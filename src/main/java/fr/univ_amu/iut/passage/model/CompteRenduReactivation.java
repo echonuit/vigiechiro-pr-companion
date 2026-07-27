@@ -55,14 +55,14 @@ public final class CompteRenduReactivation {
     }
 
     /// Titre du compte rendu : honnête aussi quand rien n'a pu être tenté (passage reconstruit, #1648).
-    private static String titre(RapportReactivation rapport) {
+    static String titre(RapportReactivation rapport) {
         if (rapport.voie() == VoieReactivation.RECONSTRUIT) {
             return "Passage reconstruit";
         }
         return rapport.complete() ? "Passage réactivé" : "Réactivation partielle";
     }
 
-    private static String preambule(RapportReactivation rapport) {
+    static String preambule(RapportReactivation rapport) {
         return rapport.voie() == VoieReactivation.BRUTS
                 ? "Ce dossier ne contenait que vos enregistrements bruts : les séquences d'écoute ont été"
                         + " régénérées à partir d'eux, puis vérifiées une à une."
@@ -75,7 +75,7 @@ public final class CompteRenduReactivation {
         return rapport.reactivees() + " séquence(s) réactivée(s)" + preuve + ".";
     }
 
-    private static String conclusion(RapportReactivation rapport) {
+    static String conclusion(RapportReactivation rapport) {
         return rapport.complete()
                 ? "L'audio est de nouveau complet : le passage est écoutable."
                 : "L'audio reste incomplet : " + rapport.decompte().presentes() + " séquence(s) sur "

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Avertissement;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Barre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
@@ -172,7 +173,7 @@ class CompteRenduChiffreTest {
                 List.of(new Action("Ouvrir le passage", true, () -> {})));
 
         assertThat(rendu.motifs()).isEmpty();
-        assertThat(rendu.avertissements()).isEmpty();
+        assertThat(rendu.textesDesAvertissements()).isEmpty();
         assertThat(rendu.resumeDesMotifs()).isEmpty();
         assertThat(rendu.ventilation().pourcentage(tout)).isEqualTo(100.0);
         assertThat(rendu.actions()).extracting(Action::principale).containsExactly(true);
@@ -181,7 +182,8 @@ class CompteRenduChiffreTest {
     @Test
     @DisplayName("les collections sont recopiées : un compte rendu ne change pas dans le dos de sa surface")
     void collections_recopiees() {
-        List<String> avertissements = new java.util.ArrayList<>(List.of("Relevé climatique absent"));
+        List<Avertissement> avertissements =
+                new java.util.ArrayList<>(List.of(Avertissement.de("Relevé climatique absent")));
         CompteRenduChiffre rendu = new CompteRenduChiffre(
                 "Import terminé",
                 "584 / 584",
@@ -192,8 +194,8 @@ class CompteRenduChiffreTest {
                 avertissements,
                 List.of());
 
-        avertissements.add("ajouté après coup");
+        avertissements.add(Avertissement.de("ajouté après coup"));
 
-        assertThat(rendu.avertissements()).containsExactly("Relevé climatique absent");
+        assertThat(rendu.textesDesAvertissements()).containsExactly("Relevé climatique absent");
     }
 }

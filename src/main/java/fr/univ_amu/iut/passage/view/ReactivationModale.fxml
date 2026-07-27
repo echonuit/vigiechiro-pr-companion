@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import fr.univ_amu.iut.commun.view.PanneauCompteRendu?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
@@ -64,8 +65,11 @@
   </VBox>
 
   <Label fx:id="lblErreur" styleClass="message-erreur" wrapText="true"/>
-  <!-- Le compte rendu est CONSTRUIT (VueCompteRendu) : sa forme depend de ce qu il y a a dire,
-       donc il ne peut pas etre declare ici. Ce conteneur l accueille. -->
+  <!-- Compte rendu CHIFFRE (#2358) d une reactivation aboutie : ce qui est revenu, ce qui manque, en
+       proportions. « 4236 sequences reactivees » ne dit pas si la nuit est exploitable ; la barre si. -->
+  <PanneauCompteRendu fx:id="compteRenduChiffre" visible="false" managed="false"/>
+  <!-- Compte rendu TEXTUEL, pour ce qui n a pas de chiffres : l annulation. Il etait la surface de la
+       reactivation aboutie jusqu a #2358 ; il ne sert plus qu a ce cas, ou il n y a rien a ventiler. -->
   <VBox fx:id="zoneCompteRendu"/>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">

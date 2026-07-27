@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Avertissement;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Barre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
@@ -76,7 +77,7 @@ class PanneauCompteRenduTest {
                                         new Segment("séquences", 1_800, "1,8 Go", Teinte.SECONDAIRE)))),
                 devenirDeLaMaquette(),
                 List.of(new Motif("en-tête WAV illisible", List.of("g.wav", "h.wav"))),
-                List.of("Relevé climatique absent : le diagnostic sera partiel."),
+                List.of(Avertissement.de("Relevé climatique absent : le diagnostic sera partiel.")),
                 List.of(new Action("Ouvrir le passage", true, () -> {})));
     }
 

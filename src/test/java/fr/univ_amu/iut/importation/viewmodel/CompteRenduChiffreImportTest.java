@@ -126,7 +126,7 @@ class CompteRenduChiffreImportTest {
                     resultat(toutPasse, VolumesImport.AUCUN, List.of("Sonde de température absente")), List.of());
 
             assertThat(rendu.severite()).isEqualTo(Severite.AVERTISSEMENT);
-            assertThat(rendu.avertissements()).contains("Sonde de température absente");
+            assertThat(rendu.textesDesAvertissements()).contains("Sonde de température absente");
         }
 
         @Test
@@ -320,7 +320,7 @@ class CompteRenduChiffreImportTest {
             CompteRenduChiffre rendu =
                     CompteRenduChiffreImport.de(resultat(avecDoublon, VolumesImport.AUCUN, List.of()), List.of());
 
-            assertThat(rendu.avertissements())
+            assertThat(rendu.textesDesAvertissements())
                     .singleElement()
                     .asString()
                     .contains("déjà importée")
@@ -348,7 +348,7 @@ class CompteRenduChiffreImportTest {
                         .containsExactly(
                                 "n° 1 (2026) au carré 640380, point A1", "n° 2 (2026) au carré 640380, point A1");
             });
-            assertThat(rendu.avertissements())
+            assertThat(rendu.textesDesAvertissements())
                     .singleElement()
                     .asString()
                     .as("l'avertissement dénombre, il n'énumère pas")
@@ -454,8 +454,8 @@ class CompteRenduChiffreImportTest {
 
             // En tête des autres : importer ne résout pas un mélange d'enregistreurs, cela le grave dans
             // un passage - c'est plus grave qu'une sonde absente.
-            assertThat(rendu.avertissements()).first().asString().startsWith(MELANGE);
-            assertThat(rendu.avertissements()).contains("Sonde absente");
+            assertThat(rendu.textesDesAvertissements()).first().asString().startsWith(MELANGE);
+            assertThat(rendu.textesDesAvertissements()).contains("Sonde absente");
         }
 
         @Test
@@ -466,7 +466,7 @@ class CompteRenduChiffreImportTest {
 
             CompteRenduChiffre rendu = CompteRenduChiffreImport.de(avecParticipation, List.of());
 
-            assertThat(rendu.avertissements())
+            assertThat(rendu.textesDesAvertissements())
                     .anySatisfy(texte -> assertThat(texte)
                             .contains("Participation créée sur Vigie-Chiro")
                             .contains("le dépôt la réutilisera"));
@@ -478,7 +478,7 @@ class CompteRenduChiffreImportTest {
             CompteRenduChiffre rendu =
                     CompteRenduChiffreImport.de(resultat(rapportType(), VolumesImport.AUCUN, List.of()), List.of());
 
-            assertThat(rendu.avertissements()).noneMatch(texte -> texte.contains("Vigie-Chiro"));
+            assertThat(rendu.textesDesAvertissements()).noneMatch(texte -> texte.contains("Vigie-Chiro"));
         }
 
         @Test
@@ -492,7 +492,7 @@ class CompteRenduChiffreImportTest {
             CompteRenduChiffre rendu = CompteRenduChiffreImport.de(nuits, List.of());
 
             // Deux sur trois : annoncer « 3 participations » mentirait sur la nuit restée locale.
-            assertThat(rendu.avertissements())
+            assertThat(rendu.textesDesAvertissements())
                     .anySatisfy(texte -> assertThat(texte).startsWith("2 participations créées sur Vigie-Chiro"));
         }
     }
