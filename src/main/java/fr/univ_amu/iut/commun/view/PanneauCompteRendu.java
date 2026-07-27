@@ -51,6 +51,13 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// n'affiche pas un cadre vide intitulé « Motifs de rejet », et la bande se referme sur l'essentiel.
 public final class PanneauCompteRendu extends VBox {
 
+    /// Classe CSS de la racine. **Pas** `compte-rendu` : ce nom appartient déjà à [VueCompteRendu], le
+    /// compte rendu **textuel**, et une seconde règle de même nom plus bas dans la feuille lui imposait
+    /// silencieusement le cadre de cette bande - carte blanche, bordure et 16 px de marge intérieure - sur
+    /// tous les écrans qui l'affichent. Les autres classes de ce composant étaient déjà préfixées `cr-` ;
+    /// seule la racine avait emprunté un nom pris.
+    static final String CLASSE_RACINE = "panneau-compte-rendu";
+
     /// Largeur minimale d'un segment non nul, en pixels : un segment minuscule doit rester **visible**
     /// (sa valeur exacte est de toute façon en légende) plutôt que d'être arrondi en silence à zéro.
     private static final double LARGEUR_MINI_SEGMENT = 3;
@@ -88,7 +95,7 @@ public final class PanneauCompteRendu extends VBox {
     private final HBox pied = new HBox(10, actions, espaceur(), resumeMotifs);
 
     public PanneauCompteRendu() {
-        getStyleClass().add("compte-rendu");
+        getStyleClass().add(CLASSE_RACINE);
         setSpacing(12);
         titre.getStyleClass().add("cr-titre");
         pastille.getStyleClass().add("cr-badge");
