@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.81.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.80.1...v2.81.0) (2026-07-27)
+
+
+### Features
+
+* **synchro:** rendre la récupération des nuits suivable et interruptible ([#2585](https://github.com/echonuit/vigiechiro-pr-companion/issues/2585)) ([10b4c38](https://github.com/echonuit/vigiechiro-pr-companion/commit/10b4c38c7b96e8ad3b9dd598c4250daab4417c57)), closes [#2557](https://github.com/echonuit/vigiechiro-pr-companion/issues/2557) [#2558](https://github.com/echonuit/vigiechiro-pr-companion/issues/2558) [#1369](https://github.com/echonuit/vigiechiro-pr-companion/issues/1369)
+
 ## [2.80.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.80.0...v2.80.1) (2026-07-27)
 
 
