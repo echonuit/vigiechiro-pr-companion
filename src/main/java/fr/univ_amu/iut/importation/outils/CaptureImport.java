@@ -24,12 +24,14 @@ import fr.univ_amu.iut.importation.model.LigneRapport;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
+import fr.univ_amu.iut.importation.model.VolumesImport;
 import fr.univ_amu.iut.importation.view.ImportationController;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.di.SitesModule;
@@ -131,7 +133,8 @@ public final class CaptureImport {
                         vm,
                         injecteur.getInstance(PreferenceConservation.class),
                         injecteur.getInstance(ExecuteurTache.class),
-                        injecteur.getInstance(fr.univ_amu.iut.importation.view.FabriqueActionImportTransformes.class))
+                        injecteur.getInstance(fr.univ_amu.iut.importation.view.FabriqueActionImportTransformes.class),
+                        injecteur.getInstance(fr.univ_amu.iut.commun.view.OuvrirPassage.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         // Seule la LARGEUR compte ici : chaque rendu se fait ensuite à la hauteur de son propre contenu
@@ -211,8 +214,40 @@ public final class CaptureImport {
                         StatutImportFichier.REJETE,
                         "Fréquence source 44100 Hz non divisible par 10"),
                 new LigneRapport("notes-terrain.txt", StatutImportFichier.IGNORE, "fichier non pertinent")));
-        vm.marquerTermine(new ResultatImport(null, null, SERIE, 1, 3, List.of(), rapport));
+        // Agrégat et volumes renseignés (#2358) : sans eux, la bande de compte rendu n'affiche ni le titre
+        // de la nuit, ni les barres de volume, ni l'action suivante - la capture montrerait alors un
+        // compte rendu amputé, que l'application ne produit jamais.
+        vm.marquerTermine(new ResultatImport(
+                passageImporte(),
+                new SessionDEnregistrement(1L, "/ws/Car640380-2026-Pass1-A1", 0L, 0L, 1L),
+                SERIE,
+                1,
+                3,
+                List.of(),
+                rapport,
+                new VolumesImport(5_100_273_664L, 5_100_273_664L, 1_932_735_283L)));
         rendre(scene, sortie.resolve("apercu-import-rejets.png"));
+    }
+
+    /// Le passage créé par l'import capturé : ce que le compte rendu nomme en titre et ce que son action
+    /// suivante ouvre.
+    private static Passage passageImporte() {
+        return new Passage(
+                1L,
+                1,
+                2026,
+                "2026-04-22",
+                "20:39",
+                "07:12",
+                null,
+                StatutWorkflow.TRANSFORME,
+                null,
+                null,
+                null,
+                null,
+                1L,
+                SERIE,
+                null);
     }
 
     /// État « avertissements de rattachement » (#108/#111) : deux encarts AMBRE non bloquants, restylés du

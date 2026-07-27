@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.EtatUnite;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -233,17 +234,30 @@ class ImportationClicImporterTest {
                 .as("un import abouti expose son résultat")
                 .isNotNull();
 
-        // Le récap de succès s'affiche EN PLACE (l'import n'ouvre pas de nouvelle fenêtre).
+        // Le récap de succès s'affiche EN PLACE (l'import n'ouvre pas de nouvelle fenêtre). Depuis #2358
+        // c'est la bande de compte rendu chiffré qui le porte, et non plus la phrase de statut.
         WaitForAsyncUtils.waitForFxEvents();
+        PanneauCompteRendu compteRendu = robot.lookup("#compteRenduChiffre").queryAs(PanneauCompteRendu.class);
+        assertThat(compteRendu.isVisible())
+                .as("le compte rendu de l'import doit être affiché après le clic")
+                .isTrue();
+        assertThat(((Label) compteRendu.lookup(".cr-titre")).getText())
+                .as("le titre du compte rendu nomme l'import abouti et sa nuit")
+                .startsWith("Import terminé");
+        assertThat(((Label) compteRendu.lookup(".cr-badge")).getText())
+                .as("la pastille chiffre le résultat : le récap n'est plus une phrase")
+                .contains("importés");
+
+        // La phrase de statut s'efface sur un import abouti : deux formulations du même fait côte à côte
+        // se liraient comme deux faits. La barre de statut du chrome, elle, garde sa version courte.
         Label statut = robot.lookup("#labelStatut").queryAs(Label.class);
         assertThat(statut.isVisible())
-                .as("le récap de succès doit être affiché après l'import")
-                .isTrue();
-        assertThat(statut.getText()).contains("Import terminé");
-        // Barre de statut (#1024) : le statut du wizard est aussi porté par la zone centre ; l'agrégat
-        // racine (sans contexte passage) laisse la gauche au défaut du chrome.
+                .as("le titre de la bande dit déjà ce que cette phrase disait")
+                .isFalse();
+        // Barre de statut (#1024) : le statut du wizard reste porté par la zone centre ; l'agrégat racine
+        // (sans contexte passage) laisse la gauche au défaut du chrome.
         var zones = controleur.zonesStatutProperty().get();
-        assertThat(zones.centre()).isEqualTo(statut.getText());
+        assertThat(zones.centre()).contains("Import terminé");
         assertThat(zones.gauche()).isEmpty();
     }
 

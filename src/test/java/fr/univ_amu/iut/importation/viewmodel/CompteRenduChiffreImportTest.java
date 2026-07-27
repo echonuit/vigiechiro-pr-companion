@@ -260,7 +260,7 @@ class CompteRenduChiffreImportTest {
 
             // Le moteur produit « Original illisible (en-tête WAV) : d.wav ». Sans retaille, d.wav et e.wav
             // auraient deux raisons distinctes, donc deux motifs d'un fichier chacun : aucun regroupement.
-            assertThat(motifs.get(0).libelle()).isEqualTo("fichiers : Original illisible (en-tête WAV)");
+            assertThat(motifs.get(0).libelle()).isEqualTo("fichier(s) : Original illisible (en-tête WAV)");
             assertThat(motifs.get(0).libelle()).doesNotContain(".wav");
             assertThat(motifs.get(0).compte()).isEqualTo(2);
         }
@@ -278,7 +278,7 @@ class CompteRenduChiffreImportTest {
             assertThat(motifs)
                     .singleElement()
                     .extracting(Motif::libelle)
-                    .isEqualTo("fichiers : OriginalIllisibleException");
+                    .isEqualTo("fichier(s) : OriginalIllisibleException");
         }
 
         @Test
@@ -290,7 +290,7 @@ class CompteRenduChiffreImportTest {
                             .motifs())
                     .singleElement()
                     .extracting(Motif::libelle)
-                    .isEqualTo("fichiers : raison non précisée");
+                    .isEqualTo("fichier(s) : raison non précisée");
         }
 
         @Test
@@ -326,6 +326,33 @@ class CompteRenduChiffreImportTest {
                     .contains("déjà importée")
                     .contains("2 passage(s)");
             assertThat(rendu.severite()).isEqualTo(Severite.AVERTISSEMENT);
+        }
+
+        @Test
+        @DisplayName("Les passages déjà présents sont nommés dans un motif, pas déversés dans l'avertissement")
+        void passages_deja_presents_en_motif() {
+            RapportImport avecDoublon = new RapportImport(
+                    List.of(ligne("a.wav", StatutImportFichier.IMPORTE, "")),
+                    List.of(
+                            new PassageExistant(1, 2026, "640380", "A1"),
+                            new PassageExistant(2, 2026, "640380", "A1")));
+
+            CompteRenduChiffre rendu =
+                    CompteRenduChiffreImport.de(resultat(avecDoublon, VolumesImport.AUCUN, List.of()), List.of());
+
+            // Les verser dans le texte de l'avertissement les rendrait de longueur non bornée dans un
+            // encart d'une ligne, ce que l'ADR 0031 a soldé. En motif, ils se comptent puis s'ouvrent.
+            assertThat(rendu.motifs()).singleElement().satisfies(motif -> {
+                assertThat(motif.libelle()).isEqualTo("passage(s) déjà présent(s) pour cette nuit");
+                assertThat(motif.sujets())
+                        .containsExactly(
+                                "n° 1 (2026) au carré 640380, point A1", "n° 2 (2026) au carré 640380, point A1");
+            });
+            assertThat(rendu.avertissements())
+                    .singleElement()
+                    .asString()
+                    .as("l'avertissement dénombre, il n'énumère pas")
+                    .doesNotContain("carré 640380");
         }
     }
 
