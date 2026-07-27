@@ -1027,3 +1027,124 @@
     -fx-font-size: 14px;
 }
 
+
+/* ========== Compte rendu chiffre d une operation lourde (#2358, maquette M-CompteRendu) ==========
+
+   Une bande dense : verdict, proportions, cout disque, ce qui reste vrai, action suivante. Le
+   composant [PanneauCompteRendu] construit l arbre ; toutes les couleurs viennent d ici, aucune du
+   code, pour que le theme sombre (#1037) puisse les reinterpreter sans toucher aux appelants. */
+.compte-rendu {
+    -fx-padding: 14 16 14 16;
+    -fx-background-color: -couleur-texte-clair;
+    -fx-border-color: #d0d7de;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.cr-titre {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -couleur-texte;
+}
+
+/* Pastille du verdict : elle porte un LIBELLE chiffre, la couleur ne fait que le doubler (une couleur
+   seule ne se lit pas quand on ne la distingue pas). */
+.cr-badge {
+    -fx-padding: 2 10 2 10;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.cr-badge-succes {
+    -fx-background-color: -badge-succes-fond;
+    -fx-border-color: -couleur-succes;
+    -fx-text-fill: -badge-succes-texte;
+}
+
+.cr-badge-info {
+    -fx-background-color: -badge-info-fond;
+    -fx-border-color: -couleur-primaire;
+    -fx-text-fill: -badge-info-texte;
+}
+
+.cr-badge-avertissement {
+    -fx-background-color: -badge-avertissement-fond;
+    -fx-border-color: -couleur-avertissement;
+    -fx-text-fill: -badge-avertissement-texte;
+}
+
+.cr-badge-erreur {
+    -fx-background-color: -badge-danger-fond;
+    -fx-border-color: -couleur-danger;
+    -fx-text-fill: -badge-danger-texte;
+}
+
+/* Barre : les largeurs de ses segments sont liees aux quantites par le composant, jamais posees ici. */
+.cr-barre {
+    -fx-min-height: 22;
+    -fx-pref-height: 22;
+    -fx-max-height: 22;
+}
+
+.cr-seg {
+    -fx-background-radius: 0;
+}
+
+.cr-puce {
+    -fx-min-width: 10;
+    -fx-min-height: 10;
+    -fx-max-width: 10;
+    -fx-max-height: 10;
+    -fx-background-radius: 2;
+}
+
+/* Les six roles de teinte. Les trois premiers qualifient un DEVENIR (severite pertinente), les trois
+   suivants un VOLUME, ou aucune severite n a de sens : des bruts conserves ne sont ni bons ni mauvais. */
+.cr-seg-retenu { -fx-background-color: -couleur-succes; }
+.cr-seg-ecarte { -fx-background-color: -couleur-avertissement; }
+.cr-seg-refuse { -fx-background-color: -couleur-danger; }
+/* Gris-bleu de reference, comme les autres gris de cadre du fichier : aucun jeton de palette ne porte
+   un neutre de remplissage. */
+.cr-seg-reference { -fx-background-color: #9fb2c9; }
+.cr-seg-principale { -fx-background-color: -couleur-primaire; }
+.cr-seg-secondaire { -fx-background-color: -couleur-succes; }
+
+.cr-legende {
+    -fx-font-size: 12px;
+    -fx-text-fill: -couleur-texte;
+}
+
+.cr-volume-libelle {
+    -fx-font-size: 12px;
+    -fx-text-fill: -couleur-texte-discret;
+    -fx-min-width: 110;
+    -fx-alignment: CENTER-RIGHT;
+}
+
+.cr-volume-valeur {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: -couleur-texte-discret;
+}
+
+/* Avertissement encore vrai : ambre, distinct d une erreur. Un incident absorbe ne s annonce pas en
+   rouge, et ce qui reste vrai a la fin ne se confond pas avec ce qui a echoue. */
+.cr-avertissement {
+    -fx-font-size: 12px;
+    -fx-text-fill: -couleur-avertissement-texte;
+}
+
+.cr-avertissement-icone {
+    -fx-icon-size: 13;
+    -fx-icon-color: -couleur-avertissement;
+}
+
+/* Resume des motifs : discret, a l oppose de l action suivante. Il dit de quoi il s agit sans derouler
+   la liste des fichiers, qui reste accessible d un geste. */
+.cr-resume-motifs {
+    -fx-font-size: 11.5px;
+    -fx-text-fill: -couleur-texte-discret;
+}

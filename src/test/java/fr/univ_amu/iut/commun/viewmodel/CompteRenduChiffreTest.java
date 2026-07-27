@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Barre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Teinte;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Ventilation;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -21,7 +22,7 @@ import org.junit.jupiter.api.Test;
 class CompteRenduChiffreTest {
 
     private static Segment seg(String libelle, long quantite) {
-        return new Segment(libelle, quantite, quantite + " fichiers");
+        return new Segment(libelle, quantite, quantite + " fichiers", Teinte.RETENU);
     }
 
     @Test
@@ -98,10 +99,12 @@ class CompteRenduChiffreTest {
     @Test
     @DisplayName("règle 1 : les barres de volume partagent une ÉCHELLE COMMUNE, la plus grande du lot")
     void echelle_commune_des_volumes() {
-        Barre lu = Barre.unique("Lu sur la carte", new Segment("lu", 5_000, "5,0 Go"));
+        Barre lu = Barre.unique("Lu sur la carte", new Segment("lu", 5_000, "5,0 Go", Teinte.REFERENCE));
         Barre ecrit = new Barre(
                 "Écrit sur le disque",
-                List.of(new Segment("bruts", 5_000, "5,0 Go"), new Segment("séquences", 1_800, "1,8 Go")));
+                List.of(
+                        new Segment("bruts", 5_000, "5,0 Go", Teinte.PRINCIPALE),
+                        new Segment("séquences", 1_800, "1,8 Go", Teinte.SECONDAIRE)));
         CompteRenduChiffre rendu = new CompteRenduChiffre(
                 "Import terminé",
                 "583 / 612 importés",
@@ -127,7 +130,7 @@ class CompteRenduChiffreTest {
     @Test
     @DisplayName("une quantité négative est refusée : elle rendrait toute proportion absurde")
     void quantite_negative_refusee() {
-        assertThatThrownBy(() -> new Segment("Importés", -1, "?"))
+        assertThatThrownBy(() -> new Segment("Importés", -1, "?", Teinte.RETENU))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Importés");
     }
