@@ -12,6 +12,8 @@ import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -79,9 +81,14 @@ public final class CaptureActivite {
         Path workspace = Files.createTempDirectory("vc-capture-activite");
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
-        rendre(creerInjecteur(), sortie.resolve("apercu-activite.png"));
+        // Schéma migré (comme CaptureAnalyse) : l'écran porte des onglets de vues mémorisées, dont le
+        // dépôt lit `saved_filter_view`. Aucune donnée n'est semée pour autant — les contacts restent
+        // fournis par le service de démonstration.
+        Injector injecteur = creerInjecteur();
+        new MigrationSchema(injecteur.getInstance(SourceDeDonnees.class)).migrer();
+        rendre(injecteur, sortie.resolve("apercu-activite.png"));
         rendre(injecteurAvec(List.of()), sortie.resolve("apercu-activite-vide.png"));
-        exporter(creerInjecteur(), sortie.resolve("apercu-activite-export.png"));
+        exporter(injecteur, sortie.resolve("apercu-activite-export.png"));
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage

@@ -2,7 +2,10 @@ package fr.univ_amu.iut.analyse.view;
 
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
+import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.DescripteurCritere;
+import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
@@ -20,6 +23,9 @@ import javafx.scene.control.ComboBox;
 /// (quelles courbes tracer), pas dans le sous-ensemble de données. Aucune présélection : ajouter une puce
 /// n'écarte rien tant qu'une valeur n'est pas choisie.
 final class CriteresActivite {
+
+    /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par défaut.
+    private static final String GROUPE = "groupe";
 
     private CriteresActivite() {}
 
@@ -42,7 +48,7 @@ final class CriteresActivite {
 
     /// Critère **Taxon parent** (groupe) : liste déroulante des groupes présents, sans présélection.
     static CritereFiltre<ContactHoraire> groupe(Supplier<? extends List<String>> groupesPresents) {
-        return liste("groupe", "Taxon parent", "Choisir un taxon parent", groupesPresents, ContactHoraire::groupe);
+        return liste(GROUPE, "Taxon parent", "Choisir un taxon parent", groupesPresents, ContactHoraire::groupe);
     }
 
     private static String libelleNuit(ContactHoraire contact) {
@@ -94,6 +100,29 @@ final class CriteresActivite {
                 }
             }
         };
+    }
+
+    /// Onglets **par défaut** de l'écran, rendus en lecture seule avant les vues de l'utilisateur : ils
+    /// partitionnent les taxons détectés par **catégorie du référentiel** (niveau `Catégorie` de
+    /// `taxonomic_group`, semé par V05).
+    ///
+    /// Tadarida ne détecte pas que des chauves-souris : sur une vraie saison, orthoptères, autres
+    /// mammifères et oiseaux figurent au même rang que les chiroptères, et la présélection des cinq taxons
+    /// les plus contactés peut retenir une sauterelle — tracée alors comme une espèce de chauve-souris.
+    /// Chaque onglet porte le **nom exact** de sa catégorie au référentiel : un onglet « Autres » qui ne
+    /// couvrirait qu'une catégorie mentirait sur son contenu. Un vrai complément (tout sauf les
+    /// chiroptères) demanderait un critère à choix multiple ou négatif, que le socle n'offre pas encore.
+    static List<VueSauvegardee> vuesParDefaut() {
+        return List.of(
+                vueParDefaut("Tout"),
+                vueParDefaut("Chiroptères", new DescripteurCritere(GROUPE, List.of("Chiroptères"))),
+                vueParDefaut(
+                        "Orthoptères et cigales", new DescripteurCritere(GROUPE, List.of("Orthoptères et cigales"))),
+                vueParDefaut("Autres mammifères", new DescripteurCritere(GROUPE, List.of("Autres mammifères"))));
+    }
+
+    private static VueSauvegardee vueParDefaut(String nom, DescripteurCritere... criteres) {
+        return VuesParDefaut.vue("activite", nom, criteres);
     }
 
     /// **Recherche texte** de la barre : vrai si un champ cherchable d'un contact (taxon retenu, nom
