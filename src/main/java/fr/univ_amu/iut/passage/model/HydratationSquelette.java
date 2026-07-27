@@ -146,7 +146,10 @@ public final class HydratationSquelette {
         if (nuit.isEmpty()) {
             return Optional.empty();
         }
-        jeton.leverSiAnnule();
+        // Pas de leverSiAnnule ici : l'étape réseau consulte le jeton en PREMIER
+        // ([PlateformeReconstruction#observationsCsv]), et doubler le contrôle laissait croire à une
+        // garantie propre à cet appelant. Le mutant qui le supprimait survivait à toute la suite (#2554,
+        // passe 6) - un contrôle qu'on peut retirer sans rien casser ne contrôle rien.
         Optional<ObservationsAReconstruire> observations =
                 telecharger(nuit.orElseThrow().idParticipation(), source, libelleSeul(progres), jeton);
         if (observations.isEmpty()) {
