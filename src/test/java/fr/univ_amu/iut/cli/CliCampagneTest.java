@@ -71,4 +71,38 @@ class CliCampagneTest {
     void lister_vide() {
         assertThat(executerSortie("lister-campagnes")).contains("Aucune campagne");
     }
+
+    /// Identifiant de la campagne créée : la sortie l'annonce sous la forme « Campagne créée : #12 … ».
+    private static String idDepuis(String sortieCreation) {
+        return sortieCreation.replaceAll("(?s).*#(\\d+).*", "$1");
+    }
+
+    @Test
+    @DisplayName("#2355 : modifier-campagne corrige le nom et l'année, lister-campagnes le reflète")
+    void modifier_campagne() {
+        String id = idDepuis(executerSortie("creer-campagne", "--nom", "Nom fautif", "--annee", "2025"));
+
+        String modification =
+                executerSortie("modifier-campagne", "--campagne", id, "--nom", "Suivi ENS", "--annee", "2026");
+
+        assertThat(modification)
+                .contains("Campagne modifiée")
+                .contains("Suivi ENS")
+                .contains("2026");
+        assertThat(executerSortie("lister-campagnes")).contains("Suivi ENS").doesNotContain("Nom fautif");
+    }
+
+    @Test
+    @DisplayName("#2355 : supprimer-campagne retire le regroupement et le dit sans ambiguïté")
+    void supprimer_campagne() {
+        String id = idDepuis(executerSortie("creer-campagne", "--nom", "À supprimer", "--annee", "2026"));
+
+        String suppression = executerSortie("supprimer-campagne", "--campagne", id);
+
+        assertThat(suppression)
+                .as("la sortie doit lever le doute : on supprime un regroupement, pas des nuits")
+                .contains("supprimée")
+                .contains("détachés");
+        assertThat(executerSortie("lister-campagnes")).contains("Aucune campagne");
+    }
 }
