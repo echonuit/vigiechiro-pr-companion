@@ -3,6 +3,8 @@ package fr.univ_amu.iut.importation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -282,6 +284,50 @@ class ServiceImportTest {
         // Le passage fraîchement importé se voit créer sa participation VigieChiro au plus tôt (best-effort) ;
         // le dépôt la réutilisera ensuite (pas de doublon).
         verify(sync).creerPour(resultat.passage().id());
+        // #1488 : et le résultat le PORTE. L'écriture était faite en silence, sans que rien ne l'annonce
+        // nulle part - or elle dépose les données de l'utilisateur sur un serveur distant.
+        assertThat(resultat.participationCreee())
+                .as("l'import doit rapporter l'écriture distante qu'il vient de faire")
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("#1488 : sans passerelle de synchronisation, aucune participation n'est annoncée")
+    void aucune_participation_sans_passerelle() {
+        // `service` est construit sans passerelle (Optional.empty) : rien n'est écrit sur la plateforme,
+        // donc il n'y a rien à annoncer. Un compte rendu qui l'annoncerait quand même ferait croire à un
+        // dépôt qui n'a pas eu lieu.
+        ResultatImport resultat = service.importer(sd, idPoint, prefixe);
+
+        assertThat(resultat.participationCreee()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#1488 : une participation refusée hors portée n'est pas annoncée comme créée")
+    void participation_refusee_non_annoncee() {
+        SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        doThrow(new RegleMetierException("Site non rattaché à un site Vigie-Chiro"))
+                .when(sync)
+                .creerPour(anyLong());
+        ServiceImport avecSync = new ServiceImport(
+                new InspecteurDossier(new AnalyseurLogPR()),
+                OutilsImport.reels(new CopieProtegee(), new Renommeur(), new TransformationAudio()),
+                new AgregatImportDao(source),
+                new UniteDeTravail(source),
+                new Workspace(racine.resolve("ws")),
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                idPassage -> 0,
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
+                Optional.of(sync));
+
+        ResultatImport resultat = avecSync.importer(sd, idPoint, prefixe);
+
+        // Le refus reste non bloquant pour l'import (repli au dépôt), mais il ne doit pas se raconter en
+        // succès : c'est exactement le genre d'écart qu'un compte rendu doit refuser de lisser.
+        assertThat(resultat.passage().id())
+                .as("l'import aboutit malgré le refus distant")
+                .isNotNull();
+        assertThat(resultat.participationCreee()).isFalse();
     }
 
     @Test

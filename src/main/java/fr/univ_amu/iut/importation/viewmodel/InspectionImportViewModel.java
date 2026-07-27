@@ -307,6 +307,17 @@ public class InspectionImportViewModel {
     /// Ce que l'inspection a relevé (mélange, incohérence journal/fichiers, nuit déjà importée), à rendre
     /// par [fr.univ_amu.iut.commun.view.VueCompteRendu]. Compte rendu **vide** si le dossier ne pose
     /// aucune question.
+    /// Les avertissements de l'inspection **encore vrais une fois la nuit importée** (#1488) : mélange
+    /// d'enregistreurs, incohérence journal ↔ fichiers. Vide tant qu'aucun dossier n'est inspecté.
+    ///
+    /// Ils sont composés ici et non dans la vue : mettre en forme une restitution est une décision de
+    /// présentation **testable**, et la vue n'a pas à relire le rapport d'inspection pour la prendre.
+    public List<String> avertissementsEncoreVraisApresImport() {
+        return rapport == null
+                ? List.of()
+                : AvertissementsInspection.encoreVraisApresImport(rapport.melange(), rapport.coherence());
+    }
+
     public ReadOnlyObjectProperty<CompteRendu> avertissementsProperty() {
         return avertissements.getReadOnlyProperty();
     }
