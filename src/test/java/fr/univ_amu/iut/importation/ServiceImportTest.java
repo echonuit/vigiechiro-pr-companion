@@ -179,6 +179,42 @@ class ServiceImportTest {
                 .allSatisfy(o -> assertThat(o.frequenceEchantillonnageHz()).isEqualTo(FREQUENCE_WAV));
     }
 
+    /// Volume des deux WAV d'une nuit préparée par [#preparerCarteSD] : le « lu sur la carte » attendu
+    /// (#2358), mesuré sur les fichiers eux-mêmes et non recopié en dur, pour que le test suive la fixture.
+    private static long volumeSourceDe(Path carte) {
+        try (var fichiers = Files.list(carte)) {
+            return fichiers.filter(f -> f.getFileName().toString().endsWith(".wav"))
+                    .mapToLong(ServiceImportTest::taille)
+                    .sum();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    @Test
+    @DisplayName("#2358 : l'import mesure ce qu'il a lu sur la carte et ce qu'il a écrit sur le disque")
+    void import_mesure_les_volumes_lus_et_ecrits() {
+        long volumeSource = volumeSourceDe(sd);
+
+        ResultatImport resultat = service.importer(sd, idPoint, prefixe);
+
+        assertThat(resultat.volumes().octetsLus())
+                .as("« lu sur la carte » : le volume des WAV de la nuit, mesuré sur la source")
+                .isEqualTo(volumeSource);
+        assertThat(resultat.volumes().octetsBruts())
+                .as("mode conservation : les bruts copiés pèsent ce que pesait la source")
+                .isEqualTo(volumeSource);
+        assertThat(resultat.volumes().octetsSequences())
+                .as("les séquences produites sont écrites, donc mesurées")
+                .isPositive();
+        assertThat(resultat.volumes().octetsEcrits())
+                .as("l'écrit est la somme des deux, c'est ce que l'import a coûté en place")
+                .isEqualTo(resultat.volumes().octetsBruts() + resultat.volumes().octetsSequences());
+        assertThat(resultat.volumes().octetsSequences())
+                .as("les volumes du compte rendu et ceux persistés dans la session sont le même chiffre")
+                .isEqualTo(resultat.session().volumeSequencesOctets());
+    }
+
     @Test
     @DisplayName("#1299 : séquences et originaux portent taille et empreinte dès l'import")
     void import_pose_taille_et_empreinte() {
@@ -408,6 +444,19 @@ class ServiceImportTest {
         assertThat(resultat.session().volumeOriginauxOctets())
                 .as("mode sans copie : aucun original conservé, volume bruts persisté = 0")
                 .isZero();
+
+        // #2358 : c'est la propriété qui distingue « lu » de « écrit ». La carte a bien été lue en entier,
+        // même si rien n'en est conservé ; confondre les deux ferait dire au compte rendu que l'import
+        // n'a rien lu, alors que c'est justement ce mode qui économise la place.
+        assertThat(resultat.volumes().octetsLus())
+                .as("le volume lu ne dépend pas de l'option de conservation")
+                .isEqualTo(volumeSourceDe(sd));
+        assertThat(resultat.volumes().octetsBruts())
+                .as("rien n'est conservé : aucun octet de brut n'est écrit")
+                .isZero();
+        assertThat(resultat.volumes().octetsEcrits())
+                .as("l'écrit se réduit alors aux séquences")
+                .isEqualTo(resultat.volumes().octetsSequences());
 
         Long idSession = resultat.session().id();
         assertThat(originalDao.findBySession(idSession)).hasSize(2).allSatisfy(o -> {
@@ -1052,6 +1101,20 @@ class ServiceImportTest {
             assertThat(r.passage().statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
             assertThat(sessionDao.trouverParPassage(r.passage().id())).isPresent();
         });
+
+        // #2358 : les volumes se cumulent sur les trois nuits. Rendre ceux de la seule première (celle que
+        // `premier()` expose par compatibilité) sous-estimerait l'import des deux tiers, et c'est justement
+        // en multi-nuits que le volume écrit surprend.
+        assertThat(resultat.volumes().octetsLus())
+                .as("le lu cumulé couvre les six WAV de la carte, pas les deux de la première nuit")
+                .isEqualTo(volumeSourceDe(carte));
+        assertThat(resultat.volumes().octetsLus())
+                .isEqualTo(resultat.parNuit().stream()
+                        .mapToLong(r -> r.volumes().octetsLus())
+                        .sum());
+        assertThat(resultat.volumes().octetsEcrits())
+                .as("chaque nuit écrit sa propre session : l'écrit cumulé dépasse celui d'une nuit")
+                .isGreaterThan(resultat.parNuit().getFirst().volumes().octetsEcrits());
     }
 
     @Test

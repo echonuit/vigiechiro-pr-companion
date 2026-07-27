@@ -17,6 +17,7 @@ import java.util.List;
 /// @param nombreSequences nombre total de séquences d'écoute produites (R10)
 /// @param anomalies anomalies relevées dans le journal du capteur (R19), éventuellement vide
 /// @param rapport rapport d'import résilient — importés / ignorés / rejetés (#155)
+/// @param volumes volumes lus et écrits par cet import (#2358) ; [VolumesImport#AUCUN] si non mesurés
 public record ResultatImport(
         Passage passage,
         SessionDEnregistrement session,
@@ -24,11 +25,33 @@ public record ResultatImport(
         int nombreOriginaux,
         int nombreSequences,
         List<String> anomalies,
-        RapportImport rapport) {
+        RapportImport rapport,
+        VolumesImport volumes) {
 
     public ResultatImport {
         anomalies = List.copyOf(anomalies);
         rapport = rapport == null ? new RapportImport(List.of()) : rapport;
+        volumes = volumes == null ? VolumesImport.AUCUN : volumes;
+    }
+
+    /// Variante sans volumes : pour les appelants/tests qui ne les mesurent pas (#2358).
+    public ResultatImport(
+            Passage passage,
+            SessionDEnregistrement session,
+            String numeroSerieEnregistreur,
+            int nombreOriginaux,
+            int nombreSequences,
+            List<String> anomalies,
+            RapportImport rapport) {
+        this(
+                passage,
+                session,
+                numeroSerieEnregistreur,
+                nombreOriginaux,
+                nombreSequences,
+                anomalies,
+                rapport,
+                VolumesImport.AUCUN);
     }
 
     /// Variante sans rapport (rapport vide) : pour les appelants/tests qui n'en construisent pas.

@@ -141,7 +141,9 @@ final class MoteurImport {
         // Garde-fou d'espace disque (#2041), AVANT toute écriture : on refuse tôt et proprement plutôt
         // que d'échouer à mi-import en laissant une session partielle. Le contrôle est **par nuit** :
         // sur une carte multi-nuits, une nuit qui ne tient pas n'invalide pas celles déjà importées.
-        verifierEspaceDisque(originauxNuit, dossierSession.getParent(), conserverOriginaux);
+        // Le garde-fou mesure le volume de la source pour décider ; on le garde, c'est le « lu sur la
+        // carte » du compte rendu chiffré (#2358), et il vaut que la copie des bruts soit demandée ou non.
+        long octetsLus = verifierEspaceDisque(originauxNuit, dossierSession.getParent(), conserverOriginaux);
 
         // Suivi par fichier (#947) : le plan de la nuit est annoncé AVANT toute écriture, une entrée par
         // original (l'ordre du plan fixe les numéros 1..N que copies et transformations cibleront). En
@@ -321,7 +323,8 @@ final class MoteurImport {
                 transformations.size(),
                 nombreSequences,
                 journal.messagesAnomalies(),
-                rapportImport);
+                rapportImport,
+                new VolumesImport(octetsLus, volumeOriginaux, volumeSequences));
     }
 
     /// Remappe la progression **locale** d'une nuit (fraction 0→1) dans sa **tranche globale**
@@ -355,7 +358,11 @@ final class MoteurImport {
     /// En mode **conservation**, les bruts sont copiés en plus : il faut donc **deux fois** le volume
     /// source. Sans copie, une seule. La marge absorbe les en-têtes des tranches, le journal et le
     /// relevé.
-    private void verifierEspaceDisque(List<Path> originaux, Path dossierCible, boolean conserverOriginaux) {
+    ///
+    /// @return le volume **lu sur la source**, mesuré ici une fois pour toutes : le garde-fou le calcule
+    ///     déjà, et le compte rendu chiffré (#2358) en a besoin pour donner l'échelle de ce qui a été
+    ///     écrit. Le mesurer deux fois ferait deux parcours de métadonnées pour le même chiffre.
+    private long verifierEspaceDisque(List<Path> originaux, Path dossierCible, boolean conserverOriginaux) {
         try {
             long volume = volumeTotal(originaux);
             long requis = (conserverOriginaux ? 2 * volume : volume) + MARGE_ESPACE_DISQUE_OCTETS;
@@ -369,6 +376,7 @@ final class MoteurImport {
                                         + " dans Réglages ▸ Import (divise par deux la place nécessaire)."
                                 : "."));
             }
+            return volume;
         } catch (IOException e) {
             throw new UncheckedIOException("Espace disque illisible pour " + dossierCible, e);
         }
