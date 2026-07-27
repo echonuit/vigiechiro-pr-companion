@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.84.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.83.0...v2.84.0) (2026-07-27)
+
+
+### Features
+
+* **commun:** chaque motif de rejet ouvre la liste de ses fichiers ([#2358](https://github.com/echonuit/vigiechiro-pr-companion/issues/2358)) ([#2594](https://github.com/echonuit/vigiechiro-pr-companion/issues/2594)) ([4b4f0bb](https://github.com/echonuit/vigiechiro-pr-companion/commit/4b4f0bbe4e552cc21a246f6fd5f8424819c43d67)), closes [#2574](https://github.com/echonuit/vigiechiro-pr-companion/issues/2574) [#1486](https://github.com/echonuit/vigiechiro-pr-companion/issues/1486)
+
 # [2.83.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.82.0...v2.83.0) (2026-07-27)
 
 
