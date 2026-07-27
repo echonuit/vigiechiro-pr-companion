@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.diagnostic.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.AxeHoraire;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
@@ -30,7 +31,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
-import javafx.util.StringConverter;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran **M-Diagnostic** (`Diagnostic.fxml`).
@@ -241,22 +241,9 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
                 .toMinutes();
         axeTemps.setTickLabelsVisible(true);
         axeTemps.setTickMarkVisible(true);
-        axeTemps.setAutoRanging(false);
-        axeTemps.setLowerBound(0);
-        axeTemps.setUpperBound(Math.max(span, 1));
-        axeTemps.setTickUnit(pasLisibleMinutes(span));
-        axeTemps.setMinorTickCount(0);
-        axeTemps.setTickLabelFormatter(new StringConverter<>() {
-            @Override
-            public String toString(Number minutes) {
-                return origine.plusMinutes(minutes.longValue()).format(HEURE);
-            }
-
-            @Override
-            public Number fromString(String texte) {
-                return 0;
-            }
-        });
+        // Bornes calées sur les mesures (l'écran montre la nuit telle qu'elle a été enregistrée), le
+        // graduage en heures venant du socle partagé avec la courbe d'activité.
+        AxeHoraire.graduerEnHeures(axeTemps, origine.toLocalTime(), Math.max(span, 1), pasLisibleMinutes(span));
     }
 
     private static LocalDateTime instant(MesureClimatique mesure) {
