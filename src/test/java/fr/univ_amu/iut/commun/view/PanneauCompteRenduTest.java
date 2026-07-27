@@ -10,11 +10,16 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Teinte;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Ventilation;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import org.assertj.core.data.Offset;
@@ -247,21 +252,152 @@ class PanneauCompteRenduTest {
     }
 
     @Test
-    @DisplayName("le résumé des motifs dit de quoi il s'agit sans dérouler la liste des fichiers")
+    @DisplayName("le résumé des motifs dit de quoi il s'agit, replié : les fichiers ne sont pas déroulés")
     void resume_des_motifs_en_pied() {
         PanneauCompteRendu panneau = miseEnPage(importAvecRejets());
 
-        assertThat(textes(panneau)).anyMatch(t -> t.equals("2 en-tête WAV illisible"));
-        assertThat(textes(panneau))
-                .as("les noms de fichiers restent hors de la bande")
-                .noneMatch(t -> t.contains("g.wav"));
+        assertThat(resume(panneau).getText()).isEqualTo("2 en-tête WAV illisible");
+        assertThat(detail(panneau).isVisible())
+                .as("une bande compacte s'ouvre sur demande, pas d'office")
+                .isFalse();
+        assertThat(detail(panneau).isManaged())
+                .as("replié, le détail ne doit pas non plus garder sa place")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("un clic sur le résumé ouvre la liste des fichiers de chaque motif")
+    void le_resume_ouvre_la_liste_des_fichiers() {
+        CompteRenduChiffre rendu = new CompteRenduChiffre(
+                "Import terminé",
+                "600 / 612 importés",
+                Severite.AVERTISSEMENT,
+                List.of(),
+                devenirDeLaMaquette(),
+                List.of(
+                        new Motif("en-tête WAV illisible", List.of("g.wav", "h.wav")),
+                        new Motif("fréquence d'acquisition inattendue", List.of("i.wav"))),
+                List.of(),
+                List.of());
+        PanneauCompteRendu panneau = miseEnPage(rendu);
+
+        ouvrirLeDetail(panneau);
+
+        assertThat(detail(panneau).isVisible()).isTrue();
+        // Un motif = un intitulé dénombré + SA liste. C'est le critère « chaque motif ouvre sa liste ».
+        assertThat(intitules(panneau))
+                .containsExactly("2 en-tête WAV illisible", "1 fréquence d'acquisition inattendue");
+        assertThat(fichiersParMotif(panneau)).containsExactly(List.of("g.wav", "h.wav"), List.of("i.wav"));
+    }
+
+    @Test
+    @DisplayName("2ᵉ constat de #1486 : serrée en hauteur, la liste ne se laisse pas écraser à zéro")
+    void la_liste_ne_se_laisse_pas_ecraser() {
+        // Le défaut relevé en recette : le cadre « Fichiers rejetés » s'affichait, la liste dessous avait
+        // une hauteur nulle, ni le nom ni la raison n'étaient visibles - alors qu'une hauteur préférée
+        // était bien posée dans le FXML. La cause n'est pas l'absence de hauteur préférée, c'est qu'une
+        // boîte verticale à court de place rabat ses enfants sur leur hauteur MINIMALE, et celle d'une
+        // liste vaut zéro. On reproduit donc la contrainte : une scène trop courte pour tout loger.
+        PanneauCompteRendu panneau = new PanneauCompteRendu();
+        panneau.afficher(importAvecRejets());
+        Scene scene = new Scene(panneau, LARGEUR, 150);
+        scene.getRoot().applyCss();
+        scene.getRoot().layout();
+
+        ouvrirLeDetail(panneau);
+
+        assertThat(listes(panneau)).hasSize(1);
+        assertThat(listes(panneau).getFirst().getHeight())
+                .as("une liste de deux fichiers garde ses deux lignes, même à l'étroit")
+                .isGreaterThan(40);
+    }
+
+    @Test
+    @DisplayName("un second clic referme le détail, et un nouvel affichage le referme aussi")
+    void le_detail_se_referme() {
+        PanneauCompteRendu panneau = miseEnPage(importAvecRejets());
+
+        ouvrirLeDetail(panneau);
+        assertThat(detail(panneau).isVisible()).isTrue();
+
+        resume(panneau).fire();
+        assertThat(detail(panneau).isVisible())
+                .as("le lien referme ce qu'il a ouvert")
+                .isFalse();
+
+        ouvrirLeDetail(panneau);
+        panneau.afficher(importAvecRejets());
+        assertThat(detail(panneau).isVisible())
+                .as("l'ouverture est une demande de l'utilisateur, pas un état hérité du compte rendu précédent")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("sans motif, ni le lien ni le détail ne s'affichent")
+    void sans_motif_rien_a_ouvrir() {
+        PanneauCompteRendu panneau = miseEnPage(new CompteRenduChiffre(
+                "Import terminé",
+                "584 importés",
+                Severite.SUCCES,
+                List.of(),
+                devenirDeLaMaquette(),
+                List.of(),
+                List.of(),
+                List.of(new Action("Ouvrir le passage", true, () -> {}))));
+
+        assertThat(resume(panneau).isVisible()).isFalse();
+        assertThat(detail(panneau).isVisible()).isFalse();
+        assertThat(listes(panneau)).isEmpty();
+    }
+
+    /// Ouvre le détail **et remet en page** : sans la seconde mise en page, les listes qui viennent
+    /// d'apparaître n'ont pas encore de hauteur, et la mesure dirait zéro pour une mauvaise raison.
+    private static void ouvrirLeDetail(PanneauCompteRendu panneau) {
+        resume(panneau).fire();
+        panneau.applyCss();
+        panneau.layout();
+    }
+
+    private static Hyperlink resume(PanneauCompteRendu panneau) {
+        return (Hyperlink) panneau.lookup(".cr-resume-motifs");
+    }
+
+    private static Region detail(PanneauCompteRendu panneau) {
+        return (Region) panneau.lookup(".cr-motifs");
+    }
+
+    private static List<String> intitules(PanneauCompteRendu panneau) {
+        return panneau.lookupAll(".cr-motif-intitule").stream()
+                .filter(Label.class::isInstance)
+                .map(noeud -> ((Label) noeud).getText())
+                .toList();
+    }
+
+    /// Les listes de fichiers, sans paramètre de type : on n'y lit que des libellés. Construites par une
+    /// boucle plutôt qu'un flux, le temps d'un flux capturant le joker en un type que la liste de retour
+    /// n'accepte pas.
+    private static List<ListView<?>> listes(PanneauCompteRendu panneau) {
+        List<ListView<?>> listes = new ArrayList<>();
+        for (Node noeud : panneau.lookupAll(".cr-motif-liste")) {
+            if (noeud instanceof ListView<?> liste) {
+                listes.add(liste);
+            }
+        }
+        return listes;
+    }
+
+    /// Les fichiers de chaque liste, dans l'ordre des motifs.
+    private static List<List<String>> fichiersParMotif(PanneauCompteRendu panneau) {
+        return listes(panneau).stream()
+                .map(liste -> liste.getItems().stream().map(String::valueOf).toList())
+                .toList();
     }
 
     private static List<String> textes(PanneauCompteRendu panneau) {
         return panneau.lookupAll(".label").stream()
                 .filter(Label.class::isInstance)
                 .map(noeud -> ((Label) noeud).getText())
-                .filter(texte -> texte != null)
+                .filter(Objects::nonNull)
                 .toList();
     }
 }

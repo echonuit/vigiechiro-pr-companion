@@ -4,16 +4,20 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Barre;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.collections.FXCollections;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.ColumnConstraints;
 import javafx.scene.layout.GridPane;
@@ -66,6 +70,20 @@ public final class PanneauCompteRendu extends VBox {
     /// même littéral (PMD `AvoidDuplicateLiterals`).
     private static final String SEPARATEUR = " · ";
 
+    /// Nombre de fichiers visibles d'un coup dans la liste d'un motif, au-delà duquel elle défile. Une
+    /// nuit réelle peut rejeter des centaines de fichiers : la liste doit être bornée, mais assez haute
+    /// pour qu'on voie de quoi il s'agit sans avoir à faire défiler d'abord.
+    private static final int LIGNES_VISIBLES_PAR_MOTIF = 5;
+
+    /// Hauteur d'une ligne de liste, en pixels. **Imposée** aux cellules ([ListView#setFixedCellSize]) et
+    /// non seulement supposée : sans cela, la hauteur de la liste et celle de ses cellules divergent d'un
+    /// pixil ou deux et la dernière ligne apparaît **coupée en deux** - ce qu'on lit comme un défaut, pas
+    /// comme une invitation à faire défiler.
+    private static final int HAUTEUR_LIGNE = 24;
+
+    /// Les bordures haute et basse du cadre de la liste, à ajouter aux lignes pour que le compte soit juste.
+    private static final int MARGE_LISTE = 2;
+
     /// Classe CSS de la pastille selon la sévérité, comme [BandeauRetour] pour le bandeau : la couleur
     /// vient de la feuille de style, jamais du code.
     private static final Map<Severite, String> CLASSE_PASTILLE = Map.of(
@@ -91,8 +109,16 @@ public final class PanneauCompteRendu extends VBox {
     private final VBox blocAvertissements = new VBox(4);
 
     private final HBox actions = new HBox(10);
-    private final Label resumeMotifs = new Label();
+
+    /// Le résumé des motifs est un **lien** et non une étiquette : il annonce un détail qui existe, donc il
+    /// doit se laisser ouvrir. Une étiquette qui énumère « 6 fichiers déjà expansés » sans dire lesquels
+    /// pose une question à laquelle elle refuse de répondre.
+    private final Hyperlink resumeMotifs = new Hyperlink();
+
     private final HBox pied = new HBox(10, actions, espaceur(), resumeMotifs);
+
+    /// Le détail des motifs, replié par défaut : une bande compacte ne s'ouvre que si on le demande.
+    private final VBox blocMotifs = new VBox(8);
 
     public PanneauCompteRendu() {
         getStyleClass().add(CLASSE_RACINE);
@@ -111,7 +137,10 @@ public final class PanneauCompteRendu extends VBox {
         legende.setAlignment(Pos.CENTER_LEFT);
         actions.setAlignment(Pos.CENTER_LEFT);
         pied.setAlignment(Pos.CENTER_LEFT);
-        getChildren().addAll(enTete, blocVentilation, blocVolumes, blocAvertissements, pied);
+        blocMotifs.getStyleClass().add("cr-motifs");
+        resumeMotifs.setOnAction(evenement -> basculerLesMotifs());
+        montrer(blocMotifs, false);
+        getChildren().addAll(enTete, blocVentilation, blocVolumes, blocAvertissements, pied, blocMotifs);
     }
 
     /// Affiche `rendu`, en masquant tout bloc qui n'a rien à dire. Appelable plusieurs fois : chaque appel
@@ -266,6 +295,48 @@ public final class PanneauCompteRendu extends VBox {
         resumeMotifs.setText(resume);
         montrer(resumeMotifs, !resume.isEmpty());
         montrer(pied, !rendu.actions().isEmpty() || !resume.isEmpty());
+        remplirMotifs(rendu.motifs());
+    }
+
+    /// Le détail des motifs, un bloc par motif : son intitulé, puis la **liste de ses fichiers**. Reconstruit
+    /// à chaque affichage et **replié**, l'ouverture étant une demande de l'utilisateur, pas un état hérité
+    /// du compte rendu précédent.
+    ///
+    /// Un motif est une **raison**, et les raisons restent peu nombreuses même quand les fichiers sont des
+    /// centaines : c'est la granularité qui rend « chaque motif ouvre sa liste » tenable à l'écran.
+    private void remplirMotifs(List<Motif> motifs) {
+        blocMotifs.getChildren().clear();
+        for (Motif motif : motifs) {
+            Label intitule = new Label(motif.compte() + " " + motif.libelle());
+            intitule.getStyleClass().add("cr-motif-intitule");
+            blocMotifs.getChildren().add(new VBox(4, intitule, listeDe(motif)));
+        }
+        replierLesMotifs();
+    }
+
+    /// La liste des fichiers d'un motif. Sa hauteur est **posée explicitement** à partir du nombre d'entrées,
+    /// et bornée : une liste laissée à sa hauteur naturelle dans une boîte verticale se réduit à zéro et
+    /// n'affiche plus rien, défaut relevé en recette sur l'ancienne liste de rejets (2ᵉ constat de #1486).
+    private static ListView<String> listeDe(Motif motif) {
+        ListView<String> liste = new ListView<>(FXCollections.observableArrayList(motif.sujets()));
+        liste.getStyleClass().add("cr-motif-liste");
+        liste.setFixedCellSize(HAUTEUR_LIGNE);
+        liste.setPrefHeight(Math.min(motif.compte(), LIGNES_VISIBLES_PAR_MOTIF) * HAUTEUR_LIGNE + MARGE_LISTE);
+        liste.setMinHeight(Region.USE_PREF_SIZE);
+        return liste;
+    }
+
+    /// Ouvre ou referme le détail. Le chevron suit l'état : un lien qui ne dit pas s'il est ouvert oblige à
+    /// cliquer pour le savoir.
+    private void basculerLesMotifs() {
+        boolean ouvert = !blocMotifs.isVisible();
+        montrer(blocMotifs, ouvert);
+        resumeMotifs.setGraphic(new FontIcon(ouvert ? "fas-caret-down" : "fas-caret-right"));
+    }
+
+    private void replierLesMotifs() {
+        montrer(blocMotifs, false);
+        resumeMotifs.setGraphic(new FontIcon("fas-caret-right"));
     }
 
     /// Masque **et** démanage : un bloc invisible qui garde sa place laisserait un trou dans la bande.
