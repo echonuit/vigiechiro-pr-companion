@@ -73,8 +73,6 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
   <rect x="46" y="362" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/><text x="66" y="372" class="filt-off">Plesp</text><text x="226" y="372" class="filt-num">13</text>
   <rect x="46" y="386" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/><text x="66" y="396" class="filt-off">Barbar</text><text x="226" y="396" class="filt-num">9</text>
 
-  <rect x="44" y="418" width="60" height="22" rx="3" class="ctrl"/><text x="74" y="433" class="ctrl-txt">Top 5</text>
-  <rect x="112" y="418" width="60" height="22" rx="3" class="ctrl"/><text x="142" y="433" class="ctrl-txt">Aucune</text>
   <rect x="44" y="450" width="128" height="22" rx="3" class="ctrl"/><text x="108" y="465" class="ctrl-txt">Réinitialiser</text>
 
   <!-- En-tete du graphe -->
@@ -119,13 +117,10 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
   <polyline class="s2" points="310,416 334,416 359,409 383,402 408,389 432,370 457,344 482,312 506,286 531,293 556,312 580,331 605,350 630,370 654,383 679,389 704,396 728,402 753,402 777,409 802,409 827,409 851,416 876,416 900,416 925,416 950,416"/>
   <polyline class="s3" points="310,416 334,409 359,396 383,377 408,357 432,338 457,325 482,325 506,331 531,338 556,344 580,357 605,363 630,370 654,377 679,377 704,383 728,389 753,389 777,396 802,396 827,402 851,402 876,402 900,409 925,409 950,409"/>
 
-  <!-- pics + etiquettes directes -->
+  <!-- pics : marques seules, l'identification passe par la legende et le survol -->
   <circle cx="506" cy="213" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
-  <text x="516" y="208" class="lbl">Pippip · 30</text>
   <circle cx="506" cy="286" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
-  <text x="516" y="281" class="lbl">Nyclei · 20</text>
   <circle cx="457" cy="325" r="4" fill="#4a3aa7" stroke="#ffffff" stroke-width="2"/>
-  <text x="447" y="320" class="lbl" text-anchor="end">Pipkuh · 14</text>
 
   <!-- Legende -->
   <rect x="46" y="490" width="11" height="11" rx="2" fill="#2a78d6"/><text x="66" y="500" class="legend-txt">Pipistrelle commune (Pippip)</text>
@@ -146,10 +141,11 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
 - **Bande nocturne** (`bandeNuit`) : aplat très pâle entre le coucher et le lever du soleil calculés au point d'écoute. C'est la même source que la cohérence horaire de [M-Diagnostic](M-Diagnostic.md). Quand le GPS du point manque, la bande disparaît et le graphe reste traçable.
 - **Axe des ordonnées** (`axeContacts`) : nombre de contacts dans la tranche. Le pas se choisit sur des valeurs rondes ; le titre d'axe rappelle la tranche courante, qui change avec le sélecteur.
 - **Sélecteur de tranche** (`groupeTranche`) : 15, 30 ou 60 minutes. Le graphe se recalcule, la sélection d'espèces est conservée.
-- **Panneau de filtres** (`panneauFiltres`) : sections repliables carrés → points → passages → nuits → espèces, **en cascade** (choisir des carrés restreint les points disponibles, et ainsi de suite). Chaque en-tête porte un compteur `n / total`, ce qui évite d'avoir à déplier pour savoir où on en est.
-- **Sémantique du vide** : une sélection vide signifie « rien », pas « pas de filtre ». C'est le seul choix qui rende les raccourcis « Aucune » utilisables.
+- **Barre de filtres** (`barreFiltres`) : recherche permanente et puces « + Filtre » (carré, point, nuit, taxon parent), sur le socle partagé avec Espèces & observations. Chaque puce se retire d'un clic, et le sous-ensemble filtré est **ré-agrégé** en direct : filtrer, c'est re-tracer.
+- **Onglets** (`barreOnglets`) : socle des vues mémorisées, partageant les taxons par **catégorie du référentiel** (Chiroptères, Orthoptères et cigales, Autres mammifères), plus « Tout ». Tadarida ne détecte pas que des chauves-souris, et sans cette séparation la présélection des plus contactés peut retenir une sauterelle. L'utilisateur enregistre ses propres vues à côté.
+- **Sémantique du vide** : une sélection vide signifie « rien », pas « pas de filtre » — l'écran le dit alors en nommant la dimension responsable.
 - **Espèces** (`listeEspeces`) : cochées par défaut sur les **cinq plus contactées**. Au-delà, le graphe devient illisible. Le compteur à droite de chaque espèce respecte les autres filtres actifs.
-- **Identité des courbes** : légende systématique **et** étiquette directe au pic. L'identité d'une série ne repose jamais sur la seule couleur, qui ne survit ni au daltonisme, ni à l'impression, ni au thème sombre.
+- **Identité des courbes** : légende systématique sous le graphe, et **survol** d'un point pour l'espèce, l'heure exacte et le nombre de contacts. L'étiquette directe au pic, prévue à la conception pour ne pas dépendre de la seule couleur, s'est révélée illisible à cinq courbes : elle a été retirée à l'usage, la légende portant l'identification. L'arbitrage est assumé, la dépendance résiduelle à la couleur avec.
 - **Barre de statut** : contexte du passage, nombre d'espèces affichées et tranche courante, volumétrie de la sélection.
 
 ## Variante - état vide
@@ -178,10 +174,14 @@ Quand le graphe n'a rien à tracer, le message **nomme la dimension effectivemen
 |---|---|
 | Cocher / décocher une espèce | Ajoute ou retire la courbe ; les couleurs des autres séries **ne changent pas** |
 | Changer la tranche | Recalcule le graphe, conserve la sélection |
-| Survol du graphe | Infobulle : tranche horaire, espèce, nombre de contacts |
-| **Top 5** / **Aucune** | Raccourcis de sélection des espèces |
-| **Exporter l'image…** | Image **redessinée** hors écran, portant carré, point, passage, nuit, tranche, filtres actifs, version et date |
+| Survol d'un point | Infobulle : espèce, heure de la tranche, nombre de contacts |
+| **Exporter l'image…** | Image **redessinée** hors écran, portant carré, point, passage, tranche, filtres actifs, version et date. Le résultat, réussite comme échec, est dit dans le bandeau de retour |
 | Sélection vide | Message nommant la dimension responsable |
+
+### Deux règles nées de l'usage réel
+
+- **Plusieurs nuits se replient sur une.** L'axe est celui d'**une** nuit : sur un sous-ensemble qui en couvre plusieurs, les tranches de même heure de nuit sont **sommées**. Sans ce repliement, chaque nuit repose ses points sur le même axe et la ligne, qui suit l'ordre chronologique, repart en arrière — la courbe prend un aspect de dents de scie qui ne décrit rien.
+- **Une tranche sans contact vaut zéro, là où l'on écoutait.** Sinon deux contacts séparés d'un silence de trois heures sont reliés par une droite, qui donne à voir une activité continue. La plage des zéros est la **fenêtre réellement enregistrée** du passage, ou à défaut la plage observée : hors d'elle, l'absence de contact ne dit rien — le capteur pouvait être éteint — et la courbe s'abstient plutôt que d'affirmer un silence constaté.
 
 ## Notes pour l'implémentation
 
