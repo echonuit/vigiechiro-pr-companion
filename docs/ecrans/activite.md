@@ -5,7 +5,7 @@ L'écran **Activité de la nuit** trace le nombre de contacts par tranche horair
 heure ?** ». Il s'ouvre depuis l'écran [Passage](passage.md), pour une nuit, ou depuis l'accueil, sur
 l'ensemble des nuits.
 
-![La courbe d'activité d'une nuit : une couleur par espèce, l'aplat de la fenêtre nocturne, les étiquettes au pic.](../assets/captures/apercu-activite.png)
+![La courbe d'activité d'une nuit : une couleur par espèce, l'aplat de la fenêtre nocturne, la légende sous le graphe.](../assets/captures/apercu-activite.png)
 
 Une nuit a une forme : montée après le coucher du soleil, pic, décroissance jusqu'à l'aube. Cette
 forme porte une information que le total efface. Deux nuits à 300 contacts n'ont rien à voir selon
@@ -18,7 +18,7 @@ L'écran réunit :
   minuit, qui couperait la nuit en deux ;
 - l'**aplat de la fenêtre nocturne** (du coucher au lever du soleil au point d'écoute) : ce qui en
   déborde est de l'activité crépusculaire ou diurne ;
-- une **étiquette au pic** de chaque courbe, qui nomme l'espèce sans dépendre de la seule couleur ;
+- une **légende** sous le graphe, qui nomme chaque courbe affichée ;
 - la **largeur de tranche** au choix (15, 30 ou 60 minutes) : un pas fin dessine le détail d'un pic,
   un pas large lisse la forme générale ;
 - une **case par espèce** détectée, avec son total ; les **cinq plus contactées** sont cochées par

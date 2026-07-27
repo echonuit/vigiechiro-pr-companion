@@ -156,7 +156,12 @@ public final class CaptureActivite {
             int heure = (20 + index) % 24;
             LocalDate jour = (20 + index) >= 24 ? SOIR.plusDays(1) : SOIR;
             for (int rang = 0; rang < parHeure[index]; rang++) {
-                contacts.add(new ContactHoraire(taxon, nom, "Chiroptères", jour.atTime(heure, (rang * 7) % 60)));
+                // Trois nuits consécutives : la démo exerce le repliement sur l'axe nocturne (#2352), la
+                // vue transverse étant le cas où plusieurs nuits se superposent.
+                for (int nuit = 0; nuit < 3; nuit++) {
+                    contacts.add(new ContactHoraire(
+                            taxon, nom, "Chiroptères", jour.plusDays(nuit).atTime(heure, (rang * 7) % 60)));
+                }
             }
         }
     }

@@ -181,19 +181,16 @@ class ActiviteViewTest {
     }
 
     @Test
-    void chaque_courbe_affichee_porte_une_etiquette_au_pic(FxRobot robot) {
+    void la_legende_nomme_chaque_courbe_affichee(FxRobot robot) {
         charger(robot, concat(nContacts("PIPKUH", "Pipistrelle de Kuhl", 5), nContacts("BARBAR", "Barbastelle", 2)));
         LineChart<?, ?> graphe = robot.lookup("#grapheActivite").queryAs(LineChart.class);
 
-        long etiquettes = graphe.getData().stream()
-                .flatMap(serie -> serie.getData().stream())
-                .map(XYChart.Data::getNode)
-                .filter(Label.class::isInstance)
-                .count();
-
-        assertThat(etiquettes)
-                .as("une étiquette directe au pic par courbe affichée (identifier sans la seule couleur)")
-                .isEqualTo(2);
+        assertThat(graphe.isLegendVisible())
+                .as("la légende porte l'identification des courbes, le survol en donne le détail")
+                .isTrue();
+        assertThat(graphe.getData())
+                .extracting(XYChart.Series::getName)
+                .containsExactlyInAnyOrder("Pipistrelle de Kuhl", "Barbastelle");
     }
 
     @Test

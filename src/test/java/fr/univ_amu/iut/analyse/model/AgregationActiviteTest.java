@@ -154,6 +154,54 @@ class AgregationActiviteTest {
     }
 
     @Test
+    void le_repliement_somme_les_memes_heures_de_nuits_differentes() {
+        // Trois nuits, la même heure : sans repliement, la courbe porterait trois points à la même
+        // abscisse et repartirait en arrière à chaque nuit (dents de scie constatées en vue transverse).
+        List<ContactHoraire> contacts = List.of(
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 21, 22, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 22, 22, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 23, 22, 0)));
+
+        CourbeEspece repliee = AgregationActivite.replierSurLaNuit(
+                        AgregationActivite.parEspece(contacts, LargeurTranche.HEURE))
+                .get(0);
+
+        assertThat(repliee.points())
+                .as("une seule tranche de 22 h, portant les trois nuits")
+                .hasSize(1);
+        assertThat(repliee.points().get(0).nombre()).isEqualTo(3);
+        assertThat(repliee.total()).isEqualTo(3);
+    }
+
+    @Test
+    void le_repliement_ordonne_les_points_sur_l_axe_de_la_nuit() {
+        // Le soir d'une nuit et le matin de la nuit précédente : sur l'axe nocturne, 02 h vient APRÈS 22 h.
+        List<ContactHoraire> contacts = List.of(
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 22, 2, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 23, 22, 0)));
+
+        CourbeEspece repliee = AgregationActivite.replierSurLaNuit(
+                        AgregationActivite.parEspece(contacts, LargeurTranche.HEURE))
+                .get(0);
+
+        assertThat(repliee.points())
+                .extracting(point -> point.debutTranche().getHour())
+                .as("22 h (soir) précède 02 h (matin) sur l'axe d'une nuit, quelles que soient les dates")
+                .containsExactly(22, 2);
+    }
+
+    @Test
+    void sur_une_nuit_unique_le_repliement_ne_change_rien() {
+        List<ContactHoraire> contacts = List.of(
+                contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(22, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(23, 0)));
+
+        List<CourbeEspece> avant = AgregationActivite.parEspece(contacts, LargeurTranche.HEURE);
+
+        assertThat(AgregationActivite.replierSurLaNuit(avant)).isEqualTo(avant);
+    }
+
+    @Test
     void aucun_contact_donne_aucune_courbe() {
         assertThat(AgregationActivite.parEspece(List.of(), LargeurTranche.DEMI_HEURE))
                 .isEmpty();

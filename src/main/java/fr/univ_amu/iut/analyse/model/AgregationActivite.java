@@ -1,6 +1,10 @@
 package fr.univ_amu.iut.analyse.model;
 
+import fr.univ_amu.iut.commun.model.Nuit;
+import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -12,7 +16,7 @@ import java.util.Map;
 /// base ni JavaFX, directement testable ; regroupement stable puis tri), mais l'axe est le **temps de la
 /// nuit** au lieu de l'espèce ou du carré.
 ///
-/// **Entrée** : les [ContactHoraire] d'**une** nuit, déjà filtrés par l'appelant (statut, pseudo-taxons
+/// **Entrée** : des [ContactHoraire] déjà filtrés par l'appelant, d'une nuit ou de plusieurs (statut, pseudo-taxons
 /// `noise`/`piaf`, sélection de nuit) — exactement comme [AgregationAnalyse] reçoit des observations déjà
 /// filtrées. L'agrégation **écarte** les contacts sans heure (impossibles à situer sur l'axe) et sans
 /// taxon (une séquence non identifiée n'est pas une espèce) : ce ne sont pas des erreurs, juste des
@@ -21,7 +25,14 @@ import java.util.Map;
 /// **Sortie** : une [CourbeEspece] par espèce présente, **triée par total décroissant** — l'ordre dans
 /// lequel la vue proposera les espèces et sélectionnera les cinq premières par défaut — puis, à total
 /// égal, par nom vernaculaire (nuls en premier, comme le tri secondaire de [AgregationAnalyse]).
+///
+/// Sur **plusieurs nuits**, [#parEspece] rend un point par (nuit, tranche) : c'est la matière de
+/// l'export, qui date ses lignes. Une **courbe** ne se lit pas ainsi — l'axe est celui d'une nuit —
+/// et demande le repliement de [#replierSurLaNuit].
 public final class AgregationActivite {
+
+    /// Origine de l'axe nocturne : 18 h, le repère depuis lequel se comptent les heures de la nuit.
+    private static final LocalTime DEBUT_NUIT = LocalTime.of(18, 0);
 
     private AgregationActivite() {}
 
@@ -70,5 +81,51 @@ public final class AgregationActivite {
         int minutesDuJour = heure.getHour() * 60 + heure.getMinute();
         int debutMinutes = (minutesDuJour / tranche.minutes()) * tranche.minutes();
         return heure.toLocalDate().atStartOfDay().plusMinutes(debutMinutes);
+    }
+
+    /// **Replie** des courbes couvrant plusieurs nuits sur **une** nuit : les tranches de même heure de nuit
+    /// sont **sommées**, et la courbe redevient une fonction du temps de la nuit.
+    ///
+    /// Sans ce repliement, une vue transverse trace, pour une même espèce, un point par (nuit, tranche) ;
+    /// l'axe nocturne les ramenant tous à leur heure de nuit, plusieurs points se superposent à la même
+    /// abscisse et la ligne, qui suit l'ordre chronologique, **repart en arrière** à chaque nuit suivante —
+    /// la courbe prend un aspect de dents de scie qui ne décrit rien.
+    ///
+    /// L'instant porté par chaque point retombe sur la **nuit la plus ancienne** du jeu : après repliement,
+    /// seule l'**heure de la nuit** a du sens, la date n'est qu'un support. Sur une nuit unique, le
+    /// repliement est l'identité.
+    public static List<CourbeEspece> replierSurLaNuit(List<CourbeEspece> courbes) {
+        LocalDate reference = nuitLaPlusAncienne(courbes);
+        if (reference == null) {
+            return courbes;
+        }
+        return courbes.stream().map(courbe -> replier(courbe, reference)).toList();
+    }
+
+    private static CourbeEspece replier(CourbeEspece courbe, LocalDate reference) {
+        Map<Long, Integer> parHeureDeNuit = new LinkedHashMap<>();
+        for (PointActivite point : courbe.points()) {
+            parHeureDeNuit.merge(minutesDepuisDebutDeNuit(point.debutTranche()), point.nombre(), Integer::sum);
+        }
+        List<PointActivite> points = parHeureDeNuit.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entree ->
+                        new PointActivite(reference.atTime(DEBUT_NUIT).plusMinutes(entree.getKey()), entree.getValue()))
+                .toList();
+        return new CourbeEspece(courbe.taxon(), courbe.nomEspece(), courbe.groupe(), courbe.total(), points);
+    }
+
+    /// Minutes écoulées depuis 18 h le soir de la nuit à laquelle `instant` appartient (bascule à midi,
+    /// [Nuit]) : la clé de repliement, et l'abscisse même de l'axe nocturne.
+    private static long minutesDepuisDebutDeNuit(LocalDateTime instant) {
+        return Duration.between(Nuit.de(instant).atTime(DEBUT_NUIT), instant).toMinutes();
+    }
+
+    private static LocalDate nuitLaPlusAncienne(List<CourbeEspece> courbes) {
+        return courbes.stream()
+                .flatMap(courbe -> courbe.points().stream())
+                .map(point -> Nuit.de(point.debutTranche()))
+                .min(Comparator.naturalOrder())
+                .orElse(null);
     }
 }

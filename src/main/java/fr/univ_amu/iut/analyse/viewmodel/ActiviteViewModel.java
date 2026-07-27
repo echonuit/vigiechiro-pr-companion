@@ -111,7 +111,11 @@ public class ActiviteViewModel {
     }
 
     private void reagreger() {
-        especes.setAll(AgregationActivite.parEspece(contactsFiltres, tranche.get()));
+        // Repliement sur une nuit : le sous-ensemble peut couvrir plusieurs nuits (vue transverse,
+        // ou filtre laissant passer plusieurs passages). L'axe étant celui d'UNE nuit, les tranches de
+        // même heure doivent être sommées, sans quoi la courbe repart en arrière à chaque nuit.
+        especes.setAll(
+                AgregationActivite.replierSurLaNuit(AgregationActivite.parEspece(contactsFiltres, tranche.get())));
         majCourbesAffichees();
     }
 

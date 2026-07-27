@@ -25,7 +25,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
@@ -344,47 +343,28 @@ public class ActiviteController implements EmplacementNavigation {
     /// Reconstruit une série par espèce affichée : chaque tranche devient un point placé à sa minute
     /// depuis 18 h. Le nom de série (légende) est le nom vernaculaire, ou le code à défaut.
     private void majGraphe() {
-        List<XYChart.Series<Number, Number>> series = viewModel.courbesAffichees().stream()
-                .map(ActiviteController::versSerie)
-                .toList();
-        grapheActivite.getData().setAll(series);
+        grapheActivite.getData().setAll(versSeries(viewModel.courbesAffichees()));
+    }
+
+    /// Traduit des courbes en séries de graphe. Partagée avec [ExportImageActivite], qui redessine les
+    /// mêmes courbes hors écran : l'image montre ainsi exactement ce que l'écran montre.
+    static List<XYChart.Series<Number, Number>> versSeries(List<CourbeEspece> courbes) {
+        return courbes.stream().map(ActiviteController::versSerie).toList();
     }
 
     /// Traduit une courbe en série de graphe. Visible du paquet : [ExportImageActivite] la réutilise pour
     /// **redessiner** les mêmes courbes hors écran, plutôt que d'emprunter les séries de l'écran (une série
     /// n'appartient qu'à un graphe à la fois).
-    static XYChart.Series<Number, Number> versSerie(CourbeEspece courbe) {
+    private static XYChart.Series<Number, Number> versSerie(CourbeEspece courbe) {
         XYChart.Series<Number, Number> serie = new XYChart.Series<>();
         serie.setName(nomAffiche(courbe));
-        PointActivite pic = pointCulminant(courbe);
         for (PointActivite point : courbe.points()) {
             XYChart.Data<Number, Number> donnee =
                     new XYChart.Data<>(minutesDepuis18h(point.debutTranche()), point.nombre());
-            if (point == pic) {
-                donnee.setNode(etiquettePic(nomAffiche(courbe)));
-            }
             installerInfobulle(donnee, texteInfobulle(nomAffiche(courbe), point));
             serie.getData().add(donnee);
         }
         return serie;
-    }
-
-    /// Point **culminant** de la courbe (nombre de contacts maximal), où l'on pose l'étiquette directe ;
-    /// `null` si la courbe n'a aucun point.
-    private static PointActivite pointCulminant(CourbeEspece courbe) {
-        return courbe.points().stream()
-                .max(Comparator.comparingInt(PointActivite::nombre))
-                .orElse(null);
-    }
-
-    /// **Étiquette directe au pic** : le nom de l'espèce, pour identifier la courbe **sans dépendre de la
-    /// seule couleur** (légende + étiquette, cf. #2352). Décalée au-dessus du point ; elle remplace le
-    /// symbole du pic (l'infobulle reste posée dessus).
-    private static Label etiquettePic(String espece) {
-        Label etiquette = new Label(espece);
-        etiquette.getStyleClass().add("etiquette-pic");
-        etiquette.setTranslateY(-14);
-        return etiquette;
     }
 
     /// Texte de l'infobulle d'un point : espèce, heure de la tranche (`HH:mm`) et nombre de contacts, avec
