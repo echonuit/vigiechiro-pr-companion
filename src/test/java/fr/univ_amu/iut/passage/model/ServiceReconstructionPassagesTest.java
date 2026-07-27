@@ -448,6 +448,10 @@ class ServiceReconstructionPassagesTest {
     void synchroniser_rapatrie_l_identite() {
         when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
         when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detailComplet()));
+        // Dit explicitement ce que le montage veut dire : la plateforme RÉPOND, mais n'expose pas encore le
+        // CSV (analyse non terminée). Sans ce bouchon, le mock rendait `null`, donc un ÉCHEC DE LECTURE - le
+        // test affirmait « en attente d'analyse » en produisant tout autre chose (#2554, passe 1).
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.empty()));
 
         Optional<RapportSynchro> rapport = service.synchroniser(client);
 
@@ -655,6 +659,24 @@ class ServiceReconstructionPassagesTest {
                 .hasValueSatisfying(
                         compteRendu -> assertThat(compteRendu.enClair()).isEqualTo("1 nuit(s) récupérée(s)"));
         assertThat(sequenceDao.findBySession(idSession)).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("#2554 P1-C : une nuit qu'on n'a PAS PU lire n'est pas annoncée « en attente d'analyse »")
+    void synchroniser_distingue_echec_de_lecture_et_attente() {
+        when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detailComplet()));
+        // La plateforme est injoignable au moment de lire le CSV : l'analyse est peut-être terminée depuis
+        // des jours. Annoncer « en attente d'analyse » serait affirmer une cause qu'on n'a pas constatée,
+        // et orienter vers l'attente là où il faut réessayer.
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Injoignable<>("délai dépassé"));
+
+        Optional<RapportSynchro> rapport = service.synchroniser(client);
+
+        assertThat(rapport)
+                .hasValueSatisfying(compteRendu -> assertThat(compteRendu.enClair())
+                        .contains("1 non récupérée(s), à réessayer")
+                        .doesNotContain("en attente d'analyse"));
     }
 
     @Test
