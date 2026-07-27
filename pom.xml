@@ -988,7 +988,15 @@
         </profile>
 
         <!-- Profil mutation : PIT (org.pitest). NON exécuté par défaut.
-             Lancer explicitement via ./mvnw -Pmutation test (lent). -->
+             Lancer explicitement via ./mvnw -Pmutation test (lent).
+
+             ⚠️ TOUJOURS enchaîner une PHASE avant le but, p. ex. :
+                 ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage -DtargetClasses=…
+             Le but seul n'exécute aucune phase : `jacocoArgLine` (jacoco:prepare-agent) et
+             ${net.bytebuddy:byte-buddy-agent:jar} (dependency:properties, phase initialize) restent alors
+             NON RÉSOLUS dans l'argLine que PIT hérite de surefire, le minion reçoit un -javaagent
+             littéral, ne démarre pas, et PIT ne rapporte qu'un MINION_DIED muet - identique sur une
+             classe pure, ce qui fait conclure à tort que PIT est cassé (#2554, passe 6). -->
         <profile>
             <id>mutation</id>
             <build>

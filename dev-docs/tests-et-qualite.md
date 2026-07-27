@@ -402,17 +402,28 @@ l'écart tient en trois lignes, le bloc ci-dessus suffit.
         -DtargetTests=fr.univ_amu.iut.passage.viewmodel.SaisieHorairesNuitTest
     ```
 
-**Sur une classe de vue (TestFX), passer les options de la JVM headless.** Le profil `mutation` ne
-reprend pas l'`argLine` de Surefire : sans elles, PIT lance ses minions sans `glass.platform=Headless`,
-la suite ne démarre pas et l'outil s'arrête sur « *tests did not pass without mutation* ». On les lui
-donne à la main :
+⚠️ **`test-compile` n'est pas une commodité, c'est ce qui fait démarrer le minion.** PIT hérite de
+l'`argLine` de Surefire, qui contient deux valeurs posées par des greffons liés à des **phases** :
+`@{jacocoArgLine}` (`jacoco:prepare-agent`) et `${net.bytebuddy:byte-buddy-agent:jar}`
+(`dependency:properties`, phase `initialize`). Invoquer le **but seul**
+(`./mvnw -Pmutation org.pitest:...:mutationCoverage`) n'exécute **aucune** phase : les deux restent
+littérales, le minion reçoit `-javaagent:${net.bytebuddy:byte-buddy-agent:jar}`, refuse de démarrer, et
+PIT ne rapporte que :
 
-```bash
-./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
-    -DtargetClasses=fr.univ_amu.iut.commun.view.Modales \
-    -DtargetTests=fr.univ_amu.iut.commun.view.ModalesTest \
-    -DjvmArgs="-Dglass.platform=Headless,-Dprism.order=sw,-Djava.awt.headless=true,-Dtestfx.robot=glass,--enable-native-access=ALL-UNNAMED"
 ```
+PIT >> SEVERE : Coverage generator Minion exited abnormally due to MINION_DIED
+```
+
+Ce message **ne dit pas** la cause, et il est identique quelle que soit la classe visée - y compris une
+classe pure sans JavaFX ni SQLite. D'où la conclusion tentante, et fausse, que « PIT ne marche pas sur ce
+dépôt ». Il marche : toujours enchaîner une phase, comme dans les exemples ci-dessus.
+
+**Sur une classe de vue (TestFX), rien de plus à faire.** Le profil `mutation` du `pom.xml` passe déjà
+les quatre propriétés headless au minion (`glass.platform=Headless`, `prism.order=sw`,
+`java.awt.headless=true`, `testfx.robot=glass`) : sans elles, PIT lançait ses minions hors headless et
+s'arrêtait sur « *tests did not pass without mutation* ». **Ne pas** les repasser à la main via
+`-DjvmArgs=…` : la ligne de commande **remplace** la liste du profil au lieu de s'y ajouter, et une liste
+incomplète ramène l'échec que le profil avait supprimé.
 
 PIT couvre donc aussi la couche `view`, ce que l'échec brut laissait croire impossible.
 
