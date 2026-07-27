@@ -57,7 +57,7 @@ La **catégorie** décide de la **désactivabilité** :
 |---|---|---|---|
 | `COEUR` | non (garde-fou) | active | feature socle, ou **feuille load-bearing** (une autre feature/écran en dépend) |
 | `OPTIONNELLE` | oui | active | feature autonome, activée par défaut |
-| `EXPERIMENTALE` | oui | **inactive** | feature en cours de dev, mergée derrière un flag OFF |
+| `EXPERIMENTALE` | oui | **inactive** | fonctionnalité en construction, livrée sans être offerte |
 
 Le registre [`Fonctionnalites`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/Fonctionnalites.java)
 résout l'état actif de chaque feature, consulté par `RacineInjecteur.modules()` **à la composition**
@@ -86,6 +86,36 @@ masquant son point d'entrée si absent) : `diagnostic`, `lot`, `qualification`, 
 exception. Le reste demeure `COEUR` : `sites`, `passage`, `validation`, `audio`,
 `bibliotheque`, `multisite`, `connexion`, `synchronisation-participation`, `depot-vigiechiro`
 (dépendances EAGER ; cf. [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)).
+
+### Livrer un écran inachevé : conditionner l'accès, jamais les composants
+
+Un écran en cours de construction se livre volontiers sous une fonctionnalité `EXPERIMENTALE`
+(inactive par défaut) : les paliers intermédiaires rejoignent `main` sans qu'un écran à moitié fait
+apparaisse à l'utilisateur. La tentation est alors de placer **tout** l'écran dans ce module. C'est
+une impasse, et elle se paie en intégration continue.
+
+`ChargementFxmlTest` charge **chaque** vue FXML avec l'injecteur complet par défaut. Si le ViewModel
+et le service de l'écran vivent dans le module conditionné, ils ne sont **pas fournis** quand la
+fonctionnalité est inactive : la vue devient inchargeable et la garde rougit. Le même piège attend
+chez le consommateur : un `Optional<OuvrirX>` n'est injectable que si un `OptionalBinder` **de base**
+est déclaré chez lui, faute de quoi l'`Optional` n'est pas « vide », il est **introuvable**.
+
+La répartition qui tient :
+
+- le module **conditionné** ne porte que les **points d'entrée** : le contrat `Ouvrir*` (via
+  `setBinding`) et la carte d'accueil (`activite(...)`) ;
+- les **composants** (ViewModel, service, DAO) vivent dans le module **toujours actif** de la
+  fonctionnalité ;
+- le **consommateur** déclare le liant de base
+  `OptionalBinder.newOptionalBinder(binder(), OuvrirX.class)` sans `setBinding`, pour que l'`Optional`
+  soit injectable et vide quand la fonctionnalité est inactive.
+
+Corollaire en ligne de commande : une commande qui s'appuie sur ces composants n'a **pas** à être
+gouvernée par l'interrupteur de l'écran. Celui-ci gouverne un **accès**, pas une capacité de données —
+`exporter-activite` fonctionne que l'écran soit offert ou non (cf. [CLI](cli.md)).
+
+Découpe illustrée par `analyse` : `AnalyseModule` (toujours actif) fournit `ActiviteViewModel` et
+`ServiceActivite` ; `ActiviteModule` ne porte que `OuvrirActivite` et la carte d'accueil.
 
 ## Ce que publie un module de feature
 

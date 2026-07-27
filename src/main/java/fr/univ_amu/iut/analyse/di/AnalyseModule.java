@@ -55,8 +55,8 @@ public class AnalyseModule extends ModuleDeFeature {
     }
 
     // Machinerie de l'écran « Activité de la nuit » (#2352). Fournie ici, avec le reste de la feature
-    // `analyse`, et non par ActiviteModule : ce dernier ne gate que l'ENTRÉE (contrat OuvrirActivite,
-    // qui ne gate que l'entrée). L'écran fait partie de la feature analyse, et son FXML doit
+    // `analyse`, et non par ActiviteModule : ce dernier ne conditionne que l'ACCÈS (contrat OuvrirActivite,
+    // qui ne conditionne que l'accès). L'écran fait partie de la feature analyse, et son FXML doit
     // rester chargeable (ChargementFxmlTest) même l'entrée coupée. Non-singleton (VM frais par écran).
     @Provides
     ActiviteViewModel fournirActiviteViewModel(ServiceActivite service) {

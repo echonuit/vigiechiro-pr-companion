@@ -8,7 +8,7 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.view.OuvrirActivite;
 
-/// Module de feature du paquet `analyse` qui **gate l'entrée** de l'écran **Activité de la nuit** (#2352,
+/// Module de feature du paquet `analyse` qui **conditionne l'accès** à l'écran **Activité de la nuit** (#2352,
 /// lot 2 du chantier #2348), à côté d'[AnalyseModule]. Deux modules dans une même feature suivent le
 /// précédent de `audio` (AudioModule, DiscussionModule…).
 ///
@@ -18,7 +18,7 @@ import fr.univ_amu.iut.commun.view.OuvrirActivite;
 /// (le [...viewmodel.ActiviteViewModel] et le [...model.ServiceActivite]) est fournie par [AnalyseModule]
 /// — toujours actif — et **non** ici : l'écran fait partie de la feature `analyse`, et son FXML doit
 /// rester chargeable (garde-fou `ChargementFxmlTest`) même quand ces entrées sont coupées. Ce module ne
-/// gate donc que **l'accès**, jamais les composants.
+/// conditionne donc que **l'accès**, jamais les composants.
 public class ActiviteModule extends ModuleDeFeature {
 
     /// Identité de la feature. `OPTIONNELLE` (désactivable, **active par défaut**) depuis la clôture du lot

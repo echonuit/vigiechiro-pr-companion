@@ -25,8 +25,8 @@ import picocli.CommandLine.Spec;
 /// **image** de l'IHM : le même [AgregationActivite#parEspece] alimente les deux.
 ///
 /// Réutilise le [ServiceActivite] (feature `analyse`, toujours active) et le formateur pur
-/// [ExportActiviteCsv], sans logique nouvelle. La commande **n'est pas** gouvernée par le flag
-/// `activite-nuit` : celui-ci gate l'*accès à la vue*, alors que l'agrégation exportée ici est une
+/// [ExportActiviteCsv], sans logique nouvelle. La commande **n'est pas** gouvernée par la fonctionnalité
+/// `activite-nuit` : celle-ci conditionne l'*accès à la vue*, alors que l'agrégation exportée ici est une
 /// capacité stable de `analyse`. Un passage sans contact produit un CSV d'en-têtes seuls (résultat valide).
 @Command(
         name = "exporter-activite",
