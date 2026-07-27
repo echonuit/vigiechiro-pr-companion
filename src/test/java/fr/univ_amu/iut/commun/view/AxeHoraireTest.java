@@ -24,7 +24,7 @@ class AxeHoraireTest {
 
     @Test
     void l_abscisse_zero_porte_l_heure_d_origine() {
-        StringConverter<Number> etiquettes = AxeHoraire.etiquettesHeure(LocalTime.of(18, 0));
+        StringConverter<Number> etiquettes = AxeHoraire.etiquettesHeure(LocalTime.of(18, 0), 60);
 
         assertThat(etiquettes.toString(0)).isEqualTo("18");
         assertThat(etiquettes.toString(60)).isEqualTo("19");
@@ -34,7 +34,7 @@ class AxeHoraireTest {
     void l_etiquette_repasse_par_minuit_sans_rien_de_special() {
         // 18 h + 6 h = minuit, puis 18 h + 8 h = 2 h du matin : une nuit franchit minuit, l'axe doit
         // suivre sans discontinuité.
-        StringConverter<Number> etiquettes = AxeHoraire.etiquettesHeure(LocalTime.of(18, 0));
+        StringConverter<Number> etiquettes = AxeHoraire.etiquettesHeure(LocalTime.of(18, 0), 60);
 
         assertThat(etiquettes.toString(360)).isEqualTo("00");
         assertThat(etiquettes.toString(480)).isEqualTo("02");
@@ -58,10 +58,20 @@ class AxeHoraireTest {
     }
 
     @Test
+    void la_minute_n_apparait_que_si_le_pas_n_est_pas_horaire() {
+        // Un axe gradué toutes les 45 min a besoin de la minute : sans elle, 22:00 et 22:45 porteraient
+        // tous deux « 22 ». Un axe gradué à l'heure n'a que faire d'un « :00 » répété.
+        assertThat(AxeHoraire.etiquettesHeure(LocalTime.of(22, 0), 45).toString(45))
+                .isEqualTo("22:45");
+        assertThat(AxeHoraire.etiquettesHeure(LocalTime.of(22, 0), 60).toString(240))
+                .isEqualTo("02");
+    }
+
+    @Test
     void une_saisie_d_etiquette_ne_fait_pas_tomber_l_ecran() {
         // Une étiquette d'axe ne se saisit pas : fromString n'est jamais appelé, mais un appel inattendu
         // de JavaFX doit rendre une valeur plutôt que lever.
-        assertThat(AxeHoraire.etiquettesHeure(LocalTime.of(18, 0)).fromString("peu importe"))
+        assertThat(AxeHoraire.etiquettesHeure(LocalTime.of(18, 0), 60).fromString("peu importe"))
                 .isEqualTo(0);
     }
 }
