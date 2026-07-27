@@ -12,10 +12,14 @@ import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.util.Objects;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -141,7 +145,33 @@ public class ConnexionModaleController {
         majBadgeIdentite(viewModel.connecteProperty().get());
         // #1369 : un jeton conservé hors ligne (jamais vérifié) est revérifié à l'ouverture, sans
         // geste : le badge redevient vert dès que la plateforme répond.
-        viewModel.jetonAVerifier().ifPresent(this::verifierJeton);
+        //
+        // #2558 : attendre que la modale soit RATTACHÉE À SA SCÈNE. La vérification ouvre désormais un
+        // dialogue de progression, qui a besoin d'une fenêtre propriétaire - or `initialize` s'exécute
+        // pendant le chargement du FXML, quand le champ n'a encore ni scène ni fenêtre.
+        viewModel.jetonAVerifier().ifPresent(this::verifierDesQueVisible);
+    }
+
+    /// Lance la re-vérification **dès que la modale a une fenêtre**, et pas avant.
+    ///
+    /// Sans cette attente, la re-vérification automatique (#1369) partirait depuis `initialize`, où le
+    /// FXML n'est pas encore attaché : le dialogue de progression n'aurait aucune fenêtre à qui
+    /// appartenir. L'écouteur se retire dès qu'il a servi - la scène ne change qu'une fois.
+    private void verifierDesQueVisible(String token) {
+        Scene dejaLa = champToken.getScene();
+        if (dejaLa != null && dejaLa.getWindow() != null) {
+            verifierJeton(token);
+            return;
+        }
+        champToken.sceneProperty().addListener(new ChangeListener<Scene>() {
+            @Override
+            public void changed(ObservableValue<? extends Scene> observable, Scene ancienne, Scene nouvelle) {
+                if (nouvelle != null) {
+                    champToken.sceneProperty().removeListener(this);
+                    Platform.runLater(() -> verifierJeton(token));
+                }
+            }
+        });
     }
 
     /// Étape 1 : ouvre la plateforme dans le navigateur système (pour s'y connecter).
