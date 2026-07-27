@@ -21,7 +21,7 @@ import javafx.scene.layout.VBox;
 ///
 /// Les séries sont **reconstruites** depuis les courbes du ViewModel, jamais empruntées à l'écran : une
 /// `XYChart.Series` n'appartient qu'à un graphe à la fois, et la réutiliser la **retirerait** de la vue
-/// affichée. Le même [ActiviteController#versSerie] les produit, donc l'image montre exactement ce que
+/// affichée. Le même [ActiviteController#versSeries] les produit, donc l'image montre exactement ce que
 /// l'écran montre (étiquette au pic comprise).
 ///
 /// L'image **porte son contexte** ([LegendeExportActivite]) : carré, point, passage, tranche, filtres
@@ -61,8 +61,7 @@ public final class ExportImageActivite {
         GrapheNocturne graphe = new GrapheNocturne(axeTemps, axeContacts);
         graphe.setAnimated(false);
         graphe.setLegendVisible(true);
-        graphe.getData()
-                .setAll(courbes.stream().map(ActiviteController::versSerie).toList());
+        graphe.getData().setAll(ActiviteController.versSeries(courbes));
         if (fenetreNuit != null) {
             graphe.definirFenetreNuit(fenetreNuit[0], fenetreNuit[1]);
         }

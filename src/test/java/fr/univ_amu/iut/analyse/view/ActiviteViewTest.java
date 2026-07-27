@@ -181,19 +181,16 @@ class ActiviteViewTest {
     }
 
     @Test
-    void chaque_courbe_affichee_porte_une_etiquette_au_pic(FxRobot robot) {
+    void la_legende_nomme_chaque_courbe_affichee(FxRobot robot) {
         charger(robot, concat(nContacts("PIPKUH", "Pipistrelle de Kuhl", 5), nContacts("BARBAR", "Barbastelle", 2)));
         LineChart<?, ?> graphe = robot.lookup("#grapheActivite").queryAs(LineChart.class);
 
-        long etiquettes = graphe.getData().stream()
-                .flatMap(serie -> serie.getData().stream())
-                .map(XYChart.Data::getNode)
-                .filter(Label.class::isInstance)
-                .count();
-
-        assertThat(etiquettes)
-                .as("une étiquette directe au pic par courbe affichée (identifier sans la seule couleur)")
-                .isEqualTo(2);
+        assertThat(graphe.isLegendVisible())
+                .as("la légende porte l'identification des courbes, le survol en donne le détail")
+                .isTrue();
+        assertThat(graphe.getData())
+                .extracting(XYChart.Series::getName)
+                .containsExactlyInAnyOrder("Pipistrelle de Kuhl", "Barbastelle");
     }
 
     @Test
@@ -239,6 +236,38 @@ class ActiviteViewTest {
         assertThat(couleursDistinctes(rendu))
                 .as("le graphe est REDESSINÉ : une capture d'un nœud masqué rendrait une image unie (noire)")
                 .isGreaterThan(5);
+    }
+
+    @Test
+    void un_export_reussi_le_dit(FxRobot robot) {
+        charger(robot, nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
+        controleur.selecteur().definir(new SelecteurFige(dossier.resolve("activite.png")));
+
+        robot.clickOn("#boutonExporterImage");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Label retour = robot.lookup("#lblRetour").queryAs(Label.class);
+        assertThat(retour.getText())
+                .as("un export qui a marché sans rien dire est indiscernable d'un clic sans effet")
+                .contains("activite.png");
+    }
+
+    @Test
+    void un_export_impossible_le_dit_au_lieu_de_ne_rien_faire(FxRobot robot) throws Exception {
+        charger(robot, nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
+        // Destination impossible : le « dossier » parent est en réalité un fichier, l'écriture échoue.
+        Path obstacle = dossier.resolve("obstacle");
+        Files.writeString(obstacle, "je ne suis pas un dossier");
+        controleur.selecteur().definir(new SelecteurFige(obstacle.resolve("activite.png")));
+
+        robot.clickOn("#boutonExporterImage");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Label retour = robot.lookup("#lblRetour").queryAs(Label.class);
+        assertThat(retour.getText())
+                .as("l'échec est dit : sans cela l'exception est avalée par le fil JavaFX, et le bouton"
+                        + " « ne fait rien »")
+                .contains("échoué");
     }
 
     @Test

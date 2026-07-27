@@ -50,7 +50,7 @@
 
   <!-- Sélecteur d'espèces : une case par espèce de la nuit ; les cinq plus contactées sont cochées par
        défaut. Au-delà de cinq courbes, le graphe devient illisible. -->
-  <Label text="Espèces" styleClass="section-sous"/>
+  <Label fx:id="lblTitreEspeces" text="Espèces" styleClass="section-sous"/>
   <FlowPane fx:id="selecteurEspeces" hgap="14.0" vgap="6.0"/>
 
   <!-- Courbe : une série par espèce sélectionnée, sur l'axe nocturne fixe 18h vers 8h (étiquettes HH
@@ -64,6 +64,17 @@
       <NumberAxis label="Contacts"/>
     </yAxis>
   </GrapheNocturne>
+
+  <!-- Bandeau de retour d'opération (export réussi ou échoué), mutualisé avec Analyse et Sons &
+       validation : style dans commun/view/design.css, câblage dans commun/view/BandeauRetour. -->
+  <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
+    <Label fx:id="lblRetour" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+    <Button fx:id="btnFermerRetour" styleClass="fermer-retour" accessibleText="Fermer le message">
+      <graphic>
+        <FontIcon iconLiteral="fas-times"/>
+      </graphic>
+    </Button>
+  </HBox>
 
   <!-- État vide (#2352) : une nuit sans espèce détectée le dit, plutôt qu'un graphe vide muet. -->
   <Label fx:id="lblEtatVide" styleClass="encart" wrapText="true"

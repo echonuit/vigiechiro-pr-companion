@@ -17,6 +17,7 @@ référence explique *en détail* ce que chaque écran propose.
 | [Carte & passages](multisite.md) | Vue agrégée des passages (tri, filtres, vues sauvegardées) |
 | [Ma saison](saison.md) | Solde de la saison : ce qu'il reste à faire, point par point |
 | [Espèces & observations](analyse.md) | Exploiter les observations toutes nuits confondues : quelles espèces, où, quand, combien |
+| [Activité de la nuit](activite.md) | La courbe des contacts heure par heure et par espèce, sur l'axe de la nuit |
 | [Diagnostic](diagnostic.md) | Diagnostic d'une nuit (climat, anomalies) |
 | [Audit de cohérence](audit.md) | Confronter disque, base et Vigie-Chiro : plus rien ne diverge en silence |
 | [Réglages](reglages.md) | Préférences de l'application, par domaine (menu ☰) |

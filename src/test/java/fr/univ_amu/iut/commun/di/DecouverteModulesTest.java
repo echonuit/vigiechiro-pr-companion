@@ -61,7 +61,9 @@ class DecouverteModulesTest {
 
     /// Features EXPERIMENTALES (Categorie inactive par défaut) : découvertes par le ServiceLoader, donc
     /// dans FEATURES_ATTENDUES, mais **absentes** de modules() tant qu'on ne les active pas explicitement.
-    private static final Set<String> FEATURES_EXPERIMENTALES = Set.of("ActiviteModule");
+    /// Vide depuis la clôture du lot #2352 (`activite-nuit` est passée `OPTIONNELLE`) : le jour où une
+    /// feature expérimentale réapparaît, l'y inscrire remet la vérification en service.
+    private static final Set<String> FEATURES_EXPERIMENTALES = Set.of();
 
     @AfterEach
     void nettoyer() {
@@ -134,10 +136,14 @@ class DecouverteModulesTest {
 
         // Les features EXPERIMENTALES (inactives par défaut) sont découvertes mais pas installées.
         assertThat(modules).hasSize(2 + FEATURES_ATTENDUES.size() - FEATURES_EXPERIMENTALES.size());
-        assertThat(modules.stream()
-                        .map(module -> module.getClass().getSimpleName())
-                        .toList())
-                .doesNotContainAnyElementsOf(FEATURES_EXPERIMENTALES);
+        // Conditionnel : AssertJ refuse un `doesNotContainAnyElementsOf` vide. L'assertion reprend d'elle
+        // même dès qu'une feature expérimentale réapparaît, plutôt que d'être supprimée puis oubliée.
+        if (!FEATURES_EXPERIMENTALES.isEmpty()) {
+            assertThat(modules.stream()
+                            .map(module -> module.getClass().getSimpleName())
+                            .toList())
+                    .doesNotContainAnyElementsOf(FEATURES_EXPERIMENTALES);
+        }
     }
 
     @Test

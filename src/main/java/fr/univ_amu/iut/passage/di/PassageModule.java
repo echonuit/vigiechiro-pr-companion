@@ -148,7 +148,7 @@ public class PassageModule extends ModuleDeFeature {
 
         // Contrats de navigation vers M-Diagnostic, M-Qualification, M-Lot et M-Activite : OptionalBinder
         // VIDE (features `diagnostic`, `qualification`, `lot` désactivables #1087, `activite-nuit`
-        // expérimentale #2352). Chaque module réel fait `setBinding` quand sa feature est active ; sinon
+        // de l'activité, #2352). Chaque module réel fait `setBinding` quand sa feature est active ; sinon
         // l'Optional reste vide et PassageController masque la carte correspondante. Le binder de base doit
         // vivre ici (consommateur toujours installé) : sans lui, l'Optional serait NON LIÉ dès que le
         // fournisseur est absent, et l'injection du PassageController échouerait.

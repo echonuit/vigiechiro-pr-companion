@@ -9,6 +9,7 @@ import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VersionApplication;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
@@ -24,7 +25,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
@@ -42,6 +42,7 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
 
 /// Controller de l'écran **M-Activite** (`Activite.fxml`, #2352, lot 2 du chantier #2348).
@@ -87,6 +88,9 @@ public class ActiviteController implements EmplacementNavigation {
     private FlowPane selecteurEspeces;
 
     @FXML
+    private Label lblTitreEspeces;
+
+    @FXML
     private Label lblEtatVide;
 
     @FXML
@@ -100,6 +104,15 @@ public class ActiviteController implements EmplacementNavigation {
 
     @FXML
     private Button boutonExporterImage;
+
+    @FXML
+    private HBox bandeauRetour;
+
+    @FXML
+    private Label lblRetour;
+
+    @FXML
+    private Button btnFermerRetour;
 
     /// Barre de filtres cascadés (patron « à la Notion »), gardée en champ pour vivre autant que l'écran.
     private GestionnaireFiltres<ContactHoraire> gestionnaireFiltres;
@@ -177,6 +190,15 @@ public class ActiviteController implements EmplacementNavigation {
         // sans effet (affordance, cf. #790).
         boutonExporterImage.disableProperty().bind(Bindings.isEmpty(viewModel.courbesAffichees()));
 
+        // Bandeau de retour mutualisé (#1837) : dit l'export réussi et, surtout, l'export échoué.
+        BandeauRetour.installer(
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+
+        // Sans espèce détectée, le titre du sélecteur s'efface avec lui : un intitulé suivi de rien laisse
+        // croire à un affichage tronqué (constaté sur l'aperçu de l'état vide).
+        lblTitreEspeces.visibleProperty().bind(Bindings.isNotEmpty(viewModel.especes()));
+        lblTitreEspeces.managedProperty().bind(Bindings.isNotEmpty(viewModel.especes()));
+
         viewModel.courbesAffichees().addListener((ListChangeListener<CourbeEspece>) changement -> majGraphe());
         viewModel.especes().addListener((ListChangeListener<CourbeEspece>) changement -> construireSelecteur());
         viewModel.especesSelectionnees().addListener((SetChangeListener<String>) changement -> construireSelecteur());
@@ -209,26 +231,50 @@ public class ActiviteController implements EmplacementNavigation {
         selecteur
                 .enregistrerFichier(
                         "Exporter l'image de la courbe d'activité", "activite-nuit.png", FiltreFichier.png())
-                .ifPresent(this::ecrireImage);
+                .ifPresent(this::exporterVers);
     }
 
-    private void ecrireImage(java.nio.file.Path fichier) {
-        ExportImageActivite.ecrire(
-                List.copyOf(viewModel.courbesAffichees()),
-                ActiviteController::configurerAxeNocturne,
-                fenetreNuitSurAxe(),
-                lignesLegende(),
-                fichier);
+    /// Écrit l'image de la courbe dans `fichier`, datée du jour.
+    public void exporterVers(java.nio.file.Path fichier) {
+        exporterVers(fichier, LocalDate.now());
+    }
+
+    /// Écrit l'image de la courbe dans `fichier`, en la datant de `dateExport`. Publique, et la date
+    /// **passée en paramètre**, parce que l'outil de capture s'en sert pour produire l'aperçu de l'export :
+    /// la capture passe ainsi par le **vrai** chemin de production (ADR 0025) plutôt que d'en reconstruire
+    /// une imitation, tout en restant **déterministe** — un `LocalDate.now()` interne reverserait un PNG
+    /// différent chaque jour dans un dépôt qui les versionne.
+    public void exporterVers(java.nio.file.Path fichier, LocalDate dateExport) {
+        try {
+            ExportImageActivite.ecrire(
+                    List.copyOf(viewModel.courbesAffichees()),
+                    ActiviteController::configurerAxeNocturne,
+                    fenetreNuitSurAxe(),
+                    lignesLegende(dateExport),
+                    fichier);
+            viewModel.signalerExport(String.valueOf(fichier.getFileName()));
+        } catch (RuntimeException echec) {
+            // Disque plein, dossier en lecture seule, rendu refusé par la garde des libellés : sans ce
+            // rattrapage, l'exception remonte au fil JavaFX, qui l'avale — le bouton « ne fait rien ».
+            viewModel.signalerEchecExport(motif(echec));
+        }
+    }
+
+    /// Message d'un échec, à défaut de message une mention du type : une chaîne vide dans le bandeau ne
+    /// vaudrait pas mieux que le silence qu'on corrige.
+    private static String motif(RuntimeException echec) {
+        String message = echec.getMessage();
+        return message == null || message.isBlank() ? echec.getClass().getSimpleName() : message;
     }
 
     /// Les lignes de contexte estampillées sur l'image : identité (carré, point, passage), réglages
     /// (tranche, filtres actifs) et provenance (version, date).
-    private List<String> lignesLegende() {
+    private List<String> lignesLegende(LocalDate dateExport) {
         return List.of(
                 LegendeExportActivite.identite(contexte),
                 LegendeExportActivite.reglages(
                         viewModel.trancheProperty().get().minutes(), gestionnaireFiltres.decrire()),
-                LegendeExportActivite.provenance(version.libelle(), LocalDate.now()));
+                LegendeExportActivite.provenance(version.libelle(), dateExport));
     }
 
     /// La fenêtre nocturne en minutes sur l'axe (`[début, fin]`), ou `null` si elle n'est pas connue : l'image
@@ -297,47 +343,28 @@ public class ActiviteController implements EmplacementNavigation {
     /// Reconstruit une série par espèce affichée : chaque tranche devient un point placé à sa minute
     /// depuis 18 h. Le nom de série (légende) est le nom vernaculaire, ou le code à défaut.
     private void majGraphe() {
-        List<XYChart.Series<Number, Number>> series = viewModel.courbesAffichees().stream()
-                .map(ActiviteController::versSerie)
-                .toList();
-        grapheActivite.getData().setAll(series);
+        grapheActivite.getData().setAll(versSeries(viewModel.courbesAffichees()));
+    }
+
+    /// Traduit des courbes en séries de graphe. Partagée avec [ExportImageActivite], qui redessine les
+    /// mêmes courbes hors écran : l'image montre ainsi exactement ce que l'écran montre.
+    static List<XYChart.Series<Number, Number>> versSeries(List<CourbeEspece> courbes) {
+        return courbes.stream().map(ActiviteController::versSerie).toList();
     }
 
     /// Traduit une courbe en série de graphe. Visible du paquet : [ExportImageActivite] la réutilise pour
     /// **redessiner** les mêmes courbes hors écran, plutôt que d'emprunter les séries de l'écran (une série
     /// n'appartient qu'à un graphe à la fois).
-    static XYChart.Series<Number, Number> versSerie(CourbeEspece courbe) {
+    private static XYChart.Series<Number, Number> versSerie(CourbeEspece courbe) {
         XYChart.Series<Number, Number> serie = new XYChart.Series<>();
         serie.setName(nomAffiche(courbe));
-        PointActivite pic = pointCulminant(courbe);
         for (PointActivite point : courbe.points()) {
             XYChart.Data<Number, Number> donnee =
                     new XYChart.Data<>(minutesDepuis18h(point.debutTranche()), point.nombre());
-            if (point == pic) {
-                donnee.setNode(etiquettePic(nomAffiche(courbe)));
-            }
             installerInfobulle(donnee, texteInfobulle(nomAffiche(courbe), point));
             serie.getData().add(donnee);
         }
         return serie;
-    }
-
-    /// Point **culminant** de la courbe (nombre de contacts maximal), où l'on pose l'étiquette directe ;
-    /// `null` si la courbe n'a aucun point.
-    private static PointActivite pointCulminant(CourbeEspece courbe) {
-        return courbe.points().stream()
-                .max(Comparator.comparingInt(PointActivite::nombre))
-                .orElse(null);
-    }
-
-    /// **Étiquette directe au pic** : le nom de l'espèce, pour identifier la courbe **sans dépendre de la
-    /// seule couleur** (légende + étiquette, cf. #2352). Décalée au-dessus du point ; elle remplace le
-    /// symbole du pic (l'infobulle reste posée dessus).
-    private static Label etiquettePic(String espece) {
-        Label etiquette = new Label(espece);
-        etiquette.getStyleClass().add("etiquette-pic");
-        etiquette.setTranslateY(-14);
-        return etiquette;
     }
 
     /// Texte de l'infobulle d'un point : espèce, heure de la tranche (`HH:mm`) et nombre de contacts, avec

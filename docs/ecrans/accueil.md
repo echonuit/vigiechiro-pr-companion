@@ -22,6 +22,7 @@ L'**exploitation** de la donnée : l'inventaire des espèces détectées et vos 
 | Activité | Ouvre | Pour |
 |---|---|---|
 | **Espèces & observations** | [Analyse](analyse.md) | l'inventaire de vos espèces détectées (où, quand, combien — par espèce ou par carré) |
+| **Activité de la nuit** | [Activité](activite.md) | la courbe des contacts heure par heure, pour lire la forme de la nuit |
 | **Sons & validation** | [Sons & validation](validation.md) | écouter, valider et exporter vos sons de référence |
 
 ## Atteindre les autres écrans

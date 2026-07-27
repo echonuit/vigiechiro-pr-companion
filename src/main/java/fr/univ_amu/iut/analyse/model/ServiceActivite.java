@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.analyse.model;
 
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
@@ -26,10 +27,13 @@ public class ServiceActivite {
 
     private final ProjectionsAudioDao projections;
     private final PlageNuitPassage plageNuitPassage;
+    private final FenetreObserveeNuit fenetreObservee;
 
-    public ServiceActivite(ProjectionsAudioDao projections, PlageNuitPassage plageNuitPassage) {
+    public ServiceActivite(
+            ProjectionsAudioDao projections, PlageNuitPassage plageNuitPassage, FenetreObserveeNuit fenetreObservee) {
         this.projections = projections;
         this.plageNuitPassage = plageNuitPassage;
+        this.fenetreObservee = fenetreObservee;
     }
 
     /// Les contacts datés d'un **passage**, prêts pour l'agrégation : chaque observation devient un
@@ -59,6 +63,16 @@ public class ServiceActivite {
     /// la courbe sans aplat nocturne, sans être empêchée.
     public Optional<PlageNuit> plageNuit(long idPassage) {
         return plageNuitPassage.pour(idPassage);
+    }
+
+    /// La fenêtre **réellement enregistrée** de la nuit (premier et dernier enregistrement effectifs,
+    /// [FenetreObserveeNuit]), ou **vide** si la nuit n'a laissé aucune trace exploitable.
+    ///
+    /// Sert à savoir **où l'on écoutait** : c'est la seule plage sur laquelle une tranche sans contact
+    /// vaut légitimement zéro. En dehors, l'absence de contact ne dit rien — le capteur était peut-être
+    /// éteint —, et la courbe s'abstient plutôt que d'affirmer un silence observé.
+    public Optional<FenetreObserveeNuit.Bornes> fenetreEnregistree(long idPassage) {
+        return fenetreObservee.pour(idPassage);
     }
 
     private static ContactHoraire versContact(LigneObservationAudio ligne) {

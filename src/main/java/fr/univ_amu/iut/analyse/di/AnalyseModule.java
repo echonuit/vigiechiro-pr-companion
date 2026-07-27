@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
@@ -55,8 +56,8 @@ public class AnalyseModule extends ModuleDeFeature {
     }
 
     // Machinerie de l'écran « Activité de la nuit » (#2352). Fournie ici, avec le reste de la feature
-    // `analyse`, et non par ActiviteModule : ce dernier ne gate que l'ENTRÉE (contrat OuvrirActivite,
-    // expérimental et coupé par défaut). L'écran fait partie de la feature analyse, et son FXML doit
+    // `analyse`, et non par ActiviteModule : ce dernier ne conditionne que l'ACCÈS (contrat OuvrirActivite,
+    // qui ne conditionne que l'accès). L'écran fait partie de la feature analyse, et son FXML doit
     // rester chargeable (ChargementFxmlTest) même l'entrée coupée. Non-singleton (VM frais par écran).
     @Provides
     ActiviteViewModel fournirActiviteViewModel(ServiceActivite service) {
@@ -65,7 +66,8 @@ public class AnalyseModule extends ModuleDeFeature {
 
     @Provides
     @Singleton
-    ServiceActivite fournirServiceActivite(ProjectionsAudioDao projections, PlageNuitPassage plageNuitPassage) {
-        return new ServiceActivite(projections, plageNuitPassage);
+    ServiceActivite fournirServiceActivite(
+            ProjectionsAudioDao projections, PlageNuitPassage plageNuitPassage, FenetreObserveeNuit fenetreObservee) {
+        return new ServiceActivite(projections, plageNuitPassage, fenetreObservee);
     }
 }

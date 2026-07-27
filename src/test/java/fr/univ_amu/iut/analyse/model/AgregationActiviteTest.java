@@ -154,6 +154,91 @@ class AgregationActiviteTest {
     }
 
     @Test
+    void le_repliement_somme_les_memes_heures_de_nuits_differentes() {
+        // Trois nuits, la même heure : sans repliement, la courbe porterait trois points à la même
+        // abscisse et repartirait en arrière à chaque nuit (dents de scie constatées en vue transverse).
+        List<ContactHoraire> contacts = List.of(
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 21, 22, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 22, 22, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 23, 22, 0)));
+
+        CourbeEspece repliee = AgregationActivite.replierSurLaNuit(
+                        AgregationActivite.parEspece(contacts, LargeurTranche.HEURE))
+                .get(0);
+
+        assertThat(repliee.points())
+                .as("une seule tranche de 22 h, portant les trois nuits")
+                .hasSize(1);
+        assertThat(repliee.points().get(0).nombre()).isEqualTo(3);
+        assertThat(repliee.total()).isEqualTo(3);
+    }
+
+    @Test
+    void le_repliement_ordonne_les_points_sur_l_axe_de_la_nuit() {
+        // Le soir d'une nuit et le matin de la nuit précédente : sur l'axe nocturne, 02 h vient APRÈS 22 h.
+        List<ContactHoraire> contacts = List.of(
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 22, 2, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", LocalDateTime.of(2026, 6, 23, 22, 0)));
+
+        CourbeEspece repliee = AgregationActivite.replierSurLaNuit(
+                        AgregationActivite.parEspece(contacts, LargeurTranche.HEURE))
+                .get(0);
+
+        assertThat(repliee.points())
+                .extracting(point -> point.debutTranche().getHour())
+                .as("22 h (soir) précède 02 h (matin) sur l'axe d'une nuit, quelles que soient les dates")
+                .containsExactly(22, 2);
+    }
+
+    @Test
+    void sur_une_nuit_unique_le_repliement_ne_change_rien() {
+        List<ContactHoraire> contacts = List.of(
+                contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(22, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(23, 0)));
+
+        List<CourbeEspece> avant = AgregationActivite.parEspece(contacts, LargeurTranche.HEURE);
+
+        assertThat(AgregationActivite.replierSurLaNuit(avant)).isEqualTo(avant);
+    }
+
+    @Test
+    void les_tranches_sans_contact_valent_zero_dans_la_plage() {
+        // Deux contacts séparés d'un trou de deux heures : sans comblement, la ligne les relie tout droit
+        // et donne à voir une activité continue là où il n'y en avait aucune.
+        List<ContactHoraire> contacts = List.of(
+                contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(21, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(23, 0)));
+        List<CourbeEspece> courbes = AgregationActivite.parEspece(contacts, LargeurTranche.HEURE);
+
+        // Plage 21 h -> 23 h, soit 180 à 300 minutes depuis 18 h.
+        CourbeEspece comblee = AgregationActivite.comblerLesCreux(courbes, LargeurTranche.HEURE, 180, 300)
+                .get(0);
+
+        assertThat(comblee.points())
+                .extracting(PointActivite::nombre)
+                .as("21 h, puis un zéro à 22 h, puis 23 h")
+                .containsExactly(1, 0, 1);
+        assertThat(comblee.total())
+                .as("le total reste celui des contacts réels")
+                .isEqualTo(2);
+    }
+
+    @Test
+    void hors_de_la_plage_la_courbe_s_abstient() {
+        // Un seul contact à 21 h, plage d'écoute 21 h -> 22 h : rien n'est affirmé avant ni après.
+        List<ContactHoraire> contacts = List.of(contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(21, 0)));
+        List<CourbeEspece> courbes = AgregationActivite.parEspece(contacts, LargeurTranche.HEURE);
+
+        CourbeEspece comblee = AgregationActivite.comblerLesCreux(courbes, LargeurTranche.HEURE, 180, 240)
+                .get(0);
+
+        assertThat(comblee.points())
+                .extracting(point -> point.debutTranche().getHour())
+                .as("aucun zéro à 18, 19, 20 h : on n'écoutait pas, l'absence ne dit rien")
+                .containsExactly(21, 22);
+    }
+
+    @Test
     void aucun_contact_donne_aucune_courbe() {
         assertThat(AgregationActivite.parEspece(List.of(), LargeurTranche.DEMI_HEURE))
                 .isEmpty();

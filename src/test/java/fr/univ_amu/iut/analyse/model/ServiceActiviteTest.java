@@ -5,6 +5,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -23,7 +24,9 @@ class ServiceActiviteTest {
 
     private final ProjectionsAudioDao projections = mock(ProjectionsAudioDao.class);
     private final PlageNuitPassage plageNuitPassage = mock(PlageNuitPassage.class);
-    private final ServiceActivite service = new ServiceActivite(projections, plageNuitPassage);
+    private final FenetreObserveeNuit fenetreObservee = mock(FenetreObserveeNuit.class);
+
+    private final ServiceActivite service = new ServiceActivite(projections, plageNuitPassage, fenetreObservee);
 
     @Test
     void mappe_le_taxon_retenu_avec_l_observateur_prioritaire() {

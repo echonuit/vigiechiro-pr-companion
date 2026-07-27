@@ -10,7 +10,7 @@ import java.util.Objects;
 /// socle [ActiviteAccueil] et délègue à [NavigationActivite#ouvrirTout].
 ///
 /// Enregistrée dans le `Multibinder<ActiviteAccueil>` par [fr.univ_amu.iut.analyse.di.ActiviteModule],
-/// donc **derrière le flag expérimental `activite-nuit`** : la carte n'apparaît que lorsque la feature est
+/// donc **sous la fonctionnalité `activite-nuit`** : la carte n'apparaît que lorsque la feature est
 /// activée (#2352, le temps du chantier #2348). Rang 20 : juste après « Espèces & observations ».
 public final class ActiviteNuit implements ActiviteAccueil {
 
