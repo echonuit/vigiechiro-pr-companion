@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -31,7 +32,12 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,14 +52,22 @@ import org.junit.jupiter.api.io.TempDir;
 /// squelette au lieu de la laisser à moitié faite.
 class HydratationSqueletteTest {
 
+    private static final String CARRE = "130711";
     private static final String PARTICIPATION = "6a53f5faae21902a597394d3";
     private static final String DOSSIER_SESSION = "Car130711-2026-Pass1-Z41";
     private static final String SEQ_1 = "Car130711-2026-Pass1-Z41-PaRec_20260703_220529_000";
     private static final String SEQ_2 = "Car130711-2026-Pass1-Z41-PaRec_20260703_220534_000";
 
+    private static final String PARTICIPATION_2 = "6a53f5faae21902a597394e7";
+    private static final String DOSSIER_SESSION_2 = "Car130711-2026-Pass2-Z41";
+    private static final String SEQ_2_1 = "Car130711-2026-Pass2-Z41-PaRec_20260704_221030_000";
+
     private static final String CSV_OBSERVATIONS = "\"nom du fichier\";\"temps_debut\";\"tadarida_taxon\"\n"
             + "\"" + SEQ_1 + "\";0.1;\"Pippip\"\n"
             + "\"" + SEQ_2 + "\";0.0;\"Pippip\"\n";
+
+    private static final String CSV_OBSERVATIONS_2 =
+            "\"nom du fichier\";\"temps_debut\";\"tadarida_taxon\"\n" + "\"" + SEQ_2_1 + "\";0.2;\"Pippip\"\n";
 
     @TempDir
     Path dossier;
@@ -88,7 +102,7 @@ class HydratationSqueletteTest {
     /// `passage` peut le relire.
     private long semerSquelette() {
         JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
-                .carre("130711")
+                .carre(CARRE)
                 .point("Z41")
                 .cheminSession(dossier.resolve(DOSSIER_SESSION).toString())
                 .semerSquelette();
@@ -98,9 +112,91 @@ class HydratationSqueletteTest {
         return jeu.idPassage();
     }
 
+    /// Une nuit **déjà pourvue** de ses séquences : ni squelette, ni candidate à l'hydratation.
+    private long semerNuitComplete() {
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .carre(CARRE)
+                .point("Z41")
+                .nuit(2, 2026, "2026-07-04")
+                .cheminSession(dossier.resolve(DOSSIER_SESSION_2).toString())
+                .semer();
+        jeu.ajouterSequence();
+        new LienVigieChiroDao(source)
+                .upsert(new LienVigieChiro(
+                        LienVigieChiro.ENTITE_PASSAGE, String.valueOf(jeu.idPassage()), PARTICIPATION_2));
+        return jeu.idPassage();
+    }
+
+    /// Une **seconde** nuit rapatriée, sur le même point : de quoi exercer le balayage sur plus d'une nuit.
+    private long semerSecondSquelette() {
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .carre(CARRE)
+                .point("Z41")
+                .nuit(2, 2026, "2026-07-04")
+                .cheminSession(dossier.resolve(DOSSIER_SESSION_2).toString())
+                .semerSquelette();
+        new LienVigieChiroDao(source)
+                .upsert(new LienVigieChiro(
+                        LienVigieChiro.ENTITE_PASSAGE, String.valueOf(jeu.idPassage()), PARTICIPATION_2));
+        return jeu.idPassage();
+    }
+
     private void csvDisponible() {
         when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS)));
         when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS)).thenReturn(List.of(SEQ_1, SEQ_2));
+    }
+
+    private void csvDisponiblePourLaSeconde() {
+        when(client.csvObservations(PARTICIPATION_2))
+                .thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS_2)));
+        when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS_2)).thenReturn(List.of(SEQ_2_1));
+    }
+
+    private HydratationSquelette.BilanCompletion completer(List<Long> nuits, JetonAnnulation jeton) {
+        return hydratation.completerLesSquelettes(nuits, progres -> {}, jeton);
+    }
+
+    private List<SequenceDEcoute> sequencesDe(long idPassage) {
+        return sequenceDao.findBySession(
+                sessionDao.trouverParPassage(idPassage).orElseThrow().id());
+    }
+
+    /// Branche une sonde sur le journal de [HydratationSquelette] le temps d'une action, et rend ce qui y a
+    /// été écrit. Même idiome que `JournalisationTacheTest` : le niveau exact fait partie du contrat
+    /// (ADR 0008), pas seulement le fait qu'une trace parte.
+    private List<LogRecord> capturerLeJournal(Runnable action) {
+        List<LogRecord> captures = new ArrayList<>();
+        Logger logger = Logger.getLogger(HydratationSquelette.class.getName());
+        Level niveauInitial = logger.getLevel();
+        boolean parentInitial = logger.getUseParentHandlers();
+        Handler sonde = new Handler() {
+            @Override
+            public void publish(LogRecord enregistrement) {
+                captures.add(enregistrement);
+            }
+
+            @Override
+            public void flush() {
+                // Rien à vider : la sonde accumule en mémoire.
+            }
+
+            @Override
+            public void close() {
+                // Rien à fermer : aucune ressource système.
+            }
+        };
+        sonde.setLevel(Level.ALL);
+        logger.setLevel(Level.ALL);
+        logger.setUseParentHandlers(false);
+        logger.addHandler(sonde);
+        try {
+            action.run();
+        } finally {
+            logger.removeHandler(sonde);
+            logger.setLevel(niveauInitial);
+            logger.setUseParentHandlers(parentInitial);
+        }
+        return captures;
     }
 
     private Optional<HydratationSquelette.BilanHydratation> hydrater(HydratationSquelette.Source mode) {
@@ -160,7 +256,7 @@ class HydratationSqueletteTest {
     @DisplayName("Une nuit qui a déjà ses séquences n'est pas retouchée, et ne coûte aucun appel réseau")
     void nuit_deja_hydratee_ignoree() {
         JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
-                .carre("130711")
+                .carre(CARRE)
                 .point("Z41")
                 .cheminSession(dossier.resolve(DOSSIER_SESSION).toString())
                 .semer();
@@ -229,6 +325,174 @@ class HydratationSqueletteTest {
         assertThat(points)
                 .isNotEmpty()
                 .allSatisfy(point -> assertThat(point.fraction()).isZero());
-        assertThat(points).extracting(Progression::libelle).contains("Import des observations…");
+        // Les TROIS étapes se disent, réseau compris (celle du téléchargement porte une fraction de 0.10
+        // que le relais aplatit) : sans les nommer toutes, supprimer un relais ne se voyait pas.
+        assertThat(points)
+                .extracting(Progression::libelle)
+                .contains("Téléchargement des observations…", "Création des séquences…", "Import des observations…");
+    }
+
+    @Test
+    @DisplayName("Annuler avant le téléchargement arrête la phase 0 sans rien demander au réseau")
+    void annulation_avant_le_telechargement() {
+        idPassage = semerSquelette();
+        csvDisponible();
+        JetonAnnulation jeton = new JetonAnnulation();
+        jeton.annuler();
+
+        assertThatThrownBy(() -> hydratation.hydraterSiSquelette(
+                        idPassage, HydratationSquelette.Source.CSV_SEULEMENT, progres -> {}, jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        verify(client, never()).csvObservations(anyString());
+    }
+
+    @Test
+    @DisplayName("Fonctionnalité « Import Vigie-Chiro » éteinte : refus qui dit où la rallumer")
+    void import_desactive_refuse_en_mode_complet() {
+        idPassage = semerSquelette();
+        HydratationSquelette sansImport = new HydratationSquelette(
+                source,
+                client,
+                new Workspace(dossier),
+                new HorlogeFigee(LocalDateTime.of(2026, 7, 26, 2, 0)),
+                Optional.empty());
+
+        assertThatThrownBy(() -> sansImport.hydraterSiSquelette(
+                        idPassage, HydratationSquelette.Source.COMPLETE, progres -> {}, JetonAnnulation.neutre()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Import Vigie-Chiro");
+    }
+
+    @Test
+    @DisplayName("Dossier de session renommé à la main : refus qui dit quoi corriger")
+    void dossier_renomme_refuse_en_mode_complet() {
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .carre(CARRE)
+                .point("Z41")
+                .cheminSession(dossier.resolve("nuit-du-3-juillet").toString())
+                .semerSquelette();
+        idPassage = jeu.idPassage();
+        new LienVigieChiroDao(source)
+                .upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), PARTICIPATION));
+
+        assertThatThrownBy(() -> hydrater(HydratationSquelette.Source.COMPLETE))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("renommé");
+
+        // En balayage, le même empêchement ne dit rien mais reste COMPTÉ.
+        assertThat(completer(List.of(idPassage), JetonAnnulation.neutre()))
+                .isEqualTo(new HydratationSquelette.BilanCompletion(0, 1, 0));
+    }
+
+    @Test
+    @DisplayName("Un CSV qu'on n'a pas pu LIRE est compté non lu, et tracé comme un incident")
+    void lecture_ratee_comptee_non_lue_et_tracee() {
+        long squelette = semerSquelette();
+        when(client.csvObservations(PARTICIPATION)).thenThrow(new IllegalStateException("réseau coupé"));
+
+        AtomicReference<HydratationSquelette.BilanCompletion> bilan = new AtomicReference<>();
+        List<LogRecord> journal =
+                capturerLeJournal(() -> bilan.set(completer(List.of(squelette), JetonAnnulation.neutre())));
+
+        // « non lue », PAS « en attente d'analyse » : la nuit peut être analysée depuis des jours, c'est la
+        // lecture qui a manqué. C'est le défaut que la passe 1 de #2554 a corrigé.
+        assertThat(bilan.get()).isEqualTo(new HydratationSquelette.BilanCompletion(0, 0, 1));
+        assertThat(journal)
+                .singleElement()
+                .satisfies(trace -> assertThat(trace.getLevel()).isEqualTo(Level.WARNING));
+    }
+
+    // --- Le balayage de la synchro (completerLesSquelettes) ------------------------------------------
+    // Ces cinq tests viennent de la passe 6 de #2554 : PIT y a fait survivre cinq mutants, chacun sur une
+    // garantie que le code ÉNONCE en commentaire sans que rien ne la tienne.
+
+    @Test
+    @DisplayName("Le dénominateur du bilan ne compte que les nuits réellement en squelette")
+    void bilan_ne_compte_que_les_squelettes() {
+        long squelette = semerSquelette();
+        long deja = semerNuitComplete();
+        csvDisponible();
+
+        // Neutraliser le filtre estSquelette (le rendre toujours vrai) laissait la suite verte : la nuit
+        // déjà pourvue n'était pas retouchée pour autant, mais elle entrait dans le dénominateur et
+        // ressortait en « en attente d'analyse ». Soit exactement le défaut que la passe 1 a corrigé.
+        assertThat(completer(List.of(squelette, deja), JetonAnnulation.neutre()))
+                .isEqualTo(new HydratationSquelette.BilanCompletion(1, 0, 0));
+    }
+
+    @Test
+    @DisplayName("Un balayage sans rien à faire rend un bilan vide, pas une absence de bilan")
+    void rien_a_completer_rend_un_bilan_vide() {
+        long deja = semerNuitComplete();
+
+        assertThat(completer(List.of(deja), JetonAnnulation.neutre()))
+                .isEqualTo(new HydratationSquelette.BilanCompletion(0, 0, 0));
+
+        // C'est le cas de TOUTES les synchros suivant la première : le chemin le plus fréquent était le
+        // seul que rien n'exerçait.
+        verify(client, never()).csvObservations(anyString());
+    }
+
+    @Test
+    @DisplayName("Une nuit qu'on ne sait pas traiter reste comptée incomplète, jamais tue")
+    void nuit_non_traitable_reste_comptee() {
+        long orpheline = JeuDeDonneesPassage.dans(source)
+                .carre(CARRE)
+                .point("Z41")
+                .cheminSession(dossier.resolve(DOSSIER_SESSION).toString())
+                .semerSquelette()
+                .idPassage();
+
+        assertThat(completer(List.of(orpheline), JetonAnnulation.neutre()))
+                .isEqualTo(new HydratationSquelette.BilanCompletion(0, 1, 0));
+    }
+
+    @Test
+    @DisplayName("Annuler pendant les écritures arrête le balayage : la nuit suivante n'est pas écrite")
+    void annulation_pendant_les_ecritures() {
+        long premiere = semerSquelette();
+        long seconde = semerSecondSquelette();
+        csvDisponible();
+        csvDisponiblePourLaSeconde();
+        JetonAnnulation jeton = new JetonAnnulation();
+        when(importObservations.importerCsv(premiere, CSV_OBSERVATIONS, false)).thenAnswer(appel -> {
+            jeton.annuler(); // l'utilisateur clique « Annuler » pendant que la première nuit s'écrit
+            return "";
+        });
+
+        assertThatThrownBy(() -> completer(List.of(premiere, seconde), jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        // Le jeton n'est consulté qu'ENTRE deux écritures : ce qui était fait reste fait, ce qui suivait
+        // n'est pas commencé. Sans cette consultation, un « Annuler » sur cent nuits ne coûtait rien à
+        // demander et ne changeait rien - la boucle allait jusqu'au bout.
+        assertThat(sequencesDe(premiere)).hasSize(2);
+        assertThat(sequencesDe(seconde)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Une nuit qui échoue est comptée non lue, rendue à son squelette, et laisse une trace")
+    void nuit_en_echec_comptee_rendue_et_consignee() {
+        long premiere = semerSquelette();
+        long seconde = semerSecondSquelette();
+        csvDisponible();
+        csvDisponiblePourLaSeconde();
+        when(importObservations.importerCsv(seconde, CSV_OBSERVATIONS_2, false))
+                .thenThrow(new RegleMetierException("Analyse non terminée"));
+
+        AtomicReference<HydratationSquelette.BilanCompletion> bilan = new AtomicReference<>();
+        List<LogRecord> journal =
+                capturerLeJournal(() -> bilan.set(completer(List.of(premiere, seconde), JetonAnnulation.neutre())));
+
+        assertThat(bilan.get()).isEqualTo(new HydratationSquelette.BilanCompletion(1, 0, 1));
+        assertThat(sequencesDe(premiere)).hasSize(2);
+        assertThat(sequencesDe(seconde)).isEmpty(); // compensée, donc reprenable telle quelle
+        // ADR 0008 : la trace part, et son NIVEAU dit la nature. Une analyse non terminée est une issue
+        // normale : en WARNING elle noierait les vrais bugs qu'on cherche dans ce journal.
+        assertThat(journal)
+                .singleElement()
+                .satisfies(trace -> assertThat(trace.getLevel()).isEqualTo(Level.FINE));
+        assertThat(journal.getFirst().getMessage()).contains(String.valueOf(seconde));
     }
 }
