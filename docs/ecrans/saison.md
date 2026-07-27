@@ -57,6 +57,30 @@ lecture. Par défaut, l'écran affiche la **saison courante**.
 Un **double-clic** sur une ligne ouvre le **passage concerné** ; s'il n'existe pas encore de passage
 pour ce point, il ouvre le **carré** du point, pour en saisir un.
 
-!!! note "Sans campagne pour l'instant"
-    Une colonne **Campagne** (regrouper les points d'un même suivi) est prévue mais n'est pas encore
-    livrée : l'écran fonctionne sans elle, point par point.
+## Ne voir qu'une campagne
+
+Une **campagne** regroupe les nuits qui relèvent d'un même suivi. Le solde peut s'y restreindre pour
+répondre à « où en est ma campagne ? » plutôt qu'à « où en est ma saison ? ».
+
+Il s'agit d'un **filtre**, et non d'une colonne : une ligne du solde est un **point**, avec ses **deux**
+passages, qui peuvent relever de campagnes différentes — une colonne aurait dû choisir laquelle
+afficher. Le filtre, lui, retient un point dès qu'**au moins un** de ses deux passages appartient à la
+campagne, et le montre **en entier** : le second passage reste visible même s'il n'en fait pas partie,
+puisque c'est l'état complet du point qui dit ce qu'il reste à y faire.
+
+La correspondance est **partielle et insensible à la casse** : taper `ens` retient « Suivi ENS ». Un
+point dont aucune nuit n'est rattachée à une campagne n'est jamais retenu par un filtre de campagne.
+
+En ligne de commande : `vigiechiro solde-saison --campagne ens`.
+
+## Les nuits opportunistes n'y comptent pas
+
+Une **participation opportuniste** est une nuit réalisée sur le **carré d'un autre observateur**. Elle
+ne relève pas du protocole Point Fixe : le solde ne la compte donc **pas** dans les « deux passages
+attendus » du point, et n'en tire aucun « reste à faire ». Elle reste visible, en pastille
+**Opportuniste**, pour qu'on sache qu'une nuit a bien eu lieu là.
+
+Un carré **entièrement** possédé par un tiers sort quant à lui du solde : y participer est une
+occasion, pas une obligation de protocole.
+
+Comment une nuit devient opportuniste : voir [Le passage](passage.md#participation-opportuniste).

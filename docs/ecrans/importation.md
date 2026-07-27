@@ -15,7 +15,15 @@ trois temps**.
 3. **Rattachement** : indiquez le site, le point d'écoute, l'année et le numéro de passage ; un
    aperçu montre le préfixe qui sera appliqué. Une **carte de confirmation** (lecture seule) affiche le
    **carré du site** et **ses points**, le **point choisi en surbrillance** (indigo) et les autres en
-   gris : un coup d'œil pour vérifier qu'on rattache la nuit au bon endroit.
+   gris : un coup d'œil pour vérifier qu'on rattache la nuit au bon endroit. Une case
+   **Participation opportuniste** est proposée à cette étape (voir ci-dessous).
+
+!!! note "Nuit réalisée sur le carré d'un autre observateur"
+    Cochez **Participation opportuniste** : la nuit sera exemptée de la fenêtre calendaire (R3) et de
+    l'intervalle conseillé entre deux passages (R4), et ne comptera pas dans le solde de saison du
+    point. Un import cible un seul carré : la case vaut donc pour **toutes** les nuits de cet import,
+    y compris quand la carte en contient plusieurs. Elle reste corrigeable après coup depuis
+    [Modifier le passage](passage.md#participation-opportuniste).
 
 Le bouton **Importer cette nuit** applique aux enregistrements le préfixe
 `CarXXXXXX-AAAA-PassN-YY-`, puis les transforme en séquences de 5 s ralenties dix fois (une séquence
