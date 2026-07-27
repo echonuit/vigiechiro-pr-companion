@@ -23,7 +23,7 @@ final class ColonnesMultisite {
 
     private ColonnesMultisite() {}
 
-    /// Câble les sept colonnes du tableau des passages.
+    /// Câble les colonnes du tableau des passages.
     static void configurer(
             TableColumn<LignePassage, String> carre,
             TableColumn<LignePassage, String> point,
@@ -32,7 +32,8 @@ final class ColonnesMultisite {
             TableColumn<LignePassage, String> date,
             TableColumn<LignePassage, String> statut,
             TableColumn<LignePassage, String> verdict,
-            TableColumn<LignePassage, String> analyse) {
+            TableColumn<LignePassage, String> analyse,
+            TableColumn<LignePassage, String> campagne) {
         carre.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().numeroCarre()));
         point.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().codePoint()));
         annee.setCellValueFactory(
@@ -50,6 +51,10 @@ final class ColonnesMultisite {
         // Statut / verdict en badges (#691), comme la table de la fiche site.
         statut.setCellFactory(colonne -> ColonneBadge.cellule(ligne -> ColonneBadge.classe(ligne.statut())));
         verdict.setCellFactory(colonne -> ColonneBadge.cellule(ligne -> ColonneBadge.classe(ligne.verdict())));
+        // Campagne (#2355) : cellule vide pour une nuit non rattachée — le rattachement est facultatif,
+        // et la feature est désactivable.
+        campagne.setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                c.getValue().campagne() == null ? "" : c.getValue().campagne()));
         configurerAnalyse(analyse);
     }
 

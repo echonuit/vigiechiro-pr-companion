@@ -26,7 +26,11 @@ public enum TriMultisite {
 
     /// Tri par verdict ([Verdict], passages non vérifiés en dernier), puis référence.
     PAR_VERDICT(Comparator.comparing(
-            LignePassage::verdict, Comparator.nullsLast(Comparator.comparingInt(Verdict::ordinal))));
+            LignePassage::verdict, Comparator.nullsLast(Comparator.comparingInt(Verdict::ordinal)))),
+
+    /// Tri par **campagne** (#2355), alphabétique ; les passages non rattachés ferment la liste — comme
+    /// les non vérifiés pour le verdict. Regroupe à l'écran les nuits qui relèvent du même suivi.
+    PAR_CAMPAGNE(Comparator.comparing(LignePassage::campagne, Comparator.nullsLast(Comparator.naturalOrder())));
 
     /// Ordre de référence stable, utilisé tel quel par [#PAR_SITE] et en départage ailleurs.
     private static final Comparator<LignePassage> REFERENCE = Comparator.comparing(LignePassage::numeroCarre)
@@ -54,6 +58,7 @@ public enum TriMultisite {
             case PAR_ANNEE -> "Par année";
             case PAR_STATUT -> "Par statut";
             case PAR_VERDICT -> "Par verdict";
+            case PAR_CAMPAGNE -> "Par campagne";
         };
     }
 }

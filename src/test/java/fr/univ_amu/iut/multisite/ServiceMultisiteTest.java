@@ -199,18 +199,40 @@ class ServiceMultisiteTest {
         Campagne suivi = campagnes.creerCampagne("Suivi ENS", 2026, null);
         campagnes.rattacherPassage(service.listerPassages(ID_USER).getFirst().idPassage(), suivi.id());
 
-        ServiceMultisite avecCampagnes = new ServiceMultisite(
+        assertThat(serviceAvec(campagnes, horloge).listerPassages(ID_USER))
+                .extracting(LignePassage::campagne)
+                .containsExactly("Suivi ENS", null, null, null, null);
+    }
+
+    @Test
+    @DisplayName("#2355 : tri par campagne — alphabétique, nuits non rattachées en dernier")
+    void tri_par_campagne() {
+        PassageDao passages = injecteur.getInstance(PassageDao.class);
+        HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
+        ServiceCampagne campagnes = new ServiceCampagne(new CampagneDao(source), passages, horloge);
+        // Créées dans l'ordre inverse de l'alphabet, pour que le tri ne puisse pas réussir par hasard.
+        Campagne zeta = campagnes.creerCampagne("Zeta", 2026, null);
+        Campagne alpha = campagnes.creerCampagne("Alpha", 2026, null);
+        List<LignePassage> ordreDeLecture = service.listerPassages(ID_USER);
+        campagnes.rattacherPassage(ordreDeLecture.get(0).idPassage(), zeta.id());
+        campagnes.rattacherPassage(ordreDeLecture.get(1).idPassage(), alpha.id());
+
+        List<LignePassage> lignes = serviceAvec(campagnes, horloge)
+                .listerPassages(ID_USER, FiltresMultisite.aucun(), TriMultisite.PAR_CAMPAGNE);
+
+        assertThat(lignes).extracting(LignePassage::campagne).containsExactly("Alpha", "Zeta", null, null, null);
+    }
+
+    /// Même service, mais avec la feature `campagne` **active**.
+    private ServiceMultisite serviceAvec(ServiceCampagne campagnes, HorlogeFigee horloge) {
+        return new ServiceMultisite(
                 injecteur.getInstance(SiteDao.class),
                 injecteur.getInstance(PointDao.class),
-                passages,
+                injecteur.getInstance(PassageDao.class),
                 injecteur.getInstance(ReleveTraitementDao.class),
                 injecteur.getInstance(ResultatsIdentificationDao.class),
                 Optional.of(campagnes),
                 horloge);
-
-        assertThat(avecCampagnes.listerPassages(ID_USER))
-                .extracting(LignePassage::campagne)
-                .containsExactly("Suivi ENS", null, null, null, null);
     }
 
     @Test

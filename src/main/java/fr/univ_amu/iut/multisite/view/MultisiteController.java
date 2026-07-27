@@ -177,6 +177,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private TableColumn<LignePassage, String> colAnalyse;
 
+    /// Campagne de rattachement de la nuit (#2355), vide si aucune.
+    @FXML
+    private TableColumn<LignePassage, String> colCampagne;
+
     @FXML
     private Label lblRetour;
 
@@ -269,7 +273,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
         TableDonnees.uniformiserNavigable(tableLignes);
         ColonnesMultisite.configurer(
-                colCarre, colPoint, colAnnee, colNumero, colDate, colStatut, colVerdict, colAnalyse);
+                colCarre, colPoint, colAnnee, colNumero, colDate, colStatut, colVerdict, colAnalyse, colCampagne);
         // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant). La
         // disposition (ordre + visibilité) est retenue par écran et restaurée à la réouverture (#994).
         var colonnes = colonnesLignes();
@@ -571,7 +575,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 new GestionnaireColonnes.Colonne(colDate, "Date", false),
                 new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
                 new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false),
-                new GestionnaireColonnes.Colonne(colAnalyse, "Analyse", false));
+                new GestionnaireColonnes.Colonne(colAnalyse, "Analyse", false),
+                new GestionnaireColonnes.Colonne(colCampagne, "Campagne", false));
     }
 
     private void ouvrirPassageDeLaLigne(LignePassage ligne) {

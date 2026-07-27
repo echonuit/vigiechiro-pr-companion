@@ -131,6 +131,9 @@
               <!-- #1338 : où en est l'analyse Tadarida de la nuit, et ses observations sont-elles déjà
                    là. L'infobulle porte la date du relevé : le cache est un état observé, pas une vérité. -->
               <TableColumn fx:id="colAnalyse" text="Analyse" prefWidth="120.0"/>
+              <!-- Campagne (#2355) : regroupe les nuits qui relèvent du même suivi. Vide si la nuit
+                   n'est rattachée à aucune campagne, ou si la feature est désactivée. -->
+              <TableColumn fx:id="colCampagne" text="Campagne" prefWidth="140.0"/>
             </columns>
             <placeholder>
               <Label text="Aucun passage à afficher (ajustez éventuellement les filtres)." wrapText="true"/>
