@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.82.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.81.0...v2.82.0) (2026-07-27)
+
+
+### Features
+
+* **analyse:** l'Activité de la nuit devient une fonctionnalité offerte, documentée et illustrée ([#2569](https://github.com/echonuit/vigiechiro-pr-companion/issues/2569)) ([98e084d](https://github.com/echonuit/vigiechiro-pr-companion/commit/98e084daf75c287b0869c4b60256c0afb5c6d0b6)), closes [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2348](https://github.com/echonuit/vigiechiro-pr-companion/issues/2348) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#1878](https://github.com/echonuit/vigiechiro-pr-companion/issues/1878)
+
 # [2.81.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.80.1...v2.81.0) (2026-07-27)
 
 
