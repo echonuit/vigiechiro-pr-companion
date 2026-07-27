@@ -31,6 +31,25 @@ class LegendeExportActiviteTest {
     }
 
     @Test
+    void un_passage_sans_numero_ne_l_invente_pas() {
+        // ContextePassage porte 0 quand le numéro est inconnu : « Passage N° 0 » serait un faux.
+        ContextePassage sansNumero = new ContextePassage(1L, 0, new ContexteSite("640380", "A1", null));
+
+        assertThat(LegendeExportActivite.identite(sansNumero))
+                .isEqualTo("Carré 640380 · Point A1")
+                .doesNotContain("N° 0");
+    }
+
+    @Test
+    void un_critere_sans_valeur_est_nomme_sans_egal() {
+        // Une puce fraîchement ajoutée, ou un critère booléen, n'a pas de valeur : on nomme le critère
+        // plutôt que d'écrire « nuit =  » suivi de rien.
+        DescripteurFiltre filtres = new DescripteurFiltre("", List.of(new DescripteurCritere("nuit", List.of())));
+
+        assertThat(LegendeExportActivite.reglages(30, filtres)).isEqualTo("Tranche 30 min · Filtres : nuit");
+    }
+
+    @Test
     void les_reglages_disent_la_tranche_et_les_filtres_en_clair() {
         DescripteurFiltre filtres =
                 new DescripteurFiltre("kuhl", List.of(new DescripteurCritere("nuit", List.of("2026-06-21"))));

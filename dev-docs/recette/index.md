@@ -28,7 +28,7 @@ ailleurs il n'est qu'écran de transit (seule la fluidité de la transition est 
 | S3 | Vérifier (pré-check + écoute + verdict) | qualification (+ raccourcis clavier) |
 | S4 | Déposer et suivre (lot, dépôt réel, suivi) | lot |
 | S5 | Valider (sur une nuit déposée) | Sons & validation, fiche espèce |
-| S6 | Exploiter et piloter (vues agrégées) | Carte & passages, Espèces & observations, Audit, recherche |
+| S6 | Exploiter et piloter (vues agrégées) | [Activité de la nuit](sessions/s6-exploiter-piloter.md) (écrite), puis Carte & passages, Espèces & observations, Audit, recherche |
 | S7 | Réglages, interrupteurs OFF, états dégradés | reglages (5 onglets) + chrome |
 
 Chaque session se joue en trois temps : une **passe statique** en solo (préparation, postée en
@@ -150,7 +150,7 @@ Pour **revalider** aux jalons suivants sans tout re-piloter à la main, on rejou
 ## Où ça vit
 
 - `dev-docs/recette/index.md` : **cette page**, la méthode.
-- `dev-docs/recette/sessions/` : les **scripts de session** figés (S1-S4 ; S5-S7 à venir).
+- `dev-docs/recette/sessions/` : les **scripts de session** figés (S1-S4 complets, S6 partielle ; S5 et S7 à venir).
 - `recette/fixtures/spec/` : les **specs** (YAML) des cartes SD, matérialisées par le générateur
   déterministe ; voir [Fixtures (générateur de cartes SD)](fixtures.md).
 - L'**EPIC** (label `recette`) : le déroulé vivant, les comptes-rendus, la task-list des issues.

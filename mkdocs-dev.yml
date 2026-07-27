@@ -127,6 +127,7 @@ nav:
     - S2 · Importer une nuit: recette/sessions/s2-importer.md
     - S3 · Vérifier: recette/sessions/s3-verifier.md
     - S4 · Déposer et suivre: recette/sessions/s4-deposer-suivre.md
+    - S6 · Exploiter et piloter: recette/sessions/s6-exploiter-piloter.md
   - Interface en ligne de commande (CLI): cli.md
   - Tests et qualité: tests-et-qualite.md
   - Contrat de l'API VigieChiro: api-vigiechiro.md
