@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.86.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.85.0...v2.86.0) (2026-07-27)
+
+
+### Features
+
+* **analyse:** des onglets pour isoler les catégories de taxons sur la courbe d'activité ([#2598](https://github.com/echonuit/vigiechiro-pr-companion/issues/2598)) ([aedb621](https://github.com/echonuit/vigiechiro-pr-companion/commit/aedb6210d9bb3e63b3830345f29ce73f2bed8f05)), closes [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#623](https://github.com/echonuit/vigiechiro-pr-companion/issues/623) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352)
+
 # [2.85.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.84.0...v2.85.0) (2026-07-27)
 
 
