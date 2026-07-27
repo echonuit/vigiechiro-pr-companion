@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.AbsenceReactivation;
@@ -19,12 +20,15 @@ import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.viewmodel.ReactivationModaleViewModel;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -103,18 +107,20 @@ class ReactivationModaleViewTest {
                                         "PaRecPR_20260422_205342_001.wav", "tranche non régénérée", 1))),
                 robot);
 
-        String compteRendu = compteRendu(robot);
-        assertThat(details(robot))
-                .as("chaque absence est un noeud distinct, avec son sujet et son motif (ADR 0031)")
-                .anySatisfy(ligne -> assertThat(ligne)
+        // Depuis #2358 la modale rend le compte rendu CHIFFRÉ : les absences y sont regroupées par motif,
+        // chaque motif ouvrant la liste de ses fichiers. Le sujet et sa cause voyagent toujours ensemble,
+        // mais la cause est portée une fois par le groupe au lieu d'être répétée sur chaque ligne.
+        assertThat(intitulesDeMotif(robot))
+                .anySatisfy(intitule -> assertThat(intitule).contains("enregistrement absent"))
+                .anySatisfy(intitule -> assertThat(intitule).contains("tranche non régénérée"));
+        assertThat(fichiersDesMotifs(robot))
+                .anySatisfy(fichier -> assertThat(fichier)
                         .contains("PaRecPR_20260422_205332.wav")
-                        .contains("enregistrement absent")
                         .contains("(3 séquences)"))
-                .anySatisfy(ligne -> assertThat(ligne).contains("PaRecPR_20260422_205342_001.wav"));
-        assertThat(compteRendu).contains("tranche non régénérée");
-        assertThat(compteRendu)
+                .anySatisfy(fichier -> assertThat(fichier).contains("PaRecPR_20260422_205342_001.wav"));
+        assertThat(fichiersDesMotifs(robot))
                 .as("une absence isolée ne s'annonce pas « (1 séquences) »")
-                .doesNotContain("(1 séquences)");
+                .noneMatch(fichier -> fichier.contains("(1 séquences)"));
     }
 
     @Test
@@ -132,7 +138,14 @@ class ReactivationModaleViewTest {
                         VoieReactivation.TRANSFORMES),
                 robot);
 
-        assertThat(compteRendu(robot)).contains("réactivée(s)").contains("30").contains("écoutable");
+        // La bande chiffrée porte le verdict : la pastille dit le décompte, une mention dit l'écoutabilité.
+        assertThat(bande(robot).isVisible()).isTrue();
+        assertThat(textesDeLaBande(robot))
+                .anySatisfy(texte -> assertThat(texte).contains("30"))
+                .anySatisfy(texte -> assertThat(texte).contains("écoutable"));
+        assertThat(robot.lookup("#zoneCompteRendu").queryAs(VBox.class).isVisible())
+                .as("le compte rendu textuel ne double pas la bande : ce serait dire deux fois les mêmes faits")
+                .isFalse();
         assertThat(robot.lookup("#boutonFermer").queryButton().isDisabled())
                 .as("l'opération est terminée : « Fermer » redevient actif")
                 .isFalse();
@@ -233,6 +246,11 @@ class ReactivationModaleViewTest {
         assertThat(compteRendu)
                 .as("les fichiers peuvent être présents : ne pas prétendre le contraire")
                 .doesNotContain("introuvables");
+        // Un passage reconstruit garde le compte rendu TEXTUEL (#2358) : la réactivation n'a pas eu lieu,
+        // il n'y a rien à ventiler. Une barre « 0 sur 30 » ferait croire à une tentative qui a échoué.
+        assertThat(bande(robot).isVisible())
+                .as("pas de tentative, donc pas de proportions à montrer")
+                .isFalse();
     }
 
     @Test
@@ -288,6 +306,39 @@ class ReactivationModaleViewTest {
     /// portent sur le fond ; celles qui portent sur la **structure** passent par [#details].
     private static String compteRendu(FxRobot robot) {
         return String.join("\n", lignes(robot));
+    }
+
+    /// La bande de compte rendu chiffré (#2358), présente dans l'arbre même quand elle est masquée.
+    private static PanneauCompteRendu bande(FxRobot robot) {
+        return robot.lookup("#compteRenduChiffre").queryAs(PanneauCompteRendu.class);
+    }
+
+    /// Tous les textes de la bande : titre, pastille, légendes, mentions.
+    private static List<String> textesDeLaBande(FxRobot robot) {
+        return bande(robot).lookupAll(".label").stream()
+                .filter(Label.class::isInstance)
+                .map(noeud -> ((Label) noeud).getText())
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    /// Les intitulés dénombrés des motifs (« 2 fichier(s) : enregistrement absent »).
+    private static List<String> intitulesDeMotif(FxRobot robot) {
+        return bande(robot).lookupAll(".cr-motif-intitule").stream()
+                .filter(Label.class::isInstance)
+                .map(noeud -> ((Label) noeud).getText())
+                .toList();
+    }
+
+    /// Les fichiers listés sous chaque motif, tous groupes confondus.
+    private static List<String> fichiersDesMotifs(FxRobot robot) {
+        List<String> fichiers = new java.util.ArrayList<>();
+        for (Node noeud : bande(robot).lookupAll(".cr-motif-liste")) {
+            if (noeud instanceof ListView<?> liste) {
+                liste.getItems().stream().map(String::valueOf).forEach(fichiers::add);
+            }
+        }
+        return fichiers;
     }
 
     /// Les seules lignes de détail, chacune étant un nœud distinct depuis #2001 - ce qui permet de

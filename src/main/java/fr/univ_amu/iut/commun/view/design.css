@@ -1147,6 +1147,24 @@
     -fx-icon-color: -couleur-avertissement;
 }
 
+/* Registre d une mention (#2358). L ambre est le defaut pose ci-dessus ; ces regles le corrigent quand
+   la mention n est pas un avertissement. Un triangle d alerte devant « L audio est de nouveau complet »
+   apprend a ne plus regarder les alertes. */
+.cr-mention-succes {
+    -fx-text-fill: -couleur-succes;
+    -fx-icon-color: -couleur-succes;
+}
+
+.cr-mention-info {
+    -fx-text-fill: -couleur-texte-discret;
+    -fx-icon-color: -couleur-texte-discret;
+}
+
+.cr-mention-erreur {
+    -fx-text-fill: -couleur-danger;
+    -fx-icon-color: -couleur-danger;
+}
+
 /* Resume des motifs : discret, a l oppose de l action suivante. Il dit de quoi il s agit sans derouler
    la liste des fichiers, qui reste accessible d un geste. C est un Hyperlink : on lui retire le cadre de
    focus et le souligne systematique du controle, il doit se lire comme du texte cliquable, pas comme un

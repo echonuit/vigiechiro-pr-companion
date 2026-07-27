@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Avertissement;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Barre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
@@ -130,7 +131,8 @@ public final class CaptureCompteRendu {
                                 "fichiers déjà expansés",
                                 List.of("a.wav", "b.wav", "c.wav", "d.wav", "e.wav", "f.wav")),
                         new Motif("en-têtes WAV illisibles", List.of("g.wav", "h.wav"))),
-                List.of("Relevé climatique absent : le diagnostic de la nuit sera partiel, le dépôt reste possible."),
+                List.of(Avertissement.de(
+                        "Relevé climatique absent : le diagnostic de la nuit sera partiel, le dépôt reste possible.")),
                 List.of(
                         new Action("Ouvrir le passage", true, () -> {}),
                         new Action("Vérifier l'enregistrement", false, () -> {})));
@@ -168,7 +170,8 @@ public final class CaptureCompteRendu {
                 // Aucun motif ici : « connexion interrompue » redirait ce que la légende annonce déjà
                 // (« En échec · 5 archives »), et un compte rendu ne se répète pas - vu à la capture.
                 List.of(),
-                List.of("Connexion interrompue. Aucune archive perdue : les 9 déjà déposées ne seront pas renvoyées."),
+                List.of(Avertissement.de(
+                        "Connexion interrompue. Aucune archive perdue : les 9 déjà déposées ne seront pas renvoyées.")),
                 List.of(new Action("Retenter les échecs", true, () -> {}), new Action("Plus tard", false, () -> {})));
     }
 

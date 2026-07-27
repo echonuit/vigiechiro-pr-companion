@@ -3,6 +3,7 @@ package fr.univ_amu.iut.importation.viewmodel;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Avertissement;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Barre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
@@ -224,27 +225,32 @@ public final class CompteRenduChiffreImport {
 
     /// Ce qui reste vrai après l'import et qu'aucun chiffre ne porte : le doublon de nuit assumé, les
     /// anomalies relevées au journal du capteur (R19).
-    private static List<String> avertissements(
+    private static List<Avertissement> avertissements(
             List<RapportImport> rapports, List<String> anomalies, ContexteApresImport contexte) {
-        List<String> avertissements = new ArrayList<>(contexte.avertissementsEncoreVrais());
+        List<Avertissement> avertissements = new ArrayList<>(contexte.avertissementsEncoreVrais().stream()
+                .map(Avertissement::de)
+                .toList());
         long doublons = rapports.stream()
                 .flatMap(rapport -> rapport.doublonsDeNuit().stream())
                 .count();
         if (doublons > 0) {
             avertissements.add(
-                    "Cette nuit était déjà importée : " + doublons
-                            + " passage(s) existant(s) pour la même série et la même date. Le passage créé en est un doublon assumé.");
+                    Avertissement.de(
+                            "Cette nuit était déjà importée : " + doublons
+                                    + " passage(s) existant(s) pour la même série et la même date. Le passage créé en est un doublon assumé."));
         }
-        avertissements.addAll(anomalies);
+        anomalies.stream().map(Avertissement::de).forEach(avertissements::add);
         // L'écriture distante se dit (#1488) : elle porte les données de l'utilisateur sur un serveur, et
-        // ne s'annonçait nulle part. Rangée avec les avertissements faute d'un troisième registre, mais
-        // formulée comme le fait accompli qu'elle est, non comme un problème.
+        // ne s'annonçait nulle part. Elle est dite au registre du SUCCÈS, pas de l'alerte : c'est un fait
+        // accompli et voulu, non un problème - la sévérité par mention (#2358) permet enfin de le dire.
         if (contexte.participations() == 1) {
-            avertissements.add(
-                    "Participation créée sur Vigie-Chiro : la nuit y est déclarée, le dépôt la réutilisera.");
+            avertissements.add(Avertissement.succes(
+                    "Participation créée sur Vigie-Chiro : la nuit y est déclarée, le dépôt la réutilisera."));
         } else if (contexte.participations() > 1) {
-            avertissements.add(contexte.participations()
-                    + " participations créées sur Vigie-Chiro : les nuits y sont déclarées, le dépôt les réutilisera.");
+            avertissements.add(
+                    Avertissement.succes(
+                            contexte.participations()
+                                    + " participations créées sur Vigie-Chiro : les nuits y sont déclarées, le dépôt les réutilisera."));
         }
         return avertissements;
     }

@@ -40,6 +40,10 @@ public class ReactivationModaleViewModel {
     /// bouge que sur un passage reconstruit dont l'audio est revenu : sinon la phase ne se déclenche pas.
     private final ProgressionOperation progressionAncrage = new ProgressionOperation();
 
+    /// Le rapport de la réactivation aboutie (#2358), source du compte rendu **chiffré** de la modale.
+    private final ReadOnlyObjectWrapper<RapportReactivation> rapport =
+            new ReadOnlyObjectWrapper<>(this, "rapport", null);
+
     private final ReadOnlyObjectWrapper<CompteRendu> compteRendu =
             new ReadOnlyObjectWrapper<>(CompteRendu.de("", List.of()));
     private final ReadOnlyStringWrapper erreur = new ReadOnlyStringWrapper("");
@@ -84,9 +88,22 @@ public class ReactivationModaleViewModel {
     /// Publie le compte rendu (**fil JavaFX**) et marque [#reactiveProperty] : l'opération s'est conclue,
     /// l'écran appelant se rechargera à la fermeture.
     public void restituer(RapportReactivation rapport) {
+        // Le rapport EN PREMIER : la modale décide de masquer le compte rendu textuel quand il y a un
+        // rapport à chiffrer, et l'ordre inverse la ferait publier le textuel avant de savoir qu'il fait
+        // doublon. La vue s'en protège aussi de son côté, mais l'ordre juste vaut mieux qu'un rattrapage.
+        this.rapport.set(rapport);
         compteRendu.set(CompteRenduReactivation.de(rapport));
         erreur.set("");
         reactive.set(true);
+    }
+
+    /// Le rapport brut de la réactivation aboutie, `null` tant qu'il n'y en a pas (#2358).
+    ///
+    /// La modale s'en sert pour rendre le compte rendu **chiffré**, qui montre les proportions ; la
+    /// commande `reactiver` continue de rendre le [#compteRenduProperty] **textuel**, un terminal ne
+    /// dessinant pas de barres. Les deux dérivent du même rapport et ne recalculent rien.
+    public ReadOnlyObjectProperty<RapportReactivation> rapportProperty() {
+        return rapport.getReadOnlyProperty();
     }
 
     /// Route un échec vers le message d'erreur de la modale : un refus (dossier introuvable, plateforme

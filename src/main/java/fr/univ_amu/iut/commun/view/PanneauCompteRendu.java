@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Avertissement;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Barre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
@@ -84,6 +85,17 @@ public final class PanneauCompteRendu extends VBox {
     /// Les bordures haute et basse du cadre de la liste, à ajouter aux lignes pour que le compte soit juste.
     private static final int MARGE_LISTE = 2;
 
+    /// Glyphe par défaut d'une mention : le triangle d'alerte.
+    private static final String GLYPHE_ALERTE = "fas-exclamation-triangle";
+
+    /// Glyphe d'une mention selon son registre. Un fait de contexte s'annonce par un « i », une bonne
+    /// nouvelle par une coche : les trois ne se confondent plus d'un coup d'œil.
+    private static final Map<Severite, String> GLYPHE_AVERTISSEMENT = Map.of(
+            Severite.SUCCES, "fas-check-circle",
+            Severite.INFO, "fas-info-circle",
+            Severite.AVERTISSEMENT, GLYPHE_ALERTE,
+            Severite.ERREUR, "fas-times-circle");
+
     /// Classe CSS de la pastille selon la sévérité, comme [BandeauRetour] pour le bandeau : la couleur
     /// vient de la feuille de style, jamais du code.
     private static final Map<Severite, String> CLASSE_PASTILLE = Map.of(
@@ -125,7 +137,13 @@ public final class PanneauCompteRendu extends VBox {
         setSpacing(12);
         titre.getStyleClass().add("cr-titre");
         pastille.getStyleClass().add("cr-badge");
-        resumeMotifs.getStyleClass().add("cr-resume-motifs");
+        // `abregeable` : dans une modale étroite (réactivation), l'énumération des motifs ne tient pas sur
+        // une ligne, et le garde-fou anti-troncature refuse une capture qui l'abrégerait en silence. Le
+        // déficit doit bien tomber quelque part ; il tombe ici, parce que c'est le SEUL libellé de la bande
+        // dont le contenu complet est à un clic - les motifs qu'il résume s'ouvrent juste dessous.
+        // (Le nom est celui que le garde-fou de capture reconnaît ; il est posé en littéral, comme dans les
+        // FXML qui l'utilisent, pour qu'une vue ne dépende pas d'un outil de capture.)
+        resumeMotifs.getStyleClass().addAll("cr-resume-motifs", "abregeable");
         barreVentilation.getStyleClass().add("cr-barre");
         // Sans cela, chaque segment est arrondi au pixel et la somme des arrondis dépasse la largeur de
         // la barre : « la somme des segments fait le total » ne serait vraie qu'à deux pixels près.
@@ -261,23 +279,30 @@ public final class PanneauCompteRendu extends VBox {
         return entree;
     }
 
-    private void remplirAvertissements(List<String> avertissements) {
+    /// Ce qui reste vrai à la fin, **chacun avec son registre**. Le glyphe et la couleur suivent la
+    /// sévérité de l'entrée : un triangle d'alerte devant « L'audio est de nouveau complet » apprend à ne
+    /// plus regarder les alertes - défaut vu à la première capture de la réactivation (#2358).
+    private void remplirAvertissements(List<Avertissement> avertissements) {
         blocAvertissements.getChildren().clear();
         if (avertissements.isEmpty()) {
             montrer(blocAvertissements, false);
             return;
         }
-        for (String avertissement : avertissements) {
-            FontIcon icone = new FontIcon("fas-exclamation-triangle");
-            icone.getStyleClass().add("cr-avertissement-icone");
-            Label texte = new Label(avertissement);
-            texte.getStyleClass().add("cr-avertissement");
+        for (Avertissement avertissement : avertissements) {
+            FontIcon icone = new FontIcon(GLYPHE_AVERTISSEMENT.getOrDefault(avertissement.severite(), GLYPHE_ALERTE));
+            icone.getStyleClass().addAll("cr-avertissement-icone", classeDeSeverite(avertissement.severite()));
+            Label texte = new Label(avertissement.texte());
+            texte.getStyleClass().addAll("cr-avertissement", classeDeSeverite(avertissement.severite()));
             texte.setWrapText(true);
             HBox ligne = new HBox(8, icone, texte);
             ligne.setAlignment(Pos.CENTER_LEFT);
             blocAvertissements.getChildren().add(ligne);
         }
         montrer(blocAvertissements, true);
+    }
+
+    private static String classeDeSeverite(Severite severite) {
+        return "cr-mention-" + severite.name().toLowerCase(Locale.ROOT);
     }
 
     /// Le pied : l'action suivante mise en avant, les autres à sa droite, et le résumé des motifs à
@@ -309,6 +334,14 @@ public final class PanneauCompteRendu extends VBox {
         for (Motif motif : motifs) {
             Label intitule = new Label(motif.compte() + " " + motif.libelle());
             intitule.getStyleClass().add("cr-motif-intitule");
+            // Enroulable : la bande vit aussi dans une modale étroite (réactivation), où « 1 fichier(s) :
+            // enregistrement absent du dossier » manquait 102 px et sortait abrégé. Un motif dit une cause,
+            // et une cause abrégée ne se comprend plus.
+            intitule.setWrapText(true);
+            // `wrapText` seul ne suffit pas : sans largeur maximale, le Label prend sa largeur PRÉFÉRÉE,
+            // déborde, et le contrôle l'abrège au lieu de l'enrouler. La borne est ce qui déclenche
+            // l'enroulement.
+            intitule.setMaxWidth(Double.MAX_VALUE);
             blocMotifs.getChildren().add(new VBox(4, intitule, listeDe(motif)));
         }
         replierLesMotifs();

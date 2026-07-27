@@ -6,10 +6,14 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Modales;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.VueCompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.passage.model.CompteRenduChiffreReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
+import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.viewmodel.ReactivationModaleViewModel;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import javafx.beans.binding.Bindings;
@@ -88,6 +92,9 @@ public class ReactivationModaleController {
     private VBox zoneCompteRendu;
 
     @FXML
+    private PanneauCompteRendu compteRenduChiffre;
+
+    @FXML
     private Button boutonAnnuler;
 
     @FXML
@@ -133,11 +140,15 @@ public class ReactivationModaleController {
         // de commande, elle, les rend tous.
         viewModel.compteRenduProperty().addListener((obs, avant, apres) -> afficherCompteRendu(apres));
         afficherCompteRendu(viewModel.compteRenduProperty().get());
+        viewModel.rapportProperty().addListener((obs, avant, apres) -> afficherCompteRenduChiffre(apres));
+        afficherCompteRenduChiffre(viewModel.rapportProperty().get());
         // La modale est dimensionnée sur le contenu visible à l'ouverture : une seule barre. Ce qui paraît
         // ensuite la fait grandir - la barre d'ancrage poussait les boutons hors de la fenêtre, et le compte
         // rendu ses dernières lignes sous la ligne de flottaison (cf. reconstruction #1534). La fenêtre suit
-        // désormais les DEUX révélations, par le patron commun.
-        Modales.suivreLaCroissance(racine, ancrageDemarre, viewModel.compteRenduProperty());
+        // désormais les TROIS révélations, par le patron commun - la bande chiffrée (#2358) en fait partie,
+        // sans quoi elle repousserait à son tour les boutons hors de la fenêtre.
+        Modales.suivreLaCroissance(
+                racine, ancrageDemarre, viewModel.compteRenduProperty(), viewModel.rapportProperty());
 
         boutonAnnuler.visibleProperty().bind(operationEnCours);
         boutonAnnuler.managedProperty().bind(operationEnCours);
@@ -242,9 +253,48 @@ public class ReactivationModaleController {
     /// lisible, là où la sortie de la CLI les rend tous parce qu'elle se filtre (ADR 0031).
     private static final int DETAILS_MONTRES = 5;
 
+    /// Publie le compte rendu **chiffré** (#2358) d'une réactivation aboutie, ou masque la bande.
+    ///
+    /// Il ne remplace pas le compte rendu textuel : celui-ci reste la surface de l'**annulation**, où il
+    /// n'y a rien à ventiler, et reste ce que la commande `reactiver` rend en lignes.
+    ///
+    /// Le pied ne propose pas d'action : depuis cette modale, la seule suite est de fermer pour revenir
+    /// au passage, ce que le bouton de la modale fait déjà. Y ajouter « Ouvrir le passage » proposerait
+    /// d'aller là où l'on est.
+    private void afficherCompteRenduChiffre(RapportReactivation rapport) {
+        boolean aChiffrer = aQuelqueChoseAVentiler(rapport);
+        if (aChiffrer) {
+            compteRenduChiffre.afficher(CompteRenduChiffreReactivation.de(rapport, List.of()));
+        }
+        compteRenduChiffre.setVisible(aChiffrer);
+        compteRenduChiffre.setManaged(aChiffrer);
+        // Le textuel se réévalue ici aussi : les deux propriétés sont publiées l'une après l'autre, et
+        // c'est celle qui arrive en dernier qui doit trancher, quel que soit l'ordre.
+        afficherCompteRendu(viewModel.compteRenduProperty().get());
+    }
+
     /// Remplace le compte rendu affiché. On reconstruit plutôt qu'on ne met à jour : un compte rendu est
     /// immuable et publié d'un bloc, il n'y a rien à rafraîchir en place.
+    /// `true` si le rapport a des **proportions** à montrer, donc si la bande a lieu d'être.
+    ///
+    /// Un passage **reconstruit** n'en a pas : la réactivation n'a pas eu lieu, l'application connaît le
+    /// nom des séquences sans pouvoir les relier aux fichiers. Une barre « 0 sur 30 » y ferait croire à
+    /// une tentative qui aurait échoué, là où il n'y a pas eu de tentative. Ce cas garde le compte rendu
+    /// textuel, qui l'explique.
+    private static boolean aQuelqueChoseAVentiler(RapportReactivation rapport) {
+        return rapport != null && rapport.voie() != VoieReactivation.RECONSTRUIT;
+    }
+
     private void afficherCompteRendu(CompteRendu rendu) {
+        // La bande chiffrée dit déjà tout d'une réactivation aboutie : laisser le textuel dessous
+        // afficherait deux fois les mêmes faits, l'un sous l'autre. Il ne reste que pour ce qu'elle ne
+        // couvre pas - l'annulation et le passage reconstruit, où il n'y a rien à ventiler.
+        if (aQuelqueChoseAVentiler(viewModel.rapportProperty().get())) {
+            zoneCompteRendu.getChildren().clear();
+            zoneCompteRendu.setVisible(false);
+            zoneCompteRendu.setManaged(false);
+            return;
+        }
         zoneCompteRendu
                 .getChildren()
                 .setAll(VueCompteRendu.rendre(rendu, DETAILS_MONTRES).getChildren());

@@ -39,7 +39,7 @@ import java.util.Objects;
 /// @param volumes barres comparées **à échelle commune** (lu / écrit), vide si l'opération n'en dit rien
 /// @param ventilation le devenir d'un ensemble, exhaustif ; [Ventilation#aucune()] s'il n'y a rien à ventiler
 /// @param motifs motifs de rejet et leurs effectifs, chacun ouvrant sa liste ; vide s'il n'y a aucun rejet
-/// @param avertissements ce qui reste **vrai à la fin** de l'opération, distinct des erreurs (#1488)
+/// @param avertissements ce qui reste **vrai à la fin** de l'opération, chacun avec sa sévérité (#1488)
 /// @param actions ce qu'on fait ensuite, la première étant mise en avant
 public record CompteRenduChiffre(
         String titre,
@@ -48,12 +48,45 @@ public record CompteRenduChiffre(
         List<Barre> volumes,
         Ventilation ventilation,
         List<Motif> motifs,
-        List<String> avertissements,
+        List<Avertissement> avertissements,
         List<Action> actions) {
 
     /// Nom du paramètre `libelle`, que les cinq records imbriqués gardent tous : mutualisé pour ne pas
     /// répéter le même littéral (PMD `AvoidDuplicateLiterals`).
     private static final String LIBELLE = "libelle";
+
+    /// Ce qui reste vrai à la fin, **avec sa sévérité**.
+    ///
+    /// La sévérité n'était pas là, et la première capture de la réactivation l'a montré : le composant
+    /// posait un triangle d'alerte devant « L'audio est de nouveau complet : le passage est écoutable. »
+    /// et devant un indice de concordance explicitement annoncé non bloquant. Un compte rendu qui alerte
+    /// sur une bonne nouvelle apprend à ne plus regarder ses alertes.
+    ///
+    /// @param texte la phrase, écrite pour un humain
+    /// @param severite ce qu'elle pèse : [Severite#INFO] pour un fait de contexte, [Severite#SUCCES] pour
+    ///     une bonne nouvelle, [Severite#AVERTISSEMENT] pour ce sur quoi il faut revenir
+    public record Avertissement(String texte, Severite severite) {
+
+        public Avertissement {
+            Objects.requireNonNull(texte, "texte");
+            Objects.requireNonNull(severite, "severite");
+        }
+
+        /// Un avertissement au sens strict : ce sur quoi l'utilisateur devra revenir.
+        public static Avertissement de(String texte) {
+            return new Avertissement(texte, Severite.AVERTISSEMENT);
+        }
+
+        /// Un fait de contexte, ni bon ni mauvais : il informe, il n'alerte pas.
+        public static Avertissement info(String texte) {
+            return new Avertissement(texte, Severite.INFO);
+        }
+
+        /// Une bonne nouvelle : elle mérite d'être dite, pas d'être signalée.
+        public static Avertissement succes(String texte) {
+            return new Avertissement(texte, Severite.SUCCES);
+        }
+    }
 
     public CompteRenduChiffre {
         Objects.requireNonNull(titre, "titre");
@@ -64,6 +97,12 @@ public record CompteRenduChiffre(
         motifs = List.copyOf(motifs);
         avertissements = List.copyOf(avertissements);
         actions = List.copyOf(actions);
+    }
+
+    /// Les seules phrases des mentions, sans leur registre : pour les surfaces qui n'ont pas d'habillage à
+    /// choisir - une sortie texte, une assertion de test.
+    public List<String> textesDesAvertissements() {
+        return avertissements.stream().map(Avertissement::texte).toList();
     }
 
     /// **Échelle commune** des barres de volume : la plus grande quantité de l'ensemble. Deux barres
