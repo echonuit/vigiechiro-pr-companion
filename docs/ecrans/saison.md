@@ -71,14 +71,22 @@ puisque c'est l'état complet du point qui dit ce qu'il reste à y faire.
 La correspondance est **partielle et insensible à la casse** : taper `ens` retient « Suivi ENS ». Un
 point dont aucune nuit n'est rattachée à une campagne n'est jamais retenu par un filtre de campagne.
 
-En ligne de commande : `vigiechiro solde-saison --campagne ens`.
+!!! info "Pour l'instant, en ligne de commande seulement"
+    Ce filtre s'utilise avec `vigiechiro solde-saison --campagne ens`. L'écran **Ma saison**, lui, ne
+    propose pas encore de sélecteur de campagne : il affiche toujours la saison entière. Son ajout
+    est suivi par l'issue [#2610](https://github.com/echonuit/vigiechiro-pr-companion/issues/2610).
 
 ## Les nuits opportunistes n'y comptent pas
 
 Une **participation opportuniste** est une nuit réalisée sur le **carré d'un autre observateur**. Elle
 ne relève pas du protocole Point Fixe : le solde ne la compte donc **pas** dans les « deux passages
-attendus » du point, et n'en tire aucun « reste à faire ». Elle reste visible, en pastille
-**Opportuniste**, pour qu'on sache qu'une nuit a bien eu lieu là.
+attendus » du point, et n'en tire aucun « reste à faire ».
+
+Elle reste visible pour autant, dans une colonne à elle : **Hors protocole**, en pastille
+« Opportuniste » suivie de sa date. Elle a sa propre colonne précisément pour ne pas occuper celle
+d'un passage attendu : la voir en « Passage 1 » se lirait « le passage 1 est fait », alors que la
+même ligne réclame encore de poser l'enregistreur. Les colonnes Passage 1 et Passage 2 restent donc
+sur « Non planifié » tant que le passage du protocole manque réellement.
 
 Un carré **entièrement** possédé par un tiers sort quant à lui du solde : y participer est une
 occasion, pas une obligation de protocole.
