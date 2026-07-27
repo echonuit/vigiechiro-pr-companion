@@ -146,7 +146,10 @@ public final class HydratationSquelette {
         if (nuit.isEmpty()) {
             return Optional.empty();
         }
-        jeton.leverSiAnnule();
+        // Pas de leverSiAnnule ici : l'étape réseau consulte le jeton en PREMIER
+        // ([PlateformeReconstruction#observationsCsv]), et doubler le contrôle laissait croire à une
+        // garantie propre à cet appelant. Le mutant qui le supprimait survivait à toute la suite (#2554,
+        // passe 6) - un contrôle qu'on peut retirer sans rien casser ne contrôle rien.
         Optional<ObservationsAReconstruire> observations =
                 telecharger(nuit.orElseThrow().idParticipation(), source, libelleSeul(progres), jeton);
         if (observations.isEmpty()) {
@@ -192,21 +195,26 @@ public final class HydratationSquelette {
                 .flatMap(Optional::stream)
                 .toList();
         if (candidats.isEmpty()) {
-            return new BilanCompletion(0, squelettes.size());
+            return new BilanCompletion(0, squelettes.size(), 0);
         }
 
-        List<Optional<ObservationsAReconstruire>> sources =
-                telechargements.cartographier(candidats, "Nuits", this::telechargerSansBruit, progres, jeton);
+        List<IssueTelechargement> sources =
+                telechargements.cartographier(candidats, "Nuits", this::telecharger, progres, jeton);
 
         int completees = 0;
+        int echecs = 0;
         for (int index = 0; index < candidats.size(); index++) {
             jeton.leverSiAnnule();
-            Optional<ObservationsAReconstruire> observations = sources.get(index);
-            if (observations.isEmpty()) {
-                continue; // pas de CSV : la nuit attend son tour, sans que ce soit une erreur
+            IssueTelechargement source = sources.get(index);
+            if (source.echouee()) {
+                echecs++;
+                continue; // on N'A PAS PU lire : ce n'est pas une nuit qui attend, c'est une lecture ratée
+            }
+            if (source.observations().isEmpty()) {
+                continue; // pas encore de CSV : la nuit attend son analyse, sans que ce soit une erreur
             }
             try {
-                ecrire(candidats.get(index), observations.orElseThrow(), progres);
+                ecrire(candidats.get(index), source.observations().orElseThrow(), progres);
                 completees++;
             } catch (RuntimeException echecNuit) {
                 // Best-effort : la nuit est rendue à son état de squelette par la compensation d'ecrire, le
@@ -214,17 +222,41 @@ public final class HydratationSquelette {
                 // Mais poursuivre n'est pas oublier : sans trace, « il me reste 12 nuits vides » serait
                 // indiagnosticable (ADR 0008).
                 consigner(candidats.get(index).idPassage(), echecNuit);
+                echecs++;
             }
         }
-        return new BilanCompletion(completees, squelettes.size() - completees);
+        return new BilanCompletion(completees, squelettes.size() - completees - echecs, echecs);
     }
 
-    /// Ce qu'un balayage a produit (#2557).
+    /// Ce qu'un balayage a produit (#2557), **ventilé par cause** (#2554 passe 1).
+    ///
+    /// Les trois nombres couvrent **exactement** les nuits en squelette au début du balayage : c'est ce qui
+    /// interdit un reliquat silencieux, et ce que [fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre]
+    /// exige d'une ventilation.
+    ///
+    /// La distinction entre les deux dernières n'est pas cosmétique. Le premier compte rendu annonçait
+    /// **« en attente d'analyse Vigie-Chiro »** pour toute nuit non complétée, y compris celles dont le CSV
+    /// n'avait pas pu être **lu** : on affirmait une cause qu'on n'avait pas constatée, et on orientait vers
+    /// l'attente là où il fallait réessayer.
     ///
     /// @param completees nuits amenées au niveau « contenu »
-    /// @param resteesIncompletes nuits toujours en squelette (CSV pas encore exposé, nuit non rattachée,
-    ///     dossier renommé, échec d'écriture) : elles seront reprises au prochain tour
-    public record BilanCompletion(int completees, int resteesIncompletes) {}
+    /// @param enAttenteDAnalyse nuits dont la plateforme n'expose pas encore le CSV : rien à faire qu'attendre
+    /// @param nonLues nuits dont la lecture ou l'écriture a échoué (réseau, refus serveur, écriture
+    ///     interrompue) : à reprendre, pas à attendre
+    public record BilanCompletion(int completees, int enAttenteDAnalyse, int nonLues) {}
+
+    /// L'issue du téléchargement d'**une** nuit : ses observations, ou l'absence, ou l'échec - trois états
+    /// que le seul `Optional` confondait en deux.
+    private record IssueTelechargement(Optional<ObservationsAReconstruire> observations, boolean echouee) {
+
+        static IssueTelechargement lue(Optional<ObservationsAReconstruire> observations) {
+            return new IssueTelechargement(observations, false);
+        }
+
+        static IssueTelechargement echec() {
+            return new IssueTelechargement(Optional.empty(), true);
+        }
+    }
 
     /// Ce qu'il faut savoir d'une nuit avant de l'hydrater, résolu **une seule fois** : porté de la phase
     /// des lectures à celle des écritures sans les recalculer.
@@ -298,12 +330,13 @@ public final class HydratationSquelette {
 
     /// Le CSV d'**une** nuit du balayage, sans rien dire de son avancement propre : c'est le **lot** qui
     /// rythme (« Nuits k/N »), pas chaque nuit. Un échec réseau isolé n'écarte pas les autres.
-    private Optional<ObservationsAReconstruire> telechargerSansBruit(NuitAHydrater nuit) {
+    private IssueTelechargement telecharger(NuitAHydrater nuit) {
         try {
-            return telecharger(nuit.idParticipation(), Source.CSV_SEULEMENT, progres -> {}, JetonAnnulation.neutre());
+            return IssueTelechargement.lue(
+                    telecharger(nuit.idParticipation(), Source.CSV_SEULEMENT, progres -> {}, JetonAnnulation.neutre()));
         } catch (RuntimeException indisponible) {
             consigner(nuit.idPassage(), indisponible);
-            return Optional.empty();
+            return IssueTelechargement.echec();
         }
     }
 

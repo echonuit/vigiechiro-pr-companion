@@ -73,7 +73,7 @@ public class NavigationMultisite implements OuvrirMultisite {
             Stage modale = new Stage();
             modale.initOwner(parent);
             modale.initModality(Modality.WINDOW_MODAL);
-            modale.setTitle("Reconstruire un passage manquant");
+            modale.setTitle("Compléter une nuit récupérée");
             modale.setScene(new Scene(vue));
             Modales.fermerParEchap(modale);
             // Rafraîchir l'écran appelant à TOUTE fermeture (bouton « Fermer », croix, Échap), et non au seul

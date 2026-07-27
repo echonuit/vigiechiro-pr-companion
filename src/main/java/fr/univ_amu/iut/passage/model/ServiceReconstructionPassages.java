@@ -187,7 +187,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     /// @param completees nuits amenées au niveau « contenu » (séquences + observations)
     /// @param resteesIncompletes nuits toujours en squelette : leur analyse n'est pas terminée sur la
     ///     plateforme, ou leur CSV n'y est pas encore exposé. Elles seront reprises au prochain tour
-    record BilanTour(int crees, int completees, int resteesIncompletes) {
+    record BilanTour(int crees, int completees, int enAttenteDAnalyse, int nonLues) {
 
         /// Rien **ne s'est passé** : ni nuit créée, ni nuit complétée.
         ///
@@ -199,6 +199,23 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         /// question, et elle appartient au compte rendu de l'opération (#2558).
         boolean rienAAnnoncer() {
             return crees == 0 && completees == 0;
+        }
+
+        /// Ce que le compteur passerait sous silence, **par cause** - et jamais sous une cause supposée.
+        ///
+        /// « En attente d'analyse » est une affirmation sur la plateforme : elle n'est due qu'aux nuits dont
+        /// on a effectivement constaté que le CSV n'existe pas encore. Une nuit qu'on n'a **pas pu lire**
+        /// (réseau, refus serveur) se dit autrement, parce qu'elle appelle autre chose : réessayer, pas
+        /// attendre. Les confondre, c'était affirmer une cause qu'on n'avait pas constatée.
+        String reste() {
+            List<String> parts = new ArrayList<>();
+            if (enAttenteDAnalyse > 0) {
+                parts.add(enAttenteDAnalyse + " en attente d'analyse Vigie-Chiro");
+            }
+            if (nonLues > 0) {
+                parts.add(nonLues + " non récupérée(s), à réessayer");
+            }
+            return String.join(", ", parts);
         }
     }
 
@@ -217,10 +234,8 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         // deux fois. Une nuit créée mais restée vide n'est pas perdue pour autant - elle est exactement l'une
         // de celles que la précision annonce.
         RapportSynchro rapport = new RapportSynchro("nuit(s) récupérée(s)", bilan.completees());
-        return Optional.of(
-                bilan.resteesIncompletes() == 0
-                        ? rapport
-                        : rapport.avecPrecision(bilan.resteesIncompletes() + " en attente d'analyse Vigie-Chiro"));
+        String reste = bilan.reste();
+        return Optional.of(reste.isEmpty() ? rapport : rapport.avecPrecision(reste));
     }
 
     /// [Phase#DEPENDANTE] : les passages se rapatrient sur des points d'écoute **déjà locaux**, créés par le
@@ -261,7 +276,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         int crees = creerLesNuitsAbsentes();
         HydratationSquelette.BilanCompletion completion = hydratation.completerLesSquelettes(
                 passagesParParticipation().values().stream().toList(), suivi, jeton);
-        return new BilanTour(crees, completion.completees(), completion.resteesIncompletes());
+        return new BilanTour(crees, completion.completees(), completion.enAttenteDAnalyse(), completion.nonLues());
     }
 
     /// @return le nombre de passages créés

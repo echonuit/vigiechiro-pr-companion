@@ -115,6 +115,7 @@ nav:
     - 1881 · Le numéro d'une ADR est celui de son chantier: decisions/1881-l-identifiant-d-une-adr-est-le-numero-de-son-chantier.md
     - 2465 · Une ADR déclare comment elle est vérifiée: decisions/2465-une-adr-declare-comment-elle-est-verifiee.md
     - 2493 · Une modale à révélation suit la croissance: decisions/2493-une-modale-a-revelation-suit-la-croissance.md
+    - 2554 · La synchro amène chaque nuit à un niveau de complétude: decisions/2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md
     - 2352 · La nuit se lit du crépuscule à l'aube: decisions/2352-la-nuit-se-lit-du-crepuscule-a-l-aube-pas-de-minuit-a-minuit.md
     - 2348 · Un export d'image se redessine: decisions/2348-un-export-d-image-se-redessine-il-ne-se-capture-pas.md
     - 2354 · Le réessai réseau est gradué, jamais aveugle: decisions/2354-le-reessai-reseau-est-gradue-jamais-aveugle-toujours-jittere.md
@@ -128,6 +129,7 @@ nav:
     - S3 · Vérifier: recette/sessions/s3-verifier.md
     - S4 · Déposer et suivre: recette/sessions/s4-deposer-suivre.md
     - S6 · Exploiter et piloter: recette/sessions/s6-exploiter-piloter.md
+    - S8 · Récupérer une nuit déposée: recette/sessions/s8-recuperer-une-nuit.md
   - Interface en ligne de commande (CLI): cli.md
   - Tests et qualité: tests-et-qualite.md
   - Contrat de l'API VigieChiro: api-vigiechiro.md

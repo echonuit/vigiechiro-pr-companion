@@ -48,12 +48,23 @@ numéro de passage, mais également l'**enregistreur**, la **météo** et le **m
 votre historique lisible dès la première synchronisation - c'est ce qui permet, après une réinstallation
 ou sur un nouveau poste, de repartir de la plateforme plutôt que de zéro.
 
-!!! note "Une nuit rapatriée reste « à reconstruire »"
-    Ce que la synchronisation ramène, c'est l'**identité** de la nuit, pas son **contenu** : ni les
-    sons, ni les identifications. Ces nuits apparaissent donc « à reconstruire » ; c'est
-    **☰ › Reconstruire un passage manquant…** ([Toutes mes nuits](multisite.md)) qui va chercher les
-    observations, une nuit ou toutes en une passe. Le contenu est bien plus lourd que l'identité : la
-    synchronisation ne l'impose pas.
+Elle rapatrie enfin leur **contenu** : les identifications faites par Vigie-Chiro et la liste des
+fichiers de la nuit. Vos nuits sont donc consultables dès la première synchronisation.
+
+!!! note "Ce que la synchronisation ne peut pas ramener"
+    **Les sons.** Ils ne sont pas conservés sur la plateforme : une nuit récupérée se consulte, elle ne
+    s'écoute pas. Si vous retrouvez la carte d'origine ou une sauvegarde, ouvrez la nuit et utilisez
+    **Réactiver ce passage** : l'application y reconnaît vos fichiers et les rebranche.
+
+    **Les nuits que Vigie-Chiro n'a pas fini d'analyser.** Leurs identifications n'existent pas encore.
+    La synchronisation le dit (« N en attente d'analyse Vigie-Chiro ») et les reprendra d'elle-même au
+    prochain passage. Si le compte rendu indique plutôt « N non récupérée(s), à réessayer », c'est la
+    liaison avec la plateforme qui a manqué, pas l'analyse : relancez la synchronisation.
+
+!!! info "La synchronisation peut être longue"
+    Elle va chercher le contenu de **chaque** nuit du compte. Sur un historique fourni, comptez
+    plusieurs minutes à la première fois. Une barre indique où elle en est, et **Annuler** l'interrompt
+    à tout moment : ce qui a déjà été récupéré est conservé, et la fois suivante reprend le reste.
 
 La synchronisation rapatrie **tous** les points d'un carré (utile pour importer une nuit sur un point
 pas encore utilisé). Mais un carré Point Fixe en compte des dizaines, dont un seul sert : les vues ne

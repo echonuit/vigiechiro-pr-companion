@@ -160,9 +160,14 @@ final class PlateformeReconstruction {
     private static <T> T exiger(ReponseApi<T> reponse, String quoi) {
         return switch (reponse) {
             case ReponseApi.Succes<T>(T valeur) -> valeur;
+            // Ni le GESTE ni la SURFACE ne sont nommés, et c'est délibéré (#2554, passe 2). Ce message
+            // disait « avant de reconstruire un passage (menu ☰ > Se connecter) » : depuis #2555 la
+            // réactivation passe par ce même collaborateur, et depuis toujours la CLI aussi. On servait donc
+            // « reconstruire » à qui réactive, et un menu ☰ à qui travaille dans un terminal. Un modèle ne
+            // sait pas d'où on l'appelle : il dit ce qui manque, pas où cliquer.
             case ReponseApi.NonConnecte<T> ignore ->
-                throw new RegleMetierException("Non connecté à Vigie-Chiro : collez un jeton (menu ☰ >"
-                        + " Se connecter à Vigie-Chiro) avant de reconstruire un passage.");
+                throw new RegleMetierException("Non connecté à Vigie-Chiro : " + quoi
+                        + " n'a pas pu être lu. Connectez-vous à" + " Vigie-Chiro, puis recommencez.");
             case ReponseApi.Injoignable<T>(String cause) ->
                 throw new RegleMetierException(
                         "Vigie-Chiro est injoignable (" + cause + ") : " + quoi + " n'a pas pu être lu.");

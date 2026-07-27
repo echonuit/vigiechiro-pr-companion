@@ -173,6 +173,21 @@ négatifs qui rendaient l'hydratation d'un vrai passage inopérante avant correc
 deux choix est consigné en [ADR 0001](decisions/0001-reactivation-passage-reconstruit-identite-structurelle.md)
 (identité structurelle) et [ADR 0002](decisions/0002-detection-acoustique-energie-de-pointe.md) (énergie de pointe).
 
+**Cas limite : la nuit *récupérée* et pas encore hydratée (EPIC #2554).** Une nuit rapatriée par la
+synchro n'a ni audio **ni séquences** : il n'y a donc rien à confronter au dossier désigné, et la cascade
+n'a pas de prise. C'est un état distinct du passage reconstruit, qui a ses séquences mais pas ses fichiers.
+La réactivation le reconnaît et **va d'abord chercher les observations** (phase 0, `HydratationSquelette`,
+#2555) : ce sont elles qui apportent les **noms** et l'**horodatage** sur lesquels la cascade reconnaît
+ensuite les fichiers de *cette* nuit dans une carte qui en contient plusieurs. La suite est le chemin
+ci-dessus, inchangé.
+
+Deux points de conception s'y rattachent, consignés en
+[ADR 2554](decisions/2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md) : l'hydratation se
+fait **en place** (un écran est ouvert sur cet identifiant, et un squelette porte peut-être des saisies
+manuelles que la plateforme ignore), là où la reconstruction remplace la nuit ; et la source diffère selon
+l'appelant — le repli sur la pagination `donnees` est justifié sur **une** nuit désignée, jamais sur le
+balayage de compte de la synchro.
+
 **Principes.** Fail-safe (ne pas pouvoir prouver = ne pas faire), **honnêteté** (dire *avec quelle
 force* on a conclu), et refus de la fausse alternative « preuve parfaite ou rien ».
 

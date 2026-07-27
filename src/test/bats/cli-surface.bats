@@ -84,6 +84,26 @@ COMMANDES_LOCALES_SANS_ARG=(
   [[ "${output}" == *"jeton"* ]]
 }
 
+@test "reactiver sur un passage inconnu : refus métier, exit 2, jamais une pile (#2554)" {
+  # Le chantier #2554 a fait circuler la phase 0 (récupération des observations) sur cette commande.
+  # Ce test regarde ce qu'aucun test Java in-process ne voit : le VRAI fat-jar, l'analyse picocli des
+  # arguments, et le CODE DE SORTIE. Un refus qui remonterait en pile aurait un exit 1 et un stacktrace.
+  mkdir -p "${BATS_TEST_TMPDIR}/carte"
+  run cli reactiver --passage 9999 --source "${BATS_TEST_TMPDIR}/carte"
+  [ "${status}" -eq 2 ]
+  [[ "${output}" != *"Exception"* ]]
+  [[ "${output}" != *"\tat fr.univ_amu"* ]]
+}
+
+@test "reactiver : le refus ne parle ni du menu ☰ ni de « reconstruire » (#2554)" {
+  # Les lectures distantes servent la reconstruction, la réactivation, l'IHM et la CLI. Leur refus disait
+  # « avant de reconstruire un passage (menu ☰ > Se connecter) » : un menu dans un terminal, et un geste
+  # qu'on n'a pas demandé. Vu du vrai binaire, c'est ce que l'utilisateur lit.
+  mkdir -p "${BATS_TEST_TMPDIR}/carte"
+  run cli reactiver --passage 9999 --source "${BATS_TEST_TMPDIR}/carte"
+  [[ "${output}" != *"☰"* ]]
+}
+
 @test "synchroniser-vigiechiro reste un alias : les scripts existants ne cassent pas (#1866)" {
   # Le renommage (ADR 0022) ne doit pas rompre un contrat déjà publié : l'ancien nom mène à la même
   # commande, avec le même refus. Sans ce test, l'alias pourrait disparaître sans que rien ne le dise.
