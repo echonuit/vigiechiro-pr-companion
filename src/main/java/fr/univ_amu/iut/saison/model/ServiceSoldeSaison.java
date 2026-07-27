@@ -135,6 +135,11 @@ public class ServiceSoldeSaison {
                 }
             }
         }
+        // Tri **défensif** : les deux DAO trient déjà en SQL (`ORDER BY square_number`, `ORDER BY code`),
+        // donc la boucle imbriquée produit naturellement cet ordre-là. Le retirer ne serait aujourd'hui
+        // observable par aucun test (mutant équivalent par construction, constaté au PIT de clôture
+        // #2349). Il reste, pour que l'ordre annoncé par cet écran soit garanti ICI plutôt que dépendre
+        // de deux clauses SQL vivant dans une autre feature.
         lignes.sort(PAR_CARRE_PUIS_POINT);
         return new SoldeSaison(annee, aujourdhui, lignes);
     }

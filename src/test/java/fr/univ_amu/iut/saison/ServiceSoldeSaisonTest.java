@@ -62,6 +62,7 @@ class ServiceSoldeSaisonTest {
     @TempDir
     Path dossier;
 
+    private Injector injecteur;
     private SourceDeDonnees source;
     private SiteDao siteDao;
     private ServiceSoldeSaison service;
@@ -72,7 +73,7 @@ class ServiceSoldeSaisonTest {
     @BeforeEach
     void preparer() {
         System.setProperty("vigiechiro.workspace", dossier.toString());
-        Injector injecteur = Guice.createInjector(
+        injecteur = Guice.createInjector(
                 new CommunModule(), new PersistenceModule(), new SitesModule(), new PassageModule());
         source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
@@ -318,6 +319,40 @@ class ServiceSoldeSaisonTest {
         assertThat(service.soldePour(ID_USER, 2026, "Inconnue").lignes())
                 .as("aucun point ne relève de cette campagne")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("fenêtre du second passage dépassée : le reste à faire le dit, et le signalement se tait")
+    void fenetre_depassee_apres_l_echeance() {
+        // Horloge au 15 octobre : les deux fenêtres 2026 sont closes. Deux comportements en dépendent,
+        // aucun n'était éprouvé (deux survivants PIT) : la phrase de `actionPoser` quand la fenêtre est
+        // derrière nous, et le signalement qui ne concerne QUE les fenêtres encore ouvertes.
+        SoldeSaison solde = serviceAu(LocalDate.of(2026, 10, 15)).soldePour(ID_USER, 2026);
+
+        assertThat(ligne(solde, "640002", "B1").resteAFaire())
+                .as("P1 déposé, P2 jamais posé et la fenêtre est close")
+                .isEqualTo("Fenêtre du 2e passage dépassée (30/09)");
+        assertThat(ligne(solde, "640004", "D1").resteAFaire())
+                .as("aucune nuit : c'est la fenêtre du PREMIER passage qui est annoncée dépassée")
+                .isEqualTo("Fenêtre du 1er passage dépassée (31/07)");
+
+        assertThat(solde.joursAvantEcheanceSecondPassage()).isNegative();
+        assertThat(solde.pointsSecondPassageEnAttente())
+                .as("l'application signale une échéance qui approche, pas une échéance passée")
+                .isZero();
+    }
+
+    /// Le même service, vu d'un autre jour. Les phrases du solde dépendent de la date courante ;
+    /// l'horloge du montage est figée au 20/07/2026, dans la fenêtre du premier passage.
+    private ServiceSoldeSaison serviceAu(LocalDate jour) {
+        return new ServiceSoldeSaison(
+                siteDao,
+                injecteur.getInstance(PointDao.class),
+                injecteur.getInstance(PassageDao.class),
+                opportunistes,
+                carresDeTiers,
+                Optional.of(campagnes),
+                new HorlogeFigee(jour));
     }
 
     /// Identifiant local du carré `carre`.
