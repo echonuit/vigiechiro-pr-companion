@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.79.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.78.0...v2.79.0) (2026-07-27)
+
+
+### Features
+
+* **saison:** filtrer le solde par campagne ([#2355](https://github.com/echonuit/vigiechiro-pr-companion/issues/2355)) ([#2582](https://github.com/echonuit/vigiechiro-pr-companion/issues/2582)) ([cbdcb35](https://github.com/echonuit/vigiechiro-pr-companion/commit/cbdcb35371566c128cb15c3afc44cf89739c43dd)), closes [#2349](https://github.com/echonuit/vigiechiro-pr-companion/issues/2349)
+
 # [2.78.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.77.0...v2.78.0) (2026-07-27)
 
 
