@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Modales;
@@ -175,25 +176,44 @@ public class ConnexionModaleController {
     }
 
     /// Vérifie un jeton (collé, ou enregistré non vérifié à revérifier, #1369) hors du fil JavaFX.
+    ///
+    /// **Sous une barre depuis #2558.** Se connecter ne se réduit plus à vérifier un jeton : la connexion
+    /// rejoue les rapprocheurs, et l'un d'eux rapatrie désormais le contenu de **chaque nuit du compte**
+    /// (#2557). Le bandeau « Vérification en cours… » annonçait une seconde d'attente pour ce qui peut en
+    /// prendre plusieurs centaines, sans rien montrer ni permettre de renoncer.
+    ///
+    /// Renoncer n'annule **pas** la connexion : le jeton est vérifié et enregistré avant que les
+    /// rapprocheurs démarrent. C'est le rapatriement qui s'arrête, et la synchro suivante le reprendra.
     private void verifierJeton(String token) {
         verificationEnCours.set(true);
         afficherStatut("Vérification en cours…", STATUT_INFO);
-        executeur.executer(
-                () -> viewModel.connecter(token),
-                reponse -> {
-                    verificationEnCours.set(false);
-                    viewModel.rafraichir();
-                    restituerVerification(reponse);
-                },
-                erreur -> {
-                    verificationEnCours.set(false);
-                    viewModel.rafraichir();
-                    String detail = erreur.getMessage();
-                    afficherStatut(
-                            "Vérification impossible : "
-                                    + (detail != null && !detail.isBlank() ? detail : "erreur inattendue."),
-                            STATUT_DANGER);
-                });
+        new DialogueProgression(executeur)
+                .lancer(
+                        champToken.getScene().getWindow(),
+                        "Connexion à Vigie-Chiro",
+                        (suivi, jeton) -> viewModel.connecter(token, suivi, jeton),
+                        reponse -> {
+                            verificationEnCours.set(false);
+                            viewModel.rafraichir();
+                            restituerVerification(reponse);
+                        },
+                        () -> {
+                            verificationEnCours.set(false);
+                            viewModel.rafraichir();
+                            afficherStatut(
+                                    "Connexion enregistrée. La récupération de vos nuits a été interrompue :"
+                                            + " la prochaine synchronisation reprendra le reste.",
+                                    STATUT_INFO);
+                        },
+                        erreur -> {
+                            verificationEnCours.set(false);
+                            viewModel.rafraichir();
+                            String detail = erreur.getMessage();
+                            afficherStatut(
+                                    "Vérification impossible : "
+                                            + (detail != null && !detail.isBlank() ? detail : "erreur inattendue."),
+                                    STATUT_DANGER);
+                        });
     }
 
     /// Restitue l'issue de la vérification du jeton (#1284) : avant, tout échec devenait « Token

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
+import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
@@ -135,11 +136,19 @@ public class MesSitesController implements ResumeStatut {
     /// message) s'applique sur le fil JavaFX, l'échec rejoint le message de synchronisation.
     @FXML
     private void recupererDepuisVigieChiro() {
-        occupation.occuper(
-                "Synchronisation Vigie-Chiro en cours…",
-                viewModel::synchroniserEtRecharger,
-                viewModel::appliquerSynchro,
-                viewModel::signalerErreurSynchro);
+        // #2558 : le voile opaque a fait son temps. Depuis #2557 ce geste rapatrie le CONTENU de chaque
+        // nuit du compte - des minutes, sur un gros compte. La mesure a permis de décider de ne pas BORNER
+        // le balayage ; cette décision ne tient que si l'on voit où il en est et qu'on peut renoncer.
+        // L'annulation remplace la borne, et elle ne perd rien : la synchro est idempotente par nuit, donc
+        // interrompue elle reprend au tour suivant.
+        new DialogueProgression(executeur)
+                .lancer(
+                        listeCartes.getScene().getWindow(),
+                        "Synchronisation Vigie-Chiro",
+                        viewModel::synchroniserEtRecharger,
+                        viewModel::appliquerSynchro,
+                        viewModel::signalerAnnulationSynchro,
+                        viewModel::signalerErreurSynchro);
     }
 
     /// Action des boutons « + Nouveau site » (bandeau et état vide).
