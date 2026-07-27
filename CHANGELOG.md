@@ -2,6 +2,14 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.76.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.75.0...v2.76.0) (2026-07-27)
+
+
+### Features
+
+* **multisite:** colonne « Campagne » dans le tableau et tri par campagne ([#2355](https://github.com/echonuit/vigiechiro-pr-companion/issues/2355)) ([#2576](https://github.com/echonuit/vigiechiro-pr-companion/issues/2576)) ([60b8788](https://github.com/echonuit/vigiechiro-pr-companion/commit/60b87887794e0edde54c0c01f5eb3592ccd1338b)), closes [#2572](https://github.com/echonuit/vigiechiro-pr-companion/issues/2572)
+* **passage:** la synchro amene chaque nuit au niveau contenu ([#2571](https://github.com/echonuit/vigiechiro-pr-companion/issues/2571)) ([a1141fd](https://github.com/echonuit/vigiechiro-pr-companion/commit/a1141fd67af879adda49756c7562247cb571a04f)), closes [#1814](https://github.com/echonuit/vigiechiro-pr-companion/issues/1814) [#1814](https://github.com/echonuit/vigiechiro-pr-companion/issues/1814) [#2557](https://github.com/echonuit/vigiechiro-pr-companion/issues/2557)
+
 # [2.75.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.74.0...v2.75.0) (2026-07-26)
 
 
