@@ -32,6 +32,7 @@ COMMANDES_OPTIONS_REQUISES=(
   deposer deposer-vigiechiro importer-vigiechiro publier-corrections-vigiechiro
   etat-traitement-vigiechiro lancer-traitement-vigiechiro verifier-depot-vigiechiro
   vigiechiro
+  creer-campagne rattacher-campagne
 )
 
 @test "surface : chaque commande à options requises refuse l'absence d'arguments (exit 2) (#1592)" {
@@ -50,7 +51,10 @@ COMMANDES_OPTIONS_REQUISES=(
 
 # Commandes LOCALES sans option requise : s'exécutent telles quelles sur la base fraîche (migrée au
 # démarrage), sans réseau, exit 0. Chacune écrit/lit uniquement sous le workspace jetable du test.
-COMMANDES_LOCALES_SANS_ARG=(audit-coherence sauvegarder reset-guide retro-empreintes)
+COMMANDES_LOCALES_SANS_ARG=(
+  audit-coherence sauvegarder reset-guide retro-empreintes
+  solde-saison lister-campagnes
+)
 
 @test "surface : les commandes locales sans option requise s'exécutent sur base fraîche (exit 0) (#1592)" {
   local n=0
@@ -63,7 +67,7 @@ COMMANDES_LOCALES_SANS_ARG=(audit-coherence sauvegarder reset-guide retro-emprei
     n=$((n + 1))
   done
   echo "commandes locales sans argument vérifiées : ${n}"
-  [ "${n}" -eq 4 ]
+  [ "${n}" -eq 6 ]
 }
 
 @test "audit-coherence : base fraîche, aucun écart disque/base annoncé, exit 0 (#1592)" {
