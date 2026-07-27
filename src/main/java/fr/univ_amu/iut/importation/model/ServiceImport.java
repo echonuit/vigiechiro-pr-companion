@@ -230,9 +230,9 @@ public class ServiceImport {
                     : executerImportProtege(
                             dossierSource, idPoint, prefixe, progres, jeton, false, conserverOriginaux, suiviFichiers);
             // La nuit est persistée (transaction O7 committée) : on crée sa participation VigieChiro au plus
-            // tôt (best-effort), pour que le dépôt la réutilise ensuite (pas de doublon).
-            creerParticipationSiPossible(resultat.passage().id());
-            return resultat;
+            // tôt (best-effort), pour que le dépôt la réutilise ensuite (pas de doublon). Le résultat porte
+            // désormais ce qui s'est passé (#1488) : cette écriture distante ne s'annonçait nulle part.
+            return creerParticipationSiPossible(resultat.passage().id()) ? resultat.avecParticipationCreee() : resultat;
         } finally {
             importEnCours.set(false);
         }
@@ -399,10 +399,13 @@ public class ServiceImport {
                     jeton,
                     suiviFichiers);
             ResultatImportMultiNuits resultat = moteur.importerNuits(ctx, prefixeBase, nuits, progres);
-            // Une participation VigieChiro par nuit persistée (best-effort), réutilisée au dépôt.
-            resultat.parNuit()
-                    .forEach(nuit -> creerParticipationSiPossible(nuit.passage().id()));
-            return resultat;
+            // Une participation VigieChiro par nuit persistée (best-effort), réutilisée au dépôt. Chaque
+            // nuit porte le sien : sur une carte multi-nuits, certaines peuvent être publiées et d'autres
+            // non, et un compte rendu qui l'annoncerait pour toutes en bloc mentirait sur les secondes.
+            return new ResultatImportMultiNuits(resultat.parNuit().stream()
+                    .map(nuit ->
+                            creerParticipationSiPossible(nuit.passage().id()) ? nuit.avecParticipationCreee() : nuit)
+                    .toList());
         } finally {
             importEnCours.set(false);
         }
@@ -469,14 +472,24 @@ public class ServiceImport {
     /// sans doublon). Hors connexion (aucun token → création silencieusement refusée côté client) ou site non
     /// rattaché ([RegleMetierException] avalée), l'import **reste un succès** : la participation sera créée en
     /// repli au dépôt. Best-effort et silencieux ; la passerelle est absente des injecteurs sans connexion.
-    private void creerParticipationSiPossible(Long idPassage) {
-        synchronisation.ifPresent(sync -> {
-            try {
-                sync.creerPour(idPassage);
-            } catch (RegleMetierException horsPortee) {
-                // Site non rattaché / point manquant : non bloquant pour l'import (repli au dépôt).
-            }
-        });
+    /// @return `true` si une participation a effectivement été créée sur la plateforme. Le dire est le
+    ///     second volet de #1488 : l'import écrivait sur un serveur distant **sans que rien ne l'annonce**,
+    ///     nulle part. Une écriture silencieuse n'est pas une écriture discrète, c'est une écriture qu'on
+    ///     découvre ailleurs. `false` couvre les deux cas où rien n'a été écrit - passerelle absente (hors
+    ///     application complète) et refus hors portée - car du point de vue du compte rendu ils se valent :
+    ///     il n'y a rien à annoncer.
+    private boolean creerParticipationSiPossible(Long idPassage) {
+        return synchronisation
+                .map(sync -> {
+                    try {
+                        sync.creerPour(idPassage);
+                        return true;
+                    } catch (RegleMetierException horsPortee) {
+                        // Site non rattaché / point manquant : non bloquant pour l'import (repli au dépôt).
+                        return false;
+                    }
+                })
+                .orElse(false);
     }
 
     /// Rejette (NPE) tout paramètre commun manquant d'un import, factorisé pour éviter la duplication : les

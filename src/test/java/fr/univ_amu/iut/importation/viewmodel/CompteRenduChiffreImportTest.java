@@ -365,7 +365,7 @@ class CompteRenduChiffreImportTest {
                     List.of(nuit("2026-04-22", 2, 1), nuit("2026-04-23", 3, 0), nuit("2026-04-24", 1, 2)));
         }
 
-        private static ResultatImport nuit(String date, int importes, int rejetes) {
+        static ResultatImport nuit(String date, int importes, int rejetes) {
             List<LigneRapport> lignes = new java.util.ArrayList<>();
             for (int i = 0; i < importes; i++) {
                 lignes.add(ligne(date + "-ok-" + i + ".wav", StatutImportFichier.IMPORTE, ""));
@@ -432,6 +432,68 @@ class CompteRenduChiffreImportTest {
 
             assertThat(CompteRenduChiffreImport.de(uneNuit, List.of()).titre())
                     .isEqualTo("Import terminé - nuit du 2026-04-22, carré 640380 · A1");
+        }
+    }
+
+    @Nested
+    @DisplayName("#1488 : ce que le rapport ne sait pas")
+    class ContexteApres {
+
+        private static final String MELANGE = "Ce dossier mélangeait plusieurs enregistreurs";
+
+        @Test
+        @DisplayName("Les avertissements d'inspection encore vrais sont rappelés, en tête")
+        void avertissements_encore_vrais_rappeles() {
+            var contexte = new CompteRenduChiffreImport.ContexteApresImport(
+                    List.of(MELANGE + " (1925492, 1648011) : le passage créé peut contenir des enregistrements"
+                            + " d'un autre appareil."),
+                    0);
+
+            CompteRenduChiffre rendu = CompteRenduChiffreImport.de(
+                    resultat(rapportType(), VolumesImport.AUCUN, List.of("Sonde absente")), List.of(), contexte);
+
+            // En tête des autres : importer ne résout pas un mélange d'enregistreurs, cela le grave dans
+            // un passage - c'est plus grave qu'une sonde absente.
+            assertThat(rendu.avertissements()).first().asString().startsWith(MELANGE);
+            assertThat(rendu.avertissements()).contains("Sonde absente");
+        }
+
+        @Test
+        @DisplayName("La participation créée se dit : une écriture distante ne se découvre pas ailleurs")
+        void participation_creee_annoncee() {
+            ResultatImport avecParticipation =
+                    resultat(rapportType(), VolumesImport.AUCUN, List.of()).avecParticipationCreee();
+
+            CompteRenduChiffre rendu = CompteRenduChiffreImport.de(avecParticipation, List.of());
+
+            assertThat(rendu.avertissements())
+                    .anySatisfy(texte -> assertThat(texte)
+                            .contains("Participation créée sur Vigie-Chiro")
+                            .contains("le dépôt la réutilisera"));
+        }
+
+        @Test
+        @DisplayName("Sans participation, rien n'est annoncé : il n'y a rien à dire")
+        void sans_participation_rien_a_dire() {
+            CompteRenduChiffre rendu =
+                    CompteRenduChiffreImport.de(resultat(rapportType(), VolumesImport.AUCUN, List.of()), List.of());
+
+            assertThat(rendu.avertissements()).noneMatch(texte -> texte.contains("Vigie-Chiro"));
+        }
+
+        @Test
+        @DisplayName("En multi-nuits, les participations se comptent nuit par nuit")
+        void participations_comptees_par_nuit() {
+            var nuits = new ResultatImportMultiNuits(List.of(
+                    MultiNuits.nuit("2026-04-22", 2, 0).avecParticipationCreee(),
+                    MultiNuits.nuit("2026-04-23", 1, 0).avecParticipationCreee(),
+                    MultiNuits.nuit("2026-04-24", 1, 0)));
+
+            CompteRenduChiffre rendu = CompteRenduChiffreImport.de(nuits, List.of());
+
+            // Deux sur trois : annoncer « 3 participations » mentirait sur la nuit restée locale.
+            assertThat(rendu.avertissements())
+                    .anySatisfy(texte -> assertThat(texte).startsWith("2 participations créées sur Vigie-Chiro"));
         }
     }
 

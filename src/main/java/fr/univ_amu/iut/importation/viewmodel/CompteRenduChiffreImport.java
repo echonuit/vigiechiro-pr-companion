@@ -41,18 +41,32 @@ public final class CompteRenduChiffreImport {
     /// @param actions ce que l'écran propose de faire ensuite ; un compte rendu ne se termine pas sur
     ///     « Fermer », et c'est l'écran qui sait où mènent ses boutons
     public static CompteRenduChiffre de(ResultatImport resultat, List<Action> actions) {
+        return de(resultat, actions, ContexteApresImport.AUCUN);
+    }
+
+    /// Variante qui reçoit en plus ce que le rapport ne sait pas : les avertissements d'inspection encore
+    /// vrais et la participation créée (#1488).
+    public static CompteRenduChiffre de(ResultatImport resultat, List<Action> actions, ContexteApresImport contexte) {
         return construire(
                 titreMonoNuit(resultat),
                 List.of(resultat.rapport()),
                 resultat.volumes(),
                 resultat.anomalies(),
-                actions);
+                actions,
+                contexte.avecParticipations(resultat.participationCreee() ? 1 : 0));
     }
 
     /// Le compte rendu chiffré d'un import **multi-nuits** : mêmes catégories, agrégées sur toutes les
     /// nuits. Rendre compte de la seule première tairait les rejets des autres, or c'est sur un import
     /// multi-nuits qu'il y en a le plus.
     public static CompteRenduChiffre de(ResultatImportMultiNuits resultat, List<Action> actions) {
+        return de(resultat, actions, ContexteApresImport.AUCUN);
+    }
+
+    /// Variante multi-nuits recevant le contexte d'après import (#1488). Les participations sont comptées
+    /// **nuit par nuit** : sur une carte multi-nuits, certaines peuvent être publiées et d'autres non.
+    public static CompteRenduChiffre de(
+            ResultatImportMultiNuits resultat, List<Action> actions, ContexteApresImport contexte) {
         return construire(
                 titreMultiNuits(resultat),
                 resultat.parNuit().stream().map(ResultatImport::rapport).toList(),
@@ -60,7 +74,10 @@ public final class CompteRenduChiffreImport {
                 resultat.parNuit().stream()
                         .flatMap(nuit -> nuit.anomalies().stream())
                         .toList(),
-                actions);
+                actions,
+                contexte.avecParticipations((int) resultat.parNuit().stream()
+                        .filter(ResultatImport::participationCreee)
+                        .count()));
     }
 
     private static CompteRenduChiffre construire(
@@ -68,7 +85,8 @@ public final class CompteRenduChiffreImport {
             List<RapportImport> rapports,
             VolumesImport volumes,
             List<String> anomalies,
-            List<Action> actions) {
+            List<Action> actions,
+            ContexteApresImport contexte) {
         List<LigneRapport> lignes =
                 rapports.stream().flatMap(rapport -> rapport.lignes().stream()).toList();
         long importes = compte(lignes, StatutImportFichier.IMPORTE);
@@ -80,7 +98,7 @@ public final class CompteRenduChiffreImport {
                 barresDeVolume(volumes),
                 ventilation(lignes),
                 motifs(rapports, lignes),
-                avertissements(rapports, anomalies),
+                avertissements(rapports, anomalies, contexte),
                 actions);
     }
 
@@ -206,8 +224,9 @@ public final class CompteRenduChiffreImport {
 
     /// Ce qui reste vrai après l'import et qu'aucun chiffre ne porte : le doublon de nuit assumé, les
     /// anomalies relevées au journal du capteur (R19).
-    private static List<String> avertissements(List<RapportImport> rapports, List<String> anomalies) {
-        List<String> avertissements = new ArrayList<>();
+    private static List<String> avertissements(
+            List<RapportImport> rapports, List<String> anomalies, ContexteApresImport contexte) {
+        List<String> avertissements = new ArrayList<>(contexte.avertissementsEncoreVrais());
         long doublons = rapports.stream()
                 .flatMap(rapport -> rapport.doublonsDeNuit().stream())
                 .count();
@@ -217,7 +236,41 @@ public final class CompteRenduChiffreImport {
                             + " passage(s) existant(s) pour la même série et la même date. Le passage créé en est un doublon assumé.");
         }
         avertissements.addAll(anomalies);
+        // L'écriture distante se dit (#1488) : elle porte les données de l'utilisateur sur un serveur, et
+        // ne s'annonçait nulle part. Rangée avec les avertissements faute d'un troisième registre, mais
+        // formulée comme le fait accompli qu'elle est, non comme un problème.
+        if (contexte.participations() == 1) {
+            avertissements.add(
+                    "Participation créée sur Vigie-Chiro : la nuit y est déclarée, le dépôt la réutilisera.");
+        } else if (contexte.participations() > 1) {
+            avertissements.add(contexte.participations()
+                    + " participations créées sur Vigie-Chiro : les nuits y sont déclarées, le dépôt les réutilisera.");
+        }
         return avertissements;
+    }
+
+    /// Ce que le compte rendu sait de l'import **au-delà du rapport** : les avertissements d'inspection
+    /// encore vrais (#1488), que seul l'écran a vus, et le nombre de participations créées, que seul le
+    /// service sait. Regroupés en un type valeur (doctrine de l'EPIC #2483) plutôt qu'ajoutés en
+    /// paramètres voisins d'une signature déjà longue.
+    ///
+    /// @param avertissementsEncoreVrais cf. [AvertissementsInspection#encoreVraisApresImport]
+    /// @param participations nombre de nuits pour lesquelles une participation a été créée
+    public record ContexteApresImport(List<String> avertissementsEncoreVrais, int participations) {
+
+        /// Rien à ajouter : import hors écran (outil de capture, test) et inspection sans réserve.
+        public static final ContexteApresImport AUCUN = new ContexteApresImport(List.of(), 0);
+
+        public ContexteApresImport {
+            avertissementsEncoreVrais = List.copyOf(avertissementsEncoreVrais);
+        }
+
+        /// Le même contexte, avec le nombre de participations relevé sur le résultat. L'écran fournit les
+        /// avertissements - il est le seul à avoir vu l'inspection - et le résultat porte les
+        /// participations : chacun renseigne ce qu'il sait, personne ne devine la part de l'autre.
+        ContexteApresImport avecParticipations(int combien) {
+            return new ContexteApresImport(avertissementsEncoreVrais, combien);
+        }
     }
 
     private static long compte(List<LigneRapport> lignes, StatutImportFichier statut) {

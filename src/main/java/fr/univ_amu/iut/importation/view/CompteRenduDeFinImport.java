@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.viewmodel.CompteRenduChiffreImport;
+import fr.univ_amu.iut.importation.viewmodel.CompteRenduChiffreImport.ContexteApresImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -50,13 +51,25 @@ final class CompteRenduDeFinImport {
         var mono = viewModel.resultatProperty().get();
         boolean aRendre = viewModel.etatProperty().get() == EtatImport.TERMINE && (multiNuits != null || mono != null);
         if (aRendre) {
+            ContexteApresImport contexte = contexteApresImport();
             panneau.afficher(
                     multiNuits != null
-                            ? CompteRenduChiffreImport.de(multiNuits, actionsApresImport(multiNuits.premier()))
-                            : CompteRenduChiffreImport.de(mono, actionsApresImport(mono)));
+                            ? CompteRenduChiffreImport.de(
+                                    multiNuits, actionsApresImport(multiNuits.premier()), contexte)
+                            : CompteRenduChiffreImport.de(mono, actionsApresImport(mono), contexte));
         }
         panneau.setVisible(aRendre);
         panneau.setManaged(aRendre);
+    }
+
+    /// Ce que seul l'écran sait : les avertissements de l'inspection **encore vrais** une fois la nuit
+    /// importée (#1488). Le rapport de fin rappelait le doublon mais jamais le mélange d'enregistreurs ni
+    /// l'incohérence journal ↔ fichiers, pourtant plus graves - or importer ne les résout pas, cela les
+    /// grave dans un passage.
+    ///
+    /// La composition du texte revient au ViewModel : la vue ne fait que le transmettre au compte rendu.
+    private ContexteApresImport contexteApresImport() {
+        return new ContexteApresImport(viewModel.inspection().avertissementsEncoreVraisApresImport(), 0);
     }
 
     /// L'action suivante : ouvrir le passage créé. Un compte rendu ne se termine pas sur « Fermer » - la

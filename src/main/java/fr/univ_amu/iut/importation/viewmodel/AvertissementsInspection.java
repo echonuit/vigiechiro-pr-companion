@@ -39,6 +39,34 @@ public final class AvertissementsInspection {
         return constats.isEmpty() ? CompteRendu.de("", List.of()) : CompteRendu.de("", constats);
     }
 
+    /// Les avertissements d'inspection **encore vrais une fois l'import fait** (#1488).
+    ///
+    /// Le rapport de fin rappelait le doublon de nuit mais jamais le mélange d'enregistreurs ni
+    /// l'incohérence journal ↔ fichiers, pourtant plus graves : l'utilisateur les voyait avant d'importer,
+    /// puis l'écran les remplaçait par un compte rendu qui n'en disait rien. Or importer ne les résout pas,
+    /// cela les **grave dans un passage**.
+    ///
+    /// La rédaction est distincte de celle d'avant l'import, et c'est voulu : « vérifiez la source avant
+    /// d'importer » n'a plus de sens une fois la nuit persistée. Avant, on prévient ; après, on dit ce qui
+    /// peut être faux dans ce qui vient d'être créé. Les deux vivent ici, côte à côte, pour ne pas dériver
+    /// l'une de l'autre sans qu'on le voie.
+    ///
+    /// La nuit déjà importée n'y figure pas : le compte rendu chiffré la porte déjà, avec la liste de ses
+    /// passages ([CompteRenduChiffreImport]).
+    static List<String> encoreVraisApresImport(AnalyseMelange melange, AnalyseCoherence coherence) {
+        List<String> encoreVrais = new ArrayList<>();
+        if (melange != null && melange.plusieursEnregistreurs()) {
+            encoreVrais.add("Ce dossier mélangeait plusieurs enregistreurs ("
+                    + String.join(", ", melange.series())
+                    + ") : le passage créé peut contenir des enregistrements d'un autre appareil.");
+        }
+        if (coherence != null && coherence.incoherent()) {
+            encoreVrais.add("Le journal du capteur ne correspondait pas aux enregistrements : la série ou la"
+                    + " date du passage créé peuvent être fausses.");
+        }
+        return List.copyOf(encoreVrais);
+    }
+
     /// Mélange d'enregistreurs : un import correspond à un seul enregistreur. Chaque série est un détail,
     /// là où elles étaient jointes par des virgules dans la phrase.
     private static Optional<Constat> melangeConstat(AnalyseMelange melange) {

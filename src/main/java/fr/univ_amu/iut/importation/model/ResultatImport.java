@@ -18,6 +18,9 @@ import java.util.List;
 /// @param anomalies anomalies relevées dans le journal du capteur (R19), éventuellement vide
 /// @param rapport rapport d'import résilient — importés / ignorés / rejetés (#155)
 /// @param volumes volumes lus et écrits par cet import (#2358) ; [VolumesImport#AUCUN] si non mesurés
+/// @param participationCreee `true` si l'import a créé une **participation sur Vigie-Chiro** (#1488).
+///     L'écriture est faite après la persistance locale, en best-effort ; elle n'était annoncée nulle
+///     part, alors qu'elle porte les données de l'utilisateur sur un serveur distant
 public record ResultatImport(
         Passage passage,
         SessionDEnregistrement session,
@@ -26,7 +29,8 @@ public record ResultatImport(
         int nombreSequences,
         List<String> anomalies,
         RapportImport rapport,
-        VolumesImport volumes) {
+        VolumesImport volumes,
+        boolean participationCreee) {
 
     public ResultatImport {
         anomalies = List.copyOf(anomalies);
@@ -34,7 +38,23 @@ public record ResultatImport(
         volumes = volumes == null ? VolumesImport.AUCUN : volumes;
     }
 
-    /// Variante sans volumes : pour les appelants/tests qui ne les mesurent pas (#2358).
+    /// Le même import, **avec sa participation Vigie-Chiro créée** (#1488). La participation est écrite
+    /// après la persistance locale, donc après la construction de ce résultat : c'est le service qui en
+    /// enrichit la copie, plutôt que le moteur qui l'anticiperait.
+    public ResultatImport avecParticipationCreee() {
+        return new ResultatImport(
+                passage,
+                session,
+                numeroSerieEnregistreur,
+                nombreOriginaux,
+                nombreSequences,
+                anomalies,
+                rapport,
+                volumes,
+                true);
+    }
+
+    /// Variante sans volumes ni participation : pour les appelants/tests qui ne les renseignent pas.
     public ResultatImport(
             Passage passage,
             SessionDEnregistrement session,
@@ -52,6 +72,28 @@ public record ResultatImport(
                 anomalies,
                 rapport,
                 VolumesImport.AUCUN);
+    }
+
+    /// Variante sans participation : pour le moteur, qui produit le résultat **avant** l'écriture distante.
+    public ResultatImport(
+            Passage passage,
+            SessionDEnregistrement session,
+            String numeroSerieEnregistreur,
+            int nombreOriginaux,
+            int nombreSequences,
+            List<String> anomalies,
+            RapportImport rapport,
+            VolumesImport volumes) {
+        this(
+                passage,
+                session,
+                numeroSerieEnregistreur,
+                nombreOriginaux,
+                nombreSequences,
+                anomalies,
+                rapport,
+                volumes,
+                false);
     }
 
     /// Variante sans rapport (rapport vide) : pour les appelants/tests qui n'en construisent pas.
