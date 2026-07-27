@@ -22,6 +22,13 @@ public record ResultatImportMultiNuits(List<ResultatImport> parNuit) {
         return parNuit.stream().mapToInt(ResultatImport::nombreSequences).sum();
     }
 
+    /// Volumes **cumulés** sur toutes les nuits (#2358) : chaque nuit lit sa part de la carte et écrit sa
+    /// propre session. Rendre ceux de la seule première nuit sous-estimerait l'import de tout le reste,
+    /// et c'est justement sur un import multi-nuits que le volume écrit surprend.
+    public VolumesImport volumes() {
+        return parNuit.stream().map(ResultatImport::volumes).reduce(VolumesImport.AUCUN, VolumesImport::plus);
+    }
+
     /// Premier passage créé (nuit la plus ancienne), ou `null` si la liste est vide.
     public ResultatImport premier() {
         return parNuit.isEmpty() ? null : parNuit.getFirst();
