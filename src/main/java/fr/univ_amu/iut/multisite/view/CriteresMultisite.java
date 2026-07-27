@@ -152,6 +152,43 @@ final class CriteresMultisite {
         };
     }
 
+    /// Critère **Campagne** (#2355) : champ libre, correspondance **partielle** sur le nom (on tape
+    /// « ENS », pas le libellé exact) — même ergonomie que le carré, et pour la même raison : la liste des
+    /// campagnes n'est pas connue de la vue, et taper est plus rapide que dérouler.
+    static CritereFiltre<LignePassage> campagne() {
+        return new CritereFiltre<LignePassage>() {
+            @Override
+            public String nom() {
+                return "campagne";
+            }
+
+            @Override
+            public String libelle() {
+                return "Campagne";
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<LignePassage>> applique) {
+                TextField champ = new TextField();
+                champ.setPromptText("Nom de campagne");
+                champ.textProperty().addListener((obs, avant, texte) -> applique.accept(predicatCampagne(texte)));
+                applique.accept(tout()); // pas de valeur → aucun filtre
+                return champ;
+            }
+
+            @Override
+            public List<String> valeurCourante(Node editeur) {
+                String campagne = texteOuNull(((TextField) editeur).getText());
+                return campagne == null ? List.of() : List.of(campagne);
+            }
+
+            @Override
+            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+                ((TextField) editeur).setText(valeurs.isEmpty() ? "" : valeurs.get(0));
+            }
+        };
+    }
+
     /// Critère **Statut de workflow** : liste déroulante, sans présélection.
     static CritereFiltre<LignePassage> statut() {
         return new CritereFiltre<LignePassage>() {
@@ -289,6 +326,11 @@ final class CriteresMultisite {
     private static Predicate<LignePassage> predicatCarre(String texte) {
         String carre = texteOuNull(texte);
         return carre == null ? tout() : FiltresMultisite.parSite(carre)::accepte;
+    }
+
+    private static Predicate<LignePassage> predicatCampagne(String texte) {
+        String campagne = texteOuNull(texte);
+        return campagne == null ? tout() : FiltresMultisite.parCampagne(campagne)::accepte;
     }
 
     private static Predicate<LignePassage> predicatAnnee(String texte) {

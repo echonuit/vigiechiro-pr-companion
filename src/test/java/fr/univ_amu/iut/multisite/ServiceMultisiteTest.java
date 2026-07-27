@@ -223,6 +223,45 @@ class ServiceMultisiteTest {
         assertThat(lignes).extracting(LignePassage::campagne).containsExactly("Alpha", "Zeta", null, null, null);
     }
 
+    @Test
+    @DisplayName("#2355 : filtre par campagne — correspondance partielle, insensible à la casse")
+    void filtre_par_campagne() {
+        PassageDao passages = injecteur.getInstance(PassageDao.class);
+        HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
+        ServiceCampagne campagnes = new ServiceCampagne(new CampagneDao(source), passages, horloge);
+        Campagne ens = campagnes.creerCampagne("Suivi ENS", 2026, null);
+        List<LignePassage> ordreDeLecture = service.listerPassages(ID_USER);
+        campagnes.rattacherPassage(ordreDeLecture.get(0).idPassage(), ens.id());
+        ServiceMultisite avecCampagnes = serviceAvec(campagnes, horloge);
+
+        assertThat(avecCampagnes.listerPassages(ID_USER, FiltresMultisite.parCampagne("ens")))
+                .as("fragment en minuscules d'un nom en majuscules")
+                .singleElement()
+                .extracting(LignePassage::campagne)
+                .isEqualTo("Suivi ENS");
+        assertThat(avecCampagnes.listerPassages(ID_USER, FiltresMultisite.parCampagne("Suivi")))
+                .hasSize(1);
+        assertThat(avecCampagnes.listerPassages(ID_USER, FiltresMultisite.parCampagne("Inconnue")))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2355 : filtrer sur une campagne écarte les nuits non rattachées")
+    void filtre_campagne_ecarte_les_non_rattachees() {
+        PassageDao passages = injecteur.getInstance(PassageDao.class);
+        HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
+        ServiceCampagne campagnes = new ServiceCampagne(new CampagneDao(source), passages, horloge);
+        Campagne ens = campagnes.creerCampagne("Suivi ENS", 2026, null);
+        campagnes.rattacherPassage(service.listerPassages(ID_USER).getFirst().idPassage(), ens.id());
+
+        // Les 4 autres nuits n'ont pas de campagne : elles ne sont retenues par aucun filtre de campagne.
+        assertThat(serviceAvec(campagnes, horloge).listerPassages(ID_USER, FiltresMultisite.parCampagne("i")))
+                .as("« i » figure dans « Suivi ENS » mais les non rattachées restent dehors")
+                .singleElement()
+                .extracting(LignePassage::campagne)
+                .isEqualTo("Suivi ENS");
+    }
+
     /// Même service, mais avec la feature `campagne` **active**.
     private ServiceMultisite serviceAvec(ServiceCampagne campagnes, HorlogeFigee horloge) {
         return new ServiceMultisite(
@@ -303,7 +342,7 @@ class ServiceMultisiteTest {
     @DisplayName("Filtres combinés (ET logique) : site ET année")
     void filtres_combines() {
         List<LignePassage> lignes =
-                service.listerPassages(ID_USER, new FiltresMultisite("640380", null, null, 2026, null));
+                service.listerPassages(ID_USER, new FiltresMultisite("640380", null, null, 2026, null, null));
 
         assertThat(lignes).hasSize(2).allMatch(l -> l.numeroCarre().equals("640380") && l.annee() == 2026);
     }

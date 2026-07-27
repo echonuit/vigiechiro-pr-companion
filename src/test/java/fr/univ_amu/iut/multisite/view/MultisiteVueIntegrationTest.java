@@ -191,7 +191,7 @@ class MultisiteVueIntegrationTest {
         MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
         assertThat(menuAjout.getItems())
                 .extracting(MenuItem::getText)
-                .containsExactlyInAnyOrder("Carré", "Statut", "Verdict", "Année", "Analyse");
+                .containsExactlyInAnyOrder("Carré", "Statut", "Verdict", "Année", "Analyse", "Campagne");
         // Tri (souvent absent) : les 4 critères de TriMultisite.
         assertThat(robot.lookup("#choixTri").queryAs(ComboBox.class).getItems()).hasSize(TriMultisite.values().length);
     }

@@ -316,7 +316,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                         CriteresMultisite.statut(),
                         CriteresMultisite.verdict(),
                         CriteresMultisite.annee(),
-                        CriteresMultisite.analyse()),
+                        CriteresMultisite.analyse(),
+                        CriteresMultisite.campagne()),
                 CriteresMultisite.rechercheTexte());
         // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur. La vue
         // capture aussi la disposition des colonnes du tableau (#994), via l'adaptateur mono-table.
