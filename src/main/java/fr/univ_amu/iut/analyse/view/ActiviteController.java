@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VersionApplication;
+import fr.univ_amu.iut.commun.view.AxeHoraire;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
@@ -339,22 +340,9 @@ public class ActiviteController implements EmplacementNavigation {
     /// La configuration de l'axe nocturne, isolée pour être appliquée **aussi** à l'axe neuf de l'image
     /// exportée : l'export redessine le graphe, il doit donc reposer sur le même repère que l'écran.
     static void configurerAxeNocturne(NumberAxis axeTemps) {
-        axeTemps.setAutoRanging(false);
-        axeTemps.setLowerBound(0);
-        axeTemps.setUpperBound(MINUTES_FENETRE);
-        axeTemps.setTickUnit(60);
-        axeTemps.setMinorTickCount(0);
-        axeTemps.setTickLabelFormatter(new StringConverter<>() {
-            @Override
-            public String toString(Number minutes) {
-                return DEBUT_FENETRE.plusMinutes(minutes.longValue()).format(HEURE);
-            }
-
-            @Override
-            public Number fromString(String texte) {
-                return 0;
-            }
-        });
+        // Cadre FIXE (et non calé sur les données) : deux nuits se comparent alors à la même échelle,
+        // une nuit courte occupant le milieu du cadre au lieu d'être étirée (ADR 2352).
+        AxeHoraire.graduerEnHeures(axeTemps, DEBUT_FENETRE, MINUTES_FENETRE, 60);
     }
 
     /// Reconstruit une série par espèce affichée : chaque tranche devient un point placé à sa minute
