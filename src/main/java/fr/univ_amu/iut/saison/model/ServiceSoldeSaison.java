@@ -208,6 +208,12 @@ public class ServiceSoldeSaison {
         if (cas.opportuniste()) {
             return ""; // hors protocole (carré d'un tiers) : rien à faire, pas de « poser l'enregistreur »
         }
+        // Précédence délibérée sur `inexploitable()` ci-dessous : un passage déposé ne se redemande pas,
+        // même si son verdict le disqualifiait. Le cas est aujourd'hui **inatteignable** - deux gardes
+        // vivant ailleurs l'interdisent (`ServiceLot.exigerDeposable` refuse de déposer un inexploitable,
+        // R14 ; `ServicePassage.poserVerdict` fige le verdict une fois déposé). Le contrôle reste ici pour
+        // que le solde énonce sa règle plutôt que de l'emprunter à deux autres features (constaté au PIT
+        // de clôture #2349 : mutant survivant, équivalent tant que ces gardes tiennent).
         if (cas.terminee()) {
             return "";
         }

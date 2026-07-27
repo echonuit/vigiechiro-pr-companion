@@ -88,10 +88,13 @@ public record SoldeSaison(int annee, LocalDate aujourdhui, List<LigneSaison> lig
     /// inexploitable) alors que sa fenêtre **n'est pas close** : ce sont eux que le signalement de
     /// fin de saison concerne. L'application **signale**, elle n'alerte pas.
     public long pointsSecondPassageEnAttente() {
-        return lignes.stream()
-                .filter(ligne -> !ligne.passage2().faite())
-                .filter(ligne -> !aujourdhui.isAfter(echeanceSecondPassage()))
-                .count();
+        // Sortie anticipée plutôt qu'un second filtre : la fenêtre est close ou elle ne l'est pas, ce
+        // n'est pas une propriété de la ligne. Filtrer chaque ligne sur une condition globale se lisait
+        // comme si elle pouvait différer d'un point à l'autre.
+        if (aujourdhui.isAfter(echeanceSecondPassage())) {
+            return 0;
+        }
+        return lignes.stream().filter(ligne -> !ligne.passage2().faite()).count();
     }
 
     private Stream<CasePassage> cases() {
