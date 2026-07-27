@@ -6,6 +6,7 @@ import fr.univ_amu.iut.analyse.model.CourbeEspece;
 import fr.univ_amu.iut.analyse.model.LargeurTranche;
 import fr.univ_amu.iut.analyse.model.PointActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VersionApplication;
@@ -14,6 +15,7 @@ import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
+import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -75,6 +77,9 @@ public class ActiviteController implements EmplacementNavigation {
     /// version de l'application une image trouvée dans un dossier a été produite.
     private final VersionApplication version;
 
+    /// Dépôt des vues mémorisées : alimente les onglets et enregistre celles de l'utilisateur.
+    private final DepotVues depotVues;
+
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
 
@@ -101,6 +106,10 @@ public class ActiviteController implements EmplacementNavigation {
 
     @FXML
     private FlowPane pucesFiltres;
+
+    /// Conteneur des onglets de vues mémorisées (socle `GestionnaireVues`, #623).
+    @FXML
+    private FlowPane barreOnglets;
 
     @FXML
     private Button boutonExporterImage;
@@ -134,11 +143,13 @@ public class ActiviteController implements EmplacementNavigation {
             ActiviteViewModel viewModel,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
-            VersionApplication version) {
+            VersionApplication version,
+            DepotVues depotVues) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.version = Objects.requireNonNull(version, "version");
+        this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
     }
 
     @FXML
@@ -158,6 +169,12 @@ public class ActiviteController implements EmplacementNavigation {
                         CriteresActivite.nuit(viewModel::nuitsDisponibles),
                         CriteresActivite.groupe(viewModel::groupesDisponibles)),
                 CriteresActivite.rechercheTexte());
+
+        // Onglets de vues (#623) : les vues par défaut partitionnent par catégorie du référentiel, et
+        // l'écran s'ouvre sur « Chiroptères » — Tadarida détecte aussi orthoptères et micromammifères,
+        // qui n'ont rien à faire dans la présélection des cinq taxons les plus contactés.
+        GestionnaireVues.avecDialogue(
+                barreOnglets, gestionnaireFiltres, depotVues, "activite", CriteresActivite.vuesParDefaut());
 
         choixTranche.setItems(FXCollections.observableArrayList(LargeurTranche.values()));
         choixTranche.setConverter(new StringConverter<>() {

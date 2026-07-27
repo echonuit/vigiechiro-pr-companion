@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -70,6 +71,9 @@ class ActiviteViewTest {
         when(service.plageNuit(anyLong())).thenReturn(Optional.empty());
         OuvrirSite ouvrirSite = mock(OuvrirSite.class);
         OuvrirPassage ouvrirPassage = mock(OuvrirPassage.class);
+        // Dépôt de vues vide : seuls les onglets par défaut (catégories du référentiel) sont rendus.
+        DepotVues depotVues = mock(DepotVues.class);
+        when(depotVues.findByFeature("activite")).thenReturn(List.of());
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             ActiviteViewModel viewModel() {
@@ -84,6 +88,11 @@ class ActiviteViewTest {
             @Provides
             OuvrirPassage ouvrirPassage() {
                 return ouvrirPassage;
+            }
+
+            @Provides
+            DepotVues depotVues() {
+                return depotVues;
             }
         });
         FXMLLoader loader = new FXMLLoader(ActiviteController.class.getResource("Activite.fxml"));
@@ -151,6 +160,21 @@ class ActiviteViewTest {
                 .singleElement()
                 .extracting(Lieu::libelle)
                 .isEqualTo("Activité de la nuit");
+    }
+
+    @Test
+    void les_onglets_partitionnent_les_taxons_par_categorie(FxRobot robot) {
+        FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
+
+        assertThat(onglets.getChildren())
+                .as("un onglet par catégorie du référentiel, plus « Tout » et « + Vue »")
+                .isNotEmpty();
+        assertThat(robot.lookup("Chiroptères").tryQuery())
+                .as("Tadarida détecte aussi des orthoptères : la catégorie doit pouvoir s'isoler")
+                .isPresent();
+        assertThat(robot.lookup("Orthoptères et cigales").tryQuery())
+                .as("l'onglet porte le nom exact de sa catégorie, il ne promet pas plus qu'il ne filtre")
+                .isPresent();
     }
 
     @Test

@@ -27,6 +27,11 @@
       styleClass="ecran-activite"
       spacing="14.0">
 
+  <!-- Onglets de vues mémorisées (socle GestionnaireVues, #623) : les vues par défaut partitionnent les
+       taxons par catégorie du référentiel (Chiroptères, Orthoptères, Autres, Tout), l'utilisateur pouvant
+       enregistrer les siennes. Tadarida ne détecte pas que des chauves-souris. -->
+  <FlowPane fx:id="barreOnglets" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="barre-onglets"/>
+
   <!-- Barre de filtres (patron « à la Notion », socle Filtres) : recherche permanente, menu « + Filtre »
        (Carré, Taxon parent) et puces des filtres actifs. Le sous-ensemble filtré est ré-agrégé en direct. -->
   <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-filtres">
