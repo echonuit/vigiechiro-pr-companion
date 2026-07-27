@@ -8,15 +8,16 @@ Samuel a changé d'ordinateur en cours de saison. Ses nuits sont **déposées su
 
 Récupérer une nuit se décompose en **trois coutures** naturelles, activées dans l'ordre selon le besoin : chacune ajoute une strate à la précédente.
 
-1. **La structure et l'identité** - *se connecter et synchroniser « mes sites »*. À la connexion, la synchronisation rapatrie non seulement les sites et leurs points, mais aussi l'**historique des nuits** de la plateforme, sous forme de **squelettes** : un passage archivé, sans séquences ni audio, mais **identifié** - point d'écoute, date, numéro de passage, et aussi l'**enregistreur**, la **météo** et le **micro**. Les nuits manquantes cessent d'être invisibles - elles apparaissent dans les listes de passages, marquées comme archivées, et **lisibles**.
-2. **Les observations** - *reconstruire une nuit, ou toutes en lot*. Depuis la vue multi-sites (menu ☰ « Reconstruire un passage manquant »), Samuel choisit une nuit squelette et la **reconstruit** : l'application rapatrie ses **observations** depuis Vigie-Chiro. Le passage devient **consultable** (les résultats Tadarida sont là), mais **sans audio** - la plateforme ne restitue pas les fichiers. Un bouton « **Reconstruire tout** » traite toutes les nuits manquantes en une passe, avec une **double barre de progression** : la nuit en cours, et le lot « Nuit X / N ».
+1. **La structure, l'identité et le contenu** - *se connecter et synchroniser « mes sites »*. La synchronisation rapatrie les sites et leurs points, l'**historique des nuits** de la plateforme avec leur **identité** (point, date, numéro, enregistreur, météo, micro), et enfin leur **contenu** : les observations et la liste des fichiers de chaque nuit. Une nuit récupérée est donc **consultable d'emblée** ; il ne lui manque que ses sons.
+2. **Le rattrapage du contenu** - *compléter une nuit récupérée*. Deux cas échappent à la couture 1 : Vigie-Chiro n'a pas fini d'analyser la nuit, ou la liaison a manqué au moment de la lire. Depuis la vue multi-sites (menu ☰ « Compléter une nuit récupérée »), Samuel reprend ces nuits-là, une par une ou **toutes en une passe**, avec une **double barre de progression** : la nuit en cours, et le lot « Nuit X / N ». La synchro suivante les reprendrait d'elle-même ; cette couture permet de ne pas attendre.
 3. **L'audio et l'ancrage** - *réactiver*. Quand Samuel **retrouve ses fichiers d'origine** (une sauvegarde, une carte SD), il ouvre le passage et lance « **Réactiver ce passage** » en désignant le dossier. L'application régénère les séquences depuis les bruts, les **vérifie une à une** (jamais de rebranchement en silence), et - pour un passage reconstruit - **rapatrie l'ancrage** des observations, leur lien à la plateforme nécessaire pour publier des corrections. Le passage redevient **écoutable**. C'est la couture la plus complète : *observations + audio + ancrage*. Comme la reconstruction en lot, elle **dit où elle en est** : une barre par phase mesurable (la régénération des séquences, puis l'ancrage réseau), et un **libellé nommé** pour les étapes intermédiaires - inscrire les fichiers retrouvés, recompter l'audio disponible. Sur une nuit de plusieurs milliers de séquences, l'opération dure : **aucun de ses moments ne doit rester muet**, sans quoi l'utilisateur ne peut pas la distinguer d'un blocage.
 
 ```mermaid
 %%{init: {"flowchart": {"defaultRenderer": "elk"}, "themeCSS": ".nodeLabel, .nodeLabel p, .nodeLabel span { color: #fff !important; fill: #fff !important; }"}}%%
 flowchart LR
-    S[☁️ 1. Synchro<br/>squelettes de nuits] --> R[📋 2. Reconstruire<br/>observations · consultable]
-    R --> A[🎧 3. Réactiver<br/>audio + ancrage · écoutable]
+    S[☁️ 1. Synchro<br/>identité + contenu · consultable] --> A[🎧 3. Réactiver<br/>audio + ancrage · écoutable]
+    S -.-> R[📋 2. Compléter<br/>si l'analyse n'était pas prête]
+    R -.-> A
     classDef c fill:#1e8449,stroke:#0e5128,color:#fff,stroke-width:2px
     class S,R,A c
 ```
@@ -25,13 +26,29 @@ flowchart LR
 
 Chaque strate a un **coût** et une **utilité** distincts, et l'utilisateur ne veut pas toujours tout ([O6](../../Objectifs%20qualités/Objectifs%20qualités/O6.md)) :
 
-- rapatrier **tout** à la synchro (structure + observations + audio) serait prohibitif - un **import complet** par nuit, pour des nuits qu'on ne consultera peut-être jamais - et **impossible pour l'audio**, que le dépôt par ZIP ne restitue pas ;
-- **consulter** une nuit (couture 2) ne suppose pas d'avoir ses fichiers : les observations suffisent à revoir les résultats ;
+- rapatrier l'**audio** à la synchro reste **impossible** : le dépôt par ZIP ne le restitue pas, il n'est nulle part sur la plateforme ;
+- **consulter** une nuit ne suppose pas d'avoir ses fichiers : les observations suffisent à revoir les résultats, et elles arrivent désormais dès la synchro ;
 - **écouter et corriger** (couture 3) suppose d'avoir retrouvé les fichiers, ce qui n'arrive pas toujours, et pas tout de suite.
 
 Découper permet donc de n'activer **que** la strate utile, quand elle le devient. Un passage reconstruit est **honnête** sur ce qui lui manque : il annonce « consultable, pas écoutable » et invite à réactiver plutôt que de laisser croire à une équivalence avec un import complet.
 
-La frontière entre les coutures 1 et 2 se place au **coût**, pas à la commodité. La première version de ce parcours arrêtait la synchro au point et à la date, pour qu'elle ne coûte que la liste. À l'usage, l'historique remontait alors en colonnes d'« enregistreur inconnu » - **présent mais illisible**, ce qui ne rend guère service. L'identité d'une nuit (enregistreur, météo, micro) vaut donc **un appel par nuit nouvelle**, payé une seule fois et en parallèle ; le **contenu**, lui, reste derrière la couture 2, parce qu'il se compte en fichiers et non en champs.
+La frontière entre les coutures 1 et 2 s'est **déplacée deux fois**, et toujours pour la même raison : elle
+se place au **coût réel**, et le coût réel change.
+
+La première version arrêtait la synchro au point et à la date, pour qu'elle ne coûte que la liste. À
+l'usage, l'historique remontait en colonnes d'« enregistreur inconnu » - **présent mais illisible**.
+L'identité (enregistreur, météo, micro) a donc rejoint la couture 1, au prix d'un appel par nuit nouvelle.
+
+Le **contenu** est resté derrière la couture 2 tant qu'il « se comptait en fichiers et non en champs » :
+le rapatrier demandait alors de parcourir les observations page par page, une cinquantaine de pages par
+nuit. Depuis que la plateforme expose un **CSV** téléchargeable d'un coup, ce coût est tombé à **deux
+requêtes par nuit** - et l'argument qui tenait la frontière est tombé avec lui. Le contenu a donc rejoint
+la couture 1 à son tour.
+
+Ce que cette histoire dit du découpage : les coutures ne sont pas des étapes qu'on impose à l'utilisateur,
+ce sont des **paliers de coût**. Quand un coût s'effondre, le palier disparaît - et ce qui reste de la
+couture 2 n'est plus une étape du parcours nominal, mais un **rattrapage** pour les nuits que la plateforme
+n'avait pas encore analysées.
 
 ## L'échange va dans les deux sens
 

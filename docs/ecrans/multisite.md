@@ -93,15 +93,16 @@ Il arrive qu'une nuit existe **sur Vigie-Chiro** et nulle part sur cette machine
 depuis un autre ordinateur, avant d'utiliser cette application, ou vous avez réinstallé votre poste.
 Elle ne figure alors dans **aucune ligne** de ce tableau.
 
-En fait, la **synchronisation** « Mes sites » les rapatrie déjà **automatiquement**, sous une forme
-légère - point + date, sans observations : la nuit apparaît aussitôt dans l'historique de son carré.
-Le menu **☰ › Reconstruire un passage manquant…** liste ces nuits et permet de les **hydrater**,
-c'est-à-dire d'en rapatrier les **observations** : une par une (**Reconstruire cette nuit**) ou
-**toutes en une passe** (**Reconstruire tout**, avec un suivi à **deux niveaux** - la nuit en cours et
-le lot entier - et un bouton **Annuler** pour interrompre proprement). Le passage hydraté apparaît
-complet dans le tableau, avec ses observations : vous le consultez comme n'importe quel autre.
+En fait, la **synchronisation** « Mes sites » les rapatrie déjà **automatiquement**, contenu compris :
+la nuit apparaît dans l'historique de son carré avec ses observations, prête à être consultée.
 
-![La modale « Reconstruire un passage manquant » : les nuits déposées sur Vigie-Chiro et absentes de cette machine. La seconde ne peut pas être reconstruite tant que son point d'écoute n'existe pas ici.](../assets/captures/apercu-multisite-reconstruction.png)
+Il reste deux cas où une nuit arrive **sans son contenu** : Vigie-Chiro n'a pas fini de l'analyser, ou
+la liaison a manqué au moment de la lire. Le menu **☰ › Compléter une nuit récupérée…** liste
+précisément ces nuits-là et permet de les **hydrater** : une par une (**Reconstruire cette nuit**) ou
+**toutes en une passe** (**Reconstruire tout**, avec un suivi à **deux niveaux** - la nuit en cours et
+le lot entier - et un bouton **Annuler** pour interrompre proprement).
+
+![La modale « Compléter une nuit récupérée » : les nuits dont Vigie-Chiro n'a pas encore livré le contenu. La seconde ne peut pas être complétée tant que son point d'écoute n'existe pas ici.](../assets/captures/apercu-multisite-reconstruction.png)
 
 !!! note "Ce qu'une nuit reconstruite ne contient pas"
     La plateforme ne rend pas tout. Un passage reconstruit arrive donc **sans audio** (c'est un

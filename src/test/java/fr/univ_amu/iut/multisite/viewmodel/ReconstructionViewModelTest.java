@@ -53,7 +53,7 @@ class ReconstructionViewModelTest {
     }
 
     @Test
-    @DisplayName("Aucune nuit manquante n'est une bonne nouvelle, pas une erreur")
+    @DisplayName("Aucune nuit à compléter est une bonne nouvelle, pas une erreur")
     void aucune_orpheline_est_une_bonne_nouvelle() {
         ServiceReconstructionPassages service = mock(ServiceReconstructionPassages.class);
         when(service.orphelines()).thenReturn(List.of());
@@ -62,7 +62,9 @@ class ReconstructionViewModelTest {
         viewModel.appliquer(viewModel.charger());
 
         assertThat(viewModel.orphelines()).isEmpty();
-        assertThat(viewModel.etatListeProperty().get()).contains("Aucune nuit manquante");
+        // #2554 : « manquante » était devenu faux. Depuis #2557 ces nuits SONT là, avec leur contenu ;
+        // celles que la modale liste sont celles qui attendent encore le leur.
+        assertThat(viewModel.etatListeProperty().get()).contains("Rien à compléter");
     }
 
     @Test

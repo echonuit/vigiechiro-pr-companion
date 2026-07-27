@@ -129,8 +129,10 @@ public class ReconstructionViewModel {
         // avant #1917, puisqu'il vivait dans une propriété distincte).
         etatListe.set(
                 chargees.isEmpty()
-                        ? "Aucune nuit manquante : toutes vos participations Vigie-Chiro ont un passage ici."
-                        : chargees.size() + " nuit(s) déposée(s) sur Vigie-Chiro n'existent pas sur cette machine.");
+                        ? "Rien à compléter : toutes vos nuits Vigie-Chiro sont ici, avec leur contenu."
+                        : chargees.size()
+                                + " nuit(s) sans leur contenu : analyse Vigie-Chiro non terminée, ou liaison"
+                                + " manquée lors d'une synchronisation.");
     }
 
     /// **Bloquant** (réseau + base) : reconstruit la participation choisie en passage archivé, en relayant

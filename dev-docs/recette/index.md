@@ -30,6 +30,7 @@ ailleurs il n'est qu'écran de transit (seule la fluidité de la transition est 
 | S5 | Valider (sur une nuit déposée) | Sons & validation, fiche espèce |
 | S6 | Exploiter et piloter (vues agrégées) | [Activité de la nuit](sessions/s6-exploiter-piloter.md) (écrite), puis Carte & passages, Espèces & observations, Audit, recherche |
 | S7 | Réglages, interrupteurs OFF, états dégradés | reglages (5 onglets) + chrome |
+| S8 | Récupérer une nuit déposée (P12 de bout en bout, carte SD réelle) | Connexion, Mes sites, Toutes mes nuits, passage |
 
 Chaque session se joue en trois temps : une **passe statique** en solo (préparation, postée en
 commentaire), la **session interactive** (pilotage écran par écran), puis un **triage à froid**.

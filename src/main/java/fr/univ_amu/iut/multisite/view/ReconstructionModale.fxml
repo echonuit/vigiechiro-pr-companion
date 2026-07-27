@@ -32,7 +32,7 @@
        prennent sur la largeur utile, et les colonnes de la table débordaient d'une poignée de pixels -
        assez pour faire paraître une barre de défilement horizontale sous la table. -->
 
-  <Label text="Reconstruire un passage manquant" styleClass="titre-page">
+  <Label text="Compléter une nuit récupérée" styleClass="titre-page">
     <graphic>
       <FontIcon iconLiteral="fas-cloud" styleClass="titre-page-icone"/>
     </graphic>

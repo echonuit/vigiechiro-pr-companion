@@ -1,6 +1,6 @@
 # ADR 0016 — La synchro rapatrie les nuits en squelettes, hydratés à la demande
 
-- **Statut** : Accepté — 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814) et [ADR 0019](0019-ancrage-acquis-quand-il-sert.md) (#1838)
+- **Statut** : Accepté — 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814), [ADR 0019](0019-ancrage-acquis-quand-il-sert.md) (#1838) et [ADR 2554](2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md) (EPIC #2554)
 - **Chantier** : EPIC #1662 (refonte de la récupération d'une nuit)
 - **Vérification** : humaine — le rapatriement en squelettes hydratés à la demande est un comportement de synchro, non observable par un motif statique
 
@@ -9,6 +9,15 @@
 > paie désormais **un** détail par nuit **nouvelle** pour rapatrier son **identité** (enregistreur, météo,
 > micro, fin de nuit) ; les observations et l'audio restent à l'hydratation. Le reste de cette décision
 > (squelette léger, hydratation à la demande, remplacement à la reconstruction) tient toujours.
+
+> [!NOTE]
+> **Amendement (ADR 2554)** : la répartition « la reconstruction rapatrie les observations, la réactivation
+> rebranche l'audio » ne tient plus. La question devient **à quel niveau de complétude chaque nuit est
+> amenée** (structure → identité → **contenu**), et la synchro va jusqu'au contenu — pour toutes les nuits
+> sans séquences, squelettes hérités compris. Le chiffrage qui justifiait de s'arrêter avant portait sur la
+> pagination `donnees` ; le CSV (#1565) coûte deux GET. L'alternative « hydrater en place », écartée ici,
+> est **retenue** sur le chemin de la réactivation (un écran est ouvert dessus, et un squelette porte des
+> saisies manuelles). Voir [ADR 2554](2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md).
 
 > [!NOTE]
 > **Amendement (ADR 0019)** : la réactivation n'est plus le **seul** moment où l'ancrage s'acquiert. La
