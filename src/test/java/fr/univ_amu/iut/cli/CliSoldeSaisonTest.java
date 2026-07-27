@@ -160,17 +160,18 @@ class CliSoldeSaisonTest {
         long id = semer(source, idUser, "640005", "E1", 1, "2026-06-25", StatutWorkflow.DEPOSE, Verdict.OK);
         injecteur.getInstance(PassageOpportunisteDao.class).marquer(id);
 
+        // La nuit opportuniste ne figure PAS dans les colonnes de passage : elle a la sienne (#2525).
         assertThat(cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "csv"}, sortie, erreur))
                 .isEqualTo(Cli.CODE_SUCCES);
-        assertThat(texteSortie()).contains("Opportuniste P1").contains("640005").contains("oui");
+        assertThat(texteSortie()).contains("Hors protocole").contains("640005").contains("opportuniste 25/06");
 
         tamponSortie.reset();
         cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "texte"}, sortie, erreur);
-        assertThat(texteSortie()).contains("opportuniste");
+        assertThat(texteSortie()).contains("[hors protocole : opportuniste 25/06]");
 
         tamponSortie.reset();
         cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "json"}, sortie, erreur);
-        assertThat(texteSortie()).contains("\"opportuniste1\"");
+        assertThat(texteSortie()).contains("\"horsProtocole\"");
     }
 
     @Test

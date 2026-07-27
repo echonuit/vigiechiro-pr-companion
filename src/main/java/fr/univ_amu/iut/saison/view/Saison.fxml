@@ -27,11 +27,14 @@
 
     <TableView fx:id="tableSaison" VBox.vgrow="ALWAYS">
         <columns>
-            <TableColumn fx:id="colCarre" text="Carré" prefWidth="80.0"/>
-            <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
-            <TableColumn fx:id="colPassage1" text="Passage 1" prefWidth="180.0"/>
-            <TableColumn fx:id="colPassage2" text="Passage 2" prefWidth="180.0"/>
-            <TableColumn fx:id="colResteAFaire" text="Reste à faire" prefWidth="280.0"/>
+            <TableColumn fx:id="colCarre" text="Carré" prefWidth="75.0"/>
+            <TableColumn fx:id="colPoint" text="Point" prefWidth="65.0"/>
+            <TableColumn fx:id="colPassage1" text="Passage 1" prefWidth="170.0"/>
+            <TableColumn fx:id="colPassage2" text="Passage 2" prefWidth="170.0"/>
+            <!-- Nuits réalisées sur ce point mais HORS protocole (opportunistes, #2525) : elles ne
+                 prennent pas la place d'un passage attendu, qui reste « Non planifié ». -->
+            <TableColumn fx:id="colHorsProtocole" text="Hors protocole" prefWidth="145.0"/>
+            <TableColumn fx:id="colResteAFaire" text="Reste à faire" prefWidth="240.0"/>
         </columns>
         <placeholder>
             <Label text="Aucun point suivi pour cette saison. Déclarez un site et un point d'écoute pour commencer." wrapText="true"/>

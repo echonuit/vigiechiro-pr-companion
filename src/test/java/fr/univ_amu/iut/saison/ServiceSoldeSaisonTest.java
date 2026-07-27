@@ -20,6 +20,7 @@ import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
+import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
 import fr.univ_amu.iut.saison.model.SoldeSaison;
@@ -249,14 +250,21 @@ class ServiceSoldeSaisonTest {
 
         LigneSaison ligne = ligne(service.soldePour(ID_USER, 2026), "640005", "E1");
 
-        assertThat(ligne.passage1().opportuniste()).isTrue();
-        assertThat(ligne.passage1().faite())
-                .as("une nuit opportuniste ne compte pas comme faite")
+        // Les deux nuits sont hors protocole : elles quittent les colonnes de passage, qui redeviennent
+        // « absentes ». Sans quoi une case remplie et un « reste à faire » réclamant ce même passage se
+        // contrediraient sur la même ligne.
+        assertThat(ligne.horsProtocole())
+                .as("les deux nuits opportunistes vivent dans leur propre colonne")
+                .hasSize(2)
+                .allMatch(CasePassage::opportuniste);
+        assertThat(ligne.passage1().presente())
+                .as("le passage 1 PROTOCOLAIRE reste à faire")
                 .isFalse();
-        assertThat(ligne.passage2().faite()).isFalse();
+        assertThat(ligne.passage2().presente()).isFalse();
+        assertThat(ligne.passage1().faite()).isFalse();
         assertThat(ligne.resteAFaire())
-                .as("hors protocole : ni « poser l'enregistreur », ni action")
-                .isEmpty();
+                .as("le point n'a aucune nuit protocolaire : il en réclame une")
+                .isEqualTo("Poser l'enregistreur avant le 31/07");
     }
 
     @Test

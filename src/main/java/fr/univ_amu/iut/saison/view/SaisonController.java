@@ -12,6 +12,7 @@ import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.viewmodel.SaisonViewModel;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -55,6 +56,9 @@ public class SaisonController implements RafraichirAuRetour {
     private TableColumn<LigneSaison, String> colPassage2;
 
     @FXML
+    private TableColumn<LigneSaison, String> colHorsProtocole;
+
+    @FXML
     private TableColumn<LigneSaison, String> colResteAFaire;
 
     private final SaisonViewModel viewModel;
@@ -83,6 +87,11 @@ public class SaisonController implements RafraichirAuRetour {
         colPassage2.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper(texteCase(c.getValue().passage2())));
         colPassage2.setCellFactory(col -> ColonneBadge.cellule(ligne -> classeCase(ligne.passage2())));
+
+        // Hors protocole (#2525) : les nuits opportunistes du point, hors du décompte des deux passages
+        // attendus. Cellule vide dans le cas courant — la colonne ne parle que quand il y a de quoi.
+        colHorsProtocole.setCellValueFactory(c -> new ReadOnlyStringWrapper(texteHorsProtocole(c.getValue())));
+        colHorsProtocole.setCellFactory(col -> ColonneBadge.cellule(ligne -> "badge-opportuniste"));
 
         colResteAFaire.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 c.getValue().aJour() ? "rien" : c.getValue().resteAFaire()));
@@ -121,14 +130,16 @@ public class SaisonController implements RafraichirAuRetour {
     }
 
     private void ouvrirLigne(LigneSaison ligne) {
-        if (ligne.passage1().presente()) {
-            ouvrirPassage.ouvrir(ligne.passage1().idPassage(), contexte(ligne));
-        } else if (ligne.passage2().presente()) {
-            ouvrirPassage.ouvrir(ligne.passage2().idPassage(), contexte(ligne));
-        } else {
-            // Aucun passage encore : on ouvre le carré du point pour en saisir un.
-            ouvrirSite.ouvrirDetail(ligne.numeroCarre());
-        }
+        // Les nuits hors protocole comptent ici : depuis #2525 elles ne sont plus dans les colonnes de
+        // passage, mais un point qui n'a QU'une nuit opportuniste doit rester ouvrable d'un double-clic
+        // — sans quoi la seule nuit existante deviendrait inatteignable depuis cet écran.
+        ligne.toutesLesCases()
+                .filter(CasePassage::presente)
+                .findFirst()
+                .ifPresentOrElse(
+                        cas -> ouvrirPassage.ouvrir(cas.idPassage(), contexte(ligne)),
+                        // Aucune nuit encore : on ouvre le carré du point pour en saisir une.
+                        () -> ouvrirSite.ouvrirDetail(ligne.numeroCarre()));
     }
 
     private static ContexteSite contexte(LigneSaison ligne) {
@@ -148,6 +159,21 @@ public class SaisonController implements RafraichirAuRetour {
             etat = cas.inexploitable() ? "Inexploitable" : cas.statut().libelle();
         }
         return cas.date() == null ? etat : etat + " · " + cas.date().format(JOUR_MOIS);
+    }
+
+    /// Colonne « Hors protocole » (#2525) : les nuits opportunistes du point, séparées par un point
+    /// médian quand il y en a plusieurs. **`null`** dans le cas courant — c'est ce que la cellule badge
+    /// interprète comme « rien à afficher » ([ColonneBadge]). Rendre `""` lui ferait poser une pastille
+    /// vide, et surtout une classe CSS nulle qui casse le recyclage des cellules au défilement.
+    private static String texteHorsProtocole(LigneSaison ligne) {
+        if (ligne.horsProtocole().isEmpty()) {
+            return null;
+        }
+        return ligne.horsProtocole().stream()
+                .map(cas -> cas.date() == null
+                        ? "Opportuniste"
+                        : "Opportuniste · " + cas.date().format(JOUR_MOIS))
+                .collect(Collectors.joining(" · "));
     }
 
     /// Classe CSS de la pastille : couleurs **reprises du modèle** (statut, ou verdict pour un passage

@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /// Service de la feature `saison` : calcule le **solde de saison** d'un observateur, c'est-à-dire,
 /// pour une année donnée, ce qu'il lui reste à faire **point par point** (#2356).
@@ -41,6 +42,11 @@ import java.util.stream.Collectors;
 /// `site.observateur`) est écarté lui aussi : y participer est une occasion, pas une obligation de
 /// protocole. Les nuits qu'on y réalise restent visibles ailleurs (M-Passage), simplement le solde
 /// n'en fait pas un « reste à faire ».
+///
+/// **Les nuits opportunistes ont leur propre colonne.** Une nuit hors protocole ne prend pas la place
+/// du passage protocolaire correspondant : les colonnes « passage 1 » et « passage 2 » ne montrent que
+/// ce qui compte, et [LigneSaison#horsProtocole] porte le reste. Sinon une case remplie et un « reste à
+/// faire » qui réclame ce même passage se contrediraient sur la même ligne.
 ///
 /// Constructeur **simple** (sans annotation d'injection), à la manière de `ServiceMultisite` : DAO et
 /// service restent de simples objets réutilisables, `SaisonModule` sait les assembler.
@@ -149,8 +155,9 @@ public class ServiceSoldeSaison {
             return true;
         }
         String fragment = campagne.toLowerCase(Locale.ROOT);
-        return correspond(ligne.passage1().campagne(), fragment)
-                || correspond(ligne.passage2().campagne(), fragment);
+        // Toutes les nuits du point comptent, y compris hors protocole : une campagne peut parfaitement
+        // regrouper des participations opportunistes.
+        return ligne.toutesLesCases().anyMatch(cas -> correspond(cas.campagne(), fragment));
     }
 
     private static boolean correspond(String nomCampagne, String fragmentEnMinuscules) {
@@ -159,10 +166,17 @@ public class ServiceSoldeSaison {
 
     private LigneSaison ligneDuPoint(
             Site site, PointDEcoute point, int annee, LocalDate aujourdhui, Map<Long, String> nomsCampagnes) {
-        CasePassage passage1 = casePour(point.id(), annee, 1, nomsCampagnes);
-        CasePassage passage2 = casePour(point.id(), annee, 2, nomsCampagnes);
+        CasePassage nuit1 = casePour(point.id(), annee, 1, nomsCampagnes);
+        CasePassage nuit2 = casePour(point.id(), annee, 2, nomsCampagnes);
+        // Les nuits opportunistes quittent les colonnes protocolaires (#2525) : y laisser une pastille
+        // ferait lire « ce passage est fait » là où le passage protocolaire manque, pendant que le
+        // « reste à faire » dit d'aller poser l'enregistreur. Elles ont leur propre colonne.
+        List<CasePassage> horsProtocole =
+                Stream.of(nuit1, nuit2).filter(CasePassage::opportuniste).toList();
+        CasePassage passage1 = nuit1.opportuniste() ? CasePassage.absente() : nuit1;
+        CasePassage passage2 = nuit2.opportuniste() ? CasePassage.absente() : nuit2;
         String reste = resteAFaire(passage1, passage2, annee, aujourdhui);
-        return new LigneSaison(site.numeroCarre(), point.code(), point.id(), passage1, passage2, reste);
+        return new LigneSaison(site.numeroCarre(), point.code(), point.id(), passage1, passage2, horsProtocole, reste);
     }
 
     private CasePassage casePour(Long idPoint, int annee, int numero, Map<Long, String> nomsCampagnes) {
