@@ -54,6 +54,9 @@ public final class CaptureActivite {
     /// Fenêtre nocturne de démonstration (coucher 21 h, lever 6 h), portée par le ViewModel.
     private static final PlageNuit NUIT = new PlageNuit(21, 6);
 
+    /// Préfixe du message de sortie, repris par chaque rendu.
+    private static final String APERCU_ECRIT = "Apercu ecrit dans ";
+
     private CaptureActivite() {}
 
     public static void main() throws InterruptedException {
@@ -89,6 +92,8 @@ public final class CaptureActivite {
         rendre(injecteur, sortie.resolve("apercu-activite.png"));
         rendre(injecteurAvec(List.of()), sortie.resolve("apercu-activite-vide.png"));
         exporter(injecteur, sortie.resolve("apercu-activite-export.png"));
+        rendreTransverse(injecteur, sortie.resolve("apercu-activite-transverse.png"));
+        rendreApresExport(injecteur, sortie.resolve("apercu-activite-retour.png"));
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
@@ -108,7 +113,7 @@ public final class CaptureActivite {
     /// PNG. Scène bornée sous 1000 px (le rendu headless plafonne le blit à 1000×1000).
     private static void rendre(Injector injecteur, Path fichier) throws IOException {
         ApercuFx.enregistrerPng(new Scene(ouvrir(injecteur), 980, 620), fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
     /// Aperçu de l'**image exportée** (#2352) : passe par le vrai geste d'export du controller, qui
@@ -119,7 +124,31 @@ public final class CaptureActivite {
         // Date d'export FIXE : les PNG sont versionnés, et un `LocalDate.now()` reverserait une capture
         // différente à chaque jour de CI.
         controleur.exporterVers(fichier, SOIR.plusDays(1));
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// Aperçu de la **vue transverse** (toutes les nuits de l'utilisateur) : second point d'entrée de
+    /// l'écran, et le seul où l'**aplat nocturne disparaît** — plusieurs nuits n'ont pas de fenêtre
+    /// commune, et en afficher une serait trompeur.
+    private static void rendreTransverse(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = chargeur(injecteur);
+        Parent vue = loader.load();
+        ActiviteController controleur = loader.getController();
+        controleur.ouvrirTout("demo");
+        ApercuFx.enregistrerPng(new Scene(vue, 980, 620), fichier);
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// Aperçu du **bandeau de retour** après un export réussi : sans lui, un export qui a marché serait
+    /// indiscernable d'un clic sans effet. L'élément n'apparaît sur aucun autre aperçu de cet écran.
+    private static void rendreApresExport(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = chargeur(injecteur);
+        Parent vue = loader.load();
+        ActiviteController controleur = loader.getController();
+        ouvrirSurLaDemo(controleur);
+        controleur.exporterVers(Path.of(System.getProperty("java.io.tmpdir"), "activite-nuit.png"), SOIR.plusDays(1));
+        ApercuFx.enregistrerPng(new Scene(vue, 980, 620), fichier);
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
     private static Parent ouvrir(Injector injecteur) throws IOException {
@@ -223,6 +252,13 @@ public final class CaptureActivite {
             return new ServiceActivite(null, null, null) {
                 @Override
                 public List<ContactHoraire> contactsDuPassage(long idPassage) {
+                    return contacts;
+                }
+
+                /// Vue transverse : les mêmes contacts, l'écran couvrant alors toutes les nuits de
+                /// l'utilisateur plutôt qu'un passage.
+                @Override
+                public List<ContactHoraire> contactsDeLUtilisateur(String idUtilisateur) {
                     return contacts;
                 }
 

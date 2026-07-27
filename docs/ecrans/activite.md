@@ -23,7 +23,10 @@ L'écran réunit :
   un pas large lisse la forme générale ;
 - une **case par espèce** détectée, avec son total ; les **cinq plus contactées** sont cochées par
   défaut, au-delà le graphe devient illisible ;
-- une **barre de filtres** (carré, point, nuit, taxon parent, recherche libre) : filtrer re-trace.
+- une **barre de filtres** (carré, point, nuit, taxon parent, recherche libre) : filtrer re-trace ;
+- des **onglets** qui séparent les catégories du référentiel — chiroptères, orthoptères et cigales,
+  autres mammifères —, parce que le détecteur ne repère pas que des chauves-souris. Vos propres vues
+  s'enregistrent à côté, avec « + Vue ».
 
 ## La nuit biologique
 
@@ -52,6 +55,8 @@ Ouvert depuis l'accueil, l'écran couvre **tous les passages** : la barre de fil
 restreindre progressivement (un carré, puis un point, puis une nuit). L'aplat nocturne disparaît dans
 cette vue : plusieurs nuits n'ont pas de fenêtre commune, et en afficher une serait trompeur.
 
+![L'écran ouvert sur toutes les nuits : la courbe cumule les passages et l'aplat nocturne a disparu.](../assets/captures/apercu-activite-transverse.png)
+
 ## Exporter l'image
 
 Le bouton **Exporter l'image…** enregistre la courbe telle qu'elle est affichée, au format PNG.
@@ -64,6 +69,11 @@ d'export. Sans ces mentions, une courbe collée dans un compte rendu ne dit plus
 parle.
 
 ![L'image exportée : la courbe redessinée, avec sous elle son identité, ses réglages et sa provenance.](../assets/captures/apercu-activite-export.png)
+
+L'écran **dit le résultat** de l'export, réussite comme échec : un fichier écrit sans que rien ne
+l'annonce serait indiscernable d'un clic sans effet.
+
+![Après l'export : un bandeau vert nomme le fichier écrit.](../assets/captures/apercu-activite-retour.png)
 
 Pour produire le même contenu **en tableau** plutôt qu'en image, la ligne de commande expose
 `exporter-activite` (une ligne par espèce et par tranche, ouvrable dans un tableur).
