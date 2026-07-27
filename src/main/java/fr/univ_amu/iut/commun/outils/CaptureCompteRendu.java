@@ -13,8 +13,11 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import javafx.application.Platform;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.layout.VBox;
 
 /// Outil de capture/mesure, utilisable tel quel.
@@ -28,7 +31,9 @@ import javafx.scene.layout.VBox;
 /// - `apercu-compte-rendu-sans-rejet.png` : le cas **courant**, sans rejet ni avertissement. C'est celui
 ///   qui prouve que les blocs vides **disparaissent** au lieu d'afficher des cadres vides ;
 /// - `apercu-compte-rendu-echec.png` : une opération **en échec**, où les proportions s'inversent et où
-///   le pied propose la reprise plutôt qu'un acquittement.
+///   le pied propose la reprise plutôt qu'un acquittement ;
+/// - `apercu-compte-rendu-motifs.png` : le premier cas, **détail des motifs ouvert** - chaque motif y
+///   montre la liste de ses fichiers, ce que le seul résumé du pied ne fait pas.
 ///
 /// Les chiffres sont ceux de la maquette M-CompteRendu (612 enregistrements : 583 importés, 21 déjà
 /// présents, 8 rejetés ; 5,0 Go lus, 6,8 Go écrits), pour que la capture et la maquette se confrontent.
@@ -67,11 +72,29 @@ public final class CaptureCompteRendu {
         rendre(avecRejets(), sortie.resolve("apercu-compte-rendu.png"));
         rendre(sansRejet(), sortie.resolve("apercu-compte-rendu-sans-rejet.png"));
         rendre(enEchec(), sortie.resolve("apercu-compte-rendu-echec.png"));
+        rendreMotifsOuverts(sortie.resolve("apercu-compte-rendu-motifs.png"));
+    }
+
+    /// Le même compte rendu, **détail des motifs ouvert** : chaque motif y montre la liste de ses fichiers.
+    /// L'ouverture passe par le lien du pied, comme un clic d'utilisateur, et non par une méthode dédiée à
+    /// la capture - une capture prouve ce que l'écran fait, pas ce qu'on lui fait faire.
+    private static void rendreMotifsOuverts(Path fichier) {
+        rendre(avecRejets(), fichier, panneau -> {
+            Node lien = panneau.lookup(".cr-resume-motifs");
+            if (lien instanceof Hyperlink resume) {
+                resume.fire();
+            }
+        });
     }
 
     private static void rendre(CompteRenduChiffre modele, Path fichier) {
+        rendre(modele, fichier, panneau -> {});
+    }
+
+    private static void rendre(CompteRenduChiffre modele, Path fichier, Consumer<PanneauCompteRendu> geste) {
         PanneauCompteRendu panneau = new PanneauCompteRendu();
         panneau.afficher(modele);
+        geste.accept(panneau);
         // Marge autour du panneau : la capture montre le composant tel qu'il s'insère, pas collé au bord.
         VBox cadre = new VBox(panneau);
         cadre.setStyle("-fx-padding: 16; -fx-background-color: #f5f6f8;");
