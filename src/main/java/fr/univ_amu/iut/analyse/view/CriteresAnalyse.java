@@ -32,6 +32,9 @@ final class CriteresAnalyse {
     /// dupliqué).
     private static final String STATUT = "statut";
 
+    /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par catégorie.
+    private static final String GROUPE = "groupe";
+
     private CriteresAnalyse() {}
 
     /// Vues **par défaut** (lecture seule) de l'inventaire analyse, rendues comme onglets avant les vues de
@@ -43,13 +46,23 @@ final class CriteresAnalyse {
     ///
     /// Chaque descripteur est sérialisé exactement comme [GestionnaireFiltres#decrire()] le produirait, pour
     /// que rejouer la vue laisse un état « non modifié ».
+    /// Onglets **par défaut** : les deux angles de revue (à valider, validées) et la partition par
+    /// **catégorie du référentiel**, alignée sur l'écran Activité de la nuit. Tadarida ne détecte pas
+    /// que des chauves-souris : sans ces onglets, orthoptères et micromammifères s'intercalent dans
+    /// l'inventaire au même rang que les chiroptères.
+    ///
+    /// Chaque onglet porte le **nom exact** de sa catégorie : un onglet « Autres » qui ne couvrirait
+    /// qu'une catégorie mentirait sur son contenu.
     static List<VueSauvegardee> vuesParDefaut() {
         return List.of(
                 vueParDefaut("Tout"),
                 vueParDefaut(
                         "À valider", new DescripteurCritere(STATUT, List.of(StatutObservation.NON_TOUCHEE.name()))),
                 vueParDefaut("Validées", new DescripteurCritere(STATUT, List.of(StatutObservation.VALIDEE.name()))),
-                vueParDefaut("Chiroptères", new DescripteurCritere("groupe", List.of("Chiroptères"))));
+                vueParDefaut("Chiroptères", new DescripteurCritere(GROUPE, List.of("Chiroptères"))),
+                vueParDefaut(
+                        "Orthoptères et cigales", new DescripteurCritere(GROUPE, List.of("Orthoptères et cigales"))),
+                vueParDefaut("Autres mammifères", new DescripteurCritere(GROUPE, List.of("Autres mammifères"))));
     }
 
     /// Une vue par défaut de cet écran : délégation à la fabrique partagée [VuesParDefaut] (#1257).
@@ -105,7 +118,7 @@ final class CriteresAnalyse {
         return new CritereFiltre<ObservationAnalyse>() {
             @Override
             public String nom() {
-                return "groupe";
+                return GROUPE;
             }
 
             @Override

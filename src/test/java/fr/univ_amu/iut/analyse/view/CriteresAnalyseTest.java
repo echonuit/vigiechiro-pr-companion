@@ -43,13 +43,14 @@ class CriteresAnalyseTest {
     }
 
     @Test
-    @DisplayName("Les vues par défaut (Tout / À valider / Validées / Chiroptères) portent les bons filtres")
+    @DisplayName("Les vues par défaut (revue + catégories du référentiel) portent les bons filtres")
     void vues_par_defaut_portent_les_bons_filtres() {
         List<VueSauvegardee> vues = CriteresAnalyse.vuesParDefaut();
 
         assertThat(vues)
                 .extracting(VueSauvegardee::nom)
-                .containsExactly("Tout", "À valider", "Validées", "Chiroptères");
+                .containsExactly(
+                        "Tout", "À valider", "Validées", "Chiroptères", "Orthoptères et cigales", "Autres mammifères");
         assertThat(vues).allSatisfy(vue -> {
             assertThat(vue.id())
                     .as("vue par défaut : jamais persistée (lecture seule)")
@@ -62,6 +63,10 @@ class CriteresAnalyseTest {
         assertThat(descripteur(vues, "À valider")).contains("statut", StatutObservation.NON_TOUCHEE.name());
         assertThat(descripteur(vues, "Validées")).contains("statut", StatutObservation.VALIDEE.name());
         assertThat(descripteur(vues, "Chiroptères")).contains("groupe", "Chiroptères");
+        // Les catégories du référentiel (V05) partitionnent l'inventaire : Tadarida détecte aussi des
+        // orthoptères et des micromammifères, qui s'intercalaient sans cela au rang des chiroptères.
+        assertThat(descripteur(vues, "Orthoptères et cigales")).contains("groupe", "Orthoptères et cigales");
+        assertThat(descripteur(vues, "Autres mammifères")).contains("groupe", "Autres mammifères");
     }
 
     private static String descripteur(List<VueSauvegardee> vues, String nom) {
