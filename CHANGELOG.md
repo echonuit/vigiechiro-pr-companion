@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.89.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.88.0...v2.89.0) (2026-07-27)
+
+
+### Features
+
+* **passage:** la réactivation rend des comptes en chiffres ([#2358](https://github.com/echonuit/vigiechiro-pr-companion/issues/2358)) ([#2623](https://github.com/echonuit/vigiechiro-pr-companion/issues/2623)) ([15c6833](https://github.com/echonuit/vigiechiro-pr-companion/commit/15c68330c95ddbc7579c33c059a1cac1ca988ca7))
+
 # [2.88.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.87.1...v2.88.0) (2026-07-27)
 
 
