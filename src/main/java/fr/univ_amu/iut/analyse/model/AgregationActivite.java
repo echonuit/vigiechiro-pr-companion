@@ -121,6 +121,61 @@ public final class AgregationActivite {
         return Duration.between(Nuit.de(instant).atTime(DEBUT_NUIT), instant).toMinutes();
     }
 
+    /// **Comble les creux** : sur la plage `[debutMinutes, finMinutes]` de l'axe nocturne, toute tranche
+    /// sans contact reçoit un point à **zéro**.
+    ///
+    /// Sans ce comblement, une espèce détectée à 21 h puis à 01 h voit ses deux points **reliés par une
+    /// droite** : la courbe donne à voir une activité continue là où il n'y en avait aucune. Une absence
+    /// doit se lire comme un zéro, pas comme une interpolation.
+    ///
+    /// La plage est **fournie par l'appelant**, et c'est tout l'enjeu : un zéro affirme « on écoutait, et
+    /// rien n'est venu ». Hors de la fenêtre où l'on écoutait vraiment, l'absence de contact ne dit rien —
+    /// le capteur pouvait être éteint — et la courbe **s'abstient** plutôt que d'affirmer un silence
+    /// observé. Les points hors plage sont conservés tels quels : ce sont des faits.
+    public static List<CourbeEspece> comblerLesCreux(
+            List<CourbeEspece> courbes, LargeurTranche tranche, long debutMinutes, long finMinutes) {
+        if (courbes.isEmpty() || finMinutes < debutMinutes) {
+            return courbes;
+        }
+        LocalDate reference = nuitLaPlusAncienne(courbes);
+        if (reference == null) {
+            return courbes;
+        }
+        long premiere = alignerSurLaTranche(debutMinutes, tranche);
+        return courbes.stream()
+                .map(courbe -> combler(courbe, tranche, premiere, finMinutes, reference))
+                .toList();
+    }
+
+    private static CourbeEspece combler(
+            CourbeEspece courbe, LargeurTranche tranche, long premiere, long finMinutes, LocalDate reference) {
+        Map<Long, Integer> parHeureDeNuit = new LinkedHashMap<>();
+        for (long minute = premiere; minute <= finMinutes; minute += tranche.minutes()) {
+            parHeureDeNuit.put(minute, 0);
+        }
+        for (PointActivite point : courbe.points()) {
+            parHeureDeNuit.put(minutesDepuisDebutDeNuit(point.debutTranche()), point.nombre());
+        }
+        List<PointActivite> points = parHeureDeNuit.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entree ->
+                        new PointActivite(reference.atTime(DEBUT_NUIT).plusMinutes(entree.getKey()), entree.getValue()))
+                .toList();
+        return new CourbeEspece(courbe.taxon(), courbe.nomEspece(), courbe.groupe(), courbe.total(), points);
+    }
+
+    /// Aligne une minute de l'axe sur le **début de sa tranche**, pour que les zéros tombent sur la même
+    /// grille que les contacts (une fenêtre ouverte à 20:25 commence la tranche de 20:00 en pas horaire).
+    private static long alignerSurLaTranche(long minutes, LargeurTranche tranche) {
+        return Math.floorDiv(minutes, tranche.minutes()) * (long) tranche.minutes();
+    }
+
+    /// Minutes depuis 18 h (l'origine de l'axe nocturne) pour un instant donné : sert à l'appelant à
+    /// convertir une fenêtre d'enregistrement en bornes de comblement.
+    public static long minutesSurLAxe(LocalDateTime instant) {
+        return minutesDepuisDebutDeNuit(instant);
+    }
+
     private static LocalDate nuitLaPlusAncienne(List<CourbeEspece> courbes) {
         return courbes.stream()
                 .flatMap(courbe -> courbe.points().stream())

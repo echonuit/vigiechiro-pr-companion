@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
@@ -65,7 +66,8 @@ public class AnalyseModule extends ModuleDeFeature {
 
     @Provides
     @Singleton
-    ServiceActivite fournirServiceActivite(ProjectionsAudioDao projections, PlageNuitPassage plageNuitPassage) {
-        return new ServiceActivite(projections, plageNuitPassage);
+    ServiceActivite fournirServiceActivite(
+            ProjectionsAudioDao projections, PlageNuitPassage plageNuitPassage, FenetreObserveeNuit fenetreObservee) {
+        return new ServiceActivite(projections, plageNuitPassage, fenetreObservee);
     }
 }

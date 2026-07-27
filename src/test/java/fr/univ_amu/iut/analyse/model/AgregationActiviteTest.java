@@ -202,6 +202,43 @@ class AgregationActiviteTest {
     }
 
     @Test
+    void les_tranches_sans_contact_valent_zero_dans_la_plage() {
+        // Deux contacts séparés d'un trou de deux heures : sans comblement, la ligne les relie tout droit
+        // et donne à voir une activité continue là où il n'y en avait aucune.
+        List<ContactHoraire> contacts = List.of(
+                contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(21, 0)),
+                contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(23, 0)));
+        List<CourbeEspece> courbes = AgregationActivite.parEspece(contacts, LargeurTranche.HEURE);
+
+        // Plage 21 h -> 23 h, soit 180 à 300 minutes depuis 18 h.
+        CourbeEspece comblee = AgregationActivite.comblerLesCreux(courbes, LargeurTranche.HEURE, 180, 300)
+                .get(0);
+
+        assertThat(comblee.points())
+                .extracting(PointActivite::nombre)
+                .as("21 h, puis un zéro à 22 h, puis 23 h")
+                .containsExactly(1, 0, 1);
+        assertThat(comblee.total())
+                .as("le total reste celui des contacts réels")
+                .isEqualTo(2);
+    }
+
+    @Test
+    void hors_de_la_plage_la_courbe_s_abstient() {
+        // Un seul contact à 21 h, plage d'écoute 21 h -> 22 h : rien n'est affirmé avant ni après.
+        List<ContactHoraire> contacts = List.of(contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(21, 0)));
+        List<CourbeEspece> courbes = AgregationActivite.parEspece(contacts, LargeurTranche.HEURE);
+
+        CourbeEspece comblee = AgregationActivite.comblerLesCreux(courbes, LargeurTranche.HEURE, 180, 240)
+                .get(0);
+
+        assertThat(comblee.points())
+                .extracting(point -> point.debutTranche().getHour())
+                .as("aucun zéro à 18, 19, 20 h : on n'écoutait pas, l'absence ne dit rien")
+                .containsExactly(21, 22);
+    }
+
+    @Test
     void aucun_contact_donne_aucune_courbe() {
         assertThat(AgregationActivite.parEspece(List.of(), LargeurTranche.DEMI_HEURE))
                 .isEmpty();

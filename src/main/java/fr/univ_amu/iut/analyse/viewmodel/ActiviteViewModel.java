@@ -8,8 +8,10 @@ import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.LongSummaryStatistics;
 import java.util.Objects;
 import java.util.function.Function;
 import javafx.beans.property.ObjectProperty;
@@ -56,6 +58,10 @@ public class ActiviteViewModel {
     private final ObservableList<String> nuitsDisponibles = FXCollections.observableArrayList();
     private final ObjectProperty<PlageNuit> plageNuit = new SimpleObjectProperty<>();
 
+    /// Fenêtre **réellement enregistrée** du passage chargé, ou `null` en vue transverse (plusieurs nuits,
+    /// donc plusieurs fenêtres). Borne la plage sur laquelle une tranche sans contact vaut zéro.
+    private FenetreObserveeNuit.Bornes fenetreEnregistree;
+
     /// Retour de la dernière opération de l'écran (aujourd'hui l'export d'image), pour le bandeau
     /// mutualisé : un export qui réussit ou qui échoue sans rien dire se lit comme un clic sans effet.
     private final ReadOnlyObjectWrapper<RetourOperation> retour =
@@ -70,6 +76,7 @@ public class ActiviteViewModel {
     /// Charge **un passage** : ses contacts datés et sa fenêtre nocturne, agrège avec la tranche courante,
     /// puis présélectionne les cinq espèces les plus contactées.
     public void chargerPassage(long idPassage) {
+        fenetreEnregistree = service.fenetreEnregistree(idPassage).orElse(null);
         remplacerContacts(
                 service.contactsDuPassage(idPassage),
                 service.plageNuit(idPassage).orElse(null));
@@ -79,6 +86,9 @@ public class ActiviteViewModel {
     /// unique n'a de sens sur plusieurs nuits : l'aplat coucher/lever est laissé à `null` tant qu'un filtre
     /// n'a pas ramené la sélection à un seul passage.
     public void chargerUtilisateur(String idUtilisateur) {
+        // Plusieurs nuits, donc plusieurs fenêtres d'enregistrement : aucune ne vaut pour l'ensemble. Les
+        // zéros se borneront alors à la plage réellement observée.
+        fenetreEnregistree = null;
         remplacerContacts(service.contactsDeLUtilisateur(idUtilisateur), null);
     }
 
@@ -114,9 +124,36 @@ public class ActiviteViewModel {
         // Repliement sur une nuit : le sous-ensemble peut couvrir plusieurs nuits (vue transverse,
         // ou filtre laissant passer plusieurs passages). L'axe étant celui d'UNE nuit, les tranches de
         // même heure doivent être sommées, sans quoi la courbe repart en arrière à chaque nuit.
-        especes.setAll(
-                AgregationActivite.replierSurLaNuit(AgregationActivite.parEspece(contactsFiltres, tranche.get())));
+        List<CourbeEspece> repliees =
+                AgregationActivite.replierSurLaNuit(AgregationActivite.parEspece(contactsFiltres, tranche.get()));
+        // Comblement des creux : une tranche sans contact vaut zéro là où l'on écoutait, pour qu'un silence
+        // ne se lise pas comme une droite reliant deux pics distants.
+        especes.setAll(comblerLesCreux(repliees));
         majCourbesAffichees();
+    }
+
+    /// Comble les tranches sans contact par des **zéros**, sur la plage où l'on écoutait vraiment : la
+    /// fenêtre enregistrée du passage quand elle est connue, sinon la **plage observée** (du premier au
+    /// dernier contact du sous-ensemble, toutes espèces confondues). Hors de cette plage, l'absence de
+    /// contact ne dit rien et la courbe s'abstient.
+    private List<CourbeEspece> comblerLesCreux(List<CourbeEspece> courbes) {
+        if (courbes.isEmpty()) {
+            return courbes;
+        }
+        long debut;
+        long fin;
+        if (fenetreEnregistree != null) {
+            debut = AgregationActivite.minutesSurLAxe(fenetreEnregistree.debut());
+            fin = AgregationActivite.minutesSurLAxe(fenetreEnregistree.fin());
+        } else {
+            LongSummaryStatistics observee = courbes.stream()
+                    .flatMap(courbe -> courbe.points().stream())
+                    .mapToLong(point -> AgregationActivite.minutesSurLAxe(point.debutTranche()))
+                    .summaryStatistics();
+            debut = observee.getMin();
+            fin = observee.getMax();
+        }
+        return AgregationActivite.comblerLesCreux(courbes, tranche.get(), debut, fin);
     }
 
     private void selectionnerLesPlusContactees() {

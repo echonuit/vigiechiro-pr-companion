@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -159,8 +160,12 @@ public final class CaptureActivite {
                 // Trois nuits consécutives : la démo exerce le repliement sur l'axe nocturne (#2352), la
                 // vue transverse étant le cas où plusieurs nuits se superposent.
                 for (int nuit = 0; nuit < 3; nuit++) {
+                    // Répartis sur toute l'heure (et non groupés en tête) : sinon les demi-heures paires
+                    // ressortent vides et l'aperçu montre des creux à zéro qui viennent de la fixture,
+                    // non du produit.
+                    int minute = (rang * 59) / parHeure[index];
                     contacts.add(new ContactHoraire(
-                            taxon, nom, "Chiroptères", jour.plusDays(nuit).atTime(heure, (rang * 7) % 60)));
+                            taxon, nom, "Chiroptères", jour.plusDays(nuit).atTime(heure, minute)));
                 }
             }
         }
@@ -208,7 +213,7 @@ public final class CaptureActivite {
         /// Service à contacts fixes : les deux lectures sont surchargées, les DAO (nuls) ne sont jamais
         /// touchés. Un seul but, montrer une courbe déterministe sans base.
         private static ServiceActivite serviceDemo(List<ContactHoraire> contacts) {
-            return new ServiceActivite(null, null) {
+            return new ServiceActivite(null, null, null) {
                 @Override
                 public List<ContactHoraire> contactsDuPassage(long idPassage) {
                     return contacts;
@@ -217,6 +222,14 @@ public final class CaptureActivite {
                 @Override
                 public Optional<PlageNuit> plageNuit(long idPassage) {
                     return Optional.of(NUIT);
+                }
+
+                /// Fenêtre d'enregistrement de la démo : de 20 h au soir à 6 h au matin, la plage sur
+                /// laquelle une tranche sans contact vaut zéro.
+                @Override
+                public Optional<FenetreObserveeNuit.Bornes> fenetreEnregistree(long idPassage) {
+                    return Optional.of(new FenetreObserveeNuit.Bornes(
+                            SOIR.atTime(20, 0), SOIR.plusDays(1).atTime(6, 0)));
                 }
             };
         }
