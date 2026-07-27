@@ -15,6 +15,9 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.passage.model.Campagne;
+import fr.univ_amu.iut.passage.model.ServiceCampagne;
+import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.saison.model.LigneSaison;
@@ -28,6 +31,7 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -62,6 +66,7 @@ class ServiceSoldeSaisonTest {
     private ServiceSoldeSaison service;
     private PassageOpportunisteDao opportunistes;
     private SiteTiersDao carresDeTiers;
+    private ServiceCampagne campagnes;
 
     @BeforeEach
     void preparer() {
@@ -90,12 +95,17 @@ class ServiceSoldeSaisonTest {
 
         opportunistes = injecteur.getInstance(PassageOpportunisteDao.class);
         carresDeTiers = injecteur.getInstance(SiteTiersDao.class);
+        campagnes = new ServiceCampagne(
+                new CampagneDao(source),
+                injecteur.getInstance(PassageDao.class),
+                new HorlogeFigee(LocalDate.of(2026, 7, 20)));
         service = new ServiceSoldeSaison(
                 siteDao,
                 pointDao,
                 injecteur.getInstance(PassageDao.class),
                 opportunistes,
                 carresDeTiers,
+                Optional.of(campagnes),
                 new HorlogeFigee(LocalDate.of(2026, 7, 20)));
     }
 
@@ -266,6 +276,40 @@ class ServiceSoldeSaisonTest {
         assertThat(apres.pointsSuivis())
                 .as("640002 portait deux points (B1 et B2)")
                 .isEqualTo(pointsAvant - 2);
+    }
+
+    @Test
+    @DisplayName("#2355 : filtrer le solde par campagne ne garde que les points concernés")
+    void solde_filtre_par_campagne() {
+        // Le 1er passage de 640001/A1 relève d'un suivi ; les autres points n'ont aucune campagne.
+        Campagne suivi = campagnes.creerCampagne("Suivi ENS", 2026, null);
+        LigneSaison a1 = ligne(service.soldePour(ID_USER, 2026), "640001", "A1");
+        campagnes.rattacherPassage(a1.passage1().idPassage(), suivi.id());
+
+        SoldeSaison filtre = service.soldePour(ID_USER, 2026, "ens");
+
+        assertThat(filtre.lignes())
+                .as("fragment insensible à la casse ; seul le point rattaché est retenu")
+                .extracting(LigneSaison::numeroCarre, LigneSaison::codePoint)
+                .containsExactly(tuple("640001", "A1"));
+        // Le point est montré ENTIER : son second passage, hors campagne, reste visible.
+        assertThat(filtre.lignes().getFirst().passage2().presente()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#2355 : sans filtre, le solde reste complet ; un filtre inconnu ne retient rien")
+    void solde_sans_filtre_et_filtre_inconnu() {
+        int pointsSuivis = service.soldePour(ID_USER, 2026).pointsSuivis();
+
+        assertThat(service.soldePour(ID_USER, 2026, null).pointsSuivis())
+                .as("campagne nulle = pas de restriction")
+                .isEqualTo(pointsSuivis);
+        assertThat(service.soldePour(ID_USER, 2026, "  ").pointsSuivis())
+                .as("saisie vide = pas de restriction")
+                .isEqualTo(pointsSuivis);
+        assertThat(service.soldePour(ID_USER, 2026, "Inconnue").lignes())
+                .as("aucun point ne relève de cette campagne")
+                .isEmpty();
     }
 
     /// Identifiant local du carré `carre`.

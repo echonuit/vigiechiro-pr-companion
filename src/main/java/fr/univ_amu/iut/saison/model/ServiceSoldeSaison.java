@@ -2,7 +2,9 @@ package fr.univ_amu.iut.saison.model;
 
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.FenetreSaisonniere;
+import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -15,9 +17,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /// Service de la feature `saison` : calcule le **solde de saison** d'un observateur, c'est-à-dire,
 /// pour une année donnée, ce qu'il lui reste à faire **point par point** (#2356).
@@ -56,6 +61,10 @@ public class ServiceSoldeSaison {
     /// carrés — ceux d'un autre observateur n'engagent aucune obligation de protocole.
     private final SiteTiersDao carresDeTiers;
 
+    /// Campagnes (#2355), **optionnelles** : la feature est désactivable. Absente, aucun point ne relève
+    /// d'une campagne — le solde complet reste entier, seul le filtre par campagne ne retient rien.
+    private final Optional<ServiceCampagne> campagnes;
+
     private final Horloge horloge;
 
     public ServiceSoldeSaison(
@@ -64,51 +73,105 @@ public class ServiceSoldeSaison {
             PassageDao passageDao,
             PassageOpportunisteDao opportunistes,
             SiteTiersDao carresDeTiers,
+            Optional<ServiceCampagne> campagnes,
             Horloge horloge) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.opportunistes = Objects.requireNonNull(opportunistes, "opportunistes");
         this.carresDeTiers = Objects.requireNonNull(carresDeTiers, "carresDeTiers");
+        this.campagnes = Objects.requireNonNull(campagnes, "campagnes");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
     }
 
     /// Solde de la **saison courante** (année de l'horloge) pour l'observateur `idUtilisateur`.
     public SoldeSaison soldeCourant(String idUtilisateur) {
-        return soldePour(idUtilisateur, horloge.aujourdhui().getYear());
+        return soldeCourant(idUtilisateur, null);
+    }
+
+    /// Solde de la **saison courante**, restreint à une campagne (#2355) ; `campagne` nul = tout le solde.
+    /// Évite à l'appelant (CLI, IHM) d'avoir à connaître l'année du jour pour combiner les deux.
+    public SoldeSaison soldeCourant(String idUtilisateur, String campagne) {
+        return soldePour(idUtilisateur, horloge.aujourdhui().getYear(), campagne);
     }
 
     /// Solde de la saison `annee` pour l'observateur `idUtilisateur` : une ligne par point suivi de
     /// ses sites PointFixeStandard, triée par carré puis par code de point (ordre déterministe).
     public SoldeSaison soldePour(String idUtilisateur, int annee) {
+        return soldePour(idUtilisateur, annee, null);
+    }
+
+    /// Solde de la saison `annee`, **restreint à une campagne** (#2355) : ne sont retenus que les points
+    /// dont au moins un des deux passages relève de `campagne` (correspondance partielle, insensible à la
+    /// casse, comme dans « Carte & passages »). Répond à « où en est ma campagne ? ».
+    ///
+    /// Le point retenu est montré **en entier** — ses deux passages et son « reste à faire » —, même si
+    /// l'un d'eux n'appartient pas à la campagne : c'est l'état du point qui dit ce qu'il reste à y faire.
+    ///
+    /// @param campagne fragment du nom de campagne, ou `null` pour ne pas restreindre (toutes les nuits,
+    ///     rattachées ou non)
+    public SoldeSaison soldePour(String idUtilisateur, int annee, String campagne) {
         Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         LocalDate aujourdhui = horloge.aujourdhui();
         List<LigneSaison> lignes = new ArrayList<>();
-        // Lecture groupée : un seul accès pour écarter tous les carrés de tiers (#2525).
+        // Lecture groupée : un seul accès pour écarter tous les carrés de tiers (#2525), un autre pour
+        // résoudre les noms de campagne (#2355) — pas une requête par point.
         Set<Long> tiers = carresDeTiers.tousLesIds();
+        Map<Long, String> nomsCampagnes = nomsDesCampagnes();
         for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
             if (site.protocole() != Protocole.STANDARD || tiers.contains(site.id())) {
                 continue;
             }
             for (PointDEcoute point : pointDao.findBySite(site.id())) {
-                lignes.add(ligneDuPoint(site, point, annee, aujourdhui));
+                LigneSaison ligne = ligneDuPoint(site, point, annee, aujourdhui, nomsCampagnes);
+                if (releveDeLaCampagne(ligne, campagne)) {
+                    lignes.add(ligne);
+                }
             }
         }
         lignes.sort(PAR_CARRE_PUIS_POINT);
         return new SoldeSaison(annee, aujourdhui, lignes);
     }
 
-    private LigneSaison ligneDuPoint(Site site, PointDEcoute point, int annee, LocalDate aujourdhui) {
-        CasePassage passage1 = casePour(point.id(), annee, 1);
-        CasePassage passage2 = casePour(point.id(), annee, 2);
+    /// Noms des campagnes par identifiant, lus **une seule fois** par solde. Vide si la feature `campagne`
+    /// est coupée : aucun point ne relève alors d'une campagne, et un filtre renseigné ne retient rien.
+    private Map<Long, String> nomsDesCampagnes() {
+        return campagnes
+                .map(service ->
+                        service.listerCampagnes().stream().collect(Collectors.toMap(Campagne::id, Campagne::nom)))
+                .orElseGet(Map::of);
+    }
+
+    /// Le point est-il retenu par le filtre `campagne` ? Sans filtre, tous le sont. Avec, il faut qu'**au
+    /// moins un** des deux passages porte une campagne dont le nom contient le fragment demandé.
+    private boolean releveDeLaCampagne(LigneSaison ligne, String campagne) {
+        if (campagne == null || campagne.isBlank()) {
+            return true;
+        }
+        String fragment = campagne.toLowerCase(Locale.ROOT);
+        return correspond(ligne.passage1().campagne(), fragment)
+                || correspond(ligne.passage2().campagne(), fragment);
+    }
+
+    private static boolean correspond(String nomCampagne, String fragmentEnMinuscules) {
+        return nomCampagne != null && nomCampagne.toLowerCase(Locale.ROOT).contains(fragmentEnMinuscules);
+    }
+
+    private LigneSaison ligneDuPoint(
+            Site site, PointDEcoute point, int annee, LocalDate aujourdhui, Map<Long, String> nomsCampagnes) {
+        CasePassage passage1 = casePour(point.id(), annee, 1, nomsCampagnes);
+        CasePassage passage2 = casePour(point.id(), annee, 2, nomsCampagnes);
         String reste = resteAFaire(passage1, passage2, annee, aujourdhui);
         return new LigneSaison(site.numeroCarre(), point.code(), point.id(), passage1, passage2, reste);
     }
 
-    private CasePassage casePour(Long idPoint, int annee, int numero) {
+    private CasePassage casePour(Long idPoint, int annee, int numero, Map<Long, String> nomsCampagnes) {
         return passageDao
                 .trouverParPointAnneePassage(idPoint, annee, numero)
-                .map(passage -> CasePassage.de(passage, opportunistes.estOpportuniste(passage.id())))
+                .map(passage -> CasePassage.de(
+                        passage,
+                        opportunistes.estOpportuniste(passage.id()),
+                        passage.idCampagne() == null ? null : nomsCampagnes.get(passage.idCampagne())))
                 .orElseGet(CasePassage::absente);
     }
 

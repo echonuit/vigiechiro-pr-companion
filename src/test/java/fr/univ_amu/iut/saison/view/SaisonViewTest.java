@@ -62,7 +62,7 @@ class SaisonViewTest {
                                 "A1",
                                 1L,
                                 new CasePassage(
-                                        42L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 20), false),
+                                        42L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 20), false, null),
                                 CasePassage.absente(),
                                 "Poser l'enregistreur avant le 30/09"),
                         new LigneSaison(
@@ -77,7 +77,7 @@ class SaisonViewTest {
                                 "C1",
                                 3L,
                                 new CasePassage(
-                                        99L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 25), true),
+                                        99L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 25), true, null),
                                 CasePassage.absente(),
                                 "")));
         when(service.soldeCourant(anyString())).thenReturn(solde);

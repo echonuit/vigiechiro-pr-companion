@@ -50,6 +50,11 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
     @Option(names = "--annee", description = "Année de la saison (par défaut : la saison courante).")
     private Integer annee;
 
+    @Option(
+            names = "--campagne",
+            description = "Ne garder que les points d'une campagne (fragment du nom, insensible à la casse).")
+    private String campagne;
+
     @Option(names = "--format", description = "Format de sortie : texte (défaut), csv ou json.")
     private String format = "texte";
 
@@ -71,7 +76,7 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
     @Override
     public Integer call() {
         String id = idUtilisateur.get();
-        SoldeSaison solde = annee != null ? service.soldePour(id, annee) : service.soldeCourant(id);
+        SoldeSaison solde = annee != null ? service.soldePour(id, annee, campagne) : service.soldeCourant(id, campagne);
         PrintWriter sortie = spec.commandLine().getOut();
         return switch (format.toLowerCase(Locale.ROOT)) {
             case "json" -> {

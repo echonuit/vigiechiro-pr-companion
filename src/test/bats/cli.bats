@@ -169,3 +169,31 @@ setup() {
   [ "${status}" -eq 2 ]
   [[ "${output}" == *"s'excluent"* ]]
 }
+
+@test "workflow campagne : creer-campagne -> lister-campagnes -> solde-saison --campagne filtre (#2355)" {
+  # Un point SANS nuit suffit à prouver le filtre au niveau processus : il figure au solde complet, et
+  # il en disparaît dès qu'on demande une campagne (aucun de ses passages n'y est rattaché).
+  local site
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  run cli ajouter-point --site "${site}" --code A1
+  [ "${status}" -eq 0 ]
+
+  run cli creer-campagne --nom "Suivi ENS"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Suivi ENS"* ]]
+
+  run cli lister-campagnes
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Suivi ENS"* ]]
+
+  # Sans filtre : le point suivi est là.
+  run cli solde-saison
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"130711"* ]]
+
+  # Avec filtre : plus rien, le point n'ayant aucune nuit rattachée à cette campagne.
+  run cli solde-saison --campagne "ens"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" != *"130711"* ]]
+  [[ "${output}" == *"Aucun point suivi"* ]]
+}
