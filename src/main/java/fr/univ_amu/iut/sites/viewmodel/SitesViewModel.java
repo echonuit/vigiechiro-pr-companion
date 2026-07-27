@@ -2,7 +2,9 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
@@ -20,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -91,14 +94,29 @@ public class SitesViewModel {
     /// conservatrice de [SynchronisationSites] (jamais d’écrasement local). Un compte-rendu par rapprocheur
     /// ayant du neuf à annoncer ; liste vide si la passerelle est absente ou n’a rien récupéré.
     public List<RapportSynchro> synchroniserDepuisVigieChiro() {
-        return synchronisation.map(SynchronisationSites::synchroniser).orElseGet(List::of);
+        return synchroniserDepuisVigieChiro(progres -> {}, JetonAnnulation.neutre());
+    }
+
+    /// Variante **suivie et annulable** (#2558) : depuis #2557, le pull rapatrie le **contenu** de chaque
+    /// nuit du compte et non plus de simples squelettes. Ce qui tenait sous un voile opaque dure désormais
+    /// des minutes, et doit se montrer et se laisser interrompre.
+    public List<RapportSynchro> synchroniserDepuisVigieChiro(Consumer<Progression> suivi, JetonAnnulation jeton) {
+        return synchronisation
+                .map(passerelle -> passerelle.synchroniser(suivi, jeton))
+                .orElseGet(List::of);
     }
 
     /// Parcours complet de la synchronisation à la demande (#1045, déporté #1212), à appeler **hors du
     /// fil JavaFX** : pull best-effort puis relecture des cartes (le pull a pu créer des sites). Le
     /// résultat s'applique sur le fil JavaFX via [#appliquerSynchro].
     public SynchroEtChargement synchroniserEtRecharger() {
-        return new SynchroEtChargement(synchroniserDepuisVigieChiro(), charger());
+        return synchroniserEtRecharger(progres -> {}, JetonAnnulation.neutre());
+    }
+
+    /// Variante **suivie et annulable** (#2558). Le rechargement des cartes qui suit le pull n'est **pas**
+    /// suivi : il est bref, et lui donner une part de barre la ferait sauter à la fin sans rien apprendre.
+    public SynchroEtChargement synchroniserEtRecharger(Consumer<Progression> suivi, JetonAnnulation jeton) {
+        return new SynchroEtChargement(synchroniserDepuisVigieChiro(suivi, jeton), charger());
     }
 
     /// À rappeler **sur le fil JavaFX** après [#synchroniserEtRecharger()] : applique les cartes
@@ -112,6 +130,17 @@ public class SitesViewModel {
     /// silence, ni un bouton resté figé (#795/#1212).
     public void signalerErreurSynchro(Throwable erreur) {
         messageSynchro.set("La synchronisation Vigie-Chiro a échoué : " + erreur.getMessage());
+    }
+
+    /// L'utilisateur a **renoncé** en cours de synchronisation (#2558). Ni un succès, ni un échec : un
+    /// geste délibéré, qu'on restitue comme tel.
+    ///
+    /// Ce qui avait été rapatrié avant l'arrêt **est acquis** - chaque nuit est écrite entièrement ou pas
+    /// du tout - et la synchro étant idempotente, la suivante reprendra là où celle-ci s'est arrêtée. On le
+    /// dit, plutôt que de laisser croire à un travail perdu.
+    public void signalerAnnulationSynchro() {
+        messageSynchro.set("Synchronisation interrompue. Ce qui a déjà été récupéré est conservé ;"
+                + " la prochaine synchronisation reprendra le reste.");
     }
 
     /// Message de résultat de la synchronisation à la demande, vide tant qu’aucune n’a eu lieu.

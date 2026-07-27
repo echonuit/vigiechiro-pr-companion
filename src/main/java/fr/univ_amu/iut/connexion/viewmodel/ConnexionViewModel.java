@@ -4,12 +4,15 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -64,6 +67,21 @@ public class ConnexionViewModel {
     /// revérifié à la prochaine ouverture de la modale ([#jetonAVerifier]). À lancer hors du fil
     /// JavaFX ; ne touche à aucune propriété (le controller appelle [#rafraichir] ensuite).
     public ReponseApi<ProfilVigieChiro> connecter(String token) {
+        return connecter(token, progres -> {}, JetonAnnulation.neutre());
+    }
+
+    /// Variante **suivie et annulable** (#2558). Se connecter rejoue les rapprocheurs, et l'un d'eux
+    /// rapatrie désormais le **contenu** de chaque nuit du compte (#2557) : sur un gros compte, la
+    /// vérification d'un jeton s'accompagne de plusieurs minutes de travail. Elles ne peuvent pas rester
+    /// muettes ni inarrêtables.
+    ///
+    /// L'annulation ne touche **pas** à la connexion elle-même : le jeton est vérifié et enregistré avant
+    /// que les rapprocheurs démarrent. Renoncer interrompt le rapatriement, pas l'authentification - et le
+    /// travail restant sera repris à la prochaine synchro, celle-ci étant idempotente.
+    ///
+    /// @throws fr.univ_amu.iut.commun.model.OperationAnnuleeException si l'utilisateur renonce **pendant**
+    ///     les rapprochements ; le jeton est alors déjà enregistré
+    public ReponseApi<ProfilVigieChiro> connecter(String token, Consumer<Progression> suivi, JetonAnnulation jeton) {
         if (token == null || token.isBlank()) {
             return ReponseApi.nonConnecte();
         }
@@ -74,7 +92,7 @@ public class ConnexionViewModel {
         switch (profil) {
             case ReponseApi.Succes<ProfilVigieChiro>(ProfilVigieChiro identiteVerifiee) -> {
                 stockage.enregistrer(propre, identiteVerifiee);
-                amorcerRapprochements();
+                amorcerRapprochements(suivi, jeton);
             }
             case ReponseApi.Injoignable<ProfilVigieChiro> injoignable -> {
                 // #1369 : impossible de vérifier n'est pas « jeton refusé » : on le garde, non vérifié.
@@ -95,11 +113,11 @@ public class ConnexionViewModel {
     /// (#728) et mémorise un résumé de ce qui a été synchronisé (#717). Chaque rapprocheur est
     /// **best-effort** (il avale ses propres erreurs) : un échec ne compromet pas la connexion. Déjà hors
     /// du fil JavaFX (appelé depuis [#connecter]).
-    private void amorcerRapprochements() {
+    private void amorcerRapprochements(Consumer<Progression> suivi, JetonAnnulation jeton) {
         List<String> parties = new ArrayList<>();
         // Ordre (#1776) : structure d'abord (sites, taxons), puis ce qui en dépend (passages sur points locaux).
         for (RapprochementVigieChiro rapprocheur : RapprochementVigieChiro.ordonnes(rapprocheurs)) {
-            rapprocheur.synchroniser(client).ifPresent(rapport -> parties.add(rapport.enClair()));
+            rapprocheur.synchroniser(client, suivi, jeton).ifPresent(rapport -> parties.add(rapport.enClair()));
         }
         resumeSynchro = String.join(", ", parties);
     }

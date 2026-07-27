@@ -3,9 +3,12 @@ package fr.univ_amu.iut.sites.model;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.Progression;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /// **Synchronisation à la demande depuis M-Sites** (#1045) : rejoue, sans se reconnecter, ce que la
 /// connexion fait pour les sites. Rapproche d'abord la **structure des sites** ([RapprochementSites]),
@@ -37,10 +40,24 @@ public final class SynchronisationSites {
     /// rapprocheur ayant quelque chose à dire (les autres restent silencieux). À appeler **hors du fil
     /// JavaFX** (réseau + écritures base).
     public List<RapportSynchro> synchroniser() {
+        return synchroniser(progres -> {}, JetonAnnulation.neutre());
+    }
+
+    /// Variante **suivie et annulable** (#2558) : c'est celle du bouton, depuis que les dépendants
+    /// rapatrient le **contenu** de chaque nuit (#2557) et non plus seulement des squelettes.
+    ///
+    /// La structure des sites reste **hors suivi** : elle est brève, et lui donner une part de barre
+    /// ferait avancer celle-ci d'un coup avant la vraie attente. Seuls les dépendants, qui sont ce qui
+    /// dure, alimentent la progression.
+    ///
+    /// @throws fr.univ_amu.iut.commun.model.OperationAnnuleeException si l'utilisateur renonce
+    public List<RapportSynchro> synchroniser(Consumer<Progression> suivi, JetonAnnulation jeton) {
+        Objects.requireNonNull(suivi, "suivi");
+        Objects.requireNonNull(jeton, "jeton");
         List<RapportSynchro> rapports = new ArrayList<>();
         sites.synchroniser(client).ifPresent(rapports::add);
         for (RapprochementVigieChiro dependant : dependants) {
-            dependant.synchroniser(client).ifPresent(rapports::add);
+            dependant.synchroniser(client, suivi, jeton).ifPresent(rapports::add);
         }
         return rapports;
     }

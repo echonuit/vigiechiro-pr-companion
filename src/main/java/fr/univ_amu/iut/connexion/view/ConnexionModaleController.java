@@ -5,16 +5,21 @@ import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.util.Objects;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -140,7 +145,33 @@ public class ConnexionModaleController {
         majBadgeIdentite(viewModel.connecteProperty().get());
         // #1369 : un jeton conservé hors ligne (jamais vérifié) est revérifié à l'ouverture, sans
         // geste : le badge redevient vert dès que la plateforme répond.
-        viewModel.jetonAVerifier().ifPresent(this::verifierJeton);
+        //
+        // #2558 : attendre que la modale soit RATTACHÉE À SA SCÈNE. La vérification ouvre désormais un
+        // dialogue de progression, qui a besoin d'une fenêtre propriétaire - or `initialize` s'exécute
+        // pendant le chargement du FXML, quand le champ n'a encore ni scène ni fenêtre.
+        viewModel.jetonAVerifier().ifPresent(this::verifierDesQueVisible);
+    }
+
+    /// Lance la re-vérification **dès que la modale a une fenêtre**, et pas avant.
+    ///
+    /// Sans cette attente, la re-vérification automatique (#1369) partirait depuis `initialize`, où le
+    /// FXML n'est pas encore attaché : le dialogue de progression n'aurait aucune fenêtre à qui
+    /// appartenir. L'écouteur se retire dès qu'il a servi - la scène ne change qu'une fois.
+    private void verifierDesQueVisible(String token) {
+        Scene dejaLa = champToken.getScene();
+        if (dejaLa != null && dejaLa.getWindow() != null) {
+            verifierJeton(token);
+            return;
+        }
+        champToken.sceneProperty().addListener(new ChangeListener<Scene>() {
+            @Override
+            public void changed(ObservableValue<? extends Scene> observable, Scene ancienne, Scene nouvelle) {
+                if (nouvelle != null) {
+                    champToken.sceneProperty().removeListener(this);
+                    Platform.runLater(() -> verifierJeton(token));
+                }
+            }
+        });
     }
 
     /// Étape 1 : ouvre la plateforme dans le navigateur système (pour s'y connecter).
@@ -175,25 +206,44 @@ public class ConnexionModaleController {
     }
 
     /// Vérifie un jeton (collé, ou enregistré non vérifié à revérifier, #1369) hors du fil JavaFX.
+    ///
+    /// **Sous une barre depuis #2558.** Se connecter ne se réduit plus à vérifier un jeton : la connexion
+    /// rejoue les rapprocheurs, et l'un d'eux rapatrie désormais le contenu de **chaque nuit du compte**
+    /// (#2557). Le bandeau « Vérification en cours… » annonçait une seconde d'attente pour ce qui peut en
+    /// prendre plusieurs centaines, sans rien montrer ni permettre de renoncer.
+    ///
+    /// Renoncer n'annule **pas** la connexion : le jeton est vérifié et enregistré avant que les
+    /// rapprocheurs démarrent. C'est le rapatriement qui s'arrête, et la synchro suivante le reprendra.
     private void verifierJeton(String token) {
         verificationEnCours.set(true);
         afficherStatut("Vérification en cours…", STATUT_INFO);
-        executeur.executer(
-                () -> viewModel.connecter(token),
-                reponse -> {
-                    verificationEnCours.set(false);
-                    viewModel.rafraichir();
-                    restituerVerification(reponse);
-                },
-                erreur -> {
-                    verificationEnCours.set(false);
-                    viewModel.rafraichir();
-                    String detail = erreur.getMessage();
-                    afficherStatut(
-                            "Vérification impossible : "
-                                    + (detail != null && !detail.isBlank() ? detail : "erreur inattendue."),
-                            STATUT_DANGER);
-                });
+        new DialogueProgression(executeur)
+                .lancer(
+                        champToken.getScene().getWindow(),
+                        "Connexion à Vigie-Chiro",
+                        (suivi, jeton) -> viewModel.connecter(token, suivi, jeton),
+                        reponse -> {
+                            verificationEnCours.set(false);
+                            viewModel.rafraichir();
+                            restituerVerification(reponse);
+                        },
+                        () -> {
+                            verificationEnCours.set(false);
+                            viewModel.rafraichir();
+                            afficherStatut(
+                                    "Connexion enregistrée. La récupération de vos nuits a été interrompue :"
+                                            + " la prochaine synchronisation reprendra le reste.",
+                                    STATUT_INFO);
+                        },
+                        erreur -> {
+                            verificationEnCours.set(false);
+                            viewModel.rafraichir();
+                            String detail = erreur.getMessage();
+                            afficherStatut(
+                                    "Vérification impossible : "
+                                            + (detail != null && !detail.isBlank() ? detail : "erreur inattendue."),
+                                    STATUT_DANGER);
+                        });
     }
 
     /// Restitue l'issue de la vérification du jeton (#1284) : avant, tout échec devenait « Token

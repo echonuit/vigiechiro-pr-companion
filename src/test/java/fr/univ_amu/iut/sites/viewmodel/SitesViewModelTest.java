@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -80,7 +81,7 @@ class SitesViewModelTest {
     @DisplayName("#1045 : la synchronisation recharge les cartes (sites créés par le pull) et pose le message")
     void synchro_recharge_et_message() {
         SynchronisationSites sync = mock(SynchronisationSites.class);
-        when(sync.synchroniser()).thenAnswer(invocation -> {
+        when(sync.synchroniser(any(), any())).thenAnswer(invocation -> {
             // Le pull crée un site local (comportement réel de RapprochementSites) : le rechargement doit le voir.
             service.creerSite("640380", "Étang de Berre", Protocole.STANDARD, null, ID_USER);
             return List.of(new RapportSynchro("sites", 3));
@@ -105,7 +106,7 @@ class SitesViewModelTest {
         SynchronisationSites sync = mock(SynchronisationSites.class);
         // Le bouton rejoue désormais la structure des sites PUIS ses dépendants : le rapport des passages
         // (ServiceReconstructionPassages, phase DEPENDANTE) s'ajoute à celui des sites.
-        when(sync.synchroniser())
+        when(sync.synchroniser(any(), any()))
                 .thenReturn(List.of(new RapportSynchro("sites", 1), new RapportSynchro("passage(s) rapatrié(s)", 5)));
         SitesViewModel vm =
                 new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
@@ -120,7 +121,7 @@ class SitesViewModelTest {
     @DisplayName("#1045 : rien récupéré (hors connexion, aucun site distant) → message explicite, pas un silence")
     void synchro_sans_resultat() {
         SynchronisationSites sync = mock(SynchronisationSites.class);
-        when(sync.synchroniser()).thenReturn(List.of());
+        when(sync.synchroniser(any(), any())).thenReturn(List.of());
         SitesViewModel vm =
                 new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
 

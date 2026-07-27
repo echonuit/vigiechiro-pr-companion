@@ -6,6 +6,8 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Consumer;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -93,8 +96,14 @@ public final class RecupererVigieChiro implements Callable<Integer> {
 
         List<String> parties = new ArrayList<>();
         // Ordre (#1776) : structure d'abord (sites, taxons), puis ce qui en dépend (passages sur points locaux).
+        // Suivi (#2558) : depuis #2557 le rapprocheur des passages rapatrie le contenu de chaque nuit du
+        // compte. Sans une ligne d'avancement, la commande reste muette plusieurs minutes, et l'on ne sait
+        // pas distinguer un travail en cours d'un blocage. La parité avec l'IHM (ADR 0014) le demande aussi.
+        Consumer<Progression> suivi = etape -> sortie.println("  " + etape.libelle());
         for (RapprochementVigieChiro rapprocheur : RapprochementVigieChiro.ordonnes(rapprocheurs.get())) {
-            rapprocheur.synchroniser(client).ifPresent(rapport -> parties.add(rapport.enClair()));
+            rapprocheur
+                    .synchroniser(client, suivi, JetonAnnulation.neutre())
+                    .ifPresent(rapport -> parties.add(rapport.enClair()));
         }
         sortie.println(rendreResume(parties));
         return 0;

@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.connexion.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -58,12 +60,13 @@ class ConnexionViewModelTest {
     @DisplayName("connecter avec un token valide : identité persistée, état « connecté », résumé de synchro")
     void connecter_valide() {
         when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
-        when(rapprocheur.synchroniser(client)).thenReturn(Optional.of(new RapportSynchro("taxons", 385)));
+        when(rapprocheur.synchroniser(eq(client), any(), any()))
+                .thenReturn(Optional.of(new RapportSynchro("taxons", 385)));
 
         assertThat(viewModel.connecter("TOK123")).isEqualTo(ReponseApi.succes(PROFIL));
 
         assertThat(stockage.profil()).as("persisté").contains(PROFIL);
-        verify(rapprocheur).synchroniser(client);
+        verify(rapprocheur).synchroniser(eq(client), any(), any());
         assertThat(viewModel.resumeSynchro()).isEqualTo("385 taxons");
         viewModel.rafraichir();
         assertThat(viewModel.connecteProperty().get()).isTrue();
@@ -78,17 +81,19 @@ class ConnexionViewModelTest {
         when(sites.phase()).thenReturn(Phase.STRUCTURE);
         when(passages.phase()).thenReturn(Phase.DEPENDANTE);
         when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
-        when(sites.synchroniser(client)).thenReturn(Optional.of(new RapportSynchro("site(s)", 3)));
-        when(passages.synchroniser(client)).thenReturn(Optional.of(new RapportSynchro("passage(s) rapatrié(s)", 2)));
+        when(sites.synchroniser(eq(client), any(), any())).thenReturn(Optional.of(new RapportSynchro("site(s)", 3)));
+        when(passages.synchroniser(eq(client), any(), any()))
+                .thenReturn(Optional.of(new RapportSynchro("passage(s) rapatrié(s)", 2)));
         // Le passage est donné AVANT le site dans le Set : l'ordre ne doit venir que des phases, pas de l'entrée.
         ConnexionViewModel avecDeux = new ConnexionViewModel(stockage, client, Set.of(passages, sites));
 
         avecDeux.connecter("TOK123");
 
         InOrder ordre = inOrder(sites, passages);
-        ordre.verify(sites).synchroniser(client);
+        ordre.verify(sites).synchroniser(eq(client), any(), any());
         ordre.verify(passages)
-                .synchroniser(client); // les passages, dépendant des points locaux, passent après les sites
+                .synchroniser(
+                        eq(client), any(), any()); // les passages, dépendant des points locaux, passent après les sites
     }
 
     @Test
@@ -134,7 +139,7 @@ class ConnexionViewModelTest {
     @DisplayName("#1369 : un jeton vérifié n'est pas à revérifier")
     void jeton_verifie_na_rien_a_reverifier() {
         when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
-        when(rapprocheur.synchroniser(client)).thenReturn(Optional.empty());
+        when(rapprocheur.synchroniser(eq(client), any(), any())).thenReturn(Optional.empty());
 
         viewModel.connecter("TOK123");
 
