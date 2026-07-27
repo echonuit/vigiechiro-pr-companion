@@ -614,6 +614,50 @@ class ServiceReconstructionPassagesTest {
     }
 
     @Test
+    @DisplayName("#2558 : renoncer TRAVERSE le contrat best-effort, au lieu d'être avalé comme une panne")
+    void synchroniser_annulation_remonte() {
+        when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detailComplet()));
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS)));
+        when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS)).thenReturn(List.of(SEQ_1, SEQ_2));
+        JetonAnnulation renonce = new JetonAnnulation();
+        renonce.annuler();
+
+        // Avalée, l'annulation ferait enchaîner le rapprocheur suivant alors qu'on vient de demander
+        // l'arrêt, et priverait la surface du moyen de distinguer « annulé » de « terminé ».
+        assertThatThrownBy(() -> service.synchroniser(client, progres -> {}, renonce))
+                .isInstanceOf(OperationAnnuleeException.class);
+    }
+
+    @Test
+    @DisplayName("#2558 : une synchro interrompue est REPRENABLE - le tour suivant achève le travail")
+    void synchroniser_annulation_reprenable() {
+        when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detailComplet()));
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS)));
+        when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS)).thenReturn(List.of(SEQ_1, SEQ_2));
+        JetonAnnulation renonce = new JetonAnnulation();
+        renonce.annuler();
+
+        assertThatThrownBy(() -> service.synchroniser(client, progres -> {}, renonce))
+                .isInstanceOf(OperationAnnuleeException.class);
+        Long idPassage = passageDao.findAll().getFirst().id();
+        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
+        assertThat(sequenceDao.findBySession(idSession))
+                .as("interrompue avant d'écrire : la nuit est restée un squelette, pas une nuit à moitié faite")
+                .isEmpty();
+
+        // C'est ce qui rend l'annulation acceptable comme garde-fou à la place d'une borne : rien n'est
+        // perdu, la synchro suivante reprend le travail restant.
+        Optional<RapportSynchro> reprise = service.synchroniser(client);
+
+        assertThat(reprise)
+                .hasValueSatisfying(
+                        compteRendu -> assertThat(compteRendu.enClair()).isEqualTo("1 nuit(s) récupérée(s)"));
+        assertThat(sequenceDao.findBySession(idSession)).hasSize(2);
+    }
+
+    @Test
     @DisplayName("#1707 synchro : une participation dont le point n'est pas encore local est ignorée")
     void synchroniser_ignore_point_non_local() {
         when(client.mesParticipations())

@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.api;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro.Phase;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -38,6 +39,34 @@ class RapprochementVigieChiroTest {
         RapprochementVigieChiro sansPhaseDeclaree = client -> Optional.empty();
 
         assertThat(sansPhaseDeclaree.phase()).isEqualTo(Phase.STRUCTURE);
+    }
+
+    @Test
+    @DisplayName("#2558 : un rapprocheur qui ignore le suivi reste appelé - la surcharge délègue au défaut")
+    void surcharge_suivie_delegue_par_defaut() {
+        List<ClientVigieChiro> appels = new java.util.ArrayList<>();
+        // Un rapprocheur « court » (taxons, sites) n'implémente QUE la méthode abstraite. C'est toute la
+        // raison d'avoir mis la variante suivie en `default` : ces rapprocheurs n'ont ni progression à
+        // rendre ni travail à interrompre, et ne devaient pas être réécrits pour autant.
+        RapprochementVigieChiro court = client -> {
+            appels.add(client);
+            return Optional.of(new RapportSynchro("taxons", 385));
+        };
+
+        Optional<RapportSynchro> rapport = court.synchroniser(null, progres -> {}, JetonAnnulation.neutre());
+
+        assertThat(rapport).map(RapportSynchro::enClair).contains("385 taxons");
+        assertThat(appels)
+                .as("le rapprocheur a bien été invoqué par la surcharge")
+                .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#2558 : la surcharge n'a pas rompu le FunctionalInterface - une lambda reste un rapprocheur")
+    void reste_une_interface_fonctionnelle() {
+        assertThat(RapprochementVigieChiro.class.getAnnotation(FunctionalInterface.class))
+                .as("deux méthodes abstraites feraient échouer toutes les lambdas du Multibinder")
+                .isNotNull();
     }
 
     @Test

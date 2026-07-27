@@ -1,9 +1,12 @@
 package fr.univ_amu.iut.commun.api;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.Progression;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /// Point d'extension de **rapprochement** d'un référentiel local avec VigieChiro (#728, axe 1).
 ///
@@ -40,6 +43,28 @@ public interface RapprochementVigieChiro {
     ///     [Optional#empty()] s'il n'y a rien à dire (non connecté : silence légitime ; échec interne
     ///     best-effort). L'appelant affiche [RapportSynchro#enClair()] sans deviner.
     Optional<RapportSynchro> synchroniser(ClientVigieChiro client);
+
+    /// Variante **suivie et annulable** (#2558), pour les rapprocheurs devenus **longs**.
+    ///
+    /// Depuis #2557, celui des passages ne se contente plus de créer des squelettes : il télécharge et
+    /// écrit le contenu de **chaque nuit du compte**. Ce qui était un aller-retour bref est devenu une
+    /// opération de plusieurs minutes sur un gros compte - et la décision de ne pas la **borner** (mesure à
+    /// l'appui) ne tient que si l'utilisateur peut voir où elle en est et **renoncer**. L'annulation
+    /// remplace la borne.
+    ///
+    /// Par défaut, un rapprocheur **ignore** ces deux moyens et délègue à [#synchroniser(ClientVigieChiro)] :
+    /// les référentiels courts (taxons, sites) n'ont rien à suivre ni à interrompre, et n'ont donc rien à
+    /// surcharger. C'est aussi ce qui préserve le [FunctionalInterface] de ce port.
+    ///
+    /// **Une annulation n'est pas une perte** : la synchro est idempotente par nuit, donc interrompue elle
+    /// reprend au tour suivant, sans laisser de nuit à moitié écrite.
+    ///
+    /// @param suivi notifié au fil du travail ; à relayer vers une barre déterminée
+    /// @param jeton consulté aux frontières ; `annuler()` interrompt à la prochaine
+    default Optional<RapportSynchro> synchroniser(
+            ClientVigieChiro client, Consumer<Progression> suivi, JetonAnnulation jeton) {
+        return synchroniser(client);
+    }
 
     /// Phase d'exécution de ce rapprocheur (#1776). Par défaut [Phase#STRUCTURE] : un rapprocheur qui
     /// n'attend rien d'un autre n'a rien à surcharger. Ceux qui dépendent d'un référentiel déjà rapproché

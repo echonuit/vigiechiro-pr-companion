@@ -159,8 +159,23 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     /// relancée, elle ne recrée pas ce qui est déjà rattaché.
     @Override
     public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
+        return synchroniser(client, progres -> {}, JetonAnnulation.neutre());
+    }
+
+    /// Variante **suivie et annulable** (#2558). C'est celle que les surfaces appellent depuis que ce
+    /// rapprocheur télécharge et écrit le contenu de chaque nuit du compte (#2557) : il lui faut une barre
+    /// et un bouton « Annuler ».
+    ///
+    /// Une [OperationAnnuleeException] **traverse** le contrat best-effort, délibérément : renoncer est un
+    /// geste de l'utilisateur, pas une panne. L'avaler ferait enchaîner le rapprocheur suivant alors qu'on
+    /// vient de demander l'arrêt, et priverait la surface du moyen de distinguer « annulé » de « terminé ».
+    @Override
+    public Optional<RapportSynchro> synchroniser(
+            ClientVigieChiro client, Consumer<Progression> suivi, JetonAnnulation jeton) {
         try {
-            return rapporter(synchroniserStructure());
+            return rapporter(synchroniserStructure(suivi, jeton));
+        } catch (OperationAnnuleeException renoncement) {
+            throw renoncement;
         } catch (RuntimeException echecBestEffort) {
             return Optional.empty();
         }
@@ -242,10 +257,10 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     /// plafond God Class (PMD `NcssCount`, déjà franchi une fois par #1814).
     ///
     /// @return ce que le tour a fait des nuits du compte
-    BilanTour synchroniserStructure() {
+    BilanTour synchroniserStructure(Consumer<Progression> suivi, JetonAnnulation jeton) {
         int crees = creerLesNuitsAbsentes();
         HydratationSquelette.BilanCompletion completion = hydratation.completerLesSquelettes(
-                passagesParParticipation().values().stream().toList(), progres -> {}, JetonAnnulation.neutre());
+                passagesParParticipation().values().stream().toList(), suivi, jeton);
         return new BilanTour(crees, completion.completees(), completion.resteesIncompletes());
     }
 
