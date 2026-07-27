@@ -1,0 +1,235 @@
+package fr.univ_amu.iut.importation.viewmodel;
+
+import fr.univ_amu.iut.commun.model.Severite;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Barre;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Teinte;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Ventilation;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
+import fr.univ_amu.iut.importation.model.LigneRapport;
+import fr.univ_amu.iut.importation.model.RapportImport;
+import fr.univ_amu.iut.importation.model.ResultatImport;
+import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
+import fr.univ_amu.iut.importation.model.StatutImportFichier;
+import fr.univ_amu.iut.importation.model.VolumesImport;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/// Traduit un import abouti en **compte rendu chiffré** (#2358), celui que rend
+/// [fr.univ_amu.iut.commun.view.PanneauCompteRendu].
+///
+/// Distinct de [CompteRenduImport], qui produit la restitution **textuelle** (ADR 0028/0031) : ce sont
+/// deux lectures du même import, l'une en phrases et en listes, l'autre en proportions. Elles coexistent
+/// le temps que le chiffré prenne la place, et rien ne les fait diverger - toutes deux ne lisent que le
+/// [RapportImport] et les volumes déjà produits, sans rien recalculer.
+///
+/// Purement dérivé : aucune donnée n'est inventée ici. Les quantités viennent du rapport, les volumes de
+/// [VolumesImport] (#2358), les motifs des lignes rejetées.
+public final class CompteRenduChiffreImport {
+
+    private CompteRenduChiffreImport() {}
+
+    /// Le compte rendu chiffré d'un import **mono-nuit**.
+    ///
+    /// @param resultat l'import abouti
+    /// @param actions ce que l'écran propose de faire ensuite ; un compte rendu ne se termine pas sur
+    ///     « Fermer », et c'est l'écran qui sait où mènent ses boutons
+    public static CompteRenduChiffre de(ResultatImport resultat, List<Action> actions) {
+        return construire(
+                titreMonoNuit(resultat),
+                List.of(resultat.rapport()),
+                resultat.volumes(),
+                resultat.anomalies(),
+                actions);
+    }
+
+    /// Le compte rendu chiffré d'un import **multi-nuits** : mêmes catégories, agrégées sur toutes les
+    /// nuits. Rendre compte de la seule première tairait les rejets des autres, or c'est sur un import
+    /// multi-nuits qu'il y en a le plus.
+    public static CompteRenduChiffre de(ResultatImportMultiNuits resultat, List<Action> actions) {
+        return construire(
+                titreMultiNuits(resultat),
+                resultat.parNuit().stream().map(ResultatImport::rapport).toList(),
+                resultat.volumes(),
+                resultat.parNuit().stream()
+                        .flatMap(nuit -> nuit.anomalies().stream())
+                        .toList(),
+                actions);
+    }
+
+    private static CompteRenduChiffre construire(
+            String titre,
+            List<RapportImport> rapports,
+            VolumesImport volumes,
+            List<String> anomalies,
+            List<Action> actions) {
+        List<LigneRapport> lignes =
+                rapports.stream().flatMap(rapport -> rapport.lignes().stream()).toList();
+        long importes = compte(lignes, StatutImportFichier.IMPORTE);
+        long rejetes = compte(lignes, StatutImportFichier.REJETE);
+        return new CompteRenduChiffre(
+                titre,
+                resultat(importes, lignes.size()),
+                severite(rapports, rejetes, anomalies),
+                barresDeVolume(volumes),
+                ventilation(lignes),
+                motifsDeRejet(lignes),
+                avertissements(rapports, anomalies),
+                actions);
+    }
+
+    /// « 583 / 612 importés » quand tout n'est pas passé, « 584 importés » quand si : afficher
+    /// « 584 / 584 » ferait chercher l'écart qui n'existe pas.
+    private static String resultat(long importes, int total) {
+        return importes == total ? importes + " importés" : importes + " / " + total + " importés";
+    }
+
+    /// La sévérité du verdict. Un rejet n'est pas une erreur d'import - l'import a abouti, il est
+    /// **résilient** (#155) - mais c'est un avertissement : des fichiers de la carte ne sont pas en base.
+    /// Un doublon de nuit et une anomalie du journal du capteur pèsent pareil.
+    private static Severite severite(List<RapportImport> rapports, long rejetes, List<String> anomalies) {
+        boolean aDouter =
+                rejetes > 0 || !anomalies.isEmpty() || rapports.stream().anyMatch(RapportImport::aDoublonDeNuit);
+        return aDouter ? Severite.AVERTISSEMENT : Severite.SUCCES;
+    }
+
+    /// Ventilation **exhaustive** des fichiers de la source : chaque fichier est dans exactement un
+    /// statut, donc la somme des segments fait le total, sans « autres » silencieux.
+    private static Ventilation ventilation(List<LigneRapport> lignes) {
+        if (lignes.isEmpty()) {
+            return Ventilation.aucune();
+        }
+        List<Segment> segments = new ArrayList<>();
+        ajouterSiPresent(segments, "Importés", compte(lignes, StatutImportFichier.IMPORTE), Teinte.RETENU);
+        ajouterSiPresent(segments, "Ignorés", compte(lignes, StatutImportFichier.IGNORE), Teinte.ECARTE);
+        ajouterSiPresent(segments, "Rejetés", compte(lignes, StatutImportFichier.REJETE), Teinte.REFUSE);
+        return new Ventilation("Devenir des " + lignes.size() + " fichiers de la source", lignes.size(), segments);
+    }
+
+    /// Un segment ne se déclare que s'il a une quantité : un « 0 ignoré » en légende est du bruit, et un
+    /// segment de largeur nulle dans la barre n'apprend rien.
+    private static void ajouterSiPresent(List<Segment> segments, String libelle, long quantite, Teinte teinte) {
+        if (quantite > 0) {
+            segments.add(new Segment(libelle, quantite, String.valueOf(quantite), teinte));
+        }
+    }
+
+    /// Les deux barres de volume, à échelle commune : ce que la carte a donné, ce que le disque a pris.
+    /// Vides si rien n'a été mesuré - deux barres à zéro se liraient comme un import stérile.
+    private static List<Barre> barresDeVolume(VolumesImport volumes) {
+        if (volumes.estVide()) {
+            return List.of();
+        }
+        List<Segment> ecrit = new ArrayList<>();
+        if (volumes.octetsBruts() > 0) {
+            ecrit.add(segmentDeVolume("bruts conservés", volumes.octetsBruts(), Teinte.PRINCIPALE));
+        }
+        ecrit.add(segmentDeVolume("séquences", volumes.octetsSequences(), Teinte.SECONDAIRE));
+        return List.of(
+                Barre.unique("Lu sur la carte", segmentDeVolume("lu", volumes.octetsLus(), Teinte.REFERENCE)),
+                new Barre("Écrit sur le disque", ecrit));
+    }
+
+    private static Segment segmentDeVolume(String libelle, long octets, Teinte teinte) {
+        return new Segment(libelle, octets, Formats.octetsLisibles(octets), teinte);
+    }
+
+    /// Les motifs de rejet, un par **raison**, chacun portant la liste de ses fichiers.
+    ///
+    /// ## Pourquoi la raison est retaillée avant de grouper
+    ///
+    /// La raison produite par le moteur **finit par le nom du fichier** (« Original illisible (…) :
+    /// PaRec…_203922.wav ») : grouper sur elle telle quelle donnerait un motif par fichier, c'est-à-dire
+    /// aucun groupe. Le nom est retiré de la raison - il est déjà le **sujet** - et sert de clé de
+    /// regroupement.
+    ///
+    /// La raison reste un **texte d'exception**, ce que #2358 interdit d'afficher **seul** : ici elle
+    /// accompagne un motif dénombré, une ventilation et une liste de fichiers nommés. La classer en
+    /// causes typées (« en-tête WAV illisible », « fréquence inattendue ») demande de typer les rejets
+    /// dans le moteur : c'est la substance de #2076, pas de cette issue.
+    private static List<Motif> motifsDeRejet(List<LigneRapport> lignes) {
+        Map<String, List<String>> parRaison = new LinkedHashMap<>();
+        for (LigneRapport ligne : lignes) {
+            if (ligne.statut() == StatutImportFichier.REJETE) {
+                parRaison
+                        .computeIfAbsent(raisonSansNomDeFichier(ligne), ignore -> new ArrayList<>())
+                        .add(ligne.nomFichier());
+            }
+        }
+        return parRaison.entrySet().stream()
+                .map(motif -> new Motif("fichiers : " + motif.getKey(), motif.getValue()))
+                .toList();
+    }
+
+    /// Retire du message le suffixe « : nomDuFichier » que le moteur y appose. Sans correspondance, la
+    /// raison est rendue telle quelle : mieux vaut un motif verbeux qu'un motif amputé au mauvais endroit.
+    private static String raisonSansNomDeFichier(LigneRapport ligne) {
+        String suffixe = " : " + ligne.nomFichier();
+        String detail = ligne.detail();
+        String raison = detail.endsWith(suffixe) ? detail.substring(0, detail.length() - suffixe.length()) : detail;
+        return raison.isBlank() ? "raison non précisée" : raison;
+    }
+
+    /// Ce qui reste vrai après l'import et qu'aucun chiffre ne porte : le doublon de nuit assumé, les
+    /// anomalies relevées au journal du capteur (R19).
+    private static List<String> avertissements(List<RapportImport> rapports, List<String> anomalies) {
+        List<String> avertissements = new ArrayList<>();
+        long doublons = rapports.stream()
+                .flatMap(rapport -> rapport.doublonsDeNuit().stream())
+                .count();
+        if (doublons > 0) {
+            avertissements.add(
+                    "Cette nuit était déjà importée : " + doublons
+                            + " passage(s) existant(s) pour la même série et la même date. Le passage créé en est un doublon assumé.");
+        }
+        avertissements.addAll(anomalies);
+        return avertissements;
+    }
+
+    private static long compte(List<LigneRapport> lignes, StatutImportFichier statut) {
+        return lignes.stream().filter(ligne -> ligne.statut() == statut).count();
+    }
+
+    /// Titre neutre, quand l'import n'a pas d'agrégat à nommer.
+    private static final String TITRE_NU = "Import terminé";
+
+    /// « Import terminé - nuit du 2026-04-22, carré 640380 · A1 ». Le carré et le point viennent du
+    /// **nom du dossier de session** ; renommé à la main, le titre se réduit à la date plutôt que
+    /// d'inventer un rattachement.
+    ///
+    /// L'agrégat peut manquer : [ResultatImport] admet un passage et une session nuls, ce dont usent les
+    /// outils de capture, qui n'ont besoin que du rapport. Le titre se réduit alors, il ne casse pas.
+    private static String titreMonoNuit(ResultatImport resultat) {
+        if (resultat.passage() == null) {
+            return TITRE_NU;
+        }
+        String date = TITRE_NU + " - nuit du " + resultat.passage().dateEnregistrement();
+        if (resultat.session() == null) {
+            return date;
+        }
+        return resultat.session()
+                .prefixe()
+                .map(prefixe -> date + ", carré " + prefixe.carre() + " · " + prefixe.codePoint())
+                .orElse(date);
+    }
+
+    /// « Import terminé - 3 nuits, du 2026-04-22 au 2026-04-24 ». La plage dit d'un coup ce que couvre
+    /// l'import, là où le seul nombre de passages laisse chercher lesquels.
+    private static String titreMultiNuits(ResultatImportMultiNuits resultat) {
+        List<ResultatImport> nuits = resultat.parNuit();
+        if (nuits.isEmpty()) {
+            return TITRE_NU;
+        }
+        if (nuits.size() == 1) {
+            return titreMonoNuit(nuits.getFirst());
+        }
+        String premiere = nuits.getFirst().passage().dateEnregistrement();
+        String derniere = nuits.getLast().passage().dateEnregistrement();
+        return TITRE_NU + " - " + nuits.size() + " nuits, du " + premiere + " au " + derniere;
+    }
+}
