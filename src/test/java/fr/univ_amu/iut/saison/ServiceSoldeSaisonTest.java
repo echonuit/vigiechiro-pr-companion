@@ -322,6 +322,29 @@ class ServiceSoldeSaisonTest {
     }
 
     @Test
+    @DisplayName("la ventilation ferme : faits + à refaire + à réaliser = attendus, hors protocole à part")
+    void ventilation_exhaustive() {
+        long idOpportuniste = semer("640005", "E1", 1, 2026, "2026-07-04", StatutWorkflow.DEPOSE, Verdict.OK);
+        opportunistes.marquer(idOpportuniste);
+
+        SoldeSaison solde = service.soldePour(ID_USER, 2026);
+
+        // L'invariant, et non des nombres appris par cœur : un décompte qui ne ferme pas laisse
+        // l'observateur deviner où sont passés les manquants. La nuit opportuniste est DEHORS du total :
+        // elle a eu lieu, mais ce n'est pas un passage attendu.
+        assertThat(solde.passagesFaits() + solde.passagesARefaire() + solde.passagesARealiser())
+                .as("les trois catégories couvrent exactement les passages attendus")
+                .isEqualTo(solde.passagesAttendus());
+        assertThat(solde.nuitsHorsProtocole())
+                .as("la nuit de E1, comptée à côté")
+                .isEqualTo(1);
+        assertThat(solde.passagesAttendus())
+                .as("E1 ajoute un point suivi, donc deux passages attendus de plus")
+                .isEqualTo(14);
+        assertThat(solde.passagesARefaire()).as("B2 seul est inexploitable").isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("fenêtre du second passage dépassée : le reste à faire le dit, et le signalement se tait")
     void fenetre_depassee_apres_l_echeance() {
         // Horloge au 15 octobre : les deux fenêtres 2026 sont closes. Deux comportements en dépendent,

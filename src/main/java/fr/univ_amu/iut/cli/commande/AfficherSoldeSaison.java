@@ -106,9 +106,14 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             sortie.println("Aucun point suivi pour la saison " + solde.annee() + ".");
             return;
         }
+        // Même ventilation exhaustive que l'en-tête de l'écran « Ma saison » : les trois nombres somment
+        // aux passages attendus, et les nuits hors protocole se disent à part (elles ne sont pas attendues).
         sortie.println("Solde de la saison " + solde.annee() + " : " + solde.pointsSuivis()
-                + " point(s) suivi(s), " + solde.passagesFaits() + "/" + solde.passagesAttendus()
-                + " passage(s) fait(s).");
+                + " point(s) suivi(s), " + solde.passagesFaits() + " faits, " + solde.passagesARefaire()
+                + " à refaire, " + solde.passagesARealiser() + " à réaliser sur " + solde.passagesAttendus()
+                + " attendus"
+                + (solde.nuitsHorsProtocole() == 0 ? "" : " (" + solde.nuitsHorsProtocole() + " hors protocole)")
+                + ".");
         sortie.println("Fenêtre du second passage : jusqu'au "
                 + solde.echeanceSecondPassage().format(JOUR_MOIS) + " (" + solde.pointsSecondPassageEnAttente()
                 + " point(s) en attente).");

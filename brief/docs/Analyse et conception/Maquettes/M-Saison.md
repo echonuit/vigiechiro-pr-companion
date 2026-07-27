@@ -59,7 +59,7 @@ L'écran répond à une seule question, celle qu'un observateur se pose au milie
   <rect x="94" y="62" width="58" height="24" rx="3" class="tab"/><text x="123" y="79" class="tab-txt">2025</text>
   <rect x="158" y="62" width="58" height="24" rx="3" class="tab"/><text x="187" y="79" class="tab-txt">2024</text>
 
-  <text x="970" y="79" class="pagesub" text-anchor="end">4 points suivis · 5 passages sur 8 · fenêtre du 2ᵉ passage : jusqu'au 31 août</text>
+  <text x="970" y="79" class="pagesub" text-anchor="end">4 points suivis · 5 faits, 1 à refaire, 2 à réaliser · 1 hors protocole · fenêtre du 2ᵉ passage : 31/08</text>
 
   <!-- Tableau -->
   <rect x="30" y="104" width="940" height="286" class="list-frame"/>
@@ -118,7 +118,7 @@ L'écran répond à une seule question, celle qu'un observateur se pose au milie
 ### Annotations
 
 - **Sélecteur d'année** (`groupeAnnee`) : la saison courante par défaut ; les saisons antérieures restent consultables en lecture.
-- **Résumé d'en-tête** (`lblResume`) : nombre de points suivis, passages réalisés sur attendus, et **échéance de la fenêtre du second passage**. Ce décompte et les lignes du tableau proviennent de la **même source** : ils ne peuvent pas diverger.
+- **Résumé d'en-tête** (`lblResume`) : les passages attendus **ventilés** - faits, à refaire, à réaliser - puis l'**échéance de la fenêtre du second passage**. La somme des trois vaut le total attendu (5 + 1 + 2 = 8 ci-dessus) : un décompte qui ne ferme pas laisse chercher où sont les manquants, ce qu'une proportion seule (« 5 sur 8 ») faisait. Les **nuits hors protocole** se comptent **à côté**, jamais dans le total, et la mention disparaît s'il n'y en a aucune. Ce décompte et les lignes du tableau proviennent de la **même source** : ils ne peuvent pas diverger.
 - **La campagne est un filtre, pas une colonne** (issue #2355). Une ligne du solde est un **point**, avec ses **deux** passages, qui peuvent relever de campagnes différentes : une colonne aurait dû en choisir une à afficher. Le filtre retient un point dès qu'**au moins un** de ses passages relève de la campagne, et le montre **en entier** - c'est l'état complet du point qui dit ce qu'il reste à y faire.
     ⚠️ *État réel* : ce filtre existe dans le **service** et en **ligne de commande** (`solde-saison --campagne`), mais **pas encore dans l'écran** ; la maquette ci-dessus ne le dessine donc pas. Suivi par [#2610](https://github.com/echonuit/vigiechiro-pr-companion/issues/2610).
 - **Colonne « Hors protocole »** (`colHorsProtocole`, issue #2525) : les nuits **opportunistes** réalisées sur ce point. Elles ont leur colonne précisément pour ne pas occuper celle d'un passage attendu : les voir en « Passage 1 » se lirait « le passage 1 est fait » alors que la ligne réclame encore de poser l'enregistreur (ligne 3 de la maquette). Les colonnes de passage restent donc sur « Non planifié » tant que le passage du protocole manque réellement, et ces nuits ne comptent pas dans le décompte ([R34](../Modèle%20conceptuel/Règles%20métier.md#r34)).

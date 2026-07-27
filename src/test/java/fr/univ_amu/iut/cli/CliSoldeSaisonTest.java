@@ -133,7 +133,8 @@ class CliSoldeSaisonTest {
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         String texte = texteSortie();
         assertThat(texte).contains("Solde de la saison 2026");
-        assertThat(texte).contains("3 point(s) suivi(s)").contains("4/6 passage(s) fait(s)");
+        // Ventilation exhaustive, identique à l'en-tête de l'écran : 4 + 1 + 1 = 6 attendus.
+        assertThat(texte).contains("3 point(s) suivi(s), 4 faits, 1 à refaire, 1 à réaliser sur 6 attendus.");
         assertThat(texte).contains("Téléverser la nuit du 21/08").contains("Refaire le 1er passage");
     }
 

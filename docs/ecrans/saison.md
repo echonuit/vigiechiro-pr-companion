@@ -39,9 +39,17 @@ suivante pour ce point :
 
 ## En-tête et signalement de fenêtre
 
-L'**en-tête** récapitule la saison : nombre de points suivis, passages faits sur attendus, et
-l'échéance de la fenêtre du second passage. Ce résumé et le tableau proviennent de la **même source** :
-ils ne peuvent pas diverger.
+L'**en-tête** récapitule la saison en **ventilant** les passages attendus : combien sont faits,
+combien sont à refaire, combien restent à réaliser. Les trois nombres somment exactement au nombre
+de passages attendus, de sorte qu'aucun manquant ne se perd en route : une proportion seule
+(« 5 sur 10 ») laisserait deviner où sont les cinq autres.
+
+Les **nuits hors protocole** se comptent **à côté**, jamais dans le total. Elles ont bien eu lieu,
+mais ce ne sont pas des passages attendus : les fondre dans les 10 referait l'erreur que la colonne
+« Hors protocole » corrige dans le tableau. La mention n'apparaît que s'il y en a.
+
+Suit l'échéance de la fenêtre du second passage. Ce résumé et le tableau proviennent de la **même
+source** : ils ne peuvent pas diverger.
 
 Quand la **fenêtre du second passage** approche de sa fermeture, une ligne le **signale** (« la fenêtre
 se referme dans N jours pour M points »). L'application **signale**, elle n'alerte pas : elle ne pose

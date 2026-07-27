@@ -36,6 +36,32 @@ public record SoldeSaison(int annee, LocalDate aujourdhui, List<LigneSaison> lig
         return pointsSuivis() * 2;
     }
 
+    /// Nombre de passages **à refaire** : la nuit existe mais son verdict la juge inexploitable.
+    ///
+    /// Avec [#passagesFaits] et [#passagesARealiser], forme une **ventilation exhaustive** des
+    /// [#passagesAttendus] : la somme des trois vaut le total. C'est délibéré et contrôlé par un test.
+    /// Un décompte qui ne ferme pas laisse l'observateur deviner où sont passés les manquants, ce que
+    /// l'ancien résumé « 5/10 » faisait précisément.
+    public long passagesARefaire() {
+        return cases().filter(cas -> cas.presente() && cas.inexploitable()).count();
+    }
+
+    /// Nombre de passages **à réaliser** : aucune nuit enregistrée pour ce numéro. Dit « à réaliser » et
+    /// non « à poser » : la fenêtre du second passage n'est pas forcément ouverte, et une consigne
+    /// immédiate serait fausse la moitié de la saison.
+    public long passagesARealiser() {
+        return cases().filter(cas -> !cas.presente()).count();
+    }
+
+    /// Nombre de nuits **hors protocole** (opportunistes, #2525) réalisées sur les points suivis.
+    ///
+    /// Compté **à côté** du total, jamais dedans : ces nuits ont bien eu lieu, mais elles ne sont pas des
+    /// passages attendus. Les fondre dans les [#passagesAttendus] referait l'erreur que la colonne
+    /// « Hors protocole » corrige dans le tableau.
+    public long nuitsHorsProtocole() {
+        return lignes.stream().mapToLong(ligne -> ligne.horsProtocole().size()).sum();
+    }
+
     /// Nombre de points **à jour** (aucune action restante).
     public long pointsAJour() {
         return lignes.stream().filter(LigneSaison::aJour).count();
