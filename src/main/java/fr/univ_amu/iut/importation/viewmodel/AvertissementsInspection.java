@@ -104,7 +104,10 @@ public final class AvertissementsInspection {
         return Detail.de(libelle(passage));
     }
 
-    private static String libelle(PassageExistant passage) {
+    /// Libellé d'un passage déjà présent. Visible du paquet pour que le compte rendu **chiffré** (#2358)
+    /// le réutilise au lieu de remettre en forme la même donnée une troisième fois - la deuxième mise en
+    /// forme, avant et après l'import, était le défaut soldé par #2050.
+    static String libelle(PassageExistant passage) {
         return String.format(
                 "n° %d (%d) au carré %s, point %s",
                 passage.numeroPassage(), passage.annee(), passage.carre(), passage.codePoint());

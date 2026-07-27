@@ -3,8 +3,8 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
+<?import fr.univ_amu.iut.commun.view.PanneauCompteRendu?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
@@ -188,19 +188,14 @@
          la décompression d'un .zip, qui ne suit pas les fichiers). -->
     <TableView fx:id="tableFichiers" prefHeight="190.0" visible="false" managed="false"/>
   </VBox>
+  <!-- Statut du wizard hors import abouti : annulation, principalement. Sur un import TERMINÉ, c'est le
+       compte rendu chiffré ci-dessous qui parle, et cette phrase s'efface pour ne pas dire deux fois la
+       même chose (la barre de statut du chrome garde, elle, sa version courte). -->
   <Label fx:id="labelStatut" styleClass="message-succes" wrapText="true"/>
-  <!-- Compte rendu d'import (#2004) : ce que la barre de statut ne peut pas porter sans se tronquer -
-       doublon de nuit, fichiers ignorés, cardinal des rejets, anomalies du journal du capteur. -->
-  <VBox fx:id="zoneCompteRenduImport" visible="false" managed="false"/>
-
-  <!-- Rapport d'import (#155) : fichiers rejetés (nom — raison), visible seulement s'il y en a. -->
-  <VBox fx:id="zoneRejets" spacing="3.0" visible="false" managed="false">
-    <Label text="Fichiers rejetés (non importés) :" styleClass="message-erreur">
-      <graphic>
-        <FontIcon iconLiteral="fas-exclamation-triangle"/>
-      </graphic>
-    </Label>
-    <ListView fx:id="listeRejets" prefHeight="110.0"/>
-  </VBox>
+  <!-- Compte rendu chiffré de l'import (#2358) : le verdict, la ventilation des fichiers de la source,
+       les volumes lus et écrits, ce qui reste vrai, et l'action suivante. Il remplace trois surfaces qui
+       disaient la même chose en trois formes - la phrase de succès, le compte rendu textuel (#2004) et la
+       liste des rejets (#155) - dont la dernière s'affichait à hauteur nulle (2ᵉ constat de #1486). -->
+  <PanneauCompteRendu fx:id="compteRenduChiffre" visible="false" managed="false"/>
 </VBox>
 

@@ -12,6 +12,8 @@ import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.MenuCopier;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
@@ -42,7 +44,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -82,6 +83,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// durables (service, sites, utilisateur, espace de travail, exécuteur), pour que le contrôleur n'en
     /// garde qu'**un** champ et reste sous le plafond `NcssCount` (cf. [FabriqueActionImportTransformes]).
     private final FabriqueActionImportTransformes fabriqueImportTransformes;
+
+    /// Navigation vers l'écran pivot du passage créé (#2358) : l'**action suivante** que propose le compte
+    /// rendu. Contrat du socle ([OuvrirPassage]) et non la vue de `passage`, pour ne pas dépendre du `view`
+    /// d'une autre feature (règle ArchUnit `pas_de_dependance_inter_feature_vers_la_vue`).
+    private final OuvrirPassage ouvrirPassage;
 
     @FXML
     private VBox racineImport;
@@ -193,13 +199,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     private Button boutonAnnuler;
 
     @FXML
-    private VBox zoneCompteRenduImport;
-
-    @FXML
-    private VBox zoneRejets;
-
-    @FXML
-    private ListView<String> listeRejets;
+    private PanneauCompteRendu compteRenduChiffre;
 
     @FXML
     private VBox zoneNuits;
@@ -224,11 +224,13 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
             ImportationViewModel viewModel,
             PreferenceConservation conservation,
             ExecuteurTache executeur,
-            FabriqueActionImportTransformes fabriqueImportTransformes) {
+            FabriqueActionImportTransformes fabriqueImportTransformes,
+            OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.conservation = Objects.requireNonNull(conservation, "conservation");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.fabriqueImportTransformes = Objects.requireNonNull(fabriqueImportTransformes, "fabriqueImportTransformes");
+        this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
     @Override
@@ -460,6 +462,10 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                         viewModel.etatProperty(),
                         viewModel.resultatProperty(),
                         viewModel.resultatNuitsProperty()));
+        // Sur un import abouti, cette phrase s'efface : le titre du compte rendu chiffré la redit en mieux,
+        // et deux formulations du même fait côte à côte se lisent comme deux faits (#2358). Elle reste pour
+        // ce que la bande ne couvre pas - l'annulation, notamment.
+        VisibiliteGeree.lier(labelStatut, viewModel.etatProperty().map(etat -> etat != EtatImport.TERMINE));
         // Barre de statut (#1024) : statut du wizard au centre, progression + ETA à droite pendant un
         // traitement. Recomposée sur les mêmes sources que le statut, plus le message de progression.
         zonesStatut.bind(Bindings.createObjectBinding(
@@ -473,16 +479,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 viewModel.resultatNuitsProperty(),
                 viewModel.progression().messageProperty()));
 
-        // Compte rendu d'import (#2004) : ce que le statut ne peut pas porter - doublon de nuit, fichiers
-        // ignorés, cardinal des rejets, anomalies du journal. Reconstruit à chaque publication : un compte
-        // rendu est immuable et publié d'un bloc.
-        viewModel.compteRenduProperty().addListener((observable, avant, rendu) -> afficherCompteRenduImport(rendu));
-        afficherCompteRenduImport(viewModel.compteRenduProperty().get());
-
-        // Rapport d'import (#155) : la liste des fichiers rejetés n'apparaît que s'il y en a.
-        listeRejets.setItems(viewModel.rejetsImport());
-        var aDesRejets = Bindings.isNotEmpty(viewModel.rejetsImport());
-        VisibiliteGeree.lier(zoneRejets, aDesRejets);
+        // Compte rendu chiffré de fin d'import (#2358), branché par son propre collaborateur : ce qu'il dit
+        // et où mène son action suivante se lisent mieux ensemble qu'au milieu des liaisons de contrôles.
+        new CompteRenduDeFinImport(viewModel, ouvrirPassage).brancher(compteRenduChiffre);
     }
 
     /// Remplace les avertissements d'inspection affichés. Tous les détails sont montrés : ils nomment des
@@ -496,21 +495,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         zoneAvertissements.getStyleClass().setAll(VueCompteRendu.CLASSE_RACINE);
         zoneAvertissements.setVisible(!rendu.estVide());
         zoneAvertissements.setManaged(!rendu.estVide());
-    }
-
-    /// Nombre de détails montrés par constat avant de résumer. L'écran en décide, pas le compte rendu
-    /// (ADR 0031) : la place sous la barre de statut est comptée.
-    private static final int DETAILS_MONTRES = 5;
-
-    /// Remplace le compte rendu d'import affiché. On reconstruit plutôt qu'on ne met à jour : un compte
-    /// rendu est immuable et publié d'un bloc, il n'y a rien à rafraîchir en place.
-    private void afficherCompteRenduImport(CompteRendu rendu) {
-        zoneCompteRenduImport
-                .getChildren()
-                .setAll(VueCompteRendu.rendre(rendu, DETAILS_MONTRES).getChildren());
-        zoneCompteRenduImport.getStyleClass().setAll(VueCompteRendu.CLASSE_RACINE);
-        zoneCompteRenduImport.setVisible(!rendu.estVide());
-        zoneCompteRenduImport.setManaged(!rendu.estVide());
     }
 
     /// « Parcourir » : demande le **dossier** de la nuit puis charge la source.

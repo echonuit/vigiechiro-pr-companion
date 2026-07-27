@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -27,7 +28,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -152,8 +152,11 @@ class ImportationVueIntegrationTest {
                 .as("#1798 : le nom de fichier est la valeur qu'on recopie depuis cet écran")
                 .contains("Colonnes…", "Copier");
         assertThat(robot.lookup("#boutonAnnuler").queryAs(Button.class)).isNotNull(); // #146 (annulation)
-        assertThat(robot.lookup("#zoneRejets").queryAs(VBox.class)).isNotNull(); // #155 (rapport d'import)
-        assertThat(robot.lookup("#listeRejets").queryAs(ListView.class)).isNotNull(); // #155
+        // #2358 : la bande de compte rendu chiffré remplace la phrase de succès, le compte rendu textuel
+        // et la liste des rejets. Elle est présente dans l'arbre mais masquée tant qu'aucun import n'a
+        // abouti (cf. ImportationClicImporterTest pour son contenu après import).
+        assertThat(robot.lookup("#compteRenduChiffre").queryAs(PanneauCompteRendu.class))
+                .isNotNull();
         // Pré-contrôle R5 (#108) : la zone d'avertissement de doublon et son bouton « n° libre » existent.
         assertThat(robot.lookup("#zonePassageExistant").queryAs(HBox.class)).isNotNull();
         assertThat(robot.lookup("#labelPassageExistant").queryAs(Label.class)).isNotNull();

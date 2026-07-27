@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -107,6 +108,9 @@ class ImportationControllerGardeTest {
                 "u-1",
                 mock(Workspace.class),
                 new ExecuteurTacheSynchrone());
-        return new ImportationController(viewModel, conservation, new ExecuteurTacheSynchrone(), fabrique);
+        // La navigation vers le passage créé n'est jamais empruntée ici : ces tests lisent le prédicat de
+        // garde, pas le pied du compte rendu. Doublure inerte, comme la fabrique ci-dessus.
+        return new ImportationController(
+                viewModel, conservation, new ExecuteurTacheSynchrone(), fabrique, mock(OuvrirPassage.class));
     }
 }

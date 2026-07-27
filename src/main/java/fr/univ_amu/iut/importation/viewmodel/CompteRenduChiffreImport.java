@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /// Traduit un import abouti en **compte rendu chiffré** (#2358), celui que rend
 /// [fr.univ_amu.iut.commun.view.PanneauCompteRendu].
@@ -78,7 +79,7 @@ public final class CompteRenduChiffreImport {
                 severite(rapports, rejetes, anomalies),
                 barresDeVolume(volumes),
                 ventilation(lignes),
-                motifsDeRejet(lignes),
+                motifs(rapports, lignes),
                 avertissements(rapports, anomalies),
                 actions);
     }
@@ -152,6 +153,12 @@ public final class CompteRenduChiffreImport {
     /// accompagne un motif dénombré, une ventilation et une liste de fichiers nommés. La classer en
     /// causes typées (« en-tête WAV illisible », « fréquence inattendue ») demande de typer les rejets
     /// dans le moteur : c'est la substance de #2076, pas de cette issue.
+    private static List<Motif> motifs(List<RapportImport> rapports, List<LigneRapport> lignes) {
+        List<Motif> motifs = new ArrayList<>(motifsDeRejet(lignes));
+        motifDesDoublons(rapports).ifPresent(motifs::add);
+        return motifs;
+    }
+
     private static List<Motif> motifsDeRejet(List<LigneRapport> lignes) {
         Map<String, List<String>> parRaison = new LinkedHashMap<>();
         for (LigneRapport ligne : lignes) {
@@ -161,9 +168,31 @@ public final class CompteRenduChiffreImport {
                         .add(ligne.nomFichier());
             }
         }
+        // « fichier(s) », et non « fichiers » : le panneau compose le libellé APRÈS un effectif, et un motif
+        // à un seul fichier donnait « 1 fichiers : … ». La marque « (s) » est la réponse déjà en usage dans
+        // l'application (« %d fichier(s) non pertinent(s) ignoré(s) », « N séquence(s) »), vue à la capture.
         return parRaison.entrySet().stream()
-                .map(motif -> new Motif("fichiers : " + motif.getKey(), motif.getValue()))
+                .map(motif -> new Motif("fichier(s) : " + motif.getKey(), motif.getValue()))
                 .toList();
+    }
+
+    /// Les passages **déjà présents** pour cette nuit (#214/#147), en motif dépliable.
+    ///
+    /// Ils n'y sont pas comme une cause de rejet mais pour la même raison : ce sont des sujets nommés que
+    /// l'avertissement dénombre sans pouvoir les lister. Les verser dans le texte de l'avertissement les
+    /// rendrait de longueur non bornée dans un encart d'une ligne, ce que l'ADR 0031 a précisément soldé ;
+    /// en motif, ils se comptent en pied et s'ouvrent d'un geste.
+    ///
+    /// Le libellé vient de [AvertissementsInspection#libelle] : la même donnée était déjà mise en forme
+    /// deux fois, avant l'import et après (#2050), il n'y aura pas de troisième rédaction.
+    private static Optional<Motif> motifDesDoublons(List<RapportImport> rapports) {
+        List<String> passages = rapports.stream()
+                .flatMap(rapport -> rapport.doublonsDeNuit().stream())
+                .map(AvertissementsInspection::libelle)
+                .toList();
+        return passages.isEmpty()
+                ? Optional.empty()
+                : Optional.of(new Motif("passage(s) déjà présent(s) pour cette nuit", passages));
     }
 
     /// Retire du message le suffixe « : nomDuFichier » que le moteur y appose. Sans correspondance, la
