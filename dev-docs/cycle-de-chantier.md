@@ -248,6 +248,37 @@ s'applique) et la **mutation à la main** pour ce que PIT ne mute pas - attribut
 FXML, sonde réseau. Le mode d'emploi et les quatre contre-exemples qui ont motivé la règle sont dans
 [Tests et qualité](tests-et-qualite.md#un-garde-fou-de-non-regression-se-verifie-en-le-voyant-rouge).
 
+!!! warning "Deux dispositifs qu'on saute quand on est pressé"
+    Ce sont **toujours les deux mêmes** qui manquent à l'appel, parce qu'ils demandent une commande de
+    plus et qu'un écran vert donne déjà l'impression du travail fini. La passe 6 n'est pas close tant
+    qu'ils n'ont pas tourné, ou que leur inapplicabilité n'est pas **écrite**.
+
+    **PIT sur les classes du chantier**, et sa lecture — pas son score :
+
+    ```bash
+    env -u DISPLAY ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
+      -DtargetClasses="fr.univ_amu.iut.<feature>.model.*" \
+      -DtargetTests="fr.univ_amu.iut.<feature>.*"
+    ```
+
+    Le pourcentage ne dit rien : ce sont les **survivants** qui parlent, et il faut les ouvrir un par
+    un. Trois familles s'y mêlent, à ne pas confondre — un **vrai trou** (un test manque, on l'écrit),
+    un **défensif inatteignable** (on l'assume, sans test creux), et un **artefact de ciblage** (la
+    classe est couverte par un test qu'on a exclu de `targetTests` : on élargit et on remesure).
+    Cibler les classes **pures** ; une façade de délégation ne produit que des survivants sans valeur.
+
+    **Les E2E `bats` de la CLI** (`src/test/bats/`), dès qu'une commande est ajoutée ou changée. Ils
+    lancent le **vrai fat-jar dans un processus** : ils voient le packaging, l'analyse des arguments
+    par picocli et les **codes de sortie réels**, que les tests Java in-process ne voient pas.
+
+    ```bash
+    ./mvnw -DskipTests package && bats src/test/bats
+    ```
+
+    Deux niveaux, tous deux requis : `cli-surface.bats` (la commande **existe** et refuse une
+    invocation vide) et `cli.bats` (elle **fait ce qu'elle promet** — fichier écrit, refus expliqué,
+    code de sortie juste).
+
 **Des E2E qui traversent, quitte à fusionner des scénarios.** Un E2E ne vaut pas par le nombre
 d'assertions mais par ce qu'il **traverse**. Plusieurs parcours courts, qui bouchonnent chacun l'étape
 voisine, prouvent chacun une tranche et **personne ne prouve la chaîne** : les défauts se logent
@@ -435,7 +466,7 @@ trompé : une analyse fausse laissée en place oriente le chantier suivant.
 - [ ] 3. Doc développeur (dev-docs) à jour + ADR pour toute décision structurante (dev-docs/decisions/)
 - [ ] 4. Doc utilisateur (docs/) + captures
 - [ ] 5. Brief projet (`brief/`, dans la PR du chantier) répercuté si un élément de conception change
-- [ ] 6. Tests : inventaire des usages **depuis le diff** (chemins non nominaux, parité CLI ↔ IHM), E2E qui **traversent les coutures**, non-automatisable reporté en **recette**
+- [ ] 6. Tests : inventaire des usages **depuis le diff** (chemins non nominaux, parité CLI ↔ IHM), E2E qui **traversent les coutures**, **PIT ciblé** (survivants lus un par un) et **E2E `bats`** si la CLI bouge, non-automatisable reporté en **recette**
 - [ ] 7. Harmonisation : **audit global** (ce qui ressemble / bénéficierait, exhaustif) puis **refactoring de conceptualisation** (lisibilité ; duplication et abstraction = outils) ; **choix, doutes, conséquences discutés avec l'utilisateur**
 - [ ] 8. Revue visuelle : **toute conséquence visible** couverte par une capture (captures **ajoutées** si besoin), régénérées et ouvertes une par une
 - [ ] 9. Nouveaux chantiers identifiés + issues créées

@@ -170,6 +170,28 @@ setup() {
   [[ "${output}" == *"s'excluent"* ]]
 }
 
+@test "exporter-activite : ecrit le CSV d activite sur une base vide, exit 0 (#2352)" {
+  # Base jetable sans observation : le CSV se reduit a ses en-tetes, ce qui reste un resultat valide.
+  # Le test prouve ce que le test Java in-process ne voit pas : le fat-jar sait produire le fichier.
+  run cli exporter-activite --passage 1 --sortie "${BATS_TEST_TMPDIR}/activite.csv"
+  [ "${status}" -eq 0 ]
+  [ -f "${BATS_TEST_TMPDIR}/activite.csv" ]
+  run head -1 "${BATS_TEST_TMPDIR}/activite.csv"
+  [[ "${output}" == *"Contacts"* ]]
+}
+
+@test "exporter-activite --tranche 99 : refus explique, exit 2 (#2352)" {
+  run cli exporter-activite --passage 1 --sortie "${BATS_TEST_TMPDIR}/a.csv" --tranche 99
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Tranche invalide"* ]]
+}
+
+@test "exporter-activite --format json : refus explique, exit 2 (#2352)" {
+  run cli exporter-activite --passage 1 --sortie "${BATS_TEST_TMPDIR}/a.json" --format json
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Format non pris en charge"* ]]
+}
+
 @test "workflow campagne : creer-campagne -> lister-campagnes -> solde-saison --campagne filtre (#2355)" {
   # Un point SANS nuit suffit à prouver le filtre au niveau processus : il figure au solde complet, et
   # il en disparaît dès qu'on demande une campagne (aucun de ses passages n'y est rattaché).

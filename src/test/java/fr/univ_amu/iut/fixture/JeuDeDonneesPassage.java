@@ -26,6 +26,7 @@ import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 /// **La topologie d'une nuit, semée une bonne fois** (#1258) : utilisateur → site → point → enregistreur →
@@ -262,6 +263,56 @@ public final class JeuDeDonneesPassage {
                         "/ws/seq" + rang + ".wav",
                         false,
                         idSession))
+                .id();
+    }
+
+    /// Une séquence d'écoute **horodatée** : l'heure de capture est la matière de la courbe d'activité
+    /// (#2352), qui écarte les contacts sans heure. Sans elle, une nuit semée ne trace rien.
+    public long ajouterSequenceA(LocalDateTime horodatage) {
+        exigerSemis();
+        int rang = rangSequence++;
+        return new SequenceDao(source)
+                .insert(new SequenceDEcoute(
+                        null,
+                        "seq" + rang + ".wav",
+                        idOriginal,
+                        rang,
+                        0.0,
+                        5.0,
+                        "/ws/seq" + rang + ".wav",
+                        false,
+                        idSession,
+                        horodatage,
+                        null))
+                .id();
+    }
+
+    /// Une détection **non revue** posée à une heure précise : la brique des tests d'activité, où c'est
+    /// l'heure qui porte le sens.
+    public long ajouterObservationA(LocalDateTime horodatage, String taxonTadarida) {
+        long idSequence = ajouterSequenceA(horodatage);
+        return new ObservationDao(source)
+                .insert(new Observation(
+                        null,
+                        idSequence,
+                        0.1,
+                        0.4,
+                        45,
+                        taxonTadarida,
+                        0.9,
+                        null,
+                        null,
+                        null,
+                        null,
+                        false,
+                        ModeValidation.NON_VALIDE,
+                        idResultats,
+                        false,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null))
                 .id();
     }
 
