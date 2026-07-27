@@ -44,6 +44,18 @@ import org.junit.jupiter.api.Test;
 /// La séparation est voulue - `palette.css` est chargée seule sur les scènes de capture, sans
 /// `base.css`, précisément pour que les jetons se résolvent partout. Ce sont deux préoccupations sur
 /// le sélecteur racine de JavaFX, pas une copie. C'est la seule entrée de [#EXCEPTIONS].
+///
+/// ## L'angle mort qu'il a fallu boucher
+///
+/// Ce cliquet n'a longtemps regardé que « le même nom dans **deux feuilles** », et a donc laissé
+/// passer le même défaut **dans une seule** : `.compte-rendu`, défini une fois pour le compte rendu
+/// textuel ([VueCompteRendu]) puis une seconde fois, plus bas dans `design.css`, pour la bande chiffrée
+/// (#2358). À égalité de spécificité, c'est la dernière règle qui gagne : tous les comptes rendus
+/// textuels de l'application ont hérité en silence d'une carte blanche, d'une bordure et de 16 px de
+/// marge intérieure. Aucun test ne rougissait, et la seule chose qui l'a montré est une capture.
+///
+/// Une classe se définit donc **une fois**, dans une feuille et une seule : [#chaque_classe_a_une_seule_feuille]
+/// couvre la première moitié, [#aucune_classe_n_est_definie_deux_fois_dans_une_feuille] la seconde.
 class DoublonsFeuillesDeStyleTest {
 
     private static final Path RACINE = Path.of("src/main/java/fr/univ_amu/iut");
@@ -96,6 +108,43 @@ class DoublonsFeuillesDeStyleTest {
                         Classes trouvées dans deux feuilles :
                         %s
                         """.formatted(String.join("\n", multiFeuilles)))
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("Aucune classe CSS n'est définie deux fois dans la même feuille (la dernière gagnerait)")
+    void aucune_classe_n_est_definie_deux_fois_dans_une_feuille() {
+        List<String> redefinitions = new ArrayList<>();
+
+        for (Path feuille : feuillesDeStyle()) {
+            Map<String, Integer> occurrences = new TreeMap<>();
+            Matcher regle = DEBUT_DE_REGLE.matcher(lire(feuille));
+            while (regle.find()) {
+                occurrences.merge(regle.group(1), 1, Integer::sum);
+            }
+            occurrences.entrySet().stream()
+                    .filter(e -> e.getValue() >= 2)
+                    .forEach(e -> redefinitions.add(
+                            feuille.getFileName() + " : " + e.getKey() + " (" + e.getValue() + " fois)"));
+        }
+
+        assertThat(redefinitions)
+                .as("""
+                        Une classe CSS est définie deux fois dans la même feuille.
+
+                        À spécificité égale, c'est la DERNIÈRE règle qui l'emporte : la seconde
+                        définition impose ses propriétés à tout ce que la première habillait, sans que
+                        rien ne rougisse. C'est ainsi que la bande chiffrée du compte rendu (#2358) a
+                        posé une carte blanche et une bordure sur tous les comptes rendus textuels de
+                        l'application, sous le nom commun `.compte-rendu`.
+
+                        Deux concepts ne partagent pas un nom : désambiguïsez (comme
+                        `.compte-rendu` / `.panneau-compte-rendu`). Si les deux règles décrivent
+                        vraiment le même concept, fusionnez-les en une seule.
+
+                        Classes redéfinies :
+                        %s
+                        """.formatted(String.join("\n", redefinitions)))
                 .isEmpty();
     }
 

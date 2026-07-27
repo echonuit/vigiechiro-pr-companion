@@ -1032,8 +1032,13 @@
 
    Une bande dense : verdict, proportions, cout disque, ce qui reste vrai, action suivante. Le
    composant [PanneauCompteRendu] construit l arbre ; toutes les couleurs viennent d ici, aucune du
-   code, pour que le theme sombre (#1037) puisse les reinterpreter sans toucher aux appelants. */
-.compte-rendu {
+   code, pour que le theme sombre (#1037) puisse les reinterpreter sans toucher aux appelants.
+
+   La racine s appelle `panneau-compte-rendu` et NON `compte-rendu` : ce dernier nom appartient au
+   compte rendu textuel (`VueCompteRendu`, plus haut dans cette feuille), et une seconde regle de meme
+   nom plus bas gagne la cascade - elle imposait la carte blanche, la bordure et les 16 px de marge de
+   cette bande a tous les comptes rendus textuels de l application. */
+.panneau-compte-rendu {
     -fx-padding: 14 16 14 16;
     -fx-background-color: -couleur-texte-clair;
     -fx-border-color: #d0d7de;
