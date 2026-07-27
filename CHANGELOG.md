@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.80.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.80.0...v2.80.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **commun:** la bande chiffrée cesse d'habiller tous les comptes rendus textuels ([#2358](https://github.com/echonuit/vigiechiro-pr-companion/issues/2358)) ([#2588](https://github.com/echonuit/vigiechiro-pr-companion/issues/2588)) ([4bde86c](https://github.com/echonuit/vigiechiro-pr-companion/commit/4bde86c11adf21b5a9343a74423e67c64a43eceb)), closes [#2574](https://github.com/echonuit/vigiechiro-pr-companion/issues/2574) [#2574](https://github.com/echonuit/vigiechiro-pr-companion/issues/2574)
+
 # [2.80.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.79.0...v2.80.0) (2026-07-27)
 
 
