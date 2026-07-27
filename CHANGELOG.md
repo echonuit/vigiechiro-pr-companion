@@ -2,6 +2,18 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.88.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.87.1...v2.88.0) (2026-07-27)
+
+
+### Bug Fixes
+
+* **synchro:** le compte rendu ventile par cause, et les libellés cessent de mentir ([#2608](https://github.com/echonuit/vigiechiro-pr-companion/issues/2608)) ([40ab50b](https://github.com/echonuit/vigiechiro-pr-companion/commit/40ab50b6e05b3755c6c6a8ee2222ee7f517fcebe)), closes [#2554](https://github.com/echonuit/vigiechiro-pr-companion/issues/2554) [#2280](https://github.com/echonuit/vigiechiro-pr-companion/issues/2280) [#1565](https://github.com/echonuit/vigiechiro-pr-companion/issues/1565) [#2557](https://github.com/echonuit/vigiechiro-pr-companion/issues/2557) [#2557](https://github.com/echonuit/vigiechiro-pr-companion/issues/2557) [#2554](https://github.com/echonuit/vigiechiro-pr-companion/issues/2554) [#2605](https://github.com/echonuit/vigiechiro-pr-companion/issues/2605)
+
+
+### Features
+
+* **analyse:** les mêmes onglets de catégories sur Espèces & observations ([#2612](https://github.com/echonuit/vigiechiro-pr-companion/issues/2612)) ([d5d446b](https://github.com/echonuit/vigiechiro-pr-companion/commit/d5d446b73c89b98d8cd6ccd1b0617a92a6781031)), closes [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352)
+
 ## [2.87.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.87.0...v2.87.1) (2026-07-27)
 
 
