@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.87.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.87.0...v2.87.1) (2026-07-27)
+
+
+### Bug Fixes
+
+* **importation:** le compte rendu rappelle ce qui reste vrai et dit l'écriture distante ([#1488](https://github.com/echonuit/vigiechiro-pr-companion/issues/1488)) ([#2602](https://github.com/echonuit/vigiechiro-pr-companion/issues/2602)) ([e3f068b](https://github.com/echonuit/vigiechiro-pr-companion/commit/e3f068b91e5e1bede63c7415dc44e26c19c2da62)), closes [#2483](https://github.com/echonuit/vigiechiro-pr-companion/issues/2483)
+
 # [2.87.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.86.0...v2.87.0) (2026-07-27)
 
 
