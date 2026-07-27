@@ -1,9 +1,9 @@
 Utilisateur: identifiant local, nom affiché
-Site de suivi: n° carré, nom convivial, protocole
+Site de suivi: n° carré, nom convivial, protocole, carré d'un tiers
 Point d'écoute: code, coordonnées GPS, descriptif
 Enregistreur: n° de série, modèle / version
 Micro: réf micro, modèle / référence, bande passante, sensibilité, date de mise en service
-Passage: réf passage, n° de passage, année, date d'enregistrement, heure début / fin, verdict de vérification, statut workflow
+Passage: réf passage, n° de passage, année, date d'enregistrement, heure début / fin, verdict de vérification, statut workflow, participation opportuniste
 Session d'enregistrement: réf session, chemin racine, volume total
 Enregistrement original: réf original, nom de fichier, durée, échantillonnage
 Séquence d'écoute: réf séquence, nom de fichier, index, durée
@@ -14,10 +14,12 @@ Résultats d'identification: réf résultats, chemin, format détecté, date d'i
 Observation: réf observation, temps début, temps fin, taxon Tadarida, probabilité Tadarida, taxon observateur, probabilité observateur
 Taxon: code, nom latin, nom vernaculaire FR
 Groupe taxonomique: réf groupe, niveau, nom
+Campagne: réf campagne, nom, année, commentaire
 
 Posséder, 1N Utilisateur, 11 Site de suivi
 Comporter, 1N Site de suivi, 11 Point d'écoute
 Accueillir, 0N Point d'écoute, 11 Passage
+Rattacher, 0N Campagne, 01 Passage
 Utiliser, 1N Enregistreur, 11 Passage
 Porter, 11 Enregistreur, 11 Micro
 Produire, 11 Passage, 11 Session d'enregistrement

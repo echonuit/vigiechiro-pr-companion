@@ -7,6 +7,7 @@ Tableau récapitulatif des cardinalités d'association du modèle conceptuel. Le
 | [Utilisateur](C1%20-%20Utilisateur.md) | possède | [Site de suivi](C2%20-%20Site%20de%20suivi.md) | 0..* | aucun sur une installation neuve, puis 1 (Marie) à 36+ (Samuel) |
 | [Site de suivi](C2%20-%20Site%20de%20suivi.md) | contient | [Point d'écoute](C3%20-%20Point%20d%27écoute.md) | 1..* | un site sans point n'a pas de sens |
 | [Point d'écoute](C3%20-%20Point%20d%27écoute.md) | fait l'objet de | [Passage](C5%20-%20Passage.md) | 0..* | un point peut n'avoir aucun passage encore |
+| [Campagne](C16%20-%20Campagne.md) | regroupe | [Passage](C5%20-%20Passage.md) | 0..* | facultatif des deux côtés : un passage relève de 0 ou 1 campagne, une campagne peut rester vide |
 | [Enregistreur](C4%20-%20Enregistreur.md) | a produit | [Passage](C5%20-%20Passage.md) | 1..* | un même enregistreur peut faire plusieurs nuits |
 | [Enregistreur](C4%20-%20Enregistreur.md) | porte | [Micro](C4bis%20-%20Micro.md) | 0..* | les micros sont **historisés** : un seul **actif** à la fois, les précédents restent avec leur date de retrait |
 | [Passage](C5%20-%20Passage.md) | déployé avec | Matériel micro (`passage_equipment`) | 0..1 | position (sol / canopée), hauteur, type de micro **de cette nuit-là** (EPIC #543) |

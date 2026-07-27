@@ -3,7 +3,7 @@
 > **Type** : écran **« Ma saison »**, carte d'activité du prisme *Collecte & passages* de [M-Accueil](M-Accueil.md).
 > **Persona principal** : [Marie](../Personas/Marie.md) (savoir ce qu'il lui reste à faire) et [Samuel](../Personas/Samuel.md) (suivre l'avancement d'un ensemble de points).
 > **Parcours couverts** : complète [P5 - Naviguer dans plusieurs sites et passages](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) et [P9 - Regrouper les nuits successives par point](../Parcours%20utilisateurs/P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md).
-> **Issues** : #2356 (écran), #2355 (colonne Campagne) - chantier #2349.
+> **Issues** : #2356 (écran), #2355 (campagne), #2525 (participations opportunistes), #2610 (filtre campagne dans l'écran) - chantier #2349.
 
 L'écran répond à une seule question, celle qu'un observateur se pose au milieu de sa saison : **qu'est-ce qu'il me reste à faire ?** Le protocole demande deux passages par an et par point, dans des fenêtres calendaires ([règles métier](../Modèle%20conceptuel/Règles%20métier.md) R3 et R4). L'application connaît la règle et la vérifie déjà ; cet écran est ce qui la **restitue**.
 
@@ -39,6 +39,8 @@ L'écran répond à une seule question, celle qu'un observateur se pose au milie
     .p-encours { fill: #2c6fad; }
     .p-absent { fill: #a93226; }
     .p-refaire { fill: #b9770e; }
+    .p-opportuniste { fill: #ede9fe; stroke: #c4b5fd; stroke-width: 1; }
+    .pill-txt-opp { font: 600 11px sans-serif; fill: #5b21b6; text-anchor: middle; }
     .warn-txt { font: 12px sans-serif; fill: #7e5109; }
     .statusbar { fill: #eceff5; stroke: #d0d7de; stroke-width: 1; }
     .status-txt { font: 12px sans-serif; fill: #4a6785; }
@@ -64,44 +66,41 @@ L'écran répond à une seule question, celle qu'un observateur se pose au milie
   <rect x="30" y="104" width="940" height="26" class="list-head"/>
   <text x="42" y="121" class="head-txt">Carré</text>
   <text x="112" y="121" class="head-txt">Point</text>
-  <text x="172" y="121" class="head-txt">Campagne</text>
-  <text x="352" y="121" class="head-txt">Passage 1</text>
-  <text x="522" y="121" class="head-txt">Passage 2</text>
-  <text x="692" y="121" class="head-txt">Reste à faire</text>
+  <text x="172" y="121" class="head-txt">Passage 1</text>
+  <text x="357" y="121" class="head-txt">Passage 2</text>
+  <text x="542" y="121" class="head-txt">Hors protocole</text>
+  <text x="700" y="121" class="head-txt">Reste à faire</text>
 
   <!-- ligne 1 : P2 a televerser -->
   <text x="42" y="151" class="cell">640380</text>
   <text x="112" y="151" class="cell-b">A1</text>
-  <text x="172" y="151" class="cell">Suivi ENS 2026</text>
-  <rect x="352" y="140" width="118" height="16" rx="8" class="p-depose"/><text x="411" y="152" class="pill-txt">Déposé · 22/05</text>
-  <rect x="522" y="140" width="140" height="16" rx="8" class="p-encours"/><text x="592" y="152" class="pill-txt">Prêt à déposer · 22/06</text>
-  <text x="692" y="151" class="todo">Téléverser la nuit du 22/06</text>
+  <rect x="172" y="140" width="118" height="16" rx="8" class="p-depose"/><text x="231" y="152" class="pill-txt">Déposé · 22/05</text>
+  <rect x="357" y="140" width="140" height="16" rx="8" class="p-encours"/><text x="427" y="152" class="pill-txt">Prêt à déposer · 22/06</text>
+  <text x="700" y="151" class="todo">Téléverser la nuit du 22/06</text>
 
   <!-- ligne 2 : rien a faire -->
   <rect x="31" y="161" width="938" height="30" class="list-row-alt"/>
   <text x="42" y="181" class="cell">640380</text>
   <text x="112" y="181" class="cell-b">B2</text>
-  <text x="172" y="181" class="cell">Suivi ENS 2026</text>
-  <rect x="352" y="170" width="118" height="16" rx="8" class="p-depose"/><text x="411" y="182" class="pill-txt">Déposé · 24/05</text>
-  <rect x="522" y="170" width="118" height="16" rx="8" class="p-depose"/><text x="581" y="182" class="pill-txt">Déposé · 25/06</text>
-  <text x="692" y="181" class="todo-none">rien</text>
+  <rect x="172" y="170" width="118" height="16" rx="8" class="p-depose"/><text x="231" y="182" class="pill-txt">Déposé · 24/05</text>
+  <rect x="357" y="170" width="118" height="16" rx="8" class="p-depose"/><text x="416" y="182" class="pill-txt">Déposé · 25/06</text>
+  <text x="700" y="181" class="todo-none">rien</text>
 
-  <!-- ligne 3 : P2 non planifie -->
+  <!-- ligne 3 : P2 non planifie, avec une nuit hors protocole sur le meme point -->
   <text x="42" y="211" class="cell">640250</text>
   <text x="112" y="211" class="cell-b">A1</text>
-  <text x="172" y="211" class="cell">Suivi ENS 2026</text>
-  <rect x="352" y="200" width="118" height="16" rx="8" class="p-depose"/><text x="411" y="212" class="pill-txt">Déposé · 19/05</text>
-  <rect x="522" y="200" width="106" height="16" rx="8" class="p-absent"/><text x="575" y="212" class="pill-txt">Non planifié</text>
-  <text x="692" y="211" class="todo">Poser l'enregistreur avant le 31/08</text>
+  <rect x="172" y="200" width="118" height="16" rx="8" class="p-depose"/><text x="231" y="212" class="pill-txt">Déposé · 19/05</text>
+  <rect x="357" y="200" width="106" height="16" rx="8" class="p-absent"/><text x="410" y="212" class="pill-txt">Non planifié</text>
+  <rect x="542" y="200" width="136" height="16" rx="8" class="p-opportuniste"/><text x="610" y="212" class="pill-txt-opp">Opportuniste · 12/07</text>
+  <text x="700" y="211" class="todo">Poser l'enregistreur avant le 31/08</text>
 
   <!-- ligne 4 : P1 inexploitable -->
   <rect x="31" y="221" width="938" height="30" class="list-row-alt"/>
   <text x="42" y="241" class="cell">640315</text>
   <text x="112" y="241" class="cell-b">C1</text>
-  <text x="172" y="241" class="cell-sub">non rattaché</text>
-  <rect x="352" y="230" width="140" height="16" rx="8" class="p-refaire"/><text x="422" y="242" class="pill-txt">Inexploitable · 21/05</text>
-  <rect x="522" y="230" width="106" height="16" rx="8" class="p-absent"/><text x="575" y="242" class="pill-txt">Non planifié</text>
-  <text x="692" y="241" class="todo">Refaire le 1ᵉʳ passage</text>
+  <rect x="172" y="230" width="140" height="16" rx="8" class="p-refaire"/><text x="242" y="242" class="pill-txt">Inexploitable · 21/05</text>
+  <rect x="357" y="230" width="106" height="16" rx="8" class="p-absent"/><text x="410" y="242" class="pill-txt">Non planifié</text>
+  <text x="700" y="241" class="todo">Refaire le 1ᵉʳ passage</text>
 
   <!-- avertissement fenetre -->
   <text x="42" y="292" class="warn-txt">La fenêtre du second passage se referme dans 40 jours pour 2 points.</text>
@@ -120,7 +119,9 @@ L'écran répond à une seule question, celle qu'un observateur se pose au milie
 
 - **Sélecteur d'année** (`groupeAnnee`) : la saison courante par défaut ; les saisons antérieures restent consultables en lecture.
 - **Résumé d'en-tête** (`lblResume`) : nombre de points suivis, passages réalisés sur attendus, et **échéance de la fenêtre du second passage**. Ce décompte et les lignes du tableau proviennent de la **même source** : ils ne peuvent pas diverger.
-- **Colonne Campagne** (`colCampagne`, issue #2355) : présente si la campagne est livrée et le passage rattaché. Un point non rattaché affiche « non rattaché », sans que cela constitue une anomalie : le rattachement est **facultatif**.
+- **La campagne est un filtre, pas une colonne** (issue #2355). Une ligne du solde est un **point**, avec ses **deux** passages, qui peuvent relever de campagnes différentes : une colonne aurait dû en choisir une à afficher. Le filtre retient un point dès qu'**au moins un** de ses passages relève de la campagne, et le montre **en entier** - c'est l'état complet du point qui dit ce qu'il reste à y faire.
+    ⚠️ *État réel* : ce filtre existe dans le **service** et en **ligne de commande** (`solde-saison --campagne`), mais **pas encore dans l'écran** ; la maquette ci-dessus ne le dessine donc pas. Suivi par [#2610](https://github.com/echonuit/vigiechiro-pr-companion/issues/2610).
+- **Colonne « Hors protocole »** (`colHorsProtocole`, issue #2525) : les nuits **opportunistes** réalisées sur ce point. Elles ont leur colonne précisément pour ne pas occuper celle d'un passage attendu : les voir en « Passage 1 » se lirait « le passage 1 est fait » alors que la ligne réclame encore de poser l'enregistreur (ligne 3 de la maquette). Les colonnes de passage restent donc sur « Non planifié » tant que le passage du protocole manque réellement, et ces nuits ne comptent pas dans le décompte ([R34](../Modèle%20conceptuel/Règles%20métier.md#r34)).
 - **Colonnes Passage 1 et Passage 2** (`colPassage1`, `colPassage2`) : l'état du passage et sa date, ou son absence. **Les états et leurs couleurs sont repris du modèle existant** ; l'écran ne crée pas un second vocabulaire de statuts, ce qui obligerait l'utilisateur à en apprendre deux.
 - **Un passage inexploitable compte comme restant à faire** : c'est le cas où un décompte naïf induit en erreur, puisque le passage existe en base mais ne vaut rien pour le protocole.
 - **Colonne « Reste à faire »** (`colResteAFaire`) : **le cœur de l'écran**. Elle formule une action, pas un état. Elle est vide (« rien ») quand le point est à jour.
@@ -166,4 +167,5 @@ Un observateur qui ouvre l'écran en début de saison, ou qui vient de déclarer
 - **Rafraîchissement** : le tableau et le résumé se recalculent quand les données changent. Le défaut déjà signalé sur les compteurs d'accueil (#1376) ne doit pas se reproduire ici.
 - **`TableView`** avec une `cellFactory` pour les pastilles d'état, réutilisant les couleurs de statut existantes de [M-MultiSite](M-MultiSite.md).
 - **Icônes** : `FontIcon` Ikonli, pas d'emoji (règle #700).
-- **Fonctionnalité optionnelle** : l'écran doit rester cohérent quand la campagne est désactivée (la colonne disparaît, le reste fonctionne).
+- **Fonctionnalité optionnelle** : l'écran doit rester cohérent quand la campagne est désactivée. Le service la consomme en `Optional<ServiceCampagne>` ; coupée, aucun point ne relève d'une campagne et le solde reste entier. Le futur sélecteur ([#2610](https://github.com/echonuit/vigiechiro-pr-companion/issues/2610)) ne doit alors pas apparaître.
+- **Carrés d'un tiers exclus** : le solde ne parle que des carrés de l'observateur. Un carré rattaché à quelqu'un d'autre ([R35](../Modèle%20conceptuel/Règles%20métier.md#r35)) sort entièrement du tableau - y participer est une occasion, pas une obligation de protocole.

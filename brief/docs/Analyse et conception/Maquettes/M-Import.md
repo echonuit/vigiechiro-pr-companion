@@ -153,6 +153,7 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
 - **Section 1 (Dossier source)** : un dossier de carte SD, une copie disque, ou une **archive .zip** (décompressée d'abord). Le glisser-déposer d'un dossier ou d'un .zip n'importe où sur l'écran marche aussi.
 - **Section 2 (Inspection)** : en **lecture seule**, l'application détecte le journal du capteur, le relevé climatique, les WAV et l'état du nommage. Rien n'est modifié.
 - **Section 3 (Rattachement)** : site / point / année / n° de passage, **pré-remplis** depuis le dernier rattachement mémorisé pour cet enregistreur. La **carte** situe le carré et le point choisis (en indigo) ; un point sans GPS se place au centre de son carré ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26), [R27](../Modèle%20conceptuel/Règles%20métier.md#r27)).
+    La section porte aussi une case **« Participation opportuniste »** ([R34](../Modèle%20conceptuel/Règles%20métier.md#r34)) : la nuit a bien eu lieu, mais hors protocole. C'est le bon endroit pour le déclarer, puisque c'est là qu'on désigne le carré. La case vaut pour **toutes les nuits de l'import** : une demande qui ne viserait qu'un carré, sur une carte multi-nuits, n'a pas de sens ici - elle se corrigerait passage par passage dans [M-Passage](M-Passage.md).
 - **Aperçu du préfixe** : montre le résultat exact appliqué aux fichiers ([R6](../Modèle%20conceptuel/Règles%20métier.md#r6), [R7](../Modèle%20conceptuel/Règles%20métier.md#r7)), à vérifier avant de cliquer.
 
 ### Interactions clés

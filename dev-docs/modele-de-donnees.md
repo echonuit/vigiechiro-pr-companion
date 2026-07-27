@@ -43,7 +43,7 @@ Le **schéma physique** est plus proche de la machine. On le donne en notation *
 (IE / *crow's foot*, celle de Mermaid) : relations binaires, clés étrangères explicites. C'est la
 traduction du MCD ci-dessus. **19 tables à l'origine**, créées par
 [`V01__schema.sql`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/resources/db/migration/V01__schema.sql) ;
-le schéma courant en compte **28** après les migrations ultérieures (`V02`→`V30`),
+le schéma courant en compte **31** après les migrations ultérieures (`V02`→`V35`),
 clés étrangères **`ON DELETE CASCADE`** (supprimer un passage emporte sa session, ses séquences, ses
 observations…).
 
@@ -51,7 +51,10 @@ observations…).
 erDiagram
     user ||--o{ monitoring_site : "déclare"
     monitoring_site ||--o{ listening_point : "contient"
+    monitoring_site ||--o| site_tiers : "carré d'un tiers"
     listening_point ||--o{ passage : "accueille"
+    campagne ||--o{ passage : "regroupe"
+    passage ||--o| passage_opportuniste : "hors protocole"
     recorder ||--o{ passage : "enregistre"
     recorder ||--o{ microphone : "équipe"
     passage ||--|| recording_session : "produit"
@@ -229,15 +232,22 @@ par [`MoteurWorkflowPassage`](patterns.md#machine-a-etats-moteurworkflowpassage)
 
 ## Régénérer le MCD (Mocodo)
 
-Le MCD est **versionné comme source** ([`nuit-de-capture.mcd`](assets/nuit-de-capture.mcd), 16 entités
-+ 17 associations) et rendu avec [Mocodo](https://www.mocodo.net/), l'outil de référence pour le MCD
+Le MCD est **versionné comme source** ([`nuit-de-capture.mcd`](assets/nuit-de-capture.mcd), 17 entités
++ 18 associations) et rendu avec [Mocodo](https://www.mocodo.net/), l'outil de référence pour le MCD
 Merise. Après modification de la source, régénérez le SVG :
 
 ```bash
 pip install mocodo                       # une fois
 cd dev-docs/assets
 mocodo -i nuit-de-capture.mcd -t arrange:wide=8 --colors ocean   # agencement auto + dessin SVG
+git checkout -- nuit-de-capture.mcd      # cf. ci-dessous : l'agencement réécrit la source
 ```
+
+⚠️ `arrange` **réécrit `nuit-de-capture.mcd`** sous sa forme agencée (les boîtes réparties en grille,
+entités et associations entremêlées). Cette forme est illisible à la relecture et impossible à
+compléter à la main : ce dépôt versionne donc la forme **linéaire** (toutes les entités, puis toutes
+les associations) et ne garde l'agencement que dans le SVG. D'où le `git checkout` ci-dessus, à faire
+**après** avoir vérifié que le SVG est correct.
 
 `arrange:wide=8` agence les boîtes sur ~8 colonnes (essayez `wide=6`/`7` pour un autre format) et
 `--colors ocean` applique la palette (cohérente avec le thème indigo du site ; `mocodo --help` liste

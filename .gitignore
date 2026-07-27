@@ -94,6 +94,10 @@ site/
 site-dev/
 site-brief/
 
+# Sous-produit de `mocodo -t arrange` (geometrie calculee, reinjectee dans la source .mcd
+# et dans le SVG) : rien a versionner en plus des deux fichiers qu'il sert a produire.
+*_geo.json
+
 # ========== Agents IA (instructions locales, non versionnées) ==========
 # CLAUDE.md contient les consignes agent (cf. CONTRIBUTING.md + dev-docs pour la
 # version versionnée destinée aux humains). Reste local, propre à chaque poste.

@@ -126,7 +126,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 
 - **Barre du chrome (cadre commun)** : le bouton **← Retour** ramène à l'écran réellement précédent (historique de navigation) ; le **fil d'Ariane** affiche l'emplacement hiérarchique cliquable (`🏠 Accueil › Mes sites › Carré N › Détails du passage N° X`). Ces deux affordances ne sont **pas** propres à M-Passage : elles sont rendues par le chrome sur tous les écrans (navigation homogène). M-Passage déclare seulement son emplacement.
 - **En-tête** : le titre identifie le passage (`Carré N / Point / N° X (année)`). Les actions de tête sont **contextuelles selon l'état** ; il en existe **six** :
-    - **toujours** : **🗺 Voir sur la carte**, **✏ Modifier le passage** (année, n° de passage, avec re-renommage des fichiers), **🗑 Supprimer** (refusé si le passage est déposé) ;
+    - **toujours** : **🗺 Voir sur la carte**, **✏ Modifier le passage** (année, n° de passage - avec re-renommage des fichiers -, campagne, participation opportuniste), **🗑 Supprimer** (refusé si le passage est déposé) ;
     - **après dépôt** : **🔗 Voir la participation** (ouvre la fiche de la participation sur la plateforme), **↩ Annuler le dépôt** ;
     - si le passage est **archivé** (audio absent du disque) : **♻ Réactiver ce passage**.
 
@@ -143,7 +143,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 | **← Retour** (chrome) | Revient à l'écran précédent réel (historique), sans repasser par l'accueil |
 | **Fil d'Ariane** (chrome) | Remonte à un ancêtre (Accueil, Mes sites, Carré N) - emplacement cliquable |
 | Bouton **🗺 Voir sur la carte** | Ouvre [M-MultiSite](M-MultiSite.md) centré sur le point du passage |
-| Bouton **✏ Modifier le passage** | Ouvre la **modale** d'édition (année, n° de passage), avec re-renommage des fichiers (voir variante ci-dessous) |
+| Bouton **✏ Modifier le passage** | Ouvre la **modale** d'édition (année, n° de passage, campagne, participation opportuniste) ; changer l'année ou le n° re-renomme les fichiers (voir variante ci-dessous) |
 | Bouton **🗑 Supprimer** | Confirmation forte (suppression de la nuit et des fichiers) ; refusée si le passage est déposé |
 | Bouton **🔗 Voir la participation** *(après dépôt)* | Ouvre la fiche de la participation sur la plateforme |
 | Bouton **↩ Annuler le dépôt** *(après dépôt)* | Ramène le passage à un état pré-dépôt (le dépôt en ligne n'est pas défait automatiquement) |
@@ -160,6 +160,8 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 Le bouton **✏ Modifier le passage** ouvre une **modale** d'édition de l'**identité** du passage. Ce n'est pas un simple formulaire : changer ces valeurs **renomme tous les fichiers** de la session.
 
 - **Champs éditables** : **année** et **n° de passage** (le site et le point ne se changent pas ici) ; les valeurs courantes sont pré-remplies.
+- **Rattachement à une campagne** ([C16](../Modèle%20conceptuel/C16%20-%20Campagne.md)) : une liste déroulante des campagnes existantes, avec une entrée vide pour **détacher**. Sans conséquence sur les fichiers - c'est du rangement, pas de l'identité. La liste n'apparaît pas si la fonctionnalité `campagne` est désactivée.
+- **Case « participation opportuniste »** ([R34](../Modèle%20conceptuel/Règles%20métier.md#r34)) : déclare que la nuit a bien eu lieu mais **hors protocole**. La cocher retire le passage du décompte du [solde de saison](M-Saison.md) et rend muets les contrôles de fenêtre et d'intervalle pour lui. Là encore, aucun fichier n'est touché.
 - **Conséquence annoncée** : la modification recompose le **préfixe** `CarXXXXXX-AAAA-PassN-YY-` ([R6](../Modèle%20conceptuel/Règles%20métier.md#r6)) et **re-renomme** tous les enregistrements et séquences ([R7](../Modèle%20conceptuel/Règles%20métier.md#r7)) ; la modale l'explique avant de valider.
 - **Garde d'unicité** : la nouvelle combinaison `(Site, Point, Année, n° de passage)` doit rester **unique** ([R5](../Modèle%20conceptuel/Règles%20métier.md#r5)) ; une collision est refusée.
 - **Confirmation forte** : l'opération touchant le disque, elle demande une confirmation explicite (**Enregistrer** / **Annuler**).

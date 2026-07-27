@@ -9,10 +9,12 @@ Un site est un **carreau de 2 km × 2 km** issu d'un **carroyage de référence 
 | protocole | énum | `PointFixeStandard` \| `PointFixeRecherche` | **`PointFixeStandard`** : suit le protocole VigieChiro à la lettre (2 passages annuels dans les fenêtres juin-juillet et août-septembre, cf. [R3](Règles%20métier.md#r3) / [R4](Règles%20métier.md#r4)). **`PointFixeRecherche`** : utilise les mêmes réglages techniques d'acquisition mais avec dates et fréquences personnalisées (cas des campagnes de recherche, par ex. la thèse Samuel) - [R3](Règles%20métier.md#r3) et [R4](Règles%20métier.md#r4) sont alors muettes. Architecture extensible (Pédestre, Routier… plus tard). |
 | commentaire libre | texte | optionnel | Contexte écologique, descriptif paysager. |
 | date de création | date | obligatoire | Date locale (importante pour les anniversaires de passage). |
+| carré d'un tiers | booléen | dérivé | Vrai quand la synchronisation Vigie-Chiro rattache le carré à un **autre observateur** que celui connecté. Réévalué **à chaque synchronisation** (un carré peut changer de main). Ses nuits sont alors présumées **opportunistes** ([R35](Règles%20métier.md#r35)). |
 
 ## Règles applicables
 
 - [R1](Règles%20métier.md#r1) - format du n° de carré (6 chiffres, leading zero départements 1-9).
+- [R35](Règles%20métier.md#r35) - un carré d'un tiers rend ses nuits opportunistes (marquage à sens unique).
 - [R25](Règles%20métier.md#r25) - le n° de carré est **unique par utilisateur** (pas deux fois le même carré).
 - [R26](Règles%20métier.md#r26) - le carré matérialise une **maille 2 km** du carroyage national : son emprise situe ses points sur la carte.
 - [R28](Règles%20métier.md#r28) - un site qui **porte des passages** ne peut pas être supprimé.
