@@ -104,9 +104,27 @@ public class ServiceCampagne {
         return campagneDao.toutes();
     }
 
+    /// Année proposée par défaut à la création (celle de l'[Horloge] injectée).
+    ///
+    /// Exposée pour que la surface ne rappelle pas `LocalDate.now()` de son côté : une capture ou un
+    /// test qui repart d'une horloge figée doit voir l'année figée, pas celle de la machine.
+    public int anneeParDefaut() {
+        return horloge.aujourdhui().getYear();
+    }
+
     /// Nombre de campagnes (compteur éventuel d'accueil).
     public long compterCampagnes() {
         return campagneDao.compter();
+    }
+
+    /// Nombre de passages **rattachés** à une campagne (#2630).
+    ///
+    /// Sert à la confirmation de suppression : « 12 passages seront détachés ». Une suppression qui
+    /// annonce l'ampleur de son effet se décide ; une qui ne dit rien se subit. La campagne n'a pas
+    /// besoin d'exister : une campagne inconnue n'a simplement aucun passage.
+    public long compterPassagesRattaches(Long idCampagne) {
+        Objects.requireNonNull(idCampagne, "idCampagne");
+        return passageDao.compterParCampagne(idCampagne);
     }
 
     /// La campagne à laquelle un passage est rattaché, ou [Optional#empty()] s'il ne l'est pas (ou si

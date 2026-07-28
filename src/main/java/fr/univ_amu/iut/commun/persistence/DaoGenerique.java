@@ -25,6 +25,9 @@ import java.util.Optional;
 /// @param <ID> type de clé primaire
 public abstract class DaoGenerique<T, ID> extends ProjectionGenerique implements Dao<T, ID> {
 
+    /// Mot-clé mutualisé : trois requêtes construisent leur condition en concaténant le nom de table.
+    private static final String WHERE = " WHERE ";
+
     protected DaoGenerique(SourceDeDonnees source) {
         super(source);
     }
@@ -45,12 +48,12 @@ public abstract class DaoGenerique<T, ID> extends ProjectionGenerique implements
 
     @Override
     public Optional<T> findById(ID id) {
-        return queryUnique("SELECT * FROM " + table() + " WHERE " + colonneCle() + " = ?", mapper(), id);
+        return queryUnique("SELECT * FROM " + table() + WHERE + colonneCle() + " = ?", mapper(), id);
     }
 
     @Override
     public void delete(ID id) {
-        executerMaj("DELETE FROM " + table() + " WHERE " + colonneCle() + " = ?", id);
+        executerMaj("DELETE FROM " + table() + WHERE + colonneCle() + " = ?", id);
     }
 
     /// Nombre de lignes de la table (`COUNT(*)`). Efficace : ne matérialise aucune entité
@@ -62,6 +65,27 @@ public abstract class DaoGenerique<T, ID> extends ProjectionGenerique implements
             return rs.next() ? rs.getLong(1) : 0L;
         } catch (SQLException e) {
             throw new DataAccessException("Échec du comptage : " + table(), e);
+        }
+    }
+
+    /// Nombre de lignes **satisfaisant une condition** (`COUNT(*) … WHERE …`). Même intention que
+    /// [#compter()], restreinte : compter sans matérialiser, quand seul le nombre intéresse.
+    ///
+    /// La `clauseWhere` s'écrit **sans** le mot-clé (`"campaign_id = ?"`), et ses paramètres passent par
+    /// [PreparedStatement] : aucune concaténation de valeur.
+    ///
+    /// @param clauseWhere condition SQL, sans `WHERE`
+    /// @param parametres valeurs des `?` de la condition
+    protected long compterSi(String clauseWhere, Object... parametres) {
+        try (Connection connexion = source.getConnection();
+                PreparedStatement ps =
+                        connexion.prepareStatement("SELECT COUNT(*) FROM " + table() + WHERE + clauseWhere)) {
+            lier(ps, parametres);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? rs.getLong(1) : 0L;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Échec du comptage conditionnel : " + table(), e);
         }
     }
 
