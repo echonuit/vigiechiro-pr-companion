@@ -1,8 +1,6 @@
 package fr.univ_amu.iut.passage.view;
 
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -32,6 +30,7 @@ import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.passage.model.ChoixRebranchement;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ModeRebranchement;
@@ -225,28 +224,29 @@ class PassageReactivationViewTest {
                 ArgumentCaptor.forClass(ReactivationModaleController.Travail.class);
         verify(navigation).ouvrirModaleReactivation(any(), travail.capture(), any());
         // Le travail confié à la modale réactive le PASSAGE COURANT depuis le DOSSIER DÉSIGNÉ.
-        travail.getValue().executer(point -> {}, point -> {}, new JetonAnnulation());
-        verify(reactivation).reactiver(eq(ID_PASSAGE), eq(DOSSIER), eq(ModeRebranchement.COPIE), any(), any(), any());
+        travail.getValue().executer(point -> {}, point -> {}, ChoixRebranchement.COPIE, new JetonAnnulation());
+        verify(reactivation).reactiver(eq(ID_PASSAGE), eq(DOSSIER), any(), any(), any(), any());
         assertThat(questions)
-                .as("#2255 : le choix est proposé, et sa conséquence dite avant de choisir")
-                .singleElement(as(STRING))
-                .contains("Les laisser où ils sont")
-                .contains("plus écoutable si ce support n'est pas accessible");
+                .as("#2577 : plus AUCUNE question ici - à ce stade on ignore ce que le dossier contient,"
+                        + " et sur deux voies sur trois la réponse n'aurait servi à rien")
+                .isEmpty();
     }
 
     @Test
-    @DisplayName("#2255 : répondre « oui » laisse l'audio où il est - la base suivra, rien ne sera copié")
-    void repondre_oui_reactive_par_reference(FxRobot robot) {
-        laisserSurPlace = true;
-
+    @DisplayName("#2577 : le choix confié au service est celui de la MODALE, pas un mode figé d'avance")
+    void le_choix_vient_de_la_modale(FxRobot robot) {
         cliquerReactiver(robot);
 
         ArgumentCaptor<ReactivationModaleController.Travail> travail =
                 ArgumentCaptor.forClass(ReactivationModaleController.Travail.class);
         verify(navigation).ouvrirModaleReactivation(any(), travail.capture(), any());
-        travail.getValue().executer(point -> {}, point -> {}, new JetonAnnulation());
-        verify(reactivation)
-                .reactiver(eq(ID_PASSAGE), eq(DOSSIER), eq(ModeRebranchement.REFERENCE), any(), any(), any());
+
+        // Le travail relaie le port TEL QUEL : c'est la modale qui posera la question, au moment où la
+        // procédure saura qu'elle a un objet. L'assistant, lui, n'a plus d'avis sur la question.
+        ChoixRebranchement porte = ChoixRebranchement.fixe(ModeRebranchement.REFERENCE);
+        travail.getValue().executer(point -> {}, point -> {}, porte, new JetonAnnulation());
+
+        verify(reactivation).reactiver(eq(ID_PASSAGE), eq(DOSSIER), eq(porte), any(), any(), any());
     }
 
     @Test

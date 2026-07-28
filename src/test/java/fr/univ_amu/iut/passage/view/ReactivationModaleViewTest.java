@@ -90,7 +90,7 @@ class ReactivationModaleViewTest {
     @DisplayName("#1943 : ce qui manque est nommé, avec son motif et ce qu'il coûte")
     void absences_nommees_dans_le_compte_rendu(FxRobot robot) {
         lancer(
-                (progresRegeneration, progresAncrage, jeton) -> new RapportReactivation(
+                (progresRegeneration, progresAncrage, choix, jeton) -> new RapportReactivation(
                         10,
                         0,
                         4,
@@ -127,7 +127,7 @@ class ReactivationModaleViewTest {
     @DisplayName("Réactivation réussie : le compte rendu s'affiche dans la modale, sur quelle preuve")
     void reactivation_reussie_affiche_le_compte_rendu(FxRobot robot) {
         lancer(
-                (progresRegeneration, progresAncrage, jeton) -> new RapportReactivation(
+                (progresRegeneration, progresAncrage, choix, jeton) -> new RapportReactivation(
                         30,
                         0,
                         0,
@@ -155,7 +155,7 @@ class ReactivationModaleViewTest {
     @DisplayName("Sans phase d'ancrage, la seconde barre reste masquée")
     void sans_ancrage_la_barre_d_ancrage_reste_masquee(FxRobot robot) {
         lancer(
-                (progresRegeneration, progresAncrage, jeton) -> {
+                (progresRegeneration, progresAncrage, choix, jeton) -> {
                     progresRegeneration.accept(new Progression("Vérification 3/3", 1.0));
                     return new RapportReactivation(
                             3,
@@ -178,7 +178,7 @@ class ReactivationModaleViewTest {
     @DisplayName("#1780 : quand la phase d'ancrage démarre, sa barre apparaît (plus de barre figée à 100 %)")
     void la_phase_d_ancrage_revele_sa_barre(FxRobot robot) {
         lancer(
-                (progresRegeneration, progresAncrage, jeton) -> {
+                (progresRegeneration, progresAncrage, choix, jeton) -> {
                     progresRegeneration.accept(new Progression("Vérification 30/30", 1.0));
                     progresAncrage.accept(new Progression(
                             "Récupération des identifiants et des échanges avec le validateur… (page 1/2)", 0.5));
@@ -237,7 +237,7 @@ class ReactivationModaleViewTest {
     @DisplayName("#1648 : passage reconstruit : compte rendu honnête, jamais « introuvables »")
     void passage_reconstruit_compte_rendu_honnete(FxRobot robot) {
         lancer(
-                (progresRegeneration, progresAncrage, jeton) -> new RapportReactivation(
+                (progresRegeneration, progresAncrage, choix, jeton) -> new RapportReactivation(
                         0, 0, 30, 0, null, List.of(), new DecompteAudio(0, 30), VoieReactivation.RECONSTRUIT),
                 robot);
 
@@ -257,7 +257,7 @@ class ReactivationModaleViewTest {
     @DisplayName("Un échec devient un message dans la modale, pas une exception muette")
     void echec_devient_un_message(FxRobot robot) {
         lancer(
-                (progresRegeneration, progresAncrage, jeton) -> {
+                (progresRegeneration, progresAncrage, choix, jeton) -> {
                     throw new RegleMetierException("Dossier introuvable : /media/absent.");
                 },
                 robot);
@@ -269,7 +269,7 @@ class ReactivationModaleViewTest {
     @DisplayName("Annulation : état neutre (rien n'est défait), pas d'erreur rouge")
     void annulation_est_un_etat_neutre(FxRobot robot) {
         lancer(
-                (progresRegeneration, progresAncrage, jeton) -> {
+                (progresRegeneration, progresAncrage, choix, jeton) -> {
                     throw new OperationAnnuleeException();
                 },
                 robot);
@@ -284,7 +284,7 @@ class ReactivationModaleViewTest {
     @DisplayName("Fermer après une réactivation conclue rafraîchit l'écran appelant (audio revenu)")
     void fermer_rafraichit_l_appelant(FxRobot robot) {
         lancer(
-                (progresRegeneration, progresAncrage, jeton) -> new RapportReactivation(
+                (progresRegeneration, progresAncrage, choix, jeton) -> new RapportReactivation(
                         30,
                         0,
                         0,
