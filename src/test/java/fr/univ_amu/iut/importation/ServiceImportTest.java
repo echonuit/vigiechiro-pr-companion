@@ -42,8 +42,6 @@ import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -868,25 +866,15 @@ class ServiceImportTest {
     @DisplayName(
             "#… : prochainBlocPassagesLibre — 1,3,5,7 pris → premier bloc de N consécutifs libres, sans casser la consécutivité")
     void prochain_bloc_consecutif_libre_evite_les_trous() {
-        PassageDao passageDao = new PassageDao(source);
-        enregistreurDao.insert(new Enregistreur("9999999", "V1.01", null));
         for (int numero : new int[] {1, 3, 5, 7}) {
-            passageDao.insert(new Passage(
-                    null,
-                    numero,
-                    2026,
-                    "2026-04-22",
-                    "20:25:00",
-                    "07:47:00",
-                    null,
-                    StatutWorkflow.TRANSFORME,
-                    null,
-                    null,
-                    null,
-                    null,
-                    idPoint,
-                    "9999999",
-                    null));
+            JeuDeDonneesPassage.dans(source)
+                    .utilisateur(ID_USER)
+                    .carre("640380")
+                    .point("Z1")
+                    .enregistreur("9999999")
+                    .nuit(numero, 2026, "2026-04-22")
+                    .statut(StatutWorkflow.TRANSFORME)
+                    .semer();
         }
 
         // Bloc de 1 : comble le premier trou (2). Bloc de 2 ou 3 : les trous 2/4/6 sont isolés → 8.
