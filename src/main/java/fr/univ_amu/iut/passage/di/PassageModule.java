@@ -30,6 +30,7 @@ import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
 import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
+import fr.univ_amu.iut.passage.model.PropositionCampagne;
 import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
 import fr.univ_amu.iut.passage.model.RattrapageMetadonnees;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
@@ -108,6 +109,11 @@ public class PassageModule extends ModuleDeFeature {
         // VIDE ici ; CampagneModule pose le binding quand la feature est active. Absent (campagne coupée), la
         // modale « Modifier le passage » masque son champ campagne.
         OptionalBinder.newOptionalBinder(binder(), ServiceCampagne.class);
+
+        // Port PropositionCampagne (#2631) : ce dont `importation` a besoin des campagnes pour les
+        // proposer et rattacher à l'import. OptionalBinder VIDE ici, binding réel dans CampagneModule ;
+        // la fonctionnalité coupée, l'assistant d'import se comporte exactement comme avant.
+        OptionalBinder.newOptionalBinder(binder(), PropositionCampagne.class);
 
         // Port CrisAttendus (#1302) : les observations appartiennent à `validation`, qui dépend déjà de
         // `passage` — l'inverse fermerait un cycle. OptionalBinder VIDE ici ; ValidationModule pose le
