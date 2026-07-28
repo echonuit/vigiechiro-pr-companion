@@ -246,8 +246,15 @@ public final class ClientVigieChiro {
     /// [#participation]. Renvoie l'`_id` en cas de succès, ou le **détail de l'échec** (statut + corps) — un
     /// refus doit être expliqué. Prérequis : `etag` courant (sinon `412 Precondition Failed`).
     public ResultatEcriture modifierParticipation(String id, String etag, ParticipationADeposer miseAJour) {
+        // Pas de rejeu (#2677) : l'`If-Match` protège du doublon, mais pas du malentendu. Si la première
+        // tentative aboutit et que la réponse se perd, l'`_etag` a changé et le rejeu revient en `412` -
+        // l'utilisateur lirait « échec » sur une modification qui a bien eu lieu.
         String echec = echecDe(transport.ecrire(
-                "PATCH", CHEMIN_PARTICIPATIONS + id, RequetesVigieChiro.miseAJourParticipation(miseAJour), etag));
+                "PATCH",
+                CHEMIN_PARTICIPATIONS + id,
+                RequetesVigieChiro.miseAJourParticipation(miseAJour),
+                etag,
+                TransportVigieChiro.Rejeu.INTERDIT));
         return echec == null ? ResultatEcriture.reussie() : ResultatEcriture.echouee(echec);
     }
 
@@ -262,7 +269,15 @@ public final class ClientVigieChiro {
             String donneeId, int indice, String objectidTaxon, Certitude certitude, boolean bilan) {
         String chemin = "/donnees/" + donneeId + "/observations/" + indice + (bilan ? "" : "?no_bilan=true");
         String echec = echecDe(
-                transport.ecrire("PATCH", chemin, RequetesVigieChiro.correction(objectidTaxon, certitude), null));
+                // Rejeu autorisé (#2677) : la correction pose une **valeur absolue** (taxon, certitude)
+                // sur un sous-document repéré par son indice. L'appliquer deux fois donne le même état, et
+                // la seconde réponse dit la même chose que la première.
+                transport.ecrire(
+                        "PATCH",
+                        chemin,
+                        RequetesVigieChiro.correction(objectidTaxon, certitude),
+                        null,
+                        TransportVigieChiro.Rejeu.AUTORISE));
         return echec == null ? ResultatEcriture.reussie() : ResultatEcriture.echouee(echec);
     }
 
@@ -287,7 +302,11 @@ public final class ClientVigieChiro {
     ///     été régénérée par un re-compute côté serveur, et il faut réimporter avant de réessayer
     public ReponseApi<String> posterMessage(String donneeId, int indice, String texte) {
         String chemin = "/donnees/" + donneeId + "/observations/" + indice + "/messages";
-        return transport.ecrire("PUT", chemin, RequetesVigieChiro.message(texte), null);
+        // Rejeu INTERDIT (#2677), et c'est le cas qui montre qu'une règle par verbe HTTP serait fausse :
+        // ce `PUT` **empile** par `$push` côté serveur. Le rejouer poste le message deux fois, sur des
+        // données partagées avec un validateur du MNHN, et aucune route ne permet de le retirer.
+        return transport.ecrire(
+                "PUT", chemin, RequetesVigieChiro.message(texte), null, TransportVigieChiro.Rejeu.INTERDIT);
     }
 
     /// Déclare un **fichier** à téléverser (`POST /fichiers`, étape 1/3) : renvoie son `_id` et l'URL S3
@@ -382,12 +401,16 @@ public final class ClientVigieChiro {
                     break;
                 }
                 byte[] chunk = lus == tampon.length ? tampon.clone() : Arrays.copyOf(tampon, lus);
+                // Rejeu autorisé (#2677) : demander deux fois l'URL de la partie `numero` ne crée rien -
+                // c'est une signature, et le numéro de partie est explicite. C'est le `PUT` S3 qui suit
+                // qui dépose des octets, et il a son propre réessai depuis #2354.
                 ReponseApi<String> url = transport
                         .ecrire(
                                 "PUT",
                                 CHEMIN_FICHIERS + "/" + fichierId + "/multipart",
                                 RequetesVigieChiro.demandePartie(numero),
-                                null)
+                                null,
+                                TransportVigieChiro.Rejeu.AUTORISE)
                         .lireAvec(ReponsesVigieChiro::urlDePartie);
                 if (!(url instanceof ReponseApi.Succes<String>(String urlSignee))) {
                     return url;
@@ -410,7 +433,10 @@ public final class ClientVigieChiro {
     /// Abandonne un upload multipart (#2354, `DELETE /fichiers/{id}`) : à appeler quand une partie a
     /// échoué définitivement, pour que le serveur ne conserve pas de parties orphelines. Best-effort.
     public ReponseApi<String> abandonnerFichier(String fichierId) {
-        return transport.ecrire("DELETE", CHEMIN_FICHIERS + "/" + fichierId, "", null);
+        // Rejeu autorisé (#2677) : supprimer deux fois laisse le même état. Un `404` au second passage
+        // n'est pas un problème ici, l'abandon étant de toute façon au mieux-effort.
+        return transport.ecrire(
+                "DELETE", CHEMIN_FICHIERS + "/" + fichierId, "", null, TransportVigieChiro.Rejeu.AUTORISE);
     }
 
     // Le traitement serveur (lancer le compute, lire son etat) vit dans TraitementVigieChiro :
@@ -418,8 +444,12 @@ public final class ClientVigieChiro {
     /// **POST authentifié** d'un corps JSON sur `chemin`, issue **triée** ([ReponseApi]) : statut et
     /// corps d'un refus conservés, pour un message d'erreur exploitable (création de participation,
     /// lancement d'un traitement #1261).
+    /// Jamais rejoué (#2677) : ces `POST` **créent** (participation, déclaration de fichier,
+    /// finalisation, lancement d'un traitement) et l'API n'offre aucune clé d'idempotence. Si la requête
+    /// arrive, que le serveur crée, et que la réponse se perd, un rejeu créerait une seconde ressource -
+    /// une participation en double sur la plateforme, qu'il faudrait aller supprimer à la main.
     ReponseApi<String> poster(String chemin, String corpsJson) {
-        return transport.ecrire("POST", chemin, corpsJson, null);
+        return transport.ecrire("POST", chemin, corpsJson, null, TransportVigieChiro.Rejeu.INTERDIT);
     }
 
     /// Triage **commun des écritures** : la cause d'échec exploitable ([ReponseApi#echec()], le
