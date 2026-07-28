@@ -26,12 +26,13 @@ vraie carte SD soit reconnue.
 
 **Étape 1 · La connexion devient une opération longue**
 
-1. Coller le jeton : une **modale de progression** s'ouvre par-dessus la modale de connexion.
+1. Coller le jeton : l'avancement de la récupération s'affiche.
 2. La barre **avance** et son libellé nomme la nuit en cours (« Nuits k / N »), il ne reste pas figé.
 3. Une **estimation du temps restant** apparaît une fois l'avancement mesurable.
 4. Le bouton **Annuler** est atteignable pendant toute l'opération (pas masqué, pas hors fenêtre).
-5. ⚠️ Point de jugement : **une modale par-dessus une modale** est-elle acceptable ici, ou faut-il
-   fondre la barre dans la modale de connexion ?
+5. L'avancement paraît **dans** la modale de connexion, sans seconde fenêtre. ⚠️ **Écart connu** tant
+   que #2642 n'est pas livré : une modale de progression s'ouvre par-dessus. Ce n'est plus un point de
+   jugement - il a été tranché à la passe 10 de #2554.
 6. À la fin, la modale de connexion annonce l'identité **et** le résumé de ce qui a été récupéré.
 
 **Étape 2 · Ce que le compte rendu affirme**
