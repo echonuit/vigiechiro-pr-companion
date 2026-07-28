@@ -194,6 +194,21 @@ public final class PanneauCompteRendu extends VBox {
             barreVentilation.getChildren().add(part(segment, ventilation.fraction(segment), barreVentilation));
             legende.getChildren().add(entreeDeLegende(segment, ventilation.pourcentage(segment)));
         }
+        // Le libellé de la ventilation devient le **texte accessible** de la barre (#2694).
+        //
+        // Il était composé par cinq traductions et lu par personne : ni rendu, ni testé, donc jamais
+        // confronté - l'une d'elles annonçait « le devenir de 140 observations » là où douze n'en étaient
+        // jamais devenues, et rien ne pouvait la démentir.
+        //
+        // Il n'est pas AFFICHÉ, parce que la pastille dit déjà l'essentiel (« 128 / 140 importées ») et
+        // qu'un compte rendu ne se répète pas. Mais la barre, elle, n'avait aucun texte accessible : son
+        // seul secours était un `Tooltip` par part, qui suppose une souris et un survol. Un lecteur
+        // d'écran ne recevait donc rien de l'information principale de la bande.
+        //
+        // Les **parts** n'y figurent pas : la légende les rend déjà en `Label`, donc elles sont déjà
+        // lues. Les répéter ici les ferait entendre deux fois. La barre dit ce qu'elle ventile, la
+        // légende dit comment.
+        barreVentilation.setAccessibleText(ventilation.libelle());
         montrer(blocVentilation, true);
     }
 
