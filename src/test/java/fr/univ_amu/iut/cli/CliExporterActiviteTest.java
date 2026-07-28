@@ -58,7 +58,41 @@ class CliExporterActiviteTest {
         assertThat(tampon.toString(StandardCharsets.UTF_8)).contains("Activité exportée");
         assertThat(Files.exists(sortie)).isTrue();
         assertThat(Files.readString(sortie, StandardCharsets.UTF_8))
-                .startsWith("\uFEFFPassage;Nuit;Code espèce;Nom espèce;Groupe;Début tranche;Tranche (min);Contacts");
+                .startsWith(
+                        "\uFEFFCarré;Point;Nuit;Code espèce;Nom espèce;Groupe;Début tranche;Tranche (min);Contacts");
+    }
+
+    @Test
+    @DisplayName("exporter-activite --tout : couvre tous les passages, code 0 (#2613)")
+    void exporter_activite_couvre_la_vue_transverse() throws Exception {
+        Path sortie = workspace.resolve("activite-tout.csv");
+        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+
+        int code = executer(tampon, "exporter-activite", "--tout", "--sortie", sortie.toString());
+
+        assertThat(code)
+                .as("la vue transverse de l'écran a désormais son équivalent en ligne de commande")
+                .isEqualTo(Cli.CODE_SUCCES);
+        assertThat(Files.exists(sortie)).isTrue();
+    }
+
+    @Test
+    @DisplayName("exporter-activite : --passage et --tout s'excluent, code 2 (#2613)")
+    void exporter_activite_refuse_les_deux_portees() {
+        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+
+        int code = executer(
+                tampon,
+                "exporter-activite",
+                "--passage",
+                "1",
+                "--tout",
+                "--sortie",
+                workspace.resolve("a.csv").toString());
+
+        assertThat(code)
+                .as("une portée ambiguë se refuse plutôt que de se trancher en silence")
+                .isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
     }
 
     @Test

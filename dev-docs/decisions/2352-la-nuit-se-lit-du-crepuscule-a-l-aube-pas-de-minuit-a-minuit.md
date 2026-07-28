@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-26
 - **Chantier** : #2352 (lot 2 de l'EPIC #2348)
-- **Vérification** : certaine — `ExportActiviteCsvTest#rattache_les_tranches_d_apres_minuit_a_la_nuit_du_soir`
+- **Vérification** : certaine — `AgregationActiviteTest#l_export_date_ses_lignes_par_la_nuit_biologique`
 
 ## Contexte
 

@@ -1,11 +1,13 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.google.inject.name.Named;
 import fr.univ_amu.iut.analyse.model.AgregationActivite;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
-import fr.univ_amu.iut.analyse.model.CourbeEspece;
 import fr.univ_amu.iut.analyse.model.ExportActiviteCsv;
 import fr.univ_amu.iut.analyse.model.LargeurTranche;
+import fr.univ_amu.iut.analyse.model.LigneActivite;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -13,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ExitCode;
 import picocli.CommandLine.Model.CommandSpec;
@@ -33,12 +36,24 @@ import picocli.CommandLine.Spec;
         description = "Exporte en CSV la courbe d'activité horaire d'un passage (contacts par tranche et par espèce).")
 public final class ExporterActivite implements Callable<Integer> {
 
-    @Option(
-            names = "--passage",
-            required = true,
-            paramLabel = "<id>",
-            description = "Identifiant du passage dont exporter l'activité.")
-    private long passage;
+    /// Un passage, ou **tous** : les deux s'excluent, et l'un des deux est exigé. Sans cette exclusion,
+    /// `--passage 3 --tout` aurait un sens ambigu que la commande trancherait en silence.
+    @ArgGroup(multiplicity = "1")
+    private Portee portee;
+
+    /// Portée de l'export : une nuit précise, ou toutes celles de l'utilisateur (la vue transverse de
+    /// l'écran, #2613).
+    private static final class Portee {
+
+        @Option(
+                names = "--passage",
+                paramLabel = "<id>",
+                description = "Identifiant du passage dont exporter l'activité.")
+        private Long passage;
+
+        @Option(names = "--tout", description = "Exporte l'activité de tous les passages de l'utilisateur.")
+        private boolean tout;
+    }
 
     @Option(
             names = "--sortie",
@@ -66,9 +81,15 @@ public final class ExporterActivite implements Callable<Integer> {
 
     private final ServiceActivite service;
 
+    /// Identifiant de l'utilisateur courant, pour la portée `--tout`. En `Provider` : la commande est
+    /// instanciée par picocli **avant** la migration du schéma, et le résoudre au constructeur ouvrirait
+    /// la base trop tôt.
+    private final Provider<String> utilisateur;
+
     @Inject
-    public ExporterActivite(ServiceActivite service) {
+    public ExporterActivite(ServiceActivite service, @Named("idUtilisateurCourant") Provider<String> utilisateur) {
         this.service = Objects.requireNonNull(service, "service");
+        this.utilisateur = Objects.requireNonNull(utilisateur, "utilisateur");
     }
 
     @Override
@@ -85,12 +106,14 @@ public final class ExporterActivite implements Callable<Integer> {
             return ExitCode.USAGE;
         }
 
-        List<ContactHoraire> contacts = service.contactsDuPassage(passage);
-        List<CourbeEspece> courbes = AgregationActivite.parEspece(contacts, tranche.get());
-        Path ecrit = ExportActiviteCsv.ecrire(passage, tranche.get(), courbes, sortie);
+        List<ContactHoraire> contacts = portee.tout
+                ? service.contactsDeLUtilisateur(utilisateur.get())
+                : service.contactsDuPassage(portee.passage);
+        List<LigneActivite> lignes = AgregationActivite.pourExport(contacts, tranche.get());
+        Path ecrit = ExportActiviteCsv.ecrire(tranche.get(), lignes, sortie);
         spec.commandLine()
                 .getOut()
-                .println("Activité exportée : " + courbes.size() + " espèce(s) → " + ecrit.toAbsolutePath());
+                .println("Activité exportée : " + lignes.size() + " ligne(s) → " + ecrit.toAbsolutePath());
         return 0;
     }
 }

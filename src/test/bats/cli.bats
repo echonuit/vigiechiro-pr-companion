@@ -180,6 +180,17 @@ setup() {
   [[ "${output}" == *"Contacts"* ]]
 }
 
+@test "exporter-activite --tout : couvre tous les passages, exit 0 (#2613)" {
+  run cli exporter-activite --tout --sortie "${BATS_TEST_TMPDIR}/tout.csv"
+  [ "${status}" -eq 0 ]
+  [ -f "${BATS_TEST_TMPDIR}/tout.csv" ]
+}
+
+@test "exporter-activite : --passage et --tout s excluent, exit 2 (#2613)" {
+  run cli exporter-activite --passage 1 --tout --sortie "${BATS_TEST_TMPDIR}/a.csv"
+  [ "${status}" -eq 2 ]
+}
+
 @test "exporter-activite --tranche 99 : refus explique, exit 2 (#2352)" {
   run cli exporter-activite --passage 1 --sortie "${BATS_TEST_TMPDIR}/a.csv" --tranche 99
   [ "${status}" -eq 2 ]

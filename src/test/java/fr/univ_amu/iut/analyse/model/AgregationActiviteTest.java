@@ -239,6 +239,43 @@ class AgregationActiviteTest {
     }
 
     @Test
+    void l_export_separe_les_lieux_que_la_courbe_confond() {
+        // Même espèce, même heure de nuit, deux points d'écoute : la COURBE les somme (elle décrit le
+        // temps, pas le lieu), l'EXPORT doit les distinguer, sans quoi on ne peut plus recouper.
+        List<ContactHoraire> contacts = List.of(
+                new ContactHoraire("PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", le21juin(22, 0), "640380", "A1", 1L),
+                new ContactHoraire(
+                        "PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", le21juin(22, 5), "640380", "B2", 2L));
+
+        List<LigneActivite> lignes = AgregationActivite.pourExport(contacts, LargeurTranche.HEURE);
+
+        assertThat(lignes).hasSize(2);
+        assertThat(lignes)
+                .extracting(LigneActivite::codePoint)
+                .as("triées par lieu, puis par temps")
+                .containsExactly("A1", "B2");
+        assertThat(lignes).allSatisfy(ligne -> assertThat(ligne.nombre()).isEqualTo(1));
+    }
+
+    @Test
+    void l_export_date_ses_lignes_par_la_nuit_biologique() {
+        // 02 h le 22 juin appartient à la nuit du 21 : la ligne doit le dire, comme la courbe.
+        List<ContactHoraire> contacts = List.of(new ContactHoraire(
+                "PIPKUH",
+                "Pipistrelle de Kuhl",
+                "Chiroptères",
+                LocalDateTime.of(2026, 6, 22, 2, 0),
+                "640380",
+                "A1",
+                1L));
+
+        LigneActivite ligne =
+                AgregationActivite.pourExport(contacts, LargeurTranche.HEURE).get(0);
+
+        assertThat(ligne.nuit()).isEqualTo(java.time.LocalDate.of(2026, 6, 21));
+    }
+
+    @Test
     void aucun_contact_donne_aucune_courbe() {
         assertThat(AgregationActivite.parEspece(List.of(), LargeurTranche.DEMI_HEURE))
                 .isEmpty();
