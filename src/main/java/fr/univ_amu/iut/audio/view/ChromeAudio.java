@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
+import fr.univ_amu.iut.audio.viewmodel.ComptageEnjeu;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
@@ -57,14 +58,18 @@ final class ChromeAudio {
     /// ciblé (Carré · point · N°) s'il y en a un, sinon l'intitulé de la source (Références, Sons non
     /// identifiés…). Sans le nom d'écran (déjà porté par le fil d'Ariane). [ZonesStatut#VIDE] tant que la
     /// vue n'est pas ouverte sur une source.
-    static ZonesStatut zonesStatut(SourceObservations source, ComptageAudio comptage) {
+    static ZonesStatut zonesStatut(SourceObservations source, ComptageAudio comptage, ComptageEnjeu enjeu) {
         if (source == null) {
             return ZonesStatut.VIDE;
         }
         var passage = source.contexteDuPassage();
         String gauche = passage != null ? passage.identiteStatut() : source.titre();
         String centre = comptage.total() == 0 ? "Aucune observation" : comptage.total() + " observation(s)";
-        String droite = comptage.total() == 0 ? "" : comptage.progression();
+        // Le compteur d'espèces à enjeu (#2353) rejoint la progression, à droite : les deux répondent à
+        // « que me reste-t-il à faire ? ». Il s'efface quand il n'y en a aucune, plutôt que d'occuper la
+        // place avec un « 0 à enjeu » qu'on finirait par ne plus lire.
+        String progression = comptage.total() == 0 ? "" : comptage.progression();
+        String droite = enjeu.libelle().isEmpty() ? progression : progression + " · " + enjeu.libelle();
         return new ZonesStatut(gauche, centre, droite);
     }
 }

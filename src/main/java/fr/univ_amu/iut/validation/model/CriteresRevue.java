@@ -24,11 +24,16 @@ import java.util.Locale;
 ///     les deux
 /// @param certitude certitude **observateur** déclarée, ou `null` pour ne pas filtrer
 public record CriteresRevue(
-        StatutObservation statut, String taxon, Boolean douteux, Boolean reference, Certitude certitude) {
+        StatutObservation statut,
+        String taxon,
+        Boolean douteux,
+        Boolean reference,
+        Certitude certitude,
+        Boolean aEnjeu) {
 
     /// Aucun filtre : toutes les observations du passage.
     public static CriteresRevue aucun() {
-        return new CriteresRevue(null, null, null, null, null);
+        return new CriteresRevue(null, null, null, null, null, null);
     }
 
     /// L'observation passe-t-elle **tous** les critères posés ? Les critères absents (`null`) ne retiennent
@@ -37,10 +42,24 @@ public record CriteresRevue(
         return statutRetenu(ligne) && taxonRetenu(ligne) && drapeauxRetenus(ligne) && certitudeRetenue(ligne);
     }
 
+    /// Le critère **espèce à enjeu** (#2353) ne se juge pas sur la seule ligne : il demande le référentiel
+    /// de conservation, que ce record n'a pas à porter. Il est donc évalué à part, par
+    /// [SelectionObservations], à qui l'on fournit de quoi répondre.
+    ///
+    /// @param estPrioritaire ce que dit le référentiel du taxon retenu de la ligne
+    public boolean retientLEnjeu(boolean estPrioritaire) {
+        return aEnjeu == null || aEnjeu == estPrioritaire;
+    }
+
     /// Y a-t-il au moins un filtre ? Sert aux commandes à **dire** qu'elles ont agi sur tout un passage
     /// plutôt que sur une sélection : un geste en masse sans filtre mérite d'être annoncé comme tel.
     public boolean vide() {
-        return statut == null && taxon == null && douteux == null && reference == null && certitude == null;
+        return statut == null
+                && taxon == null
+                && douteux == null
+                && reference == null
+                && certitude == null
+                && aEnjeu == null;
     }
 
     private boolean statutRetenu(LigneObservationAudio ligne) {

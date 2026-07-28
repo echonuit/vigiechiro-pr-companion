@@ -26,7 +26,7 @@ class CriteresRevueTest {
     void drapeau_absent_ne_filtre_pas() {
         // C'est la nuance qui rend l'option `--douteux` correcte : sans elle, on veut LES DEUX, pas
         // « celles qui ne sont pas douteuses ». Un booléen à deux états ne saurait pas l'exprimer.
-        CriteresRevue sansAvis = new CriteresRevue(null, null, null, null, null);
+        CriteresRevue sansAvis = new CriteresRevue(null, null, null, null, null, null);
 
         assertThat(sansAvis.retient(ligne(StatutObservation.NON_TOUCHEE, "Pippip", true, false, null)))
                 .isTrue();
@@ -37,14 +37,14 @@ class CriteresRevueTest {
     @Test
     @DisplayName("--douteux ne garde que les douteuses ; --reference que les références")
     void drapeaux_poses_filtrent() {
-        CriteresRevue douteuses = new CriteresRevue(null, null, Boolean.TRUE, null, null);
+        CriteresRevue douteuses = new CriteresRevue(null, null, Boolean.TRUE, null, null, null);
 
         assertThat(douteuses.retient(ligne(StatutObservation.NON_TOUCHEE, "Pippip", true, false, null)))
                 .isTrue();
         assertThat(douteuses.retient(ligne(StatutObservation.NON_TOUCHEE, "Pippip", false, true, null)))
                 .isFalse();
 
-        CriteresRevue references = new CriteresRevue(null, null, null, Boolean.TRUE, null);
+        CriteresRevue references = new CriteresRevue(null, null, null, Boolean.TRUE, null, null);
         assertThat(references.retient(ligne(StatutObservation.NON_TOUCHEE, "Pippip", false, true, null)))
                 .isTrue();
         assertThat(references.retient(ligne(StatutObservation.NON_TOUCHEE, "Pippip", true, false, null)))
@@ -54,7 +54,7 @@ class CriteresRevueTest {
     @Test
     @DisplayName("Le taxon se compare sans tenir compte de la casse (« pippip » trouve « Pippip »)")
     void taxon_insensible_a_la_casse() {
-        CriteresRevue criteres = new CriteresRevue(null, "pippip", null, null, null);
+        CriteresRevue criteres = new CriteresRevue(null, "pippip", null, null, null, null);
 
         assertThat(criteres.retient(ligne(StatutObservation.NON_TOUCHEE, "Pippip", false, false, null)))
                 .isTrue();
@@ -66,7 +66,7 @@ class CriteresRevueTest {
     @DisplayName("Les critères posés se combinent en ET : il faut les satisfaire tous")
     void criteres_combines_en_et() {
         CriteresRevue criteres =
-                new CriteresRevue(StatutObservation.CORRIGEE, "Pippip", null, null, Certitude.PROBABLE);
+                new CriteresRevue(StatutObservation.CORRIGEE, "Pippip", null, null, Certitude.PROBABLE, null);
 
         assertThat(criteres.retient(ligne(StatutObservation.CORRIGEE, "Pippip", false, false, Certitude.PROBABLE)))
                 .isTrue();
@@ -74,6 +74,16 @@ class CriteresRevueTest {
                 .as("bon statut, bon taxon, mais la certitude ne correspond pas")
                 .isFalse();
         assertThat(criteres.vide()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#2353 : « à enjeu » compte comme un filtre posé, sinon le geste croit viser tout le passage")
+    void l_enjeu_est_un_filtre_pose() {
+        // vide() commande le garde-fou --confirmer des gestes de revue : un critère qu'elle ignore ferait
+        // réclamer une confirmation « passage ENTIER » alors que l'utilisateur a restreint sa cible.
+        assertThat(new CriteresRevue(null, null, null, null, null, Boolean.TRUE).vide())
+                .isFalse();
+        assertThat(CriteresRevue.aucun().vide()).isTrue();
     }
 
     private static LigneObservationAudio ligne(

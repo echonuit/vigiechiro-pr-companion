@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio.view;
 import com.google.inject.Inject;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.ComptageEnjeu;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
@@ -629,7 +630,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     /// Zones de la **barre de statut**, dérivées de la source et du comptage. Détail dans [ChromeAudio].
     private ZonesStatut zonesStatutCourantes() {
-        return ChromeAudio.zonesStatut(source, viewModel.comptageProperty().get());
+        return ChromeAudio.zonesStatut(
+                source,
+                viewModel.comptageProperty().get(),
+                ComptageEnjeu.de(viewModel.observationsFiltrees(), ligne -> marqueurEnjeu.aEnjeu(ligne.taxonRetenu())));
     }
 
     @Override
