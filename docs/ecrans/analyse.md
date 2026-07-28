@@ -19,6 +19,10 @@ Une table récapitule vos espèces. Un sélecteur **Regrouper** propose deux ang
 - **Par carré** : une ligne par carré, avec sa **richesse spécifique** (nombre d'espèces distinctes) et son
   total de détections — utile pour le rendu Vigie-Chiro.
 
+> Le filtre **« Nature de la nuit »** sépare les nuits du protocole des **participations
+> opportunistes** (celles réalisées sur le carré d'un tiers, qui ne comptent pas dans votre solde de
+> saison). Les deux restent comptées ensemble par défaut : c'est à vous de demander la séparation.
+
 > Le **taxon parent** est la même notion que le filtre **« Groupe »** de la vue [Sons & validation](validation.md#filtrer-les-observations) : la catégorie taxonomique (Chiroptères, Oiseaux, Orthoptères…) qui coiffe l'espèce.
 
 ![L'inventaire par carré : la richesse spécifique (nombre d'espèces) de chaque carré.](../assets/captures/apercu-analyse-carre.png)

@@ -8,17 +8,14 @@ import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
-import javafx.scene.Node;
-import javafx.scene.control.ComboBox;
 
 /// Catalogue des **critères de filtrage** de la vue Activité (patron « à la Notion », socle
 /// [fr.univ_amu.iut.commun.viewmodel.Filtres]), pendant du [CriteresAnalyse] mais sur [ContactHoraire].
-/// Deux puces cascadables — **Carré** et **Taxon parent** (groupe) — plus la recherche texte permanente.
+/// Quatre puces cascadables — **Carré**, **Point**, **Nuit** et **Taxon parent** (groupe) —, la **Nature
+/// de la nuit** (protocole ou opportuniste), plus la recherche texte permanente.
 ///
 /// La sélection d'**espèce** n'est **pas** un filtre ici : elle vit dans les cases à cocher de la courbe
 /// (quelles courbes tracer), pas dans le sous-ensemble de données. Aucune présélection : ajouter une puce
@@ -40,18 +37,18 @@ final class CriteresActivite {
     /// Critère **Carré** : liste déroulante des carrés présents (fournis par `carresPresents`, lus à l'ajout
     /// de la puce), sans présélection. Tête de la cascade carré → point → nuit.
     static CritereFiltre<ContactHoraire> carre(Supplier<? extends List<String>> carresPresents) {
-        return liste("carre", "Carré", "Choisir un carré", carresPresents, ContactHoraire::numeroCarre);
+        return CritereListe.simple("carre", "Carré", "Choisir un carré", carresPresents, ContactHoraire::numeroCarre);
     }
 
     /// Critère **Point** d'écoute : liste déroulante des points présents, sans présélection.
     static CritereFiltre<ContactHoraire> point(Supplier<? extends List<String>> pointsPresents) {
-        return liste("point", "Point", "Choisir un point", pointsPresents, ContactHoraire::codePoint);
+        return CritereListe.simple("point", "Point", "Choisir un point", pointsPresents, ContactHoraire::codePoint);
     }
 
     /// Critère **Nuit** (une nuit = un passage) : liste déroulante des nuits présentes (dates du soir),
     /// sans présélection.
     static CritereFiltre<ContactHoraire> nuit(Supplier<? extends List<String>> nuitsPresentes) {
-        return liste("nuit", "Nuit", "Choisir une nuit", nuitsPresentes, CriteresActivite::libelleNuit);
+        return CritereListe.simple("nuit", "Nuit", "Choisir une nuit", nuitsPresentes, CriteresActivite::libelleNuit);
     }
 
     /// Critère **Taxon parent** (groupe) : liste déroulante des groupes présents, sans présélection.
@@ -62,55 +59,21 @@ final class CriteresActivite {
                 GROUPE, "Taxon parent", "Choisir un taxon parent", groupesPresents, ContactHoraire::groupe);
     }
 
-    private static String libelleNuit(ContactHoraire contact) {
-        return contact.nuit() == null ? null : contact.nuit().toString();
+    /// Critère **Nature de la nuit** (#2614) : protocole ou participation opportuniste (#2525), lu sur
+    /// l'ensemble des passages marqués que fournit `opportunistes` — un ensemble déjà en mémoire, relu à
+    /// chaque ligne sans coût. Sans présélection : la puce n'écarte rien tant qu'une nature n'est pas
+    /// choisie.
+    static CritereFiltre<ContactHoraire> natureNuit(Supplier<Set<Long>> opportunistes) {
+        return CritereListe.simple(
+                "natureNuit",
+                "Nature de la nuit",
+                "Protocole ou opportuniste",
+                () -> NatureNuit.VALEURS,
+                contact -> NatureNuit.de(contact.idPassage(), opportunistes.get()));
     }
 
-    /// Fabrique d'un critère « liste déroulante sur une dimension texte » : `ComboBox` peuplée à l'ouverture
-    /// par `valeursPresentes`, qui restreint les contacts à ceux dont `dimension` égale la valeur choisie.
-    private static CritereFiltre<ContactHoraire> liste(
-            String cle,
-            String titre,
-            String invite,
-            Supplier<? extends List<String>> valeursPresentes,
-            Function<ContactHoraire, String> dimension) {
-        return new CritereFiltre<>() {
-            @Override
-            public String nom() {
-                return cle;
-            }
-
-            @Override
-            public String libelle() {
-                return titre;
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<ContactHoraire>> applique) {
-                ComboBox<String> choix = new ComboBox<>();
-                choix.getItems().setAll(valeursPresentes.get());
-                choix.setPromptText(invite);
-                choix.valueProperty()
-                        .addListener((obs, avant, valeur) ->
-                                applique.accept(valeur == null ? c -> true : c -> valeur.equals(dimension.apply(c))));
-                applique.accept(c -> true); // pas de présélection : n'écarte rien tant qu'aucune valeur n'est choisie
-                return choix;
-            }
-
-            @Override
-            public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of((String) valeur);
-            }
-
-            @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (!valeurs.isEmpty()) {
-                    ComboBox<?> choix = (ComboBox<?>) editeur;
-                    choix.getSelectionModel().select(choix.getItems().indexOf(valeurs.get(0)));
-                }
-            }
-        };
+    private static String libelleNuit(ContactHoraire contact) {
+        return contact.nuit() == null ? null : contact.nuit().toString();
     }
 
     /// Onglets **par défaut** de l'écran, rendus en lecture seule avant les vues de l'utilisateur : ils
@@ -120,9 +83,10 @@ final class CriteresActivite {
     /// Tadarida ne détecte pas que des chauves-souris : sur une vraie saison, orthoptères, autres
     /// mammifères et oiseaux figurent au même rang que les chiroptères, et la présélection des cinq taxons
     /// les plus contactés peut retenir une sauterelle — tracée alors comme une espèce de chauve-souris.
-    /// Chaque onglet porte le **nom exact** de sa catégorie au référentiel : un onglet « Autres » qui ne
-    /// couvrirait qu'une catégorie mentirait sur son contenu. Un vrai complément (tout sauf les
-    /// chiroptères) demanderait un critère à choix multiple ou négatif, que le socle n'offre pas encore.
+    ///
+    /// Trois onglets qui **partitionnent** : « Tout », « Chiroptères », et un « Autres » qui tient sa
+    /// promesse depuis #2615 — il cumule toutes les catégories non-chiroptères ([#HORS_CHIROPTERES]),
+    /// que le critère à choix multiple sait désormais retenir d'un seul filtre.
     static List<VueSauvegardee> vuesParDefaut() {
         return List.of(
                 vueParDefaut("Tout"),

@@ -13,6 +13,7 @@ import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -39,6 +40,10 @@ public class AnalyseViewModel {
     private static final String SEPARATEUR = " · ";
 
     private final ServiceAnalyse service;
+
+    /// Instantané **immuable** des passages marqués opportunistes (#2614), renouvelé à chaque chargement.
+    /// `volatile` : écrit sur le fil de chargement (#1208), lu sur le fil JavaFX à chaque ligne filtrée.
+    private volatile Set<Long> nuitsOpportunistes = Set.of();
     private final String idUtilisateur;
 
     private final ObjectProperty<Regroupement> regroupement =
@@ -97,7 +102,16 @@ public class AnalyseViewModel {
     /// **Lecture seule** des observations de l'utilisateur (requête base). Sans effet sur l'état
     /// observable : sûre à exécuter **hors du fil JavaFX** (#1208, déport via `IndicateurOccupation`).
     public List<ObservationAnalyse> chargerObservations() {
+        // Même voyage en base que les observations, donc même déport hors du fil JavaFX : l'instantané des
+        // nuits opportunistes (#2614) est publié par un champ volatile, pas par l'état observable.
+        nuitsOpportunistes = Set.copyOf(service.nuitsOpportunistes());
         return service.observationsAnalyse(idUtilisateur);
+    }
+
+    /// Passages marqués **opportunistes** (#2525) : lus par le critère « Nature de la nuit » pour classer
+    /// chaque observation. Instantané immuable en mémoire, consultable ligne à ligne sans coût.
+    public Set<Long> nuitsOpportunistes() {
+        return nuitsOpportunistes;
     }
 
     /// Applique des observations chargées : recompose la liste, les groupes disponibles, repart d'un

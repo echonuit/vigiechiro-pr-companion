@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,7 +47,8 @@ class ServiceAnalyseTest {
                 10L);
         when(observationDao.observationsAnalyse(ID)).thenReturn(List.of(obs));
 
-        assertThat(new ServiceAnalyse(observationDao).observationsAnalyse(ID)).containsExactly(obs);
+        assertThat(new ServiceAnalyse(observationDao, Set::of).observationsAnalyse(ID))
+                .containsExactly(obs);
     }
 
     @Test
@@ -70,7 +72,8 @@ class ServiceAnalyseTest {
         when(observationDao.observationsDeLEspece(ID, "Pippip", StatutObservation.VALIDEE))
                 .thenReturn(List.of(detail));
 
-        assertThat(new ServiceAnalyse(observationDao).observationsDeLEspece(ID, "Pippip", StatutObservation.VALIDEE))
+        assertThat(new ServiceAnalyse(observationDao, Set::of)
+                        .observationsDeLEspece(ID, "Pippip", StatutObservation.VALIDEE))
                 .containsExactly(detail);
     }
 
@@ -81,7 +84,7 @@ class ServiceAnalyseTest {
         EspeceAgregee espece = new EspeceAgregee(
                 "Pippip", "Pipistrellus", "Pipistrelle commune", "Chiroptères", 5, 3, 2, 2, 2024, 2026);
 
-        new ServiceAnalyse(observationDao).exporterEspeces(cible, List.of(espece));
+        new ServiceAnalyse(observationDao, Set::of).exporterEspeces(cible, List.of(espece));
 
         String contenu = Files.readString(cible);
         assertThat(contenu).contains("code").contains("detections"); // en-tête
@@ -98,7 +101,7 @@ class ServiceAnalyseTest {
         Path cible = dossier.resolve("carres.csv");
         CarreEspeces carre = new CarreEspeces("640380", "Étang", 4, 10, 2025, 2026);
 
-        new ServiceAnalyse(observationDao).exporterCarres(cible, List.of(carre));
+        new ServiceAnalyse(observationDao, Set::of).exporterCarres(cible, List.of(carre));
 
         String contenu = Files.readString(cible);
         assertThat(contenu).contains("carre").contains("richesse"); // en-tête

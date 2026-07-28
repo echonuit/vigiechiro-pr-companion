@@ -2,6 +2,7 @@ package fr.univ_amu.iut.analyse.model;
 
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
+import fr.univ_amu.iut.passage.model.NuitsOpportunistes;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
@@ -28,12 +29,17 @@ public class ServiceActivite {
     private final ProjectionsAudioDao projections;
     private final PlageNuitPassage plageNuitPassage;
     private final FenetreObserveeNuit fenetreObservee;
+    private final NuitsOpportunistes nuitsOpportunistes;
 
     public ServiceActivite(
-            ProjectionsAudioDao projections, PlageNuitPassage plageNuitPassage, FenetreObserveeNuit fenetreObservee) {
+            ProjectionsAudioDao projections,
+            PlageNuitPassage plageNuitPassage,
+            FenetreObserveeNuit fenetreObservee,
+            NuitsOpportunistes nuitsOpportunistes) {
         this.projections = projections;
         this.plageNuitPassage = plageNuitPassage;
         this.fenetreObservee = fenetreObservee;
+        this.nuitsOpportunistes = nuitsOpportunistes;
     }
 
     /// Les contacts datés d'un **passage**, prêts pour l'agrégation : chaque observation devient un
@@ -73,6 +79,13 @@ public class ServiceActivite {
     /// éteint —, et la courbe s'abstient plutôt que d'affirmer un silence observé.
     public Optional<FenetreObserveeNuit.Bornes> fenetreEnregistree(long idPassage) {
         return fenetreObservee.pour(idPassage);
+    }
+
+    /// Les passages marqués **opportunistes** (#2525), pour la dimension de filtre « Nature de la nuit »
+    /// (#2614). Lecture groupée et rare : le ViewModel en garde un instantané le temps d'un chargement,
+    /// plutôt qu'une requête par contact filtré.
+    public Set<Long> nuitsOpportunistes() {
+        return nuitsOpportunistes.identifiants();
     }
 
     private static ContactHoraire versContact(LigneObservationAudio ligne) {

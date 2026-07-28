@@ -35,6 +35,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
@@ -183,8 +184,47 @@ class ActiviteViewTest {
 
         assertThat(menu.getItems())
                 .extracting(MenuItem::getText)
-                .as("cascade carré → point → nuit, plus le taxon parent")
-                .contains("Carré", "Point", "Nuit", "Taxon parent");
+                .as("cascade carré → point → nuit, le taxon parent, et la nature de la nuit (#2614)")
+                .contains("Carré", "Point", "Nuit", "Taxon parent", "Nature de la nuit");
+    }
+
+    @Test
+    void le_filtre_nature_de_la_nuit_ecarte_les_nuits_opportunistes(FxRobot robot) {
+        // Deux espèces, deux nuits : l'une menée dans le cadre du protocole, l'autre sur le carré d'un
+        // tiers (#2525). Sans cette dimension, elles se mêlaient sans que rien ne le signale.
+        when(service.contactsDeLUtilisateur("u-1"))
+                .thenReturn(concat(nContactsDuPassage("PIPKUH", 1L, 5), nContactsDuPassage("BARBAR", 2L, 3)));
+        when(service.nuitsOpportunistes()).thenReturn(Set.of(2L));
+        robot.interact(() -> controleur.ouvrirTout("u-1"));
+        LineChart<?, ?> graphe = robot.lookup("#grapheActivite").queryAs(LineChart.class);
+        assertThat(graphe.getData()).as("les deux nuits sont tracées au départ").hasSize(2);
+
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        MenuItem itemNature = menuAjout.getItems().stream()
+                .filter(item -> "Nature de la nuit".equals(item.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(itemNature::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        @SuppressWarnings("unchecked")
+        ComboBox<String> choixNature =
+                (ComboBox<String>) robot.from(puces).lookup(".combo-box").queryAs(ComboBox.class);
+        robot.interact(() -> choixNature.setValue("Opportuniste"));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(graphe.getData())
+                .as("seule la nuit réalisée sur le carré d'un tiers reste tracée")
+                .hasSize(1);
+        assertThat(graphe.getData().get(0).getName()).isEqualTo("BARBAR");
+
+        robot.interact(() -> choixNature.setValue("Protocole"));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(graphe.getData())
+                .as("le complément : la nuit du protocole, et elle seule")
+                .hasSize(1);
+        assertThat(graphe.getData().get(0).getName()).isEqualTo("PIPKUH");
     }
 
     @Test
@@ -378,6 +418,16 @@ class ActiviteViewTest {
         when(service.contactsDuPassage(PASSAGE)).thenReturn(contacts);
         ContextePassage contexte = new ContextePassage(PASSAGE, 3, new ContexteSite("640380", "A1", "Étang"));
         robot.interact(() -> controleur.ouvrirSur(contexte));
+    }
+
+    /// Contacts d'un **passage donné**, pour distinguer les nuits du protocole des nuits opportunistes.
+    private static List<ContactHoraire> nContactsDuPassage(String taxon, long idPassage, int nombre) {
+        List<ContactHoraire> contacts = new ArrayList<>();
+        for (int i = 0; i < nombre; i++) {
+            contacts.add(new ContactHoraire(
+                    taxon, taxon, "Chiroptères", LocalDateTime.of(2026, 6, 20, 22, i), "640380", "A1", idPassage));
+        }
+        return contacts;
     }
 
     private static List<ContactHoraire> nContacts(String taxon, String nom, int nombre) {
