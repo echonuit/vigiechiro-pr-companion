@@ -232,6 +232,28 @@ rien** : il serait absurde de recalculer des séquences à partir d'un fichier d
     sans en faire un couperet : sur des cris réels faibles, une mesure automatique se trompe plus
     facilement qu'elle ne rassure, et refuser sur cette base écarterait le bon son.
 
+### Ce que la réactivation vous rend à la fin
+
+Quand elle a terminé, la fenêtre affiche un **compte rendu** qui répond d'abord à la seule question qui
+compte : **le passage est-il de nouveau écoutable ?** La pastille chiffre les séquences présentes, et la
+barre en montre la part.
+
+![Réactivation réussie : toutes les séquences sont revenues, l'audio est de nouveau complet.](../assets/captures/apercu-passage-reactivation-compte-rendu.png)
+
+Quand il **manque** des séquences, la barre le montre plutôt que de le dire, et le pied résume **pourquoi** :
+
+![Réactivation partielle : 4229 séquences sur 4236, les manquantes et leurs motifs.](../assets/captures/apercu-passage-reactivation-lacunes.png)
+
+Les motifs se **déplient d'un clic**, et chacun ouvre la liste des fichiers concernés — les plus coûteux
+d'abord, puisque c'est par eux qu'on commence à chercher. Deux situations y sont distinguées, parce
+qu'elles n'appellent pas la même suite :
+
+- un **enregistrement absent du dossier** : vous pouvez le retrouver et relancer ;
+- une **tranche non régénérée** : le brut était là, la tranche n'a pas pu en sortir.
+
+Un fichier qui portait le **bon nom sans être le bon audio** forme son propre motif. Il n'est **jamais**
+rebranché en silence : vos observations pointeraient alors sur un autre son que celui qu'elles décrivent.
+
 !!! note "Vos bruts ne sont pas recopiés sur le disque"
     Ils servent à recalculer les séquences, puis l'application les oublie. Recopier les gigaoctets que
     vous aviez justement demandé de libérer n'aurait aucun sens : le passage redevient **écoutable**,
