@@ -92,27 +92,32 @@
 
 ## E5.S4 - Actions de masse sur une sélection de passages { #e5s4 }
 
-!!! warning "Non livré (cible)"
-    Il n'existe ni sélection multiple de passages, ni actions de masse (verdict ou suppression en lot, saisie de « SUPPRIMER », journal d'opérations). La seule multi-sélection du code sert la **revue d'observations audio** ([E7](E7%20-%20Valider%20les%20résultats%20Tadarida.md)), pas cette story : suppression et verdict restent **unitaires**.
+!!! success "Livré autrement que décrit (#2357)"
+    La sélection multiple et les actions groupées existent, mais elles portent sur la **chaîne de production** (préparer le dépôt, téléverser, importer les résultats, déclencher le calcul), pas sur le verdict ni la suppression. Ce n'est pas un demi-parcours : c'est le besoin réel, relu après coup. Ce qui coûte à Samuel n'est pas de reposer vingt verdicts, c'est de refaire vingt fois la même suite de gestes.
+
+    Le **verdict** et la **suppression** restent **volontairement unitaires** : le premier est un jugement porté après écoute, la seconde détruit des fichiers du disque. Le **journal d'opérations** persistant n'existe pas non plus : le journal du lot est vivant pendant l'exécution, et le compte rendu final en garde la trace, mais rien n'est archivé pour audit.
 
 **En tant que** [Samuel](../Personas/Samuel.md)
 
-**Je veux** pouvoir sélectionner plusieurs passages dans la vue tabulaire et leur appliquer une action commune (changer le verdict, supprimer, exporter)
+**Je veux** pouvoir sélectionner plusieurs passages dans la vue tabulaire et leur appliquer une action commune
 
 **Afin de** ne pas être obligé d'ouvrir chaque passage individuellement quand je veux faire le même traitement sur un lot
 
 **Critères d'acceptation** :
 
-- [ ] La vue tabulaire ([E5.S2](#e5s2)) permet la sélection multiple (Ctrl+clic, Maj+clic pour plage, Ctrl+A pour tout).
-- [ ] Une barre d'actions contextuelle apparaît dès qu'au moins 2 passages sont sélectionnés : « Actions sur 5 passages : [Verdict] [Exporter] [Supprimer] ».
-- [ ] Action **Verdict** : applique le même verdict (OK / Utilisable / Inexploitable) à tous les passages sélectionnés, avec confirmation explicite.
-- [ ] Action **Exporter** : produit un récapitulatif CSV (1 ligne par passage avec ses métadonnées) téléchargeable.
-- [ ] Action **Supprimer** : confirmation forte (fenêtre modale expliquant que les fichiers sur disque seront aussi supprimés), avec saisie de « SUPPRIMER » pour valider. Action irréversible.
-- [ ] Toute action de masse est tracée dans un journal d'opérations (pour audit en cas de bug ou de fausse manipulation).
-- [ ] Si l'action échoue partiellement (ex. 3 passages traités, 2 en erreur), un récapitulatif post-action liste les succès et les échecs avec leur raison.
+- [x] La vue tabulaire ([E5.S2](#e5s2)) permet la sélection multiple (Ctrl+clic, Maj+clic pour plage).
+- [x] Les actions groupées sont proposées par le menu **☰**, chaque entrée disant combien de lignes sont cochées et, si elle est grisée, ce qui lui manque. *(Pas de barre d'actions contextuelle : le menu ☰ est déjà l'endroit où l'on cherche les actions de cet écran, et une barre qui apparaît décale le tableau au moment où l'on vient d'y cliquer.)*
+- [x] Quatre actions de la chaîne de production : **préparer le dépôt**, **téléverser**, **importer les résultats**, **déclencher le calcul**.
+- [x] Une annonce **préalable** dit combien de passages seront traités et **nomme** les écartés avec leur motif ; on peut renoncer.
+- [x] Si l'action échoue partiellement, un récapitulatif post-action liste chaque passage avec son sort et sa raison.
+- [x] Une interruption laisse chaque passage **soit avant, soit après**, jamais entre les deux ; le lot est reprenable.
+- [x] Les mêmes actions en ligne de commande (`traiter-passages`), mêmes règles et même compte rendu.
+- [ ] Action **Verdict** en série. *(Écartée : un verdict se forme en écoutant une nuit.)*
+- [ ] Action **Supprimer** en série. *(Écartée : destruction de fichiers, confirmation nuit par nuit.)*
+- [ ] Journal d'opérations **persisté** pour audit. *(Reste à faire.)*
 
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), Notes pour Samuel<br>
-**Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (barre d'actions contextuelle)<br>
+**Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (actions groupées du menu ☰)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E5.S2](#e5s2)<br>
 
 ---

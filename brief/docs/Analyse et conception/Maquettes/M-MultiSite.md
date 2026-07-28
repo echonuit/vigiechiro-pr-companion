@@ -174,7 +174,20 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
 
 - **Carte (à gauche)** : chaque **carré** (maille 2 km du carroyage national, indigo) affiche son numéro dans le coin ; ses **points d'écoute** sont des marqueurs **colorés selon le statut** du dernier passage. Un point **sans GPS** est posé **au centre de son carré** ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26), [R27](../Modèle%20conceptuel/Règles%20métier.md#r27)). Une **légende** repliée en bas à gauche et un bouton **⤢** (recadrer) en haut à droite complètent. La carte montre **tous** les sites : elle n'est **pas** restreinte par les filtres du tableau.
 - **Tableau (à droite)** : un passage par ligne (carré, point, année, n° de passage, date, statut, verdict, **analyse**, **campagne**). On **trie** en cliquant un en-tête (Année et N° se trient numériquement) ; un **double-clic** ouvre [M-Passage](M-Passage.md). La colonne **Campagne** ([C16](../Modèle%20conceptuel/C16%20-%20Campagne.md)) reste vide pour un passage non rattaché : le rattachement est **facultatif**, ce n'est pas une anomalie.
-- **Onglets de vues + filtres à puces** (socle partagé, décrit une fois dans le [pattern visuel partagé](index.md)) : en tête, des **onglets de vues mémorisées** (« Tous les passages », les vues enregistrées, **＋** pour en créer une) ; en dessous, un bouton **＋ Filtre** puis les filtres actifs sous forme de **puces cumulables** (statut, verdict, année, carré, analyse, campagne), plus **Réinitialiser**. Le menu **☰** ne porte que le **choix des colonnes** et l'**export** (CSV), **pas** les vues.
+- **Onglets de vues + filtres à puces** (socle partagé, décrit une fois dans le [pattern visuel partagé](index.md)) : en tête, des **onglets de vues mémorisées** (« Tous les passages », les vues enregistrées, **＋** pour en créer une) ; en dessous, un bouton **＋ Filtre** puis les filtres actifs sous forme de **puces cumulables** (statut, verdict, année, carré, analyse, campagne), plus **Réinitialiser**. Le menu **☰** porte l'**écoute**, l'**export** (CSV), le **choix des colonnes** et les **actions groupées** sur les lignes cochées ; **pas** les vues.
+- **Actions groupées** : plusieurs lignes se cochent (Ctrl+clic, Maj+clic pour une plage), et le menu
+  **☰** propose alors quatre gestes de la chaîne de production sur la sélection : **préparer le dépôt**,
+  **téléverser**, **importer les résultats**, **déclencher le calcul**. Une fenêtre annonce d'abord
+  **combien** de nuits seront traitées et **lesquelles** seront écartées, chacune avec son motif ; un
+  compte rendu final donne le sort de chacune.
+
+    !!! note "Pourquoi dans le menu ☰, et non dans une barre d'actions contextuelle"
+        La story [E5.S4](../Story%20mapping/E5%20-%20Naviguer%20dans%20le%20volume%20multi-sites.md#e5s4)
+        imaginait une barre apparaissant sous le tableau dès deux lignes cochées. Le menu **☰** existait
+        déjà, il est l'endroit où l'utilisateur cherche les actions de cet écran, et une barre qui
+        apparaît décale le tableau au moment où l'on vient d'y cliquer. Les entrées y sont **grisées**
+        tant que rien n'est coché, et leur libellé dit alors ce qui leur manque.
+
 - **Replis** : en bas, **◀ Carte** et **Tableau ▶** replient entièrement un panneau pour donner toute la largeur à l'autre ; on ne peut pas masquer les deux. Replier la carte est aussi la **dégradation élégante hors connexion** (le fond OpenStreetMap n'est alors pas joignable).
 
 ### Interactions clés
@@ -184,7 +197,8 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
 | **Onglets de vues** (＋ pour en créer) | Rejouent une combinaison de filtres enregistrée |
 | **＋ Filtre** puis puces cumulables | Restreignent le **tableau** (la carte reste complète) |
 | Clic d'en-tête de colonne | Trie le tableau |
-| Menu **☰** | **Colonnes** affichées / **Exporter** (CSV) |
+| Menu **☰** | **Écouter** / **Exporter** (CSV) / **Colonnes** affichées / les quatre **actions groupées** sur les lignes cochées |
+| **Ctrl+clic**, **Maj+clic** sur les lignes | Cochent plusieurs passages ; chaque entrée groupée du menu **☰** dit alors combien de lignes sont cochées |
 | Double-clic sur une ligne | Ouvre [M-Passage](M-Passage.md) |
 | **◀ Carte** / **Tableau ▶** | Replient / rouvrent un panneau |
 | Marqueur de point (carte) | Survol = mini-stats ; en mode édition, glisser pour corriger la position (contraint au carré, [R26](../Modèle%20conceptuel/Règles%20métier.md#r26)) |
