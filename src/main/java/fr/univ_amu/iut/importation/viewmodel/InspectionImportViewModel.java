@@ -185,23 +185,36 @@ public class InspectionImportViewModel {
     /// aussi les réimports sans journal. Sans identité exploitable, rien à signaler. La mise en forme
     /// est déléguée à [AvertissementsInspection].
     private List<PassageExistant> passagesDeLaNuit(RapportInspection rapport) {
-        String serie;
-        String date;
+        return identiteNuit(rapport)
+                .map(identite -> serviceImport.nuitDejaImportee(identite.numeroSerie(), identite.dateNuit()))
+                .filter(Objects::nonNull)
+                .orElseGet(List::of);
+    }
+
+    /// Identité de la nuit inspectée - l'enregistreur et la date - ou vide si le dossier ne la livre pas.
+    ///
+    /// Cette identité vient du **journal** s'il est présent, sinon - mode dégradé (#107) - elle est
+    /// **reconstituée des noms de WAV**, exactement comme à l'import. C'est la même règle qui sert au
+    /// badge « déjà importée » ; l'extraire la rend consultable par les autres contrôles, en premier lieu
+    /// celui du n° de passage, qui doit reconnaître une nuit déjà récupérée de Vigie-Chiro (#2580).
+    private java.util.Optional<IdentiteNuit> identiteNuit(RapportInspection rapport) {
         JournalParse journal =
                 rapport.journalOptionnel().filter(j -> j.dateDebut() != null).orElse(null);
         if (journal != null) {
-            serie = journal.numeroSerie();
-            date = journal.dateDebut().toString();
-        } else {
-            AnalyseMelange analyse = AnalyseMelange.depuis(rapport.originaux());
-            if (analyse.series().isEmpty() || analyse.nuits().isEmpty()) {
-                return List.of();
-            }
-            serie = analyse.series().first();
-            date = analyse.nuits().first().toString();
+            return java.util.Optional.of(
+                    new IdentiteNuit(journal.numeroSerie(), journal.dateDebut().toString()));
         }
-        List<PassageExistant> existants = serviceImport.nuitDejaImportee(serie, date);
-        return existants == null ? List.of() : existants;
+        AnalyseMelange analyse = AnalyseMelange.depuis(rapport.originaux());
+        if (analyse.series().isEmpty() || analyse.nuits().isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.of(new IdentiteNuit(
+                analyse.series().first(), analyse.nuits().first().toString()));
+    }
+
+    /// Identité de la **dernière nuit inspectée**, ou vide tant qu'aucune inspection n'a abouti.
+    public java.util.Optional<IdentiteNuit> identiteNuit() {
+        return rapport == null ? java.util.Optional.empty() : identiteNuit(rapport);
     }
 
     /// Recalcule l'avertissement « nuit déjà importée » (#147) depuis la **dernière inspection**, sans

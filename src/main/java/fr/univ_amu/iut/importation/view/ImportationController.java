@@ -90,6 +90,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// d'une autre feature (règle ArchUnit `pas_de_dependance_inter_feature_vers_la_vue`).
     private final OuvrirPassage ouvrirPassage;
 
+    /// Nuit déjà récupérée de Vigie-Chiro (#2580) : reconnaissance et geste associé, tenus à part.
+    private final ZoneNumeroPassage zoneNumeroPassage;
+
     @FXML
     private VBox racineImport;
 
@@ -165,6 +168,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     @FXML
     private Button boutonNumeroLibre;
 
+    /// « Ouvrir cette nuit » (#2580) : l'unique geste juste quand la carte rapporte une nuit déjà
+    /// récupérée de Vigie-Chiro. Occupe la place des deux autres, qui la mutileraient.
+    @FXML
+    private Button boutonOuvrirNuit;
+
     @FXML
     private Button boutonEcraser;
 
@@ -238,6 +246,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.fabriqueImportTransformes = Objects.requireNonNull(fabriqueImportTransformes, "fabriqueImportTransformes");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.zoneNumeroPassage = new ZoneNumeroPassage(viewModel, this.ouvrirPassage);
     }
 
     @Override
@@ -448,17 +457,14 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // Pré-contrôle R5 (#108) : la zone n'apparaît qu'en cas de doublon de n° de passage (avertissement
         // non vide) ; elle porte l'avertissement + un bouton pour adopter le prochain n° libre (gelé
         // pendant l'import). Même patron que les avertissements « mélange »/« incohérence » ci-dessus.
-        LibelleRetour.installer(labelPassageExistant, viewModel.avertissementNumeroPassageProperty());
-        var aUnDoublon = Bindings.createBooleanBinding(
-                () -> viewModel.avertissementNumeroPassageProperty().get().present(),
-                viewModel.avertissementNumeroPassageProperty());
-        VisibiliteGeree.lier(zonePassageExistant, aUnDoublon);
-        boutonNumeroLibre.disableProperty().bind(traitement);
+        zoneNumeroPassage.installer(
+                zonePassageExistant,
+                labelPassageExistant,
+                new ZoneNumeroPassage.Boutons(boutonNumeroLibre, boutonEcraser, boutonOuvrirNuit),
+                traitement,
+                viewModel.inspection().inspecteProperty());
         // « Écraser et réimporter » (#214) : possible seulement si une nuit est inspectée (sinon rien à
         // réimporter) et hors traitement. Visible dans la même zone que l'avertissement de doublon.
-        boutonEcraser
-                .disableProperty()
-                .bind(traitement.or(viewModel.inspection().inspecteProperty().not()));
         labelMessage.textProperty().bind(viewModel.messageErreurProperty());
         labelStatut
                 .textProperty()
@@ -612,6 +618,12 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 || !viewModel.inspection().estInspecte()) {
             return;
         }
+        // Jamais sur une nuit déjà récupérée (#2580) : l'écrasement supprime le passage en cascade, donc
+        // ses observations, vos validations et son rattachement à la participation - pour réimporter un
+        // audio qu'on peut lui rendre sans rien perdre. Le bouton est caché ; la garde tient la règle.
+        if (zoneNumeroPassage.estReconnue()) {
+            return;
+        }
         if (!confirmations.confirmerEcrasement(viewModel.controleNumero().apercuEcrasement())) {
             return;
         }
@@ -668,6 +680,13 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         if (jetonCourant != null) {
             jetonCourant.annuler();
         }
+    }
+
+    /// « Ouvrir cette nuit » (#2580) : quitte l'assistant d'import pour la fiche de la nuit **déjà
+    /// récupérée** que cette carte rapporte, où se trouve « Réactiver ce passage ».
+    @FXML
+    private void ouvrirNuitRecuperee() {
+        zoneNumeroPassage.ouvrir();
     }
 
     /// « Utiliser ce n° » : adopte le prochain n° de passage libre proposé par le pré-contrôle R5 (#108).

@@ -10,7 +10,9 @@ import fr.univ_amu.iut.importation.model.SuiviFichiers;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel.DemandeImport;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -43,11 +45,31 @@ public final class ControleNumeroPassage {
 
     /// Dernier « prochain n° libre » calculé, proposé en un clic. Sur le seul fil JavaFX (renseigné par
     /// [#verifier()]) : un simple champ suffit.
+    /// Ce que voit l'utilisateur quand sa carte rapporte une nuit **déjà récupérée** : la situation, la
+    /// raison, le geste. Le nommer ici plutôt que l'écrire dans la branche garde `verifier()` lisible et
+    /// rend le texte citable par les tests.
+    private static final String MESSAGE_NUIT_RECUPEREE = "Cette nuit est déjà là : elle a été récupérée de"
+            + " Vigie-Chiro, avec ses observations et son rattachement, mais sans son audio. Ouvrez-la et"
+            + " utilisez « Réactiver ce passage » : votre carte lui rendra son son en gardant tout le reste."
+            + " L'importer ici en ferait une seconde, et vos observations resteraient sur l'autre.";
+
     private int prochainNumeroLibre = 1;
 
-    ControleNumeroPassage(ServiceImport serviceImport, RattachementImportViewModel rattachement) {
+    /// L'identité de la nuit qu'on s'apprête à importer (série, date), quand l'inspection l'a établie.
+    /// Fournie par l'orchestrateur : ce contrôle ne lit pas la carte, il consulte ce que d'autres ont vu.
+    private final Supplier<Optional<IdentiteNuit>> identiteNuit;
+
+    /// La nuit **déjà récupérée de Vigie-Chiro** que le n° courant heurte (#2580), s'il y en a une.
+    private final ReadOnlyObjectWrapper<Optional<Long>> nuitRecuperee =
+            new ReadOnlyObjectWrapper<>(this, "nuitRecuperee", Optional.empty());
+
+    ControleNumeroPassage(
+            ServiceImport serviceImport,
+            RattachementImportViewModel rattachement,
+            Supplier<Optional<IdentiteNuit>> identiteNuit) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
         this.rattachement = Objects.requireNonNull(rattachement, "rattachement");
+        this.identiteNuit = Objects.requireNonNull(identiteNuit, "identiteNuit");
         // Recalcule le pré-contrôle dès qu'un champ déterminant du rattachement change (le PRÉ-REMPLISSAGE
         // du n° au prochain bloc libre est porté par CoordinationNuits, qui connaît le nombre de nuits).
         rattachement.pointSelectionneProperty().addListener((obs, ancien, nouveau) -> verifier());
@@ -55,33 +77,64 @@ public final class ControleNumeroPassage {
         rattachement.numeroPassageProperty().addListener((obs, ancien, nouveau) -> verifier());
     }
 
-    /// Recalcule le pré-contrôle pour le rattachement courant. Sans point sélectionné ou avec un n° &lt; 1
+    /// Recalcule le pré-contrôle pour la nuit et le rattachement courants. Appelé par l'orchestrateur
+    /// après une inspection (la nuit change) et, en interne, à chaque champ déterminant du rattachement.
+    ///
+    /// Sans point sélectionné ou avec un n° &lt; 1
     /// (rattachement incomplet), l'avertissement est vide : rien à signaler tant que la saisie n'est pas
     /// exploitable.
-    private void verifier() {
+    void verifier() {
         PointDEcoute point = rattachement.pointSelectionneProperty().get();
         int annee = rattachement.anneeProperty().get();
         int numero = rattachement.numeroPassageProperty().get();
         if (point == null || numero < 1) {
             dejaUtilise.set(false);
+            nuitRecuperee.set(Optional.empty());
             avertissement.set(RetourOperation.AUCUN);
             return;
         }
-        if (serviceImport.numeroPassageDejaUtilise(point.id(), annee, numero)) {
+        // Cette nuit est-elle DÉJÀ LÀ, récupérée de Vigie-Chiro ? Depuis #2557, c'est le cas ordinaire
+        // après une synchro : la nuit porte ses observations et son rattachement, mais pas son audio.
+        // L'importer une seconde fois, sur ce n° ou sur le suivant, en ferait DEUX (#2580).
+        Optional<Long> recuperee = identiteNuit
+                .get()
+                .flatMap(identite -> serviceImport.nuitRecuperee(identite.numeroSerie(), identite.dateNuit()));
+        nuitRecuperee.set(recuperee);
+        boolean numeroPris = serviceImport.numeroPassageDejaUtilise(point.id(), annee, numero);
+        dejaUtilise.set(numeroPris);
+        if (numeroPris) {
             prochainNumeroLibre = serviceImport.prochainNumeroPassageLibre(point.id(), annee);
-            dejaUtilise.set(true);
+        }
+        // Quand les deux se présentent, la nuit déjà récupérée prime : le doublon qu'elle annonce est le
+        // plus coûteux des deux (deux moitiés d'une même nuit, sur deux n° différents), et le geste qu'elle
+        // demande n'est pas de changer de n°.
+        if (recuperee.isPresent()) {
+            avertissement.set(RetourOperation.avertissement(MESSAGE_NUIT_RECUPEREE));
+        } else if (numeroPris) {
             avertissement.set(RetourOperation.avertissement(String.format(
                     "Le passage n° %d existe déjà pour ce point en %d. Prochain n° libre : %d.",
                     numero, annee, prochainNumeroLibre)));
         } else {
-            dejaUtilise.set(false);
             avertissement.set(RetourOperation.AUCUN);
         }
     }
 
-    /// Renseigne le n° de passage du rattachement avec le **prochain n° libre** proposé : corrige un
-    /// doublon en un clic. Sans effet si aucun doublon n'est signalé.
+    /// La nuit **déjà récupérée** que cette carte rapporte, s'il y en a une : l'écran y offre l'accès à sa
+    /// fiche, là où se trouve « Réactiver ce passage », plutôt que les deux gestes qui la mutileraient
+    /// (#2580).
+    public ReadOnlyObjectProperty<Optional<Long>> nuitRecupereeProperty() {
+        return nuitRecuperee.getReadOnlyProperty();
+    }
+
+    /// Renseigne le n° de passage du rattachement avec le **prochain n° libre** proposé.
+    ///
+    /// **Sans effet quand la nuit est déjà là** (#2580) : c'est précisément le geste qui fabriquerait le
+    /// doublon - une nuit avec les observations, une autre avec l'audio. L'écran retire d'ailleurs le
+    /// bouton dans ce cas ; cette garde tient la règle même si l'écran l'oubliait.
     public void utiliserProchainNumeroLibre() {
+        if (nuitRecuperee.get().isPresent()) {
+            return;
+        }
         if (dejaUtilise.get()) {
             rattachement.numeroPassageProperty().set(prochainNumeroLibre);
         }
@@ -90,6 +143,13 @@ public final class ControleNumeroPassage {
     /// `true` si le n° de passage courant est déjà pris (R5).
     boolean estDejaUtilise() {
         return dejaUtilise.get();
+    }
+
+    /// `true` si l'import doit être **retenu** : n° déjà pris (R5), ou nuit déjà récupérée de Vigie-Chiro
+    /// (#2580). Le second cas bloque **même sur un n° libre** : ce n'est pas le n° qui est en cause, c'est
+    /// que la nuit est déjà là et attend d'être réactivée, pas réimportée.
+    boolean estBloque() {
+        return dejaUtilise.get() || nuitRecuperee.get().isPresent();
     }
 
     /// Aperçu de ce que l'écrasement du passage existant au quadruplet courant supprimerait (#214) :

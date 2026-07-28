@@ -43,8 +43,20 @@ public class AgregatImportDao {
 
     private final SourceDeDonnees source;
 
+    /// Reconnaissance d'une nuit déjà récupérée de Vigie-Chiro (#2580) : une lecture à part entière, avec
+    /// sa propre question, donc son propre objet - cet agrégat porte déjà l'unicité R5, l'écrasement et
+    /// les doublons de nuit. Il l'expose parce qu'il est la porte d'entrée du service ; il ne l'écrit pas.
+    private final NuitRecupereeDao nuitRecupereeDao;
+
     public AgregatImportDao(SourceDeDonnees source) {
         this.source = java.util.Objects.requireNonNull(source, "source");
+        this.nuitRecupereeDao = new NuitRecupereeDao(source);
+    }
+
+    /// Le passage **déjà récupéré** de cette nuit `(enregistreur, date)`, s'il y en a un (#2580).
+    /// Délégué à [NuitRecupereeDao], qui porte le critère et sa justification.
+    public java.util.Optional<Long> nuitRecuperee(String idEnregistreur, String dateNuit) {
+        return nuitRecupereeDao.nuitRecuperee(idEnregistreur, dateNuit);
     }
 
     // ---------------------------------------------------------------------------

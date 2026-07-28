@@ -371,6 +371,131 @@ class ImportationViewModelTest {
         assertThat(viewModel.peutImporter().get()).isTrue();
     }
 
+    @Test
+    @DisplayName("#2580 : une nuit déjà récupérée de Vigie-Chiro renvoie vers la réactivation, pas vers un n° libre")
+    void nuit_recuperee_renvoie_vers_la_reactivation() {
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+        when(serviceImport.numeroPassageDejaUtilise(10L, 2026, 2)).thenReturn(true);
+        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(3);
+        // La nuit de cette carte - série 1925492, nuit du 22/04/2026 selon le journal - est déjà en base,
+        // récupérée de Vigie-Chiro. L'identité stubée est EXACTE : si le contrôle interrogeait le service
+        // avec autre chose, il obtiendrait le défaut (vide) et ce test tomberait.
+        when(serviceImport.nuitRecuperee("1925492", "2026-04-22")).thenReturn(Optional.of(77L));
+
+        viewModel.inspection().dossierSourceProperty().set(sd);
+        viewModel.inspecter();
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.rattachement().numeroPassageProperty().set(2);
+
+        assertThat(viewModel.controleNumero().nuitRecupereeProperty().get())
+                .as("la nuit déjà là est nommée : l'écran peut y conduire")
+                .contains(77L);
+        RetourOperation message = viewModel.avertissementNumeroPassageProperty().get();
+        assertThat(message.texte())
+                .as("le message dit la situation et le geste, pas un n° de rechange")
+                .contains("déjà là")
+                .contains("Réactiver ce passage")
+                .doesNotContain("Prochain n° libre");
+        assertThat(viewModel.peutImporter().get())
+                .as("importer ferait la seconde moitié de cette nuit")
+                .isFalse();
+
+        viewModel.controleNumero().utiliserProchainNumeroLibre();
+
+        assertThat(viewModel.rattachement().numeroPassageProperty().get())
+                .as("le raccourci qui fabrique le doublon reste sans effet")
+                .isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("#2580 : la nuit déjà récupérée bloque même sur un n° de passage libre")
+    void nuit_recuperee_bloque_meme_sur_un_numero_libre() {
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        // Aucun n° n'est pris : R5 seul laisserait passer, et l'utilisateur créerait la nuit en double.
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+        when(serviceImport.nuitRecuperee("1925492", "2026-04-22")).thenReturn(Optional.of(77L));
+
+        viewModel.inspection().dossierSourceProperty().set(sd);
+        viewModel.inspecter();
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.rattachement().numeroPassageProperty().set(5);
+
+        assertThat(viewModel.avertissementNumeroPassageProperty().get().texte()).contains("déjà là");
+        assertThat(viewModel.peutImporter().get())
+                .as("ce n'est pas le n° qui est en cause : c'est que la nuit est déjà là")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#2580 : sans nuit récupérée, le doublon de n° garde son message d'origine")
+    void sans_nuit_recuperee_le_message_r5_est_inchange() {
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+        when(serviceImport.numeroPassageDejaUtilise(10L, 2026, 2)).thenReturn(true);
+        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(3);
+        // Nuit inconnue de Vigie-Chiro : le service répond vide (défaut du mock, explicité ici).
+        when(serviceImport.nuitRecuperee(anyString(), anyString())).thenReturn(Optional.empty());
+
+        viewModel.inspection().dossierSourceProperty().set(sd);
+        viewModel.inspecter();
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.rattachement().numeroPassageProperty().set(2);
+
+        assertThat(viewModel.controleNumero().nuitRecupereeProperty().get()).isEmpty();
+        assertThat(viewModel.avertissementNumeroPassageProperty().get().texte())
+                .contains("existe déjà")
+                .contains("3")
+                .doesNotContain("déjà là");
+
+        viewModel.controleNumero().utiliserProchainNumeroLibre();
+
+        assertThat(viewModel.rattachement().numeroPassageProperty().get()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("#2580 : la détection suit la nuit inspectée, même quand le rattachement est saisi d'abord")
+    void nuit_recuperee_detectee_quand_l_inspection_vient_apres_le_rattachement() {
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+        when(serviceImport.nuitRecuperee("1925492", "2026-04-22")).thenReturn(Optional.of(77L));
+
+        // Le rattachement est complet AVANT toute inspection : à cet instant, aucune nuit n'est connue,
+        // donc rien à signaler. C'est l'inspection qui apporte l'identité.
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.rattachement().numeroPassageProperty().set(5);
+        assertThat(viewModel.controleNumero().nuitRecupereeProperty().get())
+                .as("sans nuit inspectée, il n'y a pas de nuit à reconnaître")
+                .isEmpty();
+
+        viewModel.inspection().dossierSourceProperty().set(sd);
+        viewModel.inspecter();
+
+        assertThat(viewModel.controleNumero().nuitRecupereeProperty().get())
+                .as("l'inspection change la nuit : le pré-contrôle doit être rejoué")
+                .contains(77L);
+    }
+
     // --- Étape 4 : exécution ---
 
     @Test

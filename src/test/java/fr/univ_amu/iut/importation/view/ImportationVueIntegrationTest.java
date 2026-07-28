@@ -161,6 +161,13 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#zonePassageExistant").queryAs(HBox.class)).isNotNull();
         assertThat(robot.lookup("#labelPassageExistant").queryAs(Label.class)).isNotNull();
         assertThat(robot.lookup("#boutonNumeroLibre").queryAs(Button.class)).isNotNull();
+        // #2580 : le geste « Ouvrir cette nuit », qui prend la place des deux autres quand la carte
+        // rapporte une nuit déjà récupérée de Vigie-Chiro. Ici aucune ne l'est : il est donc **caché**
+        // (une liaison inversée le montrerait d'emblée).
+        Button ouvrirNuit = robot.lookup("#boutonOuvrirNuit").queryAs(Button.class);
+        assertThat(ouvrirNuit).isNotNull();
+        assertThat(ouvrirNuit.isVisible()).isFalse();
+        assertThat(ouvrirNuit.isManaged()).isFalse();
     }
 
     @Test
@@ -227,6 +234,14 @@ class ImportationVueIntegrationTest {
                 .isTrue();
         assertThat(zone.isManaged()).isTrue();
         assertThat(labelPassageExistant.getText()).containsIgnoringCase("existe déjà");
+        // #2580 : doublon de n° SANS nuit récupérée → les deux gestes historiques restent offerts, et
+        // « Ouvrir cette nuit » reste caché. C'est l'échange qui doit être conditionnel, pas l'inverse.
+        assertThat(robot.lookup("#boutonNumeroLibre").queryAs(Button.class).isVisible())
+                .isTrue();
+        assertThat(robot.lookup("#boutonEcraser").queryAs(Button.class).isVisible())
+                .isTrue();
+        assertThat(robot.lookup("#boutonOuvrirNuit").queryAs(Button.class).isVisible())
+                .isFalse();
 
         // « Utiliser ce n° » adopte le prochain libre (2, le 1 étant pris) et masque l'avertissement.
         robot.clickOn("#boutonNumeroLibre");
