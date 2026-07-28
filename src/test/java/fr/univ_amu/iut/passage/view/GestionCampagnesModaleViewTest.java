@@ -11,6 +11,8 @@ import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.di.CampagneModule;
+import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
@@ -57,11 +59,18 @@ class GestionCampagnesModaleViewTest {
         System.setProperty(
                 "vigiechiro.workspace",
                 Files.createTempDirectory("vc-gestion-campagnes").toString());
-        Injector socle = Guice.createInjector(new CommunModule(), new PersistenceModule());
+        Injector socle = Guice.createInjector(
+                new CommunModule(), new PersistenceModule(), new PassageModule(), new CampagneModule());
         SourceDeDonnees source = socle.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
+        // Les DAO viennent de l'injecteur, et non d'une construction directe : le cliquet de fixtures
+        // compte comme « semeur de passage à la main » tout test qui instancie lui-même le DAO des
+        // passages. Ce test n'en sème aucun, mais le détecteur ne peut pas le savoir - et il vaut mieux
+        // passer par l'injection que lui apprendre une exception de plus.
         service = new ServiceCampagne(
-                new CampagneDao(source), new PassageDao(source), new HorlogeFigee(LocalDate.of(2026, 7, 20)));
+                socle.getInstance(CampagneDao.class),
+                socle.getInstance(PassageDao.class),
+                new HorlogeFigee(LocalDate.of(2026, 7, 20)));
 
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
