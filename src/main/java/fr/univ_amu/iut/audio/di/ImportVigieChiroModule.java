@@ -11,11 +11,15 @@ import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
+import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.validation.model.ImportObservationsVigieChiro;
+import fr.univ_amu.iut.validation.model.ImportResultatsGroupe;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
+import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
+import java.util.Optional;
 
 /// Liaison **réelle** de l'import VigieChiro (axe 4.2) : pose la valeur de l'`OptionalBinder<ImportVigieChiro>`
 /// déclaré (à vide) par [AudioModule]. Chargé **uniquement** dans l'injecteur applicatif complet
@@ -40,6 +44,12 @@ public class ImportVigieChiroModule extends ModuleDeFeature {
 
     @Override
     protected void configure() {
+        // Action(s) de lot (#2357) : la valeur du port optionnel déclaré par `MultisiteModule`.
+        // Coupée, cette feature retire simplement son entrée du menu.
+        OptionalBinder.newOptionalBinder(
+                        binder(), Key.get(ActionGroupee.class, Names.named("action.importerResultats")))
+                .setBinding()
+                .to(Key.get(ActionGroupee.class, Names.named("action.importerResultats.impl")));
         OptionalBinder.newOptionalBinder(binder(), ImportVigieChiro.class)
                 .setBinding()
                 .to(Key.get(ImportVigieChiro.class, Names.named(QUALIFIANT)));
@@ -49,6 +59,20 @@ public class ImportVigieChiroModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), ImportObservations.class)
                 .setBinding()
                 .to(Key.get(ImportObservations.class, Names.named(QUALIFIANT)));
+    }
+
+    /// Action groupée **« Importer les résultats »** (#2357, lot 3, PR 4/5), sous le port
+    /// [ActionGroupee].
+    ///
+    /// Fournie ici parce que c'est cette feature qui possède le geste. Elle prend l'import en
+    /// `Optional` : hors connexion, tous les passages seront écartés avec ce motif, ce que l'annonce
+    /// du lot dira avant de partir.
+    @Provides
+    @Singleton
+    @Named("action.importerResultats.impl")
+    ActionGroupee fournirImportResultatsGroupe(
+            Optional<ImportVigieChiro> importateur, ResultatsIdentificationDao resultats) {
+        return new ImportResultatsGroupe(importateur, resultats);
     }
 
     /// Adaptateur du port : l import reel, rendu consommable par les autres ecrans (#1264).
