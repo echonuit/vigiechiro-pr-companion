@@ -1,15 +1,18 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.CompteRenduChiffreImportVigieChiro;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.DemandeurDeChoix;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.SuiviOperation;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.validation.model.BilanImport;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,8 +20,10 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 
 /// Câblage et déclenchement de l'**import des résultats VigieChiro** (axe 4.2) sur la vue audio. Isolé du
@@ -30,16 +35,59 @@ final class ImportVigieChiroUI {
 
     /// Câble l'item de menu (libellé Importer / Réimporter, désactivé pendant un import) et le libellé de
     /// restitution (avancement / bilan / erreur), sur les propriétés des deux ViewModel.
-    static void cabler(
-            MenuItem item, Label message, ImportVigieChiroViewModel importVigieChiro, AudioViewModel viewModel) {
+    static void cabler(MenuItem item, VBox zone, ImportVigieChiroViewModel importVigieChiro, AudioViewModel viewModel) {
         item.textProperty()
                 .bind(Bindings.when(viewModel.resultatsDisponiblesProperty())
                         .then("Réimporter depuis Vigie-Chiro…")
                         .otherwise("Importer depuis Vigie-Chiro…"));
         item.disableProperty().bind(importVigieChiro.enCoursProperty());
+        PanneauCompteRendu compteRendu = new PanneauCompteRendu();
+        zone.getChildren().setAll(libelleDuMessage(importVigieChiro), compteRendu);
+        importVigieChiro.bilanProperty().addListener((observable, avant, bilan) -> afficher(compteRendu, bilan));
+        afficher(compteRendu, importVigieChiro.bilanProperty().get());
+        // La zone s'efface quand ses deux canaux se taisent, pour ne pas laisser un blanc sous le menu.
+        BooleanBinding quelqueChoseADire = Bindings.createBooleanBinding(
+                () -> !importVigieChiro.messageProperty().get().isEmpty()
+                        || importVigieChiro.bilanProperty().get() != null,
+                importVigieChiro.messageProperty(),
+                importVigieChiro.bilanProperty());
+        zone.visibleProperty().bind(quelqueChoseADire);
+        zone.managedProperty().bind(quelqueChoseADire);
+    }
+
+    /// L'**avancement** pendant la récupération, et l'**erreur** en cas d'échec. Ces deux-là tiennent dans
+    /// une phrase ; le bilan d'un import réussi, non - il passe par la bande.
+    ///
+    /// Fabriqué ici plutôt que déclaré dans le FXML, comme pour la publication : c'est un détail de rendu
+    /// de cette restitution, et un champ `@FXML` de moins dans un contrôleur déjà au plafond NCSS.
+    private static Label libelleDuMessage(ImportVigieChiroViewModel importVigieChiro) {
+        Label message = new Label();
+        message.getStyleClass().add("audio-message");
+        message.setWrapText(true);
+        message.setMaxWidth(Double.MAX_VALUE);
         message.textProperty().bind(importVigieChiro.messageProperty());
         message.visibleProperty().bind(importVigieChiro.messageProperty().isNotEmpty());
         message.managedProperty().bind(importVigieChiro.messageProperty().isNotEmpty());
+        return message;
+    }
+
+    /// Publie le compte rendu **chiffré** du bilan (#2651), ou masque la bande.
+    ///
+    /// Il **remplace** la phrase d'autrefois, qui ne disait qu'un des sept nombres du bilan. Le pied ne
+    /// propose pas d'action : l'import est lancé depuis un menu de l'écran audio, et l'observateur y est
+    /// déjà - proposer d'aller là où l'on est n'est pas une action suivante.
+    private static void afficher(PanneauCompteRendu bande, BilanImport bilan) {
+        if (bilan != null) {
+            bande.afficher(CompteRenduChiffreImportVigieChiro.de(bilan, List.of()));
+        }
+        bande.setVisible(bilan != null);
+        bande.setManaged(bilan != null);
+    }
+
+    /// Le compte rendu affiché, pour les tests de câblage : le second enfant de la zone, le premier étant
+    /// le libellé d'avancement.
+    static PanneauCompteRendu zoneDuCompteRendu(VBox zone) {
+        return (PanneauCompteRendu) zone.getChildren().get(1);
     }
 
     /// Lance l'import des résultats VigieChiro du passage de `source`. Deux cas : si le passage est déjà

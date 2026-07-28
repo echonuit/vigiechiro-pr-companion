@@ -8,7 +8,6 @@ import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.CheckMenuItem;
-import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.VBox;
 
@@ -25,7 +24,7 @@ final class MenuAudio {
     record Items(
             MenuItem importer,
             MenuItem importerVigieChiro,
-            Label lblImportVigieChiro,
+            VBox zoneImportVigieChiro,
             MenuItem publierCorrections,
             VBox zonePublierCorrections,
             CheckMenuItem inclureMode,
@@ -55,7 +54,8 @@ final class MenuAudio {
                         .otherwise("Importer un CSV Tadarida…"));
         // Import VigieChiro (axe 4.2) : câblage (libellé Importer/Réimporter, désactivation, restitution)
         // délégué à ImportVigieChiroUI. Sa visibilité (workflow + connexion) est gérée dans [#adapter].
-        ImportVigieChiroUI.cabler(items.importerVigieChiro(), items.lblImportVigieChiro(), importVigieChiro, viewModel);
+        ImportVigieChiroUI.cabler(
+                items.importerVigieChiro(), items.zoneImportVigieChiro(), importVigieChiro, viewModel);
         // Publication des corrections (#723) : item désactivé pendant l'envoi et, proactivement, quand le
         // passage n'a aucun ancrage plateforme (#1596). Restitution dédiée.
         PublicationCorrectionsUI.cabler(

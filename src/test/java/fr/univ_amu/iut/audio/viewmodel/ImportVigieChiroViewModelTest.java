@@ -113,7 +113,7 @@ class ImportVigieChiroViewModelTest {
     }
 
     @Test
-    @DisplayName("cycle d'état IHM : en cours → bilan (nb observations) / échec")
+    @DisplayName("cycle d'état IHM : en cours → bilan entier / échec, chaque canal se taisant à son tour")
     void cycle_etat_ihm() {
         ImportVigieChiroViewModel vm = new ImportVigieChiroViewModel(Optional.of(importateur));
         assertThat(vm.enCoursProperty().get()).isFalse();
@@ -121,12 +121,35 @@ class ImportVigieChiroViewModelTest {
         vm.marquerEnCours();
         assertThat(vm.enCoursProperty().get()).isTrue();
         assertThat(vm.messageProperty().get()).contains("Récupération");
+        assertThat(vm.bilanProperty().get()).isNull();
 
-        vm.appliquerBilan(new BilanImport(null, 7, 0, 0));
+        BilanImport bilan = new BilanImport(null, 7, 0, 0);
+        vm.appliquerBilan(bilan);
         assertThat(vm.enCoursProperty().get()).isFalse();
-        assertThat(vm.messageProperty().get()).contains("7 observation");
+        // Le bilan ENTIER (#2651) : la phrase n'en disait qu'un des sept nombres, et la surface le
+        // traduit désormais en compte rendu chiffré.
+        assertThat(vm.bilanProperty().get()).isSameAs(bilan);
+        assertThat(vm.messageProperty().get())
+                .as("le message d'avancement s'efface : le laisser redirait en phrase ce que la bande dit")
+                .isEmpty();
 
         vm.echec("Token expiré");
         assertThat(vm.messageProperty().get()).isEqualTo("Token expiré");
+        assertThat(vm.bilanProperty().get())
+                .as("un compte rendu périmé sous un message d'erreur ferait croire à un résultat frais")
+                .isNull();
+    }
+
+    @Test
+    @DisplayName("#2651 : relancer un import efface le compte rendu précédent avant de travailler")
+    void relancer_efface_le_compte_rendu_precedent() {
+        ImportVigieChiroViewModel vm = new ImportVigieChiroViewModel(Optional.of(importateur));
+        vm.appliquerBilan(new BilanImport(null, 7, 0, 0));
+
+        vm.marquerEnCours();
+
+        assertThat(vm.bilanProperty().get())
+                .as("sans cet effacement, la bande du précédent import resterait sous l'avancement du suivant")
+                .isNull();
     }
 }
