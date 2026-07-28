@@ -38,4 +38,4 @@ Marie vient de récupérer la carte SD de son enregistreur après une nuit d'enr
 
 > Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
 
-- **La fin d'import rend des comptes en chiffres.** Le rapport final énumère aujourd'hui ce qui est passé et ce qui a été écarté ; le [compte rendu chiffré](../Maquettes/M-CompteRendu.md) le restitue en proportions (part importée, part ignorée, part rejetée avec ses motifs), annonce le volume écrit sur le disque, et se termine par l'action suivante plutôt que par un acquittement (#2358).
+- **La fin d'import rend des comptes en chiffres** *(livré, #2358)*. Le [compte rendu chiffré](../Maquettes/M-CompteRendu.md) a remplacé les trois surfaces qui se succédaient — la phrase de succès, le compte rendu textuel et la liste des rejets. Il restitue la ventilation des fichiers de la source, compare le volume **lu sur la carte** au volume **écrit sur le disque**, rappelle les réserves d'inspection **encore vraies** (#1488) et se termine par « Ouvrir le passage » plutôt que par un acquittement.

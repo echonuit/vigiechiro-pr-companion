@@ -218,6 +218,37 @@ La structure ne change pas : ce sont les proportions qui parlent. Le compte rend
 | Opération sans rejet ni avertissement | Les blocs correspondants **disparaissent**, ils ne s'affichent pas vides |
 | Opération en échec | Même structure, proportions inversées, reprise proposée |
 
+## Ce que le livré a précisé
+
+La maquette a été écrite avant le code. Cinq points ont été **tranchés en chemin**, et ce sont eux qu'un
+lecteur doit connaître avant d'ajouter une quatrième surface.
+
+**1. Chaque mention porte sa sévérité.** La maquette ne prévoyait qu'un bloc « avertissements ». La
+première capture de la réactivation a montré un triangle d'alerte devant « L'audio est de nouveau
+complet » et devant un indice explicitement annoncé non bloquant. Une mention porte donc son registre :
+coche pour une bonne nouvelle, « i » pour un fait de contexte, triangle pour ce sur quoi il faut revenir.
+
+**2. Le compte rendu textuel ne disparaît pas partout, et le critère est le consommateur.** Là où une
+**commande en ligne** rend le même bilan (la réactivation), il reste. Là où la seule surface était l'écran
+(la publication des corrections), le chiffré le remplace.
+
+**3. Un bilan qui n'a rien à ventiler garde le textuel.** Un passage **reconstruit** n'a pas subi de
+réactivation : une barre « 0 sur 30 » y ferait croire à une tentative qui a échoué.
+
+**4. La teinte de la seconde part d'un volume ne s'emploie pas dans une ventilation.** Elle partage la
+couleur de la part retenue — « bruts + séquences » se lit comme un tout. Employée pour une catégorie
+distincte, elle fait lire un écart comme une réussite (constaté sur « sans ancrage », dans la
+publication).
+
+**5. La bande vit dans des largeurs très différentes** — 900 px sous l'écran d'import, ~560 px dans une
+modale. La légende **reflue**, les intitulés s'enroulent, et le résumé des motifs **assume** de s'abréger
+puisque son contenu est à un clic. C'est le garde-fou anti-troncature des captures qui l'a imposé, dont
+une fois en intégration continue seulement : ses métriques de police diffèrent de neuf pixels par entrée.
+
+**Et la donnée que le lot devait ajouter est ajoutée** : le volume **lu sur la carte** n'était mesuré
+nulle part. Il ne l'a pas fallu calculer — le garde-fou d'espace disque parcourait déjà les originaux
+pour décider, il jetait le chiffre. Il le rend (`VolumesImport`).
+
 ## Notes pour l'implémentation
 
 - **Composant présentationnel pur** dans `commun/view` : il reçoit un modèle de compte rendu et l'affiche. Il ne va rien chercher, ne décide de rien, et n'appartient à aucune feature.
