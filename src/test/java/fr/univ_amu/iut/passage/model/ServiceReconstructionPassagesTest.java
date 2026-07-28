@@ -899,9 +899,19 @@ class ServiceReconstructionPassagesTest {
 
         // C'est l'un des quatre éléments d'identité que #1814 est allé chercher : sans lui, la nuit
         // s'afficherait comme durant zéro minute.
-        assertThat(passageDao.findAll())
-                .singleElement()
-                .satisfies(nuit -> assertThat(nuit.heureFin()).startsWith("06:30"));
+        //
+        // L'heure attendue se DÉRIVE, elle ne se code pas en dur : le détail porte un décalage (+02:00) et
+        // l'application le convertit dans le fuseau de la machine. Une valeur murale écrite ici passerait à
+        // Paris et échouerait sur un runner en UTC - vécu.
+        LocalDateTime finDuDetail =
+                ParticipationOrpheline.horodatage("2026-07-04T06:30:00+02:00").orElseThrow();
+        assertThat(passageDao.findAll()).singleElement().satisfies(nuit -> {
+            assertThat(nuit.heureFin())
+                    .startsWith(finDuDetail.toLocalTime().toString().substring(0, 5));
+            assertThat(nuit.heureFin())
+                    .as("la fin vient du détail, pas du début recopié")
+                    .isNotEqualTo(nuit.heureDebut());
+        });
     }
 
     @Test
