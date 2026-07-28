@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -28,6 +29,7 @@ class MoteurTraitementGroupeTest {
         private final Predicate<CiblePassage> inelig;
         private final Predicate<CiblePassage> echoue;
         private Runnable pendant = () -> {};
+        private Supplier<RuntimeException> leve = () -> new IllegalStateException("disque plein");
 
         ActionEspionne(Predicate<CiblePassage> inelig, Predicate<CiblePassage> echoue) {
             this.inelig = inelig;
@@ -48,7 +50,7 @@ class MoteurTraitementGroupeTest {
         public void executer(CiblePassage cible, JetonAnnulation jeton) {
             pendant.run();
             if (echoue.test(cible)) {
-                throw new IllegalStateException("disque plein");
+                throw leve.get();
             }
             traites.add(cible.idPassage());
         }
@@ -179,6 +181,50 @@ class MoteurTraitementGroupeTest {
                 .allSatisfy(ligne -> assertThat(ligne).startsWith("["));
         assertThat(journal).anyMatch(ligne -> ligne.startsWith("[640380 / A1 / 2026 n°2] écarté : déjà déposé"));
         assertThat(journal).anyMatch(ligne -> ligne.startsWith("[640381 / B1 / 2026 n°1] ÉCHEC : disque plein"));
+    }
+
+    @Test
+    @DisplayName("ADR 2635 : sans rédaction de surface, le fait seul — le besoin ne s'invente pas")
+    void sans_redaction_le_fait_seul() {
+        ActionEspionne action = new ActionEspionne(cible -> false, cible -> true);
+        action.leve = () -> new RegleMetierException("L'application n'est pas connectée.", new Besoin.Connexion());
+
+        ResultatTraitementGroupe resultat = moteur.executer(action, List.of(P1), JetonAnnulation.neutre());
+
+        assertThat(resultat.issues().getFirst().motif()).isEqualTo("L'application n'est pas connectée.");
+    }
+
+    @Test
+    @DisplayName("ADR 2635 : la rédaction de la surface atteint le compte rendu ET le journal")
+    void redaction_de_surface_atteint_les_deux() {
+        // Ce que fait GesteAttendu côté application : le fait, puis où le régler.
+        MoteurTraitementGroupe avecGeste =
+                new MoteurTraitementGroupe(refus -> refus.getMessage() + " Connectez-vous depuis le menu ☰.");
+        ActionEspionne action = new ActionEspionne(cible -> false, cible -> true);
+        action.leve = () -> new RegleMetierException("L'application n'est pas connectée.", new Besoin.Connexion());
+        List<String> journal = new ArrayList<>();
+
+        ResultatTraitementGroupe resultat =
+                avecGeste.executer(action, List.of(P1), JetonAnnulation.neutre(), journal::add);
+
+        assertThat(resultat.issues().getFirst().motif())
+                .as("un lot de vingt nuits ne doit pas être vingt refus sans remède")
+                .isEqualTo("L'application n'est pas connectée. Connectez-vous depuis le menu ☰.");
+        assertThat(journal)
+                .as("le journal est ce qu'on regarde PENDANT : il porte le geste, lui aussi")
+                .anyMatch(ligne -> ligne.endsWith(
+                        "ÉCHEC : L'application n'est pas connectée. Connectez-vous" + " depuis le menu ☰."));
+    }
+
+    @Test
+    @DisplayName("Une exception sans message garde un motif lisible plutôt qu'une ligne vide")
+    void exception_sans_message() {
+        ActionEspionne action = new ActionEspionne(cible -> false, cible -> true);
+        action.leve = IllegalStateException::new;
+
+        ResultatTraitementGroupe resultat = moteur.executer(action, List.of(P1), JetonAnnulation.neutre());
+
+        assertThat(resultat.issues().getFirst().motif()).isEqualTo("IllegalStateException");
     }
 
     @Test
