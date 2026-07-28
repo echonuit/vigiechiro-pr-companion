@@ -2,6 +2,14 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.111.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.110.0...v2.111.0) (2026-07-28)
+
+
+### Features
+
+* **lot:** la fin de depot rend ses comptes en chiffres ([#2708](https://github.com/echonuit/vigiechiro-pr-companion/issues/2708)) ([511d105](https://github.com/echonuit/vigiechiro-pr-companion/commit/511d105c0971375e79bc56348e93054a541fe985)), closes [#2653](https://github.com/echonuit/vigiechiro-pr-companion/issues/2653) [#2586](https://github.com/echonuit/vigiechiro-pr-companion/issues/2586) [#2653](https://github.com/echonuit/vigiechiro-pr-companion/issues/2653) [#2350](https://github.com/echonuit/vigiechiro-pr-companion/issues/2350) [#1044](https://github.com/echonuit/vigiechiro-pr-companion/issues/1044) [#2653](https://github.com/echonuit/vigiechiro-pr-companion/issues/2653) [#1890](https://github.com/echonuit/vigiechiro-pr-companion/issues/1890) [#2653](https://github.com/echonuit/vigiechiro-pr-companion/issues/2653) [#2350](https://github.com/echonuit/vigiechiro-pr-companion/issues/2350)
+* **passage:** ne demander copier ou referencer que la ou ca compte ([#2704](https://github.com/echonuit/vigiechiro-pr-companion/issues/2704)) ([a0466e7](https://github.com/echonuit/vigiechiro-pr-companion/commit/a0466e7ad232e62a3fda7303635a668eb67a28f3)), closes [#2554](https://github.com/echonuit/vigiechiro-pr-companion/issues/2554) [#2577](https://github.com/echonuit/vigiechiro-pr-companion/issues/2577) [#2642](https://github.com/echonuit/vigiechiro-pr-companion/issues/2642)
+
 # [2.110.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.109.0...v2.110.0) (2026-07-28)
 
 
