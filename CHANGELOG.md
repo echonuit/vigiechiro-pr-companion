@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.93.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.92.1...v2.93.0) (2026-07-28)
+
+
+### Features
+
+* **diagnostic:** la nuit réelle sur la courbe climatique, et son export ([#2641](https://github.com/echonuit/vigiechiro-pr-companion/issues/2641)) ([d553ce8](https://github.com/echonuit/vigiechiro-pr-companion/commit/d553ce8d0fa34a7979eb3dd64a14c07cd7e95c59)), closes [#2617](https://github.com/echonuit/vigiechiro-pr-companion/issues/2617) [#2618](https://github.com/echonuit/vigiechiro-pr-companion/issues/2618) [#2617](https://github.com/echonuit/vigiechiro-pr-companion/issues/2617) [#2618](https://github.com/echonuit/vigiechiro-pr-companion/issues/2618)
+
 ## [2.92.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.92.0...v2.92.1) (2026-07-28)
 
 
