@@ -64,6 +64,19 @@
     <ProgressBar fx:id="barreAncrage" maxWidth="Infinity"/>
   </VBox>
 
+  <!-- La question « copier ou référencer » (#2577) : posée ICI, au milieu de l'opération, parce que
+       c'est le seul moment où l'on sait qu'elle a un objet. Dans la modale et non par-dessus : un seul
+       écran, jamais une fenêtre sur une fenêtre (#2642). Repliée tant qu'on ne demande rien. -->
+  <VBox fx:id="zoneQuestion" spacing="8.0" visible="false" managed="false">
+    <Label fx:id="lblQuestion" styleClass="section-sous" wrapText="true"/>
+    <HBox spacing="8.0" alignment="CENTER_RIGHT">
+      <Button fx:id="boutonLaisser" text="Les laisser où ils sont" styleClass="bouton-primaire"
+              onAction="#laisserEnPlace"/>
+      <Button fx:id="boutonCopier" text="En faire une copie" styleClass="bouton-secondaire"
+              onAction="#copier"/>
+    </HBox>
+  </VBox>
+
   <Label fx:id="lblErreur" styleClass="message-erreur" wrapText="true"/>
   <!-- Compte rendu CHIFFRE (#2358) d une reactivation aboutie : ce qui est revenu, ce qui manque, en
        proportions. « 4236 sequences reactivees » ne dit pas si la nuit est exploitable ; la barre si. -->

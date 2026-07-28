@@ -2,7 +2,6 @@ package fr.univ_amu.iut.passage.view;
 
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
-import fr.univ_amu.iut.passage.model.ModeRebranchement;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -60,29 +59,14 @@ final class ActionReactivation {
             return;
         }
         Path source = dossier.orElseThrow();
-        ModeRebranchement mode = demanderLeMode(source);
+        // Plus de question ici (#2577) : à ce stade on ne sait pas encore ce que le dossier contient, ni
+        // si la nuit devra d'abord être hydratée. La procédure la posera - dans la modale - au moment où
+        // elle saura qu'elle a un objet. Avant, elle était posée systématiquement, et sa réponse ignorée
+        // sur deux voies sur trois.
         navigation.ouvrirModaleReactivation(
                 proprietaire.get(),
-                (progresRegeneration, progresAncrage, jeton) ->
-                        viewModel.reactiver(source, mode, progresRegeneration, progresAncrage, jeton),
+                (progresRegeneration, progresAncrage, choix, jeton) ->
+                        viewModel.reactiver(source, choix, progresRegeneration, progresAncrage, jeton),
                 recharger);
-    }
-
-    /// Copier, ou laisser l'audio où il est ? La question est **posée dans tous les cas**, mais sa
-    /// recommandation se déduit du dossier désigné : hors de l'espace de travail, ces fichiers sont
-    /// ceux de l'utilisateur, et les recopier ferait un doublon qu'il n'a pas demandé.
-    ///
-    /// La conséquence est dite, pas tue : référencer rend la nuit muette si le support s'absente.
-    private ModeRebranchement demanderLeMode(Path source) {
-        boolean aLutilisateur = viewModel.horsEspaceDeTravail(source);
-        String question = aLutilisateur
-                ? "Ce dossier est en dehors de votre dossier de travail : ces fichiers sont les vôtres.\n\n"
-                        + "Les laisser où ils sont (recommandé) ? L'application s'y référera sans rien copier.\n"
-                        + "Cette nuit ne sera plus écoutable si ce support n'est pas accessible (disque débranché,"
-                        + " dossier réseau hors ligne), et le redeviendra dès qu'il le sera.\n\n"
-                        + "Répondre « non » copiera les fichiers dans votre dossier de travail."
-                : "Laisser ces fichiers où ils sont, sans en faire de copie ?\n\n"
-                        + "Répondre « non » les copiera à l'emplacement que l'application attend.";
-        return confirmateur.confirmer(question) ? ModeRebranchement.REFERENCE : ModeRebranchement.COPIE;
     }
 }

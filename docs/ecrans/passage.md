@@ -108,14 +108,22 @@ et c'est normal : le son n'est nulle part ailleurs que sur votre carte SD.
 
 ### Copier, ou laisser vos fichiers où ils sont
 
-Une fois le dossier désigné, l'application demande **ce qu'elle doit en faire**. La question est
-toujours posée, mais elle n'est pas formulée de la même façon selon l'endroit que vous avez choisi :
+L'application demande **ce qu'elle doit faire de vos fichiers** - mais seulement quand la question a
+un objet, c'est-à-dire quand votre dossier contient des séquences **déjà transformées** qu'elle peut
+reposer telles quelles. Elle apparaît alors **dans la fenêtre de réactivation**, à la place des barres,
+et la procédure reprend dès que vous avez répondu.
+
+Sur une carte qui ne contient que vos **enregistrements bruts**, aucune question ne vous est posée :
+il n'y a rien à laisser en place, puisque les séquences sont recalculées et écrites dans votre dossier
+de travail.
+
+La formulation dépend de l'endroit que vous avez choisi :
 
 - **hors de votre dossier de travail** - un serveur de fichiers, un disque externe, votre arborescence
   habituelle : ces fichiers sont **les vôtres**, et en faire une copie créerait un doublon que vous
   n'avez pas demandé. L'application propose donc de **les laisser où ils sont** et de s'y référer ;
-- **une sauvegarde ponctuelle** dont vous ne voulez pas dépendre : répondez **non**, et l'application
-  en garde sa propre copie, comme elle l'a toujours fait.
+- **une sauvegarde ponctuelle** dont vous ne voulez pas dépendre : choisissez **En faire une copie**, et
+  l'application en garde la sienne, comme elle l'a toujours fait.
 
 Laisser les fichiers sur place a une conséquence, et elle vous est dite **avant** le choix, pas
 découverte après : cette nuit n'est plus écoutable tant que ce support n'est pas accessible - disque
@@ -124,7 +132,8 @@ faille rien réactiver une seconde fois.
 
 Ce choix ne concerne que les fichiers **que vous désignez**. Les séquences que l'application
 **régénère** elle-même à partir de vos enregistrements bruts sont, elles, toujours écrites dans votre
-dossier de travail : elles n'existaient nulle part ailleurs, il n'y a donc rien à référencer.
+dossier de travail : elles n'existaient nulle part ailleurs, il n'y a donc rien à référencer - et c'est
+pour cela que la question ne vous est pas posée dans ce cas.
 
 **Chaque fichier est vérifié avant d'être rebranché.** C'est le cœur de l'affaire : deux jeux de
 fichiers peuvent porter **les mêmes noms** sans être les mêmes (une redécoupe, une autre expansion,

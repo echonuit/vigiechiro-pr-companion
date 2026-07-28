@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.viewmodel.TexteCompteRendu;
+import fr.univ_amu.iut.passage.model.ChoixRebranchement;
 import fr.univ_amu.iut.passage.model.CompteRenduReactivation;
 import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.ModeRebranchement;
@@ -84,7 +85,9 @@ public final class Reactiver implements Callable<Integer> {
                 .reactiver(
                         idPassage,
                         source,
-                        referencer ? ModeRebranchement.REFERENCE : ModeRebranchement.COPIE,
+                        // La ligne de commande n'a personne à interroger : son choix est dans l'option
+                        // (#2577). C'est l'IHM qui pose la question, et seulement quand elle a un objet.
+                        ChoixRebranchement.fixe(referencer ? ModeRebranchement.REFERENCE : ModeRebranchement.COPIE),
                         progres -> {},
                         progres -> {},
                         JetonAnnulation.neutre());

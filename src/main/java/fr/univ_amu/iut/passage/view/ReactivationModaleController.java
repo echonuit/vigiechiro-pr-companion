@@ -9,13 +9,19 @@ import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.VueCompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.passage.model.ChoixRebranchement;
 import fr.univ_amu.iut.passage.model.CompteRenduChiffreReactivation;
+import fr.univ_amu.iut.passage.model.ModeRebranchement;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.viewmodel.ReactivationModaleViewModel;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -58,6 +64,9 @@ public class ReactivationModaleController {
     /// Jeton de l'opération en cours, câblé sur « Annuler » (#1252). Null hors opération.
     private JetonAnnulation jetonCourant;
 
+    /// La réponse que le fil de fond attend, quand une question est posée (#2577). `null` hors question.
+    private CompletableFuture<ModeRebranchement> reponseAttendue;
+
     /// Rafraîchissement de l'écran appelant, joué à la fermeture **si** une réactivation s'est conclue.
     private Runnable apresSucces = () -> {};
 
@@ -87,6 +96,13 @@ public class ReactivationModaleController {
 
     @FXML
     private Label lblErreur;
+
+    /// Zone de la question « copier ou référencer » (#2577), repliée hors demande.
+    @FXML
+    private VBox zoneQuestion;
+
+    @FXML
+    private Label lblQuestion;
 
     @FXML
     private VBox zoneCompteRendu;
@@ -189,7 +205,7 @@ public class ReactivationModaleController {
             viewModel.progressionAncrage().appliquer(point);
         });
         executeur.executer(
-                () -> travail.executer(progresRegeneration, progresAncrage, jeton),
+                () -> travail.executer(progresRegeneration, progresAncrage, this::demanderLeMode, jeton),
                 rapport -> {
                     operationEnCours.set(false);
                     etape.set("Terminé.");
@@ -207,10 +223,69 @@ public class ReactivationModaleController {
                 });
     }
 
+    /// La question « copier ou référencer », **posée dans cette modale** au moment où la procédure sait
+    /// qu'elle a un objet (#2577).
+    ///
+    /// Appelée **hors du fil JavaFX** : on revient sur le fil FX pour montrer la question, et on y fait
+    /// attendre l'appelant. C'est une attente voulue - la procédure ne peut pas continuer sans la réponse,
+    /// et le faire croire en choisissant à sa place est précisément ce qu'on corrige.
+    ///
+    /// Renoncer pendant la question compte comme une annulation : la réponse est alors sans objet, et on
+    /// rend le défaut plutôt que de laisser le fil de fond bloqué à jamais.
+    private ModeRebranchement demanderLeMode(Path dossierSource, boolean horsEspaceDeTravail) {
+        CompletableFuture<ModeRebranchement> reponse = new CompletableFuture<>();
+        reponseAttendue = reponse;
+        Platform.runLater(() -> {
+            lblQuestion.setText(question(dossierSource, horsEspaceDeTravail));
+            zoneQuestion.setVisible(true);
+            zoneQuestion.setManaged(true);
+        });
+        try {
+            return reponse.get();
+        } catch (InterruptedException interrompu) {
+            Thread.currentThread().interrupt();
+            return ModeRebranchement.COPIE;
+        } catch (ExecutionException echec) {
+            return ModeRebranchement.COPIE;
+        }
+    }
+
+    private static String question(Path dossierSource, boolean horsEspaceDeTravail) {
+        String ou = "Des fichiers déjà transformés ont été trouvés dans « " + dossierSource.getFileName() + " ». ";
+        return horsEspaceDeTravail
+                ? ou
+                        + "Ce dossier est en dehors de votre dossier de travail : ces fichiers sont les vôtres."
+                        + " Les laisser où ils sont évite un doublon, mais cette nuit ne sera plus écoutable"
+                        + " quand ce support sera absent - et le redeviendra dès qu'il reviendra."
+                : ou + "Les laisser où ils sont, ou en faire une copie dans votre dossier de travail ?";
+    }
+
+    @FXML
+    private void laisserEnPlace() {
+        repondre(ModeRebranchement.REFERENCE);
+    }
+
+    @FXML
+    private void copier() {
+        repondre(ModeRebranchement.COPIE);
+    }
+
+    private void repondre(ModeRebranchement mode) {
+        zoneQuestion.setVisible(false);
+        zoneQuestion.setManaged(false);
+        if (reponseAttendue != null) {
+            reponseAttendue.complete(mode);
+            reponseAttendue = null;
+        }
+    }
+
     /// « Annuler » : demande l'arrêt de l'opération en cours (#1252). Le travail hors fil s'arrête au
     /// prochain point de contrôle ; rien n'est défait (la réactivation ajoute de l'audio, elle n'en supprime pas).
     @FXML
     private void annuler() {
+        // Une question en attente doit être libérée AVANT : sans ça, le fil de fond resterait bloqué sur
+        // une réponse qui ne viendra jamais, et l'annulation n'arriverait jamais à son point de contrôle.
+        repondre(ModeRebranchement.COPIE);
         if (jetonCourant != null) {
             jetonCourant.annuler();
         }
@@ -319,6 +394,9 @@ public class ReactivationModaleController {
     @FunctionalInterface
     public interface Travail {
         RapportReactivation executer(
-                Consumer<Progression> progresRegeneration, Consumer<Progression> progresAncrage, JetonAnnulation jeton);
+                Consumer<Progression> progresRegeneration,
+                Consumer<Progression> progresAncrage,
+                ChoixRebranchement choix,
+                JetonAnnulation jeton);
     }
 }

@@ -159,7 +159,7 @@ class ServiceReactivationPassageTest {
         RapportReactivation rapport = service.reactiver(
                 idPassage,
                 sauvegarde,
-                ModeRebranchement.REFERENCE,
+                ChoixRebranchement.fixe(ModeRebranchement.REFERENCE),
                 progres -> {},
                 progres -> {},
                 JetonAnnulation.neutre());
@@ -502,6 +502,53 @@ class ServiceReactivationPassageTest {
     }
 
     // --- Voie « bruts » (#1406) -------------------------------------------------------------------
+
+    @Test
+    @DisplayName("#2577 : sur la voie BRUTS, le choix copier/référencer n'est JAMAIS demandé")
+    void voie_bruts_ne_demande_rien() throws IOException {
+        archiverAvecBrutSauvegarde(NOM_R6_BRUT, true);
+        List<Path> demandes = new ArrayList<>();
+
+        RapportReactivation rapport = service.reactiver(
+                idPassage,
+                sauvegarde,
+                (dossier, hors) -> {
+                    demandes.add(dossier);
+                    return ModeRebranchement.COPIE;
+                },
+                progres -> {},
+                progres -> {},
+                JetonAnnulation.neutre());
+
+        assertThat(rapport.voie()).isEqualTo(VoieReactivation.BRUTS);
+        // Rien n'est reposé : les tranches sont RÉGÉNÉRÉES dans l'espace de travail. Demander « faut-il
+        // les laisser où elles sont » n'avait pas de sens, et la réponse était ignorée (#2577).
+        assertThat(demandes)
+                .as("aucune question sur une voie qui ne pose aucun fichier existant")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2577 : sur la voie TRANSFORMES, le choix est demandé - une seule fois, et il est suivi")
+    void voie_transformes_demande_une_fois() throws IOException {
+        archiverAvecSauvegarde(true, true);
+        List<Path> demandes = new ArrayList<>();
+
+        RapportReactivation rapport = service.reactiver(
+                idPassage,
+                sauvegarde,
+                (dossier, hors) -> {
+                    demandes.add(dossier);
+                    return ModeRebranchement.REFERENCE;
+                },
+                progres -> {},
+                progres -> {},
+                JetonAnnulation.neutre());
+
+        assertThat(rapport.voie()).isEqualTo(VoieReactivation.TRANSFORMES);
+        assertThat(demandes).as("posée une fois, sur le dossier désigné").containsExactly(sauvegarde);
+        assertThat(rapport.reactivees()).isPositive();
+    }
 
     @Test
     @DisplayName("#1406 : seul le brut a été gardé → séquences RÉGÉNÉRÉES, et leur empreinte concorde")
