@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.multisite.view;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
@@ -44,10 +46,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -92,6 +94,14 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private final DepotVues depotVues;
     private final DepotDispositionColonnes depotColonnes;
     private final ExecuteurTache executeur;
+
+    /// Traitement en lot (#2357) : il porte ses propres ports de dialogue, que les tests d'écran
+    /// remplacent par des doubles.
+    private final TraitementLot lots;
+
+    /// L'action groupée « Préparer le dépôt », consommée sous son **port** : `multisite` enchaîne
+    /// une action sur des passages sans rien savoir du dépôt.
+    private final ActionGroupee preparerDepot;
 
     /// Action de ligne « Ouvrir sur Vigie-Chiro » (#1799) : page de la participation liée au passage.
     private final ActionVigieChiroPassage vigieChiro;
@@ -148,6 +158,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// « ☁ Relever l'état des analyses » (#1338) : retiré hors connexion (il interroge la plateforme).
     @FXML
     private MenuItem itemReleverAnalyses;
+
+    @FXML
+    private MenuItem itemPreparerSelection;
 
     @FXML
     private TableView<LignePassage> tableLignes;
@@ -229,14 +242,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         return edition;
     }
 
-    /// Dernière position du diviseur quand carte ET tableau sont visibles, restaurée à la réouverture
-    /// d'un panneau replié (un `SplitPane` réinitialise ses diviseurs quand on retire/rajoute un item).
-    private double derniereDivision = 0.42;
-
-    /// Chevrons des poignées de repli (pointent vers le panneau qui va se replier / se rouvrir).
-    private static final String CHEVRON_GAUCHE = "fas-chevron-left";
-
-    private static final String CHEVRON_DROITE = "fas-chevron-right";
+    /// Repli des deux panneaux (#347), extrait : mécaniques de `SplitPane`, sans rapport avec les
+    /// passages. Assigné dans `initialize()`, les nœuds FXML n'existant pas avant.
+    private ReplisPanneaux replis;
 
     /// Focalisation « voir sur la carte » (carré ou point) déléguée, pour garder le controller mince.
     private final FocalisationCarte focalisation = new FocalisationCarte(carte, this::degagerLaCarte);
@@ -251,7 +259,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
             DepotVues depotVues,
             DepotDispositionColonnes depotColonnes,
             ExecuteurTache executeur,
-            ActionVigieChiroPassage vigieChiro) {
+            ActionVigieChiroPassage vigieChiro,
+            @Named("action.preparerDepot") ActionGroupee preparerDepot) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.reconstruction = Objects.requireNonNull(reconstruction, "reconstruction");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -261,6 +270,13 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
+        this.preparerDepot = Objects.requireNonNull(preparerDepot, "preparerDepot");
+        this.lots = new TraitementLot(executeur);
+    }
+
+    /// Traitement en lot, exposé aux tests pour y poser leurs doubles (#1013, #1405).
+    TraitementLot lots() {
+        return lots;
     }
 
     @Override
@@ -272,6 +288,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private void initialize() {
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
         TableDonnees.uniformiserNavigable(tableLignes);
+        // Multi-sélection (#2357, lot 3) : plusieurs lignes se cochent pour recevoir la même action.
+        // Les gestes de ligne existants (double-clic, « Écouter le passage ») continuent de lire
+        // `selectedItem`, qui reste la DERNIÈRE ligne cochée : rien ne change pour eux.
+        tableLignes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         ColonnesMultisite.configurer(
                 colCarre, colPoint, colAnnee, colNumero, colDate, colStatut, colVerdict, colAnalyse, colCampagne);
         // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant). La
@@ -355,8 +375,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 itemEcouterPassage,
                 itemReconstruire,
                 itemReleverAnalyses,
+                itemPreparerSelection,
                 viewModel.nonVideProperty(),
                 tableLignes.getSelectionModel().selectedItemProperty(),
+                Bindings.size(tableLignes.getSelectionModel().getSelectedItems()),
                 reconstruction.disponible(),
                 viewModel.releveAnalysesDisponible());
 
@@ -388,7 +410,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 .addListener(
                         (obs, ancienne, ligne) -> carte.surbrillanceCarre(ligne == null ? null : ligne.numeroCarre()));
 
-        majPoignees();
+        replis = new ReplisPanneaux(
+                splitCarteTableau, zoneCarte, panneauTableau, boutonReplierCarte, boutonReplierTableau);
+        replis.majPoignees();
 
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
         chargerDonnees();
@@ -441,73 +465,18 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         zoneCarte.getChildren().add(controlesEdition);
     }
 
-    /// Replie (ou rouvre) la **carte** : le tableau prend alors toute la largeur. On ne peut pas replier
-    /// les deux panneaux à la fois (cf. [#majPoignees]).
+    /// Replie (ou rouvre) la **carte** : le tableau prend alors toute la largeur. Délégué à
+    /// [ReplisPanneaux].
     @FXML
     private void basculerCarte() {
-        if (estVisible(zoneCarte)) {
-            replier(zoneCarte);
-        } else {
-            rouvrir(zoneCarte, 0);
-        }
-        majPoignees();
+        replis.basculerCarte();
     }
 
-    /// Replie (ou rouvre) le **tableau** : la carte prend alors toute la largeur.
+    /// Replie (ou rouvre) le **tableau** : la carte prend alors toute la largeur. Délégué à
+    /// [ReplisPanneaux].
     @FXML
     private void basculerTableau() {
-        if (estVisible(panneauTableau)) {
-            replier(panneauTableau);
-        } else {
-            rouvrir(panneauTableau, splitCarteTableau.getItems().size());
-        }
-        majPoignees();
-    }
-
-    private boolean estVisible(Node panneau) {
-        return splitCarteTableau.getItems().contains(panneau);
-    }
-
-    /// Retire un panneau du `SplitPane` (repli complet), après avoir mémorisé la position du diviseur
-    /// pour pouvoir la restaurer à la réouverture.
-    private void replier(Node panneau) {
-        if (splitCarteTableau.getDividerPositions().length > 0) {
-            derniereDivision = splitCarteTableau.getDividerPositions()[0];
-        }
-        splitCarteTableau.getItems().remove(panneau);
-    }
-
-    /// Réinsère un panneau à sa place canonique (carte en 0, tableau en fin) et restaure le diviseur.
-    private void rouvrir(Node panneau, int index) {
-        if (!splitCarteTableau.getItems().contains(panneau)) {
-            splitCarteTableau
-                    .getItems()
-                    .add(Math.min(index, splitCarteTableau.getItems().size()), panneau);
-            splitCarteTableau.setDividerPositions(derniereDivision);
-        }
-    }
-
-    /// Met à jour le libellé, l'info-bulle, le texte accessible (#163) et l'état activé des deux poignées
-    /// selon ce qui est visible. La poignée d'un panneau **déjà seul** est désactivée (interdit de tout
-    /// replier), celle du panneau replié invite à le rouvrir.
-    private void majPoignees() {
-        boolean carteVisible = estVisible(zoneCarte);
-        boolean tableauVisible = estVisible(panneauTableau);
-
-        StyleControlesCarte.poignee(
-                boutonReplierCarte,
-                "Carte",
-                carteVisible ? CHEVRON_GAUCHE : CHEVRON_DROITE,
-                ContentDisplay.LEFT,
-                carteVisible ? "Masquer la carte" : "Afficher la carte",
-                tableauVisible);
-        StyleControlesCarte.poignee(
-                boutonReplierTableau,
-                "Tableau",
-                tableauVisible ? CHEVRON_DROITE : CHEVRON_GAUCHE,
-                ContentDisplay.RIGHT,
-                tableauVisible ? "Masquer le tableau" : "Afficher le tableau",
-                carteVisible);
+        replis.basculerTableau();
     }
 
     /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur l'agrégat
@@ -542,10 +511,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// Replie le tableau (#338) pour donner toute la largeur à la carte : c'est le but du clic « Voir sur
     /// la carte ». L'utilisateur le rouvre au besoin via la poignée « Tableau ◀ ».
     private void degagerLaCarte() {
-        if (estVisible(panneauTableau)) {
-            replier(panneauTableau);
-            majPoignees();
-        }
+        replis.degagerLaCarte();
     }
 
     /// Retrace la carte depuis l'agrégat (traduction domaine → [DonneesCarte]) **et** réindexe l'édition
@@ -615,6 +581,21 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 () -> viewModel.releverPuisCharger(nuitsDeposees),
                 viewModel::appliquerReleve,
                 viewModel::signalerErreur);
+    }
+
+    /// « Préparer le dépôt de la sélection… » (#2357, lot 3) : applique la préparation à **toutes** les
+    /// lignes cochées.
+    ///
+    /// Le geste entier est délégué à [TraitementLot], qui annonce ce qui sera écarté, exécute sous suivi
+    /// annulable et rend compte. Ce contrôleur ne fait que lui remettre la sélection et de quoi se
+    /// rafraîchir : les statuts auront bougé.
+    @FXML
+    private void preparerSelection() {
+        List<LignePassage> selection =
+                List.copyOf(tableLignes.getSelectionModel().getSelectedItems());
+        if (!selection.isEmpty()) { // l'item est grisé sinon : garde de ceinture
+            lots.lancer(menuActions.getScene().getWindow(), preparerDepot, selection, this::chargerDonnees);
+        }
     }
 
     /// « Exporter » : demande où écrire, puis écriture par le ViewModel dans **l'ordre affiché** (#291).
