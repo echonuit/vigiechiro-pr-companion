@@ -37,6 +37,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -74,6 +75,9 @@ import javafx.scene.Scene;
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureDiagnostic {
+
+    /// Carré de démonstration, partagé par les seeds et les contextes de navigation.
+    private static final String NUMERO_CARRE = "640380";
 
     private static final String ID_UTILISATEUR = "demo-enseignant";
     private static final String SERIE = "1925492";
@@ -145,6 +149,7 @@ public final class CaptureDiagnostic {
         Graine graine = seeder(source, workspace);
 
         rendre(injecteur, graine.idAvecReleve(), sortie.resolve("apercu-diagnostic.png"));
+        exporter(injecteur, graine.idAvecReleve(), sortie.resolve("apercu-diagnostic-export.png"));
         rendre(injecteur, graine.idSansReleve(), sortie.resolve("apercu-diagnostic-sans-releve.png"));
         rendre(injecteur, graine.idSansGps(), sortie.resolve("apercu-diagnostic-sans-gps.png"));
         // État migré (#2050) que rien ne montrait de façon dédiée (#2222) : un enregistrement hors nuit
@@ -174,8 +179,22 @@ public final class CaptureDiagnostic {
         Parent vue = loader.load();
         DiagnosticController controleur = loader.getController();
         // Capture hors-chrome : le fil d'Ariane n'est pas rendu ; le contexte n'a donc pas à être réel.
-        controleur.ouvrirSur(new ContextePassage(idPassage, 1, new ContexteSite("640380", "A1", null)));
+        controleur.ouvrirSur(new ContextePassage(idPassage, 1, new ContexteSite(NUMERO_CARRE, "A1", null)));
         ApercuFx.enregistrerPng(new Scene(vue, 1000, 660), fichier);
+        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Aperçu de l'**image exportée** du graphe climatique (#2618) : passe par le vrai geste du
+    /// controller, qui redessine hors écran et estampille son contexte. Reconstruire ici une imitation
+    /// produirait une capture qui dériverait du produit (ADR 0025).
+    private static void exporter(Injector injecteur, long idPassage, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(DiagnosticController.class.getResource("Diagnostic.fxml"));
+        loader.setControllerFactory(injecteur::getInstance);
+        loader.load();
+        DiagnosticController controleur = loader.getController();
+        controleur.ouvrirSur(new ContextePassage(idPassage, 2, new ContexteSite(NUMERO_CARRE, "A1", null)));
+        // Date FIXE : les PNG sont versionnés, un LocalDate.now() reverserait une capture par jour.
+        controleur.exporterVers(fichier, LocalDate.of(2026, 6, 23));
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
@@ -195,7 +214,7 @@ public final class CaptureDiagnostic {
 
         // Même carré que le contexte ouvert plus haut (640380, dépt 64) : site, GPS et nom de session cohérents.
         Site site = siteDao.insert(new Site(
-                null, "640380", "Étang de la Tuilière", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
+                null, NUMERO_CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
         Long idPoint = pointDao.insert(new PointDEcoute(null, "A1", 43.4010, -1.5740, "lisière", site.id()))
                 .id();
         // Point NON géolocalisé (#1673) : sert la 3e capture (GPS non renseigné → cohérence indisponible).

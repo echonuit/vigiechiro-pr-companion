@@ -1,15 +1,11 @@
 package fr.univ_amu.iut.analyse.view;
 
 import fr.univ_amu.iut.analyse.model.CourbeEspece;
-import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.view.ExportGraphe;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
-import javafx.scene.Scene;
 import javafx.scene.chart.NumberAxis;
-import javafx.scene.control.Label;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 
 /// Export **image** de la courbe d'activité (#2352) : **redessine** le graphe hors écran, il ne le
 /// **capture pas**.
@@ -52,41 +48,12 @@ public final class ExportImageActivite {
             double[] fenetreNuit,
             List<String> lignesLegende,
             Path fichier) {
-        NumberAxis axeTemps = new NumberAxis();
-        axeTemps.setLabel("Heure");
-        configurerAxe.accept(axeTemps);
-        NumberAxis axeContacts = new NumberAxis();
-        axeContacts.setLabel("Contacts");
-
-        GrapheNocturne graphe = new GrapheNocturne(axeTemps, axeContacts);
-        graphe.setAnimated(false);
-        graphe.setLegendVisible(true);
-        graphe.getData().setAll(ActiviteController.versSeries(courbes));
-        if (fenetreNuit != null) {
-            graphe.definirFenetreNuit(fenetreNuit[0], fenetreNuit[1]);
-        }
-        VBox.setVgrow(graphe, Priority.ALWAYS);
-
-        VBox racine = new VBox(6.0, graphe);
-        racine.getChildren()
-                .addAll(lignesLegende.stream().map(ExportImageActivite::ligne).toList());
-        racine.getStyleClass().add("export-activite");
-
-        Scene scene = new Scene(racine, LARGEUR, HAUTEUR);
-        scene.getStylesheets()
-                .addAll(
-                        ActiviteController.class
-                                .getResource("/fr/univ_amu/iut/commun/view/palette.css")
-                                .toExternalForm(),
-                        ActiviteController.class.getResource("activite.css").toExternalForm());
-        ApercuFx.enregistrerPng(scene, fichier);
-    }
-
-    /// Une ligne de légende. Non enroulable : la scène d'export est assez large pour ces lignes, et un
-    /// libellé enroulable comprimé ferait **refuser** la capture (garde `ApercuFx`).
-    private static Label ligne(String texte) {
-        Label libelle = new Label(texte);
-        libelle.getStyleClass().add("legende-export");
-        return libelle;
+        ExportGraphe.ecrire(
+                () -> ActiviteController.versSeries(courbes),
+                configurerAxe,
+                "Contacts",
+                fenetreNuit,
+                lignesLegende,
+                fichier);
     }
 }

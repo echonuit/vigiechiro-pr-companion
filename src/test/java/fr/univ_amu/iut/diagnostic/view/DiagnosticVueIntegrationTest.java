@@ -8,8 +8,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
+import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.diagnostic.model.AnalyseAnomalies;
@@ -19,10 +21,16 @@ import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.model.SerieClimatique;
 import fr.univ_amu.iut.diagnostic.model.ServiceDiagnostic;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
+import java.awt.image.BufferedImage;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -32,14 +40,18 @@ import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Tests d'**intégration TestFX** de l'écran **M-Diagnostic** centrés sur le câblage réel
 /// Vue ↔ ViewModel : chaque test fait un **vrai lookup des `fx:id`** (`robot.lookup("#…")`) puis
@@ -172,6 +184,82 @@ class DiagnosticVueIntegrationTest {
         assertThat(alerteR20.isVisible()).isFalse();
         assertThat(alerteR20.isManaged()).isFalse();
         assertThat(bandeau.isVisible()).as("aucun retour à afficher").isFalse();
+    }
+
+    @Test
+    @DisplayName("#2617 : la fenêtre nocturne se voit sur la courbe, pas seulement en toutes lettres")
+    void la_nuit_reelle_est_materialisee_sur_le_graphe(FxRobot robot) {
+        // Nuit complète : c'est le seul passage de la fixture dont la fenêtre nocturne est calculable.
+        // Sur le passage par défaut, l'absence de bande est le comportement attendu, pas un défaut.
+        robot.interact(() -> controleur.ouvrirSur(ctx(77L)));
+        // La bande ne prend ses dimensions qu'à la mise en page du graphe : on la force, comme le fait
+        // l'outil de capture, sans quoi on mesurerait un rectangle jamais positionné.
+        LineChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(LineChart.class);
+        robot.interact(() -> {
+            graphe.applyCss();
+            graphe.layout();
+        });
+        Rectangle aplat = robot.lookup(".aplat-nuit").queryAs(Rectangle.class);
+
+        assertThat(aplat.isVisible())
+                .as("l'écran connaissait la fenêtre coucher/lever, elle situe désormais les mesures")
+                .isTrue();
+        assertThat(aplat.getWidth())
+                .as("la bande couvre une largeur réelle sur l'axe")
+                .isGreaterThan(0.0);
+    }
+
+    @Test
+    @DisplayName("#2618 : l'export redessine le graphe climatique et le dit")
+    void l_export_du_graphe_ecrit_une_image_reellement_dessinee(FxRobot robot, @TempDir Path dossier) throws Exception {
+        Path image = dossier.resolve("climat.png");
+        controleur.selecteur().definir(new SelecteurFichier() {
+            @Override
+            public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {
+                return Optional.of(image);
+            }
+
+            @Override
+            public Optional<Path> choisirFichier(String titre, Optional<Path> dossierInitial, FiltreFichier filtre) {
+                return Optional.of(image);
+            }
+
+            @Override
+            public Optional<Path> enregistrerFichier(String titre, String nomPropose, FiltreFichier filtre) {
+                return Optional.of(image);
+            }
+        });
+
+        robot.clickOn("#boutonExporterGraphe");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(Files.exists(image)).isTrue();
+        BufferedImage rendu = ImageIO.read(image.toFile());
+        Set<Integer> couleurs = new HashSet<>();
+        for (int x = 0; x < rendu.getWidth() && couleurs.size() <= 32; x += 4) {
+            for (int y = 0; y < rendu.getHeight() && couleurs.size() <= 32; y += 4) {
+                couleurs.add(rendu.getRGB(x, y));
+            }
+        }
+        assertThat(couleurs.size())
+                .as("le graphe est REDESSINÉ : une capture d'un nœud masqué rendrait une image unie")
+                .isGreaterThan(5);
+        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText()).contains("exporté");
+    }
+
+    @Test
+    @DisplayName("#2617 : sans fenêtre calculable, aucune bande n'est inventée")
+    void sans_fenetre_calculable_aucune_bande(FxRobot robot) {
+        // Passage par défaut (42) : relevé présent mais fenêtre nocturne indisponible.
+        LineChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(LineChart.class);
+        robot.interact(() -> {
+            graphe.applyCss();
+            graphe.layout();
+        });
+
+        assertThat(robot.lookup(".aplat-nuit").queryAs(Rectangle.class).isVisible())
+                .as("une nuit qu'on ne sait pas calculer ne se dessine pas")
+                .isFalse();
     }
 
     @Test

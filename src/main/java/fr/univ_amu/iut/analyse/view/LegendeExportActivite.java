@@ -2,12 +2,13 @@ package fr.univ_amu.iut.analyse.view;
 
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
-import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-/// Compose la **légende de contexte** estampillée sur l'export image de la courbe d'activité (#2352).
+/// La ligne de **réglages** propre à la courbe d'activité, estampillée sur son export (#2352).
+///
+/// Les deux lignes communes à tout export — identité et provenance — vivent dans
+/// [fr.univ_amu.iut.commun.view.LegendeExport] : elles ne doivent rien à cet écran.
 ///
 /// Une image de graphe sans son contexte devient **inexploitable dès qu'elle quitte l'application** : rien
 /// n'y dit de quel carré, de quel point ni de quelle nuit elle parle, ni quels filtres étaient actifs quand
@@ -20,23 +21,6 @@ import java.util.List;
 public final class LegendeExportActivite {
 
     private LegendeExportActivite() {}
-
-    /// Ligne d'**identité** : de quoi parle la courbe — carré, point, passage —, ou la portée transverse
-    /// quand aucun passage n'est en contexte (`null`).
-    public static String identite(ContextePassage contexte) {
-        if (contexte == null) {
-            return "Tous les passages";
-        }
-        List<String> segments = new ArrayList<>();
-        segments.add("Carré " + contexte.site().numeroCarre());
-        if (contexte.site().codePoint() != null) {
-            segments.add("Point " + contexte.site().codePoint());
-        }
-        if (contexte.numeroPassage() > 0) {
-            segments.add("Passage N° " + contexte.numeroPassage());
-        }
-        return String.join(" · ", segments);
-    }
 
     /// Ligne de **réglages** : la largeur de tranche et les filtres actifs, en clair. Sans filtre, on le
     /// **dit** (« aucun filtre ») plutôt que de laisser un silence qu'on lirait comme un total non filtré ou
@@ -66,11 +50,5 @@ public final class LegendeExportActivite {
             return critere.nom();
         }
         return critere.nom() + " = " + String.join(" / ", critere.valeurs());
-    }
-
-    /// Ligne de **provenance** : ce qui a produit l'image et quand. Sans elle, impossible de savoir si une
-    /// image trouvée dans un dossier reflète encore l'état des données.
-    public static String provenance(String version, LocalDate date) {
-        return "VigieChiro Companion " + version + " · exporté le " + date;
     }
 }

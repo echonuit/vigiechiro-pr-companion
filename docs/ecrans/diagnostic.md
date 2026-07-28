@@ -14,6 +14,11 @@ L'écran réunit :
 - la **cohérence horaire** : la fenêtre nocturne réelle au point d'écoute (heures de coucher et de
   lever du soleil), assortie d'une alerte « hors nuit » si l'enregistrement déborde de cette fenêtre
   (démarrage avant le coucher ou arrêt après le lever du soleil) ;
+- la **fenêtre nocturne** matérialisée par un aplat pâle derrière la courbe : elle situe les mesures
+  dans la nuit réelle, et sans coordonnées au point elle disparaît plutôt que d'être inventée ;
+- un bouton **Exporter le graphe…** qui écrit la courbe en image, **redessinée** pour l'occasion (donc
+  fidèle même fenêtre réduite) et portant son contexte : carré, point, passage, nombre de mesures,
+  version et date. C'est ce qu'on joint à un signalement d'anomalie ;
 - l'état du **GPS du point d'écoute** : « disponible », ou « non renseigné » avec une invitation à
   compléter la fiche du site. Ce sont les coordonnées du point d'écoute (et non du capteur) ; le
   calcul de la fenêtre nocturne en dépend.
@@ -44,3 +49,7 @@ fiche site) » et l'encart cohérence horaire disparaît : la fenêtre nocturne 
 sans coordonnées. Le reste du diagnostic (courbe, anomalies, évènements) demeure exploitable.
 
 ![L'écran de diagnostic sans coordonnées GPS : repère « non renseigné », cohérence horaire absente.](../assets/captures/apercu-diagnostic-sans-gps.png)
+
+## Exporter la courbe
+
+![L'image exportée du graphe climatique : la courbe redessinée, avec sous elle le passage, le nombre de mesures et la provenance.](../assets/captures/apercu-diagnostic-export.png)

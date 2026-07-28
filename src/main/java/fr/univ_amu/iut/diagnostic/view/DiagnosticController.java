@@ -1,21 +1,31 @@
 package fr.univ_amu.iut.diagnostic.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.commun.view.AxeHoraire;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.ExportGraphe;
+import fr.univ_amu.iut.commun.view.FiltreFichier;
+import fr.univ_amu.iut.commun.view.GrapheNocturne;
+import fr.univ_amu.iut.commun.view.LegendeExport;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
+import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
+import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +34,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
@@ -65,7 +74,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private Label lblTemperature;
 
     @FXML
-    private LineChart<Number, Number> grapheClimat;
+    private GrapheNocturne grapheClimat;
 
     @FXML
     private ListView<String> listeAnomalies;
@@ -97,11 +106,76 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     @FXML
     private Button btnFermerRetour;
 
+    @FXML
+    private Button boutonExporterGraphe;
+
+    /// Désignation du fichier, derrière le port du socle : un `FileChooser` natif en dur **fige** un test
+    /// headless, et le geste ne serait pas testable.
+    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(new SelecteurFichierJavaFx(
+            () -> this.boutonExporterGraphe.getScene().getWindow()));
+
+    /// Porteur de désignation exposé aux tests.
+    SelecteurFichierModifiable selecteur() {
+        return selecteur;
+    }
+
     @Inject
-    public DiagnosticController(DiagnosticViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
+    public DiagnosticController(
+            DiagnosticViewModel viewModel,
+            OuvrirSite ouvrirSite,
+            OuvrirPassage ouvrirPassage,
+            VersionApplication version) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.version = Objects.requireNonNull(version, "version");
+    }
+
+    /// Version empaquetée, estampillée sur l'image exportée.
+    private final VersionApplication version;
+
+    /// **Exporte le graphe climatique** en PNG : redessiné hors écran, jamais photographié (ADR 2348), et
+    /// porteur de son contexte — une courbe de température qui quitte l'application sans dire de quelle
+    /// nuit elle parle n'explique plus rien.
+    @FXML
+    private void exporterGraphe() {
+        if (viewModel.mesures().isEmpty()) {
+            return;
+        }
+        selecteur
+                .enregistrerFichier("Exporter le graphe climatique", "climat-nuit.png", FiltreFichier.png())
+                .ifPresent(this::ecrireGraphe);
+    }
+
+    /// Écrit l'image du graphe dans `fichier`. Publique parce que l'outil de capture s'en sert : la
+    /// capture passe ainsi par le **vrai** chemin de production (ADR 0025).
+    public void exporterVers(java.nio.file.Path fichier, LocalDate dateExport) {
+        ecrireGraphe(fichier, dateExport);
+    }
+
+    private void ecrireGraphe(java.nio.file.Path fichier) {
+        ecrireGraphe(fichier, LocalDate.now());
+    }
+
+    /// Date **en paramètre** et non lue à l'intérieur : les aperçus sont versionnés, et un
+    /// `LocalDate.now()` interne reverserait un PNG différent à chaque jour de CI.
+    private void ecrireGraphe(java.nio.file.Path fichier, LocalDate dateExport) {
+        try {
+            ExportGraphe.ecrire(
+                    this::seriesClimat,
+                    axe -> configurerAxeTemps(axe, instant(viewModel.mesures().get(0)), viewModel.mesures()),
+                    "T° (°C) / Humidité (%)",
+                    fenetreNuitSurAxe(),
+                    List.of(
+                            LegendeExport.identite(contexte),
+                            "Climat de la nuit · " + viewModel.mesures().size() + " mesures",
+                            LegendeExport.provenance(version.libelle(), dateExport)),
+                    fichier);
+            viewModel.signalerExport(String.valueOf(fichier.getFileName()));
+        } catch (RuntimeException echec) {
+            viewModel.signalerEchecExport(
+                    echec.getMessage() == null ? echec.getClass().getSimpleName() : echec.getMessage());
+        }
     }
 
     @Override
@@ -151,8 +225,15 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
         listeAnomalies.setItems(viewModel.anomalies());
         listeEvenements.setItems(viewModel.evenements());
 
-        viewModel.mesures().addListener((ListChangeListener<MesureClimatique>) changement -> majGraphe());
+        viewModel.mesures().addListener((ListChangeListener<MesureClimatique>) changement -> {
+            majGraphe();
+            majFenetreNuit();
+        });
+        // La cohérence horaire est posée APRÈS les mesures : sans cet écouteur, l'aplat se calculerait
+        // sur une fenêtre encore inconnue et ne s'afficherait jamais.
+        viewModel.coherenceHoraireProperty().addListener((observable, avant, apres) -> majFenetreNuit());
         majGraphe();
+        majFenetreNuit();
 
         // Encart cohérence horaires (#548) : la fenêtre nocturne réelle quand elle est calculable.
         lblFenetreNuit.textProperty().bind(viewModel.fenetreNuitProperty());
@@ -232,6 +313,67 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
             configurerAxeTemps(axeTemps, origine, mesures);
         }
         grapheClimat.getData().setAll(List.of(temperature, humidite));
+    }
+
+    /// Deux séries **neuves** T°/hygrométrie, pour l'export : une `XYChart.Series` n'appartient qu'à un
+    /// graphe à la fois, emprunter celles de l'écran les lui retirerait.
+    private List<XYChart.Series<Number, Number>> seriesClimat() {
+        XYChart.Series<Number, Number> temperature = new XYChart.Series<>();
+        temperature.setName("T° (°C)");
+        XYChart.Series<Number, Number> humidite = new XYChart.Series<>();
+        humidite.setName("Humidité (%)");
+        List<MesureClimatique> mesures = viewModel.mesures();
+        LocalDateTime origine = instant(mesures.get(0));
+        for (MesureClimatique mesure : mesures) {
+            long minutes = Duration.between(origine, instant(mesure)).toMinutes();
+            temperature.getData().add(new XYChart.Data<>(minutes, mesure.temperatureCelsius()));
+            humidite.getData().add(new XYChart.Data<>(minutes, mesure.humiditePourcent()));
+        }
+        return List.of(temperature, humidite);
+    }
+
+    /// La fenêtre nocturne en minutes sur l'axe, ou `null` si elle n'est pas calculable — l'image se
+    /// dessine alors sans bande, comme l'écran.
+    private double[] fenetreNuitSurAxe() {
+        CoherenceHoraire coherence = viewModel.coherenceHoraireProperty().get();
+        List<MesureClimatique> mesures = viewModel.mesures();
+        if (coherence == null || !coherence.disponible() || mesures.isEmpty()) {
+            return null;
+        }
+        LocalDateTime origine = instant(mesures.get(0));
+        return new double[] {
+            minutesDepuis(origine, coherence.coucherSoleil()), minutesDepuis(origine, coherence.leverSoleil())
+        };
+    }
+
+    /// Pose l'**aplat de la nuit réelle** (coucher → lever au point d'écoute) derrière la courbe
+    /// climatique, en convertissant ces deux heures en minutes depuis l'origine de l'axe.
+    ///
+    /// L'écran connaissait déjà cette fenêtre — il l'écrit sous le graphe et alerte quand
+    /// l'enregistrement en déborde — mais elle ne se voyait pas **sur** la courbe, là où elle situe les
+    /// mesures. Sans coordonnées au point, elle n'est pas calculable : l'aplat s'efface alors plutôt que
+    /// d'inventer une nuit (#2617).
+    private void majFenetreNuit() {
+        List<MesureClimatique> mesures = viewModel.mesures();
+        CoherenceHoraire coherence = viewModel.coherenceHoraireProperty().get();
+        if (mesures.isEmpty() || coherence == null || !coherence.disponible()) {
+            grapheClimat.definirFenetreNuit(null, null);
+            return;
+        }
+        LocalDateTime origine = instant(mesures.get(0));
+        grapheClimat.definirFenetreNuit(
+                minutesDepuis(origine, coherence.coucherSoleil()), minutesDepuis(origine, coherence.leverSoleil()));
+    }
+
+    /// Minutes séparant `origine` de l'`heure` visée, en restant **dans la nuit** : une heure antérieure
+    /// à l'origine appartient au lendemain (le lever, après une origine du soir), et compte donc en
+    /// positif au-delà de minuit.
+    private static double minutesDepuis(LocalDateTime origine, LocalTime heure) {
+        LocalDateTime cible = origine.toLocalDate().atTime(heure);
+        if (cible.isBefore(origine)) {
+            cible = cible.plusDays(1);
+        }
+        return Duration.between(origine, cible).toMinutes();
     }
 
     /// Calibre l'axe du temps : bornes 0..durée, un pas « propre » visant 6 à 8 repères, et des

@@ -3,20 +3,4 @@
  * design.css (patron de diagnostic.css).
  */
 
-/* Aplat de la fenêtre nocturne (coucher -> lever), dessiné derrière les courbes. Très pâle pour
- * situer sans écraser : ce qui déborde de la bande est de l'activité diurne. */
-.aplat-nuit {
-    -fx-fill: rgba(26, 82, 118, 0.10);
-}
 
-/* Image exportée : fond blanc opaque (une image à fond transparent devient illisible collée sur un
- * support sombre) et lignes de contexte discrètes sous le graphe. */
-.export-activite {
-    -fx-background-color: white;
-    -fx-padding: 16;
-}
-
-.legende-export {
-    -fx-font-size: 0.78em;
-    -fx-text-fill: #34495e;
-}

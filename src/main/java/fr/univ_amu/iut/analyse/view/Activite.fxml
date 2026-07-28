@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import fr.univ_amu.iut.analyse.view.GrapheNocturne?>
+<?import fr.univ_amu.iut.commun.view.GrapheNocturne?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
