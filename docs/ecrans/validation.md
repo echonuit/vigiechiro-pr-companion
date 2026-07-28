@@ -63,10 +63,18 @@ plus sûres. Les **compteurs** de la barre de statut (À revoir / Validées / Co
 le **sous-ensemble affiché**, pas la nuit entière : vous voyez toujours combien il reste à traiter dans ce
 que vous avez sous les yeux.
 
+À leur droite, un compteur dédié aux **espèces à enjeu** : « 12 à enjeu, 11 à revoir ». Il dit ce qui
+**reste**, parce que c'est là-dessus qu'on agit, et il s'efface s'il n'y a aucune espèce prioritaire dans
+ce que vous regardez.
+
 Vous pouvez **exporter ce sous-ensemble** en **CSV** via **☰ → Exporter les observations (CSV)** : le
 fichier reprend exactement les observations **actuellement affichées** (donc les filtres appliqués), avec
 leurs colonnes (carré, point, site, date, espèce, statut, fréquence, commentaire…). Le CSV est en UTF‑8 et
 s'ouvre directement dans un tableur (Excel, LibreOffice) pour l'analyse ou la transmission.
+
+Une colonne **« Espèce à enjeu »** y porte le même repère que le bouclier de la table : sans elle, le
+fichier perdrait à la sortie l'information qu'on cherche en premier, et il faudrait la reconstituer à la
+main depuis une liste externe.
 
 ![La barre de filtres avec la puce « Groupe : Chiroptères » active : la table ne montre plus que les chauves-souris.](../assets/captures/apercu-sons-validation-filtres.png)
 

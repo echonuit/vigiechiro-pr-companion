@@ -1,8 +1,11 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsCsv;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -44,15 +47,21 @@ public final class ExporterObservations implements Callable<Integer> {
 
     private final ProjectionsAudioDao projections;
 
+    /// Référentiel de conservation (#2353), pour la colonne « Espèce à enjeu ». `Provider` comme les
+    /// autres lectures en base : picocli instancie les sous-commandes avant la migration du schéma.
+    private final Provider<EspecesPrioritaires> especesPrioritaires;
+
     @Inject
-    public ExporterObservations(ProjectionsAudioDao projections) {
+    public ExporterObservations(ProjectionsAudioDao projections, Provider<EspecesPrioritaires> especesPrioritaires) {
         this.projections = Objects.requireNonNull(projections, "projections");
+        this.especesPrioritaires = Objects.requireNonNull(especesPrioritaires, "especesPrioritaires");
     }
 
     @Override
     public Integer call() throws IOException {
         List<LigneObservationAudio> lignes = projections.lignesAudioDuPassage(passage);
-        Path ecrit = ExportObservationsCsv.ecrire(lignes, sortie);
+        MarqueurEspecesAEnjeu marqueur = new MarqueurEspecesAEnjeu(especesPrioritaires.get());
+        Path ecrit = ExportObservationsCsv.ecrire(lignes, sortie, marqueur::aEnjeu);
         spec.commandLine()
                 .getOut()
                 .println("Observations exportées : " + lignes.size() + " ligne(s) → " + ecrit.toAbsolutePath());

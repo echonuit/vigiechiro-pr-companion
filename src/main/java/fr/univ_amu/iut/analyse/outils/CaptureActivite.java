@@ -182,14 +182,17 @@ public final class CaptureActivite {
     /// 20 h à 05 h). Déterministe, aucune base.
     private static List<ContactHoraire> contactsDemo() {
         List<ContactHoraire> contacts = new ArrayList<>();
-        ajouter(contacts, "PIPKUH", "Pipistrelle de Kuhl", new int[] {2, 9, 16, 22, 18, 12, 7, 4, 2, 1});
-        ajouter(contacts, "PIPPIP", "Pipistrelle commune", new int[] {6, 13, 10, 8, 6, 4, 3, 2, 1, 0});
-        ajouter(contacts, "NYCNOC", "Noctule commune", new int[] {7, 5, 3, 2, 1, 1, 0, 0, 0, 0});
-        ajouter(contacts, "BARBAR", "Barbastelle d'Europe", new int[] {0, 1, 2, 3, 3, 2, 1, 1, 0, 0});
-        ajouter(contacts, "MYODAU", "Murin de Daubenton", new int[] {0, 1, 1, 2, 2, 1, 1, 0, 0, 0});
+        ajouter(contacts, "Pipkuh", "Pipistrelle de Kuhl", new int[] {2, 9, 16, 22, 18, 12, 7, 4, 2, 1});
+        ajouter(contacts, "Pippip", "Pipistrelle commune", new int[] {6, 13, 10, 8, 6, 4, 3, 2, 1, 0});
+        ajouter(contacts, "Nycnoc", "Noctule commune", new int[] {7, 5, 3, 2, 1, 1, 0, 0, 0, 0});
+        ajouter(contacts, "Barbar", "Barbastelle d'Europe", new int[] {0, 1, 2, 3, 3, 2, 1, 1, 0, 0});
+        ajouter(contacts, "Myodau", "Murin de Daubenton", new int[] {0, 1, 1, 2, 2, 1, 1, 0, 0, 0});
         return List.copyOf(contacts);
     }
 
+    /// Les codes suivent la **casse du référentiel Tadarida** (`Pippip`, et non `PIPPIP`) : le repère
+    /// « espèce à enjeu » (#2353) compare des codes, et une démo en majuscules montrerait l'écran sans la
+    /// fonctionnalité — un aperçu qui documente une absence.
     private static void ajouter(List<ContactHoraire> contacts, String taxon, String nom, int[] parHeure) {
         for (int index = 0; index < parHeure.length; index++) {
             int heure = (20 + index) % 24;
@@ -219,7 +222,11 @@ public final class CaptureActivite {
         /// l'attester par une absence.
         @Provides
         EspecesPrioritaires especesPrioritaires() {
-            return () -> Set.of("Pippip");
+            // Le sous-ensemble RÉELLEMENT prioritaire parmi les cinq espèces de la démo : Pipistrelle
+            // commune et Noctule commune figurent au plan national, la Pipistrelle de Kuhl, la
+            // Barbastelle d'Europe et le Murin de Daubenton non. Un référentiel de démonstration qui
+            // s'écarterait du vrai ferait mentir l'aperçu dans un sens ou dans l'autre.
+            return () -> Set.of("Pippip", "Nycnoc");
         }
 
         /// Contacts que le service de démonstration renverra : la nuit type, ou **rien** pour l'aperçu de

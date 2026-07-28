@@ -1,9 +1,9 @@
 package fr.univ_amu.iut.analyse.view;
 
+import fr.univ_amu.iut.commun.view.RepereEspeceAEnjeu;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import javafx.scene.control.TableCell;
-import javafx.scene.control.Tooltip;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Cellule du nom d'espèce de l'inventaire, ornée d'un **bouclier** quand l'espèce est **prioritaire** au
@@ -17,12 +17,6 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// la teinte, qui ne survit ni au daltonisme ni à l'impression.
 final class CelluleEspeceAEnjeu {
 
-    /// Glyphe et classe CSS partagés avec l'écran de revue, pour que le même fait se reconnaisse d'un
-    /// écran à l'autre.
-    private static final String ICONE = "fas-shield-alt";
-
-    private static final String STYLE = "icone-enjeu";
-
     private CelluleEspeceAEnjeu() {}
 
     static TableCell<EspeceAgregee, String> cellule(MarqueurEspecesAEnjeu marqueur) {
@@ -33,15 +27,19 @@ final class CelluleEspeceAEnjeu {
                 EspeceAgregee espece =
                         getTableRow() == null ? null : getTableRow().getItem();
                 setText(vide ? null : libelle);
-                if (vide || espece == null || !marqueur.aEnjeu(espece.code())) {
+                if (vide || espece == null) {
                     setGraphic(null);
                     setTooltip(null);
-                } else {
-                    FontIcon icone = new FontIcon(ICONE);
-                    icone.getStyleClass().add(STYLE);
-                    setGraphic(icone);
-                    setTooltip(new Tooltip("Espèce prioritaire du Plan National d'Actions Chiroptères"));
+                    return;
                 }
+                // Le bouclier occupe une GOUTTIÈRE de largeur fixe, présente même quand l'espèce n'est pas
+                // prioritaire : sinon les noms non marqués commenceraient plus à gauche que les autres, et
+                // la colonne d'identité — celle qu'on parcourt du regard — perdrait son bord aligné.
+                boolean aEnjeu = marqueur.aEnjeu(espece.code());
+                FontIcon icone = RepereEspeceAEnjeu.icone();
+                icone.setVisible(aEnjeu);
+                setGraphic(icone);
+                setTooltip(aEnjeu ? RepereEspeceAEnjeu.infobulle() : null);
             }
         };
     }
