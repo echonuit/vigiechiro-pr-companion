@@ -7,7 +7,7 @@ import fr.univ_amu.iut.commun.model.EchelleProgression;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
-import fr.univ_amu.iut.commun.view.DialogueProgression;
+import fr.univ_amu.iut.commun.view.SuiviProgression;
 import fr.univ_amu.iut.connexion.di.ConnexionModule;
 import fr.univ_amu.iut.connexion.view.NavigationConnexion;
 import java.io.IOException;
@@ -20,6 +20,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 /// Outil de capture/mesure, utilisable tel quel.
@@ -37,6 +38,7 @@ import javafx.scene.layout.VBox;
 public final class CaptureConnexion {
 
     private static final String APERCU_ECRIT = "Apercu ecrit dans ";
+    private static final String FXML_MODALE = "ConnexionModale.fxml";
 
     private CaptureConnexion() {}
 
@@ -66,7 +68,7 @@ public final class CaptureConnexion {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        FXMLLoader loader = new FXMLLoader(NavigationConnexion.class.getResource("ConnexionModale.fxml"));
+        FXMLLoader loader = new FXMLLoader(NavigationConnexion.class.getResource(FXML_MODALE));
         loader.setControllerFactory(creerInjecteur()::getInstance);
         Parent vue = loader.load();
         Path fichier = sortie.resolve("apercu-connexion.png");
@@ -76,24 +78,36 @@ public final class CaptureConnexion {
         capturerProgression(sortie);
     }
 
-    /// Troisième état : la **modale de progression** ouverte par la connexion (#2558).
+    /// Troisième état : la connexion **en cours de récupération** (#2558, #2642).
     ///
     /// Se connecter n'est plus instantané : depuis #2554, la connexion rejoue les rapprocheurs, et l'un
     /// d'eux rapatrie les nuits du compte avec leur contenu. L'opération dure, elle s'annonce donc, et elle
     /// se laisse **interrompre** - ce que le seul bandeau « Vérification en cours… » ne faisait pas.
     ///
+    /// La barre est capturée **dans la modale**, à sa place réelle. Elle s'y greffe depuis #2642 : ouvrir
+    /// une seconde fenêtre par-dessus celle-ci montrait deux fenêtres pour un seul geste, et aucune image
+    /// ne pouvait en rendre compte - un aperçu rend une scène, pas une pile de fenêtres. Maintenant qu'il
+    /// n'y a plus qu'une scène, la capture dit tout.
+    ///
     /// L'étape montrée est celle qu'émet réellement le balayage (`ExecutionParallele`, libellé « Nuits
     /// k/N ») et sa fraction vient de la vraie échelle, pas d'un nombre choisi pour l'image.
-    ///
-    /// ⚠️ Ce que cette capture **ne peut pas** montrer : la modale s'ouvre **par-dessus** celle de
-    /// connexion, et un aperçu rend une scène, pas une pile de fenêtres. La superposition se juge en
-    /// recette (case S8-5).
     private static void capturerProgression(Path sortie) throws IOException {
-        VBox contenu = DialogueProgression.apercu(
+        FXMLLoader loader = new FXMLLoader(NavigationConnexion.class.getResource(FXML_MODALE));
+        loader.setControllerFactory(creerInjecteur()::getInstance);
+        Parent vue = loader.load();
+        VBox contenu = SuiviProgression.apercu(
                 "Connexion à Vigie-Chiro",
                 new Progression("Nuits 7/12", EchelleProgression.autonome(12).fraction(7)));
+        // On greffe le VRAI contenu du socle dans la VRAIE zone d'accueil, exactement comme le fait
+        // PanneauProgression en production. Le skin du conteneur n'existe qu'après une passe de layout.
+        vue.applyCss();
+        vue.layout();
+        StackPane zone = (StackPane) vue.lookup("#zoneProgression");
+        zone.getChildren().setAll(contenu);
+        zone.setVisible(true);
+        zone.setManaged(true);
         Path fichier = sortie.resolve("apercu-connexion-progression.png");
-        ApercuFx.enregistrerPng(new Scene(contenu), fichier);
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
         System.out.println(APERCU_ECRIT + fichier);
     }
 
@@ -107,7 +121,7 @@ public final class CaptureConnexion {
     /// **sans toucher au presse-papier**, puis on crée la scène **après** : elle se dimensionne alors sur
     /// une préférence qui inclut déjà le bandeau, et le PNG loge le bandeau ET les boutons.
     private static void capturerAvecBandeau(Path sortie) throws IOException {
-        FXMLLoader loader = new FXMLLoader(NavigationConnexion.class.getResource("ConnexionModale.fxml"));
+        FXMLLoader loader = new FXMLLoader(NavigationConnexion.class.getResource(FXML_MODALE));
         loader.setControllerFactory(creerInjecteur()::getInstance);
         Parent vue = loader.load();
         ((Button) vue.lookup("#boutonConnecter")).fire();

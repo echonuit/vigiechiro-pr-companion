@@ -674,11 +674,22 @@ bloqué. Le patron correct (thread virtuel → travail → `Platform.runLater`) 
   sur la racine de la fenêtre, et **opération critique (#906) posée le temps du travail** (fermer
   l'application en pleine copie déclenche l'avertissement du socle). Installée par le
   `MainController`, consommée par injection dans les `ActionMenu`.
-- `DialogueProgression` (#1597) / port `SuiviOperation` (#1622) : la déclinaison **modale à barre de
+- `SuiviProgression` (#1597, #2642) / port `SuiviOperation` (#1622) : la déclinaison **à barre de
   progression annulable**, pour les opérations **longues** dont l'utilisateur veut voir l'avancement et
-  pouvoir renoncer (reconstruction, réactivation avec ancrage, import des observations). Là où
-  `IndicateurOccupation` pose un voile opaque (« ça travaille »), la modale **dit où on en est** (barre
-  déterminée + libellé d'étape + ETA) et **laisse annuler** (bouton « Annuler » câblé sur le jeton). Elle
+  pouvoir renoncer (reconstruction, réactivation avec ancrage, import des observations, connexion). Là où
+  `IndicateurOccupation` pose un voile opaque (« ça travaille »), elle **dit où on en est** (barre
+  déterminée + libellé d'étape + ETA) et **laisse annuler** (bouton « Annuler » câblé sur le jeton).
+
+  **Deux présentations, un seul socle.** `SuiviProgression` porte le contenu et l'orchestration ; ses
+  sous-classes ne diffèrent que par l'endroit où le contenu paraît. `DialogueProgression` ouvre une
+  **fenêtre** ; `PanneauProgression` **greffe** le contenu dans une zone fournie par l'appelant. Le choix
+  appartient à l'appelant, parce que lui seul sait d'où il part : un geste lancé **depuis une modale**
+  prend le panneau, sinon l'utilisateur voit deux fenêtres pour un seul geste, alors que l'écran
+  d'origine a déjà la zone où il lui parle. Un geste lancé d'une barre d'outils prend la fenêtre. Quand
+  le panneau est en place, l'appelant grise ce qui n'a plus de sens - la saisie en cours, et le bouton
+  « Fermer », qui laisserait sinon le travail orphelin.
+
+  Elle
   pilote le même `ExecuteurTache` (progression + annulation ci-dessous). Le port `SuiviOperation` rend le
   geste **testable sans fenêtre** : un double **synchrone** exécute le travail sans ouvrir de `Stage`, si
   bien que le déclenchement s'éprouve **hors du fil JavaFX**.
@@ -707,8 +718,8 @@ l'opération et vérifie l'arrêt propre au premier point de contrôle (callback
 échec) - c'est le contrat coopératif qui est testé, la simultanéité réelle relevant de l'E2E.
 
 **La règle.** Toute opération longue d'un écran passe par le socle — `IndicateurOccupation` (voile) pour
-les traitements brefs, `DialogueProgression` (modale) quand l'avancement mérite d'être montré et
-l'opération annulée — l'échec étant routé vers le filet d'erreurs de l'écran (#795), jamais un
+les traitements brefs, `SuiviProgression` (fenêtre ou panneau intégré) quand l'avancement mérite d'être
+montré et l'opération annulée — l'échec étant routé vers le filet d'erreurs de l'écran (#795), jamais un
 `Thread.ofVirtual()` + `runLater` recopié à la main, y compris pour la progression et l'annulation
 (surcharges ci-dessus). Le déport écran par
 écran (EPIC #793 puis reliquat #1316) est **terminé** : plus aucun `Thread.ofVirtual` ne vit hors du
