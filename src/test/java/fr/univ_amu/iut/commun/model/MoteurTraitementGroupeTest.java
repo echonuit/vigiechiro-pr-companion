@@ -45,7 +45,7 @@ class MoteurTraitementGroupeTest {
         }
 
         @Override
-        public void executer(CiblePassage cible) {
+        public void executer(CiblePassage cible, JetonAnnulation jeton) {
             pendant.run();
             if (echoue.test(cible)) {
                 throw new IllegalStateException("disque plein");
