@@ -96,20 +96,21 @@ Elle ne figure alors dans **aucune ligne** de ce tableau.
 En fait, la **synchronisation** « Mes sites » les rapatrie déjà **automatiquement**, contenu compris :
 la nuit apparaît dans l'historique de son carré avec ses observations, prête à être consultée.
 
-Il reste deux cas où une nuit arrive **sans son contenu** : Vigie-Chiro n'a pas fini de l'analyser, ou
-la liaison a manqué au moment de la lire. Le menu **☰ › Compléter une nuit récupérée…** liste
-précisément ces nuits-là et permet de les **hydrater** : une par une (**Reconstruire cette nuit**) ou
-**toutes en une passe** (**Reconstruire tout**, avec un suivi à **deux niveaux** - la nuit en cours et
-le lot entier - et un bouton **Annuler** pour interrompre proprement).
+Il reste des cas où une nuit arrive **sans son contenu** : Vigie-Chiro n'a pas fini de l'analyser, la
+liaison a manqué au moment de la lire, ou son point d'écoute n'existe pas encore sur cette machine. Le
+menu **☰ › Compléter une nuit récupérée…** liste précisément ces nuits-là et permet de les compléter :
+une par une (**Compléter cette nuit**) ou **toutes en une passe** (**Tout compléter**, avec un suivi à
+**deux niveaux** - la nuit en cours et le lot entier - et un bouton **Annuler** pour interrompre
+proprement).
 
 ![La modale « Compléter une nuit récupérée » : les nuits dont Vigie-Chiro n'a pas encore livré le contenu. La seconde ne peut pas être complétée tant que son point d'écoute n'existe pas ici.](../assets/captures/apercu-multisite-reconstruction.png)
 
-!!! note "Ce qu'une nuit reconstruite ne contient pas"
-    La plateforme ne rend pas tout. Un passage reconstruit arrive donc **sans audio** (c'est un
+!!! note "Ce qu'une nuit complétée ne contient pas"
+    La plateforme ne rend pas tout. Une nuit complétée reste donc **sans audio** (c'est un
     [passage sans audio](passage.md) : consultable, pas
     écoutable), **sans** journal du capteur ni relevé climatique, et **sans** les séquences que
     Tadarida n'a pas identifiées : le serveur ne les connaît pas. Ces manques sont **affichés** à la
-    fin de la reconstruction, pas passés sous silence.
+    fin de l'opération, pas passés sous silence.
 
     Si vous retrouvez les fichiers d'origine, ouvrez le passage et utilisez **Réactiver ce passage**.
 
