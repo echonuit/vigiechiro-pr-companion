@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.95.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.94.1...v2.95.0) (2026-07-28)
+
+
+### Features
+
+* **campagne:** gérer les campagnes depuis l'application ([#2640](https://github.com/echonuit/vigiechiro-pr-companion/issues/2640)) ([348b13b](https://github.com/echonuit/vigiechiro-pr-companion/commit/348b13bc641a58557c76a81c5f2d78f0366410a1)), closes [#2630](https://github.com/echonuit/vigiechiro-pr-companion/issues/2630) [#2630](https://github.com/echonuit/vigiechiro-pr-companion/issues/2630) [#2355](https://github.com/echonuit/vigiechiro-pr-companion/issues/2355) [#2355](https://github.com/echonuit/vigiechiro-pr-companion/issues/2355) [#2630](https://github.com/echonuit/vigiechiro-pr-companion/issues/2630) [#2630](https://github.com/echonuit/vigiechiro-pr-companion/issues/2630)
+
 ## [2.94.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.94.0...v2.94.1) (2026-07-28)
 
 
