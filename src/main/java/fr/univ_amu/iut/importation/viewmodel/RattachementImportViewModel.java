@@ -3,11 +3,14 @@ package fr.univ_amu.iut.importation.viewmodel;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.passage.model.Campagne;
+import fr.univ_amu.iut.passage.model.PropositionCampagne;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -49,6 +52,22 @@ public class RattachementImportViewModel {
     /// exemptée de R3/R4. Cochée par l'utilisateur, elle s'applique à tous les passages créés par cet
     /// import (une même demande cible un seul carré). N'influe ni sur le préfixe ni sur la numérotation.
     private final BooleanProperty opportuniste = new SimpleBooleanProperty(this, "opportuniste", false);
+    /// Campagne (#2631), **optionnelle** : la fonctionnalité est désactivable. Absent le port, la liste
+    /// reste vide, rien n'est proposé ni rattaché, et l'assistant se comporte comme avant.
+    private final Optional<PropositionCampagne> campagnes;
+
+    private final ObservableList<Campagne> campagnesProposees = FXCollections.observableArrayList();
+    private final ObjectProperty<Campagne> campagneSelectionnee =
+            new SimpleObjectProperty<>(this, "campagneSelectionnee");
+
+    /// L'utilisateur a-t-il **choisi lui-même** une campagne sur cet écran ?
+    ///
+    /// Dès qu'il l'a fait, changer de point ne redéfinit plus la proposition : deviner est un service,
+    /// écraser une décision est une faute. Le drapeau distingue les deux, ce que la seule valeur
+    /// sélectionnée ne permet pas - « aucune campagne » choisi à la main et « rien proposé » ont la
+    /// même valeur, `null`, et des sens opposés.
+    private boolean campagneChoisieALaMain;
+
     private final ReadOnlyStringWrapper apercuPrefixe = new ReadOnlyStringWrapper(this, "apercuPrefixe", "");
 
     /// Avertissement **non bloquant** (#33, #111) : non vide quand le dossier contient des originaux déjà
@@ -64,9 +83,11 @@ public class RattachementImportViewModel {
     /// (#111) sur l'ensemble du dossier. Liste vide tant qu'aucune inspection n'a réussi.
     private List<String> nomsOriginaux = List.of();
 
-    public RattachementImportViewModel(ServiceSites serviceSites, Horloge horloge, String idUtilisateur) {
+    public RattachementImportViewModel(
+            ServiceSites serviceSites, Horloge horloge, String idUtilisateur, Optional<PropositionCampagne> campagnes) {
         this.serviceSites = Objects.requireNonNull(serviceSites, "serviceSites");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        this.campagnes = Objects.requireNonNull(campagnes, "campagnes");
         Objects.requireNonNull(horloge, "horloge");
 
         // Valeur initiale avant d'installer les écouteurs (évite un recalcul d'aperçu prématuré).
@@ -78,9 +99,61 @@ public class RattachementImportViewModel {
             pointSelectionne.set(null);
             rafraichir();
         });
-        pointSelectionne.addListener((obs, ancien, nouveau) -> rafraichir());
+        pointSelectionne.addListener((obs, ancien, nouveau) -> {
+            proposerCampagnePour(nouveau);
+            rafraichir();
+        });
         annee.addListener((obs, ancien, nouveau) -> rafraichir());
         numeroPassage.addListener((obs, ancien, nouveau) -> rafraichir());
+    }
+
+    /// La fonctionnalité `campagne` est-elle active (donc la liste déroulante affichée) ?
+    public boolean campagneActivee() {
+        return campagnes.isPresent();
+    }
+
+    /// Charge les campagnes proposables. Appelée à l'ouverture de l'écran, comme [#chargerSites].
+    public void chargerCampagnes() {
+        campagnes.ifPresent(port -> campagnesProposees.setAll(port.campagnes()));
+    }
+
+    /// Enregistre que la campagne affichée vient d'un **choix de l'utilisateur**, et non d'une
+    /// proposition. Appelée par la surface au changement de sélection.
+    ///
+    /// C'est la surface qui sait faire la différence : le ViewModel voit passer les deux par la même
+    /// propriété. Sans ce signal, la proposition suivante écraserait le choix.
+    public void marquerCampagneChoisie() {
+        campagneChoisieALaMain = true;
+    }
+
+    /// Propose la campagne du dernier passage de `point`, **sauf** si l'utilisateur a déjà choisi.
+    ///
+    /// Un point sans passage rattaché ne propose rien, et cela vaut décision : la proposition passe
+    /// alors à « aucune campagne » plutôt que de laisser en place celle du point précédent, qui n'a
+    /// aucune raison de s'appliquer ici.
+    private void proposerCampagnePour(PointDEcoute point) {
+        if (campagneChoisieALaMain) {
+            return;
+        }
+        campagnes.ifPresent(port -> campagneSelectionnee.set(
+                point == null ? null : port.proposerPour(point.id()).orElse(null)));
+    }
+
+    /// Campagnes proposées à la liste déroulante (vide si la fonctionnalité est coupée).
+    public ObservableList<Campagne> campagnesProposees() {
+        return campagnesProposees;
+    }
+
+    /// Campagne retenue pour les nuits de cet import (`null` = aucune), liée en bidirectionnel.
+    public ObjectProperty<Campagne> campagneSelectionneeProperty() {
+        return campagneSelectionnee;
+    }
+
+    /// Identifiant de la campagne retenue, `null` si aucune ou fonctionnalité coupée : ce que le
+    /// rattachement post-import applique aux nuits créées.
+    public Long idCampagneRetenue() {
+        Campagne retenue = campagneSelectionnee.get();
+        return retenue == null ? null : retenue.id();
     }
 
     /// Recharge les sites de l'utilisateur courant (à l'ouverture de l'écran ou après création d'un site).

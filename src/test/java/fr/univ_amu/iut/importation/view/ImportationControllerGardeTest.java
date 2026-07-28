@@ -19,6 +19,7 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -50,7 +51,14 @@ class ImportationControllerGardeTest {
         when(horloge.aujourdhui()).thenReturn(LocalDate.of(2026, 6, 21));
         PreferenceConservation conservation = new PreferenceConservation(reglages);
         ImportationViewModel viewModel = new ImportationViewModel(
-                serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation, (id, opp) -> {});
+                serviceImport,
+                serviceSites,
+                horloge,
+                "u-1",
+                new NavigationViewModel(),
+                conservation,
+                (id, opp) -> {},
+                Optional.empty());
         ImportationController controller = controleur(viewModel, conservation);
 
         assertThat(controller.aSaisieNonEnregistree()).isFalse();
@@ -66,7 +74,14 @@ class ImportationControllerGardeTest {
         when(horloge.aujourdhui()).thenReturn(LocalDate.of(2026, 6, 21));
         PreferenceConservation conservation = new PreferenceConservation(reglages);
         ImportationViewModel viewModel = new ImportationViewModel(
-                serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation, (id, opp) -> {});
+                serviceImport,
+                serviceSites,
+                horloge,
+                "u-1",
+                new NavigationViewModel(),
+                conservation,
+                (id, opp) -> {},
+                Optional.empty());
         ImportationController controller = controleur(viewModel, conservation);
 
         viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
@@ -87,7 +102,14 @@ class ImportationControllerGardeTest {
         when(horloge.aujourdhui()).thenReturn(LocalDate.of(2026, 6, 21));
         PreferenceConservation conservation = new PreferenceConservation(reglages);
         ImportationViewModel viewModel = new ImportationViewModel(
-                serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation, (id, opp) -> {});
+                serviceImport,
+                serviceSites,
+                horloge,
+                "u-1",
+                new NavigationViewModel(),
+                conservation,
+                (id, opp) -> {},
+                Optional.empty());
         ImportationController controller = controleur(viewModel, conservation);
 
         viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));

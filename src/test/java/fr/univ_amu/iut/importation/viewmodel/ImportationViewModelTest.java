@@ -36,8 +36,10 @@ import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.PropositionCampagne;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -47,6 +49,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -93,6 +96,29 @@ class ImportationViewModelTest {
     private final InspecteurDossier inspecteur = new InspecteurDossier(new AnalyseurLogPR());
     private final NavigationViewModel navigation = new NavigationViewModel();
     private PreferenceConservation conservation;
+    /// Port de campagne **capturant** (#2631) : on veut savoir ce qui a été rattaché, pas simuler des
+    /// campagnes. Un mock Mockito conviendrait ; celui-ci dit plus clairement ce qu'on observe.
+    private final List<String> rattachements = new java.util.ArrayList<>();
+
+    private final PropositionCampagne portCampagne = new PropositionCampagne() {
+        @Override
+        public List<Campagne> campagnes() {
+            return List.of(CAMPAGNE_ENS);
+        }
+
+        @Override
+        public Optional<Campagne> proposerPour(Long idPoint) {
+            return Optional.empty();
+        }
+
+        @Override
+        public void rattacher(long idPassage, Long idCampagne) {
+            rattachements.add(idPassage + "->" + idCampagne);
+        }
+    };
+
+    private static final Campagne CAMPAGNE_ENS = new Campagne(7L, "Suivi ENS", 2026, null);
+
     private ImportationViewModel viewModel;
     private Path sd;
 
@@ -108,7 +134,8 @@ class ImportationViewModelTest {
                 ID_USER,
                 navigation,
                 conservation,
-                marquageOpportuniste);
+                marquageOpportuniste,
+                Optional.of(portCampagne));
         sd = Files.createDirectories(racine.resolve("sd"));
         Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
@@ -1027,5 +1054,25 @@ class ImportationViewModelTest {
                 .containsExactly("Incluez au moins une nuit à importer.");
         assertThat(viewModel.coordinationNuits().numerotationValideProperty().get())
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#2631 : la campagne retenue est appliquée au passage créé")
+    void import_rattache_a_la_campagne_retenue() {
+        viewModel.rattachement().campagneSelectionneeProperty().set(CAMPAGNE_ENS);
+
+        viewModel.marquerTermine(new ResultatImport(passageTransforme(42L), null, "1925492", 1, 5, List.of()));
+
+        assertThat(rattachements).containsExactly("42->7");
+    }
+
+    @Test
+    @DisplayName("#2631 : aucune campagne retenue — rien n'est rattaché")
+    void import_sans_campagne_ne_rattache_rien() {
+        viewModel.marquerTermine(new ResultatImport(passageTransforme(42L), null, "1925492", 1, 5, List.of()));
+
+        assertThat(rattachements)
+                .as("le rattachement est facultatif : ne rien choisir ne doit rien écrire")
+                .isEmpty();
     }
 }
