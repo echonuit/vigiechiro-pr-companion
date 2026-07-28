@@ -1,6 +1,6 @@
 # CI/CD et release
 
-Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->10<!--/inv--> workflows et le processus de
+Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->11<!--/inv--> workflows et le processus de
 publication.
 
 ## Les workflows
@@ -16,6 +16,7 @@ publication.
 | [release.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | push `main` | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true) | — |
 | [api-live.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/api-live.yml) | hebdomadaire (lundi) + manuel | Contrat de l'API Vigie-Chiro, **en lecture seule** ; sépare « jeton mort » (warning) de « contrat cassé » (rouge) | — |
 | [adr-rapport.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/adr-rapport.yml) | hebdomadaire + manuel | Rapport ADR (calibration des cliquets et des loupes) | — |
+| [mutation-hebdo.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-hebdo.yml) | hebdomadaire (lundi) + manuel | Mesure de mutation PIT sur le dépôt : bilan dans le résumé du job, rapport détaillé en artefact | — |
 | [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | release | Paquet Flatpak (cf. plus bas) | — |
 | [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | release | Soumission winget (inerte sans `WINGET_TOKEN`) | — |
 
