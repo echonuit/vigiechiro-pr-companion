@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -50,7 +52,8 @@ class TransportVigieChiroTest {
 
         assertThat(transport.enteteAuthorization()).isEmpty();
         assertThat(transport.lire("/moi")).isInstanceOf(ReponseApi.NonConnecte.class);
-        assertThat(transport.ecrire("POST", "/fichiers", "{}", null)).isInstanceOf(ReponseApi.NonConnecte.class);
+        assertThat(transport.ecrire("POST", "/fichiers", "{}", null, TransportVigieChiro.Rejeu.INTERDIT))
+                .isInstanceOf(ReponseApi.NonConnecte.class);
     }
 
     @Test
@@ -59,7 +62,7 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport = new TransportVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
 
         assertThat(transport.lire("/moi")).isInstanceOf(ReponseApi.Injoignable.class);
-        assertThat(transport.ecrire("PATCH", "/participations/p1", "{}", "e1"))
+        assertThat(transport.ecrire("PATCH", "/participations/p1", "{}", "e1", TransportVigieChiro.Rejeu.INTERDIT))
                 .isInstanceOf(ReponseApi.Injoignable.class);
         assertThat(transport.telecharger("http://localhost:1/s3/signe")).isInstanceOf(ReponseApi.Injoignable.class);
     }
@@ -223,6 +226,65 @@ class TransportVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#2677 : une écriture qui CRÉE n'est jamais rejouée, même sur une coupure réseau")
+    void ecriture_qui_cree_n_est_jamais_rejouee() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        doThrow(new IOException("paquet perdu")).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        ReponseApi<String> reponse =
+                transport.ecrire("POST", "/sites/s1/participations", "{}", null, TransportVigieChiro.Rejeu.INTERDIT);
+
+        // Une panne réseau ne dit pas si le serveur a agi : la requête a pu arriver, la participation
+        // être créée, et la RÉPONSE se perdre. Insister échangerait une erreur visible contre un doublon
+        // silencieux sur la plateforme, qu'aucune route ne permet de retirer.
+        assertThat(reponse).isInstanceOf(ReponseApi.Injoignable.class);
+        assertThat(attentes)
+                .as("aucune reprise : le réessai n'est jamais aveugle (ADR 2354, règle 1)")
+                .isEmpty();
+        verify(client, times(1)).send(any(), any());
+    }
+
+    @Test
+    @DisplayName("#2677 : une écriture de valeur absolue, elle, est réessayée")
+    void ecriture_idempotente_est_reessayee() throws Exception {
+        HttpResponse<String> ok = reponseTexte(200, "{}");
+        HttpClient client = mock(HttpClient.class);
+        doThrow(new IOException("paquet perdu")).doReturn(ok).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        ReponseApi<String> reponse =
+                transport.ecrire("PATCH", "/donnees/d1/observations/0", "{}", null, TransportVigieChiro.Rejeu.AUTORISE);
+
+        assertThat(reponse).isInstanceOf(ReponseApi.Succes.class);
+        assertThat(attentes)
+                .as("poser deux fois la même valeur donne le même état")
+                .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#2677 : le Retry-After du serveur fait autorité hors S3 aussi (règle 3 de l'ADR)")
+    void retry_after_fait_autorite_sur_une_lecture() throws Exception {
+        HttpResponse<String> tropVite = reponseTexte(429, "trop vite", Map.of("Retry-After", List.of("7")));
+        HttpResponse<String> ok = reponseTexte(200, "{}");
+        HttpClient client = mock(HttpClient.class);
+        doReturn(tropVite).doReturn(ok).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        transport.lire("/moi/participations");
+
+        assertThat(attentes)
+                .as("c'est le serveur qui sait : notre temporisation calculée ne doit pas la remplacer")
+                .containsExactly(Duration.ofSeconds(7));
+    }
+
+    @Test
     @DisplayName("#2619 : une lecture refusée (4xx) n'est jamais rejouée")
     void lecture_ne_reessaie_pas_un_refus_definitif() throws Exception {
         // 401 : le jeton est mort, il ne ressuscitera pas à la seconde tentative.
@@ -336,11 +398,15 @@ class TransportVigieChiroTest {
 
     /// Réponse **texte** : ce que rendent les lectures, là où [#reponse] sert les PUT S3 sans corps.
     private static HttpResponse<String> reponseTexte(int statut, String corps) {
-        @SuppressWarnings("unchecked")
+        return reponseTexte(statut, corps, Map.of());
+    }
+
+    /// Variante **avec en-têtes**, pour exercer le `Retry-After` d'un `429` (#2677).
+    private static HttpResponse<String> reponseTexte(int statut, String corps, Map<String, List<String>> entetes) {
         HttpResponse<String> reponse = mock(HttpResponse.class);
         when(reponse.statusCode()).thenReturn(statut);
         when(reponse.body()).thenReturn(corps);
-        when(reponse.headers()).thenReturn(HttpHeaders.of(Map.of(), (nom, valeur) -> true));
+        when(reponse.headers()).thenReturn(HttpHeaders.of(entetes, (nom, valeur) -> true));
         return reponse;
     }
 

@@ -31,7 +31,7 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("get / moi sans token → NonConnecte, sans même toucher le réseau")
     void moi_sans_token_est_vide() {
-        ClientVigieChiro client = new ClientVigieChiro("http://localhost:1", SANS_TOKEN);
+        ClientVigieChiro client = clientHorsLigne("http://localhost:1", SANS_TOKEN);
 
         assertThat(client.moi()).isInstanceOf(ReponseApi.NonConnecte.class);
     }
@@ -39,7 +39,7 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("get / moi hors-ligne (URL injoignable) → Injoignable, sans lever")
     void moi_hors_ligne_est_vide() {
-        ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
+        ClientVigieChiro client = clientHorsLigne("http://localhost:1/api/v1", TOKEN_ABC);
 
         assertThat(client.moi()).isInstanceOf(ReponseApi.Injoignable.class);
     }
@@ -47,7 +47,7 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("toutes les lectures sans token → NonConnecte, sans toucher le réseau (#1284)")
     void listes_sans_token_sont_vides() {
-        ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", SANS_TOKEN);
+        ClientVigieChiro client = clientHorsLigne("http://localhost:1/api/v1", SANS_TOKEN);
 
         assertThat(client.taxons()).isInstanceOf(ReponseApi.NonConnecte.class);
         assertThat(client.mesSites()).isInstanceOf(ReponseApi.NonConnecte.class);
@@ -59,7 +59,7 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("participation / donnees hors-ligne → Injoignable, plus jamais un faux « vide » (#1284)")
     void lectures_triees_hors_ligne() {
-        ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
+        ClientVigieChiro client = clientHorsLigne("http://localhost:1/api/v1", TOKEN_ABC);
 
         assertThat(client.participation("6a49")).isInstanceOf(ReponseApi.Injoignable.class);
         assertThat(client.donnees("6a49")).isInstanceOf(ReponseApi.Injoignable.class);
@@ -68,7 +68,7 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("écritures sans token → échec « non connecté » explicite, sans toucher le réseau (#1284)")
     void ecritures_sans_token() {
-        ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", SANS_TOKEN);
+        ClientVigieChiro client = clientHorsLigne("http://localhost:1/api/v1", SANS_TOKEN);
 
         assertThat(client.creerParticipation("site1", participationMinimale()).id())
                 .isEmpty();
@@ -85,7 +85,7 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("écritures hors-ligne (URL injoignable) → échec « injoignable » explicite, sans lever")
     void ecritures_hors_ligne() {
-        ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
+        ClientVigieChiro client = clientHorsLigne("http://localhost:1/api/v1", TOKEN_ABC);
 
         assertThat(client.creerParticipation("site1", participationMinimale()).id())
                 .isEmpty();
@@ -102,7 +102,7 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("televerserVersS3 hors-ligne → false, sans lever (URL S3 déjà signée, sans auth)")
     void upload_s3_hors_ligne_est_false() {
-        ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
+        ClientVigieChiro client = clientHorsLigne("http://localhost:1/api/v1", TOKEN_ABC);
 
         assertThat(client.televerserVersS3("http://localhost:1/s3/signe", new byte[] {1, 2, 3}, "audio/x-wav"))
                 .isFalse();
@@ -115,9 +115,9 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("journalTraitement : sans token → NonConnecte, hors ligne → Injoignable (#1284)")
     void journal_traitement_degrade_proprement() {
-        assertThat(new ClientVigieChiro("http://localhost:1", SANS_TOKEN).journalTraitement("6a49"))
+        assertThat(clientHorsLigne("http://localhost:1", SANS_TOKEN).journalTraitement("6a49"))
                 .isInstanceOf(ReponseApi.NonConnecte.class);
-        assertThat(new ClientVigieChiro("http://localhost:1", TOKEN_ABC).journalTraitement("6a49"))
+        assertThat(clientHorsLigne("http://localhost:1", TOKEN_ABC).journalTraitement("6a49"))
                 .isInstanceOf(ReponseApi.Injoignable.class);
     }
 
@@ -125,12 +125,12 @@ class ClientVigieChiroTest {
     @DisplayName("accès fichiers (#1565) : accesFichier / piecesJointes / csvObservations dégradent"
             + " proprement — sans token → NonConnecte, hors ligne → Injoignable (#1284)")
     void acces_fichiers_degrade_proprement() {
-        ClientVigieChiro sansToken = new ClientVigieChiro("http://localhost:1/api/v1", SANS_TOKEN);
+        ClientVigieChiro sansToken = clientHorsLigne("http://localhost:1/api/v1", SANS_TOKEN);
         assertThat(sansToken.accesFichier("f1")).isInstanceOf(ReponseApi.NonConnecte.class);
         assertThat(sansToken.piecesJointes("6a49", TypePieceJointe.WAV)).isInstanceOf(ReponseApi.NonConnecte.class);
         assertThat(sansToken.csvObservations("6a49")).isInstanceOf(ReponseApi.NonConnecte.class);
 
-        ClientVigieChiro horsLigne = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
+        ClientVigieChiro horsLigne = clientHorsLigne("http://localhost:1/api/v1", TOKEN_ABC);
         assertThat(horsLigne.accesFichier("f1")).isInstanceOf(ReponseApi.Injoignable.class);
         assertThat(horsLigne.piecesJointes("6a49", TypePieceJointe.PROCESSING_EXTRA))
                 .isInstanceOf(ReponseApi.Injoignable.class);
@@ -140,9 +140,9 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("corrigerObservation (#723) : sans token ou hors ligne → échec EXPLIQUÉ, distinct (#1284)")
     void correction_degrade_proprement() {
-        ResultatEcriture sansToken = new ClientVigieChiro("http://localhost:1", SANS_TOKEN)
+        ResultatEcriture sansToken = clientHorsLigne("http://localhost:1", SANS_TOKEN)
                 .corrigerObservation("6a4f", 0, "5526", fr.univ_amu.iut.commun.model.Certitude.SUR, true);
-        ResultatEcriture horsLigne = new ClientVigieChiro("http://localhost:1", TOKEN_ABC)
+        ResultatEcriture horsLigne = clientHorsLigne("http://localhost:1", TOKEN_ABC)
                 .corrigerObservation("6a4f", 0, "5526", fr.univ_amu.iut.commun.model.Certitude.SUR, false);
 
         // Une écriture refusée est expliquée (jamais un booléen opaque), et depuis #1284 la cause est
@@ -226,5 +226,13 @@ class ClientVigieChiroTest {
         when(reponse.body()).thenReturn(corps);
         when(reponse.headers()).thenReturn(HttpHeaders.of(entetes, (nom, valeur) -> true));
         return reponse;
+    }
+
+    /// Client hors-ligne **sans attente**. Depuis que les emissions reessaient (#2619), la politique de
+    /// production dort vraiment entre deux tentatives, et cette classe est passee de 5 s a une trentaine.
+    /// Le reessai lui-meme est verifie dans `TransportVigieChiroTest` ; ici on teste la facade.
+    private static ClientVigieChiro clientHorsLigne(String baseUrl, FournisseurToken jeton) {
+        return new ClientVigieChiro(new TransportVigieChiro(
+                baseUrl, jeton, HttpClient.newHttpClient(), new PolitiqueReessai(delai -> {}, () -> 0.0)));
     }
 }
