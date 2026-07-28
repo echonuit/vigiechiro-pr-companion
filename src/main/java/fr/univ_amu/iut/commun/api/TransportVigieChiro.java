@@ -155,15 +155,15 @@ final class TransportVigieChiro {
             return uneTentative(requete).reponse();
         }
         // Réessai gradué sur TOUTES les émissions rejouables, pas seulement sur les écritures du dépôt
-        // (#2619). PREMIER_PLAN et non ARRIÈRE-PLAN : dans ce produit, aucune lecture n'est un sondage
-        // automatique - « on n'interroge le serveur que quand l'utilisateur le demande » (#1338) - donc il
-        // y a toujours quelqu'un qui attend, et la règle 2 de l'ADR 2354 dit d'insister. Le jour où une
-        // tâche périodique apparaîtra, elle devra passer ARRIERE_PLAN explicitement.
+        // (#2619). INSISTANT parce que dans ce produit, aucune lecture n'est un sondage automatique
+        // - « on n'interroge le serveur que quand l'utilisateur le demande » (#1338) - donc il y a
+        // toujours quelqu'un qui attend. Le jour où une tâche périodique apparaîtra, elle devra demander
+        // BREF explicitement : c'est elle qui amplifierait un incident en insistant, pas un écran.
         //
         // Le suivi est SILENCIEUX ici : le transport n'a pas de canal vers l'écran. La reprise se voit
         // dans le journal, via l'issue de chaque tentative.
         return politique.executer(
-                PolitiqueReessai.Profil.PREMIER_PLAN, SuiviReprise.SILENCIEUX, () -> uneTentative(requete));
+                PolitiqueReessai.Profil.INSISTANT, SuiviReprise.SILENCIEUX, () -> uneTentative(requete));
     }
 
     /// Une émission, rendue **avec** le délai que le serveur a éventuellement imposé (`Retry-After`).
@@ -274,20 +274,20 @@ final class TransportVigieChiro {
 
     /// Variante **réessayée** (#2354) : une coupure momentanée sur un gros téléversement (`PUT` S3 de
     /// plusieurs dizaines de Mo depuis une connexion mobile) ne doit pas coûter l'unité. Le `PUT` est
-    /// **idempotent** (même URL signée, même clé, même objet), donc sûr à rejouer ; profil PREMIER_PLAN,
+    /// **idempotent** (même URL signée, même clé, même objet), donc sûr à rejouer ; profil INSISTANT,
     /// car le dépôt est attendu. `Retry-After` du serveur fait autorité (cf. [PolitiqueReessai]). `suivi`
     /// est prévenu avant chaque nouvelle tentative (mention discrète).
     boolean deposerVersS3(String urlSignee, CorpsAEnvoyer corps, String mime, SuiviReprise suivi) {
-        ReponseApi<String> issue = politique.executer(
-                PolitiqueReessai.Profil.PREMIER_PLAN, suivi, () -> uneDepose(urlSignee, corps, mime));
+        ReponseApi<String> issue =
+                politique.executer(PolitiqueReessai.Profil.INSISTANT, suivi, () -> uneDepose(urlSignee, corps, mime));
         return issue instanceof ReponseApi.Succes<String>;
     }
 
     /// **PUT** d'une **partie** multipart (#2354) vers son URL S3 signée, réessayé comme un dépôt entier
-    /// (idempotent, PREMIER_PLAN, `Retry-After`). Rend l'issue triée : un succès **porte l'`ETag`** de la
+    /// (idempotent, INSISTANT, `Retry-After`). Rend l'issue triée : un succès **porte l'`ETag`** de la
     /// partie (requis pour recoller l'objet à la finalisation), un échec sa cause.
     ReponseApi<String> deposerPartie(String urlSignee, CorpsAEnvoyer corps, String mime, SuiviReprise suivi) {
-        return politique.executer(PolitiqueReessai.Profil.PREMIER_PLAN, suivi, () -> uneDepose(urlSignee, corps, mime));
+        return politique.executer(PolitiqueReessai.Profil.INSISTANT, suivi, () -> uneDepose(urlSignee, corps, mime));
     }
 
     /// Un **unique** envoi S3 : construit la requête, l'émet, la consigne, et rend l'issue **avec** le
