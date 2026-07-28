@@ -166,11 +166,12 @@ public final class CapturePassage {
 
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
-        // Deux campagnes (#2355) : la liste déroulante de la modale montre alors un choix réel, et pas
-        // seulement sa sentinelle « aucune campagne ».
+        // Deux campagnes (#2355, #2630) : la liste déroulante de « Modifier le passage » montre un
+        // choix réel plutôt que sa seule sentinelle « aucune campagne », et la modale de gestion a de
+        // quoi lister. Le commentaire de la première est rendu dans sa cellule.
         CampagneDao campagneDao = new CampagneDao(source);
         Long ens = campagneDao
-                .insert(new Campagne(null, "Suivi ENS 2026", 2026, null))
+                .insert(new Campagne(null, "Suivi ENS 2026", 2026, "commanditaire : le Parc"))
                 .id();
         campagneDao.insert(new Campagne(null, "Thèse Samuel", 2025, null));
         long idPoint = seederSiteEtPoint(source);
@@ -186,6 +187,7 @@ public final class CapturePassage {
         // deux gestes livrés par #1839 n'étaient montrés nulle part - le harnais n'ayant pas de passerelle,
         // la capture unique les cachait sans que rien ne le signale.
         rendreRattachement(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement.png"));
+        rendreGestionCampagnes(injecteur, sortie.resolve("apercu-passage-campagnes.png"));
         rendreRattachement(injecteurConnecte(), idVerifie, sortie.resolve("apercu-passage-rattachement-connecte.png"));
         // Troisième état de la modale : une nuit SQUELETTE (rapatriée, sans fichier ni séquence). Ses
         // heures ne sont attestées par rien, donc saisissables (#1892) - l'inverse des deux captures
@@ -222,8 +224,9 @@ public final class CapturePassage {
                 new PersistenceModule(),
                 new PassageModule(),
                 // Campagne (#2355) : feature OPTIONNELLE. Sans ce module, le ViewModel reçoit un
-                // Optional vide, le contrôleur MASQUE la ligne « Campagne », et le rattachement livré
-                // par ce chantier n'apparaissait dans aucune capture.
+                // Optional vide, le contrôleur MASQUE la ligne « Campagne » (le rattachement livré par
+                // #2355 n'apparaissait alors dans aucune capture), et la modale de gestion (#2630) n'est
+                // même pas constructible.
                 new CampagneModule());
     }
 
@@ -367,6 +370,16 @@ public final class CapturePassage {
         vue.layout();
         ((ScrollPane) scene.lookup(".corps-modale")).setVvalue(1.0);
         ApercuFx.enregistrerPng(scene, fichier);
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// Modale **« Gérer les campagnes »** (#2630) : créer, renommer et supprimer une campagne sans
+    /// terminal. Elle comble le dernier critère de #2355 non tenu côté interface.
+    private static void rendreGestionCampagnes(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource("GestionCampagnesModale.fxml"));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 

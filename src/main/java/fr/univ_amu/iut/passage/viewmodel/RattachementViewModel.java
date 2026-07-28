@@ -4,7 +4,6 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
-import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
@@ -17,14 +16,12 @@ import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.collections.ObservableList;
 
 /// ViewModel de la modale « Modifier le rattachement » (E2.S8) : corrige l'année ou le numéro de
 /// passage d'un passage importé, sans changer de site/point.
@@ -123,19 +120,16 @@ public class RattachementViewModel {
         majRecap();
     }
 
-    /// La feature `campagne` est-elle active (donc le champ campagne affiché) ?
-    public boolean campagneActivee() {
-        return selectionCampagne.activee();
-    }
-
-    /// Campagnes proposées au ComboBox de la modale (vide si la feature est coupée).
-    public ObservableList<Campagne> campagnes() {
-        return selectionCampagne.campagnes();
-    }
-
-    /// Campagne sélectionnée (`null` = aucune) ; liée en bidirectionnel au ComboBox.
-    public ObjectProperty<Campagne> campagneProperty() {
-        return selectionCampagne.selectionProperty();
+    /// Le sous-ViewModel du **rattachement à une campagne**, exposé tel quel.
+    ///
+    /// Il l'était auparavant par **quatre** méthodes de délégation (`campagneActivee`, `campagnes`,
+    /// `campagneProperty`, puis `rechargerCampagnes` en #2630). L'Extract Class avait sorti l'état,
+    /// pas la surface : ce ViewModel restait le guichet de tout ce que son collaborateur sait faire,
+    /// et la quatrième délégation l'a fait basculer en God Class au portail PMD.
+    ///
+    /// Une seule porte, donc, et chaque appelant s'adresse directement à qui de droit.
+    public SelectionCampagne selectionCampagne() {
+        return selectionCampagne;
     }
 
     /// Nature opportuniste du passage (#2525) ; liée en bidirectionnel à la case de la modale.

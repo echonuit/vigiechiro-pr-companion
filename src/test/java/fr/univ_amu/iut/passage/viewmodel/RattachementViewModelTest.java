@@ -636,11 +636,11 @@ class RattachementViewModelTest {
 
         vm.ouvrirSur(ID, "040962", "A1");
 
-        assertThat(vm.campagneActivee()).isTrue();
-        assertThat(vm.campagnes()).containsExactly(null, suivi, autre); // null = « aucune » en tête
-        assertThat(vm.campagneProperty().get()).isEqualTo(suivi);
+        assertThat(vm.selectionCampagne().activee()).isTrue();
+        assertThat(vm.selectionCampagne().campagnes()).containsExactly(null, suivi, autre); // null = « aucune » en tête
+        assertThat(vm.selectionCampagne().selectionProperty().get()).isEqualTo(suivi);
 
-        vm.campagneProperty().set(autre);
+        vm.selectionCampagne().selectionProperty().set(autre);
         assertThat(vm.appliquer()).isTrue();
         verify(campagneService).rattacherPassage(ID, 2L);
     }
@@ -652,8 +652,8 @@ class RattachementViewModelTest {
 
         viewModel.ouvrirSur(ID, "040962", "A1");
 
-        assertThat(viewModel.campagneActivee()).isFalse();
-        assertThat(viewModel.campagnes()).isEmpty();
+        assertThat(viewModel.selectionCampagne().activee()).isFalse();
+        assertThat(viewModel.selectionCampagne().campagnes()).isEmpty();
     }
 
     @Test
