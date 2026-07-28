@@ -108,6 +108,37 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 41. Fermer/rouvrir l'application : le dernier état connu est réaffiché avec sa date, sans réseau.
 42. **Noter l'identifiant de la participation** (nettoyage manuel éventuel + matériau de S5).
 
+### Traitement en lot : ce qu'un seul poste ne peut pas prouver (#2357)
+
+> Ces cases ne sont **pas automatisables**. Les tests éprouvent le lot avec des actions doublées, sur
+> une base en mémoire : ils prouvent l'ordonnancement, jamais qu'une vraie rafale reste **polie** avec
+> la plateforme, ni qu'un lot interrompu au milieu d'un vrai téléversement se **reprend**. Ce sont
+> précisément les deux propriétés qui ont motivé la conception séquentielle
+> ([ADR 2357](../../decisions/2357-un-traitement-en-lot-compose-des-gestes-unitaires.md)).
+
+*Bloc E · Un lot de trois nuits, pour de vrai*
+
+43. Cocher trois nuits (Ctrl+clic) : les quatre entrées de lot du menu ☰ s'activent et annoncent
+    « des 3 lignes cochées ».
+44. « Préparer le dépôt des 3 lignes cochées… » : l'annonce dit **3 sur 3**, aucune écartée.
+45. Rejouer la même action : l'annonce dit **0 sur 3**, les trois écartées « dépôt déjà préparé », et
+    « Rien ne sera fait » ; renoncer ne touche rien.
+46. Cocher une nuit déjà déposée avec deux nuits prêtes : l'annonce **nomme** la déposée et son motif.
+47. « Téléverser les 3 lignes cochées… » : le débit observé reste celui d'**une** nuit (5 unités de
+    front, pas 15). À mesurer côté réseau, c'est le seul endroit où cela se voit.
+48. **Annuler** en cours de téléversement de la deuxième nuit : le lot s'arrête, la deuxième reste en
+    « Dépôt en cours », la troisième est **intacte** (statut inchangé).
+49. Relancer le même lot : la deuxième **reprend** là où elle s'était arrêtée, la troisième part
+    normalement, aucune archive n'est renvoyée deux fois.
+50. Le compte rendu final donne **une ligne par nuit**, dans l'ordre de la sélection.
+51. **Débrancher le réseau** avant « Importer les résultats des 3 lignes cochées… » : les trois
+    remontent en échec avec un motif qui dit quoi faire (« Connectez-vous depuis le menu ☰ … »), et le
+    lot va au bout au lieu de s'arrêter à la première.
+52. « Déclencher le calcul » sur une nuit déjà analysée : elle ressort en **échec** avec « relancer
+    effacerait les observations », jamais recalculée.
+53. Les mêmes gestes en ligne de commande : `vigiechiro traiter-passages --action televerser --passage
+    … --json` rend le même verdict par passage, et un code de sortie non nul si l'un a échoué.
+
 ### Métadonnées : ce que la plateforme affiche vraiment (#1828, #1844, #1845)
 
 > Ces cases ne sont **pas automatisables** : elles se jouent sur la **fiche web** de la participation,

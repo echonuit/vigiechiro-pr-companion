@@ -109,6 +109,23 @@ class TeleversementGroupeTest {
     }
 
     @Test
+    @DisplayName("un passage sans lot connu est écarté avec le motif du service, pas avec une pile")
+    void lot_introuvable_est_ecarte_avec_son_motif() {
+        // Chemin non nominal trouvé par PIT : le refus de `consulterLot` remontait sans qu'aucun test ne
+        // le suive. Sans cette reprise, le lot entier tomberait sur le premier passage inconnu.
+        when(service.consulterLot(42L))
+                .thenThrow(new fr.univ_amu.iut.commun.model.RegleMetierException("Passage introuvable : 42"));
+
+        assertThat(action().motifNonEligible(CIBLE)).contains("Passage introuvable : 42");
+    }
+
+    @Test
+    @DisplayName("le libellé est celui que l'observateur lit dans le suivi et le compte rendu")
+    void libelle_lisible() {
+        assertThat(action().libelle()).isEqualTo("Téléverser vers Vigie-Chiro");
+    }
+
+    @Test
     @DisplayName("le jeton du lot est relayé au dépôt : renoncer arrête entre deux unités")
     void le_jeton_est_relaye() {
         SourceDepot source = mock(SourceDepot.class);

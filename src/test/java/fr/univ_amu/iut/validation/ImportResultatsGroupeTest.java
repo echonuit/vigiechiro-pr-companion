@@ -43,6 +43,12 @@ class ImportResultatsGroupeTest {
     }
 
     @Test
+    @DisplayName("le libellé est celui que l'observateur lit dans le suivi et le compte rendu")
+    void libelle_lisible() {
+        assertThat(action().libelle()).isEqualTo("Importer les résultats");
+    }
+
+    @Test
     @DisplayName("un passage déposé et sans résultats est éligible")
     void depose_sans_resultats_est_eligible() {
         when(importateur.estRattache(42L)).thenReturn(true);

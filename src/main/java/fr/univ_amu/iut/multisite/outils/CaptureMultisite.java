@@ -219,7 +219,7 @@ public final class CaptureMultisite {
             System.out.println("[capture-multisite-menu] popup non rendu (headless) : " + fichier + " ignoré.");
             return;
         }
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        journaliser(fichier);
     }
 
     /// Photographie le même menu ☰ **avec trois lignes cochées** (#2357, clôture du lot 3).
@@ -252,7 +252,7 @@ public final class CaptureMultisite {
             System.out.println("[capture-multisite-menu-selection] popup non rendu (headless) : " + fichier);
             return;
         }
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        journaliser(fichier);
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage

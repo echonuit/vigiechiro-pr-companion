@@ -45,6 +45,12 @@ class LancementCalculGroupeTest {
     }
 
     @Test
+    @DisplayName("le libellé est celui que l'observateur lit dans le suivi et le compte rendu")
+    void libelle_lisible() {
+        assertThat(action().libelle()).isEqualTo("Déclencher le calcul");
+    }
+
+    @Test
     @DisplayName("une nuit déposée est éligible")
     void deposee_est_eligible() {
         when(depot.participationLiee(42L)).thenReturn(true);

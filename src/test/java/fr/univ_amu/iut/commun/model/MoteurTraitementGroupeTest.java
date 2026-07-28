@@ -181,6 +181,11 @@ class MoteurTraitementGroupeTest {
                 .allSatisfy(ligne -> assertThat(ligne).startsWith("["));
         assertThat(journal).anyMatch(ligne -> ligne.startsWith("[640380 / A1 / 2026 n°2] écarté : déjà déposé"));
         assertThat(journal).anyMatch(ligne -> ligne.startsWith("[640381 / B1 / 2026 n°1] ÉCHEC : disque plein"));
+        // Le nominal aussi : c'est ce qu'on regarde PENDANT un lot long, et son absence laisserait de
+        // longs silences entre deux écarts.
+        assertThat(journal)
+                .as("chaque passage dit qu'il commence, puis qu'il a fini")
+                .contains("[640380 / A1 / 2026 n°1] Préparer le dépôt…", "[640380 / A1 / 2026 n°1] terminé");
     }
 
     @Test
