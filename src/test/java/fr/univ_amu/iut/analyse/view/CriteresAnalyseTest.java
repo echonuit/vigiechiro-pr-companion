@@ -49,8 +49,7 @@ class CriteresAnalyseTest {
 
         assertThat(vues)
                 .extracting(VueSauvegardee::nom)
-                .containsExactly(
-                        "Tout", "À valider", "Validées", "Chiroptères", "Orthoptères et cigales", "Autres mammifères");
+                .containsExactly("Tout", "À valider", "Validées", "Chiroptères", "Autres");
         assertThat(vues).allSatisfy(vue -> {
             assertThat(vue.id())
                     .as("vue par défaut : jamais persistée (lecture seule)")
@@ -65,8 +64,10 @@ class CriteresAnalyseTest {
         assertThat(descripteur(vues, "Chiroptères")).contains("groupe", "Chiroptères");
         // Les catégories du référentiel (V05) partitionnent l'inventaire : Tadarida détecte aussi des
         // orthoptères et des micromammifères, qui s'intercalaient sans cela au rang des chiroptères.
-        assertThat(descripteur(vues, "Orthoptères et cigales")).contains("groupe", "Orthoptères et cigales");
-        assertThat(descripteur(vues, "Autres mammifères")).contains("groupe", "Autres mammifères");
+        // « Autres » cumule les catégories non-chiroptères : c'est le choix multiple (#2615) qui le rend
+        // possible, un critère à valeur unique n'aurait couvert qu'une catégorie en promettant le reste.
+        assertThat(descripteur(vues, "Autres"))
+                .contains("groupe", "Orthoptères et cigales", "Autres mammifères", "Oiseaux");
     }
 
     private static String descripteur(List<VueSauvegardee> vues, String nom) {

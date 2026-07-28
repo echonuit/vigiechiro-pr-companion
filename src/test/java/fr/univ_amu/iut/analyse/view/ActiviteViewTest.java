@@ -172,8 +172,8 @@ class ActiviteViewTest {
         assertThat(robot.lookup("Chiroptères").tryQuery())
                 .as("Tadarida détecte aussi des orthoptères : la catégorie doit pouvoir s'isoler")
                 .isPresent();
-        assertThat(robot.lookup("Orthoptères et cigales").tryQuery())
-                .as("l'onglet porte le nom exact de sa catégorie, il ne promet pas plus qu'il ne filtre")
+        assertThat(robot.lookup("Autres").tryQuery())
+                .as("« Autres » cumule les catégories non-chiroptères : il tient enfin sa promesse (#2615)")
                 .isPresent();
     }
 
