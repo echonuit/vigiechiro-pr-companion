@@ -11,6 +11,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
@@ -84,7 +85,7 @@ class MultisiteViewModelTest {
     @DisplayName("#1338 : relever n'interroge QUE les nuits déposées, et rend compte du rafraîchissement")
     void relever_les_nuits_deposees_et_rend_compte() {
         SuiviTraitement suivi = mock(SuiviTraitement.class);
-        when(suivi.releverTout(anyList())).thenReturn(new SuiviTraitement.BilanReleveGroupe(2, 0));
+        when(suivi.releverTout(anyList(), any(), any())).thenReturn(new SuiviTraitement.BilanReleveGroupe(2, 0));
         MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, Optional.of(suivi), ID);
         when(service.listerPassages(ID))
                 .thenReturn(List.of(
@@ -96,9 +97,9 @@ class MultisiteViewModelTest {
         List<Long> deposees = vm.nuitsDeposees();
         assertThat(deposees).containsExactly(1L, 3L);
 
-        var compteRendu = vm.releverAnalyses(deposees);
+        var compteRendu = vm.releverAnalyses(deposees, progression -> {}, JetonAnnulation.neutre());
 
-        verify(suivi).releverTout(List.of(1L, 3L));
+        verify(suivi).releverTout(eq(List.of(1L, 3L)), any(), any());
         assertThat(compteRendu.texte()).contains("2 nuit(s)");
         assertThat(compteRendu.severite())
                 .as("#1888 : un relevé complet est un succès, ce que le canal String ne disait pas")
@@ -111,25 +112,30 @@ class MultisiteViewModelTest {
         SuiviTraitement suivi = mock(SuiviTraitement.class);
         MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, Optional.of(suivi), ID);
 
-        assertThat(vm.releverAnalyses(List.of()).texte()).contains("Aucune nuit déposée");
-        assertThat(vm.releverAnalyses(List.of()).severite())
+        assertThat(vm.releverAnalyses(List.of(), progression -> {}, JetonAnnulation.neutre())
+                        .texte())
+                .contains("Aucune nuit déposée");
+        assertThat(vm.releverAnalyses(List.of(), progression -> {}, JetonAnnulation.neutre())
+                        .severite())
                 .as("rien à relever est un guidage, pas un échec")
                 .isEqualTo(Severite.INFO);
-        verify(suivi, never()).releverTout(anyList());
+        verify(suivi, never()).releverTout(anyList(), any(), any());
     }
 
     @Test
     @DisplayName("#1338 : un échec réseau ne ment pas sur la fraîcheur — il compte les injoignables")
     void relever_avec_echecs_le_dit() {
         SuiviTraitement suivi = mock(SuiviTraitement.class);
-        when(suivi.releverTout(anyList())).thenReturn(new SuiviTraitement.BilanReleveGroupe(1, 2));
+        when(suivi.releverTout(anyList(), any(), any())).thenReturn(new SuiviTraitement.BilanReleveGroupe(1, 2));
         MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, Optional.of(suivi), ID);
 
-        assertThat(vm.releverAnalyses(List.of(1L, 2L, 3L)).severite())
+        assertThat(vm.releverAnalyses(List.of(1L, 2L, 3L), progression -> {}, JetonAnnulation.neutre())
+                        .severite())
                 .as("#1888 : un relevé PARTIEL n'est ni un succès (ce serait mentir sur la fraîcheur),"
                         + " ni une erreur (les données restent affichées)")
                 .isEqualTo(Severite.INFO);
-        assertThat(vm.releverAnalyses(List.of(1L, 2L, 3L)).texte())
+        assertThat(vm.releverAnalyses(List.of(1L, 2L, 3L), progression -> {}, JetonAnnulation.neutre())
+                        .texte())
                 .contains("1 nuit(s) sur 3")
                 .contains("2 injoignable(s)")
                 .contains("dernier état connu");
@@ -139,12 +145,13 @@ class MultisiteViewModelTest {
     @DisplayName("#1338 : relever puis charger publie le compte rendu APRÈS le rechargement (non effacé)")
     void relever_puis_charger_conserve_le_message() {
         SuiviTraitement suivi = mock(SuiviTraitement.class);
-        when(suivi.releverTout(anyList())).thenReturn(new SuiviTraitement.BilanReleveGroupe(1, 0));
+        when(suivi.releverTout(anyList(), any(), any())).thenReturn(new SuiviTraitement.BilanReleveGroupe(1, 0));
         when(service.listerPassages(ID)).thenReturn(List.of(ligne("640380", "A1", 2026, 1, StatutWorkflow.DEPOSE)));
         when(service.agregerPourCarte(ID)).thenReturn(List.of());
         MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, Optional.of(suivi), ID);
 
-        MultisiteViewModel.ResultatReleve resultat = vm.releverPuisCharger(List.of(1L));
+        MultisiteViewModel.ResultatReleve resultat =
+                vm.releverPuisCharger(List.of(1L), progression -> {}, JetonAnnulation.neutre());
         vm.appliquerReleve(resultat);
 
         assertThat(vm.retourProperty().get().texte())

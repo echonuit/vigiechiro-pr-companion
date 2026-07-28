@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.multisite.viewmodel;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -100,7 +103,7 @@ public class MultisiteViewModel {
 
     /// Identifiants des passages **déposés** actuellement chargés (source non filtrée) : ce sont les seules
     /// nuits dont l'analyse serveur existe. À lire **sur le fil JavaFX** (la liste observable), pour passer
-    /// l'instantané à [#releverAnalyses(List)] qui, lui, part en tâche de fond.
+    /// l'instantané à [#releverAnalyses(List, Consumer, JetonAnnulation)] qui, lui, part en tâche de fond.
     public List<Long> nuitsDeposees() {
         return tousLesPassages.stream()
                 .filter(ligne -> ligne.statut() == StatutWorkflow.DEPOSE)
@@ -116,7 +119,8 @@ public class MultisiteViewModel {
     /// plutôt que de lire la liste observable depuis le fil de fond. Renvoie le compte rendu prêt à
     /// afficher — ou, si la liste est vide, un message qui le dit plutôt qu'un « 0 relevé » sec.
     /// Précondition : [#releveAnalysesDisponible()] vrai (l'appelant garde le bouton).
-    public RetourOperation releverAnalyses(List<Long> nuitsDeposees) {
+    public RetourOperation releverAnalyses(
+            List<Long> nuitsDeposees, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(nuitsDeposees, "nuitsDeposees");
         SuiviTraitement moteur = suivi.orElseThrow(
                 () -> new IllegalStateException("Relevé des analyses indisponible : connectez-vous à Vigie-Chiro."));
@@ -124,7 +128,7 @@ public class MultisiteViewModel {
             // Rien à relever n'est pas un échec : c'est un guidage.
             return RetourOperation.info("Aucune nuit déposée : il n'y a pas encore d'analyse à relever.");
         }
-        return retourReleve(moteur.releverTout(nuitsDeposees));
+        return retourReleve(moteur.releverTout(nuitsDeposees, progres, jeton));
     }
 
     /// Résultat d'un relevé groupé : le compte rendu à afficher **et** les données rechargées, pour que la
@@ -134,8 +138,9 @@ public class MultisiteViewModel {
     /// Relève l'état des analyses **puis relit** l'écran, le tout **hors du fil JavaFX** (#1338) : le
     /// nouvel état du cache doit se voir dans la colonne « Analyse » dès le retour, sans imbriquer une
     /// seconde occupation ni laisser le compte rendu se faire effacer par un rechargement concurrent.
-    public ResultatReleve releverPuisCharger(List<Long> nuitsDeposees) {
-        RetourOperation retour = releverAnalyses(nuitsDeposees);
+    public ResultatReleve releverPuisCharger(
+            List<Long> nuitsDeposees, Consumer<Progression> progres, JetonAnnulation jeton) {
+        RetourOperation retour = releverAnalyses(nuitsDeposees, progres, jeton);
         return new ResultatReleve(retour, charger());
     }
 
@@ -185,6 +190,12 @@ public class MultisiteViewModel {
         tousLesPassages.setAll(donnees.passages());
         filtres.appliquer();
         carresCarte.setAll(donnees.carte());
+    }
+
+    /// Publie un état **neutre** dans le message de l'écran : ni un succès, ni une erreur. Sert au
+    /// renoncement (#2636), où rien n'a raté et où l'utilisateur a simplement arrêté.
+    public void signalerInfo(String message) {
+        retour.set(RetourOperation.info(message));
     }
 
     /// Route l'échec d'un chargement vers le message de l'écran (filet #795), à la place d'une exception

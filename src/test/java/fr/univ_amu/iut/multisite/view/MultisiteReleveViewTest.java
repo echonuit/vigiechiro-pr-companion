@@ -3,6 +3,7 @@ package fr.univ_amu.iut.multisite.view;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -73,7 +74,8 @@ class MultisiteReleveViewTest {
     void start(Stage stage) throws Exception {
         ServiceMultisite service = mock(ServiceMultisite.class);
         suivi = mock(SuiviTraitement.class);
-        when(suivi.releverTout(List.of(42L, 3L))).thenReturn(new SuiviTraitement.BilanReleveGroupe(2, 0));
+        when(suivi.releverTout(eq(List.of(42L, 3L)), any(), any()))
+                .thenReturn(new SuiviTraitement.BilanReleveGroupe(2, 0));
         when(service.listerPassages(anyString()))
                 .thenReturn(List.of(
                         ligne(42L, 1, StatutWorkflow.DEPOSE),
@@ -139,7 +141,7 @@ class MultisiteReleveViewTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         // Seules les deux nuits déposées (42, 3), pas la nuit vérifiée (7).
-        verify(suivi).releverTout(List.of(42L, 3L));
+        verify(suivi).releverTout(eq(List.of(42L, 3L)), any(), any());
         assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText()).contains("2 nuit(s)");
     }
 }
