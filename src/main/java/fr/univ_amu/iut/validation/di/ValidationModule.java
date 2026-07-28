@@ -19,6 +19,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.CrisDesObservations;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.EspecesPrioritairesTaxon;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
@@ -61,6 +62,14 @@ public class ValidationModule extends ModuleDeFeature {
     /// validation Tadarida sans dépendre de la vue de cette feature (graphe de slices acyclique).
     @Override
     protected void configure() {
+        // Pont [EspecesPrioritaires] (#2353) : expose la seule **lecture** des espèces à enjeu aux écrans
+        // qui les repèrent, les filtrent et les comptent (`audio`, `analyse`), sans leur livrer le DAO ni le
+        // pouvoir d'écrire dans une donnée de référence. `setBinding` sur l'OptionalBinder dont les features
+        // consommatrices posent le défaut VIDE : même montage d'inversion que CoordonneesPoint (#547).
+        // Cette liaison l'emporte dès que ce module est installé, c'est-à-dire dans l'application complète.
+        OptionalBinder.newOptionalBinder(binder(), EspecesPrioritaires.class)
+                .setBinding()
+                .to(EspecesPrioritairesTaxon.class);
         bind(OuvrirValidation.class).to(NavigationValidation.class);
         // Port CrisAttendus (#1302) : cette feature possède les observations, elle fournit donc la
         // matière de la vérification acoustique (#1309) à `passage`, qui ne peut pas dépendre d'elle
@@ -89,15 +98,6 @@ public class ValidationModule extends ModuleDeFeature {
     @Singleton
     TaxonDao fournirTaxonDao(SourceDeDonnees source) {
         return new TaxonDao(source);
-    }
-
-    /// Pont [EspecesPrioritaires] (#2353) : expose la seule **lecture** des espèces à enjeu aux écrans qui
-    /// les repèrent, les filtrent et les comptent (`audio`, `analyse`), sans leur livrer le DAO ni le
-    /// pouvoir d'écrire dans une donnée de référence.
-    @Provides
-    @Singleton
-    EspecesPrioritaires fournirEspecesPrioritaires(TaxonDao taxonDao) {
-        return taxonDao::codesPrioritaires;
     }
 
     /// Rapprocheur des taxons (#728) : relie `taxon.code` ↔ `objectid` VigieChiro. Contribué au

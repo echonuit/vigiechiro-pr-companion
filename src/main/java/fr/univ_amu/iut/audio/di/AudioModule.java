@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -30,6 +31,7 @@ import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.nio.file.Files;
 import java.util.Optional;
+import java.util.Set;
 
 /// Module Guice de la feature `audio` (vue audio unifiée « Sons & validation »).
 ///
@@ -54,6 +56,14 @@ public class AudioModule extends ModuleDeFeature {
     @Override
     protected void configure() {
         bind(OuvrirAudio.class).to(NavigationAudio.class);
+        // Port EspecesPrioritaires (#2353) : cette feature CONSOMME le référentiel des espèces à enjeu,
+        // détenu par `validation` (table latérale du référentiel taxonomique). Défaut **vide** ici, liaison
+        // réelle posée par ValidationModule dans l'application complète. Un injecteur partiel (capture,
+        // test d'écran) reste ainsi construisible : sans référentiel, aucune ligne n'est marquée — ce qui
+        // est exactement ce que dit une base sans espèce prioritaire, et non une anomalie.
+        OptionalBinder.newOptionalBinder(binder(), EspecesPrioritaires.class)
+                .setDefault()
+                .toInstance(Set::of);
         activite(AccueilSonsReference.class);
         // Onglet « Audio » de l'écran Réglages (#1006) : préférences de lecture (auto-lecture, boucle),
         // partagées avec les options du menu ☰ de la vue audio.

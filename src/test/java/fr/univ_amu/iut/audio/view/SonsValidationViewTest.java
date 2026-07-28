@@ -40,6 +40,7 @@ import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -181,7 +182,6 @@ class SonsValidationViewTest {
                                 "Noctule de Leisler",
                                 "Noctule de Leisler",
                                 Certitude.PROBABLE)));
-        when(service.especesPrioritaires()).thenReturn(Set.of("Pippip"));
         when(service.cheminAudio(anyLong())).thenReturn(Optional.empty());
         when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/p.wav")));
         depotVues = mock(DepotVues.class);
@@ -192,6 +192,15 @@ class SonsValidationViewTest {
 
         Injector injector = Guice.createInjector(
                 new AbstractModule() {
+                    // Référentiel des espèces à enjeu (#2353) : les DEUX espèces de la fixture sont
+                    // prioritaires au PNA, on n'en retient qu'une pour que le filtre ait quelque chose à
+                    // écarter. La justesse du référentiel réel est gardée par
+                    // EspecesPrioritairesReferentielTest.
+                    @Provides
+                    EspecesPrioritaires especesPrioritaires() {
+                        return () -> Set.of("Pippip");
+                    }
+
                     @Provides
                     AudioViewModel viewModel() {
                         return new AudioViewModel(

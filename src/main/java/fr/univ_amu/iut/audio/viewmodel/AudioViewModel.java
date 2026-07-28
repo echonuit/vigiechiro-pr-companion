@@ -21,7 +21,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -81,11 +80,6 @@ public class AudioViewModel {
     private final FilteredList<LigneObservationAudio> observationsFiltrees = new FilteredList<>(observations);
     private final ObservableList<Taxon> taxons = FXCollections.observableArrayList();
 
-    /// Instantané **immuable** des espèces à enjeu de conservation (#2353), renouvelé à chaque
-    /// chargement. Le repère de ligne et le critère de filtre le consultent une fois **par ligne
-    /// affichée** : une requête par ligne n'y résisterait pas. `volatile` parce que le chargement peut
-    /// venir d'un autre fil que celui qui affiche (#1208).
-    private volatile Set<String> especesPrioritaires = Set.of();
     private final ObjectProperty<LigneObservationAudio> selection = new SimpleObjectProperty<>(this, "selection");
     /// Vrai dès qu'une **ligne** est sélectionnée (observation ou séquence non identifiée). Pilote le bouton
     /// État **dérivé de la sélection** (présence / observation / proposition Tadarida / référence / douteux),
@@ -210,25 +204,10 @@ public class AudioViewModel {
         taxons.setAll(donnees.taxons());
         idResultats = donnees.idResultats();
         resultatsDisponibles.set(idResultats != null);
-        especesPrioritaires = Set.copyOf(service.especesPrioritaires());
         observations.setAll(donnees.lignes());
         bandeauArchive.set(DisponibiliteEcoute.texteBandeau(donnees.decompteAudio()));
         publicationImpossible.set(donnees.publicationImpossible());
         filtres.appliquer();
-    }
-
-    /// Cette ligne porte-t-elle une **espèce à enjeu** (#2353) ? Lu sur le **taxon retenu** — la correction
-    /// de l'observateur si elle existe, sinon la proposition Tadarida —, parce que c'est l'espèce que la
-    /// ligne affirme, pas celle qui a été proposée. Corriger une détection vers une espèce prioritaire fait
-    /// donc apparaître le repère, et l'inverse le fait disparaître.
-    public boolean aEnjeu(LigneObservationAudio ligne) {
-        String retenu = ligne.taxonObservateur() != null ? ligne.taxonObservateur() : ligne.taxonTadarida();
-        return retenu != null && especesPrioritaires.contains(retenu);
-    }
-
-    /// Les espèces à enjeu du référentiel, pour le critère de filtre. Instantané en mémoire.
-    public Set<String> especesPrioritaires() {
-        return especesPrioritaires;
     }
 
     /// Route l'échec d'un chargement vers le bandeau d'erreur de l'écran (filet #795), sans lever.
@@ -346,7 +325,6 @@ public class AudioViewModel {
     private void charger() {
         LigneObservationAudio selectionnee = selection.get();
         List<LigneObservationAudio> lignes = resolveur.lignes(source);
-        especesPrioritaires = Set.copyOf(service.especesPrioritaires());
         observations.setAll(lignes);
         reselectionner(selectionnee);
         // Ré-applique les filtres actifs ; le callback recompte ET met à jour l'indice d'état vide (source
