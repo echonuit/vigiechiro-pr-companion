@@ -5,11 +5,11 @@ import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
-import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.PanneauProgression;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.util.Objects;
 import javafx.application.Platform;
@@ -93,6 +93,14 @@ public class ConnexionModaleController {
     @FXML
     private StackPane enveloppeConnecter;
 
+    /// Zone d'accueil de l'avancement (#2642) : le suivi de la connexion s'y greffe, au lieu d'ouvrir une
+    /// seconde fenêtre par-dessus cette modale.
+    @FXML
+    private StackPane zoneProgression;
+
+    @FXML
+    private Button boutonFermer;
+
     @FXML
     private StackPane enveloppeDeconnecter;
 
@@ -122,6 +130,10 @@ public class ConnexionModaleController {
         // Verrouille la saisie quand on est connecté (ou pendant la vérification) : on comprend qu'il n'y
         // a plus rien à coller. Le bouton « Se déconnecter » fait le miroir.
         champToken.disableProperty().bind(viewModel.connecteProperty().or(verificationEnCours));
+        // Pendant l'opération, « Annuler » est le seul geste qui a un sens : fermer la modale laisserait
+        // le travail tourner sans plus rien pour le suivre ni l'interrompre (#2642). Les deux boutons se
+        // touchent à l'écran, la confusion serait facile.
+        boutonFermer.disableProperty().bind(verificationEnCours);
         boutonConnecter.disableProperty().bind(viewModel.connecteProperty().or(verificationEnCours));
         // Déconnexion possible dès qu'un jeton est enregistré, même non vérifié (#1369).
         boutonDeconnecter
@@ -215,20 +227,20 @@ public class ConnexionModaleController {
     /// Renoncer n'annule **pas** la connexion : le jeton est vérifié et enregistré avant que les
     /// rapprocheurs démarrent. C'est le rapatriement qui s'arrête, et la synchro suivante le reprendra.
     private void verifierJeton(String token) {
-        verificationEnCours.set(true);
-        afficherStatut("Vérification en cours…", STATUT_INFO);
-        new DialogueProgression(executeur)
+        // La barre paraît DANS cette modale (#2642). Le panneau pose lui-même `verificationEnCours`, qui
+        // grise déjà le champ et le bouton : l'inertie des contrôles et la présence de la barre sont le
+        // même état, elles ne peuvent donc plus diverger. Il le remet à faux AVANT de conclure, comme le
+        // faisait chaque issue en ouverture de bloc.
+        new PanneauProgression(executeur, zoneProgression, verificationEnCours::set)
                 .lancer(
                         champToken.getScene().getWindow(),
                         "Connexion à Vigie-Chiro",
                         (suivi, jeton) -> viewModel.connecter(token, suivi, jeton),
                         reponse -> {
-                            verificationEnCours.set(false);
                             viewModel.rafraichir();
                             restituerVerification(reponse);
                         },
                         () -> {
-                            verificationEnCours.set(false);
                             viewModel.rafraichir();
                             afficherStatut(
                                     "Connexion enregistrée. La récupération de vos nuits a été interrompue :"
@@ -236,7 +248,6 @@ public class ConnexionModaleController {
                                     STATUT_INFO);
                         },
                         erreur -> {
-                            verificationEnCours.set(false);
                             viewModel.rafraichir();
                             String detail = erreur.getMessage();
                             afficherStatut(

@@ -30,9 +30,8 @@ vraie carte SD soit reconnue.
 2. La barre **avance** et son libellé nomme la nuit en cours (« Nuits k / N »), il ne reste pas figé.
 3. Une **estimation du temps restant** apparaît une fois l'avancement mesurable.
 4. Le bouton **Annuler** est atteignable pendant toute l'opération (pas masqué, pas hors fenêtre).
-5. L'avancement paraît **dans** la modale de connexion, sans seconde fenêtre. ⚠️ **Écart connu** tant
-   que #2642 n'est pas livré : une modale de progression s'ouvre par-dessus. Ce n'est plus un point de
-   jugement - il a été tranché à la passe 10 de #2554.
+5. L'avancement paraît **dans** la modale de connexion, sans seconde fenêtre, et « Fermer » y est grisé
+   tant que l'opération tourne (#2642).
 6. À la fin, la modale de connexion annonce l'identité **et** le résumé de ce qui a été récupéré.
 
 **Étape 2 · Ce que le compte rendu affirme**
