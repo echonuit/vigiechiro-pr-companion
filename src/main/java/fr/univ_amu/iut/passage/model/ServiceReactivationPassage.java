@@ -188,7 +188,7 @@ public class ServiceReactivationPassage {
     public RapportReactivation reactiver(
             Long idPassage, Path dossierSource, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(progres, "progres");
-        return reactiver(idPassage, dossierSource, ModeRebranchement.COPIE, progres, progres, jeton);
+        return reactiver(idPassage, dossierSource, ChoixRebranchement.COPIE, progres, progres, jeton);
     }
 
     /// Variante à **deux progressions** (#1780) : depuis S3 (#1571) la réactivation enchaîne deux phases
@@ -208,16 +208,21 @@ public class ServiceReactivationPassage {
             Consumer<Progression> progresRegeneration,
             Consumer<Progression> progresAncrage,
             JetonAnnulation jeton) {
-        return reactiver(idPassage, dossierSource, ModeRebranchement.COPIE, progresRegeneration, progresAncrage, jeton);
+        return reactiver(
+                idPassage, dossierSource, ChoixRebranchement.COPIE, progresRegeneration, progresAncrage, jeton);
     }
 
+    /// @param choix consulté **seulement si** la voie retenue pose des fichiers existants, c'est-à-dire
+    ///     sur [VoieReactivation#TRANSFORMES]. Ailleurs, les séquences sont régénérées dans l'espace de
+    ///     travail : il n'y a rien à laisser en place, donc rien à demander (#2577)
     public RapportReactivation reactiver(
             Long idPassage,
             Path dossierSource,
-            ModeRebranchement mode,
+            ChoixRebranchement choix,
             Consumer<Progression> progresRegeneration,
             Consumer<Progression> progresAncrage,
             JetonAnnulation jeton) {
+        Objects.requireNonNull(choix, "choix");
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         Objects.requireNonNull(dossierSource, "dossierSource");
         Objects.requireNonNull(progresRegeneration, "progresRegeneration");
@@ -239,11 +244,6 @@ public class ServiceReactivationPassage {
         // Sans objet (et sans coût) sur une nuit qui a déjà ses séquences.
         hydraterSiSquelette(idPassage, session, progresRegeneration, jeton);
 
-        // #2255 : copier ou référencer. En référence, aucun fichier ne bouge - c'est la base qui suit
-        // l'audio là où l'utilisateur le garde. Le candidat a été vérifié avant d'arriver ici.
-        RebranchementSequences.PoseurCandidat poseur = mode == ModeRebranchement.REFERENCE
-                ? (sequence, candidat, destination) -> sequenceDao.majChemin(sequence.id(), candidat)
-                : RebranchementSequences.COPIE;
         List<SequenceDEcoute> sequences = sequenceDao.findBySession(session.id());
         List<EnregistrementOriginal> originaux = originalDao.findBySession(session.id());
         CandidatsReactivation candidats = CandidatsReactivation.dans(dossierSource);
@@ -271,11 +271,15 @@ public class ServiceReactivationPassage {
                 adopterOriginaux(session, originaux, resultat);
             } else {
                 bilan = rebranchement.rebrancher(
-                        sequences, candidats, OrigineCandidats.DOSSIER, poseur, progresRegeneration);
+                        sequences,
+                        candidats,
+                        OrigineCandidats.DOSSIER,
+                        poseur(choix, dossierSource),
+                        progresRegeneration);
             }
         } else {
             bilan = rebranchement.rebrancher(
-                    sequences, candidats, OrigineCandidats.DOSSIER, poseur, progresRegeneration);
+                    sequences, candidats, OrigineCandidats.DOSSIER, poseur(choix, dossierSource), progresRegeneration);
         }
 
         // Entre la dernière séquence traitée et la première page d'ancrage, le travail continue sans qu'aucune
@@ -366,6 +370,20 @@ public class ServiceReactivationPassage {
             return VoieReactivation.BRUTS;
         }
         return sansInventaireExploitable(originaux) ? VoieReactivation.RECONSTRUIT : VoieReactivation.AUCUNE;
+    }
+
+    /// Copier, ou se référer aux fichiers là où ils sont (#2255) - **demandé ici**, et seulement ici.
+    ///
+    /// C'est le seul moment où la question a un objet : on s'apprête à poser des fichiers **qui
+    /// existent**. Sur les autres voies, les séquences sont régénérées dans l'espace de travail, et il n'y
+    /// a rien à laisser en place - la question y était posée quand même, et sa réponse ignorée (#2577).
+    ///
+    /// Les deux appels sont exclusifs l'un de l'autre : l'utilisateur n'est donc interrogé qu'une fois.
+    private RebranchementSequences.PoseurCandidat poseur(ChoixRebranchement choix, Path dossierSource) {
+        ModeRebranchement mode = choix.choisir(dossierSource, horsEspaceDeTravail(dossierSource));
+        return mode == ModeRebranchement.REFERENCE
+                ? (sequence, candidat, destination) -> sequenceDao.majChemin(sequence.id(), candidat)
+                : RebranchementSequences.COPIE;
     }
 
     /// Un passage **reconstruit** (#1305) ne porte aucun original exploitable pour repartir des bruts : ses

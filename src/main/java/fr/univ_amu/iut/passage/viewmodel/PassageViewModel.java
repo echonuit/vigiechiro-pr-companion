@@ -9,8 +9,8 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.passage.model.ChoixRebranchement;
 import fr.univ_amu.iut.passage.model.DetailPassage;
-import fr.univ_amu.iut.passage.model.ModeRebranchement;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
@@ -173,11 +173,11 @@ public class PassageViewModel {
     /// l'audio où il vit et faire suivre la base.
     public RapportReactivation reactiver(
             Path dossierSource,
-            ModeRebranchement mode,
+            ChoixRebranchement choix,
             Consumer<Progression> progresRegeneration,
             Consumer<Progression> progresAncrage,
             JetonAnnulation jeton) {
-        return reactivation.reactiver(idPassage, dossierSource, mode, progresRegeneration, progresAncrage, jeton);
+        return reactivation.reactiver(idPassage, dossierSource, choix, progresRegeneration, progresAncrage, jeton);
     }
 
     /// Ce dossier appartient-il à l'utilisateur plutôt qu'à l'application (#2255) ? Sert à **proposer**

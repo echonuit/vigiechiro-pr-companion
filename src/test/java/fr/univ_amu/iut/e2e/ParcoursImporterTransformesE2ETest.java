@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.importation.model.ServiceImportReference;
 import fr.univ_amu.iut.importation.model.ServiceImportReference.ResultatImportReference;
+import fr.univ_amu.iut.passage.model.ChoixRebranchement;
 import fr.univ_amu.iut.passage.model.DisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.ModeRebranchement;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
@@ -100,7 +101,7 @@ class ParcoursImporterTransformesE2ETest {
                 .reactiver(
                         idPassage,
                         nouvelEmplacement,
-                        ModeRebranchement.REFERENCE,
+                        ChoixRebranchement.fixe(ModeRebranchement.REFERENCE),
                         p -> {},
                         p -> {},
                         JetonAnnulation.neutre());
