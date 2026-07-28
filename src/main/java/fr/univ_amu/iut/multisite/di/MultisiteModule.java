@@ -55,6 +55,8 @@ public class MultisiteModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), Key.get(ActionGroupee.class, Names.named("action.televerser")));
         OptionalBinder.newOptionalBinder(
                 binder(), Key.get(ActionGroupee.class, Names.named("action.importerResultats")));
+        OptionalBinder.newOptionalBinder(
+                binder(), Key.get(ActionGroupee.class, Names.named("action.declencherCalcul")));
         activite(ActiviteMultisite.class);
         // Contrat socle « voir sur la carte » : les autres features renvoient vers la carte multi-sites.
         bind(OuvrirMultisite.class).to(NavigationMultisite.class);
@@ -72,8 +74,9 @@ public class MultisiteModule extends ModuleDeFeature {
     ActionsDeLot fournirActionsDeLot(
             @Named("action.preparerDepot") Optional<ActionGroupee> preparerDepot,
             @Named("action.televerser") Optional<ActionGroupee> televerser,
-            @Named("action.importerResultats") Optional<ActionGroupee> importerResultats) {
-        return new ActionsDeLot(preparerDepot, televerser, importerResultats);
+            @Named("action.importerResultats") Optional<ActionGroupee> importerResultats,
+            @Named("action.declencherCalcul") Optional<ActionGroupee> declencherCalcul) {
+        return new ActionsDeLot(preparerDepot, televerser, importerResultats, declencherCalcul);
     }
 
     @Provides

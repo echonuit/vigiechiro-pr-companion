@@ -24,11 +24,13 @@ import java.util.Optional;
 public record ActionsDeLot(
         Optional<ActionGroupee> preparerDepot,
         Optional<ActionGroupee> televerser,
-        Optional<ActionGroupee> importerResultats) {
+        Optional<ActionGroupee> importerResultats,
+        Optional<ActionGroupee> declencherCalcul) {
 
     public ActionsDeLot {
         Objects.requireNonNull(preparerDepot, "preparerDepot");
         Objects.requireNonNull(televerser, "televerser");
         Objects.requireNonNull(importerResultats, "importerResultats");
+        Objects.requireNonNull(declencherCalcul, "declencherCalcul");
     }
 }

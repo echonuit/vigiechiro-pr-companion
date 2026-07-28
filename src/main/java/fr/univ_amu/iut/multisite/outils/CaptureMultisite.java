@@ -266,6 +266,12 @@ public final class CaptureMultisite {
                         return actionDeCapture("Importer les résultats");
                     }
 
+                    @Provides
+                    @Named("action.declencherCalcul")
+                    ActionGroupee fournirActionCalcul() {
+                        return actionDeCapture("Déclencher le calcul");
+                    }
+
                     /// Remplaçant d'action : le libellé suffit, rien d'autre n'est rendu.
                     private ActionGroupee actionDeCapture(String libelle) {
                         return new ActionGroupee() {

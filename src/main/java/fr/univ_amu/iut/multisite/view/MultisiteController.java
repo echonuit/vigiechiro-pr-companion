@@ -170,6 +170,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private MenuItem itemImporterResultatsSelection;
 
     @FXML
+    private MenuItem itemDeclencherCalculSelection;
+
+    @FXML
     private TableView<LignePassage> tableLignes;
 
     @FXML
@@ -385,7 +388,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                         itemReleverAnalyses,
                         itemPreparerSelection,
                         itemTeleverserSelection,
-                        itemImporterResultatsSelection),
+                        itemImporterResultatsSelection,
+                        itemDeclencherCalculSelection),
                 viewModel.nonVideProperty(),
                 tableLignes.getSelectionModel().selectedItemProperty(),
                 Bindings.size(tableLignes.getSelectionModel().getSelectedItems()),
@@ -627,6 +631,12 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private void importerResultatsSelection() {
         lancerSurLaSelection(actions.importerResultats());
+    }
+
+    /// « Déclencher le calcul de la sélection… » (#2357, PR 5/5).
+    @FXML
+    private void declencherCalculSelection() {
+        lancerSurLaSelection(actions.declencherCalcul());
     }
 
     /// Applique `action` aux lignes cochées. Factorisé dès la deuxième : chaque PR du lot 3 ajoute une

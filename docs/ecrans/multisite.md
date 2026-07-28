@@ -92,6 +92,61 @@ tableau et montre toutes les colonnes d'un coup.
 Le rattachement lui-même se fait depuis la fenêtre **Modifier le passage**, décrite dans
 [Le passage](passage.md#rattacher-a-une-campagne).
 
+## Agir sur plusieurs nuits à la fois
+
+Rentrer d'une semaine de terrain avec six cartes SD, c'était refaire six fois le même parcours en six
+écrans, sans qu'aucune de ces six répétitions ne demande une décision différente.
+
+**Cochez plusieurs lignes** du tableau (Ctrl+clic, ou Maj+clic pour une plage), puis choisissez dans le
+menu **☰** l'une des quatre actions groupées :
+
+| Action | Ce qu'elle fait |
+|---|---|
+| **Préparer le dépôt** | contrôle la cohérence et fait passer les nuits à « Prêt à déposer » |
+| **Téléverser** | envoie les fichiers vers Vigie-Chiro |
+| **Importer les résultats** | rapatrie les identifications Tadarida |
+| **Déclencher le calcul** | demande à Vigie-Chiro d'analyser les nuits déposées |
+
+Le libellé de chaque entrée dit combien de lignes sont cochées, et pourquoi il est grisé s'il l'est.
+
+### On vous dit d'abord ce qui sera écarté
+
+Une fenêtre annonce **combien** de nuits seront traitées, et **lesquelles** ne le seront pas, chacune
+avec son motif : « déjà déposé », « pas encore vérifié », « hors connexion à Vigie-Chiro »… Vous pouvez
+renoncer.
+
+C'est le point important : un traitement qui ignorerait la moitié de votre sélection sans le dire
+serait pire qu'un traitement qui refuse.
+
+### Une nuit en échec n'arrête pas les autres
+
+Les nuits sont traitées **l'une après l'autre**, jamais en même temps : le rythme d'envoi vers
+Vigie-Chiro reste celui d'une seule nuit, quel que soit le nombre de lignes cochées.
+
+Si l'une échoue, les suivantes sont traitées quand même. Le compte rendu final dit, **pour chaque
+nuit**, ce qui s'est passé — « fait », « écarté : … », « échec : … ».
+
+### Renoncer en cours de route
+
+Le bouton **Annuler** arrête le lot. Les nuits déjà traitées le restent, celles qui n'ont pas commencé
+ne sont pas touchées : chacune est soit dans son état d'avant, soit dans son état d'après, jamais entre
+les deux.
+
+Le **téléversement** fait exception, et c'est voulu : il s'arrête entre deux fichiers plutôt que
+d'attendre la fin de la nuit en cours, qui peut prendre plusieurs minutes. La nuit reste alors en
+« Dépôt en cours » et **reprend là où elle en était** au lancement suivant.
+
+!!! warning "« Déclencher le calcul » ne relance jamais"
+    Une nuit déjà calculée est signalée en échec, avec ce motif, plutôt que recalculée. Ce n'est pas
+    une limitation : à chaque calcul, Vigie-Chiro **efface les observations avant de recalculer**, et
+    sur une nuit déposée en archive, les fichiers ne sont plus là pour être relus. Le résultat serait
+    définitivement perdu. Relancer volontairement une nuit reste possible, nuit par nuit, en ligne de
+    commande.
+
+!!! note "« Importer les résultats » ne remplace jamais"
+    Une nuit qui a déjà ses résultats est écartée. Réimporter écrase vos validations et l'avis du
+    validateur ; cela se décide depuis [Sons & validation](validation.md), nuit par nuit.
+
 ## Éditer les positions des points
 
 Le bouton **« ✎ »** superposé **en haut à gauche de la carte** fait passer celle-ci en **mode édition**
