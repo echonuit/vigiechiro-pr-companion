@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.97.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.96.0...v2.97.0) (2026-07-28)
+
+
+### Features
+
+* **analyse:** une nuit realisee sur le carre d'un tiers ne se fond plus dans le lot ([#2662](https://github.com/echonuit/vigiechiro-pr-companion/issues/2662)) ([fcd6b0e](https://github.com/echonuit/vigiechiro-pr-companion/commit/fcd6b0e9fea56880041d8ef2080d0704de1800d0)), closes [#2614](https://github.com/echonuit/vigiechiro-pr-companion/issues/2614) [#2614](https://github.com/echonuit/vigiechiro-pr-companion/issues/2614)
+
 # [2.96.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.95.0...v2.96.0) (2026-07-28)
 
 
