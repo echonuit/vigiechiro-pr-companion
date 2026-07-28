@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.multisite.view;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
@@ -36,6 +35,7 @@ import fr.univ_amu.iut.multisite.viewmodel.SourcesAudioMultisite;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -100,12 +100,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// remplacent par des doubles.
     private final TraitementLot lots;
 
-    /// L'action groupée « Préparer le dépôt », consommée sous son **port** : `multisite` enchaîne
-    /// une action sur des passages sans rien savoir du dépôt.
-    private final ActionGroupee preparerDepot;
-
-    /// L'action groupée « Téléverser », consommée sous le même port (#2357, PR 3/5).
-    private final ActionGroupee televerser;
+    /// Les actions de lot (#2357), consommées sous leur **port** : `multisite` enchaîne une action sur
+    /// des passages sans rien savoir du dépôt ni de l'import.
+    private final ActionsDeLot actions;
 
     /// Action de ligne « Ouvrir sur Vigie-Chiro » (#1799) : page de la participation liée au passage.
     private final ActionVigieChiroPassage vigieChiro;
@@ -168,6 +165,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private MenuItem itemTeleverserSelection;
+
+    @FXML
+    private MenuItem itemImporterResultatsSelection;
 
     @FXML
     private TableView<LignePassage> tableLignes;
@@ -267,8 +267,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
             DepotDispositionColonnes depotColonnes,
             ExecuteurTache executeur,
             ActionVigieChiroPassage vigieChiro,
-            @Named("action.preparerDepot") ActionGroupee preparerDepot,
-            @Named("action.televerser") ActionGroupee televerser) {
+            ActionsDeLot actions) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.reconstruction = Objects.requireNonNull(reconstruction, "reconstruction");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -278,8 +277,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
-        this.preparerDepot = Objects.requireNonNull(preparerDepot, "preparerDepot");
-        this.televerser = Objects.requireNonNull(televerser, "televerser");
+        this.actions = Objects.requireNonNull(actions, "actions");
         this.lots = new TraitementLot(executeur);
     }
 
@@ -386,10 +384,12 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                         itemReconstruire,
                         itemReleverAnalyses,
                         itemPreparerSelection,
-                        itemTeleverserSelection),
+                        itemTeleverserSelection,
+                        itemImporterResultatsSelection),
                 viewModel.nonVideProperty(),
                 tableLignes.getSelectionModel().selectedItemProperty(),
                 Bindings.size(tableLignes.getSelectionModel().getSelectedItems()),
+                actions,
                 reconstruction.disponible(),
                 viewModel.releveAnalysesDisponible());
 
@@ -614,23 +614,31 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// rafraîchir : les statuts auront bougé.
     @FXML
     private void preparerSelection() {
-        lancerSurLaSelection(preparerDepot);
+        lancerSurLaSelection(actions.preparerDepot());
     }
 
     /// « Téléverser la sélection… » (#2357, PR 3/5) : même geste, autre action.
     @FXML
     private void televerserSelection() {
-        lancerSurLaSelection(televerser);
+        lancerSurLaSelection(actions.televerser());
+    }
+
+    /// « Importer les résultats de la sélection… » (#2357, PR 4/5).
+    @FXML
+    private void importerResultatsSelection() {
+        lancerSurLaSelection(actions.importerResultats());
     }
 
     /// Applique `action` aux lignes cochées. Factorisé dès la deuxième : chaque PR du lot 3 ajoute une
     /// action, pas un geste - la surface, elle, ne bouge plus.
-    private void lancerSurLaSelection(ActionGroupee action) {
+    private void lancerSurLaSelection(Optional<ActionGroupee> action) {
         List<LignePassage> selection =
                 List.copyOf(tableLignes.getSelectionModel().getSelectedItems());
-        if (!selection.isEmpty()) { // l'item est grisé sinon : garde de ceinture
-            lots.lancer(menuActions.getScene().getWindow(), action, selection, this::chargerDonnees);
+        if (selection.isEmpty()) { // l'item est grisé sinon : garde de ceinture
+            return;
         }
+        // Action absente = feature coupée : l'entrée de menu a déjà disparu, on n'arrive pas ici.
+        action.ifPresent(a -> lots.lancer(menuActions.getScene().getWindow(), a, selection, this::chargerDonnees));
     }
 
     /// « Exporter » : demande où écrire, puis écriture par le ViewModel dans **l'ordre affiché** (#291).

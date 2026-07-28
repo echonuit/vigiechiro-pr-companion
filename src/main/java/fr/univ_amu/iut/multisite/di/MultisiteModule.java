@@ -1,16 +1,21 @@
 package fr.univ_amu.iut.multisite.di;
 
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
+import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
+import fr.univ_amu.iut.multisite.view.ActionsDeLot;
 import fr.univ_amu.iut.multisite.view.ActiviteMultisite;
 import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
@@ -42,6 +47,14 @@ public class MultisiteModule extends ModuleDeFeature {
     /// `multisite`).
     @Override
     protected void configure() {
+        // Actions de lot (#2357) : déclarées VIDES ici, le consommateur. Leur valeur est posée par la
+        // feature qui possède le geste - `lot` pour les deux premières, `import-vigiechiro` pour la
+        // troisième - et ces features sont DÉSACTIVABLES. Sans ces OptionalBinder, couper `lot` faisait
+        // échouer l'injecteur entier.
+        OptionalBinder.newOptionalBinder(binder(), Key.get(ActionGroupee.class, Names.named("action.preparerDepot")));
+        OptionalBinder.newOptionalBinder(binder(), Key.get(ActionGroupee.class, Names.named("action.televerser")));
+        OptionalBinder.newOptionalBinder(
+                binder(), Key.get(ActionGroupee.class, Names.named("action.importerResultats")));
         activite(ActiviteMultisite.class);
         // Contrat socle « voir sur la carte » : les autres features renvoient vers la carte multi-sites.
         bind(OuvrirMultisite.class).to(NavigationMultisite.class);
@@ -52,6 +65,17 @@ public class MultisiteModule extends ModuleDeFeature {
     /// l'[Horloge] du socle. L'assemblage inter-modules est résolu par `RacineInjecteur`. Les vues
     /// mémorisées ne passent plus par ce service (#537 étape 6b) : voir le [fr.univ_amu.iut.commun.model.DepotVues]
     /// fourni par `CommunModule`.
+    /// Les actions de lot (#2357), assemblées ici : chacune vient de la feature qui possède son geste,
+    /// et l'écran les reçoit en un seul porteur plutôt qu'une par une.
+    @Provides
+    @Singleton
+    ActionsDeLot fournirActionsDeLot(
+            @Named("action.preparerDepot") Optional<ActionGroupee> preparerDepot,
+            @Named("action.televerser") Optional<ActionGroupee> televerser,
+            @Named("action.importerResultats") Optional<ActionGroupee> importerResultats) {
+        return new ActionsDeLot(preparerDepot, televerser, importerResultats);
+    }
+
     @Provides
     @Singleton
     ServiceMultisite fournirServiceMultisite(
