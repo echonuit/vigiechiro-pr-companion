@@ -1,15 +1,17 @@
 package fr.univ_amu.iut.audio.view;
 
+import fr.univ_amu.iut.audio.viewmodel.CompteRenduChiffrePublication;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
 import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.SuiviOperation;
-import fr.univ_amu.iut.commun.view.VueCompteRendu;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.TriPublication;
+import java.util.List;
 import java.util.function.Supplier;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -41,17 +43,14 @@ final class PublicationCorrectionsUI {
     /// le tri des observations revues et le fait que l'ancrage manquant sera acquis par l'envoi.
     private record Apercu(TriPublication tri, boolean ancrageAVenir) {}
 
-    /// Nombre de détails montrés par constat avant de résumer. La **vue** en décide, pas le compte rendu
-    /// (ADR 0031) : la liste des refus peut être longue, la place sous le menu ne l'est pas.
-    private static final int DETAILS_MONTRES = 5;
-
     /// Câble l'item de menu (désactivé pendant une publication **ou** quand la publication est hors
     /// d'atteinte, #1596) et la zone de restitution.
     ///
-    /// Celle-ci reçoit **deux nœuds parce qu'il y a deux natures** (ADR 0028 / 0031) : le **compte rendu**,
-    /// une structure de constats que l'on parcourt, et au-dessus le **retour** borné - un refus, une
-    /// annulation, une phrase. Les faire tenir dans un même libellé obligeait à tronquer le premier : la
-    /// version d'avant n'affichait qu'une cause de refus sur N.
+    /// Celle-ci reçoit **deux nœuds parce qu'il y a deux natures** (ADR 0028 / 0031) : le **compte rendu**
+    /// de ce qui s'est passé, et au-dessus le **retour** borné - un refus, une annulation, une phrase. Les
+    /// faire tenir dans un même libellé obligeait à tronquer le premier. Depuis #2358 le compte rendu est
+    /// une bande **chiffrée** : la place n'y limite plus ce qu'on peut dire, les motifs de refus se
+    /// dépliant à la demande au lieu d'être plafonnés par la surface.
     static void cabler(
             MenuItem item,
             VBox zone,
@@ -69,16 +68,16 @@ final class PublicationCorrectionsUI {
                         .then("Publier les corrections vers Vigie-Chiro…"
                                 + " (rattachez la nuit à sa participation Vigie-Chiro)")
                         .otherwise("Publier les corrections vers Vigie-Chiro…"));
-        VBox compteRendu = new VBox();
+        PanneauCompteRendu compteRendu = new PanneauCompteRendu();
         zone.getChildren().setAll(libelleDuRetour(publication), compteRendu);
-        publication.compteRenduProperty().addListener((observable, avant, rendu) -> afficher(compteRendu, rendu));
-        afficher(compteRendu, publication.compteRenduProperty().get());
+        publication.bilanProperty().addListener((observable, avant, bilan) -> afficher(compteRendu, bilan));
+        afficher(compteRendu, publication.bilanProperty().get());
         // La zone s'efface entièrement quand ses deux canaux se taisent, pour ne pas laisser un blanc.
         BooleanBinding quelqueChoseADire = Bindings.createBooleanBinding(
                 () -> publication.retourProperty().get().present()
-                        || !publication.compteRenduProperty().get().estVide(),
+                        || publication.bilanProperty().get() != null,
                 publication.retourProperty(),
-                publication.compteRenduProperty());
+                publication.bilanProperty());
         zone.visibleProperty().bind(quelqueChoseADire);
         zone.managedProperty().bind(quelqueChoseADire);
     }
@@ -103,13 +102,21 @@ final class PublicationCorrectionsUI {
         return message;
     }
 
-    /// Remplace le compte rendu affiché. On reconstruit plutôt qu'on ne met à jour : un compte rendu est
-    /// immuable et publié d'un bloc, il n'y a rien à rafraîchir en place.
-    private static void afficher(VBox zone, CompteRendu rendu) {
-        zone.getChildren().setAll(VueCompteRendu.rendre(rendu, DETAILS_MONTRES).getChildren());
-        zone.getStyleClass().setAll(VueCompteRendu.CLASSE_RACINE);
-        zone.setVisible(!rendu.estVide());
-        zone.setManaged(!rendu.estVide());
+    /// Publie le compte rendu **chiffré** du bilan (#2358), ou masque la bande.
+    ///
+    /// Il **remplace** la restitution textuelle, qui n'avait que cette surface pour consommateur - la
+    /// publication n'a pas de commande en ligne, contrairement à la réactivation, qui a dû garder la
+    /// sienne. La question de l'observateur à cet instant est « quelle part est arrivée sur la
+    /// plateforme ? », et une liste de constats n'y répond pas : une barre, si.
+    ///
+    /// Le pied ne propose pas d'action : la publication est lancée depuis un menu de l'écran audio, et
+    /// l'observateur y est déjà. Proposer d'aller là où l'on est n'est pas une action suivante.
+    private static void afficher(PanneauCompteRendu bande, BilanPublication bilan) {
+        if (bilan != null) {
+            bande.afficher(CompteRenduChiffrePublication.de(bilan, List.of()));
+        }
+        bande.setVisible(bilan != null);
+        bande.setManaged(bilan != null);
     }
 
     /// Le compte rendu affiché, pour les tests de câblage : le second enfant de la zone, le premier

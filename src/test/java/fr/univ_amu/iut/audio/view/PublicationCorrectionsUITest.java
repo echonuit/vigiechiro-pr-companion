@@ -15,14 +15,10 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Progression;
-import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.SuiviOperation;
-import fr.univ_amu.iut.commun.view.VueCompteRendu;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
@@ -38,8 +34,10 @@ import java.util.function.Supplier;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -184,10 +182,10 @@ class PublicationCorrectionsUITest {
     @DisplayName("garde : item grisé + libellé explicite quand la publication est hors d'atteinte (#1596)")
     void garde_avant_publication() {
         ReadOnlyObjectWrapper<RetourOperation> retour = new ReadOnlyObjectWrapper<>(RetourOperation.AUCUN);
-        ReadOnlyObjectWrapper<CompteRendu> compteRendu = new ReadOnlyObjectWrapper<>(CompteRendu.de("", List.of()));
+        ReadOnlyObjectWrapper<BilanPublication> bilan = new ReadOnlyObjectWrapper<>(null);
         when(publication.enCoursProperty()).thenReturn(new SimpleBooleanProperty(false));
         when(publication.retourProperty()).thenReturn(retour.getReadOnlyProperty());
-        when(publication.compteRenduProperty()).thenReturn(compteRendu.getReadOnlyProperty());
+        when(publication.bilanProperty()).thenReturn(bilan.getReadOnlyProperty());
         MenuItem item = new MenuItem();
         BooleanProperty publicationImpossible = new SimpleBooleanProperty(false);
 
@@ -234,10 +232,10 @@ class PublicationCorrectionsUITest {
     @DisplayName("#2004 : le compte rendu publié atteint la zone dédiée, le libellé garde le retour")
     void compte_rendu_rendu_dans_la_zone() {
         ReadOnlyObjectWrapper<RetourOperation> retour = new ReadOnlyObjectWrapper<>(RetourOperation.AUCUN);
-        ReadOnlyObjectWrapper<CompteRendu> compteRendu = new ReadOnlyObjectWrapper<>(CompteRendu.de("", List.of()));
+        ReadOnlyObjectWrapper<BilanPublication> bilan = new ReadOnlyObjectWrapper<>(null);
         when(publication.enCoursProperty()).thenReturn(new SimpleBooleanProperty(false));
         when(publication.retourProperty()).thenReturn(retour.getReadOnlyProperty());
-        when(publication.compteRenduProperty()).thenReturn(compteRendu.getReadOnlyProperty());
+        when(publication.bilanProperty()).thenReturn(bilan.getReadOnlyProperty());
         VBox zone = new VBox();
 
         PublicationCorrectionsUI.cabler(new MenuItem(), zone, publication, new SimpleBooleanProperty(false));
@@ -248,19 +246,18 @@ class PublicationCorrectionsUITest {
                 .isFalse();
 
         // Monté ici plutôt qu'appelé sur le ViewModel : ce test porte sur le CÂBLAGE, pas sur la
-        // fabrication du compte rendu, que PublicationCorrectionsViewModelTest tient déjà.
-        compteRendu.set(CompteRendu.de(
-                "Corrections publiées vers Vigie-Chiro",
-                List.of(new Constat(
-                        "2 refus de la plateforme.",
-                        Severite.ERREUR,
-                        List.of(Detail.de("Observation 7 : HTTP 404"), Detail.de("Observation 12 : HTTP 500"))))));
+        // traduction du bilan, que CompteRenduChiffrePublicationTest tient déjà.
+        bilan.set(new BilanPublication(10, 0, 0, 0, List.of("Observation 7 : HTTP 404", "Observation 12 : HTTP 500")));
 
         assertThat(zone.isVisible()).isTrue();
-        assertThat(compteRenduAffiche.getStyleClass()).contains(VueCompteRendu.CLASSE_RACINE);
-        // Les DEUX refus sont à l'écran : c'est la reprise que #2004 cherchait. La version en phrase
-        // n'en montrait qu'un, et rien ne disait à l'observateur qu'il en manquait.
-        assertThat(textes(zone)).contains("Observation 7 : HTTP 404", "Observation 12 : HTTP 500");
+        assertThat(compteRenduAffiche).isInstanceOf(PanneauCompteRendu.class);
+        // Les DEUX refus sont à l'écran : c'est la reprise que #2004 cherchait, et elle survit au passage
+        // en bande chiffrée (#2358) - ils y sont deux motifs, chacun portant son observation.
+        assertThat(fichiersDesMotifs(compteRenduAffiche)).contains("Observation 7", "Observation 12");
+        assertThat(textes(zone))
+                .as("les deux causes sont nommées, pas seulement la première")
+                .anySatisfy(texte -> assertThat(texte).contains("HTTP 404"))
+                .anySatisfy(texte -> assertThat(texte).contains("HTTP 500"));
         Label message = (Label) zone.getChildren().getFirst();
         assertThat(message.isVisible())
                 .as("aucun échec : le canal du retour reste muet")
@@ -271,10 +268,23 @@ class PublicationCorrectionsUITest {
         assertThat(message.getText()).isEqualTo("Vigie-Chiro injoignable.");
     }
 
+    /// Les sujets listés sous chaque motif de la bande, tous groupes confondus.
+    private static List<String> fichiersDesMotifs(Parent bande) {
+        List<String> sujets = new java.util.ArrayList<>();
+        for (Node noeud : bande.lookupAll(".cr-motif-liste")) {
+            if (noeud instanceof ListView<?> liste) {
+                liste.getItems().stream().map(String::valueOf).forEach(sujets::add);
+            }
+        }
+        return sujets;
+    }
+
     /// Tous les libellés du sous-arbre, pour lire ce que la zone montre réellement.
     private static List<String> textes(Parent racine) {
         return racine.lookupAll(".label").stream()
+                .filter(Label.class::isInstance)
                 .map(noeud -> ((Label) noeud).getText())
+                .filter(java.util.Objects::nonNull)
                 .toList();
     }
 }

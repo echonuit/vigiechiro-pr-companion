@@ -21,6 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -109,7 +110,12 @@ public final class PanneauCompteRendu extends VBox {
     private final HBox enTete = new HBox(8, titre, espaceur(), pastille);
 
     private final HBox barreVentilation = new HBox();
-    private final HBox legende = new HBox(18);
+    /// La légende **passe à la ligne** quand elle ne tient pas : une ventilation à cinq parts (le dépôt)
+    /// en déborde, et une boîte horizontale comprime alors chaque entrée jusqu'à l'ellipse - « Publiées ·
+    /// 12 (60,0 % » ne se lit plus. Le défaut n'est apparu qu'en **intégration continue**, dont les
+    /// métriques de police diffèrent de neuf pixels par entrée : c'est exactement le genre d'écart qu'une
+    /// mise en page à ligne unique transforme en texte coupé, ici comme sur l'écran d'un utilisateur.
+    private final FlowPane legende = new FlowPane(18, 6);
     private final VBox blocVentilation = new VBox(8, barreVentilation, legende);
 
     /// Les volumes vivent dans une **grille** et non dans des lignes indépendantes : la colonne de la
@@ -153,6 +159,7 @@ public final class PanneauCompteRendu extends VBox {
         blocVolumes.getColumnConstraints().addAll(colonneLibelle(), colonneBarre(), colonneValeur());
         enTete.setAlignment(Pos.CENTER_LEFT);
         legende.setAlignment(Pos.CENTER_LEFT);
+        legende.setRowValignment(javafx.geometry.VPos.CENTER);
         actions.setAlignment(Pos.CENTER_LEFT);
         pied.setAlignment(Pos.CENTER_LEFT);
         blocMotifs.getStyleClass().add("cr-motifs");

@@ -3,16 +3,10 @@ package fr.univ_amu.iut.audio.viewmodel;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.commun.model.Severite;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import fr.univ_amu.iut.validation.model.TriPublication;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -37,8 +31,13 @@ public class PublicationCorrectionsViewModel {
 
     /// Compte rendu de la dernière publication : ce qui est parti, ce qui a été écarté et pourquoi, ce
     /// qui a été refusé (ADR 0031). **Extensible** : il a déjà gagné le rapatriement d'ancrage (#1867).
-    private final ReadOnlyObjectWrapper<CompteRendu> compteRendu =
-            new ReadOnlyObjectWrapper<>(this, "compteRendu", CompteRendu.de("", List.of()));
+    /// Le bilan de la dernière publication, `null` tant qu'il n'y en a pas (#2358).
+    ///
+    /// C'est le **bilan brut** et non un compte rendu déjà mis en forme : la surface en fait une bande
+    /// chiffrée ([CompteRenduChiffrePublication]). La version textuelle qu'il remplace n'avait qu'un
+    /// consommateur - cette même surface - donc la remplacer ne prive personne, là où la réactivation
+    /// devait garder la sienne pour sa commande en ligne.
+    private final ReadOnlyObjectWrapper<BilanPublication> bilan = new ReadOnlyObjectWrapper<>(this, "bilan", null);
 
     /// Retour d'opération : échec métier ou réseau, annulation. **Borné** - une phrase, une sévérité.
     ///
@@ -91,15 +90,15 @@ public class PublicationCorrectionsViewModel {
         // Démarrer EFFACE le compte rendu précédent (corollaire de l'ADR 0023) : sans cela, le bilan de
         // la publication d'avant se lirait comme celui de celle qui travaille. Et l'annonce du travail en
         // cours ne passe pas par ce canal - elle a sa modale de progression, avec son « Annuler ».
-        compteRendu.set(CompteRendu.de("", List.of()));
+        bilan.set(null);
         retour.set(RetourOperation.AUCUN);
         enCours.set(true);
     }
 
     /// Restitue une publication **terminée** (au fil JavaFX) : résumé du bilan, écarts et refus compris.
-    public void appliquerBilan(BilanPublication bilan) {
+    public void appliquerBilan(BilanPublication bilanPublie) {
         enCours.set(false);
-        compteRendu.set(construire(bilan));
+        bilan.set(bilanPublie);
     }
 
     /// Restitue un **échec** ou une **annulation** (au fil JavaFX) : message d'erreur métier / réseau,
@@ -108,46 +107,6 @@ public class PublicationCorrectionsViewModel {
         enCours.set(false);
         // Une chaîne vide efface le retour : c'est ainsi que l'annulation se solde, sans rien annoncer.
         retour.set(erreur.isEmpty() ? RetourOperation.AUCUN : RetourOperation.erreur(erreur));
-    }
-
-    /// Le compte rendu d'une publication, **structuré** (ADR 0031) : ce qui est parti, ce qui a été
-    /// écarté et pourquoi, ce qui a été refusé.
-    ///
-    /// La version textuelle qu'il remplace ne montrait **qu'une cause de refus sur N** (« 3 refus, dont :
-    /// … »), alors que le bilan les porte toutes. C'était un compte rendu tronqué en phrase, faute de
-    /// pouvoir en dire plus dans un libellé unique. Chaque refus est désormais un détail, et c'est la
-    /// surface qui décide combien elle en montre.
-    static CompteRendu construire(BilanPublication bilan) {
-        List<Constat> constats = new ArrayList<>();
-        constats.add(Constat.de(String.format("%d correction(s) envoyée(s).", bilan.poussees()), Severite.SUCCES));
-        ecarte(constats, bilan.sansCertitude(), "%d à compléter : certitude non déclarée.");
-        // Depuis #1838 la publication ancre elle-même ce qui peut l'être : ce qui reste ici n'est pas un
-        // oubli de réimport, c'est une nuit sans participation à quoi s'ancrer. Le remède a changé.
-        ecarte(
-                constats,
-                bilan.sansAncrage(),
-                "%d sans ancrage plateforme : rattachez la nuit à sa participation Vigie-Chiro.");
-        ecarte(constats, bilan.horsReferentiel(), "%d hors référentiel.");
-        if (!bilan.sansEchec()) {
-            constats.add(new Constat(
-                    String.format("%d refus de la plateforme.", bilan.echecs().size()),
-                    Severite.ERREUR,
-                    bilan.echecs().stream().map(Detail::de).toList()));
-        }
-        if (!bilan.rapatriement().estMuet()) {
-            // Le rapatriement d'ancrage ramène aussi les échanges avec le validateur (#1867). Les taire
-            // reviendrait à laisser l'observateur les découvrir en ouvrant la bonne observation, par
-            // hasard. Le texte vient du port d'import, qui seul sait ce qu'il a écrit.
-            constats.add(Constat.de(bilan.rapatriement().texte(), Severite.INFO));
-        }
-        return new CompteRendu("Corrections publiées vers Vigie-Chiro", "", constats, "");
-    }
-
-    /// Ajoute un constat d'écart **s'il y a lieu** : annoncer « 0 hors référentiel » serait du bruit.
-    private static void ecarte(List<Constat> constats, int combien, String gabarit) {
-        if (combien > 0) {
-            constats.add(Constat.de(String.format(gabarit, combien), Severite.INFO));
-        }
     }
 
     private PublicationCorrections moteur() {
@@ -159,9 +118,10 @@ public class PublicationCorrectionsViewModel {
         return enCours.getReadOnlyProperty();
     }
 
-    /// Le compte rendu de la dernière publication, à rendre par [fr.univ_amu.iut.commun.view.VueCompteRendu].
-    public ReadOnlyObjectProperty<CompteRendu> compteRenduProperty() {
-        return compteRendu.getReadOnlyProperty();
+    /// Le bilan de la dernière publication, à rendre par
+    /// [fr.univ_amu.iut.commun.view.PanneauCompteRendu] via [CompteRenduChiffrePublication].
+    public ReadOnlyObjectProperty<BilanPublication> bilanProperty() {
+        return bilan.getReadOnlyProperty();
     }
 
     /// Le retour d'opération (échec, annulation), à rendre au bandeau.
