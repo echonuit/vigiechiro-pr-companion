@@ -27,6 +27,7 @@ import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.Taxon;
 import java.io.File;
@@ -394,7 +395,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 colValidateur,
                 colFil,
                 colEnjeu);
-        ColonnesAudio.configurer(colonnes, marqueurEnjeu::aEnjeu, viewModel.actions()::commenter);
+        ColonnesAudio.configurer(
+                colonnes, ligne -> marqueurEnjeu.aEnjeu(ligne.taxonRetenu()), viewModel.actions()::commenter);
     }
 
     @FXML

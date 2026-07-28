@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,6 +78,14 @@ class ActiviteViewTest {
         DepotVues depotVues = mock(DepotVues.class);
         when(depotVues.findByFeature("activite")).thenReturn(List.of());
         Injector injector = Guice.createInjector(new AbstractModule() {
+            // Référentiel des espèces à enjeu (#2353) : cet injecteur n'installe pas les modules de
+            // feature, il déclare donc son propre monde. La justesse du référentiel réel est gardée
+            // par EspecesPrioritairesReferentielTest.
+            @Provides
+            EspecesPrioritaires especesPrioritaires() {
+                return () -> Set.of("PIPKUH");
+            }
+
             @Provides
             ActiviteViewModel viewModel() {
                 return new ActiviteViewModel(service);
@@ -211,13 +220,36 @@ class ActiviteViewTest {
     }
 
     @Test
+    void l_onglet_especes_prioritaires_ne_garde_que_les_especes_a_enjeu(FxRobot robot) {
+        // Deux espèces de chiroptères, une seule prioritaire au plan national : l'onglet doit trancher.
+        when(service.contactsDeLUtilisateur("u-1"))
+                .thenReturn(concat(
+                        nContactsDuGroupe("PIPKUH", "Chiroptères", 5), nContactsDuGroupe("BARBAR", "Chiroptères", 3)));
+        robot.interact(() -> controleur.ouvrirTout("u-1"));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        LineChart<?, ?> graphe = robot.lookup("#grapheActivite").queryAs(LineChart.class);
+        assertThat(graphe.getData())
+                .as("les deux espèces sont tracées à l'ouverture")
+                .hasSize(2);
+
+        robot.clickOn("Espèces prioritaires");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(graphe.getData())
+                .extracting(XYChart.Series::getName)
+                .as("seule l'espèce prioritaire au plan national reste tracée")
+                .containsExactly("PIPKUH");
+    }
+
+    @Test
     void le_menu_filtre_offre_la_cascade_geo_et_le_taxon_parent(FxRobot robot) {
         MenuButton menu = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
 
         assertThat(menu.getItems())
                 .extracting(MenuItem::getText)
                 .as("cascade carré → point → nuit, le taxon parent, et la nature de la nuit (#2614)")
-                .contains("Carré", "Point", "Nuit", "Taxon parent", "Nature de la nuit");
+                .contains("Carré", "Point", "Nuit", "Taxon parent", "Nature de la nuit", "Espèces à enjeu");
     }
 
     @Test

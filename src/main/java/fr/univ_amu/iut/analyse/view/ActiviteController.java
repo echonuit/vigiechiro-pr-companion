@@ -27,6 +27,8 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -52,6 +54,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran **M-Activite** (`Activite.fxml`, #2352, lot 2 du chantier #2348).
 ///
@@ -150,18 +153,24 @@ public class ActiviteController implements EmplacementNavigation {
         return selecteur;
     }
 
+    /// Repère des **espèces à enjeu** (#2353) : lu une fois, le référentiel ne bougeant pas en cours de
+    /// session. Partagé par les cases du sélecteur d'espèces et le critère de filtre.
+    private final MarqueurEspecesAEnjeu marqueurEnjeu;
+
     @Inject
     public ActiviteController(
             ActiviteViewModel viewModel,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
             VersionApplication version,
-            DepotVues depotVues) {
+            DepotVues depotVues,
+            EspecesPrioritaires especesPrioritaires) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.version = Objects.requireNonNull(version, "version");
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
+        this.marqueurEnjeu = new MarqueurEspecesAEnjeu(especesPrioritaires);
     }
 
     @FXML
@@ -180,7 +189,8 @@ public class ActiviteController implements EmplacementNavigation {
                         CriteresActivite.point(viewModel::pointsDisponibles),
                         CriteresActivite.nuit(viewModel::nuitsDisponibles),
                         CriteresActivite.groupe(viewModel::groupesDisponibles),
-                        CriteresActivite.natureNuit(viewModel::nuitsOpportunistes)),
+                        CriteresActivite.natureNuit(viewModel::nuitsOpportunistes),
+                        CriteresActivite.aEnjeu(contact -> marqueurEnjeu.aEnjeu(contact.taxon()))),
                 CriteresActivite.rechercheTexte());
 
         // Onglets de vues (#623) : les vues par défaut partitionnent par catégorie du référentiel, et
@@ -452,6 +462,14 @@ public class ActiviteController implements EmplacementNavigation {
         for (CourbeEspece courbe : viewModel.especes()) {
             String taxon = courbe.taxon();
             CheckBox case_ = new CheckBox(nomAffiche(courbe) + " (" + courbe.total() + ")");
+            // Repère « espèce à enjeu » (#2353) : le bouclier accompagne le nom, là où l'œil choisit quelles
+            // courbes tracer. Jamais la couleur seule — le glyphe et l'infobulle portent l'information.
+            if (marqueurEnjeu.aEnjeu(taxon)) {
+                FontIcon bouclier = new FontIcon("fas-shield-alt");
+                bouclier.getStyleClass().add("icone-enjeu");
+                case_.setGraphic(bouclier);
+                case_.setTooltip(new Tooltip("Espèce prioritaire du Plan National d'Actions Chiroptères"));
+            }
             case_.setSelected(viewModel.especesSelectionnees().contains(taxon));
             case_.selectedProperty().addListener((observable, avant, coche) -> majSelection(taxon, coche));
             selecteurEspeces.getChildren().add(case_);

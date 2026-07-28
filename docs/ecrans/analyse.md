@@ -19,6 +19,12 @@ Une table récapitule vos espèces. Un sélecteur **Regrouper** propose deux ang
 - **Par carré** : une ligne par carré, avec sa **richesse spécifique** (nombre d'espèces distinctes) et son
   total de détections — utile pour le rendu Vigie-Chiro.
 
+> Un **bouclier violet** devant un nom d'espèce signale une espèce **prioritaire** au sens du
+> [Plan National d'Actions Chiroptères](https://plan-actions-chiropteres.fr/) 2016-2025 : dix-neuf
+> espèces sur les trente-six de métropole. L'onglet **« Espèces prioritaires »** ne garde qu'elles, et
+> la puce du même nom se combine avec les autres filtres. L'absence de bouclier ne veut pas dire « sans
+> intérêt » : la plupart des taxons détectés ne relèvent tout simplement pas de ce plan.
+
 > Le filtre **« Nature de la nuit »** sépare les nuits du protocole des **participations
 > opportunistes** (celles réalisées sur le carré d'un tiers, qui ne comptent pas dans votre solde de
 > saison). Les deux restent comptées ensemble par défaut : c'est à vous de demander la séparation.

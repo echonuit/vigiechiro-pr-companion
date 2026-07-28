@@ -10,7 +10,10 @@ import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
+import javafx.scene.Node;
 
 /// Catalogue des **critères de filtrage** de la vue Activité (patron « à la Notion », socle
 /// [fr.univ_amu.iut.commun.viewmodel.Filtres]), pendant du [CriteresAnalyse] mais sur [ContactHoraire].
@@ -24,6 +27,9 @@ final class CriteresActivite {
 
     /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par défaut.
     private static final String GROUPE = "groupe";
+
+    /// Clé du critère « Espèces à enjeu », partagée par le filtre et l'onglet du même nom (#2353).
+    private static final String A_ENJEU = "a_enjeu";
 
     /// Les catégories du référentiel qui ne sont **pas** des chiroptères. Énumérées, et non exprimées par
     /// une négation : le filtre dit alors ce qu'il **retient**, ce qui se lit dans la puce et se rejoue
@@ -72,6 +78,32 @@ final class CriteresActivite {
                 contact -> NatureNuit.de(contact.idPassage(), opportunistes.get()));
     }
 
+    /// Critère **Espèces à enjeu** (#2353) : ne trace que les courbes des espèces **prioritaires** au sens
+    /// du Plan National d'Actions Chiroptères. Critère **sans éditeur** (booléen) : la présence de la puce
+    /// active le filtre.
+    ///
+    /// Porte l'onglet « Espèces prioritaires » ([#vuesParDefaut()]) : sur une nuit à plusieurs milliers de
+    /// contacts, il répond d'un clic à « qu'ai-je entendu qui compte ? ».
+    static CritereFiltre<ContactHoraire> aEnjeu(Predicate<ContactHoraire> estPrioritaire) {
+        return new CritereFiltre<ContactHoraire>() {
+            @Override
+            public String nom() {
+                return A_ENJEU;
+            }
+
+            @Override
+            public String libelle() {
+                return "Espèces à enjeu";
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<ContactHoraire>> applique) {
+                applique.accept(estPrioritaire); // filtre actif dès l'ajout de la puce
+                return null; // booléen : pas d'éditeur, la présence de la puce suffit
+            }
+        };
+    }
+
     private static String libelleNuit(ContactHoraire contact) {
         return contact.nuit() == null ? null : contact.nuit().toString();
     }
@@ -91,7 +123,8 @@ final class CriteresActivite {
         return List.of(
                 vueParDefaut("Tout"),
                 vueChiropteres(),
-                vueParDefaut("Autres", new DescripteurCritere(GROUPE, HORS_CHIROPTERES)));
+                vueParDefaut("Autres", new DescripteurCritere(GROUPE, HORS_CHIROPTERES)),
+                vueParDefaut("Espèces prioritaires", new DescripteurCritere(A_ENJEU, List.of())));
     }
 
     /// La vue sur laquelle l'écran **s'ouvre** (#2616) : « Chiroptères ».

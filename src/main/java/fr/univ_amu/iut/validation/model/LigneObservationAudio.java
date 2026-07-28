@@ -113,6 +113,14 @@ public record LigneObservationAudio(
         return taxonValidateur != null && taxonObservateur != null && !taxonValidateur.equals(taxonObservateur);
     }
 
+    /// Le taxon **retenu** de la ligne : la correction de l'observateur si elle existe, sinon la
+    /// proposition de Tadarida (`COALESCE(taxon_observer, taxon_tadarida)`, comme partout ailleurs).
+    /// C'est l'espèce que la ligne **affirme**, par opposition à celle qui a été proposée. `null` pour une
+    /// séquence non identifiée.
+    public String taxonRetenu() {
+        return taxonObservateur != null ? taxonObservateur : taxonTadarida;
+    }
+
     /// Une discussion est-elle ouverte sur cette détection ?
     public boolean aUnFil() {
         return nbMessages > 0;
