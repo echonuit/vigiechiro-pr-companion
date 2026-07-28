@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.112.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.112.0...v2.112.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **api:** « Annuler » cesse de disparaitre pendant une temporisation de reprise ([#2712](https://github.com/echonuit/vigiechiro-pr-companion/issues/2712)) ([853c38e](https://github.com/echonuit/vigiechiro-pr-companion/commit/853c38e62389e2db56b6e66aa3274ff6618e896a)), closes [#2686](https://github.com/echonuit/vigiechiro-pr-companion/issues/2686) [#2619](https://github.com/echonuit/vigiechiro-pr-companion/issues/2619) [#1522](https://github.com/echonuit/vigiechiro-pr-companion/issues/1522) [#2686](https://github.com/echonuit/vigiechiro-pr-companion/issues/2686) [#2354](https://github.com/echonuit/vigiechiro-pr-companion/issues/2354)
+
 # [2.112.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.111.0...v2.112.0) (2026-07-28)
 
 
