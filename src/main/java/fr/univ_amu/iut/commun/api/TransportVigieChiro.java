@@ -76,23 +76,26 @@ final class TransportVigieChiro {
         if (entete.isEmpty()) {
             return ReponseApi.nonConnecte();
         }
-        return emettre(() -> HttpRequest.newBuilder(URI.create(baseUrl + chemin))
-                .timeout(DELAI)
-                .header("Authorization", entete.get())
-                .header("Accept", TYPE_JSON)
-                .GET()
-                .build());
+        return emettre(
+                Rejeu.AUTORISE,
+                () -> HttpRequest.newBuilder(URI.create(baseUrl + chemin))
+                        .timeout(DELAI)
+                        .header("Authorization", entete.get())
+                        .header("Accept", TYPE_JSON)
+                        .GET()
+                        .build());
     }
 
     /// Écriture authentifiée (`POST` / `PATCH`) d'un corps JSON sur `chemin`, triée comme [#lire]. Si
     /// `etag` est non-`null`, ajoute l'en-tête `If-Match` (concurrence optimiste exigée par Eve pour
     /// les mises à jour).
-    ReponseApi<String> ecrire(String methode, String chemin, String corpsJson, String etag) {
+    /// `rejeu` dit ce qu'un rejeu ferait **côté serveur** : l'appelant l'arbitre, le transport l'applique.
+    ReponseApi<String> ecrire(String methode, String chemin, String corpsJson, String etag, Rejeu rejeu) {
         Optional<String> entete = enteteAuthorization();
         if (entete.isEmpty()) {
             return ReponseApi.nonConnecte();
         }
-        return emettre(() -> {
+        return emettre(rejeu, () -> {
             HttpRequest.Builder requete = HttpRequest.newBuilder(URI.create(baseUrl + chemin))
                     .timeout(DELAI)
                     .header("Authorization", entete.get())
@@ -109,8 +112,12 @@ final class TransportVigieChiro {
     /// Télécharge une URL **déjà signée** (S3, #1132) : aucun en-tête `Authorization` (S3 refuse une
     /// authentification surnuméraire, la signature de l'URL fait foi), donc jamais « non connecté ».
     ReponseApi<String> telecharger(String url) {
-        return emettre(() ->
-                HttpRequest.newBuilder(URI.create(url)).timeout(DELAI).GET().build());
+        return emettre(
+                Rejeu.AUTORISE,
+                () -> HttpRequest.newBuilder(URI.create(url))
+                        .timeout(DELAI)
+                        .GET()
+                        .build());
     }
 
     /// Requête à émettre, construite au dernier moment (sa construction même peut échouer).
@@ -119,29 +126,51 @@ final class TransportVigieChiro {
         HttpRequest requete() throws IOException;
     }
 
+    /// Ce qu'un rejeu ferait à l'**état du serveur**, déclaré par l'appelant. Ni la méthode HTTP ni le
+    /// bon sens ne suffisent à le déduire : `PUT /…/messages` **empile** par `$push` côté serveur, donc
+    /// un `PUT` peut parfaitement ne pas être idempotent. C'est pourquoi l'EPIC #2350 exige un périmètre
+    /// « **arbitré appel par appel**, et documenté », et non une règle par verbe.
+    ///
+    /// Deux familles de raisons de refuser, et c'est pourquoi la décision est nommée plutôt que sa cause :
+    /// le rejeu **duplique** (une création, un message empilé), ou il **trompe** (un `PATCH` protégé par
+    /// `If-Match` rejoué après un succès dont la réponse s'est perdue revient en `412`, et l'utilisateur
+    /// lit « échec » sur une modification qui a bien eu lieu).
+    enum Rejeu {
+        /// Rejouer redonne le même état et la même réponse : lectures, suppression, valeur absolue.
+        AUTORISE,
+        /// Ne pas rejouer. Le mode de panne visé n'est pas exotique : la requête arrive, le serveur agit,
+        /// et c'est la **réponse** qui se perd. Sans clé d'idempotence, rien ne distingue alors un rejeu
+        /// d'une demande neuve.
+        INTERDIT
+    }
+
     /// Filet **commun des émissions** : envoie la requête, trie l'issue et la **consigne** (#1845). Une
     /// interruption ou une panne (réseau, DNS, TLS, délai) devient [ReponseApi.Injoignable] avec sa cause :
     /// plus jamais un silence indistinct.
-    private ReponseApi<String> emettre(RequeteAEmettre requete) {
-        // Réessai gradué sur TOUTES les émissions, pas seulement sur les écritures du dépôt (#2619).
-        // PREMIER_PLAN et non ARRIÈRE-PLAN : dans ce produit, aucune lecture n'est un sondage automatique
-        // - « on n'interroge le serveur que quand l'utilisateur le demande » (#1338) - donc il y a
-        // toujours quelqu'un qui attend, et la règle 2 de l'ADR 2354 dit d'insister. Le jour où une tâche
-        // périodique apparaîtra, elle devra passer ARRIERE_PLAN explicitement.
+    private ReponseApi<String> emettre(Rejeu rejeu, RequeteAEmettre requete) {
+        if (rejeu == Rejeu.INTERDIT) {
+            // Règle 1 de l'ADR 2354 : le réessai n'est jamais aveugle. Une panne réseau ne dit pas si le
+            // serveur a agi ; insister sur une création, c'est échanger une erreur visible contre un
+            // doublon silencieux sur la plateforme, qu'aucune route ne permet de retirer (#2677).
+            return uneTentative(requete).reponse();
+        }
+        // Réessai gradué sur TOUTES les émissions rejouables, pas seulement sur les écritures du dépôt
+        // (#2619). PREMIER_PLAN et non ARRIÈRE-PLAN : dans ce produit, aucune lecture n'est un sondage
+        // automatique - « on n'interroge le serveur que quand l'utilisateur le demande » (#1338) - donc il
+        // y a toujours quelqu'un qui attend, et la règle 2 de l'ADR 2354 dit d'insister. Le jour où une
+        // tâche périodique apparaîtra, elle devra passer ARRIERE_PLAN explicitement.
         //
         // Le suivi est SILENCIEUX ici : le transport n'a pas de canal vers l'écran. La reprise se voit
         // dans le journal, via l'issue de chaque tentative.
         return politique.executer(
-                PolitiqueReessai.Profil.PREMIER_PLAN,
-                SuiviReprise.SILENCIEUX,
-                () -> PolitiqueReessai.Issue.de(uneEmission(requete)));
+                PolitiqueReessai.Profil.PREMIER_PLAN, SuiviReprise.SILENCIEUX, () -> uneTentative(requete));
     }
 
-    /// **Une** émission : envoie la requête, trie l'issue et la **consigne** (#1845). Une interruption ou
-    /// une panne (réseau, DNS, TLS, délai) devient [ReponseApi.Injoignable] avec sa cause : plus jamais un
-    /// silence indistinct. C'est cette unité que [PolitiqueReessai] rejoue, et chaque tentative laisse
-    /// donc sa propre trace.
-    private ReponseApi<String> uneEmission(RequeteAEmettre requete) {
+    /// Une émission, rendue **avec** le délai que le serveur a éventuellement imposé (`Retry-After`).
+    /// Sans lui, la règle 3 de l'ADR 2354 - « `Retry-After` fait autorité, c'est lui qui sait » - ne
+    /// valait plus que pour le `PUT` S3 : partout ailleurs un `429` d'Eve était rejoué sur notre
+    /// temporisation calculée, en ignorant le délai demandé (#2677).
+    private PolitiqueReessai.Issue<String> uneTentative(RequeteAEmettre requete) {
         long debut = System.nanoTime();
         String methode = "?";
         String chemin = "?";
@@ -149,18 +178,19 @@ final class TransportVigieChiro {
             HttpRequest envoi = requete.requete();
             methode = envoi.method();
             chemin = envoi.uri().getPath();
-            ReponseApi<String> reponse = triage(client.send(envoi, HttpResponse.BodyHandlers.ofString()));
+            HttpResponse<String> http = client.send(envoi, HttpResponse.BodyHandlers.ofString());
+            ReponseApi<String> reponse = triage(http);
             journaliser(methode, chemin, reponse, debut, null);
-            return reponse;
+            return new PolitiqueReessai.Issue<>(reponse, retryAfter(http));
         } catch (InterruptedException interrompu) {
             Thread.currentThread().interrupt();
             ReponseApi<String> reponse = ReponseApi.injoignable("appel interrompu");
             journaliser(methode, chemin, reponse, debut, interrompu);
-            return reponse;
+            return PolitiqueReessai.Issue.de(reponse);
         } catch (RuntimeException | IOException indisponible) {
             ReponseApi<String> reponse = ReponseApi.injoignable(cause(indisponible));
             journaliser(methode, chemin, reponse, debut, indisponible);
-            return reponse;
+            return PolitiqueReessai.Issue.de(reponse);
         }
     }
 
