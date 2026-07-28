@@ -4,6 +4,7 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -78,10 +79,44 @@ final class PolitiqueReessai {
     interface Temporisateur {
         void attendre(Duration delai) throws InterruptedException;
 
+        /// Attend `delai`, en **abandonnant** dès que `renoncer` le demande (#2686).
+        ///
+        /// Le défaut se contente d'attendre : c'est le bon comportement pour un double de test, qui
+        /// n'attend pas vraiment et n'a donc pas de trou à surveiller. **Comment** on surveille est un
+        /// détail de celui qui dort réellement - le mettre dans la politique lui ferait découper une
+        /// attente que le double observe d'un seul tenant, et casserait la lecture de ses durées.
+        default void attendre(Duration delai, BooleanSupplier renoncer) throws InterruptedException {
+            attendre(delai);
+        }
+
+        /// Temporisateur de production : dort vraiment, et **par tranches** quand un renoncement est
+        /// offert - `Retry-After` peut demander une minute, et « Annuler » n'a pas à y disparaître.
         static Temporisateur systeme() {
-            return delai -> Thread.sleep(delai.toMillis());
+            return new Temporisateur() {
+                @Override
+                public void attendre(Duration delai) throws InterruptedException {
+                    Thread.sleep(delai.toMillis());
+                }
+
+                @Override
+                public void attendre(Duration delai, BooleanSupplier renoncer) throws InterruptedException {
+                    Duration restant = delai;
+                    while (restant.compareTo(Duration.ZERO) > 0 && !renoncer.getAsBoolean()) {
+                        Duration tranche = restant.compareTo(TRANCHE_SURVEILLANCE) > 0 ? TRANCHE_SURVEILLANCE : restant;
+                        Thread.sleep(tranche.toMillis());
+                        restant = restant.minus(tranche);
+                    }
+                }
+            };
         }
     }
+
+    /// Renoncement des appels qui n'en offrent pas.
+    private static final BooleanSupplier JAMAIS = () -> false;
+
+    /// Pas de surveillance du renoncement pendant une attente. Assez court pour qu'un « Annuler »
+    /// paraisse immédiat, assez long pour ne pas réveiller le fil sans cesse.
+    private static final Duration TRANCHE_SURVEILLANCE = Duration.ofMillis(200);
 
     private final Temporisateur temporisateur;
 
@@ -100,18 +135,39 @@ final class PolitiqueReessai {
     }
 
     /// Émet `tentative`, et la rejoue tant qu'elle rend une issue réessayable et qu'il reste des
-    /// tentatives au profil. Rend la dernière issue obtenue (succès, refus définitif, ou dernier échec
-    /// après épuisement). Une interruption pendant l'attente rend l'issue courante sans réessayer.
+    /// tentatives au profil. Sans renoncement possible : les appels qui n'offrent pas d'annulation.
     <T> ReponseApi<T> executer(Profil profil, SuiviReprise suivi, Supplier<Issue<T>> tentative) {
+        return executer(profil, suivi, JAMAIS, tentative);
+    }
+
+    /// Même chose, en honorant le **renoncement** de l'appelant. Rend la dernière issue obtenue (succès,
+    /// refus définitif, dernier échec après épuisement, ou issue courante si l'on renonce). Une
+    /// interruption de fil pendant l'attente rend elle aussi l'issue courante.
+    ///
+    /// `renoncer` existe parce que **l'annulation de ce produit est un drapeau coopératif**, pas une
+    /// interruption de fil ([fr.univ_amu.iut.commun.model.JetonAnnulation] : « jamais d'interruption
+    /// brutale »), et qu'elle n'est consultée qu'**entre deux unités de travail**. Une temporisation de
+    /// reprise serait donc un trou pendant lequel « Annuler » ne fait rien - exactement le trou que le
+    /// relais page par page avait bouché (#1522, #2686). Le drapeau se passe tel quel : `jeton::estAnnule`.
+    <T> ReponseApi<T> executer(
+            Profil profil, SuiviReprise suivi, BooleanSupplier renoncer, Supplier<Issue<T>> tentative) {
         Issue<T> issue = tentative.get();
         int tentativesFaites = 1;
         while (tentativesFaites < profil.maxTentatives && issue.reponse().estReessayable()) {
+            // AVANT l'annonce, et ce n'est pas redondant avec le contrôle de l'attente : sans lui,
+            // `nouvelleTentative` promet à l'écran une reprise « dans N s » qui n'aura jamais lieu.
+            if (renoncer.getAsBoolean()) {
+                return issue.reponse();
+            }
             Duration delai = delaiAvantReprise(profil, tentativesFaites, issue.retryAfter());
             suivi.nouvelleTentative(tentativesFaites + 1, delai);
             try {
-                temporisateur.attendre(delai);
+                temporisateur.attendre(delai, renoncer);
             } catch (InterruptedException interrompu) {
                 Thread.currentThread().interrupt();
+                return issue.reponse();
+            }
+            if (renoncer.getAsBoolean()) {
                 return issue.reponse();
             }
             issue = tentative.get();

@@ -12,4 +12,15 @@ public interface SuiviPagination {
     /// Appelé après chaque page **non vide**, avant de demander la suivante. Une exception levée ici
     /// interrompt le parcours et remonte telle quelle (annulation coopérative d'un long téléchargement).
     void surPage(int page, int totalPages);
+
+    /// `true` si l'appelant a **demandé l'annulation**. Consulté pendant les temporisations de réessai
+    /// (#2686), là où [#surPage] ne peut rien dire : une reprise dure plusieurs secondes - davantage si
+    /// le serveur envoie un `Retry-After` - et « Annuler » n'a pas à y disparaître. C'est le trou que ce
+    /// relais page par page avait justement bouché (#1522), rouvert par le réessai des lectures (#2619).
+    ///
+    /// Le défaut est « jamais » : un parcours qui n'offre pas d'annulation ne renonce pas. Redéfinir avec
+    /// le drapeau coopératif de l'appelant, `jeton::estAnnule`.
+    default boolean renonce() {
+        return false;
+    }
 }

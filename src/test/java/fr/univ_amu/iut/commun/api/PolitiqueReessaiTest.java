@@ -149,4 +149,54 @@ class PolitiqueReessaiTest {
                         new Avis(3, Duration.ofMillis(500)),
                         new Avis(4, Duration.ofMillis(1000)));
     }
+
+    @Test
+    @DisplayName("#2686 : renoncer arrête la reprise, et n'annonce pas une tentative qui n'aura pas lieu")
+    void renoncer_arrete_la_reprise_sans_l_annoncer() {
+        List<Integer> annonces = new ArrayList<>();
+
+        ReponseApi<String> issue = politique.executer(
+                Profil.INSISTANT,
+                (tentative, delai) -> annonces.add(tentative),
+                () -> true,
+                scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
+
+        assertThat(issue).isInstanceOf(ReponseApi.Injoignable.class);
+        assertThat(attentes)
+                .as("on ne temporise pas pour une reprise à laquelle on renonce")
+                .isEmpty();
+        assertThat(annonces)
+                .as("annoncer « nouvelle tentative dans N s » pour une tentative qui n'aura jamais lieu est"
+                        + " un mensonge d'écran : le renoncement se lit AVANT l'annonce, pas après")
+                .isEmpty();
+        assertThat(appels).as("une seule émission : la première").hasValue(1);
+    }
+
+    @Test
+    @DisplayName("#2686 : sans renoncement, rien ne change - l'attente reste d'un seul tenant")
+    void sans_renoncement_l_attente_reste_entiere() {
+        politique.executer(
+                Profil.INSISTANT, SuiviReprise.SILENCIEUX, scenario(Issue.de(ReponseApi.<String>injoignable("x"))));
+
+        // Le découpage appartient au temporisateur de PRODUCTION : un double qui n'attend pas vraiment
+        // n'a pas de trou à surveiller, et continue d'observer une durée par reprise.
+        assertThat(attentes).containsExactly(Duration.ofMillis(250), Duration.ofMillis(500), Duration.ofMillis(1000));
+    }
+
+    @Test
+    @DisplayName("#2686 : le temporisateur de PRODUCTION découpe son attente pour voir le renoncement")
+    void le_temporisateur_de_production_decoupe_son_attente() throws InterruptedException {
+        List<Duration> tranches = new ArrayList<>();
+        Temporisateur systeme = new Temporisateur() {
+            @Override
+            public void attendre(Duration delai) {
+                tranches.add(delai);
+            }
+        };
+
+        // Le défaut de l'interface délègue au simple `attendre` : c'est ce que fait un double.
+        systeme.attendre(Duration.ofSeconds(1), () -> false);
+
+        assertThat(tranches).containsExactly(Duration.ofSeconds(1));
+    }
 }

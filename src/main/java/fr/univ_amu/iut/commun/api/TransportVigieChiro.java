@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -72,12 +73,21 @@ final class TransportVigieChiro {
     /// **GET authentifié** sur `chemin` (relatif à la base), trié : succès (2xx, corps), non connecté
     /// (pas de jeton : l'appel n'a pas lieu), injoignable (réseau, délai) ou refusé (statut + corps).
     ReponseApi<String> lire(String chemin) {
+        return lire(chemin, null);
+    }
+
+    /// Variante **renonçable** (#2686) : `renoncer` - le drapeau d'annulation coopératif de l'appelant,
+    /// ou `null` s'il n'en offre pas - est consulté pendant les temporisations de reprise. Sans lui, une
+    /// reprise est un trou où « Annuler » ne fait rien, alors qu'un balayage paginé le relaie
+    /// précisément page par page (#1522).
+    ReponseApi<String> lire(String chemin, BooleanSupplier renoncer) {
         Optional<String> entete = enteteAuthorization();
         if (entete.isEmpty()) {
             return ReponseApi.nonConnecte();
         }
         return emettre(
                 Rejeu.AUTORISE,
+                renoncer,
                 () -> HttpRequest.newBuilder(URI.create(baseUrl + chemin))
                         .timeout(DELAI)
                         .header("Authorization", entete.get())
@@ -148,6 +158,11 @@ final class TransportVigieChiro {
     /// interruption ou une panne (réseau, DNS, TLS, délai) devient [ReponseApi.Injoignable] avec sa cause :
     /// plus jamais un silence indistinct.
     private ReponseApi<String> emettre(Rejeu rejeu, RequeteAEmettre requete) {
+        return emettre(rejeu, null, requete);
+    }
+
+    /// Variante qui honore le **renoncement** de l'appelant pendant les temporisations (#2686).
+    private ReponseApi<String> emettre(Rejeu rejeu, BooleanSupplier renoncer, RequeteAEmettre requete) {
         if (rejeu == Rejeu.INTERDIT) {
             // Règle 1 de l'ADR 2354 : le réessai n'est jamais aveugle. Une panne réseau ne dit pas si le
             // serveur a agi ; insister sur une création, c'est échanger une erreur visible contre un
@@ -162,8 +177,14 @@ final class TransportVigieChiro {
         //
         // Le suivi est SILENCIEUX ici : le transport n'a pas de canal vers l'écran. La reprise se voit
         // dans le journal, via l'issue de chaque tentative.
-        return politique.executer(
-                PolitiqueReessai.Profil.INSISTANT, SuiviReprise.SILENCIEUX, () -> uneTentative(requete));
+        return renoncer == null
+                ? politique.executer(
+                        PolitiqueReessai.Profil.INSISTANT, SuiviReprise.SILENCIEUX, () -> uneTentative(requete))
+                : politique.executer(
+                        PolitiqueReessai.Profil.INSISTANT,
+                        SuiviReprise.SILENCIEUX,
+                        renoncer,
+                        () -> uneTentative(requete));
     }
 
     /// Une émission, rendue **avec** le délai que le serveur a éventuellement imposé (`Retry-After`).
@@ -278,8 +299,8 @@ final class TransportVigieChiro {
     /// car le dépôt est attendu. `Retry-After` du serveur fait autorité (cf. [PolitiqueReessai]). `suivi`
     /// est prévenu avant chaque nouvelle tentative (mention discrète).
     boolean deposerVersS3(String urlSignee, CorpsAEnvoyer corps, String mime, SuiviReprise suivi) {
-        ReponseApi<String> issue =
-                politique.executer(PolitiqueReessai.Profil.INSISTANT, suivi, () -> uneDepose(urlSignee, corps, mime));
+        ReponseApi<String> issue = politique.executer(
+                PolitiqueReessai.Profil.INSISTANT, suivi, suivi::renonce, () -> uneDepose(urlSignee, corps, mime));
         return issue instanceof ReponseApi.Succes<String>;
     }
 
@@ -287,7 +308,8 @@ final class TransportVigieChiro {
     /// (idempotent, INSISTANT, `Retry-After`). Rend l'issue triée : un succès **porte l'`ETag`** de la
     /// partie (requis pour recoller l'objet à la finalisation), un échec sa cause.
     ReponseApi<String> deposerPartie(String urlSignee, CorpsAEnvoyer corps, String mime, SuiviReprise suivi) {
-        return politique.executer(PolitiqueReessai.Profil.INSISTANT, suivi, () -> uneDepose(urlSignee, corps, mime));
+        return politique.executer(
+                PolitiqueReessai.Profil.INSISTANT, suivi, suivi::renonce, () -> uneDepose(urlSignee, corps, mime));
     }
 
     /// Un **unique** envoi S3 : construit la requête, l'émet, la consigne, et rend l'issue **avec** le

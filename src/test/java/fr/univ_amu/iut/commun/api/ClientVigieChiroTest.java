@@ -3,6 +3,8 @@ package fr.univ_amu.iut.commun.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.http.HttpClient;
@@ -234,5 +236,37 @@ class ClientVigieChiroTest {
     private static ClientVigieChiro clientHorsLigne(String baseUrl, FournisseurToken jeton) {
         return new ClientVigieChiro(new TransportVigieChiro(
                 baseUrl, jeton, HttpClient.newHttpClient(), new PolitiqueReessai(delai -> {}, () -> 0.0)));
+    }
+
+    @Test
+    @DisplayName("#2686 : le balayage des données relaie le renoncement de l'appelant jusqu'au réessai")
+    void le_balayage_relaie_le_renoncement() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        when(client.send(any(), any())).thenThrow(new java.io.IOException("coupure"));
+        ClientVigieChiro facade = new ClientVigieChiro(
+                new TransportVigieChiro("http://localhost:1/api/v1", TOKEN_ABC, client, sansAttente()));
+        // Un suivi qui a DÉJÀ renoncé : le cas de l'utilisateur qui clique « Annuler » pendant le
+        // téléchargement d'une nuit. Sans le relais `suivi::renonce`, le balayage insisterait encore.
+        SuiviPagination annule = new SuiviPagination() {
+            @Override
+            public void surPage(int page, int totalPages) {
+                // Aucune page n'aboutit ici : la première lecture échoue.
+            }
+
+            @Override
+            public boolean renonce() {
+                return true;
+            }
+        };
+
+        ReponseApi<List<DonneeVigieChiro>> issue = facade.donnees("6a49", annule);
+
+        assertThat(issue).isInstanceOf(ReponseApi.Injoignable.class);
+        verify(client, times(1)).send(any(), any());
+    }
+
+    /// Politique sans vraie attente (aléa nul), pour des tests instantanés.
+    private static PolitiqueReessai sansAttente() {
+        return new PolitiqueReessai(delai -> {}, () -> 0.0);
     }
 }

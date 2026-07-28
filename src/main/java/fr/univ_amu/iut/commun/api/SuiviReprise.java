@@ -17,6 +17,18 @@ public interface SuiviReprise {
     /// Une nouvelle tentative (`tentative`, la première portant le n° 1) est prévue dans `delai`.
     void nouvelleTentative(int tentative, Duration delai);
 
+    /// `true` si l'appelant a **demandé l'annulation** (#2686). Consulté pendant la temporisation, là où
+    /// le dépôt ne consulte son drapeau qu'**entre deux unités** : une reprise à l'intérieur d'un envoi
+    /// est sinon une attente que « Annuler » ne traverse pas.
+    ///
+    /// Porté par ce port plutôt que par un paramètre de plus : il descend **déjà** du dépôt jusqu'au
+    /// transport, et trois signatures y sont au bord de l'arité que le portail qualité tolère.
+    ///
+    /// Le défaut est « jamais » : un appel qui n'offre pas d'annulation ne renonce pas.
+    default boolean renonce() {
+        return false;
+    }
+
     /// Reprise silencieuse : aucune mention. Défaut des appels sans IHM et des tests.
     SuiviReprise SILENCIEUX = (tentative, delai) -> {};
 }
