@@ -59,6 +59,10 @@ import java.util.function.Consumer;
 /// `ServiceAuditCoherence` : le constructeur reste court et le service testable sur une base jetable.
 public class ServiceReconstructionPassages implements RapprochementVigieChiro {
 
+    /// Dernier point de progression d'une opération : la barre atteint le bout, quel que soit le chemin
+    /// (création complète ou complétion d'un squelette).
+    private static final String ETAPE_FIN = "Terminé.";
+
     private final PassageDao passageDao;
     private final LienVigieChiroDao liens;
 
@@ -410,7 +414,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
                 issueParNuit.accept(new IssueNuit.Ignoree(nuit, echecNuit.getMessage()));
             }
         }
-        progresGlobal.accept(new Progression("Terminé.", 1.0));
+        progresGlobal.accept(new Progression(ETAPE_FIN, 1.0));
         return new BilanReconstructionGroupe(reussies, ignorees, sequences, observations);
     }
 
@@ -443,7 +447,10 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             JetonAnnulation jeton) {
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(jeton, "jeton");
-        remplacerSiSquelette(idParticipation);
+        Optional<RapportReconstruction> parCompletion = completerSiSquelette(idParticipation, progres, jeton);
+        if (parCompletion.isPresent()) {
+            return parCompletion.orElseThrow();
+        }
 
         // Vérifié AVANT toute écriture : un passage reconstruit sans ses observations ne serait qu'une
         // coquille, et mieux vaut ne rien créer que créer à moitié.
@@ -498,7 +505,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             progres.accept(new Progression("Import des observations…", 0.96));
             jeton.leverSiAnnule();
             observations.importer(idPassage);
-            progres.accept(new Progression("Terminé.", 1.0));
+            progres.accept(new Progression(ETAPE_FIN, 1.0));
             return new RapportReconstruction(
                     idPassage,
                     structure.nbSequences(),
@@ -529,25 +536,41 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
 
     /// Si la participation est déjà rattachée à un passage local, deux cas (#1710) :
     ///
-    /// - **squelette** (rapatrié par la synchro #1707, sans séquence) : on le **retire** pour le reconstruire
-    ///   complet par le même geste qu'une nuit jamais vue (sa session vide part en cascade ; le lien sera
-    ///   reposé par la reconstruction). Retiré **avant** les lectures réseau, pour que le numéro de passage
-    ///   libéré soit réutilisé ; si un aléa réseau interrompt ensuite, la synchro suivante recrée le squelette
-    ///   (idempotente, #1707) — rien n'est perdu durablement.
-    /// - **déjà hydraté** (avec séquences) : il n'y a rien à reconstruire, on refuse.
-    private void remplacerSiSquelette(String idParticipation) {
+    /// - **squelette** (rapatrié par la synchro #1707, sans séquence) : on le **complète en place**, par le
+    ///   même geste que la réactivation ([HydratationSquelette]) ;
+    /// - **déjà pourvu** de son contenu : il n'y a rien à compléter, on refuse.
+    ///
+    /// ## Pourquoi ce n'est plus un delete + recreate (#2554, passe 7)
+    ///
+    /// Jusqu'ici, un squelette était **supprimé** puis recréé depuis la plateforme. C'était défendable
+    /// quand un squelette ne portait rien : ce n'est plus vrai. Il peut porter des **saisies manuelles**
+    /// que la plateforme ignore - heures de nuit corrigées (#1892, le seul cas où l'application les rend
+    /// modifiables), n° de série (#1828), météo (#1688) - et le geste s'appelle désormais « Compléter »,
+    /// ce qui promet précisément de ne pas les perdre.
+    ///
+    /// Deux gestes agissaient donc sur la même nuit avec des politiques **opposées** : « Réactiver ce
+    /// passage » hydratait en place pour préserver ces saisies, « Compléter cette nuit » les écrasait.
+    /// L'identifiant du passage changeait en plus sous un écran éventuellement ouvert.
+    private Optional<RapportReconstruction> completerSiSquelette(
+            String idParticipation, Consumer<Progression> progres, JetonAnnulation jeton) {
         Optional<Long> idPassageLie = passageRattache(idParticipation);
         if (idPassageLie.isEmpty()) {
-            return; // vraie orpheline : aucun passage à remplacer
+            return Optional.empty(); // vraie orpheline : il n'y a rien à compléter, il faut créer
         }
-        Long idPassage = idPassageLie.get();
+        Long idPassage = idPassageLie.orElseThrow();
         if (!estSquelette(idPassage)) {
-            throw new RegleMetierException(
-                    "Cette participation est déjà rattachée à un passage local déjà reconstruit : il n'y a rien"
-                            + " à reconstruire.");
+            throw new RegleMetierException("Cette participation est déjà rattachée à un passage local qui a son"
+                    + " contenu : il n'y a rien à compléter.");
         }
-        liens.supprimer(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage));
-        passageDao.delete(idPassage);
+        // `orElseThrow` et non `map` : un Optional vide ferait RETOMBER sur la création complète, donc sur
+        // la suppression de la nuit. Un repli silencieux vers un geste destructeur n'en est pas un.
+        HydratationSquelette.BilanHydratation bilan = hydratation
+                .hydraterSiSquelette(idPassage, HydratationSquelette.Source.COMPLETE, progres, jeton)
+                .orElseThrow(() -> new RegleMetierException("Cette nuit n'a pas pu être complétée : elle n'a plus"
+                        + " l'état d'une nuit récupérée. Rechargez la liste, puis recommencez."));
+        progres.accept(new Progression(ETAPE_FIN, 1.0));
+        return Optional.of(new RapportReconstruction(
+                idPassage, bilan.sequences(), bilan.observations(), RapportReconstruction.lacunesConnues()));
     }
 
     /// Passage local rattaché à cette participation, s'il en existe un.
