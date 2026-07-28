@@ -37,18 +37,28 @@ class CompteRenduChiffreDepotTest {
     void le_volume_est_dit() {
         CompteRenduChiffre rendu = traduire(new BilanDepot("p-1", 14, List.of(), 4_500_000_000L), plan(14, 14, false));
 
-        assertThat(rendu.volumes()).hasSize(1);
-        assertThat(rendu.volumes().get(0).segments())
-                .extracting(Segment::valeurLisible)
-                .containsExactly("4,2 Go");
+        assertThat(textes(rendu)).anyMatch(texte -> texte.contains("4,2 Go téléversés"));
     }
 
     @Test
-    @DisplayName("volume nul : aucune barre, plutôt qu'une barre à zéro")
-    void volume_nul_n_affiche_pas_de_barre() {
+    @DisplayName("le volume est une MENTION, jamais une barre : seule, une barre est toujours pleine")
+    void le_volume_n_est_pas_une_barre() {
+        // Sur un dépôt interrompu, une barre unique afficherait 2,7 Go à 100 % alors qu'il en manque
+        // autant. L'import peut se le permettre : il en a DEUX, à échelle commune, et comparer le lu à
+        // l'écrit veut dire quelque chose.
+        CompteRenduChiffre rendu = traduire(new BilanDepot("p-1", 9, List.of(), 2_900_000_000L), plan(14, 9, true));
+
+        assertThat(rendu.volumes()).isEmpty();
+        assertThat(textes(rendu)).anyMatch(texte -> texte.contains("2,7 Go téléversés"));
+    }
+
+    @Test
+    @DisplayName("volume nul : rien n'est dit, plutôt qu'un « 0 Ko téléversés »")
+    void volume_nul_n_est_pas_annonce() {
         CompteRenduChiffre rendu = traduire(new BilanDepot("p-1", 0, List.of("Car-1.zip"), 0), plan(1, 0, false));
 
         assertThat(rendu.volumes()).isEmpty();
+        assertThat(textes(rendu)).noneMatch(texte -> texte.contains("téléversés"));
     }
 
     @Test

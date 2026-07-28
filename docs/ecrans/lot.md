@@ -81,6 +81,28 @@ réouverture de l'écran, la table de dépôt réaffiche l'état exact de chaque
 alors « **Retenter les échecs** » : seuls les fichiers manquants sont re-téléversés — jamais ceux déjà
 en ligne. Le passage ne devient « Déposé » que lorsque **tous** les fichiers sont en ligne.
 
+### Ce que le dépôt vous rend à la fin
+
+Quand le téléversement se termine, un **compte rendu** dit ce qui est en ligne, en proportions.
+
+![Le compte rendu d'un dépôt complet : la barre est pleine, le volume téléversé est dit, et l'étape suivante est proposée.](../assets/captures/apercu-lot-depot-compte-rendu.png)
+
+Il ne remplace pas la table : celle-ci garde le **détail par fichier**, avec la cause de chaque échec.
+Le compte rendu répond à la question qu'on se pose à cet instant - **quelle part est arrivée** - et il
+ajoute deux choses que la table ne donne pas : le **volume téléversé**, et **ce qu'il reste à faire**.
+
+C'est le sens du bouton **« Lancer la participation »** en pied de compte rendu : téléverser ne suffit
+pas, et rien ne le disait à ce moment-là. Il n'apparaît que lorsque **tout** est en ligne : lancer
+l'analyse d'une nuit incomplète la ferait analyser incomplète.
+
+Si vous avez **arrêté** le dépôt en cours de route, le compte rendu le dit sans le déguiser :
+
+![Le compte rendu d'un dépôt interrompu : la part restante apparaît, et la reprise est annoncée.](../assets/captures/apercu-lot-depot-interrompu.png)
+
+La part **« Restantes »** est la différence entre ce que vous avez arrêté et un dépôt réussi : sans
+elle, la barre serait pleine alors qu'il manque des archives sur la plateforme. Aucune action n'est
+proposée en pied, parce que la suite est **« Reprendre le dépôt »**, un bouton déjà sous vos yeux.
+
 ## 4. Lancer la participation (ou marquer le passage déposé)
 
 ![L'état « Déposé » : toutes les étapes sont franchies.](../assets/captures/apercu-lot-depose.png)

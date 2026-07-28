@@ -4,7 +4,6 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Avertissement;
-import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Barre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Teinte;
@@ -57,7 +56,7 @@ public final class CompteRenduChiffreDepot {
                 titre(plan),
                 resultat(bilan, plan),
                 severite(bilan, plan),
-                volumes(bilan),
+                List.of(),
                 ventilation(bilan, plan),
                 motifs(bilan),
                 avertissements(bilan, plan),
@@ -91,21 +90,6 @@ public final class CompteRenduChiffreDepot {
             return Severite.ERREUR;
         }
         return plan.interrompu() || plan.enLigne() < total(bilan, plan) ? Severite.AVERTISSEMENT : Severite.SUCCES;
-    }
-
-    /// Le **volume en ligne**, que rien ne disait avant ce lot. Une seule barre : il n'y a pas de second
-    /// volume à comparer côté dépôt, contrairement à l'import qui oppose ce qu'il lit à ce qu'il écrit.
-    private static List<Barre> volumes(BilanDepot bilan) {
-        if (bilan.octetsDeposes() <= 0) {
-            return List.of();
-        }
-        return List.of(Barre.unique(
-                "Téléversé",
-                new Segment(
-                        "téléversé",
-                        bilan.octetsDeposes(),
-                        Formats.octetsLisibles(bilan.octetsDeposes()),
-                        Teinte.REFERENCE)));
     }
 
     /// Le devenir des unités du plan : en ligne, en échec, et **restantes** quand on a interrompu.
@@ -147,6 +131,16 @@ public final class CompteRenduChiffreDepot {
     private static List<Avertissement> avertissements(BilanDepot bilan, Plan plan) {
         List<Avertissement> avertissements = new ArrayList<>();
         int total = total(bilan, plan);
+        if (bilan.octetsDeposes() > 0) {
+            // En MENTION et non en barre, contrairement à l'import (#2586). Une barre dit une
+            // **proportion** ; seule, elle est toujours pleine. L'import en a deux, à échelle commune, et
+            // comparer le lu à l'écrit veut dire quelque chose. Ici il n'y a pas de second volume : la
+            // barre serait pleine à 100 % pour 2,7 Go d'un dépôt interrompu où il en manque autant - une
+            // impression fausse avec l'autorité du visuel, ce que l'ADR 2358 proscrit. Vu en regardant la
+            // capture de l'état interrompu.
+            avertissements.add(
+                    Avertissement.info(Formats.octetsLisibles(bilan.octetsDeposes()) + " téléversés sur Vigie-Chiro."));
+        }
         if (plan.interrompu()) {
             // Ni un succès ni une erreur : la reprise ne renverra que le reste, et le dire évite qu'on
             // recommence tout par précaution (#1044).
