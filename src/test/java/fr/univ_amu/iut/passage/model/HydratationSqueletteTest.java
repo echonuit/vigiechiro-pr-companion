@@ -309,27 +309,44 @@ class HydratationSqueletteTest {
     }
 
     @Test
-    @DisplayName("La phase 0 ne relaie que le LIBELLÉ : sa fraction reste à zéro, la barre appartient à la suite")
-    void progression_sans_fraction() {
+    @DisplayName("L'hydratation dit où elle en est : trois étapes, fractions croissantes")
+    void progression_des_trois_etapes() {
         idPassage = semerSquelette();
         csvDisponible();
         List<Progression> points = new ArrayList<>();
-        Consumer<Progression> journal = points::add;
 
         hydratation.hydraterSiSquelette(
-                idPassage, HydratationSquelette.Source.CSV_SEULEMENT, journal, JetonAnnulation.neutre());
+                idPassage, HydratationSquelette.Source.CSV_SEULEMENT, points::add, JetonAnnulation.neutre());
 
-        // ProgressionOperation garde la fraction MONOTONE (#814) : laisser passer les fractions du
-        // téléchargement épinglerait la barre au plus haut atteint, et le rebranchement qui suit resterait
-        // invisible jusqu'à l'avoir dépassé.
-        assertThat(points)
-                .isNotEmpty()
-                .allSatisfy(point -> assertThat(point.fraction()).isZero());
-        // Les TROIS étapes se disent, réseau compris (celle du téléchargement porte une fraction de 0.10
-        // que le relais aplatit) : sans les nommer toutes, supprimer un relais ne se voyait pas.
+        // Les TROIS étapes se disent, réseau compris : sans les nommer toutes, supprimer un relais ne se
+        // verrait pas.
         assertThat(points)
                 .extracting(Progression::libelle)
                 .contains("Téléchargement des observations…", "Création des séquences…", "Import des observations…");
+        // Et elles AVANCENT. La barre appartient ici à l'hydratation elle-même : c'est le cas quand elle est
+        // toute l'opération (« Compléter cette nuit »). L'aplatissement est le choix de l'appelant pour qui
+        // elle n'est qu'une sous-étape, pas une propriété de l'hydratation (#2554, passe 7).
+        assertThat(points)
+                .extracting(Progression::fraction)
+                .isSorted()
+                .anySatisfy(fraction -> assertThat(fraction).isGreaterThan(0.0));
+    }
+
+    @Test
+    @DisplayName("Un appelant qui possède la barre aplatit les fractions et ne garde que le libellé")
+    void libelle_seul_aplatit_les_fractions() {
+        List<Progression> points = new ArrayList<>();
+        Consumer<Progression> aplati = HydratationSquelette.libelleSeul(points::add);
+
+        aplati.accept(new Progression("Import des observations…", 0.85));
+
+        // Ce que fait la phase 0 d'une réactivation, et chaque nuit d'un balayage : ProgressionOperation
+        // garde la fraction MONOTONE (#814), donc laisser passer celle-ci épinglerait la barre de la phase
+        // SUIVANTE au plus haut atteint, et cette phase resterait invisible jusqu'à l'avoir dépassé.
+        assertThat(points).singleElement().satisfies(point -> {
+            assertThat(point.libelle()).isEqualTo("Import des observations…");
+            assertThat(point.fraction()).isZero();
+        });
     }
 
     @Test

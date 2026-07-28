@@ -304,9 +304,17 @@ public class ServiceReactivationPassage {
     private void hydraterSiSquelette(
             Long idPassage, SessionDEnregistrement session, Consumer<Progression> progres, JetonAnnulation jeton) {
         if (hydratationSquelette.isPresent()) {
+            // La barre appartient à la phase SUIVANTE (le rebranchement), qui part de zéro et que
+            // ProgressionOperation garde monotone (#814) : on ne relaie que les libellés. L'aplatissement se
+            // décide ici, chez celui qui possède la barre, et non dans l'hydratation - qui sert aussi des
+            // appelants dont elle est TOUTE l'opération (#2554, passe 7).
             hydratationSquelette
                     .orElseThrow()
-                    .hydraterSiSquelette(idPassage, HydratationSquelette.Source.COMPLETE, progres, jeton);
+                    .hydraterSiSquelette(
+                            idPassage,
+                            HydratationSquelette.Source.COMPLETE,
+                            HydratationSquelette.libelleSeul(progres),
+                            jeton);
         } else if (sequenceDao.findBySession(session.id()).isEmpty()) {
             throw new RegleMetierException("Cette nuit a été rapatriée de Vigie-Chiro mais ses observations n'ont"
                     + " pas encore été récupérées, et ce sont elles qui permettent de reconnaître vos"

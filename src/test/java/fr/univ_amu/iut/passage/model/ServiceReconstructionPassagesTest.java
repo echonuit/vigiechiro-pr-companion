@@ -730,6 +730,53 @@ class ServiceReconstructionPassagesTest {
     }
 
     @Test
+    @DisplayName("#2554 : compléter un squelette GARDE son identifiant et ses saisies manuelles")
+    void completer_preserve_le_passage_et_ses_saisies() {
+        bouchonnerPlateforme();
+        service.synchroniser(client);
+        Long idAvant = passageDao.findAll().getFirst().id();
+
+        // L'utilisateur corrige à la main les heures de la nuit : c'est précisément ce que #1892 lui permet
+        // sur une nuit rapatriée, dont rien n'atteste les bornes.
+        Passage saisi = passageDao.findById(idAvant).orElseThrow();
+        passageDao.update(new Passage(
+                saisi.id(),
+                saisi.numeroPassage(),
+                saisi.annee(),
+                saisi.dateEnregistrement(),
+                "21:07",
+                "05:42",
+                saisi.parametresAcquisition(),
+                saisi.statutWorkflow(),
+                saisi.verdictVerification(),
+                saisi.commentaire(),
+                saisi.donneesMeteo(),
+                saisi.deposeLe(),
+                saisi.idPoint(),
+                saisi.idEnregistreur(),
+                saisi.idCampagne()));
+
+        List<Progression> points = new ArrayList<>();
+        RapportReconstruction rapport = service.reconstruire(PARTICIPATION, points::add, JetonAnnulation.neutre());
+
+        // Le geste s'appelle « Compléter » : il ajoute le contenu, il ne refait pas la nuit. Un
+        // delete + recreate rendait ici les bornes de la plateforme et effaçait la correction, sous un
+        // identifiant neuf - donc sous l'écran éventuellement ouvert sur l'ancien.
+        assertThat(rapport.idPassage())
+                .as("le passage survit : même identifiant")
+                .isEqualTo(idAvant);
+        assertThat(passageDao.findById(idAvant).orElseThrow()).satisfies(apres -> {
+            assertThat(apres.heureDebut()).isEqualTo("21:07");
+            assertThat(apres.heureFin()).isEqualTo("05:42");
+        });
+        assertThat(rapport.sequencesRecreees()).isEqualTo(2);
+        assertThat(rapport.observationsImportees()).isEqualTo(3);
+        // La barre va jusqu'au bout. Ici l'hydratation est TOUTE l'opération : ses fractions passent, et
+        // c'est le service qui pose le point final - sans quoi la modale resterait à 85 % sur un succès.
+        assertThat(points).extracting(Progression::fraction).isSorted().endsWith(1.0);
+    }
+
+    @Test
     @DisplayName("#1710 : une nuit rapatriée en squelette reste listée « à reconstruire » (à hydrater)")
     void orphelines_inclut_un_squelette() {
         when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
@@ -742,14 +789,14 @@ class ServiceReconstructionPassagesTest {
     }
 
     @Test
-    @DisplayName("#1710 : reconstruire une nuit déjà reconstruite (avec séquences) est refusé")
+    @DisplayName("#1710 : compléter une nuit qui a déjà son contenu est refusé")
     void reconstruire_refuse_un_passage_deja_hydrate() {
         bouchonnerPlateforme();
         service.reconstruire(PARTICIPATION); // 1re reconstruction : passage complet (séquences + observations)
 
         assertThatThrownBy(() -> service.reconstruire(PARTICIPATION))
                 .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("déjà reconstruit");
+                .hasMessageContaining("qui a son contenu");
     }
 
     @Test

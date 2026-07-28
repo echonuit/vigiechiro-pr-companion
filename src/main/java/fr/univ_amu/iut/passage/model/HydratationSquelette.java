@@ -70,6 +70,13 @@ public final class HydratationSquelette {
     /// rester poli avec la plateforme.
     private static final int TELECHARGEMENTS_DE_FRONT = 8;
 
+    /// Où en est une hydratation quand elle écrit. Ces deux repères ne sont **pas** des mesures : ils
+    /// situent l'écriture après le téléchargement (0.10, posé par [PlateformeReconstruction]) et avant la
+    /// fin. Un appelant pour qui l'hydratation n'est qu'une sous-étape les aplatit ([#libelleSeul]).
+    private static final double FRACTION_SEQUENCES = 0.55;
+
+    private static final double FRACTION_IMPORT = 0.85;
+
     private final PlateformeReconstruction plateforme;
 
     /// Fan-out borné des téléchargements d'un balayage. Il ne couvre **que** la phase réseau : les écritures
@@ -151,7 +158,7 @@ public final class HydratationSquelette {
         // garantie propre à cet appelant. Le mutant qui le supprimait survivait à toute la suite (#2554,
         // passe 6) - un contrôle qu'on peut retirer sans rien casser ne contrôle rien.
         Optional<ObservationsAReconstruire> observations =
-                telecharger(nuit.orElseThrow().idParticipation(), source, libelleSeul(progres), jeton);
+                telecharger(nuit.orElseThrow().idParticipation(), source, progres, jeton);
         if (observations.isEmpty()) {
             return Optional.empty(); // CSV_SEULEMENT : pas encore de CSV, la nuit attend son tour
         }
@@ -214,7 +221,7 @@ public final class HydratationSquelette {
                 continue; // pas encore de CSV : la nuit attend son analyse, sans que ce soit une erreur
             }
             try {
-                ecrire(candidats.get(index), source.observations().orElseThrow(), progres);
+                ecrire(candidats.get(index), source.observations().orElseThrow(), libelleSeul(progres));
                 completees++;
             } catch (RuntimeException echecNuit) {
                 // Best-effort : la nuit est rendue à son état de squelette par la compensation d'ecrire, le
@@ -352,10 +359,10 @@ public final class HydratationSquelette {
             NuitAHydrater nuit, ObservationsAReconstruire observations, Consumer<Progression> progres) {
         SessionDEnregistrement session = nuit.session();
         Set<Long> avant = originauxDe(session);
-        progres.accept(new Progression("Création des séquences…", 0.0));
+        progres.accept(new Progression("Création des séquences…", FRACTION_SEQUENCES));
         int sequences = structure.hydraterSequences(session.id(), nuit.prefixe(), observations.nomsFichiers());
         try {
-            progres.accept(new Progression("Import des observations…", 0.0));
+            progres.accept(new Progression("Import des observations…", FRACTION_IMPORT));
             observations.importer(nuit.idPassage());
         } catch (RuntimeException interruption) {
             annulerHydratationPartielle(session, avant, interruption);
@@ -404,15 +411,19 @@ public final class HydratationSquelette {
 
     /// Relaie le **libellé** d'une progression en gardant la fraction à zéro.
     ///
-    /// L'hydratation est une **phase 0** : la barre qu'elle partage appartient à la phase suivante (le
-    /// rebranchement des séquences), qui part de zéro. Or [fr.univ_amu.iut.commun.viewmodel.ProgressionOperation]
-    /// garde la fraction **monotone** (#814) : laisser passer les fractions du téléchargement épinglerait la
-    /// barre au plus haut atteint, et le rebranchement resterait **invisible** jusqu'à l'avoir dépassé.
+    /// À l'appelant de décider, parce que lui seul sait **à qui appartient la barre** (#2554, passe 7) :
     ///
-    /// La barre reste donc vide pendant que le libellé avance - le même idiome qu'en fin de phase disque,
-    /// où c'est l'inverse : la barre reste pleine et le libellé avance (#1780). Une barre propre à cette
-    /// phase relève de #2558.
-    private static Consumer<Progression> libelleSeul(Consumer<Progression> progres) {
+    /// - l'hydratation est une **sous-étape** (phase 0 d'une réactivation, une nuit parmi N d'un balayage) :
+    ///   la barre appartient à l'opération englobante, et
+    ///   [fr.univ_amu.iut.commun.viewmodel.ProgressionOperation] la garde **monotone** (#814). Laisser
+    ///   passer les fractions d'ici l'épinglerait au plus haut atteint, et la suite resterait **invisible**
+    ///   jusqu'à l'avoir dépassé. La barre reste donc vide pendant que le libellé avance ;
+    /// - l'hydratation est **toute l'opération** (« Compléter cette nuit ») : la barre est la sienne, et
+    ///   l'aplatir la figerait sans raison.
+    ///
+    /// Ce choix vivait ici, donc s'imposait aux deux : router la modale de complétion vers l'hydratation
+    /// lui aurait donné une barre morte.
+    public static Consumer<Progression> libelleSeul(Consumer<Progression> progres) {
         return point -> progres.accept(new Progression(point.libelle(), 0.0));
     }
 }
