@@ -25,6 +25,23 @@ trois temps**.
     y compris quand la carte en contient plusieurs. Elle reste corrigeable après coup depuis
     [Modifier le passage](passage.md#participation-opportuniste).
 
+### La campagne, proposée et non imposée
+
+La section **Rattachement** porte aussi une liste **Campagne (optionnel)**. Dès que vous choisissez un
+point d'écoute, l'application y propose la **campagne de la dernière nuit enregistrée sur ce point** :
+deux nuits d'affilée sur un même point relèvent presque toujours du même suivi, et le retaper à chaque
+import serait fastidieux.
+
+C'est une **proposition**. Vous pouvez en choisir une autre, ou l'effacer pour n'en mettre aucune. Et
+dès que vous avez tranché vous-même, changer de point ne rappelle plus la proposition : deviner est un
+service, écraser votre décision serait une faute.
+
+Un point sur lequel aucune nuit n'a encore de campagne ne propose rien, et ce n'est pas une anomalie :
+le rattachement est facultatif. La campagne retenue s'applique à **toutes les nuits** de cet import,
+une demande d'import ne visant qu'un seul carré.
+
+Pour créer une campagne, voir [Le passage](passage.md#gerer-les-campagnes).
+
 Le bouton **Importer cette nuit** applique aux enregistrements le préfixe
 `CarXXXXXX-AAAA-PassN-YY-`, puis les transforme en séquences de 5 s ralenties dix fois (une séquence
 de 5 s devient 50 s à l'écoute, dans la bande audible). Un enregistrement de plus de 5 s produit
