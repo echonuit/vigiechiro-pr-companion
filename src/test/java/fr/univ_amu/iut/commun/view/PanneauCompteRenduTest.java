@@ -181,6 +181,58 @@ class PanneauCompteRenduTest {
     }
 
     @Test
+    @DisplayName("une légende à cinq parts passe à la ligne au lieu de se couper")
+    void legende_passe_a_la_ligne() {
+        // Cinq parts (le cas du dépôt), dans une largeur qui ne peut pas toutes les tenir sur une ligne.
+        // Une boîte horizontale comprimerait chaque entrée jusqu'à l'ellipse - « Publiées · 12 (60,0 % ».
+        // Le défaut n'est apparu qu'en intégration continue, dont les métriques de police diffèrent de
+        // neuf pixels par entrée : à ligne unique, tout écart de police devient du texte coupé.
+        Ventilation cinqParts = new Ventilation(
+                "Devenir des 20 observations revues",
+                20,
+                List.of(
+                        new Segment("Publiées", 12, "12", Teinte.RETENU),
+                        new Segment("À compléter", 2, "2", Teinte.ECARTE),
+                        new Segment("Sans ancrage", 2, "2", Teinte.PRINCIPALE),
+                        new Segment("Hors référentiel", 1, "1", Teinte.REFERENCE),
+                        new Segment("Refusées", 3, "3", Teinte.REFUSE)));
+        PanneauCompteRendu panneau = new PanneauCompteRendu();
+        panneau.afficher(new CompteRenduChiffre(
+                "Corrections publiées vers Vigie-Chiro",
+                "12 / 20 publiées",
+                Severite.ERREUR,
+                List.of(),
+                cinqParts,
+                List.of(),
+                List.of(),
+                List.of()));
+        Scene scene = new Scene(panneau, 520, 400);
+        scene.getRoot().applyCss();
+        scene.getRoot().layout();
+
+        List<Label> entrees = panneau.lookupAll(".cr-legende").stream()
+                .filter(Label.class::isInstance)
+                .map(Label.class::cast)
+                .toList();
+
+        assertThat(entrees).hasSize(5);
+        // Aucune entrée n'est comprimée : chacune occupe au moins la largeur que son texte demande. C'est
+        // le critère du garde-fou anti-troncature des captures, appliqué ici en test.
+        assertThat(entrees)
+                .allSatisfy(entree -> assertThat(entree.getWidth())
+                        .as("« %s » doit tenir en entier", entree.getText())
+                        .isGreaterThanOrEqualTo(entree.prefWidth(-1) - 1));
+        // Et la preuve qu'elles ont bien REFLUÉ : la légende occupe plusieurs lignes.
+        assertThat(legende(panneau).getHeight())
+                .as("cinq parts dans 520 px ne tiennent pas sur une ligne")
+                .isGreaterThan(entrees.getFirst().getHeight() * 1.5);
+    }
+
+    private static Region legende(PanneauCompteRendu panneau) {
+        return (Region) panneau.lookup(".cr-legende").getParent().getParent();
+    }
+
+    @Test
     @DisplayName("ce qui n'a rien à dire disparaît : ni bloc vide, ni trou dans la bande")
     void blocs_vides_disparaissent() {
         CompteRenduChiffre rienASignaler = new CompteRenduChiffre(
