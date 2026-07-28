@@ -98,7 +98,7 @@ class ReconstructionViewModelTest {
     @DisplayName("#1708 import groupé : le viewModel DÉLÈGUE au service (la boucle y vit) et restitue son bilan")
     void reconstruire_tout_delegue_au_service_et_restitue() {
         ServiceReconstructionPassages service = mock(ServiceReconstructionPassages.class);
-        BilanReconstructionGroupe bilan = new BilanReconstructionGroupe(2, 1, 15, 28);
+        BilanReconstructionGroupe bilan = new BilanReconstructionGroupe(2, 1, 15, 28, false);
         when(service.reconstruireTout(any(), any(), any(), any(), any())).thenReturn(bilan);
         ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.of(service));
 

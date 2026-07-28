@@ -305,11 +305,15 @@ public class ReconstructionModaleController {
                     charger(); // recharge : les reconstruites disparaissent, les ignorées restent
                 },
                 () -> {
+                    // Chemin résiduel : depuis la clôture du lot 3, un lot annulé RESTITUE son bilan par
+                    // la branche de succès. On recharge quand même - un écran qui ne se rafraîchit pas
+                    // après une annulation continue d'offrir des nuits déjà complétées.
                     operationEnCours.set(false);
                     lotEnCours.set(false);
                     viewModel.progression().reinitialiser();
                     viewModel.progressionGlobale().reinitialiser();
                     viewModel.signalerAnnulation();
+                    charger();
                 },
                 erreur -> {
                     operationEnCours.set(false);

@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -1057,18 +1058,48 @@ class ServiceReconstructionPassagesTest {
     }
 
     @Test
-    @DisplayName("#1708 import groupé : l'annulation arrête tout le lot (aucune nuit reconstruite)")
-    void reconstruire_tout_annulation_arrete_le_lot() {
+    @DisplayName("#1708 import groupé : annulé avant la première nuit, aucune n'est touchée")
+    void reconstruire_tout_annulation_avant_la_premiere() {
         ServiceReconstructionPassages espion = spy(service);
         JetonAnnulation jeton = new JetonAnnulation();
         jeton.annuler();
         ParticipationOrpheline n1 =
                 new ParticipationOrpheline("p1", "130711", "Z41", "2026-07-03T22:00:00+02:00", true);
 
-        assertThatThrownBy(() ->
-                        espion.reconstruireTout(List.of(n1), progression -> {}, progression -> {}, issue -> {}, jeton))
-                .isInstanceOf(OperationAnnuleeException.class);
+        ServiceReconstructionPassages.BilanReconstructionGroupe bilan =
+                espion.reconstruireTout(List.of(n1), progression -> {}, progression -> {}, issue -> {}, jeton);
+
         verify(espion, never()).reconstruire(any(ParticipationOrpheline.class), any(), any());
+        assertThat(bilan.reussies()).isZero();
+        assertThat(bilan.interrompu()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Annulé APRÈS la première nuit : le bilan dit qu'elle a été complétée, il ne se tait pas")
+    void reconstruire_tout_annulation_restitue_ce_qui_est_fait() {
+        // Le lot levait : la modale affichait « aucune nuit n'a été complétée » alors qu'une l'était,
+        // et ne rechargeait pas sa liste - la nuit déjà complétée restait offerte à la complétion.
+        ServiceReconstructionPassages espion = spy(service);
+        JetonAnnulation jeton = new JetonAnnulation();
+        ParticipationOrpheline n1 =
+                new ParticipationOrpheline("p1", "130711", "Z41", "2026-07-03T22:00:00+02:00", true);
+        ParticipationOrpheline n2 =
+                new ParticipationOrpheline("p2", "130711", "Z41", "2026-07-04T22:00:00+02:00", true);
+        doAnswer(invocation -> {
+                    jeton.annuler(); // l'utilisateur renonce pendant la première nuit, qui va au bout
+                    return new RapportReconstruction(1L, 10, 20, RapportReconstruction.lacunesConnues());
+                })
+                .when(espion)
+                .reconstruire(eq(n1), any(), any());
+
+        ServiceReconstructionPassages.BilanReconstructionGroupe bilan =
+                espion.reconstruireTout(List.of(n1, n2), progression -> {}, progression -> {}, issue -> {}, jeton);
+
+        assertThat(bilan.reussies())
+                .as("la première nuit est complétée pour de bon : le bilan doit le dire")
+                .isEqualTo(1);
+        assertThat(bilan.interrompu()).isTrue();
+        verify(espion, never()).reconstruire(eq(n2), any(), any());
     }
 
     private static ParticipationVigieChiro participation(String id) {

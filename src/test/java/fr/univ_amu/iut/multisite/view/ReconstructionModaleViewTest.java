@@ -156,7 +156,7 @@ class ReconstructionModaleViewTest {
     void reconstruire_tout_en_lot(FxRobot robot) {
         // La boucle vit au service (harmonisation passe 7) : on mocke son bilan (1 reconstruite, 1 ignorée).
         when(service.reconstruireTout(any(), any(), any(), any(), any()))
-                .thenReturn(new BilanReconstructionGroupe(1, 1, 10, 20));
+                .thenReturn(new BilanReconstructionGroupe(1, 1, 10, 20, false));
 
         Button reconstruireTout = robot.lookup("#boutonReconstruireTout").queryButton();
         assertThat(reconstruireTout.getText())

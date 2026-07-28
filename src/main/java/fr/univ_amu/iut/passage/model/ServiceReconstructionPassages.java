@@ -397,8 +397,12 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         int ignorees = 0;
         long sequences = 0;
         long observations = 0;
-        for (int index = 0; index < total; index++) {
-            jeton.leverSiAnnule();
+        boolean interrompu = false;
+        for (int index = 0; index < total && !interrompu; index++) {
+            if (jeton.estAnnule()) {
+                interrompu = true;
+                continue;
+            }
             ParticipationOrpheline nuit = aTraiter.get(index);
             progresGlobal.accept(new Progression(
                     "Nuit " + (index + 1) + " / " + total + "…", total == 0 ? 1.0 : (double) index / total));
@@ -409,20 +413,29 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
                 observations += rapport.observationsImportees();
                 issueParNuit.accept(new IssueNuit.Reconstruite(nuit, rapport));
             } catch (OperationAnnuleeException annulation) {
-                throw annulation; // geste délibéré : arrête tout le lot
+                // La nuit courante s'est compensée : rien de partiel ne subsiste. On s'arrête ici, mais on
+                // RESTITUE - les nuits déjà complétées le sont pour de bon, et l'appelant doit le dire.
+                interrompu = true;
             } catch (RegleMetierException echecNuit) {
                 ignorees++; // best-effort : cette nuit est sautée, le lot continue
                 issueParNuit.accept(new IssueNuit.Ignoree(nuit, echecNuit.getMessage()));
             }
         }
         progresGlobal.accept(new Progression(ETAPE_FIN, 1.0));
-        return new BilanReconstructionGroupe(reussies, ignorees, sequences, observations);
+        return new BilanReconstructionGroupe(reussies, ignorees, sequences, observations, interrompu);
     }
 
     /// Bilan d'un import groupé (#1708) : combien de nuits **reconstruites**, combien **ignorées**
-    /// (best-effort : point d'écoute inconnu ici, analyse non terminée), et les totaux de séquences et
-    /// d'observations rapatriées.
-    public record BilanReconstructionGroupe(int reussies, int ignorees, long sequences, long observations) {}
+    /// (best-effort : point d'écoute inconnu ici, analyse non terminée), les totaux de séquences et
+    /// d'observations rapatriées, et si le lot a été **interrompu**.
+    ///
+    /// Le lot **rend son bilan même interrompu** (harmonisation, clôture du lot 3). Il levait auparavant,
+    /// si bien qu'annuler pendant la quatrième nuit affichait « aucune nuit n'a été complétée » alors que
+    /// trois l'étaient, sans recharger la liste : les trois restaient offertes à la complétion. Chaque nuit
+    /// est **soit avant, soit après** - même contrat que
+    /// [fr.univ_amu.iut.commun.model.MoteurTraitementGroupe].
+    public record BilanReconstructionGroupe(
+            int reussies, int ignorees, long sequences, long observations, boolean interrompu) {}
 
     /// Issue d'**une** nuit dans un import groupé (#1708) : **reconstruite** (avec son rapport) ou
     /// **ignorée** (best-effort, avec la cause). Permet à chaque surface son rendu - une ligne en CLI, un

@@ -192,8 +192,14 @@ public class ReconstructionViewModel {
     public void restituerLot(ServiceReconstructionPassages.BilanReconstructionGroupe bilan) {
         Objects.requireNonNull(bilan, "bilan");
         reconstruit.set(bilan.reussies() > 0);
-        String rendu = bilan.reussies() + " nuit(s) complétée(s) : " + bilan.sequences() + " séquence(s), "
-                + bilan.observations() + " observation(s) rapatriée(s).";
+        String rendu = (bilan.interrompu() ? "Import interrompu. " : "") + bilan.reussies()
+                + " nuit(s) complétée(s) : " + bilan.sequences() + " séquence(s), " + bilan.observations()
+                + " observation(s) rapatriée(s).";
+        if (bilan.interrompu()) {
+            rendu += System.lineSeparator()
+                    + "Les nuits non commencées sont intactes et restent dans la liste : relancez l'import"
+                    + " quand vous voulez.";
+        }
         if (bilan.ignorees() > 0) {
             rendu += System.lineSeparator() + bilan.ignorees()
                     + " nuit(s) ignorée(s) (point d'écoute inconnu ici, ou analyse non terminée) : elles restent"
