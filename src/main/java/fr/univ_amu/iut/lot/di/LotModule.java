@@ -17,6 +17,7 @@ import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ModeDepot;
 import fr.univ_amu.iut.lot.model.PreparationGroupee;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.TeleversementGroupe;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
@@ -152,6 +153,18 @@ public class LotModule extends ModuleDeFeature {
     @Named("action.preparerDepot")
     ActionGroupee fournirPreparationGroupee(ServiceLot service) {
         return new PreparationGroupee(service);
+    }
+
+    /// Action groupée **« Téléverser vers Vigie-Chiro »** (#2357, lot 3, PR 3/5).
+    ///
+    /// Elle relaie le jeton du lot au dépôt, qui le consulte avant chaque unité : c'est la seule action
+    /// du lot dont l'interruption laisse un état **nommé et reprenable** (« Dépôt en cours » + plan
+    /// persisté), donc la seule qui ait le droit de s'arrêter au milieu d'un passage.
+    @Provides
+    @Singleton
+    @Named("action.televerser")
+    ActionGroupee fournirTeleversementGroupe(ServiceLot service, Optional<DepotVigieChiro> depot) {
+        return new TeleversementGroupe(service, depot);
     }
 
     @Provides
