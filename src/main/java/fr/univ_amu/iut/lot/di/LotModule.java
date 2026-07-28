@@ -3,9 +3,11 @@ package fr.univ_amu.iut.lot.di;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
+import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
+import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
@@ -13,6 +15,7 @@ import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ModeDepot;
+import fr.univ_amu.iut.lot.model.PreparationGroupee;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
@@ -136,6 +139,21 @@ public class LotModule extends ModuleDeFeature {
     }
 
     /// ViewModel de M-Lot. **Non-singleton** (un VM frais par chargement FXML).
+    /// Action groupée **« Préparer le dépôt »** (#2357, lot 3), exposée sous le port [ActionGroupee].
+    ///
+    /// C'est `lot` qui possède le geste, donc `lot` qui le fournit. La feature qui l'applique à une
+    /// sélection (`multisite`) consomme le **port**, jamais [ServiceLot] : elle n'a pas à connaître le
+    /// dépôt pour savoir enchaîner une action sur des passages.
+    ///
+    /// Nommée : les PR suivantes du lot 3 en apporteront d'autres (téléverser, importer les résultats,
+    /// déclencher le calcul), et elles se distinguent par ce nom.
+    @Provides
+    @Singleton
+    @Named("action.preparerDepot")
+    ActionGroupee fournirPreparationGroupee(ServiceLot service) {
+        return new PreparationGroupee(service);
+    }
+
     @Provides
     LotViewModel fournirLotViewModel(ServiceLot service) {
         return new LotViewModel(service);
