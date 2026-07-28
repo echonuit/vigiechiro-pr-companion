@@ -5,7 +5,9 @@ import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.validation.model.CriteresRevue;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.SelectionObservations;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.io.PrintWriter;
@@ -70,6 +72,12 @@ public final class ListerObservations implements Callable<Integer> {
     private Certitude certitude;
 
     @Option(
+            names = "--a-enjeu",
+            description = "Ne garde que les observations d'espèces prioritaires du Plan National d'Actions "
+                    + "Chiroptères. Sans l'option : les deux.")
+    private boolean aEnjeu;
+
+    @Option(
             names = "--json",
             description = "Émet la liste au format JSON (pour l'enchaînement de scripts) plutôt qu'en texte.")
     private boolean json;
@@ -77,13 +85,24 @@ public final class ListerObservations implements Callable<Integer> {
     @Spec
     private CommandSpec spec;
 
+    /// Instantané du référentiel, résolu au moment de l'exécution (jamais à la construction).
+    private MarqueurEspecesAEnjeu marqueurEnjeu;
+
     /// `Provider` : picocli instancie **toutes** les sous-commandes avant que le schéma ne soit migré.
     /// Tirer le service ici ouvrirait la base trop tôt.
     private final Provider<SelectionObservations> selection;
 
+    /// Repère des **espèces à enjeu** (#2353), pour le drapeau de la sortie texte et le champ JSON. Même
+    /// `Provider` que la sélection, et pour la même raison : picocli instancie toutes les sous-commandes
+    /// avant la migration du schéma, or le référentiel se lit en base.
+    private final Provider<MarqueurEspecesAEnjeu> marqueur;
+
     @Inject
-    public ListerObservations(Provider<SelectionObservations> selection) {
+    public ListerObservations(
+            Provider<SelectionObservations> selection, Provider<EspecesPrioritaires> especesPrioritaires) {
         this.selection = Objects.requireNonNull(selection, "selection");
+        Objects.requireNonNull(especesPrioritaires, "especesPrioritaires");
+        this.marqueur = () -> new MarqueurEspecesAEnjeu(especesPrioritaires.get());
     }
 
     /// Les filtres tels que l'utilisateur les a posés. Les drapeaux picocli sont **binaires** (présent /
@@ -91,17 +110,22 @@ public final class ListerObservations implements Callable<Integer> {
     /// là-dessus ») et non en `false` (« seulement les non-douteuses »), qui serait un contresens.
     CriteresRevue criteres() {
         return new CriteresRevue(
-                statut, taxon, douteux ? Boolean.TRUE : null, reference ? Boolean.TRUE : null, certitude);
+                statut,
+                taxon,
+                douteux ? Boolean.TRUE : null,
+                reference ? Boolean.TRUE : null,
+                certitude,
+                aEnjeu ? Boolean.TRUE : null);
     }
 
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
         List<LigneObservationAudio> lignes = selection.get().lignes(passage, criteres());
+        marqueurEnjeu = marqueur.get();
 
         if (json) {
-            sortie.println(FormatJson.tableau(
-                    lignes.stream().map(ListerObservations::champs).toList()));
+            sortie.println(FormatJson.tableau(lignes.stream().map(this::champs).toList()));
             return 0;
         }
         if (lignes.isEmpty()) {
@@ -130,13 +154,16 @@ public final class ListerObservations implements Callable<Integer> {
 
     /// Ce qui se voit d'un coup d'œil sans encombrer une colonne : douteux, référence, avis d'un validateur,
     /// fil ouvert.
-    private static String drapeaux(LigneObservationAudio ligne) {
+    private String drapeaux(LigneObservationAudio ligne) {
         StringBuilder marques = new StringBuilder();
         if (ligne.douteux()) {
             marques.append("douteux ");
         }
         if (ligne.reference()) {
             marques.append("reference ");
+        }
+        if (marqueurEnjeu.aEnjeu(ligne.taxonRetenu())) {
+            marques.append("enjeu ");
         }
         if (ligne.trancheeParUnValidateur()) {
             marques.append(ligne.validateurEnDesaccord() ? "validateur:desaccord " : "validateur:accord ");
@@ -147,7 +174,7 @@ public final class ListerObservations implements Callable<Integer> {
         return marques.isEmpty() ? "-" : marques.toString().trim();
     }
 
-    private static Map<String, Object> champs(LigneObservationAudio ligne) {
+    private Map<String, Object> champs(LigneObservationAudio ligne) {
         Map<String, Object> champs = new LinkedHashMap<>();
         champs.put("id", ligne.idObservation());
         champs.put("fichier", ligne.nomFichier());
@@ -164,6 +191,7 @@ public final class ListerObservations implements Callable<Integer> {
         champs.put("statut", ligne.statut().name());
         champs.put("douteux", ligne.douteux());
         champs.put("reference", ligne.reference());
+        champs.put("aEnjeu", marqueurEnjeu.aEnjeu(ligne.taxonRetenu()));
         champs.put("messages", ligne.nbMessages());
         return champs;
     }

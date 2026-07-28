@@ -76,6 +76,12 @@ public final class CiblesRevue {
                 description = "Ne vise que cette certitude observateur : ${COMPLETION-CANDIDATES}.")
         private Certitude certitude;
 
+        @Option(
+                names = "--a-enjeu",
+                description = "Ne vise que les observations d'espèces prioritaires du Plan National d'Actions "
+                        + "Chiroptères.")
+        private boolean aEnjeu;
+
         @Option(names = "--confirmer", description = "Obligatoire pour viser un passage ENTIER (aucun filtre posé).")
         private boolean confirmer;
 
@@ -83,7 +89,12 @@ public final class CiblesRevue {
         /// filtre pas là-dessus »), jamais `false` (« seulement les non-douteuses »).
         CriteresRevue criteres() {
             return new CriteresRevue(
-                    statut, taxonTadarida, douteux ? Boolean.TRUE : null, reference ? Boolean.TRUE : null, certitude);
+                    statut,
+                    taxonTadarida,
+                    douteux ? Boolean.TRUE : null,
+                    reference ? Boolean.TRUE : null,
+                    certitude,
+                    aEnjeu ? Boolean.TRUE : null);
         }
     }
 
