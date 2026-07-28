@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.94.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.93.0...v2.94.0) (2026-07-28)
+
+
+### Features
+
+* **commun:** une puce de filtre qui retient plusieurs valeurs, et un onglet « Autres » qui tient sa promesse ([#2647](https://github.com/echonuit/vigiechiro-pr-companion/issues/2647)) ([77e6e64](https://github.com/echonuit/vigiechiro-pr-companion/commit/77e6e64398cca5e69dad94b5cb443656e1664380)), closes [#2615](https://github.com/echonuit/vigiechiro-pr-companion/issues/2615) [#2615](https://github.com/echonuit/vigiechiro-pr-companion/issues/2615)
+
 # [2.93.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.92.1...v2.93.0) (2026-07-28)
 
 
