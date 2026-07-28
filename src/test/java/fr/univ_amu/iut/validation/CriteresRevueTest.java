@@ -77,6 +77,20 @@ class CriteresRevueTest {
     }
 
     @Test
+    @DisplayName("--statut ÉCARTE ce qui ne le porte pas (trou trouvé par PIT à la clôture #2353)")
+    void statut_pose_ecarte_les_autres() {
+        // Un mutant remplaçant `statutRetenu` par `true` survivait : aucun test ne vérifiait qu'un statut
+        // posé EXCLUT. Or c'est ce filtre qui décide ce que les gestes de revue vont toucher.
+        CriteresRevue validees = new CriteresRevue(StatutObservation.VALIDEE, null, null, null, null, null);
+
+        assertThat(validees.retient(ligne(StatutObservation.VALIDEE, "Pippip", false, false, null)))
+                .isTrue();
+        assertThat(validees.retient(ligne(StatutObservation.NON_TOUCHEE, "Pippip", false, false, null)))
+                .as("une observation à revoir n'a rien à faire dans un lot « validées »")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("#2353 : « à enjeu » compte comme un filtre posé, sinon le geste croit viser tout le passage")
     void l_enjeu_est_un_filtre_pose() {
         // vide() commande le garde-fou --confirmer des gestes de revue : un critère qu'elle ignore ferait

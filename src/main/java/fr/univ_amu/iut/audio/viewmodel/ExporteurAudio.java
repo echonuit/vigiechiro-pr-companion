@@ -4,6 +4,7 @@ import fr.univ_amu.iut.bibliotheque.model.ExportBiblioSons;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.validation.model.ExportObservationsCsv;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -54,7 +55,10 @@ final class ExporteurAudio {
             return IGNORE;
         }
         try {
-            Path ecrit = ExportObservationsCsv.ecrire(lignes, destination);
+            // Le référentiel de conservation vient du service déjà tenu ici : la colonne « Espèce à
+            // enjeu » (#2353) doit dire la même chose que le repère de l'écran.
+            MarqueurEspecesAEnjeu marqueur = new MarqueurEspecesAEnjeu(validation::especesPrioritaires);
+            Path ecrit = ExportObservationsCsv.ecrire(lignes, destination, marqueur::aEnjeu);
             return new ResultatExport(true, lignes.size() + " observation(s) exportée(s) : " + ecrit.getFileName());
         } catch (IOException | RuntimeException echec) {
             return new ResultatExport(false, echec.getMessage());
