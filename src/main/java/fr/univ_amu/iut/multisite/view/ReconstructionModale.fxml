@@ -40,7 +40,7 @@
 
   <!-- Texte sur UNE ligne : en FXML, un attribut multi-lignes conserve les retours et l'indentation,
        ce qui trouait le paragraphe au rendu. -->
-  <Label text="Ces nuits existent sur Vigie-Chiro mais pas sur cette machine. Les reconstruire les rend consultables ici (observations comprises), mais sans les fichiers audio : la plateforme ne les restitue pas."
+  <Label text="Ces nuits sont sur Vigie-Chiro sans leur contenu ici : certaines ont été récupérées mais attendent leurs observations, d'autres n'ont pas encore de fiche locale. Les compléter rapatrie leurs observations, mais pas les fichiers audio : la plateforme ne les restitue pas. Pour retrouver le son, réactivez la nuit depuis sa carte SD."
          styleClass="section-sous" wrapText="true"/>
 
   <TableView fx:id="tableOrphelines" prefHeight="240.0">
@@ -101,14 +101,14 @@
          passage partiel (compensation côté service). -->
     <Button fx:id="boutonAnnuler" text="Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
     <Button fx:id="boutonFermer" text="Fermer" styleClass="bouton-secondaire" onAction="#fermer"/>
-    <!-- Import groupé (#1708) : reconstruit toutes les nuits listées en une passe, avec double barre de
-         progression et annulation. Grisé s'il n'y a aucune nuit à reconstruire. -->
-    <Button fx:id="boutonReconstruireTout" text="Reconstruire tout" styleClass="bouton-secondaire"
+    <!-- Import groupé (#1708) : complète toutes les nuits listées en une passe, avec double barre de
+         progression et annulation. Grisé s'il n'y a aucune nuit à compléter. -->
+    <Button fx:id="boutonReconstruireTout" text="Tout compléter" styleClass="bouton-secondaire"
             onAction="#reconstruireTout"/>
     <!-- Enveloppe non désactivée (#789) : un bouton grisé n'affiche aucun tooltip. C'est elle qui porte
          l'explication du blocage (aucune nuit choisie, ou point d'écoute inconnu ici). -->
     <StackPane fx:id="enveloppeReconstruire">
-      <Button fx:id="boutonReconstruire" text="Reconstruire cette nuit" styleClass="bouton-primaire"
+      <Button fx:id="boutonReconstruire" text="Compléter cette nuit" styleClass="bouton-primaire"
               onAction="#reconstruire"/>
     </StackPane>
   </HBox>

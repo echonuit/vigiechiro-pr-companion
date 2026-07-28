@@ -208,7 +208,7 @@ public class ReconstructionModaleController {
         zoneProgressionGlobale.managedProperty().bind(lotEnCours);
         boutonReconstruireTout
                 .textProperty()
-                .bind(Bindings.concat("Reconstruire tout (", Bindings.size(viewModel.orphelines()), ")"));
+                .bind(Bindings.concat("Tout compléter (", Bindings.size(viewModel.orphelines()), ")"));
         boutonReconstruireTout
                 .disableProperty()
                 .bind(Bindings.isEmpty(viewModel.orphelines()).or(operationEnCours));

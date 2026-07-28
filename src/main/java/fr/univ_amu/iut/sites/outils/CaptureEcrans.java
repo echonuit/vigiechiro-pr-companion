@@ -5,8 +5,10 @@ import com.google.inject.Injector;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.EchelleProgression;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -17,6 +19,7 @@ import fr.univ_amu.iut.commun.outils.AttenteTuiles;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -38,6 +41,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.layout.VBox;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -127,6 +131,7 @@ public final class CaptureEcrans {
         capturerModaleCreation(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-point-creation.png"));
         capturerModaleSiteEdition(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-site.png"));
         capturerModaleSiteCreation(creerInjecteur(), sortie.resolve("apercu-sites-modale-site-creation.png"));
+        capturerSynchroEnCours(sortie.resolve("apercu-sites-synchro-progression.png"));
 
         // État vide : base neuve (juste un utilisateur, aucun site) → accueil M-Sites en état initial.
         Path workspaceVide = Files.createTempDirectory("vc-capture-sites-vide");
@@ -292,4 +297,20 @@ public final class CaptureEcrans {
 
     /// Donnees seedees reutilisees par les ecrans detail et modale.
     private record Seed(Site site, PointDEcoute point, Site siteSansPassage) {}
+
+    /// La **modale de progression de la synchronisation** (#2558), figée sur une étape.
+    ///
+    /// « Synchroniser depuis VigieChiro » posait un simple voile opaque : ça travaillait, sans dire où on
+    /// en était ni laisser renoncer. Depuis #2554 la synchro rapatrie aussi le CONTENU de chaque nuit, donc
+    /// elle dure - une opération qui dure doit s'annoncer et se laisser interrompre.
+    ///
+    /// Le libellé est celui qu'émet réellement le balayage (`ExecutionParallele` : « Nuits k/N ») et la
+    /// fraction vient de la vraie échelle, pour que l'image dise ce que l'utilisateur lit.
+    private static void capturerSynchroEnCours(Path fichier) throws IOException {
+        VBox contenu = DialogueProgression.apercu(
+                "Synchronisation Vigie-Chiro",
+                new Progression("Nuits 7/12", EchelleProgression.autonome(12).fraction(7)));
+        ApercuFx.enregistrerPng(new Scene(contenu), fichier);
+        System.out.println("Apercu ecrit dans " + fichier);
+    }
 }

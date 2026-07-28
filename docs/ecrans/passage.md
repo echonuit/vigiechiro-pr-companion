@@ -100,6 +100,12 @@ Le bouton **Réactiver ce passage** remet l'audio en place à partir d'un dossie
 (votre sauvegarde, un disque externe, la carte d'origine…). L'exploration est **récursive** : vous
 pouvez pointer la racine d'une sauvegarde.
 
+Il est actif sur une nuit **récupérée de Vigie-Chiro**, qui n'a jamais eu d'audio sur cette machine :
+c'est même le cas qu'il sert le plus. Sa fiche est alors presque vide - aucun volume, aucune séquence -
+et c'est normal : le son n'est nulle part ailleurs que sur votre carte SD.
+
+![La fiche d'une nuit récupérée de Vigie-Chiro : volumes et séquences à zéro, « Vérifier l'enregistrement » hors de portée faute d'audio, et « Réactiver ce passage » actif pour aller le chercher sur la carte.](../assets/captures/apercu-passage-squelette.png)
+
 ### Copier, ou laisser vos fichiers où ils sont
 
 Une fois le dossier désigné, l'application demande **ce qu'elle doit en faire**. La question est

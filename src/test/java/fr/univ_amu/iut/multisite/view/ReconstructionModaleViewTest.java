@@ -166,7 +166,7 @@ class ReconstructionModaleViewTest {
 
         assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText())
                 .as("le lot reconstruit la nuit située et ignore celle au point inconnu")
-                .contains("1 nuit(s) reconstruite(s)")
+                .contains("1 nuit(s) complétée(s)")
                 .contains("1 nuit(s) ignorée(s)");
         robot.interact(() -> robot.lookup("#boutonFermer").queryButton().fire());
         assertThat(appelantRafraichi)
