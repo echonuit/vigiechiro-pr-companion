@@ -7,6 +7,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.IntegerExpression;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.control.MenuItem;
@@ -39,8 +40,10 @@ final class MenuActionsMultisite {
             MenuItem ecouterPassage,
             MenuItem reconstruire,
             MenuItem reculerAnalyses,
+            MenuItem preparerSelection,
             ObservableBooleanValue nonVide,
             ObservableObjectValue<LignePassage> selection,
+            IntegerExpression nombreSelectionne,
             boolean peutReconstruire,
             boolean peutRelever) {
         exporter.disableProperty().bind(Bindings.not(nonVide));
@@ -62,6 +65,17 @@ final class MenuActionsMultisite {
         // grisé. Il n'est pas désactivé faute de nuit déposée : dans ce cas, le clic répond « rien à
         // relever » (le VM le dit), ce qui renseigne mieux qu'un item muet.
         reculerAnalyses.setVisible(peutRelever);
+
+        // #2357 lot 3 : un item désactivé ne dit pas pourquoi (il n'accueille pas d'info-bulle), donc
+        // c'est son LIBELLÉ qui porte la raison — même patron que « Exporter » ci-dessus.
+        preparerSelection.disableProperty().bind(nombreSelectionne.lessThan(1));
+        preparerSelection
+                .textProperty()
+                .bind(Bindings.when(nombreSelectionne.greaterThan(1))
+                        .then(Bindings.concat("Préparer le dépôt des ", nombreSelectionne, " lignes cochées…"))
+                        .otherwise(Bindings.when(nombreSelectionne.isEqualTo(1))
+                                .then("Préparer le dépôt de la ligne cochée…")
+                                .otherwise("Préparer le dépôt de la sélection… (aucune ligne cochée)")));
     }
 
     /// « Exporter » : demande où écrire et, si l'utilisateur ne renonce pas, remet le chemin choisi et

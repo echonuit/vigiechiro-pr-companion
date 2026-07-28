@@ -10,6 +10,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.name.Names;
+import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -153,6 +155,11 @@ class MultisiteVueIntegrationTest {
             @Override
             protected void configure() {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
+                // #2357 lot 3 : l'écran consomme l'action groupée sous son PORT. Un double suffit ici,
+                // ces tests ne lancent pas de lot.
+                bind(ActionGroupee.class)
+                        .annotatedWith(Names.named("action.preparerDepot"))
+                        .toInstance(mock(ActionGroupee.class));
                 bind(OuvrirAudio.class).toInstance(source -> {});
                 bind(DepotVues.class).toInstance(depotVues);
                 // « Ouvrir sur Vigie-Chiro » de ligne (#1799) ouvre un lien : navigateur no-op ici.
