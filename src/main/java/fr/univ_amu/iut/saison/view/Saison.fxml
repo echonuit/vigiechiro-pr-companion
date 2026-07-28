@@ -20,6 +20,10 @@
     <HBox spacing="10.0" alignment="CENTER_LEFT">
         <Label text="Saison"/>
         <ComboBox fx:id="choixAnnee"/>
+        <!-- Filtre par campagne (#2610) : masqué tant qu'aucune campagne n'existe, ou si la
+             fonctionnalité `campagne` est coupée. Un sélecteur qui ne propose rien n'aide personne. -->
+        <Label fx:id="lblCampagne" text="Campagne"/>
+        <ComboBox fx:id="choixCampagne" prefWidth="220.0"/>
     </HBox>
 
     <Label fx:id="lblResume" wrapText="true"/>

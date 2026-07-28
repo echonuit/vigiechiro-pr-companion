@@ -17,9 +17,12 @@ import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.di.CampagneModule;
 import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
@@ -116,6 +119,9 @@ public final class CaptureSaison {
                 new PersistenceModule(),
                 new SitesModule(),
                 new PassageModule(),
+                // Campagne (#2610) : sans ce module, le service reçoit un Optional vide, aucune
+                // campagne n'est proposable et le sélecteur de l'écran ne se rend pas.
+                new CampagneModule(),
                 new SaisonModule());
     }
 
@@ -132,6 +138,12 @@ public final class CaptureSaison {
                 null, "640380", "Étang de la Tuilière", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
         Site chenes = siteDao.insert(
                 new Site(null, "640381", "Bois des Chênes", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
+
+        // Deux campagnes (#2610) : le sélecteur de l'écran a de quoi proposer, et la capture montre le
+        // contrôle plutôt qu'une barre où il serait retiré faute de campagne.
+        CampagneDao campagneDao = new CampagneDao(source);
+        campagneDao.insert(new Campagne(null, "Suivi ENS 2026", 2026, null));
+        campagneDao.insert(new Campagne(null, "Thèse Samuel", 2025, null));
 
         Long a1 = pointDao.insert(new PointDEcoute(null, "A1", null, null, null, etang.id()))
                 .id();
