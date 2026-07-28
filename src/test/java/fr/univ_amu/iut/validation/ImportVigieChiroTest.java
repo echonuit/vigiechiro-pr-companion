@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -200,9 +201,13 @@ class ImportVigieChiroTest {
         when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of(PARTICIPATION));
         when(client.donnees(eq(PARTICIPATION), any())).thenReturn(ReponseApi.nonConnecte());
 
+        // Le refus dit ce qui MANQUE, et le porte de façon exploitable (#2635) : le geste - coller un
+        // jeton, ou taper une commande - appartient à la surface qui l'affiche, pas au modèle.
         assertThatThrownBy(() -> importateur.importer(ID_PASSAGE, false))
                 .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("jeton");
+                .hasMessageContaining("pas connectée à Vigie-Chiro")
+                .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.type(RegleMetierException.class))
+                .satisfies(refus -> assertThat(refus.besoin()).contains(new Besoin.Connexion()));
         aucunImport();
     }
 

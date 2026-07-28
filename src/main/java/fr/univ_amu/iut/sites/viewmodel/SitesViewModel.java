@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.viewmodel.GesteAttendu;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -129,7 +130,9 @@ public class SitesViewModel {
     /// Route l'échec de la synchronisation vers son message de restitution (fil JavaFX) : jamais un
     /// silence, ni un bouton resté figé (#795/#1212).
     public void signalerErreurSynchro(Throwable erreur) {
-        messageSynchro.set("La synchronisation Vigie-Chiro a échoué : " + erreur.getMessage());
+        // Le geste attendu vient de GesteAttendu (#2635) : le modèle a dit ce qui manquait, l'application
+        // dit où le régler.
+        messageSynchro.set("La synchronisation Vigie-Chiro a échoué : " + GesteAttendu.message(erreur));
     }
 
     /// L'utilisateur a **renoncé** en cours de synchronisation (#2558). Ni un succès, ni un échec : un

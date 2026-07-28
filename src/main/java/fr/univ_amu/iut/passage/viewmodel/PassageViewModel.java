@@ -124,7 +124,7 @@ public class PassageViewModel {
     public void signalerErreur(Long idPassage, Throwable erreur) {
         this.idPassage = idPassage;
         reinitialiser();
-        retour.set(RetourOperation.erreur(erreur.getMessage()));
+        retour.set(RetourOperation.erreur(erreur));
     }
 
     /// Supprime le passage courant (action « Supprimer » de M-Passage). Délègue à

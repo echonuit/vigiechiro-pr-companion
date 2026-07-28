@@ -89,9 +89,12 @@ public final class NoyauImportObservations {
         // DataAccessException (rollback, « échec inattendu ») au lieu d'un refus métier lisible. Le
         // remplacement, lui, supprime l'ancien jeu dans la transaction ci-dessous.
         if (!remplacer && resultatsDao.findByPassage(idPassage).isPresent()) {
-            throw new RegleMetierException("Ce passage a déjà un jeu de résultats Tadarida. Pour le remplacer,"
-                    + " ouvrez « Sons & validation » (menu ☰ > Réimporter, ou glissez-y un nouveau CSV) : le"
-                    + " remplacement préserve vos validations en cours.");
+            // Ce refus ne dit plus OÙ remplacer (#2635). Ce n'était pas un besoin d'environnement mais un
+            // renvoi vers un écran, écrit ici parce qu'une seule surface l'appelait alors. Ce qu'il faut
+            // savoir - qu'un remplacement est possible et qu'il ne coûte pas les validations - est un fait
+            // du domaine et reste dit ; le chemin pour y aller appartient à qui affiche le message.
+            throw new RegleMetierException("Ce passage a déjà un jeu de résultats Tadarida. Un import qui le"
+                    + " remplace est possible, et il préserve vos validations en cours.");
         }
 
         SessionDEnregistrement session = sessionDao

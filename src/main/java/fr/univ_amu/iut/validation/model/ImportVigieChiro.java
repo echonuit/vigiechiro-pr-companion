@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -141,8 +142,10 @@ public class ImportVigieChiro {
                 switch (client.donnees(participationId, suivi)) {
                     case ReponseApi.Succes<List<DonneeVigieChiro>>(List<DonneeVigieChiro> liste) -> liste;
                     case ReponseApi.NonConnecte<List<DonneeVigieChiro>> nonConnecte ->
-                        throw new RegleMetierException("Non connecté à Vigie-Chiro : collez un jeton"
-                                + " (menu ☰ > Se connecter à Vigie-Chiro) avant d'importer les observations.");
+                        throw new RegleMetierException(
+                                "Les observations de cette nuit n'ont pas pu être lues : l'application"
+                                        + " n'est pas connectée à Vigie-Chiro.",
+                                new Besoin.Connexion());
                     case ReponseApi.Injoignable<List<DonneeVigieChiro>>(String cause) ->
                         throw new RegleMetierException("Vigie-Chiro est injoignable (" + cause
                                 + ") : les observations n'ont pas pu être lues. Vérifiez le réseau et réessayez.");

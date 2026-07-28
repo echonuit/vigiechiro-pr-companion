@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -316,10 +317,10 @@ public class ServiceReactivationPassage {
                             HydratationSquelette.libelleSeul(progres),
                             jeton);
         } else if (sequenceDao.findBySession(session.id()).isEmpty()) {
-            throw new RegleMetierException("Cette nuit a été rapatriée de Vigie-Chiro mais ses observations n'ont"
-                    + " pas encore été récupérées, et ce sont elles qui permettent de reconnaître vos"
-                    + " fichiers. Connectez-vous (menu ☰ > Se connecter à Vigie-Chiro) et vérifiez que la"
-                    + " fonctionnalité « Import Vigie-Chiro » est active, puis recommencez.");
+            throw new RegleMetierException(
+                    "Cette nuit a été rapatriée de Vigie-Chiro mais ses observations n'ont pas encore été"
+                            + " récupérées, et ce sont elles qui permettent de reconnaître vos fichiers.",
+                    new Besoin.Connexion());
         }
     }
 

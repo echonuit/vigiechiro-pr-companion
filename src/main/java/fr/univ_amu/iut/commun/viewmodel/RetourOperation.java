@@ -73,6 +73,15 @@ public record RetourOperation(String texte, Severite severite) {
     }
 
     /// Retour d'**erreur** (rouge) : l'opération a échoué.
+    /// Refus ou échec **remonté d'une exception** : le message y gagne le **geste attendu** quand le
+    /// modèle a nommé ce qui manque (#2635). Sans besoin, c'est le message tel quel.
+    ///
+    /// C'est l'unique endroit où l'IHM ajoute son « comment » : le modèle ne connaît pas les menus, et la
+    /// ligne de commande en dit un autre.
+    public static RetourOperation erreur(Throwable refus) {
+        return erreur(GesteAttendu.message(refus));
+    }
+
     public static RetourOperation erreur(String texte) {
         return new RetourOperation(texte == null ? "Une erreur est survenue." : texte, Severite.ERREUR);
     }

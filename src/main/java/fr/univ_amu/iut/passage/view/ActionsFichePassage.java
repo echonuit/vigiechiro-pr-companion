@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
+import fr.univ_amu.iut.commun.viewmodel.GesteAttendu;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.util.List;
 import java.util.Objects;
@@ -72,7 +73,7 @@ final class ActionsFichePassage {
             viewModel.supprimer();
             retourAccueil.run();
         } catch (RegleMetierException refus) {
-            signalerRefus("Suppression impossible", refus.getMessage());
+            signalerRefus("Suppression impossible", GesteAttendu.message(refus));
         }
     }
 
@@ -91,7 +92,7 @@ final class ActionsFichePassage {
             // Seul refus non bloquant de l'écran (ADR 0023) : annuler un dépôt ne détruit rien, c'est la
             // transition arrière du workflow. L'utilisateur ne peut pas croire avoir perdu de données, et
             // le statut affiché le détrompe déjà. Les trois autres refus gardent le modal.
-            viewModel.signalerRefus(refus.getMessage());
+            viewModel.signalerRefus(GesteAttendu.message(refus));
         }
     }
 
