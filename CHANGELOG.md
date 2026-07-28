@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.104.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.103.0...v2.104.0) (2026-07-28)
+
+
+### Features
+
+* **commun:** un refus porte ce qui manque, la surface ajoute le geste ([#2685](https://github.com/echonuit/vigiechiro-pr-companion/issues/2685)) ([6d23118](https://github.com/echonuit/vigiechiro-pr-companion/commit/6d2311872f807c0945aaa8f414f5f5800e729dcc)), closes [#2554](https://github.com/echonuit/vigiechiro-pr-companion/issues/2554) [#2635](https://github.com/echonuit/vigiechiro-pr-companion/issues/2635)
+
 # [2.103.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.102.0...v2.103.0) (2026-07-28)
 
 
