@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.113.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.113.0...v2.113.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **commun:** le libelle d'une ventilation devient le texte accessible de sa barre ([#2719](https://github.com/echonuit/vigiechiro-pr-companion/issues/2719)) ([3af5c5a](https://github.com/echonuit/vigiechiro-pr-companion/commit/3af5c5ac7c8fc0f9c1a79652da6b3dfb0575fba1)), closes [#2694](https://github.com/echonuit/vigiechiro-pr-companion/issues/2694)
+
 # [2.113.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.112.1...v2.113.0) (2026-07-28)
 
 
