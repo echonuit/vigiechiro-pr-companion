@@ -49,9 +49,37 @@ public class DiagnosticViewModel {
     private final ReadOnlyBooleanWrapper coherenceHoraireDisponible =
             new ReadOnlyBooleanWrapper(this, "coherenceHoraireDisponible", false);
 
+    /// Signale un **export réussi**, en nommant le fichier écrit : un export muet est indiscernable d'un
+    /// clic sans effet.
+    public void signalerExport(String nomFichier) {
+        retour.set(RetourOperation.succes("Graphe exporté vers " + nomFichier + "."));
+    }
+
+    /// Signale un **échec d'export** (disque plein, dossier en lecture seule, rendu refusé).
+    public void signalerEchecExport(String motif) {
+        retour.set(RetourOperation.erreur("L'export du graphe a échoué : " + motif));
+    }
+
+    /// La fenêtre nocturne **exploitable** (heures de coucher et de lever), pour situer les mesures sur
+    /// le graphe. `null` tant qu'aucun diagnostic n'est chargé ; indisponible quand le point n'a pas de
+    /// coordonnées.
+    public ReadOnlyObjectProperty<CoherenceHoraire> coherenceHoraireProperty() {
+        return coherence.getReadOnlyProperty();
+    }
+
     /// Libellé de la fenêtre nocturne (`Nuit : coucher 21:58 · lever 05:48`), vide si indisponible.
     /// L'icône lune est posée par la vue (FontIcon), pas ici (le VM ignore l'IHM).
     private final ReadOnlyStringWrapper fenetreNuit = new ReadOnlyStringWrapper(this, "fenetreNuit", "");
+
+    /// La cohérence horaire brute du diagnostic courant, ou `null` tant que rien n'est chargé. Le libellé
+    /// n'en dit que le texte ; l'aplat de la nuit sur le graphe a besoin des **heures** (#2617).
+    ///
+    /// **Observable**, et non un simple champ : le graphe se reconstruit dès que les mesures changent,
+    /// ce qui arrive **avant** que la cohérence ne soit posée. Un champ obligerait l'appelant à respecter
+    /// un ordre implicite entre deux affectations — le genre de couplage qui se recasse en silence au
+    /// premier remaniement.
+    private final ReadOnlyObjectWrapper<CoherenceHoraire> coherence =
+            new ReadOnlyObjectWrapper<>(this, "coherence", null);
 
     /// Alerte « hors nuit » (démarrage/arrêt diurne), [RetourOperation#AUCUN] si les horaires sont
     /// cohérents. Un [RetourOperation] plutôt qu'une chaîne : sa sévérité (AVERTISSEMENT) est portée par la
@@ -90,6 +118,7 @@ public class DiagnosticViewModel {
     }
 
     private void appliquerCoherence(CoherenceHoraire coherence) {
+        this.coherence.set(coherence);
         coherenceHoraireDisponible.set(coherence.disponible());
         if (!coherence.disponible()) {
             fenetreNuit.set("");

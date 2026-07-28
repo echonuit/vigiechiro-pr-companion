@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.LineChart?>
+<?import fr.univ_amu.iut.commun.view.GrapheNocturne?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -50,14 +50,24 @@
   </Label>
   <!-- Axe X temporel (#1498) : NumberAxis en minutes depuis la 1re mesure, étiqueté HH:mm par le
        controller (6 à 8 repères). Remplace un CategoryAxis qui affichait un libellé par mesure. -->
-  <LineChart fx:id="grapheClimat" VBox.vgrow="ALWAYS" minHeight="260.0" legendVisible="true" animated="false">
+  <!-- Export de la courbe climatique (#2618) : redessinée hors écran et estampillée de son contexte,
+       comme la courbe d'activité. C'est ce qu'on joint à un signalement d'anomalie. -->
+  <HBox alignment="CENTER_RIGHT">
+    <Button fx:id="boutonExporterGraphe" minWidth="-Infinity" text="Exporter le graphe…" onAction="#exporterGraphe">
+      <graphic>
+        <FontIcon iconLiteral="fas-file-image"/>
+      </graphic>
+    </Button>
+  </HBox>
+
+  <GrapheNocturne fx:id="grapheClimat" VBox.vgrow="ALWAYS" minHeight="260.0" legendVisible="true" animated="false">
     <xAxis>
       <NumberAxis label="Heure"/>
     </xAxis>
     <yAxis>
       <NumberAxis label="T° (°C) / Humidité (%)"/>
     </yAxis>
-  </LineChart>
+  </GrapheNocturne>
 
   <HBox spacing="14.0" VBox.vgrow="ALWAYS">
     <VBox spacing="4.0" HBox.hgrow="ALWAYS">

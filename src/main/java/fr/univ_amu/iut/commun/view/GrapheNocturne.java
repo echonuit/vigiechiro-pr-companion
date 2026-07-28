@@ -1,13 +1,17 @@
-package fr.univ_amu.iut.analyse.view;
+package fr.univ_amu.iut.commun.view;
 
 import javafx.beans.NamedArg;
 import javafx.scene.chart.Axis;
 import javafx.scene.chart.LineChart;
 import javafx.scene.shape.Rectangle;
 
-/// `LineChart` de l'activité qui matérialise la **fenêtre nocturne** (coucher → lever) par un **aplat
-/// pâle** derrière les courbes (#2352). On voit d'un coup d'œil si de l'activité déborde en période
-/// diurne, ce qui est un signal de dispositif autant qu'écologique.
+/// `LineChart` qui matérialise la **fenêtre nocturne** (coucher → lever) par un **aplat pâle** derrière
+/// les courbes.
+///
+/// Deux écrans en ont besoin, pour la même raison : situer ce qu'ils tracent dans la nuit **réelle**. La
+/// courbe d'activité y montre ce qui déborde en période diurne — signal de dispositif autant
+/// qu'écologique (#2352) ; la courbe climatique du diagnostic y situe ses mesures, la fenêtre étant
+/// justement ce qu'il vérifie par ailleurs (#2617).
 ///
 /// Sous-classe (plutôt qu'un calque voisin) pour dessiner dans le **repère du plot** via
 /// `getPlotChildren` : la bande s'aligne exactement sur l'axe sans translation de coordonnées, et se

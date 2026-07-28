@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
+import fr.univ_amu.iut.commun.view.LegendeExport;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import java.time.LocalDate;
@@ -20,12 +21,12 @@ class LegendeExportActiviteTest {
 
     @Test
     void l_identite_nomme_le_carre_le_point_et_le_passage() {
-        assertThat(LegendeExportActivite.identite(PASSAGE)).isEqualTo("Carré 640380 · Point A1 · Passage N° 2");
+        assertThat(LegendeExport.identite(PASSAGE)).isEqualTo("Carré 640380 · Point A1 · Passage N° 2");
     }
 
     @Test
     void sans_passage_l_identite_dit_la_portee_transverse() {
-        assertThat(LegendeExportActivite.identite(null))
+        assertThat(LegendeExport.identite(null))
                 .as("la vue transverse couvre tous les passages : le dire, plutôt que laisser un blanc")
                 .isEqualTo("Tous les passages");
     }
@@ -35,7 +36,7 @@ class LegendeExportActiviteTest {
         // ContextePassage porte 0 quand le numéro est inconnu : « Passage N° 0 » serait un faux.
         ContextePassage sansNumero = new ContextePassage(1L, 0, new ContexteSite("640380", "A1", null));
 
-        assertThat(LegendeExportActivite.identite(sansNumero))
+        assertThat(LegendeExport.identite(sansNumero))
                 .isEqualTo("Carré 640380 · Point A1")
                 .doesNotContain("N° 0");
     }
@@ -69,7 +70,7 @@ class LegendeExportActiviteTest {
 
     @Test
     void la_provenance_porte_la_version_et_la_date() {
-        assertThat(LegendeExportActivite.provenance("1.4.0", LocalDate.of(2026, 7, 26)))
+        assertThat(LegendeExport.provenance("1.4.0", LocalDate.of(2026, 7, 26)))
                 .isEqualTo("VigieChiro Companion 1.4.0 · exporté le 2026-07-26");
     }
 }

@@ -19,6 +19,8 @@ import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
+import fr.univ_amu.iut.commun.view.GrapheNocturne;
+import fr.univ_amu.iut.commun.view.LegendeExport;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -318,10 +320,10 @@ public class ActiviteController implements EmplacementNavigation {
     /// (tranche, filtres actifs) et provenance (version, date).
     private List<String> lignesLegende(LocalDate dateExport) {
         return List.of(
-                LegendeExportActivite.identite(contexte),
+                LegendeExport.identite(contexte),
                 LegendeExportActivite.reglages(
                         viewModel.trancheProperty().get().minutes(), gestionnaireFiltres.decrire()),
-                LegendeExportActivite.provenance(version.libelle(), dateExport));
+                LegendeExport.provenance(version.libelle(), dateExport));
     }
 
     /// La fenêtre nocturne en minutes sur l'axe (`[début, fin]`), ou `null` si elle n'est pas connue : l'image

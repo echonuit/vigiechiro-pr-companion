@@ -1202,3 +1202,23 @@
 .cr-motif-liste {
     -fx-font-size: 11.5px;
 }
+
+/* Aplat de la fenêtre nocturne (coucher -> lever), dessine derriere les courbes par GrapheNocturne.
+ * Ici et non dans la feuille d'un ecran : le composant sert la courbe d'activite ET la courbe
+ * climatique du diagnostic (#2617). Sans style, le rectangle tombe sur le noir par defaut.
+ * Tres pale pour situer sans ecraser : ce qui deborde de la bande est de l'activite diurne. */
+.aplat-nuit {
+    -fx-fill: rgba(26, 82, 118, 0.10);
+}
+
+/* Image exportée : fond blanc opaque (une image à fond transparent devient illisible collée sur un
+ * support sombre) et lignes de contexte discrètes sous le graphe. */
+.export-graphe {
+    -fx-background-color: white;
+    -fx-padding: 16;
+}
+
+.legende-export {
+    -fx-font-size: 0.78em;
+    -fx-text-fill: #34495e;
+}
