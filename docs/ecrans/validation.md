@@ -245,6 +245,28 @@ même voie complète sert de repli quand le fichier d'observations n'est pas dis
 dans une **fenêtre de progression** avec un bouton **Annuler** : renoncer laisse le passage tel qu'il
 était, sans demi-import.
 
+#### Ce que l'import vous rend à la fin
+
+Quand l'import se termine, un **compte rendu** dit ce qu'il a fait, en proportions plutôt qu'en une
+phrase.
+
+![Le compte rendu d'un réimport : la part importée, les lignes écartées, et les mentions qui disent ce
+qui coûte quelque chose.](../assets/captures/apercu-import-vigiechiro-compte-rendu.png)
+
+La barre ventile **toutes les lignes reçues** : celles qui sont devenues des observations, et celles qui
+ont été écartées. Le reste tient en mentions, chacune à son registre :
+
+| Mention | Ce qu'elle veut dire |
+|---|---|
+| **validations perdues** ⚠ | des corrections, marquages ou commentaires que vous aviez saisis n'ont pas retrouvé d'observation correspondante dans le nouveau jeu. **Ce travail est définitivement perdu.** |
+| **validations préservées** | vos saisies ont été réattachées aux nouvelles observations : un réimport ne vous coûte pas votre revue |
+| **lignes ignorées** ⚠ | leur séquence audio est absente, ou la ligne n'a pas de taxon. Si ce sont les séquences qui manquent, importez d'abord la nuit de ce passage |
+| **taxons hors référentiel** | des codes inconnus du référentiel ont été enregistrés en souches : leurs observations sont bien importées, il n'y a rien à faire |
+| **échanges avec le validateur** | des observations portent un message du Muséum. La mention est là pour que vous ne les découvriez pas par hasard, en ouvrant la bonne ligne |
+
+Les deux lignes de validations n'apparaissent qu'au **réimport** : sur un premier import, il n'y avait
+rien à préserver ni à perdre, et l'afficher à zéro ferait chercher un problème qui n'existe pas.
+
 Si l'analyse de la plateforme n'est pas terminée, l'import vous dit **pourquoi** il n'y a rien à
 récupérer : l'analyse n'a **jamais été lancée** (lancez-la depuis « Préparer le dépôt », étape 4), elle
 est **planifiée** ou **en cours** (patientez : comptez plusieurs dizaines de minutes), elle a **échoué**

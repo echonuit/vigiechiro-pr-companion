@@ -71,7 +71,15 @@ public final class CompteRenduChiffreImportVigieChiro {
         List<Segment> segments = new ArrayList<>();
         ajouterSiPresent(segments, "Importées", bilan.importees(), Teinte.RETENU);
         ajouterSiPresent(segments, "Ignorées", bilan.ignorees(), Teinte.ECARTE);
-        return new Ventilation("Devenir des " + total + " observations reçues", total, segments);
+        // « lignes » et non « observations » : les ignorées ne sont jamais DEVENUES des observations
+        // (séquence absente, ou pas de taxon). Annoncer « le devenir de 140 observations » quand 12 n'en
+        // ont jamais été promettrait un objet qui n'existe pas.
+        //
+        // ⚠️ Ce libellé n'est aujourd'hui **affiché nulle part** : `PanneauCompteRendu` ne lit pas
+        // `Ventilation.libelle`, et les quatre traductions le composent pour rien (#2694). On l'écrit
+        // juste quand même - le jour où la bande le rendra, ou le portera en texte accessible, il ne
+        // faudra pas relire quatre traductions pour découvrir qu'elles se sont contredites.
+        return new Ventilation("Devenir des " + total + " lignes reçues", total, segments);
     }
 
     private static void ajouterSiPresent(List<Segment> segments, String libelle, int quantite, Teinte teinte) {

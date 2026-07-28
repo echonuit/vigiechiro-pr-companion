@@ -53,6 +53,7 @@ MAINS=(
   "fr.univ_amu.iut.audio.outils.CaptureValidationTadarida"
   "fr.univ_amu.iut.audio.outils.CaptureMenuLigne"
   "fr.univ_amu.iut.audio.outils.CapturePublicationCorrections"
+  "fr.univ_amu.iut.audio.outils.CaptureImportVigieChiro"
   "fr.univ_amu.iut.commun.outils.CaptureFicheEspece"
   "fr.univ_amu.iut.commun.outils.CaptureDialogues"
   "fr.univ_amu.iut.commun.outils.CaptureCompteRendu"
