@@ -108,7 +108,7 @@ class ReconstructionViewModelTest {
         assertThat(rendu).as("le viewModel renvoie le bilan du service").isSameAs(bilan);
         viewModel.restituerLot(rendu);
         assertThat(viewModel.retourProperty().get().texte())
-                .contains("2 nuit(s) reconstruite(s)")
+                .contains("2 nuit(s) complétée(s)")
                 .contains("1 nuit(s) ignorée(s)");
         assertThat(viewModel.reconstruitProperty().get())
                 .as("au moins une nuit reconstruite : l'appelant doit recharger sa table")

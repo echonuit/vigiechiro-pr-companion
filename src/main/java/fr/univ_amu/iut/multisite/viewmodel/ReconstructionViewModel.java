@@ -130,9 +130,14 @@ public class ReconstructionViewModel {
         etatListe.set(
                 chargees.isEmpty()
                         ? "Rien à compléter : toutes vos nuits Vigie-Chiro sont ici, avec leur contenu."
+                        // Causes POSSIBLES, au pluriel et sans en choisir une : la liste mêle des nuits
+                        // récupérées qui attendent leur analyse et des nuits sans fiche locale (point
+                        // inconnu ici). Annoncer une cause unique en affirmerait une non constatée pour
+                        // l'autre moitié - le défaut que la passe 1 de #2554 a corrigé sur le compte rendu.
                         : chargees.size()
-                                + " nuit(s) sans leur contenu : analyse Vigie-Chiro non terminée, ou liaison"
-                                + " manquée lors d'une synchronisation.");
+                                + " nuit(s) sans leur contenu ici. Causes possibles : analyse Vigie-Chiro non"
+                                + " terminée, liaison manquée lors d'une synchronisation, ou point d'écoute"
+                                + " inconnu sur cette machine.");
     }
 
     /// **Bloquant** (réseau + base) : reconstruit la participation choisie en passage archivé, en relayant
@@ -149,7 +154,7 @@ public class ReconstructionViewModel {
     public void restituer(ParticipationOrpheline orpheline, RapportReconstruction rapport) {
         orphelines.remove(orpheline);
         reconstruit.set(true);
-        String rendu = "Nuit du " + orpheline.dateDebut() + " reconstruite (passage archivé) : "
+        String rendu = "Nuit du " + orpheline.dateDebut() + " complétée (passage archivé) : "
                 + rapport.sequencesRecreees() + " séquence(s), " + rapport.observationsImportees()
                 + " observation(s) rapatriée(s)."
                 + System.lineSeparator()
@@ -187,7 +192,7 @@ public class ReconstructionViewModel {
     public void restituerLot(ServiceReconstructionPassages.BilanReconstructionGroupe bilan) {
         Objects.requireNonNull(bilan, "bilan");
         reconstruit.set(bilan.reussies() > 0);
-        String rendu = bilan.reussies() + " nuit(s) reconstruite(s) : " + bilan.sequences() + " séquence(s), "
+        String rendu = bilan.reussies() + " nuit(s) complétée(s) : " + bilan.sequences() + " séquence(s), "
                 + bilan.observations() + " observation(s) rapatriée(s).";
         if (bilan.ignorees() > 0) {
             rendu += System.lineSeparator() + bilan.ignorees()
@@ -195,7 +200,7 @@ public class ReconstructionViewModel {
                     + " dans la liste.";
         }
         rendu += System.lineSeparator()
-                + "Les passages reconstruits sont consultables mais pas écoutables (le dépôt ZIP ne restitue"
+                + "Ces nuits sont consultables mais pas écoutables (le dépôt ZIP ne restitue"
                 + " pas l'audio). Réactivez-les si vous retrouvez les fichiers d'origine.";
         retour.set(RetourOperation.succes(rendu));
     }
@@ -211,11 +216,14 @@ public class ReconstructionViewModel {
     /// reconstruction se compense côté service), et on le dit plutôt que de laisser un écran figé.
     public void signalerAnnulation() {
         // Ni un succès (rien n'a été créé), ni une erreur (rien n'a raté, l'utilisateur a arrêté).
-        retour.set(RetourOperation.info("Reconstruction annulée : aucun passage n'a été créé."));
+        retour.set(RetourOperation.info("Opération annulée : aucune nuit n'a été complétée."));
     }
 
+    /// Le message nomme ce qui **manque**, pas le geste : la même modale sert désormais à **compléter** une
+    /// nuit récupérée, et parler de « reconstruction » y désignait une opération que l'utilisateur ne
+    /// demandait plus (#2554, passe 8).
     private ServiceReconstructionPassages exiger() {
-        return service.orElseThrow(() -> new RegleMetierException("La reconstruction a besoin de la connexion"
+        return service.orElseThrow(() -> new RegleMetierException("Compléter une nuit demande la connexion"
                 + " Vigie-Chiro : connectez-vous (menu ☰ > Se connecter à Vigie-Chiro) puis recommencez."));
     }
 }
