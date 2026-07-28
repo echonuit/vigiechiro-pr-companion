@@ -28,10 +28,13 @@ import fr.univ_amu.iut.importation.model.VolumesImport;
 import fr.univ_amu.iut.importation.view.ImportationController;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
+import fr.univ_amu.iut.passage.di.CampagneModule;
 import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
+import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.di.SitesModule;
@@ -413,6 +416,10 @@ public final class CaptureImport {
                         new PersistenceModule(),
                         new SitesModule(),
                         new PassageModule(),
+                        // Campagne (#2355, #2631) : feature OPTIONNELLE. Sans ce module, la ligne
+                        // « Campagne » du rattachement se rend masquée et la capture montrerait un
+                        // assistant où la proposition n'existe pas.
+                        new CampagneModule(),
                         new ImportationModule())
                 .with(liaison -> {
                     liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
@@ -435,6 +442,11 @@ public final class CaptureImport {
         // capture (#2097), c'est ce que montre apercu-import-rattachement-avertissements. Le passage
         // reference son enregistreur (contrainte de cle etrangere), qu'on seme d'abord.
         new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
+        // Deux campagnes (#2631) : la liste déroulante montre un choix, et le passage déjà en base en
+        // porte une, ce qui rend la proposition observable sur la capture.
+        CampagneDao campagnes = new CampagneDao(source);
+        Campagne campagne = campagnes.insert(new Campagne(null, "Suivi ENS 2026", 2026, null));
+        campagnes.insert(new Campagne(null, "Thèse Samuel", 2025, null));
         new PassageDao(source)
                 .insert(new Passage(
                         null,
@@ -451,7 +463,9 @@ public final class CaptureImport {
                         null,
                         point.id(),
                         SERIE,
-                        null));
+                        // Rattaché à une campagne (#2631) : c'est ce passage-là que l'assistant regarde
+                        // pour proposer la même campagne à la nuit suivante sur ce point.
+                        campagne.id()));
     }
 
     /// Dossier d'exemple **standard** (chemin déterministe) : journal + relevé + deux WAV cohérents

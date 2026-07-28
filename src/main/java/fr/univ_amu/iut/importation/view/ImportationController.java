@@ -30,6 +30,7 @@ import fr.univ_amu.iut.importation.viewmodel.InspectionImportViewModel;
 import fr.univ_amu.iut.importation.viewmodel.LigneFichierImport;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.importation.viewmodel.RattachementImportViewModel;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Path;
@@ -142,6 +143,12 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
 
     @FXML
     private CheckBox caseOpportuniste;
+
+    @FXML
+    private HBox ligneCampagne;
+
+    @FXML
+    private ComboBox<Campagne> comboCampagne;
 
     @FXML
     private Label labelApercu;
@@ -377,6 +384,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 champAnnee.textProperty(), rattachement.anneeProperty(), new NumberStringConverter("0"));
         Bindings.bindBidirectional(
                 champPassage.textProperty(), rattachement.numeroPassageProperty(), new NumberStringConverter("0"));
+        SelecteurCampagne.installer(ligneCampagne, comboCampagne, rattachement);
         // Participation opportuniste (#2525) : la case pilote le drapeau du rattachement (appliqué aux
         // passages créés après import).
         caseOpportuniste.selectedProperty().bindBidirectional(rattachement.opportunisteProperty());

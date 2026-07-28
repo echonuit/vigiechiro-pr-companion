@@ -14,10 +14,12 @@ import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
+import fr.univ_amu.iut.passage.model.PropositionCampagne;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -139,16 +141,19 @@ public class ImportationViewModel {
             String idUtilisateur,
             NavigationViewModel navigation,
             PreferenceConservation conservation,
-            MarquageOpportuniste marquageOpportuniste) {
+            MarquageOpportuniste marquageOpportuniste,
+            Optional<PropositionCampagne> campagnes) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.conservation = Objects.requireNonNull(conservation, "conservation");
         this.inspection = new InspectionImportViewModel(serviceImport);
         // Sous-VM rattachement (#183) : il valide serviceSites / horloge / idUtilisateur et préremplit
         // l'année courante.
-        this.rattachement = new RattachementImportViewModel(serviceSites, horloge, idUtilisateur);
-        // Marquage opportuniste (#2525) : lit la case du rattachement, marque les passages après import.
-        this.marquageNuits = new MarquageNuitsImportees(marquageOpportuniste, rattachement::estOpportuniste);
+        this.rattachement = new RattachementImportViewModel(serviceSites, horloge, idUtilisateur, campagnes);
+        // Décisions du rattachement appliquées APRÈS import (#2525 opportuniste, #2631 campagne) : le
+        // collaborateur lit la case et la liste déroulante, puis marque et rattache les passages créés.
+        this.marquageNuits = new MarquageNuitsImportees(
+                marquageOpportuniste, rattachement::estOpportuniste, campagnes, rattachement::idCampagneRetenue);
         // Pré-contrôle R5 proactif (#108) : observe lui-même le rattachement et entretient son état.
         this.controleNumeroPassage = new ControleNumeroPassage(serviceImport, rattachement);
         // Coordination multi-nuits (#…) : s'abonne au rattachement et à la table des nuits pour

@@ -86,6 +86,20 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
         return compterSi("campaign_id = ?", idCampagne);
     }
 
+    /// Dernier passage de ce point qui porte une **campagne** (#2631), pour proposer la même à l'import
+    /// d'une nuit suivante.
+    ///
+    /// « Dernier » au sens du protocole : l'année puis le n° de passage décroissants, l'identifiant
+    /// technique départageant deux nuits de même rang. Un point dont aucun passage n'a de campagne rend
+    /// [Optional#empty()], et **ce n'est pas une anomalie** : le rattachement est facultatif.
+    public Optional<Passage> dernierAvecCampagne(Long idPoint) {
+        return queryUnique(
+                "SELECT * FROM passage WHERE point_id = ? AND campaign_id IS NOT NULL"
+                        + " ORDER BY year DESC, passage_number DESC, id DESC LIMIT 1",
+                MAPPER,
+                idPoint);
+    }
+
     /// Passages produits par un enregistreur donné.
     public List<Passage> findByEnregistreur(String idEnregistreur) {
         return query(

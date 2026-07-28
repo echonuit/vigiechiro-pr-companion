@@ -32,6 +32,7 @@ import fr.univ_amu.iut.importation.viewmodel.OngletReglagesImport;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
 import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
+import fr.univ_amu.iut.passage.model.PropositionCampagne;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -169,9 +170,17 @@ public class ImportationModule extends ModuleDeFeature {
             @Named("idUtilisateurCourant") String idUtilisateur,
             NavigationViewModel navigation,
             PreferenceConservation conservation,
-            MarquageOpportuniste marquageOpportuniste) {
+            MarquageOpportuniste marquageOpportuniste,
+            Optional<PropositionCampagne> campagnes) {
         return new ImportationViewModel(
-                serviceImport, serviceSites, horloge, idUtilisateur, navigation, conservation, marquageOpportuniste);
+                serviceImport,
+                serviceSites,
+                horloge,
+                idUtilisateur,
+                navigation,
+                conservation,
+                marquageOpportuniste,
+                campagnes);
     }
 
     /// Préférence « conserver les originaux » **partagée** (singleton) entre l'écran d'import (liaison de

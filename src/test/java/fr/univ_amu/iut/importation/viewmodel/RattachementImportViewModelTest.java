@@ -7,11 +7,14 @@ import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.passage.model.Campagne;
+import fr.univ_amu.iut.passage.model.PropositionCampagne;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,11 +35,15 @@ class RattachementImportViewModelTest {
     @Mock
     private ServiceSites serviceSites;
 
+    private static final PointDEcoute B2 = new PointDEcoute(11L, "B2", 43.6, 5.5, null, 1L);
+    private static final Campagne ENS = new Campagne(7L, "Suivi ENS", 2026, null);
+    private static final Campagne THESE = new Campagne(8L, "Thèse Samuel", 2025, null);
+
     private RattachementImportViewModel vm;
 
     @BeforeEach
     void preparer() {
-        vm = new RattachementImportViewModel(serviceSites, new HorlogeFigee(JOUR), ID_USER);
+        vm = new RattachementImportViewModel(serviceSites, new HorlogeFigee(JOUR), ID_USER, Optional.empty());
     }
 
     @Test
@@ -187,5 +194,98 @@ class RattachementImportViewModelTest {
         vm.definirOriginaux(List.of("Car999999-2025-Pass3-B2-PaRec_x.wav"));
 
         assertThat(vm.avertissementPrefixeProperty().get().present()).isFalse();
+    }
+
+    /// VM branché sur un port de campagne : `proposerPour` répond ENS sur A1, rien sur B2.
+    private RattachementImportViewModel avecCampagnes() {
+        PropositionCampagne port = new PropositionCampagne() {
+            @Override
+            public List<Campagne> campagnes() {
+                return List.of(ENS, THESE);
+            }
+
+            @Override
+            public Optional<Campagne> proposerPour(Long idPoint) {
+                return A1.id().equals(idPoint) ? Optional.of(ENS) : Optional.empty();
+            }
+
+            @Override
+            public void rattacher(long idPassage, Long idCampagne) {
+                // sans objet : ce test n'importe rien
+            }
+        };
+        return new RattachementImportViewModel(serviceSites, new HorlogeFigee(JOUR), ID_USER, Optional.of(port));
+    }
+
+    @Test
+    @DisplayName("#2631 : choisir un point propose la campagne de son dernier passage")
+    void propose_la_campagne_du_point() {
+        when(serviceSites.listerSites(ID_USER)).thenReturn(List.of(ETANG));
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1, B2));
+        RattachementImportViewModel avecCampagnes = avecCampagnes();
+        avecCampagnes.chargerSites();
+        avecCampagnes.chargerCampagnes();
+
+        avecCampagnes.siteSelectionneProperty().set(ETANG);
+        avecCampagnes.pointSelectionneProperty().set(A1);
+
+        assertThat(avecCampagnes.campagnesProposees()).containsExactly(ENS, THESE);
+        assertThat(avecCampagnes.campagneSelectionneeProperty().get()).isEqualTo(ENS);
+        assertThat(avecCampagnes.idCampagneRetenue()).isEqualTo(7L);
+    }
+
+    @Test
+    @DisplayName("#2631 : un point sans campagne n'en propose aucune, et efface celle du point précédent")
+    void point_sans_campagne_ne_propose_rien() {
+        when(serviceSites.listerSites(ID_USER)).thenReturn(List.of(ETANG));
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1, B2));
+        RattachementImportViewModel avecCampagnes = avecCampagnes();
+        avecCampagnes.chargerSites();
+        avecCampagnes.siteSelectionneProperty().set(ETANG);
+        avecCampagnes.pointSelectionneProperty().set(A1);
+
+        avecCampagnes.pointSelectionneProperty().set(B2);
+
+        assertThat(avecCampagnes.campagneSelectionneeProperty().get())
+                .as("la campagne de A1 n'a aucune raison de s'appliquer à B2")
+                .isNull();
+        assertThat(avecCampagnes.idCampagneRetenue()).isNull();
+    }
+
+    @Test
+    @DisplayName("#2631 : un choix fait à la main survit à un changement de point")
+    void choix_explicite_non_ecrase() {
+        when(serviceSites.listerSites(ID_USER)).thenReturn(List.of(ETANG));
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1, B2));
+        RattachementImportViewModel avecCampagnes = avecCampagnes();
+        avecCampagnes.chargerSites();
+        avecCampagnes.chargerCampagnes();
+        avecCampagnes.siteSelectionneProperty().set(ETANG);
+        avecCampagnes.pointSelectionneProperty().set(B2); // rien de proposé ici
+
+        // L'utilisateur tranche lui-même, puis change de point : A1 propose ENS.
+        avecCampagnes.campagneSelectionneeProperty().set(THESE);
+        avecCampagnes.marquerCampagneChoisie();
+        avecCampagnes.pointSelectionneProperty().set(A1);
+
+        assertThat(avecCampagnes.campagneSelectionneeProperty().get())
+                .as("deviner est un service, écraser une décision est une faute")
+                .isEqualTo(THESE);
+    }
+
+    @Test
+    @DisplayName("#2631 : fonctionnalité coupée, ni liste ni proposition ni campagne retenue")
+    void campagne_coupee() {
+        when(serviceSites.listerSites(ID_USER)).thenReturn(List.of(ETANG));
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1));
+        vm.chargerSites();
+        vm.chargerCampagnes();
+
+        vm.siteSelectionneProperty().set(ETANG);
+        vm.pointSelectionneProperty().set(A1);
+
+        assertThat(vm.campagneActivee()).isFalse();
+        assertThat(vm.campagnesProposees()).isEmpty();
+        assertThat(vm.idCampagneRetenue()).isNull();
     }
 }

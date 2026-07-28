@@ -127,6 +127,16 @@ public class ServiceCampagne {
         return passageDao.compterParCampagne(idCampagne);
     }
 
+    /// Campagne du **dernier passage** de ce point (#2631), ou [Optional#empty()] si aucun n'en porte.
+    ///
+    /// Sert à *proposer* un rattachement à l'import, jamais à l'imposer : c'est le suivi qui porte la
+    /// campagne, et deux nuits d'affilée sur un même point en relèvent presque toujours. L'absence de
+    /// proposition est un cas **normal**, pas un défaut à signaler.
+    public Optional<Campagne> derniereCampagneDuPoint(Long idPoint) {
+        Objects.requireNonNull(idPoint, "idPoint");
+        return passageDao.dernierAvecCampagne(idPoint).map(Passage::idCampagne).flatMap(campagneDao::findById);
+    }
+
     /// La campagne à laquelle un passage est rattaché, ou [Optional#empty()] s'il ne l'est pas (ou si
     /// le passage est introuvable). Sert à pré-sélectionner la modale « Modifier le passage ».
     public Optional<Campagne> campagneDePassage(Long idPassage) {

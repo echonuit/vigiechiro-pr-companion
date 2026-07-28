@@ -11,10 +11,14 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.Campagne;
+import fr.univ_amu.iut.passage.model.PropositionCampagne;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.viewmodel.GestionCampagnesViewModel;
+import java.util.List;
+import java.util.Optional;
 
 /// Module Guice de la feature `campagne` (#2355) : assemble [CampagneDao] et [ServiceCampagne]. Vit
 /// dans `passage/di` à côté de [ReconstructionModule] et [SynchronisationParticipationModule] : même
@@ -41,6 +45,13 @@ public class CampagneModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), ServiceCampagne.class)
                 .setBinding()
                 .to(Key.get(ServiceCampagne.class, Names.named("campagne.impl")));
+
+        // Port étroit consommé par `importation` (#2631) : proposer une campagne à l'import et
+        // rattacher les nuits créées, sans livrer tout ServiceCampagne. Le défaut vide est déclaré
+        // par PassageModule, toujours chargé.
+        OptionalBinder.newOptionalBinder(binder(), PropositionCampagne.class)
+                .setBinding()
+                .to(Key.get(PropositionCampagne.class, Names.named("campagne.proposition")));
     }
 
     @Provides
@@ -64,5 +75,29 @@ public class CampagneModule extends ModuleDeFeature {
     @Provides
     GestionCampagnesViewModel fournirGestionCampagnesViewModel(@Named("campagne.impl") ServiceCampagne service) {
         return new GestionCampagnesViewModel(service);
+    }
+
+    /// Implémentation du port [PropositionCampagne] (#2631), adossée au service : trois délégations,
+    /// aucune règle de plus. `importation` consomme ce port plutôt que tout [ServiceCampagne].
+    @Provides
+    @Singleton
+    @Named("campagne.proposition")
+    PropositionCampagne fournirPropositionCampagne(@Named("campagne.impl") ServiceCampagne service) {
+        return new PropositionCampagne() {
+            @Override
+            public List<Campagne> campagnes() {
+                return service.listerCampagnes();
+            }
+
+            @Override
+            public Optional<Campagne> proposerPour(Long idPoint) {
+                return service.derniereCampagneDuPoint(idPoint);
+            }
+
+            @Override
+            public void rattacher(long idPassage, Long idCampagne) {
+                service.rattacherPassage(idPassage, idCampagne);
+            }
+        };
     }
 }
