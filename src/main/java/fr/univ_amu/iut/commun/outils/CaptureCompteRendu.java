@@ -142,7 +142,11 @@ public final class CaptureCompteRendu {
     private static CompteRenduChiffre sansRejet() {
         return new CompteRenduChiffre(
                 "Import terminé - nuit du 20/06/2026, carré 640380 · A1",
-                "584 / 584 importés",
+                // « 584 importés », et non « 584 / 584 » : la traduction refuse d'afficher un écart qui
+                // n'existe pas, parce qu'un « 584 / 584 » fait chercher la différence. La capture disait
+                // pourtant l'inverse - une donnée de démonstration qui contredisait la règle du produit,
+                // vue à la revue visuelle de la clôture.
+                "584 importés",
                 Severite.SUCCES,
                 volumes(),
                 new Ventilation(
