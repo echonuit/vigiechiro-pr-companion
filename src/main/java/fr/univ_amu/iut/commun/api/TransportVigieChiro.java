@@ -11,6 +11,8 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -71,17 +73,29 @@ final class TransportVigieChiro {
 
     /// **GET authentifié** sur `chemin` (relatif à la base), trié : succès (2xx, corps), non connecté
     /// (pas de jeton : l'appel n'a pas lieu), injoignable (réseau, délai) ou refusé (statut + corps).
-    ReponseApi<String> lire(String chemin) {
+    ReponseApi<String> lire(String chemin, PolitiqueReessai.Profil profil) {
+        return lire(chemin, profil, SuiviReprise.SILENCIEUX, null);
+    }
+
+    /// Variante **réessayée et renonçable** (#2619) : `suivi` est prévenu avant chaque nouvelle tentative,
+    /// et `jeton` - le drapeau d'annulation coopératif de l'appelant, ou `null` s'il n'en offre pas - est
+    /// consulté pendant les temporisations. Sans lui, une reprise serait un trou où « Annuler » ne serait
+    /// pas honoré, alors qu'un balayage paginé le relaie précisément page par page (#1522).
+    ReponseApi<String> lire(String chemin, PolitiqueReessai.Profil profil, SuiviReprise suivi, BooleanSupplier jeton) {
         Optional<String> entete = enteteAuthorization();
         if (entete.isEmpty()) {
             return ReponseApi.nonConnecte();
         }
-        return emettre(() -> HttpRequest.newBuilder(URI.create(baseUrl + chemin))
-                .timeout(DELAI)
-                .header("Authorization", entete.get())
-                .header("Accept", TYPE_JSON)
-                .GET()
-                .build());
+        Supplier<PolitiqueReessai.Issue<String>> tentative =
+                () -> uneLecture(() -> HttpRequest.newBuilder(URI.create(baseUrl + chemin))
+                        .timeout(DELAI)
+                        .header("Authorization", entete.get())
+                        .header("Accept", TYPE_JSON)
+                        .GET()
+                        .build());
+        return jeton == null
+                ? politique.executer(profil, suivi, tentative)
+                : politique.executer(profil, suivi, jeton, tentative);
     }
 
     /// Écriture authentifiée (`POST` / `PATCH`) d'un corps JSON sur `chemin`, triée comme [#lire]. Si
@@ -108,9 +122,14 @@ final class TransportVigieChiro {
 
     /// Télécharge une URL **déjà signée** (S3, #1132) : aucun en-tête `Authorization` (S3 refuse une
     /// authentification surnuméraire, la signature de l'URL fait foi), donc jamais « non connecté ».
-    ReponseApi<String> telecharger(String url) {
-        return emettre(() ->
-                HttpRequest.newBuilder(URI.create(url)).timeout(DELAI).GET().build());
+    ReponseApi<String> telecharger(String url, PolitiqueReessai.Profil profil) {
+        return politique.executer(
+                profil,
+                SuiviReprise.SILENCIEUX,
+                () -> uneLecture(() -> HttpRequest.newBuilder(URI.create(url))
+                        .timeout(DELAI)
+                        .GET()
+                        .build()));
     }
 
     /// Requête à émettre, construite au dernier moment (sa construction même peut échouer).
@@ -123,6 +142,13 @@ final class TransportVigieChiro {
     /// interruption ou une panne (réseau, DNS, TLS, délai) devient [ReponseApi.Injoignable] avec sa cause :
     /// plus jamais un silence indistinct.
     private ReponseApi<String> emettre(RequeteAEmettre requete) {
+        return uneLecture(requete).reponse();
+    }
+
+    /// Une **unique** émission, rendue **avec** le délai que le serveur a éventuellement imposé
+    /// (`Retry-After`) : c'est ce que la politique de réessai attend pour qu'un `429` soit respecté plutôt
+    /// que deviné. Le pendant de [#uneDepose] pour tout ce qui n'est pas un `PUT` S3.
+    private PolitiqueReessai.Issue<String> uneLecture(RequeteAEmettre requete) {
         long debut = System.nanoTime();
         String methode = "?";
         String chemin = "?";
@@ -130,18 +156,19 @@ final class TransportVigieChiro {
             HttpRequest envoi = requete.requete();
             methode = envoi.method();
             chemin = envoi.uri().getPath();
-            ReponseApi<String> reponse = triage(client.send(envoi, HttpResponse.BodyHandlers.ofString()));
+            HttpResponse<String> http = client.send(envoi, HttpResponse.BodyHandlers.ofString());
+            ReponseApi<String> reponse = triage(http);
             journaliser(methode, chemin, reponse, debut, null);
-            return reponse;
+            return new PolitiqueReessai.Issue<>(reponse, retryAfter(http));
         } catch (InterruptedException interrompu) {
             Thread.currentThread().interrupt();
             ReponseApi<String> reponse = ReponseApi.injoignable("appel interrompu");
             journaliser(methode, chemin, reponse, debut, interrompu);
-            return reponse;
+            return PolitiqueReessai.Issue.de(reponse);
         } catch (RuntimeException | IOException indisponible) {
             ReponseApi<String> reponse = ReponseApi.injoignable(cause(indisponible));
             journaliser(methode, chemin, reponse, debut, indisponible);
-            return reponse;
+            return PolitiqueReessai.Issue.de(reponse);
         }
     }
 

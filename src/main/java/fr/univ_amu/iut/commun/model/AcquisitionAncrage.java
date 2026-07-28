@@ -60,10 +60,21 @@ public final class AcquisitionAncrage {
     /// Suivi **page par page** : le rapatriement des `donnees` compte des dizaines de pages ; sans relais
     /// la barre resterait figée plusieurs minutes, et « Annuler » ne se lèverait qu'à la fin.
     private static SuiviPagination suivi(Consumer<Progression> progres, JetonAnnulation jeton) {
-        return (page, totalPages) -> {
-            jeton.leverSiAnnule();
-            double fraction = Math.min(page, totalPages) / (double) Math.max(totalPages, 1);
-            progres.accept(new Progression(LIBELLE + " (page " + page + "/" + totalPages + ")", fraction));
+        return new SuiviPagination() {
+            @Override
+            public void surPage(int page, int totalPages) {
+                jeton.leverSiAnnule();
+                double fraction = Math.min(page, totalPages) / (double) Math.max(totalPages, 1);
+                progres.accept(new Progression(LIBELLE + " (page " + page + "/" + totalPages + ")", fraction));
+            }
+
+            /// Le drapeau est **aussi** lu pendant les temporisations de réessai (#2619) : depuis que les
+            /// lectures réessaient, une reprise dure plusieurs secondes, et « Annuler » y disparaîtrait
+            /// entre deux pages. C'est la même raison qui avait fait naître ce relais page par page.
+            @Override
+            public boolean renonce() {
+                return jeton.estAnnule();
+            }
         };
     }
 }

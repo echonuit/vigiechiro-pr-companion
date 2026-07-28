@@ -68,14 +68,22 @@ public final class ClientVigieChiro {
     /// Profil de l'utilisateur connecté (`GET /moi`), **trié** (#1284) : un jeton refusé (`401`)
     /// revient en `Refuse`, une panne en `Injoignable` — la modale de connexion peut enfin cesser
     /// d'annoncer « jeton invalide » quand c'est le réseau qui est coupé.
+    /// Réessai **minimal** (#2619) : quelqu'un fixe la modale de connexion, et échouer ne coûte rien -
+    /// on reclique. Insister ferait passer un serveur injoignable de 10 s d'échec net à trois quarts de
+    /// minute de fenêtre figée, ce qui est un recul, pas un progrès.
     public ReponseApi<ProfilVigieChiro> moi() {
-        return transport.lire("/moi").lireAvec(ReponsesVigieChiro::profil);
+        return transport.lire("/moi", PolitiqueReessai.Profil.ARRIERE_PLAN).lireAvec(ReponsesVigieChiro::profil);
     }
 
     /// Référentiel officiel des taxons (`GET /taxons/liste`, résumé non paginé : `_id` + libellés),
     /// **trié** (#1284) : les rapprocheurs peuvent enfin dire pourquoi rien n'a été synchronisé.
+    /// Réessai **insistant** (#2619) : cette lecture ouvre un rapprochement ou une synchro, et la rater
+    /// fait échouer tout ce qui suit sans que personne ne la regarde elle. Le référentiel n'est demandé
+    /// qu'une fois par opération : il n'y a pas de « prochaine passe » pour rattraper.
     public ReponseApi<List<TaxonVigieChiro>> taxons() {
-        return transport.lire("/taxons/liste").transformer(ReponsesVigieChiro::taxons);
+        return transport
+                .lire("/taxons/liste", PolitiqueReessai.Profil.BALAYAGE)
+                .transformer(ReponsesVigieChiro::taxons);
     }
 
     /// **Carré STOC officiel** d'une position (`GET /grille_stoc/cercle`, #733) : le carré de la grille
@@ -94,7 +102,12 @@ public final class ClientVigieChiro {
     /// carré — c'est ce qui permet à l'appelant de se taire au lieu d'accuser à tort.
     public ReponseApi<Optional<String>> carreStoc(double latitude, double longitude) {
         String requete = "/grille_stoc/cercle?lng=" + longitude + "&lat=" + latitude + "&r=" + RAYON_CARRE_STOC_METRES;
-        return transport.lire(requete).transformer(ReponsesVigieChiro::numeroCarreStoc);
+        // Réessai minimal (#2619) : l'écran de création de site attend cette réponse, et le produit sait
+        // déjà se taire quand elle n'arrive pas (issue triée). Une attente longue vaut moins qu'un « je
+        // ne sais pas » rapide, puisque la saisie du carré reste possible à la main.
+        return transport
+                .lire(requete, PolitiqueReessai.Profil.ARRIERE_PLAN)
+                .transformer(ReponsesVigieChiro::numeroCarreStoc);
     }
 
     /// Sites rattachés à l'observateur, **dérivés de ses participations** (`GET /moi/participations`),
@@ -128,16 +141,24 @@ public final class ClientVigieChiro {
 
     /// Corps JSON **trié** de la page `page` de `GET /moi/participations` : source commune des sites et
     /// des participations, parcourue **toutes pages confondues** via [PaginationEve] (#1150).
+    /// Réessai **insistant** (#2619) : une page ratée fait échouer le parcours entier, et le compte se
+    /// retraverse depuis la première page.
     private ReponseApi<String> pageParticipations(int page) {
-        return transport.lire(CHEMIN_MOI_PARTICIPATIONS + PaginationEve.requete(page));
+        return transport.lire(
+                CHEMIN_MOI_PARTICIPATIONS + PaginationEve.requete(page), PolitiqueReessai.Profil.BALAYAGE);
     }
 
     /// Participation **détaillée** (`GET /participations/#id`, axe 4) : `_etag` (pour un `PATCH` `If-Match`
     /// concurrent-sûr), dates, météo, configuration matérielle et état du traitement Tadarida. Issue
     /// **triée** (#1284) : une participation inconnue revient en `Refuse(404)`, une panne en
     /// `Injoignable`, l'absence de jeton en `NonConnecte` — plus jamais un même « vide ».
+    /// Réessai **modéré** (#2619) : lecture unitaire, mais elle sert surtout à obtenir l'`_etag` frais
+    /// d'un `PATCH` qui suit immédiatement. La rater, c'est faire échouer une écriture déjà décidée -
+    /// quelqu'un attend, et le coût n'est pas nul.
     public ReponseApi<ParticipationDetail> participation(String id) {
-        return transport.lire(CHEMIN_PARTICIPATIONS + id).lireAvec(ParticipationsVigieChiro::detail);
+        return transport
+                .lire(CHEMIN_PARTICIPATIONS + id, PolitiqueReessai.Profil.PREMIER_PLAN)
+                .lireAvec(ParticipationsVigieChiro::detail);
     }
 
     /// Résultats Tadarida d'une participation (`GET /participations/#id/donnees`, #719, axe 4.2) : les
@@ -156,8 +177,16 @@ public final class ClientVigieChiro {
     public ReponseApi<List<DonneeVigieChiro>> donnees(String participationId, SuiviPagination suivi) {
         return PaginationEve.parcourir(
                 PAGES_MAX,
+                // Réessai insistant (#2619) : c'est le balayage qui a motivé l'issue. Sur quarante nuits,
+                // une seule coupure momentanée suffisait à faire ressortir une nuit « non récupérée »,
+                // alors que la politique existait et l'aurait absorbée. Le renoncement de l'appelant est
+                // consulté pendant les temporisations : sans lui, « Annuler » disparaîtrait dans une
+                // reprise, ce que le relais page par page avait justement corrigé (#1522).
                 page -> transport.lire(
-                        CHEMIN_PARTICIPATIONS + participationId + "/donnees" + PaginationEve.requete(page)),
+                        CHEMIN_PARTICIPATIONS + participationId + "/donnees" + PaginationEve.requete(page),
+                        PolitiqueReessai.Profil.BALAYAGE,
+                        SuiviReprise.SILENCIEUX,
+                        suivi::renonce),
                 DonneesVigieChiro::donnees,
                 suivi);
     }
@@ -172,8 +201,11 @@ public final class ClientVigieChiro {
     /// ou un refus, qui gardent leur cause (la vérification d'un dépôt hors ligne n'est plus un faux
     /// « tout manquant »).
     public ReponseApi<Optional<String>> journalTraitement(String participationId) {
+        // Réessai insistant (#2619) : maillon d'une chaîne de trois appels (participation → id du
+        // journal → URL signée → S3). Rater un maillon fait recommencer la chaîne entière, et rien
+        // n'attend cette lecture-là en particulier.
         return transport
-                .lire(CHEMIN_PARTICIPATIONS + participationId)
+                .lire(CHEMIN_PARTICIPATIONS + participationId, PolitiqueReessai.Profil.BALAYAGE)
                 .puis(corps -> JournalVigieChiro.idJournal(corps)
                         .map(idFichier -> accesFichier(idFichier).transformer(Optional::of))
                         .orElseGet(() -> ReponseApi.succes(Optional.empty())));
@@ -186,10 +218,13 @@ public final class ClientVigieChiro {
     /// Issue **triée** (#1284) : un fichier indisponible (`disponible:false`) revient en `Refuse(410)`,
     /// une panne en `Injoignable`.
     public ReponseApi<String> accesFichier(String fichierId) {
+        // Réessai insistant des deux bouts (#2619) : l'URL signée puis le téléchargement S3. C'est le
+        // chemin du CSV d'une nuit - le balayage en télécharge un par nuit, et perdre celui-ci coûte de
+        // refaire la nuit entière.
         return transport
-                .lire(CHEMIN_FICHIERS + "/" + fichierId + "/acces")
+                .lire(CHEMIN_FICHIERS + "/" + fichierId + "/acces", PolitiqueReessai.Profil.BALAYAGE)
                 .lireAvec(ReponsesVigieChiro::urlSignee)
-                .puis(transport::telecharger);
+                .puis(url -> transport.telecharger(url, PolitiqueReessai.Profil.BALAYAGE));
     }
 
     /// **Fichiers rattachés** à une participation, filtrés par type (`GET
@@ -198,8 +233,12 @@ public final class ClientVigieChiro {
     /// collection `/fichiers` n'est pas listable pour un observateur, `403`). Issue **triée** (#1284) ;
     /// une liste vide signifie « le serveur répond, aucun fichier de ce type (encore) ».
     public ReponseApi<List<PieceJointe>> piecesJointes(String participationId, TypePieceJointe filtre) {
+        // Réessai insistant (#2619) : seule voie vers le `_id` d'un fichier, donc premier maillon du
+        // téléchargement d'un CSV de nuit. La rater rend tout le reste inatteignable.
         return transport
-                .lire(CHEMIN_PARTICIPATIONS + participationId + "/pieces_jointes?" + filtre.parametre() + "=true")
+                .lire(
+                        CHEMIN_PARTICIPATIONS + participationId + "/pieces_jointes?" + filtre.parametre() + "=true",
+                        PolitiqueReessai.Profil.BALAYAGE)
                 .transformer(PiecesJointesVigieChiro::pieces);
     }
 
