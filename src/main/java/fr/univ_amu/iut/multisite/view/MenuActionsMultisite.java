@@ -38,7 +38,8 @@ final class MenuActionsMultisite {
             MenuItem reculerAnalyses,
             MenuItem preparerSelection,
             MenuItem televerserSelection,
-            MenuItem importerResultatsSelection) {}
+            MenuItem importerResultatsSelection,
+            MenuItem declencherCalculSelection) {}
 
     private MenuActionsMultisite() {}
 
@@ -105,6 +106,14 @@ final class MenuActionsMultisite {
                 "Importer les résultats des ",
                 "Importer les résultats de la ligne cochée…",
                 "Importer les résultats de la sélection… (aucune ligne cochée)");
+        entrees.declencherCalculSelection()
+                .setVisible(actions.declencherCalcul().isPresent());
+        surLaSelection(
+                entrees.declencherCalculSelection(),
+                nombreSelectionne,
+                "Déclencher le calcul des ",
+                "Déclencher le calcul de la ligne cochée…",
+                "Déclencher le calcul de la sélection… (aucune ligne cochée)");
     }
 
     /// Grisage et libellé d'une action de lot : le texte porte l'état de la sélection.

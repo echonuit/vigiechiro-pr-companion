@@ -162,6 +162,7 @@ class MultisiteVueIntegrationTest {
                         .toInstance(new ActionsDeLot(
                                 Optional.of(mock(ActionGroupee.class)),
                                 Optional.of(mock(ActionGroupee.class)),
+                                Optional.of(mock(ActionGroupee.class)),
                                 Optional.of(mock(ActionGroupee.class))));
                 bind(OuvrirAudio.class).toInstance(source -> {});
                 bind(DepotVues.class).toInstance(depotVues);
