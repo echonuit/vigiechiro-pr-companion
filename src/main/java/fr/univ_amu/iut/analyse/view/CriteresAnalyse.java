@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.view;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
@@ -35,6 +36,11 @@ final class CriteresAnalyse {
     /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par catégorie.
     private static final String GROUPE = "groupe";
 
+    /// Catégories du référentiel qui ne sont pas des chiroptères : la même liste que sur l'écran Activité
+    /// de la nuit, les deux vues partageant la matière (#2615).
+    private static final List<String> HORS_CHIROPTERES =
+            List.of("Orthoptères et cigales", "Autres mammifères", "Oiseaux", "Autres invertébrés", "Amphibiens");
+
     private CriteresAnalyse() {}
 
     /// Vues **par défaut** (lecture seule) de l'inventaire analyse, rendues comme onglets avant les vues de
@@ -60,9 +66,7 @@ final class CriteresAnalyse {
                         "À valider", new DescripteurCritere(STATUT, List.of(StatutObservation.NON_TOUCHEE.name()))),
                 vueParDefaut("Validées", new DescripteurCritere(STATUT, List.of(StatutObservation.VALIDEE.name()))),
                 vueParDefaut("Chiroptères", new DescripteurCritere(GROUPE, List.of("Chiroptères"))),
-                vueParDefaut(
-                        "Orthoptères et cigales", new DescripteurCritere(GROUPE, List.of("Orthoptères et cigales"))),
-                vueParDefaut("Autres mammifères", new DescripteurCritere(GROUPE, List.of("Autres mammifères"))));
+                vueParDefaut("Autres", new DescripteurCritere(GROUPE, HORS_CHIROPTERES)));
     }
 
     /// Une vue par défaut de cet écran : délégation à la fabrique partagée [VuesParDefaut] (#1257).
@@ -112,45 +116,12 @@ final class CriteresAnalyse {
         };
     }
 
-    /// Critère **Taxon parent** (groupe, #518) : éditeur = liste déroulante des groupes **présents dans
-    /// l'inventaire** (fournis par `groupesPresents`, lus à l'ajout de la puce), **sans présélection**.
+    /// Critère **Taxon parent** (groupe, #518) : éditeur à **choix multiple** sur les groupes présents
+    /// dans l'inventaire, sans présélection. Le multiple sert l'onglet « Autres », qui cumule les
+    /// catégories non-chiroptères (#2615).
     static CritereFiltre<ObservationAnalyse> groupe(Supplier<? extends List<String>> groupesPresents) {
-        return new CritereFiltre<ObservationAnalyse>() {
-            @Override
-            public String nom() {
-                return GROUPE;
-            }
-
-            @Override
-            public String libelle() {
-                return "Taxon parent";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<ObservationAnalyse>> applique) {
-                ComboBox<String> choix = new ComboBox<>();
-                choix.getItems().setAll(groupesPresents.get());
-                choix.setPromptText("Choisir un taxon parent");
-                choix.valueProperty()
-                        .addListener((obs, avant, groupe) ->
-                                applique.accept(groupe == null ? o -> true : o -> groupe.equals(o.groupe())));
-                applique.accept(o -> true); // pas de présélection : n'écarte rien tant qu'un groupe n'est pas choisi
-                return choix;
-            }
-
-            @Override
-            public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of((String) valeur);
-            }
-
-            @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (!valeurs.isEmpty()) {
-                    selectionnerParValeur(editeur, valeurs.get(0));
-                }
-            }
-        };
+        return CritereListe.multiple(
+                GROUPE, "Taxon parent", "Choisir un taxon parent", groupesPresents, ObservationAnalyse::groupe);
     }
 
     /// **Recherche texte** de la barre : vrai si un des champs cherchables d'une observation (taxon retenu,

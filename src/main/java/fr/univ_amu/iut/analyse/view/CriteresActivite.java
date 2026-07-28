@@ -4,6 +4,7 @@ import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import java.util.List;
@@ -27,6 +28,13 @@ final class CriteresActivite {
     /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par défaut.
     private static final String GROUPE = "groupe";
 
+    /// Les catégories du référentiel qui ne sont **pas** des chiroptères. Énumérées, et non exprimées par
+    /// une négation : le filtre dit alors ce qu'il **retient**, ce qui se lit dans la puce et se rejoue
+    /// dans une vue mémorisée. Contrepartie assumée — une catégorie ajoutée un jour au référentiel devra
+    /// être inscrite ici (#2615).
+    private static final List<String> HORS_CHIROPTERES =
+            List.of("Orthoptères et cigales", "Autres mammifères", "Oiseaux", "Autres invertébrés", "Amphibiens");
+
     private CriteresActivite() {}
 
     /// Critère **Carré** : liste déroulante des carrés présents (fournis par `carresPresents`, lus à l'ajout
@@ -48,7 +56,10 @@ final class CriteresActivite {
 
     /// Critère **Taxon parent** (groupe) : liste déroulante des groupes présents, sans présélection.
     static CritereFiltre<ContactHoraire> groupe(Supplier<? extends List<String>> groupesPresents) {
-        return liste(GROUPE, "Taxon parent", "Choisir un taxon parent", groupesPresents, ContactHoraire::groupe);
+        // Choix MULTIPLE sur cette dimension seule : c'est elle que l'onglet « Autres » cumule
+        // (orthoptères, micromammifères, oiseaux…), là où un carré ou une nuit se choisissent un à un.
+        return CritereListe.multiple(
+                GROUPE, "Taxon parent", "Choisir un taxon parent", groupesPresents, ContactHoraire::groupe);
     }
 
     private static String libelleNuit(ContactHoraire contact) {
@@ -116,9 +127,7 @@ final class CriteresActivite {
         return List.of(
                 vueParDefaut("Tout"),
                 vueParDefaut("Chiroptères", new DescripteurCritere(GROUPE, List.of("Chiroptères"))),
-                vueParDefaut(
-                        "Orthoptères et cigales", new DescripteurCritere(GROUPE, List.of("Orthoptères et cigales"))),
-                vueParDefaut("Autres mammifères", new DescripteurCritere(GROUPE, List.of("Autres mammifères"))));
+                vueParDefaut("Autres", new DescripteurCritere(GROUPE, HORS_CHIROPTERES)));
     }
 
     private static VueSauvegardee vueParDefaut(String nom, DescripteurCritere... criteres) {
