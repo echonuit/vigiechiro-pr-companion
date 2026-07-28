@@ -353,7 +353,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                 menuAjoutFiltre,
                 pucesFiltres,
                 viewModel.filtres(),
-                List.of(CriteresAnalyse.statut(), CriteresAnalyse.groupe(viewModel::groupesDisponibles)),
+                List.of(
+                        CriteresAnalyse.statut(),
+                        CriteresAnalyse.groupe(viewModel::groupesDisponibles),
+                        CriteresAnalyse.natureNuit(viewModel::nuitsOpportunistes)),
                 CriteresAnalyse.rechercheTexte());
         // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur. La vue
         // capture aussi la disposition des colonnes des trois tables (#994), via l'adaptateur du sélecteur.

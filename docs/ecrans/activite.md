@@ -23,10 +23,22 @@ L'écran réunit :
   un pas large lisse la forme générale ;
 - une **case par espèce** détectée, avec son total ; les **cinq plus contactées** sont cochées par
   défaut, au-delà le graphe devient illisible ;
-- une **barre de filtres** (carré, point, nuit, taxon parent, recherche libre) : filtrer re-trace ;
-- des **onglets** qui séparent les catégories du référentiel — chiroptères, orthoptères et cigales,
-  autres mammifères —, parce que le détecteur ne repère pas que des chauves-souris. Vos propres vues
-  s'enregistrent à côté, avec « + Vue ».
+- une **barre de filtres** (carré, point, nuit, taxon parent, nature de la nuit, recherche libre) :
+  filtrer re-trace ;
+- des **onglets** qui séparent les chiroptères du reste — le détecteur ne repère pas que des
+  chauves-souris, et « Autres » réunit orthoptères, micromammifères, oiseaux et le reste du
+  référentiel. Vos propres vues s'enregistrent à côté, avec « + Vue ».
+
+## Les nuits opportunistes
+
+Une **participation opportuniste** est une nuit enregistrée sur le carré de quelqu'un d'autre, quand
+l'occasion se présente : elle échappe aux règles de calendrier du protocole et ne compte pas dans
+votre solde de saison.
+
+Ces nuits **restent affichées** ici : ce que vous avez entendu, vous l'avez entendu. Mais elles ne se
+comparent pas aux autres, alors le filtre **« Nature de la nuit »** permet de ne garder que l'une des
+deux lectures — « Protocole » ou « Opportuniste ». Une nuit sans marquage relève du protocole, qui
+est le cas courant.
 
 ## La nuit biologique
 

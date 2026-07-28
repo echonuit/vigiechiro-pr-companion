@@ -34,6 +34,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -179,6 +180,22 @@ class AnalyseViewTest {
                 "Chiroptères",
                 StatutObservation.VALIDEE,
                 42L,
+                2026,
+                "640380",
+                "Étang",
+                1L);
+    }
+
+    /// Variante rattachée à un **passage donné** : pour distinguer une nuit du protocole d'une nuit
+    /// opportuniste (#2614), qui ne se lisent que par leur passage.
+    private static ObservationAnalyse obsDuPassage(String taxon, String vern, long idPassage) {
+        return new ObservationAnalyse(
+                taxon,
+                taxon + " (latin)",
+                vern,
+                "Chiroptères",
+                StatutObservation.VALIDEE,
+                idPassage,
                 2026,
                 "640380",
                 "Étang",
@@ -544,6 +561,40 @@ class AnalyseViewTest {
         assertThat(zoneCarte.isVisible()).isFalse();
         assertThat(especes.isVisible()).isTrue();
         assertThat(boutonCarte.getText()).contains("Carte");
+    }
+
+    @Test
+    @DisplayName("#2614 : le filtre « Nature de la nuit » écarte les observations des nuits opportunistes")
+    void filtre_nature_de_la_nuit_via_la_barre_a_puces(FxRobot robot) {
+        // Deux espèces sur deux passages : l'un du protocole, l'autre réalisé sur le carré d'un tiers.
+        when(service.observationsAnalyse(anyString()))
+                .thenReturn(List.of(
+                        obsAnalyse("Pippip", "Pipistrelle commune"), obsDuPassage("Barbar", "Barbastelle", 77L)));
+        when(service.nuitsOpportunistes()).thenReturn(Set.of(77L));
+        robot.interact(() -> controleur.rafraichirAuRetour());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        assertThat(especes.getItems()).as("les deux espèces sont là au départ").hasSize(2);
+
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        MenuItem itemNature = menuAjout.getItems().stream()
+                .filter(item -> "Nature de la nuit".equals(item.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(itemNature::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        @SuppressWarnings("unchecked")
+        ComboBox<String> choixNature =
+                (ComboBox<String>) robot.from(puces).lookup(".combo-box").queryAs(ComboBox.class);
+        robot.interact(() -> choixNature.setValue("Protocole"));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(especes.getItems())
+                .as("la nuit opportuniste ne compte pas comme une nuit du protocole")
+                .hasSize(1);
     }
 
     @Test

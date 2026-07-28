@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.analyse.model;
 
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
+import fr.univ_amu.iut.passage.model.NuitsOpportunistes;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /// Service de la feature **`analyse`** (prisme « Espèces & biodiversité ») : expose la **lecture
 /// transverse** des observations de l'utilisateur, pour répondre à « quelles espèces, où, combien ». Pur
@@ -24,9 +26,18 @@ import java.util.Objects;
 public class ServiceAnalyse {
 
     private final ProjectionsAnalyseDao observationDao;
+    private final NuitsOpportunistes nuitsOpportunistes;
 
-    public ServiceAnalyse(ProjectionsAnalyseDao observationDao) {
+    public ServiceAnalyse(ProjectionsAnalyseDao observationDao, NuitsOpportunistes nuitsOpportunistes) {
         this.observationDao = Objects.requireNonNull(observationDao, "observationDao");
+        this.nuitsOpportunistes = Objects.requireNonNull(nuitsOpportunistes, "nuitsOpportunistes");
+    }
+
+    /// Les passages marqués **opportunistes** (#2525), pour la dimension de filtre « Nature de la nuit »
+    /// (#2614) : une nuit réalisée sur le carré d'un tiers ne compte pas comme une nuit du protocole.
+    /// Lecture groupée, dont le ViewModel garde un instantané le temps d'un chargement.
+    public Set<Long> nuitsOpportunistes() {
+        return nuitsOpportunistes.identifiants();
     }
 
     /// **Observations enrichies** de l'utilisateur (#537 étape 4) : la matière **filtrée et agrégée côté

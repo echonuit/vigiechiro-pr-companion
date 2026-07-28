@@ -176,7 +176,8 @@ public class ActiviteController implements EmplacementNavigation {
                         CriteresActivite.carre(viewModel::carresDisponibles),
                         CriteresActivite.point(viewModel::pointsDisponibles),
                         CriteresActivite.nuit(viewModel::nuitsDisponibles),
-                        CriteresActivite.groupe(viewModel::groupesDisponibles)),
+                        CriteresActivite.groupe(viewModel::groupesDisponibles),
+                        CriteresActivite.natureNuit(viewModel::nuitsOpportunistes)),
                 CriteresActivite.rechercheTexte());
 
         // Onglets de vues (#623) : les vues par défaut partitionnent par catégorie du référentiel, et

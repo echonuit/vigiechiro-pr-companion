@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.LongSummaryStatistics;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -59,6 +60,12 @@ public class ActiviteViewModel {
     private final ObservableList<String> nuitsDisponibles = FXCollections.observableArrayList();
     private final ObjectProperty<PlageNuit> plageNuit = new SimpleObjectProperty<>();
 
+    /// Instantané **immuable** des passages marqués opportunistes (#2614), remplacé à chaque chargement.
+    /// Le critère « Nature de la nuit » le consulte une fois par contact filtré : un ensemble déjà en
+    /// mémoire, sans copie ni requête par ligne. `volatile` parce que le chargement peut venir d'un autre
+    /// fil que celui qui filtre (#1208).
+    private volatile Set<Long> nuitsOpportunistes = Set.of();
+
     /// Fenêtre **réellement enregistrée** du passage chargé, ou `null` en vue transverse (plusieurs nuits,
     /// donc plusieurs fenêtres). Borne la plage sur laquelle une tranche sans contact vaut zéro.
     private FenetreObserveeNuit.Bornes fenetreEnregistree;
@@ -95,6 +102,7 @@ public class ActiviteViewModel {
 
     private void remplacerContacts(List<ContactHoraire> contacts, PlageNuit fenetre) {
         tous.setAll(contacts);
+        nuitsOpportunistes = Set.copyOf(service.nuitsOpportunistes());
         groupesDisponibles.setAll(valeursDistinctes(ContactHoraire::groupe));
         carresDisponibles.setAll(valeursDistinctes(ContactHoraire::numeroCarre));
         pointsDisponibles.setAll(valeursDistinctes(ContactHoraire::codePoint));
@@ -178,6 +186,12 @@ public class ActiviteViewModel {
     /// « Taxon parent ».
     public ObservableList<String> groupesDisponibles() {
         return groupesDisponibles;
+    }
+
+    /// Passages marqués **opportunistes** (#2525) parmi ceux chargés : lus par le critère « Nature de la
+    /// nuit » pour classer chaque contact. Instantané en mémoire, consultable ligne à ligne sans coût.
+    public Set<Long> nuitsOpportunistes() {
+        return nuitsOpportunistes;
     }
 
     /// Numéros de carré présents dans les contacts chargés : peuplent la liste déroulante du critère

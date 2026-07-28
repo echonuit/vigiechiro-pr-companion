@@ -10,6 +10,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuButton;
 
 /// Fabrique de **critères de filtre sur une dimension textuelle** (le carré, le point, la catégorie de
@@ -91,6 +92,62 @@ public final class CritereListe {
                     if (item instanceof CheckMenuItem coche) {
                         coche.setSelected(voulues.contains(coche.getText()));
                     }
+                }
+            }
+        };
+    }
+
+    /// Un critère dont l'éditeur laisse choisir **une seule** valeur : la liste déroulante classique, pour
+    /// les dimensions qui se lisent une à une (un carré, une nuit, la nature d'une nuit). Même contrat et
+    /// même sémantique de départ que [#multiple] — rien de choisi n'écarte rien —, et mêmes paramètres,
+    /// pour qu'une dimension puisse passer de l'une à l'autre sans réécrire son appel.
+    ///
+    /// @param cle clé stable du critère, partagée entre vues (elle sert aussi aux vues mémorisées)
+    /// @param libelle intitulé de la puce
+    /// @param invite texte affiché tant que rien n'est choisi
+    /// @param valeursPresentes les valeurs offertes, calculées au moment où la puce s'ouvre
+    /// @param dimension ce qu'on lit sur une ligne pour la comparer
+    public static <T> CritereFiltre<T> simple(
+            String cle,
+            String libelle,
+            String invite,
+            Supplier<? extends List<String>> valeursPresentes,
+            Function<T, String> dimension) {
+        return new CritereFiltre<T>() {
+            @Override
+            public String nom() {
+                return cle;
+            }
+
+            @Override
+            public String libelle() {
+                return libelle;
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<T>> applique) {
+                ComboBox<String> choix = new ComboBox<>();
+                choix.getItems().setAll(valeursPresentes.get());
+                choix.setPromptText(invite);
+                choix.valueProperty()
+                        .addListener((obs, avant, valeur) -> applique.accept(
+                                valeur == null ? ligne -> true : ligne -> valeur.equals(dimension.apply(ligne))));
+                // Aucune présélection : tant que rien n'est choisi, la puce n'écarte rien.
+                applique.accept(ligne -> true);
+                return choix;
+            }
+
+            @Override
+            public List<String> valeurCourante(Node editeur) {
+                Object valeur = ((ComboBox<?>) editeur).getValue();
+                return valeur == null ? List.of() : List.of((String) valeur);
+            }
+
+            @Override
+            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+                if (!valeurs.isEmpty()) {
+                    ComboBox<?> choix = (ComboBox<?>) editeur;
+                    choix.getSelectionModel().select(choix.getItems().indexOf(valeurs.get(0)));
                 }
             }
         };

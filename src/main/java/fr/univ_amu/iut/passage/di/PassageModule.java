@@ -30,6 +30,7 @@ import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
 import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
+import fr.univ_amu.iut.passage.model.NuitsOpportunistes;
 import fr.univ_amu.iut.passage.model.PropositionCampagne;
 import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
 import fr.univ_amu.iut.passage.model.RattrapageMetadonnees;
@@ -326,6 +327,15 @@ public class PassageModule extends ModuleDeFeature {
     @Singleton
     MarquageOpportuniste fournirMarquageOpportuniste(ServicePassage service) {
         return service::marquerOpportuniste;
+    }
+
+    /// Pont [NuitsOpportunistes] (#2614) : expose la seule **lecture** du marquage aux features qui
+    /// exploitent les nuits (analyse) sans leur livrer le DAO. Branché sur la lecture groupée du DAO,
+    /// la puce de filtre en prenant un instantané plutôt qu'une requête par ligne.
+    @Provides
+    @Singleton
+    NuitsOpportunistes fournirNuitsOpportunistes(PassageOpportunisteDao opportunistes) {
+        return opportunistes::tousLesIds;
     }
 
     /// Conditions de la nuit (météo #106/#697, matériel du micro #543), extraites de ServicePassage (#1192).

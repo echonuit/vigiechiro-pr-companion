@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -57,8 +58,9 @@ final class CriteresAnalyse {
     /// que des chauves-souris : sans ces onglets, orthoptères et micromammifères s'intercalent dans
     /// l'inventaire au même rang que les chiroptères.
     ///
-    /// Chaque onglet porte le **nom exact** de sa catégorie : un onglet « Autres » qui ne couvrirait
-    /// qu'une catégorie mentirait sur son contenu.
+    /// « Autres » cumule toutes les catégories non-chiroptères ([#HORS_CHIROPTERES]) depuis #2615 : les
+    /// deux écrans offrent donc la même partition, un onglet ne portant plus le nom d'une seule catégorie
+    /// pour en désigner plusieurs.
     static List<VueSauvegardee> vuesParDefaut() {
         return List.of(
                 vueParDefaut("Tout"),
@@ -119,6 +121,18 @@ final class CriteresAnalyse {
     /// Critère **Taxon parent** (groupe, #518) : éditeur à **choix multiple** sur les groupes présents
     /// dans l'inventaire, sans présélection. Le multiple sert l'onglet « Autres », qui cumule les
     /// catégories non-chiroptères (#2615).
+    /// Critère **Nature de la nuit** (#2614) : protocole ou participation opportuniste (#2525). Même
+    /// dimension et mêmes libellés que sur l'écran Activité de la nuit — une nuit opportuniste ne compte
+    /// pas de la même façon, et se mêlait jusqu'ici sans le dire aux nuits du protocole.
+    static CritereFiltre<ObservationAnalyse> natureNuit(Supplier<Set<Long>> opportunistes) {
+        return CritereListe.simple(
+                "natureNuit",
+                "Nature de la nuit",
+                "Protocole ou opportuniste",
+                () -> NatureNuit.VALEURS,
+                observation -> NatureNuit.de(observation.idPassage(), opportunistes.get()));
+    }
+
     static CritereFiltre<ObservationAnalyse> groupe(Supplier<? extends List<String>> groupesPresents) {
         return CritereListe.multiple(
                 GROUPE, "Taxon parent", "Choisir un taxon parent", groupesPresents, ObservationAnalyse::groupe);

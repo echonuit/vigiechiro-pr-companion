@@ -26,6 +26,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -249,7 +250,7 @@ public final class CaptureActivite {
         /// Service à contacts fixes : les deux lectures sont surchargées, les DAO (nuls) ne sont jamais
         /// touchés. Un seul but, montrer une courbe déterministe sans base.
         private static ServiceActivite serviceDemo(List<ContactHoraire> contacts) {
-            return new ServiceActivite(null, null, null) {
+            return new ServiceActivite(null, null, null, Set::of) {
                 @Override
                 public List<ContactHoraire> contactsDuPassage(long idPassage) {
                     return contacts;
