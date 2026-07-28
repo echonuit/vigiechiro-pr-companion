@@ -3,7 +3,9 @@ package fr.univ_amu.iut.analyse.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.analyse.model.CourbeEspece;
+import fr.univ_amu.iut.analyse.model.ExportActiviteCsv;
 import fr.univ_amu.iut.analyse.model.LargeurTranche;
+import fr.univ_amu.iut.analyse.model.LigneActivite;
 import fr.univ_amu.iut.analyse.model.PointActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
@@ -23,6 +25,7 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -116,6 +119,9 @@ public class ActiviteController implements EmplacementNavigation {
     private Button boutonExporterImage;
 
     @FXML
+    private Button boutonExporterDonnees;
+
+    @FXML
     private HBox bandeauRetour;
 
     @FXML
@@ -207,6 +213,9 @@ public class ActiviteController implements EmplacementNavigation {
         // Rien de tracé, rien à exporter : le bouton le dit en se grisant, plutôt que d'accepter un clic
         // sans effet (affordance, cf. #790).
         boutonExporterImage.disableProperty().bind(Bindings.isEmpty(viewModel.courbesAffichees()));
+        // L'export de données suit les espèces **présentes**, non les courbes tracées : décocher une
+        // courbe allège le graphe, cela ne retire pas la donnée du jeu.
+        boutonExporterDonnees.disableProperty().bind(Bindings.isEmpty(viewModel.especes()));
 
         // Bandeau de retour mutualisé (#1837) : dit l'export réussi et, surtout, l'export échoué.
         BandeauRetour.installer(
@@ -252,6 +261,26 @@ public class ActiviteController implements EmplacementNavigation {
                 .ifPresent(this::exporterVers);
     }
 
+    /// **Exporte les données** du sous-ensemble filtré en CSV — le pendant à l'écran de la commande
+    /// `exporter-activite`, sur le même formateur pur. Une image se colle dans un compte rendu, un tableau
+    /// se recoupe : les deux besoins sont distincts, l'écran offre désormais les deux (#2613).
+    @FXML
+    private void exporterDonnees() {
+        selecteur
+                .enregistrerFichier("Exporter les données d'activité en CSV", "activite-nuit.csv", FiltreFichier.csv())
+                .ifPresent(this::ecrireDonnees);
+    }
+
+    private void ecrireDonnees(java.nio.file.Path fichier) {
+        try {
+            List<LigneActivite> lignes = viewModel.lignesExport();
+            ExportActiviteCsv.ecrire(viewModel.trancheProperty().get(), lignes, fichier);
+            viewModel.signalerExportDonnees(String.valueOf(fichier.getFileName()), lignes.size());
+        } catch (IOException | RuntimeException echec) {
+            viewModel.signalerEchecExport(motif(echec));
+        }
+    }
+
     /// Écrit l'image de la courbe dans `fichier`, datée du jour.
     public void exporterVers(java.nio.file.Path fichier) {
         exporterVers(fichier, LocalDate.now());
@@ -280,7 +309,7 @@ public class ActiviteController implements EmplacementNavigation {
 
     /// Message d'un échec, à défaut de message une mention du type : une chaîne vide dans le bandeau ne
     /// vaudrait pas mieux que le silence qu'on corrige.
-    private static String motif(RuntimeException echec) {
+    private static String motif(Exception echec) {
         String message = echec.getMessage();
         return message == null || message.isBlank() ? echec.getClass().getSimpleName() : message;
     }

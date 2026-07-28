@@ -4,6 +4,7 @@ import fr.univ_amu.iut.analyse.model.AgregationActivite;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.analyse.model.CourbeEspece;
 import fr.univ_amu.iut.analyse.model.LargeurTranche;
+import fr.univ_amu.iut.analyse.model.LigneActivite;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
@@ -239,6 +240,22 @@ public class ActiviteViewModel {
     /// sans aplat.
     public ObjectProperty<PlageNuit> plageNuitProperty() {
         return plageNuit;
+    }
+
+    /// Les lignes d'export du **sous-ensemble filtré**, à la tranche courante : ce que l'écran montre,
+    /// mis à plat pour un tableur (une ligne par carré, point, nuit, espèce et tranche).
+    ///
+    /// Passe par [AgregationActivite#pourExport] et non par les courbes affichées : une courbe décrit le
+    /// temps pour une espèce, tous lieux confondus, alors qu'un export doit se recouper (#2613). Les
+    /// espèces **décochées** en sont donc absentes ? Non : l'export suit les **filtres**, pas la sélection
+    /// de tracé — décocher une courbe allège le graphe, cela ne retire pas la donnée du jeu.
+    public List<LigneActivite> lignesExport() {
+        return AgregationActivite.pourExport(List.copyOf(contactsFiltres), tranche.get());
+    }
+
+    /// Signale un **export de données réussi**, en nommant le fichier écrit.
+    public void signalerExportDonnees(String nomFichier, int lignes) {
+        retour.set(RetourOperation.succes(lignes + " ligne(s) exportée(s) vers " + nomFichier + "."));
     }
 
     /// Retour de la **dernière opération** avec sa sévérité, pour le bandeau de feedback mutualisé

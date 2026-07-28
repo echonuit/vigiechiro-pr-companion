@@ -46,6 +46,11 @@
     <Label text="Tranche horaire" styleClass="section-sous"/>
     <ChoiceBox fx:id="choixTranche"/>
     <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="boutonExporterDonnees" minWidth="-Infinity" text="Exporter les données…" onAction="#exporterDonnees">
+      <graphic>
+        <FontIcon iconLiteral="fas-file-csv"/>
+      </graphic>
+    </Button>
     <Button fx:id="boutonExporterImage" minWidth="-Infinity" text="Exporter l'image…" onAction="#exporterImage">
       <graphic>
         <FontIcon iconLiteral="fas-file-image"/>

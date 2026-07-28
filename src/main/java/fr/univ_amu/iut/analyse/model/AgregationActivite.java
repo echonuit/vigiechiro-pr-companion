@@ -48,6 +48,56 @@ public final class AgregationActivite {
                 .toList();
     }
 
+    /// Agrège les mêmes contacts **pour l'export** : une ligne par (carré, point, nuit, espèce, tranche),
+    /// triée par lieu puis par temps puis par espèce.
+    ///
+    /// Sortie **plate**, à la différence de [#parEspece] : chaque ligne porte son contexte entier, parce
+    /// qu'un export se recoupe et se filtre **hors de l'application**, où rien ne rappelle d'où vient une
+    /// valeur. Un export multi-nuits sans carré ni point ne dit plus ce qu'il montre.
+    ///
+    /// Les contacts sans taxon ou sans heure sont écartés, comme pour la courbe : ils n'ont pas de place
+    /// sur un axe, ils n'en ont pas davantage dans un tableau daté.
+    public static List<LigneActivite> pourExport(List<ContactHoraire> contacts, LargeurTranche tranche) {
+        Map<CleExport, Integer> comptes = new LinkedHashMap<>();
+        Map<CleExport, ContactHoraire> temoins = new LinkedHashMap<>();
+        for (ContactHoraire contact : contacts) {
+            if (contact.taxon() == null || contact.heure() == null) {
+                continue;
+            }
+            CleExport cle = new CleExport(
+                    contact.numeroCarre(),
+                    contact.codePoint(),
+                    contact.taxon(),
+                    debutTranche(contact.heure(), tranche));
+            comptes.merge(cle, 1, Integer::sum);
+            temoins.putIfAbsent(cle, contact);
+        }
+        return comptes.entrySet().stream()
+                .map(entree -> versLigne(entree.getKey(), temoins.get(entree.getKey()), entree.getValue()))
+                .sorted(Comparator.comparing(
+                                LigneActivite::numeroCarre, Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .thenComparing(LigneActivite::codePoint, Comparator.nullsFirst(Comparator.naturalOrder()))
+                        .thenComparing(LigneActivite::debutTranche)
+                        .thenComparing(LigneActivite::taxon))
+                .toList();
+    }
+
+    private static LigneActivite versLigne(CleExport cle, ContactHoraire temoin, int nombre) {
+        return new LigneActivite(
+                cle.numeroCarre(),
+                cle.codePoint(),
+                Nuit.de(cle.debutTranche()),
+                cle.taxon(),
+                temoin.nomEspece(),
+                temoin.groupe(),
+                cle.debutTranche(),
+                nombre);
+    }
+
+    /// Clé de regroupement de l'export. La **nuit** n'y figure pas : elle se déduit du début de tranche
+    /// (bascule à midi), et l'y ajouter ouvrirait la porte à une incohérence entre les deux.
+    private record CleExport(String numeroCarre, String codePoint, String taxon, LocalDateTime debutTranche) {}
+
     /// Regroupe par taxon retenu en préservant l'**ordre de première apparition** (agrégation déterministe
     /// avant le tri final), en écartant au passage les contacts inexploitables (sans taxon ou sans heure).
     private static Map<String, List<ContactHoraire>> grouperParEspece(List<ContactHoraire> contacts) {

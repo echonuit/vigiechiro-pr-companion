@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.analyse.model;
 
-import fr.univ_amu.iut.commun.model.Nuit;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -12,9 +11,10 @@ import java.util.List;
 /// l'export **image** de l'IHM : la même agrégation ([AgregationActivite]) sort ici en tableau plutôt qu'en
 /// graphe. Utilisé par le CLI (`exporter-activite`), formateur **pur** (aucune dépendance IHM).
 ///
-/// **Une ligne par (espèce, tranche)**, en format long : robuste au nombre variable d'espèces et directement
-/// filtrable dans un tableur. Chaque ligne **porte son contexte** — passage, nuit biologique, largeur de
-/// tranche — de sorte que le fichier reste lisible une fois détaché de l'application. La **nuit** est
+/// **Une ligne par (carré, point, nuit, espèce, tranche)**, en format long : robuste au nombre variable
+/// d'espèces et directement filtrable dans un tableur. Chaque ligne **porte son contexte entier** — d'où
+/// elle vient, quand, et à quelle largeur de tranche —, de sorte qu'un export couvrant plusieurs nuits ou
+/// plusieurs points reste recoupable une fois détaché de l'application (#2613). La **nuit** est
 /// recalculée par la **bascule à midi** ([Nuit#de]), la même règle que la courbe : une tranche à 02 h
 /// appartient à la nuit du soir précédent, pas à la date du jour.
 ///
@@ -27,41 +27,47 @@ public final class ExportActiviteCsv {
     private static final String FIN_LIGNE = "\r\n";
 
     private static final List<String> ENTETES = List.of(
-            "Passage", "Nuit", "Code espèce", "Nom espèce", "Groupe", "Début tranche", "Tranche (min)", "Contacts");
+            "Carré",
+            "Point",
+            "Nuit",
+            "Code espèce",
+            "Nom espèce",
+            "Groupe",
+            "Début tranche",
+            "Tranche (min)",
+            "Contacts");
 
     private ExportActiviteCsv() {}
 
     /// Écrit le CSV de l'activité (BOM + en-têtes + une ligne par point de chaque courbe) dans `destination`.
     /// Renvoie le fichier écrit.
-    public static Path ecrire(long passage, LargeurTranche tranche, List<CourbeEspece> courbes, Path destination)
-            throws IOException {
-        Files.writeString(destination, contenu(passage, tranche, courbes), StandardCharsets.UTF_8);
+    public static Path ecrire(LargeurTranche tranche, List<LigneActivite> lignes, Path destination) throws IOException {
+        Files.writeString(destination, contenu(tranche, lignes), StandardCharsets.UTF_8);
         return destination;
     }
 
     /// Contenu CSV complet. Un passage sans contact produit les en-têtes seuls (résultat valide, comme
     /// `exporter-observations`).
-    public static String contenu(long passage, LargeurTranche tranche, List<CourbeEspece> courbes) {
+    public static String contenu(LargeurTranche tranche, List<LigneActivite> lignes) {
         StringBuilder csv = new StringBuilder(BOM);
         ajouterLigne(csv, ENTETES);
-        for (CourbeEspece courbe : courbes) {
-            for (PointActivite point : courbe.points()) {
-                ajouterLigne(csv, champs(passage, tranche, courbe, point));
-            }
+        for (LigneActivite ligne : lignes) {
+            ajouterLigne(csv, champs(tranche, ligne));
         }
         return csv.toString();
     }
 
-    private static List<String> champs(long passage, LargeurTranche tranche, CourbeEspece courbe, PointActivite point) {
+    private static List<String> champs(LargeurTranche tranche, LigneActivite ligne) {
         return List.of(
-                Long.toString(passage),
-                Nuit.de(point.debutTranche()).toString(),
-                texte(courbe.taxon()),
-                texte(courbe.nomEspece()),
-                texte(courbe.groupe()),
-                point.debutTranche().toString(),
+                texte(ligne.numeroCarre()),
+                texte(ligne.codePoint()),
+                ligne.nuit().toString(),
+                texte(ligne.taxon()),
+                texte(ligne.nomEspece()),
+                texte(ligne.groupe()),
+                ligne.debutTranche().toString(),
                 Integer.toString(tranche.minutes()),
-                Integer.toString(point.nombre()));
+                Integer.toString(ligne.nombre()));
     }
 
     private static void ajouterLigne(StringBuilder csv, List<String> valeurs) {

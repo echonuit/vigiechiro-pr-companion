@@ -295,6 +295,25 @@ class ActiviteViewTest {
     }
 
     @Test
+    void l_ecran_exporte_aussi_les_donnees_avec_leur_lieu(FxRobot robot) throws Exception {
+        charger(robot, nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
+        Path csv = dossier.resolve("activite.csv");
+        controleur.selecteur().definir(new SelecteurFige(csv));
+
+        robot.clickOn("#boutonExporterDonnees");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(Files.exists(csv))
+                .as("la ligne de commande savait exporter les données, l'écran le sait désormais aussi")
+                .isTrue();
+        assertThat(Files.readString(csv))
+                .as("chaque ligne porte son lieu, sinon l'export ne se recoupe pas")
+                .contains("Carré;Point;Nuit");
+        Label retour = robot.lookup("#lblRetour").queryAs(Label.class);
+        assertThat(retour.getText()).contains("exportée");
+    }
+
+    @Test
     void sans_courbe_tracee_l_export_est_grise(FxRobot robot) {
         charger(robot, List.of());
 
