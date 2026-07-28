@@ -79,10 +79,15 @@ puisque c'est l'état complet du point qui dit ce qu'il reste à y faire.
 La correspondance est **partielle et insensible à la casse** : taper `ens` retient « Suivi ENS ». Un
 point dont aucune nuit n'est rattachée à une campagne n'est jamais retenu par un filtre de campagne.
 
-!!! info "Pour l'instant, en ligne de commande seulement"
-    Ce filtre s'utilise avec `vigiechiro solde-saison --campagne ens`. L'écran **Ma saison**, lui, ne
-    propose pas encore de sélecteur de campagne : il affiche toujours la saison entière. Son ajout
-    est suivi par l'issue [#2610](https://github.com/echonuit/vigiechiro-pr-companion/issues/2610).
+Le sélecteur **Campagne**, à côté de celui de l'année, applique ce filtre. « Toutes les campagnes »
+revient au solde entier. Le tableau **et** le résumé d'en-tête se restreignent ensemble : ils sont
+calculés à partir du même solde, ils ne peuvent pas se contredire.
+
+Le sélecteur n'apparaît que s'il y a une campagne à proposer. Tant que vous n'en avez créé aucune, la
+barre reste telle quelle : un contrôle vide n'aide personne. Pour en créer une, voir
+[Le passage](passage.md#gerer-les-campagnes).
+
+Le même filtre existe en ligne de commande : `vigiechiro solde-saison --campagne ens`.
 
 ## Les nuits opportunistes n'y comptent pas
 
