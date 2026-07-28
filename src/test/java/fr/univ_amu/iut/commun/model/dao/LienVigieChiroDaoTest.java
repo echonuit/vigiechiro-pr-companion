@@ -58,6 +58,27 @@ class LienVigieChiroDaoTest {
     }
 
     @Test
+    @DisplayName("refLocalePour lit dans l'autre sens, et l'entité y discrimine aussi")
+    void ref_locale_pour_objectid() {
+        dao.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_TAXON, "Pippip", "partage"));
+        dao.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, "7", "partage"));
+
+        // Le même objectid sous deux entités n'a rien d'absurde : ce sont deux espaces de noms distincts
+        // côté plateforme. Une lecture inverse qui ignorerait l'entité rendrait donc l'une pour l'autre.
+        assertThat(dao.refLocalePour(LienVigieChiro.ENTITE_TAXON, "partage")).contains("Pippip");
+        assertThat(dao.refLocalePour(LienVigieChiro.ENTITE_SITE, "partage")).contains("7");
+        assertThat(dao.refLocalePour(LienVigieChiro.ENTITE_PASSAGE, "partage")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("refLocalePour un objectid inconnu renvoie vide")
+    void ref_locale_pour_objectid_inconnu() {
+        dao.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_TAXON, "Pippip", "5a1"));
+
+        assertThat(dao.refLocalePour(LienVigieChiro.ENTITE_TAXON, "jamais-vu")).isEmpty();
+    }
+
+    @Test
     @DisplayName("l'entité discrimine : même ref_locale sous taxon et site = deux correspondances")
     void ref_locale_scoping_par_entite() {
         dao.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_TAXON, "42", "taxon-42"));

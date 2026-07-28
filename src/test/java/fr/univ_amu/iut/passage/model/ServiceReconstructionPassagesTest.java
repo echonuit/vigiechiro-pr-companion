@@ -68,8 +68,14 @@ class ServiceReconstructionPassagesTest {
 
     private static final String ID_USER = "u-1";
     private static final String PARTICIPATION = "6a53f5faae21902a597394d3";
+
+    /// Seconde participation du même point : de quoi vérifier qu'un geste porte bien sur la nuit demandée
+    /// et pas sur sa voisine (#2638). Une base réelle en compte des dizaines depuis #2554.
+    private static final String PARTICIPATION_VOISINE = "6a53f5faae21902a597394e7";
     private static final String SEQ_1 = "Car130711-2026-Pass1-Z41-PaRec_20260703_220529_000";
     private static final String SEQ_2 = "Car130711-2026-Pass1-Z41-PaRec_20260703_220534_000";
+    private static final String SEQ_VOISINE_1 = "Car130711-2026-Pass2-Z41-PaRec_20260704_221030_000";
+    private static final String SEQ_VOISINE_2 = "Car130711-2026-Pass2-Z41-PaRec_20260704_221035_000";
     private static final LocalDateTime MAINTENANT = LocalDateTime.of(2026, 7, 14, 2, 0);
 
     /// CSV Tadarida BRUT réel en miniature (séparateur `;`, entête quotée) : 3 observations sur 2 fichiers.
@@ -430,6 +436,36 @@ class ServiceReconstructionPassagesTest {
 
     // --- Fixture ---------------------------------------------------------------------------------
 
+    /// Deux participations sur le même point, chacune avec ses propres fichiers : le montage minimal qui
+    /// ressemble à une vraie base. Sans lui, tout test de « quelle nuit est visée » passe par construction.
+    private void bouchonnerDeuxParticipations() {
+        when(client.mesParticipations())
+                .thenReturn(new ReponseApi.Succes<>(
+                        List.of(participation(PARTICIPATION), participation(PARTICIPATION_VOISINE))));
+        bouchonnerUne(PARTICIPATION, SEQ_1, SEQ_2);
+        bouchonnerUne(PARTICIPATION_VOISINE, SEQ_VOISINE_1, SEQ_VOISINE_2);
+        when(importObservations.importer(anyLong(), any(), anyBoolean())).thenReturn("3 observation(s) importée(s).");
+    }
+
+    private void bouchonnerUne(String idParticipation, String premier, String second) {
+        when(client.participation(idParticipation)).thenReturn(new ReponseApi.Succes<>(detail()));
+        when(client.csvObservations(idParticipation)).thenReturn(new ReponseApi.Succes<>(Optional.empty()));
+        when(client.donnees(eq(idParticipation), any()))
+                .thenReturn(new ReponseApi.Succes<>(List.of(
+                        new DonneeVigieChiro("d-" + premier, premier, List.of(observation(), observation())),
+                        new DonneeVigieChiro("d-" + second, second, List.of(observation())))));
+    }
+
+    private List<SequenceDEcoute> sequencesDe(String idParticipation) {
+        Long idPassage = Long.valueOf(liens.tous(LienVigieChiro.ENTITE_PASSAGE).entrySet().stream()
+                .filter(entree -> entree.getValue().equals(idParticipation))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("aucun passage lié à " + idParticipation)));
+        return sequenceDao.findBySession(
+                sessionDao.trouverParPassage(idPassage).orElseThrow().id());
+    }
+
     private void bouchonnerPlateforme() {
         when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
         when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
@@ -727,6 +763,37 @@ class ServiceReconstructionPassagesTest {
         assertThat(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(rapport.idPassage())))
                 .as("la participation est rattachée au passage reconstruit (lien reposé)")
                 .contains(PARTICIPATION);
+    }
+
+    @Test
+    @DisplayName("#2638 : compléter une participation touche SA nuit, jamais celle d'à côté")
+    void completer_designe_la_nuit_demandee() {
+        bouchonnerDeuxParticipations();
+        service.synchroniser(client); // deux squelettes, deux liens
+
+        service.reconstruire(PARTICIPATION_VOISINE);
+
+        assertThat(sequencesDe(PARTICIPATION_VOISINE))
+                .as("la nuit demandée a reçu son contenu")
+                .hasSize(2);
+        assertThat(sequencesDe(PARTICIPATION))
+                .as("la voisine n'a pas été touchée")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2638 : et dans l'autre sens, pour que l'ordre des liens ne décide de rien")
+    void completer_designe_la_nuit_demandee_dans_l_autre_sens() {
+        bouchonnerDeuxParticipations();
+        service.synchroniser(client);
+
+        service.reconstruire(PARTICIPATION);
+
+        // Les deux sens, délibérément. Le passage est retrouvé en filtrant la table des liens : si le
+        // filtre venait à ne plus filtrer, `findFirst` rendrait une entrée arbitraire - déterministe pour
+        // une base donnée, donc un test unique pourrait tomber du bon côté par chance et ne rien prouver.
+        assertThat(sequencesDe(PARTICIPATION)).hasSize(2);
+        assertThat(sequencesDe(PARTICIPATION_VOISINE)).isEmpty();
     }
 
     @Test
