@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.113.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.112.1...v2.113.0) (2026-07-28)
+
+
+### Features
+
+* **import:** router vers la réactivation quand la nuit est déjà récupérée ([#2711](https://github.com/echonuit/vigiechiro-pr-companion/issues/2711)) ([fdc8d75](https://github.com/echonuit/vigiechiro-pr-companion/commit/fdc8d75a96cb27a840fc92fbc2b26dba3c5e3650)), closes [#2557](https://github.com/echonuit/vigiechiro-pr-companion/issues/2557) [#2580](https://github.com/echonuit/vigiechiro-pr-companion/issues/2580) [#147](https://github.com/echonuit/vigiechiro-pr-companion/issues/147) [#107](https://github.com/echonuit/vigiechiro-pr-companion/issues/107) [#2580](https://github.com/echonuit/vigiechiro-pr-companion/issues/2580)
+
 ## [2.112.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.112.0...v2.112.1) (2026-07-28)
 
 
