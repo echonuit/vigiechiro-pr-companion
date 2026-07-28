@@ -205,6 +205,40 @@ class TransportVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#2619 : une LECTURE coupée est réessayée, puis aboutit")
+    void lecture_reessaie_une_coupure_puis_reussit() throws Exception {
+        HttpResponse<String> ok = reponseTexte(200, "{\"_id\":\"u-1\"}");
+        HttpClient client = mock(HttpClient.class);
+        doThrow(new IOException("paquet perdu")).doReturn(ok).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        ReponseApi<String> reponse = transport.lire("/moi");
+
+        // Le pare-chocs existait, il ne servait que les écritures du dépôt. Depuis que la synchronisation
+        // balaie tout un compte, une coupure d'une seconde faisait ressortir une nuit « non récupérée ».
+        assertThat(reponse).isInstanceOf(ReponseApi.Succes.class);
+        assertThat(attentes).as("une coupure, une reprise").hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#2619 : une lecture refusée (4xx) n'est jamais rejouée")
+    void lecture_ne_reessaie_pas_un_refus_definitif() throws Exception {
+        // 401 : le jeton est mort, il ne ressuscitera pas à la seconde tentative.
+        HttpResponse<String> refus = reponseTexte(401, "{}");
+        HttpClient client = mock(HttpClient.class);
+        doReturn(refus).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        transport.lire("/moi");
+
+        assertThat(attentes).as("aucune attente : un 4xx ne se rejoue pas").isEmpty();
+    }
+
+    @Test
     @DisplayName("#2354 : un refus définitif (4xx) du PUT S3 n'est jamais rejoué")
     void depot_s3_ne_reessaie_pas_un_refus_definitif() throws Exception {
         // 403 SignatureDoesNotMatch : rejouer ne le rendra pas valide.
@@ -298,6 +332,16 @@ class TransportVigieChiroTest {
     /// Politique sans vraie attente qui **note** les durées demandées, pour compter les reprises.
     private static PolitiqueReessai sansAttente(List<Duration> attentes) {
         return new PolitiqueReessai(attentes::add, () -> 0.0);
+    }
+
+    /// Réponse **texte** : ce que rendent les lectures, là où [#reponse] sert les PUT S3 sans corps.
+    private static HttpResponse<String> reponseTexte(int statut, String corps) {
+        @SuppressWarnings("unchecked")
+        HttpResponse<String> reponse = mock(HttpResponse.class);
+        when(reponse.statusCode()).thenReturn(statut);
+        when(reponse.body()).thenReturn(corps);
+        when(reponse.headers()).thenReturn(HttpHeaders.of(Map.of(), (nom, valeur) -> true));
+        return reponse;
     }
 
     private static HttpResponse<Void> reponse(int statut, Map<String, List<String>> entetes) {

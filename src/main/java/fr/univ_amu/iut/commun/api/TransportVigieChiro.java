@@ -123,6 +123,25 @@ final class TransportVigieChiro {
     /// interruption ou une panne (réseau, DNS, TLS, délai) devient [ReponseApi.Injoignable] avec sa cause :
     /// plus jamais un silence indistinct.
     private ReponseApi<String> emettre(RequeteAEmettre requete) {
+        // Réessai gradué sur TOUTES les émissions, pas seulement sur les écritures du dépôt (#2619).
+        // PREMIER_PLAN et non ARRIÈRE-PLAN : dans ce produit, aucune lecture n'est un sondage automatique
+        // - « on n'interroge le serveur que quand l'utilisateur le demande » (#1338) - donc il y a
+        // toujours quelqu'un qui attend, et la règle 2 de l'ADR 2354 dit d'insister. Le jour où une tâche
+        // périodique apparaîtra, elle devra passer ARRIERE_PLAN explicitement.
+        //
+        // Le suivi est SILENCIEUX ici : le transport n'a pas de canal vers l'écran. La reprise se voit
+        // dans le journal, via l'issue de chaque tentative.
+        return politique.executer(
+                PolitiqueReessai.Profil.PREMIER_PLAN,
+                SuiviReprise.SILENCIEUX,
+                () -> PolitiqueReessai.Issue.de(uneEmission(requete)));
+    }
+
+    /// **Une** émission : envoie la requête, trie l'issue et la **consigne** (#1845). Une interruption ou
+    /// une panne (réseau, DNS, TLS, délai) devient [ReponseApi.Injoignable] avec sa cause : plus jamais un
+    /// silence indistinct. C'est cette unité que [PolitiqueReessai] rejoue, et chaque tentative laisse
+    /// donc sa propre trace.
+    private ReponseApi<String> uneEmission(RequeteAEmettre requete) {
         long debut = System.nanoTime();
         String methode = "?";
         String chemin = "?";
