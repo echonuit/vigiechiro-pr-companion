@@ -11,9 +11,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Ventilation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.AbsenceReactivation;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /// Traduit une réactivation en **compte rendu chiffré** (#2358), celui que rend
 /// [fr.univ_amu.iut.commun.view.PanneauCompteRendu].
@@ -114,16 +112,18 @@ public final class CompteRenduChiffreReactivation {
     }
 
     private static List<Motif> motifsDesAbsences(List<AbsenceReactivation> absences) {
-        Map<String, List<String>> parMotif = new LinkedHashMap<>();
-        absences.stream()
+        // Triées AVANT de grouper : le groupage préserve l'ordre d'apparition, et les absences les plus
+        // coûteuses doivent venir en tête - c'est par elles qu'on commence à chercher.
+        List<AbsenceReactivation> parCout = absences.stream()
                 .sorted(Comparator.comparingInt(AbsenceReactivation::sequences)
                         .reversed()
                         .thenComparing(AbsenceReactivation::nomFichier))
-                .forEach(absence -> parMotif.computeIfAbsent(absence.motif(), ignore -> new ArrayList<>())
-                        .add(libelleAbsence(absence)));
-        return parMotif.entrySet().stream()
-                .map(motif -> new Motif("fichier(s) : " + motif.getKey(), motif.getValue()))
                 .toList();
+        return Motif.grouperParCause(
+                parCout,
+                AbsenceReactivation::motif,
+                cause -> "fichier(s) : " + cause,
+                CompteRenduChiffreReactivation::libelleAbsence);
     }
 
     private static String libelleAbsence(AbsenceReactivation absence) {

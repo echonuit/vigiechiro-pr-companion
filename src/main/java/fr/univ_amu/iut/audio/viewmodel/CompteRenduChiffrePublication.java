@@ -10,9 +10,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Teinte;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Ventilation;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /// Traduit une **publication de corrections** vers Vigie-Chiro (#723) en compte rendu chiffré (#2358),
 /// celui que rend [fr.univ_amu.iut.commun.view.PanneauCompteRendu].
@@ -98,16 +96,24 @@ public final class CompteRenduChiffrePublication {
     /// nom du fichier était en suffixe. Sans cette coupe, chaque observation serait son propre motif, et
     /// vingt refus pour une même panne feraient vingt lignes disant la même chose.
     private static List<Motif> motifs(BilanPublication bilan) {
-        Map<String, List<String>> parCause = new LinkedHashMap<>();
-        for (String echec : bilan.echecs()) {
-            int coupure = echec.indexOf(SEPARATEUR_CAUSE);
-            String cause = coupure < 0 ? "cause non précisée" : echec.substring(coupure + SEPARATEUR_CAUSE.length());
-            String sujet = coupure < 0 ? echec : echec.substring(0, coupure);
-            parCause.computeIfAbsent(cause, ignore -> new ArrayList<>()).add(sujet);
-        }
-        return parCause.entrySet().stream()
-                .map(motif -> new Motif("observation(s) : " + motif.getKey(), motif.getValue()))
-                .toList();
+        return Motif.grouperParCause(
+                bilan.echecs(),
+                CompteRenduChiffrePublication::cause,
+                cause -> "observation(s) : " + cause,
+                CompteRenduChiffrePublication::sujet);
+    }
+
+    /// La cause d'un refus : ce qui suit le premier séparateur. Sans séparateur reconnaissable, une cause
+    /// nommée plutôt qu'un motif muet.
+    private static String cause(String echec) {
+        int coupure = echec.indexOf(SEPARATEUR_CAUSE);
+        return coupure < 0 ? "cause non précisée" : echec.substring(coupure + SEPARATEUR_CAUSE.length());
+    }
+
+    /// Le sujet d'un refus : ce qui précède le premier séparateur, ou le texte entier à défaut.
+    private static String sujet(String echec) {
+        int coupure = echec.indexOf(SEPARATEUR_CAUSE);
+        return coupure < 0 ? echec : echec.substring(0, coupure);
     }
 
     /// Ce que la ventilation ne porte pas : **quoi faire** de ce qui a été écarté, et ce que la phase

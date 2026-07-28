@@ -279,6 +279,36 @@ public record CompteRenduChiffre(
         public int compte() {
             return sujets.size();
         }
+
+        /// **Groupe des sujets par cause**, dans l'ordre de première apparition, et rend un motif par cause.
+        ///
+        /// Les trois traductions livrées (import, réactivation, publication) écrivaient chacune la même
+        /// boucle : une table ordonnée, une clé de cause, une liste de sujets. Le groupage n'est pas une
+        /// affaire de feature — c'est la forme même d'un motif, et le mettre ici évite qu'une quatrième
+        /// surface le réécrive une quatrième fois.
+        ///
+        /// **L'ordre d'apparition est significatif** : l'appelant trie ses sujets AVANT d'appeler (la
+        /// réactivation met les absences les plus coûteuses d'abord, puisque c'est par elles qu'on commence
+        /// à chercher), et le groupage préserve cet ordre au lieu d'imposer le sien.
+        ///
+        /// @param sujets les sujets à grouper, déjà dans l'ordre souhaité
+        /// @param cause ce qui identifie la cause d'un sujet : c'est la **clé** de regroupement
+        /// @param libelleDeLaCause comment nommer le motif d'une cause (« fichier(s) : … »)
+        /// @param nomDuSujet comment nommer un sujet dans la liste ouverte
+        public static <T> List<Motif> grouperParCause(
+                List<T> sujets,
+                java.util.function.Function<T, String> cause,
+                java.util.function.UnaryOperator<String> libelleDeLaCause,
+                java.util.function.Function<T, String> nomDuSujet) {
+            java.util.Map<String, List<String>> parCause = new java.util.LinkedHashMap<>();
+            for (T sujet : sujets) {
+                parCause.computeIfAbsent(cause.apply(sujet), ignore -> new java.util.ArrayList<>())
+                        .add(nomDuSujet.apply(sujet));
+            }
+            return parCause.entrySet().stream()
+                    .map(entree -> new Motif(libelleDeLaCause.apply(entree.getKey()), entree.getValue()))
+                    .toList();
+        }
     }
 
     /// Ce qu'on **fait ensuite**. Un compte rendu qui se termine sur « Fermer » laisse l'utilisateur
