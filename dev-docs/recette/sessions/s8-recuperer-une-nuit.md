@@ -57,8 +57,10 @@ vraie carte SD soit reconnue.
 
 **Étape 5 · Réactiver depuis la carte SD**
 
-18. Désigner la carte : la question « copier ou référencer » apparaît. ⚠️ Sur la voie **bruts**, la
-    réponse est **sans effet** (constat #2577) : vérifier ce que l'utilisateur comprend.
+18. Désigner la carte : **aucune question** n'est posée à ce moment. Sur une carte qui ne contient que
+    des bruts, il ne doit **jamais** y en avoir - les tranches sont régénérées, il n'y a rien à laisser
+    en place (#2577). Si des séquences déjà transformées s'y trouvent, la question paraît **dans la
+    modale**, à la place des barres, et la procédure reprend après la réponse.
 19. La modale de réactivation montre ses **deux barres de phase**.
 20. À la fin, « Audio » passe à **COMPLETE (N / N)** et la nuit est **écoutable**.
 21. Ouvrir une séquence : le son correspond bien à l'observation affichée.
