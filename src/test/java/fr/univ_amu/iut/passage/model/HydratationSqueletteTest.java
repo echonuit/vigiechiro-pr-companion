@@ -32,6 +32,8 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.logging.Handler;
@@ -65,6 +67,13 @@ class HydratationSqueletteTest {
     private static final String CSV_OBSERVATIONS = "\"nom du fichier\";\"temps_debut\";\"tadarida_taxon\"\n"
             + "\"" + SEQ_1 + "\";0.1;\"Pippip\"\n"
             + "\"" + SEQ_2 + "\";0.0;\"Pippip\"\n";
+
+    private static final String PARTICIPATION_3 = "6a53f5faae21902a597394f1";
+    private static final String DOSSIER_SESSION_3 = "Car130711-2026-Pass3-Z41";
+    private static final String SEQ_3_1 = "Car130711-2026-Pass3-Z41-PaRec_20260705_222030_000";
+
+    private static final String CSV_OBSERVATIONS_3 =
+            "\"nom du fichier\";\"temps_debut\";\"tadarida_taxon\"\n" + "\"" + SEQ_3_1 + "\";0.3;\"Pippip\"\n";
 
     private static final String CSV_OBSERVATIONS_2 =
             "\"nom du fichier\";\"temps_debut\";\"tadarida_taxon\"\n" + "\"" + SEQ_2_1 + "\";0.2;\"Pippip\"\n";
@@ -144,6 +153,36 @@ class HydratationSqueletteTest {
     private void csvDisponible() {
         when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS)));
         when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS)).thenReturn(List.of(SEQ_1, SEQ_2));
+    }
+
+    /// Une **troisième** nuit : il en faut plus de deux pour que le parallélisme des téléchargements se
+    /// distingue franchement d'un hasard d'ordonnancement.
+    private long semerTroisiemeSquelette() {
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .carre(CARRE)
+                .point("Z41")
+                .nuit(3, 2026, "2026-07-05")
+                .cheminSession(dossier.resolve(DOSSIER_SESSION_3).toString())
+                .semerSquelette();
+        new LienVigieChiroDao(source)
+                .upsert(new LienVigieChiro(
+                        LienVigieChiro.ENTITE_PASSAGE, String.valueOf(jeu.idPassage()), PARTICIPATION_3));
+        return jeu.idPassage();
+    }
+
+    private void csvDisponiblePourLaTroisieme() {
+        when(client.csvObservations(PARTICIPATION_3))
+                .thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS_3)));
+        when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS_3)).thenReturn(List.of(SEQ_3_1));
+    }
+
+    /// Le CSV correspondant à une participation, pour les montages qui répondent à plusieurs nuits.
+    private static String csvPour(String idParticipation) {
+        return switch (idParticipation) {
+            case PARTICIPATION_2 -> CSV_OBSERVATIONS_2;
+            case PARTICIPATION_3 -> CSV_OBSERVATIONS_3;
+            default -> CSV_OBSERVATIONS;
+        };
     }
 
     private void csvDisponiblePourLaSeconde() {
@@ -511,5 +550,43 @@ class HydratationSqueletteTest {
                 .singleElement()
                 .satisfies(trace -> assertThat(trace.getLevel()).isEqualTo(Level.FINE));
         assertThat(journal.getFirst().getMessage()).contains(String.valueOf(seconde));
+    }
+
+    @Test
+    @DisplayName("#2606 : le balayage télécharge en parallèle mais écrit EN SÉRIE, sur un seul fil")
+    void telecharge_en_parallele_ecrit_en_serie() {
+        List<Long> nuits = new ArrayList<>();
+        nuits.add(semerSquelette());
+        nuits.add(semerSecondSquelette());
+        nuits.add(semerTroisiemeSquelette());
+        csvDisponible();
+        csvDisponiblePourLaSeconde();
+        csvDisponiblePourLaTroisieme();
+        // L'IDENTIFIANT du fil, pas son nom : un fil virtuel n'en porte pas par défaut, et trois threads
+        // distincts se seraient tous présentés sous la même chaîne vide.
+        Set<Long> filsDeTelechargement = ConcurrentHashMap.newKeySet();
+        Set<Long> filsDEcriture = ConcurrentHashMap.newKeySet();
+        when(client.csvObservations(anyString())).thenAnswer(appel -> {
+            filsDeTelechargement.add(Thread.currentThread().threadId());
+            return new ReponseApi.Succes<>(Optional.of(csvPour(appel.getArgument(0))));
+        });
+        when(importObservations.importerCsv(anyLong(), anyString(), eq(false))).thenAnswer(appel -> {
+            filsDEcriture.add(Thread.currentThread().threadId());
+            return "";
+        });
+
+        completer(nuits, JetonAnnulation.neutre());
+
+        // SQLite est mono-écrivain : huit transactions concurrentes s'attendraient au mieux, se
+        // disputeraient le verrou au pire. La décision vit en commentaire depuis #2557 et rien ne la
+        // tenait : rendre la boucle parallèle ne faisait rougir aucune assertion fonctionnelle, jusqu'au
+        // premier SQLITE_BUSY sur un gros compte.
+        assertThat(filsDEcriture).as("toutes les écritures sur le même fil").hasSize(1);
+        assertThat(filsDeTelechargement)
+                .as("les téléchargements, eux, partent en parallèle")
+                .hasSizeGreaterThan(1);
+        assertThat(filsDeTelechargement)
+                .as("et hors du fil appelant, qui reste celui des écritures")
+                .doesNotContainAnyElementsOf(filsDEcriture);
     }
 }
