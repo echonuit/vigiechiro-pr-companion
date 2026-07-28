@@ -261,6 +261,37 @@ class DepotVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#2653 : le bilan porte le volume RÉELLEMENT en ligne, somme des unités abouties")
+    void bilan_porte_le_volume_depose(@TempDir Path dossier) throws IOException {
+        Path a = fichierDe(dossier, "Car-1.zip", 1500);
+        Path b = fichierDe(dossier, "Car-2.zip", 2500);
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        armerUploadOk();
+
+        BilanDepot bilan = depot.deposer(idPassage, List.of(a, b));
+
+        // Rien n'est recalculé : le téléverseur mesurait déjà chaque archive pour choisir sa voie
+        // d'envoi (bloc ou parties), et jetait le chiffre.
+        assertThat(bilan.octetsDeposes()).isEqualTo(4000L);
+    }
+
+    @Test
+    @DisplayName("#2653 : un envoi refusé n'ajoute rien au volume - il dit ce qui est EN LIGNE")
+    void un_envoi_refuse_n_ajoute_pas_son_volume(@TempDir Path dossier) throws IOException {
+        Path a = fichierDe(dossier, "Car-1.zip", 1500);
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        // La déclaration est refusée : rien ne part, alors que le fichier existe et a une taille.
+        when(client.creerFichier(anyString(), anyString())).thenReturn(ReponseApi.refuse(422, "titre invalide"));
+
+        BilanDepot bilan = depot.deposer(idPassage, List.of(a));
+
+        assertThat(bilan.echecs()).hasSize(1);
+        assertThat(bilan.octetsDeposes())
+                .as("compter les octets à l'envoi plutôt qu'à l'aboutissement annoncerait en ligne ce qui n'y est pas")
+                .isZero();
+    }
+
+    @Test
     @DisplayName("#982 : upload EN FLUX — le client reçoit le Path du fichier, pas ses octets en mémoire")
     void upload_en_flux(@TempDir Path dossier) throws IOException {
         Path a = fichier(dossier, "Car-1.zip");
@@ -686,6 +717,13 @@ class DepotVigieChiroTest {
     private static Path grosFichier(Path dossier, String nom) throws IOException {
         Path chemin = dossier.resolve(nom);
         Files.write(chemin, new byte[(int) (ClientVigieChiro.SEUIL_MULTIPART_OCTETS + 1024)]);
+        return chemin;
+    }
+
+    /// Fichier de `taille` octets, pour mesurer le volume déposé (#2653).
+    private static Path fichierDe(Path dossier, String nom, int taille) throws IOException {
+        Path chemin = dossier.resolve(nom);
+        Files.write(chemin, new byte[taille]);
         return chemin;
     }
 

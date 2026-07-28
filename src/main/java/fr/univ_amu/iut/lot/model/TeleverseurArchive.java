@@ -31,10 +31,13 @@ final class TeleverseurArchive {
             return Resultat.echec("fichier introuvable sur le disque (archives à régénérer ?)");
         }
         String titre = fichier.getFileName().toString();
+        // Mesuré UNE fois : ce chiffre décide de la voie d'envoi, et repart ensuite dans l'issue pour que
+        // la fin de dépôt puisse dire le volume téléversé (#2653) sans le recalculer.
+        long octets = tailleDe(fichier);
         // Grosse archive (#2354) : découpée en parties réessayables séparément, pour qu'une coupure ne
         // fasse pas rejouer 700 Mo mais la seule partie en vol.
-        if (tailleDe(fichier) > ClientVigieChiro.SEUIL_MULTIPART_OCTETS) {
-            return televerserEnParts(fichier, titre, participationId, progression, reprise);
+        if (octets > ClientVigieChiro.SEUIL_MULTIPART_OCTETS) {
+            return televerserEnParts(fichier, titre, participationId, progression, reprise, octets);
         }
         // #1284 : chaque étape échoue avec sa cause exacte (non connecté / injoignable / HTTP n),
         // plus jamais un « refusé par VigieChiro » générique quand c'était le réseau.
@@ -49,7 +52,7 @@ final class TeleverseurArchive {
         if (finalisation.echec().isPresent()) {
             return Resultat.echec("finalisation : " + causeDe(finalisation));
         }
-        return Resultat.reussi(signe.id());
+        return Resultat.reussi(signe.id(), octets);
     }
 
     /// Téléverse une grosse archive **en parties** (#2354) : déclaration multipart, dépôt partie par
@@ -57,7 +60,12 @@ final class TeleverseurArchive {
     /// abandonne l'upload côté serveur (`DELETE`, best-effort) pour ne pas laisser de parties orphelines,
     /// puis on rend la cause.
     private Resultat televerserEnParts(
-            Path fichier, String titre, String participationId, DoubleConsumer progression, SuiviReprise reprise) {
+            Path fichier,
+            String titre,
+            String participationId,
+            DoubleConsumer progression,
+            SuiviReprise reprise,
+            long octets) {
         ReponseApi<String> declaration = client.creerFichierMultipart(titre, participationId);
         if (!(declaration instanceof ReponseApi.Succes<String>(String fichierId))) {
             return Resultat.echec("déclaration multipart : " + causeDe(declaration));
@@ -67,7 +75,7 @@ final class TeleverseurArchive {
             client.abandonnerFichier(fichierId);
             return Resultat.echec("téléversement multipart : " + causeDe(depot));
         }
-        return Resultat.reussi(fichierId);
+        return Resultat.reussi(fichierId, octets);
     }
 
     /// Taille du fichier, ou `-1` s'il est illisible : le seuil multipart n'est alors pas franchi et
@@ -95,14 +103,21 @@ final class TeleverseurArchive {
         return minuscule.endsWith(".zip") ? "application/zip" : "application/octet-stream";
     }
 
-    /// Issue d'un téléversement d'archive : l'id distant en cas de succès, la raison sinon.
-    record Resultat(String fichierId, String raison) {
-        static Resultat reussi(String fichierId) {
-            return new Resultat(fichierId, null);
+    /// Issue d'un téléversement d'archive : l'id distant en cas de succès, la raison sinon, et le
+    /// **volume effectivement parti** (#2653).
+    ///
+    /// Ce volume n'est pas calculé pour l'occasion : [#televerser] mesure déjà le fichier pour décider
+    /// entre l'envoi d'un bloc et l'envoi en parties, et jetait ce chiffre. Même situation qu'à l'import
+    /// avant #2586, où le garde-fou d'espace disque parcourait les originaux puis oubliait le volume.
+    ///
+    /// @param octets taille du fichier parti, `0` sur un échec (rien n'est en ligne) ou un fichier illisible
+    record Resultat(String fichierId, String raison, long octets) {
+        static Resultat reussi(String fichierId, long octets) {
+            return new Resultat(fichierId, null, Math.max(0, octets));
         }
 
         static Resultat echec(String raison) {
-            return new Resultat(null, raison);
+            return new Resultat(null, raison, 0);
         }
 
         boolean reussi() {

@@ -170,6 +170,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private TableView<LigneDepot> tableDepot;
 
     @FXML
+    private VBox zoneCompteRenduDepot;
+
+    @FXML
     private Button btnAnnulerDepot;
 
     @FXML
@@ -646,6 +649,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         btnReinitialiserDepot.disableProperty().bind(depotViewModel.enCoursProperty());
         // Étape 3 (téléverser / reprendre, et l'annulation coopérative) : câblage déporté, comme l'étape 4.
         EtapeTeleverserUI.cabler(btnTeleverser, iconeTeleverser, btnAnnulerDepot, depotViewModel);
+        // Compte rendu de fin de dépôt (#2653) : l'action suivante est fournie ICI, parce que « Lancer la
+        // participation » est l'étape ④ de cet écran et que le ViewModel n'a pas à savoir où mènent ses
+        // boutons. Même geste que le bouton de l'étape ④, pour qu'il n'y ait qu'un seul chemin.
+        CompteRenduDepotUI.cabler(zoneCompteRenduDepot, depotViewModel, () -> suiviTraitement.lancer(depotViewModel));
     }
 
     /// Demande l'annulation coopérative du dépôt en cours (#1044) : délégué au ViewModel, le moteur

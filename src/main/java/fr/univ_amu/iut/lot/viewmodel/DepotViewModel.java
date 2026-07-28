@@ -48,6 +48,10 @@ public class DepotViewModel {
     /// travail en arrière-plan.
     private JetonAnnulation jeton = new JetonAnnulation();
 
+    /// Fin du dernier dépôt, ou `null` tant qu'aucun n'est terminé (et de nouveau `null` dès qu'un dépôt
+    /// repart ou échoue : un compte rendu périmé ferait croire à un résultat frais).
+    private final ReadOnlyObjectWrapper<FinDepot> finDepot = new ReadOnlyObjectWrapper<>(this, "finDepot", null);
+
     private final ReadOnlyBooleanWrapper annulationDemandee =
             new ReadOnlyBooleanWrapper(this, "annulationDemandee", false);
 
@@ -208,6 +212,7 @@ public class DepotViewModel {
         // Le jeton du socle est volontairement à usage unique : réarmer = repartir d'un jeton neuf.
         jeton = new JetonAnnulation();
         annulationDemandee.set(false);
+        finDepot.set(null);
         enCours.set(true);
     }
 
@@ -231,30 +236,45 @@ public class DepotViewModel {
         enCours.set(false);
         // Un dépôt a eu lieu : la participation existe → l'étape ④ devient « Lancer la participation ».
         participationLiee.set(true);
-        // Dépôt interrompu à la demande (#1044) : le bilan de la tentative peut être « sans échec » alors
-        // qu'il reste des fichiers à téléverser — le message le dit explicitement (compteurs de la table).
-        if (annulationDemandee.get()) {
-            // Interruption demandée : ni un succès (des fichiers manquent), ni une erreur (rien n'a raté,
-            // l'utilisateur a arrêté), et la reprise ne renverra que le reste.
-            retour.set(RetourOperation.info(
-                    "Dépôt interrompu : " + suiviLignes.deposeesProperty().get() + "/"
-                            + suiviLignes.totalProperty().get()
-                            + " fichier(s) en ligne. « Reprendre le dépôt » ne renverra que les manquants."));
-            return;
-        }
-        String resume = "Nuit déposée sur Vigie-Chiro : " + bilan.deposees() + " fichier(s) téléversé(s).";
-        // Dépôt partiel : même raisonnement qu'au Lot 2 pour un relevé partiel - annoncer un succès
-        // mentirait sur ce qui est en ligne, annoncer une erreur nierait ce qui est passé.
-        retour.set(
-                bilan.estComplet()
-                        ? RetourOperation.succes(resume)
-                        : RetourOperation.info(resume + " " + bilan.echecs().size() + " en échec (à relancer)."));
+        // Le bandeau d'une ligne a disparu (#2653) : il redisait en phrase ce que la bande dit en
+        // proportions, et il ne pouvait porter ni le volume ni l'action suivante.
+        //
+        // Le ViewModel publie le FAIT, pas sa traduction : c'est l'écran qui sait où mènent ses boutons,
+        // et « Lancer la participation » est une action de l'étape ④. Le plan accompagne le bilan parce
+        // qu'un dépôt INTERROMPU a une tentative sans échec et des archives manquantes (#1044) : sans
+        // lui, la barre serait pleine et verte.
+        // Deux sources, et un plancher plutôt qu'un choix : la table compte toutes les tentatives, le
+        // bilan compte celle-ci. En régime normal la table est la plus complète (une reprise y ajoute au
+        // déjà-déposé) ; mais elle est alimentée par un relais, et si celui-ci est en retard elle
+        // annoncerait moins que ce qui vient de partir. Ce qui est en ligne est donc AU MOINS ce que
+        // cette tentative a déposé.
+        int enLigne = Math.max(suiviLignes.deposeesProperty().get(), bilan.deposees());
+        finDepot.set(new FinDepot(
+                bilan,
+                new CompteRenduChiffreDepot.Plan(
+                        Math.max(
+                                suiviLignes.totalProperty().get(),
+                                enLigne + bilan.echecs().size()),
+                        enLigne,
+                        annulationDemandee.get())));
     }
+
+    /// Ce qu'une fin de dépôt donne à restituer : le bilan de la tentative et ce que le **plan** sait.
+    ///
+    /// Les deux voyagent ensemble parce qu'aucun ne suffit : le bilan ignore les tentatives précédentes,
+    /// et le plan ignore les échecs de celle-ci.
+    public record FinDepot(BilanDepot bilan, CompteRenduChiffreDepot.Plan plan) {}
 
     /// Restitue un **échec** de dépôt (au fil JavaFX) : message d'erreur métier / réseau.
     public void echec(String erreur) {
         enCours.set(false);
+        finDepot.set(null);
         retour.set(RetourOperation.erreur(erreur));
+    }
+
+    /// La fin du dernier dépôt, que la vue traduit en compte rendu chiffré (#2653).
+    public ReadOnlyObjectProperty<FinDepot> finDepotProperty() {
+        return finDepot.getReadOnlyProperty();
     }
 
     public ReadOnlyBooleanProperty enCoursProperty() {

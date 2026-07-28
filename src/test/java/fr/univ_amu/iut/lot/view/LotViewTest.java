@@ -34,6 +34,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -94,6 +95,16 @@ class LotViewTest {
         stage.show();
     }
 
+    /// Les textes visibles d'une zone de restitution, lus dans le graphe de scène comme l'utilisateur
+    /// les voit.
+    private static java.util.List<String> textesDe(VBox zone) {
+        return zone.lookupAll(".label").stream()
+                .filter(Label.class::isInstance)
+                .map(noeud -> ((Label) noeud).getText())
+                .filter(texte -> texte != null && !texte.isBlank())
+                .toList();
+    }
+
     @Test
     @DisplayName("Affiche statut/récap/dossier ; préparer actif, déposer désactivé (Vérifié)")
     void affiche_etat_verifie(FxRobot robot) {
@@ -139,12 +150,16 @@ class LotViewTest {
 
         // #1890 : les deux ViewModels de l'écran partagent un bandeau unique ; le bilan du dépôt y arrive
         // comme n'importe quel autre compte rendu.
-        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
-        HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
         verify(depot).deposer(eq(42L), any(), any(), any());
-        assertThat(message.getText()).contains("1 fichier(s) téléversé(s)");
-        assertThat(bandeau.isVisible()).isTrue();
-        assertThat(bandeau.getStyleClass()).as("un dépôt complet est un succès").contains("retour-succes");
+        // #2653 : le bilan n'arrive plus dans le bandeau d'une ligne mais dans la bande chiffrée, qui
+        // peut porter la proportion, le volume et l'action suivante - trois choses qu'une phrase ne peut
+        // pas dire. Le bandeau reste partagé pour les ERREURS et les autres opérations de l'écran.
+        VBox zone = robot.lookup("#zoneCompteRenduDepot").queryAs(VBox.class);
+        assertThat(zone.isVisible()).isTrue();
+        assertThat(textesDe(zone)).anyMatch(texte -> texte.contains("1 déposées"));
+        assertThat(robot.lookup("#bandeauRetour").queryAs(HBox.class).isVisible())
+                .as("un dépôt réussi ne laisse plus de bandeau : il redirait ce que la bande montre")
+                .isFalse();
     }
 
     @Test
@@ -171,12 +186,13 @@ class LotViewTest {
 
         robot.interact(() -> robot.lookup("#btnTeleverser").queryButton().fire());
 
-        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
-        HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
-        assertThat(message.getText()).contains("interrompu").contains("Reprendre le dépôt");
-        assertThat(bandeau.getStyleClass())
-                .as("#1890 : une interruption demandée n'est ni un succès ni une erreur")
-                .contains("retour-info");
+        // #2653 : l'interruption se lit dans la bande. Ce qui compte reste le même - elle ne doit passer
+        // ni pour un succes ni pour une erreur - mais c'est desormais la part « Restantes » de la barre
+        // qui l'empeche, plutot qu'une couleur de bandeau.
+        VBox zone = robot.lookup("#zoneCompteRenduDepot").queryAs(VBox.class);
+        assertThat(textesDe(zone))
+                .anyMatch(texte -> texte.contains("Dépôt interrompu"))
+                .anyMatch(texte -> texte.contains("Reprendre le dépôt"));
         assertThat(robot.lookup("#btnAnnulerDepot").queryButton().isVisible())
                 .as("le dépôt est fini : le bouton disparaît")
                 .isFalse();
@@ -188,7 +204,10 @@ class LotViewTest {
         when(service.consulterLot(anyLong()))
                 .thenReturn(new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
         when(service.sequencesADeposer(42L)).thenReturn(List.of(java.nio.file.Path.of("/ws/a.wav")));
-        when(depot.deposer(eq(42L), any(), any(), any())).thenReturn(new BilanDepot("part-1", 1, List.of()));
+        // Un dépôt EN ÉCHEC : depuis #2653 le succès passe par la bande, et le bandeau ne porte plus que
+        // les erreurs et les autres opérations de l'écran. Il en faut donc une pour éprouver sa croix.
+        when(depot.deposer(eq(42L), any(), any(), any()))
+                .thenThrow(new fr.univ_amu.iut.commun.model.RegleMetierException("Vigie-Chiro injoignable"));
         robot.interact(() -> controleur.ouvrirSur(
                 new ContextePassage(42L, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière"))));
         robot.interact(() -> robot.lookup("#btnTeleverser").queryButton().fire());
@@ -210,7 +229,8 @@ class LotViewTest {
         when(service.consulterLot(anyLong()))
                 .thenReturn(new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
         when(service.sequencesADeposer(42L)).thenReturn(List.of(java.nio.file.Path.of("/ws/a.wav")));
-        when(depot.deposer(eq(42L), any(), any(), any())).thenReturn(new BilanDepot("part-1", 1, List.of()));
+        when(depot.deposer(eq(42L), any(), any(), any()))
+                .thenThrow(new fr.univ_amu.iut.commun.model.RegleMetierException("Vigie-Chiro injoignable"));
         when(service.supprimerArchivesDepot(42L)).thenReturn(4096L);
         // La suppression n'est offerte que s'il y a des archives en table (liaison vivante sur les lignes).
         when(service.archivesDepot("/ws/session-42"))
@@ -219,10 +239,12 @@ class LotViewTest {
         robot.interact(() -> controleur.ouvrirSur(
                 new ContextePassage(42L, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière"))));
 
-        // Compte rendu du DEPOT (DepotViewModel), puis compte rendu du LOT (LotViewModel).
+        // Compte rendu du DEPOT (DepotViewModel), puis compte rendu du LOT (LotViewModel). Depuis #2653
+        // c'est l'ÉCHEC d'un dépôt qui emprunte le bandeau : son succès a sa propre bande. Le partage
+        // qu'éprouve ce test - deux ViewModels, un bandeau, le dernier parle - est intact.
         robot.interact(() -> robot.lookup("#btnTeleverser").queryButton().fire());
         Label message = robot.lookup("#lblRetour").queryAs(Label.class);
-        assertThat(message.getText()).contains("téléversé");
+        assertThat(message.getText()).contains("injoignable");
 
         // Sans stub, la confirmation ouvre un Alert.showAndWait() qui fige TestFX en headless.
         robot.interact(() -> controleur.confirmateur().definir(texte -> true));
