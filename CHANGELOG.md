@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.98.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.97.0...v2.98.0) (2026-07-28)
+
+
+### Features
+
+* **connexion:** l avancement parait dans la modale, plus dans une seconde fenetre ([#2664](https://github.com/echonuit/vigiechiro-pr-companion/issues/2664)) ([96d7458](https://github.com/echonuit/vigiechiro-pr-companion/commit/96d745856ee0048ba023ef0b25379443b3c9a3a0)), closes [#2642](https://github.com/echonuit/vigiechiro-pr-companion/issues/2642) [#2642](https://github.com/echonuit/vigiechiro-pr-companion/issues/2642)
+
 # [2.97.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.96.0...v2.97.0) (2026-07-28)
 
 
