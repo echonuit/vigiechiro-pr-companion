@@ -4,6 +4,7 @@ import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.time.LocalDateTime;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Cursor;
@@ -27,11 +28,16 @@ final class CellulesAudio {
     /// Icône du drapeau **douteux** (#160) : point d'interrogation, pour le bouton de bascule de la barre.
     static final String ICONE_DOUTEUX = "fas-question-circle";
 
+    /// **Espèce à enjeu** (#2353) : un bouclier, pour une espèce que le plan national désigne comme
+    /// prioritaire. Ni alerte ni erreur — l'enjeu porte sur l'espèce, pas sur la qualité de la donnée.
+    static final String ICONE_ENJEU = "fas-shield-alt";
+
     /// Classes CSS colorant les icônes (`-fx-icon-color` dans `sons-validation.css`) : étoile dorée,
     /// commentaire bleu, doute orange.
     static final String STYLE_REFERENCE = "icone-reference";
     static final String STYLE_COMMENTAIRE = "icone-commentaire";
     static final String STYLE_DOUTEUX = "icone-douteux";
+    static final String STYLE_ENJEU = "icone-enjeu";
 
     private CellulesAudio() {}
 
@@ -55,9 +61,10 @@ final class CellulesAudio {
             TableColumn<LigneObservationAudio, String> colonne,
             String id,
             String iconeLiteral,
+            String classeCss,
             String libelle,
             Supplier<TableCell<LigneObservationAudio, String>> fournisseurCellule) {
-        poserEnTeteIcone(colonne, id, iconeLiteral, libelle);
+        poserEnTeteIcone(colonne, id, iconeLiteral, classeCss, libelle);
         colonne.setSortable(false);
         colonne.setCellFactory(c -> fournisseurCellule.get());
     }
@@ -69,8 +76,11 @@ final class CellulesAudio {
     /// Séparé du reste parce qu'un en-tête à icône ne dit rien du **comportement** de la colonne : les deux
     /// indicateurs ne se trient pas, le fil de discussion si - c'est un compte.
     static void poserEnTeteIcone(
-            TableColumn<LigneObservationAudio, String> colonne, String id, String iconeLiteral, String libelle) {
-        String classeCss = ICONE_REFERENCE.equals(iconeLiteral) ? STYLE_REFERENCE : STYLE_COMMENTAIRE;
+            TableColumn<LigneObservationAudio, String> colonne,
+            String id,
+            String iconeLiteral,
+            String classeCss,
+            String libelle) {
         FontIcon enTete = icone(iconeLiteral, classeCss);
         enTete.setAccessibleText(libelle);
         Tooltip.install(enTete, new Tooltip(libelle));
@@ -85,18 +95,23 @@ final class CellulesAudio {
             TableColumn<LigneObservationAudio, String> colReference,
             TableColumn<LigneObservationAudio, String> colCommentaire,
             TableColumn<LigneObservationAudio, String> colFil,
+            TableColumn<LigneObservationAudio, String> colEnjeu,
+            Predicate<LigneObservationAudio> aEnjeu,
             BiConsumer<Long, String> enregistrerCommentaire) {
-        configurerColonne(colReference, "colReference", ICONE_REFERENCE, "Référence", CellulesAudio::reference);
+        configurerColonne(colEnjeu, "colEnjeu", ICONE_ENJEU, STYLE_ENJEU, "Espèce à enjeu", () -> enjeu(aEnjeu));
+        configurerColonne(
+                colReference, "colReference", ICONE_REFERENCE, STYLE_REFERENCE, "Référence", CellulesAudio::reference);
         configurerColonne(
                 colCommentaire,
                 "colCommentaire",
                 ICONE_COMMENTAIRE,
+                STYLE_COMMENTAIRE,
                 "Commentaire",
                 () -> commentaire(enregistrerCommentaire));
         // Le fil gardait un glyphe littéral en en-tête : ni annoncé par un lecteur d'écran, ni expliqué au
         // survol, et absent des machines dont la police ne le porte pas. Seul son EN-TÊTE change : ses
         // cellules portent un compte de messages, et cette colonne reste triable.
-        poserEnTeteIcone(colFil, "colFil", ICONE_FIL, "Discussion");
+        poserEnTeteIcone(colFil, "colFil", ICONE_FIL, STYLE_COMMENTAIRE, "Discussion");
     }
 
     /// Cellule texte qui **élide** un contenu long et en expose la valeur complète via une infobulle au
@@ -153,6 +168,30 @@ final class CellulesAudio {
                 } else {
                     setGraphic(icone(ICONE_REFERENCE, STYLE_REFERENCE));
                     setTooltip(new Tooltip("Son de référence"));
+                }
+            }
+        };
+    }
+
+    /// Cellule de la colonne « **espèce à enjeu** » (#2353) : **bouclier violet** si le taxon retenu de la
+    /// ligne figure parmi les espèces prioritaires du plan national, rien sinon.
+    ///
+    /// Le repère n'est **jamais une couleur seule** : l'icône porte sa forme, une infobulle nomme le plan,
+    /// et l'en-tête de colonne porte son libellé accessible (#794). Une ligne sans repère n'est pas une
+    /// ligne douteuse — l'immense majorité des taxons détectés ne relèvent pas du plan.
+    static TableCell<LigneObservationAudio, String> enjeu(Predicate<LigneObservationAudio> aEnjeu) {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(String valeur, boolean vide) {
+                super.updateItem(valeur, vide);
+                LigneObservationAudio ligne =
+                        getTableRow() == null ? null : getTableRow().getItem();
+                if (vide || ligne == null || !aEnjeu.test(ligne)) {
+                    setGraphic(null);
+                    setTooltip(null);
+                } else {
+                    setGraphic(icone(ICONE_ENJEU, STYLE_ENJEU));
+                    setTooltip(new Tooltip("Espèce prioritaire du Plan National d'Actions Chiroptères"));
                 }
             }
         };

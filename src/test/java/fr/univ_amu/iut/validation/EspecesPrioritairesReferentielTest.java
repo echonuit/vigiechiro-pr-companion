@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.validation.model.dao.TaxonPrioritaireDao;
+import fr.univ_amu.iut.validation.model.dao.TaxonDao;
 import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -59,13 +59,13 @@ class EspecesPrioritairesReferentielTest {
     Path dossier;
 
     private SourceDeDonnees source;
-    private TaxonPrioritaireDao dao;
+    private TaxonDao dao;
 
     @BeforeEach
     void migrer() {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        dao = new TaxonPrioritaireDao(source);
+        dao = new TaxonDao(source);
     }
 
     @Test
@@ -94,13 +94,13 @@ class EspecesPrioritairesReferentielTest {
     void marque_dix_sept_taxons() {
         // 19 espèces au plan, 2 absentes du référentiel Tadarida. Si ce nombre bouge, c'est que l'une des
         // deux listes a bougé — et il faut alors relire l'ADR 2353 avant de corriger le chiffre.
-        assertThat(dao.tousLesCodes()).hasSize(17);
+        assertThat(dao.codesPrioritaires()).hasSize(17);
     }
 
     @Test
     @DisplayName("Chaque code marqué désigne un chiroptère réellement présent au référentiel")
     void chaque_code_marque_existe() {
-        Set<String> marques = dao.tousLesCodes();
+        Set<String> marques = dao.codesPrioritaires();
         assertThat(marques).isNotEmpty();
         assertThat(codesDuGroupe("Chiroptères"))
                 .as("code marqué absent du référentiel, ou rattaché à un autre groupe")

@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /// Service métier de la feature `validation` : valide les résultats d'identification Tadarida
 /// (parcours P7, épopée E7). Suit le patron du service de référence `ServiceSites` : pure Java
@@ -78,6 +79,13 @@ public class ServiceValidation implements CompteurValidations {
     /// Cœur d'import, extrait pour cohésion (plafond GodClass) : porte l'invariant « un seul jeu par
     /// passage » et l'orchestration transactionnelle. Le service n'en est plus qu'une façade.
     private final NoyauImportObservations noyau;
+
+    /// Les espèces à **enjeu de conservation** (#2353) : celles que le Plan National d'Actions
+    /// Chiroptères désigne comme prioritaires. Passe par le [TaxonDao] déjà tenu ici — le marquage est une
+    /// table latérale du référentiel taxonomique, pas une donnée métier de plus à faire descendre.
+    public Set<String> especesPrioritaires() {
+        return taxonDao.codesPrioritaires();
+    }
 
     public ServiceValidation(
             ResultatsIdentificationDao resultatsDao,

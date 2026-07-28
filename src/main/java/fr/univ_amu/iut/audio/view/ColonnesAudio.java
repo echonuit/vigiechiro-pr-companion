@@ -8,6 +8,7 @@ import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.control.TableColumn;
 
@@ -41,7 +42,8 @@ final class ColonnesAudio {
             TableColumn<LigneObservationAudio, String> reference,
             TableColumn<LigneObservationAudio, String> commentaire,
             TableColumn<LigneObservationAudio, String> validateur,
-            TableColumn<LigneObservationAudio, String> fil) {}
+            TableColumn<LigneObservationAudio, String> fil,
+            TableColumn<LigneObservationAudio, String> enjeu) {}
 
     private ColonnesAudio() {}
 
@@ -55,7 +57,8 @@ final class ColonnesAudio {
         col.date().setVisible(!passageUnique);
     }
 
-    static void configurer(Colonnes col, BiConsumer<Long, String> enregistrerCommentaire) {
+    static void configurer(
+            Colonnes col, Predicate<LigneObservationAudio> aEnjeu, BiConsumer<Long, String> enregistrerCommentaire) {
         col.tadarida().setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.tadarida(c.getValue())));
         col.proba()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
@@ -130,6 +133,7 @@ final class ColonnesAudio {
 
         // Indicateurs référence / commentaire : en-tête et cellule rendus par une icône Ikonli colorée,
         // un id stable pour les retrouver, cellules dédiées (icône + infobulle), et non triables.
-        CellulesAudio.configurerIndicateurs(col.reference(), col.commentaire(), col.fil(), enregistrerCommentaire);
+        CellulesAudio.configurerIndicateurs(
+                col.reference(), col.commentaire(), col.fil(), col.enjeu(), aEnjeu, enregistrerCommentaire);
     }
 }

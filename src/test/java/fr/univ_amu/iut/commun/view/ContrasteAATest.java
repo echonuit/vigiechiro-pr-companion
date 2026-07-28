@@ -113,6 +113,8 @@ class ContrasteAATest {
     static {
         // diagnostic.css:32, design.css:961 — le triangle d'avertissement, seul usage restant du jeton.
         COUPLES_ELEMENT.put("-couleur-avertissement (icône) sur -couleur-fond", "-couleur-avertissement|-couleur-fond");
+        // sons-validation.css — le bouclier « espèce à enjeu » (#2353), qui n'habille jamais de texte.
+        COUPLES_ELEMENT.put("-couleur-enjeu (icône) sur -couleur-fond", "-couleur-enjeu|-couleur-fond");
     }
 
     /// **La dette, et elle est soldée.** Quatre couples au moment d'écrire ce test, zéro aujourd'hui :

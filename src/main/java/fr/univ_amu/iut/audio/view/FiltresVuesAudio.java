@@ -38,6 +38,7 @@ final class FiltresVuesAudio {
             MemoireRevueAudio memoire,
             DepotVues depotVues,
             String feature,
+            MarqueurEspecesAEnjeu marqueurEnjeu,
             Supplier<List<GestionnaireColonnes.Colonne>> colonnes) {
         // Barre de filtres « à la Notion » (#470/#471) : recherche texte permanente + « + Filtre » + puces,
         // pilotant les filtres composables du view-model. Catalogue de critères : statut et groupe taxon.
@@ -53,6 +54,7 @@ final class FiltresVuesAudio {
                         CriteresAudio.references(),
                         CriteresAudio.douteux(),
                         CriteresAudio.nonIdentifie(),
+                        CriteresAudio.aEnjeu(marqueurEnjeu::aEnjeu),
                         CriteresAudio.probabilite(),
                         CriteresAudio.heure(viewModel::plageNuitParDefaut)),
                 CriteresAudio.rechercheTexte());

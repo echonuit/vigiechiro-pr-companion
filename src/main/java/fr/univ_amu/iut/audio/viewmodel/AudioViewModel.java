@@ -79,6 +79,7 @@ public class AudioViewModel {
     private final ObservableList<LigneObservationAudio> observations = FXCollections.observableArrayList();
     private final FilteredList<LigneObservationAudio> observationsFiltrees = new FilteredList<>(observations);
     private final ObservableList<Taxon> taxons = FXCollections.observableArrayList();
+
     private final ObjectProperty<LigneObservationAudio> selection = new SimpleObjectProperty<>(this, "selection");
     /// Vrai dès qu'une **ligne** est sélectionnée (observation ou séquence non identifiée). Pilote le bouton
     /// État **dérivé de la sélection** (présence / observation / proposition Tadarida / référence / douteux),

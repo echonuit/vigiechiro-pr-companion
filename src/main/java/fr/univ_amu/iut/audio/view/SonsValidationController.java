@@ -6,7 +6,6 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
-import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DemandeurDeChoixModifiable;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
@@ -144,6 +143,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// [AudioViewModel#filtres]. Mémorisée pour la réinitialiser lors d'une navigation ciblée.
     private GestionnaireFiltres<LigneObservationAudio> gestionnaireFiltres;
 
+    /// Repère des **espèces à enjeu** (#2353) : lu une fois à l'ouverture, le référentiel ne bougeant pas
+    /// en cours de session. Partagé par la colonne-indicateur et le critère de filtre.
+    private MarqueurEspecesAEnjeu marqueurEnjeu;
+
     /// Aiguillage des actions de revue selon la sélection (unitaire vs lot, #479), partagé par les boutons et
     /// les raccourcis clavier.
     private ActionsSelectionAudio actionsSelection;
@@ -257,6 +260,11 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private TableColumn<LigneObservationAudio, String> colFil;
 
+    /// Colonne-indicateur **espèce à enjeu** (#2353) : bouclier sur les lignes dont le taxon retenu est
+    /// une espèce prioritaire du plan national.
+    @FXML
+    private TableColumn<LigneObservationAudio, String> colEnjeu;
+
     @FXML
     private Label lblVide;
 
@@ -365,6 +373,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// [ColonnesAudio] (unité cohésive extraite pour garder ce contrôleur sous le seuil de God Class) ; on
     /// lui passe les colonnes injectées par le FXML, regroupées.
     private void configurerColonnes() {
+        marqueurEnjeu = new MarqueurEspecesAEnjeu(appuis.especesPrioritaires());
         colonnes = new ColonnesAudio.Colonnes(
                 colTadarida,
                 colProba,
@@ -383,8 +392,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 colReference,
                 colCommentaire,
                 colValidateur,
-                colFil);
-        ColonnesAudio.configurer(colonnes, viewModel.actions()::commenter);
+                colFil,
+                colEnjeu);
+        ColonnesAudio.configurer(colonnes, marqueurEnjeu::aEnjeu, viewModel.actions()::commenter);
     }
 
     @FXML
@@ -423,28 +433,11 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // vide : le geste restait muet et passait pour cassé (#1834).
         DoubleClicLigne.installer(tableObservations, ligne -> actionsMenu.ouvrirFiche(ligne, viewModel::signaler));
 
-        tableObservations.getSelectionModel().selectedItemProperty().addListener((obs, ancienne, nouvelle) -> {
-            viewModel.selectionProperty().set(nouvelle);
-            // « Fiche de l'espèce » (#847, #1795) : cible la proposition Tadarida de la ligne sélectionnée,
-            // pour l'item du ☰ comme pour celui du clic droit (tous deux tenus par ActionsMenuAudio).
-            actionsMenu.configurerFiches(itemFicheEspece, nouvelle);
-        });
-        // État initial des items « Fiche de l'espèce » avant toute sélection (désactivés, libellé explicatif).
-        actionsMenu.configurerFiches(
-                itemFicheEspece, tableObservations.getSelectionModel().getSelectedItem());
-        // Resynchronisation **VM → table** : après un Valider/Corriger, charger() reconstruit la liste avec
-        // de nouvelles instances de record (statut/taxon changés), ce qui vide la surbrillance de la table
-        // alors que le VM restaure la sélection par identifiant. On réaligne la ligne surlignée sur la
-        // sélection du VM (et on désélectionne si null). La garde d'égalité empêche toute boucle avec le
-        // listener table → VM ci-dessus (une sélection déjà alignée ne redéclenche rien).
-        viewModel.selectionProperty().addListener((obs, ancienne, nouvelle) -> {
-            var modele = tableObservations.getSelectionModel();
-            if (nouvelle == null) {
-                modele.clearSelection();
-            } else if (!nouvelle.equals(modele.getSelectedItem())) {
-                modele.select(nouvelle);
-            }
-        });
+        // Synchronisation de la sélection dans les deux sens, et items de fiche qui la suivent : déléguée
+        // à SelectionTableAudio, comme MenuCertitude et PanneauDiscussion — ce contrôleur est au plafond
+        // de NcssCount, et les deux écouteurs forment un tout (la garde d'égalité de l'un empêche la
+        // boucle avec l'autre).
+        SelectionTableAudio.installer(tableObservations, viewModel, actionsMenu, itemFicheEspece);
 
         // Barre de filtres « à la Notion » (#470/#471), mémoire de session (#484) et onglets de vues
         // mémorisées (#623) : assemblage délégué à FiltresVuesAudio, qui rend le gestionnaire (gardé pour
@@ -456,6 +449,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 memoire,
                 appuis.depotVues(),
                 FEATURE,
+                marqueurEnjeu,
                 this::colonnesTableAudio);
 
         zonesStatut.bind(Bindings.createObjectBinding(this::zonesStatutCourantes, viewModel.comptageProperty()));
@@ -502,25 +496,14 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 itemOuvrirVigieChiro);
         MenuAudio.cabler(itemsMenu, viewModel, importVigieChiro, publicationCorrections, reactifs);
 
-        // État vide : placeholder gris superposé à la table, réservé au seul « aucune observation… ».
-        var listeVide = Bindings.isEmpty(viewModel.observationsFiltrees());
-        lblVide.textProperty().bind(viewModel.messageProperty());
-        lblVide.visibleProperty().bind(listeVide);
-        lblVide.managedProperty().bind(listeVide);
+        // Ce que l'écran dit quand il n'a rien à montrer (état vide), quand une opération vient de se
+        // terminer (bandeau de retour, #795) et quand l'audio n'est pas tout là (bandeau d'archive, #1301) :
+        // trois messages de la même zone, câblés dans MessagesEcranAudio — ce contrôleur est au plafond
+        // de NcssCount.
+        MessagesEcranAudio.installer(lblVide, bandeauRetour, lblRetour, btnFermerRetour, lblBandeauArchive, viewModel);
 
-        // Bandeau de retour d'opération (import / export / valider / corriger) : libellé, visibilité,
-        // couleur de sévérité et croix de fermeture, décorrélés de l'état vide pour qu'une erreur d'import
-        // ne soit plus noyée dans le placeholder gris. Câblage isolé dans BandeauRetour.
-        BandeauRetour.installer(
-                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
-
-        // Disponibilité de l'audio (#1301) : bandeau « passage archivé / audio partiel n/total » en tête
-        // d'écran (masqué quand tout est là), et encart d'explication à la place du lecteur quand le
-        // fichier de la séquence sélectionnée n'est plus sur disque (jamais un lecteur inerte).
-        var bandeauPresent = viewModel.bandeauArchiveProperty().isNotEmpty();
-        lblBandeauArchive.textProperty().bind(viewModel.bandeauArchiveProperty());
-        lblBandeauArchive.visibleProperty().bind(bandeauPresent);
-        lblBandeauArchive.managedProperty().bind(bandeauPresent);
+        // Encart d'explication à la place du lecteur quand le fichier de la séquence sélectionnée n'est
+        // plus sur disque (jamais un lecteur inerte, #1301).
         EncartsEcouteAudio.installer(
                 audioView, encartAudioManquant, encartAudioDivergent, lblMotifDivergence, viewModel);
 
@@ -571,7 +554,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 new GestionnaireColonnes.Colonne(colReference, "Référence", false),
                 new GestionnaireColonnes.Colonne(colCommentaire, "Commentaire", false),
                 new GestionnaireColonnes.Colonne(colValidateur, "Avis du validateur", false),
-                new GestionnaireColonnes.Colonne(colFil, "Discussion", false));
+                new GestionnaireColonnes.Colonne(colFil, "Discussion", false),
+                new GestionnaireColonnes.Colonne(colEnjeu, "Espèce à enjeu", false));
     }
 
     /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue à

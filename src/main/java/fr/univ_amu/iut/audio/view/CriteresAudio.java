@@ -308,6 +308,32 @@ final class CriteresAudio {
     /// des observations Tadarida (dont la proposition n'est jamais nulle), y compris une fois validées à la main
     /// (elles n'acquièrent pas de proposition Tadarida). Critère **sans éditeur** (booléen) : la présence de la
     /// puce active le filtre. Porte la vue par défaut « Sons non identifiés » ([#vuesParDefaut()]).
+    /// Critère **Espèces à enjeu** (#2353) : garde les observations dont le **taxon retenu** figure parmi
+    /// les espèces prioritaires du Plan National d'Actions Chiroptères. Critère **sans éditeur** (booléen) :
+    /// la présence de la puce active le filtre, comme « Douteux » ou « Non identifiés ».
+    ///
+    /// Sur une nuit à 4 000 contacts dont douze relèvent d'espèces à enjeu, c'est ce qui remplace une
+    /// recherche ligne par ligne.
+    static CritereFiltre<LigneObservationAudio> aEnjeu(Predicate<LigneObservationAudio> estPrioritaire) {
+        return new CritereFiltre<LigneObservationAudio>() {
+            @Override
+            public String nom() {
+                return "a_enjeu";
+            }
+
+            @Override
+            public String libelle() {
+                return "Espèces à enjeu";
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
+                applique.accept(estPrioritaire); // filtre actif dès l'ajout de la puce
+                return null; // booléen : pas d'éditeur, la présence de la puce suffit
+            }
+        };
+    }
+
     static CritereFiltre<LigneObservationAudio> nonIdentifie() {
         return new CritereFiltre<LigneObservationAudio>() {
             @Override

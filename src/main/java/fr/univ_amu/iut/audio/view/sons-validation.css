@@ -59,6 +59,15 @@
   -fx-icon-size: 14px;
 }
 
+/* Espèce à enjeu (#2353) : bouclier violet patrimonial. Teinte propre, distincte des trois autres
+   indicateurs et des jetons sémantiques — un enjeu de conservation n'est ni une alerte sur la donnée,
+   ni une erreur à corriger. Le jeton vit dans palette.css, donc il suivra le thème sombre le jour
+   où il sera câblé (#1037). */
+.icone-enjeu {
+  -fx-icon-color: -couleur-enjeu;
+  -fx-icon-size: 15px;
+}
+
 /* Drapeau « douteux » (#160) : point d'interrogation orange (attention, à repasser). */
 .icone-douteux {
   -fx-icon-color: #e67e22;

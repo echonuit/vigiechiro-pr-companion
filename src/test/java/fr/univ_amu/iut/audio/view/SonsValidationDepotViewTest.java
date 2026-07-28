@@ -38,6 +38,7 @@ import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.validation.model.BilanImport;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -52,6 +53,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -141,6 +143,13 @@ class SonsValidationDepotViewTest {
                                 mock(ServiceDisponibiliteAudio.class),
                                 p -> true,
                                 mock(DiscussionValidateur.class));
+                    }
+
+                    // Référentiel des espèces à enjeu (#2353) : cet injecteur n'installe pas AudioModule,
+                    // il déclare donc son propre monde. Vide : cet écran ne teste pas le repère.
+                    @Provides
+                    EspecesPrioritaires especesPrioritaires() {
+                        return Set::of;
                     }
 
                     @Provides
