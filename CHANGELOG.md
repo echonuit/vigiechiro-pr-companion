@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.92.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.91.0...v2.92.0) (2026-07-28)
+
+
+### Features
+
+* **analyse:** un export d'activité qui dit d'où viennent ses lignes ([#2627](https://github.com/echonuit/vigiechiro-pr-companion/issues/2627)) ([b41ac57](https://github.com/echonuit/vigiechiro-pr-companion/commit/b41ac57d0c2eb0ef42fab4ba29f7bad23d8abbf0)), closes [#2613](https://github.com/echonuit/vigiechiro-pr-companion/issues/2613) [#2613](https://github.com/echonuit/vigiechiro-pr-companion/issues/2613)
+
 # [2.91.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.90.0...v2.91.0) (2026-07-28)
 
 
