@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
@@ -289,9 +290,9 @@ public final class HydratationSquelette {
         if (importObservations.isEmpty()) {
             return renoncer(
                     source,
-                    "Récupérer les observations de cette nuit demande la fonctionnalité « Import"
-                            + " Vigie-Chiro », qui est désactivée : réactivez-la (menu ☰ > Fonctionnalités)"
-                            + " puis recommencez.");
+                    "Récupérer les observations de cette nuit est impossible : la fonctionnalité"
+                            + " « Import Vigie-Chiro » est désactivée.",
+                    new Besoin.Fonctionnalite("Import Vigie-Chiro"));
         }
         Optional<Prefixe> prefixe = squelette.prefixe();
         if (prefixe.isEmpty()) {
@@ -323,6 +324,14 @@ public final class HydratationSquelette {
     private static <T> Optional<T> renoncer(Source source, String raison) {
         if (source == Source.COMPLETE) {
             throw new RegleMetierException(raison);
+        }
+        return Optional.empty();
+    }
+
+    /// Même renoncement, mais le refus porte ce qui **manque** (#2635) : la surface y ajoutera le geste.
+    private static <T> Optional<T> renoncer(Source source, String raison, Besoin besoin) {
+        if (source == Source.COMPLETE) {
+            throw new RegleMetierException(raison, besoin);
         }
         return Optional.empty();
     }

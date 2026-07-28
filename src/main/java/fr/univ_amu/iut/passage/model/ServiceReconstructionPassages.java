@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro.Phase;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -455,9 +456,9 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         // Vérifié AVANT toute écriture : un passage reconstruit sans ses observations ne serait qu'une
         // coquille, et mieux vaut ne rien créer que créer à moitié.
         ImportObservations importateur = importObservations.orElseThrow(() -> new RegleMetierException(
-                "La reconstruction rapatrie les observations depuis Vigie-Chiro, et la fonctionnalité"
-                        + " « Import Vigie-Chiro » est désactivée : réactivez-la (menu ☰ > Fonctionnalités)"
-                        + " puis recommencez."));
+                "Rapatrier les observations de cette nuit est impossible : la fonctionnalité"
+                        + " « Import Vigie-Chiro » est désactivée.",
+                new Besoin.Fonctionnalite("Import Vigie-Chiro")));
 
         progres.accept(new Progression("Lecture de la participation…", 0.05));
         jeton.leverSiAnnule();

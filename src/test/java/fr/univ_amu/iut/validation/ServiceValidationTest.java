@@ -404,11 +404,12 @@ class ServiceValidationTest {
         // Un passage a déjà un jeu (ici déjà importé ; même situation qu'un passage reconstruit par CSV).
         // Hors remplacement, l'invariant « un seul jeu par passage » refuse AVANT l'INSERT : une
         // RegleMetierException lisible plutôt que la contrainte UNIQUE qui fuyait en DataAccessException
-        // (« échec inattendu »). Le message guide vers « Sons & validation » pour remplacer.
+        // (« échec inattendu »). Le message dit le FAIT - un remplacement est possible, et il ne coûte pas
+        // les validations - sans nommer l'écran où le faire : ça, c'est l'affaire de la surface (#2635).
         assertThatThrownBy(() -> service.importer(idPassage, ecrireBrut()))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("déjà un jeu")
-                .hasMessageContaining("Sons & validation");
+                .hasMessageContaining("préserve vos validations");
 
         // Aucune insertion : le premier jeu et ses observations sont préservés à l'identique.
         assertThat(resultatsDao.findByPassage(idPassage).orElseThrow().id()).isEqualTo(idResultats1);

@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.model;
 
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.NommageSequences;
 import fr.univ_amu.iut.commun.model.NommageSequences.TranchesAttendues;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -58,9 +59,9 @@ final class ReactivationDepuisBruts {
             Optional<Prefixe> prefixeSession,
             Consumer<Progression> progres) {
         RegenerationSequences moteur = regeneration.orElseThrow(() -> new RegleMetierException(
-                "Ce dossier ne contient que les enregistrements bruts, et les régénérer demande la"
-                        + " fonctionnalité « Importation », désactivée : réactivez-la (menu ☰ >"
-                        + " Fonctionnalités) puis recommencez."));
+                "Ce dossier ne contient que les enregistrements bruts, et les régénérer est impossible :"
+                        + " la fonctionnalité « Importation » est désactivée.",
+                new Besoin.Fonctionnalite("Importation")));
         Prefixe prefixe = prefixeSession.orElseThrow(() -> new RegleMetierException(
                 "Le dossier de cette session ne porte pas un nom reconnaissable : impossible de régénérer"
                         + " ses séquences."));

@@ -154,7 +154,9 @@ public final class Cli {
             // traite déjà ainsi (`catch (RegleMetierException | IllegalArgumentException)`) ; la CLI s'aligne,
             // pour ne pas noyer les logs sous une trace SEVERE à chaque saisie invalide.
             LOG.fine(() -> "Refus métier d'une commande CLI : " + exception.getMessage());
-            ligne.getErr().println("Refus : " + exception.getMessage());
+            // Le message du modèle dit ce qui MANQUE ; c'est ici qu'on ajoute quoi taper (#2635). Avant,
+            // il arrivait avec « menu ☰ > Se connecter » écrit dedans, servi à qui n'a pas de menu.
+            ligne.getErr().println("Refus : " + GesteAttenduCli.message(exception));
             return CODE_REFUS;
         }
         LOG.log(Level.SEVERE, exception, () -> "Échec inattendu d'une commande CLI");

@@ -208,8 +208,7 @@ public class ReconstructionViewModel {
     /// Route un échec vers le message de la modale : un refus (point inconnu, hors connexion, analyse non
     /// terminée) **dit quoi faire**, il ne doit pas remonter en exception muette depuis le fil de fond.
     public void signalerErreur(Throwable echec) {
-        String detail = echec.getMessage();
-        retour.set(RetourOperation.erreur(detail != null && !detail.isBlank() ? detail : null));
+        retour.set(RetourOperation.erreur(echec));
     }
 
     /// Annulation demandée par l'utilisateur : un état **neutre**, pas une erreur. Rien n'a été créé (la
