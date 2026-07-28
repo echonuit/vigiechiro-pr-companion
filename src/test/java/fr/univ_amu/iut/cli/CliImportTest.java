@@ -182,7 +182,13 @@ class CliImportTest {
         assertThat(sortieImport.toString(StandardCharsets.UTF_8))
                 .contains("Import réussi")
                 .contains("Z1")
-                .contains("640380");
+                .contains("640380")
+                // Parité avec l'IHM (clôture #2350) : depuis #2358 l'écran compare le volume lu au volume
+                // écrit. La CLI ne dessine pas de barres, mais elle dit les mêmes chiffres - c'est une
+                // donnée, pas une mise en forme, et une capacité livrée d'un seul côté est à moitié livrée.
+                .contains("Lu / écrit")
+                .contains("lus sur la source")
+                .contains("écrits");
 
         // Effet persisté : un passage au statut Transformé est rattaché au point.
         List<Passage> passages = injecteur.getInstance(PassageDao.class).findByPoint(idPoint);

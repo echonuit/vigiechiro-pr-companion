@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.importation.model.ApercuEcrasement;
 import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.RapportImport;
@@ -152,6 +153,23 @@ public final class Importer implements Callable<Integer> {
         sortie.println("  Enregistreur: " + resultat.numeroSerieEnregistreur());
         sortie.println("  Originaux   : " + resultat.nombreOriginaux());
         sortie.println("  Séquences   : " + resultat.nombreSequences());
+        // Parité avec l'IHM (clôture #2350) : le compte rendu chiffré de l'écran compare le volume LU sur
+        // la carte au volume ÉCRIT sur le disque (#2358). La ligne de commande ne peut pas dessiner de
+        // barres, mais elle peut dire les mêmes chiffres - c'est une donnée, pas une mise en forme.
+        if (!resultat.volumes().estVide()) {
+            sortie.println("  Lu / écrit  : "
+                    + Formats.octetsLisibles(resultat.volumes().octetsLus())
+                    + " lus sur la source, "
+                    + Formats.octetsLisibles(resultat.volumes().octetsEcrits())
+                    + " écrits (dont "
+                    + Formats.octetsLisibles(resultat.volumes().octetsBruts())
+                    + " de bruts conservés)");
+        }
+        // #1488 : l'import crée une participation sur un serveur distant. L'écran le dit depuis la clôture
+        // du lot 2 ; la taire ici laisserait l'écriture se découvrir ailleurs, ce que l'issue interdit.
+        if (resultat.participationCreee()) {
+            sortie.println("  Vigie-Chiro : participation créée (le dépôt la réutilisera)");
+        }
 
         RapportImport rapport = resultat.rapport();
         sortie.println("  Rapport     : " + rapport.resume());
