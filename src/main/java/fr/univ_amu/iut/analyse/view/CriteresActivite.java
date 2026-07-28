@@ -90,8 +90,24 @@ final class CriteresActivite {
     static List<VueSauvegardee> vuesParDefaut() {
         return List.of(
                 vueParDefaut("Tout"),
-                vueParDefaut("Chiroptères", new DescripteurCritere(GROUPE, List.of("Chiroptères"))),
+                vueChiropteres(),
                 vueParDefaut("Autres", new DescripteurCritere(GROUPE, HORS_CHIROPTERES)));
+    }
+
+    /// La vue sur laquelle l'écran **s'ouvre** (#2616) : « Chiroptères ».
+    ///
+    /// Sans elle, l'écran s'ouvrait sur « Tout », et la présélection des cinq taxons les plus contactés
+    /// pouvait retenir une sauterelle — tracée alors, sur le même graphe et avec la même allure, qu'une
+    /// espèce de chauve-souris. Le protocole ne vise que les chiroptères : c'est donc eux que l'écran
+    /// montre d'abord, les autres catégories restant à un onglet de distance.
+    ///
+    /// Elle **n'est pas** un filtre imposé : l'onglet actif le dit, et « Tout » est juste à côté.
+    static VueSauvegardee vueDOuverture() {
+        return vueChiropteres();
+    }
+
+    private static VueSauvegardee vueChiropteres() {
+        return vueParDefaut("Chiroptères", new DescripteurCritere(GROUPE, List.of("Chiroptères")));
     }
 
     private static VueSauvegardee vueParDefaut(String nom, DescripteurCritere... criteres) {

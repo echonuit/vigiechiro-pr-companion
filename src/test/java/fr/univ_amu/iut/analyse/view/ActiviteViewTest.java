@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -176,6 +177,37 @@ class ActiviteViewTest {
         assertThat(robot.lookup("Autres").tryQuery())
                 .as("« Autres » cumule les catégories non-chiroptères : il tient enfin sa promesse (#2615)")
                 .isPresent();
+    }
+
+    @Test
+    void l_ecran_s_ouvre_sur_l_onglet_chiropteres(FxRobot robot) {
+        // Tadarida ne détecte pas que des chauves-souris : sur une vraie saison, la présélection des cinq
+        // taxons les plus contactés peut retenir une sauterelle, tracée comme une espèce de chiroptère.
+        // L'écran doit donc s'ouvrir sur la seule catégorie que le protocole vise (#2616).
+        when(service.contactsDeLUtilisateur("u-1"))
+                .thenReturn(concat(
+                        nContactsDuGroupe("PIPKUH", "Chiroptères", 5),
+                        nContactsDuGroupe("TETVIR", "Orthoptères et cigales", 9)));
+        robot.interact(() -> controleur.ouvrirTout("u-1"));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
+        Node actif = onglets.getChildren().stream()
+                .filter(o -> o.getStyleClass().contains("onglet-vue-actif"))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("aucun onglet actif à l'ouverture"));
+        assertThat(robot.from(actif)
+                        .lookup(".onglet-vue-nom")
+                        .queryAs(Label.class)
+                        .getText())
+                .as("l'écran s'ouvre sur la catégorie que le protocole vise")
+                .isEqualTo("Chiroptères");
+
+        LineChart<?, ?> graphe = robot.lookup("#grapheActivite").queryAs(LineChart.class);
+        assertThat(graphe.getData())
+                .extracting(XYChart.Series::getName)
+                .as("l'orthoptère le plus contacté ne doit pas être tracé comme une chauve-souris")
+                .containsExactly("PIPKUH");
     }
 
     @Test
@@ -418,6 +450,15 @@ class ActiviteViewTest {
         when(service.contactsDuPassage(PASSAGE)).thenReturn(contacts);
         ContextePassage contexte = new ContextePassage(PASSAGE, 3, new ContexteSite("640380", "A1", "Étang"));
         robot.interact(() -> controleur.ouvrirSur(contexte));
+    }
+
+    /// Contacts d'un **groupe taxonomique donné**, pour éprouver la partition par catégorie.
+    private static List<ContactHoraire> nContactsDuGroupe(String taxon, String groupe, int nombre) {
+        List<ContactHoraire> contacts = new ArrayList<>();
+        for (int i = 0; i < nombre; i++) {
+            contacts.add(new ContactHoraire(taxon, taxon, groupe, LocalDateTime.of(2026, 6, 20, 22, i)));
+        }
+        return contacts;
     }
 
     /// Contacts d'un **passage donné**, pour distinguer les nuits du protocole des nuits opportunistes.

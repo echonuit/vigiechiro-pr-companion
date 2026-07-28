@@ -29,6 +29,11 @@ L'écran réunit :
   chauves-souris, et « Autres » réunit orthoptères, micromammifères, oiseaux et le reste du
   référentiel. Vos propres vues s'enregistrent à côté, avec « + Vue ».
 
+L'écran **s'ouvre sur l'onglet « Chiroptères »**, la seule catégorie que le protocole vise. Sans cela,
+les cinq espèces cochées d'office pouvaient comprendre une sauterelle, tracée sur le même graphe et
+avec la même allure qu'une chauve-souris. Ce n'est pas un filtre imposé : l'onglet actif le dit, et
+« Tout » est juste à côté.
+
 ## Les nuits opportunistes
 
 Une **participation opportuniste** est une nuit enregistrée sur le carré de quelqu'un d'autre, quand
