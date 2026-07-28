@@ -104,6 +104,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// une action sur des passages sans rien savoir du dépôt.
     private final ActionGroupee preparerDepot;
 
+    /// L'action groupée « Téléverser », consommée sous le même port (#2357, PR 3/5).
+    private final ActionGroupee televerser;
+
     /// Action de ligne « Ouvrir sur Vigie-Chiro » (#1799) : page de la participation liée au passage.
     private final ActionVigieChiroPassage vigieChiro;
     private IndicateurOccupation occupation;
@@ -162,6 +165,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private MenuItem itemPreparerSelection;
+
+    @FXML
+    private MenuItem itemTeleverserSelection;
 
     @FXML
     private TableView<LignePassage> tableLignes;
@@ -261,7 +267,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
             DepotDispositionColonnes depotColonnes,
             ExecuteurTache executeur,
             ActionVigieChiroPassage vigieChiro,
-            @Named("action.preparerDepot") ActionGroupee preparerDepot) {
+            @Named("action.preparerDepot") ActionGroupee preparerDepot,
+            @Named("action.televerser") ActionGroupee televerser) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.reconstruction = Objects.requireNonNull(reconstruction, "reconstruction");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -272,6 +279,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
         this.preparerDepot = Objects.requireNonNull(preparerDepot, "preparerDepot");
+        this.televerser = Objects.requireNonNull(televerser, "televerser");
         this.lots = new TraitementLot(executeur);
     }
 
@@ -371,12 +379,14 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // État des entrées du menu ☰ (grisage parlant #789, retrait de la reconstruction hors connexion
         // #1396) : déporté dans MenuActionsMultisite, le controller était au plafond de taille.
         MenuActionsMultisite.installer(
-                itemExporter,
-                itemEcouterLot,
-                itemEcouterPassage,
-                itemReconstruire,
-                itemReleverAnalyses,
-                itemPreparerSelection,
+                new MenuActionsMultisite.Entrees(
+                        itemExporter,
+                        itemEcouterLot,
+                        itemEcouterPassage,
+                        itemReconstruire,
+                        itemReleverAnalyses,
+                        itemPreparerSelection,
+                        itemTeleverserSelection),
                 viewModel.nonVideProperty(),
                 tableLignes.getSelectionModel().selectedItemProperty(),
                 Bindings.size(tableLignes.getSelectionModel().getSelectedItems()),
@@ -604,10 +614,22 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// rafraîchir : les statuts auront bougé.
     @FXML
     private void preparerSelection() {
+        lancerSurLaSelection(preparerDepot);
+    }
+
+    /// « Téléverser la sélection… » (#2357, PR 3/5) : même geste, autre action.
+    @FXML
+    private void televerserSelection() {
+        lancerSurLaSelection(televerser);
+    }
+
+    /// Applique `action` aux lignes cochées. Factorisé dès la deuxième : chaque PR du lot 3 ajoute une
+    /// action, pas un geste - la surface, elle, ne bouge plus.
+    private void lancerSurLaSelection(ActionGroupee action) {
         List<LignePassage> selection =
                 List.copyOf(tableLignes.getSelectionModel().getSelectedItems());
         if (!selection.isEmpty()) { // l'item est grisé sinon : garde de ceinture
-            lots.lancer(menuActions.getScene().getWindow(), preparerDepot, selection, this::chargerDonnees);
+            lots.lancer(menuActions.getScene().getWindow(), action, selection, this::chargerDonnees);
         }
     }
 

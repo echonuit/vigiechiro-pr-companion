@@ -106,6 +106,12 @@
               <FontIcon iconLiteral="fas-layer-group"/>
             </graphic>
           </MenuItem>
+          <MenuItem fx:id="itemTeleverserSelection" text="Téléverser la sélection…"
+                    onAction="#televerserSelection">
+            <graphic>
+              <FontIcon iconLiteral="fas-cloud-upload-alt"/>
+            </graphic>
+          </MenuItem>
           <!-- #1338 : relève l'état des analyses de toutes les nuits déposées, À LA DEMANDE (aucun
                sondage automatique). Retiré hors connexion VigieChiro (il interroge la plateforme). -->
           <MenuItem fx:id="itemReleverAnalyses" text="Relever l'état des analyses"

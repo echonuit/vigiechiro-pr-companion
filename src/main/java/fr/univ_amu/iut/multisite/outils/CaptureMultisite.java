@@ -8,6 +8,7 @@ import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.CiblePassage;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -248,12 +249,23 @@ public final class CaptureMultisite {
                     // l'état grisé viennent du NOMBRE de lignes cochées. Substituer ne change aucun
                     // pixel. Le jour où une capture montrerait le lot en cours, il faudra le vrai.
                     @Provides
+                    @Named("action.televerser")
+                    ActionGroupee fournirActionTeleverser() {
+                        return actionDeCapture("Téléverser vers Vigie-Chiro");
+                    }
+
+                    @Provides
                     @Named("action.preparerDepot")
                     ActionGroupee fournirActionPreparer() {
+                        return actionDeCapture("Préparer le dépôt");
+                    }
+
+                    /// Remplaçant d'action : le libellé suffit, rien d'autre n'est rendu.
+                    private ActionGroupee actionDeCapture(String libelle) {
                         return new ActionGroupee() {
                             @Override
                             public String libelle() {
-                                return "Préparer le dépôt";
+                                return libelle;
                             }
 
                             @Override
@@ -262,7 +274,7 @@ public final class CaptureMultisite {
                             }
 
                             @Override
-                            public void executer(CiblePassage cible) {
+                            public void executer(CiblePassage cible, JetonAnnulation jeton) {
                                 throw new UnsupportedOperationException("capture : aucune action n'est jouée");
                             }
                         };
