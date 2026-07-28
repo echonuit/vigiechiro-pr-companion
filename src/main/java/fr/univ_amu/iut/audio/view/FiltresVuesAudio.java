@@ -53,6 +53,7 @@ final class FiltresVuesAudio {
                         CriteresAudio.references(),
                         CriteresAudio.douteux(),
                         CriteresAudio.nonIdentifie(),
+                        CriteresAudio.aEnjeu(viewModel::aEnjeu),
                         CriteresAudio.probabilite(),
                         CriteresAudio.heure(viewModel::plageNuitParDefaut)),
                 CriteresAudio.rechercheTexte());

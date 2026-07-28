@@ -9,8 +9,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /// DAO de l'entité [Taxon] (table `taxon`).
 ///
@@ -46,6 +48,21 @@ public class TaxonDao extends DaoGenerique<Taxon, String> {
     }
 
     /// Taxons rattachés à un groupe taxonomique donné, triés par code.
+    /// Codes des taxons **prioritaires** au sens du Plan National d'Actions Chiroptères (table latérale
+    /// `taxon_prioritaire`, V36, #2353). Lecture **groupée** : les écrans en gardent un instantané et le
+    /// consultent une fois par ligne affichée, ce qu'une requête par ligne ne supporterait pas.
+    ///
+    /// Lu ici, avec le reste du référentiel taxonomique, plutôt que par un DAO à part : la table latérale
+    /// n'a pas de vie propre — l'application ne l'écrit jamais, seule la migration l'alimente. Un second
+    /// DAO n'aurait fait qu'un collaborateur de plus à faire descendre jusqu'aux écrans, dans des
+    /// constructeurs déjà au plafond.
+    ///
+    /// `LinkedHashSet` : l'ordre de lecture reste stable d'une exécution à l'autre.
+    public Set<String> codesPrioritaires() {
+        return new LinkedHashSet<>(projeter(
+                "SELECT taxon_code FROM taxon_prioritaire ORDER BY taxon_code", rs -> rs.getString("taxon_code")));
+    }
+
     public List<Taxon> findByGroupe(Long idGroupe) {
         return query("SELECT * FROM taxon WHERE group_id = ? ORDER BY code", MAPPER, idGroupe);
     }

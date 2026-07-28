@@ -50,6 +50,11 @@
     -couleur-avertissement: #b9770e;
     -couleur-avertissement-texte: #a36100;
     -couleur-danger: #a93226;
+    /* Enjeu de conservation (#2353) : violet patrimonial, teinte encore libre parmi les indicateurs de
+       la table audio (etoile doree, commentaire bleu, doute orange) et distincte des jetons semantiques
+       — un enjeu n'est ni une alerte sur la donnee, ni une erreur. 7,6:1 sur -couleur-fond, tres au-dela
+       du 3:1 demande a un element d'interface : ce marqueur doit se reperer du coin de l'oeil. */
+    -couleur-enjeu: #6c3483;
     /* -couleur-neutre a ete retire (#322) : aucun usage, et il portait #6a737d, la valeur que #2102
        a ecartee pour insuffisance de contraste (4,45:1). Un jeton que personne n'emploie et qui
        porte une valeur non conforme ne protege rien : il attend celui qui le trouvera. Le gris du

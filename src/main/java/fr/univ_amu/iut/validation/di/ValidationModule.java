@@ -33,7 +33,6 @@ import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
-import fr.univ_amu.iut.validation.model.dao.TaxonPrioritaireDao;
 import fr.univ_amu.iut.validation.view.NavigationValidation;
 import fr.univ_amu.iut.validation.viewmodel.IndicateurObservations;
 
@@ -92,19 +91,13 @@ public class ValidationModule extends ModuleDeFeature {
         return new TaxonDao(source);
     }
 
-    @Provides
-    @Singleton
-    TaxonPrioritaireDao fournirTaxonPrioritaireDao(SourceDeDonnees source) {
-        return new TaxonPrioritaireDao(source);
-    }
-
     /// Pont [EspecesPrioritaires] (#2353) : expose la seule **lecture** des espèces à enjeu aux écrans qui
     /// les repèrent, les filtrent et les comptent (`audio`, `analyse`), sans leur livrer le DAO ni le
     /// pouvoir d'écrire dans une donnée de référence.
     @Provides
     @Singleton
-    EspecesPrioritaires fournirEspecesPrioritaires(TaxonPrioritaireDao dao) {
-        return dao::tousLesCodes;
+    EspecesPrioritaires fournirEspecesPrioritaires(TaxonDao taxonDao) {
+        return taxonDao::codesPrioritaires;
     }
 
     /// Rapprocheur des taxons (#728) : relie `taxon.code` ↔ `objectid` VigieChiro. Contribué au

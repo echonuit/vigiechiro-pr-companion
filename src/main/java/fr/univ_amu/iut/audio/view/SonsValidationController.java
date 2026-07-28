@@ -257,6 +257,11 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private TableColumn<LigneObservationAudio, String> colFil;
 
+    /// Colonne-indicateur **espèce à enjeu** (#2353) : bouclier sur les lignes dont le taxon retenu est
+    /// une espèce prioritaire du plan national.
+    @FXML
+    private TableColumn<LigneObservationAudio, String> colEnjeu;
+
     @FXML
     private Label lblVide;
 
@@ -383,8 +388,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 colReference,
                 colCommentaire,
                 colValidateur,
-                colFil);
-        ColonnesAudio.configurer(colonnes, viewModel.actions()::commenter);
+                colFil,
+                colEnjeu);
+        ColonnesAudio.configurer(colonnes, viewModel::aEnjeu, viewModel.actions()::commenter);
     }
 
     @FXML
@@ -571,7 +577,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 new GestionnaireColonnes.Colonne(colReference, "Référence", false),
                 new GestionnaireColonnes.Colonne(colCommentaire, "Commentaire", false),
                 new GestionnaireColonnes.Colonne(colValidateur, "Avis du validateur", false),
-                new GestionnaireColonnes.Colonne(colFil, "Discussion", false));
+                new GestionnaireColonnes.Colonne(colFil, "Discussion", false),
+                new GestionnaireColonnes.Colonne(colEnjeu, "Espèce à enjeu", false));
     }
 
     /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue à

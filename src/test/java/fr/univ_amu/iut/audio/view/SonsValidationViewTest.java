@@ -56,6 +56,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -180,6 +181,7 @@ class SonsValidationViewTest {
                                 "Noctule de Leisler",
                                 "Noctule de Leisler",
                                 Certitude.PROBABLE)));
+        when(service.especesPrioritaires()).thenReturn(Set.of("Pippip"));
         when(service.cheminAudio(anyLong())).thenReturn(Optional.empty());
         when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/p.wav")));
         depotVues = mock(DepotVues.class);
@@ -413,6 +415,47 @@ class SonsValidationViewTest {
                 .orElseThrow();
         robot.interact(valider::fire);
         verify(service).validerSelonMode(eq(1L), any());
+    }
+
+    @Test
+    @DisplayName("#2353 : le repère « espèce à enjeu » ne marque que la ligne concernée, et pas par la seule couleur")
+    void repere_espece_a_enjeu_marque_la_bonne_ligne(FxRobot robot) {
+        // Deux lignes affichées, une seule espèce prioritaire au référentiel : un seul bouclier.
+        assertThat(robot.lookup(".icone-enjeu").queryAll())
+                .as("un repère par ligne à enjeu, plus celui de l'en-tête de colonne")
+                .hasSize(2);
+
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        TableColumn<?, ?> colonne = table.getColumns().stream()
+                .filter(c -> "colEnjeu".equals(c.getId()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(colonne.getGraphic().getAccessibleText())
+                .as("un glyphe seul n'annonce rien à un lecteur d'écran (#794)")
+                .isEqualTo("Espèce à enjeu");
+        assertThat(colonne.isSortable())
+                .as("trier une colonne d'icônes donne une colonne « vide » triable, déroutante")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#2353 : la puce « Espèces à enjeu » isole les observations des espèces prioritaires")
+    void filtre_especes_a_enjeu_isole_les_lignes(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        assertThat(table.getItems())
+                .as("les deux observations sont là au départ")
+                .hasSize(2);
+
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        robot.interact(() -> itemParLibelle(menuAjout, "Espèces à enjeu").fire());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(table.getItems())
+                .as("seule l'observation dont le taxon retenu est prioritaire reste")
+                .hasSize(1);
+        assertThat(table.getItems().get(0))
+                .extracting(ligne -> ((LigneObservationAudio) ligne).taxonObservateur())
+                .isEqualTo("Pippip");
     }
 
     @Test

@@ -36,8 +36,27 @@ Les critères disponibles :
 | **Groupe** | un groupe taxonomique présent (Chiroptères, Oiseaux, Orthoptères…) | **Chiroptères** s'il est présent : « chauves-souris uniquement », qui écarte bruit, oiseaux et orthoptères |
 | **Espèce** | une espèce précise (taxon retenu) | aucune tant que vous n'en choisissez pas une |
 | **Références** | seulement les sons marqués « référence » | (puce booléenne : sa présence suffit) |
+| **Espèces à enjeu** | seulement les observations d'espèces **prioritaires** du Plan National d'Actions Chiroptères | (puce booléenne : sa présence suffit) |
 | **Proba** | les détections dont la probabilité Tadarida est **≥** au seuil du curseur | 50 % ; les observations **sans** probabilité sont toujours gardées |
 | **Heure** | les captures dont l'heure tombe dans la plage « de … à … » | **nuit (21 h → 6 h)** ; la plage gère le passage à minuit, et les captures sans heure sont gardées |
+
+## Repérer les espèces à enjeu
+
+Une colonne d'indicateur porte un **bouclier violet** sur les observations dont l'espèce retenue est
+**prioritaire** au sens du [Plan National d'Actions Chiroptères](https://plan-actions-chiropteres.fr/)
+2016-2025 : dix-neuf espèces sur les trente-six de métropole, retenues par le plan sur la directive
+Habitats, l'accord EUROBATS et la Liste rouge nationale.
+
+Sur une nuit à quelques milliers de contacts, ces quelques observations se retrouvaient jusqu'ici à la
+main, ligne par ligne. Le repère les montre, et la puce **« Espèces à enjeu »** ne garde qu'elles.
+
+Le repère se lit sur l'**espèce retenue** : votre correction si vous en avez posé une, sinon la
+proposition de Tadarida. Corriger une détection vers une espèce prioritaire fait donc apparaître le
+bouclier, et l'inverse le fait disparaître.
+
+L'absence de bouclier ne veut pas dire « sans intérêt » : l'immense majorité des taxons détectés
+(oiseaux, orthoptères, micromammifères) ne relèvent tout simplement pas de ce plan, qui ne parle que
+de chauves-souris.
 
 Les puces se **combinent en ET** : « Chiroptères » + « Proba ≥ 80 % » ne garde que les chauves-souris les
 plus sûres. Les **compteurs** de la barre de statut (À revoir / Validées / Corrigées) suivent en temps réel
