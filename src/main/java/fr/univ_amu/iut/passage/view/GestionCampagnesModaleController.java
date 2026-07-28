@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.viewmodel.GestionCampagnesViewModel;
 import java.util.Objects;
@@ -107,6 +108,9 @@ public class GestionCampagnesModaleController {
 
         BandeauRetour.installer(
                 bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+        // ADR 2493 : le bandeau paraît APRÈS le dimensionnement de la fenêtre. Sans ce suivi, le premier
+        // message pousserait le pied (« Fermer ») hors de la vue au lieu de faire grandir la modale.
+        Modales.suivreLaCroissance(racine, bandeauRetour.managedProperty());
 
         viewModel.charger();
     }
