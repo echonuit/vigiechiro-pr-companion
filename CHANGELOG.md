@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.105.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.104.0...v2.105.0) (2026-07-28)
+
+
+### Features
+
+* **analyse:** l'activite de la nuit s'ouvre la ou le protocole regarde ([#2690](https://github.com/echonuit/vigiechiro-pr-companion/issues/2690)) ([bdc1aa9](https://github.com/echonuit/vigiechiro-pr-companion/commit/bdc1aa9fbefc6230942b3ade97ab9c99ad082a40)), closes [#2616](https://github.com/echonuit/vigiechiro-pr-companion/issues/2616) [#2616](https://github.com/echonuit/vigiechiro-pr-companion/issues/2616)
+
 # [2.104.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.103.0...v2.104.0) (2026-07-28)
 
 
