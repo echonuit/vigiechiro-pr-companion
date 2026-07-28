@@ -60,11 +60,30 @@ public class SaisonViewModel {
         signalement.set(construireSignalement(solde));
     }
 
+    /// Résumé d'en-tête : la **ventilation** des passages attendus, puis l'échéance.
+    ///
+    /// Il ventile au lieu d'annoncer « 5/10 » parce qu'une proportion seule laisse deviner où sont les
+    /// manquants ; ici la somme des trois nombres vaut le total, garanti par [SoldeSaison]. Les nuits
+    /// hors protocole se disent **à part** : elles ont eu lieu, mais ne sont pas des passages attendus.
     private static String construireResume(SoldeSaison solde) {
-        return solde.pointsSuivis() + " point(s) suivi(s) · "
-                + solde.passagesFaits() + "/" + solde.passagesAttendus() + " passage(s) fait(s) · "
-                + "fenêtre du second passage jusqu'au "
-                + solde.echeanceSecondPassage().format(JOUR_MOIS);
+        StringBuilder resume = new StringBuilder()
+                .append(solde.pointsSuivis())
+                .append(solde.pointsSuivis() > 1 ? " points suivis · " : " point suivi · ")
+                .append(solde.passagesFaits())
+                .append(" faits, ")
+                .append(solde.passagesARefaire())
+                .append(" à refaire, ")
+                .append(solde.passagesARealiser())
+                .append(" à réaliser");
+        long horsProtocole = solde.nuitsHorsProtocole();
+        if (horsProtocole > 0) {
+            resume.append(" · ")
+                    .append(horsProtocole)
+                    .append(horsProtocole > 1 ? " nuits hors protocole" : " nuit hors protocole");
+        }
+        return resume.append(" · fenêtre du second passage jusqu'au ")
+                .append(solde.echeanceSecondPassage().format(JOUR_MOIS))
+                .toString();
     }
 
     private static String construireSignalement(SoldeSaison solde) {

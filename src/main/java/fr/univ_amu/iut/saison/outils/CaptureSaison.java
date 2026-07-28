@@ -22,6 +22,7 @@ import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.saison.di.SaisonModule;
 import fr.univ_amu.iut.saison.view.SaisonController;
 import fr.univ_amu.iut.sites.di.SitesModule;
@@ -151,25 +152,35 @@ public final class CaptureSaison {
         passage(passageDao, 1, "2026-06-22", StatutWorkflow.DEPOSE, Verdict.OK, c1);
         // D1 : passage 1 inexploitable → « Refaire le 1er passage ».
         passage(passageDao, 1, "2026-06-23", StatutWorkflow.VERIFIE, Verdict.A_JETER, d1);
+        // E3 : nuit OPPORTUNISTE (#2525), réalisée sur le carré d'un tiers. Elle est hors protocole :
+        // pastille « Opportuniste », hors décompte, et aucun « reste à faire ». Sans elle, la capture
+        // ne montrerait pas un état que la documentation décrit.
+        Long e3 = pointDao.insert(new PointDEcoute(null, "E3", null, null, null, chenes.id()))
+                .id();
+        long idOpportuniste = passage(passageDao, 1, "2026-07-04", StatutWorkflow.DEPOSE, Verdict.OK, e3);
+        new PassageOpportunisteDao(source).marquer(idOpportuniste);
     }
 
-    private static void passage(
+    /// Sème un passage et renvoie son identifiant (utile pour le marquer ensuite, cf. la nuit
+    /// opportuniste ci-dessus).
+    private static long passage(
             PassageDao dao, int numero, String date, StatutWorkflow statut, Verdict verdict, Long idPoint) {
-        dao.insert(new Passage(
-                null,
-                numero,
-                2026,
-                date,
-                "20:25:00",
-                "07:47:00",
-                null,
-                statut,
-                verdict,
-                null,
-                null,
-                null,
-                idPoint,
-                ENREGISTREUR,
-                null));
+        return dao.insert(new Passage(
+                        null,
+                        numero,
+                        2026,
+                        date,
+                        "20:25:00",
+                        "07:47:00",
+                        null,
+                        statut,
+                        verdict,
+                        null,
+                        null,
+                        null,
+                        idPoint,
+                        ENREGISTREUR,
+                        null))
+                .id();
     }
 }

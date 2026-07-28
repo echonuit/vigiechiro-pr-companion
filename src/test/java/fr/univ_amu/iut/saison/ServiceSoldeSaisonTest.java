@@ -20,6 +20,7 @@ import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
+import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
 import fr.univ_amu.iut.saison.model.SoldeSaison;
@@ -61,6 +62,7 @@ class ServiceSoldeSaisonTest {
     @TempDir
     Path dossier;
 
+    private Injector injecteur;
     private SourceDeDonnees source;
     private SiteDao siteDao;
     private ServiceSoldeSaison service;
@@ -71,7 +73,7 @@ class ServiceSoldeSaisonTest {
     @BeforeEach
     void preparer() {
         System.setProperty("vigiechiro.workspace", dossier.toString());
-        Injector injecteur = Guice.createInjector(
+        injecteur = Guice.createInjector(
                 new CommunModule(), new PersistenceModule(), new SitesModule(), new PassageModule());
         source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
@@ -249,14 +251,21 @@ class ServiceSoldeSaisonTest {
 
         LigneSaison ligne = ligne(service.soldePour(ID_USER, 2026), "640005", "E1");
 
-        assertThat(ligne.passage1().opportuniste()).isTrue();
-        assertThat(ligne.passage1().faite())
-                .as("une nuit opportuniste ne compte pas comme faite")
+        // Les deux nuits sont hors protocole : elles quittent les colonnes de passage, qui redeviennent
+        // « absentes ». Sans quoi une case remplie et un « reste à faire » réclamant ce même passage se
+        // contrediraient sur la même ligne.
+        assertThat(ligne.horsProtocole())
+                .as("les deux nuits opportunistes vivent dans leur propre colonne")
+                .hasSize(2)
+                .allMatch(CasePassage::opportuniste);
+        assertThat(ligne.passage1().presente())
+                .as("le passage 1 PROTOCOLAIRE reste à faire")
                 .isFalse();
-        assertThat(ligne.passage2().faite()).isFalse();
+        assertThat(ligne.passage2().presente()).isFalse();
+        assertThat(ligne.passage1().faite()).isFalse();
         assertThat(ligne.resteAFaire())
-                .as("hors protocole : ni « poser l'enregistreur », ni action")
-                .isEmpty();
+                .as("le point n'a aucune nuit protocolaire : il en réclame une")
+                .isEqualTo("Poser l'enregistreur avant le 31/07");
     }
 
     @Test
@@ -310,6 +319,63 @@ class ServiceSoldeSaisonTest {
         assertThat(service.soldePour(ID_USER, 2026, "Inconnue").lignes())
                 .as("aucun point ne relève de cette campagne")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("la ventilation ferme : faits + à refaire + à réaliser = attendus, hors protocole à part")
+    void ventilation_exhaustive() {
+        long idOpportuniste = semer("640005", "E1", 1, 2026, "2026-07-04", StatutWorkflow.DEPOSE, Verdict.OK);
+        opportunistes.marquer(idOpportuniste);
+
+        SoldeSaison solde = service.soldePour(ID_USER, 2026);
+
+        // L'invariant, et non des nombres appris par cœur : un décompte qui ne ferme pas laisse
+        // l'observateur deviner où sont passés les manquants. La nuit opportuniste est DEHORS du total :
+        // elle a eu lieu, mais ce n'est pas un passage attendu.
+        assertThat(solde.passagesFaits() + solde.passagesARefaire() + solde.passagesARealiser())
+                .as("les trois catégories couvrent exactement les passages attendus")
+                .isEqualTo(solde.passagesAttendus());
+        assertThat(solde.nuitsHorsProtocole())
+                .as("la nuit de E1, comptée à côté")
+                .isEqualTo(1);
+        assertThat(solde.passagesAttendus())
+                .as("E1 ajoute un point suivi, donc deux passages attendus de plus")
+                .isEqualTo(14);
+        assertThat(solde.passagesARefaire()).as("B2 seul est inexploitable").isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("fenêtre du second passage dépassée : le reste à faire le dit, et le signalement se tait")
+    void fenetre_depassee_apres_l_echeance() {
+        // Horloge au 15 octobre : les deux fenêtres 2026 sont closes. Deux comportements en dépendent,
+        // aucun n'était éprouvé (deux survivants PIT) : la phrase de `actionPoser` quand la fenêtre est
+        // derrière nous, et le signalement qui ne concerne QUE les fenêtres encore ouvertes.
+        SoldeSaison solde = serviceAu(LocalDate.of(2026, 10, 15)).soldePour(ID_USER, 2026);
+
+        assertThat(ligne(solde, "640002", "B1").resteAFaire())
+                .as("P1 déposé, P2 jamais posé et la fenêtre est close")
+                .isEqualTo("Fenêtre du 2e passage dépassée (30/09)");
+        assertThat(ligne(solde, "640004", "D1").resteAFaire())
+                .as("aucune nuit : c'est la fenêtre du PREMIER passage qui est annoncée dépassée")
+                .isEqualTo("Fenêtre du 1er passage dépassée (31/07)");
+
+        assertThat(solde.joursAvantEcheanceSecondPassage()).isNegative();
+        assertThat(solde.pointsSecondPassageEnAttente())
+                .as("l'application signale une échéance qui approche, pas une échéance passée")
+                .isZero();
+    }
+
+    /// Le même service, vu d'un autre jour. Les phrases du solde dépendent de la date courante ;
+    /// l'horloge du montage est figée au 20/07/2026, dans la fenêtre du premier passage.
+    private ServiceSoldeSaison serviceAu(LocalDate jour) {
+        return new ServiceSoldeSaison(
+                siteDao,
+                injecteur.getInstance(PointDao.class),
+                injecteur.getInstance(PassageDao.class),
+                opportunistes,
+                carresDeTiers,
+                Optional.of(campagnes),
+                new HorlogeFigee(jour));
     }
 
     /// Identifiant local du carré `carre`.

@@ -249,6 +249,48 @@ Sur un passage **déjà déposé**, l'année et le numéro sont **verrouillés**
 nuit côté Vigie-Chiro), mais la **météo et le micro restent modifiables**. C'est utile, par exemple, pour
 compléter à la main la météo d'un passage **reconstruit** que la plateforme n'a pas rapatriée.
 
+### Rattacher à une campagne
+
+Une **campagne** regroupe les nuits qui relèvent d'un même suivi (« Suivi ENS 2026 », « Convention
+carrière »…). Le rattachement est **facultatif** : une nuit sans campagne reste une nuit normale.
+
+La liste **Campagne** propose les campagnes existantes, avec « (aucune campagne) » en tête pour détacher.
+Le choix est enregistré à **Appliquer**, indépendamment du renommage : on peut donc rattacher ou détacher
+une nuit **déjà déposée**, dont l'année et le numéro sont pourtant verrouillés.
+
+Le regroupement se retrouve ensuite dans **Carte & passages** (colonne, tri et filtre) et dans
+**[Ma saison](saison.md#ne-voir-quune-campagne)** (filtre).
+
+!!! note "Créer, renommer, supprimer une campagne"
+    Ces trois gestes se font pour l'instant **en ligne de commande** : `vigiechiro creer-campagne
+    --nom "Suivi ENS"`, `modifier-campagne`, `supprimer-campagne`. Supprimer une campagne **détache** ses
+    nuits, elle ne les efface jamais. Un écran de gestion est à venir.
+
+### Participation opportuniste
+
+Une **participation opportuniste** est une nuit réalisée sur le **carré d'un autre observateur**. Elle
+est identique en données à une nuit ordinaire, mais elle ne relève pas du protocole Point Fixe : elle
+est donc **exemptée** de la fenêtre calendaire (R3) et de l'intervalle conseillé entre deux passages
+(R4). Aucune alerte ne vous sera faite sur ses dates.
+
+La case **Participation opportuniste** permet de le déclarer. Elle sert surtout aux participations
+**non connectées**, celles que l'application ne peut pas rapprocher d'un site Vigie-Chiro.
+
+Trois chemins mènent au même résultat :
+
+- la **case à l'import**, pour déclarer la nuit dès son arrivée ;
+- la **case de cette fenêtre**, pour le corriger après coup ;
+- **automatiquement**, à la synchronisation : si la plateforme dit que le carré appartient à quelqu'un
+  d'autre, ses nuits sont marquées sans que vous ayez à y penser.
+
+!!! note "L'automatique n'efface jamais votre choix"
+    La synchronisation **ajoute** des marquages, elle n'en retire aucun. Une case que vous avez cochée à
+    la main survit à toutes les synchronisations suivantes — y compris sur une participation que la
+    plateforme ne connaît pas.
+
+Conséquence sur le suivi : une nuit opportuniste ne compte pas dans les deux passages attendus du point,
+et n'engendre aucun « reste à faire » dans **[Ma saison](saison.md#les-nuits-opportunistes-ny-comptent-pas)**.
+
 ### Renseigner l'enregistreur
 
 Le champ **Enregistreur** porte le **numéro de série** du Passive Recorder qui a produit la nuit.

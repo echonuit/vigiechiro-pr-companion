@@ -19,6 +19,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -40,11 +41,10 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             "Statut P1",
             "Date P1",
             "Verdict P1",
-            "Opportuniste P1",
             "Statut P2",
             "Date P2",
             "Verdict P2",
-            "Opportuniste P2",
+            "Hors protocole",
             "Reste à faire");
 
     @Option(names = "--annee", description = "Année de la saison (par défaut : la saison courante).")
@@ -106,17 +106,24 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             sortie.println("Aucun point suivi pour la saison " + solde.annee() + ".");
             return;
         }
+        // Même ventilation exhaustive que l'en-tête de l'écran « Ma saison » : les trois nombres somment
+        // aux passages attendus, et les nuits hors protocole se disent à part (elles ne sont pas attendues).
         sortie.println("Solde de la saison " + solde.annee() + " : " + solde.pointsSuivis()
-                + " point(s) suivi(s), " + solde.passagesFaits() + "/" + solde.passagesAttendus()
-                + " passage(s) fait(s).");
+                + " point(s) suivi(s), " + solde.passagesFaits() + " faits, " + solde.passagesARefaire()
+                + " à refaire, " + solde.passagesARealiser() + " à réaliser sur " + solde.passagesAttendus()
+                + " attendus"
+                + (solde.nuitsHorsProtocole() == 0 ? "" : " (" + solde.nuitsHorsProtocole() + " hors protocole)")
+                + ".");
         sortie.println("Fenêtre du second passage : jusqu'au "
                 + solde.echeanceSecondPassage().format(JOUR_MOIS) + " (" + solde.pointsSecondPassageEnAttente()
                 + " point(s) en attente).");
         for (LigneSaison ligne : solde.lignes()) {
             String reste = ligne.resteAFaire().isEmpty() ? "rien" : ligne.resteAFaire();
+            String hors = horsProtocole(ligne);
             sortie.println("  " + ligne.numeroCarre() + " / " + ligne.codePoint()
                     + "   P1 " + descriptif(ligne.passage1())
                     + "   P2 " + descriptif(ligne.passage2())
+                    + (hors.isEmpty() ? "" : "   [hors protocole : " + hors + "]")
                     + "   -> " + reste);
         }
     }
@@ -148,11 +155,10 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
                     statut(ligne.passage1()),
                     date(ligne.passage1()),
                     verdict(ligne.passage1()),
-                    opportuniste(ligne.passage1()),
                     statut(ligne.passage2()),
                     date(ligne.passage2()),
                     verdict(ligne.passage2()),
-                    opportuniste(ligne.passage2()),
+                    horsProtocole(ligne),
                     ligne.resteAFaire()));
         }
         return lignes;
@@ -167,11 +173,10 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             objet.put("statut1", champ(statut(ligne.passage1())));
             objet.put("date1", champ(date(ligne.passage1())));
             objet.put("verdict1", champ(verdict(ligne.passage1())));
-            objet.put("opportuniste1", ligne.passage1().opportuniste());
             objet.put("statut2", champ(statut(ligne.passage2())));
             objet.put("date2", champ(date(ligne.passage2())));
             objet.put("verdict2", champ(verdict(ligne.passage2())));
-            objet.put("opportuniste2", ligne.passage2().opportuniste());
+            objet.put("horsProtocole", champ(horsProtocole(ligne)));
             objet.put("resteAFaire", ligne.resteAFaire());
             objets.add(objet);
         }
@@ -191,9 +196,15 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         return cas.verdict() == null ? "" : cas.verdict().libelle();
     }
 
-    /// « oui » pour une nuit opportuniste (#2525, hors protocole), vide sinon (colonne CSV).
-    private static String opportuniste(CasePassage cas) {
-        return cas.opportuniste() ? "oui" : "";
+    /// Les nuits **hors protocole** du point (#2525), datées, séparées par un point médian ; vide
+    /// dans le cas courant. Elles ne figurent pas dans les colonnes de passage : elles y prendraient la
+    /// place d'un passage attendu qui, lui, reste à faire.
+    private static String horsProtocole(LigneSaison ligne) {
+        return ligne.horsProtocole().stream()
+                .map(cas -> cas.date() == null
+                        ? "opportuniste"
+                        : "opportuniste " + cas.date().format(JOUR_MOIS))
+                .collect(Collectors.joining(" · "));
     }
 
     /// Une chaîne vide (champ de passage absent) devient `null` en JSON, plus juste pour un script.

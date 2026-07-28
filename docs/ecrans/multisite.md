@@ -47,7 +47,8 @@ C'est aussi l'état où l'on arrive en cliquant **« Voir sur la carte »** depu
 passage : le tableau se replie automatiquement pour centrer l'attention sur la carte.
 
 À **droite**, le **tableau** liste chaque passage (carré, point, année, numéro, date, **statut**,
-**verdict**). La barre du haut permet de **filtrer** (par carré, statut, verdict, année) et de
+**verdict**, **analyse**, **campagne**). La barre du haut permet de **filtrer** (carré, statut, verdict,
+année, analyse, campagne) et de
 **réinitialiser** les filtres ; un menu **☰** à droite de la barre regroupe les actions secondaires
 (**Vues** enregistrées et **export** de la sélection). On **trie** en cliquant l'en-tête d'une
 colonne (Année et N° de passage se trient numériquement), en plus du sélecteur d'ordres. Un
@@ -69,6 +70,27 @@ et [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 Quand un filtre est actif, le tableau et le résumé se recalculent en conséquence :
 
 ![La vue Carte & passages filtrée (ici par verdict) : le résumé est recalculé.](../assets/captures/apercu-multisite-filtre.png)
+
+## Regrouper par campagne
+
+Une **campagne** regroupe les nuits d'un même suivi. Le tableau la porte de trois façons :
+
+- une colonne **Campagne** (vide pour une nuit non rattachée), masquable comme les autres depuis le
+  réglage des colonnes ;
+- un ordre **Par campagne**, alphabétique, qui place les nuits **non rattachées en dernier** ;
+- un filtre **Campagne**, à saisie libre : taper `ens` retient « Suivi ENS ». Un passage sans campagne
+  n'est jamais retenu par ce filtre — le demander, c'est demander les nuits qui en ont une.
+
+L'**export CSV** de la sélection porte une colonne `campagne`, en fin de ligne.
+
+La colonne se trouve en **fin de tableau** : à côté de la carte, elle sort du cadre et il faut faire
+défiler horizontalement. Replier la carte avec la poignée **◀ Carte** donne toute la largeur au
+tableau et montre toutes les colonnes d'un coup.
+
+![Carte repliée, tableau en pleine largeur : toutes les colonnes sont visibles, dont Analyse et Campagne. La dernière nuit n'est rattachée à aucune campagne, ce qui est un état normal et non une anomalie.](../assets/captures/apercu-multisite-tableau-plein.png)
+
+Le rattachement lui-même se fait depuis la fenêtre **Modifier le passage**, décrite dans
+[Le passage](passage.md#rattacher-a-une-campagne).
 
 ## Éditer les positions des points
 

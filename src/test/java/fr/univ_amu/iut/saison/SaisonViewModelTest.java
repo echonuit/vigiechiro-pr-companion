@@ -23,7 +23,7 @@ class SaisonViewModelTest {
     private static final String ID = "u-test";
 
     private static LigneSaison ligne(String carre, String point, CasePassage p1, CasePassage p2, String reste) {
-        return new LigneSaison(carre, point, 1L, p1, p2, reste);
+        return new LigneSaison(carre, point, 1L, p1, p2, List.of(), reste);
     }
 
     private static CasePassage depose(String date) {
@@ -47,7 +47,11 @@ class SaisonViewModelTest {
 
         assertThat(vm.lignes()).extracting(LigneSaison::numeroCarre).containsExactly("640001", "640002");
         assertThat(vm.annee()).isEqualTo(2026);
-        assertThat(vm.resumeProperty().get()).contains("2 point(s) suivi(s)").contains("jusqu'au 30/09");
+        // Le résumé se lit en entier plutôt que par fragments : c'est une ventilation, et une
+        // ventilation se juge à ce qu'elle somme (3 + 0 + 1 = 4 attendus sur 2 points).
+        assertThat(vm.resumeProperty().get())
+                .isEqualTo("2 points suivis · 3 faits, 0 à refaire, 1 à réaliser"
+                        + " · fenêtre du second passage jusqu'au 30/09");
     }
 
     @Test

@@ -64,6 +64,7 @@ class SaisonViewTest {
                                 new CasePassage(
                                         42L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 20), false, null),
                                 CasePassage.absente(),
+                                List.of(),
                                 "Poser l'enregistreur avant le 30/09"),
                         new LigneSaison(
                                 "640002",
@@ -71,15 +72,19 @@ class SaisonViewTest {
                                 2L,
                                 CasePassage.absente(),
                                 CasePassage.absente(),
+                                List.of(),
                                 "Poser l'enregistreur avant le 31/07"),
+                        // #2525 : la nuit opportuniste ne prend PAS la place du passage 1 protocolaire,
+                        // qui reste manquant — elle vit dans la colonne « Hors protocole ».
                         new LigneSaison(
                                 "640003",
                                 "C1",
                                 3L,
-                                new CasePassage(
-                                        99L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 25), true, null),
                                 CasePassage.absente(),
-                                "")));
+                                CasePassage.absente(),
+                                List.of(new CasePassage(
+                                        99L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 25), true, null)),
+                                "Poser l'enregistreur avant le 31/07")));
         when(service.soldeCourant(anyString())).thenReturn(solde);
         when(service.soldePour(anyString(), anyInt())).thenReturn(solde);
 

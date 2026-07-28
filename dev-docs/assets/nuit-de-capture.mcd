@@ -1,9 +1,9 @@
 Utilisateur: identifiant local, nom affiché
-Site de suivi: numéro de carré, nom convivial, protocole, commentaire, créé le
+Site de suivi: numéro de carré, nom convivial, protocole, commentaire, créé le, carré d'un tiers
 Point d'écoute: code, latitude, longitude, description
 Enregistreur: numéro de série, version de modèle, commentaire
 Micro: réf micro, référence modèle, bande passante, sensibilité, mis en service le, retiré le, actif, commentaire
-Passage: réf passage, numéro de passage, année, date d'enregistrement, heure de début, heure de fin, paramètres d'acquisition, statut workflow, verdict de vérification, commentaire, données météo, déposé le
+Passage: réf passage, numéro de passage, année, date d'enregistrement, heure de début, heure de fin, paramètres d'acquisition, statut workflow, verdict de vérification, commentaire, données météo, déposé le, participation opportuniste
 Session d'enregistrement: réf session, chemin racine, octets originaux, octets séquences
 Enregistrement original: réf wav, nom de fichier, chemin, durée (s), fréquence d'échantillonnage (Hz), sha256
 Séquence d'écoute: réf séquence, nom de fichier, index source, décalage source (s), durée (s), chemin, dans la sélection
@@ -14,10 +14,12 @@ Résultats d'identification: réf résultats, chemin, format détecté, importé
 Observation: réf observation, début (s), fin (s), fréquence médiane (Hz), proba Tadarida, proba observateur, commentaire, est référence, mode de validation
 Taxon: code taxon, nom latin, nom vernaculaire
 Groupe taxonomique: réf groupe, niveau, nom
+Campagne: réf campagne, nom, année, commentaire
 
 Déclarer, 0N Utilisateur, 11 Site de suivi
 Comporter, 0N Site de suivi, 11 Point d'écoute
 Accueillir, 0N Point d'écoute, 11 Passage
+Rattacher, 0N Campagne, 01 Passage
 Mobiliser, 0N Enregistreur, 11 Passage
 Équiper, 0N Enregistreur, 11 Micro
 Produire, 11 Passage, 11 Session d'enregistrement

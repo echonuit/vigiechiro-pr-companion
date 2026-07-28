@@ -230,3 +230,49 @@ setup() {
   [[ "${output}" != *"130711"* ]]
   [[ "${output}" == *"Aucun point suivi"* ]]
 }
+
+@test "cycle de vie d'une campagne : creer -> modifier -> supprimer, relu par lister-campagnes (#2355)" {
+  # Ce qui se joue ici est ENTRE les commandes : une modification qui ne se relit pas, ou une
+  # suppression qui laisse la ligne en place, ne se voit qu'en enchaînant. Les tests Java pilotent
+  # le service en mémoire ; seul le fat-jar prouve l'analyse d'arguments, la persistance et les
+  # codes de sortie de ces deux commandes-là.
+  local campagne
+  campagne=$(cli creer-campagne --nom "Suivi ENS" --annee 2026 2>/dev/null | sed -E 's/.*#([0-9]+).*/\1/')
+  [ -n "${campagne}" ]
+
+  run cli modifier-campagne --campagne "${campagne}" --nom "Suivi ENS Sainte-Baume" --annee 2027
+  [ "${status}" -eq 0 ]
+
+  # Relecture : le nouveau nom a bien remplacé l'ancien, il ne s'y est pas ajouté.
+  run cli lister-campagnes
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Suivi ENS Sainte-Baume"* ]]
+  [[ "${output}" == *"2027"* ]]
+  [[ "${output}" != *"#${campagne}  Suivi ENS  "* ]]
+
+  run cli supprimer-campagne --campagne "${campagne}"
+  [ "${status}" -eq 0 ]
+
+  run cli lister-campagnes
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Aucune campagne enregistrée"* ]]
+}
+
+@test "modifier-campagne / supprimer-campagne sur une campagne inconnue : refus métier, exit 2 (#2355)" {
+  run cli modifier-campagne --campagne 999999 --nom "Fantôme" --annee 2026
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"introuvable"* ]]
+
+  run cli supprimer-campagne --campagne 999999
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"introuvable"* ]]
+}
+
+@test "rattacher-campagne sur un passage inconnu : refus métier, exit 2 (#2355)" {
+  # Le rattachement lui-même demande un passage, que la CLI ne sait pas créer sans import : c'est le
+  # refus qui est vérifiable ici au niveau processus. Le chemin nominal est couvert par
+  # CliRattacherCampagneTest.
+  run cli rattacher-campagne --passage 999999
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"introuvable"* ]]
+}

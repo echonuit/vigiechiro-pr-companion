@@ -553,6 +553,45 @@ sans modifier la base) et **LSP** (tout `DaoGenerique` concret est substituable 
 
 ---
 
+## Table latérale de présence (un fait booléen hors du record)
+
+**Le problème.** Attacher un **fait booléen** à une entité centrale — « ce passage est opportuniste »,
+« ce carré appartient à un tiers », « ce passage a un relevé de micro ». Le réflexe est d'ajouter une
+colonne, donc une composante au record ; mais `Passage` est construit en **plus d'une centaine
+d'endroits** (`main` et `test` confondus) et `Site` en **plus de quatre-vingts**. À ce volume, une
+composante de plus propage un diff mécanique partout et ajoute un paramètre de même type qu'un voisin,
+échangeable en silence (cf. l'EPIC arité #2483). Les mesures datées sont dans l'ADR ci-dessous ; on ne
+les fige pas ici, où rien ne les garderait à jour.
+
+**La solution.** Une table dont la **clé primaire est la clé étrangère** vers l'entité : la présence de
+la ligne porte le fait, son absence porte le cas courant.
+
+```sql
+CREATE TABLE passage_opportuniste (
+  passage_id INTEGER PRIMARY KEY REFERENCES passage(id) ON DELETE CASCADE
+);
+```
+
+Le DAO étend `DaoGenerique<Long, Long>` — l'entité **est** la clé, seul le fait d'exister compte — et
+expose une API d'intention plutôt que le CRUD : `marquer` / `demarquer` / `definir(id, bool)` /
+`estX(id)`, plus un **`tousLesIds()`** de lecture groupée. `insert`/`update` du contrat `Dao` n'ont
+rien à écrire et délèguent au marquage idempotent (`ON CONFLICT DO NOTHING`).
+
+**La règle.** Le `tousLesIds()` n'est pas un confort : dès qu'un service balaie plusieurs entités
+(R4 sur les voisins d'un point, décompte du solde), il lit **une fois** l'ensemble marqué au lieu de
+faire une requête par ligne. C'est la contrepartie du pattern : la lecture n'arrive plus « gratuitement »
+avec l'entité, il faut la prévoir.
+
+**Quand ne pas l'employer.** Pour une entité construite en quelques endroits, la colonne reste plus
+simple et plus lisible. Le critère est le **volume de sites de construction** croisé avec la
+**proportion de lignes concernées** — un fait vrai pour la majorité des lignes ne gagne rien à sortir
+du record. Voir l'[ADR 2525](decisions/2525-un-fait-booleen-d-une-entite-centrale-vit-dans-une-table-laterale.md).
+
+**Occurrences.** V10 `passage_equipment` (matériel du micro), V34 `passage_opportuniste`, V35
+`site_tiers`.
+
+---
+
 ## Strategy (`RowMapper`, génération de sélection)
 
 **Le problème.** Une partie d'un algorithme **varie** (comment lire une ligne ? comment choisir des

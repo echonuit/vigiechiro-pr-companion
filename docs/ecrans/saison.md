@@ -39,9 +39,17 @@ suivante pour ce point :
 
 ## En-tête et signalement de fenêtre
 
-L'**en-tête** récapitule la saison : nombre de points suivis, passages faits sur attendus, et
-l'échéance de la fenêtre du second passage. Ce résumé et le tableau proviennent de la **même source** :
-ils ne peuvent pas diverger.
+L'**en-tête** récapitule la saison en **ventilant** les passages attendus : combien sont faits,
+combien sont à refaire, combien restent à réaliser. Les trois nombres somment exactement au nombre
+de passages attendus, de sorte qu'aucun manquant ne se perd en route : une proportion seule
+(« 5 sur 10 ») laisserait deviner où sont les cinq autres.
+
+Les **nuits hors protocole** se comptent **à côté**, jamais dans le total. Elles ont bien eu lieu,
+mais ce ne sont pas des passages attendus : les fondre dans les 10 referait l'erreur que la colonne
+« Hors protocole » corrige dans le tableau. La mention n'apparaît que s'il y en a.
+
+Suit l'échéance de la fenêtre du second passage. Ce résumé et le tableau proviennent de la **même
+source** : ils ne peuvent pas diverger.
 
 Quand la **fenêtre du second passage** approche de sa fermeture, une ligne le **signale** (« la fenêtre
 se referme dans N jours pour M points »). L'application **signale**, elle n'alerte pas : elle ne pose
@@ -57,6 +65,38 @@ lecture. Par défaut, l'écran affiche la **saison courante**.
 Un **double-clic** sur une ligne ouvre le **passage concerné** ; s'il n'existe pas encore de passage
 pour ce point, il ouvre le **carré** du point, pour en saisir un.
 
-!!! note "Sans campagne pour l'instant"
-    Une colonne **Campagne** (regrouper les points d'un même suivi) est prévue mais n'est pas encore
-    livrée : l'écran fonctionne sans elle, point par point.
+## Ne voir qu'une campagne
+
+Une **campagne** regroupe les nuits qui relèvent d'un même suivi. Le solde peut s'y restreindre pour
+répondre à « où en est ma campagne ? » plutôt qu'à « où en est ma saison ? ».
+
+Il s'agit d'un **filtre**, et non d'une colonne : une ligne du solde est un **point**, avec ses **deux**
+passages, qui peuvent relever de campagnes différentes — une colonne aurait dû choisir laquelle
+afficher. Le filtre, lui, retient un point dès qu'**au moins un** de ses deux passages appartient à la
+campagne, et le montre **en entier** : le second passage reste visible même s'il n'en fait pas partie,
+puisque c'est l'état complet du point qui dit ce qu'il reste à y faire.
+
+La correspondance est **partielle et insensible à la casse** : taper `ens` retient « Suivi ENS ». Un
+point dont aucune nuit n'est rattachée à une campagne n'est jamais retenu par un filtre de campagne.
+
+!!! info "Pour l'instant, en ligne de commande seulement"
+    Ce filtre s'utilise avec `vigiechiro solde-saison --campagne ens`. L'écran **Ma saison**, lui, ne
+    propose pas encore de sélecteur de campagne : il affiche toujours la saison entière. Son ajout
+    est suivi par l'issue [#2610](https://github.com/echonuit/vigiechiro-pr-companion/issues/2610).
+
+## Les nuits opportunistes n'y comptent pas
+
+Une **participation opportuniste** est une nuit réalisée sur le **carré d'un autre observateur**. Elle
+ne relève pas du protocole Point Fixe : le solde ne la compte donc **pas** dans les « deux passages
+attendus » du point, et n'en tire aucun « reste à faire ».
+
+Elle reste visible pour autant, dans une colonne à elle : **Hors protocole**, en pastille
+« Opportuniste » suivie de sa date. Elle a sa propre colonne précisément pour ne pas occuper celle
+d'un passage attendu : la voir en « Passage 1 » se lirait « le passage 1 est fait », alors que la
+même ligne réclame encore de poser l'enregistreur. Les colonnes Passage 1 et Passage 2 restent donc
+sur « Non planifié » tant que le passage du protocole manque réellement.
+
+Un carré **entièrement** possédé par un tiers sort quant à lui du solde : y participer est une
+occasion, pas une obligation de protocole.
+
+Comment une nuit devient opportuniste : voir [Le passage](passage.md#participation-opportuniste).

@@ -32,7 +32,7 @@ COMMANDES_OPTIONS_REQUISES=(
   deposer deposer-vigiechiro importer-vigiechiro publier-corrections-vigiechiro
   etat-traitement-vigiechiro lancer-traitement-vigiechiro verifier-depot-vigiechiro
   vigiechiro
-  creer-campagne rattacher-campagne
+  creer-campagne rattacher-campagne modifier-campagne supprimer-campagne
 )
 
 @test "surface : chaque commande à options requises refuse l'absence d'arguments (exit 2) (#1592)" {

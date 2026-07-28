@@ -47,10 +47,11 @@ Le modèle conceptuel est éclaté en plusieurs fiches pour rester lisible. Chaq
 | C13 | [Observation](C13%20-%20Observation.md) | Une ligne de résultats Tadarida. |
 | C14 | [Taxon](C14%20-%20Taxon.md) | Code 6 lettres (genre + espèce). |
 | C15 | [Groupe taxonomique](C15%20-%20Groupe%20taxonomique.md) | Niveau hiérarchique au-dessus du taxon. |
+| C16 | [Campagne](C16%20-%20Campagne.md) | Regroupement **facultatif** de passages relevant du même suivi. |
 
 ### Tables du schéma non modélisées comme entités
 
-Le diagramme ci-dessus est **conceptuel** : il ne porte que les entités métier. Le schéma physique (migrations `V01` → `V30`) contient en plus des tables **d'intégration plateforme** et **techniques**, décrites dans les *voisins* des fiches concernées :
+Le diagramme ci-dessus est **conceptuel** : il ne porte que les entités métier. Le schéma physique (migrations `V01` → `V35`) contient en plus des tables **d'intégration plateforme** et **techniques**, décrites dans les *voisins* des fiches concernées :
 
 | Table | Rôle | Où elle apparaît |
 |---|---|---|
@@ -59,6 +60,8 @@ Le diagramme ci-dessus est **conceptuel** : il ne porte que les entités métier
 | `depot_unite`, `depot_plan` | dépôt **reprenable**, unité par unité, + empreinte de la liste source | voisins de [C5](C5%20-%20Passage.md) |
 | `participation_traitement` | **état relevé** du calcul Tadarida serveur (cache d'observation) | voisin de [C5](C5%20-%20Passage.md) |
 | `observation_message` | **fil de discussion** avec le validateur MNHN | voisin de [C13](C13%20-%20Observation.md) |
+| `passage_opportuniste` | **participation opportuniste** d'une nuit ([R34](Règles%20métier.md#r34)) : la présence de la ligne porte le fait | attribut de [C5](C5%20-%20Passage.md) |
+| `site_tiers` | **carré appartenant à un tiers** ([R35](Règles%20métier.md#r35)), dérivé de la synchronisation | attribut de [C2](C2%20-%20Site%20de%20suivi.md) |
 | `saved_filter_view`, `column_layout`, `app_setting` | **tables techniques** : vues de filtres, disposition des colonnes, réglages | persistance d'IHM et de préférences, hors modèle métier |
 | `saved_view` | **table morte** : créée en `V01`, remplacée par `saved_filter_view` (`V11`), plus référencée par le code | à retirer |
 
