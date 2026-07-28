@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.viewmodel.SaisonViewModel;
@@ -20,6 +21,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.util.StringConverter;
 
 /// Controller de l'écran **M-Saison** : une ligne par point suivi, l'état de ses deux passages en
 /// pastilles (couleurs reprises du modèle), la colonne « reste à faire », un sélecteur d'année et le
@@ -33,6 +35,12 @@ public class SaisonController implements RafraichirAuRetour {
 
     @FXML
     private ComboBox<Integer> choixAnnee;
+
+    @FXML
+    private Label lblCampagne;
+
+    @FXML
+    private ComboBox<Campagne> choixCampagne;
 
     @FXML
     private Label lblResume;
@@ -113,6 +121,38 @@ public class SaisonController implements RafraichirAuRetour {
 
         viewModel.chargerCourant();
         peuplerAnnees();
+        installerFiltreCampagne();
+    }
+
+    /// Filtre par campagne (#2610), **effacé de la mise en page** quand il n'y a rien à proposer :
+    /// fonctionnalité coupée, ou aucune campagne créée.
+    ///
+    /// Le tableau **et** le résumé se restreignent ensemble, le ViewModel rechargeant le solde entier
+    /// à chaque changement : les deux viennent de la même source, comme l'exige #2356.
+    private void installerFiltreCampagne() {
+        boolean aProposer = !viewModel.campagnes().isEmpty();
+        lblCampagne.setVisible(aProposer);
+        lblCampagne.setManaged(aProposer);
+        choixCampagne.setVisible(aProposer);
+        choixCampagne.setManaged(aProposer);
+        if (!aProposer) {
+            return;
+        }
+        choixCampagne.setItems(viewModel.campagnes());
+        // Convertisseur écrit ici : `Convertisseurs` existe dans `multisite` et `importation`, mais en
+        // portée paquet dans chacun. Le mutualiser dépasserait cette issue.
+        choixCampagne.setConverter(new StringConverter<Campagne>() {
+            @Override
+            public String toString(Campagne campagne) {
+                return campagne == null ? "Toutes les campagnes" : campagne.nom();
+            }
+
+            @Override
+            public Campagne fromString(String libelle) {
+                return null; // liste non éditable : la conversion inverse n'a pas de sens
+            }
+        });
+        choixCampagne.valueProperty().bindBidirectional(viewModel.campagneSelectionneeProperty());
     }
 
     private void peuplerAnnees() {

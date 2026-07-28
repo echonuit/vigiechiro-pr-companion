@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.saison.viewmodel;
 
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
 import fr.univ_amu.iut.saison.model.SoldeSaison;
@@ -7,10 +8,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -38,19 +41,69 @@ public class SaisonViewModel {
     private final ReadOnlyStringWrapper signalement = new ReadOnlyStringWrapper(this, "signalement", "");
     private final ReadOnlyIntegerWrapper annee = new ReadOnlyIntegerWrapper(this, "annee", 0);
 
+    /// Campagnes proposées au filtre (#2610), avec la sentinelle `null` « Toutes les campagnes » en
+    /// tête. Vide si la fonctionnalité `campagne` est coupée : la vue n'affiche alors pas le sélecteur.
+    private final ObservableList<Campagne> campagnes = FXCollections.observableArrayList();
+
+    /// Campagne retenue, `null` = pas de restriction. Mémorisée entre deux chargements : changer
+    /// d'année ne doit pas faire oublier la campagne qu'on suivait.
+    private final ObjectProperty<Campagne> campagneSelectionnee =
+            new SimpleObjectProperty<>(this, "campagneSelectionnee");
+
     public SaisonViewModel(ServiceSoldeSaison service, String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        // Changer de campagne recharge la saison affichée : le tableau ET le résumé se restreignent
+        // ensemble, ils viennent du même solde (critère de #2356).
+        campagneSelectionnee.addListener((obs, ancienne, nouvelle) -> rechargerSaisonCourante());
     }
 
-    /// Charge le solde de la **saison courante** (année de l'horloge du service).
+    /// Charge le solde de la **saison courante** (année de l'horloge du service), et peuple la liste
+    /// des campagnes proposables.
     public void chargerCourant() {
-        publier(service.soldeCourant(idUtilisateur));
+        chargerCampagnes();
+        publier(service.soldeCourant(idUtilisateur, nomCampagneRetenue()));
     }
 
-    /// Charge le solde de la saison `annee`.
+    /// Charge le solde de la saison `annee`, restreint à la campagne retenue s'il y en a une.
     public void charger(int annee) {
-        publier(service.soldePour(idUtilisateur, annee));
+        publier(service.soldePour(idUtilisateur, annee, nomCampagneRetenue()));
+    }
+
+    /// Recharge la saison **déjà affichée** après un changement de campagne. Sans effet tant qu'aucune
+    /// saison n'a été chargée (l'écran s'ouvre par [#chargerCourant]).
+    private void rechargerSaisonCourante() {
+        if (annee.get() != 0) {
+            charger(annee.get());
+        }
+    }
+
+    /// Peuple la liste des campagnes proposées, sentinelle « toutes » en tête. Vide si la
+    /// fonctionnalité est coupée : la vue n'affiche alors pas le sélecteur.
+    private void chargerCampagnes() {
+        List<Campagne> proposables = service.campagnesProposables();
+        campagnes.clear();
+        if (!proposables.isEmpty()) {
+            campagnes.add(null); // sentinelle « Toutes les campagnes »
+            campagnes.addAll(proposables);
+        }
+    }
+
+    /// Nom de la campagne retenue, ou `null` pour ne pas restreindre. Le service filtre sur le **nom**
+    /// (correspondance partielle) : un nom exact issu de la liste y répond exactement.
+    private String nomCampagneRetenue() {
+        Campagne retenue = campagneSelectionnee.get();
+        return retenue == null ? null : retenue.nom();
+    }
+
+    /// Campagnes proposées au sélecteur (vide = pas de sélecteur à afficher).
+    public ObservableList<Campagne> campagnes() {
+        return campagnes;
+    }
+
+    /// Campagne retenue par le filtre, `null` = toute la saison.
+    public ObjectProperty<Campagne> campagneSelectionneeProperty() {
+        return campagneSelectionnee;
     }
 
     private void publier(SoldeSaison solde) {

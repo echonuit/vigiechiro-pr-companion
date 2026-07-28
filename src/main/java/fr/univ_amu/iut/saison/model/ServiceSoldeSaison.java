@@ -144,6 +144,15 @@ public class ServiceSoldeSaison {
         return new SoldeSaison(annee, aujourdhui, lignes);
     }
 
+    /// Campagnes proposables au filtre de l'écran (#2610), vide si la fonctionnalité est coupée.
+    ///
+    /// Exposée par **ce** service, et non par un second injecté dans le ViewModel : l'écran ne connaît
+    /// qu'un interlocuteur, et la liste qu'il propose vient de la même source que le filtre qui
+    /// l'applique. Une liste et un filtre nourris par deux chemins finiraient par diverger.
+    public List<Campagne> campagnesProposables() {
+        return campagnes.map(ServiceCampagne::listerCampagnes).orElseGet(List::of);
+    }
+
     /// Noms des campagnes par identifiant, lus **une seule fois** par solde. Vide si la feature `campagne`
     /// est coupée : aucun point ne relève alors d'une campagne, et un filtre renseigné ne retient rien.
     private Map<Long, String> nomsDesCampagnes() {

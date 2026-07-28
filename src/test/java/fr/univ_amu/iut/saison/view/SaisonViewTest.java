@@ -28,6 +28,8 @@ import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
@@ -85,7 +87,8 @@ class SaisonViewTest {
                                 List.of(new CasePassage(
                                         99L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 25), true, null)),
                                 "Poser l'enregistreur avant le 31/07")));
-        when(service.soldeCourant(anyString())).thenReturn(solde);
+        when(service.soldeCourant(anyString(), org.mockito.ArgumentMatchers.isNull()))
+                .thenReturn(solde);
         when(service.soldePour(anyString(), anyInt())).thenReturn(solde);
 
         Injector injecteur = Guice.createInjector(new AbstractModule() {
@@ -136,5 +139,18 @@ class SaisonViewTest {
         robot.doubleClickOn("640002");
         WaitForAsyncUtils.waitForFxEvents();
         verify(ouvrirSite).ouvrirDetail("640002");
+    }
+
+    @Test
+    @DisplayName("#2610 : aucune campagne à proposer, le sélecteur est retiré de la mise en page")
+    void selecteur_campagne_efface_sans_campagne(FxRobot robot) {
+        // `setVisible(false)` seul laisserait un trou dans la barre : c'est `managed` qui retire le
+        // contrôle du calcul de mise en page. Vérifier les deux, sinon on ne teste que la moitié.
+        assertThat(robot.lookup("#choixCampagne").queryAs(ComboBox.class).isVisible())
+                .isFalse();
+        assertThat(robot.lookup("#choixCampagne").queryAs(ComboBox.class).isManaged())
+                .isFalse();
+        assertThat(robot.lookup("#lblCampagne").queryAs(Label.class).isManaged())
+                .isFalse();
     }
 }
