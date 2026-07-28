@@ -135,6 +135,9 @@ public class ActiviteController implements EmplacementNavigation {
     /// Barre de filtres cascadés (patron « à la Notion »), gardée en champ pour vivre autant que l'écran.
     private GestionnaireFiltres<ContactHoraire> gestionnaireFiltres;
 
+    /// Onglets de vues (#623), gardés pour poser la vue d'ouverture après chaque chargement (#2616).
+    private GestionnaireVues<ContactHoraire> gestionnaireVues;
+
     /// Désignation du fichier d'export, derrière le port du socle : un `FileChooser` natif en dur **fige**
     /// un test TestFX headless, et l'action ne serait pas testable du tout.
     private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
@@ -183,7 +186,7 @@ public class ActiviteController implements EmplacementNavigation {
         // Onglets de vues (#623) : les vues par défaut partitionnent par catégorie du référentiel, et
         // l'écran s'ouvre sur « Chiroptères » — Tadarida détecte aussi orthoptères et micromammifères,
         // qui n'ont rien à faire dans la présélection des cinq taxons les plus contactés.
-        GestionnaireVues.avecDialogue(
+        gestionnaireVues = GestionnaireVues.avecDialogue(
                 barreOnglets, gestionnaireFiltres, depotVues, "activite", CriteresActivite.vuesParDefaut());
 
         choixTranche.setItems(FXCollections.observableArrayList(LargeurTranche.values()));
@@ -342,6 +345,7 @@ public class ActiviteController implements EmplacementNavigation {
     public void ouvrirSur(ContextePassage passage) {
         this.contexte = passage;
         viewModel.chargerPassage(passage.idPassage());
+        ouvrirSurLesChiropteres();
     }
 
     /// Ouvre l'activité de **tous les passages** de l'utilisateur (entrée transverse, écran racine). Sans
@@ -349,6 +353,20 @@ public class ActiviteController implements EmplacementNavigation {
     public void ouvrirTout(String idUtilisateur) {
         this.contexte = null;
         viewModel.chargerUtilisateur(idUtilisateur);
+        ouvrirSurLesChiropteres();
+    }
+
+    /// Pose la vue d'ouverture « Chiroptères » (#2616), **après** le chargement des contacts.
+    ///
+    /// L'ordre n'est pas un détail : la puce « Taxon parent » se peuple des catégories **présentes dans
+    /// les données**. Appliquée avant le chargement, la vue ne trouverait aucune case à cocher et
+    /// n'écarterait rien — un filtre affiché comme actif, qui ne filtre pas.
+    ///
+    /// Appliquée ici, elle pose son filtre avant que la présélection des cinq taxons les plus contactés
+    /// ne s'exerce : ce sont donc les cinq chiroptères les plus contactés qui sont tracés, jamais une
+    /// sauterelle.
+    private void ouvrirSurLesChiropteres() {
+        gestionnaireVues.appliquer(CriteresActivite.vueDOuverture());
     }
 
     /// Emplacement dans le fil d'Ariane. Depuis un passage : `Mes sites › Carré N › Détails du passage N° X
