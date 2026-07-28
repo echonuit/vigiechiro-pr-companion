@@ -76,6 +76,16 @@ class CriteresRevueTest {
         assertThat(criteres.vide()).isFalse();
     }
 
+    @Test
+    @DisplayName("#2353 : « à enjeu » compte comme un filtre posé, sinon le geste croit viser tout le passage")
+    void l_enjeu_est_un_filtre_pose() {
+        // vide() commande le garde-fou --confirmer des gestes de revue : un critère qu'elle ignore ferait
+        // réclamer une confirmation « passage ENTIER » alors que l'utilisateur a restreint sa cible.
+        assertThat(new CriteresRevue(null, null, null, null, null, Boolean.TRUE).vide())
+                .isFalse();
+        assertThat(CriteresRevue.aucun().vide()).isTrue();
+    }
+
     private static LigneObservationAudio ligne(
             StatutObservation statut, String taxonTadarida, boolean douteux, boolean reference, Certitude certitude) {
         return new LigneObservationAudio(

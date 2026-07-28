@@ -54,7 +54,12 @@ public record CriteresRevue(
     /// Y a-t-il au moins un filtre ? Sert aux commandes à **dire** qu'elles ont agi sur tout un passage
     /// plutôt que sur une sélection : un geste en masse sans filtre mérite d'être annoncé comme tel.
     public boolean vide() {
-        return statut == null && taxon == null && douteux == null && reference == null && certitude == null;
+        return statut == null
+                && taxon == null
+                && douteux == null
+                && reference == null
+                && certitude == null
+                && aEnjeu == null;
     }
 
     private boolean statutRetenu(LigneObservationAudio ligne) {
