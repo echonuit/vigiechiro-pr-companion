@@ -74,6 +74,11 @@
 
   <!-- Bandeau de feedback de l'action (succès/échec/hint) : masqué tant qu'il n'y a rien à dire ; sa
        styleClass sémantique (bandeau-statut + badge-succes/danger/info) est posée par le controller. -->
+  <!-- Zone d'accueil de l'avancement (#2642) : la connexion rejoue les rapprocheurs, donc elle DURE. Son
+       suivi paraît ICI plutôt que dans une seconde fenêtre par-dessus celle-ci. Masquée ET non gérée hors
+       opération : sans `managed=false`, elle réserverait sa place et laisserait un trou. -->
+  <StackPane fx:id="zoneProgression" visible="false" managed="false"/>
+
   <Label fx:id="bandeauStatut" styleClass="bandeau-statut" wrapText="true"
          maxWidth="Infinity" visible="false" managed="false"/>
 
@@ -83,6 +88,8 @@
               styleClass="action-secondaire" onAction="#deconnecter"/>
     </StackPane>
     <Region HBox.hgrow="ALWAYS"/>
-    <Button text="Fermer" styleClass="action-secondaire" onAction="#fermer"/>
+    <!-- Grisé pendant une opération (#2642) : « Annuler » est juste au-dessus et renonce proprement ;
+         fermer la modale, lui, laisserait le travail orphelin sans le dire. -->
+    <Button fx:id="boutonFermer" text="Fermer" styleClass="action-secondaire" onAction="#fermer"/>
   </HBox>
 </VBox>
