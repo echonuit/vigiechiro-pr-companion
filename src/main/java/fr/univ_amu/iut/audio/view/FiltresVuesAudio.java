@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import java.util.List;
 import java.util.function.Supplier;
 import javafx.scene.control.MenuButton;
@@ -54,7 +55,7 @@ final class FiltresVuesAudio {
                         CriteresAudio.references(),
                         CriteresAudio.douteux(),
                         CriteresAudio.nonIdentifie(),
-                        CriteresAudio.aEnjeu(marqueurEnjeu::aEnjeu),
+                        CriteresAudio.aEnjeu(ligne -> marqueurEnjeu.aEnjeu(ligne.taxonRetenu())),
                         CriteresAudio.probabilite(),
                         CriteresAudio.heure(viewModel::plageNuitParDefaut)),
                 CriteresAudio.rechercheTexte());

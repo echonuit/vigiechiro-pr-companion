@@ -8,7 +8,6 @@ import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import fr.univ_amu.iut.commun.view.ActionFicheEspece;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
-import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -30,6 +29,8 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -271,6 +272,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private TableColumn<ObservationEspece, String> colObsStatut;
 
+    /// Repère des **espèces à enjeu** (#2353) : lu une fois à la construction, le référentiel ne bougeant
+    /// pas en cours de session. Partagé par la cellule d'espèce et le critère de filtre.
+    private final MarqueurEspecesAEnjeu marqueurEnjeu;
+
     @Inject
     public AnalyseController(
             AnalyseViewModel viewModel,
@@ -279,7 +284,8 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
             DepotVues depotVues,
             DepotDispositionColonnes depotColonnes,
             ActionFicheEspece actionFicheEspece,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            EspecesPrioritaires especesPrioritaires) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
@@ -287,6 +293,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.actionFicheEspece = Objects.requireNonNull(actionFicheEspece, "actionFicheEspece");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        this.marqueurEnjeu = new MarqueurEspecesAEnjeu(especesPrioritaires);
     }
 
     @Override
@@ -356,7 +363,8 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                 List.of(
                         CriteresAnalyse.statut(),
                         CriteresAnalyse.groupe(viewModel::groupesDisponibles),
-                        CriteresAnalyse.natureNuit(viewModel::nuitsOpportunistes)),
+                        CriteresAnalyse.natureNuit(viewModel::nuitsOpportunistes),
+                        CriteresAnalyse.aEnjeu(observation -> marqueurEnjeu.aEnjeu(observation.taxonRetenu()))),
                 CriteresAnalyse.rechercheTexte());
         // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur. La vue
         // capture aussi la disposition des colonnes des trois tables (#994), via l'adaptateur du sélecteur.
@@ -589,38 +597,22 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     }
 
     private void configurerColonnes() {
-        colEspece.setCellValueFactory(c -> texte(FormatAnalyse.libelleEspece(c.getValue())));
-        colGroupe.setCellValueFactory(
-                c -> texte(FormatAnalyse.ouTiret(c.getValue().groupe())));
-        colDetections.setCellValueFactory(c -> texte(c.getValue().nbObservations()));
-        colPassages.setCellValueFactory(c -> texte(c.getValue().nbPassages()));
-        colCarres.setCellValueFactory(c -> texte(c.getValue().nbCarres()));
-        colPoints.setCellValueFactory(c -> texte(c.getValue().nbPoints()));
-        colPeriode.setCellValueFactory(c -> texte(
-                FormatAnalyse.periode(c.getValue().anneeMin(), c.getValue().anneeMax())));
-
-        colCarre.setCellValueFactory(c -> texte(c.getValue().numeroCarre()));
-        colSite.setCellValueFactory(
-                c -> texte(FormatAnalyse.ouTiret(c.getValue().nomSite())));
-        colRichesse.setCellValueFactory(c -> texte(c.getValue().richesse()));
-        colDetectionsCarre.setCellValueFactory(c -> texte(c.getValue().nbObservations()));
-        colPeriodeCarre.setCellValueFactory(c -> texte(
-                FormatAnalyse.periode(c.getValue().anneeMin(), c.getValue().anneeMax())));
-
-        // Colonnes du détail (observations de l'espèce sélectionnée).
-        colObsPassage.setCellValueFactory(c -> texte(FormatAnalyse.libellePassage(c.getValue())));
-        colObsCarre.setCellValueFactory(c -> texte(c.getValue().numeroCarre()));
-        colObsRichesse.setCellValueFactory(
-                c -> texte(richesseDuCarre(c.getValue().numeroCarre())));
-        colObsPoint.setCellValueFactory(c -> texte(c.getValue().codePoint()));
-        colObsTadarida.setCellValueFactory(c -> texte(FormatAnalyse.taxonEtProb(
-                c.getValue().taxonTadarida(), c.getValue().probTadarida())));
-        colObsObservateur.setCellValueFactory(c -> texte(FormatAnalyse.taxonEtProb(
-                c.getValue().taxonObservateur(), c.getValue().probObservateur())));
-        colObsStatut.setCellValueFactory(
-                c -> texte(FormatAnalyse.libelleStatut(c.getValue().statut())));
-        // Statut de revue en badge (#691), cohérent avec les autres tables de données.
-        colObsStatut.setCellFactory(colonne -> ColonneBadge.cellule(obs -> FormatAnalyse.classeStatut(obs.statut())));
+        ColonnesAnalyse.especes(
+                new ColonnesAnalyse.Especes(
+                        colEspece, colGroupe, colDetections, colPassages, colCarres, colPoints, colPeriode),
+                marqueurEnjeu);
+        ColonnesAnalyse.carres(
+                new ColonnesAnalyse.Carres(colCarre, colSite, colRichesse, colDetectionsCarre, colPeriodeCarre));
+        ColonnesAnalyse.observations(
+                new ColonnesAnalyse.Observations(
+                        colObsPassage,
+                        colObsCarre,
+                        colObsRichesse,
+                        colObsPoint,
+                        colObsTadarida,
+                        colObsObservateur,
+                        colObsStatut),
+                this::richesseDuCarre);
     }
 
     /// Libellé du passage d'une observation : date d'enregistrement et n° de passage (`2026-06-22 · n°2`).

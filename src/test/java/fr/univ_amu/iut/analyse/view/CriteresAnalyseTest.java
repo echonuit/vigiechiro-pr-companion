@@ -49,7 +49,7 @@ class CriteresAnalyseTest {
 
         assertThat(vues)
                 .extracting(VueSauvegardee::nom)
-                .containsExactly("Tout", "À valider", "Validées", "Chiroptères", "Autres");
+                .containsExactly("Tout", "À valider", "Validées", "Chiroptères", "Autres", "Espèces prioritaires");
         assertThat(vues).allSatisfy(vue -> {
             assertThat(vue.id())
                     .as("vue par défaut : jamais persistée (lecture seule)")
@@ -62,6 +62,8 @@ class CriteresAnalyseTest {
         assertThat(descripteur(vues, "À valider")).contains("statut", StatutObservation.NON_TOUCHEE.name());
         assertThat(descripteur(vues, "Validées")).contains("statut", StatutObservation.VALIDEE.name());
         assertThat(descripteur(vues, "Chiroptères")).contains("groupe", "Chiroptères");
+        // Critère BOOLÉEN (#2353) : la clé sans valeur suffit, la présence de la puce filtre.
+        assertThat(descripteur(vues, "Espèces prioritaires")).contains("a_enjeu");
         // Les catégories du référentiel (V05) partitionnent l'inventaire : Tadarida détecte aussi des
         // orthoptères et des micromammifères, qui s'intercalaient sans cela au rang des chiroptères.
         // « Autres » cumule les catégories non-chiroptères : c'est le choix multiple (#2615) qui le rend

@@ -27,6 +27,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -106,6 +107,14 @@ class AnalyseViewTest {
                 .thenReturn(List.of(new VueSauvegardee(1L, "analyse", "Validées 2026", "{\"criteres\":[]}")));
         DepotVues depot = depotVues;
         Injector injector = Guice.createInjector(new AbstractModule() {
+            // Référentiel des espèces à enjeu (#2353) : cet injecteur n'installe pas les modules de
+            // feature, il déclare donc son propre monde. La justesse du référentiel réel est gardée
+            // par EspecesPrioritairesReferentielTest.
+            @Provides
+            EspecesPrioritaires especesPrioritaires() {
+                return () -> Set.of("Pippip");
+            }
+
             @Provides
             AnalyseViewModel viewModel() {
                 return new AnalyseViewModel(service, "u-1");
@@ -561,6 +570,25 @@ class AnalyseViewTest {
         assertThat(zoneCarte.isVisible()).isFalse();
         assertThat(especes.isVisible()).isTrue();
         assertThat(boutonCarte.getText()).contains("Carte");
+    }
+
+    @Test
+    @DisplayName("#2353 : l'onglet « Espèces prioritaires » ne garde que les espèces à enjeu")
+    void onglet_especes_prioritaires_ne_garde_que_les_especes_a_enjeu(FxRobot robot) {
+        when(service.observationsAnalyse(anyString()))
+                .thenReturn(List.of(obsAnalyse("Pippip", "Pipistrelle commune"), obsAnalyse("Barbar", "Barbastelle")));
+        robot.interact(() -> controleur.rafraichirAuRetour());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        assertThat(especes.getItems()).as("les deux espèces sont là au départ").hasSize(2);
+
+        robot.clickOn("Espèces prioritaires");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(especes.getItems())
+                .as("la Barbastelle n'est pas prioritaire au plan national, contrairement à la Pipistrelle commune")
+                .hasSize(1);
     }
 
     @Test

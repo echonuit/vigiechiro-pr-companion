@@ -29,6 +29,11 @@ L'écran réunit :
   chauves-souris, et « Autres » réunit orthoptères, micromammifères, oiseaux et le reste du
   référentiel. Vos propres vues s'enregistrent à côté, avec « + Vue ».
 
+Un **bouclier violet** devant le nom d'une espèce, dans la liste des cases à cocher, signale une espèce
+**prioritaire** au sens du [Plan National d'Actions Chiroptères](https://plan-actions-chiropteres.fr/).
+L'onglet **« Espèces prioritaires »** ne trace qu'elles : sur une nuit à plusieurs milliers de contacts,
+il répond d'un clic à « qu'ai-je entendu qui compte ? ».
+
 L'écran **s'ouvre sur l'onglet « Chiroptères »**, la seule catégorie que le protocole vise. Sans cela,
 les cinq espèces cochées d'office pouvaient comprendre une sauterelle, tracée sur le même graphe et
 avec la même allure qu'une chauve-souris. Ce n'est pas un filtre imposé : l'onglet actif le dit, et

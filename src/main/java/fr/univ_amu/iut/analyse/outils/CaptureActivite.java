@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -211,6 +212,15 @@ public final class CaptureActivite {
     /// Module de démonstration : un [ActiviteViewModel] alimenté par un [ServiceActivite] à contacts
     /// fixes, et les contrats de fil d'Ariane inertes (la capture est rendue hors-chrome).
     private static final class ModuleDemo extends AbstractModule {
+
+        /// Référentiel des **espèces à enjeu** (#2353) : cet injecteur n'installe ni `ValidationModule`
+        /// (qui pose la liaison réelle) ni `AudioModule` (qui pose le défaut vide), il déclare donc son
+        /// propre monde. Une espèce marquée, pour que l'aperçu **montre** le repère plutôt que de
+        /// l'attester par une absence.
+        @Provides
+        EspecesPrioritaires especesPrioritaires() {
+            return () -> Set.of("Pippip");
+        }
 
         /// Contacts que le service de démonstration renverra : la nuit type, ou **rien** pour l'aperçu de
         /// l'état vide.

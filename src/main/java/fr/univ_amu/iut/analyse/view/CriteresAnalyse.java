@@ -37,6 +37,9 @@ final class CriteresAnalyse {
     /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par catégorie.
     private static final String GROUPE = "groupe";
 
+    /// Clé du critère « Espèces à enjeu », partagée par le filtre et l'onglet du même nom (#2353).
+    private static final String A_ENJEU = "a_enjeu";
+
     /// Catégories du référentiel qui ne sont pas des chiroptères : la même liste que sur l'écran Activité
     /// de la nuit, les deux vues partageant la matière (#2615).
     private static final List<String> HORS_CHIROPTERES =
@@ -68,7 +71,8 @@ final class CriteresAnalyse {
                         "À valider", new DescripteurCritere(STATUT, List.of(StatutObservation.NON_TOUCHEE.name()))),
                 vueParDefaut("Validées", new DescripteurCritere(STATUT, List.of(StatutObservation.VALIDEE.name()))),
                 vueParDefaut("Chiroptères", new DescripteurCritere(GROUPE, List.of("Chiroptères"))),
-                vueParDefaut("Autres", new DescripteurCritere(GROUPE, HORS_CHIROPTERES)));
+                vueParDefaut("Autres", new DescripteurCritere(GROUPE, HORS_CHIROPTERES)),
+                vueParDefaut("Espèces prioritaires", new DescripteurCritere(A_ENJEU, List.of())));
     }
 
     /// Une vue par défaut de cet écran : délégation à la fabrique partagée [VuesParDefaut] (#1257).
@@ -124,6 +128,32 @@ final class CriteresAnalyse {
     /// Critère **Nature de la nuit** (#2614) : protocole ou participation opportuniste (#2525). Même
     /// dimension et mêmes libellés que sur l'écran Activité de la nuit — une nuit opportuniste ne compte
     /// pas de la même façon, et se mêlait jusqu'ici sans le dire aux nuits du protocole.
+    /// Critère **Espèces à enjeu** (#2353) : garde les observations dont le taxon retenu est une espèce
+    /// **prioritaire** au sens du Plan National d'Actions Chiroptères. Critère **sans éditeur** (booléen) :
+    /// la présence de la puce active le filtre, comme sur l'écran de revue.
+    ///
+    /// Porte l'onglet « Espèces prioritaires » ([#vuesParDefaut()]) : c'est l'information qu'un naturaliste
+    /// cherche en premier, et l'inventaire d'une saison la noyait parmi des dizaines d'espèces.
+    static CritereFiltre<ObservationAnalyse> aEnjeu(Predicate<ObservationAnalyse> estPrioritaire) {
+        return new CritereFiltre<ObservationAnalyse>() {
+            @Override
+            public String nom() {
+                return A_ENJEU;
+            }
+
+            @Override
+            public String libelle() {
+                return "Espèces à enjeu";
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<ObservationAnalyse>> applique) {
+                applique.accept(estPrioritaire); // filtre actif dès l'ajout de la puce
+                return null; // booléen : pas d'éditeur, la présence de la puce suffit
+            }
+        };
+    }
+
     static CritereFiltre<ObservationAnalyse> natureNuit(Supplier<Set<Long>> opportunistes) {
         return CritereListe.simple(
                 "natureNuit",
