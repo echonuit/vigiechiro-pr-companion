@@ -188,7 +188,13 @@ class CliImportTest {
                 // donnée, pas une mise en forme, et une capacité livrée d'un seul côté est à moitié livrée.
                 .contains("Lu / écrit")
                 .contains("lus sur la source")
-                .contains("écrits");
+                .contains("écrits")
+                // Cet import ne conserve pas les originaux : la part « bruts conservés » n'existe pas, et
+                // la ligne ne doit pas l'annoncer à zéro. L'écran omet le segment nul ; la CLI omet la
+                // mention. Les trois assertions ci-dessus ne regardaient que la présence de la ligne :
+                // elles restaient vertes sur un « dont 0 Ko de bruts conservés », que seule la recette
+                // dorée a vu (clôture #2350).
+                .doesNotContain("0 Ko de bruts conservés");
 
         // Effet persisté : un passage au statut Transformé est rattaché au point.
         List<Passage> passages = injecteur.getInstance(PassageDao.class).findByPoint(idPoint);

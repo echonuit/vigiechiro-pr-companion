@@ -5,5 +5,6 @@ Import réussi.
   Enregistreur: 1925492
   Originaux   : 6
   Séquences   : 6
+  Lu / écrit  : 7 Mo lus sur la source, 7 Mo écrits
   Rapport     : 6 importés · 0 ignorés · 0 rejetés
   Rapport CSV : <workspace>/rapport-import.csv
