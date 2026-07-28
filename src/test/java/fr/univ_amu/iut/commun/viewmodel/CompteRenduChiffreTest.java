@@ -72,8 +72,16 @@ class CompteRenduChiffreTest {
     @DisplayName("un ensemble vide ne divise pas par zéro : fraction nulle, pas d'exception")
     void ensemble_vide_ne_divise_pas_par_zero() {
         Segment rien = seg("Rien", 0);
-        assertThat(new Ventilation("Devenir", 0, List.of(rien)).fraction(rien)).isZero();
-        assertThat(new Barre("Écrit", List.of(rien)).fraction(rien)).isZero();
+        Ventilation vide = new Ventilation("Devenir", 0, List.of(rien));
+
+        assertThat(vide.fraction(rien)).isZero();
+        // Et la fraction n'est pas TOUJOURS nulle : sans cette seconde assertion, un calcul qui rendrait
+        // zéro en toute circonstance passerait ce test - c'est exactement le mutant que PIT a laissé
+        // survivre à la clôture, sur une méthode voisine. Une garde de division par zéro se vérifie en
+        // montrant aussi le cas où elle ne s'applique pas.
+        assertThat(new Ventilation("Devenir", 4, List.of(seg("Retenu", 3), seg("Écarté", 1)))
+                        .fraction(seg("Retenu", 3)))
+                .isEqualTo(0.75);
     }
 
     @Test
