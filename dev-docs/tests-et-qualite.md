@@ -427,6 +427,25 @@ incomplète ramène l'échec que le profil avait supprimé.
 
 PIT couvre donc aussi la couche `view`, ce que l'échec brut laissait croire impossible.
 
+**Une mesure hebdomadaire tourne toute seule** (`.github/workflows/mutation-hebdo.yml`, #2605). Chaque
+lundi, PIT balaie le dépôt et publie son bilan dans le **résumé du job** ; le rapport HTML détaillé est
+conservé 30 jours en artefact. Le job est **non bloquant**, comme le rapport ADR dont il est le calque :
+un survivant n'est pas un défaut mais une **question** posée à un humain, et bloquer une fusion là-dessus
+ferait cocher au hasard.
+
+Pourquoi hebdomadaire et pas par PR : PIT dépasse **dix minutes sur un seul paquet**, donc des heures sur
+le dépôt entier. L'analyse incrémentale (historique PIT mis en cache d'une semaine à l'autre) raccourcit
+les tours suivants.
+
+Le même bilan se lit en local, sur n'importe quel rapport :
+
+```bash
+python3 scripts/qualite/rapport_mutation.py --markdown
+```
+
+Il trie les classes par nombre de survivants plutôt que d'afficher un pourcentage : le score situe, la
+liste travaille.
+
 ⚠️ **Lire le rapport, pas le résumé.** `target/pit-reports/mutations.xml` écrit ses attributs en
 **apostrophes simples** (`status='SURVIVED'`). Un filtre écrit en guillemets doubles ne matche rien et
 annonce « 0 survivant » sur n'importe quel rapport - y compris sur une classe dont sept mutants

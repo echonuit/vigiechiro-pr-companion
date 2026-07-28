@@ -1,0 +1,115 @@
+# Mesure hebdomadaire de la qualité des tests par mutation (PIT).
+#
+# Ce que PIT dit et que la couverture ne dit pas : si les tests **détectent** un changement de
+# comportement. Le rendement est mesuré, pas supposé - sur ce dépôt, deux classes mutation-testées
+# pendant #2554 ont donné trois défauts réels puis deux issues (#2638, #2639).
+#
+# Hebdomadaire et non par PR, pour deux raisons. PIT est **lent** : plus de dix minutes sur un seul
+# paquet, donc des heures sur le dépôt entier. Et un survivant n'est pas un défaut mais une **question**
+# posée à un humain (vrai trou, mutant équivalent, artefact de ciblage) : bloquer une fusion là-dessus
+# ferait cocher au hasard.
+#
+# NON BLOQUANT, comme le rapport ADR dont ce workflow est le calque : ici on observe, on ne juge pas.
+#
+# ⚠️ Le `test-compile` avant le but n'est pas une commodité : sans phase, `@{jacocoArgLine}` et
+# `${net.bytebuddy:byte-buddy-agent:jar}` restent littérales dans l'argLine héritée de surefire, le
+# minion reçoit un `-javaagent` inexistant et meurt sur un `MINION_DIED` muet. Ce piège a fait conclure
+# une fois que PIT était incompatible avec ce dépôt (#2605).
+
+name: mutation-hebdo
+
+on:
+  schedule:
+    # Lundi 7 h UTC : une heure après le rapport ADR, pour que les deux bilans arrivent ensemble sans
+    # se disputer les runners.
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      perimetre:
+        description: "Classes à muter (motif PIT)"
+        required: false
+        default: "fr.univ_amu.iut.*"
+
+permissions:
+  contents: read
+
+jobs:
+  mesurer:
+    name: Mutation sur le dépôt
+    runs-on: ubuntu-latest
+    # Le dépôt entier prend des heures au premier tour ; l'historique PIT (cache ci-dessous) raccourcit
+    # les suivants. La borne évite qu'un blocage consomme la journée.
+    timeout-minutes: 300
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          check-latest: false
+          cache: maven
+
+      # Analyse incrémentale : PIT relit son historique et ne rejoue que ce qui a changé. Sans lui,
+      # chaque lundi repartirait de zéro pour des heures, et le job finirait par être désactivé.
+      #
+      # ⚠️ Les options du GREFFON sont `historyInputFile`/`historyOutputFile`. Les noms du coeur PIT
+      # (`historyInputLocation`, visibles dans ses logs) ne sont pas des propriétés Maven : passées ici,
+      # elles seraient ignorées EN SILENCE et le cache ne servirait jamais. Vérifié dans le descripteur
+      # du greffon, pas déduit du log.
+      - name: Restaurer l'historique PIT
+        uses: actions/cache@v4
+        with:
+          path: target/pit-history
+          key: pit-history-${{ github.run_id }}
+          restore-keys: |
+            pit-history-
+
+      - name: Mesurer
+        id: mesure
+        env:
+          PERIMETRE: ${{ inputs.perimetre || 'fr.univ_amu.iut.*' }}
+        run: |
+          set -euo pipefail
+          mkdir -p target/pit-history
+          # Headless : les propriétés vivent dans le profil `mutation` du pom (le minion n'hérite pas
+          # des systemPropertyVariables de surefire). Ne pas les repasser ici - `-DjvmArgs` REMPLACE
+          # la liste du profil au lieu de s'y ajouter.
+          ./mvnw -B -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
+            -DtargetClasses="$PERIMETRE" \
+            -DtargetTests="fr.univ_amu.iut.*" \
+            -DhistoryInputFile=target/pit-history/pit.history \
+            -DhistoryOutputFile=target/pit-history/pit.history
+
+      - name: Publier le bilan dans le résumé du job
+        if: always()
+        run: |
+          set -uo pipefail
+          # Volontairement sans `-e` : ce job OBSERVE. Un bilan manquant se dit, il ne se solde pas par
+          # un job rouge - sans quoi « non bloquant » ne serait vrai que les bonnes semaines.
+          if python3 scripts/qualite/rapport_mutation.py --markdown >> "$GITHUB_STEP_SUMMARY"; then
+            exit 0
+          fi
+          # Un bilan absent ou illisible serait lu comme « zéro survivant ». On le dit, plutôt que de
+          # laisser un résumé vide passer pour une bonne nouvelle.
+          {
+            echo "## Mutation (PIT)"
+            echo
+            echo "La mesure n'a pas abouti : aucun rapport lisible cette semaine."
+            echo
+            echo "Ce n'est **pas** « zéro survivant » : c'est une absence de mesure."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::Bilan de mutation absent ou illisible - une absence de mesure, pas un dépôt sain."
+
+      # Le rapport HTML permet de descendre au mutant, ligne par ligne, quand le résumé pose une
+      # question qui mérite qu'on l'ouvre.
+      - name: Conserver le rapport détaillé
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-reports
+          path: target/pit-reports/
+          retention-days: 30
+          if-no-files-found: ignore
