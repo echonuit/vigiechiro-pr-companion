@@ -54,7 +54,7 @@ année, analyse, campagne) et de
 colonne (Année et N° de passage se trient numériquement), en plus du sélecteur d'ordres. Un
 **double-clic** sur une ligne ouvre l'écran du passage correspondant.
 
-![Le menu ☰ de « Carte & passages » : écouter le passage sélectionné (grisé tant qu'aucune ligne n'est choisie), écouter la sélection filtrée, exporter, et le réglage des colonnes.](../assets/captures/apercu-multisite-menu-actions.png)
+![Le menu ☰ de « Carte & passages », aucune ligne cochée : écouter le passage sélectionné et les quatre actions groupées sont grisées, chacune disant ce qui lui manque. Restent actives « Écouter la sélection filtrée », « Exporter… » et le réglage des colonnes.](../assets/captures/apercu-multisite-menu-actions.png)
 
 Une entrée **grisée** dit ce qui lui manque : « Écouter le passage sélectionné » n'est active qu'une
 fois une ligne choisie. Deux autres entrées n'apparaissent que dans leur contexte : **Reconstruire un
@@ -109,6 +109,8 @@ menu **☰** l'une des quatre actions groupées :
 
 Le libellé de chaque entrée dit combien de lignes sont cochées, et pourquoi il est grisé s'il l'est.
 
+![Le même menu ☰ avec trois lignes cochées : les quatre actions groupées sont actives et annoncent chacune « des 3 lignes cochées ».](../assets/captures/apercu-multisite-menu-selection.png)
+
 ### On vous dit d'abord ce qui sera écarté
 
 Une fenêtre annonce **combien** de nuits seront traitées, et **lesquelles** ne le seront pas, chacune
@@ -146,6 +148,12 @@ d'attendre la fin de la nuit en cours, qui peut prendre plusieurs minutes. La nu
 !!! note "« Importer les résultats » ne remplace jamais"
     Une nuit qui a déjà ses résultats est écartée. Réimporter écrase vos validations et l'avis du
     validateur ; cela se décide depuis [Sons & validation](validation.md), nuit par nuit.
+
+!!! tip "Les mêmes quatre actions en ligne de commande"
+    `vigiechiro traiter-passages --action televerser --passage 12 --passage 13 --passage 14` applique la
+    même action aux mêmes conditions, avec les mêmes écarts et le même compte rendu, une ligne par nuit.
+    `--json` en donne une version exploitable par un script. Les quatre noms d'action sont
+    `preparer-depot`, `televerser`, `importer-resultats` et `declencher-calcul`.
 
 ## Éditer les positions des points
 

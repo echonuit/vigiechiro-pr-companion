@@ -53,6 +53,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 
@@ -88,6 +89,10 @@ public final class CaptureMultisite {
 
     /// Carré de démonstration : celui du site seedé, du filtre de recherche et de la nuit manquante.
     private static final String CARRE_DEMO = "640380";
+
+    /// Nombre de lignes cochées pour la capture du menu en sélection (#2357) : assez pour que le pluriel
+    /// des libellés se voie, assez peu pour rester lisible.
+    private static final int LIGNES_COCHEES = 3;
 
     private CaptureMultisite() {}
 
@@ -131,6 +136,7 @@ public final class CaptureMultisite {
         rendreModaleReconstruction(injecteur, sortie.resolve("apercu-multisite-reconstruction.png"));
         rendreImportGroupe(injecteur, sortie.resolve("apercu-multisite-reconstruction-groupe.png"));
         rendreMenuActions(injecteur, sortie.resolve("apercu-multisite-menu-actions.png"));
+        rendreMenuActionsSelection(injecteur, sortie.resolve("apercu-multisite-menu-selection.png"));
     }
 
     /// Rend la **modale « Reconstruire un passage manquant »** (#1396) : les nuits déposées sur
@@ -211,6 +217,39 @@ public final class CaptureMultisite {
         }
         if (!ApercuFx.enregistrerMenuOuvert(menuActions, fichier)) {
             System.out.println("[capture-multisite-menu] popup non rendu (headless) : " + fichier + " ignoré.");
+            return;
+        }
+        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Photographie le même menu ☰ **avec trois lignes cochées** (#2357, clôture du lot 3).
+    ///
+    /// La capture précédente montre les quatre actions groupées **grisées**, ce qui est leur état par
+    /// défaut mais le moins informatif : on y voit quatre entrées inertes, et rien ne dit qu'elles
+    /// s'allument. Ici, chaque entrée est active et **dit combien de lignes sont cochées** - c'est
+    /// exactement ce que la documentation affirme, et il n'y avait aucune image pour le montrer.
+    private static void rendreMenuActionsSelection(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource(FXML));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        // Le menu se peuple par liaison sur le NOMBRE de lignes cochées : il faut donc une scène et une
+        // mise en page avant de cocher, sinon les libellés restent sur leur valeur initiale.
+        Scene scene = new Scene(vue, 1100, 620);
+        vue.applyCss();
+        vue.layout();
+        if (scene.lookup("#tableLignes") instanceof TableView<?> table) {
+            table.getSelectionModel().clearSelection();
+            table.getSelectionModel()
+                    .selectRange(0, Math.min(LIGNES_COCHEES, table.getItems().size()));
+        }
+        vue.applyCss();
+        vue.layout();
+        if (!(vue.lookup("#menuActions") instanceof MenuButton menuActions)) {
+            System.out.println("[capture-multisite-menu-selection] menu ☰ introuvable : capture ignorée.");
+            return;
+        }
+        if (!ApercuFx.enregistrerMenuOuvert(menuActions, fichier)) {
+            System.out.println("[capture-multisite-menu-selection] popup non rendu (headless) : " + fichier);
             return;
         }
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
