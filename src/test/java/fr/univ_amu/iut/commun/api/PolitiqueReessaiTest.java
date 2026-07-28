@@ -42,7 +42,7 @@ class PolitiqueReessaiTest {
         ReponseApi<String> issue = ReponseApi.refuse(422, "validation");
 
         ReponseApi<String> resultat =
-                politique.executer(Profil.PREMIER_PLAN, SuiviReprise.SILENCIEUX, scenario(Issue.de(issue)));
+                politique.executer(Profil.INSISTANT, SuiviReprise.SILENCIEUX, scenario(Issue.de(issue)));
 
         assertThat(resultat).isEqualTo(issue);
         assertThat(appels).hasValue(1);
@@ -53,7 +53,7 @@ class PolitiqueReessaiTest {
     @DisplayName("injoignable puis succès : deux tentatives, une attente, le succès l'emporte")
     void injoignable_puis_succes() {
         ReponseApi<String> resultat = politique.executer(
-                Profil.PREMIER_PLAN,
+                Profil.INSISTANT,
                 SuiviReprise.SILENCIEUX,
                 scenario(Issue.de(ReponseApi.<String>injoignable("coupure")), Issue.de(ReponseApi.succes("ok"))));
 
@@ -66,7 +66,7 @@ class PolitiqueReessaiTest {
     @DisplayName("premier plan, toujours injoignable : 4 tentatives, 3 attentes, backoff croissant")
     void premier_plan_epuise_les_tentatives() {
         ReponseApi<String> resultat = politique.executer(
-                Profil.PREMIER_PLAN,
+                Profil.INSISTANT,
                 SuiviReprise.SILENCIEUX,
                 scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
 
@@ -80,9 +80,7 @@ class PolitiqueReessaiTest {
     @DisplayName("arrière-plan : une seule reprise au plus, pour ne pas aggraver l'incident")
     void arriere_plan_une_seule_reprise() {
         politique.executer(
-                Profil.ARRIERE_PLAN,
-                SuiviReprise.SILENCIEUX,
-                scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
+                Profil.BREF, SuiviReprise.SILENCIEUX, scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
 
         assertThat(appels).hasValue(2);
         assertThat(attentes).hasSize(1);
@@ -94,7 +92,7 @@ class PolitiqueReessaiTest {
         Issue<String> imposee = new Issue<>(ReponseApi.refuse(429, "slow down"), Optional.of(Duration.ofSeconds(7)));
 
         politique.executer(
-                Profil.PREMIER_PLAN, SuiviReprise.SILENCIEUX, scenario(imposee, Issue.de(ReponseApi.succes("ok"))));
+                Profil.INSISTANT, SuiviReprise.SILENCIEUX, scenario(imposee, Issue.de(ReponseApi.succes("ok"))));
 
         assertThat(attentes).containsExactly(Duration.ofSeconds(7));
     }
@@ -103,14 +101,14 @@ class PolitiqueReessaiTest {
     @DisplayName("backoff : exponentiel plafonné, jitter égal (moitié fixe + moitié aléatoire)")
     void backoff_plafonne_et_jitter() {
         // Aléa nul -> plancher = moitié de l'exponentiel plafonné.
-        assertThat(politique.delaiAvantReprise(Profil.PREMIER_PLAN, 1, Optional.empty()))
+        assertThat(politique.delaiAvantReprise(Profil.INSISTANT, 1, Optional.empty()))
                 .isEqualTo(Duration.ofMillis(250));
         // Très au-delà du plafond (8 s) : le délai sature à la moitié du plafond.
-        assertThat(politique.delaiAvantReprise(Profil.PREMIER_PLAN, 10, Optional.empty()))
+        assertThat(politique.delaiAvantReprise(Profil.INSISTANT, 10, Optional.empty()))
                 .isEqualTo(Duration.ofMillis(4000));
         // Aléa quasi maximal : on approche le plafond sans jamais le dépasser.
         PolitiqueReessai avecAlea = new PolitiqueReessai(enregistreur, () -> 0.999);
-        assertThat(avecAlea.delaiAvantReprise(Profil.PREMIER_PLAN, 10, Optional.empty()))
+        assertThat(avecAlea.delaiAvantReprise(Profil.INSISTANT, 10, Optional.empty()))
                 .isBetween(Duration.ofMillis(4000), Duration.ofMillis(8000));
     }
 
@@ -123,7 +121,7 @@ class PolitiqueReessaiTest {
         PolitiqueReessai interrompue = new PolitiqueReessai(interrupteur, () -> 0.0);
 
         ReponseApi<String> resultat = interrompue.executer(
-                Profil.PREMIER_PLAN,
+                Profil.INSISTANT,
                 SuiviReprise.SILENCIEUX,
                 scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
 
@@ -143,7 +141,7 @@ class PolitiqueReessaiTest {
         List<Avis> avis = new ArrayList<>();
         SuiviReprise suivi = (tentative, delai) -> avis.add(new Avis(tentative, delai));
 
-        politique.executer(Profil.PREMIER_PLAN, suivi, scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
+        politique.executer(Profil.INSISTANT, suivi, scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
 
         assertThat(avis)
                 .containsExactly(

@@ -20,9 +20,11 @@ import java.util.function.Supplier;
 ///    est rejoué : un incident réseau ([ReponseApi.Injoignable]) ou un serveur temporairement
 ///    indisponible ([ReponseApi.Refuse] `429`/`5xx`). Un `4xx` (URL signée expirée, corps refusé, jeton
 ///    mort) ne deviendra jamais valide en réessayant : on renonce tout de suite.
-/// 2. **Le réessai n'est pas uniforme.** Un appel que quelqu'un attend ([Profil#PREMIER_PLAN]) mérite
-///    d'insister ; un relevé d'état de fond ([Profil#ARRIERE_PLAN]) renonce vite, sinon il transforme
-///    une lenteur serveur en rafale de requêtes et amplifie l'incident.
+/// 2. **Le réessai n'est pas uniforme.** Un appel que quelqu'un attend mérite d'insister
+///    ([Profil#INSISTANT]) ; un sondage périodique renonce vite ([Profil#BREF]), sinon il transforme une
+///    lenteur serveur en rafale de requêtes et amplifie l'incident. Les profils sont nommés d'après **ce
+///    qu'ils font**, la situation qui les motive vivant dans leur documentation : c'est ce qui permet à un
+///    appelant de dire « j'insiste » sans avoir à justifier qu'il est bien « au premier plan ».
 /// 3. **La temporisation porte un aléa** (jitter) : sans lui, plusieurs unités qui échouent ensemble
 ///    retentent ensemble et la rafale se reforme. Et **`Retry-After` fait autorité** quand le serveur
 ///    l'envoie : c'est lui qui sait, pas nous.
@@ -34,10 +36,14 @@ final class PolitiqueReessai {
     /// Combien insister, et jusqu'où espacer. Le choix n'est pas cosmétique : un relevé d'état qui
     /// insiste aggrave l'incident qu'il essaie d'absorber.
     enum Profil {
-        /// Quelqu'un attend devant l'écran (téléversement, écriture demandée) : plusieurs tentatives.
-        PREMIER_PLAN(4, Duration.ofMillis(500), Duration.ofSeconds(8)),
-        /// Relevé d'état ou tâche périodique : une seule tentative supplémentaire au plus.
-        ARRIERE_PLAN(2, Duration.ofMillis(500), Duration.ofSeconds(1));
+        /// Plusieurs tentatives, temporisation croissante. **À choisir quand quelqu'un attend** une
+        /// réponse : téléversement, écriture demandée, et toute lecture de ce produit - aucune n'est un
+        /// sondage automatique (#1338, #2619).
+        INSISTANT(4, Duration.ofMillis(500), Duration.ofSeconds(8)),
+        /// Une seule tentative supplémentaire au plus. **À choisir pour un sondage périodique**, qui
+        /// repassera de toute façon : insister y transformerait une lenteur serveur en rafale de requêtes
+        /// et amplifierait l'incident qu'on prétend absorber.
+        BREF(2, Duration.ofMillis(500), Duration.ofSeconds(1));
 
         /// Nombre total de tentatives, la première incluse.
         private final int maxTentatives;

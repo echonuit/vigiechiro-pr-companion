@@ -18,12 +18,14 @@ Une politique de réessai (`PolitiqueReessai`) enveloppe les émissions du trans
 
 **2. Graduée par profil.** L'appelant choisit selon ce qu'il fait :
 
-| Profil | Quand | Comportement |
+| Profil | Comportement | À choisir quand |
 |---|---|---|
-| `PREMIER_PLAN` | quelqu'un attend devant l'écran | plusieurs tentatives, backoff exponentiel plafonné |
-| `ARRIERE_PLAN` | relevé d'état, tâche périodique | une tentative supplémentaire au plus |
+| `INSISTANT` | plusieurs tentatives, backoff exponentiel plafonné | quelqu'un attend une réponse |
+| `BREF` | une tentative supplémentaire au plus | c'est un sondage périodique, qui repassera |
 
 La distinction n'est pas cosmétique : un relevé d'état qui insiste transforme une lenteur serveur en rafale de requêtes et **amplifie** l'incident qu'il prétend absorber.
+
+Les profils sont nommés d'après **ce qu'ils font**, la situation qui les motive vivant dans la colonne de droite. C'est délibéré : nommés d'après la situation (`PREMIER_PLAN` / `ARRIERE_PLAN`, jusqu'à #2682), ils obligeaient chaque appelant à justifier qu'il était bien « au premier plan » avant de pouvoir insister - l'amendement #2619 ci-dessous a dû y consacrer un paragraphe entier, et le code un commentaire de quatre lignes. Un appelant doit pouvoir dire « j'insiste » ; c'est la documentation du profil qui dit quand ce choix est le bon.
 
 **3. Toujours jitterée, `Retry-After` faisant autorité.** La temporisation porte un aléa (jitter égal : moitié fixe pour que le délai croisse, moitié aléatoire) : sans lui, plusieurs unités qui échouent ensemble retentent ensemble et la rafale se reforme. Et quand le serveur envoie `Retry-After`, c'est **lui** qui fait autorité, pas notre backoff.
 
@@ -43,10 +45,10 @@ La distinction n'est pas cosmétique : un relevé d'état qui insiste transforme
 > « non récupérée » là où la politique existait déjà, testée, à côté. Le réessai s'applique désormais au
 > **point de passage unique** de toutes les émissions.
 >
-> Profil retenu pour les lectures : **`PREMIER_PLAN`**. Ce n'est pas un choix par défaut mais une
+> Profil retenu pour les lectures : **`INSISTANT`**. Ce n'est pas un choix par défaut mais une
 > conséquence de la règle 2 : dans ce produit, aucune lecture n'est un sondage automatique (« on
 > n'interroge le serveur que quand l'utilisateur le demande », #1338), donc il y a **toujours quelqu'un
-> qui attend**. Le jour où une tâche périodique apparaîtra, elle devra demander `ARRIERE_PLAN`
+> qui attend**. Le jour où une tâche périodique apparaîtra, elle devra demander `BREF`
 > explicitement - c'est elle qui amplifierait un incident en insistant, pas un écran.
 
 ## Alternatives écartées
