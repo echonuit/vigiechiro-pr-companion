@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.101.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.101.1...v2.101.2) (2026-07-28)
+
+
+### Bug Fixes
+
+* **api:** une ecriture qui cree n'est plus rejouee sur une coupure ([#2680](https://github.com/echonuit/vigiechiro-pr-companion/issues/2680)) ([d2abb1f](https://github.com/echonuit/vigiechiro-pr-companion/commit/d2abb1f2218126ba81d2cc77f4f4c3d00b620942)), closes [#2677](https://github.com/echonuit/vigiechiro-pr-companion/issues/2677) [#2672](https://github.com/echonuit/vigiechiro-pr-companion/issues/2672) [#2350](https://github.com/echonuit/vigiechiro-pr-companion/issues/2350) [#2672](https://github.com/echonuit/vigiechiro-pr-companion/issues/2672) [#2677](https://github.com/echonuit/vigiechiro-pr-companion/issues/2677)
+
 ## [2.101.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.101.0...v2.101.1) (2026-07-28)
 
 
