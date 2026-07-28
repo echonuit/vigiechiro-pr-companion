@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.LancementCalculGroupe;
 import fr.univ_amu.iut.lot.model.ModeDepot;
 import fr.univ_amu.iut.lot.model.PreparationGroupee;
 import fr.univ_amu.iut.lot.model.ServiceLot;
@@ -71,6 +72,9 @@ public class LotModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), Key.get(ActionGroupee.class, Names.named("action.televerser")))
                 .setBinding()
                 .to(Key.get(ActionGroupee.class, Names.named("action.televerser.impl")));
+        OptionalBinder.newOptionalBinder(binder(), Key.get(ActionGroupee.class, Names.named("action.declencherCalcul")))
+                .setBinding()
+                .to(Key.get(ActionGroupee.class, Names.named("action.declencherCalcul.impl")));
         OptionalBinder.newOptionalBinder(binder(), OuvrirLot.class).setBinding().to(NavigationLot.class);
         // Dépôt VigieChiro (#142) en liaison **optionnelle** : déclaré ici (défaut absent) pour que les
         // injecteurs partiels de la feature `lot` — notamment `CaptureLot`, sans `ConnexionModule` donc sans
@@ -170,6 +174,16 @@ public class LotModule extends ModuleDeFeature {
     /// Elle relaie le jeton du lot au dépôt, qui le consulte avant chaque unité : c'est la seule action
     /// du lot dont l'interruption laisse un état **nommé et reprenable** (« Dépôt en cours » + plan
     /// persisté), donc la seule qui ait le droit de s'arrêter au milieu d'un passage.
+    /// Action groupée **« Déclencher le calcul »** (#2357, lot 3, PR 5/5).
+    ///
+    /// Elle ne force **jamais** : relancer un calcul détruit les observations d'une nuit déposée en ZIP.
+    @Provides
+    @Singleton
+    @Named("action.declencherCalcul.impl")
+    ActionGroupee fournirLancementCalculGroupe(Optional<DepotVigieChiro> depot) {
+        return new LancementCalculGroupe(depot);
+    }
+
     @Provides
     @Singleton
     @Named("action.televerser.impl")
