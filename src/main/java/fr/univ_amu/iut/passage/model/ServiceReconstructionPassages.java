@@ -575,10 +575,8 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
 
     /// Passage local rattaché à cette participation, s'il en existe un.
     private Optional<Long> passageRattache(String idParticipation) {
-        return liens.tous(LienVigieChiro.ENTITE_PASSAGE).entrySet().stream()
-                .filter(entree -> entree.getValue().equals(idParticipation))
-                .map(entree -> Long.valueOf(entree.getKey()))
-                .findFirst();
+        return liens.refLocalePour(LienVigieChiro.ENTITE_PASSAGE, idParticipation)
+                .map(Long::valueOf);
     }
 
     /// Un passage est un **squelette** (#1710) s'il porte une session **sans aucune séquence** : une nuit

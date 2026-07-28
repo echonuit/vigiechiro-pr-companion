@@ -62,6 +62,18 @@ public class LienVigieChiroDao extends DaoGenerique<LienVigieChiro, String> {
                 .map(LienVigieChiro::objectid);
     }
 
+    /// Référence **locale** correspondant à l'`objectid` VigieChiro, pour l'entité donnée : l'inverse
+    /// d'[#objectidPour].
+    ///
+    /// Le schéma l'attendait depuis l'origine - `idx_vigiechiro_link_objectid` porte `(entite, objectid)`
+    /// et son commentaire annonce « recherche inverse » - mais aucune méthode ne l'exposait. Faute de
+    /// quoi les appelants balayaient [#tous] puis filtraient : la table entière chargée pour en garder une
+    /// ligne, et un résultat qui dépendait de l'ordre de parcours si le filtre venait à dériver (#2638).
+    public Optional<String> refLocalePour(String entite, String objectid) {
+        return queryUnique("SELECT * FROM vigiechiro_link WHERE entite = ? AND objectid = ?", MAPPER, entite, objectid)
+                .map(LienVigieChiro::refLocale);
+    }
+
     /// Toutes les correspondances d'une entité, sous forme de table `ref_locale -> objectid` (ordre
     /// d'insertion préservé). Utile aux features consommatrices pour résoudre en masse leurs clés.
     public Map<String, String> tous(String entite) {
