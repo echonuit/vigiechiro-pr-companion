@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.sites.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -8,6 +10,8 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -20,6 +24,7 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -31,6 +36,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -53,6 +59,10 @@ class MesSitesViewTest {
 
     private static final String ID_USER = "u-test";
     private Injector injector;
+    private final ClientVigieChiro client = mock(ClientVigieChiro.class);
+
+    /// Ce que l'écran montrait pendant la synchronisation : une fenêtre de suivi, une barre, un « Annuler ».
+    private final List<String> vuPendantLaSynchro = new ArrayList<>();
 
     @Start
     void start(Stage stage) throws Exception {
@@ -67,6 +77,9 @@ class MesSitesViewTest {
                         bind(ExecuteurTache.class)
                                 .to(ExecuteurTacheSynchrone.class)
                                 .in(Singleton.class);
+                        // Client bouchonné : la synchronisation n'appelle rien, mais elle passe par lui -
+                        // c'est le seul endroit d'où observer l'écran PENDANT l'opération (#2606).
+                        bind(ClientVigieChiro.class).toInstance(client);
                     }
                 }));
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
@@ -92,6 +105,31 @@ class MesSitesViewTest {
     @AfterEach
     void nettoyerWorkspace() {
         System.clearProperty("vigiechiro.workspace");
+    }
+
+    @Test
+    @DisplayName("#2606 : la synchronisation s'annonce sous une fenêtre de suivi, avec « Annuler »")
+    void synchro_montre_son_avancement_et_laisse_renoncer(FxRobot robot) {
+        when(client.mesParticipations()).thenAnswer(appel -> {
+            // Instantané pris pendant le travail : après coup, la fenêtre est déjà refermée.
+            Window suivi = Window.getWindows().stream()
+                    .filter(f -> f.getScene() != null && f.getScene().lookup(".progress-bar") != null)
+                    .findFirst()
+                    .orElse(null);
+            vuPendantLaSynchro.add("fenetre_de_suivi=" + (suivi != null));
+            vuPendantLaSynchro.add(
+                    "annuler=" + (suivi != null && suivi.getScene().lookup(".button") != null));
+            return ReponseApi.injoignable("bouchon");
+        });
+
+        robot.clickOn("#btnSyncVigieChiro");
+
+        // Ce que le voile opaque ne donnait pas : un avancement visible, et un moyen de renoncer.
+        assertThat(vuPendantLaSynchro).containsExactly("fenetre_de_suivi=true", "annuler=true");
+        assertThat(Window.getWindows())
+                .as("la fenêtre de suivi se referme, elle ne reste pas là")
+                .noneSatisfy(fenetre ->
+                        assertThat(fenetre.getScene().lookup(".progress-bar")).isNotNull());
     }
 
     @Test
