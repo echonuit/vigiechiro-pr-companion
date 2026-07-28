@@ -276,3 +276,26 @@ setup() {
   [ "${status}" -eq 2 ]
   [[ "${output}" == *"introuvable"* ]]
 }
+
+@test "traiter-passages : une action inconnue est refusée par picocli, exit 2 (#2357)" {
+  # Vu du vrai binaire : le convertisseur d'énumération est bien câblé, et son refus nomme les
+  # valeurs attendues plutôt que de laisser deviner. Un test in-process ne voit pas le code de sortie.
+  run cli traiter-passages --action tout-refaire --passage 1
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"preparer-depot"* ]]
+}
+
+@test "traiter-passages : un passage inconnu arrête tout, exit 2, sans pile (#2357)" {
+  # Traiter dix-neuf nuits sur vingt en passant la vingtième sous silence serait le pire des deux
+  # comportements : la commande refuse le lot entier et NOMME l'identifiant fautif.
+  run cli traiter-passages --action preparer-depot --passage 999999
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"999999"* ]]
+  [[ "${output}" != *"Exception"* ]]
+}
+
+@test "traiter-passages : le refus ne parle pas du menu ☰, il donne une commande (#2357, ADR 2635)" {
+  # Pendant CLI de la garde posée sur « reactiver » : un terminal n'a pas de menu.
+  run cli traiter-passages --action preparer-depot --passage 999999
+  [[ "${output}" != *"☰"* ]]
+}

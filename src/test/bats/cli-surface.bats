@@ -30,7 +30,7 @@ COMMANDES_OPTIONS_REQUISES=(
   valider-observations corriger-observations qualifier qualifier-fichier lister-selection pre-check constituer-selection
   restaurer reinitialiser-depot supprimer-passage
   deposer deposer-vigiechiro importer-vigiechiro publier-corrections-vigiechiro
-  etat-traitement-vigiechiro lancer-traitement-vigiechiro verifier-depot-vigiechiro
+  etat-traitement-vigiechiro lancer-traitement-vigiechiro verifier-depot-vigiechiro traiter-passages
   vigiechiro
   creer-campagne rattacher-campagne modifier-campagne supprimer-campagne
 )

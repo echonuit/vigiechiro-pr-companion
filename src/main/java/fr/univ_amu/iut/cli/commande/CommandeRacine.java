@@ -71,6 +71,7 @@ import picocli.CommandLine.Spec;
             RecupererVigieChiro.class,
             DeposerVigieChiro.class,
             LancerTraitementVigieChiro.class,
+            TraiterPassages.class,
             EtatTraitementVigieChiro.class,
             ReinitialiserDepot.class,
             SupprimerPassage.class,
