@@ -18,7 +18,8 @@ import java.util.Objects;
 /// ## Les trois règles, tenues par le modèle
 ///
 /// 1. **Les proportions sont à l'échelle** : les largeurs se calculent sur les quantités réelles
-///    ([Barre#fraction]), jamais sur une impression. Une barre qui ne respecte pas ce qu'elle représente
+///    ([Ventilation#fraction] pour un ensemble, [#echelleDesVolumes] pour des volumes comparés), jamais sur une
+/// impression. Une barre qui ne respecte pas ce qu'elle représente
 ///    est pire qu'un tableau : elle donne une vue fausse avec l'autorité du visuel.
 /// 2. **Un ensemble se ventile entièrement** : [Ventilation] **refuse** une somme de segments qui ne fait
 ///    pas son total. L'appelant est ainsi contraint de **nommer** le reliquat, là où un « autres »
@@ -151,12 +152,12 @@ public record CompteRenduChiffre(
             return segments.stream().mapToLong(Segment::quantite).sum();
         }
 
-        /// Part d'un segment dans cette barre, entre 0 et 1 (0 si la barre est vide) : c'est **cette**
-        /// valeur qui doit piloter une largeur, jamais une estimation.
-        public double fraction(Segment segment) {
-            long total = total();
-            return total == 0 ? 0 : (double) segment.quantite() / total;
-        }
+        // Pas de `fraction(Segment)` ici, et c'est volontaire. Une barre de volume ne mesure PAS ses
+        // segments contre son propre total : elle les mesure contre l'ÉCHELLE COMMUNE de l'ensemble
+        // ([#echelleDesVolumes]), sans quoi « lu » et « écrit » rempliraient chacun toute sa largeur et
+        // paraîtraient égaux. La méthode a existé, n'a jamais eu d'appelant, et PIT l'a révélée à la
+        // clôture (mutant survivant : aucun test ne pouvait la tuer). La garder inviterait à casser la
+        // règle que ce type existe pour tenir.
     }
 
     /// Un **segment** de barre : sa quantité (qui pilote la géométrie) et sa valeur **lisible** (que le
@@ -277,6 +278,36 @@ public record CompteRenduChiffre(
         /// Effectif du motif : le nombre de sujets qu'il porte.
         public int compte() {
             return sujets.size();
+        }
+
+        /// **Groupe des sujets par cause**, dans l'ordre de première apparition, et rend un motif par cause.
+        ///
+        /// Les trois traductions livrées (import, réactivation, publication) écrivaient chacune la même
+        /// boucle : une table ordonnée, une clé de cause, une liste de sujets. Le groupage n'est pas une
+        /// affaire de feature — c'est la forme même d'un motif, et le mettre ici évite qu'une quatrième
+        /// surface le réécrive une quatrième fois.
+        ///
+        /// **L'ordre d'apparition est significatif** : l'appelant trie ses sujets AVANT d'appeler (la
+        /// réactivation met les absences les plus coûteuses d'abord, puisque c'est par elles qu'on commence
+        /// à chercher), et le groupage préserve cet ordre au lieu d'imposer le sien.
+        ///
+        /// @param sujets les sujets à grouper, déjà dans l'ordre souhaité
+        /// @param cause ce qui identifie la cause d'un sujet : c'est la **clé** de regroupement
+        /// @param libelleDeLaCause comment nommer le motif d'une cause (« fichier(s) : … »)
+        /// @param nomDuSujet comment nommer un sujet dans la liste ouverte
+        public static <T> List<Motif> grouperParCause(
+                List<T> sujets,
+                java.util.function.Function<T, String> cause,
+                java.util.function.UnaryOperator<String> libelleDeLaCause,
+                java.util.function.Function<T, String> nomDuSujet) {
+            java.util.Map<String, List<String>> parCause = new java.util.LinkedHashMap<>();
+            for (T sujet : sujets) {
+                parCause.computeIfAbsent(cause.apply(sujet), ignore -> new java.util.ArrayList<>())
+                        .add(nomDuSujet.apply(sujet));
+            }
+            return parCause.entrySet().stream()
+                    .map(entree -> new Motif(libelleDeLaCause.apply(entree.getKey()), entree.getValue()))
+                    .toList();
         }
     }
 

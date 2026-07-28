@@ -133,4 +133,4 @@ La synchro rapatrie **tous** les points du carré Vigie-Chiro (la grille STOC pe
 
 > Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
 
-- **La réactivation rend des comptes en chiffres.** Une réactivation porte un enjeu de confiance particulier, puisqu'elle rebranche des fichiers retrouvés sur un passage archivé : ce qui a été rebranché, ce qui a été régénéré et ce qui manque encore, avec son motif, se lit mieux en proportions qu'en liste. Voir [M-CompteRendu](../Maquettes/M-CompteRendu.md) (#2358).
+- **La réactivation rend des comptes en chiffres** *(livré, #2358)*. Ce qui a été rebranché, ce qui était déjà là et ce qui manque encore se lisent en proportions, les motifs d'absence s'ouvrant à la demande — les plus coûteux d'abord. Le compte rendu **textuel** subsiste pour la commande `reactiver` (un terminal ne dessine pas de barres) et pour un passage **reconstruit**, où la réactivation n'a pas eu lieu : une barre « 0 sur 30 » y ferait croire à une tentative échouée. Voir [M-CompteRendu](../Maquettes/M-CompteRendu.md).

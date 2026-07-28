@@ -146,7 +146,9 @@ public final class DeposerVigieChiro implements Callable<Integer> {
 
     /// Suivi console du dépôt : une ligne par unité, écrite au fil de l'eau (le moteur émet sur le fil
     /// d'appel — pas de relais nécessaire en CLI, contrairement à l'IHM).
-    private record SuiviConsole(PrintWriter sortie) implements SuiviDepot {
+    /// Visible du paquet pour que le test puisse vérifier ce que chaque évènement imprime - la reprise
+    /// notamment, qu aucun test ne pouvait atteindre tant que ce type était privé.
+    record SuiviConsole(PrintWriter sortie) implements SuiviDepot {
 
         @Override
         public void planEtabli(List<DepotUnite> unites) {
@@ -166,6 +168,15 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         @Override
         public void uniteEchouee(String identifiant, String raison) {
             sortie.println("  ! " + identifiant + " — " + raison);
+        }
+
+        /// Parité avec l'IHM (clôture #2350) : depuis le réessai gradué (#2354), une coupure momentanée
+        /// n'échoue plus, elle **attend**. L'écran le dit par une mention discrète ; la ligne de commande
+        /// se taisait, et une temporisation de trente secondes y passait pour un blocage - exactement ce
+        /// qu'un utilisateur interrompt au clavier, annulant un dépôt qui allait aboutir.
+        @Override
+        public void uniteReprise(String identifiant, java.time.Duration delai) {
+            sortie.println("  ~ " + identifiant + " — nouvelle tentative dans " + delai.toSeconds() + " s");
         }
     }
 }

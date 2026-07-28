@@ -1051,7 +1051,8 @@ les mélange finit par mentir. L'EPIC #1870 a migré onze écrans et en a trouv�
 |---|---|---|---|
 | **État** | ce qui *est* (« Passage déposé le… », « Cohérence : corrigez les contrôles ») | libellé permanent, adossé à ce qu'il décrit | non |
 | **Retour d'opération** | ce qui *vient de se passer*, en **une phrase bornée** | `RetourOperation` + `BandeauRetour` ou `LibelleRetour` | oui |
-| **Compte rendu** | ce qui *vient de se passer*, de manière **extensible** : des constats, leurs détails | `CompteRendu` + `VueCompteRendu`, dans sa propre zone | non, il se remplace |
+| **Compte rendu textuel** | ce qui *vient de se passer*, de manière **extensible** : des constats, leurs détails | `CompteRendu` + `VueCompteRendu`, dans sa propre zone | non, il se remplace |
+| **Compte rendu chiffré** | ce qui *vient de se passer* d'une **opération lourde**, en **proportions** | `CompteRenduChiffre` + `PanneauCompteRendu`, dans sa propre zone | non, il se remplace |
 | **Travail en cours** | ce qui *se passe* | barre de progression, `IndicateurOccupation`, barre de statut | sans objet |
 
 ⚠ **Le mot « compte rendu » a changé de sens** avec l'[ADR 0031](decisions/0031-un-retour-n-est-pas-un-compte-rendu.md). Il désignait ici ce qui s'appelle désormais **retour d'opération**. Le critère qui les sépare n'est pas la longueur actuelle mais l'**extensibilité** : un message qui concatène une partie variable est déjà un compte rendu, et un compte rendu n'a **jamais** sa place dans un bandeau - l'y loger revient à le tronquer.
@@ -1117,6 +1118,52 @@ d'après leur texte.
 n'est jamais lu par personne. Cinq cas de ce genre existent dans l'application (#1970) : la garde et le
 `disableProperty().bind(…)` testent le même prédicat. Aucun test ne le signale - c'est en essayant de
 **produire une capture** du message qu'on s'en aperçoit.
+
+### Une opération lourde rend ses comptes en proportions
+
+**Le problème.** Un import brasse plusieurs gigaoctets, un dépôt pousse des centaines de mégaoctets. À
+la fin, l'utilisateur pose trois questions, dont **aucune n'appelle une liste** : est-ce que ça s'est
+bien passé, qu'est-ce que ça m'a coûté, qu'est-ce que je fais maintenant. Une énumération de constats y
+répond en obligeant à lire, et lire ne donne pas les proportions.
+
+**Le composant.** `PanneauCompteRendu` (`commun.view`) rend un `CompteRenduChiffre`
+(`commun.viewmodel`) : un verdict chiffré en pastille, la **ventilation** d'un ensemble en barre
+empilée, des **volumes comparés** à échelle commune, ce qui **reste vrai**, et l'**action suivante** en
+pied. Il est présentationnel pur et n'appartient à aucune feature.
+
+**Comment une feature s'y branche.** Elle **traduit** ce qu'elle a déjà produit, elle ne recalcule rien :
+
+| Feature | Bilan déjà produit | Traduction |
+|---|---|---|
+| import | `RapportImport` + `VolumesImport` | `CompteRenduChiffreImport` |
+| réactivation | `RapportReactivation` | `CompteRenduChiffreReactivation` |
+| publication des corrections | `BilanPublication` | `CompteRenduChiffrePublication` |
+
+**Ce que le type garantit, et qu'il ne faut donc pas re-vérifier à la main** ([ADR 2358](decisions/2358-un-compte-rendu-chiffre-tient-ses-regles-par-le-type.md)) :
+
+- la **largeur** d'un segment est *liée* à sa fraction — aucun endroit où poser une largeur à la main,
+  donc aucun endroit où l'échelle puisse mentir ;
+- une **ventilation non exhaustive est refusée à la construction**, en nommant le reliquat. Un « autres »
+  silencieux masquerait exactement ce qu'on cherche ;
+- les **barres de volume partagent l'échelle** de la plus grande : « lu » ne remplit pas toute la largeur
+  quand « écrit » vaut davantage.
+
+**Trois pièges rencontrés, à ne pas refaire.**
+
+1. **La teinte `SECONDAIRE` porte le vert de `RETENU`** : elle sert la seconde part d'un couple de même
+   nature (bruts + séquences se lisent comme un tout). L'employer dans une ventilation où chaque part a
+   un sens distinct fait lire un écart comme une réussite.
+2. **Chaque mention porte sa sévérité.** Un triangle d'alerte devant « L'audio est de nouveau complet »
+   apprend à ne plus regarder les alertes.
+3. **La bande vit dans des largeurs très différentes** (900 px sous l'écran d'import, ~560 px dans une
+   modale) : les libellés s'enroulent, la légende **reflue**, et ce qui assume de s'abréger le déclare
+   par `abregeable`. C'est le garde-fou anti-troncature des captures qui l'a imposé — deux fois, dont
+   une en intégration continue seulement, ses métriques de police différant de neuf pixels par entrée.
+
+**Quand ne PAS l'employer.** Un bilan qui n'a rien à ventiler garde le compte rendu textuel : un passage
+*reconstruit* n'a pas subi de réactivation, et une barre « 0 sur 30 » y ferait croire à une tentative qui
+a échoué. Et là où une **commande en ligne** rend le même bilan, le textuel reste — un terminal ne
+dessine pas de barres.
 
 ## Unit of Work (`UniteDeTravail`)
 

@@ -253,6 +253,25 @@ Rien n'est envoyé tant que vous n'avez pas accepté. Le récapitulatif distingu
 sera **ancré d'abord** (voir plus bas) et ce qui **reste à quai** avec sa cause : les observations à
 ancrer n'y figurent pas, puisque l'envoi va justement s'en occuper.
 
+#### Ce que la publication vous rend à la fin
+
+Une fois l'envoi terminé, un **compte rendu** dit **quelle part** de votre revue est arrivée sur la
+plateforme — c'est la question qu'on se pose à cet instant, et un décompte seul n'y répond pas.
+
+![Le compte rendu d'une publication : la part publiée, les trois natures d'écart distinguées, les refus groupés par cause.](../assets/captures/apercu-publication-compte-rendu.png)
+
+La barre ventile **toutes** les observations revues, et les trois natures d'écart y gardent chacune leur
+part, parce qu'elles appellent **trois gestes différents** :
+
+| Ce qui est écarté | Ce que vous avez à faire |
+|---|---|
+| **à compléter** | déclarer la certitude : la plateforme l'exige avec le taxon, et elle n'est jamais posée par défaut |
+| **sans ancrage** | rattacher la nuit à sa participation Vigie-Chiro |
+| **hors référentiel** | rien — le taxon n'existe pas côté plateforme, votre observation reste locale, et c'est attendu |
+
+Les **refus de la plateforme**, eux, sont regroupés **par cause** : vingt observations refusées pour la
+même panne font une ligne, pas vingt, et la liste des observations concernées s'ouvre d'un clic.
+
 Vos observations n'ont pas besoin d'être « rattachées » une par une à la plateforme au préalable :
 si ce lien manque, la publication le **récupère elle-même** avant d'envoyer. C'est le cas d'une nuit
 importée rapidement (le fichier d'observations seul) ou reconstruite depuis la plateforme. Une

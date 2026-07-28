@@ -17,9 +17,7 @@ import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.model.VolumesImport;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /// Traduit un import abouti en **compte rendu chiffré** (#2358), celui que rend
@@ -179,20 +177,17 @@ public final class CompteRenduChiffreImport {
     }
 
     private static List<Motif> motifsDeRejet(List<LigneRapport> lignes) {
-        Map<String, List<String>> parRaison = new LinkedHashMap<>();
-        for (LigneRapport ligne : lignes) {
-            if (ligne.statut() == StatutImportFichier.REJETE) {
-                parRaison
-                        .computeIfAbsent(raisonSansNomDeFichier(ligne), ignore -> new ArrayList<>())
-                        .add(ligne.nomFichier());
-            }
-        }
+        List<LigneRapport> rejets = lignes.stream()
+                .filter(ligne -> ligne.statut() == StatutImportFichier.REJETE)
+                .toList();
         // « fichier(s) », et non « fichiers » : le panneau compose le libellé APRÈS un effectif, et un motif
         // à un seul fichier donnait « 1 fichiers : … ». La marque « (s) » est la réponse déjà en usage dans
         // l'application (« %d fichier(s) non pertinent(s) ignoré(s) », « N séquence(s) »), vue à la capture.
-        return parRaison.entrySet().stream()
-                .map(motif -> new Motif("fichier(s) : " + motif.getKey(), motif.getValue()))
-                .toList();
+        return Motif.grouperParCause(
+                rejets,
+                CompteRenduChiffreImport::raisonSansNomDeFichier,
+                cause -> "fichier(s) : " + cause,
+                LigneRapport::nomFichier);
     }
 
     /// Les passages **déjà présents** pour cette nuit (#214/#147), en motif dépliable.

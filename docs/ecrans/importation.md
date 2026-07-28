@@ -188,25 +188,45 @@ voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 ![Import en cours : barre de progression, formulaire gelé.](../assets/captures/apercu-import-en-cours.png)
 
-## Rapport d'import
+## Compte rendu de fin d'import
 
 L'import est **résilient** : un fichier illisible ou de format invalide n'interrompt pas toute la nuit.
-Les enregistrements exploitables sont importés, et un **rapport** récapitule à la fin ce qui a été
-importé, **ignoré** (fichier non pertinent) ou **rejeté** (avec la raison). Les fichiers rejetés sont
-listés directement sous le message de fin d'import.
+À la fin, un **compte rendu** répond aux trois questions que vous vous posez à ce moment-là, et il y
+répond **en proportions** plutôt qu'en listes.
 
-![Import terminé avec rapport : le bilan structuré puis la liste des fichiers rejetés et leur raison.](../assets/captures/apercu-import-rejets.png)
+![Import terminé : le verdict chiffré, la ventilation des fichiers, les volumes lus et écrits, et l'action suivante.](../assets/captures/apercu-import-rejets.png)
 
-Le rapport signale aussi, quand il y a lieu :
+**« Est-ce que ça s'est bien passé ? »** La pastille chiffre le résultat (« 583 / 612 importés ») et la
+barre en montre la **part** : ce qui est passé, ce qui a été ignoré parce que non pertinent, ce qui a été
+rejeté. La somme fait toujours le total des fichiers de la source — aucun reliquat ne peut disparaître
+dans un « autres ».
 
-- le **doublon de nuit** - si vous avez choisi d'importer une nuit déjà présente, il rappelle quels
-  passages existaient déjà, avec leur année et leur point ;
-- les **anomalies du journal du capteur** - réveil non programmé, batterie faible, horloge
-  resynchronisée. Le capteur les enregistre dans son journal ; elles n'expliquent pas toujours un
-  problème, mais elles éclairent une nuit qui semble incomplète.
+**« Qu'est-ce que ça m'a coûté sur le disque ? »** Deux barres comparent, **à la même échelle**, ce qui a
+été lu sur la carte et ce qui a été écrit sur le disque — ce dernier ventilé entre les enregistrements
+bruts conservés et les séquences d'écoute produites. Si vous avez désactivé la conservation des bruts,
+la barre « écrit » se réduit d'autant : c'est là que se voit ce que ce réglage vous économise.
 
-Chaque ligne du rapport porte une **icône** en plus de sa couleur, pour rester lisible si vous
-distinguez mal les couleurs.
+**« Qu'est-ce que je fais maintenant ? »** Le pied propose **Ouvrir le passage**, pas un bouton
+« Fermer ».
+
+### Ce que le compte rendu signale en plus
+
+- les **motifs de rejet**, résumés en pied (« 6 fichiers déjà expansés, 2 en-têtes WAV illisibles ») et
+  **dépliables d'un clic** : chaque motif ouvre la liste des fichiers concernés ;
+- les **avertissements encore vrais** — si le dossier mélangeait plusieurs enregistreurs, ou si le
+  journal du capteur ne correspondait pas aux fichiers, le compte rendu vous le **rappelle**. Importer ne
+  résout pas ces réserves : cela les inscrit dans le passage créé ;
+- le **doublon de nuit** — si vous avez choisi d'importer une nuit déjà présente, il rappelle combien de
+  passages existaient déjà, et la liste s'ouvre comme les motifs ;
+- les **anomalies du journal du capteur** — réveil non programmé, batterie faible, horloge
+  resynchronisée. Elles n'expliquent pas toujours un problème, mais elles éclairent une nuit qui semble
+  incomplète ;
+- la **participation créée sur Vigie-Chiro**, quand vous êtes connecté et que le site est relié. L'import
+  écrit alors sur la plateforme, et il vous le dit plutôt que de vous le laisser découvrir au dépôt.
+
+Chaque mention porte une **icône** accordée à son registre — une coche pour une bonne nouvelle, un « i »
+pour un fait de contexte, un triangle pour ce sur quoi il faudra revenir — en plus de sa couleur, pour
+rester lisible si vous distinguez mal les couleurs.
 
 ## Sécurités et cas particuliers
 

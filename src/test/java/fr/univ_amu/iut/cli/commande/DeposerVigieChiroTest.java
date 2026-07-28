@@ -181,6 +181,20 @@ class DeposerVigieChiroTest {
                 .isEqualTo("Plan de dépôt : 3 fichier(s) (1 déjà en ligne, reprise).");
     }
 
+    @Test
+    @DisplayName("clôture #2350 : une nouvelle tentative se dit, au lieu de passer pour un blocage")
+    void reprise_annoncee_sur_la_console() {
+        StringWriter journal = new StringWriter();
+        SuiviDepot suivi = new DeposerVigieChiro.SuiviConsole(new PrintWriter(journal, true));
+
+        suivi.uniteReprise("Car640380-2026-Pass1-A1.zip", java.time.Duration.ofSeconds(8));
+
+        // Depuis le réessai gradué (#2354), une coupure momentanée n'échoue plus : elle ATTEND. L'écran le
+        // disait ; la console se taisait, et une temporisation passait pour un gel - ce qu'un utilisateur
+        // interrompt au clavier, annulant un dépôt qui allait aboutir.
+        assertThat(journal.toString()).contains("Car640380-2026-Pass1-A1.zip").contains("nouvelle tentative dans 8 s");
+    }
+
     private static DepotUnite unite(String identifiant, StatutDepotUnite statut) {
         return new DepotUnite(1L, 42L, identifiant, TypeDepotUnite.WAV, statut, null, null, "2026-07-11T15:00:00");
     }

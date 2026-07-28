@@ -7,12 +7,14 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.importation.model.ApercuEcrasement;
 import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.ReglageConservationOriginaux;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.importation.model.VolumesImport;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -152,6 +154,17 @@ public final class Importer implements Callable<Integer> {
         sortie.println("  Enregistreur: " + resultat.numeroSerieEnregistreur());
         sortie.println("  Originaux   : " + resultat.nombreOriginaux());
         sortie.println("  Séquences   : " + resultat.nombreSequences());
+        // Parité avec l'IHM (clôture #2350) : le compte rendu chiffré de l'écran compare le volume LU sur
+        // la carte au volume ÉCRIT sur le disque (#2358). La ligne de commande ne peut pas dessiner de
+        // barres, mais elle peut dire les mêmes chiffres - c'est une donnée, pas une mise en forme.
+        if (!resultat.volumes().estVide()) {
+            sortie.println("  Lu / écrit  : " + volumesLisibles(resultat.volumes()));
+        }
+        // #1488 : l'import crée une participation sur un serveur distant. L'écran le dit depuis la clôture
+        // du lot 2 ; la taire ici laisserait l'écriture se découvrir ailleurs, ce que l'issue interdit.
+        if (resultat.participationCreee()) {
+            sortie.println("  Vigie-Chiro : participation créée (le dépôt la réutilisera)");
+        }
 
         RapportImport rapport = resultat.rapport();
         sortie.println("  Rapport     : " + rapport.resume());
@@ -175,6 +188,23 @@ public final class Importer implements Callable<Integer> {
             sortie.println("  (rapport CSV non écrit : " + echec.getMessage() + ")");
         }
         return 0;
+    }
+
+    /// Les volumes lus et écrits, dans les mots de l'écran.
+    ///
+    /// La part des **bruts conservés** n'est dite que si elle existe : le compte rendu chiffré de l'écran
+    /// omet ce segment quand le volume est nul, au même titre qu'il omet une part de ventilation à zéro.
+    /// Une mention « dont 0 Ko de bruts conservés » annoncerait une absence, et ferait chercher ce qui
+    /// n'a pas eu lieu (vu à la recette d'import, clôture #2350).
+    private static String volumesLisibles(VolumesImport volumes) {
+        String phrase = Formats.octetsLisibles(volumes.octetsLus())
+                + " lus sur la source, "
+                + Formats.octetsLisibles(volumes.octetsEcrits())
+                + " écrits";
+        if (volumes.octetsBruts() > 0) {
+            phrase += " (dont " + Formats.octetsLisibles(volumes.octetsBruts()) + " de bruts conservés)";
+        }
+        return phrase;
     }
 
     /// Lance l'import dans le mode demandé : les options priment sur le **réglage**, qui sert de défaut.
