@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
+import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.api.Traitement;
@@ -763,6 +764,154 @@ class ServiceReconstructionPassagesTest {
         assertThat(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(rapport.idPassage())))
                 .as("la participation est rattachée au passage reconstruit (lien reposé)")
                 .contains(PARTICIPATION);
+    }
+
+    @Test
+    @DisplayName("#2639 : une reconstruction dit où elle en est, et sa barre va jusqu'au bout")
+    void reconstruire_dit_ou_elle_en_est() {
+        bouchonnerPlateforme();
+        List<Progression> points = new ArrayList<>();
+
+        service.reconstruire(PARTICIPATION, points::add, JetonAnnulation.neutre());
+
+        assertThat(points)
+                .extracting(Progression::libelle)
+                .contains("Lecture de la participation…", "Import des observations…", "Terminé.");
+        assertThat(points).extracting(Progression::fraction).isSorted().endsWith(1.0);
+    }
+
+    @Test
+    @DisplayName("#2639 : un jeton déjà annulé arrête la reconstruction avant la lecture du détail")
+    void reconstruire_annulee_avant_la_lecture() {
+        bouchonnerPlateforme();
+        JetonAnnulation jeton = new JetonAnnulation();
+        jeton.annuler();
+
+        assertThatThrownBy(() -> service.reconstruire(PARTICIPATION, progres -> {}, jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        verify(client, never()).participation(PARTICIPATION);
+        assertThat(passageDao.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2639 : annuler pendant les lectures distantes arrête AVANT la première écriture")
+    void reconstruire_annulee_avant_la_premiere_ecriture() {
+        bouchonnerPlateforme();
+        JetonAnnulation jeton = new JetonAnnulation();
+        // L'utilisateur clique « Annuler » pendant le rapatriement des observations, c'est-à-dire après
+        // le contrôle d'entrée et avant celui qui garde l'écriture. Sans ce second contrôle, la
+        // reconstruction irait au bout et il n'y aurait rien à compenser : elle aurait réussi.
+        when(client.donnees(eq(PARTICIPATION), any())).thenAnswer(appel -> {
+            jeton.annuler();
+            return new ReponseApi.Succes<>(List.of(
+                    new DonneeVigieChiro("d-1", SEQ_1, List.of(observation(), observation())),
+                    new DonneeVigieChiro("d-2", SEQ_2, List.of(observation()))));
+        });
+
+        List<Progression> points = new ArrayList<>();
+        assertThatThrownBy(() -> service.reconstruire(PARTICIPATION, points::add, jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        assertThat(passageDao.findAll()).as("rien n'a été écrit").isEmpty();
+        assertThat(liens.tous(LienVigieChiro.ENTITE_PASSAGE)).isEmpty();
+        // Une base vide ne prouve PAS qu'on n'a pas écrit : la compensation nettoie aussi bien. Ce qui
+        // distingue « on n'a pas commencé » de « on a écrit puis défait », ce sont les étapes annoncées.
+        // Sans cette assertion, retirer le contrôle d'annulation d'avant l'écriture laissait la suite
+        // verte (mutant survivant, #2639).
+        assertThat(points)
+                .extracting(Progression::libelle)
+                .doesNotContain("Création des séquences…", "Import des observations…");
+    }
+
+    @Test
+    @DisplayName("#2639 : reconstruire une nuit dont le point est inconnu ici le DIT, et n'écrit rien")
+    void reconstruire_refuse_un_point_inconnu() {
+        bouchonnerPlateforme();
+        ParticipationOrpheline ailleurs =
+                new ParticipationOrpheline(PARTICIPATION, "999999", "Z9", "2026-07-03T22:00:00+02:00", false);
+
+        assertThatThrownBy(() -> service.reconstruire(ailleurs, progres -> {}, JetonAnnulation.neutre()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("n'existe pas localement")
+                .hasMessageContaining("Créez d'abord le site et le point");
+
+        assertThat(passageDao.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2639 : une participation sans date exploitable le DIT au lieu d'inventer une nuit")
+    void reconstruire_refuse_une_date_illisible() {
+        bouchonnerPlateforme();
+        when(client.participation(PARTICIPATION))
+                .thenReturn(new ReponseApi.Succes<>(new ParticipationDetail(
+                        PARTICIPATION,
+                        "etag-1",
+                        "Z41",
+                        "pas une date",
+                        "pas une date non plus",
+                        null,
+                        Map.of(),
+                        Traitement.absent())));
+
+        assertThatThrownBy(() -> service.reconstruire(PARTICIPATION, progres -> {}, JetonAnnulation.neutre()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("impossible de dater la nuit");
+
+        assertThat(passageDao.findAll()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2639 : ce rapprocheur est DÉPENDANT - il passe après ceux qui posent sites et points")
+    void phase_dependante() {
+        // Pas une formalité : rapatrier une nuit suppose que son point d'écoute existe déjà localement.
+        // Basculer cette phase ferait échouer la synchro d'un compte neuf, en silence et à l'exécution.
+        assertThat(service.phase()).isEqualTo(RapprochementVigieChiro.Phase.DEPENDANTE);
+    }
+
+    @Test
+    @DisplayName("#2639 : la barre du lot vaut k / N, elle ne saute pas au bout dès la première nuit")
+    void reconstruire_tout_avance_par_fractions() {
+        ServiceReconstructionPassages espion = spy(service);
+        ParticipationOrpheline n1 =
+                new ParticipationOrpheline("p1", "130711", "Z41", "2026-07-03T22:00:00+02:00", true);
+        ParticipationOrpheline n2 =
+                new ParticipationOrpheline("p2", "130711", "Z41", "2026-07-04T22:00:00+02:00", true);
+        doReturn(new RapportReconstruction(1L, 1, 1, RapportReconstruction.lacunesConnues()))
+                .when(espion)
+                .reconstruire(any(ParticipationOrpheline.class), any(), any());
+        List<Progression> global = new ArrayList<>();
+
+        espion.reconstruireTout(List.of(n1, n2), global::add, progression -> {}, issue -> {}, JetonAnnulation.neutre());
+
+        // Les libellés étaient déjà tenus ; les FRACTIONS ne l'étaient pas. Une barre qui annonce 100 %
+        // sur la première des deux nuits est pire qu'une barre absente : elle promet une fin qui ne vient
+        // pas.
+        assertThat(global).extracting(Progression::fraction).containsExactly(0.0, 0.5, 1.0);
+    }
+
+    @Test
+    @DisplayName("#2639 : la nuit créée par la synchro prend sa fin du détail, pas son début")
+    void synchroniser_pose_la_fin_de_nuit_du_detail() {
+        bouchonnerPlateforme();
+
+        service.synchroniser(client);
+
+        // C'est l'un des quatre éléments d'identité que #1814 est allé chercher : sans lui, la nuit
+        // s'afficherait comme durant zéro minute.
+        //
+        // L'heure attendue se DÉRIVE, elle ne se code pas en dur : le détail porte un décalage (+02:00) et
+        // l'application le convertit dans le fuseau de la machine. Une valeur murale écrite ici passerait à
+        // Paris et échouerait sur un runner en UTC - vécu.
+        LocalDateTime finDuDetail =
+                ParticipationOrpheline.horodatage("2026-07-04T06:30:00+02:00").orElseThrow();
+        assertThat(passageDao.findAll()).singleElement().satisfies(nuit -> {
+            assertThat(nuit.heureFin())
+                    .startsWith(finDuDetail.toLocalTime().toString().substring(0, 5));
+            assertThat(nuit.heureFin())
+                    .as("la fin vient du détail, pas du début recopié")
+                    .isNotEqualTo(nuit.heureDebut());
+        });
     }
 
     @Test
