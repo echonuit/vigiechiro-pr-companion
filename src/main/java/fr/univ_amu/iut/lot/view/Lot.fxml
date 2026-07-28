@@ -170,6 +170,11 @@
          réhydratée à l'ouverture et vivante pendant un dépôt. Masquée tant qu'aucun dépôt automatique
          n'a été entamé. -->
     <TableView fx:id="tableDepot" minHeight="150.0" prefHeight="170.0" visible="false" managed="false"/>
+    <!-- Compte rendu chiffré de la fin de dépôt (#2653), sous la table qu'il ne remplace pas : la table
+         garde le détail par fichier, la bande porte le verdict, les proportions, le volume téléversé et
+         l'action suivante (« Lancer la participation », l'étape 4 que rien ne désignait). Masquée tant
+         qu'aucun dépôt n'est terminé. -->
+    <VBox fx:id="zoneCompteRenduDepot" visible="false" managed="false"/>
   </VBox>
 
   <!-- Étape 4 - Marquer déposé -->
