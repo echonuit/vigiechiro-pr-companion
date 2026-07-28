@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.lot.di;
 
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
@@ -61,6 +63,14 @@ public class LotModule extends ModuleDeFeature {
     /// préparation/dépôt sans dépendre de la vue de cette feature (graphe de slices acyclique).
     @Override
     protected void configure() {
+        // Action(s) de lot (#2357) : la valeur du port optionnel déclaré par `MultisiteModule`.
+        // Coupée, cette feature retire simplement son entrée du menu.
+        OptionalBinder.newOptionalBinder(binder(), Key.get(ActionGroupee.class, Names.named("action.preparerDepot")))
+                .setBinding()
+                .to(Key.get(ActionGroupee.class, Names.named("action.preparerDepot.impl")));
+        OptionalBinder.newOptionalBinder(binder(), Key.get(ActionGroupee.class, Names.named("action.televerser")))
+                .setBinding()
+                .to(Key.get(ActionGroupee.class, Names.named("action.televerser.impl")));
         OptionalBinder.newOptionalBinder(binder(), OuvrirLot.class).setBinding().to(NavigationLot.class);
         // Dépôt VigieChiro (#142) en liaison **optionnelle** : déclaré ici (défaut absent) pour que les
         // injecteurs partiels de la feature `lot` — notamment `CaptureLot`, sans `ConnexionModule` donc sans
@@ -150,7 +160,7 @@ public class LotModule extends ModuleDeFeature {
     /// déclencher le calcul), et elles se distinguent par ce nom.
     @Provides
     @Singleton
-    @Named("action.preparerDepot")
+    @Named("action.preparerDepot.impl")
     ActionGroupee fournirPreparationGroupee(ServiceLot service) {
         return new PreparationGroupee(service);
     }
@@ -162,7 +172,7 @@ public class LotModule extends ModuleDeFeature {
     /// persisté), donc la seule qui ait le droit de s'arrêter au milieu d'un passage.
     @Provides
     @Singleton
-    @Named("action.televerser")
+    @Named("action.televerser.impl")
     ActionGroupee fournirTeleversementGroupe(ServiceLot service, Optional<DepotVigieChiro> depot) {
         return new TeleversementGroupe(service, depot);
     }

@@ -37,7 +37,8 @@ final class MenuActionsMultisite {
             MenuItem reconstruire,
             MenuItem reculerAnalyses,
             MenuItem preparerSelection,
-            MenuItem televerserSelection) {}
+            MenuItem televerserSelection,
+            MenuItem importerResultatsSelection) {}
 
     private MenuActionsMultisite() {}
 
@@ -53,6 +54,7 @@ final class MenuActionsMultisite {
             ObservableBooleanValue nonVide,
             ObservableObjectValue<LignePassage> selection,
             IntegerExpression nombreSelectionne,
+            ActionsDeLot actions,
             boolean peutReconstruire,
             boolean peutRelever) {
         entrees.exporter().disableProperty().bind(Bindings.not(nonVide));
@@ -78,18 +80,31 @@ final class MenuActionsMultisite {
 
         // #2357 lot 3 : un item désactivé ne dit pas pourquoi (il n'accueille pas d'info-bulle), donc
         // c'est son LIBELLÉ qui porte la raison — même patron que « Exporter » ci-dessus.
+        // Feature coupée : l'entrée disparaît plutôt que de rester grisée sans recours.
+        entrees.preparerSelection().setVisible(actions.preparerDepot().isPresent());
         surLaSelection(
                 entrees.preparerSelection(),
                 nombreSelectionne,
                 "Préparer le dépôt des ",
                 "Préparer le dépôt de la ligne cochée…",
                 "Préparer le dépôt de la sélection… (aucune ligne cochée)");
+        // Feature coupée : l'entrée disparaît plutôt que de rester grisée sans recours.
+        entrees.televerserSelection().setVisible(actions.televerser().isPresent());
         surLaSelection(
                 entrees.televerserSelection(),
                 nombreSelectionne,
                 "Téléverser les ",
                 "Téléverser la ligne cochée…",
                 "Téléverser la sélection… (aucune ligne cochée)");
+        // Feature coupée : l'entrée disparaît plutôt que de rester grisée sans recours.
+        entrees.importerResultatsSelection()
+                .setVisible(actions.importerResultats().isPresent());
+        surLaSelection(
+                entrees.importerResultatsSelection(),
+                nombreSelectionne,
+                "Importer les résultats des ",
+                "Importer les résultats de la ligne cochée…",
+                "Importer les résultats de la sélection… (aucune ligne cochée)");
     }
 
     /// Grisage et libellé d'une action de lot : le texte porte l'état de la sélection.

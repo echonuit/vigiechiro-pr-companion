@@ -13,7 +13,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
@@ -114,12 +113,13 @@ class MultisiteViewTest {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
                 // #2357 lot 3 : l'écran consomme l'action groupée sous son PORT. Un double suffit ici,
                 // ces tests ne lancent pas de lot.
-                bind(ActionGroupee.class)
-                        .annotatedWith(Names.named("action.preparerDepot"))
-                        .toInstance(mock(ActionGroupee.class));
-                bind(ActionGroupee.class)
-                        .annotatedWith(Names.named("action.televerser"))
-                        .toInstance(mock(ActionGroupee.class));
+                // #2357 lot 3 : l'écran reçoit les actions en un porteur. Des doubles suffisent ici,
+                // ces tests ne lancent pas de lot.
+                bind(ActionsDeLot.class)
+                        .toInstance(new ActionsDeLot(
+                                Optional.of(mock(ActionGroupee.class)),
+                                Optional.of(mock(ActionGroupee.class)),
+                                Optional.of(mock(ActionGroupee.class))));
                 bind(OuvrirAudio.class).toInstance(ouvrirAudio);
                 bind(DepotVues.class).toInstance(depotVues);
                 // « Ouvrir sur Vigie-Chiro » de ligne (#1799) : portail mocké (le passage est lié) et

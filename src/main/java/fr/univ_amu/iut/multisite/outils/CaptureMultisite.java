@@ -249,15 +249,21 @@ public final class CaptureMultisite {
                     // l'état grisé viennent du NOMBRE de lignes cochées. Substituer ne change aucun
                     // pixel. Le jour où une capture montrerait le lot en cours, il faudra le vrai.
                     @Provides
+                    @Named("action.preparerDepot")
+                    ActionGroupee fournirActionPreparer() {
+                        return actionDeCapture("Préparer le dépôt");
+                    }
+
+                    @Provides
                     @Named("action.televerser")
                     ActionGroupee fournirActionTeleverser() {
                         return actionDeCapture("Téléverser vers Vigie-Chiro");
                     }
 
                     @Provides
-                    @Named("action.preparerDepot")
-                    ActionGroupee fournirActionPreparer() {
-                        return actionDeCapture("Préparer le dépôt");
+                    @Named("action.importerResultats")
+                    ActionGroupee fournirActionImporter() {
+                        return actionDeCapture("Importer les résultats");
                     }
 
                     /// Remplaçant d'action : le libellé suffit, rien d'autre n'est rendu.
