@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /// **Le point de relevé unique** de l'état du traitement serveur (EPIC #1259) : demander à la plateforme
 /// où en est l'analyse d'une nuit, et **s'en souvenir** au passage (cache #1262).
@@ -76,11 +77,26 @@ public final class SuiviTraitement {
     /// Bloquant (une requête réseau par nuit) : à appeler **hors du fil JavaFX**.
     ///
     /// @param idPassages nuits à relever (typiquement les passages déposés d'une vue)
-    public BilanReleveGroupe releverTout(List<Long> idPassages) {
+    /// **Suivi et annulable** (#2636) : une requête réseau par nuit, donc une opération qui **dure** sur
+    /// un compte fourni. Elle dit où elle en est (« Nuits k/N ») et se laisse interrompre.
+    ///
+    /// **L'annulation ne défait rien**, et c'est ce qui la rend sûre : chaque nuit est relevée et
+    /// enregistrée pour elle-même, donc ce qui a été rafraîchi le reste, et le bilan ne compte que ce qui
+    /// a réellement eu lieu. Relancer reprend le travail là où il en était.
+    ///
+    /// @param progres notifié après chaque nuit
+    /// @param jeton consulté entre deux nuits
+    /// @throws OperationAnnuleeException si l'utilisateur renonce
+    public BilanReleveGroupe releverTout(List<Long> idPassages, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(idPassages, "idPassages");
+        Objects.requireNonNull(progres, "progres");
+        Objects.requireNonNull(jeton, "jeton");
+        EchelleProgression echelle = EchelleProgression.autonome(idPassages.size());
         int rafraichis = 0;
         int echecs = 0;
+        int faits = 0;
         for (Long idPassage : idPassages) {
+            jeton.leverSiAnnule();
             try {
                 relever(idPassage);
                 rafraichis++;
@@ -88,6 +104,8 @@ public final class SuiviTraitement {
                 // Best-effort : le dernier état connu de cette nuit reste affiché, on continue les autres.
                 echecs++;
             }
+            faits++;
+            progres.accept(new Progression("Nuits " + faits + "/" + idPassages.size(), echelle.fraction(faits)));
         }
         return new BilanReleveGroupe(rafraichis, echecs);
     }

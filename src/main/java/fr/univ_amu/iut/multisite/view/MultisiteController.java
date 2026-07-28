@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
+import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
@@ -604,17 +605,29 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
 
     /// « ☁ Relever l'état des analyses » (#1338) : interroge VigieChiro pour **toutes les nuits déposées**,
     /// à la demande. L'instantané des nuits déposées est capturé **sur le fil JavaFX** (`nuitsDeposees`),
-    /// puis le relevé (une requête réseau par nuit) part **hors du fil JavaFX** sous le voile d'occupation.
-    /// Au retour, on **recharge** l'écran : les badges de la colonne « Analyse » reflètent le nouvel état,
-    /// et le compte rendu part dans le bandeau de message.
+    /// puis le relevé (une requête réseau par nuit) part **hors du fil JavaFX**. Au retour, on **recharge**
+    /// l'écran : les badges de la colonne « Analyse » reflètent le nouvel état, et le compte rendu part
+    /// dans le bandeau de message.
+    ///
+    /// **Sous une barre depuis #2636.** Une requête par nuit, sur un compte fourni, ça dure : le voile
+    /// opaque disait « ça travaille » sans dire où on en était ni laisser renoncer. La fenêtre est ici la
+    /// bonne présentation - le geste part d'un menu d'écran, pas d'une modale, il n'y a donc pas d'hôte
+    /// où se greffer (#2642).
+    ///
+    /// Renoncer ne défait rien : chaque nuit relevée est enregistrée pour elle-même, et la relance
+    /// reprendra le reste.
     @FXML
     private void releverAnalyses() {
         List<Long> nuitsDeposees = viewModel.nuitsDeposees();
-        occupation.occuper(
-                "Relevé de l'état des analyses…",
-                () -> viewModel.releverPuisCharger(nuitsDeposees),
-                viewModel::appliquerReleve,
-                viewModel::signalerErreur);
+        new DialogueProgression(executeur)
+                .lancer(
+                        tableLignes.getScene().getWindow(),
+                        "Relevé de l'état des analyses",
+                        (suivi, jeton) -> viewModel.releverPuisCharger(nuitsDeposees, suivi, jeton),
+                        viewModel::appliquerReleve,
+                        () -> viewModel.signalerInfo("Relevé interrompu : les nuits déjà relevées gardent leur"
+                                + " nouvel état, la prochaine relève reprendra les autres."),
+                        viewModel::signalerErreur);
     }
 
     /// « Exporter » : demande où écrire, puis écriture par le ViewModel dans **l'ordre affiché** (#291).

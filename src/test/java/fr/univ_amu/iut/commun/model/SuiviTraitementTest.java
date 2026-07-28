@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -132,7 +133,8 @@ class SuiviTraitementTest {
                 .thenReturn(ReponseApi.succes(
                         new Traitement(EtatTraitement.FINI, null, null, "2026-07-13T10:00:00+00:00", null, null)));
 
-        SuiviTraitement.BilanReleveGroupe bilan = suivi.releverTout(List.of(1L, 2L));
+        SuiviTraitement.BilanReleveGroupe bilan =
+                suivi.releverTout(List.of(1L, 2L), progression -> {}, JetonAnnulation.neutre());
 
         assertThat(bilan.rafraichis()).isEqualTo(2);
         assertThat(bilan.echecs()).isZero();
@@ -149,7 +151,8 @@ class SuiviTraitementTest {
         when(traitement.etat("part-1")).thenReturn(ReponseApi.succes(Traitement.absent()));
         when(traitement.etat("part-3")).thenReturn(ReponseApi.injoignable("délai dépassé"));
 
-        SuiviTraitement.BilanReleveGroupe bilan = suivi.releverTout(List.of(1L, 2L, 3L));
+        SuiviTraitement.BilanReleveGroupe bilan =
+                suivi.releverTout(List.of(1L, 2L, 3L), progression -> {}, JetonAnnulation.neutre());
 
         assertThat(bilan.rafraichis())
                 .as("seule la nuit 1 a été relue et réenregistrée")
@@ -162,5 +165,49 @@ class SuiviTraitementTest {
 
     private void armerLien() {
         when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of(PARTICIPATION));
+    }
+
+    @Test
+    @DisplayName("#2636 : le relevé groupé dit où il en est, une nuit à la fois")
+    void releve_groupe_annonce_son_avancement() {
+        bouchonnerTroisNuits();
+        List<Progression> points = new ArrayList<>();
+
+        suivi.releverTout(List.of(1L, 2L, 3L), points::add, JetonAnnulation.neutre());
+
+        assertThat(points).extracting(Progression::libelle).containsExactly("Nuits 1/3", "Nuits 2/3", "Nuits 3/3");
+        assertThat(points).extracting(Progression::fraction).isSorted().endsWith(1.0);
+    }
+
+    @Test
+    @DisplayName("#2636 : renoncer arrête la boucle et NE DÉFAIT PAS ce qui a déjà été relevé")
+    void releve_groupe_sinterrompt_sans_rien_defaire() {
+        bouchonnerTroisNuits();
+        JetonAnnulation jeton = new JetonAnnulation();
+        List<Progression> points = new ArrayList<>();
+
+        assertThatThrownBy(() -> suivi.releverTout(
+                        List.of(1L, 2L, 3L),
+                        point -> {
+                            points.add(point);
+                            jeton.annuler(); // l'utilisateur renonce, la première nuit venant d'être relevée
+                        },
+                        jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        assertThat(points).as("la boucle s'arrête à la frontière suivante").hasSize(1);
+        // Ce qui rend l'annulation sûre : une nuit relevée est enregistrée POUR ELLE-MÊME. Rien n'est
+        // défait, et la relance reprendra simplement les autres.
+        verify(releves, org.mockito.Mockito.times(1)).enregistrer(org.mockito.ArgumentMatchers.any());
+        verify(traitement, never()).etat("part-3");
+    }
+
+    /// Trois nuits liées et joignables : le montage minimal d'un relevé qui va au bout.
+    private void bouchonnerTroisNuits() {
+        for (int nuit = 1; nuit <= 3; nuit++) {
+            when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(nuit)))
+                    .thenReturn(Optional.of("part-" + nuit));
+            when(traitement.etat("part-" + nuit)).thenReturn(ReponseApi.succes(Traitement.absent()));
+        }
     }
 }
