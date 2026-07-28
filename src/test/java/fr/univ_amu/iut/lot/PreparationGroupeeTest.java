@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.CiblePassage;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.lot.model.ControleCoherence;
@@ -102,7 +103,7 @@ class PreparationGroupeeTest {
     @Test
     @DisplayName("exécuter délègue au service, sans rien réimplémenter")
     void executer_delegue() {
-        action.executer(CIBLE);
+        action.executer(CIBLE, new JetonAnnulation());
 
         verify(service).preparerLot(42L);
     }

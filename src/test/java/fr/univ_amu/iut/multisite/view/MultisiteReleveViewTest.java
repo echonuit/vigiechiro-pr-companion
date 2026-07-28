@@ -101,6 +101,9 @@ class MultisiteReleveViewTest {
                 bind(ActionGroupee.class)
                         .annotatedWith(Names.named("action.preparerDepot"))
                         .toInstance(mock(ActionGroupee.class));
+                bind(ActionGroupee.class)
+                        .annotatedWith(Names.named("action.televerser"))
+                        .toInstance(mock(ActionGroupee.class));
                 bind(OuvrirAudio.class).toInstance(source -> {});
                 bind(DepotVues.class).toInstance(depotVues);
                 bind(OuvreurDeLien.class).toInstance(url -> {});

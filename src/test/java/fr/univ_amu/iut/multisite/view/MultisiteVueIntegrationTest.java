@@ -160,6 +160,9 @@ class MultisiteVueIntegrationTest {
                 bind(ActionGroupee.class)
                         .annotatedWith(Names.named("action.preparerDepot"))
                         .toInstance(mock(ActionGroupee.class));
+                bind(ActionGroupee.class)
+                        .annotatedWith(Names.named("action.televerser"))
+                        .toInstance(mock(ActionGroupee.class));
                 bind(OuvrirAudio.class).toInstance(source -> {});
                 bind(DepotVues.class).toInstance(depotVues);
                 // « Ouvrir sur Vigie-Chiro » de ligne (#1799) ouvre un lien : navigateur no-op ici.

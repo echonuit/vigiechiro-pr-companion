@@ -117,6 +117,9 @@ class MultisiteViewTest {
                 bind(ActionGroupee.class)
                         .annotatedWith(Names.named("action.preparerDepot"))
                         .toInstance(mock(ActionGroupee.class));
+                bind(ActionGroupee.class)
+                        .annotatedWith(Names.named("action.televerser"))
+                        .toInstance(mock(ActionGroupee.class));
                 bind(OuvrirAudio.class).toInstance(ouvrirAudio);
                 bind(DepotVues.class).toInstance(depotVues);
                 // « Ouvrir sur Vigie-Chiro » de ligne (#1799) : portail mocké (le passage est lié) et

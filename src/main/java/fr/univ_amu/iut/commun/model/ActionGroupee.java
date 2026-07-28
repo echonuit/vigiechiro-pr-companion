@@ -26,5 +26,14 @@ public interface ActionGroupee {
 
     /// Exécute l'action sur ce passage. Lever une exception vaut **échec de ce passage** : le moteur
     /// l'enregistre avec son motif et **poursuit** le lot — un passage en échec n'arrête pas les autres.
-    void executer(CiblePassage cible);
+    ///
+    /// Le `jeton` du lot est remis à l'action, qui **peut** l'honorer en cours de route. La plupart
+    /// l'ignorent : le moteur le consulte déjà entre deux passages, ce qui suffit à garantir que chacun
+    /// est soit dans son état d'avant, soit dans celui d'après.
+    ///
+    /// Une action ne doit s'en servir que si son état interrompu est **nommé et reprenable** - c'est le
+    /// cas du téléversement, qui laisse la nuit en « Dépôt en cours » avec son plan persisté. Sans cette
+    /// propriété, honorer le jeton en cours de passage romprait le contrat du moteur au lieu de
+    /// l'affiner.
+    void executer(CiblePassage cible, JetonAnnulation jeton);
 }

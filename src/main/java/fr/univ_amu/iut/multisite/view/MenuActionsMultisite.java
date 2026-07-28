@@ -25,6 +25,20 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// (reconstruire hors connexion VigieChiro) est **retirée** plutôt que grisée.
 final class MenuActionsMultisite {
 
+    /// Les entrées du menu ☰, regroupées (#2483 : réduire l'arité des constructions).
+    ///
+    /// Sept paramètres du même type se distinguaient par leur seul **ordre** : les échanger deux à deux
+    /// aurait compilé sans broncher, et grisé la mauvaise entrée. Le lot 3 devait encore en ajouter
+    /// deux ; c'est le bon moment pour les nommer.
+    record Entrees(
+            MenuItem exporter,
+            MenuItem ecouterLot,
+            MenuItem ecouterPassage,
+            MenuItem reconstruire,
+            MenuItem reculerAnalyses,
+            MenuItem preparerSelection,
+            MenuItem televerserSelection) {}
+
     private MenuActionsMultisite() {}
 
     /// Câble l'état des entrées du menu ☰ sur l'état de l'écran.
@@ -35,47 +49,67 @@ final class MenuActionsMultisite {
     /// @param peutReconstruire vrai quand la passerelle VigieChiro est présente (#1396)
     /// @param peutRelever vrai quand le relevé groupé est disponible (connecté à VigieChiro, #1338)
     static void installer(
-            MenuItem exporter,
-            MenuItem ecouterLot,
-            MenuItem ecouterPassage,
-            MenuItem reconstruire,
-            MenuItem reculerAnalyses,
-            MenuItem preparerSelection,
+            Entrees entrees,
             ObservableBooleanValue nonVide,
             ObservableObjectValue<LignePassage> selection,
             IntegerExpression nombreSelectionne,
             boolean peutReconstruire,
             boolean peutRelever) {
-        exporter.disableProperty().bind(Bindings.not(nonVide));
-        exporter.setGraphic(new FontIcon("fas-file-export"));
-        exporter.textProperty()
+        entrees.exporter().disableProperty().bind(Bindings.not(nonVide));
+        entrees.exporter().setGraphic(new FontIcon("fas-file-export"));
+        entrees.exporter()
+                .textProperty()
                 .bind(Bindings.when(nonVide).then("Exporter…").otherwise("Exporter… (aucune ligne à exporter)"));
         // Écoute : la sélection filtrée suit la présence de lignes filtrées ; un passage exige une ligne sélectionnée.
-        ecouterLot.disableProperty().bind(Bindings.not(nonVide));
-        ecouterLot.setGraphic(new FontIcon("fas-headphones"));
-        ecouterLot
+        entrees.ecouterLot().disableProperty().bind(Bindings.not(nonVide));
+        entrees.ecouterLot().setGraphic(new FontIcon("fas-headphones"));
+        entrees.ecouterLot()
                 .textProperty()
                 .bind(Bindings.when(nonVide)
                         .then("Écouter la sélection filtrée")
                         .otherwise("Écouter la sélection filtrée (aucune ligne)"));
-        ecouterPassage.disableProperty().bind(Bindings.isNull(selection));
+        entrees.ecouterPassage().disableProperty().bind(Bindings.isNull(selection));
         // Un item qui ne peut rien faire ne vaut pas mieux qu'un item absent : il vaut moins.
-        reconstruire.setVisible(peutReconstruire);
+        entrees.reconstruire().setVisible(peutReconstruire);
         // #1338 : hors connexion, il n'y a rien à interroger — l'item se retire plutôt que de rester
         // grisé. Il n'est pas désactivé faute de nuit déposée : dans ce cas, le clic répond « rien à
         // relever » (le VM le dit), ce qui renseigne mieux qu'un item muet.
-        reculerAnalyses.setVisible(peutRelever);
+        entrees.reculerAnalyses().setVisible(peutRelever);
 
         // #2357 lot 3 : un item désactivé ne dit pas pourquoi (il n'accueille pas d'info-bulle), donc
         // c'est son LIBELLÉ qui porte la raison — même patron que « Exporter » ci-dessus.
-        preparerSelection.disableProperty().bind(nombreSelectionne.lessThan(1));
-        preparerSelection
-                .textProperty()
-                .bind(Bindings.when(nombreSelectionne.greaterThan(1))
-                        .then(Bindings.concat("Préparer le dépôt des ", nombreSelectionne, " lignes cochées…"))
-                        .otherwise(Bindings.when(nombreSelectionne.isEqualTo(1))
-                                .then("Préparer le dépôt de la ligne cochée…")
-                                .otherwise("Préparer le dépôt de la sélection… (aucune ligne cochée)")));
+        surLaSelection(
+                entrees.preparerSelection(),
+                nombreSelectionne,
+                "Préparer le dépôt des ",
+                "Préparer le dépôt de la ligne cochée…",
+                "Préparer le dépôt de la sélection… (aucune ligne cochée)");
+        surLaSelection(
+                entrees.televerserSelection(),
+                nombreSelectionne,
+                "Téléverser les ",
+                "Téléverser la ligne cochée…",
+                "Téléverser la sélection… (aucune ligne cochée)");
+    }
+
+    /// Grisage et libellé d'une action de lot : le texte porte l'état de la sélection.
+    ///
+    /// Factorisé dès la deuxième action (#2357, PR 3/5) : les suivantes auront la même règle, et des
+    /// copies auraient divergé au premier ajustement.
+    ///
+    /// Les **trois phrases** sont fournies entières plutôt que composées à partir d'un verbe : les
+    /// actions ne se construisent pas toutes pareil en français. Une première version assemblait
+    /// « verbe + la sélection », ce qui donnait « Préparer le dépôt **la** sélection ». Défaut vu en
+    /// regardant la capture, pas en relisant le code.
+    ///
+    /// @param prefixePluriel début de phrase auquel le nombre puis « lignes cochées… » sont accolés
+    private static void surLaSelection(
+            MenuItem item, IntegerExpression nombre, String prefixePluriel, String une, String aucune) {
+        item.disableProperty().bind(nombre.lessThan(1));
+        item.textProperty()
+                .bind(Bindings.when(nombre.greaterThan(1))
+                        .then(Bindings.concat(prefixePluriel, nombre, " lignes cochées…"))
+                        .otherwise(Bindings.when(nombre.isEqualTo(1)).then(une).otherwise(aucune)));
     }
 
     /// « Exporter » : demande où écrire et, si l'utilisateur ne renonce pas, remet le chemin choisi et

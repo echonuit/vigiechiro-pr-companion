@@ -107,7 +107,7 @@ class TraitementLotTest {
         }
 
         @Override
-        public void executer(CiblePassage cible) {
+        public void executer(CiblePassage cible, JetonAnnulation jeton) {
             executes.add(cible.idPassage());
             if (aEchouer.contains(cible.idPassage())) {
                 throw new IllegalStateException("disque plein");

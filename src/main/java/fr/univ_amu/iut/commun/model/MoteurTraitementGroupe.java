@@ -60,12 +60,13 @@ public final class MoteurTraitementGroupe {
                 issues.add(IssueTraitement.nonTraite(cible));
                 continue;
             }
-            issues.add(traiter(action, cible, journal));
+            issues.add(traiter(action, cible, jeton, journal));
         }
         return new ResultatTraitementGroupe(action.libelle(), issues, interrompu);
     }
 
-    private IssueTraitement traiter(ActionGroupee action, CiblePassage cible, Consumer<String> journal) {
+    private IssueTraitement traiter(
+            ActionGroupee action, CiblePassage cible, JetonAnnulation jeton, Consumer<String> journal) {
         var motifNonEligible = action.motifNonEligible(cible);
         if (motifNonEligible.isPresent()) {
             journal.accept(prefixe(cible) + "écarté : " + motifNonEligible.get());
@@ -73,7 +74,7 @@ public final class MoteurTraitementGroupe {
         }
         journal.accept(prefixe(cible) + action.libelle() + "…");
         try {
-            action.executer(cible);
+            action.executer(cible, jeton);
             journal.accept(prefixe(cible) + "terminé");
             return IssueTraitement.reussi(cible);
         } catch (RuntimeException echec) {

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot.model;
 
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.CiblePassage;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import java.util.Locale;
@@ -61,8 +62,10 @@ public class PreparationGroupee implements ActionGroupee {
                 .findFirst();
     }
 
+    /// Le jeton est ignoré : la préparation est une transition **atomique** (contrôles puis changement
+    /// de statut). Il n'y a pas d'entre-deux où s'arrêter, donc rien à honorer.
     @Override
-    public void executer(CiblePassage cible) {
+    public void executer(CiblePassage cible, JetonAnnulation jeton) {
         service.preparerLot(cible.idPassage());
     }
 }
