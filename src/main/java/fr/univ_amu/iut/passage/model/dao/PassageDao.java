@@ -77,6 +77,15 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
         return query("SELECT * FROM passage WHERE point_id = ? ORDER BY year, passage_number", MAPPER, idPoint);
     }
 
+    /// Nombre de passages **rattachés** à une campagne (#2630).
+    ///
+    /// Compté et non listé : le seul appelant est la confirmation de suppression d'une campagne, qui
+    /// annonce combien de nuits seront **détachées**. Charger les passages pour n'en garder que le
+    /// nombre coûterait cher là où l'observateur en a des centaines.
+    public long compterParCampagne(Long idCampagne) {
+        return compterSi("campaign_id = ?", idCampagne);
+    }
+
     /// Passages produits par un enregistreur donné.
     public List<Passage> findByEnregistreur(String idEnregistreur) {
         return query(

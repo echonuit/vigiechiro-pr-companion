@@ -41,6 +41,30 @@ public class SelectionCampagne {
         });
     }
 
+    /// Recharge **la liste seule**, en conservant le choix en cours (#2630).
+    ///
+    /// Appelée au retour de « Gérer les campagnes » : une campagne créée là doit apparaître ici sans
+    /// rouvrir la modale. Volontairement distincte de [#charger] : celle-là **repositionne** la
+    /// sélection sur la campagne persistée du passage, ce qui jetterait un choix que l'utilisateur
+    /// vient de faire et n'a pas encore appliqué.
+    ///
+    /// La campagne sélectionnée est ré-identifiée par son `id` : le rechargement en produit de
+    /// nouvelles instances, et un rapprochement par référence perdrait la sélection à chaque fois.
+    public void rechargerListe() {
+        service.ifPresent(svc -> {
+            Long idSelectionne =
+                    selection.get() == null ? null : selection.get().id();
+            campagnes.clear();
+            campagnes.add(null); // sentinelle « aucune campagne » en tête
+            campagnes.addAll(svc.listerCampagnes());
+            selection.set(campagnes.stream()
+                    .filter(Objects::nonNull)
+                    .filter(campagne -> campagne.id().equals(idSelectionne))
+                    .findFirst()
+                    .orElse(null));
+        });
+    }
+
     /// Persiste le rattachement sélectionné (ou le détachement si aucune). Sans effet si la feature est
     /// coupée.
     public void enregistrer(Long idPassage) {

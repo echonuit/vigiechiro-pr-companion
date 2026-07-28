@@ -51,6 +51,10 @@ public class RattachementModaleController {
 
     private final RattachementViewModel viewModel;
     private final ExecuteurTache executeur;
+
+    /// Ouverture de la modale « Gérer les campagnes » (#2630) : la surface appelante ne construit pas
+    /// de fenêtre elle-même, elle le demande à la navigation de la feature.
+    private final NavigationPassage navigation;
     private Runnable apresSucces = () -> {};
 
     /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
@@ -155,9 +159,20 @@ public class RattachementModaleController {
     private CheckBox caseOpportuniste;
 
     @Inject
-    public RattachementModaleController(RattachementViewModel viewModel, ExecuteurTache executeur) {
+    public RattachementModaleController(
+            RattachementViewModel viewModel, ExecuteurTache executeur, NavigationPassage navigation) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        this.navigation = Objects.requireNonNull(navigation, "navigation");
+    }
+
+    /// Ouvre « Gérer les campagnes » (#2630), puis **recharge** la liste déroulante à la fermeture :
+    /// une campagne créée là doit être proposée ici sans rouvrir cette modale.
+    @FXML
+    private void gererCampagnes() {
+        navigation.ouvrirModaleGestionCampagnes(
+                racine.getScene().getWindow(),
+                () -> viewModel.selectionCampagne().rechargerListe());
     }
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
@@ -228,7 +243,7 @@ public class RattachementModaleController {
 
         // Champ campagne : présent seulement si la feature `campagne` est active (Optional présent).
         // Coupée, la ligne disparaît (managed=false) et rien n'est lié ni enregistré.
-        boolean campagneActivee = viewModel.campagneActivee();
+        boolean campagneActivee = viewModel.selectionCampagne().activee();
         ligneCampagne.setVisible(campagneActivee);
         ligneCampagne.setManaged(campagneActivee);
         if (campagneActivee) {
@@ -307,7 +322,7 @@ public class RattachementModaleController {
     /// Lie le ComboBox de campagne à la liste proposée et à la sélection du ViewModel. La liste porte
     /// une sentinelle `null` (« aucune campagne ») en tête, rendue lisible par le convertisseur.
     private void lierCampagne() {
-        champCampagne.setItems(viewModel.campagnes());
+        champCampagne.setItems(viewModel.selectionCampagne().campagnes());
         champCampagne.setConverter(new StringConverter<>() {
             @Override
             public String toString(Campagne campagne) {
@@ -319,7 +334,9 @@ public class RattachementModaleController {
                 return null;
             }
         });
-        champCampagne.valueProperty().bindBidirectional(viewModel.campagneProperty());
+        champCampagne
+                .valueProperty()
+                .bindBidirectional(viewModel.selectionCampagne().selectionProperty());
     }
 
     /// Peuple un `ComboBox` d'énum (avec une entrée « non renseigné » `null` en tête) et le lie en

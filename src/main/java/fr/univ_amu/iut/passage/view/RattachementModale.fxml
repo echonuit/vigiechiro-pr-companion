@@ -94,7 +94,13 @@
       <HBox fx:id="ligneCampagne" spacing="24.0">
         <VBox spacing="4.0">
           <Label text="Campagne" styleClass="bandeau-label"/>
-          <ComboBox fx:id="champCampagne" prefWidth="260.0" maxWidth="Infinity"/>
+          <!-- Le bouton est À CÔTÉ de la liste, et non une entrée DEDANS (#2630) : la liste porte déjà
+               une sentinelle « aucune campagne », et une seconde entrée qui, elle, ouvrirait une fenêtre
+               rendrait la sélection ambiguë. -->
+          <HBox spacing="8.0" alignment="CENTER_LEFT">
+            <ComboBox fx:id="champCampagne" prefWidth="260.0" maxWidth="Infinity"/>
+            <Button fx:id="btnGererCampagnes" text="Gérer…" onAction="#gererCampagnes"/>
+          </HBox>
         </VBox>
       </HBox>
 

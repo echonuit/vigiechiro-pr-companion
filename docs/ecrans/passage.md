@@ -261,10 +261,25 @@ une nuit **déjà déposée**, dont l'année et le numéro sont pourtant verroui
 Le regroupement se retrouve ensuite dans **Carte & passages** (colonne, tri et filtre) et dans
 **[Ma saison](saison.md#ne-voir-quune-campagne)** (filtre).
 
-!!! note "Créer, renommer, supprimer une campagne"
-    Ces trois gestes se font pour l'instant **en ligne de commande** : `vigiechiro creer-campagne
-    --nom "Suivi ENS"`, `modifier-campagne`, `supprimer-campagne`. Supprimer une campagne **détache** ses
-    nuits, elle ne les efface jamais. Un écran de gestion est à venir.
+Le bouton **Gérer…**, à côté de la liste, ouvre la fenêtre où l'on **crée, renomme et supprime** les
+campagnes. C'est de là que vient la première : tant qu'aucune n'existe, la liste ne propose rien.
+
+![La fenêtre « Gérer les campagnes » : la liste des campagnes existantes, et le formulaire qui sert à en créer une ou à modifier celle qui est sélectionnée.](../assets/captures/apercu-passage-campagnes.png)
+
+Le formulaire sert aux **deux** usages. Vide, il crée. Une campagne sélectionnée dans la liste, il la
+reflète et **Enregistrer** applique vos changements. **Enregistrer** et **Supprimer** restent grisés
+tant qu'aucune campagne n'est choisie.
+
+!!! note "Supprimer une campagne n'efface aucune nuit"
+    La confirmation annonce combien de passages y étaient rattachés. Ils sont **détachés**, pas
+    supprimés : ils restent dans vos données, simplement sans campagne. C'est pourquoi la question
+    pose le chiffre avant d'agir, et non après.
+
+À la fermeture de cette fenêtre, la liste déroulante se met à jour : une campagne créée à l'instant y
+est immédiatement proposée, et le choix que vous aviez déjà fait n'est pas perdu.
+
+Les mêmes gestes restent disponibles en ligne de commande (`creer-campagne`, `modifier-campagne`,
+`supprimer-campagne`).
 
 ### Participation opportuniste
 

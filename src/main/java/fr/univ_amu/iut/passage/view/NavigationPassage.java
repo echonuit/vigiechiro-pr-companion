@@ -92,6 +92,30 @@ public class NavigationPassage implements OuvrirPassage {
         }
     }
 
+    /// Ouvre la modale **« Gérer les campagnes »** (#2630) dans une fenêtre modale appartenant à
+    /// `parent`.
+    ///
+    /// Ouverte **depuis** « Modifier le passage » : c'est là qu'on découvre qu'il faudrait une campagne
+    /// et qu'il n'y en a pas encore. `apresFermeture` recharge la liste déroulante appelante, sans quoi
+    /// une campagne créée ici ne serait proposée qu'à la réouverture de la modale.
+    public void ouvrirModaleGestionCampagnes(Window parent, Runnable apresFermeture) {
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationPassage.class, "GestionCampagnesModale.fxml");
+        loader.setControllerFactory(injector::getInstance);
+        try {
+            Parent vue = loader.load();
+            Stage modale = new Stage();
+            modale.initOwner(parent);
+            modale.initModality(Modality.WINDOW_MODAL);
+            modale.setTitle("Gérer les campagnes");
+            modale.setScene(new Scene(vue));
+            modale.setOnHidden(evenement -> apresFermeture.run());
+            Modales.fermerParEchap(modale);
+            modale.show();
+        } catch (IOException echec) {
+            throw new UncheckedIOException(CHARGEMENT_IMPOSSIBLE + loader.getLocation(), echec);
+        }
+    }
+
     /// Ouvre la modale **« Réactiver ce passage »** (#1780) dans une fenêtre modale appartenant à `parent`.
     /// `travail` porte l'opération (réseau + base) que la modale exécute **hors du fil JavaFX**, en suivant
     /// ses deux phases (régénération, ancrage) sur deux barres ; `apresSucces` recharge M-Passage à la

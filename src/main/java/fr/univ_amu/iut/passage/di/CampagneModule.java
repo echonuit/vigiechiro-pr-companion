@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.viewmodel.GestionCampagnesViewModel;
 
 /// Module Guice de la feature `campagne` (#2355) : assemble [CampagneDao] et [ServiceCampagne]. Vit
 /// dans `passage/di` à côté de [ReconstructionModule] et [SynchronisationParticipationModule] : même
@@ -53,5 +54,15 @@ public class CampagneModule extends ModuleDeFeature {
     @Named("campagne.impl")
     ServiceCampagne fournirServiceCampagne(CampagneDao campagneDao, PassageDao passageDao, Horloge horloge) {
         return new ServiceCampagne(campagneDao, passageDao, horloge);
+    }
+
+    /// ViewModel de la modale « Gérer les campagnes » (#2630). Il prend le service **sans** `Optional` :
+    /// cette modale n'est atteignable que depuis une surface qui a déjà constaté que la feature est
+    /// active. Fourni ici, et non par `PassageModule`, pour qu'il disparaisse avec la feature.
+    ///
+    /// Non-singleton : chaque ouverture repart d'une liste fraîche et d'un bandeau vide.
+    @Provides
+    GestionCampagnesViewModel fournirGestionCampagnesViewModel(@Named("campagne.impl") ServiceCampagne service) {
+        return new GestionCampagnesViewModel(service);
     }
 }
