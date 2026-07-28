@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!--
+  Modale « Gérer les campagnes » (#2630), ouverte depuis « Modifier le passage ». Elle comble le seul
+  trou du lot 1 de #2355 : on pouvait CHOISIR une campagne sans jamais pouvoir en créer une, sauf en
+  ligne de commande.
+
+  Disposition : la liste en haut (ce qui existe), le formulaire en dessous (ce qu'on écrit), le bandeau
+  de retour puis le pied épinglés en bas - même découpage que « Modifier le passage », pour que la
+  seconde fenêtre ne demande pas de réapprendre la première.
+
+  Aucune règle ici : ServiceCampagne les porte toutes, le ViewModel traduit ses refus en messages.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:id="racine"
+      fx:controller="fr.univ_amu.iut.passage.view.GestionCampagnesModaleController"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @passage.css"
+      styleClass="modale-saisie"
+      prefWidth="520.0"
+      spacing="12.0">
+
+  <HBox alignment="CENTER_LEFT" spacing="8.0">
+    <FontIcon iconLiteral="fas-layer-group" styleClass="titre-icone"/>
+    <Label text="Gérer les campagnes" styleClass="titre-modale"/>
+  </HBox>
+
+  <Label text="Une campagne regroupe les nuits d'un même suivi. Le rattachement reste facultatif : une nuit peut n'appartenir à aucune."
+         styleClass="section-sous" wrapText="true"/>
+
+  <ListView fx:id="listeCampagnes" prefHeight="160.0"/>
+
+  <Separator/>
+
+  <!-- Formulaire : vide, il sert à créer ; une campagne sélectionnée, il la reflète et « Enregistrer »
+       la modifie. Deux modes dans un seul formulaire, plutôt que deux fenêtres pour deux verbes. -->
+  <VBox spacing="4.0">
+    <Label text="Nom" styleClass="bandeau-label"/>
+    <TextField fx:id="champNom" promptText="ex. Suivi ENS 2026"/>
+  </VBox>
+
+  <HBox spacing="24.0">
+    <VBox spacing="4.0">
+      <Label text="Année" styleClass="bandeau-label"/>
+      <Spinner fx:id="champAnnee" editable="true" prefWidth="120.0"/>
+    </VBox>
+  </HBox>
+
+  <VBox spacing="4.0">
+    <Label text="Commentaire (optionnel)" styleClass="bandeau-label"/>
+    <TextArea fx:id="champCommentaire" prefRowCount="2" wrapText="true"/>
+  </VBox>
+
+  <HBox alignment="CENTER_LEFT" spacing="8.0">
+    <Button fx:id="btnCreer" text="Créer" onAction="#creer"/>
+    <Button fx:id="btnEnregistrer" text="Enregistrer" onAction="#enregistrer"/>
+    <Button fx:id="btnSupprimer" text="Supprimer…" onAction="#supprimer" styleClass="bouton-danger"/>
+  </HBox>
+
+  <!-- Bandeau de retour partagé (ADR 0023), épinglé sous le formulaire. -->
+  <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
+    <Label fx:id="lblRetour" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+    <Button fx:id="btnFermerRetour" styleClass="fermer-retour" accessibleText="Fermer le message">
+      <graphic>
+        <FontIcon iconLiteral="fas-times"/>
+      </graphic>
+    </Button>
+  </HBox>
+
+  <HBox alignment="CENTER_RIGHT" spacing="8.0">
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="btnFermer" text="Fermer" onAction="#fermer" defaultButton="true"/>
+  </HBox>
+</VBox>
