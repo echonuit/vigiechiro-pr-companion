@@ -18,6 +18,7 @@ import fr.univ_amu.iut.passage.model.CrisAttendus;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.CrisDesObservations;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
@@ -32,6 +33,7 @@ import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
+import fr.univ_amu.iut.validation.model.dao.TaxonPrioritaireDao;
 import fr.univ_amu.iut.validation.view.NavigationValidation;
 import fr.univ_amu.iut.validation.viewmodel.IndicateurObservations;
 
@@ -88,6 +90,21 @@ public class ValidationModule extends ModuleDeFeature {
     @Singleton
     TaxonDao fournirTaxonDao(SourceDeDonnees source) {
         return new TaxonDao(source);
+    }
+
+    @Provides
+    @Singleton
+    TaxonPrioritaireDao fournirTaxonPrioritaireDao(SourceDeDonnees source) {
+        return new TaxonPrioritaireDao(source);
+    }
+
+    /// Pont [EspecesPrioritaires] (#2353) : expose la seule **lecture** des espèces à enjeu aux écrans qui
+    /// les repèrent, les filtrent et les comptent (`audio`, `analyse`), sans leur livrer le DAO ni le
+    /// pouvoir d'écrire dans une donnée de référence.
+    @Provides
+    @Singleton
+    EspecesPrioritaires fournirEspecesPrioritaires(TaxonPrioritaireDao dao) {
+        return dao::tousLesCodes;
     }
 
     /// Rapprocheur des taxons (#728) : relie `taxon.code` ↔ `objectid` VigieChiro. Contribué au
