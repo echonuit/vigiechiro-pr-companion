@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
+import fr.univ_amu.iut.commun.api.SuiviReprise;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -16,6 +17,7 @@ import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -249,7 +251,8 @@ public final class DepotVigieChiro {
         }
         try {
             Path fichier = source.resoudre(unite.identifiantUnite()).orElse(null);
-            TeleverseurArchive.Resultat resultat = televerserUne(unite, fichier, participationId, suivi, source);
+            TeleverseurArchive.Resultat resultat =
+                    televerserUne(unite, fichier, participationId, suivi, source, annule);
             if (resultat.reussi()) {
                 cumul.deposees().incrementAndGet();
                 // Le volume s'accumule ici et pas ailleurs : une unite comptee deposee est une unite dont
@@ -278,14 +281,32 @@ public final class DepotVigieChiro {
     /// Téléverse une unité en persistant son avancement au fil de l'eau : `en_cours` avant l'envoi,
     /// `depose` (avec l'id distant) ou `echec` (avec la raison) après. `false` en cas d'échec.
     private TeleverseurArchive.Resultat televerserUne(
-            DepotUnite unite, Path fichier, String participationId, SuiviDepot suivi, SourceDepot source) {
+            DepotUnite unite,
+            Path fichier,
+            String participationId,
+            SuiviDepot suivi,
+            SourceDepot source,
+            BooleanSupplier annule) {
         depotUnites.mettreAJour(unite.id(), StatutDepotUnite.EN_COURS, unite.fichierIdDistant(), null, maintenant());
         suivi.uniteDemarree(unite.identifiantUnite());
         TeleverseurArchive.Resultat resultat = televerseur.televerser(
                 fichier,
                 participationId,
                 fraction -> suivi.uniteProgresse(unite.identifiantUnite(), fraction),
-                (tentative, delai) -> suivi.uniteReprise(unite.identifiantUnite(), delai));
+                new SuiviReprise() {
+                    @Override
+                    public void nouvelleTentative(int tentative, Duration delai) {
+                        suivi.uniteReprise(unite.identifiantUnite(), delai);
+                    }
+
+                    // Le drapeau est AUSSI lu pendant la temporisation (#2686) : le dépôt ne le
+                    // consulte qu'entre deux unités, et une reprise à l'intérieur d'un envoi serait
+                    // sinon une attente que « Annuler » ne traverse pas.
+                    @Override
+                    public boolean renonce() {
+                        return annule.getAsBoolean();
+                    }
+                });
         if (resultat.reussi()) {
             depotUnites.mettreAJour(unite.id(), StatutDepotUnite.DEPOSE, resultat.fichierId(), null, maintenant());
             suivi.uniteDeposee(depotUnites.findById(unite.id()).orElse(unite));
