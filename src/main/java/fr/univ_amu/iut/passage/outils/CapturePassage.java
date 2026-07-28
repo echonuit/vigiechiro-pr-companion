@@ -8,12 +8,15 @@ import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
+import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
@@ -31,6 +34,7 @@ import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
+import fr.univ_amu.iut.passage.model.HydratationSquelette;
 import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
@@ -73,6 +77,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 
 /// Outil de capture/mesure, utilisable tel quel.
@@ -88,7 +93,10 @@ import javafx.scene.control.TextField;
 ///   enregistreur, micro) **hors connexion** : la ligne VigieChiro y est masquée ;
 /// - `apercu-passage-rattachement-connecte.png` : la même, **connecté** — « Récupérer depuis
 ///   VigieChiro » et « Envoyer vers VigieChiro » apparaissent (#1839) ;
-/// - `apercu-passage-reactivation.png` : la modale « Réactiver ce passage » et ses deux barres (#1780).
+/// - `apercu-passage-reactivation.png` : la modale « Réactiver ce passage » et ses deux barres (#1780) ;
+/// - `apercu-passage-squelette.png` : la fiche d'une nuit **rapatriée de Vigie-Chiro**, connecté —
+///   audio absente, et « Réactiver ce passage » **actif** (#2554). C'est l'écran du défaut d'origine,
+///   où le bouton était grisé et ne disait pas pourquoi.
 ///
 /// On seede une base SQLite temporaire (un utilisateur, un site/point, deux passages vérifié/déposé
 /// avec leur session de 60 séquences). On fabrique le [ServicePassage] via Guice (socle + passage),
@@ -108,7 +116,12 @@ public final class CapturePassage {
     private static final String NUMERO_CARRE = "640380";
     private static final String CODE_POINT = "A1";
     private static final String NOM_SITE = "Étang de la Tuilière";
+
+    /// Participation Vigie-Chiro à laquelle la nuit squelette est rattachée. Aucun appel réseau n'a lieu :
+    /// seule la PRÉSENCE du lien compte pour la règle qui autorise la réactivation.
+    private static final String PARTICIPATION_DEMO = "6a53f5faae21902a597394d3";
     private static final String APERCU_ECRIT = "Apercu ecrit dans ";
+    private static final String FXML_RATTACHEMENT = "RattachementModale.fxml";
     private static final int NB_SEQUENCES = 60;
     private static final long VOLUME_ORIGINAUX_OCTETS = 5L * 1024 * 1024 * 1024; // 5 Go
     private static final long VOLUME_SEQUENCES_OCTETS = 180L * 1024 * 1024; // 180 Mo
@@ -168,8 +181,18 @@ public final class CapturePassage {
         // heures ne sont attestées par rien, donc saisissables (#1892) - l'inverse des deux captures
         // ci-dessus, où elles sont grisées. Sans elle, le seul cas où l'utilisateur PEUT corriger ses
         // heures n'était montré nulle part, alors que c'est le cas qui a motivé le geste.
-        long idSquelette = seederSquelette(source, idPoint);
-        rendreRattachement(injecteur, idSquelette, sortie.resolve("apercu-passage-rattachement-squelette.png"));
+        long idSquelette = seederSquelette(source, workspace, idPoint);
+        rendreRattachementSquelette(
+                injecteur, idSquelette, sortie.resolve("apercu-passage-rattachement-squelette.png"));
+        // La FICHE de cette même nuit, connecté (#2554). C'est l'écran du défaut d'origine : « Réactiver ce
+        // passage » y était grisé, parce que le gating exigeait des séquences que la synchro n'avait pas
+        // rapatriées. Aucune capture ne le montrait - la seule vue d'un squelette était la modale
+        // ci-dessus, où le bouton n'apparaît pas. Il faut la passerelle ET le rattachement à une
+        // participation : c'est cette combinaison que la règle interroge.
+        new LienVigieChiroDao(source)
+                .upsert(new LienVigieChiro(
+                        LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idSquelette), PARTICIPATION_DEMO));
+        rendrePivot(injecteurConnecte(), idSquelette, sortie.resolve("apercu-passage-squelette.png"));
         // Modale « Réactiver ce passage » (#1780) : les deux barres de phase en cours (régénération pleine,
         // ancrage à mi-course), montrant que la barre ne reste plus figée pendant l'ancrage réseau.
         rendreModaleReactivation(injecteur, sortie.resolve("apercu-passage-reactivation.png"));
@@ -206,9 +229,24 @@ public final class CapturePassage {
                         // Le fournisseur se réclame DANS configure() : `getProvider` hors de cette méthode
                         // lève « The binder can only be used inside configure() ».
                         Provider<SourceDeDonnees> source = getProvider(SourceDeDonnees.class);
+                        Provider<Workspace> workspace = getProvider(Workspace.class);
+                        Provider<Horloge> horloge = getProvider(Horloge.class);
                         OptionalBinder.newOptionalBinder(binder(), SynchronisationParticipation.class)
                                 .setBinding()
                                 .toProvider(() -> passerelleDApercu(source.get()));
+                        // L'hydratation d'un squelette, posée pour la même raison et par le même
+                        // conditionnement qu'en production : ReconstructionModule ne se charge qu'avec
+                        // ConnexionModule, donc « connecté » veut bien dire « hydratation disponible ».
+                        // C'est ce que la règle de gating interroge pour activer « Réactiver ce passage »
+                        // sur une nuit sans séquence (#2554).
+                        OptionalBinder.newOptionalBinder(binder(), HydratationSquelette.class)
+                                .setBinding()
+                                .toProvider(() -> new HydratationSquelette(
+                                        source.get(),
+                                        new ClientVigieChiro("http://localhost:1", Optional::empty),
+                                        workspace.get(),
+                                        horloge.get(),
+                                        Optional.empty()));
                     }
 
                     private SynchronisationParticipation passerelleDApercu(SourceDeDonnees source) {
@@ -283,12 +321,35 @@ public final class CapturePassage {
     /// Charge `RattachementModale.fxml` (controller injecté par Guice), la démarre sur le passage et
     /// rend la modale hors-écran.
     private static void rendreRattachement(Injector injecteur, long idPassage, Path fichier) throws IOException {
-        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource("RattachementModale.fxml"));
+        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource(FXML_RATTACHEMENT));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         RattachementModaleController controleur = loader.getController();
         controleur.demarrer(idPassage, NUMERO_CARRE, CODE_POINT, () -> {});
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// La même modale sur une nuit **squelette**, mais **défilée jusqu'aux heures**.
+    ///
+    /// La capture existait déjà et sa légende annonçait les heures saisissables (#1892) - sauf qu'elles
+    /// vivent en bas d'un `ScrollPane` (#2496) et **n'apparaissaient pas dans l'image** : on documentait un
+    /// état par une photo qui ne le montrait pas. Constat de la passe 8 de #2554.
+    ///
+    /// On défile comme le ferait l'utilisateur, après une passe CSS + layout (le skin du `ScrollPane`
+    /// n'existe pas avant), plutôt que d'agrandir la fenêtre : l'écran headless est figé à 1000 px de haut.
+    private static void rendreRattachementSquelette(Injector injecteur, long idPassage, Path fichier)
+            throws IOException {
+        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource(FXML_RATTACHEMENT));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        RattachementModaleController controleur = loader.getController();
+        controleur.demarrer(idPassage, NUMERO_CARRE, CODE_POINT, () -> {});
+        Scene scene = new Scene(vue);
+        vue.applyCss();
+        vue.layout();
+        ((ScrollPane) scene.lookup(".corps-modale")).setVvalue(1.0);
+        ApercuFx.enregistrerPng(scene, fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
@@ -303,7 +364,7 @@ public final class CapturePassage {
     /// INFO et non ERREUR : un champ mal rempli n'est pas une panne. C'est exactement la nuance que le
     /// canal, nomme « messageErreur », ne pouvait pas porter avant ce chantier.
     private static void rendreRattachementRetour(Injector injecteur, long idPassage, Path fichier) throws IOException {
-        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource("RattachementModale.fxml"));
+        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource(FXML_RATTACHEMENT));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         RattachementModaleController controleur = loader.getController();
@@ -411,8 +472,8 @@ public final class CapturePassage {
     /// Ses bornes sont volontairement **aberrantes** (`15:00 → 15:00`) : c'est l'état réel qu'a produit le
     /// cliquet de #1860 sur le terrain, celui qu'on vient réparer. Une capture qui montrerait une nuit
     /// déjà juste n'illustrerait pas le besoin.
-    private static long seederSquelette(SourceDeDonnees source, long idPoint) {
-        return new PassageDao(source)
+    private static long seederSquelette(SourceDeDonnees source, Path workspace, long idPoint) {
+        long idPassage = new PassageDao(source)
                 .insert(new Passage(
                         null,
                         3,
@@ -430,6 +491,20 @@ public final class CapturePassage {
                         ENREGISTREUR,
                         null))
                 .id();
+        // Sa session archivée, SANS original ni séquence : c'est ce que pose la synchro
+        // (CreationPassageArchive), et c'est ce qui distingue un squelette d'une nuit sans dossier. Sans
+        // elle, la capture montrait un état que la plateforme ne produit jamais - et la réactivation, qui
+        // relit le préfixe depuis ce chemin, n'aurait eu nulle part où le lire.
+        new SessionDao(source)
+                .insert(new SessionDEnregistrement(
+                        null,
+                        workspace
+                                .resolve(new Prefixe(NUMERO_CARRE, 2026, 3, CODE_POINT).nomDossierSession())
+                                .toString(),
+                        0L,
+                        0L,
+                        idPassage));
+        return idPassage;
     }
 
     private static long seederPassage(
