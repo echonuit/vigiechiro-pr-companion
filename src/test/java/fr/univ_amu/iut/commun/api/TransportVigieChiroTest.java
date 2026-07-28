@@ -5,6 +5,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
@@ -33,6 +35,7 @@ class TransportVigieChiroTest {
 
     private static final FournisseurToken SANS_TOKEN = Optional::empty;
     private static final FournisseurToken TOKEN_ABC = () -> Optional.of("abc");
+    private static final String BASE_LOCALE = "http://localhost:1/api/v1";
 
     @Test
     @DisplayName("enteteAuthorization : Basic base64(token:) ; token en username, mot de passe vide")
@@ -49,7 +52,8 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport = new TransportVigieChiro("http://localhost:1", SANS_TOKEN);
 
         assertThat(transport.enteteAuthorization()).isEmpty();
-        assertThat(transport.lire("/moi")).isInstanceOf(ReponseApi.NonConnecte.class);
+        assertThat(transport.lire("/moi", PolitiqueReessai.Profil.ARRIERE_PLAN))
+                .isInstanceOf(ReponseApi.NonConnecte.class);
         assertThat(transport.ecrire("POST", "/fichiers", "{}", null)).isInstanceOf(ReponseApi.NonConnecte.class);
     }
 
@@ -58,10 +62,12 @@ class TransportVigieChiroTest {
     void hors_ligne_est_injoignable() {
         TransportVigieChiro transport = new TransportVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
 
-        assertThat(transport.lire("/moi")).isInstanceOf(ReponseApi.Injoignable.class);
+        assertThat(transport.lire("/moi", PolitiqueReessai.Profil.ARRIERE_PLAN))
+                .isInstanceOf(ReponseApi.Injoignable.class);
         assertThat(transport.ecrire("PATCH", "/participations/p1", "{}", "e1"))
                 .isInstanceOf(ReponseApi.Injoignable.class);
-        assertThat(transport.telecharger("http://localhost:1/s3/signe")).isInstanceOf(ReponseApi.Injoignable.class);
+        assertThat(transport.telecharger("http://localhost:1/s3/signe", PolitiqueReessai.Profil.ARRIERE_PLAN))
+                .isInstanceOf(ReponseApi.Injoignable.class);
     }
 
     @Test
@@ -150,7 +156,8 @@ class TransportVigieChiroTest {
         journal.setLevel(Level.ALL);
         try {
             // Injoignable (localhost:1) : l'échange EST consigné, avec sa cause.
-            new TransportVigieChiro("http://localhost:1/api/v1", TOKEN_ABC).lire("/moi");
+            new TransportVigieChiro("http://localhost:1/api/v1", TOKEN_ABC, HttpClient.newHttpClient(), sansAttente())
+                    .lire("/moi", PolitiqueReessai.Profil.ARRIERE_PLAN);
         } finally {
             journal.removeHandler(capteur);
         }
@@ -283,6 +290,113 @@ class TransportVigieChiroTest {
 
         assertThat(issue).isEqualTo(ReponseApi.succes("etag-2"));
         assertThat(attentes).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#2619 : une lecture coupée une fois est rejouée, et personne n'en entend parler")
+    void lecture_reessaie_une_coupure_puis_reussit() throws Exception {
+        // Les réponses simulées se construisent AVANT la chaîne : `reponseTexte` stube lui-même, et
+        // Mockito refuse un `when` imbriqué dans un `doReturn` en cours (UnfinishedStubbing).
+        HttpResponse<String> ok = reponseTexte(200, "{\"ok\":1}", Map.of());
+        HttpClient client = mock(HttpClient.class);
+        doThrow(new IOException("coupure")).doReturn(ok).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport = new TransportVigieChiro(BASE_LOCALE, TOKEN_ABC, client, sansAttente(attentes));
+
+        ReponseApi<String> issue = transport.lire("/moi/participations", PolitiqueReessai.Profil.BALAYAGE);
+
+        assertThat(issue)
+                .as("c'est tout l'objet de l'issue : la nuit ne ressort plus « non récupérée »")
+                .isEqualTo(ReponseApi.succes("{\"ok\":1}"));
+        assertThat(attentes).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#2619 : un 404 n'est pas rejoué - une lecture refusée ne deviendra pas valide")
+    void lecture_ne_rejoue_pas_un_refus_definitif() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        doReturn(reponseTexte(404, "introuvable", Map.of())).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport = new TransportVigieChiro(BASE_LOCALE, TOKEN_ABC, client, sansAttente(attentes));
+
+        ReponseApi<String> issue = transport.lire("/participations/inconnue", PolitiqueReessai.Profil.BALAYAGE);
+
+        assertThat(issue).isEqualTo(ReponseApi.refuse(404, "introuvable"));
+        assertThat(attentes)
+                .as("aucune reprise : rejouer un 4xx n'est pas de la robustesse")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2619 : sur un 429, le Retry-After du serveur fait autorité sur le backoff calculé")
+    void lecture_respecte_le_retry_after() throws Exception {
+        HttpResponse<String> tropVite = reponseTexte(429, "trop vite", Map.of("Retry-After", List.of("7")));
+        HttpResponse<String> ok = reponseTexte(200, "ok", Map.of());
+        HttpClient client = mock(HttpClient.class);
+        doReturn(tropVite).doReturn(ok).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport = new TransportVigieChiro(BASE_LOCALE, TOKEN_ABC, client, sansAttente(attentes));
+
+        transport.lire("/moi/participations", PolitiqueReessai.Profil.BALAYAGE);
+
+        assertThat(attentes).containsExactly(Duration.ofSeconds(7));
+    }
+
+    @Test
+    @DisplayName("#2619 : le balayage insiste plus qu'un écran, parce qu'échouer y coûte la traversée")
+    void le_balayage_insiste_plus_que_l_ecran() throws Exception {
+        assertThat(attentesPour(PolitiqueReessai.Profil.ARRIERE_PLAN))
+                .as("un écran qui attend : un échec net vaut mieux qu'une fenêtre figée")
+                .hasSize(1);
+        assertThat(attentesPour(PolitiqueReessai.Profil.BALAYAGE))
+                .as("un balayage : personne ne le fixe, mais le rater coûte tout le compte")
+                .hasSize(4);
+    }
+
+    @Test
+    @DisplayName("#2619 : « Annuler » pendant une reprise est honoré, il ne disparaît pas dans l'attente")
+    void le_renoncement_arrete_la_reprise() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        doThrow(new IOException("coupure")).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport = new TransportVigieChiro(BASE_LOCALE, TOKEN_ABC, client, sansAttente(attentes));
+
+        List<Integer> annonces = new ArrayList<>();
+
+        ReponseApi<String> issue = transport.lire(
+                "/moi/participations",
+                PolitiqueReessai.Profil.BALAYAGE,
+                (tentative, delai) -> annonces.add(tentative),
+                () -> true);
+
+        assertThat(issue).isInstanceOf(ReponseApi.Injoignable.class);
+        assertThat(attentes)
+                .as("aucune temporisation : le renoncement est vu avant d'attendre")
+                .isEmpty();
+        assertThat(annonces)
+                .as("annoncer « nouvelle tentative dans N s » pour une tentative qui n'aura pas lieu est un"
+                        + " mensonge d'écran : le renoncement se lit AVANT l'annonce, pas après")
+                .isEmpty();
+        verify(client, times(1)).send(any(), any());
+    }
+
+    /// Les attentes qu'un profil provoque sur une panne persistante : le nombre de reprises, mesuré.
+    private static List<Duration> attentesPour(PolitiqueReessai.Profil profil) throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        doThrow(new IOException("coupure")).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        new TransportVigieChiro(BASE_LOCALE, TOKEN_ABC, client, sansAttente(attentes)).lire("/moi", profil);
+        return attentes;
+    }
+
+    /// Réponse **textuelle** simulée : statut, corps et en-têtes, pour exercer les lectures (le mock de
+    /// dépôt ne rend qu'un corps vide).
+    private static HttpResponse<String> reponseTexte(int statut, String corps, Map<String, List<String>> entetes) {
+        HttpResponse<String> reponse = mock(HttpResponse.class);
+        when(reponse.statusCode()).thenReturn(statut);
+        when(reponse.body()).thenReturn(corps);
+        when(reponse.headers()).thenReturn(HttpHeaders.of(entetes, (nom, valeur) -> true));
+        return reponse;
     }
 
     /// Corps d'un octet, reconstruit à chaque tentative (le publisher n'est pas rejouable une fois lu).

@@ -110,7 +110,10 @@ class ContratApiVigieChiroLiveTest {
     void refus_serveur_est_un_refuse_explicite() {
         TransportVigieChiro transport = new TransportVigieChiro(baseUrl, () -> Optional.of(token));
 
-        ReponseApi<String> reponse = transport.lire("/moi/participations?max_results=1000&page=1");
+        // Le profil ne change rien ici, et c'est le point : un 422 n'est pas réessayable (seuls 429 et
+        // 5xx le sont), donc le réessai des lectures (#2619) n'allonge pas le pire cas de ce test.
+        ReponseApi<String> reponse =
+                transport.lire("/moi/participations?max_results=1000&page=1", PolitiqueReessai.Profil.BALAYAGE);
 
         assertThat(reponse)
                 .as("Eve rejette max_results>100 : le transport doit conserver ce refus, pas le taire")
