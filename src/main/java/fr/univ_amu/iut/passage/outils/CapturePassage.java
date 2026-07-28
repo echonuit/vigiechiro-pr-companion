@@ -29,7 +29,9 @@ import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.passage.di.CampagneModule;
 import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
@@ -46,6 +48,7 @@ import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
+import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
@@ -163,9 +166,16 @@ public final class CapturePassage {
 
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
+        // Deux campagnes (#2355) : la liste déroulante de la modale montre alors un choix réel, et pas
+        // seulement sa sentinelle « aucune campagne ».
+        CampagneDao campagneDao = new CampagneDao(source);
+        Long ens = campagneDao
+                .insert(new Campagne(null, "Suivi ENS 2026", 2026, null))
+                .id();
+        campagneDao.insert(new Campagne(null, "Thèse Samuel", 2025, null));
         long idPoint = seederSiteEtPoint(source);
-        long idVerifie = seederPassage(source, workspace, idPoint, StatutWorkflow.VERIFIE, 2);
-        long idDepose = seederPassage(source, workspace, idPoint, StatutWorkflow.DEPOSE, 1);
+        long idVerifie = seederPassage(source, workspace, idPoint, StatutWorkflow.VERIFIE, 2, ens);
+        long idDepose = seederPassage(source, workspace, idPoint, StatutWorkflow.DEPOSE, 1, null);
 
         // Pivot : deux statuts pour montrer l'évolution des actions disponibles (préparer le dépôt
         // quand vérifié ; validation déverrouillée une fois déposé).
@@ -208,7 +218,13 @@ public final class CapturePassage {
     /// (test).
     public static Injector creerInjecteur() {
         return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new PassageModule());
+                ModuleCaptureCommun.communSynchrone(),
+                new PersistenceModule(),
+                new PassageModule(),
+                // Campagne (#2355) : feature OPTIONNELLE. Sans ce module, le ViewModel reçoit un
+                // Optional vide, le contrôleur MASQUE la ligne « Campagne », et le rattachement livré
+                // par ce chantier n'apparaissait dans aucune capture.
+                new CampagneModule());
     }
 
     /// Même injecteur, mais **connecté** : la passerelle [SynchronisationParticipation] est posée, ce qui
@@ -223,6 +239,7 @@ public final class CapturePassage {
                 ModuleCaptureCommun.communSynchrone(),
                 new PersistenceModule(),
                 new PassageModule(),
+                new CampagneModule(),
                 new AbstractModule() {
                     @Override
                     protected void configure() {
@@ -508,7 +525,7 @@ public final class CapturePassage {
     }
 
     private static long seederPassage(
-            SourceDeDonnees source, Path workspace, long idPoint, StatutWorkflow statut, int numero) {
+            SourceDeDonnees source, Path workspace, long idPoint, StatutWorkflow statut, int numero, Long idCampagne) {
         PassageDao passageDao = new PassageDao(source);
         SessionDao sessionDao = new SessionDao(source);
         EnregistrementOriginalDao originalDao = new EnregistrementOriginalDao(source);
@@ -530,7 +547,7 @@ public final class CapturePassage {
                 null,
                 idPoint,
                 ENREGISTREUR,
-                null));
+                idCampagne));
         SessionDEnregistrement session = sessionDao.insert(new SessionDEnregistrement(
                 null,
                 workspace.resolve(prefixe.nomDossierSession()).toString(),

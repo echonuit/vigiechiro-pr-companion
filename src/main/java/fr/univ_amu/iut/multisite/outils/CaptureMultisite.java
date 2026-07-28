@@ -21,10 +21,13 @@ import fr.univ_amu.iut.multisite.di.MultisiteModule;
 import fr.univ_amu.iut.multisite.view.MultisiteController;
 import fr.univ_amu.iut.multisite.view.ReconstructionModaleController;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
+import fr.univ_amu.iut.passage.di.CampagneModule;
 import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.di.SitesModule;
@@ -120,6 +123,7 @@ public final class CaptureMultisite {
         rendreEcranFiltre(injecteur, sortie.resolve("apercu-multisite-filtre.png"));
         rendreEcranEdition(injecteur, sortie.resolve("apercu-multisite-edition.png"));
         rendreEcranCartePleine(injecteur, sortie.resolve("apercu-multisite-carte-pleine.png"));
+        rendreEcranTableauPlein(injecteur, sortie.resolve("apercu-multisite-tableau-plein.png"));
         rendreModaleReconstruction(injecteur, sortie.resolve("apercu-multisite-reconstruction.png"));
         rendreImportGroupe(injecteur, sortie.resolve("apercu-multisite-reconstruction-groupe.png"));
         rendreMenuActions(injecteur, sortie.resolve("apercu-multisite-menu-actions.png"));
@@ -221,6 +225,10 @@ public final class CaptureMultisite {
                 new PersistenceModule(),
                 new SitesModule(),
                 new PassageModule(),
+                // Campagne (#2355) : feature OPTIONNELLE, liée par OptionalBinder. Absente de cet
+                // injecteur, ServiceMultisite reçoit un Optional vide et la colonne « Campagne »
+                // se rend VIDE - une colonne documentée qu'aucune capture ne montrait remplie.
+                new CampagneModule(),
                 new MultisiteModule(),
                 new ModuleCaptureNavigationAudio(),
                 new AbstractModule() {
@@ -287,6 +295,25 @@ public final class CaptureMultisite {
         capturerCarte(scene, fichier);
     }
 
+    /// Rend l'écran **carte repliée / tableau plein écran** : symétrique de [#rendreEcranCartePleine],
+    /// et la **seule** vue où le tableau montre toutes ses colonnes. À 1100 px partagés avec la carte,
+    /// « Verdict », « Analyse » et « Campagne » sortent du cadre : la colonne Campagne livrée par #2355
+    /// était documentée sans être visible nulle part.
+    private static void rendreEcranTableauPlein(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource(FXML));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        Scene scene = new Scene(vue, 1100, 620);
+        vue.applyCss();
+        vue.layout();
+        if (scene.lookup("#boutonReplierCarte") instanceof Button replierCarte) {
+            replierCarte.fire(); // replie la carte → tableau plein écran
+        }
+        vue.applyCss();
+        vue.layout();
+        ecrire(scene, fichier);
+    }
+
     /// Charge `Multisite.fxml` (le controller auto-charge le tableau en `initialize()`) et le rend, après
     /// avoir laissé les tuiles OSM se charger (la carte est l'élément vedette de cette capture).
     private static void rendreEcran(Injector injecteur, Path fichier) throws IOException {
@@ -334,15 +361,33 @@ public final class CaptureMultisite {
         Long pointB = pointDao.insert(new PointDEcoute(null, "B2", 43.4040, -1.5470, null, chenes.id()))
                 .id();
 
-        passage(passageDao, 2, 2026, "2026-06-22", StatutWorkflow.DEPOSE, Verdict.OK, pointA);
-        passage(passageDao, 1, 2026, "2026-06-08", StatutWorkflow.VERIFIE, Verdict.DOUTEUX, pointA);
-        passage(passageDao, 3, 2025, "2025-07-19", StatutWorkflow.TRANSFORME, Verdict.A_VERIFIER, pointA);
-        passage(passageDao, 1, 2026, "2026-06-15", StatutWorkflow.PRET_A_DEPOSER, Verdict.OK, pointB);
-        passage(passageDao, 2, 2026, "2026-06-29", StatutWorkflow.IMPORTE, Verdict.A_VERIFIER, pointB);
+        // Campagnes (#2355) : deux suivis distincts, et une nuit volontairement NON rattachée. Le
+        // rattachement est facultatif ; une capture où toutes les lignes seraient rattachées laisserait
+        // croire l'inverse, et une capture où aucune ne le serait montrerait une colonne vide.
+        CampagneDao campagneDao = new CampagneDao(source);
+        Long ens = campagneDao
+                .insert(new Campagne(null, "Suivi ENS 2026", 2026, null))
+                .id();
+        Long these = campagneDao
+                .insert(new Campagne(null, "Thèse Samuel", 2025, null))
+                .id();
+
+        passage(passageDao, 2, 2026, "2026-06-22", StatutWorkflow.DEPOSE, Verdict.OK, pointA, ens);
+        passage(passageDao, 1, 2026, "2026-06-08", StatutWorkflow.VERIFIE, Verdict.DOUTEUX, pointA, ens);
+        passage(passageDao, 3, 2025, "2025-07-19", StatutWorkflow.TRANSFORME, Verdict.A_VERIFIER, pointA, these);
+        passage(passageDao, 1, 2026, "2026-06-15", StatutWorkflow.PRET_A_DEPOSER, Verdict.OK, pointB, ens);
+        passage(passageDao, 2, 2026, "2026-06-29", StatutWorkflow.IMPORTE, Verdict.A_VERIFIER, pointB, null);
     }
 
     private static void passage(
-            PassageDao dao, int numero, int annee, String date, StatutWorkflow statut, Verdict verdict, Long idPoint) {
+            PassageDao dao,
+            int numero,
+            int annee,
+            String date,
+            StatutWorkflow statut,
+            Verdict verdict,
+            Long idPoint,
+            Long idCampagne) {
         dao.insert(new Passage(
                 null,
                 numero,
@@ -358,6 +403,6 @@ public final class CaptureMultisite {
                 null,
                 idPoint,
                 ENREGISTREUR,
-                null));
+                idCampagne));
     }
 }

@@ -83,6 +83,12 @@ Une **campagne** regroupe les nuits d'un même suivi. Le tableau la porte de tro
 
 L'**export CSV** de la sélection porte une colonne `campagne`, en fin de ligne.
 
+La colonne se trouve en **fin de tableau** : à côté de la carte, elle sort du cadre et il faut faire
+défiler horizontalement. Replier la carte avec la poignée **◀ Carte** donne toute la largeur au
+tableau et montre toutes les colonnes d'un coup.
+
+![Carte repliée, tableau en pleine largeur : toutes les colonnes sont visibles, dont Analyse et Campagne. La dernière nuit n'est rattachée à aucune campagne, ce qui est un état normal et non une anomalie.](../assets/captures/apercu-multisite-tableau-plein.png)
+
 Le rattachement lui-même se fait depuis la fenêtre **Modifier le passage**, décrite dans
 [Le passage](passage.md#rattacher-a-une-campagne).
 
