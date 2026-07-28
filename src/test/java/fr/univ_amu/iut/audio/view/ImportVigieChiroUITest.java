@@ -19,17 +19,22 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.DemandeurDeChoix;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.SuiviOperation;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.validation.model.BilanImport;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -94,6 +99,53 @@ class ImportVigieChiroUITest {
     @BeforeEach
     void demarrer() {
         voile = new IndicateurOccupation(new StackPane(), new ExecuteurTacheSynchrone());
+    }
+
+    @Test
+    @DisplayName("#2651 : le bilan traverse le câblage jusqu'à la bande, la phrase d'avancement s'efface")
+    void le_bilan_atteint_la_bande() {
+        // ViewModel RÉEL, pas le mock : c'est la couture entre lui et la surface qu'on vérifie.
+        ImportVigieChiroViewModel vm = new ImportVigieChiroViewModel(java.util.Optional.empty());
+        AudioViewModel audio = mock(AudioViewModel.class);
+        when(audio.resultatsDisponiblesProperty()).thenReturn(new SimpleBooleanProperty(false));
+        VBox zone = new VBox();
+
+        ImportVigieChiroUI.cabler(new MenuItem(), zone, vm, audio);
+        vm.appliquerBilan(new BilanImport(null, 128, 12, 3, 41, 2));
+
+        PanneauCompteRendu bande = ImportVigieChiroUI.zoneDuCompteRendu(zone);
+        assertThat(bande.isVisible())
+                .as("la bande paraît dès qu'un bilan existe")
+                .isTrue();
+        assertThat(zone.isVisible()).isTrue();
+        // Les six nombres jetés autrefois sont là : la proportion dans la barre, le reste en mentions.
+        assertThat(textesDe(bande))
+                .anyMatch(texte -> texte.contains("2 validation(s) perdue(s)"))
+                .anyMatch(texte -> texte.contains("3 taxon(s) hors référentiel"))
+                .anyMatch(texte -> texte.contains("12 ligne(s) ignorée(s)"));
+    }
+
+    @Test
+    @DisplayName("#2651 : sans bilan ni message, la zone s'efface au lieu de laisser un blanc")
+    void zone_muette_est_effacee() {
+        ImportVigieChiroViewModel vm = new ImportVigieChiroViewModel(java.util.Optional.empty());
+        AudioViewModel audio = mock(AudioViewModel.class);
+        when(audio.resultatsDisponiblesProperty()).thenReturn(new SimpleBooleanProperty(false));
+        VBox zone = new VBox();
+
+        ImportVigieChiroUI.cabler(new MenuItem(), zone, vm, audio);
+
+        assertThat(zone.isVisible()).isFalse();
+        assertThat(zone.isManaged()).isFalse();
+    }
+
+    /// Les textes des mentions rendues par la bande, lus dans le graphe de scène.
+    private static List<String> textesDe(PanneauCompteRendu bande) {
+        return bande.lookupAll(".label").stream()
+                .filter(Label.class::isInstance)
+                .map(noeud -> ((Label) noeud).getText())
+                .filter(texte -> texte != null)
+                .toList();
     }
 
     @Test

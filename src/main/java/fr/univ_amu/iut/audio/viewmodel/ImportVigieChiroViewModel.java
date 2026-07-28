@@ -14,6 +14,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 
@@ -33,8 +35,13 @@ public class ImportVigieChiroViewModel {
     /// état d'activité pendant la récupération réseau, qui peut être longue (milliers de fichiers).
     private final ReadOnlyBooleanWrapper enCours = new ReadOnlyBooleanWrapper(this, "enCours", false);
 
-    /// Message de restitution du dernier import (résumé de succès ou erreur), pour l'IHM.
+    /// Message de restitution : l'**avancement** pendant la récupération, l'**erreur** en cas d'échec. Le
+    /// résultat d'un import réussi, lui, passe par [#bilanProperty()] depuis #2651 : il ne tient pas dans
+    /// une phrase, et six de ses sept nombres y étaient jetés.
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
+
+    /// Bilan du dernier import **réussi**, `null` sinon. La surface le traduit en compte rendu chiffré.
+    private final ReadOnlyObjectWrapper<BilanImport> bilan = new ReadOnlyObjectWrapper<>(this, "bilan", null);
 
     public ImportVigieChiroViewModel(Optional<ImportVigieChiro> importateur) {
         this.importateur = Objects.requireNonNull(importateur, "importateur");
@@ -102,18 +109,26 @@ public class ImportVigieChiroViewModel {
     /// Signale le **début** de l'import (au fil JavaFX, avant de lancer [#importer] en arrière-plan).
     public void marquerEnCours() {
         message.set("Récupération des résultats Tadarida depuis Vigie-Chiro…");
+        bilan.set(null);
         enCours.set(true);
     }
 
-    /// Restitue un import **réussi** (au fil JavaFX) : résumé du bilan (nombre d'observations importées).
-    public void appliquerBilan(BilanImport bilan) {
+    /// Restitue un import **réussi** (au fil JavaFX) : le bilan **entier**, que la surface traduit en
+    /// compte rendu chiffré (#2651).
+    ///
+    /// Le message d'avancement s'efface : il a fait son travail pendant la récupération, et le laisser
+    /// répéterait en une phrase ce que la bande dit en proportions - « ce qui redit ce qui est déjà dit
+    /// n'informe pas, il encombre » (ADR 2358).
+    public void appliquerBilan(BilanImport resultat) {
         enCours.set(false);
-        message.set("Résultats importés depuis Vigie-Chiro : " + bilan.importees() + " observation(s).");
+        message.set("");
+        bilan.set(resultat);
     }
 
     /// Restitue un **échec** d'import (au fil JavaFX) : message d'erreur métier / réseau.
     public void echec(String erreur) {
         enCours.set(false);
+        bilan.set(null);
         message.set(erreur);
     }
 
@@ -123,5 +138,11 @@ public class ImportVigieChiroViewModel {
 
     public ReadOnlyStringProperty messageProperty() {
         return message.getReadOnlyProperty();
+    }
+
+    /// Le bilan du dernier import réussi, ou `null` tant qu'aucun n'a abouti (et de nouveau `null` dès
+    /// qu'un import est relancé ou échoue : un compte rendu périmé ferait croire à un résultat frais).
+    public ReadOnlyObjectProperty<BilanImport> bilanProperty() {
+        return bilan.getReadOnlyProperty();
     }
 }

@@ -173,7 +173,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private MenuItem itemOuvrirVigieChiro;
 
     @FXML
-    private Label lblImportVigieChiro;
+    private VBox zoneImportVigieChiro;
 
     @FXML
     private VBox zonePublierCorrections;
@@ -486,7 +486,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         itemsMenu = new MenuAudio.Items(
                 itemImporter,
                 itemImporterVigieChiro,
-                lblImportVigieChiro,
+                zoneImportVigieChiro,
                 itemPublierCorrections,
                 zonePublierCorrections,
                 itemInclureMode,

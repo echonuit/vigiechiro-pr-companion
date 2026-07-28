@@ -61,6 +61,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -317,7 +318,7 @@ class SonsValidationDepotViewTest {
     }
 
     @Test
-    @DisplayName("#1255 : import d'un passage rattaché via le socle, bilan restitué dans le libellé")
+    @DisplayName("#1255/#2651 : import d'un passage rattaché via le socle, bilan restitué dans la bande")
     void import_vigiechiro_passage_rattache(FxRobot robot) {
         when(importVigieChiro.estRattache(7L)).thenReturn(true);
         when(importVigieChiro.importerRapide(eq(7L), eq(false), any()))
@@ -326,10 +327,11 @@ class SonsValidationDepotViewTest {
 
         robot.interact(() -> itemImporterVigieChiro(robot).fire());
 
-        Label message = robot.lookup("#lblImportVigieChiro").queryAs(Label.class);
-        assertThat(message.getText())
-                .contains("Résultats importés depuis Vigie-Chiro")
-                .contains("3");
+        // Depuis #2651 le bilan n'est plus une phrase dans un libellé mais un compte rendu chiffré : la
+        // proportion s'y lit dans la barre, et le libellé d'à côté ne porte plus que l'avancement.
+        VBox zone = robot.lookup("#zoneImportVigieChiro").queryAs(VBox.class);
+        assertThat(zone.isVisible()).isTrue();
+        assertThat(textesDe(zone)).anyMatch(texte -> texte.contains("3 importées"));
     }
 
     @Test
@@ -340,8 +342,19 @@ class SonsValidationDepotViewTest {
 
         robot.interact(() -> itemImporterVigieChiro(robot).fire());
 
-        Label message = robot.lookup("#lblImportVigieChiro").queryAs(Label.class);
-        assertThat(message.getText()).contains("Aucune participation Vigie-Chiro");
+        // L'échec, lui, reste une phrase : il tient dans une ligne, et il n'y a pas de proportion à dire.
+        VBox zone = robot.lookup("#zoneImportVigieChiro").queryAs(VBox.class);
+        assertThat(textesDe(zone)).anyMatch(texte -> texte.contains("Aucune participation Vigie-Chiro"));
+    }
+
+    /// Les textes visibles de la zone de restitution : le libellé d'avancement ou d'erreur, et ceux de la
+    /// bande chiffrée. Lus dans le graphe de scène, comme l'utilisateur les voit.
+    private static java.util.List<String> textesDe(VBox zone) {
+        return zone.lookupAll(".label").stream()
+                .filter(Label.class::isInstance)
+                .map(noeud -> ((Label) noeud).getText())
+                .filter(texte -> texte != null && !texte.isBlank())
+                .toList();
     }
 
     private static MenuItem itemImporterVigieChiro(FxRobot robot) {

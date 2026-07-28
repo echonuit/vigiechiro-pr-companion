@@ -131,9 +131,11 @@
     </Button>
   </HBox>
 
-  <!-- Avancement / bilan de l'import VigieChiro (axe 4.2), masqué tant qu'aucun import n'a été lancé. -->
-  <Label fx:id="lblImportVigieChiro" styleClass="audio-message" wrapText="true" maxWidth="Infinity"
-         visible="false" managed="false"/>
+  <!-- Restitution de l'import VigieChiro (axe 4.2), masquée tant qu'aucun import n'a été lancé. Même
+       composition que la publication ci-dessous, et pour la même raison (#2651) : l'avancement et les
+       erreurs tiennent dans une phrase, le bilan d'un import réussi non - il porte sept nombres, dont
+       les validations perdues. Un seul emplacement, dont ImportVigieChiroUI compose le contenu. -->
+  <VBox fx:id="zoneImportVigieChiro" visible="false" managed="false"/>
 
   <!-- Restitution de la publication des corrections (#723), masquée tant que rien n'a été lancé. Un seul
        emplacement, dont PublicationCorrectionsUI compose le contenu : le compte rendu structuré (ADR 0031)
