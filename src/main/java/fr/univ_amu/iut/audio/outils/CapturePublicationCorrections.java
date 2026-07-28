@@ -1,11 +1,14 @@
 package fr.univ_amu.iut.audio.outils;
 
+import fr.univ_amu.iut.audio.viewmodel.CompteRenduChiffrePublication;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
+import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.TriPublication;
 import java.io.IOException;
@@ -66,6 +69,9 @@ public final class CapturePublicationCorrections {
             null,
             null);
 
+    /// Préfixe du journal de sortie, mutualisé pour ne pas répéter le même littéral (PMD).
+    private static final String APERCU_ECRIT = "Apercu ecrit dans ";
+
     private CapturePublicationCorrections() {}
 
     public static void main(String[] args) throws InterruptedException {
@@ -93,6 +99,7 @@ public final class CapturePublicationCorrections {
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
         rendreConfirmation(sortie.resolve("apercu-publication-confirmation.png"));
         rendreProgression(sortie.resolve("apercu-publication-progression.png"));
+        rendreCompteRendu(sortie.resolve("apercu-publication-compte-rendu.png"));
     }
 
     /// Le récapitulatif dans son cas le **plus riche** : des corrections prêtes, d'autres à ancrer d'abord
@@ -104,7 +111,7 @@ public final class CapturePublicationCorrections {
                 .dialogue(ApercuFx.enrouler(PublicationCorrectionsViewModel.recapitulatif(tri, true)));
         alerte.getDialogPane().setPrefWidth(560);
         ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
     /// La progression **en cours de rapatriement**, page 3 sur 12 : l'étape est celle qu'émet réellement
@@ -116,8 +123,48 @@ public final class CapturePublicationCorrections {
         Scene scene = new Scene(contenu);
         scene.getStylesheets().addAll(styles());
         ApercuFx.enregistrerPng(scene, fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
+
+    /// Le **compte rendu** d'une publication terminée (#2358), rendu par le composant de production et ses
+    /// feuilles réelles (ADR 0025). Aucune capture ne montrait cet état, ni avant ni après l'envoi : le
+    /// seul moment où l'observateur apprend ce qui est arrivé sur la plateforme n'était pas documenté.
+    ///
+    /// Le cas retenu est celui qui a le plus à dire : des corrections parties, des écartées des **trois**
+    /// natures - elles appellent trois gestes différents, et c'est ce que la ventilation rend lisible - et
+    /// deux refus de la plateforme, dont deux pour la même panne.
+    private static void rendreCompteRendu(Path fichier) {
+        BilanPublication bilan = new BilanPublication(
+                12,
+                2,
+                2,
+                1,
+                List.of(
+                        "Observation 412 (donnée d-7781, indice 3) : " + REFUS_ANCRAGE_PERIME,
+                        "Observation 418 (donnée d-7781, indice 9) : " + REFUS_ANCRAGE_PERIME,
+                        "Observation 501 (donnée d-8002, indice 1) : HTTP 500 (erreur interne de la plateforme)"));
+        PanneauCompteRendu bande = new PanneauCompteRendu();
+        bande.afficher(CompteRenduChiffrePublication.de(bilan, List.of()));
+        // Marge autour de la bande : la capture montre le composant tel qu'il s'insère sous le menu.
+        VBox cadre = new VBox(bande);
+        cadre.setStyle("-fx-padding: 16; -fx-background-color: #f5f6f8;");
+        Scene scene = new Scene(cadre, LARGEUR_COMPTE_RENDU, -1);
+        scene.getStylesheets().addAll(styles());
+        var design = PanneauCompteRendu.class.getResource("design.css");
+        if (design != null) {
+            scene.getStylesheets().add(design.toExternalForm());
+        }
+        ApercuFx.enregistrerPng(scene, fichier);
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// Largeur de rendu : celle de la zone de restitution sous le menu de la vue audio.
+    private static final int LARGEUR_COMPTE_RENDU = 900;
+
+    /// Cause d'un refus, partagée par deux observations : c'est ce partage qui montre le regroupement par
+    /// motif, là où deux causes distinctes en donneraient deux d'un élément.
+    private static final String REFUS_ANCRAGE_PERIME =
+            "HTTP 404 (ancrage périmé : réimportez depuis Vigie-Chiro puis republiez)";
 
     /// Feuilles de style partagées (palette indigo + base), comme les autres captures de dialogue : sans
     /// elles, l'image montrerait le thème par défaut de JavaFX et non celui de l'application.

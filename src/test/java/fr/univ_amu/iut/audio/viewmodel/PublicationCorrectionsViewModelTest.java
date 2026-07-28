@@ -8,12 +8,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
-import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import java.util.List;
@@ -64,70 +60,14 @@ class PublicationCorrectionsViewModelTest {
         assertThat(vm.enCoursProperty().get()).isTrue();
         // Démarrer n'ANNONCE plus rien : la progression a sa modale. Ce canal se contente de se taire,
         // pour que le bilan de la publication précédente ne se lise pas comme celui qui travaille.
-        assertThat(vm.compteRenduProperty().get().estVide()).isTrue();
+        assertThat(vm.bilanProperty().get()).isNull();
         assertThat(vm.retourProperty().get().present()).isFalse();
 
         vm.appliquerBilan(vm.publier(7L));
         assertThat(vm.enCoursProperty().get()).isFalse();
-        CompteRendu rendu = vm.compteRenduProperty().get();
-        assertThat(rendu.titre()).isEqualTo("Corrections publiées vers Vigie-Chiro");
-        assertThat(rendu.constats()).extracting(Constat::fait).containsExactly("2 correction(s) envoyée(s).");
-    }
-
-    @Test
-    @DisplayName("compte rendu : les écarts ne sont cités que s'il y en a")
-    void compte_rendu_cite_les_ecarts_presents() {
-        assertThat(PublicationCorrectionsViewModel.construire(new BilanPublication(5, 0, 0, 0, List.of()))
-                        .constats())
-                .as("annoncer « 0 hors référentiel » serait du bruit")
-                .extracting(Constat::fait)
-                .containsExactly("5 correction(s) envoyée(s).");
-
-        assertThat(PublicationCorrectionsViewModel.construire(
-                                new BilanPublication(1, 2, 1, 3, List.of("Observation 7 : HTTP 404")))
-                        .constats())
-                .extracting(Constat::fait)
-                .containsExactly(
-                        "1 correction(s) envoyée(s).",
-                        "2 à compléter : certitude non déclarée.",
-                        "1 sans ancrage plateforme : rattachez la nuit à sa participation Vigie-Chiro.",
-                        "3 hors référentiel.",
-                        "1 refus de la plateforme.");
-    }
-
-    @Test
-    @DisplayName("#2004 : TOUS les refus sont portés en détails, pas seulement le premier")
-    void compte_rendu_porte_tous_les_refus() {
-        List<String> refus =
-                List.of("Observation 7 : HTTP 404", "Observation 12 : HTTP 500", "Observation 19 : taxon inconnu");
-
-        CompteRendu rendu = PublicationCorrectionsViewModel.construire(new BilanPublication(0, 0, 0, 0, refus));
-
-        Constat constat = rendu.constats().stream()
-                .filter(c -> c.severite() == Severite.ERREUR)
-                .findFirst()
-                .orElseThrow();
-        // La phrase disait « 3 refus, dont : Observation 7 : HTTP 404 » : deux causes sur trois étaient
-        // perdues, faute de place dans un libellé unique. C'est très exactement ce que #2004 traque.
-        assertThat(constat.details()).extracting(Detail::sujet).containsExactlyElementsOf(refus);
-        assertThat(rendu.severite()).isEqualTo(Severite.ERREUR);
-    }
-
-    @Test
-    @DisplayName("#1867 : le compte rendu annonce ce que la phase d'ancrage a ramené, et se tait sinon")
-    void compte_rendu_annonce_le_rapatriement() {
-        BilanPublication sansRapatriement = new BilanPublication(2, 0, 0, 0, List.of());
-        assertThat(PublicationCorrectionsViewModel.construire(sansRapatriement).constats())
-                .as("nuit déjà ancrée : rien ne s'est passé avant l'envoi, rien à en dire")
-                .hasSize(1);
-
-        BilanPublication avecRapatriement = sansRapatriement.avecRapatriement(
-                new RapportAncrage("Observations importées depuis Vigie-Chiro : 40 observation(s)."
-                        + " Le validateur s'est exprimé sur 3 observation(s)."));
-        assertThat(PublicationCorrectionsViewModel.construire(avecRapatriement).constats())
-                .as("sans cette phrase, les messages du validateur se découvrent par hasard")
-                .extracting(Constat::fait)
-                .anySatisfy(fait -> assertThat(fait).contains("Le validateur s'est exprimé sur 3 observation(s)."));
+        // Le ViewModel publie le BILAN BRUT depuis #2358 : c'est la surface qui en fait une bande chiffrée
+        // (CompteRenduChiffrePublication). Il n'a plus de mise en forme à lui.
+        assertThat(vm.bilanProperty().get().poussees()).isEqualTo(2);
     }
 
     @Test
@@ -142,7 +82,7 @@ class PublicationCorrectionsViewModelTest {
         assertThat(vm.retourProperty().get().texte()).contains("injoignable");
         assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
         // Un échec n'est pas un compte rendu : il ne s'est rien passé, il n'y a pas de bilan à rendre.
-        assertThat(vm.compteRenduProperty().get().estVide()).isTrue();
+        assertThat(vm.bilanProperty().get()).isNull();
 
         vm.echec("");
         assertThat(vm.retourProperty().get().present())
