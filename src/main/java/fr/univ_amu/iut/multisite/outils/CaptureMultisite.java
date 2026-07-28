@@ -4,7 +4,10 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.model.ActionGroupee;
+import fr.univ_amu.iut.commun.model.CiblePassage;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -235,6 +238,34 @@ public final class CaptureMultisite {
                     @Provides
                     ResultatsIdentificationDao fournirResultatsIdentificationDao(SourceDeDonnees source) {
                         return new ResultatsIdentificationDao(source);
+                    }
+
+                    // Action groupée « Préparer le dépôt » (#2357) : REMPLAÇANT assumé, pas le
+                    // module `lot` réel. Écart déclaré et non silencieux (cf. #2669).
+                    //
+                    // Charger LotModule entraînerait ici toute la chaîne de dépôt pour une capture qui
+                    // ne clique jamais l'entrée. Et rien de l'action n'est visible : le libellé et
+                    // l'état grisé viennent du NOMBRE de lignes cochées. Substituer ne change aucun
+                    // pixel. Le jour où une capture montrerait le lot en cours, il faudra le vrai.
+                    @Provides
+                    @Named("action.preparerDepot")
+                    ActionGroupee fournirActionPreparer() {
+                        return new ActionGroupee() {
+                            @Override
+                            public String libelle() {
+                                return "Préparer le dépôt";
+                            }
+
+                            @Override
+                            public Optional<String> motifNonEligible(CiblePassage cible) {
+                                return Optional.empty();
+                            }
+
+                            @Override
+                            public void executer(CiblePassage cible) {
+                                throw new UnsupportedOperationException("capture : aucune action n'est jouée");
+                            }
+                        };
                     }
                 });
     }
