@@ -38,6 +38,17 @@ La distinction n'est pas cosmétique : un relevé d'état qui insiste transforme
 - Endormissement et aléa sont **injectés** (`Temporisateur`, source d'aléa) : les tests de la politique sont déterministes et instantanés, sans vraie attente ni réseau.
 - Pendant un réessai, l'utilisateur voit une **mention discrète** (« nouvelle tentative dans N s »), portée par le hook `Suivi` : ni silence trompeur, ni bandeau d'erreur pour un incident absorbé (décision #2350). Le câblage de ce hook vers le canal de statut vient au lot de câblage.
 
+> **Amendement (#2619, 2026-07-28).** Le pare-chocs ne servait que les **écritures** du dépôt. Depuis que
+> la synchronisation balaie tout un compte (#2557), une coupure d'une seconde fait ressortir une nuit
+> « non récupérée » là où la politique existait déjà, testée, à côté. Le réessai s'applique désormais au
+> **point de passage unique** de toutes les émissions.
+>
+> Profil retenu pour les lectures : **`PREMIER_PLAN`**. Ce n'est pas un choix par défaut mais une
+> conséquence de la règle 2 : dans ce produit, aucune lecture n'est un sondage automatique (« on
+> n'interroge le serveur que quand l'utilisateur le demande », #1338), donc il y a **toujours quelqu'un
+> qui attend**. Le jour où une tâche périodique apparaîtra, elle devra demander `ARRIERE_PLAN`
+> explicitement - c'est elle qui amplifierait un incident en insistant, pas un écran.
+
 ## Alternatives écartées
 
 - **Tout rejouer, sans classer.** Rejouerait un `4xx` (jamais valide au second essai) et, pire, un `POST` non idempotent (doublon serveur). Le tri par `ReponseApi` **et** l'arbitrage d'idempotence à l'appel l'excluent.
