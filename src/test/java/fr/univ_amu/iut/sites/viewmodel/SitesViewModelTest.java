@@ -25,6 +25,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.SynchronisationSites;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
@@ -66,7 +67,7 @@ class SitesViewModelTest {
         enregistreurDao.insert(new Enregistreur("1925492", "V1.01", null));
         liens = new LienVigieChiroDao(source);
         HorlogeFigee horloge = new HorlogeFigee(JOUR_FIXE);
-        service = new ServiceSites(siteDao, pointDao, passageDao, horloge);
+        service = new ServiceSites(siteDao, pointDao, passageDao, horloge, new PointCommuneDao(source));
         viewModel = new SitesViewModel(service, passageDao, horloge, liens, ID_USER, Optional.empty());
     }
 

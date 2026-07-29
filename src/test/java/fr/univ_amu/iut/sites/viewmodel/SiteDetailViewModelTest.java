@@ -24,6 +24,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
@@ -58,7 +59,7 @@ class SiteDetailViewModelTest {
         passageDao = new PassageDao(source);
         new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
         HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
-        service = new ServiceSites(siteDao, pointDao, passageDao, horloge);
+        service = new ServiceSites(siteDao, pointDao, passageDao, horloge, new PointCommuneDao(source));
         liens = new LienVigieChiroDao(source);
         viewModel =
                 new SiteDetailViewModel(service, pointDao, passageDao, horloge, new PortailVigieChiro(liens), liens);

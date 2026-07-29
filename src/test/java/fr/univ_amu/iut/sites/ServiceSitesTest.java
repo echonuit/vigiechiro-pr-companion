@@ -3,6 +3,7 @@ package fr.univ_amu.iut.sites;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -19,6 +20,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
@@ -45,6 +47,7 @@ class ServiceSitesTest {
     private ServiceSites service;
     private SiteDao siteDao;
     private PointDao pointDao;
+    private PointCommuneDao communeDao;
     private PassageDao passageDao;
     private EnregistreurDao enregistreurDao;
 
@@ -57,7 +60,8 @@ class ServiceSitesTest {
         pointDao = new PointDao(source);
         passageDao = new PassageDao(source);
         enregistreurDao = new EnregistreurDao(source);
-        service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(JOUR_FIXE));
+        communeDao = new PointCommuneDao(source);
+        service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(JOUR_FIXE), communeDao);
     }
 
     // --- Création de site (R1, protocole, R5) ---
@@ -396,5 +400,57 @@ class ServiceSitesTest {
 
         assertThat(service.compterSites()).isEqualTo(2L);
         assertThat(service.compterPoints()).isEqualTo(1L);
+    }
+
+    // --- Commune du point (#2791) : le GPS qui bouge invalide la commune mémorisée ---
+
+    @Test
+    @DisplayName("Modifier le GPS d'un point efface sa commune mémorisée (#2791)")
+    void gps_modifie_efface_la_commune() {
+        PointDEcoute point = pointAvecCommune();
+
+        service.modifierPoint(point.id(), point.idSite(), "A1", 43.6, 5.5, null);
+
+        assertThat(communeDao.pour(point.id()))
+                .as("le GPS a bougé : une commune absente vaut mieux qu'une commune fausse")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("Déplacer un point (glisser carte) efface sa commune mémorisée (#2791)")
+    void deplacement_efface_la_commune() {
+        PointDEcoute point = pointAvecCommune();
+
+        service.deplacerPoint(point.id(), 43.6, 5.5);
+
+        assertThat(communeDao.pour(point.id())).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Modifier un point sans toucher au GPS conserve sa commune (#2791)")
+    void edition_sans_gps_conserve_la_commune() {
+        PointDEcoute point = pointAvecCommune();
+
+        service.modifierPoint(point.id(), point.idSite(), "A2", 43.5297, 5.4474, "nouveau descriptif");
+
+        assertThat(communeDao.pour(point.id())).contains(new Commune("Aix-en-Provence", "13001"));
+    }
+
+    @Test
+    @DisplayName("Retirer le GPS d'un point efface sa commune (#2791)")
+    void gps_retire_efface_la_commune() {
+        PointDEcoute point = pointAvecCommune();
+
+        service.modifierPoint(point.id(), point.idSite(), "A1", null, null, null);
+
+        assertThat(communeDao.pour(point.id())).isEmpty();
+    }
+
+    /// Un point géolocalisé dont la commune est déjà résolue : le sujet des tests d'invalidation.
+    private PointDEcoute pointAvecCommune() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        PointDEcoute point = service.ajouterPoint(site.id(), "A1", 43.5297, 5.4474, null);
+        communeDao.definir(point.id(), new Commune("Aix-en-Provence", "13001"));
+        return point;
     }
 }

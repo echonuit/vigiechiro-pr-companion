@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -12,6 +13,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.time.LocalDate;
@@ -42,8 +44,8 @@ class ServiceSitesMockTest {
     @Test
     @DisplayName("R5 : si un carré identique existe déjà, le service refuse sans tenter d'insérer")
     void unicite_carre_refusee_sans_insertion() {
-        ServiceSites service =
-                new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 1, 1)));
+        ServiceSites service = new ServiceSites(
+                siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 1, 1)), mock(PointCommuneDao.class));
         when(siteDao.findByUtilisateur("u-1"))
                 .thenReturn(List.of(new Site(1L, "640380", null, Protocole.STANDARD, null, "2026-01-01", "u-1")));
 
@@ -56,8 +58,8 @@ class ServiceSitesMockTest {
     @Test
     @DisplayName("Carré libre : le service délègue l'insertion au DAO")
     void carre_libre_delegue_insertion() {
-        ServiceSites service =
-                new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 1, 1)));
+        ServiceSites service = new ServiceSites(
+                siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 1, 1)), mock(PointCommuneDao.class));
         Site attendu = new Site(7L, "640380", null, Protocole.STANDARD, null, "2026-01-01", "u-1");
         when(siteDao.findByUtilisateur("u-1")).thenReturn(List.of());
         when(siteDao.insert(ArgumentMatchers.any())).thenReturn(attendu);

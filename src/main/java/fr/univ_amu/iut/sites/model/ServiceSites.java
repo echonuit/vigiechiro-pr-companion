@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.validation.ValidateurCarre;
 import fr.univ_amu.iut.commun.model.validation.ValidateurCodePoint;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.util.List;
@@ -38,12 +39,15 @@ public class ServiceSites {
     private final PointDao pointDao;
     private final PassageDao passageDao;
     private final Horloge horloge;
+    private final PointCommuneDao communes;
 
-    public ServiceSites(SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
+    public ServiceSites(
+            SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge, PointCommuneDao communes) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.communes = Objects.requireNonNull(communes, "communes");
     }
 
     /// Crée un site de suivi (P1).
@@ -178,6 +182,12 @@ public class ServiceSites {
         }
         PointDEcoute aMettreAJour = new PointDEcoute(idPoint, code, latitude, longitude, description, idSite);
         pointDao.update(aMettreAJour);
+        if (!Objects.equals(existant.latitude(), latitude) || !Objects.equals(existant.longitude(), longitude)) {
+            // Le GPS a bougé : la commune mémorisée est périmée. L'effacement est local et immédiat
+            // (jamais bloquant) ; la résolution, elle, est relancée hors du fil JavaFX par les
+            // déclencheurs (#2791) — et à défaut, le rattrapage comblera.
+            communes.effacer(idPoint);
+        }
         return aMettreAJour;
     }
 
