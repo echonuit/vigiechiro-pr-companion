@@ -8,10 +8,13 @@ import fr.univ_amu.iut.commun.model.CiblePassage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.SuiviOperation;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.TexteCompteRendu;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import java.util.ArrayList;
@@ -35,9 +38,15 @@ import org.junit.jupiter.api.Test;
 class TraitementLotTest {
 
     /// Confirmateur doublé : capture ce qui a été annoncé, et répond ce qu'on lui dit de répondre.
+    ///
+    /// Il retient aussi le compte rendu **structuré**. Le repli textuel du port aplatit la structure, et
+    /// la sévérité disparaît dans l'aplatissement : une assertion sur le texte ne peut pas voir qu'une
+    /// annonce est passée d'AVERTISSEMENT à INFO. La mesure de mutation l'a dit - la conditionnelle qui
+    /// choisit la sévérité survivait.
     private static final class ConfirmateurDouble implements fr.univ_amu.iut.commun.view.Confirmateur {
         private final boolean reponse;
         private String question = "";
+        private CompteRendu structure;
 
         ConfirmateurDouble(boolean reponse) {
             this.reponse = reponse;
@@ -47,6 +56,12 @@ class TraitementLotTest {
         public boolean confirmer(String message) {
             question = message;
             return reponse;
+        }
+
+        @Override
+        public boolean confirmer(CompteRendu compteRendu) {
+            structure = compteRendu;
+            return confirmer(TexteCompteRendu.rendre(compteRendu));
         }
     }
 
@@ -67,6 +82,10 @@ class TraitementLotTest {
     private static final class SuiviDouble implements SuiviOperation {
         private final boolean annuleAvant;
 
+        /// Panne du suivi lui-même (pas d'un passage) : le lot n'a pas pu être mené. `null` = chemin
+        /// nominal.
+        private Throwable panne;
+
         SuiviDouble(boolean annuleAvant) {
             this.annuleAvant = annuleAvant;
         }
@@ -79,6 +98,10 @@ class TraitementLotTest {
                 Consumer<T> succes,
                 Runnable annule,
                 Consumer<Throwable> echec) {
+            if (panne != null) {
+                echec.accept(panne);
+                return;
+            }
             JetonAnnulation jeton = new JetonAnnulation();
             if (annuleAvant) {
                 jeton.annuler();
@@ -227,6 +250,72 @@ class TraitementLotTest {
                 .as("le fait vient du modèle, le geste de l'application : sans lui, vingt refus sans remède")
                 .contains("n'est pas connectée à Vigie-Chiro.")
                 .contains("menu ☰ > Se connecter à Vigie-Chiro");
+    }
+
+    @Test
+    @DisplayName("le compte rendu compte les NON TRAITÉS, pas seulement les réussis")
+    void compte_rendu_ventile_les_deux_nombres() {
+        // Trouvé par mutation : remplacer la soustraction par une addition survivait. Les tests ne
+        // lisaient que « N réussi(s) », jamais le second nombre - un lot de trois nuits dont une réussit
+        // pouvait annoncer « 1 réussi(s), 4 non traité(s) » sans que rien ne bronche.
+        NotificateurDouble notificateur = new NotificateurDouble();
+        ActionDouble action = new ActionDouble(List.of(2L), List.of(3L));
+
+        new TraitementLot(new ConfirmateurDouble(true), notificateur, new SuiviDouble(false))
+                .lancer(null, action, List.of(ligne(1, "A1"), ligne(2, "B2"), ligne(3, "C3")), () -> {});
+
+        assertThat(notificateur.message)
+                .as("des deux passages LANCÉS, un a réussi et un a échoué")
+                .contains("1 réussi(s), 1 non traité(s)");
+        assertThat(notificateur.message)
+                .as("l'écarté n'a jamais été lancé : il a été annoncé avant, il ne compte pas ici")
+                .doesNotContain("640380 / B2");
+    }
+
+    @Test
+    @DisplayName("l'annonce porte sa SÉVÉRITÉ : avertir quand rien ne sera fait, informer sinon")
+    void annonce_porte_sa_severite() {
+        // La sévérité disparaît dans la mise à plat textuelle : elle se lit sur la structure.
+        ConfirmateurDouble tout = new ConfirmateurDouble(false);
+        new TraitementLot(tout, new NotificateurDouble(), new SuiviDouble(false))
+                .lancer(null, new ActionDouble(List.of(), List.of()), List.of(ligne(1, "A1")), () -> {});
+
+        ConfirmateurDouble rien = new ConfirmateurDouble(false);
+        new TraitementLot(rien, new NotificateurDouble(), new SuiviDouble(false))
+                .lancer(null, new ActionDouble(List.of(1L), List.of()), List.of(ligne(1, "A1")), () -> {});
+
+        assertThat(tout.structure.constats().getFirst().severite()).isEqualTo(Severite.INFO);
+        assertThat(rien.structure.constats().getFirst().severite())
+                .as("rien ne sera fait : l'annonce doit alerter, pas informer")
+                .isEqualTo(Severite.AVERTISSEMENT);
+        assertThat(rien.structure.constats())
+                .as("le bloc des écartés s'ajoute quand il y en a, et lui seul les nomme")
+                .hasSize(2);
+        assertThat(tout.structure.constats())
+                .as("rien d'écarté : pas de bloc vide")
+                .hasSize(1);
+        // La question posée n'est pas la même selon qu'il reste quelque chose à faire : demander
+        // « Lancer le traitement ? » quand rien ne sera lancé ferait attendre un effet qui ne viendra pas.
+        assertThat(tout.structure.conclusion()).isEqualTo("Lancer le traitement ?");
+        assertThat(rien.structure.conclusion()).isEqualTo("Rien ne sera fait.");
+    }
+
+    @Test
+    @DisplayName("le lot qui ne peut pas être MENÉ le dit, au lieu de se taire")
+    void panne_du_suivi_est_dite() {
+        // Chemin sans aucune couverture avant la mesure de mutation : le rappel d'échec du suivi n'était
+        // jamais joué. Ce n'est pas l'échec d'un passage, c'est celui du lot entier.
+        NotificateurDouble notificateur = new NotificateurDouble();
+        SuiviDouble suivi = new SuiviDouble(false);
+        suivi.panne = new IllegalStateException("le fil de tâches est mort");
+        ActionDouble action = new ActionDouble(List.of(), List.of());
+
+        new TraitementLot(new ConfirmateurDouble(true), notificateur, suivi)
+                .lancer(null, action, List.of(ligne(1, "A1")), () -> {});
+
+        assertThat(action.executes).isEmpty();
+        assertThat(notificateur.message).contains("Le lot n'a pas pu être mené").contains("fil de tâches est mort");
+        assertThat(notificateur.niveau).isEqualTo(NiveauNotification.AVERTISSEMENT);
     }
 
     @Test
