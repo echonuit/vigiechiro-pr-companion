@@ -312,6 +312,25 @@ class PassageViewModelTest {
     }
 
     @Test
+    @DisplayName("#2581 : une nuit récupérée de Vigie-Chiro se supprime, et le verdict dit d'où elle vient")
+    void nuit_recuperee_se_supprime_et_dit_d_ou_elle_vient() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
+        when(service.estNuitRecuperee(ID_PASSAGE)).thenReturn(true);
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        assertThat(viewModel.suppressionPossibleProperty().get())
+                .as("nous ne l'avons pas déposée, nous l'avons reçue : l'enlever ne détruit rien d'officiel")
+                .isTrue();
+        // Le verdict, lui, reste figé : la nuit EST sur la plateforme, un verdict local divergent la
+        // désynchroniserait. Ce qui change, c'est ce que le motif raconte.
+        assertThat(viewModel.verificationDisponibleProperty().get()).isFalse();
+        assertThat(viewModel.motifBlocageVerificationProperty().get())
+                .contains("vient de Vigie-Chiro")
+                .doesNotContain("cette nuit est déposée");
+    }
+
+    @Test
     @DisplayName("Le renommage est possible sur tout statut sauf Déposé ou Dépôt en cours")
     void renommage_possible_sauf_si_depose_ou_en_cours() {
         // Renommer après dépôt divergerait du serveur (le nom des fichiers y est l'identité) : bouton grisé.
