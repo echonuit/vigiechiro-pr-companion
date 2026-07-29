@@ -63,7 +63,8 @@ public class MigrationSchema {
         "V34__passage_opportuniste.sql",
         "V35__site_tiers.sql",
         "V36__taxon_prioritaire_pna.sql",
-        "V37__statut_recupere.sql"
+        "V37__statut_recupere.sql",
+        "V38__commune_du_point.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";

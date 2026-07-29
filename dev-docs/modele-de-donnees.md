@@ -83,7 +83,7 @@ accents), **SQL** (anglais).
 |---|---|---|
 | C1 · Utilisateur | `Utilisateur` | `user` |
 | C2 · Site de suivi | `Site` | `monitoring_site` |
-| C3 · Point d'écoute | `PointDEcoute` | `listening_point` |
+| C3 · Point d'écoute | `PointDEcoute` | `listening_point` (+ table latérale `point_commune`, V38) |
 | C4 · Enregistreur | `Enregistreur` | `recorder` |
 | C4bis · Micro | *(microphone)* | `microphone` |
 | C5 · Passage | `Passage` | `passage` |
@@ -100,6 +100,15 @@ accents), **SQL** (anglais).
 
 S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisite) et `schema_version`
 (suivi des [migrations](persistance.md#les-migrations-de-schema)).
+
+!!! note "Commune d'un point (V38, #2791)"
+    Depuis `V38__commune_du_point.sql`, la table latérale `point_commune` porte la commune d'un
+    point d'écoute (`commune_name` + `commune_insee`), dérivée une fois de ses coordonnées GPS via
+    l'API Géo puis persistée. L'**absence de ligne** dit « commune non résolue » (point sans GPS,
+    hors ligne à la création) : le rattrapage la comblera. La commune s'attache au **point**, jamais
+    au carré - un carré de 10 km peut chevaucher plusieurs communes. Département et région ne sont
+    pas stockés : ils se dérivent du code INSEE via `RegionsFrancaises` (ADR 2791, alignée sur
+    l'ADR 2351).
 
 !!! note "Ancrage plateforme et certitude observateur (V21, #1139)"
     Depuis `V21__observation_ancrage_certitude.sql`, la table `observation` porte trois colonnes
