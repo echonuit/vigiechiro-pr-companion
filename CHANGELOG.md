@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.125.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.124.0...v2.125.0) (2026-07-29)
+
+
+### Features
+
+* **validation:** la commune rejoint la projection audio et l'export CSV (lot 0, exposition) ([#2837](https://github.com/echonuit/vigiechiro-pr-companion/issues/2837)) ([7b5285e](https://github.com/echonuit/vigiechiro-pr-companion/commit/7b5285eb887092f67e0e1ac6579adc40d4a4619c)), closes [#2794](https://github.com/echonuit/vigiechiro-pr-companion/issues/2794)
+
 # [2.124.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.123.0...v2.124.0) (2026-07-29)
 
 
