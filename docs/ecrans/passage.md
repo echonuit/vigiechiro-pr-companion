@@ -17,7 +17,9 @@ De haut en bas :
   pas lié (la participation est créée à l'import connecté, ou au premier dépôt).
 - **Bandeau d'identité** : date et plage horaire, enregistreur, **statut** et **verdict**.
 - **Statut du workflow** : une frise qui situe la nuit dans sa progression
-  (Importé, Transformé, Vérifié, Prêt à déposer, Dépôt en cours, Déposé).
+  (Importé, Transformé, Vérifié, Prêt à déposer, Dépôt en cours, Déposé). Une nuit **récupérée** de
+  Vigie-Chiro n'a pas de frise : elle n'a parcouru aucune de ces étapes, elle est arrivée toute faite
+  de la plateforme. Son bandeau porte simplement « Récupéré ».
 - **Résumé de la nuit** : volumes (bruts et transformés), durée enregistrée, nombre de séquences.
 - **Cartes d'actions** : Vérifier l'enregistrement, Diagnostic matériel, Préparer le dépôt,
   Sons & validation et [Activité de la nuit](activite.md). Une seule carte est mise en avant :
@@ -60,9 +62,9 @@ effectivement déposé.
 
 Sur une nuit **récupérée** de Vigie-Chiro, en revanche, le bouton est là mais **désactivé** : il n'y a
 pas de dépôt à annuler ici. C'est la plateforme qui détient cette nuit, et aucun geste pris sur votre
-machine ne le change. Le bouton reste visible parce que la pastille annonce « Déposé » : son absence
-pure et simple vous laisserait chercher. Le survoler explique la situation et indique le bon geste,
-**Supprimer**, décrit juste en dessous.
+machine ne le change. Le bouton reste visible plutôt que de disparaître, parce que la nuit *est* bien
+déposée là-bas : son absence pure et simple vous laisserait chercher. Le survoler explique la situation
+et indique le bon geste, **Supprimer**, décrit juste en dessous.
 
 (Ce n'est pas qu'une question de vocabulaire : annuler ce dépôt ramènerait la nuit en « Prêt à
 déposer », c'est-à-dire prête à être envoyée une seconde fois sur Vigie-Chiro, où elle est déjà.)
@@ -72,18 +74,29 @@ déposer », c'est-à-dire prête à être envoyée une seconde fois sur Vigie-C
 Une nuit **déposée** ne se supprime pas : c'est une donnée officielle que vous avez transmise à la
 plateforme, l'application refuse de la détruire depuis l'écran.
 
-Une nuit **récupérée** de Vigie-Chiro porte pourtant le même statut « Déposé », et il est exact - la
-participation existe bien là-bas. Mais ce n'est pas vous qui l'avez déposée : la synchronisation vous l'a
-rapportée. La supprimer enlève une **copie locale**, rien de plus. La participation reste où elle est, et
-une prochaine synchronisation la rapatriera si vous la voulez de nouveau.
+Une nuit **récupérée** de Vigie-Chiro porte, elle, son propre statut : **« Récupéré »**, sur fond violet.
+Elle est bien sur la plateforme - la participation existe là-bas - mais ce n'est pas vous qui l'y avez
+mise : la synchronisation vous l'a rapportée. La supprimer enlève une **copie locale**, rien de plus. La
+participation reste où elle est, et une prochaine synchronisation la rapatriera si vous la voulez de
+nouveau.
+
+!!! note "Pourquoi un statut à part"
+    Jusqu'à récemment ces nuits portaient « Déposé », ce qui était exact et trompeur à la fois : elles
+    héritaient alors de toutes les protections d'une nuit que **vous** aviez déposée, y compris celles
+    qui n'avaient aucun sens pour elles. Un statut distinct laisse chaque règle décider séparément - et
+    c'est ainsi que Supprimer s'est ouvert pendant que Vérifier restait fermé.
 
 **Supprimer** est donc actif sur ces nuits-là. Auparavant, le seul recours était **Annuler le dépôt** puis
 **Supprimer** : un détour qui vous faisait affirmer quelque chose de faux - la nuit *est* déposée, et
 aucun geste pris ici ne le change - pour obtenir le droit de nettoyer votre base.
 
 La **vérification**, elle, reste fermée sur ces nuits, et pour une bonne raison : leur verdict se décide
-sur Vigie-Chiro, où elles vivent. Le motif affiché le dit maintenant, au lieu de vous annoncer que vous
-avez déposé une nuit que vous n'avez jamais déposée.
+sur Vigie-Chiro, où elles vivent. Le motif affiché le dit, au lieu de vous annoncer que vous avez déposé
+une nuit que vous n'avez jamais déposée.
+
+Le **renommage** (année et n° de passage) reste verrouillé lui aussi : ces valeurs sont l'identité que le
+serveur donne à la nuit. Et **Sons & validation** reste ouvert : les observations sont là, vous pouvez
+les écouter et les valider dès maintenant, sans attendre que l'audio revienne.
 
 ## Le volume des bruts
 
