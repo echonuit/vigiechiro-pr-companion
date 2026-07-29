@@ -150,7 +150,14 @@ sur la [`SourceDeDonnees`](https://github.com/echonuit/vigiechiro-pr-companion/b
 Le cœur du domaine est l'**agrégat « nuit de capture »** (feature `passage`), qui avance dans un
 **workflow à états** :
 
-`IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (<!--inv:etats-workflow-->6<!--/inv--> états, cf. `StatutWorkflow`)
+`IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE`
+(<!--inv:etats-workflow-->7<!--/inv--> états, cf. `StatutWorkflow`)
+
+Le septième, `RECUPERE`, est **hors de cette file** : c'est une nuit que la synchronisation a
+rapatriée de Vigie-Chiro (#2581), donc qui n'a franchi aucune de ces étapes. Sa seule suite est
+`DEPOSE`, quand la réactivation lui rend son audio. Voir
+[ADR 2581](decisions/2581-un-etat-qui-decide-de-l-affichage-se-declare.md) pour la règle qui
+distingue un état **observé** d'un état **déclaré**.
 
 Le détail des entités, des tables et de la correspondance avec le **MCD du brief** est sur
 [Modèle de données et domaine](modele-de-donnees.md) ; le **mécanisme** d'accès (DAO, transactions,
