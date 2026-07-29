@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.NuitRecupereeDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -88,7 +89,8 @@ class ServicePassageTest {
                 new SessionDao(source),
                 new SequenceDao(source),
                 new ServiceDisponibiliteAudio(new SessionDao(source), new SequenceDao(source), new Workspace(dossier)),
-                opportunistesDao);
+                opportunistesDao,
+                new NuitRecupereeDao(source));
         rattachement = new ServiceRattachement(
                 passageDao,
                 new SessionDao(source),

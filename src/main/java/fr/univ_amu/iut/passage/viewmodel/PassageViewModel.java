@@ -203,13 +203,24 @@ public class PassageViewModel {
         etapes.setAll(EtapesWorkflow.construire(detail.statut()));
         boolean nuitTransformee = detail.statut().ordinal() >= StatutWorkflow.TRANSFORME.ordinal();
         boolean nuitDeposee = detail.statut() == StatutWorkflow.DEPOSE;
+        // Déposée par NOUS, ou reçue de la plateforme ? Le statut ne distingue pas les deux (#2581), et
+        // les gardes de « Déposé » ne disent pas toutes quelque chose de juste sur une nuit récupérée.
+        boolean nuitRecuperee = nuitDeposee && service.estNuitRecuperee(idPassage);
         // #1514 : la vérification reste possible tant que la nuit n'est pas déposée (une nuit déposée a un
         // verdict figé, cf. ServiceQualification.enregistrerVerdict) — on grise donc la carte au dépôt.
         verificationDisponible.set(nuitTransformee && !nuitDeposee);
+        // Le verdict reste figé sur une nuit récupérée - elle EST sur la plateforme, et un verdict local
+        // divergent la désynchroniserait tout autant. Mais le motif d'origine lui fait dire « cette nuit
+        // est déposée » à quelqu'un qui ne l'a jamais déposée : il dit désormais d'où elle vient.
         motifBlocageVerification.set(
-                nuitDeposee
-                        ? "🔒 Verdict figé : cette nuit est déposée, son verdict ne change plus."
-                        : nuitTransformee ? "" : "🔒 La vérification sera possible une fois la nuit transformée.");
+                nuitRecuperee
+                        ? "🔒 Cette nuit vient de Vigie-Chiro, où elle est déjà déposée : son verdict s'y"
+                                + " décide, pas ici."
+                        : nuitDeposee
+                                ? "🔒 Verdict figé : cette nuit est déposée, son verdict ne change plus."
+                                : nuitTransformee
+                                        ? ""
+                                        : "🔒 La vérification sera possible une fois la nuit transformée.");
         validationVerrouillee.set(detail.statut() != StatutWorkflow.DEPOSE);
         // Accès à l'écran de dépôt (M-Lot) dès le passage vérifié ET **même une fois déposé** (#…) : on doit
         // pouvoir y revenir pour consulter les archives ou les supprimer, sans avoir à annuler le dépôt.
@@ -218,7 +229,11 @@ public class PassageViewModel {
         // Suppression bloquée sur un passage déposé (le service la refuse) : on grise le bouton en amont au
         // lieu de laisser l'utilisateur découvrir le refus après la confirmation. Il faut d'abord annuler
         // le dépôt.
-        suppressionPossible.set(detail.statut() != StatutWorkflow.DEPOSE);
+        // Sauf une nuit récupérée (#2581) : nous ne l'avons pas déposée, nous l'avons reçue. La supprimer
+        // enlève une copie locale, pas une donnée officielle - la participation reste sur la plateforme.
+        // Sans cette exception, le seul recours était « Annuler le dépôt » puis « Supprimer », qui fait
+        // affirmer un faux : la nuit EST déposée, et aucun geste local ne le change.
+        suppressionPossible.set(detail.statut() != StatutWorkflow.DEPOSE || nuitRecuperee);
         // Renommage (rattachement) bloqué dès qu'un passage est déposé ou en cours de dépôt : son nom est
         // l'identité de ses fichiers côté serveur, le service refuse alors le renommage. Gating amont.
         renommagePossible.set(

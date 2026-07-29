@@ -58,6 +58,24 @@ votre travail de validation, il rouvre seulement l'étape de dépôt (par exempl
 avant de redéposer). Le bouton n'apparaît que lorsqu'il a un sens, c'est-à-dire sur un passage
 effectivement déposé.
 
+## Supprimer une nuit venue de Vigie-Chiro
+
+Une nuit **déposée** ne se supprime pas : c'est une donnée officielle que vous avez transmise à la
+plateforme, l'application refuse de la détruire depuis l'écran.
+
+Une nuit **récupérée** de Vigie-Chiro porte pourtant le même statut « Déposé », et il est exact - la
+participation existe bien là-bas. Mais ce n'est pas vous qui l'avez déposée : la synchronisation vous l'a
+rapportée. La supprimer enlève une **copie locale**, rien de plus. La participation reste où elle est, et
+une prochaine synchronisation la rapatriera si vous la voulez de nouveau.
+
+**Supprimer** est donc actif sur ces nuits-là. Auparavant, le seul recours était **Annuler le dépôt** puis
+**Supprimer** : un détour qui vous faisait affirmer quelque chose de faux - la nuit *est* déposée, et
+aucun geste pris ici ne le change - pour obtenir le droit de nettoyer votre base.
+
+La **vérification**, elle, reste fermée sur ces nuits, et pour une bonne raison : leur verdict se décide
+sur Vigie-Chiro, où elles vivent. Le motif affiché le dit maintenant, au lieu de vous annoncer que vous
+avez déposé une nuit que vous n'avez jamais déposée.
+
 ## Le volume des bruts
 
 Le **Résumé de la nuit** affiche le **volume des bruts** : la copie des enregistrements d'origine, si

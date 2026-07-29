@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model.dao;
 
+import fr.univ_amu.iut.commun.model.dao.NuitRecupereeDao;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.importation.model.PassageExistant;

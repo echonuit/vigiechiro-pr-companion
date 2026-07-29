@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.model.dao.NuitRecupereeDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -70,6 +71,11 @@ public class ServicePassage {
     /// `passage_opportuniste` porte ce fait hors du record [Passage].
     private final PassageOpportunisteDao opportunistes;
 
+    /// Reconnaissance d'une nuit **récupérée de Vigie-Chiro** (#2581) : rapatriée par la synchro, jamais
+    /// importée ici. Elle porte le statut « Déposé », qui est vrai, mais dont toutes les gardes ne le sont
+    /// pas pour elle.
+    private final NuitRecupereeDao nuitsRecuperees;
+
     public ServicePassage(
             PassageDao passageDao,
             MoteurWorkflowPassage moteur,
@@ -77,7 +83,8 @@ public class ServicePassage {
             SessionDao sessionDao,
             SequenceDao sequenceDao,
             ServiceDisponibiliteAudio disponibilite,
-            PassageOpportunisteDao opportunistes) {
+            PassageOpportunisteDao opportunistes,
+            NuitRecupereeDao nuitsRecuperees) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.moteur = Objects.requireNonNull(moteur, "moteur");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
@@ -85,6 +92,7 @@ public class ServicePassage {
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
         this.disponibilite = Objects.requireNonNull(disponibilite, "disponibilite");
         this.opportunistes = Objects.requireNonNull(opportunistes, "opportunistes");
+        this.nuitsRecuperees = Objects.requireNonNull(nuitsRecuperees, "nuitsRecuperees");
         this.unicite = new UniciteQuadruplet(passageDao);
     }
 
@@ -388,13 +396,30 @@ public class ServicePassage {
     /// **Refuse** un passage déposé : une nuit déposée est une donnée officielle transmise à
     /// Vigie-Chiro, on ne la détruit pas depuis l'IHM.
     ///
-    /// @throws RegleMetierException si le passage est introuvable ou déjà déposé
+    /// **Sauf une nuit récupérée** (#2581) : celle-là, nous ne l'avons pas déposée, nous l'avons reçue.
+    /// La supprimer ne détruit aucune donnée officielle - la participation reste sur la plateforme, et une
+    /// prochaine synchronisation la rapatriera. C'est une copie locale qu'on enlève, pas un dépôt qu'on
+    /// annule. Le détour existant (« Annuler le dépôt » puis « Supprimer ») demandait à l'utilisateur
+    /// d'affirmer quelque chose de faux pour obtenir le droit de nettoyer sa base.
+    ///
+    /// @throws RegleMetierException si le passage est introuvable, ou déposé sans être une nuit récupérée
     public void supprimer(Long idPassage) {
         Passage passage = charger(idPassage);
-        if (passage.statutWorkflow() == StatutWorkflow.DEPOSE) {
+        if (passage.statutWorkflow() == StatutWorkflow.DEPOSE && !estNuitRecuperee(idPassage)) {
             throw new RegleMetierException("Suppression refusée : un passage déposé ne peut pas être supprimé.");
         }
         passageDao.delete(idPassage);
+    }
+
+    /// Cette nuit vient-elle de la plateforme sans que rien n'y ait été fait ici (#2581) ?
+    ///
+    /// Une nuit **récupérée** porte le statut « Déposé », et c'est vrai : la participation existe sur
+    /// Vigie-Chiro. Mais les gardes de ce statut protègent une nuit **que nous avons déposée**, et elles
+    /// ne disent pas toutes quelque chose de juste sur celle-ci.
+    ///
+    /// L'état est **observé**, pas déclaré (ADR 0048) : voir [NuitRecupereeDao] pour le critère.
+    public boolean estNuitRecuperee(Long idPassage) {
+        return nuitsRecuperees.estRecuperee(idPassage);
     }
 
     /// **Annule le dépôt** d'un passage : le repasse de [StatutWorkflow#DEPOSE] à

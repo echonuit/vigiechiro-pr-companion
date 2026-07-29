@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.NuitRecupereeDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -86,7 +87,8 @@ class ServicePassageDetailTest {
                 sessionDao,
                 sequenceDao,
                 new ServiceDisponibiliteAudio(sessionDao, sequenceDao, new Workspace(dossier)),
-                new PassageOpportunisteDao(source));
+                new PassageOpportunisteDao(source),
+                new NuitRecupereeDao(source));
         conditions = new ServiceConditionsPassage(
                 passageDao,
                 new MaterielMicroDao(source),
