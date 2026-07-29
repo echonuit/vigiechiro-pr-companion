@@ -37,8 +37,8 @@ jobs:
   mesurer:
     name: Mutation sur le dépôt
     runs-on: ubuntu-latest
-    # Le dépôt entier prend des heures au premier tour ; l'historique PIT (cache ci-dessous) raccourcit
-    # les suivants. La borne évite qu'un blocage consomme la journée.
+    # Chaque lundi repart de zéro (voir « analyse incrémentale » ci-dessous) : le dépôt entier prend des
+    # heures. La borne évite qu'un blocage consomme la journée.
     timeout-minutes: 300
 
     steps:
@@ -52,36 +52,25 @@ jobs:
           check-latest: false
           cache: maven
 
-      # Analyse incrémentale : PIT relit son historique et ne rejoue que ce qui a changé. Sans lui,
-      # chaque lundi repartirait de zéro pour des heures, et le job finirait par être désactivé.
-      #
-      # ⚠️ Les options du GREFFON sont `historyInputFile`/`historyOutputFile`. Les noms du coeur PIT
-      # (`historyInputLocation`, visibles dans ses logs) ne sont pas des propriétés Maven : passées ici,
-      # elles seraient ignorées EN SILENCE et le cache ne servirait jamais. Vérifié dans le descripteur
-      # du greffon, pas déduit du log.
-      - name: Restaurer l'historique PIT
-        uses: actions/cache@v4
-        with:
-          path: target/pit-history
-          key: pit-history-${{ github.run_id }}
-          restore-keys: |
-            pit-history-
-
       - name: Mesurer
         id: mesure
         env:
           PERIMETRE: ${{ inputs.perimetre || 'fr.univ_amu.iut.*' }}
         run: |
           set -euo pipefail
-          mkdir -p target/pit-history
           # Headless : les propriétés vivent dans le profil `mutation` du pom (le minion n'hérite pas
           # des systemPropertyVariables de surefire). Ne pas les repasser ici - `-DjvmArgs` REMPLACE
           # la liste du profil au lieu de s'y ajouter.
+          #
+          # ⚠️ PAS d'analyse incrémentale. `historyInputFile`/`historyOutputFile` existent bien dans le
+          # descripteur du greffon Maven - c'est ce qui avait été vérifié - mais depuis PIT 1.25.x le
+          # STOCKAGE de l'historique est un greffon **commercial** (arcmutate). Les passer sans lui ne
+          # les fait pas ignorer : PIT **refuse de démarrer** sur « History has been enabled but no
+          # history plugin has been installed/activated », et le job entier échoue en 25 secondes.
+          # Reproductible en local sur une seule classe. Conséquence (mesure intégrale chaque lundi) : #2768.
           ./mvnw -B -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
             -DtargetClasses="$PERIMETRE" \
-            -DtargetTests="fr.univ_amu.iut.*" \
-            -DhistoryInputFile=target/pit-history/pit.history \
-            -DhistoryOutputFile=target/pit-history/pit.history
+            -DtargetTests="fr.univ_amu.iut.*"
 
       - name: Publier le bilan dans le résumé du job
         if: always()
