@@ -130,6 +130,7 @@ nav:
     - 2354 · Le réessai réseau est gradué, jamais aveugle: decisions/2354-le-reessai-reseau-est-gradue-jamais-aveugle-toujours-jittere.md
     - 2433 · Un dossier de transformés s'importe par référence: decisions/2433-un-dossier-de-transformes-s-importe-par-reference.md
     - 2385 · La doc chiffrée est adossée au code: decisions/2385-la-doc-chiffree-est-adossee-au-code.md
+    - 2791 · La commune se dérive du GPS et s'attache au point: decisions/2791-la-commune-se-derive-du-gps-et-s-attache-au-point.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
