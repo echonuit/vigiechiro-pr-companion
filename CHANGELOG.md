@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.122.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.122.0...v2.122.1) (2026-07-29)
+
+
+### Bug Fixes
+
+* **lot:** la chaîne de dépôt, l'analyse et le solde suivent une nuit récupérée ([#2815](https://github.com/echonuit/vigiechiro-pr-companion/issues/2815)) ([2daf46a](https://github.com/echonuit/vigiechiro-pr-companion/commit/2daf46a0adb1035ec40a41faac8f8f98f1f0a502)), closes [#982](https://github.com/echonuit/vigiechiro-pr-companion/issues/982) [#2581](https://github.com/echonuit/vigiechiro-pr-companion/issues/2581) [#2771](https://github.com/echonuit/vigiechiro-pr-companion/issues/2771)
+
 # [2.122.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.121.0...v2.122.0) (2026-07-29)
 
 
