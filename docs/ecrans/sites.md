@@ -43,6 +43,13 @@ simplement reliés - vos données locales ne sont **jamais écrasées**. C'est l
 que celle exécutée automatiquement à la connexion ; un message sous le bandeau récapitule ce qui a
 été récupéré (ou signale qu'il n'y avait rien à récupérer, par exemple hors connexion).
 
+Ce message dit **chaque nature séparément** - sites, nuits, taxons - et **sur combien** : « 12 nuit(s)
+récupérée(s) sur 55, dont 40 en attente d'analyse Vigie-Chiro ». Un compteur seul serait exact et
+pourtant muet sur la part qui reste à venir.
+
+Si l'une des natures n'a pas pu être récupérée, elle le dit **à côté des autres** et non à leur place :
+une synchronisation où les sites sont à jour et les nuits injoignables vous montre les deux.
+
 Il rapatrie aussi vos **nuits déjà déposées** sur la plateforme, avec leur **identité** : date, point,
 numéro de passage, mais également l'**enregistreur**, la **météo** et le **micro**. Vous retrouvez donc
 votre historique lisible dès la première synchronisation - c'est ce qui permet, après une réinstallation
