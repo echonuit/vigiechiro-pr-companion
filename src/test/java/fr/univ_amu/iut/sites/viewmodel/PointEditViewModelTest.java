@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -12,8 +13,10 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
@@ -36,6 +39,7 @@ class PointEditViewModelTest {
 
     private ServiceSites service;
     private PointDao pointDao;
+    private PointCommuneDao communeDao;
     private PointEditViewModel viewModel;
     private Site site;
 
@@ -47,9 +51,11 @@ class PointEditViewModelTest {
         SiteDao siteDao = new SiteDao(source);
         pointDao = new PointDao(source);
         PassageDao passageDao = new PassageDao(source);
-        service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.now()));
+        communeDao = new PointCommuneDao(source);
+        service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.now()), communeDao);
         // Contrôle du carré STOC absent (#733) : le cas hors connexion, où la saisie doit rester entière.
-        viewModel = new PointEditViewModel(service, Optional.empty());
+        viewModel = new PointEditViewModel(
+                service, new ServiceCommunes(pointDao, communeDao, position -> Optional.empty()), Optional.empty());
         site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
     }
 
@@ -222,5 +228,55 @@ class PointEditViewModelTest {
                 .get()
                 .extracting(PointDEcoute::code)
                 .isEqualTo("B1");
+    }
+
+    // --- Résolution de la commune après enregistrement (#2791) ---
+
+    @Test
+    @DisplayName("Après un enregistrement réussi, resoudreCommune mémorise la commune du point (#2791)")
+    void resoudre_commune_apres_enregistrement() {
+        PointEditViewModel vm = vmResolvantAix();
+        vm.preparerCreation(site);
+        vm.codeProperty().set("A1");
+        vm.latitudeProperty().set("43.5297");
+        vm.longitudeProperty().set("5.4474");
+        assertThat(vm.enregistrer()).isTrue();
+
+        vm.resoudreCommune();
+
+        Long idPoint = pointDao.findBySite(site.id()).getFirst().id();
+        assertThat(communeDao.pour(idPoint)).contains(new Commune("Aix-en-Provence", "13001"));
+    }
+
+    @Test
+    @DisplayName("resoudreCommune sans enregistrement préalable : sans effet, sans erreur (#2791)")
+    void resoudre_commune_sans_enregistrement() {
+        viewModel.preparerCreation(site);
+
+        viewModel.resoudreCommune();
+
+        assertThat(communeDao.idsResolus()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Un enregistrement refusé ne donne aucune cible à resoudreCommune (#2791)")
+    void resoudre_commune_apres_refus() {
+        PointEditViewModel vm = vmResolvantAix();
+        vm.preparerCreation(site);
+        vm.codeProperty().set("a1"); // code invalide (R2) : l'enregistrement est refusé
+
+        assertThat(vm.enregistrer()).isFalse();
+        vm.resoudreCommune();
+
+        assertThat(communeDao.idsResolus()).isEmpty();
+    }
+
+    /// Un ViewModel dont le résolveur répond toujours Aix-en-Provence : isole le déclencheur du réseau.
+    private PointEditViewModel vmResolvantAix() {
+        return new PointEditViewModel(
+                service,
+                new ServiceCommunes(
+                        pointDao, communeDao, position -> Optional.of(new Commune("Aix-en-Provence", "13001"))),
+                Optional.empty());
     }
 }
