@@ -314,8 +314,7 @@ class PassageViewModelTest {
     @Test
     @DisplayName("#2581 : une nuit récupérée de Vigie-Chiro se supprime, et le verdict dit d'où elle vient")
     void nuit_recuperee_se_supprime_et_dit_d_ou_elle_vient() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
-        when(service.estNuitRecuperee(ID_PASSAGE)).thenReturn(true);
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.RECUPERE));
 
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
 
@@ -333,8 +332,7 @@ class PassageViewModelTest {
     @Test
     @DisplayName("#2771 : « Annuler le dépôt » reste visible sur une nuit récupérée, mais désactivé et expliqué")
     void annuler_depot_visible_mais_bloque_sur_une_nuit_recuperee() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
-        when(service.estNuitRecuperee(ID_PASSAGE)).thenReturn(true);
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.RECUPERE));
 
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
 
@@ -359,6 +357,29 @@ class PassageViewModelTest {
         assertThat(viewModel.annulationDepotPertinenteProperty().get()).isTrue();
         assertThat(viewModel.annulationDepotDisponibleProperty().get()).isTrue();
         assertThat(viewModel.motifBlocageAnnulationDepotProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2773 : les gardes de « Déposé » couvrent toujours une nuit récupérée, qui n'y est plus")
+    void les_gardes_suivent_la_nuit_hors_de_depose() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.RECUPERE));
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        // Poser le statut au lot 1 a sorti ces nuits de « Déposé ». Toute garde écrite « sauf quand
+        // c'est déposé » aurait donc cessé de les couvrir, EN SILENCE - aucune n'aurait rougi.
+        assertThat(viewModel.verificationDisponibleProperty().get())
+                .as("le verdict se décide sur Vigie-Chiro : la vérification ne se rouvre pas")
+                .isFalse();
+        assertThat(viewModel.renommagePossibleProperty().get())
+                .as("son année et son n° sont l'identité du serveur : le renommage reste verrouillé")
+                .isFalse();
+        assertThat(viewModel.validationVerrouilleeProperty().get())
+                .as("« Sons & validation » reste ouvert sur une nuit récupérée (#2555)")
+                .isFalse();
+        assertThat(viewModel.depotDisponibleProperty().get())
+                .as("on peut revenir à M-Lot consulter ses archives")
+                .isTrue();
     }
 
     @Test
