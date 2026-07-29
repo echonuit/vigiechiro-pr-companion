@@ -20,12 +20,10 @@ import java.util.Objects;
 public class SortieDeRecuperation {
 
     private final PassageDao passageDao;
-    private final MoteurWorkflowPassage moteur;
 
     @Inject
-    public SortieDeRecuperation(PassageDao passageDao, MoteurWorkflowPassage moteur) {
+    public SortieDeRecuperation(PassageDao passageDao) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
-        this.moteur = Objects.requireNonNull(moteur, "moteur");
     }
 
     /// Fait sortir la nuit de l'état « Récupéré », **si elle y était et si son audio est revenu**.
@@ -46,9 +44,13 @@ public class SortieDeRecuperation {
                 .findById(idPassage)
                 .filter(p -> p.statutWorkflow() == StatutWorkflow.RECUPERE)
                 .ifPresent(p -> {
-                    // Le moteur reste juge de la transition, même quand l'appelant la croit évidente : c'est lui
-                    // qui porte la règle « Récupéré n'a qu'une suite ».
-                    moteur.exigerTransitionAutorisee(p.statutWorkflow(), StatutWorkflow.DEPOSE);
+                    // Pas d'appel au moteur ici. Il y en avait un, censé « rester juge de la transition » -
+                    // mais le filtre au-dessus garantit déjà que celle-ci est « Récupéré → Déposé », la seule
+                    // que le moteur autorise. Il ne pouvait donc JAMAIS refuser : PIT l'a montré en le
+                    // supprimant sans qu'aucun test bouge. Une garde qui ne peut pas se déclencher n'est pas
+                    // une garde, c'est un commentaire qui coûte un appel - et qui laisse croire à une
+                    // vérification là où il n'y en a pas. La règle vit dans MoteurWorkflowPassage, et
+                    // MoteurWorkflowPassageTest la tient.
                     passageDao.update(new Passage(
                             p.id(),
                             p.numeroPassage(),

@@ -1,6 +1,6 @@
 # ADR 0016 — La synchro rapatrie les nuits en squelettes, hydratés à la demande
 
-- **Statut** : Accepté — 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814), [ADR 0019](0019-ancrage-acquis-quand-il-sert.md) (#1838) et [ADR 2554](2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md) (EPIC #2554)
+- **Statut** : Accepté — 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814), [ADR 2581](2581-un-etat-qui-decide-de-l-affichage-se-declare.md) (#2581), [ADR 0019](0019-ancrage-acquis-quand-il-sert.md) (#1838) et [ADR 2554](2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md) (EPIC #2554)
 - **Chantier** : EPIC #1662 (refonte de la récupération d'une nuit)
 - **Vérification** : humaine — le rapatriement en squelettes hydratés à la demande est un comportement de synchro, non observable par un motif statique
 
@@ -18,6 +18,14 @@
 > pagination `donnees` ; le CSV (#1565) coûte deux GET. L'alternative « hydrater en place », écartée ici,
 > est **retenue** sur le chemin de la réactivation (un écran est ouvert dessus, et un squelette porte des
 > saisies manuelles). Voir [ADR 2554](2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md).
+
+> [!NOTE]
+> **Amendement (ADR 2581)** : le squelette n'est plus créé « passage **déposé** et archivé ». Il porte
+> désormais son propre statut, `RECUPERE` (« Récupéré »), hors de la file linéaire du workflow — il n'a
+> franchi aucune de ses étapes. Le statut « Déposé » recouvrait deux situations dont les gardes, les
+> gestes et l'affichage diffèrent : « nous avons déposé cette nuit » et « elle vient du serveur ». La
+> conséquence « un squelette est un état **bénin** pour l'audit » tient toujours, et l'audit n'a d'ailleurs
+> rien eu à changer. Voir [ADR 2581](2581-un-etat-qui-decide-de-l-affichage-se-declare.md).
 
 > [!NOTE]
 > **Amendement (ADR 0019)** : la réactivation n'est plus le **seul** moment où l'ancrage s'acquiert. La

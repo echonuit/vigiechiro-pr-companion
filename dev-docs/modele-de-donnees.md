@@ -19,7 +19,8 @@ la vérification, et — après dépôt — des **résultats d'identification** 
 classées par **taxon**).
 
 C'est cet agrégat qui avance dans le [workflow à états](patterns.md#machine-a-etats-moteurworkflowpassage)
-`Importé → … → Déposé`.
+`Importé → … → Déposé`, plus `Récupéré` pour les nuits rapatriées de Vigie-Chiro, qui n'entrent
+pas dans cette file (#2581).
 
 Au **niveau conceptuel**, on raisonne avec le **MCD Merise** (la notation enseignée en France) :
 **entités** (identifiant souligné), **associations** porteuses d'un verbe, et **cardinalités

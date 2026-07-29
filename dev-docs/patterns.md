@@ -1418,7 +1418,19 @@ stateDiagram-v2
     VERIFIE --> PRET_A_DEPOSER
     PRET_A_DEPOSER --> DEPOSE
     DEPOSE --> [*]
+    [*] --> RECUPERE
+    RECUPERE --> DEPOSE
 ```
+
+**Une entrée hors file** (#2581). `RECUPERE` est le statut d'une nuit **rapatriée** de Vigie-Chiro : elle
+n'a franchi aucune des étapes ci-dessus, elle est arrivée par une autre porte. Elle est donc **hors de
+`ORDRE`**, et le moteur lui accorde une seule transition — `RECUPERE → DEPOSE`, quand la réactivation lui
+rend son audio. `suivant(RECUPERE)` est **vide** : sa suite dépend d'un événement, pas d'une place dans la
+file. Voir [ADR 2581](decisions/2581-un-etat-qui-decide-de-l-affichage-se-declare.md).
+
+⚠️ **Le rang de tri n'est pas l'`ordinal()`.** `RECUPERE` est déclaré **en dernier** dans l'énum, pour ne
+pas décaler les comparaisons existantes (« au moins vérifié »). Trier sur `ordinal()` le rangerait donc
+après « Déposé », par pur effet de bord de ce choix : `StatutWorkflow.rangDeProgression()` existe pour ça.
 
 **Principes.** **SRP** (les règles de transition ne polluent ni l'énum ni les services) et un **point
 de vérité unique** pour l'avancement d'une nuit.

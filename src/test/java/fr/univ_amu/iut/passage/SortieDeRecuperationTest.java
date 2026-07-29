@@ -7,7 +7,6 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
-import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.SortieDeRecuperation;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.nio.file.Path;
@@ -32,7 +31,7 @@ class SortieDeRecuperationTest {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         passageDao = new PassageDao(source);
-        sortie = new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage());
+        sortie = new SortieDeRecuperation(passageDao);
     }
 
     private long semer(StatutWorkflow statut, int numero) {
