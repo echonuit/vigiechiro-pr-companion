@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.126.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.125.1...v2.126.0) (2026-07-29)
+
+
+### Features
+
+* **analyse:** la Synthese marque les especes prioritaires ([#2842](https://github.com/echonuit/vigiechiro-pr-companion/issues/2842)) ([91a1f24](https://github.com/echonuit/vigiechiro-pr-companion/commit/91a1f24a7facbb5f2843c25b784a9aa0b0d467e6))
+
 ## [2.125.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.125.0...v2.125.1) (2026-07-29)
 
 
