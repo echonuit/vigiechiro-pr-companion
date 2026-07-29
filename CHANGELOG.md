@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.120.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.119.0...v2.120.0) (2026-07-29)
+
+
+### Features
+
+* **analyse:** exporter la synthese, a l ecran comme en ligne de commande ([#2806](https://github.com/echonuit/vigiechiro-pr-companion/issues/2806)) ([b04ad00](https://github.com/echonuit/vigiechiro-pr-companion/commit/b04ad00a69717223dd46da98c9f877008abcbbcd))
+
 # [2.119.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.118.1...v2.119.0) (2026-07-29)
 
 
