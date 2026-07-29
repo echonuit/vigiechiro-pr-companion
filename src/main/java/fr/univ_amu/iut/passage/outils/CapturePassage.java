@@ -515,7 +515,12 @@ public final class CapturePassage {
                         "15:00",
                         "15:00",
                         null,
-                        StatutWorkflow.DEPOSE,
+                        // « Récupéré » (#2581), et non « Déposé » : c'est ce que pose la synchro. La
+                        // capture montrait jusqu'ici l'état d'avant le chantier - une pastille bleue et
+                        // les cinq jalons du workflow marqués franchis sur une nuit qui n'en a parcouru
+                        // aucun. Une capture ne peut pas échouer : elle dessine ce qu'on lui donne, et
+                        // elle a continué d'être régénérée sans que rien ne signale qu'elle mentait.
+                        StatutWorkflow.RECUPERE,
                         null,
                         null,
                         null,
