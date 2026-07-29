@@ -58,6 +58,15 @@ votre travail de validation, il rouvre seulement l'étape de dépôt (par exempl
 avant de redéposer). Le bouton n'apparaît que lorsqu'il a un sens, c'est-à-dire sur un passage
 effectivement déposé.
 
+Sur une nuit **récupérée** de Vigie-Chiro, en revanche, le bouton est là mais **désactivé** : il n'y a
+pas de dépôt à annuler ici. C'est la plateforme qui détient cette nuit, et aucun geste pris sur votre
+machine ne le change. Le bouton reste visible parce que la pastille annonce « Déposé » : son absence
+pure et simple vous laisserait chercher. Le survoler explique la situation et indique le bon geste,
+**Supprimer**, décrit juste en dessous.
+
+(Ce n'est pas qu'une question de vocabulaire : annuler ce dépôt ramènerait la nuit en « Prêt à
+déposer », c'est-à-dire prête à être envoyée une seconde fois sur Vigie-Chiro, où elle est déjà.)
+
 ## Supprimer une nuit venue de Vigie-Chiro
 
 Une nuit **déposée** ne se supprime pas : c'est une donnée officielle que vous avez transmise à la
