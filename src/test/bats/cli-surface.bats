@@ -53,7 +53,7 @@ COMMANDES_OPTIONS_REQUISES=(
 # démarrage), sans réseau, exit 0. Chacune écrit/lit uniquement sous le workspace jetable du test.
 COMMANDES_LOCALES_SANS_ARG=(
   audit-coherence sauvegarder reset-guide retro-empreintes
-  solde-saison lister-campagnes
+  solde-saison lister-campagnes rattraper-communes
 )
 
 @test "surface : les commandes locales sans option requise s'exécutent sur base fraîche (exit 0) (#1592)" {
@@ -67,7 +67,7 @@ COMMANDES_LOCALES_SANS_ARG=(
     n=$((n + 1))
   done
   echo "commandes locales sans argument vérifiées : ${n}"
-  [ "${n}" -eq 6 ]
+  [ "${n}" -eq 7 ]
 }
 
 @test "audit-coherence : base fraîche, aucun écart disque/base annoncé, exit 0 (#1592)" {
