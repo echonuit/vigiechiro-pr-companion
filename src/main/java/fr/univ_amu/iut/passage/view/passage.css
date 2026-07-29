@@ -73,6 +73,16 @@
   -fx-icon-color: -couleur-primaire;
 }
 
+/* La recommandation ne porte pas toujours sur une CARTE. Sur une nuit récupérée de Vigie-Chiro (#2581),
+   ce qu'il faut faire est « Réactiver ce passage », qui vit dans la barre d'actions. Sans cette règle, le
+   controller posait la pseudo-classe sur un bouton qu'aucun sélecteur ne captait : la recommandation
+   existait dans le modèle et n'allumait rien - repéré en REGARDANT la capture, pas en lisant le code.
+   Même vocabulaire visuel que les cartes : liseré primaire épaissi. */
+.bouton-secondaire:recommandee {
+  -fx-border-color: -couleur-primaire;
+  -fx-border-width: 2;
+}
+
 .carte-action-titre {
   -fx-font-size: 14px;
   -fx-font-weight: bold;
