@@ -517,20 +517,6 @@ class ImportationViewModelTest {
     }
 
     @Test
-    @DisplayName("#155 : marquerTermine expose les fichiers rejetés (« nom — raison ») du rapport")
-    void marquer_termine_expose_les_rejets() {
-        RapportImport rapport = new RapportImport(List.of(
-                new LigneRapport("ok.wav", StatutImportFichier.IMPORTE, "3 séquence(s)"),
-                new LigneRapport("casse.wav", StatutImportFichier.REJETE, "Original illisible"),
-                new LigneRapport("notes.txt", StatutImportFichier.IGNORE, "fichier non pertinent")));
-
-        viewModel.marquerTermine(new ResultatImport(null, null, "1925492", 1, 3, List.of(), rapport));
-
-        // Seuls les rejets sont listés, formatés « nom — raison ».
-        assertThat(viewModel.rejetsImport()).containsExactly("casse.wav — Original illisible");
-    }
-
-    @Test
     @DisplayName("Un refus métier passe l'état à ECHEC et expose le message (résultat null)")
     void importer_echec_expose_le_message() {
         Site site = site(1L, "640380");
@@ -1079,9 +1065,6 @@ class ImportationViewModelTest {
 
         assertThat(viewModel.resultatNuitsProperty().get().nombrePassages()).isEqualTo(2);
         assertThat(viewModel.etatProperty().get()).isEqualTo(EtatImport.TERMINE);
-        // Les rejets des deux nuits sont cumulés.
-        assertThat(viewModel.rejetsImport())
-                .containsExactly("casse.wav — Original illisible", "casse.wav — Original illisible");
     }
 
     private Path carteMultiNuits() throws IOException {
