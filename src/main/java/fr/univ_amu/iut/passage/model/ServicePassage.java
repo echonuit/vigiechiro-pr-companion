@@ -411,6 +411,14 @@ public class ServicePassage {
         passageDao.delete(idPassage);
     }
 
+    /// Pourquoi une nuit récupérée n'annule pas son dépôt. Nommé ici pour que le service et l'écran
+    /// disent **la même chose** : un motif affiché qui diverge du refus est un motif qui ment une fois
+    /// sur deux.
+    public static final String MOTIF_DEPOT_NON_ANNULABLE =
+            "Cette nuit vient de Vigie-Chiro, où elle est déposée : il n'y a pas de dépôt à annuler ici."
+                    + " Pour la retirer de cette machine, utilisez « Supprimer » - la participation reste"
+                    + " sur la plateforme, et une prochaine synchronisation la rapatriera.";
+
     /// Cette nuit vient-elle de la plateforme sans que rien n'y ait été fait ici (#2581) ?
     ///
     /// Une nuit **récupérée** porte le statut « Déposé », et c'est vrai : la participation existe sur
@@ -439,6 +447,13 @@ public class ServicePassage {
                     "Annulation du dépôt impossible : le passage n'est pas déposé (statut actuel : « "
                             + passage.statutWorkflow().libelle()
                             + " »).");
+        }
+        // Une nuit récupérée n'a pas de dépôt à annuler ici (#2771) : c'est la plateforme qui l'a, et
+        // aucun geste local ne le change. Pire, la transition la ramènerait en « Prêt à déposer », d'où
+        // le geste suivant - parfaitement naturel depuis cet état - fabriquerait une SECONDE
+        // participation. Depuis #2760, « Supprimer » suffit à qui veut nettoyer sa base.
+        if (estNuitRecuperee(idPassage)) {
+            throw new RegleMetierException(MOTIF_DEPOT_NON_ANNULABLE);
         }
         Passage misAJour = new Passage(
                 passage.id(),
