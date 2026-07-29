@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.116.3](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.116.2...v2.116.3) (2026-07-29)
+
+
+### Bug Fixes
+
+* **tests:** le cliquet de fixtures cesse d'être aveugle et de surcompter ([#2782](https://github.com/echonuit/vigiechiro-pr-companion/issues/2782)) ([f5724a2](https://github.com/echonuit/vigiechiro-pr-companion/commit/f5724a230152786dca8efdfd075a74e236b56d36)), closes [#2714](https://github.com/echonuit/vigiechiro-pr-companion/issues/2714)
+
 ## [2.116.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.116.1...v2.116.2) (2026-07-29)
 
 
