@@ -1115,6 +1115,22 @@ les mélange finit par mentir. L'EPIC #1870 a migré onze écrans et en a trouv�
 **Comment choisir.** Si ce qu'il y a à dire peut grandir - une liste de refus, de fichiers, de passages -
 c'est un compte rendu. Si c'est une phrase dont la forme est connue d'avance, c'est un retour.
 
+**Et d'où vient le texte ?** Le critère précédent regarde ce qu'on dit ; celui-ci regarde **qui l'a
+écrit**, et il est indépendant.
+
+Un retour est **borné** par définition - c'est ce qui le sépare d'un compte rendu. Mais rien ne borne
+un message d'exception venu du pilote SQLite ou d'une réponse serveur, et le bandeau **ne tronque
+pas** : son libellé porte `wrapText`, donc un long message enroule et fait grandir le bandeau. Mesuré :
+379 caractères le portent de 46 à 86 px, 625 à 186 px.
+
+La règle est donc : **ce qui vient d'ailleurs se borne à sa porte d'entrée**, qui est aussi le seul
+endroit où on peut l'enrichir. `RetourOperation.erreur(Throwable)` ajoute le geste attendu (ADR 2635)
+puis borne ; `erreur(String)` laisse passer entier, parce que nous l'avons écrit.
+
+⚠ **Passer `refus.getMessage()` contourne les deux.** C'est ce que faisaient dix-sept appels, dont
+quatorze perdaient au passage le « où le régler ». `MessageExterneBorneTest` refuse désormais cette
+forme, en lisant le source. Voir [ADR 2802](decisions/2802-un-texte-qu-on-n-a-pas-ecrit-se-borne-a-son-entree.md).
+
 Un état et un compte rendu ne partagent **jamais** de propriété, et un compte rendu ne se **déduit**
 jamais d'un statut : le même statut est atteint en agissant *et* en ouvrant un écran déjà dans cet
 état, et seul le premier mérite d'être rapporté. Voir

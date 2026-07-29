@@ -92,6 +92,29 @@ Récupérer un token : sur le site VigieChiro connecté, exécuter le marque-pag
 Base : `https://vigiechiro.herokuapp.com/api/v1`. Auth : `Authorization: Basic base64("<token>:")` (token en
 *username*, mot de passe vide).
 
+### Toute écriture déclare ce qu'un rejeu lui ferait (#2677)
+
+Le réessai gradué est posé au **point de passage unique** des émissions : toute lecture en bénéficie
+sans câblage. Les écritures y passent aussi, et c'est le piège - un `POST` de création rejoué crée une
+**seconde ressource**. Le mode de panne n'est pas exotique : la requête arrive, le serveur agit, et
+c'est la **réponse** qui se perd.
+
+`TransportVigieChiro.ecrire(…)` exige donc un `Rejeu` :
+
+| Valeur | Quand | Exemples |
+|---|---|---|
+| `AUTORISE` | rejouer redonne le même état **et** la même réponse | correction d'observation (valeur absolue), suppression, demande d'URL de partie |
+| `INTERDIT` | rejouer **duplique** ou **trompe** | `POST` de création, message empilé par `$push`, `PATCH` protégé par `If-Match` |
+
+⚠ **Une règle par verbe HTTP serait fausse.** `PUT /donnees/…/messages` **empile** côté serveur : un
+`PUT` peut parfaitement ne pas être idempotent. Et le `PATCH` avec `If-Match` ne duplique pas, mais
+rejoué après un succès dont la réponse s'est perdue il revient en `412` - l'utilisateur lirait « échec »
+sur une modification qui a bien eu lieu. L'arbitrage est **par appel**, écrit à côté de lui.
+
+**En ajoutant une écriture**, choisissez la valeur et dites pourquoi en commentaire : c'est ce
+commentaire, pas la valeur, qui servira au prochain qui se demandera si l'API a gagné une clé
+d'idempotence.
+
 ### Le transport dit ce qu'il est advenu de chaque appel (#1284)
 
 Toutes les méthodes de `ClientVigieChiro` rendent une **issue triée** (`ReponseApi<T>`, sealed) :
