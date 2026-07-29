@@ -22,7 +22,7 @@ class CriteresMultisiteTest {
 
         assertThat(vues)
                 .extracting(VueSauvegardee::nom)
-                .containsExactly("Tout", "Résultats à importer", "Déposés", "Non vérifié", "Vérifiés");
+                .containsExactly("Tout", "Résultats à importer", "Déposés", "À réactiver", "Non vérifié", "Vérifiés");
         assertThat(vues).allSatisfy(vue -> {
             assertThat(vue.id())
                     .as("vue par défaut : jamais persistée (lecture seule)")

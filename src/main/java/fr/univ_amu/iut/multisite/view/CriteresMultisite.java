@@ -47,6 +47,7 @@ final class CriteresMultisite {
     ///   sont prêtes ? », qui obligeait jusqu'ici à ouvrir chaque passage l'un après l'autre ;
     /// - **« Déposés »** (statut Déposé : nuits déjà envoyées) ;
     /// - **« Non vérifié »** (verdict Non vérifié : passages à contrôler) ;
+    /// - **« À réactiver »** (statut Récupéré : rapatriée de Vigie-Chiro, il lui manque son audio).
     /// - **« Vérifiés »** (statut Vérifié).
     ///
     /// Chaque descripteur est sérialisé exactement comme [GestionnaireFiltres#decrire()] le produirait, pour
@@ -58,6 +59,10 @@ final class CriteresMultisite {
                         "Résultats à importer",
                         new DescripteurCritere(ANALYSE, List.of(EtatAnalyse.A_IMPORTER.name()))),
                 vueParDefaut("Déposés", new DescripteurCritere(STATUT, List.of(StatutWorkflow.DEPOSE.name()))),
+                // #2581 : après une synchronisation, la question qui vient est « lesquelles attendent
+                // encore leur audio ? ». Sans cette vue, il faudrait la reconstruire à la main à chaque
+                // fois - et la liste des nuits récupérées est exactement celle des nuits à réactiver.
+                vueParDefaut("À réactiver", new DescripteurCritere(STATUT, List.of(StatutWorkflow.RECUPERE.name()))),
                 vueParDefaut("Non vérifié", new DescripteurCritere("verdict", List.of(Verdict.A_VERIFIER.name()))),
                 vueParDefaut("Vérifiés", new DescripteurCritere(STATUT, List.of(StatutWorkflow.VERIFIE.name()))));
     }

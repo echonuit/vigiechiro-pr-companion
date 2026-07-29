@@ -221,11 +221,11 @@ class MultisiteViewTest {
     @DisplayName("La vue par défaut « Vérifiés » est un onglet qui filtre le tableau sur le statut Vérifié")
     void vue_par_defaut_verifies_filtre_le_tableau(FxRobot robot) {
         FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
-        // Les 5 onglets par défaut sont rendus (avant les vues de l'utilisateur). « Résultats à importer »
+        // Les 6 onglets par défaut sont rendus (avant les vues de l'utilisateur). « Résultats à importer »
         // (#1338) vient en second : c'est la question la plus fréquente au retour du terrain.
         assertThat(robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class))
                 .extracting(Label::getText)
-                .containsExactly("Tout", "Résultats à importer", "Déposés", "Non vérifié", "Vérifiés");
+                .containsExactly("Tout", "Résultats à importer", "Déposés", "À réactiver", "Non vérifié", "Vérifiés");
 
         Label verifies = robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class).stream()
                 .filter(label -> "Vérifiés".equals(label.getText()))
