@@ -134,6 +134,14 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 51. **Débrancher le réseau** avant « Importer les résultats des 3 lignes cochées… » : les trois
     remontent en échec avec un motif qui dit quoi faire (« Connectez-vous depuis le menu ☰ … »), et le
     lot va au bout au lieu de s'arrêter à la première.
+52. **Réseau très dégradé** (bridage à quelques dizaines de ko/s, ou coupures brèves répétées), pour
+    provoquer de vraies **temporisations de reprise** : pendant l'attente affichée « nouvelle tentative
+    dans N s », cliquer **Annuler**. La main doit revenir **sans attendre la fin du décompte**.
+
+    C'est le seul endroit où cette propriété s'observe. Les tests injectent un temporisateur factice
+    qui n'attend pas : ils prouvent que l'attente est **découpée** et que le renoncement est **lu**
+    entre deux tranches, jamais que la latence ressentie sur un vrai réseau reste acceptable
+    (#2686, tranches de 200 ms).
 52. « Déclencher le calcul » sur une nuit déjà analysée : elle ressort en **échec** avec « relancer
     effacerait les observations », jamais recalculée.
 53. Les mêmes gestes en ligne de commande : `vigiechiro traiter-passages --action televerser --passage
