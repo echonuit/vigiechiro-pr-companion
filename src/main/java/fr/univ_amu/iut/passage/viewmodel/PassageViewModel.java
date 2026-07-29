@@ -55,6 +55,10 @@ public class PassageViewModel {
             new ReadOnlyBooleanWrapper(this, "verificationDisponible", false);
     private final ReadOnlyBooleanWrapper validationVerrouillee =
             new ReadOnlyBooleanWrapper(this, "validationVerrouillee", true);
+    /// Pourquoi chaque geste de la fiche est fermé, quand il l'est (#789) : quatre motifs qui se
+    /// calculent au même moment et répondent à la même question.
+    private final MotifsBlocagePassage motifs = new MotifsBlocagePassage();
+
     private final ReadOnlyBooleanWrapper depotDisponible = new ReadOnlyBooleanWrapper(this, "depotDisponible", false);
     private final ReadOnlyBooleanWrapper annulationDepotDisponible =
             new ReadOnlyBooleanWrapper(this, "annulationDepotDisponible", false);
@@ -64,8 +68,6 @@ public class PassageViewModel {
             new ReadOnlyBooleanWrapper(this, "renommagePossible", false);
     private final ReadOnlyBooleanWrapper reactivationPossible =
             new ReadOnlyBooleanWrapper(this, "reactivationPossible", false);
-    private final ReadOnlyStringWrapper motifBlocageReactivation =
-            new ReadOnlyStringWrapper(this, "motifBlocageReactivation", "");
     /// #1514 : pourquoi la carte « Vérifier » est grisée quand elle l'est (nuit non transformée, ou
     /// déjà déposée donc verdict figé). Vide quand la vérification est disponible.
     /// Le bouton « Annuler le dépôt » a-t-il sa place sur cette fiche ? Vrai dès que la nuit est déposée
@@ -74,13 +76,11 @@ public class PassageViewModel {
     private final ReadOnlyBooleanWrapper annulationDepotPertinente =
             new ReadOnlyBooleanWrapper(this, "annulationDepotPertinente", false);
 
+    /// Pourquoi la carte « Préparer le dépôt » est grisée ; vide quand elle ne l'est pas.
+
     /// Pourquoi « Annuler le dépôt » est grisé (#2771) ; vide quand il ne l'est pas. Gating en amont
     /// (#789) : on explique plutôt que de laisser découvrir le refus après confirmation.
-    private final ReadOnlyStringWrapper motifBlocageAnnulationDepot =
-            new ReadOnlyStringWrapper(this, "motifBlocageAnnulationDepot", "");
 
-    private final ReadOnlyStringWrapper motifBlocageVerification =
-            new ReadOnlyStringWrapper(this, "motifBlocageVerification", "");
     private final ReadOnlyObjectWrapper<ActionRecommandee> actionRecommandee =
             new ReadOnlyObjectWrapper<>(this, "actionRecommandee", ActionRecommandee.AUCUNE);
     private final ReadOnlyObjectWrapper<RetourOperation> retour =
@@ -234,23 +234,27 @@ public class PassageViewModel {
         // Le verdict reste figé sur une nuit récupérée - elle EST sur la plateforme, et un verdict local
         // divergent la désynchroniserait tout autant. Mais le motif d'origine lui fait dire « cette nuit
         // est déposée » à quelqu'un qui ne l'a jamais déposée : il dit désormais d'où elle vient.
-        motifBlocageVerification.set(
-                nuitRecuperee
-                        ? "🔒 Cette nuit vient de Vigie-Chiro, où elle est déjà déposée : son verdict s'y"
-                                + " décide, pas ici."
-                        : nuitDeposee
-                                ? "🔒 Verdict figé : cette nuit est déposée, son verdict ne change plus."
-                                : nuitTransformee
-                                        ? ""
-                                        : "🔒 La vérification sera possible une fois la nuit transformée.");
+        String motifVerification = nuitRecuperee
+                ? "🔒 Cette nuit vient de Vigie-Chiro, où elle est déjà déposée : son verdict s'y décide," + " pas ici."
+                : nuitDeposee
+                        ? "🔒 Verdict figé : cette nuit est déposée, son verdict ne change plus."
+                        : nuitTransformee ? "" : "🔒 La vérification sera possible une fois la nuit transformée.";
         validationVerrouillee.set(!surLaPlateforme);
         // Accès à l'écran de dépôt (M-Lot) dès le passage vérifié ET **même une fois déposé** (#…) : on doit
         // pouvoir y revenir pour consulter les archives ou les supprimer, sans avoir à annuler le dépôt.
-        // Même précaution : « Récupéré » répondrait « oui » par sa seule place dans l'énumération. Ici
-        // la réponse EST oui - la nuit est sur la plateforme, on peut vouloir revenir à M-Lot consulter
-        // ses archives - mais elle est écrite, pas héritée d'un rang.
-        depotDisponible.set(detail.statut() == StatutWorkflow.RECUPERE
-                || detail.statut().ordinal() >= StatutWorkflow.VERIFIE.ordinal());
+        // Une nuit récupérée n'a **rien à préparer** : elle est déjà sur la plateforme, et la préparation
+        // la refuse (« déjà déposé »). Elle n'a pas non plus d'archives locales à consulter - elle n'a
+        // jamais été déposée d'ici. La carte se ferme donc, avec son motif, plutôt que de conduire à un
+        // refus découvert après coup (#789).
+        //
+        // ⚠️ La comparaison par ordinal ne vaut que pour les statuts de la file : « Récupéré », déclaré
+        // en dernier, y répondrait « oui » par sa seule position (ADR 2581).
+        depotDisponible.set(detail.statut() != StatutWorkflow.RECUPERE
+                && detail.statut().ordinal() >= StatutWorkflow.VERIFIE.ordinal());
+        String motifDepot = nuitRecuperee
+                ? "Cette nuit vient de Vigie-Chiro, où elle est déjà déposée : il n'y a rien à y préparer"
+                        + " ni à y téléverser."
+                : "";
         // Sauf sur une nuit récupérée (#2771) : elle n'a pas de dépôt à annuler ici, et la transition
         // la rendrait « Prêt à déposer » - donc prête à faire un doublon sur la plateforme.
         // Deux questions distinctes. « Le bouton a-t-il sa place ici ? » - oui dès que la nuit est
@@ -259,7 +263,7 @@ public class PassageViewModel {
         // précisément la nuit où son absence surprendrait, puisque la pastille annonce « Déposé ».
         annulationDepotPertinente.set(surLaPlateforme);
         annulationDepotDisponible.set(nuitDeposee);
-        motifBlocageAnnulationDepot.set(nuitRecuperee ? ServicePassage.MOTIF_DEPOT_NON_ANNULABLE : "");
+        String motifAnnulation = nuitRecuperee ? ServicePassage.MOTIF_DEPOT_NON_ANNULABLE : "";
         // Suppression bloquée sur un passage déposé (le service la refuse) : on grise le bouton en amont au
         // lieu de laisser l'utilisateur découvrir le refus après la confirmation. Il faut d'abord annuler
         // le dépôt.
@@ -279,7 +283,12 @@ public class PassageViewModel {
         GatingReactivation.ContexteReactivation contexteReactivation = new GatingReactivation.ContexteReactivation(
                 portail.pageParticipation(idPassage).isPresent(), reactivation.hydratationDisponible());
         reactivationPossible.set(GatingReactivation.reactivationPossible(detail, contexteReactivation));
-        motifBlocageReactivation.set(GatingReactivation.motifReactivation(detail, contexteReactivation));
+        // Les quatre motifs se posent ensemble : ils répondent à la même question, sur quatre gestes.
+        motifs.appliquer(
+                motifVerification,
+                GatingReactivation.motifReactivation(detail, contexteReactivation),
+                motifDepot,
+                motifAnnulation);
         actionRecommandee.set(EtapesWorkflow.prochaineAction(detail.statut()));
     }
 
@@ -296,8 +305,6 @@ public class PassageViewModel {
         numeroPassage = 0;
         etapes.clear();
         verificationDisponible.set(false);
-        motifBlocageVerification.set("");
-        motifBlocageAnnulationDepot.set("");
         annulationDepotPertinente.set(false);
         validationVerrouillee.set(true);
         depotDisponible.set(false);
@@ -305,7 +312,7 @@ public class PassageViewModel {
         suppressionPossible.set(false);
         renommagePossible.set(false);
         reactivationPossible.set(false);
-        motifBlocageReactivation.set("");
+        motifs.effacer();
         actionRecommandee.set(ActionRecommandee.AUCUNE);
     }
 
@@ -379,6 +386,11 @@ public class PassageViewModel {
         return depotDisponible.getReadOnlyProperty();
     }
 
+    /// Les motifs de blocage des gestes de la fiche (#789) : `motifs().depot()`, `motifs().verification()`…
+    public MotifsBlocagePassage motifs() {
+        return motifs;
+    }
+
     /// `true` quand l'annulation du dépôt est pertinente (passage déjà **déposé**) : l'action ramène le
     /// passage à « Prêt à déposer » sans toucher aux validations Tadarida déjà saisies.
     public ReadOnlyBooleanProperty annulationDepotDisponibleProperty() {
@@ -389,11 +401,6 @@ public class PassageViewModel {
     /// [#annulationDepotDisponibleProperty] pilote son **activation**.
     public ReadOnlyBooleanProperty annulationDepotPertinenteProperty() {
         return annulationDepotPertinente.getReadOnlyProperty();
-    }
-
-    /// Pourquoi « Annuler le dépôt » est grisé, ou chaîne vide quand il ne l'est pas (#2771).
-    public ReadOnlyStringProperty motifBlocageAnnulationDepotProperty() {
-        return motifBlocageAnnulationDepot.getReadOnlyProperty();
     }
 
     /// `true` quand le passage peut être supprimé (tout statut **sauf** Déposé). Un passage déposé doit
@@ -413,14 +420,6 @@ public class PassageViewModel {
 
     public ReadOnlyBooleanProperty reactivationPossibleProperty() {
         return reactivationPossible.getReadOnlyProperty();
-    }
-
-    public ReadOnlyStringProperty motifBlocageReactivationProperty() {
-        return motifBlocageReactivation.getReadOnlyProperty();
-    }
-
-    public ReadOnlyStringProperty motifBlocageVerificationProperty() {
-        return motifBlocageVerification.getReadOnlyProperty();
     }
 
     /// Prochaine action recommandée du workflow (carte mise en avant), dérivée du statut. Se déplace
