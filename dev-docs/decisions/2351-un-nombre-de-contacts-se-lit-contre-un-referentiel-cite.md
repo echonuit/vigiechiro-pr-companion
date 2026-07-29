@@ -14,7 +14,7 @@ Y répondre demande un **référentiel** : des seuils par espèce, déclinés pa
 
 ### 1. La source est ACTICHIRO / Vigie-Chiro, citée partout où elle sert
 
-> Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020) — *Bat reference scale of activity levels* (v. 2020-04-10), Team-Chiro / CESCO — Muséum national d'Histoire naturelle. Méthode : Naturae 2022, [DOI 10.5852/naturae2022a14](https://doi.org/10.5852/naturae2022a14).
+> Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020), *Bat reference scale of activity levels* (v. 2020-04-10), Team-Chiro / CESCO, Muséum national d'Histoire naturelle. Méthode : Naturae 2022, [DOI 10.5852/naturae2022a14](https://doi.org/10.5852/naturae2022a14).
 
 C'est la **seule** source qui corresponde exactement au besoin : mêmes quatre classes, même pipeline TADARIDA, quantiles Q25/Q75/Q98 par espèce déclinés saison / région / habitat, avec un indicateur de fiabilité par déclinaison.
 
