@@ -2,6 +2,14 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.124.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.123.0...v2.124.0) (2026-07-29)
+
+
+### Features
+
+* **cli:** rattraper-communes, et l'inventaire des hotes sortants (lot 0, CLI) ([#2828](https://github.com/echonuit/vigiechiro-pr-companion/issues/2828)) ([f6016a6](https://github.com/echonuit/vigiechiro-pr-companion/commit/f6016a68767f4e8eabdf21acc308f33790f4d55c)), closes [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791)
+* **recherche:** les especes prioritaires portent leur mention ([#2827](https://github.com/echonuit/vigiechiro-pr-companion/issues/2827)) ([b9f9fcc](https://github.com/echonuit/vigiechiro-pr-companion/commit/b9f9fcc93ecc8383e529cf5ef0e59404e9b64795))
+
 # [2.123.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.122.1...v2.123.0) (2026-07-29)
 
 
