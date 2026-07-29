@@ -139,6 +139,23 @@ setup() {
   [ "${status}" -eq 2 ]
 }
 
+@test "rattraper-communes : base vide, rien a rattraper, exit 0 (#2791)" {
+  run cli rattraper-communes
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"rien à rattraper"* ]]
+}
+
+@test "rattraper-communes : un point sans GPS reste hors du rattrapage, exit 0 (#2791)" {
+  # Sans coordonnées, il n'y a rien à résoudre : la commande le dit sans toucher au réseau.
+  local site
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  cli ajouter-point --site "${site}" --code A1
+
+  run cli rattraper-communes
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"rien à rattraper"* ]]
+}
+
 @test "workflow local : creer-site -> ajouter-point -> lister-sites les montre (#1592)" {
   # Un vrai enchaînement scriptable, sur la même base jetable (le tmpdir du test).
   # creer-site écrit l'identifiant du site sur stdout (les logs partent sur stderr) : on le récupère.
