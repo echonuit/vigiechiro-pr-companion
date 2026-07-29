@@ -132,14 +132,12 @@ public class SyntheseController implements EmplacementNavigation {
         configurerColonnes();
 
         tableSynthese.setItems(viewModel.lignes());
+        // Une nuit sans espèce le DIT, dans les mots du domaine. Le texte par défaut de JavaFX
+        // (« aucun contenu dans la table ») décrit le composant, pas la nuit : il laisse croire à un
+        // écran qui n'a pas fini de charger.
+        tableSynthese.setPlaceholder(placeholder());
         chkValideesSeulement.selectedProperty().bindBidirectional(viewModel.validesSeulementProperty());
         lblContexte.textProperty().bind(viewModel.contexteNuitProperty());
-
-        // Le référentiel employé, nommé en toutes lettres : une classe dont on ignore la référence est
-        // un oracle.
-        lblReferentiel
-                .textProperty()
-                .bind(viewModel.referentielEmployeProperty().map(r -> "Comparé au référentiel : " + r));
 
         // Permanent, jamais repliable : si l'avertissement ne voyage pas avec la donnée, il ne sert à
         // rien. La citation l'accompagne — la source est libre d'usage AVEC citation obligatoire.
@@ -176,6 +174,15 @@ public class SyntheseController implements EmplacementNavigation {
         }
     }
 
+    /// Ce qu'affiche le tableau quand la nuit n'a produit aucune espèce. Un résultat vide **est** un
+    /// résultat : il se dit dans les mots du domaine, avec son identifiant pour que le test le trouve.
+    private static Label placeholder() {
+        Label vide = new Label("Aucune espèce identifiée pour cette nuit.");
+        vide.setId("lblTableauVide");
+        vide.setWrapText(true);
+        return vide;
+    }
+
     /// Message d'un échec, à défaut de message une mention du type : une chaîne vide dans le bandeau ne
     /// vaudrait pas mieux que le silence qu'on corrige.
     private static String motif(Exception echec) {
@@ -186,6 +193,10 @@ public class SyntheseController implements EmplacementNavigation {
     /// Peuple le sélecteur de milieu, ou **efface toute la colonne d'activité** quand le référentiel
     /// n'est pas exploitable. Masquer plutôt qu'afficher des cellules vides : une colonne blanche se
     /// lirait comme une donnée manquante, alors que le tableau de comptages reste, lui, entier.
+    ///
+    /// C'est **ici**, et non dans `initialize`, que se décide le libellé du référentiel : les deux cas
+    /// s'excluent, et lier la propriété d'abord pour la réécrire ensuite lève `A bound value cannot be
+    /// set` — l'écran entier devenait alors inchargeable dès que le référentiel manquait.
     private void configurerMilieux() {
         if (!viewModel.referentielDisponible()) {
             colActivite.setVisible(false);
@@ -194,9 +205,23 @@ public class SyntheseController implements EmplacementNavigation {
             cbMilieu.setManaged(false);
             lblMilieu.setVisible(false);
             lblMilieu.setManaged(false);
+            // Les colonnes retirées laisseraient leur largeur derrière elles : le tableau se terminerait
+            // par une bande vide et sans en-tête, qui se lit comme un affichage cassé. Les colonnes
+            // restantes se répartissent donc l'espace.
+            tableSynthese.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+            // Mettre en garde contre une lecture qu'on n'affiche pas, et créditer une source qu'on n'a
+            // pas pu charger, serait du bruit trompeur. L'obligation de citer naît de l'usage : sans
+            // seuils affichés, il n'y a rien à créditer.
+            blocAvertissement.setVisible(false);
+            blocAvertissement.setManaged(false);
             lblReferentiel.setText("Référentiel d'activité indisponible : le tableau reste exploitable.");
             return;
         }
+        // Le référentiel employé, nommé en toutes lettres : une classe dont on ignore la référence est
+        // un oracle.
+        lblReferentiel
+                .textProperty()
+                .bind(viewModel.referentielEmployeProperty().map(r -> "Comparé au référentiel : " + r));
         List<String> milieux = new java.util.ArrayList<>();
         milieux.add(SANS_MILIEU);
         milieux.addAll(viewModel.milieuxDisponibles());

@@ -62,10 +62,14 @@ class DecouverteModulesTest {
 
     /// Features EXPERIMENTALES (Categorie inactive par défaut) : découvertes par le ServiceLoader, donc
     /// dans FEATURES_ATTENDUES, mais **absentes** de modules() tant qu'on ne les active pas explicitement.
-    /// Vidée à la clôture du lot #2352 (`activite-nuit` est passée `OPTIONNELLE`), puis **remise en
-    /// service** par #2351 : `synthese-nuit` est expérimentale le temps du chantier, l'écran étant livré
-    /// avant son export et sa parité CLI. Elle passera `OPTIONNELLE` à la clôture du lot.
-    private static final Set<String> FEATURES_EXPERIMENTALES = Set.of("SyntheseModule");
+    /// Vidée à la clôture du lot #2352 (`activite-nuit` est passée `OPTIONNELLE`), remise en service le
+    /// temps du chantier #2351, puis **vidée de nouveau** à la clôture de ce lot : `synthese-nuit` est
+    /// `OPTIONNELLE` depuis que l'écran a son export et sa parité CLI.
+    ///
+    /// L'ensemble reste déclaré, et le test qui s'en sert reste utile : c'est lui qui vérifie qu'une
+    /// feature expérimentale est bien découverte sans être activée. Vide, il exige qu'**aucune** feature
+    /// ne traîne en expérimental sans qu'on l'ait voulu.
+    private static final Set<String> FEATURES_EXPERIMENTALES = Set.of();
 
     @AfterEach
     void nettoyer() {

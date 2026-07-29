@@ -333,8 +333,8 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         boolean activiteActive = ouvrirActivite.isPresent();
         boutonActivite.setVisible(activiteActive);
         boutonActivite.setManaged(activiteActive);
-        // « Synthèse de la nuit » (#2351) : même montage, feature `synthese-nuit`. EXPERIMENTALE le temps
-        // du chantier, donc absente par défaut — la carte n'apparaît qu'une fois la feature activée.
+        // « Synthèse de la nuit » (#2351) : même montage, feature `synthese-nuit`, OPTIONNELLE depuis la
+        // clôture du lot : coupée, le contrat est absent et la carte est retirée.
         boolean syntheseActive = ouvrirSynthese.isPresent();
         boutonSynthese.setVisible(syntheseActive);
         boutonSynthese.setManaged(syntheseActive);

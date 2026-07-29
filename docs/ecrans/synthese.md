@@ -60,6 +60,21 @@ donnée manquante :
 - **« Moyenne (indicatif) »** : les seuils retenus reposent sur trop peu de nuits. On vous les montre
   faute de mieux, sans les présenter comme une mesure.
 
+## Si le référentiel manque
+
+Il peut arriver que le référentiel d'activité ne soit pas exploitable. L'écran ne se contente alors pas
+de laisser des cases blanches, qui se liraient comme des données manquantes : les colonnes **Activité**
+et **Seuils retenus** disparaissent, le sélecteur de milieu aussi, et l'écran annonce « Référentiel
+d'activité indisponible : le tableau reste exploitable ».
+
+![La synthèse sans référentiel : les colonnes d'activité et de seuils ont disparu, les comptages restent affichés et l'écran annonce l'indisponibilité.](../assets/captures/apercu-synthese-sans-referentiel.png)
+
+La mise en garde et la citation s'effacent avec elles : mettre en garde contre une lecture qu'on
+n'affiche pas, et créditer une source qu'on n'a pas pu charger, n'aiderait personne.
+
+Vos comptages, eux, restent affichés en entier. Le nombre de contacts est une **mesure** ; la classe
+d'activité n'en est qu'une lecture. Perdre la seconde ne doit pas vous priver de la première.
+
 ## Ce que la classe d'activité ne dit pas
 
 Un bloc de mise en garde est affiché **en permanence** sous le tableau, et il est recopié dans les

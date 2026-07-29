@@ -17,12 +17,13 @@ import fr.univ_amu.iut.commun.view.OuvrirSynthese;
 /// composants — c'est la leçon de la clôture du lot #2352.
 public class SyntheseModule extends ModuleDeFeature {
 
-    /// `EXPERIMENTALE` le temps du chantier : l'écran est livré avant son export et sa parité CLI
-    /// (tranche 4), et cette catégorie permet de fusionner les paliers intermédiaires sans exposer un
-    /// écran à moitié fait. Elle passera `OPTIONNELLE` à la clôture du lot, comme `activite-nuit`.
+    /// `OPTIONNELLE` depuis la clôture du lot : l'écran a désormais son export et sa parité CLI, et
+    /// rester `EXPERIMENTALE` le livrerait **coupé par défaut** — autant ne pas l'avoir écrit. La
+    /// catégorie n'avait été `EXPERIMENTALE` que le temps du chantier, pour fusionner les paliers
+    /// intermédiaires sans exposer un écran à moitié fait.
     @Override
     public Fonctionnalite fonctionnalite() {
-        return new Fonctionnalite("synthese-nuit", "Synthèse de la nuit", Categorie.EXPERIMENTALE);
+        return new Fonctionnalite("synthese-nuit", "Synthèse de la nuit", Categorie.OPTIONNELLE);
     }
 
     @Override
