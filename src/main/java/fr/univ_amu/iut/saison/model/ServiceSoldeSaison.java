@@ -246,6 +246,10 @@ public class ServiceSoldeSaison {
             case PRET_A_DEPOSER -> "Téléverser " + nuit;
             case DEPOT_EN_COURS -> "Reprendre le dépôt de " + nuit;
             case DEPOSE -> "";
+            // Une nuit récupérée de Vigie-Chiro (#2581) n'a rien à faire avancer dans ce workflow :
+            // elle est déjà déposée là-bas. Ce qui lui manque, c'est son audio - et le geste qui le lui
+            // rend est la réactivation, depuis sa fiche.
+            case RECUPERE -> "Réactiver " + nuit;
         };
     }
 

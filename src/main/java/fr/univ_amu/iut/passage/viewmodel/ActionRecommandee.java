@@ -15,5 +15,8 @@ public enum ActionRecommandee {
     /// Préparer le dépôt (passage vérifié ou prêt à déposer).
     DEPOSER,
     /// Écouter et valider les sons du passage (passage déposé).
-    VALIDER
+    VALIDER,
+    /// Rebrancher l'audio d'une nuit **récupérée** de Vigie-Chiro (#2581) : elle porte ses observations
+    /// et son rattachement, il lui manque son son. Rien à déposer - elle l'est déjà là-bas.
+    REACTIVER
 }

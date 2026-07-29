@@ -215,6 +215,10 @@ final class ConstructeurDonneesCarte {
             case PRET_A_DEPOSER -> Color.web("#00838f");
             case DEPOT_EN_COURS -> Color.web("#148f77"); // entre « prêt » (cyan) et « déposé » (vert)
             case DEPOSE -> Color.web("#1e8449");
+            // Hors de l'axe de progression, donc hors de son dégradé (#2581) : une nuit récupérée n'est
+            // pas « plus avancée » qu'une nuit vérifiée, elle est arrivée autrement. Un violet la sort
+            // de la file gris → indigo → vert au lieu de l'y ranger à une place qu'elle n'occupe pas.
+            case RECUPERE -> Color.web("#7b5ea7");
         };
     }
 }
