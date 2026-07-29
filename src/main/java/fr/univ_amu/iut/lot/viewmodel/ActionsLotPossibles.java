@@ -22,7 +22,9 @@ record ActionsLotPossibles(boolean preparer, boolean deposer, boolean genererArc
     static ActionsLotPossibles depuis(EtatLot etat) {
         boolean coherent = !etat.aDesEchecs();
         StatutWorkflow statut = etat.statut();
-        boolean depose = statut == StatutWorkflow.DEPOSE;
+        // « Déjà là-bas » plutôt que « déposé par nous » (#2581) : une nuit récupérée n'a rien à
+        // préparer ni à téléverser non plus, et ses archives se consultent de la même façon.
+        boolean depose = statut.estSurLaPlateforme();
         boolean preparer = statut == StatutWorkflow.VERIFIE || (!coherent && !depose);
         boolean deposer =
                 coherent && (statut == StatutWorkflow.PRET_A_DEPOSER || statut == StatutWorkflow.DEPOT_EN_COURS);

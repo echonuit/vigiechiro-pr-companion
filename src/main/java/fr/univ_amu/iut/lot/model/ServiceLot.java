@@ -215,6 +215,9 @@ public class ServiceLot {
         // Le plan repart a neuf : oublier son empreinte evite que le prochain depot se compare a un lot
         // revolu et se croie incoherent (#1994).
         depotPlans.supprimerPlan(idPassage);
+        // ⚠️ « Récupéré » est délibérément ABSENT de cette liste (#2581), et ce n'est pas un oubli : la
+        // remise à « Prêt à déposer » rendrait une nuit déjà sur la plateforme prête à y repartir, donc
+        // à s'y dédoubler. C'est exactement le geste que #2771 a fermé côté fiche.
         if (passage.statutWorkflow() == StatutWorkflow.DEPOSE
                 || passage.statutWorkflow() == StatutWorkflow.DEPOT_EN_COURS) {
             // Réinitialisation délibérée : le moteur interdit les transitions arrière, on repose donc le
@@ -259,6 +262,12 @@ public class ServiceLot {
         // Le lot doit avoir été **préparé** (preparerLot a déjà validé R14 + cohérence et posé le statut).
         // On n'archive donc que des passages Prêt à déposer ou déjà Déposé : l'API ne court-circuite pas
         // ces contrôles, même si l'IHM masque déjà le bouton avant cet état.
+        if (passage.statutWorkflow() == StatutWorkflow.RECUPERE) {
+            // Sans ce cas, le refus disait « préparez-le d'abord » (#2581) : un conseil impossible à
+            // suivre, puisque la préparation refuse - à raison - une nuit déjà sur la plateforme.
+            throw new RegleMetierException("Cette nuit vient de Vigie-Chiro, où elle est déjà déposée :"
+                    + " il n'y a pas d'archives de dépôt à générer.");
+        }
         if (passage.statutWorkflow() != StatutWorkflow.PRET_A_DEPOSER
                 && passage.statutWorkflow() != StatutWorkflow.DEPOSE) {
             throw new RegleMetierException("Les archives de dépôt ne peuvent être générées qu'une fois le dépôt"

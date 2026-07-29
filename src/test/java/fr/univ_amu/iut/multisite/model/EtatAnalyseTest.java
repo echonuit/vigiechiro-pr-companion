@@ -27,9 +27,9 @@ class EtatAnalyseTest {
     @ParameterizedTest
     @EnumSource(
             value = StatutWorkflow.class,
-            names = {"DEPOSE"},
+            names = {"DEPOSE", "RECUPERE"},
             mode = EnumSource.Mode.EXCLUDE)
-    @DisplayName("Une nuit non déposée n'a pas d'analyse à suivre : sans objet, quel que soit le reste")
+    @DisplayName("Une nuit qui n'est pas sur la plateforme n'a pas d'analyse à suivre : sans objet")
     void non_depose_sans_objet(StatutWorkflow statut) {
         assertThat(EtatAnalyse.deduire(statut, releve(EtatTraitement.FINI), false))
                 .isEqualTo(EtatAnalyse.SANS_OBJET);

@@ -41,6 +41,16 @@ public enum StatutWorkflow {
         return libelle;
     }
 
+    /// La nuit est-elle **sur la plateforme**, d'une manière ou d'une autre ?
+    ///
+    /// Vrai pour [#DEPOSE] - nous l'y avons mise - et pour [#RECUPERE] - elle en vient. La distinction
+    /// compte pour les gardes et l'affichage, mais **pas** pour la chaîne de dépôt : dans les deux cas,
+    /// il n'y a plus rien à y déposer. Les deux se sont écrits `== DEPOSE` tant qu'un seul statut les
+    /// recouvrait ; ce prédicat évite d'oublier le second à chaque nouvel appelant (#2581).
+    public boolean estSurLaPlateforme() {
+        return this == DEPOSE || this == RECUPERE;
+    }
+
     /// Rang de ce statut **pour trier** des passages par avancement.
     ///
     /// Ce n'est pas `ordinal()`, et c'est tout l'intérêt. `ordinal()` reflète l'ordre de **déclaration**,

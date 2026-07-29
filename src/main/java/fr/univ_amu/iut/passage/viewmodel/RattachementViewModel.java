@@ -110,7 +110,7 @@ public class RattachementViewModel {
         numeroActuel = detail.numeroPassage();
         nombreSequences = detail.nombreSequences();
         renommageVerrouille.set(
-                detail.statut() == StatutWorkflow.DEPOSE || detail.statut() == StatutWorkflow.DEPOT_EN_COURS);
+                detail.statut().estSurLaPlateforme() || detail.statut() == StatutWorkflow.DEPOT_EN_COURS);
         conditions.charger(idPassage, detail.meteo(), detail.idEnregistreur(), detail.heureDebut(), detail.heureFin());
         messages.effacer();
         annee.set(detail.annee());
