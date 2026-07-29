@@ -118,6 +118,45 @@ class SitesViewModelTest {
     }
 
     @Test
+    @DisplayName("#2655 : un souci sur un rapprocheur n'efface plus ceux qui ont abouti")
+    void un_souci_n_efface_pas_ce_qui_a_abouti() {
+        SynchronisationSites sync = mock(SynchronisationSites.class);
+        // Les sites sont à jour, les nuits injoignables. Avant #2655, tout le message devenait
+        // « Sites non synchronisés : … » : la synchro partiellement réussie s'annonçait totalement
+        // empêchée, et l'accusation tombait sur les sites, qui n'y étaient pour rien.
+        when(sync.synchroniser(any(), any()))
+                .thenReturn(List.of(
+                        new RapportSynchro("sites", 3), RapportSynchro.empechee("nuit(s)", "Vigie-Chiro injoignable")));
+        SitesViewModel vm =
+                new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
+
+        vm.appliquerSynchro(vm.synchroniserEtRecharger());
+
+        assertThat(vm.messageSynchroProperty().get())
+                .as("ce qui a abouti reste dit, à côté de ce qui a été empêché")
+                .contains("3 sites synchronisés")
+                .contains("nuit(s) non récupérés")
+                .contains("Vigie-Chiro injoignable");
+    }
+
+    @Test
+    @DisplayName("#2655 : un empêchement SUR LES SITES dit sa cause, pas « 0 site synchronisé »")
+    void un_empechement_sur_les_sites_dit_sa_cause() {
+        SynchronisationSites sync = mock(SynchronisationSites.class);
+        when(sync.synchroniser(any(), any()))
+                .thenReturn(List.of(RapportSynchro.empechee("sites", "Vigie-Chiro injoignable")));
+        SitesViewModel vm =
+                new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
+
+        vm.appliquerSynchro(vm.synchroniserEtRecharger());
+
+        assertThat(vm.messageSynchroProperty().get())
+                .as("la forme verbale ne vaut que pour une synchro qui a eu lieu")
+                .doesNotContain("0 site synchronisé")
+                .contains("Vigie-Chiro injoignable");
+    }
+
+    @Test
     @DisplayName("#1045 : rien récupéré (hors connexion, aucun site distant) → message explicite, pas un silence")
     void synchro_sans_resultat() {
         SynchronisationSites sync = mock(SynchronisationSites.class);
