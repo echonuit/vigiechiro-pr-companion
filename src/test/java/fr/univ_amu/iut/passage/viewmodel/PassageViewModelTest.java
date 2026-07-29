@@ -383,6 +383,37 @@ class PassageViewModelTest {
     }
 
     @Test
+    @DisplayName("#2774 : le stepper d'une nuit récupérée ne raconte pas un trajet qu'elle n'a pas fait")
+    void stepper_dedie_pour_une_nuit_recuperee() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.RECUPERE));
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        // Le lot 1 la présentait comme « Déposé », ce qui marquait franchies des étapes qu'elle n'a
+        // jamais parcourues. Une seule étape dit la vérité : voilà où elle en est.
+        assertThat(viewModel.etapes()).singleElement().satisfies(etape -> {
+            assertThat(etape.statut()).isEqualTo(StatutWorkflow.RECUPERE);
+            assertThat(etape.etat()).isEqualTo(EtatEtape.COURANTE);
+        });
+        assertThat(viewModel.actionRecommandeeProperty().get())
+                .as("ce qui lui manque est porté par l'action, pas par un jalon")
+                .isEqualTo(ActionRecommandee.REACTIVER);
+    }
+
+    @Test
+    @DisplayName("#2774 : le stepper des autres statuts est inchangé")
+    void stepper_inchange_pour_les_autres() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        assertThat(viewModel.etapes())
+                .as("les cinq jalons du workflow d'import, « Dépôt en cours » et « Récupéré » exclus")
+                .hasSize(5)
+                .noneMatch(etape -> etape.statut() == StatutWorkflow.RECUPERE);
+    }
+
+    @Test
     @DisplayName("Le renommage est possible sur tout statut sauf Déposé ou Dépôt en cours")
     void renommage_possible_sauf_si_depose_ou_en_cours() {
         // Renommer après dépôt divergerait du serveur (le nom des fichiers y est l'identité) : bouton grisé.

@@ -22,7 +22,11 @@ public enum TriMultisite {
 
     /// Tri par statut de workflow (ordre de progression
     /// [StatutWorkflow][fr.univ_amu.iut.commun.model.StatutWorkflow]), puis référence.
-    PAR_STATUT(Comparator.comparingInt((LignePassage ligne) -> ligne.statut().ordinal())),
+    ///
+    /// Le rang vient de `rangDeProgression()` et non d'`ordinal()` : une nuit récupérée se range **avec
+    /// les nuits déposées**, pas après elles - `ordinal()` la mettrait en queue par simple effet de son
+    /// ordre de déclaration (#2581).
+    PAR_STATUT(Comparator.comparingInt((LignePassage ligne) -> ligne.statut().rangDeProgression())),
 
     /// Tri par verdict ([Verdict], passages non vérifiés en dernier), puis référence.
     PAR_VERDICT(Comparator.comparing(

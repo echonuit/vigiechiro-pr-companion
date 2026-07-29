@@ -355,6 +355,14 @@
     -fx-text-fill: -badge-info-texte;
 }
 
+.badge-statut-recupere {
+    /* Nuit rapatriée de Vigie-Chiro (#2581) : elle n'est pas à un stade de notre workflow, elle vient
+       d'ailleurs. Le violet la distingue de « Déposé » (indigo), avec qui elle serait sinon confondue -
+       c'est exactement la confusion que ce chantier défait. */
+    -fx-background-color: -badge-ailleurs-fond;
+    -fx-text-fill: -badge-ailleurs-texte;
+}
+
 /* Verdict d'un passage. */
 .badge-verdict-ok {
     -fx-background-color: -badge-succes-fond;
