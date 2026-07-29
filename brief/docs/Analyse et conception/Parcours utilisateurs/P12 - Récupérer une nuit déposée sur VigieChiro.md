@@ -119,6 +119,30 @@ revient - son identité étant revérifiée à chaque retour, jamais rebranchée
 Les tranches que l'application **régénère** depuis les bruts restent, elles, toujours copiées : elles
 sont produites par le produit, pas par l'utilisateur.
 
+### Une nuit rapatriée n'est pas une nuit qu'on a déposée
+
+Le geste laisse la nuit dans un état qui lui est propre, et l'écran le nomme : **« Récupéré »**.
+
+Elle porte ses observations et son rattachement, pas son audio. Elle n'a franchi aucune étape du
+workflow d'ici - ni importée, ni transformée, ni vérifiée - et sa seule suite est de rejoindre les nuits
+déposées, quand la réactivation lui rend son son.
+
+L'état a d'abord été **observé** sans être nommé : rattachée à une participation, et aucun enregistrement
+ne portant de fréquence d'échantillonnage. Cela suffisait tant qu'il ne servait qu'à **décider** - qui
+peut être supprimé, qui peut changer de verdict. Cela ne suffit plus dès qu'il faut le **montrer**, parce
+qu'une vue a besoin d'un nom, pas d'une question. C'est la règle qu'en tire l'ADR 2581 : *observer tant
+qu'on décide, déclarer quand on montre.*
+
+Ce que l'utilisateur y gagne, concrètement :
+
+- il **voit** d'où vient la nuit, au lieu de lire « Déposé » d'une nuit qu'il n'a jamais déposée ;
+- il peut la **supprimer** - c'est une copie locale, la participation reste sur la plateforme - sans
+  passer par un « Annuler le dépôt » qui lui ferait affirmer quelque chose de faux ;
+- il peut **écouter et valider** ses observations tout de suite, sans attendre l'audio ;
+- il ne peut ni changer son **verdict** (il se décide sur Vigie-Chiro) ni la **renommer** (l'année et le
+  n° sont l'identité que le serveur lui donne) ;
+- il les retrouve toutes d'un coup, dans une vue **« À réactiver »**.
+
 ## Ne pas noyer les vues site
 
 La synchro rapatrie **tous** les points du carré Vigie-Chiro (la grille STOC peut en compter des dizaines), pas seulement ceux que l'utilisateur exploite. Pour ne pas noyer les points **réellement utilisés** sous cette grille ([O5](../../Objectifs%20qualités/Objectifs%20qualités/O5.md)), les vues site distinguent l'origine d'un point : [M-Site-detail](../Maquettes/M-Site-detail.md) masque par défaut les points rapatriés **sans passage** (repliés derrière un « + N rapatrié(s) »), et [M-Sites](../Maquettes/M-Sites.md) résume de même le bandeau des points. Un point rapatrié réapparaît dès qu'on s'en sert (un passage l'y rattache).
