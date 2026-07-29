@@ -205,6 +205,15 @@ public class SyntheseController implements EmplacementNavigation {
             cbMilieu.setManaged(false);
             lblMilieu.setVisible(false);
             lblMilieu.setManaged(false);
+            // Les colonnes retirées laisseraient leur largeur derrière elles : le tableau se terminerait
+            // par une bande vide et sans en-tête, qui se lit comme un affichage cassé. Les colonnes
+            // restantes se répartissent donc l'espace.
+            tableSynthese.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+            // Mettre en garde contre une lecture qu'on n'affiche pas, et créditer une source qu'on n'a
+            // pas pu charger, serait du bruit trompeur. L'obligation de citer naît de l'usage : sans
+            // seuils affichés, il n'y a rien à créditer.
+            blocAvertissement.setVisible(false);
+            blocAvertissement.setManaged(false);
             lblReferentiel.setText("Référentiel d'activité indisponible : le tableau reste exploitable.");
             return;
         }

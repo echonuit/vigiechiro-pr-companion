@@ -48,6 +48,8 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class SyntheseSansReferentielViewTest {
 
+    private static final String TABLE = "#tableSynthese";
+
     private SyntheseController controleur;
 
     @Start
@@ -107,7 +109,7 @@ class SyntheseSansReferentielViewTest {
     void colonnes_retirees(FxRobot robot) {
         ouvrir(robot);
 
-        TableView<?> table = robot.lookup("#tableSynthese").queryAs(TableView.class);
+        TableView<?> table = robot.lookup(TABLE).queryAs(TableView.class);
         TableColumn<?, ?> activite = table.getColumns().stream()
                 .filter(colonne -> "Activité".equals(colonne.getText()))
                 .findFirst()
@@ -145,11 +147,43 @@ class SyntheseSansReferentielViewTest {
     }
 
     @Test
+    @DisplayName("La mise en garde et la citation s'effacent avec ce qu'elles commentaient")
+    void avertissement_retire(FxRobot robot) {
+        // Mettre en garde contre une lecture qu'on n'affiche pas, et créditer une source qu'on n'a pas
+        // pu charger, serait du bruit trompeur. L'obligation de citer naît de l'usage.
+        ouvrir(robot);
+
+        javafx.scene.layout.VBox bloc = robot.lookup("#blocAvertissement").queryAs(javafx.scene.layout.VBox.class);
+        assertThat(bloc.isVisible()).isFalse();
+        assertThat(bloc.isManaged())
+                .as("retiré de la mise en page, sinon il laisse un blanc inexpliqué en pied d'écran")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("Les colonnes restantes occupent la largeur : pas de bande vide sans en-tête")
+    void pas_de_colonne_orpheline(FxRobot robot) {
+        // Sans cela, les colonnes retirées laissent leur largeur derrière elles et le tableau se termine
+        // par une bande vide qui se lit comme un affichage cassé.
+        ouvrir(robot);
+
+        TableView<?> table = robot.lookup(TABLE).queryAs(TableView.class);
+        double largeurVisible = table.getColumns().stream()
+                .filter(TableColumn::isVisible)
+                .mapToDouble(TableColumn::getWidth)
+                .sum();
+
+        assertThat(largeurVisible)
+                .as("les colonnes visibles couvrent le tableau, à la bordure près")
+                .isGreaterThan(table.getWidth() - 20);
+    }
+
+    @Test
     @DisplayName("Les comptages, eux, restent affichés : ce qui est mesuré ne dépend pas du référentiel")
     void comptages_conserves(FxRobot robot) {
         ouvrir(robot);
 
-        TableView<?> table = robot.lookup("#tableSynthese").queryAs(TableView.class);
+        TableView<?> table = robot.lookup(TABLE).queryAs(TableView.class);
         assertThat(table.getItems()).hasSize(1);
         assertThat(robot.lookup("718").tryQuery())
                 .as("le nombre de contacts est une mesure, pas une interprétation")
