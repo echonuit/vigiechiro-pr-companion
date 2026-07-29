@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -19,6 +20,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
@@ -51,6 +53,7 @@ class RapprochementSitesTest {
 
     private SiteDao siteDao;
     private PointDao pointDao;
+    private PointCommuneDao communeDao;
     private ServiceSites service;
     private LienVigieChiroDao liens;
     private SiteTiersDao siteTiers;
@@ -64,10 +67,18 @@ class RapprochementSitesTest {
         siteDao = new SiteDao(source);
         pointDao = new PointDao(source);
         PassageDao passageDao = new PassageDao(source);
-        service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 6, 1)));
+        communeDao = new PointCommuneDao(source);
+        service =
+                new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 6, 1)), communeDao);
         liens = new LienVigieChiroDao(source);
         siteTiers = new SiteTiersDao(source);
-        rapprochement = new RapprochementSites(siteDao, service, liens, siteTiers, ID_USER);
+        rapprochement = new RapprochementSites(
+                siteDao,
+                service,
+                liens,
+                siteTiers,
+                ID_USER,
+                new ServiceCommunes(pointDao, communeDao, position -> Optional.empty()));
     }
 
     /// Site distant **sans propriétaire déclaré** (`observateur` absent) : cas des tests antérieurs à
@@ -203,5 +214,49 @@ class RapprochementSitesTest {
         assertThat(siteTiers.estTiers(idLocal("130711")))
                 .as("sans preuve du contraire, on ne présume pas un tiers")
                 .isFalse();
+    }
+
+    // --- Communes des points rapatriés (#2791) ---
+
+    @Test
+    @DisplayName("La synchro rattrape les communes des points qu'elle vient de créer (#2791)")
+    void rattrape_les_communes_des_points_rapatries() {
+        RapprochementSites avecResolveur = new RapprochementSites(
+                siteDao,
+                service,
+                liens,
+                siteTiers,
+                ID_USER,
+                new ServiceCommunes(
+                        pointDao, communeDao, position -> Optional.of(new Commune("Aix-en-Provence", "13001"))));
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(siteDistant(
+                        "s1",
+                        "640380",
+                        List.of(new PointVigieChiro("Z1", 43.52, 5.46), new PointVigieChiro("Z41", 43.51, 5.45))))));
+
+        avecResolveur.synchroniser(client);
+
+        assertThat(communeDao.idsResolus())
+                .as("les deux points rapatriés, géolocalisés, ont leur commune sitôt la synchro finie")
+                .hasSize(2);
+    }
+
+    @Test
+    @DisplayName("Un rattrapage qui échoue ne fait pas échouer la synchro (#2791)")
+    void rattrapage_en_echec_reste_silencieux() {
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(
+                        List.of(siteDistant("s1", "640380", List.of(new PointVigieChiro("Z1", 43.52, 5.46))))));
+        RapprochementSites rattrapageCasse = new RapprochementSites(
+                siteDao, service, liens, siteTiers, ID_USER, new ServiceCommunes(pointDao, communeDao, position -> {
+                    throw new IllegalStateException("panne du rattrapage");
+                }));
+
+        Optional<RapportSynchro> rapport = rattrapageCasse.synchroniser(client);
+
+        assertThat(rapport)
+                .as("la commune est un confort : la synchro rend son rapport")
+                .isPresent();
     }
 }
