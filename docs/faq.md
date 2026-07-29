@@ -69,6 +69,23 @@ probablement rien à supprimer. Voir [Importer une nuit](ecrans/importation.md).
     Vous en gardez la maîtrise : il n'y a pas de bouton qui efface votre audio. Si vous rangez ou
     effacez des fichiers, l'application s'en aperçoit et le dit, sans jamais crier à la corruption.
 
+### Ma synchronisation a rapporté des nuits « Récupéré » : qu'est-ce que ça veut dire ?
+
+Que la plateforme les connaît et vous les a rendues — avec leurs **observations** et leur rattachement,
+mais **sans leur audio**, que Vigie-Chiro ne renvoie pas.
+
+Ces nuits ne sont donc pas à un stade de votre workflow : elles ne sont ni importées, ni transformées, ni
+vérifiées ici. Elles portent leur propre statut, sur fond violet, et un seul geste les concerne :
+**Réactiver ce passage**, depuis leur fiche, avec la carte SD ou le dossier d'origine. Leur audio revient,
+leurs observations et vos validations restent, et la nuit devient une nuit déposée comme les autres.
+
+En attendant, vous pouvez déjà **écouter et valider** leurs observations. Ce que vous ne pouvez pas faire :
+changer leur verdict (il se décide sur Vigie-Chiro), les renommer (l'année et le n° sont l'identité que le
+serveur leur donne), ni annuler un dépôt que vous n'avez pas fait. Vous pouvez en revanche les
+**supprimer** : cela n'enlève que la copie locale, et une prochaine synchronisation les rapportera.
+
+Pour les retrouver toutes d'un coup, l'écran **Carte & passages** a une vue **« À réactiver »**.
+
 ### L'audio d'une nuit a disparu, puis-je le récupérer ?
 
 Oui, **si vous avez encore les fichiers** : le bouton **Réactiver ce passage** les rebranche depuis un

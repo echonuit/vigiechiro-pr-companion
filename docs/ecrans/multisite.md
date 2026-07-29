@@ -215,6 +215,14 @@ le site et le point dans **Mes sites**. La rattacher à un autre point produirai
 
 Une combinaison de filtres utile peut être **enregistrée sous un nom** pour être rejouée d'un clic.
 Les vues enregistrées s'affichent comme des **onglets** au-dessus du tableau : cliquer sur le nom d'un
-onglet **rejoue** sa combinaison de filtres. Le bouton **« + Vue »**, au bout de la barre d'onglets,
+onglet **rejoue** sa combinaison de filtres.
+
+Six vues sont fournies d'office : **Tout**, **Résultats à importer**, **Déposés**, **À réactiver**,
+**Non vérifié** et **Vérifiés**. « À réactiver » liste les nuits **récupérées** de Vigie-Chiro : celles
+que la synchronisation a rapportées avec leurs observations mais sans leur audio. C'est la question qui
+vient juste après une synchronisation, et la liste est exactement celle des nuits à réactiver. Sur la
+carte et dans le tableau, ces nuits portent une pastille **violette** — une couleur choisie hors du
+dégradé du workflow, parce qu'elles ne sont à aucune de ses étapes : elles sont arrivées par une autre
+porte. Le bouton **« + Vue »**, au bout de la barre d'onglets,
 enregistre les filtres **courants** sous un nouveau nom. Sur chaque onglet, le **crayon** le renomme et
 la **croix** le supprime.
