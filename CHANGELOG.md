@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.128.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.127.0...v2.128.0) (2026-07-29)
+
+
+### Features
+
+* **multisite:** la commune se cherche dans Analyse et Carte & passages (lot 0, fin) ([#2840](https://github.com/echonuit/vigiechiro-pr-companion/issues/2840)) ([ea4718b](https://github.com/echonuit/vigiechiro-pr-companion/commit/ea4718b7ae22e85b45ba48f2650e42d7879ed973)), closes [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791) [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791) [#2790](https://github.com/echonuit/vigiechiro-pr-companion/issues/2790) [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791) [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791)
+
 # [2.127.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.126.0...v2.127.0) (2026-07-29)
 
 
