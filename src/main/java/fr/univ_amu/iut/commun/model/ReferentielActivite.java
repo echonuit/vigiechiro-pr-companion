@@ -92,7 +92,13 @@ public final class ReferentielActivite {
 
     /// Lit un référentiel au format de la ressource : lignes de commentaire `#`, ligne d'en-tête, puis
     /// `code;referentiel;saison;q25;q75;q98;nbocc;confiance`.
-    static ReferentielActivite lire(java.io.Reader source) throws IOException {
+    ///
+    /// **Public** parce que le format est le contrat, pas seulement la ressource embarquée : c'est par
+    /// là qu'un référentiel fourni par l'utilisateur entrerait un jour, et c'est par là que les tests
+    /// des couches supérieures se donnent des seuils explicites plutôt que de dépendre des vraies
+    /// données — un test de règle qui lit la ressource réelle se met à échouer quand la source évolue,
+    /// pour des raisons qui n'ont rien à voir avec la règle.
+    public static ReferentielActivite lire(java.io.Reader source) throws IOException {
         Map<Cle, SeuilsActivite> table = new HashMap<>();
         List<String> refusees = new ArrayList<>();
         try (BufferedReader lecteur = new BufferedReader(source)) {
