@@ -19,11 +19,13 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -159,6 +161,15 @@ public final class CaptureSynthese {
             return (idPassage, contexte) -> {
                 // Inerte.
             };
+        }
+
+        /// Espèces prioritaires de la démonstration. **Fidèle au Plan National d'Actions** : parmi les
+        /// quatre espèces montrées, seule la Pipistrelle commune y figure. Une démo qui marquerait tout,
+        /// ou rien, donnerait une image aussi fausse dans un sens que dans l'autre — c'est le défaut
+        /// relevé à la clôture du lot #2353, où l'aperçu publié ne montrait aucun bouclier.
+        @Provides
+        EspecesPrioritaires especesPrioritaires() {
+            return () -> Set.of("Pippip");
         }
 
         /// Service à lignes fixes : les deux lectures sont surchargées, les DAO (nuls) ne sont jamais

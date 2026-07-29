@@ -15,6 +15,8 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -47,6 +49,7 @@ public class SyntheseController implements EmplacementNavigation {
     private final SyntheseViewModel viewModel;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
+    private final MarqueurEspecesAEnjeu marqueurEnjeu;
 
     private ContextePassage contexte;
 
@@ -121,10 +124,16 @@ public class SyntheseController implements EmplacementNavigation {
     }
 
     @Inject
-    public SyntheseController(SyntheseViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
+    public SyntheseController(
+            SyntheseViewModel viewModel,
+            OuvrirSite ouvrirSite,
+            OuvrirPassage ouvrirPassage,
+            EspecesPrioritaires especesPrioritaires) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.marqueurEnjeu =
+                new MarqueurEspecesAEnjeu(Objects.requireNonNull(especesPrioritaires, "especesPrioritaires"));
     }
 
     @FXML
@@ -234,6 +243,10 @@ public class SyntheseController implements EmplacementNavigation {
 
     private void configurerColonnes() {
         colEspece.setCellValueFactory(c -> texte(c.getValue().nomEspece()));
+        // Le bouclier des espèces prioritaires, dans la cellule du nom : ici une ligne EST une espèce.
+        // Même repère, même infobulle que l'inventaire, la revue, l'activité et la recherche — le produit
+        // ne peut pas désigner le même fait sur quatre surfaces et se taire sur la cinquième.
+        colEspece.setCellFactory(colonne -> CelluleEspeceAEnjeu.cellule(marqueurEnjeu, LigneSynthese::codeTaxon));
         colGroupe.setCellValueFactory(c -> texte(ouTiret(c.getValue().groupe())));
         colContacts.setCellValueFactory(c -> texte(c.getValue().contacts()));
         colFichiers.setCellValueFactory(c -> texte(c.getValue().fichiers()));

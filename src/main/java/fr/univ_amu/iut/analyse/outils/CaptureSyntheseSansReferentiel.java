@@ -15,11 +15,13 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -119,6 +121,13 @@ public final class CaptureSyntheseSansReferentiel {
             return (idPassage, contexte) -> {
                 // Inerte.
             };
+        }
+
+        /// Le référentiel d'ACTIVITÉ manque, pas celui de CONSERVATION : deux sources distinctes, et
+        /// l'écran doit continuer à marquer les espèces prioritaires. L'image le montre.
+        @Provides
+        EspecesPrioritaires especesPrioritaires() {
+            return () -> Set.of("Pippip");
         }
 
         private static ServiceSynthese serviceDemo() {

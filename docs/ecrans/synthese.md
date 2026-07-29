@@ -14,7 +14,7 @@ On y arrive depuis l'écran d'un **passage**, par la carte « Synthèse de la nu
 
 | Colonne | Ce qu'elle dit |
 |---|---|
-| **Espèce** | le taxon retenu — votre correction si vous en avez posé une, sinon la proposition de Tadarida |
+| **Espèce** | le taxon retenu : votre correction si vous en avez posé une, sinon la proposition de Tadarida. Un **bouclier** signale une espèce prioritaire du Plan National d'Actions Chiroptères |
 | **Contacts** | le nombre de cris détectés |
 | **Fichiers** | le nombre de **séquences distinctes** d'où ils viennent |
 | **Activité** | où se situe ce nombre : Faible, Moyenne, Forte ou Très forte |
@@ -74,6 +74,16 @@ n'affiche pas, et créditer une source qu'on n'a pas pu charger, n'aiderait pers
 
 Vos comptages, eux, restent affichés en entier. Le nombre de contacts est une **mesure** ; la classe
 d'activité n'en est qu'une lecture. Perdre la seconde ne doit pas vous priver de la première.
+
+## Espèce prioritaire et classe d'activité : deux choses différentes
+
+Le bouclier et la classe d'activité se lisent côte à côte sans se confondre. Le premier dit qu'une
+espèce fait l'objet d'un **plan national de conservation** ; la seconde dit combien elle a été entendue
+cette nuit-là, au regard de ce qu'on observe habituellement. Une espèce prioritaire peut très bien
+afficher une activité faible, et une espèce commune une activité très forte.
+
+C'est aussi pourquoi le bouclier reste affiché quand le référentiel d'activité manque : les deux
+informations ne viennent pas de la même source et ne dépendent pas l'une de l'autre.
 
 ## Ce que la classe d'activité ne dit pas
 

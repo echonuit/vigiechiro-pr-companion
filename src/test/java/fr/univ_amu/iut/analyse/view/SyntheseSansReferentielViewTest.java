@@ -89,6 +89,13 @@ class SyntheseSansReferentielViewTest {
             OuvrirPassage ouvrirPassage() {
                 return ouvrirPassage;
             }
+
+            /// Le référentiel d'ACTIVITÉ manque, pas celui de CONSERVATION : ce sont deux sources
+            /// distinctes, et l'écran doit continuer à marquer les espèces prioritaires.
+            @Provides
+            fr.univ_amu.iut.validation.model.EspecesPrioritaires especesPrioritaires() {
+                return () -> java.util.Set.of("Pipkuh");
+            }
         });
         FXMLLoader loader = new FXMLLoader(SyntheseController.class.getResource("Synthese.fxml"));
         loader.setControllerFactory(injector::getInstance);

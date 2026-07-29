@@ -37,6 +37,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -97,6 +98,14 @@ class SyntheseViewTest {
             @Provides
             OuvrirPassage ouvrirPassage() {
                 return ouvrirPassage;
+            }
+
+            /// Référentiel de conservation réduit au strict nécessaire : la Pipistrelle commune est
+            /// prioritaire, la Kuhl ne l'est pas. Deux espèces suffisent à prouver que le repère
+            /// discrimine.
+            @Provides
+            fr.univ_amu.iut.validation.model.EspecesPrioritaires especesPrioritaires() {
+                return () -> java.util.Set.of(PIPKUH);
             }
         });
         FXMLLoader loader = new FXMLLoader(SyntheseController.class.getResource("Synthese.fxml"));
@@ -223,6 +232,24 @@ class SyntheseViewTest {
                         .isVisible())
                 .as("une annulation n'est pas un événement : le bandeau reste muet")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("Une espèce prioritaire porte le bouclier, comme sur les quatre autres surfaces")
+    void espece_prioritaire_porte_le_bouclier(FxRobot robot) {
+        // Le produit ne peut pas désigner le même fait sur quatre surfaces et se taire sur la cinquième.
+        // Le repère se pose dans la cellule du nom : ici une ligne EST une espèce.
+        chargerDeuxEspeces(robot);
+
+        long boucliers = robot.lookup(noeud -> noeud instanceof FontIcon icone
+                        && icone.getStyleClass().contains("icone-enjeu")
+                        && icone.isVisible())
+                .queryAll()
+                .size();
+
+        assertThat(boucliers)
+                .as("une seule des deux espèces est prioritaire : le repère discrimine, il ne décore pas")
+                .isEqualTo(1);
     }
 
     @Test
