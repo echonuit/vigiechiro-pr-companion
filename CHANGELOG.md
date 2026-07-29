@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.115.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.114.0...v2.115.0) (2026-07-29)
+
+
+### Features
+
+* **commun:** un nombre de contacts peut enfin se lire contre un referentiel ([#2764](https://github.com/echonuit/vigiechiro-pr-companion/issues/2764)) ([573f009](https://github.com/echonuit/vigiechiro-pr-companion/commit/573f009c53d8eb299ceda70e4ea771be62c09201)), closes [#2351](https://github.com/echonuit/vigiechiro-pr-companion/issues/2351) [#2351](https://github.com/echonuit/vigiechiro-pr-companion/issues/2351) [#2348](https://github.com/echonuit/vigiechiro-pr-companion/issues/2348) [#2351](https://github.com/echonuit/vigiechiro-pr-companion/issues/2351)
+
 # [2.114.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.113.1...v2.114.0) (2026-07-29)
 
 
