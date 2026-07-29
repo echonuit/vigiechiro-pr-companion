@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.121.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.120.0...v2.121.0) (2026-07-29)
+
+
+### Features
+
+* **sites:** la commune d'un point se derive de son GPS (lot 0, socle) ([#2805](https://github.com/echonuit/vigiechiro-pr-companion/issues/2805)) ([948cf05](https://github.com/echonuit/vigiechiro-pr-companion/commit/948cf05f3924ffbc16f327d9f98c45c73b9f7983)), closes [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791) [#2483](https://github.com/echonuit/vigiechiro-pr-companion/issues/2483) [#2799](https://github.com/echonuit/vigiechiro-pr-companion/issues/2799) [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791) [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791)
+
 # [2.120.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.119.0...v2.120.0) (2026-07-29)
 
 
