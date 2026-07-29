@@ -103,4 +103,19 @@ class EtatAnalyseTest {
             assertThat(etat.infobulle()).as("infobulle de %s", etat).isNotBlank();
         }
     }
+
+    @Test
+    @DisplayName("#2775 : chaque état visible porte un libellé - une colonne vide ne dit rien à personne")
+    void chaque_etat_visible_a_un_libelle() {
+        // Survivant PIT lu à la clôture : vider TOUS les libellés ne faisait rougir aucun test. Seul le
+        // libellé vide de SANS_OBJET était vérifié - c'est-à-dire le seul qui doit l'être.
+        for (EtatAnalyse etat : EtatAnalyse.values()) {
+            if (etat == EtatAnalyse.SANS_OBJET) {
+                continue;
+            }
+            assertThat(etat.libelle())
+                    .as("« %s » s'affiche dans la colonne Analyse : sans libellé, la cellule ment par omission", etat)
+                    .isNotBlank();
+        }
+    }
 }
