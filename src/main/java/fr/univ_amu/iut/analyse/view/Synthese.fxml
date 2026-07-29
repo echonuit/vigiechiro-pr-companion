@@ -50,7 +50,7 @@
       <!-- Les séquences distinctes, souvent moins nombreuses que les contacts : elles disent si
            l'activité est concentrée ou diffuse. -->
       <TableColumn fx:id="colFichiers" text="Fichiers" prefWidth="90.0"/>
-      <TableColumn fx:id="colActivite" text="Activité" prefWidth="180.0"/>
+      <TableColumn fx:id="colActivite" text="Activité" prefWidth="240.0"/>
       <!-- Les quantiles retenus, à côté de la classe : une classe seule est un verdict, une classe
            accompagnée de ses bornes est une lecture contestable, donc scientifique. -->
       <TableColumn fx:id="colSeuils" text="Seuils retenus" prefWidth="220.0"/>

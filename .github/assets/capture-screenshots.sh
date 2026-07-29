@@ -42,6 +42,7 @@ MAINS=(
   "fr.univ_amu.iut.saison.outils.CaptureSaison"
   "fr.univ_amu.iut.analyse.outils.CaptureAnalyse"
   "fr.univ_amu.iut.analyse.outils.CaptureActivite"
+  "fr.univ_amu.iut.analyse.outils.CaptureSynthese"
   "fr.univ_amu.iut.diagnostic.outils.CaptureDiagnostic"
   "fr.univ_amu.iut.audit.outils.CaptureAudit"
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidation"

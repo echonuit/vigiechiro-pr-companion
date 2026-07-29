@@ -108,7 +108,7 @@ class SyntheseViewTest {
         assertThat(avertissement.isVisible()).isTrue();
         assertThat(citation.getText())
                 .as("le crédit à la source doit être lisible à l'écran, pas seulement dans le code")
-                .contains("Bas Y.", "2020", "Museum national d'Histoire naturelle");
+                .contains("Bas Y.", "2020", "Muséum national d'Histoire naturelle");
         assertThat(citation.isVisible()).isTrue();
     }
 

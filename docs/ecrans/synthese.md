@@ -8,6 +8,8 @@ habituellement pour cette espèce, à cette saison, dans cette région et dans c
 
 On y arrive depuis l'écran d'un **passage**, par la carte « Synthèse de la nuit ».
 
+![La synthèse d'une nuit : quatre espèces, leur classe d'activité et les quantiles qui la fondent, avec la mise en garde et la source en pied d'écran.](../assets/captures/apercu-synthese.png)
+
 ## Ce que le tableau montre
 
 | Colonne | Ce qu'elle dit |
