@@ -23,7 +23,7 @@ setup() {
 # quoi que ce soit. Une régression de packaging, d'enregistrement d'une commande ou de déclaration d'une
 # option requise la ferait tomber. (Les commandes réseau y figurent : leur validation est hors-ligne.)
 COMMANDES_OPTIONS_REQUISES=(
-  lister-observations discussion
+  lister-observations discussion synthetiser-passage
   exporter-observations exporter-vu exporter-lot exporter-activite
   importer importer-tadarida
   marquer-douteux marquer-reference poser-certitude

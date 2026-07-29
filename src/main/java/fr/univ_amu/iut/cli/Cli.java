@@ -94,7 +94,14 @@ public final class Cli {
         ligne.setExecutionStrategy(this::migrerPuisExecuter);
         ligne.setParameterExceptionHandler(Cli::gererErreurUsage);
         ligne.setExecutionExceptionHandler(Cli::gererErreurExecution);
-        return ligne.execute(args);
+        int code = ligne.execute(args);
+        // Un `PrintWriter` en auto-flush ne se vide QUE sur `println`/`printf`, jamais sur `print`. Une
+        // commande dont le dernier caractère écrit ne vient pas d'un `println` — un CSV, qui porte déjà
+        // sa propre fin de ligne — verrait sa sortie disparaître en silence, code 0 à l'appui. On vide
+        // donc explicitement, une fois pour toutes les commandes (#2351).
+        ligne.getOut().flush();
+        ligne.getErr().flush();
+        return code;
     }
 
     /// Stratégie d'exécution : migre la base **si une sous-commande est invoquée** (une invocation qui se

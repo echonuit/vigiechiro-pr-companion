@@ -194,6 +194,45 @@ setup() {
   [[ "${output}" == *"Aucune observation"* ]]
 }
 
+@test "synthetiser-passage : le CSV emporte la citation et l avertissement, exit 0 (#2351)" {
+  # L enjeu du lot : un CSV quitte l application pour vivre dans un tableur, loin de l ecran qui
+  # portait la mise en garde. Base vide : le tableau se reduit a son bloc de tete, ce qui suffit a
+  # prouver que le contexte voyage AVEC la donnee.
+  run cli synthetiser-passage --passage 1 --sortie "${BATS_TEST_TMPDIR}/synthese.csv"
+  [ "${status}" -eq 0 ]
+  [ -f "${BATS_TEST_TMPDIR}/synthese.csv" ]
+  run cat "${BATS_TEST_TMPDIR}/synthese.csv"
+  [[ "${output}" == *"Bas Y."* ]]
+  [[ "${output}" == *"niveau d enjeu de conservation"* || "${output}" == *"enjeu de conservation"* ]]
+  # Fragment sans accent volontairement : le fichier .bats reste ASCII, le CSV lui est accentue.
+  [[ "${output}" == *"Compar"* ]]
+}
+
+@test "synthetiser-passage sans --sortie : le CSV part sur la sortie standard, exit 0 (#2351)" {
+  # Le chemin le plus evident de la commande, et celui qu on redirige : « > synthese.csv ». Il a
+  # longtemps ete le seul non couvert, et il etait casse — la sortie se perdait, code 0 a l appui,
+  # parce qu un PrintWriter en auto-flush ne se vide pas sur `print`. Un vert qui ne teste pas le
+  # chemin par defaut ne dit rien du tout.
+  run cli synthetiser-passage --passage 1
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Bas Y."* ]]
+  [[ "${output}" == *"Code esp"* ]]
+}
+
+@test "synthetiser-passage --format json : le contexte est un objet a part, exit 0 (#2351)" {
+  run cli synthetiser-passage --passage 1 --format json
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"\"contexte\""* ]]
+  [[ "${output}" == *"\"source\""* ]]
+  [[ "${output}" == *"Bas Y."* ]]
+}
+
+@test "synthetiser-passage --format xml : refus explique, exit 2 (#2351)" {
+  run cli synthetiser-passage --passage 1 --format xml
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Format non pris en charge"* ]]
+}
+
 @test "exporter-activite : ecrit le CSV d activite sur une base vide, exit 0 (#2352)" {
   # Base jetable sans observation : le CSV se reduit a ses en-tetes, ce qui reste un resultat valide.
   # Le test prouve ce que le test Java in-process ne voit pas : le fat-jar sait produire le fichier.

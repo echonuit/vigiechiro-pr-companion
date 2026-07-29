@@ -1,26 +1,36 @@
 package fr.univ_amu.iut.analyse.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.analyse.model.ExportSyntheseCsv;
 import fr.univ_amu.iut.analyse.model.LigneSynthese;
 import fr.univ_amu.iut.analyse.viewmodel.SyntheseViewModel;
 import fr.univ_amu.iut.commun.model.SeuilsActivite;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
+import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
 /// Contrôleur de l'écran **Synthèse de la nuit** (#2351). Pur câblage : tout vient du
@@ -85,6 +95,31 @@ public class SyntheseController implements EmplacementNavigation {
     @FXML
     private Label lblCitation;
 
+    @FXML
+    private Button boutonExporter;
+
+    @FXML
+    private HBox bandeauRetour;
+
+    @FXML
+    private Label lblRetour;
+
+    @FXML
+    private Button btnFermerRetour;
+
+    /// Le sélecteur de fichier passe par un **port** : un `FileChooser` natif ouvert par `showAndWait()`
+    /// fige un test TestFX headless dès la première ligne du geste. Les tests y branchent un double qui
+    /// répond un chemin, ou rien du tout (l'utilisateur a annulé).
+    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+            // Le champ @FXML est déclaré plus haut mais reste nul jusqu'au chargement : la fenêtre se
+            // demande donc au clic, pas à la construction.
+            new SelecteurFichierJavaFx(() -> this.boutonExporter.getScene().getWindow()));
+
+    /// Le porteur du sélecteur, pour qu'un test y substitue son double.
+    SelecteurFichierModifiable selecteur() {
+        return selecteur;
+    }
+
     @Inject
     public SyntheseController(SyntheseViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -111,7 +146,41 @@ public class SyntheseController implements EmplacementNavigation {
         lblAvertissement.setText(viewModel.avertissement());
         lblCitation.setText("Source : " + viewModel.citation());
 
+        // Rien à exporter, le bouton le dit en se grisant plutôt que d'écrire un fichier d'en-têtes seuls
+        // que l'utilisateur croirait vide par erreur.
+        boutonExporter.disableProperty().bind(Bindings.isEmpty(viewModel.lignes()));
+        BandeauRetour.installer(
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+
         configurerMilieux();
+    }
+
+    /// Exporte le tableau **tel qu'il est affiché** — bascule et milieu compris — en CSV, le pendant à
+    /// l'écran de `synthetiser-passage`, sur le même formateur pur.
+    @FXML
+    private void exporter() {
+        selecteur
+                .enregistrerFichier("Exporter la synthèse de la nuit en CSV", "synthese-nuit.csv", FiltreFichier.csv())
+                .ifPresent(this::ecrire);
+    }
+
+    private void ecrire(Path fichier) {
+        try {
+            List<LigneSynthese> lignes = viewModel.lignesExport();
+            ExportSyntheseCsv.ecrire(lignes, viewModel.contexteActivite(), fichier);
+            viewModel.signalerExport(String.valueOf(fichier.getFileName()), lignes.size());
+        } catch (IOException | RuntimeException echec) {
+            // Sans ce rattrapage, l'exception remonte au fil JavaFX, qui l'avale : le bouton « ne fait
+            // rien » et l'utilisateur croit son fichier écrit.
+            viewModel.signalerEchecExport(motif(echec));
+        }
+    }
+
+    /// Message d'un échec, à défaut de message une mention du type : une chaîne vide dans le bandeau ne
+    /// vaudrait pas mieux que le silence qu'on corrige.
+    private static String motif(Exception echec) {
+        String message = echec.getMessage();
+        return message == null || message.isBlank() ? echec.getClass().getSimpleName() : message;
     }
 
     /// Peuple le sélecteur de milieu, ou **efface toute la colonne d'activité** quand le référentiel

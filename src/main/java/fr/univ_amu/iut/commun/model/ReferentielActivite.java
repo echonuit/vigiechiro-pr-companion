@@ -17,8 +17,8 @@ import java.util.Optional;
 ///
 /// ## La source, qui doit voyager avec la donnée
 ///
-/// > Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020) — *Bat reference scale of activity levels*
-/// > (v. 2020-04-10), Team-Chiro / CESCO — Muséum national d'Histoire naturelle.
+/// > Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020), *Bat reference scale of activity levels*
+/// > (v. 2020-04-10), Team-Chiro / CESCO, Muséum national d'Histoire naturelle.
 ///
 /// Données ouvertes, **libres d'usage avec citation obligatoire**. C'est pourquoi [#CITATION] est
 /// exposée : elle se recopie à l'écran et dans chaque export. Un référentiel scientifique qui voyage
@@ -46,8 +46,8 @@ public final class ReferentielActivite {
 
     /// Citation **obligatoire**, à recopier partout où une classe d'activité s'affiche ou s'exporte.
     public static final String CITATION =
-            "Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020) — Bat reference scale of activity "
-                    + "levels (v. 2020-04-10), Team-Chiro / CESCO — Muséum national d'Histoire naturelle";
+            "Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020), Bat reference scale of activity "
+                    + "levels (v. 2020-04-10), Team-Chiro / CESCO, Muséum national d'Histoire naturelle";
 
     /// Ce que la classe d'activité **ne dit pas**. Accompagne la citation, écran comme export.
     public static final String AVERTISSEMENT =

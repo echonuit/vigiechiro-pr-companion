@@ -17,8 +17,13 @@ import fr.univ_amu.iut.commun.model.ConfianceReferentiel;
 import fr.univ_amu.iut.commun.model.ContexteActivite;
 import fr.univ_amu.iut.commun.model.SaisonActivite;
 import fr.univ_amu.iut.commun.model.SeuilsActivite;
+import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.SelecteurFichier;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
@@ -31,6 +36,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -147,6 +153,128 @@ class SyntheseViewTest {
         assertThat(robot.lookup("Non couvert par le référentiel").tryQuery())
                 .as("un orthoptère le DIT, plutôt que de laisser une cellule vide")
                 .isPresent();
+    }
+
+    /// Charge une nuit à deux espèces et rend la main quand l'écran est peuplé.
+    private void chargerDeuxEspeces(FxRobot robot) {
+        when(service.pour(
+                        anyLong(),
+                        org.mockito.ArgumentMatchers.anyBoolean(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.of(
+                        ligne("Pipkuh", "Chiroptères", 150, ClasseActivite.FORTE),
+                        ligne("Tetvir", "Orthoptères et cigales", 12, null)));
+        robot.interact(() -> controleur.ouvrirSur(new fr.univ_amu.iut.commun.viewmodel.ContextePassage(
+                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite("640380", "A1", "Étang"))));
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    @Test
+    @DisplayName("Le bouton d'export écrit le fichier, avec l'avertissement et la citation dedans")
+    void export_ecrit_le_fichier(FxRobot robot, @TempDir Path dossier) throws Exception {
+        Path cible = dossier.resolve("synthese.csv");
+        chargerDeuxEspeces(robot);
+        robot.interact(() -> controleur.selecteur().definir(new SelecteurFige(cible)));
+
+        robot.clickOn("#boutonExporter");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(Files.readString(cible, StandardCharsets.UTF_8))
+                .as("le fichier quitte l'écran : ce qui n'y est pas écrit ne prévient plus personne")
+                .contains("Bas Y.")
+                .contains("n'est pas un niveau d'enjeu de conservation")
+                .contains("Comparé au référentiel : region Occitanie")
+                .contains("Pipkuh");
+    }
+
+    @Test
+    @DisplayName("Un export réussi le DIT : sinon il est indiscernable d'un clic sans effet")
+    void export_reussi_est_annonce(FxRobot robot, @TempDir Path dossier) {
+        chargerDeuxEspeces(robot);
+        robot.interact(() -> controleur.selecteur().definir(new SelecteurFige(dossier.resolve("s.csv"))));
+
+        robot.clickOn("#boutonExporter");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText()).contains("2 espèce(s) exportée(s)");
+    }
+
+    @Test
+    @DisplayName("Annuler le sélecteur n'écrit rien et n'annonce rien")
+    void annulation_n_ecrit_rien(FxRobot robot, @TempDir Path dossier) {
+        // Le cas qu'un FileChooser natif rendrait intestable : `showAndWait()` fige le test headless. Le
+        // port existe pour pouvoir vérifier justement celui-là.
+        Path cible = dossier.resolve("jamais-ecrit.csv");
+        chargerDeuxEspeces(robot);
+        robot.interact(() -> controleur.selecteur().definir(new SelecteurAnnule()));
+
+        robot.clickOn("#boutonExporter");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(Files.exists(cible)).isFalse();
+        assertThat(robot.lookup("#bandeauRetour")
+                        .queryAs(javafx.scene.layout.HBox.class)
+                        .isVisible())
+                .as("une annulation n'est pas un événement : le bandeau reste muet")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("Sans espèce, le bouton d'export est grisé plutôt que d'écrire un fichier trompeur")
+    void export_grise_sur_nuit_vide(FxRobot robot) {
+        when(service.pour(
+                        anyLong(),
+                        org.mockito.ArgumentMatchers.anyBoolean(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.of());
+        robot.interact(() -> controleur.ouvrirSur(new fr.univ_amu.iut.commun.viewmodel.ContextePassage(
+                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite("640380", "A1", "Étang"))));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(robot.lookup("#boutonExporter")
+                        .queryAs(javafx.scene.control.Button.class)
+                        .isDisabled())
+                .isTrue();
+    }
+
+    /// Sélecteur **figé** : répond toujours le même chemin, sans ouvrir de `FileChooser` natif.
+    private record SelecteurFige(Path fichier) implements SelecteurFichier {
+
+        @Override
+        public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {
+            return Optional.of(fichier);
+        }
+
+        @Override
+        public Optional<Path> choisirFichier(String titre, Optional<Path> dossierInitial, FiltreFichier filtre) {
+            return Optional.of(fichier);
+        }
+
+        @Override
+        public Optional<Path> enregistrerFichier(String titre, String nomPropose, FiltreFichier filtre) {
+            return Optional.of(fichier);
+        }
+    }
+
+    /// Sélecteur d'un utilisateur qui **annule** : ne répond aucun chemin.
+    private record SelecteurAnnule() implements SelecteurFichier {
+
+        @Override
+        public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<Path> choisirFichier(String titre, Optional<Path> dossierInitial, FiltreFichier filtre) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<Path> enregistrerFichier(String titre, String nomPropose, FiltreFichier filtre) {
+            return Optional.empty();
+        }
     }
 
     @Test
