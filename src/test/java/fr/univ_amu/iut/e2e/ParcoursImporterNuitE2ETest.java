@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
+import fr.univ_amu.iut.importation.viewmodel.CompteRenduChiffreImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
@@ -244,10 +245,16 @@ class ParcoursImporterNuitE2ETest {
         assertThat(resultat.nombreOriginaux()).isEqualTo(1);
         assertThat(new PassageDao(source).findById(resultat.passage().id())).isPresent();
 
-        // Le rapport liste 1 importé et 1 rejeté (l'illisible), et le VM expose le rejet pour M-Import.
+        // Le rapport liste 1 importé et 1 rejeté (l'illisible), et le rejet **remonte jusqu'à ce que
+        // l'écran montre**. Depuis #2600 c'est le compte rendu chiffré, plus la liste textuelle : le
+        // canal `rejetsImport` que ce test lisait n'avait plus aucun consommateur (#2654).
         assertThat(resultat.rapport().compte(StatutImportFichier.IMPORTE)).isEqualTo(1);
         assertThat(resultat.rapport().compte(StatutImportFichier.REJETE)).isEqualTo(1);
-        assertThat(vm.rejetsImport()).singleElement().asString().contains("204500");
+        assertThat(CompteRenduChiffreImport.de(vm.resultatProperty().get(), List.of())
+                        .motifs())
+                .singleElement()
+                .satisfies(motif ->
+                        assertThat(motif.sujets()).singleElement().asString().contains("204500"));
     }
 
     @Test
