@@ -65,7 +65,10 @@ public class ServiceRattachement {
         Passage passage = passageDao
                 .findById(idPassage)
                 .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
-        if (passage.statutWorkflow() == StatutWorkflow.DEPOSE
+        // « Sur la plateforme » (#2581) : l'année et le n° d'une nuit récupérée sont l'identité que le
+        // serveur lui donne, exactement comme pour une nuit que nous aurions déposée. L'écran la gate
+        // déjà, mais un service qui laisserait passer rendrait ce gating décoratif.
+        if (passage.statutWorkflow().estSurLaPlateforme()
                 || passage.statutWorkflow() == StatutWorkflow.DEPOT_EN_COURS) {
             throw new RegleMetierException(
                     "Renommage refusé : un passage déposé (ou en cours de dépôt) ne peut plus être renommé."

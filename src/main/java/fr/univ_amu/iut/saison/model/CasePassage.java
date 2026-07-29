@@ -60,10 +60,14 @@ public record CasePassage(
         return presente() && !inexploitable() && !opportuniste;
     }
 
-    /// Vrai si la nuit est **terminée** au sens du protocole : déposée sur Vigie-Chiro, plus aucune
-    /// action restante. Un passage déposé est nécessairement exploitable (R14 interdit de déposer une
-    /// nuit inexploitable).
+    /// Vrai si la nuit est **terminée** au sens du protocole : elle est sur Vigie-Chiro, plus aucune
+    /// action restante de ce côté. Un passage déposé est nécessairement exploitable (R14 interdit de
+    /// déposer une nuit inexploitable).
+    ///
+    /// Une nuit **récupérée** compte aussi (#2581) : le protocole du carré est rempli pour cette nuit-là,
+    /// c'est bien ce que le solde de saison mesure. Il lui manque son audio en local, pas son dépôt -
+    /// l'en exclure aurait fait rouvrir une case déjà remplie.
     public boolean terminee() {
-        return presente() && statut == StatutWorkflow.DEPOSE;
+        return presente() && statut.estSurLaPlateforme();
     }
 }
