@@ -331,6 +331,37 @@ class PassageViewModelTest {
     }
 
     @Test
+    @DisplayName("#2771 : « Annuler le dépôt » reste visible sur une nuit récupérée, mais désactivé et expliqué")
+    void annuler_depot_visible_mais_bloque_sur_une_nuit_recuperee() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
+        when(service.estNuitRecuperee(ID_PASSAGE)).thenReturn(true);
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        assertThat(viewModel.annulationDepotPertinenteProperty().get())
+                .as("la pastille annonce « Déposé » : c'est ici que l'absence du bouton surprendrait")
+                .isTrue();
+        assertThat(viewModel.annulationDepotDisponibleProperty().get())
+                .as("le geste ramènerait la nuit en « Prêt à déposer », donc prête à faire un doublon")
+                .isFalse();
+        assertThat(viewModel.motifBlocageAnnulationDepotProperty().get())
+                .contains("pas de dépôt à annuler")
+                .contains("Supprimer");
+    }
+
+    @Test
+    @DisplayName("#2771 : sur une nuit déposée par nous, le bouton est là et actif, sans motif")
+    void annuler_depot_actif_sur_une_nuit_deposee_par_nous() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        assertThat(viewModel.annulationDepotPertinenteProperty().get()).isTrue();
+        assertThat(viewModel.annulationDepotDisponibleProperty().get()).isTrue();
+        assertThat(viewModel.motifBlocageAnnulationDepotProperty().get()).isEmpty();
+    }
+
+    @Test
     @DisplayName("Le renommage est possible sur tout statut sauf Déposé ou Dépôt en cours")
     void renommage_possible_sauf_si_depose_ou_en_cours() {
         // Renommer après dépôt divergerait du serveur (le nom des fichiers y est l'identité) : bouton grisé.

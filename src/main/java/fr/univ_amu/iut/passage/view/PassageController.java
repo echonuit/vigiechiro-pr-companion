@@ -189,6 +189,11 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private Button boutonAnnulerDepot;
 
+    /// Enveloppe porteuse du tooltip d'« Annuler le dépôt » (#2771) : un Button désactivé n'en affiche
+    /// pas. Cf. [IndicateurBlocage].
+    @FXML
+    private StackPane enveloppeAnnulerDepot;
+
     @FXML
     private Button boutonReactiver;
 
@@ -361,8 +366,17 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                                 + " (passage déposé, identité serveur)."));
         // « Annuler le dépôt » n'a de sens que sur un passage déposé : le bouton n'apparaît (et n'occupe
         // de place) que dans ce cas, au lieu de rester grisé en permanence dans la barre d'actions.
-        boutonAnnulerDepot.visibleProperty().bind(viewModel.annulationDepotDisponibleProperty());
-        boutonAnnulerDepot.managedProperty().bind(viewModel.annulationDepotDisponibleProperty());
+        enveloppeAnnulerDepot.visibleProperty().bind(viewModel.annulationDepotPertinenteProperty());
+        enveloppeAnnulerDepot.managedProperty().bind(viewModel.annulationDepotPertinenteProperty());
+        boutonAnnulerDepot
+                .disableProperty()
+                .bind(viewModel.annulationDepotDisponibleProperty().not());
+        IndicateurBlocage.expliquer(
+                enveloppeAnnulerDepot,
+                Bindings.when(viewModel.annulationDepotDisponibleProperty())
+                        .then("Ramener ce passage de « Déposé » à « Prêt à déposer », sans toucher aux"
+                                + " validations déjà saisies.")
+                        .otherwise(viewModel.motifBlocageAnnulationDepotProperty()));
         // « Réactiver ce passage » (#1302) : gaté en amont (#789). L'action n'apparaît utile que s'il
         // manque de l'audio (fichiers déplacés ou supprimés, disque incomplet).
         boutonReactiver
