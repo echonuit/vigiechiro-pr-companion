@@ -43,6 +43,9 @@ MAINS=(
   "fr.univ_amu.iut.analyse.outils.CaptureAnalyse"
   "fr.univ_amu.iut.analyse.outils.CaptureActivite"
   "fr.univ_amu.iut.analyse.outils.CaptureSynthese"
+  # État « référentiel absent » (#2351) : le seul chemin où l'écran ne s'ouvrait pas, et le seul que
+  # rien n'exerçait. L'image le fige.
+  "fr.univ_amu.iut.analyse.outils.CaptureSyntheseSansReferentiel"
   "fr.univ_amu.iut.diagnostic.outils.CaptureDiagnostic"
   "fr.univ_amu.iut.audit.outils.CaptureAudit"
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidation"

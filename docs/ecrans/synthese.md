@@ -67,6 +67,11 @@ de laisser des cases blanches, qui se liraient comme des données manquantes : l
 et **Seuils retenus** disparaissent, le sélecteur de milieu aussi, et l'écran annonce « Référentiel
 d'activité indisponible : le tableau reste exploitable ».
 
+![La synthèse sans référentiel : les colonnes d'activité et de seuils ont disparu, les comptages restent affichés et l'écran annonce l'indisponibilité.](../assets/captures/apercu-synthese-sans-referentiel.png)
+
+La mise en garde et la citation s'effacent avec elles : mettre en garde contre une lecture qu'on
+n'affiche pas, et créditer une source qu'on n'a pas pu charger, n'aiderait personne.
+
 Vos comptages, eux, restent affichés en entier. Le nombre de contacts est une **mesure** ; la classe
 d'activité n'en est qu'une lecture. Perdre la seconde ne doit pas vous priver de la première.
 

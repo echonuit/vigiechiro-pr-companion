@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.analyse.outils.CaptureActivite;
 import fr.univ_amu.iut.analyse.outils.CaptureAnalyse;
+import fr.univ_amu.iut.analyse.outils.CaptureSyntheseSansReferentiel;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidation;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationColonnes;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationDivergence;
@@ -97,6 +98,10 @@ class CablageInjecteursCaptureTest {
                 Arguments.of("CaptureMultisite", (Supplier<Injector>) CaptureMultisite::creerInjecteur),
                 Arguments.of("CaptureSaison", (Supplier<Injector>) CaptureSaison::creerInjecteur),
                 Arguments.of("CaptureAnalyse", (Supplier<Injector>) CaptureAnalyse::creerInjecteur),
+                // #2351 : l'état « référentiel absent » a son propre graphe (service qui répond faux),
+                // et c'est l'état où l'écran ne s'ouvrait pas du tout avant la clôture du lot.
+                Arguments.of("CaptureSyntheseSansReferentiel", (Supplier<Injector>)
+                        CaptureSyntheseSansReferentiel::creerInjecteur),
                 Arguments.of("CaptureActivite", (Supplier<Injector>) CaptureActivite::creerInjecteur),
                 Arguments.of("CaptureAudit", (Supplier<Injector>) CaptureAudit::creerInjecteur),
                 Arguments.of("CaptureDiagnostic", (Supplier<Injector>) CaptureDiagnostic::creerInjecteur),
