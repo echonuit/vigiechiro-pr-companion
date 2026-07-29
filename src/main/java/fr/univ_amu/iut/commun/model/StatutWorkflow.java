@@ -41,6 +41,19 @@ public enum StatutWorkflow {
         return libelle;
     }
 
+    /// Rang de ce statut **pour trier** des passages par avancement.
+    ///
+    /// Ce n'est pas `ordinal()`, et c'est tout l'intérêt. `ordinal()` reflète l'ordre de **déclaration**,
+    /// qui place [#RECUPERE] en dernier - non parce qu'une nuit récupérée serait la plus avancée, mais
+    /// parce qu'il a fallu l'ajouter là pour ne pas décaler les comparaisons existantes (ADR 2581). Trier
+    /// là-dessus la rangerait après « Déposé » par pur effet de bord.
+    ///
+    /// Une nuit récupérée **est** sur la plateforme : elle se range donc avec les nuits déposées. Les
+    /// départager ensuite revient au critère suivant du comparateur.
+    public int rangDeProgression() {
+        return this == RECUPERE ? DEPOSE.ordinal() : ordinal();
+    }
+
     public static StatutWorkflow parLibelle(String libelle) {
         for (StatutWorkflow statut : values()) {
             if (statut.libelle.equals(libelle)) {
