@@ -107,6 +107,12 @@ class ReferentielActiviteTest {
         assertThat(ref.pour("Pipkuh", ContexteActivite.NATIONAL)).isEmpty();
         assertThat(ref.pour("Pipnat", ContexteActivite.NATIONAL)).isEmpty();
         assertThat(ref.pour("Barbar", ContexteActivite.NATIONAL)).isPresent();
+        // Écartée n'est pas escamotée : chaque refus porte son motif, sans quoi une ressource corrompue
+        // rendrait simplement des classes plus larges, en silence.
+        assertThat(ref.lignesRefusees())
+                .hasSize(2)
+                .anySatisfy(motif -> assertThat(motif).contains("confiance inconnue"))
+                .anySatisfy(motif -> assertThat(motif).contains("quantile illisible"));
     }
 
     @Test
@@ -134,6 +140,9 @@ class ReferentielActiviteTest {
                 .as("un chargement qui rendrait peu de lignes signalerait un format mal lu")
                 .isGreaterThan(3500);
         assertThat(ref.couvre("Barbar")).as("la Barbastelle doit être couverte").isTrue();
+        assertThat(ref.lignesRefusees())
+                .as("la ressource embarquée doit se lire ENTIÈREMENT : une ligne refusée est un seuil perdu")
+                .isEmpty();
         assertThat(ReferentielActivite.CITATION).contains("Bas Y.", "2020");
         assertThat(ReferentielActivite.AVERTISSEMENT).contains("n'est pas un niveau d'enjeu");
     }

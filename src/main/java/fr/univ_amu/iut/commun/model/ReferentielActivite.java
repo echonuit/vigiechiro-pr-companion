@@ -61,8 +61,20 @@ public final class ReferentielActivite {
     /// (code taxon, déclinaison, saison) → seuils.
     private final Map<Cle, SeuilsActivite> seuils;
 
-    private ReferentielActivite(Map<Cle, SeuilsActivite> seuils) {
+    /// Les lignes que la lecture a **refusées**, avec leur motif. Une ligne écartée en silence ferait
+    /// disparaître des seuils sans que personne ne s'en aperçoive : le référentiel rendrait simplement
+    /// une classe plus large, ou rien, et l'écran n'aurait rien à signaler. Les collecter permet à la
+    /// garde de la ressource embarquée d'exiger qu'il n'y en ait **aucune**.
+    private final List<String> lignesRefusees;
+
+    private ReferentielActivite(Map<Cle, SeuilsActivite> seuils, List<String> lignesRefusees) {
         this.seuils = Map.copyOf(seuils);
+        this.lignesRefusees = List.copyOf(lignesRefusees);
+    }
+
+    /// Les lignes refusées à la lecture, avec leur motif. **Vide** sur une ressource saine.
+    public List<String> lignesRefusees() {
+        return lignesRefusees;
     }
 
     /// Charge la ressource embarquée. À faire **une fois** : le référentiel ne change pas en cours de
@@ -82,27 +94,30 @@ public final class ReferentielActivite {
     /// `code;referentiel;saison;q25;q75;q98;nbocc;confiance`.
     static ReferentielActivite lire(java.io.Reader source) throws IOException {
         Map<Cle, SeuilsActivite> table = new HashMap<>();
+        List<String> refusees = new ArrayList<>();
         try (BufferedReader lecteur = new BufferedReader(source)) {
             String ligne;
             while ((ligne = lecteur.readLine()) != null) {
                 if (ligne.isBlank() || ligne.startsWith("#") || ligne.startsWith("code;")) {
                     continue;
                 }
-                ajouter(table, ligne);
+                ajouter(table, ligne, refusees);
             }
         }
-        return new ReferentielActivite(table);
+        return new ReferentielActivite(table, refusees);
     }
 
-    private static void ajouter(Map<Cle, SeuilsActivite> table, String ligne) {
+    private static void ajouter(Map<Cle, SeuilsActivite> table, String ligne, List<String> refusees) {
         String[] champs = ligne.split(";", -1);
         if (champs.length < 8) {
+            refusees.add(ligne + " → colonnes manquantes");
             return;
         }
         Optional<ConfianceReferentiel> confiance = ConfianceReferentiel.depuis(champs[7]);
         if (confiance.isEmpty()) {
             // Une confiance illisible n'est pas une confiance moyenne : la ligne est écartée plutôt que
             // rangée d'office du côté fiable.
+            refusees.add(ligne + " → confiance inconnue : " + champs[7]);
             return;
         }
         try {
@@ -117,7 +132,9 @@ public final class ReferentielActivite {
                             champs[1],
                             champs[2]));
         } catch (NumberFormatException quantileIllisible) {
-            // Même raison : une ligne dont un quantile ne se lit pas ne doit pas produire de seuil.
+            // Même raison : une ligne dont un quantile ne se lit pas ne doit pas produire de seuil. Mais
+            // elle ne disparaît pas pour autant — un rejet silencieux serait un trou invisible.
+            refusees.add(ligne + " → quantile illisible : " + quantileIllisible.getMessage());
         }
     }
 
