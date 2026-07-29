@@ -155,22 +155,31 @@ public class SitesViewModel {
         if (rapports.isEmpty()) {
             return "Aucun site distant récupéré (non connecté, ou aucun site sur Vigie-Chiro).";
         }
-        // #1284 : une synchronisation EMPECHEE (injoignable, refus) se dit telle quelle, au lieu de se
-        // confondre avec « aucun site distant ».
-        Optional<RapportSynchro> empeche =
-                rapports.stream().filter(rapport -> rapport.souci() != null).findFirst();
-        if (empeche.isPresent()) {
-            return "Sites non synchronisés : " + empeche.get().souci() + ".";
-        }
+        // #1284 : une synchronisation EMPÊCHÉE (injoignable, refus) se dit telle quelle, au lieu de se
+        // confondre avec « aucun site distant ». Mais elle se disait en ÉCRASANT tout le reste (#2655) :
+        //
+        //     if (empeche.isPresent()) { return "Sites non synchronisés : " + souci + "."; }
+        //
+        // Deux mensonges dans une ligne. Les rapprocheurs qui avaient **abouti** disparaissaient - une
+        // synchro partiellement réussie s'annonçait totalement empêchée. Et le message accusait les
+        // **sites** quel que soit le rapprocheur en souci : les sites pouvaient être à jour et les nuits
+        // injoignables, on lisait quand même « Sites non synchronisés ».
+        //
+        // `RapportSynchro.enClair()` sait déjà dire « nuit(s) non récupérées (cause) » rapport par
+        // rapport : il suffit de cesser de l'écraser. Chaque nature dit son issue, à côté des autres.
         String corps = rapports.stream().map(SitesViewModel::segmentSynchro).collect(Collectors.joining(", "));
-        return corps + " depuis Vigie-Chiro.";
+        return rapports.stream().anyMatch(rapport -> rapport.souci() != null)
+                ? corps + "."
+                : corps + " depuis Vigie-Chiro.";
     }
 
     /// Rend un rapport dans le message du bouton. Les sites gardent leur forme verbale singulier/pluriel
     /// (« 1 site synchronisé ») ; les autres rapprocheurs (passages rapatriés, #1662) se disent via
     /// [RapportSynchro#enClair] (« 5 passage(s) rapatrié(s) »).
     private static String segmentSynchro(RapportSynchro rapport) {
-        if (LIBELLE_SITES.equals(rapport.libelle())) {
+        // La forme verbale ne vaut que pour une synchro qui a EU LIEU : sur un empêchement, elle dirait
+        // « 0 site synchronisé » là où rien n'a été tenté, en taisant la cause (#2655). `enClair` la dit.
+        if (LIBELLE_SITES.equals(rapport.libelle()) && rapport.souci() == null) {
             return rapport.nombre() + (rapport.nombre() > 1 ? " sites synchronisés" : " site synchronisé");
         }
         return rapport.enClair();
