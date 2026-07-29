@@ -377,6 +377,12 @@ public class ImportationViewModel {
         messageExecution.set(message);
     }
 
+    /// Source illisible **remontée d'une exception** : passe par la porte qui ajoute le geste attendu
+    /// (ADR 2635) et qui borne (#2076), au lieu de déverser le message du système de fichiers.
+    public void signalerSourceIllisible(Throwable refus) {
+        signalerSourceIllisible(RetourOperation.erreur(refus).texte());
+    }
+
     /// Capture (sur le fil JavaFX) les entrées du rattachement courant dans un instantané immuable,
     /// pour les passer à [ExecutionImport#executer(DemandeImport)] sans relire de `Property` hors-thread.
     /// Précondition : rattachement complet ([#peutImporter()] vrai), garanti par l'appelant.
@@ -456,6 +462,11 @@ public class ImportationViewModel {
         etat.set(EtatImport.ECHEC);
         navigation.setOperationCritique(""); // l'import s'est arrêté : on déverrouille (#54)
         nettoyerTemporaireZip(); // échec : on nettoie aussi le temporaire du zip (#139)
+    }
+
+    /// Échec **remonté d'une exception** : même porte, mêmes deux garanties.
+    public void marquerEchec(Throwable refus) {
+        marquerEchec(RetourOperation.erreur(refus).texte());
     }
 
     /// Applique une **annulation** (#146) demandée par l'utilisateur (décompression ou import) : état

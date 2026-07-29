@@ -176,7 +176,7 @@ final class ImportVigieChiroUI {
                     importVigieChiro.rattacher(idPassage, choix.orElseThrow().id());
                     importerHorsFil(importVigieChiro, viewModel, source, idPassage, false, dialogue, proprietaire);
                 },
-                erreur -> importVigieChiro.echec(erreur.getMessage()));
+                importVigieChiro::echec);
     }
 
     /// Importe **hors fil JavaFX** dans la **modale de progression annulable** : le suivi par page avance la
@@ -199,7 +199,7 @@ final class ImportVigieChiroUI {
                     viewModel.ouvrirSur(source); // recharge la liste avec les observations importées
                 },
                 () -> importVigieChiro.echec(""), // annulé : on efface l'état « en cours »
-                erreur -> importVigieChiro.echec(erreur.getMessage()));
+                importVigieChiro::echec);
     }
 
     /// Choix de la participation à rattacher (libellé : localité · date · site), par le port

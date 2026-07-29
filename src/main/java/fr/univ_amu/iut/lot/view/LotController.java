@@ -597,7 +597,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         executeur.executer(
                 () -> viewModel.calculerArchivesDepot(progres, suivi),
                 viewModel::appliquerGeneration,
-                erreur -> viewModel.echecGeneration(erreur.getMessage()));
+                viewModel::echecGeneration);
     }
 
     /// Téléverse la nuit sur VigieChiro **hors fil JavaFX** (#142), étape ③ automatisée, via le socle
@@ -622,7 +622,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                     // dépôt partiel) ; on recharge l'état pour le refléter.
                     viewModel.ouvrirSur(idPassage);
                 },
-                erreur -> depotViewModel.echec(erreur.getMessage()));
+                depotViewModel::echec);
     }
 
     /// Câble la table de dépôt (#983) : lignes persistées (`depot_unite` #981) + événements du moteur

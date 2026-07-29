@@ -272,6 +272,14 @@ public class DepotViewModel {
         retour.set(RetourOperation.erreur(erreur));
     }
 
+    /// Échec **remonté d'une exception** : passe par la porte qui enrichit du geste attendu (ADR 2635)
+    /// puis borne (#2076). `echec(refus.getMessage())` perdait les deux, à un saut d'indirection.
+    public void echec(Throwable refus) {
+        enCours.set(false);
+        finDepot.set(null);
+        retour.set(RetourOperation.erreur(refus));
+    }
+
     /// La fin du dernier dépôt, que la vue traduit en compte rendu chiffré (#2653).
     public ReadOnlyObjectProperty<FinDepot> finDepotProperty() {
         return finDepot.getReadOnlyProperty();

@@ -561,7 +561,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                     viewModel.inspecter();
                 },
                 viewModel::marquerAnnule,
-                echec -> viewModel.signalerSourceIllisible(echec.getMessage()));
+                viewModel::signalerSourceIllisible);
     }
 
     /// Vrai si un traitement est en cours (import `EN_COURS` ou décompression `EXTRACTION`) : le formulaire
@@ -648,7 +648,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 () -> execution.executer(demande, progres, jeton, suivi),
                 viewModel::marquerTermine,
                 viewModel::marquerAnnule,
-                echec -> viewModel.marquerEchec(echec.getMessage()));
+                viewModel::marquerEchec);
     }
 
     /// Variante **multi-nuits** de [#lancerImportHorsFil] : un passage par nuit incluse, avec progression
@@ -670,7 +670,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 () -> viewModel.coordinationNuits().executer(demande, progres, jeton, suivi),
                 viewModel::marquerTermineNuits,
                 viewModel::marquerAnnule,
-                echec -> viewModel.marquerEchec(echec.getMessage()));
+                viewModel::marquerEchec);
     }
 
     /// « Annuler » : demande l'arrêt de l'opération longue en cours (décompression ou import, #146). Le

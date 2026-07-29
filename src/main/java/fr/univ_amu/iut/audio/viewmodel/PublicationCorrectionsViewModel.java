@@ -109,6 +109,13 @@ public class PublicationCorrectionsViewModel {
         retour.set(erreur.isEmpty() ? RetourOperation.AUCUN : RetourOperation.erreur(erreur));
     }
 
+    /// Échec **remonté d'une exception** : enrichi du geste attendu puis borné (#2076). Pas de cas
+    /// « chaîne vide » ici - une exception n'est jamais un renoncement silencieux.
+    public void echec(Throwable refus) {
+        enCours.set(false);
+        retour.set(RetourOperation.erreur(refus));
+    }
+
     private PublicationCorrections moteur() {
         return publication.orElseThrow(
                 () -> new RegleMetierException("Publication des corrections indisponible dans ce contexte."));

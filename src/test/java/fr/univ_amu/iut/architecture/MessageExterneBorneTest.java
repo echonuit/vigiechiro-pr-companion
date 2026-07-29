@@ -55,6 +55,38 @@ class MessageExterneBorneTest {
                 .isEmpty();
     }
 
+    /// Une lambda qui **déballe son propre `Throwable`** : `erreur -> canal.echec(erreur.getMessage())`.
+    ///
+    /// C'est la porte contournée d'un saut : le canal reçoit une `String`, donc sa surcharge « texte que
+    /// nous avons écrit », et l'exception perd son geste attendu comme sa borne. Le motif exige que le
+    /// nom déballé soit **celui du paramètre de la lambda** : `() -> "…" + echec.getMessage()` dans un
+    /// journal ne matche pas, et c'est voulu - un journal doit tout garder.
+    private static final Pattern LAMBDA_QUI_DEBALLE =
+            Pattern.compile("(\\w+)\\s*->\\s*[\\w.]+\\([^;]*\\b\\1\\.getMessage\\(\\)");
+
+    @Test
+    @DisplayName("#2841 : aucune lambda ne déballe son Throwable pour le passer en texte")
+    void aucune_lambda_ne_deballe_son_throwable() throws IOException {
+        List<String> fautifs = new ArrayList<>();
+        try (Stream<Path> sources = Files.walk(RACINE)) {
+            for (Path source : sources.filter(chemin -> chemin.toString().endsWith(".java"))
+                    .toList()) {
+                List<String> lignes = Files.readAllLines(source, StandardCharsets.UTF_8);
+                for (int rang = 0; rang < lignes.size(); rang++) {
+                    if (LAMBDA_QUI_DEBALLE.matcher(lignes.get(rang)).find()) {
+                        fautifs.add(RACINE.relativize(source) + ":" + (rang + 1) + " → "
+                                + lignes.get(rang).strip());
+                    }
+                }
+            }
+        }
+
+        assertThat(fautifs)
+                .as("passez le Throwable au canal (`canal::echec`) : sa surcharge l'enrichit du geste"
+                        + " attendu puis le borne, là où sa surcharge String suppose un texte de nous")
+                .isEmpty();
+    }
+
     private static void releverDans(Path source, List<String> fautifs) throws IOException {
         List<String> lignes = Files.readAllLines(source, StandardCharsets.UTF_8);
         for (int rang = 0; rang < lignes.size(); rang++) {

@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import java.util.List;
@@ -130,6 +131,14 @@ public class ImportVigieChiroViewModel {
         enCours.set(false);
         bilan.set(null);
         message.set(erreur);
+    }
+
+    /// Échec **remonté d'une exception**. L'écran expose un texte nu, mais il doit être passé par la
+    /// même porte : c'est le seul endroit qui ajoute le geste attendu et qui borne (#2076).
+    public void echec(Throwable refus) {
+        enCours.set(false);
+        bilan.set(null);
+        message.set(RetourOperation.erreur(refus).texte());
     }
 
     public ReadOnlyBooleanProperty enCoursProperty() {
