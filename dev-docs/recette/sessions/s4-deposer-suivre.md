@@ -139,6 +139,22 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 53. Les mêmes gestes en ligne de commande : `vigiechiro traiter-passages --action televerser --passage
     … --json` rend le même verdict par passage, et un code de sortie non nul si l'un a échoué.
 
+*Bloc F · Les deux mécanismes de lot, l'un après l'autre (#2755)*
+
+> Ces trois cases existent parce qu'une affirmation du bilan de l'EPIC #2349 n'est **pas** vérifiée : que
+> les deux mécanismes de traitement groupé cohabitent sans se gêner. Ils sont dans le **même menu ☰**, à
+> quatre entrées d'intervalle, et rafraîchissent la **même table** par deux chemins qui ne se connaissent
+> pas. Aucun test ne les joue à la suite, et aucun ne le peut aujourd'hui : cliquer une entrée de lot
+> ouvre une vraie fenêtre de progression, que `TraitementLot` n'expose pas aux tests.
+
+54. « Compléter une nuit récupérée… » sur deux nuits, puis **fermer la modale** : les deux nuits
+    complétées apparaissent dans le tableau de « Carte & passages », avec leur statut réel.
+55. Enchaîner **sans quitter l'écran** : cocher ces deux nuits, « Préparer le dépôt des 2 lignes
+    cochées… ». L'annonce les compte comme **éligibles** (et non « déjà déposé » ni « pas encore
+    vérifié ») - c'est-à-dire que le tableau qu'on vient de rafraîchir dit la vérité.
+56. L'inverse : lancer un lot, puis rouvrir « Compléter une nuit récupérée… » **sans quitter l'écran**.
+    La liste des nuits à compléter est celle d'après le lot, pas celle d'avant.
+
 ### Métadonnées : ce que la plateforme affiche vraiment (#1828, #1844, #1845)
 
 > Ces cases ne sont **pas automatisables** : elles se jouent sur la **fiche web** de la participation,
