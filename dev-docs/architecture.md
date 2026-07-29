@@ -135,7 +135,7 @@ public class NavigationPassage implements OuvrirPassage {
 
 Ainsi `sites` ouvre M-Passage **sans dépendre de `passage.view`** : la règle ArchUnit
 `pas_de_dependance_inter_feature_vers_la_vue` reste respectée. La **liste de référence** des contrats
-`Ouvrir*` (**<!--inv:ouvrir-->11<!--/inv-->**) est maintenue à un seul endroit : [Navigation](navigation.md#ouvrir-une-autre-feature-sans-en-dependre).
+`Ouvrir*` (**<!--inv:ouvrir-->12<!--/inv-->**) est maintenue à un seul endroit : [Navigation](navigation.md#ouvrir-une-autre-feature-sans-en-dependre).
 
 ## Persistance
 

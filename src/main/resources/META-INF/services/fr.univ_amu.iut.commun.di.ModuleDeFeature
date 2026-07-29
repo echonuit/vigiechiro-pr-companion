@@ -5,6 +5,7 @@
 # Le socle (CommunModule, PersistenceModule) reste explicite dans RacineInjecteur, jamais découvert.
 fr.univ_amu.iut.analyse.di.AnalyseModule
 fr.univ_amu.iut.analyse.di.ActiviteModule
+fr.univ_amu.iut.analyse.di.SyntheseModule
 fr.univ_amu.iut.audio.di.AudioModule
 fr.univ_amu.iut.audio.di.DiscussionModule
 fr.univ_amu.iut.audio.di.ImportVigieChiroModule

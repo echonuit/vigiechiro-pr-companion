@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirSynthese;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.passage.model.AdoptionOriginauxReconstruits;
 import fr.univ_amu.iut.passage.model.AppuisReactivation;
@@ -164,6 +165,8 @@ public class PassageModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), OuvrirLot.class);
         OptionalBinder.newOptionalBinder(binder(), OuvrirVerification.class);
         OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
+        // Synthèse de la nuit (#2351) : même montage. Absent (feature coupée), la carte est masquée.
+        OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);
     }
 
     @Provides

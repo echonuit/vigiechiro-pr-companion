@@ -63,6 +63,7 @@ open module vigiechiro {
     provides fr.univ_amu.iut.commun.di.ModuleDeFeature with
             fr.univ_amu.iut.analyse.di.AnalyseModule,
             fr.univ_amu.iut.analyse.di.ActiviteModule,
+            fr.univ_amu.iut.analyse.di.SyntheseModule,
             fr.univ_amu.iut.audio.di.AudioModule,
             fr.univ_amu.iut.audio.di.ImportVigieChiroModule,
             fr.univ_amu.iut.audio.di.PublicationCorrectionsModule,

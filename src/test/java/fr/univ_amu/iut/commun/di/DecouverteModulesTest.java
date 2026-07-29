@@ -34,6 +34,7 @@ class DecouverteModulesTest {
     private static final Set<String> FEATURES_ATTENDUES = Set.of(
             "AnalyseModule",
             "ActiviteModule",
+            "SyntheseModule",
             "AudioModule",
             "AuditModule",
             "ImportVigieChiroModule",
@@ -61,9 +62,10 @@ class DecouverteModulesTest {
 
     /// Features EXPERIMENTALES (Categorie inactive par défaut) : découvertes par le ServiceLoader, donc
     /// dans FEATURES_ATTENDUES, mais **absentes** de modules() tant qu'on ne les active pas explicitement.
-    /// Vide depuis la clôture du lot #2352 (`activite-nuit` est passée `OPTIONNELLE`) : le jour où une
-    /// feature expérimentale réapparaît, l'y inscrire remet la vérification en service.
-    private static final Set<String> FEATURES_EXPERIMENTALES = Set.of();
+    /// Vidée à la clôture du lot #2352 (`activite-nuit` est passée `OPTIONNELLE`), puis **remise en
+    /// service** par #2351 : `synthese-nuit` est expérimentale le temps du chantier, l'écran étant livré
+    /// avant son export et sa parité CLI. Elle passera `OPTIONNELLE` à la clôture du lot.
+    private static final Set<String> FEATURES_EXPERIMENTALES = Set.of("SyntheseModule");
 
     @AfterEach
     void nettoyer() {
