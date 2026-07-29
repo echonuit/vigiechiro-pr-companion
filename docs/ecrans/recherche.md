@@ -26,7 +26,12 @@ Pour une **espèce**, le détail commence par son **taxon parent** (sa catégori
 suivi du carré / point, du numéro de passage et de la date. Ouvrir une entrée espèce mène au **passage** où
 elle a été relevée.
 
-![La recherche « pipistrelle » : le groupe « Espèces » liste les pipistrelles observées, chaque détail commençant par le taxon parent « Chiroptères ».](../assets/captures/apercu-recherche-especes.png)
+Une espèce inscrite au **Plan National d'Actions Chiroptères** porte en outre la mention
+« prioritaire (PNA) », juste après son taxon parent. C'est la même information que le bouclier des écrans
+de revue, dite ici en toutes lettres : la recherche sert à retrouver quelque chose, pas à décider, et une
+icône d'alerte y perdrait le sens qu'elle a là où elle appelle une action.
+
+![La recherche « pipistrelle » : le groupe « Espèces » liste les pipistrelles observées, chaque détail commençant par le taxon parent « Chiroptères » ; la commune et la Nathusius portent la mention « prioritaire (PNA) », la Kuhl et la soprane non.](../assets/captures/apercu-recherche-especes.png)
 
 ## Naviguer au clavier
 

@@ -150,6 +150,9 @@
     <StackPane.margin>
       <Insets top="52.0" right="16.0"/>
     </StackPane.margin>
-    <ListView fx:id="listeResultats" styleClass="recherche-liste" prefWidth="320.0" maxHeight="360.0"/>
+    <!-- 460 et non 320 (#2713) : la ligne de détail d'une espèce prioritaire porte une mention de plus,
+         et à 320 elle chassait la date hors du cadre en faisant apparaître une barre de défilement
+         horizontale. Une annotation ne doit jamais évincer ce qui sert à choisir le bon résultat. -->
+    <ListView fx:id="listeResultats" styleClass="recherche-liste" prefWidth="460.0" maxHeight="360.0"/>
   </VBox>
 </StackPane>

@@ -10,6 +10,8 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,16 +39,20 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
     private final ServiceMultisite multisite;
     private final ProjectionsAnalyseDao projections;
     private final String idUtilisateur;
+    private final MarqueurEspecesAEnjeu marqueurEnjeu;
 
     public ServiceRechercheGlobale(
             ServiceSites services,
             ServiceMultisite multisite,
             ProjectionsAnalyseDao projections,
-            String idUtilisateur) {
+            String idUtilisateur,
+            EspecesPrioritaires especesPrioritaires) {
         this.services = Objects.requireNonNull(services, "services");
         this.multisite = Objects.requireNonNull(multisite, "multisite");
         this.projections = Objects.requireNonNull(projections, "projections");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        this.marqueurEnjeu =
+                new MarqueurEspecesAEnjeu(Objects.requireNonNull(especesPrioritaires, "especesPrioritaires"));
     }
 
     @Override
@@ -179,12 +185,28 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
     /// Résultat **espèce** rattaché à un passage : libellé = nom (vernaculaire, sinon latin, sinon code)
     /// + code entre parenthèses ; détail = le taxon parent (ex. « Chiroptères », si connu) puis la nuit où
     /// elle a été observée. Cliquer ouvre ce passage (mêmes clés d'identité qu'un résultat passage).
-    private static ResultatRecherche resultatEspece(EspeceObservee espece) {
+    /// Un résultat « espèce ».
+    ///
+    /// ## Pourquoi la mention « espèce prioritaire » y figure (#2713)
+    ///
+    /// La question s'est posée de savoir si un résultat de **recherche** devait porter un statut de
+    /// conservation : la recherche sert à naviguer, pas à analyser, et charger ses résultats
+    /// d'annotations peut les rendre moins lisibles.
+    ///
+    /// Elle a été tranchée par **oui, en texte**. Le produit disait « cette espèce est à enjeu » sur
+    /// trois écrans et se taisait sur le quatrième : cet écart se remarque à l'usage et fait douter du
+    /// repère lui-même. La mention se glisse donc dans la ligne de détail, à côté du groupe
+    /// taxonomique — **sans icône**, pour ne pas banaliser un bouclier qui, sur les écrans de décision,
+    /// appelle une action ; et **sans composante nouvelle** sur [ResultatRecherche], qui en porte déjà
+    /// sept.
+    private ResultatRecherche resultatEspece(EspeceObservee espece) {
         String nom = premierNonVide(espece.nomVernaculaireFr(), espece.nomLatin(), espece.code());
         String libelle = nom + " (" + espece.code() + ")";
         String prefixeGroupe =
                 espece.groupe() != null && !espece.groupe().isBlank() ? espece.groupe() + SEPARATEUR : "";
-        String details = prefixeGroupe + carreEtPoint(espece.numeroCarre(), espece.codePoint()) + SEPARATEUR + "n°"
+        String mentionEnjeu = marqueurEnjeu.aEnjeu(espece.code()) ? MarqueurEspecesAEnjeu.MENTION + SEPARATEUR : "";
+        String details = prefixeGroupe + mentionEnjeu + carreEtPoint(espece.numeroCarre(), espece.codePoint())
+                + SEPARATEUR + "n°"
                 + espece.numeroPassage()
                 + (espece.dateEnregistrement() != null ? SEPARATEUR + espece.dateEnregistrement() : "");
         return new ResultatRecherche(

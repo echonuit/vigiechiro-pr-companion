@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.recherche.model.ServiceRechercheGlobale;
 import fr.univ_amu.iut.sites.model.ServiceSites;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 
 /// Module Guice de la feature `recherche` (#144) : fournit l'implémentation de la [RechercheGlobale]
@@ -45,7 +46,8 @@ public class RechercheModule extends ModuleDeFeature {
             ServiceSites services,
             ServiceMultisite multisite,
             ProjectionsAnalyseDao projections,
-            @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new ServiceRechercheGlobale(services, multisite, projections, idUtilisateur);
+            @Named("idUtilisateurCourant") String idUtilisateur,
+            EspecesPrioritaires especesPrioritaires) {
+        return new ServiceRechercheGlobale(services, multisite, projections, idUtilisateur, especesPrioritaires);
     }
 }

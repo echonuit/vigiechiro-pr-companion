@@ -23,6 +23,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -73,7 +74,10 @@ class ServiceRechercheGlobaleTest {
                 .thenReturn(List.of());
         lenient().when(multisite.listerPassages(anyString())).thenReturn(List.of());
         lenient().when(projections.especesObserveesParUtilisateur(anyString())).thenReturn(List.of());
-        recherche = new ServiceRechercheGlobale(services, multisite, projections, UTILISATEUR);
+        // Référentiel des espèces prioritaires réduit au strict nécessaire : le test porte sur la
+        // mention, pas sur le contenu du Plan National d'Actions, qui a son propre test.
+        recherche = new ServiceRechercheGlobale(
+                services, multisite, projections, UTILISATEUR, () -> Set.of("Pippip", "Barbar"));
     }
 
     @Test
@@ -186,6 +190,35 @@ class ServiceRechercheGlobaleTest {
                         assertThat(r.codePoint()).isEqualTo("A1");
                     });
         }
+    }
+
+    @Test
+    @DisplayName("#2713 : une espèce prioritaire porte sa mention dans le détail, à côté du groupe")
+    void espece_prioritaire_mentionnee() {
+        // Le produit disait « cette espèce est à enjeu » sur trois écrans et se taisait sur le quatrième.
+        // La mention comble l'écart sans icône : la recherche sert à naviguer, pas à alerter.
+        when(projections.especesObserveesParUtilisateur(UTILISATEUR))
+                .thenReturn(List.of(espece("Pippip", "Pipistrellus pipistrellus", "Pipistrelle commune", 42L)));
+
+        assertThat(recherche.rechercher("pippip"))
+                .filteredOn(r -> r.type() == TypeResultat.ESPECE)
+                .singleElement()
+                .satisfies(r -> assertThat(r.details())
+                        .as("la mention nomme le plan : « à enjeu » seul se lirait comme un jugement du produit")
+                        .isEqualTo("Chiroptères · prioritaire (PNA) · 640380 / A1 · n°2 · 2026-06-21"));
+    }
+
+    @Test
+    @DisplayName("#2713 : une espèce ordinaire n'est pas annotée")
+    void espece_ordinaire_sans_mention() {
+        // Le pendant du test précédent : sans lui, une mention posée sur TOUTES les lignes passerait.
+        when(projections.especesObserveesParUtilisateur(UTILISATEUR))
+                .thenReturn(List.of(espece("Pipkuh", "Pipistrellus kuhlii", "Pipistrelle de Kuhl", 42L)));
+
+        assertThat(recherche.rechercher("pipkuh"))
+                .filteredOn(r -> r.type() == TypeResultat.ESPECE)
+                .singleElement()
+                .satisfies(r -> assertThat(r.details()).doesNotContain("prioritaire"));
     }
 
     @Test
