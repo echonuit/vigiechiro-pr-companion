@@ -206,6 +206,25 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             return crees == 0 && completees == 0;
         }
 
+        /// Les nuits du tour, toutes issues confondues.
+        ///
+        /// Exact **par construction** : `HydratationSquelette` rend
+        /// `enAttenteDAnalyse = squelettes.size() - completees - echecs`, donc les trois issues
+        /// partitionnent les squelettes balayés. `crees` n'en fait pas partie : une nuit créée traverse
+        /// ensuite l'hydratation et retombe dans l'une des trois - l'ajouter la compterait deux fois.
+        int total() {
+            return completees + enAttenteDAnalyse + nonLues;
+        }
+
+        /// Le libellé du compteur, **avec le total du tour** quand il en manque (#2655).
+        ///
+        /// Le total ne paraît que s'il ajoute quelque chose : « 12 nuit(s) récupérée(s) sur 12 » ferait
+        /// chercher une différence qui n'existe pas - la faute corrigée sur les volumes (#2677) et les
+        /// validations (#2695).
+        String libelleDuCompteur() {
+            return total() > completees ? "nuit(s) récupérée(s) sur " + total() : "nuit(s) récupérée(s)";
+        }
+
         /// Ce que le compteur passerait sous silence, **par cause** - et jamais sous une cause supposée.
         ///
         /// « En attente d'analyse » est une affirmation sur la plateforme : elle n'est due qu'aux nuits dont
@@ -238,7 +257,18 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         // créée puis complétée au même tour est UNE nuit récupérée, et additionner les deux la compterait
         // deux fois. Une nuit créée mais restée vide n'est pas perdue pour autant - elle est exactement l'une
         // de celles que la précision annonce.
-        RapportSynchro rapport = new RapportSynchro("nuit(s) récupérée(s)", bilan.completees());
+        // « 12 nuit(s) récupérée(s) SUR 55 » (#2655) : le compteur seul ne dit pas la part. La précision
+        // disait déjà ce qui reste et pourquoi, mais il fallait recomposer le tout de tête pour savoir
+        // qu'un cinquième du travail était fait.
+        //
+        // Le total est exact par construction : `HydratationSquelette` rend
+        // `enAttenteDAnalyse = squelettes.size() - completees - echecs`, donc les trois issues
+        // partitionnent les nuits du tour. `crees` n'en fait PAS partie - une nuit créée traverse ensuite
+        // l'hydratation et retombe dans l'une des trois ; l'ajouter la compterait deux fois.
+        //
+        // Rien n'est dit quand tout est récupéré : « 12 sur 12 » fait chercher une différence qui n'existe
+        // pas, la faute corrigée sur les volumes (#2677) et les validations (#2695).
+        RapportSynchro rapport = new RapportSynchro(bilan.libelleDuCompteur(), bilan.completees());
         String reste = bilan.reste();
         return Optional.of(reste.isEmpty() ? rapport : rapport.avecPrecision(reste));
     }

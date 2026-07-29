@@ -496,8 +496,10 @@ class ServiceReconstructionPassagesTest {
             // #2557 : la nuit apparaît, mais la plateforme n'expose pas encore son CSV. Le compteur ne la
             // revendique donc PAS comme récupérée - elle est annoncée pour ce qu'elle est, en attente.
             assertThat(compteRendu.nombre()).isZero();
+            // #2655 : le TOTAL du tour est dit, pour que la part se lise sans recomposer de tête. Il n'est
+            // exact que parce que les trois issues partitionnent les squelettes balayés.
             assertThat(compteRendu.enClair())
-                    .startsWith("0 nuit(s) récupérée(s)")
+                    .startsWith("0 nuit(s) récupérée(s) sur 1")
                     .contains("1 en attente d'analyse");
         });
         List<Passage> passages = passageDao.findAll();
