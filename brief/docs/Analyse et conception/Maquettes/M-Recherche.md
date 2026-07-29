@@ -97,6 +97,12 @@ La recherche globale permet de **sauter directement** à un site, un point, un p
 - **Champ actif** : la saisie (`640380`) alimente la liste **au fil de la frappe**, **insensible à la casse et aux accents**.
 - **Résultats groupés par type** : **Sites** (par n° de carré ou nom), **Points** (par code ou description), **Passages** (par carré, code de point, n° de passage, année ou date) et **Espèces** (par nom ou code, avec le nombre d'observations). Chaque groupe porte un en-tête ; chaque ligne montre un libellé principal et un détail de contexte. Le nombre de résultats par type est **borné** (au plus 8) pour garder la liste lisible.
 - **Sélection** : à la souris, ou au clavier (la ligne mise en évidence suit les flèches).
+- **Espèce prioritaire** : une espèce inscrite au Plan National d'Actions Chiroptères porte la mention
+  « prioritaire (PNA) » dans son détail, juste après le taxon parent. C'est la même information que le
+  bouclier des écrans de revue, dite ici **en toutes lettres et sans icône** : la recherche sert à
+  retrouver, pas à décider, et un bouclier vu partout cesserait d'appeler à l'action là où il en appelle
+  une. La liste est dimensionnée pour que cette mention n'évince pas le carré, le point ni la date, qui
+  sont ce qui permet de **choisir** le bon résultat.
 
 ### Interactions clés
 
