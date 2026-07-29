@@ -155,8 +155,8 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
         SequenceDao sequenceDao = new SequenceDao(source);
         Passage squelette = new PassageDao(source).findAll().getFirst();
         assertThat(squelette.statutWorkflow())
-                .as("la participation existe sur la plateforme : le passage est déposé")
-                .isEqualTo(StatutWorkflow.DEPOSE);
+                .as("elle vient de la plateforme et n'a jamais été importée ici : « Récupéré » (#2581)")
+                .isEqualTo(StatutWorkflow.RECUPERE);
         assertThat(squelette.idEnregistreur())
                 .as("#1814 : l'identité (n° série) est rapatriée depuis le détail dès la synchro, plus « INCONNU »")
                 .isEqualTo("1925492");
@@ -350,7 +350,9 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .as("un passage archivé est créé dès ce clic, sur le point tout juste rapatrié")
                 .singleElement()
                 .satisfies(passage -> {
-                    assertThat(passage.statutWorkflow()).isEqualTo(StatutWorkflow.DEPOSE);
+                    assertThat(passage.statutWorkflow())
+                            .as("rapatriée par la synchro, donc « Récupéré » et non « Déposé » (#2581)")
+                            .isEqualTo(StatutWorkflow.RECUPERE);
                     assertThat(passage.idEnregistreur())
                             .as("#1814 : son identité (n° série réel) remonte dès la synchro, plus « INCONNU »")
                             .isEqualTo("1925492");
