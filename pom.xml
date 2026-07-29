@@ -1018,14 +1018,35 @@
                             </outputFormats>
                             <timestampedReports>false</timestampedReports>
                             <!-- PIT hérite de l'argLine de surefire, mais PAS de ses systemPropertyVariables :
-                                 sans ces quatre propriétés, le minion démarre JavaFX hors headless, TestFX
-                                 échoue, et PIT abandonne (« requires a green suite »). Une classe de vue
-                                 devenait ainsi impossible à mutation-tester. Reproduit ici pour le minion. -->
+                                 sans elles, le minion démarre JavaFX hors headless, TestFX échoue, et PIT
+                                 abandonne (« requires a green suite »). Une classe de vue devenait ainsi
+                                 impossible à mutation-tester. Le bloc `systemPropertyVariables` de surefire
+                                 est donc reproduit ici, EN ENTIER.
+
+                                 ⚠️ Il l'a longtemps été à moitié : les quatre premières lignes seulement.
+                                 Les deux butoirs manquaient, et `ButoirsTestFxTest` — dont c'est très
+                                 exactement le rôle — le disait à chaque exécution. Le premier passage de
+                                 PIT sur le dépôt entier a donc échoué sur une suite rouge, non sur les
+                                 mutants. Ce n'est pas qu'un test à faire taire : sans ces butoirs, chaque
+                                 test TestFX du minion retombe sur les défauts de TestFX (30 s / 60 s), et
+                                 c'est **sous PIT** que la machine est la plus chargée — une JVM par cœur.
+                                 C'est le pire endroit pour un butoir calibré pour une JVM seule (#2120).
+
+                                 `ProprietesMinionPitTest` tient désormais cette parité au moment du build,
+                                 plutôt qu'à la mesure du lundi suivant. -->
                             <jvmArgs>
                                 <jvmArg>-Dglass.platform=Headless</jvmArg>
                                 <jvmArg>-Dprism.order=sw</jvmArg>
                                 <jvmArg>-Djava.awt.headless=true</jvmArg>
                                 <jvmArg>-Dtestfx.robot=glass</jvmArg>
+                                <jvmArg>-Dtestfx.setup.timeout=${testfx.setup.timeout}</jvmArg>
+                                <jvmArg>-Dtestfx.launch.timeout=${testfx.launch.timeout}</jvmArg>
+                                <!-- Sans elle, le minion lirait la configuration d'amorçage de qui lance
+                                     le build (#1038) : la mesure dépendrait de la machine. -->
+                                <jvmArg>-Dvigiechiro.config=${project.build.directory}/config-amorcage-test</jvmArg>
+                                <!-- Sans elle, les SEVERE volontaires des chemins d'échec noient le
+                                     journal du minion, déjà bavard. -->
+                                <jvmArg>-Djava.util.logging.config.file=${project.basedir}/src/test/resources/logging-tests.properties</jvmArg>
                             </jvmArgs>
                         </configuration>
                         <dependencies>
