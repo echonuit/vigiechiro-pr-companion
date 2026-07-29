@@ -16,6 +16,16 @@ import java.util.Set;
 /// L'ensemble est ensuite consulté une fois par ligne affichée : une requête par ligne n'y résisterait pas.
 public final class MarqueurEspecesAEnjeu {
 
+    /// La mention **textuelle** du repère, pour les surfaces qui ne peuvent pas porter d'icône : une
+    /// ligne de détail, un CSV, une sortie de terminal. Le pendant graphique vit dans
+    /// `commun.view.RepereEspeceAEnjeu`, qui dépend de JavaFX et n'a donc pas sa place ici.
+    ///
+    /// Elle **nomme le plan** plutôt que d'asséner « à enjeu » : sans sa source, la mention se lirait
+    /// comme un jugement du produit. Le mot « espèce » en est absent, car les surfaces qui l'emploient
+    /// désignent déjà une espèce — le répéter allongerait sans rien apprendre, dans une ligne déjà
+    /// dense. L'écran vers lequel le résultat mène porte, lui, l'infobulle complète.
+    public static final String MENTION = "prioritaire (PNA)";
+
     private final Set<String> codes;
 
     public MarqueurEspecesAEnjeu(EspecesPrioritaires referentiel) {
