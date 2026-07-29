@@ -64,7 +64,19 @@ depuis un bandeau, et personne ne devrait avoir à faire défiler un écran pour
 [`IsolationFeatureSourcesTest`] : ce qu'on interdit est une **forme d'écriture**, qui ne laisse aucune
 trace distinctive dans le `.class`.
 
-Il en faut **une par surface**, et la clôture l'a appris en falsifiant la première : rendre le défaut à
+Il en faut **une par forme de contournement**, et la clôture en a découvert deux de plus.
+
+La troisième est née de l'audit d'harmonisation de la clôture et a été livrée à part, dans
+**[#2841](https://github.com/echonuit/vigiechiro-pr-companion/issues/2841)** : douze appels écrivaient
+`erreur -> canal.echec(erreur.getMessage())`. Le canal recevait une `String`, donc sa surcharge « texte
+que nous avons écrit », et l'exception perdait les deux garanties **d'un saut d'indirection**. La
+décision ci-dessus tenait donc à l'endroit exact où la garde regardait. Celle-ci suit la **forme** - une
+lambda dont le paramètre est déballé par `getMessage()` - et non un nom de méthode : trois des douze
+sites lui doivent leur découverte, leurs récepteurs s'appelant `signalerSourceIllisible` et
+`marquerEchec`. Un journal reste libre de tout garder, puisque le motif exige que le nom déballé soit
+celui du **paramètre de la lambda**.
+
+La deuxième, elle, s'est révélée en falsifiant la première : rendre le défaut à
 l'IHM la faisait bien rougir, mais le même défaut dans une commande CLI la laissait verte - son motif
 ne connaissait que le vocabulaire de l'IHM (`erreur`, `avertissement`…), là où la CLI écrit sur
 `getErr()`. La garde CLI suit donc la **variable attrapée** (`catch (RegleMetierException refus)`) et
