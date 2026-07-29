@@ -257,7 +257,7 @@ public class MultisiteViewModel {
                     + lignesAExporter.size() + " ligne(s))."));
             return true;
         } catch (RuntimeException echec) {
-            retour.set(RetourOperation.erreur(echec.getMessage()));
+            retour.set(RetourOperation.erreur(echec));
             return false;
         }
     }

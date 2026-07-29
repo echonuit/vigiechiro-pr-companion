@@ -79,7 +79,41 @@ public record RetourOperation(String texte, Severite severite) {
     /// C'est l'unique endroit où l'IHM ajoute son « comment » : le modèle ne connaît pas les menus, et la
     /// ligne de commande en dit un autre.
     public static RetourOperation erreur(Throwable refus) {
-        return erreur(GesteAttendu.message(refus));
+        return erreur(borner(GesteAttendu.message(refus)));
+    }
+
+    /// Échec **situé** : un contexte que nous écrivons, suivi de ce que l'exception rapporte.
+    ///
+    /// Deux appelants prefixaient le message d'une exception à la main (« Impossible de charger vos
+    /// sites : » + `erreur.getMessage()`). Ils perdaient le geste attendu comme les autres, et rien ne
+    /// bornait ce qu'ils collaient. Ici le contexte reste entier - c'est notre phrase - et **seule** la
+    /// part venue d'ailleurs est bornée.
+    public static RetourOperation erreur(String contexte, Throwable refus) {
+        return erreur(contexte + borner(GesteAttendu.message(refus)));
+    }
+
+    /// Longueur maximale d'un texte venu **d'ailleurs**. Mesurée, pas choisie : à la largeur d'un écran
+    /// (1000 px), le bandeau tient 120 caractères par ligne. Deux lignes restent un bandeau ; au-delà, il
+    /// pousse le contenu de l'écran vers le bas.
+    private static final int LONGUEUR_MAX_EXTERNE = 240;
+
+    /// Borne un message **que nous n'avons pas écrit** (#2076).
+    ///
+    /// Le bandeau **n'a pas de troncature** : son libellé porte `wrapText`, donc un long message enroule
+    /// et fait grandir le bandeau. Mesuré : un message de pilote SQLite rappelant sa requête (379
+    /// caractères) le porte à 86 px, un collage de 625 caractères à 186 px - contre 46 px nominal.
+    ///
+    /// Borné **ici seulement**, et c'est le point : ce qui passe par [#erreur(String)] est écrit par nous,
+    /// et sa longueur est notre responsabilité. Ce qui arrive par un [Throwable] vient du pilote SQLite,
+    /// d'une réponse HTTP ou d'une trace réseau - personne ne l'a relu.
+    ///
+    /// Le détail complet n'est pas perdu : le journal le consigne (#1845), et c'est là qu'on va le
+    /// chercher pour diagnostiquer. Le bandeau, lui, dit ce qui s'est passé sans déverser.
+    private static String borner(String message) {
+        if (message == null || message.length() <= LONGUEUR_MAX_EXTERNE) {
+            return message;
+        }
+        return message.substring(0, LONGUEUR_MAX_EXTERNE).stripTrailing() + "… (détail dans le journal)";
     }
 
     public static RetourOperation erreur(String texte) {

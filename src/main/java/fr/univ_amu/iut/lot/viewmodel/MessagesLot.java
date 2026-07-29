@@ -49,6 +49,12 @@ final class MessagesLot {
         retour.set(RetourOperation.erreur(texte));
     }
 
+    /// Échec **remonté d'une exception** : le retour y gagne le **geste attendu** (#2635) et une longueur
+    /// **bornée** (#2076) - deux choses que `erreur(refus.getMessage())` perdait en chemin.
+    void erreur(Throwable refus) {
+        retour.set(RetourOperation.erreur(refus));
+    }
+
     /// Efface le seul retour : l'état du lot, lui, décrit la nuit et survit à la fermeture du bandeau.
     void effacerRetour() {
         retour.set(RetourOperation.AUCUN);

@@ -136,7 +136,7 @@ public class PointEditViewModel {
             retour.set(RetourOperation.AUCUN);
             return true;
         } catch (RuntimeException refus) {
-            retour.set(RetourOperation.erreur(refus.getMessage()));
+            retour.set(RetourOperation.erreur(refus));
             return false;
         }
     }

@@ -79,7 +79,7 @@ public final class ActionsRevueAudio {
             messages.succesImport(bilan);
             return true;
         } catch (RuntimeException echec) {
-            messages.erreur(echec.getMessage());
+            messages.erreur(echec);
             return false;
         }
     }
@@ -175,7 +175,7 @@ public final class ActionsRevueAudio {
             messages.effacerRetour();
             return true;
         } catch (RuntimeException echec) {
-            messages.erreur(echec.getMessage());
+            messages.erreur(echec);
             return false;
         }
     }
@@ -187,7 +187,7 @@ public final class ActionsRevueAudio {
             messages.succes(traites + " observation(s) " + libelle + ".");
             return traites;
         } catch (RuntimeException echec) {
-            messages.erreur(echec.getMessage());
+            messages.erreur(echec);
             return 0;
         }
     }

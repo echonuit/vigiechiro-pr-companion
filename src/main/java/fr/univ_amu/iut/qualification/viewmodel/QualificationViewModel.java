@@ -230,7 +230,7 @@ public class QualificationViewModel {
             retour.set(RetourOperation.AUCUN);
             etatVerdict.set(EtatVerdict.ENREGISTRE);
         } catch (RuntimeException refus) {
-            retour.set(RetourOperation.erreur(refus.getMessage()));
+            retour.set(RetourOperation.erreur(refus));
         }
     }
 

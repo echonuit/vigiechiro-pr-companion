@@ -97,7 +97,7 @@ public class LotViewModel {
             appliquer(service.consulterLot(idPassage));
         } catch (RuntimeException echec) {
             reinitialiser();
-            messages.erreur(echec.getMessage());
+            messages.erreur(echec);
         }
     }
 
@@ -137,7 +137,7 @@ public class LotViewModel {
             messages.succes("Archives de dépôt supprimées (" + Formats.octetsLisibles(liberes) + " libérés).");
             return true;
         } catch (RuntimeException echec) {
-            messages.erreur(echec.getMessage());
+            messages.erreur(echec);
             return false;
         }
     }
@@ -234,7 +234,7 @@ public class LotViewModel {
             messages.succes(bilan.apply(recharge));
             return true;
         } catch (RuntimeException echec) {
-            messages.erreur(echec.getMessage());
+            messages.erreur(echec);
             return false;
         }
     }

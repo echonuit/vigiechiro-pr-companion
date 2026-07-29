@@ -258,7 +258,7 @@ public class SitesViewModel {
 
     /// Route un échec de chargement vers le filet d'erreurs de l'écran (#795), **sur le fil JavaFX**.
     public void signalerErreur(Throwable erreur) {
-        retour.set(RetourOperation.erreur("Impossible de charger vos sites : " + erreur.getMessage()));
+        retour.set(RetourOperation.erreur("Impossible de charger vos sites : ", erreur));
     }
 
     /// Instantané du rechargement des cartes, calculé hors du fil JavaFX ([#charger]) puis appliqué

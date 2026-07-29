@@ -102,7 +102,7 @@ public class DiagnosticViewModel {
             retour.set(RetourOperation.AUCUN);
         } catch (RuntimeException echec) {
             reinitialiser();
-            retour.set(RetourOperation.erreur(echec.getMessage()));
+            retour.set(RetourOperation.erreur(echec));
         }
     }
 
