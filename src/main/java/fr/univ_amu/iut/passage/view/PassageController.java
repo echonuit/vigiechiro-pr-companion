@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.OuvrirSynthese;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
@@ -80,6 +81,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private final ExecuteurTache executeur;
     private final PortailVigieChiro portail;
     private final OuvreurDeLien ouvreurDeLien;
+
+    /// Entrée vers la Synthèse de la nuit (#2351), dépaquetée des appuis comme les trois précédentes.
+    private final Optional<OuvrirSynthese> ouvrirSynthese;
     private Long idPassage;
     private ContexteSite contexte;
 
@@ -181,6 +185,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private Button boutonActivite;
 
     @FXML
+    private Button boutonSynthese;
+
+    @FXML
     private Button boutonValidation;
 
     @FXML
@@ -255,6 +262,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         this.executeur = appuis.executeur();
         this.portail = appuis.portail();
         this.ouvreurDeLien = appuis.ouvreurDeLien();
+        this.ouvrirSynthese = appuis.ouvrirSynthese();
     }
 
     @Override
@@ -325,6 +333,11 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         boolean activiteActive = ouvrirActivite.isPresent();
         boutonActivite.setVisible(activiteActive);
         boutonActivite.setManaged(activiteActive);
+        // « Synthèse de la nuit » (#2351) : même montage, feature `synthese-nuit`. EXPERIMENTALE le temps
+        // du chantier, donc absente par défaut — la carte n'apparaît qu'une fois la feature activée.
+        boolean syntheseActive = ouvrirSynthese.isPresent();
+        boutonSynthese.setVisible(syntheseActive);
+        boutonSynthese.setManaged(syntheseActive);
         boutonValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
         boutonDepot.disableProperty().bind(viewModel.depotDisponibleProperty().not());
         // « Préparer le dépôt » n'apparaît que si la feature `lot` est activée (feature-flag #1087) : quand
@@ -485,6 +498,13 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// « Activité de la nuit » : ouvre M-Activite sur ce passage via le contrat socle [OuvrirActivite]
     /// (implémenté par la feature `analyse`, **désactivable** : la carte n'apparaît que si la feature
     /// `activite-nuit` est activée, cf. #2352).
+    /// « Synthèse de la nuit » : ouvre M-Synthese via le contrat socle [OuvrirSynthese] (#2351). La
+    /// carte n'apparaît que si la feature `synthese-nuit` est activée.
+    @FXML
+    private void voirSynthese() {
+        ouvrirSynthese.ifPresent(ouvrir -> ouvrir.ouvrir(contextePassage()));
+    }
+
     @FXML
     private void voirActivite() {
         ouvrirActivite.ifPresent(ouvrir -> ouvrir.ouvrir(contextePassage()));

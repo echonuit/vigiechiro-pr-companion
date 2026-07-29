@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.OuvrirSynthese;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -95,6 +96,9 @@ class PassageViewTest {
                 OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class)
                         .setBinding()
                         .toInstance(passage -> activiteOuverte.set(passage.idPassage()));
+                // `synthese-nuit` (#2351) : binder VIDE. Sans lui, Guice ne sait pas fabriquer
+                // l'Optional et le contrôleur devient inconstructible — l'écran ne charge plus du tout.
+                OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirVerification.class)
                         .setBinding()
                         .toInstance(passage -> verificationOuverte.set(passage.idPassage()));

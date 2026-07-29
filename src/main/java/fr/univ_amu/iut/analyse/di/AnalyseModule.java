@@ -6,10 +6,12 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
+import fr.univ_amu.iut.analyse.model.ServiceSynthese;
 import fr.univ_amu.iut.analyse.view.ActiviteAnalyse;
 import fr.univ_amu.iut.analyse.view.NavigationAnalyse;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
+import fr.univ_amu.iut.analyse.viewmodel.SyntheseViewModel;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
@@ -63,6 +65,22 @@ public class AnalyseModule extends ModuleDeFeature {
     @Provides
     ActiviteViewModel fournirActiviteViewModel(ServiceActivite service) {
         return new ActiviteViewModel(service);
+    }
+
+    // Machinerie de l'écran « Synthèse de la nuit » (#2351). Fournie ici, avec le reste de la feature
+    // `analyse`, et non par SyntheseModule : ce dernier ne conditionne que l'ACCÈS, et le FXML doit
+    // rester chargeable même l'entrée coupée (ChargementFxmlTest). Non-singleton : VM frais par écran.
+    @Provides
+    SyntheseViewModel fournirSyntheseViewModel(ServiceSynthese service) {
+        return new SyntheseViewModel(service);
+    }
+
+    /// Singleton : le référentiel d'activité est chargé **une fois**, à la construction. C'est une
+    /// donnée de référence embarquée de ~3900 lignes, elle ne change pas en cours de session.
+    @Provides
+    @Singleton
+    ServiceSynthese fournirServiceSynthese(ProjectionsAudioDao projections) {
+        return new ServiceSynthese(projections);
     }
 
     @Provides

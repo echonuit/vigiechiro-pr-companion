@@ -204,6 +204,18 @@
             </VBox>
           </graphic>
         </Button>
+        <Button fx:id="boutonSynthese" styleClass="carte-action"
+                onAction="#voirSynthese" contentDisplay="GRAPHIC_ONLY"
+                accessibleText="Synthèse de la nuit : ce que chaque espèce a produit, comparé au référentiel d'activité"
+                maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
+          <graphic>
+            <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
+              <FontIcon iconLiteral="fas-balance-scale" styleClass="carte-action-icone"/>
+              <Label text="Synthèse de la nuit" styleClass="carte-action-titre" wrapText="true"/>
+              <Label text="Ce que l'activité vaut" styleClass="carte-action-sous" wrapText="true"/>
+            </VBox>
+          </graphic>
+        </Button>
         <Button fx:id="boutonActivite" styleClass="carte-action"
                 onAction="#voirActivite" contentDisplay="GRAPHIC_ONLY"
                 accessibleText="Activité de la nuit : courbe horaire du nombre de contacts par espèce"

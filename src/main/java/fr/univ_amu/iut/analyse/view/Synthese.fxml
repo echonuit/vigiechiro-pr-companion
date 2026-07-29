@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  M-Synthese - synthèse d'une nuit (#2351, lot 1 du chantier #2348). Atteint depuis M-Passage via le
+  contrat socle OuvrirSynthese. Une ligne par espèce : ce qu'on a détecté, et ce que ce nombre vaut au
+  regard du référentiel d'activité ACTICHIRO.
+
+  Le bloc d'avertissement et la citation sont PERMANENTS et jamais repliables : la source est libre
+  d'usage AVEC citation obligatoire, et une classe d'activité sans sa mise en garde se lit comme un
+  verdict. Tous deux sont recopiés dans l'export CSV.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.analyse.view.SyntheseController"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css"
+      styleClass="ecran-synthese"
+      spacing="12.0">
+
+  <padding><Insets top="16.0" right="18.0" bottom="16.0" left="18.0"/></padding>
+
+  <!-- Cadre de lecture du tableau, pas un titre d'écran : le fil d'Ariane porte déjà le nom. -->
+  <Label fx:id="lblContexte" styleClass="sous-titre"/>
+
+  <HBox spacing="14.0" alignment="CENTER_LEFT">
+    <!-- Recalcule TOUT le tableau, colonne Activité comprise : deux lectures cohabitent, ce que la
+         machine propose et ce que l'observateur a confirmé. -->
+    <CheckBox fx:id="chkValideesSeulement" text="Identifications validées seulement"/>
+    <Region HBox.hgrow="ALWAYS"/>
+    <!-- Le milieu ne se devine pas : aucune donnée de l'application ne dit si un point est en forêt ou
+         en ville. Choix explicite, « national » par défaut. -->
+    <Label fx:id="lblMilieu" text="Milieu :"/>
+    <ChoiceBox fx:id="cbMilieu" prefWidth="200.0"/>
+  </HBox>
+
+  <TableView fx:id="tableSynthese" VBox.vgrow="ALWAYS">
+    <columns>
+      <TableColumn fx:id="colEspece" text="Espèce" prefWidth="260.0"/>
+      <TableColumn fx:id="colGroupe" text="Taxon parent" prefWidth="150.0"/>
+      <TableColumn fx:id="colContacts" text="Contacts" prefWidth="100.0"/>
+      <!-- Les séquences distinctes, souvent moins nombreuses que les contacts : elles disent si
+           l'activité est concentrée ou diffuse. -->
+      <TableColumn fx:id="colFichiers" text="Fichiers" prefWidth="90.0"/>
+      <TableColumn fx:id="colActivite" text="Activité" prefWidth="240.0"/>
+      <!-- Les quantiles retenus, à côté de la classe : une classe seule est un verdict, une classe
+           accompagnée de ses bornes est une lecture contestable, donc scientifique. -->
+      <TableColumn fx:id="colSeuils" text="Seuils retenus" prefWidth="220.0"/>
+    </columns>
+  </TableView>
+
+  <!-- Référentiel effectivement employé : sans lui, la classe serait un oracle. -->
+  <Label fx:id="lblReferentiel" styleClass="texte-discret"/>
+
+  <VBox fx:id="blocAvertissement" spacing="4.0" styleClass="bandeau-mise-en-garde">
+    <padding><Insets top="10.0" right="12.0" bottom="10.0" left="12.0"/></padding>
+    <Label fx:id="lblAvertissement" wrapText="true"/>
+    <Label fx:id="lblCitation" wrapText="true" styleClass="texte-discret"/>
+  </VBox>
+</VBox>

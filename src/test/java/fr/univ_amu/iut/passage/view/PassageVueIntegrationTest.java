@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.OuvrirSynthese;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -270,8 +271,11 @@ class PassageVueIntegrationTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
-                // Feature `activite-nuit` absente de ce test : contrat non bindé, la carte est masquée.
+                // Features `activite-nuit` et `synthese-nuit` absentes de ce test : contrats non bindés,
+                // les cartes sont masquées. Le binder VIDE reste nécessaire — sans lui, Guice ne sait pas
+                // construire l'Optional et le contrôleur devient inconstructible.
                 OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
+                OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> diagnosticOuvert.set(passage.idPassage()));

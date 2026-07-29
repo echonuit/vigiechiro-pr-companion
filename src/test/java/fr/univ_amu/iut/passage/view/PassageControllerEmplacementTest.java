@@ -57,7 +57,12 @@ class PassageControllerEmplacementTest {
                 ouvrirSite,
                 numeroCarre -> {},
                 idp -> 0,
-                new AppuisPassage(new ExecuteurTacheSynchrone(), mock(PortailVigieChiro.class), url -> {}));
+                new AppuisPassage(
+                        new ExecuteurTacheSynchrone(),
+                        mock(PortailVigieChiro.class),
+                        url -> {},
+                        // Synthèse absente : ce test porte sur le fil d'Ariane, pas sur les cartes.
+                        Optional.empty()));
     }
 
     @Test

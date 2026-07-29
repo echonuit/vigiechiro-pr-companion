@@ -27,6 +27,7 @@ import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.OuvrirSynthese;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
@@ -106,6 +107,8 @@ class PassageActionsFicheViewTest {
             protected void configure() {
                 // Écrans voisins : présents mais inertes (ce test ne navigue pas).
                 OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
+                // Idem pour `synthese-nuit` (#2351) : le binder VIDE rend l'Optional constructible.
+                OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> {});

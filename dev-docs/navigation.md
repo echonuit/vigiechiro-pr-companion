@@ -109,7 +109,7 @@ classDiagram
 3. `PassageModule` la **binde** : `bind(OuvrirPassage.class).to(NavigationPassage.class);`.
 4. `sites` **injecte** `OuvrirPassage` et appelle `ouvrir(...)` — sans jamais voir `passage.view`.
 
-Contrats existants (**<!--inv:ouvrir-->11<!--/inv-->**, la liste de référence : `commun/view/Ouvrir*.java`) : `OuvrirActivite`,
+Contrats existants (**<!--inv:ouvrir-->12<!--/inv-->**, la liste de référence : `commun/view/Ouvrir*.java`) : `OuvrirActivite`,
 `OuvrirAnalyse`, `OuvrirAudio`, `OuvrirDiagnostic`, `OuvrirImportation`, `OuvrirLot`, `OuvrirMultisite`,
 `OuvrirPassage`, `OuvrirSite`, `OuvrirValidation`, `OuvrirVerification`.
 

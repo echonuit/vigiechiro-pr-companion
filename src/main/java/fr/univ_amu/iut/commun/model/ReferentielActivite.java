@@ -46,13 +46,13 @@ public final class ReferentielActivite {
 
     /// Citation **obligatoire**, à recopier partout où une classe d'activité s'affiche ou s'exporte.
     public static final String CITATION =
-            "Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020) - Bat reference scale of activity "
-                    + "levels (v. 2020-04-10), Team-Chiro / CESCO - Museum national d'Histoire naturelle";
+            "Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020) — Bat reference scale of activity "
+                    + "levels (v. 2020-04-10), Team-Chiro / CESCO — Muséum national d'Histoire naturelle";
 
     /// Ce que la classe d'activité **ne dit pas**. Accompagne la citation, écran comme export.
     public static final String AVERTISSEMENT =
-            "Une classe d'activite n'est pas un niveau d'enjeu de conservation, et les classes ne se "
-                    + "comparent pas d'une espece a l'autre : la detectabilite varie trop d'un taxon au suivant.";
+            "Une classe d'activité n'est pas un niveau d'enjeu de conservation, et les classes ne se "
+                    + "comparent pas d'une espèce à l'autre : la détectabilité varie trop d'un taxon au suivant.";
 
     private static final String RESSOURCE = "referentiel-activite.csv";
     private static final String NATIONAL = "national";

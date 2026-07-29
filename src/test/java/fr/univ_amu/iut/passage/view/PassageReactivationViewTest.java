@@ -26,6 +26,7 @@ import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.OuvrirSynthese;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
@@ -116,6 +117,8 @@ class PassageReactivationViewTest {
             protected void configure() {
                 bind(NavigationPassage.class).toInstance(navigation);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
+                // Idem pour `synthese-nuit` (#2351) : le binder VIDE rend l'Optional constructible.
+                OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> {});

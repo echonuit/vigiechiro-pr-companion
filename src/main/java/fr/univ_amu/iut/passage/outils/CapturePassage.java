@@ -312,7 +312,10 @@ public final class CapturePassage {
                         new AppuisPassage(
                                 injecteur.getInstance(ExecuteurTache.class),
                                 injecteur.getInstance(PortailVigieChiro.class),
-                                url -> {}))
+                                url -> {},
+                                // Synthèse absente de l'injecteur de capture : la carte se masque, comme
+                                // elle le ferait la feature coupée. L'aperçu montre l'écran sans elle.
+                                Optional.empty()))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         PassageController controleur = loader.getController();
