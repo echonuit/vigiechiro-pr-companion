@@ -6,6 +6,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.api.ResolveurCommuneApiGeo;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
@@ -14,6 +15,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
+import fr.univ_amu.iut.commun.model.ResolveurCommune;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -26,8 +28,10 @@ import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
 import fr.univ_amu.iut.sites.model.RapprochementNuitsOpportunistes;
 import fr.univ_amu.iut.sites.model.RapprochementSites;
+import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.SynchronisationSites;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
@@ -166,6 +170,29 @@ public class SitesModule extends ModuleDeFeature {
     @Singleton
     ServiceSites fournirServiceSites(SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
         return new ServiceSites(siteDao, pointDao, passageDao, horloge);
+    }
+
+    /// Commune d'un point (table latérale `point_commune`, #2791).
+    @Provides
+    @Singleton
+    PointCommuneDao fournirPointCommuneDao(SourceDeDonnees source) {
+        return new PointCommuneDao(source);
+    }
+
+    /// Résolution GPS → commune par l'API Géo (#2791) : publique, sans clé, best-effort - aucune
+    /// dépendance vers `connexion`, même patron que le client GBIF des fiches d'espèces.
+    @Provides
+    @Singleton
+    ResolveurCommune fournirResolveurCommune() {
+        return new ResolveurCommuneApiGeo();
+    }
+
+    /// Tenue à jour de la commune des points (#2791) : résolution ciblée après création ou
+    /// changement de GPS, rattrapage des points en attente.
+    @Provides
+    @Singleton
+    ServiceCommunes fournirServiceCommunes(PointDao pointDao, PointCommuneDao communeDao, ResolveurCommune resolveur) {
+        return new ServiceCommunes(pointDao, communeDao, resolveur);
     }
 
     /// Identifiant de l'utilisateur courant (application mono-utilisateur, hors-ligne, C1).

@@ -93,6 +93,19 @@ class MigrationSchemaTest {
                 .doesNotContain("archived_at", "originals_purged_at");
     }
 
+    @Test
+    @DisplayName("V38 crée la table latérale point_commune, en cascade sur le point (#2791)")
+    void table_commune_du_point_creee() throws SQLException {
+        SourceDeDonnees source = new SourceDeDonnees(new Workspace(racine.resolve("ws")));
+        new MigrationSchema(source).migrer();
+
+        assertThat(tables(source)).contains("point_commune");
+        assertThat(colonnes(source, "point_commune"))
+                .as("la commune est une table latérale de valeurs : clé du point + nom + code INSEE,"
+                        + " l'absence de ligne disant « non résolue » (ADR 2791)")
+                .containsExactlyInAnyOrder("point_id", "commune_name", "commune_insee");
+    }
+
     private static List<Integer> versionsEnBase(SourceDeDonnees source) throws SQLException {
         List<Integer> versions = new ArrayList<>();
         try (Connection cx = source.getConnection();
