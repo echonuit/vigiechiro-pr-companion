@@ -145,49 +145,71 @@ public final class Importer implements Callable<Integer> {
 
         ResultatImport resultat = importerSelonLeMode(source, point, prefixe, collision);
 
-        sortie.println("Import réussi.");
-        sortie.println("  Passage     : #" + resultat.passage().id());
-        sortie.println("  Quadruplet  : carré " + site.numeroCarre()
+        String quadruplet = "carré " + site.numeroCarre()
                 + " / point " + pointDEcoute.code()
-                + " / " + anneeEffective + " / passage " + numeroEffectif);
-        sortie.println("  Statut      : " + resultat.passage().statutWorkflow().libelle());
-        sortie.println("  Enregistreur: " + resultat.numeroSerieEnregistreur());
-        sortie.println("  Originaux   : " + resultat.nombreOriginaux());
-        sortie.println("  Séquences   : " + resultat.nombreSequences());
-        // Parité avec l'IHM (clôture #2350) : le compte rendu chiffré de l'écran compare le volume LU sur
-        // la carte au volume ÉCRIT sur le disque (#2358). La ligne de commande ne peut pas dessiner de
-        // barres, mais elle peut dire les mêmes chiffres - c'est une donnée, pas une mise en forme.
-        if (!resultat.volumes().estVide()) {
-            sortie.println("  Lu / écrit  : " + volumesLisibles(resultat.volumes()));
-        }
-        // #1488 : l'import crée une participation sur un serveur distant. L'écran le dit depuis la clôture
-        // du lot 2 ; la taire ici laisserait l'écriture se découvrir ailleurs, ce que l'issue interdit.
-        if (resultat.participationCreee()) {
-            sortie.println("  Vigie-Chiro : participation créée (le dépôt la réutilisera)");
-        }
-
-        RapportImport rapport = resultat.rapport();
-        sortie.println("  Rapport     : " + rapport.resume());
-        // Parité avec l'IHM (clôture #2004) : l'écran d'import rend ces deux points depuis #2044, la
-        // ligne de commande les taisait. Le doublon de nuit change ce que l'utilisateur croit avoir
-        // importé, et les anomalies du journal étaient transportées jusqu'ici sans être montrées nulle
-        // part - une capacité livrée d'un seul côté est à moitié livrée.
-        for (PassageExistant doublon : rapport.doublonsDeNuit()) {
-            sortie.println("  Doublon     : nuit déjà importée en passage n° " + doublon.numeroPassage()
-                    + " (" + doublon.annee() + ") au carré " + doublon.carre() + ", point "
-                    + doublon.codePoint());
-        }
-        for (String anomalie : resultat.anomalies()) {
-            sortie.println("  Anomalie    : " + anomalie);
-        }
+                + " / " + anneeEffective + " / passage " + numeroEffectif;
+        sortie.println(rendreBilan(resultat, quadruplet));
         Path rapportCsv = Path.of(resultat.session().cheminRacine()).resolve("rapport-import.csv");
         try {
-            Files.writeString(rapportCsv, rapport.versCsv());
+            Files.writeString(rapportCsv, resultat.rapport().versCsv());
             sortie.println("  Rapport CSV : " + rapportCsv.toAbsolutePath());
         } catch (IOException echec) {
             sortie.println("  (rapport CSV non écrit : " + echec.getMessage() + ")");
         }
         return 0;
+    }
+
+    /// Rendu texte de la fin d'import. **Fonction pure** (aucune E/S, aucune base) : c'est ce qui la rend
+    /// testable, et c'est le patron déjà en place chez sa voisine `deposer-vigiechiro`
+    /// ([DeposerVigieChiro#rendreBilan]).
+    ///
+    /// Elle est extraite pour #2656 : trois lignes de cette sortie - les volumes, la participation créée,
+    /// et leurs conditions - n'étaient exercées par **aucun** test. `CliImportTest` construit l'injecteur
+    /// applicatif réel, sans passerelle de synchronisation : `participationCreee()` y est toujours faux,
+    /// et la ligne jamais imprimée. Le trou était déclaré ; il est comblé.
+    ///
+    /// @param resultat ce que l'import a produit
+    /// @param quadruplet carré / point / année / passage, composé par l'appelant qui seul les connaît
+    static String rendreBilan(ResultatImport resultat, String quadruplet) {
+        StringBuilder texte = new StringBuilder("Import réussi.\n");
+        ligne(texte, "Passage     ", "#" + resultat.passage().id());
+        ligne(texte, "Quadruplet  ", quadruplet);
+        ligne(texte, "Statut      ", resultat.passage().statutWorkflow().libelle());
+        ligne(texte, "Enregistreur", resultat.numeroSerieEnregistreur());
+        ligne(texte, "Originaux   ", Integer.toString(resultat.nombreOriginaux()));
+        ligne(texte, "Séquences   ", Integer.toString(resultat.nombreSequences()));
+        // Parité avec l'IHM (clôture #2350) : le compte rendu chiffré de l'écran compare le volume LU sur
+        // la carte au volume ÉCRIT sur le disque (#2358). La ligne de commande ne peut pas dessiner de
+        // barres, mais elle peut dire les mêmes chiffres - c'est une donnée, pas une mise en forme.
+        if (!resultat.volumes().estVide()) {
+            ligne(texte, "Lu / écrit  ", volumesLisibles(resultat.volumes()));
+        }
+        // #1488 : l'import crée une participation sur un serveur distant. L'écran le dit depuis la clôture
+        // du lot 2 ; la taire ici laisserait l'écriture se découvrir ailleurs, ce que l'issue interdit.
+        if (resultat.participationCreee()) {
+            ligne(texte, "Vigie-Chiro ", "participation créée (le dépôt la réutilisera)");
+        }
+        RapportImport rapport = resultat.rapport();
+        ligne(texte, "Rapport     ", rapport.resume());
+        // Parité avec l'IHM (clôture #2004) : l'écran d'import rend ces deux points depuis #2044, la
+        // ligne de commande les taisait. Le doublon de nuit change ce que l'utilisateur croit avoir
+        // importé, et les anomalies du journal étaient transportées jusqu'ici sans être montrées nulle
+        // part - une capacité livrée d'un seul côté est à moitié livrée.
+        for (PassageExistant doublon : rapport.doublonsDeNuit()) {
+            ligne(
+                    texte,
+                    "Doublon     ",
+                    "nuit déjà importée en passage n° " + doublon.numeroPassage() + " (" + doublon.annee()
+                            + ") au carré " + doublon.carre() + ", point " + doublon.codePoint());
+        }
+        for (String anomalie : resultat.anomalies()) {
+            ligne(texte, "Anomalie    ", anomalie);
+        }
+        return texte.toString().stripTrailing();
+    }
+
+    private static void ligne(StringBuilder texte, String libelle, String valeur) {
+        texte.append("  ").append(libelle).append(": ").append(valeur).append('\n');
     }
 
     /// Les volumes lus et écrits, dans les mots de l'écran.
