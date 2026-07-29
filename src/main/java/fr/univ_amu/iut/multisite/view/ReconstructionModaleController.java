@@ -331,6 +331,11 @@ public class ReconstructionModaleController {
     /// [#reconstruireTout]. Sur le fil JavaFX.
     public void apercuImportGroupeEnCours(
             String libelleLot, double fractionLot, String libelleNuit, double fractionNuit) {
+        // Un import EN COURS n'a pas de refus en attente. Sans cet effacement, l'aperçu superposait le
+        // bandeau rouge « Compléter une nuit demande la connexion Vigie-Chiro » - posé parce que
+        // l'injecteur de capture n'a pas de service - aux deux barres qui tournent : un état que le
+        // produit ne produit jamais, publié dans la documentation (revue visuelle, clôture du lot 3).
+        viewModel.effacerRetour();
         operationEnCours.set(true);
         lotEnCours.set(true);
         viewModel.progressionGlobale().demarrer(libelleLot);

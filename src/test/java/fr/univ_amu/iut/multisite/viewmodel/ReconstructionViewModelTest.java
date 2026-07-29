@@ -116,6 +116,24 @@ class ReconstructionViewModelTest {
     }
 
     @Test
+    @DisplayName("Un lot INTERROMPU dit ce qui a été fait, et ne se présente pas comme un succès")
+    void lot_interrompu_ne_se_presente_pas_en_succes() {
+        // Le message d'avant affirmait « aucune nuit n'a été complétée » : vrai pour UNE nuit, qui se
+        // compense, faux pour un lot, dont la compensation est par nuit.
+        ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.empty());
+
+        viewModel.restituerLot(new BilanReconstructionGroupe(2, 0, 20, 41, true));
+
+        assertThat(viewModel.retourProperty().get().texte())
+                .contains("Import interrompu.")
+                .contains("2 nuit(s) complétée(s)")
+                .contains("intactes");
+        assertThat(viewModel.retourProperty().get().severite())
+                .as("l'utilisateur a renoncé : une pastille verte le féliciterait de s'être arrêté")
+                .isEqualTo(Severite.INFO);
+    }
+
+    @Test
     @DisplayName("Un refus (point inconnu ici) devient un message, pas une exception muette")
     void refus_devient_un_message() {
         ServiceReconstructionPassages service = mock(ServiceReconstructionPassages.class);

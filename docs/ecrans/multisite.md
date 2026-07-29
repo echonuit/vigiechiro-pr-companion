@@ -190,6 +190,14 @@ proprement).
 
 ![La modale « Compléter une nuit récupérée » : les nuits dont Vigie-Chiro n'a pas encore livré le contenu. La seconde ne peut pas être complétée tant que son point d'écoute n'existe pas ici.](../assets/captures/apercu-multisite-reconstruction.png)
 
+![« Tout compléter » en cours : deux barres, le lot de nuits (« Nuit 2 / 3 ») et la nuit courante, et un bouton « Annuler ».](../assets/captures/apercu-multisite-reconstruction-groupe.png)
+
+**Annuler n'annule pas ce qui est fait.** La nuit en cours va au bout, les nuits non commencées ne sont
+pas touchées, et le compte rendu dit **combien** ont été complétées : elles disparaissent de la liste,
+celles qui restent y sont toujours. Relancer l'import reprend là où vous vous êtes arrêté.
+
+![Après une interruption : « Import interrompu. 2 nuit(s) complétée(s) », la troisième nuit reste seule dans la liste.](../assets/captures/apercu-multisite-reconstruction-interrompu.png)
+
 !!! note "Ce qu'une nuit complétée ne contient pas"
     La plateforme ne rend pas tout. Une nuit complétée reste donc **sans audio** (c'est un
     [passage sans audio](passage.md) : consultable, pas

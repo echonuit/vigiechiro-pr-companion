@@ -208,7 +208,9 @@ public class ReconstructionViewModel {
         rendu += System.lineSeparator()
                 + "Ces nuits sont consultables mais pas écoutables (le dépôt ZIP ne restitue"
                 + " pas l'audio). Réactivez-les si vous retrouvez les fichiers d'origine.";
-        retour.set(RetourOperation.succes(rendu));
+        // Un lot interrompu n'est pas un succès : l'utilisateur a renoncé, et une pastille verte le
+        // féliciterait de s'être arrêté. Ce n'est pas une erreur non plus - d'où l'information.
+        retour.set(bilan.interrompu() ? RetourOperation.info(rendu) : RetourOperation.succes(rendu));
     }
 
     /// Route un échec vers le message de la modale : un refus (point inconnu, hors connexion, analyse non

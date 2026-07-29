@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.CiblePassage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -31,6 +32,7 @@ import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -135,6 +137,7 @@ public final class CaptureMultisite {
         rendreEcranTableauPlein(injecteur, sortie.resolve("apercu-multisite-tableau-plein.png"));
         rendreModaleReconstruction(injecteur, sortie.resolve("apercu-multisite-reconstruction.png"));
         rendreImportGroupe(injecteur, sortie.resolve("apercu-multisite-reconstruction-groupe.png"));
+        rendreImportGroupeInterrompu(injecteur, sortie.resolve("apercu-multisite-reconstruction-interrompu.png"));
         rendreMenuActions(injecteur, sortie.resolve("apercu-multisite-menu-actions.png"));
         rendreMenuActionsSelection(injecteur, sortie.resolve("apercu-multisite-menu-selection.png"));
     }
@@ -199,6 +202,35 @@ public final class CaptureMultisite {
                         "6a53f5faae21902a597394d5", CARRE_DEMO, "C3", "2026-06-20T21:38:00+02:00", true)));
         controleur.apercuImportGroupeEnCours("Nuit 2 / 3…", 2.0 / 3.0, "Import des observations…", 0.96);
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
+    }
+
+    /// Rend la modale **après un import groupé interrompu** (revue visuelle, clôture du lot 3).
+    ///
+    /// C'est l'état qui **mentait** : le lot levait à l'annulation, la modale affichait « aucune nuit n'a
+    /// été complétée » alors que deux l'étaient, et ne rechargeait pas sa liste - les deux nuits déjà
+    /// complétées restaient offertes à la complétion. Aucune capture ne montrait cet état, donc rien ne
+    /// le contredisait.
+    ///
+    /// Ce qui est rendu ici est ce que le produit fait maintenant : le bilan dit ce qui a été fait, dit
+    /// que le reste est intact, et la liste ne garde que la nuit non commencée.
+    private static void rendreImportGroupeInterrompu(Injector injecteur, Path fichier) throws IOException {
+        ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.empty());
+        ExecuteurTache executeur = injecteur.getInstance(ExecuteurTache.class);
+        FXMLLoader loader = new FXMLLoader(ReconstructionModaleController.class.getResource(FXML_RECONSTRUCTION));
+        loader.setControllerFactory(type -> type == ReconstructionModaleController.class
+                ? new ReconstructionModaleController(viewModel, executeur)
+                : injecteur.getInstance(type));
+        Parent vue = loader.load();
+        viewModel.appliquer(List.of(new ParticipationOrpheline(
+                "6a53f5faae21902a597394d5", CARRE_DEMO, "C3", "2026-06-20T21:38:00+02:00", true)));
+        // La barre « Nuit en cours » reste affichée après un lot (elle suit `reconstruit`) : on la laisse
+        // à l'état où la dernière nuit l'a laissée, sinon l'aperçu montre une barre vide que le produit
+        // n'affiche jamais.
+        viewModel.progression().demarrer("Terminé.");
+        viewModel.progression().appliquer(new Progression("Terminé.", 1.0));
+        viewModel.restituerLot(new ServiceReconstructionPassages.BilanReconstructionGroupe(2, 0, 20, 41, true));
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
+        journaliser(fichier);
     }
 
     /// Photographie le **menu ☰ ouvert** de « Carte & passages » (#2065). Il n'était ouvert par aucune
