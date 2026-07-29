@@ -499,8 +499,12 @@ class ServiceReconstructionPassagesTest {
             // #2655 : le TOTAL du tour est dit, pour que la part se lise sans recomposer de tête. Il n'est
             // exact que parce que les trois issues partitionnent les squelettes balayés.
             assertThat(compteRendu.enClair())
-                    .startsWith("0 nuit(s) récupérée(s) sur 1")
+                    .startsWith("0 nuit(s) récupérée(s)")
+                    .contains("sur 1")
                     .contains("1 en attente d'analyse");
+            assertThat(compteRendu.libelle())
+                    .as("le libellé sert de CLÉ (LIBELLE_SITES.equals, E2E) : il reste stable")
+                    .isEqualTo("nuit(s) récupérée(s)");
         });
         List<Passage> passages = passageDao.findAll();
         assertThat(passages).hasSize(1);

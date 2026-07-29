@@ -216,15 +216,6 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             return completees + enAttenteDAnalyse + nonLues;
         }
 
-        /// Le libellé du compteur, **avec le total du tour** quand il en manque (#2655).
-        ///
-        /// Le total ne paraît que s'il ajoute quelque chose : « 12 nuit(s) récupérée(s) sur 12 » ferait
-        /// chercher une différence qui n'existe pas - la faute corrigée sur les volumes (#2677) et les
-        /// validations (#2695).
-        String libelleDuCompteur() {
-            return total() > completees ? "nuit(s) récupérée(s) sur " + total() : "nuit(s) récupérée(s)";
-        }
-
         /// Ce que le compteur passerait sous silence, **par cause** - et jamais sous une cause supposée.
         ///
         /// « En attente d'analyse » est une affirmation sur la plateforme : elle n'est due qu'aux nuits dont
@@ -239,7 +230,16 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             if (nonLues > 0) {
                 parts.add(nonLues + " non récupérée(s), à réessayer");
             }
-            return String.join(", ", parts);
+            if (parts.isEmpty()) {
+                return "";
+            }
+            // Le TOTAL en tête (#2655) : « 12 récupérée(s) » est exact et pourtant muet sur la part - il
+            // faut recomposer de tête pour savoir qu'un cinquième du travail est fait.
+            //
+            // Ici et pas dans le `libelle` : celui-ci sert de CLÉ ailleurs (`LIBELLE_SITES.equals(...)`,
+            // et un E2E qui identifie les rapprocheurs par lui). Y glisser un compteur en aurait fait une
+            // phrase, et cassé les identités qui s'y appuient.
+            return "sur " + total() + ", dont " + String.join(" et ", parts);
         }
     }
 
@@ -268,7 +268,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         //
         // Rien n'est dit quand tout est récupéré : « 12 sur 12 » fait chercher une différence qui n'existe
         // pas, la faute corrigée sur les volumes (#2677) et les validations (#2695).
-        RapportSynchro rapport = new RapportSynchro(bilan.libelleDuCompteur(), bilan.completees());
+        RapportSynchro rapport = new RapportSynchro("nuit(s) récupérée(s)", bilan.completees());
         String reste = bilan.reste();
         return Optional.of(reste.isEmpty() ? rapport : rapport.avecPrecision(reste));
     }
