@@ -10,6 +10,7 @@ import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
+import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -45,6 +46,9 @@ import javafx.collections.transformation.FilteredList;
 public class MultisiteViewModel {
 
     private final ServiceMultisite service;
+
+    /// Communes des points (#2791) : rattrapées après l'enregistrement de positions déplacées.
+    private final ServiceCommunes communes;
     private final String idUtilisateur;
 
     /// File des déplacements de points en attente (mode édition des positions, #154). Responsabilité
@@ -84,9 +88,11 @@ public class MultisiteViewModel {
     public MultisiteViewModel(
             ServiceMultisite service,
             ServiceSites serviceSites,
+            ServiceCommunes communes,
             Optional<SuiviTraitement> suivi,
             String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
+        this.communes = Objects.requireNonNull(communes, "communes");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         this.suivi = Objects.requireNonNull(suivi, "suivi");
         this.positionsEnAttente = new PositionsEnAttente(serviceSites, this::rafraichirCarte, this::rapporterPosition);
@@ -230,6 +236,13 @@ public class MultisiteViewModel {
     /// marqueurs glissés, puis enregistre ou abandonne. Voir [PositionsEnAttente].
     public PositionsEnAttente positionsEnAttente() {
         return positionsEnAttente;
+    }
+
+    /// Comble les communes des points en attente (#2791) - typiquement après l'enregistrement de
+    /// positions déplacées, le déplacement ayant invalidé la commune mémorisée. **Bloquant** (réseau) :
+    /// à appeler hors du fil JavaFX. Best-effort : un raté laisse simplement les points en attente.
+    public void rattraperCommunes() {
+        communes.rattraper();
     }
 
     /// Exporte les lignes **internes** du tableau (sous-ensemble filtré, tri nommé) en CSV vers

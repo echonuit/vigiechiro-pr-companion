@@ -21,6 +21,7 @@ import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -99,8 +100,9 @@ public class MultisiteModule extends ModuleDeFeature {
     MultisiteViewModel fournirMultisiteViewModel(
             ServiceMultisite service,
             ServiceSites serviceSites,
+            ServiceCommunes communes,
             Optional<SuiviTraitement> suivi,
             @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new MultisiteViewModel(service, serviceSites, suivi, idUtilisateur);
+        return new MultisiteViewModel(service, serviceSites, communes, suivi, idUtilisateur);
     }
 }

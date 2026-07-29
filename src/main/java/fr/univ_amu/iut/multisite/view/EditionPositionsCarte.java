@@ -38,15 +38,24 @@ final class EditionPositionsCarte {
     /// Un bouton par décision (et non une liste déroulante) : deux décisions se lisent d'un coup d'oeil.
     private final DemandeurDeChoixModifiable<SortieEdition> demandeur;
 
+    /// Rappel invoqué quand des positions ont réellement été écrites (#2791) : le contrôleur y
+    /// branche le rattrapage des communes, hors du fil JavaFX (le déplacement vient de les invalider).
+    private final Runnable apresEnregistrement;
+
     private final Map<String, Long> idPointParLibelle = new HashMap<>();
     private final Map<String, EmpriseCarre> empriseParCarre = new HashMap<>();
 
     EditionPositionsCarte(
-            CarteSites carte, MultisiteViewModel viewModel, ToggleButton toggle, Button boutonEnregistrer) {
+            CarteSites carte,
+            MultisiteViewModel viewModel,
+            ToggleButton toggle,
+            Button boutonEnregistrer,
+            Runnable apresEnregistrement) {
         this.carte = carte;
         this.viewModel = viewModel;
         this.toggle = toggle;
         this.boutonEnregistrer = boutonEnregistrer;
+        this.apresEnregistrement = apresEnregistrement;
         this.demandeur = new DemandeurDeChoixModifiable<>(new ChoixParBoutons<>(
                 "Positions modifiées", () -> toggle.getScene().getWindow()));
     }
@@ -105,7 +114,9 @@ final class EditionPositionsCarte {
 
     /// Bouton « 💾 Enregistrer les positions » : persiste les déplacements en attente (on reste en édition).
     void enregistrer() {
-        viewModel.positionsEnAttente().enregistrer();
+        if (viewModel.positionsEnAttente().enregistrer() > 0) {
+            apresEnregistrement.run();
+        }
     }
 
     /// L'utilisateur quitte le mode édition avec des déplacements non enregistrés : que veut-il en faire ?
@@ -127,7 +138,7 @@ final class EditionPositionsCarte {
             return;
         }
         if (choix.orElseThrow() == SortieEdition.ENREGISTRER) {
-            viewModel.positionsEnAttente().enregistrer();
+            enregistrer();
         } else {
             viewModel.positionsEnAttente().annuler();
         }

@@ -411,8 +411,21 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         viewModel.carresCarte().addListener((ListChangeListener<CarreAgrege>) changement -> rafraichirTracesCarte());
 
         // Édition des positions (#154) : déléguée à EditionPositionsCarte (clamp au carré, file en attente,
-        // alerte de sortie). Le controller ne fait que la brancher et relayer les actions.
-        edition = new EditionPositionsCarte(carte, viewModel, boutonEditerPositions, boutonEnregistrerPositions);
+        // alerte de sortie). Le controller ne fait que la brancher et relayer les actions. Après un
+        // enregistrement effectif, les communes invalidées par le déplacement se rattrapent hors du fil
+        // JavaFX, en best-effort (#2791) : rien à attendre, rien à signaler.
+        edition = new EditionPositionsCarte(
+                carte,
+                viewModel,
+                boutonEditerPositions,
+                boutonEnregistrerPositions,
+                () -> executeur.executer(
+                        () -> {
+                            viewModel.rattraperCommunes();
+                            return null;
+                        },
+                        resultat -> {},
+                        echec -> {}));
         edition.brancher();
 
         // Liaisons carte ↔ tableau (#152) :

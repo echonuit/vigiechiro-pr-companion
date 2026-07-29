@@ -27,6 +27,7 @@ import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
+import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
 import java.util.Optional;
@@ -176,7 +177,8 @@ class MultisiteVueIntegrationTest {
 
             @Provides
             MultisiteViewModel viewModel() {
-                return new MultisiteViewModel(service, mock(ServiceSites.class), Optional.empty(), "u-1");
+                return new MultisiteViewModel(
+                        service, mock(ServiceSites.class), mock(ServiceCommunes.class), Optional.empty(), "u-1");
             }
 
             /// Hors connexion VigieChiro : la reconstruction est indisponible, son entrée de menu se retire.
