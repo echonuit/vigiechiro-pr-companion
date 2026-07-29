@@ -69,7 +69,7 @@ ce que vous regardez.
 
 Vous pouvez **exporter ce sous-ensemble** en **CSV** via **☰ → Exporter les observations (CSV)** : le
 fichier reprend exactement les observations **actuellement affichées** (donc les filtres appliqués), avec
-leurs colonnes (carré, point, site, date, espèce, statut, fréquence, commentaire…). Le CSV est en UTF‑8 et
+leurs colonnes (carré, point, site, commune, date, espèce, statut, fréquence, commentaire…). Le CSV est en UTF‑8 et
 s'ouvre directement dans un tableur (Excel, LibreOffice) pour l'analyse ou la transmission.
 
 Une colonne **« Espèce à enjeu »** y porte le même repère que le bouclier de la table : sans elle, le
