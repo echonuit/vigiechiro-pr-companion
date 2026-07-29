@@ -151,7 +151,7 @@ class PassageViewModelTest {
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
 
         assertThat(viewModel.verificationDisponibleProperty().get()).isTrue();
-        assertThat(viewModel.motifBlocageVerificationProperty().get()).isEmpty();
+        assertThat(viewModel.motifs().verification().get()).isEmpty();
     }
 
     @Test
@@ -162,7 +162,7 @@ class PassageViewModelTest {
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
 
         assertThat(viewModel.verificationDisponibleProperty().get()).isFalse();
-        assertThat(viewModel.motifBlocageVerificationProperty().get()).contains("Verdict figé");
+        assertThat(viewModel.motifs().verification().get()).contains("Verdict figé");
     }
 
     @Test
@@ -324,7 +324,7 @@ class PassageViewModelTest {
         // Le verdict, lui, reste figé : la nuit EST sur la plateforme, un verdict local divergent la
         // désynchroniserait. Ce qui change, c'est ce que le motif raconte.
         assertThat(viewModel.verificationDisponibleProperty().get()).isFalse();
-        assertThat(viewModel.motifBlocageVerificationProperty().get())
+        assertThat(viewModel.motifs().verification().get())
                 .contains("vient de Vigie-Chiro")
                 .doesNotContain("cette nuit est déposée");
     }
@@ -342,7 +342,7 @@ class PassageViewModelTest {
         assertThat(viewModel.annulationDepotDisponibleProperty().get())
                 .as("le geste ramènerait la nuit en « Prêt à déposer », donc prête à faire un doublon")
                 .isFalse();
-        assertThat(viewModel.motifBlocageAnnulationDepotProperty().get())
+        assertThat(viewModel.motifs().annulationDepot().get())
                 .contains("pas de dépôt à annuler")
                 .contains("Supprimer");
     }
@@ -356,7 +356,7 @@ class PassageViewModelTest {
 
         assertThat(viewModel.annulationDepotPertinenteProperty().get()).isTrue();
         assertThat(viewModel.annulationDepotDisponibleProperty().get()).isTrue();
-        assertThat(viewModel.motifBlocageAnnulationDepotProperty().get()).isEmpty();
+        assertThat(viewModel.motifs().annulationDepot().get()).isEmpty();
     }
 
     @Test
@@ -378,8 +378,11 @@ class PassageViewModelTest {
                 .as("« Sons & validation » reste ouvert sur une nuit récupérée (#2555)")
                 .isFalse();
         assertThat(viewModel.depotDisponibleProperty().get())
-                .as("on peut revenir à M-Lot consulter ses archives")
-                .isTrue();
+                .as("rien à préparer : elle est déjà sur la plateforme, et elle n'a pas d'archives ici")
+                .isFalse();
+        assertThat(viewModel.motifs().depot().get())
+                .as("le refus est expliqué en amont, pas découvert après le clic (#789)")
+                .contains("déjà déposée");
     }
 
     @Test
@@ -453,7 +456,7 @@ class PassageViewModelTest {
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
 
         assertThat(viewModel.reactivationPossibleProperty().get()).isTrue();
-        assertThat(viewModel.motifBlocageReactivationProperty().get()).isEmpty();
+        assertThat(viewModel.motifs().reactivation().get()).isEmpty();
     }
 
     @Test
@@ -468,7 +471,7 @@ class PassageViewModelTest {
         // Le défaut d'origine : le bouton était grisé sur EXACTEMENT cette nuit, celle que la synchro
         // venait de ramener, avec pour tout motif « ce passage n'a aucune séquence importée localement ».
         assertThat(viewModel.reactivationPossibleProperty().get()).isTrue();
-        assertThat(viewModel.motifBlocageReactivationProperty().get()).isEmpty();
+        assertThat(viewModel.motifs().reactivation().get()).isEmpty();
     }
 
     @Test
@@ -481,7 +484,7 @@ class PassageViewModelTest {
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
 
         assertThat(viewModel.reactivationPossibleProperty().get()).isFalse();
-        assertThat(viewModel.motifBlocageReactivationProperty().get())
+        assertThat(viewModel.motifs().reactivation().get())
                 .contains("rapatriée")
                 .contains("connectez-vous");
     }
@@ -494,7 +497,7 @@ class PassageViewModelTest {
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
 
         assertThat(viewModel.reactivationPossibleProperty().get()).isFalse();
-        assertThat(viewModel.motifBlocageReactivationProperty().get()).contains("rattaché à aucune participation");
+        assertThat(viewModel.motifs().reactivation().get()).contains("rattaché à aucune participation");
     }
 
     @Test
@@ -504,7 +507,7 @@ class PassageViewModelTest {
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
 
         assertThat(viewModel.reactivationPossibleProperty().get()).isFalse();
-        assertThat(viewModel.motifBlocageReactivationProperty().get()).contains("déjà sur le disque");
+        assertThat(viewModel.motifs().reactivation().get()).contains("déjà sur le disque");
     }
 
     @Test

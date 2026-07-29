@@ -180,10 +180,13 @@
             </VBox>
           </graphic>
         </Button>
+        <!-- Enveloppe (#789) : le tooltip explique pourquoi la préparation est fermée sur une nuit
+             récupérée, et survit à la désactivation de la carte (#2581). -->
+        <StackPane fx:id="enveloppeDepot" HBox.hgrow="ALWAYS" maxWidth="Infinity" maxHeight="Infinity">
         <Button fx:id="boutonDepot" styleClass="carte-action"
                 onAction="#preparerDepot" contentDisplay="GRAPHIC_ONLY"
                 accessibleText="Préparer le dépôt : constituer le jeu Tadarida"
-                maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
+                maxWidth="Infinity" maxHeight="Infinity">
           <graphic>
             <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
               <FontIcon iconLiteral="fas-box-open" styleClass="carte-action-icone"/>
@@ -192,6 +195,7 @@
             </VBox>
           </graphic>
         </Button>
+        </StackPane>
         <Button fx:id="boutonValidation" styleClass="carte-action"
                 onAction="#validerTadarida" contentDisplay="GRAPHIC_ONLY"
                 accessibleText="Sons et validation : écouter et valider les sons du passage"

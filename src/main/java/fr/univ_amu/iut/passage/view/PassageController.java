@@ -193,6 +193,11 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private Button boutonDepot;
 
+    /// Enveloppe porteuse du tooltip de « Préparer le dépôt » (#2581) : une carte désactivée n'en affiche
+    /// pas. Cf. [IndicateurBlocage].
+    @FXML
+    private StackPane enveloppeDepot;
+
     @FXML
     private Button boutonAnnulerDepot;
 
@@ -340,11 +345,18 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         boutonSynthese.setManaged(syntheseActive);
         boutonValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
         boutonDepot.disableProperty().bind(viewModel.depotDisponibleProperty().not());
+        IndicateurBlocage.expliquer(
+                enveloppeDepot,
+                Bindings.when(viewModel.depotDisponibleProperty())
+                        .then("Préparer le dépôt : constituer le jeu Tadarida à téléverser.")
+                        .otherwise(Bindings.when(viewModel.motifs().depot().isEmpty())
+                                .then("Le dépôt se prépare une fois la nuit vérifiée.")
+                                .otherwise(viewModel.motifs().depot())));
         // « Préparer le dépôt » n'apparaît que si la feature `lot` est activée (feature-flag #1087) : quand
         // elle est coupée, le contrat est absent et la carte est retirée plutôt que laissée sans effet.
         boolean depotActif = ouvrirLot.isPresent();
-        boutonDepot.setVisible(depotActif);
-        boutonDepot.setManaged(depotActif);
+        enveloppeDepot.setVisible(depotActif);
+        enveloppeDepot.setManaged(depotActif);
         // Suppression gatée en amont (#789) : un passage déposé n'est pas supprimable (le service le refuse).
         // Plutôt que de laisser l'utilisateur découvrir le refus APRÈS la confirmation, on grise le bouton et
         // on explique le blocage par un tooltip posé sur l'enveloppe (un Button désactivé n'en affiche pas).
@@ -389,7 +401,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                 Bindings.when(viewModel.annulationDepotDisponibleProperty())
                         .then("Ramener ce passage de « Déposé » à « Prêt à déposer », sans toucher aux"
                                 + " validations déjà saisies.")
-                        .otherwise(viewModel.motifBlocageAnnulationDepotProperty()));
+                        .otherwise(viewModel.motifs().annulationDepot()));
         // « Réactiver ce passage » (#1302) : gaté en amont (#789). L'action n'apparaît utile que s'il
         // manque de l'audio (fichiers déplacés ou supprimés, disque incomplet).
         boutonReactiver
@@ -400,8 +412,8 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                 Bindings.when(viewModel.reactivationPossibleProperty())
                         .then("Réactiver ce passage : réimporte les fichiers d'origine et les rebranche,"
                                 + " après vérification que ce sont bien les mêmes.")
-                        .otherwise(viewModel.motifBlocageReactivationProperty()));
-        lblIndiceAction.textProperty().bind(viewModel.motifBlocageVerificationProperty());
+                        .otherwise(viewModel.motifs().reactivation()));
+        lblIndiceAction.textProperty().bind(viewModel.motifs().verification());
 
         // Mise en avant de la « prochaine action » : le liseré recommandé se déplace selon le statut
         // (Vérifier → Préparer le dépôt → Sons & validation), au lieu de rester figé sur Vérifier.
