@@ -51,6 +51,11 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class SyntheseViewTest {
 
+    private static final String CARRE = "640380";
+    private static final String POINT = "Étang";
+    private static final String PIPKUH = "Pipkuh";
+    private static final String BOUTON_EXPORTER = "#boutonExporter";
+
     private ServiceSynthese service;
     private SyntheseController controleur;
 
@@ -122,7 +127,7 @@ class SyntheseViewTest {
     @DisplayName("Le référentiel employé est NOMMÉ : une classe dont on ignore la référence est un oracle")
     void referentiel_nomme(FxRobot robot) {
         robot.interact(() -> controleur.ouvrirSur(new fr.univ_amu.iut.commun.viewmodel.ContextePassage(
-                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite("640380", "A1", "Étang"))));
+                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite(CARRE, "A1", POINT))));
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(robot.lookup("#lblReferentiel").queryAs(Label.class).getText())
@@ -138,10 +143,10 @@ class SyntheseViewTest {
                         org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.any()))
                 .thenReturn(List.of(
-                        ligne("Pipkuh", "Chiroptères", 150, ClasseActivite.FORTE),
+                        ligne(PIPKUH, "Chiroptères", 150, ClasseActivite.FORTE),
                         ligne("Tetvir", "Orthoptères et cigales", 12, null)));
         robot.interact(() -> controleur.ouvrirSur(new fr.univ_amu.iut.commun.viewmodel.ContextePassage(
-                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite("640380", "A1", "Étang"))));
+                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite(CARRE, "A1", POINT))));
         WaitForAsyncUtils.waitForFxEvents();
 
         TableView<?> table = robot.lookup("#tableSynthese").queryAs(TableView.class);
@@ -163,10 +168,10 @@ class SyntheseViewTest {
                         org.mockito.ArgumentMatchers.any(),
                         org.mockito.ArgumentMatchers.any()))
                 .thenReturn(List.of(
-                        ligne("Pipkuh", "Chiroptères", 150, ClasseActivite.FORTE),
+                        ligne(PIPKUH, "Chiroptères", 150, ClasseActivite.FORTE),
                         ligne("Tetvir", "Orthoptères et cigales", 12, null)));
         robot.interact(() -> controleur.ouvrirSur(new fr.univ_amu.iut.commun.viewmodel.ContextePassage(
-                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite("640380", "A1", "Étang"))));
+                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite(CARRE, "A1", POINT))));
         WaitForAsyncUtils.waitForFxEvents();
     }
 
@@ -177,7 +182,7 @@ class SyntheseViewTest {
         chargerDeuxEspeces(robot);
         robot.interact(() -> controleur.selecteur().definir(new SelecteurFige(cible)));
 
-        robot.clickOn("#boutonExporter");
+        robot.clickOn(BOUTON_EXPORTER);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(Files.readString(cible, StandardCharsets.UTF_8))
@@ -194,7 +199,7 @@ class SyntheseViewTest {
         chargerDeuxEspeces(robot);
         robot.interact(() -> controleur.selecteur().definir(new SelecteurFige(dossier.resolve("s.csv"))));
 
-        robot.clickOn("#boutonExporter");
+        robot.clickOn(BOUTON_EXPORTER);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText()).contains("2 espèce(s) exportée(s)");
@@ -209,7 +214,7 @@ class SyntheseViewTest {
         chargerDeuxEspeces(robot);
         robot.interact(() -> controleur.selecteur().definir(new SelecteurAnnule()));
 
-        robot.clickOn("#boutonExporter");
+        robot.clickOn(BOUTON_EXPORTER);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(Files.exists(cible)).isFalse();
@@ -218,6 +223,24 @@ class SyntheseViewTest {
                         .isVisible())
                 .as("une annulation n'est pas un événement : le bandeau reste muet")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("Une nuit sans espèce le DIT dans le tableau, pas avec le texte par défaut de JavaFX")
+    void nuit_vide_dit_pourquoi(FxRobot robot) {
+        when(service.pour(
+                        anyLong(),
+                        org.mockito.ArgumentMatchers.anyBoolean(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.of());
+        robot.interact(() -> controleur.ouvrirSur(new fr.univ_amu.iut.commun.viewmodel.ContextePassage(
+                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite(CARRE, "A1", POINT))));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(robot.lookup("#lblTableauVide").queryAs(Label.class).getText())
+                .as("le texte par défaut décrit le composant, pas la nuit : il laisse croire à un chargement")
+                .contains("Aucune espèce identifiée");
     }
 
     @Test
@@ -230,10 +253,10 @@ class SyntheseViewTest {
                         org.mockito.ArgumentMatchers.any()))
                 .thenReturn(List.of());
         robot.interact(() -> controleur.ouvrirSur(new fr.univ_amu.iut.commun.viewmodel.ContextePassage(
-                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite("640380", "A1", "Étang"))));
+                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite(CARRE, "A1", POINT))));
         WaitForAsyncUtils.waitForFxEvents();
 
-        assertThat(robot.lookup("#boutonExporter")
+        assertThat(robot.lookup(BOUTON_EXPORTER)
                         .queryAs(javafx.scene.control.Button.class)
                         .isDisabled())
                 .isTrue();
