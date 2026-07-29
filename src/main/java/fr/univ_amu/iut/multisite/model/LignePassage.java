@@ -40,4 +40,5 @@ public record LignePassage(
         Verdict verdict,
         EtatAnalyse etatAnalyse,
         String analyseReleveeLe,
-        String campagne) {}
+        String campagne,
+        String commune) {}

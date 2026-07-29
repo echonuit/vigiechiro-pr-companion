@@ -28,6 +28,7 @@ import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.di.SitesModule;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
@@ -103,6 +104,7 @@ class ServiceMultisiteTest {
                 injecteur.getInstance(PassageDao.class),
                 injecteur.getInstance(ReleveTraitementDao.class),
                 injecteur.getInstance(ResultatsIdentificationDao.class),
+                injecteur.getInstance(PointCommuneDao.class),
                 Optional.empty(),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)));
     }
@@ -270,6 +272,7 @@ class ServiceMultisiteTest {
                 injecteur.getInstance(PassageDao.class),
                 injecteur.getInstance(ReleveTraitementDao.class),
                 injecteur.getInstance(ResultatsIdentificationDao.class),
+                injecteur.getInstance(PointCommuneDao.class),
                 Optional.of(campagnes),
                 horloge);
     }
