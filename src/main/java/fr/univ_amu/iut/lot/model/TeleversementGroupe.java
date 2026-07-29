@@ -66,7 +66,9 @@ public class TeleversementGroupe implements ActionGroupee {
         } catch (RegleMetierException introuvable) {
             return Optional.of(introuvable.getMessage());
         }
-        if (etat.statut() == StatutWorkflow.DEPOSE) {
+        if (etat.statut().estSurLaPlateforme()) {
+            // Sans « Récupéré » ici, le refus devenait « dépôt pas encore préparé » (#2581) : on aurait
+            // invité à préparer le dépôt d'une nuit qui est déjà sur la plateforme.
             return Optional.of("déjà déposé");
         }
         if (etat.statut() != StatutWorkflow.PRET_A_DEPOSER && etat.statut() != StatutWorkflow.DEPOT_EN_COURS) {

@@ -47,7 +47,10 @@ final class EtapesDepot {
     /// l'étape ① est signalée à part.
     private static int rangCourant(
             StatutWorkflow statut, boolean archivesGenerees, boolean depotAutomatiqueDisponible) {
-        if (statut == StatutWorkflow.DEPOSE) {
+        if (statut.estSurLaPlateforme()) {
+            // Une nuit récupérée est au bout de ce chemin sans l'avoir parcouru (#2581) : rien de ce
+            // stepper ne la concerne, et l'afficher à l'étape ① « Vérifier » inviterait à préparer le
+            // dépôt d'une nuit déjà déposée.
             return 5;
         }
         if (statut == StatutWorkflow.DEPOT_EN_COURS) {

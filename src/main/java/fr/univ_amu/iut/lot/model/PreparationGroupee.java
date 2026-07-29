@@ -47,7 +47,10 @@ public class PreparationGroupee implements ActionGroupee {
         } catch (RegleMetierException introuvable) {
             return Optional.of(introuvable.getMessage());
         }
-        if (etat.statut() == StatutWorkflow.DEPOSE || etat.statut() == StatutWorkflow.DEPOT_EN_COURS) {
+        if (etat.statut().estSurLaPlateforme() || etat.statut() == StatutWorkflow.DEPOT_EN_COURS) {
+            // Une nuit récupérée tombait sinon jusqu'au « pas encore vérifié » du bas (#2581) : un refus
+            // exact sur la lettre et faux sur le fond - ce n'est pas qu'elle attend d'être vérifiée,
+            // c'est qu'elle est déjà là-bas.
             return Optional.of("déjà déposé");
         }
         if (etat.statut() == StatutWorkflow.PRET_A_DEPOSER) {

@@ -76,6 +76,10 @@ public final class FormatsLot {
 
     /// Message d'état contextuel du dépôt (déposé, dépôt entamé, cohérence à corriger, lot préparé, ou vide).
     static String messageEtat(EtatLot etat) {
+        if (etat.statut() == StatutWorkflow.RECUPERE) {
+            // Pas de date de dépôt à afficher : nous ne l'avons pas déposée, nous l'avons reçue (#2581).
+            return "Nuit récupérée de Vigie-Chiro : elle y est déjà déposée, il n'y a rien à téléverser.";
+        }
         if (etat.statut() == StatutWorkflow.DEPOSE) {
             return "Passage déposé le " + etat.deposeLe() + ".";
         }
