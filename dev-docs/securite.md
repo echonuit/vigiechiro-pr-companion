@@ -56,6 +56,24 @@ n'est conservé.
 - **Accès natifs cadrés** : sous Java 25 (accès natif strict), seuls les modules concernés sont
   autorisés (`--enable-native-access=javafx.graphics`, `--enable-native-access=org.xerial.sqlitejdbc`).
 
+### Hôtes sortants
+
+Tous les appels réseau de l'application, exhaustivement - chacun **best-effort** (une panne dégrade
+un confort, jamais un geste métier), sauf l'API VigieChiro qui porte le cœur des échanges :
+
+| Hôte | Usage | Authentifié |
+|---|---|---|
+| API VigieChiro (Eve) | sites, participations, résultats, dépôt d'une nuit | token de session |
+| URLs S3 pré-signées | téléchargement / téléversement des fichiers son | signature dans l'URL |
+| `archive-api.open-meteo.com` | pré-remplissage météo d'un passage | non |
+| `api.gbif.org` | clé d'usage des fiches d'espèces | non |
+| `geo.api.gouv.fr` | commune d'un point d'écoute depuis son GPS (#2791, ADR 2791) | non |
+| `api.github.com` | détection d'une nouvelle version | non |
+| tuiles OpenStreetMap (Gluon Maps) | fond de carte des sites | non |
+
+Hors ligne, l'application reste pleinement utilisable : ces enrichissements se taisent, et la
+commune des points se comble plus tard (`rattraper-communes`, ou les déclencheurs de l'IHM).
+
 ## Chaîne d'approvisionnement
 
 - **Dependabot** propose mensuellement les mises à jour `maven` et `github-actions` ; les bumps sont
