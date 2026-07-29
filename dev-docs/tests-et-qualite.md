@@ -427,15 +427,49 @@ incomplète ramène l'échec que le profil avait supprimé.
 
 PIT couvre donc aussi la couche `view`, ce que l'échec brut laissait croire impossible.
 
-**Une mesure hebdomadaire tourne toute seule** (`.github/workflows/mutation-hebdo.yml`, #2605). Chaque
-lundi, PIT balaie le dépôt et publie son bilan dans le **résumé du job** ; le rapport HTML détaillé est
-conservé 30 jours en artefact. Le job est **non bloquant**, comme le rapport ADR dont il est le calque :
-un survivant n'est pas un défaut mais une **question** posée à un humain, et bloquer une fusion là-dessus
-ferait cocher au hasard.
+**Deux mesures tournent toutes seules**, et leurs périmètres ne se recouvrent pas. Les deux sont **non
+bloquantes**, comme le rapport ADR dont elles sont le calque : un survivant n'est pas un défaut mais une
+**question** posée à un humain, et bloquer une fusion là-dessus ferait cocher au hasard.
 
-Pourquoi hebdomadaire et pas par PR : PIT dépasse **dix minutes sur un seul paquet**, donc des heures sur
-le dépôt entier. L'analyse incrémentale (historique PIT mis en cache d'une semaine à l'autre) raccourcit
-les tours suivants.
+| Workflow | Quand | Ce qu'elle mute | Avec quels tests |
+|---|---|---|---|
+| `mutation-hebdo.yml` | chaque lundi | `fr.univ_amu.iut.*.model.*` | tous, **sauf** `e2e` |
+| `mutation-ihm.yml` | le 8 du mois, **une feature par tour** | `fr.univ_amu.iut.<feature>.view.*` | ceux de la feature, **sauf** `e2e` |
+
+Chacune publie son bilan dans le **résumé du job** ; le rapport HTML détaillé est conservé 30 jours en
+artefact.
+
+**Pourquoi les E2E sont exclus des deux.** Un E2E est **large en couverture et pauvre en jugement**.
+`ParcoursDepotE2ETest` couvre à lui seul 8 539 blocs : PIT le retient comme test candidat pour des mutants
+situés dans des centaines de classes, et rejoue le parcours entier - des minutes de TestFX - pour
+apprendre ce qu'un test unitaire dit en millisecondes. Le premier passage sur le dépôt entier a produit
+**19 expirations en une heure**, toutes autour de ce parcours.
+
+Les exclure ne **cache** rien, et c'est le point : un mutant que seul un E2E tuerait est, par définition,
+un mutant qu'aucun test unitaire ne détecte. Il ressort désormais en **survivant**, c'est-à-dire en
+question posée à un humain, au lieu d'être tué silencieusement.
+
+**Pourquoi l'IHM se mesure une feature à la fois.** Muter une vue coûte ~9 s par mutant : chaque mutant
+rejoue des tests TestFX, qui démarrent un toolkit JavaFX. Les 283 classes de vue de l'application
+demanderaient des dizaines d'heures, quand la borne d'un job est à 300 minutes. La mesure est donc
+**complète sur un cycle, pas sur un mois** : la rotation se déduit du mois, sans état à écrire ni relire,
+et le tour se fait en 15 mois. Elle vaut le détour - sur `saison`, 80 mutants, 36 % tués, **40 % de
+survivants**.
+
+!!! danger "Ne pas allonger le butoir pour « laisser le temps » aux tests graphiques"
+    C'est la correction qui vient à l'esprit devant une expiration, et elle rendrait le chiffre **faux
+    dans le sens rassurant** : PIT compte une expiration comme une **détection**. Vérifié en rendant le
+    butoir absurde sur une classe de vue - 21 mutants, 21 expirations, score annoncé **100 %**, là où la
+    mesure honnête donne 43 %.
+
+    Le butoir par défaut (`4 s + 1,25 × durée normale`) suffit une fois les E2E écartés : sur le
+    périmètre des vues, **1 expiration sur 280 mutants**. C'est le périmètre qu'il fallait corriger, pas
+    le butoir (#2768).
+
+⚠️ **PIT n'a plus d'analyse incrémentale.** Depuis la version 1.25.x, le stockage de l'historique est un
+greffon **commercial** (arcmutate). Les options `historyInputFile`/`historyOutputFile` figurent toujours
+au descripteur du greffon Maven, mais les passer sans lui ne les fait pas ignorer : PIT **refuse de
+démarrer**. Le descripteur dit que l'option existe, pas que la fonction est là (#2768).
 
 Le même bilan se lit en local, sur n'importe quel rapport :
 
