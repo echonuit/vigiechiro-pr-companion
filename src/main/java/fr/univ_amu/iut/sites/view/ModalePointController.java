@@ -264,6 +264,15 @@ public class ModalePointController {
     @FXML
     private void valider() {
         if (viewModel.enregistrer()) {
+            // Résolution de la commune (#2791) : réseau, donc hors du fil JavaFX, et best-effort —
+            // la modale se ferme sans attendre, un échec ne se signale pas (le rattrapage comblera).
+            executeur.executer(
+                    () -> {
+                        viewModel.resoudreCommune();
+                        return null;
+                    },
+                    resultat -> {},
+                    echec -> {});
             apresSucces.run();
             fermer();
         }

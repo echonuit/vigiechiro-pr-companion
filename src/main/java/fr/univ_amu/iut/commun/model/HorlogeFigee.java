@@ -14,7 +14,7 @@ import java.util.Objects;
 ///
 /// ```
 /// Horloge horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
-/// ServiceSites service = new ServiceSites(siteDao, pointDao, passageDao, horloge);
+/// ServiceSites service = new ServiceSites(siteDao, pointDao, passageDao, horloge, communeDao);
 /// ```
 public final class HorlogeFigee implements Horloge {
 

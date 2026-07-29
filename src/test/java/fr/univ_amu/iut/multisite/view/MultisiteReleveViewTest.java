@@ -27,6 +27,7 @@ import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
+import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
 import java.util.Optional;
@@ -84,8 +85,8 @@ class MultisiteReleveViewTest {
                         ligne(3L, 3, StatutWorkflow.DEPOSE)));
         when(service.agregerPourCarte(anyString())).thenReturn(List.of());
 
-        MultisiteViewModel viewModel =
-                new MultisiteViewModel(service, mock(ServiceSites.class), Optional.of(suivi), "u-1");
+        MultisiteViewModel viewModel = new MultisiteViewModel(
+                service, mock(ServiceSites.class), mock(ServiceCommunes.class), Optional.of(suivi), "u-1");
         DepotVues depotVues = mock(DepotVues.class);
         when(depotVues.findByFeature(anyString())).thenReturn(List.of());
         // « Ouvrir sur Vigie-Chiro » de ligne (#1799) : portail mocké, pas de base ici.

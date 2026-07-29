@@ -142,8 +142,9 @@ public class SitesModule extends ModuleDeFeature {
             ServiceSites serviceSites,
             LienVigieChiroDao liens,
             SiteTiersDao siteTiers,
-            @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new RapprochementSites(siteDao, serviceSites, liens, siteTiers, idUtilisateur);
+            @Named("idUtilisateurCourant") String idUtilisateur,
+            ServiceCommunes communes) {
+        return new RapprochementSites(siteDao, serviceSites, liens, siteTiers, idUtilisateur, communes);
     }
 
     /// Marquage « carré d'un tiers » (#2525), dérivé de `site.observateur` à chaque synchronisation.
@@ -168,8 +169,9 @@ public class SitesModule extends ModuleDeFeature {
     /// sans annotation d'injection.
     @Provides
     @Singleton
-    ServiceSites fournirServiceSites(SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
-        return new ServiceSites(siteDao, pointDao, passageDao, horloge);
+    ServiceSites fournirServiceSites(
+            SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge, PointCommuneDao communes) {
+        return new ServiceSites(siteDao, pointDao, passageDao, horloge, communes);
     }
 
     /// Commune d'un point (table latérale `point_commune`, #2791).
@@ -238,8 +240,9 @@ public class SitesModule extends ModuleDeFeature {
     }
 
     @Provides
-    PointEditViewModel fournirPointEditViewModel(ServiceSites service, Optional<ControleCarreStoc> controleCarre) {
-        return new PointEditViewModel(service, controleCarre);
+    PointEditViewModel fournirPointEditViewModel(
+            ServiceSites service, ServiceCommunes communes, Optional<ControleCarreStoc> controleCarre) {
+        return new PointEditViewModel(service, communes, controleCarre);
     }
 
     /// ViewModel de la modale de site (#1431) : la déclaration a besoin de l'utilisateur courant (R5,

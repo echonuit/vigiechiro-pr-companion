@@ -49,6 +49,9 @@ class SortieEditionPositionsTest {
     /// Options réellement proposées à l'utilisateur.
     private final List<String> proposees = new ArrayList<>();
 
+    /// Nombre d'invocations du rappel « après enregistrement » (#2791) : le rattrapage des communes.
+    private int rattrapages;
+
     @BeforeEach
     void preparer() {
         MultisiteViewModel viewModel = mock(MultisiteViewModel.class);
@@ -59,7 +62,7 @@ class SortieEditionPositionsTest {
 
         carte = mock(CarteSites.class);
         toggle = new ToggleButton();
-        edition = new EditionPositionsCarte(carte, viewModel, toggle, new Button());
+        edition = new EditionPositionsCarte(carte, viewModel, toggle, new Button(), () -> rattrapages++);
         edition.demandeur().definir((entete, question, options, libelle) -> {
             options.forEach(option -> proposees.add(libelle.apply(option)));
             return choix;
@@ -85,6 +88,20 @@ class SortieEditionPositionsTest {
         verify(enAttente).enregistrer();
         verify(enAttente, never()).annuler();
         verify(carte).setEditionActive(false);
+        assertThat(rattrapages)
+                .as("aucun point réellement écrit (mock à 0) : pas de rattrapage de communes (#2791)")
+                .isZero();
+    }
+
+    @Test
+    @DisplayName("#2791 : des positions réellement écrites déclenchent le rattrapage des communes")
+    void enregistrement_effectif_rattrape_les_communes() {
+        when(enAttente.enregistrer()).thenReturn(2);
+        choix = Optional.of(SortieEdition.ENREGISTRER);
+
+        quitterLEdition();
+
+        assertThat(rattrapages).isEqualTo(1);
     }
 
     @Test

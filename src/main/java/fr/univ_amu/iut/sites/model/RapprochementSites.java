@@ -53,17 +53,23 @@ public class RapprochementSites implements RapprochementVigieChiro {
 
     private final String idUtilisateur;
 
+    /// Communes des points (#2791) : rattrapées en fin d'import, la synchro tournant déjà hors du fil
+    /// JavaFX avec le réseau à portée - le moment idéal pour combler les points en attente.
+    private final ServiceCommunes communes;
+
     public RapprochementSites(
             SiteDao siteDao,
             ServiceSites serviceSites,
             LienVigieChiroDao liens,
             SiteTiersDao siteTiers,
-            String idUtilisateur) {
+            String idUtilisateur,
+            ServiceCommunes communes) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.serviceSites = Objects.requireNonNull(serviceSites, "serviceSites");
         this.liens = Objects.requireNonNull(liens, "liens");
         this.siteTiers = Objects.requireNonNull(siteTiers, "siteTiers");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        this.communes = Objects.requireNonNull(communes, "communes");
     }
 
     @Override
@@ -115,7 +121,19 @@ public class RapprochementSites implements RapprochementVigieChiro {
                 return Optional.empty();
             }
             liens.remplacer(LienVigieChiro.ENTITE_SITE, correspondances);
+            rattraperCommunes();
             return Optional.of(new RapportSynchro(LIBELLE_SITES, correspondances.size()));
+        }
+    }
+
+    /// Comble les communes des points en attente (#2791), dont ceux que cette synchro vient de créer.
+    /// Best-effort intégral : la commune est un confort dérivé, un raté ici ne doit ni faire échouer la
+    /// synchro ni altérer son rapport.
+    private void rattraperCommunes() {
+        try {
+            communes.rattraper();
+        } catch (RuntimeException echec) {
+            LOG.log(Level.FINE, echec, () -> "Rattrapage des communes ignoré (best-effort)");
         }
     }
 

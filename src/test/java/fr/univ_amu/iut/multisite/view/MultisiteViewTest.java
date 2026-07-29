@@ -31,6 +31,7 @@ import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
+import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -102,7 +103,7 @@ class MultisiteViewTest {
                         ligne(42L, "640380", "A1", 2026, 1, "2026-06-21"),
                         ligne(7L, "640381", "B2", 2025, 3, "2025-07-02", StatutWorkflow.VERIFIE)));
         when(service.agregerPourCarte(anyString())).thenReturn(List.of()); // carte (#152) : pas de NPE à l'init
-        viewModel = new MultisiteViewModel(service, serviceSites, Optional.empty(), "u-1");
+        viewModel = new MultisiteViewModel(service, serviceSites, mock(ServiceCommunes.class), Optional.empty(), "u-1");
         DepotVues depotVues = mock(DepotVues.class);
         when(depotVues.findByFeature(anyString())).thenReturn(List.of());
         PortailVigieChiro portail = mock(PortailVigieChiro.class);

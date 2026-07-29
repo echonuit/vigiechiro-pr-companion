@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.validation.ValidateurCodePoint;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.VerdictCarre;
@@ -44,6 +45,10 @@ public class PointEditViewModel {
 
     private final ServiceSites service;
 
+    /// Tenue à jour de la commune des points (#2791) : sollicitée après un enregistrement réussi,
+    /// hors du fil JavaFX (cf. [#resoudreCommune]).
+    private final ServiceCommunes communes;
+
     /// Contrôle du carré STOC (#733) : **optionnel**, car il a besoin de la plateforme. Absent (feature de
     /// connexion éteinte), le contrôle ne se fait simplement pas — la saisie manuelle reste entière.
     private final Optional<ControleCarreStoc> controleCarre;
@@ -76,11 +81,16 @@ public class PointEditViewModel {
     private Long idSite;
     private Long idPointEnEdition;
 
+    /// Le point que le dernier [#enregistrer] réussi a écrit : la cible de [#resoudreCommune].
+    private Long idDernierPointEnregistre;
+
     /// Carré **déclaré par le site** courant : c'est lui que la grille STOC vient confirmer ou contredire.
     private String carreDuSite;
 
-    public PointEditViewModel(ServiceSites service, Optional<ControleCarreStoc> controleCarre) {
+    public PointEditViewModel(
+            ServiceSites service, ServiceCommunes communes, Optional<ControleCarreStoc> controleCarre) {
         this.service = Objects.requireNonNull(service, "service");
+        this.communes = Objects.requireNonNull(communes, "communes");
         this.controleCarre = Objects.requireNonNull(controleCarre, "controleCarre");
         codeValide = Bindings.createBooleanBinding(() -> ValidateurCodePoint.estValide(code.get()), code);
         latitudeValide = Bindings.createBooleanBinding(() -> coordonneeValide(latitude.get(), LATITUDE_MAX), latitude);
@@ -128,16 +138,28 @@ public class PointEditViewModel {
             Double lat = parserCoordonnee(latitude.get());
             Double lon = parserCoordonnee(longitude.get());
             String desc = description.get().isBlank() ? null : description.get();
+            PointDEcoute enregistre;
             if (idPointEnEdition == null) {
-                service.ajouterPoint(idSite, code.get(), lat, lon, desc);
+                enregistre = service.ajouterPoint(idSite, code.get(), lat, lon, desc);
             } else {
-                service.modifierPoint(idPointEnEdition, idSite, code.get(), lat, lon, desc);
+                enregistre = service.modifierPoint(idPointEnEdition, idSite, code.get(), lat, lon, desc);
             }
+            idDernierPointEnregistre = enregistre.id();
             retour.set(RetourOperation.AUCUN);
             return true;
         } catch (RuntimeException refus) {
             retour.set(RetourOperation.erreur(refus));
             return false;
+        }
+    }
+
+    /// Résout et mémorise la **commune** du point que le dernier [#enregistrer] réussi a écrit
+    /// (#2791). **Bloquant** (réseau) : à appeler hors du fil JavaFX, comme [#controlerCarre].
+    /// Best-effort : sans effet tant que rien n'a été enregistré, silencieux hors ligne (le point
+    /// reste « en attente », le rattrapage comblera).
+    public void resoudreCommune() {
+        if (idDernierPointEnregistre != null) {
+            communes.mettreAJour(idDernierPointEnregistre);
         }
     }
 
