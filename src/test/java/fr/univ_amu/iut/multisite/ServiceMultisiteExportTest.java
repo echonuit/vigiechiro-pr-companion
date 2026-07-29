@@ -10,6 +10,7 @@ import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
@@ -47,13 +48,16 @@ class ServiceMultisiteExportTest {
     private ResultatsIdentificationDao resultats;
 
     @Mock
+    private PointCommuneDao communesDao;
+
+    @Mock
     private Horloge horloge;
 
     @Test
     @DisplayName("exporterCsvVers écrit dans le fichier le même CSV que exporterCsv")
     void exporterCsvVers_ecrit_le_meme_csv(@TempDir Path dossier) throws Exception {
-        ServiceMultisite service =
-                new ServiceMultisite(siteDao, pointDao, passageDao, releves, resultats, Optional.empty(), horloge);
+        ServiceMultisite service = new ServiceMultisite(
+                siteDao, pointDao, passageDao, releves, resultats, communesDao, Optional.empty(), horloge);
         List<LignePassage> lignes = List.of(
                 new LignePassage(
                         1L,
@@ -66,6 +70,7 @@ class ServiceMultisiteExportTest {
                         Verdict.OK,
                         EtatAnalyse.A_IMPORTER,
                         "2026-07-14T09:00:00Z",
+                        null,
                         null),
                 new LignePassage(
                         2L,
@@ -77,6 +82,7 @@ class ServiceMultisiteExportTest {
                         StatutWorkflow.VERIFIE,
                         null,
                         EtatAnalyse.SANS_OBJET,
+                        null,
                         null,
                         null));
         Path fichier = dossier.resolve("vue.csv");

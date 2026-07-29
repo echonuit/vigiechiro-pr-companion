@@ -154,6 +154,7 @@ class TraitementLotTest {
                 Verdict.OK,
                 EtatAnalyse.SANS_OBJET,
                 null,
+                null,
                 null);
     }
 

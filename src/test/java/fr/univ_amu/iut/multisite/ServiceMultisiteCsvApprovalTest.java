@@ -17,6 +17,7 @@ import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.di.SitesModule;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
@@ -79,6 +80,7 @@ class ServiceMultisiteCsvApprovalTest {
                 injecteur.getInstance(PassageDao.class),
                 injecteur.getInstance(ReleveTraitementDao.class),
                 injecteur.getInstance(ResultatsIdentificationDao.class),
+                injecteur.getInstance(PointCommuneDao.class),
                 Optional.empty(),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)));
     }

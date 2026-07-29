@@ -11,6 +11,7 @@ import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -77,6 +78,7 @@ public final class BancMesure {
                 new ResultatsIdentificationDao(source),
                 // Campagnes (#2355) hors périmètre du banc : ce qu'on mesure ici, c'est le coût de la
                 // vue elle-même, pas la résolution d'un libellé lu une fois par listage.
+                new PointCommuneDao(source),
                 Optional.empty(),
                 new HorlogeFigee(LocalDate.of(2026, 6, 4)));
 

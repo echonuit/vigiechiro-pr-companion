@@ -23,6 +23,7 @@ import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
@@ -88,9 +89,11 @@ public class MultisiteModule extends ModuleDeFeature {
             PassageDao passageDao,
             ReleveTraitementDao relevesDao,
             ResultatsIdentificationDao resultatsDao,
+            PointCommuneDao communesDao,
             Optional<ServiceCampagne> campagnes,
             Horloge horloge) {
-        return new ServiceMultisite(siteDao, pointDao, passageDao, relevesDao, resultatsDao, campagnes, horloge);
+        return new ServiceMultisite(
+                siteDao, pointDao, passageDao, relevesDao, resultatsDao, communesDao, campagnes, horloge);
     }
 
     // Le ViewModel n'est volontairement PAS @Singleton (cf. SitesModule) : un VM frais par

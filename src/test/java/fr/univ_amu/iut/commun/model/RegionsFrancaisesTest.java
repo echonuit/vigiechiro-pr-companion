@@ -41,5 +41,15 @@ class RegionsFrancaisesTest {
     void meme_table_que_le_carre() {
         assertThat(RegionDuCarre.regionsConnues()).isEqualTo(RegionsFrancaises.regionsConnues());
         assertThat(RegionDuCarre.pour("130711")).isEqualTo(RegionsFrancaises.pourDepartement("13"));
+        // Deux caractères suffisent à conclure : borne basse du décodage (survivant PIT).
+        assertThat(RegionDuCarre.pour("13")).contains("Provence-Alpes-Cote dAzur");
+    }
+
+    @Test
+    @DisplayName("La table porte les treize régions métropolitaines - une garde containsAll ne suffit pas")
+    void treize_regions() {
+        // Sans ce compte, la garde du référentiel (containsAll) resterait verte sur une table VIDE :
+        // c'est le survivant PIT « regionsConnues -> ensemble vide » qui l'a montré.
+        assertThat(RegionsFrancaises.regionsConnues()).hasSize(13).contains("Corse", "Ile-de-France");
     }
 }

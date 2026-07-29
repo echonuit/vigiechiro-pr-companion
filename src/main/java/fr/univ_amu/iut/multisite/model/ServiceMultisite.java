@@ -9,8 +9,10 @@ import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.CommuneDuPoint;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
@@ -18,6 +20,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -69,6 +72,9 @@ public class ServiceMultisite {
     private static final String FILTRES = "filtres";
 
     private final SiteDao siteDao;
+
+    /// Communes des points (#2791, table latérale) : lues **une seule fois** par listing, comme les relevés.
+    private final PointCommuneDao communesDao;
     private final PointDao pointDao;
     private final PassageDao passageDao;
     private final Horloge horloge;
@@ -89,9 +95,11 @@ public class ServiceMultisite {
             PassageDao passageDao,
             ReleveTraitementDao relevesDao,
             ResultatsIdentificationDao resultatsDao,
+            PointCommuneDao communesDao,
             Optional<ServiceCampagne> campagnes,
             Horloge horloge) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
+        this.communesDao = Objects.requireNonNull(communesDao, "communesDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.relevesDao = Objects.requireNonNull(relevesDao, "relevesDao");
@@ -140,6 +148,10 @@ public class ServiceMultisite {
         Map<Long, ReleveTraitement> releves = relevesDao.parPassage();
         Set<Long> importes = resultatsDao.passagesAvecResultats();
         Map<Long, String> nomsCampagnes = nomsDesCampagnes();
+        Map<Long, String> communes = new HashMap<>();
+        for (CommuneDuPoint resolue : communesDao.findAll()) {
+            communes.put(resolue.idPoint(), resolue.commune().nom());
+        }
         List<LignePassage> lignes = new ArrayList<>();
         for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
             for (PointDEcoute point : pointDao.findBySite(site.id())) {
@@ -156,7 +168,8 @@ public class ServiceMultisite {
                             passage.verdictVerification(),
                             EtatAnalyse.deduire(passage.statutWorkflow(), releve, importes.contains(passage.id())),
                             releve.map(ReleveTraitement::releveLe).orElse(null),
-                            passage.idCampagne() == null ? null : nomsCampagnes.get(passage.idCampagne()));
+                            passage.idCampagne() == null ? null : nomsCampagnes.get(passage.idCampagne()),
+                            communes.get(point.id()));
                     if (filtres.accepte(ligne)) {
                         lignes.add(ligne);
                     }

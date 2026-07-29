@@ -138,6 +138,26 @@ class ServiceCommunesTest {
     }
 
     @Test
+    @DisplayName("rattraper est idempotent : un second passage ne résout ni ne rappelle rien")
+    void rattraper_idempotent() {
+        insererPoint("A1", 43.5297, 5.4474);
+        AtomicInteger appels = new AtomicInteger();
+        ServiceCommunes service = service(position -> {
+            appels.incrementAndGet();
+            return Optional.of(AIX);
+        });
+
+        service.rattraper();
+        ServiceCommunes.BilanCommunes second = service.rattraper();
+
+        assertThat(appels)
+                .as("le second passage ne sollicite plus le résolveur")
+                .hasValue(1);
+        assertThat(second.enAttente()).isZero();
+        assertThat(second.resolues()).isZero();
+    }
+
+    @Test
     @DisplayName("rattraper hors ligne : bilan honnête, les points restent en attente")
     void rattraper_hors_ligne() {
         insererPoint("A1", 43.5297, 5.4474);

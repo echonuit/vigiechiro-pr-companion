@@ -106,6 +106,31 @@ class MigrationSchemaTest {
                 .containsExactlyInAnyOrder("point_id", "commune_name", "commune_insee");
     }
 
+    @Test
+    @DisplayName("Rejouer les migrations sur une base peuplée ne touche pas aux données (#2791)")
+    void migration_sur_base_peuplee() throws SQLException {
+        SourceDeDonnees source = new SourceDeDonnees(new Workspace(racine.resolve("ws")));
+        new MigrationSchema(source).migrer();
+        try (Connection cx = source.getConnection();
+                Statement st = cx.createStatement()) {
+            st.execute("INSERT INTO user(local_id, display_name) VALUES ('u-1', 'Testeur')");
+            st.execute("INSERT INTO monitoring_site(square_number, protocol, created_at, user_id)"
+                    + " VALUES ('640380', 'Point fixe standard', '2026-05-01', 'u-1')");
+            st.execute("INSERT INTO listening_point(code, site_id) VALUES ('A1', 1)");
+            st.execute("INSERT INTO point_commune(point_id, commune_name, commune_insee)"
+                    + " VALUES (1, 'Aix-en-Provence', '13001')");
+        }
+
+        new MigrationSchema(source).migrer(); // rejeu : base à jour ET peuplée
+
+        try (Connection cx = source.getConnection();
+                Statement st = cx.createStatement();
+                ResultSet rs = st.executeQuery("SELECT commune_name FROM point_commune")) {
+            assertThat(rs.next()).isTrue();
+            assertThat(rs.getString(1)).isEqualTo("Aix-en-Provence");
+        }
+    }
+
     private static List<Integer> versionsEnBase(SourceDeDonnees source) throws SQLException {
         List<Integer> versions = new ArrayList<>();
         try (Connection cx = source.getConnection();

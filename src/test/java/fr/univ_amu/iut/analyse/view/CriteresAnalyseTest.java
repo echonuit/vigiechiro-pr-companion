@@ -19,7 +19,26 @@ class CriteresAnalyseTest {
 
     private static ObservationAnalyse obs(String taxon, String vern, String latin, String carre, String site) {
         return new ObservationAnalyse(
-                taxon, latin, vern, "Chiroptères", StatutObservation.VALIDEE, 1L, 2026, carre, site, 10L);
+                taxon, latin, vern, "Chiroptères", StatutObservation.VALIDEE, 1L, 2026, carre, site, 10L, null);
+    }
+
+    @Test
+    @DisplayName("La recherche couvre la commune du point (#2791)")
+    void recherche_couvre_la_commune() {
+        ObservationAnalyse o = new ObservationAnalyse(
+                "Rhifer",
+                "Rhinolophus ferrumequinum",
+                "Grand rhinolophe",
+                "Chiroptères",
+                StatutObservation.VALIDEE,
+                1L,
+                2026,
+                "130711",
+                "Jardin de Serge",
+                10L,
+                "Aix-en-Provence");
+        assertThat(recherche.test(o, "aix")).isTrue();
+        assertThat(recherche.test(o, "marseille")).isFalse();
     }
 
     @Test

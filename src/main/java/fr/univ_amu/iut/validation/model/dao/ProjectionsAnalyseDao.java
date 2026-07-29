@@ -48,8 +48,10 @@ public class ProjectionsAnalyseDao extends ProjectionGenerique {
             + FragmentsSqlObservation.CASE_STATUT
             + FragmentsSqlObservation.ALIAS_STATUT
             + " p.id AS passage_id, p.year AS annee, ms.square_number AS carre,"
-            + " ms.friendly_name AS nom_site, lp.id AS point_id"
+            + " ms.friendly_name AS nom_site, lp.id AS point_id, pc.commune_name AS commune"
             + FragmentsSqlObservation.DE_OBSERVATION_AU_SITE
+            // Commune du point (#2791) : table latérale, LEFT JOIN - absente tant que non résolue.
+            + " LEFT JOIN point_commune pc ON pc.point_id = lp.id"
             + FragmentsSqlObservation.FILTRE_UTILISATEUR_HORS_PSEUDO
             + ")";
 
@@ -59,7 +61,8 @@ public class ProjectionsAnalyseDao extends ProjectionGenerique {
     private static final String SQL_OBSERVATIONS_ANALYSE = CTE_OBSERVATIONS
             + " SELECT obs.taxon_code AS code, t.latin_name AS latin, t.vernacular_name_fr AS vern,"
             + " g.name AS groupe, obs.statut AS statut, obs.passage_id AS passage_id, obs.annee AS annee,"
-            + " obs.carre AS carre, obs.nom_site AS nom_site, obs.point_id AS point_id"
+            + " obs.carre AS carre, obs.nom_site AS nom_site, obs.point_id AS point_id,"
+            + " obs.commune AS commune"
             + " FROM obs"
             + " JOIN taxon t ON t.code = obs.taxon_code"
             + " LEFT JOIN taxonomic_group g ON g.id = t.group_id";
@@ -74,7 +77,8 @@ public class ProjectionsAnalyseDao extends ProjectionGenerique {
             rs.getInt(FragmentsSqlObservation.COL_ANNEE),
             rs.getString(FragmentsSqlObservation.COL_CARRE),
             rs.getString(FragmentsSqlObservation.COL_NOM_SITE),
-            rs.getLong("point_id"));
+            rs.getLong("point_id"),
+            rs.getString("commune"));
 
     /// CTE de **détail** : une ligne par observation (clé, séquence, contexte passage/carré/point, les deux
     /// taxons et probabilités, statut dérivé), pour le panneau « observations d'une espèce » (#analyse).

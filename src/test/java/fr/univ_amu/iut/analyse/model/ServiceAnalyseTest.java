@@ -44,7 +44,8 @@ class ServiceAnalyseTest {
                 2026,
                 "640380",
                 "Étang",
-                10L);
+                10L,
+                null);
         when(observationDao.observationsAnalyse(ID)).thenReturn(List.of(obs));
 
         assertThat(new ServiceAnalyse(observationDao, Set::of).observationsAnalyse(ID))

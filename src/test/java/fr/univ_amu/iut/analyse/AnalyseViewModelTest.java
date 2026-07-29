@@ -44,7 +44,8 @@ class AnalyseViewModelTest {
     /// AgregationAnalyseTest) ; seuls taxon, vernaculaire, groupe, statut et carré varient selon le besoin.
     private static ObservationAnalyse obs(
             String taxon, String vern, String groupe, StatutObservation statut, String carre) {
-        return new ObservationAnalyse(taxon, taxon + " (latin)", vern, groupe, statut, 1L, 2026, carre, "Étang", 10L);
+        return new ObservationAnalyse(
+                taxon, taxon + " (latin)", vern, groupe, statut, 1L, 2026, carre, "Étang", 10L, null);
     }
 
     private static ObservationAnalyse chiro(String taxon, String vern, StatutObservation statut) {
