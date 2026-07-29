@@ -45,6 +45,7 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
+import fr.univ_amu.iut.passage.model.SortieDeRecuperation;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.VerificationIdentiteAudio;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
@@ -272,9 +273,18 @@ public class PassageModule extends ModuleDeFeature {
             VerificationIdentiteAudio verification,
             ServiceDisponibiliteAudio disponibilite,
             AdoptionOriginauxReconstruits adoption,
-            AppuisReactivation appuis) {
+            AppuisReactivation appuis,
+            SortieDeRecuperation sortieDeRecuperation) {
         return new ServiceReactivationPassage(
-                workspace, sessionDao, sequenceDao, originalDao, verification, disponibilite, adoption, appuis);
+                workspace,
+                sessionDao,
+                sequenceDao,
+                originalDao,
+                verification,
+                disponibilite,
+                adoption,
+                appuis,
+                sortieDeRecuperation);
     }
 
     /// Moteur (pur) des transitions de workflow d'un passage.

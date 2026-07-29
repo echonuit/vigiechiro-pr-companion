@@ -113,6 +113,10 @@ public class ServiceReactivationPassage {
     /// d'échouer plus loin sans raison lisible.
     private final Optional<HydratationSquelette> hydratationSquelette;
 
+    /// Fin de l'état « Récupéré » (#2581) : quand l'audio revient, la nuit cesse d'être un squelette
+    /// venu de la plateforme et rejoint les nuits déposées.
+    private final SortieDeRecuperation sortieDeRecuperation;
+
     /// @param appuis les collaborateurs **optionnels** empruntés aux autres features (#2483) : réunis en
     ///     objet-paramètre parce qu'ils partagent tous le même trait, pouvoir manquer
     public ServiceReactivationPassage(
@@ -123,7 +127,8 @@ public class ServiceReactivationPassage {
             VerificationIdentiteAudio verification,
             ServiceDisponibiliteAudio disponibilite,
             AdoptionOriginauxReconstruits adoption,
-            AppuisReactivation appuis) {
+            AppuisReactivation appuis,
+            SortieDeRecuperation sortieDeRecuperation) {
         this.workspace = Objects.requireNonNull(workspace, "workspace");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
@@ -144,6 +149,7 @@ public class ServiceReactivationPassage {
         this.adoption = Objects.requireNonNull(adoption, "adoption");
         this.importObservations = appuis.importObservations();
         this.hydratationSquelette = appuis.hydratationSquelette();
+        this.sortieDeRecuperation = Objects.requireNonNull(sortieDeRecuperation, "sortieDeRecuperation");
     }
 
     /// Réactive le passage depuis `dossierSource` (exploré **récursivement**).
@@ -421,6 +427,10 @@ public class ServiceReactivationPassage {
         disponibilite.invalider(idPassage);
         DecompteAudio decompte = disponibilite.decompte(idPassage);
         sessionDao.majVolumeSequences(session.id(), volumeSequences(sequences));
+        // Le moment où la nuit cesse d'être « Récupérée » (#2581) : son audio est là, elle n'est plus
+        // le squelette que la synchro avait rapatrié. Sans effet si elle ne l'était pas, ou si rien
+        // n'a pu être rebranché - une tentative infructueuse ne se raconte pas comme un succès.
+        sortieDeRecuperation.promouvoirSiRecuperee(idPassage, decompte.disponibilite() != DisponibiliteAudio.ABSENTE);
         return new RapportReactivation(
                 bilan.reactivees,
                 bilan.ecarts.size(),
