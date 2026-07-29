@@ -65,6 +65,12 @@ class ObservationDaoTest {
                     "INSERT INTO monitoring_site(square_number, protocol, created_at, user_id)"
                             + " VALUES ('640380', 'Point fixe standard', '2026-05-01', 'u-1')");
             long idPoint = insererCle(cx, "INSERT INTO listening_point(code, site_id) VALUES ('A1', ?)", idSite);
+            // Commune résolue du point (#2791, table latérale) : la projection audio doit la porter.
+            insererCle(
+                    cx,
+                    "INSERT INTO point_commune(point_id, commune_name, commune_insee)"
+                            + " VALUES (?, 'Aix-en-Provence', '13001')",
+                    idPoint);
             executer(cx, "INSERT INTO recorder(serial_number) VALUES ('SN-1')");
             idPassage = insererCle(
                     cx,
@@ -547,6 +553,8 @@ class ObservationDaoTest {
             assertThat(ligne.numeroCarre()).isEqualTo("640380");
             assertThat(ligne.codePoint()).isEqualTo("A1");
             assertThat(ligne.nomFichier()).isEqualTo("a_000.wav");
+            // Commune du point (#2791) : portée par la CTE (LEFT JOIN point_commune).
+            assertThat(ligne.commune()).isEqualTo("Aix-en-Provence");
             // Groupe taxon parent porté par la projection (LEFT JOIN taxonomic_group) : Pippip et Nyclei
             // sont rattachés à « Chiroptères » (V08). Alimente le filtre par groupe de la vue audio.
             assertThat(ligne.groupe()).isEqualTo("Chiroptères");
@@ -637,6 +645,8 @@ class ObservationDaoTest {
             assertThat(ligne.statut()).isEqualTo(StatutObservation.NON_TOUCHEE);
             assertThat(ligne.reference()).isFalse();
             assertThat(ligne.nomFichier()).isEqualTo("a_000.wav");
+            // Commune du point (#2791) : portée par la CTE (LEFT JOIN point_commune).
+            assertThat(ligne.commune()).isEqualTo("Aix-en-Provence");
             assertThat(ligne.numeroCarre()).isEqualTo("640380");
             assertThat(ligne.codePoint()).isEqualTo("A1");
             assertThat(ligne.heureCapture()).isEqualTo(LocalDateTime.of(2026, 4, 22, 22, 30, 0));

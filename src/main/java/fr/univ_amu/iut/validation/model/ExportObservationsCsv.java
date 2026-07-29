@@ -28,6 +28,9 @@ public final class ExportObservationsCsv {
             "Carré",
             "Point",
             "Site",
+            // Commune du point (#2791) : le nom de lieu opposable, dérivé du GPS - celui
+            // qu'un expert cherche pour situer une observation sans connaître les sites.
+            "Commune",
             "Passage",
             "Date",
             "Fichier",
@@ -92,6 +95,7 @@ public final class ExportObservationsCsv {
                 texte(l.numeroCarre()),
                 texte(l.codePoint()),
                 texte(l.nomSite()),
+                texte(l.commune()),
                 Integer.toString(l.numeroPassage()),
                 texte(l.dateEnregistrement()),
                 texte(l.nomFichier()),

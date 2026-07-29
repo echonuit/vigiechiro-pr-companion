@@ -86,7 +86,8 @@ class FormatAvisValidateurTest {
                 "Especeinconnue",
                 Certitude.SUR,
                 null,
-                0);
+                0,
+                null);
 
         assertThat(FormatAvisValidateur.avis(ligne))
                 .as("une souche hors référentiel n'a pas de nom vernaculaire : le code vaut mieux qu'un vide")
@@ -167,7 +168,8 @@ class FormatAvisValidateurTest {
                 validateur,
                 certitudeValidateur,
                 validateur == null ? null : "Pipistrelle commune",
-                0);
+                0,
+                null);
     }
 
     private static LigneObservationAudio avecFil(int messages) {
@@ -201,6 +203,7 @@ class FormatAvisValidateurTest {
                 null,
                 null,
                 null,
-                messages);
+                messages,
+                null);
     }
 }

@@ -123,7 +123,8 @@ class SonsValidationArchiveViewTest {
                 null,
                 null,
                 null,
-                0);
+                0,
+                null);
     }
 
     @Start

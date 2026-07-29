@@ -159,7 +159,8 @@ class SonsValidationViewTest {
                 null,
                 null,
                 null,
-                0);
+                0,
+                null);
     }
 
     @Start
