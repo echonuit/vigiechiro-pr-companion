@@ -80,7 +80,7 @@ public class SaisieHorairesNuit {
             messages.effacer();
             return true;
         } catch (RegleMetierException refus) {
-            messages.erreur(refus.getMessage());
+            messages.erreur(refus);
             return false;
         }
     }

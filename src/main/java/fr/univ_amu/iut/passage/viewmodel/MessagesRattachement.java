@@ -44,6 +44,17 @@ final class MessagesRattachement {
         retour.set(RetourOperation.erreur(texte));
     }
 
+    /// Échec **remonté d'une exception** : le retour y gagne le **geste attendu** (#2635) et une longueur
+    /// **bornée** (#2076) - deux choses que `erreur(refus.getMessage())` perdait en chemin.
+    void erreur(Throwable refus) {
+        retour.set(RetourOperation.erreur(refus));
+    }
+
+    /// Échec **situé** : notre contexte, puis ce que l'exception rapporte - borné (#2076).
+    void erreur(String contexte, Throwable refus) {
+        retour.set(RetourOperation.erreur(contexte, refus));
+    }
+
     /// Publie un retour déjà constitué (le compte rendu d'envoi porte le sien).
     void publier(RetourOperation retourConstitue) {
         retour.set(retourConstitue);

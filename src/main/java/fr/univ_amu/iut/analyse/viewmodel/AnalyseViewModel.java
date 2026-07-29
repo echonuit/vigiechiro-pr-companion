@@ -205,7 +205,7 @@ public class AnalyseViewModel {
             retour.set(RetourOperation.succes("Inventaire exporté vers " + destination.getFileName() + "."));
             return true;
         } catch (RuntimeException echec) {
-            retour.set(RetourOperation.erreur(echec.getMessage()));
+            retour.set(RetourOperation.erreur(echec));
             return false;
         }
     }

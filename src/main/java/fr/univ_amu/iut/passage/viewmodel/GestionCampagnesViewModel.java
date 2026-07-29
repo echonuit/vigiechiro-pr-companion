@@ -126,7 +126,7 @@ public class GestionCampagnesViewModel {
         try {
             retour.set(ecriture.appliquer());
         } catch (RuntimeException refus) {
-            retour.set(RetourOperation.erreur(refus.getMessage()));
+            retour.set(RetourOperation.erreur(refus));
         }
     }
 

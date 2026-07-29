@@ -122,7 +122,7 @@ public class SiteEditViewModel {
             retour.set(RetourOperation.AUCUN);
             return true;
         } catch (RegleMetierException | IllegalArgumentException refus) {
-            retour.set(RetourOperation.erreur(refus.getMessage()));
+            retour.set(RetourOperation.erreur(refus));
             return false;
         }
     }

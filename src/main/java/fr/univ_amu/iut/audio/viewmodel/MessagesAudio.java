@@ -95,6 +95,12 @@ final class MessagesAudio {
         retour.set(RetourOperation.erreur(texte));
     }
 
+    /// Échec **remonté d'une exception** : le retour y gagne le **geste attendu** (#2635) et une longueur
+    /// **bornée** (#2076) - deux choses que `erreur(refus.getMessage())` perdait en chemin.
+    void erreur(Throwable refus) {
+        retour.set(RetourOperation.erreur(refus));
+    }
+
     /// Retour d'un export : bilan (succès) ou erreur d'écriture selon `reussi`, ignoré si `message` nul.
     void export(boolean reussi, String message) {
         if (message != null) {

@@ -157,7 +157,7 @@ public class RattachementViewModel {
         } catch (RuntimeException echec) {
             // Surface toute défaillance opérationnelle dans la modale (règle métier R5, disque, base)
             // plutôt que de la laisser échapper au gestionnaire d'action JavaFX (cf. PassageViewModel).
-            messages.erreur(echec.getMessage());
+            messages.erreur(echec);
             return false;
         }
     }
@@ -375,7 +375,7 @@ public class RattachementViewModel {
     /// Route l'échec inattendu d'une opération réseau de la modale (météo, tir) vers sa ligne
     /// de message, **sur le fil JavaFX** : jamais un silence, ni un bouton resté figé (#1216).
     public void signalerErreur(Throwable erreur) {
-        messages.erreur("L'opération Vigie-Chiro a échoué : " + erreur.getMessage());
+        messages.erreur("L'opération Vigie-Chiro a échoué : ", erreur);
     }
 
     /// `true` si appliquer le rattachement courant **renommera effectivement** les séquences sur le disque
