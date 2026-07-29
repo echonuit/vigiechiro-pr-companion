@@ -17,6 +17,15 @@ final class EtapesWorkflow {
     /// courant reste « Prêt à déposer » (le détail du dépôt — unités téléversées, reprise — vit dans
     /// M-Lot).
     static List<EtapeWorkflow> construire(StatutWorkflow courant) {
+        if (courant == StatutWorkflow.RECUPERE) {
+            // Une nuit rapatriée n'a parcouru AUCUNE de ces étapes (#2774). Lui dérouler le workflow
+            // d'import, avec ses jalons marqués franchis, raconterait un trajet qu'elle n'a pas fait -
+            // c'est l'approximation que le lot 1 avait assumée faute de mieux. Un stepper d'une seule
+            // étape dit la vérité : voilà où elle en est, et elle n'est venue de nulle part d'ici.
+            // Ce qu'il lui manque - son audio - est porté par l'action recommandée, qui désigne
+            // « Réactiver ».
+            return List.of(new EtapeWorkflow(StatutWorkflow.RECUPERE, EtatEtape.COURANTE));
+        }
         StatutWorkflow jalon = jalonDe(courant);
         List<EtapeWorkflow> liste = new ArrayList<>();
         for (StatutWorkflow etape : StatutWorkflow.values()) {
@@ -30,23 +39,11 @@ final class EtapesWorkflow {
 
     /// Le jalon que le stepper met en avant pour un statut donné.
     ///
-    /// Deux statuts ne sont pas des jalons. « Dépôt en cours » (#980) est technique : le jalon reste
-    /// « Prêt à déposer » tant que le téléversement n'est pas fini. « Récupéré » (#2581) n'est pas
-    /// sur ce chemin du tout : la nuit n'a franchi aucune de ces étapes, elle est arrivée de la
-    /// plateforme - où elle **est** déposée, d'où le jalon retenu.
-    ///
-    /// ⚠️ **Approximation assumée, et bornée.** Marquer « Déposé » fait apparaître les étapes
-    /// précédentes comme franchies, ce qu'elles ne sont pas. C'est moins faux que l'alternative
-    /// mécanique - `RECUPERE` étant la dernière valeur de l'énumération, le calcul par `ordinal()`
-    /// donnerait « tout franchi » sans même que « Déposé » soit courante - mais ça reste une
-    /// approximation. La représentation juste (stepper à part, ou jalon distinct) est l'objet de
-    /// **#2774** : c'est un choix d'affichage, pas de modèle.
+    /// « Dépôt en cours » (#980) n'est pas un jalon mais un état technique : le jalon reste « Prêt à
+    /// déposer » tant que le téléversement n'est pas fini. « Récupéré » ne passe pas ici - il a son
+    /// propre stepper, cf. [#construire].
     private static StatutWorkflow jalonDe(StatutWorkflow courant) {
-        return switch (courant) {
-            case DEPOT_EN_COURS -> StatutWorkflow.PRET_A_DEPOSER;
-            case RECUPERE -> StatutWorkflow.DEPOSE;
-            default -> courant;
-        };
+        return courant == StatutWorkflow.DEPOT_EN_COURS ? StatutWorkflow.PRET_A_DEPOSER : courant;
     }
 
     private static EtatEtape etatDe(StatutWorkflow etape, StatutWorkflow jalon) {
