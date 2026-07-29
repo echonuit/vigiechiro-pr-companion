@@ -212,14 +212,25 @@ public class PassageViewModel {
         dureeEnregistree.set(Formats.dureeLisible(detail.dureeEnregistreeSecondes()));
         nombreSequences.set(detail.nombreSequences());
         etapes.setAll(EtapesWorkflow.construire(detail.statut()));
-        boolean nuitTransformee = detail.statut().ordinal() >= StatutWorkflow.TRANSFORME.ordinal();
+        // ⚠️ Comparaison par ordinal : elle ne vaut QUE pour les statuts de la file. « Récupéré » est
+        // hors file et déclaré en dernier (ADR 2581), donc il passerait ce test sans rien avoir
+        // parcouru - une nuit rapatriée n'a jamais été transformée ICI. Le dire, plutôt que de laisser
+        // la position dans l'énumération répondre à notre place.
+        boolean nuitTransformee = detail.statut() != StatutWorkflow.RECUPERE
+                && detail.statut().ordinal() >= StatutWorkflow.TRANSFORME.ordinal();
         boolean nuitDeposee = detail.statut() == StatutWorkflow.DEPOSE;
-        // Déposée par NOUS, ou reçue de la plateforme ? Le statut ne distingue pas les deux (#2581), et
-        // les gardes de « Déposé » ne disent pas toutes quelque chose de juste sur une nuit récupérée.
-        boolean nuitRecuperee = nuitDeposee && service.estNuitRecuperee(idPassage);
+        // Le statut porte la distinction depuis #2772 : l'écran la LIT dans le détail qu'il vient de
+        // charger, au lieu de redemander au service - une requête sur trois tables à chaque ouverture
+        // de fiche, pour une réponse qu'il tenait déjà.
+        boolean nuitRecuperee = detail.statut() == StatutWorkflow.RECUPERE;
+        // ⚠️ « Récupéré » et « Déposé » sont désormais EXCLUSIFS. Toute garde qui disait « sauf quand
+        // c'est déposé » cessait donc de couvrir ces nuits, en silence, alors qu'elle les couvrait la
+        // veille - le statut a changé sous elles. Chacune est reprise ci-dessous avec ce que la nuit
+        // est vraiment : sur la plateforme, quel que soit celui de nous deux qui l'y a mise.
+        boolean surLaPlateforme = nuitDeposee || nuitRecuperee;
         // #1514 : la vérification reste possible tant que la nuit n'est pas déposée (une nuit déposée a un
         // verdict figé, cf. ServiceQualification.enregistrerVerdict) — on grise donc la carte au dépôt.
-        verificationDisponible.set(nuitTransformee && !nuitDeposee);
+        verificationDisponible.set(nuitTransformee && !surLaPlateforme);
         // Le verdict reste figé sur une nuit récupérée - elle EST sur la plateforme, et un verdict local
         // divergent la désynchroniserait tout autant. Mais le motif d'origine lui fait dire « cette nuit
         // est déposée » à quelqu'un qui ne l'a jamais déposée : il dit désormais d'où elle vient.
@@ -232,18 +243,22 @@ public class PassageViewModel {
                                 : nuitTransformee
                                         ? ""
                                         : "🔒 La vérification sera possible une fois la nuit transformée.");
-        validationVerrouillee.set(detail.statut() != StatutWorkflow.DEPOSE);
+        validationVerrouillee.set(!surLaPlateforme);
         // Accès à l'écran de dépôt (M-Lot) dès le passage vérifié ET **même une fois déposé** (#…) : on doit
         // pouvoir y revenir pour consulter les archives ou les supprimer, sans avoir à annuler le dépôt.
-        depotDisponible.set(detail.statut().ordinal() >= StatutWorkflow.VERIFIE.ordinal());
+        // Même précaution : « Récupéré » répondrait « oui » par sa seule place dans l'énumération. Ici
+        // la réponse EST oui - la nuit est sur la plateforme, on peut vouloir revenir à M-Lot consulter
+        // ses archives - mais elle est écrite, pas héritée d'un rang.
+        depotDisponible.set(detail.statut() == StatutWorkflow.RECUPERE
+                || detail.statut().ordinal() >= StatutWorkflow.VERIFIE.ordinal());
         // Sauf sur une nuit récupérée (#2771) : elle n'a pas de dépôt à annuler ici, et la transition
         // la rendrait « Prêt à déposer » - donc prête à faire un doublon sur la plateforme.
         // Deux questions distinctes. « Le bouton a-t-il sa place ici ? » - oui dès que la nuit est
         // déposée, sinon il disparaît (il n'a aucun sens avant le dépôt). « Le geste est-il possible ? »
         // - non sur une nuit récupérée, et là il reste VISIBLE mais désactivé, avec son motif : c'est
         // précisément la nuit où son absence surprendrait, puisque la pastille annonce « Déposé ».
-        annulationDepotPertinente.set(nuitDeposee);
-        annulationDepotDisponible.set(nuitDeposee && !nuitRecuperee);
+        annulationDepotPertinente.set(surLaPlateforme);
+        annulationDepotDisponible.set(nuitDeposee);
         motifBlocageAnnulationDepot.set(nuitRecuperee ? ServicePassage.MOTIF_DEPOT_NON_ANNULABLE : "");
         // Suppression bloquée sur un passage déposé (le service la refuse) : on grise le bouton en amont au
         // lieu de laisser l'utilisateur découvrir le refus après la confirmation. Il faut d'abord annuler
@@ -252,11 +267,10 @@ public class PassageViewModel {
         // enlève une copie locale, pas une donnée officielle - la participation reste sur la plateforme.
         // Sans cette exception, le seul recours était « Annuler le dépôt » puis « Supprimer », qui fait
         // affirmer un faux : la nuit EST déposée, et aucun geste local ne le change.
-        suppressionPossible.set(detail.statut() != StatutWorkflow.DEPOSE || nuitRecuperee);
+        suppressionPossible.set(!nuitDeposee);
         // Renommage (rattachement) bloqué dès qu'un passage est déposé ou en cours de dépôt : son nom est
         // l'identité de ses fichiers côté serveur, le service refuse alors le renommage. Gating amont.
-        renommagePossible.set(
-                detail.statut() != StatutWorkflow.DEPOSE && detail.statut() != StatutWorkflow.DEPOT_EN_COURS);
+        renommagePossible.set(!surLaPlateforme && detail.statut() != StatutWorkflow.DEPOT_EN_COURS);
         // Réactivation (#1302) : gating en amont (#789), le motif alimente le tooltip de
         // l'enveloppe. Règles pures extraites dans GatingReactivation.
         // Depuis #2555, une nuit SANS séquence peut aussi se réactiver : c'est une nuit rapatriée par la

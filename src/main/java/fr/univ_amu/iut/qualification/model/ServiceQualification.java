@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
+import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -348,7 +349,9 @@ public class ServiceQualification {
         // #1514 : un passage déposé est figé (même règle que ServicePassage.poserVerdict et la CLI).
         // Sans cette garde, l'IHM ferait régresser le passage de « Déposé » à « Vérifié », désynchronisé
         // de la plateforme (deposeLe conservé, participation orpheline) : corruption de données.
-        if (passage.statutWorkflow() == StatutWorkflow.DEPOSE) {
+        // Même règle que ServicePassage.poserVerdict, et par le même prédicat : « Récupéré » gèle le
+        // verdict autant que « Déposé » (#2773), la nuit étant sur la plateforme dans les deux cas.
+        if (ServicePassage.verdictFige(passage.statutWorkflow())) {
             throw new RegleMetierException(
                     "Verdict figé : un passage déposé ne peut plus changer de verdict de vérification.");
         }

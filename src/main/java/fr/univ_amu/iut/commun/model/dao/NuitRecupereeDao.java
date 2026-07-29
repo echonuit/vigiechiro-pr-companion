@@ -68,11 +68,16 @@ public class NuitRecupereeDao {
         });
     }
 
-    /// Ce passage précis est-il une nuit **récupérée** ?
+    /// Ce passage précis est-il une nuit **récupérée**, au sens du critère observé ?
     ///
-    /// Même critère, autre clé d'entrée : une fiche de passage sait son identifiant, pas l'identité de la
-    /// nuit. Cette question décide de gardes qui, sinon, se referment à tort - une nuit récupérée porte le
-    /// statut « Déposé », qui interdit de la supprimer et de la vérifier (#2581).
+    /// ⚠️ **Ce n'est plus une garde de production.** Depuis #2772 l'état est porté par le passage
+    /// (`StatutWorkflow.RECUPERE`), et les gardes le lisent là - entretenir deux chemins vers la même
+    /// vérité, c'est se donner deux réponses possibles.
+    ///
+    /// Cette méthode reste parce qu'elle est devenue **l'oracle de la migration V37** : le critère existe
+    /// aussi dans son `WHERE`, et `MigrationV37StatutRecupereTest` compare les deux verdicts nuit par
+    /// nuit. La supprimer supprimerait la garantie que l'ADR 2581 déclare - il n'y aurait plus rien à
+    /// quoi comparer la migration, et sa divergence future passerait inaperçue.
     ///
     /// Faux si `idPassage` est nul : il n'y a pas de passage à reconnaître.
     public boolean estRecuperee(Long idPassage) {
