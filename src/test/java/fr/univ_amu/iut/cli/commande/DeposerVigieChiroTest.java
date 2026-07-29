@@ -172,6 +172,27 @@ class DeposerVigieChiroTest {
     }
 
     @Test
+    @DisplayName("clôture #2802 : le bilan dit le VOLUME en ligne, que l'écran affiche depuis #2653")
+    void rendre_bilan_dit_le_volume() {
+        String complet = DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 14, List.of(), 4_500_000_000L));
+        String partiel = DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 9, List.of("Car-10.zip"), 2_900_000_000L));
+
+        assertThat(complet).contains("14 fichier(s) téléversé(s) (4,2 Go)");
+        assertThat(partiel).contains("9 fichier(s) téléversé(s) (2,7 Go)").contains("1 en échec");
+    }
+
+    @Test
+    @DisplayName("volume non mesuré : rien n'est dit, plutôt qu'un « 0 Ko téléversé »")
+    void rendre_bilan_tait_un_volume_absent() {
+        String texte = DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 3, List.of()));
+
+        assertThat(texte)
+                .as("annoncer une absence fait chercher ce qui n'a pas eu lieu")
+                .doesNotContain("(0")
+                .contains("3 fichier(s) téléversé(s) (participation p-1)");
+    }
+
+    @Test
     @DisplayName("rendrePlan : mentionne la reprise quand des fichiers sont déjà en ligne")
     void rendre_plan_reprise() {
         assertThat(DeposerVigieChiro.rendrePlan(List.of(

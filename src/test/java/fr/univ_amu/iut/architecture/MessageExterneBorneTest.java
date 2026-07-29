@@ -87,6 +87,53 @@ class MessageExterneBorneTest {
                 .isEmpty();
     }
 
+    /// `catch (RegleMetierException nom)` : le refus porte un [Besoin], donc un geste à nommer.
+    private static final Pattern REFUS_ATTRAPE = Pattern.compile("catch\\s*\\(\\s*RegleMetierException\\s+(\\w+)");
+
+    @Test
+    @DisplayName("#2802 : aucune commande n'affiche un refus métier sans passer par GesteAttenduCli")
+    void aucune_commande_n_affiche_un_refus_sans_son_geste() throws IOException {
+        List<String> fautifs = new ArrayList<>();
+        try (Stream<Path> sources = Files.walk(RACINE.resolve("cli"))) {
+            for (Path source : sources.filter(chemin -> chemin.toString().endsWith(".java"))
+                    .toList()) {
+                releverRefusNu(source, fautifs);
+            }
+        }
+
+        assertThat(fautifs)
+                .as("un refus porte un besoin (ADR 2635) : `GesteAttenduCli.message(refus)` dit la commande"
+                        + " qui le lève, là où `refus.getMessage()` laisse l'utilisateur sans suite")
+                .isEmpty();
+    }
+
+    /// Relève les blocs `catch (RegleMetierException nom)` dont le corps affiche `nom.getMessage()`.
+    ///
+    /// La portée est délibérément **la variable attrapée**, et non tout `getMessage()` : une
+    /// `IOException` sur l'écriture d'un CSV n'a pas de besoin à nommer, et son message brut est le bon.
+    private static void releverRefusNu(Path source, List<String> fautifs) throws IOException {
+        List<String> lignes = Files.readAllLines(source, StandardCharsets.UTF_8);
+        String refusCourant = null;
+        for (int rang = 0; rang < lignes.size(); rang++) {
+            String ligne = lignes.get(rang);
+            Matcher attrape = REFUS_ATTRAPE.matcher(ligne);
+            if (attrape.find()) {
+                refusCourant = attrape.group(1);
+                continue;
+            }
+            if (refusCourant == null || ligne.stripLeading().startsWith("//")) {
+                continue;
+            }
+            if (ligne.contains(refusCourant + ".getMessage()")) {
+                fautifs.add(RACINE.relativize(source) + ":" + (rang + 1) + " → " + ligne.strip());
+            }
+            // Le bloc se referme : au-delà, la variable n'est plus en portée.
+            if (ligne.stripTrailing().endsWith("}") && !ligne.contains("{")) {
+                refusCourant = null;
+            }
+        }
+    }
+
     private static void releverDans(Path source, List<String> fautifs) throws IOException {
         List<String> lignes = Files.readAllLines(source, StandardCharsets.UTF_8);
         for (int rang = 0; rang < lignes.size(); rang++) {

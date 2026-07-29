@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.cli.GesteAttenduCli;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
@@ -86,7 +87,7 @@ public final class LancerTraitementVigieChiro implements Callable<Integer> {
             // refusé la relance.
             return resultat.traitementEnRoute() ? 0 : 1;
         } catch (RegleMetierException refus) {
-            spec.commandLine().getErr().println("Lancement impossible : " + refus.getMessage());
+            spec.commandLine().getErr().println("Lancement impossible : " + GesteAttenduCli.message(refus));
             return 2;
         }
     }

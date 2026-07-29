@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
@@ -121,17 +122,28 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         return serviceLot.sourceDepotParDefaut(idPassage);
     }
 
-    /// Bilan final : participation, fichiers téléversés cette fois-ci, reste éventuel. Fonction pure
-    /// (testable sans base ni réseau).
+    /// Bilan final : participation, fichiers téléversés cette fois-ci, **volume en ligne**, reste
+    /// éventuel. Fonction pure (testable sans base ni réseau).
+    ///
+    /// Le volume vient de la clôture #2802, passe 2 : l'écran le dit depuis #2653 - le téléverseur le
+    /// mesurait déjà pour choisir sa voie d'envoi - et la commande le taisait. Une capacité livrée d'un
+    /// seul côté est à moitié livrée.
     static String rendreBilan(BilanDepot bilan) {
+        String volume = volumeLisible(bilan);
         if (bilan.estComplet()) {
-            return "Dépôt complet : " + bilan.deposees() + " fichier(s) téléversé(s) (participation "
+            return "Dépôt complet : " + bilan.deposees() + " fichier(s) téléversé(s)" + volume + " (participation "
                     + bilan.participationId() + "). Passage marqué « Déposé ».";
         }
-        return "Dépôt INCOMPLET : " + bilan.deposees() + " fichier(s) téléversé(s), "
+        return "Dépôt INCOMPLET : " + bilan.deposees() + " fichier(s) téléversé(s)" + volume + ", "
                 + bilan.echecs().size()
                 + " en échec (participation " + bilan.participationId() + "). Relancez la commande pour ne"
                 + " reprendre que les manquants.";
+    }
+
+    /// Le volume en ligne, **s'il a été mesuré**. Rien à zéro : un « 0 Ko téléversé » annoncerait une
+    /// absence, la faute corrigée sur les volumes d'import (#2677) et les validations (#2695).
+    private static String volumeLisible(BilanDepot bilan) {
+        return bilan.octetsDeposes() > 0 ? " (" + Formats.octetsLisibles(bilan.octetsDeposes()) + ")" : "";
     }
 
     /// Ligne de plan : combien d'unités sont à téléverser, combien sont déjà en ligne (reprise). Fonction

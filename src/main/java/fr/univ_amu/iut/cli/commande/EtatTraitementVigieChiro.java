@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.cli.GesteAttenduCli;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
@@ -105,7 +106,7 @@ public final class EtatTraitementVigieChiro implements Callable<Integer> {
             sortie.println(compteRendu(traitement));
             return code(traitement);
         } catch (RegleMetierException indisponible) {
-            spec.commandLine().getErr().println("Indisponible : " + indisponible.getMessage());
+            spec.commandLine().getErr().println("Indisponible : " + GesteAttenduCli.message(indisponible));
             return INDISPONIBLE;
         }
     }
