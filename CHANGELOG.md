@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.118.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.117.0...v2.118.0) (2026-07-29)
+
+
+### Features
+
+* **analyse:** l'ecran Synthese de la nuit, ou un nombre trouve sa mesure ([#2797](https://github.com/echonuit/vigiechiro-pr-companion/issues/2797)) ([0730afb](https://github.com/echonuit/vigiechiro-pr-companion/commit/0730afb506017567bea2a7953c09ac95919e0ab6)), closes [#2351](https://github.com/echonuit/vigiechiro-pr-companion/issues/2351) [#2351](https://github.com/echonuit/vigiechiro-pr-companion/issues/2351) [#2348](https://github.com/echonuit/vigiechiro-pr-companion/issues/2348) [#2351](https://github.com/echonuit/vigiechiro-pr-companion/issues/2351)
+
 # [2.117.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.116.3...v2.117.0) (2026-07-29)
 
 
