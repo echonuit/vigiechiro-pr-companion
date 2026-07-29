@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.116.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.115.0...v2.116.0) (2026-07-29)
+
+
+### Features
+
+* **analyse:** la synthese d'une nuit, espece par espece ([#2779](https://github.com/echonuit/vigiechiro-pr-companion/issues/2779)) ([67d2293](https://github.com/echonuit/vigiechiro-pr-companion/commit/67d2293b81cb6bf4f07f62ac65fac0d901a1d9c8)), closes [#2351](https://github.com/echonuit/vigiechiro-pr-companion/issues/2351) [#2351](https://github.com/echonuit/vigiechiro-pr-companion/issues/2351) [#2348](https://github.com/echonuit/vigiechiro-pr-companion/issues/2348)
+
 # [2.115.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.114.0...v2.115.0) (2026-07-29)
 
 
