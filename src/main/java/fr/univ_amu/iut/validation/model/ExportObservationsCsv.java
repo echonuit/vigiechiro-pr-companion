@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Predicate;
 
 /// Export **CSV** des observations audio (#149), pour l'exploitation hors application (analyse, interop
 /// tableur). Distinct du CSV `_Vu` réinjectable (dépôt Tadarida) : ici on **aplatit les colonnes affichées**
@@ -47,6 +48,10 @@ public final class ExportObservationsCsv {
             "Statut",
             "Référence",
             "Douteux",
+            // Espèce à enjeu (#2353) : le repère de l'écran doit survivre à la sortie du fichier. Sans
+            // cette colonne, qui ouvre l'export dans un tableur perd l'information qu'un naturaliste
+            // cherche en premier, et devrait la reconstituer à la main depuis une liste externe.
+            "Espèce à enjeu",
             "Fréquence médiane (kHz)",
             "Début (s)",
             "Fin (s)",
@@ -56,21 +61,33 @@ public final class ExportObservationsCsv {
 
     /// Écrit le CSV des `lignes` dans `destination` (UTF-8 + BOM). Renvoie le fichier écrit.
     public static Path ecrire(List<LigneObservationAudio> lignes, Path destination) throws IOException {
-        Files.writeString(destination, contenu(lignes), StandardCharsets.UTF_8);
+        return ecrire(lignes, destination, taxon -> false);
+    }
+
+    /// Écrit le CSV en renseignant la colonne « Espèce à enjeu » d'après le référentiel (#2353).
+    public static Path ecrire(List<LigneObservationAudio> lignes, Path destination, Predicate<String> aEnjeu)
+            throws IOException {
+        Files.writeString(destination, contenu(lignes, aEnjeu), StandardCharsets.UTF_8);
         return destination;
     }
 
     /// Contenu CSV complet (BOM + en-têtes + une ligne par observation).
     public static String contenu(List<LigneObservationAudio> lignes) {
+        return contenu(lignes, taxon -> false);
+    }
+
+    /// Contenu CSV complet, avec le **référentiel de conservation** pour renseigner la colonne « Espèce à
+    /// enjeu » (#2353). Le prédicat reçoit le **code du taxon retenu** de chaque ligne.
+    public static String contenu(List<LigneObservationAudio> lignes, Predicate<String> aEnjeu) {
         StringBuilder csv = new StringBuilder(BOM);
         ajouterLigne(csv, ENTETES);
         for (LigneObservationAudio ligne : lignes) {
-            ajouterLigne(csv, champs(ligne));
+            ajouterLigne(csv, champs(ligne, aEnjeu));
         }
         return csv.toString();
     }
 
-    private static List<String> champs(LigneObservationAudio l) {
+    private static List<String> champs(LigneObservationAudio l, Predicate<String> aEnjeu) {
         return List.of(
                 texte(l.numeroCarre()),
                 texte(l.codePoint()),
@@ -88,12 +105,19 @@ public final class ExportObservationsCsv {
                 texte(l.nomEspece()),
                 texte(l.groupe()),
                 statut(l.statut()),
-                l.reference() ? "oui" : "non",
-                l.douteux() ? "oui" : "non",
+                ouiNon(l.reference()),
+                ouiNon(l.douteux()),
+                ouiNon(aEnjeu.test(l.taxonRetenu())),
                 l.frequenceKHz() == null ? "" : Integer.toString(l.frequenceKHz()),
                 secondes(l.debutS()),
                 secondes(l.finS()),
                 texte(l.commentaire()));
+    }
+
+    /// Les drapeaux booléens du CSV, en toutes lettres : un tableur lit « oui »/« non » là où `true` /
+    /// `false` demanderait de connaître la convention du fichier.
+    private static String ouiNon(boolean vrai) {
+        return vrai ? "oui" : "non";
     }
 
     /// Certitude déclarée (`Sûr` / `Probable` / `Possible`), ou vide si non renseignée — pour l'observateur

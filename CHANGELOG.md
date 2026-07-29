@@ -2,6 +2,42 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.113.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.113.0...v2.113.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **commun:** le libelle d'une ventilation devient le texte accessible de sa barre ([#2719](https://github.com/echonuit/vigiechiro-pr-companion/issues/2719)) ([3af5c5a](https://github.com/echonuit/vigiechiro-pr-companion/commit/3af5c5ac7c8fc0f9c1a79652da6b3dfb0575fba1)), closes [#2694](https://github.com/echonuit/vigiechiro-pr-companion/issues/2694)
+
+# [2.113.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.112.1...v2.113.0) (2026-07-28)
+
+
+### Features
+
+* **import:** router vers la réactivation quand la nuit est déjà récupérée ([#2711](https://github.com/echonuit/vigiechiro-pr-companion/issues/2711)) ([fdc8d75](https://github.com/echonuit/vigiechiro-pr-companion/commit/fdc8d75a96cb27a840fc92fbc2b26dba3c5e3650)), closes [#2557](https://github.com/echonuit/vigiechiro-pr-companion/issues/2557) [#2580](https://github.com/echonuit/vigiechiro-pr-companion/issues/2580) [#147](https://github.com/echonuit/vigiechiro-pr-companion/issues/147) [#107](https://github.com/echonuit/vigiechiro-pr-companion/issues/107) [#2580](https://github.com/echonuit/vigiechiro-pr-companion/issues/2580)
+
+## [2.112.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.112.0...v2.112.1) (2026-07-28)
+
+
+### Bug Fixes
+
+* **api:** « Annuler » cesse de disparaitre pendant une temporisation de reprise ([#2712](https://github.com/echonuit/vigiechiro-pr-companion/issues/2712)) ([853c38e](https://github.com/echonuit/vigiechiro-pr-companion/commit/853c38e62389e2db56b6e66aa3274ff6618e896a)), closes [#2686](https://github.com/echonuit/vigiechiro-pr-companion/issues/2686) [#2619](https://github.com/echonuit/vigiechiro-pr-companion/issues/2619) [#1522](https://github.com/echonuit/vigiechiro-pr-companion/issues/1522) [#2686](https://github.com/echonuit/vigiechiro-pr-companion/issues/2686) [#2354](https://github.com/echonuit/vigiechiro-pr-companion/issues/2354)
+
+# [2.112.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.111.0...v2.112.0) (2026-07-28)
+
+
+### Features
+
+* **revue:** compter ce qui reste a revoir parmi les especes a enjeu ([#2707](https://github.com/echonuit/vigiechiro-pr-companion/issues/2707)) ([334328a](https://github.com/echonuit/vigiechiro-pr-companion/commit/334328a0386ba9cc1a42577b0319d9ad05ef0304)), closes [#2353](https://github.com/echonuit/vigiechiro-pr-companion/issues/2353) [#2353](https://github.com/echonuit/vigiechiro-pr-companion/issues/2353) [#2353](https://github.com/echonuit/vigiechiro-pr-companion/issues/2353) [#2353](https://github.com/echonuit/vigiechiro-pr-companion/issues/2353) [#2348](https://github.com/echonuit/vigiechiro-pr-companion/issues/2348)
+
+# [2.111.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.110.0...v2.111.0) (2026-07-28)
+
+
+### Features
+
+* **lot:** la fin de depot rend ses comptes en chiffres ([#2708](https://github.com/echonuit/vigiechiro-pr-companion/issues/2708)) ([511d105](https://github.com/echonuit/vigiechiro-pr-companion/commit/511d105c0971375e79bc56348e93054a541fe985)), closes [#2653](https://github.com/echonuit/vigiechiro-pr-companion/issues/2653) [#2586](https://github.com/echonuit/vigiechiro-pr-companion/issues/2586) [#2653](https://github.com/echonuit/vigiechiro-pr-companion/issues/2653) [#2350](https://github.com/echonuit/vigiechiro-pr-companion/issues/2350) [#1044](https://github.com/echonuit/vigiechiro-pr-companion/issues/1044) [#2653](https://github.com/echonuit/vigiechiro-pr-companion/issues/2653) [#1890](https://github.com/echonuit/vigiechiro-pr-companion/issues/1890) [#2653](https://github.com/echonuit/vigiechiro-pr-companion/issues/2653) [#2350](https://github.com/echonuit/vigiechiro-pr-companion/issues/2350)
+* **passage:** ne demander copier ou referencer que la ou ca compte ([#2704](https://github.com/echonuit/vigiechiro-pr-companion/issues/2704)) ([a0466e7](https://github.com/echonuit/vigiechiro-pr-companion/commit/a0466e7ad232e62a3fda7303635a668eb67a28f3)), closes [#2554](https://github.com/echonuit/vigiechiro-pr-companion/issues/2554) [#2577](https://github.com/echonuit/vigiechiro-pr-companion/issues/2577) [#2642](https://github.com/echonuit/vigiechiro-pr-companion/issues/2642)
+
 # [2.110.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.109.0...v2.110.0) (2026-07-28)
 
 

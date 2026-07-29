@@ -67,6 +67,7 @@ erDiagram
     passage ||--|| identification_results : "résultats"
     identification_results ||--o{ observation : "contient"
     listening_sequence ||--o{ observation : "porte"
+    taxon ||--o| taxon_prioritaire : "à enjeu (PNA)"
     taxon ||--o{ observation : "identifie"
     taxonomic_group ||--o{ taxon : "regroupe"
 ```

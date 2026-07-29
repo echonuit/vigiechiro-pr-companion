@@ -69,7 +69,6 @@ class CliquetFixturePassageTest {
             "fr/univ_amu/iut/e2e/ParcoursValidationExpertE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE2ETest.java",
             "fr/univ_amu/iut/e2e/RetourApresVerificationE2ETest.java",
-            "fr/univ_amu/iut/importation/ServiceImportTest.java",
             "fr/univ_amu/iut/importation/view/ImportationVueIntegrationTest.java",
             "fr/univ_amu/iut/lot/DepotUniteDaoTest.java",
             "fr/univ_amu/iut/lot/DepotVigieChiroTest.java",

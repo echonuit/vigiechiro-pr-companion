@@ -143,8 +143,9 @@ public class ValidationModule extends ModuleDeFeature {
     /// de revue. C'est ce partage qui rend les gestes par filtre sûrs - on agit sur exactement ce que la
     /// liste a montré.
     @Provides
-    SelectionObservations fournirSelectionObservations(ProjectionsAudioDao projections) {
-        return new SelectionObservations(projections);
+    SelectionObservations fournirSelectionObservations(
+            ProjectionsAudioDao projections, EspecesPrioritaires especesPrioritaires) {
+        return new SelectionObservations(projections, especesPrioritaires);
     }
 
     @Provides

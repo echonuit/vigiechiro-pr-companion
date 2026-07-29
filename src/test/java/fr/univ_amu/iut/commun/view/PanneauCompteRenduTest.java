@@ -453,4 +453,25 @@ class PanneauCompteRenduTest {
                 .filter(Objects::nonNull)
                 .toList();
     }
+
+    @Test
+    @DisplayName("#2694 : la barre de ventilation porte son libellé en TEXTE ACCESSIBLE")
+    void la_barre_dit_ce_qu_elle_ventile_a_un_lecteur_d_ecran() {
+        PanneauCompteRendu panneau = miseEnPage(importAvecRejets());
+
+        // Avant #2694 la barre n'avait aucun texte accessible : son seul secours était un Tooltip par
+        // part, qui suppose une souris et un survol. Un lecteur d'écran ne recevait rien de
+        // l'information principale de la bande.
+        assertThat(barre(panneau, 0).getAccessibleText()).isEqualTo("Devenir des 612 enregistrements");
+    }
+
+    @Test
+    @DisplayName("#2694 : le libellé n'est PAS affiché - la pastille le dirait deux fois")
+    void le_libelle_n_est_pas_affiche() {
+        PanneauCompteRendu panneau = miseEnPage(importAvecRejets());
+
+        assertThat(textes(panneau))
+                .as("un compte rendu ne se répète pas : « 583 / 612 importés » dit déjà l'essentiel")
+                .noneMatch(texte -> texte.contains("Devenir des"));
+    }
 }

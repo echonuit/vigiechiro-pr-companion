@@ -267,6 +267,15 @@ public class ServiceImport {
     /// que soit leur rattachement. Permet d'avertir à l'inspection qu'on s'apprête à réimporter une nuit
     /// déjà présente (l'import en créerait un nouveau passage). Liste vide si `numeroSerie`/`dateNuit` est
     /// nul ou si aucune nuit ne correspond.
+    /// La nuit **déjà récupérée de Vigie-Chiro** pour cette identité (#2580) : rattachée à une
+    /// participation, et sans audio (ses originaux n'ont pas de fréquence d'échantillonnage).
+    ///
+    /// Distingue le cas où l'import doit **router vers la réactivation** de celui, ordinaire, où il
+    /// rencontre une nuit importée puis déposée - laquelle est rattachée elle aussi, mais a son audio.
+    public Optional<Long> nuitRecuperee(String numeroSerie, String dateNuit) {
+        return agregatDao.nuitRecuperee(numeroSerie, dateNuit);
+    }
+
     public List<PassageExistant> nuitDejaImportee(String numeroSerie, String dateNuit) {
         if (numeroSerie == null || dateNuit == null) {
             return List.of();

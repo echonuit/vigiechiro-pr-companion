@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
+import fr.univ_amu.iut.commun.view.RepereEspeceAEnjeu;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.time.LocalDateTime;
 import java.util.function.BiConsumer;
@@ -28,16 +29,16 @@ final class CellulesAudio {
     /// Icône du drapeau **douteux** (#160) : point d'interrogation, pour le bouton de bascule de la barre.
     static final String ICONE_DOUTEUX = "fas-question-circle";
 
-    /// **Espèce à enjeu** (#2353) : un bouclier, pour une espèce que le plan national désigne comme
-    /// prioritaire. Ni alerte ni erreur — l'enjeu porte sur l'espèce, pas sur la qualité de la donnée.
-    static final String ICONE_ENJEU = "fas-shield-alt";
+    /// **Espèce à enjeu** (#2353) : glyphe et classe portés par le socle, pour que le même fait se
+    /// reconnaisse d'un écran à l'autre.
+    static final String ICONE_ENJEU = RepereEspeceAEnjeu.ICONE;
 
     /// Classes CSS colorant les icônes (`-fx-icon-color` dans `sons-validation.css`) : étoile dorée,
     /// commentaire bleu, doute orange.
     static final String STYLE_REFERENCE = "icone-reference";
     static final String STYLE_COMMENTAIRE = "icone-commentaire";
     static final String STYLE_DOUTEUX = "icone-douteux";
-    static final String STYLE_ENJEU = "icone-enjeu";
+    static final String STYLE_ENJEU = RepereEspeceAEnjeu.STYLE;
 
     private CellulesAudio() {}
 
@@ -190,8 +191,8 @@ final class CellulesAudio {
                     setGraphic(null);
                     setTooltip(null);
                 } else {
-                    setGraphic(icone(ICONE_ENJEU, STYLE_ENJEU));
-                    setTooltip(new Tooltip("Espèce prioritaire du Plan National d'Actions Chiroptères"));
+                    setGraphic(RepereEspeceAEnjeu.icone());
+                    setTooltip(RepereEspeceAEnjeu.infobulle());
                 }
             }
         };

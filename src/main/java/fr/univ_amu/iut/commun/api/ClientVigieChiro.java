@@ -156,8 +156,12 @@ public final class ClientVigieChiro {
     public ReponseApi<List<DonneeVigieChiro>> donnees(String participationId, SuiviPagination suivi) {
         return PaginationEve.parcourir(
                 PAGES_MAX,
+                // Le renoncement de l'appelant descend jusqu'au réessai (#2686) : sans lui, « Annuler »
+                // disparaîtrait dans une temporisation de reprise, alors que ce parcours le relaie
+                // précisément page par page depuis #1522.
                 page -> transport.lire(
-                        CHEMIN_PARTICIPATIONS + participationId + "/donnees" + PaginationEve.requete(page)),
+                        CHEMIN_PARTICIPATIONS + participationId + "/donnees" + PaginationEve.requete(page),
+                        suivi::renonce),
                 DonneesVigieChiro::donnees,
                 suivi);
     }

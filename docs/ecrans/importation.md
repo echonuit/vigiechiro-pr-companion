@@ -259,6 +259,25 @@ Par sécurité, une **sauvegarde automatique de la base est écrite juste avant 
 toujours revenir en arrière via **☰ → Restaurer une sauvegarde…** (voir [Sauvegarder et restaurer la
 base](index.md#sauvegarder-et-restaurer-la-base)).
 
+### Nuit déjà récupérée depuis Vigie-Chiro
+
+Il arrive que la nuit de votre carte soit **déjà là** sans que vous l'ayez jamais importée : la
+synchronisation avec Vigie-Chiro rapatrie les nuits que la plateforme connaît, avec leurs observations et
+leur rattachement à la participation, mais **sans leur audio** - la plateforme ne le renvoie pas.
+
+Quand l'assistant reconnaît cette situation, il vous le dit et **retire les deux gestes habituels** de la
+zone d'avertissement, parce qu'ils vous coûteraient quelque chose :
+
+- **« Utiliser ce n° »** importerait la nuit une seconde fois, sur un numéro voisin. Vous vous
+  retrouveriez avec deux moitiés de la même nuit : l'une avec ses observations et son rattachement,
+  l'autre avec son son.
+- **« Écraser et réimporter »** supprimerait la nuit existante, donc **ses observations, vos validations
+  et son rattachement** - pour réimporter un son qu'on peut lui rendre sans rien perdre.
+
+Reste **« Ouvrir cette nuit »**, qui vous conduit à sa fiche. De là, **« Réactiver ce passage »** rebranche
+l'audio de votre carte sur la nuit existante : elle garde ses observations, vos validations et son
+rattachement, et retrouve son son (voir [Réactiver un passage](passage.md#reactiver-un-passage-reimporter-les-fichiers-dorigine)).
+
 ### Reprise d'un import interrompu
 
 Si un import a été **interrompu** (fenêtre fermée, coupure, annulation), il suffit de le **relancer** :

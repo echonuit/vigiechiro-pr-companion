@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.view.LegendeExport;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.RepereEspeceAEnjeu;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -54,7 +55,6 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran **M-Activite** (`Activite.fxml`, #2352, lot 2 du chantier #2348).
 ///
@@ -465,10 +465,8 @@ public class ActiviteController implements EmplacementNavigation {
             // Repère « espèce à enjeu » (#2353) : le bouclier accompagne le nom, là où l'œil choisit quelles
             // courbes tracer. Jamais la couleur seule — le glyphe et l'infobulle portent l'information.
             if (marqueurEnjeu.aEnjeu(taxon)) {
-                FontIcon bouclier = new FontIcon("fas-shield-alt");
-                bouclier.getStyleClass().add("icone-enjeu");
-                case_.setGraphic(bouclier);
-                case_.setTooltip(new Tooltip("Espèce prioritaire du Plan National d'Actions Chiroptères"));
+                case_.setGraphic(RepereEspeceAEnjeu.icone());
+                case_.setTooltip(RepereEspeceAEnjeu.infobulle());
             }
             case_.setSelected(viewModel.especesSelectionnees().contains(taxon));
             case_.selectedProperty().addListener((observable, avant, coche) -> majSelection(taxon, coche));

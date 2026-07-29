@@ -24,9 +24,11 @@ import java.util.Objects;
 public class SelectionObservations {
 
     private final ProjectionsAudioDao projections;
+    private final MarqueurEspecesAEnjeu marqueurEnjeu;
 
-    public SelectionObservations(ProjectionsAudioDao projections) {
+    public SelectionObservations(ProjectionsAudioDao projections, EspecesPrioritaires especesPrioritaires) {
         this.projections = Objects.requireNonNull(projections, "projections");
+        this.marqueurEnjeu = new MarqueurEspecesAEnjeu(especesPrioritaires);
     }
 
     /// Les lignes du passage qui passent les critères, dans l'ordre de la projection (celui de l'écran).
@@ -35,6 +37,7 @@ public class SelectionObservations {
         Objects.requireNonNull(criteres, "criteres");
         return projections.lignesAudioDuPassage(idPassage).stream()
                 .filter(criteres::retient)
+                .filter(ligne -> criteres.retientLEnjeu(marqueurEnjeu.aEnjeu(ligne.taxonRetenu())))
                 .toList();
     }
 

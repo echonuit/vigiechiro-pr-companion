@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -19,12 +20,14 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
@@ -39,8 +42,6 @@ import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -865,25 +866,15 @@ class ServiceImportTest {
     @DisplayName(
             "#… : prochainBlocPassagesLibre — 1,3,5,7 pris → premier bloc de N consécutifs libres, sans casser la consécutivité")
     void prochain_bloc_consecutif_libre_evite_les_trous() {
-        PassageDao passageDao = new PassageDao(source);
-        enregistreurDao.insert(new Enregistreur("9999999", "V1.01", null));
         for (int numero : new int[] {1, 3, 5, 7}) {
-            passageDao.insert(new Passage(
-                    null,
-                    numero,
-                    2026,
-                    "2026-04-22",
-                    "20:25:00",
-                    "07:47:00",
-                    null,
-                    StatutWorkflow.TRANSFORME,
-                    null,
-                    null,
-                    null,
-                    null,
-                    idPoint,
-                    "9999999",
-                    null));
+            JeuDeDonneesPassage.dans(source)
+                    .utilisateur(ID_USER)
+                    .carre("640380")
+                    .point("Z1")
+                    .enregistreur("9999999")
+                    .nuit(numero, 2026, "2026-04-22")
+                    .statut(StatutWorkflow.TRANSFORME)
+                    .semer();
         }
 
         // Bloc de 1 : comble le premier trou (2). Bloc de 2 ou 3 : les trous 2/4/6 sont isolés → 8.
@@ -917,6 +908,49 @@ class ServiceImportTest {
         assertThat(service.nuitDejaImportee(SERIE, "2026-04-23")).isEmpty();
         assertThat(service.nuitDejaImportee(null, "2026-04-22")).isEmpty();
         assertThat(service.nuitDejaImportee(SERIE, null)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2580 : une nuit IMPORTÉE n'est pas prise pour une nuit récupérée, même déposée")
+    void nuit_importee_n_est_pas_une_nuit_recuperee() {
+        service.importer(sd, idPoint, prefixe);
+        // Rattachement à une participation : c'est ce que pose un import connecté ou un dépôt.
+        Long idPassage = new PassageDao(source).findAll().getFirst().id();
+        new LienVigieChiroDao(source)
+                .upsert(new LienVigieChiro(
+                        LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), "6a53f5faae21902a597394d3"));
+
+        // Rattachée, donc reconnue par la première condition - mais elle A son audio. Sans la seconde
+        // condition (originaux sans fréquence), on l'aurait envoyée vers la réactivation, qui n'a rien à
+        // lui rendre.
+        assertThat(service.nuitRecuperee(SERIE, "2026-04-22"))
+                .as("elle a ses vrais originaux : ce n'est pas une nuit à réactiver")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2580 : une nuit RÉCUPÉRÉE de Vigie-Chiro est reconnue, elle, et rendue par son id")
+    void nuit_recuperee_est_reconnue() {
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .carre("640380")
+                .point("Z1")
+                .enregistreur(SERIE)
+                .nuit(7, 2026, "2026-04-22")
+                .semerSquelette();
+        new LienVigieChiroDao(source)
+                .upsert(new LienVigieChiro(
+                        LienVigieChiro.ENTITE_PASSAGE, String.valueOf(jeu.idPassage()), "6a53f5faae21902a597394d3"));
+
+        // Sans ce cas, la requête pourrait ne rien trouver JAMAIS et le test du cas négatif resterait
+        // vert : il faut les deux sens pour prouver qu'elle discrimine.
+        assertThat(service.nuitRecuperee(SERIE, "2026-04-22")).contains(jeu.idPassage());
+    }
+
+    @Test
+    @DisplayName("#2580 : une identité incomplète ne déclenche aucune détection")
+    void nuit_recuperee_sans_identite() {
+        assertThat(service.nuitRecuperee(null, "2026-04-22")).isEmpty();
+        assertThat(service.nuitRecuperee(SERIE, null)).isEmpty();
     }
 
     @Test

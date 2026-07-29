@@ -23,7 +23,7 @@ class ExportObservationsCsvTest {
 
         assertThat(csv).startsWith("\uFEFF");
         assertThat(csv).contains("Carré;Point;Site;Passage;Date;Fichier;Taxon Tadarida;Proba Tadarida");
-        assertThat(csv).contains("Statut;Référence;Douteux;Fréquence médiane (kHz)");
+        assertThat(csv).contains("Statut;Référence;Douteux;Espèce à enjeu;Fréquence médiane (kHz)");
         assertThat(csv).endsWith("\r\n");
     }
 
@@ -49,7 +49,7 @@ class ExportObservationsCsvTest {
 
         assertThat(csv)
                 .contains("640380;A1;Étang;2;2026-06-22;seqA_000.wav;Pippip;0,74;Nyclei;;;;0"
-                        + ";Pipistrelle commune;Chiroptères;Corrigée;oui;oui;45;0,50;3,80;Cri social net");
+                        + ";Pipistrelle commune;Chiroptères;Corrigée;oui;oui;non;45;0,50;3,80;Cri social net");
     }
 
     @Test
@@ -153,6 +153,52 @@ class ExportObservationsCsvTest {
 
     /// Construit une observation en fixant les champs testés ; identifiants, passage, date, fichier,
     /// nom Tadarida et heure de capture reçoivent des valeurs de démonstration constantes.
+    @Test
+    @DisplayName("#2353 : la colonne « Espèce à enjeu » suit le référentiel de conservation")
+    void colonne_espece_a_enjeu() {
+        // Le repère de l'écran doit survivre à la sortie du fichier : sans cette colonne, qui ouvre
+        // l'export dans un tableur devrait reconstituer l'information depuis une liste externe.
+        String csv =
+                ExportObservationsCsv.contenu(List.of(ligneSimple("Pippip"), ligneSimple("Barbar")), "Pippip"::equals);
+
+        assertThat(csv).contains("Espèce à enjeu");
+        String[] lignes = csv.split("\\R");
+        assertThat(lignes[1])
+                .as("Pipistrelle commune : prioritaire au plan national")
+                .contains(";oui;");
+        assertThat(lignes[2]).as("Barbastelle : non prioritaire").doesNotContain(";oui;non;oui;");
+    }
+
+    @Test
+    @DisplayName("Sans référentiel fourni, la colonne existe et vaut « non » partout")
+    void colonne_espece_a_enjeu_sans_referentiel() {
+        // L'ancienne signature reste utilisable : elle n'invente pas d'enjeu faute de référentiel.
+        String csv = ExportObservationsCsv.contenu(List.of(ligneSimple("Pippip")));
+
+        assertThat(csv).contains("Espèce à enjeu");
+        assertThat(csv.split("\\R")[1]).doesNotContain(";oui;non;oui");
+    }
+
+    /// Une ligne réduite à ce qui compte ici : le taxon retenu (posé par l'observateur).
+    private static LigneObservationAudio ligneSimple(String taxon) {
+        return ligne(
+                "640380",
+                "A1",
+                "Site",
+                taxon,
+                0.9,
+                taxon,
+                taxon,
+                "Chiroptères",
+                StatutObservation.VALIDEE,
+                false,
+                false,
+                null,
+                45,
+                0.0,
+                1.0);
+    }
+
     private static LigneObservationAudio ligne(
             String carre,
             String point,

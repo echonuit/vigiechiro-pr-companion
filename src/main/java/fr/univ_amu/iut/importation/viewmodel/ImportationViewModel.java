@@ -155,7 +155,7 @@ public class ImportationViewModel {
         this.marquageNuits = new MarquageNuitsImportees(
                 marquageOpportuniste, rattachement::estOpportuniste, campagnes, rattachement::idCampagneRetenue);
         // Pré-contrôle R5 proactif (#108) : observe lui-même le rattachement et entretient son état.
-        this.controleNumeroPassage = new ControleNumeroPassage(serviceImport, rattachement);
+        this.controleNumeroPassage = new ControleNumeroPassage(serviceImport, rattachement, inspection::identiteNuit);
         // Coordination multi-nuits (#…) : s'abonne au rattachement et à la table des nuits pour
         // auto-numéroter les nuits incluses et exposer la validité de cette numérotation.
         this.coordinationNuits = new CoordinationNuits(serviceImport, inspection, rattachement);
@@ -183,13 +183,14 @@ public class ImportationViewModel {
                         && rattachement.estComplet()
                         && (inspection.plusieursNuits()
                                 ? coordinationNuits.numerotationValideProperty().get()
-                                : !controleNumeroPassage.estDejaUtilise()),
+                                : !controleNumeroPassage.estBloque()),
                 inspection.inspecteProperty(),
                 inspection.plusieursNuitsProperty(),
                 rattachement.siteSelectionneProperty(),
                 rattachement.pointSelectionneProperty(),
                 rattachement.numeroPassageProperty(),
                 controleNumeroPassage.dejaUtiliseProperty(),
+                controleNumeroPassage.nuitRecupereeProperty(),
                 coordinationNuits.numerotationValideProperty());
     }
 
@@ -281,6 +282,9 @@ public class ImportationViewModel {
     /// l'inspection), remet l'exécution et l'aperçu à zéro.
     public void inspecter() {
         inspection.inspecter();
+        // Le pré-contrôle du n° dépend aussi de l'IDENTITÉ de la nuit inspectée, depuis #2580 : il ne
+        // suffit plus de l'écouter réagir au rattachement, il faut le relancer quand la nuit change.
+        controleNumeroPassage.verifier();
         if (inspection.estInspecte()) {
             rattachement.definirOriginaux(inspection.nomsOriginaux());
         } else {

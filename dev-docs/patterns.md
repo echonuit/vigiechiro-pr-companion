@@ -588,7 +588,12 @@ simple et plus lisible. Le critère est le **volume de sites de construction** c
 du record. Voir l'[ADR 2525](decisions/2525-un-fait-booleen-d-une-entite-centrale-vit-dans-une-table-laterale.md).
 
 **Occurrences.** V10 `passage_equipment` (matériel du micro), V34 `passage_opportuniste`, V35
-`site_tiers`.
+`site_tiers`, V36 `taxon_prioritaire` (espèces à enjeu de conservation, #2353).
+
+La dernière ajoute une raison que les trois autres n'avaient pas : sa liste vient d'une **source
+externe datée** — le Plan National d'Actions Chiroptères 2016-2025 — et **sera remplacée** quand le
+plan le sera. Une table latérale se remplace d'un `DELETE` suivi d'un `INSERT`, sans toucher au
+référentiel taxonomique qu'elle annote. Voir l'[ADR 2353](decisions/2353-l-enjeu-de-conservation-est-celui-que-le-plan-national-designe.md).
 
 ---
 

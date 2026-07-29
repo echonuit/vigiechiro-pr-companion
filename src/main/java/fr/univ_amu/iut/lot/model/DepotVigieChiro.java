@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
+import fr.univ_amu.iut.commun.api.SuiviReprise;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -16,6 +17,7 @@ import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 
 /// **Dépôt d'une nuit** (un passage) sur l'API VigieChiro (#142), **reprenable par unité** (#982) :
@@ -210,23 +213,25 @@ public final class DepotVigieChiro {
             basculerVers(idPassage, StatutWorkflow.DEPOT_EN_COURS);
         }
 
-        AtomicInteger deposees = new AtomicInteger();
-        List<String> echecs = Collections.synchronizedList(new ArrayList<>());
+        Cumul cumul = Cumul.neuf();
         // La source peut brider ce parallelisme (#1995) : une source qui **produit** ses fichiers borne
         // ainsi ce qui existe sur le disque a un instant donne. Le mode WAV, lui, garde les 5 envois.
         int plafond = Math.min(NB_UPLOADS_PARALLELES, source.parallelismeMax());
         int parallelisme = Math.max(1, Math.min(plafond, restantes.size()));
         try (ExecutorService executeur = Executors.newFixedThreadPool(parallelisme)) {
             for (DepotUnite unite : restantes) {
-                executeur.submit(
-                        () -> deposerUneUnite(unite, source, participationId, annule, suivi, deposees, echecs));
+                executeur.submit(() -> deposerUneUnite(unite, source, participationId, annule, suivi, cumul));
             }
         } // close() attend la fin de toutes les tâches soumises (ExecutorService AutoCloseable, Java 19+).
 
         if (depotUnites.toutesDeposees(idPassage)) {
             basculerVers(idPassage, StatutWorkflow.DEPOSE);
         }
-        return new BilanDepot(participationId, deposees.get(), List.copyOf(echecs));
+        return new BilanDepot(
+                participationId,
+                cumul.deposees().get(),
+                List.copyOf(cumul.echecs()),
+                cumul.octets().get());
     }
 
     /// Traite une unité dans un worker du dépôt parallèle (#984) : respecte l'annulation coopérative
@@ -240,34 +245,68 @@ public final class DepotVigieChiro {
             String participationId,
             BooleanSupplier annule,
             SuiviDepot suivi,
-            AtomicInteger deposees,
-            List<String> echecs) {
+            Cumul cumul) {
         if (annule.getAsBoolean()) {
             return;
         }
         try {
             Path fichier = source.resoudre(unite.identifiantUnite()).orElse(null);
-            if (televerserUne(unite, fichier, participationId, suivi, source)) {
-                deposees.incrementAndGet();
+            TeleverseurArchive.Resultat resultat =
+                    televerserUne(unite, fichier, participationId, suivi, source, annule);
+            if (resultat.reussi()) {
+                cumul.deposees().incrementAndGet();
+                // Le volume s'accumule ici et pas ailleurs : une unite comptee deposee est une unite dont
+                // les octets sont en ligne. Les compter a l'envoi les compterait aussi sur un echec.
+                cumul.octets().addAndGet(resultat.octets());
             } else {
-                echecs.add(unite.identifiantUnite());
+                cumul.echecs().add(unite.identifiantUnite());
             }
         } catch (RuntimeException erreur) {
-            echecs.add(unite.identifiantUnite());
+            cumul.echecs().add(unite.identifiantUnite());
+        }
+    }
+
+    /// Ce que le depot accumule pendant que ses unites partent **en parallele** (#984) : le nombre
+    /// deposees, les identifiants en echec, et le volume effectivement en ligne (#2653).
+    ///
+    /// Un objet plutot que trois parametres de plus : la methode qui traite une unite en portait deja
+    /// sept, et trois accumulateurs voyageant ensemble sont un concept, pas une liste d'arguments.
+    /// Tous **thread-safe** : plusieurs envois y ecrivent en meme temps.
+    private record Cumul(AtomicInteger deposees, List<String> echecs, AtomicLong octets) {
+        static Cumul neuf() {
+            return new Cumul(new AtomicInteger(), Collections.synchronizedList(new ArrayList<>()), new AtomicLong());
         }
     }
 
     /// Téléverse une unité en persistant son avancement au fil de l'eau : `en_cours` avant l'envoi,
     /// `depose` (avec l'id distant) ou `echec` (avec la raison) après. `false` en cas d'échec.
-    private boolean televerserUne(
-            DepotUnite unite, Path fichier, String participationId, SuiviDepot suivi, SourceDepot source) {
+    private TeleverseurArchive.Resultat televerserUne(
+            DepotUnite unite,
+            Path fichier,
+            String participationId,
+            SuiviDepot suivi,
+            SourceDepot source,
+            BooleanSupplier annule) {
         depotUnites.mettreAJour(unite.id(), StatutDepotUnite.EN_COURS, unite.fichierIdDistant(), null, maintenant());
         suivi.uniteDemarree(unite.identifiantUnite());
         TeleverseurArchive.Resultat resultat = televerseur.televerser(
                 fichier,
                 participationId,
                 fraction -> suivi.uniteProgresse(unite.identifiantUnite(), fraction),
-                (tentative, delai) -> suivi.uniteReprise(unite.identifiantUnite(), delai));
+                new SuiviReprise() {
+                    @Override
+                    public void nouvelleTentative(int tentative, Duration delai) {
+                        suivi.uniteReprise(unite.identifiantUnite(), delai);
+                    }
+
+                    // Le drapeau est AUSSI lu pendant la temporisation (#2686) : le dépôt ne le
+                    // consulte qu'entre deux unités, et une reprise à l'intérieur d'un envoi serait
+                    // sinon une attente que « Annuler » ne traverse pas.
+                    @Override
+                    public boolean renonce() {
+                        return annule.getAsBoolean();
+                    }
+                });
         if (resultat.reussi()) {
             depotUnites.mettreAJour(unite.id(), StatutDepotUnite.DEPOSE, resultat.fichierId(), null, maintenant());
             suivi.uniteDeposee(depotUnites.findById(unite.id()).orElse(unite));
@@ -275,11 +314,11 @@ public final class DepotVigieChiro {
             // Apres le commit et jamais avant, sinon une coupure laisserait une unite ni en ligne ni sur
             // le disque - la reprise la regenererait, mais on aurait perdu la preuve de l'envoi.
             source.liberer(unite.identifiantUnite());
-            return true;
+            return resultat;
         }
         depotUnites.mettreAJour(unite.id(), StatutDepotUnite.ECHEC, null, resultat.raison(), maintenant());
         suivi.uniteEchouee(unite.identifiantUnite(), resultat.raison());
-        return false;
+        return resultat;
     }
 
     /// Refuse de reprendre un dépôt dont la **liste source a changé** depuis que le plan a été posé

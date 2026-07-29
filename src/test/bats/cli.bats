@@ -170,6 +170,30 @@ setup() {
   [[ "${output}" == *"s'excluent"* ]]
 }
 
+@test "lister-observations --a-enjeu : l option existe et le filtre passe, exit 0 (#2353)" {
+  # Base jetable sans observation : la liste est vide, ce qui reste un resultat valide. Le test prouve ce
+  # qu aucun test Java ne voit : le fat-jar declare l option et sait resoudre le referentiel de
+  # conservation (port EspecesPrioritaires) au moment ou la selection s applique.
+  run cli lister-observations --passage 1 --a-enjeu
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Aucune observation"* ]]
+}
+
+@test "lister-observations --a-enjeu : l aide decrit le filtre (#2353)" {
+  run cli lister-observations --help
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"--a-enjeu"* ]]
+  [[ "${output}" == *"prioritaires"* ]]
+}
+
+@test "valider-observations --a-enjeu : le meme filtre vise les gestes de revue (#2353)" {
+  # La promesse de SelectionObservations : le MEME code choisit, pour lister et pour agir. Le geste doit
+  # donc connaitre le filtre, sinon « lister puis valider » ne verrait pas le meme ensemble.
+  run cli valider-observations --passage 1 --a-enjeu
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Aucune observation"* ]]
+}
+
 @test "exporter-activite : ecrit le CSV d activite sur une base vide, exit 0 (#2352)" {
   # Base jetable sans observation : le CSV se reduit a ses en-tetes, ce qui reste un resultat valide.
   # Le test prouve ce que le test Java in-process ne voit pas : le fat-jar sait produire le fichier.

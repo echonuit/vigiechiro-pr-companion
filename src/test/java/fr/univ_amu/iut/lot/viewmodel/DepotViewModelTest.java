@@ -118,10 +118,14 @@ class DepotViewModelTest {
         // Bilan « sans échec » de la tentative : sans le drapeau, il serait pris pour un dépôt complet.
         vm.appliquerBilan(new BilanDepot("part-1", 1, List.of()));
 
-        assertThat(vm.retourProperty().get().texte())
-                .contains("interrompu")
-                .contains("1/2")
-                .contains("Reprendre le dépôt");
+        // Depuis #2653 la fin de dépôt passe par la bande, pas par le bandeau d'une ligne. Ce qui est
+        // vérifié ici reste le même fait : l'interruption est PORTÉE, sans quoi une tentative sans échec
+        // se lirait comme un dépôt complet.
+        DepotViewModel.FinDepot fin = vm.finDepotProperty().get();
+        assertThat(fin).isNotNull();
+        assertThat(fin.plan().interrompu()).isTrue();
+        assertThat(fin.plan().enLigne()).isEqualTo(1);
+        assertThat(fin.plan().unitesDuPlan()).isEqualTo(2);
         assertThat(vm.enCoursProperty().get()).isFalse();
     }
 
@@ -293,6 +297,20 @@ class DepotViewModelTest {
     }
 
     @Test
+    @DisplayName("#2653 : le compte rendu ne dit jamais MOINS que ce que la tentative vient de déposer")
+    void le_plan_ne_sous_estime_pas_ce_qui_vient_de_partir() {
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+        // Table de suivi vide : c'est le cas d'un relais en retard sur le moteur. Sans plancher, la bande
+        // annoncerait « 0 déposées » juste après avoir mis trois archives en ligne.
+        vm.appliquerBilan(new BilanDepot("part-1", 3, List.of()));
+
+        assertThat(vm.finDepotProperty().get().plan().enLigne()).isEqualTo(3);
+        assertThat(vm.finDepotProperty().get().plan().unitesDuPlan())
+                .as("le total suit le plancher, sinon la ventilation ne serait pas exhaustive")
+                .isEqualTo(3);
+    }
+
+    @Test
     @DisplayName("cycle d'état IHM : en cours → bilan complet / partiel / échec")
     void cycle_etat_ihm() {
         DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
@@ -308,14 +326,17 @@ class DepotViewModelTest {
 
         vm.appliquerBilan(new BilanDepot("p", 5, List.of()));
         assertThat(vm.enCoursProperty().get()).isFalse();
-        assertThat(vm.retourProperty().get().texte()).contains("5 fichier");
-        assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
+        // #2653 : le résultat n'est plus une phrase dans le bandeau, c'est le bilan entier que la vue
+        // traduira. Le bandeau reste au service des ERREURS et des autres opérations de l'écran.
+        assertThat(vm.finDepotProperty().get().bilan().deposees()).isEqualTo(5);
+        assertThat(vm.retourProperty().get().texte())
+                .as("un dépôt réussi ne laisse plus de bandeau : la bande le dit mieux")
+                .isEmpty();
 
         vm.appliquerBilan(new BilanDepot("p", 3, List.of("x.wav")));
-        assertThat(vm.retourProperty().get().texte()).contains("échec");
-        assertThat(vm.retourProperty().get().severite())
-                .as("#1890 : un dépôt partiel ne ment ni dans un sens ni dans l'autre")
-                .isEqualTo(Severite.INFO);
+        // #1890 conservé, déplacé : un dépôt partiel ne ment ni dans un sens ni dans l'autre. Ce n'est
+        // plus la sévérité d'un bandeau qui le porte mais celle du compte rendu, décidée à la traduction.
+        assertThat(vm.finDepotProperty().get().bilan().echecs()).containsExactly("x.wav");
 
         vm.echec("Token expiré");
         assertThat(vm.enCoursProperty().get()).isFalse();

@@ -318,7 +318,10 @@ class SonsValidationViewTest {
         ZonesStatut zones = controleur.zonesStatutProperty().get();
         assertThat(zones.gauche()).isEqualTo("Sons de référence");
         assertThat(zones.centre()).isEqualTo("2 observation(s)");
-        assertThat(zones.droite()).isEqualTo("2 / 2 revues");
+        // La droite porte l'avancement ET le compteur d'espèces à enjeu (#2353), séparés par un point
+        // médian : les deux répondent à « que me reste-t-il à faire ? ». Seule Pippip est prioritaire ici,
+        // et les deux lignes sont validées.
+        assertThat(zones.droite()).isEqualTo("2 / 2 revues · 1 à enjeu, toutes revues");
     }
 
     @Test
