@@ -123,4 +123,47 @@ class CompteRenduChiffreDepotTest {
     private static List<String> textes(CompteRenduChiffre rendu) {
         return rendu.avertissements().stream().map(Avertissement::texte).toList();
     }
+
+    @Test
+    @DisplayName("plan inconnu : le total se reconstitue de ce que la tentative a vu passer")
+    void plan_inconnu_le_total_se_reconstitue_de_la_tentative() {
+        BilanDepot bilan = new BilanDepot("p-1", 9, List.of("Car-10.zip", "Car-11.zip"), 1L);
+
+        // `unitesDuPlan = 0` : le plan n'a pas été relu. Le total reste vrai parce qu'il additionne
+        // ce qui est en ligne ET ce qui a échoué - une soustraction rendrait « 7 sur 5 ».
+        CompteRenduChiffre rendu = traduire(bilan, plan(0, 7, false));
+
+        assertThat(rendu.resultat()).isEqualTo("7 / 9 déposées");
+    }
+
+    @Test
+    @DisplayName("un dépôt vide ne s'annonce pas comme entièrement en ligne")
+    void un_depot_vide_ne_s_annonce_pas_comme_en_ligne() {
+        BilanDepot bilan = new BilanDepot("p-1", 0, List.of(), 0L);
+
+        CompteRenduChiffre rendu = traduire(bilan, plan(0, 0, false));
+
+        // 0 == 0 est vrai, et pourtant il n'y a rien en ligne : sans le garde sur le total, le succès
+        // « Toutes les archives sont sur Vigie-Chiro » s'afficherait sur un dépôt qui n'a rien déposé.
+        assertThat(textes(rendu)).noneMatch(texte -> texte.contains("Toutes les archives"));
+    }
+
+    @Test
+    @DisplayName("un dépôt qui a échoué quelque part ne se dit pas complet")
+    void un_depot_avec_echec_ne_se_dit_pas_complet() {
+        assertThat(new BilanDepot("p-1", 9, List.of("Car-10.zip"), 1L).estComplet())
+                .isFalse();
+        assertThat(new BilanDepot("p-1", 9, List.of(), 1L).estComplet()).isTrue();
+    }
+
+    @Test
+    @DisplayName("le titre dit la fin qu'on a eue : un dépôt interrompu ne s'intitule pas « nuit déposée »")
+    void le_titre_dit_la_fin_qu_on_a_eue() {
+        BilanDepot bilan = new BilanDepot("p-1", 9, List.of(), 1L);
+
+        // Le titre est la première chose lue, avant les barres : s'il annonce une nuit déposée alors que
+        // l'utilisateur a interrompu, le reste du panneau argumente contre son propre en-tête.
+        assertThat(traduire(bilan, plan(9, 4, true)).titre()).isEqualTo("Dépôt interrompu");
+        assertThat(traduire(bilan, plan(9, 9, false)).titre()).isEqualTo("Nuit déposée sur Vigie-Chiro");
+    }
 }

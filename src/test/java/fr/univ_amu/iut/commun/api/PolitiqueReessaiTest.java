@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -107,9 +108,14 @@ class PolitiqueReessaiTest {
         assertThat(politique.delaiAvantReprise(Profil.INSISTANT, 10, Optional.empty()))
                 .isEqualTo(Duration.ofMillis(4000));
         // Aléa quasi maximal : on approche le plafond sans jamais le dépasser.
+        //
+        // Valeur EXACTE, et non un intervalle : `isBetween(4000, 8000)` avait pour borne basse le délai
+        // sans aléa, donc acceptait un aléa nul - précisément ce que ce test prétend écarter. PIT l'a
+        // montré en remplaçant la multiplication de l'aléa par une division : le délai retombait à
+        // 4000 ms et l'assertion restait verte. Sans aléa, N clients reprennent en cadence.
         PolitiqueReessai avecAlea = new PolitiqueReessai(enregistreur, () -> 0.999);
         assertThat(avecAlea.delaiAvantReprise(Profil.INSISTANT, 10, Optional.empty()))
-                .isBetween(Duration.ofMillis(4000), Duration.ofMillis(8000));
+                .isEqualTo(Duration.ofMillis(7996));
     }
 
     @Test
@@ -198,5 +204,54 @@ class PolitiqueReessaiTest {
         systeme.attendre(Duration.ofSeconds(1), () -> false);
 
         assertThat(tranches).containsExactly(Duration.ofSeconds(1));
+    }
+
+    @Test
+    @DisplayName("#2686 : l'attente de production est découpée en tranches, pas dormie d'un bloc")
+    void l_attente_de_production_est_decoupee_en_tranches() throws InterruptedException {
+        List<Duration> tranches = new ArrayList<>();
+
+        Temporisateur.dormant(tranches::add).attendre(Duration.ofSeconds(1), () -> false);
+
+        // Cinq tranches de 200 ms plutôt qu'un sommeil d'une seconde : c'est ce découpage qui donne
+        // au renoncement cinq occasions d'être vu au lieu d'une seule, à la fin.
+        assertThat(tranches)
+                .as("une attente d'une seconde se dort en tranches de 200 ms")
+                .containsExactly(
+                        Duration.ofMillis(200),
+                        Duration.ofMillis(200),
+                        Duration.ofMillis(200),
+                        Duration.ofMillis(200),
+                        Duration.ofMillis(200));
+    }
+
+    @Test
+    @DisplayName("#2686 : une attente plus courte qu'une tranche se dort d'un seul coup")
+    void une_attente_plus_courte_qu_une_tranche_se_dort_d_un_coup() throws InterruptedException {
+        List<Duration> tranches = new ArrayList<>();
+
+        Temporisateur.dormant(tranches::add).attendre(Duration.ofMillis(50), () -> false);
+
+        // Sans quoi la dernière tranche d'une attente non multiple dormirait TROP longtemps.
+        assertThat(tranches).containsExactly(Duration.ofMillis(50));
+
+        // Et l'attente NON surveillée dort le délai d'un bloc : c'est la même source de sommeil, mais
+        // rien ne la découpe puisque personne n'écoute un renoncement.
+        tranches.clear();
+        Temporisateur.dormant(tranches::add).attendre(Duration.ofSeconds(3));
+        assertThat(tranches).containsExactly(Duration.ofSeconds(3));
+    }
+
+    @Test
+    @DisplayName("#2686 : le renoncement arrête l'attente en cours, sans dormir le reste")
+    void le_renoncement_arrete_l_attente_en_cours() throws InterruptedException {
+        List<Duration> tranches = new ArrayList<>();
+        // Renonce après la deuxième tranche : c'est l'utilisateur qui clique « Annuler » pendant l'attente.
+        BooleanSupplier apresDeuxTranches = () -> tranches.size() >= 2;
+
+        Temporisateur.dormant(tranches::add).attendre(Duration.ofSeconds(10), apresDeuxTranches);
+
+        // 400 ms au lieu de 10 s : sans ce contrôle, « Annuler » resterait sans effet jusqu'au bout.
+        assertThat(tranches).containsExactly(Duration.ofMillis(200), Duration.ofMillis(200));
     }
 }
