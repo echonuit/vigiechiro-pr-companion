@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.116.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.116.1...v2.116.2) (2026-07-29)
+
+
+### Bug Fixes
+
+* **ci:** le minion de PIT recoit les butoirs TestFX, et un test le tient ([#2780](https://github.com/echonuit/vigiechiro-pr-companion/issues/2780)) ([38ae1fc](https://github.com/echonuit/vigiechiro-pr-companion/commit/38ae1fcedae8cc5571312963ed3ed6b6ea3db696)), closes [#2120](https://github.com/echonuit/vigiechiro-pr-companion/issues/2120)
+
 ## [2.116.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.116.0...v2.116.1) (2026-07-29)
 
 
