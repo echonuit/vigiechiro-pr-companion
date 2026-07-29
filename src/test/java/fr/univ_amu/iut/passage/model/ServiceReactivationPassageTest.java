@@ -145,7 +145,7 @@ class ServiceReactivationPassageTest {
                         Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                         Optional.empty(), // pas d'import : pas de phase d'ancrage (comportement historique)
                         Optional.empty()),
-                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage())); // pas d'hydratation (#2555)
+                new SortieDeRecuperation(passageDao)); // pas d'hydratation (#2555)
     }
 
     @Test
@@ -178,6 +178,73 @@ class ServiceReactivationPassageTest {
                     .as("le dossier de l'utilisateur est laissé intact : ni copie ni déplacement")
                     .isEqualTo(fichiersAvant);
         }
+    }
+
+    @Test
+    @DisplayName("#2581 : la réactivation fait SORTIR une nuit récupérée de son statut - la vraie, pas la règle seule")
+    void reactivation_fait_sortir_du_statut_recupere() throws IOException {
+        archiverAvecSauvegarde(true, true);
+        poserStatut(StatutWorkflow.RECUPERE);
+
+        service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        // `SortieDeRecuperationTest` vérifie la RÈGLE ; celui-ci vérifie qu'elle est CÂBLÉE. Débrancher le
+        // collaborateur de ServiceReactivationPassage laisserait l'autre test parfaitement vert.
+        assertThat(passageDao.findById(idPassage).orElseThrow().statutWorkflow())
+                .as("son audio est revenu : elle a cessé d'être le squelette que la synchro avait rapatrié")
+                .isEqualTo(StatutWorkflow.DEPOSE);
+        assertThat(disponibilite.disponibilite(idPassage)).isEqualTo(DisponibiliteAudio.COMPLETE);
+    }
+
+    @Test
+    @DisplayName("#2581 : une réactivation qui ne rebranche RIEN laisse la nuit en « Récupéré »")
+    void reactivation_infructueuse_laisse_le_statut() throws IOException {
+        archiverAvecSauvegarde(true, true);
+        poserStatut(StatutWorkflow.RECUPERE);
+        Path vide = Files.createDirectories(dossier.resolve("dossier-sans-audio"));
+
+        service.reactiver(idPassage, vide, progres -> {});
+
+        // Promouvoir ici dirait « c'est réglé » d'une nuit toujours muette, et lui retirerait au passage la
+        // recommandation « Réactiver » qui la désignait.
+        assertThat(passageDao.findById(idPassage).orElseThrow().statutWorkflow())
+                .as("rien n'est revenu : elle reste ce qu'elle est")
+                .isEqualTo(StatutWorkflow.RECUPERE);
+    }
+
+    @Test
+    @DisplayName("#2581 : réactiver une nuit ORDINAIRE ne la fait pas avancer dans le workflow")
+    void reactivation_d_une_nuit_ordinaire_ne_change_pas_son_statut() throws IOException {
+        archiverAvecSauvegarde(true, true);
+        poserStatut(StatutWorkflow.VERIFIE);
+
+        service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(passageDao.findById(idPassage).orElseThrow().statutWorkflow())
+                .as("retrouver son audio n'est pas franchir une étape")
+                .isEqualTo(StatutWorkflow.VERIFIE);
+    }
+
+    /// Repose le statut du passage de la fixture. Le moteur interdit les transitions arrière ; on écrit
+    /// donc directement, comme le fait la réinitialisation de `ServiceLot`.
+    private void poserStatut(StatutWorkflow statut) {
+        Passage passage = passageDao.findById(idPassage).orElseThrow();
+        passageDao.update(new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                passage.dateEnregistrement(),
+                passage.heureDebut(),
+                passage.heureFin(),
+                passage.parametresAcquisition(),
+                statut,
+                passage.verdictVerification(),
+                passage.commentaire(),
+                passage.donneesMeteo(),
+                passage.deposeLe(),
+                passage.idPoint(),
+                passage.idEnregistreur(),
+                passage.idCampagne()));
     }
 
     @Test
@@ -385,7 +452,7 @@ class ServiceReactivationPassageTest {
                         Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                         Optional.of(importObservations),
                         Optional.empty()),
-                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage()));
+                new SortieDeRecuperation(passageDao));
     }
 
     @Test
@@ -485,7 +552,7 @@ class ServiceReactivationPassageTest {
                         Optional.empty(),
                         Optional.empty(),
                         Optional.empty()),
-                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage()));
+                new SortieDeRecuperation(passageDao));
 
         avecCris.reactiver(idPassage, sauvegarde, progres -> {});
 
@@ -619,7 +686,7 @@ class ServiceReactivationPassageTest {
                 disponibilite,
                 adoption,
                 AppuisReactivation.aucun(),
-                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage()));
+                new SortieDeRecuperation(passageDao));
 
         assertThatThrownBy(() -> sansRegeneration.reactiver(idPassage, sauvegarde, progres -> {}))
                 .isInstanceOf(RegleMetierException.class)
@@ -712,7 +779,7 @@ class ServiceReactivationPassageTest {
                         Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                         Optional.empty(),
                         Optional.empty()),
-                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage()));
+                new SortieDeRecuperation(passageDao));
 
         RapportReactivation rapport = avecCris.reactiver(idPassage, sauvegarde, progres -> {});
 
