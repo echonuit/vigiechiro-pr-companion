@@ -57,7 +57,7 @@ final class ColonnesAnalyse {
     /// porter à côté.
     static void especes(Especes col, MarqueurEspecesAEnjeu marqueurEnjeu) {
         col.espece().setCellValueFactory(c -> texte(FormatAnalyse.libelleEspece(c.getValue())));
-        col.espece().setCellFactory(colonne -> CelluleEspeceAEnjeu.cellule(marqueurEnjeu));
+        col.espece().setCellFactory(colonne -> CelluleEspeceAEnjeu.pourInventaire(marqueurEnjeu));
         col.groupe()
                 .setCellValueFactory(
                         c -> texte(FormatAnalyse.ouTiret(c.getValue().groupe())));
