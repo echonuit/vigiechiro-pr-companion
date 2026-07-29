@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.119.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.118.1...v2.119.0) (2026-07-29)
+
+
+### Features
+
+* **passage:** le statut « Récupéré » existe, hors de la file linéaire ([#2799](https://github.com/echonuit/vigiechiro-pr-companion/issues/2799)) ([f7f8aa0](https://github.com/echonuit/vigiechiro-pr-companion/commit/f7f8aa022d2fa14ebfdbe5f6db3a62e3c2fe7a66)), closes [#2581](https://github.com/echonuit/vigiechiro-pr-companion/issues/2581)
+
 ## [2.118.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.118.0...v2.118.1) (2026-07-29)
 
 
