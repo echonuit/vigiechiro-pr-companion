@@ -98,7 +98,7 @@ class ReconstructionViewModelTest {
     @DisplayName("#1708 import groupé : le viewModel DÉLÈGUE au service (la boucle y vit) et restitue son bilan")
     void reconstruire_tout_delegue_au_service_et_restitue() {
         ServiceReconstructionPassages service = mock(ServiceReconstructionPassages.class);
-        BilanReconstructionGroupe bilan = new BilanReconstructionGroupe(2, 1, 15, 28);
+        BilanReconstructionGroupe bilan = new BilanReconstructionGroupe(2, 1, 15, 28, false);
         when(service.reconstruireTout(any(), any(), any(), any(), any())).thenReturn(bilan);
         ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.of(service));
 
@@ -113,6 +113,24 @@ class ReconstructionViewModelTest {
         assertThat(viewModel.reconstruitProperty().get())
                 .as("au moins une nuit reconstruite : l'appelant doit recharger sa table")
                 .isTrue();
+    }
+
+    @Test
+    @DisplayName("Un lot INTERROMPU dit ce qui a été fait, et ne se présente pas comme un succès")
+    void lot_interrompu_ne_se_presente_pas_en_succes() {
+        // Le message d'avant affirmait « aucune nuit n'a été complétée » : vrai pour UNE nuit, qui se
+        // compense, faux pour un lot, dont la compensation est par nuit.
+        ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.empty());
+
+        viewModel.restituerLot(new BilanReconstructionGroupe(2, 0, 20, 41, true));
+
+        assertThat(viewModel.retourProperty().get().texte())
+                .contains("Import interrompu.")
+                .contains("2 nuit(s) complétée(s)")
+                .contains("intactes");
+        assertThat(viewModel.retourProperty().get().severite())
+                .as("l'utilisateur a renoncé : une pastille verte le féliciterait de s'être arrêté")
+                .isEqualTo(Severite.INFO);
     }
 
     @Test

@@ -12,13 +12,13 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 ///
 /// Les **fonctionnalités** font exception, et le message le dit franchement : elles se règlent dans
 /// l'application, pas ici. Mieux vaut renvoyer à l'endroit qui existe que d'inventer une commande.
-final class GesteAttenduCli {
+public final class GesteAttenduCli {
 
     private GesteAttenduCli() {}
 
     /// Le message complet d'un refus pour un terminal : ce qui manque, puis quoi taper. Un refus sans
     /// besoin est rendu tel quel.
-    static String message(Throwable refus) {
+    public static String message(Throwable refus) {
         String enonce = refus.getMessage() == null ? "Le geste est impossible." : refus.getMessage();
         if (!(refus instanceof RegleMetierException metier) || metier.besoin().isEmpty()) {
             return enonce;

@@ -116,6 +116,7 @@ nav:
     - 2465 · Une ADR déclare comment elle est vérifiée: decisions/2465-une-adr-declare-comment-elle-est-verifiee.md
     - 2493 · Une modale à révélation suit la croissance: decisions/2493-une-modale-a-revelation-suit-la-croissance.md
     - 2554 · La synchro amène chaque nuit à un niveau de complétude: decisions/2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md
+    - 2357 · Un traitement en lot compose des gestes unitaires: decisions/2357-un-traitement-en-lot-compose-des-gestes-unitaires.md
     - 2635 · Un refus dit ce qui manque, la surface dit quoi faire: decisions/2635-un-refus-dit-ce-qui-manque-la-surface-dit-quoi-faire.md
     - 2614 · Une nuit hors protocole se filtre: decisions/2614-une-nuit-hors-protocole-se-filtre-au-lieu-de-se-fondre.md
     - 2353 · L'enjeu de conservation est celui que le plan national désigne: decisions/2353-l-enjeu-de-conservation-est-celui-que-le-plan-national-designe.md

@@ -51,7 +51,7 @@ class ReconstruirePassageTest {
                     NUIT_1, new RapportReconstruction(1L, 10, 20, RapportReconstruction.lacunesConnues())));
             issue.accept(new IssueNuit.Reconstruite(
                     NUIT_2, new RapportReconstruction(2L, 5, 8, RapportReconstruction.lacunesConnues())));
-            return new BilanReconstructionGroupe(2, 0, 15, 28);
+            return new BilanReconstructionGroupe(2, 0, 15, 28, false);
         });
         StringWriter sortie = new StringWriter();
 
@@ -76,7 +76,7 @@ class ReconstruirePassageTest {
             issue.accept(new IssueNuit.Reconstruite(
                     NUIT_1, new RapportReconstruction(1L, 10, 20, RapportReconstruction.lacunesConnues())));
             issue.accept(new IssueNuit.Ignoree(NUIT_2, "Le point d'écoute n'existe pas localement."));
-            return new BilanReconstructionGroupe(1, 1, 10, 20);
+            return new BilanReconstructionGroupe(1, 1, 10, 20, false);
         });
         StringWriter sortie = new StringWriter();
 

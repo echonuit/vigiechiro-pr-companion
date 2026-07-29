@@ -3,9 +3,11 @@ package fr.univ_amu.iut.multisite.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.ActionGroupee;
+import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.CiblePassage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
@@ -17,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import javafx.stage.Window;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -90,6 +93,7 @@ class TraitementLotTest {
         private final List<Long> aEcarter;
         private final List<Long> aEchouer;
         private final List<Long> executes = new ArrayList<>();
+        private Supplier<RuntimeException> leve = () -> new IllegalStateException("disque plein");
 
         ActionDouble(List<Long> aEcarter, List<Long> aEchouer) {
             this.aEcarter = aEcarter;
@@ -110,7 +114,7 @@ class TraitementLotTest {
         public void executer(CiblePassage cible, JetonAnnulation jeton) {
             executes.add(cible.idPassage());
             if (aEchouer.contains(cible.idPassage())) {
-                throw new IllegalStateException("disque plein");
+                throw leve.get();
             }
         }
     }
@@ -203,6 +207,26 @@ class TraitementLotTest {
 
         assertThat(notificateur.niveau).isEqualTo(NiveauNotification.INFORMATION);
         assertThat(notificateur.message).contains("1 réussi(s)");
+    }
+
+    @Test
+    @DisplayName("ADR 2635 : un refus d'environnement arrive dans le compte rendu AVEC son geste")
+    void un_refus_d_environnement_porte_son_geste() {
+        NotificateurDouble notificateur = new NotificateurDouble();
+        ActionDouble action = new ActionDouble(List.of(), List.of(1L, 2L));
+        // Le jeton expire en cours de lot : les passages restants échouent tous sur le même besoin.
+        action.leve = () -> new RegleMetierException(
+                "Les observations de cette nuit n'ont pas pu être lues : l'application n'est pas"
+                        + " connectée à Vigie-Chiro.",
+                new Besoin.Connexion());
+
+        new TraitementLot(new ConfirmateurDouble(true), notificateur, new SuiviDouble(false))
+                .lancer(null, action, List.of(ligne(1, "A1"), ligne(2, "B2")), () -> {});
+
+        assertThat(notificateur.message)
+                .as("le fait vient du modèle, le geste de l'application : sans lui, vingt refus sans remède")
+                .contains("n'est pas connectée à Vigie-Chiro.")
+                .contains("menu ☰ > Se connecter à Vigie-Chiro");
     }
 
     @Test

@@ -78,6 +78,10 @@ public class TeleversementGroupe implements ActionGroupee {
         return Optional.empty();
     }
 
+    /// Le `orElseThrow` est une **garde de ceinture**, inatteignable par le moteur : il ne lance une
+    /// action qu'après un [#motifNonEligible] vide, qui écarte déjà le hors-connexion. Elle reste parce
+    /// que le contrat est public et qu'un futur appelant pourrait s'en passer. PIT la signale en
+    /// permanence comme non couverte : c'est **assumé**, la couvrir demanderait un test creux.
     @Override
     public void executer(CiblePassage cible, JetonAnnulation jeton) {
         depot.orElseThrow(() -> new RegleMetierException("Hors connexion à Vigie-Chiro."))

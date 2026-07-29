@@ -37,15 +37,6 @@ public record IssueTraitement(CiblePassage cible, Statut statut, String motif) {
         return new IssueTraitement(cible, Statut.NON_TRAITE, "Lot interrompu avant ce passage");
     }
 
-    /// Sévérité à afficher pour cette issue dans le compte rendu.
-    public Severite severite() {
-        return switch (statut) {
-            case REUSSI -> Severite.SUCCES;
-            case ECARTE, NON_TRAITE -> Severite.AVERTISSEMENT;
-            case ECHEC -> Severite.ERREUR;
-        };
-    }
-
     /// Le sort d'un passage dans un traitement groupé.
     public enum Statut {
         /// Action exécutée sans erreur.

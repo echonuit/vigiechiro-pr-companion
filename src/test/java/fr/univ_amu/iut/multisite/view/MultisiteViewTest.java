@@ -412,6 +412,41 @@ class MultisiteViewTest {
     }
 
     @Test
+    @DisplayName("#2357 : les entrées de lot disent COMBIEN de lignes sont cochées, et s activent avec elles")
+    void entrees_de_lot_suivent_la_selection(FxRobot robot) {
+        // Ce que ce test tient est une formulation, et c est bien un defaut de formulation qui est passe :
+        // « Preparer le depot la selection… », ne en factorisant des libelles a partir d un verbe. Aucun
+        // test ne regardait ces textes ; seule la capture les montrait.
+        TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
+        List<MenuItem> items =
+                robot.lookup("#menuActions").queryAs(MenuButton.class).getItems();
+        List<MenuItem> lot = List.of(items.get(4), items.get(5), items.get(6), items.get(7));
+
+        assertThat(lot)
+                .as("rien de coche : les quatre entrees sont grisees et disent ce qui leur manque")
+                .allSatisfy(item -> {
+                    assertThat(item.isDisable()).isTrue();
+                    assertThat(item.getText()).endsWith("(aucune ligne cochee)".replace("coche", "coché"));
+                });
+
+        robot.interact(() -> table.getSelectionModel().selectRange(0, 2));
+
+        assertThat(lot).allSatisfy(item -> assertThat(item.isDisable()).isFalse());
+        assertThat(lot.stream().map(MenuItem::getText))
+                .containsExactly(
+                        "Préparer le dépôt des 2 lignes cochées…",
+                        "Téléverser les 2 lignes cochées…",
+                        "Importer les résultats des 2 lignes cochées…",
+                        "Déclencher le calcul des 2 lignes cochées…");
+
+        robot.interact(() -> table.getSelectionModel().clearAndSelect(0));
+
+        assertThat(lot.stream().map(MenuItem::getText))
+                .as("le singulier a sa propre formulation : « 1 lignes cochées » se lirait comme un defaut")
+                .allSatisfy(texte -> assertThat(texte).doesNotContain("1 lignes"));
+    }
+
+    @Test
     @DisplayName("« Écouter le passage sélectionné » ouvre la vue audio sur ce passage (ParPassage)")
     void ecouter_le_passage_ouvre_par_passage(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);

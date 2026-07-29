@@ -192,8 +192,14 @@ public class ReconstructionViewModel {
     public void restituerLot(ServiceReconstructionPassages.BilanReconstructionGroupe bilan) {
         Objects.requireNonNull(bilan, "bilan");
         reconstruit.set(bilan.reussies() > 0);
-        String rendu = bilan.reussies() + " nuit(s) complétée(s) : " + bilan.sequences() + " séquence(s), "
-                + bilan.observations() + " observation(s) rapatriée(s).";
+        String rendu = (bilan.interrompu() ? "Import interrompu. " : "") + bilan.reussies()
+                + " nuit(s) complétée(s) : " + bilan.sequences() + " séquence(s), " + bilan.observations()
+                + " observation(s) rapatriée(s).";
+        if (bilan.interrompu()) {
+            rendu += System.lineSeparator()
+                    + "Les nuits non commencées sont intactes et restent dans la liste : relancez l'import"
+                    + " quand vous voulez.";
+        }
         if (bilan.ignorees() > 0) {
             rendu += System.lineSeparator() + bilan.ignorees()
                     + " nuit(s) ignorée(s) (point d'écoute inconnu ici, ou analyse non terminée) : elles restent"
@@ -202,7 +208,9 @@ public class ReconstructionViewModel {
         rendu += System.lineSeparator()
                 + "Ces nuits sont consultables mais pas écoutables (le dépôt ZIP ne restitue"
                 + " pas l'audio). Réactivez-les si vous retrouvez les fichiers d'origine.";
-        retour.set(RetourOperation.succes(rendu));
+        // Un lot interrompu n'est pas un succès : l'utilisateur a renoncé, et une pastille verte le
+        // féliciterait de s'être arrêté. Ce n'est pas une erreur non plus - d'où l'information.
+        retour.set(bilan.interrompu() ? RetourOperation.info(rendu) : RetourOperation.succes(rendu));
     }
 
     /// Route un échec vers le message de la modale : un refus (point inconnu, hors connexion, analyse non

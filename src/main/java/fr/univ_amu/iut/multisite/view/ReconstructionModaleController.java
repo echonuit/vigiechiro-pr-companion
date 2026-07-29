@@ -305,11 +305,15 @@ public class ReconstructionModaleController {
                     charger(); // recharge : les reconstruites disparaissent, les ignorées restent
                 },
                 () -> {
+                    // Chemin résiduel : depuis la clôture du lot 3, un lot annulé RESTITUE son bilan par
+                    // la branche de succès. On recharge quand même - un écran qui ne se rafraîchit pas
+                    // après une annulation continue d'offrir des nuits déjà complétées.
                     operationEnCours.set(false);
                     lotEnCours.set(false);
                     viewModel.progression().reinitialiser();
                     viewModel.progressionGlobale().reinitialiser();
                     viewModel.signalerAnnulation();
+                    charger();
                 },
                 erreur -> {
                     operationEnCours.set(false);
@@ -327,6 +331,11 @@ public class ReconstructionModaleController {
     /// [#reconstruireTout]. Sur le fil JavaFX.
     public void apercuImportGroupeEnCours(
             String libelleLot, double fractionLot, String libelleNuit, double fractionNuit) {
+        // Un import EN COURS n'a pas de refus en attente. Sans cet effacement, l'aperçu superposait le
+        // bandeau rouge « Compléter une nuit demande la connexion Vigie-Chiro » - posé parce que
+        // l'injecteur de capture n'a pas de service - aux deux barres qui tournent : un état que le
+        // produit ne produit jamais, publié dans la documentation (revue visuelle, clôture du lot 3).
+        viewModel.effacerRetour();
         operationEnCours.set(true);
         lotEnCours.set(true);
         viewModel.progressionGlobale().demarrer(libelleLot);

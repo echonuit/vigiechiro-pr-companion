@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.SuiviOperation;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
+import fr.univ_amu.iut.commun.viewmodel.GesteAttendu;
 import fr.univ_amu.iut.commun.viewmodel.TexteCompteRendu;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import java.util.ArrayList;
@@ -48,7 +49,10 @@ import javafx.stage.Window;
 /// parallélise rien : le moteur est séquentiel, délibérément (voir sa documentation).
 public final class TraitementLot {
 
-    private final MoteurTraitementGroupe moteur = new MoteurTraitementGroupe();
+    /// La rédaction des échecs est celle de **l'application** (ADR 2635) : le modèle dit ce qui manque,
+    /// [GesteAttendu] ajoute où le régler. Sans elle, un jeton expiré en cours de lot laisserait autant
+    /// de lignes « non connecté » que de nuits restantes, aucune ne disant quoi faire.
+    private final MoteurTraitementGroupe moteur = new MoteurTraitementGroupe(GesteAttendu::message);
     private final Confirmateur confirmateur;
     private final Notificateur notificateur;
     private final SuiviOperation suivi;

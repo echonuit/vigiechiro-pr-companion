@@ -899,6 +899,45 @@ doit vérifier : *on ne prévient pas après coup ce qu'on a déjà empêché.*
 une capture** : un libellé tronqué, un emoji qui ne se rend pas (#700), une réplique de dialogue qui avait
 **dérivé du vrai écran**. Un geste testé n'est pas un écran regardé - [rendez la capture, et ouvrez-la](captures.md).
 
+## Action groupée (`ActionGroupee`, socle `commun`)
+
+**Le problème.** Rentrer de terrain avec six cartes SD, c'est six fois la même suite de gestes. Écrire un
+« mode lot » qui saurait téléverser produit une **seconde** implémentation du dépôt, dont une seule est
+maintenue.
+
+**La solution.** Un moteur **aveugle** et des actions **fines**. `MoteurTraitementGroupe` ne connaît aucun
+métier : il applique une `ActionGroupee` à une liste de `CiblePassage` et rend une `IssueTraitement` par
+passage. Chaque action porte trois choses, et rien de plus :
+
+| Ce que porte une `ActionGroupee` | Ce que cela sert |
+|---|---|
+| `libelle()` | l'entrée de menu, le titre du suivi, l'en-tête du compte rendu |
+| `motifNonEligible(cible)` | l'**annonce préalable** : ce qui sera écarté, et pourquoi, avant de partir |
+| `executer(cible, jeton)` | le geste lui-même, celui de la nuit unique |
+
+L'éligibilité est **locale et peu coûteuse** : elle est consultée sur **toute** la sélection avant le
+premier geste, et vingt allers-retours réseau pour afficher une annonce seraient un défaut. Ce qui exige
+le réseau ressort donc en **échec avec son motif**, pas en écart.
+
+**Comment on en ajoute une.** Implémenter `ActionGroupee` dans la feature qui possède le geste, la lier
+par `OptionalBinder` sous son nom (`action.<geste>`), et l'entrée de menu apparaît. Feature désactivée,
+l'entrée **disparaît** au lieu de rester grisée sans recours ([ADR 0003](decisions/0003-feature-plugin-desactivable-ports-optionnels.md)) :
+c'est le patron déjà suivi par « Compléter une nuit récupérée » et « Relever l'état des analyses ». Le
+consommateur (`MultisiteModule`) déclare les optionnels vides, chaque feature propriétaire pose le sien.
+
+**Ce que le moteur garantit, et qu'on ne réécrit pas.** Il est **séquentiel** : le plafond de parallélisme
+reste celui d'un passage. Il consulte le jeton **entre** deux passages, si bien que chaque nuit est soit
+avant, soit après, jamais entre les deux. Un échec **n'arrête pas** le lot. Et il ne **formate** pas les
+motifs d'échec : il applique la rédaction que la surface lui donne
+([ADR 2635](decisions/2635-un-refus-dit-ce-qui-manque-la-surface-dit-quoi-faire.md)). Le raisonnement
+complet et les alternatives écartées sont dans
+l'[ADR 2357](decisions/2357-un-traitement-en-lot-compose-des-gestes-unitaires.md).
+
+**Deux surfaces, un seul moteur.** L'écran orchestre avec les trois ports de dialogue ci-dessus
+(`Confirmateur` pour annoncer, `SuiviOperation` pour exécuter, `Notificateur` pour rendre compte) ; la
+commande `traiter-passages` réutilise les mêmes actions. Ce que la ligne de commande apporte n'est pas la
+boucle, un terminal sachant boucler, mais **l'écran d'éligibilité**, que rien d'autre n'expose.
+
 ## Écrans de données : densité, badge, filtres (socle design partagé)
 
 **Le problème.** Les onze écrans sont nés à des moments différents, sans référentiel de design commun :

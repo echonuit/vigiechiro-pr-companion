@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.CiblePassage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -31,6 +32,7 @@ import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -53,6 +55,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 
@@ -88,6 +91,10 @@ public final class CaptureMultisite {
 
     /// Carré de démonstration : celui du site seedé, du filtre de recherche et de la nuit manquante.
     private static final String CARRE_DEMO = "640380";
+
+    /// Nombre de lignes cochées pour la capture du menu en sélection (#2357) : assez pour que le pluriel
+    /// des libellés se voie, assez peu pour rester lisible.
+    private static final int LIGNES_COCHEES = 3;
 
     private CaptureMultisite() {}
 
@@ -130,7 +137,9 @@ public final class CaptureMultisite {
         rendreEcranTableauPlein(injecteur, sortie.resolve("apercu-multisite-tableau-plein.png"));
         rendreModaleReconstruction(injecteur, sortie.resolve("apercu-multisite-reconstruction.png"));
         rendreImportGroupe(injecteur, sortie.resolve("apercu-multisite-reconstruction-groupe.png"));
+        rendreImportGroupeInterrompu(injecteur, sortie.resolve("apercu-multisite-reconstruction-interrompu.png"));
         rendreMenuActions(injecteur, sortie.resolve("apercu-multisite-menu-actions.png"));
+        rendreMenuActionsSelection(injecteur, sortie.resolve("apercu-multisite-menu-selection.png"));
     }
 
     /// Rend la **modale « Reconstruire un passage manquant »** (#1396) : les nuits déposées sur
@@ -195,6 +204,35 @@ public final class CaptureMultisite {
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
     }
 
+    /// Rend la modale **après un import groupé interrompu** (revue visuelle, clôture du lot 3).
+    ///
+    /// C'est l'état qui **mentait** : le lot levait à l'annulation, la modale affichait « aucune nuit n'a
+    /// été complétée » alors que deux l'étaient, et ne rechargeait pas sa liste - les deux nuits déjà
+    /// complétées restaient offertes à la complétion. Aucune capture ne montrait cet état, donc rien ne
+    /// le contredisait.
+    ///
+    /// Ce qui est rendu ici est ce que le produit fait maintenant : le bilan dit ce qui a été fait, dit
+    /// que le reste est intact, et la liste ne garde que la nuit non commencée.
+    private static void rendreImportGroupeInterrompu(Injector injecteur, Path fichier) throws IOException {
+        ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.empty());
+        ExecuteurTache executeur = injecteur.getInstance(ExecuteurTache.class);
+        FXMLLoader loader = new FXMLLoader(ReconstructionModaleController.class.getResource(FXML_RECONSTRUCTION));
+        loader.setControllerFactory(type -> type == ReconstructionModaleController.class
+                ? new ReconstructionModaleController(viewModel, executeur)
+                : injecteur.getInstance(type));
+        Parent vue = loader.load();
+        viewModel.appliquer(List.of(new ParticipationOrpheline(
+                "6a53f5faae21902a597394d5", CARRE_DEMO, "C3", "2026-06-20T21:38:00+02:00", true)));
+        // La barre « Nuit en cours » reste affichée après un lot (elle suit `reconstruit`) : on la laisse
+        // à l'état où la dernière nuit l'a laissée, sinon l'aperçu montre une barre vide que le produit
+        // n'affiche jamais.
+        viewModel.progression().demarrer("Terminé.");
+        viewModel.progression().appliquer(new Progression("Terminé.", 1.0));
+        viewModel.restituerLot(new ServiceReconstructionPassages.BilanReconstructionGroupe(2, 0, 20, 41, true));
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
+        journaliser(fichier);
+    }
+
     /// Photographie le **menu ☰ ouvert** de « Carte & passages » (#2065). Il n'était ouvert par aucune
     /// capture : ses cinq entrées - dont « Exporter… » et « Écouter la sélection filtrée », converties en
     /// icônes par #1564 - n'apparaissaient **nulle part**, et leur rendu n'était donc vérifiable par
@@ -213,7 +251,40 @@ public final class CaptureMultisite {
             System.out.println("[capture-multisite-menu] popup non rendu (headless) : " + fichier + " ignoré.");
             return;
         }
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        journaliser(fichier);
+    }
+
+    /// Photographie le même menu ☰ **avec trois lignes cochées** (#2357, clôture du lot 3).
+    ///
+    /// La capture précédente montre les quatre actions groupées **grisées**, ce qui est leur état par
+    /// défaut mais le moins informatif : on y voit quatre entrées inertes, et rien ne dit qu'elles
+    /// s'allument. Ici, chaque entrée est active et **dit combien de lignes sont cochées** - c'est
+    /// exactement ce que la documentation affirme, et il n'y avait aucune image pour le montrer.
+    private static void rendreMenuActionsSelection(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource(FXML));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        // Le menu se peuple par liaison sur le NOMBRE de lignes cochées : il faut donc une scène et une
+        // mise en page avant de cocher, sinon les libellés restent sur leur valeur initiale.
+        Scene scene = new Scene(vue, 1100, 620);
+        vue.applyCss();
+        vue.layout();
+        if (scene.lookup("#tableLignes") instanceof TableView<?> table) {
+            table.getSelectionModel().clearSelection();
+            table.getSelectionModel()
+                    .selectRange(0, Math.min(LIGNES_COCHEES, table.getItems().size()));
+        }
+        vue.applyCss();
+        vue.layout();
+        if (!(vue.lookup("#menuActions") instanceof MenuButton menuActions)) {
+            System.out.println("[capture-multisite-menu-selection] menu ☰ introuvable : capture ignorée.");
+            return;
+        }
+        if (!ApercuFx.enregistrerMenuOuvert(menuActions, fichier)) {
+            System.out.println("[capture-multisite-menu-selection] popup non rendu (headless) : " + fichier);
+            return;
+        }
+        journaliser(fichier);
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
