@@ -2,7 +2,6 @@ package fr.univ_amu.iut.multisite.viewmodel;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
-import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
@@ -106,7 +105,9 @@ public class MultisiteViewModel {
     /// l'instantané à [#releverAnalyses(List, Consumer, JetonAnnulation)] qui, lui, part en tâche de fond.
     public List<Long> nuitsDeposees() {
         return tousLesPassages.stream()
-                .filter(ligne -> ligne.statut() == StatutWorkflow.DEPOSE)
+                // Une nuit récupérée a, elle aussi, une analyse serveur à relever (#2581) : c'est
+                // même souvent la seule chose qu'on ait d'elle en attendant son audio.
+                .filter(ligne -> ligne.statut().estSurLaPlateforme())
                 .map(LignePassage::idPassage)
                 .toList();
     }
