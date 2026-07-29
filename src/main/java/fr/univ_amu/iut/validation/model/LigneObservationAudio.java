@@ -67,6 +67,9 @@ import java.time.LocalDateTime;
 ///     n'a écrit. Un compteur plutôt que le fil lui-même — la table dit qu'une discussion existe, la modale
 ///     la donne à lire ; les quatre derniers composants sont ajoutés en **queue** pour préserver l'ordre
 ///     historique du record
+/// @param commune nom de la commune du point d'écoute (table latérale `point_commune`, #2791), ou
+///     `null` tant qu'elle n'est pas résolue (point sans GPS, hors ligne à la création) - en queue,
+///     comme les ajouts précédents
 public record LigneObservationAudio(
         Long idObservation,
         long idSequence,
@@ -97,7 +100,8 @@ public record LigneObservationAudio(
         String taxonValidateur,
         Certitude certitudeValidateur,
         String nomValidateur,
-        int nbMessages) {
+        int nbMessages,
+        String commune) {
 
     /// Un expert du MNHN s'est-il prononcé sur cette détection ? Vrai dès qu'un taxon de validateur est
     /// posé — c'est ce qui distingue une observation *revue par un expert* d'une observation qu'on est

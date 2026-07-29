@@ -477,7 +477,8 @@ class GestionnaireFiltresTest {
                 null,
                 null,
                 null,
-                0);
+                0,
+                null);
     }
 
     /// Observation **corrigée** : Tadarida a proposé `taxonTadarida`, l'observateur a retenu le taxon
@@ -515,7 +516,8 @@ class GestionnaireFiltresTest {
                 null,
                 null,
                 null,
-                0);
+                0,
+                null);
     }
 
     /// Observation portant une **probabilité Tadarida** donnée (ou `null` = sans proba), pour le critère Proba.
@@ -550,7 +552,8 @@ class GestionnaireFiltresTest {
                 null,
                 null,
                 null,
-                0);
+                0,
+                null);
     }
 
     /// Observation **archivée en référence** (`is_reference` = true), pour le critère Références.
@@ -585,7 +588,8 @@ class GestionnaireFiltresTest {
                 null,
                 null,
                 null,
-                0);
+                0,
+                null);
     }
 
     /// Observation portant un **instant de capture** donné (ou `null` = sans heure), pour le critère Heure.
@@ -620,6 +624,7 @@ class GestionnaireFiltresTest {
                 null,
                 null,
                 null,
-                0);
+                0,
+                null);
     }
 }

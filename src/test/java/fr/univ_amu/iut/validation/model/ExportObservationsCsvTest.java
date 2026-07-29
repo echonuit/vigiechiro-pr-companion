@@ -22,7 +22,7 @@ class ExportObservationsCsvTest {
         String csv = ExportObservationsCsv.contenu(List.of());
 
         assertThat(csv).startsWith("\uFEFF");
-        assertThat(csv).contains("Carré;Point;Site;Passage;Date;Fichier;Taxon Tadarida;Proba Tadarida");
+        assertThat(csv).contains("Carré;Point;Site;Commune;Passage;Date;Fichier;Taxon Tadarida;Proba Tadarida");
         assertThat(csv).contains("Statut;Référence;Douteux;Espèce à enjeu;Fréquence médiane (kHz)");
         assertThat(csv).endsWith("\r\n");
     }
@@ -48,8 +48,32 @@ class ExportObservationsCsvTest {
                 3.8)));
 
         assertThat(csv)
-                .contains("640380;A1;Étang;2;2026-06-22;seqA_000.wav;Pippip;0,74;Nyclei;;;;0"
+                .contains("640380;A1;Étang;;2;2026-06-22;seqA_000.wav;Pippip;0,74;Nyclei;;;;0"
                         + ";Pipistrelle commune;Chiroptères;Corrigée;oui;oui;non;45;0,50;3,80;Cri social net");
+    }
+
+    @Test
+    @DisplayName("La commune résolue s'exporte entre le site et le passage (#2791)")
+    void commune_exportee() {
+        String csv = ExportObservationsCsv.contenu(List.of(ligne(
+                "640380",
+                "A1",
+                "Étang",
+                "Pippip",
+                0.74,
+                null,
+                "Pipistrelle commune",
+                "Chiroptères",
+                StatutObservation.NON_TOUCHEE,
+                false,
+                false,
+                null,
+                45,
+                0.5,
+                3.8,
+                "Aix-en-Provence")));
+
+        assertThat(csv).contains("640380;A1;Étang;Aix-en-Provence;2;2026-06-22;seqA_000.wav");
     }
 
     @Test
@@ -111,7 +135,8 @@ class ExportObservationsCsvTest {
                 "Pipnat",
                 Certitude.SUR,
                 "Pipistrelle de Nathusius",
-                2);
+                2,
+                null);
 
         String csv = ExportObservationsCsv.contenu(List.of(ligne));
 
@@ -215,6 +240,43 @@ class ExportObservationsCsvTest {
             Integer frequenceKHz,
             Double debutS,
             Double finS) {
+        return ligne(
+                carre,
+                point,
+                site,
+                taxonTadarida,
+                probTadarida,
+                taxonObservateur,
+                nomEspece,
+                groupe,
+                statut,
+                reference,
+                douteux,
+                commentaire,
+                frequenceKHz,
+                debutS,
+                finS,
+                null);
+    }
+
+    /// Variante avec **commune résolue** (#2791) : la colonne doit porter la valeur, pas un vide.
+    private static LigneObservationAudio ligne(
+            String carre,
+            String point,
+            String site,
+            String taxonTadarida,
+            Double probTadarida,
+            String taxonObservateur,
+            String nomEspece,
+            String groupe,
+            StatutObservation statut,
+            boolean reference,
+            boolean douteux,
+            String commentaire,
+            Integer frequenceKHz,
+            Double debutS,
+            Double finS,
+            String commune) {
         return new LigneObservationAudio(
                 1L,
                 1L,
@@ -245,6 +307,7 @@ class ExportObservationsCsvTest {
                 null,
                 null,
                 null,
-                0);
+                0,
+                commune);
     }
 }

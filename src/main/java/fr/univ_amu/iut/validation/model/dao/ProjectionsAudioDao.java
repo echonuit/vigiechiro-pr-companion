@@ -45,12 +45,15 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
             + " tv.vernacular_name_fr AS nom_validateur,"
             + " (SELECT COUNT(*) FROM observation_message m WHERE m.observation_id = o.id) AS nb_messages,"
             + " ls.file_name AS nom_fichier, ls.recorded_at AS recorded_at,"
-            + " o.start_time_s AS debut_s, o.end_time_s AS fin_s"
+            + " o.start_time_s AS debut_s, o.end_time_s AS fin_s,"
+            + " pc.commune_name AS commune"
             + FragmentsSqlObservation.DE_OBSERVATION_AU_SITE
             + " LEFT JOIN taxon te ON te.code = COALESCE(o.taxon_observer, o.taxon_tadarida)"
             + " LEFT JOIN taxon tt ON tt.code = o.taxon_tadarida"
             + " LEFT JOIN taxon tv ON tv.code = o.taxon_validator"
             + " LEFT JOIN taxonomic_group g ON g.id = te.group_id"
+            // Commune du point (#2791) : table latérale, LEFT JOIN - absente tant que non résolue.
+            + " LEFT JOIN point_commune pc ON pc.point_id = lp.id"
             + ")";
 
     private static final String SELECT_AUDIO = CTE_AUDIO + " SELECT * FROM obs WHERE obs.";
@@ -93,7 +96,8 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
             rs.getString("validateur"),
             Certitude.depuisTexte(rs.getString("certitude_validateur")),
             rs.getString("nom_validateur"),
-            rs.getInt("nb_messages"));
+            rs.getInt("nb_messages"),
+            rs.getString("commune"));
 
     public ProjectionsAudioDao(SourceDeDonnees source) {
         super(source);
@@ -158,8 +162,10 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
             + " te.vernacular_name_fr AS nom_espece,"
             + " p.id AS passage_id, p.passage_number AS num_passage, p.recording_date AS date_enr,"
             + " ms.square_number AS carre, ms.friendly_name AS nom_site, lp.code AS point_code,"
-            + " ls.file_name AS nom_fichier, ls.recorded_at AS recorded_at"
+            + " ls.file_name AS nom_fichier, ls.recorded_at AS recorded_at,"
+            + " pc.commune_name AS commune"
             + FragmentsSqlObservation.DE_SEQUENCE_AU_SITE
+            + " LEFT JOIN point_commune pc ON pc.point_id = lp.id"
             + " LEFT JOIN observation om ON om.sequence_id = ls.id AND om.results_id IS NULL"
             + " LEFT JOIN taxon te ON te.code = om.taxon_observer"
             + " WHERE rs.passage_id = ?"
@@ -203,7 +209,8 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
             null, // taxonValidateur
             null, // certitudeValidateur
             null, // nomValidateur
-            0); // nbMessages
+            0, // nbMessages
+            rs.getString("commune"));
 
     /// Source **Non identifiés** : les séquences d'un passage **sans observation Tadarida** (à écouter et
     /// valider à la main). L'écoute ne dépend pas d'une observation, seulement de la séquence ; une
