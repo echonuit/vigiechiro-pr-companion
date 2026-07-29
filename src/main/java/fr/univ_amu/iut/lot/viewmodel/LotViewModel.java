@@ -158,7 +158,7 @@ public class LotViewModel {
             appliquerGeneration(calculerArchivesDepot(progression -> {}, SuiviArchives.inerte()));
             return true;
         } catch (RuntimeException echec) {
-            echecGeneration(echec.getMessage());
+            echecGeneration(echec);
             return false;
         }
     }
@@ -207,6 +207,14 @@ public class LotViewModel {
     /// lève l'état « en cours ».
     public void echecGeneration(String messageErreur) {
         messages.erreur(messageErreur);
+        generationEnCours.set(false);
+        progression.reinitialiser();
+    }
+
+    /// Échec **remonté d'une exception** : `MessagesLot` sait l'enrichir et le borner, là où sa
+    /// surcharge `String` suppose un texte que nous avons écrit.
+    public void echecGeneration(Throwable refus) {
+        messages.erreur(refus);
         generationEnCours.set(false);
         progression.reinitialiser();
     }

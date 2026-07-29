@@ -152,7 +152,7 @@ final class PublicationCorrectionsUI {
                 "Analyse des corrections à publier…",
                 () -> new Apercu(publication.trier(idPassage), publication.ancrageAcquerable(idPassage)),
                 apercu -> confirmerPuisPublier(publication, idPassage, apercu, dialogue, proprietaire, confirmateur),
-                erreur -> publication.echec(erreur.getMessage()));
+                publication::echec);
     }
 
     /// Au fil JavaFX, l'aperçu en main : rien de publiable **ni d'ancrable** → restitution directe des
@@ -184,6 +184,6 @@ final class PublicationCorrectionsUI {
                 (progres, jeton) -> publication.publier(idPassage, progres, jeton),
                 publication::appliquerBilan,
                 () -> publication.echec(""), // renoncé en cours de route : on efface l'état « en cours »
-                erreur -> publication.echec(erreur.getMessage()));
+                publication::echec);
     }
 }

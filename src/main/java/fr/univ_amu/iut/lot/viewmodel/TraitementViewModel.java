@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -92,6 +93,14 @@ public class TraitementViewModel {
     /// Le relevé a échoué (serveur injoignable) : on le dit, sans effacer ce qu'on savait déjà.
     public void echec(String motif) {
         alerte.set("Impossible de joindre Vigie-Chiro : " + motif);
+        enCours.set(false);
+    }
+
+    /// Échec **remonté d'une exception**. Le contexte que nous avons écrit reste entier ; seul ce qui
+    /// vient d'ailleurs est enrichi puis borné (#2076).
+    public void echec(Throwable refus) {
+        alerte.set(RetourOperation.erreur("Impossible de joindre Vigie-Chiro", refus)
+                .texte());
         enCours.set(false);
     }
 

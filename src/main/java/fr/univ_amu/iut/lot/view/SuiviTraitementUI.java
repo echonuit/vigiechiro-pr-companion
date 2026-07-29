@@ -88,8 +88,7 @@ final class SuiviTraitementUI {
     void actualiser() {
         Long passage = idPassage.get();
         viewModel.marquerEnCours();
-        executeur.executer(
-                () -> viewModel.relever(passage), viewModel::appliquer, erreur -> viewModel.echec(erreur.getMessage()));
+        executeur.executer(() -> viewModel.relever(passage), viewModel::appliquer, viewModel::echec);
     }
 
     /// Lance le **traitement serveur** (compute, #984) **hors du fil JavaFX**, puis **relit l'état** : le
@@ -107,6 +106,6 @@ final class SuiviTraitementUI {
                     depot.restituerLancement(resultat);
                     actualiser();
                 },
-                erreur -> depot.echec(erreur.getMessage()));
+                depot::echec);
     }
 }
