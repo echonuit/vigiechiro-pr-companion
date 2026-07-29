@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.122.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.121.0...v2.122.0) (2026-07-29)
+
+
+### Features
+
+* **passage:** le statut « Récupéré » se voit — stepper, pastille, tri, filtre ([#2809](https://github.com/echonuit/vigiechiro-pr-companion/issues/2809)) ([a0cbb03](https://github.com/echonuit/vigiechiro-pr-companion/commit/a0cbb03f251f170bc3acb117598b7c8392c14e83)), closes [#2581](https://github.com/echonuit/vigiechiro-pr-companion/issues/2581) [#2628](https://github.com/echonuit/vigiechiro-pr-companion/issues/2628)
+
 # [2.121.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.120.0...v2.121.0) (2026-07-29)
 
 
