@@ -71,12 +71,34 @@ exports. Deux points comptent :
   au suivant pour qu'une « Forte » de Pipistrelle commune et une « Forte » de Barbastelle disent la
   même chose.
 
+## Exporter
+
+Le bouton d'export écrit un **CSV** qui reprend le tableau tel qu'il est affiché — filtres et bascule
+compris. En tête du fichier, quatre lignes précédées de `#` :
+
+- ce que contient le fichier (« Synthèse d'une nuit - VigieChiro Companion ») ;
+- le contexte de comparaison (« Comparé au référentiel : milieu Foret · Été ») ;
+- la mise en garde ;
+- la source.
+
+Elles sont commentées pour qu'un tableur les affiche comme du texte et qu'un script puisse les sauter,
+sans les perdre pour autant. **Si l'avertissement ne voyage pas avec la donnée, il ne sert à rien** :
+un fichier ouvert trois mois plus tard, par quelqu'un qui n'a jamais vu cet écran, doit pouvoir savoir
+d'où sortent ces classes.
+
+En ligne de commande, `synthetiser-passage` produit exactement la même chose :
+
+```bash
+./vigiechiro synthetiser-passage --passage 3 --carre 130711 --milieu Foret --sortie synthese.csv
+./vigiechiro synthetiser-passage --passage 3 --format json
+```
+
 ## D'où viennent les seuils
 
 Du référentiel national **ACTICHIRO / Vigie-Chiro**, construit sur les données du protocole Point Fixe :
 
-> Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020) — *Bat reference scale of activity levels*
-> (v. 2020-04-10), Team-Chiro / CESCO — Muséum national d'Histoire naturelle.
+> Bas Y., Kerbiriou C., Roemer C. & Julien J.-F. (2020), *Bat reference scale of activity levels*
+> (v. 2020-04-10), Team-Chiro / CESCO, Muséum national d'Histoire naturelle.
 
 Ces données sont **libres d'usage avec citation obligatoire**. C'est pourquoi la source est nommée à
 l'écran et recopiée dans chaque export : un référentiel scientifique qui voyage sans sa source est une
