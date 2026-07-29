@@ -9,6 +9,21 @@
 # posée à un humain (vrai trou, mutant équivalent, artefact de ciblage) : bloquer une fusion là-dessus
 # ferait cocher au hasard.
 #
+# ⚠️ PÉRIMÈTRE : les paquets `model`, et JAMAIS les E2E côté tests. Les deux décisions sont mesurées,
+# pas supposées (#2768) :
+#
+#   - un E2E est **large en couverture et pauvre en jugement**. `ParcoursDepotE2ETest` couvre à lui seul
+#     8 539 blocs : PIT le retient comme test candidat pour des mutants situés dans des centaines de
+#     classes, et rejoue le parcours entier - des minutes de TestFX - pour apprendre ce qu'un test
+#     unitaire dit en millisecondes. Le premier passage sur le dépôt entier a produit 19 expirations en
+#     une heure, toutes autour de ce parcours ;
+#   - les exclure ne **cache** rien. Un mutant que seul un E2E tuerait est, par définition, un mutant
+#     qu'aucun test unitaire ne détecte : il ressort désormais en SURVIVANT, c'est-à-dire en question
+#     posée à un humain. C'est ce que ce rapport doit produire.
+#
+# Les classes de **vue** ont leur propre mesure : `mutation-ihm.yml`. Elles ne sont pas oubliées, elles
+# sont mesurées ailleurs, avec des tests qui les jugent.
+#
 # NON BLOQUANT, comme le rapport ADR dont ce workflow est le calque : ici on observe, on ne juge pas.
 #
 # ⚠️ Le `test-compile` avant le but n'est pas une commodité : sans phase, `@{jacocoArgLine}` et
@@ -28,7 +43,7 @@ on:
       perimetre:
         description: "Classes à muter (motif PIT)"
         required: false
-        default: "fr.univ_amu.iut.*"
+        default: "fr.univ_amu.iut.*.model.*"
 
 permissions:
   contents: read
@@ -55,7 +70,7 @@ jobs:
       - name: Mesurer
         id: mesure
         env:
-          PERIMETRE: ${{ inputs.perimetre || 'fr.univ_amu.iut.*' }}
+          PERIMETRE: ${{ inputs.perimetre || 'fr.univ_amu.iut.*.model.*' }}
         run: |
           set -euo pipefail
           # Headless : les propriétés vivent dans le profil `mutation` du pom (le minion n'hérite pas
@@ -70,7 +85,8 @@ jobs:
           # Reproductible en local sur une seule classe. Conséquence (mesure intégrale chaque lundi) : #2768.
           ./mvnw -B -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
             -DtargetClasses="$PERIMETRE" \
-            -DtargetTests="fr.univ_amu.iut.*"
+            -DtargetTests="fr.univ_amu.iut.*" \
+            -DexcludedTestClasses="fr.univ_amu.iut.e2e.*"
 
       - name: Publier le bilan dans le résumé du job
         if: always()

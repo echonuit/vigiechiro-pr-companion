@@ -1,0 +1,138 @@
+# Mesure de la qualité des tests d'INTERFACE par mutation (PIT), une feature à la fois.
+#
+# Pendant de `mutation-hebdo.yml`, qui mesure les paquets `model`. Les classes de vue ne sont pas
+# oubliées : elles sont mesurées ici, avec les tests qui les jugent.
+#
+# Ce que cette mesure apprend, et qui n'était visible nulle part : sur un périmètre de vues réel,
+# 50 % des mutants sont tués, **33 % survivent** et 16 % ne sont pas couverts du tout. Un tiers de
+# survivants, ce sont autant de comportements d'écran que rien ne vérifie.
+#
+# ## Pourquoi une exécution par feature, et non tout d'un coup
+#
+# Muter une vue coûte cher : chaque mutant rejoue des tests TestFX, qui démarrent un toolkit JavaFX.
+# Mesuré sur ce dépôt : ~9 s par mutant, et 280 mutants pour cinq classes de vue. À ce rythme, les
+# 283 classes de vue de l'application demanderaient des dizaines d'heures - la borne du job est à
+# 300 minutes.
+#
+# La mesure est donc **complète sur un cycle, pas sur un mois** : chaque exécution prend une feature,
+# et le tour se fait en un peu plus d'un an. La rotation est **sans état** - elle se déduit du mois -
+# pour qu'aucun fichier n'ait à être écrit ni relu entre deux exécutions.
+#
+# ## Ce qu'on ne règle PAS ici : le butoir
+#
+# La tentation était d'allonger `timeoutConstant` pour « laisser le temps » aux tests graphiques. La
+# mesure dit le contraire : E2E exclus, le périmètre des vues a produit **1 expiration sur 280
+# mutants**. Le butoir par défaut suffit.
+#
+# ⚠️ Et un butoir trop large serait pire que rien : PIT compte une expiration comme une DÉTECTION.
+# Vérifié en le rendant absurde sur une classe de vue - 21 mutants, 21 expirations, score annoncé
+# **100 %**, là où la mesure honnête donne 43 %. Un butoir mal calibré ne dégrade pas le chiffre, il
+# le rend faux dans le sens rassurant (#2768).
+
+name: mutation-ihm
+
+on:
+  schedule:
+    # Le 8 du mois à 7 h UTC : une semaine après le rapport ADR et la mesure `model`, pour ne pas
+    # empiler trois bilans le même lundi.
+    - cron: "0 7 8 * *"
+  workflow_dispatch:
+    inputs:
+      feature:
+        description: "Feature dont les vues sont mutées (vide = celle du tour, déduite du mois)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  mesurer:
+    name: Mutation sur les vues d'une feature
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: "25"
+          distribution: "temurin"
+          check-latest: false
+          cache: maven
+
+      - name: Choisir la feature du tour
+        id: tour
+        env:
+          DEMANDEE: ${{ inputs.feature }}
+        run: |
+          set -euo pipefail
+          # Les features possédant un paquet `view`, par poids décroissant. `commun` est volontairement
+          # EN TÊTE : c'est le socle partagé (141 classes de vue), donc celui dont les survivants
+          # coûtent le plus cher à tout le monde.
+          FEATURES=(commun audio analyse multisite importation lot qualification sites passage \
+                    audit saison connexion diagnostic validation maj)
+          if [ -n "${DEMANDEE}" ]; then
+            FEATURE="${DEMANDEE}"
+          else
+            # Rotation sans état : le mois choisit. Le tour complet prend 15 mois.
+            MOIS=$(date -u +%-m)
+            ANNEE=$(date -u +%Y)
+            INDEX=$(( (ANNEE * 12 + MOIS) % ${#FEATURES[@]} ))
+            FEATURE="${FEATURES[$INDEX]}"
+          fi
+          if [ ! -d "src/main/java/fr/univ_amu/iut/${FEATURE}/view" ]; then
+            echo "::error::Feature « ${FEATURE} » sans paquet view : rien à mesurer."
+            exit 1
+          fi
+          echo "feature=${FEATURE}" >> "$GITHUB_OUTPUT"
+          echo "Feature du tour : ${FEATURE}"
+
+      - name: Mesurer
+        env:
+          FEATURE: ${{ steps.tour.outputs.feature }}
+        run: |
+          set -euo pipefail
+          # Les tests de la feature JUGENT ses vues ; les E2E ne feraient que les traverser, au prix
+          # d'un parcours complet par mutant (voir l'en-tête de mutation-hebdo.yml).
+          #
+          # Headless : les propriétés vivent dans le profil `mutation` du pom (le minion n'hérite pas
+          # des systemPropertyVariables de surefire). Ne pas les repasser ici - `-DjvmArgs` REMPLACE
+          # la liste du profil au lieu de s'y ajouter.
+          ./mvnw -B -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
+            -DtargetClasses="fr.univ_amu.iut.${FEATURE}.view.*" \
+            -DtargetTests="fr.univ_amu.iut.${FEATURE}.*" \
+            -DexcludedTestClasses="fr.univ_amu.iut.e2e.*"
+
+      - name: Publier le bilan dans le résumé du job
+        if: always()
+        env:
+          FEATURE: ${{ steps.tour.outputs.feature }}
+        run: |
+          set -uo pipefail
+          # Volontairement sans `-e` : ce job OBSERVE. Un bilan manquant se dit, il ne se solde pas par
+          # un job rouge - sans quoi « non bloquant » ne serait vrai que les bons mois.
+          echo "## Mutation des vues — feature \`${FEATURE}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
+          if python3 scripts/qualite/rapport_mutation.py --markdown >> "$GITHUB_STEP_SUMMARY"; then
+            exit 0
+          fi
+          # Un bilan absent ou illisible serait lu comme « zéro survivant ». On le dit, plutôt que de
+          # laisser un résumé vide passer pour une bonne nouvelle.
+          {
+            echo "La mesure n'a pas abouti : aucun rapport lisible ce mois-ci."
+            echo
+            echo "Ce n'est **pas** « zéro survivant » : c'est une absence de mesure."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "::warning::Bilan de mutation IHM absent ou illisible - une absence de mesure, pas un dépôt sain."
+
+      - name: Conserver le rapport détaillé
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pit-reports-ihm-${{ steps.tour.outputs.feature }}
+          path: target/pit-reports/
+          retention-days: 30
+          if-no-files-found: ignore
