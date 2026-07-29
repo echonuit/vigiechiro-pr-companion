@@ -9,7 +9,6 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
-import fr.univ_amu.iut.commun.model.dao.NuitRecupereeDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
@@ -63,8 +62,7 @@ class GestesNuitRecupereeTest {
                 sessionDao,
                 sequenceDao,
                 new ServiceDisponibiliteAudio(sessionDao, sequenceDao, new Workspace(dossier)),
-                new PassageOpportunisteDao(source),
-                new NuitRecupereeDao(source));
+                new PassageOpportunisteDao(source));
     }
 
     /// Une nuit **récupérée** : rattachée à une participation, et sans le moindre WAV posé.
@@ -73,7 +71,7 @@ class GestesNuitRecupereeTest {
                 .carre("130711")
                 .point("Z41")
                 .nuit(1, 2026, "2026-04-22")
-                .statut(StatutWorkflow.DEPOSE)
+                .statut(StatutWorkflow.RECUPERE)
                 .semerSquelette();
         rattacher(jeu.idPassage());
         return jeu.idPassage();
@@ -131,8 +129,9 @@ class GestesNuitRecupereeTest {
     }
 
     @Test
-    @DisplayName("#2581 : une nuit sans audio mais NON rattachée n'est pas une nuit récupérée")
-    void nuit_sans_audio_non_rattachee_reste_protegee() {
+    @DisplayName(
+            "#2773 : une nuit déposée sans audio reste protégée - c'est le statut qui décide, pas l'absence de WAV")
+    void nuit_deposee_sans_audio_reste_protegee() {
         long idPassage = JeuDeDonneesPassage.dans(source)
                 .carre("130711")
                 .point("Z41")
@@ -141,8 +140,9 @@ class GestesNuitRecupereeTest {
                 .semerSquelette()
                 .idPassage();
 
-        // L'absence d'audio seule ne prouve rien : une nuit purgée localement (#1300) n'a plus ses WAV
-        // et n'est pourtant pas venue de la plateforme.
+        // L'absence d'audio ne prouve rien à elle seule : une nuit purgée localement (#1300) n'a plus ses
+        // WAV et n'est pourtant pas venue de la plateforme. Depuis #2772, c'est le statut qui tranche -
+        // il a été posé une fois, à la création, par qui savait d'où venait la nuit.
         assertThat(service.estNuitRecuperee(idPassage)).isFalse();
         assertThatThrownBy(() -> service.supprimer(idPassage)).isInstanceOf(RegleMetierException.class);
     }
@@ -159,7 +159,7 @@ class GestesNuitRecupereeTest {
 
         assertThat(passageDao.findById(idPassage).orElseThrow().statutWorkflow())
                 .as("le statut n'a pas bougé : rien ne l'a rendue « Prêt à déposer »")
-                .isEqualTo(StatutWorkflow.DEPOSE);
+                .isEqualTo(StatutWorkflow.RECUPERE);
     }
 
     @Test
@@ -172,5 +172,33 @@ class GestesNuitRecupereeTest {
         assertThat(passageDao.findById(idPassage).orElseThrow().statutWorkflow())
                 .as("le geste garde tout son sens là où il en a un")
                 .isEqualTo(StatutWorkflow.PRET_A_DEPOSER);
+    }
+
+    @Test
+    @DisplayName("#2773 : le verdict d'une nuit récupérée reste figé, alors qu'elle n'est plus « Déposé »")
+    void verdict_fige_sur_une_nuit_recuperee() {
+        long idPassage = semerNuitRecuperee();
+
+        // La garde testait `== DEPOSE`. Sortir ces nuits de « Déposé » au lot 1 les aurait donc
+        // dégelées, sans qu'aucun test existant ne le dise.
+        assertThatThrownBy(() -> service.poserVerdict(
+                        passageDao.findById(idPassage).orElseThrow(), fr.univ_amu.iut.commun.model.Verdict.OK))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Verdict figé");
+    }
+
+    @Test
+    @DisplayName("#2773 : le refus d'annuler dit encore quoi faire, et non « le passage n'est pas déposé »")
+    void le_refus_specifique_precede_le_refus_generique() {
+        long idPassage = semerNuitRecuperee();
+
+        // Depuis #2772 la nuit n'est plus « Déposé » : le refus GÉNÉRIQUE de annulerDepot l'attraperait
+        // en premier et répondrait « le passage n'est pas déposé » - vrai localement, trompeur, et sans
+        // le geste à faire.
+        assertThatThrownBy(() -> service.annulerDepot(idPassage))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("pas de dépôt à annuler")
+                .hasMessageContaining("Supprimer")
+                .hasMessageNotContaining("n'est pas déposé");
     }
 }

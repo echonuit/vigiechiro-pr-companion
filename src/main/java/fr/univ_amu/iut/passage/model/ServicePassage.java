@@ -7,7 +7,6 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
-import fr.univ_amu.iut.commun.model.dao.NuitRecupereeDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -71,11 +70,6 @@ public class ServicePassage {
     /// `passage_opportuniste` porte ce fait hors du record [Passage].
     private final PassageOpportunisteDao opportunistes;
 
-    /// Reconnaissance d'une nuit **récupérée de Vigie-Chiro** (#2581) : rapatriée par la synchro, jamais
-    /// importée ici. Elle porte le statut « Déposé », qui est vrai, mais dont toutes les gardes ne le sont
-    /// pas pour elle.
-    private final NuitRecupereeDao nuitsRecuperees;
-
     public ServicePassage(
             PassageDao passageDao,
             MoteurWorkflowPassage moteur,
@@ -83,8 +77,7 @@ public class ServicePassage {
             SessionDao sessionDao,
             SequenceDao sequenceDao,
             ServiceDisponibiliteAudio disponibilite,
-            PassageOpportunisteDao opportunistes,
-            NuitRecupereeDao nuitsRecuperees) {
+            PassageOpportunisteDao opportunistes) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.moteur = Objects.requireNonNull(moteur, "moteur");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
@@ -92,7 +85,6 @@ public class ServicePassage {
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
         this.disponibilite = Objects.requireNonNull(disponibilite, "disponibilite");
         this.opportunistes = Objects.requireNonNull(opportunistes, "opportunistes");
-        this.nuitsRecuperees = Objects.requireNonNull(nuitsRecuperees, "nuitsRecuperees");
         this.unicite = new UniciteQuadruplet(passageDao);
     }
 
@@ -363,7 +355,10 @@ public class ServicePassage {
     public Passage poserVerdict(Passage passage, Verdict verdict) {
         Objects.requireNonNull(passage, PASSAGE);
         Objects.requireNonNull(verdict, "verdict");
-        if (passage.statutWorkflow() == StatutWorkflow.DEPOSE) {
+        // « Récupéré » compte ici au même titre que « Déposé » (#2773) : la nuit est sur Vigie-Chiro,
+        // un verdict local divergent la désynchroniserait exactement pareil. Sans cette ligne, poser le
+        // statut au lot 1 aurait DÉGELÉ un verdict que la version précédente tenait fermé.
+        if (verdictFige(passage.statutWorkflow())) {
             throw new RegleMetierException(
                     "Verdict figé : un passage déposé ne peut plus changer de verdict de vérification.");
         }
@@ -405,7 +400,8 @@ public class ServicePassage {
     /// @throws RegleMetierException si le passage est introuvable, ou déposé sans être une nuit récupérée
     public void supprimer(Long idPassage) {
         Passage passage = charger(idPassage);
-        if (passage.statutWorkflow() == StatutWorkflow.DEPOSE && !estNuitRecuperee(idPassage)) {
+        // Le statut porte désormais la distinction (#2772) : « Déposé » veut dire « déposé par nous ».
+        if (passage.statutWorkflow() == StatutWorkflow.DEPOSE) {
             throw new RegleMetierException("Suppression refusée : un passage déposé ne peut pas être supprimé.");
         }
         passageDao.delete(idPassage);
@@ -425,9 +421,22 @@ public class ServicePassage {
     /// Vigie-Chiro. Mais les gardes de ce statut protègent une nuit **que nous avons déposée**, et elles
     /// ne disent pas toutes quelque chose de juste sur celle-ci.
     ///
-    /// L'état est **observé**, pas déclaré (ADR 0048) : voir [NuitRecupereeDao] pour le critère.
+    /// Depuis #2772, l'état est **porté par le passage** : la question se lit sur lui, elle ne se
+    /// redemande plus à la base. Le prédicat observé (`NuitRecupereeDao`) reste ce qui a **fondé** ce
+    /// statut, et ce que la migration V37 rejoue - mais entretenir deux chemins vers la même vérité,
+    /// c'est se donner deux réponses possibles. Voir l'ADR 2581.
+    /// Les statuts pour lesquels le verdict ne se change plus : la nuit vit sur Vigie-Chiro, qu'elle y
+    /// soit allée par nos soins ou qu'elle en vienne. Partagé avec `ServiceQualification`, qui applique
+    /// la même règle sur son propre chemin de saisie.
+    public static boolean verdictFige(StatutWorkflow statut) {
+        return statut == StatutWorkflow.DEPOSE || statut == StatutWorkflow.RECUPERE;
+    }
+
     public boolean estNuitRecuperee(Long idPassage) {
-        return nuitsRecuperees.estRecuperee(idPassage);
+        return passageDao
+                .findById(idPassage)
+                .map(p -> p.statutWorkflow() == StatutWorkflow.RECUPERE)
+                .orElse(false);
     }
 
     /// **Annule le dépôt** d'un passage : le repasse de [StatutWorkflow#DEPOSE] à
@@ -442,6 +451,13 @@ public class ServicePassage {
     /// @throws RegleMetierException si le passage est introuvable ou n'est **pas** déposé
     public Passage annulerDepot(Long idPassage) {
         Passage passage = charger(idPassage);
+        // D'ABORD le refus spécifique. Depuis #2772 une nuit récupérée n'est plus « Déposé », donc le
+        // refus générique ci-dessous l'attraperait - en lui répondant « le passage n'est pas déposé »,
+        // ce qui est vrai localement et trompeur : il l'est sur la plateforme, et le message ne dirait
+        // plus quoi faire.
+        if (passage.statutWorkflow() == StatutWorkflow.RECUPERE) {
+            throw new RegleMetierException(MOTIF_DEPOT_NON_ANNULABLE);
+        }
         if (passage.statutWorkflow() != StatutWorkflow.DEPOSE) {
             throw new RegleMetierException(
                     "Annulation du dépôt impossible : le passage n'est pas déposé (statut actuel : « "
@@ -452,9 +468,6 @@ public class ServicePassage {
         // aucun geste local ne le change. Pire, la transition la ramènerait en « Prêt à déposer », d'où
         // le geste suivant - parfaitement naturel depuis cet état - fabriquerait une SECONDE
         // participation. Depuis #2760, « Supprimer » suffit à qui veut nettoyer sa base.
-        if (estNuitRecuperee(idPassage)) {
-            throw new RegleMetierException(MOTIF_DEPOT_NON_ANNULABLE);
-        }
         Passage misAJour = new Passage(
                 passage.id(),
                 passage.numeroPassage(),
