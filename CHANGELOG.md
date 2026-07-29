@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.117.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.116.3...v2.117.0) (2026-07-29)
+
+
+### Features
+
+* **passage:** une nuit récupérée n'annule pas un dépôt qu'elle n'a pas fait ([#2786](https://github.com/echonuit/vigiechiro-pr-companion/issues/2786)) ([e0f9670](https://github.com/echonuit/vigiechiro-pr-companion/commit/e0f9670e548e0d126cb2146b808c1f04c58ca7a4)), closes [#2760](https://github.com/echonuit/vigiechiro-pr-companion/issues/2760) [#2581](https://github.com/echonuit/vigiechiro-pr-companion/issues/2581) [#789](https://github.com/echonuit/vigiechiro-pr-companion/issues/789)
+
 ## [2.116.3](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.116.2...v2.116.3) (2026-07-29)
 
 
