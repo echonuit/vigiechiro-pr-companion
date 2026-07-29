@@ -181,7 +181,8 @@ final class CriteresAnalyse {
                 || contient(observation.nomVernaculaireFr(), aiguille)
                 || contient(observation.nomLatin(), aiguille)
                 || contient(observation.numeroCarre(), aiguille)
-                || contient(observation.nomSite(), aiguille);
+                || contient(observation.nomSite(), aiguille)
+                || contient(observation.commune(), aiguille);
     }
 
     private static boolean contient(String champ, String aiguille) {

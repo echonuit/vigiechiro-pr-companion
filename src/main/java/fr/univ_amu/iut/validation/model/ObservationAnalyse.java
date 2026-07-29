@@ -30,4 +30,5 @@ public record ObservationAnalyse(
         int annee,
         String numeroCarre,
         String nomSite,
-        long idPoint) {}
+        long idPoint,
+        String commune) {}

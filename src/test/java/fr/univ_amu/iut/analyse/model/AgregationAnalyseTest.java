@@ -28,7 +28,8 @@ class AgregationAnalyseTest {
                 annee,
                 carre,
                 "Site " + carre,
-                idPoint);
+                idPoint,
+                null);
     }
 
     @Test

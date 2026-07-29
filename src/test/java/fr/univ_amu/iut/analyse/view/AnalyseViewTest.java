@@ -192,7 +192,8 @@ class AnalyseViewTest {
                 2026,
                 "640380",
                 "Étang",
-                1L);
+                1L,
+                null);
     }
 
     /// Variante rattachée à un **passage donné** : pour distinguer une nuit du protocole d'une nuit
@@ -208,14 +209,15 @@ class AnalyseViewTest {
                 2026,
                 "640380",
                 "Étang",
-                1L);
+                1L,
+                null);
     }
 
     /// Variante **sans nom latin** : un pseudo-taxon (« Bruit ») n'a ni code PNA ni binôme sur lequel se
     /// rabattre, donc aucune fiche n'est constructible, quelle que soit la source universelle préférée.
     private static ObservationAnalyse obsSansFiche(String taxon, String vern) {
         return new ObservationAnalyse(
-                taxon, null, vern, "Chiroptères", StatutObservation.VALIDEE, 42L, 2026, "640380", "Étang", 1L);
+                taxon, null, vern, "Chiroptères", StatutObservation.VALIDEE, 42L, 2026, "640380", "Étang", 1L, null);
     }
 
     @Test

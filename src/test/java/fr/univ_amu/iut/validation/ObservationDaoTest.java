@@ -508,6 +508,10 @@ class ObservationDaoTest {
 
         List<ObservationAnalyse> observations = analyse.observationsAnalyse("u-1");
 
+        assertThat(observations)
+                .as("commune du point (#2791) portée par la projection analyse")
+                .allSatisfy(o -> assertThat(o.commune()).isEqualTo("Aix-en-Provence"));
+
         // Espèce retenue = COALESCE(observateur, tadarida) ; statut dérivé ; contexte carré/point/passage/année.
         assertThat(observations)
                 .extracting(ObservationAnalyse::taxonRetenu)
