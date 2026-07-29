@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.PositionGeo;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.dao.NuitRecupereeDao;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
@@ -95,7 +96,8 @@ class ServicePassageMockTest {
                 sessionDao,
                 sequenceDao,
                 mock(ServiceDisponibiliteAudio.class),
-                opportunistes);
+                opportunistes,
+                mock(NuitRecupereeDao.class));
     }
 
     /// Conditions de la nuit (météo), extraites de ServicePassage (#1192).

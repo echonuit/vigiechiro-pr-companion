@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.NuitRecupereeDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.OuvrirActivite;
@@ -317,8 +318,10 @@ public class PassageModule extends ModuleDeFeature {
             SessionDao sessionDao,
             SequenceDao sequenceDao,
             ServiceDisponibiliteAudio disponibilite,
-            PassageOpportunisteDao opportunistes) {
-        return new ServicePassage(passageDao, moteur, horloge, sessionDao, sequenceDao, disponibilite, opportunistes);
+            PassageOpportunisteDao opportunistes,
+            NuitRecupereeDao nuitsRecuperees) {
+        return new ServicePassage(
+                passageDao, moteur, horloge, sessionDao, sequenceDao, disponibilite, opportunistes, nuitsRecuperees);
     }
 
     /// Pont [MarquageOpportuniste] (#2525) : expose le seul marquage opportuniste aux features qui créent
