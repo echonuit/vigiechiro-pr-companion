@@ -79,6 +79,7 @@ import picocli.CommandLine.Spec;
             ExporterVu.class,
             ExporterObservations.class,
             ExporterActivite.class,
+            SynthetiserPassage.class,
             Sauvegarder.class,
             Restaurer.class,
             ResetGuide.class,
