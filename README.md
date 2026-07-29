@@ -182,7 +182,9 @@ Chaque **couche** a une règle stricte :
 | `di/` | **Injection** : le module Guice qui assemble la fonctionnalité | Publie ses services/VM au conteneur |
 
 Le cœur du modèle est l'**agrégat « nuit de capture »** (fonctionnalité `passage`), qui avance dans un
-workflow à états : `IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (<!--inv:etats-workflow-->6<!--/inv--> états). La persistance est en
+workflow à états : `IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE`, plus
+`RECUPERE` pour les nuits rapatriées de Vigie-Chiro, qui n'ont parcouru aucune de ces étapes et
+rejoignent `DEPOSE` quand la réactivation leur rend leur audio (<!--inv:etats-workflow-->7<!--/inv--> états). La persistance est en
 **SQLite** via des **DAO** en `PreparedStatement` (pas d'ORM) avec des **migrations** versionnées.
 
 Chacune des **<!--inv:features-->16<!--/inv--> fonctionnalités** est un **paquet** autonome ; son nom

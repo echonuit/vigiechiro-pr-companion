@@ -228,7 +228,7 @@ public final class CreationPassageArchive {
                         debut.toLocalTime().toString(),
                         fin.toLocalTime().toString(),
                         null,
-                        StatutWorkflow.DEPOSE,
+                        StatutWorkflow.RECUPERE,
                         null,
                         null,
                         donneesMeteo,

@@ -173,8 +173,9 @@ class ServiceReconstructionPassagesTest {
 
         Passage passage = passageDao.findById(rapport.idPassage()).orElseThrow();
         assertThat(passage.statutWorkflow())
-                .as("la participation existe sur la plateforme : le passage est déposé")
-                .isEqualTo(StatutWorkflow.DEPOSE);
+                .as("elle vient de la plateforme et n'a jamais été importée ici : « Récupéré », pas"
+                        + " « Déposé » - c'est nous qui n'avons rien déposé (#2581)")
+                .isEqualTo(StatutWorkflow.RECUPERE);
         assertThat(passage.idPoint()).isEqualTo(idPoint);
         assertThat(passage.annee()).isEqualTo(2026);
 
@@ -511,8 +512,9 @@ class ServiceReconstructionPassagesTest {
         assertThat(passages).hasSize(1);
         Passage passage = passages.get(0);
         assertThat(passage.statutWorkflow())
-                .as("la participation existe sur la plateforme : le passage est déposé")
-                .isEqualTo(StatutWorkflow.DEPOSE);
+                .as("elle vient de la plateforme et n'a jamais été importée ici : « Récupéré », pas"
+                        + " « Déposé » - c'est nous qui n'avons rien déposé (#2581)")
+                .isEqualTo(StatutWorkflow.RECUPERE);
         assertThat(passage.idPoint()).isEqualTo(idPoint);
         assertThat(passage.annee()).isEqualTo(2026);
         assertThat(passage.idEnregistreur())

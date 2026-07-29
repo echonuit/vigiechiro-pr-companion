@@ -94,4 +94,43 @@ class MoteurWorkflowPassageTest {
         assertThat(moteur.estTransitionAutorisee(StatutWorkflow.DEPOSE, StatutWorkflow.DEPOSE))
                 .isFalse();
     }
+
+    @Test
+    @DisplayName("#2581 : « Récupéré » n'a qu'une suite, « Déposé », et rien d'autre n'est autorisé")
+    void recupere_ne_mene_qu_a_depose() {
+        assertThat(moteur.estTransitionAutorisee(StatutWorkflow.RECUPERE, StatutWorkflow.DEPOSE))
+                .as("l'audio est revenu : la nuit rejoint les nuits déposées")
+                .isTrue();
+        for (StatutWorkflow cible : StatutWorkflow.values()) {
+            if (cible == StatutWorkflow.DEPOSE) {
+                continue;
+            }
+            assertThat(moteur.estTransitionAutorisee(StatutWorkflow.RECUPERE, cible))
+                    .as(
+                            "une nuit récupérée ne peut pas aller vers « %s » : elle n'a parcouru aucune des"
+                                    + " étapes d'import",
+                            cible.libelle())
+                    .isFalse();
+        }
+    }
+
+    @Test
+    @DisplayName("#2581 : aucune étape du workflow ne mène à « Récupéré »")
+    void rien_ne_mene_a_recupere() {
+        for (StatutWorkflow depart : StatutWorkflow.values()) {
+            assertThat(moteur.estTransitionAutorisee(depart, StatutWorkflow.RECUPERE))
+                    .as(
+                            "« Récupéré » se pose à la création par la synchro, il ne s'atteint pas depuis" + " « %s »",
+                            depart.libelle())
+                    .isFalse();
+        }
+    }
+
+    @Test
+    @DisplayName("#2581 : « Récupéré » n'a pas de successeur au sens de la progression")
+    void recupere_est_hors_de_la_file() {
+        assertThat(moteur.suivant(StatutWorkflow.RECUPERE))
+                .as("sa suite dépend d'un événement - le retour de l'audio - pas d'une place dans la file")
+                .isEmpty();
+    }
 }

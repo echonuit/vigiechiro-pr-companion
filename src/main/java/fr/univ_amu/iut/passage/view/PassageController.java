@@ -418,6 +418,10 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         boutonVerifier.pseudoClassStateChanged(RECOMMANDEE, action == ActionRecommandee.VERIFIER);
         boutonDepot.pseudoClassStateChanged(RECOMMANDEE, action == ActionRecommandee.DEPOSER);
         boutonValidation.pseudoClassStateChanged(RECOMMANDEE, action == ActionRecommandee.VALIDER);
+        // Une nuit récupérée de Vigie-Chiro (#2581) : ce qui lui manque, c'est son audio. Sans cette
+        // ligne, la valeur existerait dans le modèle sans que rien ne s'allume - une recommandation
+        // qu'aucune carte ne porte est une recommandation muette.
+        boutonReactiver.pseudoClassStateChanged(RECOMMANDEE, action == ActionRecommandee.REACTIVER);
     }
 
     /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.

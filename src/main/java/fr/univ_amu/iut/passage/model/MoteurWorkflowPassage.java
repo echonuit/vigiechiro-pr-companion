@@ -34,6 +34,12 @@ import java.util.Optional;
 public final class MoteurWorkflowPassage {
 
     /// Ordre canonique des statuts : l'index dans cette liste définit la progression.
+    ///
+    /// [StatutWorkflow#RECUPERE] n'y figure pas, **délibérément** (#2581) : une nuit rapatriée de
+    /// Vigie-Chiro n'a franchi aucune de ces étapes, elle est arrivée par un autre chemin. L'y glisser
+    /// aurait obligé à répondre à des questions qui n'ont pas de sens - quel est le statut *avant*
+    /// « Récupéré » ? quelle étape suit ? - et aurait donné un successeur à un état qui n'en a qu'un,
+    /// conditionnel.
     private static final List<StatutWorkflow> ORDRE = List.of(
             StatutWorkflow.IMPORTE,
             StatutWorkflow.TRANSFORME,
@@ -44,6 +50,10 @@ public final class MoteurWorkflowPassage {
 
     /// Successeur immédiat d'un statut, ou [Optional#empty()] si `actuel` est le statut terminal
     /// ([StatutWorkflow#DEPOSE]).
+    ///
+    /// Vide aussi pour [StatutWorkflow#RECUPERE], qui n'est pas dans la file : sa suite existe
+    /// ([StatutWorkflow#DEPOSE]) mais elle n'est pas *immédiate* au sens de la progression - elle
+    /// dépend d'un événement, le retour de l'audio. Voir [#estTransitionAutorisee].
     public Optional<StatutWorkflow> suivant(StatutWorkflow actuel) {
         int index = ORDRE.indexOf(actuel);
         if (index < 0 || index == ORDRE.size() - 1) {
@@ -61,6 +71,13 @@ public final class MoteurWorkflowPassage {
         }
         if (actuel == StatutWorkflow.DEPOT_EN_COURS && cible == StatutWorkflow.DEPOT_EN_COURS) {
             return true; // reprise d'un dépôt interrompu : on repart du même statut
+        }
+        if (actuel == StatutWorkflow.RECUPERE) {
+            // Une nuit récupérée n'a qu'une suite possible (#2581) : quand la réactivation lui rend son
+            // audio, elle cesse d'être un squelette venu de la plateforme et devient une nuit déposée
+            // comme les autres. Toute autre cible est refusée - y compris un retour vers les étapes
+            // d'import, qu'elle n'a jamais parcourues.
+            return cible == StatutWorkflow.DEPOSE;
         }
         return suivant(actuel).map(attendu -> attendu == cible).orElse(false);
     }

@@ -144,7 +144,8 @@ class ServiceReactivationPassageTest {
                         Optional.of(regeneration),
                         Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                         Optional.empty(), // pas d'import : pas de phase d'ancrage (comportement historique)
-                        Optional.empty())); // pas d'hydratation : ces nuits ont déjà leurs séquences (#2555)
+                        Optional.empty()),
+                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage())); // pas d'hydratation (#2555)
     }
 
     @Test
@@ -383,7 +384,8 @@ class ServiceReactivationPassageTest {
                         Optional.of(regeneration),
                         Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                         Optional.of(importObservations),
-                        Optional.empty()));
+                        Optional.empty()),
+                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage()));
     }
 
     @Test
@@ -482,7 +484,8 @@ class ServiceReactivationPassageTest {
                         Optional.of(regeneration),
                         Optional.empty(),
                         Optional.empty(),
-                        Optional.empty()));
+                        Optional.empty()),
+                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage()));
 
         avecCris.reactiver(idPassage, sauvegarde, progres -> {});
 
@@ -615,7 +618,8 @@ class ServiceReactivationPassageTest {
                 new VerificationIdentiteAudio(),
                 disponibilite,
                 adoption,
-                AppuisReactivation.aucun());
+                AppuisReactivation.aucun(),
+                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage()));
 
         assertThatThrownBy(() -> sansRegeneration.reactiver(idPassage, sauvegarde, progres -> {}))
                 .isInstanceOf(RegleMetierException.class)
@@ -707,7 +711,8 @@ class ServiceReactivationPassageTest {
                         Optional.of(regeneration),
                         Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                         Optional.empty(),
-                        Optional.empty()));
+                        Optional.empty()),
+                new SortieDeRecuperation(passageDao, new MoteurWorkflowPassage()));
 
         RapportReactivation rapport = avecCris.reactiver(idPassage, sauvegarde, progres -> {});
 
