@@ -55,12 +55,17 @@
             </graphic>
           </Button>
         </StackPane>
-        <Button fx:id="boutonAnnulerDepot" text="Annuler le dépôt"
-                styleClass="bouton-secondaire" onAction="#annulerDepot">
-          <graphic>
-            <FontIcon iconLiteral="fas-undo"/>
-          </graphic>
-        </Button>
+        <!-- Enveloppe (#789) : sur une nuit récupérée de Vigie-Chiro, le bouton garde sa place mais
+             se désactive, et le tooltip dit pourquoi - un Button désactivé n'affiche pas de tooltip,
+             d'où l'enveloppe (#2771). -->
+        <StackPane fx:id="enveloppeAnnulerDepot">
+          <Button fx:id="boutonAnnulerDepot" text="Annuler le dépôt"
+                  styleClass="bouton-secondaire" onAction="#annulerDepot">
+            <graphic>
+              <FontIcon iconLiteral="fas-undo"/>
+            </graphic>
+          </Button>
+        </StackPane>
         <!-- Enveloppe (#789) : le tooltip explique pourquoi la réactivation est bloquée (rien à
              réactiver : audio déjà là, ou aucune séquence importée) et survit à la désactivation (#1302). -->
         <StackPane fx:id="enveloppeReactiver">

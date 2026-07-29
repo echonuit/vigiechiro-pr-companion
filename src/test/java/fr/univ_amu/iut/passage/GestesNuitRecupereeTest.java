@@ -27,7 +27,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/// Supprimer une nuit **récupérée** de Vigie-Chiro (#2581).
+/// Ce qu'on peut, et ne peut pas, faire d'une nuit **récupérée** de Vigie-Chiro (#2581).
 ///
 /// Une nuit rapatriée par la synchro porte le statut « Déposé », et c'est vrai : la participation existe
 /// sur la plateforme. Mais la garde de ce statut protège une nuit **que nous avons déposée** - « une
@@ -35,8 +35,10 @@ import org.junit.jupiter.api.io.TempDir;
 /// reçue ; la supprimer enlève une copie locale, et la participation reste où elle est.
 ///
 /// Le seul recours était « Annuler le dépôt » puis « Supprimer » : on demandait à l'utilisateur
-/// d'affirmer quelque chose de faux pour obtenir le droit de nettoyer sa base.
-class SuppressionNuitRecupereeTest {
+/// d'affirmer quelque chose de faux pour obtenir le droit de nettoyer sa base. Ce détour est fermé des
+/// deux bouts - la suppression s'ouvre (#2760), et l'annulation de dépôt se refuse (#2771), parce
+/// qu'elle ramènerait la nuit en « Prêt à déposer », donc prête à faire un doublon sur la plateforme.
+class GestesNuitRecupereeTest {
 
     private static final String PARTICIPATION = "6a53f5faae21902a597394d3";
 
@@ -143,5 +145,32 @@ class SuppressionNuitRecupereeTest {
         // et n'est pourtant pas venue de la plateforme.
         assertThat(service.estNuitRecuperee(idPassage)).isFalse();
         assertThatThrownBy(() -> service.supprimer(idPassage)).isInstanceOf(RegleMetierException.class);
+    }
+
+    @Test
+    @DisplayName("#2771 : une nuit récupérée ne peut pas annuler un dépôt qu'elle n'a pas fait")
+    void nuit_recuperee_ne_peut_pas_annuler_son_depot() {
+        long idPassage = semerNuitRecuperee();
+
+        assertThatThrownBy(() -> service.annulerDepot(idPassage))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("pas de dépôt à annuler")
+                .hasMessageContaining("Supprimer");
+
+        assertThat(passageDao.findById(idPassage).orElseThrow().statutWorkflow())
+                .as("le statut n'a pas bougé : rien ne l'a rendue « Prêt à déposer »")
+                .isEqualTo(StatutWorkflow.DEPOSE);
+    }
+
+    @Test
+    @DisplayName("#2771 : une nuit que NOUS avons déposée peut toujours annuler son dépôt")
+    void nuit_deposee_par_nous_peut_annuler_son_depot() {
+        long idPassage = semerNuitDeposeeParNous();
+
+        service.annulerDepot(idPassage);
+
+        assertThat(passageDao.findById(idPassage).orElseThrow().statutWorkflow())
+                .as("le geste garde tout son sens là où il en a un")
+                .isEqualTo(StatutWorkflow.PRET_A_DEPOSER);
     }
 }

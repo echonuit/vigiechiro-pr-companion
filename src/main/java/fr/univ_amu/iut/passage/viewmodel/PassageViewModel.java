@@ -68,6 +68,17 @@ public class PassageViewModel {
             new ReadOnlyStringWrapper(this, "motifBlocageReactivation", "");
     /// #1514 : pourquoi la carte « Vérifier » est grisée quand elle l'est (nuit non transformée, ou
     /// déjà déposée donc verdict figé). Vide quand la vérification est disponible.
+    /// Le bouton « Annuler le dépôt » a-t-il sa place sur cette fiche ? Vrai dès que la nuit est déposée
+    /// - y compris quand le geste lui-même est refusé (#2771), pour que le refus soit **visible et
+    /// expliqué** plutôt que muet.
+    private final ReadOnlyBooleanWrapper annulationDepotPertinente =
+            new ReadOnlyBooleanWrapper(this, "annulationDepotPertinente", false);
+
+    /// Pourquoi « Annuler le dépôt » est grisé (#2771) ; vide quand il ne l'est pas. Gating en amont
+    /// (#789) : on explique plutôt que de laisser découvrir le refus après confirmation.
+    private final ReadOnlyStringWrapper motifBlocageAnnulationDepot =
+            new ReadOnlyStringWrapper(this, "motifBlocageAnnulationDepot", "");
+
     private final ReadOnlyStringWrapper motifBlocageVerification =
             new ReadOnlyStringWrapper(this, "motifBlocageVerification", "");
     private final ReadOnlyObjectWrapper<ActionRecommandee> actionRecommandee =
@@ -225,7 +236,15 @@ public class PassageViewModel {
         // Accès à l'écran de dépôt (M-Lot) dès le passage vérifié ET **même une fois déposé** (#…) : on doit
         // pouvoir y revenir pour consulter les archives ou les supprimer, sans avoir à annuler le dépôt.
         depotDisponible.set(detail.statut().ordinal() >= StatutWorkflow.VERIFIE.ordinal());
-        annulationDepotDisponible.set(detail.statut() == StatutWorkflow.DEPOSE);
+        // Sauf sur une nuit récupérée (#2771) : elle n'a pas de dépôt à annuler ici, et la transition
+        // la rendrait « Prêt à déposer » - donc prête à faire un doublon sur la plateforme.
+        // Deux questions distinctes. « Le bouton a-t-il sa place ici ? » - oui dès que la nuit est
+        // déposée, sinon il disparaît (il n'a aucun sens avant le dépôt). « Le geste est-il possible ? »
+        // - non sur une nuit récupérée, et là il reste VISIBLE mais désactivé, avec son motif : c'est
+        // précisément la nuit où son absence surprendrait, puisque la pastille annonce « Déposé ».
+        annulationDepotPertinente.set(nuitDeposee);
+        annulationDepotDisponible.set(nuitDeposee && !nuitRecuperee);
+        motifBlocageAnnulationDepot.set(nuitRecuperee ? ServicePassage.MOTIF_DEPOT_NON_ANNULABLE : "");
         // Suppression bloquée sur un passage déposé (le service la refuse) : on grise le bouton en amont au
         // lieu de laisser l'utilisateur découvrir le refus après la confirmation. Il faut d'abord annuler
         // le dépôt.
@@ -264,6 +283,8 @@ public class PassageViewModel {
         etapes.clear();
         verificationDisponible.set(false);
         motifBlocageVerification.set("");
+        motifBlocageAnnulationDepot.set("");
+        annulationDepotPertinente.set(false);
         validationVerrouillee.set(true);
         depotDisponible.set(false);
         annulationDepotDisponible.set(false);
@@ -348,6 +369,17 @@ public class PassageViewModel {
     /// passage à « Prêt à déposer » sans toucher aux validations Tadarida déjà saisies.
     public ReadOnlyBooleanProperty annulationDepotDisponibleProperty() {
         return annulationDepotDisponible.getReadOnlyProperty();
+    }
+
+    /// Le bouton « Annuler le dépôt » a-t-il sa place ici (#2771) ? Pilote sa **présence**, quand
+    /// [#annulationDepotDisponibleProperty] pilote son **activation**.
+    public ReadOnlyBooleanProperty annulationDepotPertinenteProperty() {
+        return annulationDepotPertinente.getReadOnlyProperty();
+    }
+
+    /// Pourquoi « Annuler le dépôt » est grisé, ou chaîne vide quand il ne l'est pas (#2771).
+    public ReadOnlyStringProperty motifBlocageAnnulationDepotProperty() {
+        return motifBlocageAnnulationDepot.getReadOnlyProperty();
     }
 
     /// `true` quand le passage peut être supprimé (tout statut **sauf** Déposé). Un passage déposé doit
