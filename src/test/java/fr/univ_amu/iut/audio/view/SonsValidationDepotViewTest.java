@@ -17,6 +17,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
+import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
@@ -37,8 +38,11 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
+import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -140,7 +144,10 @@ class SonsValidationDepotViewTest {
                                 mock(MarquageDouteux.class),
                                 mock(SaisieCertitude.class),
                                 mock(RevueEnLot.class),
-                                bibliotheque,
+                                new ExporteurAudio(
+                                        service,
+                                        bibliotheque,
+                                        new ExportObservationsEtSons(mock(SequenceDao.class), mock(SessionDao.class))),
                                 mock(ServiceDisponibiliteAudio.class),
                                 p -> true,
                                 mock(DiscussionValidateur.class));
@@ -399,6 +406,30 @@ class SonsValidationDepotViewTest {
         assertThat(destination)
                 .as("l'export ne se contente pas d'annoncer : il écrit")
                 .exists();
+    }
+
+    @Test
+    @DisplayName("#2793 : « Exporter les observations et les sons » écrit vraiment l'archive désignée")
+    void export_sons_ecrit_l_archive(FxRobot robot) {
+        Path destination = dossierReglages.resolve("observations-sons.zip");
+        choixSelecteur = Optional.of(destination);
+
+        robot.interact(() -> item(robot, "itemExporterSons").fire());
+
+        assertThat(nomsProposes).containsExactly("observations-sons.zip");
+        assertThat(destination)
+                .as("le geste traverse la modale de progression et écrit l'archive")
+                .exists();
+    }
+
+    @Test
+    @DisplayName("#2793 : « Exporter les observations et les sons » annulé au sélecteur : rien n'est écrit")
+    void export_sons_annule_n_ecrit_rien(FxRobot robot) {
+        choixSelecteur = Optional.empty();
+
+        robot.interact(() -> item(robot, "itemExporterSons").fire());
+
+        assertThat(dossierReglages.resolve("observations-sons.zip")).doesNotExist();
     }
 
     @Test

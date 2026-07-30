@@ -7,6 +7,7 @@ import fr.univ_amu.iut.audio.view.AccueilSonsReference;
 import fr.univ_amu.iut.audio.view.NavigationAudio;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
+import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
@@ -18,7 +19,10 @@ import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
+import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -106,7 +110,7 @@ public class AudioModule extends ModuleDeFeature {
             MarquageDouteux marquageDouteux,
             SaisieCertitude saisieCertitude,
             RevueEnLot revueEnLot,
-            ServiceBibliotheque bibliotheque,
+            ExporteurAudio exporteur,
             ServiceDisponibiliteAudio disponibilite,
             DiscussionValidateur discussion) {
         return new AudioViewModel(
@@ -117,10 +121,25 @@ public class AudioModule extends ModuleDeFeature {
                 marquageDouteux,
                 saisieCertitude,
                 revueEnLot,
-                bibliotheque,
+                exporteur,
                 disponibilite,
                 Files::exists,
                 discussion);
+    }
+
+    /// Exports de la vue audio (#2793) : assemblés ici pour que le ViewModel reste à son arité - le
+    /// service d'archive (CSV + sons) vient de `validation`, la bibliothèque de `bibliotheque`.
+    @Provides
+    ExporteurAudio fournirExporteurAudio(
+            ServiceValidation validation, ServiceBibliotheque bibliotheque, ExportObservationsEtSons exportSons) {
+        return new ExporteurAudio(validation, bibliotheque, exportSons);
+    }
+
+    /// Le composeur d'archive « observations + sons » (#2792) : séquences et sessions viennent des DAO
+    /// de `passage`, dépendance de modèle déjà établie (`audio` réutilise les modèles des puits).
+    @Provides
+    ExportObservationsEtSons fournirExportObservationsEtSons(SequenceDao sequenceDao, SessionDao sessionDao) {
+        return new ExportObservationsEtSons(sequenceDao, sessionDao);
     }
 
     /// ViewModel dédié de l'**import VigieChiro** (axe 4.2), séparé de [AudioViewModel] (concern distinct, et

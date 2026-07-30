@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
-import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.SondeAccessibilite;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
@@ -141,7 +140,7 @@ public class AudioViewModel {
             MarquageDouteux marquageDouteux,
             SaisieCertitude saisieCertitude,
             RevueEnLot revueEnLot,
-            ServiceBibliotheque bibliotheque,
+            ExporteurAudio exporteur,
             ServiceDisponibiliteAudio disponibilite,
             Predicate<Path> fichierPresent,
             DiscussionValidateur discussion) {
@@ -149,7 +148,7 @@ public class AudioViewModel {
         this.discussion = Objects.requireNonNull(discussion, "discussion");
         this.disponibiliteEcoute = new DisponibiliteEcoute(disponibilite, fichierPresent);
         this.resolveur = new ResolveurSourceAudio(service, projectionsAudio, plageNuitPassage);
-        this.exporteur = new ExporteurAudio(service, bibliotheque);
+        this.exporteur = Objects.requireNonNull(exporteur, "exporteur");
         this.actions = new ActionsRevueAudio(
                 service,
                 Objects.requireNonNull(validationManuelle, "validationManuelle"),
@@ -306,6 +305,57 @@ public class AudioViewModel {
         ExporteurAudio.ResultatExport resultat = exporteur.bibliotheque(destination);
         messages.export(resultat.reussi(), resultat.message());
         return resultat.reussi();
+    }
+
+    /// **Prépare** l'export « observations + sons » (#2793), sur le fil JavaFX : fige le sous-ensemble
+    /// affiché et **sonde le dossier de destination** (#2426) avant d'ouvrir la modale. Vide = refus,
+    /// le motif est posé en message.
+    public Optional<List<LigneObservationAudio>> preparerExportSons(Path destination) {
+        if (destination == null) {
+            return Optional.empty();
+        }
+        Path dossier = destination.toAbsolutePath().getParent();
+        SondeAccessibilite.Verdict verdict = SondeAccessibilite.sonder(dossier);
+        if (!verdict.accessible()) {
+            messages.avertissement("Dossier inutilisable : " + verdict.motif() + " (" + dossier + ").");
+            return Optional.empty();
+        }
+        return Optional.of(List.copyOf(observationsFiltrees));
+    }
+
+    /// Exporte `lignes` **et leurs sons** en archive ZIP (#2793). **Bloquant** : à appeler hors du fil
+    /// JavaFX, dans la modale de progression, après [#preparerExportSons]. L'annulation remonte en
+    /// [fr.univ_amu.iut.commun.model.OperationAnnuleeException] (issue « annulé » de la modale),
+    /// l'échec d'écriture en [java.io.UncheckedIOException] (issue « échec ») - l'archive partielle
+    /// est déjà supprimée.
+    ///
+    /// @return le message de bilan, à restituer par [#confirmerExportSons]
+    public String exporterObservationsEtSons(
+            List<LigneObservationAudio> lignes,
+            Path destination,
+            java.util.function.Consumer<fr.univ_amu.iut.commun.model.Progression> progres,
+            fr.univ_amu.iut.commun.model.JetonAnnulation jeton) {
+        try {
+            return exporteur.observationsEtSons(lignes, destination, progres, jeton);
+        } catch (java.io.IOException echec) {
+            throw new java.io.UncheckedIOException(echec);
+        }
+    }
+
+    /// Restitutions de l'export « observations + sons », sur le fil JavaFX (issues de la modale).
+    public void confirmerExportSons(String message) {
+        messages.export(true, message);
+    }
+
+    /// L'utilisateur a annulé : l'archive partielle a été supprimée, on le dit sans dramatiser.
+    public void annulationExportSons() {
+        messages.avertissement("Export annulé : aucune archive n'a été écrite.");
+    }
+
+    /// L'écriture a échoué : l'archive partielle a été supprimée, le motif est restitué.
+    public void echecExportSons(Throwable echec) {
+        String motif = echec.getCause() != null ? echec.getCause().getMessage() : echec.getMessage();
+        messages.export(false, "Export impossible : " + motif);
     }
 
     /// Exporte en **CSV** les observations **actuellement affichées** (filtres appliqués) vers

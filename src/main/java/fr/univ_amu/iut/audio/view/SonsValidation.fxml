@@ -109,6 +109,11 @@
               <FontIcon iconLiteral="fas-file-export"/>
             </graphic>
           </MenuItem>
+          <MenuItem fx:id="itemExporterSons" text="Exporter les observations et les sons (ZIP)…" onAction="#exporterObservationsEtSons">
+            <graphic>
+              <FontIcon iconLiteral="fas-file-archive"/>
+            </graphic>
+          </MenuItem>
           <MenuItem fx:id="itemExporterBiblio" text="Exporter la bibliothèque…" onAction="#exporterBibliotheque">
             <graphic>
               <FontIcon iconLiteral="fas-file-export"/>

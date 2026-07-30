@@ -30,6 +30,7 @@ final class MenuAudio {
             CheckMenuItem inclureMode,
             MenuItem exporterVu,
             MenuItem exporterObservations,
+            MenuItem exporterSons,
             MenuItem exporterBiblio,
             MenuItem ouvrirVigieChiro) {}
 
@@ -77,6 +78,14 @@ final class MenuAudio {
                 .bind(Bindings.when(Bindings.isEmpty(viewModel.observationsFiltrees()))
                         .then("Exporter les observations (CSV)… (aucune observation à exporter)")
                         .otherwise("Exporter les observations (CSV)…"));
+        // Export « observations + sons » (#2793) : mêmes conditions que le CSV - toutes sources, dès
+        // qu'une ligne est affichée - et même restitution de la cause dans le libellé grisé (#789).
+        items.exporterSons().disableProperty().bind(Bindings.isEmpty(viewModel.observationsFiltrees()));
+        items.exporterSons()
+                .textProperty()
+                .bind(Bindings.when(Bindings.isEmpty(viewModel.observationsFiltrees()))
+                        .then("Exporter les observations et les sons (ZIP)… (aucune observation à exporter)")
+                        .otherwise("Exporter les observations et les sons (ZIP)…"));
         // Inclure (ou non) la colonne validation_mode dans l'export _Vu (R24). Persisté (#1006) : le VM
         // (recréé à chaque chargement) suit le réglage partagé avec l'onglet « Audio », puis la case du ☰
         // suit le VM. Ordre important pour l'initialisation depuis la valeur persistée.

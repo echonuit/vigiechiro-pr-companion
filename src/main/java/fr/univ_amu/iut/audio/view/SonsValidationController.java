@@ -190,6 +190,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private MenuItem itemExporterObservations;
 
     @FXML
+    private MenuItem itemExporterSons;
+
+    @FXML
     private MenuItem itemExporterBiblio;
 
     @FXML
@@ -495,6 +498,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 itemInclureMode,
                 itemExporterVu,
                 itemExporterObservations,
+                itemExporterSons,
                 itemExporterBiblio,
                 itemOuvrirVigieChiro);
         MenuAudio.cabler(itemsMenu, viewModel, importVigieChiro, publicationCorrections, reactifs);
@@ -730,6 +734,17 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private void exporterObservations() {
         ExportsAudioUI.exporterObservations(viewModel, selecteur());
+    }
+
+    /// « Exporter les observations et les sons (ZIP) » (#2793) : sélecteur d'enregistrement, préparation
+    /// sur le fil JavaFX (sonde de destination), puis écriture hors fil dans la modale de progression.
+    @FXML
+    private void exporterObservationsEtSons() {
+        ExportSonsUI.lancer(
+                viewModel,
+                selecteur(),
+                new DialogueProgression(appuis.executeur()),
+                () -> tableObservations.getScene().getWindow());
     }
 
     /// « Exporter la bibliothèque » : sélecteur de dossier natif puis délégation au VM (copie des sons de

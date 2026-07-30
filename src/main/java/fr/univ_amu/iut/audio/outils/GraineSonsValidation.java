@@ -9,6 +9,7 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.view.SonsValidationController;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
+import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
@@ -45,6 +46,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.di.ValidationModule;
+import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import fr.univ_amu.iut.validation.model.Observation;
@@ -137,6 +139,8 @@ final class GraineSonsValidation {
                             SaisieCertitude saisieCertitude,
                             RevueEnLot revueEnLot,
                             ServiceBibliotheque bibliotheque,
+                            SequenceDao sequenceDao,
+                            SessionDao sessionDao,
                             ServiceDisponibiliteAudio disponibilite,
                             DiscussionValidateur discussion) {
                         return new AudioViewModel(
@@ -147,7 +151,10 @@ final class GraineSonsValidation {
                                 marquageDouteux,
                                 saisieCertitude,
                                 revueEnLot,
-                                bibliotheque,
+                                new ExporteurAudio(
+                                        validation,
+                                        bibliotheque,
+                                        new ExportObservationsEtSons(sequenceDao, sessionDao)),
                                 disponibilite,
                                 Files::exists,
                                 discussion);
