@@ -8,20 +8,14 @@ import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
-import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -49,11 +43,14 @@ class CreationPassageArchiveTest {
     void preparer() {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "130711", "Test", Protocole.STANDARD, null, "2026-05-31", "u-1"));
-        PointDEcoute point = new PointDao(source).insert(new PointDEcoute(null, "Z41", 43.5, 5.4, null, site.id()));
-        idPoint = point.id();
+        idPoint = JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .carre("130711")
+                .nomSite("Test")
+                .point("Z41")
+                .position(43.5, 5.4)
+                .semerSiteEtPoint()
+                .idPoint();
         creation =
                 new CreationPassageArchive(source, new Workspace(dossier), new HorlogeFigee(LocalDate.of(2026, 7, 17)));
     }

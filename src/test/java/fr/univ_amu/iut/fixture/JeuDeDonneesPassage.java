@@ -397,6 +397,27 @@ public final class JeuDeDonneesPassage {
         return idPoint;
     }
 
+    /// Le **site** semé, relu depuis la base.
+    ///
+    /// La fixture rend des identifiants, ce qui suffit à la plupart des appelants. Cinq ne s'en
+    /// contentent pas : ils passent l'entité à une vue ou à un service. Faire relire chacun par son DAO
+    /// remettait trois lignes de plomberie dans cinq tests, ce qui est précisément ce qu'une fixture est
+    /// là pour retirer. Un appelant ne justifiait pas d'élargir cette surface ; cinq, oui.
+    public Site leSite() {
+        exigerTopologie();
+        return new SiteDao(source).findById(idSite).orElseThrow();
+    }
+
+    /// Le **point d'écoute** semé, relu depuis la base.
+    public PointDEcoute lePoint() {
+        exigerTopologie();
+        return new PointDao(source)
+                .findBySite(idSite).stream()
+                        .filter(point -> point.code().equals(codePoint))
+                        .findFirst()
+                        .orElseThrow();
+    }
+
     public long idPassage() {
         exigerSemis();
         return idPassage;
