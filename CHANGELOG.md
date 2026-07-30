@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.138.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.138.0...v2.138.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **captures:** les graines de M-Sites et M-Import retrouvent leurs accents ([#2957](https://github.com/echonuit/vigiechiro-pr-companion/issues/2957)) ([06c2cdb](https://github.com/echonuit/vigiechiro-pr-companion/commit/06c2cdb5a679df72cfcc43cfb87bc2eb39fa1c8a)), closes [#2945](https://github.com/echonuit/vigiechiro-pr-companion/issues/2945)
+
 # [2.138.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.137.3...v2.138.0) (2026-07-30)
 
 
