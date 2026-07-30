@@ -427,14 +427,23 @@ incomplète ramène l'échec que le profil avait supprimé.
 
 PIT couvre donc aussi la couche `view`, ce que l'échec brut laissait croire impossible.
 
-**Deux mesures tournent toutes seules**, et leurs périmètres ne se recouvrent pas. Les deux sont **non
+**Deux mesures tournent toutes seules, chaque nuit**, et leurs périmètres ne se recouvrent pas.
+
+Elles étaient hebdomadaire et mensuelle : les cycles complets prenaient **17 semaines** et **15 mois**.
+Quinze mois, pour les vues d'une feature, c'est plus long que le chantier qui y introduirait une
+régression. En quotidien les mêmes cycles prennent **17 et 15 jours**, et le dépôt étant public, les
+minutes d'Actions sont illimitées sur les runners standard : la fréquence ne coûte que du temps machine.
+
+Deux limites à garder en tête. La rotation est **aveugle au diff** : elle avance d'un paquet par jour quoi
+qu'on ait touché, donc elle mesure plus souvent, pas plus juste. Et un bilan quotidien que personne ne lit
+vaut moins qu'un bilan hebdomadaire qu'on lit - la fréquence ne crée pas l'attention. Les deux sont **non
 bloquantes**, comme le rapport ADR dont elles sont le calque : un survivant n'est pas un défaut mais une
 **question** posée à un humain, et bloquer une fusion là-dessus ferait cocher au hasard.
 
 | Workflow | Quand | Ce qu'elle mute | Avec quels tests |
 |---|---|---|---|
-| `mutation-hebdo.yml` | chaque lundi, **un paquet par tour** (cycle de 17 semaines) | `fr.univ_amu.iut.<feature>.model.*` | tous, **sauf** `e2e` et `commun.api` |
-| `mutation-ihm.yml` | le 8 du mois, **une feature par tour** (cycle de 15 mois) | `fr.univ_amu.iut.<feature>.view.*` | ceux de la feature, **sauf** `e2e` |
+| `mutation-model.yml` | chaque nuit (3 h UTC), **un paquet par tour** (cycle de 17 jours) | `fr.univ_amu.iut.<feature>.model.*` | tous, **sauf** `e2e` et `commun.api` |
+| `mutation-ihm.yml` | chaque nuit (5 h UTC), **une feature par tour** (cycle de 15 jours) | `fr.univ_amu.iut.<feature>.view.*` | ceux de la feature, **sauf** `e2e` |
 
 Chacune publie son bilan dans le **résumé du job** ; le rapport HTML détaillé est conservé 30 jours en
 artefact.

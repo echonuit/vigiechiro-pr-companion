@@ -1,6 +1,6 @@
 # Mesure de la qualité des tests d'INTERFACE par mutation (PIT), une feature à la fois.
 #
-# Pendant de `mutation-hebdo.yml`, qui mesure les paquets `model`. Les classes de vue ne sont pas
+# Pendant de `mutation-model.yml`, qui mesure les paquets `model`. Les classes de vue ne sont pas
 # oubliées : elles sont mesurées ici, avec les tests qui les jugent.
 #
 # Ce que cette mesure apprend, et qui n'était visible nulle part : sur un périmètre de vues réel,
@@ -14,9 +14,9 @@
 # 283 classes de vue de l'application demanderaient des dizaines d'heures - la borne du job est à
 # 300 minutes.
 #
-# La mesure est donc **complète sur un cycle, pas sur un mois** : chaque exécution prend une feature,
-# et le tour se fait en un peu plus d'un an. La rotation est **sans état** - elle se déduit du mois -
-# pour qu'aucun fichier n'ait à être écrit ni relu entre deux exécutions.
+# La mesure est donc **complète sur un cycle, pas sur un jour** : chaque exécution prend une feature,
+# et le tour se fait en 15 jours. La rotation est **sans état** - elle se déduit du jour - pour
+# qu'aucun fichier n'ait à être écrit ni relu entre deux exécutions.
 #
 # ## Ce qu'on ne règle PAS ici : le butoir
 #
@@ -33,13 +33,18 @@ name: mutation-ihm
 
 on:
   schedule:
-    # Le 8 du mois à 7 h UTC : une semaine après le rapport ADR et la mesure `model`, pour ne pas
-    # empiler trois bilans le même lundi.
-    - cron: "0 7 8 * *"
+    # Chaque nuit à 5 h UTC, deux heures après la mesure `model` : les deux peuvent tourner de front,
+    # mais les décaler garde les deux résumés lisibles l'un après l'autre.
+    #
+    # Pourquoi quotidien : en mensuel, la rotation par feature rendait le cycle complet en **15 mois**.
+    # Les vues d'une feature n'étaient donc mesurées qu'une fois par an et quart - une régression pouvait
+    # y vivre plus longtemps que le chantier qui l'avait introduite. Le même cycle en quotidien prend
+    # **15 jours**.
+    - cron: "0 5 * * *"
   workflow_dispatch:
     inputs:
       feature:
-        description: "Feature dont les vues sont mutées (vide = celle du tour, déduite du mois)"
+        description: "Feature dont les vues sont mutées (vide = celle du tour, déduite du jour)"
         required: false
         default: ""
 
@@ -77,10 +82,10 @@ jobs:
           if [ -n "${DEMANDEE}" ]; then
             FEATURE="${DEMANDEE}"
           else
-            # Rotation sans état : le mois choisit. Le tour complet prend 15 mois.
-            MOIS=$(date -u +%-m)
-            ANNEE=$(date -u +%Y)
-            INDEX=$(( (ANNEE * 12 + MOIS) % ${#FEATURES[@]} ))
+            # Rotation sans état : le JOUR choisit, compté en jours depuis l'époque. Le tour complet prend
+            # 15 jours, et le compte absolu évite la bascule d'année.
+            JOUR=$(( $(date -u +%s) / 86400 ))
+            INDEX=$(( JOUR % ${#FEATURES[@]} ))
             FEATURE="${FEATURES[$INDEX]}"
           fi
           if [ ! -d "src/main/java/fr/univ_amu/iut/${FEATURE}/view" ]; then
@@ -96,7 +101,7 @@ jobs:
         run: |
           set -euo pipefail
           # Les tests de la feature JUGENT ses vues ; les E2E ne feraient que les traverser, au prix
-          # d'un parcours complet par mutant (voir l'en-tête de mutation-hebdo.yml).
+          # d'un parcours complet par mutant (voir l'en-tête de mutation-model.yml).
           #
           # Headless : les propriétés vivent dans le profil `mutation` du pom (le minion n'hérite pas
           # des systemPropertyVariables de surefire). Ne pas les repasser ici - `-DjvmArgs` REMPLACE
@@ -122,7 +127,7 @@ jobs:
           # Un bilan absent ou illisible serait lu comme « zéro survivant ». On le dit, plutôt que de
           # laisser un résumé vide passer pour une bonne nouvelle.
           {
-            echo "La mesure n'a pas abouti : aucun rapport lisible ce mois-ci."
+            echo "La mesure n'a pas abouti : aucun rapport lisible aujourd'hui."
             echo
             echo "Ce n'est **pas** « zéro survivant » : c'est une absence de mesure."
           } >> "$GITHUB_STEP_SUMMARY"
