@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-07-29
 - **Chantier** : #2843, suite de la clôture du chantier #2348 et de #2813
-- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 506)
+- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 275)
 
 ## Contexte
 
@@ -29,7 +29,11 @@ Une seule population, un seul nombre, aucun angle mort.
 
 **4. Une zone nettoyée passe du cliquet à la tolérance zéro.** Cette ADR annonçait d'abord que la documentation aurait « son propre cliquet ». C'était mal formulé : un cliquet sur une zone déjà au plancher est inutilement faible, et il resterait masquable tant qu'une autre zone comptée avec elle serait, elle, loin du plancher. Une zone nettoyée n'a plus besoin d'une marge, elle a besoin d'un refus.
 
-`docs/` et `brief/` sont nettoyées depuis #2365 : la vérification y compte **zéro** cadratin de prose, et le script échoue à la première rechute.
+`docs/`, `brief/`, `dev-docs/` et **`src/main/java`** sont nettoyées depuis #2365 : la vérification y compte **zéro** cadratin de prose, et le script échoue à la première rechute. Le cliquet ne porte donc plus que sur `src/test/java`.
+
+La promotion se fait **dans la tranche qui amène la zone à zéro**, pas plus tard. Différer, c'est ouvrir une fenêtre où l'arbre est propre et où rien ne le garde : la première rechute y passerait sans bruit, et le cliquet, ayant encore sa marge, resterait vert.
+
+Une zone peut porter une **extension** : un arbre de sources se garde exactement comme un arbre de documentation. Ce qui rend cette généralisation risquée, c'est qu'un motif mal apparié à son arbre (`*.md` sur `src/main/java`) rapporterait « 0 cadratin de prose » **à jamais**, avec la forme exacte du succès. Une zone qui ne balaie **aucun fichier** lève donc, et le garde-fou des scripts vérifie ce refus : rien d'autre ne distingue une zone propre d'une zone jamais regardée.
 
 Les zones nettoyées vivent dans une **liste déclarative** du script (`ZONES_NETTOYEES`). Ajouter une tranche revient à ajouter **une ligne**, et c'est délibéré : chaque tranche du chantier touche ce même script, donc une insertion d'une ligne se résout sans réfléchir là où un bloc de code aurait sérialisé les tranches.
 
