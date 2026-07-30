@@ -433,8 +433,8 @@ bloquantes**, comme le rapport ADR dont elles sont le calque : un survivant n'es
 
 | Workflow | Quand | Ce qu'elle mute | Avec quels tests |
 |---|---|---|---|
-| `mutation-hebdo.yml` | chaque lundi | `fr.univ_amu.iut.*.model.*` | tous, **sauf** `e2e` |
-| `mutation-ihm.yml` | le 8 du mois, **une feature par tour** | `fr.univ_amu.iut.<feature>.view.*` | ceux de la feature, **sauf** `e2e` |
+| `mutation-hebdo.yml` | chaque lundi, **un paquet par tour** (cycle de 17 semaines) | `fr.univ_amu.iut.<feature>.model.*` | tous, **sauf** `e2e` et `commun.api` |
+| `mutation-ihm.yml` | le 8 du mois, **une feature par tour** (cycle de 15 mois) | `fr.univ_amu.iut.<feature>.view.*` | ceux de la feature, **sauf** `e2e` |
 
 Chacune publie son bilan dans le **résumé du job** ; le rapport HTML détaillé est conservé 30 jours en
 artefact.
@@ -448,6 +448,22 @@ apprendre ce qu'un test unitaire dit en millisecondes. Le premier passage sur le
 Les exclure ne **cache** rien, et c'est le point : un mutant que seul un E2E tuerait est, par définition,
 un mutant qu'aucun test unitaire ne détecte. Il ressort désormais en **survivant**, c'est-à-dire en
 question posée à un humain, au lieu d'être tué silencieusement.
+
+**Pourquoi le modèle aussi se mesure un paquet à la fois.** Les paquets `model` d'un seul coup n'ont pas
+fini : le job a été **tué à 300 minutes pile**, après 335 unités sur ~4 657 mutants. Ce n'est pas la
+lenteur d'un test qui l'a tué, c'est le **volume** - 4 657 mutants à quelques secondes chacun font cinq
+heures quelle que soit la finesse des tests. Un paquet seul, en revanche, tient sans peine :
+`saison.model` a rendu 86 mutants et **97 % de détection en 12 minutes**, sans expiration.
+
+Les deux plus gros paquets (`commun`, 96 classes ; `passage`, 93) ne sont pas garantis pour autant, et ce
+n'est pas mesuré. Les deux premiers tours du cycle le diront ; s'ils débordent, la maille descendra d'un
+cran **sur eux seuls**.
+
+**Pourquoi `commun.api` est écarté côté tests.** Nuance qui compte : ce n'est pas une classe mutée, c'est
+la suite du **réessai gradué** ([ADR 2354](decisions/2354-le-reessai-reseau-est-gradue-jamais-aveugle-toujours-jittere.md)),
+la plus lente du dépôt (5,5 s). Son sujet est l'**attente** : tout mutant qui fait boucler le réessai une
+fois de plus dépasse le butoir de PIT (~11 s), et l'expiration y est un **effet du sujet muté**, pas un
+défaut d'outillage. Les 16 expirations du run tué pointaient vers elle.
 
 **Pourquoi l'IHM se mesure une feature à la fois.** Muter une vue coûte ~9 s par mutant : chaque mutant
 rejoue des tests TestFX, qui démarrent un toolkit JavaFX. Les 283 classes de vue de l'application

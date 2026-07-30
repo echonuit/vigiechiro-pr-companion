@@ -9,8 +9,17 @@
 # posée à un humain (vrai trou, mutant équivalent, artefact de ciblage) : bloquer une fusion là-dessus
 # ferait cocher au hasard.
 #
-# ⚠️ PÉRIMÈTRE : les paquets `model`, et JAMAIS les E2E côté tests. Les deux décisions sont mesurées,
-# pas supposées (#2768) :
+# ⚠️ PÉRIMÈTRE : **un paquet `model` par semaine**, et jamais les E2E ni la suite du réessai réseau
+# côté tests. Chaque décision est mesurée, pas supposée (#2768) :
+#
+#   - le dépôt ENTIER n'a jamais fini : 1 h 54 sans aboutir, 19 expirations ;
+#   - les paquets `model` d'un coup n'ont pas fini non plus : **tué à 300 minutes pile**, après avoir
+#     traité 335 unités sur ~4 657 mutants. Ce n'est pas la lenteur d'un test qui l'a tué, c'est le
+#     VOLUME - 4 657 mutants à quelques secondes chacun font cinq heures quelle que soit la finesse ;
+#   - une feature à la fois, en revanche, aboutit : la mesure IHM a rendu 561 mutants en 51 minutes.
+#
+# D'où la rotation ci-dessous : la mesure est **complète sur un cycle, pas sur une semaine**. Même patron
+# que `mutation-ihm.yml`, sans état à écrire ni relire - la semaine ISO choisit.
 #
 #   - un E2E est **large en couverture et pauvre en jugement**. `ParcoursDepotE2ETest` couvre à lui seul
 #     8 539 blocs : PIT le retient comme test candidat pour des mutants situés dans des centaines de
@@ -23,6 +32,13 @@
 #
 # Les classes de **vue** ont leur propre mesure : `mutation-ihm.yml`. Elles ne sont pas oubliées, elles
 # sont mesurées ailleurs, avec des tests qui les jugent.
+#
+# ⚠️ `commun.api` est écarté côté TESTS, et c'est une nuance qui compte : ce n'est pas une classe mutée,
+# c'est la suite du **réessai gradué** (#2354), la plus lente du dépôt (5,5 s). Son sujet est l'attente :
+# tout mutant qui fait boucler le réessai une fois de plus dépasse le butoir de PIT (~11 s ici), et
+# l'expiration y est un **effet du sujet**, pas un défaut d'outillage. Les 16 expirations du run tué
+# pointaient vers elle. Ce qu'elle couvre au passage est mieux jugé par ses propres tests que par un
+# rapport de mutation qui la fait expirer.
 #
 # NON BLOQUANT, comme le rapport ADR dont ce workflow est le calque : ici on observe, on ne juge pas.
 #
@@ -40,10 +56,10 @@ on:
     - cron: "0 7 * * 1"
   workflow_dispatch:
     inputs:
-      perimetre:
-        description: "Classes à muter (motif PIT)"
+      feature:
+        description: "Feature dont le paquet model est muté (vide = celle du tour, déduite de la semaine)"
         required: false
-        default: "fr.univ_amu.iut.*.model.*"
+        default: ""
 
 permissions:
   contents: read
@@ -52,8 +68,14 @@ jobs:
   mesurer:
     name: Mutation sur le dépôt
     runs-on: ubuntu-latest
-    # Chaque lundi repart de zéro (voir « analyse incrémentale » ci-dessous) : le dépôt entier prend des
-    # heures. La borne évite qu'un blocage consomme la journée.
+    # Un paquet moyen tient sans peine : `saison.model` (4 classes, 86 mutants) a pris 12 minutes en
+    # local, sans expiration, 97 % de détection.
+    #
+    # ⚠️ Les deux plus gros ne sont PAS garantis. `commun` compte 96 classes et `passage` 93, soit une
+    # vingtaine de fois `saison` : à ce rythme leur tour frôlerait la borne. Ce n'est pas mesuré - les deux
+    # premiers tours du cycle le diront. S'ils débordent, la maille descend d'un cran sur eux seuls
+    # (`commun.model.dao` et le reste), sans toucher aux quinze autres. On ne complique pas d'avance ce
+    # qu'une mesure va trancher.
     timeout-minutes: 300
 
     steps:
@@ -67,10 +89,37 @@ jobs:
           check-latest: false
           cache: maven
 
+      - name: Choisir le paquet du tour
+        id: tour
+        env:
+          DEMANDEE: ${{ inputs.feature }}
+        run: |
+          set -euo pipefail
+          # Les features possédant un paquet `model`, par poids décroissant. Les plus lourdes passent en
+          # tête : ce sont elles dont les survivants coûtent le plus cher, et il vaut mieux les mesurer
+          # tôt dans le cycle.
+          FEATURES=(commun passage validation importation lot sites audit analyse diagnostic \
+                    qualification multisite saison maj bibliotheque cli recherche connexion)
+          if [ -n "${DEMANDEE}" ]; then
+            FEATURE="${DEMANDEE}"
+          else
+            # Rotation sans état : la semaine ISO choisit. Le tour complet prend 17 semaines.
+            SEMAINE=$(date -u +%-V)
+            ANNEE=$(date -u +%G)
+            INDEX=$(( (ANNEE * 53 + SEMAINE) % ${#FEATURES[@]} ))
+            FEATURE="${FEATURES[$INDEX]}"
+          fi
+          if [ ! -d "src/main/java/fr/univ_amu/iut/${FEATURE}/model" ]; then
+            echo "::error::Feature « ${FEATURE} » sans paquet model : rien à mesurer."
+            exit 1
+          fi
+          echo "feature=${FEATURE}" >> "$GITHUB_OUTPUT"
+          echo "Paquet du tour : fr.univ_amu.iut.${FEATURE}.model"
+
       - name: Mesurer
         id: mesure
         env:
-          PERIMETRE: ${{ inputs.perimetre || 'fr.univ_amu.iut.*.model.*' }}
+          PERIMETRE: fr.univ_amu.iut.${{ steps.tour.outputs.feature }}.model.*
         run: |
           set -euo pipefail
           # Headless : les propriétés vivent dans le profil `mutation` du pom (le minion n'hérite pas
@@ -86,14 +135,18 @@ jobs:
           ./mvnw -B -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
             -DtargetClasses="$PERIMETRE" \
             -DtargetTests="fr.univ_amu.iut.*" \
-            -DexcludedTestClasses="fr.univ_amu.iut.e2e.*"
+            -DexcludedTestClasses="fr.univ_amu.iut.e2e.*,fr.univ_amu.iut.commun.api.*"
 
       - name: Publier le bilan dans le résumé du job
         if: always()
+        env:
+          FEATURE: ${{ steps.tour.outputs.feature }}
         run: |
           set -uo pipefail
           # Volontairement sans `-e` : ce job OBSERVE. Un bilan manquant se dit, il ne se solde pas par
           # un job rouge - sans quoi « non bloquant » ne serait vrai que les bonnes semaines.
+          echo "## Mutation du modèle — paquet \`${FEATURE}.model\`" >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
           if python3 scripts/qualite/rapport_mutation.py --markdown >> "$GITHUB_STEP_SUMMARY"; then
             exit 0
           fi
@@ -114,7 +167,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pit-reports
+          name: pit-reports-model-${{ steps.tour.outputs.feature }}
           path: target/pit-reports/
           retention-days: 30
           if-no-files-found: ignore
