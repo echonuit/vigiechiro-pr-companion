@@ -46,6 +46,27 @@ def lire(chemin: pathlib.Path):
     return etats, survivants
 
 
+def ventilation_sans_assertion(etats: collections.Counter) -> str:
+    """Ce que le score doit à autre chose qu'une assertion, énoncé en clair quand il y en a.
+
+    Le décompte, lui, ne change pas : un mutant qui fait boucler le code est bien détecté, et un rapport
+    qui contredit son propre outil ne se fait pas croire (cf. `DETECTES`). Ce qui manquait n'était pas le
+    chiffre mais sa **composition** : cinq expirations fondues dans 685 détections ne se voyaient pas, et
+    deux cents ne se verraient pas davantage.
+    """
+    libelles = {
+        "TIMED_OUT": ("expiration", "expirations"),
+        "MEMORY_ERROR": ("mémoire épuisée", "mémoires épuisées"),
+        "RUN_ERROR": ("erreur d'exécution", "erreurs d'exécution"),
+    }
+    parts = []
+    for etat, (singulier, pluriel) in libelles.items():
+        nombre = etats.get(etat, 0)
+        if nombre:
+            parts.append(f"{nombre} {singulier if nombre == 1 else pluriel}")
+    return ", ".join(parts)
+
+
 def markdown(etats: collections.Counter, survivants: collections.Counter) -> str:
     total = sum(etats.values())
     tues = sum(etats.get(etat, 0) for etat in DETECTES)
@@ -57,6 +78,15 @@ def markdown(etats: collections.Counter, survivants: collections.Counter) -> str
         f"{etats.get('SURVIVED', 0)} survivants, {etats.get('NO_COVERAGE', 0)} sans couverture.",
         "",
     ]
+    detections_sans_assertion = ventilation_sans_assertion(etats)
+    if detections_sans_assertion:
+        lignes += [
+            f"⚠️ Dont **{detections_sans_assertion}** — détectés, mais par épuisement plutôt que par une"
+            " assertion. Un butoir mal calibré gonfle donc ce score : mesuré sur une classe de vue, un"
+            " butoir absurde a fait passer 43 % à **100 %** (#2768). Si cette part grossit, c'est le"
+            " butoir ou le périmètre qu'il faut regarder, pas les tests.",
+            "",
+        ]
     if not survivants:
         lignes.append("Aucun survivant : rien à arbitrer cette semaine.")
         return "\n".join(lignes)
