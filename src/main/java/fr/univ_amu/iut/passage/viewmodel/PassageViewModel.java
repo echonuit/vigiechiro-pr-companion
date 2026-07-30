@@ -229,7 +229,7 @@ public class PassageViewModel {
         // est vraiment : sur la plateforme, quel que soit celui de nous deux qui l'y a mise.
         boolean surLaPlateforme = nuitDeposee || nuitRecuperee;
         // #1514 : la vérification reste possible tant que la nuit n'est pas déposée (une nuit déposée a un
-        // verdict figé, cf. ServiceQualification.enregistrerVerdict) — on grise donc la carte au dépôt.
+        // verdict figé, cf. ServiceQualification.enregistrerVerdict) : on grise donc la carte au dépôt.
         verificationDisponible.set(nuitTransformee && !surLaPlateforme);
         // Le verdict reste figé sur une nuit récupérée - elle EST sur la plateforme, et un verdict local
         // divergent la désynchroniserait tout autant. Mais le motif d'origine lui fait dire « cette nuit

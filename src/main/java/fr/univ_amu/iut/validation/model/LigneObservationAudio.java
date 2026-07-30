@@ -33,19 +33,19 @@ import java.time.LocalDateTime;
 /// @param commentaire commentaire libre de l'observateur, ou `null`
 /// @param frequenceKHz fréquence médiane en kHz, ou `null`
 /// @param nomEspece nom vernaculaire FR de l'espèce **retenue** (`COALESCE(observateur, tadarida)`), ou
-///     `null` si le taxon n'a pas de nom vernaculaire (souche hors référentiel) — la vue affiche alors le code
+///     `null` si le taxon n'a pas de nom vernaculaire (souche hors référentiel) : la vue affiche alors le code
 /// @param nomTadarida nom vernaculaire FR de la **proposition Tadarida** (`taxon_tadarida`), ou `null`
-///     (souche hors référentiel) — la vue affiche alors le code
-/// @param latinTadarida nom **latin** de la proposition Tadarida (`taxon_tadarida.latin_name`), ou `null` —
+///     (souche hors référentiel) : la vue affiche alors le code
+/// @param latinTadarida nom **latin** de la proposition Tadarida (`taxon_tadarida.latin_name`), ou `null` :
 ///     sert de clé à la source universelle (GBIF/Wikipédia) pour la fiche des taxons hors PNA (oiseaux…)
 /// @param groupe nom du **groupe taxonomique parent** de l'espèce retenue (`taxonomic_group.name`, ex.
-///     « Chiroptères », « Oiseaux », « Orthoptères et cigales »), ou `null` si le taxon n'a pas de groupe —
+///     « Chiroptères », « Oiseaux », « Orthoptères et cigales »), ou `null` si le taxon n'a pas de groupe :
 ///     permet de filtrer la liste par grand groupe (chauves-souris, oiseaux…) sans lister chaque espèce
 /// @param nomFichier nom de fichier de la séquence d'écoute (`listening_sequence.file_name`), pour relier
 ///     la ligne à l'enregistrement écouté
 /// @param debutS début du cri dans la séquence, en secondes **réelles** (issu du CSV Tadarida, dont les
 ///     temps sont en secondes réelles dans la tranche de 5 s), ou `null`
-/// @param finS fin du cri dans la séquence, en secondes **réelles**, ou `null` — la durée du cri vaut
+/// @param finS fin du cri dans la séquence, en secondes **réelles**, ou `null` : la durée du cri vaut
 ///     directement `(finS − debutS)`, sans division (cf. `FormatLigneAudioTest`)
 /// @param heureCapture **instant réel** de capture (date + heure) de la séquence, issu de son horodatage
 ///     persisté (`listening_sequence.recorded_at`, #530), ou `null` si la séquence n'est pas horodatée. On
@@ -61,10 +61,10 @@ import java.time.LocalDateTime;
 ///     propre correction était le dernier mot
 /// @param certitudeValidateur certitude déclarée par le validateur (`validator_certainty`, #1417), ou
 ///     `null`
-/// @param nomValidateur nom vernaculaire FR du taxon du validateur, ou `null` (souche hors référentiel —
+/// @param nomValidateur nom vernaculaire FR du taxon du validateur, ou `null` (souche hors référentiel :
 ///     la vue affiche alors le code), pendant de `nomTadarida`
 /// @param nbMessages nombre de messages du **fil de discussion** de l'observation (#1417) : `0` = personne
-///     n'a écrit. Un compteur plutôt que le fil lui-même — la table dit qu'une discussion existe, la modale
+///     n'a écrit. Un compteur plutôt que le fil lui-même : la table dit qu'une discussion existe, la modale
 ///     la donne à lire ; les quatre derniers composants sont ajoutés en **queue** pour préserver l'ordre
 ///     historique du record
 /// @param commune nom de la commune du point d'écoute (table latérale `point_commune`, #2791), ou
@@ -104,7 +104,7 @@ public record LigneObservationAudio(
         String commune) {
 
     /// Un expert du MNHN s'est-il prononcé sur cette détection ? Vrai dès qu'un taxon de validateur est
-    /// posé — c'est ce qui distingue une observation *revue par un expert* d'une observation qu'on est
+    /// posé : c'est ce qui distingue une observation *revue par un expert* d'une observation qu'on est
     /// seul à avoir regardée.
     public boolean trancheeParUnValidateur() {
         return taxonValidateur != null;

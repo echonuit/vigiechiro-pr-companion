@@ -275,7 +275,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         return zonesStatut.getReadOnlyProperty();
     }
 
-    /// Compose les 3 zones de la barre de statut (#1022) : identité (gauche), statut et — s'il est saisi —
+    /// Compose les 3 zones de la barre de statut (#1022) : identité (gauche), statut et, s'il est saisi :
     /// verdict (centre), nombre de séquences de la nuit (droite, vide tant que rien n'est chargé).
     private ZonesStatut calculerZonesStatut() {
         String statut = libelleStatut(viewModel.statutProperty().get());
@@ -575,7 +575,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     }
 
     /// « Réactiver ce passage » (#1302) : choix du dossier, vérification et rebranchement hors du fil
-    /// JavaFX, rapport — délégués à [ActionReactivation] (le contrôleur reste du pur câblage).
+    /// JavaFX, rapport : délégués à [ActionReactivation] (le contrôleur reste du pur câblage).
     @FXML
     private void reactiver() {
         new ActionReactivation(
@@ -603,7 +603,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     }
 
     /// « Voir sur la carte » : ouvre la vue multi-sites centrée/surlignée sur le carré de ce passage.
-    /// Ouvre la participation liée sur le portail Vigie-Chiro (#1124) — vérification visuelle du
+    /// Ouvre la participation liée sur le portail Vigie-Chiro (#1124) : vérification visuelle du
     /// rattachement (« la bonne nuit au bon endroit ») avant ou après un dépôt.
     @FXML
     private void ouvrirSurVigieChiro() {

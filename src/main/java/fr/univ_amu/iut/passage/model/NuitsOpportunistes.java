@@ -3,7 +3,7 @@ package fr.univ_amu.iut.passage.model;
 import java.util.Set;
 
 /// Port de **lecture** du marquage opportuniste (#2614) : une feature qui exploite les nuits sans être
-/// `passage` — au premier chef `analyse` — sait lesquelles sont des participations opportunistes (carré
+/// `passage` (au premier chef `analyse`) sait lesquelles sont des participations opportunistes (carré
 /// d'un tiers, exemptées de R3/R4, #2525) **sans dépendre de tout [ServicePassage]** ni du DAO.
 ///
 /// Pendant en lecture de [MarquageOpportuniste], qui n'expose que l'écriture : les deux restent séparés

@@ -9,7 +9,7 @@ import java.util.function.Predicate;
 /// Analyse des anomalies et évènements techniques d'une nuit (R19), à partir de l'état déjà
 /// persisté du [JournalDuCapteur] (feature `passage`). Classe **pure** (aucun DAO, aucune IO,
 /// aucun JavaFX) : elle ne fait que **relire et classer** ce qui est présent dans les colonnes
-/// JSON `parsed_events` / `detected_anomalies` — pas de re-parsing du fichier `LogPR`.
+/// JSON `parsed_events` / `detected_anomalies` : pas de re-parsing du fichier `LogPR`.
 ///
 /// **R19 (journal circulaire)** : la SD pleine efface les entrées anciennes. L'analyse n'essaie
 /// jamais de reconstituer les pertes : elle expose la liste brute des anomalies présentes et

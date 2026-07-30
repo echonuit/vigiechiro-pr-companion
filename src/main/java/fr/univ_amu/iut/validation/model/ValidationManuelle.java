@@ -8,12 +8,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 /// Validation **manuelle** d'une séquence **non identifiée** (présente sur disque mais absente du CSV
-/// Tadarida) : crée — ou met à jour — une **observation manuelle** portant le taxon de l'observateur,
+/// Tadarida) : crée (ou met à jour) une **observation manuelle** portant le taxon de l'observateur,
 /// **sans** taxon ni jeu de résultats Tadarida (`taxon_tadarida`/`results_id` nuls, autorisés depuis la
 /// migration V13), en mode `manuel`.
 ///
 /// Classe **dédiée** (et non une n-ième méthode de [ServiceValidation], déjà au plafond de cohésion) : ce
-/// cas d'usage — valider un son que Tadarida n'a pas classé — est autonome et se teste isolément.
+/// cas d'usage (valider un son que Tadarida n'a pas classé) est autonome et se teste isolément.
 public class ValidationManuelle {
 
     private final ObservationDao observationDao;

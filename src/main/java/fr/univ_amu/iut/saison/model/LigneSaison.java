@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 /// @param idPoint identifiant technique du point (pour l'ouverture)
 /// Les deux colonnes de passage ne montrent que le **protocole** : une nuit opportuniste (#2525),
 /// réalisée sur le carré d'un tiers, n'y figure pas. Elle occuperait la place du passage protocolaire
-/// qui, lui, **manque** — une case remplie et un « reste à faire » qui dit d'aller poser l'enregistreur
+/// qui, lui, **manque** : une case remplie et un « reste à faire » qui dit d'aller poser l'enregistreur
 /// se contredisent sur la même ligne. Ces nuits ont donc leur propre colonne, [#horsProtocole].
 ///
 /// @param passage1 état du premier passage **protocolaire** (présent ou absent)

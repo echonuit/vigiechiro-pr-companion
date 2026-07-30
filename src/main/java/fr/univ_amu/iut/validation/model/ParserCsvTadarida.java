@@ -178,7 +178,7 @@ public final class ParserCsvTadarida {
         return ligne.get(col);
     }
 
-    /// Un champ est « vide » s'il est `null`, blanc, ou réduit à un guillemet littéral seul (`"`) —
+    /// Un champ est « vide » s'il est `null`, blanc, ou réduit à un guillemet littéral seul (`"`) :
     /// l'encodage d'un champ vide rencontré dans certains exports `_Vu`.
     static boolean estVide(String champ) {
         if (champ == null) {
@@ -192,7 +192,7 @@ public final class ParserCsvTadarida {
         return estVide(champ) ? null : champ.trim();
     }
 
-    /// Lit un nombre **strict** (temps, …) : une valeur non vide non numérique lève — une donnée
+    /// Lit un nombre **strict** (temps, …) : une valeur non vide non numérique lève, une donnée
     /// malformée hors colonnes de probabilité n'est pas silencieusement avalée.
     private static Double nombre(String champ) {
         return estVide(champ) ? null : Double.valueOf(champ.trim());

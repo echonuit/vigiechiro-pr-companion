@@ -109,7 +109,7 @@ public final class AuditPointsServeur {
             orphelines = reconstruction.get().orphelines();
         } catch (RegleMetierException indisponible) {
             // Le service lève quand la plateforme ne répond plus entre deux appels : on dégrade en INFO,
-            // comme le reste de l'audit en ligne — jamais d'échec dur.
+            // comme le reste de l'audit en ligne : jamais d'échec dur.
             return List.of(constatIndisponible(indisponible.getMessage()));
         }
         Map<String, List<ParticipationOrpheline>> parLocalite = orphelines.stream()

@@ -119,13 +119,13 @@ public class PassageModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), PropositionCampagne.class);
 
         // Port CrisAttendus (#1302) : les observations appartiennent à `validation`, qui dépend déjà de
-        // `passage` — l'inverse fermerait un cycle. OptionalBinder VIDE ici ; ValidationModule pose le
+        // `passage` : l'inverse fermerait un cycle. OptionalBinder VIDE ici ; ValidationModule pose le
         // binding réel. Absent (injecteurs partiels), la cascade de vérification (#1309) retombe sur la
         // preuve structurelle seule.
         OptionalBinder.newOptionalBinder(binder(), CrisAttendus.class);
 
         // Port RegenerationSequences (#1406) : la transformation appartient à `importation`, qui dépend
-        // déjà de `passage` — l'inverse fermerait un cycle. OptionalBinder VIDE ici ; ImportationModule
+        // déjà de `passage` : l'inverse fermerait un cycle. OptionalBinder VIDE ici ; ImportationModule
         // pose le binding réel. Absent (feature « Importation » désactivée), la réactivation depuis les
         // BRUTS se refuse en le disant ; la voie « transformés » reste entière.
         OptionalBinder.newOptionalBinder(binder(), RegenerationSequences.class);
@@ -142,7 +142,7 @@ public class PassageModule extends ModuleDeFeature {
                 .setDefault()
                 .toInstance((carre, point) -> Optional.empty());
 
-        // Reconstruction des passages jamais importés localement (#1305) : OptionalBinder VIDE — le service
+        // Reconstruction des passages jamais importés localement (#1305) : OptionalBinder VIDE, le service
         // a besoin de la connexion VigieChiro. ReconstructionModule (chargé avec ConnexionModule) pose le
         // binding ; hors connexion, l'Optional reste vide et l'IHM/CLI le disent.
         OptionalBinder.newOptionalBinder(binder(), ServiceReconstructionPassages.class);

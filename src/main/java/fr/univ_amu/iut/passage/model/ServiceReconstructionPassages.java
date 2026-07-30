@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 ///
 /// Les passages sans audio local forment **deux populations**, et les issues A à G n'en traitaient qu'une :
 ///
-/// 1. **archivé par purge** : on l'a eu, on l'a supprimé (#1300, #1302) — le passage existe en base ;
+/// 1. **archivé par purge** : on l'a eu, on l'a supprimé (#1300, #1302), le passage existe en base ;
 /// 2. **jamais local** : la participation existe **sur la plateforme** (déposée depuis un autre poste,
 ///    avant l'application, ou après une réinstallation) mais **rien** n'est en base ici.
 ///
@@ -49,7 +49,7 @@ import java.util.function.Consumer;
 /// **Pourquoi recréer les séquences.** L'import d'observations rattache chaque ligne à la séquence de
 /// **même nom** et **ignore** celles qu'il ne trouve pas : sans lignes de séquences, un passage
 /// reconstruit n'aurait aucune observation. On les crée donc à partir des `titre` des données
-/// distantes — ce sont exactement les noms de fichiers attendus.
+/// distantes : ce sont exactement les noms de fichiers attendus.
 ///
 /// **Ce qui manque est dit, pas deviné** ([RapportReconstruction#lacunesConnues]) : ni journal du
 /// capteur, ni relevé climatique, ni séquences non identifiées (le serveur ne les connaît pas), ni
@@ -116,8 +116,8 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     }
 
     /// Participations de la plateforme **à reconstruire ici** : celles qui n'ont aucun passage local, **ou**
-    /// dont le passage local n'est qu'un **squelette** rapatrié par la synchro (#1707) — point + date, sans
-    /// séquences — qu'il reste à **hydrater** (#1710). Chacune dit si son point est déjà connu localement.
+    /// dont le passage local n'est qu'un **squelette** rapatrié par la synchro (#1707) : point + date, sans
+    /// séquences, qu'il reste à **hydrater** (#1710). Chacune dit si son point est déjà connu localement.
     ///
     /// Depuis #1707, la synchro consomme en squelettes les orphelines « jamais vues » ; sans les inclure
     /// ici, la liste de reconstruction serait vide juste après une synchro, et les nuits rapatriées
@@ -321,7 +321,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         for (ParticipationVigieChiro participation : plateforme.participations()) {
             // Une nuit qui a déjà un passage local (squelette OU hydraté) n'est pas rapatriée une seconde
             // fois : c'est ce qui rend la synchro idempotente (#1707). On n'itère donc pas [#orphelines],
-            // qui inclut désormais les squelettes à hydrater (#1710) — les recréer ferait des doublons.
+            // qui inclut désormais les squelettes à hydrater (#1710) : les recréer ferait des doublons.
             if (passageParParticipation.containsKey(participation.id())) {
                 continue;
             }

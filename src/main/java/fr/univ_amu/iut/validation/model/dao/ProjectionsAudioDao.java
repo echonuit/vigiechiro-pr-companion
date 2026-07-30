@@ -38,7 +38,7 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
             + " tt.latin_name AS latin_tadarida,"
             + " g.name AS groupe,"
             // Le troisième avis (#1417) : ce que le validateur du MNHN a tranché. Il arrivait déjà du
-            // serveur à chaque import, et la vue ne le montrait pas — l'observateur croyait donc que sa
+            // serveur à chaque import, et la vue ne le montrait pas : l'observateur croyait donc que sa
             // correction faisait foi. Le nombre de messages, lui, dit qu'une discussion existe : sans ce
             // compteur, un fil ouvert par un expert resterait invisible.
             + " o.taxon_validator AS validateur, o.validator_certainty AS certitude_validateur,"
@@ -151,7 +151,7 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
     /// Séquences d'un passage **sans observation Tadarida** (présentes sur disque, absentes du CSV),
     /// projetées comme des lignes audio « à revoir » : écoutables (via `idSequence`). Une éventuelle
     /// **observation manuelle** (`results_id IS NULL`, créée en validant à la main) est rattachée par un
-    /// `LEFT JOIN` — la séquence **reste** dans la liste après validation, marquée « corrigée » avec le
+    /// `LEFT JOIN` : la séquence **reste** dans la liste après validation, marquée « corrigée » avec le
     /// taxon saisi. Le `NOT EXISTS` n'écarte que les séquences **identifiées par Tadarida**
     /// (`results_id IS NOT NULL`). Ordre chronologique (horodatage puis nom de fichier).
     private static final String SQL_LIGNES_NON_IDENTIFIEES = "SELECT ls.id AS seq, om.id AS id,"

@@ -16,10 +16,10 @@ import java.util.Optional;
 /// ⚠️ **Ce qui part ne se retire pas.** Le serveur ajoute par `$push`, et **aucune route ne permet de
 /// supprimer ni de modifier un message** (spike de #724). Ce n'est pas un détail d'implémentation : c'est
 /// la propriété qui gouverne tout le reste. L'appelant IHM doit faire **confirmer explicitement**, et le
-/// dire — un message envoyé par erreur restera visible pour l'expert, indéfiniment.
+/// dire : un message envoyé par erreur restera visible pour l'expert, indéfiniment.
 ///
 /// **Le serveur d'abord, la base ensuite.** Le message n'est écrit localement **qu'après** que le serveur
-/// l'a accepté. L'inverse — écrire en base puis pousser — laisserait, au moindre refus, un message que
+/// l'a accepté. L'inverse (écrire en base puis pousser) laisserait, au moindre refus, un message que
 /// l'observateur croirait envoyé et que le validateur ne verrait jamais. C'est exactement la perte
 /// silencieuse que l'EPIC #1154 traque, à l'envers.
 ///
@@ -46,7 +46,7 @@ public class PublicationMessage {
 
     /// Cette observation **peut-elle** recevoir un message ? Non si elle n'a pas d'**ancrage plateforme**
     /// (`_id` de la donnée + indice brut, #1139) : une observation issue d'un CSV Tadarida, ou saisie à la
-    /// main, n'existe pas côté serveur — il n'y a personne à qui parler.
+    /// main, n'existe pas côté serveur : il n'y a personne à qui parler.
     ///
     /// Sans réseau : l'IHM s'en sert pour **désactiver** la saisie et en **dire la raison** (affordance
     /// #789), plutôt que de laisser l'utilisateur écrire un message qui échouerait à l'envoi.
@@ -104,7 +104,7 @@ public class PublicationMessage {
     }
 
     /// Ajoute le message en **queue** du fil local : le rang suit le dernier message connu, comme le
-    /// `$push` du serveur. L'auteur et la date restent vides — le serveur les posera (cf. [#poster]).
+    /// `$push` du serveur. L'auteur et la date restent vides : le serveur les posera (cf. [#poster]).
     private void enregistrerLocalement(Long idObservation, String texte) {
         List<MessageObservation> fil = messages.filDeLObservation(idObservation);
         int rang = fil.isEmpty() ? 0 : fil.getLast().rang() + 1;

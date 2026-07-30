@@ -50,7 +50,7 @@ public class PointEditViewModel {
     private final ServiceCommunes communes;
 
     /// Contrôle du carré STOC (#733) : **optionnel**, car il a besoin de la plateforme. Absent (feature de
-    /// connexion éteinte), le contrôle ne se fait simplement pas — la saisie manuelle reste entière.
+    /// connexion éteinte), le contrôle ne se fait simplement pas : la saisie manuelle reste entière.
     private final Optional<ControleCarreStoc> controleCarre;
 
     private final StringProperty code = new SimpleStringProperty(this, "code", "");
@@ -211,7 +211,7 @@ public class PointEditViewModel {
     /// Confronte la position saisie à la **grille STOC officielle** (#733). **Bloquant** (réseau) : à
     /// appeler hors du fil JavaFX, et à conclure par [#appliquerControleCarre].
     ///
-    /// Rend [VerdictCarre.Indisponible] — donc le silence — dès qu'il n'y a rien à contrôler : coordonnées
+    /// Rend [VerdictCarre.Indisponible] (donc le silence) dès qu'il n'y a rien à contrôler : coordonnées
     /// incomplètes, ou plateforme hors d'atteinte. Le contrôle est un **confort**, jamais une condition de
     /// saisie.
     public VerdictCarre controlerCarre() {

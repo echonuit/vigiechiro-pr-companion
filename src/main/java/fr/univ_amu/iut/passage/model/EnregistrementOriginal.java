@@ -12,7 +12,7 @@ package fr.univ_amu.iut.passage.model;
 /// @param cheminFichier d'où vient le fichier : le sous-dossier `bruts/` (R22) quand l'import l'a
 ///     copié, **le chemin sur la carte SD** quand il ne l'a pas fait. Dans ce second cas c'est une
 ///     **provenance, pas un localisateur** : le montage aura disparu. Aucun parcours de récupération
-///     ne s'en sert — la réactivation apparie par [#nomFichier], jamais par ce chemin — et l'audit
+///     ne s'en sert : la réactivation apparie par [#nomFichier], jamais par ce chemin, et l'audit
 ///     l'ignore dès lors que la session déclare « non stocké localement » (#2062). Ne pas écrire de
 ///     code qui suppose ce fichier ouvrable.
 /// @param dureeSecondes durée en secondes (optionnel, typiquement 2-30 s)

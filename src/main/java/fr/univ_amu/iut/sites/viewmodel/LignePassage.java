@@ -36,7 +36,7 @@ public record LignePassage(
         return statut.libelle();
     }
 
-    /// Libellé du verdict : `— à vérifier` tant qu'aucun verdict n'est posé.
+    /// Libellé du verdict : « — à vérifier » tant qu'aucun verdict n'est posé.
     public String verdictLibelle() {
         return verdict == null ? Formats.VALEUR_ABSENTE + " à vérifier" : verdict.libelle();
     }

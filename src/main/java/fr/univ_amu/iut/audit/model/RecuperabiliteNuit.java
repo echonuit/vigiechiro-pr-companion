@@ -5,7 +5,7 @@ import java.util.Objects;
 /// Ce que deviendrait **une nuit** si l'on repartait d'une base neuve (#1151).
 ///
 /// @param idPassage passage concerné
-/// @param libelle de quelle nuit on parle (carré, point, date) — l'utilisateur ne raisonne pas en `id`
+/// @param libelle de quelle nuit on parle (carré, point, date) : l'utilisateur ne raisonne pas en `id`
 /// @param source d'où l'audio reviendrait (ou pas)
 /// @param sequencesPresentes séquences effectivement sur le disque
 /// @param sequencesTotal séquences que la base connaît

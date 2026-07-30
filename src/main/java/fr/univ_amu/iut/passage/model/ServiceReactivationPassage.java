@@ -342,7 +342,7 @@ public class ServiceReactivationPassage {
     /// passe `donnees` complète y est acceptable, opération déjà lourde et voulue.
     ///
     /// Ne se déclenche que sur un passage **reconstruit** (rattaché à une participation, ancrage manquant) :
-    /// un passage importé normalement porte déjà son ancrage, la phase ne s'y déclenche pas — donc aucune
+    /// un passage importé normalement porte déjà son ancrage, la phase ne s'y déclenche pas, donc aucune
     /// dépendance réseau n'est imposée à la réactivation d'un passage local ordinaire.
     /// @return le compte rendu du rapatriement, **prêt à afficher** (dont les échanges rapatriés avec le
     ///     validateur, #1867), ou une chaîne vide quand il n'y avait rien à acquérir. La réactivation le

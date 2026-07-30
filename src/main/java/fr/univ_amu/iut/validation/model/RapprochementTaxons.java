@@ -48,7 +48,7 @@ public class RapprochementTaxons implements RapprochementVigieChiro {
         try {
             // Toute issue non-succès = ne toucher ni la table ni les liens (garde anti-purge : un
             // incident transitoire ne doit pas altérer un référentiel déjà acquis). Depuis #1284 la
-            // cause remonte au bandeau, au lieu d'être omise en silence — sauf « non connecté »,
+            // cause remonte au bandeau, au lieu d'être omise en silence : sauf « non connecté »,
             // silence légitime du hors-ligne.
             return switch (client.taxons()) {
                 case ReponseApi.Succes<List<TaxonVigieChiro>>(List<TaxonVigieChiro> officiels) -> fusionner(officiels);

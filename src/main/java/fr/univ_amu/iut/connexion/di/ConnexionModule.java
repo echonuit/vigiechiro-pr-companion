@@ -116,7 +116,7 @@ public class ConnexionModule extends ModuleDeFeature {
     /// injecteurs de capture, qui n'ont pas de `connexion`, gardent l'`Optional` vide.
     ///
     /// La liaison de l'optional vise une **clé qualifiée** (`@Named`) et non `SuiviTraitement` directement,
-    /// sans quoi la cible se référencerait elle-même (`RecursiveBinding`) — même piège que le dépôt.
+    /// sans quoi la cible se référencerait elle-même (`RecursiveBinding`) : même piège que le dépôt.
     @Provides
     @Singleton
     @Named(QUALIFIANT)

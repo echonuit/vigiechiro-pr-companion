@@ -44,7 +44,7 @@ import java.util.Set;
 /// remontant `passage → point → site` : cela créerait une dépendance `passage → sites` alors que
 /// `sites → passage` existe déjà (`ServiceSites` lit `PassageDao`), donc un **cycle** que
 /// `ArchitectureTest` refuse. Le [Protocole] est donc **passé en paramètre** par l'appelant (le
-/// `viewmodel`, qui connaît le site courant) — exactement comme
+/// `viewmodel`, qui connaît le site courant) : exactement comme
 /// `ServiceSites.rappelsProtocole(Protocole)`.
 public class ServicePassage {
 
@@ -143,7 +143,7 @@ public class ServicePassage {
 
     /// Crée un passage à l'état initial [StatutWorkflow#IMPORTE], sans verdict.
     ///
-    /// - R5 (dur) : refuse si le quadruplet `(point, année, n° de passage)` existe déjà —
+    /// - R5 (dur) : refuse si le quadruplet `(point, année, n° de passage)` existe déjà :
     /// pré-vérifié via [UniciteQuadruplet] (filet : contrainte `UNIQUE` du schéma).
     /// - Année : déduite de la date d'enregistrement. Si `dateEnregistrement` est `null`, on prend
     /// la date du jour de l'[Horloge] (déterministe en test).
@@ -444,7 +444,7 @@ public class ServicePassage {
     /// **corriger** (compléter/rectifier des validations, ré-importer le CSV Tadarida) puis re-déposer.
     ///
     /// Les observations et leurs **validations sont conservées** : seul le statut change (aucune donnée
-    /// n'est détruite). C'est la **seule transition arrière** admise du workflow — le
+    /// n'est détruite). C'est la **seule transition arrière** admise du workflow : le
     /// [MoteurWorkflowPassage] étant strictement linéaire, ce retour délibéré depuis « Déposé » est géré
     /// ici directement, hors moteur.
     ///

@@ -61,7 +61,7 @@ public class ConnexionViewModel {
 
     /// **Vérifie et enregistre** un token (opération réseau : `GET /moi`). Renvoie l'issue **triée**
     /// (#1284) : `Succes` (identité persistée), `Refuse` (le serveur a dit non : jeton invalide ou
-    /// expiré → connexion effacée) ou `Injoignable` — et dans ce dernier cas, depuis #1369, le jeton
+    /// expiré → connexion effacée) ou `Injoignable`, et dans ce dernier cas, depuis #1369, le jeton
     /// est **conservé, non vérifié** : le réseau était peut-être seul en cause, et le jeton stocké
     /// permet à toutes les actions VigieChiro de refonctionner dès que la plateforme répond. Il sera
     /// revérifié à la prochaine ouverture de la modale ([#jetonAVerifier]). À lancer hors du fil

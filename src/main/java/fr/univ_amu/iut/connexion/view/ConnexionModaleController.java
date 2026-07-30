@@ -258,7 +258,7 @@ public class ConnexionModaleController {
     }
 
     /// Restitue l'issue de la vérification du jeton (#1284) : avant, tout échec devenait « Token
-    /// invalide ou expiré » — y compris une simple panne réseau, qui poussait l'observateur à jeter un
+    /// invalide ou expiré » : y compris une simple panne réseau, qui poussait l'observateur à jeter un
     /// jeton parfaitement valide.
     private void restituerVerification(ReponseApi<ProfilVigieChiro> reponse) {
         switch (reponse) {

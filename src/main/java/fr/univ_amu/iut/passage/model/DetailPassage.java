@@ -26,7 +26,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 /// @param decompteAudio disponibilité **observée** de l'audio sur disque (#1298), pour gater l'écoute
 ///     et la réactivation (#1302) sans refaire un balayage dans la couche IHM
 /// @param meteo relevé météo optionnel du passage (température début/fin, vent, couverture nuageuse ;
-/// #106 étendu) — jamais `null`, mais chacune de ses grandeurs peut l'être
+/// #106 étendu) : jamais `null`, mais chacune de ses grandeurs peut l'être
 public record DetailPassage(
         int numeroPassage,
         int annee,

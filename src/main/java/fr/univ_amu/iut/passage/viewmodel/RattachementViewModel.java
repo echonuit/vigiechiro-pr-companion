@@ -26,7 +26,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 /// ViewModel de la modale « Modifier le rattachement » (E2.S8) : corrige l'année ou le numéro de
 /// passage d'un passage importé, sans changer de site/point.
 ///
-/// Pur (aucun `javafx.scene` — règle ArchUnit `viewmodel_sans_javafx_ui`). Expose les deux champs
+/// Pur (aucun `javafx.scene` : règle ArchUnit `viewmodel_sans_javafx_ui`). Expose les deux champs
 /// éditables ([#anneeProperty], [#numeroPassageProperty]), un **récapitulatif** réactif des
 /// conséquences ([#recapProperty] : « X → Y, N séquences renommées ») et un message d'erreur. Le
 /// carré et le code point (inchangés) sont fournis par la navigation : le `model`/`viewmodel` ne
@@ -140,7 +140,7 @@ public class RattachementViewModel {
     /// Applique le nouveau rattachement (année + n° saisis), après validation des bornes.
     ///
     /// @return `true` si l'opération a réussi (la vue peut fermer la modale) ; `false` sinon (saisie
-    ///     invalide, ou échec opérationnel — R5, disque, base — dont le motif est dans
+    ///     invalide, ou échec opérationnel (R5, disque, base) dont le motif est dans
     ///     [#retourProperty])
     public boolean valider() {
         if (numeroPassage.get() < 1) {

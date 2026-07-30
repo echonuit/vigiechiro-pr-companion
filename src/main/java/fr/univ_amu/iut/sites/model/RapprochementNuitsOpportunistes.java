@@ -17,12 +17,12 @@ import java.util.logging.Logger;
 /// Marque **opportunistes** les nuits réalisées sur un carré appartenant à un tiers (#2525).
 ///
 /// [Phase#DEPENDANTE] : il s'appuie sur le référentiel que `RapprochementSites` vient d'établir au même
-/// tour — c'est lui qui dit quels carrés sont ceux d'un tiers (`site_tiers`, dérivé de
+/// tour : c'est lui qui dit quels carrés sont ceux d'un tiers (`site_tiers`, dérivé de
 /// `site.observateur`). Ce rapprocheur ne fait **aucun appel réseau** : il tire les conséquences locales
 /// de la synchronisation, d'où le `client` inutilisé.
 ///
 /// **Sens unique, délibéré.** On marque, on ne démarque **jamais** :
-///  - un carré qui vous est transféré ne réécrit pas l'histoire — les nuits y ont bien été réalisées
+///  - un carré qui vous est transféré ne réécrit pas l'histoire : les nuits y ont bien été réalisées
 ///    alors qu'il appartenait à quelqu'un d'autre ;
 ///  - surtout, démarquer écraserait les **saisies manuelles** faites pour les participations non
 ///    connectées (import #2543, modale #2545), dont le site local n'est lié à aucun site distant et
@@ -52,7 +52,7 @@ public class RapprochementNuitsOpportunistes implements RapprochementVigieChiro 
     /// Après le rapprochement des sites : marque les nuits des carrés de tiers **pas encore** marquées.
     ///
     /// @return le nombre de nuits **nouvellement** marquées, ou [Optional#empty()] s'il n'y a rien à dire
-    ///     (aucun carré de tiers, ou tout est déjà à jour — le cas d'une synchro de routine)
+    ///     (aucun carré de tiers, ou tout est déjà à jour : le cas d'une synchro de routine)
     @Override
     public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         try {

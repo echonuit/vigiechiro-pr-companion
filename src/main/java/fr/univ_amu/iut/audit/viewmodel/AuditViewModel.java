@@ -48,7 +48,7 @@ public class AuditViewModel {
 
     /// Audit **ciblé** sur un passage (#1347) : `ServiceAuditCoherence.auditerPassage` existait depuis
     /// #1133, mais l'IHM n'exposait que l'audit global. Après avoir réparé une nuit, on veut vérifier
-    /// **cette** nuit, pas tout le workspace — surtout quand il en compte des dizaines.
+    /// **cette** nuit, pas tout le workspace : surtout quand il en compte des dizaines.
     public void auditerPassage(Long idPassage) {
         appliquer(service.auditerPassage(idPassage).constats());
         resume.set("Audit du passage " + idPassage + " : " + resumeProperty().get());

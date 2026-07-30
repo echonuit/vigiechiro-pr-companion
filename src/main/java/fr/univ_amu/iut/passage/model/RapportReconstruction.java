@@ -2,8 +2,8 @@ package fr.univ_amu.iut.passage.model;
 
 import java.util.List;
 
-/// Rapport d'une reconstruction (#1305) : ce que la plateforme a permis de recréer, et — tout aussi
-/// important — **ce qui manque**. Un passage reconstruit depuis le serveur est **moins riche** qu'un
+/// Rapport d'une reconstruction (#1305) : ce que la plateforme a permis de recréer, et, tout aussi
+/// important, **ce qui manque**. Un passage reconstruit depuis le serveur est **moins riche** qu'un
 /// passage archivé par purge : le serveur rend les observations, pas le journal du capteur, pas le relevé
 /// climatique, pas les séquences dépourvues d'observation. On le **montre**, plutôt que de laisser croire
 /// à une équivalence.

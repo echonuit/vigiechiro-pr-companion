@@ -20,7 +20,7 @@ public final class AppuisPassage {
     private final OuvreurDeLien ouvreurDeLien;
 
     /// Entrée vers la **Synthèse de la nuit** (#2351). Passe par cet objet-paramètre plutôt que par un
-    /// douzième paramètre du contrôleur — c'est exactement ce pour quoi il existe. `Optional` : la
+    /// douzième paramètre du contrôleur, c'est exactement ce pour quoi il existe. `Optional` : la
     /// feature est conditionnable, et la carte se masque quand elle est coupée.
     private final Optional<OuvrirSynthese> ouvrirSynthese;
 

@@ -81,7 +81,7 @@ public class ServiceSites {
     ///
     /// - Le site doit exister.
     /// - R1 (dur) : le numéro de carré doit être valide (6 chiffres), cf. [ValidateurCarre].
-    /// - R5 (dur) : le carré reste unique pour l'utilisateur — la vérification **exclut le site
+    /// - R5 (dur) : le carré reste unique pour l'utilisateur, la vérification **exclut le site
     ///   courant** (renommer un site, ou le ré-enregistrer sans changer son carré, ne doit pas
     ///   déclencher un faux conflit).
     /// - Protocole : conserve celui du site si `null`.
@@ -185,7 +185,7 @@ public class ServiceSites {
         if (!Objects.equals(existant.latitude(), latitude) || !Objects.equals(existant.longitude(), longitude)) {
             // Le GPS a bougé : la commune mémorisée est périmée. L'effacement est local et immédiat
             // (jamais bloquant) ; la résolution, elle, est relancée hors du fil JavaFX par les
-            // déclencheurs (#2791) — et à défaut, le rattrapage comblera.
+            // déclencheurs (#2791), et à défaut, le rattrapage comblera.
             communes.effacer(idPoint);
         }
         return aMettreAJour;

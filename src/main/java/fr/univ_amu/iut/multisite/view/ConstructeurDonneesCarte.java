@@ -38,7 +38,7 @@ final class ConstructeurDonneesCarte {
 
     /// Construit les données de carte à partir des carrés agrégés : un marqueur par point **géolocalisé**
     /// (coloré par statut dominant), un marqueur **approximatif** par point **sans GPS** placé au centre de
-    /// son carré (#153), et un tracé d'emprise par carré **traçable** — soit ancré sur ses points, soit calé
+    /// son carré (#153), et un tracé d'emprise par carré **traçable** : soit ancré sur ses points, soit calé
     /// sur le carroyage officiel (donc tracé même sans GPS). Le remplissage reflète la **densité de
     /// passages**, normalisée sur **exactement** les carrés tracés.
     static DonneesCarte depuis(List<CarreAgrege> carres) {
@@ -119,7 +119,7 @@ final class ConstructeurDonneesCarte {
     }
 
     /// Mini-stats d'un **carré** au survol : nom (et numéro), total de passages, décompte des points
-    /// **affichés** (géolocalisés + sans GPS, ces derniers placés au centre — #153), et répartition des
+    /// **affichés** (géolocalisés + sans GPS, ces derniers placés au centre : #153), et répartition des
     /// statuts dominants sur **tous** les points affichés (cohérente avec les marqueurs). Lignes jointes
     /// par [#SAUT].
     private static String infobulleCarre(CarreAgrege carre, List<PointAgrege> geolocalises, List<PointAgrege> sansGps) {

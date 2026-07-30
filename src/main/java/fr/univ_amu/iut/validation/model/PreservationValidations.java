@@ -98,7 +98,7 @@ final class PreservationValidations {
     ///
     /// L'**avis du validateur** (#1417) suit la même règle que l'ancrage : il reste celui de `neuve`. Ce
     /// n'est pas une décision *de l'utilisateur* qu'un réimport risquerait d'effacer, c'est un reflet du
-    /// serveur — et c'est bien le point : si l'expert du MNHN a changé d'avis entre deux imports, c'est
+    /// serveur, et c'est bien le point : si l'expert du MNHN a changé d'avis entre deux imports, c'est
     /// **son** nouvel avis qui doit s'afficher, pas la copie qu'on en gardait.
     private static Observation avecValidation(Observation neuve, Observation ancienne) {
         return new Observation(

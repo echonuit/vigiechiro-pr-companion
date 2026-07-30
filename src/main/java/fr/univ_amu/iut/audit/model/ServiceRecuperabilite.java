@@ -27,7 +27,7 @@ import java.util.Optional;
 ///
 /// C'est le garde-fou du reset, et l'issue est explicite sur sa forme : *« ne plus refuser en bloc quand
 /// des originaux sont purgés ; établir plutôt, **avant d'écrire quoi que ce soit**, un bilan de
-/// récupérabilité par nuit — disque / serveur / perdu — et ne demander confirmation que s'il existe au
+/// récupérabilité par nuit (disque / serveur / perdu) et ne demander confirmation que s'il existe au
 /// moins une nuit en “perdu” »*.
 ///
 /// **Ce qui revient toujours** : les métadonnées et les observations, que le serveur rend (#1050, prouvé
@@ -35,18 +35,18 @@ import java.util.Optional;
 ///
 /// ## La cascade, et pourquoi elle est courte
 ///
-/// 1. **Disque** — les séquences sont là. Elles se réimportent, la nuit redevient complète. C'est le cas
+/// 1. **Disque** : les séquences sont là. Elles se réimportent, la nuit redevient complète. C'est le cas
 ///    normal, et le seul rapide.
-/// 2. **Serveur** — le disque ne les a plus, mais la nuit a été déposée **en WAV** *et* rattachée à une
+/// 2. **Serveur** : le disque ne les a plus, mais la nuit a été déposée **en WAV** *et* rattachée à une
 ///    participation. Alors, et alors seulement, le serveur les a gardées (un `POST /fichiers` pose un
 ///    `s3_id` définitif). Cas **rare** : le mode de dépôt par défaut est le **ZIP** depuis #984.
-/// 3. **Perdu** — ni l'un ni l'autre. Un dépôt **ZIP** ne laisse **aucun** audio côté serveur : les
+/// 3. **Perdu**, ni l'un ni l'autre. Un dépôt **ZIP** ne laisse **aucun** audio côté serveur : les
 ///    archives sont détruites après extraction et les WAV extraits ne sont jamais montés sur S3.
 ///
 /// ## « Perdu » n'est plus une impasse
 ///
 /// Avant #1297, cette branche était un cul-de-sac dont on ne savait que faire. Elle a désormais un nom et
-/// un comportement : la nuit devient un **passage archivé** — observations et vérifications consultables,
+/// un comportement : la nuit devient un **passage archivé**, observations et vérifications consultables,
 /// écoute impossible, **réactivable** si l'utilisateur retrouve un jour ses fichiers. La perte reste une
 /// perte, mais elle est **assumée et navigable**. Ce bilan sert donc à la *dire avant*, pas à interdire.
 ///
@@ -133,7 +133,7 @@ public class ServiceRecuperabilite {
                 passage.id(), libelle, SourceAudio.PERDU, presentes, total, motifPerte(rattachee, plan));
     }
 
-    /// Pourquoi l'audio est perdu — en nommant la **vraie** cause, celle qui aurait pu être évitée.
+    /// Pourquoi l'audio est perdu : en nommant la **vraie** cause, celle qui aurait pu être évitée.
     private static String motifPerte(boolean rattachee, List<DepotUnite> plan) {
         if (plan.isEmpty()) {
             return rattachee
@@ -147,7 +147,7 @@ public class ServiceRecuperabilite {
     }
 
     /// Séquences réellement sur le disque, en **un balayage groupé** ([PresenceFichiers] : un accès disque
-    /// par dossier, pas par fichier) — le même que celui de l'audit.
+    /// par dossier, pas par fichier) : le même que celui de l'audit.
     private int compterPresentes(List<SequenceDEcoute> sequences) {
         if (sequences.isEmpty()) {
             return 0;

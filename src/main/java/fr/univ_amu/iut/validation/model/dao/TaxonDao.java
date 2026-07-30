@@ -53,7 +53,7 @@ public class TaxonDao extends DaoGenerique<Taxon, String> {
     /// consultent une fois par ligne affichée, ce qu'une requête par ligne ne supporterait pas.
     ///
     /// Lu ici, avec le reste du référentiel taxonomique, plutôt que par un DAO à part : la table latérale
-    /// n'a pas de vie propre — l'application ne l'écrit jamais, seule la migration l'alimente. Un second
+    /// n'a pas de vie propre : l'application ne l'écrit jamais, seule la migration l'alimente. Un second
     /// DAO n'aurait fait qu'un collaborateur de plus à faire descendre jusqu'aux écrans, dans des
     /// constructeurs déjà au plafond.
     ///

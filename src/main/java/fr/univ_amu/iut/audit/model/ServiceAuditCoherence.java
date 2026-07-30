@@ -298,7 +298,7 @@ public class ServiceAuditCoherence {
     /// (même chaîne que la vérification pré-dépôt du lot).
     /// Site et point d'un passage (#1347) : ce qu'il faut pour **ouvrir** ce passage depuis un constat.
     /// Un constat cite un passage par son `id` ; l'écran pivot attend le contexte de son site. Le service
-    /// d'audit sait le résoudre — il tient déjà les DAO qu'il faut pour recalculer le préfixe attendu.
+    /// d'audit sait le résoudre : il tient déjà les DAO qu'il faut pour recalculer le préfixe attendu.
     public Optional<ContexteAuditPassage> contexteDuPassage(Long idPassage) {
         return passageDao
                 .findById(Objects.requireNonNull(idPassage, "idPassage"))

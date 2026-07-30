@@ -23,8 +23,8 @@ public class ControleCarreStocModule extends ModuleDeFeature {
 
     private static final String QUALIFIANT = "vigiechiro";
 
-    /// Identité de la feature. **Optionnelle** (désactivable) : c'est un confort de saisie — un appel réseau
-    /// par point géolocalisé — dont rien d'autre ne dépend.
+    /// Identité de la feature. **Optionnelle** (désactivable) : c'est un confort de saisie (un appel réseau
+    /// par point géolocalisé) dont rien d'autre ne dépend.
     @Override
     public Fonctionnalite fonctionnalite() {
         return new Fonctionnalite("controle-carre-stoc", "Contrôle du carré STOC", Categorie.OPTIONNELLE);

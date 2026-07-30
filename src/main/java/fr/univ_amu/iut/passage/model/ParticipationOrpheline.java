@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
 
 /// Une participation de la plateforme **sans équivalent local** (#1305) : elle existe sur VigieChiro
 /// (déposée depuis un autre poste, avant l'application, ou après une réinstallation), mais **rien** de
-/// cette nuit n'est en base ici — ni passage, ni observation, ni séquence. C'est la population que les
+/// cette nuit n'est en base ici, ni passage, ni observation, ni séquence. C'est la population que les
 /// issues A à G ne traitaient pas : elles savent archiver et réactiver un passage **qu'on a eu**.
 ///
 /// @param idParticipation `_id` de la participation sur la plateforme
@@ -52,7 +52,7 @@ public record ParticipationOrpheline(
     /// illisible.
     ///
     /// L'API rend un **instant** daté d'un décalage (`2026-07-04T19:00:00+00:00`) ; l'application, elle,
-    /// raisonne en **heure murale locale** — c'est ce que l'observateur a lu sur sa montre en posant
+    /// raisonne en **heure murale locale** : c'est ce que l'observateur a lu sur sa montre en posant
     /// l'enregistreur, et c'est ce que [CorrespondanceParticipation] reconvertit en UTC à l'envoi. La
     /// conversion doit donc **préserver l'instant** et changer de repère.
     ///

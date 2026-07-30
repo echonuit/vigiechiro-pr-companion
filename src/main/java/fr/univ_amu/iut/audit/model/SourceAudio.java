@@ -2,7 +2,7 @@ package fr.univ_amu.iut.audit.model;
 
 /// D'où l'audio d'une nuit **reviendrait** si l'on repartait d'une base neuve (#1151).
 ///
-/// C'est la question à laquelle il faut savoir répondre **avant** un reset, nuit par nuit — pas après.
+/// C'est la question à laquelle il faut savoir répondre **avant** un reset, nuit par nuit : pas après.
 /// Les métadonnées et les observations, elles, reviennent toujours du serveur (#1050) ; l'audio, non.
 ///
 /// La cascade est celle de l'issue : le **disque** d'abord (rapide, complet, hors réseau), le **serveur**
@@ -17,7 +17,7 @@ public enum SourceAudio {
     SERVEUR("l'audio n'est plus sur le disque, mais la nuit a été déposée en WAV : le serveur peut le rendre"),
 
     /// Ni disque, ni serveur. **Ce n'est pas une impasse** : depuis #1297, la nuit devient un **passage
-    /// archivé** — observations et vérifications consultables, écoute impossible, réactivation possible si
+    /// archivé** : observations et vérifications consultables, écoute impossible, réactivation possible si
     /// l'utilisateur retrouve un jour ses fichiers. Mais c'est une **perte assumée**, et elle doit être
     /// annoncée **avant** d'agir, pas découverte après.
     PERDU("l'audio est perdu : la nuit deviendra un passage archivé (consultable, non écoutable)");

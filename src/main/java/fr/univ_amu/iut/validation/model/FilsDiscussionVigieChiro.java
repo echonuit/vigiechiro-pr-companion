@@ -14,14 +14,14 @@ import java.util.Objects;
 
 /// Écrit les **fils de discussion** d'une participation VigieChiro dans la base, une fois ses
 /// observations importées (#1417). Collaborateur interne de [ServiceValidation], sur le modèle de
-/// [PreservationValidations] : l'import garde son cœur commun, et le fil — qui n'existe que côté
-/// VigieChiro — reste à côté.
+/// [PreservationValidations] : l'import garde son cœur commun, et le fil, qui n'existe que côté
+/// VigieChiro, reste à côté.
 ///
 /// **Pourquoi à part, et après.** Le fil est un 1-N : il ne peut pas voyager dans une
 /// [LigneObservation] (projection à plat, partagée avec le CSV Tadarida, qui n'a pas de fil). Et il ne
 /// peut pas être écrit *pendant* l'insertion des observations : celle-ci se fait en lot, sans récupérer
 /// les clés générées. On relit donc les observations fraîchement insérées et on les rapproche des
-/// données serveur par leur **ancrage plateforme** (`_id` de la donnée + indice brut, V21/#1139) — le
+/// données serveur par leur **ancrage plateforme** (`_id` de la donnée + indice brut, V21/#1139) : le
 /// même couple qui sert de cible au `PATCH` des corrections.
 ///
 /// Rien n'est écrit quand aucune observation n'a de message, ce qui est le cas le plus courant : pas de
@@ -41,8 +41,8 @@ final class FilsDiscussionVigieChiro {
 
     /// Enregistre les fils des observations du jeu de résultats `idResultats`, tels que le serveur les a
     /// renvoyés. Le fil local est **remplacé**, jamais fusionné : c'est un reflet du serveur, qui fait
-    /// foi (un message n'a pas d'identité stable côté serveur — l'ancrage est positionnel, l'ajout se
-    /// fait par `$push` — donc rien ne permettrait de rapprocher deux versions d'un même fil autrement
+    /// foi (un message n'a pas d'identité stable côté serveur : l'ancrage est positionnel, l'ajout se
+    /// fait par `$push`, donc rien ne permettrait de rapprocher deux versions d'un même fil autrement
     /// qu'en inventant une identité).
     ///
     /// @return le nombre d'**observations** dont un fil a été écrit. C'est ce compte, et non celui des
@@ -85,7 +85,7 @@ final class FilsDiscussionVigieChiro {
     }
 
     /// Convertit un fil serveur en messages persistables. Le **rang** est la position dans le tableau du
-    /// serveur : l'ajout s'y faisant par `$push`, cet ordre **est** l'ordre chronologique — plus fiable
+    /// serveur : l'ajout s'y faisant par `$push`, cet ordre **est** l'ordre chronologique, plus fiable
     /// qu'un tri sur des dates que le serveur ne garantit pas toutes.
     private static List<MessageObservation> enMessages(Long idObservation, List<MessageVigieChiro> fil) {
         List<MessageObservation> messages = new ArrayList<>(fil.size());

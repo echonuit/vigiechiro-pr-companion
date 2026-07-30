@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 /// température de début/fin de nuit, le vent et la couverture nuageuse.
 ///
 /// **Dégradation propre** : timeout court, et toute erreur (hors-ligne, HTTP non 200, JSON inattendu)
-/// est convertie en [Optional#empty()] — jamais d'exception remontée (comme le fond de carte OSM).
+/// est convertie en [Optional#empty()] : jamais d'exception remontée (comme le fond de carte OSM).
 /// Aucune dépendance ajoutée : `java.net.http` (JDK) + un lecteur JSON minimal (le projet ne `requires`
 /// aucune bibliothèque JSON).
 ///

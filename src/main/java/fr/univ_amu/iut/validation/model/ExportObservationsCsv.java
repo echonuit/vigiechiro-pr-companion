@@ -11,7 +11,7 @@ import java.util.function.Predicate;
 
 /// Export **CSV** des observations audio (#149), pour l'exploitation hors application (analyse, interop
 /// tableur). Distinct du CSV `_Vu` réinjectable (dépôt Tadarida) : ici on **aplatit les colonnes affichées**
-/// (carré, point, site, date, espèce, statut, fréquence, commentaire…) d'un jeu de lignes — typiquement le
+/// (carré, point, site, date, espèce, statut, fréquence, commentaire…) d'un jeu de lignes : typiquement le
 /// **sous-ensemble filtré** de la vue « Sons & validation ». Formateur **pur** (aucune dépendance IHM),
 /// réutilisable par le CLI (#618).
 ///
@@ -124,7 +124,7 @@ public final class ExportObservationsCsv {
         return vrai ? "oui" : "non";
     }
 
-    /// Certitude déclarée (`Sûr` / `Probable` / `Possible`), ou vide si non renseignée — pour l'observateur
+    /// Certitude déclarée (`Sûr` / `Probable` / `Possible`), ou vide si non renseignée : pour l'observateur
     /// comme pour le validateur : côté serveur, c'est la même énumération (contrat #1203).
     private static String certitude(Certitude certitude) {
         return certitude == null ? "" : certitude.libelle();

@@ -197,7 +197,7 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
     /// Elle a été tranchée par **oui, en texte**. Le produit disait « cette espèce est à enjeu » sur
     /// trois écrans et se taisait sur le quatrième : cet écart se remarque à l'usage et fait douter du
     /// repère lui-même. La mention se glisse donc dans la ligne de détail, à côté du groupe
-    /// taxonomique — **sans icône**, pour ne pas banaliser un bouclier qui, sur les écrans de décision,
+    /// taxonomique : **sans icône**, pour ne pas banaliser un bouclier qui, sur les écrans de décision,
     /// appelle une action ; et **sans composante nouvelle** sur [ResultatRecherche], qui en porte déjà
     /// sept.
     private ResultatRecherche resultatEspece(EspeceObservee espece) {

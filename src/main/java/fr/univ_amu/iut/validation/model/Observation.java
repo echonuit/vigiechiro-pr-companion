@@ -23,7 +23,7 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 ///
 /// L'avis du validateur est en **lecture seule** : le serveur refuse (403) qu'un jeton de rôle
 /// `Observateur` le pose (spike de #724). Il est donc toujours un **reflet** du serveur, rafraîchi à
-/// chaque import — jamais une saisie locale, jamais préservé d'un import à l'autre.
+/// chaque import : jamais une saisie locale, jamais préservé d'un import à l'autre.
 ///
 /// Le `modeValidation` est mappé via [ModeValidation] (colonne `validation_mode` ; `null` →
 /// [ModeValidation#NON_VALIDE]). Les colonnes numériques optionnelles (`REAL` / `INTEGER`

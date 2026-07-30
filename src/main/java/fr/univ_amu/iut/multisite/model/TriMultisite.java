@@ -32,7 +32,7 @@ public enum TriMultisite {
     PAR_VERDICT(Comparator.comparing(
             LignePassage::verdict, Comparator.nullsLast(Comparator.comparingInt(Verdict::ordinal)))),
 
-    /// Tri par **campagne** (#2355), alphabétique ; les passages non rattachés ferment la liste — comme
+    /// Tri par **campagne** (#2355), alphabétique ; les passages non rattachés ferment la liste : comme
     /// les non vérifiés pour le verdict. Regroupe à l'écran les nuits qui relèvent du même suivi.
     PAR_CAMPAGNE(Comparator.comparing(LignePassage::campagne, Comparator.nullsLast(Comparator.naturalOrder())));
 

@@ -25,7 +25,7 @@ public final class ActionResetGuide implements ActionMenu {
 
     /// Le geste, **détenu** par l'entrée et non recréé à chaque clic. C'est ce qui le rend atteignable :
     /// un test remplace ses dialogues, déclenche l'entrée, et vérifie **quel** geste est parti. Sans cela,
-    /// rien ne garantissait que « Repartir d'une base neuve » ne lance pas une simple sauvegarde — et
+    /// rien ne garantissait que « Repartir d'une base neuve » ne lance pas une simple sauvegarde : et
     /// c'est l'entrée la plus destructrice du menu (#1436).
     private final GesteReset geste;
 

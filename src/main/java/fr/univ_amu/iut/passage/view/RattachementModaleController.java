@@ -451,7 +451,7 @@ public class RattachementModaleController {
 
     /// « Récupérer depuis VigieChiro » : **tire** les métadonnées de la participation (réseau) hors
     /// du fil JavaFX (socle [ExecuteurTache] #1216), puis **recharge** les champs météo/micro et
-    /// affiche le message sur le fil JavaFX — même patron que « Récupérer la météo ».
+    /// affiche le message sur le fil JavaFX : même patron que « Récupérer la météo ».
     @FXML
     private void tirerDepuisVigieChiro() {
         operationEnCours.set(true);

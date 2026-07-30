@@ -88,16 +88,16 @@ import javafx.scene.control.TextField;
 /// Capture l'écran pivot M-Passage en PNG pour le comparer à la maquette du brief, dans plusieurs
 /// **états** afin d'en montrer les particularités :
 ///
-/// - `apercu-passage.png` : passage **vérifié** — « Préparer le dépôt » actif, validation Tadarida
+/// - `apercu-passage.png` : passage **vérifié**, « Préparer le dépôt » actif, validation Tadarida
 ///   verrouillée (le passage n'est pas encore déposé) ;
-/// - `apercu-passage-depose.png` : passage **déposé** — stepper au bout, « Préparer le dépôt »
+/// - `apercu-passage-depose.png` : passage **déposé**, stepper au bout, « Préparer le dépôt »
 ///   désactivé, validation Tadarida déverrouillée ;
 /// - `apercu-passage-rattachement.png` : la **modale « Modifier le passage »** (rattachement, météo,
 ///   enregistreur, micro) **hors connexion** : la ligne VigieChiro y est masquée ;
-/// - `apercu-passage-rattachement-connecte.png` : la même, **connecté** — « Récupérer depuis
+/// - `apercu-passage-rattachement-connecte.png` : la même, **connecté**, « Récupérer depuis
 ///   VigieChiro » et « Envoyer vers VigieChiro » apparaissent (#1839) ;
 /// - `apercu-passage-reactivation.png` : la modale « Réactiver ce passage » et ses deux barres (#1780) ;
-/// - `apercu-passage-squelette.png` : la fiche d'une nuit **rapatriée de Vigie-Chiro**, connecté —
+/// - `apercu-passage-squelette.png` : la fiche d'une nuit **rapatriée de Vigie-Chiro**, connecté :
 ///   audio absente, et « Réactiver ce passage » **actif** (#2554). C'est l'écran du défaut d'origine,
 ///   où le bouton était grisé et ne disait pas pourquoi.
 ///
@@ -608,7 +608,7 @@ public final class CapturePassage {
     /// Insère en SQL brut un site (`monitoring_site`) et son point d'écoute (`listening_point`),
     /// cibles de clé étrangère du passage, et renvoie l'`id` du point. Volontairement sans les DAO de
     /// la feature `sites` : `passage` ne doit pas en dépendre (cycle ArchUnit). Le point n'est qu'une
-    /// FK ici — M-Passage affiche le libellé du site via [ContexteSite], sans jointure.
+    /// FK ici : M-Passage affiche le libellé du site via [ContexteSite], sans jointure.
     private static long seederSiteEtPoint(SourceDeDonnees source) {
         String insertSite = "INSERT INTO monitoring_site"
                 + "(square_number, friendly_name, protocol, comment, created_at, user_id)"

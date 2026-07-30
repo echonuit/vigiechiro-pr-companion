@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Objects;
 
 /// Implémentation du port [ImportObservations] (#1264) : elle branche l'import réel ([ImportVigieChiro])
-/// sur le contrat que le socle expose aux autres écrans — M-Passage en tête.
+/// sur le contrat que le socle expose aux autres écrans : M-Passage en tête.
 ///
 /// Elle ne fait que **traduire** : l'orchestration (résoudre la participation, récupérer les `donnees`,
 /// diagnostiquer une absence de résultats) reste dans [ImportVigieChiro], et le compte rendu devient un

@@ -211,7 +211,7 @@ public final class SynchronisationParticipation {
 
     /// Écarts entre le passage local et la **participation liée** côté VigieChiro (« la bonne nuit au
     /// bon endroit », pré-vol du dépôt #1046) : compare le **point** (code localité) et la **nuit**
-    /// (date UTC de `date_debut` — le mappeur pousse la date du passage telle quelle en UTC). Liste de
+    /// (date UTC de `date_debut` : le mappeur pousse la date du passage telle quelle en UTC). Liste de
     /// messages lisibles, vide si tout concorde **ou** si aucune participation n'est liée (rien à
     /// vérifier : une création est correcte par construction). Ne compare pas météo/config : la
     /// synchronisation de la modale les gère.

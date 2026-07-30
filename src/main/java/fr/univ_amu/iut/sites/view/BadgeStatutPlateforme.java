@@ -8,8 +8,8 @@ import javafx.scene.control.Tooltip;
 /// carte de « Mes sites » et le détail de site.
 ///
 /// Le badge ne décide de rien : il rend ce que l'état [StatutPlateforme] dit de lui-même (libellé, famille
-/// de couleur, infobulle). C'est ce que demandait #734 — *« utiliser le badge de statut unifié de l'app
-/// plutôt qu'un style ad hoc »* — et c'est ce qui garantit qu'un carré verrouillé se lit pareil des deux
+/// de couleur, infobulle). C'est ce que demandait #734 : *« utiliser le badge de statut unifié de l'app
+/// plutôt qu'un style ad hoc »*, et c'est ce qui garantit qu'un carré verrouillé se lit pareil des deux
 /// côtés.
 final class BadgeStatutPlateforme {
 
@@ -20,7 +20,7 @@ final class BadgeStatutPlateforme {
     ///
     /// L'infobulle est posée par `setTooltip` et non par `Tooltip.install` : un [Label] est un `Control`,
     /// il a donc une **propriété** `tooltip`, que la seconde forme (réservée aux nœuds quelconques) laisse
-    /// vide — l'infobulle s'affichait, mais restait invisible du code, donc intestable.
+    /// vide : l'infobulle s'affichait, mais restait invisible du code, donc intestable.
     static Label creer(StatutPlateforme statut) {
         Label badge = new Label(statut.libelle());
         badge.getStyleClass().addAll("badge", statut.classeBadge());

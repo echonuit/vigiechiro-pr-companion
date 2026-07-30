@@ -23,12 +23,12 @@ import java.util.Objects;
 /// - la **liste des chemins de fichiers de séquences à copier** (dédupliquée, ordre stable).
 ///
 /// [#exporterVers(Path)] compose les deux : il écrit le CSV puis copie les fichiers de séquences
-/// dans un dossier de destination — l'unique effet de bord disque, explicite et déclenché par la
+/// dans un dossier de destination : l'unique effet de bord disque, explicite et déclenché par la
 /// couche IHM (jamais à la construction).
 ///
 /// **Déterminisme** (cf. SERVICE-CONVENTIONS §5) : aucun horodatage ni hash dans la sortie,
 /// ordre des colonnes et des lignes figé (le service trie les entrées avant de construire
-/// l'export) — deux exécutions produisent le même octet, ce qui rend le CSV testable par
+/// l'export) : deux exécutions produisent le même octet, ce qui rend le CSV testable par
 /// *approval*.
 public record ExportBiblioSons(List<EntreeBiblio> entrees) {
 

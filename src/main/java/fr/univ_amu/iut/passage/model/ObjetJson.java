@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
 /// Les valeurs sont conservées comme **jetons bruts** (un nombre reste un nombre, une chaîne reste
 /// entre guillemets), pour ne pas altérer le format. **Tolérant** : `null`, chaîne vide ou contenu non
 /// objet → objet vide. (Le module ne `requires` aucune bibliothèque JSON ; pendant longtemps seule
-/// l'écriture existait, cf. [JsonSimple] — d'où ce lecteur minimal, suffisant pour des objets plats.)
+/// l'écriture existait, cf. [JsonSimple] : d'où ce lecteur minimal, suffisant pour des objets plats.)
 final class ObjetJson {
 
     /// Paire `"clé": valeur` de premier niveau : la valeur est soit une chaîne entre guillemets (gérant

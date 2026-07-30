@@ -8,7 +8,7 @@ import java.util.Set;
 /// État d'un site local vis-à-vis de la plateforme VigieChiro (#718, #734) :
 /// - [#ABSENT] : aucune correspondance (le site n'est pas connu de la plateforme) ;
 /// - [#ENREGISTRE] : correspondance établie mais site **non** verrouillé (en attente de validation) ;
-/// - [#VERROUILLE] : site **verrouillé** côté plateforme — le dépôt d'une participation est possible.
+/// - [#VERROUILLE] : site **verrouillé** côté plateforme, le dépôt d'une participation est possible.
 ///
 /// L'enum porte **son propre badge** (libellé, famille de couleur, infobulle) : le même sur la carte de
 /// « Mes sites » et sur le détail de site (#734). Ces libellés vivaient en dur dans `MesSitesController` ;

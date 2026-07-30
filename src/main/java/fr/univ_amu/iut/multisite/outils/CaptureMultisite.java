@@ -67,7 +67,7 @@ import javafx.scene.control.ToggleButton;
 /// - `apercu-multisite.png` : la **vue agrégée**, tableau de tous les passages (deux sites, statuts
 ///   et verdicts variés), barre de filtres et de tri, export ;
 /// - `apercu-multisite-filtre.png` : le tableau **filtré** par verdict, résumé recalculé ;
-/// - `apercu-multisite-edition.png` : le **mode édition des positions** (#154) — le toggle « ✎ »
+/// - `apercu-multisite-edition.png` : le **mode édition des positions** (#154), le toggle « ✎ »
 ///   superposé à la carte est actif (ambré), le bouton « Enregistrer les positions » apparaît.
 ///
 /// On seede une base SQLite temporaire via les **DAO réels** (la feature `multisite` dépend déjà de
@@ -78,7 +78,7 @@ import javafx.scene.control.ToggleButton;
 /// [ApercuFx].
 ///
 /// **Déterminisme** : le tableau n'affiche que des métadonnées de passage (carré, point, date,
-/// statut, verdict) — aucun chemin de fichier, donc aucune dépendance au dossier temporaire.
+/// statut, verdict) : aucun chemin de fichier, donc aucune dépendance au dossier temporaire.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureMultisite {
@@ -403,7 +403,7 @@ public final class CaptureMultisite {
     }
 
     /// Rend l'écran **tableau replié / carte plein écran** (#347) : on actionne la poignée « Tableau ▶ »
-    /// (`#basculerTableau`) pour retirer le tableau du `SplitPane` et donner toute la largeur à la carte —
+    /// (`#basculerTableau`) pour retirer le tableau du `SplitPane` et donner toute la largeur à la carte :
     /// l'état où arrive « Voir sur la carte ». Le `applyCss/layout` préalable garantit que la poignée est
     /// trouvable par `lookup` (comme pour le mode édition).
     private static void rendreEcranCartePleine(Injector injecteur, Path fichier) throws IOException {
@@ -455,7 +455,7 @@ public final class CaptureMultisite {
         journaliser(fichier);
     }
 
-    /// Rend `scene` **après attente des tuiles OSM** (#152) et journalise — pour les captures à carte.
+    /// Rend `scene` **après attente des tuiles OSM** (#152) et journalise : pour les captures à carte.
     private static void capturerCarte(Scene scene, Path fichier) {
         ApercuFx.capturerApresPreparation(scene, AttenteTuiles::attendre, fichier);
         journaliser(fichier);

@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.function.Consumer;
 
 /// Ce que la **plateforme VigieChiro** sait d'une reconstruction : la liste des participations, le détail
-/// d'une nuit, et surtout la **source des observations** — le CSV téléchargé d'un coup (#1565) si la
+/// d'une nuit, et surtout la **source des observations** : le CSV téléchargé d'un coup (#1565) si la
 /// plateforme l'expose, sinon la pagination `donnees` (repli). Extraite de [ServiceReconstructionPassages]
 /// (plafond God Class) : toutes les lectures distantes et leur traduction en refus **motivé** (#1284)
 /// vivent ici, sans aucune écriture locale.
@@ -153,7 +153,7 @@ final class PlateformeReconstruction {
     }
 
     /// Traduction **unique** d'une issue d'appel (#1284) en valeur ou en refus **motivé** : une seule
-    /// formulation par cause (non connecté, injoignable, refusé), et le geste qui va avec — au lieu de
+    /// formulation par cause (non connecté, injoignable, refusé), et le geste qui va avec : au lieu de
     /// répéter le même `switch` à chaque lecture distante.
     ///
     /// @param quoi ce qu'on lisait, pour que le message dise **ce qui** a échoué

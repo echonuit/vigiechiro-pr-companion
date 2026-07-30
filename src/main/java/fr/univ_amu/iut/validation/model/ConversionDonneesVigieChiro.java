@@ -6,7 +6,7 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 import java.util.List;
 
 /// Convertit les résultats Tadarida d'une participation VigieChiro ([DonneeVigieChiro], renvoyés par
-/// `GET /participations/#id/donnees`) en [LigneObservation] locales — la **même** projection que le
+/// `GET /participations/#id/donnees`) en [LigneObservation] locales : la **même** projection que le
 /// parseur CSV Tadarida ([ParserCsvTadarida]), de sorte que les deux sources rejoignent le cœur d'import
 /// commun de [ServiceValidation] (#719, axe 4.2).
 ///
@@ -20,7 +20,7 @@ import java.util.List;
 /// [ModeValidation#MANUEL] ; sinon [ModeValidation#NON_VALIDE] (résultat Tadarida brut).
 ///
 /// L'avis du **validateur** (#1417) traverse ici sans transformation : il ne change **pas** le mode de
-/// validation. Un expert du MNHN peut trancher une observation que l'observateur n'a jamais touchée —
+/// validation. Un expert du MNHN peut trancher une observation que l'observateur n'a jamais touchée :
 /// la faire passer pour « validée manuellement » attribuerait à l'observateur une décision qui n'est
 /// pas la sienne. Les deux avis restent distincts, et affichés comme tels.
 ///

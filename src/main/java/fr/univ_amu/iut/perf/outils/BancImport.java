@@ -41,7 +41,7 @@ import java.util.function.Consumer;
 /// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Banc de mesure de l'**import** (#29, objectif O3) : génère une **nuit synthétique** de vrais WAV
-/// (en-tête RIFF canonique, fréquence multiple de 10 — R10) + un journal `LogPR`, puis lance le
+/// (en-tête RIFF canonique, fréquence multiple de 10 : R10) + un journal `LogPR`, puis lance le
 /// **vrai** [ServiceImport#importer] dessus et mesure le **temps total** (copie R9 vs transformation
 /// R10/R11 parallélisée #12), le **débit** (fichiers/s, Mo/s) et la **mémoire crête** (échantillonnée).
 /// À exécuter **sur une machine représentative** (IUT, JIT froid) pour fixer les ordres de grandeur.

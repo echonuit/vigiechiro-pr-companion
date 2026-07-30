@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 /// Ce que **tout le workspace** deviendrait si l'on repartait d'une base neuve (#1151) : une ligne par
-/// nuit, et la question qui décide de tout — *y a-t-il de la perte ?*
+/// nuit, et la question qui décide de tout : *y a-t-il de la perte ?*
 ///
 /// L'issue le dit ainsi : *« ne demander confirmation que s'il existe au moins une nuit en “perdu” »*. Un
 /// reset qui ne perd rien ne doit pas s'entourer de cérémonie ; un reset qui perd de l'audio ne doit pas

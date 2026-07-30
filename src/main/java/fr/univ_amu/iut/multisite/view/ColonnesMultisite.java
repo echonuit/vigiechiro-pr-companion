@@ -51,7 +51,7 @@ final class ColonnesMultisite {
         // Statut / verdict en badges (#691), comme la table de la fiche site.
         statut.setCellFactory(colonne -> ColonneBadge.cellule(ligne -> ColonneBadge.classe(ligne.statut())));
         verdict.setCellFactory(colonne -> ColonneBadge.cellule(ligne -> ColonneBadge.classe(ligne.verdict())));
-        // Campagne (#2355) : cellule vide pour une nuit non rattachée — le rattachement est facultatif,
+        // Campagne (#2355) : cellule vide pour une nuit non rattachée, le rattachement est facultatif,
         // et la feature est désactivable.
         campagne.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 c.getValue().campagne() == null ? "" : c.getValue().campagne()));

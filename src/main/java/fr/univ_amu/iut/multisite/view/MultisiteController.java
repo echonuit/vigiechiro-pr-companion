@@ -459,7 +459,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     }
 
     /// Superpose à la carte ses contrôles : la **légende** (bas-gauche, #152), le bouton **« ⤢ recadrer »**
-    /// (haut-droite, #339) et les **contrôles d'édition des positions** (haut-gauche, #154) — le toggle
+    /// (haut-droite, #339) et les **contrôles d'édition des positions** (haut-gauche, #154) : le toggle
     /// « ✎ » (toujours visible) et « 💾 » (visible en mode édition seulement, géré par
     /// [EditionPositionsCarte]). Icônes seules, à portée de la carte qu'ils pilotent ; les `id` sont
     /// conservés pour les tests/CSS.

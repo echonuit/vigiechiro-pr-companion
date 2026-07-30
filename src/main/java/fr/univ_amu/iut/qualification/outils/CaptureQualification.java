@@ -62,7 +62,7 @@ import javafx.scene.Scene;
 ///
 /// 1. base SQLite temporaire seedée : un utilisateur, un site/point, un passage `TRANSFORME` et une
 ///    session de **60 enregistrements** horodatés sur toute la nuit (20:25 → ~08:13) et nommés
-///    selon le préfixe R6 — de quoi obtenir un pré-check **tout au vert** (≥ 50 fichiers, noms
+///    selon le préfixe R6 : de quoi obtenir un pré-check **tout au vert** (≥ 50 fichiers, noms
 ///    conformes, couverture complète) ;
 /// 2. injecteur Guice (socle + sites + passage + qualification) ;
 /// 3. la vue est chargée avec une `controllerFactory` qui injecte deux VM connus, qu'on pilote

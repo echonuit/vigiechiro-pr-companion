@@ -46,8 +46,8 @@ public final class StockageConnexion implements FournisseurToken {
 
     /// `@Inject` + `@Singleton` : le stockage se laisse construire par Guice **même dans un injecteur
     /// partiel** qui ne charge pas `ConnexionModule` (outils de capture, tests de module). Sans cela, toute
-    /// feature qui en dépend — depuis #1417, la vue audio le consulte pour dire « Vous » dans le fil de
-    /// discussion — casserait ces injecteurs, alors que `Workspace` et `Horloge` y sont toujours liés.
+    /// feature qui en dépend (depuis #1417, la vue audio le consulte pour dire « Vous » dans le fil de
+    /// discussion) casserait ces injecteurs, alors que `Workspace` et `Horloge` y sont toujours liés.
     /// Là où `ConnexionModule` est chargé, son `@Provides` fait foi.
     @Inject
     public StockageConnexion(Workspace workspace, Horloge horloge) {

@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 ///
 /// Le fil est un **reflet du serveur** : à chaque import VigieChiro, celui de la participation est
 /// réécrit intégralement ([#remplacerFil]) plutôt que fusionné. Une fusion supposerait qu'un message
-/// ait une identité stable côté serveur — il n'en a pas (l'ancrage est positionnel, l'ajout se fait
+/// ait une identité stable côté serveur : il n'en a pas (l'ancrage est positionnel, l'ajout se fait
 /// par `$push`), et un rapprochement au texte inventerait une identité qui n'existe pas.
 ///
 /// [#filsDesObservations] charge les fils de **plusieurs** observations d'un coup : l'écran de
@@ -57,7 +57,7 @@ public class MessageObservationDao extends DaoGenerique<MessageObservation, Long
         return MAPPER;
     }
 
-    /// Le fil d'une observation, dans l'ordre du serveur (vide si personne n'a jamais écrit — le cas
+    /// Le fil d'une observation, dans l'ordre du serveur (vide si personne n'a jamais écrit : le cas
     /// courant).
     public List<MessageObservation> filDeLObservation(Long idObservation) {
         return query(
@@ -115,7 +115,7 @@ public class MessageObservationDao extends DaoGenerique<MessageObservation, Long
     }
 
     /// Valeurs positionnelles de [#SQL_INSERT]. La date est normalisée en ISO-8601 (instant UTC) ;
-    /// `null` reste `null` — un message sans date reste un message.
+    /// `null` reste `null` : un message sans date reste un message.
     private static Object[] valeurs(MessageObservation message) {
         return new Object[] {
             message.idObservation(),

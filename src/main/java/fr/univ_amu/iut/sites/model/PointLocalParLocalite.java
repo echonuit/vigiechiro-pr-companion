@@ -12,7 +12,7 @@ import java.util.Optional;
 /// cycle que créerait `passage → sites`.
 ///
 /// Résolution **stricte** : le carré doit exister localement, et porter un point de ce code. Un `Optional`
-/// vide dit « je ne connais pas ce point » — la reconstruction (#1305) refusera alors explicitement,
+/// vide dit « je ne connais pas ce point » : la reconstruction (#1305) refusera alors explicitement,
 /// plutôt que d'inventer un rattachement (une nuit rattachée au mauvais point est une donnée fausse).
 public final class PointLocalParLocalite implements PointParLocalite {
 
