@@ -74,8 +74,6 @@ class CliquetFixturePassageTest {
             "fr/univ_amu/iut/validation/PublicationMessageTest.java",
             "fr/univ_amu/iut/validation/ResultatsIdentificationDaoTest.java",
             "fr/univ_amu/iut/validation/SaisieCertitudeTest.java",
-            "fr/univ_amu/iut/validation/ServiceValidationTest.java",
-            "fr/univ_amu/iut/validation/ValidationExpertTest.java",
             "fr/univ_amu/iut/validation/ValidationManuelleTest.java");
 
     @Test

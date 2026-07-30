@@ -7,7 +7,6 @@ import fr.univ_amu.iut.commun.api.MessageVigieChiro;
 import fr.univ_amu.iut.commun.api.ObservationVigieChiro;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -16,18 +15,14 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
-import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.BilanImport;
@@ -86,30 +81,20 @@ class ValidationExpertTest {
         observationDao = new ObservationDao(source);
         messageDao = new MessageObservationDao(source);
 
-        Site site = siteDao.insert(new Site(null, "640380", "Test", Protocole.STANDARD, null, "2026-04-01", ID_USER));
-        PointDEcoute point = pointDao.insert(new PointDEcoute(null, "Z1", null, null, null, site.id()));
-        enregistreurDao.insert(new Enregistreur("1925492", "V1.01", null));
-        Passage passage = passageDao.insert(new Passage(
-                null,
-                2,
-                2026,
-                "2026-04-22",
-                "20:00:00",
-                "06:00:00",
-                null,
-                StatutWorkflow.DEPOSE,
-                null,
-                null,
-                null,
-                null,
-                point.id(),
-                "1925492",
-                null));
-        idPassage = passage.id();
-        SessionDEnregistrement session =
-                sessionDao.insert(new SessionDEnregistrement(null, "/ws/session", null, null, idPassage));
+        // `semerSquelette` : ces tests posent leurs propres originaux et séquences.
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("640380")
+                .nomSite("Test")
+                .point("Z1")
+                .enregistreur("1925492")
+                .nuit(2, 2026, "2026-04-22")
+                .statut(StatutWorkflow.DEPOSE)
+                .cheminSession("/ws/session")
+                .semerSquelette();
+        idPassage = jeu.idPassage();
         EnregistrementOriginal original = originalDao.insert(new EnregistrementOriginal(
-                null, SEQUENCE + ".wav", "/ws/bruts/" + SEQUENCE + ".wav", 5.0, 384000, null, session.id()));
+                null, SEQUENCE + ".wav", "/ws/bruts/" + SEQUENCE + ".wav", 5.0, 384000, null, jeu.idSession()));
         sequenceDao.insert(new SequenceDEcoute(
                 null,
                 SEQUENCE + ".wav",
@@ -119,7 +104,7 @@ class ValidationExpertTest {
                 5.0,
                 "/ws/transformes/" + SEQUENCE + ".wav",
                 false,
-                session.id()));
+                jeu.idSession()));
 
         service = new ServiceValidation(
                 new fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao(source),
