@@ -208,6 +208,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private Label lblRetour;
 
     @FXML
+    private VBox zoneCompteRenduReleve;
+
+    @FXML
     private HBox bandeauRetour;
 
     @FXML
@@ -400,6 +403,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // Bandeau de retour partagé (ADR 0023) : libellé, visibilité, sévérité et croix de fermeture.
         BandeauRetour.installer(
                 bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+        CompteRenduReleveUI.cabler(zoneCompteRenduReleve, viewModel.compteRenduReleveProperty());
 
         // Carte (#152) : le composant réutilisable affiche sites + points. On le remplit en traduisant
         // l'agrégat carte (non filtré) en DonneesCarte à chaque mise à jour. La carte ne dépend pas des
@@ -617,7 +621,15 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                         tableLignes.getScene().getWindow(),
                         "Relevé de l'état des analyses",
                         (suivi, jeton) -> viewModel.releverPuisCharger(nuitsDeposees, suivi, jeton),
-                        viewModel::appliquerReleve,
+                        resultat -> {
+                            viewModel.appliquerReleve(resultat);
+                            if (resultat.compteRendu().isEmpty()) {
+                                // Rien à ventiler, donc rien à chiffrer : c'est un guidage, et il se dit
+                                // dans le bandeau. Le modèle a constaté, la surface formule (ADR 2635).
+                                viewModel.signalerInfo(
+                                        "Aucune nuit déposée : il n'y a pas encore d'analyse à relever.");
+                            }
+                        },
                         () -> viewModel.signalerInfo("Relevé interrompu : les nuits déjà relevées gardent leur"
                                 + " nouvel état, la prochaine relève reprendra les autres."),
                         viewModel::signalerErreur);

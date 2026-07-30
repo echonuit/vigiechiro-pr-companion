@@ -183,6 +183,10 @@
     </right>
   </BorderPane>
 
+  <!-- Compte rendu chiffré du relevé groupé (#2757) : une proportion se VOIT, là où une phrase se lit.
+       Distinct du bandeau ci-dessous, qui porte des retours bornés (ADR 0031). -->
+  <VBox fx:id="zoneCompteRenduReleve" visible="false" managed="false"/>
+
   <!-- Bandeau de retour partagé (ADR 0023) : sévérité + fermeture. -->
   <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
     <Label fx:id="lblRetour" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>

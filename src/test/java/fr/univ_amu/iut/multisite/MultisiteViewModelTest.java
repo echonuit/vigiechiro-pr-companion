@@ -104,8 +104,9 @@ class MultisiteViewModelTest {
         var compteRendu = vm.releverAnalyses(deposees, progression -> {}, JetonAnnulation.neutre());
 
         verify(suivi).releverTout(eq(List.of(1L, 3L)), any(), any());
-        assertThat(compteRendu.texte()).contains("2 nuit(s)");
-        assertThat(compteRendu.severite())
+        assertThat(compteRendu).isPresent();
+        assertThat(compteRendu.orElseThrow().resultat()).isEqualTo("2 relevées");
+        assertThat(compteRendu.orElseThrow().severite())
                 .as("#1888 : un relevé complet est un succès, ce que le canal String ne disait pas")
                 .isEqualTo(Severite.SUCCES);
     }
@@ -116,13 +117,11 @@ class MultisiteViewModelTest {
         SuiviTraitement suivi = mock(SuiviTraitement.class);
         MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, communes, Optional.of(suivi), ID);
 
-        assertThat(vm.releverAnalyses(List.of(), progression -> {}, JetonAnnulation.neutre())
-                        .texte())
-                .contains("Aucune nuit déposée");
-        assertThat(vm.releverAnalyses(List.of(), progression -> {}, JetonAnnulation.neutre())
-                        .severite())
-                .as("rien à relever est un guidage, pas un échec")
-                .isEqualTo(Severite.INFO);
+        // #2757 : rien à ventiler, donc AUCUN compte rendu. Le guidage est formulé par la surface, comme
+        // celui de l'interruption - le modèle se contente de constater qu'il n'y a rien à relever.
+        assertThat(vm.releverAnalyses(List.of(), progression -> {}, JetonAnnulation.neutre()))
+                .as("un compte rendu chiffré à zéro nuit n'a rien à chiffrer")
+                .isEmpty();
         verify(suivi, never()).releverTout(anyList(), any(), any());
     }
 
@@ -133,16 +132,19 @@ class MultisiteViewModelTest {
         when(suivi.releverTout(anyList(), any(), any())).thenReturn(new SuiviTraitement.BilanReleveGroupe(1, 2));
         MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, communes, Optional.of(suivi), ID);
 
-        assertThat(vm.releverAnalyses(List.of(1L, 2L, 3L), progression -> {}, JetonAnnulation.neutre())
-                        .severite())
+        var partiel = vm.releverAnalyses(List.of(1L, 2L, 3L), progression -> {}, JetonAnnulation.neutre())
+                .orElseThrow();
+
+        assertThat(partiel.severite())
                 .as("#1888 : un relevé PARTIEL n'est ni un succès (ce serait mentir sur la fraîcheur),"
                         + " ni une erreur (les données restent affichées)")
                 .isEqualTo(Severite.INFO);
-        assertThat(vm.releverAnalyses(List.of(1L, 2L, 3L), progression -> {}, JetonAnnulation.neutre())
-                        .texte())
-                .contains("1 nuit(s) sur 3")
-                .contains("2 injoignable(s)")
-                .contains("dernier état connu");
+        // #2757 : la proportion se VOIT désormais, dans deux parts qui couvrent le total.
+        assertThat(partiel.resultat()).isEqualTo("1 / 3 relevées");
+        assertThat(partiel.ventilation().total()).isEqualTo(3);
+        assertThat(partiel.avertissements())
+                .as("la barre ne peut pas dire que rien n'est perdu : une phrase le doit")
+                .anySatisfy(avis -> assertThat(avis.texte()).contains("dernier état connu"));
     }
 
     @Test
@@ -158,9 +160,10 @@ class MultisiteViewModelTest {
                 vm.releverPuisCharger(List.of(1L), progression -> {}, JetonAnnulation.neutre());
         vm.appliquerReleve(resultat);
 
-        assertThat(vm.retourProperty().get().texte())
+        assertThat(vm.compteRenduReleveProperty().get())
                 .as("le compte rendu doit survivre au rechargement (appliquer efface le message avant)")
-                .contains("relevé pour 1 nuit(s)");
+                .isNotNull();
+        assertThat(vm.compteRenduReleveProperty().get().resultat()).isEqualTo("1 relevées");
     }
 
     private static LignePassage ligne(String carre, String point, int annee, int numero) {
@@ -323,5 +326,25 @@ class MultisiteViewModelTest {
         assertThat(vm.positionsEnAttente().modifieesProperty().get()).isFalse();
         verify(serviceSites, never()).deplacerPoint(any(), any(), any());
         verify(service, atLeastOnce()).agregerPourCarte(ID);
+    }
+
+    @Test
+    @DisplayName("#2757 : un rechargement efface le compte rendu, qui deviendrait périmé sans mentir")
+    void un_rechargement_efface_le_compte_rendu() {
+        SuiviTraitement suivi = mock(SuiviTraitement.class);
+        when(suivi.releverTout(anyList(), any(), any())).thenReturn(new SuiviTraitement.BilanReleveGroupe(2, 1));
+        when(service.listerPassages(ID)).thenReturn(List.of(ligne("640380", "A1", 2026, 1, StatutWorkflow.DEPOSE)));
+        when(service.agregerPourCarte(ID)).thenReturn(List.of());
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, communes, Optional.of(suivi), ID);
+        vm.appliquerReleve(vm.releverPuisCharger(List.of(1L, 2L, 3L), progression -> {}, JetonAnnulation.neutre()));
+        assertThat(vm.compteRenduReleveProperty().get()).isNotNull();
+
+        // Un simple rafraîchissement du tableau : les nuits relevées ne sont plus forcément celles
+        // affichées, et « 2 / 3 relevées » ne parle plus de ce qu'on a sous les yeux.
+        vm.rafraichir();
+
+        assertThat(vm.compteRenduReleveProperty().get())
+                .as("un compte rendu périmé se lit exactement comme un compte rendu vrai")
+                .isNull();
     }
 }
