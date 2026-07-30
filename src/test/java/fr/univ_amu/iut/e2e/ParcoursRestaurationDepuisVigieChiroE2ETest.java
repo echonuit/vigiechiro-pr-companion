@@ -36,6 +36,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.passage.model.DisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
@@ -57,6 +58,7 @@ import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -250,7 +252,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
         // l'identique, et la cascade structurelle les accepte (#1650/#1682).
         Path sd = Files.createTempDirectory("vc-e2e-bruts");
         ecrireBrut(sd.resolve("PaRec_20260703_220529.wav"));
-        ecrireLog(sd.resolve("LogPR1925492.txt"));
+        JournalDeCapteur.ecrire(sd, "1925492", LocalDate.of(2026, 7, 3), FREQUENCE_ACQUISITION_HZ / 1000);
 
         RapportReactivation reactivation = injector.getInstance(ServiceReactivationPassage.class)
                 .reactiver(rapport.idPassage(), sd, progres -> {});
@@ -306,7 +308,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
         //    rebranche l'audio. C'est la couture entière, celle que le défaut traversait.
         Path sd = Files.createTempDirectory("vc-e2e-squelette");
         ecrireBrut(sd.resolve("PaRec_20260703_220529.wav"));
-        ecrireLog(sd.resolve("LogPR1925492.txt"));
+        JournalDeCapteur.ecrire(sd, "1925492", LocalDate.of(2026, 7, 3), FREQUENCE_ACQUISITION_HZ / 1000);
 
         RapportReactivation reactivation =
                 injector.getInstance(ServiceReactivationPassage.class).reactiver(idPassage, sd, progres -> {});
@@ -426,17 +428,5 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
         }
         Files.createDirectories(fichier.getParent());
         FichierWav.ecrire(fichier, 1, FREQUENCE_ACQUISITION_HZ / 10, 16, pcm, 0, pcm.length);
-    }
-
-    /// Journal minimal de l'enregistreur : la ligne « Paramètres » porte la fréquence d'acquisition `Fe…kHz`,
-    /// la seule chose que l'inventaire (#1649) y lit pour régénérer à l'identique.
-    private static void ecrireLog(Path fichier) throws IOException {
-        Files.write(
-                fichier,
-                List.of(
-                        "03/07/26 - 22:00:00 PR1925492 Démarrage v1.0",
-                        "03/07/26 - 22:00:01 PR1925492 Paramètres : Acquisi. 22:00-06:30, Fe"
-                                + (FREQUENCE_ACQUISITION_HZ / 1000) + "kHz, S. R. Med, Bd. Freq. 8-120kHz"),
-                java.nio.charset.StandardCharsets.UTF_8);
     }
 }
