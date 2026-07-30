@@ -30,14 +30,14 @@ final class ExportSonsUI {
                         "observations-sons.zip",
                         FiltreFichier.archiveZip())
                 .ifPresent(destination -> viewModel
-                        .preparerExportSons(destination)
+                        .exports()
+                        .preparer(destination)
                         .ifPresent(lignes -> dialogue.lancer(
                                 fenetre.get(),
                                 "Export des observations et des sons",
-                                (progres, jeton) ->
-                                        viewModel.exporterObservationsEtSons(lignes, destination, progres, jeton),
-                                viewModel::confirmerExportSons,
-                                viewModel::annulationExportSons,
-                                viewModel::echecExportSons)));
+                                (progres, jeton) -> viewModel.exports().exporter(lignes, destination, progres, jeton),
+                                viewModel.exports()::confirmer,
+                                viewModel.exports()::annulee,
+                                viewModel.exports()::echec)));
     }
 }

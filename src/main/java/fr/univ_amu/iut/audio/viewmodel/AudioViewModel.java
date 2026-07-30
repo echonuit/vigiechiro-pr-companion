@@ -65,6 +65,9 @@ public class AudioViewModel {
     private final ResolveurSourceAudio resolveur;
     private final ExporteurAudio exporteur;
 
+    /// Flux du geste ZIP (#2793), exposé à la vue (patron « positionsEnAttente » du multisite).
+    private final FluxExportsAudio exports;
+
     /// Actions de revue (unitaires + en lot), déléguées à un collaborateur pour que le VM garde la seule
     /// orchestration (cohésion, seuil PMD). Voir [ActionsRevueAudio].
     private final ActionsRevueAudio actions;
@@ -149,6 +152,7 @@ public class AudioViewModel {
         this.disponibiliteEcoute = new DisponibiliteEcoute(disponibilite, fichierPresent);
         this.resolveur = new ResolveurSourceAudio(service, projectionsAudio, plageNuitPassage);
         this.exporteur = Objects.requireNonNull(exporteur, "exporteur");
+        this.exports = new FluxExportsAudio(exporteur, messages, () -> List.copyOf(observationsFiltrees));
         this.actions = new ActionsRevueAudio(
                 service,
                 Objects.requireNonNull(validationManuelle, "validationManuelle"),
@@ -307,67 +311,10 @@ public class AudioViewModel {
         return resultat.reussi();
     }
 
-    /// **Prépare** l'export « observations + sons » (#2793), sur le fil JavaFX : fige le sous-ensemble
-    /// affiché et **sonde le dossier de destination** (#2426) avant d'ouvrir la modale. Vide = refus,
-    /// le motif est posé en message.
-    public Optional<List<LigneObservationAudio>> preparerExportSons(Path destination) {
-        if (destination == null) {
-            return Optional.empty();
-        }
-        Path dossier = destination.toAbsolutePath().getParent();
-        SondeAccessibilite.Verdict verdict = SondeAccessibilite.sonder(dossier);
-        if (!verdict.accessible()) {
-            messages.avertissement("Dossier inutilisable : " + verdict.motif() + " (" + dossier + ").");
-            return Optional.empty();
-        }
-        return Optional.of(List.copyOf(observationsFiltrees));
-    }
-
-    /// Exporte `lignes` **et leurs sons** en archive ZIP (#2793). **Bloquant** : à appeler hors du fil
-    /// JavaFX, dans la modale de progression, après [#preparerExportSons]. L'annulation remonte en
-    /// [fr.univ_amu.iut.commun.model.OperationAnnuleeException] (issue « annulé » de la modale),
-    /// l'échec d'écriture en [java.io.UncheckedIOException] (issue « échec ») - l'archive partielle
-    /// est déjà supprimée.
-    ///
-    /// @return le message de bilan, à restituer par [#confirmerExportSons]
-    public String exporterObservationsEtSons(
-            List<LigneObservationAudio> lignes,
-            Path destination,
-            java.util.function.Consumer<fr.univ_amu.iut.commun.model.Progression> progres,
-            fr.univ_amu.iut.commun.model.JetonAnnulation jeton) {
-        try {
-            return exporteur.observationsEtSons(lignes, destination, progres, jeton);
-        } catch (java.io.IOException echec) {
-            throw new java.io.UncheckedIOException(echec);
-        }
-    }
-
-    /// Restitutions de l'export « observations + sons », sur le fil JavaFX (issues de la modale).
-    public void confirmerExportSons(String message) {
-        messages.export(true, message);
-    }
-
-    /// L'utilisateur a annulé : l'archive partielle a été supprimée, on le dit sans dramatiser.
-    public void annulationExportSons() {
-        messages.avertissement("Export annulé : aucune archive n'a été écrite.");
-    }
-
-    /// L'écriture a échoué : l'archive partielle a été supprimée, le motif est restitué.
-    public void echecExportSons(Throwable echec) {
-        String motif = echec.getCause() != null ? echec.getCause().getMessage() : echec.getMessage();
-        messages.export(false, "Export impossible : " + motif);
-    }
-
-    /// Exporte en **CSV** les observations **actuellement affichées** (filtres appliqués) vers
-    /// `destination` (#149). Le sous-ensemble est **figé** au moment de l'appel. Le bilan (ou l'erreur
-    /// d'écriture) est restitué dans le message.
-    ///
-    /// @param destination fichier CSV cible choisi par l'observateur
-    /// @return `true` si le fichier a été écrit
-    public boolean exporterObservations(Path destination) {
-        ExporteurAudio.ResultatExport resultat = exporteur.observations(List.copyOf(observationsFiltrees), destination);
-        messages.export(resultat.reussi(), resultat.message());
-        return resultat.reussi();
+    /// Les exports du sous-ensemble affiché (#149, #2793), pilotés par la vue : CSV seul, ou
+    /// archive « observations + sons » (préparation, écriture hors fil, restitutions par issue).
+    public FluxExportsAudio exports() {
+        return exports;
     }
 
     /// Recharge les lignes de la source courante en **préservant la sélection**, puis met à jour compteurs

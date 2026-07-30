@@ -730,7 +730,7 @@ class AudioViewModelTest {
 
             AudioViewModel vm = vm();
 
-            assertThat(vm.preparerExportSons(fichier.resolve("archive.zip"))).isEmpty();
+            assertThat(vm.exports().preparer(fichier.resolve("archive.zip"))).isEmpty();
             assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
         }
 
@@ -743,7 +743,7 @@ class AudioViewModelTest {
             AudioViewModel vm = vm();
             vm.ouvrirSur(new SourceObservations.ParPassage(PASSAGE_7));
 
-            assertThat(vm.preparerExportSons(racine.resolve("archive.zip")))
+            assertThat(vm.exports().preparer(racine.resolve("archive.zip")))
                     .hasValueSatisfying(lignes -> assertThat(lignes).hasSize(1));
         }
 
@@ -755,12 +755,13 @@ class AudioViewModelTest {
             Path archive = racine.resolve("observations-sons.zip");
             AudioViewModel vm = vm();
 
-            String message = vm.exporterObservationsEtSons(
-                    List.of(ligne(1L, 1L, "Pippip", null, StatutObservation.NON_TOUCHEE, false)),
-                    archive,
-                    progression -> {},
-                    fr.univ_amu.iut.commun.model.JetonAnnulation.neutre());
-            vm.confirmerExportSons(message);
+            String message = vm.exports()
+                    .exporter(
+                            List.of(ligne(1L, 1L, "Pippip", null, StatutObservation.NON_TOUCHEE, false)),
+                            archive,
+                            progression -> {},
+                            fr.univ_amu.iut.commun.model.JetonAnnulation.neutre());
+            vm.exports().confirmer(message);
 
             assertThat(archive)
                     .as("l'export ne se contente pas d'annoncer : il écrit")
@@ -774,11 +775,11 @@ class AudioViewModelTest {
         void annulation_et_echec_se_restituent() {
             AudioViewModel vm = vm();
 
-            vm.annulationExportSons();
+            vm.exports().annulee();
             assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
             assertThat(vm.retourProperty().get().texte()).contains("annulé");
 
-            vm.echecExportSons(new java.io.UncheckedIOException(new java.io.IOException("disque plein")));
+            vm.exports().echec(new java.io.UncheckedIOException(new java.io.IOException("disque plein")));
             assertThat(vm.retourProperty().get().texte()).contains("disque plein");
         }
     }

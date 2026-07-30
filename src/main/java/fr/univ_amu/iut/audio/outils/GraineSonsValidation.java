@@ -138,9 +138,7 @@ final class GraineSonsValidation {
                             MarquageDouteux marquageDouteux,
                             SaisieCertitude saisieCertitude,
                             RevueEnLot revueEnLot,
-                            ServiceBibliotheque bibliotheque,
-                            SequenceDao sequenceDao,
-                            SessionDao sessionDao,
+                            ExporteurAudio exporteur,
                             ServiceDisponibiliteAudio disponibilite,
                             DiscussionValidateur discussion) {
                         return new AudioViewModel(
@@ -151,13 +149,20 @@ final class GraineSonsValidation {
                                 marquageDouteux,
                                 saisieCertitude,
                                 revueEnLot,
-                                new ExporteurAudio(
-                                        validation,
-                                        bibliotheque,
-                                        new ExportObservationsEtSons(sequenceDao, sessionDao)),
+                                exporteur,
                                 disponibilite,
                                 Files::exists,
                                 discussion);
+                    }
+
+                    @Provides
+                    ExporteurAudio exporteur(
+                            ServiceValidation validation,
+                            ServiceBibliotheque bibliotheque,
+                            SequenceDao sequenceDao,
+                            SessionDao sessionDao) {
+                        return new ExporteurAudio(
+                                validation, bibliotheque, new ExportObservationsEtSons(sequenceDao, sessionDao));
                     }
 
                     // Repondre au validateur est indisponible en capture (aucune connexion) : le fil se
