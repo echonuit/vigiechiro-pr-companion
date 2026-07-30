@@ -7,14 +7,12 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.zip.ZipEntry;
@@ -40,6 +38,7 @@ class CliExporterSonsTest {
     private Cli cli;
     private Injector injecteur;
     private long idPassage;
+    private final SortieCapturee capture = new SortieCapturee();
 
     @BeforeEach
     void preparer() throws IOException {
@@ -100,22 +99,18 @@ class CliExporterSonsTest {
         System.clearProperty("vigiechiro.workspace");
     }
 
-    private int executer(ByteArrayOutputStream tampon, String... args) {
-        PrintStream flux = new PrintStream(tampon, true, StandardCharsets.UTF_8);
-        return cli.executer(args, flux, flux);
+    private int executer(String... args) {
+        return cli.executer(args, capture.sortie(), capture.erreur());
     }
 
     @Test
     @DisplayName("exporter-sons --passage : archive relue (CSV + son présents), bilan chiffré, code 0")
     void exporter_par_passage_ecrit_une_archive_relue() throws IOException {
         Path sortie = workspace.resolve("sons.zip");
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
-
-        int code = executer(
-                tampon, "exporter-sons", "--passage", String.valueOf(idPassage), "--sortie", sortie.toString());
+        int code = executer("exporter-sons", "--passage", String.valueOf(idPassage), "--sortie", sortie.toString());
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(tampon.toString(StandardCharsets.UTF_8))
+        assertThat(capture.texte())
                 .contains("Archive écrite : 1 observation(s), 1 son(s)")
                 .contains(sortie.toAbsolutePath().toString());
         try (ZipFile zip = new ZipFile(sortie.toFile())) {
@@ -128,9 +123,7 @@ class CliExporterSonsTest {
     @DisplayName("exporter-sons --espece : l'espèce à travers les passages de l'utilisateur, code 0")
     void exporter_par_espece_couvre_les_passages_de_l_utilisateur() throws IOException {
         Path sortie = workspace.resolve("rhifer.zip");
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
-
-        int code = executer(tampon, "exporter-sons", "--espece", "Rhifer", "--sortie", sortie.toString());
+        int code = executer("exporter-sons", "--espece", "Rhifer", "--sortie", sortie.toString());
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         try (ZipFile zip = new ZipFile(sortie.toFile())) {
@@ -144,12 +137,10 @@ class CliExporterSonsTest {
     @DisplayName("exporter-sons : une espèce sans observation produit une archive au CSV d'en-têtes seuls, code 0")
     void exporter_une_espece_sans_observation_reste_valide() throws IOException {
         Path sortie = workspace.resolve("vide.zip");
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
-
-        int code = executer(tampon, "exporter-sons", "--espece", "Pippip", "--sortie", sortie.toString());
+        int code = executer("exporter-sons", "--espece", "Pippip", "--sortie", sortie.toString());
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(tampon.toString(StandardCharsets.UTF_8)).contains("0 observation(s), 0 son(s)");
+        assertThat(capture.texte()).contains("0 observation(s), 0 son(s)");
         try (ZipFile zip = new ZipFile(sortie.toFile())) {
             assertThat(zip.stream().map(ZipEntry::getName)).containsExactly("observations.csv");
         }
@@ -158,10 +149,7 @@ class CliExporterSonsTest {
     @Test
     @DisplayName("exporter-sons : --passage et --espece s'excluent, code 2")
     void refuse_les_deux_portees() {
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
-
         int code = executer(
-                tampon,
                 "exporter-sons",
                 "--passage",
                 String.valueOf(idPassage),
@@ -179,23 +167,19 @@ class CliExporterSonsTest {
     @DisplayName("exporter-sons : passage inconnu refusé avant toute écriture, code 2")
     void refuse_un_passage_inconnu() {
         Path sortie = workspace.resolve("inconnu.zip");
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
-
-        int code = executer(tampon, "exporter-sons", "--passage", "999", "--sortie", sortie.toString());
+        int code = executer("exporter-sons", "--passage", "999", "--sortie", sortie.toString());
 
         assertThat(code)
                 .as("un passage inconnu est une faute de frappe, pas un export vide")
                 .isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
-        assertThat(tampon.toString(StandardCharsets.UTF_8)).contains("Passage introuvable");
+        assertThat(capture.texteErreur()).contains("Passage introuvable");
         assertThat(Files.exists(sortie)).isFalse();
     }
 
     @Test
     @DisplayName("exporter-sons sans argument : refus picocli, code 2")
     void refuse_une_invocation_vide() {
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
-
-        int code = executer(tampon, "exporter-sons");
+        int code = executer("exporter-sons");
 
         assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
     }
