@@ -25,17 +25,11 @@ class CliquetWriterWavTest {
 
     /// La dette épinglée. **Ne peut que rétrécir** : cf. [Cliquet] pour les deux sens de variation.
     private static final List<String> ECRIVENT_UN_EN_TETE_A_LA_MAIN = List.of(
-            "fr/univ_amu/iut/cli/CliImportTest.java",
-            "fr/univ_amu/iut/cli/CliImportTransformesTest.java",
-            "fr/univ_amu/iut/e2e/ParcoursDepotE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursImporterNuitE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursMultisiteVersPassageE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursPassageVersDiagnosticE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursPassageVersNonIdentifiesE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursPassageVersValidationE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursPremiereNuitE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursSitesVersPassageE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE2ETest.java",
             "fr/univ_amu/iut/importation/ServiceImportReferenceTest.java",
             "fr/univ_amu/iut/importation/ServiceImportTest.java",
             "fr/univ_amu/iut/importation/SuiviFichiersImportTest.java",

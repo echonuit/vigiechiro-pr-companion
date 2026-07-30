@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -25,8 +26,6 @@ import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -431,21 +430,9 @@ class ParcoursImporterNuitE2ETest {
             pcm[2 * i] = (byte) (e & 0xFF);
             pcm[2 * i + 1] = (byte) ((e >> 8) & 0xFF);
         }
-        ByteBuffer buf = ByteBuffer.allocate(44 + pcm.length).order(ByteOrder.LITTLE_ENDIAN);
-        buf.put("RIFF".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(36 + pcm.length);
-        buf.put("WAVE".getBytes(StandardCharsets.US_ASCII));
-        buf.put("fmt ".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(16);
-        buf.putShort((short) 1);
-        buf.putShort((short) 1);
-        buf.putInt(FREQUENCE_WAV);
-        buf.putInt(FREQUENCE_WAV * 2);
-        buf.putShort((short) 2);
-        buf.putShort((short) 16);
-        buf.put("data".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(pcm.length);
-        buf.put(pcm);
-        Files.write(fichier, buf.array());
+        // Writer de production (#2864) : mêmes octets que l'en-tête écrit ici à la main, et
+        // c'est le format que l'application saura relire - un test qui compose le sien teste un
+        // format que le produit n'utilise pas.
+        FichierWav.ecrire(fichier, 1, FREQUENCE_WAV, 16, pcm, 0, pcm.length);
     }
 }
