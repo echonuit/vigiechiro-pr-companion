@@ -65,6 +65,7 @@ class CablageInjecteursCaptureTest {
             Map.entry("CaptureCommentaireAudio", "part de la graine partagée GraineSonsValidation"),
             Map.entry("CaptureFicheEspece", "rend un composant isolé, sans injecteur"),
             Map.entry("CaptureDialogues", "rend des dialogues construits à la main, sans injecteur"),
+            Map.entry("CaptureBandeauRetour", "rend le bandeau de retour seul, sans injecteur"),
             Map.entry("CaptureCompteRendu", "rend un composant de compte rendu, sans injecteur"),
             Map.entry("CaptureCompteRenduDepot", "rend un composant de compte rendu, sans injecteur"),
             Map.entry("CaptureEcranReglages", "rend l'écran des réglages depuis l'injecteur racine"),
