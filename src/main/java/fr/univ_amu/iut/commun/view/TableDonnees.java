@@ -7,7 +7,7 @@ import javafx.scene.control.TableView;
 /// qu'elles partagent la même hauteur de ligne et le même style de tableau.
 ///
 /// Choix « composant plutôt que convention » : plutôt que de compter sur l'ajout manuel d'une classe CSS
-/// sur chaque `<TableView>` (facile à oublier ou à faire diverger — c'est l'origine de la dette), un
+/// sur chaque `<TableView>` (facile à oublier ou à faire diverger : c'est l'origine de la dette), un
 /// **appel unique** dans le controller garantit l'habillage partagé. La classe `table-donnees` porte, dans
 /// `design.css`, la densité (hauteur de ligne unique via `-fx-cell-size`) et le style de tableau (en-tête,
 /// cellules).

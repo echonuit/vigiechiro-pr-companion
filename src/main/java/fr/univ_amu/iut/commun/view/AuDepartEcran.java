@@ -5,7 +5,7 @@ package fr.univ_amu.iut.commun.view;
 /// ou clic d'un ancêtre du fil), après une éventuelle confirmation de [GardeQuitter].
 ///
 /// Un controller d'écran l'implémente pour **libérer ses ressources** au moment où il n'est plus
-/// atteignable (ex. l'import supprime le dossier temporaire d'extraction d'un `.zip` abandonné — sans
+/// atteignable (ex. l'import supprime le dossier temporaire d'extraction d'un `.zip` abandonné : sans
 /// ce hook, un temporaire de plusieurs Go fuiterait car le ViewModel est non-singleton).
 ///
 /// Appelé sur le **fil JavaFX**. Ne doit jamais lever : un nettoyage en échec ne doit pas casser la

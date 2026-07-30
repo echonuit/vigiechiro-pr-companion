@@ -47,7 +47,7 @@ final class ControleursReglages {
     ///
     /// Elle n'était rendue qu'en infobulle : le libellé s'affichait, la conséquence non. Or plusieurs
     /// réglages portent dans leur aide un **arbitrage** que l'utilisateur doit connaître avant de
-    /// choisir — la forme du dépôt décide si l'audio reste récupérable côté serveur
+    /// choisir : la forme du dépôt décide si l'audio reste récupérable côté serveur
     /// ([ADR 0034](../../../../../../dev-docs/decisions/0034-la-forme-du-depot-se-choisit.md)), la
     /// conservation des originaux coûte plusieurs Go par nuit
     /// ([ADR 0036](../../../../../../dev-docs/decisions/0036-la-copie-des-bruts-est-une-option.md)).

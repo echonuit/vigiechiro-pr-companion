@@ -5,7 +5,7 @@ package fr.univ_amu.iut.commun.model;
 ///
 /// **Les quantiles s'affichent à côté de la classe**, jamais seuls derrière elle. Une classe seule est
 /// un verdict ; une classe accompagnée de « Q75 = 480 · Q98 = 1 240 » est une lecture que l'utilisateur
-/// peut contester — ce qui est exactement ce qu'on attend d'un outil scientifique.
+/// peut contester : ce qui est exactement ce qu'on attend d'un outil scientifique.
 ///
 /// @param q25 premier quartile : en dessous, l'activité est faible
 /// @param q75 troisième quartile : au-delà, l'activité est forte
@@ -13,7 +13,7 @@ package fr.univ_amu.iut.commun.model;
 /// @param occurrences nombre de nuits ayant servi au calcul
 /// @param confiance ce que le référentiel dit de la solidité de ces seuils
 /// @param declinaison la déclinaison retenue, telle qu'elle se nomme dans la ressource
-///     (`national`, `region:…`, `habitat:…`) — à afficher, pour que l'utilisateur sache **à quoi** son
+///     (`national`, `region:…`, `habitat:…`), à afficher, pour que l'utilisateur sache **à quoi** son
 ///     nombre a été comparé
 /// @param saison la saison retenue (`toutes`, `printemps`, `ete`, `automne`)
 public record SeuilsActivite(

@@ -6,7 +6,7 @@ import java.util.List;
 /// Répartit `nombre` éléments **en éventail autour du centre** d'une [EmpriseCarre] : utilisé pour
 /// désempiler les points **sans GPS** posés au centre de leur carré (#153/#154). Un seul élément reste
 /// **pile au centre** ; plusieurs sont placés sur un **petit cercle** ([#RAYON] du demi-côté), donc à des
-/// positions distinctes et toujours **à l'intérieur de la maille** — sinon ils se masqueraient
+/// positions distinctes et toujours **à l'intérieur de la maille** : sinon ils se masqueraient
 /// mutuellement (un point sélectionné pourrait disparaître sous un autre).
 ///
 /// Logique partagée entre la vue multi-sites ([fr.univ_amu.iut.multisite.view.ConstructeurDonneesCarte])

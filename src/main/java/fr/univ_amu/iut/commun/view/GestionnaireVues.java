@@ -75,7 +75,7 @@ public final class GestionnaireVues<T> {
 
     /// Variante avec des **vues par défaut** en lecture seule (rendues en premier). Au chargement, la vue
     /// (par défaut ou utilisateur) correspondant aux filtres courants est activée ; à défaut, la **première
-    /// vue par défaut** est appliquée — il y a donc **toujours** une vue active tant qu'il en existe une par
+    /// vue par défaut** est appliquée : il y a donc **toujours** une vue active tant qu'il en existe une par
     /// défaut, ce qui évite d'avoir à sélectionner un onglet avant de modifier les filtres.
     public GestionnaireVues(
             Pane onglets,
@@ -260,7 +260,7 @@ public final class GestionnaireVues<T> {
     }
 
     /// « 💾 » sur une vue **par défaut** (non écrasable) : enregistre les filtres courants comme une **nouvelle**
-    /// vue nommée — même effet que « + Vue », mais accessible depuis l'onglet actif.
+    /// vue nommée : même effet que « + Vue », mais accessible depuis l'onglet actif.
     private void enregistrerCommeNouvelle() {
         saisieNom.apply("").ifPresent(this::enregistrer);
     }
@@ -346,7 +346,7 @@ public final class GestionnaireVues<T> {
     }
 
     /// Bouton d'action d'un onglet (enregistrer / renommer / supprimer) : une **icône Ikonli** (FontAwesome)
-    /// plutôt qu'un glyphe de police. Les emojis (type 💾) ne se rendent pas dans toutes les polices — même
+    /// plutôt qu'un glyphe de police. Les emojis (type 💾) ne se rendent pas dans toutes les polices : même
     /// constat que pour les indicateurs ⭐/💬 de la table audio, passés en `FontIcon` pour la même raison. Le
     /// libellé accessible porte le sens de l'action ; l'icône est colorée par la classe CSS `onglet-vue-icone`.
     private static Button bouton(String iconeLiteral, String accessible, Runnable action) {

@@ -20,7 +20,7 @@ import fr.univ_amu.iut.commun.view.OngletReglages;
 /// ```
 ///
 /// Marque aussi une classe comme **module de feature** (par opposition au socle [CommunModule] /
-/// [PersistenceModule], toujours explicites) — socle de l'auto-découverte introduite ensuite.
+/// [PersistenceModule], toujours explicites) : socle de l'auto-découverte introduite ensuite.
 ///
 /// Les points d'extension **non couverts** (ex. `RapprochementVigieChiro`, ou une déclaration de
 /// `Multibinder` vide) restent exprimés directement via `Multibinder` : le DSL n'a vocation qu'à

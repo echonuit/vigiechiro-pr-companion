@@ -67,7 +67,7 @@ final class CoucheCarres extends MapLayer {
     protected void layoutLayer() {
         for (TraceCarre trace : traces) {
             EmpriseCarre emprise = trace.carre.emprise();
-            // Coin haut-gauche = (latMax, lonMin) ; bas-droite = (latMin, lonMax) — la latitude croît vers
+            // Coin haut-gauche = (latMax, lonMin) ; bas-droite = (latMin, lonMax) : la latitude croît vers
             // le nord, donc vers le HAUT de l'écran (Y plus petit).
             Point2D hautGauche = getMapPoint(emprise.latMax(), emprise.lonMin());
             Point2D basDroite = getMapPoint(emprise.latMin(), emprise.lonMax());

@@ -2,7 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 /// Contrat de navigation inter-feature : ouvrir la **vue multi-sites** en la **focalisant** sur un carré
 /// précis (« voir sur la carte »). Permet à d'autres écrans (fiche site, M-Passage…) de renvoyer vers
-/// LA carte de référence — centrée et surlignée sur l'élément concerné — au lieu d'embarquer une carte.
+/// LA carte de référence (centrée et surlignée sur l'élément concerné) au lieu d'embarquer une carte.
 ///
 /// Défini dans le socle (`commun.view`) pour ne pas dépendre du `view` de la feature `multisite` (règle
 /// ArchUnit `pas_de_dependance_inter_feature_vers_la_vue`). La feature `multisite` en fournit

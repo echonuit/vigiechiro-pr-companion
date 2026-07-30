@@ -27,7 +27,7 @@ import java.util.Optional;
 ///
 /// ## La règle de repli
 ///
-/// On cherche du **plus précis au plus général** — milieu, puis région, puis national — mais on retient
+/// On cherche du **plus précis au plus général** (milieu, puis région, puis national), mais on retient
 /// la **première déclinaison fiable**, pas la plus fine. Descendre vers un seuil peu fiable parce qu'il
 /// est plus spécifique produit une classe plus **fausse**, pas plus juste.
 ///
@@ -96,7 +96,7 @@ public final class ReferentielActivite {
     /// **Public** parce que le format est le contrat, pas seulement la ressource embarquée : c'est par
     /// là qu'un référentiel fourni par l'utilisateur entrerait un jour, et c'est par là que les tests
     /// des couches supérieures se donnent des seuils explicites plutôt que de dépendre des vraies
-    /// données — un test de règle qui lit la ressource réelle se met à échouer quand la source évolue,
+    /// données : un test de règle qui lit la ressource réelle se met à échouer quand la source évolue,
     /// pour des raisons qui n'ont rien à voir avec la règle.
     public static ReferentielActivite lire(java.io.Reader source) throws IOException {
         Map<Cle, SeuilsActivite> table = new HashMap<>();
@@ -139,19 +139,19 @@ public final class ReferentielActivite {
                             champs[2]));
         } catch (NumberFormatException quantileIllisible) {
             // Même raison : une ligne dont un quantile ne se lit pas ne doit pas produire de seuil. Mais
-            // elle ne disparaît pas pour autant — un rejet silencieux serait un trou invisible.
+            // elle ne disparaît pas pour autant : un rejet silencieux serait un trou invisible.
             refusees.add(ligne + " → quantile illisible : " + quantileIllisible.getMessage());
         }
     }
 
-    /// Les seuils à retenir pour ce taxon, dans ce contexte — ou **vide** si le taxon n'est pas couvert.
+    /// Les seuils à retenir pour ce taxon, dans ce contexte, ou **vide** si le taxon n'est pas couvert.
     ///
     /// L'ordre d'essai va du plus précis au plus général, et **s'arrête à la première déclinaison
     /// fiable**. Faute de fiable, la plus précise des non fiables est rendue, à charge pour l'appelant
     /// de la marquer indicative.
     ///
     /// @param codeTaxon code Tadarida, dans la casse du référentiel (`Pipkuh`)
-    /// @param contexte saison, région et milieu tels qu'on les connaît — chacun facultatif
+    /// @param contexte saison, région et milieu tels qu'on les connaît : chacun facultatif
     public Optional<SeuilsActivite> pour(String codeTaxon, ContexteActivite contexte) {
         if (codeTaxon == null) {
             return Optional.empty();

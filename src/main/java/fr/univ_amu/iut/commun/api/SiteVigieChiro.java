@@ -14,11 +14,11 @@ import java.util.List;
 /// @param titre titre du site (ex. `"Vigiechiro - Point Fixe-130711"`), base du rapprochement local
 /// @param verrouille `true` si le dépôt est possible : **toujours vrai** pour un site atteint via une
 ///     participation (créer une participation exige un site verrouillé, cf. #142). ⚠️ **Faux ami** : ce
-///     champ ne dit **rien** de la propriété du carré — c'est [#observateur] qui la porte.
+///     champ ne dit **rien** de la propriété du carré : c'est [#observateur] qui la porte.
 /// @param numeroCarre numéro de carré (6 chiffres) extrait du titre, ou `null` si absent
 /// @param observateur identifiant plateforme du **propriétaire** du carré (champ `observateur` du site,
 ///     #2525), ou `null` si absent du JSON. Comparé à l'id du profil connecté, il dit si le carré est
-///     celui d'un tiers — donc si les nuits qu'on y réalise sont des participations *opportunistes*
+///     celui d'un tiers, donc si les nuits qu'on y réalise sont des participations *opportunistes*
 /// @param points localités du site (points d'écoute), éventuellement vide
 public record SiteVigieChiro(
         String id,

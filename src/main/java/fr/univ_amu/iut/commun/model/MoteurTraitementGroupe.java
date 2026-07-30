@@ -12,7 +12,7 @@ import java.util.function.Function;
 /// ## Séquentiel, délibérément
 ///
 /// Le moteur ne parallélise **rien**. Les gestes qu'il enchaîne parallélisent déjà en interne quand
-/// c'est utile — le dépôt téléverse cinq unités de front, plafond calqué sur le front web. Lancer N
+/// c'est utile : le dépôt téléverse cinq unités de front, plafond calqué sur le front web. Lancer N
 /// passages simultanément multiplierait ce plafond par N et transformerait un confort en rafale que
 /// le serveur rejette. Le parallélisme reste donc **à l'intérieur** d'un passage, jamais entre eux.
 ///
@@ -21,7 +21,7 @@ import java.util.function.Function;
 /// Le jeton est consulté **avant** chaque passage, jamais pendant. Un passage commencé va donc au
 /// bout, et tout passage non commencé est rendu [IssueTraitement.Statut#NON_TRAITE] : chacun est soit
 /// dans son état d'avant, soit dans son état d'après, **jamais entre les deux**. C'est le contrat qui
-/// rend un lot interrompu reprenable — et il est tenu par construction, pas par vigilance.
+/// rend un lot interrompu reprenable, et il est tenu par construction, pas par vigilance.
 ///
 /// ## Un échec n'arrête pas le lot
 ///
@@ -66,7 +66,7 @@ public final class MoteurTraitementGroupe {
     /// Exécute `action` sur chaque cible et rend le sort de chacune.
     ///
     /// Chaque ligne remise à `journal` est **préfixée du passage concerné** : sans cela, un lot
-    /// interrompu est indiagnostiquable — on sait qu'il a échoué, pas où.
+    /// interrompu est indiagnostiquable : on sait qu'il a échoué, pas où.
     ///
     /// @param jeton consulté avant chaque passage ; une fois annulé, les passages restants sont rendus
     ///     `NON_TRAITE` sans être touchés

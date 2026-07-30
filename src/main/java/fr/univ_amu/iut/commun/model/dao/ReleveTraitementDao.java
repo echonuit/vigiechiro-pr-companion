@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 ///
 /// Un seul relevé par passage, **écrasé** à chaque rafraîchissement (`ON CONFLICT`) : on retient où en
 /// est le calcul, pas par où il est passé. Écriture unique ([#enregistrer]), lecture unique
-/// ([#pour]) — le cache n'a pas d'autre vie.
+/// ([#pour]) : le cache n'a pas d'autre vie.
 ///
 /// La lecture de l'état est **tolérante** comme celle du client (#1260) : une valeur inconnue (base
 /// écrite par une version plus récente, ou serveur ayant introduit un état) redonne un traitement dont

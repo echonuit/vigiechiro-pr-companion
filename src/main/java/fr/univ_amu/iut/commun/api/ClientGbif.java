@@ -19,7 +19,7 @@ import java.util.logging.Logger;
 ///
 /// Appelle `GET https://api.gbif.org/v1/species/match?name=<nom latin>` et lit `usageKey` (rejeté si
 /// `matchType` vaut `NONE`). **Best-effort** : toute erreur (réseau, réponse inattendue, aucune
-/// correspondance) renvoie [Optional#empty()] — l'appelant retombe alors sur la recherche.
+/// correspondance) renvoie [Optional#empty()] : l'appelant retombe alors sur la recherche.
 public final class ClientGbif {
 
     private static final Logger LOG = Logger.getLogger(ClientGbif.class.getName());

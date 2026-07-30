@@ -7,7 +7,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /// **Repartir d'une base vide** (#1419, EPIC #1154) : supprime le fichier de base, ses journaux, puis
-/// rejoue la migration. Le workspace se retrouve dans l'état d'une première ouverture — schéma à jour,
+/// rejoue la migration. Le workspace se retrouve dans l'état d'une première ouverture : schéma à jour,
 /// référentiel de taxons semé, aucune donnée.
 ///
 /// **Ce que ce n'est pas** : une réinitialisation « logique » table par table. Un `DELETE FROM` laisserait
@@ -16,12 +16,12 @@ import java.util.Objects;
 ///
 /// **Pourquoi c'est faisable à chaud.** Les connexions du socle sont **de courte durée** (ouvertes puis
 /// fermées par opération, cf. [SourceDeDonnees]) : il n'y a aucun pool à vider, aucune connexion longue à
-/// fermer. La `SourceDeDonnees` ne retient qu'une URL JDBC — la prochaine connexion ouvrira simplement le
+/// fermer. La `SourceDeDonnees` ne retient qu'une URL JDBC : la prochaine connexion ouvrira simplement le
 /// fichier neuf. C'est déjà le mécanisme sur lequel repose [ServiceSauvegarde#restaurer(Path)], qui
 /// remplace le fichier de base sous l'application depuis #148.
 ///
 /// En revanche, une **application graphique déjà ouverte** garde en mémoire des écrans peuplés par
-/// l'ancienne base : ils afficheraient des fantômes. C'est l'appelant qui doit exiger un redémarrage —
+/// l'ancienne base : ils afficheraient des fantômes. C'est l'appelant qui doit exiger un redémarrage :
 /// ce service, lui, ne connaît pas d'IHM.
 ///
 /// Un **filet de sécurité** est posé malgré tout (`vigiechiro.db.avant-reset`), au cas où la base neuve
@@ -38,7 +38,7 @@ public class BaseNeuve {
     }
 
     /// Efface la base et la recrée vide (schéma migré, référentiel semé). Renvoie le **filet** : la copie
-    /// de la base d'avant, qu'un `restaurer` saurait relire. Action **délibérée et destructrice** — à
+    /// de la base d'avant, qu'un `restaurer` saurait relire. Action **délibérée et destructrice** : à
     /// n'appeler qu'après une sauvegarde complète et une confirmation explicite.
     ///
     /// @return le chemin de la base mise de côté, ou vide s'il n'y avait pas encore de base

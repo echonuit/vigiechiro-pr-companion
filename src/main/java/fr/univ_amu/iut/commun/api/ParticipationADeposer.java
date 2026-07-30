@@ -8,7 +8,7 @@ import java.util.Map;
 /// clé → valeur : type détecteur-enregistreur, type / position / hauteur du micro…).
 ///
 /// **Pas de champ `numero`** : le backend Eve le refuse (`422 {"numero": "invalid field"}`, vérifié en
-/// réel) — le numéro de passage est déduit côté serveur, pas transmis à la création.
+/// réel) : le numéro de passage est déduit côté serveur, pas transmis à la création.
 ///
 /// La sérialisation JSON (noms de champs `snake_case`, champs `null` omis) est faite par
 /// [RequetesVigieChiro] ; ce record reste une donnée pure.

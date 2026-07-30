@@ -9,7 +9,7 @@ import java.util.Objects;
 ///
 /// **Rétro-compatibilité** : les vues enregistrées avant #994 stockaient directement le descripteur de
 /// **filtres** (`{"texte":…,"criteres":[…]}`), sans section colonnes. [#interpreter] reconnaît ce format
-/// hérité (absence de la clé `filtres`) et le lit comme une vue **sans** colonnes — aucune migration de
+/// hérité (absence de la clé `filtres`) et le lit comme une vue **sans** colonnes : aucune migration de
 /// base n'est nécessaire (le blob `descriptor_json` est opaque côté SQLite).
 public final class DescripteurVueJson {
 

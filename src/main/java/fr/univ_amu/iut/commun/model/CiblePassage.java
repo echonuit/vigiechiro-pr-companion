@@ -7,7 +7,7 @@ import java.util.Objects;
 ///
 /// La `designation` est ce que l'observateur lit (« 640380 / A1 / 2026 n°1 »). Elle est portée par la
 /// cible plutôt que reconstruite par le moteur : celui-ci ne sait rien des carrés ni des points, et
-/// c'est précisément ce qui le rend réutilisable — et testable sans base.
+/// c'est précisément ce qui le rend réutilisable, et testable sans base.
 ///
 /// @param idPassage identifiant technique du passage
 /// @param designation libellé lisible du passage, jamais vide (il préfixe chaque ligne de journal)

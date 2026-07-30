@@ -14,7 +14,7 @@ import java.util.function.Function;
 /// n'a pas répondu » (une latence rendue comme collection vide, cf. le faux négatif du contrat live).
 ///
 /// Ce type rend les issues distinctes et **exhaustives à la compilation** : un `switch` sur une
-/// [ReponseApi] qui oublie une branche ne compile pas — la garantie qui manquait à la famille de
+/// [ReponseApi] qui oublie une branche ne compile pas : la garantie qui manquait à la famille de
 /// pannes #1277 (« un cas auquel personne n'a pensé »). Le comportement commun est porté par
 /// **override** dans chaque variante, jamais par `switch` sur soi-même.
 public sealed interface ReponseApi<T> {
@@ -92,7 +92,7 @@ public sealed interface ReponseApi<T> {
         }
     }
 
-    /// Le serveur n'a **pas répondu** : réseau coupé, DNS, TLS, délai dépassé, appel interrompu — ou
+    /// Le serveur n'a **pas répondu** : réseau coupé, DNS, TLS, délai dépassé, appel interrompu, ou
     /// réponse au corps illisible (portail captif, mandataire) : « pas de réponse exploitable » n'est
     /// pas un refus. On ne sait rien de l'état distant ; à ne jamais confondre avec une collection
     /// réellement vide.

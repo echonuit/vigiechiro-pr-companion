@@ -19,7 +19,7 @@ import java.nio.file.Path;
 /// plutôt que de lancer une opération qui échouera à mi-parcours en laissant des fichiers partiels.
 ///
 /// Les appelants qui **anticipent** (un libellé, un bouton grisé) traduisent l'échec en `0`, qui
-/// signifie « inconnu » et ne bloque rien — c'est ce que fait `RepertoireDepot.espaceDisponible`. Le
+/// signifie « inconnu » et ne bloque rien : c'est ce que fait `RepertoireDepot.espaceDisponible`. Le
 /// même chiffre veut donc dire deux choses opposées selon le contexte, et chaque appelant doit dire
 /// laquelle.
 @FunctionalInterface

@@ -32,7 +32,7 @@ import java.util.Optional;
 /// compare pas à ce qu'elle devrait.
 ///
 /// Hors fenêtre, [#de] rend **vide** : la comparaison se fait alors « toutes saisons ». En hibernation,
-/// une nuit à trois contacts n'est pas une nuit faible — c'est une nuit d'hiver, et lui appliquer un
+/// une nuit à trois contacts n'est pas une nuit faible : c'est une nuit d'hiver, et lui appliquer un
 /// seuil estival la ferait passer pour un désert.
 public enum SaisonActivite {
     PRINTEMPS("printemps", "Printemps", MonthDay.of(4, 1), MonthDay.of(6, 15)),

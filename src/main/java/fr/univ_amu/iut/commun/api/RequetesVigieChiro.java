@@ -28,7 +28,7 @@ final class RequetesVigieChiro {
 
     /// Corps d'une **mise à jour partielle** de participation (`PATCH /participations/#id`) : on n'émet que
     /// les métadonnées **synchronisables** (dates, météo, configuration ; champs `null` omis) et on **retire
-    /// `point`** — la localité identifie la participation, elle ne se modifie pas depuis l'app. La
+    /// `point`** : la localité identifie la participation, elle ne se modifie pas depuis l'app. La
     /// concurrence est gérée côté client par l'en-tête `If-Match` (l'`_etag`), pas par le corps.
     static String miseAJourParticipation(ParticipationADeposer participation) {
         JsonObject corps = GSON.toJsonTree(participation).getAsJsonObject();
@@ -82,7 +82,7 @@ final class RequetesVigieChiro {
     ///
     /// Le serveur **refuse (422)** tout ce qui n'est pas une chaîne, et **ajoute** le message par `$push` :
     /// il n'y a ni remplacement, ni route de suppression. Ce corps est donc celui d'une écriture
-    /// **définitive** — l'appelant doit l'avoir fait confirmer.
+    /// **définitive** : l'appelant doit l'avoir fait confirmer.
     static String message(String texte) {
         return GSON.toJson(Map.of("message", texte));
     }

@@ -5,7 +5,7 @@ package fr.univ_amu.iut.commun.view.carte;
 /// [#contraindre] ; la valeur **retournée** (éventuellement ajustée) est celle réellement appliquée au
 /// marqueur et remontée par [DeplacementMarqueur].
 ///
-/// Usage type : **garder un point dans son carré** — l'appelant clampe `(latitude, longitude)` aux bornes
+/// Usage type : **garder un point dans son carré**, l'appelant clampe `(latitude, longitude)` aux bornes
 /// de l'emprise du carré du `point`, de sorte que le marqueur suive la souris mais s'arrête au bord.
 ///
 /// Par défaut, la carte n'applique **aucune** contrainte (identité). Le composant reste donc agnostique du

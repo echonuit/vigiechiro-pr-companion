@@ -28,7 +28,7 @@ final class CorpsFichierAvecProgression implements HttpRequest.BodyPublisher {
 
     /// Enveloppe le fichier `fichier` en remontant sa fraction envoyée (0 à 1) à `progression`.
     ///
-    /// @throws IOException si le fichier est illisible (taille indéterminable) — le `PUT` échouera de
+    /// @throws IOException si le fichier est illisible (taille indéterminable) : le `PUT` échouera de
     ///     toute façon, l'appelant traite l'exception comme un échec de téléversement.
     static HttpRequest.BodyPublisher depuis(Path fichier, DoubleConsumer progression) throws IOException {
         return new CorpsFichierAvecProgression(

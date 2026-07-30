@@ -14,13 +14,13 @@ import java.util.List;
 /// lit comme une courbe d'hier.
 ///
 /// Fonctions **pures**, sans nœud JavaFX : la vue ne fait que rendre les lignes produites ici. Ce que
-/// chaque écran ajoute de spécifique — réglages, filtres actifs — lui appartient (cf.
+/// chaque écran ajoute de spécifique (réglages, filtres actifs) lui appartient (cf.
 /// [fr.univ_amu.iut.analyse.view.LegendeExportActivite]).
 public final class LegendeExport {
 
     private LegendeExport() {}
 
-    /// Ligne d'**identité** : de quoi parle la courbe — carré, point, passage —, ou la portée transverse
+    /// Ligne d'**identité** : de quoi parle la courbe (carré, point, passage), ou la portée transverse
     /// quand aucun passage n'est en contexte (`null`).
     public static String identite(ContextePassage contexte) {
         if (contexte == null) {

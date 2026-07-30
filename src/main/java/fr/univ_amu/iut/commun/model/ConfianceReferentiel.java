@@ -24,7 +24,7 @@ public enum ConfianceReferentiel {
     }
 
     /// Assez solide pour qu'on s'arrête à cette déclinaison ? `Très bonne` et `Bonne` le sont ;
-    /// `Modérée` et `Faible` ne le sont pas — leurs seuils restent affichables, mais **marqués
+    /// `Modérée` et `Faible` ne le sont pas : leurs seuils restent affichables, mais **marqués
     /// indicatifs**, et seulement faute de mieux.
     public boolean fiable() {
         return fiable;

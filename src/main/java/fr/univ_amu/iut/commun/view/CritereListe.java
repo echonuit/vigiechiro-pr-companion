@@ -19,7 +19,7 @@ import javafx.scene.control.MenuButton;
 /// ## Pourquoi le choix multiple
 ///
 /// Une puce à valeur unique ne sait dire que « ce carré-ci ». Elle ne sait pas dire « ces trois
-/// carrés », ni surtout **« tout sauf les chiroptères »** — l'onglet « Autres » que réclament les vues
+/// carrés », ni surtout **« tout sauf les chiroptères »** : l'onglet « Autres » que réclament les vues
 /// d'espèces, où le détecteur rapporte aussi des orthoptères et des micromammifères (#2615).
 ///
 /// Le socle n'était pourtant pas en cause : [CritereFiltre#editeur] porte déjà un `Predicate` **quelconque**,
@@ -30,7 +30,7 @@ import javafx.scene.control.MenuButton;
 /// ## Sémantique
 ///
 /// **Rien de coché n'écarte rien** : une puce fraîchement ajoutée ne doit pas vider la vue avant qu'on
-/// ait choisi. Dès qu'une valeur est cochée, le prédicat devient une **appartenance** — la ligne passe si
+/// ait choisi. Dès qu'une valeur est cochée, le prédicat devient une **appartenance** : la ligne passe si
 /// sa dimension figure parmi les valeurs retenues.
 ///
 /// @param <T> type des lignes filtrées
@@ -99,7 +99,7 @@ public final class CritereListe {
 
     /// Un critère dont l'éditeur laisse choisir **une seule** valeur : la liste déroulante classique, pour
     /// les dimensions qui se lisent une à une (un carré, une nuit, la nature d'une nuit). Même contrat et
-    /// même sémantique de départ que [#multiple] — rien de choisi n'écarte rien —, et mêmes paramètres,
+    /// même sémantique de départ que [#multiple] (rien de choisi n'écarte rien), et mêmes paramètres,
     /// pour qu'une dimension puisse passer de l'une à l'autre sans réécrire son appel.
     ///
     /// @param cle clé stable du critère, partagée entre vues (elle sert aussi aux vues mémorisées)

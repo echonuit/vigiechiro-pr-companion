@@ -8,7 +8,7 @@ import javafx.collections.transformation.FilteredList;
 
 /// Filtres **composables** d'une table (#470/#537), **génériques** sur le type de ligne `T` : plusieurs
 /// prédicats nommés combinés en **ET**, appliqués à la [FilteredList] affichée. À chaque changement, on
-/// recompose la conjonction puis on **notifie l'appelant** (`apresApplication`) — c'est là qu'un view-model
+/// recompose la conjonction puis on **notifie l'appelant** (`apresApplication`) : c'est là qu'un view-model
 /// recalcule ce qui dépend du sous-ensemble affiché (compteurs, indice d'état vide).
 ///
 /// Piloté par la **barre de filtres** (patron « à la Notion ») : chaque puce active branche son prédicat via

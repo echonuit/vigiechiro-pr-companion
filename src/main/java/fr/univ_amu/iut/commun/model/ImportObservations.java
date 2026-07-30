@@ -7,10 +7,10 @@ import java.util.List;
 /// **Port** : importer les observations d'une nuit depuis Vigie-Chiro, depuis n'importe quel écran (#1264).
 ///
 /// L'import lui-même vit dans la feature `validation` (il écrit les observations). Mais c'est depuis
-/// **M-Passage** qu'on veut souvent le déclencher — juste après avoir constaté que l'analyse est terminée.
+/// **M-Passage** qu'on veut souvent le déclencher : juste après avoir constaté que l'analyse est terminée.
 /// Or `passage` ne peut pas dépendre de `validation` : le graphe des features doit rester acyclique
 /// (ArchUnit y veille). D'où ce contrat dans `commun`, que `validation` implémente et que `passage`
-/// consomme — le même patron que [ReferentielPoint] et [CoordonneesPoint].
+/// consomme : le même patron que [ReferentielPoint] et [CoordonneesPoint].
 ///
 /// Le compte rendu est rendu sous forme de **texte prêt à afficher** : le bilan détaillé
 /// (`BilanImport`) appartient à `validation`, et n'a pas à traverser le socle pour être relu par une
@@ -23,7 +23,7 @@ public interface ImportObservations {
 
     /// Importe les observations de la nuit. **Bloquant** (réseau) : à appeler hors du fil JavaFX.
     ///
-    /// Lève une [RegleMetierException] quand il n'y a rien à importer — avec la **raison** (analyse jamais
+    /// Lève une [RegleMetierException] quand il n'y a rien à importer : avec la **raison** (analyse jamais
     /// lancée, en cours, en échec…) plutôt qu'un refus muet (#1264).
     ///
     /// @param remplacer remplace le jeu existant en préservant les validations de l'observateur
@@ -69,8 +69,8 @@ public interface ImportObservations {
     String importerCsv(Long idPassage, String contenuCsv, boolean remplacer);
 
     /// Le passage a-t-il des observations **sans ancrage plateforme** (`idDonneeVigieChiro == null`) ?
-    /// C'est le cas d'un passage reconstruit par CSV (#1565), dont l'ancrage — requis pour **publier des
-    /// corrections** — n'est acquis qu'à la **réactivation** (#1571), quand l'audio (re)devient disponible.
+    /// C'est le cas d'un passage reconstruit par CSV (#1565), dont l'ancrage : requis pour **publier des
+    /// corrections** : n'est acquis qu'à la **réactivation** (#1571), quand l'audio (re)devient disponible.
     /// `false` si le passage n'a pas d'observations, ou si toutes portent déjà leur ancrage.
     boolean ancrageManquant(Long idPassage);
 }

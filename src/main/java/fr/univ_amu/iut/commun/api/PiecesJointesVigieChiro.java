@@ -7,7 +7,7 @@ import java.util.List;
 
 /// Lecture de la réponse JSON de `GET /participations/{id}/pieces_jointes?<filtre>` vers des
 /// [PieceJointe]. Best-effort comme les autres lecteurs du paquet (jamais d'exception ; un élément sans
-/// `_id` est ignoré, un corps illisible donne une liste vide), sans aucune E/S — testable sur des
+/// `_id` est ignoré, un corps illisible donne une liste vide), sans aucune E/S : testable sur des
 /// réponses figées.
 final class PiecesJointesVigieChiro {
 

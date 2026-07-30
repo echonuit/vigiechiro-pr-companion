@@ -14,13 +14,13 @@ import java.util.function.IntFunction;
 ///
 /// **Tout-ou-rien** (#1284) : un échec à la page N rend l'issue de cette page pour la collection
 /// entière. Avant, l'échec « terminait » le parcours : une panne à la page 3 rendait les pages 1-2
-/// comme si la collection était complète — un préfixe silencieux, la variante pire-que-vide de #1277.
+/// comme si la collection était complète : un préfixe silencieux, la variante pire-que-vide de #1277.
 final class PaginationEve {
 
     /// Taille de page demandée à Eve. **100 est le maximum accepté** : au-delà, le serveur ne tronque pas,
     /// il **rejette la requête** (`422`). Quand le transport dégradait tout échec HTTP en
     /// `Optional.empty()`, un dépassement ne se voyait pas : la collection entière revenait **vide, en
-    /// silence** — import des observations, participations et sites (#1277). Le plafond est celui du
+    /// silence** : import des observations, participations et sites (#1277). Le plafond est celui du
     /// `Paginator` du backend (`vigiechiro/xin/snippets.py`) ; le contrat live verrouille désormais
     /// `422 → Refuse`.
     static final int TAILLE_PAGE = 100;

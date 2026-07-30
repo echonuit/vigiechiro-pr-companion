@@ -7,7 +7,7 @@ package fr.univ_amu.iut.commun.view;
 /// `Multibinder<ActiviteAccueil>` de son module Guice. Le [MainController] injecte alors
 /// `Set<ActiviteAccueil>` et bâtit les cartes **sans dépendre d'aucune feature** : le graphe de
 /// slices reste acyclique (cf. `ArchitectureTest`), et ajouter une activité à l'accueil revient à
-/// écrire une implémentation + une ligne de binding — le socle n'est jamais retouché.
+/// écrire une implémentation + une ligne de binding : le socle n'est jamais retouché.
 public interface ActiviteAccueil {
 
     /// **Prisme** auquel rattacher l'activité : le [MainController] regroupe les cartes d'accueil en deux
@@ -41,7 +41,7 @@ public interface ActiviteAccueil {
     ///
     /// Le contrat existe pour être **contraignant** : une activité offerte à l'utilisateur est une
     /// surface documentée, et `DocumentationAJourTest` refuse une fiche absente. Faute de cette méthode,
-    /// on peut livrer un écran entier sans page — c'est arrivé (« Audit de cohérence », #1133 → #1458).
+    /// on peut livrer un écran entier sans page : c'est arrivé (« Audit de cohérence », #1133 → #1458).
     String pageDoc();
 
     /// Ouvre l'activité (typiquement via la façade de navigation de la feature, qui publie une

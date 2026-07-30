@@ -4,7 +4,7 @@ package fr.univ_amu.iut.commun.view.carte;
 /// et nord/est (`latMax`/`lonMax`). Type **pur** (aucune dépendance IHM), donc directement testable.
 ///
 /// L'emprise peut venir de plusieurs sources (cf. [FournisseurEmpriseCarre]) : repli autour des points
-/// d'écoute, ou — à terme — le carroyage officiel Vigie-Chiro. Le carré Vigie-Chiro fait 2 km de côté,
+/// d'écoute, ou (à terme) le carroyage officiel Vigie-Chiro. Le carré Vigie-Chiro fait 2 km de côté,
 /// mais son **numéro n'encode pas de coordonnées** (6 chiffres = département + identifiant local), d'où
 /// le recours à un fournisseur d'emprise plutôt qu'à un décodage.
 public record EmpriseCarre(double latMin, double lonMin, double latMax, double lonMax) {

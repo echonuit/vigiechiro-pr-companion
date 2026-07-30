@@ -130,7 +130,7 @@ public final class ExecutionParallele {
     }
 
     /// Ce qui est connu au moment d'annoncer un élément **terminé**, et dont l'appelant compose son
-    /// libellé. `total` est la taille de la liste traitée — pas le dénominateur du pipeline, qui vit
+    /// libellé. `total` est la taille de la liste traitée : pas le dénominateur du pipeline, qui vit
     /// dans [EchelleProgression] : « Copie 3/12 » se compte en originaux même quand la barre, elle, se
     /// mesure en étapes.
     ///

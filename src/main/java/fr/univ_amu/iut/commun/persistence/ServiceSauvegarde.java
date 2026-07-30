@@ -28,7 +28,7 @@ import org.sqlite.SQLiteDataSource;
 /// - **Restauration** : on vérifie d'abord que le fichier est une base **lisible**, on met de côté la base
 ///   courante (**filet de sécurité** avant écrasement, critère #148), on la remplace, on purge les fichiers
 ///   annexes (`-wal`/`-shm`/`-journal`) puis on **rejoue la migration** (idempotente) pour garantir un schéma
-///   à jour — un état cohérent quelle que soit l'ancienneté de la sauvegarde.
+///   à jour : un état cohérent quelle que soit l'ancienneté de la sauvegarde.
 ///
 /// Les connexions du socle sont **de courte durée** (ouvertes/fermées par opération, cf. [SourceDeDonnees]) :
 /// aucune connexion longue à fermer pour remplacer le fichier. La restauration reste une action délibérée,
@@ -171,7 +171,7 @@ public class ServiceSauvegarde {
             for (Path racineSession : racinesSessions()) {
                 // Une racine absente n'est PAS une erreur (carte SD non montée, disque débranché) : la
                 // sauvegarde doit aboutir. Mais la sauter en silence laissait croire à une copie complète
-                // (#1346) — c'est la seule chose qu'on ne peut pas se permettre avant un reset (#1151).
+                // (#1346) : c'est la seule chose qu'on ne peut pas se permettre avant un reset (#1151).
                 if (Files.isDirectory(racineSession)) {
                     copierRecursif(
                             racineSession,

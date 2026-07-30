@@ -16,13 +16,13 @@ import javafx.scene.layout.VBox;
 /// (ADR 2348).
 ///
 /// La distinction n'est pas cosmétique. Photographier le nœud affiché rend une image **vide ou noire**
-/// dès que le graphe est masqué ou accéléré matériellement — un export qui échoue en **silence**, tout
+/// dès que le graphe est masqué ou accéléré matériellement : un export qui échoue en **silence**, tout
 /// en produisant un fichier d'apparence normale. On reconstruit donc un graphe neuf dans une scène
 /// transitoire, hors écran.
 ///
 /// Deux écrans exportent ainsi : la courbe d'activité par espèce (#2352) et la courbe climatique du
-/// diagnostic (#2618). L'appelant fournit ce qui lui est propre — ses séries, la graduation de son axe,
-/// sa bande de nuit, ses lignes de contexte —, ce socle porte le geste commun.
+/// diagnostic (#2618). L'appelant fournit ce qui lui est propre (ses séries, la graduation de son axe,
+/// sa bande de nuit, ses lignes de contexte), ce socle porte le geste commun.
 ///
 /// Les séries arrivent par un **fournisseur** et non toutes faites : une `XYChart.Series` n'appartient
 /// qu'à un graphe à la fois, et emprunter celles de l'écran les lui **retirerait** sous les yeux de
@@ -30,7 +30,7 @@ import javafx.scene.layout.VBox;
 public final class ExportGraphe {
 
     /// Dimensions de la scène d'export : assez large pour que les étiquettes, la légende et les lignes de
-    /// contexte tiennent sans être comprimées — `ApercuFx` refuse une image aux libellés tronqués.
+    /// contexte tiennent sans être comprimées : `ApercuFx` refuse une image aux libellés tronqués.
     private static final int LARGEUR = 1100;
 
     private static final int HAUTEUR = 640;
@@ -85,7 +85,7 @@ public final class ExportGraphe {
     }
 
     /// Une ligne de contexte. Non enroulable : la scène est assez large, et un libellé comprimé ferait
-    /// **refuser** la capture — ce qui est le bon comportement, mais qu'on n'a pas à provoquer.
+    /// **refuser** la capture : ce qui est le bon comportement, mais qu'on n'a pas à provoquer.
     private static Label ligne(String texte) {
         Label libelle = new Label(texte);
         libelle.getStyleClass().add("legende-export");

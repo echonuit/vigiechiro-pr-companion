@@ -31,7 +31,7 @@ public interface CritereFiltre<T> {
     /// pour un descripteur de filtre **transportable** ([DescripteurCritere], #537 étape 2). Le critère
     /// reste **sans état** : il connaît la structure de son propre éditeur et en extrait la valeur en clair.
     ///
-    /// Défaut : **liste vide** — convient aux critères **booléens** (éditeur `null`, la présence de la puce
+    /// Défaut : **liste vide**, convient aux critères **booléens** (éditeur `null`, la présence de la puce
     /// suffit) ; les critères à valeur (liste, curseur, plage) la redéfinissent.
     ///
     /// @param editeur le Node renvoyé par [#editeur] pour cette puce (peut être `null` pour un booléen)
@@ -45,7 +45,7 @@ public interface CritereFiltre<T> {
     /// mémorisée** (#623). L'implémentation traduit les valeurs en clair vers les contrôles (sélection d'une
     /// liste, position d'un curseur…), ce qui déclenche leurs écouteurs et donc la réapplication du prédicat.
     ///
-    /// Défaut : **no-op** — convient aux critères **booléens** (éditeur `null`, la présence de la puce suffit)
+    /// Défaut : **no-op**, convient aux critères **booléens** (éditeur `null`, la présence de la puce suffit)
     /// et à tout critère sans valeur à restaurer ; les critères à valeur le redéfinissent.
     ///
     /// @param editeur le Node renvoyé par [#editeur] pour cette puce (peut être `null` pour un booléen)

@@ -6,7 +6,7 @@ import java.util.Objects;
 
 /// Ce qu'une **sauvegarde complète** a réellement emporté (#1346).
 ///
-/// La copie saute les racines de session **inaccessibles** — typiquement une carte SD non montée, ou un
+/// La copie saute les racines de session **inaccessibles** : typiquement une carte SD non montée, ou un
 /// disque externe débranché. Elle le faisait jusqu'ici **en silence** : l'utilisateur repartait avec une
 /// sauvegarde amputée, et la certitude de l'avoir complète. C'est précisément ce qu'on ne peut pas se
 /// permettre avant un reset (#1151), dont la sauvegarde est le prérequis déclaré.

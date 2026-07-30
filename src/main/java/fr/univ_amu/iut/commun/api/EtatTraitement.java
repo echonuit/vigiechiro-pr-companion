@@ -8,7 +8,7 @@ import java.util.Optional;
 /// C'est un état **observé**, pas un statut du workflow local : il appartient au serveur, il n'est pas
 /// monotone (une relance ramène `FINI` à `PLANIFIE`) et l'application ne fait que le lire. Il reste donc
 /// délibérément **distinct** de [fr.univ_amu.iut.commun.model.StatutWorkflow], dont `DEPOSE` demeure
-/// l'état terminal (« ma part locale est faite ») — même choix que `StatutPlateforme` côté sites (EPIC
+/// l'état terminal (« ma part locale est faite ») : même choix que `StatutPlateforme` côté sites (EPIC
 /// #1259).
 ///
 /// Les cinq valeurs sont celles du backend (`Scille/vigiechiro-api`, `resources/participations.py:73`).
@@ -36,7 +36,7 @@ public enum EtatTraitement {
     RETRY;
 
     /// Lecture **tolérante** de la valeur brute du serveur : vide si la chaîne est absente, vide, ou
-    /// inconnue de cette énumération. Ne lève jamais — le serveur peut introduire un état sans nous
+    /// inconnue de cette énumération. Ne lève jamais : le serveur peut introduire un état sans nous
     /// prévenir, et une participation jamais calculée n'a pas de bloc `traitement` du tout.
     public static Optional<EtatTraitement> depuis(String valeur) {
         if (valeur == null || valeur.isBlank()) {

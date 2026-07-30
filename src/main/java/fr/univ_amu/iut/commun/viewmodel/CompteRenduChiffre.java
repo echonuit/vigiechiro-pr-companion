@@ -284,7 +284,7 @@ public record CompteRenduChiffre(
         ///
         /// Les trois traductions livrées (import, réactivation, publication) écrivaient chacune la même
         /// boucle : une table ordonnée, une clé de cause, une liste de sujets. Le groupage n'est pas une
-        /// affaire de feature — c'est la forme même d'un motif, et le mettre ici évite qu'une quatrième
+        /// affaire de feature : c'est la forme même d'un motif, et le mettre ici évite qu'une quatrième
         /// surface le réécrive une quatrième fois.
         ///
         /// **L'ordre d'apparition est significatif** : l'appelant trie ses sujets AVANT d'appeler (la

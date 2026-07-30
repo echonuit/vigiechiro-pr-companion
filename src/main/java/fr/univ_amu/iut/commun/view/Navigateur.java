@@ -21,7 +21,7 @@ import javafx.scene.Parent;
 /// Singleton Guice partagé par tout l'applicatif. Il tient un **historique de navigation** (pile des
 /// écrans visités, base = Accueil) dont le sommet alimente [#vueCentraleProperty()] (liée par le
 /// [MainController] au centre du `BorderPane`). Les écrans restent **vivants** dans la pile : revenir
-/// ré-affiche l'instance précédente (état préservé), sans rechargement — sauf si l'écran déclare le
+/// ré-affiche l'instance précédente (état préservé), sans rechargement : sauf si l'écran déclare le
 /// contrat [RafraichirAuRetour], auquel cas il est rechargé au retour (p. ex. M-Passage, dont une
 /// sous-activité comme M-Qualification a pu modifier l'état pendant qu'il était masqué).
 ///
