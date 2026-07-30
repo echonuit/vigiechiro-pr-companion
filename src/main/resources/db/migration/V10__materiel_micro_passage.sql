@@ -4,7 +4,7 @@
 -- Position (sol / canopée), hauteur de fixation et type de micro sont des informations propres
 -- au **déploiement d'une nuit** : elles sont donc rattachées au passage (décision de l'EPIC #543).
 -- Plutôt que d'alourdir l'entité centrale `passage` (construite en ~60 endroits), on les isole
--- dans une table **1:1** — `passage_equipment` — à clé primaire = FK vers `passage(id)` : le
+-- dans une table **1:1** (`passage_equipment`) à clé primaire = FK vers `passage(id)` : le
 -- record `Passage` et son DAO restent inchangés. Toutes les colonnes sont **optionnelles**
 -- (un relevé partiel est normal ; le n° de série du détecteur vit déjà dans `recorder`).
 --

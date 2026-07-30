@@ -1,6 +1,6 @@
 {
   "info": {
-    "name": "VigieChiro API — contrat & exploration",
+    "name": "VigieChiro API : contrat & exploration",
     "description": "Catalogue de requêtes de l'API VigieChiro (Python-Eve) pour l'EXPLORATION manuelle (Postman) et un SMOKE run headless (Newman). Complément de la suite REST-assured `ContratApiVigieChiroLiveTest` (@Tag api-live), qui reste la référence du contrat PROFOND (validation contre les JSON Schema partagés de src/test/resources/vigiechiro/). Ici on ne fait que des vérifications légères (statut, présence des champs coeur, format de date, domaines météo) pour ne PAS dupliquer le schéma.\n\nAuth : Basic base64(\"<token>:\"), token en username, mot de passe vide. Le token 14 j se récupère via le marque-page localStorage['auth-session-token'].\n\nSmoke headless :\n  newman run dev-docs/api/vigiechiro.postman_collection.json --env-var token=XXXX\n  (rapport HTML : --reporters cli,htmlextra)",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
@@ -18,7 +18,7 @@
   ],
   "item": [
     {
-      "name": "GET /moi — profil de l'observateur connecté",
+      "name": "GET /moi : profil de l'observateur connecté",
       "request": { "method": "GET", "url": "{{baseUrl}}/moi" },
       "event": [
         {
@@ -33,7 +33,7 @@
       ]
     },
     {
-      "name": "GET /moi/participations — collection Eve",
+      "name": "GET /moi/participations : collection Eve",
       "request": { "method": "GET", "url": "{{baseUrl}}/moi/participations" },
       "event": [
         {
@@ -61,7 +61,7 @@
       ]
     },
     {
-      "name": "GET /participations/:id — participation détaillée",
+      "name": "GET /participations/:id : participation détaillée",
       "request": { "method": "GET", "url": "{{baseUrl}}/participations/{{participationId}}" },
       "event": [
         {
@@ -84,7 +84,7 @@
       ]
     },
     {
-      "name": "GET /participations/:id/donnees — résultats Tadarida (paginé)",
+      "name": "GET /participations/:id/donnees : résultats Tadarida (paginé)",
       "request": { "method": "GET", "url": "{{baseUrl}}/participations/{{participationId}}/donnees" },
       "event": [
         {
@@ -100,7 +100,7 @@
       ]
     },
     {
-      "name": "GET /taxons/liste — référentiel taxons",
+      "name": "GET /taxons/liste : référentiel taxons",
       "request": { "method": "GET", "url": "{{baseUrl}}/taxons/liste" },
       "event": [
         {

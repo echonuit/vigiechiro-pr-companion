@@ -64,7 +64,7 @@
    Le `-fx-text-fill: #ffffff` qui vivait ici a été RETIRÉ (#322) : ce bouton ne porte pas de texte,
    seulement un `FontIcon` posé par `StyleControlesCarte.overlay`, et `-fx-text-fill` ne colore pas
    une icône Ikonli (cf. ADR 0035). La déclaration ne peignait donc rien, mais elle laissait croire
-   à du blanc sur ambre — un couple à 2,08:1 qui n'a jamais existé à l'écran.
+   à du blanc sur ambre, un couple à 2,08:1 qui n'a jamais existé à l'écran.
    Ce qui compte ici est `-fx-icon-color`, hérité de la règle de base (#34495e) : sur cet ambre il
    mesure 4,46:1, au-dessus du seuil de 3:1 que WCAG demande à un élément d'interface. */
 .bouton-editer-positions:selected {

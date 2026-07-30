@@ -18,7 +18,7 @@ decouvrir_jar() {
 }
 
 # Un vrai processus : workspace jetable (base SQLite créée sous le tmpdir du test, migrée au démarrage),
-# aucun jeton VigieChiro — on éprouve les contrats HORS-LIGNE.
+# aucun jeton VigieChiro : on éprouve les contrats HORS-LIGNE.
 cli() {
   java --enable-native-access=ALL-UNNAMED -Dvigiechiro.workspace="${BATS_TEST_TMPDIR}" \
     -cp "${JAR}" fr.univ_amu.iut.cli.Cli "$@"

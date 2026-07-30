@@ -1024,12 +1024,12 @@
                                  est donc reproduit ici, EN ENTIER.
 
                                  ⚠️ Il l'a longtemps été à moitié : les quatre premières lignes seulement.
-                                 Les deux butoirs manquaient, et `ButoirsTestFxTest` — dont c'est très
-                                 exactement le rôle — le disait à chaque exécution. Le premier passage de
+                                 Les deux butoirs manquaient, et `ButoirsTestFxTest` (dont c'est très
+                                 exactement le rôle) le disait à chaque exécution. Le premier passage de
                                  PIT sur le dépôt entier a donc échoué sur une suite rouge, non sur les
                                  mutants. Ce n'est pas qu'un test à faire taire : sans ces butoirs, chaque
                                  test TestFX du minion retombe sur les défauts de TestFX (30 s / 60 s), et
-                                 c'est **sous PIT** que la machine est la plus chargée — une JVM par cœur.
+                                 c'est **sous PIT** que la machine est la plus chargée : une JVM par cœur.
                                  C'est le pire endroit pour un butoir calibré pour une JVM seule (#2120).
 
                                  `ProprietesMinionPitTest` tient désormais cette parité au moment du build,

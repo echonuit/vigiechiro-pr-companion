@@ -1,8 +1,8 @@
 /*
- * design.css — feuille de design PARTAGÉE de VigieChiro Companion.
+ * design.css : feuille de design PARTAGÉE de VigieChiro Companion.
  *
  * Classes de présentation communes à TOUS les écrans (typographie de page et de section), jusqu'ici
- * redéclarées — avec de légères divergences — dans chaque CSS de feature. Centralisées ici et chargées
+ * redéclarées (avec de légères divergences) dans chaque CSS de feature. Centralisées ici et chargées
  * par chaque FXML sous la forme `@palette.css, @design.css, @<feature>.css` : après palette.css (dont
  * elles consomment les jetons de couleur) et avant la feuille de la feature (qui peut encore surcharger
  * ponctuellement, le temps de la convergence).
@@ -62,8 +62,8 @@
  * passage) sous deux noms parallèles (`bouton-*` et `action-*`) aux paddings et
  * bordures divergents. Référence retenue : la hiérarchie de la feature « sites ».
  *
- * Règle de placement : l'action PRINCIPALE d'un écran — ou de l'étape courante
- * d'un assistant — porte `.bouton-primaire` ; les actions de soutien portent
+ * Règle de placement : l'action PRINCIPALE d'un écran (ou de l'étape courante
+ * d'un assistant) porte `.bouton-primaire` ; les actions de soutien portent
  * `.bouton-secondaire` ; une action destructrice porte `.bouton-danger`. Au plus
  * une action primaire visible à la fois. (Le bouton « retour » de navigation vit
  * dans base.css, côté chrome.)
@@ -1243,7 +1243,7 @@
 }
 
 /* Espèce à enjeu (#2353) : bouclier violet patrimonial, sur les DEUX écrans qui le portent (revue et
-   inventaire). Teinte propre, distincte des indicateurs voisins et des jetons sémantiques — un enjeu de
+   inventaire). Teinte propre, distincte des indicateurs voisins et des jetons sémantiques : un enjeu de
    conservation n'est ni une alerte sur la donnée, ni une erreur à corriger. Le jeton vit dans
    palette.css, donc il suivra le thème sombre le jour où il sera câblé (#1037). */
 .icone-enjeu {

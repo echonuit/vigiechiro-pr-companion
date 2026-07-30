@@ -108,7 +108,7 @@ jobs:
 
       - name: Idempotence du packaging (2e build sans clean)
         # Le packaging doit être reproductible : un 2e `package` SANS `clean` ne doit pas re-shader le
-        # fat-jar. Garde-fou contre une régression de la séparation thin/fat (#1188/#1189) — sans elle,
+        # fat-jar. Garde-fou contre une régression de la séparation thin/fat (#1188/#1189) : sans elle,
         # le shade consommait sa propre sortie (`original-*.jar` gonflé, fat-jar qui grossit). On vérifie :
         # taille du fat-jar stable, aucun `original-*.jar`, jar principal resté MINCE.
         run: |

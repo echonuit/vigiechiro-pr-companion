@@ -48,7 +48,7 @@ while IFS= read -r fqcn; do
 done <<<"$mains"
 
 if [[ $erreurs -gt 0 ]]; then
-  echo "Garde MAINS captures : $erreurs problème(s) — voir ci-dessus."
+  echo "Garde MAINS captures : $erreurs problème(s) : voir ci-dessus."
   exit 1
 fi
 echo "Garde MAINS captures : OK ($nb_outils outils de capture, tous enregistrés dans MAINS)."
