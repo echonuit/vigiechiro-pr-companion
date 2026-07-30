@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.135.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.135.0...v2.135.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **analyse:** la probabilité d'un taxon ne suit plus la locale de la machine ([#2901](https://github.com/echonuit/vigiechiro-pr-companion/issues/2901)) ([3ff1584](https://github.com/echonuit/vigiechiro-pr-companion/commit/3ff1584991b5d0f330dd66d8a6a942dfd7d2fc16)), closes [#2757](https://github.com/echonuit/vigiechiro-pr-companion/issues/2757) [#2896](https://github.com/echonuit/vigiechiro-pr-companion/issues/2896)
+
 # [2.135.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.134.0...v2.135.0) (2026-07-30)
 
 
