@@ -29,7 +29,11 @@ final class EtapesWorkflow {
         StatutWorkflow jalon = jalonDe(courant);
         List<EtapeWorkflow> liste = new ArrayList<>();
         for (StatutWorkflow etape : StatutWorkflow.values()) {
-            if (etape == StatutWorkflow.DEPOT_EN_COURS || etape == StatutWorkflow.RECUPERE) {
+            // C'est l'énumération qui dit ce qui est un jalon, pas cette boucle (#2833). Un statut ajouté
+            // reste DEHORS tant qu'on ne l'y met pas - et le `switch` exhaustif de `estJalon()` oblige à
+            // répondre pour lui, à la compilation. L'ancienne liste d'exceptions faisait l'inverse :
+            // dedans par défaut, et l'oubli était muet.
+            if (!etape.estJalon()) {
                 continue;
             }
             liste.add(new EtapeWorkflow(etape, etatDe(etape, jalon)));

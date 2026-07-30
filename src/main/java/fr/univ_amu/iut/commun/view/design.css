@@ -319,14 +319,21 @@
 .badge-froid {
     -fx-background-color: -badge-neutre-fond;
     -fx-text-fill: -couleur-texte;
-    -fx-border-color: #d0d7de;
+    -fx-border-color: -badge-neutre-bord;
     -fx-border-radius: 11;
 }
 
 /* Statut workflow d'un passage. */
 .badge-statut-importe {
-    -fx-background-color: -badge-neutre-fond;
-    -fx-text-fill: -badge-neutre-texte;
+    /* Le fond neutre était si proche du blanc de la ligne que la pastille disparaissait : il ne restait
+       qu'un mot, aligné avec des voisins encadrés (#2628). L'œil lisait « il y a un état » puis « il n'y
+       a pas d'état », alors que les deux en ont un.
+       ⚠️ La border seule ne suffisait pas : elle donnait EXACTEMENT le vocabulaire de
+       `.badge-non-planifie` (fond neutre + bordure), c'est-à-dire celui d'une nuit qui N'EXISTE PAS.
+       Pleine, donc : la nuit est là, même si elle n'a encore rien franchi. Vu en regardant Ma saison,
+       où les deux se côtoient - aucun test ne peut rougir là-dessus. */
+    -fx-background-color: -badge-arrivee-fond;
+    -fx-text-fill: -badge-arrivee-texte;
 }
 
 .badge-statut-transforme {
@@ -340,8 +347,12 @@
 }
 
 .badge-statut-pret_a_deposer {
-    -fx-background-color: -badge-neutre-fond;
-    -fx-text-fill: -badge-neutre-texte;
+    /* Pas simplement bordée (#2628) : une bordure neutre la rendait lisible, mais IDENTIQUE à
+       « Non planifié » - une nuit prête à partir avait l'air d'une nuit qui n'existe pas. Vu en
+       regardant la capture de Ma saison, où les deux se côtoient sur la même ligne. Elle prend donc le
+       premier cran de la rampe qui mène au dépôt. « Importé », lui, reste neutre : c'est bien le début. */
+    -fx-background-color: -badge-attente-fond;
+    -fx-text-fill: -badge-attente-texte;
 }
 
 .badge-statut-depot_en_cours {

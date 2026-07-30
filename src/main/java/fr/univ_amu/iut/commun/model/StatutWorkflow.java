@@ -41,6 +41,24 @@ public enum StatutWorkflow {
         return libelle;
     }
 
+    /// Ce statut est-il un **jalon** de la frise d'avancement affichée sur la fiche d'un passage ?
+    ///
+    /// La réponse est **explicite pour chaque valeur**, et c'est le point. La frise se construisait en
+    /// parcourant l'énumération puis en retirant à la main ce qui n'en était pas : tout statut ajouté y
+    /// entrait donc **par défaut**, et l'oubli ne levait rien - il ajoutait simplement une étape à une
+    /// frise que personne ne relit (#2833). La bonne valeur par défaut est celle qui ne ment pas quand on
+    /// l'oublie ; ici, c'est « non ».
+    ///
+    /// Deux valeurs n'en sont pas. [#DEPOT_EN_COURS] est **technique** (#980) : tant que le téléversement
+    /// n'est pas fini, le jalon reste « Prêt à déposer ». [#RECUPERE] n'est pas sur ce chemin (#2581) :
+    /// la nuit n'a franchi aucune de ces étapes, elle a sa propre frise.
+    public boolean estJalon() {
+        return switch (this) {
+            case IMPORTE, TRANSFORME, VERIFIE, PRET_A_DEPOSER, DEPOSE -> true;
+            case DEPOT_EN_COURS, RECUPERE -> false;
+        };
+    }
+
     /// La nuit est-elle **sur la plateforme**, d'une manière ou d'une autre ?
     ///
     /// Vrai pour [#DEPOSE] - nous l'y avons mise - et pour [#RECUPERE] - elle en vient. La distinction

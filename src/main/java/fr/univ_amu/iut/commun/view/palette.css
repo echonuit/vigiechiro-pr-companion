@@ -79,8 +79,23 @@
     -badge-danger-texte: #a93226;
     -badge-neutre-fond: #f6f8fa;
     -badge-neutre-texte: #6a737d;
+    /* Bordure des pastilles neutres (#2628) : leur fond est trop proche du blanc de la ligne pour se
+       lire seul. La couleur était jusqu'ici écrite en dur dans .badge-froid ; elle sert désormais à
+       trois pastilles, elle a donc sa place ici. */
+    -badge-neutre-bord: #d0d7de;
     -badge-info-fond: #c5cae9;
     -badge-info-texte: #303f9f;
     -badge-ailleurs-fond: #e6dcf0;
     -badge-ailleurs-texte: #5b3a86;
+    /* « En attente d'un geste de notre part » (#2628) : le cran le plus pâle de la rampe indigo qui mène
+       au dépôt - « Prêt à déposer » (ici) → « Dépôt en cours » (-couleur-primaire-voile) → « Déposé »
+       (-badge-info-fond). Neutre, cette pastille se confondait avec « Non planifié », c'est-à-dire avec
+       une nuit qui n'existe pas. */
+    -badge-attente-fond: #e8eaf6;
+    -badge-attente-texte: #3949ab;
+    /* Premier état d'une nuit RÉELLE (#2628). Distinct du neutre en creux, qui dit une ABSENCE : une
+       pastille bordée sur fond quasi blanc, c'est le vocabulaire de « Non planifié ». Celle-ci est
+       pleine, parce que la nuit, elle, est là. */
+    -badge-arrivee-fond: #dfe4ea;
+    -badge-arrivee-texte: #3d4852;
 }
