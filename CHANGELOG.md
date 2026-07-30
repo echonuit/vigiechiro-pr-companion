@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.138.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.137.3...v2.138.0) (2026-07-30)
+
+
+### Features
+
+* **ci:** le titre de PR est garde contre le tiret cadratin ([#2955](https://github.com/echonuit/vigiechiro-pr-companion/issues/2955)) ([4b2bf92](https://github.com/echonuit/vigiechiro-pr-companion/commit/4b2bf92fe5aad4e39f32f4b0e494355cfb430e9e)), closes [#2365](https://github.com/echonuit/vigiechiro-pr-companion/issues/2365) [#2947](https://github.com/echonuit/vigiechiro-pr-companion/issues/2947)
+
 ## [2.137.3](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.137.2...v2.137.3) (2026-07-30)
 
 
