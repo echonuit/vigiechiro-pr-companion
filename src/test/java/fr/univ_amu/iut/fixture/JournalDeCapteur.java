@@ -109,6 +109,24 @@ public final class JournalDeCapteur {
         return journal;
     }
 
+    /// Écrit le journal d'une nuit **suivi des lignes que le test sème lui-même**.
+    ///
+    /// C'est la forme qu'il faut quand le journal n'est plus un décor mais le **sujet** : un réveil sans
+    /// alarme, une coupure, une carte pleine. Le préambule reste partagé - c'est lui, la duplication - et
+    /// l'anomalie reste écrite dans le test, à côté de ce qu'elle doit produire.
+    ///
+    /// ⚠️ Les lignes sont **ajoutées à la fin**, après la mise en veille du matin. Si l'ordre
+    /// chronologique compte pour ce que le test éprouve, il faut composer soi-même depuis [#lignes].
+    public static Path ecrireAvec(Path racineSd, String serie, LocalDate nuit, List<String> lignesEnPlus)
+            throws IOException {
+        Files.createDirectories(racineSd);
+        List<String> toutes = new ArrayList<>(lignes(serie, nuit, true));
+        toutes.addAll(lignesEnPlus);
+        Path journal = racineSd.resolve("LogPR" + serie + ".txt");
+        Files.write(journal, toutes, StandardCharsets.UTF_8);
+        return journal;
+    }
+
     /// Écrit le relevé climatique `PaRecPR<serie>_THLog.csv`, réduit à son en-tête.
     ///
     /// L'import exige que le fichier existe ; son contenu ne l'intéresse que si des relevés y figurent.

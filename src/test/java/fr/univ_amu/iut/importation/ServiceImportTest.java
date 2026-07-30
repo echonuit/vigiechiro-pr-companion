@@ -29,6 +29,7 @@ import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
@@ -91,14 +92,6 @@ class ServiceImportTest {
     private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10, = Fe du log
     private static final int TRAMES = 576_000; // 1,5 s à 384 kHz -> ceil(1,5 / 5) = 1 séquence par original
     private static final String SERIE = "1925492";
-
-    private static final String LOG =
-            "22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
-                    + "22/04/26 - 16:02:21 PR1925492 Sonde température/hygrométrie présente, lecture toutes"
-                    + " les 600s\n"
-                    + "22/04/26 - 16:02:21 PR1925492 Paramètres : Acquisi. 20:25-07:47, Fe384kHz FL N FPH"
-                    + " 00, S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%\n";
 
     @TempDir
     Path racine;
@@ -253,7 +246,7 @@ class ServiceImportTest {
         // Désormais la date vient de la soirée réelle des WAV (24/04), comme l'import multi-nuits.
         Path nuitTardive = racine.resolve("sd-nuit-tardive");
         Files.createDirectories(nuitTardive);
-        Files.writeString(nuitTardive.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(nuitTardive, "1925492", LocalDate.of(2026, 4, 22));
         ecrireWav(nuitTardive.resolve("PaRecPR1925492_20260424_203922.wav"));
         ecrireWav(nuitTardive.resolve("PaRecPR1925492_20260424_204326.wav"));
 
@@ -338,7 +331,7 @@ class ServiceImportTest {
         // et NE PAS être ré-expansés.
         Path carte = racine.resolve("sd-pr");
         Files.createDirectories(carte);
-        Files.writeString(carte.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(carte, "1925492", LocalDate.of(2026, 4, 22));
         ecrireWav(carte.resolve("PaRecPR1925492_20260422_203922.wav"), 38_400);
 
         ResultatImport resultat = service.importer(carte, idPoint, prefixe);
@@ -712,7 +705,7 @@ class ServiceImportTest {
     void decoupage_parallele_traite_tous_les_originaux() throws IOException {
         Path multi = racine.resolve("sd-multi");
         Files.createDirectories(multi);
-        Files.writeString(multi.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(multi, "1925492", LocalDate.of(2026, 4, 22));
         int nb = 6;
         for (int i = 0; i < nb; i++) {
             // 6 originaux distincts (secondes croissantes) → 6 découpages lancés en parallèle.
@@ -745,7 +738,7 @@ class ServiceImportTest {
     void original_illisible_est_rejete_et_consigne() throws IOException {
         Path corrompu = racine.resolve("sd-corrompu");
         Files.createDirectories(corrompu);
-        Files.writeString(corrompu.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(corrompu, "1925492", LocalDate.of(2026, 4, 22));
         ecrireWav(corrompu.resolve("PaRecPR1925492_20260422_203922.wav")); // WAV valide
         Files.writeString(corrompu.resolve("PaRecPR1925492_20260422_204326.wav"), "pas un WAV"); // illisible
 
@@ -768,7 +761,7 @@ class ServiceImportTest {
     void tous_originaux_illisibles_refuse_l_import() throws IOException {
         Path corrompu = racine.resolve("sd-tout-corrompu");
         Files.createDirectories(corrompu);
-        Files.writeString(corrompu.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(corrompu, "1925492", LocalDate.of(2026, 4, 22));
         Files.writeString(corrompu.resolve("PaRecPR1925492_20260422_203922.wav"), "pas un WAV");
 
         assertThatThrownBy(() -> service.importer(corrompu, idPoint, prefixe))
@@ -1044,7 +1037,7 @@ class ServiceImportTest {
         // Nouvelle SD pour le MÊME quadruplet, mais ne contenant qu'UN des deux WAV (l'autre a disparu).
         Path sdReduite = racine.resolve("sd-reduite");
         Files.createDirectories(sdReduite);
-        Files.writeString(sdReduite.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(sdReduite, "1925492", LocalDate.of(2026, 4, 22));
         ecrireWav(sdReduite.resolve("PaRecPR1925492_20260422_203922.wav"));
 
         // Écrasement : le dossier de session déterministe est réutilisé ; sans remise au propre, le WAV
@@ -1263,10 +1256,13 @@ class ServiceImportTest {
         Path carte = racine.resolve("sd-multi-journal");
         Files.createDirectories(carte);
         // Journal UNIQUE : lignes de déploiement (22/04) + un réveil daté par nuit (bascule midi).
-        String log = LOG
-                + "23/04/26 - 03:00:00 PR1925492 Wakeup by WATCHDOG Cpt3 nuit22\n"
-                + "24/04/26 - 02:00:00 PR1925492 Wakeup by WATCHDOG Cpt5 nuit23\n";
-        Files.writeString(carte.resolve("LogPR1925492.txt"), log, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrireAvec(
+                carte,
+                "1925492",
+                LocalDate.of(2026, 4, 22),
+                List.of(
+                        "23/04/26 - 03:00:00 PR1925492 Wakeup by WATCHDOG Cpt3 nuit22",
+                        "24/04/26 - 02:00:00 PR1925492 Wakeup by WATCHDOG Cpt5 nuit23"));
         for (String jour : List.of("20260422", "20260423")) {
             ecrireWav(carte.resolve("PaRecPR1925492_" + jour + "_203922.wav"));
             ecrireWav(carte.resolve("PaRecPR1925492_" + jour + "_204326.wav"));
@@ -1321,7 +1317,7 @@ class ServiceImportTest {
 
     private Path preparerCarteSD(Path dossier) throws IOException {
         Files.createDirectories(dossier);
-        Files.writeString(dossier.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(dossier, "1925492", LocalDate.of(2026, 4, 22));
         Files.writeString(dossier.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
         ecrireWav(dossier.resolve("PaRecPR1925492_20260422_203922.wav"));
         ecrireWav(dossier.resolve("PaRecPR1925492_20260422_204326.wav"));
@@ -1332,7 +1328,7 @@ class ServiceImportTest {
     /// journal LogPR de la carte. Chaque soirée (horodatage > midi) forme une nuit distincte.
     private Path preparerCarteMultiNuits(Path dossier) throws IOException {
         Files.createDirectories(dossier);
-        Files.writeString(dossier.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(dossier, "1925492", LocalDate.of(2026, 4, 22));
         for (String jour : List.of("20260422", "20260423", "20260424")) {
             ecrireWav(dossier.resolve("PaRecPR1925492_" + jour + "_203922.wav"));
             ecrireWav(dossier.resolve("PaRecPR1925492_" + jour + "_204326.wav"));
