@@ -287,6 +287,71 @@ setup() {
   [[ "${output}" == *"0 observation(s), 0 son(s)"* ]]
 }
 
+@test "exporter-sons : l archive produite contient le CSV et le son, et ils sont bons (#2795)" {
+  # LE test qui traverse tout : une carte SD fabriquee ici, importee par le vrai fat-jar, un CSV
+  # Tadarida qui cree l observation, puis l export - et l archive est OUVERTE pour verifier ce qu elle
+  # contient. Les tests Java in-process voient la meme chaine, mais pas le packaging : un ZIP produit
+  # par le jar shade pourrait etre illisible sans qu aucun d eux ne rougisse.
+  command -v python3 >/dev/null 2>&1 || skip "python3 requis pour fabriquer le WAV et relire l archive"
+
+  local sd="${BATS_TEST_TMPDIR}/sd"
+  mkdir -p "${sd}"
+  cat > "${sd}/LogPR1925492.txt" << 'EOF'
+22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01, CPU 600000000, T4.1
+22/04/26 - 16:02:21 PR1925492 Sonde température/hygrométrie présente, lecture toutes les 600s
+22/04/26 - 16:02:21 PR1925492 Paramètres : Acquisi. 20:25-07:47, Fe384kHz FL N FPH 00, S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%
+EOF
+  printf 'Date\tHour\n' > "${sd}/PaRecPR1925492_THLog.csv"
+  python3 - "${sd}/PaRecPR1925492_20260422_203922.wav" << 'EOF'
+import sys, wave, struct
+with wave.open(sys.argv[1], "wb") as w:
+    w.setnchannels(1)
+    w.setsampwidth(2)
+    w.setframerate(384000)
+    w.writeframes(b"".join(struct.pack("<h", ((i * 41) % 1000) - 500) for i in range(384000)))
+EOF
+
+  local site point sequence
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+  run cli importer --point "${point}" --source "${sd}"
+  [ "${status}" -eq 0 ]
+
+  # Le nom de sequence est produit par la transformation (prefixe R6) : on le relit sur le disque
+  # plutot que de le deviner, puis on ecrit le CSV Tadarida qui cree l observation.
+  sequence=$(basename "$(find "${BATS_TEST_TMPDIR}" -name '*_000.wav' | head -1)" .wav)
+  [ -n "${sequence}" ]
+  {
+    printf '"nom du fichier";"temps_debut";"temps_fin";"frequence_mediane";"tadarida_taxon";"tadarida_probabilite";"tadarida_taxon_autre";"observateur_taxon";"observateur_probabilite";"validateur_taxon";"validateur_probabilite"\n'
+    printf '"%s";"0.3";"3.9";"45.0";"Rhifer";"0.93";"";"";"";"";""\n' "${sequence}"
+  } > "${BATS_TEST_TMPDIR}/obs.csv"
+  run cli importer-tadarida --passage 1 --csv "${BATS_TEST_TMPDIR}/obs.csv"
+  [ "${status}" -eq 0 ]
+
+  run cli exporter-sons --passage 1 --sortie "${BATS_TEST_TMPDIR}/sons.zip"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"1 observation(s), 1 son(s)"* ]]
+
+  # L archive est OUVERTE : le CSV porte bien l observation (carre, point, fichier), et le son est
+  # range sous sa nuit, avec des octets identiques a ceux du disque.
+  run python3 - "${BATS_TEST_TMPDIR}/sons.zip" "${sequence}" << 'EOF'
+import sys, zipfile
+archive, sequence = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(archive) as zip:
+    noms = zip.namelist()
+    assert noms[0] == "observations.csv", noms
+    sons = [n for n in noms if n.startswith("sons/")]
+    assert sons == ["sons/Car130711-2026-Pass1-A1/" + sequence + ".wav"], sons
+    lignes = zip.read("observations.csv").decode("utf-8").splitlines()
+    assert len(lignes) == 2, lignes
+    assert "130711" in lignes[1] and sequence in lignes[1], lignes[1]
+    assert len(zip.read(sons[0])) > 1000, "le son emballe est vide ou tronque"
+print("archive conforme")
+EOF
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"archive conforme"* ]]
+}
+
 @test "exporter-sons : --passage et --espece s excluent, exit 2 (#2795)" {
   run cli exporter-sons --passage 1 --espece Rhifer --sortie "${BATS_TEST_TMPDIR}/a.zip"
   [ "${status}" -eq 2 ]
