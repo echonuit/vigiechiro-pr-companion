@@ -202,10 +202,7 @@ public final class JeuDeDonneesPassage {
     /// **trouvés s'ils existent déjà, créés sinon** : deux `semer()` qui partagent ces coordonnées sèment
     /// deux passages sur le **même** point, sans doublonner ni violer de clé.
     public JeuDeDonneesPassage semer() {
-        trouverOuCreerUtilisateur();
-        trouverOuCreerEnregistreur();
-        idSite = trouverOuCreerSite();
-        idPoint = trouverOuCreerPoint();
+        semerSiteEtPoint();
         idPassage = new PassageDao(source)
                 .insert(new Passage(
                         null,
@@ -232,6 +229,28 @@ public final class JeuDeDonneesPassage {
                     .insert(new EnregistrementOriginal(null, "brut.wav", "/ws/brut.wav", 5.0, 384000, null, idSession))
                     .id();
         }
+        return this;
+    }
+
+    /// Sème **la topologie sans la nuit** : utilisateur, enregistreur, site (par n° de carré) et point
+    /// (par code). S'arrête là.
+    ///
+    /// Beaucoup de tests n'ont besoin que d'un point d'écoute : ceux des sites, de la carte, des
+    /// campagnes, et les semeurs de recette. `semer()` leur imposait un passage, une session et un
+    /// enregistrement original dont ils n'avaient que faire - alors ils semaient à la main, et la fixture
+    /// restait inutilisable là où elle aurait le plus servi. C'était le principal frein restant à son
+    /// adoption (#2865).
+    ///
+    /// Les mêmes règles de partage s'appliquent : deux appels qui citent le même carré et le même code de
+    /// point retombent sur le **même** point, sans doublonner.
+    ///
+    /// Après cet appel, [#idSite()] et [#idPoint()] répondent ; [#idPassage()] refuse, puisqu'il n'y a
+    /// pas de nuit. Appeler ensuite [#semer()] complète la chaîne sans rien resemer.
+    public JeuDeDonneesPassage semerSiteEtPoint() {
+        trouverOuCreerUtilisateur();
+        trouverOuCreerEnregistreur();
+        idSite = trouverOuCreerSite();
+        idPoint = trouverOuCreerPoint();
         return this;
     }
 
@@ -369,12 +388,12 @@ public final class JeuDeDonneesPassage {
     }
 
     public long idSite() {
-        exigerSemis();
+        exigerTopologie();
         return idSite;
     }
 
     public long idPoint() {
-        exigerSemis();
+        exigerTopologie();
         return idPoint;
     }
 
@@ -396,6 +415,15 @@ public final class JeuDeDonneesPassage {
     private void exigerSemis() {
         if (idPassage == null) {
             throw new IllegalStateException("Appelez semer() avant d'utiliser le jeu de données.");
+        }
+    }
+
+    /// Le site et le point existent dès `semerSiteEtPoint()` : leur exiger un passage refuserait
+    /// précisément l'usage que cette entrée légère vient ouvrir (#2865).
+    private void exigerTopologie() {
+        if (idPoint == null) {
+            throw new IllegalStateException(
+                    "Appelez semerSiteEtPoint() ou semer() avant d'utiliser le jeu de données.");
         }
     }
 
