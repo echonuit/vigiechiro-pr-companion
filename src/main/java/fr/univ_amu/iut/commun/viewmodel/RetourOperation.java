@@ -101,7 +101,7 @@ public record RetourOperation(String texte, Severite severite) {
     ///
     /// Le bandeau **n'a pas de troncature** : son libellé porte `wrapText`, donc un long message enroule
     /// et fait grandir le bandeau. Mesuré : un message de pilote SQLite rappelant sa requête (379
-    /// caractères) le porte à 86 px, un collage de 625 caractères à 186 px - contre 46 px nominal.
+    /// caractères) le porte à 106 px, un collage de 625 caractères à 186 px - contre 56 px nominal.
     ///
     /// Borné **ici seulement**, et c'est le point : ce qui passe par [#erreur(String)] est écrit par nous,
     /// et sa longueur est notre responsabilité. Ce qui arrive par un [Throwable] vient du pilote SQLite,

@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class RetourOperationTest {
 
     /// Un message de pilote qui rappelle sa requête entière : 379 caractères mesurés, qui portaient le
-    /// bandeau de 46 à 86 px. Le bandeau n'a pas de troncature - son libellé enroule.
+    /// bandeau de 56 à 106 px. Le bandeau n'a pas de troncature - son libellé enroule.
     private static final String MESSAGE_DE_PILOTE = "[SQLITE_CONSTRAINT_FOREIGNKEY] A foreign key constraint"
             + " failed lors de : INSERT INTO observation (id_sequence, taxon_tadarida, taxon_observateur,"
             + " certitude, temps_debut, temps_fin, frequence_mediane, probabilite, id_resultats,"

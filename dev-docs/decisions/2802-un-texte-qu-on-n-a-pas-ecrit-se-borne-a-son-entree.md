@@ -16,10 +16,16 @@ porte `wrapText`, donc rien n'est tronqué - un long message **enroule** et fait
 
 | Cas | Longueur | Hauteur du bandeau |
 |---|---|---|
-| refus métier écrit par nous | 58 car. | 46 px |
-| échec HTTP typique | 125 car. | 46 px |
-| message de pilote SQLite rappelant sa requête | 379 car. | **86 px** |
+| refus métier écrit par nous | 58 car. | 56 px |
+| échec HTTP typique | 125 car. | 56 px |
+| message de pilote SQLite rappelant sa requête | 379 car. | **106 px** |
 | collage arbitraire dans un champ de saisie | 625 car. | **186 px** |
+
+> **Chiffres corrigés en 2026-07-30 (#2897).** Les premiers avaient été relevés sur une **imitation** du
+> bandeau : l'outil de mesure montait un `Label` dans un `HBox` aux bonnes classes CSS sans passer par
+> `BandeauRetour.installer`, donc sans l'icône de sévérité ni le bouton de fermeture. Ces deux enfants
+> prennent 104 px de largeur : le libellé réel s'enroule plus tôt et le bandeau est plus haut. La
+> conclusion ne change pas - c'est même pire que ce qui avait été mesuré.
 
 En triant les dix-sept par **origine du texte**, un second défaut est apparu, plus coûteux : quatorze
 passaient `refus.getMessage()` au lieu du `Throwable`, et court-circuitaient donc [`GesteAttendu`] -
