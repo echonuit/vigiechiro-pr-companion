@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.129.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.128.1...v2.129.0) (2026-07-30)
+
+
+### Features
+
+* **qualite:** un cliquet pour la regle du tiret cadratin ([#2853](https://github.com/echonuit/vigiechiro-pr-companion/issues/2853)) ([de82a93](https://github.com/echonuit/vigiechiro-pr-companion/commit/de82a93b1d8274213356898c77ca47e1b7da5098)), closes [#2348](https://github.com/echonuit/vigiechiro-pr-companion/issues/2348) [#2843](https://github.com/echonuit/vigiechiro-pr-companion/issues/2843)
+
 ## [2.128.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.128.0...v2.128.1) (2026-07-29)
 
 
