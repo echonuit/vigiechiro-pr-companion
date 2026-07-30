@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -51,6 +52,24 @@ public final class CritereListe {
             String invite,
             Supplier<? extends List<String>> valeursPresentes,
             Function<T, String> dimension) {
+        return multipleParmi(cle, libelle, invite, valeursPresentes, (T ligne) -> {
+            String valeur = dimension.apply(ligne);
+            return valeur == null ? List.<String>of() : List.of(valeur);
+        });
+    }
+
+    /// Variante de [#multiple] pour une ligne qui porte **plusieurs dimensions comparables** (le critère
+    /// « Lieu » de la vue audio confronte commune, carré, point et site à la même liste, #2794) : la
+    /// ligne passe si **l'une** de ses valeurs figure parmi celles cochées. Même sémantique de départ :
+    /// rien de coché n'écarte rien. (Nom distinct : une surcharge de `multiple` aurait le même effacement.)
+    ///
+    /// @param dimensions ce qu'on lit sur une ligne pour la comparer (toutes les valeurs candidates)
+    public static <T> CritereFiltre<T> multipleParmi(
+            String cle,
+            String libelle,
+            String invite,
+            Supplier<? extends List<String>> valeursPresentes,
+            Function<T, ? extends Collection<String>> dimensions) {
         return new CritereFiltre<T>() {
             @Override
             public String nom() {
@@ -70,7 +89,7 @@ public final class CritereListe {
                     CheckMenuItem item = new CheckMenuItem(valeur);
                     item.selectedProperty().addListener((obs, avant, coche) -> {
                         majLibelle(bouton, invite);
-                        applique.accept(predicat(bouton, dimension));
+                        applique.accept(predicat(bouton, dimensions));
                     });
                     bouton.getItems().add(item);
                 }
@@ -153,14 +172,15 @@ public final class CritereListe {
         };
     }
 
-    /// Le prédicat courant : appartenance aux valeurs cochées, ou **tout passe** si rien ne l'est.
-    private static <T> Predicate<T> predicat(MenuButton bouton, Function<T, String> dimension) {
+    /// Le prédicat courant : appartenance aux valeurs cochées, ou **tout passe** si rien ne l'est. Une
+    /// ligne passe dès que **l'une** de ses valeurs candidates est cochée.
+    private static <T> Predicate<T> predicat(MenuButton bouton, Function<T, ? extends Collection<String>> dimensions) {
         List<String> retenues = cochees(bouton);
         if (retenues.isEmpty()) {
             return ligne -> true;
         }
         Set<String> ensemble = new LinkedHashSet<>(retenues);
-        return ligne -> ensemble.contains(dimension.apply(ligne));
+        return ligne -> dimensions.apply(ligne).stream().anyMatch(ensemble::contains);
     }
 
     private static List<String> cochees(MenuButton bouton) {
