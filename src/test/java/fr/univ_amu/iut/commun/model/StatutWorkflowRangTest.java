@@ -37,4 +37,27 @@ class StatutWorkflowRangTest {
                     .isEqualTo(statut.ordinal());
         }
     }
+
+    @Test
+    @DisplayName("#2833 : chaque statut répond explicitement s'il est un jalon de la frise")
+    void chaque_statut_dit_s_il_est_un_jalon() {
+        // Le `switch` exhaustif d'`estJalon()` oblige déjà à répondre pour toute valeur ajoutée : sans
+        // réponse, ça ne compile pas. Ce test verrouille l'autre moitié - que la réponse soit celle
+        // qu'on croit, et non un `true` posé pour faire taire le compilateur.
+        assertThat(StatutWorkflow.DEPOT_EN_COURS.estJalon())
+                .as("statut technique : le jalon reste « Prêt à déposer » tant que le dépôt n'est pas fini")
+                .isFalse();
+        assertThat(StatutWorkflow.RECUPERE.estJalon())
+                .as("hors de la file : elle n'a franchi aucune de ces étapes, elle a sa propre frise")
+                .isFalse();
+
+        for (StatutWorkflow statut : StatutWorkflow.values()) {
+            if (statut == StatutWorkflow.DEPOT_EN_COURS || statut == StatutWorkflow.RECUPERE) {
+                continue;
+            }
+            assertThat(statut.estJalon())
+                    .as("« %s » est une étape que la nuit franchit : la frise doit la montrer", statut.libelle())
+                    .isTrue();
+        }
+    }
 }
