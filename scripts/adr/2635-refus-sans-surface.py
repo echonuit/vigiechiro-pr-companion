@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 2635 — Un refus dit ce qui manque ; la surface dit quoi faire.
+"""ADR 2635 - Un refus dit ce qui manque ; la surface dit quoi faire.
 
 Pourquoi « probable » et non « certaine » : un message de modèle peut évoquer un écran sans faute -
 « ouvrez la fiche de la nuit » relève du domaine autant que de l'interface, et il n'existe pas de motif

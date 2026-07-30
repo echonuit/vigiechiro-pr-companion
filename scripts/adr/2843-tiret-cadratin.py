@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 2843 — Le tiret cadratin ne se corrige pas d'un coup, il se cliquette.
+"""ADR 2843 - Le tiret cadratin ne se corrige pas d'un coup, il se cliquette.
 
 La convention est écrite deux fois (`CONTRIBUTING.md`, `dev-docs/ajouter-une-fonctionnalite.md`) et
 n'était appliquée par rien. Elle a été enfreinte pendant la clôture du chantier #2348, dans un message

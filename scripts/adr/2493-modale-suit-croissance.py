@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 2493 — Une modale à révélation suit la croissance de son contenu.
+"""ADR 2493 - Une modale à révélation suit la croissance de son contenu.
 
 Une modale est dimensionnée à son ouverture, sur le contenu visible à cet instant. Un bandeau de retour
 qui paraît ensuite (BandeauRetour, LibelleRetour, un `setManaged(true)`) agrandit la mise en page sans

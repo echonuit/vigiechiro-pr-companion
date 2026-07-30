@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 0008 — Aucun échec silencieux ; la sévérité de journalisation se décide à l'émission.
+"""ADR 0008 - Aucun échec silencieux ; la sévérité de journalisation se décide à l'émission.
 
 Pourquoi « probable » et non « certaine » : décider si un `catch` « expose » vraiment son échec
 demande de comprendre le corps. Un catch qui journalise, relance, ou traduit l'échec en un état visible

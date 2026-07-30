@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 0010 — Les dialogues bloquants sont des ports injectables.
+"""ADR 0010 - Les dialogues bloquants sont des ports injectables.
 
 Pourquoi « probable » et non « certaine » : distinguer l'ADAPTATEUR d'un port (qui a le droit, et le
 devoir, d'appeler `Alert`) d'un appel direct depuis une vue demande de savoir ce que la classe est.
