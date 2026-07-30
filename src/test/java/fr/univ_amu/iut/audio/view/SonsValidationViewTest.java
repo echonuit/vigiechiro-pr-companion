@@ -312,6 +312,22 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName("#2794 : le catalogue de l'écran offre la puce « Lieu », qui filtre sur les valeurs réelles")
+    void filtre_lieu_est_offert_par_l_ecran(FxRobot robot) {
+        // Le critère est éprouvé isolément ailleurs ; ici on vérifie qu'il est réellement INSCRIT au
+        // catalogue de cet écran - un oubli d'enregistrement laisserait un critère parfait mais
+        // inatteignable.
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        robot.interact(() -> itemParLibelle(menuAjout, "Lieu").fire());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Rien de coché n'écarte rien : la table reste entière tant qu'aucun lieu n'est retenu.
+        assertThat(robot.lookup("#tableObservations").queryAs(TableView.class).getItems())
+                .as("une puce fraîchement posée ne masque aucune observation")
+                .hasSize(2);
+    }
+
+    @Test
     @DisplayName("La table liste les références ; le résumé de statut compte + l'avancement (sans bandeau de titre)")
     void affiche_table_et_resume(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
@@ -849,7 +865,8 @@ class SonsValidationViewTest {
     }
 
     @Test
-    @DisplayName("Source References : menu « Exporter la bibliothèque » visible, actions passage masquées")
+    @DisplayName(
+            "Source References : menu « Exporter la bibliothèque de sons (ZIP) » visible, actions passage masquées")
     void menu_adapte_a_la_source(FxRobot robot) {
         // Les MenuItem ne sont pas des Node : on passe par le MenuButton et ses items, repérés par leur
         // libellé (robuste à l'ordre / aux ajouts, comme « Voir sur la carte » en tête, #476).
@@ -857,7 +874,7 @@ class SonsValidationViewTest {
         MenuItem importer = itemParLibelle(menu, "Importer un CSV Tadarida…");
         MenuItem inclureMode = itemParLibelle(menu, "Inclure le mode de validation à l'export _Vu");
         MenuItem exporterVu = itemParLibelle(menu, "Exporter _Vu…");
-        MenuItem exporterBiblio = itemParLibelle(menu, "Exporter la bibliothèque…");
+        MenuItem exporterBiblio = itemParLibelle(menu, "Exporter la bibliothèque de sons (ZIP)…");
 
         assertThat(menu.isVisible()).isTrue();
         assertThat(exporterBiblio.isVisible()).isTrue();

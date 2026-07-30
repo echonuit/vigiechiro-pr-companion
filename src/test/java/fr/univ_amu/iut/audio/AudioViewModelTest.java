@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
+import fr.univ_amu.iut.bibliotheque.model.EntreeBiblio;
 import fr.univ_amu.iut.bibliotheque.model.ExportBiblioSons;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -548,35 +549,42 @@ class AudioViewModelTest {
         }
 
         @Test
-        @DisplayName("exporterBibliotheque délègue au service bibliothèque et rapporte le bilan")
-        void exporter_bibliotheque(@TempDir Path sortie) {
+        @DisplayName("L'export bibliothèque écrit l'archive et rapporte son bilan chiffré")
+        void exporter_bibliotheque(@TempDir Path racine) throws Exception {
+            // Harmonisation (clôture EPIC #2790) : la bibliothèque s'écrit désormais en archive, par le
+            // même socle que l'export « observations + sons » - et rend les mêmes comptes.
             when(service.taxonsDisponibles()).thenReturn(List.of());
             when(projections.lignesAudioReferences("u-1")).thenReturn(List.of());
-            ExportBiblioSons export = org.mockito.Mockito.mock(ExportBiblioSons.class);
-            when(bibliotheque.exporterBibliotheque()).thenReturn(export);
-            when(export.exporterVers(sortie)).thenReturn(3);
+            Path son = Files.writeString(racine.resolve("a_000.wav"), "RIFF");
+            when(bibliotheque.exporterBibliotheque())
+                    .thenReturn(new ExportBiblioSons(
+                            List.of(new EntreeBiblio("PIPPIP", "a_000.wav", son.toString(), 45, null))));
+            Path archive = racine.resolve("bibliotheque-sons.zip");
 
             AudioViewModel vm = vm();
             vm.ouvrirSur(new SourceObservations.References("u-1"));
+            String message = vm.exports()
+                    .bibliotheque(archive, progression -> {}, fr.univ_amu.iut.commun.model.JetonAnnulation.neutre());
+            vm.exports().confirmer(message);
 
-            assertThat(vm.exporterBibliotheque(sortie)).isTrue();
             verify(bibliotheque).exporterBibliotheque();
-            assertThat(vm.retourProperty().get().texte()).contains("3 fichier(s)");
+            assertThat(archive).exists();
+            assertThat(message).contains("1 référence(s), 1 son(s)");
             assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
         }
 
         @Test
-        @DisplayName("exporterBibliotheque refuse un dossier inutilisable AVANT toute copie (#2426)")
-        void exporter_bibliotheque_refuse_dossier_inutilisable(@TempDir Path racine) throws Exception {
-            // Une destination qui est un fichier, pas un dossier : la sonde la refuse sans rien écrire.
+        @DisplayName("L'export bibliothèque refuse une destination inutilisable AVANT toute copie (#2426)")
+        void exporter_bibliotheque_refuse_destination_inutilisable(@TempDir Path racine) throws Exception {
+            // La destination est un fichier, donc son « dossier parent » n'existe pas : la sonde partagée
+            // refuse avant d'ouvrir la modale, et le service n'est jamais sollicité.
             Path fichier = Files.createFile(racine.resolve("pas-un-dossier.txt"));
 
             AudioViewModel vm = vm();
 
-            assertThat(vm.exporterBibliotheque(fichier)).isFalse();
+            assertThat(vm.exports().preparer(fichier.resolve("archive.zip"))).isEmpty();
             verify(bibliotheque, never()).exporterBibliotheque();
             assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
-            assertThat(vm.retourProperty().get().texte()).contains("un fichier, pas un dossier");
         }
 
         @Test
@@ -771,6 +779,74 @@ class AudioViewModelTest {
         }
 
         @Test
+        @DisplayName("#149 : l'export CSV du sous-ensemble écrit le fichier et rend compte (trou révélé par PIT)")
+        void export_csv_du_sous_ensemble_ecrit_et_rend_compte(@TempDir Path racine) {
+            // Cet export existait avant le chantier et n'était couvert par AUCUN test - le PIT l'a
+            // nommé (NO_COVERAGE) quand le geste a déménagé du ViewModel vers le flux.
+            when(service.especesPrioritaires()).thenReturn(java.util.Set.of());
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(projections.lignesAudioReferences("u-1"))
+                    .thenReturn(List.of(ligne(1L, 1L, "Pippip", null, StatutObservation.NON_TOUCHEE, false)));
+            Path csv = racine.resolve("observations.csv");
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(new SourceObservations.References("u-1"));
+
+            boolean ecrit = vm.exports().observationsCsv(csv);
+
+            assertThat(ecrit).isTrue();
+            assertThat(csv).exists();
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
+            assertThat(vm.retourProperty().get().texte()).contains("1 observation(s) exportée(s)");
+        }
+
+        @Test
+        @DisplayName("#149 : une destination illisible ne fait pas croire à un export réussi")
+        void export_csv_refuse_rend_compte_de_l_echec(@TempDir Path racine) {
+            when(service.especesPrioritaires()).thenReturn(java.util.Set.of());
+            AudioViewModel vm = vm();
+            // Un dossier là où le fichier doit s'écrire : l'écriture échoue, et le message doit le dire.
+            Path occupe = racine.resolve("observations.csv");
+
+            boolean ecrit;
+            try {
+                Files.createDirectory(occupe);
+                ecrit = vm.exports().observationsCsv(occupe);
+            } catch (java.io.IOException impossible) {
+                throw new IllegalStateException(impossible);
+            }
+
+            assertThat(ecrit).isFalse();
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
+        }
+
+        @Test
+        @DisplayName("Le bilan dit les sons restés hors de l'archive, sans les taire ni alarmer")
+        void bilan_nomme_les_sons_introuvables(@TempDir Path racine) {
+            // La séquence n'est pas en base (nuit archivée, support débranché) : l'observation part au
+            // CSV, le son ne peut pas suivre. Un succès qui n'en dirait rien laisserait croire que
+            // l'archive est complète, et l'expert écouterait un silence qu'il croirait vide.
+            when(service.especesPrioritaires()).thenReturn(java.util.Set.of());
+            when(sequenceDao.findById(1L)).thenReturn(Optional.empty());
+            AudioViewModel vm = vm();
+
+            String message = vm.exports()
+                    .exporter(
+                            List.of(ligne(1L, 1L, "Pippip", null, StatutObservation.NON_TOUCHEE, false)),
+                            racine.resolve("observations-sons.zip"),
+                            progression -> {},
+                            fr.univ_amu.iut.commun.model.JetonAnnulation.neutre());
+            vm.exports().confirmer(message);
+
+            assertThat(message)
+                    .as("le bilan chiffre ce qui manque et dit où le retrouver")
+                    .contains("1 son(s) introuvable(s)")
+                    .contains("le CSV les nomme");
+            assertThat(vm.retourProperty().get().severite())
+                    .as("l'archive a bien été produite : un son absent n'est pas un échec")
+                    .isEqualTo(Severite.SUCCES);
+        }
+
+        @Test
         @DisplayName("Annulation et échec se restituent chacun avec leur ton")
         void annulation_et_echec_se_restituent() {
             AudioViewModel vm = vm();
@@ -781,6 +857,11 @@ class AudioViewModelTest {
 
             vm.exports().echec(new java.io.UncheckedIOException(new java.io.IOException("disque plein")));
             assertThat(vm.retourProperty().get().texte()).contains("disque plein");
+
+            // Un échec SANS cause (levé directement) doit rester lisible : sans le repli, le motif
+            // afficherait « null » là où l'utilisateur attend une raison.
+            vm.exports().echec(new IllegalStateException("archive verrouillée"));
+            assertThat(vm.retourProperty().get().texte()).contains("archive verrouillée");
         }
     }
 }

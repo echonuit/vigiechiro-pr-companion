@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -73,6 +75,34 @@ class ExportObservationsEtSonsTest {
                     .as("le CSV de l'archive est celui de l'export CSV seul, à l'octet près")
                     .isEqualTo(ExportObservationsCsv.contenu(lignes, taxon -> false));
         }
+    }
+
+    @Test
+    @DisplayName("La première progression annonce le contenu : observations, sons et volume (#2793)")
+    void annonce_le_contenu_avant_la_copie() throws IOException {
+        // Des tailles qui PÈSENT : avec quelques kilo-octets, « ~0,0 Mo » resterait vrai même si le
+        // volume n'était jamais lu (mutant survivant au premier jet). 1,5 Mo au total le prouve.
+        long premiere = creerSequence("Car640380-2026-Pass1-Z1", "a_000.wav", new byte[1_048_576]);
+        long seconde = creerSequence("Car640380-2026-Pass2-Z1", "b_000.wav", new byte[524_288]);
+        List<Progression> etapes = new ArrayList<>();
+        Path archive = workspace.resolve("export.zip");
+
+        export.exporter(
+                List.of(ligne(premiere, "a_000.wav"), ligne(seconde, "b_000.wav")),
+                archive,
+                taxon -> false,
+                etapes::add,
+                JetonAnnulation.neutre());
+
+        // La modale doit dire ce qui va se passer AVANT la première copie : sans cette ligne, un export
+        // de plusieurs centaines de Mo commence sans que personne sache ce qu'il embarque.
+        assertThat(etapes).isNotEmpty();
+        assertThat(etapes.get(0).libelle())
+                .as("annonce d'ouverture : observations, sons dédupliqués, volume lu sur le disque")
+                .isEqualTo("2 observation(s) · 2 son(s) · ~1,5 Mo");
+        assertThat(etapes.get(1).libelle())
+                .as("la copie suit l'annonce, entrée par entrée")
+                .startsWith("Archive : ");
     }
 
     @Test
@@ -151,6 +181,39 @@ class ExportObservationsEtSonsTest {
         assertThat(bilan.sonsCopies()).isEqualTo(1);
         assertThat(bilan.sonsIntrouvables()).isEmpty();
         assertThat(sequence.idSession()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("Une session au chemin racine vide se range sous « session-N », pas sous un dossier sans nom")
+    void session_sans_chemin_se_range_sous_un_nom_de_repli() throws IOException {
+        // Chemin racine vide en base (nuit rapatriée en squelette, chemin jamais renseigné) : sans le
+        // repli, l'entrée d'archive serait « sons//a_000.wav » - un chemin que les outils d'archive
+        // rendent de façons diverses, quand ils ne le refusent pas. Mutant PIT lu en cérémonie.
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .carre("640380")
+                .point("A1")
+                .cheminSession("")
+                .nuit(prochainNumeroPassage++, 2026, "2026-06-25")
+                .semer();
+        Path fichier = Files.createDirectories(workspace.resolve("ailleurs")).resolve("a_000.wav");
+        Files.write(fichier, new byte[] {9});
+        long idSequence = sequenceDao
+                .insert(new SequenceDEcoute(
+                        null, "a_000.wav", jeu.idOriginal(), 0, 0.0, 5.0, fichier.toString(), false, jeu.idSession()))
+                .id();
+        Path archive = workspace.resolve("repli.zip");
+
+        export.exporter(
+                List.of(ligne(idSequence, "a_000.wav")),
+                archive,
+                taxon -> false,
+                progression -> {},
+                JetonAnnulation.neutre());
+
+        try (ZipFile zip = new ZipFile(archive.toFile())) {
+            assertThat(zip.stream().map(ZipEntry::getName))
+                    .containsExactly("observations.csv", "sons/session-" + jeu.idSession() + "/a_000.wav");
+        }
     }
 
     @Test
