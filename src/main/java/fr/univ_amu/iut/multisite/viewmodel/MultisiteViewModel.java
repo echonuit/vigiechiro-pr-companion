@@ -3,6 +3,7 @@ package fr.univ_amu.iut.multisite.viewmodel;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
@@ -76,6 +77,11 @@ public class MultisiteViewModel {
     private final ReadOnlyObjectWrapper<RetourOperation> retour =
             new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
+    /// Compte rendu chiffré du dernier relevé groupé (#2757), ou `null` s'il n'y en a pas. Distinct de
+    /// [#retour] : un retour est **borné** (ADR 0031), un compte rendu grandit avec ce qu'il a à nommer.
+    private final ReadOnlyObjectWrapper<CompteRenduChiffre> compteRenduReleve =
+            new ReadOnlyObjectWrapper<>(this, "compteRenduReleve", null);
+
     /// Socle de filtres composables (#537) : recompose la conjonction sur [#passagesFiltres] puis
     /// publie via [#publierLignes()]. Déclaré après ses dépendances (la liste filtrée).
     private final Filtres<LignePassage> filtres = new Filtres<>(passagesFiltres, this::publierLignes);
@@ -123,32 +129,34 @@ public class MultisiteViewModel {
     /// échoue n'écrase pas son dernier état connu).
     ///
     /// Reçoit la liste en paramètre (capturée sur le fil JavaFX par l'appelant, cf. [#nuitsDeposees()])
-    /// plutôt que de lire la liste observable depuis le fil de fond. Renvoie le compte rendu prêt à
-    /// afficher — ou, si la liste est vide, un message qui le dit plutôt qu'un « 0 relevé » sec.
-    /// Précondition : [#releveAnalysesDisponible()] vrai (l'appelant garde le bouton).
-    public RetourOperation releverAnalyses(
+    /// plutôt que de lire la liste observable depuis le fil de fond.
+    ///
+    /// **Vide** si la liste l'est : il n'y a alors rien à ventiler, donc pas de compte rendu à rendre. Ce
+    /// n'est pas un échec mais un **guidage**, et c'est la surface qui le formule - comme elle formule
+    /// déjà celui de l'interruption. Précondition : [#releveAnalysesDisponible()] vrai (l'appelant garde
+    /// le bouton).
+    public Optional<CompteRenduChiffre> releverAnalyses(
             List<Long> nuitsDeposees, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(nuitsDeposees, "nuitsDeposees");
         SuiviTraitement moteur = suivi.orElseThrow(
                 () -> new IllegalStateException("Relevé des analyses indisponible : connectez-vous à Vigie-Chiro."));
         if (nuitsDeposees.isEmpty()) {
-            // Rien à relever n'est pas un échec : c'est un guidage.
-            return RetourOperation.info("Aucune nuit déposée : il n'y a pas encore d'analyse à relever.");
+            return Optional.empty();
         }
-        return retourReleve(moteur.releverTout(nuitsDeposees, progres, jeton));
+        return Optional.of(CompteRenduChiffreReleve.de(moteur.releverTout(nuitsDeposees, progres, jeton), List.of()));
     }
 
     /// Résultat d'un relevé groupé : le compte rendu à afficher **et** les données rechargées, pour que la
-    /// vue applique les deux en une fois (#1338).
-    public record ResultatReleve(RetourOperation retour, DonneesMultisite donnees) {}
+    /// vue applique les deux en une fois (#1338). `compteRendu` est vide quand il n'y avait rien à relever.
+    public record ResultatReleve(Optional<CompteRenduChiffre> compteRendu, DonneesMultisite donnees) {}
 
     /// Relève l'état des analyses **puis relit** l'écran, le tout **hors du fil JavaFX** (#1338) : le
     /// nouvel état du cache doit se voir dans la colonne « Analyse » dès le retour, sans imbriquer une
     /// seconde occupation ni laisser le compte rendu se faire effacer par un rechargement concurrent.
     public ResultatReleve releverPuisCharger(
             List<Long> nuitsDeposees, Consumer<Progression> progres, JetonAnnulation jeton) {
-        RetourOperation retour = releverAnalyses(nuitsDeposees, progres, jeton);
-        return new ResultatReleve(retour, charger());
+        Optional<CompteRenduChiffre> compteRendu = releverAnalyses(nuitsDeposees, progres, jeton);
+        return new ResultatReleve(compteRendu, charger());
     }
 
     /// Applique le résultat d'un relevé groupé **sur le fil JavaFX** : recompose le tableau (badges
@@ -156,20 +164,12 @@ public class MultisiteViewModel {
     /// via `publierLignes`, donc le compte rendu est posé **après**.
     public void appliquerReleve(ResultatReleve resultat) {
         appliquer(resultat.donnees());
-        retour.set(resultat.retour());
+        resultat.compteRendu().ifPresent(compteRenduReleve::set);
     }
 
-    /// Compte rendu du relevé groupé : ce qui a été rafraîchi, et ce qui a échoué **sans mentir** sur une
-    /// fraîcheur non obtenue (les nuits en échec gardent leur dernier état connu).
-    private static RetourOperation retourReleve(SuiviTraitement.BilanReleveGroupe bilan) {
-        if (bilan.echecs() == 0) {
-            return RetourOperation.succes(
-                    "État des analyses relevé pour " + bilan.rafraichis() + " nuit(s)" + " déposée(s).");
-        }
-        // Relevé **partiel** : rien n'a échoué au sens technique, mais tout n'a pas été rafraîchi. Ni un
-        // succès (ce serait mentir sur la fraîcheur), ni une erreur (les données restent affichées).
-        return RetourOperation.info("État relevé pour " + bilan.rafraichis() + " nuit(s) sur " + bilan.total() + " : "
-                + bilan.echecs() + " injoignable(s), leur dernier état connu reste affiché.");
+    /// Le compte rendu chiffré du dernier relevé, ou `null`. La vue y branche son panneau.
+    public ReadOnlyObjectProperty<CompteRenduChiffre> compteRenduReleveProperty() {
+        return compteRenduReleve.getReadOnlyProperty();
     }
 
     /// (Re)charge **tous** les passages de l'utilisateur, puis ré-applique filtres et tri courants.
@@ -222,6 +222,9 @@ public class MultisiteViewModel {
         nonVide.set(!lignes.isEmpty());
         resume.set(lignes.size() + " passage(s) affiché(s).");
         retour.set(RetourOperation.AUCUN);
+        // Le compte rendu s'efface avec le retour : un changement de filtre ou un rechargement le rendrait
+        // périmé, et un compte rendu périmé se lit comme un compte rendu vrai.
+        compteRenduReleve.set(null);
     }
 
     /// (Re)charge l'agrégat des carrés pour la **carte** (#152), vue d'ensemble **non filtrée**.

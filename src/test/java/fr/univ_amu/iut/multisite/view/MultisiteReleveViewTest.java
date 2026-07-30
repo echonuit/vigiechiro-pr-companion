@@ -22,6 +22,7 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
@@ -155,6 +156,17 @@ class MultisiteReleveViewTest {
 
         // Seules les deux nuits déposées (42, 3), pas la nuit vérifiée (7).
         verify(suivi).releverTout(eq(List.of(42L, 3L)), any(), any());
-        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText()).contains("2 nuit(s)");
+
+        // #2757 : le résultat va dans la bande chiffrée, plus dans le bandeau de retour. Un retour est
+        // borné (ADR 0031) ; ce compte rendu grandit avec le nombre d'états à nommer.
+        PanneauCompteRendu bande = robot.lookup("#compteRenduReleve").queryAs(PanneauCompteRendu.class);
+        assertThat(bande.isVisible())
+                .as("la bande se déplie dès qu'il y a un relevé à rendre")
+                .isTrue();
+        assertThat(bande.lookupAll(".label").stream()
+                        .filter(Label.class::isInstance)
+                        .map(noeud -> ((Label) noeud).getText())
+                        .toList())
+                .anySatisfy(texte -> assertThat(texte).contains("2 relevées"));
     }
 }
