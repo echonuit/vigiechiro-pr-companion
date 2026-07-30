@@ -182,7 +182,7 @@ Les tests vivent sous `src/test/java/fr/univ_amu/iut/`, en **miroir** des paquet
 | Intégration de vue (TestFX) | `<feature>/view/*VueIntegrationTest` | La vue FXML se lie au ViewModel et réagit (headless). |
 | **Geste** (TestFX) | `<feature>/view/*ViewTest` | Le bouton est **cliqué**, et on vérifie son **effet** (#1405). |
 | Bout en bout | `fr.univ_amu.iut.e2e.*`, `<feature>/e2e/Parcours*E2ETest` | Le scénario complet : IHM → ViewModel → service → base. |
-| **CLI shell (bats)** | `src/test/bats/*.bats` (fixtures partagées `helper.bash`) | La CLI **empaquetée** (fat-jar shadé), au niveau **processus** : arguments picocli, texte d'aide, **codes de sortie**, refus métier — ce que les tests Java in-process ne voient pas. `cli.bats` éprouve les commandes du chantier #1565 ; `cli-surface.bats` couvre le contrat **hors-ligne de chaque** sous-commande (aide, refus des options requises manquantes, exécution locale, refus sans jeton) ; `cli-reseau.bats` pointe le client sur un **serveur stub** (processus Python `stub_vigiechiro.py`) via la surcharge `VIGIECHIRO_URL` (`ConnexionModule#urlDeBase`) et prouve le chemin réseau **sans jeton réel ni Internet**. Reste à étoffer : contrats métier réseau sur fixtures Eve réalistes (#1592). Lancés en CI après le smoke-test du fat-jar (#1572, amorce). |
+| **CLI shell (bats)** | `src/test/bats/*.bats` (fixtures partagées `helper.bash`) | La CLI **empaquetée** (fat-jar shadé), au niveau **processus** : arguments picocli, texte d'aide, **codes de sortie**, refus métier, ce que les tests Java in-process ne voient pas. `cli.bats` éprouve les commandes du chantier #1565 ; `cli-surface.bats` couvre le contrat **hors-ligne de chaque** sous-commande (aide, refus des options requises manquantes, exécution locale, refus sans jeton) ; `cli-reseau.bats` pointe le client sur un **serveur stub** (processus Python `stub_vigiechiro.py`) via la surcharge `VIGIECHIRO_URL` (`ConnexionModule#urlDeBase`) et prouve le chemin réseau **sans jeton réel ni Internet**. Reste à étoffer : contrats métier réseau sur fixtures Eve réalistes (#1592). Lancés en CI après le smoke-test du fat-jar (#1572, amorce). |
 | Architecture (ArchUnit) | `architecture/ArchitectureTest` | Les **6 règles** de frontière MVVM (cf. [Architecture](architecture.md)). |
 | **Documentation** | `documentation/DocumentationAJourTest` | Toute commande CLI a sa ligne, tout écran a sa fiche (#1458). |
 
@@ -535,9 +535,9 @@ introduites, et vérifier à la main les garde-fous que PIT ne peut pas atteindr
 
 | Workflow | Commande | Bloquant ? |
 |---|---|---|
-| « Java CI » ([maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml)) — tests **+ couverture** | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
-| « Quality gate » ([lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml)) — formatage | `./mvnw -B spotless:check` | **Oui** |
-| « Quality gate » — portail PMD | `./mvnw -B -Pquality-gate compile pmd:check` | **Oui** |
+| « Java CI » ([maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml)), tests **+ couverture** | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
+| « Quality gate » ([lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml)), formatage | `./mvnw -B spotless:check` | **Oui** |
+| « Quality gate », portail PMD | `./mvnw -B -Pquality-gate compile pmd:check` | **Oui** |
 
 `lint.yml` vérifie aussi la **complétude des captures** (cf. [Captures](captures.md)). Une PR doit
 passer **les deux** workflows (cf. [CI/CD et release](ci-cd-release.md)).

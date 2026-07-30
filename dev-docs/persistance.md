@@ -61,7 +61,7 @@ Trois gestes remplacent le fichier de base **à chaud** : la **restauration** (`
 
 Ce n'est pas un pari. La [source de données](#la-source-de-donnees) **n'a aucun pool** : chaque opération
 ouvre puis ferme sa connexion, et `SourceDeDonnees` ne retient qu'une URL JDBC. Il n'y a donc aucune
-connexion longue à fermer — la prochaine ouvrira simplement le fichier neuf.
+connexion longue à fermer : la prochaine ouvrira simplement le fichier neuf.
 
 Trois précautions, les mêmes pour les trois gestes :
 
@@ -74,7 +74,7 @@ Trois précautions, les mêmes pour les trois gestes :
 
 !!! warning "Ce que la base ne sait pas, c'est l'IHM qui doit le porter"
     Une application graphique **déjà ouverte** garde en mémoire des écrans peuplés par l'**ancienne** base :
-    ils afficheraient des fantômes. Le socle ne connaît pas d'IHM — c'est à l'appelant d'exiger un
+    ils afficheraient des fantômes. Le socle ne connaît pas d'IHM : c'est à l'appelant d'exiger un
     redémarrage (ce que fait le reset : il ferme l'application après coup).
 
     Le piège est plus subtil qu'il n'y paraît, et il a été trouvé par un test E2E : `idUtilisateurCourant`

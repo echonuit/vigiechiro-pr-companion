@@ -78,7 +78,7 @@ Les garde-fous ci-dessus vérifient qu'une capture **existe**. Celui-ci vérifie
 pas**. Il vit dans `ApercuFx`, au moment du rendu, et **interrompt** la chaîne : un aperçu déformé
 n'est pas écrit.
 
-L'application monte ses vues dans un `ScrollPane` permanent — ce qui déborde **défile**. La capture
+L'application monte ses vues dans un `ScrollPane` permanent : ce qui déborde **défile**. La capture
 rend une scène de taille fixe et n'a pas ce recours : ce qui déborde se **déforme**, de deux façons
 que le message d'erreur distingue.
 
@@ -89,7 +89,7 @@ que le message d'erreur distingue.
 
 **`minWidth="-Infinity"`** est le remède le plus fréquent. La largeur *minimale* d'un `Labeled`
 autorise la troncature : une `HBox` en déficit rogne donc les libellés d'action plutôt que les
-sélecteurs et champs de recherche qui les entourent. Le figer inverse cette priorité — le déficit se
+sélecteurs et champs de recherche qui les entourent. Le figer inverse cette priorité : le déficit se
 reporte sur les voisins souples, qui se resserrent sans rien perdre de lisible.
 
 L'attribut se pose **dans le FXML**, sur le nœud qui est enfant direct du conteneur qui rogne (donc
@@ -98,10 +98,10 @@ notamment dans les modales.
 
 !!! note "Pourquoi pas une classe CSS ?"
     On ne peut pas. `-fx-min-width: -Infinity` **parse sans erreur** mais donne `-1.0`, c'est-à-dire
-    `USE_COMPUTED_SIZE` — exactement le comportement qu'on cherche à éviter — au lieu de
+    `USE_COMPUTED_SIZE` (exactement le comportement qu'on cherche à éviter) au lieu de
     `USE_PREF_SIZE`. Mesuré. L'attribut FXML est le seul moyen d'exprimer cette contrainte.
 
-**`abregeable`** est une classe CSS **marqueur**, sans règle de style — ne pas la supprimer comme
+**`abregeable`** est une classe CSS **marqueur**, sans règle de style : ne pas la supprimer comme
 CSS morte. Elle déclare, *dans la vue*, quel libellé porte le déficit : le figer partout ne fait pas
 rentrer le contenu d'une barre, cela le fait déborder. La règle est de désigner un sélecteur ou une
 métadonnée (qui se relisent ailleurs) plutôt qu'un libellé d'action (qui ne se relit nulle part). La
@@ -110,7 +110,7 @@ tolérance s'hérite jusqu'aux libellés internes des contrôles composés (`Com
 **Le contrôle ne connaît pas d'exception par composant.** Le sous-arbre d'`AudioView` a été exclu un
 temps, parce que sa barre de transport tronquait et qu'aucun FXML d'ici n'y pouvait rien. Le défaut a
 été corrigé en amont (audio-view#56, publié en 1.15.1) et l'exclusion retirée. Si un composant tiers
-redevenait infixable, la même mesure s'imposerait — mais tant qu'une chaîne *peut* être verte, mieux
+redevenait infixable, la même mesure s'imposerait : mais tant qu'une chaîne *peut* être verte, mieux
 vaut la garder voyante : une régression amont se signale alors d'elle-même.
 
 !!! warning "Le poste de développement sous-mesure"
@@ -125,10 +125,10 @@ vaut la garder voyante : une régression amont se signale alors d'elle-même.
 
 ### Capturer un dialogue : pré-enrouler les textes longs
 
-Un dialogue se capture **hors `showAndWait`** — on veut l'image, pas la modale bloquante. Dans cet
+Un dialogue se capture **hors `showAndWait`** : on veut l'image, pas la modale bloquante. Dans cet
 état, **rien ne borne la largeur du contenu** d'un `DialogPane` : un libellé `wrapText` long y garde
-sa largeur d'une ligne, déborde, et se fait couper par une ellipse. La mise en page ne le rattrape pas
-— imposer la largeur du dialogue ne se propage pas à son contenu, et la hauteur d'un libellé
+sa largeur d'une ligne, déborde, et se fait couper par une ellipse. La mise en page ne le rattrape pas :
+imposer la largeur du dialogue ne se propage pas à son contenu, et la hauteur d'un libellé
 enroulable se calcule à sa largeur *préférée*, pas à sa largeur réelle (mesuré en #2243).
 
 Le remède est **à la source** : pré-découper le texte aux espaces avant de rendre, sans en changer un
@@ -141,7 +141,7 @@ mot.
 !!! danger "Le garde-fou ne voit pas cette troncature-là"
     Le contrôle de fidélité ci-dessus **ne l'attrape pas** : sa mesure verticale retombe sur la même
     hauteur d'une ligne (l'écart vaut zéro), et sa mesure horizontale exclut par principe les libellés
-    enroulables. Aucun contrôle géométrique ne referme ce trou de façon fiable — toute construction
+    enroulables. Aucun contrôle géométrique ne referme ce trou de façon fiable : toute construction
     reproductible s'enroule correctement, ou déclenche déjà la mesure verticale (six essais instrumentés
     en #2265). **Une capture de dialogue vert ne prouve donc pas que son texte long est lisible** :
     l'ouvrir reste le seul contrôle, ce que fait la passe de revue visuelle.

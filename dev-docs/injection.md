@@ -82,7 +82,7 @@ l'origine), les 6 feuilles autrefois couplées au runtime dont le contrat `Ouvri
 **neutralisé** (`OptionalBinder` vide côté consommateur + `setBinding` côté feuille, le consommateur
 masquant son point d'entrée si absent) : `diagnostic`, `lot`, `qualification`, `importation`, `analyse`,
 `recherche` (#1087), **et** `activite-nuit`, née `EXPERIMENTALE` le temps du chantier #2348 puis passée
-`OPTIONNELLE` à la clôture du lot #2352 — la bascule d'une feature achevée est le cas nominal, pas une
+`OPTIONNELLE` à la clôture du lot #2352 : la bascule d'une feature achevée est le cas nominal, pas une
 exception. Le reste demeure `COEUR` : `sites`, `passage`, `validation`, `audio`,
 `bibliotheque`, `multisite`, `connexion`, `synchronisation-participation`, `depot-vigiechiro`
 (dépendances EAGER ; cf. [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)).
@@ -111,7 +111,7 @@ La répartition qui tient :
   soit injectable et vide quand la fonctionnalité est inactive.
 
 Corollaire en ligne de commande : une commande qui s'appuie sur ces composants n'a **pas** à être
-gouvernée par l'interrupteur de l'écran. Celui-ci gouverne un **accès**, pas une capacité de données —
+gouvernée par l'interrupteur de l'écran. Celui-ci gouverne un **accès**, pas une capacité de données :
 `exporter-activite` fonctionne que l'écran soit offert ou non (cf. [CLI](cli.md)).
 
 Découpe illustrée par `analyse` : `AnalyseModule` (toujours actif) fournit `ActiviteViewModel` et

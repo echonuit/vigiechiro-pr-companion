@@ -15,7 +15,7 @@ Un **utilisateur** déclare des **sites de suivi**, chacun avec des **points d'�
 il réalise des **passages** (une nuit). Un passage est la **racine d'agrégat** : il possède une
 **session d'enregistrement** (les enregistrements originaux copiés de la carte SD, les séquences
 d'écoute ralenties ×10, le journal du capteur, le relevé climatique), une **sélection d'écoute** pour
-la vérification, et — après dépôt — des **résultats d'identification** Tadarida (les **observations**,
+la vérification, et (après dépôt) des **résultats d'identification** Tadarida (les **observations**,
 classées par **taxon**).
 
 C'est cet agrégat qui avance dans le [workflow à états](patterns.md#machine-a-etats-moteurworkflowpassage)
@@ -155,7 +155,7 @@ S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisi
     corruption. N'étant plus ni écrits ni lus, ils ont été **retirés du schéma par `V31`** (#2429).
 
 !!! note "Validation d'expert (V26, EPIC #1154)"
-    **`V26__validation_expert.sql`** fait entrer en base le **troisième avis** — et la discussion qui
+    **`V26__validation_expert.sql`** fait entrer en base le **troisième avis** : et la discussion qui
     l'entoure.
 
     VigieChiro distingue trois avis sur une même détection : Tadarida **propose** (`taxon_tadarida`),
@@ -169,7 +169,7 @@ S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisi
       souche, la clé étrangère ramènerait le code à `NULL` et l'application **tairait l'avis qui fait
       autorité**.
     - `observation_message` : le **fil de discussion** (1-N, cascade sur `observation`). `rank_in_thread`
-      fige l'ordre du serveur — l'ajout s'y faisant par `$push`, cet ordre **est** l'ordre chronologique,
+      fige l'ordre du serveur : l'ajout s'y faisant par `$push`, cet ordre **est** l'ordre chronologique,
       plus fiable qu'un tri sur des dates que le serveur ne garantit pas toutes.
       `author_platform_id` est un **objectid**, jamais un nom.
 
@@ -188,16 +188,16 @@ vite (**384 kHz**), donc **inaudible**. L'import le transforme en **séquences d
 l'**ordre des opérations reproduit fidèlement la chaîne Vigie-Chiro/Tadarida** (condition pour que
 l'`observations.csv`, produit sur les mêmes séquences, se raccroche à l'audio) :
 
-1. **Découper à 5 s réelles** — au **rythme source** (`5 × frequenceSource` trames), et **non** au rythme
+1. **Découper à 5 s réelles** : au **rythme source** (`5 × frequenceSource` trames), et **non** au rythme
    de sortie. Une séquence porte donc 5 s de l'enregistrement d'origine (la dernière peut être plus
    courte). Nombre de séquences pour une durée `D` : `ceil(D / 5)`.
-2. **Expanser ×10** — en **réinterprétant** le rythme d'échantillonnage (`frequenceSortie = source / 10`,
+2. **Expanser ×10** : en **réinterprétant** le rythme d'échantillonnage (`frequenceSortie = source / 10`,
    ex. 38 400 Hz) : **aucun échantillon n'est recalculé**, les mêmes octets PCM sont conservés. Une
    séquence de 5 s réelles devient **50 s à l'écoute**, dans la bande audible.
 
 !!! warning "Piège corrigé"
     Découper *après* l'expansion et au rythme de **sortie** donnait des séquences de **0,5 s réelles**
-    (10× trop courtes), désalignées des temps de l'`observations.csv` — qui sont en **secondes réelles
+    (10× trop courtes), désalignées des temps de l'`observations.csv` : qui sont en **secondes réelles
     dans une séquence de 5 s**. On découpe donc bien à 5 s **au rythme source**.
 
 !!! note "Unité des durées : secondes **réelles**"
@@ -214,7 +214,7 @@ l'`observations.csv`, produit sur les mêmes séquences, se raccroche à l'audio
 
 **Nommage horodaté (clé de jointure).** Chaque séquence porte l'**heure réelle de son début** :
 l'horodatage de l'original (`_AAAAMMJJ_HHMMSS`) **décalé** de `index × 5 s`, suivi d'un `_000`
-systématique — et non un index `_000`, `_001`… Exemple : `…_20260422_225849.wav` →
+systématique, et non un index `_000`, `_001`… Exemple : `…_20260422_225849.wav` →
 `…_225849_000`, `…_225854_000`, `…_225859_000`… C'est exactement le nom que porte l'`observations.csv`,
 et `ServiceValidation` **relie une observation à sa séquence par ce nom** (sans extension).
 
@@ -224,7 +224,7 @@ enregistrement plus récent (`…_225342`, dont la tête vise aussi `…_225342_
 [`ReconciliationNoms`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/importation/model/ReconciliationNoms.java)
 tranche de façon **déterministe** : le **plus ancien enregistrement garde le `_000`** (c'est ce que
 référence l'`observations.csv`), le perdant passe en **`_001`** (disponible à l'écoute, sans
-observation associée — **aucune donnée perdue**). Comme le découpage est parallèle
+observation associée : **aucune donnée perdue**). Comme le découpage est parallèle
 ([`DecoupageParallele`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java)),
 chaque original écrit d'abord dans un **dossier temporaire propre**, puis les noms définitifs sont
 attribués en une passe séquentielle qui déplace les fichiers vers `transformes/`.

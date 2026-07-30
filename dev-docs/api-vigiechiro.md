@@ -140,7 +140,7 @@ la sonde live `refus_serveur_est_un_refuse_explicite` verrouille que ce refus re
 | GET | `/moi` | profil de l'observateur connecté (valide le token) |
 | GET | `/moi/participations` | collection Eve `_items` de mes participations (+ sites embarqués) |
 | GET | `/participations/{id}` | participation détaillée (schéma canonique, `_etag`, `traitement`) |
-| GET | `/participations/{id}/donnees` | résultats Tadarida (paginé) — sert à l'import |
+| GET | `/participations/{id}/donnees` | résultats Tadarida (paginé) : sert à l'import |
 | GET | `/taxons/liste` | référentiel taxons |
 | POST | `/sites/{id}/participations` | crée une participation |
 | PATCH | `/participations/{id}` (`If-Match: _etag`) | pousse météo/config depuis la modale du passage |
@@ -180,13 +180,13 @@ la sonde live `refus_serveur_est_un_refuse_explicite` verrouille que ce refus re
     - **`meteo`** porte `vent` (`NUL|FAIBLE|MOYEN|FORT`), `couverture`
       (`0-25|25-50|50-75|75-100`) **et les températures** `temperature_debut` / `temperature_fin`,
       typées **`integer`** : un relevé décimal est **refusé**, il faut arrondir avant l'envoi (#1844).
-      *(Cette page a longtemps affirmé l'inverse — « pas de températures ». L'app ne les transportait
+      *(Cette page a longtemps affirmé l'inverse : « pas de températures ». L'app ne les transportait
       pas, ce qui a fait conclure à tort que le schéma ne les portait pas.)*
     - **`configuration` est un dictionnaire libre, donc un piège** : le `PATCH` le **remplace en
       entier**, et aucune clé n'est validée. D'où deux règles ([ADR 0020](decisions/0020-ecrire-sur-la-plateforme-ne-rien-inventer-ni-effacer.md)) :
       partir de la configuration **distante** avant d'y superposer la nôtre (sinon on efface
       `micro0_numero_serie`, `micro1_*`, `canal_*`), et écrire le n° de série sous la clé **que le
-      formulaire web lie** — `detecteur_enregistreur_numero_serie`. L'app a longtemps poussé
+      formulaire web lie** : `detecteur_enregistreur_numero_serie`. L'app a longtemps poussé
       `..._numserie` : accepté par le serveur, **invisible** sur la fiche web. La lecture accepte
       encore les deux ; l'écriture retire l'ancienne.
     - **`_etag`** est requis en en-tête `If-Match` pour tout `PATCH`/`PUT`/`DELETE` (concurrence Eve).
@@ -257,7 +257,7 @@ PATCH /donnees/6a4fcaa2842983a29ba25363/observations/0
 Règles imposées par le handler (`donnees.py`, `edit_observation`) :
 
 - **rôle `Observateur` + propriétaire de la donnée uniquement** pour `observateur_*` (`403` sinon) ;
-  `validateur_taxon` / `validateur_probabilite` sont réservés Administrateur / Validateur — l'application
+  `validateur_taxon` / `validateur_probabilite` sont réservés Administrateur / Validateur : l'application
   ne peut donc **que les lire**, jamais les écrire (arbitrage #724, livré par #1417) ;
 - **`observateur_probabilite` est une énumération `SUR | PROBABLE | POSSIBLE`**, pas un flottant, et
   elle est **obligatoire dès que `observateur_taxon` est envoyé** (`422` sinon). **Arbitrage tranché
@@ -315,7 +315,7 @@ porte, sur **chaque observation** :
 'messages': [ {'message': str, 'auteur': relation('utilisateurs'), 'date': datetime} ],
 ```
 
-Ces champs arrivaient donc à **chaque import**, dans la même charge utile — et le parseur les jetait.
+Ces champs arrivaient donc à **chaque import**, dans la même charge utile : et le parseur les jetait.
 L'application présentait la correction de l'observateur comme le dernier mot, alors qu'un expert avait pu
 la réviser sans qu'on le voie jamais.
 
@@ -329,26 +329,26 @@ Points de contrat :
 - l'auteur revient tantôt **brut** (`"auteur": "5f3a…"`), tantôt **résolu** (`{"_id": "5f3a…", …}`) selon
   les projections : le parseur accepte les deux.
 
-### `PUT /donnees/{id}/observations/{index}/messages` — poster un message (#1418)
+### `PUT /donnees/{id}/observations/{index}/messages` : poster un message (#1418)
 
 ```http
 PUT /donnees/6a4fcaa2842983a29ba25363/observations/0/messages
 { "message": "Médiane basse pour un Eptser, non ?" }
 ```
 
-- rôle **`Observateur`** : `_check_access_rights` laisse passer le **propriétaire** de la donnée — notre
+- rôle **`Observateur`** : `_check_access_rights` laisse passer le **propriétaire** de la donnée, notre
   jeton suffit (contrairement à l'avis de validateur, refusé en `403`) ;
 - **ancrage positionnel**, le même que la correction : `donnee._id` + indice **brut** ;
 - corps à un seul champ ; tout ce qui n'est pas une chaîne → `422` ;
 - ni `If-Match`, ni `_etag` : **aucun contrôle de concurrence**. Deux messages simultanés s'**empilent**,
-  ils ne s'écrasent pas — c'est le seul point rassurant de cette absence.
+  ils ne s'écrasent pas : c'est le seul point rassurant de cette absence.
 
 !!! danger "Un message posté ne se retire pas"
     Le serveur ajoute par **`$push`**, et **aucune route ne permet de supprimer ni de modifier un
     message**. C'est une écriture **définitive**, sur des données que lit un validateur du MNHN. D'où,
     partout : une confirmation qui **dit** l'irréversibilité et **cite** le texte (on ne consent qu'à ce
     qu'on a compris), `--confirmer` obligatoire en CLI, et une **fonctionnalité désactivable**
-    (`discuter-validateur`) — couper l'écriture laisse la lecture du fil intacte.
+    (`discuter-validateur`) : couper l'écriture laisse la lecture du fil intacte.
 
     Corollaire pour les probes : toute sonde **live** sur cette route est **irréversible**. C'est pourquoi
     elle exige **trois** verrous et non deux (`-Dvigiechiro.write=true` +
@@ -394,7 +394,7 @@ cf. [Patterns](patterns.md)).
 Deux garde-fous s'exécutent au début de chaque dépôt (IHM et CLI) :
 
 - **Pré-vol « la bonne nuit au bon endroit »** : la participation liée est relue
-  (`GET /participations/{id}`) et comparée au passage local — même **point** (code localité) et même
+  (`GET /participations/{id}`) et comparée au passage local : même **point** (code localité) et même
   **nuit** (date UTC de `date_debut` : le mappeur pousse la date du passage telle quelle en UTC).
   Tout écart (point différent, nuit différente, participation injoignable) **refuse le dépôt** avec
   le détail, avant toute écriture. Porté par `SynchronisationParticipation.ecartsAvecDistant`.
@@ -403,7 +403,7 @@ Deux garde-fous s'exécutent au début de chaque dépôt (IHM et CLI) :
   Limites : `donnees` n'existe qu'**après traitement** (un fichier téléversé mais pas encore traité
   sera re-téléversé, sans conséquence) ; les archives **ZIP ne sont pas appariables** par titre
   (contenu inconnu localement) ; il n'existe **aucun inventaire lisible des uploads avant
-  traitement** (`GET /fichiers` et `GET /participations/{id}/fichiers` → 403) — mais **après**
+  traitement** (`GET /fichiers` et `GET /participations/{id}/fichiers` → 403) : mais **après**
   traitement, le journal (§ ci-dessous) en fournit un complet.
 
 ### Téléversement d'un fichier et déclenchement du traitement (#984)
@@ -421,7 +421,7 @@ Le dépôt d'une unité (WAV ou archive ZIP) est un aller-retour en **trois temp
 !!! danger "`lien_participation` est obligatoire (le bug qui n'a jamais marché avant #984)"
     Sans `lien_participation` à l'étape 1, le fichier est **créé et téléversé sur S3 mais orphelin** :
     il n'est **rattaché à aucune participation**, donc `compute` traite une participation vide et le
-    journal serveur affiche `Extracting 0 zipped files`. Le symptôme est trompeur — l'IHM et la CLI
+    journal serveur affiche `Extracting 0 zipped files`. Le symptôme est trompeur : l'IHM et la CLI
     voient trois requêtes réussies (201/200/200) et annoncent « Déposé », mais **rien n'apparaît sur la
     plateforme**. Le rattachement est résolu par `DepotVigieChiro.participationLiee(idPassage)` (lien
     `ENTITE_PASSAGE`) et propagé jusqu'à `creerFichier(titre, participationId)`.
@@ -437,7 +437,7 @@ appelé (par l'application ou depuis la page web de la participation).
 ### Le traitement serveur, après le dépôt (EPIC #1259)
 
 **`DEPOSE` n'est pas la fin.** Une fois le compute lancé, la plateforme analyse la nuit ; les
-observations ne sont récupérables qu'à `FINI`. Avant, `GET /donnees` répond **« 200, liste vide »** —
+observations ne sont récupérables qu'à `FINI`. Avant, `GET /donnees` répond **« 200, liste vide »** :
 pas une erreur, un **état**.
 
 **Les cinq états** (`participation.traitement.etat`, `resources/participations.py:73`) :
@@ -457,7 +457,7 @@ calcul démarre, `date_planification` **disparaît**. N'attendez jamais les troi
 **Un état SERVEUR, distinct du workflow local.** `EtatTraitement` (`commun.api`) n'est **pas** une
 extension de `StatutWorkflow` : il ne nous appartient pas, il n'est **pas monotone** (une relance
 ramène `FINI` à `PLANIFIE`) et nous ne faisons que l'observer. `DEPOSE` reste donc l'état terminal du
-workflow local — même partition que `StatutPlateforme` côté sites.
+workflow local : même partition que `StatutPlateforme` côté sites.
 
 **Un refus n'est pas un échec.** `POST /compute` répond `400 «Already»` quand un traitement est déjà
 `PLANIFIE`/`EN_COURS` **depuis moins de 24 h** (`participations.py:231-237`). Plutôt que de décrypter
@@ -467,13 +467,13 @@ booléen aveugle.
 
 !!! danger "Relancer un traitement DÉTRUIT les observations"
     Le serveur **supprime toutes les `donnees` avant de recalculer** (`task_participation.py:726-731`),
-    puis relit les WAV via `get_file_from_s3` — qui **renvoie `None` sans lever** quand le fichier n'a
+    puis relit les WAV via `get_file_from_s3` : qui **renvoie `None` sans lever** quand le fichier n'a
     pas de `s3_id` (`fichiers.py:118-121`). Or sur un dépôt en **archives ZIP** (notre mode par défaut
     depuis #984), les WAV extraits n'ont **jamais** de `s3_id` (#1244) et les ZIP ont été supprimés de
     S3. Le recalcul rend donc une participation **vide, définitivement**.
 
     Vérifié en réel : un `compute` sur une participation `FINI` est **accepté (HTTP 200)**. **Seule
-    notre garde locale protège les données** — `DepotVigieChiro.lancerTraitement(id, forcer)` refuse de
+    notre garde locale protège les données** : `DepotVigieChiro.lancerTraitement(id, forcer)` refuse de
     son propre chef, le bouton de M-Lot se verrouille, et le forçage n'existe qu'en ligne de commande
     (`lancer-traitement-vigiechiro --forcer`), là où il mérite d'être réfléchi.
 
@@ -484,7 +484,7 @@ Le suivi scriptable, lui, passe par la CLI (`etat-traitement-vigiechiro`, codes 
 / `2` échec / `4` jamais lancé), faite pour une boucle `until … ; [ $? -ne 3 ]`.
 
 **Le point de relevé unique** est `commun.model.SuiviTraitement` : il interroge le serveur **et**
-alimente le cache. M-Lot, la modale de M-Passage et la CLI le partagent — il vit dans `commun` parce
+alimente le cache. M-Lot, la modale de M-Passage et la CLI le partagent : il vit dans `commun` parce
 qu'un `passage` qui dépendrait de `lot` fermerait un cycle qu'ArchUnit refuse.
 
 ### Journal de traitement d'une participation (#1132)
@@ -498,10 +498,10 @@ token en trois requêtes :
    en-tête surnuméraire est refusé par S3).
 
 Contenu observé (participation canonique `6a4961f5…`, ~1 Mo) : extraction de chaque archive avec
-**inventaire** (`Archive contained: {'application/zip': 1, 'audio/wav': N}` — somme = 4806, le
+**inventaire** (`Archive contained: {'application/zip': 1, 'audio/wav': N}`, somme = 4806, le
 compte exact des `donnees`), **chaque WAV nommé** dans la sortie TadaridaD, suppression des zips de
 S3 après extraction, TadaridaD en **expansion x10**. C'est la **vérification a posteriori** d'un
-dépôt — la seule capable de vérifier un dépôt en **ZIP** — portée par `ClientVigieChiro
+dépôt (la seule capable de vérifier un dépôt en **ZIP**) portée par `ClientVigieChiro
 .journalTraitement`, `lot/model/VerificationDepot` et la commande CLI `verifier-depot-vigiechiro`.
 Même limite que `donnees` : le journal n'existe qu'après le passage du pipeline serveur.
 
@@ -538,7 +538,7 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
 ### Verdicts des probes d'écriture (exécutées le 2026-07-11)
 
 - **ZIP (pilier B, #984)** : **verdict confirmé en réel.** La plateforme accepte un `.zip`
-  (déclaration, `PUT` S3 `application/zip`, finalisation) **et l'ingère** — d'abord vérifié sur la
+  (déclaration, `PUT` S3 `application/zip`, finalisation) **et l'ingère** : d'abord vérifié sur la
   participation canonique `6a4961f5…` (déposée en zip via le site web, 4806 `donnees`), puis reproduit
   par **notre chemin d'upload** (API directe) sur une vraie nuit (`Car130711-2026-Pass2-Z41`, 04/07) :
   les 19 archives ZIP téléversées, `compute` lancé, WAV extraits et listés côté serveur. Le dépôt
@@ -551,7 +551,7 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
   mode de dépôt par défaut est cassé**, et non, comme son libellé le laissait croire, qu'il faudrait
   revenir au WAV.
 - **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur → le **push point→site est abandonné** ;
-  le pull (`RapprochementSites`) reste la seule direction de synchronisation des sites — exécuté à la
+  le pull (`RapprochementSites`) reste la seule direction de synchronisation des sites : exécuté à la
   connexion, et rejouable **à la demande** depuis M-Sites (« Récupérer depuis VigieChiro », #1045,
   passerelle `SynchronisationSites` activée par `OptionalBinder`).
 - **Aller-retour d'écriture (#1862)** : **quatre verdicts confirmés en réel** (exécutée le 2026-07-18 sur
@@ -570,11 +570,11 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
 
 ### Méthodes autorisées et récupération (exploration du 2026-07-11, lecture seule)
 
-Sondé via `OPTIONS` (en-tête `Allow`) avec un token d'observateur — **aucune suppression testée**.
+Sondé via `OPTIONS` (en-tête `Allow`) avec un token d'observateur : **aucune suppression testée**.
 
 | Ressource | `Allow` observé | Réalité |
 |---|---|---|
-| `/participations/{id}` | `GET, PATCH, DELETE…` | PATCH **fonctionne** (sync modale) ; **DELETE annoncé** — une participation est supprimable par son propriétaire (non testé, destructif ; `If-Match` requis, convention Eve) |
+| `/participations/{id}` | `GET, PATCH, DELETE…` | PATCH **fonctionne** (sync modale) ; **DELETE annoncé** : une participation est supprimable par son propriétaire (non testé, destructif ; `If-Match` requis, convention Eve) |
 | `/sites/{id}` | `GET, PATCH, DELETE…` | PATCH réel → **403** : `Allow` reflète le **schéma Eve**, pas l'autorisation par rôle. Écriture/suppression réservées (MNHN/propriétaire) |
 | `/moi/participations` | `GET` seul | lecture seule, **paginée** (`_meta.total` fiable) |
 | `/fichiers` (collection) | `POST, GET…` | `GET` réel → **403** : on peut créer des fichiers, pas les relire |
@@ -584,14 +584,14 @@ Sondé via `OPTIONS` (en-tête `Allow`) avec un token d'observateur — **aucune
 
 **Ce qui est récupérable depuis la plateforme** (restauration possible, cf. issue dédiée) :
 
-- **toutes ses participations** (pagination `_meta` — attention : `mesSites()`/`mesParticipations()` ne
+- **toutes ses participations** (pagination `_meta`, attention : `mesSites()`/`mesParticipations()` ne
   lisent aujourd'hui que la **première page**) ;
 - pour chacune : son **site complet embarqué** (`localites` = les points) et son `point` (code
   localité) → sites/points reconstruisibles **sans aucune donnée locale** ;
 - ses **observations** (`donnees` : titre du fichier + observations Tadarida) → rejouables dans
   l'application (import « depuis VigieChiro » existant).
 
-**Ce qui ne l'est pas** : les **WAV téléversés** — aucun lien de téléchargement dans les `donnees`,
+**Ce qui ne l'est pas** : les **WAV téléversés**, aucun lien de téléchargement dans les `donnees`,
 collection `/fichiers` interdite en lecture. Les enregistrements audio d'origine n'existent que
 localement : la sauvegarde du workspace reste indispensable.
 

@@ -185,7 +185,7 @@ Deux points de conception s'y rattachent, consignés en
 [ADR 2554](decisions/2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md) : l'hydratation se
 fait **en place** (un écran est ouvert sur cet identifiant, et un squelette porte peut-être des saisies
 manuelles que la plateforme ignore), là où la reconstruction remplace la nuit ; et la source diffère selon
-l'appelant — le repli sur la pagination `donnees` est justifié sur **une** nuit désignée, jamais sur le
+l'appelant : le repli sur la pagination `donnees` est justifié sur **une** nuit désignée, jamais sur le
 balayage de compte de la synchro.
 
 **Principes.** Fail-safe (ne pas pouvoir prouver = ne pas faire), **honnêteté** (dire *avec quelle
@@ -204,7 +204,7 @@ pire que le vide. L'appelant ne peut ni informer l'utilisateur, ni décider corr
 
 **La solution.** Un type scellé qui rend l'issue **exhaustive à la compilation** :
 `ReponseApi<T>` = `Succes(valeur)` / `NonConnecte` / `Injoignable(cause)` / `Refuse(statut, corps)`.
-Un `switch` qui oublie une branche ne compile pas — la famille de bugs #1277, c'est « un cas auquel
+Un `switch` qui oublie une branche ne compile pas : la famille de bugs #1277, c'est « un cas auquel
 personne n'a pensé ». Le comportement commun vit dans les variantes par **override** (`enOptionnel`,
 `transformer`, `lireAvec`, `puis`, `echec`), jamais par `switch (this)`. Là où le silence reste le
 comportement **voulu**, c'est l'appelant qui le choisit, explicitement : `enOptionnel()`.
@@ -228,7 +228,7 @@ la faire), et un **vocabulaire unique** des messages d'échec (`ReponseApi.echec
 
 **Le problème.** Une opération à plusieurs issues renvoie souvent un rapport « à trous » :
 `(boolean succes, String motif, Rapport rapport)`, dont l'appelant doit deviner quels champs sont
-renseignés dans quel cas. Chaque appelant re-tricote alors le même `if` — et chaque **surface** (IHM,
+renseignés dans quel cas. Chaque appelant re-tricote alors le même `if` : et chaque **surface** (IHM,
 CLI) invente sa propre phrase pour dire la même chose. Les deux finissent par diverger.
 
 **La solution.** Un type **scellé** dont chaque variante porte **ce qui la caractérise**, et **sait le
@@ -248,7 +248,7 @@ public sealed interface ResultatReset {
 L'IHM **affiche** `enClair()`, la CLI **affiche** `enClair()` et sort sur `codeSortie()`. Aucune des deux
 ne traduit un état en phrase : la parité CLI ↔ IHM est **structurelle**, pas maintenue à la main.
 
-**Dans cette application.** `VerdictCarre` (#733 : `Concorde` / `Diverge` / `HorsGrille` / `Indisponible` — dont
+**Dans cette application.** `VerdictCarre` (#733 : `Concorde` / `Diverge` / `HorsGrille` / `Indisponible`, dont
 le message **vide** exprime le silence hors ligne) et `ResultatReset` (#1419). Même famille que
 [l'issue d'appel triée](#issue-dappel-triee-le-transport-ne-parle-plus-par-silence), appliquée aux
 **opérations locales** plutôt qu'au transport : exhaustivité par le compilateur, comportement par
@@ -259,7 +259,7 @@ le message **vide** exprime le silence hors ligne) et `ResultatReset` (#1419). M
 ## Refuser avant de détruire (l'ordre des garde-fous est la garantie)
 
 **Le problème.** Une opération destructrice qui vérifie ses conditions **au fil de l'eau** laisse, au
-premier obstacle, un état **à moitié détruit** — le pire des deux mondes. Et l'utilisateur, lui, ne
+premier obstacle, un état **à moitié détruit** : le pire des deux mondes. Et l'utilisateur, lui, ne
 distingue plus « ça a refusé » de « ça a planté en route ».
 
 **La solution.** Tous les refus **avant** la première écriture, et un refus qui **le dit** : *rien n'a été
@@ -267,9 +267,9 @@ modifié*. L'ordre des étapes n'est pas une commodité de lecture, c'est **la g
 
 Le reset guidé (#1419) en est le cas d'école :
 
-1. **dire ce qu'on perdrait** — une nuit dont l'audio n'est ni sur le disque ni sur le serveur est perdue
+1. **dire ce qu'on perdrait** : une nuit dont l'audio n'est ni sur le disque ni sur le serveur est perdue
    pour de bon ; sans acceptation **explicite**, on s'arrête là ;
-2. **vérifier que la plateforme répond** — la base neuve se **repeuple depuis le serveur** : le détruire
+2. **vérifier que la plateforme répond**, la base neuve se **repeuple depuis le serveur** : le détruire
    alors qu'il est injoignable laisserait un workspace **vide**. Aucune sauvegarde ne rendrait ça
    acceptable, et c'est le garde-fou décisif ;
 3. **sauvegarder** ; 4. **base neuve** ; 5. **repeupler** ; 6. **auditer**.
@@ -281,7 +281,7 @@ refus, un message que l'observateur **croirait envoyé** et que le validateur ne
 **Corollaires.**
 
 - Une **confirmation nomme ce qu'on perd** : elle énumère les nuits, ou cite le texte qui va partir. Un
-  « êtes-vous sûr ? » générique n'est **pas un consentement** — on ne consent qu'à ce qu'on a lu. C'est ce
+  « êtes-vous sûr ? » générique n'est **pas un consentement** : on ne consent qu'à ce qu'on a lu. C'est ce
   message-là que le test vérifie, pas le fait qu'un dialogue s'ouvre.
 - Une **écriture définitive mérite d'être désactivable**. `discuter-validateur` (#1418) est une
   fonctionnalité à part de la lecture du fil : couper l'écriture laisse la lecture intacte. Lire est sans
@@ -328,7 +328,7 @@ même fonctionnalité dans tout le projet : pour modifier un écran, on touche p
 (chrome, persistance, DI). On ouvre, modifie ou supprime une feature sans naviguer ailleurs.
 
 **Principes.** **Forte cohésion / faible couplage** ; **OCP** à l'échelle du produit (ajouter une
-feature ≈ ajouter un paquet, sans toucher aux autres — garanti par
+feature ≈ ajouter un paquet, sans toucher aux autres : garanti par
 `pas_de_dependance_inter_feature_vers_la_vue`).
 
 ---
@@ -390,7 +390,7 @@ décision de **câblage**, pas une contrainte gravée dans la classe.
 ## Separated Interface (contrats `Ouvrir*`)
 
 **Le problème.** Si `sites` appelait directement `passage.view.NavigationPassage`, les features
-seraient **couplées** entre elles — impossible de les faire évoluer indépendamment (et la règle
+seraient **couplées** entre elles : impossible de les faire évoluer indépendamment (et la règle
 ArchUnit l'interdit).
 
 **La solution.** Publier une **interface dans le socle**, l'implémenter dans la feature cible :
@@ -476,7 +476,7 @@ l'extension** (une nouvelle carte = un nouveau binding, zéro ligne touchée dan
 **auto-découverts** par `RacineInjecteur` (`ServiceLoader<ModuleDeFeature>`, cf.
 [Injection](injection.md#la-racine-de-composition)). Une feature complète (DAO, services, carte,
 compteur, réglages, entrée de menu) s'ajoute donc **sans toucher une seule ligne du socle ni de la
-racine de composition** — juste un `XxxModule extends ModuleDeFeature` déclaré comme service.
+racine de composition** : juste un `XxxModule extends ModuleDeFeature` déclaré comme service.
 
 ---
 
@@ -555,7 +555,7 @@ sans modifier la base) et **LSP** (tout `DaoGenerique` concret est substituable 
 
 ## Table latérale de présence (un fait booléen hors du record)
 
-**Le problème.** Attacher un **fait booléen** à une entité centrale — « ce passage est opportuniste »,
+**Le problème.** Attacher un **fait booléen** à une entité centrale : « ce passage est opportuniste »,
 « ce carré appartient à un tiers », « ce passage a un relevé de micro ». Le réflexe est d'ajouter une
 colonne, donc une composante au record ; mais `Passage` est construit en **plus d'une centaine
 d'endroits** (`main` et `test` confondus) et `Site` en **plus de quatre-vingts**. À ce volume, une
@@ -572,7 +572,7 @@ CREATE TABLE passage_opportuniste (
 );
 ```
 
-Le DAO étend `DaoGenerique<Long, Long>` — l'entité **est** la clé, seul le fait d'exister compte — et
+Le DAO étend `DaoGenerique<Long, Long>` (l'entité **est** la clé, seul le fait d'exister compte) et
 expose une API d'intention plutôt que le CRUD : `marquer` / `demarquer` / `definir(id, bool)` /
 `estX(id)`, plus un **`tousLesIds()`** de lecture groupée. `insert`/`update` du contrat `Dao` n'ont
 rien à écrire et délèguent au marquage idempotent (`ON CONFLICT DO NOTHING`).
@@ -584,14 +584,14 @@ avec l'entité, il faut la prévoir.
 
 **Quand ne pas l'employer.** Pour une entité construite en quelques endroits, la colonne reste plus
 simple et plus lisible. Le critère est le **volume de sites de construction** croisé avec la
-**proportion de lignes concernées** — un fait vrai pour la majorité des lignes ne gagne rien à sortir
+**proportion de lignes concernées** : un fait vrai pour la majorité des lignes ne gagne rien à sortir
 du record. Voir l'[ADR 2525](decisions/2525-un-fait-booleen-d-une-entite-centrale-vit-dans-une-table-laterale.md).
 
 **Occurrences.** V10 `passage_equipment` (matériel du micro), V34 `passage_opportuniste`, V35
 `site_tiers`, V36 `taxon_prioritaire` (espèces à enjeu de conservation, #2353).
 
 La dernière ajoute une raison que les trois autres n'avaient pas : sa liste vient d'une **source
-externe datée** — le Plan National d'Actions Chiroptères 2016-2025 — et **sera remplacée** quand le
+externe datée** (le Plan National d'Actions Chiroptères 2016-2025) et **sera remplacée** quand le
 plan le sera. Une table latérale se remplace d'un `DELETE` suivi d'un `INSERT`, sans toucher au
 référentiel taxonomique qu'elle annote. Voir l'[ADR 2353](decisions/2353-l-enjeu-de-conservation-est-celui-que-le-plan-national-designe.md).
 
@@ -618,7 +618,7 @@ ou passée au client.
 
 - [`GenerateurSelection`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/qualification/model/GenerateurSelection.java) :
   `selectionner(sequences, methode, taille)` choisit un sous-ensemble selon la `MethodeSelection`
-  (répartition temporelle vs aléatoire vs manuel) — une **règle pure**, sans base ni IHM.
+  (répartition temporelle vs aléatoire vs manuel) : une **règle pure**, sans base ni IHM.
 
 ```mermaid
 classDiagram
@@ -631,7 +631,7 @@ classDiagram
 ```
 
 **Principes.** **OCP** (ajouter une stratégie sans modifier l'appelant), **SRP** (chaque stratégie est
-une règle isolée, **testable sans persistance ni IHM** — objectif réutilisation O6).
+une règle isolée, **testable sans persistance ni IHM** : objectif réutilisation O6).
 
 ---
 
@@ -655,7 +655,7 @@ alimenté depuis des fils d'arrière-plan, parfois dans le désordre (travail pa
   traduit les événements en mutations observables.
 
 **La règle.** Toute nouvelle opération longue « par unité » réutilise ce socle : définir l'interface
-d'événements (+ `inerte()`), la ligne et le pilote spécialisés, le relais fil JavaFX — jamais une
+d'événements (+ `inerte()`), la ligne et le pilote spécialisés, le relais fil JavaFX : jamais une
 table ad hoc.
 
 ## Occupation d'un écran pendant un traitement long (socle `commun`)
@@ -722,9 +722,9 @@ l'annulation : le jeton appartenant à l'appelant, le test l'**annule avant de d
 l'opération et vérifie l'arrêt propre au premier point de contrôle (callback `annule`, ni succès ni
 échec) - c'est le contrat coopératif qui est testé, la simultanéité réelle relevant de l'E2E.
 
-**La règle.** Toute opération longue d'un écran passe par le socle — `IndicateurOccupation` (voile) pour
+**La règle.** Toute opération longue d'un écran passe par le socle : `IndicateurOccupation` (voile) pour
 les traitements brefs, `SuiviProgression` (fenêtre ou panneau intégré) quand l'avancement mérite d'être
-montré et l'opération annulée — l'échec étant routé vers le filet d'erreurs de l'écran (#795), jamais un
+montré et l'opération annulée : l'échec étant routé vers le filet d'erreurs de l'écran (#795), jamais un
 `Thread.ofVirtual()` + `runLater` recopié à la main, y compris pour la progression et l'annulation
 (surcharges ci-dessus). Le déport écran par
 écran (EPIC #793 puis reliquat #1316) est **terminé** : plus aucun `Thread.ofVirtual` ne vit hors du
@@ -1022,16 +1022,16 @@ bouton à icône qui n'a pas dit son nom. Le raisonnement complet est dans
   se pose **à côté** du champ, ou pas du tout.
 
 **La règle.** Aucun pictogramme littéral dans un FXML : `PictogrammesFxmlTest` échoue dessus. La
-**CLI** est hors sujet — une console ne rend pas de `FontIcon`, `⚠` y est le seul moyen d'écrire un
+**CLI** est hors sujet : une console ne rend pas de `FontIcon`, `⚠` y est le seul moyen d'écrire un
 avertissement. Les libellés bâtis **en Java** (#1564) ont été repris depuis : les glyphes de
 **sévérité** par #2036 puis #2188/#2221, qui les font dériver du type plutôt que de les écrire.
 
 **Un pictogramme d'état n'est pas une sévérité, mais il se pose pareil.** La colonne « Écouté » de la
-qualification rendait `ecoutee() ? "✓" : "○"` — deux pictogrammes dans une chaîne, qui ne disent
+qualification rendait `ecoutee() ? "✓" : "○"`, deux pictogrammes dans une chaîne, qui ne disent
 pourtant aucune sévérité (ce ✓ veut dire « écouté », pas « succès »). `MarqueurEcoute` les **pose** par
 un `cellFactory`, comme la colonne badge de verdict : la **forme** distingue les deux états (un `CHECK`
 plein, un cercle creux), la couleur reste neutre. Choisir un glyphe **différent** de celui de la
-sévérité est délibéré — réutiliser `CHECK_CIRCLE` aurait fait lire « succès » là où on dit « fait »
+sévérité est délibéré : réutiliser `CHECK_CIRCLE` aurait fait lire « succès » là où on dit « fait »
 (#2237).
 
 ## Actions de ligne d'une table : double-clic et menu contextuel (socle `commun`)
@@ -1212,7 +1212,7 @@ pied. Il est présentationnel pur et n'appartient à aucune feature.
 
 **Ce que le type garantit, et qu'il ne faut donc pas re-vérifier à la main** ([ADR 2358](decisions/2358-un-compte-rendu-chiffre-tient-ses-regles-par-le-type.md)) :
 
-- la **largeur** d'un segment est *liée* à sa fraction — aucun endroit où poser une largeur à la main,
+- la **largeur** d'un segment est *liée* à sa fraction : aucun endroit où poser une largeur à la main,
   donc aucun endroit où l'échelle puisse mentir ;
 - une **ventilation non exhaustive est refusée à la construction**, en nommant le reliquat. Un « autres »
   silencieux masquerait exactement ce qu'on cherche ;
@@ -1228,12 +1228,12 @@ pied. Il est présentationnel pur et n'appartient à aucune feature.
    apprend à ne plus regarder les alertes.
 3. **La bande vit dans des largeurs très différentes** (900 px sous l'écran d'import, ~560 px dans une
    modale) : les libellés s'enroulent, la légende **reflue**, et ce qui assume de s'abréger le déclare
-   par `abregeable`. C'est le garde-fou anti-troncature des captures qui l'a imposé — deux fois, dont
+   par `abregeable`. C'est le garde-fou anti-troncature des captures qui l'a imposé : deux fois, dont
    une en intégration continue seulement, ses métriques de police différant de neuf pixels par entrée.
 
 **Quand ne PAS l'employer.** Un bilan qui n'a rien à ventiler garde le compte rendu textuel : un passage
 *reconstruit* n'a pas subi de réactivation, et une barre « 0 sur 30 » y ferait croire à une tentative qui
-a échoué. Et là où une **commande en ligne** rend le même bilan, le textuel reste — un terminal ne
+a échoué. Et là où une **commande en ligne** rend le même bilan, le textuel reste : un terminal ne
 dessine pas de barres.
 
 ## Unit of Work (`UniteDeTravail`)
@@ -1389,7 +1389,7 @@ observables, pas de logique).
 !!! note "API fluente (le « builder » le plus proche)"
     Les liaisons s'écrivent souvent avec l'**API fluente** de JavaFX :
     `Bindings.when(cond).then(a).otherwise(b)`, `Bindings.createStringBinding(...)`. C'est un
-    *builder* conditionnel **fourni par la bibliothèque** — pas un patron Builder que nous
+    *builder* conditionnel **fourni par la bibliothèque** : pas un patron Builder que nous
     implémentons. Le projet n'a d'ailleurs **pas de Builder maison** : les entités sont des `record`
     immuables (cf. *Objets-valeurs*), qui rendraient un builder superflu.
 
@@ -1440,7 +1440,7 @@ stateDiagram-v2
 
 **Une entrée hors file** (#2581). `RECUPERE` est le statut d'une nuit **rapatriée** de Vigie-Chiro : elle
 n'a franchi aucune des étapes ci-dessus, elle est arrivée par une autre porte. Elle est donc **hors de
-`ORDRE`**, et le moteur lui accorde une seule transition — `RECUPERE → DEPOSE`, quand la réactivation lui
+`ORDRE`**, et le moteur lui accorde une seule transition : `RECUPERE → DEPOSE`, quand la réactivation lui
 rend son audio. `suivant(RECUPERE)` est **vide** : sa suite dépend d'un événement, pas d'une place dans la
 file. Voir [ADR 2581](decisions/2581-un-etat-qui-decide-de-l-affichage-se-declare.md).
 
@@ -1471,7 +1471,7 @@ visibles dans le code.
 ### Loi de Déméter (« ne parle qu'à tes amis proches »)
 
 Un objet ne devrait appeler que les méthodes de **lui-même**, de ses **paramètres**, de ce qu'il
-**crée** et de ses **champs directs** — pas de chaîne `a.getB().getC().faire()`.
+**crée** et de ses **champs directs** : pas de chaîne `a.getB().getC().faire()`.
 
 **Ici.** La vue se lie à `vm.titreProperty()` (un collaborateur **direct**), jamais à
 `vm.modele().site().nom()`. Les contrats `Ouvrir*` reçoivent un `ContexteSite` / `ContextePassage`
@@ -1508,7 +1508,7 @@ transition est interdite, au lieu d'exposer l'ordre pour que chaque appelant le 
 ### Composition plutôt qu'héritage
 
 **Ici.** Le chrome **compose** des capacités via de petites interfaces optionnelles (ISP) détectées à
-l'exécution, et l'injection **compose** le graphe d'objets — au lieu d'une hiérarchie de classes
+l'exécution, et l'injection **compose** le graphe d'objets : au lieu d'une hiérarchie de classes
 profonde. (`DaoGenerique` reste un héritage **assumé**, limité au Template Method.)
 
 ### Convention plutôt que configuration

@@ -97,7 +97,7 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
 48. Ré-inspection de `sd-nominale` : bandeau « nuit déjà importée », informatif.
 49. Rattachement au même point + année + n° : bandeau « n° déjà pris » avec « Utiliser ce n° » et
 
-**Bloc · Gestes de ligne (EPIC #1792)** — non automatisable (rendu du popup).
+**Bloc · Gestes de ligne (EPIC #1792)** : non automatisable (rendu du popup).
 
 50. Pendant un import, clic droit sur une ligne du **suivi des fichiers** : le menu s'ouvre,
     entièrement lisible.

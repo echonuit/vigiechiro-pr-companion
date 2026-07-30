@@ -45,7 +45,7 @@ séquences (parcours P3, règles R13 consultative et R14 bloquante).
 
 ### Verdict final du passage
 
-**Dérivé** des verdicts par fichier son et **surchargeable** (proposé, pas imposé — R13).
+**Dérivé** des verdicts par fichier son et **surchargeable** (proposé, pas imposé : R13).
 
 | Verdict final | Sens | Dépôt |
 |---|---|---|

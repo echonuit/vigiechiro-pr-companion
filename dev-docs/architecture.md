@@ -73,13 +73,13 @@ Casser une frontière fait **échouer la CI**.
 !!! warning "Sauf si la dépendance se réduit à une constante"
     ArchUnit lit le **bytecode**, et une dépendance qui ne consiste qu'en une **constante compile-time**
     n'y laisse aucune trace : le compilateur inline la valeur, le `.class` ne cite jamais la classe qui la
-    déclarait (JLS 13.1). Toutes les règles ci-dessous sont aveugles à ce cas — ce n'est pas un faux négatif
+    déclarait (JLS 13.1). Toutes les règles ci-dessous sont aveugles à ce cas : ce n'est pas un faux négatif
     isolé mais une **catégorie**, qui vaut pour toute `String`, `int` ou `boolean` constant.
 
     Le cas s'est produit : une commande CLI a cité le `viewmodel` d'une feature pour une clé de réglage
     sans qu'aucune règle ne bronche ([#2181](https://github.com/echonuit/vigiechiro-pr-companion/issues/2181)).
     D'où un **doublon au niveau des sources**, `IsolationFeatureSourcesTest`, qui lit l'`import` dans le
-    `.java` — présent quoi qu'en fasse le compilateur. Mesuré : en réintroduisant volontairement une telle
+    `.java`, présent quoi qu'en fasse le compilateur. Mesuré : en réintroduisant volontairement une telle
     dépendance, les six règles ArchUnit restent **vertes** et ce test échoue.
 
     Il ne couvre que la règle d'**isolation inter-feature**. Un vert d'ArchUnit dit donc « aucune dépendance
@@ -115,12 +115,12 @@ publie un **contrat** `Ouvrir*` dans `commun.view`, la feature cible l'**implém
 `Navigation*` (bindée par son module Guice), et la feature appelante l'obtient **par injection**.
 
 ```java
-// commun/view/OuvrirPassage.java — le CONTRAT (dans le socle)
+// commun/view/OuvrirPassage.java : le CONTRAT (dans le socle)
 public interface OuvrirPassage {
     void ouvrir(Long idPassage, ContexteSite contexte);
 }
 
-// passage/view/NavigationPassage.java — l'IMPLÉMENTATION (dans la feature passage)
+// passage/view/NavigationPassage.java : l'IMPLÉMENTATION (dans la feature passage)
 @Singleton
 public class NavigationPassage implements OuvrirPassage {
     @Override public void ouvrir(Long idPassage, ContexteSite contexte) {

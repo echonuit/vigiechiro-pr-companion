@@ -15,10 +15,10 @@ Sous `src/main/java/fr/univ_amu/iut/`, créez `mafeature/` avec les 4 sous-paque
 
 ```
 mafeature/
-├── model/         ← entités (records) + services + model/dao/ (SQLite)   — AUCUN JavaFX
-├── viewmodel/     ← état observable (javafx.beans.property)              — pas de javafx.scene/fxml/stage
-├── view/          ← Controller + MaFeature.fxml + mafeature.css          — ne touche jamais la base
-└── di/            ← MaFeatureModule (Guice)                               — assemble la feature
+├── model/         ← entités (records) + services + model/dao/ (SQLite)   : AUCUN JavaFX
+├── viewmodel/     ← état observable (javafx.beans.property)              : pas de javafx.scene/fxml/stage
+├── view/          ← Controller + MaFeature.fxml + mafeature.css          : ne touche jamais la base
+└── di/            ← MaFeatureModule (Guice)                               : assemble la feature
 ```
 
 ## 2. Le modèle (`model/`)
@@ -129,14 +129,14 @@ public class MaFeatureModule extends ModuleDeFeature {
 `DecouverteModulesTest`) :
 
 - `src/main/resources/META-INF/services/fr.univ_amu.iut.commun.di.ModuleDeFeature` (une ligne : le FQN
-  du module) — chemin **classpath** (tests, fat-jar) ;
+  du module) : chemin **classpath** (tests, fat-jar) ;
 - `module-info.java` : ajoutez le module au `provides fr.univ_amu.iut.commun.di.ModuleDeFeature with …`
-  — chemin **module-path** (`javafx:run`).
+ , chemin **module-path** (`javafx:run`).
 
 !!! tip "Contribuer aux points d'extension"
     Une feature peut aussi ajouter un **compteur** d'accueil (`indicateur(...)`), un **onglet de
     réglages** (`ongletReglages(...)`, cf. `OngletReglages` + `DescripteurReglage`) et une **entrée de
-    menu ☰** (`actionMenu(...)`, cf. `ActionMenu`) — toujours sans toucher le socle.
+    menu ☰** (`actionMenu(...)`, cf. `ActionMenu`) : toujours sans toucher le socle.
 
 ## 6. Brancher la navigation (inversion de dépendance)
 
