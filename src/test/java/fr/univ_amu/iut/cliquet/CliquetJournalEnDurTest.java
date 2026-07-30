@@ -39,11 +39,8 @@ class CliquetJournalEnDurTest {
             "fr/univ_amu/iut/cli/CliImportTest.java",
             "fr/univ_amu/iut/diagnostic/AnalyseAnomaliesTest.java",
             "fr/univ_amu/iut/diagnostic/ServiceDiagnosticTest.java",
-            "fr/univ_amu/iut/e2e/ParcoursDepotE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursImporterNuitE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursPremiereNuitE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursRestaurationDepuisVigieChiroE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE2ETest.java",
             "fr/univ_amu/iut/importation/CopieProtegeeTest.java",
             "fr/univ_amu/iut/importation/ExtracteurZipTest.java",
             "fr/univ_amu/iut/importation/ServiceImportTest.java",
@@ -66,7 +63,7 @@ class CliquetJournalEnDurTest {
                 Cliquet.fichiersOu(CliquetJournalEnDurTest::ecritUnJournalEnDur),
                 ECRIVENT_UN_JOURNAL_EN_DUR,
                 "les tests qui écrivent un journal LogPR en dur",
-                "la brique paramétrée de GenerateurCartesSD",
+                "fr.univ_amu.iut.fixture.JournalDeCapteur",
                 "ECRIVENT_UN_JOURNAL_EN_DUR, dans ce fichier");
     }
 

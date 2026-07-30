@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.lot.model.Lot;
@@ -25,9 +26,9 @@ import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -64,12 +65,6 @@ class ParcoursPremiereNuitE2ETest {
     private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10 (R10)
     private static final int TRAMES = 576_000;
     private static final String NOM_WAV = "PaRecPR" + SERIE + "_20260422_203922.wav";
-    private static final String LOG =
-            "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
-                    + "22/04/26 - 16:02:21 PR1925492 Sonde temperature/hygrometrie presente, lecture toutes"
-                    + " les 600s\n";
-
     private Injector injector;
     private SourceDeDonnees source;
     private Path workspace;
@@ -166,8 +161,8 @@ class ParcoursPremiereNuitE2ETest {
     /// l'import peut traiter de bout en bout jusqu'au dépôt.
     private static Path creerNuitSynthetique(Path sd) throws Exception {
         Files.createDirectories(sd);
-        Files.writeString(sd.resolve("LogPR" + SERIE + ".txt"), LOG, StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve("PaRecPR" + SERIE + "_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(sd, SERIE, LocalDate.of(2026, 4, 22));
+        JournalDeCapteur.ecrireReleve(sd, SERIE);
         ecrireWav(sd.resolve(NOM_WAV));
         return sd;
     }
