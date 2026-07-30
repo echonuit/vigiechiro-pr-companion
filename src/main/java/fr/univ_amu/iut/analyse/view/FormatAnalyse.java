@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.util.Locale;
 
 /// Formatage des **libellés** de l'écran « Espèces & observations » (colonnes de tables, panneau détail,
 /// sélecteur de statut) : fonctions **pures**, extraites de [AnalyseController] pour alléger sa cohésion
@@ -25,7 +26,10 @@ public final class FormatAnalyse {
         if (probabilite == null) {
             return taxon;
         }
-        return taxon + " (" + String.format("%.2f", probabilite) + ")";
+        // Locale EXPLICITE : sans elle, `String.format` suit celle de la MACHINE, et la virgule que
+        // documente cette méthode devenait un point sur tout poste non francophone - dont le runner de
+        // la CI, qui génère les aperçus. La galerie affichait donc « Pippip (0.90) » (#2896).
+        return taxon + " (" + String.format(Locale.FRANCE, "%.2f", probabilite) + ")";
     }
 
     /// Libellé d'une espèce : nom vernaculaire (sinon latin, sinon code) suivi du code entre parenthèses.
