@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-07-29
 - **Chantier** : #2843, suite de la clôture du chantier #2348 et de #2813
-- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 275)
+- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 2)
 
 ## Contexte
 
@@ -30,6 +30,13 @@ Une seule population, un seul nombre, aucun angle mort.
 **4. Une zone nettoyée passe du cliquet à la tolérance zéro.** Cette ADR annonçait d'abord que la documentation aurait « son propre cliquet ». C'était mal formulé : un cliquet sur une zone déjà au plancher est inutilement faible, et il resterait masquable tant qu'une autre zone comptée avec elle serait, elle, loin du plancher. Une zone nettoyée n'a plus besoin d'une marge, elle a besoin d'un refus.
 
 `docs/`, `brief/`, `dev-docs/` et **`src/main/java`** sont nettoyées depuis #2365 : la vérification y compte **zéro** cadratin de prose, et le script échoue à la première rechute. Le cliquet ne porte donc plus que sur `src/test/java`.
+
+`src/test/java` est nettoyée à son tour, et son plancher vaut **2**, pas zéro. Un plancher nommé n'est pas un reste de travail, c'est pourquoi il est écrit ici :
+
+- `DocumentationAJourTest` compile une classe de caractères acceptant **les deux formes** d'en-tête d'ADR, le tiret simple et le cadratin. C'est le troisième analyseur de cette forme, avec `_commun.py` et `resserre_cliquets.py` ;
+- `SiteDetailViewModelTest` affirme `« — à vérifier »`, la valeur **composée** que l'écran affiche.
+
+Aucune des deux n'est couverte par une forme citée, et les y faire entrer coûterait plus que le gain. Un motif épargnant tout littéral commençant par le glyphe serait trop permissif ; et recomposer l'attente du test depuis `Formats.VALEUR_ABSENTE` changerait ce que ce test **épingle**, au détour d'une passe de typographie. Un cliquet de 2 refuse la troisième occurrence exactement comme une tolérance zéro refuse la première.
 
 La promotion se fait **dans la tranche qui amène la zone à zéro**, pas plus tard. Différer, c'est ouvrir une fenêtre où l'arbre est propre et où rien ne le garde : la première rechute y passerait sans bruit, et le cliquet, ayant encore sa marge, resterait vert.
 
