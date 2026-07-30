@@ -135,6 +135,13 @@ La fenêtre intègre une **carte-outil** centrée sur le carré du site, **synch
 sens** avec les champs latitude / longitude (#153) : **glissez le marqueur** sur la carte pour fixer
 la position (les champs se remplissent), ou **saisissez les coordonnées** (le marqueur se déplace).
 
+Dès qu'un point géolocalisé est enregistré, sa **commune** est déterminée automatiquement depuis ses
+coordonnées (service public de géocodage, connexion requise) et mémorisée : c'est elle que retrouvent
+ensuite les recherches (« aix » dans [Carte & passages](multisite.md) ou la recherche globale) et
+l'export CSV des observations. Hors ligne, la commune attend simplement une prochaine occasion : une
+synchronisation, un nouvel enregistrement du point, ou la commande `rattraper-communes` en ligne de
+commande.
+
 Les champs acceptent **deux formats**, au choix : **degrés décimaux** (`43.5298`, la virgule est
 tolérée) **ou** **degrés/minutes/secondes** (`43°31'47"N`, `1°34'26.4"W`). Vous pouvez donc **coller**
 des coordonnées depuis n'importe quelle source ; elles sont converties automatiquement, et une saisie

@@ -51,7 +51,7 @@ Le modèle conceptuel est éclaté en plusieurs fiches pour rester lisible. Chaq
 
 ### Tables du schéma non modélisées comme entités
 
-Le diagramme ci-dessus est **conceptuel** : il ne porte que les entités métier. Le schéma physique (migrations `V01` → `V35`) contient en plus des tables **d'intégration plateforme** et **techniques**, décrites dans les *voisins* des fiches concernées :
+Le diagramme ci-dessus est **conceptuel** : il ne porte que les entités métier. Le schéma physique (migrations `V01` → `V38`) contient en plus des tables **d'intégration plateforme** et **techniques**, décrites dans les *voisins* des fiches concernées :
 
 | Table | Rôle | Où elle apparaît |
 |---|---|---|
@@ -62,6 +62,7 @@ Le diagramme ci-dessus est **conceptuel** : il ne porte que les entités métier
 | `observation_message` | **fil de discussion** avec le validateur MNHN | voisin de [C13](C13%20-%20Observation.md) |
 | `passage_opportuniste` | **participation opportuniste** d'une nuit ([R34](Règles%20métier.md#r34)) : la présence de la ligne porte le fait | attribut de [C5](C5%20-%20Passage.md) |
 | `site_tiers` | **carré appartenant à un tiers** ([R35](Règles%20métier.md#r35)), dérivé de la synchronisation | attribut de [C2](C2%20-%20Site%20de%20suivi.md) |
+| `point_commune` | **commune du point** (nom + code INSEE), dérivée **une fois** de ses coordonnées GPS (API Géo) ; l'absence de ligne dit « non résolue » | attribut de [C3](C3%20-%20Point%20d'écoute.md) |
 | `saved_filter_view`, `column_layout`, `app_setting` | **tables techniques** : vues de filtres, disposition des colonnes, réglages | persistance d'IHM et de préférences, hors modèle métier |
 | `saved_view` | **table morte** : créée en `V01`, remplacée par `saved_filter_view` (`V11`), plus référencée par le code | à retirer |
 

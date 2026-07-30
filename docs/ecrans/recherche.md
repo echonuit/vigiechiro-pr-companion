@@ -14,7 +14,7 @@ La liste se remplit **au fil de la frappe**, **insensible à la casse et aux acc
 
 - les **sites** : par **numéro de carré** ou **nom** ;
 - les **points d'écoute** : par **code** ou **description** ;
-- les **passages** : par **carré**, **code de point**, **numéro de passage**, **année** ou **date** ;
+- les **passages** : par **carré**, **code de point**, **commune**, **numéro de passage**, **année** ou **date** ;
 - les **espèces observées** : par **code**, **nom latin** ou **nom français**.
 
 Les résultats sont **groupés par type** (Sites, puis Points, puis Passages, puis Espèces), chaque groupe

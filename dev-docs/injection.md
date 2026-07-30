@@ -202,6 +202,7 @@ Exemple, la fonctionnalité « Fiche de l'espèce » (#844) :
 |---|---|---|
 | `SourceUniverselle` | `LienGbif` | `SourceUniversellePreferee` (préférence GBIF / Wikipédia) |
 | `ResolveurFiche` | `ResolveurFicheIdentite` (aucun réseau) | `ResolveurFicheGbif` (résout la clé via l'API GBIF) |
+| `ResolveurCommune` | lambda dans les tests (aucun réseau) | `ResolveurCommuneApiGeo` (commune d'un point via l'API Géo, #2791) |
 | `ExecuteurFiche` | `ExecuteurFicheSynchrone` (déterministe) | `ExecuteurFicheAsynchrone` (hors fil JavaFX + `Platform.runLater`) |
 | `ExecuteurTache` (#793) | `ExecuteurTacheSynchrone` (déterministe) | `ExecuteurTacheAsynchrone` (thread virtuel + `Platform.runLater`) |
 
