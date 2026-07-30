@@ -7,10 +7,9 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import java.io.ByteArrayOutputStream;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -35,10 +34,10 @@ class CliSauvegardeTest {
 
     private Injector injecteur;
     private Cli cli;
-    private ByteArrayOutputStream tamponSortie;
-    private ByteArrayOutputStream tamponErreur;
-    private PrintStream sortie;
-    private PrintStream erreur;
+
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
 
     @BeforeEach
     void preparer() {
@@ -47,10 +46,6 @@ class CliSauvegardeTest {
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
         injecteur.getInstance(UtilisateurDao.class).insert(new Utilisateur("u1", "Alice"));
-        tamponSortie = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        tamponErreur = new ByteArrayOutputStream();
-        erreur = new PrintStream(tamponErreur, true, StandardCharsets.UTF_8);
     }
 
     @AfterEach
@@ -59,7 +54,7 @@ class CliSauvegardeTest {
     }
 
     private String texteSortie() {
-        return tamponSortie.toString(StandardCharsets.UTF_8);
+        return capture.texte();
     }
 
     @Test
@@ -113,7 +108,7 @@ class CliSauvegardeTest {
         // 1 est le code de l'ÉCHEC d'exécution : le rendre ici laissait un script incapable de distinguer
         // « j'ai refusé, l'état local est intact » de « j'ai échoué en route », sur une commande destructive.
         assertThat(code).as("un refus se dit 2 : la commande n'a rien fait").isEqualTo(2);
-        assertThat(tamponErreur.toString(StandardCharsets.UTF_8))
+        assertThat(capture.texteErreur())
                 .as("un refus part sur stderr, pour ne pas se mêler au compte rendu")
                 .contains("--confirmer");
     }

@@ -7,11 +7,10 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import fr.univ_amu.iut.validation.model.dao.MessageObservationDao;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -34,10 +33,10 @@ class CliDiscussionTest {
 
     private Injector injecteur;
     private Cli cli;
-    private ByteArrayOutputStream tamponSortie;
-    private ByteArrayOutputStream tamponErreur;
-    private PrintStream sortie;
-    private PrintStream erreur;
+
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
 
     @BeforeEach
     void preparer() {
@@ -45,10 +44,6 @@ class CliDiscussionTest {
         injecteur = Cli.injecteurApplicatif();
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
-        tamponSortie = new ByteArrayOutputStream();
-        tamponErreur = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        erreur = new PrintStream(tamponErreur, true, StandardCharsets.UTF_8);
     }
 
     @AfterEach
@@ -64,7 +59,7 @@ class CliDiscussionTest {
                 new String[] {"discussion", "--observation", "7", "--message", "Je doute."}, sortie, erreur);
 
         assertThat(code).isEqualTo(2);
-        assertThat(tamponErreur.toString(StandardCharsets.UTF_8))
+        assertThat(capture.texteErreur())
                 .contains("ne pourra PAS être supprimé")
                 .contains("--confirmer");
     }
@@ -75,7 +70,7 @@ class CliDiscussionTest {
         int code = cli.executer(new String[] {"discussion", "--observation", "7"}, sortie, erreur);
 
         assertThat(code).isZero();
-        assertThat(tamponSortie.toString(StandardCharsets.UTF_8)).contains("Aucun message");
+        assertThat(capture.texte()).contains("Aucun message");
     }
 
     @Test
@@ -87,7 +82,7 @@ class CliDiscussionTest {
                 new String[] {"discussion", "--observation", String.valueOf(idObservation)}, sortie, erreur);
 
         assertThat(code).isZero();
-        assertThat(tamponSortie.toString(StandardCharsets.UTF_8))
+        assertThat(capture.texte())
                 .as("l'ordre du serveur ($push) est l'ordre chronologique : la CLI le rend tel quel")
                 .containsSubsequence("u-validateur", "C'est un Pipnat.", "u-moi", "Je repasse le son.");
     }

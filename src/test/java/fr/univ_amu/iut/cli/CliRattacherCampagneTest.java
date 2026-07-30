@@ -8,11 +8,10 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,9 +30,10 @@ class CliRattacherCampagneTest {
     private PassageDao passageDao;
     private long idPassage;
     private long idCampagne;
-    private ByteArrayOutputStream tamponSortie;
-    private PrintStream sortie;
-    private PrintStream erreur;
+
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
 
     @BeforeEach
     void preparer() {
@@ -55,9 +55,6 @@ class CliRattacherCampagneTest {
                 .getInstance(ServiceCampagne.class)
                 .creerCampagne("Suivi ENS", 2026, null)
                 .id();
-        tamponSortie = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        erreur = new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8);
     }
 
     @AfterEach
@@ -80,7 +77,7 @@ class CliRattacherCampagneTest {
                 erreur);
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(tamponSortie.toString(StandardCharsets.UTF_8)).contains("rattaché");
+        assertThat(capture.texte()).contains("rattaché");
         assertThat(passageDao.findById(idPassage).orElseThrow().idCampagne()).isEqualTo(idCampagne);
     }
 

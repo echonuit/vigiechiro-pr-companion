@@ -3,9 +3,8 @@ package fr.univ_amu.iut.cli;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
-import java.io.ByteArrayOutputStream;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
@@ -33,10 +32,10 @@ class CliEmplacementsTest {
     Path choix;
 
     private Cli cli;
-    private ByteArrayOutputStream tamponSortie;
-    private ByteArrayOutputStream tamponErreur;
-    private PrintStream sortie;
-    private PrintStream erreur;
+
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
 
     @BeforeEach
     void preparer() {
@@ -45,10 +44,6 @@ class CliEmplacementsTest {
         Injector injecteur = Cli.injecteurApplicatif();
         cli = new Cli(injecteur);
         System.clearProperty("vigiechiro.workspace"); // la commande doit lire la config, pas la surcharge
-        tamponSortie = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        tamponErreur = new ByteArrayOutputStream();
-        erreur = new PrintStream(tamponErreur, true, StandardCharsets.UTF_8);
     }
 
     @AfterEach
@@ -58,11 +53,11 @@ class CliEmplacementsTest {
     }
 
     private String texteSortie() {
-        return tamponSortie.toString(StandardCharsets.UTF_8);
+        return capture.texte();
     }
 
     private String texteErreur() {
-        return tamponErreur.toString(StandardCharsets.UTF_8);
+        return capture.texteErreur();
     }
 
     @Test
