@@ -20,7 +20,7 @@ import picocli.CommandLine.Spec;
 ///
 /// En IHM, la sûreté de ce geste tient à une **modale** qui montre ce qui sera perdu avant de laisser
 /// cliquer. Une surface scriptable n'a pas de modale : la parade est un **drapeau explicite**. Sans
-/// `--confirmer`, la commande **dit la perte et ne touche à rien**, en sortant en `2` — un script qui
+/// `--confirmer`, la commande **dit la perte et ne touche à rien**, en sortant en `2` : un script qui
 /// enchaînerait s'arrête là plutôt que de détruire.
 ///
 /// Le drapeau ne dispense pas d'informer : il **déplace** seulement le moment où l'utilisateur décide.

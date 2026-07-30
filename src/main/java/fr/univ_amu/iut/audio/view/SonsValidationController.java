@@ -440,7 +440,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         DoubleClicLigne.installer(tableObservations, ligne -> actionsMenu.ouvrirFiche(ligne, viewModel::signaler));
 
         // Synchronisation de la sélection dans les deux sens, et items de fiche qui la suivent : déléguée
-        // à SelectionTableAudio, comme MenuCertitude et PanneauDiscussion — ce contrôleur est au plafond
+        // à SelectionTableAudio, comme MenuCertitude et PanneauDiscussion : ce contrôleur est au plafond
         // de NcssCount, et les deux écouteurs forment un tout (la garde d'égalité de l'un empêche la
         // boucle avec l'autre).
         SelectionTableAudio.installer(tableObservations, viewModel, actionsMenu, itemFicheEspece);
@@ -505,7 +505,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
         // Ce que l'écran dit quand il n'a rien à montrer (état vide), quand une opération vient de se
         // terminer (bandeau de retour, #795) et quand l'audio n'est pas tout là (bandeau d'archive, #1301) :
-        // trois messages de la même zone, câblés dans MessagesEcranAudio — ce contrôleur est au plafond
+        // trois messages de la même zone, câblés dans MessagesEcranAudio : ce contrôleur est au plafond
         // de NcssCount.
         MessagesEcranAudio.installer(lblVide, bandeauRetour, lblRetour, btnFermerRetour, lblBandeauArchive, viewModel);
 

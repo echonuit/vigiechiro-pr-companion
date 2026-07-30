@@ -16,7 +16,7 @@ import java.time.format.DateTimeParseException;
 /// Fonctions **pures**, séparées du ViewModel : les phrases sont ce que l'on relit le plus souvent, et il
 /// vaut mieux pouvoir les éprouver sans monter d'IHM.
 ///
-/// Le vocabulaire est délibérément celui de l'observateur — « analyse », « nuit », « observations » — et
+/// Le vocabulaire est délibérément celui de l'observateur (« analyse », « nuit », « observations ») et
 /// non celui de la plateforme (« compute », « donnees », « participation »).
 final class FormatsTraitement {
 
@@ -49,7 +49,7 @@ final class FormatsTraitement {
         };
     }
 
-    /// « Dernier état connu le … » : la fraîcheur de l'information, que l'on doit à l'utilisateur — surtout
+    /// « Dernier état connu le … » : la fraîcheur de l'information, que l'on doit à l'utilisateur, surtout
     /// hors connexion, où l'écran affiche un souvenir et non une vérité.
     static String fraicheur(ReleveTraitement releve) {
         return "Dernier état connu le " + lisible(releve.releveLe()) + ".";

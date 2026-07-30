@@ -15,7 +15,7 @@ import picocli.CommandLine.Spec;
 
 /// Commande `restaurer` (#1346) : remet en place une sauvegarde produite par `sauvegarder`.
 ///
-/// **Destructif** : l'état local est écrasé. `--confirmer` est donc obligatoire — en script, rien ne doit
+/// **Destructif** : l'état local est écrasé. `--confirmer` est donc obligatoire, en script, rien ne doit
 /// pouvoir remplacer une base par inadvertance. L'état courant de la base est mis de côté
 /// (`vigiechiro.db.avant-restauration`) ; l'**audio**, lui, ne l'est pas.
 ///

@@ -27,7 +27,7 @@ import picocli.CommandLine.Spec;
 /// `statut-passage` (#618) : **inspecte un passage en lecture seule** (aucun effet de bord). Synthétise le
 /// statut du workflow, le verdict, les volumes et séquences de la nuit, la **disponibilité de son
 /// audio local** (#1297 : un passage archivé se consulte mais ne s'écoute plus) et la présence de
-/// résultats Tadarida — de quoi savoir « où en est ce passage ? » sans ouvrir l'interface graphique.
+/// résultats Tadarida : de quoi savoir « où en est ce passage ? » sans ouvrir l'interface graphique.
 ///
 /// La synthèse provient de [ServicePassage#detailPassage(Long)] ; la présence de résultats Tadarida est lue
 /// à part via [ResultatsIdentificationDao] (le CLI est le point de composition entre les features `passage`
@@ -126,7 +126,7 @@ public final class StatutPassage implements Callable<Integer> {
     }
 
     /// Disponibilité **observée** de l'audio local (#1298) et son décompte : `COMPLETE`, `PARTIELLE`
-    /// (avec `présentes/total`) ou `ABSENTE` — l'état d'un passage archivé (#1297), réactivable par
+    /// (avec `présentes/total`) ou `ABSENTE` : l'état d'un passage archivé (#1297), réactivable par
     /// réimport (`reactiver`).
     private static String audioLisible(DetailPassage detail) {
         DecompteAudio decompte = detail.decompteAudio();

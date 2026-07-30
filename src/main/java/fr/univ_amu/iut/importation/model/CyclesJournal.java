@@ -11,13 +11,13 @@ import java.util.regex.Pattern;
 /// `LogPR` : le firmware ouvre chaque nuit par `Wakeup by ALARM... Cpt N` et la referme par
 /// `### Passage en mode Veille` / `Mise en veille`. Un cycle refermé par une **anomalie** (carte SD
 /// pleine, `### Passage en mode Erreur`) ou **jamais refermé** (journal interrompu, ou réveil suivant
-/// sans veille) est marqué **incomplet** — c'est le signal fiable d'une **nuit tronquée**.
+/// sans veille) est marqué **incomplet** : c'est le signal fiable d'une **nuit tronquée**.
 ///
 /// Parsing purement regex/positionnel, **déterministe**. Les évènements de configuration antérieurs au
 /// premier réveil (tests d'accès SD, mises en veille de paramétrage) sont ignorés.
 final class CyclesJournal {
 
-    /// `JJ/MM/AA - HH:MM:SS PR<serie> <message>` — capture la date, l'heure **et** le message.
+    /// `JJ/MM/AA - HH:MM:SS PR<serie> <message>`, capture la date, l'heure **et** le message.
     private static final Pattern LIGNE =
             Pattern.compile("^(\\d{2})/(\\d{2})/(\\d{2})\\s*-\\s*(\\d{2}):(\\d{2}):(\\d{2})\\s+PR\\d+\\s+(.*)$");
 

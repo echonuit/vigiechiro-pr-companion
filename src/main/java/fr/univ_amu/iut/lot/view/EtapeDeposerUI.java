@@ -16,7 +16,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// trois règles qui ont chacune leur histoire, et le contrôleur n'a pas à les héberger.
 ///
 /// 1. **Son libellé change de sens** (#984) : « Marquer déposé » quand le dépôt est manuel, « Lancer la
-///    participation » dès qu'une participation est liée — l'application ayant alors déjà déposé la nuit.
+///    participation » dès qu'une participation est liée : l'application ayant alors déjà déposé la nuit.
 /// 2. **Il reste cliquable après un dépôt partiel** : c'est justement le moment de lancer le calcul.
 /// 3. **Il se verrouille quand la nuit a déjà été analysée** (#1261/#1263) : relancer supprimerait les
 ///    observations du serveur, qui ne pourraient pas être recalculées (l'audio n'est pas conservé après un
@@ -44,7 +44,7 @@ final class EtapeDeposerUI {
                 .bind(Bindings.when(depot.participationLieeProperty())
                         // Mode « Lancer la participation » : cliquable quel que soit le statut de dépôt (même
                         // « Dépôt en cours » après une annulation ou un dépôt partiel), sauf pendant une
-                        // opération en cours — et sauf si la nuit a déjà été analysée.
+                        // opération en cours, et sauf si la nuit a déjà été analysée.
                         .then(depot.enCoursProperty()
                                 .or(lot.generationEnCoursProperty())
                                 .or(traitement.relanceBloqueeProperty()))

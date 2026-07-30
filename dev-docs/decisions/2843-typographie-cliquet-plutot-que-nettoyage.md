@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-07-29
 - **Chantier** : #2843, suite de la clôture du chantier #2348 et de #2813
-- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 836)
+- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 506)
 
 ## Contexte
 
@@ -33,9 +33,13 @@ Une seule population, un seul nombre, aucun angle mort.
 
 Les zones nettoyées vivent dans une **liste déclarative** du script (`ZONES_NETTOYEES`). Ajouter une tranche revient à ajouter **une ligne**, et c'est délibéré : chaque tranche du chantier touche ce même script, donc une insertion d'une ligne se résout sans réfléchir là où un bloc de code aurait sérialisé les tranches.
 
-**5. Ce qui est cité n'est pas de la prose.** Un cadratin entre **guillemets français** ou entre **chevrons de code** est une citation : le glyphe de valeur absente que la documentation décrit, ou un libellé de l'application qu'une fiche d'écran reproduit fidèlement. Une seule règle couvre les deux, là où deux listes d'exceptions auraient dérivé séparément.
+**5. Ce qui est cité n'est pas de la prose.** Un cadratin entre **guillemets français**, entre **chevrons de code**, seul dans une **cellule de tableau**, ou réduit à un **littéral Java** (`"—"`) est une citation : le glyphe de valeur absente que la documentation décrit, un libellé de l'application qu'une fiche d'écran reproduit fidèlement, ou le glyphe lui-même tel que `Formats` le définit et que les tests l'affirment. Une seule règle couvre les quatre, là où quatre listes d'exceptions auraient dérivé séparément.
 
-C'est aussi ce qui a révélé que **`docs/` n'est pas indépendante des chaînes Java** : `docs/ecrans/sites.md` cite le libellé `« GPS manquant, placer sur la carte »`, écrit tel quel dans `CartesPointsSite`. Corriger la documentation seule l'aurait fait diverger du produit. Ce cadratin partira avec la tranche des chaînes Java, où le libellé et sa documentation changeront ensemble.
+La règle vaut pour **les deux mesures**, Java comprise. Elle n'a d'abord servi qu'aux zones Markdown, et le compteur Java restait brut : il butait donc sur un plancher de **50 occurrences légitimes** du glyphe, que rien ne distinguait d'un reste de travail. Un cliquet dont on ignore le plancher est un cliquet sur lequel on ne peut pas clore le chantier, puisque nul ne sait quel nombre signifie « fini ». La mesure dit maintenant la même chose des deux côtés : **notre prose**.
+
+C'est aussi ce qui a révélé que **`docs/` n'est pas indépendante des chaînes Java** : `docs/ecrans/sites.md` cite le libellé `« GPS manquant : placer sur la carte »`, écrit tel quel dans `CartesPointsSite`. Corriger la documentation seule l'aurait fait diverger du produit. Le libellé et sa documentation ont donc changé ensemble, dans la tranche des chaînes Java.
+
+Une citation vieillit, et le chantier l'a prouvé quatre fois. Cette phrase citait encore `« GPS manquant, placer sur la carte »` avec une virgule, quand la tranche des chaînes avait tranché pour un deux-points ; trois Javadoc décrivaient de même un format d'affichage que cette tranche avait changé sous elles. Aucun contrôle ne peut l'attraper : une citation périmée est du texte juste au sujet d'un produit qui a bougé. La seule parade connue est de **relire les citations quand on touche à ce qu'elles citent**, et le motif se cherche mécaniquement (un libellé **composé** entre guillemets, contenant un séparateur).
 
 **3. La vérification reste « probable ».** Un tiret cadratin peut être cité légitimement : un commentaire qui explique la règle, une chaîne qui reproduit un texte externe. Aucun motif ne sait faire cette différence, c'est un humain qui tranche, extrait en main.
 

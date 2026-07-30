@@ -93,7 +93,7 @@ public class VerificationCoherence {
     }
 
     /// **Checklist** des contrôles de cohérence du passage (#254), chacun avec son statut (✓ / ✗ / ⚠) et
-    /// un détail — affichée telle quelle à l'étape « Préparer le lot », même quand tout est satisfait.
+    /// un détail : affichée telle quelle à l'étape « Préparer le lot », même quand tout est satisfait.
     ///
     /// @param passage le passage à contrôler (avec son `id` persisté)
     public List<ControleCoherence> controler(Passage passage) {

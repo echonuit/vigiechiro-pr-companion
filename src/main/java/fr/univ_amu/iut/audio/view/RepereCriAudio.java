@@ -38,7 +38,7 @@ final class RepereCriAudio {
 
     /// Surligne la fenêtre du cri et y positionne la lecture. Sans observation ou sans bornes temporelles,
     /// efface le surlignage. Les bornes (secondes réelles) sont passées **telles quelles** à l'AudioView.
-    /// Le seek n'est tenté que si le clip est chargé ([AudioView#isReady]) — sinon il serait borné à zéro ;
+    /// Le seek n'est tenté que si le clip est chargé ([AudioView#isReady]) : sinon il serait borné à zéro ;
     /// il est rejoué au passage à « prêt ».
     static void appliquer(AudioView audioView, LigneObservationAudio observation) {
         if (observation == null || observation.debutS() == null || observation.finS() == null) {

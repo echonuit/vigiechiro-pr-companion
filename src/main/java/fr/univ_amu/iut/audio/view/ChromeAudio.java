@@ -38,14 +38,14 @@ final class ChromeAudio {
             return EmplacementPassage.emplacementEnfant(contextePassage, ouvrirSite, ouvrirPassage, source.titre());
         }
         if (source instanceof SourceObservations.ParEspece) {
-            // Accueil › Espèces & observations › Écoute : [espèce] — le segment analyse rouvre l'écran, sauf
+            // Accueil › Espèces & observations › Écoute : [espèce], le segment analyse rouvre l'écran, sauf
             // si la feature `analyse` est désactivable et coupée (#1087) : le segment ne fait alors rien.
             return List.of(
                     Lieu.vers("Espèces & observations", () -> ouvrirAnalyse.ifPresent(OuvrirAnalyse::ouvrir)),
                     Lieu.courant(source.titre()));
         }
         if (source instanceof SourceObservations.ParPassages) {
-            // Accueil › Carte & passages › Écoute : lot — le segment multisite rouvre la vue agrégée.
+            // Accueil › Carte & passages › Écoute : lot, le segment multisite rouvre la vue agrégée.
             return List.of(
                     Lieu.vers("Carte & passages", () -> ouvrirMultisite.ouvrirSurCarre(null)),
                     Lieu.courant(source.titre()));

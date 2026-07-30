@@ -101,7 +101,7 @@ public class ImportVigieChiroViewModel {
         };
         // Voie rapide (#1838) : le CSV d'un coup, repli sur les `donnees` page par page. L'ancrage et les
         // fils de discussion, que le CSV ne porte pas, sont acquis par la publication au moment où ils
-        // servent (ADR 0019) — les précharger ici coûtait des minutes à chaque import, pour tout le monde.
+        // servent (ADR 0019) : les précharger ici coûtait des minutes à chaque import, pour tout le monde.
         return importateur
                 .orElseThrow(() -> new RegleMetierException("Import Vigie-Chiro indisponible dans ce contexte."))
                 .importerRapide(idPassage, remplacer, suivi);

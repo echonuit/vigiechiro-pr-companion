@@ -6,7 +6,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Spec;
 
 /// Commande **racine** du CLI VigieChiro (#614) : porte le nom du programme, l'aide générale et la liste
-/// des sous-commandes. Sans logique propre — chaque sous-commande réutilise un service métier existant.
+/// des sous-commandes. Sans logique propre : chaque sous-commande réutilise un service métier existant.
 ///
 /// Lancée **sans sous-commande**, elle affiche l'aide (au lieu de ne rien faire), pour guider l'utilisateur.
 /// L'aide, l'usage et la liste des commandes sont **générés** par picocli à partir de ces annotations : plus

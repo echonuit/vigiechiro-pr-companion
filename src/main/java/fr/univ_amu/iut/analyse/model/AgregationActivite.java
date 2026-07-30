@@ -17,17 +17,17 @@ import java.util.Map;
 /// nuit** au lieu de l'espèce ou du carré.
 ///
 /// **Entrée** : des [ContactHoraire] déjà filtrés par l'appelant, d'une nuit ou de plusieurs (statut, pseudo-taxons
-/// `noise`/`piaf`, sélection de nuit) — exactement comme [AgregationAnalyse] reçoit des observations déjà
+/// `noise`/`piaf`, sélection de nuit) : exactement comme [AgregationAnalyse] reçoit des observations déjà
 /// filtrées. L'agrégation **écarte** les contacts sans heure (impossibles à situer sur l'axe) et sans
 /// taxon (une séquence non identifiée n'est pas une espèce) : ce ne sont pas des erreurs, juste des
 /// contacts sans place sur une courbe d'espèce.
 ///
-/// **Sortie** : une [CourbeEspece] par espèce présente, **triée par total décroissant** — l'ordre dans
-/// lequel la vue proposera les espèces et sélectionnera les cinq premières par défaut — puis, à total
+/// **Sortie** : une [CourbeEspece] par espèce présente, **triée par total décroissant** (l'ordre dans
+/// lequel la vue proposera les espèces et sélectionnera les cinq premières par défaut), puis, à total
 /// égal, par nom vernaculaire (nuls en premier, comme le tri secondaire de [AgregationAnalyse]).
 ///
 /// Sur **plusieurs nuits**, [#parEspece] rend un point par (nuit, tranche) : c'est la matière de
-/// l'export, qui date ses lignes. Une **courbe** ne se lit pas ainsi — l'axe est celui d'une nuit —
+/// l'export, qui date ses lignes. Une **courbe** ne se lit pas ainsi, l'axe est celui d'une nuit :
 /// et demande le repliement de [#replierSurLaNuit].
 public final class AgregationActivite {
 
@@ -138,7 +138,7 @@ public final class AgregationActivite {
     ///
     /// Sans ce repliement, une vue transverse trace, pour une même espèce, un point par (nuit, tranche) ;
     /// l'axe nocturne les ramenant tous à leur heure de nuit, plusieurs points se superposent à la même
-    /// abscisse et la ligne, qui suit l'ordre chronologique, **repart en arrière** à chaque nuit suivante —
+    /// abscisse et la ligne, qui suit l'ordre chronologique, **repart en arrière** à chaque nuit suivante :
     /// la courbe prend un aspect de dents de scie qui ne décrit rien.
     ///
     /// L'instant porté par chaque point retombe sur la **nuit la plus ancienne** du jeu : après repliement,
@@ -179,8 +179,8 @@ public final class AgregationActivite {
     /// doit se lire comme un zéro, pas comme une interpolation.
     ///
     /// La plage est **fournie par l'appelant**, et c'est tout l'enjeu : un zéro affirme « on écoutait, et
-    /// rien n'est venu ». Hors de la fenêtre où l'on écoutait vraiment, l'absence de contact ne dit rien —
-    /// le capteur pouvait être éteint — et la courbe **s'abstient** plutôt que d'affirmer un silence
+    /// rien n'est venu ». Hors de la fenêtre où l'on écoutait vraiment, l'absence de contact ne dit rien,
+    /// le capteur pouvant être éteint, et la courbe **s'abstient** plutôt que d'affirmer un silence
     /// observé. Les points hors plage sont conservés tels quels : ce sont des faits.
     public static List<CourbeEspece> comblerLesCreux(
             List<CourbeEspece> courbes, LargeurTranche tranche, long debutMinutes, long finMinutes) {

@@ -32,7 +32,7 @@ public record RapportImport(List<LigneRapport> lignes, List<PassageExistant> dou
         return !doublonsDeNuit.isEmpty();
     }
 
-    /// Fichiers **rejetés** (non importés, #155) formatés « nom — raison », pour l'affichage dans M-Import.
+    /// Fichiers **rejetés** (non importés, #155) formatés « nom : raison », pour l'affichage dans M-Import.
     /// Liste vide si aucun rejet.
     public List<String> rejetsFormates() {
         return lignes.stream()

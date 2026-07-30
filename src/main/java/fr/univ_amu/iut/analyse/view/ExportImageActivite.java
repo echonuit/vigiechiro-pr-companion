@@ -11,7 +11,7 @@ import javafx.scene.chart.NumberAxis;
 /// **capture pas**.
 ///
 /// La distinction n'est pas cosmétique. Photographier le nœud affiché produit une image noire dès que le
-/// graphe est masqué (onglet en arrière-plan, fenêtre réduite) ou accéléré matériellement — un export qui
+/// graphe est masqué (onglet en arrière-plan, fenêtre réduite) ou accéléré matériellement : un export qui
 /// échoue **silencieusement**, en rendant un fichier d'apparence normale. On reconstruit donc un graphe
 /// neuf, dans une scène transitoire dimensionnée pour l'export.
 ///

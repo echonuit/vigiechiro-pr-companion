@@ -56,7 +56,7 @@ final class PublicationCorrectionsUI {
             VBox zone,
             PublicationCorrectionsViewModel publication,
             ObservableBooleanValue publicationImpossible) {
-        // Grisé pendant l'envoi, et — proactivement — quand rien n'est publiable ni ne le deviendra :
+        // Grisé pendant l'envoi, et (proactivement) quand rien n'est publiable ni ne le deviendra :
         // aucune observation ancrée et nuit non rattachée (#1596, précisé par #1838). Le remède annoncé a
         // changé avec la cause : ce n'est plus « réactivez le passage » (la publication sait désormais
         // acquérir l'ancrage elle-même) mais le rattachement, seul verrou restant. Un MenuItem désactivé
@@ -166,7 +166,7 @@ final class PublicationCorrectionsUI {
             Confirmateur confirmateur) {
         TriPublication tri = apercu.tri();
         // Rien de prêt *et* rien à ancrer : c'est un vrai cul-de-sac. Avec un ancrage à venir, en
-        // revanche, l'aperçu ne peut pas conclure — les observations non ancrées deviendront publiables.
+        // revanche, l'aperçu ne peut pas conclure : les observations non ancrées deviendront publiables.
         if (tri.publiables().isEmpty() && !apercu.ancrageAVenir()) {
             publication.echec("Rien à publier : " + PublicationCorrectionsViewModel.ecarts(tri, true)
                     + ". Déclarez la certitude des observations corrigées, ou rattachez cette nuit à sa"

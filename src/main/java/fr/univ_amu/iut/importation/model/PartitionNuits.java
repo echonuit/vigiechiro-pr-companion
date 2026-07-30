@@ -22,7 +22,7 @@ import java.util.TreeMap;
 ///
 /// **Complétude** déduite des [cycles du journal][CyclesJournal] (fiable) : une nuit dont le cycle s'est
 /// terminé anormalement (carte SD pleine, erreur, interruption) est **tronquée**. Une nuit sans cycle
-/// correspondant (journal absent) est supposée **complète** — on ne devine pas, pour éviter les fausses
+/// correspondant (journal absent) est supposée **complète** : on ne devine pas, pour éviter les fausses
 /// alertes (une nuit calme au petit matin a peu de fichiers sans être tronquée).
 public final class PartitionNuits {
 

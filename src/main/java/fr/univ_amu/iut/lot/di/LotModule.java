@@ -77,12 +77,12 @@ public class LotModule extends ModuleDeFeature {
                 .to(Key.get(ActionGroupee.class, Names.named("action.declencherCalcul.impl")));
         OptionalBinder.newOptionalBinder(binder(), OuvrirLot.class).setBinding().to(NavigationLot.class);
         // Dépôt VigieChiro (#142) en liaison **optionnelle** : déclaré ici (défaut absent) pour que les
-        // injecteurs partiels de la feature `lot` — notamment `CaptureLot`, sans `ConnexionModule` donc sans
-        // client HTTP — résolvent `Optional<DepotVigieChiro>` à vide. La liaison réelle est posée par
+        // injecteurs partiels de la feature `lot` (notamment `CaptureLot`, sans `ConnexionModule` donc sans
+        // client HTTP) résolvent `Optional<DepotVigieChiro>` à vide. La liaison réelle est posée par
         // `DepotVigieChiroModule` (chargé seulement dans l'injecteur applicatif complet).
         OptionalBinder.newOptionalBinder(binder(), DepotVigieChiro.class);
         // Suivi du traitement serveur (#1263) : même montage que le dépôt ci-dessus. Déclaré ici (et pas
-        // seulement dans `CommunModule`) pour que les injecteurs partiels de `lot` — capture, tests de vue —
+        // seulement dans `CommunModule`) pour que les injecteurs partiels de `lot`, capture, tests de vue :
         // résolvent `Optional<SuiviTraitement>` à vide sans binding manquant. La liaison réelle est posée par
         // `ConnexionModule`, où vit le client HTTP.
         OptionalBinder.newOptionalBinder(binder(), SuiviTraitement.class);

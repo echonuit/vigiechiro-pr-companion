@@ -10,7 +10,7 @@ import java.util.List;
 /// marquer déposé (depuis `Prêt à déposer`), ou simplement constater le dépôt (`Déposé`). Le chemin
 /// du dossier (R22) est la cible du téléversement manuel, le volume et le nombre de séquences en
 /// donnent l'ordre de grandeur, et la **checklist de cohérence** ([#controles]) montre, contrôle par
-/// contrôle, ce que « Préparer le lot » vérifie (#254) — les contrôles en échec bloquent la préparation.
+/// contrôle, ce que « Préparer le lot » vérifie (#254) : les contrôles en échec bloquent la préparation.
 ///
 /// @param statut statut workflow courant du passage
 /// @param cheminDossier chemin du dossier de session à téléverser (R22), `null` si pas de session

@@ -19,11 +19,11 @@ import java.util.Set;
 /// **reprenable** (#982) et réhydratable à la réouverture de M-Lot (#983).
 ///
 /// Deux écritures :
-/// - [#synchroniserPlan] : pose (ou complète) le plan d'un passage, **idempotente** — les unités déjà
+/// - [#synchroniserPlan] : pose (ou complète) le plan d'un passage, **idempotente**, les unités déjà
 ///   suivies gardent leur statut (c'est la clé de la reprise), les manquantes sont ajoutées
 ///   « à déposer », celles sorties du plan (archives régénérées autrement) sont retirées ;
 /// - [#mettreAJour] : avancement d'une unité (statut, id distant, message d'erreur), unitaire et
-///   committée immédiatement — une interruption ne perd que l'unité en vol.
+///   committée immédiatement : une interruption ne perd que l'unité en vol.
 public class DepotUniteDao extends DaoGenerique<DepotUnite, Long> {
 
     private static final RowMapper<DepotUnite> MAPPER = rs -> new DepotUnite(
@@ -91,7 +91,7 @@ public class DepotUniteDao extends DaoGenerique<DepotUnite, Long> {
 
     /// Unités **restantes** du passage (tout sauf `depose`, dans l'ordre du plan) : celles que le
     /// moteur reprenable (#982) doit (re)téléverser. Une unité laissée `en_cours` par une interruption
-    /// en fait partie — son téléversement n'a jamais été confirmé.
+    /// en fait partie : son téléversement n'a jamais été confirmé.
     public List<DepotUnite> restantes(Long passageId) {
         return query(
                 "SELECT * FROM depot_unite WHERE passage_id = ? AND statut != ? ORDER BY id",
@@ -116,7 +116,7 @@ public class DepotUniteDao extends DaoGenerique<DepotUnite, Long> {
     /// Pose (ou complète) le **plan de dépôt** du passage, de façon **idempotente** :
     ///
     /// - une unité du plan déjà suivie (même `identifiant_unite`) est **conservée telle quelle**
-    ///   (statut, id distant… — c'est ce qui rend la reprise possible) ;
+    ///   (statut, id distant… : c'est ce qui rend la reprise possible) ;
     /// - une unité du plan encore inconnue est insérée telle que fournie (normalement « à déposer ») ;
     /// - une unité suivie qui ne figure plus dans le plan est **retirée** (archives régénérées
     ///   différemment : son suivi ne correspond plus à rien).

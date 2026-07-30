@@ -10,7 +10,7 @@ import javafx.beans.value.ObservableValue;
 /// (pur câblage, seuil de cohésion PMD) :
 ///
 /// - **trois normalisations** complémentaires : le NIVEAU à la lecture (#109) pour égaliser le volume d'un
-///   cri à l'autre, et les deux VISUELLES (audio-view 1.14) pour les cris faibles — l'onde du sonogramme
+///   cri à l'autre, et les deux VISUELLES (audio-view 1.14) pour les cris faibles : l'onde du sonogramme
 ///   remplit la gouttière au lieu de rester plate, la fenêtre dB du spectrogramme se recale sur le pic ;
 /// - **expansion temporelle ×10** du protocole Vigie-Chiro (les séquences transformées sont les originaux
 ///   ralentis ×10) : réglée pour que les axes affichent les grandeurs RÉELLES (fréquences × 10, temps ÷ 10) ;

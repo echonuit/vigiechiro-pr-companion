@@ -65,10 +65,10 @@ public class ImportationViewModel {
     /// l'assistant pendant un import (l'écran porte la seule vue/VM qui reçoit le résultat).
     private final NavigationViewModel navigation;
 
-    /// Étapes 1-2 : sous-VM d'**inspection** (#183) — dossier source + état d'inspection.
+    /// Étapes 1-2 : sous-VM d'**inspection** (#183), dossier source + état d'inspection.
     private final InspectionImportViewModel inspection;
 
-    /// Étape 3 : sous-VM du **rattachement** (#183) — site / point / année / n° de passage + aperçu.
+    /// Étape 3 : sous-VM du **rattachement** (#183), site / point / année / n° de passage + aperçu.
     private final RattachementImportViewModel rattachement;
 
     /// Message d'erreur **unifié** présenté à la vue : recomposé depuis l'erreur d'inspection (portée
@@ -185,7 +185,7 @@ public class ImportationViewModel {
 
     /// Sous-VM d'**inspection** (étapes 1-2) : la vue **s'y lie directement** (dossier source, état
     /// d'inspection, journal/relevé, compte, nommage, avertissements #33). L'orchestrateur ne re-expose
-    /// plus ces propriétés une à une (façade allégée — la vue dépend des sous-VM, pas d'un orchestrateur
+    /// plus ces propriétés une à une (façade allégée : la vue dépend des sous-VM, pas d'un orchestrateur
     /// God Class).
     public InspectionImportViewModel inspection() {
         return inspection;
@@ -211,7 +211,7 @@ public class ImportationViewModel {
 
     /// Avertissement de doublon R5 (#108), **vide** si le n° est libre ; sinon explique le doublon et
     /// propose le prochain n° libre (délégué à [ControleNumeroPassage], collaborateur **possédé par**
-    /// l'orchestrateur — il dépend de `ServiceImport`). Sa non-vacuité signale à la fois l'avertissement à
+    /// l'orchestrateur : il dépend de `ServiceImport`). Sa non-vacuité signale à la fois l'avertissement à
     /// afficher et l'import bloqué (cf. `peutImporter`).
     public ReadOnlyObjectProperty<RetourOperation> avertissementNumeroPassageProperty() {
         return controleNumeroPassage.avertissementProperty();

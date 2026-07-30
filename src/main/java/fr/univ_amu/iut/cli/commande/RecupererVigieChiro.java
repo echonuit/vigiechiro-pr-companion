@@ -56,7 +56,7 @@ public final class RecupererVigieChiro implements Callable<Integer> {
     private final ClientVigieChiro client;
 
     /// Résolu **paresseusement** : picocli instancie toutes les sous-commandes à la construction de
-    /// la CLI, avant la migration du schéma — or résoudre les rapprocheurs déclenche le provider de
+    /// la CLI, avant la migration du schéma : or résoudre les rapprocheurs déclenche le provider de
     /// l’utilisateur courant, qui touche la base. On ne les demande qu’à l’exécution.
     private final Provider<Set<RapprochementVigieChiro>> rapprocheurs;
 
@@ -70,7 +70,7 @@ public final class RecupererVigieChiro implements Callable<Integer> {
     public Integer call() {
         if (token != null && !token.isBlank()) {
             // Jeton ponctuel : consulté par le client à chaque requête (cf. ConnexionModule), sans rien
-            // persister — la connexion enregistrée de l'application n'est pas modifiée.
+            // persister : la connexion enregistrée de l'application n'est pas modifiée.
             System.setProperty("vigiechiro.token", token);
         }
         // Même garde que la modale : on vérifie l'identité avant de récupérer, pour distinguer un

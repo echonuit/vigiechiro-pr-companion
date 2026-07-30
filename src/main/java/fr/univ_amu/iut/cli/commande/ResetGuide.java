@@ -26,13 +26,13 @@ import picocli.CommandLine.Spec;
 ///
 /// La procédure de reset se compose de gestes qui existent déjà et qui sont testés :
 ///
-/// 1. `sauvegarder --complet` — base **et** audio (#1346) ;
-/// 2. `exporter-observations` — les validations ;
+/// 1. `sauvegarder --complet` : base **et** audio (#1346) ;
+/// 2. `exporter-observations` : les validations ;
 /// 3. base neuve ;
-/// 4. `recuperer-vigiechiro` puis `reconstruire-passage` — métadonnées, sites, points, observations
+/// 4. `recuperer-vigiechiro` puis `reconstruire-passage` : métadonnées, sites, points, observations
 ///    reviennent du serveur (#1050, prouvé de bout en bout) ;
 /// 5. réimport de l'audio : depuis le disque (`importer`), ou `reactiver` pour un passage archivé ;
-/// 6. `audit-coherence` — le workspace doit être sain.
+/// 6. `audit-coherence` : le workspace doit être sain.
 ///
 /// Ce que la procédure **ne dit pas d'elle-même**, et que cette commande dit : *l'étape 5 va-t-elle
 /// aboutir ?* Les métadonnées et les observations reviennent toujours. **L'audio, non.** Une nuit déposée
@@ -40,7 +40,7 @@ import picocli.CommandLine.Spec;
 /// est perdu.
 ///
 /// D'où cette commande, **en lecture seule** : elle établit le bilan de récupérabilité *avant* qu'on
-/// écrive quoi que ce soit. Code de sortie **2** s'il existe au moins une nuit en « perdu » — un script
+/// écrive quoi que ce soit. Code de sortie **2** s'il existe au moins une nuit en « perdu » : un script
 /// peut ainsi refuser d'enchaîner.
 ///
 /// « Perdu » n'est pas une impasse (#1297) : la nuit deviendra un **passage archivé**, consultable et non
@@ -121,7 +121,7 @@ public final class ResetGuide implements Callable<Integer> {
         return bilan.perteAnnoncee() ? CODE_PERTE : 0;
     }
 
-    /// Avec `--executer` : la procédure entière. `--confirmer` est **obligatoire** — une base ne se détruit
+    /// Avec `--executer` : la procédure entière. `--confirmer` est **obligatoire**, une base ne se détruit
     /// pas par inadvertance, et surtout pas par une option qu'on aurait pu laisser traîner dans un script.
     private Integer executerLeReset() {
         PrintWriter sortie = spec.commandLine().getOut();

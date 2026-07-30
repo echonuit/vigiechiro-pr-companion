@@ -22,19 +22,19 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/// `reconstruire-passage` (#1305, EPIC #1297) : rend visibles — et récupérables — les nuits **déposées sur
+/// `reconstruire-passage` (#1305, EPIC #1297) : rend visibles (et récupérables) les nuits **déposées sur
 /// la plateforme mais jamais importées sur cette machine** (déposées depuis un autre poste, avant
 /// l'application, ou après une réinstallation).
 ///
 /// Sans argument, la commande **liste** ces participations orphelines. Avec `--participation <objectid>`,
 /// elle en **reconstruit** une ; avec `--tout`, elle les reconstruit **toutes** en une passe (parité CLI
-/// de l'import groupé #1708 — best-effort : une nuit qui échoue est ignorée, le lot continue). Une nuit
+/// de l'import groupé #1708, best-effort : une nuit qui échoue est ignorée, le lot continue). Une nuit
 /// reconstruite devient un **passage archivé** : lignes de séquences (sans fichier) et observations
 /// rapatriées. Elle se consulte comme tout passage archivé, et se réactive si l'utilisateur retrouve ses
 /// fichiers (`reactiver`).
 ///
 /// **Ce qui manque est dit** : un passage reconstruit n'a ni journal du capteur, ni relevé climatique, ni
-/// séquences non identifiées, ni empreintes — la plateforme ne les connaît pas.
+/// séquences non identifiées, ni empreintes : la plateforme ne les connaît pas.
 @Command(
         name = "reconstruire-passage",
         description = "Liste les participations Vigie-Chiro sans équivalent local (nuits déposées depuis un "

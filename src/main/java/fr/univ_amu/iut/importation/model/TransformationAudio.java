@@ -21,7 +21,7 @@ import java.util.Objects;
 /// Un enregistrement brut est un ultrason mono 16 bits acquis très vite (`Fe`, ex. 384 000 Hz), donc
 /// inaudible ; l'écoute Vigie-Chiro se fait **expansé ×10** (`Fe/10`, ex. 38 400 Hz). Point clé :
 /// **c'est la vraie fréquence d'acquisition `Fe` (issue du log) qui pilote l'arithmétique, pas
-/// l'en-tête WAV** — l'enregistreur PR écrit ses bruts **déjà expansés** (en-tête = `Fe/10`), tandis
+/// l'en-tête WAV** : l'enregistreur PR écrit ses bruts **déjà expansés** (en-tête = `Fe/10`), tandis
 /// qu'une source « directe » les porte à `Fe` (cf. [FrequenceAcquisition]). La chaîne :
 ///
 /// 1. **Découpe** le brut en **tranches de 5 s réelles** : chaque tranche porte `5 × Fe` trames (la
@@ -82,7 +82,7 @@ public class TransformationAudio {
     /// clé de jointure Tadarida). Cf. [SourceOriginal].
     ///
     /// @param originalWav chemin du WAV **lu** (mono 16 bits ; en-tête `Fe/10` pour un brut PR, `Fe` pour
-    ///     une source directe) — `bruts/` ou carte SD
+    ///     une source directe) : `bruts/` ou carte SD
     /// @param nomR6 nom logique R6 servant au nommage R8 des séquences et au `nomOriginal` du résultat
     /// @param dossierSortie dossier `transformes/` où écrire les séquences (créé si absent)
     /// @param prefixe préfixe de la session (sert au nommage R8 des séquences)
@@ -132,7 +132,7 @@ public class TransformationAudio {
         long tailleSource = tailleSource(originalWav);
 
         // Écriture des séquences dans le WORKSPACE : un échec ici (disque plein, permission…) est
-        // **fatal** — il ne doit pas être masqué en « fichier rejeté » ; il remonte et la session est
+        // **fatal** : il ne doit pas être masqué en « fichier rejeté » ; il remonte et la session est
         // nettoyée par l'appelant.
         try {
             Files.createDirectories(dossierSortie);
@@ -219,7 +219,7 @@ public class TransformationAudio {
         }
     }
 
-    /// Nombre de séquences attendues pour une durée source donnée (R10) : `ceil(D / 5)` — une séquence par
+    /// Nombre de séquences attendues pour une durée source donnée (R10) : `ceil(D / 5)`, une séquence par
     /// tranche de 5 s **réelles** de l'enregistrement. Exposé pour la lisibilité des tests et de l'IHM
     /// (prévisualisation du volume à produire).
     public static long nombreSequencesAttendu(double dureeSourceSecondes) {

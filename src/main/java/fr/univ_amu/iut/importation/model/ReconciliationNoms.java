@@ -91,7 +91,7 @@ final class ReconciliationNoms {
     private static Path deplacer(Path source, Path cible) {
         try {
             Files.createDirectories(cible.getParent());
-            // REPLACE_EXISTING : réimport / reprise (#231) — le dossier de session est réutilisé (clé =
+            // REPLACE_EXISTING : réimport / reprise (#231), le dossier de session est réutilisé (clé =
             // quadruplet), donc une tentative antérieure a pu laisser une tranche du même nom. On la
             // réécrit (R11 : sortie déterministe), comme le faisait l'écriture directe historique.
             return Files.move(source, cible, StandardCopyOption.REPLACE_EXISTING);

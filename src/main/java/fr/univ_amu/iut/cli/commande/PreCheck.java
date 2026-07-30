@@ -15,7 +15,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/// `pre-check` (#1512) : affiche le **pré-check** consultatif d'une nuit avant sa vérification — trois
+/// `pre-check` (#1512) : affiche le **pré-check** consultatif d'une nuit avant sa vérification, trois
 /// feux (couverture horaire R3, nombre de fichiers, cohérence du renommage R6) avec leur explication en
 /// clair, plus un résumé de la ou des anomalies. **Consultatif (R13)** : jamais bloquant. Parité CLI du
 /// bandeau de pré-check de M-Qualification (chantier #1524). Lecture pure ; `--json` pour les scripts.

@@ -24,7 +24,7 @@ import java.util.Set;
 /// ## La bascule « identifications validées seulement »
 ///
 /// Elle ne masque pas des lignes : elle **recalcule tout**. Une espèce dont aucune observation n'est
-/// validée disparaît alors du tableau, et les contacts des autres baissent — ce qui change leur classe
+/// validée disparaît alors du tableau, et les contacts des autres baissent : ce qui change leur classe
 /// d'activité. C'est le but : on veut pouvoir lire la nuit telle que Tadarida la propose, puis telle
 /// qu'on l'a soi-même validée, et voir l'écart.
 public final class AgregationSynthese {

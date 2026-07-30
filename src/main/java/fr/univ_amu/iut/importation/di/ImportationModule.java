@@ -66,7 +66,7 @@ public class ImportationModule extends ModuleDeFeature {
 
     /// L'import est une **action contextuelle** (la nuit d'un site précis) : pas de carte d'accueil. Le
     /// point d'entrée est la fiche d'un site, qui ouvre l'import pré-rattaché via le contrat socle
-    /// [OuvrirImportation] — `NavigationImportation` (singleton) le fournit, sans que `sites` dépende du
+    /// [OuvrirImportation] : `NavigationImportation` (singleton) le fournit, sans que `sites` dépende du
     /// `view` de cette feature.
     @Override
     protected void configure() {

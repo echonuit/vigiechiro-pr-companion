@@ -23,7 +23,7 @@ public interface SuiviFichiers {
     /// « sans copie », aucun événement de copie n'est émis).
     void copieDemarree(int numero);
 
-    /// Le fichier `numero` est copié — ou sa copie fidèle a été retrouvée (reprise #231).
+    /// Le fichier `numero` est copié, ou sa copie fidèle a été retrouvée (reprise #231).
     void copieTerminee(int numero);
 
     /// La transformation R10/R11 du fichier `numero` commence.

@@ -28,7 +28,7 @@ final class MetriquesAcoustiquesAudio {
     private final Map<Long, Mesures> parObservation = new HashMap<>();
 
     /// Installe **toute** la fonctionnalité FME / fréquence terminale sur les deux colonnes : leur
-    /// `cellValueFactory` (lue d'un cache privé), leur comparateur numérique, et la **capture** — à chaque
+    /// `cellValueFactory` (lue d'un cache privé), leur comparateur numérique, et la **capture** : à chaque
     /// recalcul des grandeurs par l'audio-view (la propriété FME change au chargement d'un clip et à chaque
     /// surlignage), on mémorise la mesure pour l'observation **courante** et on rafraîchit la table pour
     /// peupler ses cellules. Le cache vit dans les fermetures (aucun état à porter côté controller).

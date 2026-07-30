@@ -9,7 +9,7 @@ import javafx.scene.control.TableView;
 /// les items « Fiche de l'espèce » qui en dépendent.
 ///
 /// Câblage délégué hors de [SonsValidationController], comme `MenuCertitude` et `PanneauDiscussion` avant
-/// lui : ce contrôleur est au plafond de `NcssCount`, et cette synchronisation forme un tout — les deux
+/// lui : ce contrôleur est au plafond de `NcssCount`, et cette synchronisation forme un tout, les deux
 /// écouteurs n'ont de sens que l'un par rapport à l'autre, la garde d'égalité de l'un empêchant la boucle
 /// avec l'autre.
 final class SelectionTableAudio {

@@ -119,7 +119,7 @@ public class ServiceImport {
     }
 
     /// Racine du workspace (sur disque) : volume d'accueil d'une éventuelle extraction de zip (#139),
-    /// le même que celui où l'import recopie ensuite les fichiers — donc jamais le *tmpfs* RAM `/tmp`.
+    /// le même que celui où l'import recopie ensuite les fichiers, donc jamais le *tmpfs* RAM `/tmp`.
     public Path racineWorkspace() {
         return workspace.racine();
     }
@@ -141,7 +141,7 @@ public class ServiceImport {
 
     /// Variante avec **suivi de progression** (story #33) : `progres` est notifié au fil de la copie
     /// puis de la transformation des originaux (fraction globale 0→1, libellé « Copie X/N » puis
-    /// « Transformation X/N »). Appelé sur le fil d'exécution de l'import — la couche IHM relaie au fil
+    /// « Transformation X/N »). Appelé sur le fil d'exécution de l'import : la couche IHM relaie au fil
     /// JavaFX. Même contrat transactionnel et mêmes règles métier que la variante sans callback.
     public ResultatImport importer(Path dossierSource, Long idPoint, Prefixe prefixe, Consumer<Progression> progres) {
         return importer(dossierSource, idPoint, prefixe, progres, JetonAnnulation.neutre());
@@ -150,7 +150,7 @@ public class ServiceImport {
     /// Variante **annulable** (#146) : `jeton` est vérifié entre chaque fichier copié puis transformé ;
     /// **Conserve les originaux** (copie dans `bruts/`) : ce n'est pas « le défaut », c'est un **choix
     /// explicite** porté par cette variante. Le défaut de l'application vit dans le réglage
-    /// `import.conserver-originaux`, que ses appelants (IHM, CLI) lisent eux-mêmes — un service du
+    /// `import.conserver-originaux`, que ses appelants (IHM, CLI) lisent eux-mêmes : un service du
     /// modèle n'a pas à connaître les préférences d'interface (#2064).
     ///
     /// une annulation lève [OperationAnnuleeException] et **nettoie la session partielle** sur disque
@@ -162,7 +162,7 @@ public class ServiceImport {
     }
 
     /// Variante avec choix de **conservation des originaux** (#…) : quand `conserverOriginaux` est
-    /// `false`, les WAV ne sont **pas copiés** dans `bruts/` — ils sont lus et transformés directement
+    /// `false`, les WAV ne sont **pas copiés** dans `bruts/` : ils sont lus et transformés directement
     /// depuis la source (R9, lecture seule), afin d'économiser l'espace disque (une nuit d'originaux peut
     /// peser plusieurs Go). `true` reproduit le comportement historique (copie protégée dans `bruts/`).
     /// Mêmes règles métier, même contrat transactionnel O7.
@@ -179,7 +179,7 @@ public class ServiceImport {
     /// Variante avec **suivi par fichier** (#947) : `suiviFichiers` est notifié au fil de la copie et de
     /// la transformation de chaque original (plan de la nuit, démarrages, fins, rejets #155), en
     /// complément de la progression globale. Notifié hors-thread et **dans le désordre** (transformation
-    /// parallèle #12) — la couche IHM relaie au fil JavaFX et cible les lignes par numéro. Mêmes règles
+    /// parallèle #12) : la couche IHM relaie au fil JavaFX et cible les lignes par numéro. Mêmes règles
     /// métier, même contrat transactionnel que les autres variantes.
     public ResultatImport importer(
             Path dossierSource,
@@ -456,7 +456,7 @@ public class ServiceImport {
         JournalParse journal = rapport.journalOptionnel().orElseGet(() -> JournalDeRepli.depuis(rapport.originaux()));
 
         // Import mono-nuit : une seule nuit = tous les originaux. La date de la nuit vient des horodatages
-        // RÉELS des WAV (date de soirée, bascule à midi), calculée par `partitionNuits()` — déjà la source de
+        // RÉELS des WAV (date de soirée, bascule à midi), calculée par `partitionNuits()` : déjà la source de
         // vérité de l'import multi-nuits. On NE date PLUS d'après le journal : le LogPR est circulaire et sa
         // 1re ligne est celle du DÉPLOIEMENT (nuit 1), si bien qu'un dossier de passe ultérieure héritait à
         // tort de la nuit 1 (collision de date constatée au dépôt). Repli sur `journal.dateDebut()` seulement

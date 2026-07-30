@@ -75,8 +75,8 @@ public class ServiceActivite {
     /// [FenetreObserveeNuit]), ou **vide** si la nuit n'a laissé aucune trace exploitable.
     ///
     /// Sert à savoir **où l'on écoutait** : c'est la seule plage sur laquelle une tranche sans contact
-    /// vaut légitimement zéro. En dehors, l'absence de contact ne dit rien — le capteur était peut-être
-    /// éteint —, et la courbe s'abstient plutôt que d'affirmer un silence observé.
+    /// vaut légitimement zéro. En dehors, l'absence de contact ne dit rien (le capteur était peut-être
+    /// éteint), et la courbe s'abstient plutôt que d'affirmer un silence observé.
     public Optional<FenetreObserveeNuit.Bornes> fenetreEnregistree(long idPassage) {
         return fenetreObservee.pour(idPassage);
     }

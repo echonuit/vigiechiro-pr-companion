@@ -9,13 +9,13 @@ import javafx.application.Platform;
 /// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Capture les **trois avis** portés par une même détection (`apercu-sons-validation-avis-validateur.png`,
-/// #1417) : Tadarida **propose**, l'observateur **corrige**, le validateur du MNHN **tranche** — et, sur la
+/// #1417) : Tadarida **propose**, l'observateur **corrige**, le validateur du MNHN **tranche**, et, sur la
 /// détection sélectionnée, il **contredit** l'observateur (badge de désaccord). Le **fil de discussion**
 /// qui en découle est ouvert à droite du lecteur.
 ///
 /// **Pourquoi une capture à part.** L'aperçu général ([CaptureSonsValidation]) cadre la gauche de la table
 /// et coupe **avant** la colonne « Avis du validateur » : la fonctionnalité y serait invisible. On fait
-/// donc défiler la table jusqu'à elle — c'est ce qu'un utilisateur fait lui-même pour lire le verdict de
+/// donc défiler la table jusqu'à elle : c'est ce qu'un utilisateur fait lui-même pour lire le verdict de
 /// l'expert.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).

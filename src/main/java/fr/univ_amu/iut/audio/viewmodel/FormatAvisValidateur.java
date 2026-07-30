@@ -12,7 +12,7 @@ import java.util.Locale;
 ///
 /// Classe à part, et pas trois méthodes de plus dans [FormatLigneAudio] : celui-ci formate *la ligne*
 /// (ses temps, ses fréquences, son statut de revue), tandis qu'on formate ici *un avis d'expert* et *un
-/// fil de messages* — deux notions que la ligne ne portait pas hier. Les y ajouter faisait basculer
+/// fil de messages* : deux notions que la ligne ne portait pas hier. Les y ajouter faisait basculer
 /// `FormatLigneAudio` en God Class au sens de PMD, ce qui n'était pas un caprice de l'outil : les
 /// responsabilités avaient bien divergé.
 public final class FormatAvisValidateur {
@@ -23,7 +23,7 @@ public final class FormatAvisValidateur {
     private FormatAvisValidateur() {}
 
     /// Libellé de la colonne **« Avis du validateur »** : le nom vernaculaire du taxon tranché par
-    /// l'expert s'il est connu, sinon son code (souche hors référentiel), suivi de sa certitude — et le
+    /// l'expert s'il est connu, sinon son code (souche hors référentiel), suivi de sa certitude, et le
     /// tiret « — » tant qu'aucun expert ne s'est prononcé, ce qui reste le cas le plus courant.
     ///
     /// La certitude est **accolée au taxon** plutôt que mise en colonne séparée : un avis se lit d'un bloc
@@ -40,7 +40,7 @@ public final class FormatAvisValidateur {
     }
 
     /// Classe CSS de l'avis : **mise en avant du désaccord**. Un expert qui confirme ne demande rien ; un
-    /// expert qui **contredit** l'observateur est ce qu'il faut voir en premier — c'est là que se joue la
+    /// expert qui **contredit** l'observateur est ce qu'il faut voir en premier : c'est là que se joue la
     /// qualité de la donnée déposée.
     public static String classeBadge(LigneObservationAudio o) {
         if (!o.trancheeParUnValidateur()) {
@@ -50,7 +50,7 @@ public final class FormatAvisValidateur {
     }
 
     /// Colonne du **fil de discussion** : le nombre de messages échangés. Vide (et non « 0 ») quand
-    /// personne n'a écrit — une colonne d'indicateurs doit rester silencieuse tant qu'il n'y a rien à
+    /// personne n'a écrit : une colonne d'indicateurs doit rester silencieuse tant qu'il n'y a rien à
     /// signaler ; l'en-tête porte le pictogramme, comme « ⭐ » et « 💬 » à côté.
     public static String marqueFil(LigneObservationAudio o) {
         return o.aUnFil() ? String.valueOf(o.nbMessages()) : "";
@@ -58,7 +58,7 @@ public final class FormatAvisValidateur {
 
     /// **Auteur** d'un message, tel qu'il s'affiche dans le fil. Le serveur ne donne qu'un objectid : on le
     /// compare à celui de notre propre profil pour dire « Vous », et on s'en tient à « Le validateur »
-    /// sinon — plutôt qu'un appel réseau par auteur, pour un nom dont le fil n'a pas besoin.
+    /// sinon : plutôt qu'un appel réseau par auteur, pour un nom dont le fil n'a pas besoin.
     ///
     /// Un auteur inconnu (le serveur ne l'a pas renseigné) n'est **pas** attribué : mieux vaut un message
     /// anonyme qu'un message faussement signé.

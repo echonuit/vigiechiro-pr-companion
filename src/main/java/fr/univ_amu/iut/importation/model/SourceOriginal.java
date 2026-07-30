@@ -20,6 +20,6 @@ import java.nio.file.Path;
 /// @param chemin chemin du WAV réellement lu (dans `bruts/` en conservation, sur la SD sans copie)
 /// @param nomR6 nom logique R6 de l'original (base du nommage R8 des séquences et du `nomFichier`)
 /// @param numero rang (1..N) de l'original dans le plan de la nuit, clé de ciblage du suivi par
-///     fichier ([SuiviFichiers], #947) — stable quel que soit l'ordre de fin des transformations
+///     fichier ([SuiviFichiers], #947) : stable quel que soit l'ordre de fin des transformations
 ///     parallèles ; `0` si inconnu (événements ignorés côté IHM)
 record SourceOriginal(Path chemin, String nomR6, int numero) {}

@@ -79,7 +79,7 @@ public final class CaptureSynthese {
         controleur.ouvrirSur(new ContextePassage(1L, 3, new ContexteSite("640380", "A1", "Étang de Biguglia")));
         Path fichier = sortie.resolve("apercu-synthese.png");
         // 1100 × 700 : à 620 px, le bloc de mise en garde débordait de quelques pixels et ApercuFx
-        // refusait la capture (ADR 0042). Il avait raison — un avertissement tronqué ne prévient
+        // refusait la capture (ADR 0042). Il avait raison : un avertissement tronqué ne prévient
         // personne, et c'est justement ce que cette capture doit montrer comme lisible.
         ApercuFx.enregistrerPng(new Scene(vue, 1100, 700), fichier);
         System.out.println("Apercu de la synthese ecrit dans " + fichier.toAbsolutePath());
@@ -165,7 +165,7 @@ public final class CaptureSynthese {
 
         /// Espèces prioritaires de la démonstration. **Fidèle au Plan National d'Actions** : parmi les
         /// quatre espèces montrées, seule la Pipistrelle commune y figure. Une démo qui marquerait tout,
-        /// ou rien, donnerait une image aussi fausse dans un sens que dans l'autre — c'est le défaut
+        /// ou rien, donnerait une image aussi fausse dans un sens que dans l'autre : c'est le défaut
         /// relevé à la clôture du lot #2353, où l'aperçu publié ne montrait aucun bouclier.
         @Provides
         EspecesPrioritaires especesPrioritaires() {
@@ -176,7 +176,7 @@ public final class CaptureSynthese {
         /// touchés. Un seul but, montrer un tableau déterministe sans base.
         private static ServiceSynthese serviceDemo() {
             // DAO à source nulle : jamais interrogé, les deux lectures étant surchargées. Le service
-            // exige un DAO non nul — garde légitime, c'est à la démo de fournir de quoi la satisfaire.
+            // exige un DAO non nul : garde légitime, c'est à la démo de fournir de quoi la satisfaire.
             return new ServiceSynthese(new ProjectionsAudioDao(null)) {
                 @Override
                 public List<LigneSynthese> pour(

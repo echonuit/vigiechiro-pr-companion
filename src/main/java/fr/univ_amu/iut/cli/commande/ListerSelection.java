@@ -16,9 +16,9 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/// `lister-selection` (#1512) : affiche la **sélection d'écoute** d'un passage — chaque séquence
+/// `lister-selection` (#1512) : affiche la **sélection d'écoute** d'un passage, chaque séquence
 /// échantillonnée avec son fichier, son état d'écoute et son **verdict par fichier** (`Bon` / `Mauvais`
-/// / `Inexploitable` / `Non jugé`) — plus le **verdict final proposé** du passage, dérivé de ces
+/// / `Inexploitable` / `Non jugé`) : plus le **verdict final proposé** du passage, dérivé de ces
 /// verdicts par fichier ([ServiceQualification#verdictDerivePassage]).
 ///
 /// Parité CLI de l'écran M-Qualification (verdict par fichier + final, chantier #1524) : lecture pure,

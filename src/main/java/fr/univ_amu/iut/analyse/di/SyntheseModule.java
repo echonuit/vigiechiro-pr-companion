@@ -11,14 +11,14 @@ import fr.univ_amu.iut.commun.view.OuvrirSynthese;
 /// chantier #2348), à côté d'[AnalyseModule] et d'[ActiviteModule].
 ///
 /// Il ne porte **que le point d'entrée** : le contrat socle [OuvrirSynthese], que `passage` injecte pour
-/// ouvrir l'écran. La **machinerie** — le `SyntheseViewModel` et le `ServiceSynthese` — est fournie par
+/// ouvrir l'écran. La **machinerie** (le `SyntheseViewModel` et le `ServiceSynthese`) est fournie par
 /// [AnalyseModule], toujours actif, et **non** ici : le FXML doit rester chargeable (garde-fou
 /// `ChargementFxmlTest`) même l'entrée coupée. Ce module ne conditionne donc que l'**accès**, jamais les
-/// composants — c'est la leçon de la clôture du lot #2352.
+/// composants : c'est la leçon de la clôture du lot #2352.
 public class SyntheseModule extends ModuleDeFeature {
 
     /// `OPTIONNELLE` depuis la clôture du lot : l'écran a désormais son export et sa parité CLI, et
-    /// rester `EXPERIMENTALE` le livrerait **coupé par défaut** — autant ne pas l'avoir écrit. La
+    /// rester `EXPERIMENTALE` le livrerait **coupé par défaut** : autant ne pas l'avoir écrit. La
     /// catégorie n'avait été `EXPERIMENTALE` que le temps du chantier, pour fusionner les paliers
     /// intermédiaires sans exposer un écran à moitié fait.
     @Override

@@ -16,7 +16,7 @@ import fr.univ_amu.iut.commun.view.OuvrirActivite;
 /// [NavigationActivite]), que `passage` injecte pour ouvrir l'écran depuis un passage, et la carte
 /// d'accueil transverse [ActiviteNuit] (prisme « Espèces & biodiversité »). La **machinerie** de l'écran
 /// (le [...viewmodel.ActiviteViewModel] et le [...model.ServiceActivite]) est fournie par [AnalyseModule]
-/// — toujours actif — et **non** ici : l'écran fait partie de la feature `analyse`, et son FXML doit
+/// (toujours actif) et **non** ici : l'écran fait partie de la feature `analyse`, et son FXML doit
 /// rester chargeable (garde-fou `ChargementFxmlTest`) même quand ces entrées sont coupées. Ce module ne
 /// conditionne donc que **l'accès**, jamais les composants.
 public class ActiviteModule extends ModuleDeFeature {

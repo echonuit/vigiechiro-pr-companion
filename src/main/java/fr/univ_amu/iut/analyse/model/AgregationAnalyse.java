@@ -16,7 +16,7 @@ import java.util.function.Function;
 /// testable.
 ///
 /// **Fidélité au SQL remplacé** : mêmes compteurs (`COUNT` / `COUNT(DISTINCT …)`), mêmes min/max
-/// d'année, et **même tri par défaut** — par espèce : nombre d'observations décroissant puis nom
+/// d'année, et **même tri par défaut**, par espèce : nombre d'observations décroissant puis nom
 /// vernaculaire ; par carré : richesse décroissante puis numéro de carré. Le tri secondaire place les
 /// valeurs nulles en premier, comme `ORDER BY … ASC` sous SQLite.
 public final class AgregationAnalyse {

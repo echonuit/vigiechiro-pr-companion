@@ -11,12 +11,12 @@ import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 
 /// Table de dépôt VigieChiro (#983) côté ViewModel : spécialise le socle [SuiviLignes] pour refléter
-/// l'état **persisté** des unités (`depot_unite`, #981 — réhydratation à la réouverture) et les
+/// l'état **persisté** des unités (`depot_unite`, #981 : réhydratation à la réouverture) et les
 /// événements du moteur reprenable (#982) pendant un dépôt. Les événements ciblent leur ligne par
 /// **identifiant** (nom du fichier, la clé de reprise), traduit ici en numéro de ligne.
 ///
 /// Expose [#resteAReprendreProperty()] : `true` quand un dépôt a été entamé et qu'il reste des unités
-/// non déposées — l'IHM bascule alors le bouton en « Retenter les échecs » (le moteur ne re-téléverse
+/// non déposées : l'IHM bascule alors le bouton en « Retenter les échecs » (le moteur ne re-téléverse
 /// que le manquant).
 ///
 /// **Fil JavaFX** : ces méthodes mutent des collections/propriétés observables ; l'appelant (le
@@ -36,7 +36,7 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
     private final ReadOnlyIntegerWrapper enCours = new ReadOnlyIntegerWrapper(this, "enCours", 0);
 
     /// Unités **en échec** du dépôt courant (compteur honnête #984) : rendues visibles pour ne plus
-    /// masquer un dépôt qui n'avance pas — la barre ne comptait auparavant que les succès.
+    /// masquer un dépôt qui n'avance pas : la barre ne comptait auparavant que les succès.
     private final ReadOnlyIntegerWrapper echecs = new ReadOnlyIntegerWrapper(this, "echecs", 0);
 
     /// Pose (ou re-pose) la table depuis l'état **persisté** des unités : chaque statut de `depot_unite`

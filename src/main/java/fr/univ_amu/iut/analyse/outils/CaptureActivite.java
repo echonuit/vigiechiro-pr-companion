@@ -87,7 +87,7 @@ public final class CaptureActivite {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
         // Schéma migré (comme CaptureAnalyse) : l'écran porte des onglets de vues mémorisées, dont le
-        // dépôt lit `saved_filter_view`. Aucune donnée n'est semée pour autant — les contacts restent
+        // dépôt lit `saved_filter_view`. Aucune donnée n'est semée pour autant : les contacts restent
         // fournis par le service de démonstration.
         Injector injecteur = creerInjecteur();
         new MigrationSchema(injecteur.getInstance(SourceDeDonnees.class)).migrer();
@@ -130,7 +130,7 @@ public final class CaptureActivite {
     }
 
     /// Aperçu de la **vue transverse** (toutes les nuits de l'utilisateur) : second point d'entrée de
-    /// l'écran, et le seul où l'**aplat nocturne disparaît** — plusieurs nuits n'ont pas de fenêtre
+    /// l'écran, et le seul où l'**aplat nocturne disparaît** : plusieurs nuits n'ont pas de fenêtre
     /// commune, et en afficher une serait trompeur.
     private static void rendreTransverse(Injector injecteur, Path fichier) throws IOException {
         FXMLLoader loader = chargeur(injecteur);
@@ -192,7 +192,7 @@ public final class CaptureActivite {
 
     /// Les codes suivent la **casse du référentiel Tadarida** (`Pippip`, et non `PIPPIP`) : le repère
     /// « espèce à enjeu » (#2353) compare des codes, et une démo en majuscules montrerait l'écran sans la
-    /// fonctionnalité — un aperçu qui documente une absence.
+    /// fonctionnalité : un aperçu qui documente une absence.
     private static void ajouter(List<ContactHoraire> contacts, String taxon, String nom, int[] parHeure) {
         for (int index = 0; index < parHeure.length; index++) {
             int heure = (20 + index) % 24;

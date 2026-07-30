@@ -194,7 +194,7 @@ public class ActiviteController implements EmplacementNavigation {
                 CriteresActivite.rechercheTexte());
 
         // Onglets de vues (#623) : les vues par défaut partitionnent par catégorie du référentiel, et
-        // l'écran s'ouvre sur « Chiroptères » — Tadarida détecte aussi orthoptères et micromammifères,
+        // l'écran s'ouvre sur « Chiroptères » : Tadarida détecte aussi orthoptères et micromammifères,
         // qui n'ont rien à faire dans la présélection des cinq taxons les plus contactés.
         gestionnaireVues = GestionnaireVues.avecDialogue(
                 barreOnglets, gestionnaireFiltres, depotVues, "activite", CriteresActivite.vuesParDefaut());
@@ -277,7 +277,7 @@ public class ActiviteController implements EmplacementNavigation {
                 .ifPresent(this::exporterVers);
     }
 
-    /// **Exporte les données** du sous-ensemble filtré en CSV — le pendant à l'écran de la commande
+    /// **Exporte les données** du sous-ensemble filtré en CSV : le pendant à l'écran de la commande
     /// `exporter-activite`, sur le même formateur pur. Une image se colle dans un compte rendu, un tableau
     /// se recoupe : les deux besoins sont distincts, l'écran offre désormais les deux (#2613).
     @FXML
@@ -305,7 +305,7 @@ public class ActiviteController implements EmplacementNavigation {
     /// Écrit l'image de la courbe dans `fichier`, en la datant de `dateExport`. Publique, et la date
     /// **passée en paramètre**, parce que l'outil de capture s'en sert pour produire l'aperçu de l'export :
     /// la capture passe ainsi par le **vrai** chemin de production (ADR 0025) plutôt que d'en reconstruire
-    /// une imitation, tout en restant **déterministe** — un `LocalDate.now()` interne reverserait un PNG
+    /// une imitation, tout en restant **déterministe** : un `LocalDate.now()` interne reverserait un PNG
     /// différent chaque jour dans un dépôt qui les versionne.
     public void exporterVers(java.nio.file.Path fichier, LocalDate dateExport) {
         try {
@@ -318,7 +318,7 @@ public class ActiviteController implements EmplacementNavigation {
             viewModel.signalerExport(String.valueOf(fichier.getFileName()));
         } catch (RuntimeException echec) {
             // Disque plein, dossier en lecture seule, rendu refusé par la garde des libellés : sans ce
-            // rattrapage, l'exception remonte au fil JavaFX, qui l'avale — le bouton « ne fait rien ».
+            // rattrapage, l'exception remonte au fil JavaFX, qui l'avale : le bouton « ne fait rien ».
             viewModel.signalerEchecExport(motif(echec));
         }
     }
@@ -370,7 +370,7 @@ public class ActiviteController implements EmplacementNavigation {
     ///
     /// L'ordre n'est pas un détail : la puce « Taxon parent » se peuple des catégories **présentes dans
     /// les données**. Appliquée avant le chargement, la vue ne trouverait aucune case à cocher et
-    /// n'écarterait rien — un filtre affiché comme actif, qui ne filtre pas.
+    /// n'écarterait rien : un filtre affiché comme actif, qui ne filtre pas.
     ///
     /// Appliquée ici, elle pose son filtre avant que la présélection des cinq taxons les plus contactés
     /// ne s'exerce : ce sont donc les cinq chiroptères les plus contactés qui sont tracés, jamais une
@@ -463,7 +463,7 @@ public class ActiviteController implements EmplacementNavigation {
             String taxon = courbe.taxon();
             CheckBox case_ = new CheckBox(nomAffiche(courbe) + " (" + courbe.total() + ")");
             // Repère « espèce à enjeu » (#2353) : le bouclier accompagne le nom, là où l'œil choisit quelles
-            // courbes tracer. Jamais la couleur seule — le glyphe et l'infobulle portent l'information.
+            // courbes tracer. Jamais la couleur seule : le glyphe et l'infobulle portent l'information.
             if (marqueurEnjeu.aEnjeu(taxon)) {
                 case_.setGraphic(RepereEspeceAEnjeu.icone());
                 case_.setTooltip(RepereEspeceAEnjeu.infobulle());

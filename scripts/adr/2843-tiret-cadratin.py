@@ -34,9 +34,25 @@ CADRATIN = "—"
 # Fin de ligne conservée pour situer le suspect : c'est un humain qui tranche, extrait en main.
 EXTRAIT = 90
 
+# Ce qui est **cité** ou **affiché** n'est pas notre prose. Quatre formes, une seule règle :
+#
+# - le glyphe de valeur absente entre chevrons de code ;
+# - un libellé de l'application entre guillemets français, qu'une fiche d'écran reproduit fidèlement ;
+# - un cadratin **seul dans une cellule de tableau**, qui est le même glyphe posé dans du Markdown ;
+# - un littéral Java réduit au glyphe (`"—"`), qui **est** le glyphe : sa définition dans `Formats`,
+#   ses concaténations, et les tests qui l'affirment comme valeur attendue.
+#
+# Les quatre se reconnaissent à leur encadrement. Quatre listes d'exceptions auraient dérivé séparément.
+CITE = re.compile('"' + CADRATIN + '"|`' + CADRATIN + "`|«[^»\n]*»|\\|\\s*" + CADRATIN + "\\s*(?=\\|)")
+
 
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
-    """Les lignes Java portant un tiret cadratin.
+    """Les lignes Java portant un tiret cadratin **de prose**, citations exclues.
+
+    Citations exclues via [#CITE], comme dans les zones Markdown, et pour la même raison : la mesure
+    doit vouloir dire « notre prose ». Comptée brute, elle butait sur un plancher de 50 citations
+    légitimes du glyphe, plancher que personne n'aurait su distinguer d'un reste de travail. Un
+    cliquet dont on ignore le plancher est un cliquet sur lequel on ne peut pas clore le chantier.
 
     `racine` sert au garde-fou `verifie_scripts.py`, qui pointe le script vers une fixture jetable.
     Sans elle, on balaie les deux arbres de sources du dépôt.
@@ -49,19 +65,10 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
         for source in sorted(arbre.rglob("*.java")):
             contenu = source.read_text(encoding="utf-8")
             for numero, ligne in enumerate(contenu.splitlines(), 1):
-                if CADRATIN in ligne:
+                if CADRATIN in CITE.sub("", ligne):
                     trouves.append(f"{source}:{numero}  {ligne.strip()[:EXTRAIT]}")
     return trouves
 
-
-# Ce qui est **cité** ou **affiché** n'est pas notre prose. Trois formes, une seule règle :
-#
-# - le glyphe de valeur absente entre chevrons de code ;
-# - un libellé de l'application entre guillemets français, qu'une fiche d'écran reproduit fidèlement ;
-# - un cadratin **seul dans une cellule de tableau**, qui est le même glyphe posé dans du Markdown.
-#
-# Les trois se reconnaissent à leur encadrement. Trois listes d'exceptions auraient dérivé séparément.
-CITE = re.compile("`" + CADRATIN + "`|«[^»\n]*»|\\|\\s*" + CADRATIN + "\\s*(?=\\|)")
 
 # Les zones **nettoyées** par #2365, en tolérance zéro. Ajouter une tranche revient à ajouter **une
 # ligne** ici : c'est délibéré, chaque tranche touchant ce même script, et une insertion d'une ligne

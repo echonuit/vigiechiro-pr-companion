@@ -16,7 +16,7 @@ final class FormatsImport {
 
     private FormatsImport() {}
 
-    /// Libellé d'un site dans la combo de rattachement : « Carré N » ou « Carré N — nom convivial ».
+    /// Libellé d'un site dans la combo de rattachement : « Carré N » ou « Carré N - nom convivial ».
     static String libelleSite(Site site) {
         return site.nomConvivial() == null
                 ? "Carré " + site.numeroCarre()

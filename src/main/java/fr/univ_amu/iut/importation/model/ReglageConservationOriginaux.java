@@ -10,7 +10,7 @@ package fr.univ_amu.iut.importation.model;
 ///
 /// **Pourquoi ici et pas dans le `viewmodel`.** La clé y a d'abord vécu, sous la forme d'un `CLE_PUBLIQUE`
 /// que la CLI citait. C'était une dépendance vers le `viewmodel` d'une **autre** feature, ce que la règle
-/// ArchUnit `une feature ne dépend pas du view ni du viewmodel d'une autre feature` interdit — sans
+/// ArchUnit `une feature ne dépend pas du view ni du viewmodel d'une autre feature` interdit : sans
 /// pouvoir la voir : `CLE_PUBLIQUE` était une constante compile-time, donc inlinée par le compilateur, et
 /// le `.class` de la commande n'en gardait aucune trace (#2181). La règle était verte à tort.
 ///
@@ -18,7 +18,7 @@ package fr.univ_amu.iut.importation.model;
 /// [RapportImport], [ResultatImport] et [PassageExistant]. Descendre la clé d'un cran suffit donc à
 /// rendre la dépendance légitime, sans installer dans `commun` un réglage que seul l'import utilise.
 ///
-/// **Pourquoi la clé et le défaut ensemble.** Ils étaient écrits à deux endroits — `lireBooleen(CLE,
+/// **Pourquoi la clé et le défaut ensemble.** Ils étaient écrits à deux endroits : `lireBooleen(CLE,
 /// false)` dans la préférence, et le même appel dans la commande. Un défaut dupliqué est une divergence
 /// qui attend son tour : changer d'avis sur « conserver ou non » aurait demandé de le changer deux fois,
 /// et rien n'aurait signalé l'oubli.

@@ -98,21 +98,28 @@ def test_0035_pictogramme() -> None:
 
 def test_2843_tiret_cadratin() -> None:
     m = _charge("2843-tiret-cadratin.py")
+    cad = chr(0x2014)
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
         _ecrire(
             racine,
             "Exemple.java",
             "class Exemple {\n"
-            "    // un tiret cadratin — en commentaire, et la regle vise justement les commentaires\n"
-            '    String propre = "deux-points : voila la forme attendue";\n'
+            "    // un tiret cadratin " + cad + " en commentaire, et la regle vise les commentaires\n"
+            '    String propre = "deux-points : voila la forme attendue";\n'  # rien -> non
+            '    static final String ABSENTE = "' + cad + '";\n'  # litteral = le glyphe -> non
+            "    /// La cellule vide affiche `" + cad + "` dans le tableau.\n"  # chevrons -> non
+            "    /// Le verdict vaut « " + cad + " a verifier » tant que rien n est pose.\n"  # cite -> non
             "}\n",
         )
         n = len(m.suspects(racine))
         # Contrairement a ses voisins, ce script COMPTE les commentaires : la regle porte sur « la doc
-        # et les commentaires », qui sont ici la matiere et non le bruit. La ligne sans cadratin, elle,
-        # ne doit pas etre comptee - sans quoi le script surcompterait sans rien detecter.
-        _verifie("2843 detecte le cadratin en commentaire, ignore la ligne propre", n, 1)
+        # et les commentaires », qui sont ici la matiere et non le bruit. Les trois formes CITEES, en
+        # revanche, ne sont pas de la prose (meme regle que les zones Markdown) : le glyphe defini en
+        # litteral, entre chevrons de code, ou dans un libelle recopie. Ce cas garde les deux sens a la
+        # fois - si le motif de citation devenait gourmand il avalerait la prose et n tomberait a 0 ;
+        # s il cessait de proteger, n monterait a 4 et le cliquet buterait sur un plancher fantome.
+        _verifie("2843 compte la prose Java, epargne les trois formes citees", n, 1)
 
 
 def test_2843_prose_documentation() -> None:

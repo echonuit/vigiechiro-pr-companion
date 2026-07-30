@@ -15,21 +15,21 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 /// `lancer-traitement-vigiechiro` (#984) : déclenche le **traitement serveur** (Tadarida) de la
-/// participation liée à un passage — équivalent CLI du bouton « Lancer la participation » de M-Lot.
+/// participation liée à un passage : équivalent CLI du bouton « Lancer la participation » de M-Lot.
 /// À lancer **une fois la nuit déposée** ; le serveur enchaîne l'extraction des archives puis Tadarida.
 ///
 /// **Jeton** : `--token`, sinon la variable d'environnement `VIGIECHIRO_TOKEN`, sinon la **connexion
 /// enregistrée** dans l'application (préférer la variable d'environnement à `--token`, qui laisse le
 /// jeton dans l'historique du shell).
 ///
-/// Code retour **`0` dès lors que le traitement est en route** — que le serveur vienne de l'accepter ou
-/// qu'il tourne déjà (la commande est donc **idempotente**, scriptable sans crainte) —, **`1`** si le
+/// Code retour **`0` dès lors que le traitement est en route**, que le serveur vienne de l'accepter ou
+/// qu'il tourne déjà (la commande est donc **idempotente**, scriptable sans crainte). **`1`** si le
 /// serveur a refusé la relance, et **`2`** pour un refus métier en amont (dépôt indisponible, ou aucune
 /// participation liée au passage : déposer d'abord), qui remonte via le handler central (#2294).
 ///
 /// ⚠️ **Une nuit déjà analysée n'est pas relancée** : le serveur supprimerait ses observations pour les
 /// recalculer, or l'audio d'un dépôt en archives ZIP n'est pas récupérable (#1244, #1261). L'option
-/// `--forcer` lève cette garde, en connaissance de cause — typiquement après un **échec**, où il n'y a
+/// `--forcer` lève cette garde, en connaissance de cause : typiquement après un **échec**, où il n'y a
 /// plus rien à perdre.
 @Command(
         name = "lancer-traitement-vigiechiro",

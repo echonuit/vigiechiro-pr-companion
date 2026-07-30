@@ -208,7 +208,7 @@ final class MoteurImport {
             jeton.leverSiAnnule();
         } catch (RuntimeException echec) {
             // Annulation (#146) OU erreur fatale (p. ex. écriture workspace impossible, #155) : on nettoie
-            // la session partielle et on remonte — pas de demi-état sur disque ni de passage persisté.
+            // la session partielle et on remonte : pas de demi-état sur disque ni de passage persisté.
             supprimerSessionPartielle(dossierSession);
             throw echec;
         }
@@ -346,7 +346,7 @@ final class MoteurImport {
     }
 
     /// Refuse l'import d'une nuit qui ne tiendrait manifestement pas sur le disque (#2041), **avant**
-    /// d'écrire quoi que ce soit — plutôt que d'échouer à mi-parcours en laissant une session partielle,
+    /// d'écrire quoi que ce soit : plutôt que d'échouer à mi-parcours en laissant une session partielle,
     /// ce que `ExtracteurZip` avait constaté en `ENOSPC` sans pouvoir le prévenir.
     ///
     /// ## Ce que l'import écrit vraiment
@@ -388,7 +388,7 @@ final class MoteurImport {
     }
 
     /// Nombre d'étapes de progression d'une nuit (#33) : N transformations, précédées de N copies
-    /// **uniquement** quand on conserve les originaux — en mode sans copie il n'y a pas de phase de
+    /// **uniquement** quand on conserve les originaux : en mode sans copie il n'y a pas de phase de
     /// copie, la source étant lue en place.
     private static int totalEtapes(int nbOriginaux, boolean conserverOriginaux) {
         return (conserverOriginaux ? nbOriginaux : 0) + nbOriginaux;

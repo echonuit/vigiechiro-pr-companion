@@ -126,7 +126,7 @@ final class CriteresAnalyse {
     /// dans l'inventaire, sans présélection. Le multiple sert l'onglet « Autres », qui cumule les
     /// catégories non-chiroptères (#2615).
     /// Critère **Nature de la nuit** (#2614) : protocole ou participation opportuniste (#2525). Même
-    /// dimension et mêmes libellés que sur l'écran Activité de la nuit — une nuit opportuniste ne compte
+    /// dimension et mêmes libellés que sur l'écran Activité de la nuit : une nuit opportuniste ne compte
     /// pas de la même façon, et se mêlait jusqu'ici sans le dire aux nuits du protocole.
     /// Critère **Espèces à enjeu** (#2353) : garde les observations dont le taxon retenu est une espèce
     /// **prioritaire** au sens du Plan National d'Actions Chiroptères. Critère **sans éditeur** (booléen) :

@@ -24,7 +24,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-/// Sous-ViewModel de **M-Import** — étapes 1 et 2 : choix du **dossier source** et son **inspection
+/// Sous-ViewModel de **M-Import**, étapes 1 et 2 : choix du **dossier source** et son **inspection
 /// en lecture seule** (R9).
 ///
 /// Extrait de [ImportationViewModel] (#183) : cet objet ne porte **que** l'état d'inspection (dossier,
@@ -180,8 +180,8 @@ public class InspectionImportViewModel {
     }
 
     /// Détecte (lecture base via le service) si la nuit inspectée a déjà été importée (#147) : même
-    /// enregistreur + même date. L'identité vient du **journal** s'il est présent, sinon — mode dégradé
-    /// (#107) — elle est **reconstituée des noms de WAV** (comme à l'import), pour que la détection couvre
+    /// enregistreur + même date. L'identité vient du **journal** s'il est présent, sinon (mode dégradé
+    /// #107) elle est **reconstituée des noms de WAV** (comme à l'import), pour que la détection couvre
     /// aussi les réimports sans journal. Sans identité exploitable, rien à signaler. La mise en forme
     /// est déléguée à [AvertissementsInspection].
     private List<PassageExistant> passagesDeLaNuit(RapportInspection rapport) {

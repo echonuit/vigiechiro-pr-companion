@@ -172,7 +172,7 @@ final class PanneauDiscussion {
     }
 
     /// **Installe** le fil dans l'écran : il prend place dans `hote`, à droite du lecteur, et suit la
-    /// sélection de `table`. Le chargement passe par le ViewModel — la vue ne touche jamais la base.
+    /// sélection de `table`. Le chargement passe par le ViewModel : la vue ne touche jamais la base.
     ///
     /// Installé ici plutôt qu'épelé dans le contrôleur (patron de [MenuCertitude#installer]) : celui-ci est
     /// au plafond de NcssCount, et ce câblage forme une unité cohésive qui n'a rien à y faire.
@@ -205,7 +205,7 @@ final class PanneauDiscussion {
     /// personne n'a encore écrit reste un endroit où l'on peut ouvrir une discussion.
     ///
     /// Quand l'envoi est impossible, la saisie est **désactivée et l'enveloppe en dit la raison**
-    /// (affordance #789) — un champ qui ne mènerait à rien serait pire qu'un champ absent.
+    /// (affordance #789) : un champ qui ne mènerait à rien serait pire qu'un champ absent.
     void afficher(List<MessageObservation> fil, String idProfilConnecte, Optional<String> pourquoiPasEcrire) {
         messages.getChildren().clear();
         fil.forEach(message -> messages.getChildren().add(bulle(message, idProfilConnecte)));
@@ -224,7 +224,7 @@ final class PanneauDiscussion {
     }
 
     /// Un message : qui, quand, quoi. Savoir **qui parle** est la moitié de l'information dans une
-    /// discussion — l'entête le dit en clair, et le style distingue nos messages de ceux de l'expert.
+    /// discussion : l'entête le dit en clair, et le style distingue nos messages de ceux de l'expert.
     private static VBox bulle(MessageObservation message, String idProfilConnecte) {
         Label entete = new Label(entete(message, idProfilConnecte));
         entete.getStyleClass().add(message.deMoi(idProfilConnecte) ? "message-de-moi" : "message-du-validateur");

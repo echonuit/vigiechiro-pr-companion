@@ -23,7 +23,7 @@ final class ActionsMenuAudio {
     private final ActionDonneesVigieChiro donneesVigieChiro;
     private final OuvrirPassage ouvrirPassage;
 
-    /// Item « Fiche de l'espèce » du **menu contextuel** de la table (#1795), tenu ici — comme l'item du ☰
+    /// Item « Fiche de l'espèce » du **menu contextuel** de la table (#1795), tenu ici : comme l'item du ☰
     /// est tenu par le controller : instance distincte, un [MenuItem] n'appartenant qu'à un seul menu.
     private final MenuItem itemFicheContexte = new MenuItem();
 

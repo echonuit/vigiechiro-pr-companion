@@ -1,7 +1,7 @@
 package fr.univ_amu.iut.importation.model;
 
 /// Résout la **vraie fréquence d'acquisition** (Hz) d'un enregistrement, indépendamment de ce que
-/// porte son en-tête WAV. C'est cette fréquence — et non l'en-tête — qui pilote toute l'arithmétique
+/// porte son en-tête WAV. C'est cette fréquence (et non l'en-tête) qui pilote toute l'arithmétique
 /// de [TransformationAudio] (fréquence de sortie, découpage à 5 s réelles).
 ///
 /// **Pourquoi l'en-tête ne suffit pas.** L'enregistreur Passive Recorder Vigie-Chiro écrit ses bruts

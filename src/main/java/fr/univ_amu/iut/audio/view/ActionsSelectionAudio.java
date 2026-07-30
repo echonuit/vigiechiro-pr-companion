@@ -48,7 +48,7 @@ final class ActionsSelectionAudio {
             return;
         }
         // Bascule homogène pour un lot mixte : dès qu'une ligne n'est pas en référence, on **marque** tout
-        // le lot ; sinon (toutes en référence) on **retire** tout — plus prévisible qu'un toggle par ligne.
+        // le lot ; sinon (toutes en référence) on **retire** tout : plus prévisible qu'un toggle par ligne.
         boolean marquer = selection.stream().anyMatch(ligne -> !ligne.reference());
         viewModel.actions().marquerReferenceLot(ids(selection), marquer);
     }
@@ -74,7 +74,7 @@ final class ActionsSelectionAudio {
             return;
         }
         // Bascule homogène pour un lot mixte : dès qu'une ligne n'est pas douteuse, on **marque** tout le lot ;
-        // sinon (toutes douteuses) on **retire** tout — plus prévisible qu'un toggle par ligne.
+        // sinon (toutes douteuses) on **retire** tout : plus prévisible qu'un toggle par ligne.
         boolean marquer = selection.stream().anyMatch(ligne -> !ligne.douteux());
         viewModel.actions().marquerDouteuxLot(ids(selection), marquer);
     }

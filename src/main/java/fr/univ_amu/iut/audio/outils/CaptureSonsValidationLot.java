@@ -10,7 +10,7 @@ import javafx.application.Platform;
 ///
 /// Capture la **sélection multiple** de la vue « Sons & validation » (`apercu-sons-validation-lot.png`,
 /// #479) : plusieurs lignes sont retenues d'un coup (surbrillance accentuée) pour appliquer une action
-/// **groupée** — valider, corriger ou marquer en référence tout le lot. Illustre le confort de revue
+/// **groupée** : valider, corriger ou marquer en référence tout le lot. Illustre le confort de revue
 /// « à la volée » sur un ensemble d'observations.
 ///
 /// Le seed et le rendu sont factorisés dans [GraineSonsValidation]. Un `main` distinct (une JVM par PNG)

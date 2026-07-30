@@ -17,7 +17,7 @@ import javafx.scene.input.KeyEvent;
 ///   sélection : Sûr / Probable / Possible (saisie explicite, cf. [MenuCertitude]).
 /// - `N` : aller à la **prochaine « À revoir »** (statut non touché), en **bouclant** en fin de liste.
 /// - `↑` / `↓` : navigation native du [TableView] (observation précédente / suivante), qui déclenche
-///   l'écoute automatique via la sélection — rien à recâbler ici.
+///   l'écoute automatique via la sélection : rien à recâbler ici.
 ///
 /// Le handler est posé **sur la table** : les touches ne sont donc captées que lorsque la table a le focus,
 /// ce qui **respecte la saisie** dans les champs (recherche, sélecteur de taxon, éditeur de commentaire) sans
