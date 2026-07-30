@@ -54,6 +54,19 @@ public final class SortieCapturee {
         return tamponErreur.toString(StandardCharsets.UTF_8);
     }
 
+    /// Les deux flux **mis bout à bout**, la sortie standard d'abord.
+    ///
+    /// Pour les tests qui ne se soucient pas de savoir par où un message est sorti : ils passaient
+    /// autrefois **un seul tampon** aux deux flux, ce qui les mêlait dans l'ordre chronologique.
+    ///
+    /// ⚠️ La différence est réelle et se voit sur un seul cas : l'**entrelacement**. Un tampon unique rend
+    /// « A(std) B(err) C(std) » ; cette méthode rend « A C B ». Un `contains` sur un fragment n'y voit
+    /// rien ; une comparaison au texte entier, si. Les tests migrés relèvent tous du premier cas, sauf
+    /// l'approbation de recette - dont le golden, inchangé, prouve que rien n'est parti sur l'erreur.
+    public String tout() {
+        return texte() + texteErreur();
+    }
+
     /// Remet **les deux** tampons à zéro, pour enchaîner une seconde invocation sur la même instance.
     ///
     /// ⚠️ Les deux, et pas seulement la sortie standard : un test qui vidait `tamponSortie` seul et
