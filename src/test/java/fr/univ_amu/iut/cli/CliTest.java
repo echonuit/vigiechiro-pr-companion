@@ -5,10 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.cli.model.RegistrePassages;
 import fr.univ_amu.iut.commun.model.VersionApplication;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -35,20 +34,15 @@ class CliTest {
 
     private Injector injecteur;
     private Cli cli;
-    private ByteArrayOutputStream tamponSortie;
-    private ByteArrayOutputStream tamponErreur;
-    private PrintStream sortie;
-    private PrintStream erreur;
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
 
     @BeforeEach
     void preparer() {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injecteur = Cli.injecteurApplicatif();
         cli = new Cli(injecteur);
-        tamponSortie = new ByteArrayOutputStream();
-        tamponErreur = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        erreur = new PrintStream(tamponErreur, true, StandardCharsets.UTF_8);
     }
 
     @AfterEach
@@ -57,19 +51,19 @@ class CliTest {
     }
 
     private String texteSortie() {
-        return tamponSortie.toString(StandardCharsets.UTF_8);
+        return capture.texte();
     }
 
     private String texteErreur() {
-        return tamponErreur.toString(StandardCharsets.UTF_8);
+        return capture.texteErreur();
     }
 
     /// Exécute une commande avec un flux de sortie neuf et renvoie sa sortie standard (élaguée) : sert à
     /// capturer l'identifiant écrit par `creer-site`/`ajouter-point` sans mêler plusieurs sorties.
     private String executerSortie(String... args) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        cli.executer(args, new PrintStream(out, true, StandardCharsets.UTF_8), erreur);
-        return out.toString(StandardCharsets.UTF_8).strip();
+        SortieCapturee neuve = new SortieCapturee();
+        cli.executer(args, neuve.sortie(), erreur);
+        return neuve.texte().strip();
     }
 
     @Test

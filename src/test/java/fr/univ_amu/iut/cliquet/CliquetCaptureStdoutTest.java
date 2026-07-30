@@ -20,17 +20,11 @@ import org.junit.jupiter.api.Test;
 /// deux couches distinctes, découpe écrite des deux côtés.
 class CliquetCaptureStdoutTest {
 
-    /// La dette épinglée. **Ne peut que rétrécir** : cf. [Cliquet] pour les deux sens de variation.
-    private static final List<String> MONTENT_LEUR_PROPRE_CAPTURE = List.of(
-            "fr/univ_amu/iut/cli/CliCampagneTest.java",
-            "fr/univ_amu/iut/cli/CliExportVuTest.java",
-            "fr/univ_amu/iut/cli/CliExporterActiviteTest.java",
-            "fr/univ_amu/iut/cli/CliImportTest.java",
-            "fr/univ_amu/iut/cli/CliImportTransformesTest.java",
-            "fr/univ_amu/iut/cli/CliSynthetiserPassageTest.java",
-            "fr/univ_amu/iut/cli/CliTest.java",
-            "fr/univ_amu/iut/importation/TransformationAudioTest.java",
-            "fr/univ_amu/iut/recette/RecetteImportCliGoldenTest.java");
+    /// La dette épinglée : **elle est vide**, et le cliquet reste.
+    ///
+    /// Son rôle a changé le jour où le dernier fichier a été migré : il ne compte plus une dette, il
+    /// empêche qu'elle renaisse. C'est le second axe du chantier #1771 à atteindre zéro.
+    private static final List<String> MONTENT_LEUR_PROPRE_CAPTURE = List.of();
 
     @Test
     @DisplayName("La dette des captures stdout ne peut que rétrécir : aucun nouvel échafaudage")
@@ -50,16 +44,28 @@ class CliquetCaptureStdoutTest {
     /// copie apparaître : il ne la voyait pas. Un détecteur trop littéral est un détecteur qui se tait.
     private static final Pattern TAMPON = Pattern.compile("new\\s+(?:[\\w.]+\\.)?ByteArrayOutputStream\\s*\\(");
 
-    /// Un tampon **monté dans un `@BeforeEach`** : c'est la forme de l'échafaudage recopié. Un
-    /// `ByteArrayOutputStream` construit au fil d'un test isolé sert souvent à autre chose.
+    /// Un tampon **branché sur un flux d'impression** : c'est cela, capturer une sortie.
+    ///
+    /// ⚠️ **Correction de la mesure, pas migration** (ADR 2867, la confusion usage / mention). La version
+    /// précédente se contentait d'un tampon et d'un `@BeforeEach` quelque part dans le fichier, et
+    /// comptait donc `TransformationAudioTest` - qui empile du **PCM audio** dans un
+    /// `ByteArrayOutputStream` pour vérifier que la concaténation des séquences reconstitue la source. Ce
+    /// fichier n'a jamais capturé la moindre sortie : il n'écrit pas une seule ligne de texte, et ne
+    /// construit aucun `PrintStream`.
+    ///
+    /// Il sort donc de la liste **sans avoir été touché**. Un cliquet qui surcompte se décrédibilise
+    /// aussi sûrement qu'un qui sous-compte, et le distinguer d'une migration réussie est exactement ce
+    /// que le message du patron réclame.
     private static boolean monteSaPropreCapture(Cliquet.Fichier fichier) {
         // Le paquet `fixture` est la DESTINATION de la migration : `SortieCapturee` monte forcément le
-        // tampon que tous les autres cessent de monter. L'exclusion manquait tant que la brique n'existait
-        // pas ; elle est écrite maintenant plutôt que laissée à un détail de forme (aujourd'hui, seule
-        // l'absence de `@BeforeEach` empêche de la compter, ce qui ne tient qu'à un cheveu).
+        // tampon que tous les autres cessent de monter.
         if (fichier.dansLePaquet("cliquet") || fichier.dansLePaquet("fixture")) {
             return false;
         }
-        return TAMPON.matcher(fichier.source()).find() && fichier.source().contains("@BeforeEach");
+        return TAMPON.matcher(fichier.source()).find()
+                && FLUX_D_IMPRESSION.matcher(fichier.source()).find();
     }
+
+    /// Le tampon est-il **branché sur un flux** ? Sans cela, ce n'est pas une capture de sortie.
+    private static final Pattern FLUX_D_IMPRESSION = Pattern.compile("new\\s+(?:[\\w.]+\\.)?PrintStream\\s*\\(");
 }

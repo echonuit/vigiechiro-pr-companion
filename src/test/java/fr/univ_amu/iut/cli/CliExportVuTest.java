@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -27,9 +28,7 @@ import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -185,15 +184,15 @@ class CliExportVuTest {
     @DisplayName("exporter-vu : écrit le _Vu.csv canonique, code de sortie 0 (golden)")
     void exporter_vu_produit_le_csv_vu() throws IOException {
         Path sortieCsv = workspace.resolve("passage_Vu.csv");
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+        SortieCapturee tampon = new SortieCapturee();
 
         int code = cli.executer(
                 new String[] {"exporter-vu", "--passage", String.valueOf(idPassage), "--sortie", sortieCsv.toString()},
-                new PrintStream(tampon, true, StandardCharsets.UTF_8),
-                new PrintStream(tampon, true, StandardCharsets.UTF_8));
+                tampon.sortie(),
+                tampon.erreur());
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(tampon.toString(StandardCharsets.UTF_8)).contains("Export Vu écrit");
+        assertThat(tampon.tout()).contains("Export Vu écrit");
         assertThat(Files.exists(sortieCsv)).isTrue();
 
         Approvals.verify(Files.readString(sortieCsv, StandardCharsets.UTF_8));

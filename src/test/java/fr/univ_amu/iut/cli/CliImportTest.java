@@ -9,15 +9,14 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -110,22 +109,17 @@ class CliImportTest {
     @Test
     @DisplayName("#2064 : les deux options s'excluent, et le disent")
     void options_incompatibles() {
-        ByteArrayOutputStream sortie = new ByteArrayOutputStream();
-        int code = cli.executer(
-                argsImport("--conserver-originaux", "--sans-originaux"),
-                new PrintStream(sortie, true, StandardCharsets.UTF_8),
-                new PrintStream(sortie, true, StandardCharsets.UTF_8));
+        SortieCapturee sortie = new SortieCapturee();
+        int code =
+                cli.executer(argsImport("--conserver-originaux", "--sans-originaux"), sortie.sortie(), sortie.erreur());
 
         assertThat(code).isNotEqualTo(Cli.CODE_SUCCES);
-        assertThat(sortie.toString(StandardCharsets.UTF_8)).contains("s'excluent");
+        assertThat(sortie.tout()).contains("s'excluent");
     }
 
     private int importerAvec(String... options) {
-        ByteArrayOutputStream sortie = new ByteArrayOutputStream();
-        return cli.executer(
-                argsImport(options),
-                new PrintStream(sortie, true, StandardCharsets.UTF_8),
-                new PrintStream(sortie, true, StandardCharsets.UTF_8));
+        SortieCapturee sortie = new SortieCapturee();
+        return cli.executer(argsImport(options), sortie.sortie(), sortie.erreur());
     }
 
     private String[] argsImport(String... options) {
@@ -161,7 +155,7 @@ class CliImportTest {
     @Test
     @DisplayName("importer puis lister-passages : passage Transformé persisté, codes de sortie 0")
     void importer_puis_lister() {
-        ByteArrayOutputStream sortieImport = new ByteArrayOutputStream();
+        SortieCapturee sortieImport = new SortieCapturee();
         int codeImport = cli.executer(
                 new String[] {
                     "importer",
@@ -174,11 +168,11 @@ class CliImportTest {
                     "--passage",
                     "2"
                 },
-                new PrintStream(sortieImport, true, StandardCharsets.UTF_8),
-                new PrintStream(sortieImport, true, StandardCharsets.UTF_8));
+                sortieImport.sortie(),
+                sortieImport.erreur());
 
         assertThat(codeImport).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(sortieImport.toString(StandardCharsets.UTF_8))
+        assertThat(sortieImport.tout())
                 .contains("Import réussi")
                 .contains("Z1")
                 .contains("640380")
@@ -203,14 +197,11 @@ class CliImportTest {
         assertThat(passages.get(0).annee()).isEqualTo(2026);
 
         // lister-passages restitue le passage importé avec son contexte site/point.
-        ByteArrayOutputStream sortieListe = new ByteArrayOutputStream();
-        int codeListe = cli.executer(
-                new String[] {"lister-passages"},
-                new PrintStream(sortieListe, true, StandardCharsets.UTF_8),
-                new PrintStream(sortieListe, true, StandardCharsets.UTF_8));
+        SortieCapturee sortieListe = new SortieCapturee();
+        int codeListe = cli.executer(new String[] {"lister-passages"}, sortieListe.sortie(), sortieListe.erreur());
 
         assertThat(codeListe).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(sortieListe.toString(StandardCharsets.UTF_8))
+        assertThat(sortieListe.tout())
                 .contains("1 passage(s)")
                 .contains("640380")
                 .contains("Z1")
@@ -227,21 +218,17 @@ class CliImportTest {
                 .getFirst()
                 .id();
 
-        ByteArrayOutputStream tamponSortie = new ByteArrayOutputStream();
-        ByteArrayOutputStream tamponErreur = new ByteArrayOutputStream();
-        int code = cli.executer(
-                argsImport(),
-                new PrintStream(tamponSortie, true, StandardCharsets.UTF_8),
-                new PrintStream(tamponErreur, true, StandardCharsets.UTF_8));
+        SortieCapturee capture = new SortieCapturee();
+        int code = cli.executer(argsImport(), capture.sortie(), capture.erreur());
 
         assertThat(code)
                 .as("2 arrête un script qui enchaînerait, sans le confondre avec un échec (1)")
                 .isEqualTo(2);
-        assertThat(tamponSortie.toString(StandardCharsets.UTF_8))
+        assertThat(capture.texte())
                 .as("la perte se chiffre AVANT d'agir, comme la double confirmation de l'IHM")
                 .contains("déjà utilisé")
                 .contains("Suppression DÉFINITIVE");
-        assertThat(tamponErreur.toString(StandardCharsets.UTF_8)).contains("--ecraser");
+        assertThat(capture.texteErreur()).contains("--ecraser");
         assertThat(injecteur.getInstance(PassageDao.class).findByPoint(idPoint))
                 .as("un refus qui aurait déjà détruit serait pire que pas de refus du tout")
                 .singleElement()
@@ -271,14 +258,11 @@ class CliImportTest {
     @Test
     @DisplayName("#2278 : sans collision, la sortie nominale ne dit RIEN d'un écrasement")
     void sans_collision_aucune_ligne_ecrasement() {
-        ByteArrayOutputStream tamponSortie = new ByteArrayOutputStream();
-        int code = cli.executer(
-                argsImport(),
-                new PrintStream(tamponSortie, true, StandardCharsets.UTF_8),
-                new PrintStream(tamponSortie, true, StandardCharsets.UTF_8));
+        SortieCapturee capture = new SortieCapturee();
+        int code = cli.executer(argsImport(), capture.sortie(), capture.erreur());
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(tamponSortie.toString(StandardCharsets.UTF_8))
+        assertThat(capture.tout())
                 .as("le chemin nominal est inchangé — un golden compare cette sortie mot pour mot")
                 .doesNotContain("déjà utilisé")
                 .doesNotContain("Suppression DÉFINITIVE");
@@ -311,15 +295,15 @@ class CliImportTest {
     @Test
     @DisplayName("#2004 : la sortie rapporte les anomalies du journal, comme l'écran depuis #2044")
     void importer_rapporte_les_anomalies_du_journal() {
-        ByteArrayOutputStream sortie = new ByteArrayOutputStream();
+        SortieCapturee sortie = new SortieCapturee();
         int code = cli.executer(
                 new String[] {"importer", "--source", sd.toString(), "--point", String.valueOf(idPoint)},
-                new PrintStream(sortie, true, StandardCharsets.UTF_8),
-                new PrintStream(sortie, true, StandardCharsets.UTF_8));
+                sortie.sortie(),
+                sortie.erreur());
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         // Ces anomalies étaient transportées jusqu'au ViewModel et affichées NULLE PART. #2044 les a
         // rendues visibles à l'écran ; sans cette ligne, la commande resterait la moitié muette.
-        assertThat(sortie.toString(StandardCharsets.UTF_8)).contains("Anomalie").contains("Réveil non programmé");
+        assertThat(sortie.tout()).contains("Anomalie").contains("Réveil non programmé");
     }
 }

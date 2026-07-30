@@ -4,9 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,7 +21,6 @@ class CliCampagneTest {
     Path workspace;
 
     private Cli cli;
-    private PrintStream erreur;
 
     @BeforeEach
     void preparer() {
@@ -31,7 +28,6 @@ class CliCampagneTest {
         Injector injecteur = Cli.injecteurApplicatif();
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
-        erreur = new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8);
     }
 
     @AfterEach
@@ -39,12 +35,12 @@ class CliCampagneTest {
         System.clearProperty("vigiechiro.workspace");
     }
 
-    /// Exécute une commande avec un flux de sortie neuf et renvoie sa sortie standard (élaguée).
+    /// Exécute une commande avec une capture neuve et renvoie sa sortie standard (élaguée).
     private String executerSortie(String... args) {
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        int code = cli.executer(args, new PrintStream(out, true, StandardCharsets.UTF_8), erreur);
+        SortieCapturee capture = new SortieCapturee();
+        int code = cli.executer(args, capture.sortie(), capture.erreur());
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        return out.toString(StandardCharsets.UTF_8).strip();
+        return capture.texte().strip();
     }
 
     @Test
