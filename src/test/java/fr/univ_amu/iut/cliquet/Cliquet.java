@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /// **Le patron du cliquet** : une dette est épinglée dans une liste explicite, et cette liste ne peut que
@@ -50,28 +52,55 @@ import java.util.stream.Stream;
 /// valeur par défaut est celle qui ne ment pas quand on l'oublie.
 public final class Cliquet {
 
-    /// Racine des sources de test, d'où partent tous les balayages.
+    /// Racine des sources de test, d'où part la plupart des balayages.
     public static final Path TESTS = Path.of("src", "test", "java");
+
+    /// Racine des sources principales : une dette peut vivre dans le produit, pas seulement dans ses
+    /// tests (#2669, les outils qui assemblent leur injecteur à la main).
+    public static final Path SOURCES = Path.of("src", "main", "java");
 
     private Cliquet() {}
 
-    /// Les fichiers de test qui satisfont `critere`, en chemins relatifs à [#TESTS], triés.
+    /// Les fichiers de **test** qui satisfont `critere`, en chemins relatifs à [#TESTS], triés.
+    public static List<String> fichiersOu(Predicate<Fichier> critere) {
+        return fichiersOu(TESTS, critere);
+    }
+
+    /// Les fichiers sous `racine` qui satisfont `critere`, en chemins relatifs à `racine`, triés.
     ///
     /// Le prédicat reçoit le **contenu** du fichier et son chemin : les deux sont nécessaires, le second
     /// pour exclure un paquet entier ; une exclusion écrite vaut mieux qu'un effet de bord.
-    public static List<String> fichiersOu(Predicate<Fichier> critere) {
-        try (Stream<Path> fichiers = Files.walk(TESTS)) {
+    public static List<String> fichiersOu(Path racine, Predicate<Fichier> critere) {
+        try (Stream<Path> fichiers = Files.walk(racine)) {
             return fichiers.filter(chemin -> chemin.toString().endsWith(".java"))
                     .map(chemin -> new Fichier(chemin, lire(chemin)))
                     .filter(critere)
                     .map(fichier ->
-                            TESTS.relativize(fichier.chemin()).toString().replace('\\', '/'))
+                            racine.relativize(fichier.chemin()).toString().replace('\\', '/'))
                     .sorted()
                     .toList();
         } catch (IOException echec) {
-            throw new UncheckedIOException("parcours de " + TESTS, echec);
+            throw new UncheckedIOException("parcours de " + racine, echec);
         }
     }
+
+    /// Le source **sans ses doc-commentaires** (`///`) ni ses blocs `/* … */`.
+    ///
+    /// Un détecteur qui lit les commentaires confond l'**usage** et la **mention** : `RacineInjecteur`
+    /// se serait exclu tout seul du cliquet des injecteurs parce que sa Javadoc cite
+    /// `RacineInjecteur.modules()` en exemple, alors que son code ne l'appelle pas. C'est le piège que
+    /// l'ADR 2867 nomme, sous sa forme la plus discrète : ici, il **innocentait** le seul fichier qui
+    /// devait l'être pour une tout autre raison.
+    public static String sansCommentaires(String source) {
+        return BLOC_DE_COMMENTAIRE
+                .matcher(source)
+                .replaceAll(" ")
+                .lines()
+                .filter(ligne -> !ligne.strip().startsWith("//"))
+                .collect(Collectors.joining("\n"));
+    }
+
+    private static final Pattern BLOC_DE_COMMENTAIRE = Pattern.compile("/\\*.*?\\*/", Pattern.DOTALL);
 
     /// Un fichier de test, avec son contenu déjà lu : le détecteur n'a pas à s'occuper d'entrées-sorties.
     public record Fichier(Path chemin, String source) {
