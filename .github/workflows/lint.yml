@@ -86,3 +86,11 @@ jobs:
         # Cet auto-test plante une violation témoin par script et exige qu'il la voie, et la même en
         # commentaire pour qu'il ne la compte pas. Il ferme le trou de la passe 6 de clôture.
         run: python3 scripts/adr/verifie_scripts.py
+
+      - name: Auto-test du garde de titre de PR (bloquant, #2947)
+        # Même raisonnement que l'étape précédente, appliqué au garde qui vit hors de `scripts/adr`.
+        # Il refuse deux choses : un titre hors Conventional Commits, et un tiret cadratin. La seconde
+        # règle compte doublement, parce que ce titre devient la ligne du CHANGELOG à la fusion en
+        # squash, et que le CHANGELOG est le seul fichier que la typographie ne peut pas rattraper
+        # après coup. Un garde qui cesserait de détecter laisserait la source se rouvrir en silence.
+        run: bash .github/scripts/verifie-titre-pr.sh --auto-test
