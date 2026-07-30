@@ -12,17 +12,9 @@ import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Map;
@@ -70,33 +62,19 @@ class CycleTraitementIntegrationTest {
                 new TraitementVigieChiro(client), liens, releves, Horloge.figeeAu(LocalDate.of(2026, 7, 13)));
     }
 
-    /// Une nuit déposée : site, point, enregistreur, passage. (Fixture à mutualiser un jour : #1258.)
+    /// Une nuit déposée : site, point, enregistreur, passage. Le « un jour » de #1258, c'est aujourd'hui.
     private static Long seedPassage(SourceDeDonnees source) {
-        new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-05-31", "u-1"));
-        Long idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "Z41", 43.5, 5.4, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
-        return new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        1,
-                        2026,
-                        "2026-07-12",
-                        "20:25:00",
-                        "07:47:00",
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        "1925492",
-                        null))
-                .id();
+        return JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .carre("640380")
+                .nomSite("Étang")
+                .point("Z41")
+                .position(43.5, 5.4)
+                .enregistreur("1925492")
+                .nuit(1, 2026, "2026-07-12")
+                .statut(StatutWorkflow.DEPOSE)
+                .semerSquelette()
+                .idPassage();
     }
 
     @Test
