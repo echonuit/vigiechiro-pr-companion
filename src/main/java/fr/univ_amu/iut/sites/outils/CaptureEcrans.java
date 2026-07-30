@@ -45,32 +45,32 @@ import javafx.scene.layout.VBox;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Capture les ecrans de la feature « sites » (M-Sites, M-Site-detail, modale point) en PNG, pour
-/// les comparer visuellement aux maquettes du brief. Demarche :
+/// Capture les écrans de la feature « sites » (M-Sites, M-Site-detail, modale point) en PNG, pour
+/// les comparer visuellement aux maquettes du brief. Démarche :
 ///
-/// 1. base SQLite temporaire seedee avec des donnees d'exemple realistes (3 sites, points GPS,
-///    passages aux statuts/verdicts varies) ;
+/// 1. base SQLite temporaire semée avec des données d'exemple réalistes (3 sites, points GPS,
+///    passages aux statuts/verdicts variés) ;
 /// 2. injecteur Guice du **chrome complet** ([RacineInjecteur#modules()] : toutes les features, car
-///    `MainController` en dépend) avec une [HorlogeFigee] pour un rendu deterministe (fraicheur,
-///    « il y a N j », annee courante figes) et un `OuvrirImportation` no-op ;
-/// 3. chaque vue est chargee via la `controllerFactory` Guice du `FXMLLoader`, puis rendue
-///    hors-ecran par [ApercuFx] (snapshot + SwingFXUtils) dans `.github/assets/`.
+///    `MainController` en dépend) avec une [HorlogeFigee] pour un rendu déterministe (fraîcheur,
+///    « il y a N j », année courante figées) et un `OuvrirImportation` no-op ;
+/// 3. chaque vue est chargée via la `controllerFactory` Guice du `FXMLLoader`, puis rendue
+///    hors-écran par [ApercuFx] (snapshot + SwingFXUtils) dans `.github/assets/`.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26,
-/// `glass.platform=Headless`, sans xvfb). Patron reutilisable : chaque future feature ajoute son
+/// `glass.platform=Headless`, sans xvfb). Patron réutilisable : chaque future feature ajoute son
 /// propre `<feature>.outils.CaptureEcrans`.
 public final class CaptureEcrans {
 
-    /// Identifiant de l'unique utilisateur local seede (l'app est mono-utilisateur).
+    /// Identifiant de l'unique utilisateur local semé (l'app est mono-utilisateur).
     private static final String ID_UTILISATEUR = "demo-enseignant";
 
-    /// Date figee de reference (« aujourd'hui ») pour un rendu deterministe.
+    /// Date figée de référence (« aujourd'hui ») pour un rendu déterministe.
     private static final LocalDate REFERENCE = LocalDate.of(2026, 9, 20);
 
-    /// Annee de campagne des passages seedes.
+    /// Année de campagne des passages semés.
     private static final int ANNEE = 2026;
 
-    /// N° de serie des deux enregistreurs seedes (cle naturelle, cf. [Enregistreur]).
+    /// N° de série des deux enregistreurs semés (clé naturelle, cf. [Enregistreur]).
     private static final String SERIE_PR1 = "1925492";
 
     private static final String SERIE_PR2 = "1648011";
@@ -78,10 +78,10 @@ public final class CaptureEcrans {
     private static final String CHROME = "/fr/univ_amu/iut/commun/view/MainView.fxml";
     private static final String MODALE = "/fr/univ_amu/iut/sites/view/ModalePoint.fxml";
 
-    /// Modale de declaration / edition d'un site (#1431) : une VRAIE vue, rendue telle quelle. La
-    /// capture precedente (apercu-sites-modale-edition.png) etait une REPLIQUE reconstruite a la main
-    /// dans CaptureDialogues, parce que le dialogue n'avait pas de .fxml - elle pouvait donc deriver du
-    /// vrai ecran sans que rien ne le signale.
+    /// Modale de déclaration / édition d'un site (#1431) : une VRAIE vue, rendue telle quelle. La
+    /// capture précédente (apercu-sites-modale-edition.png) était une RÉPLIQUE reconstruite à la main
+    /// dans CaptureDialogues, parce que le dialogue n'avait pas de .fxml, elle pouvait donc dériver du
+    /// vrai écran sans que rien ne le signale.
     private static final String MODALE_SITE = "/fr/univ_amu/iut/sites/view/ModaleSite.fxml";
 
     private CaptureEcrans() {}
@@ -113,9 +113,9 @@ public final class CaptureEcrans {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        // Migration + seed une seule fois ; chaque ecran reconstruit ensuite un injecteur neuf
-        // (singletons frais) pointant sur la meme base, pour eviter qu'un meme noeud JavaFX soit
-        // partage entre deux scenes.
+        // Migration + semis une seule fois ; chaque écran reconstruit ensuite un injecteur neuf
+        // (singletons frais) pointant sur la même base, pour éviter qu'un même nœud JavaFX soit
+        // partagé entre deux scènes.
         Injector amorce = creerInjecteur();
         amorce.getInstance(MigrationSchema.class).migrer();
         Seed seed = seeder(amorce);
@@ -145,15 +145,15 @@ public final class CaptureEcrans {
         System.out.println("Apercus ecrits dans " + sortie.toAbsolutePath());
     }
 
-    /// Ecran d'accueil M-Sites, rendu dans le chrome principal (barre + zone centrale).
+    /// Écran d'accueil M-Sites, rendu dans le chrome principal (barre + zone centrale).
     private static void capturerMesSites(Injector injecteur, Path fichier) throws IOException {
         Parent chrome = chargerFxml(injecteur, CHROME);
         injecteur.getInstance(NavigationSites.class).ouvrirAccueil();
         ApercuFx.enregistrerPng(new Scene(chrome, 1100, 720), fichier);
     }
 
-    /// Ecran de detail d'un site, rendu dans le chrome (fiche + points + tableau des passages).
-    /// On empile d'abord la liste M-Sites puis le detail, pour que le **fil d'Ariane** du chrome
+    /// Écran de détail d'un site, rendu dans le chrome (fiche + points + tableau des passages).
+    /// On empile d'abord la liste M-Sites puis le détail, pour que le **fil d'Ariane** du chrome
     /// montre le parcours complet (`Accueil › Mes sites › Carré N`) et le bouton ← Retour (#140).
     private static void capturerDetail(Injector injecteur, Site site, Path fichier) throws IOException {
         Parent chrome = chargerFxml(injecteur, CHROME);
@@ -163,8 +163,8 @@ public final class CaptureEcrans {
         ApercuFx.enregistrerPng(new Scene(chrome, 1180, 920), fichier);
     }
 
-    /// Modale d'edition d'un point d'ecoute (champs pre-remplis), rendue seule (fenetre modale). La
-    /// modale embarque desormais une carte-outil (#153) : on attend les tuiles OSM avant le snapshot.
+    /// Modale d'édition d'un point d'écoute (champs pré-remplis), rendue seule (fenêtre modale). La
+    /// modale embarque désormais une carte-outil (#153) : on attend les tuiles OSM avant le snapshot.
     private static void capturerModaleEdition(Injector injecteur, Site site, PointDEcoute point, Path fichier)
             throws IOException {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE));
@@ -174,8 +174,8 @@ public final class CaptureEcrans {
         ApercuFx.capturerApresPreparation(new Scene(vue), AttenteTuiles::attendre, fichier);
     }
 
-    /// Modale de creation d'un point d'ecoute (formulaire vierge), rendue seule (fenetre modale). Comme
-    /// l'edition, on laisse les tuiles OSM de la carte-outil se charger avant le snapshot (#153).
+    /// Modale de création d'un point d'écoute (formulaire vierge), rendue seule (fenêtre modale). Comme
+    /// l'édition, on laisse les tuiles OSM de la carte-outil se charger avant le snapshot (#153).
     private static void capturerModaleCreation(Injector injecteur, Site site, Path fichier) throws IOException {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE));
         loader.setControllerFactory(injecteur::getInstance);
@@ -184,8 +184,8 @@ public final class CaptureEcrans {
         ApercuFx.capturerApresPreparation(new Scene(vue), AttenteTuiles::attendre, fichier);
     }
 
-    /// Modale d'edition d'un site (champs pre-remplis), rendue seule. Pas de carte-outil ici : aucun
-    /// chargement de tuiles a attendre.
+    /// Modale d'édition d'un site (champs pré-remplis), rendue seule. Pas de carte-outil ici : aucun
+    /// chargement de tuiles à attendre.
     private static void capturerModaleSiteEdition(Injector injecteur, Site site, Path fichier) throws IOException {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
         loader.setControllerFactory(injecteur::getInstance);
@@ -194,7 +194,7 @@ public final class CaptureEcrans {
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
     }
 
-    /// Modale de declaration d'un site (formulaire vierge), rendue seule.
+    /// Modale de déclaration d'un site (formulaire vierge), rendue seule.
     private static void capturerModaleSiteCreation(Injector injecteur, Path fichier) throws IOException {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
         loader.setControllerFactory(injecteur::getInstance);
@@ -225,7 +225,7 @@ public final class CaptureEcrans {
                 }));
     }
 
-    /// Insere les donnees d'exemple et renvoie le site + point captures en detail et en modale.
+    /// Insère les données d'exemple et renvoie le site + point capturés en détail et en modale.
     private static Seed seeder(Injector injecteur) {
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
@@ -235,15 +235,15 @@ public final class CaptureEcrans {
         enregistreurs.insert(new Enregistreur(SERIE_PR1, "V1.01, T4.1", null));
         enregistreurs.insert(new Enregistreur(SERIE_PR2, "V1.01, T4.1", null));
 
-        // Site 1 (tiede) : riche, c'est lui qui est capture en detail et dont A1 alimente la modale.
+        // Site 1 (tiède) : riche, c'est lui qui est capturé en détail et dont A1 alimente la modale.
         Site etang = service.creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, "Ahetze", ID_UTILISATEUR);
         PointDEcoute a1 =
                 service.ajouterPoint(etang.id(), "A1", 43.4010, -1.5740, "Près du grand chêne, à 30 m du chemin");
         PointDEcoute b2 = service.ajouterPoint(etang.id(), "B2", 43.4055, -1.5680, "Lisière de roselière");
         service.ajouterPoint(etang.id(), "C3", null, null, "Bord de l'étang - GPS à relever");
-        // Points RAPATRIES de la plateforme mais jamais utilises (#1738) : masques par defaut de la fiche
-        // (un lien « Afficher les points non utilises » les revele) et resumes sur la carte M-Sites
-        // (« + N rapatries »), pour ne pas noyer les points qui servent sous la grille rapatriee.
+        // Points RAPATRIÉS de la plateforme mais jamais utilisés (#1738) : masqués par défaut de la fiche
+        // (un lien « Afficher N point(s) rapatrié(s) non utilisé(s) » les révèle) et résumés sur la carte
+        // M-Sites (« (+ N rapatriés) »), pour ne pas noyer les points qui servent sous la grille rapatriée.
         service.ajouterPointSynchronise(etang.id(), "Z10", 43.4020, -1.5730, null);
         service.ajouterPointSynchronise(etang.id(), "Z11", 43.4030, -1.5720, null);
         service.ajouterPointSynchronise(etang.id(), "Z12", 43.4040, -1.5710, null);
@@ -255,14 +255,14 @@ public final class CaptureEcrans {
         passages.insert(
                 passage(1, "2026-06-20", b2.id(), SERIE_PR2, StatutWorkflow.DEPOSE, Verdict.DOUTEUX, "2026-06-23"));
 
-        // Site 2 (frais) : un passage tout recent, pas encore verifie. Carre 131165 = maille reelle de
-        // Marseille (centroide 43.342, 5.355), coherente avec les coordonnees du point.
+        // Site 2 (frais) : un passage tout récent, pas encore vérifié. Carré 131165 = maille réelle de
+        // Marseille (centroïde 43.342, 5.355), cohérente avec les coordonnées du point.
         Site zac = service.creerSite("131165", "ZAC Nord", Protocole.STANDARD, "Marseille", ID_UTILISATEUR);
         PointDEcoute zacA1 = service.ajouterPoint(zac.id(), "A1", 43.3400, 5.3600, null);
         passages.insert(passage(1, "2026-09-15", zacA1.id(), SERIE_PR1, StatutWorkflow.IMPORTE, null, null));
 
-        // Site 3 (froid) : aucun passage, protocole recherche. Capture en detail « sans passage ».
-        // Carre 131275 = maille reelle des Calanques (centroide 43.213, 5.447), coherente avec le point.
+        // Site 3 (froid) : aucun passage, protocole recherche. Capturé en détail « sans passage ».
+        // Carré 131275 = maille réelle des Calanques (centroïde 43.213, 5.447), cohérente avec le point.
         Site calanques = service.creerSite("131275", "Calanques", Protocole.RECHERCHE, null, ID_UTILISATEUR);
         service.ajouterPoint(calanques.id(), "A1", 43.2100, 5.4400, "Crete sud");
 
@@ -295,7 +295,7 @@ public final class CaptureEcrans {
                 null);
     }
 
-    /// Donnees seedees reutilisees par les ecrans detail et modale.
+    /// Données semées réutilisées par les écrans détail et modale.
     private record Seed(Site site, PointDEcoute point, Site siteSansPassage) {}
 
     /// La **modale de progression de la synchronisation** (#2558), figée sur une étape.

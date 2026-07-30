@@ -57,16 +57,16 @@ import javafx.scene.Scene;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Capture l'assistant M-Import en PNG, pour le comparer a la maquette du brief. Pour montrer le
-/// « cas standard » (sections inspection + rattachement remplies, et non l'ecran vide), on pilote
+/// Capture l'assistant M-Import en PNG, pour le comparer à la maquette du brief. Pour montrer le
+/// « cas standard » (sections inspection + rattachement remplies, et non l'écran vide), on pilote
 /// directement le [ImportationViewModel] :
 ///
-/// 1. base SQLite temporaire seedee (un utilisateur, un site avec un point) + un dossier
-///    d'echantillon (journal LogPR, releve climatique, deux WAV) ;
+/// 1. base SQLite temporaire semée (un utilisateur, un site avec un point) + un dossier
+///    d'échantillon (journal LogPR, relevé climatique, deux WAV) ;
 /// 2. injecteur Guice minimal (socle + sites + passage + importation) avec une [HorlogeFigee] pour
-///    une annee de passage deterministe ;
-/// 3. la vue est chargee avec une `controllerFactory` qui injecte un VM connu, qu'on pilote ensuite
-///    (choix du dossier -> inspection -> selection site/point) avant le rendu hors-ecran par
+///    une année de passage déterministe ;
+/// 3. la vue est chargée avec une `controllerFactory` qui injecte un VM connu, qu'on pilote ensuite
+///    (choix du dossier -> inspection -> sélection site/point) avant le rendu hors-écran par
 ///    [ApercuFx].
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
@@ -437,10 +437,11 @@ public final class CaptureImport {
         ServiceSites service = injecteur.getInstance(ServiceSites.class);
         var site = service.creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, "Ahetze", ID_UTILISATEUR);
         var point = service.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, "Près du grand chêne");
-        // Un passage n°1 DEJA en base pour ce point (#108) : re-choisir le n°1 dans l'assistant fait
-        // apparaitre l'avertissement « passage deja existant ». Restyle en ambre par #2072 et jamais
-        // capture (#2097), c'est ce que montre apercu-import-rattachement-avertissements. Le passage
-        // reference son enregistreur (contrainte de cle etrangere), qu'on seme d'abord.
+        // Un passage n°1 DÉJÀ en base pour ce point (#108) : re-choisir le n°1 dans l'assistant fait
+        // apparaître l'avertissement « Le passage n° 1 existe déjà pour ce point en… ». Restylé en
+        // ambre par #2072 et jamais capturé (#2097), c'est ce que montre
+        // apercu-import-rattachement-avertissements. Le passage
+        // référence son enregistreur (contrainte de clé étrangère), qu'on sème d'abord.
         new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
         // Deux campagnes (#2631) : la liste déroulante montre un choix, et le passage déjà en base en
         // porte une, ce qui rend la proposition observable sur la capture.
