@@ -79,6 +79,18 @@ public final class FluxExportsAudio {
         }
     }
 
+    /// Exporte la **bibliothèque de sons de référence** (P10) dans l'archive `destination`.
+    /// **Bloquant** : même contrat que [#exporter] - à appeler hors du fil JavaFX, après [#preparer].
+    ///
+    /// @return le message de bilan, à restituer par [#confirmer]
+    public String bibliotheque(Path destination, Consumer<Progression> progres, JetonAnnulation jeton) {
+        try {
+            return exporteur.bibliotheque(destination, progres, jeton);
+        } catch (IOException echec) {
+            throw new UncheckedIOException(echec);
+        }
+    }
+
     /// Le bilan de l'export, en message de succès (issue nominale de la modale).
     public void confirmer(String message) {
         messages.export(true, message);

@@ -53,6 +53,8 @@ MAINS=(
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidation"
   "fr.univ_amu.iut.audio.outils.CaptureAvisValidateur"
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidationFiltres"
+  "fr.univ_amu.iut.audio.outils.CaptureSonsValidationLieu"
+  "fr.univ_amu.iut.audio.outils.CaptureMenuReferences"
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidationColonnes"
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidationDivergence"
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidationLot"

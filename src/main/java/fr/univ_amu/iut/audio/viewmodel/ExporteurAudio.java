@@ -98,21 +98,23 @@ public final class ExporteurAudio {
         return message.toString();
     }
 
-    /// Exporte la bibliothèque de sons de référence vers le dossier `destination` (P10) : récapitulatif
-    /// CSV + copie des fichiers son existants. Ignoré si `destination` est nul.
-    ResultatExport bibliotheque(Path destination) {
-        if (destination == null) {
-            return IGNORE;
+    /// Exporte la bibliothèque de sons de référence dans l'archive `destination` (P10). **Bloquant** :
+    /// à appeler hors du fil JavaFX, dans la modale de progression - une bibliothèque de saison pèse
+    /// plusieurs centaines de mégaoctets.
+    ///
+    /// @return le message de bilan, à restituer par la vue
+    String bibliotheque(Path destination, java.util.function.Consumer<Progression> progres, JetonAnnulation jeton)
+            throws IOException {
+        ExportBiblioSons export = bibliotheque.exporterBibliotheque();
+        ExportBiblioSons.Bilan bilan = export.exporterVers(destination, progres, jeton);
+        StringBuilder message = new StringBuilder("Bibliothèque exportée : " + destination.getFileName() + " - "
+                + export.nombre() + " référence(s), " + bilan.sonsCopies() + " son(s), "
+                + String.format(java.util.Locale.FRENCH, "%.1f Mo", bilan.octets() / 1_048_576.0) + ".");
+        if (!bilan.sonsIntrouvables().isEmpty()) {
+            message.append(" ")
+                    .append(bilan.sonsIntrouvables().size())
+                    .append(" son(s) introuvable(s), resté(s) hors de l'archive (le CSV les nomme).");
         }
-        try {
-            ExportBiblioSons export = bibliotheque.exporterBibliotheque();
-            int copies = export.exporterVers(destination);
-            return new ResultatExport(
-                    true,
-                    "Bibliothèque exportée vers " + destination + " : " + copies + " fichier(s) son + le récapitulatif "
-                            + ExportBiblioSons.NOM_CSV + ".");
-        } catch (RuntimeException echec) {
-            return new ResultatExport(false, echec.getMessage());
-        }
+        return message.toString();
     }
 }

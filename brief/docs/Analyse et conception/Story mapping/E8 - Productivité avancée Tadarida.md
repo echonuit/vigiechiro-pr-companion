@@ -41,7 +41,7 @@ Ces gains sont **secondaires** : ils enrichissent la validation sans en être un
 ## E8.S2 - Marquer des séquences comme référence et exporter une bibliothèque par espèce { #e8s2 }
 
 !!! note "Partiellement livré"
-    Le marquage « séquence de référence » et l'export existent, mais les sons sont exportés **à plat** dans un dossier unique, accompagnés d'un CSV récapitulatif où le taxon est une colonne. Ils ne sont **pas** rangés en **arborescence de sous-dossiers par taxon** (cf. [R32](../Modèle%20conceptuel/Règles%20métier.md#r32)).
+    Le marquage « séquence de référence » et l'export existent, et l'export produit désormais une **archive ZIP** annulable au bilan chiffré (harmonisation avec l'export « observations + sons », clôture de l'EPIC #2790). Mais les sons y restent **à plat** sous `sons/`, accompagnés d'un CSV récapitulatif où le taxon est une colonne : ils ne sont **pas** rangés en **arborescence de sous-dossiers par taxon** (cf. [R32](../Modèle%20conceptuel/Règles%20métier.md#r32)).
 
 **En tant que** [Samuel](../Personas/Samuel.md) (qui forme un débutant)
 
@@ -65,7 +65,7 @@ Ces gains sont **secondaires** : ils enrichissent la validation sans en être un
     ```
 - [x] Les WAV exportés sont **copies** des séquences ralenties ×10 (lisibles directement par tout lecteur audio).
 - [ ] **Variante** : option « Document récapitulatif » pour produire en plus un PDF/HTML par espèce avec spectrogrammes et métadonnées (à arbitrer selon la complexité, [E6.S5](E6%20-%20Diagnostiquer%20le%20matériel.md#e6s5) peut servir de base technique).
-- [ ] L'utilisateur choisit le dossier de destination ; un bouton « Zipper le dossier » est proposé après export pour partage.
+- [x] L'utilisateur choisit l'**archive** de destination : elle est produite directement, sans étape de compression manuelle.
 - [x] La sélection « référence » est persistée en BD ([E0.S5](E0%20-%20Fondations%20de%20persistance.md#e0s5)) et réutilisable d'une session à l'autre.
 
 **Parcours rattaché** : [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md)<br>
@@ -92,3 +92,33 @@ Ces gains sont **secondaires** : ils enrichissent la validation sans en être un
 **Parcours rattaché** : [P11](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20espèces%20détectées.md)<br>
 **Maquettes cibles** : [M-Analyse](../Maquettes/M-Analyse.md)<br>
 **Dépendances** : [E7.S1](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s1)<br>
+
+---
+
+## E8.S4 - Exporter un sous-ensemble filtré avec ses sons, pour avis d'expert { #e8s4 }
+
+**En tant que** [Samuel](../Personas/Samuel.md)
+
+**Je veux** emporter les observations que j'ai à l'écran **et leurs fichiers son** dans une archive unique
+
+**Afin de** faire trancher une identification douteuse par un spécialiste, qui doit pouvoir **réécouter**
+
+**Critères d'acceptation** :
+
+- [x] La vue « Sons & validation » offre un critère **« Lieu »** (commune, carré, point, site présents
+      dans le sous-ensemble chargé) qui se combine avec le critère **Espèce**, et sa recherche texte
+      couvre ces mêmes champs.
+- [x] La **commune** d'un point est dérivée de ses coordonnées GPS et mémorisée
+      ([C3](../Modèle%20conceptuel/C3%20-%20Point%20d%27écoute.md)) : « Aix-en-Provence » est trouvable
+      même si le site porte un autre nom.
+- [x] Le menu ☰ produit une **archive ZIP** du sous-ensemble affiché : `observations.csv` (identique à
+      l'export CSV seul) et les sons rangés **par nuit**, dédupliqués.
+- [x] L'écriture est **annulable** et montre sa progression ; l'annulation comme l'échec ne laissent
+      **aucune archive partielle**.
+- [x] Un son dont le fichier a quitté le disque est **compté** dans le compte rendu, sans bloquer
+      l'export : l'observation reste au CSV.
+- [x] La **ligne de commande** produit la même archive (`exporter-sons --passage | --espece --sortie`).
+
+**Parcours rattaché** : [P13](../Parcours%20utilisateurs/P13%20-%20Envoyer%20un%20sous-ensemble%20à%20un%20expert.md)<br>
+**Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (menu ☰ + modale de progression)<br>
+**Dépendances** : [E7.S1](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s1), [E8.S3](#e8s3)<br>

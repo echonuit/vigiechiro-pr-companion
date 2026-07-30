@@ -106,7 +106,8 @@ validée (résultats Tadarida), l'écran invite à le faire.
 ## Filtrer et exporter
 
 Le champ **Filtrer** restreint la table à la volée (insensible à la casse et aux accents) : par **nom ou
-code d'espèce** en mode *Par espèce*, par **numéro de carré ou nom de site** en mode *Par carré*. Le
+code d'espèce** en mode *Par espèce*, par **numéro de carré, nom de site ou commune** en mode *Par
+carré* (la commune est celle déduite des coordonnées du point, voir [Mes sites](sites.md)). Le
 bouton **« Exporter… »** enregistre l'inventaire **affiché** (tel que filtré) en **CSV**, prêt pour un
 tableur ou un partage.
 

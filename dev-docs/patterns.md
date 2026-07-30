@@ -678,6 +678,33 @@ en miroir).
 contrat de la plateforme, pas une variante d'options). La structure d'archive de l'export des sons
 (sous-dossier par session) est actée par l'ADR 2792.
 
+**Deux exports de sons, un seul comportement.** L'export « observations + sons » (#2793) et l'export
+de la **bibliothèque de sons de référence** (P10) passent tous deux par cet écrivain, derrière la même
+modale annulable et le même bilan chiffré. Le second écrivait auparavant dans un **dossier**, de façon
+**synchrone**, en **ignorant** les fichiers absents : trois écarts qu'aucun test ne signalait, parce
+que rien n'obligeait deux gestes jumeaux à se ressembler. C'est le sens de l'harmonisation menée à la
+clôture de l'EPIC #2790 : le patron n'existe que si le second usage l'adopte.
+
+## Critère de filtre sur liste (socle `commun.view`)
+
+**Le problème.** Chaque écran à barre de filtres « à la Notion » (#470/#537) écrivait son éditeur de
+puce en liste déroulante à choix unique. Une puce à valeur unique ne sait dire ni « ces trois
+carrés », ni « tout sauf les chiroptères » (#2615) ; et le critère « Lieu » de la vue audio (#2794)
+confronte la même liste de valeurs cochées à **quatre champs** d'une ligne (commune, carré, point,
+site).
+
+**La solution.** `CritereListe`, fabrique de `CritereFiltre` sur une dimension textuelle, en trois
+variantes : `simple` (liste déroulante, une valeur), `multiple` (cases à cocher, appartenance),
+`multipleParmi` (cases à cocher, la ligne portant **plusieurs valeurs candidates** passe dès que
+l'une est cochée - nom distinct, une surcharge de `multiple` aurait le même effacement). Sémantique
+partagée : **rien de coché n'écarte rien** (une puce fraîchement posée ne vide pas la vue), les
+valeurs offertes sont **celles réellement présentes**, calculées à l'ouverture de la puce, et l'état
+se mémorise/rejoue par les vues sauvegardées sans travail spécifique (`DescripteurCritere#valeurs`
+est déjà une liste).
+
+**La règle.** Un nouveau critère sur dimension textuelle passe par `CritereListe` ; un éditeur écrit
+à la main ne se justifie que pour un type d'éditeur nouveau (curseur, plage horaire).
+
 ## Occupation d'un écran pendant un traitement long (socle `commun`)
 
 **Le problème.** Un traitement lourd (agrégats, inspection de dossier, appel réseau) exécuté
@@ -1204,6 +1231,13 @@ et le plafond `GodClass` du portail qualité s'en trouve mieux.
 la sévérité se décidant au point de jonction. **Un collaborateur qui émet plusieurs natures** reçoit la
 messagerie et choisit lui-même : la lui faire deviner ailleurs reviendrait à réinterpréter ses messages
 d'après leur texte.
+
+**Le patron du flux exposé.** Quand un **enchaînement complet** (préparation, travail hors fil,
+restitutions par issue) pèse sur le ViewModel, il déménage dans un collaborateur que le VM construit
+et **expose par un accesseur** : `MultisiteViewModel.positionsEnAttente()` (la file du drag carte),
+`AudioViewModel.exports()` (`FluxExportsAudio`, #2793/#2794 : exports CSV et « observations +
+sons »). La vue pilote le collaborateur, qui parle au service et restitue par la messagerie du VM ;
+le VM garde l'orchestration d'écran, et le plafond `GodClass` cesse d'interdire les gestes riches.
 
 **Le piège à connaître.** Un message de garde placé derrière un contrôle **grisé sur la même condition**
 n'est jamais lu par personne. Cinq cas de ce genre existent dans l'application (#1970) : la garde et le

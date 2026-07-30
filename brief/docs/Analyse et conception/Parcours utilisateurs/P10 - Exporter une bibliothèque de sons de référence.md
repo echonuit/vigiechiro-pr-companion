@@ -8,16 +8,21 @@ Samuel a validé plusieurs centaines d'observations sur la saison. Il veut **con
 
 1. Pendant la validation (parcours [P7](P7%20-%20Valider%20les%20résultats%20Tadarida.md)), Samuel marque certaines observations comme « **séquence de référence** » via un bouton dédié.
 2. Quand il a fini de constituer sa sélection, il ouvre le menu « **Exporter** » → « **Bibliothèque de sons de référence** ».
-3. L'application produit un dossier organisé par espèce :
+3. L'application produit une **archive ZIP** (le récapitulatif à la racine, les sons sous `sons/`),
+   écrite avec progression annulable comme l'export « observations + sons » (P13) :
    ```
-   bibliotheque/
-     Pippip - Pipistrellus pipistrellus/
-       Car640380-2026-Pass2-Z1-...20260422_212817_003.wav
-       Car640380-2026-Pass2-Z1-...20260423_001435_001.wav
-     Nyclei - Nyctalus leisleri/
-       ...
+   bibliotheque-sons.zip
+   ├── bibliotheque-sons.csv     (taxon, séquence source, fichier, fréquence, commentaire)
+   └── sons/
+       ├── Car640380-2026-Pass2-Z1-...20260422_212817_003.wav
+       └── Car640380-2026-Pass2-Z1-...20260423_001435_001.wav
    ```
-4. Samuel peut zipper le dossier et le partager.
+4. Samuel transmet l'archive telle quelle. Un son dont le fichier a quitté le disque est **compté**
+   dans le bilan, sans bloquer l'export.
+
+> **Reste à faire** : le rangement des sons **par espèce** (sous-dossiers `sons/<taxon>/`) demandé par
+> [E8.S2](../Story%20mapping/E8%20-%20Productivité%20avancée%20Tadarida.md#e8s2) n'est pas livré : les
+> sons sont à plat sous `sons/`, le taxon vit dans le CSV.
 
 ## Variante
 
