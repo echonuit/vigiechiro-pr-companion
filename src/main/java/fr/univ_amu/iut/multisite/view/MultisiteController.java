@@ -346,6 +346,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 viewModel.filtres(),
                 List.of(
                         CriteresMultisite.carre(),
+                        CriteresMultisite.lieu(viewModel::passagesFiltres),
                         CriteresMultisite.statut(),
                         CriteresMultisite.verdict(),
                         CriteresMultisite.annee(),

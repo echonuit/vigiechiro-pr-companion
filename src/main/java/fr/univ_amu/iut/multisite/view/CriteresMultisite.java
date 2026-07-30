@@ -5,16 +5,22 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
@@ -36,6 +42,11 @@ final class CriteresMultisite {
 
     /// Clé **stable** du critère Analyse (#1338), partagée par le critère et la vue « Résultats à importer ».
     private static final String ANALYSE = "analyse";
+
+    /// Clé du critère « Lieu » (#2968). Même clé que les vues audio (#2794) et Analyse (#2966) :
+    /// une vue mémorisée nomme ses critères, et trois écrans qui filtrent le même concept sous trois
+    /// clés se liraient mal.
+    private static final String LIEU = "lieu";
 
     private CriteresMultisite() {}
 
@@ -123,6 +134,58 @@ final class CriteresMultisite {
 
     /// Critère **Carré** : champ texte du n° de carré (ex. `640380`). Éditable au clavier **et** posé par la
     /// carte (clic d'un carré, via [fr.univ_amu.iut.commun.view.GestionnaireFiltres#poser(String, List)]).
+    /// Critère **Lieu** (#2968, chantier #2790) : liste à cocher des lieux **présents dans les passages
+    /// filtrés**, toutes dimensions confondues, dans l'ordre commune, carré, point. Une ligne passe si
+    /// **l'une** de ses dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien
+    /// de coché n'écarte rien.
+    ///
+    /// **Trois dimensions, pas quatre** : [LignePassage] ne porte pas le nom de site. C'est un écart avec
+    /// la vue audio (#2794), qui en a quatre, et il tient à la projection, pas à un choix d'ergonomie.
+    ///
+    /// **Le critère « Carré » subsiste à côté**, et ce n'est pas un doublon oublié. Le retirer serait
+    /// silencieusement destructeur : [fr.univ_amu.iut.commun.view.GestionnaireFiltres] restaure une vue
+    /// mémorisée en ignorant **sans un mot** un critère qu'il ne connaît plus, si bien qu'une vue
+    /// « Carré 640380 » se rejouerait sans aucun filtre, en montrant toute la saison. Un élargissement
+    /// silencieux sur un filtre trompe plus qu'une erreur. Retirer « Carré » demande une migration des
+    /// vues stockées, qui est une autre préoccupation.
+    static CritereFiltre<LignePassage> lieu(Supplier<? extends List<LignePassage>> passagesFiltres) {
+        return CritereListe.multipleParmi(
+                LIEU,
+                "Lieu",
+                "Choisir un lieu",
+                () -> lieuxPresents(passagesFiltres.get()),
+                CriteresMultisite::dimensionsLieu);
+    }
+
+    /// Lieux présents dans `passages` : les valeurs **distinctes** de chaque dimension, groupées par
+    /// dimension (communes, puis carrés, puis points) et triées au sein de chacune. Un même libellé porté
+    /// par deux dimensions n'apparaît qu'une fois : le coche vaut alors pour les deux.
+    private static List<String> lieuxPresents(List<LignePassage> passages) {
+        Set<String> lieux = new LinkedHashSet<>();
+        lieux.addAll(valeursDistinctes(passages, LignePassage::commune));
+        lieux.addAll(valeursDistinctes(passages, LignePassage::numeroCarre));
+        lieux.addAll(valeursDistinctes(passages, LignePassage::codePoint));
+        return List.copyOf(lieux);
+    }
+
+    /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
+    private static List<String> valeursDistinctes(
+            List<LignePassage> passages, Function<LignePassage, String> dimension) {
+        return passages.stream()
+                .map(dimension)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    /// Les dimensions de lieu d'un passage, valeurs nulles écartées.
+    private static List<String> dimensionsLieu(LignePassage ligne) {
+        return Stream.of(ligne.commune(), ligne.numeroCarre(), ligne.codePoint())
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
     static CritereFiltre<LignePassage> carre() {
         return new CritereFiltre<LignePassage>() {
             @Override

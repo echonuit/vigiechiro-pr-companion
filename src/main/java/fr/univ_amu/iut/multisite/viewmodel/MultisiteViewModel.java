@@ -183,6 +183,14 @@ public class MultisiteViewModel {
 
     /// Données de l'écran chargées **hors du fil JavaFX** (#1209) : passages du tableau + agrégat des
     /// carrés de la carte, les deux requêtes base réunies pour une seule occupation.
+    /// Passages **filtrés** (conjonction des filtres actifs), tels que le tableau les montre. Exposé
+    /// pour la puce « Lieu » (#2968), qui liste les lieux **présents dans ce sous-ensemble** et non dans
+    /// toute la saison : une liste qui proposerait des communes déjà écartées par un autre filtre ferait
+    /// cliquer dans le vide.
+    public ObservableList<LignePassage> passagesFiltres() {
+        return passagesFiltres;
+    }
+
     public record DonneesMultisite(List<LignePassage> passages, List<CarreAgrege> carte) {}
 
     /// **Lecture seule** des données de l'écran (deux requêtes base). Sans effet sur l'état observable :
