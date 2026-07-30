@@ -110,7 +110,7 @@ public class ServiceQualification {
     }
 
     // ===========================================================================
-    // R12 — Constitution de la sélection d'écoute
+    // R12 : Constitution de la sélection d'écoute
     // ===========================================================================
 
     /// Constitue la sélection d'écoute **à l'ouverture de la vue** (R12) : méthode
@@ -246,8 +246,8 @@ public class ServiceQualification {
     }
 
     /// Enregistre le **verdict par fichier** d'une séquence de la sélection d'un passage (#1524, lot 5).
-    /// Lève si le passage n'a pas de sélection. Écrit `selection_sequence.verdict`, puis — **uniquement
-    /// si le passage est déjà `VÉRIFIÉ`** — resynchronise le cache dénormalisé `passage.verification_verdict`
+    /// Lève si le passage n'a pas de sélection. Écrit `selection_sequence.verdict`, puis (**uniquement
+    /// si le passage est déjà `VÉRIFIÉ`**) resynchronise le cache dénormalisé `passage.verification_verdict`
     /// avec le verdict dérivé ([#resynchroniserCacheSiVerifie]). Depuis le lot 6a, l'IHM dérive le verdict
     /// du passage de ces verdicts par fichier ([#verdictDerivePassage]) et le persiste à l'enregistrement
     /// ([#enregistrerVerdict]) : cette resynchronisation garde le cache d'un passage **déjà vérifié**
@@ -268,8 +268,8 @@ public class ServiceQualification {
     /// ([#verdictDerivePassage]), **uniquement pour un passage déjà `VÉRIFIÉ`** (#1524, item cache).
     ///
     /// Restreindre au statut `VÉRIFIÉ` est délibéré : le cache d'un passage vérifié reste cohérent quand
-    /// on rejuge un de ses fichiers, **sans** polluer les passages **non vérifiés** — dont le cache `null`
-    /// sert de sentinelle « pas encore vérifié » à d'autres écrans (M-Sites, multisite, filtres, CSV) —
+    /// on rejuge un de ses fichiers, **sans** polluer les passages **non vérifiés**, dont le cache `null`
+    /// sert de sentinelle « pas encore vérifié » à d'autres écrans (M-Sites, multisite, filtres, CSV),
     /// ni toucher un passage **déposé**, dont le verdict est figé (#1514, statut ≠ `VÉRIFIÉ`). On ne
     /// rétrograde jamais vers `Non vérifié` : la resynchronisation n'a lieu que sur un dérivé décisif.
     private void resynchroniserCacheSiVerifie(Long idPassage) {
@@ -320,7 +320,7 @@ public class ServiceQualification {
     }
 
     // ===========================================================================
-    // R13 — Verdict global et transition de statut
+    // R13 : Verdict global et transition de statut
     // ===========================================================================
 
     /// Enregistre le **verdict global** de vérification d'un passage et le fait transiter vers
@@ -329,7 +329,7 @@ public class ServiceQualification {
     /// **R13 : aucun seuil d'écoute obligatoire.** Le verdict est accepté quel que soit le
     /// nombre de séquences réellement écoutées (l'utilisateur reste responsable) : la méthode ne
     /// consulte donc jamais l'état d'écoute de la sélection. Un verdict [Verdict#A_JETER] est
-    /// simplement mémorisé tel quel — le refus d'inclusion dans un lot (R14) sera appliqué en
+    /// simplement mémorisé tel quel : le refus d'inclusion dans un lot (R14) sera appliqué en
     /// aval par la feature `lot`.
     ///
     /// @param verdict `OK`, `Utilisable` ou `Inexploitable` (le sentinelle `Non vérifié` est refusé : il
@@ -389,14 +389,14 @@ public class ServiceQualification {
     }
 
     // ===========================================================================
-    // P3 étape 1 — Pré-check synthétique (3 feux)
+    // P3 étape 1 : Pré-check synthétique (3 feux)
     // ===========================================================================
 
     /// Évalue les trois feux du pré-check d'une nuit (P3) : couverture horaire, nombre de
     /// fichiers, cohérence du renommage. Rassemble les mesures depuis les DAO puis délègue la
     /// décision au moteur pur [PreCheckNuit].
     ///
-    /// **Couverture horaire — limite connue.** La fenêtre théorique « coucher de soleil - 30
+    /// **Couverture horaire : limite connue.** La fenêtre théorique « coucher de soleil - 30
     /// min → lever de soleil + 30 min » (R3) suppose un calcul astronomique (position du soleil
     /// selon GPS + date) non disponible dans cette couche. À défaut, on utilise comme fenêtre de
     /// référence la plage déclarée du passage (`start_time` → `end_time`, à cheval sur minuit le

@@ -16,7 +16,7 @@ import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 /// Le service est désormais consommé par la **vue audio unifiée** (#audio) : l'export de la bibliothèque
 /// s'y fait sur la source `References`, et l'entrée d'accueil est la carte
 /// `fr.univ_amu.iut.audio.view.AccueilSonsReference` (feature `audio`). Ce module ne fournit donc plus de
-/// `view`/`viewmodel` ni de carte d'accueil — seulement le service.
+/// `view`/`viewmodel` ni de carte d'accueil : seulement le service.
 ///
 /// Même patron que `SitesModule` / `LotModule` : une méthode `@Provides @Singleton` câble un service resté
 /// **sans annotation d'injection** (objet Java ordinaire, instanciable à la main dans les tests). Les DAO

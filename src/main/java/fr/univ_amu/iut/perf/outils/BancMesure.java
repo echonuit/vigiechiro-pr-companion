@@ -36,11 +36,11 @@ import java.util.function.IntSupplier;
 /// imprime leur `EXPLAIN QUERY PLAN` :
 ///
 ///  - **sélection** des ~4031 observations d'un jeu de résultats
-///    ([ObservationDao#findByResults]) — cible < 100 ms ;
+///    ([ObservationDao#findByResults]) : cible < 100 ms ;
 ///  - **tri/filtre** des ~1000 passages de l'utilisateur
-///    ([ServiceMultisite#listerPassages]) — cible < 200 ms.
+///    ([ServiceMultisite#listerPassages]) : cible < 200 ms.
 ///
-/// Chaque opération est mesurée **à froid** (1ᵉʳ appel, JIT non chauffé — comme le demande le brief)
+/// Chaque opération est mesurée **à froid** (1ᵉʳ appel, JIT non chauffé : comme le demande le brief)
 /// puis **à chaud** (médiane sur [#ITERATIONS] itérations). Chrono simple (`System.nanoTime`), aucune
 /// dépendance ajoutée : les cibles du brief sont des ordres de grandeur, le banc sert à les affiner et
 /// à comparer **avant / après index** (#28). À relancer sur une **machine IUT, JIT froid** (cf.

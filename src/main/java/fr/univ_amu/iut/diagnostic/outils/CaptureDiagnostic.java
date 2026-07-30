@@ -70,7 +70,7 @@ import javafx.scene.Scene;
 /// chargée via une `controllerFactory` Guice (socle + sites + passage + diagnostic) et rendue
 /// hors-écran par [ApercuFx].
 ///
-/// **Déterminisme** : l'écran n'affiche que la série climatique, les anomalies et le GPS — aucun
+/// **Déterminisme** : l'écran n'affiche que la série climatique, les anomalies et le GPS, aucun
 /// chemin de fichier, donc aucune dépendance au dossier temporaire.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).

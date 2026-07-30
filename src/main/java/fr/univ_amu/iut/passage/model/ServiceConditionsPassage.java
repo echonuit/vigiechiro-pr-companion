@@ -133,7 +133,7 @@ public class ServiceConditionsPassage {
     }
 
     /// Matériel du micro déployé pour le passage `idPassage` (position sol/canopée, hauteur de fixation,
-    /// type ; métadonnées de dépôt VigieChiro). Renvoie un [MaterielMicro#vide] si rien n'a été saisi —
+    /// type ; métadonnées de dépôt VigieChiro). Renvoie un [MaterielMicro#vide] si rien n'a été saisi :
     /// jamais `null`. Le n° de série du détecteur n'est pas ici (il vit sur l'enregistreur du passage).
     public MaterielMicro materiel(Long idPassage) {
         Objects.requireNonNull(idPassage, "idPassage");

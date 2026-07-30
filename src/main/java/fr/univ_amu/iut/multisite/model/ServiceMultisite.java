@@ -55,7 +55,7 @@ public class ServiceMultisite {
 
     /// En-tête du tableau / export CSV : ordre stable des colonnes (P5-CA2). `analyse` et
     /// `analyse_relevee_le` (#1338) closent la ligne : exporter la vue « Résultats à importer » sans dire
-    /// l'état d'analyse — ni **de quand il date** — livrerait une liste que rien ne justifie.
+    /// l'état d'analyse (ni **de quand il date**) livrerait une liste que rien ne justifie.
     private static final List<String> ENTETE = List.of(
             "site",
             "point",
@@ -110,7 +110,7 @@ public class ServiceMultisite {
 
     /// Noms des campagnes par identifiant, lus **une seule fois** par listing (même raison que les relevés
     /// ci-dessous : le tableau peut afficher des milliers de lignes). Vide si la feature `campagne` est
-    /// coupée — la colonne reste alors vide, sans que rien d'autre ne change.
+    /// coupée : la colonne reste alors vide, sans que rien d'autre ne change.
     private Map<Long, String> nomsDesCampagnes() {
         return campagnes
                 .map(service ->

@@ -20,7 +20,7 @@ import java.util.Locale;
 /// @param annee année à conserver, ou `null` pour toutes les années
 /// @param etatAnalyse état d'analyse à conserver (#1338), ou `null` pour tous les états
 /// @param campagne fragment du nom de campagne à conserver (#2355, correspondance partielle insensible
-///     à la casse), ou `null` pour toutes les campagnes — y compris les nuits non rattachées
+///     à la casse), ou `null` pour toutes les campagnes : y compris les nuits non rattachées
 public record FiltresMultisite(
         String numeroCarre,
         StatutWorkflow statut,
@@ -61,7 +61,7 @@ public record FiltresMultisite(
     }
 
     /// Filtre ne retenant que les nuits d'une **campagne** (#2355), par correspondance **partielle et
-    /// insensible à la casse** sur son nom — comme on cherche un carré : on tape « ENS », pas le libellé
+    /// insensible à la casse** sur son nom, comme on cherche un carré : on tape « ENS », pas le libellé
     /// exact. Une nuit non rattachée n'est jamais retenue.
     public static FiltresMultisite parCampagne(String campagne) {
         return new FiltresMultisite(null, null, null, null, null, campagne);

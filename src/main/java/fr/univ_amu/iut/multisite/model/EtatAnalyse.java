@@ -12,8 +12,8 @@ import java.util.Optional;
 /// fallait auparavant ouvrir chaque passage l'un après l'autre.
 ///
 /// Il **croise deux questions distinctes**, que l'issue prend soin de ne pas confondre :
-/// 1. *où en est le calcul côté serveur ?* — le relevé daté du cache (`participation_traitement`, #1262) ;
-/// 2. *les observations sont-elles déjà en base ?* — l'existence de résultats d'identification (C12).
+/// 1. *où en est le calcul côté serveur ?* : le relevé daté du cache (`participation_traitement`, #1262) ;
+/// 2. *les observations sont-elles déjà en base ?* : l'existence de résultats d'identification (C12).
 ///
 /// Une analyse `FINI` dont les résultats sont déjà importés n'est **pas** « à importer » : c'est tout
 /// l'objet de [#IMPORTEE]. Sans ce croisement, la vue « résultats à importer » listerait indéfiniment des

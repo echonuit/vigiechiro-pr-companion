@@ -51,8 +51,8 @@ import javafx.scene.layout.VBox;
 /// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Capture la **recherche globale** du chrome (#144) : le champ « Rechercher » et sa liste déroulante de
-/// résultats groupés (Sites / Points / Passages). La recherche n'a pas d'écran propre — elle vit dans le
-/// chrome (`MainView.fxml`) — donc on rend le **chrome complet** avec le popup ouvert.
+/// résultats groupés (Sites / Points / Passages). La recherche n'a pas d'écran propre : elle vit dans le
+/// chrome (`MainView.fxml`), donc on rend le **chrome complet** avec le popup ouvert.
 ///
 /// Démarche : injecteur applicatif complet ([RacineInjecteur#modules()], exécuteurs synchrones pour la
 /// capture) pour que le chrome se charge avec

@@ -207,7 +207,7 @@ public class MesSitesController implements ResumeStatut {
         return colonne;
     }
 
-    /// Rangée de badges de la carte : la fraîcheur, suivie du badge de statut plateforme (#718, #734) —
+    /// Rangée de badges de la carte : la fraîcheur, suivie du badge de statut plateforme (#718, #734) :
     /// « Enregistré » (bleu) ou « Verrouillé » (vert, dépôt possible). Un site **absent** de la plateforme
     /// n'en porte pas ici : sur une liste, une pastille grise par carte ferait du bruit sans rien dire de
     /// plus. Le **détail** du site, lui, l'affiche : c'est là qu'on se demande pourquoi on ne peut pas

@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 ///
 /// L'issue demandait de *« proposer le n° de carré automatiquement depuis le GPS plutôt que de le saisir à
 /// la main »*, à la création d'un point. Le n° de carré n'appartient pourtant **pas** au point : il
-/// appartient au **site**, et il est saisi bien avant, à sa création — écran où aucune coordonnée n'est
+/// appartient au **site**, et il est saisi bien avant, à sa création : écran où aucune coordonnée n'est
 /// connue. Il n'y a donc rien à pré-remplir dans la modale de point.
 ///
 /// Ce qu'on peut faire, et qui sert la même intention (*fiabiliser le n° de carré*), c'est **vérifier** :
@@ -35,7 +35,7 @@ public class ControleCarreStoc {
     ///
     /// Toute issue **non-succès** (hors connexion, plateforme injoignable, refus) rend
     /// [VerdictCarre.Indisponible] : le contrôle est un **confort**, jamais une condition. Il ne doit ni
-    /// bloquer la saisie, ni la commenter à tort — travailler hors ligne reste normal.
+    /// bloquer la saisie, ni la commenter à tort : travailler hors ligne reste normal.
     public VerdictCarre confronter(String carreDeclare, double latitude, double longitude) {
         Objects.requireNonNull(carreDeclare, "carreDeclare");
         return switch (client.carreStoc(latitude, longitude)) {

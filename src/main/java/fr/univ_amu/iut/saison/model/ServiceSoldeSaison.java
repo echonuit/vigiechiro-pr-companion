@@ -64,11 +64,11 @@ public class ServiceSoldeSaison {
     private final PassageOpportunisteDao opportunistes;
 
     /// Carrés appartenant à un **tiers** (#2525), dérivés de l'API : le solde ne parle que de **vos**
-    /// carrés — ceux d'un autre observateur n'engagent aucune obligation de protocole.
+    /// carrés : ceux d'un autre observateur n'engagent aucune obligation de protocole.
     private final SiteTiersDao carresDeTiers;
 
     /// Campagnes (#2355), **optionnelles** : la feature est désactivable. Absente, aucun point ne relève
-    /// d'une campagne — le solde complet reste entier, seul le filtre par campagne ne retient rien.
+    /// d'une campagne : le solde complet reste entier, seul le filtre par campagne ne retient rien.
     private final Optional<ServiceCampagne> campagnes;
 
     private final Horloge horloge;
@@ -111,7 +111,7 @@ public class ServiceSoldeSaison {
     /// dont au moins un des deux passages relève de `campagne` (correspondance partielle, insensible à la
     /// casse, comme dans « Carte & passages »). Répond à « où en est ma campagne ? ».
     ///
-    /// Le point retenu est montré **en entier** — ses deux passages et son « reste à faire » —, même si
+    /// Le point retenu est montré **en entier** (ses deux passages et son « reste à faire »), même si
     /// l'un d'eux n'appartient pas à la campagne : c'est l'état du point qui dit ce qu'il reste à y faire.
     ///
     /// @param campagne fragment du nom de campagne, ou `null` pour ne pas restreindre (toutes les nuits,
@@ -121,7 +121,7 @@ public class ServiceSoldeSaison {
         LocalDate aujourdhui = horloge.aujourdhui();
         List<LigneSaison> lignes = new ArrayList<>();
         // Lecture groupée : un seul accès pour écarter tous les carrés de tiers (#2525), un autre pour
-        // résoudre les noms de campagne (#2355) — pas une requête par point.
+        // résoudre les noms de campagne (#2355) : pas une requête par point.
         Set<Long> tiers = carresDeTiers.tousLesIds();
         Map<Long, String> nomsCampagnes = nomsDesCampagnes();
         for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {

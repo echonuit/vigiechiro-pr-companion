@@ -24,18 +24,18 @@ import javafx.stage.Window;
 /// Le **reset guidé** vu de l'IHM (#1419) : la parité de `reset-guide --executer`, en trois temps que
 /// l'utilisateur traverse sans jamais avancer à l'aveugle.
 ///
-/// 1. **Regarder.** Le bilan de récupérabilité est établi *avant* toute question — nuit par nuit, ce que
+/// 1. **Regarder.** Le bilan de récupérabilité est établi *avant* toute question : nuit par nuit, ce que
 ///    deviendrait l'audio. C'est une lecture du disque : elle tourne hors du fil JavaFX, sous le voile du
 ///    chrome ([OccupationChrome], #1215).
 /// 2. **Accepter.** La confirmation **énumère les nuits qui perdraient leur audio**. Cliquer « oui » sur
 ///    ce texte-là *est* l'acceptation de la perte : c'est ce qui arme `accepterPerte` côté service. Un
-///    « êtes-vous sûr ? » générique ne le permettrait pas — on ne peut accepter que ce qu'on a lu.
+///    « êtes-vous sûr ? » générique ne le permettrait pas : on ne peut accepter que ce qu'on a lu.
 /// 3. **Repartir.** Le reset s'exécute (sauvegarde complète → base neuve → repeuplement → audit), puis
 ///    l'application **se ferme** : ses écrans tiennent encore l'ancienne base en mémoire, et rien ne
 ///    garantirait qu'ils ne l'affichent pas. Un fantôme d'écran, dans un chantier qui traque la perte
 ///    silencieuse, serait une ironie de trop.
 ///
-/// Le service refuse de lui-même si la plateforme ne répond pas — une base neuve qu'on ne peut pas
+/// Le service refuse de lui-même si la plateforme ne répond pas : une base neuve qu'on ne peut pas
 /// repeupler est une destruction sèche. L'IHM n'a pas à le redire : elle affiche le refus.
 ///
 /// Les trois dialogues sont **injectables** (#1405), et la fermeture aussi : le geste est donc testable
@@ -45,7 +45,7 @@ final class GesteReset {
     // Fournisseurs, non instances : l'entrée ☰ est bâtie au démarrage du chrome, AVANT que la base soit
     // ouverte. Résoudre ServiceReset à ce moment-là tirerait les rapprocheurs → idUtilisateurCourant → une
     // requête SQL sur une base pas encore migrée. Les services se résolvent au clic ; le GESTE, lui, naît
-    // avec l'entrée — c'est ce qui le rend atteignable par un test (#1405, patron de PorteurSauvegarde).
+    // avec l'entrée : c'est ce qui le rend atteignable par un test (#1405, patron de PorteurSauvegarde).
     private final Supplier<ServiceRecuperabilite> recuperabilite;
     private final Supplier<ServiceReset> reset;
     private final Supplier<ServiceSauvegarde> sauvegarde;
@@ -142,7 +142,7 @@ final class GesteReset {
     }
 
     /// Temps 3 : exécuter hors du fil JavaFX, sous le voile, avec le libellé d'**opération critique**
-    /// (#906) — fermer l'application pendant un reset avertit.
+    /// (#906) : fermer l'application pendant un reset avertit.
     private void executer(Path dossier, boolean perteAcceptee) {
         occupation.occuper(
                 "Reset en cours (sauvegarde, base neuve, repeuplement)…",
@@ -152,7 +152,7 @@ final class GesteReset {
                 echec -> notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Reset impossible", message(echec)));
     }
 
-    /// Sur le fil JavaFX : dire ce qui s'est passé. Le résultat **porte son propre message** — l'IHM
+    /// Sur le fil JavaFX : dire ce qui s'est passé. Le résultat **porte son propre message**, l'IHM
     /// n'a pas à traduire un état en phrase, elle l'affiche.
     private void annoncer(ResultatReset resultat) {
         switch (resultat) {

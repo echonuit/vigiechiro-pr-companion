@@ -83,7 +83,7 @@ public class App extends Application {
 
         // Garde-fou de fermeture (#906) : si une opération critique est en cours (import, génération
         // d'archives, dépôt) ou une saisie non enregistrée est en attente, on demande confirmation avant de
-        // fermer — sinon la tâche serait interrompue en laissant un état incohérent.
+        // fermer, sinon la tâche serait interrompue en laissant un état incohérent.
         Navigateur navigateur = injector.getInstance(Navigateur.class);
         primaryStage.setOnCloseRequest(evenement -> {
             if (!navigateur.confirmerFermeture()) {

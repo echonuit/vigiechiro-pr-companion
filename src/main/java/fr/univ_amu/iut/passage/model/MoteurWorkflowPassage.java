@@ -25,7 +25,7 @@ import java.util.Optional;
 ///
 /// - elle est **spécifique à la feature `passage`** (le sens de progression n'a de sens que pour
 /// un passage) ;
-/// - elle est **purement algorithmique**, donc testable en JUnit nu, sans base ni mock — d'où le
+/// - elle est **purement algorithmique**, donc testable en JUnit nu, sans base ni mock : d'où le
 /// test `MoteurWorkflowPassageTest`.
 ///
 /// Une transition interdite est une violation d'**invariant métier** (règle dure) : elle lève une
@@ -63,7 +63,7 @@ public final class MoteurWorkflowPassage {
     }
 
     /// `true` si l'on peut passer de `actuel` à `cible` : le **successeur immédiat**, ou l'une des deux
-    /// exceptions du dépôt (#980) — marquage manuel `Prêt à déposer → Déposé`, reprise
+    /// exceptions du dépôt (#980) : marquage manuel `Prêt à déposer → Déposé`, reprise
     /// `Dépôt en cours → Dépôt en cours`.
     public boolean estTransitionAutorisee(StatutWorkflow actuel, StatutWorkflow cible) {
         if (actuel == StatutWorkflow.PRET_A_DEPOSER && cible == StatutWorkflow.DEPOSE) {
@@ -85,7 +85,7 @@ public final class MoteurWorkflowPassage {
     /// Exige que la transition `actuel → cible` soit autorisée.
     ///
     /// @throws RegleMetierException si la transition n'est ni le passage à l'étape suivante, ni une
-    /// exception du dépôt (marquage manuel, reprise) — saut d'étape, retour en arrière, ou statut
+    /// exception du dépôt (marquage manuel, reprise) : saut d'étape, retour en arrière, ou statut
     /// déjà terminal
     public void exigerTransitionAutorisee(StatutWorkflow actuel, StatutWorkflow cible) {
         if (!estTransitionAutorisee(actuel, cible)) {

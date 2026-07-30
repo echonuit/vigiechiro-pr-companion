@@ -2,7 +2,7 @@ package fr.univ_amu.iut.validation.model;
 
 /// Projection **inventaire par espèce** (#analyse) : une espèce ([Taxon]) observée par l'utilisateur,
 /// agrégée sur **toutes** ses observations (selon le filtre de statut). Sert à la vue transverse
-/// « Espèces & observations » — répondre à « quelles espèces, où, quand, combien ».
+/// « Espèces & observations » : répondre à « quelles espèces, où, quand, combien ».
 ///
 /// L'espèce est le taxon **validé** s'il existe, sinon la proposition Tadarida
 /// (`COALESCE(taxon_observer, taxon_tadarida)`) ; les pseudo-taxons `noise`/`piaf` sont exclus.

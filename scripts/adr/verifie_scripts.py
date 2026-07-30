@@ -20,6 +20,11 @@ import sys
 import tempfile
 
 ICI = pathlib.Path(__file__).parent
+
+# Nomme parce qu il porte TROIS cas, la ou ses voisins n en ont qu un : le cliquet Java, la tolerance
+# zero d une zone nettoyee, et le refus d une zone qui ne balaie aucun fichier.
+ADR_2843 = "2843-tiret-cadratin.py"
+
 _echecs: list[str] = []
 
 
@@ -97,7 +102,7 @@ def test_0035_pictogramme() -> None:
 
 
 def test_2843_tiret_cadratin() -> None:
-    m = _charge("2843-tiret-cadratin.py")
+    m = _charge(ADR_2843)
     cad = chr(0x2014)
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
@@ -123,7 +128,7 @@ def test_2843_tiret_cadratin() -> None:
 
 
 def test_2843_prose_documentation() -> None:
-    m = _charge("2843-tiret-cadratin.py")
+    m = _charge(ADR_2843)
     cad = chr(0x2014)
     with tempfile.TemporaryDirectory() as d:
         racine = pathlib.Path(d)
@@ -140,6 +145,29 @@ def test_2843_prose_documentation() -> None:
         # l application. Si le motif de citation devenait trop gourmand, il avalerait la prose et ce
         # cas tomberait a zero : c est exactement la deflation que ce fichier existe pour interdire.
         _verifie("2843 zone nettoyee : compte la prose, epargne les citations", n, 1)
+
+
+def test_2843_zone_vide_est_une_erreur() -> None:
+    """Une zone qui ne balaie AUCUN fichier doit lever, pas rapporter zero.
+
+    C est le faux vert le plus difficile a voir de tout ce fichier : un motif mal apparie a son arbre
+    (« *.md » sur un arbre Java) fait dire au garde « 0 cadratin de prose », ce qui a la forme exacte
+    du succes. Rien, ailleurs, ne distingue une zone propre d une zone jamais regardee.
+    """
+    m = _charge(ADR_2843)
+    cad = chr(0x2014)
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(racine, "Source.java", "// une prose " + cad + " avec un cadratin\n")
+        # Le bon motif voit le fichier et compte sa prose.
+        _verifie("2843 zone nettoyee : le motif « *.java » voit l arbre Java", len(m.prose(racine, (), "*.java")), 1)
+        # Le mauvais motif ne voit rien : ce doit etre une erreur, jamais un zero rassurant.
+        try:
+            m.prose(racine, (), "*.md")
+        except AssertionError:
+            _verifie("2843 zone nettoyee : un motif qui ne balaie rien leve", 1, 1)
+        else:
+            _verifie("2843 zone nettoyee : un motif qui ne balaie rien leve", 0, 1)
 
 
 def test_0037_slot_actions() -> None:
@@ -242,6 +270,7 @@ if __name__ == "__main__":
         test_0037_slot_actions,
         test_2843_tiret_cadratin,
         test_2843_prose_documentation,
+        test_2843_zone_vide_est_une_erreur,
         test_2493_modale_suit_croissance,
         test_loupe_0020,
         test_loupe_0044,

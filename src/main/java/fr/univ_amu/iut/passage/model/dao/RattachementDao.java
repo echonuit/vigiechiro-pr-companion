@@ -157,7 +157,7 @@ public class RattachementDao {
     }
 
     /// Re-préfixage **logique** d'un nom de fichier : remplace le préfixe de tête `ancienPrefixe` par
-    /// `nouveauPrefixe`. Indépendant du chemin physique — nécessaire pour les fichiers **hors session** (bruts
+    /// `nouveauPrefixe`. Indépendant du chemin physique : nécessaire pour les fichiers **hors session** (bruts
     /// référencés sur la carte SD, jamais renommés) dont le `file_name` est un nom logique préfixé. Sans effet
     /// si le nom ne porte pas l'ancien préfixe (déjà réconcilié, ou nom non conforme laissé tel quel).
     private static String reprefixerNom(String nom, String ancienPrefixe, String nouveauPrefixe) {

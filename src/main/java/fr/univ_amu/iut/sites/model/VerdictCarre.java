@@ -4,7 +4,7 @@ import fr.univ_amu.iut.commun.model.Severite;
 
 /// Ce que la **grille STOC officielle** dit d'une position, confrontée au carré que le site déclare (#733).
 ///
-/// Le n° de carré est saisi à la main, une fois, à la création du site — et il conditionne ensuite *tout* :
+/// Le n° de carré est saisi à la main, une fois, à la création du site, et il conditionne ensuite *tout* :
 /// le préfixe R6 de chaque fichier, le dossier de session, l'unité déposée sur la plateforme. Une faute de
 /// frappe ne se voit qu'au dépôt, très loin en aval. Dès qu'un point d'écoute reçoit ses coordonnées, on
 /// peut pourtant **demander à la plateforme** dans quel carré il tombe, et le dire.
@@ -54,7 +54,7 @@ public sealed interface VerdictCarre {
         }
     }
 
-    /// Aucun carré STOC à proximité : la position est hors de la grille (en mer, hors de France) — le plus
+    /// Aucun carré STOC à proximité : la position est hors de la grille (en mer, hors de France), le plus
     /// souvent, des coordonnées inversées ou mal saisies.
     record HorsGrille() implements VerdictCarre {
         @Override
@@ -69,7 +69,7 @@ public sealed interface VerdictCarre {
     }
 
     /// La plateforme n'a pas pu répondre (hors connexion, injoignable, refus) : on se **tait**. La saisie
-    /// manuelle reste entière — c'est le repli propre exigé par l'issue, et il ne s'annonce pas, sans quoi
+    /// manuelle reste entière : c'est le repli propre exigé par l'issue, et il ne s'annonce pas, sans quoi
     /// travailler hors ligne deviendrait bruyant.
     record Indisponible() implements VerdictCarre {
         @Override

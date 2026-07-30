@@ -10,7 +10,7 @@ import java.util.Objects;
 /// Implémentation du port [CrisAttendus] (#1302) : projette les **observations** d'une séquence en
 /// cris attendus (instants + fréquence médiane), la matière de la vérification acoustique (#1309).
 ///
-/// C'est la feature `validation` qui la fournit — elle possède les observations et dépend déjà de
+/// C'est la feature `validation` qui la fournit : elle possède les observations et dépend déjà de
 /// `passage` : l'inversion évite le cycle que créerait `passage → validation`.
 ///
 /// Les observations **incomplètes** (sans instants ou sans fréquence médiane) sont écartées : elles

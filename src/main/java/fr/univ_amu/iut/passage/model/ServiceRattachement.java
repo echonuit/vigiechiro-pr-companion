@@ -46,7 +46,7 @@ public class ServiceRattachement {
     /// Ordre (atomicité best-effort base/disque) : (1) contrôle **R5** du nouveau quadruplet ;
     /// (2) re-préfixage **disque** ([ReprefixeurSession], rollback interne) ; (3) transaction
     /// **base** ([UniteDeTravail]) du quadruplet et des chemins (session, originaux, séquences,
-    /// journal, relevé — [RattachementDao]). Si la transaction échoue, le disque est **remis dans
+    /// journal, relevé : [RattachementDao]). Si la transaction échoue, le disque est **remis dans
     /// son état initial** (compensation) avant que l'erreur ne soit propagée.
     ///
     /// Le carré et le code point (inchangés) sont fournis par l'appelant via `nouveau` (le `model` ne

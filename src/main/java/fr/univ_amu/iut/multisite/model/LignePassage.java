@@ -24,7 +24,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 /// @param etatAnalyse où en est l'analyse Tadarida de cette nuit (#1338), déduite du relevé daté du
 ///     serveur croisé avec la présence de résultats en base ; jamais `null`
 /// @param campagne nom de la **campagne** de rattachement (#2355), ou `null` si le passage n'est
-///     rattaché à aucune — le rattachement est facultatif, et la feature `campagne` est désactivable
+///     rattaché à aucune : le rattachement est facultatif, et la feature `campagne` est désactivable
 ///     (coupée, la colonne reste vide partout)
 /// @param analyseReleveeLe horodatage ISO de **notre dernière lecture** de l'état serveur, ou `null` si
 ///     on ne l'a jamais demandé. Le cache est un relevé daté, pas une vérité : la vue doit pouvoir dire

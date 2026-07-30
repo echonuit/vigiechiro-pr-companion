@@ -43,7 +43,7 @@ final class CriteresMultisite {
     /// l'utilisateur (#623), sur le modèle de `CriteresAudio` :
     /// - **« Tout »** (aucun filtre) : active au chargement, n'écarte rien ;
     /// - **« Résultats à importer »** (#1338) : les nuits dont l'analyse est terminée et dont les
-    ///   observations ne sont **pas encore** en base — la réponse en un onglet à « lesquelles de mes nuits
+    ///   observations ne sont **pas encore** en base : la réponse en un onglet à « lesquelles de mes nuits
     ///   sont prêtes ? », qui obligeait jusqu'ici à ouvrir chaque passage l'un après l'autre ;
     /// - **« Déposés »** (statut Déposé : nuits déjà envoyées) ;
     /// - **« Non vérifié »** (verdict Non vérifié : passages à contrôler) ;
@@ -158,7 +158,7 @@ final class CriteresMultisite {
     }
 
     /// Critère **Campagne** (#2355) : champ libre, correspondance **partielle** sur le nom (on tape
-    /// « ENS », pas le libellé exact) — même ergonomie que le carré, et pour la même raison : la liste des
+    /// « ENS », pas le libellé exact), même ergonomie que le carré, et pour la même raison : la liste des
     /// campagnes n'est pas connue de la vue, et taper est plus rapide que dérouler.
     static CritereFiltre<LignePassage> campagne() {
         return new CritereFiltre<LignePassage>() {

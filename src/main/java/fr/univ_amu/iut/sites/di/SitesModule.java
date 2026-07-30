@@ -90,7 +90,7 @@ public class SitesModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), ReferentielPoint.class)
                 .setBinding()
                 .to(InfosPointSites.class);
-        // Port socle PointParLocalite (#1305) : sens INVERSE du précédent — retrouver le point local d'une
+        // Port socle PointParLocalite (#1305) : sens INVERSE du précédent, retrouver le point local d'une
         // participation distante (carré + localité). Même montage d'inversion, pour reconstruire un passage
         // jamais importé ici sans que `passage` dépende de `sites`.
         OptionalBinder.newOptionalBinder(binder(), PointParLocalite.class)
@@ -155,7 +155,7 @@ public class SitesModule extends ModuleDeFeature {
     }
 
     /// Conséquence du précédent (#2525) : les nuits des carrés de tiers deviennent opportunistes. Lit les
-    /// DAO de `passage` — dépendance `sites → passage` déjà établie (cf. [ServiceSites]).
+    /// DAO de `passage` : dépendance `sites → passage` déjà établie (cf. [ServiceSites]).
     @Provides
     @Singleton
     RapprochementNuitsOpportunistes fournirRapprochementNuitsOpportunistes(

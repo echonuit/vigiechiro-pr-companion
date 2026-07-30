@@ -77,7 +77,7 @@ public class DiagnosticViewModel {
     ///
     /// **Observable**, et non un simple champ : le graphe se reconstruit dès que les mesures changent,
     /// ce qui arrive **avant** que la cohérence ne soit posée. Un champ obligerait l'appelant à respecter
-    /// un ordre implicite entre deux affectations — le genre de couplage qui se recasse en silence au
+    /// un ordre implicite entre deux affectations : le genre de couplage qui se recasse en silence au
     /// premier remaniement.
     private final ReadOnlyObjectWrapper<CoherenceHoraire> coherence =
             new ReadOnlyObjectWrapper<>(this, "coherence", null);

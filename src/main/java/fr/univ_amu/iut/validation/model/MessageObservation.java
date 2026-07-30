@@ -11,8 +11,8 @@ import java.time.Instant;
 ///
 /// L'auteur est un **identifiant plateforme** (objectid de la ressource `utilisateurs`), **pas** un
 /// nom : le serveur ne donne rien d'autre dans cette charge utile. Plutôt qu'un appel réseau par
-/// auteur, l'application le compare à l'identifiant de son propre profil — déjà stocké localement à la
-/// connexion — pour distinguer « vous » d'« un validateur » ([#deMoi(String)]).
+/// auteur, l'application le compare à l'identifiant de son propre profil (déjà stocké localement à la
+/// connexion) pour distinguer « vous » d'« un validateur » ([#deMoi(String)]).
 ///
 /// @param id clé technique, `null` avant insertion
 /// @param idObservation observation commentée (FK → `observation.id`, obligatoire)
@@ -26,7 +26,7 @@ public record MessageObservation(Long id, Long idObservation, int rang, String a
 
     /// Ce message est-il **le nôtre** ? Vrai si son auteur est l'utilisateur dont l'identifiant
     /// plateforme est `idProfil` (celui du profil connecté). Faux si l'un des deux est inconnu : sans
-    /// certitude sur l'identité, on n'attribue rien — mieux vaut un message d'auteur indéterminé
+    /// certitude sur l'identité, on n'attribue rien : mieux vaut un message d'auteur indéterminé
     /// qu'un message faussement signé.
     public boolean deMoi(String idProfil) {
         return auteur != null && idProfil != null && auteur.equals(idProfil);

@@ -97,7 +97,7 @@ public class SaisonController implements RafraichirAuRetour {
         colPassage2.setCellFactory(col -> ColonneBadge.cellule(ligne -> classeCase(ligne.passage2())));
 
         // Hors protocole (#2525) : les nuits opportunistes du point, hors du décompte des deux passages
-        // attendus. Cellule vide dans le cas courant — la colonne ne parle que quand il y a de quoi.
+        // attendus. Cellule vide dans le cas courant : la colonne ne parle que quand il y a de quoi.
         colHorsProtocole.setCellValueFactory(c -> new ReadOnlyStringWrapper(texteHorsProtocole(c.getValue())));
         colHorsProtocole.setCellFactory(col -> ColonneBadge.cellule(ligne -> "badge-opportuniste"));
 
@@ -172,7 +172,7 @@ public class SaisonController implements RafraichirAuRetour {
     private void ouvrirLigne(LigneSaison ligne) {
         // Les nuits hors protocole comptent ici : depuis #2525 elles ne sont plus dans les colonnes de
         // passage, mais un point qui n'a QU'une nuit opportuniste doit rester ouvrable d'un double-clic
-        // — sans quoi la seule nuit existante deviendrait inatteignable depuis cet écran.
+        // : sans quoi la seule nuit existante deviendrait inatteignable depuis cet écran.
         ligne.toutesLesCases()
                 .filter(CasePassage::presente)
                 .findFirst()
@@ -202,7 +202,7 @@ public class SaisonController implements RafraichirAuRetour {
     }
 
     /// Colonne « Hors protocole » (#2525) : les nuits opportunistes du point, séparées par un point
-    /// médian quand il y en a plusieurs. **`null`** dans le cas courant — c'est ce que la cellule badge
+    /// médian quand il y en a plusieurs. **`null`** dans le cas courant : c'est ce que la cellule badge
     /// interprète comme « rien à afficher » ([ColonneBadge]). Rendre `""` lui ferait poser une pastille
     /// vide, et surtout une classe CSS nulle qui casse le recyclage des cellules au défilement.
     private static String texteHorsProtocole(LigneSaison ligne) {

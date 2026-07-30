@@ -71,7 +71,7 @@ public class SiteDetailViewModel {
             new ReadOnlyBooleanWrapper(this, "suppressionPossible", true);
 
     /// État du site vis-à-vis de la plateforme (#734). Le détail est l'écran où l'on se demande *pourquoi
-    /// je ne peux pas déposer* : il affiche donc les trois états, y compris « non enregistré » — que la
+    /// je ne peux pas déposer* : il affiche donc les trois états, y compris « non enregistré », que la
     /// liste, elle, tait.
     private final ReadOnlyObjectWrapper<StatutPlateforme> statutPlateforme =
             new ReadOnlyObjectWrapper<>(this, "statutPlateforme", StatutPlateforme.ABSENT);

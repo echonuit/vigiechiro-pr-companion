@@ -14,7 +14,7 @@ final class EtapesWorkflow {
 
     /// Étapes du stepper : les 5 statuts **jalons** du workflow. Le statut technique « Dépôt en
     /// cours » (#980) n'est pas un jalon : tant que le dépôt automatique n'est pas terminé, le jalon
-    /// courant reste « Prêt à déposer » (le détail du dépôt — unités téléversées, reprise — vit dans
+    /// courant reste « Prêt à déposer » (le détail du dépôt (unités téléversées, reprise) vit dans
     /// M-Lot).
     static List<EtapeWorkflow> construire(StatutWorkflow courant) {
         if (courant == StatutWorkflow.RECUPERE) {

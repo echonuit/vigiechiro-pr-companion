@@ -81,7 +81,7 @@ public class ServiceValidation implements CompteurValidations {
     private final NoyauImportObservations noyau;
 
     /// Les espèces à **enjeu de conservation** (#2353) : celles que le Plan National d'Actions
-    /// Chiroptères désigne comme prioritaires. Passe par le [TaxonDao] déjà tenu ici — le marquage est une
+    /// Chiroptères désigne comme prioritaires. Passe par le [TaxonDao] déjà tenu ici : le marquage est une
     /// table latérale du référentiel taxonomique, pas une donnée métier de plus à faire descendre.
     public Set<String> especesPrioritaires() {
         return taxonDao.codesPrioritaires();
@@ -118,7 +118,7 @@ public class ServiceValidation implements CompteurValidations {
     // ---------------------------------------------------------------------------------------------
 
     /// **Fil de discussion** d'une observation (#1417) : ce que l'observateur et le validateur du MNHN se
-    /// sont dit à propos de cette détection, dans l'ordre du serveur. Vide si personne n'a écrit — le cas
+    /// sont dit à propos de cette détection, dans l'ordre du serveur. Vide si personne n'a écrit : le cas
     /// courant. Lecture seule : le fil est un reflet du serveur, rafraîchi à chaque import.
     public List<MessageObservation> filDeLObservation(Long idObservation) {
         Objects.requireNonNull(idObservation, "idObservation");
@@ -137,8 +137,8 @@ public class ServiceValidation implements CompteurValidations {
     }
 
     /// Le passage a-t-il **au moins une** observation sans ancrage plateforme (`idDonneeVigieChiro ==
-    /// null`) ? Cas d'un passage reconstruit par CSV (#1565), dont l'ancrage — requis pour publier des
-    /// corrections — n'est acquis qu'à la réactivation (#1571). Délègue à [EtatAncragePassage].
+    /// null`) ? Cas d'un passage reconstruit par CSV (#1565), dont l'ancrage (requis pour publier des
+    /// corrections) n'est acquis qu'à la réactivation (#1571). Délègue à [EtatAncragePassage].
     public boolean ancrageManquant(Long idPassage) {
         return ancrage.manquant(idPassage);
     }
@@ -381,7 +381,7 @@ public class ServiceValidation implements CompteurValidations {
     // revue.
     ///
     /// Renvoie une vue **vide** (`idResultats` null, liste vide) si aucun CSV Tadarida n'a encore été
-    /// importé pour le passage — l'écran affiche alors un état vide plutôt que de lever.
+    /// importé pour le passage : l'écran affiche alors un état vide plutôt que de lever.
     public VueValidation chargerValidation(Long idPassage) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         Optional<ResultatsIdentification> resultats = resultatsDao.findByPassage(idPassage);

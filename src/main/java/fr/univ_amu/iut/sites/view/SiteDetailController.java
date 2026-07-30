@@ -368,7 +368,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     /// Ouvre la boîte d'édition pré-remplie ; à la validation, applique la modification via le
     /// ViewModel (qui recharge la fiche). Un refus métier (carré déjà pris) ou un format invalide
     /// (R1) est rapporté sans quitter l'écran.
-    /// Ouvre la page du site sur le portail Vigie-Chiro (#1124) — vérification visuelle du rattachement.
+    /// Ouvre la page du site sur le portail Vigie-Chiro (#1124) : vérification visuelle du rattachement.
     @FXML
     private void ouvrirSurVigieChiro() {
         String lien = viewModel.lienPortailProperty().get();

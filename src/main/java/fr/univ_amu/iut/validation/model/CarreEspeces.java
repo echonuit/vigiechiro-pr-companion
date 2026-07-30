@@ -2,7 +2,7 @@ package fr.univ_amu.iut.validation.model;
 
 /// Projection **inventaire par carré** (#analyse) : un carré (site) de l'utilisateur, agrégé sur les
 /// observations qui s'y rattachent (selon le filtre de statut). Donne la **richesse spécifique** (nombre
-/// d'espèces distinctes) — l'angle « centré lieu » du pivot espèce ↔ lieu.
+/// d'espèces distinctes) : l'angle « centré lieu » du pivot espèce ↔ lieu.
 ///
 /// L'espèce comptée est `COALESCE(taxon_observer, taxon_tadarida)`, pseudo-taxons `noise`/`piaf` exclus.
 ///

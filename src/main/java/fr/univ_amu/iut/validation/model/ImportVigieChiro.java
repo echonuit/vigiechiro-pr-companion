@@ -71,7 +71,7 @@ public class ImportVigieChiro {
     /// `donnees` sur le réseau puis importe en base).
     ///
     /// Lève une [RegleMetierException] si le passage n'est rattaché à aucune participation, ou s'il n'y a
-    /// rien à importer — et, dans ce dernier cas, **dit pourquoi** (#1264) : le serveur renvoie « 200, liste
+    /// rien à importer, et, dans ce dernier cas, **dit pourquoi** (#1264) : le serveur renvoie « 200, liste
     /// vide » tant que l'analyse n'est pas terminée, si bien que l'absence de résultats n'est pas une erreur
     /// mais un **état**, qu'on relit pour l'expliquer (cf. [#pourquoiRienAImporter]).
     ///
@@ -193,7 +193,7 @@ public class ImportVigieChiro {
     }
 
     /// **Pourquoi il n'y a rien à importer** (#1264). Le serveur répond « 200, liste vide » tant que
-    /// l'analyse n'est pas finie : l'absence de résultats n'est donc pas une erreur, c'est un état — encore
+    /// l'analyse n'est pas finie : l'absence de résultats n'est donc pas une erreur, c'est un état, encore
     /// faut-il le dire. Le message d'avant les confondait tous (« analyse pas encore terminée, ou connexion
     /// indisponible »), laissant l'observateur sans rien à faire de cette information.
     ///

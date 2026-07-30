@@ -6,7 +6,7 @@ import java.nio.file.Path;
 import java.util.List;
 
 /// Issue d'un **reset guidé** (#1419) : soit la procédure a **refusé de démarrer**, soit elle est allée
-/// au bout. Deux issues, deux formes — plutôt qu'un rapport à trous qu'il faudrait interroger « est-ce
+/// au bout. Deux issues, deux formes : plutôt qu'un rapport à trous qu'il faudrait interroger « est-ce
 /// que ça s'est fait ? » avant de pouvoir le lire.
 ///
 /// Chaque forme **porte son message** et son code de sortie : l'appelant (CLI ou IHM) affiche, il n'a

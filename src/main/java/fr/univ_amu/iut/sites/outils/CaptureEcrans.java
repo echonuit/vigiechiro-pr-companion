@@ -210,7 +210,7 @@ public final class CaptureEcrans {
     }
 
     /// Injecteur du **chrome complet** (toutes les features, comme l'application réelle), car cet
-    /// outil rend `MesSites` à l'intérieur de `MainView` — dont le `MainController` dépend de tout le
+    /// outil rend `MesSites` à l'intérieur de `MainView` : dont le `MainController` dépend de tout le
     /// graphe (recherche globale, etc.). On part de [RacineInjecteur#modules()] et on **surcharge**
     /// l'horloge (rendu reproductible), `OuvrirImportation` (no-op : la capture ne déclenche pas
     /// d'import) et les exécuteurs hors fil (synchrones : le snapshot doit voir le contenu chargé,

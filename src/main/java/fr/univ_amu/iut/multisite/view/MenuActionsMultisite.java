@@ -74,13 +74,13 @@ final class MenuActionsMultisite {
         entrees.ecouterPassage().disableProperty().bind(Bindings.isNull(selection));
         // Un item qui ne peut rien faire ne vaut pas mieux qu'un item absent : il vaut moins.
         entrees.reconstruire().setVisible(peutReconstruire);
-        // #1338 : hors connexion, il n'y a rien à interroger — l'item se retire plutôt que de rester
+        // #1338 : hors connexion, il n'y a rien à interroger, l'item se retire plutôt que de rester
         // grisé. Il n'est pas désactivé faute de nuit déposée : dans ce cas, le clic répond « rien à
         // relever » (le VM le dit), ce qui renseigne mieux qu'un item muet.
         entrees.reculerAnalyses().setVisible(peutRelever);
 
         // #2357 lot 3 : un item désactivé ne dit pas pourquoi (il n'accueille pas d'info-bulle), donc
-        // c'est son LIBELLÉ qui porte la raison — même patron que « Exporter » ci-dessus.
+        // c'est son LIBELLÉ qui porte la raison : même patron que « Exporter » ci-dessus.
         // Feature coupée : l'entrée disparaît plutôt que de rester grisée sans recours.
         entrees.preparerSelection().setVisible(actions.preparerDepot().isPresent());
         surLaSelection(

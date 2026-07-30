@@ -121,7 +121,7 @@ public class ProjectionsAnalyseDao extends ProjectionGenerique {
     }
 
     /// Projection des **espèces observées par l'utilisateur, rattachées à leur passage** (#323). Une ligne
-    /// par couple (espèce, passage) — `DISTINCT` car un passage peut contenir plusieurs observations de la
+    /// par couple (espèce, passage) : `DISTINCT` car un passage peut contenir plusieurs observations de la
     /// même espèce. L'espèce est le taxon **validé** s'il existe, sinon la proposition Tadarida. Les
     /// **pseudo-taxons** `noise` (bruit) et `piaf` (oiseau) sont exclus : ce ne sont pas des espèces de
     /// chiroptères. Triée du passage le plus récent au plus ancien (le plafond garde les plus récents).

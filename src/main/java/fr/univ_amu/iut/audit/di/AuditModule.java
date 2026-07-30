@@ -46,7 +46,7 @@ public class AuditModule extends ModuleDeFeature {
     protected void configure() {
         activite(ActiviteAudit.class);
         // « Repartir d'une base neuve… » (#1419) : parité IHM de `reset-guide --executer`. Contribuée par
-        // la feature, pas par le socle — c'est `audit` qui sait ce qu'un reset coûte.
+        // la feature, pas par le socle : c'est `audit` qui sait ce qu'un reset coûte.
         actionMenu(ActionResetGuide.class);
         // Audit en ligne (#1132 dépôts, #1178 points) : injecté en Optional pour dégrader dans les
         // injecteurs partiels (outils de capture) qui ne chargent pas ces bindings.
@@ -61,7 +61,7 @@ public class AuditModule extends ModuleDeFeature {
 
     /// L'audit des points regarde dans les **deux sens** (#1455). Le sens serveur → local s'appuie sur la
     /// reconstruction (#1305), qui sait déjà quelles participations n'ont aucun équivalent ici :
-    /// `Optional`, car la feature « reconstruire » est désactivable — l'audit se tait alors sur ce sens
+    /// `Optional`, car la feature « reconstruire » est désactivable : l'audit se tait alors sur ce sens
     /// plutôt que d'échouer.
     @Provides
     @Singleton
@@ -87,7 +87,7 @@ public class AuditModule extends ModuleDeFeature {
     }
 
     /// Bilan de récupérabilité (#1151) : ce que deviendrait l'audio de chaque nuit si l'on repartait d'une
-    /// base neuve. Lecture seule, sans réseau — c'est le garde-fou qui doit précéder tout reset.
+    /// base neuve. Lecture seule, sans réseau : c'est le garde-fou qui doit précéder tout reset.
     @Provides
     @Singleton
     ServiceRecuperabilite fournirServiceRecuperabilite(SourceDeDonnees source, Workspace workspace) {
@@ -95,7 +95,7 @@ public class AuditModule extends ModuleDeFeature {
     }
 
     /// **Exécution** du reset guidé (#1419) : le bilan ci-dessus dit ce qu'on perdrait, ce service-ci le
-    /// fait — sauvegarde, base neuve, repeuplement depuis la plateforme, audit final. Destructeur : il
+    /// fait, sauvegarde, base neuve, repeuplement depuis la plateforme, audit final. Destructeur : il
     /// refuse de démarrer si la perte n'est pas acceptée, ou si VigieChiro ne répond pas.
     @Provides
     @Singleton

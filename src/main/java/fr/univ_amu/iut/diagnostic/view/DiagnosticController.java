@@ -44,7 +44,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran **M-Diagnostic** (`Diagnostic.fxml`).
 ///
-/// Pur câblage (patron CM4) : lie les contrôles au [DiagnosticViewModel] — graphe T°/hygrométrie
+/// Pur câblage (patron CM4) : lie les contrôles au [DiagnosticViewModel], graphe T°/hygrométrie
 /// (reconstruit depuis la série du VM), listes d'anomalies et d'évènements (R19), signalement
 /// d'absence de relevé (R20) et disponibilité GPS. Aucun accès base de données ni logique métier
 /// ici (règle ArchUnit `view_sans_jdbc`).
@@ -135,7 +135,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private final VersionApplication version;
 
     /// **Exporte le graphe climatique** en PNG : redessiné hors écran, jamais photographié (ADR 2348), et
-    /// porteur de son contexte — une courbe de température qui quitte l'application sans dire de quelle
+    /// porteur de son contexte : une courbe de température qui quitte l'application sans dire de quelle
     /// nuit elle parle n'explique plus rien.
     @FXML
     private void exporterGraphe() {
@@ -332,7 +332,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
         return List.of(temperature, humidite);
     }
 
-    /// La fenêtre nocturne en minutes sur l'axe, ou `null` si elle n'est pas calculable — l'image se
+    /// La fenêtre nocturne en minutes sur l'axe, ou `null` si elle n'est pas calculable : l'image se
     /// dessine alors sans bande, comme l'écran.
     private double[] fenetreNuitSurAxe() {
         CoherenceHoraire coherence = viewModel.coherenceHoraireProperty().get();
@@ -349,8 +349,8 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     /// Pose l'**aplat de la nuit réelle** (coucher → lever au point d'écoute) derrière la courbe
     /// climatique, en convertissant ces deux heures en minutes depuis l'origine de l'axe.
     ///
-    /// L'écran connaissait déjà cette fenêtre — il l'écrit sous le graphe et alerte quand
-    /// l'enregistrement en déborde — mais elle ne se voyait pas **sur** la courbe, là où elle situe les
+    /// L'écran connaissait déjà cette fenêtre (il l'écrit sous le graphe et alerte quand
+    /// l'enregistrement en déborde), mais elle ne se voyait pas **sur** la courbe, là où elle situe les
     /// mesures. Sans coordonnées au point, elle n'est pas calculable : l'aplat s'efface alors plutôt que
     /// d'inventer une nuit (#2617).
     private void majFenetreNuit() {

@@ -29,13 +29,13 @@ import java.util.Set;
 ///    **depuis le serveur**. Détruire la base alors que VigieChiro est injoignable laisserait un
 ///    workspace **vide**, et le remède serait pire que le mal. On refuse **avant** de détruire.
 /// 3. **Sauvegarder** base **et** audio (#1346), en disant ce qui n'a pas pu être copié (#1151).
-/// 4. **Base neuve** ([BaseNeuve]) — un filet est posé au passage.
+/// 4. **Base neuve** ([BaseNeuve]) : un filet est posé au passage.
 /// 5. **Repeupler depuis VigieChiro** : rapprochements (taxons, sites, points) puis reconstruction des
 ///    participations en passages archivés (#1050, #1305).
 /// 6. **Auditer** : le workspace doit être sain. Un audit qui crierait ici trahirait un reset raté.
 ///
 /// L'**audio** (étape 5 de la procédure documentée) n'est **pas** automatisable : il faut une carte SD
-/// montée, ou des fichiers retrouvés. Le service ne le fait pas — il **nomme** les nuits concernées pour
+/// montée, ou des fichiers retrouvés. Le service ne le fait pas : il **nomme** les nuits concernées pour
 /// que l'utilisateur sache exactement quoi rebrancher, plutôt que de le laisser découvrir le trou.
 public class ServiceReset {
 
@@ -68,13 +68,13 @@ public class ServiceReset {
         this.utilisateurDao = Objects.requireNonNull(utilisateurDao, "utilisateurDao");
     }
 
-    /// Exécute le reset complet. **Détruit la base** — à n'appeler qu'après une confirmation explicite de
+    /// Exécute le reset complet. **Détruit la base** : à n'appeler qu'après une confirmation explicite de
     /// l'utilisateur.
     ///
     /// @param dossierSauvegarde où écrire la sauvegarde complète (base + audio) avant de détruire
     /// @param accepterPerte l'utilisateur a **vu et accepté** que l'audio de certaines nuits ne reviendra
     ///     pas. Sans cela, la procédure refuse de démarrer dès qu'une nuit est en « perdu »
-    /// @return ce qui s'est passé, ou le **refus** motivé — auquel cas rien n'a été touché
+    /// @return ce qui s'est passé, ou le **refus** motivé : auquel cas rien n'a été touché
     public ResultatReset executer(Path dossierSauvegarde, boolean accepterPerte) {
         Objects.requireNonNull(dossierSauvegarde, "dossierSauvegarde");
 
@@ -102,7 +102,7 @@ public class ServiceReset {
 
         // L'observateur survit au reset : c'est la MEME personne qui repart d'une base neuve. Sans cette
         // précaution, tout ce que les rapprocheurs recréeraient (sites, points) pointerait sur un
-        // propriétaire disparu — clé étrangère morte, échec avalé par le contrat best-effort, workspace
+        // propriétaire disparu : clé étrangère morte, échec avalé par le contrat best-effort, workspace
         // muet. Le service `idUtilisateurCourant` est un singleton déjà résolu : il ne se recréerait pas.
         List<Utilisateur> observateur = utilisateurDao.findAll();
 
@@ -115,7 +115,7 @@ public class ServiceReset {
     }
 
     /// Rejoue depuis la plateforme tout ce qu'elle connaît de l'observateur : d'abord les rapprochements
-    /// (référentiel de taxons, sites, points — sans eux, une participation n'aurait nulle part où
+    /// (référentiel de taxons, sites, points : sans eux, une participation n'aurait nulle part où
     /// s'accrocher), puis chaque participation orpheline, reconstruite en **passage archivé**.
     ///
     /// Une participation qui échoue n'arrête pas les autres : l'audit final la signalera, et un
@@ -125,7 +125,7 @@ public class ServiceReset {
         // Les rapprocheurs RÉFÉRENTIELS (taxons, sites, points) d'abord : sans eux, une participation
         // n'aurait nulle part où s'accrocher. On écarte le rapprocheur des PASSAGES : depuis #1707 sa
         // synchro crée des SQUELETTES qui consommeraient l'orpheline avant la boucle ci-dessous, selon
-        // l'ordre (non déterministe) d'un Set — d'où un `reconstruits` tantôt 0, tantôt 1. Le reset
+        // l'ordre (non déterministe) d'un Set : d'où un `reconstruits` tantôt 0, tantôt 1. Le reset
         // reconstruit en PLEIN (séquences comprises), pas en squelette : c'est son objet même (repeupler
         // tout ce que la plateforme sait), et c'est ce que la boucle explicite fait ensuite, de façon
         // déterministe.

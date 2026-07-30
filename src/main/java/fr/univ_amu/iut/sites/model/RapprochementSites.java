@@ -76,7 +76,7 @@ public class RapprochementSites implements RapprochementVigieChiro {
     public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         try {
             // Toute issue non-succès = ne toucher à rien (ni création, ni purge : garde anti-purge).
-            // Depuis #1284 la cause remonte, au lieu d'être omise en silence — sauf « non connecté ».
+            // Depuis #1284 la cause remonte, au lieu d'être omise en silence : sauf « non connecté ».
             return switch (client.mesSites()) {
                 case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> distants) ->
                     importer(distants, idProfilConnecte(client));

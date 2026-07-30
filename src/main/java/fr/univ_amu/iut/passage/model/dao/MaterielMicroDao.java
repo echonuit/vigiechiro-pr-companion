@@ -10,8 +10,8 @@ import fr.univ_amu.iut.passage.model.PositionMicro;
 ///
 /// Même patron d'**upsert** que [EnregistreurDao] : [#insert(MaterielMicro)] fait
 /// `INSERT … ON CONFLICT(passage_id) DO UPDATE`, car il y a **au plus une** ligne de matériel par
-/// passage. Un `mic_height_m` (REAL) nul est lu via `getObject` — et non `getDouble` (qui renverrait
-/// `0.0`) —, et une position inconnue est tolérée par [PositionMicro#depuisTexte].
+/// passage. Un `mic_height_m` (REAL) nul est lu via `getObject` et non `getDouble` (qui renverrait
+/// `0.0`) ; une position inconnue est tolérée par [PositionMicro#depuisTexte].
 public class MaterielMicroDao extends DaoGenerique<MaterielMicro, Long> {
 
     private static final RowMapper<MaterielMicro> MAPPER = rs -> new MaterielMicro(

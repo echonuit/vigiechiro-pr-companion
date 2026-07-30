@@ -6,7 +6,7 @@ import java.util.Set;
 /// du Plan National d'Actions Chiroptères 2016-2025, telles que la migration V36 les a marquées.
 ///
 /// Interface étroite, à l'image des autres ponts du produit ([fr.univ_amu.iut.passage.model.NuitsOpportunistes],
-/// `CoordonneesPoint`) : les écrans qui repèrent, filtrent et comptent ces espèces — `audio`, `analyse` —
+/// `CoordonneesPoint`) : les écrans qui repèrent, filtrent et comptent ces espèces, `audio`, `analyse` :
 /// prennent **l'ensemble des codes**, et rien de plus. Aucun d'eux n'a de raison de toucher au
 /// référentiel, qui vient du plan national et non de l'application.
 ///

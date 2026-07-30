@@ -215,7 +215,7 @@ public class ModalePointController {
 
     /// (Re)pose le carré-repère et le marqueur du point sur la carte, **sans recadrer** la vue (elle
     /// reste calée sur le carré). Marqueur à la position GPS si elle est saisie et valide, sinon au
-    /// centre du carré en **position approximative** (à caler par glisser ou saisie — #153).
+    /// centre du carré en **position approximative** (à caler par glisser ou saisie : #153).
     private void majMarqueur() {
         if (numeroCarre == null) {
             return;
@@ -264,7 +264,7 @@ public class ModalePointController {
     @FXML
     private void valider() {
         if (viewModel.enregistrer()) {
-            // Résolution de la commune (#2791) : réseau, donc hors du fil JavaFX, et best-effort —
+            // Résolution de la commune (#2791) : réseau, donc hors du fil JavaFX, et best-effort :
             // la modale se ferme sans attendre, un échec ne se signale pas (le rattrapage comblera).
             executeur.executer(
                     () -> {

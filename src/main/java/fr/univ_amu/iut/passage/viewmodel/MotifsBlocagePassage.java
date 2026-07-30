@@ -7,7 +7,7 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 ///
 /// Le gating de M-Passage est **en amont** : on grise avec une explication plutôt que de laisser
 /// découvrir le refus après confirmation. Chaque geste gatable a donc son motif, et ces motifs forment
-/// un groupe cohérent — ils répondent tous à la même question, posée sur quatre objets différents.
+/// un groupe cohérent : ils répondent tous à la même question, posée sur quatre objets différents.
 ///
 /// Les tenir ensemble sort du [PassageViewModel] quatre propriétés et quatre accesseurs qui n'y
 /// disaient rien de plus qu'ici, et rend visible ce qu'ils ont en commun. L'écran s'y lie de la même

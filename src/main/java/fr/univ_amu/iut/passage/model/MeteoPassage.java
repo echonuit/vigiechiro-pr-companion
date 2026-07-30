@@ -6,7 +6,7 @@ import java.util.Map;
 /// Accès typé aux **données météo optionnelles** d'un passage (#106, étendu aux données demandées au
 /// dépôt VigieChiro), portées par la colonne JSON `passage.weather_data` ([Passage#donneesMeteo]).
 ///
-/// Les grandeurs vivent chacune sous une clé de l'**objet JSON** — `tempDebut`, `tempFin`, `vent`,
+/// Les grandeurs vivent chacune sous une clé de l'**objet JSON** : `tempDebut`, `tempFin`, `vent`,
 /// `couvertureNuageuse` ; lecture et écriture **préservent les autres clés** ([ObjetJson]), pour ne
 /// jamais écraser la colonne. Chaque grandeur est **indépendamment optionnelle** (`null` = non
 /// renseignée) : jamais bloquant.
