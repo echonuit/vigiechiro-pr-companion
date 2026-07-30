@@ -115,16 +115,18 @@ def test_2843_tiret_cadratin() -> None:
             '    static final String ABSENTE = "' + cad + '";\n'  # litteral = le glyphe -> non
             "    /// La cellule vide affiche `" + cad + "` dans le tableau.\n"  # chevrons -> non
             "    /// Le verdict vaut « " + cad + " a verifier » tant que rien n est pose.\n"  # cite -> non
+            '    Pattern LEGACY = Pattern.compile("probable [-' + cad + '] `");\n'  # classe litterale -> non
             "}\n",
         )
         n = len(m.suspects(racine))
         # Contrairement a ses voisins, ce script COMPTE les commentaires : la regle porte sur « la doc
-        # et les commentaires », qui sont ici la matiere et non le bruit. Les trois formes CITEES, en
+        # et les commentaires », qui sont ici la matiere et non le bruit. Les quatre formes CITEES, en
         # revanche, ne sont pas de la prose (meme regle que les zones Markdown) : le glyphe defini en
-        # litteral, entre chevrons de code, ou dans un libelle recopie. Ce cas garde les deux sens a la
-        # fois - si le motif de citation devenait gourmand il avalerait la prose et n tomberait a 0 ;
-        # s il cessait de proteger, n monterait a 4 et le cliquet buterait sur un plancher fantome.
-        _verifie("2843 compte la prose Java, epargne les trois formes citees", n, 1)
+        # litteral, entre chevrons de code, dans un libelle recopie, ou dans la classe de caracteres
+        # par laquelle un analyseur accepte l ancienne forme. Ce cas garde les deux sens a la fois - si
+        # le motif de citation devenait gourmand il avalerait la prose et n tomberait a 0 ; s il cessait
+        # de proteger, n monterait a 5 et le cliquet buterait sur un plancher fantome.
+        _verifie("2843 compte la prose Java, epargne les quatre formes citees", n, 1)
 
 
 def test_2843_prose_documentation() -> None:
@@ -138,13 +140,20 @@ def test_2843_prose_documentation() -> None:
             "Une phrase " + cad + " avec un cadratin de prose.\n"  # prose -> compte
             "La cellule vide affiche `" + cad + "` dans le tableau.\n"  # chevrons de code -> non
             "Le lien « GPS manquant " + cad + " placer » vient de l application.\n"  # citation -> non
+            "Un motif `[-" + cad + "]` accepte l ancienne forme d en-tete.\n"  # classe litterale -> non
+            "Voir [le guide " + cad + " chapitre 3](guide.md) pour la suite.\n"  # LIEN Markdown -> compte
             "Une phrase saine : deux-points.\n",  # rien -> non
         )
         n = len(m.prose(racine))
         # La regle « ce qui est cite n est pas de la prose » couvre le glyphe ET les libelles de
         # l application. Si le motif de citation devenait trop gourmand, il avalerait la prose et ce
         # cas tomberait a zero : c est exactement la deflation que ce fichier existe pour interdire.
-        _verifie("2843 zone nettoyee : compte la prose, epargne les citations", n, 1)
+        #
+        # Le LIEN Markdown est ici pour une raison precise. La forme citee « classe de caracteres » est
+        # ecrite en LITTERAL, et non « des crochets contenant un cadratin », faute de quoi elle
+        # avalerait tout libelle de lien portant un tiret de prose. Ce fichier de fixture contient donc
+        # les deux : la classe, epargnee, et le lien, compte. Elargir le motif fait tomber n a 1.
+        _verifie("2843 zone nettoyee : compte la prose et les liens, epargne les citations", n, 2)
 
 
 def test_2843_zone_vide_est_une_erreur() -> None:
