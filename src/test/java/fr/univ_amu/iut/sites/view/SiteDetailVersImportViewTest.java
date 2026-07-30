@@ -5,14 +5,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.Utilisateur;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,10 +43,15 @@ class SiteDetailVersImportViewTest {
         Injector injector = RacineInjecteur.creer();
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        new PointDao(source).insert(new PointDEcoute(null, "A1", 43.5, 5.4, null, site.id()));
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("640380")
+                .nomSite("Étang")
+                .point("A1")
+                .position(43.5, 5.4)
+                .semerSiteEtPoint();
+        // La vue s'ouvre sur le Site lui-même, pas sur son identifiant : on le relit.
+        Site site = new SiteDao(source).findById(jeu.idSite()).orElseThrow();
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);

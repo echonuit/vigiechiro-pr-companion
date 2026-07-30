@@ -30,7 +30,6 @@ class CliquetSemisTopologieTest {
     /// La dette épinglée. **Ne peut que rétrécir** : cf. [Cliquet] pour les deux sens de variation.
     private static final List<String> SEMENT_LA_TOPOLOGIE_A_LA_MAIN = List.of(
             "fr/univ_amu/iut/audit/model/AuditPointsServeurTest.java",
-            "fr/univ_amu/iut/cli/CliRattraperCommunesTest.java",
             "fr/univ_amu/iut/e2e/ParcoursImporterTransformesE2ETest.java",
             "fr/univ_amu/iut/importation/ServiceImportReferenceTest.java",
             "fr/univ_amu/iut/importation/ServiceImportTest.java",
@@ -39,8 +38,7 @@ class CliquetSemisTopologieTest {
             "fr/univ_amu/iut/passage/model/CreationPassageArchiveTest.java",
             "fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java",
             "fr/univ_amu/iut/saison/ServiceSoldeSaisonTest.java",
-            "fr/univ_amu/iut/sites/model/ServiceCommunesTest.java",
-            "fr/univ_amu/iut/sites/view/SiteDetailVersImportViewTest.java");
+            "fr/univ_amu/iut/sites/model/ServiceCommunesTest.java");
 
     @Test
     @DisplayName("La dette des semis de topologie ne peut que rétrécir : aucun nouveau site créé à la main")
