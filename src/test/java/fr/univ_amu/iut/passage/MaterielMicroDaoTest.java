@@ -2,24 +2,15 @@ package fr.univ_amu.iut.passage;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.PositionMicro;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,32 +36,17 @@ class MaterielMicroDaoTest {
     void preparer() {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        // Chaîne de parents requise par les FK : user -> site -> point, l'enregistreur, puis le passage.
-        new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "040962", "Étang", Protocole.STANDARD, null, "2026-05-01", "u-1"));
-        long idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
         passages = new PassageDao(source);
-        idPassage = passages.insert(new Passage(
-                        null,
-                        1,
-                        2026,
-                        "2026-06-20",
-                        "21:30:00",
-                        "05:15:00",
-                        null,
-                        StatutWorkflow.IMPORTE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .carre("040962")
+                .nomSite("Étang")
+                .point("A1")
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .statut(StatutWorkflow.IMPORTE)
+                .semerSquelette()
+                .idPassage();
         dao = new MaterielMicroDao(source);
     }
 

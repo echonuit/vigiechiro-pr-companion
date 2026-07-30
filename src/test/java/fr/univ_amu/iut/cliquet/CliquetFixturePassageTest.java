@@ -37,7 +37,6 @@ class CliquetFixturePassageTest {
             "fr/univ_amu/iut/bibliotheque/ServiceBibliothequeApprovalTest.java",
             "fr/univ_amu/iut/bibliotheque/ServiceBibliothequeTest.java",
             "fr/univ_amu/iut/cli/CliResetGuideTest.java",
-            "fr/univ_amu/iut/cli/CliRetroEmpreintesTest.java",
             "fr/univ_amu/iut/commun/model/CycleTraitementIntegrationTest.java",
             "fr/univ_amu/iut/commun/model/dao/ReleveTraitementDaoTest.java",
             "fr/univ_amu/iut/commun/persistence/BackfillVerdictMigrationTest.java",
@@ -55,12 +54,7 @@ class CliquetFixturePassageTest {
             "fr/univ_amu/iut/lot/VerificationCoherenceTest.java",
             "fr/univ_amu/iut/passage/BackfillEmpreintesTest.java",
             "fr/univ_amu/iut/passage/BackfillHorodatageCaptureTest.java",
-            "fr/univ_amu/iut/passage/EnregistrementOriginalDaoTest.java",
-            "fr/univ_amu/iut/passage/JournalDuCapteurDaoTest.java",
-            "fr/univ_amu/iut/passage/MaterielMicroDaoTest.java",
             "fr/univ_amu/iut/passage/PassageDaoTest.java",
-            "fr/univ_amu/iut/passage/ReleveClimatiqueDaoTest.java",
-            "fr/univ_amu/iut/passage/SequenceDaoTest.java",
             "fr/univ_amu/iut/passage/ServicePassageDetailTest.java",
             "fr/univ_amu/iut/passage/ServicePassageTest.java",
             "fr/univ_amu/iut/passage/SessionDaoTest.java",
@@ -78,8 +72,6 @@ class CliquetFixturePassageTest {
             "fr/univ_amu/iut/validation/PublicationMessageTest.java",
             "fr/univ_amu/iut/validation/ResultatsIdentificationDaoTest.java",
             "fr/univ_amu/iut/validation/SaisieCertitudeTest.java",
-            "fr/univ_amu/iut/validation/ServiceValidationTest.java",
-            "fr/univ_amu/iut/validation/ValidationExpertTest.java",
             "fr/univ_amu/iut/validation/ValidationManuelleTest.java");
 
     @Test
