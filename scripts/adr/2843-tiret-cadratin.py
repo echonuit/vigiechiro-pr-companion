@@ -107,6 +107,9 @@ ZONES_NETTOYEES = (
     ("migrations de schéma", pathlib.Path("src/main/resources/db/migration"), (), "*.sql"),
     ("scripts", pathlib.Path("scripts"), (), "*.py"),
     ("gardes de capture", pathlib.Path(".github/assets"), (), "*.sh"),
+    # Les scripts d'atelier, dont le garde de titre de PR. Cette zone manquait, et le régime de
+    # couverture l'a signalée dès que ce garde a porté sa première ligne de prose (#2947).
+    ("scripts d'atelier", pathlib.Path(".github/scripts"), (), "*.sh"),
     ("ateliers d'intégration", pathlib.Path(".github/workflows"), (), "*.yml"),
     # Glob total : ce dossier ne contient que des `.bats` et le `.bash` qu'ils chargent, et deux
     # entrées pour deux extensions du même petit dossier se seraient désynchronisées.
