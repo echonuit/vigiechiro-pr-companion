@@ -2,7 +2,6 @@ package fr.univ_amu.iut.multisite.view;
 
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.CiblePassage;
-import fr.univ_amu.iut.commun.model.IssueTraitement;
 import fr.univ_amu.iut.commun.model.MoteurTraitementGroupe;
 import fr.univ_amu.iut.commun.model.ResultatTraitementGroupe;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -18,8 +17,8 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.commun.viewmodel.GesteAttendu;
-import fr.univ_amu.iut.commun.viewmodel.TexteCompteRendu;
 import fr.univ_amu.iut.multisite.model.LignePassage;
+import fr.univ_amu.iut.multisite.viewmodel.CompteRenduChiffreLot;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -145,36 +144,18 @@ public final class TraitementLot {
                 action.libelle(), "", constats, eligibles.isEmpty() ? "Rien ne sera fait." : "Lancer le traitement ?");
     }
 
-    /// Rend compte du lot : le bilan structuré, mis à plat par [TexteCompteRendu] puisque le port
-    /// [Notificateur] parle en texte. Le niveau distingue « tout est passé » de « il reste à voir ».
+    /// Rend compte du lot **en chiffres** (#2757) : le port sait désormais transporter un
+    /// [fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre], là où il fallait auparavant mettre le bilan
+    /// à plat pour le faire passer. Le niveau distingue « tout est passé » de « il reste à voir ».
+    ///
+    /// La mise à plat n'a pas disparu : elle est devenue le **repli** du port, pour une surface qui ne
+    /// dessine pas de barre. Elle n'est simplement plus imposée à celles qui en dessinent.
     private void rendreCompte(ActionGroupee action, ResultatTraitementGroupe resultat) {
         boolean impeccable = resultat.reussis() == resultat.issues().size();
         notificateur.notifier(
                 impeccable ? NiveauNotification.INFORMATION : NiveauNotification.AVERTISSEMENT,
                 action.libelle(),
-                TexteCompteRendu.rendre(bilan(action, resultat)));
-    }
-
-    /// Ce qu'on lit **après** : une ligne par passage, dans l'ordre de soumission, avec son sort.
-    private static CompteRendu bilan(ActionGroupee action, ResultatTraitementGroupe resultat) {
-        List<Detail> lignes = resultat.issues().stream()
-                .map(issue -> new Detail(issue.cible().designation(), libelle(issue)))
-                .toList();
-        Constat entete = new Constat(
-                resultat.reussis() + " réussi(s), " + (resultat.issues().size() - resultat.reussis()) + " non traité(s)"
-                        + (resultat.interrompu() ? ", lot interrompu" : ""),
-                resultat.reussis() == resultat.issues().size() ? Severite.SUCCES : Severite.AVERTISSEMENT,
-                lignes);
-        return CompteRendu.de(action.libelle(), List.of(entete));
-    }
-
-    private static String libelle(IssueTraitement issue) {
-        return switch (issue.statut()) {
-            case REUSSI -> "fait";
-            case ECARTE -> "écarté : " + issue.motif();
-            case ECHEC -> "échec : " + issue.motif();
-            case NON_TRAITE -> "non traité (lot interrompu)";
-        };
+                CompteRenduChiffreLot.de(resultat, List.of()));
     }
 
     /// Désignation lisible d'une ligne, telle qu'elle préfixera le journal et le compte rendu.

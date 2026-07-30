@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.SuiviOperation;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.TexteCompteRendu;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -65,15 +66,27 @@ class TraitementLotTest {
         }
     }
 
-    /// Notificateur doublé : capture le compte rendu final.
+    /// Notificateur doublé : capture le compte rendu final, **structuré** depuis #2757.
+    ///
+    /// Il redéfinit la surcharge chiffrée au lieu de laisser le repli textuel du port opérer : c'est
+    /// exactement ce que l'élargissement du port a rendu possible - éprouver le geste jusqu'à ce qu'il
+    /// annonce, en parts et non en phrase. La surcharge `String` reste captée pour les actions qui n'ont
+    /// rien à ventiler.
     private static final class NotificateurDouble implements fr.univ_amu.iut.commun.view.Notificateur {
         private NiveauNotification niveau;
         private String message = "";
+        private CompteRenduChiffre compteRendu;
 
         @Override
         public void notifier(NiveauNotification niveau, String entete, String message) {
             this.niveau = niveau;
             this.message = message;
+        }
+
+        @Override
+        public void notifier(NiveauNotification niveau, String entete, CompteRenduChiffre compteRendu) {
+            this.niveau = niveau;
+            this.compteRendu = compteRendu;
         }
     }
 
@@ -199,6 +212,9 @@ class TraitementLotTest {
         assertThat(notificateur.message)
                 .as("l'annonce a déjà tout dit : un compte rendu vide serait du bruit")
                 .isEmpty();
+        assertThat(notificateur.compteRendu)
+                .as("#2757 : rien n'est rendu du tout, ni en texte ni en chiffres")
+                .isNull();
     }
 
     @Test
@@ -214,7 +230,11 @@ class TraitementLotTest {
         assertThat(action.executes)
                 .as("le second passage est traité malgré l'échec du premier")
                 .containsExactly(1L, 2L);
-        assertThat(notificateur.message).contains("disque plein").contains("640380 / A1");
+        // #2757 : le motif et son sujet sont désormais deux champs, non deux morceaux d'une même phrase.
+        assertThat(notificateur.compteRendu.motifs()).anySatisfy(motif -> {
+            assertThat(motif.libelle()).contains("disque plein");
+            assertThat(motif.sujets()).contains("640380 / A1 / 2026 n°1");
+        });
         assertThat(notificateur.niveau).isEqualTo(NiveauNotification.AVERTISSEMENT);
         assertThat(rafraichi)
                 .as("le tableau se rafraîchit : les statuts ont bougé")
@@ -230,7 +250,7 @@ class TraitementLotTest {
                 .lancer(null, new ActionDouble(List.of(), List.of()), List.of(ligne(1, "A1")), () -> {});
 
         assertThat(notificateur.niveau).isEqualTo(NiveauNotification.INFORMATION);
-        assertThat(notificateur.message).contains("1 réussi(s)");
+        assertThat(notificateur.compteRendu.resultat()).isEqualTo("1 traités");
     }
 
     @Test
@@ -247,10 +267,12 @@ class TraitementLotTest {
         new TraitementLot(new ConfirmateurDouble(true), notificateur, new SuiviDouble(false))
                 .lancer(null, action, List.of(ligne(1, "A1"), ligne(2, "B2")), () -> {});
 
-        assertThat(notificateur.message)
+        // #2757 : le refus vit désormais dans un MOTIF, qui le cite une fois pour tous ses sujets.
+        assertThat(notificateur.compteRendu.motifs())
                 .as("le fait vient du modèle, le geste de l'application : sans lui, vingt refus sans remède")
-                .contains("n'est pas connectée à Vigie-Chiro.")
-                .contains("menu ☰ > Se connecter à Vigie-Chiro");
+                .anySatisfy(motif -> assertThat(motif.libelle())
+                        .contains("n'est pas connectée à Vigie-Chiro.")
+                        .contains("menu ☰ > Se connecter à Vigie-Chiro"));
     }
 
     @Test
@@ -265,12 +287,18 @@ class TraitementLotTest {
         new TraitementLot(new ConfirmateurDouble(true), notificateur, new SuiviDouble(false))
                 .lancer(null, action, List.of(ligne(1, "A1"), ligne(2, "B2"), ligne(3, "C3")), () -> {});
 
-        assertThat(notificateur.message)
+        // #2757 : le second nombre n'est plus un mot dans une phrase, c'est une PART de la ventilation -
+        // dont le constructeur refuse qu'elle ne fasse pas le total. Le défaut trouvé par mutation
+        // (« 1 réussi(s), 4 non traité(s) » sur trois nuits) ne peut plus se construire.
+        assertThat(notificateur.compteRendu.ventilation().total())
                 .as("des deux passages LANCÉS, un a réussi et un a échoué")
-                .contains("1 réussi(s), 1 non traité(s)");
-        assertThat(notificateur.message)
+                .isEqualTo(2);
+        assertThat(notificateur.compteRendu.ventilation().segments())
+                .extracting(fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment::quantite)
+                .containsExactly(1L, 1L);
+        assertThat(notificateur.compteRendu.motifs())
                 .as("l'écarté n'a jamais été lancé : il a été annoncé avant, il ne compte pas ici")
-                .doesNotContain("640380 / B2");
+                .allSatisfy(motif -> assertThat(motif.sujets()).doesNotContain("640380 / B2"));
     }
 
     @Test
@@ -331,6 +359,9 @@ class TraitementLotTest {
         assertThat(action.executes)
                 .as("le jeton est consulté AVANT chaque passage : aucun n'est commencé")
                 .isEmpty();
-        assertThat(notificateur.message).contains("lot interrompu").contains("non traité");
+        assertThat(notificateur.compteRendu.titre()).contains("interrompu");
+        assertThat(notificateur.compteRendu.ventilation().segments())
+                .extracting(fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment::libelle)
+                .containsExactly("Non traités");
     }
 }
