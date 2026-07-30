@@ -21,8 +21,9 @@ import tempfile
 
 ICI = pathlib.Path(__file__).parent
 
-# Nomme parce qu il porte TROIS cas, la ou ses voisins n en ont qu un : le cliquet Java, la tolerance
-# zero d une zone nettoyee, et le refus d une zone qui ne balaie aucun fichier.
+# Nomme parce qu il porte QUATRE cas, la ou ses voisins n en ont qu un : le cliquet Java, la tolerance
+# zero d une zone nettoyee, le refus d une zone qui ne balaie aucun fichier, et le balayage non
+# recursif de la racine.
 ADR_2843 = "2843-tiret-cadratin.py"
 
 _echecs: list[str] = []
@@ -179,6 +180,27 @@ def test_2843_zone_vide_est_une_erreur() -> None:
             _verifie("2843 zone nettoyee : un motif qui ne balaie rien leve", 0, 1)
 
 
+def test_2843_balayage_non_recursif() -> None:
+    """`recursif=False` doit vraiment s arreter au niveau de la racine.
+
+    Sans ce cas, le drapeau serait un no-op SILENCIEUX : la zone racine se mettrait a descendre dans
+    tout le depot, ramasserait les fichiers non suivis, et ferait rougir le garde chez le developpeur
+    sans rien signaler en CI. Un drapeau qu on croit actif et qui ne fait rien est pire qu absent.
+    """
+    m = _charge(ADR_2843)
+    cad = chr(0x2014)
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(racine, "RACINE.md", "Une prose " + cad + " a la racine.\n")
+        _ecrire(racine, "sousdossier/PROFOND.md", "Une prose " + cad + " en profondeur.\n")
+        _verifie("2843 zone nettoyee : recursif voit les deux niveaux", len(m.prose(racine, (), "*.md")), 2)
+        _verifie(
+            "2843 zone nettoyee : non recursif s arrete a la racine",
+            len(m.prose(racine, (), "*.md", False)),
+            1,
+        )
+
+
 def test_0037_slot_actions() -> None:
     m = _charge("0037-slot-actions-hbox.py")
     with tempfile.TemporaryDirectory() as d:
@@ -280,6 +302,7 @@ if __name__ == "__main__":
         test_2843_tiret_cadratin,
         test_2843_prose_documentation,
         test_2843_zone_vide_est_une_erreur,
+        test_2843_balayage_non_recursif,
         test_2493_modale_suit_croissance,
         test_loupe_0020,
         test_loupe_0044,

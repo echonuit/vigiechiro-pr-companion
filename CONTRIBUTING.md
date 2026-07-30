@@ -163,13 +163,13 @@ angles, ne se ressemblent pas, et le recoupement se découvre alors au **conflit
 et le seul qui ne se retrouve pas après coup.
 
 Ces trois phrases se déposent **en commentaire sur l'issue**, avec le **chantier**, la **branche** et le
-**remède envisagé** — et l'issue s'**assigne**. L'assignee est le signal qui se filtre
+**remède envisagé**, et l'issue s'**assigne**. L'assignee est le signal qui se filtre
 (`gh issue list --assignee "*"`) ; le commentaire porte ce qu'il ne dit pas. Annoncer le remède est le
 vrai gain : deux personnes peuvent voir le même défaut et imaginer deux corrections dont l'une est
 meilleure ; annoncées, le désaccord se règle **avant** le code.
 
 **Un signalement se relâche** : quand on s'arrête, on retire l'assignee et on le dit. Une revendication
-oubliée est pire que rien — elle fait passer une issue libre pour prise. Elle répond à « cette issue
+oubliée est pire que rien : elle fait passer une issue libre pour prise. Elle répond à « cette issue
 est-elle prise ? », **pas** à « est-ce la même que celle-là sous d'autres mots ? » : cette seconde
 question reste le travail du triage.
 
