@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-07-22
 - **Chantier** : #1038 (choisir où vit la base `.db`, sans déménager l'audio), dernier lot de l'EPIC #2258
-- **Vérification** : certaine — `WorkspaceTest#resolu_lit_la_configuration_persistee`
+- **Vérification** : certaine - `WorkspaceTest#resolu_lit_la_configuration_persistee`
 - **Suit** : [ADR 0048](0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md), qui a réduit ce chantier à la base seule
 - **Absorbe** : #2187 (les drapeaux de fonctionnalités sont lus avant les migrations)
 

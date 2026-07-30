@@ -1,8 +1,8 @@
-# ADR 0027 — Une attente porte toujours un nom, et c'est l'étape qui va attendre qui le pose
+# ADR 0027 - Une attente porte toujours un nom, et c'est l'étape qui va attendre qui le pose
 
-- **Statut** : Accepté — 2026-07-19
+- **Statut** : Accepté - 2026-07-19
 - **Chantier** : #1931, #1935, #1940, #1946, #1951, #1959
-- **Vérification** : humaine — qu'aucune opération longue ne laisse l'écran muet est une propriété temporelle du déroulé, pas un invariant statique
+- **Vérification** : humaine - qu'aucune opération longue ne laisse l'écran muet est une propriété temporelle du déroulé, pas un invariant statique
 
 ## Contexte
 
@@ -12,9 +12,9 @@ Sur une nuit réelle de 2042 bruts, l'écran est resté **plus de deux minutes**
 
 Deux erreurs successives ont été nécessaires pour trouver la règle.
 
-**La première** : #1951 a nommé les étapes de fin de phase (« Vérification de l'audio disponible… », « Recherche de ce qu'il reste à récupérer… ») — sans rien changer pour l'utilisateur. Ces libellés étaient posés **après** le geste qui prenait le temps.
+**La première** : #1951 a nommé les étapes de fin de phase (« Vérification de l'audio disponible… », « Recherche de ce qu'il reste à récupérer… »), sans rien changer pour l'utilisateur. Ces libellés étaient posés **après** le geste qui prenait le temps.
 
-**La seconde** est plus intéressante : le fait que rien ne change a **localisé** le défaut. Puisque les libellés d'après ne s'affichaient jamais, l'attente était forcément avant eux. Elle était dans l'adoption des originaux d'une nuit reconstruite — près de 6700 ordres SQL auto-commités, soit autant de `fsync` (#1959).
+**La seconde** est plus intéressante : le fait que rien ne change a **localisé** le défaut. Puisque les libellés d'après ne s'affichaient jamais, l'attente était forcément avant eux. Elle était dans l'adoption des originaux d'une nuit reconstruite, près de 6700 ordres SQL auto-commités, soit autant de `fsync` (#1959).
 
 ## Décision
 
@@ -29,7 +29,7 @@ adopterOriginaux(session, originaux, resultat);   // ← ce qui va prendre le te
 
 **3. Une attente nommée est aussi un instrument de mesure.** Quand on ignore où passe le temps, nommer les étapes coûte moins que d'instrumenter, et l'usage réel tranche en une exécution. C'est ce qui a désigné l'adoption : les deux minutes ne s'affichaient sur aucun des libellés posés, donc elles étaient avant.
 
-**4. Nommer ne dispense pas de corriger.** Une attente de deux minutes reste une attente : le libellé la rend supportable, la transaction la fait disparaître. Les deux se font — dans cet ordre de découverte, pas de priorité.
+**4. Nommer ne dispense pas de corriger.** Une attente de deux minutes reste une attente : le libellé la rend supportable, la transaction la fait disparaître. Les deux se font, dans cet ordre de découverte, pas de priorité.
 
 ## Conséquences
 
@@ -41,6 +41,6 @@ adopterOriginaux(session, originaux, resultat);   // ← ce qui va prendre le te
 
 **Une barre indéterminée pendant les temps morts.** JavaFX la rend gratuitement (`progress = -1`), mais `ProgressionOperation.appliquer` retient `Math.max(fraction, point.fraction())` : une valeur négative serait avalée. Il aurait fallu ouvrir le contrat du socle pour un cas d'affichage ; le libellé sur barre pleine dit la même chose sans y toucher.
 
-**Une ligne d'étape dédiée, alimentée par un troisième canal.** Sémantiquement le bon endroit — la ligne parle quand aucune barre ne le peut — mais il aurait fallu reprendre les **12 implémentations** de `ReactivationModaleController.Travail` pour un libellé. Reste le bon choix le jour où une étape n'appartient à aucune des deux phases.
+**Une ligne d'étape dédiée, alimentée par un troisième canal.** Sémantiquement le bon endroit (la ligne parle quand aucune barre ne le peut), mais il aurait fallu reprendre les **12 implémentations** de `ReactivationModaleController.Travail` pour un libellé. Reste le bon choix le jour où une étape n'appartient à aucune des deux phases.
 
 **Mesurer d'abord, afficher ensuite.** L'ordre inverse a été retenu : l'affichage est utile en soi et coûte deux lignes, alors qu'une instrumentation ne sert qu'une fois (décision 3).

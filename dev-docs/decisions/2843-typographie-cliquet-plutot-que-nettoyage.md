@@ -1,8 +1,8 @@
-# ADR 2843 — Une convention typographique se tient par un cliquet, pas par un nettoyage
+# ADR 2843 - Une convention typographique se tient par un cliquet, pas par un nettoyage
 
-- **Statut** : Accepté — 2026-07-29
+- **Statut** : Accepté - 2026-07-29
 - **Chantier** : #2843, suite de la clôture du chantier #2348 et de #2813
-- **Vérification** : probable — `scripts/adr/2843-tiret-cadratin.py` (cliquet : 1036)
+- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 1036)
 
 ## Contexte
 
@@ -35,7 +35,7 @@ Les zones nettoyées vivent dans une **liste déclarative** du script (`ZONES_NE
 
 **5. Ce qui est cité n'est pas de la prose.** Un cadratin entre **guillemets français** ou entre **chevrons de code** est une citation : le glyphe de valeur absente que la documentation décrit, ou un libellé de l'application qu'une fiche d'écran reproduit fidèlement. Une seule règle couvre les deux, là où deux listes d'exceptions auraient dérivé séparément.
 
-C'est aussi ce qui a révélé que **`docs/` n'est pas indépendante des chaînes Java** : `docs/ecrans/sites.md` cite le libellé `« GPS manquant — placer sur la carte »`, écrit tel quel dans `CartesPointsSite`. Corriger la documentation seule l'aurait fait diverger du produit. Ce cadratin partira avec la tranche des chaînes Java, où le libellé et sa documentation changeront ensemble.
+C'est aussi ce qui a révélé que **`docs/` n'est pas indépendante des chaînes Java** : `docs/ecrans/sites.md` cite le libellé `« GPS manquant, placer sur la carte »`, écrit tel quel dans `CartesPointsSite`. Corriger la documentation seule l'aurait fait diverger du produit. Ce cadratin partira avec la tranche des chaînes Java, où le libellé et sa documentation changeront ensemble.
 
 **3. La vérification reste « probable ».** Un tiret cadratin peut être cité légitimement : un commentaire qui explique la règle, une chaîne qui reproduit un texte externe. Aucun motif ne sait faire cette différence, c'est un humain qui tranche, extrait en main.
 

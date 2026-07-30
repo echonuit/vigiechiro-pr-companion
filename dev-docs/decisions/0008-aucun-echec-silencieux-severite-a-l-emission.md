@@ -1,8 +1,8 @@
-# ADR 0008 — Aucun échec silencieux ; la sévérité de journalisation se décide à l'émission
+# ADR 0008 - Aucun échec silencieux ; la sévérité de journalisation se décide à l'émission
 
-- **Statut** : Accepté — rétroactif
+- **Statut** : Accepté - rétroactif
 - **Chantier** : EPIC #1523 (observabilité)
-- **Vérification** : probable — `scripts/adr/0008-echec-silencieux.py` (cliquet : 14)
+- **Vérification** : probable - `scripts/adr/0008-echec-silencieux.py` (cliquet : 14)
 
 ## Contexte
 

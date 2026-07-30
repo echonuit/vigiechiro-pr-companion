@@ -1,18 +1,18 @@
-# ADR 0020 — Écrire sur la plateforme : ne rien inventer, ne rien effacer
+# ADR 0020 - Écrire sur la plateforme : ne rien inventer, ne rien effacer
 
-- **Statut** : Accepté — 2026-07-18
+- **Statut** : Accepté - 2026-07-18
 - **Chantier** : #1828, #1844 (suites de l'EPIC #1662)
-- **Vérification** : humaine — les trois règles d'écriture serveur (ne rien inventer ni effacer) portent sur la sémantique des requêtes, jugée en revue Loupe : `scripts/adr/loupe-0020-ecritures-plateforme.py`
+- **Vérification** : humaine - les trois règles d'écriture serveur (ne rien inventer ni effacer) portent sur la sémantique des requêtes, jugée en revue Loupe : `scripts/adr/loupe-0020-ecritures-plateforme.py`
 
 ## Contexte
 
 VigieChiro n'est pas notre base : c'est un système **partagé**, écrit par plusieurs clients (le formulaire web, cette application, d'autres postes) et relu par tous. Trois défauts découverts coup sur coup à l'usage réel, sur le même geste (pousser les métadonnées d'un passage), ont montré que nous n'avions aucune règle explicite pour l'écriture.
 
-**Nous inventions.** L'application représente un enregistreur inconnu par la sentinelle `INCONNU` (`recorder_id` est `NOT NULL` en base : il faut bien une valeur). La garde `idEnregistreur != null` étant **toujours vraie**, chaque dépôt publiait `detecteur_enregistreur_numserie = "INCONNU"`. La plateforme se retrouvait avec un numéro de série qui n'existe pas, que l'application **se relisait ensuite comme une donnée** — et que tout autre poste relisait pareil. Un aveu d'ignorance local était devenu un fait partagé.
+**Nous inventions.** L'application représente un enregistreur inconnu par la sentinelle `INCONNU` (`recorder_id` est `NOT NULL` en base : il faut bien une valeur). La garde `idEnregistreur != null` étant **toujours vraie**, chaque dépôt publiait `detecteur_enregistreur_numserie = "INCONNU"`. La plateforme se retrouvait avec un numéro de série qui n'existe pas, que l'application **se relisait ensuite comme une donnée**, et que tout autre poste relisait pareil. Un aveu d'ignorance local était devenu un fait partagé.
 
 **Nous effacions.** Un `PATCH` sur `configuration` **remplace le dictionnaire entier**. En n'envoyant que les clés que nous modélisons, nous supprimions silencieusement celles que le formulaire web gère et pas nous : `micro0_numero_serie`, `micro1_*`, `canal_expansion_temps`, `canal_enregistrement_direct`. L'utilisateur saisissait sa météo dans l'application et perdait, sans le savoir, la configuration matérielle qu'il avait renseignée sur le web.
 
-**Nous parlions une langue que personne ne lisait.** Le numéro de série partait sous `detecteur_enregistreur_numserie`, alors que le formulaire web lie `detecteur_enregistreur_numero_serie`. La donnée arrivait bien sur la plateforme — et y restait **invisible**. C'est ce qui a rendu le diagnostic si long : l'envoi réussissait (`200`), le journal aurait dit « succès », et la fiche web restait vide.
+**Nous parlions une langue que personne ne lisait.** Le numéro de série partait sous `detecteur_enregistreur_numserie`, alors que le formulaire web lie `detecteur_enregistreur_numero_serie`. La donnée arrivait bien sur la plateforme, et y restait **invisible**. C'est ce qui a rendu le diagnostic si long : l'envoi réussissait (`200`), le journal aurait dit « succès », et la fiche web restait vide.
 
 Aucun de ces trois défauts ne produit d'erreur. Ils réussissent tous.
 
@@ -24,7 +24,7 @@ Toute écriture vers la plateforme respecte trois règles.
 
 **2. Ne rien effacer.** Une écriture partielle **part de l'état distant** : on relit la `configuration` de la participation, on y superpose nos clés, on renvoie l'ensemble. Nos valeurs écrasent les leurs sur les champs que nous modélisons ; tout le reste **survit**. Le corollaire vaut dans l'autre sens : ce que nous ne modélisons pas, nous n'avons pas le droit de le détruire.
 
-**3. Parler la langue du lecteur.** La clé écrite est celle que **le consommateur lit** (ici, celle que lie le formulaire web), pas celle que nous trouvons juste. Quand une clé historique traîne, la lecture **accepte les deux** et l'écriture **retire l'ancienne** — les fiches déjà polluées se réparent alors au premier envoi.
+**3. Parler la langue du lecteur.** La clé écrite est celle que **le consommateur lit** (ici, celle que lie le formulaire web), pas celle que nous trouvons juste. Quand une clé historique traîne, la lecture **accepte les deux** et l'écriture **retire l'ancienne** : les fiches déjà polluées se réparent alors au premier envoi.
 
 ## Conséquences
 

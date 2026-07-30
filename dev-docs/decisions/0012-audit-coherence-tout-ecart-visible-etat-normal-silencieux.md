@@ -1,8 +1,8 @@
-# ADR 0012 — L'audit de cohérence rend tout écart visible, mais un état normal ne crie pas
+# ADR 0012 - L'audit de cohérence rend tout écart visible, mais un état normal ne crie pas
 
-- **Statut** : Accepté — rétroactif
+- **Statut** : Accepté - rétroactif
 - **Chantier** : EPIC #1154 (cohérence disque ↔ base ↔ serveur)
-- **Vérification** : humaine — que l'audit rende tout écart visible mais qu'un état normal ne crie pas est une règle de restitution, jugée en revue et par les tests d'audit
+- **Vérification** : humaine - que l'audit rende tout écart visible mais qu'un état normal ne crie pas est une règle de restitution, jugée en revue et par les tests d'audit
 
 ## Contexte
 

@@ -1,8 +1,8 @@
-# ADR 2802 — Un texte qu'on n'a pas écrit se borne à son entrée
+# ADR 2802 - Un texte qu'on n'a pas écrit se borne à son entrée
 
-- **Statut** : Accepté — 2026-07-29
+- **Statut** : Accepté - 2026-07-29
 - **Chantier** : #2802 (suites de la clôture de l'EPIC #2350, passe 3)
-- **Vérification** : certaine — `MessageExterneBorneTest#aucun_retour_ne_renvoie_un_message_nu`
+- **Vérification** : certaine - `MessageExterneBorneTest#aucun_retour_ne_renvoie_un_message_nu`
   (une garde par surface : voir aussi `aucune_commande_n_affiche_un_refus_sans_son_geste` pour la CLI)
 
 ## Contexte

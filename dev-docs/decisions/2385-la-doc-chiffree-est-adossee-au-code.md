@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-07-24
 - **Chantier** : #2385 (adosser les chiffres) ; étendu par #2386 (règles métier, statut des ADR) ; clôture de l'EPIC #2367
-- **Vérification** : certaine — `DocumentationAJourTest#chaque_chiffre_balise_egale_l_inventaire_reel`
+- **Vérification** : certaine - `DocumentationAJourTest#chaque_chiffre_balise_egale_l_inventaire_reel`
 
 ## Contexte
 

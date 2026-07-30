@@ -1,8 +1,8 @@
-# ADR 0047 — L'identité de distribution est le projet Echonuit, distincte de l'auteur et de la plateforme
+# ADR 0047 - L'identité de distribution est le projet Echonuit, distincte de l'auteur et de la plateforme
 
-- **Statut** : Accepté — 2026-07-21
+- **Statut** : Accepté - 2026-07-21
 - **Chantier** : #2240 (issu de #2213 winget, #2111 Flathub)
-- **Vérification** : certaine — `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`
+- **Vérification** : certaine - `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`
 - **Fait évoluer** : [ADR 0045](0045-l-upgradecode-windows-est-une-constante-d-identite.md), dont les exemples d'identifiant winget sont remplacés ; prolonge la logique de #2108.
 
 ## Contexte
@@ -55,13 +55,13 @@ motif passe de « PR Companion » à « Companion »).
 ## Conséquences
 
 **Ce qu'on gagne.** Une identité cohérente et non personnelle, invisible dans l'IHM (l'utilisateur voit
-le nom du produit, pas l'app-id), et **découplée de l'org GitHub** — le renommage d'org devient un
+le nom du produit, pas l'app-id), et **découplée de l'org GitHub** : le renommage d'org devient un
 geste libre, sans effet sur winget ni Flathub.
 
 **Ce qui est reporté (PR B).** Le `--name` de jpackage reste « VigieChiro » : les **noms d'artefacts**
 (`VigieChiro-*.msi`…), les chemins d'installation, l'entrée « Ajout/Suppression de programmes » et
 l'`Exec`/`Icon` de l'AppImage ne changent **pas** dans cette première étape. Les renommer touche
-`release.yml`, les smoke-tests et les docs, et déplace l'entrée ARP — d'où une PR isolée. Tant qu'elle
+`release.yml`, les smoke-tests et les docs, et déplace l'entrée ARP : d'où une PR isolée. Tant qu'elle
 n'est pas faite, l'entrée ARP (« VigieChiro ») ne correspondra pas au `PackageName` winget
 (« VigieChiro Companion ») : à résorber **avant** la soumission winget.
 

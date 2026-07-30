@@ -18,9 +18,9 @@ On écrit une ADR quand un chantier prend une décision qu'un développeur futur
 
 Une décision qui n'est jamais reconfrontée au code se re-débat de la même façon qu'une décision oubliée. Chaque ADR déclare donc, dans son en-tête, **comment on sait si elle est tenue** :
 
-- **`certaine`** — un invariant qui se prouve. Un test (`DecisionsRespecteesTest`) ou un script déterministe échoue en CI si la règle est violée. L'en-tête nomme le test ou le script.
-- **`probable`** — pas de preuve possible, mais un script (`scripts/adr/NNNN-*.py`) liste des **suspects** qu'un humain trie. Le signal utile n'est pas « zéro » mais « aucun **nouveau** » : un **cliquet**, inscrit dans l'en-tête, borne la dette et fait rougir la CI si un cas s'ajoute.
-- **`humaine`** — aucun invariant mécanique. Le motif dit **pourquoi**. Une décision de méthode ou de comportement ne se prouve pas par un scan, et un test creux serait pire que rien. Quand un pattern reconnaissable existe malgré tout, une **loupe** (`scripts/adr/loupe-NNNN-*.py`) surface une *surface de revue* pour la passe humaine : elle ne bloque jamais, elle aide à ne rien oublier.
+- **`certaine`** : un invariant qui se prouve. Un test (`DecisionsRespecteesTest`) ou un script déterministe échoue en CI si la règle est violée. L'en-tête nomme le test ou le script.
+- **`probable`**, pas de preuve possible, mais un script (`scripts/adr/NNNN-*.py`) liste des **suspects** qu'un humain trie. Le signal utile n'est pas « zéro » mais « aucun **nouveau** » : un **cliquet**, inscrit dans l'en-tête, borne la dette et fait rougir la CI si un cas s'ajoute.
+- **`humaine`**, aucun invariant mécanique. Le motif dit **pourquoi**. Une décision de méthode ou de comportement ne se prouve pas par un scan, et un test creux serait pire que rien. Quand un pattern reconnaissable existe malgré tout, une **loupe** (`scripts/adr/loupe-NNNN-*.py`) surface une *surface de revue* pour la passe humaine : elle ne bloque jamais, elle aide à ne rien oublier.
 
 Un garde-fou (`DocumentationAJourTest`) exige que **chaque** ADR déclare son niveau, et que le test, le script ou la loupe nommé **existe vraiment** : une ADR ne peut pas annoncer une garde disparue.
 
@@ -50,9 +50,9 @@ Comme les numéros d'issue croissent avec le temps, le dossier reste dans l'ordr
 Copier le squelette suivant dans `NNNN-titre-court.md`, où `NNNN` est le numéro de l'issue du chantier :
 
 ```markdown
-# ADR NNNN — La décision, formulée comme une affirmation
+# ADR NNNN : La décision, formulée comme une affirmation
 
-- **Statut** : Accepté — AAAA-MM-JJ
+- **Statut** : Accepté - AAAA-MM-JJ
 - **Chantier** : EPIC #NNNN (titre court)
 
 ## Contexte

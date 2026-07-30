@@ -1,16 +1,16 @@
-# ADR 0019 — L'ancrage s'acquiert quand il sert, pas à un moment décrété
+# ADR 0019 - L'ancrage s'acquiert quand il sert, pas à un moment décrété
 
-- **Statut** : Accepté — 2026-07-18
+- **Statut** : Accepté - 2026-07-18
 - **Chantier** : #1838 (amende [ADR 0016](0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md))
-- **Vérification** : humaine — l'acquisition de l'ancrage au moment où il sert est une règle temporelle du déroulé, pas un invariant statique
+- **Vérification** : humaine - l'acquisition de l'ancrage au moment où il sert est une règle temporelle du déroulé, pas un invariant statique
 
 ## Contexte
 
 [ADR 0016](0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md) a séparé trois coutures : structure, observations, audio + ancrage. Elle rattachait l'ancrage à la **réactivation** (#1571), au motif que c'est là que l'audio revient. Le rapprochement était naturel : les deux passent par le même ré-import des `donnees`.
 
-Mais l'ancrage et l'audio ne servent pas au même geste. L'audio sert à **écouter** ; l'ancrage sert à **publier** — il est la cible du `PATCH /donnees/{id}/observations/{indice}` (contrat #1203). Les rattacher revenait à exiger la réactivation d'une nuit pour publier ses corrections, alors que publier ne demande aucun fichier.
+Mais l'ancrage et l'audio ne servent pas au même geste. L'audio sert à **écouter** ; l'ancrage sert à **publier** : il est la cible du `PATCH /donnees/{id}/observations/{indice}` (contrat #1203). Les rattacher revenait à exiger la réactivation d'une nuit pour publier ses corrections, alors que publier ne demande aucun fichier.
 
-Le coût de ce raccourci s'est payé sur les nuits importées par **CSV** (#1565), qui ne portent pas d'ancrage. Leurs corrections étaient toutes écartées ; l'application conseillait « réimportez depuis VigieChiro », et l'action de publication était même **grisée par avance** (#1596). Un utilisateur ayant validé toute une nuit se retrouvait devant un menu inerte lui demandant de réactiver — c'est-à-dire de retrouver l'audio — pour un geste qui n'en avait pas besoin. Symétriquement, l'import proposé par l'écran de validation avait dérivé vers la pagination `donnees` (lente) plutôt que le CSV, précisément pour ramener cet ancrage : une heuristique de préchargement payée par tous, pour un besoin qui ne concerne que ceux qui publient.
+Le coût de ce raccourci s'est payé sur les nuits importées par **CSV** (#1565), qui ne portent pas d'ancrage. Leurs corrections étaient toutes écartées ; l'application conseillait « réimportez depuis VigieChiro », et l'action de publication était même **grisée par avance** (#1596). Un utilisateur ayant validé toute une nuit se retrouvait devant un menu inerte lui demandant de réactiver (c'est-à-dire de retrouver l'audio) pour un geste qui n'en avait pas besoin. Symétriquement, l'import proposé par l'écran de validation avait dérivé vers la pagination `donnees` (lente) plutôt que le CSV, précisément pour ramener cet ancrage : une heuristique de préchargement payée par tous, pour un besoin qui ne concerne que ceux qui publient.
 
 ## Décision
 
@@ -18,7 +18,7 @@ L'ancrage s'acquiert **au moment où il sert** : la publication des corrections 
 
 Aucun geste n'acquiert d'ancrage « au cas où ». La réactivation continue de le faire (elle rapatrie déjà les `donnees` pour l'audio, l'ancrage vient avec) ; ce n'est plus le **seul** endroit, et surtout plus un passage obligé.
 
-Corollaire sur les gardes : une IHM ne grise un geste que sur une **impossibilité durable**, pas sur un état que le geste lui-même sait changer. Le grisage de la publication porte donc sur « aucun ancrage **et** nuit non rattachée » — le rattachement, seul verrou que la publication ne peut pas lever. Et un aperçu qui conclut « rien à publier » doit tenir compte de ce que l'envoi va acquérir, sans quoi il refuse exactement le cas qu'on vient de rendre possible.
+Corollaire sur les gardes : une IHM ne grise un geste que sur une **impossibilité durable**, pas sur un état que le geste lui-même sait changer. Le grisage de la publication porte donc sur « aucun ancrage **et** nuit non rattachée », le rattachement, seul verrou que la publication ne peut pas lever. Et un aperçu qui conclut « rien à publier » doit tenir compte de ce que l'envoi va acquérir, sans quoi il refuse exactement le cas qu'on vient de rendre possible.
 
 ## Conséquences
 

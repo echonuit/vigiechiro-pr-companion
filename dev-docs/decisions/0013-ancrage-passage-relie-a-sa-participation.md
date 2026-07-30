@@ -1,8 +1,8 @@
-# ADR 0013 — Un passage local est ancré à sa participation serveur par un lien explicite
+# ADR 0013 - Un passage local est ancré à sa participation serveur par un lien explicite
 
-- **Statut** : Accepté — rétroactif
+- **Statut** : Accepté - rétroactif
 - **Chantier** : EPIC #720 (intégration API VigieChiro)
-- **Vérification** : humaine — l'ancrage explicite du passage à sa participation est un comportement de dépôt ; sa présence structurelle ne capture pas la décision
+- **Vérification** : humaine - l'ancrage explicite du passage à sa participation est un comportement de dépôt ; sa présence structurelle ne capture pas la décision
 
 ## Contexte
 

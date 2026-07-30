@@ -1,8 +1,8 @@
-# ADR 2351 — Un nombre de contacts se lit contre un référentiel cité, et on retient le plus fiable avant le plus fin
+# ADR 2351 - Un nombre de contacts se lit contre un référentiel cité, et on retient le plus fiable avant le plus fin
 
-- **Statut** : Accepté — 2026-07-29
+- **Statut** : Accepté - 2026-07-29
 - **Chantier** : #2351 (lot 1 de l'EPIC #2348)
-- **Vérification** : certaine — `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`
+- **Vérification** : certaine - `ReferentielActiviteTest#precise_mais_peu_fiable_ecartee`
 
 ## Contexte
 
@@ -22,9 +22,9 @@ Données ouvertes, **libres d'usage avec citation obligatoire**. La citation est
 
 ### 2. Le repli retient la première déclinaison **fiable**, pas la plus fine
 
-On cherche du plus précis au plus général — milieu, puis région, puis national — et l'on **s'arrête à la première déclinaison fiable**. La colonne `confiance` de la source (`Très bonne`, `Bonne`, `Modérée`, `Faible`) n'est pas décorative : c'est elle qui arrête la descente.
+On cherche du plus précis au plus général (milieu, puis région, puis national) et l'on **s'arrête à la première déclinaison fiable**. La colonne `confiance` de la source (`Très bonne`, `Bonne`, `Modérée`, `Faible`) n'est pas décorative : c'est elle qui arrête la descente.
 
-Douze nuits d'un habitat donné sont plus **spécifiques** que neuf mille nuits nationales, et beaucoup moins **solides**. Descendre vers le seuil peu fiable parce qu'il est plus précis produit une classe plus fausse, pas plus juste — et rien à l'écran ne distinguerait les deux.
+Douze nuits d'un habitat donné sont plus **spécifiques** que neuf mille nuits nationales, et beaucoup moins **solides**. Descendre vers le seuil peu fiable parce qu'il est plus précis produit une classe plus fausse, pas plus juste : et rien à l'écran ne distinguerait les deux.
 
 Quand aucune déclinaison fiable n'existe, la plus précise des non fiables est rendue, **marquée indicative**. Ne rien dire ferait croire à une absence de données là où il n'y a qu'une incertitude assumée.
 
@@ -52,4 +52,4 @@ Le milieu ne se devine pas, et on ne le suppose donc pas. Une déclinaison devin
 - **Repartir des publications d'origine** pour recalculer les seuils. Traçable jusqu'au bout, mais c'est refaire un travail scientifique publié, avec le risque d'en diverger sans le savoir. Embarquer le dérivé publié **en le citant** garde le lien avec la source.
 - **Retenir toujours la déclinaison la plus fine.** Le réflexe naturel, et l'erreur que la colonne `confiance` existe pour éviter.
 - **Deviner le milieu** depuis les coordonnées du point (occupation du sol). Séduisant, mais un milieu deviné faux produit une classe fausse sans le signaler ; et le produit n'embarque aucune donnée d'occupation du sol.
-- **Faire de la région un sélecteur explicite**, comme le milieu. Envisagé tant que l'encodage du numéro de carré n'était pas confirmé — une déduction tirée de quelques exemples n'aurait pas suffi. La confirmation obtenue, la déduction est légitime, et elle épargne un choix à l'utilisateur à chaque nuit.
+- **Faire de la région un sélecteur explicite**, comme le milieu. Envisagé tant que l'encodage du numéro de carré n'était pas confirmé : une déduction tirée de quelques exemples n'aurait pas suffi. La confirmation obtenue, la déduction est légitime, et elle épargne un choix à l'utilisateur à chaque nuit.

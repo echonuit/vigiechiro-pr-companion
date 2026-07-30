@@ -26,7 +26,7 @@ def appliquer() -> list[str]:
         texte = fichier.read_text(encoding="utf-8")
         # On ne baisse que la valeur du cliquet, dans la ligne de vérification de CETTE ADR.
         nouveau, n = re.subn(
-            r"(- \*\*Vérification\*\* : probable — `[^`]+` \(cliquet : )\d+(\))",
+            r"(- \*\*Vérification\*\* : probable [-—] `[^`]+` \(cliquet : )\d+(\))",
             lambda m: f"{m.group(1)}{nouvelle}{m.group(2)}",
             texte,
             count=1,

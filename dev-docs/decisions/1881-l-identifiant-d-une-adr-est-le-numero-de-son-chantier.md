@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-07-22
 - **Chantier** : #1881 (numérotation des ADR : collision systématique entre chantiers parallèles)
-- **Vérification** : certaine — `DocumentationAJourTest#l_entete_d_une_adr_porte_son_numero`
+- **Vérification** : certaine - `DocumentationAJourTest#l_entete_d_une_adr_porte_son_numero`
 
 ## Contexte
 

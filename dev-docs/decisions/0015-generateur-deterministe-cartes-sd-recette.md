@@ -1,8 +1,8 @@
-# ADR 0015 — Cartes SD de recette : specs déclaratives + générateur déterministe
+# ADR 0015 - Cartes SD de recette : specs déclaratives + générateur déterministe
 
 - **Statut** : Accepté
-- **Chantier** : P5 — générateur de cartes SD de recette (#1749, #1758, #1767, #1769 ; contribue à #1363)
-- **Vérification** : certaine — `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`
+- **Chantier** : P5 - générateur de cartes SD de recette (#1749, #1758, #1767, #1769 ; contribue à #1363)
+- **Vérification** : certaine - `GenerationCartesSDCliquetTest#chaque_spec_produit_la_pathologie_attendue`
 
 ## Contexte
 

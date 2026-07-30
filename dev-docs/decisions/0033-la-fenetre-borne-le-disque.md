@@ -1,8 +1,8 @@
-# ADR 0033 — Une fenêtre bornée, pas un pipeline unitaire, et deux seuils disque au lieu d'un
+# ADR 0033 - Une fenêtre bornée, pas un pipeline unitaire, et deux seuils disque au lieu d'un
 
-- **Statut** : Accepté — 2026-07-19
+- **Statut** : Accepté - 2026-07-19
 - **Chantier** : #1991 (lots #1993 à #1999)
-- **Vérification** : humaine — la fenêtre bornée et les deux seuils disque sont un choix d'architecture du dépôt, non réductible à un motif observable
+- **Vérification** : humaine - la fenêtre bornée et les deux seuils disque sont un choix d'architecture du dépôt, non réductible à un motif observable
 
 ## Contexte
 
@@ -15,8 +15,8 @@ calqué sur le front web). Ce qui était sérialisé, ce sont les deux **phases 
 contenu.
 
 Un pipeline strictement unitaire aurait donc échangé un gain de recouvrement contre une perte de
-parallélisme, en sérialisant une compression aujourd'hui multi-cœurs. Sur les gros passages — ceux qui
-motivaient #769, de l'ordre de 4800 séquences — le remède aurait pu coûter plus cher que le mal.
+parallélisme, en sérialisant une compression aujourd'hui multi-cœurs. Sur les gros passages : ceux qui
+motivaient #769, de l'ordre de 4800 séquences : le remède aurait pu coûter plus cher que le mal.
 
 ## Décision
 
@@ -27,7 +27,7 @@ des deux phases.
 
 **2. La fenêtre est une constante interne, pas un réglage.** Elle n'ajoute donc ni surface de
 configuration, ni axe de variation à couvrir en test. Si le besoin d'ajuster apparaît, il deviendra une
-issue — pas une option offerte par précaution.
+issue : pas une option offerte par précaution.
 
 **3. La libération suit la preuve, jamais l'envoi.** Elle est déclenchée par `uniteDeposee`, émis après
 le commit qui marque l'unité `depose`. Une archive en échec reste sur le disque.
@@ -45,8 +45,8 @@ caduc, il est **dédoublé** :
 | Déposer (pipeline) | jamais plus que la fenêtre | fenêtre au plafond, ou le lot s'il est plus petit |
 
 `AnticipationEspaceDisque` continue donc de dimensionner l'étape ② sur le volume total. Lui appliquer le
-seuil du pipeline la laisserait démarrer puis échouer à mi-parcours en laissant des archives partielles
-— exactement ce que #769 avait créé ce garde-fou pour empêcher.
+seuil du pipeline la laisserait démarrer puis échouer à mi-parcours en laissant des archives partielles :
+exactement ce que #769 avait créé ce garde-fou pour empêcher.
 
 ## Conséquences
 
@@ -59,7 +59,7 @@ Le grisage du bouton de téléversement pendant la génération **reste**, alors
 devoir le retirer. Il n'exprimait pas une attente mais une **exclusion mutuelle** : les deux opérations
 écrivent le même `<préfixe>-N.zip` (`CompacteurDepot.ecrireArchive` et
 `SourceArchivesRegenerables.resoudre`), et les laisser se recouvrir corromprait des archives. Ce qui a
-disparu, c'est l'obligation de lancer l'étape ② d'abord — le stepper le dit désormais.
+disparu, c'est l'obligation de lancer l'étape ② d'abord : le stepper le dit désormais.
 
 L'espace disque du choix de source passe par une couture injectable, sur le modèle de
 `CompacteurDepot.EspaceDisque` : sans elle, la bascule de seuil n'était vérifiable qu'au niveau
@@ -68,7 +68,7 @@ arithmétique, jamais sur la décision elle-même.
 ## Ce qui a été écarté
 
 **La fenêtre à une archive**, telle que #1930 la décrivait. Elle minimise le pic disque mais sérialise
-la compression, au risque d'une régression de durée sur les gros passages — ceux-là mêmes que le
+la compression, au risque d'une régression de durée sur les gros passages : ceux-là mêmes que le
 chantier vise.
 
 **Une fenêtre réglable dans Réglages ▸ Dépôt.** Plus honnête sur un poste contraint, mais elle ajoute un

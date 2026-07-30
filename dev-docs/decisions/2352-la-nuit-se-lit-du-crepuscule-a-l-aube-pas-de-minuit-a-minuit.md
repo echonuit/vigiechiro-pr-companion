@@ -1,14 +1,14 @@
-# ADR 2352 — La nuit se lit du crépuscule à l'aube, pas de minuit à minuit
+# ADR 2352 - La nuit se lit du crépuscule à l'aube, pas de minuit à minuit
 
-- **Statut** : Accepté — 2026-07-26
+- **Statut** : Accepté - 2026-07-26
 - **Chantier** : #2352 (lot 2 de l'EPIC #2348)
-- **Vérification** : certaine — `AgregationActiviteTest#l_export_date_ses_lignes_par_la_nuit_biologique`
+- **Vérification** : certaine - `AgregationActiviteTest#l_export_date_ses_lignes_par_la_nuit_biologique`
 
 ## Contexte
 
-Une nuit d'enregistrement chiroptère commence après le coucher du soleil et finit avant l'aube : elle est **à cheval sur deux dates civiles**. Le calendrier, lui, bascule à minuit — au milieu de l'objet qu'on observe.
+Une nuit d'enregistrement chiroptère commence après le coucher du soleil et finit avant l'aube : elle est **à cheval sur deux dates civiles**. Le calendrier, lui, bascule à minuit, au milieu de l'objet qu'on observe.
 
-Cette collision n'est pas théorique. Découper l'activité par date civile coupe chaque nuit en deux moitiés qui atterrissent dans deux cases différentes : le pic de 23 h 40 dans la case du 21, la retombée de 00 h 20 dans celle du 22. Un axe horaire 0 h → 24 h produit alors une courbe en deux morceaux, l'un collé à droite, l'autre à gauche, entre lesquels l'œil doit reconstruire la continuité. La forme de la nuit — montée, pic, décroissance — devient illisible, alors que c'est précisément elle qui porte l'information que le comptage total efface.
+Cette collision n'est pas théorique. Découper l'activité par date civile coupe chaque nuit en deux moitiés qui atterrissent dans deux cases différentes : le pic de 23 h 40 dans la case du 21, la retombée de 00 h 20 dans celle du 22. Un axe horaire 0 h → 24 h produit alors une courbe en deux morceaux, l'un collé à droite, l'autre à gauche, entre lesquels l'œil doit reconstruire la continuité. La forme de la nuit (montée, pic, décroissance) devient illisible, alors que c'est précisément elle qui porte l'information que le comptage total efface.
 
 Le même écueil guette hors de l'écran : un export qui daterait ses tranches par leur date civile mêlerait deux nuits dans un même regroupement de tableur.
 
@@ -35,5 +35,5 @@ Trois conséquences de cette règle, appliquées partout où l'activité se lit 
 
 - **Un axe 0 h → 24 h.** Le plus simple à écrire, et celui qui coupe la nuit en deux. Écarté pour la raison qui a motivé cette ADR.
 - **Un axe calé sur les données** (min/max des contacts). Chaque nuit occuperait toute la largeur, au prix de la comparabilité : deux nuits de durées différentes auraient la même longueur à l'écran, ce qui est exactement l'illusion qu'on veut éviter.
-- **Un axe borné par le coucher et le lever réels.** Séduisant, mais l'échelle changerait à chaque nuit — même problème que ci-dessus — et une nuit sans GPS n'aurait plus d'axe du tout.
+- **Un axe borné par le coucher et le lever réels.** Séduisant, mais l'échelle changerait à chaque nuit (même problème que ci-dessus) et une nuit sans GPS n'aurait plus d'axe du tout.
 - **Rattacher la nuit par « date de la première séquence ».** Marche tant qu'un enregistrement commence avant minuit ; une session démarrée à 00 h 15 basculerait la nuit entière d'un jour. La bascule à midi ne dépend pas de l'heure de démarrage.

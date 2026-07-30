@@ -1,8 +1,8 @@
-# ADR 2465 — Une ADR déclare comment elle est vérifiée, sur trois niveaux
+# ADR 2465 - Une ADR déclare comment elle est vérifiée, sur trois niveaux
 
-- **Statut** : Accepté — 2026-07-23
+- **Statut** : Accepté - 2026-07-23
 - **Chantier** : EPIC #2465
-- **Vérification** : certaine — `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`
+- **Vérification** : certaine - `DocumentationAJourTest#la_verification_declaree_par_une_adr_existe_vraiment`
 
 ## Contexte
 
@@ -14,13 +14,13 @@ Le piège, dès qu'on veut « vérifier les ADR », est d'en faire trop : coller
 
 ## Décision
 
-**Chaque ADR déclare, dans son en-tête, comment on sait si elle est tenue.** Une puce `- **Vérification** : <niveau> — <référence>`, à côté de `Statut` et `Chantier`, sur trois niveaux :
+**Chaque ADR déclare, dans son en-tête, comment on sait si elle est tenue.** Une puce `- **Vérification** : <niveau>, <référence>`, à côté de `Statut` et `Chantier`, sur trois niveaux :
 
-1. **`certaine`** — un invariant qui se prouve. Un test (`DecisionsRespecteesTest`) ou un script déterministe échoue en CI si la règle est violée. La puce nomme le test ou le script.
-2. **`probable`** — pas de preuve possible, mais un script (`scripts/adr/NNNN-*.py`) liste des **suspects** qu'un humain trie. Le signal utile n'est pas « zéro » mais « aucun **nouveau** » : un **cliquet**, inscrit dans la puce, borne la dette. Le portail qualité fait rougir la CI dès qu'un suspect s'ajoute.
-3. **`humaine`** — aucun invariant mécanique. Le motif dit **pourquoi**. Quand un pattern reconnaissable existe malgré tout, une **loupe** (`scripts/adr/loupe-NNNN-*.py`) surface une *surface de revue* pour la passe humaine : elle ne bloque jamais, elle aide à ne rien oublier.
+1. **`certaine`** : un invariant qui se prouve. Un test (`DecisionsRespecteesTest`) ou un script déterministe échoue en CI si la règle est violée. La puce nomme le test ou le script.
+2. **`probable`**, pas de preuve possible, mais un script (`scripts/adr/NNNN-*.py`) liste des **suspects** qu'un humain trie. Le signal utile n'est pas « zéro » mais « aucun **nouveau** » : un **cliquet**, inscrit dans la puce, borne la dette. Le portail qualité fait rougir la CI dès qu'un suspect s'ajoute.
+3. **`humaine`**, aucun invariant mécanique. Le motif dit **pourquoi**. Quand un pattern reconnaissable existe malgré tout, une **loupe** (`scripts/adr/loupe-NNNN-*.py`) surface une *surface de revue* pour la passe humaine : elle ne bloque jamais, elle aide à ne rien oublier.
 
-**Le lien ADR ↔ vérification est mécanique.** `DocumentationAJourTest` exige que chaque ADR déclare un niveau valide, et que le test, le script ou la loupe nommé **existe vraiment** — une ADR ne peut pas annoncer une garde disparue. Le backlog de classement est clos : une ADR nouvelle déclare sa vérification dans la PR qui l'introduit, au même titre qu'elle porte un `Statut`.
+**Le lien ADR ↔ vérification est mécanique.** `DocumentationAJourTest` exige que chaque ADR déclare un niveau valide, et que le test, le script ou la loupe nommé **existe vraiment**, une ADR ne peut pas annoncer une garde disparue. Le backlog de classement est clos : une ADR nouvelle déclare sa vérification dans la PR qui l'introduit, au même titre qu'elle porte un `Statut`.
 
 **Le cliquet vit dans l'ADR, pas dans le script**, pour que le lecteur de la décision voie la marge en vigueur au même endroit que la règle. Un **rapport hebdomadaire** (`scripts/adr/rapport.py`) mesure l'écart et **resserre** les cliquets sur la réalité mesurée, par une PR : resserrer est mécanique, desserrer reste un geste humain.
 

@@ -315,7 +315,7 @@ class DocumentationAJourTest {
 
     /// La puce d'en-tête qui déclare le niveau, à côté de `Statut` et `Chantier`.
     private static final Pattern VERIFICATION_ADR =
-            Pattern.compile("^- \\*\\*Vérification\\*\\* : (\\w+) — (.+)$", Pattern.MULTILINE);
+            Pattern.compile("^- \\*\\*Vérification\\*\\* : (\\w+) [-—] (.+)$", Pattern.MULTILINE);
 
     /// Une vérification `certaine` nomme son test : `ClasseDeTest#nom_de_la_methode`.
     private static final Pattern REFERENCE_TEST = Pattern.compile("^`(\\w+)#([a-z0-9_]+)`$");

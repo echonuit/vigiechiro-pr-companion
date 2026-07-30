@@ -1,8 +1,8 @@
-# ADR 0024 — Les heures d'une nuit viennent de ses preuves ; de l'utilisateur seulement à défaut
+# ADR 0024 - Les heures d'une nuit viennent de ses preuves ; de l'utilisateur seulement à défaut
 
-- **Statut** : Accepté — 2026-07-18
+- **Statut** : Accepté - 2026-07-18
 - **Chantier** : EPIC #1863, suites #1860 / #1878 / #1885 / #1892
-- **Vérification** : humaine — que les heures d'une nuit viennent de ses preuves, de l'utilisateur seulement à défaut, est une règle de calcul métier
+- **Vérification** : humaine - que les heures d'une nuit viennent de ses preuves, de l'utilisateur seulement à défaut, est une règle de calcul métier
 
 ## Contexte
 

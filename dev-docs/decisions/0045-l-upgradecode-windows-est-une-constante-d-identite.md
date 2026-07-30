@@ -1,8 +1,8 @@
-# ADR 0045 — L'UpgradeCode et le scope de l'installeur Windows sont des constantes d'identité
+# ADR 0045 - L'UpgradeCode et le scope de l'installeur Windows sont des constantes d'identité
 
-- **Statut** : Accepté — 2026-07-21
+- **Statut** : Accepté - 2026-07-21
 - **Chantier** : EPIC #2104 / lot 5 (#2110) / winget (#2213)
-- **Vérification** : certaine — `DecisionsRespecteesTest#l_installeur_windows_porte_ses_constantes_d_identite`
+- **Vérification** : certaine - `DecisionsRespecteesTest#l_installeur_windows_porte_ses_constantes_d_identite`
 
 ## Contexte
 

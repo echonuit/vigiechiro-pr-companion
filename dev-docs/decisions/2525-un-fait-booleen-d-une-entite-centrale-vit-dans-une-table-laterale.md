@@ -1,8 +1,8 @@
-# ADR 2525 — Un fait booléen d'une entité centrale vit dans une table latérale, pas dans une colonne
+# ADR 2525 - Un fait booléen d'une entité centrale vit dans une table latérale, pas dans une colonne
 
-- **Statut** : Accepté — 2026-07-27
+- **Statut** : Accepté - 2026-07-27
 - **Chantier** : #2525 (participations opportunistes), EPIC #2349
-- **Vérification** : humaine — le compromis se juge à la **revue d'une migration** : combien de sites de construction l'entité a-t-elle, et le fait concerne-t-il une minorité de lignes ? Aucun scan ne répond à la seconde question, et un test qui figerait le nombre de composantes d'un record serait un contrôle creux, cassé au premier ajout légitime.
+- **Vérification** : humaine - le compromis se juge à la **revue d'une migration** : combien de sites de construction l'entité a-t-elle, et le fait concerne-t-il une minorité de lignes ? Aucun scan ne répond à la seconde question, et un test qui figerait le nombre de composantes d'un record serait un contrôle creux, cassé au premier ajout légitime.
 
 ## Contexte
 
@@ -17,9 +17,9 @@ Le réflexe est d'ajouter une colonne, donc une composante au record. Le coût r
 Ces nombres bougent au fil des chantiers ; ce qui compte n'est pas leur valeur exacte mais leur **ordre
 de grandeur**, qui place ces deux records hors d'atteinte d'un ajout de composante bon marché.
 
-À ce volume, une composante de plus n'est pas une ligne de diff : c'est une propagation mécanique sur des dizaines de fichiers, et surtout un **risque d'échange silencieux** entre paramètres de même type — le défaut que l'[EPIC #2483](https://github.com/echonuit/vigiechiro-pr-companion/issues/2483) traite en réduisant l'arité des constructions. Ajouter un booléen à `Passage` allait frontalement contre un chantier en cours.
+À ce volume, une composante de plus n'est pas une ligne de diff : c'est une propagation mécanique sur des dizaines de fichiers, et surtout un **risque d'échange silencieux** entre paramètres de même type, le défaut que l'[EPIC #2483](https://github.com/echonuit/vigiechiro-pr-companion/issues/2483) traite en réduisant l'arité des constructions. Ajouter un booléen à `Passage` allait frontalement contre un chantier en cours.
 
-Un précédent existait, et il était documenté : la migration **V10** avait isolé le matériel du micro dans `passage_equipment` plutôt que d'alourdir `passage`, en écrivant explicitement la raison — « plutôt que d'alourdir l'entité centrale, construite en ~60 endroits ».
+Un précédent existait, et il était documenté : la migration **V10** avait isolé le matériel du micro dans `passage_equipment` plutôt que d'alourdir `passage`, en écrivant explicitement la raison, « plutôt que d'alourdir l'entité centrale, construite en ~60 endroits ».
 
 ## Décision
 
@@ -33,7 +33,7 @@ CREATE TABLE passage_opportuniste (
 
 La **présence de la ligne** porte le fait ; son absence porte le cas courant, qui ne coûte alors aucun stockage. Le record et son DAO restent **inchangés**.
 
-Le DAO associé étend `DaoGenerique<Long, Long>` — l'entité *est* la clé, seul le fait d'exister compte — et expose une API d'intention : `marquer` / `demarquer` / `definir(id, bool)` / `estX(id)`, plus un **`tousLesIds()`** de lecture groupée. Ce dernier n'est pas un confort : sans lui, un service qui balaie N entités ferait N requêtes.
+Le DAO associé étend `DaoGenerique<Long, Long>` (l'entité *est* la clé, seul le fait d'exister compte) et expose une API d'intention : `marquer` / `demarquer` / `definir(id, bool)` / `estX(id)`, plus un **`tousLesIds()`** de lecture groupée. Ce dernier n'est pas un confort : sans lui, un service qui balaie N entités ferait N requêtes.
 
 Appliqué par **V34** (`passage_opportuniste`) et **V35** (`site_tiers`).
 
@@ -55,4 +55,4 @@ Appliqué par **V34** (`passage_opportuniste`) et **V35** (`site_tiers`).
 
 ## Journal
 
-- 2026-07-27 — Rédigée à la clôture (passe 3) du chantier #2349, après application dans V34 et V35.
+- 2026-07-27 : Rédigée à la clôture (passe 3) du chantier #2349, après application dans V34 et V35.
