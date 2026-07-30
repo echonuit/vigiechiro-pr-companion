@@ -3,10 +3,10 @@ package fr.univ_amu.iut.audio.view;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
-import java.util.Optional;
 
-/// Actions d'**export** de la vue audio (CSV `_Vu`, CSV des observations affichées, bibliothèque de sons de
-/// référence) : désignation de la cible puis délégation au [AudioViewModel]. Isolé du
+/// Actions d'**export CSV** de la vue audio (`_Vu` réinjectable, observations affichées) : désignation de
+/// la cible puis délégation au [AudioViewModel]. Les exports **d'archives** (observations + sons #2793,
+/// bibliothèque de sons P10) passent par [ExportSonsUI], qui leur ajoute la modale annulable. Isolé du
 /// [SonsValidationController] (même patron que [ImportTadarida] / [ImportVigieChiroUI]) pour le garder léger
 /// (contrainte NCSS).
 ///
@@ -31,12 +31,5 @@ final class ExportsAudioUI {
                 .enregistrerFichier(
                         "Exporter les observations affichées (CSV)", "observations.csv", FiltreFichier.csv())
                 .ifPresent(destination -> viewModel.exports().observationsCsv(destination));
-    }
-
-    /// Exporte la **bibliothèque de sons de référence** vers un dossier choisi (P10).
-    static void exporterBibliotheque(AudioViewModel viewModel, SelecteurFichier selecteur) {
-        selecteur
-                .choisirDossier("Exporter la bibliothèque de sons de référence", Optional.empty())
-                .ifPresent(viewModel::exporterBibliotheque);
     }
 }

@@ -747,10 +747,14 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 () -> tableObservations.getScene().getWindow());
     }
 
-    /// « Exporter la bibliothèque » : sélecteur de dossier natif puis délégation au VM (copie des sons de
-    /// référence + récapitulatif CSV).
+    /// « Exporter la bibliothèque » : désignation de l'archive puis écriture dans la modale annulable,
+    /// comme l'export « observations + sons » (harmonisation, clôture de l'EPIC #2790).
     @FXML
     private void exporterBibliotheque() {
-        ExportsAudioUI.exporterBibliotheque(viewModel, selecteur());
+        ExportSonsUI.lancerBibliotheque(
+                viewModel,
+                selecteur(),
+                new DialogueProgression(appuis.executeur()),
+                () -> tableObservations.getScene().getWindow());
     }
 }

@@ -1,15 +1,17 @@
 package fr.univ_amu.iut.bibliotheque.model;
 
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
+import fr.univ_amu.iut.commun.model.EcrivainZip;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.Progression;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 /// Bibliothèque de sons de référence exportable (parcours P10, story E8, COULD).
 ///
@@ -22,9 +24,12 @@ import java.util.Objects;
 ///   `commentaire`) via l'[EcrivainCsv] partagé du socle `commun` ;
 /// - la **liste des chemins de fichiers de séquences à copier** (dédupliquée, ordre stable).
 ///
-/// [#exporterVers(Path)] compose les deux : il écrit le CSV puis copie les fichiers de séquences
-/// dans un dossier de destination : l'unique effet de bord disque, explicite et déclenché par la
-/// couche IHM (jamais à la construction).
+/// [#exporterVers] compose les deux dans une **archive ZIP** : le CSV à la racine, les sons sous
+/// `sons/`, écrits par le socle [EcrivainZip] (#2792) - l'unique effet de bord disque, explicite et
+/// déclenché par la couche IHM (jamais à la construction). Une bibliothèque de saison pèse plusieurs
+/// centaines de mégaoctets : l'écriture **annonce ce qu'elle emporte, avance entrée par entrée et
+/// s'annule**, et un son qui a quitté le disque est **compté** au lieu d'être ignoré en silence
+/// (harmonisation avec l'export « observations + sons », cérémonie de l'EPIC #2790).
 ///
 /// **Déterminisme** (cf. SERVICE-CONVENTIONS §5) : aucun horodatage ni hash dans la sortie,
 /// ordre des colonnes et des lignes figé (le service trie les entrées avant de construire
@@ -36,8 +41,17 @@ public record ExportBiblioSons(List<EntreeBiblio> entrees) {
     public static final List<String> ENTETE =
             List.of("taxon", "sequence source", "fichier", "frequence", "commentaire");
 
-    /// Nom de fichier du CSV récapitulatif écrit par [#exporterVers(Path)] dans le dossier cible.
+    /// Nom du CSV récapitulatif, à la racine de l'archive écrite par [#exporterVers].
     public static final String NOM_CSV = "bibliotheque-sons.csv";
+
+    /// Ce qu'une bibliothèque exportée a réellement emporté : sons copiés, sons dont le fichier a
+    /// quitté le disque (nommés, pour que l'observateur sache lesquels manquent), taille de l'archive.
+    public record Bilan(int sonsCopies, List<String> sonsIntrouvables, long octets) {
+
+        public Bilan {
+            sonsIntrouvables = List.copyOf(sonsIntrouvables);
+        }
+    }
 
     /// Copie défensive immuable de la liste d'entrées.
     public ExportBiblioSons {
@@ -75,34 +89,53 @@ public record ExportBiblioSons(List<EntreeBiblio> entrees) {
         EcrivainCsv.minimal().ecrire(fichier, lignesCsv());
     }
 
-    /// Matérialise la bibliothèque dans `dossier` : écrit le [CSV récapitulatif][#NOM_CSV] puis
-    /// **copie** à côté chaque fichier de séquence existant. Les dossiers parents sont créés au
-    /// besoin et une copie déjà présente est écrasée (export idempotent). Une source introuvable sur
-    /// disque est **ignorée** (son chemin reste tracé dans le CSV) : l'export reste possible même si
-    /// une séquence a été déplacée depuis la validation.
+    /// Matérialise la bibliothèque dans l'archive `destination` : le [CSV récapitulatif][#NOM_CSV] à la
+    /// racine, chaque fichier de séquence existant sous `sons/`. Une source introuvable sur disque est
+    /// **comptée et nommée** (son chemin reste tracé dans le CSV) : l'export reste possible même si une
+    /// séquence a été déplacée depuis la validation. L'archive partielle ne survit ni à l'échec ni à
+    /// l'annulation.
     ///
-    /// @param dossier répertoire de destination choisi par l'observateur
-    /// @return le nombre de fichiers son effectivement copiés
-    /// @throws UncheckedIOException si la création du dossier ou une copie échoue
-    public int exporterVers(Path dossier) {
-        Objects.requireNonNull(dossier, "dossier");
-        try {
-            Files.createDirectories(dossier);
-            ecrireCsv(dossier.resolve(NOM_CSV));
-            int copies = 0;
-            for (String chemin : cheminsSequences()) {
-                Path source = Path.of(chemin);
-                if (Files.isRegularFile(source)) {
-                    Files.copy(
-                            source,
-                            dossier.resolve(source.getFileName().toString()),
-                            StandardCopyOption.REPLACE_EXISTING);
-                    copies++;
-                }
+    /// @param destination archive ZIP choisie par l'observateur
+    /// @param surProgression informé de l'annonce puis de chaque entrée écrite
+    /// @param jeton annulation coopérative, vérifiée entre deux entrées
+    /// @return ce que l'archive a emporté
+    /// @throws IOException si l'écriture échoue
+    /// @throws fr.univ_amu.iut.commun.model.OperationAnnuleeException si `jeton` est levé
+    public Bilan exporterVers(Path destination, Consumer<Progression> surProgression, JetonAnnulation jeton)
+            throws IOException {
+        Objects.requireNonNull(destination, "destination");
+        List<EcrivainZip.EntreeFichier> sons = new ArrayList<>();
+        List<String> introuvables = new ArrayList<>();
+        for (String chemin : cheminsSequences()) {
+            Path source = Path.of(chemin);
+            if (Files.isRegularFile(source)) {
+                sons.add(new EcrivainZip.EntreeFichier("sons/" + source.getFileName(), source));
+            } else {
+                introuvables.add(source.getFileName().toString());
             }
-            return copies;
-        } catch (IOException echec) {
-            throw new UncheckedIOException("Export de la bibliothèque de sons impossible vers " + dossier, echec);
+        }
+        surProgression.accept(annonce(sons));
+        long octets = EcrivainZip.ecrire(
+                destination, List.of(new EcrivainZip.EntreeTexte(NOM_CSV, versCsv())), sons, surProgression, jeton);
+        return new Bilan(sons.size(), List.copyOf(introuvables), octets);
+    }
+
+    /// L'annonce qui ouvre la modale : ce que l'archive va contenir, volume compris.
+    private Progression annonce(List<EcrivainZip.EntreeFichier> sons) {
+        long octets = sons.stream().mapToLong(son -> taille(son.source())).sum();
+        return new Progression(
+                nombre() + " référence(s) · " + sons.size() + " son(s) · ~"
+                        + String.format(java.util.Locale.FRENCH, "%.1f Mo", octets / 1_048_576.0),
+                0.0);
+    }
+
+    /// La taille du fichier, ou `0` s'il est parti entre la vérification et l'annonce : le volume
+    /// annoncé est un ordre de grandeur, et l'écriture signalera la disparition mieux que l'annonce.
+    private static long taille(Path source) {
+        try {
+            return Files.size(source);
+        } catch (IOException disparu) {
+            return 0L;
         }
     }
 

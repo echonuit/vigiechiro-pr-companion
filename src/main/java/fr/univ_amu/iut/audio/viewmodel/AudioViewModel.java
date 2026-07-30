@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.commun.model.PlageNuit;
-import fr.univ_amu.iut.commun.model.SondeAccessibilite;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
@@ -283,30 +282,6 @@ public class AudioViewModel {
     /// @return `true` si le fichier a été écrit
     public boolean exporterVu(Path destination) {
         ExporteurAudio.ResultatExport resultat = exporteur.vu(idResultats, destination, inclureMode.get());
-        messages.export(resultat.reussi(), resultat.message());
-        return resultat.reussi();
-    }
-
-    /// Exporte la **bibliothèque de sons de référence** vers le dossier `destination` (P10). Réservé à la
-    /// source `References`. Le bilan (ou l'erreur d'écriture) est restitué dans le message.
-    ///
-    /// **Sonde d'abord la destination** (#2426) : un dossier inutilisable (un fichier, non créable, non
-    /// inscriptible) est refusé **avant** de lancer la copie, avec le motif, comme pour la sauvegarde
-    /// ([SondeAccessibilite], harmonisation #2258). Sans cette garde, l'échec ne se découvrait qu'à
-    /// mi-parcours, sur un message d'E/S brut et après une copie partielle.
-    ///
-    /// @param destination dossier cible choisi par l'observateur
-    /// @return `true` si l'export a réussi
-    public boolean exporterBibliotheque(Path destination) {
-        if (destination == null) {
-            return false;
-        }
-        SondeAccessibilite.Verdict verdict = SondeAccessibilite.sonder(destination);
-        if (!verdict.accessible()) {
-            messages.avertissement("Dossier inutilisable : " + verdict.motif() + " (" + destination + ").");
-            return false;
-        }
-        ExporteurAudio.ResultatExport resultat = exporteur.bibliotheque(destination);
         messages.export(resultat.reussi(), resultat.message());
         return resultat.reussi();
     }
