@@ -4,7 +4,7 @@ Cette section présente les **parcours d'usage** de l'application, organisés en
 
 - **Section A - Fil rouge** : un seul parcours, **P0**, qui raconte l'usage de bout-en-bout vu par Marie, de la carte SD au dépôt.
 - **Section B - Chaîne de production** : les parcours **P1 à P6** qui composent et enrichissent le fil rouge - déclaration de site, import, vérification, préparation du dépôt, navigation multi-sites et diagnostic matériel -, plus **P12** (récupérer une nuit déjà déposée sur la plateforme, en trois coutures : synchro, reconstruire, réactiver).
-- **Section C - Après le dépôt & exploitation** : **P7** (validation des résultats Tadarida) et son prolongement **biodiversité** - regroupement (**P9**), bibliothèque de sons (**P10**) et inventaire des espèces (**P11**).
+- **Section C - Après le dépôt & exploitation** : **P7** (validation des résultats Tadarida) et son prolongement **biodiversité** - regroupement (**P9**), bibliothèque de sons (**P10**), inventaire des espèces (**P11**) et envoi d'un sous-ensemble à un expert (**P13**).
 - **Transverse** : **P8** (recherche globale) est accessible depuis **n'importe quel écran**.
 
 Tous les parcours reposent sur le vocabulaire posé dans le [Modèle conceptuel](../Modèle%20conceptuel/index.md).
@@ -27,6 +27,7 @@ Tous les parcours reposent sur le vocabulaire posé dans le [Modèle conceptuel]
     | [P7](P7%20-%20Valider%20les%20résultats%20Tadarida.md) | les espèces à enjeu, et un mode activité enfin mesurable |
     | [P9](P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md) | le point comme ligne de solde annuel |
     | [P11](P11%20-%20Inventaire%20des%20espèces%20détectées.md) | ce que l'activité vaut, et la forme de la nuit |
+    | [P13](P13%20-%20Envoyer%20un%20sous-ensemble%20à%20un%20expert.md) | un bilan chiffré d'archive (sons emportés, sons introuvables) |
     | [P12](P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md) | un compte rendu de réactivation |
 
 ## Topologie des parcours
@@ -49,13 +50,14 @@ flowchart LR
     P7 --> P9[🔁 P9 - Regrouper<br/>les nuits par point]
     P7 --> P10[🎼 P10 - Exporter<br/>sons de référence]
     P7 --> P11[🪶 P11 - Inventaire<br/>des espèces]
+    P7 --> P13[📤 P13 - Envoyer à<br/>un expert]
 
     P8[🔍 P8 - Recherche globale<br/>depuis tout écran]
 
     classDef livre fill:#1e8449,stroke:#0e5128,color:#fff,stroke-width:2px
     classDef transverse fill:#3f51b5,stroke:#283593,color:#fff,stroke-width:2px
     classDef nonlivre fill:#5d6d7e,stroke:#283747,color:#fff,stroke-width:2px,stroke-dasharray:5 3
-    class P1,P2,P3,P4,P5,P6,P7,P10,P11,P12 livre
+    class P1,P2,P3,P4,P5,P6,P7,P10,P11,P12,P13 livre
     class P8 transverse
     class P9 nonlivre
 ```
@@ -76,6 +78,7 @@ Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4. Les nœuds ve
 | | [P9 - Regrouper les nuits successives par point](P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md) | Karim / Samuel | validation conjointe |
 | | [P10 - Exporter une bibliothèque de sons de référence](P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) | Samuel | sons de référence par espèce |
 | | [P11 - Inventaire des espèces détectées](P11%20-%20Inventaire%20des%20espèces%20détectées.md) | Karim / Samuel | « Espèces & observations » (par espèce / par carré) |
+| | [P13 - Envoyer un sous-ensemble à un expert](P13%20-%20Envoyer%20un%20sous-ensemble%20à%20un%20expert.md) | Samuel | espèce × lieu → archive ZIP (CSV + sons) |
 | **Transverse** | [P8 - Rechercher globalement](P8%20-%20Rechercher%20globalement.md) | tous | sauter à un site, un point, un passage |
 
 ## Couverture par persona
@@ -93,6 +96,7 @@ Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4. Les nœuds ve
 | [P7 - Validation Tadarida](P7%20-%20Valider%20les%20résultats%20Tadarida.md) | ✅ ⭐ | ✓ | ✅ ⭐ |
 | [P9 - Regroupement nuits](P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md) | (rare) | ✅ | ✅ ⭐ |
 | [P10 - Sons de référence](P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) | (non) | (non) | ✅ |
+| [P13 - Envoyer à un expert](P13%20-%20Envoyer%20un%20sous-ensemble%20à%20un%20expert.md) | ✓ | ✅ | ✅ ⭐ |
 | [P11 - Inventaire des espèces](P11%20-%20Inventaire%20des%20espèces%20détectées.md) | ✓ | ✅ | ✅ ⭐ |
 | [P8 - Recherche globale (transverse)](P8%20-%20Rechercher%20globalement.md) | ✅ | ✅ ⭐ | ✅ ⭐ |
 

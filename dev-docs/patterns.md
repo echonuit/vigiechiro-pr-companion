@@ -658,6 +658,26 @@ alimenté depuis des fils d'arrière-plan, parfois dans le désordre (travail pa
 d'événements (+ `inerte()`), la ligne et le pilote spécialisés, le relais fil JavaFX : jamais une
 table ad hoc.
 
+## Écrivain ZIP généraliste (socle `commun`)
+
+**Le problème.** Deux emballeurs ZIP coexistaient : `CompacteurDepot` (sémantique dépôt : nommage
+`-N.zip`, plafond 700 Mo, découpage) et le besoin d'archives quelconques (export « observations +
+sons » #2792, et tout export futur). Recopier la boucle `putNextEntry`/`Files.copy` disperserait les
+mêmes exigences : mémoire bornée, annulation, pas d'archive partielle.
+
+**La solution.** `commun.model.EcrivainZip` (#2792), statique et sans JavaFX : `ecrire(destination,
+entrées texte, entrées fichier, progression, jeton)` renvoie la taille écrite. Deux natures d'entrées
+(`EntreeTexte` pour un contenu déjà en mémoire - un CSV -, `EntreeFichier` copiée **en flux**), le
+[JetonAnnulation](#occupation-dun-écran-pendant-un-traitement-long-socle-commun) vérifié **avant chaque
+entrée** avec re-vérification finale, la progression émise entrée par entrée (« Archive : X / N ·
+nom »), et l'archive **partielle supprimée** sur échec comme sur annulation (patron `ExtracteurZip`,
+en miroir).
+
+**La règle.** Toute nouvelle archive « assemblée » (un manifeste + des fichiers) passe par
+`EcrivainZip` ; `CompacteurDepot` reste l'emballeur **du dépôt** (son nommage et son découpage sont un
+contrat de la plateforme, pas une variante d'options). La structure d'archive de l'export des sons
+(sous-dossier par session) est actée par l'ADR 2792.
+
 ## Occupation d'un écran pendant un traitement long (socle `commun`)
 
 **Le problème.** Un traitement lourd (agrégats, inspection de dossier, appel réseau) exécuté

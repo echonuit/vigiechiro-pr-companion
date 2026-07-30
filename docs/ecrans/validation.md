@@ -79,6 +79,37 @@ Une colonne **« Espèce à enjeu »** y porte le même repère que le bouclier 
 fichier perdrait à la sortie l'information qu'on cherche en premier, et il faudrait la reconstituer à la
 main depuis une liste externe.
 
+### Exporter les observations et les sons (ZIP)
+
+Le CSV dit **ce qui a été entendu** ; il ne permet pas à un tiers de **réécouter**. Pour envoyer un
+sous-ensemble à un expert (« pourquoi ai-je du grand Rhinolophe en ville ? »), **☰ → Exporter les
+observations et les sons (ZIP)…** produit une **archive unique** contenant le même CSV et les fichiers
+son des observations affichées :
+
+```
+observations-sons.zip
+├── observations.csv              (le CSV de l'export ci-dessus, à l'identique)
+└── sons/
+    └── Car130711-2026-Pass1-Z41/
+        ├── Car130711-2026-Pass1-Z41_..._000.wav
+        └── …
+```
+
+Les sons sont rangés **par nuit** (un sous-dossier par session d'enregistrement), et une séquence
+partagée par plusieurs observations n'est emballée qu'**une fois**. Avant la copie, une **fenêtre de
+progression** annonce le contenu (« N observation(s) · M son(s) · ~X Mo ») puis avance fichier par
+fichier ; **Annuler** interrompt proprement, sans laisser d'archive partielle sur le disque.
+
+![La fenêtre de progression de l'export : la barre avance fichier par fichier, le son en cours est nommé, et Annuler reste disponible pendant toute la copie.](../assets/captures/apercu-export-sons-progression.png)
+
+Un son dont le fichier n'est plus sur le disque (nuit archivée, disque externe débranché) **ne bloque
+pas** l'export : l'observation reste dans le CSV, le son manquant est **compté** dans le compte rendu
+final, et le CSV permet de le nommer. Comptez quelques minutes pour plusieurs centaines de sons - sur
+une saison réelle, 721 sons (658 Mo) partent en moins de cinq minutes.
+
+La même archive se produit **en ligne de commande** avec `vigiechiro exporter-sons` (`--passage <id>`
+ou `--espece <code>`, et `--sortie <zip>`), pour scripter des envois réguliers.
+
 ![La barre de filtres avec la puce « Groupe : Chiroptères » active : la table ne montre plus que les chauves-souris.](../assets/captures/apercu-sons-validation-filtres.png)
 
 ### Vues sauvegardées

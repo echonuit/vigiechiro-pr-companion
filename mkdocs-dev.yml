@@ -132,6 +132,7 @@ nav:
     - 2433 · Un dossier de transformés s'importe par référence: decisions/2433-un-dossier-de-transformes-s-importe-par-reference.md
     - 2385 · La doc chiffrée est adossée au code: decisions/2385-la-doc-chiffree-est-adossee-au-code.md
     - 2791 · La commune se dérive du GPS et s'attache au point: decisions/2791-la-commune-se-derive-du-gps-et-s-attache-au-point.md
+    - 2792 · L'archive d'export range les sons par session: decisions/2792-l-archive-d-export-range-les-sons-par-session.md
     - 2843 · La typographie se tient par un cliquet: decisions/2843-typographie-cliquet-plutot-que-nettoyage.md
     - 2867 · Une dette se tient par un cliquet: decisions/2867-une-dette-se-tient-par-un-cliquet.md
   - Recette (acceptation):
@@ -141,6 +142,7 @@ nav:
     - S2 · Importer une nuit: recette/sessions/s2-importer.md
     - S3 · Vérifier: recette/sessions/s3-verifier.md
     - S4 · Déposer et suivre: recette/sessions/s4-deposer-suivre.md
+    - S5 · Valider: recette/sessions/s5-valider.md
     - S6 · Exploiter et piloter: recette/sessions/s6-exploiter-piloter.md
     - S8 · Récupérer une nuit déposée: recette/sessions/s8-recuperer-une-nuit.md
   - Interface en ligne de commande (CLI): cli.md

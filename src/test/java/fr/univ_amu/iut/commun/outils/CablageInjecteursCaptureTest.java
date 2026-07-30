@@ -73,6 +73,7 @@ class CablageInjecteursCaptureTest {
             Map.entry("CaptureImportVigieChiro", "rend une modale construite à la main, sans injecteur"),
             Map.entry("CaptureImportTransformes", "rend une modale construite à la main, sans injecteur"),
             Map.entry("CapturePublicationCorrections", "rend une modale construite à la main, sans injecteur"),
+            Map.entry("CaptureExportSons", "rend une modale construite à la main, sans injecteur"),
             Map.entry("CaptureConfirmationsImport", "rend des confirmations construites à la main, sans injecteur"));
 
     private static String workspacePrecedent;

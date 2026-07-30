@@ -103,6 +103,23 @@ relire ces résultats, séquence par séquence, et de **confirmer ou corriger** 
 
 Cette étape est accessible une fois le passage déposé (voir l'avertissement plus haut).
 
+## Envoyer un sous-ensemble à un expert
+
+Une identification vous étonne - du grand Rhinolophe en pleine ville - et vous voulez **l'avis d'un
+spécialiste**, qui aura besoin d'**écouter** les sons, pas seulement de lire un tableau. Le parcours
+tient en trois gestes, quel que soit l'écran d'où vous partez :
+
+1. **Isoler le sous-ensemble** dans [Sons & validation](../ecrans/validation.md#filtrer-les-observations) :
+   la puce **Espèce** retient le taxon qui vous intrigue, la puce **Lieu** le restreint à une commune,
+   un carré, un point ou un site. Depuis « Espèces & observations », un clic sur l'espèce ouvre déjà
+   la vue audio sur elle.
+2. **☰ → Exporter les observations et les sons (ZIP)…** : l'archive emporte
+   [le CSV et les fichiers son](../ecrans/validation.md#exporter-les-observations-et-les-sons-zip) de
+   ce qui est affiché - rien d'autre.
+3. **Transmettre l'archive** (messagerie, dépôt de fichiers…) : l'expert y trouve les observations
+   documentées (dont votre correction et votre certitude) et les sons rangés par nuit, écoutables
+   avec n'importe quel lecteur audio.
+
 ## Pour aller plus loin
 
 - [Référence par écran](../ecrans/index.md) : le détail de chaque écran et de ses états.
