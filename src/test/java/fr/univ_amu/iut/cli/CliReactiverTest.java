@@ -38,7 +38,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// [fr.univ_amu.iut.e2e.ParcoursRestaurationDepuisVigieChiroE2ETest], qui dispose du vrai câblage.
 ///
 /// Le semis passe par [JeuDeDonneesPassage] : semer la topologie d'une nuit à la main est une dette que
-/// [fr.univ_amu.iut.fixture.CliquetFixturePassageTest] compte et fait rétrécir.
+/// [fr.univ_amu.iut.cliquet.CliquetFixturePassageTest] compte et fait rétrécir.
 class CliReactiverTest {
 
     private static final String PARTICIPATION = "6a53f5faae21902a597394d3";

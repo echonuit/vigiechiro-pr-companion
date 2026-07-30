@@ -25,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// la base est intacte*. Un refus qui aurait déjà supprimé serait pire que pas de refus du tout.
 ///
 /// Le semis passe par [JeuDeDonneesPassage] : semer la topologie d'une nuit à la main est une dette que
-/// [fr.univ_amu.iut.fixture.CliquetFixturePassageTest] compte et fait rétrécir.
+/// [fr.univ_amu.iut.cliquet.CliquetFixturePassageTest] compte et fait rétrécir.
 class CliSupprimerPassageTest {
 
     @TempDir

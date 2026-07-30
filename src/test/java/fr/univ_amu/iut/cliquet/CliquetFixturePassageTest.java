@@ -1,51 +1,35 @@
-package fr.univ_amu.iut.fixture;
+package fr.univ_amu.iut.cliquet;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// **Le cliquet de la dette de fixtures** (#1258) : la liste des tests qui sèment encore la topologie d'une
 /// nuit **à la main** est **épinglée ici**, et elle ne peut que **rétrécir**.
 ///
+/// C'est le premier cliquet du dépôt, et celui sur lequel les deux pièges du patron ont été rencontrés
+/// pour de vrai (#2714). Il passe désormais par [Cliquet], comme les autres, et vit dans le même paquet :
+/// le patron et ses règles sont décrits par l'ADR 2867.
+///
 /// ## Pourquoi un cliquet
 ///
-/// La migration vers [JeuDeDonneesPassage] est **opportuniste** : on bascule un fichier quand on le
+/// La migration vers `JeuDeDonneesPassage` est **opportuniste** : on bascule un fichier quand on le
 /// retouche, parce qu'une conversion mécanique en masse est risquée (trois styles SQL, jeux de colonnes
 /// variables) et qu'un test converti trop vite est un test qu'on ne relit plus.
 ///
 /// Mais **une migration opportuniste sans garde-fou est une migration qu'on oublie.** C'est exactement le
 /// défaut que `DocumentationAJourTest` a corrigé ailleurs (#1458) : la doc dérivait parce que **rien ne
 /// rougissait**. Une dette qu'aucun test ne compte n'est pas une dette, c'est un vœu.
-///
-/// ## Ce qu'il fait rougir
-///
-/// - **Un nouveau semeur à la main** : la liste s'allonge → **CI rouge**. Le message renvoie vers la
-///   fixture. C'est le cas qui compte le plus : sans lui, la dette **repousserait** aussi vite qu'on la
-///   coupe.
-/// - **Une migration réussie** : la liste raccourcit → **CI rouge** aussi, jusqu'à ce qu'on **retire le
-///   nom**. Le geste est trivial, et il rend le progrès **visible** : le compteur qui descend est la seule
-///   preuve que le chantier avance.
-///
-/// Le nombre restant est donc **toujours exact**, et personne n'a besoin de s'en souvenir.
 class CliquetFixturePassageTest {
 
-    /// Surefire s'exécute depuis la racine du projet.
-    private static final Path TESTS = Path.of("src", "test", "java");
-
-    /// Les 64 tests qui sèment encore un passage à la main, au 2026-07-15.
+    /// Les tests qui sèment encore un passage à la main.
     ///
     /// **Cette liste ne doit que rétrécir.** Pour en retirer un : basculer son semis sur
-    /// [JeuDeDonneesPassage], puis supprimer sa ligne ici.
+    /// `JeuDeDonneesPassage`, puis supprimer sa ligne ici. Aucun chiffre n'est écrit ici à dessein :
+    /// l'annotation précédente en annonçait 64 pour 50 lignes, ce qui est le sort de tout nombre recopié.
     private static final List<String> SEMENT_ENCORE_A_LA_MAIN = List.of(
             "fr/univ_amu/iut/audit/model/ServiceAuditCoherenceTest.java",
             "fr/univ_amu/iut/audit/model/ServiceRecuperabiliteTest.java",
@@ -102,52 +86,23 @@ class CliquetFixturePassageTest {
     @DisplayName("La dette de fixtures ne peut que rétrécir : aucun nouveau semeur à la main, et toute"
             + " migration se solde en retirant son nom de la liste")
     void la_dette_ne_peut_que_retrecir() {
-        List<String> reels = semeursALaMain();
+        Cliquet.verifier(
+                Cliquet.fichiersOu(CliquetFixturePassageTest::semeUnPassage),
+                SEMENT_ENCORE_A_LA_MAIN,
+                "les tests qui sèment un passage À LA MAIN",
+                """
+                fr.univ_amu.iut.fixture.JeuDeDonneesPassage :
 
-        assertThat(reels).as("""
-                        La liste des tests qui sèment un passage À LA MAIN a changé.
-
-                        • Elle s'ALLONGE ? Vous venez d'ajouter un semeur de plus (il y en a déjà assez).
-                          Utilisez fr.univ_amu.iut.fixture.JeuDeDonneesPassage :
-
-                              JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source).semer();
-                              long idObservation = jeu.ajouterObservation("Pipkuh");
-
-                        • Elle RACCOURCIT ? Deux causes possibles, et elles ne se valent pas. Soit vous
-                          venez d'en migrer un - bravo, retirez son nom de SEMENT_ENCORE_A_LA_MAIN, dans
-                          ce fichier : c'est le geste qui rend le progrès visible. Soit vous avez touché
-                          au DÉTECTEUR, et la liste raccourcit sans qu'une ligne de test ait bougé -
-                          alors ce n'est pas un progrès, c'est une correction de la mesure, et elle se
-                          dit comme telle.
-
-                        Pourquoi ce cliquet : la migration est opportuniste (on bascule un fichier quand
-                        on le retouche), et une migration opportuniste sans garde-fou est une migration
-                        qu'on oublie. Une dette qu'aucun test ne compte n'est pas une dette, c'est un vœu.
-                        """).containsExactlyInAnyOrderElementsOf(SEMENT_ENCORE_A_LA_MAIN);
+                      JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source).semer();
+                      long idObservation = jeu.ajouterObservation("Pipkuh")""",
+                "SEMENT_ENCORE_A_LA_MAIN, dans ce fichier");
     }
 
-    /// Un test **sème un passage à la main** dès qu'il en crée un lui-même : par `INSERT INTO passage`
-    /// (les trois styles SQL de l'audit) ou par le DAO typé. C'est le **passage** qu'on guette, parce que
-    /// c'est lui qui entraîne toute la chaîne derrière (session, séquence, observation…).
-    private static List<String> semeursALaMain() {
-        try (Stream<Path> fichiers = Files.walk(TESTS)) {
-            return fichiers.filter(fichier -> fichier.toString().endsWith(".java"))
-                    .filter(CliquetFixturePassageTest::semeUnPassage)
-                    .map(fichier -> TESTS.relativize(fichier).toString().replace('\\', '/'))
-                    .sorted()
-                    .toList();
-        } catch (IOException echec) {
-            throw new UncheckedIOException("parcours de " + TESTS, echec);
-        }
-    }
-
-    /// Nommer [JeuDeDonneesPassage] vaut **migration** : c'est ce qui écarte du compte les fichiers
-    /// basculés - et, au passage, la fixture elle-même et ce cliquet, qui la nomment tous deux.
-    ///
-    /// **La limite est assumée** : un fichier qui utiliserait la fixture **et** sèmerait en plus un second
-    /// passage à la main passerait à travers. On l'accepte - le détecteur doit rester lisible, et ce cas
-    /// n'existe pas aujourd'hui.
     /// Ce fichier **sème-t-il encore un passage à la main** ?
+    ///
+    /// Un test sème un passage dès qu'il en crée un lui-même : par `INSERT INTO passage` (les trois styles
+    /// SQL de l'audit) ou par le DAO typé. C'est le **passage** qu'on guette, parce que c'est lui qui
+    /// entraîne toute la chaîne derrière (session, séquence, observation…).
     ///
     /// La question porte sur ce que le fichier **fait**, pas sur ce qu'il mentionne. Le détecteur
     /// s'arrêtait autrefois au premier `JeuDeDonneesPassage` rencontré et rendait `false` : un fichier
@@ -156,24 +111,23 @@ class CliquetFixturePassageTest {
     /// il devait parler - et son silence se lisait comme « migré » (#2714).
     ///
     /// Il n'y a donc plus de court-circuit : un fichier compte tant qu'il lui reste **un** semis.
-    private static boolean semeUnPassage(Path fichier) {
-        if (fichier.getParent() != null && fichier.getParent().endsWith(MAISON_DES_FIXTURES)) {
+    ///
+    /// **La limite est assumée** : un fichier qui utiliserait la fixture **et** sèmerait en plus un second
+    /// passage à la main compterait, ce qui est juste ; l'inverse - une migration partielle qu'on croirait
+    /// finie - est ce qu'on refuse.
+    private static boolean semeUnPassage(Cliquet.Fichier fichier) {
+        // `fixture` est la DESTINATION de la migration : y semer un passage est le métier de
+        // `JeuDeDonneesPassage`. `cliquet` est la MESURE : ce fichier-ci cite « insert into passage » et
+        // `new PassageDao(` dans ses propres motifs, et se compterait lui-même. Les deux exclusions
+        // tenaient autrefois par accident (le court-circuit du détecteur les couvrait) ; elles sont
+        // écrites depuis #2714, et ce changement de paquet montre pourquoi : un effet de bord fondé sur
+        // l'emplacement d'un fichier ne survit pas à son déplacement.
+        if (fichier.dansLePaquet("fixture") || fichier.dansLePaquet("cliquet")) {
             return false;
         }
-        String source = lire(fichier);
+        String source = fichier.source();
         return source.toLowerCase(Locale.ROOT).contains("insert into passage") || insereViaLeDao(source);
     }
-
-    /// Le paquet des fixtures est **hors mesure**, et il faut le dire explicitement.
-    ///
-    /// [JeuDeDonneesPassage] sème évidemment un passage : c'est son métier, et c'est la destination de
-    /// la migration - la compter comme dette serait absurde. Ce fichier-ci cite « insert into passage »
-    /// et `new PassageDao(` dans ses propres motifs de détection, et se compterait lui-même.
-    ///
-    /// Les deux étaient exclus **par accident** tant que le détecteur s'arrêtait au premier
-    /// `JeuDeDonneesPassage` rencontré. Retirer ce court-circuit (#2714) a rendu l'exclusion visible :
-    /// mieux vaut une règle écrite qu'un effet de bord qui tient par chance.
-    private static final Path MAISON_DES_FIXTURES = Path.of("fr", "univ_amu", "iut", "fixture");
 
     /// `new PassageDao(source)` **écrit-il** un passage, ou se contente-t-il de lire ?
     ///
@@ -206,12 +160,4 @@ class CliquetFixturePassageTest {
     /// ailleurs dans le fichier, si on lui demande un `insert`.
     private static final Pattern DAO_RANGE_DANS_UNE_VARIABLE =
             Pattern.compile("(\\w+)\\s*=\\s*new\\s+PassageDao\\s*\\(");
-
-    private static String lire(Path fichier) {
-        try {
-            return Files.readString(fichier);
-        } catch (IOException echec) {
-            throw new UncheckedIOException("lecture de " + fichier, echec);
-        }
-    }
 }
