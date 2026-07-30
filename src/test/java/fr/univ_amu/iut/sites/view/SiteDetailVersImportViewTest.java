@@ -9,7 +9,6 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
@@ -43,15 +42,14 @@ class SiteDetailVersImportViewTest {
         Injector injector = RacineInjecteur.creer();
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
-        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+        Site site = JeuDeDonneesPassage.dans(source)
                 .utilisateur(ID_USER)
                 .carre("640380")
                 .nomSite("Étang")
                 .point("A1")
                 .position(43.5, 5.4)
-                .semerSiteEtPoint();
-        // La vue s'ouvre sur le Site lui-même, pas sur son identifiant : on le relit.
-        Site site = new SiteDao(source).findById(jeu.idSite()).orElseThrow();
+                .semerSiteEtPoint()
+                .leSite();
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);

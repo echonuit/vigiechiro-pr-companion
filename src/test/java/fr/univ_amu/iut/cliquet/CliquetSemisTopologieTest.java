@@ -34,8 +34,6 @@ class CliquetSemisTopologieTest {
             "fr/univ_amu/iut/importation/ServiceImportReferenceTest.java",
             "fr/univ_amu/iut/importation/ServiceImportTest.java",
             "fr/univ_amu/iut/importation/SuiviFichiersImportTest.java",
-            "fr/univ_amu/iut/importation/view/ActionImportTransformesTest.java",
-            "fr/univ_amu/iut/passage/model/CreationPassageArchiveTest.java",
             "fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java",
             "fr/univ_amu/iut/saison/ServiceSoldeSaisonTest.java",
             "fr/univ_amu/iut/sites/model/ServiceCommunesTest.java");
