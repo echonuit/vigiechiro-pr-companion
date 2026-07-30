@@ -4,8 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -40,22 +39,21 @@ class CliExporterActiviteTest {
         System.clearProperty("vigiechiro.workspace");
     }
 
-    private int executer(ByteArrayOutputStream tampon, String... args) {
-        PrintStream flux = new PrintStream(tampon, true, StandardCharsets.UTF_8);
-        return cli.executer(args, flux, flux);
+    private int executer(SortieCapturee capture, String... args) {
+        return cli.executer(args, capture.sortie(), capture.erreur());
     }
 
     @Test
     @DisplayName("exporter-activite : passage sans contact, écrit les en-têtes, code 0")
     void exporter_activite_ecrit_les_en_tetes_sur_un_passage_sans_contact() throws Exception {
         Path sortie = workspace.resolve("activite.csv");
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+        SortieCapturee tampon = new SortieCapturee();
 
         int code = executer(
                 tampon, "exporter-activite", "--passage", "1", "--sortie", sortie.toString(), "--tranche", "30");
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(tampon.toString(StandardCharsets.UTF_8)).contains("Activité exportée");
+        assertThat(tampon.tout()).contains("Activité exportée");
         assertThat(Files.exists(sortie)).isTrue();
         assertThat(Files.readString(sortie, StandardCharsets.UTF_8))
                 .startsWith(
@@ -66,7 +64,7 @@ class CliExporterActiviteTest {
     @DisplayName("exporter-activite --tout : couvre tous les passages, code 0 (#2613)")
     void exporter_activite_couvre_la_vue_transverse() throws Exception {
         Path sortie = workspace.resolve("activite-tout.csv");
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+        SortieCapturee tampon = new SortieCapturee();
 
         int code = executer(tampon, "exporter-activite", "--tout", "--sortie", sortie.toString());
 
@@ -79,7 +77,7 @@ class CliExporterActiviteTest {
     @Test
     @DisplayName("exporter-activite : --passage et --tout s'excluent, code 2 (#2613)")
     void exporter_activite_refuse_les_deux_portees() {
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+        SortieCapturee tampon = new SortieCapturee();
 
         int code = executer(
                 tampon,
@@ -99,25 +97,25 @@ class CliExporterActiviteTest {
     @DisplayName("exporter-activite : tranche hors des trois pas refusée, code 2")
     void exporter_activite_refuse_une_tranche_invalide() {
         Path sortie = workspace.resolve("activite.csv");
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+        SortieCapturee tampon = new SortieCapturee();
 
         int code = executer(
                 tampon, "exporter-activite", "--passage", "1", "--sortie", sortie.toString(), "--tranche", "99");
 
         assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
-        assertThat(tampon.toString(StandardCharsets.UTF_8)).contains("Tranche invalide");
+        assertThat(tampon.tout()).contains("Tranche invalide");
     }
 
     @Test
     @DisplayName("exporter-activite : format autre que csv refusé, code 2")
     void exporter_activite_refuse_un_format_non_csv() {
         Path sortie = workspace.resolve("activite.json");
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+        SortieCapturee tampon = new SortieCapturee();
 
         int code = executer(
                 tampon, "exporter-activite", "--passage", "1", "--sortie", sortie.toString(), "--format", "json");
 
         assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
-        assertThat(tampon.toString(StandardCharsets.UTF_8)).contains("Format non pris en charge");
+        assertThat(tampon.tout()).contains("Format non pris en charge");
     }
 }

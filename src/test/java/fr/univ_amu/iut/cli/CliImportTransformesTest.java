@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -16,10 +17,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -76,17 +74,12 @@ class CliImportTransformesTest {
     @DisplayName("--referencer : passage créé, séquences externes, aucun WAV dans le workspace, sortie 0")
     void referencer_reussit_et_ne_copie_rien() throws IOException {
         Path externe = preparerDossierTransforme(racine.resolve("nas"));
-        ByteArrayOutputStream sortie = new ByteArrayOutputStream();
+        SortieCapturee sortie = new SortieCapturee();
 
-        int code = cli.executer(
-                args(externe, "--referencer"),
-                new PrintStream(sortie, true, StandardCharsets.UTF_8),
-                new PrintStream(sortie, true, StandardCharsets.UTF_8));
+        int code = cli.executer(args(externe, "--referencer"), sortie.sortie(), sortie.erreur());
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(sortie.toString(StandardCharsets.UTF_8))
-                .contains("référence")
-                .contains("aucun octet audio");
+        assertThat(sortie.tout()).contains("référence").contains("aucun octet audio");
 
         List<SequenceDEcoute> sequences = sequencesDuPassage();
         assertThat(sequences)
@@ -103,13 +96,13 @@ class CliImportTransformesTest {
     @DisplayName("Refus métier : point inconnu → rien de créé, sortie 2 (état intact, #2294)")
     void point_inconnu_sort_en_deux() throws IOException {
         Path externe = preparerDossierTransforme(racine.resolve("nas"));
-        ByteArrayOutputStream sortie = new ByteArrayOutputStream();
+        SortieCapturee sortie = new SortieCapturee();
 
         int code = cli.executer(
                 new String[] {"importer-transformes", "--dossier", externe.toString(), "--point", "9999", "--referencer"
                 },
-                new PrintStream(sortie, true, StandardCharsets.UTF_8),
-                new PrintStream(sortie, true, StandardCharsets.UTF_8));
+                sortie.sortie(),
+                sortie.erreur());
 
         assertThat(code).isEqualTo(2);
         assertThat(sequencesDuPassage()).isEmpty();

@@ -8,14 +8,12 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.approvaltests.Approvals;
 import org.approvaltests.reporters.QuietReporter;
@@ -73,7 +71,7 @@ class RecetteImportCliGoldenTest {
         Path sd = racine.resolve("sd-nominale");
         new GenerateurCartesSD().genererVers(spec, sd);
 
-        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+        SortieCapturee tampon = new SortieCapturee();
         int code = cli.executer(
                 new String[] {
                     "importer",
@@ -86,11 +84,11 @@ class RecetteImportCliGoldenTest {
                     "--passage",
                     "2"
                 },
-                new PrintStream(tampon, true, StandardCharsets.UTF_8),
-                new PrintStream(tampon, true, StandardCharsets.UTF_8));
+                tampon.sortie(),
+                tampon.erreur());
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        Approvals.verify(sortieStable(tampon.toString(StandardCharsets.UTF_8)));
+        Approvals.verify(sortieStable(tampon.tout()));
     }
 
     /// Masque la seule ligne non déterministe (chemin absolu du rapport sous le `@TempDir`) pour que la
