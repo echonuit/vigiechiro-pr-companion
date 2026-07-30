@@ -13,7 +13,8 @@ import org.junit.jupiter.api.Test;
 /// Le recopier, c'est autant d'endroits à retoucher le jour où un champ bouge, et autant d'occasions
 /// d'en oublier un, sans que rien ne le dise.
 ///
-/// La destination est la brique paramétrée que porte déjà `GenerateurCartesSD`, dans le paquet `recette`.
+/// La destination est `fr.univ_amu.iut.fixture.JournalDeCapteur`, extrait de `GenerateurCartesSD` par
+/// #2904 - le générateur de recette s'en sert désormais lui aussi, une seule source pour deux usages.
 ///
 /// ## Ce qui est hors mesure, et pourquoi c'est écrit
 ///
@@ -27,33 +28,39 @@ import org.junit.jupiter.api.Test;
 /// plutôt que laissée à la chance.
 class CliquetJournalEnDurTest {
 
-    /// Nom de fichier de journal composé dans le code : `"LogPR…"`, `"LogPR" + serie`, `LogPR1925492`.
-    /// Une simple occurrence du mot dans un commentaire ne compte pas - c'est l'usage qui compte, pas la
-    /// mention (cf. [Cliquet], les deux pièges du patron).
-    private static final Pattern JOURNAL_COMPOSE = Pattern.compile("\"LogPR|LogPR\"\\s*\\+|LogPR\\d");
+    /// Une **ligne de journal écrite à la main** : l'horodatage que produit un vrai enregistreur, suivi de
+    /// `PR` et du numéro de série - `22/04/26 - 16:02:20 PR1925492 …`.
+    ///
+    /// ⚠️ **Correction de la mesure** (ADR 2867, la confusion usage / mention). Ce motif cherchait
+    /// autrefois le **nom** du fichier (`"LogPR…"`), et comptait donc neuf fichiers qui n'écrivent aucun
+    /// journal :
+    ///
+    ///  - `ServiceLotTest`, `VerificationCoherenceTest`, `PassageDaoTest`, `JournalDuCapteurDaoTest`
+    ///    insèrent une **ligne en base** portant un nom de fichier : rien n'est écrit sur le disque ;
+    ///  - `CliAuditTest` et `PropositionsEnregistreurTest` **composent un chemin**, l'un pour dire qu'il
+    ///    manque, l'autre dans un bouchon ;
+    ///  - `ServiceAuditCoherenceTest`, `CopieProtegeeTest` et `ExtracteurZipTest` écrivent bien un fichier,
+    ///    mais **volontairement pas un journal** : seize octets nuls, ou le mot « journal ». Ils éprouvent
+    ///    la corruption, la copie et l'extraction - leur donner un vrai journal détruirait leur sujet.
+    ///
+    /// Aucun de ces neuf n'avait quoi que ce soit à migrer. Un cliquet qui surcompte se décrédibilise
+    /// aussi sûrement qu'un qui sous-compte, et il fait pire : il donne à croire qu'un chantier est plus
+    /// gros qu'il n'est, ce qui décourage de le finir.
+    private static final Pattern JOURNAL_COMPOSE = Pattern.compile("\\d\\d/\\d\\d/\\d\\d - \\d\\d:\\d\\d:\\d\\d PR");
 
     /// La dette épinglée. **Ne peut que rétrécir** : cf. [Cliquet] pour les deux sens de variation.
     private static final List<String> ECRIVENT_UN_JOURNAL_EN_DUR = List.of(
-            "fr/univ_amu/iut/audit/model/ServiceAuditCoherenceTest.java",
-            "fr/univ_amu/iut/cli/CliAuditTest.java",
             "fr/univ_amu/iut/cli/CliImportTest.java",
             "fr/univ_amu/iut/diagnostic/AnalyseAnomaliesTest.java",
             "fr/univ_amu/iut/diagnostic/ServiceDiagnosticTest.java",
             "fr/univ_amu/iut/e2e/ParcoursImporterNuitE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursRestaurationDepuisVigieChiroE2ETest.java",
-            "fr/univ_amu/iut/importation/CopieProtegeeTest.java",
-            "fr/univ_amu/iut/importation/ExtracteurZipTest.java",
             "fr/univ_amu/iut/importation/ServiceImportTest.java",
             "fr/univ_amu/iut/importation/SuiviFichiersImportTest.java",
             "fr/univ_amu/iut/importation/model/InventaireParInspectionTest.java",
             "fr/univ_amu/iut/importation/view/ImportationClicImporterTest.java",
             "fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java",
             "fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java",
-            "fr/univ_amu/iut/lot/ServiceLotTest.java",
-            "fr/univ_amu/iut/lot/VerificationCoherenceTest.java",
-            "fr/univ_amu/iut/passage/JournalDuCapteurDaoTest.java",
-            "fr/univ_amu/iut/passage/PassageDaoTest.java",
-            "fr/univ_amu/iut/passage/model/PropositionsEnregistreurTest.java",
             "fr/univ_amu/iut/passage/model/ServiceReactivationPassageTest.java");
 
     @Test
