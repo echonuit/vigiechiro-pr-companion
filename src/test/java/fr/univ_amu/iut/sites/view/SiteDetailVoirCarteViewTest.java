@@ -30,7 +30,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-/// Test d'intégration TestFX du badge GPS de **M-Site-detail** (#154) : le lien « ✓ GPS — voir sur la
+/// Test d'intégration TestFX du badge GPS de **M-Site-detail** (#154) : le lien « ✓ GPS, voir sur la
 /// carte » d'un point géolocalisé doit ouvrir LA carte multi-sites **centrée sur ce point** (contrat
 /// socle [OuvrirMultisite#ouvrirSurPoint]), et non un OpenStreetMap externe. On capture l'appel via une
 /// implémentation d'`OuvrirMultisite` substituée dans l'injecteur réel.

@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Test d'INTÉGRATION du câblage Guice : la racine de composition agrège, via le
-/// `Multibinder<IndicateurAccueil>`, les compteurs publiés par chaque feature — sans que le socle
+/// `Multibinder<IndicateurAccueil>`, les compteurs publiés par chaque feature : sans que le socle
 /// ne dépende d'aucune feature.
 class IndicateurAccueilWiringTest {
 

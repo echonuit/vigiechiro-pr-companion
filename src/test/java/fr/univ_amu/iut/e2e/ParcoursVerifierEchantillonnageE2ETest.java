@@ -36,7 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-/// **Test E2E de parcours (P3 — Vérifier l'enregistrement par échantillonnage)** : sur l'injecteur
+/// **Test E2E de parcours (P3, Vérifier l'enregistrement par échantillonnage)** : sur l'injecteur
 /// applicatif réel ([RacineInjecteur]) et une base SQLite jetable (workspace temporaire +
 /// [MigrationSchema]), on enchaîne les **trois étapes du parcours P3** depuis une nuit fraîchement
 /// importée (précondition P2, statut `Transformé`) jusqu'au verdict global (`Vérifié`) :

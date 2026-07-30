@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Vérifie la **carte d'accueil transverse** de l'Activité ([ActiviteNuit]) : son contrat (prisme, action)
-/// et sa **présence conditionnée au flag** — offerte par défaut (feature OPTIONNELLE depuis la clôture du
+/// et sa **présence conditionnée au flag** : offerte par défaut (feature OPTIONNELLE depuis la clôture du
 /// lot #2352), retirée quand `activite-nuit` est désactivée.
 class ActiviteNuitTest {
 

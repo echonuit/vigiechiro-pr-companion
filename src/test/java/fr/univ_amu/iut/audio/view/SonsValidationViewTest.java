@@ -906,7 +906,7 @@ class SonsValidationViewTest {
     }
 
     @Test
-    @DisplayName("#483 : options de lecture — auto-lecture cochée par défaut, la boucle de l'AudioView suit sa case")
+    @DisplayName("#483 : options de lecture, auto-lecture cochée par défaut, la boucle de l'AudioView suit sa case")
     void options_de_lecture(FxRobot robot) {
         MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
         AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
@@ -923,7 +923,7 @@ class SonsValidationViewTest {
     }
 
     @Test
-    @DisplayName("#478 : raccourcis clavier sur la table — Entrée valide, R bascule la référence")
+    @DisplayName("#478 : raccourcis clavier sur la table, Entrée valide, R bascule la référence")
     void raccourcis_clavier_valider_et_reference(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
         robot.interact(() -> table.getSelectionModel().select(0));

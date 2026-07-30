@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 ///
 /// Ce que ce test protège, c'est le **câblage** et le **contrat de sortie**. Le contenu du tableau est
 /// couvert au niveau du formateur pur ([fr.univ_amu.iut.analyse.model.ExportSyntheseCsvTest]), et le
-/// comportement sur le vrai jar l'est par `src/test/bats/cli.bats` — ici, on veut une défaillance
+/// comportement sur le vrai jar l'est par `src/test/bats/cli.bats` : ici, on veut une défaillance
 /// **précise et rapide** le jour où l'injection casse.
 class CliSynthetiserPassageTest {
 

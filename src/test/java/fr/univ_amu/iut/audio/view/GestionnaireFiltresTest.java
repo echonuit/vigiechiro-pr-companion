@@ -287,7 +287,7 @@ class GestionnaireFiltresTest {
     }
 
     @Test
-    @DisplayName("#549 : critère Heure — le défaut suit la nuit fournie (coucher/lever) plutôt que 21h→6h")
+    @DisplayName("#549 : critère Heure, le défaut suit la nuit fournie (coucher/lever) plutôt que 21h→6h")
     void filtre_heure_defaut_depuis_ephemeride(FxRobot robot) {
         FilteredList<LigneObservationAudio> vues = new FilteredList<>(FXCollections.observableArrayList());
         Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});

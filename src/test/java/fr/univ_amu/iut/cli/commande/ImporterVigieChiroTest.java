@@ -114,7 +114,7 @@ class ImporterVigieChiroTest {
     @DisplayName("repli paginé : l'avancement par page est relayé sur la sortie d'erreur (#1622)")
     void progression_relayee_sur_stderr() {
         // Depuis #1838 la voie normale est le CSV, qui ne se pagine pas : le suivi ne s'exprime que sur le
-        // repli `donnees`. Ce qu'on vérifie ici reste le point sensible — que la commande branche bien son
+        // repli `donnees`. Ce qu'on vérifie ici reste le point sensible : que la commande branche bien son
         // relais, sans quoi un import long redeviendrait muet.
         when(moteur.importerRapide(eq(42L), eq(false), any())).thenAnswer(invocation -> {
             SuiviPagination suivi = invocation.getArgument(2);

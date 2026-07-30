@@ -97,8 +97,8 @@ class ImportVigieChiroTest {
 
         assertThat(importateur.importerRapide(ID_PASSAGE, true, (page, total) -> {}))
                 .isSameAs(attendu);
-        // Le CSV n'est même pas demandé : il ne porte ni l'avis du validateur (#1417) — que le remplacement
-        // écraserait par du vide — ni les fils, que la suppression des observations emporte en cascade.
+        // Le CSV n'est même pas demandé : il ne porte ni l'avis du validateur (#1417), que le remplacement
+        // écraserait par du vide, ni les fils, que la suppression des observations emporte en cascade.
         // « Réimporter » veut dire « va chercher ce qui a changé côté serveur ».
         verify(client, never()).csvObservations(any());
     }
@@ -259,7 +259,7 @@ class ImportVigieChiroTest {
     @DisplayName("#1264 : analyse TERMINÉE mais aucune observation → c'est le dépôt qu'il faut vérifier")
     void rien_a_importer_alors_que_l_analyse_est_finie() {
         // Cas anormal : le calcul est fini et pourtant le serveur ne renvoie rien. Ce n'est plus une question
-        // de patience — quelque chose s'est perdu en route.
+        // de patience : quelque chose s'est perdu en route.
         armerParticipationSansDonnees();
         when(traitement.etat(PARTICIPATION)).thenReturn(ReponseApi.succes(etat(EtatTraitement.FINI)));
 

@@ -45,13 +45,13 @@ import org.junit.jupiter.api.io.TempDir;
 /// Tests du service [ServiceMultisite] sur une base SQLite jetable (`@TempDir` + [MigrationSchema]). La
 /// topologie est semée par [JeuDeDonneesPassage] (plusieurs nuits qui **partagent** leur site et leur
 /// point, grâce au trouver-ou-créer de la fixture), et les DAO du service sont résolus par un injecteur
-/// Guice — d'où l'absence de tout semis manuel de passage ici.
+/// Guice : d'où l'absence de tout semis manuel de passage ici.
 ///
 /// L'[HorlogeFigee] au 2026-05-31 garde déterministe la vue « saison courante » (année 2026). Le seul
 /// DAO fourni localement est [ResultatsIdentificationDao] (feature `validation`), absent de cet injecteur
 /// partiel de `multisite`.
 ///
-/// Jeu de données (utilisateur `u-1`) — ordre de lecture par défaut (site, point, année, n°) :
+/// Jeu de données (utilisateur `u-1`), ordre de lecture par défaut (site, point, année, n°) :
 ///
 /// ```
 ///   #1  640380 / A1 / 2025 / 1  → Transformé , OK
@@ -207,7 +207,7 @@ class ServiceMultisiteTest {
     }
 
     @Test
-    @DisplayName("#2355 : tri par campagne — alphabétique, nuits non rattachées en dernier")
+    @DisplayName("#2355 : tri par campagne, alphabétique, nuits non rattachées en dernier")
     void tri_par_campagne() {
         PassageDao passages = injecteur.getInstance(PassageDao.class);
         HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
@@ -226,7 +226,7 @@ class ServiceMultisiteTest {
     }
 
     @Test
-    @DisplayName("#2355 : filtre par campagne — correspondance partielle, insensible à la casse")
+    @DisplayName("#2355 : filtre par campagne, correspondance partielle, insensible à la casse")
     void filtre_par_campagne() {
         PassageDao passages = injecteur.getInstance(PassageDao.class);
         HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));

@@ -213,7 +213,7 @@ class RattachementModaleViewTest {
         Spinner<Integer> numero = robot.lookup("#spinnerNumero").queryAs(Spinner.class);
 
         // 0 (hors domaine) et 100000 (au-delà d'une borne arbitraire) sont conservés tels quels : c'est
-        // valider() qui rejettera 0 — le spinner ne le normalise pas silencieusement.
+        // valider() qui rejettera 0 : le spinner ne le normalise pas silencieusement.
         robot.interact(() -> numero.getValueFactory().setValue(0));
         assertThat(numero.getValue()).isZero();
 
@@ -270,7 +270,7 @@ class RattachementModaleViewTest {
     }
 
     @Test
-    @DisplayName("#1688 : passage déposé — année/n° verrouillés (spinners grisés + indice), météo éditable")
+    @DisplayName("#1688 : passage déposé, année/n° verrouillés (spinners grisés + indice), météo éditable")
     void passage_depose_verrouille_le_renommage_pas_la_meteo(FxRobot robot) {
         // Rouvrir la modale sur un passage déposé : son nom est l'identité serveur (#1134). Les bindings du
         // verrou sont réactifs, l'IHM se met à jour au ré-ouvrir.

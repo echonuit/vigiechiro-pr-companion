@@ -125,7 +125,7 @@ class ClientVigieChiroTest {
 
     @Test
     @DisplayName("accès fichiers (#1565) : accesFichier / piecesJointes / csvObservations dégradent"
-            + " proprement — sans token → NonConnecte, hors ligne → Injoignable (#1284)")
+            + " proprement : sans token → NonConnecte, hors ligne → Injoignable (#1284)")
     void acces_fichiers_degrade_proprement() {
         ClientVigieChiro sansToken = clientHorsLigne("http://localhost:1/api/v1", SANS_TOKEN);
         assertThat(sansToken.accesFichier("f1")).isInstanceOf(ReponseApi.NonConnecte.class);

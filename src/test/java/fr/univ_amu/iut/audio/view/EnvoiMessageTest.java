@@ -64,7 +64,7 @@ class EnvoiMessageTest {
     }
 
     @Test
-    @DisplayName("#1418 : la confirmation DIT que le message est définitif, et cite le texte — on ne"
+    @DisplayName("#1418 : la confirmation DIT que le message est définitif, et cite le texte, on ne"
             + " consent qu'à ce qu'on a compris")
     void la_confirmation_dit_que_c_est_definitif() {
         when(discussion.poster(any(), anyString())).thenReturn(ReponseApi.succes("ok"));

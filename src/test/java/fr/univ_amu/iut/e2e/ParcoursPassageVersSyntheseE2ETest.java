@@ -41,7 +41,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// jointure entre un code de taxon en base et une déclinaison du référentiel aboutisse.
 ///
 /// La base, elle, se protège : une contrainte de clé étrangère refuse un code de taxon inconnu, si bien
-/// qu'un code mal orthographié n'y entre jamais. Ce parcours ne couvre donc **pas** ce défaut-là — il vit
+/// qu'un code mal orthographié n'y entre jamais. Ce parcours ne couvre donc **pas** ce défaut-là : il vit
 /// dans les fixtures qui construisent leurs objets sans passer par la base, et c'est
 /// `CodesTaxonFixturesCaptureTest` qui l'y traque (#2715). Ce que ce parcours couvre, c'est la jointure
 /// **entre deux référentiels distincts** : les taxons en base et les déclinaisons du référentiel
@@ -127,7 +127,7 @@ class ParcoursPassageVersSyntheseE2ETest {
     void la_classe_vient_du_referentiel_embarque(FxRobot robot) {
         // Le cœur de ce parcours. `SyntheseViewTest` dicte ses seuils au service : il ne prouve pas que
         // le code d'un taxon en base joigne une déclinaison du référentiel embarqué. Une saison mal
-        // déduite, une région introuvable, une déclinaison absente — et la jointure rend vide, sans que
+        // déduite, une région introuvable, une déclinaison absente, et la jointure rend vide, sans que
         // rien ne rougisse.
         ouvrirSynthese(robot);
 
@@ -175,7 +175,7 @@ class ParcoursPassageVersSyntheseE2ETest {
     @DisplayName("« Validées seulement » recalcule : sans validation, le tableau se vide")
     void la_bascule_recalcule_sur_de_vraies_observations(FxRobot robot) {
         // La bascule ne masque pas des lignes, elle recalcule. Sur des observations semées et non
-        // validées, elle doit donc tout retirer — un test d'écran sur service mocké ne le montre pas.
+        // validées, elle doit donc tout retirer : un test d'écran sur service mocké ne le montre pas.
         ouvrirSynthese(robot);
         TableView<?> table = robot.lookup("#tableSynthese").queryAs(TableView.class);
         assertThat(table.getItems()).isNotEmpty();

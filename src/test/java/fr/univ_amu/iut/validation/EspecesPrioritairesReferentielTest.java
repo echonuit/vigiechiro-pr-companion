@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 /// Garde-fou du **référentiel des espèces à enjeu** (#2353) : la migration V36 marque les espèces dites
 /// *prioritaires* du Plan National d'Actions Chiroptères 2016-2025, et ce test vérifie qu'elle marque
-/// **exactement** ce que le plan désigne — ni plus, ni moins.
+/// **exactement** ce que le plan désigne, ni plus, ni moins.
 ///
 /// Une donnée de référence embarquée se périme en silence : le plan courant s'achève en 2025, et la
 /// prochaine liste ne sera pas la même. Ces assertions sont là pour qu'une divergence se voie au build
@@ -93,7 +93,7 @@ class EspecesPrioritairesReferentielTest {
     @DisplayName("Le compte est de 17, et ce compte est un fait constaté, pas un objectif")
     void marque_dix_sept_taxons() {
         // 19 espèces au plan, 2 absentes du référentiel Tadarida. Si ce nombre bouge, c'est que l'une des
-        // deux listes a bougé — et il faut alors relire l'ADR 2353 avant de corriger le chiffre.
+        // deux listes a bougé, et il faut alors relire l'ADR 2353 avant de corriger le chiffre.
         assertThat(dao.codesPrioritaires()).hasSize(17);
     }
 

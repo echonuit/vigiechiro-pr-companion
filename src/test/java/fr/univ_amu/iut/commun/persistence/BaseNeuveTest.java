@@ -19,7 +19,7 @@ class BaseNeuveTest {
     Path dossier;
 
     @Test
-    @DisplayName("#1419 : la base est vidée et recréée — schéma à jour, référentiel semé, aucune donnée")
+    @DisplayName("#1419 : la base est vidée et recréée, schéma à jour, référentiel semé, aucune donnée")
     void la_base_repart_vide_mais_utilisable() {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
@@ -36,12 +36,12 @@ class BaseNeuveTest {
                 .as("mais la base répond : le schéma a été rejoué, elle est utilisable telle quelle")
                 .isZero();
         assertThat(new fr.univ_amu.iut.validation.model.dao.TaxonDao(source).findAll())
-                .as("et le référentiel de taxons est resemé — une base neuve, pas une base cassée")
+                .as("et le référentiel de taxons est resemé : une base neuve, pas une base cassée")
                 .isNotEmpty();
     }
 
     @Test
-    @DisplayName("#1419 : un filet est posé — la base d'avant reste relisible si le reset était une erreur")
+    @DisplayName("#1419 : un filet est posé, la base d'avant reste relisible si le reset était une erreur")
     void un_filet_est_pose_avant_de_detruire() {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
@@ -60,7 +60,7 @@ class BaseNeuveTest {
     }
 
     @Test
-    @DisplayName("#1419 : les journaux SQLite sont purgés — un WAL périmé rejouerait l'ancienne base"
+    @DisplayName("#1419 : les journaux SQLite sont purgés, un WAL périmé rejouerait l'ancienne base"
             + " par-dessus la neuve")
     void les_journaux_sont_purges() throws Exception {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));

@@ -132,7 +132,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         Hyperlink segmentPassage = filSegment(robot, "Détails du passage N° 1");
 
         // 4) Cliquer ce segment exerce le Runnable du Lieu (OuvrirPassage) et rouvre réellement
-        // M-Passage — y compris depuis un enfant atteint via la vue multi-sites.
+        // M-Passage : y compris depuis un enfant atteint via la vue multi-sites.
         robot.interact(segmentPassage::fire);
         assertThat(navigation.getVueCourante()).isEqualTo("passage");
         assertThat(robot.lookup("#boutonVerifier").tryQuery()).isPresent();

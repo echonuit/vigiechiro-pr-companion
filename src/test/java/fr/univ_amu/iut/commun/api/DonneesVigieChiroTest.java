@@ -88,7 +88,7 @@ class DonneesVigieChiroTest {
     }
 
     @Test
-    @DisplayName("#1417 : l'avis du validateur et le fil de discussion sont lus — ils arrivaient déjà dans"
+    @DisplayName("#1417 : l'avis du validateur et le fil de discussion sont lus, ils arrivaient déjà dans"
             + " cette réponse, le parseur les jetait")
     void avis_du_validateur_et_fil() {
         // Forme réelle : `validateur_taxon` est un taxon imbriqué (comme `observateur_taxon`),

@@ -57,7 +57,7 @@ import org.testfx.framework.junit5.Start;
 /// Couvre en plus :
 /// - des **garde-fous structurels** de la refonte : plus aucun `TabPane`, ni fil d'Ariane interne
 ///   (`#lblFilAriane`), ni onglets-lanceurs (`#boutonOuvrirDiagnostic`/`#boutonOuvrirValidation`/
-///   `#lblValidation`) — le retour et le fil sont désormais portés par le chrome (`commun`) ;
+///   `#lblValidation`) : le retour et le fil sont désormais portés par le chrome (`commun`) ;
 /// - les **états des cartes d'actions selon le statut** (Importé / Vérifié / Déposé) ;
 /// - le **déclenchement des handlers** vers les contrats socle (idPassage attendu).
 ///
@@ -272,7 +272,7 @@ class PassageVueIntegrationTest {
             @Override
             protected void configure() {
                 // Features `activite-nuit` et `synthese-nuit` absentes de ce test : contrats non bindés,
-                // les cartes sont masquées. Le binder VIDE reste nécessaire — sans lui, Guice ne sait pas
+                // les cartes sont masquées. Le binder VIDE reste nécessaire : sans lui, Guice ne sait pas
                 // construire l'Optional et le contrôleur devient inconstructible.
                 OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);

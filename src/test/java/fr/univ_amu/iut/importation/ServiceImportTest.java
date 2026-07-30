@@ -381,7 +381,7 @@ class ServiceImportTest {
     @DisplayName("#2041 : le refus propose de désactiver la conservation, qui divise le besoin par deux")
     void refus_en_conservation_propose_l_option() {
         // En conservation il faut deux fois le volume source (les bruts copiés, puis les séquences qui
-        // pèsent autant — la transformation ne recalcule aucun échantillon). L'utilisateur a donc une
+        // pèsent autant : la transformation ne recalcule aucun échantillon). L'utilisateur a donc une
         // issue autre que « libérez de l'espace », et le message la lui donne.
         ServiceImport serre = serviceAvecDisque(dossier -> 1L);
 
@@ -389,7 +389,7 @@ class ServiceImportTest {
     }
 
     @Test
-    @DisplayName("#2041 : sans conservation, le besoin est moitié moindre — un disque juste suffisant passe")
+    @DisplayName("#2041 : sans conservation, le besoin est moitié moindre, un disque juste suffisant passe")
     void sans_conservation_le_besoin_est_moitie_moindre() {
         // Le même disque qui refuse en conservation accepte sans copie : c'est exactement ce que
         // l'option fait gagner, et le garde-fou doit le refléter.
@@ -596,7 +596,7 @@ class ServiceImportTest {
     }
 
     @Test
-    @DisplayName("#231 : reprise — des originaux déjà copiés+renommés ne sont pas re-copiés (ni conflit de renommage)")
+    @DisplayName("#231 : reprise, des originaux déjà copiés+renommés ne sont pas re-copiés (ni conflit de renommage)")
     void reprise_saute_la_copie_des_originaux_deja_presents() throws IOException {
         // Simule un import interrompu APRÈS copie + renommage : bruts/ contient déjà les deux originaux
         // sous leur nom préfixé (R6). Sans passage en base (R5 ne bloque donc pas) → c'est une reprise.
@@ -640,7 +640,7 @@ class ServiceImportTest {
     }
 
     @Test
-    @DisplayName("#231 : reprise sécurisée — un original présent au mauvais contenu (empreinte ≠ source) est re-copié")
+    @DisplayName("#231 : reprise sécurisée, un original présent au mauvais contenu (empreinte ≠ source) est re-copié")
     void reprise_recopie_un_original_au_contenu_different() throws IOException {
         Path bruts = racine.resolve("ws").resolve(prefixe.nomDossierSession()).resolve("bruts");
         Files.createDirectories(bruts);
@@ -701,7 +701,7 @@ class ServiceImportTest {
                 .hasMessageContaining("déjà en cours");
 
         // Le verrou est relâché à la fin (finally) : un import ultérieur n'est plus bloqué par la garde
-        // (ici c'est R5 — doublon du même quadruplet — qui le refuse, preuve que la garde a libéré).
+        // (ici c'est R5 (doublon du même quadruplet) qui le refuse, preuve que la garde a libéré).
         assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("existe déjà");
@@ -863,7 +863,7 @@ class ServiceImportTest {
 
     @Test
     @DisplayName(
-            "#… : prochainBlocPassagesLibre — 1,3,5,7 pris → premier bloc de N consécutifs libres, sans casser la consécutivité")
+            "#… : prochainBlocPassagesLibre, 1,3,5,7 pris → premier bloc de N consécutifs libres, sans casser la consécutivité")
     void prochain_bloc_consecutif_libre_evite_les_trous() {
         for (int numero : new int[] {1, 3, 5, 7}) {
             JeuDeDonneesPassage.dans(source)

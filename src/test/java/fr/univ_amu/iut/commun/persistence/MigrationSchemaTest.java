@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// `migrer()` retient les migrations déjà appliquées **par numéro de version** (table `schema_version`),
 /// pas par nom de fichier. Deux migrations qui partageraient un numéro constitueraient donc un piège
 /// silencieux : la première appliquée enregistrerait la version, et **la seconde serait ignorée à
-/// jamais** — sa table ne serait jamais créée, sans le moindre message. Le cas n'est pas théorique : il
+/// jamais**, sa table ne serait jamais créée, sans le moindre message. Le cas n'est pas théorique : il
 /// s'est présenté le jour même entre ce chantier et #1139, deux branches parallèles réclamant `V21`.
 ///
 /// Ces tests transforment cette collision en **échec de build**, au lieu d'une base incomplète chez

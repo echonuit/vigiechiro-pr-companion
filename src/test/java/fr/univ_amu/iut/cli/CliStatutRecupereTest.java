@@ -19,7 +19,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// Parité CLI ↔ IHM pour le statut « Récupéré » (#2775, ADR 0014).
 ///
 /// **Pourquoi ce test existe.** À la clôture de l'EPIC #2581, j'avais conclu que la parité CLI était
-/// « acquise sans travail » — en **lisant** que les deux commandes affichent le libellé du statut. C'est
+/// « acquise sans travail » : en **lisant** que les deux commandes affichent le libellé du statut. C'est
 /// une déduction, pas une vérification : un statut à moitié posé se voit précisément là où personne ne
 /// regarde. Ces deux cas font tourner les commandes réelles sur une base réelle.
 class CliStatutRecupereTest {

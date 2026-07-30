@@ -400,7 +400,7 @@ class ServiceValidationMockTest {
         when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "7")).thenReturn(Optional.of("participation-1"));
 
         // Même état d'ancrage que le test précédent : seul le rattachement change. C'est lui qui décide,
-        // depuis que la publication sait rapatrier l'ancrage manquant — griser ici interdirait le cas.
+        // depuis que la publication sait rapatrier l'ancrage manquant : griser ici interdirait le cas.
         assertThat(service().publicationImpossible(7L)).isFalse();
     }
 

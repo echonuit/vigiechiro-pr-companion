@@ -59,7 +59,7 @@ class CliGestesRevueTest {
     }
 
     @Test
-    @DisplayName("LE REFUS : --passage sans aucun filtre viserait la nuit ENTIÈRE — la commande refuse sans"
+    @DisplayName("LE REFUS : --passage sans aucun filtre viserait la nuit ENTIÈRE, la commande refuse sans"
             + " --confirmer, et rien n'est touché")
     void passage_entier_sans_confirmer_est_refuse() {
         int code = cli.executer(

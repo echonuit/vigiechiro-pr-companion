@@ -99,7 +99,7 @@ class AgregationSyntheseTest {
 
         assertThat(tout).hasSize(2);
         assertThat(validees)
-                .as("la Barbastelle, jamais validée, sort du tableau — elle n'est pas seulement masquée")
+                .as("la Barbastelle, jamais validée, sort du tableau : elle n'est pas seulement masquée")
                 .hasSize(1);
         assertThat(validees.get(0).contacts())
                 .as("et la Pipistrelle retombe à son seul contact validé")

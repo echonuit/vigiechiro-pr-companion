@@ -142,7 +142,7 @@ class SuiviTraitementTest {
     }
 
     @Test
-    @DisplayName("#1338 releverTout : best-effort — une nuit injoignable n'interrompt pas les autres")
+    @DisplayName("#1338 releverTout : best-effort, une nuit injoignable n'interrompt pas les autres")
     void relever_tout_best_effort() {
         when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "1")).thenReturn(Optional.of("part-1"));
         // Nuit 2 non liée : elle échoue (RegleMetierException), sans arrêter le relevé.

@@ -502,7 +502,7 @@ class ObservationDaoTest {
 
     @Test
     @DisplayName(
-            "#analyse : observationsAnalyse — une ligne enrichie par observation (espèce retenue, statut, contexte)")
+            "#analyse : observationsAnalyse, une ligne enrichie par observation (espèce retenue, statut, contexte)")
     void observations_analyse_enrichies() {
         semerTroisStatuts();
 

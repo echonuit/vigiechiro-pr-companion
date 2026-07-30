@@ -77,7 +77,7 @@ class SaisonViewTest {
                                 List.of(),
                                 "Poser l'enregistreur avant le 31/07"),
                         // #2525 : la nuit opportuniste ne prend PAS la place du passage 1 protocolaire,
-                        // qui reste manquant — elle vit dans la colonne « Hors protocole ».
+                        // qui reste manquant : elle vit dans la colonne « Hors protocole ».
                         new LigneSaison(
                                 "640003",
                                 "C1",

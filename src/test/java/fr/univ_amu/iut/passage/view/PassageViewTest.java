@@ -97,7 +97,7 @@ class PassageViewTest {
                         .setBinding()
                         .toInstance(passage -> activiteOuverte.set(passage.idPassage()));
                 // `synthese-nuit` (#2351) : binder VIDE. Sans lui, Guice ne sait pas fabriquer
-                // l'Optional et le contrôleur devient inconstructible — l'écran ne charge plus du tout.
+                // l'Optional et le contrôleur devient inconstructible : l'écran ne charge plus du tout.
                 OptionalBinder.newOptionalBinder(binder(), OuvrirSynthese.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirVerification.class)
                         .setBinding()

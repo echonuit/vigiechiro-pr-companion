@@ -101,7 +101,7 @@ class ParcoursPublierCorrectionsE2ETest {
         // « Nyclei » vient du référentiel semé par les migrations : rien à inventer ici.
         liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_TAXON, TAXON_RETENU, OBJECTID_TAXON));
 
-        // L'import RAPIDE, celui de l'écran : le CSV d'un coup. Il ne pose aucun ancrage — c'est le point
+        // L'import RAPIDE, celui de l'écran : le CSV d'un coup. Il ne pose aucun ancrage, c'est le point
         // de départ du parcours, pas un raccourci de test.
         injector.getInstance(ImportVigieChiro.class).importerRapide(idPassage, false, (page, total) -> {});
 
@@ -122,7 +122,7 @@ class ParcoursPublierCorrectionsE2ETest {
     }
 
     @Test
-    @DisplayName("#1838 : nuit importée par CSV — l'écran la montre sans ancrage, et publier va le chercher")
+    @DisplayName("#1838 : nuit importée par CSV, l'écran la montre sans ancrage, et publier va le chercher")
     void publier_une_nuit_importee_par_csv(FxRobot robot) {
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -150,7 +150,7 @@ class ParcoursPublierCorrectionsE2ETest {
                 .isZero();
 
         // La couture, vue du serveur : on a d'abord tiré les `donnees` (pour l'ancrage), puis poussé le
-        // PATCH sur l'identifiant qu'elles ont donné — avec le taxon de l'observateur, pas celui de Tadarida.
+        // PATCH sur l'identifiant qu'elles ont donné : avec le taxon de l'observateur, pas celui de Tadarida.
         verify(plateforme).donnees(eq(PARTICIPATION), any());
         verify(plateforme).corrigerObservation("d1", 0, OBJECTID_TAXON, Certitude.SUR, true);
 

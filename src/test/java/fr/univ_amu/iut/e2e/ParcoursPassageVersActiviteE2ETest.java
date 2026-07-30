@@ -35,7 +35,7 @@ import org.testfx.framework.junit5.Start;
 /// Il traverse la couture que les tests d'écran ne voient pas : base → `ProjectionsAudioDao` →
 /// `ServiceActivite` → ViewModel → graphe. Les tests de vue mockent le service, et le mock a longtemps
 /// menti par omission : il ne rendait qu'**une** nuit, si bien que le repliement des nuits sur l'axe
-/// nocturne n'était exercé par rien — le défaut (courbe en dents de scie) n'a été vu que sur une vraie
+/// nocturne n'était exercé par rien : le défaut (courbe en dents de scie) n'a été vu que sur une vraie
 /// saison. Ce parcours sème donc **deux nuits**.
 @ExtendWith(ApplicationExtension.class)
 class ParcoursPassageVersActiviteE2ETest {
@@ -116,7 +116,7 @@ class ParcoursPassageVersActiviteE2ETest {
                 .as("une abscisse ne porte qu'un point : sinon la ligne repart en arrière à chaque nuit")
                 .isEqualTo((int) abscissesDistinctes);
         // La valeur, et pas seulement la forme : les deux nuits doivent être SOMMÉES. Sans cette
-        // vérification le test reste vert alors que le repliement est neutralisé — le comblement des
+        // vérification le test reste vert alors que le repliement est neutralisé : le comblement des
         // zéros dédoublonne les abscisses, mais en écrasant, ce qui perdrait un contact sur deux.
         int contactsTraces = serie.getData().stream()
                 .mapToInt(donnee -> ((Number) donnee.getYValue()).intValue())

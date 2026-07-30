@@ -59,7 +59,7 @@ class ProprietesMinionPitTest {
 
         assertThat(minion)
                 .as("Ces propriétés sont posées sur la JVM de Surefire mais PAS sur le minion de PIT."
-                        + " Un test qui en dépend passe au build et échoue à la mesure hebdomadaire —"
+                        + " Un test qui en dépend passe au build et échoue à la mesure hebdomadaire,"
                         + " ou pire, passe partout en s'exécutant dans de mauvaises conditions."
                         + " Reprenez-les dans <jvmArgs> du profil `mutation`.")
                 .containsAll(surefire);

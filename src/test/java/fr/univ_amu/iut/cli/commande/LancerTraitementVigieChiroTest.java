@@ -113,7 +113,7 @@ class LancerTraitementVigieChiroTest {
     }
 
     @Test
-    @DisplayName("#1265 : --forcer lève la garde — le seul moyen de relancer une analyse en échec")
+    @DisplayName("#1265 : --forcer lève la garde, le seul moyen de relancer une analyse en échec")
     void forcer_leve_la_garde() {
         // Après un ERREUR, il n'y a plus d'observations à perdre : la relance est le geste utile. Mais
         // elle reste explicite, jamais le défaut.

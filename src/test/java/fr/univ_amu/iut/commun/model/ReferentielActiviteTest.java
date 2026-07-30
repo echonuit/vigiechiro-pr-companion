@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 /// général, mais on retient la **première déclinaison fiable**, pas la plus fine.
 ///
 /// C'est la règle centrale du lot, et la plus facile à écrire à l'envers. Descendre vers un seuil peu
-/// fiable parce qu'il est plus spécifique produit une classe plus **fausse**, pas plus juste — et rien
+/// fiable parce qu'il est plus spécifique produit une classe plus **fausse**, pas plus juste, et rien
 /// à l'écran ne distinguerait les deux.
 ///
 /// Les jeux sont écrits à la main plutôt que lus dans la ressource embarquée : un test de règle qui
@@ -59,7 +59,7 @@ class ReferentielActiviteTest {
     }
 
     @Test
-    @DisplayName("Faute de mieux, les seuils peu fiables sont rendus — mais marqués indicatifs")
+    @DisplayName("Faute de mieux, les seuils peu fiables sont rendus, mais marqués indicatifs")
     void faute_de_mieux_indicatif() throws IOException {
         // Ne rien dire ferait croire à une absence de données là où il n'y a qu'une incertitude assumée.
         ReferentielActivite ref = referentiel("Pipkuh;habitat:Foret;ete;10;100;1000;12;Moderee");
@@ -123,7 +123,7 @@ class ReferentielActiviteTest {
 
         assertThat(ClasseActivite.de(9, seuils)).isEqualTo(ClasseActivite.FAIBLE);
         assertThat(ClasseActivite.de(10, seuils))
-                .as("pile sur Q25 : moyenne, pas faible — sinon le seuil se lirait comme une sous-estimation")
+                .as("pile sur Q25 : moyenne, pas faible, sinon le seuil se lirait comme une sous-estimation")
                 .isEqualTo(ClasseActivite.MOYENNE);
         assertThat(ClasseActivite.de(99, seuils)).isEqualTo(ClasseActivite.MOYENNE);
         assertThat(ClasseActivite.de(100, seuils)).isEqualTo(ClasseActivite.FORTE);

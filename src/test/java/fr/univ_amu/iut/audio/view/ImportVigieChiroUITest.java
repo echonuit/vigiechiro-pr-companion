@@ -48,7 +48,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 /// **confirme le remplacement** (refus → rien ; accord → import en remplaçant).
 ///
 /// La modale d'import est injectée par le port [SuiviOperation] : ici un **double synchrone sans fenêtre**
-/// qui exécute le travail immédiatement — le geste se teste **hors du fil JavaFX**, sans ouvrir de `Stage`
+/// qui exécute le travail immédiatement : le geste se teste **hors du fil JavaFX**, sans ouvrir de `Stage`
 /// (c'est tout l'intérêt de l'abstraction). La plateforme JavaFX reste initialisée ([ApplicationExtension])
 /// pour le voile d'occupation (chemin non rattaché), mais aucun robot n'est piloté. Le chemin **non
 /// rattaché** (choix de participation, réseau) reste couvert par [ImportVigieChiroViewModelTest].
@@ -69,7 +69,7 @@ class ImportVigieChiroUITest {
 
     /// Modale de progression **synchrone et sans fenêtre** : exécute le travail immédiatement (relais de
     /// progression neutre, jeton vierge) puis restitue succès / annulation / échec, comme le ferait la vraie
-    /// modale une fois le travail fini — mais sans `Stage`, donc jouable hors du fil JavaFX.
+    /// modale une fois le travail fini, mais sans `Stage`, donc jouable hors du fil JavaFX.
     private final SuiviOperation suiviSynchrone = new SuiviOperation() {
         @Override
         public <T> void lancer(

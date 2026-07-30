@@ -63,7 +63,7 @@ class CorrespondanceParticipationTest {
     }
 
     @Test
-    @DisplayName("#1844 : la configuration distante est PRÉSERVÉE — un envoi n'efface plus ce qu'on ne modélise pas")
+    @DisplayName("#1844 : la configuration distante est PRÉSERVÉE, un envoi n'efface plus ce qu'on ne modélise pas")
     void vers_participation_preserve_la_configuration_distante() {
         Map<String, String> distante = Map.of(
                 "micro0_numero_serie", "M-123",
@@ -101,7 +101,7 @@ class CorrespondanceParticipationTest {
     }
 
     @Test
-    @DisplayName("#1828 : un n° de série sentinelle n'est PAS publié — le type reste vrai, le mensonge ne part pas")
+    @DisplayName("#1828 : un n° de série sentinelle n'est PAS publié, le type reste vrai, le mensonge ne part pas")
     void vers_participation_ne_publie_pas_une_sentinelle() {
         ParticipationADeposer squelette = CorrespondanceParticipation.versParticipation(
                 "Z41", passageAvecEnregistreur(Enregistreur.INCONNU), MaterielMicro.vide(42L));

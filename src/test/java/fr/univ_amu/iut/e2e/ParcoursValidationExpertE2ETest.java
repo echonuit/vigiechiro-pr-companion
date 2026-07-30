@@ -69,7 +69,7 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// La chaîne complète, sur le **vrai câblage** de l'application (`RacineInjecteur`), seule la plateforme
 /// étant bouchonnée : un import rapatrie une observation sur laquelle **un expert du MNHN a contredit
-/// l'observateur** et lui a écrit — puis « Sons & validation » s'ouvre, et **le montre**.
+/// l'observateur** et lui a écrit, puis « Sons & validation » s'ouvre, et **le montre**.
 ///
 /// Ce que ce parcours protège tient en une phrase : ces champs arrivaient **déjà** du serveur, à chaque
 /// import, et l'application les jetait. Elle présentait donc la correction de l'observateur comme le
@@ -86,7 +86,7 @@ class ParcoursValidationExpertE2ETest {
     private Injector injector;
     private long idPassage;
 
-    /// Le contrôleur **que le FXML a créé** — pas celui que l'injecteur rendrait : la `controllerFactory`
+    /// Le contrôleur **que le FXML a créé**, pas celui que l'injecteur rendrait : la `controllerFactory`
     /// en fabrique un neuf par chargement, et seul celui-là a ses colonnes câblées.
     private fr.univ_amu.iut.audio.view.SonsValidationController controleur;
 
@@ -125,7 +125,7 @@ class ParcoursValidationExpertE2ETest {
     }
 
     @Test
-    @DisplayName("#1417 : l'expert a contredit l'observateur — l'écran le MONTRE, et donne sa discussion à lire")
+    @DisplayName("#1417 : l'expert a contredit l'observateur, l'écran le MONTRE, et donne sa discussion à lire")
     void le_troisieme_avis_arrive_jusqu_a_l_ecran(FxRobot robot) {
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -244,7 +244,7 @@ class ParcoursValidationExpertE2ETest {
                                 null,
                                 "Nyclei", // l'observateur corrige
                                 Certitude.PROBABLE,
-                                "Pipnat", // le validateur tranche — et le contredit
+                                "Pipnat", // le validateur tranche, et le contredit
                                 Certitude.SUR,
                                 List.of(
                                         new MessageVigieChiro(

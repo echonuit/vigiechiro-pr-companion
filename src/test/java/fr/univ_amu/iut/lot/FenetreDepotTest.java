@@ -90,7 +90,7 @@ class FenetreDepotTest {
         SourceArchivesRegenerables source = source(dossier, 6);
         int maximumObserve = 0;
 
-        // Déroulé du pipeline : on matérialise, on compte, on libère — comme le feront les workers.
+        // Déroulé du pipeline : on matérialise, on compte, on libère, comme le feront les workers.
         for (String identifiant : source.identifiants()) {
             source.resoudre(identifiant);
             maximumObserve = Math.max(maximumObserve, archivesSurDisque(dossier));

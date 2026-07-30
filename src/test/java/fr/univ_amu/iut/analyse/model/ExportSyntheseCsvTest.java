@@ -21,7 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// C'est l'enjeu de cette tranche, et il n'est pas cosmétique : un CSV quitte l'application pour vivre
 /// dans un tableur, loin de l'écran qui portait la mise en garde. Un fichier ouvert trois mois plus tard
 /// par quelqu'un qui n'a jamais vu l'écran doit pouvoir savoir d'où sortent ces classes et ce qu'elles
-/// valent — sans quoi l'avertissement ne sert à rien.
+/// valent : sans quoi l'avertissement ne sert à rien.
 class ExportSyntheseCsvTest {
 
     /// Le nombre de colonnes du tableau, en dur : c'est un **contrat de fichier**, et le voir changer
@@ -99,7 +99,7 @@ class ExportSyntheseCsvTest {
     @Test
     @DisplayName("Une espèce hors référentiel porte son motif, et ses colonnes de seuils restent vides")
     void hors_referentiel() {
-        // Dans un CSV, une cellule vide se lit comme une absence de donnée — ce qui est exactement le cas
+        // Dans un CSV, une cellule vide se lit comme une absence de donnée : ce qui est exactement le cas
         // pour les quantiles. La colonne « Activité », elle, DIT pourquoi.
         String csv = ExportSyntheseCsv.contenu(List.of(ligne("Tetvir", 244, null, false)), contexte());
 

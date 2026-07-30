@@ -70,7 +70,7 @@ class CompacteurDepotTest {
 
     @Test
     @DisplayName(
-            "#814 : compression PARALLÈLE de nombreux lots — numéros 1..N ordonnés, tous les fichiers présents une fois")
+            "#814 : compression PARALLÈLE de nombreux lots, numéros 1..N ordonnés, tous les fichiers présents une fois")
     void compresse_en_parallele_en_conservant_l_ordre() throws IOException {
         // 40 fichiers de 30 Ko, plafond 100 Ko → 3 par archive → 14 archives : plus de lots que de cœurs,
         // ce qui exerce réellement le parallélisme. L'ordre de RENVOI doit rester 1..N indépendamment de
@@ -102,7 +102,7 @@ class CompacteurDepotTest {
     }
 
     @Test
-    @DisplayName("#110 : données INCOMPRESSIBLES — chaque archive ZIP réelle reste ≤ plafond (en-têtes + DEFLATE)")
+    @DisplayName("#110 : données INCOMPRESSIBLES, chaque archive ZIP réelle reste ≤ plafond (en-têtes + DEFLATE)")
     void garantit_le_plafond_sur_donnees_incompressibles() throws IOException {
         // 5 fichiers de 33 300 o, plafond 100 000 o : un découpage naïf (somme des tailles) en mettrait 3
         // par archive (99 900 o) mais le ZIP réel (données non compressibles + en-têtes) dépasserait alors
@@ -237,7 +237,7 @@ class CompacteurDepotTest {
     }
 
     @Test
-    @DisplayName("#820 : la génération notifie le suivi par archive — plan établi, démarrages, progression, fins")
+    @DisplayName("#820 : la génération notifie le suivi par archive, plan établi, démarrages, progression, fins")
     void notifie_le_suivi_par_archive() throws IOException {
         // 7 fichiers de 30 Ko, plafond 100 Ko → 3 archives (3 + 3 + 1), comme la scission de référence.
         Path src = Files.createDirectories(dossier.resolve("src"));
@@ -322,7 +322,7 @@ class CompacteurDepotTest {
     }
 
     /// Octets **pseudo-aléatoires déterministes** (LCG par graine) : incompressibles, donc DEFLATE
-    /// n'aide pas — on exerce ainsi le pire cas pour la garantie « archive ≤ plafond ».
+    /// n'aide pas : on exerce ainsi le pire cas pour la garantie « archive ≤ plafond ».
     private static byte[] aleatoire(int taille, int graine) {
         byte[] b = new byte[taille];
         long etat = graine * 0x9E3779B97F4A7C15L + 1;

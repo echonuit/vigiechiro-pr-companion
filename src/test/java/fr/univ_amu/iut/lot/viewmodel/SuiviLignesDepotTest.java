@@ -63,7 +63,7 @@ class SuiviLignesDepotTest {
     }
 
     @Test
-    @DisplayName("#984 : compteur honnête — déposées / en cours / échecs / total suivent les états des lignes")
+    @DisplayName("#984 : compteur honnête, déposées / en cours / échecs / total suivent les états des lignes")
     void compteurs_honnetes_suivent_les_etats() {
         SuiviLignesDepot suivi = new SuiviLignesDepot();
         suivi.planifier(List.of(

@@ -106,7 +106,7 @@ class MoteurTraitementGroupeTest {
     }
 
     @Test
-    @DisplayName("#2357 : l'annulation s'arrête ENTRE deux passages — le passage courant va au bout")
+    @DisplayName("#2357 : l'annulation s'arrête ENTRE deux passages, le passage courant va au bout")
     void annulation_apres_le_passage_courant() {
         JetonAnnulation jeton = new JetonAnnulation();
         ActionEspionne action = action();
@@ -189,7 +189,7 @@ class MoteurTraitementGroupeTest {
     }
 
     @Test
-    @DisplayName("ADR 2635 : sans rédaction de surface, le fait seul — le besoin ne s'invente pas")
+    @DisplayName("ADR 2635 : sans rédaction de surface, le fait seul, le besoin ne s'invente pas")
     void sans_redaction_le_fait_seul() {
         ActionEspionne action = new ActionEspionne(cible -> false, cible -> true);
         action.leve = () -> new RegleMetierException("L'application n'est pas connectée.", new Besoin.Connexion());

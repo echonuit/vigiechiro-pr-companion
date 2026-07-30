@@ -102,7 +102,7 @@ class ExportObservationsCsvTest {
     }
 
     @Test
-    @DisplayName("#1417 : les TROIS avis sortent dans le CSV — un export qui n'en porterait que deux ferait"
+    @DisplayName("#1417 : les TROIS avis sortent dans le CSV, un export qui n'en porterait que deux ferait"
             + " perdre le verdict de l'expert à qui ouvre le fichier dans un tableur")
     void les_trois_avis_sont_exportes() {
         LigneObservationAudio ligne = new LigneObservationAudio(
@@ -144,7 +144,7 @@ class ExportObservationsCsvTest {
                 .as("l'en-tête annonce les trois avis et l'existence d'une discussion")
                 .contains("Votre certitude;Avis du validateur;Certitude du validateur;Messages");
         assertThat(csv)
-                .as("Tadarida propose, l'observateur corrige, le validateur tranche — et 2 messages en"
+                .as("Tadarida propose, l'observateur corrige, le validateur tranche, et 2 messages en"
                         + " attestent : tout cela doit survivre à l'export")
                 .contains("Pipkuh;0,74;Pippip;Possible;Pipnat;Sûr;2;");
     }

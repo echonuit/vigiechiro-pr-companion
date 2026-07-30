@@ -21,8 +21,8 @@ import org.junit.jupiter.api.Test;
 ///
 /// ## Pourquoi ce test existe
 ///
-/// Rien ne mesurait le contraste dans ce dépôt. Le défaut de #2102 — le gris du texte discret à
-/// 4,45:1 pour un seuil de 4,5 — a été trouvé **à la main**, en relevant les pixels d'un aperçu
+/// Rien ne mesurait le contraste dans ce dépôt. Le défaut de #2102 (le gris du texte discret à
+/// 4,45:1 pour un seuil de 4,5) a été trouvé **à la main**, en relevant les pixels d'un aperçu
 /// pendant une revue visuelle. Il aurait pu ne jamais l'être, et rien n'empêche un jeton corrigé de
 /// redériver ensuite.
 ///
@@ -44,13 +44,13 @@ import org.junit.jupiter.api.Test;
 /// ## Deux seuils, et pourquoi le second n'est pas une porte de sortie
 ///
 /// WCAG demande 4,5:1 pour du petit texte et 3:1 pour un **élément d'interface**. Un jeton ne bénéficie
-/// du second qu'à la condition de **n'habiller aucun texte** — c'est ce qui a fait dédoubler l'ambre en
+/// du second qu'à la condition de **n'habiller aucun texte** : c'est ce qui a fait dédoubler l'ambre en
 /// #2115 plutôt que de le déclarer « icône » pour s'épargner l'assombrissement.
 ///
 /// ## Ce qu'il couvre, en deux mécanismes complémentaires
 ///
 /// **Une carte écrite à la main** ([#COUPLES]) : les jetons de `palette.css` sur les fonds où ils
-/// sont attestés. Elle couvre ce qu'aucune lecture de CSS ne peut deviner — un texte dont le fond
+/// sont attestés. Elle couvre ce qu'aucune lecture de CSS ne peut deviner : un texte dont le fond
 /// vient d'une règle parente, donc de la cascade.
 ///
 /// **Un balayage qui dérive ses couples** (#322) : chaque règle qui pose elle-même la couleur du
@@ -62,7 +62,7 @@ import org.junit.jupiter.api.Test;
 /// ## Ce qu'il ne couvre toujours pas
 ///
 /// Les couleurs littérales posées **sans leur fond** dans la même règle. Leur contraste dépend de
-/// l'écran, et seule une mesure sur rendu le donnerait — c'est ainsi que le défaut de #2102 a été
+/// l'écran, et seule une mesure sur rendu le donnerait : c'est ainsi que le défaut de #2102 a été
 /// trouvé. La question du périmètre reste donc ouverte pour #1974.
 class ContrasteAATest {
 
@@ -72,11 +72,11 @@ class ContrasteAATest {
     /// de l'application est à 12 ou 13px : c'est ce seuil qui s'applique.
     private static final double SEUIL_AA = 4.5;
 
-    /// Seuil WCAG AA pour un **élément d'interface** — icône, trait, bordure porteuse de sens. Il est
+    /// Seuil WCAG AA pour un **élément d'interface** : icône, trait, bordure porteuse de sens. Il est
     /// plus bas parce qu'une forme se distingue à moins de contraste qu'une lettre.
     ///
     /// Il n'est pas une facilité : un jeton ne s'y range que s'il **n'habille plus aucun texte**. C'est
-    /// le cas de `-couleur-avertissement` depuis #2115, où l'ambre a été dédoublé — l'icône garde la
+    /// le cas de `-couleur-avertissement` depuis #2115, où l'ambre a été dédoublé : l'icône garde la
     /// teinte qui la fait repérer, le texte prend `-couleur-avertissement-texte`, plus sombre.
     private static final double SEUIL_AA_ELEMENT = 3.0;
 
@@ -91,9 +91,9 @@ class ContrasteAATest {
         COUPLES.put("-couleur-texte-discret sur bandeau-infos", "-couleur-texte-discret|#f6f8fa");
         COUPLES.put(
                 "-couleur-texte-discret sur -couleur-primaire-voile", "-couleur-texte-discret|-couleur-primaire-voile");
-        // diagnostic.css:25, sites.css:204/216, design.css:599 — libellés d'état en vert sur fond clair.
+        // diagnostic.css:25, sites.css:204/216, design.css:599, libellés d'état en vert sur fond clair.
         COUPLES.put("-couleur-succes sur -couleur-fond", "-couleur-succes|-couleur-fond");
-        // diagnostic.css:31, design.css:960 — « GPS absent », libellé d'avertissement sur fond clair.
+        // diagnostic.css:31, design.css:960, « GPS absent », libellé d'avertissement sur fond clair.
         COUPLES.put("-couleur-avertissement-texte sur -couleur-fond", "-couleur-avertissement-texte|-couleur-fond");
         COUPLES.put("-couleur-danger sur -couleur-fond", "-couleur-danger|-couleur-fond");
         COUPLES.put("-couleur-texte-clair sur -couleur-primaire", "-couleur-texte-clair|-couleur-primaire");
@@ -111,9 +111,9 @@ class ContrasteAATest {
     private static final Map<String, String> COUPLES_ELEMENT = new LinkedHashMap<>();
 
     static {
-        // diagnostic.css:32, design.css:961 — le triangle d'avertissement, seul usage restant du jeton.
+        // diagnostic.css:32, design.css:961, le triangle d'avertissement, seul usage restant du jeton.
         COUPLES_ELEMENT.put("-couleur-avertissement (icône) sur -couleur-fond", "-couleur-avertissement|-couleur-fond");
-        // sons-validation.css — le bouclier « espèce à enjeu » (#2353), qui n'habille jamais de texte.
+        // sons-validation.css : le bouclier « espèce à enjeu » (#2353), qui n'habille jamais de texte.
         COUPLES_ELEMENT.put("-couleur-enjeu (icône) sur -couleur-fond", "-couleur-enjeu|-couleur-fond");
     }
 
@@ -253,7 +253,7 @@ class ContrasteAATest {
                         Ces jetons bénéficient d'un seuil plus bas que le texte parce qu'ils
                         n'habillent AUCUN texte : une forme se distingue à moins de contraste qu'une
                         lettre. Le jour où l'un d'eux recolore un libellé, il repasse sous le seuil
-                        du texte — déplacez-le dans COUPLES plutôt que de garder l'exemption.
+                        du texte : déplacez-le dans COUPLES plutôt que de garder l'exemption.
 
                         C'est le sens du dédoublement de l'ambre (#2115) : l'icône garde la teinte
                         qui la fait repérer, le texte prend un jeton plus sombre.
@@ -268,7 +268,7 @@ class ContrasteAATest {
         for (CoupleLitteral couple : couplesLitteraux()) {
             double mesure = contraste(rvb(couple.texte()), rvb(couple.fond()));
             if (mesure < SEUIL_AA) {
-                sousLeSeuil.add("%s (%s sur %s, %.2f:1) — %s"
+                sousLeSeuil.add("%s (%s sur %s, %.2f:1) - %s"
                         .formatted(couple.selecteur(), couple.texte(), couple.fond(), mesure, couple.fichier()));
             }
         }
@@ -294,7 +294,7 @@ class ContrasteAATest {
 
                         • Le nœud ne porte PAS de texte (bouton à icône seule) ? Alors la déclaration
                           `-fx-text-fill` ne peint rien : SUPPRIMEZ-LA. Ce test ne peut pas savoir si
-                          un sélecteur habille du texte — il signalera donc un couple fantôme, et
+                          un sélecteur habille du texte : il signalera donc un couple fantôme, et
                           c'est déjà arrivé sur `.bouton-editer-positions:selected`, dont le blanc
                           annoncé à 2,08:1 ne s'affichait nulle part. Une déclaration morte reste un
                           défaut : elle ment sur ce que la règle fait, et fait perdre du temps.

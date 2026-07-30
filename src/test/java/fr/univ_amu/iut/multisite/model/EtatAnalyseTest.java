@@ -73,7 +73,7 @@ class EtatAnalyseTest {
     }
 
     @Test
-    @DisplayName("#1338 : FINI + résultats absents = À IMPORTER — la seule ligne qui demande une action")
+    @DisplayName("#1338 : FINI + résultats absents = À IMPORTER, la seule ligne qui demande une action")
     void fini_sans_resultats_est_a_importer() {
         EtatAnalyse etat = EtatAnalyse.deduire(StatutWorkflow.DEPOSE, releve(EtatTraitement.FINI), false);
 
@@ -84,7 +84,7 @@ class EtatAnalyseTest {
     }
 
     @Test
-    @DisplayName("#1338 : FINI + résultats DÉJÀ en base = importée — sans ce croisement, la vue mentirait")
+    @DisplayName("#1338 : FINI + résultats DÉJÀ en base = importée, sans ce croisement, la vue mentirait")
     void fini_avec_resultats_nest_plus_a_importer() {
         EtatAnalyse etat = EtatAnalyse.deduire(StatutWorkflow.DEPOSE, releve(EtatTraitement.FINI), true);
 

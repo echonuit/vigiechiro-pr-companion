@@ -137,7 +137,7 @@ class CarteSitesTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         // Clic RÉEL à l'écran sur le libellé « Z1 » : ne réussit que si le marqueur a été **projeté** à une
-        // position d'écran valide (couvre le positionnement, pas seulement la présence — vigilance #294).
+        // position d'écran valide (couvre le positionnement, pas seulement la présence : vigilance #294).
         robot.clickOn("Z1");
         WaitForAsyncUtils.waitForFxEvents();
 

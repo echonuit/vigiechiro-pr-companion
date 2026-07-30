@@ -69,8 +69,8 @@ import org.junit.jupiter.api.Test;
 ///
 /// C'est la promesse de l'issue G : *« sur une installation vierge (nouvelle machine, base perdue),
 /// reconstruire depuis la plateforme tout ce qu'elle connaît de l'observateur »*. Le code de cette
-/// promesse existe — la pagination des participations (#1150), le rapprochement des sites
-/// (`RapprochementSites`), la reconstruction des passages (#1305) — mais il a été livré **par morceaux,
+/// promesse existe : la pagination des participations (#1150), le rapprochement des sites
+/// (`RapprochementSites`), la reconstruction des passages (#1305). Mais il a été livré **par morceaux,
 /// dans trois chantiers différents**, et **personne n'avait jamais exercé la chaîne entière**. Ce test
 /// est la preuve qui manquait, et il est le prérequis du reset guidé (#1151), dont il constitue
 /// l'étape 4.
@@ -83,9 +83,9 @@ import org.junit.jupiter.api.Test;
 ///    lue dans le détail par nuit), mais sans séquences ni observations (elles viennent à la reconstruction) ;
 /// 2. **retrouver** : la nuit déposée sur la plateforme est un **passage local en squelette**, listé
 ///    « à reconstruire » ;
-/// 3. **hydrater** : reconstruire la nuit **remplace** le squelette par un passage complet — séquences
+/// 3. **hydrater** : reconstruire la nuit **remplace** le squelette par un passage complet, séquences
 ///    (lignes sans fichier) + observations rapatriées (#1710) ;
-/// 4. **auditer** : le workspace restauré est **sain**. Un passage sans audio n'est pas un passage cassé —
+/// 4. **auditer** : le workspace restauré est **sain**. Un passage sans audio n'est pas un passage cassé :
 ///    c'est un passage **archivé** (#1297), et l'audit informe au lieu de crier (#1303, garde-fou #1719).
 ///
 /// La plateforme est bouchonnée ([ClientVigieChiro] mocké, substitué dans l'injecteur **réel** par
@@ -196,8 +196,8 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .as("ce qui manque est DIT, pas deviné (ni journal, ni relevé, ni non-identifiés, ni empreintes)")
                 .isNotEmpty();
 
-        // 4. Auditer : le workspace restauré est SAIN. C'est la question de fond de l'EPIC #1154 — « chaque
-        //    écart disque / base / serveur est-il visible ? » — et sa réciproque, tout aussi importante : un
+        // 4. Auditer : le workspace restauré est SAIN. C'est la question de fond de l'EPIC #1154, « chaque
+        //    écart disque / base / serveur est-il visible ? », et sa réciproque, tout aussi importante : un
         //    audit qui crie sur un état normal ne vaut rien, car on cesse de l'écouter.
         RapportAudit audit = injector.getInstance(ServiceAuditCoherence.class).auditerTout();
         assertThat(audit.constats())
@@ -377,7 +377,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
     /// La plateforme telle qu'elle répond à un observateur qui a déposé une nuit depuis un autre poste.
     ///
     /// ⚠️ Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** (et non plus une liste vide) :
-    /// chaque appel que le parcours déclenche doit être stubé explicitement — y compris [ClientVigieChiro#taxons],
+    /// chaque appel que le parcours déclenche doit être stubé explicitement : y compris [ClientVigieChiro#taxons],
     /// que le rapprocheur des taxons appelle en même temps que celui des sites.
     private static ClientVigieChiro plateformeBouchonnee() {
         ClientVigieChiro client = mock(ClientVigieChiro.class);

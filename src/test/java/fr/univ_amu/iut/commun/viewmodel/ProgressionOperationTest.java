@@ -67,7 +67,7 @@ class ProgressionOperationTest {
 
     @Test
     @DisplayName(
-            "#814 : travail parallèle — la fraction reste monotone (un point en retard ne fait pas reculer la barre)")
+            "#814 : travail parallèle, la fraction reste monotone (un point en retard ne fait pas reculer la barre)")
     void fraction_monotone_malgre_points_desordonnes() {
         ProgressionOperation progression = new ProgressionOperation();
         progression.demarrer("Préparation…");

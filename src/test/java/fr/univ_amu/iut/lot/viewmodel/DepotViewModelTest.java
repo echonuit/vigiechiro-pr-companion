@@ -30,7 +30,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// Tests unitaires de [DepotViewModel] (#142) : coordination du téléversement d'une nuit — résolution des
+/// Tests unitaires de [DepotViewModel] (#142) : coordination du téléversement d'une nuit, résolution des
 /// séquences via [ServiceLot], dépôt via [DepotVigieChiro], avec dépôt **optionnel** (indisponible hors
 /// application connectée). DAO + client mockés, aucun réseau.
 @ExtendWith(MockitoExtension.class)

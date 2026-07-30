@@ -8,7 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// Stepper du dépôt (#251) : l'étape courante est déduite du statut workflow, de la présence d'archives
-/// générées, et — depuis #1998 — de la disponibilité du dépôt automatique. Pur (aucun état JavaFX).
+/// générées, et (depuis #1998) de la disponibilité du dépôt automatique. Pur (aucun état JavaFX).
 class EtapesDepotTest {
 
     private static final boolean CONNECTE = true;
@@ -25,7 +25,7 @@ class EtapesDepotTest {
     }
 
     @Test
-    @DisplayName("#1998 : connecté, l'étape ③ est courante sans archives — générer n'est plus obligatoire")
+    @DisplayName("#1998 : connecté, l'étape ③ est courante sans archives, générer n'est plus obligatoire")
     void connecte_le_televersement_est_atteignable_directement() {
         // C'est le changement du lot : le téléversement produit lui-même ses archives (#1995), donc
         // annoncer « Générer les archives » comme étape courante ferait attendre pour rien.

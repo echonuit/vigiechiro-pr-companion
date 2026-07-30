@@ -53,7 +53,7 @@ import org.junit.jupiter.api.io.TempDir;
 ///
 /// Ce que ces tests protègent : jusqu'ici, l'application recevait ces champs à **chaque** import et les
 /// jetait. Elle présentait donc la correction de l'observateur comme le dernier mot, alors qu'un expert
-/// avait pu la réviser — une **perte silencieuse**, exactement ce que l'EPIC #1154 traque.
+/// avait pu la réviser : une **perte silencieuse**, exactement ce que l'EPIC #1154 traque.
 class ValidationExpertTest {
 
     private static final String ID_USER = "u-1";
@@ -136,7 +136,7 @@ class ValidationExpertTest {
     }
 
     @Test
-    @DisplayName("#1417 : l'avis du validateur est persisté à côté de celui de l'observateur — les trois"
+    @DisplayName("#1417 : l'avis du validateur est persisté à côté de celui de l'observateur, les trois"
             + " avis coexistent, aucun n'écrase l'autre")
     void les_trois_avis_coexistent() {
         BilanImport bilan = importer(observation(0, "Pipkuh", "Pippip", Certitude.POSSIBLE, "Pipnat", List.of()));
@@ -154,7 +154,7 @@ class ValidationExpertTest {
     }
 
     @Test
-    @DisplayName("#1417 : un taxon de validateur hors référentiel est auto-enregistré en souche — sans"
+    @DisplayName("#1417 : un taxon de validateur hors référentiel est auto-enregistré en souche, sans"
             + " quoi la FK ferait taire l'avis qui fait autorité")
     void taxon_validateur_hors_referentiel_devient_une_souche() {
         BilanImport bilan = importer(observation(0, "Pipkuh", null, null, "Especeinconnue", List.of()));

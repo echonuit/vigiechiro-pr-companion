@@ -7,7 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// Onglet « Audio » de l'écran Réglages (#1006) : ses descripteurs pointent les clés/défauts partagés
-/// avec les options du menu ☰ de la vue audio (`LecteurAudio`, qui référence les mêmes constantes) —
+/// avec les options du menu ☰ de la vue audio (`LecteurAudio`, qui référence les mêmes constantes) :
 /// impossible de dériver. On vérifie clés, défauts et types.
 class OngletReglagesAudioTest {
 

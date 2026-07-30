@@ -349,7 +349,7 @@ class ServiceReactivationPassageTest {
     }
 
     @Test
-    @DisplayName("Réactivation sans audio (#1571) : pas d'ancrage — on ne corrige pas ce qu'on n'écoute pas")
+    @DisplayName("Réactivation sans audio (#1571) : pas d'ancrage, on ne corrige pas ce qu'on n'écoute pas")
     void reactivation_sans_audio_n_acquiert_pas_l_ancrage() throws IOException {
         archiverAvecSauvegarde(true, true); // passage archivé, fichiers en sauvegarde
         ImportObservations importObservations = mock(ImportObservations.class);
@@ -407,7 +407,7 @@ class ServiceReactivationPassageTest {
     }
 
     @Test
-    @DisplayName("#1780 : deux barres — la régénération et l'ancrage rapportent chacun à son consommateur")
+    @DisplayName("#1780 : deux barres, la régénération et l'ancrage rapportent chacun à son consommateur")
     void deux_progressions_separent_regeneration_et_ancrage() throws IOException {
         archiverAvecSauvegarde(true, true); // audio complet -> la phase d'ancrage se déclenche
         ImportObservations importObservations = mock(ImportObservations.class);

@@ -23,7 +23,7 @@ class PanneauDiscussionTest {
 
     private static final String MOI = "u-moi";
 
-    /// Raison de blocage : la détection n'existe pas côté plateforme — il n'y a personne à qui parler.
+    /// Raison de blocage : la détection n'existe pas côté plateforme, il n'y a personne à qui parler.
     private static final Optional<String> PAS_SUR_LA_PLATEFORME =
             Optional.of("Cette détection n'existe pas sur Vigie-Chiro.");
 
@@ -87,7 +87,7 @@ class PanneauDiscussionTest {
     }
 
     @Test
-    @DisplayName("#1417 : changer de ligne pour une détection sans fil vide le panneau — pas de fil"
+    @DisplayName("#1417 : changer de ligne pour une détection sans fil vide le panneau, pas de fil"
             + " fantôme de la ligne précédente")
     void changer_de_ligne_vide_le_panneau() {
         PanneauDiscussion panneau = new PanneauDiscussion();

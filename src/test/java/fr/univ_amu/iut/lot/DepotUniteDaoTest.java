@@ -141,7 +141,7 @@ class DepotUniteDaoTest {
     }
 
     @Test
-    @DisplayName("restantes() : tout sauf « depose » — une unité laissée « en_cours » est à re-tenter")
+    @DisplayName("restantes() : tout sauf « depose », une unité laissée « en_cours » est à re-tenter")
     void restantes_couvre_en_cours_et_echec() {
         dao.synchroniserPlan(
                 idPassage,

@@ -99,7 +99,7 @@ class CliMarquageRevueTest {
     }
 
     @Test
-    @DisplayName("LE CAS QUI COMPTE : sans --certitude ni --effacer, la commande REFUSE — une certitude ne"
+    @DisplayName("LE CAS QUI COMPTE : sans --certitude ni --effacer, la commande REFUSE, une certitude ne"
             + " se devine pas, et un défaut silencieux mettrait un jugement qu'on n'a pas porté")
     void certitude_ne_se_devine_pas() {
         int code = cli.executer(new String[] {"poser-certitude", "--observation", String.valueOf(idA)}, sortie, erreur);

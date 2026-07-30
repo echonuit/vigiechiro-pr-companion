@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test;
 /// le **doublon** : une séquence validée à la main figure à la fois dans `lignesAudioDuPassage` (elle a désormais
 /// une observation) et dans `lignesAudioNonIdentifiees` (elle n'a jamais eu de proposition Tadarida, donc y
 /// reste). La restriction `taxonTadarida != null` sur les observations Tadarida la retire de la première branche
-/// pour ne la garder que dans la seconde — les deux ensembles se partitionnent sur la nullité de `taxonTadarida`.
+/// pour ne la garder que dans la seconde : les deux ensembles se partitionnent sur la nullité de `taxonTadarida`.
 class ResolveurSourceAudioTest {
 
     private static final long ID_PASSAGE = 7L;

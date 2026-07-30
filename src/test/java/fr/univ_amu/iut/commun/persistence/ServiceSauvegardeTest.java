@@ -166,7 +166,7 @@ class ServiceSauvegardeTest {
 
     /// Déclare une ligne `recording_session` pointant sur `racine`, **sans rien créer sur le disque** (FK
     /// désactivées : seul `root_path` importe pour la sauvegarde complète). Sert à simuler une racine
-    /// inaccessible — une carte SD retirée laisse exactement cette trace en base.
+    /// inaccessible : une carte SD retirée laisse exactement cette trace en base.
     private void declarerSession(Path racine, int idPassage) throws IOException {
         try (Connection cx = source.getConnection();
                 Statement st = cx.createStatement()) {

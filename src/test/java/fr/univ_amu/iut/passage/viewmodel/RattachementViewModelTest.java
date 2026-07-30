@@ -395,7 +395,7 @@ class RattachementViewModelTest {
     }
 
     @Test
-    @DisplayName("#1688 : passage déposé — appliquer enregistre la météo mais ne renomme PAS (année/n° verrouillés)")
+    @DisplayName("#1688 : passage déposé, appliquer enregistre la météo mais ne renomme PAS (année/n° verrouillés)")
     void appliquer_sur_passage_depose_enregistre_conditions_sans_renommer() {
         when(service.detailPassage(ID)).thenReturn(detailDepose(MeteoReleve.VIDE));
         viewModel.ouvrirSur(ID, "040962", "A1");
@@ -582,7 +582,7 @@ class RattachementViewModelTest {
     }
 
     @Test
-    @DisplayName("#1828 : saisir une sentinelle est refusé — « INCONNU » n'est pas un numéro de série")
+    @DisplayName("#1828 : saisir une sentinelle est refusé, « INCONNU » n'est pas un numéro de série")
     void enregistreur_sentinelle_refusee() {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 0));
         viewModel.ouvrirSur(ID, "640380", "A1");

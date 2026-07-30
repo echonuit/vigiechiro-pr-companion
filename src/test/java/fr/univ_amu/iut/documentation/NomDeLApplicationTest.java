@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// ## Pourquoi ce test existe
 ///
-/// L'application s'appelle **VigieChiro Companion** — c'est ce que son bandeau affiche. La
+/// L'application s'appelle **VigieChiro Companion** : c'est ce que son bandeau affiche. La
 /// plateforme nationale à laquelle elle se connecte s'appelle **Vigie-Chiro**. La documentation
 /// écrivait « VigieChiro » pour les deux, jusque dans le `site_name` du site produit.
 ///
@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// ## La frontière, et pourquoi elle est mécanique
 ///
-/// **Le tiret est le signal.** « Vigie-Chiro » avec tiret désigne la plateforme — c'est déjà la forme
+/// **Le tiret est le signal.** « Vigie-Chiro » avec tiret désigne la plateforme : c'est déjà la forme
 /// employée par l'IHM (« Téléverser sur Vigie-Chiro », « Se connecter à Vigie-Chiro… »). « VigieChiro »
 /// sans tiret ne doit apparaître qu'accompagné de « Companion ».
 ///
@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// ## Ce qui est exempté, et pourquoi
 ///
-/// Les **noms d'artefacts produits par le build** — `VigieChiro.exe`, `VigieChiro-2.20.0-…AppImage`,
+/// Les **noms d'artefacts produits par le build** : `VigieChiro.exe`, `VigieChiro-2.20.0-…AppImage`,
 /// les lignes `sha256sum`. La documentation est **juste** tant que le build produit ces noms : les
 /// renommer dans les pages sans renommer les fichiers la rendrait fausse. Les renommer dans le build
 /// est une autre décision, qui touche les chemins d'installation existants.
@@ -86,7 +86,7 @@ class NomDeLApplicationTest {
                             .matcher(ligne.substring(0, m.start()))
                             .find();
                     if (!suivi && !precede) {
-                        fautifs.add(page + ":" + (i + 1) + " — " + ligne.strip());
+                        fautifs.add(page + ":" + (i + 1) + " - " + ligne.strip());
                     }
                 }
             }
@@ -98,7 +98,7 @@ class NomDeLApplicationTest {
 
                         • L'application : « VigieChiro Companion » à la première mention d'une page,
                           « l'application » ensuite.
-                        • La plateforme : « Vigie-Chiro », avec le tiret — c'est la forme qu'emploie
+                        • La plateforme : « Vigie-Chiro », avec le tiret, c'est la forme qu'emploie
                           l'IHM (« Téléverser sur Vigie-Chiro »).
 
                         Le tiret est le signal, et c'est ce qui rend cette règle vérifiable.

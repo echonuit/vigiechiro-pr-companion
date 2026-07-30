@@ -8,7 +8,7 @@ import org.junit.jupiter.api.Test;
 
 /// Épingle l'identité de la feature **Activité de la nuit** ([ActiviteModule]) : son identifiant, qui sert
 /// de clé au réglage persisté (`feature.activite-nuit.active`) et à la propriété d'activation, et sa
-/// catégorie `OPTIONNELLE` — désactivable, mais **offerte par défaut** depuis la clôture du lot #2352.
+/// catégorie `OPTIONNELLE` : désactivable, mais **offerte par défaut** depuis la clôture du lot #2352.
 ///
 /// Un retour silencieux à `EXPERIMENTALE` masquerait l'écran pour tout le monde sans que rien ne rougisse
 /// (patron de `SaisonModuleTest` et `CampagneModuleTest`).

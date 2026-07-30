@@ -31,7 +31,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// une fausse carte SD (journal LogPR + WAV synthétiques), on invoque `importer`, puis on
 /// vérifie les effets persistés (passage au statut `Transformé`) et le code de sortie. On
 /// enchaîne sur `lister-passages` pour confirmer que le passage importé est restitué avec son
-/// contexte site/point — scénario « importer un dossier de fixtures puis lister ».
+/// contexte site/point : scénario « importer un dossier de fixtures puis lister ».
 ///
 /// Un seul test cible le flux lourd (la mécanique fine de l'import est déjà couverte par
 /// `ServiceImportTest`) ; ici on valide l'**orchestration CLI** (résolution Guice, dérivation du
@@ -86,7 +86,7 @@ class CliImportTest {
     }
 
     @Test
-    @DisplayName("#2064 : sans option, `importer` suit le réglage — il ne conserve plus en dur")
+    @DisplayName("#2064 : sans option, `importer` suit le réglage, il ne conserve plus en dur")
     void importer_suit_le_reglage() {
         // Avant #2064, la variante courte du service passait `true` en dur : la CLI conservait toujours
         // les originaux, quel que soit le réglage, alors que l'IHM ne les conserve plus par défaut. Le
@@ -263,7 +263,7 @@ class CliImportTest {
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         assertThat(capture.tout())
-                .as("le chemin nominal est inchangé — un golden compare cette sortie mot pour mot")
+                .as("le chemin nominal est inchangé : un golden compare cette sortie mot pour mot")
                 .doesNotContain("déjà utilisé")
                 .doesNotContain("Suppression DÉFINITIVE");
     }

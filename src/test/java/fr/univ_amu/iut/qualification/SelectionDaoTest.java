@@ -197,7 +197,7 @@ class SelectionDaoTest {
     }
 
     @Test
-    @DisplayName("#1524 : verdict par fichier — défaut NON_JUGE (NULL), marquage et remise à NULL")
+    @DisplayName("#1524 : verdict par fichier, défaut NON_JUGE (NULL), marquage et remise à NULL")
     void verdict_par_fichier_defaut_marquage_et_remise_a_zero() {
         SelectionDEcoute selection = dao.insert(new SelectionDEcoute(null, MethodeSelection.MANUEL, 1, idPassage));
         long sequence = creerSequence("seq_verdict");

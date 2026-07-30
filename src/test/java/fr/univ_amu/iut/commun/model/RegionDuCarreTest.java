@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 /// référentiel embarqué.
 ///
 /// C'est le second test qui compte. Un libellé de région mal orthographié ne casse rien : il ne trouve
-/// simplement aucune ligne, et le référentiel retombe sur `national` — silencieusement, en donnant une
+/// simplement aucune ligne, et le référentiel retombe sur `national` : silencieusement, en donnant une
 /// classe plus large et personne pour s'en apercevoir. La garde confronte donc chaque région produite à
 /// ce que la ressource porte vraiment.
 class RegionDuCarreTest {

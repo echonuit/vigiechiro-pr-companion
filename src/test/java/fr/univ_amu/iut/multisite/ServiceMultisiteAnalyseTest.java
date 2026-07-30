@@ -34,11 +34,11 @@ import org.junit.jupiter.api.io.TempDir;
 
 /// L'**état d'analyse** de la vue multi-sites (#1338), de bout en bout et sur une **vraie base** : c'est
 /// ici qu'on prouve que le service croise réellement le cache du traitement serveur et les résultats
-/// d'identification en base (les cas de bord — sans objet, filtre — sont couverts par [EtatAnalyseTest]
+/// d'identification en base (les cas de bord (sans objet, filtre) sont couverts par [EtatAnalyseTest]
 /// (unité), `ServiceMultisiteCsvApprovalTest` (golden multi-nuits) et `MultisiteVueIntegrationTest`).
 ///
 /// La nuit est semée par [JeuDeDonneesPassage] (pas de topologie à la main) et le service est résolu par
-/// un injecteur Guice — d'où l'absence totale de semis manuel de passage dans ce fichier. Le seul DAO
+/// un injecteur Guice : d'où l'absence totale de semis manuel de passage dans ce fichier. Le seul DAO
 /// fourni localement est [ResultatsIdentificationDao] (feature `validation`), que l'injecteur partiel de
 /// `multisite` ne connaît pas ; c'est un simple objet sur la [SourceDeDonnees] déjà liée.
 class ServiceMultisiteAnalyseTest {
