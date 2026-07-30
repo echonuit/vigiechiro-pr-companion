@@ -21,7 +21,7 @@ class FormatsLotTest {
     }
 
     @Test
-    @DisplayName("messageEtat : déposé / vide selon le statut — un ÉTAT, jamais un compte rendu (#1890)")
+    @DisplayName("messageEtat : déposé / vide selon le statut, un ÉTAT, jamais un compte rendu (#1890)")
     void message_etat() {
         assertThat(FormatsLot.messageEtat(new EtatLot(StatutWorkflow.DEPOSE, "/ws", 5, 8192L, List.of(), "2026-06-22")))
                 .contains("déposé");
@@ -58,7 +58,7 @@ class FormatsLotTest {
     }
 
     @Test
-    @DisplayName("#984 : libelleDepotEnCours — compteur honnête déposées / en cours / échecs, masqués si nuls")
+    @DisplayName("#984 : libelleDepotEnCours, compteur honnête déposées / en cours / échecs, masqués si nuls")
     void libelle_depot_en_cours_honnete() {
         assertThat(FormatsLot.libelleDepotEnCours(0, 0, 0, 0)).isEqualTo("Dépôt en préparation…");
         // En cours et échecs nuls : pas de bruit, seulement le déposé/total.

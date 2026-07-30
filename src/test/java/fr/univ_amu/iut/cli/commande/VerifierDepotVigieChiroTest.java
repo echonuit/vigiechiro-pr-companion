@@ -16,7 +16,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
-/// `verifier-depot-vigiechiro` (#1132) : délégation à [VerificationDepot] (mocké — l’appariement est
+/// `verifier-depot-vigiechiro` (#1132) : délégation à [VerificationDepot] (mocké, l’appariement est
 /// couvert par `VerificationDepotTest`), rendu du bilan et **code retour scriptable** (0 = tout
 /// retrouvé, 1 sinon), jeton ponctuel `--token`.
 class VerifierDepotVigieChiroTest {

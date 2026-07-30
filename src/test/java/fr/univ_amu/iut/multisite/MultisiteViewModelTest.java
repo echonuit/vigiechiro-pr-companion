@@ -126,7 +126,7 @@ class MultisiteViewModelTest {
     }
 
     @Test
-    @DisplayName("#1338 : un échec réseau ne ment pas sur la fraîcheur — il compte les injoignables")
+    @DisplayName("#1338 : un échec réseau ne ment pas sur la fraîcheur, il compte les injoignables")
     void relever_avec_echecs_le_dit() {
         SuiviTraitement suivi = mock(SuiviTraitement.class);
         when(suivi.releverTout(anyList(), any(), any())).thenReturn(new SuiviTraitement.BilanReleveGroupe(1, 2));

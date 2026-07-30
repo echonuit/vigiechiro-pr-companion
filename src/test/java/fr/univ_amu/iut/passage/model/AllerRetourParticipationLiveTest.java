@@ -71,7 +71,7 @@ import org.junit.jupiter.api.Test;
 /// corps à la main ne garderait plus le mapping - or c'est précisément là que #1844 et #1860 se
 /// jouaient.
 @Tag("api-live")
-@DisplayName("Aller-retour d'écriture sur une participation (live) — ce que la plateforme en fait")
+@DisplayName("Aller-retour d'écriture sur une participation (live) : ce que la plateforme en fait")
 class AllerRetourParticipationLiveTest {
 
     /// Clé témoin, propre à la sonde : elle n'appartient ni à l'application ni au formulaire web. Sa

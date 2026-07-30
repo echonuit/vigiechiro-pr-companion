@@ -296,7 +296,7 @@ class ServicePassageTest {
     @DisplayName("R4 : un voisin opportuniste n'est pas compté dans l'intervalle d'un passage normal")
     void r4_voisin_opportuniste_ignore() {
         // Le passage 1 est opportuniste (20 juin) ; le passage 2 normal (5 juillet) est à moins d'un
-        // mois — mais son unique voisin étant hors protocole, R4 doit rester muette.
+        // mois, mais son unique voisin étant hors protocole, R4 doit rester muette.
         Passage passage1 = service.creerPassage(
                 idPoint, SERIE, 1, LocalDate.of(2026, 6, 20), "21:30:00", "05:15:00", null, null, null);
         opportunistesDao.marquer(passage1.id());

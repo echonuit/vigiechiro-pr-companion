@@ -198,7 +198,7 @@ class ReactivationModaleViewTest {
                 .as("la phase réseau a émis : sa barre est révélée")
                 .isTrue();
         // Le libellé dit le sens réel de l'échange (#1853) : cette phase *récupère* les identifiants, elle
-        // n'écrit rien sur la plateforme — « Ancrage … sur VigieChiro » laissait croire l'inverse.
+        // n'écrit rien sur la plateforme : « Ancrage … sur VigieChiro » laissait croire l'inverse.
         assertThat(robot.lookup("#lblAncrage").queryAs(Label.class).getText())
                 .contains("Récupération des identifiants et des échanges avec le validateur");
     }

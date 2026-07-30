@@ -28,7 +28,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 /// Test de la matérialisation disque de la vue agrégée
 /// ([ServiceMultisite#exporterCsvVers(Path, List)]) : l'écriture fichier produit exactement le même
 /// CSV que [ServiceMultisite#exporterCsv(List)] (déjà couvert par approval). Les DAO ne sont pas
-/// sollicités par l'export — mockés et inutilisés.
+/// sollicités par l'export : mockés et inutilisés.
 @ExtendWith(MockitoExtension.class)
 class ServiceMultisiteExportTest {
 

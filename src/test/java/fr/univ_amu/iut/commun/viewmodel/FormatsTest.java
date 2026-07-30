@@ -25,7 +25,7 @@ class FormatsTest {
     }
 
     @Test
-    @DisplayName("dureeSecondes : null → tiret (—), sans NPE")
+    @DisplayName("dureeSecondes : null → tiret « — », sans NPE")
     void dureeSecondes_null() {
         assertThat(Formats.dureeSecondes(null)).isEqualTo("—");
     }

@@ -54,7 +54,7 @@ class TransformationAudioTest {
     }
 
     @Test
-    @DisplayName("#231 : reprise — une séquence corrompue (même taille) est régénérée à l'identique")
+    @DisplayName("#231 : reprise, une séquence corrompue (même taille) est régénérée à l'identique")
     void reprise_regenere_les_sequences_corrompues() throws IOException {
         Path transformes = dossier.resolve("transformes");
         Path sequence = transformation
@@ -64,7 +64,7 @@ class TransformationAudioTest {
                 .chemin();
         byte[] correct = Files.readAllBytes(sequence);
 
-        // Corruption silencieuse : on remplace le contenu par des octets bidons DE MÊME TAILLE — un saut
+        // Corruption silencieuse : on remplace le contenu par des octets bidons DE MÊME TAILLE, un saut
         // fondé sur la seule taille ne la détecterait pas, mais la régénération systématique (R11) si.
         Files.write(sequence, new byte[correct.length]);
         assertThat(Files.readAllBytes(sequence)).isNotEqualTo(correct);

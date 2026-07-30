@@ -155,7 +155,7 @@ class DepotVigieChiroTest {
     @DisplayName("#1993 : un lot modifié entre deux tentatives change l'empreinte enregistrée")
     void empreinte_suit_le_lot(@TempDir Path dossier) throws IOException {
         // Première tentative en échec : le passage reste « Dépôt en cours », donc reprenable. Un dépôt
-        // complet basculerait « Déposé » et la reprise serait alors refusée par le workflow — ce qui
+        // complet basculerait « Déposé » et la reprise serait alors refusée par le workflow : ce qui
         // n'est pas le cas qu'on veut décrire ici.
         Path a = fichier(dossier, "Car-1.zip");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
@@ -292,7 +292,7 @@ class DepotVigieChiroTest {
     }
 
     @Test
-    @DisplayName("#982 : upload EN FLUX — le client reçoit le Path du fichier, pas ses octets en mémoire")
+    @DisplayName("#982 : upload EN FLUX, le client reçoit le Path du fichier, pas ses octets en mémoire")
     void upload_en_flux(@TempDir Path dossier) throws IOException {
         Path a = fichier(dossier, "Car-1.zip");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
@@ -541,7 +541,7 @@ class DepotVigieChiroTest {
     void participation_refusee() {
         when(participations.participationDe(idPassage)).thenReturn(Optional.empty());
         when(participations.creerPour(idPassage))
-                .thenReturn(ResultatEcriture.echouee("HTTP 422 — {\"_errors\":{\"numero\":\"invalid field\"}}"));
+                .thenReturn(ResultatEcriture.echouee("HTTP 422 : {\"_errors\":{\"numero\":\"invalid field\"}}"));
 
         assertThatThrownBy(() -> depot.deposer(idPassage, List.of()))
                 .isInstanceOf(RegleMetierException.class)

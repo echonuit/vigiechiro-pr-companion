@@ -8,7 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// Onglet « Dépôt » de l’écran Réglages (#1047) : les descripteurs pointent les clés lues par
-/// `LotModule` — impossible de dériver. On vérifie clé, défaut, bornes et type.
+/// `LotModule` : impossible de dériver. On vérifie clé, défaut, bornes et type.
 class OngletReglagesDepotTest {
 
     @Test

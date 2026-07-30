@@ -336,7 +336,7 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#823 : barre de statut 3 zones — contexte à gauche, statut · récap au centre, bilan à droite")
+    @DisplayName("#823 : barre de statut 3 zones, contexte à gauche, statut · récap au centre, bilan à droite")
     void barre_de_statut_trois_zones(FxRobot robot) {
         when(service.archivesDepot("/ws/session-42"))
                 .thenReturn(List.of(
@@ -407,7 +407,7 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#820 : la table rend les 4 états d'archive — attente, barre « en cours », terminée, échec")
+    @DisplayName("#820 : la table rend les 4 états d'archive, attente, barre « en cours », terminée, échec")
     void table_rend_l_etat_de_chaque_archive(FxRobot robot) {
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 4, 8192L, List.of(), null));
 

@@ -43,7 +43,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// `reset-guide` (#1151) : le bilan de récupérabilité en CLI, et surtout ses **codes de sortie**.
 ///
 /// La procédure de reset doit être **scriptable**, et un script doit pouvoir refuser d'enchaîner sur une
-/// perte d'audio. D'où le code **2** — distinct du succès (0) et de l'échec (1) — dès qu'une seule nuit
+/// perte d'audio. D'où le code **2** (distinct du succès (0) et de l'échec (1)) dès qu'une seule nuit
 /// est en « perdu ».
 class CliResetGuideTest {
 
@@ -87,7 +87,7 @@ class CliResetGuideTest {
     }
 
     @Test
-    @DisplayName("#1419 : --executer sans --confirmer ne détruit rien — une base ne s'efface pas par une"
+    @DisplayName("#1419 : --executer sans --confirmer ne détruit rien, une base ne s'efface pas par une"
             + " option qu'on aurait laissée traîner dans un script")
     void executer_exige_confirmer() throws IOException {
         creerNuit(1, true);
@@ -101,7 +101,7 @@ class CliResetGuideTest {
     }
 
     @Test
-    @DisplayName("#1419 : hors connexion, --executer --confirmer REFUSE — la base neuve se repeuple depuis"
+    @DisplayName("#1419 : hors connexion, --executer --confirmer REFUSE, la base neuve se repeuple depuis"
             + " la plateforme, la détruire sans elle laisserait un workspace vide")
     void executer_refuse_hors_connexion() throws IOException {
         creerNuit(1, true);
@@ -141,7 +141,7 @@ class CliResetGuideTest {
     }
 
     @Test
-    @DisplayName("Nuit déposée en ZIP, disque vide : code 2 — un script peut refuser d'enchaîner")
+    @DisplayName("Nuit déposée en ZIP, disque vide : code 2, un script peut refuser d'enchaîner")
     void audio_perdu_code_2() throws IOException {
         Long idPassage = creerNuit(1, false);
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);

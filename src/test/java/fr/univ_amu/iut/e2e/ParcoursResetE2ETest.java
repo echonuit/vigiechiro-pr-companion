@@ -49,7 +49,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// **Le reset guidé, de bout en bout** (#1419, EPIC #1154) : la question de l'EPIC, prise au mot —
+/// **Le reset guidé, de bout en bout** (#1419, EPIC #1154) : la question de l'EPIC, prise au mot :
 /// *« peut-on repartir d'une base neuve sans perte silencieuse ? »*
 ///
 /// Le parcours part d'une base **abîmée** (une nuit rattachée à rien, dont les fichiers ont disparu du
@@ -108,7 +108,7 @@ class ParcoursResetE2ETest {
                 .isInstanceOf(ResultatReset.Refuse.class);
         assertThat(((ResultatReset.Refuse) resultat).motif()).contains("Vigie-Chiro ne répond pas");
         assertThat(new PassageDao(source).findAll())
-                .as("la base d'origine est toujours là — c'est tout l'intérêt de refuser AVANT")
+                .as("la base d'origine est toujours là : c'est tout l'intérêt de refuser AVANT")
                 .hasSize(1);
     }
 
@@ -142,7 +142,7 @@ class ParcoursResetE2ETest {
                 .isEqualTo(1);
 
         assertThat(fait.audit().constats())
-                .as("le workspace remis à neuf est SAIN : aucune erreur. C'est la réciproque de l'EPIC —"
+                .as("le workspace remis à neuf est SAIN : aucune erreur. C'est la réciproque de l'EPIC ;"
                         + " un audit qui crierait sur un état normal ne vaudrait rien")
                 .noneMatch(constat -> constat.severite() == Severite.ERREUR);
 
@@ -159,7 +159,7 @@ class ParcoursResetE2ETest {
 
     /// Une base **abîmée**, telle qu'on en trouve quand on veut repartir de zéro : une nuit en base,
     /// rattachée à **aucune** participation (elle ne se re-déposera jamais), dont les fichiers ne sont
-    /// **pas** sur le disque. `ServiceRecuperabilite` la classe donc en **PERDU** — et c'est bien le cas
+    /// **pas** sur le disque. `ServiceRecuperabilite` la classe donc en **PERDU**, et c'est bien le cas
     /// qui doit forcer une acceptation explicite avant tout reset.
     private static SourceDeDonnees preparerBaseAbimee(Injector injector) {
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
@@ -212,7 +212,7 @@ class ParcoursResetE2ETest {
     }
 
     /// ⚠️ Depuis #1284, un retour `ReponseApi` non bouchonné vaut **`null`** : chaque appel du parcours
-    /// doit être stubé, y compris [ClientVigieChiro#moi] — c'est lui, ici, qui atteste que la plateforme
+    /// doit être stubé, y compris [ClientVigieChiro#moi] : c'est lui, ici, qui atteste que la plateforme
     /// répond avant qu'on ose détruire quoi que ce soit.
     private static ClientVigieChiro plateformeBouchonnee() {
         ClientVigieChiro client = mock(ClientVigieChiro.class);

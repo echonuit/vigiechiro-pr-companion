@@ -44,7 +44,7 @@ import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration de l'écran **Synthèse de la nuit** (#2351) : chargement du FXML via Guice avec un
-/// [ServiceSynthese] mocké, et surtout ce que l'écran **affirme en permanence** — le référentiel employé,
+/// [ServiceSynthese] mocké, et surtout ce que l'écran **affirme en permanence** : le référentiel employé,
 /// l'avertissement et la citation.
 ///
 /// Ces trois là ne sont pas décoratifs : la source est libre d'usage **avec citation obligatoire**, et

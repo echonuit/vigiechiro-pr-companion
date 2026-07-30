@@ -91,7 +91,7 @@ class TransportVigieChiroTest {
     }
 
     @Test
-    @DisplayName("#1845 : la sévérité se décide à l'émission — anomalie visible, échange nominal au détail")
+    @DisplayName("#1845 : la sévérité se décide à l'émission, anomalie visible, échange nominal au détail")
     void severite_decidee_a_l_emission() {
         assertThat(TransportVigieChiro.niveauDe(ReponseApi.succes("{}"))).isEqualTo(Level.FINE);
         assertThat(TransportVigieChiro.niveauDe(ReponseApi.nonConnecte()))
@@ -103,7 +103,7 @@ class TransportVigieChiroTest {
     }
 
     @Test
-    @DisplayName("#1845 : le résumé porte méthode, chemin, issue et durée — et le corps d'un REFUS")
+    @DisplayName("#1845 : le résumé porte méthode, chemin, issue et durée, et le corps d'un REFUS")
     void resume_consigne_l_essentiel() {
         String refus = TransportVigieChiro.resume(
                 "PATCH", "/participations/p1", ReponseApi.refuse(422, "{\"_issues\": {\"numero\": \"invalid\"}}"), 12);
@@ -118,7 +118,7 @@ class TransportVigieChiroTest {
     }
 
     @Test
-    @DisplayName("#1845 : le corps d'un refus est TRONQUÉ — un journal n'est pas un déversoir")
+    @DisplayName("#1845 : le corps d'un refus est TRONQUÉ, un journal n'est pas un déversoir")
     void resume_tronque_un_corps_volumineux() {
         String enorme = "x".repeat(5000);
 

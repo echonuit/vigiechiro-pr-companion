@@ -61,7 +61,7 @@ import org.junit.jupiter.api.Test;
 /// Le contrat live **hebdomadaire** (`api-live.yml`) est en **lecture seule** et doit le rester : il ne
 /// passe aucun de ces trois drapeaux.
 @Tag("api-live")
-@DisplayName("Contrat API Vigie-Chiro (live, lecture) — documentation vivante du schéma")
+@DisplayName("Contrat API Vigie-Chiro (live, lecture) : documentation vivante du schéma")
 class ContratApiVigieChiroLiveTest {
 
     private static String baseUrl;
@@ -77,7 +77,7 @@ class ContratApiVigieChiroLiveTest {
         RestAssured.baseURI = baseUrl;
     }
 
-    /// Requête authentifiée : Basic `base64("<token>:")` — token en *username*, mot de passe vide, comme
+    /// Requête authentifiée : Basic `base64("<token>:")`, token en *username*, mot de passe vide, comme
     /// [ClientVigieChiro.enteteAuthorization].
     private static RequestSpecification api() {
         return given().auth().preemptive().basic(token, "");
@@ -106,7 +106,7 @@ class ContratApiVigieChiroLiveTest {
 
     @Test
     @DisplayName("Transport #1284 : un refus serveur revient en Refuse avec son statut (422 pour"
-            + " max_results>100), plus jamais en vide silencieux — le verrou qui aurait rendu #1277 bruyante")
+            + " max_results>100), plus jamais en vide silencieux : le verrou qui aurait rendu #1277 bruyante")
     void refus_serveur_est_un_refuse_explicite() {
         TransportVigieChiro transport = new TransportVigieChiro(baseUrl, () -> Optional.of(token));
 
@@ -154,7 +154,7 @@ class ContratApiVigieChiroLiveTest {
 
     @Test
     @DisplayName("GET /grille_stoc/cercle (#733) : le carré rendu pour les coordonnées d'un point EST le carré"
-            + " de son site — la sonde qui tranche la convention lat/lng")
+            + " de son site : la sonde qui tranche la convention lat/lng")
     void grille_stoc_rend_le_carre_du_point() {
         ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
 
@@ -174,7 +174,7 @@ class ContratApiVigieChiroLiveTest {
         // Le vrai risque de cet endpoint n'est pas qu'il échoue : c'est qu'il réponde À CÔTÉ. La plateforme
         // mélange les conventions (les localités d'un site sont stockées [lat, lon], à rebours du GeoJSON),
         // et une inversion lat/lng rendrait un carré parfaitement plausible... au milieu de l'Asie. Seule
-        // une confrontation au réel le dit — leçon de #1277, que seul le contrat live avait vue.
+        // une confrontation au réel le dit : leçon de #1277, que seul le contrat live avait vue.
         assertThat(carre)
                 .as("les coordonnées du point %s tombent dans le carré de son propre site", point.code())
                 .contains(site.numeroCarre());
@@ -199,7 +199,7 @@ class ContratApiVigieChiroLiveTest {
     }
 
     @Test
-    @DisplayName("Dérive client : le bloc traitement réel est lisible (état connu, dates cohérentes) — #1260")
+    @DisplayName("Dérive client : le bloc traitement réel est lisible (état connu, dates cohérentes), #1260")
     void client_lit_le_traitement_reel() {
         ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
         String id = client.mesParticipations()
@@ -212,7 +212,7 @@ class ContratApiVigieChiroLiveTest {
                 client.participation(id).enOptionnel().orElseThrow().traitement();
 
         // Une participation jamais calculée n'a pas de bloc traitement : c'est un cas légitime, pas un
-        // échec. En revanche, s'il y en a un, le parseur doit en reconnaître l'état — un état inconnu
+        // échec. En revanche, s'il y en a un, le parseur doit en reconnaître l'état : un état inconnu
         // signalerait que le backend a introduit une valeur que cette version ignore (le point même de
         // cette sonde : détecter la dérive).
         if (traitement.estInconnu()) {
@@ -363,7 +363,7 @@ class ContratApiVigieChiroLiveTest {
 
     // ---------------------------------------------------------------------------------------------
     // PROBES en écriture (opt-in -Dvigiechiro.write=true) : remplacent les spikes jetables. Elles
-    // ÉCRIVENT sur la plateforme (fichier d'essai, PATCH quasi no-op) — à lancer sciemment, jamais
+    // ÉCRIVENT sur la plateforme (fichier d'essai, PATCH quasi no-op) : à lancer sciemment, jamais
     // en veille périodique. Leur échec est un VERDICT documenté, pas forcément une régression.
     // ---------------------------------------------------------------------------------------------
 
@@ -393,11 +393,11 @@ class ContratApiVigieChiroLiveTest {
 
     @Test
     @DisplayName("PROBE #1261 : un compute est accepté, et le SECOND (400 « Already ») est reconnu comme"
-            + " « déjà lancé » — non comme un échec")
+            + " « déjà lancé » : non comme un échec")
     void probe_compute_et_refus_deja_lance() {
         supposerEcritureAutorisee();
         // Participation de rebut fournie par l'observateur (vide, non supprimable côté plateforme) : on
-        // peut y lancer un calcul sans conséquence. Sans elle, la probe est ignorée — on ne lance JAMAIS un
+        // peut y lancer un calcul sans conséquence. Sans elle, la probe est ignorée : on ne lance JAMAIS un
         // compute sur une participation réelle : il détruirait ses observations pour les recalculer (#1244).
         String participationId = System.getProperty("vigiechiro.participationRebut");
         assumeTrue(
@@ -434,7 +434,7 @@ class ContratApiVigieChiroLiveTest {
     void probe_zip_vs_wav() {
         supposerEcritureAutorisee();
         // #1287 : la probe passait « probe » en second argument. Depuis #1239 c'est le lien_participation,
-        // et « probe » n'est pas un ObjectId — la déclaration était refusée, la probe échouait, et son
+        // et « probe » n'est pas un ObjectId : la déclaration était refusée, la probe échouait, et son
         // libellé (« échec = verdict WAV confirmé ») faisait conclure l'INVERSE de la vérité. Elle vise
         // désormais la participation de rebut, comme les autres probes d'écriture.
         String participation = participationDeRebut();
@@ -453,7 +453,7 @@ class ContratApiVigieChiroLiveTest {
         boolean finalise = client.finaliserFichier(signe.get().id()).echec().isEmpty();
         assertThat(finalise)
                 .as("finalisation du zip : la plateforme accepte un zip comme fichier de participation,"
-                        + " l'ingère et le dézippe (vérifié en production depuis #1231 — la nuit canonique"
+                        + " l'ingère et le dézippe (vérifié en production depuis #1231 : la nuit canonique"
                         + " a été déposée ainsi, 4806 observations à la clé)")
                 .isTrue();
     }
@@ -475,7 +475,7 @@ class ContratApiVigieChiroLiveTest {
     void probe_patch_site_localites() {
         supposerEcritureAutorisee();
         // Site d'une participation de l'observateur (site régional : il y participe sans en être
-        // propriétaire — le cas réel du terrain).
+        // propriétaire : le cas réel du terrain).
         String idSite = api().when()
                 .get("/moi/participations")
                 .then()
@@ -644,7 +644,7 @@ class ContratApiVigieChiroLiveTest {
     }
 
     @Test
-    @DisplayName("PROBE #1418/#1456 : PUT /donnees/{id}/observations/{index}/messages — le message part (200)"
+    @DisplayName("PROBE #1418/#1456 : PUT /donnees/{id}/observations/{index}/messages, le message part (200)"
             + " et se relit dans le fil. ATTENTION : cette écriture est DÉFINITIVE, le serveur $push et"
             + " aucune route ne retire ni ne modifie un message. Triple opt-in, banc d'essai seulement")
     void probe_put_message_observation() {
@@ -688,7 +688,7 @@ class ContratApiVigieChiroLiveTest {
     }
 
     @Test
-    @DisplayName("PROBE #1418/#1456 (verdict négatif) : un corps de message non-chaîne est refusé (422) —"
+    @DisplayName("PROBE #1418/#1456 (verdict négatif) : un corps de message non-chaîne est refusé (422) ;"
             + " le serveur n'écrit rien, la sonde ne laisse donc aucune trace")
     void probe_message_corps_invalide() {
         supposerEcritureAutorisee();

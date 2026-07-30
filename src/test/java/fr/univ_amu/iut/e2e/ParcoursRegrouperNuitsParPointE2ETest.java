@@ -150,7 +150,7 @@ class ParcoursRegrouperNuitsParPointE2ETest {
     @Test
     @DisplayName("P9 jalons 1-2 : sélectionner un point liste ses nuits triées chronologiquement, isolées par point")
     void point_liste_ses_nuits_successives_triees_chronologiquement() {
-        // Jalon 1 — Sélection du point : ses passages de la saison apparaissent, ordonnés
+        // Jalon 1, Sélection du point : ses passages de la saison apparaissent, ordonnés
         // chronologiquement (findByPoint trie par (année, n° de passage), aligné sur les dates).
         List<Passage> nuits = passageDao.findByPoint(point.id());
         assertThat(nuits).hasSize(4);
@@ -165,7 +165,7 @@ class ParcoursRegrouperNuitsParPointE2ETest {
         // Isolation « par point » : la nuit semée sur l'autre point (B2) n'est PAS dans le groupe de A1.
         assertThat(nuits).extracting(Passage::id).doesNotContain(idNuitAutrePoint);
 
-        // Jalon 2 — Sélection des nuits successives : les 4 passages du point sont les candidats au
+        // Jalon 2, Sélection des nuits successives : les 4 passages du point sont les candidats au
         // regroupement (toutes sur le même point, le critère de fusion de P9).
         assertThat(nuits).extracting(Passage::idPoint).containsOnly(point.id());
         assertThat(idsNuits)
@@ -176,7 +176,7 @@ class ParcoursRegrouperNuitsParPointE2ETest {
     @Test
     @DisplayName("P9 jalon 3 : regrouper fusionne les observations des 4 nuits par espèce avec le bon compteur")
     void regrouper_les_nuits_fusionne_les_observations_par_espece() {
-        // Jalon 3 — Regroupement : on agrège les observations réellement persistées par
+        // Jalon 3, Regroupement : on agrège les observations réellement persistées par
         // ServiceValidation sur les 4 nuits du point, puis on les trie/compte par espèce (le service
         // de regroupement dédié n'existe pas encore : cf. la mise en garde de classe).
         TreeMap<String, Integer> comptesParEspece = new TreeMap<>();
@@ -209,7 +209,7 @@ class ParcoursRegrouperNuitsParPointE2ETest {
     @Test
     @DisplayName("P9 jalon 4 : valider une espèce sur la période regroupée couvre toutes ses nuits (R18 inventaire)")
     void valider_une_espece_sur_toute_la_periode_regroupee() {
-        // Jalon 4 — Validation regroupée : Samuel valide « Pippip » une seule fois par nuit du
+        // Jalon 4, Validation regroupée : Samuel valide « Pippip » une seule fois par nuit du
         // regroupement. En mode inventaire (R18), chaque validation propage en auto aux autres Pippip
         // de la même nuit ; en chaînant sur les 4 nuits, son verdict couvre toute la période.
         for (Long idNuit : idsNuits) {

@@ -12,7 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// Tests unitaires (purs, sans JavaFX) des **vues par défaut** du tableau des passages : noms et ordre,
-/// lecture seule (`id` nul), et surtout critères/valeurs des descripteurs — un nom d'énumération erroné
+/// lecture seule (`id` nul), et surtout critères/valeurs des descripteurs : un nom d'énumération erroné
 /// produirait un filtre **no-op silencieux**.
 class CriteresMultisiteTest {
 

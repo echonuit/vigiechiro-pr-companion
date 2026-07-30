@@ -70,7 +70,7 @@ class PropositionsEnregistreurTest {
     }
 
     @Test
-    @DisplayName("#1828 : les sentinelles ne sont jamais proposées — « INCONNU » n'aiderait personne")
+    @DisplayName("#1828 : les sentinelles ne sont jamais proposées, « INCONNU » n'aiderait personne")
     void sentinelles_ecartees() {
         when(enregistreurDao.findAll())
                 .thenReturn(List.of(

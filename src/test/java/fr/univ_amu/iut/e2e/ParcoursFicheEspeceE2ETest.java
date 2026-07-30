@@ -44,7 +44,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Injecteur applicatif réel, avec deux surcharges ciblées : un faux [OuvreurDeLien] (enregistre l'URL,
 /// aucun navigateur) et l'[ExecuteurFicheSynchrone] (résolution + ouverture synchrones → déterministe,
-/// sans réseau — l'URL PNA est directe).
+/// sans réseau : l'URL PNA est directe).
 @ExtendWith(ApplicationExtension.class)
 class ParcoursFicheEspeceE2ETest {
 

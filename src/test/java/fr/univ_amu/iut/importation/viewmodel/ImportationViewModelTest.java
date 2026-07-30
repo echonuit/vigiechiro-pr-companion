@@ -545,7 +545,7 @@ class ImportationViewModelTest {
     }
 
     @Test
-    @DisplayName("#2063 : une installation qui a déjà choisi garde son choix — le nouveau défaut ne la retourne pas")
+    @DisplayName("#2063 : une installation qui a déjà choisi garde son choix, le nouveau défaut ne la retourne pas")
     void installation_existante_garde_son_choix() {
         // `lireBooleen` ne retombe sur le défaut que si la clé est ABSENTE. Une installation qui a déjà
         // importé porte sa valeur en base : basculer le défaut ne doit pas revenir sur un choix
@@ -571,7 +571,7 @@ class ImportationViewModelTest {
             "« Conserver les originaux » lit le réglage persisté (défaut activé) et le mémorise au lancement de l'import")
     void conserver_originaux_lit_et_persiste_le_reglage() {
         // À la construction, le défaut est lu depuis Reglages : **ne pas conserver** (#2063). Copier les
-        // bruts est une option de ré-analyse, pas un dû — rien dans l'application n'en dépend.
+        // bruts est une option de ré-analyse, pas un dû : rien dans l'application n'en dépend.
         assertThat(conservation.conserverOriginauxProperty().get()).isFalse();
 
         // L'utilisateur active l'option puis lance l'import : le choix est mémorisé au moment de
@@ -718,7 +718,7 @@ class ImportationViewModelTest {
     }
 
     @Test
-    @DisplayName("#2525 : import opportuniste — le passage créé est marqué opportuniste")
+    @DisplayName("#2525 : import opportuniste, le passage créé est marqué opportuniste")
     void import_opportuniste_marque_le_passage() {
         viewModel.rattachement().opportunisteProperty().set(true);
 
@@ -728,7 +728,7 @@ class ImportationViewModelTest {
     }
 
     @Test
-    @DisplayName("#2525 : import normal (case décochée) — aucun marquage")
+    @DisplayName("#2525 : import normal (case décochée), aucun marquage")
     void import_normal_ne_marque_pas() {
         viewModel.marquerTermine(new ResultatImport(passageTransforme(42L), null, "1925492", 1, 5, List.of()));
 
@@ -736,7 +736,7 @@ class ImportationViewModelTest {
     }
 
     @Test
-    @DisplayName("#2525 : import multi-nuits opportuniste — chaque passage créé est marqué")
+    @DisplayName("#2525 : import multi-nuits opportuniste, chaque passage créé est marqué")
     void import_multi_nuits_opportuniste_marque_chaque_passage() {
         viewModel.rattachement().opportunisteProperty().set(true);
         ResultatImport n1 = new ResultatImport(passageTransforme(10L), null, "1925492", 1, 3, List.of());
@@ -891,7 +891,7 @@ class ImportationViewModelTest {
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
         // Point sélectionné AVANT l'inspection : la proposition du n° de base est d'abord calculée pour une
-        // seule « nuit » (taille 1, table pas encore peuplée) puis pour les 3 nuits — d'où `anyInt()`.
+        // seule « nuit » (taille 1, table pas encore peuplée) puis pour les 3 nuits : d'où `anyInt()`.
         when(serviceImport.prochainBlocPassagesLibre(eq(10L), eq(2026), anyInt()))
                 .thenReturn(4);
         when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
@@ -979,8 +979,7 @@ class ImportationViewModelTest {
     }
 
     @Test
-    @DisplayName(
-            "Multi-nuits : la proposition évite les trous — 1,3,5,7 existants + 3 nuits → 8,9,10 (bloc consécutif)")
+    @DisplayName("Multi-nuits : la proposition évite les trous, 1,3,5,7 existants + 3 nuits → 8,9,10 (bloc consécutif)")
     void multi_nuits_bloc_consecutif_evite_les_trous() throws IOException {
         Path multi = carteMultiNuits();
         Site site = site(1L, "640380");
@@ -998,7 +997,7 @@ class ImportationViewModelTest {
         viewModel.rattachement().siteSelectionneProperty().set(site);
         viewModel.rattachement().pointSelectionneProperty().set(point);
 
-        // Le n° de base est pré-rempli à 8 et la table propose 8, 9, 10 — import valide (pas de collision).
+        // Le n° de base est pré-rempli à 8 et la table propose 8, 9, 10 : import valide (pas de collision).
         assertThat(viewModel.rattachement().numeroPassageProperty().get()).isEqualTo(8);
         assertThat(viewModel.inspection().nuits())
                 .extracting(NuitVM::numeroPassagePropose)
@@ -1175,7 +1174,7 @@ class ImportationViewModelTest {
     }
 
     @Test
-    @DisplayName("#2631 : aucune campagne retenue — rien n'est rattaché")
+    @DisplayName("#2631 : aucune campagne retenue, rien n'est rattaché")
     void import_sans_campagne_ne_rattache_rien() {
         viewModel.marquerTermine(new ResultatImport(passageTransforme(42L), null, "1925492", 1, 5, List.of()));
 

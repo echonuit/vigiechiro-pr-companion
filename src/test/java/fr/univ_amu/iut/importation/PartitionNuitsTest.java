@@ -32,7 +32,7 @@ class PartitionNuitsTest {
         List<Path> originaux = List.of(
                 wav("20260703_213000"), // nuit du 03 (soir)
                 wav("20260703_233000"), // nuit du 03 (soir)
-                wav("20260704_050000"), // nuit du 03 (petit matin) — même nuit malgré la date du 04
+                wav("20260704_050000"), // nuit du 03 (petit matin) : même nuit malgré la date du 04
                 wav("20260704_213000"), // nuit du 04 (soir)
                 wav("20260705_060000"), // nuit du 04 (petit matin)
                 wav("20260705_213000"), // nuit du 05 (soir)

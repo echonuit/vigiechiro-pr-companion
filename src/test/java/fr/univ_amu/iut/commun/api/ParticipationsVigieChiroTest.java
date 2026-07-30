@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Lecture de `GET /moi/participations` ([ParticipationsVigieChiro]) : deux projections d'un même corps —
+/// Lecture de `GET /moi/participations` ([ParticipationsVigieChiro]) : deux projections d'un même corps :
 /// les **sites** rattachés et les **participations** elles-mêmes. Fonctions pures, tolérantes, sans réseau.
 class ParticipationsVigieChiroTest {
 

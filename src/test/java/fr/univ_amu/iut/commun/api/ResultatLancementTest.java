@@ -6,7 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// Issues d une demande de lancement du traitement (#1261) : la question que pose l IHM comme la CLI est
-/// « le serveur travaille-t-il, oui ou non ? » — et un refus « deja en cours » repond oui.
+/// « le serveur travaille-t-il, oui ou non ? », et un refus « deja en cours » repond oui.
 class ResultatLancementTest {
 
     @Test

@@ -38,7 +38,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// des objets fabriqués) : une nuit passe de « jamais calculée » à « en cours », puis « terminée », et le
 /// relevé la suit.
 ///
-/// Seul le transport HTTP est simulé — c'est la frontière de ce qu'on peut tester sans réseau. Le refus
+/// Seul le transport HTTP est simulé : c'est la frontière de ce qu'on peut tester sans réseau. Le refus
 /// « Already » du serveur, lui, est éprouvé là où vit le transport (`TraitementVigieChiroTest`) : sa
 /// visibilité reste volontairement confinée au paquet `commun.api`.
 class CycleTraitementIntegrationTest {
@@ -59,7 +59,7 @@ class CycleTraitementIntegrationTest {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(racine.resolve("ws")));
         new MigrationSchema(source).migrer();
         // Le relevé est rattaché au passage (clé étrangère, cascade à la suppression) : il faut donc une
-        // vraie nuit en base — site, point, enregistreur, passage.
+        // vraie nuit en base : site, point, enregistreur, passage.
         idPassage = seedPassage(source);
         LienVigieChiroDao liens = new LienVigieChiroDao(source);
         // La nuit a été déposée par l'application : son passage est lié à une participation.
@@ -136,7 +136,7 @@ class CycleTraitementIntegrationTest {
                 .isEqualTo(1);
     }
 
-    /// Le serveur répond ce bloc `traitement` sur `GET /participations/{id}` — parsé pour de vrai.
+    /// Le serveur répond ce bloc `traitement` sur `GET /participations/{id}` : parsé pour de vrai.
     private void serveurRepond(Traitement traitement) {
         when(client.participation(PARTICIPATION))
                 .thenReturn(ReponseApi.succes(

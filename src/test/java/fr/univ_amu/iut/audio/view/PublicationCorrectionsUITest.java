@@ -199,14 +199,14 @@ class PublicationCorrectionsUITest {
                 .as("rien d'ancré et nuit non rattachée : publication grisée")
                 .isTrue();
         // Le remède annoncé suit la cause : depuis #1838 l'ancrage s'acquiert à la publication, donc le
-        // seul verrou restant est le rattachement — plus la réactivation.
+        // seul verrou restant est le rattachement : plus la réactivation.
         assertThat(item.getText()).contains("rattachez la nuit à sa participation");
     }
 
     @Test
     @DisplayName("aucun ancrage mais acquérable : on confirme et on publie au lieu de refuser (#1838)")
     void ancrage_a_venir_ne_bloque_pas_la_publication() {
-        // L'aperçu ne voit rien de publiable — mais l'ancrage va être rapatrié : conclure « rien à
+        // L'aperçu ne voit rien de publiable, mais l'ancrage va être rapatrié : conclure « rien à
         // publier » ici, c'est exactement le cul-de-sac que #1838 supprime.
         when(publication.trier(7L)).thenReturn(new TriPublication(List.of(), 0, 3, 0));
         when(publication.ancrageAcquerable(7L)).thenReturn(true);

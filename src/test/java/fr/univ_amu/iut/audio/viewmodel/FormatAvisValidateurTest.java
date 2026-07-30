@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// L'enjeu tient en une phrase : jusqu'ici, l'écran présentait la correction de l'observateur comme le
 /// dernier mot. Un expert avait pu la réviser sans qu'on le voie **jamais**. Ces tests figent le fait que
-/// l'avis s'affiche, et que le **désaccord** se distingue de l'accord — c'est là que se joue la qualité
+/// l'avis s'affiche, et que le **désaccord** se distingue de l'accord : c'est là que se joue la qualité
 /// de la donnée déposée.
 class FormatAvisValidateurTest {
 
@@ -104,7 +104,7 @@ class FormatAvisValidateurTest {
     }
 
     @Test
-    @DisplayName("#1417 : « Vous » se déduit de l'objectid du profil connecté — sans appel réseau ; un"
+    @DisplayName("#1417 : « Vous » se déduit de l'objectid du profil connecté, sans appel réseau ; un"
             + " auteur inconnu n'est PAS attribué")
     void auteur_dun_message() {
         MessageObservation deMoi = new MessageObservation(1L, 7L, 0, "u-moi", "Je doute.", null);
@@ -122,7 +122,7 @@ class FormatAvisValidateurTest {
     }
 
     @Test
-    @DisplayName("#1417 : un message que le serveur n'a pas daté reste lisible — on n'invente pas de date")
+    @DisplayName("#1417 : un message que le serveur n'a pas daté reste lisible, on n'invente pas de date")
     void date_dun_message() {
         MessageObservation sansDate = new MessageObservation(1L, 7L, 0, "u-moi", "Vu.", null);
         MessageObservation date =

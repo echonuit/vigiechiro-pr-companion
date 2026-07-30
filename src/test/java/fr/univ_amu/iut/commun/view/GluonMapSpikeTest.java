@@ -15,7 +15,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
-/// **Spike #152 — faisabilité Gluon Maps sous JavaFX 26 headless.**
+/// **Spike #152 : faisabilité Gluon Maps sous JavaFX 26 headless.**
 ///
 /// Prouve qu'un [MapView] s'instancie, s'attache à la scène et accepte une **couche custom**
 /// ([MapLayer] + projection `getMapPoint`) sous la plateforme Glass Headless (FX 26), **sans tuiles

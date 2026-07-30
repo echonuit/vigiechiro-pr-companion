@@ -34,12 +34,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/// Le **geste de reset** vu de l'IHM ([GesteReset], #1419), joué pour de vrai — jusqu'à la fermeture de
+/// Le **geste de reset** vu de l'IHM ([GesteReset], #1419), joué pour de vrai : jusqu'à la fermeture de
 /// l'application (#1405 : les dialogues sont des doubles, la fermeture aussi).
 ///
 /// L'enjeu de ces tests n'est pas que le reset marche : c'est qu'il ne parte **jamais** sans que
 /// l'utilisateur ait lu ce qu'il allait perdre. Un « êtes-vous sûr ? » générique ne serait pas un
-/// consentement — d'où l'insistance sur le **contenu** du message de confirmation.
+/// consentement : d'où l'insistance sur le **contenu** du message de confirmation.
 ///
 /// Exécution synchrone de bout en bout ([ExecuteurTacheSynchrone]) ; le voile du chrome n'est pas
 /// installé (contexte partiel), ce qui n'ôte aucune garantie.
@@ -95,7 +95,7 @@ class GesteResetTest {
     }
 
     @Test
-    @DisplayName("#1419 : la confirmation NOMME les nuits qui perdraient leur audio — on ne peut accepter"
+    @DisplayName("#1419 : la confirmation NOMME les nuits qui perdraient leur audio, on ne peut accepter"
             + " que ce qu'on a lu")
     void la_confirmation_nomme_ce_qui_serait_perdu() {
         when(recuperabilite.bilan()).thenReturn(bilanAvecPerte());
@@ -118,7 +118,7 @@ class GesteResetTest {
     }
 
     @Test
-    @DisplayName("#1419 : annuler la confirmation n'exécute RIEN — et annuler le choix du dossier non plus")
+    @DisplayName("#1419 : annuler la confirmation n'exécute RIEN, et annuler le choix du dossier non plus")
     void annuler_annule_vraiment() {
         when(recuperabilite.bilan()).thenReturn(bilanAvecPerte());
 

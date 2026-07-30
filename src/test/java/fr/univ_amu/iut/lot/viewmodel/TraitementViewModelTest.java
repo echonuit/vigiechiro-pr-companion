@@ -17,7 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// Zone « Traitement Vigie-Chiro » de M-Lot (#1263) : ce que l'écran dit de l'analyse serveur, et ce qu'il
-/// en déduit — notamment **si la relance doit être interdite**. Suivi mocké, aucun réseau.
+/// en déduit : notamment **si la relance doit être interdite**. Suivi mocké, aucun réseau.
 class TraitementViewModelTest {
 
     private static final Long ID_PASSAGE = 42L;
@@ -71,7 +71,7 @@ class TraitementViewModelTest {
 
         assertThat(vm.messageProperty().get()).contains("Analyse terminée", "prêtes à être importées");
         assertThat(vm.relanceBloqueeProperty().get())
-                .as("le serveur, lui, accepterait de recalculer — et détruirait tout (#1244)")
+                .as("le serveur, lui, accepterait de recalculer, et détruirait tout (#1244)")
                 .isTrue();
     }
 

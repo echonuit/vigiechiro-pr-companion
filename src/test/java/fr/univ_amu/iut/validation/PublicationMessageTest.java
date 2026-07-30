@@ -45,7 +45,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /// **Poster un message au validateur** ([PublicationMessage], #1418) : la seule écriture **définitive** de
-/// ce chantier — le serveur ajoute par `$push` et n'offre aucune route de suppression.
+/// ce chantier : le serveur ajoute par `$push` et n'offre aucune route de suppression.
 ///
 /// ⚠️ Tous ces tests tournent sur une **API bouchonnée**. Aucune écriture réelle n'est tirée : une sonde
 /// live sur cette route serait irréversible, et reste soumise à un accord explicite.
@@ -182,7 +182,7 @@ class PublicationMessageTest {
 
     @Test
     @DisplayName(
-            "#1418 : une observation ancrée peut recevoir un message — rien à expliquer, la saisie" + " est ouverte")
+            "#1418 : une observation ancrée peut recevoir un message, rien à expliquer, la saisie" + " est ouverte")
     void observation_ancree_est_ecrivable() {
         assertThat(publication.pourquoiImpossible(observationAncree())).isEmpty();
     }

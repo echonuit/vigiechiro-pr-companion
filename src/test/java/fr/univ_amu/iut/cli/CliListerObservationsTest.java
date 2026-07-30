@@ -61,7 +61,7 @@ class CliListerObservationsTest {
     }
 
     @Test
-    @DisplayName("Sans filtre : les trois observations sortent, AVEC leur identifiant — c'est tout l'objet"
+    @DisplayName("Sans filtre : les trois observations sortent, AVEC leur identifiant, c'est tout l'objet"
             + " de la commande")
     void liste_avec_les_identifiants() {
         int code = cli.executer(

@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
 /// `etat-traitement-vigiechiro` (#1265) : l'interface que lit un **script**, ce sont les codes de retour.
-/// Ils doivent donc dire exactement une chose chacun — « c'est prêt », « patiente », « ça a échoué »,
+/// Ils doivent donc dire exactement une chose chacun : « c'est prêt », « patiente », « ça a échoué »,
 /// « ça n'a jamais tourné », « je n'ai pas pu demander ». Suivi mocké, aucun réseau.
 class EtatTraitementVigieChiroTest {
 

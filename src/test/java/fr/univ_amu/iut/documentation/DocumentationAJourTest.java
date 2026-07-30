@@ -56,7 +56,7 @@ import picocli.CommandLine;
 /// Le point de comparaison n'est **jamais une liste tenue à la main** (c'est exactement ce qui dérive),
 /// mais la **vérité du câblage** :
 ///
-/// - les sous-commandes déclarées dans l'annotation `@Command` de [CommandeRacine] — lues par
+/// - les sous-commandes déclarées dans l'annotation `@Command` de [CommandeRacine] : lues par
 ///   **réflexion sur l'annotation**, sans jamais instancier une commande (leurs constructeurs tirent des
 ///   `Provider` qui ouvrent la base : les instancier ici ferait de l'E/S pour rien) ;
 /// - les [ActiviteAccueil] réellement liées dans le `Multibinder` de l'**injecteur**, pas les classes qui
@@ -220,7 +220,7 @@ class DocumentationAJourTest {
 
     /// L'en-tête d'une ADR, qui doit porter le même numéro que son nom de fichier.
     ///
-    /// Deux formes coexistent dans le journal (`# ADR 0035 — …` et `# 0026 - …`) et le test **tolère les
+    /// Deux formes coexistent dans le journal (`# ADR 0035 : …` et `# 0026 - …`) et le test **tolère les
     /// deux** : il garde le **numéro**, pas le style de titre. Le rendre strict sur la forme le ferait
     /// rougir sur une variation de rédaction, ce qui est le meilleur moyen de le faire désactiver.
     private static final Pattern ENTETE_ADR = Pattern.compile("^#\\s+(?:ADR\\s+)?(\\d{4,})\\b");

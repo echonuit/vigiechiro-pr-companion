@@ -41,7 +41,7 @@ import org.junit.jupiter.api.io.TempDir;
 ///
 /// Les trois branches de la cascade sont **les trois seuls verdicts possibles**, et l'issue exige qu'ils
 /// soient établis **avant** d'écrire quoi que ce soit. Le cas qui compte est le dernier : une nuit déposée
-/// en **ZIP** (le mode par défaut) dont le disque n'a plus les fichiers est **perdue** — le serveur ne les
+/// en **ZIP** (le mode par défaut) dont le disque n'a plus les fichiers est **perdue** : le serveur ne les
 /// a jamais eus.
 class ServiceRecuperabiliteTest {
 
@@ -121,7 +121,7 @@ class ServiceRecuperabiliteTest {
     }
 
     @Test
-    @DisplayName("Disque vide + dépôt ZIP : PERDU — le serveur ne garde aucun audio d'une archive")
+    @DisplayName("Disque vide + dépôt ZIP : PERDU, le serveur ne garde aucun audio d'une archive")
     void audio_perdu_car_depot_zip() throws IOException {
         Long idPassage = creerNuit(1, false);
         depotDao.insert(DepotUnite.aDeposer(idPassage, "lot.zip", TypeDepotUnite.ZIP, "2026-07-01"));

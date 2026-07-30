@@ -56,7 +56,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// On vérifie le **résultat métier** à chaque jalon, jusqu'à relire le passage **en base** (la base
 /// est la source de vérité). Un second cas couvre le garde-fou **R5** : réimporter le même quadruplet
-/// `(point, année, n° de passage)` est **bloqué en amont** par le pré-contrôle R5 (#108) — dès le
+/// `(point, année, n° de passage)` est **bloqué en amont** par le pré-contrôle R5 (#108) : dès le
 /// rattachement, le bouton « Importer » se désactive et aucun import n'est lancé, donc la base reste
 /// intacte.
 class ParcoursImporterNuitE2ETest {
@@ -106,7 +106,7 @@ class ParcoursImporterNuitE2ETest {
     void parcours_import_sans_copie_puis_carte_retiree() throws Exception {
         // Le défaut vivait ENTRE l'import et l'audit : chaque côté fonctionnait, leur couture non.
         // L'import sans copie persiste des `file_path` pointant sur la carte SD, et ne déclarait pas
-        // l'état « non stocké localement » — l'audit prenait donc chaque original devenu introuvable
+        // l'état « non stocké localement » : l'audit prenait donc chaque original devenu introuvable
         // pour une corruption. Un test de chaque côté n'aurait rien vu.
         ImportationViewModel vm = injector.getInstance(ImportationViewModel.class);
         vm.inspection().dossierSourceProperty().set(dossierSource);
@@ -159,7 +159,7 @@ class ParcoursImporterNuitE2ETest {
     void parcours_complet_inspecter_rattacher_importer() {
         ImportationViewModel vm = injector.getInstance(ImportationViewModel.class);
 
-        // Jalon 1 — Inspection (lecture seule) : le dossier source est photographié sans rien y écrire.
+        // Jalon 1, Inspection (lecture seule) : le dossier source est photographié sans rien y écrire.
         vm.inspection().dossierSourceProperty().set(dossierSource);
         vm.inspecter();
         assertThat(vm.inspection().estInspecte()).isTrue();
@@ -171,7 +171,7 @@ class ParcoursImporterNuitE2ETest {
         // Tant que le rattachement n'est pas complet, l'import reste impossible.
         assertThat(vm.peutImporter().get()).isFalse();
 
-        // Jalon 2 — Rattachement : le site de l'utilisateur est proposé, on choisit site + point + année
+        // Jalon 2, Rattachement : le site de l'utilisateur est proposé, on choisit site + point + année
         // + n° de passage, puis le bouton « Importer » s'active.
         vm.chargerSites();
         assertThat(vm.rattachement().sites()).extracting(Site::id).containsExactly(site.id());
@@ -182,7 +182,7 @@ class ParcoursImporterNuitE2ETest {
         vm.rattachement().numeroPassageProperty().set(1);
         assertThat(vm.peutImporter().get()).isTrue();
 
-        // Jalon 3 — Import : copie protégée + renommage + transformation + persistance atomique.
+        // Jalon 3, Import : copie protégée + renommage + transformation + persistance atomique.
         vm.importer();
         assertThat(vm.etatProperty().get()).isEqualTo(EtatImport.TERMINE);
 
@@ -193,7 +193,7 @@ class ParcoursImporterNuitE2ETest {
         assertThat(resultat.nombreSequences()).isPositive();
         assertThat(resultat.passage().statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
 
-        // Jalon final — Vérification métier en base (source de vérité) : le passage persisté est bien
+        // Jalon final, Vérification métier en base (source de vérité) : le passage persisté est bien
         // rattaché au point et au statut Transformé (état final d'un import complet).
         Long idPassage = resultat.passage().id();
         assertThat(idPassage).isNotNull();
@@ -203,7 +203,7 @@ class ParcoursImporterNuitE2ETest {
         assertThat(passagePersiste.annee()).isEqualTo(ANNEE);
         assertThat(passagePersiste.numeroPassage()).isEqualTo(1);
 
-        // #1051 — chaîne import → persistance : la durée persistée est **réelle** (une séquence dure au plus
+        // #1051, chaîne import → persistance : la durée persistée est **réelle** (une séquence dure au plus
         // 5 s au rythme d'acquisition), et non expansée ×10 (~50 s à l'écoute). Comble le gap de couverture
         // import → base sur cette colonne.
         List<SequenceDEcoute> sequences = new SequenceDao(source).findAll();
@@ -218,7 +218,7 @@ class ParcoursImporterNuitE2ETest {
 
     @Test
     @DisplayName(
-            "P2 #155 : import résilient — un WAV illisible est rejeté+consigné, l'import réussit et le rapport le liste")
+            "P2 #155 : import résilient, un WAV illisible est rejeté+consigné, l'import réussit et le rapport le liste")
     void parcours_import_resilient_avec_rapport() throws Exception {
         // Nuit avec un WAV valide ET un WAV illisible (contenu non-WAV portant l'extension .wav).
         Path nuit = Files.createTempDirectory("vc-e2e-resilient");
@@ -266,7 +266,7 @@ class ParcoursImporterNuitE2ETest {
 
         ImportationViewModel vm = injector.getInstance(ImportationViewModel.class);
 
-        // Jalon 0 (spécifique #139) — l'archive est décompressée dans un dossier temporaire dédié, hors
+        // Jalon 0 (spécifique #139) : l'archive est décompressée dans un dossier temporaire dédié, hors
         // de l'arborescence d'origine ; l'inspection se fait ensuite sur ce dossier extrait.
         Path extrait = vm.extraireSiZip(zip);
         assertThat(extrait)
@@ -275,7 +275,7 @@ class ParcoursImporterNuitE2ETest {
         assertThat(Files.isDirectory(extrait)).isTrue();
         assertThat(extrait.resolve("LogPR" + SERIE + ".txt")).exists();
 
-        // Jalons 1 à 3 — parcours nominal sur le dossier extrait.
+        // Jalons 1 à 3 : parcours nominal sur le dossier extrait.
         vm.inspection().dossierSourceProperty().set(extrait);
         vm.inspecter();
         assertThat(vm.inspection().estInspecte()).isTrue();
@@ -291,7 +291,7 @@ class ParcoursImporterNuitE2ETest {
         vm.importer();
         assertThat(vm.etatProperty().get()).isEqualTo(EtatImport.TERMINE);
 
-        // Jalon final — un passage Transformé existe en base, exactement comme pour un import depuis un
+        // Jalon final : un passage Transformé existe en base, exactement comme pour un import depuis un
         // dossier, ET le dossier temporaire d'extraction a été nettoyé une fois l'import terminé (#139).
         Long idPassage = vm.resultatProperty().get().passage().id();
         var passagePersiste = new PassageDao(source).findById(idPassage).orElseThrow();

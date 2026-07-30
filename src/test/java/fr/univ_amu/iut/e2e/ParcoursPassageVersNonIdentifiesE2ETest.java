@@ -52,7 +52,7 @@ import org.testfx.framework.junit5.Start;
 /// contrat socle `OuvrirValidation`, comme la carte « Sons & validation » de M-Passage) ne liste donc que
 /// ces séquences non identifiées. On vérifie qu'elles **apparaissent** (sans taxon), qu'elles ne sont **pas
 /// validables en l'état** (« Valider » reste désactivé : pas de proposition Tadarida à retenir), puis qu'on
-/// peut les **valider à la main** (« Corriger ») — ce qui crée une observation corrigée qui **persiste** et
+/// peut les **valider à la main** (« Corriger ») : ce qui crée une observation corrigée qui **persiste** et
 /// laisse la séquence dans la liste.
 @ExtendWith(ApplicationExtension.class)
 class ParcoursPassageVersNonIdentifiesE2ETest {

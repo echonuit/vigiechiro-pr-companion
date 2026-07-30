@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test;
 /// **Pourquoi deux fois la même règle.** ArchUnit lit le **bytecode**. Une dépendance qui se réduit à une
 /// constante compile-time n'y laisse aucune trace : le compilateur inline la valeur sur le site d'appel
 /// (JLS 13.1, *constant variables*), et le `.class` ne référence jamais la classe qui la déclarait. La
-/// règle est alors **verte à tort**, sans rien signaler — c'est le cas réel qui a ouvert #2181 :
+/// règle est alors **verte à tort**, sans rien signaler, c'est le cas réel qui a ouvert #2181 :
 /// `cli.commande.Importer` citait `importation.viewmodel.PreferenceConservation.CLE_PUBLIQUE`, et
 /// `javap` ne montrait aucune référence.
 ///
@@ -28,8 +28,8 @@ import org.junit.jupiter.api.Test;
 /// un `int` ou un `boolean` constant traverse n'importe laquelle de nos règles ArchUnit sans être vue.
 ///
 /// La déclaration `import`, elle, est dans le **source** quoi qu'en fasse le compilateur. Ce test la lit
-/// donc directement. Il est volontairement plus simple qu'ArchUnit — il ne voit que les imports
-/// explicites, pas les noms pleinement qualifiés écrits en ligne — et c'est suffisant : le style du
+/// donc directement. Il est volontairement plus simple qu'ArchUnit : il ne voit que les imports
+/// explicites, pas les noms pleinement qualifiés écrits en ligne, et c'est suffisant : le style du
 /// dépôt (Google Java Format, Spotless) impose l'import.
 ///
 /// Le cas d'`Importer` a été corrigé en descendant la clé dans `importation.model` (#2181). Ce test
@@ -85,7 +85,7 @@ class IsolationFeatureSourcesTest {
         return point < 0 ? nomRelatif : nomRelatif.substring(0, point);
     }
 
-    /// Vrai si un segment du nom relatif est `view` ou `viewmodel` — même critère qu'`ArchitectureTest`.
+    /// Vrai si un segment du nom relatif est `view` ou `viewmodel` : même critère qu'`ArchitectureTest`.
     private static boolean estVueOuViewModel(String nomRelatif) {
         for (String segment : nomRelatif.split("\\.")) {
             if (segment.equals("view") || segment.equals("viewmodel")) {

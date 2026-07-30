@@ -38,12 +38,12 @@ import org.junit.jupiter.api.io.TempDir;
 ///
 /// Deux conséquences, la seconde plus grave : la documentation illustrait une fonctionnalité par une
 /// image où elle est absente ; et en lisant cette image, on pouvait conclure que le repère ne
-/// fonctionne pas — alors que le produit était juste et la **fixture** fausse. Une capture ne casse pas
+/// fonctionne pas : alors que le produit était juste et la **fixture** fausse. Une capture ne casse pas
 /// quand elle ne montre rien : c'est pour cela qu'il faut un test.
 ///
 /// ## Comment le contrôle est mené
 ///
-/// Tous les littéraux de **six lettres** des `Capture*.java` sont relevés — c'est la forme d'un code
+/// Tous les littéraux de **six lettres** des `Capture*.java` sont relevés : c'est la forme d'un code
 /// Tadarida (`Pipkuh`, `Nycnoc`). Chacun doit alors être :
 ///
 /// - un code du référentiel réel, **écrit comme le référentiel l'écrit** ; ou
@@ -51,7 +51,7 @@ import org.junit.jupiter.api.io.TempDir;
 ///
 /// L'exemption est une liste, et c'est assumé : l'oublier fait **rougir**, jamais passer en silence.
 /// C'est l'inverse d'une liste d'inclusion, où l'oubli se traduit par une vérification qui ne s'exécute
-/// pas — le défaut relevé en #2813.
+/// pas : le défaut relevé en #2813.
 class CodesTaxonFixturesCaptureTest {
 
     /// Un code Tadarida fait six lettres : trois du genre, trois de l'espèce.
@@ -110,7 +110,7 @@ class CodesTaxonFixturesCaptureTest {
         }
     }
 
-    /// Un littéral relevé, avec le fichier d'où il vient — pour que le message nomme le coupable.
+    /// Un littéral relevé, avec le fichier d'où il vient : pour que le message nomme le coupable.
     private record Trouvaille(String fichier, String litteral) {
         @Override
         public String toString() {

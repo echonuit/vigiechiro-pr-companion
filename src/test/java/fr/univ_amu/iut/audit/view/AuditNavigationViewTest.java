@@ -45,7 +45,7 @@ import org.testfx.util.WaitForAsyncUtils;
 
 /// Écran **Audit de cohérence** : d'un constat au passage qu'il accuse (#1347).
 ///
-/// L'audit nommait le coupable — « passage 3, préfixe non conforme » — et laissait l'utilisateur le
+/// L'audit nommait le coupable (« passage 3, préfixe non conforme ») et laissait l'utilisateur le
 /// retrouver à la main, alors que partout ailleurs dans l'application une ligne de table s'ouvre au
 /// double-clic. On vérifie ici que le **contrat socle** `OuvrirPassage` est bien appelé, **avec le contexte
 /// du site** (carré, point) : sans lui, le fil d'Ariane de l'écran pivot serait vide.

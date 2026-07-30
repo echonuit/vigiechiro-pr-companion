@@ -121,7 +121,7 @@ class PassageViewModelTest {
     }
 
     @Test
-    @DisplayName("#980 : « Dépôt en cours » n'est pas un jalon du stepper — le jalon courant reste « Prêt à déposer »")
+    @DisplayName("#980 : « Dépôt en cours » n'est pas un jalon du stepper, le jalon courant reste « Prêt à déposer »")
     void stepper_ignore_le_statut_technique_de_depot() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOT_EN_COURS));
 

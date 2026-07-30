@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// Les bornes tombent **au milieu des mois**, ce qui est précisément ce qu'un découpage calendaire
 /// raterait : le 10 juin est du printemps, le 20 juin de l'été, et août appartient encore à l'été.
-/// Chaque borne est éprouvée des **deux côtés** — un test qui ne vérifierait que le milieu de chaque
+/// Chaque borne est éprouvée des **deux côtés** : un test qui ne vérifierait que le milieu de chaque
 /// fenêtre laisserait passer un décalage d'un jour comme d'un mois.
 class SaisonActiviteTest {
 

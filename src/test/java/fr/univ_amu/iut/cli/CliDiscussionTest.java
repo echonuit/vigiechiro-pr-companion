@@ -21,7 +21,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/// `discussion` (#1418) : la **parité CLI** du fil d'échange avec le validateur — le lire, et y répondre.
+/// `discussion` (#1418) : la **parité CLI** du fil d'échange avec le validateur, le lire, et y répondre.
 ///
 /// ⚠️ Aucun envoi réel n'est tiré ici : l'injecteur applicatif n'est pas connecté, et le test s'arrête
 /// **avant** l'appel réseau. Ce qu'il protège, c'est le garde-fou : **rien ne part sans `--confirmer`**,
@@ -52,7 +52,7 @@ class CliDiscussionTest {
     }
 
     @Test
-    @DisplayName("#1418 : --message sans --confirmer n'envoie RIEN — on n'écrit pas l'irréversible par une"
+    @DisplayName("#1418 : --message sans --confirmer n'envoie RIEN, on n'écrit pas l'irréversible par une"
             + " option laissée traîner dans un script")
     void message_exige_confirmer() {
         int code = cli.executer(
@@ -88,7 +88,7 @@ class CliDiscussionTest {
     }
 
     /// Une observation, et deux messages sur son fil. Le fil est un **reflet du serveur** (c'est l'import
-    /// qui l'y met) : on l'écrit donc directement en base. L'observation, elle, doit exister pour de bon —
+    /// qui l'y met) : on l'écrit donc directement en base. L'observation, elle, doit exister pour de bon :
     /// la clé étrangère du schéma y veille, et c'est heureux : un fil sans détection ne veut rien dire.
     private long semerUnFil() throws SQLException {
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);

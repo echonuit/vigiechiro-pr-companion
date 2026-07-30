@@ -51,7 +51,7 @@ import org.testfx.framework.junit5.Start;
 
 /// Écran **M-Lot en mode connecté** (#984) : les tests d'intégration existants
 /// ([LotVueIntegrationTest]) montent l'écran **sans** dépôt VigieChiro (`Optional.empty()`), donc sans
-/// participation liée — ils ne peuvent pas exercer l'étape ④ dans son mode « Lancer la participation »
+/// participation liée : ils ne peuvent pas exercer l'étape ④ dans son mode « Lancer la participation »
 /// ni le bouton « Réinitialiser le dépôt ». Ce fichier monte l'écran **avec** un [DepotVigieChiro]
 /// mocké et couvre les liaisons que le chantier #984 a ajoutées.
 ///
@@ -120,7 +120,7 @@ class LotDepotConnecteViewTest {
     }
 
     @Test
-    @DisplayName("#1998 : connecté et sans archives, un SEUL bouton primaire — « Téléverser », pas « Générer »")
+    @DisplayName("#1998 : connecté et sans archives, un SEUL bouton primaire, « Téléverser », pas « Générer »")
     void un_seul_bouton_primaire_quand_connecte_sans_archives(FxRobot robot) {
         // Défaut trouvé en REGARDANT la capture, pas par un test : depuis que le téléversement produit
         // ses propres archives, « connecté sans archives » est devenu un état courant, et « Générer »
@@ -146,7 +146,7 @@ class LotDepotConnecteViewTest {
 
         assertThat(deposer.getText()).isEqualTo("Lancer la participation");
         // Régression : la garde « Marquer déposé » (statut « Prêt à déposer ») désactivait le bouton dès la
-        // fin de l'upload — or c'est justement là qu'il faut pouvoir lancer le traitement.
+        // fin de l'upload : or c'est justement là qu'il faut pouvoir lancer le traitement.
         assertThat(deposer.isDisabled()).isFalse();
     }
 
@@ -200,7 +200,7 @@ class LotDepotConnecteViewTest {
     @Test
     @DisplayName("#1263 : à l'ouverture, le dernier état connu est affiché SANS appel réseau (cache #1262)")
     void ouverture_affiche_le_dernier_etat_connu_sans_reseau(FxRobot robot) {
-        // Hors connexion, l'écran doit dire ce qu'il sait — et de quand cela date — plutôt que rien.
+        // Hors connexion, l'écran doit dire ce qu'il sait (et de quand cela date) plutôt que rien.
         when(suivi.dernierReleve(ID_PASSAGE))
                 .thenReturn(Optional.of(new ReleveTraitement(
                         ID_PASSAGE,

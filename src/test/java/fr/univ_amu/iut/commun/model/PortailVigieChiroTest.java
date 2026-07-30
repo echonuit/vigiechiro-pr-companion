@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Pages du portail Vigie-Chiro ([PortailVigieChiro], #1124) sur table des liens **réelle** (SQLite
-/// jetable) : URL construite pour une entité rattachée, vide sinon — aucune IHM, aucun réseau.
+/// jetable) : URL construite pour une entité rattachée, vide sinon, aucune IHM, aucun réseau.
 class PortailVigieChiroTest {
 
     @TempDir

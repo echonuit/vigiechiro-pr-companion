@@ -94,7 +94,7 @@ class ReponsesVigieChiroTest {
     @Test
     @DisplayName("numeroCarreStoc : le PREMIER élément (GET /grille_stoc/cercle rend les carrés triés par distance)")
     void numero_carre_stoc() {
-        // Réponse Eve paginée du backend (`$near` : distance croissante) — le premier item est le carré de
+        // Réponse Eve paginée du backend (`$near` : distance croissante), le premier item est le carré de
         // la position demandée, les suivants sont ses voisins.
         String corps = "{\"_items\":["
                 + "{\"_id\":\"g1\",\"numero\":\"130711\",\"centre\":{\"type\":\"Point\",\"coordinates\":[5.44,43.52]}},"

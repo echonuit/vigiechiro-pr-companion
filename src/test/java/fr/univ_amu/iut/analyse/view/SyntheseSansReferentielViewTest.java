@@ -39,7 +39,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// L'écran **Synthèse de la nuit** quand le référentiel d'activité est **absent** (#2351).
 ///
 /// C'est un critère d'acceptation du lot, et il n'était couvert par rien : le code existait, mais rien
-/// ne le tenait. Le comportement attendu n'est pas d'échouer ni d'afficher des cases blanches — une
+/// ne le tenait. Le comportement attendu n'est pas d'échouer ni d'afficher des cases blanches : une
 /// colonne vide se lirait comme une donnée manquante. L'écran **retire** ce qu'il ne peut plus fonder
 /// et le dit en toutes lettres ; le tableau de comptages, lui, reste entier et exploitable.
 ///

@@ -35,7 +35,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// **Test E2E du parcours fil rouge P0 — « Première nuit de Marie »** : la chaîne complète de
+/// **Test E2E du parcours fil rouge P0, « Première nuit de Marie »** : la chaîne complète de
 /// bout-en-bout, racontée du point de vue de la persona débutante mono-site, **pilotée uniquement
 /// par les services métier réels** (aucune IHM). On part d'une base jetable migrée, on enchaîne les
 /// étapes du parcours et on **vérifie le résultat métier à chaque jalon** :
@@ -55,7 +55,7 @@ import org.junit.jupiter.api.Test;
 /// Le harnais reprend celui des E2E existants (workspace jetable surchargé via la propriété système
 /// `vigiechiro.workspace`, schéma migré par [MigrationSchema], services assemblés par les **mêmes
 /// constructeurs** que la production), mais sans `ApplicationExtension` puisqu'aucune fenêtre n'est
-/// montée — exactement comme `RacineInjecteurTest` qui résout déjà les services hors toolkit JavaFX.
+/// montée : exactement comme `RacineInjecteurTest` qui résout déjà les services hors toolkit JavaFX.
 class ParcoursPremiereNuitE2ETest {
 
     private static final String ID_USER = "u-e2e-p0";
@@ -89,7 +89,7 @@ class ParcoursPremiereNuitE2ETest {
     @Test
     @DisplayName("Fil rouge P0 : de la déclaration du site jusqu'au dépôt, statut à chaque jalon")
     void premiere_nuit_de_la_declaration_au_depot() throws Exception {
-        // ── Étape 1 — Déclarer le site (P1) ────────────────────────────────────────────────────
+        // ── Étape 1 : Déclarer le site (P1) ────────────────────────────────────────────────────
         ServiceSites sites = injector.getInstance(ServiceSites.class);
         Site site = sites.creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
         PointDEcoute point = sites.ajouterPoint(site.id(), CODE_POINT, 43.4010, -1.5740, "Près du chêne");
@@ -97,7 +97,7 @@ class ParcoursPremiereNuitE2ETest {
         assertThat(point.id()).isNotNull();
         assertThat(point.code()).isEqualTo(CODE_POINT);
 
-        // ── Étape 3 — Importer la nuit (P2) : copie + renommage + transformation → « Transformé » ─
+        // ── Étape 3, Importer la nuit (P2) : copie + renommage + transformation → « Transformé » ─
         Prefixe prefixe = new Prefixe(CARRE, 2026, 1, CODE_POINT);
         Path sd = creerNuitSynthetique(workspace.resolve("sd"));
         ResultatImport resultat = injector.getInstance(ServiceImport.class).importer(sd, point.id(), prefixe);
@@ -112,7 +112,7 @@ class ParcoursPremiereNuitE2ETest {
         assertThat(originaux).isNotEmpty();
         assertThat(originaux).allSatisfy(o -> assertThat(o.nomFichier()).startsWith(prefixe.prefixeFichier()));
 
-        // ── Étape 4 — Vérifier l'enregistrement (P3) : sélection + pré-check + verdict OK → « Vérifié » ─
+        // ── Étape 4, Vérifier l'enregistrement (P3) : sélection + pré-check + verdict OK → « Vérifié » ─
         ServiceQualification qualification = injector.getInstance(ServiceQualification.class);
         assertThat(qualification.ouvrirVerification(idPassage)).isNotNull();
         assertThat(qualification.precheck(idPassage)).isNotNull();
@@ -120,7 +120,7 @@ class ParcoursPremiereNuitE2ETest {
         assertThat(verifie.verdictVerification()).isEqualTo(Verdict.OK);
         assertThat(statut(idPassage)).isEqualTo(StatutWorkflow.VERIFIE);
 
-        // ── Étape 5 — Préparer le lot puis confirmer le dépôt manuel (P4) → « Prêt à déposer » → « Déposé » ─
+        // ── Étape 5 : Préparer le lot puis confirmer le dépôt manuel (P4) → « Prêt à déposer » → « Déposé » ─
         ServiceLot lot = injector.getInstance(ServiceLot.class);
         Lot prepare = lot.preparerLot(idPassage);
         assertThat(prepare.idPassage()).isEqualTo(idPassage);
@@ -147,7 +147,7 @@ class ParcoursPremiereNuitE2ETest {
 
         injector.getInstance(ServiceImport.class).importer(sd, point.id(), new Prefixe(CARRE, 2026, 1, CODE_POINT));
 
-        // R9 : la SD n'est jamais altérée — le fichier original est toujours présent, bit pour bit identique.
+        // R9 : la SD n'est jamais altérée, le fichier original est toujours présent, bit pour bit identique.
         assertThat(Files.exists(wavOrigine)).isTrue();
         assertThat(Files.readAllBytes(wavOrigine)).isEqualTo(avantImport);
     }

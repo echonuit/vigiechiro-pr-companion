@@ -28,16 +28,16 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Le **câblage de la sixième entrée ☰** — « Repartir d'une base neuve » (#1419) — au regard du trou que
+/// Le **câblage de la sixième entrée ☰** (« Repartir d'une base neuve » (#1419)) au regard du trou que
 /// #1436 a fermé sur les cinq autres.
 ///
 /// Les cinq entrées qui touchent au disque construisaient leur action **dans** `executer()`, avec leurs
 /// vrais dialogues : rien ne pouvait donc les déclencher, et rien ne vérifiait qu'elles appellent **le
-/// bon geste**. Celle-ci était née après, et reproduisait le défaut — alors qu'elle est **la plus
+/// bon geste**. Celle-ci était née après, et reproduisait le défaut : alors qu'elle est **la plus
 /// destructrice du menu** : elle efface la base.
 ///
 /// Elle détient maintenant son geste. On remplace ses dialogues (et sa fermeture d'application, sans quoi
-/// le test tuerait sa propre JVM), on déclenche l'entrée, et on vérifie **quel** geste est parti — et,
+/// le test tuerait sa propre JVM), on déclenche l'entrée, et on vérifie **quel** geste est parti : et,
 /// tout aussi important, **lequel ne l'est pas**.
 class ActionResetGuideTest {
 
@@ -52,7 +52,7 @@ class ActionResetGuideTest {
     private int fermetures;
 
     @Test
-    @DisplayName("#1419 : « Repartir d'une base neuve » lance le RESET — et surtout pas une sauvegarde")
+    @DisplayName("#1419 : « Repartir d'une base neuve » lance le RESET, et surtout pas une sauvegarde")
     void l_entree_lance_le_reset() {
         when(recuperabilite.bilan()).thenReturn(bilanAvecPerte());
         when(reset.executer(any(), anyBoolean())).thenReturn(fait());

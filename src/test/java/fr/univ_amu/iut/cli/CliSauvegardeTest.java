@@ -25,7 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// --complet` et `restaurer`.
 ///
 /// Le cas qui compte est le **bilan amputé** : une racine de session non montée (carte SD retirée) doit
-/// donner un code de sortie distinct — une sauvegarde qu'on croit complète et qui ne l'est pas est le pire
+/// donner un code de sortie distinct : une sauvegarde qu'on croit complète et qui ne l'est pas est le pire
 /// des deux mondes, surtout juste avant un reset (#1151).
 class CliSauvegardeTest {
 

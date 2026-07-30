@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 
 /// Orchestration de [DialogueProgression] (#1597), **sans fenêtre** : sur un [ExecuteurTacheSynchrone], on
 /// vérifie que le succès ferme et restitue (et que la progression émise avance la barre), qu'une
-/// annulation ferme et appelle **`annule`** — sans succès ni échec (renoncer n'est pas échouer, #1622) —
+/// annulation ferme et appelle **`annule`**, sans succès ni échec (renoncer n'est pas échouer, #1622) :
 /// et qu'une erreur ferme et remonte l'échec.
 class DialogueProgressionTest {
 

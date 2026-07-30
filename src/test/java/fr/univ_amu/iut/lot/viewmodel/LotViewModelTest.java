@@ -348,7 +348,7 @@ class LotViewModelTest {
     }
 
     @Test
-    @DisplayName("#251 : génération hors-thread — marquer en cours puis appliquer/échec gère l'état")
+    @DisplayName("#251 : génération hors-thread, marquer en cours puis appliquer/échec gère l'état")
     void generation_hors_thread_gere_l_etat_en_cours() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
         var archive = new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2);

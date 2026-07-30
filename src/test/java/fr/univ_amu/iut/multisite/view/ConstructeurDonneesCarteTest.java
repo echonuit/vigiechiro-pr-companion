@@ -14,7 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// Tests **purs** (sans IHM) du [ConstructeurDonneesCarte] (#152) : traduction des agrégats domaine en
-/// [DonneesCarte] — points géolocalisés colorés par statut, emprises des carrés, et gestion des points
+/// [DonneesCarte] : points géolocalisés colorés par statut, emprises des carrés, et gestion des points
 /// sans GPS.
 class ConstructeurDonneesCarteTest {
 
@@ -51,7 +51,7 @@ class ConstructeurDonneesCarteTest {
     @DisplayName("un carré hors référentiel et sans point géolocalisé n'est ni marqué ni tracé")
     void carre_sans_point_geolocalise_n_est_pas_trace() {
         // Carré ABSENT du carroyage officiel (999999) : on retombe sur le repli, qui sans point géolocalisé
-        // ne peut rien ancrer. (Un carré DU référentiel, lui, est tracé même sans point — cf. carroyage #325.)
+        // ne peut rien ancrer. (Un carré DU référentiel, lui, est tracé même sans point : cf. carroyage #325.)
         CarreAgrege carre = new CarreAgrege("999999", null, List.of(new PointAgrege("A1", null, null, 0, null)), 0);
 
         DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
