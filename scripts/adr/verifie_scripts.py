@@ -96,6 +96,25 @@ def test_0035_pictogramme() -> None:
         _verifie("0035 détecte un pictogramme, ignore le commentaire", n, 1)
 
 
+def test_2843_tiret_cadratin() -> None:
+    m = _charge("2843-tiret-cadratin.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(
+            racine,
+            "Exemple.java",
+            "class Exemple {\n"
+            "    // un tiret cadratin — en commentaire, et la regle vise justement les commentaires\n"
+            '    String propre = "deux-points : voila la forme attendue";\n'
+            "}\n",
+        )
+        n = len(m.suspects(racine))
+        # Contrairement a ses voisins, ce script COMPTE les commentaires : la regle porte sur « la doc
+        # et les commentaires », qui sont ici la matiere et non le bruit. La ligne sans cadratin, elle,
+        # ne doit pas etre comptee - sans quoi le script surcompterait sans rien detecter.
+        _verifie("2843 detecte le cadratin en commentaire, ignore la ligne propre", n, 1)
+
+
 def test_0037_slot_actions() -> None:
     m = _charge("0037-slot-actions-hbox.py")
     with tempfile.TemporaryDirectory() as d:
@@ -194,6 +213,7 @@ if __name__ == "__main__":
         test_0010_dialogue_hors_port,
         test_0035_pictogramme,
         test_0037_slot_actions,
+        test_2843_tiret_cadratin,
         test_2493_modale_suit_croissance,
         test_loupe_0020,
         test_loupe_0044,
