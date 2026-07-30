@@ -112,6 +112,12 @@ ou `--espece <code>`, et `--sortie <zip>`), pour scripter des envois réguliers.
 
 ![La barre de filtres avec la puce « Groupe : Chiroptères » active : la table ne montre plus que les chauves-souris.](../assets/captures/apercu-sons-validation-filtres.png)
 
+La puce **« Lieu »** procède de la même façon, en cochant un ou plusieurs lieux : c'est le seul endroit
+où la **commune** déduite des coordonnées du point se lit à l'écran, et elle se combine avec l'espèce
+pour préparer l'archive à envoyer.
+
+![La puce « Lieu : Aix-en-Provence » posée dans la barre de filtres : la table ne montre plus que les observations de cette commune.](../assets/captures/apercu-sons-validation-lieu.png)
+
 ### Vues sauvegardées
 
 La revue **au fil de l'eau** est déjà mémorisée automatiquement (vous retrouvez vos filtres et votre tri à
@@ -467,5 +473,10 @@ détection issue d'un **import CSV** ou d'une **saisie manuelle** n'existe pas s
 
 Depuis l'accueil, l'activité **Sons & validation** ouvre l'écran sur **toutes les observations marquées
 « référence »** : vous les **écoutez**, les **validez / corrigez**, **retirez** la référence, et
-**exportez la bibliothèque** (un récapitulatif CSV + la copie des fichiers son) vers un dossier de votre
-choix.
+**exportez la bibliothèque** en **archive ZIP** : le récapitulatif `bibliotheque-sons.csv` à la racine
+et les fichiers son sous `sons/`, prête à être transmise sans autre manipulation. Comme l'export
+« observations + sons », l'écriture annonce ce qu'elle emporte, avance fichier par fichier, s'annule
+sans rien laisser derrière elle, et **compte les sons dont le fichier a quitté le disque** (le CSV
+continue de les nommer).
+
+![Le menu ☰ sur le corpus de référence : les trois exports (CSV des observations, observations + sons, bibliothèque de sons), les entrées propres à un passage restant masquées.](../assets/captures/apercu-menu-references.png)
