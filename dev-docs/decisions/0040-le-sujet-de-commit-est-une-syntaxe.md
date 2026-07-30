@@ -1,8 +1,8 @@
-# ADR 0040 — Le sujet d'un commit est une syntaxe, pas une phrase française
+# ADR 0040 - Le sujet d'un commit est une syntaxe, pas une phrase française
 
-- **Statut** : Accepté — 2026-07-20
+- **Statut** : Accepté - 2026-07-20
 - **Chantier** : EPIC #2104 / lot 0 (#2105)
-- **Vérification** : certaine — `.github/scripts/verifie-titre-pr.sh`
+- **Vérification** : certaine - `.github/scripts/verifie-titre-pr.sh`
 
 ## Contexte
 

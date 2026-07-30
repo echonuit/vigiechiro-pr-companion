@@ -1,8 +1,8 @@
-# ADR 0032 — Le plan de dépôt précède l'écriture des archives
+# ADR 0032 - Le plan de dépôt précède l'écriture des archives
 
-- **Statut** : Accepté — 2026-07-19
+- **Statut** : Accepté - 2026-07-19
 - **Chantier** : #1991 (lots #1993 à #1999)
-- **Vérification** : humaine — que le plan de dépôt précède l'écriture des archives est un ordonnancement du moteur, vérifié par ses tests, pas par un motif
+- **Vérification** : humaine - que le plan de dépôt précède l'écriture des archives est un ordonnancement du moteur, vérifié par ses tests, pas par un motif
 
 ## Contexte
 
@@ -20,7 +20,7 @@ archives, et deux phases sérialisées alors qu'elles pouvaient se recouvrir.
 Cette dépendance était plus faible qu'il n'y paraissait. `PlanificateurArchives.partitionner` est un
 glouton à **ordre préservé** sur les tailles source, et `ecrireArchive` nomme ses sorties
 `<préfixe>-N.zip`. Le plan complet, **noms compris**, est donc calculable avant le moindre octet
-écrit — `ArchivePlanifiee` existait déjà pour ça, et son commentaire le disait : « ce que l'on connaît
+écrit, `ArchivePlanifiee` existait déjà pour ça, et son commentaire le disait : « ce que l'on connaît
 dès l'établissement du plan (avant toute écriture) ».
 
 Ce qui manquait n'était pas l'information, c'était la **séparation** entre « ce qu'il y a à déposer »
@@ -42,7 +42,7 @@ basculement n'a plus lieu.
 **3. Le plan porte l'empreinte de sa liste source.** Le déterminisme de `partitionner` ne tient qu'à
 **liste source inchangée** : une séquence ajoutée, retirée ou re-transformée décale la partition, et
 l'archive `N` porterait le même nom pour un contenu différent. `EmpreinteLot` couvre le nom et la
-taille de chaque fichier dans l'ordre — exactement ce dont la partition dépend. Elle ne lit pas le
+taille de chaque fichier dans l'ordre : exactement ce dont la partition dépend. Elle ne lit pas le
 contenu : hacher des dizaines de gigaoctets à chaque pose de plan coûterait bien plus cher que le
 défaut évité.
 
@@ -71,7 +71,7 @@ l'écriture.
 
 **Persister la composition de chaque archive** (la liste des WAV qu'elle contient). Cela garantirait
 une régénération exacte même après modification du lot, mais duplique une information dérivable et
-alourdit le schéma. L'empreinte rend le défaut *impossible* plutôt que *réparable* — pour un cas qui ne
+alourdit le schéma. L'empreinte rend le défaut *impossible* plutôt que *réparable* : pour un cas qui ne
 devrait pas se produire, c'est le bon compromis.
 
 **S'appuyer sur le seul déterminisme, sans rien persister.** C'est ce qui aurait été le plus simple, et

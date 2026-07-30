@@ -1,8 +1,8 @@
-# ADR 0005 — La réactivation se vérifie par une cascade de preuves ; « archivé » est un état observé, pas un statut
+# ADR 0005 - La réactivation se vérifie par une cascade de preuves ; « archivé » est un état observé, pas un statut
 
-- **Statut** : Accepté — rétroactif, **amendé** par [ADR 0048](0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md) (#1038)
+- **Statut** : Accepté - rétroactif, **amendé** par [ADR 0048](0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md) (#1038)
 - **Chantier** : EPIC #1297 (passage archivé) ; cascade #1309, empreinte #1299
-- **Vérification** : certaine — `DecisionsRespecteesTest#archive_n_est_pas_un_statut_de_workflow`
+- **Vérification** : certaine - `DecisionsRespecteesTest#archive_n_est_pas_un_statut_de_workflow`
 
 ## Contexte
 

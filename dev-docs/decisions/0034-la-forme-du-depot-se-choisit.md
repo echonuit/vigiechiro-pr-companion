@@ -1,9 +1,9 @@
-# ADR 0034 — La forme du dépôt se choisit, elle ne se déduit pas de la place disponible
+# ADR 0034 - La forme du dépôt se choisit, elle ne se déduit pas de la place disponible
 
-- **Statut** : Accepté — 2026-07-19
+- **Statut** : Accepté - 2026-07-19
 - **Chantier** : #1991 (lots #1993 à #1999)
 - **Amende** : [ADR 0006](0006-depot-zip-par-defaut-perte-audio-serveur-assumee.md), sur la mécanique de contrepartie (le repli WAV ne se déduit plus de la place) ; sa décision de fond, le ZIP par défaut, reste entière.
-- **Vérification** : humaine — que la forme du dépôt se choisisse (réglage) plutôt qu'elle ne se déduise de la place est une règle de comportement
+- **Vérification** : humaine - que la forme du dépôt se choisisse (réglage) plutôt qu'elle ne se déduise de la place est une règle de comportement
 
 ## Contexte
 
@@ -62,8 +62,8 @@ déposer.
 La CLI et l'IHM partagent enfin le même défaut. `--archives` et `--wav` restent, et priment sur le
 réglage pour un dépôt ponctuel : c'est l'IHM qui rattrape la CLI, pas l'inverse.
 
-Le constat de recette S4-C06 peut être coché. Ce qui reste de #1515 est l'arbitrage produit lui-même —
-faut-il recommander le WAV par défaut ? — qui demande un retour de terrain que ce chantier n'a pas.
+Le constat de recette S4-C06 peut être coché. Ce qui reste de #1515 est l'arbitrage produit lui-même :
+faut-il recommander le WAV par défaut ? : qui demande un retour de terrain que ce chantier n'a pas.
 
 `ChoixSourceDepot` ne fait plus qu'**appliquer** un mode et refuser ce qu'il ne peut pas honorer. La
 place disque a cessé d'être une politique déguisée en contrainte.
@@ -75,7 +75,7 @@ Mais le repli serait devenu pratiquement inatteignable, laissant un mécanisme m
 choix toujours subi.
 
 **Traiter le choix hors de ce chantier, dans une issue rattachée à #1515.** Cela aurait laissé une
-fenêtre pendant laquelle le mode WAV était inatteignable en IHM sans que rien ne le dise — une
+fenêtre pendant laquelle le mode WAV était inatteignable en IHM sans que rien ne le dise : une
 régression fonctionnelle introduite par un chantier de performance, ce qui est précisément le genre de
 dette qu'on ne voit qu'une fois livrée.
 

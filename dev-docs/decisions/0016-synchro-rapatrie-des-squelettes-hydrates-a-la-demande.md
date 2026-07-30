@@ -1,8 +1,8 @@
-# ADR 0016 — La synchro rapatrie les nuits en squelettes, hydratés à la demande
+# ADR 0016 - La synchro rapatrie les nuits en squelettes, hydratés à la demande
 
-- **Statut** : Accepté — 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814), [ADR 2581](2581-un-etat-qui-decide-de-l-affichage-se-declare.md) (#2581), [ADR 0019](0019-ancrage-acquis-quand-il-sert.md) (#1838) et [ADR 2554](2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md) (EPIC #2554)
+- **Statut** : Accepté - 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814), [ADR 2581](2581-un-etat-qui-decide-de-l-affichage-se-declare.md) (#2581), [ADR 0019](0019-ancrage-acquis-quand-il-sert.md) (#1838) et [ADR 2554](2554-la-synchro-amene-chaque-nuit-a-un-niveau-de-completude.md) (EPIC #2554)
 - **Chantier** : EPIC #1662 (refonte de la récupération d'une nuit)
-- **Vérification** : humaine — le rapatriement en squelettes hydratés à la demande est un comportement de synchro, non observable par un motif statique
+- **Vérification** : humaine - le rapatriement en squelettes hydratés à la demande est un comportement de synchro, non observable par un motif statique
 
 > [!NOTE]
 > **Amendement (ADR 0018)** : le squelette n'est plus « sans aucun appel de détail par nuit ». La synchro
@@ -13,7 +13,7 @@
 > [!NOTE]
 > **Amendement (ADR 2554)** : la répartition « la reconstruction rapatrie les observations, la réactivation
 > rebranche l'audio » ne tient plus. La question devient **à quel niveau de complétude chaque nuit est
-> amenée** (structure → identité → **contenu**), et la synchro va jusqu'au contenu — pour toutes les nuits
+> amenée** (structure → identité → **contenu**), et la synchro va jusqu'au contenu : pour toutes les nuits
 > sans séquences, squelettes hérités compris. Le chiffrage qui justifiait de s'arrêter avant portait sur la
 > pagination `donnees` ; le CSV (#1565) coûte deux GET. L'alternative « hydrater en place », écartée ici,
 > est **retenue** sur le chemin de la réactivation (un écran est ouvert dessus, et un squelette porte des
@@ -21,7 +21,7 @@
 
 > [!NOTE]
 > **Amendement (ADR 2581)** : le squelette n'est plus créé « passage **déposé** et archivé ». Il porte
-> désormais son propre statut, `RECUPERE` (« Récupéré »), hors de la file linéaire du workflow — il n'a
+> désormais son propre statut, `RECUPERE` (« Récupéré »), hors de la file linéaire du workflow : il n'a
 > franchi aucune de ses étapes. Le statut « Déposé » recouvrait deux situations dont les gardes, les
 > gestes et l'affichage diffèrent : « nous avons déposé cette nuit » et « elle vient du serveur ». La
 > conséquence « un squelette est un état **bénin** pour l'audit » tient toujours, et l'audit n'a d'ailleurs

@@ -1,8 +1,8 @@
-# ADR 0007 — Les retours de l'API sont un type scellé `ReponseApi`
+# ADR 0007 - Les retours de l'API sont un type scellé `ReponseApi`
 
-- **Statut** : Accepté — rétroactif
+- **Statut** : Accepté - rétroactif
 - **Chantier** : EPIC #1284 (faire parler le transport HTTP)
-- **Vérification** : humaine — un appel réseau qui contourne ReponseApi ne se distingue pas par motif d'un utilitaire du paquet api ; vérifié en revue
+- **Vérification** : humaine - un appel réseau qui contourne ReponseApi ne se distingue pas par motif d'un utilitaire du paquet api ; vérifié en revue
 
 ## Contexte
 

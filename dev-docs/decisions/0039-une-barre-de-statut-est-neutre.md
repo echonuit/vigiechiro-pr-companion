@@ -1,8 +1,8 @@
-# ADR 0039 — Une barre de statut dit où l'on en est, pas si c'est bien ou mal
+# ADR 0039 - Une barre de statut dit où l'on en est, pas si c'est bien ou mal
 
-- **Statut** : Accepté — 2026-07-20
+- **Statut** : Accepté - 2026-07-20
 - **Chantier** : EPIC #1990 / sous-EPIC #2004 (passe d'harmonisation de la clôture)
-- **Vérification** : humaine — la neutralité d'une barre de statut porte sur la sémantique des libellés, qu'aucun motif ne juge
+- **Vérification** : humaine - la neutralité d'une barre de statut porte sur la sémantique des libellés, qu'aucun motif ne juge
 - **Complète** : [ADR 0035](0035-un-pictogramme-est-une-icone-pas-un-caractere.md) et [ADR 0038](0038-l-echelle-de-severite-a-quatre-niveaux.md), en donnant à la quatrième surface de restitution la règle qui lui manquait.
 
 ## Contexte

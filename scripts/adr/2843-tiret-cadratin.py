@@ -72,10 +72,9 @@ CITE = re.compile("`" + CADRATIN + "`|«[^»\n]*»|\\|\\s*" + CADRATIN + "\\s*(?
 ZONES_NETTOYEES = (
     ("documentation utilisateur", pathlib.Path("docs"), ()),
     ("brief projet", pathlib.Path("brief"), ()),
-    # `decisions` en attente : les cadratins des en-têtes d'ADR (Statut, Chantier, Vérification) sont
-    # des **séparateurs de format**, lus par quatre analyseurs. Les changer est une migration de
-    # format, pas un nettoyage de prose, et elle aura sa propre tranche.
-    ("documentation développeur", pathlib.Path("dev-docs"), ("decisions",)),
+    # `decisions` incluse depuis la migration de format : les séparateurs des en-têtes d'ADR sont
+    # passés au tiret simple, et les trois analyseurs qui les lisent acceptent les deux formes.
+    ("documentation développeur", pathlib.Path("dev-docs"), ()),
 )
 
 

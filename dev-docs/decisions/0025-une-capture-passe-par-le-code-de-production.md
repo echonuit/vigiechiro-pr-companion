@@ -1,8 +1,8 @@
-# ADR 0025 — Une capture passe par le code de production, elle ne le reconstruit pas
+# ADR 0025 - Une capture passe par le code de production, elle ne le reconstruit pas
 
-- **Statut** : Accepté — 2026-07-18
+- **Statut** : Accepté - 2026-07-18
 - **Chantier** : #1468, #1865 (suites de la clôture de #1838)
-- **Vérification** : humaine — qu'une capture appelle le code de production plutôt qu'un fac-similé est une discipline de conception, jugée en revue
+- **Vérification** : humaine - qu'une capture appelle le code de production plutôt qu'un fac-similé est une discipline de conception, jugée en revue
 
 ## Contexte
 
@@ -10,7 +10,7 @@ Les captures d'écran de ce dépôt ne sont pas des illustrations : elles sont *
 
 Certaines surfaces résistent à ce principe. Un `Alert` se montre par `showAndWait`, qui **bloque** ; une modale de progression n'existe que le temps d'un travail ; un `MenuButton` n'expose pas la scène de son popup. Faute de pouvoir les obtenir, les outils de capture les **reconstruisaient à l'identique**.
 
-**Et « à l'identique » n'engage personne.** #1468 l'a découvert en ouvrant les images : la documentation montrait des dialogues qui avaient **dérivé du produit**, jusqu'à une confirmation entière qui manquait. La reconstruction n'échoue jamais, ne rougit aucun test, et se périme silencieusement — exactement le défaut que les captures existent pour empêcher.
+**Et « à l'identique » n'engage personne.** #1468 l'a découvert en ouvrant les images : la documentation montrait des dialogues qui avaient **dérivé du produit**, jusqu'à une confirmation entière qui manquait. La reconstruction n'échoue jamais, ne rougit aucun test, et se périme silencieusement, exactement le défaut que les captures existent pour empêcher.
 
 #1468 a posé le remède sur un cas (`ConfirmationNavigation.dialogue`). #1865 l'a appliqué trois fois de plus, et a montré que c'était une règle et non un expédient. Elle n'était écrite nulle part.
 

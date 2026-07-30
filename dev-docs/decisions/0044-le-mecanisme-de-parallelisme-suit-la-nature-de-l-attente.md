@@ -1,8 +1,8 @@
-# ADR 0044 — Le mécanisme de parallélisme se choisit sur la nature de l'attente, la borne se chiffre sur autre chose
+# ADR 0044 - Le mécanisme de parallélisme se choisit sur la nature de l'attente, la borne se chiffre sur autre chose
 
-- **Statut** : Accepté — 2026-07-20
+- **Statut** : Accepté - 2026-07-20
 - **Chantier** : #2040 (EPIC #2116)
-- **Vérification** : humaine — le choix du mécanisme de parallélisme selon la nature de l'attente est un jugement de conception, non observable dans le code. Loupe : `scripts/adr/loupe-0044-mecanisme-parallelisme.py`
+- **Vérification** : humaine - le choix du mécanisme de parallélisme selon la nature de l'attente est un jugement de conception, non observable dans le code. Loupe : `scripts/adr/loupe-0044-mecanisme-parallelisme.py`
 
 ## Contexte
 
@@ -28,7 +28,7 @@ Elle ne l'est pas tout à fait. **La règle existe déjà, écrite une seule foi
 **L'analyse d'ouverture de #2040 s'est trompée de suspect.** Elle tenait la divergence de
 `DepotVigieChiro` pour justifiée (« travail bloquant réseau, plafond métier de 5 ») et celle de
 `CompacteurDepot` pour douteuse. C'est l'inverse : `CompacteurDepot` compresse en DEFLATE, du calcul
-pur, sur un pool calé sur `availableProcessors()` — le cas d'école de la règle. `DepotVigieChiro`
+pur, sur un pool calé sur `availableProcessors()` : le cas d'école de la règle. `DepotVigieChiro`
 attend le réseau sur des threads de plateforme, exactement ce que `PlateformeReconstruction` fait avec
 des fils virtuels. Le seul des deux qui s'écarte est celui que l'issue disait conforme.
 
@@ -79,7 +79,7 @@ Un contributeur qui parallélise n'a plus à deviner laquelle des deux formes co
 tâche attend ou si elle calcule.
 
 `DepotVigieChiro:217` porte désormais une divergence **motivée**. Une divergence non écrite se propage
-par copie — c'est ainsi que trois copies du patron d'exécution parallèle ont pu coexister (#2039).
+par copie : c'est ainsi que trois copies du patron d'exécution parallèle ont pu coexister (#2039).
 
 Cet ADR ne referme pas #2039 : documenter le choix du mécanisme ne dédouble pas les implantations.
 Il le rend en revanche jugeable, puisque la règle contre laquelle juger existe.

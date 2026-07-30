@@ -1,8 +1,8 @@
-# ADR 0043 — La mesure fait foi en CI, pas sur le poste (amende 0037)
+# ADR 0043 - La mesure fait foi en CI, pas sur le poste (amende 0037)
 
-- **Statut** : Accepté — 2026-07-20
+- **Statut** : Accepté - 2026-07-20
 - **Chantier** : #1641, #1873, #1579, #2129
-- **Vérification** : humaine — que la mesure fasse foi en CI plutôt qu'une observation locale est une discipline de méthode, non observable dans le code
+- **Vérification** : humaine - que la mesure fasse foi en CI plutôt qu'une observation locale est une discipline de méthode, non observable dans le code
 
 ## Contexte
 
@@ -18,7 +18,7 @@ Trois faits l'ont établi, et chacun a d'abord été pris pour autre chose.
 
 ## Décision
 
-**1. Une observation visuelle locale est une hypothèse, pas un constat.** Elle vaut pour orienter, jamais pour conclure. Toute affirmation de la forme « cet écran ne tronque plus » se vérifie sur un rendu de CI avant d'être écrite — dans une ADR, un bilan, ou le corps d'une issue.
+**1. Une observation visuelle locale est une hypothèse, pas un constat.** Elle vaut pour orienter, jamais pour conclure. Toute affirmation de la forme « cet écran ne tronque plus » se vérifie sur un rendu de CI avant d'être écrite : dans une ADR, un bilan, ou le corps d'une issue.
 
 **2. Une correction de dimension prend une marge, elle ne vise pas le chiffre mesuré.** Environ **10 px** au-delà du manque relevé. Une correction exacte est une correction qui repassera au rouge ailleurs.
 
@@ -32,6 +32,6 @@ Trois faits l'ont établi, et chacun a d'abord été pris pour autre chose.
 
 ## Ce qui a été écarté
 
-**Relever la tolérance du verrou pour absorber l'écart de police** (par exemple à 8 px). Cela rendrait la chaîne stable partout — et aveugle aux défauts de 2 à 6 px, qui sont la majorité de ceux trouvés. On préfère un verrou exigeant mesuré au bon endroit à un verrou permissif mesuré partout.
+**Relever la tolérance du verrou pour absorber l'écart de police** (par exemple à 8 px). Cela rendrait la chaîne stable partout : et aveugle aux défauts de 2 à 6 px, qui sont la majorité de ceux trouvés. On préfère un verrou exigeant mesuré au bon endroit à un verrou permissif mesuré partout.
 
 **Figer la police du harnais** (embarquer une fonte et l'imposer aux captures). Rendrait la mesure reproductible, mais ferait mentir les aperçus d'une autre façon : ils ne montreraient plus le rendu que l'utilisateur obtient sur son système. La piste reste ouverte si les allers-retours de CI deviennent coûteux.

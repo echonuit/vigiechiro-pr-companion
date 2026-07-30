@@ -1,8 +1,8 @@
-# ADR 0017 — L'origine d'un point d'écoute (rapatrié vs ajouté à la main) est un état porté, pas déduit
+# ADR 0017 - L'origine d'un point d'écoute (rapatrié vs ajouté à la main) est un état porté, pas déduit
 
-- **Statut** : Accepté — 2026-07-17
+- **Statut** : Accepté - 2026-07-17
 - **Chantier** : EPIC #1662 (#1738)
-- **Vérification** : humaine — que l'origine d'un point soit portée (drapeau) et non déduite est un comportement de vue ; le champ seul ne prouve pas la règle
+- **Vérification** : humaine - que l'origine d'un point soit portée (drapeau) et non déduite est un comportement de vue ; le champ seul ne prouve pas la règle
 
 ## Contexte
 

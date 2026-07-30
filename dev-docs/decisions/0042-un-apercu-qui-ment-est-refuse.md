@@ -1,8 +1,8 @@
-# ADR 0042 — Un aperçu qui ment est refusé, et l'exception se déclare dans la vue
+# ADR 0042 - Un aperçu qui ment est refusé, et l'exception se déclare dans la vue
 
-- **Statut** : Accepté — 2026-07-20
+- **Statut** : Accepté - 2026-07-20
 - **Chantier** : #2049, #1641, #1873, #1579, #2129
-- **Vérification** : certaine — `ApercuFxElisionTest#bouton_tronque_refuse`
+- **Vérification** : certaine - `ApercuFxElisionTest#bouton_tronque_refuse`
 
 ## Contexte
 
@@ -25,13 +25,13 @@ Le message nomme le libellé fautif et **chiffre** ce qui lui manque : sans le c
 
 **2. Le critère porte sur le libellé, jamais sur la scène.** Comparer la hauteur du contenu à celle de la scène ne marche pas : mesuré sur le Diagnostic, cet écart vaut 1,6 px sur un écran où **rien** n'est élidé, ses conteneurs extensibles absorbant la place sans rien perdre. Pire, mesurée en hauteur **préférée**, une carte annonce 767 580 px de débordement. Un libellé comprimé, lui, occupe moins de hauteur que celle qu'il demanderait pour la largeur dont il dispose : c'est local, vérifiable, et sans faux positif.
 
-**3. Le déficit ne se supprime pas, il se déplace — et on choisit sur qui.** Figer tous les contrôles d'une barre ne fait pas rentrer son contenu : cela le fait déborder. Il faut donc désigner un porteur. La règle : **un sélecteur ou une métadonnée avant un libellé d'action**. Un mode se relit au déroulé, un nom de fichier se relit dans la table d'à côté ; un bouton coupé ne se relit nulle part.
+**3. Le déficit ne se supprime pas, il se déplace, et on choisit sur qui.** Figer tous les contrôles d'une barre ne fait pas rentrer son contenu : cela le fait déborder. Il faut donc désigner un porteur. La règle : **un sélecteur ou une métadonnée avant un libellé d'action**. Un mode se relit au déroulé, un nom de fichier se relit dans la table d'à côté ; un bouton coupé ne se relit nulle part.
 
 **4. L'exception se déclare dans la vue, par la classe CSS `abregeable`.** Elle vit dans le FXML et non dans une liste tenue par l'outil, pour se lire **à l'endroit où elle s'applique**, par qui modifie la vue. C'est une classe **marqueur** : elle ne porte aucune règle de style, et ne doit pas être supprimée comme CSS morte. Elle s'hérite jusqu'aux libellés internes des contrôles composés (`ComboBox`, `MenuButton`), qu'un FXML ne peut pas marquer directement.
 
 **5. Un composant tiers est hors du contrôle.** `AudioView` vient d'un artefact séparé : ses boutons de transport tronquent, et aucun FXML d'ici ne peut y remédier. Un verrou qui exige une correction impossible ne protège rien, il bloque. Ces défauts se traitent en amont (audio-view#56) et l'exclusion tombera quand ce sera publié.
 
-> **Levée le 2026-07-20.** audio-view#56 est corrigée (sa barre de transport est passée en `FlowPane`, elle plie au lieu de tronquer) et publiée en **1.15.1**. L'exclusion est **retirée** : le sous-arbre `AudioView` repasse sous le contrôle. Le principe énoncé ici reste valide et se réappliquera si un composant tiers redevient infixable d'ici — mais tant qu'une chaîne *peut* être verte, la rendre aveugle coûterait plus qu'elle ne rapporte : une régression amont ne se verrait plus.
+> **Levée le 2026-07-20.** audio-view#56 est corrigée (sa barre de transport est passée en `FlowPane`, elle plie au lieu de tronquer) et publiée en **1.15.1**. L'exclusion est **retirée** : le sous-arbre `AudioView` repasse sous le contrôle. Le principe énoncé ici reste valide et se réappliquera si un composant tiers redevient infixable d'ici, mais tant qu'une chaîne *peut* être verte, la rendre aveugle coûterait plus qu'elle ne rapporte : une régression amont ne se verrait plus.
 
 ## Conséquences
 
@@ -44,6 +44,6 @@ Le message nomme le libellé fautif et **chiffre** ce qui lui manque : sans le c
 
 **Avertir sans bloquer.** C'est l'état d'avant, sous un autre nom. Les cinq issues prouvent que ce qui n'arrête pas la chaîne n'est pas traité.
 
-**Élargir les scènes de capture jusqu'à ce que tout tienne.** Fait disparaître le symptôme de l'image sans rien changer pour l'utilisateur qui travaille en fenêtre étroite — déjà écarté par [ADR 0037](0037-une-barre-d-actions-plie-elle-ne-tronque-pas.md) pour #1701.
+**Élargir les scènes de capture jusqu'à ce que tout tienne.** Fait disparaître le symptôme de l'image sans rien changer pour l'utilisateur qui travaille en fenêtre étroite : déjà écarté par [ADR 0037](0037-une-barre-d-actions-plie-elle-ne-tronque-pas.md) pour #1701.
 
 **Une liste d'exceptions dans `ApercuFx`.** Elle se serait périmée en silence : rien n'oblige qui modifie une vue à aller lire un outil de capture. La classe CSS est sous ses yeux.

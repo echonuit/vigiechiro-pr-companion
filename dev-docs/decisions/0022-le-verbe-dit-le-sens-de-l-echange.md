@@ -1,8 +1,8 @@
-# ADR 0022 — Le verbe d'un geste dit le sens réel de l'échange
+# ADR 0022 - Le verbe d'un geste dit le sens réel de l'échange
 
-- **Statut** : Accepté — 2026-07-18
+- **Statut** : Accepté - 2026-07-18
 - **Chantier** : #1855, #1866 (suites de l'EPIC #1662 et du chantier #1838)
-- **Vérification** : humaine — que le verbe d'un geste dise le sens réel de l'échange porte sur le vocabulaire de l'IHM, qu'aucun motif ne juge
+- **Vérification** : humaine - que le verbe d'un geste dise le sens réel de l'échange porte sur le vocabulaire de l'IHM, qu'aucun motif ne juge
 
 ## Contexte
 
@@ -14,7 +14,7 @@ Deux fois, à deux chantiers d'écart, ce mot a menti.
 
 **#1838.** Une phase de progression s'appelait « Ancrage des observations **sur** VigieChiro… » pour un traitement qui **télécharge** des identifiants. Le libellé était partagé avec la réactivation (#1571) et figurait déjà dans une capture : le chantier n'avait pas créé le défaut, il l'avait propagé.
 
-Entre les deux, rien n'a signalé la récidive. La règle posée par #1855 existait, elle était juste, et elle vivait **uniquement dans le corps d'un message de commit** — un endroit que personne ne relit.
+Entre les deux, rien n'a signalé la récidive. La règle posée par #1855 existait, elle était juste, et elle vivait **uniquement dans le corps d'un message de commit** : un endroit que personne ne relit.
 
 Une troisième question est alors revenue (#1866) : le menu ☰ de « Sons & validation » dit « **Importer** depuis VigieChiro… » là où Mes sites dit « **Récupérer** depuis VigieChiro ». Même plateforme, même direction, deux verbes. Est-ce le même défaut ? Non, et la raison mérite d'être écrite : c'est précisément ce qui distingue une incohérence d'une distinction utile.
 
@@ -32,7 +32,7 @@ C'est pourquoi « Importer depuis VigieChiro » et « Récupérer depuis VigieCh
 
 - « Importer / Réimporter depuis VigieChiro » **reste**. Ce n'est pas une exception tolérée par lassitude : c'est l'application de la règle 2. La question ne se rouvre pas au prochain chantier qui touchera ce menu.
 - La commande CLI `synchroniser-vigiechiro` était le dernier résidu du vocabulaire écarté par #1855 : elle devient `recuperer-vigiechiro`, l'ancien nom restant comme **alias** pour ne pas casser les scripts existants (la parité CLI ↔ IHM de l'[ADR 0014](0014-parite-cli-ihm.md) porte aussi sur les mots).
-- Un libellé partagé par deux gestes se change **en plusieurs endroits** : la source, la doc utilisateur, la fiche de recette, et la capture qui le montre. #1838 a livré le remède structurel — quand deux gestes partagent un libellé, il vit dans **une constante** (`AcquisitionAncrage.LIBELLE`) et non dans deux chaînes jumelles. Sans quoi le renommage se fait une fois sur deux, et rien ne le dit.
+- Un libellé partagé par deux gestes se change **en plusieurs endroits** : la source, la doc utilisateur, la fiche de recette, et la capture qui le montre. #1838 a livré le remède structurel, quand deux gestes partagent un libellé, il vit dans **une constante** (`AcquisitionAncrage.LIBELLE`) et non dans deux chaînes jumelles. Sans quoi le renommage se fait une fois sur deux, et rien ne le dit.
 - Les termes vus par l'utilisateur sont désormais définis dans le [glossaire utilisateur](https://companion.echonuit.fr/glossaire/) ; leur sens interne, dans le [glossaire du domaine](../glossaire.md). Une divergence entre les deux reste un défaut de vocabulaire à corriger, comme le pose déjà ce dernier.
 
 ## Alternatives écartées

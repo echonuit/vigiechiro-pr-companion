@@ -19,7 +19,9 @@ import sys
 
 DECISIONS = pathlib.Path("dev-docs/decisions")
 
-CLIQUET = re.compile(r"^- \*\*Vérification\*\* : probable — `[^`]+` \(cliquet : (\d+)\)$", re.M)
+# Le séparateur accepte le tiret simple ET le cadratin : #2365 migre le format des en-têtes d'ADR,
+# et un analyseur tolérant rend chaque état intermédiaire sûr, y compris une migration interrompue.
+CLIQUET = re.compile(r"^- \*\*Vérification\*\* : probable [-—] `[^`]+` \(cliquet : (\d+)\)$", re.M)
 
 
 def cliquet(numero: str) -> int:
@@ -31,7 +33,7 @@ def cliquet(numero: str) -> int:
     if not trouve:
         raise SystemExit(
             f"ADR {numero} ne déclare aucun cliquet lisible. Attendu, dans son en-tête :\n"
-            f"  - **Vérification** : probable — `chemin/du/script` (cliquet : N)"
+            f"  - **Vérification** : probable - `chemin/du/script` (cliquet : N)"
         )
     return int(trouve.group(1))
 

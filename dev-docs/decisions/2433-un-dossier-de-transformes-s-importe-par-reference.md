@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-07-23
 - **Chantier** : #2258 (l'application cesse de posséder l'audio), lot #2433
-- **Vérification** : certaine — `ServiceImportReferenceTest#reference_pose_identite_et_placeholder`
+- **Vérification** : certaine - `ServiceImportReferenceTest#reference_pose_identite_et_placeholder`
 - **Complète** : #2255 (dont la clôture avait replié le versant « import » sur la réactivation) ; prolonge [ADR 0048](0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md)
 - **Quatrième couture** : rejoint import groupé, reconstruction par CSV (#1305) et hydratation (#1571) sous le concept unique d'import (#1662)
 

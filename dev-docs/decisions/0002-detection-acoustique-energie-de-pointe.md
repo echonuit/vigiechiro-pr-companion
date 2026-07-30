@@ -1,8 +1,8 @@
-# ADR 0002 — Détection acoustique par énergie de pointe, pas par moyenne globale
+# ADR 0002 - Détection acoustique par énergie de pointe, pas par moyenne globale
 
-- **Statut** : Accepté — 2026-07-17
+- **Statut** : Accepté - 2026-07-17
 - **Chantier** : EPIC #1653 (réactiver un passage reconstruit depuis les bruts)
-- **Vérification** : humaine — le choix de l'énergie de pointe plutôt que la moyenne globale est un algorithme de détection, vérifié par ses tests, pas par un motif
+- **Vérification** : humaine - le choix de l'énergie de pointe plutôt que la moyenne globale est un algorithme de détection, vérifié par ses tests, pas par un motif
 
 ## Contexte
 

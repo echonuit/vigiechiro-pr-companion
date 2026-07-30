@@ -1,8 +1,8 @@
-# ADR 2791 — La commune se dérive du GPS et s'attache au point, jamais au carré
+# ADR 2791 - La commune se dérive du GPS et s'attache au point, jamais au carré
 
-- **Statut** : Accepté — 2026-07-29
+- **Statut** : Accepté - 2026-07-29
 - **Chantier** : #2791 (lot 0 de l'EPIC #2790)
-- **Vérification** : certaine — `MigrationSchemaTest#table_commune_du_point_creee`
+- **Vérification** : certaine - `MigrationSchemaTest#table_commune_du_point_creee`
 
 ## Contexte
 

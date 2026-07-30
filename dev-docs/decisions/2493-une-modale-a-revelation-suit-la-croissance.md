@@ -1,8 +1,8 @@
-# ADR 2493 — Une modale à révélation suit la croissance de son contenu
+# ADR 2493 - Une modale à révélation suit la croissance de son contenu
 
-- **Statut** : Accepté — 2026-07-25
+- **Statut** : Accepté - 2026-07-25
 - **Chantier** : #2493 (issu du fix connexion #2486, du patron #1534)
-- **Vérification** : probable — `scripts/adr/2493-modale-suit-croissance.py` (cliquet : 0)
+- **Vérification** : probable - `scripts/adr/2493-modale-suit-croissance.py` (cliquet : 0)
 
 ## Contexte
 

@@ -1,8 +1,8 @@
-# ADR 0028 — Un état n'est pas un compte rendu, et ils ne partagent pas de canal
+# ADR 0028 - Un état n'est pas un compte rendu, et ils ne partagent pas de canal
 
-- **Statut** : Accepté — 2026-07-19, **amendé** par [ADR 0031](0031-un-retour-n-est-pas-un-compte-rendu.md) (sur le vocabulaire ; la décision reste entière)
+- **Statut** : Accepté - 2026-07-19, **amendé** par [ADR 0031](0031-un-retour-n-est-pas-un-compte-rendu.md) (sur le vocabulaire ; la décision reste entière)
 - **Chantier** : #1870 (lots #1886 à #1917)
-- **Vérification** : humaine — la séparation conceptuelle entre état et compte rendu se lit dans l'intention, pas dans un motif de code
+- **Vérification** : humaine - la séparation conceptuelle entre état et compte rendu se lit dans l'intention, pas dans un motif de code
 
 ## Contexte
 
@@ -19,9 +19,9 @@ message.set("Archives de dépôt supprimées (…)");   // l'écrase aussitôt
 
 Inverser ces deux lignes changeait ce que voyait l'utilisateur. Rien ne le signalait.
 
-**Le compte rendu déduit d'un état.** La même propriété disait « ✓ Dépôt préparé : N séquences validées » sur la seule foi du statut `PRET_A_DEPOSER`. Le succès de l'étape ① n'était donc pas *annoncé*, il était *déduit* — et s'affichait aussi à la simple ouverture d'un passage préparé la veille, annonçant une action qui n'avait pas eu lieu. Un test figeait ce comportement en ouvrant l'écran sans jamais préparer.
+**Le compte rendu déduit d'un état.** La même propriété disait « ✓ Dépôt préparé : N séquences validées » sur la seule foi du statut `PRET_A_DEPOSER`. Le succès de l'étape ① n'était donc pas *annoncé*, il était *déduit*, et s'affichait aussi à la simple ouverture d'un passage préparé la veille, annonçant une action qui n'avait pas eu lieu. Un test figeait ce comportement en ouvrant l'écran sans jamais préparer.
 
-**La sévérité logée dans les noms.** `ReconstructionViewModel` séparait bien trois natures, mais en multipliant les propriétés : `message`, `erreur`, `compteRendu`. Ailleurs, un canal nommé `messageErreur` portait « Métadonnées récupérées depuis Vigie-Chiro. » — un succès, présenté comme un échec faute de pouvoir dire autre chose.
+**La sévérité logée dans les noms.** `ReconstructionViewModel` séparait bien trois natures, mais en multipliant les propriétés : `message`, `erreur`, `compteRendu`. Ailleurs, un canal nommé `messageErreur` portait « Métadonnées récupérées depuis Vigie-Chiro. », un succès, présenté comme un échec faute de pouvoir dire autre chose.
 
 ## Décision
 
@@ -33,11 +33,11 @@ Inverser ces deux lignes changeait ce que voyait l'utilisateur. Rien ne le signa
 
 **4. Un collaborateur choisit sa sévérité s'il en émet plusieurs.** Quand un collaborateur n'émet que des échecs, il peut rester agnostique et laisser le point de jonction qualifier (`PositionsEnAttente`, lot #1888). Quand il émet des guidages **et** des succès, il choisit lui-même (`SaisiePassageConditions` via `MessagesRattachement`, lot #1917) : le faire deviner ailleurs reviendrait à réinterpréter des messages d'après leur texte.
 
-**5. Ce qui décide de la fenêtre n'est pas ce qui décide de la couleur.** `CompteRenduEnvoi.peutFermer()` et `CompteRenduEnvoi.retour()` dérivent des mêmes drapeaux et coïncident aujourd'hui — un succès ferme, tout le reste retient. Ils restent **distincts** : `peutFermer` n'a de sens que dans une modale alors que `RetourOperation` vit dans `commun` et sert des écrans où « fermer » n'en a aucun ; et rien ne garantit que la correspondance reste totale, un succès qu'on voudrait laisser lire étant un `SUCCES` qui ne ferme pas.
+**5. Ce qui décide de la fenêtre n'est pas ce qui décide de la couleur.** `CompteRenduEnvoi.peutFermer()` et `CompteRenduEnvoi.retour()` dérivent des mêmes drapeaux et coïncident aujourd'hui, un succès ferme, tout le reste retient. Ils restent **distincts** : `peutFermer` n'a de sens que dans une modale alors que `RetourOperation` vit dans `commun` et sert des écrans où « fermer » n'en a aucun ; et rien ne garantit que la correspondance reste totale, un succès qu'on voudrait laisser lire étant un `SUCCES` qui ne ferme pas.
 
 ## Conséquences
 
-Trois classes portent désormais cette séparation — `MessagesAudio`, `MessagesLot`, `MessagesRattachement` — chacune exposant l'état de son écran et un `RetourOperation`. Un quatrième cas se factorisera plutôt qu'il ne se recopiera.
+Trois classes portent désormais cette séparation (`MessagesAudio`, `MessagesLot`, `MessagesRattachement`), chacune exposant l'état de son écran et un `RetourOperation`. Un quatrième cas se factorisera plutôt qu'il ne se recopiera.
 
 Les règles de sévérité se lisent dans les valeurs : un **guidage** (champ mal rempli, rien à faire, opération sans objet) est une `INFO` et non une `ERREUR` ; un **résultat partiel** (relevé incomplet, dépôt interrompu) est une `INFO`, parce qu'annoncer un succès mentirait sur ce qui est acquis et une erreur nierait ce qui est passé.
 
