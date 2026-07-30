@@ -1,6 +1,6 @@
 # S8 · Récupérer une nuit déposée
 
-> **Écran propriétaire** : aucun en propre — la session traverse **Connexion**, **Mes sites**, **Toutes
+> **Écran propriétaire** : aucun en propre, la session traverse **Connexion**, **Mes sites**, **Toutes
 > mes nuits** et la **fiche passage**.
 > **Features** : reconstruction-passages, passage, sites, connexion, lot, multisite, saison.
 > · **Statut : à jouer.**
@@ -68,7 +68,7 @@ a changé : à jouer une par une, l'œil sur le motif affiché autant que sur l'
 21. **Supprimer** est **actif**. Le survol dit ce qu'il enlève (la copie locale) et ce qu'il laisse (la
     participation).
 22. **Vérifier** est **grisé**, et le motif dit « cette nuit vient de Vigie-Chiro, où elle est déjà
-    déposée : son verdict s'y décide » — et **non** « cette nuit est déposée ».
+    déposée : son verdict s'y décide », et **non** « cette nuit est déposée ».
 23. **Annuler le dépôt** est **visible mais désactivé**, avec son motif. Il ne doit ni disparaître ni
     être cliquable.
 24. **Modifier le passage** ouvre la modale, mais l'année et le n° y sont **verrouillés**.
@@ -89,7 +89,7 @@ a changé : à jouer une par une, l'œil sur le motif affiché autant que sur l'
 32. Ouvrir une séquence : le son correspond bien à l'observation affichée.
 33. **Le statut est passé à « Déposé »** : la nuit a rejoint les nuits ordinaires, elle sort de la vue
     « À réactiver », et « Annuler le dépôt » redevient actif. C'est la seule transition que le moteur
-    autorise depuis « Récupéré » — et elle ne doit se produire **que** si de l'audio est effectivement
+    autorise depuis « Récupéré » : et elle ne doit se produire **que** si de l'audio est effectivement
     revenu : une réactivation infructueuse laisse la nuit en « Récupéré ».
 
 **Étape 6 · Le rattrapage**
@@ -101,14 +101,14 @@ a changé : à jouer une par une, l'œil sur le motif affiché autant que sur l'
 **Étape 7 · La migration, sur une base qui a déjà servi (EPIC #2581)**
 
 37. Ouvrir une base **antérieure** au chantier, portant des nuits rapatriées en « Déposé ». Après
-    migration, elles portent **« Récupéré »** — et **elles seules** : une nuit que vous aviez déposée
+    migration, elles portent **« Récupéré »**, et **elles seules** : une nuit que vous aviez déposée
     garde « Déposé », même rattachée à sa participation.
 38. Le carré 130711 est le bon terrain : ses quatre nuits ont été rapatriées avant ce chantier.
 
 ## Ce que la session doit mesurer
 
 - **La lisibilité du statut** : « Récupéré » se comprend-il sans explication, ou faut-il lire la doc ?
-  C'est le seul juge de l'EPIC #2581 — le reste est tenu par des tests.
+  C'est le seul juge de l'EPIC #2581 : le reste est tenu par des tests.
 - **Durée** de la première synchronisation, et nombre de nuits traitées. Repère mesuré au banc :
   10,5 s pour 2 nuits (≈ 9 000 séquences, 24 542 observations). C'est ce chiffre qui a permis d'écarter
   un bornage du balayage ; s'il ne tient pas en usage réel, la décision est à rouvrir.

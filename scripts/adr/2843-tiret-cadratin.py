@@ -10,11 +10,14 @@ Pourquoi « probable » et non « certaine » : un tiret cadratin peut être **c
 exemple dans un commentaire qui explique justement la règle, ou dans une chaîne reproduisant un texte
 externe. Aucun motif ne sait faire cette différence.
 
-Périmètre : les **sources Java** (`src/main/java`, `src/test/java`). La documentation Markdown en est
-exclue à dessein. Un cliquet unique couvrant les deux populations pourrait **masquer** une régression
-dans l'une par un nettoyage dans l'autre : le total resterait stable et le verdict vert. Une seule
-population, un seul nombre, aucun angle mort. Si la documentation doit être tenue de même, elle aura
-son propre cliquet.
+Deux régimes, et c'est le point de conception de ce script.
+
+**Le cliquet** ne porte que sur les **sources Java** (`src/main/java`, `src/test/java`), encore loin du
+plancher. Un cliquet unique qui aurait aussi compté la documentation pourrait **masquer** une régression
+dans l'une par un nettoyage dans l'autre : le total resterait stable et le verdict vert.
+
+**La tolérance zéro** porte sur les zones **déjà nettoyées** ([#ZONES_NETTOYEES]). Une zone au plancher
+n'a pas besoin d'une marge, elle a besoin d'un refus, et un refus ne se masque pas.
 """
 
 import pathlib
@@ -51,10 +54,14 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     return trouves
 
 
-# Ce qui est **cité** n'est pas notre prose : le glyphe de valeur absente entre chevrons de code ou
-# entre guillemets français, et les libellés de l'application qu'une fiche d'écran reproduit
-# fidèlement. Une seule règle couvre les deux, là où deux listes auraient dérivé séparément.
-CITE = re.compile("`" + CADRATIN + "`|«[^»\n]*»")
+# Ce qui est **cité** ou **affiché** n'est pas notre prose. Trois formes, une seule règle :
+#
+# - le glyphe de valeur absente entre chevrons de code ;
+# - un libellé de l'application entre guillemets français, qu'une fiche d'écran reproduit fidèlement ;
+# - un cadratin **seul dans une cellule de tableau**, qui est le même glyphe posé dans du Markdown.
+#
+# Les trois se reconnaissent à leur encadrement. Trois listes d'exceptions auraient dérivé séparément.
+CITE = re.compile("`" + CADRATIN + "`|«[^»\n]*»|\\|\\s*" + CADRATIN + "\\s*(?=\\|)")
 
 # Les zones **nettoyées** par #2365, en tolérance zéro. Ajouter une tranche revient à ajouter **une
 # ligne** ici : c'est délibéré, chaque tranche touchant ce même script, et une insertion d'une ligne
@@ -63,21 +70,28 @@ CITE = re.compile("`" + CADRATIN + "`|«[^»\n]*»")
 # Tolérance zéro et non cliquet : une zone au plancher n'a pas besoin d'une marge, et une marge
 # partagée avec une zone encore loin du plancher resterait masquable.
 ZONES_NETTOYEES = (
-    ("documentation utilisateur", pathlib.Path("docs")),
-    ("brief projet", pathlib.Path("brief")),
+    ("documentation utilisateur", pathlib.Path("docs"), ()),
+    ("brief projet", pathlib.Path("brief"), ()),
+    # `decisions` en attente : les cadratins des en-têtes d'ADR (Statut, Chantier, Vérification) sont
+    # des **séparateurs de format**, lus par quatre analyseurs. Les changer est une migration de
+    # format, pas un nettoyage de prose, et elle aura sa propre tranche.
+    ("documentation développeur", pathlib.Path("dev-docs"), ("decisions",)),
 )
 
 
-def prose(racine: pathlib.Path) -> list[str]:
+def prose(racine: pathlib.Path, exclus: tuple[str, ...] = ()) -> list[str]:
     """Les cadratins de **prose** d'une zone nettoyée, citations exclues.
 
     `racine` est explicite : le garde-fou `verifie_scripts.py` y pointe une fixture jetable, et
-    [#ZONES_NETTOYEES] la fournit pour chaque zone du dépôt.
+    [#ZONES_NETTOYEES] la fournit pour chaque zone du dépôt. `exclus` nomme les sous-dossiers encore
+    en chantier, pour qu'une zone puisse se garder **par morceaux** au lieu d'attendre d'être entière.
     """
     trouves = []
     if not racine.exists():
         return trouves
     for page in sorted(racine.rglob("*.md")):
+        if any(part in exclus for part in page.parts):
+            continue
         for numero, ligne in enumerate(page.read_text(encoding="utf-8").splitlines(), 1):
             if CADRATIN in CITE.sub("", ligne):
                 trouves.append(f"{page}:{numero}  {ligne.strip()[:EXTRAIT]}")
@@ -87,8 +101,8 @@ def prose(racine: pathlib.Path) -> list[str]:
 if __name__ == "__main__":
     code = rapporte("2843", "tiret cadratin dans une source Java", suspects())
 
-    for libelle, racine in ZONES_NETTOYEES:
-        rechutes = prose(racine)
+    for libelle, racine, exclus in ZONES_NETTOYEES:
+        rechutes = prose(racine, exclus)
         print(f"\n{libelle} : {len(rechutes)} cadratin(s) de prose (tolérance zéro)")
         for suspect in rechutes:
             print(f"  {suspect}")

@@ -190,7 +190,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 53. **Ouvrir le journal et y chercher le jeton** : il n'y figure ni en clair, ni encodé, ni via une URL S3
     signée (le journal doit pouvoir être joint à un signalement).
 
-**Bloc · Gestes de ligne des tableaux (EPIC #1792)** — le rendu d'un menu contextuel ne se scripte pas :
+**Bloc · Gestes de ligne des tableaux (EPIC #1792)**, le rendu d'un menu contextuel ne se scripte pas :
 longueur des libellés, lisibilité d'un item grisé, position du popup près d'un bord.
 
 54. Clic droit sur une ligne du **suivi des archives** : le menu s'ouvre entièrement lisible, aucun

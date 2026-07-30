@@ -58,7 +58,7 @@ pas. Le filet d'exceptions non capturées d'`App`
 Le filet ci-dessus couvre les **tâches** ; il ne voyait pas le **réseau**. Le journal ne portait aucune
 ligne mentionnant `participation`, `PATCH` ni le moindre statut HTTP. Face à « l'application dit
 *envoyées*, la plateforme n'affiche rien » (#1844), il ne permettait de trancher **aucune** hypothèse :
-le diagnostic a dû se faire en lisant les sources du serveur et du front — hors de portée d'un
+le diagnostic a dû se faire en lisant les sources du serveur et du front : hors de portée d'un
 utilisateur, et impossible sur le terrain.
 
 `TransportVigieChiro` consigne désormais chaque échange : **méthode, chemin, issue, durée**. Le point
@@ -78,13 +78,13 @@ La sévérité se décide **à l'émission**
 | Refusé | WARNING | idem, **avec le corps de la réponse** |
 
 Le **corps d'un refus** est consigné, tronqué à 300 caractères : c'est l'explication du serveur
-(`_issues`, « invalid field »…), l'élément le plus diagnostique qui soit — et précisément ce qui
+(`_issues`, « invalid field »…), l'élément le plus diagnostique qui soit : et précisément ce qui
 manquait pour comprendre #1844.
 
 !!! warning "Ce qu'un journal ne doit jamais contenir"
     Le jeton et les en-têtes ne sont **jamais** journalisés, ni le corps envoyé. L'**URL complète**
     non plus : une URL S3 **pré-signée porte sa signature dans sa requête**. On journalise donc le
-    **chemin seul** — la fuite est réglée par construction, pas par vigilance. Un journal doit pouvoir
+    **chemin seul** : la fuite est réglée par construction, pas par vigilance. Un journal doit pouvoir
     être joint à un signalement d'anomalie sans divulguer de secret (cf. [Sécurité](securite.md)).
 
 ## Accès utilisateur
@@ -102,7 +102,7 @@ montrent désormais un **voile d'occupation** ou un repère « … en cours » (
 vers le filet d'erreurs de son écran, l'autre *fire-and-forget* assumé à la fermeture de la modale mais
 **journalisé** au point de passage.
 
-Cette page a ensuite conclu, pendant un temps, qu'aucune dette d'observabilité ne restait — alors que
+Cette page a ensuite conclu, pendant un temps, qu'aucune dette d'observabilité ne restait : alors que
 la **couche réseau était muette** (§ « Les échanges avec l'API »). La leçon vaut d'être gardée : un
 audit d'observabilité ne prouve rien sur ce qu'il n'a pas pensé à regarder. La question utile n'est pas
 « mes journaux couvrent-ils mes échecs ? » mais « **face à ce symptôme, le journal me permet-il de

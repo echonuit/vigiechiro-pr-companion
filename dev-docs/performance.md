@@ -2,9 +2,9 @@
 
 Deux objectifs qualité chiffrés encadrent les performances :
 
-- **O5 — capacité** : tenir une saison réaliste, de l'ordre de **~1000 passages** et **~4031
+- **O5, capacité** : tenir une saison réaliste, de l'ordre de **~1000 passages** et **~4031
   observations**, avec des écrans réactifs (sélection < 100 ms, tri/filtre < 200 ms) ;
-- **O3 — tenue dans la durée** : importer des **nuits volumineuses** sans dérive de temps ni de
+- **O3, tenue dans la durée** : importer des **nuits volumineuses** sans dérive de temps ni de
   mémoire.
 
 Le dépôt fournit un **banc de mesure** (`fr.univ_amu.iut.perf.outils`) qui sert à la fois de **premier
@@ -28,7 +28,7 @@ complètes (avec les propriétés `-Dperf.*` de dimensionnement) sont dans le RE
 
 ## Ce que mesurent les relevés
 
-### O5 — couche données
+### O5 : couche données
 
 Les deux opérations critiques sont **largement sous les cibles** (facteur ~4 à ~10), grâce à l'index
 `idx_obs_results` posé en réponse au point #28 :
@@ -41,7 +41,7 @@ Les deux opérations critiques sont **largement sous les cibles** (facteur ~4 à
 Sans l'index, la sélection faisait un `SCAN` (~75 ms froid) ; l'index la ramène à ~25 ms. Le gain est
 **verrouillé par un test CI** (non-régression du plan d'exécution).
 
-### O3 — import d'une nuit
+### O3 : import d'une nuit
 
 Le temps d'import **croît linéairement** avec la taille (débit ~stable 180-250 fichiers/s), la
 **mémoire plafonne** (~600-700 Mo pour ~1000-1500 fichiers) :

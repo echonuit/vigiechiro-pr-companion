@@ -108,7 +108,7 @@ de « Régénérer »), #1510 (« Inexploitable » dit son effet réel), #1511 (
 (passage déposé figé, pas de régression). Restent ouverts : #1512 (parité CLI sélection/pré-check), #1513
 (fiche/raccourcis, réalignée sur le verdict à deux niveaux).
 
-## Dernière passe (14/07, écran pré-refonte) — relevé historique
+## Dernière passe (14/07, écran pré-refonte) : relevé historique
 
 Verdict par axe **avant** la refonte #1524 (conservé pour mémoire ; à refaire au delta) :
 
