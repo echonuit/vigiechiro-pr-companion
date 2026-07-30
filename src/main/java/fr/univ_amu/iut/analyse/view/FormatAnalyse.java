@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.analyse.view;
 
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -19,7 +20,7 @@ public final class FormatAnalyse {
     /// Taxon suivi de sa probabilité si présente (`Pippip (0,92)`) ; `—` si pas de taxon (non touchée).
     public static String taxonEtProb(String taxon, Double probabilite) {
         if (taxon == null || taxon.isBlank()) {
-            return "—";
+            return Formats.VALEUR_ABSENTE;
         }
         if (probabilite == null) {
             return taxon;
@@ -65,7 +66,7 @@ public final class FormatAnalyse {
 
     /// Valeur telle quelle, ou tiret cadratin `—` si elle est nulle ou vide.
     public static String ouTiret(String valeur) {
-        return valeur == null || valeur.isBlank() ? "—" : valeur;
+        return valeur == null || valeur.isBlank() ? Formats.VALEUR_ABSENTE : valeur;
     }
 
     private static String premierNonVide(String... candidats) {

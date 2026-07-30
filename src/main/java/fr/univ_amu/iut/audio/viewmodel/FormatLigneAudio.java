@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Certitude;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.time.LocalDateTime;
@@ -48,7 +49,7 @@ public final class FormatLigneAudio {
     public static String votreTaxon(LigneObservationAudio o) {
         String observateur = o.taxonObservateur();
         if (observateur == null || observateur.isBlank()) {
-            return "—";
+            return Formats.VALEUR_ABSENTE;
         }
         return o.nomEspece() != null && !o.nomEspece().isBlank() ? o.nomEspece() : observateur;
     }
@@ -62,14 +63,14 @@ public final class FormatLigneAudio {
 
     /// Probabilité de détection formatée pour la colonne (« 81 % »), tiret si absente.
     public static String probabilite(Double probabilite) {
-        return probabilite == null ? "—" : Math.round(probabilite * 100) + " %";
+        return probabilite == null ? Formats.VALEUR_ABSENTE : Math.round(probabilite * 100) + " %";
     }
 
     /// Fréquence médiane formatée pour la **colonne** (« 52 kHz »), tiret si absente. La valeur Tadarida est
     /// en **kHz** (fréquences de pic des chiroptères : dizaines de kHz), pas en Hz. (Le pendant privé
     /// [#frequence(Integer)] sert au panneau de détail avec le libellé « non renseigné ».)
     public static String frequenceColonne(Integer frequenceKHz) {
-        return frequenceKHz == null ? "—" : frequenceKHz + " kHz";
+        return frequenceKHz == null ? Formats.VALEUR_ABSENTE : frequenceKHz + " kHz";
     }
 
     /// Durée du cri formatée pour la colonne, en unité **adaptative** : millisecondes sous 1 s (« 120 ms »),
@@ -78,7 +79,7 @@ public final class FormatLigneAudio {
     /// réelle, **sans** division : l'audio-view affiche la même échelle (axe réel via `setTimeExpansionFactor`).
     public static String dureeColonne(Double debutS, Double finS) {
         if (debutS == null || finS == null) {
-            return "—";
+            return Formats.VALEUR_ABSENTE;
         }
         double secondes = finS - debutS;
         if (secondes < 1.0) {
@@ -93,7 +94,7 @@ public final class FormatLigneAudio {
     /// positions).
     public static String positionColonne(Double debutS) {
         if (debutS == null) {
-            return "—";
+            return Formats.VALEUR_ABSENTE;
         }
         return String.format(Locale.FRENCH, "%.2f s", debutS);
     }
@@ -104,18 +105,18 @@ public final class FormatLigneAudio {
     /// Heure de capture formatée pour la **colonne** (« 22:37 », heure de la nuit extraite de l'instant),
     /// tiret si absente (#530).
     public static String heureColonne(LocalDateTime heureCapture) {
-        return heureCapture == null ? "—" : HEURE_COLONNE.format(heureCapture);
+        return heureCapture == null ? Formats.VALEUR_ABSENTE : HEURE_COLONNE.format(heureCapture);
     }
 
     /// Valeur d'une colonne texte, ou **tiret** « — » si absente/blanche (colonnes de contexte de la table).
     public static String ouTiret(String valeur) {
-        return valeur == null || valeur.isBlank() ? "—" : valeur;
+        return valeur == null || valeur.isBlank() ? Formats.VALEUR_ABSENTE : valeur;
     }
 
     /// Libellé de la colonne « Certitude » (#1139) : la déclaration manuelle de l'observateur, ou le
     /// tiret « — » tant qu'elle n'est pas renseignée (vide par défaut, jamais préremplie).
     public static String libelleCertitude(Certitude certitude) {
-        return certitude == null ? "—" : certitude.libelle();
+        return certitude == null ? Formats.VALEUR_ABSENTE : certitude.libelle();
     }
 
     /// Libellé d'affichage du statut de revue (partagé avec la colonne « Statut » de la vue).

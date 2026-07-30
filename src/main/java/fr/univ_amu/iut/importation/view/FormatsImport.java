@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.view;
 
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -25,7 +26,7 @@ final class FormatsImport {
     /// État du nommage des fichiers inspectés (bruts à renommer / déjà préfixés / aucun).
     static String libelleNommage(EtatNommage etat) {
         if (etat == null) {
-            return "—";
+            return Formats.VALEUR_ABSENTE;
         }
         return switch (etat) {
             case BRUT -> "fichiers bruts (seront renommés)";

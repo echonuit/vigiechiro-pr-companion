@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.view;
 
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.ComparateursAudio;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.util.HashMap;
 import java.util.Locale;
@@ -86,16 +87,16 @@ final class MetriquesAcoustiquesAudio {
     /// ou si la ligne n'a pas d'observation (`idObservation` nul : séquence non identifiée).
     String fmeColonne(Long idObservation) {
         Mesures mesures = parObservation.get(idObservation);
-        return mesures == null ? "—" : kiloHertz(mesures.fmeHz());
+        return mesures == null ? Formats.VALEUR_ABSENTE : kiloHertz(mesures.fmeHz());
     }
 
     /// Fréquence terminale de l'observation formatée en **kHz**, ou « — » si pas encore calculée / absente.
     String frequenceTerminaleColonne(Long idObservation) {
         Mesures mesures = parObservation.get(idObservation);
-        return mesures == null ? "—" : kiloHertz(mesures.frequenceTerminaleHz());
+        return mesures == null ? Formats.VALEUR_ABSENTE : kiloHertz(mesures.frequenceTerminaleHz());
     }
 
     private static String kiloHertz(double hz) {
-        return Double.isNaN(hz) ? "—" : String.format(Locale.ROOT, "%d kHz", Math.round(hz / 1000));
+        return Double.isNaN(hz) ? Formats.VALEUR_ABSENTE : String.format(Locale.ROOT, "%d kHz", Math.round(hz / 1000));
     }
 }

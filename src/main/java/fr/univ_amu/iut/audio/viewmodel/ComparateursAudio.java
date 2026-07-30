@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Comparator;
 
@@ -43,7 +44,7 @@ public final class ComparateursAudio {
     /// Durée d'affichage (« 120 ms » ou « 2,1 s ») ramenée en **millisecondes** pour le tri ; -1 si absente.
     /// Le « ms » distingue l'unité (sinon secondes → ×1000). Virgule décimale FR gérée.
     private static double dureeEnMillisecondes(String affichage) {
-        if (affichage == null || affichage.isBlank() || affichage.equals("—")) {
+        if (affichage == null || affichage.isBlank() || affichage.equals(Formats.VALEUR_ABSENTE)) {
             return -1;
         }
         String nombre = affichage.replaceAll("[^0-9,.]", "").replace(',', '.');

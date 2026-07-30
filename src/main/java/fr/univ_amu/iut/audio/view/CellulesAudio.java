@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.commun.view.RepereEspeceAEnjeu;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.time.LocalDateTime;
 import java.util.function.BiConsumer;
@@ -122,7 +123,7 @@ final class CellulesAudio {
             @Override
             protected void updateItem(String valeur, boolean vide) {
                 super.updateItem(valeur, vide);
-                if (vide || !estRenseigne(valeur) || "—".equals(valeur)) {
+                if (vide || !estRenseigne(valeur) || Formats.VALEUR_ABSENTE.equals(valeur)) {
                     setText(vide ? null : valeur);
                     setTooltip(null);
                 } else {

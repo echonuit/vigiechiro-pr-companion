@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import java.time.ZoneId;
@@ -29,7 +30,7 @@ public final class FormatAvisValidateur {
     /// (« Pipistrelle commune · Sûr »), et la table compte déjà dix-huit colonnes.
     public static String avis(LigneObservationAudio o) {
         if (!o.trancheeParUnValidateur()) {
-            return "—";
+            return Formats.VALEUR_ABSENTE;
         }
         String taxon =
                 o.nomValidateur() != null && !o.nomValidateur().isBlank() ? o.nomValidateur() : o.taxonValidateur();

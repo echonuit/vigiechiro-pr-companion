@@ -43,7 +43,8 @@ public class DiagnosticViewModel {
             new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
     /// Température en début de nuit (#106) : libellé d'affichage (`8,5 °C` / `—`).
-    private final ReadOnlyStringWrapper temperature = new ReadOnlyStringWrapper(this, "temperature", "—");
+    private final ReadOnlyStringWrapper temperature =
+            new ReadOnlyStringWrapper(this, "temperature", Formats.VALEUR_ABSENTE);
 
     /// Cohérence horaires (#548) : fenêtre nocturne calculable au point d'écoute.
     private final ReadOnlyBooleanWrapper coherenceHoraireDisponible =
@@ -152,7 +153,7 @@ public class DiagnosticViewModel {
         mesures.clear();
         anomalies.clear();
         evenements.clear();
-        temperature.set("—");
+        temperature.set(Formats.VALEUR_ABSENTE);
         coherenceHoraireDisponible.set(false);
         fenetreNuit.set("");
         alerteHorsNuit.set(RetourOperation.AUCUN);

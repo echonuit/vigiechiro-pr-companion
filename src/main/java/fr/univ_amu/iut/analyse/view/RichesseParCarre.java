@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.analyse.view;
 
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import java.util.HashMap;
 import java.util.List;
@@ -27,7 +28,7 @@ final class RichesseParCarre {
     /// Richesse du carré `numeroCarre`, ou `—` si inconnue de l'inventaire.
     String libelle(String numeroCarre) {
         Integer richesse = parNumero.get(numeroCarre);
-        return richesse == null ? "—" : richesse.toString();
+        return richesse == null ? Formats.VALEUR_ABSENTE : richesse.toString();
     }
 
     private void majDepuis(List<CarreEspeces> carres) {
