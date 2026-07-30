@@ -33,10 +33,12 @@ class CliquetSemisTopologieTest {
             "fr/univ_amu/iut/cli/CliRattraperCommunesTest.java",
             "fr/univ_amu/iut/e2e/ParcoursImporterTransformesE2ETest.java",
             "fr/univ_amu/iut/importation/ServiceImportReferenceTest.java",
+            "fr/univ_amu/iut/importation/ServiceImportTest.java",
             "fr/univ_amu/iut/importation/SuiviFichiersImportTest.java",
             "fr/univ_amu/iut/importation/view/ActionImportTransformesTest.java",
             "fr/univ_amu/iut/passage/model/CreationPassageArchiveTest.java",
             "fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java",
+            "fr/univ_amu/iut/saison/ServiceSoldeSaisonTest.java",
             "fr/univ_amu/iut/sites/model/ServiceCommunesTest.java",
             "fr/univ_amu/iut/sites/view/SiteDetailVersImportViewTest.java");
 
@@ -56,7 +58,17 @@ class CliquetSemisTopologieTest {
     ///
     /// Un fichier qui va jusqu'au passage relève de l'autre cliquet, pas de celui-ci : les deux dettes se
     /// migrent vers deux entrées différentes de la fixture, et les mélanger rendrait chaque compte
-    /// illisible.
+    /// illisible. Cette **partition** est délibérée et reste.
+    ///
+    /// ⚠️ Ce qui ne restait pas, c'est le **court-circuit** qui l'accompagnait : le détecteur rendait
+    /// aussi `false` dès qu'un fichier nommait `JeuDeDonneesPassage`, c'est-à-dire dès qu'il était
+    /// **partiellement** migré. Il devenait donc aveugle exactement là où il devait parler, ce que
+    /// l'ADR 2867 nomme comme le premier piège du patron - corrigé sur le cliquet des fixtures par #2714,
+    /// et réintroduit ici par moi en le posant.
+    ///
+    /// Deux fichiers étaient masqués : `ServiceImportTest` et `ServiceSoldeSaisonTest`, qui prennent la
+    /// fixture pour leur nuit et sèment encore leur topologie à la main. La liste **grandit** de deux, ce
+    /// qui est le sens de variation le plus inconfortable et le seul honnête ici.
     private static boolean semeLaTopologieALaMain(Cliquet.Fichier fichier) {
         if (fichier.dansLePaquet("cliquet") || fichier.dansLePaquet("fixture")) {
             return false;
@@ -66,7 +78,7 @@ class CliquetSemisTopologieTest {
             return false;
         }
         String source = fichier.source();
-        if (source.contains("JeuDeDonneesPassage") || source.contains("new Passage(")) {
+        if (source.contains("new Passage(")) {
             return false;
         }
         return source.contains("new PointDEcoute(")
