@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.135.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.135.1...v2.135.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **outils:** mesurer le vrai bandeau, et corriger les hauteurs qu'il justifie ([#2902](https://github.com/echonuit/vigiechiro-pr-companion/issues/2902)) ([4143470](https://github.com/echonuit/vigiechiro-pr-companion/commit/4143470fecbd384522478283d73f67ab8a582223)), closes [#2897](https://github.com/echonuit/vigiechiro-pr-companion/issues/2897)
+
 ## [2.135.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.135.0...v2.135.1) (2026-07-30)
 
 
