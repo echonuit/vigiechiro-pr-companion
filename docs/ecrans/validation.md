@@ -25,7 +25,8 @@ Une nuit d'enregistrement produit souvent des centaines d'observations : la **ba
 à isoler celles que vous voulez revoir. Elle fonctionne « à la manière de Notion » :
 
 - un **champ de recherche** permanent, à gauche, cherche dans le **nom de fichier**, l'**espèce** (taxon
-  Tadarida ou votre correction) et le **commentaire** ; la recherche ignore la casse et les accents ;
+  Tadarida ou votre correction), le **commentaire** et le **lieu** (carré, point, site, commune) ; la
+  recherche ignore la casse et les accents ;
 - un bouton **« + Filtre »** ajoute un critère sous forme de **puce** ; on retire une puce par sa croix.
 
 Les critères disponibles :
@@ -35,6 +36,7 @@ Les critères disponibles :
 | **Statut** | À revoir / Validée / Corrigée | À revoir (le plus utile pour la revue) |
 | **Groupe** | un groupe taxonomique présent (Chiroptères, Oiseaux, Orthoptères…) | **Chiroptères** s'il est présent : « chauves-souris uniquement », qui écarte bruit, oiseaux et orthoptères |
 | **Espèce** | une espèce précise (taxon retenu) | aucune tant que vous n'en choisissez pas une |
+| **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés, points, sites présents dans la table | aucun tant que vous ne cochez rien ; cocher plusieurs lieux les cumule |
 | **Références** | seulement les sons marqués « référence » | (puce booléenne : sa présence suffit) |
 | **Espèces à enjeu** | seulement les observations d'espèces **prioritaires** du Plan National d'Actions Chiroptères | (puce booléenne : sa présence suffit) |
 | **Proba** | les détections dont la probabilité Tadarida est **≥** au seuil du curseur | 50 % ; les observations **sans** probabilité sont toujours gardées |
@@ -59,7 +61,8 @@ L'absence de bouclier ne veut pas dire « sans intérêt » : l'immense majorit�
 de chauves-souris.
 
 Les puces se **combinent en ET** : « Chiroptères » + « Proba ≥ 80 % » ne garde que les chauves-souris les
-plus sûres. Les **compteurs** de la barre de statut (À revoir / Validées / Corrigées) suivent en temps réel
+plus sûres ; « Espèce : Grand rhinolophe » + « Lieu : Aix-en-Provence » isole une espèce sur une commune,
+prête à être exportée (CSV, ou archive ZIP avec les sons) depuis le menu ☰. Les **compteurs** de la barre de statut (À revoir / Validées / Corrigées) suivent en temps réel
 le **sous-ensemble affiché**, pas la nuit entière : vous voyez toujours combien il reste à traiter dans ce
 que vous avez sous les yeux.
 

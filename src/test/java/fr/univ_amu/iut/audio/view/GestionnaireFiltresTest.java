@@ -17,6 +17,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
@@ -407,8 +408,170 @@ class GestionnaireFiltresTest {
         assertThat(affichees).extracting(LigneObservationAudio::idObservation).containsExactly(1L); // À revoir
     }
 
+    @Test
+    @DisplayName(
+            "#2794 : critère Lieu : valeurs présentes groupées par dimension ; chaque dimension filtre ; cocher = appartenance")
+    void filtre_lieu(FxRobot robot) {
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligneLieu(1, "Rhifer", "Aix-en-Provence", "640380", "A1", "Jardin de Serge"),
+                ligneLieu(2, "Pippip", "Venelles", "870150", "B2", "Le pré"));
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.lieu(() -> source)),
+                CriteresAudio.rechercheTexte());
+        assertThat(ignore).isNotNull();
+
+        // Ajouter la puce Lieu : valeurs distinctes groupées par dimension (communes, carrés, points,
+        // sites), triées au sein de chacune ; rien de coché n'écarte rien.
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        MenuButton choixLieu = menuBoutonDe(pucesLocales, 0);
+        assertThat(choixLieu.getItems())
+                .extracting(MenuItem::getText)
+                .containsExactly(
+                        "Aix-en-Provence", "Venelles", "640380", "870150", "A1", "B2", "Jardin de Serge", "Le pré");
+        assertThat(vues).hasSize(2);
+
+        // Cocher la COMMUNE « Aix-en-Provence » (lot 0) → seule la ligne 1 reste.
+        robot.interact(() -> coche(choixLieu, "Aix-en-Provence").setSelected(true));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L);
+
+        // Cocher AUSSI le CARRÉ « 870150 » → appartenance : chaque ligne passe par l'une de ses dimensions.
+        robot.interact(() -> coche(choixLieu, "870150").setSelected(true));
+        assertThat(vues).hasSize(2);
+
+        // Le POINT seul, puis le SITE seul : chaque dimension filtre.
+        robot.interact(() -> {
+            coche(choixLieu, "Aix-en-Provence").setSelected(false);
+            coche(choixLieu, "870150").setSelected(false);
+            coche(choixLieu, "B2").setSelected(true);
+        });
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
+        robot.interact(() -> {
+            coche(choixLieu, "B2").setSelected(false);
+            coche(choixLieu, "Jardin de Serge").setSelected(true);
+        });
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L);
+    }
+
+    @Test
+    @DisplayName("#2794 : espèce × lieu : la puce Lieu compose avec la puce Espèce (grand Rhinolophe à Aix)")
+    void filtre_espece_et_lieu(FxRobot robot) {
+        // Le scénario Samuel : source ParEspece = « le grand Rhinolophe partout » (Aix ET Venelles) ; une
+        // pipistrelle à Aix sert de bruit. Espèce × lieu doit isoler la ligne 1.
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligneLieu(1, "Rhifer", "Aix-en-Provence", "640380", "A1", null),
+                ligneLieu(2, "Rhifer", "Venelles", "870150", "B2", null),
+                ligneLieu(3, "Pippip", "Aix-en-Provence", "640380", "A1", null));
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.taxon(() -> source), CriteresAudio.lieu(() -> source)),
+                CriteresAudio.rechercheTexte());
+        assertThat(ignore).isNotNull();
+
+        // Puce Espèce → « Rhifer » : le grand Rhinolophe partout (lignes 1 et 2).
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        ComboBox<Object> choixEspece = comboDe(pucesLocales);
+        robot.interact(() -> choixEspece.setValue(choixEspece.getItems().get(1))); // Pippip, Rhifer (triés)
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L, 2L);
+
+        // Puce Lieu → « Aix-en-Provence » : l'intersection espèce × lieu isole la ligne 1.
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        robot.interact(
+                () -> coche(menuBoutonDe(pucesLocales, 1), "Aix-en-Provence").setSelected(true));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L);
+    }
+
+    @Test
+    @DisplayName("#2794 : la puce Lieu se mémorise et se rejoue (vues nommées), restaurer()/decrire() round-trip")
+    void lieu_round_trip_vue_memorisee(FxRobot robot) {
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligneLieu(1, "Rhifer", "Aix-en-Provence", "640380", "A1", null),
+                ligneLieu(2, "Pippip", "Venelles", "870150", "B2", null));
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres<LigneObservationAudio> gestion = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.lieu(() -> source)),
+                CriteresAudio.rechercheTexte());
+
+        // Rejouer une vue mémorisée portant le lieu « Aix-en-Provence » : la puce se reconstruit cochée.
+        robot.interact(() -> gestion.restaurer(
+                new DescripteurFiltre("", List.of(new DescripteurCritere("lieu", List.of("Aix-en-Provence"))))));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L);
+
+        // Round-trip sémantique : decrire() reproduit exactement le descripteur restauré.
+        assertThat(gestion.decrire())
+                .isEqualTo(
+                        new DescripteurFiltre("", List.of(new DescripteurCritere("lieu", List.of("Aix-en-Provence")))));
+    }
+
+    @Test
+    @DisplayName("#2794 : la recherche texte couvre carré, point, site et commune (insensible casse/accents)")
+    void recherche_texte_geographique(FxRobot robot) {
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligneLieu(1, "Pippip", "Aix-en-Provence", "640380", "A1", "Jardin de Serge"),
+                ligneLieu(2, "Nyclei", "Venelles", "870150", "B2", "Le pré"));
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
+        TextField rechercheLocale = new TextField();
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
+                rechercheLocale,
+                new MenuButton(),
+                new FlowPane(),
+                filtresLocaux,
+                List.of(),
+                CriteresAudio.rechercheTexte());
+        assertThat(ignore).isNotNull();
+
+        // Le SITE (« Jardin ») puis la COMMUNE (« venelles », casse ignorée) : la vue audio rejoint Analyse.
+        robot.interact(() -> rechercheLocale.setText("jardin"));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L);
+        robot.interact(() -> rechercheLocale.setText("venelles"));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
+
+        // Le CARRÉ puis le POINT : les colonnes affichées deviennent cherchables.
+        robot.interact(() -> rechercheLocale.setText("640380"));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L);
+        robot.interact(() -> rechercheLocale.setText("b2"));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
+    }
+
     private Button boutonRetirer() {
         return (Button) puces.lookupAll(".puce-filtre-retirer").iterator().next();
+    }
+
+    /// L'éditeur du critère Lieu est un [MenuButton] à cases à cocher, 2e enfant de sa puce.
+    private static MenuButton menuBoutonDe(FlowPane puces, int indexPuce) {
+        HBox puce = (HBox) puces.getChildren().get(indexPuce);
+        return (MenuButton) puce.getChildren().get(1);
+    }
+
+    /// La case à cocher d'un lieu, retrouvée par son libellé exact dans le menu de la puce Lieu.
+    private static CheckMenuItem coche(MenuButton bouton, String texte) {
+        return bouton.getItems().stream()
+                .filter(item -> item instanceof CheckMenuItem && texte.equals(item.getText()))
+                .map(CheckMenuItem.class::cast)
+                .findFirst()
+                .orElseThrow();
     }
 
     /// Le bouton ✕ est toujours le **dernier** enfant de la puce (après un éventuel éditeur).
@@ -479,6 +642,44 @@ class GestionnaireFiltresTest {
                 null,
                 0,
                 null);
+    }
+
+    /// Observation **localisée** (commune du lot 0 + carré/point/site), pour le critère Lieu (#2794) et
+    /// la recherche texte géographique.
+    private static LigneObservationAudio ligneLieu(
+            long id, String taxon, String commune, String carre, String point, String site) {
+        return new LigneObservationAudio(
+                id,
+                10 + id,
+                7L,
+                1,
+                "2026-06-20",
+                carre,
+                point,
+                site,
+                taxon,
+                0.9,
+                null,
+                null,
+                StatutObservation.VALIDEE,
+                false,
+                null,
+                45,
+                null,
+                taxon,
+                null,
+                "Chiroptères",
+                "f" + id + ".wav",
+                0.2,
+                0.4,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                0,
+                commune);
     }
 
     /// Observation **corrigée** : Tadarida a proposé `taxonTadarida`, l'observateur a retenu le taxon
