@@ -6,14 +6,12 @@ import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
-import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
@@ -26,10 +24,6 @@ import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.SuiviFichiers;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,12 +63,14 @@ class SuiviFichiersImportTest {
         SourceDeDonnees source = new SourceDeDonnees(workspace);
         new MigrationSchema(source).migrer();
 
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-05-31", ID_USER));
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "Z1", 43.5, 5.4, null, site.id()))
-                .id();
+        idPoint = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("640380")
+                .nomSite("Étang")
+                .point("Z1")
+                .position(43.5, 5.4)
+                .semerSiteEtPoint()
+                .idPoint();
 
         HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
         service = new ServiceImport(
