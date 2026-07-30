@@ -23,23 +23,10 @@ import org.junit.jupiter.api.Test;
 /// accident (cf. [Cliquet], les deux pièges du patron).
 class CliquetWriterWavTest {
 
-    /// La dette épinglée. **Ne peut que rétrécir** : cf. [Cliquet] pour les deux sens de variation.
-    private static final List<String> ECRIVENT_UN_EN_TETE_A_LA_MAIN = List.of(
-            "fr/univ_amu/iut/e2e/ParcoursMultisiteVersPassageE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursPassageVersDiagnosticE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursPassageVersNonIdentifiesE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursPassageVersValidationE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursSitesVersPassageE2ETest.java",
-            "fr/univ_amu/iut/importation/ServiceImportReferenceTest.java",
-            "fr/univ_amu/iut/importation/ServiceImportTest.java",
-            "fr/univ_amu/iut/importation/SuiviFichiersImportTest.java",
-            "fr/univ_amu/iut/importation/TransformationAudioTest.java",
-            "fr/univ_amu/iut/importation/model/EquivalenceImportReactivationTest.java",
-            "fr/univ_amu/iut/importation/model/NombreTranchesFideleTest.java",
-            "fr/univ_amu/iut/importation/view/ActionImportTransformesTest.java",
-            "fr/univ_amu/iut/importation/view/ImportationClicImporterTest.java",
-            "fr/univ_amu/iut/passage/model/HydratationCollisionTest.java",
-            "fr/univ_amu/iut/passage/model/ReliquatPlaceholderTest.java");
+    /// **La dette est éteinte.** Vingt et un fichiers composaient leur propre en-tête ; tous délèguent
+    /// désormais au writer de production. La liste reste, vide : elle empêche la dette de renaître, et
+    /// c'est maintenant son seul rôle.
+    private static final List<String> ECRIVENT_UN_EN_TETE_A_LA_MAIN = List.of();
 
     @Test
     @DisplayName("La dette des writers WAV ne peut que rétrécir : aucun nouvel en-tête écrit à la main")

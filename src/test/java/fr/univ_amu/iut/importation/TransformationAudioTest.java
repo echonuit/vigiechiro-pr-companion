@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Empreintes;
+import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.importation.model.OriginalIllisibleException;
 import fr.univ_amu.iut.importation.model.SequenceProduite;
@@ -11,9 +12,6 @@ import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.TransformationOriginal;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -234,22 +232,9 @@ class TransformationAudioTest {
     /// Écrit un WAV PCM canonique (en-tête 44 octets, little-endian).
     private static void ecrireWav(Path fichier, int canaux, int frequence, int bits, byte[] pcm) throws IOException {
         int blocAlign = canaux * (bits / 8);
-        ByteBuffer buf = ByteBuffer.allocate(ENTETE_WAV + pcm.length).order(ByteOrder.LITTLE_ENDIAN);
-        buf.put("RIFF".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(36 + pcm.length);
-        buf.put("WAVE".getBytes(StandardCharsets.US_ASCII));
-        buf.put("fmt ".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(16);
-        buf.putShort((short) 1); // PCM
-        buf.putShort((short) canaux);
-        buf.putInt(frequence);
-        buf.putInt(frequence * blocAlign);
-        buf.putShort((short) blocAlign);
-        buf.putShort((short) bits);
-        buf.put("data".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(pcm.length);
-        buf.put(pcm);
-        Files.write(fichier, buf.array());
+        // Writer de production (#2864) : memes octets, et c'est le format que l'application
+        // saura relire.
+        FichierWav.ecrire(fichier, canaux, frequence, bits, pcm, 0, pcm.length);
     }
 
     private static int lireIntLE(byte[] o, int pos) {

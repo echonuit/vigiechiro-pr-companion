@@ -9,9 +9,6 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.importation.model.RegenerationParTransformationAudio;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -174,22 +171,9 @@ class HydratationCollisionTest {
             pcm[2 * i + 1] = (byte) ((echantillon >> 8) & 0xFF);
         }
         int blocAlign = CANAUX * (BITS / 8);
-        ByteBuffer buf = ByteBuffer.allocate(ENTETE_WAV + pcm.length).order(ByteOrder.LITTLE_ENDIAN);
-        buf.put("RIFF".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(36 + pcm.length);
-        buf.put("WAVE".getBytes(StandardCharsets.US_ASCII));
-        buf.put("fmt ".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(16);
-        buf.putShort((short) 1);
-        buf.putShort((short) CANAUX);
-        buf.putInt(FREQUENCE_ACQUISITION);
-        buf.putInt(FREQUENCE_ACQUISITION * blocAlign);
-        buf.putShort((short) blocAlign);
-        buf.putShort((short) BITS);
-        buf.put("data".getBytes(StandardCharsets.US_ASCII));
-        buf.putInt(pcm.length);
-        buf.put(pcm);
-        Files.write(fichier, buf.array());
+        // Writer de production (#2864) : memes octets, et c'est le format que l'application
+        // saura relire.
+        FichierWav.ecrire(fichier, CANAUX, FREQUENCE_ACQUISITION, BITS, pcm, 0, pcm.length);
         return fichier;
     }
 }
