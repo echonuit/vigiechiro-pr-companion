@@ -5,27 +5,13 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
-import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
-import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
-import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -44,17 +30,11 @@ import org.junit.jupiter.api.io.TempDir;
 /// structure d'archive sont exactement ceux de production.
 class ExportObservationsEtSonsTest {
 
-    private static final String SERIE = "1925492";
-    private static final String ID_USER = "u-1";
-
     @TempDir
     Path workspace;
 
+    private SourceDeDonnees source;
     private SequenceDao sequenceDao;
-    private SessionDao sessionDao;
-    private EnregistrementOriginalDao originalDao;
-    private PassageDao passageDao;
-    private Long idPoint;
     private ExportObservationsEtSons export;
 
     /// Numéro de passage auto-incrémenté : l'unicité (point, année, n°) refuse deux passages identiques.
@@ -62,20 +42,10 @@ class ExportObservationsEtSonsTest {
 
     @BeforeEach
     void preparer() {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(workspace));
+        source = new SourceDeDonnees(new Workspace(workspace));
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-05-01", ID_USER));
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, null, null));
-        passageDao = new PassageDao(source);
-        sessionDao = new SessionDao(source);
-        originalDao = new EnregistrementOriginalDao(source);
         sequenceDao = new SequenceDao(source);
-        export = new ExportObservationsEtSons(sequenceDao, sessionDao);
+        export = new ExportObservationsEtSons(sequenceDao, new SessionDao(source));
     }
 
     @Test
@@ -198,68 +168,28 @@ class ExportObservationsEtSonsTest {
         assertThat(archive).doesNotExist();
     }
 
-    /// Une session complète (passage + session + original + séquence) sous `<workspace>/<dossier>`.
+    /// Une session complète sous `<workspace>/<dossier>`, semée par la **fabrique partagée**
+    /// (cliquet #1771) ; seule la séquence, dont le fichier doit réellement exister, est insérée ici.
     /// `contenu` nul = le fichier n'existe pas sur disque (son parti).
     private long creerSequence(String dossierSession, String nomFichier, byte[] contenu) throws IOException {
-        return creerSequenceInterne(workspace.resolve(dossierSession), nomFichier, contenu);
+        return creerSequenceSousRacine(workspace.resolve(dossierSession), nomFichier, contenu, prochainNumeroPassage);
     }
 
     /// Variante à racine arbitraire, pour fabriquer deux sessions aux dossiers **homonymes**.
     private long creerSequenceSousRacine(Path racineSession, String nomFichier, int numeroPassage) throws IOException {
-        prochainNumeroPassage = Math.max(prochainNumeroPassage, numeroPassage + 1);
-        Passage passage = passageDao.insert(new Passage(
-                null,
-                numeroPassage,
-                2026,
-                "2026-06-2" + numeroPassage,
-                "21:30:00",
-                "05:15:00",
-                null,
-                StatutWorkflow.IMPORTE,
-                null,
-                null,
-                null,
-                null,
-                idPoint,
-                SERIE,
-                null));
-        return inserer(racineSession, nomFichier, new byte[] {7}, passage.id());
+        return creerSequenceSousRacine(racineSession, nomFichier, new byte[] {7}, numeroPassage);
     }
 
-    private long creerSequenceInterne(Path racineSession, String nomFichier, byte[] contenu) throws IOException {
-        Passage passage = passageDao.insert(new Passage(
-                null,
-                prochainNumeroPassage++,
-                2026,
-                "2026-06-20",
-                "21:30:00",
-                "05:15:00",
-                null,
-                StatutWorkflow.IMPORTE,
-                null,
-                null,
-                null,
-                null,
-                idPoint,
-                SERIE,
-                null));
-        return inserer(racineSession, nomFichier, contenu, passage.id());
-    }
-
-    private long inserer(Path racineSession, String nomFichier, byte[] contenu, Long idPassage) throws IOException {
-        Long idSession = sessionDao
-                .insert(new SessionDEnregistrement(null, racineSession.toString(), null, null, idPassage))
-                .id();
-        Long idOriginal = originalDao
-                .insert(new EnregistrementOriginal(
-                        null,
-                        "orig.wav",
-                        racineSession.resolve("bruts").resolve("orig.wav").toString(),
-                        null,
-                        null,
-                        null,
-                        idSession))
-                .id();
+    private long creerSequenceSousRacine(Path racineSession, String nomFichier, byte[] contenu, int numeroPassage)
+            throws IOException {
+        prochainNumeroPassage = Math.max(prochainNumeroPassage, numeroPassage) + 1;
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .carre("640380")
+                .nomSite("Étang")
+                .point("A1")
+                .cheminSession(racineSession.toString())
+                .nuit(numeroPassage, 2026, "2026-06-2" + Math.min(numeroPassage, 9))
+                .semer();
         Path transformes = Files.createDirectories(racineSession.resolve("transformes"));
         Path fichier = transformes.resolve(nomFichier);
         if (contenu != null) {
@@ -267,7 +197,17 @@ class ExportObservationsEtSonsTest {
         }
         return sequenceDao
                 .insert(new SequenceDEcoute(
-                        null, nomFichier, idOriginal, 0, 0.0, 5.0, fichier.toString(), false, idSession, null, null))
+                        null,
+                        nomFichier,
+                        jeu.idOriginal(),
+                        0,
+                        0.0,
+                        5.0,
+                        fichier.toString(),
+                        false,
+                        jeu.idSession(),
+                        null,
+                        null))
                 .id();
     }
 
