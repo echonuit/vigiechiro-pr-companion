@@ -54,9 +54,7 @@ class CliquetJournalEnDurTest {
             "fr/univ_amu/iut/diagnostic/AnalyseAnomaliesTest.java",
             "fr/univ_amu/iut/diagnostic/ServiceDiagnosticTest.java",
             "fr/univ_amu/iut/e2e/ParcoursImporterNuitE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursRestaurationDepuisVigieChiroE2ETest.java",
             "fr/univ_amu/iut/importation/ServiceImportTest.java",
-            "fr/univ_amu/iut/importation/SuiviFichiersImportTest.java",
             "fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java",
             "fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java");
 
