@@ -7,11 +7,10 @@ import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,10 +33,10 @@ class CliMarquageRevueTest {
     private Injector injecteur;
     private Cli cli;
     private SourceDeDonnees source;
-    private ByteArrayOutputStream tamponSortie;
-    private ByteArrayOutputStream tamponErreur;
-    private PrintStream sortie;
-    private PrintStream erreur;
+
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
 
     private long idPassage;
     private long idA;
@@ -50,10 +49,6 @@ class CliMarquageRevueTest {
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
         source = injecteur.getInstance(SourceDeDonnees.class);
-        tamponSortie = new ByteArrayOutputStream();
-        tamponErreur = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        erreur = new PrintStream(tamponErreur, true, StandardCharsets.UTF_8);
         semer();
     }
 
@@ -122,7 +117,7 @@ class CliMarquageRevueTest {
                 cli.executer(new String[] {"marquer-douteux", "--passage", String.valueOf(idPassage)}, sortie, erreur);
 
         assertThat(code).isNotZero();
-        assertThat(tamponErreur.toString(StandardCharsets.UTF_8)).contains("--confirmer");
+        assertThat(capture.texteErreur()).contains("--confirmer");
         assertThat(observation(idA).douteux()).isFalse();
         assertThat(observation(idB).douteux()).isFalse();
     }

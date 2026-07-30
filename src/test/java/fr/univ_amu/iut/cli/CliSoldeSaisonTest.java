@@ -11,13 +11,12 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import org.junit.jupiter.api.AfterEach;
@@ -46,10 +45,10 @@ class CliSoldeSaisonTest {
     private Injector injecteur;
     private SourceDeDonnees source;
     private String idUser;
-    private ByteArrayOutputStream tamponSortie;
-    private ByteArrayOutputStream tamponErreur;
-    private PrintStream sortie;
-    private PrintStream erreur;
+
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
 
     @BeforeEach
     void preparer() {
@@ -65,11 +64,6 @@ class CliSoldeSaisonTest {
         semer(source, idUser, "640001", "A2", 1, "2026-06-21", StatutWorkflow.DEPOSE, Verdict.OK);
         semer(source, idUser, "640001", "A2", 2, "2026-08-21", StatutWorkflow.PRET_A_DEPOSER, Verdict.OK);
         semer(source, idUser, "640002", "B1", 1, "2026-06-23", StatutWorkflow.VERIFIE, Verdict.A_JETER);
-
-        tamponSortie = new ByteArrayOutputStream();
-        tamponErreur = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        erreur = new PrintStream(tamponErreur, true, StandardCharsets.UTF_8);
     }
 
     @AfterEach
@@ -99,7 +93,7 @@ class CliSoldeSaisonTest {
     }
 
     private String texteSortie() {
-        return tamponSortie.toString(StandardCharsets.UTF_8);
+        return capture.texte();
     }
 
     @Test
@@ -144,7 +138,7 @@ class CliSoldeSaisonTest {
         int code = cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "xml"}, sortie, erreur);
 
         assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
-        assertThat(tamponErreur.toString(StandardCharsets.UTF_8)).contains("Format inconnu");
+        assertThat(capture.texteErreur()).contains("Format inconnu");
     }
 
     @Test
@@ -166,11 +160,11 @@ class CliSoldeSaisonTest {
                 .isEqualTo(Cli.CODE_SUCCES);
         assertThat(texteSortie()).contains("Hors protocole").contains("640005").contains("opportuniste 25/06");
 
-        tamponSortie.reset();
+        capture.vider();
         cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "texte"}, sortie, erreur);
         assertThat(texteSortie()).contains("[hors protocole : opportuniste 25/06]");
 
-        tamponSortie.reset();
+        capture.vider();
         cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "json"}, sortie, erreur);
         assertThat(texteSortie()).contains("\"horsProtocole\"");
     }

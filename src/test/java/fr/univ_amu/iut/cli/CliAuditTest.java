@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -22,9 +23,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,9 +44,10 @@ class CliAuditTest {
 
     private Injector injecteur;
     private Cli cli;
-    private ByteArrayOutputStream tamponSortie;
-    private PrintStream sortie;
-    private PrintStream erreur;
+
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
 
     @BeforeEach
     void preparer() {
@@ -55,9 +55,6 @@ class CliAuditTest {
         injecteur = Cli.injecteurApplicatif();
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
-        tamponSortie = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        erreur = new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8);
     }
 
     @AfterEach
@@ -66,7 +63,7 @@ class CliAuditTest {
     }
 
     private String texteSortie() {
-        return tamponSortie.toString(StandardCharsets.UTF_8);
+        return capture.texte();
     }
 
     @Test

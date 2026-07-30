@@ -22,26 +22,11 @@ class CliquetCaptureStdoutTest {
 
     /// La dette épinglée. **Ne peut que rétrécir** : cf. [Cliquet] pour les deux sens de variation.
     private static final List<String> MONTENT_LEUR_PROPRE_CAPTURE = List.of(
-            "fr/univ_amu/iut/cli/CliAuditTest.java",
             "fr/univ_amu/iut/cli/CliCampagneTest.java",
-            "fr/univ_amu/iut/cli/CliDiscussionTest.java",
-            "fr/univ_amu/iut/cli/CliEmplacementsTest.java",
             "fr/univ_amu/iut/cli/CliExportVuTest.java",
             "fr/univ_amu/iut/cli/CliExporterActiviteTest.java",
-            "fr/univ_amu/iut/cli/CliGestesRevueTest.java",
             "fr/univ_amu/iut/cli/CliImportTest.java",
             "fr/univ_amu/iut/cli/CliImportTransformesTest.java",
-            "fr/univ_amu/iut/cli/CliListerObservationsTest.java",
-            "fr/univ_amu/iut/cli/CliMarquageRevueTest.java",
-            "fr/univ_amu/iut/cli/CliRattacherCampagneTest.java",
-            "fr/univ_amu/iut/cli/CliRattraperCommunesTest.java",
-            "fr/univ_amu/iut/cli/CliReactiverTest.java",
-            "fr/univ_amu/iut/cli/CliResetGuideTest.java",
-            "fr/univ_amu/iut/cli/CliRetroEmpreintesTest.java",
-            "fr/univ_amu/iut/cli/CliSauvegardeTest.java",
-            "fr/univ_amu/iut/cli/CliSoldeSaisonTest.java",
-            "fr/univ_amu/iut/cli/CliStatutRecupereTest.java",
-            "fr/univ_amu/iut/cli/CliSupprimerPassageTest.java",
             "fr/univ_amu/iut/cli/CliSynthetiserPassageTest.java",
             "fr/univ_amu/iut/cli/CliTest.java",
             "fr/univ_amu/iut/importation/TransformationAudioTest.java",
@@ -68,7 +53,11 @@ class CliquetCaptureStdoutTest {
     /// Un tampon **monté dans un `@BeforeEach`** : c'est la forme de l'échafaudage recopié. Un
     /// `ByteArrayOutputStream` construit au fil d'un test isolé sert souvent à autre chose.
     private static boolean monteSaPropreCapture(Cliquet.Fichier fichier) {
-        if (fichier.dansLePaquet("cliquet")) {
+        // Le paquet `fixture` est la DESTINATION de la migration : `SortieCapturee` monte forcément le
+        // tampon que tous les autres cessent de monter. L'exclusion manquait tant que la brique n'existait
+        // pas ; elle est écrite maintenant plutôt que laissée à un détail de forme (aujourd'hui, seule
+        // l'absence de `@BeforeEach` empêche de la compter, ce qui ne tient qu'à un cheveu).
+        if (fichier.dansLePaquet("cliquet") || fichier.dansLePaquet("fixture")) {
             return false;
         }
         return TAMPON.matcher(fichier.source()).find() && fichier.source().contains("@BeforeEach");

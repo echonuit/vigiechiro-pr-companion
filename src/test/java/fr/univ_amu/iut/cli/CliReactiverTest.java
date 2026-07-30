@@ -9,11 +9,10 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
@@ -49,10 +48,10 @@ class CliReactiverTest {
 
     private Injector injecteur;
     private Cli cli;
-    private ByteArrayOutputStream tamponSortie;
-    private ByteArrayOutputStream tamponErreur;
-    private PrintStream sortie;
-    private PrintStream erreur;
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
+
     private SourceDeDonnees source;
     private Path dossierSource;
 
@@ -63,10 +62,6 @@ class CliReactiverTest {
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
         source = injecteur.getInstance(SourceDeDonnees.class);
-        tamponSortie = new ByteArrayOutputStream();
-        tamponErreur = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        erreur = new PrintStream(tamponErreur, true, StandardCharsets.UTF_8);
         dossierSource = Files.createDirectories(workspace.resolve("carte-sd"));
     }
 
@@ -76,7 +71,7 @@ class CliReactiverTest {
     }
 
     private String texteSortie() {
-        return tamponSortie.toString(StandardCharsets.UTF_8) + tamponErreur.toString(StandardCharsets.UTF_8);
+        return capture.texte() + capture.texteErreur();
     }
 
     /// Une nuit **rapatriée par la synchro** : session archivée, aucune séquence, rattachée à sa

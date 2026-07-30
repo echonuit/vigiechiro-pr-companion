@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -23,10 +24,8 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
@@ -47,9 +46,10 @@ class CliRetroEmpreintesTest {
 
     private Injector injecteur;
     private Cli cli;
-    private ByteArrayOutputStream tamponSortie;
-    private PrintStream sortie;
-    private PrintStream erreur;
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
+
     private SequenceDao sequenceDao;
     private long idSequencePresente;
     private long idSequenceAbsente;
@@ -60,9 +60,6 @@ class CliRetroEmpreintesTest {
         injecteur = Cli.injecteurApplicatif();
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
-        tamponSortie = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        erreur = new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8);
         semerPassageAvecSequences();
     }
 
@@ -77,7 +74,7 @@ class CliRetroEmpreintesTest {
         int code = cli.executer(new String[] {"retro-empreintes"}, sortie, erreur);
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        String texte = tamponSortie.toString(StandardCharsets.UTF_8);
+        String texte = capture.texte();
         assertThat(texte).contains("1 renseignée(s)").contains("1 sans fichier");
         assertThat(sequenceDao.findById(idSequencePresente).orElseThrow().empreinte())
                 .isNotNull();

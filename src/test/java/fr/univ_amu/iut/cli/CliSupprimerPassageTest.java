@@ -7,10 +7,9 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,10 +33,10 @@ class CliSupprimerPassageTest {
 
     private Injector injecteur;
     private Cli cli;
-    private ByteArrayOutputStream tamponSortie;
-    private ByteArrayOutputStream tamponErreur;
-    private PrintStream sortie;
-    private PrintStream erreur;
+    private final SortieCapturee capture = new SortieCapturee();
+    private final PrintStream sortie = capture.sortie();
+    private final PrintStream erreur = capture.erreur();
+
     private PassageDao passageDao;
     private long idPassage;
 
@@ -48,10 +47,6 @@ class CliSupprimerPassageTest {
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
         passageDao = new PassageDao(injecteur.getInstance(SourceDeDonnees.class));
-        tamponSortie = new ByteArrayOutputStream();
-        tamponErreur = new ByteArrayOutputStream();
-        sortie = new PrintStream(tamponSortie, true, StandardCharsets.UTF_8);
-        erreur = new PrintStream(tamponErreur, true, StandardCharsets.UTF_8);
         idPassage = semerUneNuit(1, StatutWorkflow.IMPORTE);
     }
 
@@ -61,7 +56,7 @@ class CliSupprimerPassageTest {
     }
 
     private String texteSortie() {
-        return tamponSortie.toString(StandardCharsets.UTF_8);
+        return capture.texte();
     }
 
     @Test
@@ -80,7 +75,7 @@ class CliSupprimerPassageTest {
                 .as("le drapeau ne dispense pas d'informer : il déplace le moment où l'on décide")
                 .contains("Suppression DÉFINITIVE")
                 .contains("2 séquence(s)");
-        assertThat(tamponErreur.toString(StandardCharsets.UTF_8)).contains("--confirmer");
+        assertThat(capture.texteErreur()).contains("--confirmer");
     }
 
     @Test
