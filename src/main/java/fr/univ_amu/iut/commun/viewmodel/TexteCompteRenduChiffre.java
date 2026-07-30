@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Motif;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /// Rend un [CompteRenduChiffre] **en texte**, quand la surface ne sait pas dessiner de barre.
@@ -57,6 +58,9 @@ public final class TexteCompteRenduChiffre {
         if (total <= 0) {
             return "";
         }
-        return String.format(" (%.1f %%)", 100.0 * part.quantite() / total);
+        // Locale EXPLICITE, comme `PanneauCompteRendu` : sans elle, `String.format` suit celle de la
+        // machine et le même compte rendu dit « 70,0 % » ici et « 70.0 % » ailleurs. La CI l'a montré,
+        // son runner étant en anglais là où ce poste est en français.
+        return String.format(Locale.FRANCE, " (%.1f %%)", 100.0 * part.quantite() / total);
     }
 }
