@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.OptionalDouble;
 
@@ -202,9 +203,13 @@ public class VerificationIdentiteAudio {
         }
         double dureeReelle = wav.dureeSecondes() / FACTEUR_EXPANSION;
         if (Math.abs(dureeReelle - dureeAttendueSecondes) > TOLERANCE_DUREE_SECONDES) {
+            // Locale explicite (#2896) : ce refus s'affiche à l'utilisateur, et sans elle ses deux durées
+            // s'écrivaient avec un point sur toute machine non francophone.
             return new Refusee(String.format(
+                    Locale.FRANCE,
                     "Durée réelle différente : %.2f s au lieu de %.2f s (redécoupe à d'autres paramètres ?).",
-                    dureeReelle, dureeAttendueSecondes));
+                    dureeReelle,
+                    dureeAttendueSecondes));
         }
         return null;
     }
