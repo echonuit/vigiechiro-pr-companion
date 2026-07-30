@@ -83,9 +83,27 @@ public class ExportObservationsEtSons {
                     sequence.idSession(), id -> nomDossierUnique(id, dossiersParSession.values()));
             sons.add(new EcrivainZip.EntreeFichier("sons/" + dossier + "/" + sequence.nomFichier(), source));
         }
+        surProgression.accept(annonce(lignes.size(), sons));
         long octets = EcrivainZip.ecrire(
                 destination, List.of(new EcrivainZip.EntreeTexte(NOM_CSV, csv)), sons, surProgression, jeton);
         return new Bilan(lignes.size(), sons.size(), List.copyOf(introuvables), octets);
+    }
+
+    /// L'annonce qui ouvre la modale : ce que l'archive va contenir, volume compris (tailles lues
+    /// du disque, les fichiers viennent d'être vérifiés présents).
+    private static Progression annonce(int observations, List<EcrivainZip.EntreeFichier> sons) {
+        long octets = 0;
+        for (EcrivainZip.EntreeFichier son : sons) {
+            try {
+                octets += Files.size(son.source());
+            } catch (IOException disparu) {
+                // Parti entre la vérification et l'annonce : l'écriture le dira mieux que l'annonce.
+            }
+        }
+        return new Progression(
+                observations + " observation(s) · " + sons.size() + " son(s) · ~"
+                        + String.format(java.util.Locale.FRENCH, "%.1f Mo", octets / 1_048_576.0),
+                0.0);
     }
 
     /// Les séquences du sous-ensemble, **dédupliquées** dans l'ordre d'affichage (plusieurs
