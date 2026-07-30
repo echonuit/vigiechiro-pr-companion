@@ -435,8 +435,8 @@ public final class CaptureImport {
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         ServiceSites service = injecteur.getInstance(ServiceSites.class);
-        var site = service.creerSite("640380", "Etang de la Tuiliere", Protocole.STANDARD, "Ahetze", ID_UTILISATEUR);
-        var point = service.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, "Pres du grand chene");
+        var site = service.creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, "Ahetze", ID_UTILISATEUR);
+        var point = service.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, "Près du grand chêne");
         // Un passage n°1 DEJA en base pour ce point (#108) : re-choisir le n°1 dans l'assistant fait
         // apparaitre l'avertissement « passage deja existant ». Restyle en ambre par #2072 et jamais
         // capture (#2097), c'est ce que montre apercu-import-rattachement-avertissements. Le passage
