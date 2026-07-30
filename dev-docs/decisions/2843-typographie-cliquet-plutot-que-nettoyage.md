@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-07-29
 - **Chantier** : #2843, suite de la clôture du chantier #2348 et de #2813
-- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 2)
+- **Vérification** : probable - `scripts/adr/2843-tiret-cadratin.py` (cliquet : 1)
 
 ## Contexte
 
@@ -31,12 +31,13 @@ Une seule population, un seul nombre, aucun angle mort.
 
 `docs/`, `brief/`, `dev-docs/` et **`src/main/java`** sont nettoyées depuis #2365 : la vérification y compte **zéro** cadratin de prose, et le script échoue à la première rechute. Le cliquet ne porte donc plus que sur `src/test/java`.
 
-`src/test/java` est nettoyée à son tour, et son plancher vaut **2**, pas zéro. Un plancher nommé n'est pas un reste de travail, c'est pourquoi il est écrit ici :
+`src/test/java` est nettoyée à son tour, et son plancher vaut **1**, pas zéro. Un plancher nommé n'est pas un reste de travail, c'est pourquoi il est écrit ici :
 
-- `DocumentationAJourTest` compile une classe de caractères acceptant **les deux formes** d'en-tête d'ADR, le tiret simple et le cadratin. C'est le troisième analyseur de cette forme, avec `_commun.py` et `resserre_cliquets.py` ;
 - `SiteDetailViewModelTest` affirme `« — à vérifier »`, la valeur **composée** que l'écran affiche.
 
-Aucune des deux n'est couverte par une forme citée, et les y faire entrer coûterait plus que le gain. Un motif épargnant tout littéral commençant par le glyphe serait trop permissif ; et recomposer l'attente du test depuis `Formats.VALEUR_ABSENTE` changerait ce que ce test **épingle**, au détour d'une passe de typographie. Un cliquet de 2 refuse la troisième occurrence exactement comme une tolérance zéro refuse la première.
+La classe de caractères par laquelle `DocumentationAJourTest` accepte les **deux formes** d'en-tête d'ADR faisait d'abord partie de ce plancher. Elle est devenue une **forme citée** à part entière quand les familles hors Java sont passées en tolérance zéro : les trois analyseurs de cette forme (`_commun.py`, `resserre_cliquets.py`, `DocumentationAJourTest`) citent une syntaxe héritée, ce qui est une citation au même titre qu'un libellé recopié.
+
+Celle qui reste n'entrera pas dans une forme citée, et pour une raison de dosage : un motif épargnant tout littéral **commençant** par le glyphe serait trop permissif, et chaque élargissement du motif de citation est un risque de déflation silencieuse du compteur. Recomposer l'attente du test depuis `Formats.VALEUR_ABSENTE` changerait, de son côté, ce que ce test **épingle**, au détour d'une passe de typographie. Un cliquet de 1 refuse la deuxième occurrence exactement comme une tolérance zéro refuse la première.
 
 La promotion se fait **dans la tranche qui amène la zone à zéro**, pas plus tard. Différer, c'est ouvrir une fenêtre où l'arbre est propre et où rien ne le garde : la première rechute y passerait sans bruit, et le cliquet, ayant encore sa marge, resterait vert.
 
@@ -44,7 +45,9 @@ Une zone peut porter une **extension** : un arbre de sources se garde exactement
 
 Les zones nettoyées vivent dans une **liste déclarative** du script (`ZONES_NETTOYEES`). Ajouter une tranche revient à ajouter **une ligne**, et c'est délibéré : chaque tranche du chantier touche ce même script, donc une insertion d'une ligne se résout sans réfléchir là où un bloc de code aurait sérialisé les tranches.
 
-**5. Ce qui est cité n'est pas de la prose.** Un cadratin entre **guillemets français**, entre **chevrons de code**, seul dans une **cellule de tableau**, ou réduit à un **littéral Java** (`"—"`) est une citation : le glyphe de valeur absente que la documentation décrit, un libellé de l'application qu'une fiche d'écran reproduit fidèlement, ou le glyphe lui-même tel que `Formats` le définit et que les tests l'affirment. Une seule règle couvre les quatre, là où quatre listes d'exceptions auraient dérivé séparément.
+**5. Ce qui est cité n'est pas de la prose.** Un cadratin entre **guillemets français**, entre **chevrons de code**, seul dans une **cellule de tableau**, réduit à un **littéral Java** (`"—"`), ou posé dans la **classe de caractères littérale** par laquelle les trois analyseurs d'en-têtes d'ADR acceptent encore l'ancienne forme, est une citation : le glyphe de valeur absente que la documentation décrit, un libellé de l'application qu'une fiche d'écran reproduit fidèlement, le glyphe lui-même tel que `Formats` le définit, ou une syntaxe héritée qu'un analyseur doit continuer de lire. Une seule règle couvre les cinq, là où cinq listes d'exceptions auraient dérivé séparément.
+
+Cette cinquième forme est écrite **en littéral**, et non « des crochets contenant un cadratin » : un motif si large avalerait les libellés de liens Markdown, où un tiret entre crochets est de la prose ordinaire. Le garde-fou des scripts porte les deux cas dans la même fixture, la classe épargnée et le lien compté, pour qu'un élargissement du motif fasse rougir au lieu de déflater.
 
 La règle vaut pour **les deux mesures**, Java comprise. Elle n'a d'abord servi qu'aux zones Markdown, et le compteur Java restait brut : il butait donc sur un plancher de **50 occurrences légitimes** du glyphe, que rien ne distinguait d'un reste de travail. Un cliquet dont on ignore le plancher est un cliquet sur lequel on ne peut pas clore le chantier, puisque nul ne sait quel nombre signifie « fini ». La mesure dit maintenant la même chose des deux côtés : **notre prose**.
 

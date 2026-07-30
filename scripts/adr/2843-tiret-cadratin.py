@@ -36,16 +36,26 @@ CADRATIN = "—"
 # Fin de ligne conservée pour situer le suspect : c'est un humain qui tranche, extrait en main.
 EXTRAIT = 90
 
-# Ce qui est **cité** ou **affiché** n'est pas notre prose. Quatre formes, une seule règle :
+# Ce qui est **cité** ou **affiché** n'est pas notre prose. Cinq formes, une seule règle :
 #
 # - le glyphe de valeur absente entre chevrons de code ;
 # - un libellé de l'application entre guillemets français, qu'une fiche d'écran reproduit fidèlement ;
 # - un cadratin **seul dans une cellule de tableau**, qui est le même glyphe posé dans du Markdown ;
 # - un littéral Java réduit au glyphe (`"—"`), qui **est** le glyphe : sa définition dans `Formats`,
-#   ses concaténations, et les tests qui l'affirment comme valeur attendue.
+#   ses concaténations, et les tests qui l'affirment comme valeur attendue ;
+# - la classe de caractères `[-—]` **littérale**, par laquelle les trois analyseurs d'en-têtes d'ADR
+#   (`_commun.py`, `resserre_cliquets.py`, `DocumentationAJourTest`) acceptent encore l'ancienne forme.
 #
-# Les quatre se reconnaissent à leur encadrement. Quatre listes d'exceptions auraient dérivé séparément.
-CITE = re.compile('"' + CADRATIN + '"|`' + CADRATIN + "`|«[^»\n]*»|\\|\\s*" + CADRATIN + "\\s*(?=\\|)")
+# Cette dernière est volontairement **littérale** et non « une classe contenant un cadratin » : un tel
+# motif avalerait les libellés de liens Markdown, où un tiret posé entre crochets est de la prose
+# ordinaire. Chaque élargissement de ce motif est un risque de déflation silencieuse du compteur, donc
+# chacun se taille au plus juste. Cette phrase-ci en a fait la démonstration : elle donnait d'abord
+# l'exemple du lien en clair, et la tolérance zéro l'a refusée.
+#
+# Les cinq se reconnaissent à leur encadrement. Cinq listes d'exceptions auraient dérivé séparément.
+CITE = re.compile(
+    "\\[-" + CADRATIN + "\\]|\"" + CADRATIN + '"|`' + CADRATIN + "`|«[^»\n]*»|\\|\\s*" + CADRATIN + "\\s*(?=\\|)"
+)
 
 
 def suspects(racine: pathlib.Path | None = None) -> list[str]:
@@ -88,6 +98,24 @@ ZONES_NETTOYEES = (
     # la règle de cette ADR, et elle ferme la fenêtre où l'arbre serait propre mais non gardé. Le
     # cliquet ne porte donc plus que sur `src/test/java` ([#SOURCES]).
     ("sources principales", pathlib.Path("src/main/java"), (), "*.java"),
+    # Les familles **hors Java et hors Markdown**, nettoyées elles aussi. Chaque zone est ancrée sur
+    # son répertoire réel plutôt que sur la racine du dépôt : un balayage depuis `.` verrait aussi les
+    # fichiers **non suivis**, et un artefact local ferait alors rougir le garde chez le développeur
+    # sans rien signaler en CI. Un garde qui ment selon la machine ne vaut rien.
+    ("feuilles de style", pathlib.Path("src/main/java"), (), "*.css"),
+    ("migrations de schéma", pathlib.Path("src/main/resources/db/migration"), (), "*.sql"),
+    ("scripts", pathlib.Path("scripts"), (), "*.py"),
+    ("gardes de capture", pathlib.Path(".github/assets"), (), "*.sh"),
+    ("ateliers d'intégration", pathlib.Path(".github/workflows"), (), "*.yml"),
+    # Glob total : ce dossier ne contient que des `.bats` et le `.bash` qu'ils chargent, et deux
+    # entrées pour deux extensions du même petit dossier se seraient désynchronisées.
+    ("tests de paquet", pathlib.Path("src/test/bats"), (), "*"),
+    ("schémas de contrat", pathlib.Path("src/test/resources/vigiechiro"), (), "*.json"),
+    ("collection d'exploration", pathlib.Path("dev-docs/api"), (), "*.json"),
+    # Deux fichiers seuls à la racine. `target` est exclu : Maven peut y déposer des copies, et le
+    # garde n'a rien à dire sur un produit de build.
+    ("configuration Maven", pathlib.Path("."), ("target",), "pom.xml"),
+    ("configuration du site", pathlib.Path("."), ("target",), "mkdocs*.yml"),
 )
 
 
