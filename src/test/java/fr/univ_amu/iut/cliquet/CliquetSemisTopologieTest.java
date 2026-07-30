@@ -29,9 +29,6 @@ class CliquetSemisTopologieTest {
 
     /// La dette épinglée. **Ne peut que rétrécir** : cf. [Cliquet] pour les deux sens de variation.
     private static final List<String> SEMENT_LA_TOPOLOGIE_A_LA_MAIN = List.of(
-            "fr/univ_amu/iut/audit/model/AuditPointsServeurTest.java",
-            "fr/univ_amu/iut/e2e/ParcoursImporterTransformesE2ETest.java",
-            "fr/univ_amu/iut/importation/ServiceImportReferenceTest.java",
             "fr/univ_amu/iut/importation/ServiceImportTest.java",
             "fr/univ_amu/iut/importation/SuiviFichiersImportTest.java",
             "fr/univ_amu/iut/recette/GenerationCartesSDImportCliquetTest.java",

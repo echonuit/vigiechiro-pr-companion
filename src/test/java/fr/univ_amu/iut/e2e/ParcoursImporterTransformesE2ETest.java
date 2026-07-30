@@ -7,11 +7,9 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
-import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.Utilisateur;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.importation.model.ServiceImportReference;
 import fr.univ_amu.iut.importation.model.ServiceImportReference.ResultatImportReference;
 import fr.univ_amu.iut.passage.model.ChoixRebranchement;
@@ -23,10 +21,6 @@ import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -129,12 +123,14 @@ class ParcoursImporterTransformesE2ETest {
     }
 
     private static Long prepararerPoint(SourceDeDonnees source) {
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur E2E"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-05-31", ID_USER));
-        return new PointDao(source)
-                .insert(new PointDEcoute(null, "Z1", 43.5, 5.4, null, site.id()))
-                .id();
+        return JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("640380")
+                .nomSite("Étang")
+                .point("Z1")
+                .position(43.5, 5.4)
+                .semerSiteEtPoint()
+                .idPoint();
     }
 
     /// Dossier externe de transformés : deux originaux (2 tranches + 1), noms R6 horodatés portant la série.
