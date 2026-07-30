@@ -24,6 +24,7 @@ dans la tranche même qui l'y amène : sinon l'arbre est propre et rien ne le ga
 
 import pathlib
 import re
+import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
@@ -166,6 +167,54 @@ def prose(
     return trouves
 
 
+# Les fichiers **délibérément** hors couverture, avec leur motif. Un fichier généré depuis des sujets de
+# commits déjà fusionnés ne se corrige pas : la ligne réécrite falsifierait le compte rendu de ce qui a
+# été livré, et reviendrait à la génération suivante.
+HORS_COUVERTURE = {"CHANGELOG.md": "généré par semantic-release depuis les sujets de commits fusionnés"}
+
+
+def couvert(chemin: pathlib.Path) -> bool:
+    """Ce fichier tombe-t-il dans une zone en tolérance zéro, ou sous le cliquet ?"""
+    for zone in ZONES_NETTOYEES:
+        _, racine, exclus, motif = zone[:4]
+        recursif = zone[4] if len(zone) > 4 else True
+        if not racine.exists():
+            continue
+        vus = racine.rglob(motif) if recursif else racine.glob(motif)
+        if chemin in set(vus) and not any(part in exclus for part in chemin.parts):
+            return True
+    return any(arbre in chemin.parents for arbre in SOURCES)
+
+
+def sans_garde() -> list[str]:
+    """Les fichiers **suivis** portant un cadratin que rien ne garde.
+
+    Le troisième régime, et celui qui manquait. Les deux autres répondent « combien reste-t-il ? » ;
+    celui-ci répond « **qu'est-ce que personne ne regarde ?** ». La différence n'est pas théorique : à
+    la première clôture de #2365, les deux premiers régimes étaient au vert alors que `CONTRIBUTING.md`,
+    le fichier qui **énonce** la convention, portait encore deux cadratins de prose. Aucune zone ne
+    couvrait le niveau racine, et compter ce qui reste ne dit rien de ce qui est gardé.
+
+    La liste part de `git ls-files` : les fichiers **suivis**, donc ni les artefacts de build ni le
+    brouillon local de qui lance le script.
+    """
+    suivis = subprocess.run(
+        ["git", "ls-files"], capture_output=True, text=True, check=True
+    ).stdout.splitlines()
+    orphelins = []
+    for nom in suivis:
+        chemin = pathlib.Path(nom)
+        if nom in HORS_COUVERTURE or not chemin.is_file():
+            continue
+        try:
+            contenu = chemin.read_text(encoding="utf-8")
+        except (UnicodeDecodeError, OSError):
+            continue  # binaire ou illisible : pas de prose à garder
+        if CADRATIN in CITE.sub("", contenu) and not couvert(chemin):
+            orphelins.append(nom)
+    return orphelins
+
+
 if __name__ == "__main__":
     code = rapporte("2843", "tiret cadratin dans une source Java", suspects())
 
@@ -185,5 +234,19 @@ if __name__ == "__main__":
                 "un libellé de l'application, encadrez-le de guillemets français ou de chevrons de code."
             )
             code = 1
+
+    orphelins = sans_garde()
+    print(f"\ncouverture : {len(orphelins)} fichier(s) porteur(s) que rien ne garde")
+    for nom in orphelins:
+        print(f"  {nom}")
+    if orphelins:
+        print(
+            "\nCes fichiers portent un cadratin de prose et ne tombent dans aucune zone ni sous le\n"
+            "cliquet. Ajoutez la zone qui les couvre à ZONES_NETTOYEES, ou inscrivez-les dans\n"
+            "HORS_COUVERTURE avec le motif de leur exemption. Un fichier propre mais non gardé\n"
+            "rechute sans bruit : c'est ainsi que CONTRIBUTING.md, qui énonce la convention, l'a\n"
+            "enfreinte pendant tout le chantier qui l'appliquait."
+        )
+        code = 1
 
     sys.exit(code)
