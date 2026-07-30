@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.136.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.135.3...v2.136.0) (2026-07-30)
+
+
+### Features
+
+* **audio:** le critere « Lieu » et la recherche geographique de la vue audio (lot C) ([#2910](https://github.com/echonuit/vigiechiro-pr-companion/issues/2910)) ([6fac58a](https://github.com/echonuit/vigiechiro-pr-companion/commit/6fac58abea8433a38f76e0191147731d5691d7a3)), closes [#2794](https://github.com/echonuit/vigiechiro-pr-companion/issues/2794) [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791) [#2794](https://github.com/echonuit/vigiechiro-pr-companion/issues/2794)
+
 ## [2.135.3](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.135.2...v2.135.3) (2026-07-30)
 
 
