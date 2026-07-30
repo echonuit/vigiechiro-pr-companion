@@ -15,8 +15,8 @@ package fr.univ_amu.iut.commun.api;
 /// @param issue ce qu'il est advenu de la demande
 /// @param traitement état du traitement **relu** après coup, ou [Traitement#absent()] quand il n'a pas pu
 ///     l'être (demande acceptée, serveur injoignable)
-/// @param détail précision technique (statut HTTP et corps du refus), `null` s'il n'y a rien à préciser
-public record ResultatLancement(IssueLancement issue, Traitement traitement, String détail) {
+/// @param detail précision technique (statut HTTP et corps du refus), `null` s'il n'y a rien à préciser
+public record ResultatLancement(IssueLancement issue, Traitement traitement, String detail) {
 
     /// Le serveur a **accepté** : le traitement est planifié, les résultats arriveront après le calcul.
     public static ResultatLancement accepte() {

@@ -104,7 +104,7 @@ public final class LancerTraitementVigieChiro implements Callable<Integer> {
                 "Cette nuit a déjà été analysée. La relancer effacerait les observations du serveur sans"
                         + " pouvoir les recalculer (audio non conservé pour un dépôt en archives) :"
                         + " importez-les plutôt (importer-vigiechiro).";
-            case REFUSE -> "Vigie-Chiro a refusé le lancement du traitement : " + resultat.détail();
+            case REFUSE -> "Vigie-Chiro a refusé le lancement du traitement : " + resultat.detail();
             case INJOIGNABLE -> "Vigie-Chiro est injoignable : le traitement n'a pas pu être lancé.";
         };
     }
