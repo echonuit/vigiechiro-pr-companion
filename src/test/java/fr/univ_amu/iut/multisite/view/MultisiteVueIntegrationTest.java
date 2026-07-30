@@ -15,10 +15,12 @@ import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -32,11 +34,15 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
@@ -47,6 +53,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -202,9 +209,12 @@ class MultisiteVueIntegrationTest {
         assertThat(robot.lookup("#pucesFiltres").queryAs(FlowPane.class)).isNotNull();
 
         MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        // « Lieu » (#2968) coexiste avec « Carré », et ce n'est pas un doublon oublié : retirer « Carré »
+        // ferait se rejouer SANS FILTRE les vues mémorisées qui le portent, un critère inconnu étant
+        // ignoré sans un mot à la restauration. Le retirer demande d'abord une migration des vues.
         assertThat(menuAjout.getItems())
                 .extracting(MenuItem::getText)
-                .containsExactlyInAnyOrder("Carré", "Statut", "Verdict", "Année", "Analyse", "Campagne");
+                .containsExactlyInAnyOrder("Carré", "Lieu", "Statut", "Verdict", "Année", "Analyse", "Campagne");
         // Tri (souvent absent) : les 4 critères de TriMultisite.
         assertThat(robot.lookup("#choixTri").queryAs(ComboBox.class).getItems()).hasSize(TriMultisite.values().length);
     }
@@ -470,5 +480,76 @@ class MultisiteVueIntegrationTest {
                 .as("tri par année croissante : 2025 (carré 640381) puis 2026 (carré 640380)")
                 .extracting(LignePassage::annee)
                 .containsExactly(2025, 2026);
+    }
+
+    @Test
+    @DisplayName("#2968 : critère Lieu : commune, carré et point filtrent chacun ; cocher = appartenance")
+    void critere_lieu_filtre_sur_chaque_dimension(FxRobot robot) {
+        ObservableList<LignePassage> source = FXCollections.observableArrayList(
+                ligneLieu(1L, "640380", "A1", "Aix-en-Provence"), ligneLieu(2L, "870150", "B2", "Venelles"));
+        FilteredList<LignePassage> vues = new FilteredList<>(source);
+        Filtres<LignePassage> filtresLocaux = new Filtres<>(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres<LignePassage> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresMultisite.lieu(() -> source)),
+                CriteresMultisite.rechercheTexte());
+        assertThat(ignore).isNotNull();
+
+        // Valeurs groupées par dimension (communes, carrés, points), triées au sein de chacune. Le SITE
+        // n'y figure pas : LignePassage ne le porte pas, contrairement à la vue audio.
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        MenuButton choixLieu = menuBoutonDeLieu(pucesLocales);
+        assertThat(choixLieu.getItems())
+                .extracting(MenuItem::getText)
+                .containsExactly("Aix-en-Provence", "Venelles", "640380", "870150", "A1", "B2");
+        assertThat(vues).as("rien de coché n'écarte rien").hasSize(2);
+
+        robot.interact(() -> cocheLieu(choixLieu, "Aix-en-Provence").setSelected(true));
+        assertThat(vues).extracting(LignePassage::idPassage).containsExactly(1L);
+        robot.interact(() -> cocheLieu(choixLieu, "870150").setSelected(true));
+        assertThat(vues).as("une ligne passe par l'UNE de ses dimensions").hasSize(2);
+
+        robot.interact(() -> {
+            cocheLieu(choixLieu, "Aix-en-Provence").setSelected(false);
+            cocheLieu(choixLieu, "870150").setSelected(false);
+            cocheLieu(choixLieu, "B2").setSelected(true);
+        });
+        assertThat(vues).extracting(LignePassage::idPassage).containsExactly(2L);
+    }
+
+    /// Ligne portant sa commune : l'aide générale du fichier la laisse nulle, faute d'en avoir eu besoin.
+    private static LignePassage ligneLieu(long id, String carre, String point, String commune) {
+        return new LignePassage(
+                id,
+                carre,
+                point,
+                2026,
+                1,
+                "2026-06-20",
+                StatutWorkflow.DEPOSE,
+                Verdict.OK,
+                EtatAnalyse.SANS_OBJET,
+                null,
+                null,
+                commune);
+    }
+
+    /// Le `MenuButton` de l'unique puce posée : la puce est une `HBox` dont le second enfant est l'éditeur.
+    private static MenuButton menuBoutonDeLieu(FlowPane puces) {
+        return (MenuButton) ((HBox) puces.getChildren().get(0)).getChildren().get(1);
+    }
+
+    /// La case à cocher d'un lieu, retrouvée par son libellé exact.
+    private static CheckMenuItem cocheLieu(MenuButton bouton, String texte) {
+        return bouton.getItems().stream()
+                .filter(item -> item instanceof CheckMenuItem && texte.equals(item.getText()))
+                .map(CheckMenuItem.class::cast)
+                .findFirst()
+                .orElseThrow();
     }
 }
