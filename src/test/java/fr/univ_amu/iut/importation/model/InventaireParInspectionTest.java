@@ -4,13 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.Prefixe;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.passage.model.BrutInventorie;
 import fr.univ_amu.iut.passage.model.InventaireBruts;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
+import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -32,7 +31,7 @@ class InventaireParInspectionTest {
     @Test
     @DisplayName("Log présent : la Fe est lue du log et chaque brut de carte SD reçoit son nom R6")
     void log_present_bruts_nommes_r6() throws IOException {
-        ecrireLog(dossier.resolve("LogPR1997632.txt"), 384);
+        JournalDeCapteur.ecrire(dossier, "1997632", LocalDate.of(2026, 7, 3), 384);
         ecrireBrut(dossier.resolve("PaRecPR1997632_20260703_210004.wav"));
         ecrireBrut(dossier.resolve("PaRecPR1997632_20260703_210254.wav"));
 
@@ -61,7 +60,7 @@ class InventaireParInspectionTest {
     @Test
     @DisplayName("Un brut déjà préfixé R6 (copie du dossier bruts/) n'est jamais re-préfixé")
     void brut_deja_prefixe_conserve() throws IOException {
-        ecrireLog(dossier.resolve("LogPR1997632.txt"), 384);
+        JournalDeCapteur.ecrire(dossier, "1997632", LocalDate.of(2026, 7, 3), 384);
         String nomR6 = "Car130711-2026-Pass1-Z41-PaRecPR1997632_20260703_210004.wav";
         ecrireBrut(dossier.resolve(nomR6));
 
@@ -75,16 +74,6 @@ class InventaireParInspectionTest {
     }
 
     /// Journal minimal au format du firmware Teensy : une ligne « Paramètres » porte la fréquence `Fe…kHz`.
-    private void ecrireLog(Path fichier, int frequenceKhz) throws IOException {
-        Files.write(
-                fichier,
-                List.of(
-                        "03/07/26 - 19:00:00 PR1997632 Démarrage v1.0",
-                        "03/07/26 - 19:00:01 PR1997632 Paramètres : Acquisi. 19:00-04:00, Fe" + frequenceKhz
-                                + "kHz, S. R. Med, Bd. Freq. 8-120kHz"),
-                StandardCharsets.UTF_8);
-    }
-
     /// Brut synthétique minimal : l'inventaire ne lit que le nom (pas le contenu), un WAV valide suffit.
     private void ecrireBrut(Path fichier) throws IOException {
         FichierWav.ecrire(fichier, 1, 38_400, 16, new byte[2_000], 0, 2_000);
