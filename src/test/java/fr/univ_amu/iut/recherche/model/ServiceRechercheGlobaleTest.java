@@ -48,7 +48,8 @@ class ServiceRechercheGlobaleTest {
         return new Site(id, numeroCarre, nom, Protocole.STANDARD, null, "2026-01-01", UTILISATEUR);
     }
 
-    private static LignePassage passage(Long id, String carre, String point, int annee, int numero, String date) {
+    private static LignePassage passage(
+            Long id, String carre, String point, int annee, int numero, String date, String commune) {
         return new LignePassage(
                 id,
                 carre,
@@ -61,7 +62,7 @@ class ServiceRechercheGlobaleTest {
                 EtatAnalyse.SANS_OBJET,
                 null,
                 null,
-                null);
+                commune);
     }
 
     @BeforeEach
@@ -120,10 +121,21 @@ class ServiceRechercheGlobaleTest {
     }
 
     @Test
+    @DisplayName("#2791 : un passage se trouve par la commune de son point")
+    void trouve_passage_par_commune() {
+        when(multisite.listerPassages(UTILISATEUR))
+                .thenReturn(List.of(passage(7L, "130711", "A1", 2026, 1, "2026-06-20", "Aix-en-Provence")));
+
+        assertThat(recherche.rechercher("aix"))
+                .anySatisfy(r -> assertThat(r.libelle()).contains("130711"));
+        assertThat(recherche.rechercher("marseille")).isEmpty();
+    }
+
+    @Test
     @DisplayName("trouve un passage par n° de passage, date ou code, en portant l'idPassage")
     void trouve_passage_par_numero_et_date() {
         when(multisite.listerPassages(UTILISATEUR))
-                .thenReturn(List.of(passage(42L, "640380", "A1", 2026, 12, "2026-06-21")));
+                .thenReturn(List.of(passage(42L, "640380", "A1", 2026, 12, "2026-06-21", null)));
 
         assertThat(recherche.rechercher("12")).anySatisfy(r -> {
             assertThat(r.type()).isEqualTo(TypeResultat.PASSAGE);
@@ -157,7 +169,7 @@ class ServiceRechercheGlobaleTest {
     @DisplayName("le nombre de passages retournés est plafonné par type")
     void passages_plafonnes() {
         List<LignePassage> beaucoup = IntStream.range(0, ServiceRechercheGlobale.MAX_PAR_TYPE + 5)
-                .mapToObj(i -> passage((long) i, "640380", "A1", 2026, i, "2026-06-21"))
+                .mapToObj(i -> passage((long) i, "640380", "A1", 2026, i, "2026-06-21", null))
                 .toList();
         when(multisite.listerPassages(UTILISATEUR)).thenReturn(beaucoup);
 

@@ -135,6 +135,7 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
                     aiguille,
                     ligne.numeroCarre(),
                     ligne.codePoint(),
+                    ligne.commune(),
                     Integer.toString(ligne.numeroPassage()),
                     Integer.toString(ligne.annee()),
                     ligne.dateEnregistrement());
