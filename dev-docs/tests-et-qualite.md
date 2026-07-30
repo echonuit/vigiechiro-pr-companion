@@ -455,9 +455,18 @@ lenteur d'un test qui l'a tué, c'est le **volume** - 4 657 mutants à quelques 
 heures quelle que soit la finesse des tests. Un paquet seul, en revanche, tient sans peine :
 `saison.model` a rendu 86 mutants et **97 % de détection en 12 minutes**, sans expiration.
 
-Les deux plus gros paquets (`commun`, 96 classes ; `passage`, 93) ne sont pas garantis pour autant, et ce
-n'est pas mesuré. Les deux premiers tours du cycle le diront ; s'ils débordent, la maille descendra d'un
-cran **sur eux seuls**.
+**Le plus gros paquet tient, et confortablement.** `commun.model` (96 classes) a été mesuré : **2 h 35**
+sur les 5 heures de budget, 746 mutants, **92 % de détection**. L'extrapolation à partir de `saison`
+donnait 4 h 45 - elle était pessimiste d'un facteur deux, parce que le coût se compte en **mutants**, pas
+en classes : le périmètre entier en produisait 4 657, `commun.model` seulement 746.
+
+Reste `passage` (93 classes) comme seul inconnu, et il devrait se comporter comme `commun`. La maille n'a
+donc **pas** à descendre d'un cran.
+
+À noter, parce que cela contre-indique une maille plus fine : le **calcul de couverture est un coût fixe**
+payé à chaque tour, autour de 14 minutes quelle que soit la taille du paquet - 12 minutes sur les 12 de
+`saison`, 14 sur les 155 de `commun`. Découper davantage ferait payer ce préambule plus souvent, pour un
+rendement moindre.
 
 **Pourquoi `commun.api` est écarté côté tests.** Nuance qui compte : ce n'est pas une classe mutée, c'est
 la suite du **réessai gradué** ([ADR 2354](decisions/2354-le-reessai-reseau-est-gradue-jamais-aveugle-toujours-jittere.md)),

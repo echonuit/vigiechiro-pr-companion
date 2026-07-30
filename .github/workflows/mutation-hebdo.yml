@@ -71,11 +71,12 @@ jobs:
     # Un paquet moyen tient sans peine : `saison.model` (4 classes, 86 mutants) a pris 12 minutes en
     # local, sans expiration, 97 % de détection.
     #
-    # ⚠️ Les deux plus gros ne sont PAS garantis. `commun` compte 96 classes et `passage` 93, soit une
-    # vingtaine de fois `saison` : à ce rythme leur tour frôlerait la borne. Ce n'est pas mesuré - les deux
-    # premiers tours du cycle le diront. S'ils débordent, la maille descend d'un cran sur eux seuls
-    # (`commun.model.dao` et le reste), sans toucher aux quinze autres. On ne complique pas d'avance ce
-    # qu'une mesure va trancher.
+    # Et le plus gros aussi : `commun.model` (96 classes) a pris **2 h 35** en CI, 746 mutants, 92 % de
+    # détection. L'extrapolation depuis `saison` annonçait 4 h 45 - pessimiste d'un facteur deux, parce
+    # que le coût se compte en MUTANTS et non en classes.
+    #
+    # La borne reste donc un garde-fou d'interblocage, avec le double de la pire durée observée. Seul
+    # `passage` (93 classes) n'a pas encore eu son tour ; il devrait suivre `commun`.
     timeout-minutes: 300
 
     steps:
