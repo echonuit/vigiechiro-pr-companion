@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.recette;
 
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.recette.SpecCarteSd.Enregistreur;
 import fr.univ_amu.iut.recette.SpecCarteSd.Prefixe;
 import java.io.IOException;
@@ -10,7 +11,6 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -152,36 +152,11 @@ public final class GenerateurCartesSD {
         }
     }
 
+    /// Délègue à [fr.univ_amu.iut.fixture.JournalDeCapteur] : le tracé d'une nuit est le même ici et
+    /// dans les tests qui ont juste besoin d'un journal valide (#2868). Une seule source, deux usages.
     private static List<String> lignesJournal(SpecCarteSd spec) {
-        String serie = spec.journal().serie();
-        LocalDate nuit = spec.journal().nuit();
-        String soir = nuit.format(FORMAT_JOURNAL);
-        String matin = nuit.plusDays(1).format(FORMAT_JOURNAL);
-
-        List<String> lignes = new ArrayList<>();
-        lignes.add(ligne(soir, "16:02:20", serie, "Test accès carte SD"));
-        lignes.add(ligne(soir, "16:02:20", serie, "=========================================="));
-        lignes.add(ligne(
-                soir,
-                "16:02:20",
-                serie,
-                "Démarrage Passive Recorder numéro de série " + serie + ", V1.01, CPU 600000000, T4.1"));
-        lignes.add(ligne(soir, "16:02:21", serie, "### Passage en mode Protocole Point fixe"));
-        if (spec.journal().sondePresente()) {
-            lignes.add(
-                    ligne(soir, "16:02:21", serie, "Sonde température/hygrométrie présente, lecture toutes les 600s"));
-        }
-        lignes.add(ligne(soir, "16:02:21", serie, "Batteries internes 4.1V (90%) (MCP3221)"));
-        lignes.add(ligne(
-                soir,
-                "16:02:21",
-                serie,
-                "Paramètres : Acquisi. 20:25-07:47, Fe384kHz FL N FPH 00, S. R. 16dB 1dt. GN0,"
-                        + " Bd. Freq. 8-120kHz, Wav 2-30s SD 99%"));
-        lignes.add(ligne(soir, "20:26:13", serie, "Wakeup by ALARM... Cpt 1"));
-        lignes.add(ligne(matin, "07:48:00", serie, "### Passage en mode Veille"));
-        lignes.add(ligne(matin, "07:52:21", serie, "Mise en veille, réveil à 20:25, Bat. Interne 4.0 90%"));
-        return lignes;
+        return JournalDeCapteur.lignes(
+                spec.journal().serie(), spec.journal().nuit(), spec.journal().sondePresente());
     }
 
     private static String ligne(String date, String heure, String serie, String message) {

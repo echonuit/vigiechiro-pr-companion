@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -24,9 +25,9 @@ import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -60,9 +61,6 @@ class ParcoursPassageVersNonIdentifiesE2ETest {
     private static final String SERIE = "1925492";
     private static final int FREQUENCE_WAV = 384_000;
     private static final int TRAMES = 576_000;
-    private static final String LOG = "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie"
-            + " 1925492, V1.01, CPU 600000000, T4.1\n";
-
     private Injector injector;
     private ContextePassage contextePassage;
 
@@ -172,8 +170,10 @@ class ParcoursPassageVersNonIdentifiesE2ETest {
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {
         Files.createDirectories(sd);
-        Files.writeString(sd.resolve("LogPR" + SERIE + ".txt"), LOG, StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve("PaRecPR" + SERIE + "_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
+        // Journal et releve par la fixture (#2868) : le trace complet d'une nuit, la ou ce test
+        // n'avait besoin que d'un journal valide. Il n'affirme rien sur son contenu.
+        JournalDeCapteur.ecrire(sd, SERIE, LocalDate.of(2026, 4, 22));
+        JournalDeCapteur.ecrireReleve(sd, SERIE);
         byte[] pcm = new byte[TRAMES * 2];
         for (int i = 0; i < TRAMES; i++) {
             short e = (short) (((i * 41) % 1000) - 500);

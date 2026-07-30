@@ -20,6 +20,11 @@ import org.junit.jupiter.api.Test;
 /// `AnalyseurLogPRTest` et `InspecteurDossierTest` testent les **analyseurs** de ce format : leur donner
 /// un générateur reviendrait à tester le générateur contre lui-même. Le paquet `recette` est la
 /// **source** de la brique, pas sa dette.
+///
+/// Le paquet `fixture` non plus : `JournalDeCapteur` compose évidemment un nom de journal, c'est son
+/// métier et c'est la **destination** de la migration. L'exclusion manquait à la pose de ce cliquet, où
+/// le paquet n'écrivait encore aucun journal - la destination n'existait pas. Elle est écrite maintenant,
+/// plutôt que laissée à la chance.
 class CliquetJournalEnDurTest {
 
     /// Nom de fichier de journal composé dans le code : `"LogPR…"`, `"LogPR" + serie`, `LogPR1925492`.
@@ -36,13 +41,8 @@ class CliquetJournalEnDurTest {
             "fr/univ_amu/iut/diagnostic/ServiceDiagnosticTest.java",
             "fr/univ_amu/iut/e2e/ParcoursDepotE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursImporterNuitE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursMultisiteVersPassageE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursPassageVersDiagnosticE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursPassageVersNonIdentifiesE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursPassageVersValidationE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursPremiereNuitE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursRestaurationDepuisVigieChiroE2ETest.java",
-            "fr/univ_amu/iut/e2e/ParcoursSitesVersPassageE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE2ETest.java",
             "fr/univ_amu/iut/importation/CopieProtegeeTest.java",
             "fr/univ_amu/iut/importation/ExtracteurZipTest.java",
@@ -71,7 +71,7 @@ class CliquetJournalEnDurTest {
     }
 
     private static boolean ecritUnJournalEnDur(Cliquet.Fichier fichier) {
-        if (fichier.dansLePaquet("cliquet") || fichier.dansLePaquet("recette")) {
+        if (fichier.dansLePaquet("cliquet") || fichier.dansLePaquet("recette") || fichier.dansLePaquet("fixture")) {
             return false;
         }
         String nom = fichier.chemin().getFileName().toString();
