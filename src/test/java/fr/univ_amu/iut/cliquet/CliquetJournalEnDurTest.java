@@ -53,10 +53,7 @@ class CliquetJournalEnDurTest {
             "fr/univ_amu/iut/cli/CliImportTest.java",
             "fr/univ_amu/iut/diagnostic/AnalyseAnomaliesTest.java",
             "fr/univ_amu/iut/diagnostic/ServiceDiagnosticTest.java",
-            "fr/univ_amu/iut/e2e/ParcoursImporterNuitE2ETest.java",
-            "fr/univ_amu/iut/importation/ServiceImportTest.java",
-            "fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java",
-            "fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java");
+            "fr/univ_amu/iut/importation/ServiceImportTest.java");
 
     @Test
     @DisplayName("La dette du journal en dur ne peut que rétrécir : aucun nouveau littéral")

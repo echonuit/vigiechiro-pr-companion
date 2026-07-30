@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
@@ -26,9 +27,9 @@ import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -68,9 +69,6 @@ class ParcoursImporterNuitE2ETest {
     private static final int ANNEE = 2026;
     private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10 (R10)
     private static final int TRAMES = 576_000;
-    private static final String LOG = "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie"
-            + " 1925492, V1.01, CPU 600000000, T4.1\n";
-
     private Injector injector;
     private SourceDeDonnees source;
     private Site site;
@@ -222,8 +220,8 @@ class ParcoursImporterNuitE2ETest {
     void parcours_import_resilient_avec_rapport() throws Exception {
         // Nuit avec un WAV valide ET un WAV illisible (contenu non-WAV portant l'extension .wav).
         Path nuit = Files.createTempDirectory("vc-e2e-resilient");
-        Files.writeString(nuit.resolve("LogPR" + SERIE + ".txt"), LOG, StandardCharsets.UTF_8);
-        Files.writeString(nuit.resolve("PaRecPR" + SERIE + "_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(nuit, SERIE, LocalDate.of(2026, 4, 22));
+        JournalDeCapteur.ecrireReleve(nuit, SERIE);
         ecrireWav(nuit.resolve("PaRecPR" + SERIE + "_20260422_203922.wav")); // valide
         Files.writeString(nuit.resolve("PaRecPR" + SERIE + "_20260422_204500.wav"), "pas un WAV"); // illisible
 
@@ -389,8 +387,8 @@ class ParcoursImporterNuitE2ETest {
     /// nom brut non préfixé) que l'inspection puis l'import peuvent traiter.
     private static Path creerNuitSynthetique(Path sd) throws Exception {
         Files.createDirectories(sd);
-        Files.writeString(sd.resolve("LogPR" + SERIE + ".txt"), LOG, StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve("PaRecPR" + SERIE + "_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(sd, SERIE, LocalDate.of(2026, 4, 22));
+        JournalDeCapteur.ecrireReleve(sd, SERIE);
         ecrireWav(sd.resolve("PaRecPR" + SERIE + "_20260422_203922.wav"));
         return sd;
     }
