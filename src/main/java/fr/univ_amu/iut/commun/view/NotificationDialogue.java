@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import javafx.scene.control.Alert;
@@ -30,6 +32,29 @@ public final class NotificationDialogue implements Notificateur {
     public void notifier(NiveauNotification niveau, String entete, String message) {
         Alert alerte = new Alert(type(niveau), message, ButtonType.OK);
         alerte.setHeaderText(entete);
+        alerte.initOwner(fenetre.get());
+        alerte.showAndWait();
+    }
+
+    /// Rend la bande chiffrée **dans** le dialogue, à la place de son texte.
+    ///
+    /// Les feuilles de style sont posées à la main sur le `DialogPane`. Un `Alert` porte sa propre scène,
+    /// vierge de celles de l'application : sans ce geste, les classes `cr-*` du panneau ne s'appliquent
+    /// pas et la bande perd ses teintes de sévérité comme ses marges - elle s'affiche, en gris, alignée
+    /// n'importe comment.
+    @Override
+    public void notifier(NiveauNotification niveau, String entete, CompteRenduChiffre compteRendu) {
+        PanneauCompteRendu bande = new PanneauCompteRendu();
+        bande.afficher(compteRendu);
+        Alert alerte = new Alert(type(niveau), "", ButtonType.OK);
+        alerte.setHeaderText(entete);
+        alerte.getDialogPane().setContent(bande);
+        for (String feuille : List.of("palette.css", "design.css")) {
+            var url = PanneauCompteRendu.class.getResource(feuille);
+            if (url != null) {
+                alerte.getDialogPane().getStylesheets().add(url.toExternalForm());
+            }
+        }
         alerte.initOwner(fenetre.get());
         alerte.showAndWait();
     }
