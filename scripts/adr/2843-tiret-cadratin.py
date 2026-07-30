@@ -116,16 +116,37 @@ ZONES_NETTOYEES = (
     # garde n'a rien à dire sur un produit de build.
     ("configuration Maven", pathlib.Path("."), ("target",), "pom.xml"),
     ("configuration du site", pathlib.Path("."), ("target",), "mkdocs*.yml"),
+    # La documentation **à la racine** (`README`, `CONTRIBUTING`, `AGENTS`…), en balayage NON
+    # RÉCURSIF : les sous-arbres ont déjà leurs zones, et descendre depuis `.` ramasserait les fichiers
+    # non suivis. Cette zone manquait à la clôture de #2365, et `CONTRIBUTING.md`, le fichier qui
+    # **énonce** la convention, portait encore deux cadratins de prose. Une règle sans garde n'est pas
+    # appliquée, pas même par qui l'écrit.
+    #
+    # `CHANGELOG.md` en est exclu : il est **produit** par semantic-release depuis les sujets de
+    # commits déjà fusionnés. Le corriger falsifierait le compte rendu de ce qui a réellement été
+    # livré, et la ligne réécrite reviendrait à la génération suivante. Ce qu'il faut garder, ce sont
+    # les **titres de PR** à la source, pas leur report.
+    ("documentation racine", pathlib.Path("."), ("CHANGELOG.md",), "*.md", False),
 )
 
 
-def prose(racine: pathlib.Path, exclus: tuple[str, ...] = (), motif: str = "*.md") -> list[str]:
+def prose(
+    racine: pathlib.Path,
+    exclus: tuple[str, ...] = (),
+    motif: str = "*.md",
+    recursif: bool = True,
+) -> list[str]:
     """Les cadratins de **prose** d'une zone nettoyée, citations exclues.
 
     `racine` est explicite : le garde-fou `verifie_scripts.py` y pointe une fixture jetable, et
     [#ZONES_NETTOYEES] la fournit pour chaque zone du dépôt. `exclus` nomme les sous-dossiers encore
     en chantier, pour qu'une zone puisse se garder **par morceaux** au lieu d'attendre d'être entière.
     `motif` porte l'extension : une zone de documentation et une zone de sources se gardent pareil.
+
+    `recursif=False` limite le balayage au **niveau de `racine`**, sans descendre. C'est ce qui rend
+    gardable la documentation de la racine du dépôt : les sous-arbres ont déjà leurs zones, et une
+    descente depuis `.` ramasserait les fichiers **non suivis**, faisant rougir le garde chez le
+    développeur sans rien signaler en CI.
 
     Lève si la zone ne voit **aucun fichier**. Un motif mal apparié à son arbre (`*.md` sur un arbre
     Java) rapporterait « 0 cadratin de prose » à jamais, et ce vert-là serait indétectable : il a la
@@ -134,7 +155,8 @@ def prose(racine: pathlib.Path, exclus: tuple[str, ...] = (), motif: str = "*.md
     trouves = []
     if not racine.exists():
         return trouves
-    pages = [p for p in sorted(racine.rglob(motif)) if not any(part in exclus for part in p.parts)]
+    balayage = racine.rglob(motif) if recursif else racine.glob(motif)
+    pages = [p for p in sorted(balayage) if not any(part in exclus for part in p.parts)]
     if not pages:
         raise AssertionError(f"zone « {racine} » : aucun fichier « {motif} », le garde ne balaie rien")
     for page in pages:
@@ -147,8 +169,12 @@ def prose(racine: pathlib.Path, exclus: tuple[str, ...] = (), motif: str = "*.md
 if __name__ == "__main__":
     code = rapporte("2843", "tiret cadratin dans une source Java", suspects())
 
-    for libelle, racine, exclus, motif in ZONES_NETTOYEES:
-        rechutes = prose(racine, exclus, motif)
+    # Une zone déclare quatre champs, et un cinquième **optionnel** : le balayage non récursif, qui ne
+    # sert qu'à la racine du dépôt. Le défaut porté ici plutôt qu'un `True` répété sur chaque ligne
+    # garde la table lisible et fait ressortir le seul cas particulier.
+    for zone in ZONES_NETTOYEES:
+        libelle, racine, exclus, motif = zone[:4]
+        rechutes = prose(racine, exclus, motif, zone[4] if len(zone) > 4 else True)
         print(f"\n{libelle} : {len(rechutes)} cadratin(s) de prose (tolérance zéro)")
         for suspect in rechutes:
             print(f"  {suspect}")
