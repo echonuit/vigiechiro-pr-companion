@@ -159,7 +159,7 @@ jobs:
           set -uo pipefail
           # Volontairement sans `-e` : ce job OBSERVE. Un bilan manquant se dit, il ne se solde pas par
           # un job rouge - sans quoi « non bloquant » ne serait vrai que les bonnes semaines.
-          echo "## Mutation du modèle — paquet \`${FEATURE}.model\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Mutation du modèle : paquet \`${FEATURE}.model\`" >> "$GITHUB_STEP_SUMMARY"
           echo >> "$GITHUB_STEP_SUMMARY"
           if python3 scripts/qualite/rapport_mutation.py --markdown >> "$GITHUB_STEP_SUMMARY"; then
             exit 0

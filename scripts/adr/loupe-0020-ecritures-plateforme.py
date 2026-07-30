@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Loupe de l'ADR 0020 — Écrire sur la plateforme : ne rien inventer, ne rien effacer.
+"""Loupe de l'ADR 0020 - Écrire sur la plateforme : ne rien inventer, ne rien effacer.
 
 Cette décision est `humaine` : aucun motif ne dit si une requête « invente » ou « efface ». Mais on
 peut lister la SURFACE D'ÉCRITURE - les méthodes du client d'API qui envoient quelque chose au serveur -

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "VigieChiro — participation",
+  "title": "VigieChiro : participation",
   "description": "Contrat OBSERVÉ de l'objet `participation` de l'API VigieChiro (Python-Eve), relevé le 2026-07-10 sur une participation créée via le site officiel (schéma canonique). Source de vérité machine-lisible partagée par la suite REST-assured (matchesJsonSchemaInClasspath) et la collection Postman (pm.response.to.have.jsonSchema). Les champs coeur sont `required` ; meteo/configuration/traitement sont OPTIONNELS (une participation fraîchement créée peut n'en avoir aucun). additionalProperties=true : on tolère les ajouts de l'API, on détecte les disparitions/renommages et les domaines de valeurs (enums).",
   "type": "object",
   "required": ["_id", "_etag", "point", "date_debut", "date_fin"],

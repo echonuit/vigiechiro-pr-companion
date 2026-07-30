@@ -57,7 +57,7 @@ while IFS= read -r ligne; do
 done < "$MANIFESTE"
 
 if [[ $erreurs -gt 0 ]]; then
-  echo "Garde captures : $erreurs problème(s) — voir ci-dessus."
+  echo "Garde captures : $erreurs problème(s) : voir ci-dessus."
   exit 1
 fi
 echo "Garde captures : OK ($nb_vues vues couvertes, toutes avec au moins une capture présente)."

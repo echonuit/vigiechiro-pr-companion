@@ -1,7 +1,7 @@
 #!/usr/bin/env bats
 #
 # E2E de la CLI vigiechiro (#1572, chantier #1565) au niveau SHELL, sur le fat-jar shadé : ce que les
-# tests Java in-process (CliTest & co.) ne voient pas — le packaging réel, l'analyse des arguments par
+# tests Java in-process (CliTest & co.) ne voient pas : le packaging réel, l'analyse des arguments par
 # picocli, et les CODES DE SORTIE d'un vrai processus.
 #
 # Contrats HORS-LIGNE : aide générale, aide de CHAQUE sous-commande (un test parcourt les 35),
@@ -227,7 +227,7 @@ setup() {
 
 @test "synthetiser-passage sans --sortie : le CSV part sur la sortie standard, exit 0 (#2351)" {
   # Le chemin le plus evident de la commande, et celui qu on redirige : « > synthese.csv ». Il a
-  # longtemps ete le seul non couvert, et il etait casse — la sortie se perdait, code 0 a l appui,
+  # longtemps ete le seul non couvert, et il etait casse : la sortie se perdait, code 0 a l appui,
   # parce qu un PrintWriter en auto-flush ne se vide pas sur `print`. Un vert qui ne teste pas le
   # chemin par defaut ne dit rien du tout.
   run cli synthetiser-passage --passage 1

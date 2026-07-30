@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "VigieChiro — site (monitoring_site)",
+  "title": "VigieChiro : site (monitoring_site)",
   "description": "Contrat OBSERVÉ de l'objet `site` de l'API VigieChiro, relevé le 2026-07-10. Un `point d'écoute` local correspond à une entrée de `localites` (nom + géométrie Point). `_etag` requis pour un futur PATCH des localités (push point→site, spike-gated). additionalProperties=true.",
   "type": "object",
   "required": ["_id", "_etag", "titre", "localites"],

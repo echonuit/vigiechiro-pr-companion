@@ -1,5 +1,5 @@
 /*
- * reglages.css — mise en page de l'écran « Réglages » (#1005).
+ * reglages.css : mise en page de l'écran « Réglages » (#1005).
  *
  * Jointe à EcranReglages.fxml après palette.css / base.css : ne fait que styliser les styleClass
  * déjà posés par EcranReglagesController / ControleursReglages (aucun changement de structure).

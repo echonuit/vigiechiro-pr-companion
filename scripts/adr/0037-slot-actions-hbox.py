@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 0037 — Une barre d'actions plie, elle ne tronque pas : le slot d'actions est un FlowPane.
+"""ADR 0037 - Une barre d'actions plie, elle ne tronque pas : le slot d'actions est un FlowPane.
 
 Pourquoi « probable » et non « certaine » : une `HBox` n'est pas fautive en soi. L'ADR ne vise que le
 SLOT D'ACTIONS d'un écran - la rangée de boutons dont le nombre croît au fil des fonctionnalités, et qui

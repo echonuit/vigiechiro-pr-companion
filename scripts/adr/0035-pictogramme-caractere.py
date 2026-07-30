@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ADR 0035 — Un pictogramme d'IHM est une icône ; un caractère dans une phrase reste un caractère.
+"""ADR 0035 - Un pictogramme d'IHM est une icône ; un caractère dans une phrase reste un caractère.
 
 Pourquoi « probable » et non « certaine » : l'ADR autorise explicitement un pictogramme **dans une
 phrase**. Un `→` au milieu d'un libellé explicatif est donc légitime, là où le `☰` d'un bouton de menu

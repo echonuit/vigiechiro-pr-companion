@@ -9,7 +9,7 @@
 # Trois états, pas deux (#1371) :
 #   - VERT   : le contrat tient (les probes d'écriture opt-in ne sont JAMAIS jouées ici) ;
 #   - VERT + avertissement « jeton à renouveler » : le secret VIGIECHIRO_TOKEN est absent ou
-#     expiré (14 jours de validité côté Eve) — ce n'est pas une dérive du contrat, on ne
+#     expiré (14 jours de validité côté Eve) : ce n'est pas une dérive du contrat, on ne
 #     crie pas au loup, mais le résumé du run dit quoi faire ;
 #   - ROUGE  : le serveur répond et le contrat ne tient plus → à regarder vite.
 name: Contrat API live (hebdomadaire)

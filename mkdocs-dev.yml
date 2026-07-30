@@ -4,7 +4,7 @@
 # les deux docs vivent près du code, et chacune est PUBLIÉE dans son propre dépôt, sur son
 # propre domaine (publication symétrique) : ce site part dans `echonuit/companion-dev` et sert
 # `companion-dev.echonuit.fr`, tandis que la doc utilisateur part dans `echonuit/companion`.
-# Construit dans `site-dev/` (plus imbriqué sous le site user) — cf. .github/workflows/docs.yml.
+# Construit dans `site-dev/` (plus imbriqué sous le site user), cf. .github/workflows/docs.yml.
 #
 # Build :   mkdocs build -f mkdocs-dev.yml --strict
 # Aperçu :  mkdocs serve -f mkdocs-dev.yml
@@ -119,7 +119,7 @@ nav:
     - 2357 · Un traitement en lot compose des gestes unitaires: decisions/2357-un-traitement-en-lot-compose-des-gestes-unitaires.md
     - 2635 · Un refus dit ce qui manque, la surface dit quoi faire: decisions/2635-un-refus-dit-ce-qui-manque-la-surface-dit-quoi-faire.md
     - 2802 · Un texte qu'on n'a pas écrit se borne à son entrée: decisions/2802-un-texte-qu-on-n-a-pas-ecrit-se-borne-a-son-entree.md
-    - 2581 — Un état qui décide de l'affichage se déclare: decisions/2581-un-etat-qui-decide-de-l-affichage-se-declare.md
+    - 2581 - Un état qui décide de l'affichage se déclare: decisions/2581-un-etat-qui-decide-de-l-affichage-se-declare.md
     - 2614 · Une nuit hors protocole se filtre: decisions/2614-une-nuit-hors-protocole-se-filtre-au-lieu-de-se-fondre.md
     - 2353 · L'enjeu de conservation est celui que le plan national désigne: decisions/2353-l-enjeu-de-conservation-est-celui-que-le-plan-national-designe.md
     - 2351 · Un nombre de contacts se lit contre un référentiel cité: decisions/2351-un-nombre-de-contacts-se-lit-contre-un-referentiel-cite.md

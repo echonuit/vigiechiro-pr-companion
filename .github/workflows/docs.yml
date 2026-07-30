@@ -60,7 +60,7 @@ on:
   workflow_dispatch: {}
 
 # Permissions minimales : le job ne fait que LIRE ce dépôt. La publication passe par un PAT
-# (DOCS_DEPLOY_TOKEN) vers les dépôts de publication, pas par le GITHUB_TOKEN — aucun droit
+# (DOCS_DEPLOY_TOKEN) vers les dépôts de publication, pas par le GITHUB_TOKEN : aucun droit
 # `pages:`/`id-token:` n'est donc nécessaire ici.
 permissions:
   contents: read

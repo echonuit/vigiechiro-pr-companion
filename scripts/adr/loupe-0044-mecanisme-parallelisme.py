@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Loupe de l'ADR 0044 — Le mécanisme de parallélisme suit la nature de l'attente.
+"""Loupe de l'ADR 0044 - Le mécanisme de parallélisme suit la nature de l'attente.
 
 Cette décision est `humaine` : aucun motif ne dit si une attente est de l'I/O (→ threads virtuels, on
 peut en lancer des milliers, ils dorment pendant la latence réseau ou disque) ou du calcul (→ pool borné

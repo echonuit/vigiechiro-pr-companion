@@ -47,7 +47,7 @@ def rapporte(numero: str, titre: str, suspects: list[str]) -> int:
     tapis sous lequel on pousse.
     """
     marge = cliquet(numero)
-    print(f"ADR {numero} — {titre}")
+    print(f"ADR {numero} - {titre}")
     for suspect in suspects:
         print(f"  {suspect}")
 
@@ -62,7 +62,7 @@ def rapporte(numero: str, titre: str, suspects: list[str]) -> int:
     if verdict == "regression":
         print(
             f"\nÉCHEC : {len(suspects)} suspects pour un cliquet de {marge}. Un cas a été ajouté.\n"
-            f"Corrigez-le, ou justifiez-le et relevez le cliquet dans l'ADR — mais un cliquet qui\n"
+            f"Corrigez-le, ou justifiez-le et relevez le cliquet dans l'ADR, mais un cliquet qui\n"
             f"monte est une décision, pas une formalité.",
             file=sys.stderr,
         )
@@ -90,7 +90,7 @@ def loupe(numero: str, titre: str, candidats: list[str]) -> int:
 
         LOUPE 0020 | candidats=7
     """
-    print(f"LOUPE {numero} — {titre}")
+    print(f"LOUPE {numero} - {titre}")
     for c in candidats:
         print(f"  {c}")
     print(f"\nLOUPE {numero} | candidats={len(candidats)}")
