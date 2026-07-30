@@ -236,11 +236,11 @@ public final class CaptureEcrans {
         enregistreurs.insert(new Enregistreur(SERIE_PR2, "V1.01, T4.1", null));
 
         // Site 1 (tiede) : riche, c'est lui qui est capture en detail et dont A1 alimente la modale.
-        Site etang = service.creerSite("640380", "Etang de la Tuiliere", Protocole.STANDARD, "Ahetze", ID_UTILISATEUR);
+        Site etang = service.creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, "Ahetze", ID_UTILISATEUR);
         PointDEcoute a1 =
-                service.ajouterPoint(etang.id(), "A1", 43.4010, -1.5740, "Pres du grand chene, a 30 m du chemin");
-        PointDEcoute b2 = service.ajouterPoint(etang.id(), "B2", 43.4055, -1.5680, "Lisiere de roseliere");
-        service.ajouterPoint(etang.id(), "C3", null, null, "Bord de l'etang - GPS a relever");
+                service.ajouterPoint(etang.id(), "A1", 43.4010, -1.5740, "Près du grand chêne, à 30 m du chemin");
+        PointDEcoute b2 = service.ajouterPoint(etang.id(), "B2", 43.4055, -1.5680, "Lisière de roselière");
+        service.ajouterPoint(etang.id(), "C3", null, null, "Bord de l'étang - GPS à relever");
         // Points RAPATRIES de la plateforme mais jamais utilises (#1738) : masques par defaut de la fiche
         // (un lien « Afficher les points non utilises » les revele) et resumes sur la carte M-Sites
         // (« + N rapatries »), pour ne pas noyer les points qui servent sous la grille rapatriee.
