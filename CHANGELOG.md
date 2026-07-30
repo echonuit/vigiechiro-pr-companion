@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.132.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.131.0...v2.132.0) (2026-07-30)
+
+
+### Features
+
+* **multisite:** le relevé groupé rend ses comptes en proportions, plus en phrase ([#2877](https://github.com/echonuit/vigiechiro-pr-companion/issues/2877)) ([db2ca1d](https://github.com/echonuit/vigiechiro-pr-companion/commit/db2ca1d11d7e9c1765f0b4c9cdc3317d308a1c0a)), closes [#2757](https://github.com/echonuit/vigiechiro-pr-companion/issues/2757)
+
 # [2.131.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.130.0...v2.131.0) (2026-07-30)
 
 
