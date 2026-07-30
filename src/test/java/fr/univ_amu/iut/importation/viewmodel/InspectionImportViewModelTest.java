@@ -5,14 +5,15 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,9 +29,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class InspectionImportViewModelTest {
 
-    private static final String LOG = "22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série"
-            + " 1925492, V1.01, CPU 600000000, T4.1\n";
-
     @TempDir
     Path racine;
 
@@ -45,7 +43,7 @@ class InspectionImportViewModelTest {
     void preparer() throws IOException {
         vm = new InspectionImportViewModel(serviceImport);
         sd = Files.createDirectories(racine.resolve("sd"));
-        Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(sd, "1925492", LocalDate.of(2026, 4, 22));
         Files.writeString(sd.resolve("PaRecPR1925492_20260422_203922.wav"), "wav1");
         Files.writeString(sd.resolve("PaRecPR1925492_20260422_204326.wav"), "wav2");
     }
@@ -180,7 +178,7 @@ class InspectionImportViewModelTest {
     @DisplayName("Plusieurs dates : une ligne de nuit par nuit (triées), plusieursNuits vrai")
     void inspecter_plusieurs_nuits() throws IOException {
         Path multi = Files.createDirectories(racine.resolve("multi"));
-        Files.writeString(multi.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(multi, "1925492", LocalDate.of(2026, 4, 22));
         for (String jour : List.of("20260422", "20260423", "20260424")) {
             Files.writeString(multi.resolve("PaRecPR1925492_" + jour + "_203922.wav"), "wav");
             Files.writeString(multi.resolve("PaRecPR1925492_" + jour + "_204326.wav"), "wav");
@@ -205,7 +203,7 @@ class InspectionImportViewModelTest {
     @DisplayName("#147 par nuit : seule la nuit déjà en base porte le badge « déjà importée »")
     void nuit_deja_importee_par_ligne() throws IOException {
         Path multi = Files.createDirectories(racine.resolve("multi2"));
-        Files.writeString(multi.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(multi, "1925492", LocalDate.of(2026, 4, 22));
         for (String jour : List.of("20260422", "20260423")) {
             Files.writeString(multi.resolve("PaRecPR1925492_" + jour + "_203922.wav"), "wav");
         }

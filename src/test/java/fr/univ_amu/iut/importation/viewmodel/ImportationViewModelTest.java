@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
@@ -70,13 +71,6 @@ class ImportationViewModelTest {
 
     private static final String ID_USER = "u-1";
     private static final LocalDate JOUR = LocalDate.of(2026, 5, 31);
-    private static final String LOG =
-            "22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
-                    + "22/04/26 - 16:02:21 PR1925492 Sonde température/hygrométrie présente, lecture toutes"
-                    + " les 600s\n"
-                    + "22/04/26 - 16:02:21 PR1925492 Paramètres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
-                    + " 8-120kHz\n";
 
     @TempDir
     Path racine;
@@ -137,8 +131,8 @@ class ImportationViewModelTest {
                 marquageOpportuniste,
                 Optional.of(portCampagne));
         sd = Files.createDirectories(racine.resolve("sd"));
-        Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(sd, "1925492", LocalDate.of(2026, 4, 22));
+        JournalDeCapteur.ecrireReleve(sd, "1925492");
         Files.writeString(sd.resolve("PaRecPR1925492_20260422_203922.wav"), "wav1");
         Files.writeString(sd.resolve("PaRecPR1925492_20260422_204326.wav"), "wav2");
     }
@@ -1068,7 +1062,7 @@ class ImportationViewModelTest {
 
     private Path carteMultiNuits() throws IOException {
         Path multi = Files.createDirectories(racine.resolve("multi"));
-        Files.writeString(multi.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(multi, "1925492", LocalDate.of(2026, 4, 22));
         for (String jour : List.of("20260422", "20260423", "20260424")) {
             Files.writeString(multi.resolve("PaRecPR1925492_" + jour + "_203922.wav"), "wav");
             Files.writeString(multi.resolve("PaRecPR1925492_" + jour + "_204326.wav"), "wav");
