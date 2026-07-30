@@ -364,6 +364,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                         CriteresAnalyse.statut(),
                         CriteresAnalyse.groupe(viewModel::groupesDisponibles),
                         CriteresAnalyse.natureNuit(viewModel::nuitsOpportunistes),
+                        CriteresAnalyse.lieu(viewModel::observationsFiltrees),
                         CriteresAnalyse.aEnjeu(observation -> marqueurEnjeu.aEnjeu(observation.taxonRetenu()))),
                 CriteresAnalyse.rechercheTexte());
         // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur. La vue
