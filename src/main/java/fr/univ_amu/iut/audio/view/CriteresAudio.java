@@ -5,19 +5,24 @@ import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
@@ -28,8 +33,8 @@ import javafx.util.StringConverter;
 
 /// Catalogue des **critères de filtrage** de la table audio (patron « à la Notion »). Chaque critère est
 /// une entrée du menu « + Filtre » qui s'ajoute comme puce : **Statut**, **Groupe** taxonomique,
-/// **Espèce** (taxon), **Références**, **Non identifiés** (sans proposition Tadarida), **Proba** (seuil de
-/// probabilité Tadarida) et **Heure** (plage horaire).
+/// **Espèce** (taxon), **Lieu** (commune/carré/point/site, #2794), **Références**, **Non identifiés**
+/// (sans proposition Tadarida), **Proba** (seuil de probabilité Tadarida) et **Heure** (plage horaire).
 final class CriteresAudio {
 
     /// Groupe des chauves-souris (`taxonomic_group.name`, cf. #507) : sélection par défaut du critère
@@ -253,6 +258,53 @@ final class CriteresAudio {
                 }
             }
         };
+    }
+
+    /// Critère **Lieu** (#2794, chantier #2790) : liste à cocher des lieux **présents dans les lignes
+    /// courantes**, toutes dimensions confondues - communes (lot 0 #2791), carrés, points, sites, dans
+    /// cet ordre. Une ligne passe si **l'un** de ses quatre champs figure parmi les valeurs cochées
+    /// ([CritereListe#multipleParmi]) ; rien de coché n'écarte rien. C'est ce qui rend le scénario
+    /// « espèce × lieu » jouable en direct : Analyse → clic espèce donne « l'espèce partout », la puce
+    /// Lieu restreint à « Aix-en-Provence » sans repasser par la carte.
+    static CritereFiltre<LigneObservationAudio> lieu(Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
+        return CritereListe.multipleParmi(
+                "lieu",
+                "Lieu",
+                "Choisir un lieu",
+                () -> lieuxPresents(lignesCourantes.get()),
+                CriteresAudio::dimensionsLieu);
+    }
+
+    /// Lieux présents dans `lignes` : les valeurs **distinctes** de chaque dimension, groupées par
+    /// dimension (communes, puis carrés, puis points, puis sites) et triées au sein de chacune - la
+    /// liste reste lisible sans en-têtes. Un même libellé porté par deux dimensions (un site homonyme
+    /// d'une commune) n'apparaît qu'une fois : le coche vaut alors pour les deux.
+    private static List<String> lieuxPresents(List<LigneObservationAudio> lignes) {
+        Set<String> lieux = new LinkedHashSet<>();
+        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::commune));
+        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::numeroCarre));
+        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::codePoint));
+        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::nomSite));
+        return List.copyOf(lieux);
+    }
+
+    /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
+    private static List<String> valeursDistinctes(
+            List<LigneObservationAudio> lignes, Function<LigneObservationAudio, String> dimension) {
+        return lignes.stream()
+                .map(dimension)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    /// Les valeurs candidates d'une ligne face à la liste des lieux cochés : ses quatre champs
+    /// géographiques non nuls (commune, carré, point, site).
+    private static List<String> dimensionsLieu(LigneObservationAudio ligne) {
+        return Stream.of(ligne.commune(), ligne.numeroCarre(), ligne.codePoint(), ligne.nomSite())
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     /// Critère **Références seulement** (booléen) : ne garde que les observations archivées en référence
@@ -503,7 +555,9 @@ final class CriteresAudio {
 
     /// **Recherche texte** de la barre de filtres audio : vrai si un des champs cherchables d'une ligne
     /// contient l'aiguille (comparaison **insensible casse/accents**) : fichier, **espèce retenue** (taxon +
-    /// vernaculaire observateur `nomEspece`, ou Tadarida à défaut) et commentaire. On inclut
+    /// vernaculaire observateur `nomEspece`, ou Tadarida à défaut), commentaire, et les champs
+    /// **géographiques** - carré, point, site, commune (#2794, alignement sur la recherche d'Analyse qui
+    /// les couvrait déjà : « Aix » tapé ici trouve enfin les observations d'Aix). On inclut
     /// `taxonObservateur`/`nomEspece` pour qu'une observation **corrigée** vers une autre espèce (visible en
     /// « Votre taxon ») soit trouvable en cherchant cette espèce. Fournie au [GestionnaireFiltres] générique,
     /// qui ignore les champs propres au type filtré.
@@ -518,7 +572,11 @@ final class CriteresAudio {
                 || contient(ligne.nomTadarida(), aiguille)
                 || contient(ligne.taxonObservateur(), aiguille)
                 || contient(ligne.nomEspece(), aiguille)
-                || contient(ligne.commentaire(), aiguille);
+                || contient(ligne.commentaire(), aiguille)
+                || contient(ligne.numeroCarre(), aiguille)
+                || contient(ligne.codePoint(), aiguille)
+                || contient(ligne.nomSite(), aiguille)
+                || contient(ligne.commune(), aiguille);
     }
 
     private static boolean contient(String champ, String aiguille) {

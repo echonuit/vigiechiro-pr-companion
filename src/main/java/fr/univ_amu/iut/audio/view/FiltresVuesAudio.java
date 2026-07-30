@@ -52,6 +52,7 @@ final class FiltresVuesAudio {
                         CriteresAudio.statut(),
                         CriteresAudio.groupe(viewModel::observationsFiltrees),
                         CriteresAudio.taxon(viewModel::observationsFiltrees),
+                        CriteresAudio.lieu(viewModel::observationsFiltrees),
                         CriteresAudio.references(),
                         CriteresAudio.douteux(),
                         CriteresAudio.nonIdentifie(),
