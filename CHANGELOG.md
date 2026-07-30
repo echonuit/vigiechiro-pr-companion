@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.129.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.129.1...v2.129.2) (2026-07-30)
+
+
+### Bug Fixes
+
+* **recherche:** la commune vaut aussi pour la recherche globale (ceremonie lot 0) ([#2856](https://github.com/echonuit/vigiechiro-pr-companion/issues/2856)) ([5a77f11](https://github.com/echonuit/vigiechiro-pr-companion/commit/5a77f11c47e5ceaf6c0ae42fc82e0d79cc46ca8a)), closes [#2827](https://github.com/echonuit/vigiechiro-pr-companion/issues/2827) [#2791](https://github.com/echonuit/vigiechiro-pr-companion/issues/2791)
+
 ## [2.129.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.129.0...v2.129.1) (2026-07-30)
 
 
