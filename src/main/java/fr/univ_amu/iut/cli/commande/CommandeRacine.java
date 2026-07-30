@@ -80,6 +80,7 @@ import picocli.CommandLine.Spec;
             ExporterVu.class,
             ExporterObservations.class,
             ExporterActivite.class,
+            ExporterSons.class,
             SynthetiserPassage.class,
             Sauvegarder.class,
             Restaurer.class,
