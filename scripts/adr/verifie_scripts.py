@@ -128,11 +128,11 @@ def test_2843_prose_documentation() -> None:
             "Le lien « GPS manquant " + cad + " placer » vient de l application.\n"  # citation -> non
             "Une phrase saine : deux-points.\n",  # rien -> non
         )
-        n = len(m.prose_documentation(racine))
+        n = len(m.prose(racine))
         # La regle « ce qui est cite n est pas de la prose » couvre le glyphe ET les libelles de
         # l application. Si le motif de citation devenait trop gourmand, il avalerait la prose et ce
         # cas tomberait a zero : c est exactement la deflation que ce fichier existe pour interdire.
-        _verifie("2843 documentation : compte la prose, epargne les citations", n, 1)
+        _verifie("2843 zone nettoyee : compte la prose, epargne les citations", n, 1)
 
 
 def test_0037_slot_actions() -> None:

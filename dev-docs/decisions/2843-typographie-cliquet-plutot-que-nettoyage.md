@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-29
 - **Chantier** : #2843, suite de la clôture du chantier #2348 et de #2813
-- **Vérification** : probable — `scripts/adr/2843-tiret-cadratin.py` (cliquet : 1037)
+- **Vérification** : probable — `scripts/adr/2843-tiret-cadratin.py` (cliquet : 1036)
 
 ## Contexte
 
@@ -29,7 +29,9 @@ Une seule population, un seul nombre, aucun angle mort.
 
 **4. Une zone nettoyée passe du cliquet à la tolérance zéro.** Cette ADR annonçait d'abord que la documentation aurait « son propre cliquet ». C'était mal formulé : un cliquet sur une zone déjà au plancher est inutilement faible, et il resterait masquable tant qu'une autre zone comptée avec elle serait, elle, loin du plancher. Une zone nettoyée n'a plus besoin d'une marge, elle a besoin d'un refus.
 
-`docs/` est nettoyée depuis #2365 : la vérification y compte **zéro** cadratin de prose, et le script échoue à la première rechute.
+`docs/` et `brief/` sont nettoyées depuis #2365 : la vérification y compte **zéro** cadratin de prose, et le script échoue à la première rechute.
+
+Les zones nettoyées vivent dans une **liste déclarative** du script (`ZONES_NETTOYEES`). Ajouter une tranche revient à ajouter **une ligne**, et c'est délibéré : chaque tranche du chantier touche ce même script, donc une insertion d'une ligne se résout sans réfléchir là où un bloc de code aurait sérialisé les tranches.
 
 **5. Ce qui est cité n'est pas de la prose.** Un cadratin entre **guillemets français** ou entre **chevrons de code** est une citation : le glyphe de valeur absente que la documentation décrit, ou un libellé de l'application qu'une fiche d'écran reproduit fidèlement. Une seule règle couvre les deux, là où deux listes d'exceptions auraient dérivé séparément.
 

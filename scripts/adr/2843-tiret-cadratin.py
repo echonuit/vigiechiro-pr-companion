@@ -51,20 +51,28 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     return trouves
 
 
-DOCUMENTATION = pathlib.Path("docs")
-
 # Ce qui est **cité** n'est pas notre prose : le glyphe de valeur absente entre chevrons de code ou
 # entre guillemets français, et les libellés de l'application qu'une fiche d'écran reproduit
 # fidèlement. Une seule règle couvre les deux, là où deux listes auraient dérivé séparément.
 CITE = re.compile("`" + CADRATIN + "`|«[^»\n]*»")
 
+# Les zones **nettoyées** par #2365, en tolérance zéro. Ajouter une tranche revient à ajouter **une
+# ligne** ici : c'est délibéré, chaque tranche touchant ce même script, et une insertion d'une ligne
+# se résout sans réfléchir là où un bloc de code aurait sérialisé les tranches.
+#
+# Tolérance zéro et non cliquet : une zone au plancher n'a pas besoin d'une marge, et une marge
+# partagée avec une zone encore loin du plancher resterait masquable.
+ZONES_NETTOYEES = (
+    ("documentation utilisateur", pathlib.Path("docs")),
+    ("brief projet", pathlib.Path("brief")),
+)
 
-def prose_documentation(racine: pathlib.Path = DOCUMENTATION) -> list[str]:
-    """Les cadratins de **prose** de la documentation utilisateur.
 
-    Zone **nettoyée** (#2365) : la tolérance y est donc **zéro**, pas un cliquet. Un cliquet sur une
-    zone au plancher serait inutilement faible, et surtout masquable — un nettoyage ailleurs
-    compenserait une rechute ici sans que le total bouge.
+def prose(racine: pathlib.Path) -> list[str]:
+    """Les cadratins de **prose** d'une zone nettoyée, citations exclues.
+
+    `racine` est explicite : le garde-fou `verifie_scripts.py` y pointe une fixture jetable, et
+    [#ZONES_NETTOYEES] la fournit pour chaque zone du dépôt.
     """
     trouves = []
     if not racine.exists():
@@ -79,16 +87,17 @@ def prose_documentation(racine: pathlib.Path = DOCUMENTATION) -> list[str]:
 if __name__ == "__main__":
     code = rapporte("2843", "tiret cadratin dans une source Java", suspects())
 
-    prose = prose_documentation()
-    print(f"\nDocumentation utilisateur : {len(prose)} cadratin(s) de prose (tolérance zéro)")
-    for suspect in prose:
-        print(f"  {suspect}")
-    if prose:
-        print(
-            "\nLa documentation utilisateur est nettoyée : un cadratin de prose y est une rechute.\n"
-            "Écrivez un deux-points ou une virgule. Si vous citez le glyphe de valeur absente ou un\n"
-            "libellé de l'application, encadrez-le de guillemets français ou de chevrons de code."
-        )
-        code = 1
+    for libelle, racine in ZONES_NETTOYEES:
+        rechutes = prose(racine)
+        print(f"\n{libelle} : {len(rechutes)} cadratin(s) de prose (tolérance zéro)")
+        for suspect in rechutes:
+            print(f"  {suspect}")
+        if rechutes:
+            print(
+                f"\nLa zone « {libelle} » est nettoyée : un cadratin de prose y est une rechute.\n"
+                "Écrivez un deux-points ou une virgule. Si vous citez le glyphe de valeur absente ou\n"
+                "un libellé de l'application, encadrez-le de guillemets français ou de chevrons de code."
+            )
+            code = 1
 
     sys.exit(code)
