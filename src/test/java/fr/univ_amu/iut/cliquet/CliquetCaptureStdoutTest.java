@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// C'est le même échafaudage recopié : un tampon, un `PrintStream` en UTF-8, un workspace jetable, une
 /// base migrée. Rien de tout cela n'est propre au test qui le monte, et chaque copie est une occasion de
-/// diverger — un encodage oublié, un flux non vidé, un nettoyage manquant.
+/// diverger : un encodage oublié, un flux non vidé, un nettoyage manquant.
 ///
 /// ## Périmètre
 ///

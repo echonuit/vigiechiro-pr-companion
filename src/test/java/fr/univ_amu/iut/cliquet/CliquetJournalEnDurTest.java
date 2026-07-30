@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 /// ## Pourquoi ça compte
 ///
 /// Le format du journal (`JJ/MM/AA - HH:MM:SS PR<série> …`) est celui que produit un vrai enregistreur.
-/// Le recopier, c'est autant d'endroits à retoucher le jour où un champ bouge — et autant d'occasions
+/// Le recopier, c'est autant d'endroits à retoucher le jour où un champ bouge, et autant d'occasions
 /// d'en oublier un, sans que rien ne le dise.
 ///
 /// La destination est la brique paramétrée que porte déjà `GenerateurCartesSD`, dans le paquet `recette`.
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 class CliquetJournalEnDurTest {
 
     /// Nom de fichier de journal composé dans le code : `"LogPR…"`, `"LogPR" + serie`, `LogPR1925492`.
-    /// Une simple occurrence du mot dans un commentaire ne compte pas — c'est l'usage qui compte, pas la
+    /// Une simple occurrence du mot dans un commentaire ne compte pas - c'est l'usage qui compte, pas la
     /// mention (cf. [Cliquet], les deux pièges du patron).
     private static final Pattern JOURNAL_COMPOSE = Pattern.compile("\"LogPR|LogPR\"\\s*\\+|LogPR\\d");
 

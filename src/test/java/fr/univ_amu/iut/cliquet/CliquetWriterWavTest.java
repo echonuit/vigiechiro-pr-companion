@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 /// divergent, c'est le **test** qui a raison et personne ne le sait : il continue de passer sur un
 /// fichier que le produit ne saurait pas relire.
 ///
-/// La destination est `fr.univ_amu.iut.commun.model.FichierWav#ecrire` — le writer **de production**, pas
+/// La destination est `fr.univ_amu.iut.commun.model.FichierWav#ecrire` - le writer **de production**, pas
 /// une fabrique de test. Sept fichiers l'utilisent déjà.
 ///
 /// ## Ce qui est hors mesure, et pourquoi c'est écrit

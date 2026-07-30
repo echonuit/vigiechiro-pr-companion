@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 ///
 /// ## Pourquoi ce patron existe
 ///
-/// Une migration opportuniste — on bascule un fichier quand on le retouche — est une migration qu'on
+/// Une migration opportuniste (on bascule un fichier quand on le retouche) est une migration qu'on
 /// oublie, sauf si quelque chose la compte. Le dépôt en a la démonstration chiffrée : à l'ouverture du
 /// chantier #1771, le **seul** axe équipé d'un cliquet était le seul à avoir reculé depuis l'audit
 /// initial. Les trois autres avaient grossi.
@@ -25,11 +25,11 @@ import java.util.stream.Stream;
 /// ## Les deux sens de variation, et pourquoi les deux sont rouges
 ///
 /// **La liste s'allonge** : quelqu'un vient d'ajouter une copie de plus. Le message doit renvoyer vers la
-/// brique canonique. C'est le cas qui compte le plus — sans lui, la dette repousse aussi vite qu'on la
+/// brique canonique. C'est le cas qui compte le plus : sans lui, la dette repousse aussi vite qu'on la
 /// coupe.
 ///
-/// **La liste raccourcit** : soit une migration a réussi — bravo, retirer le nom est le geste qui rend le
-/// progrès **visible** —, soit le **détecteur** a changé, et alors ce n'est pas un progrès mais une
+/// **La liste raccourcit** : soit une migration a réussi - bravo, retirer le nom est le geste qui rend le
+/// progrès **visible** ; soit le **détecteur** a changé, et alors ce n'est pas un progrès mais une
 /// correction de la mesure. Les deux se ressemblent et ne valent pas la même chose : le message doit les
 /// distinguer, sous peine de faire passer l'un pour l'autre.
 ///
@@ -38,7 +38,7 @@ import java.util.stream.Stream;
 /// Tous deux rencontrés pour de vrai sur le premier cliquet (#2714), et tous deux inhérents :
 ///
 ///  - **le court-circuit.** Dès qu'un détecteur cesse de regarder un objet parce qu'il le croit « déjà
-///    traité », il devient aveugle exactement sur ce qui est **en cours** de migration — c'est-à-dire là
+///    traité », il devient aveugle exactement sur ce qui est **en cours** de migration, c'est-à-dire là
 ///    où il devrait parler. Son silence se lit alors comme un accord ;
 ///  - **la confusion usage / mention.** Citer une brique ne prouve rien. Le premier cliquet comptait une
 ///    **lecture** comme une écriture, et maintenait ainsi onze fichiers dans une liste où ils n'avaient
@@ -58,7 +58,7 @@ public final class Cliquet {
     /// Les fichiers de test qui satisfont `critere`, en chemins relatifs à [#TESTS], triés.
     ///
     /// Le prédicat reçoit le **contenu** du fichier et son chemin : les deux sont nécessaires, le second
-    /// pour exclure un paquet entier — une exclusion écrite vaut mieux qu'un effet de bord.
+    /// pour exclure un paquet entier ; une exclusion écrite vaut mieux qu'un effet de bord.
     public static List<String> fichiersOu(Predicate<Fichier> critere) {
         try (Stream<Path> fichiers = Files.walk(TESTS)) {
             return fichiers.filter(chemin -> chemin.toString().endsWith(".java"))
@@ -73,7 +73,7 @@ public final class Cliquet {
         }
     }
 
-    /// Un fichier de test, avec son contenu déjà lu — le détecteur n'a pas à s'occuper d'entrées-sorties.
+    /// Un fichier de test, avec son contenu déjà lu : le détecteur n'a pas à s'occuper d'entrées-sorties.
     public record Fichier(Path chemin, String source) {
 
         /// Ce fichier vit-il dans ce paquet (chemins en style `fr/univ_amu/iut/…`) ?
