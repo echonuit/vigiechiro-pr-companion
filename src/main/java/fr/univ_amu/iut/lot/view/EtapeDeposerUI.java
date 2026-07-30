@@ -63,7 +63,7 @@ final class EtapeDeposerUI {
                         .then("Cette nuit a déjà été analysée par Vigie-Chiro. La relancer effacerait ses"
                                 + " observations côté serveur, qui ne pourraient pas être recalculées (l'audio"
                                 + " n'est pas conservé après un dépôt en archives). Importez-les plutôt dans"
-                                + " « Sons & validation ». Pour forcer malgré tout — après un échec, par"
+                                + " « Sons & validation ». Pour forcer malgré tout, après un échec, par"
                                 + " exemple : lancer-traitement-vigiechiro --forcer.")
                         .otherwise(Bindings.when(lot.peutDeposerProperty()
                                         .and(lot.generationEnCoursProperty().not()))

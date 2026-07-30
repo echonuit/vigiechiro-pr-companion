@@ -113,7 +113,7 @@ class SiteDetailViewModelTest {
 
         viewModel.chargerSite(site);
 
-        assertThat(viewModel.titreProperty().get()).isEqualTo("Carré 640380 — Étang");
+        assertThat(viewModel.titreProperty().get()).isEqualTo("Carré 640380 - Étang");
         assertThat(viewModel.numeroCarreProperty().get()).isEqualTo("640380");
         assertThat(viewModel.departementProperty().get()).isEqualTo("64");
         assertThat(viewModel.protocoleProperty().get()).isEqualTo("PointFixeStandard");
@@ -241,7 +241,7 @@ class SiteDetailViewModelTest {
         viewModel.modifierSite("130010", "Calanques", Protocole.RECHERCHE, "Marseille");
 
         assertThat(viewModel.numeroCarreProperty().get()).isEqualTo("130010");
-        assertThat(viewModel.titreProperty().get()).isEqualTo("Carré 130010 — Calanques");
+        assertThat(viewModel.titreProperty().get()).isEqualTo("Carré 130010 - Calanques");
         assertThat(viewModel.protocoleProperty().get()).isEqualTo("PointFixeRecherche");
         assertThat(service.listerSites(ID_USER)).singleElement().satisfies(enregistre -> {
             assertThat(enregistre.numeroCarre()).isEqualTo("130010");
@@ -259,7 +259,7 @@ class SiteDetailViewModelTest {
 
         viewModel.modifierSite("640380", "Nouveau nom", Protocole.STANDARD, null);
 
-        assertThat(viewModel.titreProperty().get()).isEqualTo("Carré 640380 — Nouveau nom");
+        assertThat(viewModel.titreProperty().get()).isEqualTo("Carré 640380 - Nouveau nom");
     }
 
     @Test

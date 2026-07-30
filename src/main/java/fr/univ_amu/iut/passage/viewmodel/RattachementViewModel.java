@@ -402,7 +402,7 @@ public class RattachementViewModel {
                     + avant
                     + VERS
                     + apres
-                    + " — "
+                    + " : "
                     + nombreSequences
                     + " séquence(s) de la nuit seront renommées. Action irréversible.");
         }

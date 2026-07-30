@@ -276,7 +276,7 @@ public class ConnexionModaleController {
             case ReponseApi.Injoignable<ProfilVigieChiro>(String cause) ->
                 afficherStatut(
                         "Vigie-Chiro est injoignable (" + cause + ") : impossible de vérifier le jeton."
-                                + " Il reste enregistré et sera revérifié à la prochaine ouverture —"
+                                + " Il reste enregistré et sera revérifié à la prochaine ouverture :"
                                 + " le jeton n'est peut-être pas en cause.",
                         STATUT_DANGER);
             case ReponseApi.Refuse<ProfilVigieChiro>(int statut, String corps) ->

@@ -37,7 +37,7 @@ public record RapportImport(List<LigneRapport> lignes, List<PassageExistant> dou
     public List<String> rejetsFormates() {
         return lignes.stream()
                 .filter(ligne -> ligne.statut() == StatutImportFichier.REJETE)
-                .map(ligne -> ligne.nomFichier() + " — " + ligne.detail())
+                .map(ligne -> ligne.nomFichier() + " : " + ligne.detail())
                 .toList();
     }
 
@@ -63,7 +63,7 @@ public record RapportImport(List<LigneRapport> lignes, List<PassageExistant> dou
         for (LigneRapport ligne : lignes) {
             sb.append("  [").append(ligne.statut()).append("] ").append(ligne.nomFichier());
             if (!ligne.detail().isEmpty()) {
-                sb.append(" — ").append(ligne.detail());
+                sb.append(" : ").append(ligne.detail());
             }
             sb.append('\n');
         }

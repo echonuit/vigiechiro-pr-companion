@@ -51,7 +51,7 @@ public class AuditViewModel {
     /// **cette** nuit, pas tout le workspace — surtout quand il en compte des dizaines.
     public void auditerPassage(Long idPassage) {
         appliquer(service.auditerPassage(idPassage).constats());
-        resume.set("Audit du passage " + idPassage + " — " + resumeProperty().get());
+        resume.set("Audit du passage " + idPassage + " : " + resumeProperty().get());
     }
 
     /// Site et point du passage cité par un constat, pour l'**ouvrir** (#1347). Vide si le constat ne cite

@@ -45,7 +45,7 @@ public final class ActiviteAnalyse implements ActiviteAccueil {
 
     @Override
     public String description() {
-        return "L'inventaire de vos espèces détectées : où, quand, combien — par espèce ou par carré.";
+        return "L'inventaire de vos espèces détectées : où, quand, combien, par espèce ou par carré.";
     }
 
     @Override

@@ -46,6 +46,6 @@ public record ResultatTraitementGroupe(String libelleAction, List<IssueTraitemen
     /// Phrase de tête du compte rendu : ce qui a été fait, sur combien, et si l'on s'est arrêté en route.
     public String resume() {
         String base = reussis() + "/" + issues.size() + " passage(s) traité(s)";
-        return interrompu ? base + " — lot interrompu à la demande" : base;
+        return interrompu ? base + " : lot interrompu à la demande" : base;
     }
 }

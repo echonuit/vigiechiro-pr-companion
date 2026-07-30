@@ -303,7 +303,7 @@ public class SiteDetailViewModel {
 
     private String composerTitre() {
         String prefixe = "Carré " + site.numeroCarre();
-        return site.nomConvivial() == null ? prefixe : prefixe + " — " + site.nomConvivial();
+        return site.nomConvivial() == null ? prefixe : prefixe + " - " + site.nomConvivial();
     }
 
     /// Sous-titre de la barre de statut : commune (si connue) puis protocole.

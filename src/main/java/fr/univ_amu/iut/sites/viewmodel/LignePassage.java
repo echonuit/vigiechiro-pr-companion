@@ -38,7 +38,7 @@ public record LignePassage(
 
     /// Libellé du verdict : `— à vérifier` tant qu'aucun verdict n'est posé.
     public String verdictLibelle() {
-        return verdict == null ? "— à vérifier" : verdict.libelle();
+        return verdict == null ? Formats.VALEUR_ABSENTE + " à vérifier" : verdict.libelle();
     }
 
     /// Classe CSS du badge de statut, dérivée de l'énum (couleur jamais stockée). Ex.

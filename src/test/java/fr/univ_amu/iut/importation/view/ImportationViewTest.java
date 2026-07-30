@@ -140,7 +140,7 @@ class ImportationViewTest {
         ComboBox<Site> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);
         Site site = comboSites.getItems().get(0);
 
-        assertThat(comboSites.getConverter().toString(site)).isEqualTo("Carré 640380 — Étang de la Tuilière");
+        assertThat(comboSites.getConverter().toString(site)).isEqualTo("Carré 640380 - Étang de la Tuilière");
     }
 
     @Test

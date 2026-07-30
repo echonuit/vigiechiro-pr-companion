@@ -20,7 +20,7 @@ final class FormatsImport {
     static String libelleSite(Site site) {
         return site.nomConvivial() == null
                 ? "Carré " + site.numeroCarre()
-                : "Carré " + site.numeroCarre() + " — " + site.nomConvivial();
+                : "Carré " + site.numeroCarre() + " - " + site.nomConvivial();
     }
 
     /// État du nommage des fichiers inspectés (bruts à renommer / déjà préfixés / aucun).

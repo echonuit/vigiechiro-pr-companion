@@ -74,7 +74,7 @@ public sealed interface ResultatReset {
                     .append(" passage(s) archivé(s).\n  Audit final : ")
                     .append(audit.sain() ? "sain." : audit.nombre(Severite.ERREUR) + " erreur(s).");
             if (!aRetablir.isEmpty()) {
-                texte.append("\n\nIl reste l'audio à rétablir — le serveur ne l'a pas :");
+                texte.append("\n\nIl reste l'audio à rétablir, le serveur ne l'a pas :");
                 aRetablir.forEach(nuit -> texte.append("\n  - ").append(nuit));
                 texte.append("\n  Depuis le disque : ./vigiechiro importer")
                         .append("\n  Depuis un passage archivé retrouvé : ./vigiechiro reactiver");

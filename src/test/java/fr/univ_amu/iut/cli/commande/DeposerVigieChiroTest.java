@@ -84,7 +84,7 @@ class DeposerVigieChiroTest {
 
         assertThat(code).isEqualTo(1);
         assertThat(sortie.toString())
-                .contains("! b.wav — coupure réseau")
+                .contains("! b.wav : coupure réseau")
                 .contains("INCOMPLET")
                 .contains("Relancez la commande");
     }

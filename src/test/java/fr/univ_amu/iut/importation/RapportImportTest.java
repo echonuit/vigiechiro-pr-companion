@@ -40,9 +40,9 @@ class RapportImportTest {
         String texte = rapport().versTexte();
         assertThat(texte).startsWith("Rapport d'import : 1 importés · 1 ignorés · 1 rejetés");
         assertThat(texte)
-                .contains("[IMPORTE] Car-PaRec_001.wav — 3 séquence(s)")
-                .contains("[REJETE] Car-PaRec_002.wav — Fréquence source")
-                .contains("[IGNORE] notes.txt — fichier non pertinent");
+                .contains("[IMPORTE] Car-PaRec_001.wav : 3 séquence(s)")
+                .contains("[REJETE] Car-PaRec_002.wav : Fréquence source")
+                .contains("[IGNORE] notes.txt : fichier non pertinent");
     }
 
     @Test
