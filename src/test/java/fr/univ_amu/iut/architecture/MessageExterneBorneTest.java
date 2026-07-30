@@ -18,7 +18,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// Le bandeau de retour n'a **pas de troncature** : son libellé porte `wrapText`, donc un long message
 /// enroule et fait grandir le bandeau. Mesuré à la largeur d'un écran : un message de pilote SQLite
-/// rappelant sa requête (379 caractères) le porte de 46 à 86 px, un collage de 625 caractères à 186 px.
+/// rappelant sa requête (379 caractères) le porte de 56 à 106 px, un collage de 625 caractères à 186 px.
 ///
 /// `RetourOperation.erreur(Throwable)` **borne** ce qui vient d'ailleurs et y ajoute le **geste attendu**
 /// (#2635). Passer `refus.getMessage()` contourne les deux : c'est ce que faisaient **dix-sept** appels,

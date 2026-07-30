@@ -1121,7 +1121,7 @@ c'est un compte rendu. Si c'est une phrase dont la forme est connue d'avance, c'
 Un retour est **borné** par définition - c'est ce qui le sépare d'un compte rendu. Mais rien ne borne
 un message d'exception venu du pilote SQLite ou d'une réponse serveur, et le bandeau **ne tronque
 pas** : son libellé porte `wrapText`, donc un long message enroule et fait grandir le bandeau. Mesuré :
-379 caractères le portent de 46 à 86 px, 625 à 186 px.
+379 caractères le portent de 56 à 106 px, 625 à 186 px.
 
 La règle est donc : **ce qui vient d'ailleurs se borne à sa porte d'entrée**, qui est aussi le seul
 endroit où on peut l'enrichir. `RetourOperation.erreur(Throwable)` ajoute le geste attendu (ADR 2635)

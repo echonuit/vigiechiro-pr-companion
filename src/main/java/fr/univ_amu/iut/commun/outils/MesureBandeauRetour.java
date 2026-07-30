@@ -1,11 +1,15 @@
 package fr.univ_amu.iut.commun.outils;
 
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -61,13 +65,25 @@ public final class MesureBandeauRetour {
                 + " VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
     }
 
+    /// Mesure **le vrai bandeau** (#2897), et non une imitation.
+    ///
+    /// Cet outil construisait auparavant son sujet à la main - un `Label` dans un `HBox` portant les bonnes
+    /// classes CSS - sans jamais appeler [BandeauRetour#installer]. Il manquait donc les **deux enfants**
+    /// que le composant ajoute : l'icône de sévérité et le bouton de fermeture. Or ils prennent de la
+    /// largeur : le libellé réel a moins de place, il s'enroule plus tôt, et le bandeau réel est plus haut
+    /// que ce qui était rapporté. L'erreur allait dans le sens qui **sous-estimait** le problème, et ces
+    /// hauteurs sont citées comme mesure dans l'ADR 2802.
     private static void mesurerUn(String cas, String message) {
-        Label libelle = new Label(message);
+        Label libelle = new Label();
         libelle.setWrapText(true);
         libelle.setMaxWidth(Double.MAX_VALUE);
-        HBox bandeau = new HBox(10, libelle);
-        bandeau.getStyleClass().addAll("bandeau-retour", "retour-erreur");
         HBox.setHgrow(libelle, javafx.scene.layout.Priority.ALWAYS);
+        Button fermer = new Button("✕");
+        fermer.getStyleClass().add("bandeau-retour-fermer");
+        HBox bandeau = new HBox(10, libelle, fermer);
+        bandeau.getStyleClass().add("bandeau-retour");
+        BandeauRetour.installer(
+                bandeau, libelle, fermer, new SimpleObjectProperty<>(RetourOperation.erreur(message)), () -> {});
         VBox racine = new VBox(bandeau);
         Scene scene = new Scene(racine, LARGEUR, 600);
         scene.getStylesheets().addAll(styles());
