@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.140.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.139.0...v2.140.0) (2026-07-30)
+
+
+### Features
+
+* **ci:** le titre de PR refuse une élision sans apostrophe ([#2969](https://github.com/echonuit/vigiechiro-pr-companion/issues/2969)) ([38025ce](https://github.com/echonuit/vigiechiro-pr-companion/commit/38025ceb066353225dd0c21bcb977eb86a43b2a2)), closes [#2947](https://github.com/echonuit/vigiechiro-pr-companion/issues/2947)
+
 # [2.139.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.138.1...v2.139.0) (2026-07-30)
 
 
