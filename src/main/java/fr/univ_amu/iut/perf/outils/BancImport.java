@@ -103,7 +103,7 @@ public final class BancImport {
 
         System.out.printf(
                 Locale.ROOT,
-                "=== Banc d'import (#29c) — nuit synthétique : %d WAV de %.1f s @ %d Hz = %.2f Gio (%.0f Mo) ===%n",
+                "=== Banc d'import (#29c) - nuit synthétique : %d WAV de %.1f s @ %d Hz = %.2f Gio (%.0f Mo) ===%n",
                 nbFichiers,
                 secondes,
                 frequenceHz,

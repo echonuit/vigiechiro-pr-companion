@@ -71,7 +71,7 @@ public final class ListerSelection implements Callable<Integer> {
             sortie.println("Aucune sélection d'écoute pour le passage #" + idPassage + ".");
             return 0;
         }
-        sortie.println("Sélection d'écoute du passage #" + idPassage + " — " + sequences.size()
+        sortie.println("Sélection d'écoute du passage #" + idPassage + " : " + sequences.size()
                 + " séquence(s) · verdict final proposé : " + propose.libelle());
         for (SequenceEnSelection sequence : sequences) {
             sortie.println("  N° " + (sequence.position() + 1)

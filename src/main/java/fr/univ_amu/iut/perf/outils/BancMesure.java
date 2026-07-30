@@ -82,7 +82,7 @@ public final class BancMesure {
                 Optional.empty(),
                 new HorlogeFigee(LocalDate.of(2026, 6, 4)));
 
-        System.out.println("=== Banc de mesure couche données (#29) — base " + racine + " ===");
+        System.out.println("=== Banc de mesure couche données (#29) - base " + racine + " ===");
         System.out.println("Mesures à froid (1er appel) puis à chaud (médiane de " + ITERATIONS + ").");
         mesurer(
                 "Sélection observations (findByResults, " + nbObservations + ")",
@@ -95,7 +95,7 @@ public final class BancMesure {
                         .size());
 
         System.out.println();
-        System.out.println("=== EXPLAIN QUERY PLAN (un SCAN signale l'absence d'index — cf. #28) ===");
+        System.out.println("=== EXPLAIN QUERY PLAN (un SCAN signale l'absence d'index, cf. #28) ===");
         plan(
                 source,
                 "observation / results_id",

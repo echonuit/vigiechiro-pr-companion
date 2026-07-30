@@ -325,7 +325,7 @@ class ImportationVueIntegrationTest {
         assertThat(comboSites.getConverter())
                 .as("la combo des sites doit avoir un StringConverter")
                 .isNotNull();
-        assertThat(comboSites.getConverter().toString(site)).isEqualTo("Carré 640380 — Étang de la Tuilière");
+        assertThat(comboSites.getConverter().toString(site)).isEqualTo("Carré 640380 - Étang de la Tuilière");
         assertThat(comboPoints.getConverter())
                 .as("la combo des points doit avoir un StringConverter")
                 .isNotNull();

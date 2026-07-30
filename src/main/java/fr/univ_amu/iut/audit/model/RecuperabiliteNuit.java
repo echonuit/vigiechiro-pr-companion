@@ -22,6 +22,6 @@ public record RecuperabiliteNuit(
 
     /// Ligne prête à afficher, en IHM comme en CLI.
     public String enClair() {
-        return libelle + " — " + source + " (" + motif + ")";
+        return libelle + " : " + source + " (" + motif + ")";
     }
 }

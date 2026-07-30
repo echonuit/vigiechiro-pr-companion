@@ -49,7 +49,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "reset-guide",
         description = "Établit, nuit par nuit, ce que deviendrait l'audio si l'on repartait d'une base neuve "
-                + "(disque / serveur / perdu). Lecture seule — sauf avec --executer, qui mène la procédure "
+                + "(disque / serveur / perdu). Lecture seule, sauf avec --executer, qui mène la procédure "
                 + "jusqu'au bout.")
 public final class ResetGuide implements Callable<Integer> {
 

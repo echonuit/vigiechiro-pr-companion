@@ -68,7 +68,7 @@ public final class VerifierDepotVigieChiro implements Callable<Integer> {
         StringBuilder sortie = new StringBuilder();
         sortie.append("Participation ")
                 .append(bilan.participationId())
-                .append(" — journal de traitement ")
+                .append(" : journal de traitement ")
                 .append(bilan.journalDisponible() ? "disponible" : "INDISPONIBLE (traitement pas encore lancé ?)")
                 .append(", ")
                 .append(bilan.nombreDonnees())

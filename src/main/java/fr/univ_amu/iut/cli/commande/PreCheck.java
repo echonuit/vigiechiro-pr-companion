@@ -72,7 +72,7 @@ public final class PreCheck implements Callable<Integer> {
 
     private static void ligne(PrintWriter sortie, String libelle, PreCheckNuit.Feu feu, String detail) {
         sortie.println("  " + libelle + " : " + feu.name().toLowerCase(Locale.ROOT)
-                + (detail == null || detail.isBlank() ? "" : " — " + detail));
+                + (detail == null || detail.isBlank() ? "" : " : " + detail));
     }
 
     private static Map<String, Object> feu(PreCheckNuit.Feu feu, String detail) {

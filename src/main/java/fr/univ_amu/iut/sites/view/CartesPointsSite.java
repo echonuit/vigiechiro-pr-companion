@@ -137,7 +137,7 @@ final class CartesPointsSite {
         if (!carte.gpsPresent()) {
             // Sans GPS : le point est affiché au centre de son carré sur LA carte de référence. Le lien y
             // mène, mode édition activé, pour le glisser à sa vraie position (comme un point géolocalisé).
-            Hyperlink placer = new Hyperlink("GPS manquant — placer sur la carte");
+            Hyperlink placer = new Hyperlink("GPS manquant : placer sur la carte");
             placer.getStyleClass().add("gps-manquant");
             placer.setGraphic(IconesSeverite.icone(Severite.AVERTISSEMENT, "gps-manquant"));
             placer.setOnAction(evenement -> ouvrirMultisite.ouvrirSurCarrePourPlacer(
@@ -145,7 +145,7 @@ final class CartesPointsSite {
             placer.setTooltip(new Tooltip("Ouvrir la carte multi-sites pour placer ce point (mode édition)"));
             return placer;
         }
-        Hyperlink lien = new Hyperlink("GPS — voir sur la carte");
+        Hyperlink lien = new Hyperlink("GPS : voir sur la carte");
         lien.getStyleClass().add("gps-ok");
         lien.setGraphic(IconesSeverite.icone(Severite.SUCCES, "gps-ok"));
         lien.setOnAction(evenement -> ouvrirMultisite.ouvrirSurPoint(

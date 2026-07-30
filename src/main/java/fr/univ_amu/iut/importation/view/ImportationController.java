@@ -338,7 +338,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                         () -> inspection.aUnJournalProperty().get()
                                 ? "Journal du capteur : "
                                         + inspection.resumeJournalProperty().get()
-                                : "Aucun journal LogPR — import en mode dégradé (enregistreur déduit des"
+                                : "Aucun journal LogPR : import en mode dégradé (enregistreur déduit des"
                                         + " fichiers, paramètres limités)",
                         inspection.aUnJournalProperty(),
                         inspection.resumeJournalProperty()));

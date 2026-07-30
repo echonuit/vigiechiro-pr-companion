@@ -179,7 +179,7 @@ public final class DeposerVigieChiro implements Callable<Integer> {
 
         @Override
         public void uniteEchouee(String identifiant, String raison) {
-            sortie.println("  ! " + identifiant + " — " + raison);
+            sortie.println("  ! " + identifiant + " : " + raison);
         }
 
         /// Parité avec l'IHM (clôture #2350) : depuis le réessai gradué (#2354), une coupure momentanée
@@ -188,7 +188,7 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         /// qu'un utilisateur interrompt au clavier, annulant un dépôt qui allait aboutir.
         @Override
         public void uniteReprise(String identifiant, java.time.Duration delai) {
-            sortie.println("  ~ " + identifiant + " — nouvelle tentative dans " + delai.toSeconds() + " s");
+            sortie.println("  ~ " + identifiant + " : nouvelle tentative dans " + delai.toSeconds() + " s");
         }
     }
 }

@@ -20,7 +20,7 @@ import picocli.CommandLine.Spec;
         mixinStandardHelpOptions = true,
         sortOptions = false,
         synopsisSubcommandLabel = "<commande>",
-        header = "Compagnon VigieChiro — interface en ligne de commande.",
+        header = "Compagnon VigieChiro : interface en ligne de commande.",
         description = "Automatise les parcours du compagnon (import, dépôt, export) sans interface graphique, "
                 + "pour scripter des traitements. Chaque commande s'appuie sur les mêmes services que "
                 + "l'application.",

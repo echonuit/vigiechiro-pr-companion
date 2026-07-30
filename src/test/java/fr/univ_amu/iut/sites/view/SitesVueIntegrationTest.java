@@ -159,7 +159,7 @@ class SitesVueIntegrationTest {
         FlowPane cartesPoints = robot.lookup("#cartesPoints").queryAs(FlowPane.class);
 
         // Le titre (nom du site) est déporté en zone gauche de la barre de statut (#693).
-        assertThat(piedGauche.getText()).isEqualTo("Carré 640380 — Étang de la Tuilière");
+        assertThat(piedGauche.getText()).isEqualTo("Carré 640380 - Étang de la Tuilière");
         assertThat(valNumeroCarre.getText()).isEqualTo("640380");
         assertThat(valDepartement.getText()).isEqualTo("64");
         assertThat(valProtocole.getText()).isEqualTo(Protocole.STANDARD.libelle());
