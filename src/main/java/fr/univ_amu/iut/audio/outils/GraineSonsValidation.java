@@ -87,7 +87,7 @@ import javafx.scene.control.TableView;
 /// [CaptureSonsValidationFiltres] pour la barre de filtres active, [CaptureSonsValidationColonnes] pour les
 /// colonnes de mesures). Un seul état par JVM : [ApercuFx#capturerApresPreparation] attend le chargement
 /// asynchrone de l'`AudioView` via une boucle d'événements imbriquée ([AttenteAudio]), après quoi la
-/// Headless Platform JavaFX 26 refuse un nouveau `Stage` — donc pas deux captures « audio » dans le même
+/// Headless Platform JavaFX 26 refuse un nouveau `Stage`, donc pas deux captures « audio » dans le même
 /// processus. Ce socle factorise tout le reste.
 final class GraineSonsValidation {
 
@@ -356,7 +356,7 @@ final class GraineSonsValidation {
         // La première détection porte les TROIS avis (#1417) : Tadarida propose Pippip, l'observateur
         // corrige en Nyclei, et le validateur du MNHN le CONTREDIT (Pipnat). C'est le cas que la capture
         // doit montrer : un désaccord d'expert, mis en avant, et la discussion qu'il ouvre. Sans ces
-        // données dans la graine, l'écran serait capturé sans sa colonne ni son panneau — et la
+        // données dans la graine, l'écran serait capturé sans sa colonne ni son panneau, et la
         // fonctionnalité serait « livrée » sans qu'on puisse la voir.
         Long idContredite = observationDao
                 .insert(avecValidateur(
@@ -377,7 +377,7 @@ final class GraineSonsValidation {
     }
 
     /// Le **fil de discussion** de la détection contredite (#1417/#1418) : c'est lui qui ouvre le panneau
-    /// à droite du lecteur sur la capture. Écrit directement en base — le fil est un reflet du serveur,
+    /// à droite du lecteur sur la capture. Écrit directement en base : le fil est un reflet du serveur,
     /// c'est l'import qui l'y met.
     private static void seederFil(SourceDeDonnees source, Long idObservation) {
         MessageObservationDao messages = new MessageObservationDao(source);

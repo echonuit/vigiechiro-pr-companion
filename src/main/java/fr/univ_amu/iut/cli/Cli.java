@@ -77,7 +77,7 @@ public final class Cli {
     }
 
     /// Exécute une invocation et renvoie son code de sortie (sans `System.exit`). La base est **migrée**
-    /// (idempotent) avant toute sous-commande — mais pas pour l'aide seule.
+    /// (idempotent) avant toute sous-commande, mais pas pour l'aide seule.
     ///
     /// @param args arguments (`--workspace` déjà consommé par [#main(String[])])
     /// @param sortie flux du compte rendu (typiquement `System.out`)
@@ -96,8 +96,8 @@ public final class Cli {
         ligne.setExecutionExceptionHandler(Cli::gererErreurExecution);
         int code = ligne.execute(args);
         // Un `PrintWriter` en auto-flush ne se vide QUE sur `println`/`printf`, jamais sur `print`. Une
-        // commande dont le dernier caractère écrit ne vient pas d'un `println` — un CSV, qui porte déjà
-        // sa propre fin de ligne — verrait sa sortie disparaître en silence, code 0 à l'appui. On vide
+        // commande dont le dernier caractère écrit ne vient pas d'un `println` (un CSV, qui porte déjà
+        // sa propre fin de ligne) verrait sa sortie disparaître en silence, code 0 à l'appui. On vide
         // donc explicitement, une fois pour toutes les commandes (#2351).
         ligne.getOut().flush();
         ligne.getErr().flush();

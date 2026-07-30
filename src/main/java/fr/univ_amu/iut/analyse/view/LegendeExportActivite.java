@@ -7,7 +7,7 @@ import java.util.List;
 
 /// La ligne de **réglages** propre à la courbe d'activité, estampillée sur son export (#2352).
 ///
-/// Les deux lignes communes à tout export — identité et provenance — vivent dans
+/// Les deux lignes communes à tout export (identité et provenance) vivent dans
 /// [fr.univ_amu.iut.commun.view.LegendeExport] : elles ne doivent rien à cet écran.
 ///
 /// Une image de graphe sans son contexte devient **inexploitable dès qu'elle quitte l'application** : rien

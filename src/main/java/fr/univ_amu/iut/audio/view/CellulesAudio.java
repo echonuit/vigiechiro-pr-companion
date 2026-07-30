@@ -180,7 +180,7 @@ final class CellulesAudio {
     ///
     /// Le repère n'est **jamais une couleur seule** : l'icône porte sa forme, une infobulle nomme le plan,
     /// et l'en-tête de colonne porte son libellé accessible (#794). Une ligne sans repère n'est pas une
-    /// ligne douteuse — l'immense majorité des taxons détectés ne relèvent pas du plan.
+    /// ligne douteuse : l'immense majorité des taxons détectés ne relèvent pas du plan.
     static TableCell<LigneObservationAudio, String> enjeu(Predicate<LigneObservationAudio> aEnjeu) {
         return new TableCell<>() {
             @Override

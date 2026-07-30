@@ -121,7 +121,7 @@ public class DepotViewModel {
     }
 
     /// Propriété **« participation liée »** (#984) : `true` quand le passage courant a été déposé via
-    /// l'API (participation créée) — l'IHM bascule l'étape ④ en « Lancer la participation ». `false` hors
+    /// l'API (participation créée) : l'IHM bascule l'étape ④ en « Lancer la participation ». `false` hors
     /// application connectée. Posée par [#rehydrater] (ouverture) et après un dépôt.
     public ReadOnlyBooleanProperty participationLieeProperty() {
         return participationLiee.getReadOnlyProperty();
@@ -217,7 +217,7 @@ public class DepotViewModel {
     }
 
     /// Demande l'**annulation coopérative** du dépôt en cours (#1044) : le moteur termine le fichier en
-    /// vol puis s'arrête (jamais d'arrêt au milieu d'un fichier — aucune unité fantôme). Le passage reste
+    /// vol puis s'arrête (jamais d'arrêt au milieu d'un fichier : aucune unité fantôme). Le passage reste
     /// « Dépôt en cours », « Reprendre le dépôt » ne renverra que les fichiers manquants. Au fil JavaFX.
     public void demanderAnnulation() {
         jeton.annuler();

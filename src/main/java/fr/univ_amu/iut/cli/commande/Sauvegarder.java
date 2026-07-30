@@ -13,18 +13,18 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/// Commande `sauvegarder` (#1346) : met la base — et, sur demande, l'**audio** — à l'abri.
+/// Commande `sauvegarder` (#1346) : met la base (et, sur demande, l'**audio**) à l'abri.
 ///
 /// C'est la **parité CLI** (passe 2 du cycle de chantier) d'une capacité qui n'avait jusqu'ici *aucun*
 /// appelant : le moteur de sauvegarde complète existait depuis #1142, ni le menu ni la CLI ne l'exposaient.
 ///
 /// **Pourquoi `--complet` compte.** La base seule ne garde que les métadonnées et les observations. Si
 /// l'audio disparaît du disque, la plateforme ne le rendra **pas** : un dépôt en archives n'en laisse aucun
-/// (#1297), et le passage devient *archivé* — consultable, mais muet. Le disque est l'unique source de
+/// (#1297), et le passage devient *archivé* : consultable, mais muet. Le disque est l'unique source de
 /// l'audio, et cette commande est la seule à le protéger. C'est aussi le prérequis du reset guidé (#1151).
 ///
 /// Le bilan **dit ce qui manque** : une racine de session non montée (carte SD retirée, disque débranché)
-/// est sautée, et la sauvegarde est alors annoncée **incomplète** — code de sortie `2`, exploitable en
+/// est sautée, et la sauvegarde est alors annoncée **incomplète** : code de sortie `2`, exploitable en
 /// script. Une sauvegarde qu'on croit complète et qui ne l'est pas vaut moins que pas de sauvegarde.
 @Command(
         name = "sauvegarder",

@@ -66,7 +66,7 @@ public class LotViewModel {
     private final SuiviEtapesLot suiviEtapes =
             new SuiviEtapesLot(() -> !suiviLignes.lignes().isEmpty());
 
-    /// Suppression des archives possible (#…) : **liaison vivante** sur les lignes — vraie dès qu'il existe
+    /// Suppression des archives possible (#…) : **liaison vivante** sur les lignes, vraie dès qu'il existe
     /// des archives (régénérables), recalculée quand la liste change (génération, réhydratation, suppression).
     /// Un simple `set()` dans `appliquer` restait périmé après une génération en session, laissant le bouton
     /// inactif à tort.
@@ -369,7 +369,7 @@ public class LotViewModel {
     }
 
     /// `true` dès qu'il existe des archives ZIP à supprimer (liaison vivante sur la liste des archives), pour
-    /// libérer l'espace disque — les archives restant régénérables à l'identique.
+    /// libérer l'espace disque : les archives restant régénérables à l'identique.
     public BooleanExpression peutSupprimerArchivesProperty() {
         return peutSupprimerArchives;
     }

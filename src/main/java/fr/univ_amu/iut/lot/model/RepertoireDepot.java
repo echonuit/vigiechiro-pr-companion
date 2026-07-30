@@ -27,7 +27,7 @@ final class RepertoireDepot {
     }
 
     /// Archives ZIP présentes dans `depot/` (liste vide si le dossier est absent), triées par nom, avec
-    /// taille et nombre d'entrées (ouverture légère du ZIP) — pour réafficher les archives déjà générées.
+    /// taille et nombre d'entrées (ouverture légère du ZIP) : pour réafficher les archives déjà générées.
     List<ArchiveDepot> lister(String cheminRacineSession) {
         if (cheminRacineSession == null) {
             return List.of();

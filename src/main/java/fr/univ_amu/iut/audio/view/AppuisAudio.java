@@ -43,7 +43,7 @@ final class AppuisAudio {
     }
 
     /// Le référentiel des **espèces à enjeu** (#2353). Passe par cet objet-paramètre plutôt que par un
-    /// douzième paramètre du contrôleur — c'est exactement ce pour quoi il existe.
+    /// douzième paramètre du contrôleur : c'est exactement ce pour quoi il existe.
     EspecesPrioritaires especesPrioritaires() {
         return especesPrioritaires;
     }

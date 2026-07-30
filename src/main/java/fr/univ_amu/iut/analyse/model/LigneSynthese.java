@@ -19,7 +19,7 @@ import java.util.Optional;
 ///
 /// [#classe] est **vide** dans deux cas qu'il ne faut pas confondre à l'écran :
 ///
-/// - le taxon n'est **pas couvert** par le référentiel (orthoptère, oiseau, bruit) — à écrire
+/// - le taxon n'est **pas couvert** par le référentiel (orthoptère, oiseau, bruit) : à écrire
 ///   « non couvert par le référentiel » ;
 /// - le référentiel le couvre mais n'a **aucun seuil** pour ce contexte.
 ///

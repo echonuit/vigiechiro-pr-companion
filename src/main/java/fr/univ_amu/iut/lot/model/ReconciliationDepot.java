@@ -15,7 +15,7 @@ import java.util.Set;
 /// Limites (documentées) : `donnees` n'existe qu'après traitement (un fichier téléversé mais pas encore
 /// traité reste invisible et sera re-téléversé, idempotent côté plateforme) ; une archive **ZIP** n'est
 /// pas appariable par titre (contenu inconnu localement). Pour un dépôt **purement ZIP** (#984), on
-/// **saute** donc le `GET /donnees` paginé — lourd, et en croissance continue quand le serveur traite un
+/// **saute** donc le `GET /donnees` paginé : lourd, et en croissance continue quand le serveur traite un
 /// dépôt web parallèle : c'était la source du blocage « Dépôt 0/N figé ».
 final class ReconciliationDepot {
 

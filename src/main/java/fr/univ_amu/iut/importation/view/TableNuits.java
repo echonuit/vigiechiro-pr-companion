@@ -33,7 +33,7 @@ final class TableNuits {
 
     /// Table liée à la liste observable des nuits (`editable`, colonnes configurées). La table **suit le
     /// nombre de nuits** : sa hauteur (min **et** préférée) est liée au nombre de lignes. Le `minHeight`
-    /// est indispensable ici — l'écran est dans un `ScrollPane` en `fitToHeight`, qui écraserait sinon la
+    /// est indispensable ici : l'écran est dans un `ScrollPane` en `fitToHeight`, qui écraserait sinon la
     /// table à une seule ligne (comme la carte de rattachement se protège par son propre `minHeight`).
     static TableView<NuitVM> creer(ObservableList<NuitVM> nuits) {
         TableView<NuitVM> table = new TableView<>(nuits);

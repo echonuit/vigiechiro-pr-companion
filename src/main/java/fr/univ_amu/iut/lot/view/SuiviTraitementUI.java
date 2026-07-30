@@ -14,12 +14,12 @@ import javafx.scene.layout.VBox;
 /// Câblage de la zone **« Traitement Vigie-Chiro »** de M-Lot (#1263), extrait de [LotController] : celui-ci
 /// n'a plus qu'à la construire, et reste sous les plafonds de complexité.
 ///
-/// La zone n'apparaît que lorsqu'une **participation est liée** — autrement dit une fois la nuit déposée
+/// La zone n'apparaît que lorsqu'une **participation est liée** : autrement dit une fois la nuit déposée
 /// par l'application : avant cela, il n'y a rien à suivre, et une carte vide n'apprendrait rien.
 ///
 /// **Aucun sondage** : l'état est relu à l'ouverture de l'écran (depuis le cache, sans réseau), puis sur
 /// demande explicite (« Actualiser ») ou après un lancement. Le relevé réseau passe par le socle
-/// [ExecuteurTache] — hors du fil JavaFX, et déterministe en test.
+/// [ExecuteurTache] : hors du fil JavaFX, et déterministe en test.
 final class SuiviTraitementUI {
 
     private final TraitementViewModel viewModel;
@@ -28,7 +28,7 @@ final class SuiviTraitementUI {
 
     /// Installe la zone et la rend autonome : elle n'apparaît que si le suivi est **disponible**
     /// (application connectée) **et** qu'une participation est liée (nuit déposée par l'application).
-    /// Hors de ces conditions, la carte reste absente — et le composant, inerte.
+    /// Hors de ces conditions, la carte reste absente, et le composant, inerte.
     static SuiviTraitementUI installer(
             TraitementViewModel viewModel,
             ExecuteurTache executeur,
@@ -95,7 +95,7 @@ final class SuiviTraitementUI {
     /// serveur vient de changer d'avis sur cette nuit (planifiée, ou déjà en cours), autant le lui demander
     /// plutôt que de le déduire.
     ///
-    /// Le lancement appartient à cette zone, comme le reste de ce qui se passe après le dépôt — le compte
+    /// Le lancement appartient à cette zone, comme le reste de ce qui se passe après le dépôt : le compte
     /// rendu, lui, reste celui du dépôt (c'est son message d'étape ④).
     void lancer(DepotViewModel depot) {
         Long passage = idPassage.get();

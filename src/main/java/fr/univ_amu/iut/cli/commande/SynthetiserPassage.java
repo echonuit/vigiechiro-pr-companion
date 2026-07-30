@@ -21,7 +21,7 @@ import picocli.CommandLine.Spec;
 
 /// `synthetiser-passage` (#2351, lot 1 du chantier #2348) : la **facette CLI de M-Synthese**.
 ///
-/// Même service, mêmes règles de repli, même avertissement que l'écran — c'est le même
+/// Même service, mêmes règles de repli, même avertissement que l'écran : c'est le même
 /// [ServiceSynthese] qui calcule. Une synthèse qui différerait d'une surface à l'autre serait pire
 /// qu'absente : on ne saurait plus laquelle croire.
 ///
@@ -109,7 +109,7 @@ public final class SynthetiserPassage implements Callable<Integer> {
         return 0;
     }
 
-    /// Le JSON porte le contexte dans un **objet à part**, à côté des lignes — pas dilué dans chacune.
+    /// Le JSON porte le contexte dans un **objet à part**, à côté des lignes : pas dilué dans chacune.
     /// L'avertissement et la citation y figurent au même titre qu'en CSV : le format change, l'obligation
     /// de citer ne change pas.
     private java.util.Map<String, Object> champsJson(List<LigneSynthese> lignes, ContexteActivite contexte) {

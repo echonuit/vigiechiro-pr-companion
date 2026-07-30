@@ -13,12 +13,12 @@ import java.util.Optional;
 /// répondre (#1418).
 ///
 /// Un seul collaborateur, et non trois de plus dans [AudioViewModel] : celui-ci est au plafond de la
-/// liste de paramètres (PMD), et surtout ces trois besoins — *le fil*, *qui je suis*, *écrire* — forment
+/// liste de paramètres (PMD), et surtout ces trois besoins (*le fil*, *qui je suis*, *écrire*) forment
 /// une seule notion. Les séparer aurait éparpillé une conversation en trois morceaux.
 ///
 /// L'envoi est **optionnel** : `discuter-validateur` est une feature désactivable, et les injecteurs
 /// partiels (outils de capture) n'ont pas de client VigieChiro. Quand elle est absente, la lecture du fil
-/// continue de fonctionner — c'est tout l'intérêt de les avoir séparées.
+/// continue de fonctionner : c'est tout l'intérêt de les avoir séparées.
 public class DiscussionValidateur {
 
     private final ServiceValidation service;
@@ -49,7 +49,7 @@ public class DiscussionValidateur {
     /// Sans réseau : c'est ce qui permet de **désactiver la saisie en disant pourquoi** (affordance #789),
     /// plutôt que de laisser quelqu'un rédiger un message qui échouerait à l'envoi. Trois raisons
     /// possibles : la fonctionnalité est coupée, aucune ligne n'est sélectionnée, ou la détection n'existe
-    /// pas sur VigieChiro (import CSV, saisie manuelle) — il n'y a alors personne à qui parler.
+    /// pas sur VigieChiro (import CSV, saisie manuelle) : il n'y a alors personne à qui parler.
     public Optional<String> pourquoiPasEcrire(Long idObservation) {
         if (publication.isEmpty()) {
             return Optional.of("L'envoi de messages au validateur est désactivé.");

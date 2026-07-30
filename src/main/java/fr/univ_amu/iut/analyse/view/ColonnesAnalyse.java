@@ -53,7 +53,7 @@ final class ColonnesAnalyse {
             TableColumn<ObservationEspece, String> statut) {}
 
     /// L'inventaire par espèce. Le nom porte le **repère « espèce à enjeu »** (#2353) : ici une ligne
-    /// **est** une espèce, l'information lui appartient déjà — inutile de dépenser une colonne pour la
+    /// **est** une espèce, l'information lui appartient déjà : inutile de dépenser une colonne pour la
     /// porter à côté.
     static void especes(Especes col, MarqueurEspecesAEnjeu marqueurEnjeu) {
         col.espece().setCellValueFactory(c -> texte(FormatAnalyse.libelleEspece(c.getValue())));

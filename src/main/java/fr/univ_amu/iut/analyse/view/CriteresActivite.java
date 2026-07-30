@@ -17,7 +17,7 @@ import javafx.scene.Node;
 
 /// Catalogue des **critères de filtrage** de la vue Activité (patron « à la Notion », socle
 /// [fr.univ_amu.iut.commun.viewmodel.Filtres]), pendant du [CriteresAnalyse] mais sur [ContactHoraire].
-/// Quatre puces cascadables — **Carré**, **Point**, **Nuit** et **Taxon parent** (groupe) —, la **Nature
+/// Quatre puces cascadables (**Carré**, **Point**, **Nuit** et **Taxon parent** (groupe)), la **Nature
 /// de la nuit** (protocole ou opportuniste), plus la recherche texte permanente.
 ///
 /// La sélection d'**espèce** n'est **pas** un filtre ici : elle vit dans les cases à cocher de la courbe
@@ -33,7 +33,7 @@ final class CriteresActivite {
 
     /// Les catégories du référentiel qui ne sont **pas** des chiroptères. Énumérées, et non exprimées par
     /// une négation : le filtre dit alors ce qu'il **retient**, ce qui se lit dans la puce et se rejoue
-    /// dans une vue mémorisée. Contrepartie assumée — une catégorie ajoutée un jour au référentiel devra
+    /// dans une vue mémorisée. Contrepartie assumée : une catégorie ajoutée un jour au référentiel devra
     /// être inscrite ici (#2615).
     private static final List<String> HORS_CHIROPTERES =
             List.of("Orthoptères et cigales", "Autres mammifères", "Oiseaux", "Autres invertébrés", "Amphibiens");
@@ -66,7 +66,7 @@ final class CriteresActivite {
     }
 
     /// Critère **Nature de la nuit** (#2614) : protocole ou participation opportuniste (#2525), lu sur
-    /// l'ensemble des passages marqués que fournit `opportunistes` — un ensemble déjà en mémoire, relu à
+    /// l'ensemble des passages marqués que fournit `opportunistes` : un ensemble déjà en mémoire, relu à
     /// chaque ligne sans coût. Sans présélection : la puce n'écarte rien tant qu'une nature n'est pas
     /// choisie.
     static CritereFiltre<ContactHoraire> natureNuit(Supplier<Set<Long>> opportunistes) {
@@ -114,10 +114,10 @@ final class CriteresActivite {
     ///
     /// Tadarida ne détecte pas que des chauves-souris : sur une vraie saison, orthoptères, autres
     /// mammifères et oiseaux figurent au même rang que les chiroptères, et la présélection des cinq taxons
-    /// les plus contactés peut retenir une sauterelle — tracée alors comme une espèce de chauve-souris.
+    /// les plus contactés peut retenir une sauterelle : tracée alors comme une espèce de chauve-souris.
     ///
     /// Trois onglets qui **partitionnent** : « Tout », « Chiroptères », et un « Autres » qui tient sa
-    /// promesse depuis #2615 — il cumule toutes les catégories non-chiroptères ([#HORS_CHIROPTERES]),
+    /// promesse depuis #2615 : il cumule toutes les catégories non-chiroptères ([#HORS_CHIROPTERES]),
     /// que le critère à choix multiple sait désormais retenir d'un seul filtre.
     static List<VueSauvegardee> vuesParDefaut() {
         return List.of(
@@ -130,7 +130,7 @@ final class CriteresActivite {
     /// La vue sur laquelle l'écran **s'ouvre** (#2616) : « Chiroptères ».
     ///
     /// Sans elle, l'écran s'ouvrait sur « Tout », et la présélection des cinq taxons les plus contactés
-    /// pouvait retenir une sauterelle — tracée alors, sur le même graphe et avec la même allure, qu'une
+    /// pouvait retenir une sauterelle : tracée alors, sur le même graphe et avec la même allure, qu'une
     /// espèce de chauve-souris. Le protocole ne vise que les chiroptères : c'est donc eux que l'écran
     /// montre d'abord, les autres catégories restant à un onglet de distance.
     ///

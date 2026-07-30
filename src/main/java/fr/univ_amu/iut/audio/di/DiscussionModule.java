@@ -20,10 +20,10 @@ import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 /// même clé qualifiée `@Named` contre l'auto-référence), et chargé **uniquement** dans l'injecteur
 /// applicatif complet, là où `ClientVigieChiro` est lié.
 ///
-/// **Feature à part, et désactivable — délibérément.** Lire le fil (#1417) est sans conséquence : c'est un
+/// **Feature à part, et désactivable, délibérément.** Lire le fil (#1417) est sans conséquence : c'est un
 /// reflet du serveur. **Écrire** dedans est *définitif* : le serveur ajoute par `$push` et n'offre aucune
 /// route de suppression. Une organisation qui ne veut pas que ses observateurs puissent adresser un
-/// message irréversible à un validateur du MNHN peut donc simplement couper cette fonctionnalité — la
+/// message irréversible à un validateur du MNHN peut donc simplement couper cette fonctionnalité : la
 /// lecture du fil, elle, reste.
 public class DiscussionModule extends ModuleDeFeature {
 

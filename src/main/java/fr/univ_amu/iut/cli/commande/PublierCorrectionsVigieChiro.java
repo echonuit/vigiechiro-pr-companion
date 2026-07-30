@@ -66,7 +66,7 @@ public final class PublierCorrectionsVigieChiro implements Callable<Integer> {
                         + " d'exécution (fonctionnalité « publier-corrections » désactivée ?)."));
         if (token != null && !token.isBlank()) {
             // Jeton ponctuel : consulté par le client à chaque requête (cf. ConnexionModule), sans rien
-            // persister — la connexion enregistrée de l'application n'est pas modifiée.
+            // persister : la connexion enregistrée de l'application n'est pas modifiée.
             System.setProperty("vigiechiro.token", token);
         }
         // L'ancrage manquant s'acquiert ici comme dans l'IHM (#1838) : sans cela une nuit importée par CSV

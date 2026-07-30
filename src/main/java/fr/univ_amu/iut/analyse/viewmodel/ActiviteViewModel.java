@@ -33,7 +33,7 @@ import javafx.collections.transformation.FilteredList;
 /// **Filtrable** sur le socle `analyse` : les contacts chargés (un passage, ou **tous** les passages de
 /// l'utilisateur) vivent dans une [ObservableList] `tous` → [FilteredList] → [Filtres]. Un changement de
 /// filtre (carré, point, passage, espèce…) recalcule le **sous-ensemble** puis **ré-agrège** ce
-/// sous-ensemble en courbes — filtrer, c'est re-tracer. Répartition des rôles calquée sur `analyse` :
+/// sous-ensemble en courbes, filtrer, c'est re-tracer. Répartition des rôles calquée sur `analyse` :
 /// [ServiceActivite] **lit et projette**, le ViewModel **agrège et rend réactif**.
 ///
 /// Changer la tranche ré-agrège sans toucher la sélection ; (dé)cocher une espèce ne recalcule que les
@@ -262,7 +262,7 @@ public class ActiviteViewModel {
     /// Passe par [AgregationActivite#pourExport] et non par les courbes affichées : une courbe décrit le
     /// temps pour une espèce, tous lieux confondus, alors qu'un export doit se recouper (#2613). Les
     /// espèces **décochées** en sont donc absentes ? Non : l'export suit les **filtres**, pas la sélection
-    /// de tracé — décocher une courbe allège le graphe, cela ne retire pas la donnée du jeu.
+    /// de tracé : décocher une courbe allège le graphe, cela ne retire pas la donnée du jeu.
     public List<LigneActivite> lignesExport() {
         return AgregationActivite.pourExport(List.copyOf(contactsFiltres), tranche.get());
     }

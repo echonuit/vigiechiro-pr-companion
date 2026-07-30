@@ -79,7 +79,7 @@ public final class ImporterVigieChiro implements Callable<Integer> {
         GardeJeuExistant.refuserSiDejaImporte(resultatsDao, idPassage, remplacer);
         if (token != null && !token.isBlank()) {
             // Jeton ponctuel : consulté par le client à chaque requête (cf. ConnexionModule), sans rien
-            // persister — la connexion enregistrée de l'application n'est pas modifiée.
+            // persister : la connexion enregistrée de l'application n'est pas modifiée.
             System.setProperty("vigiechiro.token", token);
         }
         if (participation != null && !participation.isBlank()) {
@@ -90,7 +90,7 @@ public final class ImporterVigieChiro implements Callable<Integer> {
         SuiviPagination suivi = (page, totalPages) ->
                 spec.commandLine().getErr().println("Import Vigie-Chiro… page " + page + "/" + totalPages);
         // Voie rapide (#1838), à parité avec l'écran : CSV d'un coup, repli sur les `donnees`. Le suivi
-        // par page ne s'exprime donc que sur le repli — un CSV ne se pagine pas.
+        // par page ne s'exprime donc que sur le repli : un CSV ne se pagine pas.
         BilanImport bilan = moteur.importerRapide(idPassage, remplacer, suivi);
         // Même rendu que l'import CSV (ImporterTadarida) : les deux chemins alimentent le même écran.
         spec.commandLine().getOut().println(ImporterTadarida.rendreBilan(bilan, remplacer));

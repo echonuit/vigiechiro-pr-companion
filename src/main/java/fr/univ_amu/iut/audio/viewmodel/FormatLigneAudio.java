@@ -89,7 +89,7 @@ public final class FormatLigneAudio {
     }
 
     /// Position du début du cri dans la tranche, en secondes **réelles** (« 0,40 s »), tiret si absente. La
-    /// borne `debutS` est déjà réelle (temps Tadarida), affichée telle quelle — cohérente avec l'axe de
+    /// borne `debutS` est déjà réelle (temps Tadarida), affichée telle quelle : cohérente avec l'axe de
     /// l'audio-view. Situe le cri et distingue les lignes d'un même fichier (plusieurs cris → plusieurs
     /// positions).
     public static String positionColonne(Double debutS) {

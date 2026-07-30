@@ -23,7 +23,7 @@ import picocli.CommandLine.Spec;
 /// `lister-sites` (#615) : liste les sites de l'utilisateur courant **avec leurs points d'écoute**, pour
 /// retrouver les identifiants nécessaires aux autres commandes (`ajouter-point --site …`,
 /// `importer --point …`). Lecture pure via [ServiceSites]. En `--json`, une ligne plate par point (avec son
-/// site) — les sites sans point apparaissent avec des champs point à `null` — de façon à retrouver **tous**
+/// site) : les sites sans point apparaissent avec des champs point à `null` : de façon à retrouver **tous**
 /// les identifiants dans un seul tableau exploitable en script.
 @Command(
         name = "lister-sites",

@@ -150,7 +150,7 @@ public class SyntheseController implements EmplacementNavigation {
         lblContexte.textProperty().bind(viewModel.contexteNuitProperty());
 
         // Permanent, jamais repliable : si l'avertissement ne voyage pas avec la donnée, il ne sert à
-        // rien. La citation l'accompagne — la source est libre d'usage AVEC citation obligatoire.
+        // rien. La citation l'accompagne : la source est libre d'usage AVEC citation obligatoire.
         lblAvertissement.setText(viewModel.avertissement());
         lblCitation.setText("Source : " + viewModel.citation());
 
@@ -163,7 +163,7 @@ public class SyntheseController implements EmplacementNavigation {
         configurerMilieux();
     }
 
-    /// Exporte le tableau **tel qu'il est affiché** — bascule et milieu compris — en CSV, le pendant à
+    /// Exporte le tableau **tel qu'il est affiché** (bascule et milieu compris) en CSV, le pendant à
     /// l'écran de `synthetiser-passage`, sur le même formateur pur.
     @FXML
     private void exporter() {
@@ -206,7 +206,7 @@ public class SyntheseController implements EmplacementNavigation {
     ///
     /// C'est **ici**, et non dans `initialize`, que se décide le libellé du référentiel : les deux cas
     /// s'excluent, et lier la propriété d'abord pour la réécrire ensuite lève `A bound value cannot be
-    /// set` — l'écran entier devenait alors inchargeable dès que le référentiel manquait.
+    /// set` : l'écran entier devenait alors inchargeable dès que le référentiel manquait.
     private void configurerMilieux() {
         if (!viewModel.referentielDisponible()) {
             colActivite.setVisible(false);
@@ -245,7 +245,7 @@ public class SyntheseController implements EmplacementNavigation {
     private void configurerColonnes() {
         colEspece.setCellValueFactory(c -> texte(c.getValue().nomEspece()));
         // Le bouclier des espèces prioritaires, dans la cellule du nom : ici une ligne EST une espèce.
-        // Même repère, même infobulle que l'inventaire, la revue, l'activité et la recherche — le produit
+        // Même repère, même infobulle que l'inventaire, la revue, l'activité et la recherche : le produit
         // ne peut pas désigner le même fait sur quatre surfaces et se taire sur la cinquième.
         colEspece.setCellFactory(colonne -> CelluleEspeceAEnjeu.cellule(marqueurEnjeu, LigneSynthese::codeTaxon));
         colGroupe.setCellValueFactory(c -> texte(ouTiret(c.getValue().groupe())));

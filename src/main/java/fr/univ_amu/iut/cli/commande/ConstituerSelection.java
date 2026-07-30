@@ -14,7 +14,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/// `constituer-selection` (#1512) : (re)constitue la **sélection d'écoute** d'un passage — l'échantillon
+/// `constituer-selection` (#1512) : (re)constitue la **sélection d'écoute** d'un passage, l'échantillon
 /// de séquences à écouter pour le vérifier (R12). Méthode `reparti` (défaut) / `aleatoire` / `manuel`,
 /// taille visée (défaut 20 ; le nombre réellement retenu peut être moindre si la nuit compte moins de
 /// séquences). Parité CLI des boutons « Personnaliser… » / « Régénérer » de M-Qualification (#1524).

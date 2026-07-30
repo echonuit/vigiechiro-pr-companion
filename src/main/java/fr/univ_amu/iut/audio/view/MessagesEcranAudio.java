@@ -14,7 +14,7 @@ import javafx.scene.layout.HBox;
 ///
 /// Extrait de [SonsValidationController], comme `MenuCertitude`, `PanneauDiscussion` et
 /// [SelectionTableAudio] : ce contrôleur est au plafond de `NcssCount`. Les trois messages forment un
-/// tout — ils occupent la même zone de l'écran et leur séparation est justement ce que #795 a établi,
+/// tout : ils occupent la même zone de l'écran et leur séparation est justement ce que #795 a établi,
 /// pour qu'une erreur d'import ne soit plus noyée dans le placeholder gris de l'état vide.
 final class MessagesEcranAudio {
 

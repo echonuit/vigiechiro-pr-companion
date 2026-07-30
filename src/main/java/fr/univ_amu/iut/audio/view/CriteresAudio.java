@@ -46,13 +46,13 @@ final class CriteresAudio {
 
     /// Vues **par défaut** (lecture seule) de l'écran « Sons & validation », rendues comme onglets avant les
     /// vues de l'utilisateur (#623) :
-    /// - **« Tout »** (aucun filtre) : la vue active au chargement — elle correspond à l'état sans filtre, donc
+    /// - **« Tout »** (aucun filtre) : la vue active au chargement, elle correspond à l'état sans filtre, donc
     ///   n'écarte rien (indispensable pour ne pas masquer des séquences déjà validées, ni casser la source
     ///   « non identifiés » qui n'a pas de statut « à revoir » après validation manuelle) ;
     /// - **« À valider »** (statut À revoir, le cœur de la revue) ;
     /// - **« Chiroptères »** (groupe Chiroptères, #471) ;
     /// - **« Sons non identifiés »** (séquences sans proposition Tadarida : présentes sur disque mais absentes
-    ///   du CSV, à valider à la main — cf. [#nonIdentifie()]).
+    ///   du CSV, à valider à la main : cf. [#nonIdentifie()]).
     ///
     /// Chaque descripteur est sérialisé exactement comme [GestionnaireFiltres#decrire()] le produirait, pour
     /// que rejouer la vue laisse un état « non modifié ».
@@ -256,7 +256,7 @@ final class CriteresAudio {
     }
 
     /// Critère **Références seulement** (booléen) : ne garde que les observations archivées en référence
-    /// (`is_reference`). Critère **sans éditeur** — la simple présence de la puce active le filtre (#473),
+    /// (`is_reference`). Critère **sans éditeur** : la simple présence de la puce active le filtre (#473),
     /// son retrait le désactive. Libellé en texte (l'étoile ⭐ ne rend pas dans toutes les polices, cf.
     /// [CellulesAudio] ; l'indication visuelle reste la colonne-icône dorée de la table).
     static CritereFiltre<LigneObservationAudio> references() {
@@ -280,7 +280,7 @@ final class CriteresAudio {
     }
 
     /// Critère **Douteux seulement** (booléen, #160) : ne garde que les observations marquées « douteuses /
-    /// à repasser » (`is_doubtful`). Critère **sans éditeur** — la présence de la puce active le filtre, son
+    /// à repasser » (`is_doubtful`). Critère **sans éditeur** : la présence de la puce active le filtre, son
     /// retrait le désactive. Pendant du critère [#references()] ; l'indicateur visuel reste le bouton de la
     /// barre d'actions.
     static CritereFiltre<LigneObservationAudio> douteux() {
@@ -304,7 +304,7 @@ final class CriteresAudio {
     }
 
     /// Critère **Non identifiés** : garde les séquences **sans proposition Tadarida** (`taxonTadarida == null`)
-    /// — présentes sur disque mais absentes du CSV Tadarida, à valider à la main. C'est le **complément exact**
+    /// : présentes sur disque mais absentes du CSV Tadarida, à valider à la main. C'est le **complément exact**
     /// des observations Tadarida (dont la proposition n'est jamais nulle), y compris une fois validées à la main
     /// (elles n'acquièrent pas de proposition Tadarida). Critère **sans éditeur** (booléen) : la présence de la
     /// puce active le filtre. Porte la vue par défaut « Sons non identifiés » ([#vuesParDefaut()]).

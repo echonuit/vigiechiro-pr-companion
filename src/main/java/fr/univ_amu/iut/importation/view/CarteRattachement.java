@@ -76,7 +76,7 @@ final class CarteRattachement {
         Optional<EmpriseCarre> emprise = FournisseurEmpriseCarre.parDefaut().emprise(site.numeroCarre(), geolocalises);
         List<PointGeo> marqueurs = new ArrayList<>(geolocalises);
         // Points sans GPS : placés (approximatifs) au centre du carré, **désempilés en éventail** (#153/#154)
-        // pour qu'aucun ne se masque — sinon le point choisi pourrait disparaître sous un autre.
+        // pour qu'aucun ne se masque : sinon le point choisi pourrait disparaître sous un autre.
         emprise.ifPresent(e -> {
             List<double[]> positions = EventailCentre.positions(e, sansGps.size());
             for (int i = 0; i < sansGps.size(); i++) {

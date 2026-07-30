@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 /// Veille` / `Mise en veille`). Un cycle qui ne se termine **pas** par une mise en veille normale
 /// (carte SD pleine, mode erreur, ou journal interrompu) correspond à une **nuit tronquée**.
 ///
-/// Sert à qualifier la **complétude** de chaque nuit détectée (cf. [PartitionNuits]) de façon fiable —
+/// Sert à qualifier la **complétude** de chaque nuit détectée (cf. [PartitionNuits]) de façon fiable :
 /// contrairement à une heuristique sur les seuls fichiers, qui confondrait une nuit calme (peu de
 /// déclenchements avant l'aube) avec une nuit interrompue.
 ///

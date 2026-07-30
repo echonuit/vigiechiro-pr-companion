@@ -11,7 +11,7 @@ import java.util.List;
 
 /// Reconstitue une **identité de repli** (#107) quand aucun journal LogPR n'est présent : un
 /// [JournalParse] minimal porté par les **noms des WAV** (`PaRecPR<série>_<date>_…`, même motif que
-/// [AnalyseMelange]). Permet d'importer en **mode dégradé** sans bloquer — l'absence de journal est par
+/// [AnalyseMelange]). Permet d'importer en **mode dégradé** sans bloquer : l'absence de journal est par
 /// ailleurs signalée à l'inspection (avertissement non bloquant).
 ///
 /// Pour ne pas **coincer l'aval** (la préparation du lot exige une trace de journal, cf.
@@ -44,7 +44,7 @@ final class JournalDeRepli {
     private JournalDeRepli() {}
 
     /// Journal de repli : série + date extraites des noms d'`originaux` (la **première** série et la
-    /// **première** date triées — choix déterministe ; un dossier mélangé reste signalé, non bloquant, à
+    /// **première** date triées : choix déterministe ; un dossier mélangé reste signalé, non bloquant, à
     /// l'inspection). Les autres champs sont nuls, ce que la construction du passage et du micro tolère
     /// déjà ; une **anomalie** [#ANOMALIE_ABSENCE] est portée pour assumer le mode dégradé.
     static JournalParse depuis(List<Path> originaux) {

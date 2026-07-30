@@ -18,7 +18,7 @@ import picocli.CommandLine.Spec;
 ///
 /// C'est le pendant en ligne de commande du suivi affiché à M-Lot (#1263). L'application ne **surveille**
 /// jamais le serveur d'elle-même (aucun sondage périodique : un calcul dure des dizaines de minutes, et
-/// le site officiel n'en fait pas davantage) — mais un script, lui, peut la questionner à son rythme.
+/// le site officiel n'en fait pas davantage), mais un script, lui, peut la questionner à son rythme.
 /// D'où des **codes de retour** faits pour être testés dans une boucle :
 ///
 /// ```

@@ -12,7 +12,7 @@ import picocli.CommandLine.Spec;
 
 /// `modifier-campagne` (#2355) : corrige le nom, l'année ou le commentaire d'une campagne existante.
 ///
-/// Créer une campagne sans pouvoir la corriger obligeait à la supprimer pour la refaire — en
+/// Créer une campagne sans pouvoir la corriger obligeait à la supprimer pour la refaire : en
 /// détachant au passage tous ses passages. Cette commande comble la moitié manquante du geste.
 @Command(name = "modifier-campagne", description = "Modifie le nom, l'année ou le commentaire d'une campagne.")
 public final class ModifierCampagne implements Callable<Integer> {

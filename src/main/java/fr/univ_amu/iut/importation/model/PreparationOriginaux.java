@@ -22,7 +22,7 @@ import java.util.stream.IntStream;
 ///
 /// - **conservation** : copie protégée dans `bruts/` (R9, reprise #231) puis renommage R6/R7 ; la
 ///   lecture se fait ensuite sur ces copies (dont le nom est déjà le nom R6) ;
-/// - **sans copie** : aucune écriture — les WAV de la source sont lus **en place** (R9, lecture seule),
+/// - **sans copie** : aucune écriture, les WAV de la source sont lus **en place** (R9, lecture seule),
 ///   avec leur nom R6 **calculé** ([Renommeur#nomApresRenommage]) ; `bruts/` n'est jamais créé.
 ///
 /// La copie est **parallèle** (#948) et confiée au socle [ExecutionParallele] (#2039), qui porte les
@@ -60,7 +60,7 @@ final class PreparationOriginaux {
     /// réassocier la sortie du renommage au suivi par fichier.
     ///
     /// `dejaFidele` n'est pas une donnée de sortie, c'est ce qui permet au libellé de progression de dire
-    /// « (déjà présent) » — une mention qui ne se sait qu'**après** examen du fichier, et que le socle
+    /// « (déjà présent) » : une mention qui ne se sait qu'**après** examen du fichier, et que le socle
     /// obtient donc via le résultat de la tâche.
     private record CopieRealisee(String nomR6, int numero, boolean dejaFidele) {}
 
@@ -105,7 +105,7 @@ final class PreparationOriginaux {
     /// annulation arrête les copies restantes au lieu d'attendre la fin de toutes celles soumises.
     ///
     /// **Reprise sécurisée (#231)** : un original n'est sauté que si une version renommée existe **et**
-    /// que son empreinte SHA-256 est **identique à celle de la source SD** — contenu vérifié, pas
+    /// que son empreinte SHA-256 est **identique à celle de la source SD** : contenu vérifié, pas
     /// seulement le nom ni la taille. Un fichier absent, périmé ou corrompu (même nom, session orpheline
     /// incohérente) est re-copié : on ne persiste jamais un agrégat sur des fichiers douteux. Sauter une
     /// copie **fidèle** évite au passage le conflit de renommage qu'une re-copie déclencherait.

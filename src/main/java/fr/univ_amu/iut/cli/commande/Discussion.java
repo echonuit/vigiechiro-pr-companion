@@ -19,7 +19,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/// Commande `discussion` (#1418) : le **fil d'échange avec le validateur** du MNHN sur une observation —
+/// Commande `discussion` (#1418) : le **fil d'échange avec le validateur** du MNHN sur une observation :
 /// le lire, et y répondre.
 ///
 /// Parité CLI de ce que « Sons & validation » offre à l'écran depuis #1417 / #1418. Sans elle, deux
@@ -27,7 +27,7 @@ import picocli.CommandLine.Spec;
 ///
 /// ⚠️ **Répondre est définitif.** Le serveur ajoute par `$push` et n'offre **aucune** route de suppression
 /// ni de modification : un message posté ne se retire pas, et il est lu par un expert du MNHN. D'où
-/// `--confirmer`, **obligatoire** — on n'écrit pas l'irréversible par une option qu'on aurait pu laisser
+/// `--confirmer`, **obligatoire** : on n'écrit pas l'irréversible par une option qu'on aurait pu laisser
 /// traîner dans un script.
 ///
 /// Sans `--message`, la commande **lit** : lecture seule, sans réseau (le fil vient de la base, rafraîchi
@@ -94,7 +94,7 @@ public final class Discussion implements Callable<Integer> {
         return 0;
     }
 
-    /// Avec `--message` : l'envoi. `--confirmer` est **obligatoire** — le message ne se retire pas.
+    /// Avec `--message` : l'envoi. `--confirmer` est **obligatoire**, le message ne se retire pas.
     private Integer poster() {
         PrintWriter sortie = spec.commandLine().getOut();
         if (!confirmer) {
@@ -123,7 +123,7 @@ public final class Discussion implements Callable<Integer> {
         return 0;
     }
 
-    /// « Vous · 11/07/2026 21:04 » — l'auteur est un identifiant plateforme, jamais un nom : on ne peut que
+    /// « Vous · 11/07/2026 21:04 », l'auteur est un identifiant plateforme, jamais un nom : on ne peut que
     /// dire s'il est le nôtre. En CLI, on affiche l'identifiant brut plutôt que d'inventer une identité.
     private static String entete(MessageObservation ligne) {
         String auteur = ligne.auteur() == null ? "auteur inconnu" : ligne.auteur();

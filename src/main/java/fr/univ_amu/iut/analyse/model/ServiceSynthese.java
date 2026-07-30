@@ -80,7 +80,7 @@ public class ServiceSynthese {
                 .toList();
     }
 
-    /// Le référentiel est-il exploitable ? Faux si la ressource n'a rien donné — l'écran masque alors la
+    /// Le référentiel est-il exploitable ? Faux si la ressource n'a rien donné : l'écran masque alors la
     /// colonne d'activité et le sélecteur de milieu au lieu d'afficher des cellules vides, et le tableau
     /// de comptages reste entièrement exploitable.
     public boolean referentielDisponible() {

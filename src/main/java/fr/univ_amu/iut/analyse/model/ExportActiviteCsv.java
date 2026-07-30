@@ -12,8 +12,8 @@ import java.util.List;
 /// graphe. Utilisé par le CLI (`exporter-activite`), formateur **pur** (aucune dépendance IHM).
 ///
 /// **Une ligne par (carré, point, nuit, espèce, tranche)**, en format long : robuste au nombre variable
-/// d'espèces et directement filtrable dans un tableur. Chaque ligne **porte son contexte entier** — d'où
-/// elle vient, quand, et à quelle largeur de tranche —, de sorte qu'un export couvrant plusieurs nuits ou
+/// d'espèces et directement filtrable dans un tableur. Chaque ligne **porte son contexte entier** (d'où
+/// elle vient, quand, et à quelle largeur de tranche), de sorte qu'un export couvrant plusieurs nuits ou
 /// plusieurs points reste recoupable une fois détaché de l'application (#2613). La **nuit** est
 /// recalculée par la **bascule à midi** ([Nuit#de]), la même règle que la courbe : une tranche à 02 h
 /// appartient à la nuit du soir précédent, pas à la date du jour.

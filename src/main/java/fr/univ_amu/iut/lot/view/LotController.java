@@ -86,7 +86,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     /// Socle « travail lourd hors fil JavaFX » (#1014, étendu #1252) : les trois flux de l'écran
     /// (compute, génération d'archives, dépôt) passent par lui plutôt que par un `Thread.ofVirtual()`
-    /// maison — l'IHM ne gèle pas, et les tests sont **synchrones** (#1253).
+    /// maison : l'IHM ne gèle pas, et les tests sont **synchrones** (#1253).
     private final ExecuteurTache executeur;
 
     /// Suivi du traitement serveur (#1263), séparé de [LotViewModel] (déjà au plafond de complexité).
@@ -444,7 +444,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
         // Emphase de l'étape actionnable (#689) : parmi les trois actions applicatives du dépôt
         // (Préparer → Générer → Marquer déposé, l'étape ③ « Téléverser » étant manuelle), celle qui est
-        // actionnable porte .bouton-primaire, les autres .bouton-secondaire — au plus une à la fois.
+        // actionnable porte .bouton-primaire, les autres .bouton-secondaire : au plus une à la fois.
         // Recalculée à chaque évolution de l'état (peut*) ou des archives. « Ouvrir le dossier » reste
         // toujours secondaire (rôle fixé en FXML).
         InvalidationListener majRoles = observable -> majRolesEtapes();
@@ -468,7 +468,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// Met en avant l'action **actionnable** du dépôt (#689) : `.bouton-primaire` sur l'unique étape
     /// courante parmi Préparer / Générer / Marquer déposé, `.bouton-secondaire` sur les autres. L'étape ③
     /// « Téléverser » porte son rôle primaire depuis le FXML : hors connexion elle est masquée, et
-    /// connectée elle EST l'action de la marche courante — « Générer » lui cède donc la place plutôt que
+    /// connectée elle EST l'action de la marche courante : « Générer » lui cède donc la place plutôt que
     /// de la concurrencer. Une fois les archives générées, c'est « Marquer déposé » qui devient primaire.
     /// Plus aucun primaire une fois le passage déposé. Le gating du VM garantit qu'au plus une des trois
     /// est actionnable à la fois.
@@ -552,7 +552,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // Réhydrate la table de dépôt (#983) depuis l'état persisté : un dépôt interrompu réaffiche ses
         // unités (déposées/échecs) et propose la reprise.
         depotViewModel.rehydrater(passage.idPassage());
-        // Dernier état connu du traitement (#1262) : lu dans le cache, sans réseau — la zone n'est jamais
+        // Dernier état connu du traitement (#1262) : lu dans le cache, sans réseau, la zone n'est jamais
         // muette, même hors connexion. Le relevé frais reste à la demande (« Actualiser »).
         suiviTraitement.rehydrater();
     }
@@ -572,7 +572,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     @FXML
     private void deposer() {
         // #984 : quand une participation est liée (dépôt via l'API effectué), le bouton lance le
-        // traitement serveur (compute) au lieu de marquer déposé — déjà fait par le dépôt API.
+        // traitement serveur (compute) au lieu de marquer déposé : déjà fait par le dépôt API.
         if (depotViewModel.participationLieeProperty().get()) {
             // Le traitement serveur appartient à la zone de suivi (#1263), lancement compris.
             suiviTraitement.lancer(depotViewModel);

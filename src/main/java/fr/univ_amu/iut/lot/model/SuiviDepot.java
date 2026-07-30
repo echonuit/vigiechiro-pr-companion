@@ -9,7 +9,7 @@ import java.util.List;
 /// Le dépôt est **séquentiel** (une unité à la fois, réseau) mais émis **hors du fil JavaFX** :
 /// l'implémentation IHM doit relayer ses mutations sur le fil JavaFX (fourni par le socle,
 /// `ExecuteurTache#surFilJavaFx()`). Chaque événement cible son
-/// unité par son **identifiant** (nom du fichier, unique par passage — la clé de `depot_unite`, #981).
+/// unité par son **identifiant** (nom du fichier, unique par passage : la clé de `depot_unite`, #981).
 public interface SuiviDepot {
 
     /// Plan (ré)établi **avant tout téléversement** : l'état persisté de toutes les unités du passage,

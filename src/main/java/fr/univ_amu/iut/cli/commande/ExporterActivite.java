@@ -23,7 +23,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 /// `exporter-activite` (#2352, parité CLI de la courbe d'activité) : écrit en CSV la courbe d'activité
-/// horaire d'un passage — les contacts par tranche et par espèce, **rattachés à la nuit biologique** (bascule
+/// horaire d'un passage : les contacts par tranche et par espèce, **rattachés à la nuit biologique** (bascule
 /// à midi), exactement comme la vue les agrège. Facette **données** de l'export, en pendant de l'export
 /// **image** de l'IHM : le même [AgregationActivite#parEspece] alimente les deux.
 ///

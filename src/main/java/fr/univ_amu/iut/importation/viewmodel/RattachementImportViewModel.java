@@ -24,14 +24,14 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-/// Sous-ViewModel de **M-Import** — étape 3 : **rattachement** de la nuit (site / point / année /
+/// Sous-ViewModel de **M-Import**, étape 3 : **rattachement** de la nuit (site / point / année /
 /// n° de passage) et **aperçu du préfixe** Vigie-Chiro (R6).
 ///
 /// Extrait de [ImportationViewModel] (#183) pour le décharger : cet objet ne porte **que** l'état du
 /// rattachement, sans rien savoir de l'inspection ni de l'exécution de l'import. L'orchestrateur
 /// ([ImportationViewModel]) le **compose** : il lit [#estComplet()] pour `peutImporter`, assemble la
 /// demande d'import depuis [#idPointSelectionne()] / [#prefixeCourant()], et lui fournit (via
-/// [#definirExempleNom]) un **exemple de nom d'origine** servant à l'aperçu — une simple valeur dérivée,
+/// [#definirExempleNom]) un **exemple de nom d'origine** servant à l'aperçu : une simple valeur dérivée,
 /// pas le rapport d'inspection, pour ne pas coupler ce sous-VM à l'inspection.
 ///
 /// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seuls `javafx.beans` /
@@ -194,7 +194,7 @@ public class RattachementImportViewModel {
                 pointSelectionne.get().code());
     }
 
-    /// Fournit (orchestrateur) les noms de **tous** les originaux inspectés — dérivés de l'inspection —
+    /// Fournit (orchestrateur) les noms de **tous** les originaux inspectés, dérivés de l'inspection :
     /// ou une liste vide pour réinitialiser ; recalcule l'aperçu et l'avertissement de discordance.
     public void definirOriginaux(List<String> noms) {
         this.nomsOriginaux = List.copyOf(noms);

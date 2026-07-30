@@ -11,7 +11,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 ///
 /// **Partagée** (singleton) entre la **vue** (qui lie bidirectionnellement la case) et le **ViewModel**
 /// (qui lit la valeur au lancement de l'import), de sorte que le choix survive à la réouverture de
-/// l'écran — le ViewModel, lui, est recréé à chaque chargement FXML, alors que cette préférence, non.
+/// l'écran : le ViewModel, lui, est recréé à chaque chargement FXML, alors que cette préférence, non.
 ///
 /// VM-agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seul `javafx.beans` est importé,
 /// jamais `javafx.scene`. La persistance passe par le service socle [Reglages] (jamais un DAO).

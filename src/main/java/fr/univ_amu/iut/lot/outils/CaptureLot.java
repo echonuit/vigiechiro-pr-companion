@@ -87,24 +87,24 @@ import javafx.scene.Scene;
 /// Capture l'écran M-Lot en PNG pour le comparer à la maquette du brief, en illustrant **le workflow
 /// du dépôt étape par étape** (#251) :
 ///
-/// - `apercu-lot-preparer.png` : passage **Vérifié** cohérent — étape ① « Vérifier et préparer le dépôt »
+/// - `apercu-lot-preparer.png` : passage **Vérifié** cohérent, étape ① « Vérifier et préparer le dépôt »
 ///   active ;
-/// - `apercu-lot-deposer.png` : passage **Prêt à déposer** (après préparation) — étape ② « Générer les
+/// - `apercu-lot-deposer.png` : passage **Prêt à déposer** (après préparation), étape ② « Générer les
 ///   archives » active ;
 /// - `apercu-lot-televerser-sans-archives.png` : passage **Prêt à déposer**, application **connectée**,
-///   **aucune archive** sur le disque — l'étape ③ « Téléverser » est courante et l'étape ② n'est plus un
+///   **aucune archive** sur le disque : l'étape ③ « Téléverser » est courante et l'étape ② n'est plus un
 ///   passage obligé (#1998) ;
-/// - `apercu-lot-generation.png` : **génération en cours** — indicateur d'activité, bouton désactivé ;
-/// - `apercu-lot-archives.png` : **archives générées** — liste des ZIP (redimensionnée à son contenu),
+/// - `apercu-lot-generation.png` : **génération en cours**, indicateur d'activité, bouton désactivé ;
+/// - `apercu-lot-archives.png` : **archives générées**, liste des ZIP (redimensionnée à son contenu),
 ///   « Ouvrir le dossier » et « Supprimer les archives » actifs, étape ③ « Téléverser » courante ;
-/// - `apercu-lot-televerser.png` : mêmes archives, **application connectée** — l'étape ③ expose enfin
+/// - `apercu-lot-televerser.png` : mêmes archives, **application connectée**, l'étape ③ expose enfin
 ///   « Téléverser sur Vigie-Chiro » à côté du dépôt manuel (#1890) ;
-/// - `apercu-lot-depose.png` : passage **Déposé** — état final, toutes les étapes franchies ;
-/// - `apercu-lot-participation.png` : **participation liée** — le bouton de l'étape ④ bascule sur son
+/// - `apercu-lot-depose.png` : passage **Déposé**, état final, toutes les étapes franchies ;
+/// - `apercu-lot-participation.png` : **participation liée**, le bouton de l'étape ④ bascule sur son
 ///   second libellé, « Lancer la participation » (#1890) ;
-/// - `apercu-lot-alertes.png` : passage **Vérifié incohérent** (séquences/journal manquants) — la
+/// - `apercu-lot-alertes.png` : passage **Vérifié incohérent** (séquences/journal manquants), la
 ///   zone d'alertes de cohérence (R14) apparaît et « Préparer le lot » est désactivé ;
-/// - `apercu-lot-reprise.png` : **dépôt en cours** (#2354) — une archive déjà déposée, une autre dont le
+/// - `apercu-lot-reprise.png` : **dépôt en cours** (#2354), une archive déjà déposée, une autre dont le
 ///   `PUT` a rencontré une coupure momentanée : sa ligne porte la mention discrète « Nouvelle tentative
 ///   dans N s… » à côté de la barre, l'unité restant « en cours ».
 ///
@@ -186,7 +186,7 @@ public final class CaptureLot {
         // Après préparation : Prêt à déposer (étape ② à faire), « Générer les archives » actif.
         service.preparerLot(idCoherent);
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-deposer.png"));
-        // ② bis (#1998) : **connecté et sans archives**. C'est l'état neuf du chantier — le téléversement
+        // ② bis (#1998) : **connecté et sans archives**. C'est l'état neuf du chantier, le téléversement
         // produisant lui-même ce dont il a besoin, l'étape ③ est courante alors qu'aucune archive n'existe
         // sur le disque. Aucun aperçu ne le montrait : les deux rendus connectés existants partaient tous
         // d'archives déjà générées, donc de l'ancien flux.
@@ -233,7 +233,7 @@ public final class CaptureLot {
         service.marquerDepose(idCoherent);
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-depose.png"));
         // ④ bis (#1890) : participation liée. Le bouton de l'étape ④ bascule sur son second libellé
-        // (« 🚀 Lancer la participation ») — jamais rendu jusqu'ici, faute de lien en base.
+        // (« 🚀 Lancer la participation ») : jamais rendu jusqu'ici, faute de lien en base.
         lierParticipation(injecteur, idCoherent);
         rendre(connecte, idCoherent, sortie.resolve("apercu-lot-participation.png"));
         // Cas bloquant : Vérifié incohérent → zone d'alertes (R14), « Préparer » désactivé.
@@ -414,7 +414,7 @@ public final class CaptureLot {
                         injecteur.getInstance(DepotDispositionColonnes.class),
                         injecteur.getInstance(fr.univ_amu.iut.commun.view.ExecuteurTache.class),
                         // Suivi du traitement serveur (#1263) : l'injecteur de capture n'a pas de
-                        // `connexion`, donc pas de client — le suivi est absent, et la zone reste masquée.
+                        // `connexion`, donc pas de client : le suivi est absent, et la zone reste masquée.
                         injecteur.getInstance(fr.univ_amu.iut.lot.viewmodel.TraitementViewModel.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();

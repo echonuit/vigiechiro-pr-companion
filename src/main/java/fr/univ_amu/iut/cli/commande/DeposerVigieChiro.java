@@ -22,13 +22,13 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 /// `deposer-vigiechiro` (#1043) : téléverse la nuit d'un passage sur la plateforme VigieChiro via le
-/// **moteur reprenable** ([DepotVigieChiro], #982) — participation créée ou réutilisée, plan
+/// **moteur reprenable** ([DepotVigieChiro], #982) : participation créée ou réutilisée, plan
 /// `depot_unite` persisté, seuls les fichiers **manquants** sont (re)téléversés : la commande est
 /// **relançable** telle quelle après une coupure. À ne pas confondre avec `deposer`, le **marquage
 /// manuel** (téléversement fait sur le site web).
 ///
 /// **Ce qui est déposé** : le **même défaut que M-Lot**, c'est-à-dire le réglage `depot.mode` (#1997,
-/// Réglages ▸ Dépôt) — archives ZIP par défaut, ou séquences WAV. Ce n'est plus l'espace disque qui
+/// Réglages ▸ Dépôt) : archives ZIP par défaut, ou séquences WAV. Ce n'est plus l'espace disque qui
 /// tranche : il ne fait plus que **refuser** un dépôt ZIP qu'il ne peut pas honorer. `--archives` et
 /// `--wav` priment sur le réglage pour un dépôt ponctuel.
 ///
@@ -95,7 +95,7 @@ public final class DeposerVigieChiro implements Callable<Integer> {
                 () -> new RegleMetierException("Dépôt Vigie-Chiro indisponible dans ce contexte d'exécution."));
         if (token != null && !token.isBlank()) {
             // Jeton ponctuel : consulté par le client à chaque requête (cf. ConnexionModule), sans rien
-            // persister — la connexion enregistrée de l'application n'est pas modifiée.
+            // persister : la connexion enregistrée de l'application n'est pas modifiée.
             System.setProperty("vigiechiro.token", token);
         }
         SourceDepot source = choisirSource();
@@ -110,7 +110,7 @@ public final class DeposerVigieChiro implements Callable<Integer> {
     ///
     /// `--archives` ne ramène **pas** la liste des ZIP présents sur le disque : il force le mode ZIP, dont
     /// la source est régénérable (#1994). Sans cela, l'option échouait dès qu'une archive avait été
-    /// libérée — ce qui est désormais le cas normal après un dépôt, puisque le pipeline libère au fil de
+    /// libérée : ce qui est désormais le cas normal après un dépôt, puisque le pipeline libère au fil de
     /// l'eau (#1995). Elle reproduisait donc exactement le défaut que ce chantier a fermé côté service.
     private SourceDepot choisirSource() {
         if (archives) {
@@ -157,7 +157,7 @@ public final class DeposerVigieChiro implements Callable<Integer> {
     }
 
     /// Suivi console du dépôt : une ligne par unité, écrite au fil de l'eau (le moteur émet sur le fil
-    /// d'appel — pas de relais nécessaire en CLI, contrairement à l'IHM).
+    /// d'appel : pas de relais nécessaire en CLI, contrairement à l'IHM).
     /// Visible du paquet pour que le test puisse vérifier ce que chaque évènement imprime - la reprise
     /// notamment, qu aucun test ne pouvait atteindre tant que ce type était privé.
     record SuiviConsole(PrintWriter sortie) implements SuiviDepot {

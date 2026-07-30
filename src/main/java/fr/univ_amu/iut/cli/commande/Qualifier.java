@@ -16,7 +16,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 /// `qualifier` (#617) : pose le **verdict de vérification** d'un passage (`ok` / `utilisable` / `inexploitable`),
-/// après écoute — première moitié de la clôture, avant `deposer`. Réutilise [ServicePassage#poserVerdict]
+/// après écoute : première moitié de la clôture, avant `deposer`. Réutilise [ServicePassage#poserVerdict]
 /// sans logique nouvelle. Un commentaire de vérification optionnel est joint via une copie du passage
 /// (`poserVerdict` préserve le commentaire du passage qu'on lui donne). Les refus métier (passage
 /// introuvable, passage déjà déposé donc verdict figé) sortent en échec d'exécution (code 1) ; un verdict

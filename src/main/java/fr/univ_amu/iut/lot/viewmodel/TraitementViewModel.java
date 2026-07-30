@@ -17,10 +17,10 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 /// nuit déposée, et ce que l'observateur peut en faire.
 ///
 /// Séparé de `LotViewModel`, déjà au plafond de complexité : y ajouter le suivi l'aurait fait basculer en
-/// God Class — le même motif qui avait fait naître `DepotViewModel`.
+/// God Class : le même motif qui avait fait naître `DepotViewModel`.
 ///
 /// **L'application ne surveille pas le serveur.** Elle relit son état quand on ouvre l'écran, après un
-/// lancement, ou quand on le lui demande — jamais en boucle. Un calcul dure des dizaines de minutes : un
+/// lancement, ou quand on le lui demande, jamais en boucle. Un calcul dure des dizaines de minutes : un
 /// sondage périodique ne serait que du bruit, et le site officiel n'en fait pas davantage.
 ///
 /// Hors connexion, la zone affiche le **dernier état connu** (cache #1262) plutôt que rien, en disant
@@ -43,7 +43,7 @@ public class TraitementViewModel {
     private final ReadOnlyBooleanWrapper enCours = new ReadOnlyBooleanWrapper(false);
 
     /// La nuit a **déjà été analysée** : relancer le calcul effacerait ses observations sans pouvoir les
-    /// recalculer (#1244) — le bouton de lancement doit être gardé (#1261).
+    /// recalculer (#1244) : le bouton de lancement doit être gardé (#1261).
     private final ReadOnlyBooleanWrapper relanceBloquee = new ReadOnlyBooleanWrapper(false);
 
     @Inject

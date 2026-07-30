@@ -12,7 +12,7 @@ import java.util.List;
 ///
 /// **L'étape ② n'est plus un passage obligé** (#1998). Depuis que le téléversement produit lui-même les
 /// archives dont il a besoin, au fil de l'eau et en les libérant (#1995), générer d'abord ne sert plus
-/// qu'au **dépôt manuel** — donc hors connexion. Le stepper le dit : connecté, l'étape courante après la
+/// qu'au **dépôt manuel**, donc hors connexion. Le stepper le dit : connecté, l'étape courante après la
 /// préparation est ③ « Téléverser ».
 final class EtapesDepot {
 
@@ -58,7 +58,7 @@ final class EtapesDepot {
         }
         if (statut == StatutWorkflow.PRET_A_DEPOSER) {
             // Connecté : le téléversement génère lui-même ce dont il a besoin (#1995), donc l'étape ③ est
-            // atteignable sans passer par ② — qui ne sert plus qu'à préparer un dépôt manuel. Annoncer
+            // atteignable sans passer par ② : qui ne sert plus qu'à préparer un dépôt manuel. Annoncer
             // « Générer les archives » comme étape courante ferait attendre pour rien.
             return depotAutomatiqueDisponible || archivesGenerees ? 3 : 2;
         }

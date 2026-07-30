@@ -52,7 +52,7 @@ final class ResolveurSourceAudio {
     /// != null` sur les observations évite un **doublon** : une séquence validée à la main possède une
     /// observation (donc listée par `lignesAudioDuPassage`) **mais reste** dans `lignesAudioNonIdentifiees`
     /// (elle n'a jamais eu de proposition Tadarida). Les deux ensembles se partitionnent ainsi exactement sur
-    /// la nullité de `taxonTadarida` — le prédicat même de la vue « Sons non identifiés ».
+    /// la nullité de `taxonTadarida` : le prédicat même de la vue « Sons non identifiés ».
     private List<LigneObservationAudio> lignesDuPassage(Long idPassage) {
         Stream<LigneObservationAudio> tadarida =
                 projections.lignesAudioDuPassage(idPassage).stream().filter(ligne -> ligne.taxonTadarida() != null);

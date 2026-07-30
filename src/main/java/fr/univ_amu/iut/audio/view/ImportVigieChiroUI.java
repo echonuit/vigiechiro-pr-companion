@@ -96,7 +96,7 @@ final class ImportVigieChiroUI {
     /// avant d'importer. Sans passage (source non ciblée), ne fait rien.
     ///
     /// La brève lecture des participations passe par `occupation` (voile « … en cours »). L'**import**
-    /// lui-même — qui peut brasser des milliers de fichiers — passe par `dialogue` : une **modale de
+    /// lui-même (qui peut brasser des milliers de fichiers) passe par `dialogue` : une **modale de
     /// progression annulable** ([SuiviOperation], #1622) au-dessus de `proprietaire`, qui montre l'avancement
     /// page par page et laisse renoncer, plutôt qu'un voile opaque.
     static void lancer(

@@ -18,13 +18,13 @@ import java.util.regex.Pattern;
 /// **Vérification a posteriori d’un dépôt** (#1132) : confronte le plan local (`depot_unite`) à ce
 /// que la plateforme a **réellement traité**, via deux sources en lecture seule :
 ///
-///  - le **journal de traitement** de la participation ([ClientVigieChiro#journalTraitement]) — il
+///  - le **journal de traitement** de la participation ([ClientVigieChiro#journalTraitement]) : il
 ///    nomme chaque archive extraite (avec inventaire) et chaque WAV passé à Tadarida ; c’est la
 ///    seule source capable de vérifier un dépôt en **ZIP** ;
 ///  - les **titres des `donnees`** Tadarida (nom du WAV **sans extension**), en recoupement.
 ///
 /// Limite (comme la réconciliation #1046) : ces traces n’existent qu’**après** le traitement
-/// serveur — un fichier téléversé mais pas encore traité est « manquant » jusqu’au prochain passage
+/// serveur : un fichier téléversé mais pas encore traité est « manquant » jusqu’au prochain passage
 /// du pipeline. La vérification ne modifie **rien** (ni localement, ni côté plateforme).
 public final class VerificationDepot {
 

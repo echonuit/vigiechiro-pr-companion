@@ -199,7 +199,7 @@ public final class CaptureImport {
 
         capturerAvertissementsRattachement(vm, scene, sortie);
 
-        // État « import terminé AVEC rapport » (#155) : import résilient — la liste des fichiers rejetés
+        // État « import terminé AVEC rapport » (#155) : import résilient, la liste des fichiers rejetés
         // (illisible, format invalide) et leur raison s'affiche sous le message de succès.
         vm.inspection().dossierSourceProperty().set(dossierSd);
         vm.inspecter();

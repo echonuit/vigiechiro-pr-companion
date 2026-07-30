@@ -75,7 +75,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     private final PreferenceConservation conservation;
 
     /// Socle « travail lourd hors fil JavaFX » (#1014, étendu #1252) : décompression et imports passent
-    /// par lui plutôt que par un `Thread.ofVirtual()` maison (#1256) — progression et suivi par fichier
+    /// par lui plutôt que par un `Thread.ofVirtual()` maison (#1256) : progression et suivi par fichier
     /// reviennent par ses relais, l'annulation coopérative conclut par `marquerAnnule`, et les tests
     /// sont **synchrones**.
     private final ExecuteurTache executeur;
@@ -294,7 +294,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     }
 
     /// Départ de l'écran (#230) : si un `.zip` avait été décompressé puis abandonné (préparation jamais
-    /// lancée), son dossier temporaire — potentiellement plusieurs Go — est supprimé maintenant.
+    /// lancée), son dossier temporaire (potentiellement plusieurs Go) est supprimé maintenant.
     @Override
     public void auDepartEcran() {
         viewModel.nettoyerAuDepart();
@@ -417,7 +417,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         barreProgression.progressProperty().bind(viewModel.progression().fractionProperty());
         labelProgression.textProperty().bind(viewModel.progression().messageProperty());
         // Table de suivi par fichier (#947) : visible seulement quand un plan de nuit est établi (liaison
-        // vivante sur la liste, pas un drapeau figé) — donc masquée pendant la décompression d'un .zip.
+        // vivante sur la liste, pas un drapeau figé), donc masquée pendant la décompression d'un .zip.
         TableSuiviFichiers.configurer(tableFichiers);
         // Sélecteur de colonnes (#1800) : cette table n'avait aucun menu contextuel. Pas de persistance ici,
         // l'écran d'import étant transitoire (la liste ne survit pas à l'import).

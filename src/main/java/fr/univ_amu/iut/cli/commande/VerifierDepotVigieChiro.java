@@ -13,7 +13,7 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 /// `verifier-depot-vigiechiro` (#1132) : confronte le plan de dépôt local d’un passage à ce que la
-/// plateforme a **réellement traité** — journal de traitement de la participation (archives
+/// plateforme a **réellement traité** : journal de traitement de la participation (archives
 /// extraites, WAV passés à Tadarida) et titres des `donnees`. Lecture seule : rien n’est modifié.
 /// Compagnon naturel de `deposer-vigiechiro` : après le traitement serveur (24-48 h), cette commande
 /// donne le verdict fichier par fichier.

@@ -51,7 +51,7 @@ public class CopieProtegee {
     /// plus courant en pratique (un workspace de plusieurs Go) : on le reconnaît pour donner une consigne
     /// actionnable (« libérez de la place ») plutôt que l'opaque « Échec de la copie protégée ». Pour toute
     /// autre `IOException`, la cause technique est **jointe** au message (au lieu d'être masquée), afin que
-    /// l'utilisateur — et le support — voient la vraie raison.
+    /// l'utilisateur (et le support) voient la vraie raison.
     ///
     /// Statique et publique pour être testable directement, sans provoquer une vraie panne d'espace disque.
     public static String messageEchec(Path source, String messageCause) {

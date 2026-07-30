@@ -63,7 +63,7 @@ public class AudioModule extends ModuleDeFeature {
         // Port EspecesPrioritaires (#2353) : cette feature CONSOMME le référentiel des espèces à enjeu,
         // détenu par `validation` (table latérale du référentiel taxonomique). Défaut **vide** ici, liaison
         // réelle posée par ValidationModule dans l'application complète. Un injecteur partiel (capture,
-        // test d'écran) reste ainsi construisible : sans référentiel, aucune ligne n'est marquée — ce qui
+        // test d'écran) reste ainsi construisible : sans référentiel, aucune ligne n'est marquée, ce qui
         // est exactement ce que dit une base sans espèce prioritaire, et non une anomalie.
         OptionalBinder.newOptionalBinder(binder(), EspecesPrioritaires.class)
                 .setDefault()

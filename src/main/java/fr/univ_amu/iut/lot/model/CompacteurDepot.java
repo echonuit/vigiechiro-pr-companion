@@ -34,14 +34,14 @@ import java.util.zip.ZipOutputStream;
 /// compressibles (blocs « stored » + overhead) et le format ZIP ajoute des en-têtes (local + répertoire
 /// central + descripteur). Le coût réel de chaque entrée est donc majoré, avec une marge pour le répertoire
 /// de fin (EOCD) ; en dernier recours, la taille réelle de l'archive est **vérifiée après écriture**
-/// ([#verifierTaille]) — défense en profondeur si l'estimation était prise en défaut.
+/// ([#verifierTaille]) : défense en profondeur si l'estimation était prise en défaut.
 ///
 /// **Mémoire bornée** (#104) : chaque fichier est recopié **en flux** dans l'archive ([Files#copy]
 /// vers le [ZipOutputStream]), jamais chargé entièrement en mémoire.
 public final class CompacteurDepot {
 
     /// Plafond de taille d'une archive de dépôt **par défaut** : **700 Mo**. Base 1000 (et non 2^20) par
-    /// prudence — c'est la borne basse d'une éventuelle interprétation « 700 Mio » côté plateforme, donc
+    /// prudence : c'est la borne basse d'une éventuelle interprétation « 700 Mio » côté plateforme, donc
     /// on reste conforme dans tous les cas. Surchargeable via le constructeur (réglage applicatif #110).
     public static final long TAILLE_MAX_DEFAUT_OCTETS = 700L * 1000 * 1000;
 
@@ -97,7 +97,7 @@ public final class CompacteurDepot {
 
     /// Variante avec **suivi de progression** (#769) : `progres` est notifié après chaque fichier compressé
     /// (« Compression X/N · fichier », fraction globale 0→1), pour qu'une barre déterminée + une estimation
-    /// de durée s'affichent côté IHM. Appelé sur le fil d'exécution de la génération — la couche IHM relaie
+    /// de durée s'affichent côté IHM. Appelé sur le fil d'exécution de la génération : la couche IHM relaie
     /// au fil JavaFX. Même contrat (plafond, atomicité, garde-fou disque) que la variante sans callback.
     ///
     /// @throws RegleMetierException si un fichier dépasse à lui seul le plafond, ou si l'espace disque est

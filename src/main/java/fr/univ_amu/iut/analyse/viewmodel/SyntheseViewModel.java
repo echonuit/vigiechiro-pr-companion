@@ -20,7 +20,7 @@ import javafx.collections.ObservableList;
 /// ViewModel de la **synthèse d'une nuit** (#2351) : le tableau par espèce, et ce à quoi il compare.
 ///
 /// Deux commandes seulement, et toutes deux **recalculent l'ensemble** : la bascule « identifications
-/// validées seulement » et le choix du milieu. Rien n'est masqué — c'est un recalcul, parce que changer
+/// validées seulement » et le choix du milieu. Rien n'est masqué : c'est un recalcul, parce que changer
 /// l'un ou l'autre change les contacts retenus, donc la classe d'activité de chaque espèce. Deux
 /// lectures cohabitent volontairement : ce que la machine propose, et ce que l'observateur a confirmé.
 public class SyntheseViewModel {
@@ -128,7 +128,7 @@ public class SyntheseViewModel {
     }
 
     /// Les lignes à exporter : **exactement celles affichées**, bascule et milieu compris. L'export ne
-    /// refait pas le calcul de son côté — un fichier qui ne correspondrait pas à l'écran d'où on l'a
+    /// refait pas le calcul de son côté : un fichier qui ne correspondrait pas à l'écran d'où on l'a
     /// demandé serait pire qu'absent.
     public List<LigneSynthese> lignesExport() {
         return List.copyOf(lignes);

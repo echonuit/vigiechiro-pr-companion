@@ -37,7 +37,7 @@ import java.util.function.BooleanSupplier;
 /// **uniquement les unités restantes**, en persistant chaque succès/échec **au fil de l'eau**.
 ///
 /// Statuts honnêtes (#980) : le passage bascule « Dépôt en cours » dès qu'un téléversement est entamé
-/// (reprise comprise), et « Déposé » **seulement** quand toutes les unités sont `depose` — jamais sur
+/// (reprise comprise), et « Déposé » **seulement** quand toutes les unités sont `depose` : jamais sur
 /// un dépôt partiel. Une interruption (annulation coopérative, coupure, fermeture) laisse « Dépôt en
 /// cours » : la prochaine tentative reprend là où elle s'était arrêtée.
 ///
@@ -122,17 +122,17 @@ public final class DepotVigieChiro {
     ///
     /// ⚠️ **Une relance n'est pas un simple « réessayer ».** À chaque compute, le serveur **supprime toutes
     /// les `donnees` avant de recalculer** (`task_participation.py:726-731`). Sur une nuit déposée en
-    /// **archives ZIP** — le mode par défaut depuis #984 — les WAV extraits ne sont pas conservés sur S3
+    /// **archives ZIP** (le mode par défaut depuis #984) les WAV extraits ne sont pas conservés sur S3
     /// (#1244) : le recalcul ne peut donc pas les relire, et les observations sont **définitivement
     /// perdues**. Tant que la participation n'a **jamais** été calculée, le lancement est sûr ; ensuite, il
     /// détruit. D'où la garde : `forcer` doit être demandé explicitement (option `--forcer`, #1265), en
     /// connaissance de cause.
     ///
     /// La garde est **locale** : on relit l'état du traitement et on refuse de notre propre chef, sans rien
-    /// demander au serveur (qui, lui, accepterait — il l'accepte volontiers passé 24 h).
+    /// demander au serveur (qui, lui, accepterait : il l'accepte volontiers passé 24 h).
     ///
     /// **Fail-safe depuis #1284** : si l'état ne peut pas être **lu** (injoignable, refus), on ne lance
-    /// pas sans `forcer` — avant, un simple délai réseau au moment de la relecture faisait passer la
+    /// pas sans `forcer` : avant, un simple délai réseau au moment de la relecture faisait passer la
     /// garde, et un compute parti malgré tout aurait détruit les observations d'une nuit ZIP. Ne pas
     /// pouvoir prouver que le lancement est sûr, c'est ne pas lancer.
     public ResultatLancement lancerTraitement(Long idPassage, boolean forcer) {
@@ -178,7 +178,7 @@ public final class DepotVigieChiro {
 
     /// Dépose la nuit `idPassage` : réutilise ou crée sa participation, synchronise le plan de dépôt,
     /// bascule « Dépôt en cours », puis (re)téléverse les unités restantes **en parallèle** (jusqu'à
-    /// [#NB_UPLOADS_PARALLELES] simultanées, comme le front web) — `annule` est consulté **avant chaque
+    /// [#NB_UPLOADS_PARALLELES] simultanées, comme le front web) : `annule` est consulté **avant chaque
     /// unité** (annulation coopérative : les unités non entamées restent reprenables), `suivi` est
     /// notifié au fil de l'eau (hors fil JavaFX, émissions concurrentes). À la fin, « Déposé » seulement
     /// si toutes les unités sont en ligne.
@@ -194,7 +194,7 @@ public final class DepotVigieChiro {
 
         String participationId =
                 participations.participationDe(idPassage).orElseGet(() -> creerParticipation(idPassage));
-        // Pré-vol (#1046) : la participation (liée ou fraîchement créée) doit correspondre au passage —
+        // Pré-vol (#1046) : la participation (liée ou fraîchement créée) doit correspondre au passage :
         // même point, même nuit. Refus explicite sinon : on ne poste jamais « la mauvaise nuit au
         // mauvais endroit » (participations héritées du bug de date, rattachement manuel erroné…).
         verifierCorrespondance(idPassage);
@@ -237,7 +237,7 @@ public final class DepotVigieChiro {
     /// Traite une unité dans un worker du dépôt parallèle (#984) : respecte l'annulation coopérative
     /// (unité laissée « à déposer », donc reprenable), délègue à [#televerserUne], puis consigne le
     /// résultat dans les accumulateurs **partagés et thread-safe**. Toute exception inattendue (écriture
-    /// DB, I/O) est convertie en échec pour ne pas faire tomber le lot entier — le plan reprenable
+    /// DB, I/O) est convertie en échec pour ne pas faire tomber le lot entier : le plan reprenable
     /// reprendra l'unité au prochain essai.
     private void deposerUneUnite(
             DepotUnite unite,
@@ -398,7 +398,7 @@ public final class DepotVigieChiro {
     }
 
     /// Pré-vol du dépôt (#1046) : refuse si la participation liée ne correspond pas au passage local
-    /// (point, nuit) — le détail des écarts est remonté tel quel (IHM et CLI l'affichent).
+    /// (point, nuit) : le détail des écarts est remonté tel quel (IHM et CLI l'affichent).
     private void verifierCorrespondance(Long idPassage) {
         List<String> ecarts = participations.ecartsAvecDistant(idPassage);
         if (!ecarts.isEmpty()) {

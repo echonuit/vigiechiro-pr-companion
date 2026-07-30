@@ -25,10 +25,10 @@ import java.util.zip.ZipInputStream;
 /// paramètre), et non dans `java.io.tmpdir`. Sur la plupart des postes `/tmp` est un *tmpfs* monté en
 /// RAM, souvent borné à quelques Go : une vraie nuit de terrain (~10 Go décompressés) le saturerait et
 /// l'extraction échouerait en `ENOSPC`. Le workspace vit sur le disque, là où l'import recopie ensuite
-/// les fichiers — l'extraction et l'import partagent donc le même volume.
+/// les fichiers : l'extraction et l'import partagent donc le même volume.
 ///
 /// **Mémoire bornée** (#104) : chaque entrée est recopiée en **flux** ([java.io.InputStream#transferTo],
-/// tampon interne), jamais chargée entière en mémoire — un zip volumineux ne sature donc pas le tas.
+/// tampon interne), jamais chargée entière en mémoire : un zip volumineux ne sature donc pas le tas.
 ///
 /// **Garde « zip-slip »** : une entrée dont le chemin s'évaderait du dossier d'extraction (`../…`) est
 /// refusée, pour ne pas écrire hors de la zone temporaire.

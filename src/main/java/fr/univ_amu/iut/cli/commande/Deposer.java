@@ -12,7 +12,7 @@ import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
-/// `deposer` (#617) : clôture le workflow d'un passage — **prépare le lot** ([ServiceLot#preparerLot],
+/// `deposer` (#617) : clôture le workflow d'un passage, **prépare le lot** ([ServiceLot#preparerLot],
 /// transition Vérifié → Prêt à déposer, avec les gardes métier : R14 « Inexploitable », cohérence bloquante) puis
 /// le **marque déposé** ([ServiceLot#marquerDepose], Prêt à déposer → Déposé). Réutilise `ServiceLot` sans
 /// logique nouvelle. Tout refus métier (statut incompatible, passage « Inexploitable », session introuvable)

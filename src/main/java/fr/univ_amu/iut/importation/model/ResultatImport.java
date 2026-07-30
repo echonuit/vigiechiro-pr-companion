@@ -16,7 +16,7 @@ import java.util.List;
 /// @param nombreOriginaux nombre d'enregistrements originaux importés
 /// @param nombreSequences nombre total de séquences d'écoute produites (R10)
 /// @param anomalies anomalies relevées dans le journal du capteur (R19), éventuellement vide
-/// @param rapport rapport d'import résilient — importés / ignorés / rejetés (#155)
+/// @param rapport rapport d'import résilient : importés / ignorés / rejetés (#155)
 /// @param volumes volumes lus et écrits par cet import (#2358) ; [VolumesImport#AUCUN] si non mesurés
 /// @param participationCreee `true` si l'import a créé une **participation sur Vigie-Chiro** (#1488).
 ///     L'écriture est faite après la persistance locale, en best-effort ; elle n'était annoncée nulle

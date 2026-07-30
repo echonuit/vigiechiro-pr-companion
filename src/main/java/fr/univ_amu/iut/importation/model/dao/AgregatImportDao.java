@@ -110,7 +110,7 @@ public class AgregatImportDao {
     /// Plus petit n° de **départ** `N` (≥ 1) tel que `N, N+1, …, N+taille-1` soient **tous libres** pour ce
     /// point et cette année : le premier **bloc de `taille` n° consécutifs** non utilisés. Comble les trous
     /// tout en respectant la **consécutivité** exigée par l'import multi-nuits (p. ex. avec 1, 3, 5, 7 et
-    /// `taille = 3`, propose **8** — les trous 2/4/6 étant isolés). `taille ≤ 1` équivaut au prochain n°
+    /// `taille = 3`, propose **8** : les trous 2/4/6 étant isolés). `taille ≤ 1` équivaut au prochain n°
     /// libre simple.
     public int prochainBlocPassagesLibre(Long idPoint, int annee, int taille) {
         int besoin = Math.max(1, taille);

@@ -16,9 +16,9 @@ import java.util.List;
 /// Un CSV quitte l'application pour vivre dans un tableur, loin de l'écran qui portait la mise en garde.
 /// Trois choses l'accompagnent donc, en tête de fichier :
 ///
-/// 1. **le contexte** — à quoi les nombres ont été comparés (déclinaison, saison, périmètre) ;
-/// 2. **l'avertissement** — ce qu'une classe d'activité ne dit pas ;
-/// 3. **la citation** — la source est libre d'usage *avec citation obligatoire*.
+/// 1. **le contexte** : à quoi les nombres ont été comparés (déclinaison, saison, périmètre) ;
+/// 2. **l'avertissement** : ce qu'une classe d'activité ne dit pas ;
+/// 3. **la citation** : la source est libre d'usage *avec citation obligatoire*.
 ///
 /// C'est la règle que la maquette M-Synthese formule le mieux : **si l'avertissement ne voyage pas avec
 /// la donnée, il ne sert à rien**. Un tableur ouvert trois mois plus tard, par quelqu'un qui n'a jamais
@@ -60,7 +60,7 @@ public final class ExportSyntheseCsv {
 
     /// Contenu complet : bloc de contexte, avertissement, citation, puis en-têtes et lignes.
     ///
-    /// Une nuit sans espèce produit le bloc de tête et les en-têtes seuls — résultat valide, et bien plus
+    /// Une nuit sans espèce produit le bloc de tête et les en-têtes seuls : résultat valide, et bien plus
     /// parlant qu'un fichier vide.
     public static String contenu(List<LigneSynthese> lignes, ContexteActivite contexte) {
         StringBuilder csv = new StringBuilder(BOM);
@@ -85,7 +85,7 @@ public final class ExportSyntheseCsv {
     }
 
     /// Une ligne du tableau. Les colonnes de seuils restent **vides** quand il n'y a pas de classe : dans
-    /// un CSV, une cellule vide se lit comme une absence de donnée, ce qui est exactement le cas — et la
+    /// un CSV, une cellule vide se lit comme une absence de donnée, ce qui est exactement le cas, et la
     /// colonne « Activité », elle, **dit pourquoi** ([LigneSynthese#libelleClasse()]).
     private static List<String> champs(LigneSynthese ligne) {
         return List.of(

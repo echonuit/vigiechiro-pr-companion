@@ -7,7 +7,7 @@ import fr.univ_amu.iut.commun.model.EspaceDisque;
 ///
 /// Ils n'ont d'existence que pour construire les collaborateurs internes de [ServiceImport]
 /// ([PreparationOriginaux], [DecoupageParallele], [MoteurImport]) : les regrouper évite d'étaler quatre
-/// dépendances de plus sur une signature qui en portait déjà onze, et dit ce qu'elles ont en commun —
+/// dépendances de plus sur une signature qui en portait déjà onze, et dit ce qu'elles ont en commun :
 /// ce sont les **moyens d'écriture** de l'import, par opposition aux DAO, à l'horloge ou au workspace.
 ///
 /// C'est aussi ce qui rend le garde-fou d'espace disque **testable** (#2041) : un test injecte un

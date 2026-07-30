@@ -499,7 +499,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     }
 
     /// Affiche le panneau détail (et restaure la position du séparateur) en regroupement **Par espèce**,
-    /// le retire du `SplitPane` sinon — la table des carrés récupère alors toute la hauteur.
+    /// le retire du `SplitPane` sinon : la table des carrés récupère alors toute la hauteur.
     private void afficherDetail(Regroupement regroupement) {
         boolean parEspece = regroupement == Regroupement.PAR_ESPECE;
         if (parEspece && !separateur.getItems().contains(panneauDetail)) {

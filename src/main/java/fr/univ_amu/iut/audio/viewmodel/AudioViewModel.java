@@ -41,11 +41,11 @@ import javafx.collections.transformation.FilteredList;
 /// L'ensemble est décrit par une [SourceObservations] (passage / lot de passages / espèce / corpus de
 /// référence) que le VM **résout** en `List<LigneObservationAudio>` via [ServiceValidation], puis pilote :
 /// sélection, chemin audio courant (E7.S3), valider (R15/R18), corriger (R16), **basculer la référence**
-/// (`is_reference`, action commune à toutes les sources), et — pour la seule source `ParPassage` —
+/// (`is_reference`, action commune à toutes les sources), et, pour la seule source `ParPassage` :
 /// l'import du CSV Tadarida (R23) et l'export `_Vu` (R17). L'export de la bibliothèque (source
 /// `References`) sera branché avec la vue.
 ///
-/// Feature **`audio`** (puits) : dépend des **modèles** des features `validation` et — à terme —
+/// Feature **`audio`** (puits) : dépend des **modèles** des features `validation` et, à terme :
 /// `bibliotheque`, jamais de leur `view`/`viewmodel` ; aucune feature ne dépend de `audio`, le graphe de
 /// slices reste acyclique. VM agnostique de l'IHM (`viewmodel_sans_javafx_ui` : seuls `javafx.beans` /
 /// `javafx.collections`). Non-singleton.
@@ -263,7 +263,7 @@ public class AudioViewModel {
 
     /// Importe un CSV Tadarida (R23) pour le passage courant, puis recharge. Réservé à la source
     /// `ParPassage`. Si un jeu de résultats existe déjà : l'import est **refusé** sauf si `remplacer` est
-    /// vrai — auquel cas le jeu existant (et ses observations, cascade) est **supprimé** avant d'importer
+    /// vrai : auquel cas le jeu existant (et ses observations, cascade) est **supprimé** avant d'importer
     /// le nouveau (réimport, confirmation gérée par la vue). Sans passage ni fichier, l'appel est ignoré.
     ///
     /// @param cheminCsv fichier CSV choisi par l'observateur
