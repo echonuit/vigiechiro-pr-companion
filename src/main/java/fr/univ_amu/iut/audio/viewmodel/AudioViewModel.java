@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
-import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.SondeAccessibilite;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
@@ -65,6 +64,9 @@ public class AudioViewModel {
 
     private final ResolveurSourceAudio resolveur;
     private final ExporteurAudio exporteur;
+
+    /// Flux du geste ZIP (#2793), exposé à la vue (patron « positionsEnAttente » du multisite).
+    private final FluxExportsAudio exports;
 
     /// Actions de revue (unitaires + en lot), déléguées à un collaborateur pour que le VM garde la seule
     /// orchestration (cohésion, seuil PMD). Voir [ActionsRevueAudio].
@@ -141,7 +143,7 @@ public class AudioViewModel {
             MarquageDouteux marquageDouteux,
             SaisieCertitude saisieCertitude,
             RevueEnLot revueEnLot,
-            ServiceBibliotheque bibliotheque,
+            ExporteurAudio exporteur,
             ServiceDisponibiliteAudio disponibilite,
             Predicate<Path> fichierPresent,
             DiscussionValidateur discussion) {
@@ -149,7 +151,8 @@ public class AudioViewModel {
         this.discussion = Objects.requireNonNull(discussion, "discussion");
         this.disponibiliteEcoute = new DisponibiliteEcoute(disponibilite, fichierPresent);
         this.resolveur = new ResolveurSourceAudio(service, projectionsAudio, plageNuitPassage);
-        this.exporteur = new ExporteurAudio(service, bibliotheque);
+        this.exporteur = Objects.requireNonNull(exporteur, "exporteur");
+        this.exports = new FluxExportsAudio(exporteur, messages, () -> List.copyOf(observationsFiltrees));
         this.actions = new ActionsRevueAudio(
                 service,
                 Objects.requireNonNull(validationManuelle, "validationManuelle"),
@@ -308,16 +311,10 @@ public class AudioViewModel {
         return resultat.reussi();
     }
 
-    /// Exporte en **CSV** les observations **actuellement affichées** (filtres appliqués) vers
-    /// `destination` (#149). Le sous-ensemble est **figé** au moment de l'appel. Le bilan (ou l'erreur
-    /// d'écriture) est restitué dans le message.
-    ///
-    /// @param destination fichier CSV cible choisi par l'observateur
-    /// @return `true` si le fichier a été écrit
-    public boolean exporterObservations(Path destination) {
-        ExporteurAudio.ResultatExport resultat = exporteur.observations(List.copyOf(observationsFiltrees), destination);
-        messages.export(resultat.reussi(), resultat.message());
-        return resultat.reussi();
+    /// Les exports du sous-ensemble affiché (#149, #2793), pilotés par la vue : CSV seul, ou
+    /// archive « observations + sons » (préparation, écriture hors fil, restitutions par issue).
+    public FluxExportsAudio exports() {
+        return exports;
     }
 
     /// Recharge les lignes de la source courante en **préservant la sélection**, puis met à jour compteurs

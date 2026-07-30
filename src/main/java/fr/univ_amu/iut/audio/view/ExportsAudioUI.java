@@ -30,7 +30,7 @@ final class ExportsAudioUI {
         selecteur
                 .enregistrerFichier(
                         "Exporter les observations affichées (CSV)", "observations.csv", FiltreFichier.csv())
-                .ifPresent(viewModel::exporterObservations);
+                .ifPresent(destination -> viewModel.exports().observationsCsv(destination));
     }
 
     /// Exporte la **bibliothèque de sons de référence** vers un dossier choisi (P10).

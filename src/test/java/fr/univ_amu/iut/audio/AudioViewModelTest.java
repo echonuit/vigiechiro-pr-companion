@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
+import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.bibliotheque.model.ExportBiblioSons;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -18,7 +19,10 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
+import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.BilanImport;
+import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ModeRevue;
@@ -77,6 +81,12 @@ class AudioViewModelTest {
     @Mock
     ServiceDisponibiliteAudio disponibilite;
 
+    @Mock
+    SequenceDao sequenceDao;
+
+    @Mock
+    SessionDao sessionDao;
+
     private static final ContextePassage PASSAGE_7 =
             new ContextePassage(7L, 1, new ContexteSite("640380", "A1", "Mon site"));
 
@@ -94,7 +104,7 @@ class AudioViewModelTest {
                 marquageDouteux,
                 saisieCertitude,
                 revueEnLot,
-                bibliotheque,
+                new ExporteurAudio(service, bibliotheque, new ExportObservationsEtSons(sequenceDao, sessionDao)),
                 disponibilite,
                 fichierPresent,
                 mock(DiscussionValidateur.class));
@@ -706,6 +716,71 @@ class AudioViewModelTest {
 
             assertThat(vm.actions().marquerReferenceLot(List.of(3L, 4L), true)).isEqualTo(2);
             verify(revueEnLot).marquerReference(List.of(3L, 4L), true);
+        }
+    }
+
+    @Nested
+    @DisplayName("Export « observations + sons » (#2793)")
+    class ExportSons {
+
+        @Test
+        @DisplayName("preparerExportSons refuse une destination au dossier inutilisable AVANT la modale (#2426)")
+        void preparer_refuse_dossier_inutilisable(@TempDir Path racine) throws Exception {
+            Path fichier = Files.createFile(racine.resolve("pas-un-dossier.txt"));
+
+            AudioViewModel vm = vm();
+
+            assertThat(vm.exports().preparer(fichier.resolve("archive.zip"))).isEmpty();
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
+        }
+
+        @Test
+        @DisplayName("preparerExportSons fige le sous-ensemble affiché, sur le fil JavaFX")
+        void preparer_fige_le_sous_ensemble(@TempDir Path racine) {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(projections.lignesAudioDuPassage(7L))
+                    .thenReturn(List.of(ligne(1L, 1L, "Pippip", null, StatutObservation.NON_TOUCHEE, false)));
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(new SourceObservations.ParPassage(PASSAGE_7));
+
+            assertThat(vm.exports().preparer(racine.resolve("archive.zip")))
+                    .hasValueSatisfying(lignes -> assertThat(lignes).hasSize(1));
+        }
+
+        @Test
+        @DisplayName("L'export écrit l'archive et le bilan se confirme en message de succès")
+        void export_ecrit_et_se_confirme(@TempDir Path racine) {
+            when(service.especesPrioritaires()).thenReturn(java.util.Set.of());
+            when(sequenceDao.findById(1L)).thenReturn(Optional.empty());
+            Path archive = racine.resolve("observations-sons.zip");
+            AudioViewModel vm = vm();
+
+            String message = vm.exports()
+                    .exporter(
+                            List.of(ligne(1L, 1L, "Pippip", null, StatutObservation.NON_TOUCHEE, false)),
+                            archive,
+                            progression -> {},
+                            fr.univ_amu.iut.commun.model.JetonAnnulation.neutre());
+            vm.exports().confirmer(message);
+
+            assertThat(archive)
+                    .as("l'export ne se contente pas d'annoncer : il écrit")
+                    .exists();
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
+            assertThat(vm.retourProperty().get().texte()).contains("1 observation(s)");
+        }
+
+        @Test
+        @DisplayName("Annulation et échec se restituent chacun avec leur ton")
+        void annulation_et_echec_se_restituent() {
+            AudioViewModel vm = vm();
+
+            vm.exports().annulee();
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
+            assertThat(vm.retourProperty().get().texte()).contains("annulé");
+
+            vm.exports().echec(new java.io.UncheckedIOException(new java.io.IOException("disque plein")));
+            assertThat(vm.retourProperty().get().texte()).contains("disque plein");
         }
     }
 }

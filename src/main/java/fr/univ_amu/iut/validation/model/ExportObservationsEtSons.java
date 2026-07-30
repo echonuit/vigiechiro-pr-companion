@@ -83,9 +83,30 @@ public class ExportObservationsEtSons {
                     sequence.idSession(), id -> nomDossierUnique(id, dossiersParSession.values()));
             sons.add(new EcrivainZip.EntreeFichier("sons/" + dossier + "/" + sequence.nomFichier(), source));
         }
+        surProgression.accept(annonce(lignes.size(), sons));
         long octets = EcrivainZip.ecrire(
                 destination, List.of(new EcrivainZip.EntreeTexte(NOM_CSV, csv)), sons, surProgression, jeton);
         return new Bilan(lignes.size(), sons.size(), List.copyOf(introuvables), octets);
+    }
+
+    /// L'annonce qui ouvre la modale : ce que l'archive va contenir, volume compris (tailles lues
+    /// du disque, les fichiers viennent d'être vérifiés présents).
+    private static Progression annonce(int observations, List<EcrivainZip.EntreeFichier> sons) {
+        long octets = sons.stream().mapToLong(son -> taille(son.source())).sum();
+        return new Progression(
+                observations + " observation(s) · " + sons.size() + " son(s) · ~"
+                        + String.format(java.util.Locale.FRENCH, "%.1f Mo", octets / 1_048_576.0),
+                0.0);
+    }
+
+    /// La taille du fichier, ou `0` s'il est parti entre la vérification et l'annonce : le volume
+    /// annoncé est un ordre de grandeur, et l'écriture signalera la disparition mieux que l'annonce.
+    private static long taille(Path source) {
+        try {
+            return Files.size(source);
+        } catch (IOException disparu) {
+            return 0L;
+        }
     }
 
     /// Les séquences du sous-ensemble, **dédupliquées** dans l'ordre d'affichage (plusieurs

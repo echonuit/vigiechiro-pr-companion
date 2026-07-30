@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
+import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
@@ -29,7 +30,10 @@ import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
+import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -160,7 +164,10 @@ class SonsValidationArchiveViewTest {
                                 mock(MarquageDouteux.class),
                                 mock(SaisieCertitude.class),
                                 mock(RevueEnLot.class),
-                                mock(ServiceBibliotheque.class),
+                                new ExporteurAudio(
+                                        service,
+                                        mock(ServiceBibliotheque.class),
+                                        new ExportObservationsEtSons(mock(SequenceDao.class), mock(SessionDao.class))),
                                 disponibilite,
                                 PRESENT::equals,
                                 mock(DiscussionValidateur.class));

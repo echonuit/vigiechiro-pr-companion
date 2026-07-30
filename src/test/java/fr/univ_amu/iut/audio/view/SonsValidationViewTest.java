@@ -20,6 +20,7 @@ import com.google.inject.util.Modules;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
+import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.Certitude;
@@ -40,7 +41,10 @@ import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
+import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -212,7 +216,10 @@ class SonsValidationViewTest {
                                 mock(MarquageDouteux.class),
                                 saisieCertitude,
                                 revueEnLot,
-                                bibliotheque,
+                                new ExporteurAudio(
+                                        service,
+                                        bibliotheque,
+                                        new ExportObservationsEtSons(mock(SequenceDao.class), mock(SessionDao.class))),
                                 mock(ServiceDisponibiliteAudio.class),
                                 p -> true,
                                 mock(DiscussionValidateur.class));
