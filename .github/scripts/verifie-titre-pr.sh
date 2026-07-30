@@ -41,13 +41,20 @@ if [ "${TITRE}" = "--auto-test" ]; then
     }
     verifie 0 "docs(adr): un titre conforme et sans cadratin" "un titre conforme passe"
     verifie 1 "docs(adr): un titre ${CADRATIN} avec un cadratin" "un cadratin est refusé"
-    verifie 1 "docs(adr) : un espace avant les deux-points" "l espace avant ':' est refusé"
+    verifie 1 "docs(adr) : un espace avant les deux-points" "l'espace avant le deux-points est refusé"
     verifie 1 "un titre qui ignore Conventional Commits" "un titre non conventionnel est refusé"
     verifie 1 "" "un titre vide est refusé"
     # Épingle une DÉCISION, pas seulement un comportement : le titre n'exempte AUCUNE citation, là où
     # le garde des fichiers épargne le glyphe entre guillemets français. Qui voudrait aligner les deux
     # règles fera d'abord rougir ce cas, et lira la raison juste au-dessus.
     verifie 1 "fix(audio): le glyphe « — » ne se rend plus" "aucune exemption de citation dans un titre"
+    verifie 1 "docs(adr): 2843 renvoie vers l amendement" "une élision sans apostrophe est refusée"
+    verifie 1 "fix(cli): d une nuit a l autre" "plusieurs élisions, même refus"
+    # Contrôles NÉGATIFS : la règle doit rester étroite. Un code de point, un numéro et une élision
+    # correcte ne déclenchent pas, faute d'une lettre après l'espace ou faute d'espace.
+    verifie 0 "fix(passage): le point C3 et le carre A1 sont distincts" "un code de point ne déclenche pas"
+    verifie 0 "feat(cli): le n° 4 est traite" "un numéro ne déclenche pas"
+    verifie 0 "test(fixture): deux semeurs prennent l'entree legere" "une élision correcte ne déclenche pas"
     exit "${echecs}"
 fi
 
@@ -80,6 +87,33 @@ if printf '%s' "${TITRE}" | grep -qF "${CADRATIN}"; then
     echo "fichier que la règle typographique ne peut pas rattraper après coup : le corriger"
     echo "falsifierait le compte rendu de ce qui a été livré. C'est donc ici que ça se joue."
     echo "Cf. dev-docs/decisions/2843-typographie-cliquet-plutot-que-nettoyage.md"
+    exit 1
+fi
+
+# L'élision sans apostrophe. Ce défaut-ci ne vient pas d'une faute de frappe mais d'une HABITUDE :
+# écrire « l ADR », « d une nuit », « n est pas » pour survivre au quoting d'un shell, puis continuer
+# une fois la contrainte disparue. Le titre part ensuite tel quel dans le CHANGELOG publié.
+#
+# La règle est étroite à dessein : un mot d'UNE lettre élidable (ou « qu ») suivi d'une espace puis
+# d'une lettre. Mesurée sur les 250 derniers titres fusionnés du dépôt, elle en touche 12, et les 12
+# sont de vrais défauts : aucun faux positif. Les codes de point (« A1 », « C3 »), les numéros
+# (« n° 4 ») et les élisions correctes (« l'entrée », « qu'il ») ne déclenchent pas, faute d'une lettre
+# après l'espace ou d'une espace tout court.
+#
+# Ce qu'elle ne voit PAS, et c'est assumé : un accent manquant sur un mot qui existe aussi sans accent
+# (« garde » / « gardé », « complete » / « complète »). Aucun motif ne tranche sans dictionnaire, et un
+# garde à faux positifs se contourne. Pour ceux-là, il reste la relecture.
+ELISION="(^|[^[:alnum:]'’])([LlDdNnSsCcJjMmTt]|[Qq]u) +[[:alpha:]]"
+if printf '%s' "${TITRE}" | grep -qE "${ELISION}"; then
+    echo "::error::Le titre de la PR contient une élision sans apostrophe."
+    echo
+    echo "  écrit : ${TITRE}"
+    echo
+    echo "Rétablissez l'apostrophe : « l'ADR », « d'une nuit », « n'est pas », « qu'il »."
+    echo
+    echo "Ce titre devient la ligne du CHANGELOG publié. L'habitude d'amputer les apostrophes vient du"
+    echo "quoting shell ; elle survit à la disparition de sa cause, et cinq titres l'ont montré le"
+    echo "2026-07-30. Rédigez le titre en français correct, le quoting se règle autrement."
     exit 1
 fi
 
