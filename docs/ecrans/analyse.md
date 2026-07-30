@@ -17,7 +17,7 @@ Une table récapitule vos espèces. Un sélecteur **Regrouper** propose deux ang
   « Chiroptères »), le nombre de **détections**, de **passages**, de **carrés** et de **points** où elle
   apparaît, et sa **période** d'observation.
 - **Par carré** : une ligne par carré, avec sa **richesse spécifique** (nombre d'espèces distinctes) et son
-  total de détections — utile pour le rendu Vigie-Chiro.
+  total de détections : utile pour le rendu Vigie-Chiro.
 
 > Un **bouclier violet** devant un nom d'espèce signale une espèce **prioritaire** au sens du
 > [Plan National d'Actions Chiroptères](https://plan-actions-chiropteres.fr/) 2016-2025 : dix-neuf

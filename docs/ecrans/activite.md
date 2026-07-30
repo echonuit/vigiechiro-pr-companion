@@ -14,7 +14,7 @@ interprétation autant qu'il signale un problème de capteur.
 
 L'écran réunit :
 
-- une **courbe par espèce**, sur un axe horaire qui court de **18 h à 8 h** — et non de minuit à
+- une **courbe par espèce**, sur un axe horaire qui court de **18 h à 8 h** : et non de minuit à
   minuit, qui couperait la nuit en deux ;
 - l'**aplat de la fenêtre nocturne** (du coucher au lever du soleil au point d'écoute) : ce qui en
   déborde est de l'activité crépusculaire ou diurne ;
@@ -25,7 +25,7 @@ L'écran réunit :
   défaut, au-delà le graphe devient illisible ;
 - une **barre de filtres** (carré, point, nuit, taxon parent, nature de la nuit, recherche libre) :
   filtrer re-trace ;
-- des **onglets** qui séparent les chiroptères du reste — le détecteur ne repère pas que des
+- des **onglets** qui séparent les chiroptères du reste : le détecteur ne repère pas que des
   chauves-souris, et « Autres » réunit orthoptères, micromammifères, oiseaux et le reste du
   référentiel. Vos propres vues s'enregistrent à côté, avec « + Vue ».
 
@@ -47,7 +47,7 @@ votre solde de saison.
 
 Ces nuits **restent affichées** ici : ce que vous avez entendu, vous l'avez entendu. Mais elles ne se
 comparent pas aux autres, alors le filtre **« Nature de la nuit »** permet de ne garder que l'une des
-deux lectures — « Protocole » ou « Opportuniste ». Une nuit sans marquage relève du protocole, qui
+deux lectures : « Protocole » ou « Opportuniste ». Une nuit sans marquage relève du protocole, qui
 est le cas courant.
 
 ## La nuit biologique
@@ -66,8 +66,8 @@ l'heure de la tranche et le nombre de contacts.
 Le message d'absence **nomme sa cause**, parce qu'un « aucune donnée » ne dit pas quoi faire :
 
 - aucune espèce détectée sur les nuits chargées ;
-- aucune espèce ne correspond aux filtres — il faut alors en élargir ou en retirer un ;
-- aucune espèce cochée — il suffit d'en cocher une.
+- aucune espèce ne correspond aux filtres : il faut alors en élargir ou en retirer un ;
+- aucune espèce cochée : il suffit d'en cocher une.
 
 ![L'écran Activité sans espèce détectée : le message nomme la cause de l'absence.](../assets/captures/apercu-activite-vide.png)
 

@@ -71,7 +71,7 @@ probablement rien à supprimer. Voir [Importer une nuit](ecrans/importation.md).
 
 ### Ma synchronisation a rapporté des nuits « Récupéré » : qu'est-ce que ça veut dire ?
 
-Que la plateforme les connaît et vous les a rendues — avec leurs **observations** et leur rattachement,
+Que la plateforme les connaît et vous les a rendues : avec leurs **observations** et leur rattachement,
 mais **sans leur audio**, que Vigie-Chiro ne renvoie pas.
 
 Ces nuits ne sont donc pas à un stade de votre workflow : elles ne sont ni importées, ni transformées, ni
@@ -99,7 +99,7 @@ doublon, au prix d'une nuit muette quand le support n'est pas branché.
 
 En revanche, **la plateforme Vigie-Chiro ne vous rendra pas cet audio** si votre dépôt a été fait au
 format ZIP (le mode par défaut) : le serveur n'en conserve pas de copie téléchargeable. Sans vos
-fichiers d'origine, la perte est **définitive** — c'est exactement ce que la confirmation vous
+fichiers d'origine, la perte est **définitive** : c'est exactement ce que la confirmation vous
 rappelle.
 
 ### L'audit de cohérence signale-t-il un audio absent comme une erreur ?

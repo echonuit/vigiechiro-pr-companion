@@ -28,7 +28,7 @@ fichiers, c'est une activité diffuse toute la nuit. La classe d'activité se ca
 ## Pourquoi les seuils s'affichent à côté de la classe
 
 Une classe seule est un verdict. Une classe accompagnée de « Q75 = 480 · Q98 = 1 240 » est une
-**lecture que vous pouvez contester** — et c'est ce qu'on attend d'un outil scientifique. Vous voyez
+**lecture que vous pouvez contester** : et c'est ce qu'on attend d'un outil scientifique. Vous voyez
 sur quoi le produit s'appuie pour dire « Forte ».
 
 ## Identifications validées seulement
@@ -44,14 +44,14 @@ voir l'écart.
 
 La **saison** se déduit de la date de la nuit, la **région** du numéro de carré. Le **milieu**, lui,
 reste un choix explicite : rien dans l'application ne dit si votre point d'écoute est en forêt ou en
-ville. Par défaut, la comparaison est donc **nationale** — plus large, mais jamais fausse.
+ville. Par défaut, la comparaison est donc **nationale** : plus large, mais jamais fausse.
 
 Le référentiel réellement employé est **écrit sous le tableau** : « Comparé au référentiel :
 region Occitanie · Été ». Sans cette mention, la classe serait un oracle.
 
 ## Quand la classe n'est pas donnée
 
-La cellule dit toujours **pourquoi**, plutôt que de rester vide — une case blanche se lirait comme une
+La cellule dit toujours **pourquoi**, plutôt que de rester vide : une case blanche se lirait comme une
 donnée manquante :
 
 - **« Non couvert par le référentiel »** : orthoptères, oiseaux, bruit. Le référentiel ne parle que de
@@ -90,7 +90,7 @@ informations ne viennent pas de la même source et ne dépendent pas l'une de l'
 Un bloc de mise en garde est affiché **en permanence** sous le tableau, et il est recopié dans les
 exports. Deux points comptent :
 
-- une classe d'activité **n'est pas un niveau d'enjeu de conservation** — ce sont deux lectures
+- une classe d'activité **n'est pas un niveau d'enjeu de conservation** : ce sont deux lectures
   différentes, et une espèce à enjeu peut très bien être en activité faible ;
 - les classes **ne se comparent pas d'une espèce à l'autre** : la détectabilité varie trop d'un taxon
   au suivant pour qu'une « Forte » de Pipistrelle commune et une « Forte » de Barbastelle disent la
@@ -98,7 +98,7 @@ exports. Deux points comptent :
 
 ## Exporter
 
-Le bouton d'export écrit un **CSV** qui reprend le tableau tel qu'il est affiché — filtres et bascule
+Le bouton d'export écrit un **CSV** qui reprend le tableau tel qu'il est affiché : filtres et bascule
 compris. En tête du fichier, quatre lignes précédées de `#` :
 
 - ce que contient le fichier (« Synthèse d'une nuit - VigieChiro Companion ») ;

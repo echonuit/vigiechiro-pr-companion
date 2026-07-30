@@ -58,7 +58,7 @@ la table des archives est vide.
 Deux chemins s'offrent à vous :
 
 - **Téléversement automatique** (application connectée à Vigie-Chiro) : le bouton
-  **« Téléverser sur Vigie-Chiro »** dépose la nuit directement — la participation est créée (ou
+  **« Téléverser sur Vigie-Chiro »** dépose la nuit directement : la participation est créée (ou
   réutilisée si elle l'a été à l'import), puis les **archives ZIP** sont téléversées **plusieurs à la
   fois** (5 en parallèle), ce qui raccourcit nettement le dépôt d'une grosse nuit. Une **table de
   dépôt** suit chaque archive (en attente → en cours → déposé, ou échec avec la raison au survol) avec
@@ -78,7 +78,7 @@ Deux chemins s'offrent à vous :
 Le dépôt automatique est **reprenable** : une coupure réseau, une fermeture de l'application ou un
 échec partiel ne font **rien perdre**. Le passage prend le statut « **Dépôt en cours** » et, à la
 réouverture de l'écran, la table de dépôt réaffiche l'état exact de chaque fichier. Le bouton devient
-alors « **Retenter les échecs** » : seuls les fichiers manquants sont re-téléversés — jamais ceux déjà
+alors « **Retenter les échecs** » : seuls les fichiers manquants sont re-téléversés, jamais ceux déjà
 en ligne. Le passage ne devient « Déposé » que lorsque **tous** les fichiers sont en ligne.
 
 ### Ce que le dépôt vous rend à la fin
@@ -121,7 +121,7 @@ vous venez de déposer : la plateforme décompresse les archives, puis lance l'i
 
 **Vous avez téléversé depuis le navigateur** (repli manuel) : le bouton reste **« Marquer
 déposé »**. Il fait passer le passage au statut « Déposé » (ce qui déverrouille la validation
-Tadarida) et trace la date du dépôt — c'est une **écriture locale**, l'application ne peut pas deviner
+Tadarida) et trace la date du dépôt : c'est une **écriture locale**, l'application ne peut pas deviner
 seule ce que vous avez déposé à la main.
 
 ## Suivre l'analyse : la carte « Traitement Vigie-Chiro »
@@ -140,7 +140,7 @@ vous dit où en est le calcul :
 | **L'analyse a échoué** | Le motif est indiqué. |
 
 L'application **n'interroge pas la plateforme en permanence** : elle affiche le dernier état qu'elle
-connaît, en précisant de quand il date — y compris hors connexion. Le bouton **« Actualiser »**
+connaît, en précisant de quand il date : y compris hors connexion. Le bouton **« Actualiser »**
 redemande l'état à Vigie-Chiro, et vous pouvez fermer l'application entre-temps : le calcul se
 poursuit sur le serveur.
 
@@ -150,7 +150,7 @@ peut valoir la peine de la relancer.
 !!! danger "Une nuit déjà analysée ne se relance pas"
     Une fois l'analyse terminée, le bouton « Lancer la participation » se **verrouille**. Ce n'est pas
     une limitation arbitraire : relancer un calcul **efface d'abord les observations** côté serveur
-    pour les recalculer — or l'audio d'un dépôt en archives n'est **pas conservé** par la plateforme.
+    pour les recalculer : or l'audio d'un dépôt en archives n'est **pas conservé** par la plateforme.
     Le recalcul rendrait donc une participation **vide, définitivement**.
 
     Si vous devez tout de même relancer (typiquement après un échec, où il n'y a plus rien à perdre),
@@ -163,7 +163,7 @@ Le bouton **« Réinitialiser le dépôt »** (visible dès qu'un dépôt a ét�
 local** : l'application oublie ce qu'elle croit avoir déposé et le passage revient à « Prêt à
 déposer ». Le téléversement suivant repart alors **de zéro**, toutes archives comprises.
 
-Il est utile quand le suivi local ne correspond plus à la réalité de la plateforme — typiquement si
+Il est utile quand le suivi local ne correspond plus à la réalité de la plateforme : typiquement si
 une nuit apparaît « Déposée » côté application alors que la participation est vide côté site web. Vos
 **archives sur le disque** et le **lien vers la participation** sont conservés : rien n'est perdu, on
 ne remet à zéro que le compteur.

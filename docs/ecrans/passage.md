@@ -48,8 +48,8 @@ chauve‑souris que l'algorithme aurait manquée. Leur colonne d'espèce affiche
 **Valider à la main.** Si vous reconnaissez une espèce, sélectionnez la séquence, choisissez le taxon dans
 la liste puis cliquez sur **Corriger** : une observation est créée pour cette séquence, qui passe alors au
 statut **Corrigée** avec votre taxon. La séquence **reste** dans la liste (vous voyez ce qui a déjà été
-traité) et l'observation rejoint le reste de vos données. Le bouton **Valider** — qui « retient la
-proposition Tadarida » — reste inactif ici, faute de proposition à retenir.
+traité) et l'observation rejoint le reste de vos données. Le bouton **Valider** : qui « retient la
+proposition Tadarida » : reste inactif ici, faute de proposition à retenir.
 
 ## Annuler le dépôt
 
@@ -231,8 +231,8 @@ rien de nouveau pendant longtemps, c'est un défaut, et cela vaut la peine de le
 **Annuler** interrompt proprement à l'étape suivante : rien n'est défait, puisque la réactivation
 ajoute de l'audio sans jamais en retirer. L'arrêt est honoré **même pendant une nouvelle tentative
 réseau** : quand la plateforme demande d'attendre avant de réessayer, votre clic n'attend pas la fin
-de ce délai. **Fermer** n'est disponible qu'une fois l'opération terminée
-— survolez le bouton pour savoir pourquoi il attend.
+de ce délai. **Fermer** n'est disponible qu'une fois l'opération terminée :
+survolez le bouton pour savoir pourquoi il attend.
 
 !!! tip "Les fichiers que vous désignez ne sont jamais touchés"
     Que vous ayez demandé la copie ou la référence, votre dossier source reste **intact** : rien n'y
@@ -245,7 +245,7 @@ de ce délai. **Fermer** n'est disponible qu'une fois l'opération terminée
     observations et la plateforme, pour que vous puissiez de nouveau **publier vos corrections**. C'est
     le bon moment, et le seul utile : puisque vous venez de retrouver l'audio, vous allez pouvoir
     **écouter**, corriger, puis renvoyer. Cette étape interroge la plateforme, elle peut donc prendre un
-    moment — et n'a lieu que pour ces passages-là (un passage importé normalement garde ce lien depuis le
+    moment : et n'a lieu que pour ces passages-là (un passage importé normalement garde ce lien depuis le
     départ).
 
     Elle ramène **au passage les échanges avec le validateur** du Muséum, s'il y en a : les deux voyagent
@@ -275,8 +275,8 @@ rien** : il serait absurde de recalculer des séquences à partir d'un fichier d
     Ce qui précède vaut pour un passage que vous aviez importé puis archivé : ses empreintes avaient été
     relevées avant l'archivage. Un passage **reconstruit** (récupéré depuis Vigie-Chiro sans que l'audio
     soit jamais passé par cette machine) n'en a **aucune**, ni sur ses séquences, ni sur ses bruts. La
-    réactivation depuis les bruts fonctionne pourtant — c'est même le **seul** moyen de récupérer son
-    audio — mais elle s'appuie sur ce dont elle dispose : les tranches régénérées sont un **extrait
+    réactivation depuis les bruts fonctionne pourtant : c'est même le **seul** moyen de récupérer son
+    audio, mais elle s'appuie sur ce dont elle dispose : les tranches régénérées sont un **extrait
     fidèle** de **votre** brut désigné (le découpage recopie le son sans le retoucher), et l'application
     vérifie qu'elles portent le **bon nom** et la **bonne durée**. Elle mesure en plus, à titre
     **indicatif**, la part des cris attendus qu'elle retrouve dans l'audio (« Concordance acoustique »),
@@ -295,7 +295,7 @@ Quand il **manque** des séquences, la barre le montre plutôt que de le dire, e
 
 ![Réactivation partielle : 4229 séquences sur 4236, les manquantes et leurs motifs.](../assets/captures/apercu-passage-reactivation-lacunes.png)
 
-Les motifs se **déplient d'un clic**, et chacun ouvre la liste des fichiers concernés — les plus coûteux
+Les motifs se **déplient d'un clic**, et chacun ouvre la liste des fichiers concernés : les plus coûteux
 d'abord, puisque c'est par eux qu'on commence à chercher. Deux situations y sont distinguées, parce
 qu'elles n'appellent pas la même suite :
 
@@ -373,7 +373,7 @@ Trois chemins mènent au même résultat :
 
 !!! note "L'automatique n'efface jamais votre choix"
     La synchronisation **ajoute** des marquages, elle n'en retire aucun. Une case que vous avez cochée à
-    la main survit à toutes les synchronisations suivantes — y compris sur une participation que la
+    la main survit à toutes les synchronisations suivantes : y compris sur une participation que la
     plateforme ne connaît pas.
 
 Conséquence sur le suivi : une nuit opportuniste ne compte pas dans les deux passages attendus du point,
@@ -383,7 +383,7 @@ et n'engendre aucun « reste à faire » dans **[Ma saison](saison.md#les-nuits-
 
 Le champ **Enregistreur** porte le **numéro de série** du Passive Recorder qui a produit la nuit.
 Normalement, l'application le lit dans les noms de fichiers de la carte SD à l'import. Quand elle n'y
-parvient pas, la nuit affiche **« PR INCONNU »** — et jusqu'ici, rien ne permettait de le corriger.
+parvient pas, la nuit affiche **« PR INCONNU »** : et jusqu'ici, rien ne permettait de le corriger.
 
 Le champ est une **liste modifiable** : vous pouvez saisir le numéro librement, ou en choisir un parmi
 les propositions. Celles-ci viennent d'abord des **noms de fichiers de cette nuit** (le journal
@@ -393,7 +393,7 @@ l'import ne l'avait pas retenue.
 
 !!! note "Un enregistreur ne peut pas être vidé"
     Une nuit est toujours rattachée à un enregistreur. Vous pouvez **corriger** le numéro, pas le
-    supprimer — et « INCONNU » n'est pas une saisie acceptée : c'est ce que l'application affiche
+    supprimer, et « INCONNU » n'est pas une saisie acceptée : c'est ce que l'application affiche
     quand elle ne sait pas, pas une valeur que l'on choisit.
 
 ### Corriger les heures de la nuit

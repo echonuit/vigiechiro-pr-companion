@@ -79,7 +79,7 @@ Une **campagne** regroupe les nuits d'un même suivi. Le tableau la porte de tro
   réglage des colonnes ;
 - un ordre **Par campagne**, alphabétique, qui place les nuits **non rattachées en dernier** ;
 - un filtre **Campagne**, à saisie libre : taper `ens` retient « Suivi ENS ». Un passage sans campagne
-  n'est jamais retenu par ce filtre — le demander, c'est demander les nuits qui en ont une.
+  n'est jamais retenu par ce filtre : le demander, c'est demander les nuits qui en ont une.
 
 L'**export CSV** de la sélection porte une colonne `campagne`, en fin de ligne.
 
@@ -126,7 +126,7 @@ Les nuits sont traitées **l'une après l'autre**, jamais en même temps : le ry
 Vigie-Chiro reste celui d'une seule nuit, quel que soit le nombre de lignes cochées.
 
 Si l'une échoue, les suivantes sont traitées quand même. Le compte rendu final dit, **pour chaque
-nuit**, ce qui s'est passé — « fait », « écarté : … », « échec : … ».
+nuit**, ce qui s'est passé, « fait », « écarté : … », « échec : … ».
 
 ### Renoncer en cours de route
 
@@ -221,7 +221,7 @@ Six vues sont fournies d'office : **Tout**, **Résultats à importer**, **Dépos
 **Non vérifié** et **Vérifiés**. « À réactiver » liste les nuits **récupérées** de Vigie-Chiro : celles
 que la synchronisation a rapportées avec leurs observations mais sans leur audio. C'est la question qui
 vient juste après une synchronisation, et la liste est exactement celle des nuits à réactiver. Sur la
-carte et dans le tableau, ces nuits portent une pastille **violette** — une couleur choisie hors du
+carte et dans le tableau, ces nuits portent une pastille **violette** : une couleur choisie hors du
 dégradé du workflow, parce qu'elles ne sont à aucune de ses étapes : elles sont arrivées par une autre
 porte. Le bouton **« + Vue »**, au bout de la barre d'onglets,
 enregistre les filtres **courants** sous un nouveau nom. Sur chaque onglet, le **crayon** le renomme et

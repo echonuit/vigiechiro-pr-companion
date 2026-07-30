@@ -46,7 +46,7 @@ de la barre du haut permet de la **protéger** :
   l'application y écrit une **copie horodatée** et cohérente de la base. À faire régulièrement, et avant
   toute manipulation importante.
 - **Sauvegarde complète (base + audio)…** : la base **et** tous vos dossiers de son. C'est la **seule
-  sauvegarde qui protège vraiment** — voir l'encadré ci-dessous. Elle peut peser plusieurs gigaoctets et
+  sauvegarde qui protège vraiment** : voir l'encadré ci-dessous. Elle peut peser plusieurs gigaoctets et
   prendre du temps : l'application vous le dit avant de commencer.
 - **Restaurer une sauvegarde…** : vous choisissez un fichier de sauvegarde ; après **confirmation**,
   l'application **remplace** la base courante par celle-ci. Par sécurité, l'**état courant est d'abord mis
@@ -55,12 +55,12 @@ de la barre du haut permet de la **protéger** :
 - **Restaurer une sauvegarde complète…** : remet la base **et** les dossiers de son.
 
 !!! warning "La sauvegarde de la base seule ne protège pas vos sons"
-    La base contient vos **métadonnées** (sites, nuits, observations, validations) — pas l'**audio**, qui
+    La base contient vos **métadonnées** (sites, nuits, observations, validations) : pas l'**audio**, qui
     vit dans des dossiers à côté.
 
     Et Vigie-Chiro ne vous rendra **pas** vos sons : une nuit déposée **en archives** (le mode par défaut)
     ne laisse **aucun** fichier audio sur la plateforme. Si le disque les perd, ils sont **perdus**. La nuit
-    reste consultable — observations, vérifications — mais **muette**.
+    reste consultable (observations, vérifications) mais **muette**.
 
     Avant toute manipulation risquée, faites donc une **sauvegarde complète**. Et si un dossier de son
     n'est pas accessible au moment de la copie (carte SD non montée, disque débranché), l'application vous
@@ -71,7 +71,7 @@ de la barre du haut permet de la **protéger** :
 
 Il arrive qu'on veuille **tout reprendre à zéro** : base corrompue, expérimentation qui a mal tourné,
 poste que l'on veut remettre à neuf. Le menu **« ☰ » → « Repartir d'une base neuve… »** mène cette
-procédure de bout en bout — et surtout, **refuse de la commencer** si elle vous ferait perdre quelque
+procédure de bout en bout : et surtout, **refuse de la commencer** si elle vous ferait perdre quelque
 chose sans que vous l'ayez voulu.
 
 Elle se déroule en trois temps.
@@ -80,7 +80,7 @@ Elle se déroule en trois temps.
    du **disque** (vos fichiers sont là), du **serveur** (la nuit a été déposée en WAV), ou de **nulle
    part**.
 2. **Elle vous le montre, et vous décidez.** La confirmation **énumère les nuits** dont l'audio ne
-   reviendra pas. C'est en cliquant « oui » sur **ce texte-là** que vous acceptez la perte — pas sur un
+   reviendra pas. C'est en cliquant « oui » sur **ce texte-là** que vous acceptez la perte : pas sur un
    « êtes-vous sûr ? » anonyme.
 3. **Elle exécute** : sauvegarde complète → base neuve → tout ce que Vigie-Chiro connaît de vous est
    **retéléchargé** (sites, points, nuits, observations) → audit final. Puis l'application **se ferme** :
@@ -88,7 +88,7 @@ Elle se déroule en trois temps.
 
 !!! danger "Deux refus, avant toute destruction"
     - **Si une nuit perdrait son audio** et que vous ne l'avez pas explicitement accepté, la procédure
-      **s'arrête** — sans rien toucher.
+      **s'arrête** : sans rien toucher.
     - **Si Vigie-Chiro ne répond pas**, elle s'arrête **aussi**, même si vous avez accepté la perte : la
       base neuve se **remplit depuis la plateforme**. La vider alors que le serveur est injoignable vous
       laisserait un poste **vide**.
