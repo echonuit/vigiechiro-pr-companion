@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -318,7 +319,7 @@ public class SiteDetailViewModel {
     }
 
     private String departementDeCarre(String carre) {
-        return carre != null && carre.length() >= 2 ? carre.substring(0, 2) : "—";
+        return carre != null && carre.length() >= 2 ? carre.substring(0, 2) : Formats.VALEUR_ABSENTE;
     }
 
     private String libelleDerniereNuit(List<Passage> passagesDuSite) {
@@ -329,7 +330,7 @@ public class SiteDetailViewModel {
                 .max(LocalDate::compareTo)
                 .orElse(null);
         if (derniere == null) {
-            return "—";
+            return Formats.VALEUR_ABSENTE;
         }
         long jours = ChronoUnit.DAYS.between(derniere, horloge.aujourdhui());
         return derniere + " (il y a " + jours + " j)";

@@ -3,6 +3,7 @@ package fr.univ_amu.iut.sites.viewmodel;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.viewmodel.ClasseBadge;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.Passage;
 
 /// Données de présentation d'une ligne du tableau des passages (écran M-Site-detail).
@@ -63,6 +64,6 @@ public record LignePassage(
                 passage.statutWorkflow(),
                 passage.verdictVerification(),
                 "PR " + passage.idEnregistreur(),
-                passage.deposeLe() == null ? "—" : passage.deposeLe());
+                passage.deposeLe() == null ? Formats.VALEUR_ABSENTE : passage.deposeLe());
     }
 }

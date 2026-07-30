@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.importation.view;
 
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.importation.viewmodel.NuitVM;
 import java.util.function.Function;
 import javafx.beans.binding.Bindings;
@@ -78,7 +79,7 @@ final class TableNuits {
         colonne.setCellValueFactory(cellule -> Bindings.createStringBinding(
                 () -> cellule.getValue().numeroPassagePropose() > 0
                         ? Integer.toString(cellule.getValue().numeroPassagePropose())
-                        : "—",
+                        : Formats.VALEUR_ABSENTE,
                 cellule.getValue().numeroPassageProposeProperty()));
         return colonne;
     }

@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import java.io.IOException;
@@ -258,7 +259,7 @@ public class SyntheseController implements EmplacementNavigation {
     /// « Q25 = 10 · Q75 = 100 · Q98 = 1 000 », ou un tiret faute de seuils. Affichés **à côté** de la
     /// classe pour qu'elle reste contestable.
     private static String libelleSeuils(LigneSynthese ligne) {
-        return ligne.seuils().map(SyntheseController::formater).orElse("—");
+        return ligne.seuils().map(SyntheseController::formater).orElse(Formats.VALEUR_ABSENTE);
     }
 
     private static String formater(SeuilsActivite seuils) {
@@ -266,7 +267,7 @@ public class SyntheseController implements EmplacementNavigation {
     }
 
     private static String ouTiret(String valeur) {
-        return valeur == null || valeur.isBlank() ? "—" : valeur;
+        return valeur == null || valeur.isBlank() ? Formats.VALEUR_ABSENTE : valeur;
     }
 
     private static ObservableValue<String> texte(Object valeur) {

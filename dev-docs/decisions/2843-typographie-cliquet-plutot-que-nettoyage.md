@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-29
 - **Chantier** : #2843, suite de la clôture du chantier #2348 et de #2813
-- **Vérification** : probable — `scripts/adr/2843-tiret-cadratin.py` (cliquet : 1068)
+- **Vérification** : probable — `scripts/adr/2843-tiret-cadratin.py` (cliquet : 1037)
 
 ## Contexte
 

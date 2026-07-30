@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.GesteAttendu;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -323,7 +324,7 @@ public class SitesViewModel {
     /// pour que la carte reste lisible (#1750, corollaire de #1738 côté « Mes Sites »).
     private String joindreCodes(List<PointDEcoute> points, Set<Long> pointsAvecPassage) {
         if (points.isEmpty()) {
-            return "—";
+            return Formats.VALEUR_ABSENTE;
         }
         List<PointDEcoute> enAvant = points.stream()
                 .filter(point -> pointsAvecPassage.contains(point.id()) || !point.synchronise())
