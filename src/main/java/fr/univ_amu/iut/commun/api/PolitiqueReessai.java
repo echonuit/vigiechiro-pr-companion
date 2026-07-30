@@ -92,10 +92,22 @@ final class PolitiqueReessai {
         /// Temporisateur de production : dort vraiment, et **par tranches** quand un renoncement est
         /// offert - `Retry-After` peut demander une minute, et « Annuler » n'a pas à y disparaître.
         static Temporisateur systeme() {
+            return dormant(delai -> Thread.sleep(delai.toMillis()));
+        }
+
+        /// Le **découpage** de l'attente, séparé de l'endormissement qui l'exécute.
+        ///
+        /// Extrait de la classe anonyme de [#systeme()] parce qu'il y était **intestable** : l'éprouver
+        /// demandait de dormir vraiment. PIT l'a montré - six mutants y survivaient, dont la suppression
+        /// pure et simple des `Thread.sleep`. C'est pourtant le mécanisme qui rend « Annuler » vivant
+        /// pendant une reprise (#2686).
+        ///
+        /// `sommeil` reçoit chaque **tranche**. En production c'est `Thread.sleep` ; en test, un compteur.
+        static Temporisateur dormant(Sommeil sommeil) {
             return new Temporisateur() {
                 @Override
                 public void attendre(Duration delai) throws InterruptedException {
-                    Thread.sleep(delai.toMillis());
+                    sommeil.dormir(delai);
                 }
 
                 @Override
@@ -103,11 +115,17 @@ final class PolitiqueReessai {
                     Duration restant = delai;
                     while (restant.compareTo(Duration.ZERO) > 0 && !renoncer.getAsBoolean()) {
                         Duration tranche = restant.compareTo(TRANCHE_SURVEILLANCE) > 0 ? TRANCHE_SURVEILLANCE : restant;
-                        Thread.sleep(tranche.toMillis());
+                        sommeil.dormir(tranche);
                         restant = restant.minus(tranche);
                     }
                 }
             };
+        }
+
+        /// Ce qui dort réellement une tranche. Injecté pour que le **découpage** s'éprouve sans attendre.
+        @FunctionalInterface
+        interface Sommeil {
+            void dormir(Duration tranche) throws InterruptedException;
         }
     }
 

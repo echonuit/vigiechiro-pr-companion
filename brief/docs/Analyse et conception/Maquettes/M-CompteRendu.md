@@ -220,8 +220,21 @@ La structure ne change pas : ce sont les proportions qui parlent. Le compte rend
 
 ## Ce que le livré a précisé
 
-La maquette a été écrite avant le code. Cinq points ont été **tranchés en chemin**, et ce sont eux qu'un
-lecteur doit connaître avant d'ajouter une quatrième surface.
+La maquette a été écrite avant le code. Six points ont été **tranchés en chemin**, et ce sont eux qu'un
+lecteur doit connaître avant d'ajouter une **sixième** surface.
+
+Le composant en sert **cinq** aujourd'hui : fin d'import de carte SD, fin de réactivation, publication
+des corrections, fin d'import Vigie-Chiro (#2651) et fin de dépôt (#2653). Les deux dernières ont été
+livrées par les suites de la clôture (#2802), qui ont aussi tranché ce que la bande **ne porte pas** :
+une synchronisation dont les rapports comptent des choses différentes (taxons, sites, nuits) n'a pas de
+ventilation à montrer - les mêler ferait une barre dont les segments ne mesurent pas la même chose.
+
+**0. La barre se dit à un lecteur d'écran.** Le libellé de la ventilation (« Devenir des 140 lignes
+reçues ») était composé par les cinq traductions et **affiché nulle part** : ni rendu, ni testé, donc
+jamais confronté - l'une d'elles annonçait « le devenir de 140 observations » là où douze n'en étaient
+jamais devenues. Il n'est toujours pas affiché - la pastille dit déjà l'essentiel, et un compte rendu ne
+se répète pas - mais il est devenu le **texte accessible** de la barre, qui n'en avait aucun : son seul
+secours était une infobulle par part, qui suppose une souris (#2694).
 
 **1. Chaque mention porte sa sévérité.** La maquette ne prévoyait qu'un bloc « avertissements ». La
 première capture de la réactivation a montré un triangle d'alerte devant « L'audio est de nouveau

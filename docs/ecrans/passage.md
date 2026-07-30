@@ -229,7 +229,9 @@ défilent sur le libellé de l'étape en cours. **Aucun moment ne reste muet** :
 rien de nouveau pendant longtemps, c'est un défaut, et cela vaut la peine de le signaler.
 
 **Annuler** interrompt proprement à l'étape suivante : rien n'est défait, puisque la réactivation
-ajoute de l'audio sans jamais en retirer. **Fermer** n'est disponible qu'une fois l'opération terminée
+ajoute de l'audio sans jamais en retirer. L'arrêt est honoré **même pendant une nouvelle tentative
+réseau** : quand la plateforme demande d'attendre avant de réessayer, votre clic n'attend pas la fin
+de ce délai. **Fermer** n'est disponible qu'une fois l'opération terminée
 — survolez le bouton pour savoir pourquoi il attend.
 
 !!! tip "Les fichiers que vous désignez ne sont jamais touchés"

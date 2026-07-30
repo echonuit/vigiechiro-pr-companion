@@ -39,3 +39,5 @@ Marie vient de récupérer la carte SD de son enregistreur après une nuit d'enr
 > Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
 
 - **La fin d'import rend des comptes en chiffres** *(livré, #2358)*. Le [compte rendu chiffré](../Maquettes/M-CompteRendu.md) a remplacé les trois surfaces qui se succédaient — la phrase de succès, le compte rendu textuel et la liste des rejets. Il restitue la ventilation des fichiers de la source, compare le volume **lu sur la carte** au volume **écrit sur le disque**, rappelle les réserves d'inspection **encore vraies** (#1488) et se termine par « Ouvrir le passage » plutôt que par un acquittement.
+
+    Le remplacement n'a été **complet** qu'à #2654 : jusque-là le ViewModel alimentait encore les deux canaux d'autrefois - le compte rendu textuel et la liste des rejets - que plus aucune surface ne lisait. Ils mentaient sur l'état du code, et leur retrait a demandé de vérifier, cas par cas, que la substance de leurs sept tests avait bien déménagé.

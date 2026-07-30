@@ -132,4 +132,20 @@ class CompteRenduChiffreImportVigieChiroTest {
     private static List<String> textes(CompteRenduChiffre rendu) {
         return rendu.avertissements().stream().map(Avertissement::texte).toList();
     }
+
+    @Test
+    @DisplayName("ce qui vaut zéro ne se mentionne pas : pas de « 0 ligne(s) ignorée(s) »")
+    void ce_qui_vaut_zero_ne_se_mentionne_pas() {
+        // Le même défaut que la recette golden avait attrapé sur « 0 Ko de bruts conservés » : une
+        // mention à zéro n'informe pas, elle inquiète. Chaque compteur est éprouvé à zéro séparément,
+        // sinon un seul garde relâché passerait inaperçu derrière les autres.
+        List<String> textes = textes(traduire(new BilanImport(JEU, 140, 0, 0, 0, 0)));
+
+        assertThat(textes)
+                .as("aucune mention ne s'affiche pour un compteur à zéro")
+                .noneMatch(texte -> texte.contains("0 ligne(s) ignorée(s)"))
+                .noneMatch(texte -> texte.contains("0 taxon(s) hors référentiel"))
+                .noneMatch(texte -> texte.contains("0 validation(s)"))
+                .noneMatch(texte -> texte.contains("0 observation(s)"));
+    }
 }

@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.cli.GesteAttenduCli;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.importation.model.ServiceImportReference;
@@ -81,7 +82,7 @@ public final class ImporterTransformes implements Callable<Integer> {
                     dossier, point, annee, numeroPassage, referencer, p -> {}, JetonAnnulation.neutre());
         } catch (RegleMetierException refus) {
             // Refus métier : rien n'a été créé, l'état est intact. On dit lequel, sans trace, code 2 (#2294).
-            spec.commandLine().getErr().println("Refus : " + refus.getMessage());
+            spec.commandLine().getErr().println("Refus : " + GesteAttenduCli.message(refus));
             return CODE_REFUS;
         }
         sortie.println("Import par " + (referencer ? "référence" : "copie") + " réussi.");

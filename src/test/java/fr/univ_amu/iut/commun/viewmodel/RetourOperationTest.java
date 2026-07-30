@@ -83,4 +83,16 @@ class RetourOperationTest {
                 .hasMessageContaining("portée par son niveau");
         assertThat(RetourOperation.erreur("attention ⚠ au milieu").severite()).isEqualTo(Severite.ERREUR);
     }
+
+    @Test
+    @DisplayName("#2076 : un message pile à la borne passe entier, il n'y a rien à couper")
+    void un_message_pile_a_la_borne_passe_entier() {
+        String pileALaBorne = "x".repeat(240);
+
+        RetourOperation retour = RetourOperation.erreur(new IllegalStateException(pileALaBorne));
+
+        // La borne est INCLUSIVE : couper à 240 caractères un message qui en fait exactement 240
+        // ajouterait « détail dans le journal » pour ne rien renvoyer de plus au journal.
+        assertThat(retour.texte()).endsWith(pileALaBorne).doesNotContain("détail dans le journal");
+    }
 }
