@@ -277,6 +277,28 @@ setup() {
   [[ "${output}" == *"Tranche invalide"* ]]
 }
 
+@test "exporter-sons --espece : ecrit l archive et le dit, exit 0 (#2795)" {
+  # Base jetable sans observation : l archive se reduit au CSV d en-tetes, resultat valide. Le test
+  # prouve ce que le test Java in-process ne voit pas : le fat-jar sait produire le ZIP et le dire.
+  run cli exporter-sons --espece Rhifer --sortie "${BATS_TEST_TMPDIR}/sons.zip"
+  [ "${status}" -eq 0 ]
+  [ -f "${BATS_TEST_TMPDIR}/sons.zip" ]
+  [[ "${output}" == *"Archive écrite"* ]]
+  [[ "${output}" == *"0 observation(s), 0 son(s)"* ]]
+}
+
+@test "exporter-sons : --passage et --espece s excluent, exit 2 (#2795)" {
+  run cli exporter-sons --passage 1 --espece Rhifer --sortie "${BATS_TEST_TMPDIR}/a.zip"
+  [ "${status}" -eq 2 ]
+}
+
+@test "exporter-sons : passage inconnu refuse et explique, exit 2 (#2795)" {
+  run cli exporter-sons --passage 999 --sortie "${BATS_TEST_TMPDIR}/a.zip"
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Passage introuvable"* ]]
+  [ ! -f "${BATS_TEST_TMPDIR}/a.zip" ]
+}
+
 @test "exporter-activite --format json : refus explique, exit 2 (#2352)" {
   run cli exporter-activite --passage 1 --sortie "${BATS_TEST_TMPDIR}/a.json" --format json
   [ "${status}" -eq 2 ]
