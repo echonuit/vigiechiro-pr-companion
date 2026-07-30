@@ -79,7 +79,12 @@ feature : IHM → ViewModel → service → base).
 - doc-comments **Markdown** `///` (JEP 467), pas de `/** */` HTML ;
 - **noms de classes en français**, sans accents dans les identifiants (`Navigateur`, `Passage`,
   `EtapeNavigation`...) ;
-- **pas de tiret cadratin** dans la doc et les commentaires : tiret simple ou deux-points.
+- **pas de tiret cadratin** : tiret simple, deux-points ou virgule. La règle vaut **partout** (doc,
+  commentaires, chaînes affichées, styles, scripts, ateliers), et un garde la fait respecter
+  ([ADR 2843](dev-docs/decisions/2843-typographie-cliquet-plutot-que-nettoyage.md)). Le glyphe reste
+  permis là où il **est** la donnée plutôt qu'une ponctuation : la valeur absente
+  (`Formats.VALEUR_ABSENTE`), un libellé de l'application **cité** entre guillemets français, une
+  classe de caractères d'analyseur. Le titre de PR, lui, n'est pas gardé : il alimente le CHANGELOG.
 
 **Commits** : [Conventional Commits](https://www.conventionalcommits.org/fr/) **en français**, le
 scope étant le nom de la feature ou du domaine :

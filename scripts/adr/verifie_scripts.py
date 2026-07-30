@@ -21,9 +21,10 @@ import tempfile
 
 ICI = pathlib.Path(__file__).parent
 
-# Nomme parce qu il porte QUATRE cas, la ou ses voisins n en ont qu un : le cliquet Java, la tolerance
-# zero d une zone nettoyee, le refus d une zone qui ne balaie aucun fichier, et le balayage non
-# recursif de la racine.
+# Nomme parce qu il porte PLUSIEURS cas la ou ses voisins n en ont qu un : le cliquet Java, la
+# tolerance zero d une zone, le refus d une zone qui ne balaie rien, le discernement de la couverture,
+# le balayage non recursif. Sans denombrement ici : la phrase a deja derive deux fois en une journee,
+# et un commentaire qui compte ses voisins vieillit a chaque ajout.
 ADR_2843 = "2843-tiret-cadratin.py"
 
 _echecs: list[str] = []
@@ -180,6 +181,31 @@ def test_2843_zone_vide_est_une_erreur() -> None:
             _verifie("2843 zone nettoyee : un motif qui ne balaie rien leve", 0, 1)
 
 
+def test_2843_couverture_distingue_dedans_dehors() -> None:
+    """`couvert()` doit DISTINGUER, pas repondre oui a tout.
+
+    Le regime de couverture repond « quel fichier personne ne regarde ? ». Il ne peut pas garder son
+    propre discernement : rendre `couvert()` toujours vrai l AVEUGLE, et un detecteur aveugle rapporte
+    « 0 fichier sans garde », soit exactement le vert de la bonne sante. Muter le script ne fait donc
+    pas rougir le script. Ce cas-ci est le seul endroit ou cette mutation se voit.
+    """
+    m = _charge(ADR_2843)
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(racine, "zone/dedans.md", "peu importe\n")
+        _ecrire(racine, "ailleurs/dehors.md", "peu importe\n")
+        zones, sources = m.ZONES_NETTOYEES, m.SOURCES
+        try:
+            m.ZONES_NETTOYEES = (("zone temoin", racine / "zone", (), "*.md"),)
+            m.SOURCES = []
+            _verifie("2843 couverture : un fichier DANS la zone est couvert",
+                     m.couvert(racine / "zone" / "dedans.md"), True)
+            _verifie("2843 couverture : un fichier HORS zone ne l est pas",
+                     m.couvert(racine / "ailleurs" / "dehors.md"), False)
+        finally:
+            m.ZONES_NETTOYEES, m.SOURCES = zones, sources
+
+
 def test_2843_balayage_non_recursif() -> None:
     """`recursif=False` doit vraiment s arreter au niveau de la racine.
 
@@ -302,6 +328,7 @@ if __name__ == "__main__":
         test_2843_tiret_cadratin,
         test_2843_prose_documentation,
         test_2843_zone_vide_est_une_erreur,
+        test_2843_couverture_distingue_dedans_dehors,
         test_2843_balayage_non_recursif,
         test_2493_modale_suit_croissance,
         test_loupe_0020,
