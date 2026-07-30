@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.129.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.129.0...v2.129.1) (2026-07-30)
+
+
+### Bug Fixes
+
+* **commun:** la frise n'accueille plus par défaut, et deux pastilles se lisent enfin ([#2854](https://github.com/echonuit/vigiechiro-pr-companion/issues/2854)) ([c46966e](https://github.com/echonuit/vigiechiro-pr-companion/commit/c46966e070df448c391d85cba239bc614969fd9a)), closes [#2833](https://github.com/echonuit/vigiechiro-pr-companion/issues/2833) [#2628](https://github.com/echonuit/vigiechiro-pr-companion/issues/2628)
+
 # [2.129.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.128.1...v2.129.0) (2026-07-30)
 
 
