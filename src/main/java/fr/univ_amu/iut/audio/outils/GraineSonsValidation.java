@@ -98,6 +98,9 @@ final class GraineSonsValidation {
     static final String CODE_POINT = "A1";
     static final String NOM_SITE = "Étang de la Tuilière";
 
+    /// Commune du point de démonstration (#2791), celle du scénario fondateur du chantier #2790.
+    static final String COMMUNE = "Aix-en-Provence";
+
     private GraineSonsValidation() {}
 
     /// Prépare l'espace de travail, migre le schéma et seede la base de démo. Renvoie l'injecteur partiel
@@ -219,6 +222,13 @@ final class GraineSonsValidation {
                         return numeroCarre -> {};
                     }
                 });
+    }
+
+    /// Ouvre un contrôleur déjà chargé sur la source **References** (le corpus de référence), pour les
+    /// captures qui rendent autre chose que la vue entière - le menu ☰, par exemple, dont les entrées
+    /// dépendent de la source ([CaptureMenuReferences]).
+    static void ouvrirSurReferences(SonsValidationController controleur) {
+        controleur.ouvrirSur(new SourceObservations.References(ID_UTILISATEUR));
     }
 
     /// Charge `SonsValidation.fxml`, ouvre la vue sur la source `References` et la rend hors-écran dans un
@@ -477,6 +487,7 @@ final class GraineSonsValidation {
                 ps.executeUpdate();
                 idSite = cleGeneree(ps);
             }
+            long idPoint;
             try (PreparedStatement ps = cx.prepareStatement(insertPoint, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, CODE_POINT);
                 ps.setDouble(2, 43.4010);
@@ -484,8 +495,19 @@ final class GraineSonsValidation {
                 ps.setString(4, "Près du grand chêne");
                 ps.setLong(5, idSite);
                 ps.executeUpdate();
-                return cleGeneree(ps);
+                idPoint = cleGeneree(ps);
             }
+            // La commune du point (#2791), telle que l'API Géo la résoudrait : sans elle, le critère
+            // « Lieu » (#2794) n'offrirait que carré, point et site, et la capture ne montrerait pas ce
+            // qui rend le filtre utile - un lieu que l'utilisateur nomme comme il le pense.
+            try (PreparedStatement ps = cx.prepareStatement(
+                    "INSERT INTO point_commune(point_id, commune_name, commune_insee)" + " VALUES (?, ?, ?)")) {
+                ps.setLong(1, idPoint);
+                ps.setString(2, COMMUNE);
+                ps.setString(3, "13001");
+                ps.executeUpdate();
+            }
+            return idPoint;
         } catch (SQLException echec) {
             throw new IllegalStateException("Seed SQL du site/point impossible", echec);
         }
