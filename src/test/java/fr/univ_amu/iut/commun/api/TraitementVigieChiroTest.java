@@ -51,7 +51,7 @@ class TraitementVigieChiroTest {
         ResultatLancement resultat = traitement.lancer(PART);
 
         assertThat(resultat.issue()).isEqualTo(IssueLancement.REFUSE);
-        assertThat(resultat.détail()).contains("400", "participation invalide");
+        assertThat(resultat.detail()).contains("400", "participation invalide");
     }
 
     @Test
@@ -89,7 +89,7 @@ class TraitementVigieChiroTest {
         ResultatLancement resultat = traitement.lancer(PART);
 
         assertThat(resultat.issue()).isEqualTo(IssueLancement.REFUSE);
-        assertThat(resultat.détail()).contains("400", "boom");
+        assertThat(resultat.detail()).contains("400", "boom");
     }
 
     private static String eqChemin() {

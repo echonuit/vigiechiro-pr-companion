@@ -32,7 +32,7 @@ class ResultatLancementTest {
         ResultatLancement refus = ResultatLancement.refuse(422, "champ invalide");
 
         assertThat(refus.issue()).isEqualTo(IssueLancement.REFUSE);
-        assertThat(refus.détail()).contains("422", "champ invalide");
+        assertThat(refus.detail()).contains("422", "champ invalide");
     }
 
     @Test

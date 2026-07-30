@@ -76,9 +76,9 @@ feature : IHM → ViewModel → service → base).
 **Code** :
 
 - formatage **Spotless / Palantir Java Format** (le hook s'en charge ; sinon `./mvnw spotless:apply`) ;
-- doc-comments **Markdown** `///` (JEP 467), pas de `/** */` HTML ;
+- doc-comments **Markdown** `///` (JEP 467), pas de `/** */` HTML, gardé par `ConventionsDEcritureTest` ;
 - **noms de classes en français**, sans accents dans les identifiants (`Navigateur`, `Passage`,
-  `EtapeNavigation`...) ;
+  `EtapeNavigation`...), gardé par `ConventionsDEcritureTest` ;
 - **pas de tiret cadratin** : tiret simple, deux-points ou virgule. La règle vaut **partout** (doc,
   commentaires, chaînes affichées, styles, scripts, ateliers), et un garde la fait respecter
   ([ADR 2843](dev-docs/decisions/2843-typographie-cliquet-plutot-que-nettoyage.md)). Le glyphe reste

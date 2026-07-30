@@ -74,7 +74,7 @@ public class LancementCalculGroupe implements ActionGroupee {
         return switch (resultat.issue()) {
             case RELANCE_BLOQUEE -> "déjà calculé : relancer effacerait les observations";
             case INJOIGNABLE -> "Vigie-Chiro injoignable ; par sécurité, rien n'a été lancé";
-            case REFUSE -> "refusé par Vigie-Chiro (" + resultat.détail() + ")";
+            case REFUSE -> "refusé par Vigie-Chiro (" + resultat.detail() + ")";
             case ACCEPTE, DEJA_LANCE -> throw new IllegalStateException("issue en route traitée comme un échec");
         };
     }
