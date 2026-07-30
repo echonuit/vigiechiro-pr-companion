@@ -1,13 +1,13 @@
-# Mesure hebdomadaire de la qualité des tests par mutation (PIT).
+# Mesure quotidienne de la qualité des tests par mutation (PIT), un paquet `model` par tour.
 #
 # Ce que PIT dit et que la couverture ne dit pas : si les tests **détectent** un changement de
 # comportement. Le rendement est mesuré, pas supposé - sur ce dépôt, deux classes mutation-testées
 # pendant #2554 ont donné trois défauts réels puis deux issues (#2638, #2639).
 #
-# Hebdomadaire et non par PR, pour deux raisons. PIT est **lent** : plus de dix minutes sur un seul
-# paquet, donc des heures sur le dépôt entier. Et un survivant n'est pas un défaut mais une **question**
-# posée à un humain (vrai trou, mutant équivalent, artefact de ciblage) : bloquer une fusion là-dessus
-# ferait cocher au hasard.
+# Programmé et non par PR, pour deux raisons. PIT est **lent** : plus de dix minutes sur un seul paquet,
+# et 2 h 35 sur le plus gros. Et un survivant n'est pas un défaut mais une **question** posée à un humain
+# (vrai trou, mutant équivalent, artefact de ciblage) : bloquer une fusion là-dessus ferait cocher au
+# hasard.
 #
 # ⚠️ PÉRIMÈTRE : **un paquet `model` par semaine**, et jamais les E2E ni la suite du réessai réseau
 # côté tests. Chaque décision est mesurée, pas supposée (#2768) :
@@ -42,22 +42,34 @@
 #
 # NON BLOQUANT, comme le rapport ADR dont ce workflow est le calque : ici on observe, on ne juge pas.
 #
+# ⚠️ Un bilan quotidien que personne ne lit vaut moins qu'un bilan hebdomadaire qu'on lit : la fréquence
+# ne crée pas l'attention. Le résumé du job reste le seul canal, délibérément - le rendre bloquant ferait
+# cocher au hasard, et le pousser ailleurs demanderait de décider qui le reçoit.
+#
 # ⚠️ Le `test-compile` avant le but n'est pas une commodité : sans phase, `@{jacocoArgLine}` et
 # `${net.bytebuddy:byte-buddy-agent:jar}` restent littérales dans l'argLine héritée de surefire, le
 # minion reçoit un `-javaagent` inexistant et meurt sur un `MINION_DIED` muet. Ce piège a fait conclure
 # une fois que PIT était incompatible avec ce dépôt (#2605).
 
-name: mutation-hebdo
+name: mutation-model
 
 on:
   schedule:
-    # Lundi 7 h UTC : une heure après le rapport ADR, pour que les deux bilans arrivent ensemble sans
-    # se disputer les runners.
-    - cron: "0 7 * * 1"
+    # Chaque nuit à 3 h UTC, aux heures creuses. Le fichier s'appelait `mutation-hebdo` : un nom de
+    # cadence devient faux dès qu'on change la cadence, d'où le renommage sur ce que la mesure PORTE.
+    #
+    # Pourquoi quotidien plutôt qu'hebdomadaire : la rotation par paquet rendait le cycle complet en
+    # **17 semaines**, soit quatre mois pendant lesquels un trou de test pouvait vivre sans être vu.
+    # Le même cycle en quotidien prend **17 jours**. Le dépôt est public, donc les minutes d'Actions
+    # sont illimitées sur les runners standard : la fréquence ne coûte que du temps machine.
+    #
+    # Ce que le quotidien NE fait pas : cibler ce qui vient de changer. La rotation est aveugle au diff,
+    # elle avance d'un paquet par jour quoi qu'on ait touché. Elle mesure plus souvent, pas plus juste.
+    - cron: "0 3 * * *"
   workflow_dispatch:
     inputs:
       feature:
-        description: "Feature dont le paquet model est muté (vide = celle du tour, déduite de la semaine)"
+        description: "Feature dont le paquet model est muté (vide = celle du tour, déduite du jour)"
         required: false
         default: ""
 
@@ -104,10 +116,11 @@ jobs:
           if [ -n "${DEMANDEE}" ]; then
             FEATURE="${DEMANDEE}"
           else
-            # Rotation sans état : la semaine ISO choisit. Le tour complet prend 17 semaines.
-            SEMAINE=$(date -u +%-V)
-            ANNEE=$(date -u +%G)
-            INDEX=$(( (ANNEE * 53 + SEMAINE) % ${#FEATURES[@]} ))
+            # Rotation sans état : le JOUR choisit, compté en jours depuis l'époque. Le tour complet prend
+            # 17 jours. Le compte absolu évite la bascule d'année, qui ferait sauter ou répéter un paquet
+            # avec un numéro de jour remis à 1.
+            JOUR=$(( $(date -u +%s) / 86400 ))
+            INDEX=$(( JOUR % ${#FEATURES[@]} ))
             FEATURE="${FEATURES[$INDEX]}"
           fi
           if [ ! -d "src/main/java/fr/univ_amu/iut/${FEATURE}/model" ]; then
