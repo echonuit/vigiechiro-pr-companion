@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 ///    (`especes-pna.properties`, ~32 chiroptères de métropole), on renvoie sa fiche descriptive
 ///    spécialisée, en français.
 /// 2. **Source universelle** (par nom latin) : sinon, si un nom latin est connu, on délègue à une
-///    [SourceUniverselle] (GBIF par défaut, cf. [LienGbif]) — ce qui couvre oiseaux, orthoptères,
+///    [SourceUniverselle] (GBIF par défaut, cf. [LienGbif]) : ce qui couvre oiseaux, orthoptères,
 ///    niveaux genre et couples que le PNA ne référence pas.
 ///
 /// Sinon (pseudo-taxon `noise`/`piaf`, ou taxon sans code connu ni nom latin) : [Optional#empty()],

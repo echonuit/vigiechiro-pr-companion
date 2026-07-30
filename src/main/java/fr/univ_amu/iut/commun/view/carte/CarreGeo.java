@@ -4,7 +4,7 @@ import java.util.Objects;
 import javafx.scene.paint.Color;
 
 /// Carré (site Vigie-Chiro 2 km) à tracer sur la [CarteSites] : son numéro, son [EmpriseCarre] et une
-/// couleur de remplissage (décidée par l'appelant, p. ex. selon la densité de passages — tableau de bord).
+/// couleur de remplissage (décidée par l'appelant, p. ex. selon la densité de passages : tableau de bord).
 /// Donnée de **présentation** (couche `view`).
 ///
 /// @param numeroCarre numéro à 6 chiffres (jamais nul ; sert de libellé accessible du tracé)

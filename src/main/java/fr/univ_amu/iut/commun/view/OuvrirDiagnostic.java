@@ -6,7 +6,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 /// d'un passage ».
 ///
 /// Défini dans le socle (`commun.view`) pour permettre à `passage` (M-Passage) d'ouvrir le
-/// diagnostic **sans dépendre de la feature `diagnostic`** — qui dépend déjà de `passage`
+/// diagnostic **sans dépendre de la feature `diagnostic`** : qui dépend déjà de `passage`
 /// (`ServiceDiagnostic` lit les DAO passage), donc une dépendance directe formerait un cycle. La
 /// feature `diagnostic` en fournit l'implémentation (bindée par son module). Même esprit que
 /// [OuvrirVerification] et [OuvrirPassage].

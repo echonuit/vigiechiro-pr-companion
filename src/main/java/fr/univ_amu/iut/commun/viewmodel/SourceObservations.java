@@ -21,10 +21,10 @@ import java.util.Objects;
 /// diffère.
 ///
 /// Variantes :
-/// - [ParPassage] un passage (workflow Tadarida) — seule à permettre l'import CSV / l'export `_Vu` ;
+/// - [ParPassage] un passage (workflow Tadarida) : seule à permettre l'import CSV / l'export `_Vu` ;
 /// - [ParPassages] un lot de passages (multisite filtré) ;
 /// - [ParEspece] une espèce à travers les passages d'un utilisateur ;
-/// - [References] le corpus `is_reference` d'un utilisateur — seule à permettre l'export bibliothèque.
+/// - [References] le corpus `is_reference` d'un utilisateur : seule à permettre l'export bibliothèque.
 public sealed interface SourceObservations {
 
     /// **Intitulé** de la source, tel qu'affiché dans le fil d'Ariane / le titre de l'écran audio. C'est

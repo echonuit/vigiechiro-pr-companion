@@ -8,7 +8,7 @@ import java.util.Objects;
 ///
 /// Un relevé, pas une vérité : l'analyse Tadarida appartient au serveur, qui peut la faire avancer (ou
 /// la recommencer) sans nous prévenir. On garde donc l'état **avec la date à laquelle on l'a lu**, ce qui
-/// permet de l'afficher hors connexion et à la réouverture de l'application — et de dire honnêtement
+/// permet de l'afficher hors connexion et à la réouverture de l'application, et de dire honnêtement
 /// « dernier état connu le … » plutôt que de laisser croire à une information fraîche.
 ///
 /// Le passage est la clé : une nuit, une participation. Chaque rafraîchissement **écrase** le relevé

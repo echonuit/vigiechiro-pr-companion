@@ -7,8 +7,8 @@ import javafx.util.StringConverter;
 
 /// Axe des abscisses gradué en **minutes depuis une origine**, mais **étiqueté en heures**.
 ///
-/// Deux écrans tracent une courbe dans le temps d'une nuit — le climat du [Diagnostic] et l'activité par
-/// espèce — et tous deux se heurtent au même obstacle : un `NumberAxis` ne sait pas parler d'heures. On
+/// Deux écrans tracent une courbe dans le temps d'une nuit : le climat du [Diagnostic] et l'activité par
+/// espèce, et tous deux se heurtent au même obstacle : un `NumberAxis` ne sait pas parler d'heures. On
 /// place donc les points à leur distance en minutes d'une origine, et on **reconstruit** l'heure du jour
 /// à l'étiquette. Sans cela, l'axe afficherait des minutes brutes (0, 60, 120…) que personne ne lit.
 ///

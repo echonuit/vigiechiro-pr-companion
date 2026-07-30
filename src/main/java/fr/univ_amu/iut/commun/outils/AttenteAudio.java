@@ -8,7 +8,7 @@ import javafx.application.Platform;
 ///
 /// L'`AudioView` lit son WAV sur un **thread de fond** (`javax.sound.sampled`) puis publie la durée
 /// et le spectrogramme via `Platform.runLater`. Pour capturer un spectrogramme **peint** (et non un
-/// cadre vide), il faut attendre la fin de ce chargement — mais **sans bloquer le thread JavaFX**,
+/// cadre vide), il faut attendre la fin de ce chargement, mais **sans bloquer le thread JavaFX**,
 /// sinon le `runLater` de publication ne s'exécuterait jamais (interblocage).
 ///
 /// On utilise donc une **boucle d'évènements imbriquée** ([Platform#enterNestedEventLoop]) qui

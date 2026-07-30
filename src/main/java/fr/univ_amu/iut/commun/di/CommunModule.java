@@ -113,13 +113,13 @@ public class CommunModule extends AbstractModule {
         // Recherche globale du chrome (#144) : OptionalBinder VIDE (feature `recherche` désactivable, #1087).
         // `RechercheModule` fait `setBinding` quand elle est active ; sinon MainController masque la barre.
         OptionalBinder.newOptionalBinder(binder(), RechercheGlobale.class);
-        // Suivi du traitement serveur (#1259) : OptionalBinder VIDE ici, car il exige le client HTTP —
+        // Suivi du traitement serveur (#1259) : OptionalBinder VIDE ici, car il exige le client HTTP :
         // absent des injecteurs de capture, qui assemblent l'application sans `connexion`. `ConnexionModule`
         // pose la liaison réelle. Les consommateurs (M-Lot, modale de rattachement, CLI) reçoivent donc un
         // Optional : hors connexion, le suivi est simplement indisponible, sans binding manquant.
         OptionalBinder.newOptionalBinder(binder(), SuiviTraitement.class);
         // Import des observations (#1264) : port déclaré À VIDE, implémenté par la feature `validation`.
-        // M-Passage le consomme en Optional — sans connexion (ou feature désactivée), le bouton d'import
+        // M-Passage le consomme en Optional : sans connexion (ou feature désactivée), le bouton d'import
         // n'apparaît tout simplement pas.
         OptionalBinder.newOptionalBinder(binder(), ImportObservations.class);
     }

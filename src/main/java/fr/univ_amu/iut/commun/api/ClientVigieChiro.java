@@ -66,7 +66,7 @@ public final class ClientVigieChiro {
     }
 
     /// Profil de l'utilisateur connecté (`GET /moi`), **trié** (#1284) : un jeton refusé (`401`)
-    /// revient en `Refuse`, une panne en `Injoignable` — la modale de connexion peut enfin cesser
+    /// revient en `Refuse`, une panne en `Injoignable` : la modale de connexion peut enfin cesser
     /// d'annoncer « jeton invalide » quand c'est le réseau qui est coupé.
     public ReponseApi<ProfilVigieChiro> moi() {
         return transport.lire("/moi").lireAvec(ReponsesVigieChiro::profil);
@@ -83,15 +83,15 @@ public final class ClientVigieChiro {
     /// rayon (en mer, hors de France).
     ///
     /// Contrat relevé dans le code du backend (`vigiechiro/resources/grille_stoc.py`) : trois paramètres
-    /// **obligatoires** `lng`, `lat`, `r` (flottants), une requête MongoDB `$near` — donc des résultats
-    /// **triés par distance croissante** — plafonnés à 80 éléments. Le rôle `Observateur` suffit.
+    /// **obligatoires** `lng`, `lat`, `r` (flottants), une requête MongoDB `$near`, donc des résultats
+    /// **triés par distance croissante** : plafonnés à 80 éléments. Le rôle `Observateur` suffit.
     ///
     /// Le rayon est en **mètres** (`$maxDistance` d'un `$near` GeoJSON). [#RAYON_CARRE_STOC_METRES] vaut
     /// 10 km : les carrés STOC font 2 km de côté, un point tombe donc toujours à moins de ~1,5 km du
     /// centre du sien ; le rayon large sert à répondre quand même (le carré voisin) plutôt que rien.
     ///
     /// Issue **triée** (#1284) : hors connexion, panne et refus restent distincts d'une position sans
-    /// carré — c'est ce qui permet à l'appelant de se taire au lieu d'accuser à tort.
+    /// carré : c'est ce qui permet à l'appelant de se taire au lieu d'accuser à tort.
     public ReponseApi<Optional<String>> carreStoc(double latitude, double longitude) {
         String requete = "/grille_stoc/cercle?lng=" + longitude + "&lat=" + latitude + "&r=" + RAYON_CARRE_STOC_METRES;
         return transport.lire(requete).transformer(ReponsesVigieChiro::numeroCarreStoc);
@@ -135,7 +135,7 @@ public final class ClientVigieChiro {
     /// Participation **détaillée** (`GET /participations/#id`, axe 4) : `_etag` (pour un `PATCH` `If-Match`
     /// concurrent-sûr), dates, météo, configuration matérielle et état du traitement Tadarida. Issue
     /// **triée** (#1284) : une participation inconnue revient en `Refuse(404)`, une panne en
-    /// `Injoignable`, l'absence de jeton en `NonConnecte` — plus jamais un même « vide ».
+    /// `Injoignable`, l'absence de jeton en `NonConnecte` : plus jamais un même « vide ».
     public ReponseApi<ParticipationDetail> participation(String id) {
         return transport.lire(CHEMIN_PARTICIPATIONS + id).lireAvec(ParticipationsVigieChiro::detail);
     }
@@ -166,13 +166,13 @@ public final class ClientVigieChiro {
                 suivi);
     }
 
-    /// **Journal de traitement** d'une participation (#1132) : le serveur y trace l'ingestion —
+    /// **Journal de traitement** d'une participation (#1132) : le serveur y trace l'ingestion :
     /// archives extraites avec inventaire (`Archive contained: {'audio/wav': N}`), chaque fichier
     /// passé à Tadarida. Chaîne : `GET /participations/#id` → document `logs` → `GET
     /// /fichiers/#id/acces` → URL S3 signée, téléchargée **sans** en-tête d'authentification.
     ///
     /// Issue **triée** (#1284) : `Succes(Optional.empty())` signifie « le serveur répond, et le
-    /// journal n'existe pas (encore) » (traitement jamais lancé) — à ne plus confondre avec une panne
+    /// journal n'existe pas (encore) » (traitement jamais lancé) : à ne plus confondre avec une panne
     /// ou un refus, qui gardent leur cause (la vérification d'un dépôt hors ligne n'est plus un faux
     /// « tout manquant »).
     public ReponseApi<Optional<String>> journalTraitement(String participationId) {
@@ -229,7 +229,7 @@ public final class ClientVigieChiro {
 
     /// Crée une **participation** sur un site (`POST /sites/#id/participations`, #142) : renvoie l'`_id` créé,
     /// ou un [ResultatEcriture] portant le **détail de l'échec** (statut HTTP + corps de la réponse
-    /// VigieChiro) pour un message exploitable — le dépôt étant une écriture, un refus doit être **expliqué**,
+    /// VigieChiro) pour un message exploitable : le dépôt étant une écriture, un refus doit être **expliqué**,
     /// pas silencieusement vide. Prérequis métier : site **verrouillé** côté VigieChiro.
     public ResultatEcriture creerParticipation(String siteId, ParticipationADeposer participation) {
         ReponseApi<String> reponse =
@@ -247,7 +247,7 @@ public final class ClientVigieChiro {
     /// **Met à jour** une participation existante (`PATCH /participations/#id`, axe 4) : n'émet que les
     /// métadonnées synchronisables (dates, météo, configuration ; cf. [RequetesVigieChiro#miseAJourParticipation]),
     /// avec l'en-tête `If-Match: <etag>` exigé par Eve (concurrence optimiste). L'`etag` frais se lit via
-    /// [#participation]. Renvoie l'`_id` en cas de succès, ou le **détail de l'échec** (statut + corps) — un
+    /// [#participation]. Renvoie l'`_id` en cas de succès, ou le **détail de l'échec** (statut + corps) : un
     /// refus doit être expliqué. Prérequis : `etag` courant (sinon `412 Precondition Failed`).
     public ResultatEcriture modifierParticipation(String id, String etag, ParticipationADeposer miseAJour) {
         // Pas de rejeu (#2677) : l'`If-Match` protège du doublon, mais pas du malentendu. Si la première
@@ -290,15 +290,15 @@ public final class ClientVigieChiro {
     ///
     /// Même **ancrage positionnel** que la correction (#1203 / #1139) : la donnée par son `_id`, puis
     /// l'indice **brut** de l'observation dans son tableau. Le serveur laisse passer le propriétaire de la
-    /// donnée, donc un jeton d'`Observateur` suffit — contrairement à l'avis de validateur, qu'il refuse
+    /// donnée, donc un jeton d'`Observateur` suffit : contrairement à l'avis de validateur, qu'il refuse
     /// (403) et que l'application ne peut donc que lire (#1417).
     ///
     /// ⚠️ **Écriture définitive.** Le serveur ajoute par `$push`, et **aucune route ne permet de supprimer
-    /// ni de modifier un message**. Ce qui part ne se retire pas — et part sur des données partagées avec
+    /// ni de modifier un message**. Ce qui part ne se retire pas, et part sur des données partagées avec
     /// un validateur du MNHN. L'appelant **doit** l'avoir fait confirmer explicitement.
     ///
     /// Ni `If-Match`, ni `_etag` : le serveur n'offre aucun contrôle de concurrence sur cette route. Deux
-    /// messages postés en même temps s'empilent, ils ne s'écrasent pas — c'est le seul point rassurant de
+    /// messages postés en même temps s'empilent, ils ne s'écrasent pas : c'est le seul point rassurant de
     /// cette absence.
     ///
     /// @return l'issue **triée** (#1284) : `Succes` (le fil contient le message), `NonConnecte`,
@@ -330,7 +330,7 @@ public final class ClientVigieChiro {
     }
 
     /// Variante **en flux** de [#televerserVersS3(String, byte[], String)] (#982) : le corps du `PUT` est
-    /// **streamé depuis le disque** (`BodyPublishers.ofFile`) au lieu d'être chargé en mémoire — une
+    /// **streamé depuis le disque** (`BodyPublishers.ofFile`) au lieu d'être chargé en mémoire : une
     /// archive ZIP de dépôt peut peser ~700 Mo. Mêmes garanties : `true` si 2xx, `false` sinon (fichier
     /// illisible compris).
     public boolean televerserVersS3(String urlSignee, Path fichier, String mime) {

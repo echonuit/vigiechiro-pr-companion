@@ -32,7 +32,7 @@ public enum ClasseActivite {
     ///
     /// Les bornes sont **inclusives vers le haut** : un compte exactement égal à Q25 est « Moyenne »,
     /// pas « Faible ». C'est la convention du référentiel, et elle évite qu'une valeur pile sur le
-    /// seuil tombe dans la classe inférieure — ce qui se lirait comme une sous-estimation.
+    /// seuil tombe dans la classe inférieure : ce qui se lirait comme une sous-estimation.
     public static ClasseActivite de(int contacts, SeuilsActivite seuils) {
         if (contacts < seuils.q25()) {
             return FAIBLE;

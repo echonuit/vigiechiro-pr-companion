@@ -104,7 +104,7 @@ public record Prefixe(String carre, int annee, int numeroPassage, String codePoi
 
     /// Nom d'une séquence d'écoute **horodatée** (R8, convention Vigie-Chiro/Tadarida) : chaque tranche de
     /// 5 s réelles porte l'**heure réelle de son début** (horodatage de l'original **décalé** de
-    /// `decalageSecondes`) et un suffixe `_000` systématique — et non un index `_000`, `_001`… C'est
+    /// `decalageSecondes`) et un suffixe `_000` systématique, et non un index `_000`, `_001`… C'est
     /// indispensable pour que les lignes de l'`observations.csv` (qui référencent ces noms décalés) se
     /// raccrochent à la bonne tranche audio. Exemple : `..._20260422_225849.wav`, tranche d'index 2
     /// (`decalageSecondes = 10`) → `..._20260422_225859_000.wav`.

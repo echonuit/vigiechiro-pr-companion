@@ -6,7 +6,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// Le **repère visuel des espèces à enjeu** (#2353), dit une seule fois pour les trois écrans qui le
 /// portent : la revue (colonne-indicateur), l'inventaire (cellule du nom) et l'activité (case à cocher).
 ///
-/// Chacun le **place** différemment — ce que représente une ligne n'y est pas le même —, mais tous
+/// Chacun le **place** différemment (ce que représente une ligne n'y est pas le même), mais tous
 /// désignent le **même fait**. Trois littéraux de glyphe et trois libellés d'infobulle laissaient trois
 /// occasions de diverger : il aurait suffi qu'un écran change d'icône pour que le même fait cesse de se
 /// reconnaître d'un écran à l'autre.
@@ -18,7 +18,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 public final class RepereEspeceAEnjeu {
 
     /// Bouclier FontAwesome : une protection, pas une alerte. L'enjeu porte sur l'espèce, pas sur la
-    /// qualité de la donnée — ce qui écarte le triangle d'avertissement et le point d'interrogation,
+    /// qualité de la donnée : ce qui écarte le triangle d'avertissement et le point d'interrogation,
     /// déjà pris par d'autres indicateurs.
     public static final String ICONE = "fas-shield-alt";
 

@@ -12,14 +12,14 @@ import java.util.Set;
 ///
 /// Les libellés de région rendus ici sont ceux du **référentiel embarqué**, pas les libellés
 /// administratifs officiels : le référentiel écrit `Grand-Est` (avec trait d'union) et
-/// `Nouvelle Aquitaine` (sans). Ce sont des **clés de jointure**, pas du texte d'affichage — les
+/// `Nouvelle Aquitaine` (sans). Ce sont des **clés de jointure**, pas du texte d'affichage : les
 /// corriger orthographiquement les rendrait introuvables. La garde `RegionDuCarreTest`
 /// vérifie que chacune existe réellement dans la ressource.
 ///
 /// **Normalisation Corse** : la table est indexée sur `20` (le numérotage des carrés, fait de
 /// chiffres seuls) ; les codes INSEE `2A`/`2B` y sont ramenés. L'outre-mer (`97x`) n'a pas de
 /// déclinaison régionale dans le référentiel : il renvoie **vide**, et le référentiel retombe sur
-/// `national` — lecture plus large mais jamais fausse.
+/// `national` : lecture plus large mais jamais fausse.
 public final class RegionsFrancaises {
 
     /// Département → région. La Corse porte la clé `20` (numérotage carré), cf. normalisation.

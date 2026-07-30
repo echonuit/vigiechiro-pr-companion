@@ -39,7 +39,7 @@ public interface RapprochementVigieChiro {
     /// appeler **hors du fil JavaFX** (réseau + écritures base).
     ///
     /// @return un [RapportSynchro] si une synchronisation a eu lieu **ou a été empêchée** (#1284 :
-    ///     plateforme injoignable, refus serveur — cause portée par [RapportSynchro#souci()]), ou
+    ///     plateforme injoignable, refus serveur : cause portée par [RapportSynchro#souci()]), ou
     ///     [Optional#empty()] s'il n'y a rien à dire (non connecté : silence légitime ; échec interne
     ///     best-effort). L'appelant affiche [RapportSynchro#enClair()] sans deviner.
     Optional<RapportSynchro> synchroniser(ClientVigieChiro client);

@@ -10,7 +10,7 @@ import java.util.Locale;
 /// qui qualifie la correction de l'**observateur** (#1139, colonne `observer_certainty`) et le verdict du
 /// **validateur** du MNHN (#1417, colonne `validator_certainty`). Le type s'est d'abord appelé
 /// `CertitudeObservateur`, du nom de son premier usage ; il portait deux rôles depuis #1417, et son nom
-/// mentait — une certitude n'appartient pas à celui qui la déclare, elle qualifie ce qu'il déclare.
+/// mentait : une certitude n'appartient pas à celui qui la déclare, elle qualifie ce qu'il déclare.
 ///
 /// Notion **distincte** de la probabilité numérique `[0,1]` (`prob_observer`), qui est la confiance
 /// **Tadarida** recopiée à la validation (héritage du format `_Vu`) : aucune conversion de l'une vers

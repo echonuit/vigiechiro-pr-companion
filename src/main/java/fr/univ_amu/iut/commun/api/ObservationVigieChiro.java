@@ -9,7 +9,7 @@ import java.util.List;
 ///
 /// Elle porte les **trois avis** que la plateforme distingue sur une même détection : Tadarida
 /// *propose* (`tadarida_*`), l'observateur *corrige* (`observateur_*`), le validateur du MNHN
-/// *tranche* (`validateur_*`, #1417) — plus le **fil de discussion** qui les relie. Tout cela arrive
+/// *tranche* (`validateur_*`, #1417) : plus le **fil de discussion** qui les relie. Tout cela arrive
 /// dans la **même** charge utile : l'application le recevait déjà et le jetait.
 ///
 /// La certitude partage le **même domaine fermé** côté serveur pour l'observateur et pour le
@@ -51,7 +51,7 @@ public record ObservationVigieChiro(
         List<MessageVigieChiro> messages) {
 
     /// Fil **immuable** et tolérant au `null` : un fil absent est un fil vide, pas une erreur. Le record
-    /// est une valeur — son fil ne doit pas pouvoir muter dans le dos de qui l'a reçu.
+    /// est une valeur : son fil ne doit pas pouvoir muter dans le dos de qui l'a reçu.
     public ObservationVigieChiro {
         messages = messages == null ? List.of() : List.copyOf(messages);
     }

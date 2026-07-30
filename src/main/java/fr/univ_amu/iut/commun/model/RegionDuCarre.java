@@ -8,7 +8,7 @@ import java.util.Set;
 ///
 /// **Les deux premiers chiffres du numéro de carré sont le département.** Ce n'est écrit nulle part
 /// dans le format lui-même : c'est une propriété du numérotage Vigie-Chiro, confirmée par le porteur du
-/// produit et tracée par l'ADR 2351. Une déduction tirée de quelques exemples n'aurait pas suffi — une
+/// produit et tracée par l'ADR 2351. Une déduction tirée de quelques exemples n'aurait pas suffi : une
 /// région devinée de travers change le verdict d'activité en silence.
 ///
 /// La table département → région elle-même vit dans [RegionsFrancaises] (#2791) : elle sert aussi la

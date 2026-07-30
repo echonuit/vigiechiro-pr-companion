@@ -7,7 +7,7 @@ import java.util.Objects;
 ///
 /// Collaborateur de [ClientVigieChiro] plutôt que méthodes de plus sur lui : le client nomme les points
 /// d'accès et le transport émet, tandis que **décider** de ce qu'un refus veut dire est une règle métier.
-/// La séparation n'est pas cosmétique — c'est ce que PMD constatait en voyant le client franchir le seuil
+/// La séparation n'est pas cosmétique : c'est ce que PMD constatait en voyant le client franchir le seuil
 /// de la God Class.
 public final class TraitementVigieChiro {
 
@@ -20,7 +20,7 @@ public final class TraitementVigieChiro {
     /// Lance le traitement Tadarida de la participation.
     ///
     /// Un refus n'est pas forcément un échec : le serveur répond `400 « Already »` quand un traitement est
-    /// déjà planifié ou en cours **depuis moins de 24 h** (`participations.py:231-237`) — il travaille, il
+    /// déjà planifié ou en cours **depuis moins de 24 h** (`participations.py:231-237`), il travaille, il
     /// n'y a qu'à attendre. Plutôt que de décrypter son message d'erreur, on **relit l'état** : c'est lui
     /// qui fait foi (#1261).
     public ResultatLancement lancer(String participationId) {

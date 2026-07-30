@@ -16,7 +16,7 @@ import java.util.Objects;
 /// ## Persister un réglage énuméré : par sa valeur, jamais par son nom
 ///
 /// Il n'y a **volontairement pas** de `lireEnum` / `ecrireEnum` ici (#2042). Une telle méthode
-/// sérialiserait `Enum.name()`, c'est-à-dire l'**identifiant Java** — et renommer une constante,
+/// sérialiserait `Enum.name()`, c'est-à-dire l'**identifiant Java**, et renommer une constante,
 /// refactoring que tout le monde tient pour sûr, ferait alors retomber silencieusement le réglage de
 /// chaque utilisateur sur le défaut. Aucune erreur, aucune trace : la préférence disparaît.
 ///
@@ -36,7 +36,7 @@ import java.util.Objects;
 /// }
 /// ```
 ///
-/// Côté réglage, cela donne un [#lireTexte] suivi d'un `parValeur` — deux lignes lisibles, et le
+/// Côté réglage, cela donne un [#lireTexte] suivi d'un `parValeur` : deux lignes lisibles, et le
 /// renommage d'une constante n'atteint plus les bases existantes.
 public class Reglages {
 

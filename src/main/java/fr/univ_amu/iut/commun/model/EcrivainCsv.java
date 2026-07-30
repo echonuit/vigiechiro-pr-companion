@@ -18,7 +18,7 @@ import java.util.Objects;
 /// - [#avecGuillemets()] : **tous** les champs sont encadrés de guillemets (format
 /// Tadarida « Brut ») ;
 /// - [#minimal()] (défaut) : un champ n'est encadré que s'il le faut (il contient le
-/// séparateur, un guillemet ou un saut de ligne) — format Tadarida « Vu » et exports.
+/// séparateur, un guillemet ou un saut de ligne) : format Tadarida « Vu » et exports.
 ///
 /// Le séparateur est configurable (défaut `';'`, ex. `'\t'` pour un THLog). Un champ
 /// `null` est écrit comme une chaîne vide. Un guillemet littéral est échappé en le doublant

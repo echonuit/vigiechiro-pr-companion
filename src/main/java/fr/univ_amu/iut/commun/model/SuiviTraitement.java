@@ -14,7 +14,7 @@ import java.util.function.Consumer;
 /// où en est l'analyse d'une nuit, et **s'en souvenir** au passage (cache #1262).
 ///
 /// Il vit dans `commun` à dessein : l'écran de dépôt (#1263), la modale de rattachement (#1264) et la
-/// ligne de commande (#1265) le consomment tous, sans qu'aucune feature n'ait à dépendre d'une autre —
+/// ligne de commande (#1265) le consomment tous, sans qu'aucune feature n'ait à dépendre d'une autre :
 /// un `passage` qui dépendrait de `lot` fermerait un cycle qu'ArchUnit refuse.
 ///
 /// **Lecture seule** vis-à-vis du serveur : on observe, on n'écrit jamais. Le lancement, lui, passe par
@@ -39,7 +39,7 @@ public final class SuiviTraitement {
     ///
     /// Lève une [RegleMetierException] si le passage n'est lié à aucune participation (rien à suivre :
     /// la nuit n'a pas été déposée), ou si le serveur n'a **pas pu être lu** (#1284 : non connecté,
-    /// injoignable, ou refus) — dans ce cas le **dernier relevé persisté est conservé tel quel** : un
+    /// injoignable, ou refus), dans ce cas le **dernier relevé persisté est conservé tel quel** : un
     /// échec de lecture n'écrase jamais un souvenir acquis, même famille que la garde anti-purge des
     /// rapprochements. Un [Traitement#estInconnu()] rendu ici veut donc dire, enfin sans ambiguïté :
     /// « le serveur répond, et la nuit n'a jamais été calculée ».
@@ -66,7 +66,7 @@ public final class SuiviTraitement {
     }
 
     /// Relève l'état de **plusieurs** nuits d'un coup, **à la demande** (#1338) : c'est le relevé groupé
-    /// que les vues d'ensemble déclenchent par un bouton, jamais un sondage automatique — la règle du
+    /// que les vues d'ensemble déclenchent par un bouton, jamais un sondage automatique : la règle du
     /// chantier reste « on n'interroge le serveur que quand l'utilisateur le demande ».
     ///
     /// **Best-effort** : une nuit qui échoue (injoignable, refus, non liée) n'interrompt pas les autres,

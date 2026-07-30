@@ -168,8 +168,8 @@ public class MainController {
         // les libellés suivent NavigationViewModel.zonesStatut et la barre se masque quand tout est vide.
         BarreStatut.lier(barreStatut, piedGauche, piedCentre, piedDroite, navigation);
 
-        // Menu « ☰ » (outils) : bâti depuis les ActionMenu contribuées (#930) — sauvegarde /
-        // restauration, purge, préférences, réglages, connexion — sans que ce controller connaisse
+        // Menu « ☰ » (outils) : bâti depuis les ActionMenu contribuées (#930), sauvegarde /
+        // restauration, purge, préférences, réglages, connexion : sans que ce controller connaisse
         // chaque entrée. `this::fenetre` fournit la fenêtre propriétaire des dialogues au clic.
         ConstructeurMenuOutils.peupler(menuOutils, actionsMenu, this::fenetre);
 
@@ -182,7 +182,7 @@ public class MainController {
         // restauration, purge) voilent toute la fenêtre pendant leur travail hors du fil JavaFX.
         occupationChrome.installer(hoteOccupation);
 
-        // ← Retour (historique) : reste actif même pendant une opération critique — l'utilisateur est
+        // ← Retour (historique) : reste actif même pendant une opération critique, l'utilisateur est
         // averti à la sortie (cf. Navigateur#peutQuitter, #906) plutôt que bloqué en silence. Sa visibilité
         // (présent hors accueil) est gérée par rafraichirNavigation() et suivie par l'enveloppe. Le tooltip
         // rappelle l'action et les raccourcis (#796).
@@ -298,7 +298,7 @@ public class MainController {
     }
 
     /// Reconstruit la barre de navigation : visibilité du ← Retour (présent hors accueil) et segments
-    /// du fil d'Ariane (emplacement de l'écran courant, sinon historique — cf. [Navigateur#filActuel]).
+    /// du fil d'Ariane (emplacement de l'écran courant, sinon historique : cf. [Navigateur#filActuel]).
     private void rafraichirNavigation() {
         boolean peutRevenir = navigateur.peutRevenir();
         boutonRetour.setVisible(peutRevenir);

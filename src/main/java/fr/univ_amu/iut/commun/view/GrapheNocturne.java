@@ -9,7 +9,7 @@ import javafx.scene.shape.Rectangle;
 /// les courbes.
 ///
 /// Deux écrans en ont besoin, pour la même raison : situer ce qu'ils tracent dans la nuit **réelle**. La
-/// courbe d'activité y montre ce qui déborde en période diurne — signal de dispositif autant
+/// courbe d'activité y montre ce qui déborde en période diurne : signal de dispositif autant
 /// qu'écologique (#2352) ; la courbe climatique du diagnostic y situe ses mesures, la fenêtre étant
 /// justement ce qu'il vérifie par ailleurs (#2617).
 ///

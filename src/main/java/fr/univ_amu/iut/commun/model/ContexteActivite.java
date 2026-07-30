@@ -9,11 +9,11 @@ import java.util.Optional;
 ///
 /// Les trois ne se connaissent pas de la même façon, et c'est **volontaire** :
 ///
-/// - la **saison** se déduit de la date du passage — elle est dans la donnée ;
+/// - la **saison** se déduit de la date du passage : elle est dans la donnée ;
 /// - la **région** se déduit du numéro de carré, dont les deux premiers chiffres sont le département
 ///   ([RegionDuCarre]) ;
 /// - le **milieu** ne se devine pas. Aucune donnée du produit ne dit si un point est en forêt ou en
-///   ville. Il reste un **choix explicite**, dont la valeur par défaut est l'absence de choix — donc
+///   ville. Il reste un **choix explicite**, dont la valeur par défaut est l'absence de choix : donc
 ///   le national, et non une supposition.
 ///
 /// @param saison saison retenue, ou vide (on comparera alors « toutes saisons »)
@@ -22,7 +22,7 @@ import java.util.Optional;
 public record ContexteActivite(Optional<SaisonActivite> saison, Optional<String> region, Optional<String> milieu) {
 
     /// Contexte le plus large : aucune déclinaison, toutes saisons. C'est le **défaut**, et il est
-    /// juste — simplement moins précis.
+    /// juste : simplement moins précis.
     public static final ContexteActivite NATIONAL =
             new ContexteActivite(Optional.empty(), Optional.empty(), Optional.empty());
 

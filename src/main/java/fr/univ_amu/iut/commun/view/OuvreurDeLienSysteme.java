@@ -9,7 +9,7 @@ import javafx.application.HostServices;
 ///
 /// Le `HostServices` n'existe qu'à partir d'une [javafx.application.Application] : `App` le
 /// branche une fois au démarrage via [#initialiser]. Tant qu'il n'est pas branché (mode
-/// CLI, tests, ou avant le `start`), [#ouvrir] ne fait que journaliser — **jamais d'exception**,
+/// CLI, tests, ou avant le `start`), [#ouvrir] ne fait que journaliser : **jamais d'exception**,
 /// pour ne pas casser un parcours à cause d'un lien non ouvrable.
 @Singleton
 public class OuvreurDeLienSysteme implements OuvreurDeLien {

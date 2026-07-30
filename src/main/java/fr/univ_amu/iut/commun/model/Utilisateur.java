@@ -8,6 +8,6 @@ package fr.univ_amu.iut.commun.model;
 /// site appartient à l'utilisateur courant, R2.01).
 ///
 /// @param localId identifiant local (UUID en `TEXT`), généré à l'installation, jamais affiché
-/// — clé primaire naturelle
+/// : clé primaire naturelle
 /// @param displayName nom affiché (optionnel, repris dans la barre de titre)
 public record Utilisateur(String localId, String displayName) {}

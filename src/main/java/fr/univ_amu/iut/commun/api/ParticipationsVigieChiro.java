@@ -23,7 +23,7 @@ final class ParticipationsVigieChiro {
     private static final String CLE_ID = "_id";
 
     /// Clé de début : la participation la porte (début de nuit) **et** son bloc `traitement` aussi (prise en
-    /// charge par un worker) — deux sens, une seule orthographe côté API.
+    /// charge par un worker) : deux sens, une seule orthographe côté API.
     private static final String CLE_DATE_DEBUT = "date_debut";
 
     /// Clé de fin, portée elle aussi par la participation (fin de nuit) et par le `traitement` (fin, y

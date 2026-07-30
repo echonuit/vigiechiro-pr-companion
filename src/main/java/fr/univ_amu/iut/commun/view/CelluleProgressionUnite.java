@@ -12,7 +12,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-/// Cellule de la colonne « Progression » d'une table de suivi par unité : rend l'unité selon son état —
+/// Cellule de la colonne « Progression » d'une table de suivi par unité : rend l'unité selon son état :
 /// **barre de progression vive** tant qu'elle se traite (« en cours »), sinon une **icône + libellé**
 /// (horloge « en attente », coche « terminée », croix « échec » avec la raison en infobulle).
 ///

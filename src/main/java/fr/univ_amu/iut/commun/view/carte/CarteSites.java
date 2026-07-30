@@ -172,7 +172,7 @@ public class CarteSites extends Region {
         carte.resizeRelocate(0, 0, getWidth(), getHeight());
     }
 
-    /// Accès au fond de carte Gluon — **réservé aux tests** du même paquet (centre/zoom courants).
+    /// Accès au fond de carte Gluon : **réservé aux tests** du même paquet (centre/zoom courants).
     MapView vueCarte() {
         return carte;
     }

@@ -84,7 +84,7 @@ public final class GestionnaireColonnes {
     }
 
     /// Variante **composable** : `itemsClicDroit` (ex. « Fiche de l'espèce ») ouvrent le menu contextuel de
-    /// la table, suivis d'un séparateur puis de « Colonnes… » — sans écraser l'action de clic droit propre à
+    /// la table, suivis d'un séparateur puis de « Colonnes… » : sans écraser l'action de clic droit propre à
     /// la vue. Le ☰ reçoit « Colonnes… », **précédé d'un séparateur seulement s'il porte déjà des actions**
     /// (pas de trait parasite sur un ☰ dédié aux colonnes, #995). Chaque item « Colonnes… » est une instance
     /// distincte (un [MenuItem] n'appartient qu'à un seul menu) ancrée sur son propre point.

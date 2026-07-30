@@ -5,7 +5,7 @@ import java.util.Objects;
 
 /// Ce qu'a produit un traitement groupé (#2357) : **une issue par passage soumis**, réussi ou non.
 ///
-/// Le contrat est qu'aucun passage de la sélection ne disparaît du compte rendu — ni les inéligibles
+/// Le contrat est qu'aucun passage de la sélection ne disparaît du compte rendu, ni les inéligibles
 /// (écartés), ni ceux que l'annulation n'a pas atteints. C'est ce qui distingue un lot qu'on peut
 /// diagnostiquer d'un lot qui « a échoué » sans dire où.
 ///

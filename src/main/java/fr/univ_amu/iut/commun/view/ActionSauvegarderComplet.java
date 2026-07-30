@@ -9,7 +9,7 @@ import javafx.stage.Window;
 /// Le moteur existait depuis #1142, mais **aucun appelant** : ni menu, ni CLI. Or c'est la **seule
 /// sauvegarde qui protège vraiment**. La base seule ne garde que les métadonnées et les observations ; si
 /// l'audio disparaît du disque, la plateforme ne le rendra **pas** (un dépôt en archives n'en laisse aucun,
-/// #1297) — le passage devient *archivé*, consultable mais muet.
+/// #1297) : le passage devient *archivé*, consultable mais muet.
 ///
 /// C'est aussi le prérequis déclaré du reset guidé (#1151) : on ne repart d'une base neuve qu'après avoir
 /// mis l'audio à l'abri.

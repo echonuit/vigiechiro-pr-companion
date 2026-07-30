@@ -49,7 +49,7 @@ public final class ColonneBadge {
     /// **infobulle** calculée à partir de l'item de la ligne.
     ///
     /// Utile quand le badge nomme un état dont l'utilisateur ne peut pas deviner ce qu'il autorise ou
-    /// demande (#801, même intention qu'`IndicateurBlocage`) — et, pour un état **observé** (#1338), quand
+    /// demande (#801, même intention qu'`IndicateurBlocage`) : et, pour un état **observé** (#1338), quand
     /// il faut dire **de quand l'information date** : un relevé n'est pas une vérité.
     ///
     /// Une infobulle `null` ou vide n'installe rien (pas de bulle vide au survol).

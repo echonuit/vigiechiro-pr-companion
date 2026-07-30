@@ -8,7 +8,7 @@ package fr.univ_amu.iut.commun.model;
 ///
 /// L'import ne fonctionne pas ainsi. Copier les originaux puis les transformer, ce sont **deux phases**
 /// d'un même geste : la copie doit s'arrêter à mi-course, et la transformation reprendre là où elle
-/// s'est arrêtée. Le dénominateur n'est donc plus la liste traitée, mais le pipeline entier — et il
+/// s'est arrêtée. Le dénominateur n'est donc plus la liste traitée, mais le pipeline entier, et il
 /// vient de l'appelant, seul à le connaître.
 ///
 /// C'est ce découplage qui manquait pour que le découpage et la préparation des originaux puissent

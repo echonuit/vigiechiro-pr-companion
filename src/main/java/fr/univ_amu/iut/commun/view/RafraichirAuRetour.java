@@ -5,7 +5,7 @@ package fr.univ_amu.iut.commun.view;
 /// Le [Navigateur] garde les écrans **vivants** dans sa pile et les ré-affiche tels quels au retour
 /// (← Retour ou clic d'un segment du fil d'Ariane en repli historique), pour préserver leur état. Or
 /// un écran peut afficher des données qu'une **sous-activité** a modifiées pendant qu'il était masqué
-/// — typiquement M-Passage, dont M-Qualification change le statut (verdict). Sans rechargement, le
+/// : typiquement M-Passage, dont M-Qualification change le statut (verdict). Sans rechargement, le
 /// retour montrerait un état **périmé** (le verdict ne serait pas visible).
 ///
 /// Un écran concerné implémente ce contrat sur son `controller` (mémorisé par [EtapeNavigation], comme

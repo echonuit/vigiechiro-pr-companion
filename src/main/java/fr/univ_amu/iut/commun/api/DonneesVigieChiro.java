@@ -46,7 +46,7 @@ final class DonneesVigieChiro {
     ///
     /// Depuis #1417, on lit aussi ce que le parseur laissait tomber : l'avis du **validateur**
     /// (`validateur_taxon` / `validateur_probabilite`, mêmes formes que les champs observateur) et le
-    /// **fil de discussion** (`messages`). Ces champs arrivaient déjà dans la réponse — il n'y a ni appel
+    /// **fil de discussion** (`messages`). Ces champs arrivaient déjà dans la réponse : il n'y a ni appel
     /// ni route supplémentaires (spike de #724).
     private static List<ObservationVigieChiro> observations(JsonObject donnee) {
         List<ObservationVigieChiro> observations = new ArrayList<>();
