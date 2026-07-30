@@ -143,7 +143,7 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
 - **Sélecteur de tranche** (`groupeTranche`) : 15, 30 ou 60 minutes. Le graphe se recalcule, la sélection d'espèces est conservée.
 - **Barre de filtres** (`barreFiltres`) : recherche permanente et puces « + Filtre » (carré, point, nuit, taxon parent), sur le socle partagé avec Espèces & observations. Chaque puce se retire d'un clic, et le sous-ensemble filtré est **ré-agrégé** en direct : filtrer, c'est re-tracer.
 - **Onglets** (`barreOnglets`) : socle des vues mémorisées, partageant les taxons par **catégorie du référentiel** (Chiroptères, Orthoptères et cigales, Autres mammifères), plus « Tout ». Tadarida ne détecte pas que des chauves-souris, et sans cette séparation la présélection des plus contactés peut retenir une sauterelle. L'utilisateur enregistre ses propres vues à côté.
-- **Sémantique du vide** : une sélection vide signifie « rien », pas « pas de filtre » — l'écran le dit alors en nommant la dimension responsable.
+- **Sémantique du vide** : une sélection vide signifie « rien », pas « pas de filtre », l'écran le dit alors en nommant la dimension responsable.
 - **Espèces** (`listeEspeces`) : cochées par défaut sur les **cinq plus contactées**. Au-delà, le graphe devient illisible. Le compteur à droite de chaque espèce respecte les autres filtres actifs.
 - **Identité des courbes** : légende systématique sous le graphe, et **survol** d'un point pour l'espèce, l'heure exacte et le nombre de contacts. L'étiquette directe au pic, prévue à la conception pour ne pas dépendre de la seule couleur, s'est révélée illisible à cinq courbes : elle a été retirée à l'usage, la légende portant l'identification. L'arbitrage est assumé, la dépendance résiduelle à la couleur avec.
 - **Barre de statut** : contexte du passage, nombre d'espèces affichées et tranche courante, volumétrie de la sélection.
@@ -180,8 +180,8 @@ Quand le graphe n'a rien à tracer, le message **nomme la dimension effectivemen
 
 ### Deux règles nées de l'usage réel
 
-- **Plusieurs nuits se replient sur une.** L'axe est celui d'**une** nuit : sur un sous-ensemble qui en couvre plusieurs, les tranches de même heure de nuit sont **sommées**. Sans ce repliement, chaque nuit repose ses points sur le même axe et la ligne, qui suit l'ordre chronologique, repart en arrière — la courbe prend un aspect de dents de scie qui ne décrit rien.
-- **Une tranche sans contact vaut zéro, là où l'on écoutait.** Sinon deux contacts séparés d'un silence de trois heures sont reliés par une droite, qui donne à voir une activité continue. La plage des zéros est la **fenêtre réellement enregistrée** du passage, ou à défaut la plage observée : hors d'elle, l'absence de contact ne dit rien — le capteur pouvait être éteint — et la courbe s'abstient plutôt que d'affirmer un silence constaté.
+- **Plusieurs nuits se replient sur une.** L'axe est celui d'**une** nuit : sur un sous-ensemble qui en couvre plusieurs, les tranches de même heure de nuit sont **sommées**. Sans ce repliement, chaque nuit repose ses points sur le même axe et la ligne, qui suit l'ordre chronologique, repart en arrière, la courbe prend un aspect de dents de scie qui ne décrit rien.
+- **Une tranche sans contact vaut zéro, là où l'on écoutait.** Sinon deux contacts séparés d'un silence de trois heures sont reliés par une droite, qui donne à voir une activité continue. La plage des zéros est la **fenêtre réellement enregistrée** du passage, ou à défaut la plage observée : hors d'elle, l'absence de contact ne dit rien (le capteur pouvait être éteint) et la courbe s'abstient plutôt que d'affirmer un silence constaté.
 
 ## Notes pour l'implémentation
 

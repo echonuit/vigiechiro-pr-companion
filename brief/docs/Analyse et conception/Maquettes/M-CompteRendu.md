@@ -249,17 +249,17 @@ coche pour une bonne nouvelle, « i » pour un fait de contexte, triangle pour c
 réactivation : une barre « 0 sur 30 » y ferait croire à une tentative qui a échoué.
 
 **4. La teinte de la seconde part d'un volume ne s'emploie pas dans une ventilation.** Elle partage la
-couleur de la part retenue — « bruts + séquences » se lit comme un tout. Employée pour une catégorie
+couleur de la part retenue : « bruts + séquences » se lit comme un tout. Employée pour une catégorie
 distincte, elle fait lire un écart comme une réussite (constaté sur « sans ancrage », dans la
 publication).
 
-**5. La bande vit dans des largeurs très différentes** — 900 px sous l'écran d'import, ~560 px dans une
+**5. La bande vit dans des largeurs très différentes** : 900 px sous l'écran d'import, ~560 px dans une
 modale. La légende **reflue**, les intitulés s'enroulent, et le résumé des motifs **assume** de s'abréger
 puisque son contenu est à un clic. C'est le garde-fou anti-troncature des captures qui l'a imposé, dont
 une fois en intégration continue seulement : ses métriques de police diffèrent de neuf pixels par entrée.
 
 **Et la donnée que le lot devait ajouter est ajoutée** : le volume **lu sur la carte** n'était mesuré
-nulle part. Il ne l'a pas fallu calculer — le garde-fou d'espace disque parcourait déjà les originaux
+nulle part. Il ne l'a pas fallu calculer : le garde-fou d'espace disque parcourait déjà les originaux
 pour décider, il jetait le chiffre. Il le rend (`VolumesImport`).
 
 ## Notes pour l'implémentation
