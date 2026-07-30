@@ -71,7 +71,7 @@ Une **campagne** regroupe les nuits qui relèvent d'un même suivi. Le solde peu
 répondre à « où en est ma campagne ? » plutôt qu'à « où en est ma saison ? ».
 
 Il s'agit d'un **filtre**, et non d'une colonne : une ligne du solde est un **point**, avec ses **deux**
-passages, qui peuvent relever de campagnes différentes — une colonne aurait dû choisir laquelle
+passages, qui peuvent relever de campagnes différentes : une colonne aurait dû choisir laquelle
 afficher. Le filtre, lui, retient un point dès qu'**au moins un** de ses deux passages appartient à la
 campagne, et le montre **en entier** : le second passage reste visible même s'il n'en fait pas partie,
 puisque c'est l'état complet du point qui dit ce qu'il reste à y faire.

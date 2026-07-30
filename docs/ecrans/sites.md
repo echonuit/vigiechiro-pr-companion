@@ -116,11 +116,11 @@ Vigie-Chiro » sur l'écran Mes sites).
 ![La fenêtre d'édition de la fiche site : numéro de carré, nom convivial, protocole et commentaire.](../assets/captures/apercu-sites-modale-site.png)
 
 - **Points d'écoute** : une carte par point, avec sa description, son **statut GPS** et le nombre de
-  passages rattachés. Quand les coordonnées sont renseignées, le lien **« GPS — voir sur la carte »**,
+  passages rattachés. Quand les coordonnées sont renseignées, le lien **« GPS : voir sur la carte »**,
   précédé d'une **icône verte de validation**, ouvre la **carte multi-sites centrée sur ce point** (où le
-  mode édition permet de corriger sa position). Quand elles **manquent**, le lien **« GPS manquant —
-  placer sur la carte »**, précédé d'une **icône d'avertissement**, ouvre cette même carte sur le carré du
-  site, **mode édition déjà actif** : le point, affiché au centre de son carré, n'a plus qu'à être
+  mode édition permet de corriger sa position). Quand elles **manquent**, le lien
+  **« GPS manquant — placer sur la carte »**, précédé d'une **icône d'avertissement**, ouvre cette même
+  carte sur le carré du site, **mode édition déjà actif** : le point, affiché au centre de son carré, n'a plus qu'à être
   **glissé** à sa vraie position (puis enregistré). Le bouton **+ Ajouter un point** crée un nouveau
   point. Chaque carte indique aussi la **distance au point le plus proche** du site ; si deux points sont
   **anormalement rapprochés** (sous le seuil de protocole), une **icône d'avertissement** le signale, pour

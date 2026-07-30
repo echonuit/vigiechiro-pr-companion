@@ -51,5 +51,44 @@ def suspects(racine: pathlib.Path | None = None) -> list[str]:
     return trouves
 
 
+DOCUMENTATION = pathlib.Path("docs")
+
+# Ce qui est **cité** n'est pas notre prose : le glyphe de valeur absente entre chevrons de code ou
+# entre guillemets français, et les libellés de l'application qu'une fiche d'écran reproduit
+# fidèlement. Une seule règle couvre les deux, là où deux listes auraient dérivé séparément.
+CITE = re.compile("`" + CADRATIN + "`|«[^»\n]*»")
+
+
+def prose_documentation(racine: pathlib.Path = DOCUMENTATION) -> list[str]:
+    """Les cadratins de **prose** de la documentation utilisateur.
+
+    Zone **nettoyée** (#2365) : la tolérance y est donc **zéro**, pas un cliquet. Un cliquet sur une
+    zone au plancher serait inutilement faible, et surtout masquable — un nettoyage ailleurs
+    compenserait une rechute ici sans que le total bouge.
+    """
+    trouves = []
+    if not racine.exists():
+        return trouves
+    for page in sorted(racine.rglob("*.md")):
+        for numero, ligne in enumerate(page.read_text(encoding="utf-8").splitlines(), 1):
+            if CADRATIN in CITE.sub("", ligne):
+                trouves.append(f"{page}:{numero}  {ligne.strip()[:EXTRAIT]}")
+    return trouves
+
+
 if __name__ == "__main__":
-    sys.exit(rapporte("2843", "tiret cadratin dans une source Java", suspects()))
+    code = rapporte("2843", "tiret cadratin dans une source Java", suspects())
+
+    prose = prose_documentation()
+    print(f"\nDocumentation utilisateur : {len(prose)} cadratin(s) de prose (tolérance zéro)")
+    for suspect in prose:
+        print(f"  {suspect}")
+    if prose:
+        print(
+            "\nLa documentation utilisateur est nettoyée : un cadratin de prose y est une rechute.\n"
+            "Écrivez un deux-points ou une virgule. Si vous citez le glyphe de valeur absente ou un\n"
+            "libellé de l'application, encadrez-le de guillemets français ou de chevrons de code."
+        )
+        code = 1
+
+    sys.exit(code)

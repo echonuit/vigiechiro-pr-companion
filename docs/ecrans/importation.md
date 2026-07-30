@@ -107,7 +107,7 @@ s'arrêter à mi-parcours en laissant un import incomplet.
 Le contrôle se fait **nuit par nuit** : sur une carte qui en contient plusieurs, celles déjà importées
 restent acquises.
 
-Quand l'option « conserver les originaux » est active, il faut **deux fois** la place — une fois pour
+Quand l'option « conserver les originaux » est active, il faut **deux fois** la place : une fois pour
 la copie des enregistrements, une fois pour les séquences d'écoute. Le message vous propose alors de la
 désactiver, ce qui divise le besoin par deux.
 
@@ -159,7 +159,7 @@ Une **table des nuits** apparaît alors, une ligne par nuit :
 - **Fichiers** : nombre d'enregistrements de la nuit.
 - **État** : **complète** ou **incomplète**. Une nuit est signalée **incomplète** quand le journal
   montre qu'elle s'est arrêtée anormalement (carte SD pleine, interruption). Elle reste **incluse par
-  défaut** — à vous de décider de la conserver (pour la faire traiter par Tadarida) ou de la décocher.
+  défaut** : à vous de décider de la conserver (pour la faire traiter par Tadarida) ou de la décocher.
 - **Passage n°** : numéro attribué à la nuit, **auto-numéroté** à partir du prochain numéro libre du
   point (« — » si la nuit est décochée).
 - La mention **« déjà importée »** rappelle qu'un passage existe déjà en base pour cette nuit.
@@ -177,7 +177,7 @@ mono-nuit est inchangé).
 
 Une fois lancé, l'import affiche une **barre de progression** (avec l'estimation du temps restant) et
 **gèle le formulaire** le temps de l'opération. En dessous, une **table de suivi par fichier** montre
-où en est chaque enregistrement : en attente, en cours (avec l'étape — copie puis transformation),
+où en est chaque enregistrement : en attente, en cours (avec l'étape, copie puis transformation),
 terminé, ou **rejeté** avec la raison au survol. La copie et la transformation travaillent **en
 parallèle** sur plusieurs fichiers à la fois. En import multi-nuits, la table repart à chaque nuit.
 
@@ -198,11 +198,11 @@ répond **en proportions** plutôt qu'en listes.
 
 **« Est-ce que ça s'est bien passé ? »** La pastille chiffre le résultat (« 583 / 612 importés ») et la
 barre en montre la **part** : ce qui est passé, ce qui a été ignoré parce que non pertinent, ce qui a été
-rejeté. La somme fait toujours le total des fichiers de la source — aucun reliquat ne peut disparaître
+rejeté. La somme fait toujours le total des fichiers de la source : aucun reliquat ne peut disparaître
 dans un « autres ».
 
 **« Qu'est-ce que ça m'a coûté sur le disque ? »** Deux barres comparent, **à la même échelle**, ce qui a
-été lu sur la carte et ce qui a été écrit sur le disque — ce dernier ventilé entre les enregistrements
+été lu sur la carte et ce qui a été écrit sur le disque : ce dernier ventilé entre les enregistrements
 bruts conservés et les séquences d'écoute produites. Si vous avez désactivé la conservation des bruts,
 la barre « écrit » se réduit d'autant : c'est là que se voit ce que ce réglage vous économise.
 
@@ -213,19 +213,19 @@ la barre « écrit » se réduit d'autant : c'est là que se voit ce que ce rég
 
 - les **motifs de rejet**, résumés en pied (« 6 fichiers déjà expansés, 2 en-têtes WAV illisibles ») et
   **dépliables d'un clic** : chaque motif ouvre la liste des fichiers concernés ;
-- les **avertissements encore vrais** — si le dossier mélangeait plusieurs enregistreurs, ou si le
+- les **avertissements encore vrais** : si le dossier mélangeait plusieurs enregistreurs, ou si le
   journal du capteur ne correspondait pas aux fichiers, le compte rendu vous le **rappelle**. Importer ne
   résout pas ces réserves : cela les inscrit dans le passage créé ;
-- le **doublon de nuit** — si vous avez choisi d'importer une nuit déjà présente, il rappelle combien de
+- le **doublon de nuit** : si vous avez choisi d'importer une nuit déjà présente, il rappelle combien de
   passages existaient déjà, et la liste s'ouvre comme les motifs ;
-- les **anomalies du journal du capteur** — réveil non programmé, batterie faible, horloge
+- les **anomalies du journal du capteur** : réveil non programmé, batterie faible, horloge
   resynchronisée. Elles n'expliquent pas toujours un problème, mais elles éclairent une nuit qui semble
   incomplète ;
 - la **participation créée sur Vigie-Chiro**, quand vous êtes connecté et que le site est relié. L'import
   écrit alors sur la plateforme, et il vous le dit plutôt que de vous le laisser découvrir au dépôt.
 
-Chaque mention porte une **icône** accordée à son registre — une coche pour une bonne nouvelle, un « i »
-pour un fait de contexte, un triangle pour ce sur quoi il faudra revenir — en plus de sa couleur, pour
+Chaque mention porte une **icône** accordée à son registre : une coche pour une bonne nouvelle, un « i »
+pour un fait de contexte, un triangle pour ce sur quoi il faudra revenir : en plus de sa couleur, pour
 rester lisible si vous distinguez mal les couleurs.
 
 ## Sécurités et cas particuliers

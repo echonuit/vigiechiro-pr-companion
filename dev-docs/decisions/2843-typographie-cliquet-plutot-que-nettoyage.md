@@ -25,7 +25,15 @@ La mesure, à l'ouverture : **1132 occurrences** dans les sources Java, réparti
 
 C'est un choix contre l'alternative apparemment plus généreuse d'un compteur unique couvrant aussi la documentation. Deux populations dans un seul nombre peuvent se **masquer** : un nettoyage de vingt lignes de documentation compenserait vingt régressions dans le code, le total resterait stable, et le verdict resterait vert. Le garde mentirait alors dans le sens rassurant, ce qui est pire que pas de garde du tout.
 
-Une seule population, un seul nombre, aucun angle mort. Si la documentation doit être tenue de même, elle aura **son propre cliquet**, avec sa propre marge.
+Une seule population, un seul nombre, aucun angle mort.
+
+**4. Une zone nettoyée passe du cliquet à la tolérance zéro.** Cette ADR annonçait d'abord que la documentation aurait « son propre cliquet ». C'était mal formulé : un cliquet sur une zone déjà au plancher est inutilement faible, et il resterait masquable tant qu'une autre zone comptée avec elle serait, elle, loin du plancher. Une zone nettoyée n'a plus besoin d'une marge, elle a besoin d'un refus.
+
+`docs/` est nettoyée depuis #2365 : la vérification y compte **zéro** cadratin de prose, et le script échoue à la première rechute.
+
+**5. Ce qui est cité n'est pas de la prose.** Un cadratin entre **guillemets français** ou entre **chevrons de code** est une citation : le glyphe de valeur absente que la documentation décrit, ou un libellé de l'application qu'une fiche d'écran reproduit fidèlement. Une seule règle couvre les deux, là où deux listes d'exceptions auraient dérivé séparément.
+
+C'est aussi ce qui a révélé que **`docs/` n'est pas indépendante des chaînes Java** : `docs/ecrans/sites.md` cite le libellé `« GPS manquant — placer sur la carte »`, écrit tel quel dans `CartesPointsSite`. Corriger la documentation seule l'aurait fait diverger du produit. Ce cadratin partira avec la tranche des chaînes Java, où le libellé et sa documentation changeront ensemble.
 
 **3. La vérification reste « probable ».** Un tiret cadratin peut être cité légitimement : un commentaire qui explique la règle, une chaîne qui reproduit un texte externe. Aucun motif ne sait faire cette différence, c'est un humain qui tranche, extrait en main.
 

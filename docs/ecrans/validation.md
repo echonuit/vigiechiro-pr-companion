@@ -136,7 +136,7 @@ muet :
 
 **Tout le travail sur les données reste possible** : filtrer, trier, choisir les colonnes, commenter,
 marquer « douteux », corriger un taxon, changer votre certitude, exporter. Seule l'**écoute** est
-impossible — c'est bien ce qui distingue un passage archivé d'un passage perdu.
+impossible : c'est bien ce qui distingue un passage archivé d'un passage perdu.
 
 ## Quand un fichier substitué est signalé
 
@@ -305,7 +305,7 @@ ancrer n'y figurent pas, puisque l'envoi va justement s'en occuper.
 #### Ce que la publication vous rend à la fin
 
 Une fois l'envoi terminé, un **compte rendu** dit **quelle part** de votre revue est arrivée sur la
-plateforme — c'est la question qu'on se pose à cet instant, et un décompte seul n'y répond pas.
+plateforme : c'est la question qu'on se pose à cet instant, et un décompte seul n'y répond pas.
 
 ![Le compte rendu d'une publication : la part publiée, les trois natures d'écart distinguées, les refus groupés par cause.](../assets/captures/apercu-publication-compte-rendu.png)
 
@@ -316,7 +316,7 @@ part, parce qu'elles appellent **trois gestes différents** :
 |---|---|
 | **à compléter** | déclarer la certitude : la plateforme l'exige avec le taxon, et elle n'est jamais posée par défaut |
 | **sans ancrage** | rattacher la nuit à sa participation Vigie-Chiro |
-| **hors référentiel** | rien — le taxon n'existe pas côté plateforme, votre observation reste locale, et c'est attendu |
+| **hors référentiel** | rien : le taxon n'existe pas côté plateforme, votre observation reste locale, et c'est attendu |
 
 Les **refus de la plateforme**, eux, sont regroupés **par cause** : vingt observations refusées pour la
 même panne font une ligne, pas vingt, et la liste des observations concernées s'ouvre d'un clic.
@@ -397,9 +397,10 @@ rien à faire pour l'obtenir : il apparaît dès qu'un expert s'est prononcé su
 !!! tip "Le désaccord saute aux yeux"
     L'avis du validateur est **coloré selon qu'il vous confirme ou vous contredit**. Un expert qui
     confirme ne vous demande rien ; un expert qui **contredit** votre correction est ce que vous devez
-    voir en premier — c'est là que se joue la qualité de la donnée que vous avez déposée.
+    voir en premier : c'est là que se joue la qualité de la donnée que vous avez déposée.
 
-    Tant qu'aucun expert ne s'est prononcé — le cas le plus courant — la colonne reste discrète (« — »).
+    Tant qu'aucun expert ne s'est prononcé, ce qui est le cas le plus courant, la colonne reste
+    discrète (« — »).
 
 ### Lire le fil de discussion
 
@@ -420,7 +421,7 @@ texte qui va partir.
     permet **ni de le supprimer, ni de le modifier**, et il est lu par un expert du MNHN.
 
     C'est pourquoi la confirmation **cite votre texte** avant l'envoi : relisez-le. Si vous annulez, votre
-    texte reste dans la zone de saisie — rien n'est perdu.
+    texte reste dans la zone de saisie : rien n'est perdu.
 
     Si l'envoi échoue (plateforme injoignable, par exemple), **rien n'est publié** et votre texte vous est
     rendu : vous ne risquez pas de croire envoyé un message que le validateur ne verra jamais.

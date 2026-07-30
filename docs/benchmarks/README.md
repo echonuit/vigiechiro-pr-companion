@@ -27,7 +27,7 @@ export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
 
 Volumes paramétrables : `-Dperf.passages=...`, `-Dperf.observations=...` (à ajouter dans `exec.args`).
 
-## Lancer le banc d'import (O3 — tenue sur nuit volumineuse)
+## Lancer le banc d'import (O3 : tenue sur nuit volumineuse)
 
 `BancImport` génère une nuit de **vrais WAV** (en-tête RIFF, 384 kHz par défaut) puis lance le vrai
 import et mesure temps / débit / mémoire :
@@ -63,7 +63,7 @@ débit, nb séquences, **mémoire crête**.
 > JDK 25 standard. Chiffres **mesurés** (pas des placeholders) ; relancer 2-3 fois et garder l'ordre de
 > grandeur. La 1ʳᵉ utilisation du jour (JIT + cache disque froids) donne les valeurs « froid ».
 
-### O5 — couche données (`BancMesure`)
+### O5 : couche données (`BancMesure`)
 
 | Opération | Cible | Plan d'exécution (après #28) | Froid | Chaud (méd.) |
 |---|---|---|---|---|
@@ -74,7 +74,7 @@ Les deux opérations sont **largement sous les cibles** (facteur ~4 à ~10). Rap
 `idx_obs_results` la sélection faisait un `SCAN` (~75 ms froid sur cette machine) ; avec l'index,
 ~25 ms.
 
-### O3 — import d'une nuit (`BancImport`, WAV de 2 s @ 384 kHz)
+### O3 : import d'une nuit (`BancImport`, WAV de 2 s @ 384 kHz)
 
 | Fichiers | Taille src | Temps total | copie (R9) | transfo (#12) | persist. (O7) | Débit | Mémoire crête | Séquences |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -90,16 +90,16 @@ ajouter `-Dperf.import.secondes=2.0` pour retrouver exactement ces chiffres._
 - Le temps **croît ~linéairement** avec la taille (débit ~stable 180-250 fichiers/s) → tenue dans la
   durée confirmée. La **copie SD→workspace (I/O) domine** (~65-70 %), la transformation parallélisée
   (#12) ~25-30 %, la persistance est négligeable (~3 %).
-- **Mémoire** : la crête plafonne (≈ 600-700 Mo pour ~1000-1500 fichiers) — le découpage est borné aux
+- **Mémoire** : la crête plafonne (≈ 600-700 Mo pour ~1000-1500 fichiers), le découpage est borné aux
   cœurs (#12) ; elle croît surtout avec le **nombre de séquences** d'**une** nuit (résultats agrégés
   avant la transaction unique O7), puis est récupérée par le GC entre deux nuits → stable d'un import à
   l'autre.
 
 **Ordre de grandeur de référence** : une **vraie nuit** (~1572 fichiers) s'importe en
 **~6-8 s** (~200 fichiers/s), produit ~3600 séquences, avec une empreinte ~600-700 Mo. _(Chiffres
-machine de référence ; un poste plus modeste sera plus lent — refaire la mesure le cas échéant.)_
+machine de référence ; un poste plus modeste sera plus lent : refaire la mesure le cas échéant.)_
 
-## Réactivité IHM (freeze > 200 ms) — procédure semi-manuelle
+## Réactivité IHM (freeze > 200 ms) : procédure semi-manuelle
 
 Dans l'application réelle, l'import s'exécute **hors du fil JavaFX** (socle `ExecuteurTache`, cf.
 `ImportationController`), et la navigation est **verrouillée** pendant `EN_COURS` (#54) : le fil
@@ -130,7 +130,7 @@ new AnimationTimer() {
 
 Aucun `FREEZE IHM` ne doit apparaître pendant un import (le découpage étant hors fil JavaFX).
 
-## Mémoire stabilisée — procédure
+## Mémoire stabilisée : procédure
 
 `BancImport` imprime la **crête d'une nuit**, mais chaque lancement démarre un **JVM neuf** (heap
 remis à zéro) : **relancer l'outil ne teste donc pas** la stabilité « de nuit en nuit » ni une fuite

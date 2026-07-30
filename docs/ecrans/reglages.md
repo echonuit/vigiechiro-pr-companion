@@ -5,7 +5,7 @@ accessible à tout moment depuis le menu **☰** (en haut à droite) → **Régl
 
 ![L'écran Réglages : un onglet par domaine (Général, Import, Fonctionnalités).](../assets/captures/apercu-reglages.png)
 
-Sous chaque réglage, une ligne dit **ce qu'il engage** — pas seulement ce qu'il fait. L'onglet
+Sous chaque réglage, une ligne dit **ce qu'il engage** : pas seulement ce qu'il fait. L'onglet
 **Import** porte l'option de conservation des originaux, décochée par défaut :
 
 ![L'onglet Import des Réglages : « Conserver les originaux pour ré-analyse ultérieure », décoché.](../assets/captures/apercu-reglages-import.png)
