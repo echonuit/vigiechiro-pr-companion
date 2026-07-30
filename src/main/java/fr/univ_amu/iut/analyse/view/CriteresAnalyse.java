@@ -8,13 +8,16 @@ import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.util.StringConverter;
@@ -39,6 +42,10 @@ final class CriteresAnalyse {
 
     /// Clé du critère « Espèces à enjeu », partagée par le filtre et l'onglet du même nom (#2353).
     private static final String A_ENJEU = "a_enjeu";
+
+    /// Clé du critère « Lieu » (#2966). Même clé que la vue audio (#2794) : une vue mémorisée nomme ses
+    /// critères, et deux écrans qui filtrent le même concept sous deux clés se liraient mal.
+    private static final String LIEU = "lieu";
 
     /// Catégories du référentiel qui ne sont pas des chiroptères : la même liste que sur l'écran Activité
     /// de la nuit, les deux vues partageant la matière (#2615).
@@ -166,6 +173,58 @@ final class CriteresAnalyse {
     static CritereFiltre<ObservationAnalyse> groupe(Supplier<? extends List<String>> groupesPresents) {
         return CritereListe.multiple(
                 GROUPE, "Taxon parent", "Choisir un taxon parent", groupesPresents, ObservationAnalyse::groupe);
+    }
+
+    /// Critère **Lieu** (#2966, chantier #2790) : liste à cocher des lieux **présents dans les
+    /// observations filtrées**, toutes dimensions confondues, dans l'ordre commune, carré, site. Une
+    /// observation passe si **l'une** de ses dimensions figure parmi les valeurs cochées
+    /// ([CritereListe#multipleParmi]) ; rien de coché n'écarte rien.
+    ///
+    /// C'est la jumelle de `CriteresAudio.lieu` (#2794), dont elle reprend le libellé et l'ordre des
+    /// dimensions à dessein : le vocabulaire d'un critère se lit d'un écran à l'autre, et deux ordres
+    /// différents pour la même puce se paieraient à chaque va-et-vient.
+    ///
+    /// **Une dimension de moins que la vue audio, et c'est délibéré** : le point n'y figure pas.
+    /// [ObservationAnalyse] porte `idPoint`, un identifiant technique, et non un code affichable ; une
+    /// puce qui listerait des nombres opaques serait pire que son absence. Le point reviendra ici le
+    /// jour où la projection remontera son code, pas avant.
+    static CritereFiltre<ObservationAnalyse> lieu(Supplier<? extends List<ObservationAnalyse>> observationsFiltrees) {
+        return CritereListe.multipleParmi(
+                LIEU,
+                "Lieu",
+                "Choisir un lieu",
+                () -> lieuxPresents(observationsFiltrees.get()),
+                CriteresAnalyse::dimensionsLieu);
+    }
+
+    /// Lieux présents dans `observations` : les valeurs **distinctes** de chaque dimension, groupées par
+    /// dimension (communes, puis carrés, puis sites) et triées au sein de chacune. Un même libellé porté
+    /// par deux dimensions (un site homonyme d'une commune) n'apparaît qu'une fois : le coche vaut alors
+    /// pour les deux, ce qui est le comportement de la vue audio.
+    private static List<String> lieuxPresents(List<ObservationAnalyse> observations) {
+        Set<String> lieux = new LinkedHashSet<>();
+        lieux.addAll(valeursDistinctes(observations, ObservationAnalyse::commune));
+        lieux.addAll(valeursDistinctes(observations, ObservationAnalyse::numeroCarre));
+        lieux.addAll(valeursDistinctes(observations, ObservationAnalyse::nomSite));
+        return List.copyOf(lieux);
+    }
+
+    /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
+    private static List<String> valeursDistinctes(
+            List<ObservationAnalyse> observations, Function<ObservationAnalyse, String> dimension) {
+        return observations.stream()
+                .map(dimension)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    /// Les dimensions de lieu d'une observation, valeurs nulles écartées.
+    private static List<String> dimensionsLieu(ObservationAnalyse observation) {
+        return Stream.of(observation.commune(), observation.numeroCarre(), observation.nomSite())
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     /// **Recherche texte** de la barre : vrai si un des champs cherchables d'une observation (taxon retenu,

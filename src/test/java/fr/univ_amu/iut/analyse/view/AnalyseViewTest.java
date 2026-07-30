@@ -21,11 +21,13 @@ import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
@@ -36,11 +38,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -53,6 +59,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -750,5 +757,78 @@ class AnalyseViewTest {
 
         verify(service, never()).exporterEspeces(any(), any());
         verify(service, never()).exporterCarres(any(), any());
+    }
+
+    @Test
+    @DisplayName("#2966 : la puce « Lieu » est offerte par la barre de filtres de l'écran")
+    void puce_lieu_offerte_par_la_barre(FxRobot robot) {
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        // Le câblage vaut d'être épinglé à part : un critère peut être juste et n'être proposé nulle part.
+        assertThat(menuAjout.getItems()).extracting(MenuItem::getText).contains("Lieu");
+    }
+
+    @Test
+    @DisplayName(
+            "#2966 : critère Lieu : valeurs groupées par dimension ; chaque dimension filtre ; cocher = appartenance")
+    void critere_lieu_filtre_sur_chaque_dimension(FxRobot robot) {
+        // Barre autonome plutôt que le semis de l'écran : celui-ci n'a ni commune ni site distincts, et
+        // l'étendre ferait porter à tous les autres cas un jeu de données qu'ils n'utilisent pas.
+        ObservableList<ObservationAnalyse> source = FXCollections.observableArrayList(
+                obsLieu("Rhifer", "Aix-en-Provence", "640380", "Jardin de Serge"),
+                obsLieu("Pippip", "Venelles", "870150", "Le pré"));
+        FilteredList<ObservationAnalyse> vues = new FilteredList<>(source);
+        Filtres<ObservationAnalyse> filtresLocaux = new Filtres<>(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres<ObservationAnalyse> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAnalyse.lieu(() -> source)),
+                CriteresAnalyse.rechercheTexte());
+        assertThat(ignore).isNotNull();
+
+        // Valeurs distinctes groupées par dimension (communes, carrés, sites), triées au sein de chacune.
+        // Le POINT n'y figure pas : ObservationAnalyse ne porte qu'un idPoint technique, pas un code.
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        MenuButton choixLieu = menuBoutonDeLieu(pucesLocales);
+        assertThat(choixLieu.getItems())
+                .extracting(MenuItem::getText)
+                .containsExactly("Aix-en-Provence", "Venelles", "640380", "870150", "Jardin de Serge", "Le pré");
+        assertThat(vues).as("rien de coché n'écarte rien").hasSize(2);
+
+        // La COMMUNE seule, puis le CARRÉ de l'autre ligne : appartenance, pas conjonction.
+        robot.interact(() -> cocheLieu(choixLieu, "Aix-en-Provence").setSelected(true));
+        assertThat(vues).extracting(ObservationAnalyse::taxonRetenu).containsExactly("Rhifer");
+        robot.interact(() -> cocheLieu(choixLieu, "870150").setSelected(true));
+        assertThat(vues).as("une ligne passe par l'UNE de ses dimensions").hasSize(2);
+
+        // Le SITE seul : la troisième dimension filtre aussi.
+        robot.interact(() -> {
+            cocheLieu(choixLieu, "Aix-en-Provence").setSelected(false);
+            cocheLieu(choixLieu, "870150").setSelected(false);
+            cocheLieu(choixLieu, "Le pré").setSelected(true);
+        });
+        assertThat(vues).extracting(ObservationAnalyse::taxonRetenu).containsExactly("Pippip");
+    }
+
+    private static ObservationAnalyse obsLieu(String taxon, String commune, String carre, String site) {
+        return new ObservationAnalyse(
+                taxon, null, taxon, "Chiroptères", StatutObservation.VALIDEE, 42L, 2026, carre, site, 1L, commune);
+    }
+
+    /// Le `MenuButton` de l'unique puce posée : la puce est une `HBox` dont le second enfant est l'éditeur.
+    private static MenuButton menuBoutonDeLieu(FlowPane puces) {
+        return (MenuButton) ((HBox) puces.getChildren().get(0)).getChildren().get(1);
+    }
+
+    /// La case à cocher d'un lieu, retrouvée par son libellé exact.
+    private static CheckMenuItem cocheLieu(MenuButton bouton, String texte) {
+        return bouton.getItems().stream()
+                .filter(item -> item instanceof CheckMenuItem && texte.equals(item.getText()))
+                .map(CheckMenuItem.class::cast)
+                .findFirst()
+                .orElseThrow();
     }
 }

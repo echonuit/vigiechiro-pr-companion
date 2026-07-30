@@ -253,6 +253,14 @@ public class AnalyseViewModel {
     }
 
     /// Taxons parents présents dans les observations (liste déroulante du filtre #518), triés.
+    /// Observations **filtrées** (conjonction des filtres actifs), telles que les tables les montrent.
+    /// Exposé pour la puce « Lieu » (#2966), qui liste les lieux **présents dans ce sous-ensemble** et
+    /// non dans tout le jeu : une liste qui proposerait des communes déjà écartées par un autre filtre
+    /// ferait cliquer dans le vide.
+    public ObservableList<ObservationAnalyse> observationsFiltrees() {
+        return observationsFiltrees;
+    }
+
     public ObservableList<String> groupesDisponibles() {
         return groupesDisponibles;
     }
