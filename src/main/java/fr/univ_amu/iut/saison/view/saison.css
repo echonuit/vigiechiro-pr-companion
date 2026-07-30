@@ -8,7 +8,7 @@
 .badge-non-planifie {
     -fx-background-color: -badge-neutre-fond;
     -fx-text-fill: -couleur-texte;
-    -fx-border-color: #d0d7de;
+    -fx-border-color: -badge-neutre-bord;
     -fx-border-radius: 11;
 }
 
