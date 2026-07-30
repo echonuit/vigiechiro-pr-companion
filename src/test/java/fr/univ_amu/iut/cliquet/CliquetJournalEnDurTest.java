@@ -28,11 +28,12 @@ import org.junit.jupiter.api.Test;
 /// plutôt que laissée à la chance.
 class CliquetJournalEnDurTest {
 
-    /// Une **ligne de journal écrite à la main** : l'horodatage que produit un vrai enregistreur, suivi de
-    /// `PR` et du numéro de série - `22/04/26 - 16:02:20 PR1925492 …`.
+    /// Le **préambule d'un journal, écrit à la main** : la ligne de démarrage ou celle des paramètres
+    /// d'acquisition, horodatées comme les écrit un vrai enregistreur.
     ///
-    /// ⚠️ **Correction de la mesure** (ADR 2867, la confusion usage / mention). Ce motif cherchait
-    /// autrefois le **nom** du fichier (`"LogPR…"`), et comptait donc neuf fichiers qui n'écrivent aucun
+    /// ⚠️ **Ce motif s'est trompé deux fois, dans le même sens** (ADR 2867, la confusion usage / mention).
+    ///
+    /// **Premier essai : le nom du fichier** (`"LogPR…"`). Neuf fichiers comptés qui n'écrivent aucun
     /// journal :
     ///
     ///  - `ServiceLotTest`, `VerificationCoherenceTest`, `PassageDaoTest`, `JournalDuCapteurDaoTest`
@@ -43,17 +44,28 @@ class CliquetJournalEnDurTest {
     ///    mais **volontairement pas un journal** : seize octets nuls, ou le mot « journal ». Ils éprouvent
     ///    la corruption, la copie et l'extraction - leur donner un vrai journal détruirait leur sujet.
     ///
-    /// Aucun de ces neuf n'avait quoi que ce soit à migrer. Un cliquet qui surcompte se décrédibilise
-    /// aussi sûrement qu'un qui sous-compte, et il fait pire : il donne à croire qu'un chantier est plus
-    /// gros qu'il n'est, ce qui décourage de le finir.
-    private static final Pattern JOURNAL_COMPOSE = Pattern.compile("\\d\\d/\\d\\d/\\d\\d - \\d\\d:\\d\\d:\\d\\d PR");
+    /// **Deuxième essai : un horodatage.** Deux fichiers de diagnostic restaient comptés, qui n'écrivent
+    /// pas davantage de journal : ils insèrent en base des **libellés d'anomalie déjà analysés**, du genre
+    /// `"Réveil non programmé : 23/04/26 - 03:12:00 PR1925492 Wakeup capteur"`. L'horodatage était **dans
+    /// le libellé**, pas dans un fichier.
+    ///
+    /// **Ce qui se duplique**, ce n'est ni un nom ni une date : c'est le **préambule** que produit la
+    /// brique. Une ligne d'anomalie écrite par un test reste chez lui - c'est son sujet, pas son décor,
+    /// et [JournalDeCapteur#ecrireAvec] est là pour ça.
+    ///
+    /// Onze fichiers en tout n'avaient rien à migrer. Un cliquet qui surcompte se décrédibilise aussi
+    /// sûrement qu'un qui sous-compte, et il fait pire : il donne à croire qu'un chantier est plus gros
+    /// qu'il n'est, ce qui décourage de le finir. Deux essais pour trouver la bonne question, alors que
+    /// l'issue d'ouverture (#2863) disait déjà « c'est l'écriture qui compte ».
+    private static final Pattern JOURNAL_COMPOSE =
+            Pattern.compile("\\d\\d/\\d\\d/\\d\\d - \\d\\d:\\d\\d:\\d\\d PR[^\"]*"
+                    + "(Démarrage Passive Recorder|Paramètres\\s*:\\s*Acquisi\\.)");
 
-    /// La dette épinglée. **Ne peut que rétrécir** : cf. [Cliquet] pour les deux sens de variation.
-    private static final List<String> ECRIVENT_UN_JOURNAL_EN_DUR = List.of(
-            "fr/univ_amu/iut/cli/CliImportTest.java",
-            "fr/univ_amu/iut/diagnostic/AnalyseAnomaliesTest.java",
-            "fr/univ_amu/iut/diagnostic/ServiceDiagnosticTest.java",
-            "fr/univ_amu/iut/importation/ServiceImportTest.java");
+    /// La dette épinglée : **elle est vide**, et le cliquet reste pour empêcher qu'elle renaisse.
+    ///
+    /// Troisième axe du chantier #1771 à atteindre zéro, après les writers WAV (#2864) et les captures de
+    /// sortie (#2866).
+    private static final List<String> ECRIVENT_UN_JOURNAL_EN_DUR = List.of();
 
     @Test
     @DisplayName("La dette du journal en dur ne peut que rétrécir : aucun nouveau littéral")

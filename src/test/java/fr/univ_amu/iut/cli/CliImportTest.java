@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,17 +43,6 @@ class CliImportTest {
     private static final String ID_USER = "u-cli";
     private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10
     private static final int TRAMES = 576_000; // 1,5 s -> 3 séquences par original
-
-    private static final String LOG =
-            "22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
-                    + "22/04/26 - 16:02:21 PR1925492 Sonde température/hygrométrie présente, lecture toutes"
-                    + " les 600s\n"
-                    + "22/04/26 - 16:02:21 PR1925492 Paramètres : Acquisi. 20:25-07:47, Fe384kHz FL N FPH"
-                    + " 00, S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%\n"
-                    // Un « Wakeup » sans « ALARM » est un réveil non programmé pour
-                    // AnalyseurLogPR : de quoi éprouver la restitution des anomalies.
-                    + "22/04/26 - 03:12:00 PR1925492 Wakeup\n";
 
     @TempDir
     Path racine;
@@ -272,7 +263,13 @@ class CliImportTest {
 
     private Path preparerCarteSD(Path dossier) throws IOException {
         Files.createDirectories(dossier);
-        Files.writeString(dossier.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrireAvec(
+                dossier,
+                "1925492",
+                LocalDate.of(2026, 4, 22),
+                // Un « Wakeup » sans « ALARM » est un réveil non programmé pour AnalyseurLogPR :
+                // de quoi éprouver la restitution des anomalies. C'est le sujet du test, il reste ici.
+                List.of("22/04/26 - 03:12:00 PR1925492 Wakeup"));
         Files.writeString(dossier.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
         ecrireWav(dossier.resolve("PaRecPR1925492_20260422_203922.wav"));
         ecrireWav(dossier.resolve("PaRecPR1925492_20260422_204326.wav"));
