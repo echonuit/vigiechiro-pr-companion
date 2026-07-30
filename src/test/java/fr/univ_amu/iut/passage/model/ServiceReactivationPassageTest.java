@@ -28,6 +28,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.InventaireParInspection;
@@ -48,6 +49,7 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -1188,24 +1190,13 @@ class ServiceReactivationPassageTest {
 
         // Ce que l'utilisateur a gardé : son brut (nom de carte SD) et le log de l'enregistreur.
         Files.copy(brut, sauvegarde.resolve(NOM_SD_BRUT));
-        ecrireLog(sauvegarde.resolve("LogPR" + SERIE + ".txt"), FREQUENCE_ACQUISITION_HZ / 1000);
+        JournalDeCapteur.ecrire(sauvegarde, SERIE, LocalDate.of(2026, 6, 20), FREQUENCE_ACQUISITION_HZ / 1000);
         Files.delete(brut);
         return noms;
     }
 
     /// Journal minimal de l'enregistreur : une ligne « Paramètres » porte la fréquence `Fe…kHz`, la seule
     /// chose que l'inventaire (#1649) y lit pour régénérer à l'identique.
-    private void ecrireLog(Path fichier, int frequenceKhz) throws IOException {
-        Files.createDirectories(fichier.getParent());
-        Files.write(
-                fichier,
-                List.of(
-                        "20/06/26 - 21:30:00 PR" + SERIE + " Démarrage v1.0",
-                        "20/06/26 - 21:30:01 PR" + SERIE + " Paramètres : Acquisi. 21:30-05:15, Fe" + frequenceKhz
-                                + "kHz, S. R. Med, Bd. Freq. 8-120kHz"),
-                java.nio.charset.StandardCharsets.UTF_8);
-    }
-
     /// Brut synthétique de [#DUREE_BRUT_S] secondes **réelles** : en-tête à `Fe/10` (comme l'écrit
     /// l'enregistreur PR), contenu déterminé par la `graine`.
     private void ecrireBrut(Path fichier, int graine) throws IOException {

@@ -47,12 +47,24 @@ public final class JournalDeCapteur {
 
     private JournalDeCapteur() {}
 
+    /// Fréquence d'acquisition par défaut, en kHz : celle du parc réel, et celle qu'écrivait la brique
+    /// avant d'être paramétrée. Les goldens de recette en dépendent, elle ne change pas.
+    public static final int FREQUENCE_KHZ_PAR_DEFAUT = 384;
+
+    /// Les lignes du journal d'une nuit, à la fréquence d'acquisition du parc réel.
+    public static List<String> lignes(String serie, LocalDate nuit, boolean sondePresente) {
+        return lignes(serie, nuit, sondePresente, FREQUENCE_KHZ_PAR_DEFAUT);
+    }
+
     /// Les lignes du journal d'une nuit, dans l'ordre où l'enregistreur les écrit.
     ///
     /// @param serie numéro de série de l'enregistreur, tel qu'il apparaît dans le nom du fichier
     /// @param nuit date du **coucher** de soleil : la nuit se termine le lendemain matin
     /// @param sondePresente vrai si l'enregistreur porte une sonde température/hygrométrie
-    public static List<String> lignes(String serie, LocalDate nuit, boolean sondePresente) {
+    /// @param frequenceKhz fréquence d'acquisition annoncée par la ligne « Paramètres ». C'est la seule
+    ///     valeur du journal dont un test dépende vraiment aujourd'hui : l'import en tire la fréquence
+    ///     réelle des bruts, que l'en-tête WAV ne dit pas (il porte `Fe/10`, cf. EPIC #1054)
+    public static List<String> lignes(String serie, LocalDate nuit, boolean sondePresente, int frequenceKhz) {
         String soir = nuit.format(FORMAT_JOURNAL);
         String matin = nuit.plusDays(1).format(FORMAT_JOURNAL);
         List<String> lignes = new ArrayList<>();
@@ -73,18 +85,27 @@ public final class JournalDeCapteur {
                 soir,
                 "16:02:21",
                 serie,
-                "Paramètres : Acquisi. 20:25-07:47, Fe384kHz FL N FPH 00, S. R. 16dB 1dt. GN0,"
-                        + " Bd. Freq. 8-120kHz, Wav 2-30s SD 99%"));
+                "Paramètres : Acquisi. 20:25-07:47, Fe" + frequenceKhz + "kHz FL N FPH 00,"
+                        + " S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%"));
         lignes.add(ligne(soir, "20:26:13", serie, "Wakeup by ALARM... Cpt 1"));
         lignes.add(ligne(matin, "07:48:00", serie, "### Passage en mode Veille"));
         lignes.add(ligne(matin, "07:52:21", serie, "Mise en veille, réveil à 20:25, Bat. Interne 4.0 90%"));
         return lignes;
     }
 
-    /// Écrit `LogPR<serie>.txt` dans `racineSd`, sonde présente.
+    /// Écrit `LogPR<serie>.txt` dans `racineSd`, sonde présente, fréquence du parc réel.
     public static Path ecrire(Path racineSd, String serie, LocalDate nuit) throws IOException {
+        return ecrire(racineSd, serie, nuit, FREQUENCE_KHZ_PAR_DEFAUT);
+    }
+
+    /// Écrit `LogPR<serie>.txt` dans `racineSd` en annonçant `frequenceKhz`, sonde présente.
+    ///
+    /// Le dossier parent est créé au besoin : plusieurs appelants écrivent dans une sauvegarde ou un
+    /// sous-dossier qu'ils n'ont pas encore matérialisé.
+    public static Path ecrire(Path racineSd, String serie, LocalDate nuit, int frequenceKhz) throws IOException {
+        Files.createDirectories(racineSd);
         Path journal = racineSd.resolve("LogPR" + serie + ".txt");
-        Files.write(journal, lignes(serie, nuit, true), StandardCharsets.UTF_8);
+        Files.write(journal, lignes(serie, nuit, true, frequenceKhz), StandardCharsets.UTF_8);
         return journal;
     }
 

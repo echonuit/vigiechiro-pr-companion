@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.EtatUnite;
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -63,14 +65,6 @@ class ImportationClicImporterTest {
     private static final String ID_USER = "u-clic";
     private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10
     private static final int TRAMES = 576_000;
-
-    private static final String LOG =
-            "22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01,"
-                    + " CPU 600000000, T4.1\n"
-                    + "22/04/26 - 16:02:21 PR1925492 Sonde température/hygrométrie présente, lecture toutes"
-                    + " les 600s\n"
-                    + "22/04/26 - 16:02:21 PR1925492 Paramètres : Acquisi. 20:25-07:47, Fe384kHz FL N FPH"
-                    + " 00, S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%\n";
 
     private Injector injector;
     private ImportationViewModel viewModel;
@@ -470,7 +464,7 @@ class ImportationClicImporterTest {
 
     private Path preparerCarteSD(Path dossier) throws IOException {
         Files.createDirectories(dossier);
-        Files.writeString(dossier.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        JournalDeCapteur.ecrire(dossier, "1925492", LocalDate.of(2026, 4, 22));
         Files.writeString(dossier.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
         ecrireWav(dossier.resolve("PaRecPR1925492_20260422_203922.wav"));
         ecrireWav(dossier.resolve("PaRecPR1925492_20260422_204326.wav"));

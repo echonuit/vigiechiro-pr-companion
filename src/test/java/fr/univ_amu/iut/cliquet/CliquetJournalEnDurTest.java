@@ -57,11 +57,8 @@ class CliquetJournalEnDurTest {
             "fr/univ_amu/iut/e2e/ParcoursRestaurationDepuisVigieChiroE2ETest.java",
             "fr/univ_amu/iut/importation/ServiceImportTest.java",
             "fr/univ_amu/iut/importation/SuiviFichiersImportTest.java",
-            "fr/univ_amu/iut/importation/model/InventaireParInspectionTest.java",
-            "fr/univ_amu/iut/importation/view/ImportationClicImporterTest.java",
             "fr/univ_amu/iut/importation/viewmodel/ImportationViewModelTest.java",
-            "fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java",
-            "fr/univ_amu/iut/passage/model/ServiceReactivationPassageTest.java");
+            "fr/univ_amu/iut/importation/viewmodel/InspectionImportViewModelTest.java");
 
     @Test
     @DisplayName("La dette du journal en dur ne peut que rétrécir : aucun nouveau littéral")
