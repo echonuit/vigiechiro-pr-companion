@@ -163,6 +163,21 @@ Cette passe :
     `fr.univ_amu.iut.cli.commande` signale une capacité présente d'un seul côté. La CLI et l'IHM
     partagent les mêmes services : la parité se joue au niveau des services exposés, pas du code d'IHM.
 
+!!! warning "Confronter des inventaires, pas des exemples"
+    Vérifier qu'*un* geste a son équivalent CLI produit une **parité de façade** : vraie sur le cas
+    qu'on a regardé, fausse dès qu'on resserre le filtre comme on le fait en vrai. Ce qui se compare,
+    ce sont **deux listes** - tous les critères que l'écran offre face à toutes les options que la
+    commande accepte.
+
+    Vécu à la clôture de l'EPIC #2790 : la passe avait constaté que l'export ZIP existait des deux
+    côtés et que le critère « Lieu » manquait en CLI. Elle s'était arrêtée là. Une question d'usage
+    posée après coup - « et à plus de 90 % de confiance ? » - a montré que la puce « Proba » manquait
+    aussi, et que la dette annoncée était donc à moitié décrite (#2971).
+
+    Corollaire : quand l'option existe déjà sous un nom **voisin**, la lire avant de conclure. En CLI,
+    `--certitude` désigne la certitude déclarée par l'observateur, pas la probabilité Tadarida ; deux
+    notions qui se ressemblent à l'oral et n'ont rien à voir dans les données.
+
 ### 3. Passe de doc développeur
 
 Mettre à jour le **site dev** (`dev-docs/`, publié sous `…/dev/`) pour que l'architecture décrite
