@@ -35,10 +35,11 @@ import javafx.scene.Scene;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Rend l'écran **Synthèse de la nuit** (#2351) hors écran en PNG. La nuit montre les quatre cas que
-/// l'écran sait rendre : une classe d'activité par espèce, **ses quantiles à côté**, une mention
-/// *(indicatif)* sur une déclinaison peu fiable, et un orthoptère qui **dit** qu'il n'est pas couvert
-/// plutôt que de laisser une cellule vide.
+/// Rend l'écran **Synthèse de la nuit** (#2351) hors écran en PNG. La nuit montre **les quatre messages**
+/// que la colonne « Activité » sait écrire, plus le bouclier PNA : une classe avec ses quantiles à côté,
+/// la même classe marquée *(indicatif)* quand la déclinaison est peu fiable, « Pas de seuil pour ce
+/// contexte » quand l'espèce est connue mais pas dans ce contexte, et « Non couvert par le référentiel »
+/// quand elle lui est étrangère. Jamais de cellule vide : l'absence a un sens, et il diffère selon le cas.
 ///
 /// ## La nuit est semée, pas fabriquée (#3018)
 ///
@@ -66,20 +67,44 @@ import javafx.scene.Scene;
 /// déclinaison** de Pipkuh : ils avaient été inventés pour la maquette. La fiche et la maquette portent
 /// désormais ceux du référentiel réel ; l'ADR 2351, immuable, garde les siens.
 ///
+/// ## Pourquoi le printemps (#3051)
+///
+/// Le quatrième message, « Pas de seuil pour ce contexte », n'était montré par aucune capture. Il ne
+/// pouvait pas l'être ici : **aucun** des 98 taxons du référentiel n'est orphelin en
+/// `region:Provence-Alpes-Cote dAzur` / `ete`, tous ayant au moins une ligne `national` qui sert de
+/// repli. L'état existe pourtant, dans 507 combinaisons (taxon, région, saison) - simplement pas
+/// celle-là.
+///
+/// La nuit passe donc au **printemps**, l'un des 25 contextes où les cinq états coexistent **sans**
+/// perdre 718 en « Forte ». Le carré et le site ne bougent pas.
+///
 /// ## Ce que les nombres visent
 ///
 /// Les contacts sont choisis pour tomber dans les bandes du référentiel embarqué, déclinaison
-/// `region:Provence-Alpes-Cote dAzur` / `ete` - la classe est donc **calculée**, plus décrétée :
+/// `region:Provence-Alpes-Cote dAzur` / `printemps` - la classe est donc **calculée**, plus décrétée :
 ///
-/// | Taxon | q25 | q75 | q98 | confiance | contacts | classe attendue |
+/// | Taxon | q25 | q75 | q98 | confiance | contacts | ce que la colonne écrit |
 /// |---|---|---|---|---|---|---|
-/// | `Pipkuh` Pipistrelle de Kuhl | 41 | 620 | 3842 | Très bonne | 718 | **Forte** |
-/// | `Pippip` Pipistrelle commune | 13 | 254 | 2751 | Très bonne | 120 | **Moyenne**, et le bouclier PNA |
-/// | `Cicorn` Cigale grise | 1 | 2 | 58 | **Faible** | 1 | **Moyenne**, *(indicatif)* |
-/// | `Antcho` Antaxie catalane | — | — | — | **absente du référentiel** | 40 | aucune, et la cellule le dit |
+/// | `Pipkuh` Pipistrelle de Kuhl | 23 | 261 | 1804 | Bonne | 718 | **Forte** |
+/// | `Pippip` Pipistrelle commune | 9 | 221 | 1858 | Bonne | 120 | **Moyenne**, et le bouclier PNA |
+/// | `Myodas` Murin des marais | 1 | 2 | 11 | **Faible** | 5 | **Forte *(indicatif)*** |
+/// | `Cicorn` Cigale grise | — | — | — | **aucune déclinaison applicable** | 1 | « Pas de seuil pour ce contexte » |
+/// | `Antcho` Antaxie catalane | — | — | — | **absente du référentiel** | 40 | « Non couvert par le référentiel » |
 ///
-/// La Cigale grise n'a qu'une seule déclinaison, `national` / `ete`, et sa confiance est *Faible* : la
-/// mention *(indicatif)* ne dépend donc pas de la région retenue.
+/// Deux choix méritent d'être dits.
+///
+/// Le cas *(indicatif)* porte sur un **chiroptère**, et non plus sur une cigale : le référentiel ne parle
+/// que de chauves-souris, et « Forte *(indicatif)* » se lit alors juste sous une « Forte » fiable, ce qui
+/// montre exactement ce que la mention ajoute.
+///
+/// La **Cigale grise ne quitte pas la démonstration, elle change de case** : sa seule déclinaison est
+/// `national` / `ete`, donc au printemps plus rien ne la couvre. La même espèce, au même endroit, passe
+/// de « Moyenne (indicatif) » à « Pas de seuil pour ce contexte » parce que la **saison** a changé. C'est
+/// la démonstration la plus courte de ce que le contexte décide.
+///
+/// Le message ne dépend d'ailleurs **pas du groupe taxonomique**, contrairement à ce que laisse croire la
+/// fiche : `LigneSynthese.libelleClasse()` se décide sur `referentiel.couvre(codeTaxon)`, c'est-à-dire la
+/// présence du code dans le CSV. Une cigale peut donc dire « Pas de seuil », et c'est ce qu'elle fait ici.
 ///
 /// ⚠️ Les deux derniers **ne sont pas ceux de l'ancienne démonstration**, et c'est instructif. Elle
 /// montrait une Barbastelle marquée *(indicatif)* et une Sauterelle verte « hors référentiel » : le
@@ -106,8 +131,10 @@ public final class CaptureSynthese {
     static final String POINT = "A1";
     static final String SITE = "Étang de Berre";
 
-    /// Nuit d'**été** : la saison s'en déduit, et c'est elle qui choisit la déclinaison du référentiel.
-    private static final String NUIT = "2026-07-03";
+    /// Nuit de **printemps** (`SaisonActivite.PRINTEMPS` court du 1er avril au 15 juin) : la saison s'en
+    /// déduit, et c'est elle qui choisit la déclinaison du référentiel. Le choix n'est pas décoratif -
+    /// voir la note sur le printemps.
+    private static final String NUIT = "2026-05-14";
 
     private CaptureSynthese() {}
 
@@ -206,11 +233,16 @@ public final class CaptureSynthese {
             // 718 : le nombre fondateur de l'ADR 2351, produit et non plus affirmé (359 séquences × 2).
             semerTaxon(cx, idSession, idOriginal, idResultats, "Pipkuh", 718, 2);
             semerTaxon(cx, idSession, idOriginal, idResultats, "Pippip", 120, 1);
-            // Cigale grise : aucune de ses déclinaisons n'est fiable, la classe se marque donc indicative.
-            // Un seul contact donne « Moyenne » et non « Faible » : q25 vaut 1, et la borne est stricte
-            // (`contacts < q25`). Faible serait donc inatteignable ici - le référentiel a le dernier mot.
+            // Murin des marais : sa déclinaison de printemps est de confiance « Faible », la classe se
+            // marque donc indicative. 5 contacts tombent en « Forte » (q75 = 2, q98 = 11), ce qui place
+            // « Forte (indicatif) » juste sous la « Forte » fiable de la Pipistrelle de Kuhl : on lit
+            // alors ce que la mention ajoute, plutôt que d'avoir à l'expliquer.
+            semerTaxon(cx, idSession, idOriginal, idResultats, "Myodas", 5, 1);
+            // Cigale grise : sa seule déclinaison est `national` / `ete`, donc au printemps plus rien ne
+            // la couvre. Le référentiel la connaît, ce contexte-là non : « Pas de seuil pour ce contexte ».
             semerTaxon(cx, idSession, idOriginal, idResultats, "Cicorn", 1, 1);
-            // Antaxie catalane : connue de la base, absente du référentiel d'activité.
+            // Antaxie catalane : connue de la base, absente du référentiel d'activité. Message différent
+            // du précédent, et c'est tout l'enjeu : « Non couvert par le référentiel ».
             semerTaxon(cx, idSession, idOriginal, idResultats, "Antcho", 40, 1);
             return idPassage;
         }

@@ -8,7 +8,7 @@ habituellement pour cette espèce, à cette saison, dans cette région et dans c
 
 On y arrive depuis l'écran d'un **passage**, par la carte « Synthèse de la nuit ».
 
-![La synthèse d'une nuit : quatre espèces, leur classe d'activité et les quantiles qui la fondent, avec la mise en garde et la source en pied d'écran.](../assets/captures/apercu-synthese.png)
+![La synthèse d'une nuit : cinq espèces, leur classe d'activité et les quantiles qui la fondent, dont une classe marquée indicatif, une espèce sans seuil pour ce contexte et une espèce non couverte, avec la mise en garde et la source en pied d'écran.](../assets/captures/apercu-synthese.png)
 
 ## Ce que le tableau montre
 
@@ -27,7 +27,7 @@ fichiers, c'est une activité diffuse toute la nuit. La classe d'activité se ca
 
 ## Pourquoi les seuils s'affichent à côté de la classe
 
-Une classe seule est un verdict. Une classe accompagnée de « Q75 = 620 · Q98 = 3842 » est une
+Une classe seule est un verdict. Une classe accompagnée de « Q75 = 261 · Q98 = 1804 » est une
 **lecture que vous pouvez contester** : et c'est ce qu'on attend d'un outil scientifique. Vous voyez
 sur quoi le produit s'appuie pour dire « Forte ».
 
@@ -47,18 +47,23 @@ reste un choix explicite : rien dans l'application ne dit si votre point d'écou
 ville. Par défaut, la comparaison est donc **nationale** : plus large, mais jamais fausse.
 
 Le référentiel réellement employé est **écrit sous le tableau** : « Comparé au référentiel :
-region Occitanie · Été ». Sans cette mention, la classe serait un oracle.
+region Provence-Alpes-Cote dAzur · Printemps ». Sans cette mention, la classe serait un oracle.
 
 ## Quand la classe n'est pas donnée
 
 La cellule dit toujours **pourquoi**, plutôt que de rester vide : une case blanche se lirait comme une
 donnée manquante :
 
-- **« Non couvert par le référentiel »** : orthoptères, oiseaux, bruit. Le référentiel ne parle que de
-  chauves-souris ;
-- **« Pas de seuil pour ce contexte »** : l'espèce est connue, mais aucune déclinaison ne la couvre ;
-- **« Moyenne (indicatif) »** : les seuils retenus reposent sur trop peu de nuits. On vous les montre
-  faute de mieux, sans les présenter comme une mesure.
+- **« Non couvert par le référentiel »** : l'espèce lui est étrangère. C'est le cas de la plupart des
+  orthoptères, des oiseaux et du bruit, le référentiel portant sur les chauves-souris ;
+- **« Pas de seuil pour ce contexte »** : l'espèce **est** au référentiel, mais aucune de ses
+  déclinaisons ne couvre cette région à cette saison ;
+- **« Forte (indicatif) »**, ou toute autre classe suivie de *(indicatif)* : les seuils retenus reposent
+  sur trop peu de nuits. On vous les montre faute de mieux, sans les présenter comme une mesure.
+
+Les deux premières mentions se ressemblent et ne disent pas la même chose. La distinction ne tient pas
+au groupe de l'espèce : sur la capture ci-dessus, la **Cigale grise** est un orthoptère et affiche « Pas
+de seuil pour ce contexte », parce que le référentiel la connaît mais ne la couvre qu'en été.
 
 ## Si le référentiel manque
 
