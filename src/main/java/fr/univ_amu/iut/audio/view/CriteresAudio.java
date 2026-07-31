@@ -11,11 +11,9 @@ import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Comparator;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -279,13 +277,20 @@ final class CriteresAudio {
     /// dimension (communes, puis carrés, puis points, puis sites) et triées au sein de chacune - la
     /// liste reste lisible sans en-têtes. Un même libellé porté par deux dimensions (un site homonyme
     /// d'une commune) n'apparaît qu'une fois : le coche vaut alors pour les deux.
-    private static List<String> lieuxPresents(List<LigneObservationAudio> lignes) {
-        Set<String> lieux = new LinkedHashSet<>();
-        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::commune));
-        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::numeroCarre));
-        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::codePoint));
-        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::nomSite));
-        return List.copyOf(lieux);
+    private static List<CritereListe.GroupeValeurs> lieuxPresents(List<LigneObservationAudio> lignes) {
+        return List.of(
+                new CritereListe.GroupeValeurs("Communes", valeursDistinctes(lignes, LigneObservationAudio::commune)),
+                new CritereListe.GroupeValeurs("Carrés", valeursDistinctes(lignes, LigneObservationAudio::numeroCarre)),
+                new CritereListe.GroupeValeurs("Points", valeursDistinctes(lignes, CriteresAudio::pointQualifie)),
+                new CritereListe.GroupeValeurs("Sites", valeursDistinctes(lignes, LigneObservationAudio::nomSite)));
+    }
+
+    /// Le point **qualifié par son carré**, « 640380 · A1 » (#2992). Le schéma pose `UNIQUE(site_id, code)` :
+    /// un code de point est unique **par site**, pas globalement. Cet écran ne cible pas toujours un seul
+    /// passage (sources « un lot de passages » et « une espèce à travers les passages ») ; une entrée
+    /// « A1 » y confondait donc silencieusement les A1 de plusieurs carrés.
+    private static String pointQualifie(LigneObservationAudio ligne) {
+        return ligne.codePoint() == null ? null : ligne.numeroCarre() + " · " + ligne.codePoint();
     }
 
     /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
@@ -302,7 +307,7 @@ final class CriteresAudio {
     /// Les valeurs candidates d'une ligne face à la liste des lieux cochés : ses quatre champs
     /// géographiques non nuls (commune, carré, point, site).
     private static List<String> dimensionsLieu(LigneObservationAudio ligne) {
-        return Stream.of(ligne.commune(), ligne.numeroCarre(), ligne.codePoint(), ligne.nomSite())
+        return Stream.of(ligne.commune(), ligne.numeroCarre(), pointQualifie(ligne), ligne.nomSite())
                 .filter(Objects::nonNull)
                 .toList();
     }

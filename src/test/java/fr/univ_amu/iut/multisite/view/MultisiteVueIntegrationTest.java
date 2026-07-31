@@ -504,9 +504,10 @@ class MultisiteVueIntegrationTest {
         // n'y figure pas : LignePassage ne le porte pas, contrairement à la vue audio.
         robot.interact(() -> menuLocal.getItems().get(0).fire());
         MenuButton choixLieu = menuBoutonDeLieu(pucesLocales);
-        assertThat(choixLieu.getItems())
-                .extracting(MenuItem::getText)
-                .containsExactly("Aix-en-Provence", "Venelles", "640380", "870150", "A1", "B2");
+        assertThat(entetesLieu(choixLieu)).containsExactly("Communes", "Carrés", "Points");
+        // Le point est qualifié par son carré : « A1 » seul confondrait les A1 de toute la saison.
+        assertThat(cochablesLieu(choixLieu))
+                .containsExactly("Aix-en-Provence", "Venelles", "640380", "870150", "640380 · A1", "870150 · B2");
         assertThat(vues).as("rien de coché n'écarte rien").hasSize(2);
 
         robot.interact(() -> cocheLieu(choixLieu, "Aix-en-Provence").setSelected(true));
@@ -517,9 +518,56 @@ class MultisiteVueIntegrationTest {
         robot.interact(() -> {
             cocheLieu(choixLieu, "Aix-en-Provence").setSelected(false);
             cocheLieu(choixLieu, "870150").setSelected(false);
-            cocheLieu(choixLieu, "B2").setSelected(true);
+            cocheLieu(choixLieu, "870150 · B2").setSelected(true);
         });
         assertThat(vues).extracting(LignePassage::idPassage).containsExactly(2L);
+    }
+
+    @Test
+    @DisplayName("#2992 : deux carrés ont chacun un point « A1 » : cocher l'un ne retient pas l'autre")
+    void point_qualifie_distingue_deux_carres(FxRobot robot) {
+        // Le cas que le schéma rend inévitable : UNIQUE(site_id, code), donc le même code vit dans
+        // plusieurs carrés. C'est ce que la puce confondait avant la qualification.
+        ObservableList<LignePassage> source = FXCollections.observableArrayList(
+                ligneLieu(1L, "640380", "A1", "Ahetze"), ligneLieu(2L, "870150", "A1", "Venelles"));
+        FilteredList<LignePassage> vues = new FilteredList<>(source);
+        MenuButton menuLocal = new MenuButton();
+        FlowPane puces = new FlowPane();
+        GestionnaireFiltres<LignePassage> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                puces,
+                new Filtres<>(vues, () -> {}),
+                List.of(CriteresMultisite.lieu(() -> source)),
+                CriteresMultisite.rechercheTexte());
+        assertThat(ignore).isNotNull();
+
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        MenuButton choixLieu = menuBoutonDeLieu(puces);
+        // Deux entrées distinctes là où une seule « A1 » aurait paru.
+        assertThat(cochablesLieu(choixLieu)).contains("640380 · A1", "870150 · A1");
+
+        robot.interact(() -> cocheLieu(choixLieu, "640380 · A1").setSelected(true));
+        assertThat(vues)
+                .as("le A1 de l'autre carré n'est pas retenu")
+                .extracting(LignePassage::idPassage)
+                .containsExactly(1L);
+    }
+
+    /// Les intitulés des **en-têtes** de groupe : les items désactivés, qui nomment sans se cocher.
+    private static List<String> entetesLieu(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(item -> !(item instanceof CheckMenuItem) && item.isDisable())
+                .map(MenuItem::getText)
+                .toList();
+    }
+
+    /// Les valeurs **cochables**, en-têtes et séparateurs exclus.
+    private static List<String> cochablesLieu(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(MenuItem::getText)
+                .toList();
     }
 
     /// Ligne portant sa commune : l'aide générale du fichier la laisse nulle, faute d'en avoir eu besoin.

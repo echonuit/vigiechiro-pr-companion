@@ -11,10 +11,8 @@ import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -160,12 +158,20 @@ final class CriteresMultisite {
     /// Lieux présents dans `passages` : les valeurs **distinctes** de chaque dimension, groupées par
     /// dimension (communes, puis carrés, puis points) et triées au sein de chacune. Un même libellé porté
     /// par deux dimensions n'apparaît qu'une fois : le coche vaut alors pour les deux.
-    private static List<String> lieuxPresents(List<LignePassage> passages) {
-        Set<String> lieux = new LinkedHashSet<>();
-        lieux.addAll(valeursDistinctes(passages, LignePassage::commune));
-        lieux.addAll(valeursDistinctes(passages, LignePassage::numeroCarre));
-        lieux.addAll(valeursDistinctes(passages, LignePassage::codePoint));
-        return List.copyOf(lieux);
+    private static List<CritereListe.GroupeValeurs> lieuxPresents(List<LignePassage> passages) {
+        return List.of(
+                new CritereListe.GroupeValeurs("Communes", valeursDistinctes(passages, LignePassage::commune)),
+                new CritereListe.GroupeValeurs("Carrés", valeursDistinctes(passages, LignePassage::numeroCarre)),
+                new CritereListe.GroupeValeurs(
+                        "Points", valeursDistinctes(passages, CriteresMultisite::pointQualifie)));
+    }
+
+    /// Le point **qualifié par son carré**, « 640380 · A1 » (#2992). Le schéma pose `UNIQUE(site_id, code)` :
+    /// un code de point est unique **par site**, pas globalement, si bien que « A1 » désigne autant de
+    /// lieux qu'il y a de carrés. Cet écran couvrant la saison entière, une entrée « A1 » y confondait
+    /// silencieusement les A1 de tous les carrés. Qualifiée, chaque entrée désigne **un** lieu.
+    private static String pointQualifie(LignePassage ligne) {
+        return ligne.codePoint() == null ? null : ligne.numeroCarre() + " · " + ligne.codePoint();
     }
 
     /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
@@ -181,7 +187,7 @@ final class CriteresMultisite {
 
     /// Les dimensions de lieu d'un passage, valeurs nulles écartées.
     private static List<String> dimensionsLieu(LignePassage ligne) {
-        return Stream.of(ligne.commune(), ligne.numeroCarre(), ligne.codePoint())
+        return Stream.of(ligne.commune(), ligne.numeroCarre(), pointQualifie(ligne))
                 .filter(Objects::nonNull)
                 .toList();
     }

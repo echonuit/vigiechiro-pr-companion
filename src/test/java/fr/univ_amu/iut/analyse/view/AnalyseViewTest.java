@@ -793,8 +793,8 @@ class AnalyseViewTest {
         // Le POINT n'y figure pas : ObservationAnalyse ne porte qu'un idPoint technique, pas un code.
         robot.interact(() -> menuLocal.getItems().get(0).fire());
         MenuButton choixLieu = menuBoutonDeLieu(pucesLocales);
-        assertThat(choixLieu.getItems())
-                .extracting(MenuItem::getText)
+        assertThat(entetesLieu(choixLieu)).containsExactly("Communes", "Carrés", "Sites");
+        assertThat(cochablesLieu(choixLieu))
                 .containsExactly("Aix-en-Provence", "Venelles", "640380", "870150", "Jardin de Serge", "Le pré");
         assertThat(vues).as("rien de coché n'écarte rien").hasSize(2);
 
@@ -811,6 +811,22 @@ class AnalyseViewTest {
             cocheLieu(choixLieu, "Le pré").setSelected(true);
         });
         assertThat(vues).extracting(ObservationAnalyse::taxonRetenu).containsExactly("Pippip");
+    }
+
+    /// Les intitulés des **en-têtes** de groupe : les items désactivés, qui nomment sans se cocher.
+    private static List<String> entetesLieu(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(item -> !(item instanceof CheckMenuItem) && item.isDisable())
+                .map(MenuItem::getText)
+                .toList();
+    }
+
+    /// Les valeurs **cochables**, en-têtes et séparateurs exclus.
+    private static List<String> cochablesLieu(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(MenuItem::getText)
+                .toList();
     }
 
     private static ObservationAnalyse obsLieu(String taxon, String commune, String carre, String site) {
