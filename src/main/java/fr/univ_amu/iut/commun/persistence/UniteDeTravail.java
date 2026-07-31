@@ -34,13 +34,26 @@ public class UniteDeTravail {
                 connexion.commit();
             } catch (SQLException | RuntimeException erreur) {
                 connexion.rollback();
-                throw new DataAccessException("Transaction annulée (rollback)", erreur);
+                throw qualifiee(erreur);
             } finally {
                 connexion.setAutoCommit(autoCommitInitial);
             }
         } catch (SQLException e) {
             throw new DataAccessException("Échec d'ouverture de la transaction", e);
         }
+    }
+
+    /// Situe une erreur nue, laisse passer une erreur déjà située.
+    ///
+    /// Un bloc qui sait ce qu'il faisait lève volontiers une [DataAccessException] qui **nomme** son
+    /// échec et dit dans quel état la base se retrouve (ainsi de [MigrationSchema], qui donne le
+    /// script et l'instruction). La réemballer enfouirait ce message sous un « Transaction annulée »
+    /// générique, et c'est le générique qu'on lirait en premier. Les autres erreurs, elles, remontent
+    /// nues du pilote JDBC et gagnent à être situées.
+    private static DataAccessException qualifiee(Exception erreur) {
+        return erreur instanceof DataAccessException deja
+                ? deja
+                : new DataAccessException("Transaction annulée (rollback)", erreur);
     }
 
     /// Bloc de travail s'exécutant sur la connexion transactionnelle fournie.
