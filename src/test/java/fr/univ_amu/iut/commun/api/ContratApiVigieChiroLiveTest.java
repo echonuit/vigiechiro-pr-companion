@@ -796,6 +796,60 @@ class ContratApiVigieChiroLiveTest {
         throw new IllegalStateException("inatteignable : assumeTrue vient d'interrompre le test");
     }
 
+    @Test
+    @DisplayName("Carte des lectures (#3001) : le catalogue des sites est lisible et annonce son total")
+    void catalogue_des_sites_est_lisible() {
+        // La collection globale n'était projetée nulle part avant #2999 : c'est elle qui permet de
+        // recenser les points d'écoute de la plateforme, et de constater qu'un même code (« Z1 ») est
+        // porté par des centaines de carrés (#2993).
+        api().when()
+                .get("/sites?max_results=1&page=1")
+                .then()
+                .statusCode(200)
+                .body("_items", not(empty()))
+                .body("_meta.total", notNullValue());
+    }
+
+    @Test
+    @DisplayName("Carte des lectures (#3001) : ce que la carte annonce sans route de collection refuse bien")
+    void les_ressources_sans_collection_refusent() {
+        // « fichiers », « grille_stoc » et « actualites » n'ont AUCUNE route de collection dans le
+        // source : leur refus n'est pas une affaire de rôle (toutes les lectures exigent le même),
+        // c'est une route qui n'existe pas. La carte le dit ; cette sonde le vérifie.
+        for (String sansCollection : List.of("/fichiers", "/grille_stoc", "/actualites")) {
+            int statut = api().when().get(sansCollection).then().extract().statusCode();
+            assertThat(statut)
+                    .as("« %s » n'est pas une route de lecture : le serveur doit refuser, pas répondre", sansCollection)
+                    .isNotEqualTo(200);
+        }
+    }
+
+    @Test
+    @DisplayName("Carte des lectures (#3001) : « /sites/liste » rend des identifiants nus, dans une enveloppe"
+            + " à deux blocs")
+    void la_liste_des_sites_ne_rend_que_des_identifiants() {
+        // Le nom trompe deux fois. « liste » n'est pas un résumé lisible : chaque document est réduit à
+        // son « _id ». Et l'enveloppe n'est pas celle d'Eve : « _items » y contient DEUX blocs - la
+        // liste des documents, puis le total en entier nu. Un code qui lirait « _items[0]._id » en
+        // croyant tenir un document tiendrait en fait toute la liste.
+        io.restassured.path.json.JsonPath reponse = api().when()
+                .get("/sites/liste")
+                .then()
+                .statusCode(200)
+                .extract()
+                .jsonPath();
+
+        assertThat(reponse.getList("_items"))
+                .as("enveloppe atypique : les documents, puis le total")
+                .hasSize(2);
+        assertThat(reponse.getMap("_items[0][0]").keySet())
+                .as("chaque document est réduit à son identifiant : rien à recenser ici")
+                .containsExactly("_id");
+        assertThat(reponse.getInt("_items[1]"))
+                .as("le second bloc est le total, en entier nu")
+                .isPositive();
+    }
+
     /// `_id` de la première donnée de [#participationTraitee].
     private static String idPremiereDonnee() {
         return api().when()
