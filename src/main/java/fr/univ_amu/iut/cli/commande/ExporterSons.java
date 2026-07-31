@@ -11,6 +11,7 @@ import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.FiltreLieu;
+import fr.univ_amu.iut.validation.model.FiltreProbabilite;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
@@ -75,6 +76,14 @@ public final class ExporterSons implements Callable<Integer> {
                     + "Correspondance partielle, casse et accents ignorés. Répétable pour en cumuler plusieurs.")
     private List<String> lieux = new ArrayList<>();
 
+    /// Seuil de probabilité Tadarida (#2971), à l'échelle 0..1 comme la sortie de `lister-observations`.
+    @Option(
+            names = "--proba-min",
+            paramLabel = "<0..1>",
+            description = "Ne garde que les détections dont la probabilité Tadarida atteint ce seuil "
+                    + "(celles qui n'en ont pas sont conservées). Échelle 0 à 1 : 90 % s'écrit 0.9.")
+    private Double probaMin;
+
     @Option(
             names = "--sortie",
             required = true,
@@ -116,7 +125,8 @@ public final class ExporterSons implements Callable<Integer> {
 
     @Override
     public Integer call() throws IOException {
-        List<LigneObservationAudio> lignes = FiltreLieu.appliquer(lignesDeLaPortee(), lieux);
+        List<LigneObservationAudio> avantSeuil = FiltreLieu.appliquer(lignesDeLaPortee(), lieux);
+        List<LigneObservationAudio> lignes = FiltreProbabilite.appliquer(avantSeuil, probaMin);
         MarqueurEspecesAEnjeu marqueur = new MarqueurEspecesAEnjeu(especesPrioritaires.get());
         ExportObservationsEtSons export = new ExportObservationsEtSons(sequences, sessions);
         ExportObservationsEtSons.Bilan bilan =
@@ -126,6 +136,10 @@ public final class ExporterSons implements Callable<Integer> {
                 .println("Archive écrite : " + bilan.observations() + " observation(s), " + bilan.sonsCopies()
                         + " son(s), " + String.format(Locale.FRENCH, "%.1f Mo", bilan.octets() / 1_048_576.0) + " → "
                         + sortie.toAbsolutePath());
+        // Une archive vide est un résultat valide, mais muet : sans cela, l'utilisateur ne saurait pas
+        // que son seuil est passé juste au-dessus de tout le lot (#2971).
+        FiltreProbabilite.avertissementSeuilTropHaut(avantSeuil, probaMin)
+                .ifPresent(avertissement -> spec.commandLine().getOut().println(avertissement));
         if (!bilan.sonsIntrouvables().isEmpty()) {
             spec.commandLine()
                     .getOut()
