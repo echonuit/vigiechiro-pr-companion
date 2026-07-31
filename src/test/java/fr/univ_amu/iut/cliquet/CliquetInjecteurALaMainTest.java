@@ -53,13 +53,9 @@ class CliquetInjecteurALaMainTest {
             "fr/univ_amu/iut/audit/outils/CaptureAudit.java",
             "fr/univ_amu/iut/connexion/outils/CaptureConnexion.java",
             "fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.java",
-            "fr/univ_amu/iut/importation/outils/CaptureImport.java",
-            "fr/univ_amu/iut/lot/outils/CaptureLot.java",
             "fr/univ_amu/iut/multisite/outils/CaptureMultisite.java",
             "fr/univ_amu/iut/passage/outils/CapturePassage.java",
-            "fr/univ_amu/iut/perf/outils/BancImport.java",
-            "fr/univ_amu/iut/qualification/outils/CaptureQualification.java",
-            "fr/univ_amu/iut/saison/outils/CaptureSaison.java");
+            "fr/univ_amu/iut/qualification/outils/CaptureQualification.java");
 
     @Test
     @DisplayName("La dette des injecteurs assemblés à la main ne peut que rétrécir : un outil neuf compose"

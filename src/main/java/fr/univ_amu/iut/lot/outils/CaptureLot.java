@@ -12,7 +12,7 @@ import com.google.inject.name.Names;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
@@ -34,7 +34,6 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
-import fr.univ_amu.iut.lot.di.LotModule;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
@@ -46,8 +45,6 @@ import fr.univ_amu.iut.lot.view.LotController;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.SuiviLignesDepot;
-import fr.univ_amu.iut.passage.di.PassageModule;
-import fr.univ_amu.iut.passage.di.SynchronisationParticipationModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
@@ -62,7 +59,6 @@ import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
@@ -254,15 +250,11 @@ public final class CaptureLot {
                         LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), "6480c0ffee0000000000dead", false));
     }
 
-    /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
-    /// (test).
+    /// Injecteur de cet outil de capture : la composition **complète** de l'application, surchargée pour
+    /// le déterminisme. Exposé pour le garde-fou de câblage (test).
     public static Injector creerInjecteur() {
-        return Guice.createInjector(
-                Modules.override(ModuleCaptureCommun.communSynchrone()).with(new ModuleCaptureLot()),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                new LotModule());
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), new ModuleCaptureLot()));
     }
 
     /// Variante **connectée** de [#creerInjecteur] (#1890) : mêmes modules, plus la liaison du dépôt.
@@ -271,14 +263,8 @@ public final class CaptureLot {
     /// deux méritent d'être relus** : le déconnecté masque l'étape ③ et n'offre que le dépôt manuel.
     /// Tout basculer en connecté aurait simplement déplacé l'angle mort d'un mode à l'autre.
     public static Injector creerInjecteurConnecte() {
-        return Guice.createInjector(
-                Modules.override(ModuleCaptureCommun.communSynchrone()).with(new ModuleCaptureLot()),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                new SynchronisationParticipationModule(),
-                new LotModule(),
-                new ModuleDepotConnecte());
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), new ModuleCaptureLot(), new ModuleDepotConnecte()));
     }
 
     /// Réglages communs aux deux injecteurs de capture : horloge figée (aperçus reproductibles), DAO de
