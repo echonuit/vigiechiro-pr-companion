@@ -152,6 +152,40 @@ la sonde live `refus_serveur_est_un_refuse_explicite` verrouille que ce refus re
 | PATCH | `/donnees/{id}/observations/{indice}` | pousse une **correction d'observation** (taxon + certitude) |
 | PUT | `/donnees/{id}/observations/{indice}/messages` | ajoute un **message** au fil de discussion d'une observation |
 
+### La carte complète des lectures
+
+Les endpoints ci-dessus sont ceux que **l'application utilise**. L'API en expose davantage : le
+source déclare **63 routes**, dont **33 en lecture**, réparties sur **9 ressources**. La carte
+complète vit en code dans [`CatalogueApi`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/api/CatalogueApi.java),
+s'affiche par `vigiechiro api ressources`, et se fait contredire par `CatalogueApiTest` (comparaison
+au source) et par les sondes live (confrontation au serveur). Une carte en prose vieillit sans
+prévenir : celle-ci rougit.
+
+| Ressource | Lectures | À savoir |
+|---|---|---|
+| `sites` | `/sites`, `/sites/{id}`, `/sites/liste`, `/moi/sites`, `/protocoles/{id}/sites[/grille_stoc\|/tracet]` | catalogue entier lisible et paginé (**20 517 sites** au 2026-07-31). ⚠️ `/sites/liste` trompe deux fois : chaque document est réduit à son `_id` (759 Ko, non paginé), et son enveloppe n'est **pas** celle d'Eve (`_items` contient les documents **puis le total**, en deux blocs). Elle ne dispense pas de paginer `/sites` pour recenser les points |
+| `participations` | `/participations`, `/participations/{id}[/pieces_jointes]`, `/moi/participations`, `/sites/{id}/participations` | `/moi/participations` embarque le site : c'est de là que le client dérive vos sites (#718) |
+| `donnees` | `/donnees`, `/donnees/{id}[/fichiers]`, `/participations/{id}/donnees` | ⚠️ la collection nue `/donnees` est déclarée mais **répond 503** en pratique : passer par la participation |
+| `taxons` | `/taxons`, `/taxons/{id}`, `/taxons/liste` | `/taxons/liste` rend le référentiel entier, sans pagination |
+| `protocoles` | `/protocoles[/liste]`, `/protocoles/{id}[/observateurs]`, `/moi/protocoles` | le protocole détermine la forme des localités d'un site |
+| `utilisateurs` | `/utilisateurs`, `/utilisateurs/{id}`, `/moi` | `/moi` valide le jeton |
+| `fichiers` | `/fichiers/{id}`, `/fichiers/{id}/acces` | ⚠️ **aucune route de collection** : `/fichiers` n'existe pas en lecture, d'où son refus |
+| `grille_stoc` | `/grille_stoc/rectangle`, `/grille_stoc/cercle` | ⚠️ **aucune route de collection** : s'interroge par emprise |
+| `actualites` | `/moi/actualites`, `/actualites/validations` | ⚠️ **aucune route de collection** |
+
+**Toutes** les lectures exigent le même rôle (`Observateur`) : le source ne distingue les rôles qu'en
+écriture. Un refus en lecture ne vient donc **pas** du rôle, mais d'une route qui n'existe pas.
+
+**Rejouer la carte** quand le miroir du source bouge (`SAE201/vigiechiro-api`) :
+
+```bash
+cd ../vigiechiro-api/vigiechiro/resources
+grep -nE "@\w+\.route\('[^']+'|@requires_auth" *.py
+```
+
+Puis reporter les routes `GET` dans `CatalogueApi` ; `CatalogueApiTest` refuse tout chemin annoncé
+qui n'existe pas dans le source, et se saute proprement si le miroir est absent.
+
 ### Objet `participation` (schéma canonique)
 
 ```json
