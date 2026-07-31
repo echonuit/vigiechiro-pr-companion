@@ -18,16 +18,37 @@ import java.util.Map;
 ///
 /// ## Ce que la part signifie
 ///
-/// La part est celle **des sites lus**, jamais de la plateforme : sur un échantillon de trois pages,
-/// « 96 % » veut dire « 96 % des 300 sites que j'ai regardés ». La commande qui l'affiche doit le dire,
-/// et c'est pourquoi ce calcul ne porte que des comptes bruts : il ne sait pas, lui, sur quoi il a
-/// travaillé.
+/// La part est celle des sites **recensés**, jamais de la plateforme : sur un échantillon de trois
+/// pages, « 90 % » veut dire « 90 % des sites que j'ai regardés *et qui peuvent porter un point* ».
+/// La commande qui l'affiche doit le dire, et c'est pourquoi ce calcul ne porte que des comptes
+/// bruts : il ne sait pas, lui, sur quoi il a travaillé.
+///
+/// ⚠️ Le dénominateur exclut les sites **sans point ponctuel** (transects routiers), et cette
+/// exclusion n'est pas cosmétique : sur trois pages du catalogue réel, 219 des 300 sites lus sont des
+/// transects. Les compter au dénominateur annoncerait « Z1 : 24 % » là où la proportion est de
+/// **90 %** parmi les sites qui pouvaient le porter - une sous-estimation d'un facteur presque
+/// quatre, et dans le sens rassurant, alors que ce comptage existe précisément pour établir à quel
+/// point un code de point est partagé (#2993).
 public final class RecensementPoints {
 
     /// Un code de point, et le nombre de sites qui le portent.
     public record Ligne(String code, int sites) {}
 
     private RecensementPoints() {}
+
+    /// Combien de sites **entrent au recensement** : ceux qui portent au moins un code de point.
+    ///
+    /// C'est le dénominateur des parts. Un transect routier n'a pas de point d'écoute ponctuel ; le
+    /// compter reviendrait à demander « quelle part des sites porte Z1 » en incluant des sites qui ne
+    /// peuvent porter aucun code.
+    public static int sitesRecenses(List<SiteVigieChiro> sites) {
+        return (int) sites.stream().filter(RecensementPoints::porteUnCode).count();
+    }
+
+    private static boolean porteUnCode(SiteVigieChiro site) {
+        return site.points().stream()
+                .anyMatch(point -> point.code() != null && !point.code().isBlank());
+    }
 
     /// Les codes de points présents, **du plus partagé au moins partagé**, à égalité par ordre
     /// alphabétique. Un site qui porterait deux fois le même code ne le compte qu'une fois : c'est le

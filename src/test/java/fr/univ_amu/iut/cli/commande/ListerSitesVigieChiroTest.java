@@ -174,6 +174,28 @@ class ListerSitesVigieChiroTest {
     }
 
     @Test
+    @DisplayName("La part ne se dilue pas dans les transects : elle porte sur les sites qui peuvent porter un point")
+    void la_part_exclut_les_sites_sans_point() {
+        // Mesuré sur le catalogue réel : 219 des 300 sites lus sont des transects routiers. Les garder
+        // au dénominateur annonçait « Z1 : 24,3 % » là où la proportion est de 90,1 % parmi les sites
+        // qui pouvaient le porter. L'erreur allait dans le sens rassurant, sur le chiffre même que ce
+        // comptage existe pour produire (#2993).
+        List<SiteVigieChiro> lus = List.of(site("s1", "130711", "Z1"), site("s2", "010434"));
+        when(client.sitesPlateforme(anyInt(), any()))
+                .thenReturn(ReponseApi.succes(new LotPagine<>(lus, 20517, 1, false)));
+
+        executer("--portee", "plateforme", "--recenser");
+
+        assertThat(sortie.toString())
+                .as("un site sans point ponctuel ne peut pas porter Z1 : il n'a pas à diviser la part")
+                .contains("100,0 %")
+                .doesNotContain("50,0 %");
+        assertThat(sortie.toString())
+                .as("et le bilan dit sur quoi la part porte, pour qu'on ne le devine pas")
+                .contains("les parts portent sur les 1 autre(s)");
+    }
+
+    @Test
     @DisplayName("--json rend une enveloppe qui porte ce qui a été lu, pas un tableau nu")
     void json_est_une_enveloppe() {
         when(client.sitesPlateforme(anyInt(), any()))

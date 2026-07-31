@@ -13,6 +13,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -214,6 +215,30 @@ class ClientVigieChiroTest {
         assertThat(finalisations)
                 .as("aucune finalisation quand une partie a échoué")
                 .hasValue(0);
+    }
+
+    @Test
+    @DisplayName("#3002 : sitesPlateforme interroge « /sites » paginé, et borne le nombre de pages demandé")
+    void sites_plateforme_interroge_le_catalogue_et_borne_les_pages() throws Exception {
+        // Le bornage n'était vérifié nulle part : la commande mocke le client, et le client n'était pas
+        // exercé. Un « --pages 0 » ou négatif aurait demandé zéro page, donc rendu une collection vide
+        // qu'on aurait prise pour un catalogue vide.
+        List<String> chemins = new ArrayList<>();
+        HttpClient http = mock(HttpClient.class);
+        when(http.send(any(), any())).thenAnswer(appel -> {
+            chemins.add(((HttpRequest) appel.getArgument(0)).uri().toString());
+            return reponse(200, "{\"_meta\":{\"total\":0},\"_items\":[]}", Map.of());
+        });
+
+        ClientVigieChiro client = clientAvec(http);
+        client.sitesPlateforme(0, (page, total) -> {});
+
+        assertThat(chemins)
+                .as("zéro page demandée est ramenée à une : sans quoi la collection reviendrait vide")
+                .hasSize(1);
+        assertThat(chemins.get(0))
+                .as("le catalogue se lit sur « /sites », paginé au plafond du serveur")
+                .contains("/sites?max_results=100&page=1");
     }
 
     /// Client sur un transport à `HttpClient` mocké et politique sans vraie attente (tests instantanés).
