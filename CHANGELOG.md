@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.153.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.153.0...v2.153.1) (2026-07-31)
+
+
+### Bug Fixes
+
+* **cli:** --a-enjeu dit quand le référentiel est vide, au lieu de se taire ([#3079](https://github.com/echonuit/vigiechiro-pr-companion/issues/3079)) ([65ff715](https://github.com/echonuit/vigiechiro-pr-companion/commit/65ff7156c8d1ae6256a03b574a2bb3a40062c751)), closes [#3059](https://github.com/echonuit/vigiechiro-pr-companion/issues/3059) [#2971](https://github.com/echonuit/vigiechiro-pr-companion/issues/2971) [#3059](https://github.com/echonuit/vigiechiro-pr-companion/issues/3059) [#3048](https://github.com/echonuit/vigiechiro-pr-companion/issues/3048)
+
 # [2.153.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.152.0...v2.153.0) (2026-07-31)
 
 
