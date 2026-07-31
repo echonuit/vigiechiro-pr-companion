@@ -13,6 +13,8 @@ import javafx.scene.Node;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 
 /// Fabrique de **critères de filtre sur une dimension textuelle** (le carré, le point, la catégorie de
 /// taxon…), partagée par les écrans qui offrent une barre de filtres.
@@ -52,23 +54,43 @@ public final class CritereListe {
             String invite,
             Supplier<? extends List<String>> valeursPresentes,
             Function<T, String> dimension) {
-        return multipleParmi(cle, libelle, invite, valeursPresentes, (T ligne) -> {
+        // Un groupe SANS titre : `multiple` garde exactement son apparence de liste plate, sans
+        // en-tête. Le groupement (#2992) ne sert qu'aux critères à plusieurs dimensions.
+        Supplier<List<GroupeValeurs>> enUnGroupe =
+                () -> List.of(new GroupeValeurs(null, List.copyOf(valeursPresentes.get())));
+        return multipleParmi(cle, libelle, invite, enUnGroupe, (T ligne) -> {
             String valeur = dimension.apply(ligne);
             return valeur == null ? List.<String>of() : List.of(valeur);
         });
     }
 
+    /// Un **groupe de valeurs** d'une liste à cocher : son titre et ses valeurs. Le titre est rendu en
+    /// en-tête **non cliquable**, ce qui est tout l'objet du groupement.
+    ///
+    /// @param titre l'intitulé de l'en-tête (« Communes », « Carrés »…), ou `null` pour un groupe
+    ///     **sans** en-tête, ce qui rend une liste plate comme avant le groupement
+    /// @param valeurs les valeurs cochables du groupe, dans l'ordre d'affichage
+    public record GroupeValeurs(String titre, List<String> valeurs) {}
+
     /// Variante de [#multiple] pour une ligne qui porte **plusieurs dimensions comparables** (le critère
-    /// « Lieu » de la vue audio confronte commune, carré, point et site à la même liste, #2794) : la
-    /// ligne passe si **l'une** de ses valeurs figure parmi celles cochées. Même sémantique de départ :
-    /// rien de coché n'écarte rien. (Nom distinct : une surcharge de `multiple` aurait le même effacement.)
+    /// « Lieu » confronte commune, carré, point et site à la même liste, #2794) : la ligne passe si
+    /// **l'une** de ses valeurs figure parmi celles cochées. Même sémantique de départ : rien de coché
+    /// n'écarte rien. (Nom distinct : une surcharge de `multiple` aurait le même effacement.)
+    ///
+    /// **Les valeurs sont groupées** par dimension, chaque groupe précédé de son titre en en-tête non
+    /// cliquable (#2992). Une liste plate mêlant communes, carrés et points ne dit pas de quelle nature
+    /// est une entrée, et il faut la connaître pour choisir : « Ahetze » est-il une commune ou un site ?
+    ///
+    /// Les trois aides internes ([#cochees], [#majLibelle], [#predicat]) filtrent sur `CheckMenuItem` :
+    /// en-têtes et séparateurs sont donc ignorés sans traitement particulier, et une valeur cochée reste
+    /// mémorisable dans une vue exactement comme avant.
     ///
     /// @param dimensions ce qu'on lit sur une ligne pour la comparer (toutes les valeurs candidates)
     public static <T> CritereFiltre<T> multipleParmi(
             String cle,
             String libelle,
             String invite,
-            Supplier<? extends List<String>> valeursPresentes,
+            Supplier<? extends List<GroupeValeurs>> valeursPresentes,
             Function<T, ? extends Collection<String>> dimensions) {
         return new CritereFiltre<T>() {
             @Override
@@ -85,13 +107,27 @@ public final class CritereListe {
             public Node editeur(Consumer<Predicate<T>> applique) {
                 MenuButton bouton = new MenuButton(invite);
                 bouton.getStyleClass().add("critere-multiple");
-                for (String valeur : valeursPresentes.get()) {
-                    CheckMenuItem item = new CheckMenuItem(valeur);
-                    item.selectedProperty().addListener((obs, avant, coche) -> {
-                        majLibelle(bouton, invite);
-                        applique.accept(predicat(bouton, dimensions));
-                    });
-                    bouton.getItems().add(item);
+                for (GroupeValeurs groupe : valeursPresentes.get()) {
+                    if (groupe.valeurs().isEmpty()) {
+                        continue; // un en-tête sans valeur ne renseigne sur rien
+                    }
+                    if (groupe.titre() != null && !groupe.titre().isBlank()) {
+                        if (!bouton.getItems().isEmpty()) {
+                            bouton.getItems().add(new SeparatorMenuItem());
+                        }
+                        MenuItem entete = new MenuItem(groupe.titre());
+                        entete.setDisable(true); // en-tête : il nomme, il ne se coche pas
+                        entete.getStyleClass().add("entete-groupe-critere");
+                        bouton.getItems().add(entete);
+                    }
+                    for (String valeur : groupe.valeurs()) {
+                        CheckMenuItem item = new CheckMenuItem(valeur);
+                        item.selectedProperty().addListener((obs, avant, coche) -> {
+                            majLibelle(bouton, invite);
+                            applique.accept(predicat(bouton, dimensions));
+                        });
+                        bouton.getItems().add(item);
+                    }
                 }
                 // Aucune présélection : tant que rien n'est coché, la puce n'écarte rien.
                 applique.accept(ligne -> true);

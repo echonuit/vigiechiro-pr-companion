@@ -8,7 +8,6 @@ import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.StatutObservation;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -197,16 +196,15 @@ final class CriteresAnalyse {
                 CriteresAnalyse::dimensionsLieu);
     }
 
-    /// Lieux présents dans `observations` : les valeurs **distinctes** de chaque dimension, groupées par
-    /// dimension (communes, puis carrés, puis sites) et triées au sein de chacune. Un même libellé porté
-    /// par deux dimensions (un site homonyme d'une commune) n'apparaît qu'une fois : le coche vaut alors
-    /// pour les deux, ce qui est le comportement de la vue audio.
-    private static List<String> lieuxPresents(List<ObservationAnalyse> observations) {
-        Set<String> lieux = new LinkedHashSet<>();
-        lieux.addAll(valeursDistinctes(observations, ObservationAnalyse::commune));
-        lieux.addAll(valeursDistinctes(observations, ObservationAnalyse::numeroCarre));
-        lieux.addAll(valeursDistinctes(observations, ObservationAnalyse::nomSite));
-        return List.copyOf(lieux);
+    /// Lieux présents dans `observations`, **groupés par dimension** et triés au sein de chacun. Chaque
+    /// groupe porte son en-tête (#2992) : sans lui, rien ne dit si « Ahetze » est une commune ou un site.
+    private static List<CritereListe.GroupeValeurs> lieuxPresents(List<ObservationAnalyse> observations) {
+        return List.of(
+                new CritereListe.GroupeValeurs(
+                        "Communes", valeursDistinctes(observations, ObservationAnalyse::commune)),
+                new CritereListe.GroupeValeurs(
+                        "Carrés", valeursDistinctes(observations, ObservationAnalyse::numeroCarre)),
+                new CritereListe.GroupeValeurs("Sites", valeursDistinctes(observations, ObservationAnalyse::nomSite)));
     }
 
     /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).

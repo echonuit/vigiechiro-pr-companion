@@ -432,10 +432,21 @@ class GestionnaireFiltresTest {
         // sites), triées au sein de chacune ; rien de coché n'écarte rien.
         robot.interact(() -> menuLocal.getItems().get(0).fire());
         MenuButton choixLieu = menuBoutonDe(pucesLocales, 0);
-        assertThat(choixLieu.getItems())
-                .extracting(MenuItem::getText)
+        // Les EN-TÊTES nomment les dimensions, dans l'ordre (#2992) : sans eux, rien ne dit si
+        // « Aix-en-Provence » est une commune ou un site.
+        assertThat(entetes(choixLieu)).containsExactly("Communes", "Carrés", "Points", "Sites");
+        // Les valeurs COCHABLES, groupe par groupe. Le point est qualifié par son carré : le schéma pose
+        // UNIQUE(site_id, code), donc « A1 » seul désignerait autant de lieux qu'il y a de carrés.
+        assertThat(cochables(choixLieu))
                 .containsExactly(
-                        "Aix-en-Provence", "Venelles", "640380", "870150", "A1", "B2", "Jardin de Serge", "Le pré");
+                        "Aix-en-Provence",
+                        "Venelles",
+                        "640380",
+                        "870150",
+                        "640380 · A1",
+                        "870150 · B2",
+                        "Jardin de Serge",
+                        "Le pré");
         assertThat(vues).hasSize(2);
 
         // Cocher la COMMUNE « Aix-en-Provence » (lot 0) → seule la ligne 1 reste.
@@ -450,11 +461,11 @@ class GestionnaireFiltresTest {
         robot.interact(() -> {
             coche(choixLieu, "Aix-en-Provence").setSelected(false);
             coche(choixLieu, "870150").setSelected(false);
-            coche(choixLieu, "B2").setSelected(true);
+            coche(choixLieu, "870150 · B2").setSelected(true);
         });
         assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
         robot.interact(() -> {
-            coche(choixLieu, "B2").setSelected(false);
+            coche(choixLieu, "870150 · B2").setSelected(false);
             coche(choixLieu, "Jardin de Serge").setSelected(true);
         });
         assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L);
@@ -560,6 +571,22 @@ class GestionnaireFiltresTest {
     }
 
     /// L'éditeur du critère Lieu est un [MenuButton] à cases à cocher, 2e enfant de sa puce.
+    /// Les intitulés des **en-têtes** de groupe : les items désactivés, qui nomment sans se cocher.
+    private static List<String> entetes(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(item -> !(item instanceof CheckMenuItem) && item.isDisable())
+                .map(MenuItem::getText)
+                .toList();
+    }
+
+    /// Les valeurs **cochables**, en-têtes et séparateurs exclus.
+    private static List<String> cochables(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(MenuItem::getText)
+                .toList();
+    }
+
     private static MenuButton menuBoutonDe(FlowPane puces, int indexPuce) {
         HBox puce = (HBox) puces.getChildren().get(indexPuce);
         return (MenuButton) puce.getChildren().get(1);
