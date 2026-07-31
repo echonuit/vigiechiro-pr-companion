@@ -35,6 +35,7 @@ import picocli.CommandLine.Spec;
             AjouterPoint.class,
             ListerSites.class,
             ListerSitesVigieChiro.class,
+            ListerParticipationsVigieChiro.class,
             ListerPassages.class,
             AfficherSoldeSaison.class,
             CreerCampagne.class,
