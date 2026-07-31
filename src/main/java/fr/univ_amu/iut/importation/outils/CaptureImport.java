@@ -3,8 +3,7 @@ package fr.univ_amu.iut.importation.outils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
-import fr.univ_amu.iut.commun.model.CompteurValidations;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -19,7 +18,6 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.importation.di.ImportationModule;
 import fr.univ_amu.iut.importation.model.LigneRapport;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -28,8 +26,6 @@ import fr.univ_amu.iut.importation.model.VolumesImport;
 import fr.univ_amu.iut.importation.view.ImportationController;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
-import fr.univ_amu.iut.passage.di.CampagneModule;
-import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -37,7 +33,6 @@ import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -411,24 +406,13 @@ public final class CaptureImport {
     }
 
     public static Injector creerInjecteur() {
-        return Guice.createInjector(Modules.override(
-                        ModuleCaptureCommun.communSynchrone(),
-                        new PersistenceModule(),
-                        new SitesModule(),
-                        new PassageModule(),
-                        // Campagne (#2355, #2631) : feature OPTIONNELLE. Sans ce module, la ligne
-                        // « Campagne » du rattachement se rend masquée et la capture montrerait un
-                        // assistant où la proposition n'existe pas.
-                        new CampagneModule(),
-                        new ImportationModule())
-                .with(liaison -> {
-                    liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
-                    // Port socle du comptage des validations menacées : son implémentation vit dans la
-                    // feature `validation`, non installée dans cet injecteur partiel de capture. Stub
-                    // déterministe (0) : les aperçus de l'import n'affichent pas ce compteur, qui ne sert
-                    // qu'à la confirmation d'écrasement d'un passage existant.
-                    liaison.bind(CompteurValidations.class).toInstance(idPassage -> 0);
-                }));
+        // Composition **complète**, celle de l'application : les features s'ajoutent d'elles-mêmes.
+        // C'est ce que #333 prescrivait, et ce que l'énumération à la main a fait rater quatre fois -
+        // dont ici, où l'absence de `CampagneModule` a photographié un assistant sans sa ligne Campagne.
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(
+                        ModuleCaptureCommun.executeursSynchrones(),
+                        liaison -> liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE))));
     }
 
     private static void seeder(Injector injecteur) {

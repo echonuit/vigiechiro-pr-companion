@@ -4,8 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
-import fr.univ_amu.iut.commun.di.CommunModule;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -17,8 +16,6 @@ import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.passage.di.CampagneModule;
-import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -26,9 +23,7 @@ import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
-import fr.univ_amu.iut.saison.di.SaisonModule;
 import fr.univ_amu.iut.saison.view.SaisonController;
-import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
@@ -105,24 +100,18 @@ public final class CaptureSaison {
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
-    /// Injecteur (partiel) de l'outil : socle synchrone à **horloge figée**, plus `sites`, `passage` et
-    /// `saison`. `creerInjecteur` est exposée pour le garde-fou de câblage des captures.
+    /// Injecteur de l'outil : la composition **complète** de l'application, surchargée par des exécuteurs
+    /// synchrones et une horloge figée. La liste de modules à la main oubliait `CampagneModule` (#2610),
+    /// et le sélecteur de campagne ne se rendait pas. `creerInjecteur` est exposée pour le garde-fou de
+    /// câblage des captures.
     public static Injector creerInjecteur() {
-        return Guice.createInjector(
-                Modules.override(new CommunModule())
-                        .with(ModuleCaptureCommun.executeursSynchrones(), new AbstractModule() {
-                            @Override
-                            protected void configure() {
-                                bind(Horloge.class).toInstance(new HorlogeFigee(AUJOURDHUI));
-                            }
-                        }),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                // Campagne (#2610) : sans ce module, le service reçoit un Optional vide, aucune
-                // campagne n'est proposable et le sélecteur de l'écran ne se rend pas.
-                new CampagneModule(),
-                new SaisonModule());
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bind(Horloge.class).toInstance(new HorlogeFigee(AUJOURDHUI));
+                    }
+                }));
     }
 
     /// Seede l'utilisateur courant, deux sites PointFixeStandard et quatre points aux états variés,

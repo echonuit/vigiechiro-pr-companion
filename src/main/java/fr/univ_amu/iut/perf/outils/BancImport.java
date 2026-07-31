@@ -3,8 +3,7 @@ package fr.univ_amu.iut.perf.outils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
-import fr.univ_amu.iut.commun.di.CommunModule;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -14,11 +13,8 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.importation.di.ImportationModule;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
-import fr.univ_amu.iut.passage.di.PassageModule;
-import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -228,12 +224,8 @@ public final class BancImport {
     }
 
     private static Injector creerInjecteur() {
-        return Guice.createInjector(Modules.override(
-                        new CommunModule(),
-                        new PersistenceModule(),
-                        new SitesModule(),
-                        new PassageModule(),
-                        new ImportationModule())
+        // Composition complète : un banc qui mesure un produit amputé mesure le mauvais produit.
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
                 .with(liaison -> liaison.bind(Horloge.class).toInstance(new HorlogeFigee(LocalDate.of(2026, 9, 20)))));
     }
 
