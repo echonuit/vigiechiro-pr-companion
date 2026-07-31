@@ -1,7 +1,7 @@
 package fr.univ_amu.iut.audio.view;
 
 import com.google.inject.Singleton;
-import fr.univ_amu.iut.commun.view.EtatFiltres;
+import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.util.List;
@@ -22,7 +22,7 @@ import javafx.scene.control.TableView;
 public class MemoireRevueAudio {
 
     private List<TriColonne> tri = List.of();
-    private EtatFiltres filtres;
+    private DescripteurFiltre filtres;
 
     /// Branche la mémoire sur `table` et son `gestionnaireFiltres` (peut être `null` : mémoire du tri seul) :
     /// **restaure** immédiatement le tri et les filtres mémorisés, puis les **re-mémorise** quand la vue quitte
@@ -37,7 +37,7 @@ public class MemoireRevueAudio {
             if (scene == null) {
                 memoriserTri(table);
                 if (gestionnaireFiltres != null) {
-                    filtres = gestionnaireFiltres.capturer();
+                    filtres = gestionnaireFiltres.decrire();
                 }
             }
         });
