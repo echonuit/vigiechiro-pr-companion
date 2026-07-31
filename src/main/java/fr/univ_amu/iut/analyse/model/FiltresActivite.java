@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -115,6 +116,25 @@ public final class FiltresActivite {
         return contacts.stream()
                 .filter(c -> c.taxon() != null && estPrioritaire.test(c.taxon()))
                 .toList();
+    }
+
+    /// L'avertissement à dire quand `--a-enjeu` ne peut **rien** retenir faute de référentiel, ou vide.
+    ///
+    /// C'est le seul filtre de la commande dont un résultat vide a **deux causes opposées** : aucune
+    /// espèce prioritaire dans ces nuits, ou aucun référentiel du tout. Les deux rendaient le même fichier
+    /// vide en code 0, et elles appellent des conduites contraires - lire le résultat, ou réparer une
+    /// installation (ADR 3048 : une sortie machine ne retire pas, elle **dit**).
+    ///
+    /// Rien n'est retiré : le CSV garde ses colonnes et son code de sortie. Même patron que
+    /// [fr.univ_amu.iut.validation.model.FiltreProbabilite#avertissementSeuilTropHaut] - la décision est
+    /// une fonction pure, la surface se contente de l'imprimer.
+    public static Optional<String> avertissementReferentielVide(Set<String> prioritaires) {
+        if (!prioritaires.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of("Référentiel des espèces à enjeu vide : --a-enjeu ne peut rien retenir. Le "
+                + "fichier sera vide pour cette raison, et non parce qu'aucune espèce prioritaire n'a été "
+                + "détectée.");
     }
 
     private static boolean estOpportuniste(ContactHoraire contact, Set<Long> nuitsOpportunistes) {
