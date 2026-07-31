@@ -104,7 +104,7 @@ public final class CaptureSyntheseSansReferentiel {
         controleur.ouvrirSur(new ContextePassage(
                 idPassage, 3, new ContexteSite(CaptureSynthese.CARRE, CaptureSynthese.POINT, CaptureSynthese.SITE)));
         Path fichier = sortie.resolve("apercu-synthese-sans-referentiel.png");
-        ApercuFx.enregistrerPng(new Scene(vue, 1100, 700), fichier);
+        ApercuFx.enregistrerPng(new Scene(vue, 1180, 700), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 

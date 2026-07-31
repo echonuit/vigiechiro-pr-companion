@@ -178,7 +178,7 @@ public final class CaptureSynthese {
         // 1100 × 700 : à 620 px, le bloc de mise en garde débordait de quelques pixels et ApercuFx
         // refusait la capture (ADR 0042). Il avait raison : un avertissement tronqué ne prévient
         // personne, et c'est justement ce que cette capture doit montrer comme lisible.
-        ApercuFx.enregistrerPng(new Scene(vue, 1100, 700), fichier);
+        ApercuFx.enregistrerPng(new Scene(vue, 1180, 700), fichier);
         System.out.println("Apercu de la synthese ecrit dans " + fichier.toAbsolutePath());
     }
 

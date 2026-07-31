@@ -53,16 +53,16 @@
 
   <TableView fx:id="tableSynthese" VBox.vgrow="ALWAYS">
     <columns>
-      <TableColumn fx:id="colEspece" text="Espèce" prefWidth="260.0"/>
-      <TableColumn fx:id="colGroupe" text="Taxon parent" prefWidth="150.0"/>
-      <TableColumn fx:id="colContacts" text="Contacts" prefWidth="100.0"/>
+      <TableColumn fx:id="colEspece" text="Espèce" prefWidth="230.0"/>
+      <TableColumn fx:id="colGroupe" text="Taxon parent" prefWidth="185.0"/>
+      <TableColumn fx:id="colContacts" text="Contacts" prefWidth="85.0"/>
       <!-- Les séquences distinctes, souvent moins nombreuses que les contacts : elles disent si
            l'activité est concentrée ou diffuse. -->
-      <TableColumn fx:id="colFichiers" text="Fichiers" prefWidth="90.0"/>
-      <TableColumn fx:id="colActivite" text="Activité" prefWidth="240.0"/>
+      <TableColumn fx:id="colFichiers" text="Fichiers" prefWidth="85.0"/>
+      <TableColumn fx:id="colActivite" text="Activité" prefWidth="260.0"/>
       <!-- Les quantiles retenus, à côté de la classe : une classe seule est un verdict, une classe
            accompagnée de ses bornes est une lecture contestable, donc scientifique. -->
-      <TableColumn fx:id="colSeuils" text="Seuils retenus" prefWidth="220.0"/>
+      <TableColumn fx:id="colSeuils" text="Seuils retenus" prefWidth="290.0"/>
     </columns>
   </TableView>
 
