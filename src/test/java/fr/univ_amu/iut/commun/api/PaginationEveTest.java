@@ -164,6 +164,43 @@ class PaginationEveTest {
     }
 
     @Test
+    @DisplayName("#3046 : un parcours NON borné arrêté au garde-fou rend un échec, jamais un préfixe")
+    void parcours_tronque_au_garde_fou_est_un_echec() {
+        // Ici le plafond n'est pas une borne choisie mais un garde-fou anti-boucle : l'atteindre veut
+        // dire que la collection est plus grande que ce qu'on sait lire. Rendre les éléments déjà lus
+        // en « Succes » ferait passer un préfixe pour un tout - le défaut de #1277, sur les
+        // observations d'une nuit.
+        ReponseApi<List<ParticipationVigieChiro>> issue = PaginationEve.parcourir(
+                2,
+                numero -> ReponseApi.succes("{\"_meta\":{\"total\":9000},\"_items\":[{\"_id\":\"p" + numero
+                        + "\",\"site\":{\"_id\":\"s1\",\"titre\":\"A-100001\"}}]}"),
+                ParticipationsVigieChiro::participations);
+
+        assertThat(issue)
+                .as("la collection ne s'est jamais épuisée : ce n'est pas un succès")
+                .isInstanceOf(ReponseApi.Injoignable.class);
+        assertThat(((ReponseApi.Injoignable<List<ParticipationVigieChiro>>) issue).cause())
+                .as("la cause doit dire ce qui s'est passé, et que rien de partiel n'est rendu")
+                .contains("trop grande")
+                .contains("2 page(s) lues")
+                .contains("9000");
+    }
+
+    @Test
+    @DisplayName("#3046 : un parcours non borné qui ÉPUISE la collection rend toujours ses éléments")
+    void parcours_epuise_reste_un_succes() {
+        // Le pendant du test précédent : le nouveau refus ne doit pas se déclencher sur un parcours
+        // normal, sans quoi toute lecture paginée deviendrait impossible.
+        ReponseApi<List<ParticipationVigieChiro>> issue =
+                PaginationEve.parcourir(50, PaginationEveTest::page, ParticipationsVigieChiro::participations);
+
+        assertThat(issue).isInstanceOf(ReponseApi.Succes.class);
+        assertThat(((ReponseApi.Succes<List<ParticipationVigieChiro>>) issue).valeur())
+                .as("les pages non vides ont bien été rendues")
+                .isNotEmpty();
+    }
+
+    @Test
     @DisplayName("#3002 : un total PILE sur une frontière de page ne fabrique pas de page fantôme")
     void total_sur_une_frontiere_de_page() {
         // 200 éléments à 100 par page, c'est DEUX pages, pas trois. Le cas limite du calcul d'arrondi
