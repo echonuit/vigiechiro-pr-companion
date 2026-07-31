@@ -85,6 +85,33 @@ class FiltreProbabiliteTest {
     }
 
     @Test
+    @DisplayName("#2971 : un seuil qui a tout écarté nomme la meilleure probabilité du lot")
+    void un_seuil_trop_haut_dit_de_combien() {
+        // Le seul filtre qui peut légitimement tout écarter est aussi le seul dont le résultat vide ne
+        // dit rien. « 0,93 » apprend à la fois que le lot n'était pas vide et de combien descendre.
+        assertThat(FiltreProbabilite.avertissementSeuilTropHaut(List.of(SURE, INCERTAINE), 0.99))
+                .hasValueSatisfying(
+                        message -> assertThat(message).contains("0,93").contains("0,99"));
+    }
+
+    @Test
+    @DisplayName("#2971 : l'avertissement se tait quand il n'aurait rien à apprendre")
+    void l_avertissement_se_tait_quand_il_faut() {
+        // Sans seuil, le vide ne vient pas de lui.
+        assertThat(FiltreProbabilite.avertissementSeuilTropHaut(List.of(SURE), null))
+                .isEmpty();
+        // Le seuil n'a rien écarté : il n'y a rien à regretter.
+        assertThat(FiltreProbabilite.avertissementSeuilTropHaut(List.of(SURE), 0.5))
+                .isEmpty();
+        // Le lot était DÉJÀ vide (espèce absente, lieu sans ligne) : le seuil n'y est pour rien, et
+        // annoncer « la plus sûre du lot » d'un lot inexistant serait une sottise.
+        assertThat(FiltreProbabilite.avertissementSeuilTropHaut(List.of(), 0.9)).isEmpty();
+        // Une ligne sans probabilité est toujours conservée : le résultat n'est donc pas vide.
+        assertThat(FiltreProbabilite.avertissementSeuilTropHaut(List.of(SANS_PROBA), 0.99))
+                .isEmpty();
+    }
+
+    @Test
     @DisplayName("#2971 : un seuil hors bornes est un refus qui nomme la plage ET l'unité")
     void hors_bornes_le_filtre_refuse() {
         // « 90 » est le réflexe du pourcentage : le message doit lever la confusion d'unité, pas

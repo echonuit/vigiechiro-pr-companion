@@ -231,6 +231,11 @@ mécanique, pas promis.
     Un résultat **vide** n'est pas un refus ici, contrairement à `--lieu` : un seuil est un nombre, il
     ne peut pas désigner ce qui n'existe pas, et « aucune détection au-dessus de 0,99 » est une réponse.
 
+    Mais une réponse **muette** : c'est le seul filtre qui puisse légitimement tout écarter sans rien
+    dire de ce qu'on a raté. Quand le seuil vide le lot, la commande nomme donc la **meilleure
+    probabilité présente** (« la plus sûre du lot est à 0,74 : abaissez le seuil pour l'atteindre »),
+    ce qui apprend du même coup que le lot n'était pas vide et de combien descendre.
+
 !!! note "`--lieu` : ce qu'il couvre, et ce qu'il ne couvre pas"
     Répétable, il retient les observations dont la **commune**, le **carré** ou le **nom de site**
     correspond, en correspondance **partielle** et insensible à la casse comme aux accents : `--lieu aix`

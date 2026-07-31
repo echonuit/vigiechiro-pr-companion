@@ -328,13 +328,16 @@ EOF
     printf '"%s";"0.3";"3.9";"45.0";"Rhifer";"0.93";"";"";"";"";""\n' "${sequence}"
     printf '"%s";"5.0";"6.0";"45.0";"Rhifer";"0.42";"";"";"";"";""\n' "${sequence}"
     printf '"%s";"8.0";"9.0";"45.0";"Rhifer";"";"";"";"";"";""\n' "${sequence}"
+    # Une 4e detection, d une AUTRE espece et avec une probabilite : elle sert a eprouver
+    # l avertissement, qui exige un lot dont AUCUNE ligne n est depourvue de probabilite.
+    printf '"%s";"11.0";"12.0";"45.0";"Pipkuh";"0.50";"";"";"";"";""\n' "${sequence}"
   } > "${BATS_TEST_TMPDIR}/obs.csv"
   run cli importer-tadarida --passage 1 --csv "${BATS_TEST_TMPDIR}/obs.csv"
   [ "${status}" -eq 0 ]
 
   run cli exporter-sons --passage 1 --sortie "${BATS_TEST_TMPDIR}/sons.zip"
   [ "${status}" -eq 0 ]
-  [[ "${output}" == *"3 observation(s), 1 son(s)"* ]]
+  [[ "${output}" == *"4 observation(s), 1 son(s)"* ]]
 
   # L archive est OUVERTE : le CSV porte bien l observation (carre, point, fichier), et le son est
   # range sous sa nuit, avec des octets identiques a ceux du disque.
@@ -347,7 +350,7 @@ with zipfile.ZipFile(archive) as zip:
     sons = [n for n in noms if n.startswith("sons/")]
     assert sons == ["sons/Car130711-2026-Pass1-A1/" + sequence + ".wav"], sons
     lignes = zip.read("observations.csv").decode("utf-8").splitlines()
-    assert len(lignes) == 4, lignes
+    assert len(lignes) == 5, lignes
     assert "130711" in lignes[1] and sequence in lignes[1], lignes[1]
     assert len(zip.read(sons[0])) > 1000, "le son emballe est vide ou tronque"
 print("archive conforme")
@@ -359,7 +362,7 @@ EOF
   # correspondance etant partielle et insensible a la casse, « 1307 » suffit a le designer.
   run cli exporter-sons --passage 1 --lieu 1307 --sortie "${BATS_TEST_TMPDIR}/filtre.zip"
   [ "${status}" -eq 0 ]
-  [[ "${output}" == *"3 observation(s), 1 son(s)"* ]]
+  [[ "${output}" == *"4 observation(s), 1 son(s)"* ]]
 
   # Et l archive FILTREE est relue : le filtre ne doit pas seulement laisser passer la commande, il
   # doit produire une archive qui contient encore la bonne chose.
@@ -368,7 +371,7 @@ import sys, zipfile
 archive, sequence = sys.argv[1], sys.argv[2]
 with zipfile.ZipFile(archive) as zip:
     lignes = zip.read("observations.csv").decode("utf-8").splitlines()
-    assert len(lignes) == 4, lignes
+    assert len(lignes) == 5, lignes
     assert "130711" in lignes[1], lignes[1]
     sons = [n for n in zip.namelist() if n.startswith("sons/")]
     assert len(sons) == 1 and len(zip.read(sons[0])) > 1000, sons
@@ -426,6 +429,16 @@ EOF
   [ "${status}" -eq 2 ]
   [[ "${output}" == *"0.9"* ]]
   [ ! -f "${BATS_TEST_TMPDIR}/pourcent.zip" ]
+
+  # #2971 : un seuil VALIDE qui ecarte tout produit une archive vide, resultat legitime mais muet.
+  # L avertissement nomme la meilleure probabilite du lot (ici 0,50), pour dire de combien descendre.
+  # L espece Pipkuh est choisie parce que sa seule detection PORTE une probabilite : sur un lot ou une
+  # ligne en serait depourvue, elle serait conservee et le resultat ne serait jamais vide.
+  run cli exporter-sons --espece Pipkuh --proba-min 0.99 --sortie "${BATS_TEST_TMPDIR}/haut.zip"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"0 observation(s)"* ]]
+  [[ "${output}" == *"0,50"* ]]
+  [[ "${output}" == *"abaissez le seuil"* ]]
 }
 
 @test "exporter-sons : --passage et --espece s excluent, exit 2 (#2795)" {

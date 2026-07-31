@@ -125,8 +125,8 @@ public final class ExporterSons implements Callable<Integer> {
 
     @Override
     public Integer call() throws IOException {
-        List<LigneObservationAudio> lignes =
-                FiltreProbabilite.appliquer(FiltreLieu.appliquer(lignesDeLaPortee(), lieux), probaMin);
+        List<LigneObservationAudio> avantSeuil = FiltreLieu.appliquer(lignesDeLaPortee(), lieux);
+        List<LigneObservationAudio> lignes = FiltreProbabilite.appliquer(avantSeuil, probaMin);
         MarqueurEspecesAEnjeu marqueur = new MarqueurEspecesAEnjeu(especesPrioritaires.get());
         ExportObservationsEtSons export = new ExportObservationsEtSons(sequences, sessions);
         ExportObservationsEtSons.Bilan bilan =
@@ -136,6 +136,10 @@ public final class ExporterSons implements Callable<Integer> {
                 .println("Archive écrite : " + bilan.observations() + " observation(s), " + bilan.sonsCopies()
                         + " son(s), " + String.format(Locale.FRENCH, "%.1f Mo", bilan.octets() / 1_048_576.0) + " → "
                         + sortie.toAbsolutePath());
+        // Une archive vide est un résultat valide, mais muet : sans cela, l'utilisateur ne saurait pas
+        // que son seuil est passé juste au-dessus de tout le lot (#2971).
+        FiltreProbabilite.avertissementSeuilTropHaut(avantSeuil, probaMin)
+                .ifPresent(avertissement -> spec.commandLine().getOut().println(avertissement));
         if (!bilan.sonsIntrouvables().isEmpty()) {
             spec.commandLine()
                     .getOut()

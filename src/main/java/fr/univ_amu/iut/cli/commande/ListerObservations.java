@@ -141,8 +141,9 @@ public final class ListerObservations implements Callable<Integer> {
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
-        List<LigneObservationAudio> lignes = FiltreProbabilite.appliquer(
-                FiltreLieu.appliquer(selection.get().lignes(passage, criteres()), lieux), probaMin);
+        List<LigneObservationAudio> avantSeuil =
+                FiltreLieu.appliquer(selection.get().lignes(passage, criteres()), lieux);
+        List<LigneObservationAudio> lignes = FiltreProbabilite.appliquer(avantSeuil, probaMin);
         marqueurEnjeu = marqueur.get();
 
         if (json) {
@@ -151,6 +152,9 @@ public final class ListerObservations implements Callable<Integer> {
         }
         if (lignes.isEmpty()) {
             sortie.println("Aucune observation ne correspond aux filtres pour le passage " + passage + ".");
+            // Le seuil est le seul filtre qui peut légitimement tout écarter : on dit alors de combien
+            // il faudrait l'abaisser, plutôt que de laisser l'utilisateur deviner (#2971).
+            FiltreProbabilite.avertissementSeuilTropHaut(avantSeuil, probaMin).ifPresent(sortie::println);
             return 0;
         }
         sortie.printf(
