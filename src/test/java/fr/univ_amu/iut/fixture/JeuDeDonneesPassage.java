@@ -479,6 +479,15 @@ public final class JeuDeDonneesPassage {
         return idPassage;
     }
 
+    /// Le **passage** semé, relu depuis la base.
+    ///
+    /// Sept appelants gardent l'entité et non son identifiant : ils la passent à un service ou en relisent
+    /// un champ. Même compte que pour [#leSite()], même conclusion.
+    public Passage lePassage() {
+        exigerSemis();
+        return new PassageDao(source).findById(idPassage).orElseThrow();
+    }
+
     public long idSession() {
         exigerSession();
         return idSession;

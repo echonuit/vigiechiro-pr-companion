@@ -2,33 +2,25 @@ package fr.univ_amu.iut.passage.dao;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ReleveClimatique;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Path;
@@ -67,13 +59,6 @@ class RattachementDaoTest {
     void preparer() {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "040962", "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        Long idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
         dao = new RattachementDao();
         uniteDeTravail = new UniteDeTravail(source);
         passageDao = new PassageDao(source);
@@ -85,24 +70,16 @@ class RattachementDaoTest {
         resultatsDao = new ResultatsIdentificationDao(source);
 
         racine = dossier.resolve(ANCIEN);
-        idPassage = passageDao
-                .insert(new Passage(
-                        null,
-                        1,
-                        2026,
-                        "2026-06-20",
-                        "21:00:00",
-                        "05:00:00",
-                        null,
-                        StatutWorkflow.TRANSFORME,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("040962")
+                .nomSite("Étang")
+                .point("A1")
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .statut(StatutWorkflow.TRANSFORME)
+                .semerPassage()
+                .idPassage();
         idSession = sessionDao
                 .insert(new SessionDEnregistrement(null, racine.toString(), 100L, 50L, idPassage))
                 .id();

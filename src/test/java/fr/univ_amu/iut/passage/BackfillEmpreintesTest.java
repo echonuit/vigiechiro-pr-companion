@@ -3,28 +3,19 @@ package fr.univ_amu.iut.passage;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.Empreintes;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.BackfillEmpreintes;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,19 +40,12 @@ class BackfillEmpreintesTest {
     private EnregistrementOriginalDao originalDao;
     private SequenceDao sequenceDao;
     private BackfillEmpreintes backfill;
-    private Long idPoint;
+    private SourceDeDonnees source;
 
     @BeforeEach
     void preparer() {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "040962", null, Protocole.STANDARD, null, "2026-05-01", ID_USER));
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, null, null));
         passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
         originalDao = new EnregistrementOriginalDao(source);
@@ -142,24 +126,15 @@ class BackfillEmpreintesTest {
     // --- Fixture ---------------------------------------------------------------------------------
 
     private Long creerSession(int numeroPassage) {
-        Long idPassage = passageDao
-                .insert(new Passage(
-                        null,
-                        numeroPassage,
-                        2026,
-                        "2026-06-20",
-                        "21:30:00",
-                        "05:15:00",
-                        null,
-                        StatutWorkflow.IMPORTE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        Long idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("040962")
+                .point("A1")
+                .enregistreur(SERIE)
+                .nuit(numeroPassage, 2026, "2026-06-20")
+                .statut(StatutWorkflow.IMPORTE)
+                .semerPassage()
+                .idPassage();
         return sessionDao
                 .insert(new SessionDEnregistrement(
                         null, dossier.resolve("session" + numeroPassage) + "", null, null, idPassage))
