@@ -18,8 +18,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javafx.scene.Node;
-import javafx.scene.control.ComboBox;
-import javafx.util.StringConverter;
 
 /// Catalogue des **critères de filtrage** de l'inventaire analyse (patron « à la Notion », #537). Chaque
 /// critère est une entrée du menu « + Filtre » qui s'ajoute comme puce : **Statut** de revue et **Taxon
@@ -89,43 +87,13 @@ final class CriteresAnalyse {
     /// Critère **Statut de revue** : éditeur = liste déroulante (Non touchée / Validée / Corrigée…) dans la
     /// puce, **sans présélection** (aucun filtre tant qu'un statut n'est pas choisi).
     static CritereFiltre<ObservationAnalyse> statut() {
-        return new CritereFiltre<ObservationAnalyse>() {
-            @Override
-            public String nom() {
-                return STATUT;
-            }
-
-            @Override
-            public String libelle() {
-                return "Statut";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<ObservationAnalyse>> applique) {
-                ComboBox<StatutObservation> choix = new ComboBox<>();
-                choix.getItems().setAll(StatutObservation.values());
-                choix.setPromptText("Choisir un statut");
-                choix.setConverter(convertisseur(FormatAnalyse::libelleStatut));
-                choix.valueProperty()
-                        .addListener((obs, avant, statut) ->
-                                applique.accept(statut == null ? o -> true : o -> o.statut() == statut));
-                applique.accept(o -> true); // pas de présélection : n'écarte rien tant qu'un statut n'est pas choisi
-                return choix;
-            }
-
-            @Override
-            public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of(((StatutObservation) valeur).name());
-            }
-
-            @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (!valeurs.isEmpty()) {
-                    selectionnerParValeur(editeur, StatutObservation.valueOf(valeurs.get(0)));
-                }
-            }
-        };
+        return CritereListe.enumeration(
+                STATUT,
+                "Statut",
+                "Choisir un statut",
+                List.of(StatutObservation.values()),
+                FormatAnalyse::libelleStatut,
+                statut -> observation -> observation.statut() == statut);
     }
 
     /// Critère **Taxon parent** (groupe, #518) : éditeur à **choix multiple** sur les groupes présents
@@ -244,26 +212,5 @@ final class CriteresAnalyse {
 
     private static boolean contient(String champ, String aiguille) {
         return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
-    }
-
-    /// Sélectionne dans une liste déroulante l'élément **égal** à `valeur` (ou vide la sélection s'il est
-    /// absent : `indexOf` → -1), pour restaurer une valeur mémorisée **sans cast générique non vérifié**.
-    private static void selectionnerParValeur(Node editeur, Object valeur) {
-        ComboBox<?> choix = (ComboBox<?>) editeur;
-        choix.getSelectionModel().select(choix.getItems().indexOf(valeur));
-    }
-
-    private static <T> StringConverter<T> convertisseur(Function<T, String> versTexte) {
-        return new StringConverter<>() {
-            @Override
-            public String toString(T valeur) {
-                return versTexte.apply(valeur);
-            }
-
-            @Override
-            public T fromString(String libelle) {
-                return null; // liste non éditable
-            }
-        };
     }
 }

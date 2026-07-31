@@ -20,9 +20,7 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javafx.scene.Node;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import javafx.util.StringConverter;
 
 /// Catalogue des **critères de filtrage** de la vue multi-sites (patron « à la Notion », #537 étape 6b).
 /// Chaque critère est une puce ajoutable : **Carré** (n° de carré, champ texte), **Statut** de workflow,
@@ -79,43 +77,13 @@ final class CriteresMultisite {
     /// Critère **État d'analyse** (#1338) : liste déroulante, sans présélection. C'est lui qui porte la vue
     /// « Résultats à importer ».
     static CritereFiltre<LignePassage> analyse() {
-        return new CritereFiltre<LignePassage>() {
-            @Override
-            public String nom() {
-                return ANALYSE;
-            }
-
-            @Override
-            public String libelle() {
-                return "Analyse";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LignePassage>> applique) {
-                ComboBox<EtatAnalyse> choix = new ComboBox<>();
-                choix.getItems().setAll(EtatAnalyse.values());
-                choix.setPromptText("Choisir un état d'analyse");
-                choix.setConverter(convertisseur(etat -> etat == null ? "" : libelleEtat(etat)));
-                choix.valueProperty()
-                        .addListener((obs, avant, etat) -> applique.accept(
-                                etat == null ? tout() : FiltresMultisite.parEtatAnalyse(etat)::accepte));
-                applique.accept(tout());
-                return choix;
-            }
-
-            @Override
-            public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of(((EtatAnalyse) valeur).name());
-            }
-
-            @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (!valeurs.isEmpty()) {
-                    selectionnerParValeur(editeur, EtatAnalyse.valueOf(valeurs.get(0)));
-                }
-            }
-        };
+        return CritereListe.enumeration(
+                ANALYSE,
+                "Analyse",
+                "Choisir un état d'analyse",
+                List.of(EtatAnalyse.values()),
+                CriteresMultisite::libelleEtat,
+                etat -> FiltresMultisite.parEtatAnalyse(etat)::accepte);
     }
 
     /// Libellé de l'état dans la liste déroulante. [EtatAnalyse#SANS_OBJET] n'a pas de libellé de badge
@@ -274,84 +242,24 @@ final class CriteresMultisite {
 
     /// Critère **Statut de workflow** : liste déroulante, sans présélection.
     static CritereFiltre<LignePassage> statut() {
-        return new CritereFiltre<LignePassage>() {
-            @Override
-            public String nom() {
-                return STATUT;
-            }
-
-            @Override
-            public String libelle() {
-                return "Statut";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LignePassage>> applique) {
-                ComboBox<StatutWorkflow> choix = new ComboBox<>();
-                choix.getItems().setAll(StatutWorkflow.values());
-                choix.setPromptText("Choisir un statut");
-                choix.setConverter(convertisseur(s -> s == null ? "" : s.libelle()));
-                choix.valueProperty()
-                        .addListener((obs, avant, statut) ->
-                                applique.accept(statut == null ? tout() : FiltresMultisite.parStatut(statut)::accepte));
-                applique.accept(tout());
-                return choix;
-            }
-
-            @Override
-            public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of(((StatutWorkflow) valeur).name());
-            }
-
-            @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (!valeurs.isEmpty()) {
-                    selectionnerParValeur(editeur, StatutWorkflow.valueOf(valeurs.get(0)));
-                }
-            }
-        };
+        return CritereListe.enumeration(
+                STATUT,
+                "Statut",
+                "Choisir un statut",
+                List.of(StatutWorkflow.values()),
+                StatutWorkflow::libelle,
+                statut -> FiltresMultisite.parStatut(statut)::accepte);
     }
 
     /// Critère **Verdict de vérification** : liste déroulante, sans présélection.
     static CritereFiltre<LignePassage> verdict() {
-        return new CritereFiltre<LignePassage>() {
-            @Override
-            public String nom() {
-                return "verdict";
-            }
-
-            @Override
-            public String libelle() {
-                return "Verdict";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LignePassage>> applique) {
-                ComboBox<Verdict> choix = new ComboBox<>();
-                choix.getItems().setAll(Verdict.values());
-                choix.setPromptText("Choisir un verdict");
-                choix.setConverter(convertisseur(v -> v == null ? "" : v.libelle()));
-                choix.valueProperty()
-                        .addListener((obs, avant, verdict) -> applique.accept(
-                                verdict == null ? tout() : FiltresMultisite.parVerdict(verdict)::accepte));
-                applique.accept(tout());
-                return choix;
-            }
-
-            @Override
-            public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of(((Verdict) valeur).name());
-            }
-
-            @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (!valeurs.isEmpty()) {
-                    selectionnerParValeur(editeur, Verdict.valueOf(valeurs.get(0)));
-                }
-            }
-        };
+        return CritereListe.enumeration(
+                "verdict",
+                "Verdict",
+                "Choisir un verdict",
+                List.of(Verdict.values()),
+                Verdict::libelle,
+                verdict -> FiltresMultisite.parVerdict(verdict)::accepte);
     }
 
     /// Critère **Année** : champ texte numérique (une saisie non numérique ne filtre pas).
@@ -443,26 +351,5 @@ final class CriteresMultisite {
         } catch (NumberFormatException saisieNonNumerique) {
             return null;
         }
-    }
-
-    /// Sélectionne dans une liste déroulante l'élément **égal** à `valeur` (ou vide la sélection s'il est
-    /// absent : `indexOf` → -1), pour restaurer une valeur mémorisée sans cast générique non vérifié.
-    private static void selectionnerParValeur(Node editeur, Object valeur) {
-        ComboBox<?> choix = (ComboBox<?>) editeur;
-        choix.getSelectionModel().select(choix.getItems().indexOf(valeur));
-    }
-
-    private static <T> StringConverter<T> convertisseur(Function<T, String> versTexte) {
-        return new StringConverter<>() {
-            @Override
-            public String toString(T valeur) {
-                return versTexte.apply(valeur);
-            }
-
-            @Override
-            public T fromString(String libelle) {
-                return null; // liste non éditable
-            }
-        };
     }
 }
