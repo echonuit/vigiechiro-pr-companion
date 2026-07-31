@@ -167,14 +167,14 @@ public final class ListerSitesVigieChiro implements Callable<Integer> {
 
     private void ecrireRecensement(PrintWriter sortie, List<SiteVigieChiro> sites) {
         List<RecensementPoints.Ligne> lignes = RecensementPoints.de(sites);
+        int recenses = RecensementPoints.sitesRecenses(sites);
         sortie.printf("%-12s %6s %8s%n", "CODE", "SITES", "PART");
         for (RecensementPoints.Ligne ligne : lignes) {
-            sortie.printf(
-                    "%-12s %6d %7s%n", ligne.code(), ligne.sites(), part(ligne.sites(), Math.max(sites.size(), 1)));
+            sortie.printf("%-12s %6d %7s%n", ligne.code(), ligne.sites(), part(ligne.sites(), Math.max(recenses, 1)));
         }
     }
 
-    /// La part, **des sites lus** : c'est l'en-tête et le bilan qui disent sur quoi elle porte.
+    /// La part, **des sites recensés** : c'est l'en-tête et le bilan qui disent sur quoi elle porte.
     private static String part(int nombre, int total) {
         return String.format(Locale.FRENCH, "%.1f %%", 100.0 * nombre / total);
     }
@@ -196,12 +196,17 @@ public final class ListerSitesVigieChiro implements Callable<Integer> {
     /// localités sont des **tronçons de transect** (géométrie linéaire) et non des points fixes ; elles
     /// n'entrent donc pas dans un recensement de codes de points. Le dire vaut mieux que sous-compter
     /// en silence - sur les premières pages du catalogue, ces sites sont la majorité.
+    ///
+    /// Le compte est le **complément exact** du dénominateur des parts : ce qui est annoncé « hors du
+    /// recensement » doit être précisément ce que le recensement ne divise pas, sinon les deux
+    /// nombres affichés côte à côte ne s'additionnent plus.
     private static String sansPoint(List<SiteVigieChiro> sites) {
-        long muets = sites.stream().filter(site -> site.points().isEmpty()).count();
+        int recenses = RecensementPoints.sitesRecenses(sites);
+        int muets = sites.size() - recenses;
         return muets == 0
                 ? ""
                 : " Dont " + muets + " site(s) sans point d'écoute ponctuel (transects routiers), "
-                        + "hors du recensement.";
+                        + "hors du recensement : les parts portent sur les " + recenses + " autre(s).";
     }
 
     /// Enveloppe JSON : le contenu **et** ce qui a été lu. Un tableau nu obligerait le script à croire
@@ -244,7 +249,7 @@ public final class ListerSitesVigieChiro implements Callable<Integer> {
 
     private static List<Map<String, Object>> lignesRecensement(List<SiteVigieChiro> sites) {
         List<Map<String, Object>> lignes = new ArrayList<>();
-        int total = Math.max(sites.size(), 1);
+        int total = Math.max(RecensementPoints.sitesRecenses(sites), 1);
         for (RecensementPoints.Ligne ligne : RecensementPoints.de(sites)) {
             Map<String, Object> champs = new LinkedHashMap<>();
             champs.put("code", ligne.code());
