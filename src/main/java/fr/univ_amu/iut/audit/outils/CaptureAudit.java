@@ -1,23 +1,18 @@
 package fr.univ_amu.iut.audit.outils;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.google.inject.Provides;
-import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.audit.view.AuditController;
-import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
-import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -35,7 +30,6 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -163,25 +157,14 @@ public final class CaptureAudit {
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
     /// ([fr.univ_amu.iut.commun.outils.CablageInjecteursCaptureTest]).
     public static Injector creerInjecteur() {
+        // Le service et son ViewModel viennent de `AuditModule`, avec leurs collaborateurs optionnels
+        // réels (`VerificationDepot`, `AuditPointsServeur`) que la substitution locale forçait à
+        // `Optional.empty()`.
+        //
+        // ⚠️ L'aperçu ne change pas pour autant : vérifié image contre image, les mêmes deux écarts
+        // s'affichent. La nuit semée ici n'exerce simplement aucune des deux sources. La substitution
+        // n'amputait donc rien de VISIBLE - elle amputait la possibilité de le voir un jour.
         return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new AbstractModule() {
-                    @Provides
-                    ServiceAuditCoherence fournirService(SourceDeDonnees source, Workspace workspace) {
-                        return new ServiceAuditCoherence(source, workspace, Optional.empty(), Optional.empty());
-                    }
-
-                    @Provides
-                    AuditViewModel fournirViewModel(ServiceAuditCoherence service) {
-                        return new AuditViewModel(service);
-                    }
-
-                    // Navigation « du constat au passage qu'il accuse » (#1338) : inerte ici, la capture
-                    // ne navigue pas. Mais sans cette liaison, l'injecteur partiel ne sait plus fournir
-                    // AuditController, et la capture échoue au chargement du FXML.
-                    @Provides
-                    OuvrirPassage fournirOuvrirPassage() {
-                        return (idPassage, contexte) -> {};
-                    }
-                });
+                Modules.override(RacineInjecteur.modules()).with(ModuleCaptureCommun.executeursSynchrones()));
     }
 }
