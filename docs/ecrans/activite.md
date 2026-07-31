@@ -105,4 +105,6 @@ l'annonce serait indiscernable d'un clic sans effet.
 ![Après l'export : un bandeau vert nomme le fichier écrit.](../assets/captures/apercu-activite-retour.png)
 
 Pour produire le même contenu **en tableau** plutôt qu'en image, la ligne de commande expose
-`exporter-activite` (une ligne par espèce et par tranche, ouvrable dans un tableur).
+`exporter-activite` (une ligne par espèce et par tranche, ouvrable dans un tableur). Elle accepte **les mêmes filtres que l'écran** : `--lieu` (répétable), `--nuit`, `--taxon-parent`, `--nature` et `--a-enjeu`, pour scripter « l'activité des chiroptères sur Ahetze » sans passer par l'interface.
+
+Une différence assumée : le **point** n'y est pas filtrable. Un code de point se retrouve sur presque tous les carrés ; l'écran le montre précédé du sien, ce qu'une valeur d'option ne peut pas reproduire sans devenir pénible à écrire. `--lieu` porte donc la commune ou le carré.

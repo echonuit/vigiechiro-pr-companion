@@ -266,6 +266,29 @@ setup() {
   [ -f "${BATS_TEST_TMPDIR}/tout.csv" ]
 }
 
+@test "exporter-activite : les cinq filtres sont acceptes ensemble, exit 0 (#3059)" {
+  # Base jetable sans observation : ce qui se prouve ici n'est pas le RESULTAT du filtrage - les tests
+  # Java le tiennent - mais que le FAT-JAR expose les cinq options, que picocli les analyse et qu'elles
+  # se combinent. Une option declaree mais absente du paquet echoue ici, et nulle part ailleurs.
+  run cli exporter-activite --tout --nature protocole --sortie "${BATS_TEST_TMPDIR}/cinq.csv"
+  [ "${status}" -eq 0 ]
+  [ -f "${BATS_TEST_TMPDIR}/cinq.csv" ]
+}
+
+@test "exporter-activite --nature inconnue : refus explique, exit 2 (#3059)" {
+  # Le refus doit NOMMER les valeurs acceptees : borner en silence rendrait un fichier vide sans dire
+  # pourquoi, et le script enchainerait.
+  run cli exporter-activite --tout --nature aleatoire --sortie "${BATS_TEST_TMPDIR}/nature.csv"
+  [ "${status}" -ne 0 ]
+  [[ "${output}" == *"protocole"* ]]
+}
+
+@test "exporter-activite --nuit illisible : refus qui donne le format, exit 2 (#3059)" {
+  run cli exporter-activite --tout --nuit 21/06/2026 --sortie "${BATS_TEST_TMPDIR}/nuit.csv"
+  [ "${status}" -ne 0 ]
+  [[ "${output}" == *"AAAA-MM-JJ"* ]]
+}
+
 @test "exporter-activite : --passage et --tout s excluent, exit 2 (#2613)" {
   run cli exporter-activite --passage 1 --tout --sortie "${BATS_TEST_TMPDIR}/a.csv"
   [ "${status}" -eq 2 ]
