@@ -165,4 +165,84 @@ class CritereListeEnumerationTest {
                 .as("elle se mémorise comme un choix ordinaire")
                 .containsExactly("ROUGE");
     }
+
+    /// Un domaine dont le **libellé diffère de la clé** : la forme du critère « Espèce » (#3060).
+    private record Espece(String code, String nom) {}
+
+    @Test
+    @DisplayName("#3060 : un domaine mémorise sa CLÉ et affiche son LIBELLÉ, qui peuvent différer")
+    void un_domaine_separe_ce_qu_on_voit_de_ce_qu_on_memorise() {
+        // C'est le cas qui a fait généraliser la fabrique : « Barbastelle d'Europe » se lit, « BARBAR »
+        // se mémorise. Mémoriser le libellé rendrait toutes les vues caduques à la première reformulation.
+        List<Espece> especes =
+                List.of(new Espece("BARBAR", "Barbastelle d'Europe"), new Espece("PIPKUH", "Pipistrelle de Kuhl"));
+        AtomicReference<Predicate<Espece>> courant = new AtomicReference<>();
+        CritereFiltre<Espece> critere = CritereListe.valeurs(
+                "espece",
+                "Espèce",
+                "Choisir une espèce",
+                new CritereListe.Domaine<>(() -> especes, Espece::nom, Espece::code),
+                attendue -> espece -> espece.code().equals(attendue.code()));
+        ComboBox<?> choix = (ComboBox<?>) critere.editeur(courant::set);
+
+        assertThat(texteAffiche(choix, 0)).as("ce qu'on voit").isEqualTo("Barbastelle d'Europe");
+        choix.getSelectionModel().select(0);
+        assertThat(critere.valeurCourante(choix)).as("ce qu'on mémorise").containsExactly("BARBAR");
+
+        assertThat(critere.restaurerValeurs(choix, List.of("PIPKUH")))
+                .as("une clé présente se restaure sans rien signaler")
+                .isEmpty();
+        assertThat(critere.valeurCourante(choix)).containsExactly("PIPKUH");
+        assertThat(critere.restaurerValeurs(choix, List.of("EPTSER")))
+                .as("une clé absente du jeu du jour se DIT, sinon la vue filtre moins qu'annoncé (#3056)")
+                .containsExactly("EPTSER");
+    }
+
+    @Test
+    @DisplayName("#3060 : le défaut se calcule SUR les valeurs offertes, pas d'avance")
+    void le_defaut_se_calcule_sur_les_valeurs_offertes() {
+        // La revue des sons s'ouvre sur « Chiroptères » S'IL EST PRÉSENT, sur le premier groupe sinon.
+        // Un défaut constant rendrait la puce vide - donc inopérante - les jours sans chiroptère.
+        // Rouge PRÉSENT mais pas en tête : c'est le cas qui discrimine. Avec un semis où le défaut est
+        // déjà premier, figer le défaut sur `offertes.get(0)` rendrait le même résultat et la mutation
+        // passerait inaperçue - elle l'a fait, au premier jet de ce test.
+        AtomicReference<Predicate<Couleur>> avecRouge = new AtomicReference<>();
+        CritereFiltre<Couleur> present = CritereListe.valeursPreselectionnees(
+                CLE,
+                LIBELLE,
+                new CritereListe.Domaine<>(
+                        () -> List.of(Couleur.VERT, Couleur.ROUGE, Couleur.BLEU),
+                        CritereListeEnumerationTest::libelle,
+                        Enum::name),
+                egalite(),
+                offertes -> offertes.contains(Couleur.ROUGE) ? Couleur.ROUGE : offertes.get(0));
+        Node avec = editeurDe(present, avecRouge);
+        assertThat(critereValeur(present, avec))
+                .as("rouge présent, mais en deuxième : c'est LUI le défaut, pas le premier de la liste")
+                .isEqualTo("ROUGE");
+        assertThat(avecRouge.get().test(Couleur.ROUGE)).isTrue();
+        assertThat(avecRouge.get().test(Couleur.VERT)).isFalse();
+
+        AtomicReference<Predicate<Couleur>> courant = new AtomicReference<>();
+        CritereFiltre<Couleur> sansRouge = CritereListe.valeursPreselectionnees(
+                CLE,
+                LIBELLE,
+                new CritereListe.Domaine<>(
+                        () -> List.of(Couleur.VERT, Couleur.BLEU), CritereListeEnumerationTest::libelle, Enum::name),
+                egalite(),
+                offertes -> offertes.contains(Couleur.ROUGE) ? Couleur.ROUGE : offertes.get(0));
+        Node editeur = editeurDe(sansRouge, courant);
+
+        assertThat(critereValeur(sansRouge, editeur))
+                .as("rouge absent : le défaut retombe sur la première valeur offerte")
+                .isEqualTo("VERT");
+        assertThat(courant.get().test(Couleur.VERT)).isTrue();
+        assertThat(courant.get().test(Couleur.BLEU))
+                .as("et il filtre réellement dès l'ajout")
+                .isFalse();
+    }
+
+    private static String critereValeur(CritereFiltre<Couleur> critere, Node editeur) {
+        return critere.valeurCourante(editeur).get(0);
+    }
 }

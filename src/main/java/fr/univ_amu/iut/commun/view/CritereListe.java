@@ -161,6 +161,34 @@ public final class CritereListe {
         };
     }
 
+    /// Ce qu'un critère de liste manipule vraiment : un **domaine de valeurs**.
+    ///
+    /// Trois écrans de ce dépôt écrivaient la même liste déroulante sur trois types différents - une
+    /// énumération, un `String`, un record `EspecePresente` - et l'écart tenait à **deux fonctions**
+    /// seulement : ce qu'on **voit** et ce qu'on **mémorise**. Les nommer ensemble donne un objet qui se
+    /// passe d'un appel à l'autre, plutôt que trois paramètres de plus à chaque fabrique.
+    ///
+    /// La distinction libellé / clé n'est pas cosmétique. Le **libellé** peut changer (traduction,
+    /// reformulation, #2967) sans rien casser ; la **clé** est le contrat de sérialisation des vues
+    /// mémorisées, et la changer les rendrait toutes caduques.
+    ///
+    /// @param valeurs les valeurs offertes, calculées au moment où la puce s'ouvre
+    /// @param libelle ce que l'utilisateur lit dans la liste
+    /// @param cle ce qu'une vue mémorisée enregistre, et par quoi elle retrouve la valeur
+    public record Domaine<T>(
+            Supplier<? extends List<T>> valeurs, Function<T, String> libelle, Function<T, String> cle) {
+
+        /// Domaine de **chaînes** : ce qu'on voit et ce qu'on mémorise sont la valeur elle-même.
+        public static Domaine<String> deChaines(Supplier<? extends List<String>> valeurs) {
+            return new Domaine<>(valeurs, valeur -> valeur, valeur -> valeur);
+        }
+
+        /// Domaine d'une **énumération** : la clé est le `name()`, **jamais** le libellé.
+        public static <E extends Enum<E>> Domaine<E> deConstantes(List<E> valeurs, Function<E, String> libelle) {
+            return new Domaine<>(() -> valeurs, libelle, Enum::name);
+        }
+    }
+
     /// Un critère dont l'éditeur laisse choisir **une seule** valeur : la liste déroulante classique, pour
     /// les dimensions qui se lisent une à une (un carré, une nuit, la nature d'une nuit). Même contrat et
     /// même sémantique de départ que [#multiple] (rien de choisi n'écarte rien), et mêmes paramètres,
@@ -248,7 +276,7 @@ public final class CritereListe {
             List<E> valeurs,
             Function<E, String> libelleValeur,
             Function<E, Predicate<T>> predicat) {
-        return enumeration(cle, libelle, invite, valeurs, libelleValeur, predicat, null);
+        return valeurs(cle, libelle, invite, Domaine.deConstantes(valeurs, libelleValeur), predicat);
     }
 
     /// Comme [#enumeration], mais avec une valeur **présélectionnée** : la puce filtre dès qu'on l'ajoute.
@@ -266,18 +294,56 @@ public final class CritereListe {
             Function<E, String> libelleValeur,
             Function<E, Predicate<T>> predicat,
             E valeurParDefaut) {
-        return enumeration(cle, libelle, null, valeurs, libelleValeur, predicat, valeurParDefaut);
+        return valeursPreselectionnees(
+                cle, libelle, Domaine.deConstantes(valeurs, libelleValeur), predicat, liste -> valeurParDefaut);
     }
 
-    private static <T, E extends Enum<E>> CritereFiltre<T> enumeration(
+    /// Un critère dont l'éditeur déroule les valeurs d'un [Domaine] : la fabrique dont [#simple] et
+    /// [#enumeration] sont des cas particuliers.
+    ///
+    /// **Aucune présélection** : ajouter la puce n'écarte rien tant qu'une valeur n'est pas choisie.
+    /// L'écran qui a besoin du contraire passe par [#valeursPreselectionnees], dont le nom rend
+    /// l'exception visible à l'appel plutôt que dans un paramètre nul.
+    ///
+    /// @param invite texte affiché tant que rien n'est choisi
+    /// @param predicat ce que retenir une valeur veut dire pour cet écran
+    public static <L, T> CritereFiltre<L> valeurs(
+            String cle, String libelle, String invite, Domaine<T> domaine, Function<T, Predicate<L>> predicat) {
+        return construire(cle, libelle, invite, domaine, predicat, null);
+    }
+
+    /// Comme [#valeurs], mais avec une valeur **présélectionnée** : la puce filtre dès qu'on l'ajoute.
+    ///
+    /// La valeur par défaut est calculée **sur les valeurs offertes** et non fixée d'avance : la revue des
+    /// sons s'ouvre sur « Chiroptères » *s'il est présent*, et sur le premier groupe sinon. Un défaut
+    /// constant y aurait rendu une puce vide les jours sans chiroptère.
+    ///
+    /// @param valeurParDefaut la valeur appliquée dès l'ajout, choisie parmi celles offertes
+    public static <L, T> CritereFiltre<L> valeursPreselectionnees(
+            String cle,
+            String libelle,
+            Domaine<T> domaine,
+            Function<T, Predicate<L>> predicat,
+            Function<List<T>, T> valeurParDefaut) {
+        return construire(cle, libelle, null, domaine, predicat, valeurParDefaut);
+    }
+
+    private static <L, T> CritereFiltre<L> construire(
             String cle,
             String libelle,
             String invite,
-            List<E> valeurs,
-            Function<E, String> libelleValeur,
-            Function<E, Predicate<T>> predicat,
-            E valeurParDefaut) {
-        return new CritereFiltre<T>() {
+            Domaine<T> domaine,
+            Function<T, Predicate<L>> predicat,
+            Function<List<T>, T> valeurParDefaut) {
+        return new CritereFiltre<L>() {
+
+            /// Les valeurs **réellement montrées** par l'éditeur, figées à sa construction.
+            ///
+            /// Gardées ici plutôt que relues du domaine à chaque appel : le fournisseur dépend des lignes
+            /// courantes, et une relecture pourrait rendre une autre liste que celle qu'on a sous les yeux.
+            /// C'est aussi ce qui permet de lire la valeur choisie par son **indice**, sans transtypage.
+            private List<T> offertes = List.of();
+
             @Override
             public String nom() {
                 return cle;
@@ -289,18 +355,19 @@ public final class CritereListe {
             }
 
             @Override
-            public Node editeur(Consumer<Predicate<T>> applique) {
-                ComboBox<E> choix = new ComboBox<>();
-                choix.getItems().setAll(valeurs);
+            public Node editeur(Consumer<Predicate<L>> applique) {
+                ComboBox<T> choix = new ComboBox<>();
+                offertes = List.copyOf(domaine.valeurs().get());
+                choix.getItems().setAll(offertes);
                 choix.setPromptText(invite);
-                choix.setConverter(new StringConverter<E>() {
+                choix.setConverter(new StringConverter<T>() {
                     @Override
-                    public String toString(E valeur) {
-                        return valeur == null ? "" : libelleValeur.apply(valeur);
+                    public String toString(T valeur) {
+                        return valeur == null ? "" : domaine.libelle().apply(valeur);
                     }
 
                     @Override
-                    public E fromString(String texte) {
+                    public T fromString(String texte) {
                         return null; // liste non éditable au clavier
                     }
                 });
@@ -310,15 +377,15 @@ public final class CritereListe {
                 if (valeurParDefaut == null) {
                     applique.accept(ligne -> true);
                 } else {
-                    choix.setValue(valeurParDefaut); // déclenche l'application initiale par l'écouteur
+                    choix.setValue(valeurParDefaut.apply(offertes)); // déclenche l'application initiale
                 }
                 return choix;
             }
 
             @Override
             public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of(((Enum<?>) valeur).name());
+                int indice = ((ComboBox<?>) editeur).getSelectionModel().getSelectedIndex();
+                return indice < 0 ? List.of() : List.of(domaine.cle().apply(offertes.get(indice)));
             }
 
             @Override
@@ -326,14 +393,12 @@ public final class CritereListe {
                 if (memorisees.isEmpty()) {
                     return List.of();
                 }
-                // Retrouvée PARMI LES VALEURS OFFERTES, et non par Enum.valueOf : une constante disparue
-                // de l'énumération ferait lever valueOf, et une vue mémorisée devenue caduque doit se
-                // rejouer sans filtre plutôt que faire échouer l'écran. Sélection par INDICE, comme dans
-                // [#simple] : elle ne demande pas de connaître le type de la liste, et -1 la vide.
-                List<String> noms = valeurs.stream().map(Enum::name).toList();
-                int indice = noms.indexOf(memorisees.get(0));
+                // Retrouvée par sa CLÉ parmi les valeurs offertes, et non reconstruite : une clé disparue
+                // (constante retirée, espèce absente du jeu du jour) doit rejouer la vue sans filtre plutôt
+                // que faire échouer l'écran - mais elle se DIT, sans quoi la vue filtre moins qu'annoncé
+                // (#3056).
+                int indice = offertes.stream().map(domaine.cle()).toList().indexOf(memorisees.get(0));
                 ((ComboBox<?>) editeur).getSelectionModel().select(indice);
-                // Se rejouer sans filtre reste le bon comportement ; le taire ne l'est pas (#3056).
                 return indice < 0 ? List.of(memorisees.get(0)) : List.of();
             }
         };
