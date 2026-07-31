@@ -81,7 +81,7 @@ L'écran répond à une question que l'inventaire ne traite pas : **718 contacts
   <text x="300" y="189" class="cell">Chiroptères</text>
   <text x="470" y="189" class="cell-num">718</text><text x="560" y="189" class="cell-num">359</text>
   <rect x="600" y="178" width="58" height="16" rx="8" class="p-forte"/><text x="629" y="190" class="pill-txt">Forte</text>
-  <text x="668" y="189" class="cell-sub">Q75 = 620 · Q98 = 3842</text>
+  <text x="668" y="189" class="cell-sub">Q75 = 261 · Q98 = 1804</text>
 
   <!-- ligne 2 -->
   <rect x="31" y="199" width="938" height="30" class="list-row-alt"/>
