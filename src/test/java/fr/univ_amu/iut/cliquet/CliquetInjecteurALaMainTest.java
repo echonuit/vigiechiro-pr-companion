@@ -46,8 +46,6 @@ class CliquetInjecteurALaMainTest {
     private static final List<String> ENUMERENT_LEURS_MODULES = List.of(
             "fr/univ_amu/iut/analyse/outils/CaptureSynthese.java",
             "fr/univ_amu/iut/analyse/outils/CaptureSyntheseSansReferentiel.java",
-            "fr/univ_amu/iut/audio/outils/CaptureValidationTadarida.java",
-            "fr/univ_amu/iut/audio/outils/GraineSonsValidation.java",
             "fr/univ_amu/iut/audit/outils/CaptureAudit.java");
 
     @Test

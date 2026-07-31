@@ -5,15 +5,15 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.util.Modules;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.view.SonsValidationController;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
-import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -33,7 +33,6 @@ import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
-import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -45,7 +44,6 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.validation.di.ValidationModule;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.MessageObservation;
@@ -124,104 +122,104 @@ final class GraineSonsValidation {
     /// Injecteur (partiel) partagé par les outils de capture de la vue audio. Exposé pour le garde-fou de
     /// câblage (test) via le `creerInjecteur()` de chaque `main`.
     static Injector creerInjecteur() {
-        return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(),
-                new PersistenceModule(),
-                new PassageModule(),
-                new ValidationModule(),
-                new BibliothequeModule(),
-                new ModuleCaptureNavigationAudio(),
-                new AbstractModule() {
-                    @Provides
-                    AudioViewModel viewModel(
-                            ServiceValidation validation,
-                            ProjectionsAudioDao projectionsAudio,
-                            PlageNuitPassage plageNuitPassage,
-                            ValidationManuelle validationManuelle,
-                            MarquageDouteux marquageDouteux,
-                            SaisieCertitude saisieCertitude,
-                            RevueEnLot revueEnLot,
-                            ExporteurAudio exporteur,
-                            ServiceDisponibiliteAudio disponibilite,
-                            DiscussionValidateur discussion) {
-                        return new AudioViewModel(
-                                validation,
-                                projectionsAudio,
-                                plageNuitPassage,
-                                validationManuelle,
-                                marquageDouteux,
-                                saisieCertitude,
-                                revueEnLot,
-                                exporteur,
-                                disponibilite,
-                                Files::exists,
-                                discussion);
-                    }
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(
+                        ModuleCaptureCommun.executeursSynchrones(),
+                        new ModuleCaptureNavigationAudio(),
+                        new AbstractModule() {
+                            @Provides
+                            AudioViewModel viewModel(
+                                    ServiceValidation validation,
+                                    ProjectionsAudioDao projectionsAudio,
+                                    PlageNuitPassage plageNuitPassage,
+                                    ValidationManuelle validationManuelle,
+                                    MarquageDouteux marquageDouteux,
+                                    SaisieCertitude saisieCertitude,
+                                    RevueEnLot revueEnLot,
+                                    ExporteurAudio exporteur,
+                                    ServiceDisponibiliteAudio disponibilite,
+                                    DiscussionValidateur discussion) {
+                                return new AudioViewModel(
+                                        validation,
+                                        projectionsAudio,
+                                        plageNuitPassage,
+                                        validationManuelle,
+                                        marquageDouteux,
+                                        saisieCertitude,
+                                        revueEnLot,
+                                        exporteur,
+                                        disponibilite,
+                                        Files::exists,
+                                        discussion);
+                            }
 
-                    @Provides
-                    ExporteurAudio exporteur(
-                            ServiceValidation validation,
-                            ServiceBibliotheque bibliotheque,
-                            SequenceDao sequenceDao,
-                            SessionDao sessionDao) {
-                        return new ExporteurAudio(
-                                validation, bibliotheque, new ExportObservationsEtSons(sequenceDao, sessionDao));
-                    }
+                            @Provides
+                            ExporteurAudio exporteur(
+                                    ServiceValidation validation,
+                                    ServiceBibliotheque bibliotheque,
+                                    SequenceDao sequenceDao,
+                                    SessionDao sessionDao) {
+                                return new ExporteurAudio(
+                                        validation,
+                                        bibliotheque,
+                                        new ExportObservationsEtSons(sequenceDao, sessionDao));
+                            }
 
-                    // Repondre au validateur est indisponible en capture (aucune connexion) : le fil se
-                    // LIT, la saisie se desactive en disant pourquoi (affordance #789). Cet injecteur ne
-                    // charge pas AudioModule, il faut donc lui fournir le collaborateur ici.
-                    @Provides
-                    @Singleton
-                    DiscussionValidateur discussion(ServiceValidation service, StockageConnexion connexion) {
-                        // Un profil, sinon l'ecran ne sait pas qui NOUS sommes : il attribuerait nos
-                        // propres messages au validateur, et la capture montrerait un expert se
-                        // repondant a lui-meme (#1417).
-                        connexion.enregistrer(
-                                "jeton-de-demo",
-                                new fr.univ_amu.iut.commun.api.ProfilVigieChiro(
-                                        ID_UTILISATEUR, "Capitaine Chiro (demo)", "Observateur"));
-                        return new DiscussionValidateur(service, connexion, java.util.Optional.empty());
-                    }
+                            // Repondre au validateur est indisponible en capture (aucune connexion) : le fil se
+                            // LIT, la saisie se desactive en disant pourquoi (affordance #789). Cet injecteur ne
+                            // charge pas AudioModule, il faut donc lui fournir le collaborateur ici.
+                            @Provides
+                            @Singleton
+                            DiscussionValidateur discussion(ServiceValidation service, StockageConnexion connexion) {
+                                // Un profil, sinon l'ecran ne sait pas qui NOUS sommes : il attribuerait nos
+                                // propres messages au validateur, et la capture montrerait un expert se
+                                // repondant a lui-meme (#1417).
+                                connexion.enregistrer(
+                                        "jeton-de-demo",
+                                        new fr.univ_amu.iut.commun.api.ProfilVigieChiro(
+                                                ID_UTILISATEUR, "Capitaine Chiro (demo)", "Observateur"));
+                                return new DiscussionValidateur(service, connexion, java.util.Optional.empty());
+                            }
 
-                    // Import VigieChiro indisponible en capture (aucune connexion) : VM à dépôt vide.
-                    @Provides
-                    ImportVigieChiroViewModel importVigieChiro() {
-                        return new ImportVigieChiroViewModel(Optional.empty());
-                    }
+                            // Import VigieChiro indisponible en capture (aucune connexion) : VM à dépôt vide.
+                            @Provides
+                            ImportVigieChiroViewModel importVigieChiro() {
+                                return new ImportVigieChiroViewModel(Optional.empty());
+                            }
 
-                    @Provides
-                    fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel publicationCorrections() {
-                        return new fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel(Optional.empty());
-                    }
+                            @Provides
+                            fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel publicationCorrections() {
+                                return new fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel(
+                                        Optional.empty());
+                            }
 
-                    // OuvrirSite requis par le controller pour son fil d'Ariane, mais SitesModule n'est
-                    // pas inclus : no-op (la source References ne l'exerce pas). OuvrirPassage, lui, est
-                    // déjà fourni par PassageModule (inclus) - ne pas le rebinder (BindingAlreadySet).
-                    @Provides
-                    OuvrirSite ouvrirSite() {
-                        return new OuvrirSite() {
-                            @Override
-                            public void ouvrirListe() {}
+                            // OuvrirSite requis par le controller pour son fil d'Ariane, mais SitesModule n'est
+                            // pas inclus : no-op (la source References ne l'exerce pas). OuvrirPassage, lui, est
+                            // déjà fourni par PassageModule (inclus) - ne pas le rebinder (BindingAlreadySet).
+                            @Provides
+                            OuvrirSite ouvrirSite() {
+                                return new OuvrirSite() {
+                                    @Override
+                                    public void ouvrirListe() {}
 
-                            @Override
-                            public void ouvrirDetail(String numeroCarre) {}
-                        };
-                    }
+                                    @Override
+                                    public void ouvrirDetail(String numeroCarre) {}
+                                };
+                            }
 
-                    // OuvrirAnalyse (#1087, feature `analyse` désactivable) : le controller l'injecte en
-                    // Optional ; ce module n'inclut pas AnalyseModule (ni son OptionalBinder vide via
-                    // AudioModule, non plus inclus), donc on fournit directement l'Optional peuplé (no-op).
-                    @Provides
-                    Optional<OuvrirAnalyse> ouvrirAnalyse() {
-                        return Optional.of((filtres, afficherCarte) -> {});
-                    }
+                            // OuvrirAnalyse (#1087, feature `analyse` désactivable) : le controller l'injecte en
+                            // Optional ; ce module n'inclut pas AnalyseModule (ni son OptionalBinder vide via
+                            // AudioModule, non plus inclus), donc on fournit directement l'Optional peuplé (no-op).
+                            @Provides
+                            Optional<OuvrirAnalyse> ouvrirAnalyse() {
+                                return Optional.of((filtres, afficherCarte) -> {});
+                            }
 
-                    @Provides
-                    OuvrirMultisite ouvrirMultisite() {
-                        return numeroCarre -> {};
-                    }
-                });
+                            @Provides
+                            OuvrirMultisite ouvrirMultisite() {
+                                return numeroCarre -> {};
+                            }
+                        }));
     }
 
     /// Ouvre un contrôleur déjà chargé sur la source **References** (le corpus de référence), pour les
