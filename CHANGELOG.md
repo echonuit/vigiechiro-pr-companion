@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.150.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.150.1...v2.150.2) (2026-07-31)
+
+
+### Bug Fixes
+
+* **synthese:** la nuit de démonstration produit enfin le nombre fondateur ([#3047](https://github.com/echonuit/vigiechiro-pr-companion/issues/3047)) ([642db60](https://github.com/echonuit/vigiechiro-pr-companion/commit/642db60fec1f91bbb5be4a3dae1d70bbbdebf252))
+
 ## [2.150.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.150.0...v2.150.1) (2026-07-31)
 
 
