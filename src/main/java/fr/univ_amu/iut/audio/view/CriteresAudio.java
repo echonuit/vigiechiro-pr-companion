@@ -94,47 +94,16 @@ final class CriteresAudio {
     /// sinon le premier groupe ; l'application est déclenchée dès l'ajout de la puce.
     static CritereFiltre<LigneObservationAudio> groupe(
             Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
-        return new CritereFiltre<LigneObservationAudio>() {
-            @Override
-            public String nom() {
-                return "groupe";
-            }
-
-            @Override
-            public String libelle() {
-                return "Taxon parent";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
-                ComboBox<String> choix = new ComboBox<>();
-                choix.getItems().setAll(groupesPresents(lignesCourantes.get()));
-                choix.valueProperty()
-                        .addListener((obs, avant, groupe) -> applique.accept(
-                                groupe == null ? ligne -> true : ligne -> groupe.equals(ligne.groupe())));
-                choix.setValue(defaut(choix.getItems())); // déclenche l'application initiale
-                return choix;
-            }
-
-            @Override
-            public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of((String) valeur);
-            }
-
-            @Override
-            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (valeurs.isEmpty()) {
-                    return List.of();
-                }
-                // Les valeurs offertes sont celles des lignes COURANTES : un groupe absent du jeu
-                // du jour n'est pas une anomalie, mais la vue filtrera moins qu'annoncé (#3056).
-                selectionnerParValeur(editeur, valeurs.get(0));
-                return ((ComboBox<?>) editeur).getSelectionModel().getSelectedIndex() < 0
-                        ? List.of(valeurs.get(0))
-                        : List.of();
-            }
-        };
+        // PRÉSÉLECTIONNÉ, seule entorse au principe « une puce ajoutée n'écarte rien » : isoler les
+        // chiroptères est le levier n°1 de la revue (#471). Le défaut se calcule SUR les valeurs offertes
+        // (Chiroptères s'il est présent, le premier groupe sinon) : un défaut constant rendrait une puce
+        // vide les jours sans chiroptère.
+        return CritereListe.valeursPreselectionnees(
+                "groupe",
+                "Taxon parent",
+                CritereListe.Domaine.deChaines(() -> groupesPresents(lignesCourantes.get())),
+                groupe -> ligne -> groupe.equals(ligne.groupe()),
+                CriteresAudio::defaut);
     }
 
     /// Groupes taxon parents présents dans `lignes` : non nuls, **distincts** et **triés** (source stable
@@ -169,65 +138,15 @@ final class CriteresAudio {
     /// affichée par son nom vernaculaire (à défaut le code). Aucune présélection : la puce n'ajoutée ne
     /// filtre rien tant qu'une espèce n'est pas choisie (#472), pour ne pas masquer arbitrairement la table.
     static CritereFiltre<LigneObservationAudio> taxon(Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
-        return new CritereFiltre<LigneObservationAudio>() {
-            @Override
-            public String nom() {
-                return "taxon";
-            }
-
-            @Override
-            public String libelle() {
-                return "Espèce";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
-                ComboBox<EspecePresente> choix = new ComboBox<>();
-                choix.getItems().setAll(especesPresentes(lignesCourantes.get()));
-                choix.setPromptText("Choisir une espèce");
-                choix.setConverter(new StringConverter<>() {
-                    @Override
-                    public String toString(EspecePresente espece) {
-                        return espece == null ? "" : espece.libelle();
-                    }
-
-                    @Override
-                    public EspecePresente fromString(String libelle) {
-                        return null; // liste non éditable
-                    }
-                });
-                choix.valueProperty()
-                        .addListener((obs, avant, espece) -> applique.accept(
-                                espece == null
-                                        ? ligne -> true
-                                        : ligne -> espece.code().equals(codeRetenu(ligne))));
-                return choix; // pas de présélection : filtre inactif tant qu'aucune espèce n'est choisie
-            }
-
-            @Override
-            public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of(((EspecePresente) valeur).code());
-            }
-
-            @Override
-            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (valeurs.isEmpty()) {
-                    return List.of();
-                }
-                ComboBox<?> choix = (ComboBox<?>) editeur;
-                for (int i = 0; i < choix.getItems().size(); i++) {
-                    if (choix.getItems().get(i) instanceof EspecePresente espece
-                            && espece.code().equals(valeurs.get(0))) {
-                        choix.getSelectionModel().select(i);
-                        return List.of();
-                    }
-                }
-                // L'espèce mémorisée n'est pas dans les lignes courantes : le dire, sans quoi la vue
-                // « Barbastelle » s'ouvre sur toutes les espèces (#3056).
-                return List.of(valeurs.get(0));
-            }
-        };
+        // Le domaine est un RECORD, et c'est le cas qui a fait généraliser la fabrique (#3060) : ce qu'on
+        // voit (le nom vernaculaire) et ce qu'on mémorise (le code Tadarida) sont deux champs distincts.
+        return CritereListe.valeurs(
+                "taxon",
+                "Espèce",
+                "Choisir une espèce",
+                new CritereListe.Domaine<>(
+                        () -> especesPresentes(lignesCourantes.get()), EspecePresente::libelle, EspecePresente::code),
+                espece -> ligne -> espece.code().equals(codeRetenu(ligne)));
     }
 
     /// Critère **Lieu** (#2794, chantier #2790) : liste à cocher des lieux **présents dans les lignes
