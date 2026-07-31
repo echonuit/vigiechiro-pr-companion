@@ -54,6 +54,18 @@ class SitesVigieChiroTest {
     }
 
     @Test
+    @DisplayName("Un site sans observateur rend « null », et non la chaîne vide")
+    void observateur_absent_rend_null() {
+        // La nuance sort telle quelle en « --json » : « null » dit *absent*, la chaîne vide dirait
+        // *présent mais anonyme*. Et l'identifiant sert à comparer au profil connecté pour savoir si
+        // le carré est celui d'un tiers : une chaîne vide serait une valeur qui ne correspond jamais,
+        // là où l'absence est une information à part entière.
+        List<SiteVigieChiro> sites = SitesVigieChiro.sites(DEUX_SITES);
+
+        assertThat(sites.get(1).observateur()).isNull();
+    }
+
+    @Test
     @DisplayName("Les coordonnées suivent l'ordre VigieChiro [lat, lon], et non le [lon, lat] GeoJSON")
     void les_coordonnees_sont_lat_puis_lon() {
         PointVigieChiro point =
