@@ -94,6 +94,7 @@ public class ServiceActivite {
                 ligne.nomEspece(),
                 ligne.groupe(),
                 ligne.heureCapture(),
+                ligne.commune(),
                 ligne.numeroCarre(),
                 ligne.codePoint(),
                 ligne.idPassage());

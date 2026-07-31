@@ -55,8 +55,6 @@ public class ActiviteViewModel {
     private final ObservableSet<String> especesSelectionnees = FXCollections.observableSet(new LinkedHashSet<>());
     private final ObservableList<CourbeEspece> courbesAffichees = FXCollections.observableArrayList();
     private final ObservableList<String> groupesDisponibles = FXCollections.observableArrayList();
-    private final ObservableList<String> carresDisponibles = FXCollections.observableArrayList();
-    private final ObservableList<String> pointsDisponibles = FXCollections.observableArrayList();
     private final ObservableList<String> nuitsDisponibles = FXCollections.observableArrayList();
     private final ObjectProperty<PlageNuit> plageNuit = new SimpleObjectProperty<>();
 
@@ -104,8 +102,6 @@ public class ActiviteViewModel {
         tous.setAll(contacts);
         nuitsOpportunistes = Set.copyOf(service.nuitsOpportunistes());
         groupesDisponibles.setAll(valeursDistinctes(ContactHoraire::groupe));
-        carresDisponibles.setAll(valeursDistinctes(ContactHoraire::numeroCarre));
-        pointsDisponibles.setAll(valeursDistinctes(ContactHoraire::codePoint));
         nuitsDisponibles.setAll(valeursDistinctes(ActiviteViewModel::libelleNuit));
         plageNuit.set(fenetre);
         reagreger();
@@ -194,15 +190,14 @@ public class ActiviteViewModel {
         return nuitsOpportunistes;
     }
 
-    /// Numéros de carré présents dans les contacts chargés : peuplent la liste déroulante du critère
-    /// « Carré ».
-    public ObservableList<String> carresDisponibles() {
-        return carresDisponibles;
-    }
-
-    /// Codes de point d'écoute présents : peuplent la liste déroulante du critère « Point ».
-    public ObservableList<String> pointsDisponibles() {
-        return pointsDisponibles;
+    /// Les contacts **tels que les filtres actifs les laissent passer** : peuplent la liste à cocher du
+    /// critère « Lieu » (#2967), qui ne propose donc que des lieux réellement atteignables.
+    ///
+    /// C'est la même mécanique que la vue Analyse, et elle remplace les deux listes figées (carrés, points)
+    /// calculées sur l'ensemble des contacts chargés : celles-ci proposaient des valeurs qu'un autre filtre
+    /// avait déjà écartées, et rendre zéro ligne sans le dire.
+    public ObservableList<ContactHoraire> contactsFiltres() {
+        return contactsFiltres;
     }
 
     /// Nuits (dates du soir) présentes : peuplent la liste déroulante du critère « Nuit » (une nuit = un

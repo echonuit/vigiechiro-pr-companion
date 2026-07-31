@@ -14,11 +14,13 @@ import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import java.awt.image.BufferedImage;
 import java.nio.file.Files;
@@ -29,6 +31,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -37,15 +42,18 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javax.imageio.ImageIO;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -243,13 +251,17 @@ class ActiviteViewTest {
     }
 
     @Test
-    void le_menu_filtre_offre_la_cascade_geo_et_le_taxon_parent(FxRobot robot) {
+    void le_menu_filtre_offre_le_lieu_et_le_taxon_parent(FxRobot robot) {
         MenuButton menu = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
 
         assertThat(menu.getItems())
                 .extracting(MenuItem::getText)
-                .as("cascade carré → point → nuit, le taxon parent, et la nature de la nuit (#2614)")
-                .contains("Carré", "Point", "Nuit", "Taxon parent", "Nature de la nuit", "Espèces à enjeu");
+                .as("le lieu (#2967), la nuit, le taxon parent, et la nature de la nuit (#2614)")
+                .contains("Lieu", "Nuit", "Taxon parent", "Nature de la nuit", "Espèces à enjeu");
+        assertThat(menu.getItems())
+                .extracting(MenuItem::getText)
+                .as("« Lieu » remplace les deux puces à choix unique, il ne s'y ajoute pas")
+                .doesNotContain("Carré", "Point");
     }
 
     @Test
@@ -493,12 +505,110 @@ class ActiviteViewTest {
         return contacts;
     }
 
+    @Test
+    @DisplayName("#2967 : la puce « Lieu » groupe les dimensions, qualifie le point, et retient deux carrés")
+    void critere_lieu_filtre_sur_chaque_dimension(FxRobot robot) {
+        // Barre autonome plutôt que le semis de l'écran : celui-ci n'a qu'un carré et qu'une commune, et
+        // l'étendre ferait porter à tous les autres cas un jeu de données qu'ils n'utilisent pas.
+        //
+        // Le semis porte à dessein DEUX carrés ayant chacun un point « Z1 » : c'est le cas que le schéma
+        // autorise (UNIQUE(site_id, code)) et que la liste doit rendre non ambigu.
+        ObservableList<ContactHoraire> source = FXCollections.observableArrayList(
+                contactLieu("PIPKUH", "Ahetze", "640380", "Z1"), contactLieu("BARBAR", "Biarritz", "870150", "Z1"));
+        FilteredList<ContactHoraire> vues = new FilteredList<>(source);
+        Filtres<ContactHoraire> filtresLocaux = new Filtres<>(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres<ContactHoraire> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresActivite.lieu(() -> source)),
+                CriteresActivite.rechercheTexte());
+        assertThat(ignore).isNotNull();
+
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        MenuButton choixLieu = menuBoutonDeLieu(pucesLocales);
+        assertThat(entetesLieu(choixLieu)).containsExactly("Communes", "Carrés", "Points");
+        assertThat(cochablesLieu(choixLieu))
+                .as("le point paraît QUALIFIÉ : un « Z1 » nu désignerait les deux carrés à la fois (#2992)")
+                .containsExactly("Ahetze", "Biarritz", "640380", "870150", "640380 · Z1", "870150 · Z1");
+        assertThat(vues).as("rien de coché n'écarte rien").hasSize(2);
+
+        // La COMMUNE seule : la dimension que l'écran ne savait pas filtrer avant #2967.
+        robot.interact(() -> cocheLieu(choixLieu, "Ahetze").setSelected(true));
+        assertThat(vues).extracting(ContactHoraire::taxon).containsExactly("PIPKUH");
+
+        // Le point qualifié désigne UN point d'UN carré, là où deux puces en conjonction le disaient.
+        robot.interact(() -> {
+            cocheLieu(choixLieu, "Ahetze").setSelected(false);
+            cocheLieu(choixLieu, "870150 · Z1").setSelected(true);
+        });
+        assertThat(vues)
+                .as("« 870150 · Z1 » ne retient que le Z1 de CE carré")
+                .extracting(ContactHoraire::taxon)
+                .containsExactly("BARBAR");
+
+        // DEUX carrés à la fois : ce que la puce « Carré » à choix unique interdisait.
+        robot.interact(() -> {
+            cocheLieu(choixLieu, "870150 · Z1").setSelected(false);
+            cocheLieu(choixLieu, "640380").setSelected(true);
+            cocheLieu(choixLieu, "870150").setSelected(true);
+        });
+        assertThat(vues)
+                .as("appartenance : deux carrés cochés retiennent les deux, impossible avant #2967")
+                .hasSize(2);
+    }
+
+    /// Les intitulés des **en-têtes** de groupe : les items désactivés, qui nomment sans se cocher.
+    private static List<String> entetesLieu(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(item -> !(item instanceof CheckMenuItem) && item.isDisable())
+                .map(MenuItem::getText)
+                .toList();
+    }
+
+    /// Les valeurs **cochables**, en-têtes et séparateurs exclus.
+    private static List<String> cochablesLieu(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(MenuItem::getText)
+                .toList();
+    }
+
+    /// Le `MenuButton` de l'unique puce posée : la puce est une `HBox` dont le second enfant est l'éditeur.
+    private static MenuButton menuBoutonDeLieu(FlowPane puces) {
+        return (MenuButton) ((HBox) puces.getChildren().get(0)).getChildren().get(1);
+    }
+
+    /// La case à cocher d'un lieu, retrouvée par son libellé exact.
+    private static CheckMenuItem cocheLieu(MenuButton bouton, String texte) {
+        return bouton.getItems().stream()
+                .filter(item -> item instanceof CheckMenuItem && texte.equals(item.getText()))
+                .map(CheckMenuItem.class::cast)
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private static ContactHoraire contactLieu(String taxon, String commune, String carre, String point) {
+        return new ContactHoraire(
+                taxon, taxon, "Chiroptères", LocalDateTime.of(2026, 6, 20, 22, 0), commune, carre, point, 1L);
+    }
+
     /// Contacts d'un **passage donné**, pour distinguer les nuits du protocole des nuits opportunistes.
     private static List<ContactHoraire> nContactsDuPassage(String taxon, long idPassage, int nombre) {
         List<ContactHoraire> contacts = new ArrayList<>();
         for (int i = 0; i < nombre; i++) {
             contacts.add(new ContactHoraire(
-                    taxon, taxon, "Chiroptères", LocalDateTime.of(2026, 6, 20, 22, i), "640380", "A1", idPassage));
+                    taxon,
+                    taxon,
+                    "Chiroptères",
+                    LocalDateTime.of(2026, 6, 20, 22, i),
+                    "Ahetze",
+                    "640380",
+                    "A1",
+                    idPassage));
         }
         return contacts;
     }

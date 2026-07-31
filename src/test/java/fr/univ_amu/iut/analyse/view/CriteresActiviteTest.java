@@ -7,36 +7,42 @@ import java.util.function.BiPredicate;
 import org.junit.jupiter.api.Test;
 
 /// Vérifie la **recherche texte** des critères de la vue Activité ([CriteresActivite]) : elle balaie
-/// taxon, nom, carré et point, insensible à la casse et aux accents, et tolère les champs nuls. Les
-/// critères à liste déroulante (Carré, Taxon parent) sont exercés par le test d'intégration de la vue.
+/// taxon, nom, commune, carré et point, insensible à la casse et aux accents, et tolère les champs nuls.
+/// Les critères à éditeur (Lieu, Taxon parent) sont exercés par le test d'intégration de la vue.
 class CriteresActiviteTest {
 
     private static final BiPredicate<ContactHoraire, String> RECHERCHE = CriteresActivite.rechercheTexte();
 
-    private static ContactHoraire contact(String taxon, String nom, String carre, String point) {
-        return new ContactHoraire(taxon, nom, "Chiroptères", null, carre, point, 1L);
+    private static ContactHoraire contact(String taxon, String nom, String commune, String carre, String point) {
+        return new ContactHoraire(taxon, nom, "Chiroptères", null, commune, carre, point, 1L);
     }
 
     @Test
-    void trouve_par_taxon_nom_carre_ou_point_insensible_casse_et_accents() {
-        ContactHoraire kuhl = contact("PIPKUH", "Pipistrelle de Kuhl", "640380", "A1");
+    void trouve_par_taxon_nom_commune_carre_ou_point_insensible_casse_et_accents() {
+        ContactHoraire kuhl = contact("PIPKUH", "Pipistrelle de Kuhl", "Ahetze", "640380", "A1");
         assertThat(RECHERCHE.test(kuhl, "pipkuh")).as("taxon, casse").isTrue();
         assertThat(RECHERCHE.test(kuhl, "KUHL")).as("nom, casse").isTrue();
+        assertThat(RECHERCHE.test(kuhl, "ahetze")).as("commune (#2967)").isTrue();
         assertThat(RECHERCHE.test(kuhl, "640380")).as("carré").isTrue();
         assertThat(RECHERCHE.test(kuhl, "a1")).as("point").isTrue();
 
-        ContactHoraire serotine = contact("EPTSER", "Sérotine commune", "770123", "B2");
-        assertThat(RECHERCHE.test(serotine, "serotine")).as("accents ignorés").isTrue();
+        ContactHoraire serotine = contact("EPTSER", "Sérotine commune", "Bénesse", "770123", "B2");
+        assertThat(RECHERCHE.test(serotine, "serotine"))
+                .as("accents ignorés, taxon")
+                .isTrue();
+        assertThat(RECHERCHE.test(serotine, "benesse"))
+                .as("accents ignorés, commune")
+                .isTrue();
     }
 
     @Test
     void ne_trouve_pas_l_absent() {
-        ContactHoraire kuhl = contact("PIPKUH", "Pipistrelle de Kuhl", "640380", "A1");
+        ContactHoraire kuhl = contact("PIPKUH", "Pipistrelle de Kuhl", "Ahetze", "640380", "A1");
         assertThat(RECHERCHE.test(kuhl, "barbastelle")).isFalse();
     }
 
     @Test
     void tolere_les_champs_nuls() {
-        assertThat(RECHERCHE.test(contact(null, null, null, null), "xxx")).isFalse();
+        assertThat(RECHERCHE.test(contact(null, null, null, null, null), "xxx")).isFalse();
     }
 }

@@ -37,9 +37,9 @@ class ServiceActiviteTest {
                 .thenReturn(List.of(ligne("PIPKUH", "PIPPIP", "Pipistrelle de Kuhl", "Chiroptères", HEURE)));
 
         assertThat(service.contactsDuPassage(PASSAGE))
-                .as("taxon retenu (observateur prioritaire) et contexte carré/point/passage portés")
+                .as("taxon retenu (observateur prioritaire) et contexte commune/carré/point/passage portés")
                 .containsExactly(new ContactHoraire(
-                        "PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", HEURE, "640380", "A1", PASSAGE));
+                        "PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", HEURE, "Ahetze", "640380", "A1", PASSAGE));
     }
 
     @Test
@@ -138,6 +138,6 @@ class ServiceActiviteTest {
                 null,
                 null,
                 0,
-                null);
+                "Ahetze");
     }
 }
