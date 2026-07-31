@@ -95,9 +95,11 @@ public final class JeuDeDonneesPassage {
     private String nomUtilisateur = "Testeur";
     private String numeroCarre = "640380";
     private String nomSite = "Site de test";
+    private Protocole protocole = Protocole.STANDARD;
     private String codePoint = "A1";
     private Double latitude;
     private Double longitude;
+    private Long idPointImpose;
     private String numeroSerie = "SN-1";
     private int numeroPassage = 1;
     private int annee = 2026;
@@ -147,9 +149,33 @@ public final class JeuDeDonneesPassage {
     }
 
     /// Position du point : nécessaire dès qu'un test touche à la carte ou à l'audit des points.
-    public JeuDeDonneesPassage position(double latitude, double longitude) {
+    ///
+    /// Les paramètres sont **nullables** à dessein : un point sans coordonnées est un état légitime, et
+    /// c'est même le sujet des tests de dérivation de commune, qui ne pouvaient pas l'exprimer tant que la
+    /// signature était primitive (#2989).
+    public JeuDeDonneesPassage position(Double latitude, Double longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
+        return this;
+    }
+
+    /// Protocole du site. `STANDARD` par défaut ; `RECHERCHE` sert aux tests qui vérifient qu'un site hors
+    /// protocole est **écarté** des comptes de saison (#2989).
+    public JeuDeDonneesPassage protocole(Protocole protocole) {
+        this.protocole = protocole;
+        return this;
+    }
+
+    /// Sème la nuit **sur un point que le test a déjà créé**, au lieu d'en trouver ou d'en créer un.
+    ///
+    /// Les entrées `carre` / `point` résolvent par **code** : un test qui construit sept, douze ou dix-sept
+    /// points et veut rattacher sa nuit à l'un d'eux ne pouvait pas le dire (#2989). Ici, le site est
+    /// déduit du point.
+    ///
+    /// ⚠️ Les réglages `carre`, `nomSite`, `point` et `position` deviennent alors **sans effet** : le point
+    /// existe, la fixture ne le retouche pas.
+    public JeuDeDonneesPassage surLePoint(long idPoint) {
+        this.idPointImpose = idPoint;
         return this;
     }
 
@@ -271,6 +297,14 @@ public final class JeuDeDonneesPassage {
     public JeuDeDonneesPassage semerSiteEtPoint() {
         trouverOuCreerUtilisateur();
         trouverOuCreerEnregistreur();
+        if (idPointImpose != null) {
+            idPoint = idPointImpose;
+            idSite = new PointDao(source)
+                    .findById(idPointImpose)
+                    .orElseThrow(() -> new IllegalStateException("Point " + idPointImpose + " introuvable"))
+                    .idSite();
+            return this;
+        }
         idSite = trouverOuCreerSite();
         idPoint = trouverOuCreerPoint();
         return this;
@@ -506,8 +540,8 @@ public final class JeuDeDonneesPassage {
                 .filter(site -> site.numeroCarre().equals(numeroCarre))
                 .map(Site::id)
                 .findFirst()
-                .orElseGet(() -> dao.insert(new Site(
-                                null, numeroCarre, nomSite, Protocole.STANDARD, null, "2026-01-01", idUtilisateur))
+                .orElseGet(() -> dao.insert(
+                                new Site(null, numeroCarre, nomSite, protocole, null, "2026-01-01", idUtilisateur))
                         .id());
     }
 
