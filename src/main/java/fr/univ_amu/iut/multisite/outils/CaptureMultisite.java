@@ -5,7 +5,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import com.google.inject.util.Modules;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.CiblePassage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -22,12 +23,9 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.multisite.di.MultisiteModule;
 import fr.univ_amu.iut.multisite.view.MultisiteController;
 import fr.univ_amu.iut.multisite.view.ReconstructionModaleController;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
-import fr.univ_amu.iut.passage.di.CampagneModule;
-import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
@@ -36,7 +34,6 @@ import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
@@ -295,74 +292,69 @@ public final class CaptureMultisite {
     /// `validation` dans un injecteur de capture du multisite y ajouterait bien plus que ce DAO. C'est un
     /// simple objet sur la [SourceDeDonnees] déjà liée par [PersistenceModule].
     public static Injector creerInjecteur() {
-        return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                // Campagne (#2355) : feature OPTIONNELLE, liée par OptionalBinder. Absente de cet
-                // injecteur, ServiceMultisite reçoit un Optional vide et la colonne « Campagne »
-                // se rend VIDE - une colonne documentée qu'aucune capture ne montrait remplie.
-                new CampagneModule(),
-                new MultisiteModule(),
-                new ModuleCaptureNavigationAudio(),
-                new AbstractModule() {
-                    @Provides
-                    ResultatsIdentificationDao fournirResultatsIdentificationDao(SourceDeDonnees source) {
-                        return new ResultatsIdentificationDao(source);
-                    }
-
-                    // Action groupée « Préparer le dépôt » (#2357) : REMPLAÇANT assumé, pas le
-                    // module `lot` réel. Écart déclaré et non silencieux (cf. #2669).
-                    //
-                    // Charger LotModule entraînerait ici toute la chaîne de dépôt pour une capture qui
-                    // ne clique jamais l'entrée. Et rien de l'action n'est visible : le libellé et
-                    // l'état grisé viennent du NOMBRE de lignes cochées. Substituer ne change aucun
-                    // pixel. Le jour où une capture montrerait le lot en cours, il faudra le vrai.
-                    @Provides
-                    @Named("action.preparerDepot")
-                    ActionGroupee fournirActionPreparer() {
-                        return actionDeCapture("Préparer le dépôt");
-                    }
-
-                    @Provides
-                    @Named("action.televerser")
-                    ActionGroupee fournirActionTeleverser() {
-                        return actionDeCapture("Téléverser vers Vigie-Chiro");
-                    }
-
-                    @Provides
-                    @Named("action.importerResultats")
-                    ActionGroupee fournirActionImporter() {
-                        return actionDeCapture("Importer les résultats");
-                    }
-
-                    @Provides
-                    @Named("action.declencherCalcul")
-                    ActionGroupee fournirActionCalcul() {
-                        return actionDeCapture("Déclencher le calcul");
-                    }
-
-                    /// Remplaçant d'action : le libellé suffit, rien d'autre n'est rendu.
-                    private ActionGroupee actionDeCapture(String libelle) {
-                        return new ActionGroupee() {
-                            @Override
-                            public String libelle() {
-                                return libelle;
+        // La colonne « Campagne » (#2355) se rendait vide faute de `CampagneModule` : composer depuis la
+        // racine rend l'oubli impossible.
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(
+                        ModuleCaptureCommun.executeursSynchrones(),
+                        new ModuleCaptureNavigationAudio(),
+                        new AbstractModule() {
+                            @Provides
+                            ResultatsIdentificationDao fournirResultatsIdentificationDao(SourceDeDonnees source) {
+                                return new ResultatsIdentificationDao(source);
                             }
 
-                            @Override
-                            public Optional<String> motifNonEligible(CiblePassage cible) {
-                                return Optional.empty();
+                            // Action groupée « Préparer le dépôt » (#2357) : REMPLAÇANT assumé, et il le reste.
+                            //
+                            // L'argument d'origine - « charger LotModule entraînerait toute la chaîne de dépôt » -
+                            // ne tient plus : la chaîne est là, l'injecteur est complet. Ce qui subsiste est le
+                            // DÉTERMINISME : l'action réelle consulte l'état du dépôt, la substituée non, et rien
+                            // de visible n'en dépend (le libellé et l'état grisé viennent du NOMBRE de lignes
+                            // cochées). Le jour où une capture montrerait le lot en cours, il faudra le vrai.
+                            @Provides
+                            @Named("action.preparerDepot")
+                            ActionGroupee fournirActionPreparer() {
+                                return actionDeCapture("Préparer le dépôt");
                             }
 
-                            @Override
-                            public void executer(CiblePassage cible, JetonAnnulation jeton) {
-                                throw new UnsupportedOperationException("capture : aucune action n'est jouée");
+                            @Provides
+                            @Named("action.televerser")
+                            ActionGroupee fournirActionTeleverser() {
+                                return actionDeCapture("Téléverser vers Vigie-Chiro");
                             }
-                        };
-                    }
-                });
+
+                            @Provides
+                            @Named("action.importerResultats")
+                            ActionGroupee fournirActionImporter() {
+                                return actionDeCapture("Importer les résultats");
+                            }
+
+                            @Provides
+                            @Named("action.declencherCalcul")
+                            ActionGroupee fournirActionCalcul() {
+                                return actionDeCapture("Déclencher le calcul");
+                            }
+
+                            /// Remplaçant d'action : le libellé suffit, rien d'autre n'est rendu.
+                            private ActionGroupee actionDeCapture(String libelle) {
+                                return new ActionGroupee() {
+                                    @Override
+                                    public String libelle() {
+                                        return libelle;
+                                    }
+
+                                    @Override
+                                    public Optional<String> motifNonEligible(CiblePassage cible) {
+                                        return Optional.empty();
+                                    }
+
+                                    @Override
+                                    public void executer(CiblePassage cible, JetonAnnulation jeton) {
+                                        throw new UnsupportedOperationException("capture : aucune action n'est jouée");
+                                    }
+                                };
+                            }
+                        }));
     }
 
     /// Rend le tableau **filtré** via la recherche de la barre à puces (#537 étape 6b), pour montrer la

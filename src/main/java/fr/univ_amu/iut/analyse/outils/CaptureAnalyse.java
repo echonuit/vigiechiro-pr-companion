@@ -2,10 +2,10 @@ package fr.univ_amu.iut.analyse.outils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import fr.univ_amu.iut.analyse.di.AnalyseModule;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.analyse.view.AnalyseController;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -16,9 +16,6 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
-import fr.univ_amu.iut.passage.di.PassageModule;
-import fr.univ_amu.iut.sites.di.SitesModule;
-import fr.univ_amu.iut.validation.di.ValidationModule;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -114,14 +111,8 @@ public final class CaptureAnalyse {
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
     /// (test).
     public static Injector creerInjecteur() {
-        return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                new ValidationModule(),
-                new AnalyseModule(),
-                new ModuleCaptureNavigationAudio());
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), new ModuleCaptureNavigationAudio()));
     }
 
     /// Charge `Analyse.fxml`, applique éventuellement un regroupement (`Par carré`), puis rend l'écran. En

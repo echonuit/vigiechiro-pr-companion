@@ -44,18 +44,11 @@ class CliquetInjecteurALaMainTest {
     /// **Cette liste ne doit que rétrécir.** Pour en retirer un : composer son injecteur depuis
     /// `RacineInjecteur.modules()`, puis supprimer sa ligne ici.
     private static final List<String> ENUMERENT_LEURS_MODULES = List.of(
-            "fr/univ_amu/iut/analyse/outils/CaptureActivite.java",
-            "fr/univ_amu/iut/analyse/outils/CaptureAnalyse.java",
             "fr/univ_amu/iut/analyse/outils/CaptureSynthese.java",
             "fr/univ_amu/iut/analyse/outils/CaptureSyntheseSansReferentiel.java",
             "fr/univ_amu/iut/audio/outils/CaptureValidationTadarida.java",
             "fr/univ_amu/iut/audio/outils/GraineSonsValidation.java",
-            "fr/univ_amu/iut/audit/outils/CaptureAudit.java",
-            "fr/univ_amu/iut/connexion/outils/CaptureConnexion.java",
-            "fr/univ_amu/iut/diagnostic/outils/CaptureDiagnostic.java",
-            "fr/univ_amu/iut/multisite/outils/CaptureMultisite.java",
-            "fr/univ_amu/iut/passage/outils/CapturePassage.java",
-            "fr/univ_amu/iut/qualification/outils/CaptureQualification.java");
+            "fr/univ_amu/iut/audit/outils/CaptureAudit.java");
 
     @Test
     @DisplayName("La dette des injecteurs assemblés à la main ne peut que rétrécir : un outil neuf compose"

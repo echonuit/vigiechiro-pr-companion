@@ -2,7 +2,8 @@ package fr.univ_amu.iut.diagnostic.outils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import com.google.inject.util.Modules;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.JsonSimple;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -15,9 +16,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
-import fr.univ_amu.iut.diagnostic.di.DiagnosticModule;
 import fr.univ_amu.iut.diagnostic.view.DiagnosticController;
-import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -28,7 +27,6 @@ import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
@@ -165,11 +163,7 @@ public final class CaptureDiagnostic {
     /// (test).
     public static Injector creerInjecteur() {
         return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                new DiagnosticModule());
+                Modules.override(RacineInjecteur.modules()).with(ModuleCaptureCommun.executeursSynchrones()));
     }
 
     /// Charge `Diagnostic.fxml`, l'ouvre sur le passage puis rend la scène hors-écran en PNG.

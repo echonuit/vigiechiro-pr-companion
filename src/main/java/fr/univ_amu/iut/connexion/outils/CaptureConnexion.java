@@ -2,13 +2,13 @@ package fr.univ_amu.iut.connexion.outils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import com.google.inject.util.Modules;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.EchelleProgression;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.view.SuiviProgression;
-import fr.univ_amu.iut.connexion.di.ConnexionModule;
 import fr.univ_amu.iut.connexion.view.NavigationConnexion;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -133,6 +133,6 @@ public final class CaptureConnexion {
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage (test).
     public static Injector creerInjecteur() {
         return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new ConnexionModule());
+                Modules.override(RacineInjecteur.modules()).with(ModuleCaptureCommun.executeursSynchrones()));
     }
 }
