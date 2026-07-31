@@ -159,28 +159,45 @@ class ActiviteViewModelTest {
     }
 
     @Test
-    void les_valeurs_disponibles_listent_points_et_nuits_distincts() {
+    void les_valeurs_disponibles_listent_les_nuits_distinctes() {
         when(service.contactsDeLUtilisateur("u-1"))
                 .thenReturn(List.of(
-                        new ContactHoraire(
-                                "PIPKUH", "n", "Chiroptères", LocalDateTime.of(2026, 6, 20, 22, 0), "640380", "A1", 1L),
-                        new ContactHoraire(
-                                "PIPKUH", "n", "Chiroptères", LocalDateTime.of(2026, 6, 21, 2, 0), "640380", "A1", 1L),
-                        new ContactHoraire(
-                                "BARBAR",
-                                "n",
-                                "Chiroptères",
-                                LocalDateTime.of(2026, 6, 25, 23, 0),
-                                "640380",
-                                "B2",
-                                2L)));
+                        contact("PIPKUH", LocalDateTime.of(2026, 6, 20, 22, 0), "Ahetze", "A1", 1L),
+                        contact("PIPKUH", LocalDateTime.of(2026, 6, 21, 2, 0), "Ahetze", "A1", 1L),
+                        contact("BARBAR", LocalDateTime.of(2026, 6, 25, 23, 0), "Biarritz", "B2", 2L)));
 
         vm.chargerUtilisateur("u-1");
 
-        assertThat(vm.pointsDisponibles()).containsExactly("A1", "B2");
         assertThat(vm.nuitsDisponibles())
                 .as("02:00 le 21 reste la nuit du 20 (bascule à midi) : deux nuits distinctes")
                 .containsExactly("2026-06-20", "2026-06-25");
+    }
+
+    @Test
+    void les_contacts_filtres_alimentent_la_puce_lieu_et_suivent_les_autres_filtres() {
+        // #2967 : la liste à cocher « Lieu » se peuple sur les contacts DÉJÀ filtrés, comme sur la vue
+        // Analyse. Une liste figée sur tous les contacts chargés proposerait des lieux qu'un autre filtre
+        // a déjà écartés, et cocher un tel lieu rendrait zéro ligne sans rien dire.
+        when(service.contactsDeLUtilisateur("u-1"))
+                .thenReturn(List.of(
+                        contact("PIPKUH", LocalDateTime.of(2026, 6, 20, 22, 0), "Ahetze", "A1", 1L),
+                        contact("BARBAR", LocalDateTime.of(2026, 6, 25, 23, 0), "Biarritz", "B2", 2L)));
+
+        vm.chargerUtilisateur("u-1");
+        assertThat(vm.contactsFiltres())
+                .as("sans filtre, tous les contacts sont atteignables")
+                .hasSize(2);
+
+        vm.filtres().definir("groupe", contact -> "PIPKUH".equals(contact.taxon()));
+        assertThat(vm.contactsFiltres())
+                .as("un filtre actif retire Biarritz des lieux proposables")
+                .extracting(ContactHoraire::commune)
+                .containsExactly("Ahetze");
+    }
+
+    private static ContactHoraire contact(
+            String taxon, LocalDateTime heure, String commune, String point, long idPassage) {
+        return new ContactHoraire(taxon, "n", "Chiroptères", heure, commune, "640380", point, idPassage);
     }
 
     @Test
@@ -210,7 +227,14 @@ class ActiviteViewModelTest {
         List<ContactHoraire> contacts = new ArrayList<>();
         for (int i = 0; i < nombre; i++) {
             contacts.add(new ContactHoraire(
-                    taxon, taxon + " (nom)", "Chiroptères", LocalDateTime.of(2026, 6, 20, 22, i), carre, "A1", 1L));
+                    taxon,
+                    taxon + " (nom)",
+                    "Chiroptères",
+                    LocalDateTime.of(2026, 6, 20, 22, i),
+                    null,
+                    carre,
+                    "A1",
+                    1L));
         }
         return contacts;
     }

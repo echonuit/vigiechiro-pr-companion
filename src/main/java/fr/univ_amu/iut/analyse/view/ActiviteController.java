@@ -185,8 +185,7 @@ public class ActiviteController implements EmplacementNavigation {
                 pucesFiltres,
                 viewModel.filtres(),
                 List.of(
-                        CriteresActivite.carre(viewModel::carresDisponibles),
-                        CriteresActivite.point(viewModel::pointsDisponibles),
+                        CriteresActivite.lieu(viewModel::contactsFiltres),
                         CriteresActivite.nuit(viewModel::nuitsDisponibles),
                         CriteresActivite.groupe(viewModel::groupesDisponibles),
                         CriteresActivite.natureNuit(viewModel::nuitsOpportunistes),

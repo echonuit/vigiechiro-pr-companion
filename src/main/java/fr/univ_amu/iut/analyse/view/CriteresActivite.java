@@ -8,17 +8,20 @@ import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import javafx.scene.Node;
 
 /// Catalogue des **critères de filtrage** de la vue Activité (patron « à la Notion », socle
 /// [fr.univ_amu.iut.commun.viewmodel.Filtres]), pendant du [CriteresAnalyse] mais sur [ContactHoraire].
-/// Quatre puces cascadables (**Carré**, **Point**, **Nuit** et **Taxon parent** (groupe)), la **Nature
-/// de la nuit** (protocole ou opportuniste), plus la recherche texte permanente.
+/// Trois puces (**Lieu**, **Nuit** et **Taxon parent** (groupe)), la **Nature de la nuit** (protocole ou
+/// opportuniste), plus la recherche texte permanente.
 ///
 /// La sélection d'**espèce** n'est **pas** un filtre ici : elle vit dans les cases à cocher de la courbe
 /// (quelles courbes tracer), pas dans le sous-ensemble de données. Aucune présélection : ajouter une puce
@@ -40,15 +43,59 @@ final class CriteresActivite {
 
     private CriteresActivite() {}
 
-    /// Critère **Carré** : liste déroulante des carrés présents (fournis par `carresPresents`, lus à l'ajout
-    /// de la puce), sans présélection. Tête de la cascade carré → point → nuit.
-    static CritereFiltre<ContactHoraire> carre(Supplier<? extends List<String>> carresPresents) {
-        return CritereListe.simple("carre", "Carré", "Choisir un carré", carresPresents, ContactHoraire::numeroCarre);
+    /// Critère **Lieu** (#2967) : liste à cocher des lieux **présents dans les contacts filtrés**, toutes
+    /// dimensions confondues, dans l'ordre commune, carré, point. Un contact passe si **l'une** de ses
+    /// dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien de coché n'écarte
+    /// rien.
+    ///
+    /// C'est la jumelle de `CriteresAnalyse.lieu` et de `CriteresAudio.lieu`, dont elle reprend le libellé
+    /// et l'ordre des dimensions : le vocabulaire d'un critère se lit d'un écran à l'autre.
+    ///
+    /// ## Elle remplace deux puces, et en fait davantage
+    ///
+    /// Avant elle, l'écran avait un **Carré** et un **Point**, tous deux à choix **unique**, et pas de
+    /// commune : c'était le seul écran où « ce que j'ai entendu sur cette commune » ne s'exprimait pas.
+    ///
+    /// On pouvait croire que remplacer deux puces par une seule perdait en précision, l'appartenance
+    /// (« l'un ou l'autre ») ne sachant pas dire ce que la conjonction de deux puces disait : « le point A1
+    /// **du** carré 640380 ». C'était vrai tant que le point paraissait nu. Depuis qu'il est **qualifié**
+    /// ([ContactHoraire#pointQualifie], règle de #2992), il n'existe plus de valeur « A1 » à cocher :
+    /// « 640380 · A1 » désigne exactement ce que la conjonction désignait. La puce est donc strictement
+    /// plus expressive, puisqu'elle sait en outre retenir **deux carrés**, ce que le choix unique interdisait.
+    static CritereFiltre<ContactHoraire> lieu(Supplier<? extends List<ContactHoraire>> contactsFiltres) {
+        return CritereListe.multipleParmi(
+                "lieu",
+                "Lieu",
+                "Choisir un lieu",
+                () -> lieuxPresents(contactsFiltres.get()),
+                CriteresActivite::dimensionsLieu);
     }
 
-    /// Critère **Point** d'écoute : liste déroulante des points présents, sans présélection.
-    static CritereFiltre<ContactHoraire> point(Supplier<? extends List<String>> pointsPresents) {
-        return CritereListe.simple("point", "Point", "Choisir un point", pointsPresents, ContactHoraire::codePoint);
+    /// Lieux présents dans `contacts`, **groupés par dimension** et triés au sein de chacun. Chaque groupe
+    /// porte son en-tête : sans lui, rien ne dit si « Ahetze » est une commune ou un carré.
+    private static List<CritereListe.GroupeValeurs> lieuxPresents(List<ContactHoraire> contacts) {
+        return List.of(
+                new CritereListe.GroupeValeurs("Communes", valeursDistinctes(contacts, ContactHoraire::commune)),
+                new CritereListe.GroupeValeurs("Carrés", valeursDistinctes(contacts, ContactHoraire::numeroCarre)),
+                new CritereListe.GroupeValeurs("Points", valeursDistinctes(contacts, ContactHoraire::pointQualifie)));
+    }
+
+    /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
+    private static List<String> valeursDistinctes(
+            List<ContactHoraire> contacts, Function<ContactHoraire, String> dimension) {
+        return contacts.stream()
+                .map(dimension)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
+    }
+
+    /// Les dimensions de lieu d'un contact, valeurs nulles écartées.
+    private static List<String> dimensionsLieu(ContactHoraire contact) {
+        return Stream.of(contact.commune(), contact.numeroCarre(), contact.pointQualifie())
+                .filter(Objects::nonNull)
+                .toList();
     }
 
     /// Critère **Nuit** (une nuit = un passage) : liste déroulante des nuits présentes (dates du soir),
@@ -148,7 +195,7 @@ final class CriteresActivite {
     }
 
     /// **Recherche texte** de la barre : vrai si un champ cherchable d'un contact (taxon retenu, nom
-    /// vernaculaire, n° de carré, code point) contient l'aiguille (insensible casse/accents). Fournie au
+    /// vernaculaire, commune, n° de carré, code point) contient l'aiguille (insensible casse/accents). Fournie au
     /// [fr.univ_amu.iut.commun.view.GestionnaireFiltres], qui l'applique au champ permanent.
     static BiPredicate<ContactHoraire, String> rechercheTexte() {
         return CriteresActivite::correspond;
@@ -158,6 +205,7 @@ final class CriteresActivite {
         String aiguille = NormalisationTexte.normaliser(texte);
         return contient(contact.taxon(), aiguille)
                 || contient(contact.nomEspece(), aiguille)
+                || contient(contact.commune(), aiguille)
                 || contient(contact.numeroCarre(), aiguille)
                 || contient(contact.codePoint(), aiguille);
     }

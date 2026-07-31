@@ -23,7 +23,7 @@ L'écran réunit :
   un pas large lisse la forme générale ;
 - une **case par espèce** détectée, avec son total ; les **cinq plus contactées** sont cochées par
   défaut, au-delà le graphe devient illisible ;
-- une **barre de filtres** (carré, point, nuit, taxon parent, nature de la nuit, recherche libre) :
+- une **barre de filtres** (lieu, nuit, taxon parent, nature de la nuit, recherche libre) :
   filtrer re-trace ;
 - des **onglets** qui séparent les chiroptères du reste : le détecteur ne repère pas que des
   chauves-souris, et « Autres » réunit orthoptères, micromammifères, oiseaux et le reste du
@@ -74,8 +74,13 @@ Le message d'absence **nomme sa cause**, parce qu'un « aucune donnée » ne dit
 ## Toutes les nuits à la fois
 
 Ouvert depuis l'accueil, l'écran couvre **tous les passages** : la barre de filtres sert alors à
-restreindre progressivement (un carré, puis un point, puis une nuit). L'aplat nocturne disparaît dans
-cette vue : plusieurs nuits n'ont pas de fenêtre commune, et en afficher une serait trompeur.
+restreindre progressivement (un lieu, puis une nuit). L'aplat nocturne disparaît dans cette vue :
+plusieurs nuits n'ont pas de fenêtre commune, et en afficher une serait trompeur.
+
+La puce **« Lieu »** propose les communes, les carrés et les points **présents dans ce que vous
+regardez**, chacun sous son intitulé. Cocher plusieurs valeurs les cumule : deux carrés cochés
+montrent les deux. Un point y paraît toujours **précédé de son carré** (« 640380 · Z1 »), parce qu'un
+même code de point se retrouve sur presque tous les carrés et ne désignerait rien de précis tout seul.
 
 ![L'écran ouvert sur toutes les nuits : la courbe cumule les passages et l'aplat nocturne a disparu.](../assets/captures/apercu-activite-transverse.png)
 
