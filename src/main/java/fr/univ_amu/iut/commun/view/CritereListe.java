@@ -15,6 +15,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.util.StringConverter;
 
 /// Fabrique de **critères de filtre sur une dimension textuelle** (le carré, le point, la catégorie de
 /// taxon…), partagée par les écrans qui offrent une barre de filtres.
@@ -204,6 +205,122 @@ public final class CritereListe {
                     ComboBox<?> choix = (ComboBox<?>) editeur;
                     choix.getSelectionModel().select(choix.getItems().indexOf(valeurs.get(0)));
                 }
+            }
+        };
+    }
+
+    /// Un critère dont l'éditeur déroule une **énumération** : la liste déroulante de [#simple], mais dont
+    /// les entrées sont les constantes d'un `enum` plutôt que des chaînes lues dans les données.
+    ///
+    /// Cinq critères la réécrivaient à la main (statut d'observation ×2, statut de workflow, verdict, état
+    /// d'analyse), et se décrivaient tous par la même phrase. Ce que le socle ne savait pas faire n'était
+    /// pas la liste : c'était **afficher** une constante autrement que par son `name()`, et **retrouver**
+    /// cette constante au moment de rejouer une vue mémorisée. C'est tout ce que cette fabrique ajoute.
+    ///
+    /// La valeur mémorisée est le `name()` de la constante, jamais son libellé : traduire un intitulé
+    /// casserait toutes les vues enregistrées.
+    ///
+    /// **Aucune présélection**, comme partout ailleurs dans ce socle : ajouter la puce n'écarte rien tant
+    /// qu'une valeur n'est pas choisie. L'écran qui a besoin du contraire passe par
+    /// [#enumerationPreselectionnee], dont le nom rend l'exception visible à l'appel.
+    ///
+    /// @param cle clé stable du critère, partagée entre vues (elle sert aussi aux vues mémorisées)
+    /// @param libelle intitulé de la puce
+    /// @param invite texte affiché tant que rien n'est choisi
+    /// @param valeurs les constantes offertes, dans l'ordre d'affichage (l'appelant peut en écarter)
+    /// @param libelleValeur l'intitulé lisible d'une constante, jamais son `name()`
+    /// @param predicat ce que filtrer sur une constante veut dire pour cet écran
+    public static <T, E extends Enum<E>> CritereFiltre<T> enumeration(
+            String cle,
+            String libelle,
+            String invite,
+            List<E> valeurs,
+            Function<E, String> libelleValeur,
+            Function<E, Predicate<T>> predicat) {
+        return enumeration(cle, libelle, invite, valeurs, libelleValeur, predicat, null);
+    }
+
+    /// Comme [#enumeration], mais avec une valeur **présélectionnée** : la puce filtre dès qu'on l'ajoute.
+    ///
+    /// C'est l'exception, pas la règle, et elle porte un nom distinct pour que l'écart se lise **à
+    /// l'appel** plutôt que dans un paramètre nul. Elle n'a de sens que là où la valeur par défaut est le
+    /// geste de l'écran lui-même (la revue des sons s'ouvre sur « À revoir » : ouvrir sur tout obligerait
+    /// à filtrer avant de commencer, à chaque fois).
+    ///
+    /// @param valeurParDefaut la constante appliquée dès l'ajout de la puce
+    public static <T, E extends Enum<E>> CritereFiltre<T> enumerationPreselectionnee(
+            String cle,
+            String libelle,
+            List<E> valeurs,
+            Function<E, String> libelleValeur,
+            Function<E, Predicate<T>> predicat,
+            E valeurParDefaut) {
+        return enumeration(cle, libelle, null, valeurs, libelleValeur, predicat, valeurParDefaut);
+    }
+
+    private static <T, E extends Enum<E>> CritereFiltre<T> enumeration(
+            String cle,
+            String libelle,
+            String invite,
+            List<E> valeurs,
+            Function<E, String> libelleValeur,
+            Function<E, Predicate<T>> predicat,
+            E valeurParDefaut) {
+        return new CritereFiltre<T>() {
+            @Override
+            public String nom() {
+                return cle;
+            }
+
+            @Override
+            public String libelle() {
+                return libelle;
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<T>> applique) {
+                ComboBox<E> choix = new ComboBox<>();
+                choix.getItems().setAll(valeurs);
+                choix.setPromptText(invite);
+                choix.setConverter(new StringConverter<E>() {
+                    @Override
+                    public String toString(E valeur) {
+                        return valeur == null ? "" : libelleValeur.apply(valeur);
+                    }
+
+                    @Override
+                    public E fromString(String texte) {
+                        return null; // liste non éditable au clavier
+                    }
+                });
+                choix.valueProperty()
+                        .addListener((obs, avant, valeur) ->
+                                applique.accept(valeur == null ? ligne -> true : predicat.apply(valeur)));
+                if (valeurParDefaut == null) {
+                    applique.accept(ligne -> true);
+                } else {
+                    choix.setValue(valeurParDefaut); // déclenche l'application initiale par l'écouteur
+                }
+                return choix;
+            }
+
+            @Override
+            public List<String> valeurCourante(Node editeur) {
+                Object valeur = ((ComboBox<?>) editeur).getValue();
+                return valeur == null ? List.of() : List.of(((Enum<?>) valeur).name());
+            }
+
+            @Override
+            public void restaurerValeurs(Node editeur, List<String> memorisees) {
+                if (memorisees.isEmpty()) {
+                    return;
+                }
+                // Retrouvée PARMI LES VALEURS OFFERTES, et non par Enum.valueOf : une constante disparue
+                // de l'énumération ferait lever valueOf, et une vue mémorisée devenue caduque doit se
+                // rejouer sans filtre plutôt que faire échouer l'écran. Sélection par INDICE, comme dans
+                // [#simple] : elle ne demande pas de connaître le type de la liste, et -1 la vide.
+                List<String> noms = valeurs.stream().map(Enum::name).toList();
+                ((ComboBox<?>) editeur).getSelectionModel().select(noms.indexOf(memorisees.get(0)));
             }
         };
     }

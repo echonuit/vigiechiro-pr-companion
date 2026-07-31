@@ -76,52 +76,15 @@ final class CriteresAudio {
     /// Critère **Statut de revue** : éditeur = liste déroulante (À revoir / Validée / Corrigée) dans la
     /// puce ; par défaut **À revoir** (le plus utile pour la revue), appliqué dès l'ajout.
     static CritereFiltre<LigneObservationAudio> statut() {
-        return new CritereFiltre<LigneObservationAudio>() {
-            @Override
-            public String nom() {
-                return "statut";
-            }
-
-            @Override
-            public String libelle() {
-                return "Statut";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
-                ComboBox<StatutObservation> choix = new ComboBox<>();
-                choix.getItems().setAll(StatutObservation.values());
-                choix.setConverter(new StringConverter<>() {
-                    @Override
-                    public String toString(StatutObservation statut) {
-                        return statut == null ? "" : FormatLigneAudio.libelleStatut(statut);
-                    }
-
-                    @Override
-                    public StatutObservation fromString(String libelle) {
-                        return null; // liste non éditable
-                    }
-                });
-                choix.valueProperty()
-                        .addListener((obs, avant, statut) ->
-                                applique.accept(statut == null ? ligne -> true : ligne -> ligne.statut() == statut));
-                choix.setValue(StatutObservation.NON_TOUCHEE); // déclenche l'application initiale (À revoir)
-                return choix;
-            }
-
-            @Override
-            public List<String> valeurCourante(Node editeur) {
-                Object valeur = ((ComboBox<?>) editeur).getValue();
-                return valeur == null ? List.of() : List.of(((StatutObservation) valeur).name());
-            }
-
-            @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (!valeurs.isEmpty()) {
-                    selectionnerParValeur(editeur, StatutObservation.valueOf(valeurs.get(0)));
-                }
-            }
-        };
+        // PRÉSÉLECTIONNÉ sur « À revoir », seule entorse au principe « une puce ajoutée n'écarte rien » :
+        // c'est le geste même de l'écran, et s'ouvrir sur tout obligerait à filtrer avant de commencer.
+        return CritereListe.enumerationPreselectionnee(
+                "statut",
+                "Statut",
+                List.of(StatutObservation.values()),
+                FormatLigneAudio::libelleStatut,
+                statut -> ligne -> ligne.statut() == statut,
+                StatutObservation.NON_TOUCHEE);
     }
 
     /// Critère **Groupe taxonomique** : éditeur = liste déroulante des groupes **présents dans les lignes
