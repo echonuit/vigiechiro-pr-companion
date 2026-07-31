@@ -24,7 +24,7 @@ montré que c'était une **règle** : trois refusent, deux rendent vide, et la l
 
 **Ce qui DÉSIGNE refuse**, en nommant ce qui est présent. Un nom de lieu, une date, un taxon parent se
 tapent de travers ; l'ensemble vide est alors une **faute de frappe**, pas une réponse. Le refus liste ce
-qui existe **dans ce qu'il a reçu** — donc après les filtres précédents — parce que la correction consiste
+qui existe **dans ce qu'il a reçu**, donc après les filtres précédents, parce que la correction consiste
 toujours à lire cette liste.
 
 **Ce qui QUALIFIE rend vide**, sans refuser. La nature d'une nuit, l'enjeu d'une espèce, un seuil
