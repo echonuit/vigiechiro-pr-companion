@@ -39,13 +39,12 @@ import org.junit.jupiter.api.Test;
 /// pas oublier ce qu'on n'énumère pas.
 class CliquetInjecteurALaMainTest {
 
-    /// Les outils qui énumèrent encore leurs modules.
+    /// La dette épinglée : **elle est vide**, et le cliquet reste pour empêcher qu'elle renaisse.
     ///
-    /// **Cette liste ne doit que rétrécir.** Pour en retirer un : composer son injecteur depuis
-    /// `RacineInjecteur.modules()`, puis supprimer sa ligne ici.
-    private static final List<String> ENUMERENT_LEURS_MODULES = List.of(
-            "fr/univ_amu/iut/analyse/outils/CaptureSynthese.java",
-            "fr/univ_amu/iut/analyse/outils/CaptureSyntheseSansReferentiel.java");
+    /// Les seize outils composent depuis `RacineInjecteur.modules()`. Aucune exclusion n'a été
+    /// nécessaire : les deux derniers candidats - les aperçus de la Synthèse - ne demandaient pas une
+    /// dérogation mais une **vraie nuit**, qu'ils sèment désormais (#3018).
+    private static final List<String> ENUMERENT_LEURS_MODULES = List.of();
 
     @Test
     @DisplayName("La dette des injecteurs assemblés à la main ne peut que rétrécir : un outil neuf compose"

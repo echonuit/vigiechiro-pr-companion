@@ -4,23 +4,27 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-import fr.univ_amu.iut.analyse.model.LigneSynthese;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.analyse.model.ServiceSynthese;
 import fr.univ_amu.iut.analyse.view.SyntheseController;
 import fr.univ_amu.iut.analyse.viewmodel.SyntheseViewModel;
-import fr.univ_amu.iut.commun.model.ContexteActivite;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.ReferentielActivite;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
-import fr.univ_amu.iut.commun.view.OuvrirPassage;
-import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.io.IOException;
+import java.io.StringReader;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
+import java.sql.SQLException;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,6 +39,21 @@ import javafx.scene.Scene;
 /// référentiel, lié puis réécrit, levait `A bound value cannot be set`. Le rendre en image est ce qui
 /// prouve qu'il s'affiche désormais, et qu'il s'affiche **utilement** : les colonnes qu'on ne peut plus
 /// fonder sont retirées, l'écran dit pourquoi, et les comptages restent entiers.
+///
+/// ## Ce qui est substitué, et ce qui ne l'est plus (#3018)
+///
+/// Cet outil remplaçait autrefois le `ServiceSynthese` **entier** par une sous-classe anonyme à lignes
+/// fixes. Il ne reste qu'une substitution, et elle porte sur ce que l'aperçu doit précisément montrer :
+/// le **référentiel est vide**.
+///
+/// Les espèces, les contacts et les fichiers viennent maintenant de la nuit semée par [CaptureSynthese] -
+/// même nuit, même agrégation, seul le référentiel change. Les deux aperçus se comparent donc ligne à
+/// ligne, ce qui est tout l'intérêt : on voit ce que l'absence de référentiel retire, et rien d'autre.
+///
+/// Le référentiel devient un **collaborateur** de `ServiceSynthese`, pour que cet état soit atteignable
+/// autrement qu'en supprimant une ressource du jar.
+///
+/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureSyntheseSansReferentiel {
 
     private CaptureSyntheseSansReferentiel() {}
@@ -45,7 +64,7 @@ public final class CaptureSyntheseSansReferentiel {
         Platform.startup(() -> {
             try {
                 capturer();
-            } catch (RuntimeException | IOException probleme) {
+            } catch (RuntimeException | IOException | SQLException probleme) {
                 erreur.set(probleme);
             } finally {
                 fini.countDown();
@@ -60,99 +79,58 @@ public final class CaptureSyntheseSansReferentiel {
         System.exit(0);
     }
 
-    /// Injecteur (partiel) de cet outil. Exposé pour le garde-fou de câblage
+    /// Injecteur de cet outil : la composition **complète** de l'application, surchargée par des
+    /// exécuteurs synchrones et un référentiel vide. Exposé pour le garde-fou de câblage
     /// (`CablageInjecteursCaptureTest`), qui construit chaque injecteur sans rendre de PNG.
     public static Injector creerInjecteur() {
-        return Guice.createInjector(new ModuleDemo());
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), new ModuleSansReferentiel()));
     }
 
-    private static void capturer() throws IOException {
+    private static void capturer() throws IOException, SQLException {
+        Path workspace = Files.createTempDirectory("vc-capture-synthese-sans-ref");
+        System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
+
         Injector injecteur = creerInjecteur();
+        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
+        injecteur.getInstance(MigrationSchema.class).migrer();
+        long idPassage = CaptureSynthese.semerLaNuit(source);
+
         FXMLLoader loader = ChargeurFxml.chargeur(SyntheseController.class, "Synthese.fxml");
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         SyntheseController controleur = loader.getController();
-        controleur.ouvrirSur(new ContextePassage(1L, 3, new ContexteSite("640380", "A1", "Étang de Biguglia")));
+        controleur.ouvrirSur(new ContextePassage(
+                idPassage, 3, new ContexteSite(CaptureSynthese.CARRE, CaptureSynthese.POINT, CaptureSynthese.SITE)));
         Path fichier = sortie.resolve("apercu-synthese-sans-referentiel.png");
         ApercuFx.enregistrerPng(new Scene(vue, 1100, 700), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
-    private static final String CHIROPTERES = "Chiroptères";
-
-    /// Les mêmes espèces que l'aperçu nominal, **sans aucune classe** : c'est tout l'intérêt de l'image.
-    private static List<LigneSynthese> lignesDemo() {
-        return List.of(
-                ligne("Pipkuh", "Pipistrelle de Kuhl", CHIROPTERES, 718, 402),
-                ligne("Pippip", "Pipistrelle commune", CHIROPTERES, 159, 96),
-                ligne("Barbar", "Barbastelle d'Europe", CHIROPTERES, 39, 31),
-                ligne("Tetvir", "Grande sauterelle verte", "Orthoptères et cigales", 244, 88));
-    }
-
-    private static LigneSynthese ligne(String code, String nom, String groupe, int contacts, int fichiers) {
-        return new LigneSynthese(code, nom, groupe, contacts, fichiers, Optional.empty(), Optional.empty(), false);
-    }
-
-    private static final class ModuleDemo extends AbstractModule {
+    /// La seule substitution : un référentiel **vide**, celui que l'aperçu doit montrer.
+    private static final class ModuleSansReferentiel extends AbstractModule {
 
         @Provides
-        SyntheseViewModel viewModel() {
-            return new SyntheseViewModel(serviceDemo());
+        SyntheseViewModel viewModel(ProjectionsAudioDao projections) {
+            return new SyntheseViewModel(new ServiceSynthese(projections, referentielVide()));
         }
 
-        @Provides
-        OuvrirSite ouvrirSite() {
-            return new OuvrirSite() {
-                @Override
-                public void ouvrirListe() {
-                    // Inerte : la capture est rendue hors-chrome.
-                }
-
-                @Override
-                public void ouvrirDetail(String numeroCarre) {
-                    // Inerte.
-                }
-            };
-        }
-
-        @Provides
-        OuvrirPassage ouvrirPassage() {
-            return (idPassage, contexte) -> {
-                // Inerte.
-            };
-        }
-
-        /// Le référentiel d'ACTIVITÉ manque, pas celui de CONSERVATION : deux sources distinctes, et
-        /// l'écran doit continuer à marquer les espèces prioritaires. L'image le montre.
+        /// Espèces prioritaires, identiques à [CaptureSynthese] : les deux aperçus doivent se comparer
+        /// sans qu'un bouclier apparaisse ou disparaisse pour une autre raison que le référentiel.
         @Provides
         EspecesPrioritaires especesPrioritaires() {
             return () -> Set.of("Pippip");
         }
 
-        private static ServiceSynthese serviceDemo() {
-            return new ServiceSynthese(new ProjectionsAudioDao(null)) {
-                @Override
-                public List<LigneSynthese> pour(
-                        long idPassage, boolean validesSeulement, String numeroCarre, String milieu) {
-                    return lignesDemo();
-                }
-
-                @Override
-                public ContexteActivite contexte(long idPassage, String numeroCarre, String milieu) {
-                    return ContexteActivite.NATIONAL;
-                }
-
-                @Override
-                public List<String> milieuxDisponibles() {
-                    return List.of();
-                }
-
-                @Override
-                public boolean referentielDisponible() {
-                    return false;
-                }
-            };
+        /// Un référentiel lu depuis une source **sans aucune ligne** : `taille()` vaut zéro, et c'est
+        /// exactement ce que `referentielDisponible()` interroge.
+        private static ReferentielActivite referentielVide() {
+            try {
+                return ReferentielActivite.lire(new StringReader(""));
+            } catch (IOException impossible) {
+                throw new UncheckedIOException("Lecture d'un referentiel vide", impossible);
+            }
         }
     }
 }
