@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.model.ExportSyntheseCsv;
 import fr.univ_amu.iut.analyse.model.LigneSynthese;
 import fr.univ_amu.iut.analyse.viewmodel.SyntheseViewModel;
+import fr.univ_amu.iut.commun.model.LibellesReferentiel;
 import fr.univ_amu.iut.commun.model.SeuilsActivite;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
@@ -236,6 +237,23 @@ public class SyntheseController implements EmplacementNavigation {
         milieux.add(SANS_MILIEU);
         milieux.addAll(viewModel.milieuxDisponibles());
         cbMilieu.setItems(FXCollections.observableArrayList(milieux));
+        // La liste porte les **clés** du référentiel (`Foret`, `Agricole-Foret`), parce que ce sont elles
+        // qui joignent la donnée. Ce que l'utilisateur lit passe par LibellesReferentiel (#3049) : sans
+        // ce convertisseur, le sélecteur affichait « Foret » et « Riviere ».
+        cbMilieu.setConverter(new javafx.util.StringConverter<String>() {
+            @Override
+            public String toString(String cle) {
+                return cle == null || SANS_MILIEU.equals(cle) ? cle : LibellesReferentiel.milieu(cle);
+            }
+
+            @Override
+            public String fromString(String affiche) {
+                // Le sélecteur n'est pas éditable : la conversion inverse ne sert qu'au contrat de la
+                // classe. Rendre l'affichage tel quel est plus sûr qu'une recherche inversée qui
+                // échouerait en silence sur une clé inconnue.
+                return affiche;
+            }
+        });
         cbMilieu.getSelectionModel().selectFirst();
         cbMilieu.valueProperty()
                 .addListener((observable, avant, choisi) ->

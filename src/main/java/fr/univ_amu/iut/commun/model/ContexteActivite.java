@@ -61,10 +61,15 @@ public record ContexteActivite(Optional<SaisonActivite> saison, Optional<String>
 
     /// Ce à quoi la comparaison a été faite, en clair, pour le dire à l'écran et le recopier à l'export.
     /// L'utilisateur doit savoir **à quoi** son nombre a été comparé, sans quoi la classe est un oracle.
+    ///
+    /// Les noms passent par [LibellesReferentiel] : les clés du référentiel n'ont ni accents ni
+    /// apostrophes, et se lisaient jusqu'ici telles quelles (« region Provence-Alpes-Cote dAzur »,
+    /// #3049). La **clé** reste celle qui joint la donnée ; seule cette phrase change.
     public String libelle() {
         StringBuilder texte = new StringBuilder();
-        texte.append(milieu.map(m -> "milieu " + m)
-                .orElseGet(() -> region.map(r -> "region " + r).orElse("national")));
+        texte.append(milieu.map(m -> "milieu " + LibellesReferentiel.milieu(m))
+                .orElseGet(() -> region.map(r -> "région " + LibellesReferentiel.region(r))
+                        .orElse("national")));
         saison.ifPresent(s -> texte.append(" · ").append(s.libelle()));
         return texte.toString();
     }

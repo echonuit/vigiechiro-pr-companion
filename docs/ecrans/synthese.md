@@ -47,7 +47,7 @@ reste un choix explicite : rien dans l'application ne dit si votre point d'écou
 ville. Par défaut, la comparaison est donc **nationale** : plus large, mais jamais fausse.
 
 Le référentiel réellement employé est **écrit sous le tableau** : « Comparé au référentiel :
-region Provence-Alpes-Cote dAzur · Printemps ». Sans cette mention, la classe serait un oracle.
+région Provence-Alpes-Côte d'Azur · Printemps ». Sans cette mention, la classe serait un oracle.
 
 ## Quand la classe n'est pas donnée
 
@@ -107,7 +107,7 @@ Le bouton d'export écrit un **CSV** qui reprend le tableau tel qu'il est affich
 compris. En tête du fichier, quatre lignes précédées de `#` :
 
 - ce que contient le fichier (« Synthèse d'une nuit - VigieChiro Companion ») ;
-- le contexte de comparaison (« Comparé au référentiel : milieu Foret · Été ») ;
+- le contexte de comparaison (« Comparé au référentiel : milieu Forêt · Été ») ;
 - la mise en garde ;
 - la source.
 

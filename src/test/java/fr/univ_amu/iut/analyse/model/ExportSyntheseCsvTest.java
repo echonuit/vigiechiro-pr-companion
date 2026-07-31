@@ -72,7 +72,7 @@ class ExportSyntheseCsvTest {
 
         assertThat(csv)
                 .as("le fichier dit à quoi les nombres ont été comparés, en français comme l'écran")
-                .contains("Comparé au référentiel : milieu Foret");
+                .contains("Comparé au référentiel : milieu Forêt");
     }
 
     @Test

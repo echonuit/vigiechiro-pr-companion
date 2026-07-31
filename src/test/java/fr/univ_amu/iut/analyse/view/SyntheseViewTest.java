@@ -140,7 +140,7 @@ class SyntheseViewTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(robot.lookup("#lblReferentiel").queryAs(Label.class).getText())
-                .contains("region Occitanie", "Été");
+                .contains("région Occitanie", "Été");
     }
 
     @Test
@@ -198,7 +198,7 @@ class SyntheseViewTest {
                 .as("le fichier quitte l'écran : ce qui n'y est pas écrit ne prévient plus personne")
                 .contains("Bas Y.")
                 .contains("n'est pas un niveau d'enjeu de conservation")
-                .contains("Comparé au référentiel : region Occitanie")
+                .contains("Comparé au référentiel : région Occitanie")
                 .contains("Pipkuh");
     }
 
