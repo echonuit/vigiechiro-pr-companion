@@ -9,13 +9,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -168,41 +165,12 @@ public final class GestionnaireFiltres<T> {
         });
     }
 
-    /// **Photographie** l'état courant des filtres (recherche texte + puces actives avec leurs valeurs), pour
-    /// le mémoriser le temps de la session (#484). Chaque puce est décrite par le [CritereFiltre#nom()] et les
-    /// valeurs de ses contrôles (index de liste déroulante, valeur de curseur), dans l'ordre d'ajout.
-    public EtatFiltres capturer() {
-        List<EtatCritere> etats = actifs.entrySet().stream()
-                .map(entree -> new EtatCritere(entree.getKey(), valeursDe(entree.getValue())))
-                .toList();
-        return new EtatFiltres(Objects.requireNonNullElse(recherche.getText(), ""), etats);
-    }
-
-    /// Restitue un état capturé par [#capturer()] : réinitialise, réapplique la recherche texte puis ré-ajoute
-    /// chaque puce (l'éditeur repart de ses valeurs par défaut, appliquées à l'ajout) avant d'y réinjecter les
-    /// valeurs mémorisées. Les critères disparus du catalogue et les valeurs surnuméraires sont ignorés.
-    public void restaurer(EtatFiltres etat) {
-        reinitialiser();
-        if (etat == null) {
-            return;
-        }
-        if (!etat.texte().isBlank()) {
-            recherche.setText(etat.texte());
-        }
-        for (EtatCritere memorise : etat.criteres()) {
-            critereParNom(memorise.nom()).ifPresent(critere -> {
-                ajouterPuce(critere);
-                appliquerValeurs(actifs.get(critere.nom()), memorise.valeurs());
-            });
-        }
-    }
-
     /// Rejoue une vue mémorisée décrite **sémantiquement** ([DescripteurFiltre], #623) : réinitialise,
     /// réapplique la recherche texte, puis ré-ajoute chaque puce (l'éditeur repart de ses valeurs par défaut,
     /// appliquées à l'ajout) avant d'y restaurer les valeurs **en clair** via
-    /// [CritereFiltre#restaurerValeurs(Node, List)]. À la différence de [#restaurer(EtatFiltres)] (index de
-    /// contrôles, mémoire de session #484), l'entrée est **transportable / persistée** (base
-    /// `vue_sauvegardee`) : les critères inconnus du catalogue sont ignorés.
+    /// [CritereFiltre#restaurerValeurs(Node, List)]. L'entrée est **transportable / persistée** (base
+    /// `vue_sauvegardee`) et sert aussi de **mémoire de session** depuis #3071 : les critères inconnus
+    /// du catalogue sont ignorés.
     ///
     /// **Rend les valeurs mémorisées qu'aucun critère n'a su replacer** (#3056) : une valeur renommée
     /// ou absente du jeu courant ne coche rien, et comme rien de coché n'écarte rien, la vue rejouée
@@ -247,60 +215,5 @@ public final class GestionnaireFiltres<T> {
 
     private Optional<CritereFiltre<T>> critereParNom(String nom) {
         return criteres.stream().filter(critere -> critere.nom().equals(nom)).findFirst();
-    }
-
-    /// Valeurs des contrôles de valeur (`ComboBox`, `Slider`) d'un Node éditeur, dans l'ordre de l'arbre :
-    /// index sélectionné pour une liste déroulante, valeur brute pour un curseur. Liste vide si `editeur` est
-    /// `null` (critère booléen).
-    private static List<Double> valeursDe(Node editeur) {
-        return controlesDe(editeur).stream()
-                .map(GestionnaireFiltres::valeurControle)
-                .toList();
-    }
-
-    /// Réinjecte, dans l'ordre, les valeurs mémorisées sur les contrôles de `editeur` (déclenche les écouteurs
-    /// et donc la réapplication des prédicats). Tolère un nombre de valeurs différent (contrôle en trop ignoré).
-    private static void appliquerValeurs(Node editeur, List<Double> valeurs) {
-        List<Node> controles = controlesDe(editeur);
-        for (int i = 0; i < controles.size() && i < valeurs.size(); i++) {
-            ecrireValeur(controles.get(i), valeurs.get(i));
-        }
-    }
-
-    /// Contrôles de valeur (`ComboBox` / `Slider`) présents dans `editeur`, en **parcours préfixe** (ordre
-    /// stable, identique à la capture). On ne descend pas dans les contrôles eux-mêmes (leur squelette interne
-    /// n'est pas une valeur métier).
-    private static List<Node> controlesDe(Node editeur) {
-        List<Node> controles = new ArrayList<>();
-        collecter(editeur, controles);
-        return controles;
-    }
-
-    private static void collecter(Node noeud, List<Node> controles) {
-        if (noeud instanceof ComboBox<?> || noeud instanceof Slider) {
-            controles.add(noeud);
-        } else if (noeud instanceof Parent parent) {
-            parent.getChildrenUnmodifiable().forEach(enfant -> collecter(enfant, controles));
-        }
-    }
-
-    private static double valeurControle(Node controle) {
-        if (controle instanceof Slider curseur) {
-            return curseur.getValue();
-        }
-        return ((ComboBox<?>) controle).getSelectionModel().getSelectedIndex();
-    }
-
-    private static void ecrireValeur(Node controle, double valeur) {
-        if (controle instanceof Slider curseur) {
-            curseur.setValue(valeur);
-        } else if (controle instanceof ComboBox<?> liste) {
-            int index = (int) valeur;
-            if (index >= 0 && index < liste.getItems().size()) {
-                liste.getSelectionModel().select(index);
-            } else {
-                liste.getSelectionModel().clearSelection();
-            }
-        }
     }
 }
