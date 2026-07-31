@@ -1,0 +1,128 @@
+package fr.univ_amu.iut.analyse.model;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.validation.model.FiltreLieu;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+/// Gardes des filtres CLI de l'activité (#3059), pendants des cinq puces de l'écran.
+///
+/// Ce qui est épinglé ici n'est pas le comportement nominal - il se devine - mais les **décisions** : ce
+/// que le point ne fait pas, ce qui refuse et ce qui rend légitimement vide.
+class FiltresActiviteTest {
+
+    private static final Set<Long> AUCUNE_OPPORTUNISTE = Set.of();
+
+    private static ContactHoraire contact(
+            String taxon, String groupe, LocalDateTime heure, String commune, String point, Long passage) {
+        return new ContactHoraire(taxon, taxon, groupe, heure, commune, "640380", point, passage);
+    }
+
+    private static final ContactHoraire RHIFER =
+            contact("Rhifer", "Chiroptères", LocalDateTime.of(2026, 6, 21, 22, 0), "Ahetze", "A1", 1L);
+    private static final ContactHoraire PIPKUH =
+            contact("Pipkuh", "Chiroptères", LocalDateTime.of(2026, 6, 22, 2, 0), "Biarritz", "Z1", 2L);
+    private static final ContactHoraire SAUTERELLE =
+            contact("Ortsp", "Orthoptères", LocalDateTime.of(2026, 6, 25, 23, 0), "Ahetze", "B2", 3L);
+    private static final List<ContactHoraire> TOUS = List.of(RHIFER, PIPKUH, SAUTERELLE);
+
+    @Test
+    @DisplayName("#3059 : le point n'est PAS une dimension de lieu en ligne de commande")
+    void le_point_n_est_pas_filtrable() {
+        // Le schéma pose UNIQUE(site_id, code) : « Z1 » désigne autant de lieux qu'il y a de carrés.
+        // L'écran s'en tire en le qualifiant (« 640380 · Z1 ») ; une option de ligne de commande ne le
+        // peut pas sans imposer un point médian à échapper dans chaque script. Même arbitrage que
+        // exporter-sons, et deux commandes qui traiteraient le lieu différemment seraient pires.
+        assertThat(FiltresActivite.dimensionsLieu(RHIFER))
+                .as("commune et carré, rien d'autre")
+                .containsExactly("Ahetze", "640380");
+        assertThatThrownBy(() -> FiltreLieu.appliquer(TOUS, List.of("A1"), FiltresActivite::dimensionsLieu))
+                .isInstanceOf(RegleMetierException.class);
+    }
+
+    @Test
+    @DisplayName("#3059 : --lieu retient sur la commune comme sur le carré, partiellement")
+    void le_lieu_retient_sur_chaque_dimension() {
+        assertThat(FiltreLieu.appliquer(TOUS, List.of("ahetze"), FiltresActivite::dimensionsLieu))
+                .as("insensible à la casse, comme --lieu de exporter-sons")
+                .containsExactly(RHIFER, SAUTERELLE);
+        assertThat(FiltreLieu.appliquer(TOUS, List.of("640380"), FiltresActivite::dimensionsLieu))
+                .hasSize(3);
+    }
+
+    @Test
+    @DisplayName("#3059 : --nuit suit la bascule à midi, comme l'écran")
+    void la_nuit_est_biologique() {
+        // 02:00 le 22 juin appartient à la nuit du 21 : la CLI ne peut pas dire autre chose que l'écran
+        // sur la même donnée, sans quoi un recoupement entre les deux surfaces deviendrait faux.
+        assertThat(FiltresActivite.parNuit(TOUS, "2026-06-21")).containsExactly(RHIFER, PIPKUH);
+    }
+
+    @Test
+    @DisplayName("#3059 : une nuit ou un taxon parent absent REFUSE, en nommant ce qui est présent")
+    void ce_qui_designe_refuse_et_nomme() {
+        // Un ensemble vide en code 0 est un succès qui ne contient rien : le script enchaîne et l'expert
+        // reçoit un fichier creux. Le refus nomme ce qui existe, parce que la correction consiste à lire.
+        assertThatThrownBy(() -> FiltresActivite.parNuit(TOUS, "2026-07-01"))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("2026-06-21")
+                .hasMessageContaining("2026-06-25");
+        assertThatThrownBy(() -> FiltresActivite.parTaxonParent(TOUS, "Oiseaux"))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Chiroptères")
+                .hasMessageContaining("Orthoptères");
+    }
+
+    @Test
+    @DisplayName("#3059 : une saisie illisible ou hors valeurs est refusée avec l'attendu")
+    void une_saisie_fautive_est_refusee() {
+        assertThatThrownBy(() -> FiltresActivite.parNuit(TOUS, "21/06/2026"))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("AAAA-MM-JJ");
+        assertThatThrownBy(() -> FiltresActivite.parNature(TOUS, "aleatoire", AUCUNE_OPPORTUNISTE))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("protocole");
+    }
+
+    @Test
+    @DisplayName("#3059 : le taxon parent est partiel et insensible aux accents")
+    void le_taxon_parent_est_partiel() {
+        assertThat(FiltresActivite.parTaxonParent(TOUS, "chiropteres"))
+                .as("sans accent et en minuscules, comme --lieu")
+                .containsExactly(RHIFER, PIPKUH);
+    }
+
+    @Test
+    @DisplayName("#3059 : ce qui QUALIFIE rend légitimement un ensemble vide, sans refuser")
+    void ce_qui_qualifie_rend_vide_sans_refuser() {
+        // Asymétrie assumée avec --nuit et --taxon-parent : « aucune nuit opportuniste » est une réponse,
+        // souvent celle qu'on cherchait. Refuser ici obligerait à savoir d'avance ce qu'on va trouver.
+        assertThat(FiltresActivite.parNature(TOUS, "opportuniste", AUCUNE_OPPORTUNISTE))
+                .as("aucune nuit marquée : la réponse est « rien », pas une erreur")
+                .isEmpty();
+        assertThat(FiltresActivite.parNature(TOUS, "protocole", AUCUNE_OPPORTUNISTE))
+                .as("une nuit sans marquage relève du protocole, qui est le cas courant")
+                .hasSize(3);
+        assertThat(FiltresActivite.parNature(TOUS, "opportuniste", Set.of(2L))).containsExactly(PIPKUH);
+        assertThat(FiltresActivite.aEnjeu(TOUS, Set.of("Barbar")::contains))
+                .as("aucune espèce prioritaire dans ce lot : une information, pas une faute")
+                .isEmpty();
+        assertThat(FiltresActivite.aEnjeu(TOUS, Set.of("Rhifer")::contains)).containsExactly(RHIFER);
+    }
+
+    @Test
+    @DisplayName("#3059 : sans critère, rien n'est écarté")
+    void sans_critere_rien_n_est_ecarte() {
+        assertThat(FiltresActivite.parNuit(TOUS, null)).isEqualTo(TOUS);
+        assertThat(FiltresActivite.parTaxonParent(TOUS, "  ")).isEqualTo(TOUS);
+        assertThat(FiltresActivite.parNature(TOUS, null, AUCUNE_OPPORTUNISTE)).isEqualTo(TOUS);
+        assertThat(FiltreLieu.appliquer(TOUS, List.of(), FiltresActivite::dimensionsLieu))
+                .isEqualTo(TOUS);
+    }
+}

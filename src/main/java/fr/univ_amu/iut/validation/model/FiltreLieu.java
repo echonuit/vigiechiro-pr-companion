@@ -4,7 +4,6 @@ import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -47,6 +46,18 @@ public final class FiltreLieu {
     ///
     /// @throws RegleMetierException si aucune ligne ne correspond, avec les lieux réellement présents
     public static List<LigneObservationAudio> appliquer(List<LigneObservationAudio> lignes, List<String> lieux) {
+        return appliquer(lignes, lieux, FiltreLieu::dimensions);
+    }
+
+    /// Le même filtre, sur **n'importe quelle ligne** qui sait dire ses dimensions de lieu (#3059).
+    ///
+    /// La règle - « la ligne passe si l'**une** de ses dimensions correspond à l'**un** des lieux
+    /// demandés » - ne dépend pas du type filtré : c'est exactement celle de
+    /// [fr.univ_amu.iut.commun.view.CritereListe#multipleParmi] côté écran. Elle était écrite deux fois,
+    /// une par surface ; elle l'est désormais une fois par surface, et non une fois par type de ligne.
+    ///
+    /// @param dimensions ce qu'on lit sur une ligne pour la comparer (valeurs nulles ou vides ignorées)
+    public static <T> List<T> appliquer(List<T> lignes, List<String> lieux, Function<T, List<String>> dimensions) {
         if (lieux == null || lieux.isEmpty()) {
             return lignes;
         }
@@ -57,23 +68,24 @@ public final class FiltreLieu {
         if (demandes.isEmpty()) {
             return lignes;
         }
-        List<LigneObservationAudio> retenues =
-                lignes.stream().filter(ligne -> correspond(ligne, demandes)).toList();
+        List<T> retenues = lignes.stream()
+                .filter(ligne -> correspond(dimensions.apply(ligne), demandes))
+                .toList();
         if (retenues.isEmpty()) {
             // Le message nomme les lieux présents **dans l'ensemble reçu**, et le dit. Sur
             // `lister-observations`, cet ensemble a déjà subi les autres filtres : annoncer les lieux de
             // toute la base y serait trompeur (« Ahetze est disponible » alors qu'il n'a aucune ligne à
             // revoir). Ainsi formulé, le refus reste vrai dans les deux commandes.
             throw new RegleMetierException("Aucune observation pour " + citer(lieux)
-                    + " parmi celles retenues. Lieux présents : " + resumer(lieuxPresents(lignes)) + ".");
+                    + " parmi celles retenues. Lieux présents : " + resumer(presents(lignes, dimensions)) + ".");
         }
         return retenues;
     }
 
     /// Vrai si l'une des dimensions de la ligne **contient** l'un des lieux demandés, une fois les deux
     /// normalisés (casse et accents ignorés).
-    private static boolean correspond(LigneObservationAudio ligne, List<String> demandes) {
-        return dimensions(ligne).stream()
+    private static boolean correspond(List<String> valeurs, List<String> demandes) {
+        return valeurs.stream()
                 .map(NormalisationTexte::normaliser)
                 .anyMatch(valeur -> demandes.stream().anyMatch(valeur::contains));
     }
@@ -85,22 +97,15 @@ public final class FiltreLieu {
                 .toList();
     }
 
-    /// Les lieux réellement présents, groupés par dimension et sans doublon : ce que le refus doit dire.
-    private static List<String> lieuxPresents(List<LigneObservationAudio> lignes) {
-        Set<String> lieux = new LinkedHashSet<>();
-        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::commune));
-        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::numeroCarre));
-        lieux.addAll(valeursDistinctes(lignes, LigneObservationAudio::nomSite));
-        return List.copyOf(lieux);
-    }
-
-    private static List<String> valeursDistinctes(
-            List<LigneObservationAudio> lignes, Function<LigneObservationAudio, String> dimension) {
+    /// Les lieux réellement présents, sans doublon et triés : ce que le refus doit dire.
+    private static <T> List<String> presents(List<T> lignes, Function<T, List<String>> dimensions) {
         return lignes.stream()
-                .map(dimension)
+                .flatMap(ligne -> dimensions.apply(ligne).stream())
                 .filter(valeur -> valeur != null && !valeur.isBlank())
                 .distinct()
                 .sorted()
+                .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new))
+                .stream()
                 .toList();
     }
 

@@ -6,9 +6,12 @@ import com.google.inject.name.Named;
 import fr.univ_amu.iut.analyse.model.AgregationActivite;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.analyse.model.ExportActiviteCsv;
+import fr.univ_amu.iut.analyse.model.FiltresActivite;
 import fr.univ_amu.iut.analyse.model.LargeurTranche;
 import fr.univ_amu.iut.analyse.model.LigneActivite;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
+import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.FiltreLieu;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -86,11 +89,52 @@ public final class ExporterActivite implements Callable<Integer> {
     /// la base trop tôt.
     private final Provider<String> utilisateur;
 
+    /// Référentiel des espèces à enjeu, pour `--a-enjeu`. En `Provider` pour la même raison que
+    /// l'utilisateur : sa liaison lit la base, que la commande ne doit pas ouvrir à sa construction.
+    private final Provider<EspecesPrioritaires> especesPrioritaires;
+
     @Inject
-    public ExporterActivite(ServiceActivite service, @Named("idUtilisateurCourant") Provider<String> utilisateur) {
+    public ExporterActivite(
+            ServiceActivite service,
+            @Named("idUtilisateurCourant") Provider<String> utilisateur,
+            Provider<EspecesPrioritaires> especesPrioritaires) {
         this.service = Objects.requireNonNull(service, "service");
         this.utilisateur = Objects.requireNonNull(utilisateur, "utilisateur");
+        this.especesPrioritaires = Objects.requireNonNull(especesPrioritaires, "especesPrioritaires");
     }
+
+    @Option(
+            names = "--lieu",
+            paramLabel = "<lieu>",
+            description = "Restreint à une commune ou un carré (répétable). Correspondance partielle, "
+                    + "insensible à la casse et aux accents. Le point n'est pas filtrable : un code seul "
+                    + "désigne autant de lieux qu'il y a de carrés.")
+    private List<String> lieux = List.of();
+
+    @Option(
+            names = "--nuit",
+            paramLabel = "<AAAA-MM-JJ>",
+            description = "Restreint à une nuit, par sa date du soir (un contact de 2 h appartient à la "
+                    + "nuit de la veille).")
+    private String nuit;
+
+    @Option(
+            names = "--taxon-parent",
+            paramLabel = "<taxon>",
+            description = "Restreint à une catégorie taxonomique (Chiroptères, Oiseaux…). Correspondance "
+                    + "partielle, insensible à la casse et aux accents.")
+    private String taxonParent;
+
+    @Option(
+            names = "--nature",
+            paramLabel = "<protocole|opportuniste>",
+            description = "Restreint aux nuits du protocole, ou à celles réalisées sur le carré d'un tiers.")
+    private String nature;
+
+    @Option(
+            names = "--a-enjeu",
+            description = "Ne garde que les espèces prioritaires au Plan National d'Actions Chiroptères.")
+    private boolean aEnjeu;
 
     @Override
     public Integer call() throws IOException {
@@ -106,14 +150,30 @@ public final class ExporterActivite implements Callable<Integer> {
             return ExitCode.USAGE;
         }
 
-        List<ContactHoraire> contacts = portee.tout
-                ? service.contactsDeLUtilisateur(utilisateur.get())
-                : service.contactsDuPassage(portee.passage);
+        List<ContactHoraire> contacts = restreindre(
+                portee.tout
+                        ? service.contactsDeLUtilisateur(utilisateur.get())
+                        : service.contactsDuPassage(portee.passage));
         List<LigneActivite> lignes = AgregationActivite.pourExport(contacts, tranche.get());
         Path ecrit = ExportActiviteCsv.ecrire(tranche.get(), lignes, sortie);
         spec.commandLine()
                 .getOut()
                 .println("Activité exportée : " + lignes.size() + " ligne(s) → " + ecrit.toAbsolutePath());
         return 0;
+    }
+
+    /// Applique les cinq critères de l'écran, dans l'ordre du plus large au plus étroit.
+    ///
+    /// L'ordre n'est pas indifférent pour les **messages** : chaque refus nomme ce qui est présent
+    /// **dans ce qu'il a reçu**, donc après les filtres précédents. « Taxons parents présents » après un
+    /// `--lieu` annonce ceux du lieu retenu, et non ceux de toute la saison - ce qui serait trompeur.
+    private List<ContactHoraire> restreindre(List<ContactHoraire> contacts) {
+        List<ContactHoraire> retenus = FiltreLieu.appliquer(contacts, lieux, FiltresActivite::dimensionsLieu);
+        retenus = FiltresActivite.parNuit(retenus, nuit);
+        retenus = FiltresActivite.parTaxonParent(retenus, taxonParent);
+        retenus = FiltresActivite.parNature(retenus, nature, service.nuitsOpportunistes());
+        return aEnjeu
+                ? FiltresActivite.aEnjeu(retenus, especesPrioritaires.get().codes()::contains)
+                : retenus;
     }
 }
