@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.fixture;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -8,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
@@ -16,7 +18,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/// Le contrat de [JeuDeDonneesPassage] pour ses deux capacités ajoutées en #1258 : le **verdict** est
+/// Le contrat de [JeuDeDonneesPassage] : les **barreaux de son échelle** (#2989), puis ses deux capacités
+/// ajoutées en #1258. Pour les premières : le **verdict** est
 /// bien persisté, et deux `semer()` qui partagent leurs coordonnées **partagent réellement** leur site et
 /// leur point (trouver-ou-créer) au lieu de les doublonner.
 ///
@@ -33,6 +36,48 @@ class JeuDeDonneesPassageTest {
     void preparer() {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
+    }
+
+    @Test
+    @DisplayName("#2989 : semerPassage() s'arrête au passage, et le dit quand on lui demande la session")
+    void semer_passage_s_arrete_au_passage() {
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .carre("640380")
+                .point("Z1")
+                .nuit(1, 2026, "2026-07-03")
+                .semerPassage();
+
+        assertThat(new PassageDao(source).findById(jeu.idPassage()))
+                .as("le passage existe")
+                .isPresent();
+        assertThat(new SessionDao(source).trouverParPassage(jeu.idPassage()))
+                .as("mais AUCUNE session : c'est tout l'objet de ce barreau")
+                .isEmpty();
+        assertThatThrownBy(jeu::idSession)
+                .as("l'accesseur refuse plutôt que de rendre null, qu'un test insérerait en base")
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("semerSquelette()");
+    }
+
+    @Test
+    @DisplayName("#2989 : les barreaux s'empilent - squelette pose la session, semer() l'original")
+    void les_barreaux_s_empilent() {
+        JeuDeDonneesPassage squelette = JeuDeDonneesPassage.dans(source)
+                .carre("640380")
+                .point("Z1")
+                .nuit(1, 2026, "2026-07-03")
+                .semerSquelette();
+        assertThat(squelette.idSession()).as("le squelette a sa session").isPositive();
+        assertThatThrownBy(squelette::idOriginal)
+                .as("mais pas d'original : c'est ce qui distingue le squelette d'une nuit importée")
+                .isInstanceOf(IllegalStateException.class);
+
+        JeuDeDonneesPassage complet = JeuDeDonneesPassage.dans(source)
+                .carre("640380")
+                .point("Z1")
+                .nuit(2, 2026, "2026-07-04")
+                .semer();
+        assertThat(complet.idOriginal()).as("semer() va jusqu'à l'original").isPositive();
     }
 
     @Test

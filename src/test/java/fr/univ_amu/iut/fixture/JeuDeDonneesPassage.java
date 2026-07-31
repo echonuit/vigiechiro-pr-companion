@@ -105,7 +105,6 @@ public final class JeuDeDonneesPassage {
     private StatutWorkflow statut = StatutWorkflow.IMPORTE;
     private Verdict verdict;
     private String cheminSession = "/ws/session";
-    private boolean avecOriginal = true;
 
     private Long idSite;
     private Long idPoint;
@@ -168,12 +167,18 @@ public final class JeuDeDonneesPassage {
         return this;
     }
 
-    /// Sème le passage **sans enregistrement original** : l'état d'une nuit rapatriée de Vigie-Chiro en
-    /// **squelette** (ADR 0016), qui n'a ni fichier ni séquence. `semer()` en pose un, ce qui convient à une
-    /// nuit importée mais fausserait tout test de l'hydratation (#2555).
+    /// Sème la nuit **et sa session, sans enregistrement original** : l'état d'une nuit rapatriée de
+    /// Vigie-Chiro en **squelette** (ADR 0016), qui n'a ni fichier ni séquence. [#semer()] en pose un, ce
+    /// qui convient à une nuit importée mais fausserait tout test de l'hydratation (#2555).
+    ///
+    /// Le nom dit un **état du domaine**, pas un niveau de l'échelle - et c'est ce qui a longtemps masqué
+    /// que la fixture en avait une (#2989).
     public JeuDeDonneesPassage semerSquelette() {
-        this.avecOriginal = false;
-        return semer();
+        semerPassage();
+        idSession = new SessionDao(source)
+                .insert(new SessionDEnregistrement(null, cheminSession, null, null, idPassage))
+                .id();
+        return this;
     }
 
     public JeuDeDonneesPassage nuit(int numero, int annee, String date) {
@@ -202,6 +207,31 @@ public final class JeuDeDonneesPassage {
     /// **trouvés s'ils existent déjà, créés sinon** : deux `semer()` qui partagent ces coordonnées sèment
     /// deux passages sur le **même** point, sans doublonner ni violer de clé.
     public JeuDeDonneesPassage semer() {
+        semerSquelette();
+        idOriginal = new EnregistrementOriginalDao(source)
+                .insert(new EnregistrementOriginal(null, "brut.wav", "/ws/brut.wav", 5.0, 384000, null, idSession))
+                .id();
+        return this;
+    }
+
+    /// Sème **la nuit sans sa session** : topologie, puis le passage. S'arrête là.
+    ///
+    /// C'est le barreau qui manquait à l'échelle (#2989). Vingt et un tests composent eux-mêmes leur
+    /// graphe de session - originaux et séquences choisis, journal, relevé - parce que c'est leur sujet.
+    /// La session que [#semerSquelette()] pose leur en interdisait l'usage : `recording_session.passage_id`
+    /// est unique, et la leur ne passait plus.
+    ///
+    /// Une nuit **sans session** est aussi un état que le domaine connaît : l'audit le constate (« aucune
+    /// session : passage jamais importé »), et `AuditNavigationViewTest` l'éprouve. Ce barreau est le seul
+    /// moyen de le semer par la fixture.
+    ///
+    /// ⚠️ J'avais écrit que poser une session à ce test le laisserait « passer en n'éprouvant plus rien ».
+    /// **C'est faux, et la sonde l'a dit** : avec `semerSquelette()`, il rougit (1 échec + 1 erreur). La
+    /// crainte était raisonnable, elle n'était pas vérifiée. Le barreau se justifie parce que ces tests en
+    /// ont besoin, pas parce que leur absence serait silencieuse.
+    ///
+    /// Après cet appel, [#idPassage()] répond ; [#idSession()] refuse.
+    public JeuDeDonneesPassage semerPassage() {
         semerSiteEtPoint();
         idPassage = new PassageDao(source)
                 .insert(new Passage(
@@ -221,14 +251,6 @@ public final class JeuDeDonneesPassage {
                         numeroSerie,
                         null))
                 .id();
-        idSession = new SessionDao(source)
-                .insert(new SessionDEnregistrement(null, cheminSession, null, null, idPassage))
-                .id();
-        if (avecOriginal) {
-            idOriginal = new EnregistrementOriginalDao(source)
-                    .insert(new EnregistrementOriginal(null, "brut.wav", "/ws/brut.wav", 5.0, 384000, null, idSession))
-                    .id();
-        }
         return this;
     }
 
@@ -424,18 +446,32 @@ public final class JeuDeDonneesPassage {
     }
 
     public long idSession() {
-        exigerSemis();
+        exigerSession();
         return idSession;
     }
 
     public long idOriginal() {
         exigerSemis();
+        if (idOriginal == null) {
+            throw new IllegalStateException("Cette nuit n'a pas d'enregistrement original : seul semer() en pose un.");
+        }
         return idOriginal;
     }
 
     private void exigerSemis() {
         if (idPassage == null) {
-            throw new IllegalStateException("Appelez semer() avant d'utiliser le jeu de données.");
+            throw new IllegalStateException(
+                    "Appelez semerPassage(), semerSquelette() ou semer() avant d'utiliser le jeu de données.");
+        }
+    }
+
+    /// La session n'existe qu'à partir de [#semerSquelette()] : un test arrêté à [#semerPassage()] la
+    /// compose lui-même, et lui rendre `null` le laisserait insérer une ligne orpheline.
+    private void exigerSession() {
+        exigerSemis();
+        if (idSession == null) {
+            throw new IllegalStateException("Cette nuit n'a pas de session : semerPassage() s'arrête au passage."
+                    + " Appelez semerSquelette() si le test en veut une.");
         }
     }
 

@@ -33,7 +33,6 @@ class CliquetFixturePassageTest {
     private static final List<String> SEMENT_ENCORE_A_LA_MAIN = List.of(
             "fr/univ_amu/iut/audit/model/ServiceAuditCoherenceTest.java",
             "fr/univ_amu/iut/audit/model/ServiceRecuperabiliteTest.java",
-            "fr/univ_amu/iut/audit/view/AuditNavigationViewTest.java",
             "fr/univ_amu/iut/bibliotheque/ServiceBibliothequeApprovalTest.java",
             "fr/univ_amu/iut/bibliotheque/ServiceBibliothequeTest.java",
             "fr/univ_amu/iut/cli/CliResetGuideTest.java",
