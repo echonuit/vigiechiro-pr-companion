@@ -34,7 +34,7 @@ Les critères disponibles :
 | Critère | Ce qu'il garde | Par défaut |
 |---|---|---|
 | **Statut** | À revoir / Validée / Corrigée | À revoir (le plus utile pour la revue) |
-| **Groupe** | un groupe taxonomique présent (Chiroptères, Oiseaux, Orthoptères…) | **Chiroptères** s'il est présent : « chauves-souris uniquement », qui écarte bruit, oiseaux et orthoptères |
+| **Taxon parent** | une catégorie taxonomique présente (Chiroptères, Oiseaux, Orthoptères…) | **Chiroptères** s'il est présent : « chauves-souris uniquement », qui écarte bruit, oiseaux et orthoptères |
 | **Espèce** | une espèce précise (taxon retenu) | aucune tant que vous n'en choisissez pas une |
 | **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés, points, sites présents dans la table | aucun tant que vous ne cochez rien ; cocher plusieurs lieux les cumule |
 | **Références** | seulement les sons marqués « référence » | (puce booléenne : sa présence suffit) |
@@ -110,7 +110,7 @@ une saison réelle, 721 sons (658 Mo) partent en moins de cinq minutes.
 La même archive se produit **en ligne de commande** avec `vigiechiro exporter-sons` (`--passage <id>`
 ou `--espece <code>`, et `--sortie <zip>`), pour scripter des envois réguliers.
 
-![La barre de filtres avec la puce « Groupe : Chiroptères » active : la table ne montre plus que les chauves-souris.](../assets/captures/apercu-sons-validation-filtres.png)
+![La barre de filtres avec la puce « Taxon parent : Chiroptères » active : la table ne montre plus que les chauves-souris.](../assets/captures/apercu-sons-validation-filtres.png)
 
 La puce **« Lieu »** procède de la même façon, en cochant un ou plusieurs lieux : c'est le seul endroit
 où la **commune** déduite des coordonnées du point se lit à l'écran, et elle se combine avec l'espèce

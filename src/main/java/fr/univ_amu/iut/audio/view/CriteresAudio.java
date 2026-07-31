@@ -30,13 +30,13 @@ import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
 
 /// Catalogue des **critères de filtrage** de la table audio (patron « à la Notion »). Chaque critère est
-/// une entrée du menu « + Filtre » qui s'ajoute comme puce : **Statut**, **Groupe** taxonomique,
+/// une entrée du menu « + Filtre » qui s'ajoute comme puce : **Statut**, **Taxon parent**,
 /// **Espèce** (taxon), **Lieu** (commune/carré/point/site, #2794), **Références**, **Non identifiés**
 /// (sans proposition Tadarida), **Proba** (seuil de probabilité Tadarida) et **Heure** (plage horaire).
 final class CriteresAudio {
 
     /// Groupe des chauves-souris (`taxonomic_group.name`, cf. #507) : sélection par défaut du critère
-    /// Groupe, car isoler les chiroptères est le levier n°1 de la revue (#471).
+    /// Taxon parent, car isoler les chiroptères est le levier n°1 de la revue (#471).
     private static final String GROUPE_CHIROPTERES = "Chiroptères";
 
     /// Bornes de la plage **nuit** par défaut du critère Heure (21 h → 6 h, à cheval sur minuit) : écarte
@@ -87,7 +87,7 @@ final class CriteresAudio {
                 StatutObservation.NON_TOUCHEE);
     }
 
-    /// Critère **Groupe taxonomique** : éditeur = liste déroulante des groupes **présents dans les lignes
+    /// Critère **Taxon parent** : éditeur = liste déroulante des groupes taxonomiques **présents dans les lignes
     /// courantes** (dérivés de `lignesCourantes`, distincts et triés : Chiroptères / Oiseaux / Orthoptères
     /// et cigales…). Sélectionner « Chiroptères » revient à « chauves-souris uniquement » (#471), mais tout
     /// autre groupe est accessible. Par défaut **Chiroptères** s'il est présent (levier n°1 de la revue),
@@ -102,7 +102,7 @@ final class CriteresAudio {
 
             @Override
             public String libelle() {
-                return "Groupe";
+                return "Taxon parent";
             }
 
             @Override
@@ -132,7 +132,7 @@ final class CriteresAudio {
     }
 
     /// Groupes taxon parents présents dans `lignes` : non nuls, **distincts** et **triés** (source stable
-    /// pour la liste déroulante du critère Groupe).
+    /// pour la liste déroulante du critère Taxon parent).
     private static List<String> groupesPresents(List<LigneObservationAudio> lignes) {
         return lignes.stream()
                 .map(LigneObservationAudio::groupe)
@@ -142,7 +142,7 @@ final class CriteresAudio {
                 .toList();
     }
 
-    /// Groupe présélectionné du critère Groupe : **Chiroptères** s'il figure parmi les groupes présents
+    /// Groupe présélectionné du critère Taxon parent : **Chiroptères** s'il figure parmi les groupes présents
     /// (cas d'usage principal en un clic), sinon le premier groupe disponible, ou `null` si aucun.
     private static String defaut(List<String> groupes) {
         if (groupes.contains(GROUPE_CHIROPTERES)) {

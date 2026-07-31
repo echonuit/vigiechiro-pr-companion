@@ -29,7 +29,7 @@ Une table récapitule vos espèces. Un sélecteur **Regrouper** propose deux ang
 > opportunistes** (celles réalisées sur le carré d'un tiers, qui ne comptent pas dans votre solde de
 > saison). Les deux restent comptées ensemble par défaut : c'est à vous de demander la séparation.
 
-> Le **taxon parent** est la même notion que le filtre **« Groupe »** de la vue [Sons & validation](validation.md#filtrer-les-observations) : la catégorie taxonomique (Chiroptères, Oiseaux, Orthoptères…) qui coiffe l'espèce.
+> Le **taxon parent** est la catégorie taxonomique (Chiroptères, Oiseaux, Orthoptères…) qui coiffe l'espèce. Le filtre porte ce nom sur tous les écrans.
 
 ![L'inventaire par carré : la richesse spécifique (nombre d'espèces) de chaque carré.](../assets/captures/apercu-analyse-carre.png)
 
