@@ -203,20 +203,30 @@ public final class GestionnaireFiltres<T> {
     /// [CritereFiltre#restaurerValeurs(Node, List)]. À la différence de [#restaurer(EtatFiltres)] (index de
     /// contrôles, mémoire de session #484), l'entrée est **transportable / persistée** (base
     /// `vue_sauvegardee`) : les critères inconnus du catalogue sont ignorés.
-    public void restaurer(DescripteurFiltre descripteur) {
+    ///
+    /// **Rend les valeurs mémorisées qu'aucun critère n'a su replacer** (#3056) : une valeur renommée
+    /// ou absente du jeu courant ne coche rien, et comme rien de coché n'écarte rien, la vue rejouée
+    /// filtre alors **moins** que ce qu'elle promet. L'appelant décide quoi en dire ; l'ignorer
+    /// rendrait la dégradation invisible.
+    ///
+    /// @return les valeurs sans correspondance, dans l'ordre des critères rencontrés (vide en temps
+    ///     normal)
+    public List<String> restaurer(DescripteurFiltre descripteur) {
         reinitialiser();
         if (descripteur == null) {
-            return;
+            return List.of();
         }
         if (!descripteur.texte().isBlank()) {
             recherche.setText(descripteur.texte());
         }
+        List<String> sansCorrespondance = new ArrayList<>();
         for (DescripteurCritere memorise : descripteur.criteres()) {
             critereParNom(memorise.nom()).ifPresent(critere -> {
                 ajouterPuce(critere);
-                critere.restaurerValeurs(actifs.get(critere.nom()), memorise.valeurs());
+                sansCorrespondance.addAll(critere.restaurerValeurs(actifs.get(critere.nom()), memorise.valeurs()));
             });
         }
+        return List.copyOf(sansCorrespondance);
     }
 
     /// **Décrit** l'état courant des filtres sous une forme **sémantique et transportable** (#537 étape 2) :

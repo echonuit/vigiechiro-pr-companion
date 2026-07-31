@@ -141,14 +141,22 @@ public final class CritereListe {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
                 MenuButton bouton = (MenuButton) editeur;
                 Set<String> voulues = new LinkedHashSet<>(valeurs);
+                Set<String> replacees = new LinkedHashSet<>();
                 for (var item : bouton.getItems()) {
                     if (item instanceof CheckMenuItem coche) {
-                        coche.setSelected(voulues.contains(coche.getText()));
+                        boolean voulue = voulues.contains(coche.getText());
+                        coche.setSelected(voulue);
+                        if (voulue) {
+                            replacees.add(coche.getText());
+                        }
                     }
                 }
+                return valeurs.stream()
+                        .filter(valeur -> !replacees.contains(valeur))
+                        .toList();
             }
         };
     }
@@ -200,11 +208,14 @@ public final class CritereListe {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (!valeurs.isEmpty()) {
-                    ComboBox<?> choix = (ComboBox<?>) editeur;
-                    choix.getSelectionModel().select(choix.getItems().indexOf(valeurs.get(0)));
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
+                if (valeurs.isEmpty()) {
+                    return List.of();
                 }
+                ComboBox<?> choix = (ComboBox<?>) editeur;
+                int indice = choix.getItems().indexOf(valeurs.get(0));
+                choix.getSelectionModel().select(indice);
+                return indice < 0 ? List.of(valeurs.get(0)) : List.of();
             }
         };
     }
@@ -311,16 +322,19 @@ public final class CritereListe {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> memorisees) {
+            public List<String> restaurerValeurs(Node editeur, List<String> memorisees) {
                 if (memorisees.isEmpty()) {
-                    return;
+                    return List.of();
                 }
                 // Retrouvée PARMI LES VALEURS OFFERTES, et non par Enum.valueOf : une constante disparue
                 // de l'énumération ferait lever valueOf, et une vue mémorisée devenue caduque doit se
                 // rejouer sans filtre plutôt que faire échouer l'écran. Sélection par INDICE, comme dans
                 // [#simple] : elle ne demande pas de connaître le type de la liste, et -1 la vide.
                 List<String> noms = valeurs.stream().map(Enum::name).toList();
-                ((ComboBox<?>) editeur).getSelectionModel().select(noms.indexOf(memorisees.get(0)));
+                int indice = noms.indexOf(memorisees.get(0));
+                ((ComboBox<?>) editeur).getSelectionModel().select(indice);
+                // Se rejouer sans filtre reste le bon comportement ; le taire ne l'est pas (#3056).
+                return indice < 0 ? List.of(memorisees.get(0)) : List.of();
             }
         };
     }

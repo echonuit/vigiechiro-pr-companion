@@ -48,9 +48,18 @@ public interface CritereFiltre<T> {
     /// Défaut : **no-op**, convient aux critères **booléens** (éditeur `null`, la présence de la puce suffit)
     /// et à tout critère sans valeur à restaurer ; les critères à valeur le redéfinissent.
     ///
+    /// **Rend les valeurs qu'il n'a pas su replacer** (#3056). Une vue mémorisée persiste des libellés
+    /// en clair, et rien ne garantit qu'ils existeront encore : une valeur peut avoir été renommée
+    /// (« Z1 » est devenu « 640380 · Z1 » en #2995) ou avoir disparu du jeu courant. Les ignorer en
+    /// silence rendrait une vue **plus large** que ce qu'elle promet, puisque rien de coché n'écarte
+    /// rien : l'appelant a besoin de le savoir pour le dire.
+    ///
     /// @param editeur le Node renvoyé par [#editeur] pour cette puce (peut être `null` pour un booléen)
     /// @param valeurs les valeurs sémantiques à restaurer (mêmes clés/ordre que [#valeurCourante(Node)])
-    default void restaurerValeurs(Node editeur, List<String> valeurs) {
-        // no-op par défaut : critère booléen ou sans valeur restaurable.
+    /// @return les valeurs demandées **sans correspondance**, dans l'ordre où elles étaient mémorisées
+    default List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
+        // no-op par défaut : critère booléen ou sans valeur restaurable. Rien n'est donc « perdu » :
+        // un critère booléen n'a pas de valeur, il ne peut pas en manquer une.
+        return List.of();
     }
 }
