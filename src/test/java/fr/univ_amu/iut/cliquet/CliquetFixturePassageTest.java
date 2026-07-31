@@ -31,7 +31,6 @@ class CliquetFixturePassageTest {
     /// `JeuDeDonneesPassage`, puis supprimer sa ligne ici. Aucun chiffre n'est écrit ici à dessein :
     /// l'annotation précédente en annonçait 64 pour 50 lignes, ce qui est le sort de tout nombre recopié.
     private static final List<String> SEMENT_ENCORE_A_LA_MAIN = List.of(
-            "fr/univ_amu/iut/audit/model/ServiceAuditCoherenceTest.java",
             "fr/univ_amu/iut/audit/model/ServiceRecuperabiliteTest.java",
             "fr/univ_amu/iut/bibliotheque/ServiceBibliothequeApprovalTest.java",
             "fr/univ_amu/iut/bibliotheque/ServiceBibliothequeTest.java",
@@ -50,7 +49,6 @@ class CliquetFixturePassageTest {
             "fr/univ_amu/iut/passage/PassageDaoTest.java",
             "fr/univ_amu/iut/passage/ServicePassageDetailTest.java",
             "fr/univ_amu/iut/passage/ServicePassageTest.java",
-            "fr/univ_amu/iut/passage/model/ServiceDisponibiliteAudioTest.java",
             "fr/univ_amu/iut/passage/model/ServiceReactivationPassageTest.java",
             "fr/univ_amu/iut/qualification/SelectionDaoTest.java",
             "fr/univ_amu/iut/qualification/ServiceQualificationTest.java",
@@ -59,7 +57,6 @@ class CliquetFixturePassageTest {
             "fr/univ_amu/iut/sites/viewmodel/SiteDetailViewModelTest.java",
             "fr/univ_amu/iut/sites/viewmodel/SitesViewModelTest.java",
             "fr/univ_amu/iut/validation/ObservationDaoTest.java",
-            "fr/univ_amu/iut/validation/PublicationMessageTest.java",
             "fr/univ_amu/iut/validation/ResultatsIdentificationDaoTest.java",
             "fr/univ_amu/iut/validation/SaisieCertitudeTest.java",
             "fr/univ_amu/iut/validation/ValidationManuelleTest.java");
