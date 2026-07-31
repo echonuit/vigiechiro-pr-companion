@@ -6,11 +6,13 @@ import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.validation.model.CriteresRevue;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
+import fr.univ_amu.iut.validation.model.FiltreLieu;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.SelectionObservations;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,6 +44,15 @@ public final class ListerObservations implements Callable<Integer> {
             paramLabel = "<id>",
             description = "Identifiant du passage dont lister les observations.")
     private long passage;
+
+    /// Restreint aux observations d'un ou plusieurs lieux (#2971). Répétable : chaque occurrence ajoute
+    /// un lieu, comme cocher une case de plus dans la puce « Lieu » de l'écran.
+    @Option(
+            names = "--lieu",
+            paramLabel = "<lieu>",
+            description = "Ne garde que les observations de ce lieu (commune, carré ou nom de site). "
+                    + "Correspondance partielle, casse et accents ignorés. Répétable pour en cumuler plusieurs.")
+    private List<String> lieux = new ArrayList<>();
 
     @Option(
             names = "--statut",
@@ -121,7 +132,8 @@ public final class ListerObservations implements Callable<Integer> {
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
-        List<LigneObservationAudio> lignes = selection.get().lignes(passage, criteres());
+        List<LigneObservationAudio> lignes =
+                FiltreLieu.appliquer(selection.get().lignes(passage, criteres()), lieux);
         marqueurEnjeu = marqueur.get();
 
         if (json) {
