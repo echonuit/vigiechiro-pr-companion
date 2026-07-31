@@ -1,11 +1,13 @@
 package fr.univ_amu.iut.audio.outils;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.commun.outils.ApercuFx;
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -55,23 +57,15 @@ public final class CaptureSonsValidationFiltres {
                 });
     }
 
-    /// Libellé de la puce, partagé avec le message d'échec : le chercher et le nommer d'un seul endroit.
-    private static final String LIBELLE_TAXON_PARENT = "Taxon parent";
-
     /// Ajoute la puce **Taxon parent** en actionnant l'entrée correspondante du menu « + Filtre » : la puce
     /// s'active sur Chiroptères par défaut et filtre la table.
     ///
-    /// **Échoue bruyamment** si l'entrée est introuvable. Cette recherche se faisait par libellé et
-    /// s'abstenait en silence : renommer la puce (ce qui vient d'arriver, #2967) produisait alors une
-    /// capture **sans filtre**, publiée sous une légende affirmant le contraire. Une capture fausse est
-    /// pire qu'une capture manquante, parce que rien ne la distingue d'une bonne.
+    /// Passe par [ApercuFx#exigerParLibelle], qui **échoue en nommant les libellés présents**. Ce garde
+    /// est né ici, écrit à la main, en renommant la puce (#2967) ; la même recherche a trouvé trois autres
+    /// outils atteints, d'où la fabrique partagée. Le premier concerné n'avait pas de raison d'y échapper.
     private static void activerFiltreGroupe(javafx.scene.Parent vue) {
         if (vue.lookup("#menuAjoutFiltre") instanceof MenuButton menu) {
-            menu.getItems().stream()
-                    .filter(item -> LIBELLE_TAXON_PARENT.equals(item.getText()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalStateException("Entrée « " + LIBELLE_TAXON_PARENT
-                            + " » absente du menu « + Filtre » : la capture montrerait une table non filtrée."))
+            ApercuFx.exigerParLibelle("le menu « + Filtre »", menu.getItems(), MenuItem::getText, "Taxon parent")
                     .fire();
         }
     }
