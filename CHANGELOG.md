@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.147.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.146.0...v2.147.0) (2026-07-31)
+
+
+### Features
+
+* **cli:** lister-sites-vigiechiro répond, au lieu de rendre du JSON à recompter (lot 2) ([#3019](https://github.com/echonuit/vigiechiro-pr-companion/issues/3019)) ([e2dce7a](https://github.com/echonuit/vigiechiro-pr-companion/commit/e2dce7ac530230eae4355bb13b16f75d797aec25))
+
 # [2.146.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.145.0...v2.146.0) (2026-07-31)
 
 
