@@ -47,6 +47,10 @@ public final class ExportObservationsCsv {
             // sans ce compteur, une discussion ouverte par un validateur serait invisible hors de l'app.
             "Messages",
             "Nom espèce",
+            // « Groupe » et non « Taxon parent », alors que les écrans disent désormais le second
+            // (#2967). Un nom de colonne exportée est un CONTRAT avec les scripts qui relisent le
+            // fichier : le faire suivre un renommage d'IHM ferait passer une rupture d'interface
+            // pour une harmonisation de vocabulaire.
             "Groupe",
             "Statut",
             "Référence",

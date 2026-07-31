@@ -82,6 +82,8 @@ regardez**, chacun sous son intitulé. Cocher plusieurs valeurs les cumule : deu
 montrent les deux. Un point y paraît toujours **précédé de son carré** (« 640380 · Z1 »), parce qu'un
 même code de point se retrouve sur presque tous les carrés et ne désignerait rien de précis tout seul.
 
+![La liste ouverte de la puce « Lieu » : trois groupes nommés (Communes, Carrés, Points), le point paraissant sous la forme « 640380 · A1 ».](../assets/captures/apercu-activite-lieu.png)
+
 ![L'écran ouvert sur toutes les nuits : la courbe cumule les passages et l'aplat nocturne a disparu.](../assets/captures/apercu-activite-transverse.png)
 
 ## Exporter l'image

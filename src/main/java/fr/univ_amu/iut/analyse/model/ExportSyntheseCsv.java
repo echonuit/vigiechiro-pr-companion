@@ -37,6 +37,10 @@ public final class ExportSyntheseCsv {
     private static final List<String> ENTETES = List.of(
             "Code espèce",
             "Nom espèce",
+            // « Groupe » et non « Taxon parent », alors que les écrans disent désormais le second
+            // (#2967). Un nom de colonne exportée est un CONTRAT avec les scripts qui relisent le
+            // fichier : le faire suivre un renommage d'IHM ferait passer une rupture d'interface
+            // pour une harmonisation de vocabulaire.
             "Groupe",
             "Contacts",
             "Fichiers",

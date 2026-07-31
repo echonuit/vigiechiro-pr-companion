@@ -35,6 +35,8 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -97,6 +99,44 @@ public final class CaptureActivite {
         exporter(injecteur, sortie.resolve("apercu-activite-export.png"));
         rendreTransverse(injecteur, sortie.resolve("apercu-activite-transverse.png"));
         rendreApresExport(injecteur, sortie.resolve("apercu-activite-retour.png"));
+        rendreListeLieu(injecteur, sortie.resolve("apercu-activite-lieu.png"));
+    }
+
+    /// Aperçu de la **liste ouverte de la puce « Lieu »** (#2967) : le critère qui a remplacé les deux
+    /// listes à choix unique « Carré » et « Point ».
+    ///
+    /// C'est le seul endroit où se voient les deux choses qui font l'intérêt du critère : les valeurs
+    /// **groupées et nommées** (Communes, Carrés, Points), là où une liste plate ne dirait pas si
+    /// « Ahetze » est une commune ou un carré ; et le point sous sa forme **« carré · point »**, le schéma
+    /// posant `UNIQUE(site_id, code)` - un code seul désigne autant de lieux qu'il y a de carrés.
+    ///
+    /// L'écran est ouvert en **transverse** : sur un passage unique, la liste n'aurait qu'un lieu par
+    /// groupe et ne montrerait ni le groupement ni la qualification.
+    private static void rendreListeLieu(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = chargeur(injecteur);
+        Parent vue = loader.load();
+        ActiviteController controleur = loader.getController();
+        controleur.ouvrirTout("demo");
+        if (!(vue.lookup("#menuAjoutFiltre") instanceof MenuButton menuAjout)) {
+            throw new IllegalStateException("Menu « + Filtre » introuvable : la puce ne peut pas être posée.");
+        }
+        ApercuFx.exigerParLibelle("le menu « + Filtre »", menuAjout.getItems(), MenuItem::getText, "Lieu")
+                .fire();
+        // Reconnue à SON CONTENU, et non à la première puce venue : l'écran s'ouvre sur l'onglet
+        // « Chiroptères », dont la puce « Taxon parent » porte la même classe CSS. Un `findFirst()` a
+        // d'abord rendu un aperçu parfaitement lisible de la MAUVAISE puce, sous la bonne légende - le
+        // défaut même que corrige l'ADR 3053, reproduit en l'écrivant.
+        MenuButton puce = vue.lookupAll(".critere-multiple").stream()
+                .filter(MenuButton.class::isInstance)
+                .map(MenuButton.class::cast)
+                .filter(bouton -> bouton.getItems().stream().anyMatch(item -> "Communes".equals(item.getText())))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Aucune puce ne porte l'en-tête « Communes » : ce n'est pas la liste « Lieu »."));
+        if (!ApercuFx.enregistrerMenuOuvert(puce, fichier)) {
+            throw new IllegalStateException("Popup de la puce non rendu : " + fichier + " n'aurait rien montré.");
+        }
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
@@ -175,9 +215,25 @@ public final class CaptureActivite {
         return loader;
     }
 
+    /// Le contexte du passage de démonstration : celui de la **première nuit** du semis, et non un carré
+    /// jumeau écrit à côté. Deux littéraux à tenir d'accord finissent par diverger, et l'aperçu montrerait
+    /// alors un en-tête qui ne correspond à aucune des données tracées.
     private static void ouvrirSurLaDemo(ActiviteController controleur) {
-        controleur.ouvrirSur(new ContextePassage(1L, 2, new ContexteSite("640380", "A1", null)));
+        controleur.ouvrirSur(new ContextePassage(1L, 2, new ContexteSite(LIEUX[0][1], LIEUX[0][2], null)));
     }
+
+    /// Le lieu de chacune des trois nuits : commune, carré, point (#2967).
+    ///
+    /// Trois triplets **choisis pour ce que la puce « Lieu » doit montrer**, et non au hasard : deux
+    /// nuits partagent leur commune et leur carré en changeant de point, la troisième change tout. La
+    /// liste ouverte présente donc deux communes, deux carrés et trois points - de quoi voir à la fois le
+    /// **groupement** par dimension et la **qualification** du point par son carré. Un semis à un seul
+    /// lieu aurait rendu une liste d'une ligne par groupe, où rien de tout cela ne se lit.
+    private static final String[][] LIEUX = {
+        {"Ahetze", "640380", "A1"},
+        {"Ahetze", "640380", "B2"},
+        {"Biarritz", "870150", "Z1"},
+    };
 
     /// Contacts de démonstration : cinq espèces avec une forme de nuit plausible (comptes par heure de
     /// 20 h à 05 h). Déterministe, aucune base.
@@ -207,7 +263,14 @@ public final class CaptureActivite {
                     // non du produit.
                     int minute = (rang * 59) / parHeure[index];
                     contacts.add(new ContactHoraire(
-                            taxon, nom, "Chiroptères", jour.plusDays(nuit).atTime(heure, minute)));
+                            taxon,
+                            nom,
+                            "Chiroptères",
+                            jour.plusDays(nuit).atTime(heure, minute),
+                            LIEUX[nuit][0],
+                            LIEUX[nuit][1],
+                            LIEUX[nuit][2],
+                            null));
                 }
             }
         }
