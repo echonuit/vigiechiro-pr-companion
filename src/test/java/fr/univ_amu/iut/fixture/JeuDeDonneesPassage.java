@@ -107,6 +107,10 @@ public final class JeuDeDonneesPassage {
     private StatutWorkflow statut = StatutWorkflow.IMPORTE;
     private Verdict verdict;
     private String cheminSession = "/ws/session";
+    private String heureDebut = "22:00";
+    private String heureFin = "06:00";
+    private String deposeLe;
+    private String donneesMeteo;
 
     private Long idSite;
     private Long idPoint;
@@ -219,6 +223,37 @@ public final class JeuDeDonneesPassage {
         return this;
     }
 
+    /// Heures de début et de fin d'acquisition. `22:00` / `06:00` par défaut.
+    ///
+    /// La fixture les écrivait **en dur**, et c'est le seul champ du passage qu'elle inventait : les tests
+    /// migrés portaient `20:25:00`/`07:47:00` ou `21:30:00`/`05:15:00`. Tant qu'aucun n'affirmait dessus,
+    /// la substitution passait ; le premier qui l'a fait a rougi, précisément et tout de suite (#1771).
+    public JeuDeDonneesPassage heures(String debut, String fin) {
+        this.heureDebut = debut;
+        this.heureFin = fin;
+        return this;
+    }
+
+    /// Date de dépôt sur la plateforme, telle que la porte le passage. `null` par défaut - une nuit non
+    /// déposée n'en a pas.
+    ///
+    /// Deux tests l'exigent : ils éprouvent la **récupérabilité** d'une nuit déjà déposée, et la date est
+    /// ce qui distingue « déposée » de « prête à déposer ». C'est un champ du passage, pas une option de
+    /// test : la fixture le construit déjà, elle se contentait de le laisser nul (#1771).
+    public JeuDeDonneesPassage deposeLe(String date) {
+        this.deposeLe = date;
+        return this;
+    }
+
+    /// Données météo du passage, en JSON. `null` par défaut.
+    ///
+    /// Sert au test qui vérifie qu'un relevé de température **préserve** les autres clés déjà présentes :
+    /// il lui faut donc une nuit qui en porte une avant qu'il n'écrive.
+    public JeuDeDonneesPassage donneesMeteo(String json) {
+        this.donneesMeteo = json;
+        return this;
+    }
+
     /// Verdict de vérification du passage (#1258 : les tests de la vue multi-sites en dépendent). `null`
     /// par défaut - une nuit non vérifiée n'a pas de verdict.
     public JeuDeDonneesPassage verdict(Verdict verdict) {
@@ -265,14 +300,14 @@ public final class JeuDeDonneesPassage {
                         numeroPassage,
                         annee,
                         dateNuit,
-                        "22:00",
-                        "06:00",
+                        heureDebut,
+                        heureFin,
                         null,
                         statut,
                         verdict,
                         null,
-                        null,
-                        null,
+                        donneesMeteo,
+                        deposeLe,
                         idPoint,
                         numeroSerie,
                         null))

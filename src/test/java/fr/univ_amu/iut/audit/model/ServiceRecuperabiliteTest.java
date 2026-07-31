@@ -3,31 +3,22 @@ package fr.univ_amu.iut.audit.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,7 +50,6 @@ class ServiceRecuperabiliteTest {
     private EnregistrementOriginalDao originalDao;
     private DepotUniteDao depotDao;
     private LienVigieChiroDao liens;
-    private Long idPoint;
     private ServiceRecuperabilite service;
 
     @BeforeEach
@@ -67,13 +57,7 @@ class ServiceRecuperabiliteTest {
         workspace = new Workspace(dossier);
         source = new SourceDeDonnees(workspace);
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "130711", "Carré", Protocole.STANDARD, null, "2026-05-01", ID_USER));
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "Z41", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, null, null));
+        // La topologie naît du premier `creerNuit`, par trouver-ou-créer.
         passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
         sequenceDao = new SequenceDao(source);
@@ -176,24 +160,17 @@ class ServiceRecuperabiliteTest {
     /// Crée une nuit avec 2 séquences déclarées en base ; `surDisque` décide si leurs fichiers existent
     /// réellement. C'est toute la différence entre « je réimporte » et « c'est perdu ».
     private Long creerNuit(int numeroPassage, boolean surDisque) throws IOException {
-        Long idPassage = passageDao
-                .insert(new Passage(
-                        null,
-                        numeroPassage,
-                        2026,
-                        "2026-07-0" + numeroPassage,
-                        "22:00",
-                        "06:00",
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        null,
-                        null,
-                        null,
-                        "2026-07-0" + numeroPassage,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        Long idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("130711")
+                .nomSite("Carré")
+                .point("Z41")
+                .enregistreur(SERIE)
+                .nuit(numeroPassage, 2026, "2026-07-0" + numeroPassage)
+                .statut(StatutWorkflow.DEPOSE)
+                .deposeLe("2026-07-0" + numeroPassage)
+                .semerPassage()
+                .idPassage();
         String nomSession = "Car130711-2026-Pass" + numeroPassage + "-Z41";
         Path racine = workspace.dossierSession(nomSession);
         Path transformes = workspace.dossierTransformes(nomSession);
