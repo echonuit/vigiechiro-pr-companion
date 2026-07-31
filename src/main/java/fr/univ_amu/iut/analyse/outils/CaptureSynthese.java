@@ -49,20 +49,37 @@ import javafx.scene.Scene;
 /// ⚠️ Cette substitution cachait une **contradiction** : le contexte passé à l'écran citait le carré
 /// `640380` (Nouvelle-Aquitaine) pendant que les seuils affirmaient « region Corse » et que le site
 /// s'appelait « Étang de Biguglia ». Personne ne pouvait la voir, puisque le service bouchonné ignorait
-/// le carré qu'on lui donnait. Le carré est désormais corse (`20…`), la région s'en **déduit**, et la
-/// saison se déduit de la nuit.
+/// le carré qu'on lui donnait. La région se **déduit** désormais du carré, et la saison de la nuit.
+///
+/// ## Pourquoi la Provence, et pourquoi 718
+///
+/// **718 contacts de Pipistrelle de Kuhl** n'est pas un nombre de démonstration : c'est la question
+/// fondatrice de l'écran, citée par l'[ADR 2351], dessinée dans la maquette `M-Synthese` et reprise en
+/// tête de la fiche utilisateur. Trois documents s'y appuient, la capture doit donc la **produire**.
+///
+/// Encore faut-il que 718 tombe bien en « Forte », ce qui dépend de la déclinaison : en Corse l'été,
+/// `q98` vaut 518, et 718 la dépasse - l'écran dirait **Très forte**. Le carré est donc en
+/// Bouches-du-Rhône (`13…`, donc `region:Provence-Alpes-Cote dAzur`), seule façon de garder à la fois
+/// le nombre fondateur et la classe que le récit lui associe.
+///
+/// ⚠️ Les quantiles cités par ces trois documents - `Q75 = 480 · Q98 = 1 240` - n'existent **dans aucune
+/// déclinaison** de Pipkuh : ils avaient été inventés pour la maquette. La fiche et la maquette portent
+/// désormais ceux du référentiel réel ; l'ADR 2351, immuable, garde les siens.
 ///
 /// ## Ce que les nombres visent
 ///
 /// Les contacts sont choisis pour tomber dans les bandes du référentiel embarqué, déclinaison
-/// `region:Corse` / `ete` - la classe est donc **calculée**, plus décrétée :
+/// `region:Provence-Alpes-Cote dAzur` / `ete` - la classe est donc **calculée**, plus décrétée :
 ///
 /// | Taxon | q25 | q75 | q98 | confiance | contacts | classe attendue |
 /// |---|---|---|---|---|---|---|
-/// | `Pipkuh` Pipistrelle de Kuhl | 6 | 92 | 518 | Bonne | 300 | **Forte** |
-/// | `Pippip` Pipistrelle commune | 19 | 217 | 1846 | Bonne | 120 | **Moyenne**, et le bouclier PNA |
+/// | `Pipkuh` Pipistrelle de Kuhl | 41 | 620 | 3842 | Très bonne | 718 | **Forte** |
+/// | `Pippip` Pipistrelle commune | 13 | 254 | 2751 | Très bonne | 120 | **Moyenne**, et le bouclier PNA |
 /// | `Cicorn` Cigale grise | 1 | 2 | 58 | **Faible** | 1 | **Moyenne**, *(indicatif)* |
 /// | `Antcho` Antaxie catalane | — | — | — | **absente du référentiel** | 40 | aucune, et la cellule le dit |
+///
+/// La Cigale grise n'a qu'une seule déclinaison, `national` / `ete`, et sa confiance est *Faible* : la
+/// mention *(indicatif)* ne dépend donc pas de la région retenue.
 ///
 /// ⚠️ Les deux derniers **ne sont pas ceux de l'ancienne démonstration**, et c'est instructif. Elle
 /// montrait une Barbastelle marquée *(indicatif)* et une Sauterelle verte « hors référentiel » : le
@@ -82,12 +99,12 @@ public final class CaptureSynthese {
     private static final String ID_UTILISATEUR = "u-capture";
     private static final String SERIE = "SN-1";
 
-    /// Carré **corse** : la région se déduit des deux premiers chiffres (`20`), elle n'est plus affirmée
-    /// par un service bouchonné.
-    static final String CARRE = "200711";
+    /// Carré des **Bouches-du-Rhône** : la région se déduit des deux premiers chiffres (`13`), elle n'est
+    /// plus affirmée par un service bouchonné. Le choix n'est pas décoratif - voir la note sur 718.
+    static final String CARRE = "130246";
 
     static final String POINT = "A1";
-    static final String SITE = "Étang de Biguglia";
+    static final String SITE = "Étang de Berre";
 
     /// Nuit d'**été** : la saison s'en déduit, et c'est elle qui choisit la déclinaison du référentiel.
     private static final String NUIT = "2026-07-03";
@@ -186,7 +203,8 @@ public final class CaptureSynthese {
                     NUIT,
                     idPassage);
 
-            semerTaxon(cx, idSession, idOriginal, idResultats, "Pipkuh", 300, 2);
+            // 718 : le nombre fondateur de l'ADR 2351, produit et non plus affirmé (359 séquences × 2).
+            semerTaxon(cx, idSession, idOriginal, idResultats, "Pipkuh", 718, 2);
             semerTaxon(cx, idSession, idOriginal, idResultats, "Pippip", 120, 1);
             // Cigale grise : aucune de ses déclinaisons n'est fiable, la classe se marque donc indicative.
             // Un seul contact donne « Moyenne » et non « Faible » : q25 vaut 1, et la borne est stricte

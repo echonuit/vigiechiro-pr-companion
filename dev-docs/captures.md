@@ -35,6 +35,32 @@ par `ApercuFx`. Souvent en **deux états** (vide / peuplé) pour montrer les cas
     Les PNG sont **versionnés** : un rendu non déterministe salirait le dépôt à chaque CI. Signaux de
     synthèse (cf. `SonDemo`), pas d'horodatage réel, attente explicite des chargements asynchrones.
 
+### L'injecteur se compose depuis la racine
+
+Un outil compose **`RacineInjecteur.modules()`**, la liste que l'application elle-même assemble, et
+s'adapte par `Modules.override(racine).with(…)` - jamais en énumérant un sous-ensemble de modules.
+
+C'est une règle, pas une préférence, et elle est **gardée** : `CliquetInjecteurALaMainTest` fait rougir
+la CI dès qu'un outil assemble sa propre liste. La raison est dans l'[ADR 3018](decisions/3018-un-outil-compose-depuis-la-racine.md) :
+un injecteur amputé et une **fonctionnalité désactivée** produisent le même écran, puisque le contrôleur
+masque sa surface exactement comme on le lui demande quand le flag est coupé. Une capture amputée n'a
+donc pas l'air cassée - elle a l'air d'une capture d'un produit configuré autrement. Quatre écrans sont
+partis dans la documentation sans leur ligne Campagne avant que ce soit vu.
+
+Les surcharges légitimes sont celles qui rendent l'exécution **déterministe ou observable**
+(`ModuleCaptureCommun.executeursSynchrones()`, horloge figée), et celle qui **est le sujet** de la
+capture - par exemple un référentiel vide, quand l'aperçu montre précisément cet état.
+
+!!! warning "Composer depuis la racine ne suffit pas si l'on bouchonne le service"
+    Un outil peut très bien composer la totalité de l'application, puis substituer un service entier
+    dont les lectures rendent des lignes écrites en dur : il compose tout et ne montre rien. Les deux
+    aperçus de la Synthèse ont vécu ainsi, et affichaient **deux états que le produit ne peut pas
+    produire** plus un contexte à trois affirmations contradictoires (#3018).
+
+    Une capture **sème sa donnée** et laisse le produit calculer. Quand un état n'est pas atteignable
+    autrement, la bonne réponse est souvent une **couture** côté production - faire d'une dépendance
+    cachée un collaborateur - et non un bouchon côté outil.
+
 ## La régénération en CI
 
 [`capture-screenshots.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/capture-screenshots.sh)
