@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -94,6 +95,7 @@ class ParcoursRegrouperNuitsParPointE2ETest {
 
     private Injector injector;
     private Path workspace;
+    private SourceDeDonnees source;
     private PassageDao passageDao;
     private SessionDao sessionDao;
     private EnregistrementOriginalDao originalDao;
@@ -111,7 +113,7 @@ class ParcoursRegrouperNuitsParPointE2ETest {
         workspace = Files.createTempDirectory("vc-e2e-p9");
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
-        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
+        source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
 
         // Application mono-utilisateur : le seul utilisateur en base désigne « idUtilisateurCourant ».
@@ -252,22 +254,16 @@ class ParcoursRegrouperNuitsParPointE2ETest {
     /// `Passage`, `SessionDEnregistrement`, `EnregistrementOriginal`, `SequenceDEcoute`).
     private Long semerNuit(Long idPoint, int numeroPassage, String date, String prefixe, String[] taxons)
             throws Exception {
-        Passage passage = passageDao.insert(new Passage(
-                null,
-                numeroPassage,
-                ANNEE,
-                date,
-                "20:00:00",
-                "06:00:00",
-                null,
-                StatutWorkflow.DEPOSE,
-                null,
-                null,
-                null,
-                null,
-                idPoint,
-                SERIE,
-                null));
+        // `surLePoint` : le point vient du SERVICE, pas de la fixture - c'est le sujet de ce parcours.
+        Passage passage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(numeroPassage, ANNEE, date)
+                .heures("20:00:00", "06:00:00")
+                .statut(StatutWorkflow.DEPOSE)
+                .semerPassage()
+                .lePassage();
         SessionDEnregistrement session =
                 sessionDao.insert(new SessionDEnregistrement(null, "/ws/" + prefixe, null, null, passage.id()));
         String base = prefixe + "seqA";

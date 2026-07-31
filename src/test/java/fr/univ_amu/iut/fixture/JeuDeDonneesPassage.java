@@ -97,6 +97,7 @@ public final class JeuDeDonneesPassage {
     private String nomSite = "Site de test";
     private Protocole protocole = Protocole.STANDARD;
     private String codePoint = "A1";
+    private String nomPoint;
     private Double latitude;
     private Double longitude;
     private Long idPointImpose;
@@ -149,6 +150,15 @@ public final class JeuDeDonneesPassage {
 
     public JeuDeDonneesPassage point(String code) {
         this.codePoint = code;
+        return this;
+    }
+
+    /// Nom libre du point (« lisière », « Chêne »). `null` par défaut.
+    ///
+    /// Deux tests l'exigent : ils vérifient que le diagnostic et la vue remontent ce que la feature
+    /// `sites` sait du point. C'est un champ du point, que la fixture construisait déjà nul.
+    public JeuDeDonneesPassage nomPoint(String nom) {
+        this.nomPoint = nom;
         return this;
     }
 
@@ -595,7 +605,7 @@ public final class JeuDeDonneesPassage {
                 .filter(point -> point.code().equals(codePoint))
                 .map(PointDEcoute::id)
                 .findFirst()
-                .orElseGet(() -> dao.insert(new PointDEcoute(null, codePoint, latitude, longitude, null, idSite))
+                .orElseGet(() -> dao.insert(new PointDEcoute(null, codePoint, latitude, longitude, nomPoint, idSite))
                         .id());
     }
 }

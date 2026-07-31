@@ -28,6 +28,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
@@ -93,6 +94,7 @@ class ServiceReactivationPassageTest {
 
     private Path transformes;
     private Path sauvegarde;
+    private SourceDeDonnees source;
     private PassageDao passageDao;
     private SessionDao sessionDao;
     private SequenceDao sequenceDao;
@@ -107,7 +109,7 @@ class ServiceReactivationPassageTest {
 
     @BeforeEach
     void preparer() throws IOException {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
         Site site = new SiteDao(source)
@@ -903,24 +905,16 @@ class ServiceReactivationPassageTest {
     /// @param avecEmpreinte pose taille + empreinte en base (import récent) ou non (import ancien)
     /// @param sauvegardeComplete copie les deux séquences dans la sauvegarde, ou seulement la première
     private void archiverAvecSauvegarde(boolean avecEmpreinte, boolean sauvegardeComplete) throws IOException {
-        idPassage = passageDao
-                .insert(new Passage(
-                        null,
-                        1,
-                        2026,
-                        "2026-06-20",
-                        "21:30:00",
-                        "05:15:00",
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        Verdict.OK,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:30:00", "05:15:00")
+                .statut(StatutWorkflow.DEPOSE)
+                .verdict(Verdict.OK)
+                .semerPassage()
+                .idPassage();
         Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
         idSession = sessionDao
                 .insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage))
@@ -996,24 +990,16 @@ class ServiceReactivationPassageTest {
     private List<String> archiverAvecBrutSauvegarde(
             String nomDansLaSauvegarde, boolean brutIntact, String nomEnregistreur) throws IOException {
         String nomR6 = PREFIXE.nommerOriginal(nomEnregistreur);
-        idPassage = passageDao
-                .insert(new Passage(
-                        null,
-                        1,
-                        2026,
-                        "2026-06-20",
-                        "21:30:00",
-                        "05:15:00",
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        Verdict.OK,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:30:00", "05:15:00")
+                .statut(StatutWorkflow.DEPOSE)
+                .verdict(Verdict.OK)
+                .semerPassage()
+                .idPassage();
         Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
         idSession = sessionDao
                 .insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage))
@@ -1077,24 +1063,15 @@ class ServiceReactivationPassageTest {
     ///
     /// @return les noms des séquences reconstruites
     private List<String> reconstruireAvecBrutsEnSauvegarde() throws IOException {
-        idPassage = passageDao
-                .insert(new Passage(
-                        null,
-                        1,
-                        2026,
-                        "2026-06-20",
-                        "21:30:00",
-                        "05:15:00",
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:30:00", "05:15:00")
+                .statut(StatutWorkflow.DEPOSE)
+                .semerPassage()
+                .idPassage();
         Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
         idSession = sessionDao
                 .insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage))
@@ -1135,24 +1112,15 @@ class ServiceReactivationPassageTest {
     ///
     /// @return les noms des séquences reconstruites, que l'hydratation (#1650) doit régénérer
     private List<String> reconstruireAvecBrutEtLog() throws IOException {
-        idPassage = passageDao
-                .insert(new Passage(
-                        null,
-                        1,
-                        2026,
-                        "2026-06-20",
-                        "21:30:00",
-                        "05:15:00",
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:30:00", "05:15:00")
+                .statut(StatutWorkflow.DEPOSE)
+                .semerPassage()
+                .idPassage();
         Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
         idSession = sessionDao
                 .insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage))
