@@ -96,27 +96,43 @@ public final class SynthetiserPassage implements Callable<Integer> {
         ContexteActivite contexte = service.contexte(passage, carre, milieu);
         PrintWriter sortieStandard = spec.commandLine().getOut();
 
+        boolean referentielDisponible = service.referentielDisponible();
+
         if ("json".equalsIgnoreCase(format)) {
-            sortieStandard.println(FormatJson.objet(champsJson(lignes, contexte)));
+            sortieStandard.println(FormatJson.objet(champsJson(lignes, contexte, referentielDisponible)));
             return 0;
         }
         if (sortie != null) {
-            Path ecrit = ExportSyntheseCsv.ecrire(lignes, contexte, sortie);
+            Path ecrit = ExportSyntheseCsv.ecrire(lignes, contexte, referentielDisponible, sortie);
             sortieStandard.println("Synthèse exportée : " + lignes.size() + " espèce(s) → " + ecrit.toAbsolutePath());
             return 0;
         }
-        sortieStandard.print(ExportSyntheseCsv.contenu(lignes, contexte));
+        sortieStandard.print(ExportSyntheseCsv.contenu(lignes, contexte, referentielDisponible));
         return 0;
     }
 
     /// Le JSON porte le contexte dans un **objet à part**, à côté des lignes : pas dilué dans chacune.
     /// L'avertissement et la citation y figurent au même titre qu'en CSV : le format change, l'obligation
     /// de citer ne change pas.
-    private java.util.Map<String, Object> champsJson(List<LigneSynthese> lignes, ContexteActivite contexte) {
+    ///
+    /// ## Ce que `disponible` répare (#3048)
+    ///
+    /// Le champ `referentiel` porte le **contexte** de comparaison, dérivé du carré et de la nuit. Il ne
+    /// consulte pas le référentiel : avec un référentiel vide, il annonçait donc « région … · Été » pour
+    /// une comparaison qui n'avait pas eu lieu, et la citation créditait une source non chargée.
+    ///
+    /// Un consommateur ne pouvait pas non plus distinguer **« cette espèce n'est pas au référentiel »**
+    /// de **« il n'y a pas de référentiel »** : toutes les lignes portent `couvertParLeReferentiel:
+    /// false` dans les deux cas, et ces deux situations appellent des conduites opposées.
+    private java.util.Map<String, Object> champsJson(
+            List<LigneSynthese> lignes, ContexteActivite contexte, boolean referentielDisponible) {
         java.util.Map<String, Object> contexteJson = new java.util.LinkedHashMap<>();
-        contexteJson.put("referentiel", contexte.libelle());
-        contexteJson.put("avertissement", ReferentielActivite.AVERTISSEMENT);
-        contexteJson.put("source", ReferentielActivite.CITATION);
+        contexteJson.put("disponible", referentielDisponible);
+        if (referentielDisponible) {
+            contexteJson.put("referentiel", contexte.libelle());
+            contexteJson.put("avertissement", ReferentielActivite.AVERTISSEMENT);
+            contexteJson.put("source", ReferentielActivite.CITATION);
+        }
 
         java.util.Map<String, Object> racine = new java.util.LinkedHashMap<>();
         racine.put("passage", passage);

@@ -175,7 +175,9 @@ public class SyntheseController implements EmplacementNavigation {
     private void ecrire(Path fichier) {
         try {
             List<LigneSynthese> lignes = viewModel.lignesExport();
-            ExportSyntheseCsv.ecrire(lignes, viewModel.contexteActivite(), fichier);
+            // La disponibilité voyage avec le fichier (#3048) : l'écran retire ses colonnes quand le
+            // référentiel manque, le CSV ne le peut pas (ses en-têtes sont un contrat), il le **dit**.
+            ExportSyntheseCsv.ecrire(lignes, viewModel.contexteActivite(), viewModel.referentielDisponible(), fichier);
             viewModel.signalerExport(String.valueOf(fichier.getFileName()), lignes.size());
         } catch (IOException | RuntimeException echec) {
             // Sans ce rattrapage, l'exception remonte au fil JavaFX, qui l'avale : le bouton « ne fait

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.model.ClasseActivite;
 import fr.univ_amu.iut.commun.model.ConfianceReferentiel;
 import fr.univ_amu.iut.commun.model.ContexteActivite;
+import fr.univ_amu.iut.commun.model.ReferentielActivite;
 import fr.univ_amu.iut.commun.model.SaisonActivite;
 import fr.univ_amu.iut.commun.model.SeuilsActivite;
 import java.nio.charset.StandardCharsets;
@@ -29,6 +30,8 @@ class ExportSyntheseCsvTest {
     private static final int COLONNES = 13;
 
     private static final String PIPKUH = "Pipkuh";
+    /// Sauterelle verte : le référentiel ne la couvre pas, elle sert les cas « sans classe ».
+    private static final String HORS_REFERENTIEL = "Tetvir";
     private static final String CHIROPTERES = "Chiroptères";
 
     /// Premier auteur de la source : sa présence est ce qui prouve que la citation a voyagé.
@@ -53,9 +56,44 @@ class ExportSyntheseCsvTest {
     }
 
     @Test
+    @DisplayName("#3048 : sans référentiel, le fichier ne décrit pas une comparaison qui n'a pas eu lieu")
+    void referentiel_indisponible_ne_pretend_pas_avoir_compare() {
+        String csv = ExportSyntheseCsv.contenu(List.of(ligne(HORS_REFERENTIEL, 244, null, false)), contexte(), false);
+
+        assertThat(csv)
+                .as("le contexte décrit à quoi on a comparé ; sans référentiel, il n'y a pas eu de comparaison")
+                .doesNotContain("Comparé au référentiel");
+        assertThat(csv)
+                .as("créditer une source qu'on n'a pas pu charger n'aiderait personne, l'écran s'en abstient déjà")
+                .doesNotContain(ReferentielActivite.CITATION);
+        assertThat(csv).doesNotContain(ReferentielActivite.AVERTISSEMENT);
+        assertThat(csv)
+                .as("et le fichier dit pourquoi, plutôt que de laisser croire à un export tronqué")
+                .contains("Référentiel d'activité indisponible");
+    }
+
+    @Test
+    @DisplayName("#3048 : sans référentiel, les colonnes ne bougent pas - leurs noms sont un contrat")
+    void referentiel_indisponible_conserve_les_colonnes() {
+        String csv = ExportSyntheseCsv.contenu(List.of(ligne(HORS_REFERENTIEL, 244, null, false)), contexte(), false);
+
+        // L'écran RETIRE les colonnes d'activité ; un CSV ne le peut pas sans casser les scripts qui le
+        // relisent. La parité d'une sortie machine est de le DIRE, pas de retirer.
+        // La première ligne porte le BOM AVANT son « # » : la filtrer sur « # » seul la laisse passer,
+        // et l'assertion porterait alors sur le titre du fichier au lieu des en-têtes.
+        assertThat(csv.lines()
+                        .filter(l -> !l.startsWith("#") && !l.startsWith("\uFEFF#"))
+                        .findFirst())
+                .get()
+                .asString()
+                .contains("Activité", "Q25", "Q75", "Q98");
+    }
+
+    @Test
     @DisplayName("La citation et l'avertissement sont RECOPIÉS en tête de fichier")
     void citation_et_avertissement_recopies() {
-        String csv = ExportSyntheseCsv.contenu(List.of(ligne(PIPKUH, 718, ClasseActivite.FORTE, true)), contexte());
+        String csv =
+                ExportSyntheseCsv.contenu(List.of(ligne(PIPKUH, 718, ClasseActivite.FORTE, true)), contexte(), true);
 
         assertThat(csv)
                 .as("la source est libre d'usage AVEC citation obligatoire : elle doit voyager avec le fichier")
@@ -68,7 +106,8 @@ class ExportSyntheseCsvTest {
     @Test
     @DisplayName("Le contexte de comparaison est écrit : sans lui, les classes seraient des oracles")
     void contexte_ecrit() {
-        String csv = ExportSyntheseCsv.contenu(List.of(ligne(PIPKUH, 718, ClasseActivite.FORTE, true)), contexte());
+        String csv =
+                ExportSyntheseCsv.contenu(List.of(ligne(PIPKUH, 718, ClasseActivite.FORTE, true)), contexte(), true);
 
         assertThat(csv)
                 .as("le fichier dit à quoi les nombres ont été comparés, en français comme l'écran")
@@ -78,7 +117,7 @@ class ExportSyntheseCsvTest {
     @Test
     @DisplayName("Les lignes de contexte sont préfixées par # : lisibles par l'humain, sautables par un script")
     void contexte_commente() {
-        String csv = ExportSyntheseCsv.contenu(List.of(), contexte());
+        String csv = ExportSyntheseCsv.contenu(List.of(), contexte(), true);
 
         String[] lignes = csv.split("\\R");
         assertThat(lignes[0]).startsWith("\uFEFF# ");
@@ -90,7 +129,7 @@ class ExportSyntheseCsvTest {
     @Test
     @DisplayName("Une nuit sans espèce produit le contexte et les en-têtes, pas un fichier vide")
     void nuit_vide() {
-        String csv = ExportSyntheseCsv.contenu(List.of(), contexte());
+        String csv = ExportSyntheseCsv.contenu(List.of(), contexte(), true);
 
         assertThat(csv).contains("Code espèce", "Activité", "Q98");
         assertThat(csv).contains(AUTEUR);
@@ -101,10 +140,12 @@ class ExportSyntheseCsvTest {
     void hors_referentiel() {
         // Dans un CSV, une cellule vide se lit comme une absence de donnée : ce qui est exactement le cas
         // pour les quantiles. La colonne « Activité », elle, DIT pourquoi.
-        String csv = ExportSyntheseCsv.contenu(List.of(ligne("Tetvir", 244, null, false)), contexte());
+        String csv = ExportSyntheseCsv.contenu(List.of(ligne(HORS_REFERENTIEL, 244, null, false)), contexte(), true);
 
-        String ligneEspece =
-                csv.lines().filter(l -> l.startsWith("Tetvir")).findFirst().orElseThrow();
+        String ligneEspece = csv.lines()
+                .filter(l -> l.startsWith(HORS_REFERENTIEL))
+                .findFirst()
+                .orElseThrow();
         assertThat(ligneEspece).contains("Non couvert par le référentiel");
         assertThat(ligneEspece).endsWith(";;;;;;");
     }
@@ -112,7 +153,8 @@ class ExportSyntheseCsvTest {
     @Test
     @DisplayName("Les quantiles accompagnent la classe, comme à l'écran")
     void quantiles_exportes() {
-        String csv = ExportSyntheseCsv.contenu(List.of(ligne(PIPKUH, 718, ClasseActivite.FORTE, true)), contexte());
+        String csv =
+                ExportSyntheseCsv.contenu(List.of(ligne(PIPKUH, 718, ClasseActivite.FORTE, true)), contexte(), true);
 
         String ligneEspece =
                 csv.lines().filter(l -> l.startsWith(PIPKUH)).findFirst().orElseThrow();
@@ -131,7 +173,7 @@ class ExportSyntheseCsvTest {
         LigneSynthese piegee = new LigneSynthese(
                 PIPKUH, "Pipistrelle ; de Kuhl", CHIROPTERES, 10, 5, Optional.empty(), Optional.empty(), true);
 
-        String csv = ExportSyntheseCsv.contenu(List.of(piegee), contexte());
+        String csv = ExportSyntheseCsv.contenu(List.of(piegee), contexte(), true);
 
         String ligneEspece =
                 csv.lines().filter(l -> l.startsWith(PIPKUH)).findFirst().orElseThrow();
@@ -143,7 +185,7 @@ class ExportSyntheseCsvTest {
     @Test
     @DisplayName("Le fichier annonce ses 13 colonnes : c'est un contrat, pas un détail")
     void nombre_de_colonnes() {
-        String csv = ExportSyntheseCsv.contenu(List.of(), contexte());
+        String csv = ExportSyntheseCsv.contenu(List.of(), contexte(), true);
 
         String entetes =
                 csv.lines().filter(l -> l.startsWith("Code")).findFirst().orElseThrow();
@@ -158,7 +200,7 @@ class ExportSyntheseCsvTest {
         LigneSynthese piegee = new LigneSynthese(
                 PIPKUH, "Pipistrelle \"commune\"", CHIROPTERES, 10, 5, Optional.empty(), Optional.empty(), true);
 
-        String csv = ExportSyntheseCsv.contenu(List.of(piegee), contexte());
+        String csv = ExportSyntheseCsv.contenu(List.of(piegee), contexte(), true);
 
         assertThat(csv).contains("\"Pipistrelle \"\"commune\"\"\"");
     }
@@ -168,8 +210,8 @@ class ExportSyntheseCsvTest {
     void ecrire_pose_le_fichier(@TempDir Path dossier) throws Exception {
         Path cible = dossier.resolve("synthese.csv");
 
-        Path ecrit =
-                ExportSyntheseCsv.ecrire(List.of(ligne(PIPKUH, 718, ClasseActivite.FORTE, true)), contexte(), cible);
+        Path ecrit = ExportSyntheseCsv.ecrire(
+                List.of(ligne(PIPKUH, 718, ClasseActivite.FORTE, true)), contexte(), true, cible);
 
         assertThat(ecrit).isEqualTo(cible);
         assertThat(Files.readString(cible, StandardCharsets.UTF_8))

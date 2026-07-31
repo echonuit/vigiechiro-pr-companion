@@ -24,6 +24,10 @@ import org.junit.jupiter.api.io.TempDir;
 /// **précise et rapide** le jour où l'injection casse.
 class CliSynthetiserPassageTest {
 
+    private static final String COMMANDE = "synthetiser-passage";
+    private static final String PASSAGE = "--passage";
+    private static final String FORMAT = "--format";
+
     @TempDir
     Path workspace;
 
@@ -51,7 +55,7 @@ class CliSynthetiserPassageTest {
     void csv_emporte_son_contexte() {
         SortieCapturee tampon = new SortieCapturee();
 
-        int code = executer(tampon, "synthetiser-passage", "--passage", "1");
+        int code = executer(tampon, COMMANDE, PASSAGE, "1");
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         assertThat(tampon.tout())
@@ -65,7 +69,7 @@ class CliSynthetiserPassageTest {
     void nuit_sans_contact_ecrit_les_en_tetes() {
         SortieCapturee tampon = new SortieCapturee();
 
-        int code = executer(tampon, "synthetiser-passage", "--passage", "1");
+        int code = executer(tampon, COMMANDE, PASSAGE, "1");
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         assertThat(tampon.tout()).contains("Code espèce", "Activité", "Q98");
@@ -77,7 +81,7 @@ class CliSynthetiserPassageTest {
         Path sortie = workspace.resolve("synthese.csv");
         SortieCapturee tampon = new SortieCapturee();
 
-        int code = executer(tampon, "synthetiser-passage", "--passage", "1", "--sortie", sortie.toString());
+        int code = executer(tampon, COMMANDE, PASSAGE, "1", "--sortie", sortie.toString());
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         assertThat(tampon.tout()).contains("Synthèse exportée");
@@ -89,7 +93,7 @@ class CliSynthetiserPassageTest {
     void json_porte_le_contexte_a_part() {
         SortieCapturee tampon = new SortieCapturee();
 
-        int code = executer(tampon, "synthetiser-passage", "--passage", "1", "--format", "json");
+        int code = executer(tampon, COMMANDE, PASSAGE, "1", FORMAT, "json");
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         assertThat(tampon.tout())
@@ -100,11 +104,26 @@ class CliSynthetiserPassageTest {
     }
 
     @Test
+    @DisplayName("#3048 : le JSON dit si le référentiel était disponible, sans quoi rien ne distingue"
+            + " « espèce non couverte » de « pas de référentiel »")
+    void json_annonce_la_disponibilite_du_referentiel() {
+        SortieCapturee tampon = new SortieCapturee();
+
+        int code = executer(tampon, COMMANDE, PASSAGE, "1", FORMAT, "json");
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(tampon.tout())
+                .as("toutes les lignes portent « couvertParLeReferentiel: false » dans les deux cas, "
+                        + "et ces deux situations appellent des conduites opposées")
+                .contains("\"disponible\": true");
+    }
+
+    @Test
     @DisplayName("synthetiser-passage : un format inconnu se refuse, code 2")
     void format_inconnu_refuse() {
         SortieCapturee tampon = new SortieCapturee();
 
-        int code = executer(tampon, "synthetiser-passage", "--passage", "1", "--format", "xml");
+        int code = executer(tampon, COMMANDE, PASSAGE, "1", FORMAT, "xml");
 
         assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
         assertThat(tampon.tout()).contains("Format non pris en charge");

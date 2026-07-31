@@ -112,7 +112,11 @@ compris. En tête du fichier, quatre lignes précédées de `#` :
 - la source.
 
 Elles sont commentées pour qu'un tableur les affiche comme du texte et qu'un script puisse les sauter,
-sans les perdre pour autant. **Si l'avertissement ne voyage pas avec la donnée, il ne sert à rien** :
+sans les perdre pour autant. **Si le référentiel est indisponible**, ces lignes cèdent la place à une
+seule : « Référentiel d'activité indisponible… ». Le fichier ne décrit alors pas une comparaison qui
+n'a pas eu lieu, et ne crédite pas une source qu'il n'a pas pu charger. Ses **colonnes ne changent
+pas** pour autant : un en-tête de colonne est lu par des scripts, le retirer casserait ce que le
+retrait cherchait à protéger. **Si l'avertissement ne voyage pas avec la donnée, il ne sert à rien** :
 un fichier ouvert trois mois plus tard, par quelqu'un qui n'a jamais vu cet écran, doit pouvoir savoir
 d'où sortent ces classes.
 
