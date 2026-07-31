@@ -499,7 +499,7 @@ class SonsValidationViewTest {
     void puces_filtres_alignees_horizontalement(FxRobot robot) {
         MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
         robot.interact(() -> itemParLibelle(menuAjout, "Statut").fire());
-        robot.interact(() -> itemParLibelle(menuAjout, "Groupe").fire());
+        robot.interact(() -> itemParLibelle(menuAjout, "Taxon parent").fire());
         WaitForAsyncUtils.waitForFxEvents();
 
         FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
