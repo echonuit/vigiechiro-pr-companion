@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.150.4](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.150.3...v2.150.4) (2026-07-31)
+
+
+### Bug Fixes
+
+* **synthese:** le quatrième message de la colonne Activité est enfin montré ([#3057](https://github.com/echonuit/vigiechiro-pr-companion/issues/3057)) ([8c59dac](https://github.com/echonuit/vigiechiro-pr-companion/commit/8c59dac57d16abd360367298ea8f8153bb55e656))
+
 ## [2.150.3](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.150.2...v2.150.3) (2026-07-31)
 
 
