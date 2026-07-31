@@ -54,24 +54,60 @@ final class PaginationEve {
             IntFunction<ReponseApi<String>> corpsPage,
             Function<String, List<T>> parPage,
             SuiviPagination suivi) {
+        return parcourirBorne(pagesMax, corpsPage, parPage, suivi).transformer(LotPagine::elements);
+    }
+
+    /// Variante qui **dit si elle a tout lu** : même parcours, mais le résultat porte le total annoncé,
+    /// le nombre de pages lues et un drapeau [LotPagine#complet].
+    ///
+    /// C'est la forme à employer quand `pagesMax` n'est plus un garde-fou mais un **choix de
+    /// l'appelant** (« lis-moi trois pages ») : sans elle, une liste tronquée est indiscernable d'une
+    /// collection épuisée, et l'appelant annonce comme un tout ce qui n'est qu'un échantillon. Le
+    /// parcours reste **tout-ou-rien** : un échec en page N rend son issue, jamais les pages
+    /// précédentes.
+    static <T> ReponseApi<LotPagine<T>> parcourirBorne(
+            int pagesMax,
+            IntFunction<ReponseApi<String>> corpsPage,
+            Function<String, List<T>> parPage,
+            SuiviPagination suivi) {
         List<T> tout = new ArrayList<>();
+        int total = 0;
         int totalPages = 0;
+        int pagesLues = 0;
+        boolean complet = false;
         for (int page = 1; page <= pagesMax; page++) {
             ReponseApi<String> reponse = corpsPage.apply(page);
             if (page == 1 && reponse instanceof ReponseApi.Succes<String>(String corps)) {
-                int total = ReponsesVigieChiro.total(corps);
+                total = ReponsesVigieChiro.total(corps);
                 totalPages = total <= 0 ? 0 : (total + TAILLE_PAGE - 1) / TAILLE_PAGE;
             }
             ReponseApi<List<T>> lot = reponse.transformer(parPage);
             if (!(lot instanceof ReponseApi.Succes<List<T>>(List<T> elements))) {
-                return lot;
+                return memeEchec(lot);
             }
             if (elements.isEmpty()) {
+                // Sortie par épuisement : c'est le seul cas où l'on tient la collection entière.
+                complet = true;
                 break;
             }
             tout.addAll(elements);
+            pagesLues++;
             suivi.surPage(page, totalPages);
         }
-        return ReponseApi.succes(List.copyOf(tout));
+        return ReponseApi.succes(new LotPagine<>(List.copyOf(tout), total, pagesLues, complet));
+    }
+
+    /// Re-type une issue d'échec. Les variantes non-`Succes` ne portent aucune valeur : seul leur
+    /// paramètre de type change. On l'écrit ici explicitement, plutôt qu'avec un
+    /// `transformer(x -> null)` qui marcherait (la transformation n'est jamais appliquée à un échec)
+    /// mais laisserait croire au lecteur qu'un succès **nul** est possible.
+    private static <A, B> ReponseApi<B> memeEchec(ReponseApi<A> issue) {
+        return switch (issue) {
+            case ReponseApi.Succes<A> succes ->
+                throw new IllegalArgumentException("issue de succès passée à memeEchec : " + succes);
+            case ReponseApi.NonConnecte<A> ignore -> ReponseApi.nonConnecte();
+            case ReponseApi.Injoignable<A>(String cause) -> ReponseApi.injoignable(cause);
+            case ReponseApi.Refuse<A>(int statut, String corps) -> ReponseApi.refuse(statut, corps);
+        };
     }
 }

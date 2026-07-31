@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.commun.api;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -9,8 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /// Lecture des réponses de `GET /moi/participations` (extrait de [ReponsesVigieChiro] pour ne pas l'enfler
 /// en God Class, comme [DonneesVigieChiro] l'a été pour `/donnees`). Deux projections d'un même corps :
@@ -29,9 +26,6 @@ final class ParticipationsVigieChiro {
     /// Clé de fin, portée elle aussi par la participation (fin de nuit) et par le `traitement` (fin, y
     /// compris en échec).
     private static final String CLE_DATE_FIN = "date_fin";
-
-    /// Numéro de carré = **6 chiffres isolés** dans le titre du site (ex. « …-130711 »).
-    private static final Pattern CARRE = Pattern.compile("(?<!\\d)\\d{6}(?!\\d)");
 
     private ParticipationsVigieChiro() {}
 
@@ -57,7 +51,15 @@ final class ParticipationsVigieChiro {
             // `observateur` (#2525) : propriétaire du carré. Absent du JSON → null, et le carré est alors
             // traité comme le sien (on ne présume pas un tiers sans preuve).
             String observateur = ReponsesVigieChiro.texte(site, "observateur");
-            parId.put(id, new SiteVigieChiro(id, titre, true, carreDepuisTitre(titre), observateur, lirePoints(site)));
+            parId.put(
+                    id,
+                    new SiteVigieChiro(
+                            id,
+                            titre,
+                            true,
+                            LocalitesVigieChiro.carreDepuisTitre(titre),
+                            observateur,
+                            LocalitesVigieChiro.lirePoints(site)));
         }
         return List.copyOf(parId.values());
     }
@@ -168,51 +170,6 @@ final class ParticipationsVigieChiro {
         try {
             return valeur == null ? null : Integer.valueOf(valeur.trim());
         } catch (NumberFormatException pasUnEntier) {
-            return null;
-        }
-    }
-
-    /// Numéro de carré (6 chiffres isolés) extrait du titre du site, ou `null` s'il n'y en a pas.
-    private static String carreDepuisTitre(String titre) {
-        if (titre == null) {
-            return null;
-        }
-        Matcher chiffres = CARRE.matcher(titre);
-        return chiffres.find() ? chiffres.group() : null;
-    }
-
-    /// Points d'écoute d'un site à partir de ses `localites` (nom + coordonnées). Localités malformées
-    /// ignorées.
-    private static List<PointVigieChiro> lirePoints(JsonObject site) {
-        List<PointVigieChiro> points = new ArrayList<>();
-        JsonElement localites = site.get("localites");
-        if (localites == null || !localites.isJsonArray()) {
-            return points;
-        }
-        for (JsonElement element : localites.getAsJsonArray()) {
-            if (!element.isJsonObject()) {
-                continue;
-            }
-            JsonObject localite = element.getAsJsonObject();
-            String nom = ReponsesVigieChiro.texte(localite, "nom");
-            double[] coord = coordonnees(localite);
-            if (nom != null && coord != null) {
-                points.add(new PointVigieChiro(nom, coord[0], coord[1]));
-            }
-        }
-        return points;
-    }
-
-    /// Coordonnées `[latitude, longitude]` d'une localité (`geometries.geometries[0].coordinates`).
-    /// ⚠️ VigieChiro stocke l'ordre **[lat, lon]** (et non le [lon, lat] GeoJSON). Malformé → `null`.
-    private static double[] coordonnees(JsonObject localite) {
-        try {
-            JsonArray geometries = localite.getAsJsonObject("geometries").getAsJsonArray("geometries");
-            JsonArray coordonnees = geometries.get(0).getAsJsonObject().getAsJsonArray("coordinates");
-            return new double[] {
-                coordonnees.get(0).getAsDouble(), coordonnees.get(1).getAsDouble()
-            };
-        } catch (RuntimeException malforme) {
             return null;
         }
     }
