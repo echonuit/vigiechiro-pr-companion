@@ -4,11 +4,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.view.ActiviteController;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
@@ -107,8 +108,8 @@ public final class CaptureActivite {
     /// Injecteur de démonstration alimenté par les `contacts` donnés : la liste vide sert l'aperçu de
     /// l'**état vide**, qui nomme la cause de l'absence.
     private static Injector injecteurAvec(List<ContactHoraire> contacts) {
-        return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new ModuleDemo(contacts));
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), new ModuleDemo(contacts)));
     }
 
     /// Charge `Activite.fxml`, l'ouvre sur le passage de démonstration puis rend la scène hors-écran en

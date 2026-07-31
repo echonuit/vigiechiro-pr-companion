@@ -5,8 +5,10 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.google.inject.multibindings.OptionalBinder;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -219,15 +221,10 @@ public final class CapturePassage {
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
     /// (test).
     public static Injector creerInjecteur() {
+        // La ligne « Campagne » (#2355) manquait ici faute de `CampagneModule` : composer depuis la
+        // racine rend l'oubli impossible plutôt que de le réparer une fois de plus.
         return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(),
-                new PersistenceModule(),
-                new PassageModule(),
-                // Campagne (#2355) : feature OPTIONNELLE. Sans ce module, le ViewModel reçoit un
-                // Optional vide, le contrôleur MASQUE la ligne « Campagne » (le rattachement livré par
-                // #2355 n'apparaissait alors dans aucune capture), et la modale de gestion (#2630) n'est
-                // même pas constructible.
-                new CampagneModule());
+                Modules.override(RacineInjecteur.modules()).with(ModuleCaptureCommun.executeursSynchrones()));
     }
 
     /// Même injecteur, mais **connecté** : la passerelle [SynchronisationParticipation] est posée, ce qui
