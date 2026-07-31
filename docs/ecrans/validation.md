@@ -118,6 +118,12 @@ pour préparer l'archive à envoyer.
 
 ![La puce « Lieu : Aix-en-Provence » posée dans la barre de filtres : la table ne montre plus que les observations de cette commune.](../assets/captures/apercu-sons-validation-lieu.png)
 
+Sa liste est **groupée par nature de lieu**, et chaque point y paraît **précédé de son carré**. Ce n'est
+pas un détail d'affichage : un code de point n'est unique qu'à l'intérieur de son site, si bien que
+plusieurs carrés portent un « A1 ». Cocher « 640380 · A1 » ne retient donc que ce point-là.
+
+![La liste ouverte de la puce « Lieu » : quatre groupes nommés (Communes, Carrés, Points, Sites), le point paraissant sous la forme « 640380 · A1 ».](../assets/captures/apercu-liste-lieu.png)
+
 ### Vues sauvegardées
 
 La revue **au fil de l'eau** est déjà mémorisée automatiquement (vous retrouvez vos filtres et votre tri à
