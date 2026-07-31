@@ -27,10 +27,12 @@ import org.junit.jupiter.api.Test;
 /// parseur WAV dans [CliquetWriterWavTest].
 class CliquetSemisTopologieTest {
 
-    /// La dette épinglée. **Ne peut que rétrécir** : cf. [Cliquet] pour les deux sens de variation.
-    private static final List<String> SEMENT_LA_TOPOLOGIE_A_LA_MAIN = List.of(
-            "fr/univ_amu/iut/saison/ServiceSoldeSaisonTest.java",
-            "fr/univ_amu/iut/sites/model/ServiceCommunesTest.java");
+    /// La dette épinglée : **elle est vide**, et le cliquet reste pour empêcher qu'elle renaisse.
+    ///
+    /// Les deux derniers ont attendu que la fixture sache dire ce qu'ils expriment : un point **sans GPS**
+    /// et un site **hors protocole** (#2989). Un cliquet ne fait pas que compter - il dit aussi quand
+    /// l'outil vers lequel il pointe n'est pas encore à la hauteur.
+    private static final List<String> SEMENT_LA_TOPOLOGIE_A_LA_MAIN = List.of();
 
     @Test
     @DisplayName("La dette des semis de topologie ne peut que rétrécir : aucun nouveau site créé à la main")

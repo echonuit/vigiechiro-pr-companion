@@ -4,17 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import fr.univ_amu.iut.commun.model.Commune;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResolveurCommune;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,25 +31,32 @@ class ServiceCommunesTest {
     @TempDir
     Path dossier;
 
+    private SourceDeDonnees source;
     private PointDao points;
     private PointCommuneDao communes;
-    private long idSite;
 
     @BeforeEach
     void preparer() {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        idSite = new SiteDao(source)
-                .insert(new Site(null, "130711", "Site test", Protocole.STANDARD, null, "2026-01-01", ID_USER))
-                .id();
+        this.source = source;
+        // Aucun point semé ici : le site naît du premier `insererPoint`, par trouver-ou-créer. Le semer
+        // d'avance créerait un point « A1 » sans GPS, que les tests retrouveraient au lieu du leur - la
+        // fixture ne repositionne pas un point existant, premier écrivain gagne.
         points = new PointDao(source);
         communes = new PointCommuneDao(source);
     }
 
+    /// Un point de plus sur le site. Le GPS est **nullable** : son absence est le sujet de plusieurs de
+    /// ces tests, et la fixture sait le dire depuis #2989.
     private long insererPoint(String code, Double latitude, Double longitude) {
-        return points.insert(new PointDEcoute(null, code, latitude, longitude, null, idSite))
-                .id();
+        return JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("130711")
+                .point(code)
+                .position(latitude, longitude)
+                .semerSiteEtPoint()
+                .idPoint();
     }
 
     private ServiceCommunes service(ResolveurCommune resolveur) {

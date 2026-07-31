@@ -25,8 +25,6 @@ import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
 import fr.univ_amu.iut.saison.model.SoldeSaison;
 import fr.univ_amu.iut.sites.di.SitesModule;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
@@ -88,12 +86,21 @@ class ServiceSoldeSaisonTest {
         // 640004 / D1 : un point déclaré, aucune nuit (semé via DAO pour n'avoir aucun passage).
         siteDao = injecteur.getInstance(SiteDao.class);
         PointDao pointDao = injecteur.getInstance(PointDao.class);
-        Site d = siteDao.insert(
-                new Site(null, "640004", "Site 640004", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        pointDao.insert(new PointDEcoute(null, "D1", null, null, null, d.id()));
+        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("640004")
+                .nomSite("Site 640004")
+                .point("D1")
+                .semerSiteEtPoint();
         // Site RECHERCHE, à écarter.
-        Site r = siteDao.insert(new Site(null, "640099", "Labo", Protocole.RECHERCHE, null, "2026-01-01", ID_USER));
-        pointDao.insert(new PointDEcoute(null, "R1", null, null, null, r.id()));
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("640099")
+                .nomSite("Labo")
+                .protocole(Protocole.RECHERCHE)
+                .point("R1")
+                .semerSiteEtPoint();
 
         opportunistes = injecteur.getInstance(PassageOpportunisteDao.class);
         carresDeTiers = injecteur.getInstance(SiteTiersDao.class);
