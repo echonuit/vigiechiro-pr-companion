@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
@@ -33,6 +34,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// cascade à la suppression du passage. Base SQLite jetable (`@TempDir` + [MigrationSchema]).
 class DepotUniteDaoTest {
 
+    private SourceDeDonnees source;
     private static final String MAINTENANT = "2026-07-11T12:00:00";
 
     @TempDir
@@ -45,7 +47,7 @@ class DepotUniteDaoTest {
 
     @BeforeEach
     void preparer() {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         // Chaîne de parents requise par les FK : user -> site -> point, l'enregistreur, puis le passage.
         new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
@@ -61,22 +63,15 @@ class DepotUniteDaoTest {
     }
 
     private Passage insererPassage(int numero) {
-        return passageDao.insert(new Passage(
-                null,
-                numero,
-                2026,
-                "2026-04-22",
-                "20:25:00",
-                "07:47:00",
-                null,
-                StatutWorkflow.PRET_A_DEPOSER,
-                null,
-                null,
-                null,
-                null,
-                idPoint,
-                "1925492",
-                null));
+        return JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .surLePoint(idPoint)
+                .enregistreur("1925492")
+                .nuit(numero, 2026, "2026-04-22")
+                .heures("20:25:00", "07:47:00")
+                .statut(StatutWorkflow.PRET_A_DEPOSER)
+                .semerPassage()
+                .lePassage();
     }
 
     @Test

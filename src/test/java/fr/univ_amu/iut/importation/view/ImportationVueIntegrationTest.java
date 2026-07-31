@@ -13,10 +13,9 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -64,6 +63,7 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class ImportationVueIntegrationTest {
 
+    private SourceDeDonnees source;
     private static final String ID_USER = "u-integ";
     private Injector injector;
     private Long idPoint;
@@ -74,7 +74,7 @@ class ImportationVueIntegrationTest {
         Path workspace = Files.createTempDirectory("vc-import-integ");
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
-        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
+        source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         seeder(source);
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
@@ -99,23 +99,14 @@ class ImportationVueIntegrationTest {
     private void semerPassageExistant(int numero) {
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new EnregistreurDao(source).insert(new Enregistreur("9999999", "V1.01", null));
-        new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        numero,
-                        anneeCourante,
-                        "2026-04-22",
-                        "20:25:00",
-                        "07:47:00",
-                        null,
-                        StatutWorkflow.TRANSFORME,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        "9999999",
-                        null));
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur("9999999")
+                .nuit(numero, anneeCourante, "2026-04-22")
+                .heures("20:25:00", "07:47:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .semerPassage();
     }
 
     @AfterEach

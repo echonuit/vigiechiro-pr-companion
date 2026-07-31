@@ -12,10 +12,9 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
@@ -119,23 +118,14 @@ class SiteDetailSuppressionsViewTest {
     /// lien « Supprimer » de la carte se ferme (#789). L'écran est rouvert pour refléter la nuit.
     private void rattacherUnPassage(FxRobot robot) {
         new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
-        new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        2,
-                        2026,
-                        "2026-06-22",
-                        "20:25:00",
-                        "07:47:00",
-                        null,
-                        StatutWorkflow.TRANSFORME,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        "1925492",
-                        null));
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur("1925492")
+                .nuit(2, 2026, "2026-06-22")
+                .heures("20:25:00", "07:47:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .semerPassage();
         robot.interact(() -> controleur.afficher(site));
     }
 

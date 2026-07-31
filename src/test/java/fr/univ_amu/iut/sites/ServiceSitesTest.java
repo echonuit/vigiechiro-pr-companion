@@ -13,8 +13,8 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -38,6 +38,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// service est exercé de bout en bout sur une vraie base, pas sur des mocks).
 class ServiceSitesTest {
 
+    private SourceDeDonnees source;
     private static final String ID_USER = "u-1";
     private static final LocalDate JOUR_FIXE = LocalDate.of(2026, 5, 31);
 
@@ -53,7 +54,7 @@ class ServiceSitesTest {
 
     @BeforeEach
     void preparer() {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
         siteDao = new SiteDao(source);
@@ -341,22 +342,14 @@ class ServiceSitesTest {
         Site site = service.creerSite("640380", null, Protocole.STANDARD, null, ID_USER);
         PointDEcoute point = service.ajouterPoint(site.id(), "A1", null, null, null);
         enregistreurDao.insert(new Enregistreur("1925492", "V1.01", null));
-        passageDao.insert(new Passage(
-                null,
-                1,
-                2026,
-                "2026-06-20",
-                "21:00:00",
-                "05:00:00",
-                null,
-                StatutWorkflow.TRANSFORME,
-                null,
-                null,
-                null,
-                null,
-                point.id(),
-                "1925492",
-                null));
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(point.id())
+                .enregistreur("1925492")
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:00:00", "05:00:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .semerPassage();
 
         assertThatThrownBy(() -> service.supprimerSite(site.id()))
                 .isInstanceOf(RegleMetierException.class)
