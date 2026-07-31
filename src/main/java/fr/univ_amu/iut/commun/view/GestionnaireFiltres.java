@@ -156,6 +156,13 @@ public final class GestionnaireFiltres<T> {
     /// [CritereFiltre#restaurerValeurs(Node, List)]). Permet à la vue de piloter un filtre sans clic
     /// utilisateur : p. ex. le multisite filtre par le carré **cliqué sur la carte** (#152/#476). Sans
     /// effet si `nom` n'appartient pas au catalogue des critères.
+    ///
+    /// ⚠️ Une valeur que le critère **n'offre pas** est ignorée en silence : `restaurerValeurs` la rend,
+    /// et cet appel la jette. Aujourd'hui sans conséquence, son unique appelant visant un **champ
+    /// libre**, qui accepte tout. Cela cesserait d'être vrai le jour où l'on poserait une valeur sur un
+    /// critère à liste : la puce apparaîtrait vide, et comme rien de coché n'écarte rien, l'écran
+    /// montrerait plus que ce qu'il annonce - le mode de panne de #3056 et #3071. Il faudrait alors
+    /// remonter ce que cette méthode jette, comme le font déjà `restaurer` et les vues mémorisées.
     public void poser(String nom, List<String> valeurs) {
         critereParNom(nom).ifPresent(critere -> {
             if (!actifs.containsKey(nom)) {
