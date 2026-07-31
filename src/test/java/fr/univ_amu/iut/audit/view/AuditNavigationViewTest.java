@@ -8,22 +8,12 @@ import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,31 +62,18 @@ class AuditNavigationViewTest {
                 })));
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "130711", "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        Long idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "Z41", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, null, null));
         // Passage SANS session : l'audit émet un constat « aucune session : passage jamais importé ».
-        new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        1,
-                        2026,
-                        "2026-07-03",
-                        "22:00",
-                        "06:00",
-                        null,
-                        StatutWorkflow.IMPORTE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null));
+        // `semerPassage()` s'arrête au passage, là où `semerSquelette()` poserait une session dont ce test
+        // constate justement l'absence - vérifié : avec `semerSquelette()`, il rougit (#2989).
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("130711")
+                .nomSite("Étang")
+                .point("Z41")
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-07-03")
+                .statut(StatutWorkflow.IMPORTE)
+                .semerPassage();
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
