@@ -210,7 +210,8 @@ personne n'a pensé ». Le comportement commun vit dans les variantes par **over
 comportement **voulu**, c'est l'appelant qui le choisit, explicitement : `enOptionnel()`.
 
 **Dans cette application** (#1284). `TransportVigieChiro` émet et trie ; `ClientVigieChiro` nomme les
-endpoints ; `PaginationEve` est **tout-ou-rien** (l'issue de la page fautive, jamais un préfixe).
+endpoints ; `PaginationEve` est **tout-ou-rien** (l'issue de la page fautive - ou de son garde-fou atteint,
+#3046 - jamais un préfixe).
 Conséquences : la modale de connexion distingue « jeton refusé (401) » de « plateforme injoignable » ;
 l'import et le suivi du traitement disent pourquoi ; la **garde anti-purge** des rapprocheurs est
 inchangée mais sa cause remonte au bandeau ; la garde anti-relance du dépôt devient **fail-safe** (état

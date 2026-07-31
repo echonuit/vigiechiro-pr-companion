@@ -127,7 +127,10 @@ Toutes les méthodes de `ClientVigieChiro` rendent une **issue triée** (`Repons
 | `Refuse(statut, corps)` | le serveur a répondu non | remonter statut + corps (9 fois sur 10, bug de notre côté) |
 
 Règles d'accompagnement : la **pagination Eve est tout-ou-rien** (une panne page 3 rend l'issue, pas
-les pages 1-2) ; `max_results` est plafonné à 100 (au-delà Eve **rejette** : `422`, cause de #1277) et
+les pages 1-2), et **l'épuisement du garde-fou en fait partie** : un parcours arrêté au plafond de
+pages rend un `Injoignable`, jamais les pages déjà lues (#3046, sans quoi un préfixe passerait pour
+une collection entière). La borne *choisie* par un appelant est un autre sujet : elle passe par
+`parcourirBorne`, qui rend un `LotPagine` disant s'il a tout lu ; `max_results` est plafonné à 100 (au-delà Eve **rejette** : `422`, cause de #1277) et
 la sonde live `refus_serveur_est_un_refuse_explicite` verrouille que ce refus reste un `Refuse` ; la
 **garde anti-purge** des rapprocheurs et la garde **anti-relance** du dépôt (fail-safe : état illisible
 = pas de lancement sans `--forcer`) s'appuient sur cette distinction. Patron détaillé :
