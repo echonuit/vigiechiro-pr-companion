@@ -350,6 +350,44 @@ print("archive conforme")
 EOF
   [ "${status}" -eq 0 ]
   [[ "${output}" == *"archive conforme"* ]]
+
+  # #2971 : le meme export RESTREINT par --lieu. Le carre de la nuit importee est 130711 ; la
+  # correspondance etant partielle et insensible a la casse, « 1307 » suffit a le designer.
+  run cli exporter-sons --passage 1 --lieu 1307 --sortie "${BATS_TEST_TMPDIR}/filtre.zip"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"1 observation(s), 1 son(s)"* ]]
+
+  # Et l archive FILTREE est relue : le filtre ne doit pas seulement laisser passer la commande, il
+  # doit produire une archive qui contient encore la bonne chose.
+  run python3 - "${BATS_TEST_TMPDIR}/filtre.zip" "${sequence}" << 'EOF'
+import sys, zipfile
+archive, sequence = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(archive) as zip:
+    lignes = zip.read("observations.csv").decode("utf-8").splitlines()
+    assert len(lignes) == 2, lignes
+    assert "130711" in lignes[1], lignes[1]
+    sons = [n for n in zip.namelist() if n.startswith("sons/")]
+    assert len(sons) == 1 and len(zip.read(sons[0])) > 1000, sons
+print("archive filtree conforme")
+EOF
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"archive filtree conforme"* ]]
+
+  # #2971 : un lieu qui ne correspond a RIEN refuse en nommant ce qui existe, plutot que d ecrire une
+  # archive vide en code 0. Un script qui enchainerait ne verrait pas la faute de frappe.
+  run cli exporter-sons --passage 1 --lieu Marseille --sortie "${BATS_TEST_TMPDIR}/vide.zip"
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Marseille"* ]]
+  [[ "${output}" == *"130711"* ]]
+  [ ! -f "${BATS_TEST_TMPDIR}/vide.zip" ]
+
+  # #2971 : la meme option sur lister-observations, la surface jumelle.
+  run cli lister-observations --passage 1 --lieu 1307
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Rhifer"* ]]
+
+  run cli lister-observations --passage 1 --lieu Marseille
+  [ "${status}" -eq 2 ]
 }
 
 @test "exporter-sons : --passage et --espece s excluent, exit 2 (#2795)" {

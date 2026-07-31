@@ -10,11 +10,13 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
+import fr.univ_amu.iut.validation.model.FiltreLieu;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -64,6 +66,15 @@ public final class ExporterSons implements Callable<Integer> {
         private String espece;
     }
 
+    /// Restreint aux observations d'un ou plusieurs lieux (#2971). Répétable : chaque occurrence ajoute
+    /// un lieu, comme cocher une case de plus dans la puce « Lieu » de l'écran.
+    @Option(
+            names = "--lieu",
+            paramLabel = "<lieu>",
+            description = "Ne garde que les observations de ce lieu (commune, carré ou nom de site). "
+                    + "Correspondance partielle, casse et accents ignorés. Répétable pour en cumuler plusieurs.")
+    private List<String> lieux = new ArrayList<>();
+
     @Option(
             names = "--sortie",
             required = true,
@@ -105,7 +116,7 @@ public final class ExporterSons implements Callable<Integer> {
 
     @Override
     public Integer call() throws IOException {
-        List<LigneObservationAudio> lignes = lignesDeLaPortee();
+        List<LigneObservationAudio> lignes = FiltreLieu.appliquer(lignesDeLaPortee(), lieux);
         MarqueurEspecesAEnjeu marqueur = new MarqueurEspecesAEnjeu(especesPrioritaires.get());
         ExportObservationsEtSons export = new ExportObservationsEtSons(sequences, sessions);
         ExportObservationsEtSons.Bilan bilan =
