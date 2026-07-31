@@ -38,7 +38,6 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
-import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -299,11 +298,6 @@ public final class CaptureMultisite {
                         ModuleCaptureCommun.executeursSynchrones(),
                         new ModuleCaptureNavigationAudio(),
                         new AbstractModule() {
-                            @Provides
-                            ResultatsIdentificationDao fournirResultatsIdentificationDao(SourceDeDonnees source) {
-                                return new ResultatsIdentificationDao(source);
-                            }
-
                             // Action groupée « Préparer le dépôt » (#2357) : REMPLAÇANT assumé, et il le reste.
                             //
                             // L'argument d'origine - « charger LotModule entraînerait toute la chaîne de dépôt » -
