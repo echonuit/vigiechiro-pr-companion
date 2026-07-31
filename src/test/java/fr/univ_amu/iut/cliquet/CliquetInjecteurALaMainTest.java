@@ -45,8 +45,7 @@ class CliquetInjecteurALaMainTest {
     /// `RacineInjecteur.modules()`, puis supprimer sa ligne ici.
     private static final List<String> ENUMERENT_LEURS_MODULES = List.of(
             "fr/univ_amu/iut/analyse/outils/CaptureSynthese.java",
-            "fr/univ_amu/iut/analyse/outils/CaptureSyntheseSansReferentiel.java",
-            "fr/univ_amu/iut/audit/outils/CaptureAudit.java");
+            "fr/univ_amu/iut/analyse/outils/CaptureSyntheseSansReferentiel.java");
 
     @Test
     @DisplayName("La dette des injecteurs assemblés à la main ne peut que rétrécir : un outil neuf compose"
