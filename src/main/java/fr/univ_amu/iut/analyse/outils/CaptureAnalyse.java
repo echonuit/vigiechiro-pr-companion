@@ -239,7 +239,7 @@ public final class CaptureAnalyse {
         long idSite = insererCle(
                 cx,
                 "INSERT INTO monitoring_site(square_number, friendly_name, protocol, created_at, user_id)"
-                        + " VALUES (?, ?, 'Point fixe standard', '2026-05-01', ?)",
+                        + " VALUES (?, ?, 'PointFixeStandard', '2026-05-01', ?)",
                 carre,
                 site,
                 ID_UTILISATEUR);

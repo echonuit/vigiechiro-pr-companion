@@ -25,8 +25,15 @@ public class ServiceSynthese {
     private final ReferentielActivite referentiel;
 
     public ServiceSynthese(ProjectionsAudioDao projections) {
+        this(projections, ReferentielActivite.embarque());
+    }
+
+    /// Variante à **référentiel fourni**. Le référentiel devient un collaborateur au lieu d'une
+    /// dépendance cachée, ce qui rend l'état « référentiel absent » atteignable autrement qu'en
+    /// supprimant une ressource du jar : c'est ce qu'exerce `CaptureSyntheseSansReferentiel` (#3018).
+    public ServiceSynthese(ProjectionsAudioDao projections, ReferentielActivite referentiel) {
         this.projections = Objects.requireNonNull(projections, "projections");
-        this.referentiel = ReferentielActivite.embarque();
+        this.referentiel = Objects.requireNonNull(referentiel, "referentiel");
     }
 
     /// La synthèse d'un passage.

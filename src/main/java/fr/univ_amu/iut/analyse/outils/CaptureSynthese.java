@@ -4,27 +4,27 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
-import fr.univ_amu.iut.analyse.model.LigneSynthese;
-import fr.univ_amu.iut.analyse.model.ServiceSynthese;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.analyse.view.SyntheseController;
-import fr.univ_amu.iut.analyse.viewmodel.SyntheseViewModel;
-import fr.univ_amu.iut.commun.model.ClasseActivite;
-import fr.univ_amu.iut.commun.model.ConfianceReferentiel;
-import fr.univ_amu.iut.commun.model.ContexteActivite;
-import fr.univ_amu.iut.commun.model.SaisonActivite;
-import fr.univ_amu.iut.commun.model.SeuilsActivite;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.Utilisateur;
+import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
-import fr.univ_amu.iut.commun.view.OuvrirPassage;
-import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
-import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Optional;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -35,16 +35,62 @@ import javafx.scene.Scene;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Rend l'écran **Synthèse de la nuit** (#2351) hors écran en PNG. La nuit de démonstration montre ce
-/// que le lot apporte : une classe d'activité par espèce, **ses quantiles à côté**, une mention
+/// Rend l'écran **Synthèse de la nuit** (#2351) hors écran en PNG. La nuit montre les quatre cas que
+/// l'écran sait rendre : une classe d'activité par espèce, **ses quantiles à côté**, une mention
 /// *(indicatif)* sur une déclinaison peu fiable, et un orthoptère qui **dit** qu'il n'est pas couvert
 /// plutôt que de laisser une cellule vide.
+///
+/// ## La nuit est semée, pas fabriquée (#3018)
+///
+/// Cet outil substituait autrefois un `ServiceSynthese` anonyme dont les trois lectures étaient
+/// surchargées : l'écran affichait des lignes écrites en dur, et le DAO qu'on lui passait portait une
+/// source **nulle**. Rien de ce qui est montré ne venait du produit.
+///
+/// ⚠️ Cette substitution cachait une **contradiction** : le contexte passé à l'écran citait le carré
+/// `640380` (Nouvelle-Aquitaine) pendant que les seuils affirmaient « region Corse » et que le site
+/// s'appelait « Étang de Biguglia ». Personne ne pouvait la voir, puisque le service bouchonné ignorait
+/// le carré qu'on lui donnait. Le carré est désormais corse (`20…`), la région s'en **déduit**, et la
+/// saison se déduit de la nuit.
+///
+/// ## Ce que les nombres visent
+///
+/// Les contacts sont choisis pour tomber dans les bandes du référentiel embarqué, déclinaison
+/// `region:Corse` / `ete` - la classe est donc **calculée**, plus décrétée :
+///
+/// | Taxon | q25 | q75 | q98 | confiance | contacts | classe attendue |
+/// |---|---|---|---|---|---|---|
+/// | `Pipkuh` Pipistrelle de Kuhl | 6 | 92 | 518 | Bonne | 300 | **Forte** |
+/// | `Pippip` Pipistrelle commune | 19 | 217 | 1846 | Bonne | 120 | **Moyenne**, et le bouclier PNA |
+/// | `Cicorn` Cigale grise | 1 | 2 | 58 | **Faible** | 1 | **Moyenne**, *(indicatif)* |
+/// | `Antcho` Antaxie catalane | — | — | — | **absente du référentiel** | 40 | aucune, et la cellule le dit |
+///
+/// ⚠️ Les deux derniers **ne sont pas ceux de l'ancienne démonstration**, et c'est instructif. Elle
+/// montrait une Barbastelle marquée *(indicatif)* et une Sauterelle verte « hors référentiel » : le
+/// référentiel embarqué dit le contraire des deux. La Barbastelle a une déclinaison **nationale d'été
+/// très fiable**, et `ReferentielActivite` s'arrête à la première fiable - elle n'est donc jamais
+/// indicative ; la Sauterelle verte, elle, a bel et bien une déclinaison `region:Corse` / `ete`.
+///
+/// Deux cas d'écran affichés depuis des données que le produit ne peut pas produire. C'est ce que
+/// permet un service bouchonné, et c'est pourquoi il fallait le retirer.
 ///
 /// Les codes de taxon suivent la **casse du référentiel** (`Pipkuh`, et non `PIPKUH`) : c'est le piège
 /// relevé à la clôture du lot #2353, où une démo en majuscules montrait un écran sans son repère.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureSynthese {
+
+    private static final String ID_UTILISATEUR = "u-capture";
+    private static final String SERIE = "SN-1";
+
+    /// Carré **corse** : la région se déduit des deux premiers chiffres (`20`), elle n'est plus affirmée
+    /// par un service bouchonné.
+    static final String CARRE = "200711";
+
+    static final String POINT = "A1";
+    static final String SITE = "Étang de Biguglia";
+
+    /// Nuit d'**été** : la saison s'en déduit, et c'est elle qui choisit la déclinaison du référentiel.
+    private static final String NUIT = "2026-07-03";
 
     private CaptureSynthese() {}
 
@@ -54,7 +100,7 @@ public final class CaptureSynthese {
         Platform.startup(() -> {
             try {
                 capturer();
-            } catch (RuntimeException | IOException probleme) {
+            } catch (RuntimeException | IOException | SQLException probleme) {
                 erreur.set(probleme);
             } finally {
                 fini.countDown();
@@ -69,14 +115,21 @@ public final class CaptureSynthese {
         System.exit(0);
     }
 
-    private static void capturer() throws IOException {
+    private static void capturer() throws IOException, SQLException {
+        Path workspace = Files.createTempDirectory("vc-capture-synthese");
+        System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
+
         Injector injecteur = creerInjecteur();
+        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
+        injecteur.getInstance(MigrationSchema.class).migrer();
+        long idPassage = semerLaNuit(source);
+
         FXMLLoader loader = ChargeurFxml.chargeur(SyntheseController.class, "Synthese.fxml");
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         SyntheseController controleur = loader.getController();
-        controleur.ouvrirSur(new ContextePassage(1L, 3, new ContexteSite("640380", "A1", "Étang de Biguglia")));
+        controleur.ouvrirSur(new ContextePassage(idPassage, 3, new ContexteSite(CARRE, POINT, SITE)));
         Path fichier = sortie.resolve("apercu-synthese.png");
         // 1100 × 700 : à 620 px, le bloc de mise en garde débordait de quelques pixels et ApercuFx
         // refusait la capture (ADR 0042). Il avait raison : un avertissement tronqué ne prévient
@@ -85,83 +138,130 @@ public final class CaptureSynthese {
         System.out.println("Apercu de la synthese ecrit dans " + fichier.toAbsolutePath());
     }
 
-    /// Injecteur (partiel) de cet outil. Exposé pour le garde-fou de câblage
-    /// (`CablageInjecteursCaptureTest`).
+    /// Injecteur de cet outil : la composition **complète** de l'application, surchargée par des
+    /// exécuteurs synchrones. Exposé pour le garde-fou de câblage (`CablageInjecteursCaptureTest`).
     public static Injector creerInjecteur() {
-        return Guice.createInjector(new ModuleDemo());
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), new ModuleCapture()));
     }
 
-    /// Groupe des chiroptères, tel que le référentiel taxonomique le nomme.
-    private static final String CHIROPTERES = "Chiroptères";
+    /// Sème la nuit et rend l'identifiant de son passage. Partagée avec
+    /// [CaptureSyntheseSansReferentiel] : les deux aperçus doivent montrer **la même nuit**, pour que
+    /// leur seule différence soit le référentiel.
+    ///
+    /// Les observations sont réparties : deux par séquence pour la Pipistrelle de Kuhl (le tableau montre
+    /// alors des contacts **supérieurs** au nombre de fichiers, comme sur une vraie nuit), une par
+    /// séquence pour les autres.
+    static long semerLaNuit(SourceDeDonnees source) throws SQLException {
+        new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
+        try (Connection cx = source.getConnection()) {
+            long idSite = cle(
+                    cx,
+                    "INSERT INTO monitoring_site(square_number, friendly_name, protocol, created_at, user_id)"
+                            + " VALUES (?, ?, 'PointFixeStandard', '2026-05-01', ?)",
+                    CARRE,
+                    SITE,
+                    ID_UTILISATEUR);
+            long idPoint = cle(cx, "INSERT INTO listening_point(code, site_id) VALUES (?, ?)", POINT, idSite);
+            executer(cx, "INSERT INTO recorder(serial_number) VALUES ('" + SERIE + "')");
+            long idPassage = cle(
+                    cx,
+                    "INSERT INTO passage(passage_number, year, recording_date, start_time, end_time,"
+                            + " workflow_status, point_id, recorder_id)"
+                            + " VALUES (3, 2026, ?, '21:00', '05:00', 'Vérifié', ?, ?)",
+                    NUIT,
+                    idPoint,
+                    SERIE);
+            long idSession = cle(
+                    cx, "INSERT INTO recording_session(root_path, passage_id) VALUES ('/ws/synthese', ?)", idPassage);
+            long idOriginal = cle(
+                    cx,
+                    "INSERT INTO original_recording(file_name, file_path, session_id)"
+                            + " VALUES ('a.wav', '/ws/synthese/bruts/a.wav', ?)",
+                    idSession);
+            long idResultats = cle(
+                    cx,
+                    "INSERT INTO identification_results(file_path, detected_format, imported_at, passage_id)"
+                            + " VALUES ('/ws/synthese/obs.csv', 'Vu', ?, ?)",
+                    NUIT,
+                    idPassage);
 
-    /// Une nuit de démonstration qui montre **les quatre cas** que l'écran sait rendre.
-    private static List<LigneSynthese> lignesDemo() {
-        return List.of(
-                ligne("Pipkuh", "Pipistrelle de Kuhl", CHIROPTERES, 718, 402, ClasseActivite.FORTE, false, true),
-                ligne("Pippip", "Pipistrelle commune", CHIROPTERES, 159, 96, ClasseActivite.MOYENNE, false, true),
-                // Déclinaison peu fiable : la classe est rendue, mais marquée indicative.
-                ligne("Barbar", "Barbastelle d'Europe", CHIROPTERES, 39, 31, ClasseActivite.FAIBLE, true, true),
-                // Hors référentiel : la cellule le DIT, plutôt que de rester vide.
-                ligne("Tetvir", "Grande sauterelle verte", "Orthoptères et cigales", 244, 88, null, false, false));
+            semerTaxon(cx, idSession, idOriginal, idResultats, "Pipkuh", 300, 2);
+            semerTaxon(cx, idSession, idOriginal, idResultats, "Pippip", 120, 1);
+            // Cigale grise : aucune de ses déclinaisons n'est fiable, la classe se marque donc indicative.
+            // Un seul contact donne « Moyenne » et non « Faible » : q25 vaut 1, et la borne est stricte
+            // (`contacts < q25`). Faible serait donc inatteignable ici - le référentiel a le dernier mot.
+            semerTaxon(cx, idSession, idOriginal, idResultats, "Cicorn", 1, 1);
+            // Antaxie catalane : connue de la base, absente du référentiel d'activité.
+            semerTaxon(cx, idSession, idOriginal, idResultats, "Antcho", 40, 1);
+            return idPassage;
+        }
     }
 
-    private static LigneSynthese ligne(
+    /// Sème `contacts` observations d'un taxon, à raison de `parSequence` par fichier.
+    private static void semerTaxon(
+            Connection cx,
+            long idSession,
+            long idOriginal,
+            long idResultats,
             String code,
-            String nom,
-            String groupe,
             int contacts,
-            int fichiers,
-            ClasseActivite classe,
-            boolean indicatif,
-            boolean couvert) {
-        SeuilsActivite seuils = new SeuilsActivite(
-                12,
-                480,
-                1240,
-                indicatif ? 14 : 8600,
-                indicatif ? ConfianceReferentiel.FAIBLE : ConfianceReferentiel.TRES_BONNE,
-                "region Corse",
-                "ete");
-        return new LigneSynthese(
-                code,
-                nom,
-                groupe,
-                contacts,
-                fichiers,
-                Optional.ofNullable(classe),
-                classe == null ? Optional.empty() : Optional.of(seuils),
-                couvert);
+            int parSequence)
+            throws SQLException {
+        String insertSequence = "INSERT INTO listening_sequence(file_name, original_recording_id, file_path,"
+                + " session_id, recorded_at) VALUES (?, ?, ?, ?, ?)";
+        String insertObservation = "INSERT INTO observation(sequence_id, taxon_tadarida, prob_tadarida,"
+                + " taxon_observer, prob_observer, results_id) VALUES (?, ?, 0.92, ?, 0.95, ?)";
+        try (PreparedStatement sequence = cx.prepareStatement(insertSequence, Statement.RETURN_GENERATED_KEYS);
+                PreparedStatement observation = cx.prepareStatement(insertObservation)) {
+            sequence.setLong(2, idOriginal);
+            sequence.setLong(4, idSession);
+            observation.setString(2, code);
+            observation.setString(3, code);
+            observation.setLong(4, idResultats);
+            int poses = 0;
+            for (int rang = 0; poses < contacts; rang++) {
+                String nom = code + "_" + rang + ".wav";
+                sequence.setString(1, nom);
+                sequence.setString(3, "/ws/synthese/transformes/" + nom);
+                // Horodatage dans la nuit du 3 au 4 juillet : c'est lui qui donne la saison (ADR 2352).
+                sequence.setString(5, NUIT + "T22:%02d:00".formatted(rang % 60));
+                sequence.executeUpdate();
+                long idSequence = premiereCle(sequence);
+                observation.setLong(1, idSequence);
+                for (int i = 0; i < parSequence && poses < contacts; i++, poses++) {
+                    observation.executeUpdate();
+                }
+            }
+        }
     }
 
-    /// Module de démonstration : un [ServiceSynthese] à lignes fixes, sans base ni référentiel réel.
-    private static final class ModuleDemo extends AbstractModule {
-
-        @Provides
-        SyntheseViewModel viewModel() {
-            return new SyntheseViewModel(serviceDemo());
+    private static void executer(Connection cx, String sql) throws SQLException {
+        try (Statement st = cx.createStatement()) {
+            st.execute(sql);
         }
+    }
 
-        @Provides
-        OuvrirSite ouvrirSite() {
-            return new OuvrirSite() {
-                @Override
-                public void ouvrirListe() {
-                    // Inerte : la capture est rendue hors-chrome.
-                }
-
-                @Override
-                public void ouvrirDetail(String numeroCarre) {
-                    // Inerte.
-                }
-            };
+    private static long cle(Connection cx, String sql, Object... parametres) throws SQLException {
+        try (PreparedStatement st = cx.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            for (int i = 0; i < parametres.length; i++) {
+                st.setObject(i + 1, parametres[i]);
+            }
+            st.executeUpdate();
+            return premiereCle(st);
         }
+    }
 
-        @Provides
-        OuvrirPassage ouvrirPassage() {
-            return (idPassage, contexte) -> {
-                // Inerte.
-            };
+    private static long premiereCle(PreparedStatement st) throws SQLException {
+        try (ResultSet cles = st.getGeneratedKeys()) {
+            cles.next();
+            return cles.getLong(1);
         }
+    }
+
+    /// Ce que la capture surcharge, et **rien de plus** : les espèces prioritaires, pour que le bouclier
+    /// du Plan National d'Actions se voie sur une seule des quatre lignes.
+    private static final class ModuleCapture extends AbstractModule {
 
         /// Espèces prioritaires de la démonstration. **Fidèle au Plan National d'Actions** : parmi les
         /// quatre espèces montrées, seule la Pipistrelle commune y figure. Une démo qui marquerait tout,
@@ -170,36 +270,6 @@ public final class CaptureSynthese {
         @Provides
         EspecesPrioritaires especesPrioritaires() {
             return () -> Set.of("Pippip");
-        }
-
-        /// Service à lignes fixes : les deux lectures sont surchargées, les DAO (nuls) ne sont jamais
-        /// touchés. Un seul but, montrer un tableau déterministe sans base.
-        private static ServiceSynthese serviceDemo() {
-            // DAO à source nulle : jamais interrogé, les deux lectures étant surchargées. Le service
-            // exige un DAO non nul : garde légitime, c'est à la démo de fournir de quoi la satisfaire.
-            return new ServiceSynthese(new ProjectionsAudioDao(null)) {
-                @Override
-                public List<LigneSynthese> pour(
-                        long idPassage, boolean validesSeulement, String numeroCarre, String milieu) {
-                    return lignesDemo();
-                }
-
-                @Override
-                public ContexteActivite contexte(long idPassage, String numeroCarre, String milieu) {
-                    return new ContexteActivite(
-                            Optional.of(SaisonActivite.ETE), Optional.of("Corse"), Optional.ofNullable(milieu));
-                }
-
-                @Override
-                public List<String> milieuxDisponibles() {
-                    return List.of("Agricole", "Foret", "Riviere", "Urbain");
-                }
-
-                @Override
-                public boolean referentielDisponible() {
-                    return true;
-                }
-            };
         }
     }
 }
