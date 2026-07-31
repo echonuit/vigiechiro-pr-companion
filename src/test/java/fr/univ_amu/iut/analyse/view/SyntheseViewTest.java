@@ -57,6 +57,9 @@ class SyntheseViewTest {
     private static final String PIPKUH = "Pipkuh";
     private static final String BOUTON_EXPORTER = "#boutonExporter";
 
+    /// Clé de milieu du référentiel, volontairement sans accent : c'est ainsi qu'elle joint.
+    private static final String CLE_FORET = "Foret";
+
     private ServiceSynthese service;
     private SyntheseController controleur;
 
@@ -78,7 +81,7 @@ class SyntheseViewTest {
     void start(Stage stage) throws Exception {
         service = mock(ServiceSynthese.class);
         when(service.referentielDisponible()).thenReturn(true);
-        when(service.milieuxDisponibles()).thenReturn(List.of("Foret", "Urbain"));
+        when(service.milieuxDisponibles()).thenReturn(List.of(CLE_FORET, "Urbain"));
         when(service.contexte(anyLong(), org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new ContexteActivite(
                         Optional.of(SaisonActivite.ETE), Optional.of("Occitanie"), Optional.empty()));
@@ -141,6 +144,25 @@ class SyntheseViewTest {
 
         assertThat(robot.lookup("#lblReferentiel").queryAs(Label.class).getText())
                 .contains("région Occitanie", "Été");
+    }
+
+    @Test
+    @DisplayName("#3049 : le sélecteur affiche « Forêt », mais sa valeur reste la clé « Foret »")
+    void selecteur_de_milieu_affiche_un_libelle_lisible(FxRobot robot) {
+        robot.interact(() -> controleur.ouvrirSur(new fr.univ_amu.iut.commun.viewmodel.ContextePassage(
+                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite(CARRE, "A1", POINT))));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        javafx.scene.control.ChoiceBox<String> selecteur =
+                robot.lookup("#cbMilieu").queryAs(javafx.scene.control.ChoiceBox.class);
+
+        assertThat(selecteur.getItems())
+                .as("la liste porte les CLÉS du référentiel : ce sont elles qui joignent la donnée")
+                .contains(CLE_FORET, "Urbain");
+        assertThat(selecteur.getConverter().toString(CLE_FORET))
+                .as("mais l'utilisateur lit un mot de sa langue, pas une clé de jointure")
+                .isEqualTo("Forêt");
+        assertThat(selecteur.getConverter().toString("Riviere")).isEqualTo("Rivière");
     }
 
     @Test

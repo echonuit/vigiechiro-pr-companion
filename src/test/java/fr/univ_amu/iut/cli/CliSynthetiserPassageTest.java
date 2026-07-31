@@ -119,6 +119,42 @@ class CliSynthetiserPassageTest {
     }
 
     @Test
+    @DisplayName("#3048 : sans référentiel, le JSON le dit et cesse de créditer une source non chargée")
+    void json_sans_referentiel_ne_cite_plus() {
+        // L'état n'est atteignable que par la couture ajoutée en #3018 : `embarque()` LÈVE si la
+        // ressource manque, donc aucun chemin de production ne produit un référentiel vide aujourd'hui.
+        // Sans cette substitution, la branche `false` de `champsJson` ne serait exercée par rien.
+        // Le CliModule doit rester : sans lui picocli ne sait plus injecter son CommandSpec. On surcharge
+        // donc la MÊME composition que la CLI applicative, on ne la remplace pas.
+        Injector sansReferentiel = com.google.inject.Guice.createInjector(com.google.inject.util.Modules.override(
+                                fr.univ_amu.iut.commun.di.RacineInjecteur.modules())
+                        .with(new com.google.inject.AbstractModule() {
+                            @com.google.inject.Provides
+                            fr.univ_amu.iut.analyse.model.ServiceSynthese service(
+                                    fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao projections)
+                                    throws Exception {
+                                return new fr.univ_amu.iut.analyse.model.ServiceSynthese(
+                                        projections,
+                                        fr.univ_amu.iut.commun.model.ReferentielActivite.lire(
+                                                new java.io.StringReader("")));
+                            }
+                        }))
+                .createChildInjector(new fr.univ_amu.iut.cli.di.CliModule());
+        SortieCapturee tampon = new SortieCapturee();
+
+        int code = new Cli(sansReferentiel)
+                .executer(new String[] {COMMANDE, PASSAGE, "1", FORMAT, "json"}, tampon.sortie(), tampon.erreur());
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(tampon.tout()).contains("\"disponible\": false");
+        assertThat(tampon.tout())
+                .as("créditer une source qu'on n'a pas pu charger n'aiderait personne")
+                .doesNotContain("\"source\"")
+                .doesNotContain("\"avertissement\"")
+                .doesNotContain("\"referentiel\"");
+    }
+
+    @Test
     @DisplayName("synthetiser-passage : un format inconnu se refuse, code 2")
     void format_inconnu_refuse() {
         SortieCapturee tampon = new SortieCapturee();
