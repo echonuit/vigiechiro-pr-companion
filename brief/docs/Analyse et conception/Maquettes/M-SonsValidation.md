@@ -98,7 +98,7 @@ Cet écran **unifie** la validation taxonomique (post-Tadarida) et la bibliothè
   <rect x="450" y="74" width="146" height="26" rx="13" class="chip"/>
   <text x="464" y="91" class="chip-txt">Statut : À revoir  ✕</text>
   <rect x="606" y="74" width="176" height="26" rx="13" class="chip"/>
-  <text x="620" y="91" class="chip-txt">Groupe : Chiroptères  ✕</text>
+  <text x="620" y="91" class="chip-txt">Taxon parent : Chiroptères  ✕</text>
   <rect x="792" y="74" width="132" height="26" rx="13" class="chip"/>
   <text x="806" y="91" class="chip-txt">Proba ≥ 50 %  ✕</text>
   <rect x="1114" y="74" width="34" height="26" rx="3" class="menu"/>
@@ -233,7 +233,7 @@ Cet écran **unifie** la validation taxonomique (post-Tadarida) et la bibliothè
 
 ### Annotations
 
-- **Barre de filtres (« à la Notion »)** : un champ de **recherche libre** (fichier, espèce, commentaire) et un bouton **« + Filtre »** qui ajoute une **puce** parmi six critères combinés en ET : *Statut* (À revoir / Validée / Corrigée), *Groupe*, *Espèce*, *Références*, *Probabilité* (curseur), *Heure* (plage horaire de la nuit). Le tri et les filtres sont **mémorisés** d'une réouverture à l'autre.
+- **Barre de filtres (« à la Notion »)** : un champ de **recherche libre** (fichier, espèce, commentaire) et un bouton **« + Filtre »** qui ajoute une **puce** parmi six critères combinés en ET : *Statut* (À revoir / Validée / Corrigée), *Taxon parent*, *Espèce*, *Références*, *Probabilité* (curseur), *Heure* (plage horaire de la nuit). Le tri et les filtres sont **mémorisés** d'une réouverture à l'autre.
 - **Menu ☰** (coin haut-droit) : il regroupe **toutes** les actions secondaires, variables selon la **source**. Ce n'est pas un menu court : il compte une douzaine d'entrées, réparties en groupes.
     - *Navigation* : `🗺️ Voir sur la carte`, `Fiche de l'espèce`.
     - *Plateforme Vigie-Chiro* : `📥 Importer depuis Vigie-Chiro…`, `📤 Publier les corrections vers Vigie-Chiro…`, `Ouvrir les données sur Vigie-Chiro`.

@@ -71,6 +71,45 @@ def test_0008_echec_silencieux() -> None:
         _verifie("0008 détecte les catch vides (vide + commentaire-seul)", n, 2)
 
 
+def test_3053_capture_libelle() -> None:
+    """Le cas discriminant est le troisième : la MÊME écriture, hors d'un outil de capture, ne compte pas.
+
+    Sans lui, le motif attraperait tout `ifPresent` du dépôt, deviendrait du bruit, et finirait
+    désactivé - ce qui coûte plus cher que l'absence de cliquet.
+    """
+    m = _charge("3053-capture-libelle.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        abstention = (
+            "  void geste() {\n"
+            "    menu.getItems().stream().filter(i -> \"Lieu\".equals(i.getText()))\n"
+            "        .findFirst().ifPresent(MenuItem::fire);\n"
+            "  }\n"
+        )
+        _ecrire(racine, "audio/outils/CaptureX.java", "class CaptureX {\n" + abstention + "}\n")
+        # Le remède : exige et lève. Ne compte pas.
+        _ecrire(
+            racine,
+            "audio/outils/CaptureY.java",
+            "class CaptureY {\n"
+            "  void geste() {\n"
+            "    ApercuFx.exigerParLibelle(\"le menu\", menu.getItems(), MenuItem::getText, \"Lieu\").fire();\n"
+            "  }\n"
+            "}\n",
+        )
+        # Le motif CITÉ dans un commentaire (c'est le cas de l'en-tête d'ApercuFx) : ne compte pas.
+        _ecrire(
+            racine,
+            "audio/outils/CaptureZ.java",
+            "class CaptureZ {\n  /* proscrit : .findFirst().ifPresent(x) */\n}\n",
+        )
+        # Ni le nom ni le paquet d'un outil de capture : hors périmètre, l'usage y est normal.
+        _ecrire(racine, "audio/view/UnControleur.java", "class UnControleur {\n" + abstention + "}\n")
+        _ecrire(racine, "audio/model/CaptureAilleurs.java", "class CaptureAilleurs {\n" + abstention + "}\n")
+        n = len(m.suspects(sources=racine))
+        _verifie("3053 détecte le geste qui ne se fait pas, et lui seul", n, 1)
+
+
 def test_0010_dialogue_hors_port() -> None:
     m = _charge("0010-dialogue-hors-port.py")
     with tempfile.TemporaryDirectory() as d:
@@ -322,6 +361,7 @@ if __name__ == "__main__":
     print("Auto-test des scripts de vérification ADR (#2467) :")
     for essai in (
         test_0008_echec_silencieux,
+        test_3053_capture_libelle,
         test_0010_dialogue_hors_port,
         test_0035_pictogramme,
         test_0037_slot_actions,
