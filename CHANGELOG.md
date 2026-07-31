@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.150.3](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.150.2...v2.150.3) (2026-07-31)
+
+
+### Bug Fixes
+
+* **api:** refuser une lecture paginee arretee par son garde-fou ([#3055](https://github.com/echonuit/vigiechiro-pr-companion/issues/3055)) ([9d25d92](https://github.com/echonuit/vigiechiro-pr-companion/commit/9d25d92487ffc75dec946dde76126389fcc230ee)), closes [#1277](https://github.com/echonuit/vigiechiro-pr-companion/issues/1277) [#3046](https://github.com/echonuit/vigiechiro-pr-companion/issues/3046)
+
 ## [2.150.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.150.1...v2.150.2) (2026-07-31)
 
 
