@@ -47,12 +47,32 @@ en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations
        migration présente** dans le dossier - **surtout pas** `V04`, le compteur est déjà bien plus
        haut.
     2. **Ajoutez son nom au tableau `MIGRATIONS`** de `MigrationSchema` - **l'ordre fait foi**.
+    3. **N'y mettez ni `PRAGMA`, ni `VACUUM`, ni `BEGIN`/`COMMIT` explicite** : le script s'exécute
+       dans une transaction (voir ci-dessous), et ces trois-là n'y survivent pas. Un `PRAGMA` y est
+       silencieusement sans effet, ce qui est le pire des trois. Une migration qui en aurait
+       réellement besoin doit d'abord changer `MigrationSchema.appliquer`.
 
     `App` migre **avant de composer l'injecteur** (`Amorcage.migrerPuisComposer()`) : les drapeaux de
     fonctionnalités sont ainsi lus dans une base à jour, ce qui a fermé le piège dormant #2187
     ([ADR 1038](decisions/1038-la-configuration-d-amorcage-vit-hors-de-la-base.md)). La CLI migre de
     même avant de composer, mais **seulement si la base existe déjà** (une aide ne doit créer aucun
     fichier). Les tests migrent sur leur base jetable.
+
+### Une migration passe entière, ou pas du tout
+
+Chaque script et l'inscription de sa version dans `schema_version` sont portés par **une seule
+transaction** (`MigrationSchema.appliquer`, via l'[unité de travail](#transactions)). Une coupure au
+milieu d'un script ne laisse donc **rien** derrière elle : ni table à moitié créée, ni colonne
+ajoutée sans sa version.
+
+Cette garantie n'est pas un confort, c'est ce qui permet de **relancer**. Les scripts ne sont pas
+idempotents pris un par un (`V01` ne pose aucun `IF NOT EXISTS`, `V26` enchaîne deux `ADD COLUMN`) :
+si une panne en laissait la moitié appliquée, le lancement suivant rejouerait le script depuis le
+début et buterait sur la première instruction déjà passée. L'application ne redémarrerait plus, sans
+qu'aucun message ne dise pourquoi (#2728).
+
+Le message d'échec, lui, **situe** la panne : le fichier, le rang de l'instruction et son début. Un
+« no such column » de SQLite laisserait sinon relire tout le script pour trouver où.
 
 ## Remplacer la base sous une application vivante
 
@@ -149,6 +169,12 @@ Une exception dans le bloc déclenche un **rollback** : la base reste cohérente
 résilience O7). Les erreurs SQL sont remontées en
 [`DataAccessException`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/DataAccessException.java)
 (non vérifiée).
+
+Une `SQLException` nue, qui arrive du pilote sans contexte, est **située** par l'unité de travail.
+En revanche, un bloc qui lève lui-même une `DataAccessException` la voit **propagée telle quelle** :
+elle nomme déjà ce qui a échoué et dans quel état la base se retrouve, et la réemballer mettrait un
+« Transaction annulée » générique devant le message qui renseigne. Le rollback a lieu dans les deux
+cas.
 
 ---
 
