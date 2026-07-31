@@ -275,6 +275,26 @@ setup() {
   [ -f "${BATS_TEST_TMPDIR}/cinq.csv" ]
 }
 
+@test "exporter-activite --a-enjeu : l option existe et le filtre passe, exit 0 (#3079)" {
+  # Le cas manquait : la passe 6 de la cloture avait lance PIT et saute les bats, alors que #3079 avait
+  # change le comportement de la commande. C'est ici, et nulle part ailleurs, que se voit qu'une option
+  # declaree est bien dans le PAQUET et analysee par picocli.
+  run cli exporter-activite --tout --a-enjeu --sortie "${BATS_TEST_TMPDIR}/enjeu.csv"
+  [ "${status}" -eq 0 ]
+  [ -f "${BATS_TEST_TMPDIR}/enjeu.csv" ]
+}
+
+@test "exporter-activite : l aide decrit les cinq filtres (#3059)" {
+  # Une option qui marche mais que l'aide ne nomme pas est introuvable : la parite se juge aussi sur ce
+  # que l'utilisateur peut DECOUVRIR sans lire le code.
+  run cli exporter-activite --help
+  [[ "${output}" == *"--lieu"* ]]
+  [[ "${output}" == *"--nuit"* ]]
+  [[ "${output}" == *"--taxon-parent"* ]]
+  [[ "${output}" == *"--nature"* ]]
+  [[ "${output}" == *"--a-enjeu"* ]]
+}
+
 @test "exporter-activite --nature inconnue : refus explique, exit 2 (#3059)" {
   # Le refus doit NOMMER les valeurs acceptees : borner en silence rendrait un fichier vide sans dire
   # pourquoi, et le script enchainerait.
