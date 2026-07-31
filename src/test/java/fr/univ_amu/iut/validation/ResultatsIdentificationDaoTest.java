@@ -3,10 +3,12 @@ package fr.univ_amu.iut.validation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Path;
@@ -40,21 +42,16 @@ class ResultatsIdentificationDaoTest {
     void preparer() throws SQLException {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        try (Connection cx = source.getConnection()) {
-            executer(cx, "INSERT INTO user(local_id, display_name) VALUES ('u-1', 'Testeur')");
-            long idSite = insererCle(
-                    cx,
-                    "INSERT INTO monitoring_site(square_number, protocol, created_at, user_id)"
-                            + " VALUES ('640380', 'Point fixe standard', '2026-05-01', 'u-1')");
-            long idPoint = insererCle(cx, "INSERT INTO listening_point(code, site_id) VALUES ('A1', ?)", idSite);
-            executer(cx, "INSERT INTO recorder(serial_number) VALUES ('SN-1')");
-            idPassage = insererCle(
-                    cx,
-                    "INSERT INTO passage(passage_number, year, recording_date, start_time, end_time,"
-                            + " workflow_status, point_id, recorder_id)"
-                            + " VALUES (1, 2026, '2026-06-20', '21:00', '05:00', 'Importé', ?, 'SN-1')",
-                    idPoint);
-        }
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .carre("640380")
+                .point("A1")
+                .enregistreur("SN-1")
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:00", "05:00")
+                .statut(StatutWorkflow.IMPORTE)
+                .semerPassage()
+                .idPassage();
         dao = new ResultatsIdentificationDao(source);
     }
 

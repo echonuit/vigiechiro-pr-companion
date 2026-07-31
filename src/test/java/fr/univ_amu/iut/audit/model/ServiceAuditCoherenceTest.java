@@ -6,15 +6,13 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.Prefixe;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.lot.model.BilanVerification;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
@@ -22,21 +20,16 @@ import fr.univ_amu.iut.lot.model.VerificationDepot;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.EmpreinteContenu;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ReleveClimatique;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
@@ -73,19 +66,14 @@ class ServiceAuditCoherenceTest {
     private JournalDuCapteurDao journalDao;
     private ReleveClimatiqueDao releveDao;
     private DepotUniteDao depotDao;
-    private Long idPoint;
 
     @BeforeEach
     void preparer() {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
+        // La topologie naît du premier `creerPassage`, par trouver-ou-créer.
         SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
-        Site site = siteDao.insert(new Site(null, "040962", "Étang", Protocole.STANDARD, null, "2026-05-01", ID_USER));
-        idPoint = pointDao.insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
 
         passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
@@ -358,24 +346,17 @@ class ServiceAuditCoherenceTest {
     // --- Fabriques -------------------------------------------------------------------------------
 
     private Long creerPassage(int numeroPassage) {
-        return passageDao
-                .insert(new Passage(
-                        null,
-                        numeroPassage,
-                        2026,
-                        "2026-06-20",
-                        "21:30:00",
-                        "05:15:00",
-                        null,
-                        StatutWorkflow.VERIFIE,
-                        Verdict.OK,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        return JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("040962")
+                .nomSite("Étang")
+                .point("A1")
+                .enregistreur(SERIE)
+                .nuit(numeroPassage, 2026, "2026-06-20")
+                .statut(StatutWorkflow.VERIFIE)
+                .verdict(Verdict.OK)
+                .semerPassage()
+                .idPassage();
     }
 
     @Test

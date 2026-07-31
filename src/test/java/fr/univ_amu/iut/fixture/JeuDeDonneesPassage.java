@@ -97,6 +97,8 @@ public final class JeuDeDonneesPassage {
     private String nomSite = "Site de test";
     private Protocole protocole = Protocole.STANDARD;
     private String codePoint = "A1";
+    private String nomPoint;
+    private boolean pointSynchronise;
     private Double latitude;
     private Double longitude;
     private Long idPointImpose;
@@ -107,6 +109,10 @@ public final class JeuDeDonneesPassage {
     private StatutWorkflow statut = StatutWorkflow.IMPORTE;
     private Verdict verdict;
     private String cheminSession = "/ws/session";
+    private String heureDebut = "22:00";
+    private String heureFin = "06:00";
+    private String deposeLe;
+    private String donneesMeteo;
 
     private Long idSite;
     private Long idPoint;
@@ -145,6 +151,26 @@ public final class JeuDeDonneesPassage {
 
     public JeuDeDonneesPassage point(String code) {
         this.codePoint = code;
+        return this;
+    }
+
+    /// Nom libre du point (« lisière », « Chêne »). `null` par défaut.
+    ///
+    /// Deux tests l'exigent : ils vérifient que le diagnostic et la vue remontent ce que la feature
+    /// `sites` sait du point. C'est un champ du point, que la fixture construisait déjà nul.
+    public JeuDeDonneesPassage nomPoint(String nom) {
+        this.nomPoint = nom;
+        return this;
+    }
+
+    /// Point **rapatrié de la plateforme** plutôt qu'ajouté à la main. `false` par défaut.
+    ///
+    /// Un seul appelant aujourd'hui, et je l'ajoute quand même : c'est un **champ du point**, que la
+    /// fixture construit déjà (à `false`), au même titre que [#nomPoint] ou [#position]. La règle du
+    /// compte d'appelants vaut pour les options qui ajoutent de l'ambiguïté, pas pour les champs que le
+    /// domaine porte de toute façon.
+    public JeuDeDonneesPassage pointRapatrie() {
+        this.pointSynchronise = true;
         return this;
     }
 
@@ -219,6 +245,37 @@ public final class JeuDeDonneesPassage {
         return this;
     }
 
+    /// Heures de début et de fin d'acquisition. `22:00` / `06:00` par défaut.
+    ///
+    /// La fixture les écrivait **en dur**, et c'est le seul champ du passage qu'elle inventait : les tests
+    /// migrés portaient `20:25:00`/`07:47:00` ou `21:30:00`/`05:15:00`. Tant qu'aucun n'affirmait dessus,
+    /// la substitution passait ; le premier qui l'a fait a rougi, précisément et tout de suite (#1771).
+    public JeuDeDonneesPassage heures(String debut, String fin) {
+        this.heureDebut = debut;
+        this.heureFin = fin;
+        return this;
+    }
+
+    /// Date de dépôt sur la plateforme, telle que la porte le passage. `null` par défaut - une nuit non
+    /// déposée n'en a pas.
+    ///
+    /// Deux tests l'exigent : ils éprouvent la **récupérabilité** d'une nuit déjà déposée, et la date est
+    /// ce qui distingue « déposée » de « prête à déposer ». C'est un champ du passage, pas une option de
+    /// test : la fixture le construit déjà, elle se contentait de le laisser nul (#1771).
+    public JeuDeDonneesPassage deposeLe(String date) {
+        this.deposeLe = date;
+        return this;
+    }
+
+    /// Données météo du passage, en JSON. `null` par défaut.
+    ///
+    /// Sert au test qui vérifie qu'un relevé de température **préserve** les autres clés déjà présentes :
+    /// il lui faut donc une nuit qui en porte une avant qu'il n'écrive.
+    public JeuDeDonneesPassage donneesMeteo(String json) {
+        this.donneesMeteo = json;
+        return this;
+    }
+
     /// Verdict de vérification du passage (#1258 : les tests de la vue multi-sites en dépendent). `null`
     /// par défaut - une nuit non vérifiée n'a pas de verdict.
     public JeuDeDonneesPassage verdict(Verdict verdict) {
@@ -265,14 +322,14 @@ public final class JeuDeDonneesPassage {
                         numeroPassage,
                         annee,
                         dateNuit,
-                        "22:00",
-                        "06:00",
+                        heureDebut,
+                        heureFin,
                         null,
                         statut,
                         verdict,
                         null,
-                        null,
-                        null,
+                        donneesMeteo,
+                        deposeLe,
                         idPoint,
                         numeroSerie,
                         null))
@@ -479,6 +536,15 @@ public final class JeuDeDonneesPassage {
         return idPassage;
     }
 
+    /// Le **passage** semé, relu depuis la base.
+    ///
+    /// Sept appelants gardent l'entité et non son identifiant : ils la passent à un service ou en relisent
+    /// un champ. Même compte que pour [#leSite()], même conclusion.
+    public Passage lePassage() {
+        exigerSemis();
+        return new PassageDao(source).findById(idPassage).orElseThrow();
+    }
+
     public long idSession() {
         exigerSession();
         return idSession;
@@ -551,7 +617,8 @@ public final class JeuDeDonneesPassage {
                 .filter(point -> point.code().equals(codePoint))
                 .map(PointDEcoute::id)
                 .findFirst()
-                .orElseGet(() -> dao.insert(new PointDEcoute(null, codePoint, latitude, longitude, null, idSite))
+                .orElseGet(() -> dao.insert(new PointDEcoute(
+                                null, codePoint, latitude, longitude, nomPoint, idSite, pointSynchronise))
                         .id());
     }
 }

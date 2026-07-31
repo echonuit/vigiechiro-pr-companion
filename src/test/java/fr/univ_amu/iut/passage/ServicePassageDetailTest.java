@@ -4,17 +4,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
@@ -31,10 +28,6 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -56,25 +49,19 @@ class ServicePassageDetailTest {
 
     private ServicePassage service;
     private ServiceConditionsPassage conditions;
+    private SourceDeDonnees source;
     private PassageDao passageDao;
     private SessionDao sessionDao;
     private EnregistrementOriginalDao originalDao;
     private SequenceDao sequenceDao;
     private EnregistreurDao enregistreurDao;
-    private Long idPoint;
 
     @BeforeEach
     void preparer() {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "A1", 43.5, 5.4, null, site.id()))
-                .id();
+        // La topologie naît du premier `insererPassage`, par trouver-ou-créer.
         enregistreurDao = new EnregistreurDao(source);
-        enregistreurDao.insert(new Enregistreur(SERIE, "V1.01", null));
         passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
         originalDao = new EnregistrementOriginalDao(source);
@@ -142,22 +129,18 @@ class ServicePassageDetailTest {
     }
 
     private Passage insererPassage(int numero, StatutWorkflow statut) {
-        return passageDao.insert(new Passage(
-                null,
-                numero,
-                2026,
-                "2026-06-22",
-                "20:25:00",
-                "07:47:00",
-                null,
-                statut,
-                null,
-                null,
-                null,
-                null,
-                idPoint,
-                SERIE,
-                null));
+        return JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("640380")
+                .nomSite("Étang")
+                .point("A1")
+                .position(43.5, 5.4)
+                .enregistreur(SERIE)
+                .nuit(numero, 2026, "2026-06-22")
+                .heures("20:25:00", "07:47:00")
+                .statut(statut)
+                .semerPassage()
+                .lePassage();
     }
 
     private void insererSequence(Long idSession, double duree) {
@@ -253,22 +236,19 @@ class ServicePassageDetailTest {
     @Test
     @DisplayName("#106 : definirMeteo préserve les autres clés météo de weather_data")
     void temperature_preserve_les_autres_cles() {
-        Passage passage = passageDao.insert(new Passage(
-                null,
-                4,
-                2026,
-                "2026-06-22",
-                "20:25:00",
-                "07:47:00",
-                null,
-                StatutWorkflow.TRANSFORME,
-                null,
-                null,
-                "{\"hygro\":80}", // une autre clé météo déjà présente
-                null,
-                idPoint,
-                SERIE,
-                null));
+        Passage passage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("640380")
+                .nomSite("Étang")
+                .point("A1")
+                .position(43.5, 5.4)
+                .enregistreur(SERIE)
+                .nuit(4, 2026, "2026-06-22")
+                .heures("20:25:00", "07:47:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .donneesMeteo("{\"hygro\":80}") // une autre clé météo déjà présente
+                .semerPassage()
+                .lePassage();
 
         conditions.definirMeteo(passage.id(), new MeteoReleve(8.5, null, null, null));
 

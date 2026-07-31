@@ -2,25 +2,17 @@ package fr.univ_amu.iut.lot;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
-import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,6 +25,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// cascade à la suppression du passage. Base SQLite jetable (`@TempDir` + [MigrationSchema]).
 class DepotUniteDaoTest {
 
+    private SourceDeDonnees source;
     private static final String MAINTENANT = "2026-07-11T12:00:00";
 
     @TempDir
@@ -45,38 +38,33 @@ class DepotUniteDaoTest {
 
     @BeforeEach
     void preparer() {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         // Chaîne de parents requise par les FK : user -> site -> point, l'enregistreur, puis le passage.
-        new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-05-31", "u-1"));
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "Z1", 43.5, 5.4, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
+        idPoint = JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .carre("640380")
+                .nomSite("Étang")
+                .point("Z1")
+                .position(43.5, 5.4)
+                .enregistreur("1925492")
+                .semerSiteEtPoint()
+                .idPoint();
         passageDao = new PassageDao(source);
         idPassage = insererPassage(2).id();
         dao = new DepotUniteDao(source);
     }
 
     private Passage insererPassage(int numero) {
-        return passageDao.insert(new Passage(
-                null,
-                numero,
-                2026,
-                "2026-04-22",
-                "20:25:00",
-                "07:47:00",
-                null,
-                StatutWorkflow.PRET_A_DEPOSER,
-                null,
-                null,
-                null,
-                null,
-                idPoint,
-                "1925492",
-                null));
+        return JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .surLePoint(idPoint)
+                .enregistreur("1925492")
+                .nuit(numero, 2026, "2026-04-22")
+                .heures("20:25:00", "07:47:00")
+                .statut(StatutWorkflow.PRET_A_DEPOSER)
+                .semerPassage()
+                .lePassage();
     }
 
     @Test

@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.ModeValidation;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -59,25 +61,32 @@ class ObservationDaoTest {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         try (Connection cx = source.getConnection()) {
-            executer(cx, "INSERT INTO user(local_id, display_name) VALUES ('u-1', 'Testeur')");
-            long idSite = insererCle(
-                    cx,
-                    "INSERT INTO monitoring_site(square_number, protocol, created_at, user_id)"
-                            + " VALUES ('640380', 'Point fixe standard', '2026-05-01', 'u-1')");
-            long idPoint = insererCle(cx, "INSERT INTO listening_point(code, site_id) VALUES ('A1', ?)", idSite);
+            // Utilisateur, site, point et enregistreur viennent de la fixture, avec le passage.
+            // ⚠️ Le SQL d'origine écrivait le protocole « Point fixe standard », un libellé que
+            // `Protocole` ne connaît plus (il stocke « PointFixeStandard ») : la ligne était illisible par
+            // `SiteDao`, et personne ne s'en apercevait parce que ce test ne relisait jamais le site.
+            long idPoint = JeuDeDonneesPassage.dans(source)
+                    .utilisateur("u-1")
+                    .carre("640380")
+                    .point("A1")
+                    .semerSiteEtPoint()
+                    .idPoint();
             // Commune résolue du point (#2791, table latérale) : la projection audio doit la porter.
             insererCle(
                     cx,
                     "INSERT INTO point_commune(point_id, commune_name, commune_insee)"
                             + " VALUES (?, 'Aix-en-Provence', '13001')",
                     idPoint);
-            executer(cx, "INSERT INTO recorder(serial_number) VALUES ('SN-1')");
-            idPassage = insererCle(
-                    cx,
-                    "INSERT INTO passage(passage_number, year, recording_date, start_time, end_time,"
-                            + " workflow_status, point_id, recorder_id)"
-                            + " VALUES (1, 2026, '2026-06-20', '21:00', '05:00', 'Importé', ?, 'SN-1')",
-                    idPoint);
+            idPassage = JeuDeDonneesPassage.dans(source)
+                    .utilisateur("u-1")
+                    .carre("640380")
+                    .point("A1")
+                    .enregistreur("SN-1")
+                    .nuit(1, 2026, "2026-06-20")
+                    .heures("21:00", "05:00")
+                    .statut(StatutWorkflow.IMPORTE)
+                    .semerPassage()
+                    .idPassage();
             long idSession =
                     insererCle(cx, "INSERT INTO recording_session(root_path, passage_id) VALUES ('/ws', ?)", idPassage);
             long idOriginal = insererCle(
@@ -907,18 +916,17 @@ class ObservationDaoTest {
     /// Retourne `{idPassage, idSequence, idResultats}`.
     private long[] creerSecondPassage() throws SQLException {
         try (Connection cx = source.getConnection()) {
-            long idPoint;
-            try (Statement st = cx.createStatement();
-                    ResultSet rs = st.executeQuery("SELECT id FROM listening_point LIMIT 1")) {
-                rs.next();
-                idPoint = rs.getLong(1);
-            }
-            long idPassage2 = insererCle(
-                    cx,
-                    "INSERT INTO passage(passage_number, year, recording_date, start_time, end_time,"
-                            + " workflow_status, point_id, recorder_id)"
-                            + " VALUES (3, 2026, '2026-07-15', '21:00', '05:00', 'Importé', ?, 'SN-1')",
-                    idPoint);
+            // Le point est celui déjà semé : la fixture le retrouve par son code, plus besoin de le relire.
+            long idPassage2 = JeuDeDonneesPassage.dans(source)
+                    .utilisateur("u-1")
+                    .carre("640380")
+                    .point("A1")
+                    .enregistreur("SN-1")
+                    .nuit(3, 2026, "2026-07-15")
+                    .heures("21:00", "05:00")
+                    .statut(StatutWorkflow.IMPORTE)
+                    .semerPassage()
+                    .idPassage();
             long idSession2 = insererCle(
                     cx, "INSERT INTO recording_session(root_path, passage_id) VALUES ('/ws2', ?)", idPassage2);
             long idOriginal2 = insererCle(

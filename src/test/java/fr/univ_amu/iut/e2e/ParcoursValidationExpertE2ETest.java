@@ -18,30 +18,16 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
-import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
-import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
-import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
-import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MessageObservation;
@@ -179,37 +165,19 @@ class ParcoursValidationExpertE2ETest {
     /// La nuit, telle qu'elle est en base après un import de la carte SD : un site, un point, un passage,
     /// une session et **la** séquence que la participation serveur va nommer.
     private void semerLaNuit(SourceDeDonnees source) {
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur E2E"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "130711", "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        Long idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "Z41", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
-        Passage passage = new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        1,
-                        2026,
-                        "2026-07-03",
-                        "22:00",
-                        "06:00",
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null));
-        idPassage = passage.id();
-        Long idSession = new SessionDao(source)
-                .insert(new SessionDEnregistrement(null, "/ws/session", null, null, idPassage))
-                .id();
-        Long idOriginal = new EnregistrementOriginalDao(source)
-                .insert(new EnregistrementOriginal(null, "brut.wav", "/ws/brut.wav", 5.0, 384_000, null, idSession))
-                .id();
+        // Session, original et fréquence sont ceux que la fixture pose par défaut.
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("130711")
+                .nomSite("Étang")
+                .point("Z41")
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-07-03")
+                .statut(StatutWorkflow.DEPOSE)
+                .semer();
+        idPassage = jeu.idPassage();
+        Long idSession = jeu.idSession();
+        Long idOriginal = jeu.idOriginal();
         new SequenceDao(source)
                 .insert(new SequenceDEcoute(
                         null,

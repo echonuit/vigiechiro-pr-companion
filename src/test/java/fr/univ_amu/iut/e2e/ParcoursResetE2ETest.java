@@ -24,23 +24,13 @@ import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.api.TaxonVigieChiro;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Passage;
-import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -164,33 +154,17 @@ class ParcoursResetE2ETest {
     private static SourceDeDonnees preparerBaseAbimee(Injector injector) {
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "999999", "Site fantôme", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        Long idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "Z9", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, null, null));
-        Passage passage = new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        1,
-                        2025,
-                        "2025-06-01",
-                        "22:00",
-                        "06:00",
-                        null,
-                        StatutWorkflow.IMPORTE,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null));
-        new SessionDao(source)
-                .insert(new SessionDEnregistrement(null, "/disque/qui/n/existe/plus", null, null, passage.id()));
+        // La session pointe vers un dossier disparu : c'est tout le sujet de ce parcours.
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("999999")
+                .nomSite("Site fantôme")
+                .point("Z9")
+                .enregistreur(SERIE)
+                .nuit(1, 2025, "2025-06-01")
+                .statut(StatutWorkflow.IMPORTE)
+                .cheminSession("/disque/qui/n/existe/plus")
+                .semerSquelette();
         return source;
     }
 

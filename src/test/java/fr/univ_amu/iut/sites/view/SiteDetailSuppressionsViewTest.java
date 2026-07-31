@@ -5,17 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
@@ -81,11 +79,15 @@ class SiteDetailSuppressionsViewTest {
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
         // Un site, un point, aucun passage : les deux suppressions sont ouvertes.
-        site = new SiteDao(source)
-                .insert(new Site(null, CARRE, "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, CODE_POINT, 43.5, 5.4, null, site.id()))
-                .id();
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre(CARRE)
+                .nomSite("Étang")
+                .point(CODE_POINT)
+                .position(43.5, 5.4)
+                .semerSiteEtPoint();
+        site = jeu.leSite();
+        idPoint = jeu.idPoint();
 
         // Le chrome, pour que le retour à l'accueil après suppression du site soit une vraie navigation.
         FXMLLoader chrome = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
@@ -119,23 +121,14 @@ class SiteDetailSuppressionsViewTest {
     /// lien « Supprimer » de la carte se ferme (#789). L'écran est rouvert pour refléter la nuit.
     private void rattacherUnPassage(FxRobot robot) {
         new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
-        new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        2,
-                        2026,
-                        "2026-06-22",
-                        "20:25:00",
-                        "07:47:00",
-                        null,
-                        StatutWorkflow.TRANSFORME,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        "1925492",
-                        null));
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur("1925492")
+                .nuit(2, 2026, "2026-06-22")
+                .heures("20:25:00", "07:47:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .semerPassage();
         robot.interact(() -> controleur.afficher(site));
     }
 
@@ -236,7 +229,12 @@ class SiteDetailSuppressionsViewTest {
     void point_rapatrie_masque_puis_revele(FxRobot robot) {
         // Un point RAPATRIÉ (synchronisé) et jamais utilisé s'ajoute au site : contrairement au point A1
         // (ajouté à la main, toujours visible), il n'apparaît pas d'emblée.
-        new PointDao(source).insert(new PointDEcoute(null, "Z9", null, null, null, site.id(), true));
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre(CARRE)
+                .point("Z9")
+                .pointRapatrie()
+                .semerSiteEtPoint();
         robot.interact(() -> controleur.afficher(site));
 
         assertThat(codesPointsAffiches(robot))

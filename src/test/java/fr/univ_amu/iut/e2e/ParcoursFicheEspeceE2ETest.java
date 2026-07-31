@@ -9,12 +9,14 @@ import com.google.inject.Provides;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurFiche;
 import fr.univ_amu.iut.commun.view.ExecuteurFicheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -117,16 +119,16 @@ class ParcoursFicheEspeceE2ETest {
     private static void semerReferenceChiroptere(SourceDeDonnees source) {
         try (Connection cx = source.getConnection();
                 Statement st = cx.createStatement()) {
-            st.execute("INSERT INTO user(local_id, display_name) VALUES ('u-1', 'Testeur E2E')");
-            st.execute("INSERT INTO monitoring_site(square_number, protocol, created_at, user_id)"
-                    + " VALUES ('640380', 'Point fixe standard', '2026-05-01', 'u-1')");
-            st.execute("INSERT INTO listening_point(code, site_id)"
-                    + " VALUES ('A1', (SELECT id FROM monitoring_site WHERE square_number = '640380'))");
-            st.execute("INSERT INTO recorder(serial_number) VALUES ('SN-1')");
-            st.execute("INSERT INTO passage(passage_number, year, recording_date, start_time, end_time,"
-                    + " workflow_status, point_id, recorder_id)"
-                    + " VALUES (1, 2026, '2026-06-20', '21:00', '05:00', 'Importé',"
-                    + " (SELECT id FROM listening_point WHERE code = 'A1'), 'SN-1')");
+            // ⚠️ Le SQL d'origine écrivait le protocole « Point fixe standard », inconnu de `Protocole`.
+            JeuDeDonneesPassage.dans(source)
+                    .utilisateur("u-1")
+                    .carre("640380")
+                    .point("A1")
+                    .enregistreur("SN-1")
+                    .nuit(1, 2026, "2026-06-20")
+                    .heures("21:00", "05:00")
+                    .statut(StatutWorkflow.IMPORTE)
+                    .semerPassage();
             st.execute("INSERT INTO recording_session(root_path, passage_id)"
                     + " VALUES ('/ws', (SELECT id FROM passage WHERE passage_number = 1))");
             st.execute(

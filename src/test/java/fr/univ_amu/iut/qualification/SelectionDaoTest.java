@@ -4,11 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.MethodeSelection;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
 import fr.univ_amu.iut.qualification.model.SequenceSelectionnee;
 import fr.univ_amu.iut.qualification.model.dao.SelectionDao;
@@ -44,17 +46,16 @@ class SelectionDaoTest {
     void preparer() {
         source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        inserer("INSERT INTO user (local_id, display_name) VALUES ('u-1', 'Testeur')");
-        long idSite = inserer("INSERT INTO monitoring_site (square_number, protocol, created_at, user_id)"
-                + " VALUES ('640380', 'PointFixeStandard', '2026-01-01', 'u-1')");
-        long idPoint = inserer("INSERT INTO listening_point (code, site_id) VALUES ('A1', " + idSite + ")");
-        inserer("INSERT INTO recorder (serial_number) VALUES ('SM4-001')");
-        idPassage = inserer("INSERT INTO passage"
-                + " (passage_number, year, recording_date, start_time, end_time, workflow_status,"
-                + " point_id, recorder_id)"
-                + " VALUES (1, 2026, '2026-05-01', '20:00', '06:00', 'Importé', "
-                + idPoint
-                + ", 'SM4-001')");
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .carre("640380")
+                .point("A1")
+                .enregistreur("SM4-001")
+                .nuit(1, 2026, "2026-05-01")
+                .heures("20:00", "06:00")
+                .statut(StatutWorkflow.IMPORTE)
+                .semerPassage()
+                .idPassage();
         idSession = inserer(
                 "INSERT INTO recording_session (root_path, passage_id) VALUES ('/tmp/sess', " + idPassage + ")");
         idOriginal = inserer("INSERT INTO original_recording (file_name, file_path, session_id)"

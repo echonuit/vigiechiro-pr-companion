@@ -4,32 +4,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.fixture.SortieCapturee;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.file.Files;
@@ -59,8 +50,6 @@ class CliResetGuideTest {
     private final PrintStream sortie = capture.sortie();
     private final PrintStream erreur = capture.erreur();
 
-    private Long idPoint;
-
     @BeforeEach
     void preparer() {
         System.setProperty("vigiechiro.workspace", workspaceDir.toString());
@@ -68,13 +57,7 @@ class CliResetGuideTest {
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "130711", "Carré", Protocole.STANDARD, null, "2026-05-01", ID_USER));
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "Z41", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, null, null));
+        // La topologie naît du premier passage semé, par trouver-ou-créer.
     }
 
     @AfterEach
@@ -177,24 +160,17 @@ class CliResetGuideTest {
     private Long creerNuit(int numeroPassage, boolean surDisque) throws IOException {
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         Workspace workspace = injecteur.getInstance(Workspace.class);
-        Long idPassage = new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        numeroPassage,
-                        2026,
-                        "2026-07-03",
-                        "22:00",
-                        "06:00",
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        null,
-                        null,
-                        null,
-                        "2026-07-03",
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        Long idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("130711")
+                .nomSite("Carré")
+                .point("Z41")
+                .enregistreur(SERIE)
+                .nuit(numeroPassage, 2026, "2026-07-03")
+                .statut(StatutWorkflow.DEPOSE)
+                .deposeLe("2026-07-03")
+                .semerPassage()
+                .idPassage();
         String nomSession = "Car130711-2026-Pass" + numeroPassage + "-Z41";
         Path racine = workspace.dossierSession(nomSession);
         Path transformes = workspace.dossierTransformes(nomSession);

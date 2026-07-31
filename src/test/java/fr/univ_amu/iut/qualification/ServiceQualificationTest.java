@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.Prefixe;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -16,8 +15,8 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
@@ -35,8 +34,6 @@ import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.model.SequenceSelectionnee;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.model.dao.SelectionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
@@ -86,26 +83,18 @@ class ServiceQualificationTest {
         selectionDao = new SelectionDao(source);
         EnregistreurDao enregistreurDao = new EnregistreurDao(source);
 
-        Site site = siteDao.insert(new Site(null, "040962", "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        PointDEcoute point = pointDao.insert(new PointDEcoute(null, "A1", 43.5, 5.4, null, site.id()));
-        enregistreurDao.insert(new Enregistreur("1925492", "V1.01", null));
-        Passage passage = passageDao.insert(new Passage(
-                null,
-                1,
-                2026,
-                "2026-06-20",
-                "20:00:00",
-                "06:00:00",
-                null,
-                StatutWorkflow.TRANSFORME,
-                null,
-                null,
-                null,
-                null,
-                point.id(),
-                "1925492",
-                null));
-        idPassage = passage.id();
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("040962")
+                .nomSite("Étang")
+                .point("A1")
+                .position(43.5, 5.4)
+                .enregistreur("1925492")
+                .nuit(1, 2026, "2026-06-20")
+                .heures("20:00:00", "06:00:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .semerPassage()
+                .idPassage();
         SessionDEnregistrement session = sessionDao.insert(
                 new SessionDEnregistrement(null, "/ws/" + prefixe.nomDossierSession(), null, null, idPassage));
         idSession = session.id();

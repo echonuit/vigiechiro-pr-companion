@@ -17,8 +17,8 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -44,6 +44,7 @@ class SiteDetailViewModelTest {
     Path dossier;
 
     private ServiceSites service;
+    private SourceDeDonnees source;
     private PassageDao passageDao;
     private PointDao pointDao;
     private SiteDetailViewModel viewModel;
@@ -51,7 +52,7 @@ class SiteDetailViewModelTest {
 
     @BeforeEach
     void preparer() {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
         SiteDao siteDao = new SiteDao(source);
@@ -317,22 +318,17 @@ class SiteDetailViewModelTest {
         assertThat(viewModel.nombrePointsMasquesProperty().get()).isEqualTo(1);
     }
 
+    /// `surLePoint` : ces tests construisent plusieurs points eux-mêmes et rattachent leur nuit à l'un
+    /// d'eux. La fixture résout le point par son code ; ici c'est un identifiant qu'on lui donne (#2989).
     private void insererPassage(PointDEcoute point, int numeroPassage, String date, Verdict verdict) {
-        passageDao.insert(new Passage(
-                null,
-                numeroPassage,
-                2026,
-                date,
-                "21:00:00",
-                "05:00:00",
-                null,
-                StatutWorkflow.TRANSFORME,
-                verdict,
-                null,
-                null,
-                null,
-                point.id(),
-                "1925492",
-                null));
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(point.id())
+                .enregistreur("1925492")
+                .nuit(numeroPassage, 2026, date)
+                .heures("21:00:00", "05:00:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .verdict(verdict)
+                .semerPassage();
     }
 }

@@ -6,15 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Prefixe;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
@@ -28,21 +26,17 @@ import fr.univ_amu.iut.lot.model.VerificationCoherence;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
@@ -77,19 +71,15 @@ class ServiceLotTest {
     private SequenceDao sequenceDao;
     private JournalDuCapteurDao journalDao;
     private final Horloge horloge = new HorlogeFigee(INSTANT_DEPOT);
-    private Long idPoint;
+    private SourceDeDonnees source;
 
     @BeforeEach
     void preparer() {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
+        // La topologie naît du premier `creerPassage` : la fixture la sème par trouver-ou-créer.
         SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
-        Site site = siteDao.insert(new Site(null, "040962", "Étang", Protocole.STANDARD, null, "2026-05-01", ID_USER));
-        idPoint = pointDao.insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
 
         passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
@@ -114,22 +104,17 @@ class ServiceLotTest {
     }
 
     private Passage creerPassage(Verdict verdict) {
-        return passageDao.insert(new Passage(
-                null,
-                1,
-                2026,
-                "2026-06-20",
-                "21:30:00",
-                "05:15:00",
-                null,
-                StatutWorkflow.VERIFIE,
-                verdict,
-                null,
-                null,
-                null,
-                idPoint,
-                SERIE,
-                null));
+        return JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("040962")
+                .nomSite("Étang")
+                .point("A1")
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .statut(StatutWorkflow.VERIFIE)
+                .verdict(verdict)
+                .semerPassage()
+                .lePassage();
     }
 
     /// Session entièrement cohérente : 2 séquences préfixées issues d'un original + journal.
