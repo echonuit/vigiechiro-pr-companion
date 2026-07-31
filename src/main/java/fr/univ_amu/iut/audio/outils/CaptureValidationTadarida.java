@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.util.Modules;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.view.SonsValidationController;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
@@ -12,11 +13,10 @@ import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
-import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -37,7 +37,6 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
-import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -49,7 +48,6 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.validation.di.ValidationModule;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
@@ -164,120 +162,120 @@ public final class CaptureValidationTadarida {
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
     /// (test).
     public static Injector creerInjecteur() {
-        return Guice.createInjector(
-                ModuleCaptureCommun.communSynchrone(),
-                new PersistenceModule(),
-                new PassageModule(),
-                new ValidationModule(),
-                new BibliothequeModule(),
-                new ModuleCaptureNavigationAudio(),
-                new AbstractModule() {
-                    /// Singleton de capture : le controller et le code de capture partagent le MÊME
-                    /// ViewModel, pour pouvoir déclencher l'import après l'ouverture.
-                    @Provides
-                    @Singleton
-                    AudioViewModel viewModel(
-                            ServiceValidation validation,
-                            ProjectionsAudioDao projectionsAudio,
-                            PlageNuitPassage plageNuitPassage,
-                            ValidationManuelle validationManuelle,
-                            MarquageDouteux marquageDouteux,
-                            SaisieCertitude saisieCertitude,
-                            RevueEnLot revueEnLot,
-                            ExporteurAudio exporteur,
-                            ServiceDisponibiliteAudio disponibilite,
-                            DiscussionValidateur discussion) {
-                        return new AudioViewModel(
-                                validation,
-                                projectionsAudio,
-                                plageNuitPassage,
-                                validationManuelle,
-                                marquageDouteux,
-                                saisieCertitude,
-                                revueEnLot,
-                                exporteur,
-                                disponibilite,
-                                Files::exists,
-                                discussion);
-                    }
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(
+                        ModuleCaptureCommun.executeursSynchrones(),
+                        new ModuleCaptureNavigationAudio(),
+                        new AbstractModule() {
+                            /// Singleton de capture : le contrôleur et le code de capture partagent le
+                            /// MÊME ViewModel, pour déclencher l'import après l'ouverture.
+                            @Provides
+                            @Singleton
+                            AudioViewModel viewModel(
+                                    ServiceValidation validation,
+                                    ProjectionsAudioDao projectionsAudio,
+                                    PlageNuitPassage plageNuitPassage,
+                                    ValidationManuelle validationManuelle,
+                                    MarquageDouteux marquageDouteux,
+                                    SaisieCertitude saisieCertitude,
+                                    RevueEnLot revueEnLot,
+                                    ExporteurAudio exporteur,
+                                    ServiceDisponibiliteAudio disponibilite,
+                                    DiscussionValidateur discussion) {
+                                return new AudioViewModel(
+                                        validation,
+                                        projectionsAudio,
+                                        plageNuitPassage,
+                                        validationManuelle,
+                                        marquageDouteux,
+                                        saisieCertitude,
+                                        revueEnLot,
+                                        exporteur,
+                                        disponibilite,
+                                        Files::exists,
+                                        discussion);
+                            }
 
-                    @Provides
-                    ExporteurAudio exporteur(
-                            ServiceValidation validation,
-                            ServiceBibliotheque bibliotheque,
-                            SequenceDao sequenceDao,
-                            SessionDao sessionDao) {
-                        return new ExporteurAudio(
-                                validation, bibliotheque, new ExportObservationsEtSons(sequenceDao, sessionDao));
-                    }
+                            @Provides
+                            ExporteurAudio exporteur(
+                                    ServiceValidation validation,
+                                    ServiceBibliotheque bibliotheque,
+                                    SequenceDao sequenceDao,
+                                    SessionDao sessionDao) {
+                                return new ExporteurAudio(
+                                        validation,
+                                        bibliotheque,
+                                        new ExportObservationsEtSons(sequenceDao, sessionDao));
+                            }
 
-                    // Repondre au validateur est indisponible en capture (aucune connexion) : le fil se
-                    // LIT, la saisie se desactive en disant pourquoi (affordance #789). Cet injecteur ne
-                    // charge pas AudioModule, il faut donc lui fournir le collaborateur ici.
-                    @Provides
-                    @Singleton
-                    DiscussionValidateur discussion(ServiceValidation service, StockageConnexion connexion) {
-                        return new DiscussionValidateur(service, connexion, java.util.Optional.empty());
-                    }
+                            // Repondre au validateur est indisponible en capture (aucune connexion) : le fil se
+                            // LIT, la saisie se desactive en disant pourquoi (affordance #789). Cet injecteur ne
+                            // charge pas AudioModule, il faut donc lui fournir le collaborateur ici.
+                            @Provides
+                            @Singleton
+                            DiscussionValidateur discussion(ServiceValidation service, StockageConnexion connexion) {
+                                return new DiscussionValidateur(service, connexion, java.util.Optional.empty());
+                            }
 
-                    // Surface **connectée** (#1865) : sans ces deux passerelles, MenuAudio.adapter masque
-                    // « Importer depuis Vigie-Chiro… » et « Publier les corrections… », et la moitié du
-                    // menu ☰ n'apparaissait sur AUCUNE capture. Le client pointe vers une adresse morte :
-                    // la capture REND la vue, elle ne clique sur rien - il suffit que la passerelle
-                    // existe. Patron repris de CapturePassage.injecteurConnecte() (#1839).
-                    @Provides
-                    @Singleton
-                    ImportVigieChiroViewModel importVigieChiro(ServiceValidation service, SourceDeDonnees source) {
-                        return new ImportVigieChiroViewModel(Optional.of(new ImportVigieChiro(
-                                clientHorsAtteinte(),
-                                new TraitementVigieChiro(clientHorsAtteinte()),
-                                new LienVigieChiroDao(source),
-                                service)));
-                    }
+                            // Surface **connectée** (#1865) : sans ces deux passerelles, MenuAudio.adapter masque
+                            // « Importer depuis Vigie-Chiro… » et « Publier les corrections… », et la moitié du
+                            // menu ☰ n'apparaissait sur AUCUNE capture. Le client pointe vers une adresse morte :
+                            // la capture REND la vue, elle ne clique sur rien - il suffit que la passerelle
+                            // existe. Patron repris de CapturePassage.injecteurConnecte() (#1839).
+                            @Provides
+                            @Singleton
+                            ImportVigieChiroViewModel importVigieChiro(
+                                    ServiceValidation service, SourceDeDonnees source) {
+                                return new ImportVigieChiroViewModel(Optional.of(new ImportVigieChiro(
+                                        clientHorsAtteinte(),
+                                        new TraitementVigieChiro(clientHorsAtteinte()),
+                                        new LienVigieChiroDao(source),
+                                        service)));
+                            }
 
-                    @Provides
-                    @Singleton
-                    PublicationCorrectionsViewModel publicationCorrections(SourceDeDonnees source) {
-                        return new PublicationCorrectionsViewModel(Optional.of(new PublicationCorrections(
-                                clientHorsAtteinte(),
-                                new LienVigieChiroDao(source),
-                                new ObservationDao(source),
-                                Optional.empty())));
-                    }
+                            @Provides
+                            @Singleton
+                            PublicationCorrectionsViewModel publicationCorrections(SourceDeDonnees source) {
+                                return new PublicationCorrectionsViewModel(Optional.of(new PublicationCorrections(
+                                        clientHorsAtteinte(),
+                                        new LienVigieChiroDao(source),
+                                        new ObservationDao(source),
+                                        Optional.empty())));
+                            }
 
-                    // OuvrirSite requis par le fil d'Ariane du controller (SitesModule non inclus) : no-op.
-                    // OuvrirPassage est déjà fourni par PassageModule (inclus) - ne pas le rebinder.
-                    @Provides
-                    OuvrirSite ouvrirSite() {
-                        return new OuvrirSite() {
-                            @Override
-                            public void ouvrirListe() {}
+                            // OuvrirSite requis par le fil d'Ariane du controller (SitesModule non inclus) : no-op.
+                            // OuvrirPassage est déjà fourni par PassageModule (inclus) - ne pas le rebinder.
+                            @Provides
+                            OuvrirSite ouvrirSite() {
+                                return new OuvrirSite() {
+                                    @Override
+                                    public void ouvrirListe() {}
 
-                            @Override
-                            public void ouvrirDetail(String numeroCarre) {}
-                        };
-                    }
+                                    @Override
+                                    public void ouvrirDetail(String numeroCarre) {}
+                                };
+                            }
 
-                    // OuvrirAnalyse (#1087, feature `analyse` désactivable) : le controller l'injecte en
-                    // Optional ; ce module n'inclut pas AnalyseModule (ni son OptionalBinder vide via
-                    // AudioModule, non plus inclus), donc on fournit directement l'Optional peuplé (no-op).
-                    @Provides
-                    Optional<OuvrirAnalyse> ouvrirAnalyse() {
-                        return Optional.of((filtres, afficherCarte) -> {});
-                    }
+                            // OuvrirAnalyse (#1087, feature `analyse` désactivable) : le controller l'injecte en
+                            // Optional ; ce module n'inclut pas AnalyseModule (ni son OptionalBinder vide via
+                            // AudioModule, non plus inclus), donc on fournit directement l'Optional peuplé (no-op).
+                            @Provides
+                            Optional<OuvrirAnalyse> ouvrirAnalyse() {
+                                return Optional.of((filtres, afficherCarte) -> {});
+                            }
 
-                    @Provides
-                    OuvrirMultisite ouvrirMultisite() {
-                        return numeroCarre -> {};
-                    }
+                            @Provides
+                            OuvrirMultisite ouvrirMultisite() {
+                                return numeroCarre -> {};
+                            }
 
-                    // Un client dont l'adresse ne répond pas : la capture a besoin que la passerelle
-                    // EXISTE (sinon les entrées de menu sont masquées), jamais qu'elle réponde. Aucune
-                    // capture ne clique, donc aucune requête ne part.
-                    private ClientVigieChiro clientHorsAtteinte() {
-                        return new ClientVigieChiro("http://localhost:1", Optional::empty);
-                    }
-                });
+                            // Un client dont l'adresse ne répond pas : la capture a besoin que la passerelle
+                            // EXISTE (sinon les entrées de menu sont masquées), jamais qu'elle réponde. Aucune
+                            // capture ne clique, donc aucune requête ne part.
+                            private ClientVigieChiro clientHorsAtteinte() {
+                                return new ClientVigieChiro("http://localhost:1", Optional::empty);
+                            }
+                        }));
     }
 
     /// Photographie le **menu ☰ ouvert** de « Sons & validation » (#1865). Jusqu'ici il n'était ouvert par
