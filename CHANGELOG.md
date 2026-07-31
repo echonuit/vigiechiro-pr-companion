@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.150.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.149.0...v2.150.0) (2026-07-31)
+
+
+### Features
+
+* **cli:** le groupe api ouvre l'exploration, sans rendre les pièges (lot 4) ([#3029](https://github.com/echonuit/vigiechiro-pr-companion/issues/3029)) ([ed66a82](https://github.com/echonuit/vigiechiro-pr-companion/commit/ed66a8263babd281893cdb431309328d7fd55c46))
+
 # [2.149.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.148.0...v2.149.0) (2026-07-31)
 
 
