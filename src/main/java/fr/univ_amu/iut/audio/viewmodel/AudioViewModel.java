@@ -448,6 +448,13 @@ public class AudioViewModel {
         messages.info(texte);
     }
 
+    /// Signale qu'une **vue mémorisée** vient d'être rejouée **amputée** de valeurs devenues
+    /// introuvables (#3056) : elle filtre moins large qu'à son enregistrement. Le cas est réel ici
+    /// depuis #2995, qui a renommé les entrées de la puce « Lieu ».
+    public void signalerVueAmputee(String nomVue, List<String> valeursDisparues) {
+        messages.publier(RetourOperation.vueAmputee(nomVue, valeursDisparues));
+    }
+
     /// Efface le retour d'opération (l'utilisateur a lu le bandeau et le ferme). Le bandeau disparaît.
     public void effacerRetour() {
         messages.effacerRetour();

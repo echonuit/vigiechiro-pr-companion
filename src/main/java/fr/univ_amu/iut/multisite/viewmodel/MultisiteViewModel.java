@@ -328,6 +328,13 @@ public class MultisiteViewModel {
     }
 
     /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
+    /// Signale qu'une **vue mémorisée** vient d'être rejouée **amputée** de valeurs devenues
+    /// introuvables (#3056) : elle filtre moins large qu'à son enregistrement, et l'utilisateur ne
+    /// peut pas s'en apercevoir autrement.
+    public void signalerVueAmputee(String nomVue, List<String> valeursDisparues) {
+        retour.set(RetourOperation.vueAmputee(nomVue, valeursDisparues));
+    }
+
     public void effacerRetour() {
         retour.set(RetourOperation.AUCUN);
     }

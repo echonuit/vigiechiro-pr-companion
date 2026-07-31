@@ -356,12 +356,14 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur. La vue
         // capture aussi la disposition des colonnes du tableau (#994), via l'adaptateur mono-table.
         GestionnaireVues.avecDialogue(
-                barreOnglets,
-                gestionnaireFiltres,
-                depotVues,
-                FEATURE,
-                CriteresMultisite.vuesParDefaut(),
-                GestionnaireColonnes.adaptateurMonoTable("principale", tableLignes, this::colonnesLignes));
+                        barreOnglets,
+                        gestionnaireFiltres,
+                        depotVues,
+                        FEATURE,
+                        CriteresMultisite.vuesParDefaut(),
+                        GestionnaireColonnes.adaptateurMonoTable("principale", tableLignes, this::colonnesLignes))
+                // Une vue rejouée amputée de valeurs disparues filtre moins large qu'annoncé (#3056).
+                .surRestauration(viewModel::signalerVueAmputee);
 
         choixTri.getItems().setAll(TriMultisite.values());
         choixTri.setConverter(Convertisseurs.parLibelle(tri -> tri == null ? "" : tri.libelle()));

@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Severite;
+import java.util.List;
 
 /// Retour d'une **opération** d'un écran (import CSV, export, valider, corriger, action refusée…) :
 /// un texte + une **sévérité**, exposé par le ViewModel dans une propriété distincte du message
@@ -78,6 +79,27 @@ public record RetourOperation(String texte, Severite severite) {
     ///
     /// C'est l'unique endroit où l'IHM ajoute son « comment » : le modèle ne connaît pas les menus, et la
     /// ligne de commande en dit un autre.
+    /// Une **vue mémorisée rejouée amputée** de valeurs devenues introuvables (#3056).
+    ///
+    /// Le cas se produit quand les libellés offerts ont changé - « Z1 » est devenu « 640380 · Z1 » en
+    /// #2995 - ou quand une valeur mémorisée est absente du jeu courant (une espèce qu'on n'a pas
+    /// contactée cette fois-ci). La vue s'ouvre quand même, mais elle **filtre moins large** qu'à son
+    /// enregistrement : le taire laisserait croire le contraire.
+    ///
+    /// Avertissement et non erreur : rien n'a échoué, et l'utilisateur n'a rien à réparer.
+    public static RetourOperation vueAmputee(String nomVue, List<String> valeurs) {
+        return avertissement("La vue « " + nomVue + " » a été rejouée sans " + manquantes(valeurs)
+                + " : elle filtre donc moins large qu'à son enregistrement.");
+    }
+
+    /// Les valeurs perdues, **accordées**. Au singulier on nomme la valeur plutôt que de la compter :
+    /// « sans 1 valeur(s) (Z1) » se lisait mal, et compter jusqu'à un n'apprend rien.
+    private static String manquantes(List<String> valeurs) {
+        return valeurs.size() == 1
+                ? "« " + valeurs.get(0) + " », qui n'existe plus"
+                : valeurs.size() + " valeurs qui n'existent plus (" + String.join(", ", valeurs) + ")";
+    }
+
     public static RetourOperation erreur(Throwable refus) {
         return erreur(borner(GesteAttendu.message(refus)));
     }

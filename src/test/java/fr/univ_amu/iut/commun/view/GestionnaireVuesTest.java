@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -92,6 +93,72 @@ class GestionnaireVuesTest {
                 .filter(HBox.class::isInstance)
                 .map(HBox.class::cast)
                 .toList();
+    }
+
+    @Test
+    @DisplayName("#3056 : rejouer une vue dont une valeur a disparu le signale à l'écran hôte")
+    void vue_amputee_est_signalee(FxRobot robot) {
+        // Le scénario réel : #2995 a renommé les entrées de la puce « Lieu » (« Z1 » est devenu
+        // « 640380 · Z1 »). La vue enregistrée avant continue de s'ouvrir - c'est voulu - mais elle ne
+        // filtre plus, et sans ce signalement rien ne le dirait.
+        VueSauvegardee vue = inserer(
+                "Z1 du carre 640380", "{\"texte\":\"\",\"criteres\":[{\"nom\":\"lieu\",\"valeurs\":[\"Z1\"]}]}");
+        AtomicReference<String> nomSignale = new AtomicReference<>();
+        List<String> valeursSignalees = new ArrayList<>();
+
+        robot.interact(() -> {
+            GestionnaireVues<String> gestionnaire =
+                    new GestionnaireVues<>(onglets, filtresAvecLieu(), dao, FEATURE, defaut -> Optional.empty());
+            gestionnaire.surRestauration((nom, valeurs) -> {
+                nomSignale.set(nom);
+                valeursSignalees.addAll(valeurs);
+            });
+            gestionnaire.appliquer(vue);
+        });
+
+        assertThat(nomSignale.get())
+                .as("le nom de la vue doit figurer au compte rendu : c'est lui que l'utilisateur a cliqué")
+                .isEqualTo("Z1 du carre 640380");
+        assertThat(valeursSignalees)
+                .as("« Z1 » n'existe plus depuis que le point est qualifié par son carré")
+                .containsExactly("Z1");
+    }
+
+    @Test
+    @DisplayName("#3056 : une vue dont toutes les valeurs existent ne signale rien")
+    void vue_intacte_ne_signale_rien(FxRobot robot) {
+        // Le pendant : le bandeau doit rester silencieux en temps normal, faute de quoi il cesserait
+        // d'être lu.
+        VueSauvegardee vue = inserer(
+                "Point qualifie", "{\"texte\":\"\",\"criteres\":[{\"nom\":\"lieu\",\"valeurs\":[\"640380 · Z1\"]}]}");
+        List<String> signalements = new ArrayList<>();
+
+        robot.interact(() -> {
+            GestionnaireVues<String> gestionnaire =
+                    new GestionnaireVues<>(onglets, filtresAvecLieu(), dao, FEATURE, defaut -> Optional.empty());
+            gestionnaire.surRestauration((nom, valeurs) -> signalements.add(nom));
+            gestionnaire.appliquer(vue);
+        });
+
+        assertThat(signalements).isEmpty();
+    }
+
+    /// Une barre de filtres portant une puce « lieu » qui n'offre que la forme **qualifiée** du point,
+    /// comme depuis #2995.
+    private GestionnaireFiltres<String> filtresAvecLieu() {
+        CritereFiltre<String> lieu = CritereListe.multipleParmi(
+                "lieu",
+                "Lieu",
+                "Choisir un lieu",
+                () -> List.of(new CritereListe.GroupeValeurs("Points", List.of("640380 · Z1"))),
+                (Function<String, List<String>>) List::of);
+        return new GestionnaireFiltres<>(
+                recherche,
+                new MenuButton(),
+                new FlowPane(),
+                new Filtres<>(affichees, () -> {}),
+                List.of(lieu),
+                (ligne, texte) -> ligne.contains(texte));
     }
 
     @Test

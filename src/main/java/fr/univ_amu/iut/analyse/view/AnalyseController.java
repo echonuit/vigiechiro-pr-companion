@@ -370,12 +370,14 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur. La vue
         // capture aussi la disposition des colonnes des trois tables (#994), via l'adaptateur du sélecteur.
         GestionnaireVues.avecDialogue(
-                barreOnglets,
-                gestionnaireFiltres,
-                depotVues,
-                FEATURE,
-                CriteresAnalyse.vuesParDefaut(),
-                selecteurColonnes.adaptateur());
+                        barreOnglets,
+                        gestionnaireFiltres,
+                        depotVues,
+                        FEATURE,
+                        CriteresAnalyse.vuesParDefaut(),
+                        selecteurColonnes.adaptateur())
+                // Une vue rejouée amputée de valeurs disparues filtre moins large qu'annoncé (#3056).
+                .surRestauration(viewModel::signalerVueAmputee);
 
         // Bandeau de retour (export, échec de chargement, action refusée), mutualisé avec Sons & validation
         // (#1837) : libellé, visibilité, couleur de sévérité et croix de fermeture.

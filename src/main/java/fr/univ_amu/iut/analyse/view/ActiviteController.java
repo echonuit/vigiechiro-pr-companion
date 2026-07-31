@@ -197,6 +197,8 @@ public class ActiviteController implements EmplacementNavigation {
         // qui n'ont rien à faire dans la présélection des cinq taxons les plus contactés.
         gestionnaireVues = GestionnaireVues.avecDialogue(
                 barreOnglets, gestionnaireFiltres, depotVues, "activite", CriteresActivite.vuesParDefaut());
+        // Une vue rejouée amputée de valeurs disparues filtre moins large qu'annoncé (#3056).
+        gestionnaireVues.surRestauration(viewModel::signalerVueAmputee);
 
         choixTranche.setItems(FXCollections.observableArrayList(LargeurTranche.values()));
         choixTranche.setConverter(new StringConverter<>() {

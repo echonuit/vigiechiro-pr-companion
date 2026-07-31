@@ -67,12 +67,14 @@ final class FiltresVuesAudio {
         // par défaut en lecture seule (« Tout », « À valider », « Chiroptères ») : au chargement, « Tout » (sans
         // filtre) est active, d'où toujours un contexte modifiable, sans masquer d'observations.
         GestionnaireVues.avecDialogue(
-                barre.barreOnglets(),
-                gestionnaireFiltres,
-                depotVues,
-                feature,
-                CriteresAudio.vuesParDefaut(),
-                GestionnaireColonnes.adaptateurMonoTable("principale", table, colonnes));
+                        barre.barreOnglets(),
+                        gestionnaireFiltres,
+                        depotVues,
+                        feature,
+                        CriteresAudio.vuesParDefaut(),
+                        GestionnaireColonnes.adaptateurMonoTable("principale", table, colonnes))
+                // Une vue rejouée amputée de valeurs disparues filtre moins large qu'annoncé (#3056).
+                .surRestauration(viewModel::signalerVueAmputee);
         return gestionnaireFiltres;
     }
 }

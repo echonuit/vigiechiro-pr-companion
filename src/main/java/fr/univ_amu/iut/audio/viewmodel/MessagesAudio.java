@@ -87,6 +87,12 @@ final class MessagesAudio {
 
     /// Retour d'**avertissement** (ambre) : un geste refusé en amont, sans échec technique - une
     /// destination inutilisable sondée avant l'écriture (#2426), au même niveau que `ActionsSauvegarde`.
+    /// Publie un retour **déjà formé**, quand sa formulation appartient au socle plutôt qu'à cet écran
+    /// (#3056 : le libellé d'une vue amputée est le même partout, il vit dans [RetourOperation]).
+    void publier(RetourOperation retourForme) {
+        retour.set(retourForme);
+    }
+
     void avertissement(String texte) {
         retour.set(RetourOperation.avertissement(texte));
     }
