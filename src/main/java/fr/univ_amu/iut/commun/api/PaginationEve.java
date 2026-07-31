@@ -36,8 +36,8 @@ final class PaginationEve {
     /// @param pagesMax  plafond de pages (garde-fou anti-boucle)
     /// @param corpsPage renvoie le corps JSON de la page `n`, trié ([ReponseApi])
     /// @param parPage   parse une page en éléments ; une page **sans élément** marque la fin
-    /// @return la collection **complète** en cas de succès ; sinon l'issue de la page fautive, sans
-    ///     jamais rendre un préfixe des pages déjà lues
+    /// @return la collection **complète** en cas de succès ; sinon l'issue de la page fautive, ou un
+    ///     `Injoignable` si le garde-fou a été atteint (#3046) : jamais un préfixe des pages lues
     static <T> ReponseApi<List<T>> parcourir(
             int pagesMax, IntFunction<ReponseApi<String>> corpsPage, Function<String, List<T>> parPage) {
         return parcourir(pagesMax, corpsPage, parPage, (page, totalPages) -> {});
@@ -54,7 +54,26 @@ final class PaginationEve {
             IntFunction<ReponseApi<String>> corpsPage,
             Function<String, List<T>> parPage,
             SuiviPagination suivi) {
-        return parcourirBorne(pagesMax, corpsPage, parPage, suivi).transformer(LotPagine::elements);
+        ReponseApi<LotPagine<T>> issue = parcourirBorne(pagesMax, corpsPage, parPage, suivi);
+        if (!(issue instanceof ReponseApi.Succes<LotPagine<T>>(LotPagine<T> lot))) {
+            return memeEchec(issue);
+        }
+        return lot.complet() ? ReponseApi.succes(lot.elements()) : ReponseApi.injoignable(troncature(lot));
+    }
+
+    /// Ici, `pagesMax` est un **garde-fou anti-boucle**, jamais une borne choisie (celle-là passe par
+    /// [#parcourirBorne]). L'atteindre est donc une anomalie : la collection est plus grande que ce
+    /// que ce parcours sait lire, et les éléments déjà lus n'en sont qu'un préfixe.
+    ///
+    /// Rendre ce préfixe en `Succes` serait exactement le défaut de #1277 : un import qui se présente
+    /// comme réussi en ayant laissé des observations derrière lui. Un échec franc est le comportement
+    /// **sûr** ; ce n'est pas le comportement idéal, et le jour où ce cas se présenterait vraiment,
+    /// il faudrait relever le plafond ou lire par morceaux (#3046).
+    private static String troncature(LotPagine<?> lot) {
+        return "collection trop grande pour être lue d'un seul tenant : " + lot.pagesLues()
+                + " page(s) lues sans atteindre la fin"
+                + (lot.totalAnnonce() > 0 ? ", sur " + lot.totalAnnonce() + " élément(s) annoncés" : "")
+                + ". Aucun résultat partiel n'est rendu, pour ne pas le faire passer pour un tout.";
     }
 
     /// Variante qui **dit si elle a tout lu** : même parcours, mais le résultat porte le total annoncé,
