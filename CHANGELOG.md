@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.145.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.144.0...v2.145.0) (2026-07-31)
+
+
+### Features
+
+* **api:** le socle lit le catalogue, et dit ce qu'il n'a pas lu (lot 1) ([#3013](https://github.com/echonuit/vigiechiro-pr-companion/issues/3013)) ([748df89](https://github.com/echonuit/vigiechiro-pr-companion/commit/748df89a75d68b22889334a8486c67db9f4030c1)), closes [#1277](https://github.com/echonuit/vigiechiro-pr-companion/issues/1277)
+
 # [2.144.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.143.0...v2.144.0) (2026-07-31)
 
 
