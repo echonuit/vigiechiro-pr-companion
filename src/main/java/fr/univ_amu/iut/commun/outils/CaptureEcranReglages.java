@@ -14,6 +14,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 
 /// Outil de capture/mesure, utilisable tel quel.
@@ -65,12 +66,13 @@ public final class CaptureEcranReglages {
     }
 
     /// Sélectionne l'onglet portant ce titre, pour qu'un aperçu montre autre chose que le premier.
+    ///
+    /// **Exige** de le trouver : la sélection s'abstenait en silence, si bien qu'un onglet renommé faisait
+    /// écrire tous les aperçus sur le PREMIER onglet, chacun sous la légende d'un autre.
     private static void selectionnerOnglet(Parent ecran, String titre) {
         TabPane onglets = (TabPane) ecran.lookup("#onglets");
-        onglets.getTabs().stream()
-                .filter(onglet -> titre.equals(onglet.getText()))
-                .findFirst()
-                .ifPresent(onglet -> onglets.getSelectionModel().select(onglet));
+        onglets.getSelectionModel()
+                .select(ApercuFx.exigerParLibelle("les onglets des réglages", onglets.getTabs(), Tab::getText, titre));
     }
 
     private static void capturer() throws IOException {

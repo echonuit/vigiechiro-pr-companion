@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -144,6 +145,28 @@ public final class ApercuFx {
         }
         String texte = libelle.getText() == null ? "" : libelle.getText();
         return "« " + (texte.length() > 40 ? texte.substring(0, 40) + "…" : texte) + " »";
+    }
+
+    /// L'element dont le libelle vaut `attendu`, ou une **erreur** nommant ce qui etait offert.
+    ///
+    /// Les outils de capture designent leurs controles par leur libelle (« Lieu », « Taxon parent »,
+    /// « Apparence »), parce que c'est ce que l'utilisateur voit. Ils le cherchaient avec
+    /// `findFirst().ifPresent(...)`, qui **s'abstient en silence** : un libelle renomme laissait alors
+    /// produire l'apercu **sans le geste**, publie sous une legende affirmant le contraire. Rien ne
+    /// distingue une capture fausse d'une bonne, et la galerie porte cette image jusqu'a ce que
+    /// quelqu'un la regarde.
+    ///
+    /// Le message nomme les libelles **presents**, parce que la correction consiste toujours a lire la
+    /// liste : le libelle a change, il n'a pas disparu.
+    ///
+    /// @param ou ce qu'on fouillait, pour situer l'erreur (« le menu + Filtre », « les onglets »)
+    public static <T> T exigerParLibelle(String ou, List<T> candidats, Function<T, String> libelle, String attendu) {
+        return candidats.stream()
+                .filter(candidat -> attendu.equals(libelle.apply(candidat)))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("« " + attendu + " » introuvable dans " + ou
+                        + " : la capture montrerait un ecran sans ce geste. Libelles presents : "
+                        + candidats.stream().map(libelle).toList()));
     }
 
     /// Capture `scene` hors-ecran et l'ecrit en PNG dans `fichier` (cree les dossiers parents).
