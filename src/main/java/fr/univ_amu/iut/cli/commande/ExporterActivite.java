@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
@@ -172,8 +173,23 @@ public final class ExporterActivite implements Callable<Integer> {
         retenus = FiltresActivite.parNuit(retenus, nuit);
         retenus = FiltresActivite.parTaxonParent(retenus, taxonParent);
         retenus = FiltresActivite.parNature(retenus, nature, service.nuitsOpportunistes());
-        return aEnjeu
-                ? FiltresActivite.aEnjeu(retenus, especesPrioritaires.get().codes()::contains)
-                : retenus;
+        return aEnjeu ? restreindreAuxEspecesAEnjeu(retenus) : retenus;
+    }
+
+    /// `--a-enjeu`, en **disant** quand le référentiel est vide plutôt qu'en rendant un fichier muet.
+    ///
+    /// Ce filtre est le seul de la commande dont un résultat vide a **deux causes opposées** : aucune
+    /// espèce prioritaire dans ces nuits, ou aucun référentiel du tout. Les deux produisaient le même
+    /// fichier vide en code 0, et elles appellent des conduites contraires - lire le résultat, ou réparer
+    /// une installation (ADR 3048).
+    ///
+    /// La sortie ne **retire** rien : le CSV garde ses colonnes et son code 0. C'est une ligne qui nomme
+    /// l'état, ce que l'ADR appelle « dire ». Le marquage d'`exporter-sons` n'a pas ce besoin : il pose
+    /// une colonne, qui reste là même sans référentiel.
+    private List<ContactHoraire> restreindreAuxEspecesAEnjeu(List<ContactHoraire> contacts) {
+        Set<String> prioritaires = especesPrioritaires.get().codes();
+        FiltresActivite.avertissementReferentielVide(prioritaires)
+                .ifPresent(spec.commandLine().getErr()::println);
+        return FiltresActivite.aEnjeu(contacts, prioritaires::contains);
     }
 }

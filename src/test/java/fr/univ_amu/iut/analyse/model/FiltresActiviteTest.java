@@ -125,4 +125,18 @@ class FiltresActiviteTest {
         assertThat(FiltreLieu.appliquer(TOUS, List.of(), FiltresActivite::dimensionsLieu))
                 .isEqualTo(TOUS);
     }
+
+    @Test
+    @DisplayName("#3059 : un référentiel vide se DIT, au lieu de rendre un fichier vide et muet")
+    void un_referentiel_vide_se_dit() {
+        // ADR 3048 : une sortie machine ne retire pas, elle dit. C'est le seul filtre dont un résultat
+        // vide a deux causes OPPOSÉES - aucune espèce prioritaire ici, ou aucun référentiel du tout - et
+        // elles appellent des conduites contraires : lire le résultat, ou réparer une installation.
+        assertThat(FiltresActivite.avertissementReferentielVide(Set.of()))
+                .hasValueSatisfying(message ->
+                        assertThat(message).contains("--a-enjeu").contains("non parce qu'aucune espèce prioritaire"));
+        assertThat(FiltresActivite.avertissementReferentielVide(Set.of("Rhifer")))
+                .as("référentiel présent : rien à signaler, le vide voudra dire ce qu'il dit")
+                .isEmpty();
+    }
 }
