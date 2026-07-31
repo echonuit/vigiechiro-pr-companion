@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -94,5 +95,36 @@ class RetourOperationTest {
         // La borne est INCLUSIVE : couper à 240 caractères un message qui en fait exactement 240
         // ajouterait « détail dans le journal » pour ne rien renvoyer de plus au journal.
         assertThat(retour.texte()).endsWith(pileALaBorne).doesNotContain("détail dans le journal");
+    }
+
+    @Test
+    @DisplayName("#3056 : une seule valeur perdue se nomme, elle ne se compte pas")
+    void vue_amputee_au_singulier_nomme_la_valeur() {
+        // Trouvé en regardant la capture, pas en lisant un test : « sans 1 valeur(s) qui n'existent
+        // plus (Z1) » ne s'accordait pas, et compter jusqu'à un n'apprenait rien.
+        RetourOperation retour = RetourOperation.vueAmputee("Z1 du carre 640380", List.of("Z1"));
+
+        assertThat(retour.texte())
+                .contains("sans « Z1 », qui n'existe plus")
+                .doesNotContain("valeur(s)")
+                .doesNotContain("1 valeur");
+    }
+
+    @Test
+    @DisplayName("#3056 : plusieurs valeurs perdues se comptent et s'énumèrent, au pluriel")
+    void vue_amputee_au_pluriel_compte_et_enumere() {
+        RetourOperation retour = RetourOperation.vueAmputee("Ma saison", List.of("Z1", "Z2", "Z3"));
+
+        assertThat(retour.texte())
+                .contains("sans 3 valeurs qui n'existent plus (Z1, Z2, Z3)")
+                .doesNotContain("valeur(s)");
+    }
+
+    @Test
+    @DisplayName("#3056 : le compte rendu est un avertissement, pas une erreur")
+    void vue_amputee_est_un_avertissement() {
+        // Rien n'a échoué et l'utilisateur n'a rien à réparer : la sévérité doit le dire, sans quoi le
+        // bandeau rouge ferait croire à une panne.
+        assertThat(RetourOperation.vueAmputee("V", List.of("Z1")).severite()).isEqualTo(Severite.AVERTISSEMENT);
     }
 }

@@ -40,6 +40,11 @@ import javafx.scene.layout.VBox;
 ///   par la porte qui l'enrichit. Deux lignes : le bandeau grandit déjà.
 /// - `apercu-bandeau-retour-borne.png` : un message de pilote SQLite, **coupé à la borne**, avec son
 ///   « … (détail dans le journal) ». Sans la borne, ce bandeau ferait trois fois cette hauteur.
+/// - `apercu-bandeau-vue-amputee.png` : une vue mémorisée rejouée sans **une** valeur devenue
+///   introuvable (#3056). Le cas courant après le renommage de #2995 : une ligne, discret.
+/// - `apercu-bandeau-vue-amputee-longue.png` : la **même chose avec cinq valeurs**. C'est le cas qui
+///   se produit quand une vue traverse un renommage de plein fouet, et le seul moyen de savoir si
+///   l'énumération reste lisible ou s'il faudrait la résumer.
 ///
 /// Le contenu sous le bandeau n'est pas décoratif : c'est lui qui rend visible ce que la borne protège.
 ///
@@ -88,6 +93,19 @@ public final class CaptureBandeauRetour {
         rendre(
                 RetourOperation.erreur(new IllegalStateException(messageSqlite())),
                 sortie.resolve("apercu-bandeau-retour-borne.png"));
+        rendre(
+                RetourOperation.vueAmputee("Z1 du carre 640380", List.of("Z1")),
+                sortie.resolve("apercu-bandeau-vue-amputee.png"));
+        rendre(
+                RetourOperation.vueAmputee("Ma saison 2026", valeursDisparues()),
+                sortie.resolve("apercu-bandeau-vue-amputee-longue.png"));
+    }
+
+    /// Le cas qui inquiète : une vue qui traverse un renommage y perd **toutes** ses valeurs d'un coup,
+    /// pas une. Cinq points qualifiés font une énumération longue, et c'est celle-là qu'il faut regarder
+    /// avant de la livrer (#3056).
+    private static List<String> valeursDisparues() {
+        return List.of("Z1", "Z2", "Z3", "Barbastelle d'Europe", "Aix-en-Provence");
     }
 
     /// Un refus métier que nous avons rédigé, déjà porteur de son geste attendu (ADR 2635).

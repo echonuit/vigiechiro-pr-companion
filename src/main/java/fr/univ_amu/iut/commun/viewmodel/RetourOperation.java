@@ -88,9 +88,16 @@ public record RetourOperation(String texte, Severite severite) {
     ///
     /// Avertissement et non erreur : rien n'a échoué, et l'utilisateur n'a rien à réparer.
     public static RetourOperation vueAmputee(String nomVue, List<String> valeurs) {
-        return avertissement("La vue « " + nomVue + " » a été rejouée sans " + valeurs.size()
-                + " valeur(s) qui n'existent plus (" + String.join(", ", valeurs)
-                + ") : elle filtre donc moins large qu'à son enregistrement.");
+        return avertissement("La vue « " + nomVue + " » a été rejouée sans " + manquantes(valeurs)
+                + " : elle filtre donc moins large qu'à son enregistrement.");
+    }
+
+    /// Les valeurs perdues, **accordées**. Au singulier on nomme la valeur plutôt que de la compter :
+    /// « sans 1 valeur(s) (Z1) » se lisait mal, et compter jusqu'à un n'apprend rien.
+    private static String manquantes(List<String> valeurs) {
+        return valeurs.size() == 1
+                ? "« " + valeurs.get(0) + " », qui n'existe plus"
+                : valeurs.size() + " valeurs qui n'existent plus (" + String.join(", ", valeurs) + ")";
     }
 
     public static RetourOperation erreur(Throwable refus) {
