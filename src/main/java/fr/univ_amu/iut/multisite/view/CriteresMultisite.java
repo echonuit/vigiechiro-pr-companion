@@ -197,8 +197,9 @@ final class CriteresMultisite {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
                 ((TextField) editeur).setText(valeurs.isEmpty() ? "" : valeurs.get(0));
+                return List.of(); // champ libre : une valeur mémorisée s'y replace toujours
             }
         };
     }
@@ -234,8 +235,9 @@ final class CriteresMultisite {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
                 ((TextField) editeur).setText(valeurs.isEmpty() ? "" : valeurs.get(0));
+                return List.of(); // champ libre : une valeur mémorisée s'y replace toujours
             }
         };
     }
@@ -291,8 +293,9 @@ final class CriteresMultisite {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
                 ((TextField) editeur).setText(valeurs.isEmpty() ? "" : valeurs.get(0));
+                return List.of(); // champ libre : une valeur mémorisée s'y replace toujours
             }
         };
     }

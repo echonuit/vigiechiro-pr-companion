@@ -123,10 +123,16 @@ final class CriteresAudio {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
-                if (!valeurs.isEmpty()) {
-                    selectionnerParValeur(editeur, valeurs.get(0));
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
+                if (valeurs.isEmpty()) {
+                    return List.of();
                 }
+                // Les valeurs offertes sont celles des lignes COURANTES : un groupe absent du jeu
+                // du jour n'est pas une anomalie, mais la vue filtrera moins qu'annoncé (#3056).
+                selectionnerParValeur(editeur, valeurs.get(0));
+                return ((ComboBox<?>) editeur).getSelectionModel().getSelectedIndex() < 0
+                        ? List.of(valeurs.get(0))
+                        : List.of();
             }
         };
     }
@@ -205,18 +211,21 @@ final class CriteresAudio {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
                 if (valeurs.isEmpty()) {
-                    return;
+                    return List.of();
                 }
                 ComboBox<?> choix = (ComboBox<?>) editeur;
                 for (int i = 0; i < choix.getItems().size(); i++) {
                     if (choix.getItems().get(i) instanceof EspecePresente espece
                             && espece.code().equals(valeurs.get(0))) {
                         choix.getSelectionModel().select(i);
-                        return;
+                        return List.of();
                     }
                 }
+                // L'espèce mémorisée n'est pas dans les lignes courantes : le dire, sans quoi la vue
+                // « Barbastelle » s'ouvre sur toutes les espèces (#3056).
+                return List.of(valeurs.get(0));
             }
         };
     }
@@ -411,10 +420,11 @@ final class CriteresAudio {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
                 if (!valeurs.isEmpty()) {
                     ((Slider) ((HBox) editeur).getChildren().get(0)).setValue(Double.parseDouble(valeurs.get(0)));
                 }
+                return List.of(); // un seuil est une valeur continue : elle se repose toujours
             }
         };
     }
@@ -481,12 +491,13 @@ final class CriteresAudio {
             }
 
             @Override
-            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
                 if (valeurs.size() >= 2) {
                     HBox conteneur = (HBox) editeur;
                     selectionnerParValeur(conteneur.getChildren().get(1), Integer.valueOf(valeurs.get(0)));
                     selectionnerParValeur(conteneur.getChildren().get(3), Integer.valueOf(valeurs.get(1)));
                 }
+                return List.of(); // les 24 heures sont toujours offertes, quel que soit le jeu courant
             }
         };
     }
