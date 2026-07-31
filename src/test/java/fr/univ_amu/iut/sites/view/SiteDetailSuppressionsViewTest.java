@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -80,11 +79,15 @@ class SiteDetailSuppressionsViewTest {
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
         // Un site, un point, aucun passage : les deux suppressions sont ouvertes.
-        site = new SiteDao(source)
-                .insert(new Site(null, CARRE, "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, CODE_POINT, 43.5, 5.4, null, site.id()))
-                .id();
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre(CARRE)
+                .nomSite("Étang")
+                .point(CODE_POINT)
+                .position(43.5, 5.4)
+                .semerSiteEtPoint();
+        site = jeu.leSite();
+        idPoint = jeu.idPoint();
 
         // Le chrome, pour que le retour à l'accueil après suppression du site soit une vraie navigation.
         FXMLLoader chrome = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
@@ -226,7 +229,12 @@ class SiteDetailSuppressionsViewTest {
     void point_rapatrie_masque_puis_revele(FxRobot robot) {
         // Un point RAPATRIÉ (synchronisé) et jamais utilisé s'ajoute au site : contrairement au point A1
         // (ajouté à la main, toujours visible), il n'apparaît pas d'emblée.
-        new PointDao(source).insert(new PointDEcoute(null, "Z9", null, null, null, site.id(), true));
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre(CARRE)
+                .point("Z9")
+                .pointRapatrie()
+                .semerSiteEtPoint();
         robot.interact(() -> controleur.afficher(site));
 
         assertThat(codesPointsAffiches(robot))

@@ -4,21 +4,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.Traitement;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,13 +35,16 @@ class ReleveTraitementDaoTest {
     void preparer() {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier.resolve("ws")));
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-05-31", "u-1"));
-        Long idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, "Z1", 43.5, 5.4, null, site.id()))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
+        // La topologie naît du premier passage semé, par trouver-ou-créer.
+        Long idPoint = JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .carre("640380")
+                .nomSite("Étang")
+                .point("Z1")
+                .position(43.5, 5.4)
+                .enregistreur("1925492")
+                .semerSiteEtPoint()
+                .idPoint();
         passageDao = new PassageDao(source);
         idPassage = JeuDeDonneesPassage.dans(source)
                 .utilisateur("u-1")

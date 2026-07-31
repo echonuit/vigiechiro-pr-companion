@@ -98,6 +98,7 @@ public final class JeuDeDonneesPassage {
     private Protocole protocole = Protocole.STANDARD;
     private String codePoint = "A1";
     private String nomPoint;
+    private boolean pointSynchronise;
     private Double latitude;
     private Double longitude;
     private Long idPointImpose;
@@ -159,6 +160,17 @@ public final class JeuDeDonneesPassage {
     /// `sites` sait du point. C'est un champ du point, que la fixture construisait déjà nul.
     public JeuDeDonneesPassage nomPoint(String nom) {
         this.nomPoint = nom;
+        return this;
+    }
+
+    /// Point **rapatrié de la plateforme** plutôt qu'ajouté à la main. `false` par défaut.
+    ///
+    /// Un seul appelant aujourd'hui, et je l'ajoute quand même : c'est un **champ du point**, que la
+    /// fixture construit déjà (à `false`), au même titre que [#nomPoint] ou [#position]. La règle du
+    /// compte d'appelants vaut pour les options qui ajoutent de l'ambiguïté, pas pour les champs que le
+    /// domaine porte de toute façon.
+    public JeuDeDonneesPassage pointRapatrie() {
+        this.pointSynchronise = true;
         return this;
     }
 
@@ -605,7 +617,8 @@ public final class JeuDeDonneesPassage {
                 .filter(point -> point.code().equals(codePoint))
                 .map(PointDEcoute::id)
                 .findFirst()
-                .orElseGet(() -> dao.insert(new PointDEcoute(null, codePoint, latitude, longitude, nomPoint, idSite))
+                .orElseGet(() -> dao.insert(new PointDEcoute(
+                                null, codePoint, latitude, longitude, nomPoint, idSite, pointSynchronise))
                         .id());
     }
 }

@@ -6,9 +6,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -42,18 +44,17 @@ class SaisieCertitudeTest {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         try (Connection cx = source.getConnection()) {
-            executer(cx, "INSERT INTO user(local_id, display_name) VALUES ('u-1', 'Testeur')");
-            long idSite = cle(
-                    cx,
-                    "INSERT INTO monitoring_site(square_number, protocol, created_at, user_id)"
-                            + " VALUES ('640380', 'Point fixe standard', '2026-05-01', 'u-1')");
-            long idPoint = cle(cx, "INSERT INTO listening_point(code, site_id) VALUES ('A1', " + idSite + ")");
-            executer(cx, "INSERT INTO recorder(serial_number) VALUES ('SN-1')");
-            long idPassage = cle(
-                    cx,
-                    "INSERT INTO passage(passage_number, year, recording_date, start_time, end_time,"
-                            + " workflow_status, point_id, recorder_id)"
-                            + " VALUES (1, 2026, '2026-06-20', '21:00', '05:00', 'Importé', " + idPoint + ", 'SN-1')");
+            // ⚠️ Le SQL d'origine écrivait le protocole « Point fixe standard », inconnu de `Protocole`.
+            long idPassage = JeuDeDonneesPassage.dans(source)
+                    .utilisateur("u-1")
+                    .carre("640380")
+                    .point("A1")
+                    .enregistreur("SN-1")
+                    .nuit(1, 2026, "2026-06-20")
+                    .heures("21:00", "05:00")
+                    .statut(StatutWorkflow.IMPORTE)
+                    .semerPassage()
+                    .idPassage();
             long idSession =
                     cle(cx, "INSERT INTO recording_session(root_path, passage_id) VALUES ('/ws', " + idPassage + ")");
             long idOriginal = cle(

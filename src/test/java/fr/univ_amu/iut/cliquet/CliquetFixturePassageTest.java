@@ -25,16 +25,12 @@ import org.junit.jupiter.api.Test;
 /// rougissait**. Une dette qu'aucun test ne compte n'est pas une dette, c'est un vœu.
 class CliquetFixturePassageTest {
 
-    /// Les tests qui sèment encore un passage à la main.
+    /// La dette épinglée : **elle est vide**, et le cliquet reste pour empêcher qu'elle renaisse.
     ///
-    /// **Cette liste ne doit que rétrécir.** Pour en retirer un : basculer son semis sur
-    /// `JeuDeDonneesPassage`, puis supprimer sa ligne ici. Aucun chiffre n'est écrit ici à dessein :
-    /// l'annotation précédente en annonçait 64 pour 50 lignes, ce qui est le sort de tout nombre recopié.
-    private static final List<String> SEMENT_ENCORE_A_LA_MAIN = List.of(
-            "fr/univ_amu/iut/commun/persistence/BackfillVerdictMigrationTest.java",
-            "fr/univ_amu/iut/e2e/ParcoursFicheEspeceE2ETest.java",
-            "fr/univ_amu/iut/qualification/SelectionDaoTest.java",
-            "fr/univ_amu/iut/validation/SaisieCertitudeTest.java");
+    /// Cinquième et dernier axe du chantier #1771 à atteindre zéro. Ce qui reste hors mesure est déclaré
+    /// dans [#EPROUVENT_L_ECRITURE], avec sa raison - pas dans cette liste, qui ne compte que ce qui a
+    /// vocation à migrer.
+    private static final List<String> SEMENT_ENCORE_A_LA_MAIN = List.of();
 
     @Test
     @DisplayName("La dette de fixtures ne peut que rétrécir : aucun nouveau semeur à la main, et toute"
@@ -51,6 +47,23 @@ class CliquetFixturePassageTest {
                       long idObservation = jeu.ajouterObservation("Pipkuh")""",
                 "SEMENT_ENCORE_A_LA_MAIN, dans ce fichier");
     }
+
+    /// Les deux tests pour qui **écrire un passage est le sujet**, et non le décor.
+    ///
+    /// Qui les compte, alors ? Personne, et c'est justifié (ADR 2951) : ils n'ont rien à migrer. Même
+    /// raison que `PointDaoTest` pour le cliquet de topologie, ou que le test du parseur WAV pour celui
+    /// des writers - on ne teste pas une brique avec elle-même.
+    ///
+    ///  - `PassageDaoTest` éprouve le **DAO du passage** : que `insert` attribue un identifiant, que les
+    ///    clés étrangères rejettent un point inconnu, que le quadruplet R5 est unique, que la suppression
+    ///    cascade. Lui donner la fixture ferait disparaître les cas qu'il construit **exprès pour être
+    ///    refusés** ;
+    ///  - `BackfillVerdictMigrationTest` rejoue l'`UPDATE` de la migration V27 sur des passages
+    ///    **hérités** : des lignes telles qu'une ancienne base les porte, avec leurs identifiants
+    ///    explicites et leurs verdicts. Les écrire par le DAO d'aujourd'hui reviendrait à éprouver la
+    ///    migration sur des données que la migration n'a jamais rencontrées.
+    private static final List<String> EPROUVENT_L_ECRITURE =
+            List.of("PassageDaoTest.java", "BackfillVerdictMigrationTest.java");
 
     /// Ce fichier **sème-t-il encore un passage à la main** ?
     ///
@@ -79,15 +92,7 @@ class CliquetFixturePassageTest {
         if (fichier.dansLePaquet("fixture") || fichier.dansLePaquet("cliquet")) {
             return false;
         }
-        // `PassageDaoTest` éprouve le DAO du passage : l'insertion EST son sujet. Il vérifie que `insert`
-        // attribue un identifiant, que les clés étrangères rejettent un point inconnu, que le quadruplet
-        // R5 est unique, et que la suppression cascade. Lui donner la fixture reviendrait à tester la
-        // fixture, et à perdre les cas qu'il construit exprès pour être refusés.
-        //
-        // Qui le compte, alors ? Personne, et c'est justifié (ADR 2951) : il n'a rien à migrer. Même
-        // raison que `PointDaoTest` pour le cliquet de topologie, et que le test du parseur WAV pour celui
-        // des writers.
-        if (fichier.chemin().getFileName().toString().equals("PassageDaoTest.java")) {
+        if (EPROUVENT_L_ECRITURE.contains(fichier.chemin().getFileName().toString())) {
             return false;
         }
         String source = fichier.source();
