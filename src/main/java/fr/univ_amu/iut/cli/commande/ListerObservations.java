@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.validation.model.CriteresRevue;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.FiltreLieu;
+import fr.univ_amu.iut.validation.model.FiltreProbabilite;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.SelectionObservations;
@@ -53,6 +54,14 @@ public final class ListerObservations implements Callable<Integer> {
             description = "Ne garde que les observations de ce lieu (commune, carré ou nom de site). "
                     + "Correspondance partielle, casse et accents ignorés. Répétable pour en cumuler plusieurs.")
     private List<String> lieux = new ArrayList<>();
+
+    /// Seuil de probabilité Tadarida (#2971), à l'échelle 0..1 comme la sortie de `lister-observations`.
+    @Option(
+            names = "--proba-min",
+            paramLabel = "<0..1>",
+            description = "Ne garde que les détections dont la probabilité Tadarida atteint ce seuil "
+                    + "(celles qui n'en ont pas sont conservées). Échelle 0 à 1 : 90 % s'écrit 0.9.")
+    private Double probaMin;
 
     @Option(
             names = "--statut",
@@ -132,8 +141,8 @@ public final class ListerObservations implements Callable<Integer> {
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
-        List<LigneObservationAudio> lignes =
-                FiltreLieu.appliquer(selection.get().lignes(passage, criteres()), lieux);
+        List<LigneObservationAudio> lignes = FiltreProbabilite.appliquer(
+                FiltreLieu.appliquer(selection.get().lignes(passage, criteres()), lieux), probaMin);
         marqueurEnjeu = marqueur.get();
 
         if (json) {
