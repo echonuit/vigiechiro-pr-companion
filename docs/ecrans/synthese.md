@@ -27,7 +27,7 @@ fichiers, c'est une activité diffuse toute la nuit. La classe d'activité se ca
 
 ## Pourquoi les seuils s'affichent à côté de la classe
 
-Une classe seule est un verdict. Une classe accompagnée de « Q75 = 480 · Q98 = 1 240 » est une
+Une classe seule est un verdict. Une classe accompagnée de « Q75 = 620 · Q98 = 3842 » est une
 **lecture que vous pouvez contester** : et c'est ce qu'on attend d'un outil scientifique. Vous voyez
 sur quoi le produit s'appuie pour dire « Forte ».
 
