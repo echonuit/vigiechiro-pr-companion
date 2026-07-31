@@ -2,6 +2,18 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.153.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.152.0...v2.153.0) (2026-07-31)
+
+
+### Bug Fixes
+
+* **filtres:** memoriser la session par valeurs, plus par indices ([#3076](https://github.com/echonuit/vigiechiro-pr-companion/issues/3076)) ([e70b06e](https://github.com/echonuit/vigiechiro-pr-companion/commit/e70b06e9012affcc0d66881bccfffcf51f55788d)), closes [#3071](https://github.com/echonuit/vigiechiro-pr-companion/issues/3071)
+
+
+### Features
+
+* **cli:** exporter-activite accepte les cinq filtres de l'écran ([#3075](https://github.com/echonuit/vigiechiro-pr-companion/issues/3075)) ([f2e8cb4](https://github.com/echonuit/vigiechiro-pr-companion/commit/f2e8cb45ed557ea5404325844b8bb84677c7c6bc)), closes [#2971](https://github.com/echonuit/vigiechiro-pr-companion/issues/2971) [#3060](https://github.com/echonuit/vigiechiro-pr-companion/issues/3060) [#3059](https://github.com/echonuit/vigiechiro-pr-companion/issues/3059)
+
 # [2.152.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.151.1...v2.152.0) (2026-07-31)
 
 
