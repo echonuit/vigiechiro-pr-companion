@@ -76,6 +76,15 @@ COMMANDES_LOCALES_SANS_ARG=(
   [[ "${output}" == *"aucun écart"* ]]
 }
 
+@test "lister-sites-vigiechiro hors connexion : refus métier explicite, exit 2 (#3003)" {
+  # Commande réseau SANS option requise : elle ne va donc dans aucune des deux listes ci-dessus, et
+  # prend son test dédié, comme recuperer-vigiechiro. Sans jeton, elle refuse avant tout appel.
+  run cli lister-sites-vigiechiro --portee plateforme
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"jeton"* ]]
+  [[ "${output}" != *"Exception"* ]]
+}
+
 @test "recuperer-vigiechiro hors connexion : refus métier explicite (jeton absent), exit 2 (#1592, #2294)" {
   # La validation des arguments passe (aucune option requise) : la commande s'exécute puis refuse faute
   # de jeton, sans jamais joindre le réseau - refus lisible, pas un plantage muet.

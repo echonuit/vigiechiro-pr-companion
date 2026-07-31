@@ -43,10 +43,24 @@ final class SitesVigieChiro {
                     titre,
                     verrouille(site),
                     LocalitesVigieChiro.carreDepuisTitre(titre),
-                    ReponsesVigieChiro.texte(site, "observateur"),
+                    identifiantObservateur(site),
                     LocalitesVigieChiro.lirePoints(site)));
         }
         return List.copyOf(sites);
+    }
+
+    /// L'identifiant du propriétaire, quelle que soit la **forme** sous laquelle il arrive : le
+    /// catalogue embarque le **document entier** de l'observateur, là où le site vu depuis une
+    /// participation n'en porte que l'identifiant. Relevé sur la collection réelle : une lecture qui
+    /// suppose une chaîne casse net (`UnsupportedOperationException: JsonObject`) dès le premier site.
+    private static String identifiantObservateur(JsonObject site) {
+        JsonElement observateur = site.get("observateur");
+        if (observateur == null || observateur.isJsonNull()) {
+            return null;
+        }
+        return observateur.isJsonObject()
+                ? ReponsesVigieChiro.texte(observateur.getAsJsonObject(), "_id")
+                : ReponsesVigieChiro.texte(site, "observateur");
     }
 
     /// Le verrouillage **tel que le document le porte**. Absent ou non booléen → `false` : c'est
