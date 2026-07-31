@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.153.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.153.1...v2.153.2) (2026-07-31)
+
+
+### Bug Fixes
+
+* **synthese:** les quantiles ne se coupent plus, et un garde le vérifie ([#3085](https://github.com/echonuit/vigiechiro-pr-companion/issues/3085)) ([42137e2](https://github.com/echonuit/vigiechiro-pr-companion/commit/42137e27d28dd41fed8c89a71b4368ad82700d95))
+
 ## [2.153.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.153.0...v2.153.1) (2026-07-31)
 
 
