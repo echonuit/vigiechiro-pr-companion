@@ -76,6 +76,13 @@ COMMANDES_LOCALES_SANS_ARG=(
   [[ "${output}" == *"aucun écart"* ]]
 }
 
+@test "lister-participations-vigiechiro hors connexion : refus métier explicite, exit 2 (#3005)" {
+  run cli lister-participations-vigiechiro
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"jeton"* ]]
+  [[ "${output}" != *"Exception"* ]]
+}
+
 @test "lister-sites-vigiechiro hors connexion : refus métier explicite, exit 2 (#3003)" {
   # Commande réseau SANS option requise : elle ne va donc dans aucune des deux listes ci-dessus, et
   # prend son test dédié, comme recuperer-vigiechiro. Sans jeton, elle refuse avant tout appel.
