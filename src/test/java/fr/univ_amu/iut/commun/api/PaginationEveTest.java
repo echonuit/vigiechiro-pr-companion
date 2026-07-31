@@ -13,6 +13,11 @@ import org.junit.jupiter.api.Test;
 /// silencieuse au-delà de `max_results`). Depuis #1284 le parcours est **tout-ou-rien** : un échec
 /// en cours de route rend l'issue, jamais un préfixe des pages déjà lues. On alimente la boucle avec
 /// des pages en mémoire (le **transport** est éprouvé ailleurs).
+/// Survivants PIT **assumés** (lus un par un, mesure du 2026-07-31 : 41 tués sur 45) : les deux bornes
+/// `total <= 0` (ici et dans [LotPagine#pagesAnnoncees]) - avec un total nul, la branche mutée calcule
+/// la même chose ; l'incrément de la boucle, qui part à l'infini et n'est visible que par le délai ; et
+/// le retour d'une liste **déjà vide** dans [LocalitesVigieChiro]. Aucun de ces quatre ne change un
+/// comportement observable : les tester demanderait d'affirmer que rien ne se passe.
 class PaginationEveTest {
 
     private static final Map<Integer, String> PAGES = Map.of(
@@ -106,5 +111,108 @@ class PaginationEveTest {
                 (page, totalPages) -> vus.add(page + "/" + totalPages));
 
         assertThat(vus).containsExactly("1/2", "2/2");
+    }
+
+    @Test
+    @DisplayName("#3002 : un parcours ÉPUISÉ se dit complet, et rapporte le total annoncé")
+    void parcours_epuise_est_complet() {
+        Map<Integer, String> pages = Map.of(
+                1,
+                "{\"_meta\":{\"total\":3},\"_items\":[{\"_id\":\"p1\",\"site\":{\"_id\":\"s1\","
+                        + "\"titre\":\"A-100001\"}}]}",
+                2,
+                "{\"_items\":[{\"_id\":\"p2\",\"site\":{\"_id\":\"s2\",\"titre\":\"B-100002\"}}]}");
+
+        ReponseApi<LotPagine<ParticipationVigieChiro>> issue = PaginationEve.parcourirBorne(
+                500,
+                numero -> ReponseApi.succes(pages.getOrDefault(numero, "{\"_items\":[]}")),
+                ParticipationsVigieChiro::participations,
+                (page, totalPages) -> {});
+
+        LotPagine<ParticipationVigieChiro> lot =
+                ((ReponseApi.Succes<LotPagine<ParticipationVigieChiro>>) issue).valeur();
+        assertThat(lot.complet())
+                .as("la boucle s'est arrêtée sur une page vide : c'est la collection entière")
+                .isTrue();
+        assertThat(lot.elements()).hasSize(2);
+        assertThat(lot.pagesLues()).isEqualTo(2);
+        assertThat(lot.totalAnnonce()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("#3002 : un parcours arrêté au PLAFOND se dit incomplet - sans quoi il mentirait comme #1277")
+    void parcours_au_plafond_est_incomplet() {
+        // Le mode de panne que ce drapeau existe pour empêcher : avec « --pages 1 » sur une collection de
+        // 20 517 sites, l'appelant tiendrait 100 éléments et les annoncerait comme le tout.
+        ReponseApi<LotPagine<ParticipationVigieChiro>> issue = PaginationEve.parcourirBorne(
+                1,
+                numero -> ReponseApi.succes("{\"_meta\":{\"total\":250},\"_items\":[{\"_id\":\"p" + numero
+                        + "\",\"site\":{\"_id\":\"s1\",\"titre\":\"A-100001\"}}]}"),
+                ParticipationsVigieChiro::participations,
+                (page, totalPages) -> {});
+
+        LotPagine<ParticipationVigieChiro> lot =
+                ((ReponseApi.Succes<LotPagine<ParticipationVigieChiro>>) issue).valeur();
+        assertThat(lot.complet())
+                .as("la boucle s'est arrêtée parce qu'elle avait épuisé SON plafond, pas la collection")
+                .isFalse();
+        assertThat(lot.pagesLues()).isEqualTo(1);
+        assertThat(lot.totalAnnonce()).isEqualTo(250);
+        assertThat(lot.pagesAnnoncees())
+                .as("250 éléments à 100 par page : trois pages annoncées, une seule lue")
+                .isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("#3002 : un total PILE sur une frontière de page ne fabrique pas de page fantôme")
+    void total_sur_une_frontiere_de_page() {
+        // 200 éléments à 100 par page, c'est DEUX pages, pas trois. Le cas limite du calcul d'arrondi
+        // (« +99 puis division ») : avec 250 il tolère une erreur de plus ou moins un, avec 200 non.
+        ReponseApi<LotPagine<ParticipationVigieChiro>> issue = PaginationEve.parcourirBorne(
+                1,
+                numero -> ReponseApi.succes("{\"_meta\":{\"total\":200},\"_items\":[{\"_id\":\"p1\","
+                        + "\"site\":{\"_id\":\"s1\",\"titre\":\"A-100001\"}}]}"),
+                ParticipationsVigieChiro::participations,
+                (page, totalPages) -> {});
+
+        LotPagine<ParticipationVigieChiro> lot =
+                ((ReponseApi.Succes<LotPagine<ParticipationVigieChiro>>) issue).valeur();
+        assertThat(lot.pagesAnnoncees())
+                .as("200 sur 100 par page : exactement deux pages")
+                .isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("#3002 : le suivi reçoit le nombre de pages exact, y compris sur une frontière")
+    void le_suivi_recoit_le_total_exact() {
+        List<String> vus = new ArrayList<>();
+
+        PaginationEve.parcourirBorne(
+                2,
+                numero -> ReponseApi.succes("{\"_meta\":{\"total\":200},\"_items\":[{\"_id\":\"p" + numero
+                        + "\",\"site\":{\"_id\":\"s1\",\"titre\":\"A-100001\"}}]}"),
+                ParticipationsVigieChiro::participations,
+                (page, totalPages) -> vus.add(page + "/" + totalPages));
+
+        assertThat(vus).as("la progression annonce deux pages, ni une ni trois").containsExactly("1/2", "2/2");
+    }
+
+    @Test
+    @DisplayName("#3002 : le tout-ou-rien survit à la borne - un refus en page 2 ne rend aucun préfixe")
+    void parcours_borne_reste_tout_ou_rien() {
+        ReponseApi<LotPagine<ParticipationVigieChiro>> issue = PaginationEve.parcourirBorne(
+                500,
+                numero -> numero == 1
+                        ? ReponseApi.succes(
+                                "{\"_items\":[{\"_id\":\"p1\",\"site\":{\"_id\":\"s1\"," + "\"titre\":\"A-100001\"}}]}")
+                        : ReponseApi.refuse(503, "service indisponible"),
+                ParticipationsVigieChiro::participations,
+                (page, totalPages) -> {});
+
+        assertThat(issue)
+                .as("la page 1 lue ne doit pas ressortir comme si la collection s'arrêtait là")
+                .isInstanceOf(ReponseApi.Refuse.class);
+        assertThat(((ReponseApi.Refuse<LotPagine<ParticipationVigieChiro>>) issue).statut())
+                .isEqualTo(503);
     }
 }
