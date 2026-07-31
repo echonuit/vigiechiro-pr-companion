@@ -554,6 +554,37 @@ class MultisiteVueIntegrationTest {
                 .containsExactly(1L);
     }
 
+    @Test
+    @DisplayName("#2967 : le clic carte a besoin de « Carré » : « Lieu » ne sait pas recevoir un carré sans passage")
+    void le_critere_carre_recoit_ce_que_la_liste_lieu_ne_contient_pas(FxRobot robot) {
+        // Garde de la décision de garder « Carré » à côté de « Lieu ». La carte affiche l'agrégat NON
+        // FILTRÉ des sites de l'utilisateur, passages ou non ; cliquer un carré sans passage doit
+        // apprendre qu'il n'a rien. Router ce clic vers « Lieu » ne ferait RIEN, faute d'entrée à cocher.
+        ObservableList<LignePassage> source =
+                FXCollections.observableArrayList(ligneLieu(1L, "640380", "A1", "Ahetze"));
+        FilteredList<LignePassage> vues = new FilteredList<>(source);
+        MenuButton menuLocal = new MenuButton();
+        FlowPane puces = new FlowPane();
+        GestionnaireFiltres<LignePassage> gestionnaire = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                puces,
+                new Filtres<>(vues, () -> {}),
+                List.of(CriteresMultisite.lieu(() -> source), CriteresMultisite.carre()),
+                CriteresMultisite.rechercheTexte());
+
+        // Le carré cliqué n'a aucun passage : il n'est donc pas dans la liste de « Lieu ».
+        robot.interact(() -> gestionnaire.poser("lieu", List.of("999999")));
+        assertThat(vues)
+                .as("« Lieu » ne coche que ce que sa liste contient : le filtre reste inerte")
+                .hasSize(1);
+
+        robot.interact(() -> gestionnaire.poser("carre", List.of("999999")));
+        assertThat(vues)
+                .as("« Carré » accepte une valeur venue d'ailleurs, et dit que ce carré n'a rien")
+                .isEmpty();
+    }
+
     /// Les intitulés des **en-têtes** de groupe : les items désactivés, qui nomment sans se cocher.
     private static List<String> entetesLieu(MenuButton bouton) {
         return bouton.getItems().stream()

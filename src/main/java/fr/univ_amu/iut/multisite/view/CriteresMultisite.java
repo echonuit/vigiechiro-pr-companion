@@ -140,12 +140,21 @@ final class CriteresMultisite {
     /// **Trois dimensions, pas quatre** : [LignePassage] ne porte pas le nom de site. C'est un écart avec
     /// la vue audio (#2794), qui en a quatre, et il tient à la projection, pas à un choix d'ergonomie.
     ///
-    /// **Le critère « Carré » subsiste à côté**, et ce n'est pas un doublon oublié. Le retirer serait
-    /// silencieusement destructeur : [fr.univ_amu.iut.commun.view.GestionnaireFiltres] restaure une vue
-    /// mémorisée en ignorant **sans un mot** un critère qu'il ne connaît plus, si bien qu'une vue
-    /// « Carré 640380 » se rejouerait sans aucun filtre, en montrant toute la saison. Un élargissement
-    /// silencieux sur un filtre trompe plus qu'une erreur. Retirer « Carré » demande une migration des
-    /// vues stockées, qui est une autre préoccupation.
+    /// **Le critère « Carré » subsiste à côté**, et ce n'est pas un doublon oublié. La raison invoquée
+    /// jusqu'ici était la migration des vues mémorisées ; elle était vraie mais secondaire, et l'audit des
+    /// quatre barres de filtres (#2967) en a exhumé une plus forte, qui tient même quand les vues stockées
+    /// ne comptent pas.
+    ///
+    /// **« Carré » est la cible du clic sur la carte**, et c'est le seul critère de cet écran capable de
+    /// recevoir une valeur **arbitraire**. La carte affiche l'agrégat **non filtré** des sites de
+    /// l'utilisateur, passages ou non ; « Lieu » ne propose que les lieux **présents dans les passages
+    /// filtrés**. Router le clic vers « Lieu » marcherait pour un carré qui a des passages, et **ne ferait
+    /// rien du tout** pour un carré qui n'en a pas : [CritereListe#multipleParmi] ne coche que ce que sa
+    /// liste contient. Un clic sans effet est pire que le filtre à zéro ligne d'aujourd'hui, qui apprend
+    /// au moins que ce carré n'a rien.
+    ///
+    /// Le champ texte n'est donc pas une redondance à résorber : c'est la porte d'entrée d'une valeur qui
+    /// vient d'ailleurs que d'une liste.
     static CritereFiltre<LignePassage> lieu(Supplier<? extends List<LignePassage>> passagesFiltres) {
         return CritereListe.multipleParmi(
                 LIEU,
