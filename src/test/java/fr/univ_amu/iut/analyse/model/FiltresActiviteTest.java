@@ -139,4 +139,23 @@ class FiltresActiviteTest {
                 .as("référentiel présent : rien à signaler, le vide voudra dire ce qu'il dit")
                 .isEmpty();
     }
+
+    @Test
+    @DisplayName("#3059 : une commune non résolue ne fait pas échouer --lieu")
+    void une_commune_absente_ne_casse_rien() {
+        // Le modèle l'autorise explicitement (« commune non résolue »), et cela arrive : la commune se
+        // dérive du GPS du point, qui peut manquer. Sans le filtre sur les valeurs nulles, la
+        // comparaison normalise un null et l'appel entier échoue - sur une donnée parfaitement légitime.
+        //
+        // Trouvé par PIT : remplacer ce filtre par `true` ne faisait rougir aucun test, mon semis ayant
+        // toujours une commune.
+        ContactHoraire sansCommune =
+                contact("Barbar", "Chiroptères", LocalDateTime.of(2026, 6, 21, 23, 0), null, "C3", 4L);
+
+        assertThat(FiltresActivite.dimensionsLieu(sansCommune))
+                .as("le carré reste comparable, la commune manquante est écartée")
+                .containsExactly("640380");
+        assertThat(FiltreLieu.appliquer(List.of(sansCommune), List.of("640380"), FiltresActivite::dimensionsLieu))
+                .containsExactly(sansCommune);
+    }
 }
