@@ -6,14 +6,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Barre d'**onglets de vues mémorisées** « à la Notion » (#623), au-dessus d'une table : un onglet par
 /// vue enregistrée de la `feature`, plus un bouton **« + Vue »**. Cliquer un onglet **rejoue** sa
@@ -30,10 +27,17 @@ import org.kordamp.ikonli.javafx.FontIcon;
 public final class GestionnaireVues<T> {
 
     private final Pane onglets;
+
+    /// Rendu de la barre (#3056, extraction) : ce gestionnaire tient le cycle de vie des vues, pas leur
+    /// apparence.
+    private final OngletsVues barre;
     private final GestionnaireFiltres<T> filtres;
     private final DepotVues depot;
     private final String feature;
     private final Function<String, Optional<String>> saisieNom;
+
+    /// Compte rendu de restauration vers l'écran hôte (#3056), `null` tant qu'aucun ne l'a branché.
+    private BiConsumer<String, List<String>> compteRendu;
 
     /// Pont **optionnel** vers le(s) sélecteur(s) de colonnes de la vue (#994) : quand il est fourni,
     /// enregistrer une vue capture **aussi** la disposition des colonnes, et la rejouer la restaure. `null`
@@ -98,6 +102,14 @@ public final class GestionnaireVues<T> {
             AdaptateurColonnes adaptateurColonnes,
             Function<String, Optional<String>> saisieNom) {
         this.onglets = Objects.requireNonNull(onglets, "onglets");
+        this.barre = new OngletsVues(
+                onglets,
+                new OngletsVues.Gestes(
+                        this::appliquer,
+                        vue -> saisieNom.apply(vue.nom()).ifPresent(nouveau -> renommer(vue, nouveau)),
+                        this::supprimer,
+                        this::enregistrerCommeNouvelle,
+                        this::enregistrerDansActive));
         this.filtres = Objects.requireNonNull(filtres, "filtres");
         this.depot = Objects.requireNonNull(depot, "depot");
         this.feature = Objects.requireNonNull(feature, "feature");
@@ -192,13 +204,19 @@ public final class GestionnaireVues<T> {
         return dialogue.showAndWait().map(String::trim).filter(nom -> !nom.isBlank());
     }
 
+    /// Supprime `vue` (la désactive si c'était l'onglet actif) puis rafraîchit.
+    public void supprimer(VueSauvegardee vue) {
+        depot.delete(vue.id());
+        if (vue.equals(active)) {
+            active = null;
+            modifiee = false;
+        }
+        rafraichir();
+    }
+
     /// Recharge les vues de la `feature` et reconstruit la barre (un onglet par vue + le bouton « + Vue »).
     public void rafraichir() {
-        onglets.getChildren().clear();
-        for (VueSauvegardee vue : toutesLesVues()) {
-            onglets.getChildren().add(construireOnglet(vue));
-        }
-        onglets.getChildren().add(boutonNouvelle());
+        barre.redessiner(toutesLesVues(), active, modifiee, GestionnaireVues::estParDefaut);
     }
 
     /// Enregistre les **filtres courants** (via `decrire`) comme une nouvelle vue nommée `nom`, l'active et
@@ -222,14 +240,38 @@ public final class GestionnaireVues<T> {
     public void appliquer(VueSauvegardee vue) {
         DescripteurVue descripteur = DescripteurVueJson.interpreter(vue.descripteurJson());
         enApplication = true;
-        filtres.restaurer(descripteur.filtres());
+        List<String> disparues = filtres.restaurer(descripteur.filtres());
         enApplication = false;
+        rendreCompteDe(vue, disparues);
         if (adaptateurColonnes != null && !descripteur.colonnes().isEmpty()) {
             adaptateurColonnes.restaurer(descripteur.colonnes());
         }
         active = vue;
         modifiee = false;
         rafraichir();
+    }
+
+    /// Dit à l'écran hôte qu'une vue s'est rejouée **amputée** de valeurs devenues introuvables (#3056).
+    ///
+    /// Le cas se produit quand les libellés offerts ont changé - « Z1 » est devenu « 640380 · Z1 »
+    /// en #2995 - ou quand une valeur mémorisée est absente du jeu de lignes courant (une espèce
+    /// qu'on n'a pas contactée cette fois-ci).
+    ///
+    /// La vue s'ouvre quand même : perdre l'accès à une vue enregistrée serait pire que le défaut.
+    /// Mais elle **filtre moins** que lorsqu'elle a été enregistrée, et le taire laisserait croire le
+    /// contraire. Bandeau et non modal : rejouer une vue est réversible et anodin (ADR 0023).
+    private void rendreCompteDe(VueSauvegardee vue, List<String> disparues) {
+        if (compteRendu == null || disparues.isEmpty()) {
+            return;
+        }
+        compteRendu.accept(vue.nom(), disparues);
+    }
+
+    /// Branche le **compte rendu** de restauration sur le bandeau de l'écran hôte. Optionnel : sans
+    /// lui, une vue amputée se rejoue en silence, ce qui était le comportement avant #3056.
+    public GestionnaireVues<T> surRestauration(BiConsumer<String, List<String>> compteRendu) {
+        this.compteRendu = compteRendu;
+        return this;
     }
 
     /// Au chargement : active la vue (par défaut ou utilisateur) dont l'instantané **correspond aux filtres
@@ -290,81 +332,5 @@ public final class GestionnaireVues<T> {
             }
             rafraichir();
         }
-    }
-
-    /// Supprime `vue` (la désactive si c'était l'onglet actif) puis rafraîchit.
-    public void supprimer(VueSauvegardee vue) {
-        depot.delete(vue.id());
-        if (vue.equals(active)) {
-            active = null;
-            modifiee = false;
-        }
-        rafraichir();
-    }
-
-    private HBox construireOnglet(VueSauvegardee vue) {
-        Label nom = new Label(vue.nom());
-        nom.getStyleClass().add("onglet-vue-nom");
-        nom.setOnMouseClicked(evenement -> appliquer(vue));
-
-        HBox onglet = new HBox(4.0, nom);
-        onglet.getStyleClass().add("onglet-vue");
-        boolean estActive = vue.equals(active);
-        boolean parDefaut = estParDefaut(vue);
-        if (estActive) {
-            onglet.getStyleClass().add("onglet-vue-actif");
-        }
-        if (parDefaut) {
-            onglet.getStyleClass().add("onglet-vue-defaut");
-        }
-        // Vue active dont les filtres ont divergé : bouton 💾. Sur une vue **par défaut** (lecture seule), il
-        // enregistre les filtres courants comme une NOUVELLE vue ; sur une vue **utilisateur**, il écrase la vue.
-        if (estActive && modifiee) {
-            onglet.getStyleClass().add("onglet-vue-modifie");
-            onglet.getChildren()
-                    .add(
-                            parDefaut
-                                    ? bouton(
-                                            "fas-save",
-                                            "Enregistrer les filtres courants comme une nouvelle vue",
-                                            this::enregistrerCommeNouvelle)
-                                    : bouton(
-                                            "fas-save",
-                                            "Enregistrer les filtres courants dans la vue " + vue.nom(),
-                                            this::enregistrerDansActive));
-        }
-        // Renommer / supprimer : uniquement sur les vues utilisateur (les vues par défaut sont en lecture seule).
-        if (!parDefaut) {
-            onglet.getChildren()
-                    .add(bouton(
-                            "fas-pen",
-                            "Renommer la vue " + vue.nom(),
-                            () -> saisieNom.apply(vue.nom()).ifPresent(nouveau -> renommer(vue, nouveau))));
-            onglet.getChildren().add(bouton("fas-times", "Supprimer la vue " + vue.nom(), () -> supprimer(vue)));
-        }
-        return onglet;
-    }
-
-    /// Bouton d'action d'un onglet (enregistrer / renommer / supprimer) : une **icône Ikonli** (FontAwesome)
-    /// plutôt qu'un glyphe de police. Les emojis (type 💾) ne se rendent pas dans toutes les polices : même
-    /// constat que pour les indicateurs ⭐/💬 de la table audio, passés en `FontIcon` pour la même raison. Le
-    /// libellé accessible porte le sens de l'action ; l'icône est colorée par la classe CSS `onglet-vue-icone`.
-    private static Button bouton(String iconeLiteral, String accessible, Runnable action) {
-        FontIcon icone = new FontIcon(iconeLiteral);
-        icone.getStyleClass().add("onglet-vue-icone");
-        Button bouton = new Button();
-        bouton.setGraphic(icone);
-        bouton.getStyleClass().add("onglet-vue-action");
-        bouton.setAccessibleText(accessible);
-        bouton.setOnAction(evenement -> action.run());
-        return bouton;
-    }
-
-    private Button boutonNouvelle() {
-        Button ajout = new Button("+ Vue");
-        ajout.getStyleClass().add("onglet-vue-nouvelle");
-        ajout.setAccessibleText("Enregistrer les filtres courants comme une nouvelle vue");
-        ajout.setOnAction(evenement -> enregistrerCommeNouvelle());
-        return ajout;
     }
 }
