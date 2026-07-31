@@ -126,6 +126,21 @@ public final class ClientVigieChiro {
         return PaginationEve.parcourirBorne(bornees, this::pageSites, SitesVigieChiro::sites, suivi);
     }
 
+    /// **Lecture brute** d'un chemin de l'API, réservée à l'exploration (`vigiechiro api lire`).
+    ///
+    /// ⚠️ Cette méthode est la seule qui **ne nomme pas** ce qu'elle lit : elle rend le corps tel quel,
+    /// sans projection ni interprétation. C'est délibérément une **échappatoire**, pas une porte
+    /// d'entrée. Tout le reste de ce client existe parce qu'un point d'accès nommé encode, une fois
+    /// pour toutes, ce qu'il faut savoir avant d'appeler - le plafond de pagination, l'ordre inversé
+    /// des coordonnées, le filtre que le serveur ignore. Une capacité nouvelle passe par une méthode
+    /// nommée, jamais par ici.
+    ///
+    /// Une règle d'architecture (`ArchitectureTest#lecture_brute_reservee_au_groupe_api`) empêche que
+    /// cette promesse ne repose sur la seule bonne volonté : hors du groupe `api`, personne ne l'appelle.
+    public ReponseApi<String> lectureBrute(String chemin) {
+        return transport.lire(chemin);
+    }
+
     /// Corps JSON d'une page du catalogue.
     private ReponseApi<String> pageSites(int page) {
         return transport.lire("/sites" + PaginationEve.requete(page));

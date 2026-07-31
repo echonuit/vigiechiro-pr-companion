@@ -76,6 +76,22 @@ COMMANDES_LOCALES_SANS_ARG=(
   [[ "${output}" == *"aucun écart"* ]]
 }
 
+@test "api : le groupe affiche son aide et sort en succès (#3006)" {
+  # Groupe imbriqué (une première dans ce dépôt) : sans sous-commande il se comporte comme la racine.
+  run cli api
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"lire"* ]]
+  [[ "${output}" == *"ressources"* ]]
+}
+
+@test "api lire : max_results hors plafond refusé AVANT tout appel réseau, exit 2 (#3006)" {
+  # Le refus est posé par la commande, sans jeton ni réseau : il doit donc tomber même hors connexion.
+  run cli api lire --chemin '/sites?max_results=1000'
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"100"* ]]
+  [[ "${output}" != *"Exception"* ]]
+}
+
 @test "lister-participations-vigiechiro hors connexion : refus métier explicite, exit 2 (#3005)" {
   run cli lister-participations-vigiechiro
   [ "${status}" -eq 2 ]

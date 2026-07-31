@@ -36,6 +36,7 @@ import picocli.CommandLine.Spec;
             ListerSites.class,
             ListerSitesVigieChiro.class,
             ListerParticipationsVigieChiro.class,
+            fr.univ_amu.iut.cli.commande.api.GroupeApi.class,
             ListerPassages.class,
             AfficherSoldeSaison.class,
             CreerCampagne.class,

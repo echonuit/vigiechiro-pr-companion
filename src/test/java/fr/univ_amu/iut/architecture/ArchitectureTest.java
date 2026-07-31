@@ -12,6 +12,7 @@ import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -68,6 +69,23 @@ class ArchitectureTest {
                 .should()
                 .dependOnClassesThat()
                 .resideInAnyPackage("javafx..")
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("La lecture brute de l'API n'est appelée que par le groupe « api » de la CLI (#3006)")
+    void lecture_brute_reservee_au_groupe_api() {
+        // `ClientVigieChiro.lectureBrute` rend le corps sans le nommer ni l'interpréter : c'est
+        // l'échappatoire d'exploration, et elle ne doit pas devenir le chemin de moindre résistance
+        // pour une capacité nouvelle. Tout le reste du client existe parce qu'un point d'accès NOMMÉ
+        // encode une fois pour toutes ce qu'il faut savoir avant d'appeler (plafond de pagination,
+        // coordonnées inversées, filtre ignoré par le serveur). Cette règle rend la promesse tenable
+        // autrement que par la bonne volonté.
+        noClasses()
+                .that()
+                .resideOutsideOfPackages("..cli.commande.api..", "..commun.api..")
+                .should()
+                .callMethod(ClientVigieChiro.class, "lectureBrute", String.class)
                 .check(classes);
     }
 
