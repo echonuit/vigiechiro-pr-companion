@@ -34,6 +34,12 @@ public final class ExportSyntheseCsv {
     private static final String BOM = "\uFEFF";
     private static final String COMMENTAIRE = "# ";
 
+    /// Ce que porte la tête du fichier quand aucune comparaison n'a pu être faite. Le texte dit **aussi**
+    /// ce qui reste bon : les comptages sont une mesure, la classe n'en était qu'une lecture.
+    static final String INDISPONIBLE =
+            "Référentiel d'activité indisponible : les colonnes d'activité et de seuils sont vides, "
+                    + "les comptages restent exacts.";
+
     private static final List<String> ENTETES = List.of(
             "Code espèce",
             "Nom espèce",
@@ -56,9 +62,10 @@ public final class ExportSyntheseCsv {
     private ExportSyntheseCsv() {}
 
     /// Écrit le CSV dans `destination` et renvoie le fichier écrit.
-    public static Path ecrire(List<LigneSynthese> lignes, ContexteActivite contexte, Path destination)
+    public static Path ecrire(
+            List<LigneSynthese> lignes, ContexteActivite contexte, boolean referentielDisponible, Path destination)
             throws IOException {
-        Files.writeString(destination, contenu(lignes, contexte), StandardCharsets.UTF_8);
+        Files.writeString(destination, contenu(lignes, contexte, referentielDisponible), StandardCharsets.UTF_8);
         return destination;
     }
 
@@ -66,20 +73,36 @@ public final class ExportSyntheseCsv {
     ///
     /// Une nuit sans espèce produit le bloc de tête et les en-têtes seuls : résultat valide, et bien plus
     /// parlant qu'un fichier vide.
-    public static String contenu(List<LigneSynthese> lignes, ContexteActivite contexte) {
+    ///
+    /// ## Quand le référentiel est indisponible (#3048)
+    ///
+    /// Le bloc de tête affirmait **sans condition** « Comparé au référentiel : … », recopiait
+    /// l'avertissement et créditait la source. Avec un référentiel vide, il décrivait donc une
+    /// comparaison qui n'a pas eu lieu et citait une source qui n'a pas été chargée - ce que l'écran
+    /// s'interdit explicitement.
+    ///
+    /// Les **colonnes ne bougent pas** pour autant. L'écran, lui, retire « Activité » et « Seuils » ;
+    /// ici ce serait une rupture de contrat, un nom de colonne exportée étant lu par des scripts. La
+    /// parité d'une sortie machine n'est pas de **retirer**, c'est de **dire** : les cellules concernées
+    /// sont vides, et la tête du fichier explique pourquoi.
+    public static String contenu(List<LigneSynthese> lignes, ContexteActivite contexte, boolean referentielDisponible) {
         StringBuilder csv = new StringBuilder(BOM);
         csv.append(COMMENTAIRE)
                 .append("Synthèse d'une nuit - VigieChiro Companion")
                 .append(System.lineSeparator());
-        csv.append(COMMENTAIRE)
-                .append("Comparé au référentiel : ")
-                .append(contexte.libelle())
-                .append(System.lineSeparator());
-        csv.append(COMMENTAIRE).append(ReferentielActivite.AVERTISSEMENT).append(System.lineSeparator());
-        csv.append(COMMENTAIRE)
-                .append("Source : ")
-                .append(ReferentielActivite.CITATION)
-                .append(System.lineSeparator());
+        if (referentielDisponible) {
+            csv.append(COMMENTAIRE)
+                    .append("Comparé au référentiel : ")
+                    .append(contexte.libelle())
+                    .append(System.lineSeparator());
+            csv.append(COMMENTAIRE).append(ReferentielActivite.AVERTISSEMENT).append(System.lineSeparator());
+            csv.append(COMMENTAIRE)
+                    .append("Source : ")
+                    .append(ReferentielActivite.CITATION)
+                    .append(System.lineSeparator());
+        } else {
+            csv.append(COMMENTAIRE).append(INDISPONIBLE).append(System.lineSeparator());
+        }
         csv.append(COMMENTAIRE).append(System.lineSeparator());
         ajouterLigne(csv, ENTETES);
         for (LigneSynthese ligne : lignes) {
