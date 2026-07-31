@@ -69,10 +69,16 @@ public class MigrationSchema {
 
     private static final String DOSSIER = "/db/migration/";
 
+    /// Longueur de l'extrait d'instruction cité dans le message d'échec : de quoi reconnaître la
+    /// ligne dans le script sans en déverser le corps.
+    private static final int LONGUEUR_EXTRAIT = 60;
+
     private final SourceDeDonnees source;
+    private final UniteDeTravail uniteDeTravail;
 
     public MigrationSchema(SourceDeDonnees source) {
         this.source = source;
+        this.uniteDeTravail = new UniteDeTravail(source);
     }
 
     /// Applique toutes les migrations non encore enregistrées dans `schema_version`.
@@ -80,11 +86,9 @@ public class MigrationSchema {
         Set<Integer> dejaAppliquees = versionsAppliquees();
         for (String fichier : MIGRATIONS) {
             int version = numeroVersion(fichier);
-            if (dejaAppliquees.contains(version)) {
-                continue;
+            if (!dejaAppliquees.contains(version)) {
+                appliquer(fichier, version);
             }
-            executerScript(DOSSIER + fichier);
-            enregistrerVersion(version);
         }
     }
 
@@ -103,28 +107,66 @@ public class MigrationSchema {
         return versions;
     }
 
-    private void enregistrerVersion(int version) {
-        String sql = "INSERT OR IGNORE INTO schema_version(version, applied_at) VALUES (?, ?)";
-        try (Connection connexion = source.getConnection();
-                PreparedStatement ps = connexion.prepareStatement(sql)) {
-            ps.setInt(1, version);
-            ps.setString(2, LocalDateTime.now().toString());
-            ps.executeUpdate();
-        } catch (SQLException e) {
-            throw new DataAccessException("Impossible d'enregistrer la version " + version, e);
+    /// Applique un script et inscrit sa version **dans la même transaction** (#2728).
+    ///
+    /// Les deux écritures ont longtemps été portées par deux connexions en autocommit. Une coupure au
+    /// milieu du script, ou entre le script et l'inscription, laissait alors un schéma partiellement
+    /// modifié qu'aucune ligne de `schema_version` ne décrivait. Le lancement suivant rejouait le
+    /// script depuis le début sur ce schéma bâtard et butait sur la première instruction non
+    /// idempotente : aucun `IF NOT EXISTS` en V01, deux `ADD COLUMN` en V26. L'application ne
+    /// redémarrait plus, et rien n'annonçait pourquoi.
+    ///
+    /// Le catalogue se prête à la transaction : SQLite sait annuler du DDL, et aucun des scripts ne
+    /// porte de `PRAGMA`, de `VACUUM` ni de transaction explicite, les trois choses qui ne survivent
+    /// pas à un `BEGIN`. Une migration future qui en aurait besoin devra donc le dire ici.
+    private void appliquer(String fichier, int version) {
+        String[] instructions = decouperInstructions(lireRessource(DOSSIER + fichier));
+        uniteDeTravail.executer(connexion -> {
+            try (Statement st = connexion.createStatement()) {
+                for (int rang = 0; rang < instructions.length; rang++) {
+                    executer(st, instructions, rang, fichier);
+                }
+            }
+            inscrireVersion(connexion, version);
+        });
+    }
+
+    /// Exécute la `rang`-ième instruction du script en **situant** son échec : sans le rang ni
+    /// l'extrait, un message de SQLite (« no such column ») laisse à relire tout le fichier pour
+    /// trouver où.
+    private static void executer(Statement st, String[] instructions, int rang, String fichier) {
+        try {
+            st.execute(instructions[rang]);
+        } catch (SQLException echec) {
+            throw new DataAccessException(
+                    "Migration "
+                            + fichier
+                            + " annulée : l'instruction n°"
+                            + (rang + 1)
+                            + " sur "
+                            + instructions.length
+                            + " a échoué (« "
+                            + extrait(instructions[rang])
+                            + " »). La base est restée dans l'état d'avant cette migration.",
+                    echec);
         }
     }
 
-    private void executerScript(String ressource) {
-        String contenu = lireRessource(ressource);
-        try (Connection connexion = source.getConnection();
-                Statement st = connexion.createStatement()) {
-            for (String instruction : decouperInstructions(contenu)) {
-                st.execute(instruction);
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Échec du script de migration " + ressource, e);
+    private static void inscrireVersion(Connection connexion, int version) throws SQLException {
+        String sql = "INSERT OR IGNORE INTO schema_version(version, applied_at) VALUES (?, ?)";
+        try (PreparedStatement ps = connexion.prepareStatement(sql)) {
+            ps.setInt(1, version);
+            ps.setString(2, LocalDateTime.now().toString());
+            ps.executeUpdate();
         }
+    }
+
+    /// Première ligne de l'instruction, tronquée : de quoi la reconnaître dans le script.
+    private static String extrait(String instruction) {
+        String premiereLigne = instruction.lines().findFirst().orElse("").strip();
+        return premiereLigne.length() <= LONGUEUR_EXTRAIT
+                ? premiereLigne
+                : premiereLigne.substring(0, LONGUEUR_EXTRAIT) + "…";
     }
 
     private int numeroVersion(String fichier) {
