@@ -11,8 +11,8 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -51,7 +51,15 @@ class ReleveTraitementDaoTest {
                 .id();
         new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
         passageDao = new PassageDao(source);
-        idPassage = passageDao.insert(passage(idPoint)).id();
+        idPassage = JeuDeDonneesPassage.dans(source)
+                .utilisateur("u-1")
+                .surLePoint(idPoint)
+                .enregistreur("1925492")
+                .nuit(1, 2026, "2026-04-22")
+                .heures("20:25:00", "07:47:00")
+                .statut(StatutWorkflow.DEPOSE)
+                .semerPassage()
+                .idPassage();
         dao = new ReleveTraitementDao(source);
     }
 
@@ -125,24 +133,5 @@ class ReleveTraitementDaoTest {
     private static Traitement fini() {
         return new Traitement(
                 EtatTraitement.FINI, null, "2026-07-13T09:00:00+00:00", "2026-07-13T10:05:00+00:00", null, null);
-    }
-
-    private static Passage passage(Long idPoint) {
-        return new Passage(
-                null,
-                1,
-                2026,
-                "2026-04-22",
-                "20:25:00",
-                "07:47:00",
-                null,
-                StatutWorkflow.DEPOSE,
-                null,
-                null,
-                null,
-                null,
-                idPoint,
-                "1925492",
-                null);
     }
 }
