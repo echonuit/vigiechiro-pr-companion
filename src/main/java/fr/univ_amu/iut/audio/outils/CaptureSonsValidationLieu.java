@@ -1,7 +1,9 @@
 package fr.univ_amu.iut.audio.outils;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.commun.outils.ApercuFx;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -61,26 +63,27 @@ public final class CaptureSonsValidationLieu {
     /// puce affiche alors le lieu retenu, et la table ne montre plus que ses observations.
     private static void activerFiltreLieu(javafx.scene.Parent vue) {
         if (vue.lookup("#menuAjoutFiltre") instanceof MenuButton menu) {
-            menu.getItems().stream()
-                    .filter(item -> "Lieu".equals(item.getText()))
-                    .findFirst()
-                    .ifPresent(MenuItem::fire);
+            ApercuFx.exigerParLibelle("le menu « + Filtre »", menu.getItems(), MenuItem::getText, "Lieu")
+                    .fire();
         }
         cocherCommune(vue);
     }
 
     /// Coche la commune dans le [MenuButton] de la puce (celui qui porte la classe `critere-multiple`).
     private static void cocherCommune(javafx.scene.Parent vue) {
-        vue.lookupAll(".critere-multiple").stream()
+        MenuButton puce = vue.lookupAll(".critere-multiple").stream()
                 .filter(MenuButton.class::isInstance)
                 .map(MenuButton.class::cast)
                 .findFirst()
-                .ifPresent(bouton -> bouton.getItems().stream()
-                        .filter(item ->
-                                item instanceof CheckMenuItem && GraineSonsValidation.COMMUNE.equals(item.getText()))
-                        .map(CheckMenuItem.class::cast)
-                        .findFirst()
-                        .ifPresent(coche -> coche.setSelected(true)));
+                .orElseThrow(() -> new IllegalStateException(
+                        "Puce « Lieu » absente après son ajout : la capture montrerait une table non filtrée."));
+        List<CheckMenuItem> coches = puce.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(CheckMenuItem.class::cast)
+                .toList();
+        ApercuFx.exigerParLibelle(
+                        "la liste de la puce « Lieu »", coches, MenuItem::getText, GraineSonsValidation.COMMUNE)
+                .setSelected(true);
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage (test).

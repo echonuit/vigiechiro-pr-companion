@@ -67,18 +67,16 @@ public final class CaptureListeLieu {
         GraineSonsValidation.ouvrirSurReferences(loader.getController());
 
         if (!(vue.lookup("#menuAjoutFiltre") instanceof MenuButton menuAjout)) {
-            System.out.println("[capture-liste-lieu] menu « + Filtre » introuvable : capture ignorée.");
-            return;
+            throw new IllegalStateException("Menu « + Filtre » introuvable : la puce ne peut pas être posée.");
         }
-        menuAjout.getItems().stream()
-                .filter(item -> "Lieu".equals(item.getText()))
-                .findFirst()
-                .ifPresent(MenuItem::fire);
+        ApercuFx.exigerParLibelle("le menu « + Filtre »", menuAjout.getItems(), MenuItem::getText, "Lieu")
+                .fire();
 
         MenuButton puce = puceLieu(vue);
         if (puce == null) {
-            System.out.println("[capture-liste-lieu] puce Lieu absente après ajout : capture ignorée.");
-            return;
+            // Un « capture ignorée » en code 0 laissait la galerie porter l'image PRÉCÉDENTE, sans que
+            // rien ne distingue « rien à refaire » de « le geste n'a pas eu lieu ».
+            throw new IllegalStateException("Puce « Lieu » absente après son ajout : rien à photographier.");
         }
         if (!ApercuFx.enregistrerMenuOuvert(puce, fichier)) {
             System.out.println("[capture-liste-lieu] popup non rendu (headless) : " + fichier + " ignoré.");
