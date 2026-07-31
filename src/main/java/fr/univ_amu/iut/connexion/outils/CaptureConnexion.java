@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.EchelleProgression;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.view.SuiviProgression;
 import fr.univ_amu.iut.connexion.view.NavigationConnexion;
 import java.io.IOException;
@@ -68,8 +69,14 @@ public final class CaptureConnexion {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
+        // Le schéma doit exister : la composition complète résout l'utilisateur courant en interrogeant
+        // `user`. L'injecteur partiel d'avant ne le faisait pas, et la base restait vide sans que rien ne
+        // le réclame (#3018).
+        Injector injecteur = creerInjecteur();
+        injecteur.getInstance(MigrationSchema.class).migrer();
+
         FXMLLoader loader = new FXMLLoader(NavigationConnexion.class.getResource(FXML_MODALE));
-        loader.setControllerFactory(creerInjecteur()::getInstance);
+        loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         Path fichier = sortie.resolve("apercu-connexion.png");
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
