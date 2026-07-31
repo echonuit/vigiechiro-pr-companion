@@ -109,6 +109,28 @@ public final class ClientVigieChiro {
                 .transformer(ClientVigieChiro::dedupliquerParId);
     }
 
+    /// Le **catalogue des sites de toute la plateforme** (`GET /sites`, collection Eve paginée) :
+    /// ~20 500 sites, tous observateurs confondus, là où [#mesSites] ne rend que ceux où vous avez une
+    /// nuit.
+    ///
+    /// `pages` est le nombre de pages à lire, **borné à `[1, PAGES_MAX]`** : la collection entière fait
+    /// plus de deux cents pages, et il est légitime de n'en vouloir qu'un échantillon. Le [LotPagine]
+    /// rendu dit **combien** il a lu et **si c'est tout** - sans quoi un échantillon serait indiscernable
+    /// de la collection, ce qui est le défaut que #1277 a coûté cher à corriger.
+    ///
+    /// Aucun filtre serveur n'est demandé : ce backend **accepte puis ignore** `where=` (le total
+    /// annoncé ne bouge même pas), si bien qu'un filtre encodé ici ne filtrerait rien tout en le
+    /// laissant croire. Le tri se fait chez l'appelant, sur ce qu'il a réellement lu.
+    public ReponseApi<LotPagine<SiteVigieChiro>> sitesPlateforme(int pages, SuiviPagination suivi) {
+        int bornees = Math.clamp(pages, 1, PAGES_MAX);
+        return PaginationEve.parcourirBorne(bornees, this::pageSites, SitesVigieChiro::sites, suivi);
+    }
+
+    /// Corps JSON d'une page du catalogue.
+    private ReponseApi<String> pageSites(int page) {
+        return transport.lire("/sites" + PaginationEve.requete(page));
+    }
+
     /// Déduplication inter-pages des sites (un même site revient sur chaque participation qui le
     /// porte) : premier vu, premier gardé.
     private static List<SiteVigieChiro> dedupliquerParId(List<SiteVigieChiro> sites) {
