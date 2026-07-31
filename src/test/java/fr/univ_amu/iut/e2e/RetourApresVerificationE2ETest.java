@@ -5,11 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -17,21 +14,12 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
-import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
-import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -190,39 +178,32 @@ class RetourApresVerificationE2ETest {
     /// Seede un passage **transformé** complet (utilisateur courant, site, point, enregistreur, session,
     /// trois séquences) prêt à être vérifié, et renvoie son identifiant.
     private long seederPassageTransforme(SourceDeDonnees source, Path workspace) {
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, CARRE, SITE, Protocole.STANDARD, "Aix", "2026-01-01", ID_USER));
-        PointDEcoute point =
-                new PointDao(source).insert(new PointDEcoute(null, POINT, 43.4010, -1.5740, "Chêne", site.id()));
-
-        Passage passage = new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        2,
-                        2026,
-                        "2026-06-22",
-                        "20:25:00",
-                        "07:47:00",
-                        null,
-                        StatutWorkflow.TRANSFORME,
-                        null,
-                        null,
-                        null,
-                        null,
-                        point.id(),
-                        ENREGISTREUR,
-                        null));
-        SessionDEnregistrement session = new SessionDao(source)
-                .insert(new SessionDEnregistrement(
-                        null, workspace.resolve("session").toString(), null, null, passage.id()));
+        // Le commentaire « Aix » du site n'est lu nulle part : il disparaît sans conséquence observable.
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre(CARRE)
+                .nomSite(SITE)
+                .point(POINT)
+                .position(43.4010, -1.5740)
+                .nomPoint("Chêne")
+                .enregistreur(ENREGISTREUR)
+                .nuit(2, 2026, "2026-06-22")
+                .heures("20:25:00", "07:47:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .cheminSession(workspace.resolve("session").toString())
+                .semerSquelette();
 
         EnregistrementOriginalDao originalDao = new EnregistrementOriginalDao(source);
         SequenceDao sequenceDao = new SequenceDao(source);
         for (String base : List.of("seqA", "seqB", "seqC")) {
             EnregistrementOriginal original = originalDao.insert(new EnregistrementOriginal(
-                    null, base + ".wav", workspace.resolve(base + ".wav").toString(), 5.0, 384000, null, session.id()));
+                    null,
+                    base + ".wav",
+                    workspace.resolve(base + ".wav").toString(),
+                    5.0,
+                    384000,
+                    null,
+                    jeu.idSession()));
             sequenceDao.insert(new SequenceDEcoute(
                     null,
                     base + "_000.wav",
@@ -232,8 +213,8 @@ class RetourApresVerificationE2ETest {
                     5.0,
                     workspace.resolve(base + "_000.wav").toString(),
                     false,
-                    session.id()));
+                    jeu.idSession()));
         }
-        return passage.id();
+        return jeu.idPassage();
     }
 }

@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
@@ -95,6 +96,21 @@ class ServicePassageTest {
                 new ReprefixeurSession(),
                 new UniteDeTravail(source),
                 new RattachementDao());
+    }
+
+    /// Sème la nuit en base et rend son identifiant. Le pendant persistant de [#candidat], qui reste
+    /// **non persisté** parce que c'est ce que les vérifications R3/R4 éprouvent : un candidat qu'on
+    /// soumet, pas une nuit qui existe.
+    private long semerNuit(int numero, String date) {
+        return JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(numero, 2026, date)
+                .heures("21:30:00", "05:15:00")
+                .statut(StatutWorkflow.IMPORTE)
+                .semerPassage()
+                .idPassage();
     }
 
     /// Construit un passage candidat (non persisté) pour les vérifications R3/R4.
@@ -430,7 +446,7 @@ class ServicePassageTest {
     @Test
     @DisplayName("Supprimer efface le passage de la base")
     void supprimer_efface_le_passage() {
-        long id = passageDao.insert(candidat(1, "2026-06-20")).id();
+        long id = semerNuit(1, "2026-06-20");
 
         service.supprimer(id);
 
@@ -440,7 +456,7 @@ class ServicePassageTest {
     @Test
     @DisplayName("Supprimer un passage efface aussi sa session par cascade")
     void supprimer_cascade_la_session() {
-        long id = passageDao.insert(candidat(1, "2026-06-20")).id();
+        long id = semerNuit(1, "2026-06-20");
         SessionDao sessionDao = new SessionDao(source);
         sessionDao.insert(new SessionDEnregistrement(null, "/tmp/nuit", null, null, id));
 
@@ -452,22 +468,17 @@ class ServicePassageTest {
     @Test
     @DisplayName("Supprimer refuse un passage déposé (donnée officielle transmise)")
     void supprimer_refuse_un_passage_depose() {
-        Passage depose = passageDao.insert(new Passage(
-                null,
-                1,
-                2026,
-                "2026-06-20",
-                "21:30:00",
-                "05:15:00",
-                null,
-                StatutWorkflow.DEPOSE,
-                Verdict.OK,
-                null,
-                null,
-                "2026-06-21T08:00",
-                idPoint,
-                SERIE,
-                null));
+        Passage depose = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:30:00", "05:15:00")
+                .statut(StatutWorkflow.DEPOSE)
+                .verdict(Verdict.OK)
+                .deposeLe("2026-06-21T08:00")
+                .semerPassage()
+                .lePassage();
 
         assertThatThrownBy(() -> service.supprimer(depose.id()))
                 .isInstanceOf(RegleMetierException.class)
@@ -488,22 +499,17 @@ class ServicePassageTest {
     @Test
     @DisplayName("annulerDepot ramène un passage déposé à « Prêt à déposer » et efface deposeLe")
     void annuler_depot_ramene_a_pret_a_deposer() {
-        Passage depose = passageDao.insert(new Passage(
-                null,
-                1,
-                2026,
-                "2026-06-20",
-                "21:30:00",
-                "05:15:00",
-                null,
-                StatutWorkflow.DEPOSE,
-                Verdict.OK,
-                null,
-                null,
-                "2026-06-21T08:00",
-                idPoint,
-                SERIE,
-                null));
+        Passage depose = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:30:00", "05:15:00")
+                .statut(StatutWorkflow.DEPOSE)
+                .verdict(Verdict.OK)
+                .deposeLe("2026-06-21T08:00")
+                .semerPassage()
+                .lePassage();
 
         Passage annule = service.annulerDepot(depose.id());
 
@@ -517,7 +523,7 @@ class ServicePassageTest {
     @Test
     @DisplayName("annulerDepot refuse un passage qui n'est pas déposé")
     void annuler_depot_refuse_passage_non_depose() {
-        long id = passageDao.insert(candidat(1, "2026-06-20")).id();
+        long id = semerNuit(1, "2026-06-20");
 
         assertThatThrownBy(() -> service.annulerDepot(id))
                 .isInstanceOf(RegleMetierException.class)
@@ -582,7 +588,7 @@ class ServicePassageTest {
     @Test
     @DisplayName("Une session en base sans dossier sur disque fait échouer la modif sans toucher la base")
     void modifier_rattachement_dossier_absent_echoue() {
-        long id = passageDao.insert(candidat(1, "2026-06-20")).id();
+        long id = semerNuit(1, "2026-06-20");
         new SessionDao(source)
                 .insert(new SessionDEnregistrement(
                         null, dossier.resolve("Car040962-2026-Pass1-A1").toString(), 0L, 0L, id));
@@ -595,22 +601,17 @@ class ServicePassageTest {
     @Test
     @DisplayName("Modifier le rattachement refuse un passage déposé (nom = identité serveur)")
     void modifier_rattachement_refuse_un_passage_depose() {
-        Passage depose = passageDao.insert(new Passage(
-                null,
-                1,
-                2026,
-                "2026-06-20",
-                "21:30:00",
-                "05:15:00",
-                null,
-                StatutWorkflow.DEPOSE,
-                Verdict.OK,
-                null,
-                null,
-                "2026-06-21T08:00",
-                idPoint,
-                SERIE,
-                null));
+        Passage depose = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:30:00", "05:15:00")
+                .statut(StatutWorkflow.DEPOSE)
+                .verdict(Verdict.OK)
+                .deposeLe("2026-06-21T08:00")
+                .semerPassage()
+                .lePassage();
 
         assertThatThrownBy(() -> rattachement.modifierRattachement(depose.id(), new Prefixe("040962", 2026, 2, "A1")))
                 .isInstanceOf(RegleMetierException.class)
@@ -623,22 +624,16 @@ class ServicePassageTest {
     @Test
     @DisplayName("Modifier le rattachement refuse un passage en cours de dépôt")
     void modifier_rattachement_refuse_un_passage_depot_en_cours() {
-        Passage enCours = passageDao.insert(new Passage(
-                null,
-                1,
-                2026,
-                "2026-06-20",
-                "21:30:00",
-                "05:15:00",
-                null,
-                StatutWorkflow.DEPOT_EN_COURS,
-                Verdict.OK,
-                null,
-                null,
-                null,
-                idPoint,
-                SERIE,
-                null));
+        Passage enCours = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:30:00", "05:15:00")
+                .statut(StatutWorkflow.DEPOT_EN_COURS)
+                .verdict(Verdict.OK)
+                .semerPassage()
+                .lePassage();
 
         assertThatThrownBy(() -> rattachement.modifierRattachement(enCours.id(), new Prefixe("040962", 2026, 2, "A1")))
                 .isInstanceOf(RegleMetierException.class)
@@ -656,24 +651,15 @@ class ServicePassageTest {
         String sequence = nom + "-PaRec_000.wav";
         Files.writeString(racine.resolve("bruts").resolve(original), "o");
         Files.writeString(racine.resolve("transformes").resolve(sequence), "s");
-        long id = passageDao
-                .insert(new Passage(
-                        null,
-                        numero,
-                        annee,
-                        "2026-06-20",
-                        "21:00:00",
-                        "05:00:00",
-                        null,
-                        StatutWorkflow.TRANSFORME,
-                        null,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        SERIE,
-                        null))
-                .id();
+        long id = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(idPoint)
+                .enregistreur(SERIE)
+                .nuit(numero, annee, "2026-06-20")
+                .heures("21:00:00", "05:00:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .semerPassage()
+                .idPassage();
         long idSession = new SessionDao(source)
                 .insert(new SessionDEnregistrement(null, racine.toString(), 100L, 50L, id))
                 .id();
