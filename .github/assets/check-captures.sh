@@ -56,8 +56,24 @@ while IFS= read -r ligne; do
   fi
 done < "$MANIFESTE"
 
+# 4. Chaque capture du disque est PRÉSENTÉE dans la galerie (README.md).
+#
+# Le manifeste garantit qu'aucune vue n'est livrée sans capture ; il ne garantissait pas qu'on puisse
+# la REGARDER. La galerie sert aux passes visuelles : une capture qui n'y figure pas n'est jamais
+# ouverte, et le document laisse croire qu'il couvre le produit entier. Vécu : 33 captures présentées
+# sur 126.
+nb_galerie=0
+for png in "$ICI"/apercu-*.png; do
+  [[ -f "$png" ]] || continue
+  nb_galerie=$((nb_galerie + 1))
+  if ! grep -qF "$(basename "$png")" "$ICI/README.md"; then
+    echo "❌ Capture absente de la galerie README.md : $(basename "$png")"
+    erreurs=$((erreurs + 1))
+  fi
+done
+
 if [[ $erreurs -gt 0 ]]; then
   echo "Garde captures : $erreurs problème(s) : voir ci-dessus."
   exit 1
 fi
-echo "Garde captures : OK ($nb_vues vues couvertes, toutes avec au moins une capture présente)."
+echo "Garde captures : OK ($nb_vues vues couvertes, $nb_galerie captures toutes présentées dans la galerie)."
