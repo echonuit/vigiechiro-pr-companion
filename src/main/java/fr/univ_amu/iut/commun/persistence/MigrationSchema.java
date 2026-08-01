@@ -3,15 +3,16 @@ package fr.univ_amu.iut.commun.persistence;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /// Applique les scripts de migration versionnés `src/main/resources/db/migration/V0x__*.sql`
 /// et trace les versions appliquées dans la table `schema_version`.
@@ -21,8 +22,13 @@ import java.util.Set;
 /// réouverture d'une base existante, les versions déjà présentes sont ignorées (migration
 /// idempotente, objectif disponibilité 5.2 : « base présente → réutilisée »).
 ///
+/// Chaque migration s'applique **en une transaction** avec l'inscription de sa version (#2728), et
+/// laisse au passage l'**empreinte** de ce qu'elle a exécuté (#2729) : un script modifié après avoir
+/// été appliqué est alors un refus explicite au démarrage, et non une divergence silencieuse entre
+/// les bases qui l'ont subi et celles qui naissent après.
+///
 /// Pour ajouter une migration : créer le fichier `V0n__xxx.sql` dans `db/migration/`
-/// **et** ajouter son nom à [#MIGRATIONS] (l'ordre fait foi).
+/// **et** ajouter son nom à [#MIGRATIONS] (l'ordre fait foi). Un script publié ne se modifie plus.
 public class MigrationSchema {
 
     /// Migrations appliquées dans l'ordre. Le préfixe `V0n` porte le numéro de version.
@@ -73,38 +79,79 @@ public class MigrationSchema {
     /// ligne dans le script sans en déverser le corps.
     private static final int LONGUEUR_EXTRAIT = 60;
 
-    private final SourceDeDonnees source;
     private final UniteDeTravail uniteDeTravail;
+    private final RegistreMigrations registre;
 
     public MigrationSchema(SourceDeDonnees source) {
-        this.source = source;
         this.uniteDeTravail = new UniteDeTravail(source);
+        this.registre = new RegistreMigrations(source);
     }
 
-    /// Applique toutes les migrations non encore enregistrées dans `schema_version`.
+    /// Applique toutes les migrations non encore enregistrées dans `schema_version`, après avoir
+    /// vérifié qu'aucune de celles qui le sont déjà n'a changé depuis (#2729).
     public void migrer() {
-        Set<Integer> dejaAppliquees = versionsAppliquees();
+        Map<Integer, String> retenues = registre.lire();
+        refuserSiUnScriptAppliqueAChange(retenues);
         for (String fichier : MIGRATIONS) {
             int version = numeroVersion(fichier);
-            if (!dejaAppliquees.contains(version)) {
+            if (!retenues.containsKey(version)) {
                 appliquer(fichier, version);
             }
         }
+        etalonnerLesEmpreintesInconnues(retenues);
     }
 
-    private Set<Integer> versionsAppliquees() {
-        Set<Integer> versions = new HashSet<>();
-        try (Connection connexion = source.getConnection();
-                Statement st = connexion.createStatement();
-                ResultSet rs = st.executeQuery("SELECT version FROM schema_version")) {
-            while (rs.next()) {
-                versions.add(rs.getInt(1));
+    /// Refuse de migrer si un script **déjà appliqué** ne correspond plus à son empreinte.
+    ///
+    /// Modifier un script après coup (rebase, correction bien intentionnée) fait diverger en silence
+    /// les bases qui l'ont subi dans sa première version de celles qui naissent avec la seconde.
+    /// Migrer par-dessus n'y changerait rien : la version est enregistrée, le script ne sera jamais
+    /// rejoué, et le schéma obtenu ne correspondrait à aucune description. Mieux vaut s'arrêter en le
+    /// disant.
+    private void refuserSiUnScriptAppliqueAChange(Map<Integer, String> retenues) {
+        List<String> derives = new ArrayList<>();
+        for (String fichier : MIGRATIONS) {
+            String retenue = retenues.get(numeroVersion(fichier));
+            if (retenue != null && !retenue.equals(empreinte(fichier))) {
+                derives.add(fichier);
             }
-        } catch (SQLException tableAbsente) {
-            // Premier lancement : la table schema_version n'existe pas encore. Aucune version appliquée.
-            return Set.of();
         }
-        return versions;
+        if (!derives.isEmpty()) {
+            throw new DataAccessException(refus(derives));
+        }
+    }
+
+    /// Donne son empreinte à chaque migration appliquée avant que les empreintes n'existent.
+    ///
+    /// C'est un **étalonnage** : il fige ce que les scripts disent aujourd'hui pour que toute dérive
+    /// ultérieure se voie. Il ne peut rien dire du passé, puisque rien n'a gardé trace de ce qui
+    /// avait été appliqué : un script déjà modifié avant ce premier lancement sera étalonné sur sa
+    /// version modifiée, sans que personne puisse le savoir.
+    private void etalonnerLesEmpreintesInconnues(Map<Integer, String> retenues) {
+        Map<Integer, String> aEtalonner = new LinkedHashMap<>();
+        for (String fichier : MIGRATIONS) {
+            int version = numeroVersion(fichier);
+            if (retenues.containsKey(version) && retenues.get(version) == null) {
+                aEtalonner.put(version, empreinte(fichier));
+            }
+        }
+        if (!aEtalonner.isEmpty()) {
+            uniteDeTravail.executer(connexion -> registre.etalonner(connexion, aEtalonner));
+        }
+    }
+
+    private static String refus(List<String> derives) {
+        String constat = derives.size() == 1
+                ? "La migration " + derives.get(0) + " a changé depuis qu'elle a été appliquée à cette base."
+                : derives.size()
+                        + " migrations ont changé depuis qu'elles ont été appliquées à cette base ("
+                        + String.join(", ", derives)
+                        + ").";
+        return constat
+                + " Un script appliqué ne se rejoue jamais : cette base porte ce que l'ancienne version"
+                + " lui a fait, et migrer par-dessus donnerait un schéma que rien ne décrit. Rétablissez"
+                + " le contenu d'origine du ou des scripts, ou repartez d'une base neuve après avoir"
+                + " sauvegardé celle-ci.";
     }
 
     /// Applique un script et inscrit sa version **dans la même transaction** (#2728).
@@ -120,14 +167,14 @@ public class MigrationSchema {
     /// porte de `PRAGMA`, de `VACUUM` ni de transaction explicite, les trois choses qui ne survivent
     /// pas à un `BEGIN`. Une migration future qui en aurait besoin devra donc le dire ici.
     private void appliquer(String fichier, int version) {
-        String[] instructions = decouperInstructions(lireRessource(DOSSIER + fichier));
+        String[] instructions = instructionsDe(fichier);
         uniteDeTravail.executer(connexion -> {
             try (Statement st = connexion.createStatement()) {
                 for (int rang = 0; rang < instructions.length; rang++) {
                     executer(st, instructions, rang, fichier);
                 }
             }
-            inscrireVersion(connexion, version);
+            registre.inscrire(connexion, version, empreinte(instructions));
         });
     }
 
@@ -152,12 +199,29 @@ public class MigrationSchema {
         }
     }
 
-    private static void inscrireVersion(Connection connexion, int version) throws SQLException {
-        String sql = "INSERT OR IGNORE INTO schema_version(version, applied_at) VALUES (?, ?)";
-        try (PreparedStatement ps = connexion.prepareStatement(sql)) {
-            ps.setInt(1, version);
-            ps.setString(2, LocalDateTime.now().toString());
-            ps.executeUpdate();
+    private static String[] instructionsDe(String fichier) {
+        return decouperInstructions(lireRessource(DOSSIER + fichier));
+    }
+
+    private static String empreinte(String fichier) {
+        return empreinte(instructionsDe(fichier));
+    }
+
+    /// Empreinte SHA-256 de ce que le script **fait faire à la base** : ses instructions, telles que
+    /// le découpage les produit, et non le fichier brut.
+    ///
+    /// La différence n'est pas cosmétique. Corriger une faute dans un commentaire, ou passer un
+    /// fichier en fins de ligne Windows, ne change rien à ce que la base reçoit : faire échouer le
+    /// démarrage pour cela serait un refus faux, et un refus faux use plus vite la confiance qu'une
+    /// alerte manquée. En revanche, toucher à une instruction, en ajouter une ou en retirer une
+    /// change l'empreinte.
+    private static String empreinte(String[] instructions) {
+        try {
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+            byte[] condense = sha256.digest(String.join(";", instructions).getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(condense);
+        } catch (NoSuchAlgorithmException absent) {
+            throw new IllegalStateException("SHA-256 est exigé de toute plateforme Java", absent);
         }
     }
 

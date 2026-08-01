@@ -176,8 +176,16 @@ class MigrationInterrompueTest {
                     });
         }
 
+        /// Le registre des migrations pose lui-même sa colonne d'empreinte, par un `ALTER TABLE` qui
+        /// n'appartient à aucun script (#2729). Le compter décalerait tous les rangs d'un cran à
+        /// partir de la première migration.
+        private static final String DDL_DU_REGISTRE = "ALTER TABLE schema_version ADD COLUMN checksum TEXT";
+
         private static boolean estUneInstructionDeScript(Method methode, Object[] arguments) {
-            return "execute".equals(methode.getName()) && arguments != null && arguments.length == 1;
+            return "execute".equals(methode.getName())
+                    && arguments != null
+                    && arguments.length == 1
+                    && !DDL_DU_REGISTRE.equals(arguments[0]);
         }
 
         private static Object deleguer(Object cible, Method methode, Object[] arguments) throws Throwable {
