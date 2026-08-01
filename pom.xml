@@ -62,7 +62,7 @@
 
         <!-- Lecture des specs YAML du générateur de cartes SD de recette (scope test uniquement,
              cf. recette/fixtures/spec/ ; jamais embarqué dans le binaire distribué). -->
-        <snakeyaml.version>2.5</snakeyaml.version>
+        <snakeyaml.version>2.6</snakeyaml.version>
 
         <!-- Persistance + injection de dépendances (cf. TP5 / TP4). -->
         <guice.version>7.0.0</guice.version>
