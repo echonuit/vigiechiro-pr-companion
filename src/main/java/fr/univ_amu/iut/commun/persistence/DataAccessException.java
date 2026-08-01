@@ -14,4 +14,11 @@ public class DataAccessException extends RuntimeException {
     public DataAccessException(String message, Throwable cause) {
         super(message, cause);
     }
+
+    /// Sans cause technique : la couche **refuse** d'elle-même, plutôt que de traduire l'échec d'un
+    /// appel JDBC. Ainsi du refus de migrer sur un script modifié après coup (#2729), où rien n'a
+    /// échoué : c'est nous qui décidons de ne pas continuer.
+    public DataAccessException(String message) {
+        super(message);
+    }
 }
