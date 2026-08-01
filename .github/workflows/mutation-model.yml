@@ -179,7 +179,7 @@ jobs:
       # question qui mérite qu'on l'ouvre.
       - name: Conserver le rapport détaillé
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pit-reports-model-${{ steps.tour.outputs.feature }}
           path: target/pit-reports/
