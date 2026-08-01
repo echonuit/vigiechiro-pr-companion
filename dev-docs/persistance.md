@@ -77,6 +77,28 @@ qu'aucun message ne dise pourquoi (#2728).
 Le message d'échec, lui, **situe** la panne : le fichier, le rang de l'instruction et son début. Un
 « no such column » de SQLite laisserait sinon relire tout le script pour trouver où.
 
+### Un filet avant chaque montée de version
+
+Une migration est le seul moment où l'application **transforme la base sans que l'utilisateur l'ait
+demandé** : il ouvre l'application après une mise à jour, et le schéma change. Avant d'appliquer la
+première migration en attente, la base est donc mise à l'abri dans
+`<workspace>/sauvegardes/vigiechiro-avant-migration-V<nn>.db`, là où la restauration propose de
+chercher (#2729).
+
+L'atomicité de la section précédente protège d'une **panne** ; le filet protège aussi d'une migration
+qui **réussit** en faisant autre chose que prévu, ce qu'aucune transaction ne rattrape.
+
+Deux cas où il n'y a rien à faire : aucune migration en attente (le lancement ordinaire n'accumule
+pas de copies), et une base qui ne portait encore aucune version. Ce second cas est la **création**
+de la base, pas sa montée de version.
+
+Si le filet ne peut pas être posé (dossier inaccessible, disque plein), **la migration n'a pas
+lieu** : avancer sans lui reviendrait à ne le promettre que quand il ne sert à rien.
+
+L'instantané est produit par `InstantaneBase` (`VACUUM INTO`), que partagent les trois usages :
+sauvegarde de routine, sauvegarde complète et filet. Il vit à part de `ServiceSauvegarde` parce que
+le migrateur en a besoin et que le service, lui, appelle déjà le migrateur.
+
 ### Un script publié ne se modifie plus
 
 Une migration appliquée **ne se rejoue jamais** : sa version est inscrite, le migrateur passe. Donc
