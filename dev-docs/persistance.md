@@ -51,6 +51,9 @@ en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations
        dans une transaction (voir ci-dessous), et ces trois-là n'y survivent pas. Un `PRAGMA` y est
        silencieusement sans effet, ce qui est le pire des trois. Une migration qui en aurait
        réellement besoin doit d'abord changer `MigrationSchema.appliquer`.
+    4. **Une fois poussée, elle ne se modifie plus.** Elle est appliquée chez d'autres, et ne se
+       rejouera pas chez eux. Ce qu'il faut corriger se corrige dans une migration **suivante** ; une
+       retouche du script déjà publié fait refuser le démarrage (voir ci-dessous).
 
     `App` migre **avant de composer l'injecteur** (`Amorcage.migrerPuisComposer()`) : les drapeaux de
     fonctionnalités sont ainsi lus dans une base à jour, ce qui a fermé le piège dormant #2187
@@ -73,6 +76,31 @@ qu'aucun message ne dise pourquoi (#2728).
 
 Le message d'échec, lui, **situe** la panne : le fichier, le rang de l'instruction et son début. Un
 « no such column » de SQLite laisserait sinon relire tout le script pour trouver où.
+
+### Un script publié ne se modifie plus
+
+Une migration appliquée **ne se rejoue jamais** : sa version est inscrite, le migrateur passe. Donc
+si on modifie son script après coup (rebase, correction bien intentionnée), les bases qui l'ont subi
+dans sa première version et celles qui naissent avec la seconde **divergent en silence**, et rien
+dans le schéma ne dit laquelle on a sous les yeux.
+
+Chaque migration laisse donc son **empreinte SHA-256** dans `schema_version`, écrite dans la
+transaction qui l'applique. Au démarrage, avant d'appliquer quoi que ce soit, une empreinte qui ne
+correspond plus à son script est un **refus explicite** qui nomme le fichier et dit quoi faire
+(#2729).
+
+L'empreinte porte sur les **instructions**, pas sur le texte du fichier : corriger une faute dans un
+commentaire ou changer les fins de ligne ne change rien à ce que la base reçoit, et faire échouer un
+démarrage pour cela serait un refus faux. Un refus faux use plus vite la confiance qu'une alerte
+manquée.
+
+!!! warning "Ce que l'empreinte ne peut pas faire"
+    Les migrations appliquées **avant** sa mise en place n'en ont aucune. Elles sont **étalonnées**
+    au premier lancement, sur le contenu actuel des scripts : l'empreinte fige le présent, elle ne
+    juge pas le passé. Si un script avait déjà été modifié sur une base existante, l'étalonnage
+    enregistrera la version modifiée et personne ne le saura. C'est irrattrapable (rien n'a gardé
+    trace de ce qui avait été appliqué) et c'est écrit ici plutôt que tu, parce qu'une garantie qu'on
+    croit plus large qu'elle n'est vaut moins que pas de garantie du tout.
 
 ## Remplacer la base sous une application vivante
 
