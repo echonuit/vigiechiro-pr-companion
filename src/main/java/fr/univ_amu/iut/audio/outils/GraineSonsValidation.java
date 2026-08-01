@@ -8,11 +8,8 @@ import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.view.SonsValidationController;
-import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
-import fr.univ_amu.iut.audio.viewmodel.ExporteurAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
-import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.ModeValidation;
@@ -37,26 +34,18 @@ import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
-import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
-import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import fr.univ_amu.iut.validation.model.Observation;
-import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
-import fr.univ_amu.iut.validation.model.RevueEnLot;
-import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
-import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.MessageObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
-import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -127,47 +116,10 @@ final class GraineSonsValidation {
                         ModuleCaptureCommun.executeursSynchrones(),
                         new ModuleCaptureNavigationAudio(),
                         new AbstractModule() {
-                            @Provides
-                            AudioViewModel viewModel(
-                                    ServiceValidation validation,
-                                    ProjectionsAudioDao projectionsAudio,
-                                    PlageNuitPassage plageNuitPassage,
-                                    ValidationManuelle validationManuelle,
-                                    MarquageDouteux marquageDouteux,
-                                    SaisieCertitude saisieCertitude,
-                                    RevueEnLot revueEnLot,
-                                    ExporteurAudio exporteur,
-                                    ServiceDisponibiliteAudio disponibilite,
-                                    DiscussionValidateur discussion) {
-                                return new AudioViewModel(
-                                        validation,
-                                        projectionsAudio,
-                                        plageNuitPassage,
-                                        validationManuelle,
-                                        marquageDouteux,
-                                        saisieCertitude,
-                                        revueEnLot,
-                                        exporteur,
-                                        disponibilite,
-                                        Files::exists,
-                                        discussion);
-                            }
-
-                            @Provides
-                            ExporteurAudio exporteur(
-                                    ServiceValidation validation,
-                                    ServiceBibliotheque bibliotheque,
-                                    SequenceDao sequenceDao,
-                                    SessionDao sessionDao) {
-                                return new ExporteurAudio(
-                                        validation,
-                                        bibliotheque,
-                                        new ExportObservationsEtSons(sequenceDao, sessionDao));
-                            }
-
-                            // Repondre au validateur est indisponible en capture (aucune connexion) : le fil se
-                            // LIT, la saisie se desactive en disant pourquoi (affordance #789). Cet injecteur ne
-                            // charge pas AudioModule, il faut donc lui fournir le collaborateur ici.
+                            // Répondre au validateur est indisponible en capture (aucune connexion) : le fil se
+                            // LIT, la saisie se désactive en disant pourquoi (affordance #789). Ce provider
+                            // n'est pas un vestige : il ENREGISTRE un profil, sans quoi l'écran nous
+                            // attribuerait nos propres messages (#1417). AudioModule est bien chargé (#3018).
                             @Provides
                             @Singleton
                             DiscussionValidateur discussion(ServiceValidation service, StockageConnexion connexion) {
