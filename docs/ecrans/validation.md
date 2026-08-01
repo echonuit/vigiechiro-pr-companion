@@ -107,6 +107,8 @@ pas** l'export : l'observation reste dans le CSV, le son manquant est **compté*
 final, et le CSV permet de le nommer. Comptez quelques minutes pour plusieurs centaines de sons - sur
 une saison réelle, 721 sons (658 Mo) partent en moins de cinq minutes.
 
+La commande `vigiechiro lister-observations` reprend **les mêmes critères que la barre de filtres** : `--statut`, `--taxon`, `--taxon-parent`, `--lieu`, `--reference`, `--douteux`, `--non-identifie`, `--a-enjeu`, `--proba-min` et la plage `--heure-debut` / `--heure-fin` (qui traverse minuit, comme la puce). Un critère qui **désigne** quelque chose d'introuvable refuse en nommant ce qui est présent ; un critère qui **qualifie** rend simplement une liste vide.
+
 La même archive se produit **en ligne de commande** avec `vigiechiro exporter-sons` (`--passage <id>`
 ou `--espece <code>`, et `--sortie <zip>`), pour scripter des envois réguliers.
 
