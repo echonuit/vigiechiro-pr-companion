@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.persistence;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.SQLException;
@@ -79,10 +80,19 @@ public class MigrationSchema {
     /// ligne dans le script sans en déverser le corps.
     private static final int LONGUEUR_EXTRAIT = 60;
 
+    /// Dossier des sauvegardes, sous la racine du workspace. Le filet posé avant une montée de
+    /// version y va, et non ailleurs : c'est là que la restauration propose de chercher.
+    private static final String DOSSIER_SAUVEGARDES = "sauvegardes";
+
+    /// Le nom dit ce que le fichier est et de quoi il précède : `vigiechiro-avant-migration-V39.db`.
+    private static final String PREFIXE_FILET = "vigiechiro-avant-migration-";
+
+    private final SourceDeDonnees source;
     private final UniteDeTravail uniteDeTravail;
     private final RegistreMigrations registre;
 
     public MigrationSchema(SourceDeDonnees source) {
+        this.source = source;
         this.uniteDeTravail = new UniteDeTravail(source);
         this.registre = new RegistreMigrations(source);
     }
@@ -92,13 +102,54 @@ public class MigrationSchema {
     public void migrer() {
         Map<Integer, String> retenues = registre.lire();
         refuserSiUnScriptAppliqueAChange(retenues);
-        for (String fichier : MIGRATIONS) {
-            int version = numeroVersion(fichier);
-            if (!retenues.containsKey(version)) {
-                appliquer(fichier, version);
-            }
+        List<String> enAttente = enAttente(retenues);
+        poserLeFilet(retenues, enAttente);
+        for (String fichier : enAttente) {
+            appliquer(fichier, numeroVersion(fichier));
         }
         etalonnerLesEmpreintesInconnues(retenues);
+    }
+
+    private List<String> enAttente(Map<Integer, String> retenues) {
+        List<String> enAttente = new ArrayList<>();
+        for (String fichier : MIGRATIONS) {
+            if (!retenues.containsKey(numeroVersion(fichier))) {
+                enAttente.add(fichier);
+            }
+        }
+        return enAttente;
+    }
+
+    /// Met la base à l'abri **avant** de la faire évoluer, dans `<workspace>/sauvegardes` (#2729).
+    ///
+    /// Une montée de version est le seul moment où l'application transforme la base sans que
+    /// l'utilisateur l'ait demandé : il ouvre l'application après une mise à jour, et le schéma
+    /// change. Chaque migration est certes atomique (#2728), mais l'atomicité protège d'une panne, pas
+    /// d'une migration qui **réussit** en faisant autre chose que prévu. Le filet, lui, protège des
+    /// deux, et il se retrouve dans la liste des sauvegardes à restaurer.
+    ///
+    /// Rien à faire dans deux cas : aucune migration en attente, ou une base qui n'en portait encore
+    /// aucune. Ce second cas est la **création** de la base, pas sa montée de version : il n'y a rien
+    /// à mettre à l'abri.
+    ///
+    /// Si le filet ne peut pas être posé, on **ne migre pas**. Avancer sans lui reviendrait à ne le
+    /// promettre que quand il ne sert à rien.
+    private void poserLeFilet(Map<Integer, String> retenues, List<String> enAttente) {
+        if (enAttente.isEmpty() || retenues.isEmpty()) {
+            return;
+        }
+        Path dossier = source.workspace().racine().resolve(DOSSIER_SAUVEGARDES);
+        String nom =
+                PREFIXE_FILET + enAttente.get(0).substring(0, enAttente.get(0).indexOf("__"));
+        try {
+            new InstantaneBase(source).ecrireDans(dossier, nom);
+        } catch (DataAccessException echec) {
+            throw new DataAccessException(
+                    "La base n'a pas pu être mise à l'abri dans " + dossier
+                            + " avant sa mise à jour, la migration n'a donc pas eu lieu. Libérez de la"
+                            + " place ou vérifiez les droits sur ce dossier, puis relancez.",
+                    echec);
+        }
     }
 
     /// Refuse de migrer si un script **déjà appliqué** ne correspond plus à son empreinte.
