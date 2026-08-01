@@ -35,6 +35,30 @@ par `ApercuFx`. Souvent en **deux états** (vide / peuplé) pour montrer les cas
     Les PNG sont **versionnés** : un rendu non déterministe salirait le dépôt à chaque CI. Signaux de
     synthèse (cf. `SonDemo`), pas d'horodatage réel, attente explicite des chargements asynchrones.
 
+    La règle porte sur **ce que le produit rend**. Une entrée **extérieure** au dépôt n'y est pas
+    soumise : voir l'exception des tuiles ci-dessous, qui est la seule.
+
+#### L'exception assumée : les tuiles OpenStreetMap
+
+Les quatre aperçus qui montrent la carte (`apercu-multisite`, `-filtre`, `-edition`, `-carte-pleine`)
+**varient légèrement d'un build à l'autre**, sans qu'aucun code ne change.
+
+C'est mesuré, pas supposé : **0,34 %** des pixels (2 302 sur 682 000), confinés au panneau de carte, en
+tracés fins de routes. Une tuile absente en ferait 65 000 - il ne s'agit donc pas d'un chargement
+incomplet, mais du **rendu servi par OpenStreetMap**, qui n'est pas identique à chaque requête.
+
+Aucune attente ne corrige cela, et ça a été vérifié : la condition de stabilité est satisfaite, et
+porter la quiétude exigée de 0,75 s à 3 s ne change rien (#3068).
+
+**Arbitrage : on garde la dépendance.** Ces captures valent parce qu'elles montrent une **vraie** carte,
+au même titre que les autres montrent de vraies données depuis une base semée. Figer la source de tuiles
+rendrait l'image plus stable et moins vraie. La variabilité résiduelle est minime et n'affecte aucun
+élément produit par le dépôt.
+
+Ce qui vient de **nous** reste donc strictement déterministe, et c'est là-dessus que la règle d'or
+s'applique. Le corollaire pratique : sur ces quatre fichiers, un diff de captures n'est pas un signal -
+la revue se fait à l'œil, pas au `cmp`.
+
 ### L'injecteur se compose depuis la racine
 
 Un outil compose **`RacineInjecteur.modules()`**, la liste que l'application elle-même assemble, et

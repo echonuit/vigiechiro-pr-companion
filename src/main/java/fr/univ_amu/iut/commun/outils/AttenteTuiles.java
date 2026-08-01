@@ -37,15 +37,18 @@ import javafx.stage.Window;
 /// et rejoue la course en entier - ce qui explique aussi pourquoi le défaut est **intermittent** :
 /// selon le réseau, la course se gagne ou se perd.
 ///
-/// ⚠️ **Cela ne rend pas les captures déterministes**, et c'est mesuré : après ce correctif, les quatre
-/// aperçus de carte varient toujours d'un run à l'autre, sur **0,34 %** des pixels, en suivant les
-/// tracés fins des routes. Porter la quiétude exigée de 0,75 s à 3 s n'y change rien. Ce sont donc les
-/// **tuiles elles-mêmes** qui diffèrent d'une exécution à l'autre, et aucune attente ne corrigera cela
-/// (#3068 reste ouverte).
+/// ⚠️ **Cela ne rend pas les captures identiques au bit près**, et c'est mesuré : après ce correctif,
+/// les quatre aperçus de carte varient toujours d'un run à l'autre, sur **0,34 %** des pixels, en
+/// suivant les tracés fins des routes. Porter la quiétude exigée de 0,75 s à 3 s n'y change rien : ce
+/// sont les **tuiles elles-mêmes** qui diffèrent, et aucune attente ne corrigera cela.
 ///
-/// Ce qui est corrigé ici est réel mais **distinct** : la course contre le réseau se perdait au hasard,
-/// et une capture pouvait partir avec des tuiles manquantes. Gain annexe net : 8 captures en **10 s** au
-/// lieu de 48.
+/// **C'est assumé** (#3068). Le déterminisme est une règle sur ce que le **produit rend** ; les tuiles
+/// sont une entrée **extérieure** au dépôt. Ces captures valent parce qu'elles montrent une *vraie*
+/// carte - figer la source les rendrait plus stables et moins vraies. Détail dans `dev-docs/captures.md`.
+///
+/// Ce qui est corrigé ici est donc réel mais **distinct** de la variabilité : la course contre le réseau
+/// se perdait au hasard, et une capture pouvait partir avec des tuiles **manquantes**, ce qui n'est pas
+/// une nuance de rendu mais un fond absent. Gain annexe net : 8 captures en **10 s** au lieu de 48.
 ///
 /// L'attente observe désormais l'**état du graphe de scène** : elle rend la main quand plus aucune
 /// image ne se charge et que leur nombre a cessé de bouger. Le délai n'est plus qu'un **plafond**.
