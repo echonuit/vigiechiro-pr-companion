@@ -40,7 +40,7 @@
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
         <maven.dependency.plugin.version>3.8.1</maven.dependency.plugin.version>
         <exec.maven.plugin.version>3.6.3</exec.maven.plugin.version>
-        <spotless.maven.plugin.version>3.8.0</spotless.maven.plugin.version>
+        <spotless.maven.plugin.version>3.9.0</spotless.maven.plugin.version>
         <palantir.java.format.version>2.91.0</palantir.java.format.version>
         <git.build.hook.plugin.version>3.6.0</git.build.hook.plugin.version>
         <maven.pmd.plugin.version>3.28.0</maven.pmd.plugin.version>
