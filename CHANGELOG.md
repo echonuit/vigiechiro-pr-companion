@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.154.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.154.0...v2.154.1) (2026-08-01)
+
+
+### Bug Fixes
+
+* **captures:** attendre les tuiles sur une condition, non sur un délai ([#3102](https://github.com/echonuit/vigiechiro-pr-companion/issues/3102)) ([abf7765](https://github.com/echonuit/vigiechiro-pr-companion/commit/abf7765e87f631d64836bc095a6a1f57b918b53c)), closes [#3068](https://github.com/echonuit/vigiechiro-pr-companion/issues/3068) [#3085](https://github.com/echonuit/vigiechiro-pr-companion/issues/3085) [#3090](https://github.com/echonuit/vigiechiro-pr-companion/issues/3090) [#3050](https://github.com/echonuit/vigiechiro-pr-companion/issues/3050) [#3068](https://github.com/echonuit/vigiechiro-pr-companion/issues/3068)
+
 # [2.154.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.153.3...v2.154.0) (2026-08-01)
 
 
