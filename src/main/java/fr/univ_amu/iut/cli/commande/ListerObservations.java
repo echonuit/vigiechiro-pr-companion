@@ -8,6 +8,7 @@ import fr.univ_amu.iut.validation.model.CriteresRevue;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.FiltreLieu;
 import fr.univ_amu.iut.validation.model.FiltreProbabilite;
+import fr.univ_amu.iut.validation.model.FiltresRevue;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.SelectionObservations;
@@ -128,6 +129,31 @@ public final class ListerObservations implements Callable<Integer> {
     /// Les filtres tels que l'utilisateur les a posés. Les drapeaux picocli sont **binaires** (présent /
     /// absent) alors que le critère est **ternaire** : on traduit donc « absent » en `null` (« ne filtre pas
     /// là-dessus ») et non en `false` (« seulement les non-douteuses »), qui serait un contresens.
+    @Option(
+            names = "--taxon-parent",
+            paramLabel = "<taxon>",
+            description = "Restreint à une catégorie taxonomique (Chiroptères, Oiseaux…). Correspondance "
+                    + "partielle, insensible à la casse et aux accents.")
+    private String taxonParent;
+
+    @Option(
+            names = "--non-identifie",
+            description = "Ne garde que les séquences sans proposition Tadarida, à identifier à la main.")
+    private boolean nonIdentifie;
+
+    @Option(
+            names = "--heure-debut",
+            paramLabel = "<0-23>",
+            description = "Début de la plage horaire de capture. Va avec --heure-fin ; la plage traverse "
+                    + "minuit si le début est plus tard que la fin (21 → 6 retient la nuit).")
+    private Integer heureDebut;
+
+    @Option(
+            names = "--heure-fin",
+            paramLabel = "<0-23>",
+            description = "Fin de la plage horaire de capture. Va avec --heure-debut.")
+    private Integer heureFin;
+
     CriteresRevue criteres() {
         return new CriteresRevue(
                 statut,
@@ -141,8 +167,11 @@ public final class ListerObservations implements Callable<Integer> {
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
-        List<LigneObservationAudio> avantSeuil =
+        List<LigneObservationAudio> retenues =
                 FiltreLieu.appliquer(selection.get().lignes(passage, criteres()), lieux);
+        retenues = FiltresRevue.parTaxonParent(retenues, taxonParent);
+        retenues = FiltresRevue.nonIdentifiees(retenues, nonIdentifie);
+        List<LigneObservationAudio> avantSeuil = FiltresRevue.parPlageHoraire(retenues, heureDebut, heureFin);
         List<LigneObservationAudio> lignes = FiltreProbabilite.appliquer(avantSeuil, probaMin);
         marqueurEnjeu = marqueur.get();
 

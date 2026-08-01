@@ -266,6 +266,38 @@ setup() {
   [ -f "${BATS_TEST_TMPDIR}/tout.csv" ]
 }
 
+@test "lister-observations : les filtres qui QUALIFIENT passent sur une base vide, exit 0 (#3082)" {
+  # Base jetable sans observation. Les deux criteres qui QUALIFIENT rendent legitimement un ensemble
+  # vide (ADR 3082) : « aucune sequence en attente » est une reponse. Ce qui se prouve ici est que les
+  # options sont dans le PAQUET et analysees par picocli, ce que les tests in-process ne voient pas.
+  run cli lister-observations --passage 1 --non-identifie --heure-debut 21 --heure-fin 6
+  [ "${status}" -eq 0 ]
+}
+
+@test "lister-observations : le taxon parent DESIGNE, donc il refuse sur une base vide (#3082)" {
+  # L autre moitie de l ADR 3082, verifiee sur le vrai fat-jar : un critere qui designe refuse quand il
+  # ne trouve rien, et NOMME ce qui est present. C est le bats qui a montre ce cas - mon premier jet
+  # attendait un exit 0 pour les trois filtres ensemble, sans voir que la base de test est vide.
+  run cli lister-observations --passage 1 --taxon-parent Chiropteres
+  [ "${status}" -ne 0 ]
+  [[ "${output}" == *"Taxons parents présents"* ]]
+}
+
+@test "lister-observations : une plage horaire a demi donnee est refusee (#3082)" {
+  # « --heure-debut 21 » seul se lirait « depuis 21 h » ou « jusqu a 21 h » : choisir a la place de
+  # l utilisateur produirait un resultat plausible et faux.
+  run cli lister-observations --passage 1 --heure-debut 21
+  [ "${status}" -ne 0 ]
+  [[ "${output}" == *"--heure-fin"* ]]
+}
+
+@test "lister-observations : l aide decrit les trois filtres ajoutes (#3082)" {
+  run cli lister-observations --help
+  [[ "${output}" == *"--taxon-parent"* ]]
+  [[ "${output}" == *"--non-identifie"* ]]
+  [[ "${output}" == *"--heure-debut"* ]]
+}
+
 @test "exporter-activite : les cinq filtres sont acceptes ensemble, exit 0 (#3059)" {
   # Base jetable sans observation : ce qui se prouve ici n'est pas le RESULTAT du filtrage - les tests
   # Java le tiennent - mais que le FAT-JAR expose les cinq options, que picocli les analyse et qu'elles
