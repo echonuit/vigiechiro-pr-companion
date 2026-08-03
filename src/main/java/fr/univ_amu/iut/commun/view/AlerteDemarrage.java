@@ -18,9 +18,15 @@ public final class AlerteDemarrage {
 
     /// Dit à l'utilisateur pourquoi l'application ne démarre pas, et attend qu'il l'ait lu.
     public static void refusDeDemarrage(String entete, String explication) {
+        dialogue(entete, explication).showAndWait();
+    }
+
+    /// Le dialogue **sans l'ouvrir**, pour que l'aperçu documentaire montre celui de la production et
+    /// non une reconstitution (ADR 0025).
+    public static Alert dialogue(String entete, String explication) {
         Alert alerte = new Alert(Alert.AlertType.WARNING);
         alerte.setHeaderText(entete);
         alerte.setContentText(explication);
-        alerte.showAndWait();
+        return alerte;
     }
 }
