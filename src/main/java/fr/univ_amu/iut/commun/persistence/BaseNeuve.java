@@ -44,6 +44,14 @@ public class BaseNeuve {
     /// @return le chemin de la base mise de côté, ou vide s'il n'y avait pas encore de base
     /// @throws DataAccessException si le fichier ne peut être ni copié ni supprimé
     public Path repartirDeZero() {
+        try (VerrouWorkspace verrou = VerrouWorkspace.pourOperationExclusive(source.workspace(), "la remise à zéro")) {
+            return effacerEtRecreer();
+        }
+    }
+
+    /// Le geste lui-même, sous le verrou du workspace : personne d'autre n'écrit pendant qu'on efface
+    /// la base (#2731).
+    private Path effacerEtRecreer() {
         Path base = source.workspace().cheminBaseDeDonnees();
         Path filet = base.resolveSibling(base.getFileName() + SUFFIXE_FILET);
         try {

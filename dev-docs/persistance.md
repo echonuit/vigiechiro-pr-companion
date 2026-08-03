@@ -249,6 +249,32 @@ restaurée ne pointe plus vers des dossiers absents.
     remet dans le workspace et non à sa place, puisque sa place n'existe plus. Le compte rendu le
     dit, et la base pointe vers l'endroit réel.
 
+## Un seul processus écrit dans un dossier de travail
+
+`VerrouWorkspace` pose un **verrou de fichier système** sur `<workspace>/.verrou` (#2731). Le PID et
+l'horodatage y sont écrits pour le **message**, jamais pour la décision : c'est le système qui
+tranche, et c'est lui qui **relâche** le verrou quand le processus meurt, de sorte qu'un plantage ne
+condamne pas le dossier de travail.
+
+Qui le prend, et pour combien de temps :
+
+| Qui | Portée |
+|---|---|
+| l'application graphique | toute la durée de son exécution : c'est elle l'occupante |
+| la migration | seulement si elle a **réellement** quelque chose à appliquer |
+| la restauration (simple et complète), la remise à zéro | le temps de l'opération |
+| les commandes de lecture | jamais |
+
+La nuance sur la migration est délibérée : une commande de lecture lancée pendant que l'IHM tourne ne
+migre rien, et la faire échouer sur un verrou lui coûterait plus que la protection ne lui rapporte.
+
+Un processus qui détient déjà le verrou **ne se bloque pas lui-même** : une restauration lancée
+depuis l'IHM réutilise le verrou de l'IHM, et sa fin ne le relâche pas.
+
+Le choix du mécanisme et celui de **refuser** la seconde instance plutôt que de la basculer en
+lecture seule sont motivés dans l'[ADR 2731](decisions/2731-un-seul-processus-par-workspace.md), qui
+dit aussi ce que le verrou **ne** protège pas.
+
 ## Le patron DAO
 
 Pas d'ORM : des **DAO** en `PreparedStatement`. La base technique

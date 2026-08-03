@@ -4,6 +4,8 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.di.Amorcage;
 import fr.univ_amu.iut.commun.model.ConfigurationJournalisation;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.persistence.DataAccessException;
+import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
@@ -53,7 +55,18 @@ public class App extends Application {
         // tard et le choix de l'utilisateur serait ignoré, sans message, pendant tout un lancement
         // (#2187). Le schéma est créé au besoin (migration idempotente) : sans cela, le premier écran qui
         // lit la base échouerait sur « no such table ».
-        Injector injector = Amorcage.migrerPuisComposer();
+        Injector injector;
+        try {
+            injector = Amorcage.migrerPuisComposer();
+        } catch (DataAccessException dossierOccupe) {
+            // Le dossier de travail est déjà tenu par une autre fenêtre (#2731). On le dit et on sort,
+            // plutôt que de laisser deux instances écrire la même base : la seconde ne s'en
+            // apercevrait qu'à un échec SQLite tardif, au milieu d'une écriture.
+            LOG.log(Level.WARNING, dossierOccupe, () -> "Démarrage refusé : dossier de travail occupé");
+            AlerteDemarrage.refusDeDemarrage("VigieChiro Companion est déjà ouvert", dossierOccupe.getMessage());
+            Platform.exit();
+            return;
+        }
 
         // Backfill applicatif de l'horodatage de capture (#530) : les séquences importées avant la colonne
         // recorded_at (V09) n'ont pas d'heure ; on la reconstruit en re-parsant leur nom de fichier. Idempotent
@@ -92,6 +105,14 @@ public class App extends Application {
         });
 
         primaryStage.show();
+    }
+
+    /// Rend le dossier de travail à la fermeture (#2731). Sans cela, le verrou ne serait relâché que
+    /// par la mort du processus : c'est ce que fait le système, mais s'en remettre à lui laisserait le
+    /// dossier réservé pendant toute une fermeture propre.
+    @Override
+    public void stop() {
+        Amorcage.libererLeWorkspace();
     }
 
     /// Donne à la fenêtre l'icône de l'application, en plusieurs tailles (#2144).

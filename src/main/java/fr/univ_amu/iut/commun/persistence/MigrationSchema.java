@@ -103,11 +103,21 @@ public class MigrationSchema {
         Map<Integer, String> retenues = registre.lire();
         refuserSiUnScriptAppliqueAChange(retenues);
         List<String> enAttente = enAttente(retenues);
-        poserLeFilet(retenues, enAttente);
-        for (String fichier : enAttente) {
-            appliquer(fichier, numeroVersion(fichier));
+        if (enAttente.isEmpty()) {
+            etalonnerLesEmpreintesInconnues(retenues);
+            return;
         }
-        etalonnerLesEmpreintesInconnues(retenues);
+        // Le verrou ne se prend QUE s'il y a quelque chose à appliquer (#2731). Une commande de
+        // lecture lancée pendant que l'IHM tourne ne migre rien : la faire échouer sur un verrou lui
+        // coûterait plus que la protection ne lui rapporte.
+        try (VerrouWorkspace verrou =
+                VerrouWorkspace.pourOperationExclusive(source.workspace(), "la mise à jour de la base")) {
+            poserLeFilet(retenues, enAttente);
+            for (String fichier : enAttente) {
+                appliquer(fichier, numeroVersion(fichier));
+            }
+            etalonnerLesEmpreintesInconnues(retenues);
+        }
     }
 
     private List<String> enAttente(Map<Integer, String> retenues) {
