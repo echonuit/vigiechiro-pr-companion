@@ -458,6 +458,42 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
+    @DisplayName("#3094 : une année illisible ne filtre rien, et la puce le dit au lieu de le taire")
+    void annee_illisible_est_signalee(FxRobot robot) {
+        ajouterPuce(robot, "Année");
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        TextField champAnnee = robot.from(puces).lookup(".text-field").queryAs(TextField.class);
+        int lignesSansFiltre = tableau(robot).getItems().size();
+
+        // Vide : la puce vient d'être posée, elle n'écarte rien et n'a aucune raison de rougir.
+        assertThat(champAnnee.getStyleClass())
+                .as("un champ encore vide ne rougit pas avant toute saisie")
+                .doesNotContain("champ-invalide");
+
+        // Illisible : le tableau n'est pas filtré, et c'est précisément ce qu'il faut annoncer. Sans
+        // marque, la puce est posée, remplie, d'apparence active, sur une table qui ne l'est pas.
+        robot.interact(() -> champAnnee.setText("202O"));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(tableau(robot).getItems())
+                .as("le comportement de filtrage est inchangé : une année illisible n'écarte rien")
+                .hasSize(lignesSansFiltre);
+        assertThat(champAnnee.getStyleClass())
+                .as("la saisie illisible doit se voir")
+                .contains("champ-invalide");
+        assertThat(champAnnee.getAccessibleText())
+                .as("la bordure rouge est un signal de couleur : le sens doit exister sans elle")
+                .contains("quatre chiffres");
+
+        // Corrigée : la marque disparaît et le filtre s'applique pour de bon.
+        robot.interact(() -> champAnnee.setText("2026"));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(champAnnee.getStyleClass()).doesNotContain("champ-invalide");
+        assertThat(tableau(robot).getItems()).extracting(LignePassage::annee).containsOnly(2026);
+    }
+
+    @Test
     @DisplayName("La recherche filtre le tableau (n° de carré, point, date)")
     void recherche_filtre_le_tableau(FxRobot robot) {
         robot.clickOn("#champRecherche").write("640381");

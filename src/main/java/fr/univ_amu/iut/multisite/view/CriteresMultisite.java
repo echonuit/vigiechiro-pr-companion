@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
+import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
@@ -19,6 +20,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 
@@ -43,6 +46,10 @@ final class CriteresMultisite {
     /// une vue mémorisée nomme ses critères, et trois écrans qui filtrent le même concept sous trois
     /// clés se liraient mal.
     private static final String LIEU = "lieu";
+
+    /// Intitulé du critère Année, porté par la puce, l'invite du champ et son libellé accessible en
+    /// saisie valide : les trois doivent dire la même chose.
+    private static final String LIBELLE_ANNEE = "Année";
 
     private CriteresMultisite() {}
 
@@ -264,7 +271,18 @@ final class CriteresMultisite {
                 verdict -> FiltresMultisite.parVerdict(verdict)::accepte);
     }
 
-    /// Critère **Année** : champ texte numérique (une saisie non numérique ne filtre pas).
+    /// Critère **Année** : champ texte numérique. Une saisie **illisible** ne filtre pas, et le **dit**
+    /// (#3094).
+    ///
+    /// Le comportement de filtrage est inchangé : `202O` (avec un O) n'écarte rien, comme avant. Ce qui
+    /// change est qu'il cesse de le taire. Une puce posée, remplie, d'apparence active, sur une table
+    /// qui n'est pas filtrée, est le genre d'état qui coûte le plus cher en confiance : ce n'est pas une
+    /// erreur visible qu'on corrige, c'est un résultat qu'on croit filtré et qui ne l'est pas.
+    ///
+    /// La condition est « **saisi mais illisible** », comme le recommande la Javadoc de
+    /// [ValidationFormulaire#marquerInvalide] : un champ encore vide reste neutre et ne rougit pas avant
+    /// toute saisie. C'est la même règle que le socle applique aux puces à liste, où rien de coché
+    /// n'écarte rien.
     static CritereFiltre<LignePassage> annee() {
         return new CritereFiltre<LignePassage>() {
             @Override
@@ -274,13 +292,14 @@ final class CriteresMultisite {
 
             @Override
             public String libelle() {
-                return "Année";
+                return LIBELLE_ANNEE;
             }
 
             @Override
             public Node editeur(Consumer<Predicate<LignePassage>> applique) {
                 TextField champ = new TextField();
-                champ.setPromptText("Année");
+                champ.setPromptText(LIBELLE_ANNEE);
+                signalerSaisieIllisible(champ);
                 champ.textProperty().addListener((obs, avant, texte) -> applique.accept(predicatAnnee(texte)));
                 applique.accept(tout());
                 return champ;
@@ -331,6 +350,24 @@ final class CriteresMultisite {
     private static Predicate<LignePassage> predicatAnnee(String texte) {
         Integer annee = anneeOuNull(texte);
         return annee == null ? tout() : FiltresMultisite.parAnnee(annee)::accepte;
+    }
+
+    /// Texte accessible du champ Année quand la saisie est illisible (#3094).
+    ///
+    /// La bordure rouge est un signal **de couleur seule**, et #2119 relève déjà que les explications
+    /// réservées à la souris n'atteignent pas tout le monde. Le champ porte donc aussi ce que le rouge
+    /// veut dire, sous une forme qu'un lecteur d'écran restitue.
+    private static final String AIDE_ANNEE_ILLISIBLE = "Année illisible : saisissez quatre chiffres, par exemple 2026.";
+
+    /// Marque le champ Année quand il est **rempli mais illisible**, et le laisse neutre tant qu'il est
+    /// vide. Le libellé accessible suit la même condition, pour que le signal ne soit pas qu'une couleur.
+    private static void signalerSaisieIllisible(TextField champ) {
+        BooleanBinding illisible = Bindings.createBooleanBinding(
+                () -> texteOuNull(champ.getText()) != null && anneeOuNull(champ.getText()) == null,
+                champ.textProperty());
+        ValidationFormulaire.marquerInvalide(champ, illisible);
+        champ.accessibleTextProperty()
+                .bind(Bindings.when(illisible).then(AIDE_ANNEE_ILLISIBLE).otherwise(LIBELLE_ANNEE));
     }
 
     /// Prédicat neutre (aucun filtre) : la puce est présente mais ne restreint rien tant qu'aucune valeur
