@@ -77,7 +77,7 @@
         <ikonli.version>12.4.0</ikonli.version>
 
         <!-- Couverture (JaCoCo) + mutation (PIT, profil -Pmutation uniquement). -->
-        <jacoco.version>0.8.14</jacoco.version>
+        <jacoco.version>0.8.15</jacoco.version>
         <pitest.version>1.25.8</pitest.version>
         <pitest.junit5.version>1.2.3</pitest.junit5.version>
 
