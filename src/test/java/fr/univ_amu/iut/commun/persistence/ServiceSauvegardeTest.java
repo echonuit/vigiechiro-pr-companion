@@ -72,9 +72,21 @@ class ServiceSauvegardeTest {
     @Test
     @DisplayName("Restaurer depuis un fichier qui n'est pas une base est refusé")
     void restauration_fichier_invalide_rejetee() throws IOException {
+        utilisateurDao.insert(new Utilisateur("u1", "Alice"));
         Path faux = Files.writeString(workspaceDir.resolve("faux.db"), "ceci n'est pas une base SQLite");
 
-        assertThatExceptionOfType(DataAccessException.class).isThrownBy(() -> service.restaurer(faux));
+        assertThatExceptionOfType(DataAccessException.class)
+                .isThrownBy(() -> service.restaurer(faux))
+                // Le refus doit venir de la VÉRIFICATION, avant tout remplacement. Sans cette
+                // précision, un échec plus tardif (migration impossible sur un fichier illisible,
+                // rattrapé par le retour arrière de #2730) passerait pour le même comportement.
+                .withMessageContaining("Fichier de sauvegarde illisible");
+        assertThat(utilisateurDao.findAll())
+                .as("la base courante n'a même pas été touchée")
+                .hasSize(1);
+        assertThat(workspaceDir.resolve(Workspace.FICHIER_BASE + ".avant-restauration"))
+                .as("et le filet n'a pas eu à être posé")
+                .doesNotExist();
     }
 
     @Test

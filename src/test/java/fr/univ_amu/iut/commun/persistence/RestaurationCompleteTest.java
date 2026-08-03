@@ -40,7 +40,9 @@ class RestaurationCompleteTest {
     private Path disque;
     private SourceDeDonnees source;
     private ServiceSauvegarde service;
-    private int passageSuivant;
+    /// Volontairement décalé : sans cela le premier passage et la première session porteraient tous
+    /// deux l'identifiant 1, et un test ne saurait pas dire si le code cherche par la bonne clé.
+    private int passageSuivant = 10;
 
     @BeforeEach
     void preparer() {
@@ -99,6 +101,57 @@ class RestaurationCompleteTest {
                 .as("la nuit vient d'être restaurée : l'annoncer absente serait une fausse alerte, et"
                         + " c'est ce qui arrivait tant que l'inventaire se faisait APRÈS la réécriture")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("TOUS les chemins de la session suivent le dossier, pas seulement sa racine")
+    void tous_les_chemins_suivent_le_dossier() throws IOException {
+        Path nuit = seederNuit(disque.resolve("Nuit-01"), "audio d'origine");
+        // Ce que la base retient d'une nuit, au-delà de root_path : chaque séquence, chaque original,
+        // le journal du capteur. Tous en ABSOLU. Plus un original resté sur la carte SD, hors de la
+        // racine de la session : celui-là ne doit surtout pas bouger.
+        long idSession =
+                seederFichiersDeSession(nuit, disque.resolve("carte-sd").resolve("brut.wav"));
+        Path backup = service.sauvegarderComplet(racine.resolve("sauvegardes")).dossier();
+        supprimerRecursif(disque.resolve("Nuit-01"));
+
+        service.restaurerComplet(backup);
+
+        Path repli = workspaceDir.resolve("Nuit-01");
+        assertThat(cheminsDe("listening_sequence", idSession))
+                .as("une séquence dont le chemin reste sur la machine d'origine est un fichier"
+                        + " introuvable, et l'application déclare la nuit perdue")
+                .containsExactly(repli.resolve("transformes").resolve("seq.wav").toString());
+        assertThat(cheminsDe("original_recording", idSession))
+                .as("l'original copié sous la session suit, celui resté sur la carte SD ne bouge pas :"
+                        + " le rebaser désignerait un fichier qui n'a jamais été là")
+                .containsExactlyInAnyOrder(
+                        repli.resolve("bruts").resolve("PaRec.wav").toString(),
+                        disque.resolve("carte-sd").resolve("brut.wav").toString());
+        assertThat(cheminsDe("sensor_log", idSession))
+                .containsExactly(repli.resolve("LogPR.txt").toString());
+        assertThat(cheminsParPassage())
+                .as("le CSV Tadarida se retrouve par le PASSAGE et non par la session : c'est la seule"
+                        + " des six tables à chemin dans ce cas, donc celle qu'on oublie")
+                .containsExactly(repli.resolve("resultats.csv").toString());
+    }
+
+    @Test
+    @DisplayName("une copie qui arrive amputée est refusée, pas rangée en silence")
+    void copie_amputee_refusee() throws IOException {
+        seederNuit(disque.resolve("Nuit-01"), "audio d'origine");
+        Path backup = service.sauvegarderComplet(racine.resolve("sauvegardes")).dossier();
+        // La destination existe déjà et contient un fichier de trop : la copie écrasante laissera un
+        // dossier qui ne correspond plus à l'inventaire du manifeste.
+        Path repli = workspaceDir.resolve("Nuit-01");
+        Files.createDirectories(repli.resolve("transformes"));
+        Files.writeString(repli.resolve("transformes").resolve("intrus.wav"), "fichier en trop");
+        supprimerRecursif(disque.resolve("Nuit-01"));
+
+        assertThatThrownBy(() -> service.restaurerComplet(backup))
+                .as("vérifier la sauvegarde ne suffit pas : ce qui compte est ce qui ARRIVE")
+                .isInstanceOf(DataAccessException.class)
+                .hasMessageContaining("une fois remis en place");
     }
 
     @Test
@@ -165,6 +218,88 @@ class RestaurationCompleteTest {
         Files.writeString(racineSession.resolve("transformes").resolve("seq.wav"), contenu);
         declarerSession(racineSession);
         return racineSession;
+    }
+
+    /// Sème dans la session les fichiers que la base retient **en plus** de sa racine : une séquence,
+    /// un original copié sous la session, un original resté **hors** de la session (import sans
+    /// copie), et le journal du capteur. Renvoie l'identifiant de la session.
+    private long seederFichiersDeSession(Path nuit, Path brutHorsSession) throws IOException {
+        Files.createDirectories(nuit.resolve("bruts"));
+        Files.writeString(nuit.resolve("bruts").resolve("PaRec.wav"), "original");
+        Files.writeString(nuit.resolve("LogPR.txt"), "journal");
+        Files.createDirectories(brutHorsSession.getParent());
+        Files.writeString(brutHorsSession, "resté sur la carte");
+        try (Connection cx = source.getConnection();
+                Statement st = cx.createStatement()) {
+            // Aucun passage réel derrière ces lignes : seuls les chemins nous intéressent ici.
+            st.execute("PRAGMA foreign_keys = OFF");
+            long idSession = identifiantSession(st, nuit);
+            st.execute("INSERT INTO original_recording(session_id, file_path, file_name) VALUES (" + idSession + ", '"
+                    + echapper(nuit.resolve("bruts").resolve("PaRec.wav")) + "', 'PaRec.wav')");
+            long idOriginal = derniereCle(st);
+            st.execute("INSERT INTO original_recording(session_id, file_path, file_name) VALUES (" + idSession + ", '"
+                    + echapper(brutHorsSession) + "', 'brut.wav')");
+            st.execute("INSERT INTO listening_sequence(session_id, original_recording_id, file_path, file_name)"
+                    + " VALUES (" + idSession + ", " + idOriginal + ", '"
+                    + echapper(nuit.resolve("transformes").resolve("seq.wav")) + "', 'seq.wav')");
+            st.execute("INSERT INTO sensor_log(session_id, file_path) VALUES (" + idSession + ", '"
+                    + echapper(nuit.resolve("LogPR.txt")) + "')");
+            // Le CSV Tadarida est rattaché au PASSAGE, pas à la session : c'est la seule des six
+            // tables à chemin qui se retrouve par une autre clé, et donc celle qu'on oublie.
+            st.execute("INSERT INTO identification_results(passage_id, file_path, detected_format,"
+                    + " imported_at) VALUES (" + passageSuivant + ", '"
+                    + echapper(nuit.resolve("resultats.csv")) + "', 'Tadarida', '2026-08-03')");
+            return idSession;
+        } catch (SQLException echec) {
+            throw new IOException(echec);
+        }
+    }
+
+    private static long derniereCle(Statement st) throws SQLException {
+        try (ResultSet rs = st.executeQuery("SELECT last_insert_rowid()")) {
+            rs.next();
+            return rs.getLong(1);
+        }
+    }
+
+    private static long identifiantSession(Statement st, Path nuit) throws SQLException {
+        try (ResultSet rs =
+                st.executeQuery("SELECT id FROM recording_session WHERE root_path = '" + echapper(nuit) + "'")) {
+            rs.next();
+            return rs.getLong(1);
+        }
+    }
+
+    private List<String> cheminsDe(String table, long idSession) {
+        List<String> chemins = new ArrayList<>();
+        try (Connection cx = source.getConnection();
+                Statement st = cx.createStatement();
+                ResultSet rs = st.executeQuery("SELECT file_path FROM " + table + " WHERE session_id = " + idSession)) {
+            while (rs.next()) {
+                chemins.add(rs.getString(1));
+            }
+        } catch (SQLException echec) {
+            throw new IllegalStateException("Lecture de " + table + " impossible", echec);
+        }
+        return chemins;
+    }
+
+    private List<String> cheminsParPassage() {
+        List<String> chemins = new ArrayList<>();
+        try (Connection cx = source.getConnection();
+                Statement st = cx.createStatement();
+                ResultSet rs = st.executeQuery("SELECT file_path FROM identification_results")) {
+            while (rs.next()) {
+                chemins.add(rs.getString(1));
+            }
+        } catch (SQLException echec) {
+            throw new IllegalStateException("Lecture des résultats d'identification impossible", echec);
+        }
+        return chemins;
+    }
+
+    private static String echapper(Path chemin) {
+        return chemin.toString().replace("'", "''");
     }
 
     private void declarerSession(Path racineSession) throws IOException {
