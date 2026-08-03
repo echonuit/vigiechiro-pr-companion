@@ -35,14 +35,14 @@ final class CriteresAnalyse {
     private static final String STATUT = "statut";
 
     /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par catégorie.
-    private static final String GROUPE = "groupe";
+    static final String GROUPE = "groupe";
 
     /// Clé du critère « Espèces à enjeu », partagée par le filtre et l'onglet du même nom (#2353).
     private static final String A_ENJEU = "a_enjeu";
 
     /// Clé du critère « Lieu » (#2966). Même clé que la vue audio (#2794) : une vue mémorisée nomme ses
     /// critères, et deux écrans qui filtrent le même concept sous deux clés se liraient mal.
-    private static final String LIEU = "lieu";
+    static final String LIEU = "lieu";
 
     /// Catégories du référentiel qui ne sont pas des chiroptères : la même liste que sur l'écran Activité
     /// de la nuit, les deux vues partageant la matière (#2615).
@@ -135,6 +135,13 @@ final class CriteresAnalyse {
                 "Protocole ou opportuniste",
                 () -> NatureNuit.VALEURS,
                 observation -> NatureNuit.de(observation.idPassage(), opportunistes.get()));
+    }
+
+    /// Les taxons parents presents dans `observations`, distincts et tries : le domaine du critere
+    /// « Taxon parent » quand il est cascade sur les lignes que les autres criteres laissent
+    /// passer (#3095).
+    static List<String> groupesDe(List<ObservationAnalyse> observations) {
+        return valeursDistinctes(observations, ObservationAnalyse::groupe);
     }
 
     static CritereFiltre<ObservationAnalyse> groupe(Supplier<? extends List<String>> groupesPresents) {

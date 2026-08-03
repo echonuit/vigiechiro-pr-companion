@@ -494,6 +494,48 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
+    @DisplayName("#3095 : cocher un lieu ne retire pas les autres du menu (le domaine exclut son critère)")
+    void la_puce_lieu_ne_s_auto_effondre_pas(FxRobot robot) {
+        // Le seul cas qui distingue le cascadage d'un simple rafraîchissement. Si le domaine se calculait
+        // sur la table déjà filtrée, cocher 640380 ne laisserait plus que 640380 au menu, et l'on ne
+        // pourrait jamais en cocher un second.
+        ajouterPuce(robot, "Lieu");
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        MenuButton lieu = (MenuButton) puces.lookup(".critere-multiple");
+        assertThat(entreesCochables(lieu)).contains("640380", "640381");
+
+        robot.interact(() -> cocher(lieu, "640380"));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(tableau(robot).getItems())
+                .as("prérequis : la table est bien restreinte au carré coché")
+                .extracting(LignePassage::numeroCarre)
+                .containsOnly("640380");
+
+        robot.interact(() -> lieu.getOnShowing().handle(new javafx.event.Event(javafx.event.Event.ANY)));
+
+        assertThat(entreesCochables(lieu))
+                .as("640381 doit rester proposé : sinon la puce ne sait plus désigner qu'un seul lieu")
+                .contains("640380", "640381");
+    }
+
+    private static List<String> entreesCochables(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(MenuItem::getText)
+                .toList();
+    }
+
+    private static void cocher(MenuButton bouton, String valeur) {
+        bouton.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(CheckMenuItem.class::cast)
+                .filter(item -> valeur.equals(item.getText()))
+                .findFirst()
+                .orElseThrow()
+                .setSelected(true);
+    }
+
+    @Test
     @DisplayName("La recherche filtre le tableau (n° de carré, point, date)")
     void recherche_filtre_le_tableau(FxRobot robot) {
         robot.clickOn("#champRecherche").write("640381");
