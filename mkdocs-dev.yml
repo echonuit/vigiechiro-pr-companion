@@ -144,6 +144,7 @@ nav:
     - 3053 · Une capture exige son libellé: decisions/3053-une-capture-exige-son-libelle.md
     - 3082 · Désigner refuse, qualifier rend vide: decisions/3082-designer-refuse-qualifier-rend-vide.md
     - 3095 · Un domaine se calcule sans son propre critère: decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md
+    - 2731 · Un seul processus par dossier de travail: decisions/2731-un-seul-processus-par-workspace.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
