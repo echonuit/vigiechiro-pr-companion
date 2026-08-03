@@ -119,6 +119,42 @@ class ManifesteSauvegardeTest {
     }
 
     @Test
+    @DisplayName("deux sauvegardes complètes dans la même seconde ne s'écrasent pas")
+    void deux_sauvegardes_dans_la_meme_seconde() throws IOException {
+        seederRacine(racine.resolve("disque-a").resolve("Nuit-01"), "audio de la nuit");
+        Path destination = racine.resolve("sauvegardes");
+
+        Path premiere = service.sauvegarderComplet(destination).dossier();
+        Path seconde = service.sauvegarderComplet(destination).dossier();
+
+        assertThat(seconde)
+                .as("l'horodatage est à la seconde et l'horloge est figée : sans suffixe, la seconde"
+                        + " sauvegarde écraserait la première, qu'on venait peut-être de faire exprès")
+                .isNotEqualTo(premiere);
+        assertThat(premiere.resolve("base").resolve("vigiechiro.db")).exists();
+        assertThat(seconde.resolve("base").resolve("vigiechiro.db")).exists();
+    }
+
+    @Test
+    @DisplayName("l'empreinte distingue deux arbres de même compte et de même poids total")
+    void l_empreinte_distingue_un_echange_de_noms() throws IOException {
+        Path premiere = seederRacine(racine.resolve("disque-a").resolve("Nuit-01"), "court");
+        Files.writeString(premiere.resolve("transformes").resolve("autre.wav"), "beaucoup plus long");
+        String avant =
+                empreinteUnique(service.sauvegarderComplet(racine.resolve("s1")).dossier());
+
+        // Mêmes noms, mêmes tailles, mais échangées : même nombre de fichiers et même poids total.
+        Files.writeString(premiere.resolve("transformes").resolve("seq.wav"), "beaucoup plus long");
+        Files.writeString(premiere.resolve("transformes").resolve("autre.wav"), "court");
+
+        assertThat(empreinteUnique(
+                        service.sauvegarderComplet(racine.resolve("s2")).dossier()))
+                .as("une empreinte qui ne regarde que le compte et le poids ne verrait pas l'échange,"
+                        + " et une restauration qui a mélangé deux fichiers passerait pour fidèle")
+                .isNotEqualTo(avant);
+    }
+
+    @Test
     @DisplayName("une sauvegarde sans manifeste se restaure comme avant")
     void sauvegarde_heritee_sans_manifeste() throws IOException {
         Path nuit = seederRacine(workspaceDir.resolve("Nuit-01"), "audio de la nuit");
@@ -199,6 +235,14 @@ class ManifesteSauvegardeTest {
             }
             return contenus;
         }
+    }
+
+    private static String empreinteUnique(Path backup) {
+        return ManifesteSauvegardeJson.lire(backup)
+                .orElseThrow()
+                .racines()
+                .getFirst()
+                .empreinte();
     }
 
     private static List<String> origines(Path backup) {

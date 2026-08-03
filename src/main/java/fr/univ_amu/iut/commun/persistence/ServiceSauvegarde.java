@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -18,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import org.sqlite.SQLiteDataSource;
 
 /// **Sauvegarde et restauration** de la base SQLite (#148) : la base concentre tout le travail
 /// (sites, passages, observations), sans filet natif. Ce service permet d'en écrire une copie cohérente
@@ -39,7 +37,6 @@ public class ServiceSauvegarde {
 
     private static final String PREFIXE = "vigiechiro-sauvegarde-";
     private static final String PREFIXE_COMPLET = "vigiechiro-sauvegarde-complete-";
-    private static final String SUFFIXE_FILET = ".avant-restauration";
 
     /// Caractères hexadécimaux du condensé qui rend unique le nom d'un dossier de session sauvegardé.
     /// Huit suffisent largement : le condensé ne départage que les racines d'une même base, elles se
@@ -68,63 +65,22 @@ public class ServiceSauvegarde {
         return instantane.ecrireDans(dossierDestination, PREFIXE + HORODATAGE.format(horloge.maintenant()));
     }
 
-    /// Restaure la base depuis `sauvegarde`. Vérifie que le fichier est une base lisible, **met de côté**
-    /// la base courante (`vigiechiro.db.avant-restauration`), la remplace, purge les fichiers annexes puis
-    /// **migre** pour garantir un schéma à jour.
+    /// Restaure la base depuis `sauvegarde` : vérification, refus d'une sauvegarde trop récente,
+    /// filet de sécurité, remplacement, migration, et **retour arrière** si la migration échoue
+    /// (#2730). Le détail vit dans [RestaurationBase].
     ///
     /// @throws IllegalArgumentException si `sauvegarde` n'existe pas
-    /// @throws DataAccessException si le fichier n'est pas une base SQLite lisible, ou en cas d'échec d'E/S
+    /// @throws DataAccessException si le fichier n'est pas une base lisible, s'il vient d'une version
+    ///     plus récente de l'application, ou si la migration de la base restaurée échoue
     public void restaurer(Path sauvegarde) {
         Objects.requireNonNull(sauvegarde, "sauvegarde");
-        if (!Files.isRegularFile(sauvegarde)) {
-            throw new IllegalArgumentException("Fichier de sauvegarde introuvable : " + sauvegarde);
-        }
-        verifierBaseLisible(sauvegarde);
-        Path base = source.workspace().cheminBaseDeDonnees();
-        try {
-            Files.createDirectories(base.getParent());
-            if (Files.exists(base)) {
-                Files.copy(
-                        base,
-                        base.resolveSibling(base.getFileName() + SUFFIXE_FILET),
-                        StandardCopyOption.REPLACE_EXISTING);
-            }
-            Files.copy(sauvegarde, base, StandardCopyOption.REPLACE_EXISTING);
-            purgerAnnexe(base, "-wal");
-            purgerAnnexe(base, "-shm");
-            purgerAnnexe(base, "-journal");
-        } catch (IOException echec) {
-            throw new DataAccessException("Restauration de la base impossible depuis " + sauvegarde, echec);
-        }
-        new MigrationSchema(source).migrer();
+        new RestaurationBase(source).executer(sauvegarde);
     }
 
     /// Dossier de sauvegarde **par défaut** (`<workspace>/sauvegardes`) : proposé quand l'utilisateur ne
     /// choisit pas d'emplacement. L'emplacement reste configurable (paramètre de [#sauvegarder]).
     public Path dossierParDefaut() {
         return source.workspace().racine().resolve("sauvegardes");
-    }
-
-    /// Vérifie que `fichier` est une base SQLite **intègre** (`PRAGMA quick_check` renvoie `ok`), via une
-    /// source jetable pointant dessus. Lève [DataAccessException] sinon.
-    private static void verifierBaseLisible(Path fichier) {
-        SQLiteDataSource source = new SQLiteDataSource();
-        source.setUrl("jdbc:sqlite:" + fichier);
-        try (Connection cx = source.getConnection();
-                Statement st = cx.createStatement();
-                ResultSet rs = st.executeQuery("PRAGMA quick_check")) {
-            if (!rs.next() || !"ok".equalsIgnoreCase(rs.getString(1))) {
-                throw new DataAccessException("Le fichier n'est pas une sauvegarde valide : " + fichier, null);
-            }
-        } catch (SQLException echec) {
-            throw new DataAccessException("Fichier de sauvegarde illisible : " + fichier, echec);
-        }
-    }
-
-    /// Supprime un fichier annexe SQLite (`base-wal`, `base-shm`, `base-journal`) s'il existe, pour ne pas
-    /// laisser un journal périmé masquer la base restaurée.
-    private static void purgerAnnexe(Path base, String suffixe) throws IOException {
-        Files.deleteIfExists(base.resolveSibling(base.getFileName() + suffixe));
     }
 
     /// **Sauvegarde complète** : base **et** dossiers de session (audio brut/transformé), prérequis d'un

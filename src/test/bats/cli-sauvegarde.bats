@@ -99,6 +99,22 @@ importer_une_nuit_sur_a() {
   [[ "${output}" == *"${MACHINE_B}"* ]]
 }
 
+@test "restaurer un fichier qui n'est pas une base : refus, et la base locale est intacte (#2730)" {
+  importer_une_nuit_sur_a
+  local faux="${BATS_TEST_TMPDIR}/faux.db"
+  echo "ceci n'est pas une base SQLite" > "${faux}"
+
+  run cli_sur "${MACHINE_A}" restaurer "${faux}" --confirmer
+  [ "${status}" -ne 0 ]
+
+  # Ce qui compte n'est pas le refus, c'est ce qu'il laisse derrière lui : la base d'avant, entière,
+  # et pas de filet posé pour rien. Le refus précède le moindre remplacement (#2730).
+  [ ! -f "${MACHINE_A}/vigiechiro.db.avant-restauration" ]
+  run cli_sur "${MACHINE_A}" reset-guide
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"[disque ]"* ]]
+}
+
 @test "sauvegarde complète : le manifeste dit d'où venait chaque dossier (#2726)" {
   importer_une_nuit_sur_a
 

@@ -2,7 +2,6 @@ package fr.univ_amu.iut.commun.persistence;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 /// Ce qu'une **sauvegarde complète** a emporté, écrit à sa racine dans [#NOM_FICHIER] (#2726).
 ///
@@ -31,14 +30,5 @@ public record ManifesteSauvegarde(int version, List<RacineSauvegardee> racines) 
 
     public static ManifesteSauvegarde courant(List<RacineSauvegardee> racines) {
         return new ManifesteSauvegarde(VERSION_COURANTE, racines);
-    }
-
-    /// La racine sauvegardée qui occupe le dossier `identifiant` sous `sessions/`, si elle y est.
-    /// C'est ce que la restauration a sous la main en parcourant la sauvegarde : un nom de dossier,
-    /// dont seul le manifeste sait d'où il venait.
-    public Optional<RacineSauvegardee> pourIdentifiant(String identifiant) {
-        return racines.stream()
-                .filter(racine -> racine.identifiant().equals(identifiant))
-                .findFirst();
     }
 }
