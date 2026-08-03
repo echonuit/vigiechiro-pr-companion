@@ -109,9 +109,9 @@ class GestionnaireVuesTest {
         robot.interact(() -> {
             GestionnaireVues<String> gestionnaire =
                     new GestionnaireVues<>(onglets, filtresAvecLieu(), dao, FEATURE, defaut -> Optional.empty());
-            gestionnaire.surRestauration((nom, valeurs) -> {
+            gestionnaire.surRestauration((nom, reste) -> {
                 nomSignale.set(nom);
-                valeursSignalees.addAll(valeurs);
+                valeursSignalees.addAll(reste.valeursPerdues());
             });
             gestionnaire.appliquer(vue);
         });
@@ -136,11 +136,36 @@ class GestionnaireVuesTest {
         robot.interact(() -> {
             GestionnaireVues<String> gestionnaire =
                     new GestionnaireVues<>(onglets, filtresAvecLieu(), dao, FEATURE, defaut -> Optional.empty());
-            gestionnaire.surRestauration((nom, valeurs) -> signalements.add(nom));
+            gestionnaire.surRestauration((nom, reste) -> signalements.add(nom));
             gestionnaire.appliquer(vue);
         });
 
         assertThat(signalements).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3093 : rejouer une vue portant un critère hors catalogue le signale aussi")
+    void critere_inconnu_est_signale(FxRobot robot) {
+        // Le pendant structurel de #3056 : le critère n'a pas disparu des données, il n'existe pas sur
+        // cet écran. La puce n'est donc pas posée du tout, et comme rien de coché n'écarte rien, la vue
+        // filtre moins large sans que rien ne le dise. C'est le mode de panne du transport (#476), où
+        // Sons & validation offre dix critères et l'analyse cinq.
+        VueSauvegardee vue = inserer(
+                "Vue venue d'un autre ecran",
+                "{\"texte\":\"\",\"criteres\":[{\"nom\":\"lieu\",\"valeurs\":[\"640380 · Z1\"]},"
+                        + "{\"nom\":\"proba\",\"valeurs\":[\"0.9\"]}]}");
+        List<String> criteresSignales = new ArrayList<>();
+
+        robot.interact(() -> {
+            GestionnaireVues<String> gestionnaire =
+                    new GestionnaireVues<>(onglets, filtresAvecLieu(), dao, FEATURE, defaut -> Optional.empty());
+            gestionnaire.surRestauration((nom, reste) -> criteresSignales.addAll(reste.criteresInconnus()));
+            gestionnaire.appliquer(vue);
+        });
+
+        assertThat(criteresSignales)
+                .as("« proba » n'est pas au catalogue de cet écran : la vue filtre donc moins large")
+                .containsExactly("proba");
     }
 
     /// Une barre de filtres portant une puce « lieu » qui n'offre que la forme **qualifiée** du point,

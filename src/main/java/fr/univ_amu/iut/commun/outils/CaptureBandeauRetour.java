@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.outils;
 
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -94,11 +95,26 @@ public final class CaptureBandeauRetour {
                 RetourOperation.erreur(new IllegalStateException(messageSqlite())),
                 sortie.resolve("apercu-bandeau-retour-borne.png"));
         rendre(
-                RetourOperation.vueAmputee("Z1 du carre 640380", List.of("Z1")),
+                RetourOperation.vueAmputee("Z1 du carre 640380", new ResteDeRestauration(List.of("Z1"), List.of())),
                 sortie.resolve("apercu-bandeau-vue-amputee.png"));
         rendre(
-                RetourOperation.vueAmputee("Ma saison 2026", valeursDisparues()),
+                RetourOperation.vueAmputee("Ma saison 2026", new ResteDeRestauration(valeursDisparues(), List.of())),
                 sortie.resolve("apercu-bandeau-vue-amputee-longue.png"));
+        rendre(
+                RetourOperation.filtresNonRepris(new ResteDeRestauration(List.of(), criteresNonOfferts())),
+                sortie.resolve("apercu-bandeau-filtres-non-repris.png"));
+        rendre(
+                RetourOperation.vueAmputee(
+                        "Rhinolophes au-dessus de 90 %",
+                        new ResteDeRestauration(List.of("640380 · Z1"), List.of("proba", "heure"))),
+                sortie.resolve("apercu-bandeau-vue-amputee-deux-causes.png"));
+    }
+
+    /// Le cas du **transport** (#476, #3093) : Sons & validation offre dix critères, l'analyse cinq. Passer
+    /// à la carte élargit donc forcément le résultat, et c'est l'énumération la plus longue des trois
+    /// messages. C'est celle qu'il faut regarder avant de la livrer.
+    private static List<String> criteresNonOfferts() {
+        return List.of("taxon", "references", "douteux", "non_identifie", "proba", "heure");
     }
 
     /// Le cas qui inquiète : une vue qui traverse un renommage y perd **toutes** ses valeurs d'un coup,
