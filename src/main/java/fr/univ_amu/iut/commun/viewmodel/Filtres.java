@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.commun.viewmodel;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -35,6 +37,39 @@ public final class Filtres<T> {
             actifs.put(nom, predicat);
         }
         appliquer();
+    }
+
+    /// Les lignes que **tous les filtres sauf `nom`** laissent passer : le **domaine encore atteignable**
+    /// d'un critère (#3095).
+    ///
+    /// Un critère qui peuple sa liste de valeurs doit la calculer **sans son propre prédicat**. En
+    /// partant du sous-ensemble affiché, il s'auto-effondrerait : une fois « Aix » retenu, les lignes
+    /// restantes ne parlent plus que d'Aix, donc le menu n'offrirait plus qu'« Aix » et l'on ne pourrait
+    /// jamais retenir une seconde commune.
+    ///
+    /// Part de la **source** et non de [#affichees], pour la même raison : la liste affichée est déjà
+    /// filtrée, elle ne peut donc jamais faire réapparaître une valeur redevenue disponible.
+    ///
+    /// Un `nom` inconnu ne retranche rien : le résultat est alors exactement ce que la table affiche.
+    ///
+    /// @param nom clé du critère à **exclure** de la conjonction
+    /// @return les lignes retenues, dans l'ordre de la source
+    public List<T> saufLui(String nom) {
+        Objects.requireNonNull(nom, "nom");
+        Predicate<T> autres = actifs.entrySet().stream()
+                .filter(actif -> !actif.getKey().equals(nom))
+                .map(Map.Entry::getValue)
+                .reduce(Predicate::and)
+                .orElse(ligne -> true);
+        // Boucle typée plutôt qu'un flux : `getSource()` rend un `ObservableList<? extends T>`, dont le
+        // flux ne se collecte pas en `List<T>` sans transtypage non vérifié.
+        List<T> retenues = new ArrayList<>();
+        for (T ligne : affichees.getSource()) {
+            if (autres.test(ligne)) {
+                retenues.add(ligne);
+            }
+        }
+        return List.copyOf(retenues);
     }
 
     /// Retire **tous** les filtres actifs (ex. navigation vers une ligne précise qui doit rester visible quel

@@ -41,6 +41,15 @@ final class CriteresAudio {
 
     /// Bornes de la plage **nuit** par défaut du critère Heure (21 h → 6 h, à cheval sur minuit) : écarte
     /// d'emblée les heures de jour, cas d'usage principal (#531).
+    /// Cles stables des criteres a domaine, partagees avec le cablage qui leur fournit les lignes
+    /// « tous sauf lui » (#3095). Un litteral duplique les ferait diverger en silence : le domaine
+    /// serait alors calcule en excluant le mauvais critere, donc faux sans que rien ne le montre.
+    static final String CLE_GROUPE = "groupe";
+
+    static final String CLE_TAXON = "taxon";
+
+    static final String CLE_LIEU = "lieu";
+
     private static final int HEURE_DEBUT_NUIT = 21;
 
     private static final int HEURE_FIN_NUIT = 6;
@@ -64,7 +73,7 @@ final class CriteresAudio {
                 vueParDefaut("Tout"),
                 vueParDefaut(
                         "À valider", new DescripteurCritere("statut", List.of(StatutObservation.NON_TOUCHEE.name()))),
-                vueParDefaut("Chiroptères", new DescripteurCritere("groupe", List.of(GROUPE_CHIROPTERES))),
+                vueParDefaut(GROUPE_CHIROPTERES, new DescripteurCritere(CLE_GROUPE, List.of(GROUPE_CHIROPTERES))),
                 vueParDefaut("Sons non identifiés", new DescripteurCritere("non_identifie", List.of())));
     }
 
@@ -94,16 +103,25 @@ final class CriteresAudio {
     /// sinon le premier groupe ; l'application est déclenchée dès l'ajout de la puce.
     static CritereFiltre<LigneObservationAudio> groupe(
             Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
+        return groupe(lignesCourantes, valeur -> {});
+    }
+
+    /// Variante qui **annonce** le remplacement du groupe retenu quand il disparaît du jeu courant
+    /// (#3095) : le défaut reprend la main, donc l'écran filtre sur autre chose que ce qui avait été
+    /// demandé, et le taire serait le défaut que le palier 1 vient de corriger.
+    static CritereFiltre<LigneObservationAudio> groupe(
+            Supplier<? extends List<LigneObservationAudio>> lignesCourantes, Consumer<String> auBasculement) {
         // PRÉSÉLECTIONNÉ, seule entorse au principe « une puce ajoutée n'écarte rien » : isoler les
         // chiroptères est le levier n°1 de la revue (#471). Le défaut se calcule SUR les valeurs offertes
         // (Chiroptères s'il est présent, le premier groupe sinon) : un défaut constant rendrait une puce
         // vide les jours sans chiroptère.
         return CritereListe.valeursPreselectionnees(
-                "groupe",
+                CLE_GROUPE,
                 "Taxon parent",
                 CritereListe.Domaine.deChaines(() -> groupesPresents(lignesCourantes.get())),
                 groupe -> ligne -> groupe.equals(ligne.groupe()),
-                CriteresAudio::defaut);
+                CriteresAudio::defaut,
+                auBasculement);
     }
 
     /// Groupes taxon parents présents dans `lignes` : non nuls, **distincts** et **triés** (source stable
@@ -141,7 +159,7 @@ final class CriteresAudio {
         // Le domaine est un RECORD, et c'est le cas qui a fait généraliser la fabrique (#3060) : ce qu'on
         // voit (le nom vernaculaire) et ce qu'on mémorise (le code Tadarida) sont deux champs distincts.
         return CritereListe.valeurs(
-                "taxon",
+                CLE_TAXON,
                 "Espèce",
                 "Choisir une espèce",
                 new CritereListe.Domaine<>(
@@ -157,7 +175,7 @@ final class CriteresAudio {
     /// Lieu restreint à « Aix-en-Provence » sans repasser par la carte.
     static CritereFiltre<LigneObservationAudio> lieu(Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
         return CritereListe.multipleParmi(
-                "lieu",
+                CLE_LIEU,
                 "Lieu",
                 "Choisir un lieu",
                 () -> lieuxPresents(lignesCourantes.get()),

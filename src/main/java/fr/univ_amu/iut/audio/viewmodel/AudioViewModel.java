@@ -463,6 +463,12 @@ public class AudioViewModel {
         messages.publier(RetourOperation.filtresDeSessionAmputes(reste));
     }
 
+    /// Le **groupe retenu a disparu** du jeu que les autres filtres laissent passer (#3095) : le critere
+    /// est revenu a son defaut, donc l ecran filtre sur autre chose que ce qui etait demande.
+    public void signalerChoixRemplace(String perdu) {
+        messages.publier(RetourOperation.choixRemplace("Taxon parent", perdu));
+    }
+
     /// Efface le retour d'opération (l'utilisateur a lu le bandeau et le ferme). Le bandeau disparaît.
     public void effacerRetour() {
         messages.effacerRetour();
