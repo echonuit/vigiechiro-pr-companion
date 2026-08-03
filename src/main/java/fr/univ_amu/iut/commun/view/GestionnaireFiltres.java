@@ -229,7 +229,12 @@ public final class GestionnaireFiltres<T> {
         return new DescripteurFiltre(Objects.requireNonNullElse(recherche.getText(), ""), criteresActifs);
     }
 
+    /// Le critère portant `nom`, **ou l'ayant porté** ([CritereFiltre#nomsHerites()], #3096) : une vue
+    /// enregistrée avant un renommage continue ainsi de se rejouer, sans migration de base.
     private Optional<CritereFiltre<T>> critereParNom(String nom) {
-        return criteres.stream().filter(critere -> critere.nom().equals(nom)).findFirst();
+        return criteres.stream()
+                .filter(critere ->
+                        critere.nom().equals(nom) || critere.nomsHerites().contains(nom))
+                .findFirst();
     }
 }

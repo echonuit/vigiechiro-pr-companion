@@ -19,6 +19,22 @@ public interface CritereFiltre<T> {
     /// (un critère déjà actif n'y réapparaît pas).
     String nom();
 
+    /// Les noms que ce critère a **portés par le passé**, et sous lesquels des vues ont pu être
+    /// enregistrées (#3096). Vide par défaut : un critère qui n'a jamais été renommé n'a rien à
+    /// déclarer.
+    ///
+    /// Une vue mémorisée nomme ses critères **en clair** dans `vue_sauvegardee`. Renommer une clé
+    /// rendrait donc caduques toutes les vues enregistrées avant : le critère ne serait pas posé, et la
+    /// vue filtrerait moins large en l'annonçant (#3093) - un défaut que nous aurions provoqué
+    /// nous-mêmes.
+    ///
+    /// Déclarer l'ancien nom évite la migration de base. Ce n'est **pas** un fourre-tout : n'y mettre
+    /// que des noms réellement portés, sans quoi le compte rendu de #3093 deviendrait muet sur de
+    /// vraies clés inconnues.
+    default List<String> nomsHerites() {
+        return List.of();
+    }
+
     /// Libellé affiché dans le menu « + Filtre » et en tête de puce (ex. « Statut », « Chauves-souris »).
     String libelle();
 

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.analyse.view;
 
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
@@ -29,20 +30,6 @@ import javafx.scene.Node;
 /// puces : ajouter la puce n'écarte rien tant qu'une valeur n'est pas choisie (l'inventaire reste complet
 /// par défaut, comme avant la barre à puces).
 final class CriteresAnalyse {
-
-    /// Clé **stable** du critère Statut, partagée par le critère et les vues par défaut (évite un littéral
-    /// dupliqué).
-    private static final String STATUT = "statut";
-
-    /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par catégorie.
-    static final String GROUPE = "groupe";
-
-    /// Clé du critère « Espèces à enjeu », partagée par le filtre et l'onglet du même nom (#2353).
-    private static final String A_ENJEU = "a_enjeu";
-
-    /// Clé du critère « Lieu » (#2966). Même clé que la vue audio (#2794) : une vue mémorisée nomme ses
-    /// critères, et deux écrans qui filtrent le même concept sous deux clés se liraient mal.
-    static final String LIEU = "lieu";
 
     /// Catégories du référentiel qui ne sont pas des chiroptères : la même liste que sur l'écran Activité
     /// de la nuit, les deux vues partageant la matière (#2615).
@@ -72,11 +59,16 @@ final class CriteresAnalyse {
         return List.of(
                 vueParDefaut("Tout"),
                 vueParDefaut(
-                        "À valider", new DescripteurCritere(STATUT, List.of(StatutObservation.NON_TOUCHEE.name()))),
-                vueParDefaut("Validées", new DescripteurCritere(STATUT, List.of(StatutObservation.VALIDEE.name()))),
-                vueParDefaut("Chiroptères", new DescripteurCritere(GROUPE, List.of("Chiroptères"))),
-                vueParDefaut("Autres", new DescripteurCritere(GROUPE, HORS_CHIROPTERES)),
-                vueParDefaut("Espèces prioritaires", new DescripteurCritere(A_ENJEU, List.of())));
+                        "À valider",
+                        new DescripteurCritere(
+                                ClesCriteres.STATUT_OBSERVATION, List.of(StatutObservation.NON_TOUCHEE.name()))),
+                vueParDefaut(
+                        "Validées",
+                        new DescripteurCritere(
+                                ClesCriteres.STATUT_OBSERVATION, List.of(StatutObservation.VALIDEE.name()))),
+                vueParDefaut("Chiroptères", new DescripteurCritere(ClesCriteres.GROUPE, List.of("Chiroptères"))),
+                vueParDefaut("Autres", new DescripteurCritere(ClesCriteres.GROUPE, HORS_CHIROPTERES)),
+                vueParDefaut("Espèces prioritaires", new DescripteurCritere(ClesCriteres.A_ENJEU, List.of())));
     }
 
     /// Une vue par défaut de cet écran : délégation à la fabrique partagée [VuesParDefaut] (#1257).
@@ -88,7 +80,7 @@ final class CriteresAnalyse {
     /// puce, **sans présélection** (aucun filtre tant qu'un statut n'est pas choisi).
     static CritereFiltre<ObservationAnalyse> statut() {
         return CritereListe.enumeration(
-                STATUT,
+                ClesCriteres.STATUT_OBSERVATION,
                 "Statut",
                 "Choisir un statut",
                 List.of(StatutObservation.values()),
@@ -112,7 +104,7 @@ final class CriteresAnalyse {
         return new CritereFiltre<ObservationAnalyse>() {
             @Override
             public String nom() {
-                return A_ENJEU;
+                return ClesCriteres.A_ENJEU;
             }
 
             @Override
@@ -146,7 +138,11 @@ final class CriteresAnalyse {
 
     static CritereFiltre<ObservationAnalyse> groupe(Supplier<? extends List<String>> groupesPresents) {
         return CritereListe.multiple(
-                GROUPE, "Taxon parent", "Choisir un taxon parent", groupesPresents, ObservationAnalyse::groupe);
+                ClesCriteres.GROUPE,
+                "Taxon parent",
+                "Choisir un taxon parent",
+                groupesPresents,
+                ObservationAnalyse::groupe);
     }
 
     /// Critère **Lieu** (#2966, chantier #2790) : liste à cocher des lieux **présents dans les
@@ -164,7 +160,7 @@ final class CriteresAnalyse {
     /// jour où la projection remontera son code, pas avant.
     static CritereFiltre<ObservationAnalyse> lieu(Supplier<? extends List<ObservationAnalyse>> observationsFiltrees) {
         return CritereListe.multipleParmi(
-                LIEU,
+                ClesCriteres.LIEU,
                 "Lieu",
                 "Choisir un lieu",
                 () -> lieuxPresents(observationsFiltrees.get()),

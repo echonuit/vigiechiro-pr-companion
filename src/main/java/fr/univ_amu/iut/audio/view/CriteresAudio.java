@@ -4,6 +4,7 @@ import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
@@ -39,17 +40,6 @@ final class CriteresAudio {
     /// Taxon parent, car isoler les chiroptères est le levier n°1 de la revue (#471).
     private static final String GROUPE_CHIROPTERES = "Chiroptères";
 
-    /// Bornes de la plage **nuit** par défaut du critère Heure (21 h → 6 h, à cheval sur minuit) : écarte
-    /// d'emblée les heures de jour, cas d'usage principal (#531).
-    /// Cles stables des criteres a domaine, partagees avec le cablage qui leur fournit les lignes
-    /// « tous sauf lui » (#3095). Un litteral duplique les ferait diverger en silence : le domaine
-    /// serait alors calcule en excluant le mauvais critere, donc faux sans que rien ne le montre.
-    static final String CLE_GROUPE = "groupe";
-
-    static final String CLE_TAXON = "taxon";
-
-    static final String CLE_LIEU = "lieu";
-
     private static final int HEURE_DEBUT_NUIT = 21;
 
     private static final int HEURE_FIN_NUIT = 6;
@@ -72,8 +62,11 @@ final class CriteresAudio {
         return List.of(
                 vueParDefaut("Tout"),
                 vueParDefaut(
-                        "À valider", new DescripteurCritere("statut", List.of(StatutObservation.NON_TOUCHEE.name()))),
-                vueParDefaut(GROUPE_CHIROPTERES, new DescripteurCritere(CLE_GROUPE, List.of(GROUPE_CHIROPTERES))),
+                        "À valider",
+                        new DescripteurCritere(
+                                ClesCriteres.STATUT_OBSERVATION, List.of(StatutObservation.NON_TOUCHEE.name()))),
+                vueParDefaut(
+                        GROUPE_CHIROPTERES, new DescripteurCritere(ClesCriteres.GROUPE, List.of(GROUPE_CHIROPTERES))),
                 vueParDefaut("Sons non identifiés", new DescripteurCritere("non_identifie", List.of())));
     }
 
@@ -88,7 +81,7 @@ final class CriteresAudio {
         // PRÉSÉLECTIONNÉ sur « À revoir », seule entorse au principe « une puce ajoutée n'écarte rien » :
         // c'est le geste même de l'écran, et s'ouvrir sur tout obligerait à filtrer avant de commencer.
         return CritereListe.enumerationPreselectionnee(
-                "statut",
+                ClesCriteres.STATUT_OBSERVATION,
                 "Statut",
                 List.of(StatutObservation.values()),
                 FormatLigneAudio::libelleStatut,
@@ -116,7 +109,7 @@ final class CriteresAudio {
         // (Chiroptères s'il est présent, le premier groupe sinon) : un défaut constant rendrait une puce
         // vide les jours sans chiroptère.
         return CritereListe.valeursPreselectionnees(
-                CLE_GROUPE,
+                ClesCriteres.GROUPE,
                 "Taxon parent",
                 CritereListe.Domaine.deChaines(() -> groupesPresents(lignesCourantes.get())),
                 groupe -> ligne -> groupe.equals(ligne.groupe()),
@@ -159,7 +152,7 @@ final class CriteresAudio {
         // Le domaine est un RECORD, et c'est le cas qui a fait généraliser la fabrique (#3060) : ce qu'on
         // voit (le nom vernaculaire) et ce qu'on mémorise (le code Tadarida) sont deux champs distincts.
         return CritereListe.valeurs(
-                CLE_TAXON,
+                ClesCriteres.TAXON,
                 "Espèce",
                 "Choisir une espèce",
                 new CritereListe.Domaine<>(
@@ -175,7 +168,7 @@ final class CriteresAudio {
     /// Lieu restreint à « Aix-en-Provence » sans repasser par la carte.
     static CritereFiltre<LigneObservationAudio> lieu(Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
         return CritereListe.multipleParmi(
-                CLE_LIEU,
+                ClesCriteres.LIEU,
                 "Lieu",
                 "Choisir un lieu",
                 () -> lieuxPresents(lignesCourantes.get()),
@@ -284,7 +277,7 @@ final class CriteresAudio {
         return new CritereFiltre<LigneObservationAudio>() {
             @Override
             public String nom() {
-                return "a_enjeu";
+                return ClesCriteres.A_ENJEU;
             }
 
             @Override

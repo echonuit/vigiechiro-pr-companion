@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.view;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
@@ -27,16 +28,6 @@ import javafx.scene.Node;
 /// (quelles courbes tracer), pas dans le sous-ensemble de données. Aucune présélection : ajouter une puce
 /// n'écarte rien tant qu'une valeur n'est pas choisie.
 final class CriteresActivite {
-
-    /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par défaut.
-    static final String GROUPE = "groupe";
-
-    /// Cle du critere Lieu, partagee avec le cablage qui lui fournit les lignes « tous sauf lui »
-    /// (#3095) : un litteral duplique ferait calculer le domaine en excluant le mauvais critere.
-    static final String LIEU = "lieu";
-
-    /// Clé du critère « Espèces à enjeu », partagée par le filtre et l'onglet du même nom (#2353).
-    private static final String A_ENJEU = "a_enjeu";
 
     /// Les catégories du référentiel qui ne sont **pas** des chiroptères. Énumérées, et non exprimées par
     /// une négation : le filtre dit alors ce qu'il **retient**, ce qui se lit dans la puce et se rejoue
@@ -68,7 +59,7 @@ final class CriteresActivite {
     /// plus expressive, puisqu'elle sait en outre retenir **deux carrés**, ce que le choix unique interdisait.
     static CritereFiltre<ContactHoraire> lieu(Supplier<? extends List<ContactHoraire>> contactsFiltres) {
         return CritereListe.multipleParmi(
-                LIEU,
+                ClesCriteres.LIEU,
                 "Lieu",
                 "Choisir un lieu",
                 () -> lieuxPresents(contactsFiltres.get()),
@@ -119,7 +110,11 @@ final class CriteresActivite {
         // Choix MULTIPLE sur cette dimension seule : c'est elle que l'onglet « Autres » cumule
         // (orthoptères, micromammifères, oiseaux…), là où un carré ou une nuit se choisissent un à un.
         return CritereListe.multiple(
-                GROUPE, "Taxon parent", "Choisir un taxon parent", groupesPresents, ContactHoraire::groupe);
+                ClesCriteres.GROUPE,
+                "Taxon parent",
+                "Choisir un taxon parent",
+                groupesPresents,
+                ContactHoraire::groupe);
     }
 
     /// Critère **Nature de la nuit** (#2614) : protocole ou participation opportuniste (#2525), lu sur
@@ -145,7 +140,7 @@ final class CriteresActivite {
         return new CritereFiltre<ContactHoraire>() {
             @Override
             public String nom() {
-                return A_ENJEU;
+                return ClesCriteres.A_ENJEU;
             }
 
             @Override
@@ -180,8 +175,8 @@ final class CriteresActivite {
         return List.of(
                 vueParDefaut("Tout"),
                 vueChiropteres(),
-                vueParDefaut("Autres", new DescripteurCritere(GROUPE, HORS_CHIROPTERES)),
-                vueParDefaut("Espèces prioritaires", new DescripteurCritere(A_ENJEU, List.of())));
+                vueParDefaut("Autres", new DescripteurCritere(ClesCriteres.GROUPE, HORS_CHIROPTERES)),
+                vueParDefaut("Espèces prioritaires", new DescripteurCritere(ClesCriteres.A_ENJEU, List.of())));
     }
 
     /// La vue sur laquelle l'écran **s'ouvre** (#2616) : « Chiroptères ».
@@ -197,7 +192,7 @@ final class CriteresActivite {
     }
 
     private static VueSauvegardee vueChiropteres() {
-        return vueParDefaut("Chiroptères", new DescripteurCritere(GROUPE, List.of("Chiroptères")));
+        return vueParDefaut("Chiroptères", new DescripteurCritere(ClesCriteres.GROUPE, List.of("Chiroptères")));
     }
 
     private static VueSauvegardee vueParDefaut(String nom, DescripteurCritere... criteres) {
