@@ -242,6 +242,56 @@ class CritereListeEnumerationTest {
                 .isFalse();
     }
 
+    @Test
+    @DisplayName("#3128 : la valeur choisie survit à un changement du jeu de valeurs offertes")
+    void la_valeur_choisie_survit_au_changement_du_jeu_offert() {
+        // Ce que le socle doit garantir : la valeur retenue est identifiée par ce qu'elle EST, pas par
+        // la place qu'elle occupait quand on l'a choisie. Tant que la liste ne bouge jamais, une lecture
+        // par position donne la même réponse ; #3095 la fera bouger, et c'est là que l'écart se paie.
+        //
+        // Le scénario est celui du cascadage : une valeur disparaît du jeu offert parce qu'un autre
+        // filtre s'est resserré, et tout ce qui la suivait se décale d'un cran.
+        AtomicReference<Predicate<Couleur>> courant = new AtomicReference<>();
+        CritereFiltre<Couleur> critere = critere();
+        ComboBox<?> choix = (ComboBox<?>) editeurDe(critere, courant);
+
+        choix.getSelectionModel().select(Couleur.BLEU.ordinal());
+        assertThat(critereValeur(critere, choix))
+                .as("prérequis : la valeur choisie est bien lue avant que la liste ne bouge")
+                .isEqualTo("BLEU");
+
+        // Le jeu offert se resserre : ROUGE n'est plus proposé, BLEU recule d'un rang.
+        choix.getItems().remove(0);
+
+        assertThat(critereValeur(critere, choix))
+                .as("c'est toujours BLEU qui est choisi : lire par position renverrait VERT, et la vue"
+                        + " enregistrée rejouerait un autre filtre que celui qu'on a posé")
+                .isEqualTo("BLEU");
+    }
+
+    @Test
+    @DisplayName("#3128 : la PREMIÈRE valeur offerte se restaure comme les autres")
+    void la_premiere_valeur_offerte_se_restaure() {
+        // Trouvé par PIT, pas en relisant les tests : muter « indice < 0 » en « indice <= 0 » survivait,
+        // parce qu'aucun test ne restaurait la valeur de rang zéro. Le mutant fait passer une valeur
+        // parfaitement offerte pour introuvable : la puce s'ouvre vide et se dit amputée (#3056), donc
+        // la vue filtre moins large tout en annonçant le contraire.
+        AtomicReference<Predicate<Couleur>> courant = new AtomicReference<>();
+        CritereFiltre<Couleur> critere = critere();
+        Node editeur = editeurDe(critere, courant);
+
+        List<String> introuvables = critere.restaurerValeurs(editeur, List.of("ROUGE"));
+
+        assertThat(introuvables)
+                .as("ROUGE est la première valeur offerte : elle est trouvée, donc rien n'est perdu")
+                .isEmpty();
+        assertThat(critereValeur(critere, editeur)).isEqualTo("ROUGE");
+        assertThat(courant.get().test(Couleur.ROUGE)).isTrue();
+        assertThat(courant.get().test(Couleur.BLEU))
+                .as("et le prédicat de l'écran est bien appliqué")
+                .isFalse();
+    }
+
     private static String critereValeur(CritereFiltre<Couleur> critere, Node editeur) {
         return critere.valeurCourante(editeur).get(0);
     }

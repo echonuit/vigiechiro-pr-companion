@@ -337,11 +337,22 @@ public final class CritereListe {
             Function<List<T>, T> valeurParDefaut) {
         return new CritereFiltre<L>() {
 
-            /// Les valeurs **réellement montrées** par l'éditeur, figées à sa construction.
+            /// Les valeurs **réellement montrées** par l'éditeur, telles qu'il les a reçues.
             ///
             /// Gardées ici plutôt que relues du domaine à chaque appel : le fournisseur dépend des lignes
             /// courantes, et une relecture pourrait rendre une autre liste que celle qu'on a sous les yeux.
-            /// C'est aussi ce qui permet de lire la valeur choisie par son **indice**, sans transtypage.
+            ///
+            /// Elles servent à **retyper** la valeur choisie, que l'éditeur ne rend que sous forme
+            /// d'`Object` : c'est le seul moyen d'appliquer [Domaine#cle()] sans transtypage non vérifié.
+            /// Elles ne servent **plus** à la désigner par son rang (#3128) : une valeur se retrouve par
+            /// ce qu'elle est. Lire par position supposait que cette liste et celle affichée restent
+            /// alignées, ce qui tenait tant qu'aucune des deux ne bougeait ; le jour où le domaine se
+            /// recalcule (#3095), le rang désigne une autre valeur et la vue enregistrée rejoue un autre
+            /// filtre, sans que rien ne casse bruyamment.
+            ///
+            /// **Invariant à tenir** quand les domaines deviendront cascadés : cette liste et les entrées
+            /// de l'éditeur se refont **ensemble, depuis la même source**. Une valeur affichée qui n'y
+            /// figurerait pas cesserait d'être lisible.
             private List<T> offertes = List.of();
 
             @Override
@@ -384,8 +395,12 @@ public final class CritereListe {
 
             @Override
             public List<String> valeurCourante(Node editeur) {
-                int indice = ((ComboBox<?>) editeur).getSelectionModel().getSelectedIndex();
-                return indice < 0 ? List.of() : List.of(domaine.cle().apply(offertes.get(indice)));
+                Object choisie = ((ComboBox<?>) editeur).getValue();
+                return offertes.stream()
+                        .filter(valeur -> valeur.equals(choisie))
+                        .findFirst()
+                        .map(valeur -> List.of(domaine.cle().apply(valeur)))
+                        .orElseGet(List::of);
             }
 
             @Override
