@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
 import fr.univ_amu.iut.commun.model.SondeAccessibilite;
+import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.BilanSauvegarde;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import java.nio.file.Path;
@@ -143,10 +144,7 @@ final class ActionsSauvegarde {
         occupation.occuper(
                 "Restauration complète (base + audio)…",
                 "la restauration complète",
-                () -> {
-                    service.restaurerComplet(dossier.get());
-                    return nom;
-                },
+                () -> service.restaurerComplet(dossier.get()),
                 this::restituerRestaurationComplete,
                 echec -> signalerEchec("Restauration impossible", echec));
     }
@@ -183,11 +181,11 @@ final class ActionsSauvegarde {
     }
 
     /// Sur le fil JavaFX, après restauration complète : compte rendu puis relecture de la base.
-    private void restituerRestaurationComplete(String nom) {
+    private void restituerRestaurationComplete(BilanRestauration bilan) {
         notificateur.notifier(
-                NiveauNotification.INFORMATION,
-                "Sauvegarde restaurée",
-                "La base et les dossiers de session ont été restaurés depuis « " + nom + " ».");
+                bilan.appelleUnRegard() ? NiveauNotification.AVERTISSEMENT : NiveauNotification.INFORMATION,
+                bilan.appelleUnRegard() ? "Sauvegarde restaurée, à un détail près" : "Sauvegarde restaurée",
+                "La base et les dossiers de son ont été restaurés.\n\n" + bilan.enClair());
         apresRestauration.run();
     }
 

@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Stream;
 import org.sqlite.SQLiteDataSource;
 
 /// **Sauvegarde et restauration** de la base SQLite (#148) : la base concentre tout le travail
@@ -162,53 +161,33 @@ public class ServiceSauvegarde {
         }
     }
 
-    /// Restaure une **sauvegarde complète** produite par [#sauvegarderComplet] : remet la base (via
-    /// [#restaurer] : vérification, filet de sécurité, migration) **puis** recopie les dossiers de session
-    /// sauvegardés à la racine du workspace (écrasement). Action délibérée, hors opération concurrente.
+    /// Restaure une **sauvegarde complète** produite par [#sauvegarderComplet] : la base **et** les
+    /// dossiers de son, remis là où ils étaient, avec une base corrigée pour les y retrouver (#2727).
     ///
+    /// L'ordre est celui d'une opération **vérifiée puis basculée** : on confronte d'abord chaque
+    /// dossier de la sauvegarde à l'inventaire du manifeste, et une seule discordance annule tout
+    /// avant que rien n'ait été touché. Ce n'est qu'ensuite que la base est remplacée (via
+    /// [#restaurer] : vérification, filet de sécurité, migration), que les dossiers sont replacés,
+    /// puis que les `root_path` sont réécrits en une transaction.
+    ///
+    /// Une sauvegarde **antérieure au manifeste** ne porte pas cette information : ses dossiers
+    /// reviennent à la racine du workspace et la base n'est pas corrigée, exactement comme avant. Le
+    /// bilan le dit, plutôt que de laisser croire à mieux.
+    ///
+    /// Action délibérée, hors opération concurrente.
+    ///
+    /// @return ce qui a été replacé, ce qui a changé de place, et ce que la sauvegarde ne contenait pas
     /// @throws IllegalArgumentException si le dossier ou sa base sont introuvables
-    public void restaurerComplet(Path dossierBackup) {
+    /// @throws DataAccessException si un dossier de la sauvegarde ne correspond pas à son inventaire
+    public BilanRestauration restaurerComplet(Path dossierBackup) {
         Objects.requireNonNull(dossierBackup, "dossierBackup");
-        restaurer(dossierBackup.resolve(SOUS_DOSSIER_BASE).resolve(Workspace.FICHIER_BASE));
-        Path dossierSessions = dossierBackup.resolve(SOUS_DOSSIER_SESSIONS);
-        if (!Files.isDirectory(dossierSessions)) {
-            return;
-        }
-        Path racineWorkspace = source.workspace().racine();
+        RestaurationComplete restauration = new RestaurationComplete(source);
         Optional<ManifesteSauvegarde> manifeste = ManifesteSauvegardeJson.lire(dossierBackup);
-        try (Stream<Path> sessions = Files.list(dossierSessions)) {
-            for (Path sessionSauvegardee : (Iterable<Path>) sessions::iterator) {
-                if (Files.isDirectory(sessionSauvegardee)) {
-                    copierRecursif(
-                            sessionSauvegardee,
-                            racineWorkspace.resolve(nomDeRestauration(manifeste, sessionSauvegardee)));
-                }
-            }
-        } catch (IOException echec) {
-            throw new DataAccessException(
-                    "Restauration des dossiers de session impossible depuis " + dossierBackup, echec);
-        }
-    }
-
-    /// Sous quel nom un dossier sauvegardé revient à la racine du workspace.
-    ///
-    /// Le dossier s'appelle `Nuit-01-3f2a1b7c` dans la sauvegarde, où le condensé n'est là que pour
-    /// éviter les collisions (#2726) ; il n'a rien à faire dans le workspace de l'utilisateur. Le
-    /// manifeste sait d'où venait ce dossier, on lui reprend donc son **dernier segment d'origine**.
-    ///
-    /// Sans manifeste (sauvegarde antérieure à ce format), le nom du dossier **est** le nom d'origine :
-    /// c'est exactement ce que la restauration faisait avant.
-    ///
-    /// ⚠️ Cette restauration remet les dossiers **à la racine du workspace**, pas à leur emplacement
-    /// d'origine, et ne touche pas aux `root_path` de la base : c'est le sujet de #2727, que le
-    /// manifeste rend enfin possible.
-    private static String nomDeRestauration(Optional<ManifesteSauvegarde> manifeste, Path sessionSauvegardee) {
-        String identifiant = sessionSauvegardee.getFileName().toString();
+        manifeste.ifPresent(present -> restauration.verifierLaSauvegarde(dossierBackup, present));
+        restaurer(dossierBackup.resolve(SOUS_DOSSIER_BASE).resolve(Workspace.FICHIER_BASE));
         return manifeste
-                .flatMap(m -> m.pourIdentifiant(identifiant))
-                .map(racine -> Path.of(racine.cheminOrigine()).getFileName())
-                .map(Path::toString)
-                .orElse(identifiant);
+                .map(present -> restauration.replacer(dossierBackup, present))
+                .orElseGet(() -> restauration.replacerSansManifeste(dossierBackup));
     }
 
     /// Copie une racine de session sous `sessions/<identifiant>` et rend son entrée de manifeste.
@@ -218,7 +197,7 @@ public class ServiceSauvegarde {
     private static RacineSauvegardee emporter(Path racineSession, Path dossierSessions) throws IOException {
         String identifiant = identifiantDe(racineSession);
         Path destination = dossierSessions.resolve(identifiant);
-        copierRecursif(racineSession, destination);
+        ArborescenceFichiers.copier(racineSession, destination);
         return RacineSauvegardee.de(identifiant, racineSession.toString(), InventaireDossier.de(destination));
     }
 
@@ -262,20 +241,5 @@ public class ServiceSauvegarde {
             candidat = dossier.resolve(base + "-" + suffixe++);
         }
         return Files.createDirectories(candidat);
-    }
-
-    /// Copie récursive d'une arborescence (`origine` → `cible`), en écrasant les fichiers existants.
-    private static void copierRecursif(Path origine, Path cible) throws IOException {
-        try (Stream<Path> arbre = Files.walk(origine)) {
-            for (Path chemin : (Iterable<Path>) arbre::iterator) {
-                Path destination = cible.resolve(origine.relativize(chemin).toString());
-                if (Files.isDirectory(chemin)) {
-                    Files.createDirectories(destination);
-                } else {
-                    Files.createDirectories(destination.getParent());
-                    Files.copy(chemin, destination, StandardCopyOption.REPLACE_EXISTING);
-                }
-            }
-        }
     }
 }

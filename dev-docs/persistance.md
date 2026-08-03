@@ -201,6 +201,54 @@ vit en base.
     traiter comme absent ferait silencieusement moins bien que promis, sur la seule sauvegarde dont
     on ait la preuve qu'elle a un problème.
 
+## Une restauration complète est vérifiée, puis basculée
+
+`ServiceSauvegarde.restaurerComplet` s'appuie sur le manifeste pour tenir la promesse en entier
+(#2727), dans cet ordre :
+
+1. **vérifier** chaque dossier de la sauvegarde contre l'inventaire du manifeste ;
+2. **restaurer la base** (avec son filet `vigiechiro.db.avant-restauration`) ;
+3. **replacer** les dossiers ;
+4. **réécrire les chemins persistés** en une transaction.
+
+!!! danger "`root_path` n'est pas le seul chemin en base"
+    Chaque original, chaque séquence d'écoute, le journal du capteur, le relevé climatique et le CSV
+    Tadarida portent leur chemin **absolu** : six tables au total (`ReecritureRacineSession`, dont
+    l'inventaire a été confronté aux colonnes `*_path` des 38 migrations). Ne réécrire que la racine
+    donne une base qui **paraît** corrigée et une application qui ne retrouve plus un seul fichier.
+
+    Ce piège n'est pas théorique : c'est l'état dans lequel cette fonctionnalité a d'abord été
+    écrite. Les tests Java relisaient `root_path` et concluaient au succès ; l'E2E `bats` qui restaure
+    sur une autre machine puis demande `reset-guide` a répondu **PERDU**. Un test qui vérifie ce qu'on
+    a écrit ne remplace pas un test qui demande à l'application si elle s'y retrouve.
+
+    ⚠️ `RattachementDao.reprefixerChemins` applique la même règle pour un autre besoin (renommer une
+    session rattachée), sans pouvoir partager ce code : le socle ne peut pas dépendre d'une feature.
+    Une septième table à chemin devra donc être ajoutée **aux deux endroits**.
+
+L'ordre est le point important : une seule discordance à l'étape 1 annule tout **avant que rien
+n'ait été touché**. La vérification passait auparavant après la bascule, ce qui revenait à découvrir
+le problème une fois la base remplacée.
+
+Où revient un dossier : **à son emplacement d'origine s'il existe encore et qu'il est inscriptible**,
+sinon dans le workspace, sous son nom d'origine. Le critère est que le dossier existe, et non que son
+parent soit créable : `/mnt/disque-a` est un point de montage **vide** quand le disque n'est pas
+branché, et le juger « créable » y déverserait des gigaoctets sur le disque système, que le montage
+du vrai disque masquerait ensuite.
+
+Dans les deux cas `root_path` désigne l'endroit réel, ce qui est toute la correction : la base
+restaurée ne pointe plus vers des dossiers absents.
+
+!!! warning "Ce que la restauration dit, et pourquoi elle le dit"
+    `BilanRestauration` porte ce qui a changé de place et ce que la sauvegarde ne contenait pas (une
+    nuit dont la racine était inaccessible au moment de la copie, #1346). Les deux surfaces
+    l'affichent. Un geste qui déplace des gigaoctets et corrige la base ne peut pas se contenter de
+    « restauré » : l'utilisateur ne saurait ni où sont ses nuits, ni laquelle manque.
+
+    Conséquence assumée du critère ci-dessus : restaurer une nuit qu'on vient de **supprimer** la
+    remet dans le workspace et non à sa place, puisque sa place n'existe plus. Le compte rendu le
+    dit, et la base pointe vers l'endroit réel.
+
 ## Le patron DAO
 
 Pas d'ORM : des **DAO** en `PreparedStatement`. La base technique

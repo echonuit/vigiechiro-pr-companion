@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import java.io.PrintWriter;
 import java.nio.file.Path;
@@ -71,8 +72,11 @@ public final class Restaurer implements Callable<Integer> {
         }
         ServiceSauvegarde sauvegarde = service.get();
         if (complet) {
-            sauvegarde.restaurerComplet(source);
-            sortie.println("Base et dossiers de session restaurés depuis : " + source);
+            BilanRestauration bilan = sauvegarde.restaurerComplet(source);
+            sortie.println("Base et dossiers de son restaurés depuis : " + source);
+            // Une restauration complète déplace des gigaoctets et corrige la base : dire où ils ont
+            // atterri, et ce qui manquait, fait partie du compte rendu (#2727).
+            sortie.println(bilan.enClair());
         } else {
             sauvegarde.restaurer(source);
             sortie.println("Base restaurée depuis : " + source);

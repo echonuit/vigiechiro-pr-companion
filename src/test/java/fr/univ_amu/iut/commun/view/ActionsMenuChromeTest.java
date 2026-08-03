@@ -6,6 +6,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.BilanSauvegarde;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
@@ -111,6 +112,9 @@ class ActionsMenuChromeTest {
     @Test
     @DisplayName("#1405 : « Restauration complète » remplace base ET dossiers de session")
     void entree_restaurer_complet() {
+        // Le service REND un bilan depuis #2727 : sans ce stub, le mock rendrait null et le compte
+        // rendu casserait sur un défaut du test, pas du code.
+        when(sauvegarde.restaurerComplet(DOSSIER)).thenReturn(BilanRestauration.sansManifeste());
         ActionRestaurerComplet entree = new ActionRestaurerComplet(sauvegarde, navigateur, occupation);
         neutraliserDialogues(entree.porteur().actions(), DOSSIER);
 
