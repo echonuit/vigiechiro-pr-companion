@@ -289,6 +289,17 @@ public class MigrationSchema {
         return Integer.parseInt(numero);
     }
 
+    /// Version de schéma la plus haute que **cette** version de l'application sache appliquer.
+    ///
+    /// Sert à refuser une sauvegarde écrite par une version plus récente (#2730) : ses tables et ses
+    /// colonnes sont inconnues ici, et la migration ne les rattrapera pas puisque leurs scripts
+    /// n'existent pas encore dans ce binaire. L'ordre du catalogue fait foi, garanti croissant par
+    /// [MigrationSchemaTest].
+    static int versionMaximale() {
+        String dernier = MIGRATIONS[MIGRATIONS.length - 1];
+        return Integer.parseInt(dernier.substring(1, dernier.indexOf("__")));
+    }
+
     private static String lireRessource(String chemin) {
         try (InputStream in = MigrationSchema.class.getResourceAsStream(chemin)) {
             if (in == null) {
