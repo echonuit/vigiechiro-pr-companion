@@ -105,10 +105,21 @@ Le bandeau, les cartes d'activités, la recherche transverse et les menus qui le
 <table>
 <tr>
 <th width="50%">Dossier de travail déjà ouvert</th>
-<th width="50%"></th>
+<th width="50%">Restauration : nuits déplacées</th>
 </tr>
 <tr>
 <td><a href="apercu-demarrage-dossier-occupe.png"><img src="apercu-demarrage-dossier-occupe.png" width="430" alt="Dossier de travail déjà ouvert"></a></td>
+<td><a href="apercu-restauration-nuits-deplacees.png"><img src="apercu-restauration-nuits-deplacees.png" width="430" alt="Restauration : nuits déplacées"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<th width="50%">Restauration : version trop récente</th>
+<th width="50%"></th>
+</tr>
+<tr>
+<td><a href="apercu-restauration-version-trop-recente.png"><img src="apercu-restauration-version-trop-recente.png" width="430" alt="Restauration : version trop récente"></a></td>
 <td></td>
 </tr>
 </table>
