@@ -8,7 +8,9 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.BilanSauvegarde;
+import fr.univ_amu.iut.commun.persistence.PlacementRacine;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Files;
@@ -242,6 +244,10 @@ class ActionsSauvegardeTest {
     @DisplayName("#1346 : restauration complète confirmée : base et dossiers de session sont remplacés, puis relus")
     void restauration_complete_confirmee_remplace_tout() {
         choix = Optional.of(DOSSIER);
+        // Le service REND un bilan depuis #2727 : sans ce stub, le mock rendrait null et le compte
+        // rendu casserait sur un défaut du test, pas du code. Ici, le cas nominal : tout est revenu
+        // à sa place.
+        when(service.restaurerComplet(DOSSIER)).thenReturn(new BilanRestauration(true, List.of(), List.of()));
 
         action.restaurerComplet();
 
@@ -257,6 +263,29 @@ class ActionsSauvegardeTest {
                 .singleElement()
                 .satisfies(annonce -> assertThat(annonce).contains("Sauvegarde restaurée"));
         assertThat(relectures).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#2727 : une nuit qui n'a pas retrouvé son disque est ANNONCÉE, pas glissée sous le tapis")
+    void restauration_complete_deplacee_avertit() {
+        choix = Optional.of(DOSSIER);
+        when(service.restaurerComplet(DOSSIER))
+                .thenReturn(new BilanRestauration(
+                        true,
+                        List.of(new PlacementRacine("/mnt/disque-a/Nuit-01", "/home/moi/vigiechiro/Nuit-01")),
+                        List.of()));
+
+        action.restaurerComplet();
+
+        assertThat(niveaux)
+                .as("des gigaoctets ont changé de disque : une information neutre le noierait")
+                .containsExactly(NiveauNotification.AVERTISSEMENT);
+        assertThat(annonces)
+                .singleElement()
+                .satisfies(annonce -> assertThat(annonce)
+                        .contains("n'ont pas retrouvé leur emplacement d'origine")
+                        .as("et l'utilisateur doit pouvoir aller les chercher")
+                        .contains("/home/moi/vigiechiro/Nuit-01"));
     }
 
     @Test
