@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.commun.view.AxeHoraire;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
@@ -188,7 +189,7 @@ public class ActiviteController implements EmplacementNavigation {
                         // Cascadage (#3095) : le domaine se calcule sur les lignes que les AUTRES
                         // criteres laissent passer. Lire la liste deja filtree ferait s auto-effondrer
                         // la puce, qui n offrirait plus que la valeur deja retenue.
-                        CriteresActivite.lieu(() -> viewModel.filtres().saufLui(CriteresActivite.LIEU)),
+                        CriteresActivite.lieu(() -> viewModel.filtres().saufLui(ClesCriteres.LIEU)),
                         // « Nuit » n est PAS cascadee, et c est deliberé : c est un SELECTEUR,
                         // pas une facette. Restreindre la liste des nuits a celles qui passent les
                         // autres filtres retirerait du menu la nuit vers laquelle on veut aller,
@@ -196,7 +197,7 @@ public class ActiviteController implements EmplacementNavigation {
                         // annee et campagne en controles fixes sur Ma saison (#3103).
                         CriteresActivite.nuit(viewModel::nuitsDisponibles),
                         CriteresActivite.groupe(() ->
-                                CriteresActivite.groupesDe(viewModel.filtres().saufLui(CriteresActivite.GROUPE))),
+                                CriteresActivite.groupesDe(viewModel.filtres().saufLui(ClesCriteres.GROUPE))),
                         CriteresActivite.natureNuit(viewModel::nuitsOpportunistes),
                         CriteresActivite.aEnjeu(contact -> marqueurEnjeu.aEnjeu(contact.taxon()))),
                 CriteresActivite.rechercheTexte());

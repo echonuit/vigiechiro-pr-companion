@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -349,7 +350,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                         // Cascadage (#3095) : le domaine se calcule sur les lignes que les AUTRES
                         // criteres laissent passer. Lire la liste deja filtree ferait s auto-effondrer
                         // la puce, qui n offrirait plus que la valeur deja retenue.
-                        CriteresMultisite.lieu(() -> viewModel.filtres().saufLui(CriteresMultisite.LIEU)),
+                        CriteresMultisite.lieu(() -> viewModel.filtres().saufLui(ClesCriteres.LIEU)),
                         CriteresMultisite.statut(),
                         CriteresMultisite.verdict(),
                         CriteresMultisite.annee(),

@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
@@ -35,17 +36,8 @@ import javafx.scene.control.TextField;
 /// présélection : ajouter une puce n'écarte rien tant qu'une valeur n'est pas saisie.
 final class CriteresMultisite {
 
-    /// Clé **stable** du critère Statut, partagée par le critère et les vues par défaut (évite un littéral
-    /// dupliqué).
-    private static final String STATUT = "statut";
-
     /// Clé **stable** du critère Analyse (#1338), partagée par le critère et la vue « Résultats à importer ».
     private static final String ANALYSE = "analyse";
-
-    /// Clé du critère « Lieu » (#2968). Même clé que les vues audio (#2794) et Analyse (#2966) :
-    /// une vue mémorisée nomme ses critères, et trois écrans qui filtrent le même concept sous trois
-    /// clés se liraient mal.
-    static final String LIEU = "lieu";
 
     /// Intitulé du critère Année, porté par la puce, l'invite du champ et son libellé accessible en
     /// saisie valide : les trois doivent dire la même chose.
@@ -72,13 +64,19 @@ final class CriteresMultisite {
                 vueParDefaut(
                         "Résultats à importer",
                         new DescripteurCritere(ANALYSE, List.of(EtatAnalyse.A_IMPORTER.name()))),
-                vueParDefaut("Déposés", new DescripteurCritere(STATUT, List.of(StatutWorkflow.DEPOSE.name()))),
+                vueParDefaut(
+                        "Déposés",
+                        new DescripteurCritere(ClesCriteres.STATUT_WORKFLOW, List.of(StatutWorkflow.DEPOSE.name()))),
                 // #2581 : après une synchronisation, la question qui vient est « lesquelles attendent
                 // encore leur audio ? ». Sans cette vue, il faudrait la reconstruire à la main à chaque
                 // fois - et la liste des nuits récupérées est exactement celle des nuits à réactiver.
-                vueParDefaut("À réactiver", new DescripteurCritere(STATUT, List.of(StatutWorkflow.RECUPERE.name()))),
+                vueParDefaut(
+                        "À réactiver",
+                        new DescripteurCritere(ClesCriteres.STATUT_WORKFLOW, List.of(StatutWorkflow.RECUPERE.name()))),
                 vueParDefaut("Non vérifié", new DescripteurCritere("verdict", List.of(Verdict.A_VERIFIER.name()))),
-                vueParDefaut("Vérifiés", new DescripteurCritere(STATUT, List.of(StatutWorkflow.VERIFIE.name()))));
+                vueParDefaut(
+                        "Vérifiés",
+                        new DescripteurCritere(ClesCriteres.STATUT_WORKFLOW, List.of(StatutWorkflow.VERIFIE.name()))));
     }
 
     /// Critère **État d'analyse** (#1338) : liste déroulante, sans présélection. C'est lui qui porte la vue
@@ -132,7 +130,7 @@ final class CriteresMultisite {
     /// vient d'ailleurs que d'une liste.
     static CritereFiltre<LignePassage> lieu(Supplier<? extends List<LignePassage>> passagesFiltres) {
         return CritereListe.multipleParmi(
-                LIEU,
+                ClesCriteres.LIEU,
                 "Lieu",
                 "Choisir un lieu",
                 () -> lieuxPresents(passagesFiltres.get()),
@@ -251,13 +249,48 @@ final class CriteresMultisite {
 
     /// Critère **Statut de workflow** : liste déroulante, sans présélection.
     static CritereFiltre<LignePassage> statut() {
-        return CritereListe.enumeration(
-                STATUT,
+        // Renomme de « statut » en « statut_workflow » (#3096) : cette cle designait le statut
+        // d OBSERVATION sur deux autres ecrans, et le mecanisme de transport (#476) arme exactement
+        // ce piege. Les vues enregistrees sous l ancien nom continuent de se rejouer, via
+        // `nomsHerites`, sans migration de base.
+        CritereFiltre<LignePassage> critere = CritereListe.enumeration(
+                ClesCriteres.STATUT_WORKFLOW,
                 "Statut",
                 "Choisir un statut",
                 List.of(StatutWorkflow.values()),
                 StatutWorkflow::libelle,
                 statut -> FiltresMultisite.parStatut(statut)::accepte);
+        return new CritereFiltre<LignePassage>() {
+            @Override
+            public String nom() {
+                return critere.nom();
+            }
+
+            @Override
+            public List<String> nomsHerites() {
+                return List.of(ClesCriteres.STATUT_OBSERVATION);
+            }
+
+            @Override
+            public String libelle() {
+                return critere.libelle();
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<LignePassage>> applique) {
+                return critere.editeur(applique);
+            }
+
+            @Override
+            public List<String> valeurCourante(Node editeur) {
+                return critere.valeurCourante(editeur);
+            }
+
+            @Override
+            public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
+                return critere.restaurerValeurs(editeur, valeurs);
+            }
+        };
     }
 
     /// Critère **Verdict de vérification** : liste déroulante, sans présélection.

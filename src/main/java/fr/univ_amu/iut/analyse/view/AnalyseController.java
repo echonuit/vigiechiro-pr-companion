@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import fr.univ_amu.iut.commun.view.ActionFicheEspece;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -367,9 +368,9 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                         // criteres laissent passer. Lire la liste deja filtree ferait s auto-effondrer
                         // la puce, qui n offrirait plus que la valeur deja retenue.
                         CriteresAnalyse.groupe(() ->
-                                CriteresAnalyse.groupesDe(viewModel.filtres().saufLui(CriteresAnalyse.GROUPE))),
+                                CriteresAnalyse.groupesDe(viewModel.filtres().saufLui(ClesCriteres.GROUPE))),
                         CriteresAnalyse.natureNuit(viewModel::nuitsOpportunistes),
-                        CriteresAnalyse.lieu(() -> viewModel.filtres().saufLui(CriteresAnalyse.LIEU)),
+                        CriteresAnalyse.lieu(() -> viewModel.filtres().saufLui(ClesCriteres.LIEU)),
                         CriteresAnalyse.aEnjeu(observation -> marqueurEnjeu.aEnjeu(observation.taxonRetenu()))),
                 CriteresAnalyse.rechercheTexte());
         // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur. La vue

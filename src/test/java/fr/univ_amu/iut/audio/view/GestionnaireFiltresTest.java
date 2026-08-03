@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
@@ -652,19 +653,19 @@ class GestionnaireFiltresTest {
                 pucesLocales,
                 filtresLocaux,
                 List.of(
-                        CriteresAudio.groupe(() -> filtresLocaux.saufLui(CriteresAudio.CLE_GROUPE)),
-                        CriteresAudio.lieu(() -> filtresLocaux.saufLui(CriteresAudio.CLE_LIEU))),
+                        CriteresAudio.groupe(() -> filtresLocaux.saufLui(ClesCriteres.GROUPE)),
+                        CriteresAudio.lieu(() -> filtresLocaux.saufLui(ClesCriteres.LIEU))),
                 CriteresAudio.rechercheTexte());
 
         // La puce Lieu, seule, offre les lieux des deux lignes.
-        local.poser(CriteresAudio.CLE_LIEU, List.of());
+        local.poser(ClesCriteres.LIEU, List.of());
         MenuButton lieu = (MenuButton) pucesLocales.lookup(".critere-multiple");
         assertThat(entreesDe(lieu)).contains("640380", "870150");
 
         // 1. Le « tous sauf lui ». On coche un lieu : la table ne montre plus que lui, mais la puce doit
         // continuer d'offrir les AUTRES lieux. Lire la liste déjà filtrée la ferait s'auto-effondrer sur
         // le seul choix déjà fait, et l'on ne pourrait jamais en cocher un second.
-        local.poser(CriteresAudio.CLE_LIEU, List.of("640380"));
+        local.poser(ClesCriteres.LIEU, List.of("640380"));
         rouvrir(lieu);
 
         assertThat(entreesDe(lieu))
@@ -674,8 +675,8 @@ class GestionnaireFiltresTest {
 
         // 2. Le cascadage proprement dit, sur un AUTRE critère. Isoler les chiroptères vide le carré
         // 870150 : le proposer ferait cliquer sur un choix qui ne ramène rien.
-        local.poser(CriteresAudio.CLE_LIEU, List.of());
-        local.poser(CriteresAudio.CLE_GROUPE, List.of("Chiroptères"));
+        local.poser(ClesCriteres.LIEU, List.of());
+        local.poser(ClesCriteres.GROUPE, List.of("Chiroptères"));
         rouvrir(lieu);
 
         assertThat(entreesDe(lieu)).contains("640380").doesNotContain("870150");

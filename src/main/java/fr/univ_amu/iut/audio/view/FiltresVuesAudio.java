@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
@@ -54,10 +55,10 @@ final class FiltresVuesAudio {
                         // critères laissent passer. Passer `observationsFiltrees` ferait s'auto-effondrer
                         // la puce, puisque cette liste est déjà filtrée par le critère qu'on peuple.
                         CriteresAudio.groupe(
-                                () -> viewModel.filtres().saufLui(CriteresAudio.CLE_GROUPE),
+                                () -> viewModel.filtres().saufLui(ClesCriteres.GROUPE),
                                 viewModel::signalerChoixRemplace),
-                        CriteresAudio.taxon(() -> viewModel.filtres().saufLui(CriteresAudio.CLE_TAXON)),
-                        CriteresAudio.lieu(() -> viewModel.filtres().saufLui(CriteresAudio.CLE_LIEU)),
+                        CriteresAudio.taxon(() -> viewModel.filtres().saufLui(ClesCriteres.TAXON)),
+                        CriteresAudio.lieu(() -> viewModel.filtres().saufLui(ClesCriteres.LIEU)),
                         CriteresAudio.references(),
                         CriteresAudio.douteux(),
                         CriteresAudio.nonIdentifie(),
