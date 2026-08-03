@@ -6,21 +6,19 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.CritereLieu;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
-import fr.univ_amu.iut.commun.view.ValeursPresentes;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.scene.Node;
@@ -129,23 +127,12 @@ final class CriteresMultisite {
     /// Le champ texte n'est donc pas une redondance à résorber : c'est la porte d'entrée d'une valeur qui
     /// vient d'ailleurs que d'une liste.
     static CritereFiltre<LignePassage> lieu(Supplier<? extends List<LignePassage>> passagesFiltres) {
-        return CritereListe.multipleParmi(
-                ClesCriteres.LIEU,
-                "Lieu",
-                "Choisir un lieu",
-                () -> lieuxPresents(passagesFiltres.get()),
-                CriteresMultisite::dimensionsLieu);
-    }
-
-    /// Lieux présents dans `passages` : les valeurs **distinctes** de chaque dimension, groupées par
-    /// dimension (communes, puis carrés, puis points) et triées au sein de chacune. Un même libellé porté
-    /// par deux dimensions n'apparaît qu'une fois : le coche vaut alors pour les deux.
-    private static List<CritereListe.GroupeValeurs> lieuxPresents(List<LignePassage> passages) {
-        return List.of(
-                new CritereListe.GroupeValeurs("Communes", ValeursPresentes.de(passages, LignePassage::commune)),
-                new CritereListe.GroupeValeurs("Carrés", ValeursPresentes.de(passages, LignePassage::numeroCarre)),
-                new CritereListe.GroupeValeurs(
-                        "Points", ValeursPresentes.de(passages, CriteresMultisite::pointQualifie)));
+        return CritereLieu.de(
+                passagesFiltres::get,
+                List.of(
+                        new CritereLieu.Dimension<>("Communes", LignePassage::commune),
+                        new CritereLieu.Dimension<>("Carrés", LignePassage::numeroCarre),
+                        new CritereLieu.Dimension<>("Points", CriteresMultisite::pointQualifie)));
     }
 
     /// Le point **qualifié par son carré**, « 640380 · A1 » (#2992). Le schéma pose `UNIQUE(site_id, code)` :
@@ -154,13 +141,6 @@ final class CriteresMultisite {
     /// silencieusement les A1 de tous les carrés. Qualifiée, chaque entrée désigne **un** lieu.
     private static String pointQualifie(LignePassage ligne) {
         return ligne.codePoint() == null ? null : ligne.numeroCarre() + " · " + ligne.codePoint();
-    }
-
-    /// Les dimensions de lieu d'un passage, valeurs nulles écartées.
-    private static List<String> dimensionsLieu(LignePassage ligne) {
-        return Stream.of(ligne.commune(), ligne.numeroCarre(), pointQualifie(ligne))
-                .filter(Objects::nonNull)
-                .toList();
     }
 
     static CritereFiltre<LignePassage> carre() {

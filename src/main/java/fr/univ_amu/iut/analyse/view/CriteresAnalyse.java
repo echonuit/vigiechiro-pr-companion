@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereBooleen;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.CritereLieu;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.ValeursPresentes;
@@ -12,12 +13,10 @@ import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 /// Catalogue des **critères de filtrage** de l'inventaire analyse (patron « à la Notion », #537). Chaque
 /// critère est une entrée du menu « + Filtre » qui s'ajoute comme puce : **Statut** de revue et **Taxon
@@ -142,31 +141,12 @@ final class CriteresAnalyse {
     /// puce qui listerait des nombres opaques serait pire que son absence. Le point reviendra ici le
     /// jour où la projection remontera son code, pas avant.
     static CritereFiltre<ObservationAnalyse> lieu(Supplier<? extends List<ObservationAnalyse>> observationsFiltrees) {
-        return CritereListe.multipleParmi(
-                ClesCriteres.LIEU,
-                "Lieu",
-                "Choisir un lieu",
-                () -> lieuxPresents(observationsFiltrees.get()),
-                CriteresAnalyse::dimensionsLieu);
-    }
-
-    /// Lieux présents dans `observations`, **groupés par dimension** et triés au sein de chacun. Chaque
-    /// groupe porte son en-tête (#2992) : sans lui, rien ne dit si « Ahetze » est une commune ou un site.
-    private static List<CritereListe.GroupeValeurs> lieuxPresents(List<ObservationAnalyse> observations) {
-        return List.of(
-                new CritereListe.GroupeValeurs(
-                        "Communes", ValeursPresentes.de(observations, ObservationAnalyse::commune)),
-                new CritereListe.GroupeValeurs(
-                        "Carrés", ValeursPresentes.de(observations, ObservationAnalyse::numeroCarre)),
-                new CritereListe.GroupeValeurs(
-                        "Sites", ValeursPresentes.de(observations, ObservationAnalyse::nomSite)));
-    }
-
-    /// Les dimensions de lieu d'une observation, valeurs nulles écartées.
-    private static List<String> dimensionsLieu(ObservationAnalyse observation) {
-        return Stream.of(observation.commune(), observation.numeroCarre(), observation.nomSite())
-                .filter(Objects::nonNull)
-                .toList();
+        return CritereLieu.de(
+                observationsFiltrees::get,
+                List.of(
+                        new CritereLieu.Dimension<>("Communes", ObservationAnalyse::commune),
+                        new CritereLieu.Dimension<>("Carrés", ObservationAnalyse::numeroCarre),
+                        new CritereLieu.Dimension<>("Sites", ObservationAnalyse::nomSite)));
     }
 
     /// **Recherche texte** de la barre : vrai si un des champs cherchables d'une observation (taxon retenu,

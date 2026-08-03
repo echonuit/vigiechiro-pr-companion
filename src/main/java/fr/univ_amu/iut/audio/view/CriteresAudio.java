@@ -7,9 +7,9 @@ import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereBooleen;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.CritereLieu;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
-import fr.univ_amu.iut.commun.view.ValeursPresentes;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -22,7 +22,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
@@ -168,25 +167,13 @@ final class CriteresAudio {
     /// « espèce × lieu » jouable en direct : Analyse → clic espèce donne « l'espèce partout », la puce
     /// Lieu restreint à « Aix-en-Provence » sans repasser par la carte.
     static CritereFiltre<LigneObservationAudio> lieu(Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
-        return CritereListe.multipleParmi(
-                ClesCriteres.LIEU,
-                "Lieu",
-                "Choisir un lieu",
-                () -> lieuxPresents(lignesCourantes.get()),
-                CriteresAudio::dimensionsLieu);
-    }
-
-    /// Lieux présents dans `lignes` : les valeurs **distinctes** de chaque dimension, groupées par
-    /// dimension (communes, puis carrés, puis points, puis sites) et triées au sein de chacune - la
-    /// liste reste lisible sans en-têtes. Un même libellé porté par deux dimensions (un site homonyme
-    /// d'une commune) n'apparaît qu'une fois : le coche vaut alors pour les deux.
-    private static List<CritereListe.GroupeValeurs> lieuxPresents(List<LigneObservationAudio> lignes) {
-        return List.of(
-                new CritereListe.GroupeValeurs("Communes", ValeursPresentes.de(lignes, LigneObservationAudio::commune)),
-                new CritereListe.GroupeValeurs(
-                        "Carrés", ValeursPresentes.de(lignes, LigneObservationAudio::numeroCarre)),
-                new CritereListe.GroupeValeurs("Points", ValeursPresentes.de(lignes, CriteresAudio::pointQualifie)),
-                new CritereListe.GroupeValeurs("Sites", ValeursPresentes.de(lignes, LigneObservationAudio::nomSite)));
+        return CritereLieu.de(
+                lignesCourantes::get,
+                List.of(
+                        new CritereLieu.Dimension<>("Communes", LigneObservationAudio::commune),
+                        new CritereLieu.Dimension<>("Carrés", LigneObservationAudio::numeroCarre),
+                        new CritereLieu.Dimension<>("Points", CriteresAudio::pointQualifie),
+                        new CritereLieu.Dimension<>("Sites", LigneObservationAudio::nomSite)));
     }
 
     /// Le point **qualifié par son carré**, « 640380 · A1 » (#2992). Le schéma pose `UNIQUE(site_id, code)` :
@@ -195,14 +182,6 @@ final class CriteresAudio {
     /// « A1 » y confondait donc silencieusement les A1 de plusieurs carrés.
     private static String pointQualifie(LigneObservationAudio ligne) {
         return ligne.codePoint() == null ? null : ligne.numeroCarre() + " · " + ligne.codePoint();
-    }
-
-    /// Les valeurs candidates d'une ligne face à la liste des lieux cochés : ses quatre champs
-    /// géographiques non nuls (commune, carré, point, site).
-    private static List<String> dimensionsLieu(LigneObservationAudio ligne) {
-        return Stream.of(ligne.commune(), ligne.numeroCarre(), pointQualifie(ligne), ligne.nomSite())
-                .filter(Objects::nonNull)
-                .toList();
     }
 
     /// Critère **Références seulement** (booléen) : ne garde que les observations archivées en référence
