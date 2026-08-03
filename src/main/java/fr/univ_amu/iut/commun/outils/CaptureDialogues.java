@@ -3,10 +3,14 @@ package fr.univ_amu.iut.commun.outils;
 import fr.univ_amu.iut.commun.di.Amorcage;
 import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.persistence.BilanRestauration;
+import fr.univ_amu.iut.commun.persistence.PlacementRacine;
 import fr.univ_amu.iut.commun.view.ActionAPropos;
 import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,6 +69,53 @@ public final class CaptureDialogues {
         enregistrer(messageGardeSaisie(), sortie.resolve("apercu-navigation-garde-saisie.png"));
         enregistrerAPropos(sortie.resolve("apercu-a-propos.png"));
         enregistrerDossierOccupe(sortie.resolve("apercu-demarrage-dossier-occupe.png"));
+        enregistrerRestaurationDeplacee(sortie.resolve("apercu-restauration-nuits-deplacees.png"));
+        enregistrerSauvegardeTropRecente(sortie.resolve("apercu-restauration-version-trop-recente.png"));
+    }
+
+    /// Compte rendu d'une restauration complète qui a **déplacé** des nuits (#2727).
+    ///
+    /// C'est le plus exposé des comptes rendus du produit : un compte, un paragraphe, puis **deux
+    /// listes** de chemins, servis juste après un geste destructeur. Le texte n'est pas recopié, il
+    /// vient de [BilanRestauration#enClair] ; seuls les chemins sont figés, pour que l'aperçu ne
+    /// change pas à chaque régénération.
+    private static void enregistrerRestaurationDeplacee(Path fichier) {
+        BilanRestauration bilan = new BilanRestauration(
+                true,
+                List.of(
+                        new PlacementRacine(
+                                "/media/disque-terrain/Car640380-2026-Pass2-Z1",
+                                "/home/naturaliste/Documents/VigieChiro-Companion/Car640380-2026-Pass2-Z1"),
+                        new PlacementRacine(
+                                "/media/disque-terrain/Car130711-2026-Pass1-A1",
+                                "/home/naturaliste/Documents/VigieChiro-Companion/Car130711-2026-Pass1-A1")),
+                List.of("/media/carte-sd/Car640380-2026-Pass3-Z2"));
+        enregistrerCompteRendu(
+                NiveauNotification.AVERTISSEMENT,
+                "Sauvegarde restaurée, à un détail près",
+                "La base et les dossiers de son ont été restaurés.\n\n" + bilan.enClair(),
+                fichier);
+    }
+
+    /// Refus d'une sauvegarde écrite par une version plus récente (#2730). Rien n'a été touché, et
+    /// c'est ce que l'aperçu doit rendre lisible.
+    private static void enregistrerSauvegardeTropRecente(Path fichier) {
+        enregistrerCompteRendu(
+                NiveauNotification.AVERTISSEMENT,
+                "Restauration impossible",
+                "Cette sauvegarde a été écrite par une version plus récente de l'application (schéma 41,"
+                        + " cette version connaît le 38). Rien n'a été touché. Mettez l'application à jour,"
+                        + " puis recommencez.",
+                fichier);
+    }
+
+    /// Rend le dialogue **de production** du port de compte rendu ([NotificationDialogue#dialogue]),
+    /// sans l'ouvrir.
+    private static void enregistrerCompteRendu(NiveauNotification niveau, String entete, String message, Path fichier) {
+        Alert alerte = new NotificationDialogue().dialogue(niveau, entete, ApercuFx.enrouler(message));
+        alerte.getDialogPane().setPrefWidth(620);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        System.out.println(TRACE + fichier.toAbsolutePath());
     }
 
     /// Refus de démarrage quand une autre fenêtre occupe déjà le dossier de travail (#2731).

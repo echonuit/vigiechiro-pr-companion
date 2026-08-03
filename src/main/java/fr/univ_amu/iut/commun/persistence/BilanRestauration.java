@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.persistence;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,11 +50,12 @@ public record BilanRestauration(
         if (!deplacees.isEmpty()) {
             resume.append("\n\n")
                     .append(deplacees.size())
-                    .append(" n'ont pas retrouvé leur emplacement d'origine (disque absent ?) et ont été"
-                            + " placés dans votre dossier de travail. La base a été corrigée pour les y"
-                            + " retrouver :")
+                    .append(" n'ont pas retrouvé leur emplacement d'origine (disque absent ?). Elles sont"
+                            + " maintenant dans ")
+                    .append(dossierDArrivee(deplacees))
+                    .append(", et la base a été corrigée pour les y retrouver :")
                     .append(lignes(deplacees.stream()
-                            .map(placement -> placement.origine() + "\n    → " + placement.destination())
+                            .map(BilanRestauration::nuitDeplacee)
                             .toList()));
         }
         if (!absentesDeLaSauvegarde.isEmpty()) {
@@ -64,6 +66,37 @@ public record BilanRestauration(
                     .append(lignes(absentesDeLaSauvegarde));
         }
         return resume.toString();
+    }
+
+    /// Une nuit déplacée, sur **une** ligne : son nom de dossier, puis d'où elle venait.
+    ///
+    /// L'ancienne forme mettait l'origine, un saut de ligne, une flèche et la destination complète. Sur
+    /// un dialogue de largeur ordinaire, la destination revenait à la ligne et **laissait la flèche
+    /// seule** : avec deux nuits, la liste se lisait comme quatre lignes sans lien. Trouvé en ouvrant
+    /// l'aperçu, jamais par un test (#3148).
+    private static String nuitDeplacee(PlacementRacine placement) {
+        Path origine = Path.of(placement.origine());
+        Path nom = origine.getFileName();
+        Path venaitDe = origine.getParent();
+        return (nom == null ? placement.origine() : nom.toString())
+                + (venaitDe == null ? "" : ", qui venait de " + venaitDe);
+    }
+
+    /// Le dossier où les nuits déplacées ont atterri, nommé **une seule fois**.
+    ///
+    /// Elles y vont toutes : la destination d'une racine déplacée est le dossier de travail. Répéter ce
+    /// chemin à chaque ligne était ce qui les allongeait au point de les faire revenir à la ligne. Si
+    /// deux destinations divergeaient malgré tout, on retombe sur une formulation neutre plutôt que
+    /// d'en nommer une au hasard.
+    private static String dossierDArrivee(List<PlacementRacine> deplacees) {
+        List<String> dossiers = deplacees.stream()
+                .map(placement -> Path.of(placement.destination()).getParent())
+                .map(parent -> parent == null ? "" : parent.toString())
+                .distinct()
+                .toList();
+        return dossiers.size() == 1 && !dossiers.getFirst().isEmpty()
+                ? dossiers.getFirst()
+                : "votre dossier de travail";
     }
 
     private static String lignes(List<String> elements) {
