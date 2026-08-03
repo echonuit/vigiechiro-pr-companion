@@ -201,6 +201,39 @@ vit en base.
     traiter comme absent ferait silencieusement moins bien que promis, sur la seule sauvegarde dont
     on ait la preuve qu'elle a un problème.
 
+## Une restauration complète est vérifiée, puis basculée
+
+`ServiceSauvegarde.restaurerComplet` s'appuie sur le manifeste pour tenir la promesse en entier
+(#2727), dans cet ordre :
+
+1. **vérifier** chaque dossier de la sauvegarde contre l'inventaire du manifeste ;
+2. **restaurer la base** (avec son filet `vigiechiro.db.avant-restauration`) ;
+3. **replacer** les dossiers ;
+4. **réécrire les `root_path`** en une transaction.
+
+L'ordre est le point important : une seule discordance à l'étape 1 annule tout **avant que rien
+n'ait été touché**. La vérification passait auparavant après la bascule, ce qui revenait à découvrir
+le problème une fois la base remplacée.
+
+Où revient un dossier : **à son emplacement d'origine s'il existe encore et qu'il est inscriptible**,
+sinon dans le workspace, sous son nom d'origine. Le critère est que le dossier existe, et non que son
+parent soit créable : `/mnt/disque-a` est un point de montage **vide** quand le disque n'est pas
+branché, et le juger « créable » y déverserait des gigaoctets sur le disque système, que le montage
+du vrai disque masquerait ensuite.
+
+Dans les deux cas `root_path` désigne l'endroit réel, ce qui est toute la correction : la base
+restaurée ne pointe plus vers des dossiers absents.
+
+!!! warning "Ce que la restauration dit, et pourquoi elle le dit"
+    `BilanRestauration` porte ce qui a changé de place et ce que la sauvegarde ne contenait pas (une
+    nuit dont la racine était inaccessible au moment de la copie, #1346). Les deux surfaces
+    l'affichent. Un geste qui déplace des gigaoctets et corrige la base ne peut pas se contenter de
+    « restauré » : l'utilisateur ne saurait ni où sont ses nuits, ni laquelle manque.
+
+    Conséquence assumée du critère ci-dessus : restaurer une nuit qu'on vient de **supprimer** la
+    remet dans le workspace et non à sa place, puisque sa place n'existe plus. Le compte rendu le
+    dit, et la base pointe vers l'endroit réel.
+
 ## Le patron DAO
 
 Pas d'ORM : des **DAO** en `PreparedStatement`. La base technique

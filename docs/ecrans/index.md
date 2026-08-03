@@ -52,7 +52,15 @@ de la barre du haut permet de la **protéger** :
   l'application **remplace** la base courante par celle-ci. Par sécurité, l'**état courant est d'abord mis
   de côté** (fichier `vigiechiro.db.avant-restauration`), et l'application revient à l'accueil pour
   repartir sur la base restaurée.
-- **Restaurer une sauvegarde complète…** : remet la base **et** les dossiers de son.
+- **Restaurer une sauvegarde complète…** : remet la base **et** les dossiers de son, **là où ils
+  étaient**. Si un disque n'est pas branché, les dossiers qu'il portait sont placés dans votre dossier
+  de travail et la base est corrigée pour les y retrouver : elle ne désigne jamais un dossier absent.
+  L'application vous dit ce qui a changé de place, et ce que la sauvegarde ne contenait pas.
+
+!!! tip "Une restauration complète vérifie avant de toucher à quoi que ce soit"
+    Chaque dossier de la sauvegarde est confronté à ce qu'elle annonce contenir. Une seule
+    discordance, et la restauration s'arrête **avant** d'avoir remplacé la base ou écrasé le moindre
+    fichier : mieux vaut une restauration qui refuse qu'une restauration à moitié faite.
 
 !!! warning "La sauvegarde de la base seule ne protège pas vos sons"
     La base contient vos **métadonnées** (sites, nuits, observations, validations) : pas l'**audio**, qui
