@@ -154,6 +154,53 @@ Trois précautions, les mêmes pour les trois gestes :
     best-effort, workspace muet. `ServiceReset` **préserve donc l'observateur** à travers le reset : c'est
     la même personne qui repart d'une base neuve.
 
+## Une sauvegarde complète sait d'où venaient les dossiers
+
+La **sauvegarde complète** (`ServiceSauvegarde.sauvegarderComplet`, #1346) emporte la base **et** les
+dossiers de son, un par `recording_session.root_path` distinct. Elle écrit à sa racine un
+**manifeste** versionné, `manifeste.json` (#2726) :
+
+```json
+{
+  "version": 1,
+  "racines": [
+    {
+      "identifiant": "Nuit-01-3f2a1b7c",
+      "cheminOrigine": "/mnt/disque-a/Nuit-01",
+      "fichiers": 2431,
+      "octets": 3407872512,
+      "empreinte": "9c1e…"
+    }
+  ]
+}
+```
+
+Il répond à deux défauts qui se tenaient ensemble :
+
+- **la destination d'une copie était le dernier segment du chemin.** `/mnt/disque-a/Nuit-01` et
+  `/mnt/disque-b/Nuit-01` visaient donc `sessions/Nuit-01` tous les deux, et la copie récursive
+  écrasant en `REPLACE_EXISTING`, la seconde nuit effaçait la première **sans un mot**. Le dossier
+  s'appelle maintenant `<dernier segment>-<condensé du chemin complet>` : lisible, et unique par
+  construction ;
+- **rien ne conservait le chemin d'origine.** Une restauration ne pouvait donc ni remettre les
+  dossiers où ils étaient, ni corriger les `root_path` de la base : la promesse « la restauration
+  remet la base et les dossiers de son » ne tenait que si l'on restaurait sur la machine d'origine.
+  C'est le sujet de #2727, que ce manifeste rend possible.
+
+L'`empreinte` porte sur l'**inventaire** (`chemin relatif` + `taille` de chaque fichier, trié, en
+SHA-256), pas sur le contenu des fichiers : elle attrape un fichier manquant, un fichier en trop, un
+renommage et une troncature, sans lire un octet d'audio. Hacher plusieurs gigaoctets doublerait le
+temps de la sauvegarde **et** celui de la restauration pour n'attraper en plus que la corruption
+silencieuse à taille égale, et le socle a déjà mieux pour ce cas-là : `original_recording.sha256`
+vit en base.
+
+!!! warning "Absent et illisible ne sont pas le même cas"
+    Une sauvegarde **antérieure** à ce format n'a pas de manifeste : c'est normal, la restauration
+    retombe sur ce qu'elle savait faire (dossiers remis à la racine du workspace, sous leur nom de
+    dossier). Un manifeste **présent mais abîmé**, en revanche, est un **refus explicite** : le
+    traiter comme absent ferait silencieusement moins bien que promis, sur la seule sauvegarde dont
+    on ait la preuve qu'elle a un problème.
+
 ## Le patron DAO
 
 Pas d'ORM : des **DAO** en `PreparedStatement`. La base technique

@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.commun.persistence;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -15,6 +17,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.sqlite.SQLiteDataSource;
 
@@ -38,6 +41,11 @@ public class ServiceSauvegarde {
     private static final String PREFIXE = "vigiechiro-sauvegarde-";
     private static final String PREFIXE_COMPLET = "vigiechiro-sauvegarde-complete-";
     private static final String SUFFIXE_FILET = ".avant-restauration";
+
+    /// Caractères hexadécimaux du condensé qui rend unique le nom d'un dossier de session sauvegardé.
+    /// Huit suffisent largement : le condensé ne départage que les racines d'une même base, elles se
+    /// comptent en dizaines, et il reste lisible à l'œil dans un nom de dossier.
+    private static final int LONGUEUR_CONDENSE = 8;
     private static final String SOUS_DOSSIER_BASE = "base";
     private static final String SOUS_DOSSIER_SESSIONS = "sessions";
     private static final DateTimeFormatter HORODATAGE = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
@@ -135,22 +143,20 @@ public class ServiceSauvegarde {
             Path racineBackup = dossierLibreComplet(dossierDestination);
             instantane.ecrire(racineBackup.resolve(SOUS_DOSSIER_BASE).resolve(Workspace.FICHIER_BASE));
             Path dossierSessions = Files.createDirectories(racineBackup.resolve(SOUS_DOSSIER_SESSIONS));
-            int copiees = 0;
+            List<RacineSauvegardee> emportees = new ArrayList<>();
             List<String> inaccessibles = new ArrayList<>();
             for (Path racineSession : racinesSessions()) {
                 // Une racine absente n'est PAS une erreur (carte SD non montée, disque débranché) : la
                 // sauvegarde doit aboutir. Mais la sauter en silence laissait croire à une copie complète
                 // (#1346) : c'est la seule chose qu'on ne peut pas se permettre avant un reset (#1151).
                 if (Files.isDirectory(racineSession)) {
-                    copierRecursif(
-                            racineSession,
-                            dossierSessions.resolve(racineSession.getFileName().toString()));
-                    copiees++;
+                    emportees.add(emporter(racineSession, dossierSessions));
                 } else {
                     inaccessibles.add(racineSession.toString());
                 }
             }
-            return new BilanSauvegarde(racineBackup, copiees, inaccessibles);
+            ManifesteSauvegardeJson.ecrire(racineBackup, ManifesteSauvegarde.courant(emportees));
+            return new BilanSauvegarde(racineBackup, emportees.size(), inaccessibles);
         } catch (IOException | SQLException echec) {
             throw new DataAccessException("Sauvegarde complète impossible vers " + dossierDestination, echec);
         }
@@ -169,19 +175,66 @@ public class ServiceSauvegarde {
             return;
         }
         Path racineWorkspace = source.workspace().racine();
+        Optional<ManifesteSauvegarde> manifeste = ManifesteSauvegardeJson.lire(dossierBackup);
         try (Stream<Path> sessions = Files.list(dossierSessions)) {
             for (Path sessionSauvegardee : (Iterable<Path>) sessions::iterator) {
                 if (Files.isDirectory(sessionSauvegardee)) {
                     copierRecursif(
                             sessionSauvegardee,
-                            racineWorkspace.resolve(
-                                    sessionSauvegardee.getFileName().toString()));
+                            racineWorkspace.resolve(nomDeRestauration(manifeste, sessionSauvegardee)));
                 }
             }
         } catch (IOException echec) {
             throw new DataAccessException(
                     "Restauration des dossiers de session impossible depuis " + dossierBackup, echec);
         }
+    }
+
+    /// Sous quel nom un dossier sauvegardé revient à la racine du workspace.
+    ///
+    /// Le dossier s'appelle `Nuit-01-3f2a1b7c` dans la sauvegarde, où le condensé n'est là que pour
+    /// éviter les collisions (#2726) ; il n'a rien à faire dans le workspace de l'utilisateur. Le
+    /// manifeste sait d'où venait ce dossier, on lui reprend donc son **dernier segment d'origine**.
+    ///
+    /// Sans manifeste (sauvegarde antérieure à ce format), le nom du dossier **est** le nom d'origine :
+    /// c'est exactement ce que la restauration faisait avant.
+    ///
+    /// ⚠️ Cette restauration remet les dossiers **à la racine du workspace**, pas à leur emplacement
+    /// d'origine, et ne touche pas aux `root_path` de la base : c'est le sujet de #2727, que le
+    /// manifeste rend enfin possible.
+    private static String nomDeRestauration(Optional<ManifesteSauvegarde> manifeste, Path sessionSauvegardee) {
+        String identifiant = sessionSauvegardee.getFileName().toString();
+        return manifeste
+                .flatMap(m -> m.pourIdentifiant(identifiant))
+                .map(racine -> Path.of(racine.cheminOrigine()).getFileName())
+                .map(Path::toString)
+                .orElse(identifiant);
+    }
+
+    /// Copie une racine de session sous `sessions/<identifiant>` et rend son entrée de manifeste.
+    ///
+    /// L'inventaire est dressé **sur la copie**, pas sur l'original : ce qu'on veut décrire, c'est ce
+    /// que la sauvegarde contient réellement.
+    private static RacineSauvegardee emporter(Path racineSession, Path dossierSessions) throws IOException {
+        String identifiant = identifiantDe(racineSession);
+        Path destination = dossierSessions.resolve(identifiant);
+        copierRecursif(racineSession, destination);
+        return RacineSauvegardee.de(identifiant, racineSession.toString(), InventaireDossier.de(destination));
+    }
+
+    /// Nom de dossier **lisible et unique** pour une racine de session : son dernier segment, suivi
+    /// d'un court condensé de son chemin complet.
+    ///
+    /// Le seul dernier segment ne suffit pas, et c'est tout le défaut corrigé ici (#2726) :
+    /// `/mnt/disque-a/Nuit-01` et `/mnt/disque-b/Nuit-01` visaient la même destination, et la copie
+    /// récursive écrasant en `REPLACE_EXISTING`, la seconde racine fusionnait dans la première sans
+    /// un mot. Le condensé est ce qui rend la collision impossible ; le segment lisible est ce qui
+    /// permet encore de s'y retrouver en ouvrant le dossier.
+    private static String identifiantDe(Path racineSession) {
+        Path dernierSegment = racineSession.getFileName();
+        String lisible = dernierSegment == null ? "racine" : dernierSegment.toString();
+        String condense = Empreintes.sha256Hex(racineSession.toString().getBytes(StandardCharsets.UTF_8));
+        return lisible + "-" + condense.substring(0, LONGUEUR_CONDENSE);
     }
 
     /// Racines des sessions d'enregistrement (`recording_session.root_path`), lues directement : ce service
