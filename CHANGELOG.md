@@ -2,6 +2,20 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.158.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.157.0...v2.158.0) (2026-08-03)
+
+
+### Bug Fixes
+
+* **commun:** une valeur choisie se retrouve par son identite, pas par son rang ([#3131](https://github.com/echonuit/vigiechiro-pr-companion/issues/3131)) ([8eb5944](https://github.com/echonuit/vigiechiro-pr-companion/commit/8eb594417449e085162a5ce5d271acf1b5a818f6)), closes [#3095](https://github.com/echonuit/vigiechiro-pr-companion/issues/3095) [#3071](https://github.com/echonuit/vigiechiro-pr-companion/issues/3071) [#3095](https://github.com/echonuit/vigiechiro-pr-companion/issues/3095) [#3128](https://github.com/echonuit/vigiechiro-pr-companion/issues/3128)
+* **multisite:** une annee illisible cesse de se faire passer pour un filtre actif ([#3125](https://github.com/echonuit/vigiechiro-pr-companion/issues/3125)) ([013f76e](https://github.com/echonuit/vigiechiro-pr-companion/commit/013f76e39a76e695829c90f152dd837534cccf8e)), closes [#2119](https://github.com/echonuit/vigiechiro-pr-companion/issues/2119) [#3094](https://github.com/echonuit/vigiechiro-pr-companion/issues/3094)
+
+
+### Features
+
+* **restauration:** refuser une sauvegarde trop récente, et revenir en arrière ([#3135](https://github.com/echonuit/vigiechiro-pr-companion/issues/3135)) ([4170ad2](https://github.com/echonuit/vigiechiro-pr-companion/commit/4170ad2c8fa2d2a077a3e538f6c8c431cd3f7241)), closes [#2729](https://github.com/echonuit/vigiechiro-pr-companion/issues/2729) [#2730](https://github.com/echonuit/vigiechiro-pr-companion/issues/2730) [#2727](https://github.com/echonuit/vigiechiro-pr-companion/issues/2727) [#2726](https://github.com/echonuit/vigiechiro-pr-companion/issues/2726) [#2727](https://github.com/echonuit/vigiechiro-pr-companion/issues/2727) [#2730](https://github.com/echonuit/vigiechiro-pr-companion/issues/2730) [#2730](https://github.com/echonuit/vigiechiro-pr-companion/issues/2730)
+* **restauration:** remettre les dossiers de son là où ils étaient ([#3124](https://github.com/echonuit/vigiechiro-pr-companion/issues/3124)) ([038f240](https://github.com/echonuit/vigiechiro-pr-companion/commit/038f240f6866068aacacad1b22644855ea946b53)), closes [#2727](https://github.com/echonuit/vigiechiro-pr-companion/issues/2727) [#2726](https://github.com/echonuit/vigiechiro-pr-companion/issues/2726) [#2727](https://github.com/echonuit/vigiechiro-pr-companion/issues/2727) [#2726](https://github.com/echonuit/vigiechiro-pr-companion/issues/2726) [#2727](https://github.com/echonuit/vigiechiro-pr-companion/issues/2727)
+
 # [2.157.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.156.0...v2.157.0) (2026-08-03)
 
 
