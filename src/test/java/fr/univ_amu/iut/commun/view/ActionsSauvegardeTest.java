@@ -284,8 +284,10 @@ class ActionsSauvegardeTest {
                 .singleElement()
                 .satisfies(annonce -> assertThat(annonce)
                         .contains("n'ont pas retrouvé leur emplacement d'origine")
-                        .as("et l'utilisateur doit pouvoir aller les chercher")
-                        .contains("/home/moi/vigiechiro/Nuit-01"));
+                        .as("l'utilisateur doit pouvoir aller les chercher : le dossier d'arrivée est"
+                                + " nommé une fois, et chaque nuit par son nom de dossier (#3148)")
+                        .contains("/home/moi/vigiechiro")
+                        .contains("Nuit-01"));
     }
 
     @Test
