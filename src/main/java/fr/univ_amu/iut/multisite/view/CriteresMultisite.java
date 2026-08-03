@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
+import fr.univ_amu.iut.commun.view.ValeursPresentes;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -142,10 +142,10 @@ final class CriteresMultisite {
     /// par deux dimensions n'apparaît qu'une fois : le coche vaut alors pour les deux.
     private static List<CritereListe.GroupeValeurs> lieuxPresents(List<LignePassage> passages) {
         return List.of(
-                new CritereListe.GroupeValeurs("Communes", valeursDistinctes(passages, LignePassage::commune)),
-                new CritereListe.GroupeValeurs("Carrés", valeursDistinctes(passages, LignePassage::numeroCarre)),
+                new CritereListe.GroupeValeurs("Communes", ValeursPresentes.de(passages, LignePassage::commune)),
+                new CritereListe.GroupeValeurs("Carrés", ValeursPresentes.de(passages, LignePassage::numeroCarre)),
                 new CritereListe.GroupeValeurs(
-                        "Points", valeursDistinctes(passages, CriteresMultisite::pointQualifie)));
+                        "Points", ValeursPresentes.de(passages, CriteresMultisite::pointQualifie)));
     }
 
     /// Le point **qualifié par son carré**, « 640380 · A1 » (#2992). Le schéma pose `UNIQUE(site_id, code)` :
@@ -154,17 +154,6 @@ final class CriteresMultisite {
     /// silencieusement les A1 de tous les carrés. Qualifiée, chaque entrée désigne **un** lieu.
     private static String pointQualifie(LignePassage ligne) {
         return ligne.codePoint() == null ? null : ligne.numeroCarre() + " · " + ligne.codePoint();
-    }
-
-    /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
-    private static List<String> valeursDistinctes(
-            List<LignePassage> passages, Function<LignePassage, String> dimension) {
-        return passages.stream()
-                .map(dimension)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .toList();
     }
 
     /// Les dimensions de lieu d'un passage, valeurs nulles écartées.
