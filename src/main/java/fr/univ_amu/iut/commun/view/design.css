@@ -570,6 +570,16 @@
     -fx-border-radius: 3;
 }
 
+/* Valeur cochée mais absente du jeu courant (#3095) : elle filtre encore, mais ne ramène aucune ligne.
+   Grisée et en italique plutôt que retirée : la retirer relâcherait le filtre en silence, et c'est
+   précisément elle qui explique une table vide. Elle doit donc se distinguer d'un choix ordinaire tout
+   en restant lisible. */
+.valeur-hors-jeu,
+.valeur-hors-jeu > .label {
+    -fx-text-fill: #7f8c8d;
+    -fx-font-style: italic;
+}
+
 /*
  * Découvrabilité des éléments cliquables/saisissables partagés (audit #786, #801). Sans indice, une
  * cible interactive passe pour un simple décor. Le remplissage et le contour des carrés de la carte

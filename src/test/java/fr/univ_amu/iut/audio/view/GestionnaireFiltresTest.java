@@ -635,6 +635,101 @@ class GestionnaireFiltresTest {
     }
 
     /// Variante fixant le **groupe taxon parent** (pour le critère Groupe) : Chiroptères, Oiseaux…
+    @Test
+    @DisplayName("#3095 : la puce Lieu n'offre que les lieux que les AUTRES critères laissent passer")
+    void le_domaine_de_lieu_cascade_sur_le_groupe() {
+        // Le câblage réel de l'écran (`FiltresVuesAudio`) : chaque domaine se calcule via
+        // `saufLui`. Ici on le reproduit sur deux critères pour éprouver la cascade elle-même.
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligneAuCarre(1, "Pippip", "Chiroptères", "640380"), ligneAuCarre(2, "Turmer", "Oiseaux", "870150"));
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres<LigneObservationAudio> local = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(
+                        CriteresAudio.groupe(() -> filtresLocaux.saufLui(CriteresAudio.CLE_GROUPE)),
+                        CriteresAudio.lieu(() -> filtresLocaux.saufLui(CriteresAudio.CLE_LIEU))),
+                CriteresAudio.rechercheTexte());
+
+        // La puce Lieu, seule, offre les lieux des deux lignes.
+        local.poser(CriteresAudio.CLE_LIEU, List.of());
+        MenuButton lieu = (MenuButton) pucesLocales.lookup(".critere-multiple");
+        assertThat(entreesDe(lieu)).contains("640380", "870150");
+
+        // 1. Le « tous sauf lui ». On coche un lieu : la table ne montre plus que lui, mais la puce doit
+        // continuer d'offrir les AUTRES lieux. Lire la liste déjà filtrée la ferait s'auto-effondrer sur
+        // le seul choix déjà fait, et l'on ne pourrait jamais en cocher un second.
+        local.poser(CriteresAudio.CLE_LIEU, List.of("640380"));
+        rouvrir(lieu);
+
+        assertThat(entreesDe(lieu))
+                .as("cocher 640380 ne doit pas retirer 870150 du menu : sinon la puce ne sait plus"
+                        + " désigner qu'une seule valeur, celle déjà retenue")
+                .contains("640380", "870150");
+
+        // 2. Le cascadage proprement dit, sur un AUTRE critère. Isoler les chiroptères vide le carré
+        // 870150 : le proposer ferait cliquer sur un choix qui ne ramène rien.
+        local.poser(CriteresAudio.CLE_LIEU, List.of());
+        local.poser(CriteresAudio.CLE_GROUPE, List.of("Chiroptères"));
+        rouvrir(lieu);
+
+        assertThat(entreesDe(lieu)).contains("640380").doesNotContain("870150");
+    }
+
+    /// Rejoue l'ouverture du menu, moment où le domaine se recalcule (#3095).
+    private static void rouvrir(MenuButton bouton) {
+        bouton.getOnShowing().handle(new javafx.event.Event(javafx.event.Event.ANY));
+    }
+
+    private static List<String> entreesDe(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(MenuItem::getText)
+                .toList();
+    }
+
+    /// Une ligne dont le **carré** et le **groupe** varient : les deux dimensions que la cascade doit
+    /// croiser. Calquée sur [#ligneGroupe], dont elle ne diffère que par le carré.
+    private static LigneObservationAudio ligneAuCarre(long id, String taxon, String groupe, String carre) {
+        return new LigneObservationAudio(
+                id,
+                10 + id,
+                7L,
+                1,
+                "2026-06-20",
+                carre,
+                "A1",
+                "Site",
+                taxon,
+                0.9,
+                null,
+                null,
+                StatutObservation.VALIDEE,
+                false,
+                null,
+                45,
+                null,
+                taxon,
+                null,
+                groupe,
+                "PaRec_" + id + ".wav",
+                0.2,
+                0.4,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                0,
+                null);
+    }
+
     private static LigneObservationAudio ligneGroupe(
             long id, String taxon, String fichier, StatutObservation statut, String groupe) {
         return new LigneObservationAudio(

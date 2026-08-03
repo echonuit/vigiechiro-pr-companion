@@ -105,6 +105,18 @@ public record RetourOperation(String texte, Severite severite) {
                 + " : il montre donc plus large que la liste d'où vous venez.");
     }
 
+    /// Le **choix d'une puce remplacé** parce qu'il a disparu du jeu courant (#3095).
+    ///
+    /// Quand un autre filtre se resserre, la valeur retenue peut ne plus être offerte. Le critère
+    /// retombe alors sur son défaut plutôt que de rester sans choix : l'écran filtre donc sur autre
+    /// chose que ce qui avait été demandé, et la table change sans qu'on ait rien touché.
+    ///
+    /// Le taire serait exactement le défaut que #3056 et #3093 ont corrigé ailleurs.
+    public static RetourOperation choixRemplace(String critere, String perdu) {
+        return avertissement("« " + perdu + " » n'existe plus dans ce que les autres filtres laissent passer :"
+                + " le critère « " + critere + " » est revenu à son choix par défaut.");
+    }
+
     /// Les filtres de la **mémoire de session** (#484) que la réouverture de l'écran n'a pas su
     /// remettre en place (#3093). Les données ont changé entre-temps : c'est le cas le plus courant des
     /// trois, et le plus discret, puisque personne n'a rien demandé.

@@ -108,28 +108,11 @@ public final class CritereListe {
             public Node editeur(Consumer<Predicate<T>> applique) {
                 MenuButton bouton = new MenuButton(invite);
                 bouton.getStyleClass().add("critere-multiple");
-                for (GroupeValeurs groupe : valeursPresentes.get()) {
-                    if (groupe.valeurs().isEmpty()) {
-                        continue; // un en-tête sans valeur ne renseigne sur rien
-                    }
-                    if (groupe.titre() != null && !groupe.titre().isBlank()) {
-                        if (!bouton.getItems().isEmpty()) {
-                            bouton.getItems().add(new SeparatorMenuItem());
-                        }
-                        MenuItem entete = new MenuItem(groupe.titre());
-                        entete.setDisable(true); // en-tête : il nomme, il ne se coche pas
-                        entete.getStyleClass().add("entete-groupe-critere");
-                        bouton.getItems().add(entete);
-                    }
-                    for (String valeur : groupe.valeurs()) {
-                        CheckMenuItem item = new CheckMenuItem(valeur);
-                        item.selectedProperty().addListener((obs, avant, coche) -> {
-                            majLibelle(bouton, invite);
-                            applique.accept(predicat(bouton, dimensions));
-                        });
-                        bouton.getItems().add(item);
-                    }
-                }
+                peupler(bouton, invite, valeursPresentes.get(), applique, dimensions);
+                // Cascadage (#3095) : le domaine se recalcule **à l'ouverture** du menu, et non à chaque
+                // changement de filtre. C'est le seul instant où la liste est regardée, donc le seul où
+                // son exactitude compte ; recalculer plus tôt coûterait à chaque frappe pour rien.
+                bouton.setOnShowing(evenement -> peupler(bouton, invite, valeursPresentes.get(), applique, dimensions));
                 // Aucune présélection : tant que rien n'est coché, la puce n'écarte rien.
                 applique.accept(ligne -> true);
                 return bouton;
@@ -309,7 +292,7 @@ public final class CritereListe {
     /// @param predicat ce que retenir une valeur veut dire pour cet écran
     public static <L, T> CritereFiltre<L> valeurs(
             String cle, String libelle, String invite, Domaine<T> domaine, Function<T, Predicate<L>> predicat) {
-        return construire(cle, libelle, invite, domaine, predicat, null);
+        return construire(cle, libelle, invite, domaine, predicat, null, valeur -> {});
     }
 
     /// Comme [#valeurs], mais avec une valeur **présélectionnée** : la puce filtre dès qu'on l'ajoute.
@@ -325,7 +308,23 @@ public final class CritereListe {
             Domaine<T> domaine,
             Function<T, Predicate<L>> predicat,
             Function<List<T>, T> valeurParDefaut) {
-        return construire(cle, libelle, null, domaine, predicat, valeurParDefaut);
+        return construire(cle, libelle, null, domaine, predicat, valeurParDefaut, valeur -> {});
+    }
+
+    /// Variante qui **annonce** le remplacement d'un choix devenu impossible (#3095).
+    ///
+    /// Quand le domaine se recalcule et que la valeur retenue n'y figure plus, le défaut reprend la
+    /// main plutôt que de laisser la puce sans choix. L'écran filtre alors sur autre chose que ce qui
+    /// avait été demandé : `auBasculement` reçoit la valeur perdue pour que l'écran le dise, faute de
+    /// quoi la table changerait sous les yeux sans raison lisible.
+    public static <L, T> CritereFiltre<L> valeursPreselectionnees(
+            String cle,
+            String libelle,
+            Domaine<T> domaine,
+            Function<T, Predicate<L>> predicat,
+            Function<List<T>, T> valeurParDefaut,
+            Consumer<String> auBasculement) {
+        return construire(cle, libelle, null, domaine, predicat, valeurParDefaut, auBasculement);
     }
 
     private static <L, T> CritereFiltre<L> construire(
@@ -334,7 +333,8 @@ public final class CritereListe {
             String invite,
             Domaine<T> domaine,
             Function<T, Predicate<L>> predicat,
-            Function<List<T>, T> valeurParDefaut) {
+            Function<List<T>, T> valeurParDefaut,
+            Consumer<String> auBasculement) {
         return new CritereFiltre<L>() {
 
             /// Les valeurs **réellement montrées** par l'éditeur, telles qu'il les a reçues.
@@ -365,6 +365,44 @@ public final class CritereListe {
                 return libelle;
             }
 
+            /// Recalcule le domaine et **préserve le choix** s'il y figure encore (#3095).
+            ///
+            /// S'il n'y figure plus, deux comportements selon le critère. Sans défaut, la sélection est
+            /// vidée : la puce cesse d'écarter quoi que ce soit, ce qui est la sémantique du socle. Avec
+            /// défaut, le défaut **reprend la main** plutôt que de laisser la puce sans choix.
+            ///
+            /// Ce second cas a une conséquence qu'il faut assumer : l'écran filtre alors sur autre chose
+            /// que ce qui avait été demandé. C'est le mode de panne que #3056 et #3093 ont corrigé
+            /// ailleurs, d'où l'annonce - réappliquer était la décision, le taire n'en faisait pas
+            /// partie.
+            private void rafraichir(ComboBox<T> choix) {
+                String choisie = cleDe(choix.getValue());
+                offertes = List.copyOf(domaine.valeurs().get());
+                choix.getItems().setAll(offertes);
+                T retrouvee = offertes.stream()
+                        .filter(valeur -> domaine.cle().apply(valeur).equals(choisie))
+                        .findFirst()
+                        .orElse(null);
+                if (choisie == null || retrouvee != null) {
+                    choix.setValue(retrouvee);
+                    return;
+                }
+                choix.setValue(valeurParDefaut == null ? null : valeurParDefaut.apply(offertes));
+                if (valeurParDefaut != null) {
+                    auBasculement.accept(choisie);
+                }
+            }
+
+            /// La clé de `valeur`, ou `null` si rien n'est choisi. Retypée via [#offertes], seul moyen
+            /// d'appliquer [Domaine#cle()] sans transtypage non vérifié (cf. #3128).
+            private String cleDe(Object valeur) {
+                return offertes.stream()
+                        .filter(offerte -> offerte.equals(valeur))
+                        .findFirst()
+                        .map(domaine.cle())
+                        .orElse(null);
+            }
+
             @Override
             public Node editeur(Consumer<Predicate<L>> applique) {
                 ComboBox<T> choix = new ComboBox<>();
@@ -390,6 +428,9 @@ public final class CritereListe {
                 } else {
                     choix.setValue(valeurParDefaut.apply(offertes)); // déclenche l'application initiale
                 }
+                // Cascadage (#3095) : le domaine se recalcule à l'ouverture de la liste, seul instant où
+                // elle est regardée.
+                choix.setOnShowing(evenement -> rafraichir(choix));
                 return choix;
             }
 
@@ -417,6 +458,83 @@ public final class CritereListe {
                 return indice < 0 ? List.of(memorisees.get(0)) : List.of();
             }
         };
+    }
+
+    /// Classe de style d'une valeur **cochée mais absente du jeu courant** (#3095) : elle filtre encore,
+    /// mais ne ramène aucune ligne. Le style vit dans `commun/view/design.css`.
+    public static final String CLASSE_VALEUR_HORS_JEU = "valeur-hors-jeu";
+
+    /// (Re)construit les entrées du menu à partir des `groupes` offerts, en **conservant la sélection**.
+    ///
+    /// Les valeurs cochées qui ne figurent plus dans le domaine ne sont **pas** retirées : elles sont
+    /// rendues en fin de liste, toujours cochées, marquées par [#CLASSE_VALEUR_HORS_JEU]. Les retirer
+    /// relâcherait le filtre **en silence**, et l'écran montrerait alors plus que ce qu'il annonce : le
+    /// défaut même que #3056 et #3093 ont corrigé ailleurs. Les garder visibles répond aussi à la
+    /// question qu'on se pose devant une table vide, « pourquoi n'y a-t-il rien ? ».
+    private static <T> void peupler(
+            MenuButton bouton,
+            String invite,
+            List<GroupeValeurs> groupes,
+            Consumer<Predicate<T>> applique,
+            Function<T, ? extends Collection<String>> dimensions) {
+        List<String> retenues = cochees(bouton);
+        bouton.getItems().clear();
+        Set<String> offertes = new LinkedHashSet<>();
+        for (GroupeValeurs groupe : groupes) {
+            if (groupe.valeurs().isEmpty()) {
+                continue; // un en-tête sans valeur ne renseigne sur rien
+            }
+            ajouterEnTete(bouton, groupe);
+            for (String valeur : groupe.valeurs()) {
+                offertes.add(valeur);
+                bouton.getItems().add(entree(bouton, invite, valeur, retenues.contains(valeur), applique, dimensions));
+            }
+        }
+        List<String> horsJeu =
+                retenues.stream().filter(valeur -> !offertes.contains(valeur)).toList();
+        if (!horsJeu.isEmpty()) {
+            if (!bouton.getItems().isEmpty()) {
+                bouton.getItems().add(new SeparatorMenuItem());
+            }
+            for (String valeur : horsJeu) {
+                CheckMenuItem item = entree(bouton, invite, valeur, true, applique, dimensions);
+                item.getStyleClass().add(CLASSE_VALEUR_HORS_JEU);
+                bouton.getItems().add(item);
+            }
+        }
+        majLibelle(bouton, invite);
+    }
+
+    private static void ajouterEnTete(MenuButton bouton, GroupeValeurs groupe) {
+        if (groupe.titre() == null || groupe.titre().isBlank()) {
+            return;
+        }
+        if (!bouton.getItems().isEmpty()) {
+            bouton.getItems().add(new SeparatorMenuItem());
+        }
+        MenuItem entete = new MenuItem(groupe.titre());
+        entete.setDisable(true); // en-tête : il nomme, il ne se coche pas
+        entete.getStyleClass().add("entete-groupe-critere");
+        bouton.getItems().add(entete);
+    }
+
+    /// Une entrée cochable, dont le changement d'état met à jour le libellé du bouton et republie le
+    /// prédicat. L'écouteur est posé **après** l'état initial, pour que reconstruire la liste ne
+    /// republie pas un prédicat identique à chaque ouverture du menu.
+    private static <T> CheckMenuItem entree(
+            MenuButton bouton,
+            String invite,
+            String valeur,
+            boolean cochee,
+            Consumer<Predicate<T>> applique,
+            Function<T, ? extends Collection<String>> dimensions) {
+        CheckMenuItem item = new CheckMenuItem(valeur);
+        item.setSelected(cochee);
+        item.selectedProperty().addListener((obs, avant, coche) -> {
+            majLibelle(bouton, invite);
+            applique.accept(predicat(bouton, dimensions));
+        });
+        return item;
     }
 
     /// Le prédicat courant : appartenance aux valeurs cochées, ou **tout passe** si rien ne l'est. Une

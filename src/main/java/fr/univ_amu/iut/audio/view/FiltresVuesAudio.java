@@ -50,9 +50,14 @@ final class FiltresVuesAudio {
                 viewModel.filtres(),
                 List.of(
                         CriteresAudio.statut(),
-                        CriteresAudio.groupe(viewModel::observationsFiltrees),
-                        CriteresAudio.taxon(viewModel::observationsFiltrees),
-                        CriteresAudio.lieu(viewModel::observationsFiltrees),
+                        // Cascadage (#3095) : chaque domaine se calcule sur les lignes que les **autres**
+                        // critères laissent passer. Passer `observationsFiltrees` ferait s'auto-effondrer
+                        // la puce, puisque cette liste est déjà filtrée par le critère qu'on peuple.
+                        CriteresAudio.groupe(
+                                () -> viewModel.filtres().saufLui(CriteresAudio.CLE_GROUPE),
+                                viewModel::signalerChoixRemplace),
+                        CriteresAudio.taxon(() -> viewModel.filtres().saufLui(CriteresAudio.CLE_TAXON)),
+                        CriteresAudio.lieu(() -> viewModel.filtres().saufLui(CriteresAudio.CLE_LIEU)),
                         CriteresAudio.references(),
                         CriteresAudio.douteux(),
                         CriteresAudio.nonIdentifie(),
