@@ -2,6 +2,18 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.156.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.155.0...v2.156.0) (2026-08-03)
+
+
+### Bug Fixes
+
+* **commun:** un filtre restauré ne se perd plus en silence ([#3119](https://github.com/echonuit/vigiechiro-pr-companion/issues/3119)) ([aaa963e](https://github.com/echonuit/vigiechiro-pr-companion/commit/aaa963e823731c79e39047f9c4b53b1b7d8219cb)), closes [#3056](https://github.com/echonuit/vigiechiro-pr-companion/issues/3056) [#3093](https://github.com/echonuit/vigiechiro-pr-companion/issues/3093) [#476](https://github.com/echonuit/vigiechiro-pr-companion/issues/476) [#484](https://github.com/echonuit/vigiechiro-pr-companion/issues/484)
+
+
+### Features
+
+* **migration:** mettre la base à l'abri avant de la faire évoluer ([#3109](https://github.com/echonuit/vigiechiro-pr-companion/issues/3109)) ([8b49cac](https://github.com/echonuit/vigiechiro-pr-companion/commit/8b49cacb17f279426fb117b4b5c04cb0111bf319)), closes [#2729](https://github.com/echonuit/vigiechiro-pr-companion/issues/2729) [#2728](https://github.com/echonuit/vigiechiro-pr-companion/issues/2728) [#2729](https://github.com/echonuit/vigiechiro-pr-companion/issues/2729)
+
 # [2.155.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.154.1...v2.155.0) (2026-08-01)
 
 
