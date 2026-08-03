@@ -115,6 +115,26 @@ importer_une_nuit_sur_a() {
   [[ "${output}" == *"[disque ]"* ]]
 }
 
+@test "le verrou n'entrave pas l'enchaînement des commandes, et nomme son occupant (#2731)" {
+  # La migration du premier lancement est une opération exclusive : elle prend le verrou. Ce que ce
+  # test vérifie, c'est qu'il ne gêne personne ensuite, et que le fichier nomme bien un occupant :
+  # c'est de ce fichier que se tire le message affiché à qui se voit refuser l'entrée.
+  #
+  # ⚠️ Il ne prouve PAS que close() relâche le verrou : le système le relâche de toute façon à la mort
+  # du processus. C'est VerrouWorkspaceTest, dans une seule JVM où le système n'aide pas, qui le
+  # prouve. Un test bats qui s'en attribuerait le mérite serait un faux témoin.
+  run cli_sur "${MACHINE_A}" lister-sites
+  [ "${status}" -eq 0 ]
+  [ -f "${MACHINE_A}/.verrou" ]
+  grep -q "processus" "${MACHINE_A}/.verrou"
+
+  run cli_sur "${MACHINE_A}" creer-site --carre 130711 --protocole STANDARD
+  [ "${status}" -eq 0 ]
+  run cli_sur "${MACHINE_A}" lister-sites
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"130711"* ]]
+}
+
 @test "sauvegarde complète : le manifeste dit d'où venait chaque dossier (#2726)" {
   importer_une_nuit_sur_a
 

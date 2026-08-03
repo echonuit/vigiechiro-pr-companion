@@ -42,6 +42,14 @@ class RestaurationBase {
         }
         verifierBaseLisible(sauvegarde);
         refuserSiEcriteParUneVersionPlusRecente(sauvegarde);
+        try (VerrouWorkspace verrou = VerrouWorkspace.pourOperationExclusive(source.workspace(), "la restauration")) {
+            remplacerPuisMigrer(sauvegarde);
+        }
+    }
+
+    /// Remplace le fichier et migre, sous le verrou du workspace : personne d'autre n'écrit pendant
+    /// que la base est échangée (#2731).
+    private void remplacerPuisMigrer(Path sauvegarde) {
         Path base = source.workspace().cheminBaseDeDonnees();
         boolean baseExistait = Files.exists(base);
         try {
