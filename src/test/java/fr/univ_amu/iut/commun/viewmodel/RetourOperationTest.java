@@ -133,11 +133,11 @@ class RetourOperationTest {
     @DisplayName("#3093 : un critère absent du catalogue se dit, au singulier comme au pluriel")
     void critere_inconnu_se_dit() {
         assertThat(RetourOperation.vueAmputee("V", criteresInconnus("proba")).texte())
-                .contains("le critère « proba », qu'il n'offre pas");
+                .contains("le critère « Proba », que cet écran n'offre pas");
 
         assertThat(RetourOperation.vueAmputee("V", criteresInconnus("proba", "heure"))
                         .texte())
-                .contains("2 critères qu'il n'offre pas (proba, heure)");
+                .contains("2 critères que cet écran n'offre pas (Proba, Heure)");
     }
 
     @Test
@@ -150,7 +150,7 @@ class RetourOperationTest {
 
         assertThat(retour.texte())
                 .contains("« 640380 · Z1 », qui n'existe plus")
-                .contains("2 critères qu'il n'offre pas (proba, heure)");
+                .contains("2 critères que cet écran n'offre pas (Proba, Heure)");
     }
 
     @Test
@@ -159,12 +159,44 @@ class RetourOperationTest {
         // Ni l'un ni l'autre n'est une vue nommée : les faire parler de « la vue » demanderait un nom
         // qu'ils n'ont pas.
         assertThat(RetourOperation.filtresNonRepris(criteresInconnus("proba")).texte())
-                .contains("plus large que la liste d'où vous venez")
+                .contains("plus large que celle d'où vous venez")
                 .doesNotContain("La vue");
 
         assertThat(RetourOperation.filtresDeSessionAmputes(valeursPerdues("Z1")).texte())
                 .contains("plus large que la dernière fois")
                 .doesNotContain("La vue");
+    }
+
+    @Test
+    @DisplayName("Revue visuelle : un critère se nomme en français, pas par sa clé technique")
+    void un_critere_absent_se_nomme_en_francais() {
+        // Trouvé en OUVRANT la capture, pas en lisant un test : le bandeau affichait « sans 6 critères
+        // qu'il n'offre pas (taxon, references, douteux, non_identifie, proba, heure) ». Le tiret bas et
+        // les accents manquants se lisent comme une faute de frappe au milieu d'une phrase française.
+        //
+        // L'assertion qui existait - `contains("proba")` - passait, parce que « proba » est lisible par
+        // hasard. C'est « non_identifie » qui trahit la fuite technique.
+        RetourOperation retour = RetourOperation.vueAmputee("V", criteresInconnus("non_identifie", "references"));
+
+        assertThat(retour.texte())
+                .contains("Non identifiés", "Références")
+                .doesNotContain("non_identifie", "references");
+    }
+
+    @Test
+    @DisplayName("Revue visuelle : « qu'il n'offre pas » n'a pas d'antécédent quand le sujet est la vue")
+    void la_phrase_de_vue_amputee_n_a_pas_de_pronom_orphelin() {
+        // « La vue « X » a été rejouée sans …, ni 2 critères QU'IL n'offre pas » : le sujet est « La
+        // vue », donc « il » ne renvoie à rien. Le fragment avait été écrit pour l'autre message
+        // (« Cet écran … qu'il n'offre pas »), où le pronom a bien un antécédent.
+        assertThat(RetourOperation.vueAmputee("V", criteresInconnus("proba")).texte())
+                .as("le fragment doit nommer ce qui n'offre pas le critère, sans pronom ambigu")
+                .contains("que cet écran n'offre pas")
+                .doesNotContain("qu'il n'offre pas");
+
+        assertThat(RetourOperation.filtresNonRepris(criteresInconnus("proba")).texte())
+                .as("et il reste juste dans le message où le sujet EST l'écran")
+                .contains("que cet écran n'offre pas");
     }
 
     private static ResteDeRestauration valeursPerdues(String... valeurs) {
