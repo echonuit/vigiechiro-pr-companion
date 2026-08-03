@@ -95,6 +95,10 @@ class RestaurationCompleteTest {
         assertThat(bilan.enClair())
                 .as("l'utilisateur doit apprendre que ses gigaoctets ont changé de disque")
                 .contains("n'ont pas retrouvé leur emplacement d'origine");
+        assertThat(bilan.absentesDeLaSauvegarde())
+                .as("la nuit vient d'être restaurée : l'annoncer absente serait une fausse alerte, et"
+                        + " c'est ce qui arrivait tant que l'inventaire se faisait APRÈS la réécriture")
+                .isEmpty();
     }
 
     @Test

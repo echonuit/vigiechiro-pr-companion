@@ -58,12 +58,15 @@ class RestaurationComplete {
     /// Replace les dossiers et corrige la base. À appeler **après** [#verifierLaSauvegarde] et après
     /// la restauration de la base : les `root_path` réécrits sont ceux de la base restaurée.
     BilanRestauration replacer(Path dossierBackup, ManifesteSauvegarde manifeste) {
+        // AVANT toute réécriture : une fois les racines déplacées, plus aucune ne correspondrait à
+        // son origine dans le manifeste, et la nuit qu'on vient de restaurer serait annoncée absente.
+        List<String> absentes = absentesDuManifeste(manifeste);
         List<PlacementRacine> placements = new ArrayList<>();
         for (RacineSauvegardee emportee : manifeste.racines()) {
             placements.add(remettre(dossierBackup, emportee));
         }
-        reecrireLesRootPath(placements);
-        return new BilanRestauration(true, placements, absentesDuManifeste(manifeste));
+        reecrireLesChemins(placements);
+        return new BilanRestauration(true, placements, absentes);
     }
 
     /// Restauration d'une sauvegarde **sans manifeste** : le comportement d'avant #2726, faute de
@@ -144,25 +147,45 @@ class RestaurationComplete {
                 null);
     }
 
-    /// Corrige `recording_session.root_path` pour chaque racine qui a changé de place, **en une
-    /// transaction** : une correction à moitié faite laisserait une base dont une partie désigne des
-    /// dossiers présents et l'autre des dossiers absents, sans rien pour distinguer les deux.
-    private void reecrireLesRootPath(List<PlacementRacine> placements) {
+    /// Corrige **tous les chemins persistés** des sessions qui ont changé de place, en une seule
+    /// transaction : une correction à moitié faite laisserait une base dont une partie désigne des
+    /// fichiers présents et l'autre des fichiers absents, sans rien pour distinguer les deux.
+    ///
+    /// Réécrire la seule racine ne suffit pas, et c'est le piège que cette méthode a d'abord eu :
+    /// chaque original, chaque séquence, le journal, le relevé et le CSV Tadarida portent leur
+    /// chemin **absolu**. La base paraissait corrigée, et l'application ne trouvait plus un fichier.
+    private void reecrireLesChemins(List<PlacementRacine> placements) {
         List<PlacementRacine> deplacees =
                 placements.stream().filter(PlacementRacine::deplacee).toList();
         if (deplacees.isEmpty()) {
             return;
         }
         uniteDeTravail.executer(connexion -> {
-            try (PreparedStatement ps =
-                    connexion.prepareStatement("UPDATE recording_session SET root_path = ? WHERE root_path = ?")) {
-                for (PlacementRacine placement : deplacees) {
-                    ps.setString(1, placement.destination());
-                    ps.setString(2, placement.origine());
-                    ps.executeUpdate();
+            for (PlacementRacine placement : deplacees) {
+                Path ancienne = Path.of(placement.origine());
+                Path nouvelle = Path.of(placement.destination());
+                for (SessionARelocaliser session : sessionsSous(connexion, placement.origine())) {
+                    ReecritureRacineSession.reenraciner(connexion, session, ancienne, nouvelle);
                 }
             }
         });
+    }
+
+    /// Les sessions dont la racine est `racine`. Plusieurs peuvent la partager : le dossier d'une
+    /// nuit peut porter plus d'une session d'enregistrement.
+    private static List<SessionARelocaliser> sessionsSous(Connection cx, String racine) throws SQLException {
+        List<SessionARelocaliser> sessions = new ArrayList<>();
+        try (PreparedStatement ps =
+                cx.prepareStatement("SELECT id, passage_id FROM recording_session WHERE root_path = ?")) {
+            ps.setString(1, racine);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    long idPassage = rs.getLong(2);
+                    sessions.add(new SessionARelocaliser(rs.getLong(1), rs.wasNull() ? null : idPassage));
+                }
+            }
+        }
+        return sessions;
     }
 
     /// Racines que la base connaît mais que le manifeste n'a pas : elles étaient inaccessibles au
