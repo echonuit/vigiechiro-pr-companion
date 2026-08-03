@@ -346,7 +346,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 viewModel.filtres(),
                 List.of(
                         CriteresMultisite.carre(),
-                        CriteresMultisite.lieu(viewModel::passagesFiltres),
+                        // Cascadage (#3095) : le domaine se calcule sur les lignes que les AUTRES
+                        // criteres laissent passer. Lire la liste deja filtree ferait s auto-effondrer
+                        // la puce, qui n offrirait plus que la valeur deja retenue.
+                        CriteresMultisite.lieu(() -> viewModel.filtres().saufLui(CriteresMultisite.LIEU)),
                         CriteresMultisite.statut(),
                         CriteresMultisite.verdict(),
                         CriteresMultisite.annee(),

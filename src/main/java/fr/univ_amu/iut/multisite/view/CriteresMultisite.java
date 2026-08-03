@@ -45,7 +45,7 @@ final class CriteresMultisite {
     /// Clé du critère « Lieu » (#2968). Même clé que les vues audio (#2794) et Analyse (#2966) :
     /// une vue mémorisée nomme ses critères, et trois écrans qui filtrent le même concept sous trois
     /// clés se liraient mal.
-    private static final String LIEU = "lieu";
+    static final String LIEU = "lieu";
 
     /// Intitulé du critère Année, porté par la puce, l'invite du champ et son libellé accessible en
     /// saisie valide : les trois doivent dire la même chose.

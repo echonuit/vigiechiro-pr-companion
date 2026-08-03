@@ -363,9 +363,13 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                 viewModel.filtres(),
                 List.of(
                         CriteresAnalyse.statut(),
-                        CriteresAnalyse.groupe(viewModel::groupesDisponibles),
+                        // Cascadage (#3095) : le domaine se calcule sur les lignes que les AUTRES
+                        // criteres laissent passer. Lire la liste deja filtree ferait s auto-effondrer
+                        // la puce, qui n offrirait plus que la valeur deja retenue.
+                        CriteresAnalyse.groupe(() ->
+                                CriteresAnalyse.groupesDe(viewModel.filtres().saufLui(CriteresAnalyse.GROUPE))),
                         CriteresAnalyse.natureNuit(viewModel::nuitsOpportunistes),
-                        CriteresAnalyse.lieu(viewModel::observationsFiltrees),
+                        CriteresAnalyse.lieu(() -> viewModel.filtres().saufLui(CriteresAnalyse.LIEU)),
                         CriteresAnalyse.aEnjeu(observation -> marqueurEnjeu.aEnjeu(observation.taxonRetenu()))),
                 CriteresAnalyse.rechercheTexte());
         // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur. La vue

@@ -29,7 +29,11 @@ import javafx.scene.Node;
 final class CriteresActivite {
 
     /// Clé du critère « Taxon parent », partagée par le filtre et les onglets par défaut.
-    private static final String GROUPE = "groupe";
+    static final String GROUPE = "groupe";
+
+    /// Cle du critere Lieu, partagee avec le cablage qui lui fournit les lignes « tous sauf lui »
+    /// (#3095) : un litteral duplique ferait calculer le domaine en excluant le mauvais critere.
+    static final String LIEU = "lieu";
 
     /// Clé du critère « Espèces à enjeu », partagée par le filtre et l'onglet du même nom (#2353).
     private static final String A_ENJEU = "a_enjeu";
@@ -64,7 +68,7 @@ final class CriteresActivite {
     /// plus expressive, puisqu'elle sait en outre retenir **deux carrés**, ce que le choix unique interdisait.
     static CritereFiltre<ContactHoraire> lieu(Supplier<? extends List<ContactHoraire>> contactsFiltres) {
         return CritereListe.multipleParmi(
-                "lieu",
+                LIEU,
                 "Lieu",
                 "Choisir un lieu",
                 () -> lieuxPresents(contactsFiltres.get()),
@@ -105,6 +109,12 @@ final class CriteresActivite {
     }
 
     /// Critère **Taxon parent** (groupe) : liste déroulante des groupes présents, sans présélection.
+    /// Les taxons parents presents dans `contacts`, distincts et tries : le domaine du critere
+    /// « Taxon parent » quand il est cascade (#3095).
+    static List<String> groupesDe(List<ContactHoraire> contacts) {
+        return valeursDistinctes(contacts, ContactHoraire::groupe);
+    }
+
     static CritereFiltre<ContactHoraire> groupe(Supplier<? extends List<String>> groupesPresents) {
         // Choix MULTIPLE sur cette dimension seule : c'est elle que l'onglet « Autres » cumule
         // (orthoptères, micromammifères, oiseaux…), là où un carré ou une nuit se choisissent un à un.
