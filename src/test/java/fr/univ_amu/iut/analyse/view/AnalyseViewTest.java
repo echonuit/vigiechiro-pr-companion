@@ -707,10 +707,17 @@ class AnalyseViewTest {
         assertThat(boutonCarte.getText()).contains("Tableau");
         // La recherche texte est transportée telle quelle.
         assertThat(recherche.getText()).isEqualTo("Pippip");
-        // Seul le critère partagé « statut » est rejoué (une puce à combo) ; « proba » (audio) est ignoré.
+        // Seul le critère partagé « statut » est rejoué (une puce à combo) ; « proba » n'est pas au
+        // catalogue de l'analyse, donc pas posé.
         assertThat(robot.from(puces).lookup(".combo-box").queryAllAs(ComboBox.class))
-                .as("seul le critère partagé est rejoué, le critère propre à l'audio est ignoré")
+                .as("seul le critère partagé est rejoué, le critère propre à l'audio n'est pas posé")
                 .hasSize(1);
+        // #3093 : et surtout, l'abandon est **annoncé** à l'écran. Sans cela la carte montrerait plus
+        // large que la liste d'où l'on vient, en le taisant : c'est le mode de panne de #3056, sur un
+        // autre chemin.
+        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText())
+                .as("le critère non repris doit être annoncé, pas jeté en silence")
+                .contains("proba");
     }
 
     @Test

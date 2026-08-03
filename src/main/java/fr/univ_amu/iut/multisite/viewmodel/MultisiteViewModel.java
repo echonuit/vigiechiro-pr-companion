@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -331,8 +332,8 @@ public class MultisiteViewModel {
     /// Signale qu'une **vue mémorisée** vient d'être rejouée **amputée** de valeurs devenues
     /// introuvables (#3056) : elle filtre moins large qu'à son enregistrement, et l'utilisateur ne
     /// peut pas s'en apercevoir autrement.
-    public void signalerVueAmputee(String nomVue, List<String> valeursDisparues) {
-        retour.set(RetourOperation.vueAmputee(nomVue, valeursDisparues));
+    public void signalerVueAmputee(String nomVue, ResteDeRestauration reste) {
+        retour.set(RetourOperation.vueAmputee(nomVue, reste));
     }
 
     public void effacerRetour() {

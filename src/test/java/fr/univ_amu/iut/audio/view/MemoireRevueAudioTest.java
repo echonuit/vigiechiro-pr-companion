@@ -2,11 +2,23 @@ package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.util.ArrayList;
+import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.SortType;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -45,7 +57,7 @@ class MemoireRevueAudioTest {
         TableView<LigneObservationAudio> premiere = tableAvecColonnes();
         robot.interact(() -> {
             racine.getChildren().add(premiere);
-            memoire.installer(premiere, null);
+            memoire.installer(premiere, null, reste -> {});
             TableColumn<LigneObservationAudio, ?> heure = premiere.getColumns().get(1);
             heure.setSortType(SortType.DESCENDING);
             premiere.getSortOrder().add(heure);
@@ -56,10 +68,92 @@ class MemoireRevueAudioTest {
         TableView<LigneObservationAudio> seconde = tableAvecColonnes();
         robot.interact(() -> {
             racine.getChildren().add(seconde);
-            memoire.installer(seconde, null);
+            memoire.installer(seconde, null, reste -> {});
         });
 
         assertThat(seconde.getSortOrder()).extracting(TableColumn::getText).containsExactly("Heure");
         assertThat(seconde.getColumns().get(1).getSortType()).isEqualTo(SortType.DESCENDING);
+    }
+
+    @Test
+    @DisplayName("#3093 : un filtre que la réouverture ne sait plus replacer est signalé, pas perdu")
+    void filtre_non_replace_est_signale(FxRobot robot) {
+        // Le geste banal : poser un filtre de lieu, aller écouter un son, revenir. Entre-temps le jeu de
+        // lignes a changé et la valeur mémorisée n'est plus offerte. Sans signalement, l'écran se rouvre
+        // avec la puce visible et ne filtre plus : il montre plus que ce qu'il annonce.
+        List<ResteDeRestauration> signalements = new ArrayList<>();
+
+        // Ouverture 1 : le carré « Z1 » est présent, on filtre dessus, puis on ferme (le retrait de la
+        // scène déclenche la mémorisation).
+        TableView<LigneObservationAudio> premiere = tableAvecColonnes();
+        robot.interact(() -> {
+            racine.getChildren().add(premiere);
+            GestionnaireFiltres<LigneObservationAudio> filtres =
+                    gestionnaireSur(ligneAuCarre("Z1"), ligneAuCarre("Z2"));
+            memoire.installer(premiere, filtres, reste -> {});
+            filtres.poser("lieu", List.of("Z1"));
+        });
+        robot.interact(() -> racine.getChildren().remove(premiere));
+
+        // Ouverture 2 : plus aucune ligne du carré « Z1 », la valeur mémorisée n'est donc plus offerte.
+        TableView<LigneObservationAudio> seconde = tableAvecColonnes();
+        robot.interact(() -> {
+            racine.getChildren().add(seconde);
+            memoire.installer(seconde, gestionnaireSur(ligneAuCarre("Z2")), signalements::add);
+        });
+
+        assertThat(signalements)
+                .as("la mémoire de session doit dire ce qu'elle n'a pas su remettre en place")
+                .hasSize(1);
+        assertThat(signalements.get(0).valeursPerdues()).containsExactly("Z1");
+    }
+
+    /// Une barre de filtres portant la puce « Lieu » de l'écran audio, alimentée par `lignes`.
+    private static GestionnaireFiltres<LigneObservationAudio> gestionnaireSur(LigneObservationAudio... lignes) {
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(lignes);
+        return new GestionnaireFiltres<>(
+                new TextField(),
+                new MenuButton(),
+                new FlowPane(),
+                new Filtres<>(new FilteredList<>(source), () -> {}),
+                List.of(CriteresAudio.lieu(() -> source)),
+                CriteresAudio.rechercheTexte());
+    }
+
+    /// Une ligne d'observation rattachée au carré `carre` : seule dimension qui varie, les autres
+    /// (point, site) restant constantes pour que le carré soit ce qui distingue les jeux.
+    private static LigneObservationAudio ligneAuCarre(String carre) {
+        return new LigneObservationAudio(
+                1L,
+                11L,
+                7L,
+                1,
+                "2026-06-20",
+                carre,
+                "A1",
+                "Site",
+                "Pippip",
+                0.9,
+                null,
+                null,
+                StatutObservation.NON_TOUCHEE,
+                false,
+                null,
+                45,
+                null,
+                "Pippip",
+                null,
+                "Chiroptères",
+                "PaRec_1.wav",
+                0.2,
+                0.4,
+                null,
+                false,
+                null,
+                null,
+                null,
+                null,
+                0,
+                null);
     }
 }

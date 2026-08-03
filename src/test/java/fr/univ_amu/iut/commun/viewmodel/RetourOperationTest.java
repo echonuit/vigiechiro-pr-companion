@@ -102,7 +102,7 @@ class RetourOperationTest {
     void vue_amputee_au_singulier_nomme_la_valeur() {
         // Trouvé en regardant la capture, pas en lisant un test : « sans 1 valeur(s) qui n'existent
         // plus (Z1) » ne s'accordait pas, et compter jusqu'à un n'apprenait rien.
-        RetourOperation retour = RetourOperation.vueAmputee("Z1 du carre 640380", List.of("Z1"));
+        RetourOperation retour = RetourOperation.vueAmputee("Z1 du carre 640380", valeursPerdues("Z1"));
 
         assertThat(retour.texte())
                 .contains("sans « Z1 », qui n'existe plus")
@@ -113,7 +113,7 @@ class RetourOperationTest {
     @Test
     @DisplayName("#3056 : plusieurs valeurs perdues se comptent et s'énumèrent, au pluriel")
     void vue_amputee_au_pluriel_compte_et_enumere() {
-        RetourOperation retour = RetourOperation.vueAmputee("Ma saison", List.of("Z1", "Z2", "Z3"));
+        RetourOperation retour = RetourOperation.vueAmputee("Ma saison", valeursPerdues("Z1", "Z2", "Z3"));
 
         assertThat(retour.texte())
                 .contains("sans 3 valeurs qui n'existent plus (Z1, Z2, Z3)")
@@ -125,6 +125,53 @@ class RetourOperationTest {
     void vue_amputee_est_un_avertissement() {
         // Rien n'a échoué et l'utilisateur n'a rien à réparer : la sévérité doit le dire, sans quoi le
         // bandeau rouge ferait croire à une panne.
-        assertThat(RetourOperation.vueAmputee("V", List.of("Z1")).severite()).isEqualTo(Severite.AVERTISSEMENT);
+        assertThat(RetourOperation.vueAmputee("V", valeursPerdues("Z1")).severite())
+                .isEqualTo(Severite.AVERTISSEMENT);
+    }
+
+    @Test
+    @DisplayName("#3093 : un critère absent du catalogue se dit, au singulier comme au pluriel")
+    void critere_inconnu_se_dit() {
+        assertThat(RetourOperation.vueAmputee("V", criteresInconnus("proba")).texte())
+                .contains("le critère « proba », qu'il n'offre pas");
+
+        assertThat(RetourOperation.vueAmputee("V", criteresInconnus("proba", "heure"))
+                        .texte())
+                .contains("2 critères qu'il n'offre pas (proba, heure)");
+    }
+
+    @Test
+    @DisplayName("#3093 : les deux causes se disent séparément, jamais confondues")
+    void les_deux_causes_ne_se_melangent_pas() {
+        // Une valeur disparue tient aux données et est passagère ; un critère absent tient à l'écran et
+        // est structurel. Les fondre en un seul décompte ferait chercher au mauvais endroit.
+        RetourOperation retour = RetourOperation.vueAmputee(
+                "Rhinolophes", new ResteDeRestauration(List.of("640380 · Z1"), List.of("proba", "heure")));
+
+        assertThat(retour.texte())
+                .contains("« 640380 · Z1 », qui n'existe plus")
+                .contains("2 critères qu'il n'offre pas (proba, heure)");
+    }
+
+    @Test
+    @DisplayName("#3093 : le transport et la mémoire de session ont leur propre phrase")
+    void transport_et_session_ne_parlent_pas_de_vue() {
+        // Ni l'un ni l'autre n'est une vue nommée : les faire parler de « la vue » demanderait un nom
+        // qu'ils n'ont pas.
+        assertThat(RetourOperation.filtresNonRepris(criteresInconnus("proba")).texte())
+                .contains("plus large que la liste d'où vous venez")
+                .doesNotContain("La vue");
+
+        assertThat(RetourOperation.filtresDeSessionAmputes(valeursPerdues("Z1")).texte())
+                .contains("plus large que la dernière fois")
+                .doesNotContain("La vue");
+    }
+
+    private static ResteDeRestauration valeursPerdues(String... valeurs) {
+        return new ResteDeRestauration(List.of(valeurs), List.of());
+    }
+
+    private static ResteDeRestauration criteresInconnus(String... criteres) {
+        return new ResteDeRestauration(List.of(), List.of(criteres));
     }
 }

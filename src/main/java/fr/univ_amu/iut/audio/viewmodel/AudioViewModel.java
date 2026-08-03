@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
@@ -451,8 +452,15 @@ public class AudioViewModel {
     /// Signale qu'une **vue mémorisée** vient d'être rejouée **amputée** de valeurs devenues
     /// introuvables (#3056) : elle filtre moins large qu'à son enregistrement. Le cas est réel ici
     /// depuis #2995, qui a renommé les entrées de la puce « Lieu ».
-    public void signalerVueAmputee(String nomVue, List<String> valeursDisparues) {
-        messages.publier(RetourOperation.vueAmputee(nomVue, valeursDisparues));
+    public void signalerVueAmputee(String nomVue, ResteDeRestauration reste) {
+        messages.publier(RetourOperation.vueAmputee(nomVue, reste));
+    }
+
+    /// Les filtres de la **mémoire de session** (#484) que la réouverture de l'écran n'a pas su remettre
+    /// en place (#3093) : les données ont changé depuis la dernière visite. Le plus discret des trois
+    /// chemins, puisque personne n'a rien demandé.
+    public void signalerFiltresDeSessionAmputes(ResteDeRestauration reste) {
+        messages.publier(RetourOperation.filtresDeSessionAmputes(reste));
     }
 
     /// Efface le retour d'opération (l'utilisateur a lu le bandeau et le ferme). Le bandeau disparaît.

@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.viewmodel;
 import fr.univ_amu.iut.analyse.model.AgregationAnalyse;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
@@ -147,8 +148,15 @@ public class AnalyseViewModel {
     /// Signale qu'une **vue mémorisée** vient d'être rejouée **amputée** de valeurs devenues
     /// introuvables (#3056) : elle filtre moins large qu'à son enregistrement, et l'utilisateur ne
     /// peut pas s'en apercevoir autrement.
-    public void signalerVueAmputee(String nomVue, List<String> valeursDisparues) {
-        retour.set(RetourOperation.vueAmputee(nomVue, valeursDisparues));
+    public void signalerVueAmputee(String nomVue, ResteDeRestauration reste) {
+        retour.set(RetourOperation.vueAmputee(nomVue, reste));
+    }
+
+    /// Des filtres **transportés** depuis un autre écran (« Voir sur la carte », #476) que l'analyse n'a
+    /// pas su reprendre en entier (#3093). Ce n'est pas une vue nommée : le message dit d'où vient
+    /// l'écart plutôt que de citer un nom.
+    public void signalerFiltresNonRepris(ResteDeRestauration reste) {
+        retour.set(RetourOperation.filtresNonRepris(reste));
     }
 
     public void effacerRetour() {
