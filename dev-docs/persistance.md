@@ -209,7 +209,22 @@ vit en base.
 1. **vérifier** chaque dossier de la sauvegarde contre l'inventaire du manifeste ;
 2. **restaurer la base** (avec son filet `vigiechiro.db.avant-restauration`) ;
 3. **replacer** les dossiers ;
-4. **réécrire les `root_path`** en une transaction.
+4. **réécrire les chemins persistés** en une transaction.
+
+!!! danger "`root_path` n'est pas le seul chemin en base"
+    Chaque original, chaque séquence d'écoute, le journal du capteur, le relevé climatique et le CSV
+    Tadarida portent leur chemin **absolu** : six tables au total (`ReecritureRacineSession`, dont
+    l'inventaire a été confronté aux colonnes `*_path` des 38 migrations). Ne réécrire que la racine
+    donne une base qui **paraît** corrigée et une application qui ne retrouve plus un seul fichier.
+
+    Ce piège n'est pas théorique : c'est l'état dans lequel cette fonctionnalité a d'abord été
+    écrite. Les tests Java relisaient `root_path` et concluaient au succès ; l'E2E `bats` qui restaure
+    sur une autre machine puis demande `reset-guide` a répondu **PERDU**. Un test qui vérifie ce qu'on
+    a écrit ne remplace pas un test qui demande à l'application si elle s'y retrouve.
+
+    ⚠️ `RattachementDao.reprefixerChemins` applique la même règle pour un autre besoin (renommer une
+    session rattachée), sans pouvoir partager ce code : le socle ne peut pas dépendre d'une feature.
+    Une septième table à chemin devra donc être ajoutée **aux deux endroits**.
 
 L'ordre est le point important : une seule discordance à l'étape 1 annule tout **avant que rien
 n'ait été touché**. La vérification passait auparavant après la bascule, ce qui revenait à découvrir
