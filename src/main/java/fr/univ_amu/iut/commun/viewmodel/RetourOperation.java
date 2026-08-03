@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Severite;
+import fr.univ_amu.iut.commun.view.LibellesCriteres;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,9 +101,12 @@ public record RetourOperation(String texte, Severite severite) {
     /// **d'où** vient l'écart. Le cas est ordinaire et non exceptionnel : Sons & validation offre dix
     /// critères, l'analyse cinq, donc resserrer sur la probabilité puis basculer sur la carte élargit
     /// forcément le résultat.
+    /// ⚠️ L'ouverture ne dit **pas** « Cet écran a repris vos filtres » : le fragment des critères
+    /// nomme déjà l'écran, et la phrase le répétait deux fois. Vu en régénérant la capture, pas en
+    /// relisant le code.
     public static RetourOperation filtresNonRepris(ResteDeRestauration reste) {
-        return avertissement("Cet écran a repris vos filtres sans " + laisseDeCote(reste)
-                + " : il montre donc plus large que la liste d'où vous venez.");
+        return avertissement("Vos filtres ont été repris sans " + laisseDeCote(reste)
+                + " : la liste est donc plus large que celle d'où vous venez.");
     }
 
     /// Le **choix d'une puce remplacé** parce qu'il a disparu du jeu courant (#3095).
@@ -149,10 +153,21 @@ public record RetourOperation(String texte, Severite severite) {
 
     /// Les critères que cet écran n'offre pas, **accordés**. Nommés par leur **clé** : l'écran ne connaît
     /// pas ces critères, donc n'a pas leur intitulé (cf. [ResteDeRestauration]).
+    /// Les critères que cet écran n'offre pas, **nommés comme leur puce les nomme**.
+    ///
+    /// Deux corrections issues de la revue visuelle du chantier #3092, trouvées en ouvrant la capture :
+    ///
+    /// - les clés sortaient **telles quelles** (« references », « non_identifie »), tiret bas et
+    ///   accents manquants compris, ce qui se lit comme une faute de frappe au milieu d'une phrase
+    ///   française. Elles passent par [LibellesCriteres] ;
+    /// - « qu'**il** n'offre pas » n'avait d'antécédent que dans un des deux messages. Dans
+    ///   [#vueAmputee], le sujet est « La vue », et le pronom ne renvoyait à rien. La formule nomme
+    ///   donc l'écran, ce qui reste juste dans les deux.
     private static String criteresAbsents(List<String> criteres) {
-        return criteres.size() == 1
-                ? "le critère « " + criteres.get(0) + " », qu'il n'offre pas"
-                : criteres.size() + " critères qu'il n'offre pas (" + String.join(", ", criteres) + ")";
+        List<String> nommes = criteres.stream().map(LibellesCriteres::de).toList();
+        return nommes.size() == 1
+                ? "le critère « " + nommes.get(0) + " », que cet écran n'offre pas"
+                : nommes.size() + " critères que cet écran n'offre pas (" + String.join(", ", nommes) + ")";
     }
 
     public static RetourOperation erreur(Throwable refus) {

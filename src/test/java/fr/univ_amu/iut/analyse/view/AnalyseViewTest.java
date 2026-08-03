@@ -717,7 +717,11 @@ class AnalyseViewTest {
         // autre chemin.
         assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText())
                 .as("le critère non repris doit être annoncé, pas jeté en silence")
-                .contains("proba");
+                .contains("Proba")
+                .as("et nommé comme sa puce le nomme : la clé brute se lisait comme une fuite technique"
+                        + " au milieu d'une phrase française (revue visuelle du chantier #3092)")
+                .doesNotContain("proba,")
+                .doesNotContain("non_identifie");
     }
 
     @Test
