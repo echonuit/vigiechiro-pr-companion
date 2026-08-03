@@ -26,6 +26,7 @@ import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
@@ -542,14 +543,22 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
 
     /// Rejoue un descripteur de filtres transporté depuis une autre vue (« Voir sur la carte » depuis
     /// l'audio, #476) et bascule éventuellement sur la carte. Le socle
-    /// [GestionnaireFiltres#restaurer(DescripteurFiltre)] **ignore les critères inconnus** de l'analyse :
-    /// seuls les critères partagés (statut, groupe) et la recherche texte sont réappliqués.
+    /// [GestionnaireFiltres#restaurer(DescripteurFiltre)] ne pose que les critères que l'analyse
+    /// **offre** : les critères partagés (statut, groupe, lieu, espèces à enjeu) et la recherche texte.
+    ///
+    /// Ce qu'il ne sait pas reprendre est **annoncé** (#3093) et non plus jeté en silence. C'est ici que
+    /// l'écart est le plus large de toute l'application : Sons & validation offre dix critères, l'analyse
+    /// cinq. Resserrer sur « les Rhinolophes au-dessus de 90 % » puis basculer sur la carte donne donc
+    /// une carte de **toutes** les probabilités, et rien ne le disait.
     ///
     /// @param filtres descripteur à rejouer, ou `null` pour ne rien changer aux filtres
     /// @param afficherCarte `true` pour basculer sur la carte de répartition
     public void appliquer(DescripteurFiltre filtres, boolean afficherCarte) {
         if (filtres != null) {
-            gestionnaireFiltres.restaurer(filtres);
+            ResteDeRestauration reste = gestionnaireFiltres.restaurer(filtres);
+            if (!reste.estVide()) {
+                viewModel.signalerFiltresNonRepris(reste);
+            }
         }
         carteAffichee.set(afficherCarte);
     }
