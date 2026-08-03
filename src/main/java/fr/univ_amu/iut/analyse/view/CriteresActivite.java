@@ -6,17 +6,16 @@ import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereBooleen;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.CritereLieu;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.ValeursPresentes;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 /// Catalogue des **critères de filtrage** de la vue Activité (patron « à la Notion », socle
 /// [fr.univ_amu.iut.commun.viewmodel.Filtres]), pendant du [CriteresAnalyse] mais sur [ContactHoraire].
@@ -57,28 +56,12 @@ final class CriteresActivite {
     /// « 640380 · A1 » désigne exactement ce que la conjonction désignait. La puce est donc strictement
     /// plus expressive, puisqu'elle sait en outre retenir **deux carrés**, ce que le choix unique interdisait.
     static CritereFiltre<ContactHoraire> lieu(Supplier<? extends List<ContactHoraire>> contactsFiltres) {
-        return CritereListe.multipleParmi(
-                ClesCriteres.LIEU,
-                "Lieu",
-                "Choisir un lieu",
-                () -> lieuxPresents(contactsFiltres.get()),
-                CriteresActivite::dimensionsLieu);
-    }
-
-    /// Lieux présents dans `contacts`, **groupés par dimension** et triés au sein de chacun. Chaque groupe
-    /// porte son en-tête : sans lui, rien ne dit si « Ahetze » est une commune ou un carré.
-    private static List<CritereListe.GroupeValeurs> lieuxPresents(List<ContactHoraire> contacts) {
-        return List.of(
-                new CritereListe.GroupeValeurs("Communes", ValeursPresentes.de(contacts, ContactHoraire::commune)),
-                new CritereListe.GroupeValeurs("Carrés", ValeursPresentes.de(contacts, ContactHoraire::numeroCarre)),
-                new CritereListe.GroupeValeurs("Points", ValeursPresentes.de(contacts, ContactHoraire::pointQualifie)));
-    }
-
-    /// Les dimensions de lieu d'un contact, valeurs nulles écartées.
-    private static List<String> dimensionsLieu(ContactHoraire contact) {
-        return Stream.of(contact.commune(), contact.numeroCarre(), contact.pointQualifie())
-                .filter(Objects::nonNull)
-                .toList();
+        return CritereLieu.de(
+                contactsFiltres::get,
+                List.of(
+                        new CritereLieu.Dimension<>("Communes", ContactHoraire::commune),
+                        new CritereLieu.Dimension<>("Carrés", ContactHoraire::numeroCarre),
+                        new CritereLieu.Dimension<>("Points", ContactHoraire::pointQualifie)));
     }
 
     /// Critère **Nuit** (une nuit = un passage) : liste déroulante des nuits présentes (dates du soir),
