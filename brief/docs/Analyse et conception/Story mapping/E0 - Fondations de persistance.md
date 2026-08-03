@@ -180,7 +180,9 @@
 - [x] Une table `schema_version` mémorise la version courante du schéma.
 - [x] Au démarrage, l'application compare la version code avec la version BD et applique les scripts de migration nécessaires.
 - [x] Les scripts de migration sont versionnés dans les sources (ex. `db/migrations/V01__init.sql`, `V02__add_observations.sql`).
-- [ ] Une migration ratée laisse la BD dans son état initial (rollback) et bloque l'application avec un message clair.
+- [x] Une migration ratée laisse la BD dans son état initial (rollback) et bloque l'application avec un message clair : script et version sont écrits **dans la même transaction**, et le message nomme le fichier et le rang de l'instruction ([#2728](https://github.com/echonuit/vigiechiro-pr-companion/issues/2728)).
+- [x] Un script **publié ne se modifie plus** : son empreinte est inscrite avec sa version, et une dérive est un **refus** au démarrage, pas une divergence silencieuse entre les bases ([#2729](https://github.com/echonuit/vigiechiro-pr-companion/issues/2729), [ADR 2729](https://companion-dev.echonuit.fr/decisions/2729-un-script-publie-ne-se-modifie-plus/)).
+- [x] Avant la **première migration en attente**, la base est mise à l'abri dans `sauvegardes/` : l'atomicité protège d'une panne, le filet protège aussi d'une migration qui réussit en faisant autre chose que prévu ([#2729](https://github.com/echonuit/vigiechiro-pr-companion/issues/2729)).
 - [x] Test d'intégration : créer une BD en V01, lancer l'application qui fait passer en V02, vérifier la cohérence.
 
 **Parcours rattaché** : transverse (technique pur)<br>
@@ -224,6 +226,10 @@
 - [x] **Restauration** : vérifie la lisibilité, **met de côté la base courante** (filet), remplace, purge les journaux, et **rejoue la migration** pour être à jour.
 - [x] Sauvegarde / restauration **« complète »** : base **+ audio**, en **disant ce qui n'a pas pu être copié**.
 - [x] L'**emplacement de destination** est choisi par l'utilisateur.
+- [x] Une sauvegarde complète **sait d'où venaient** les dossiers de son : deux nuits de même nom sur deux disques ne se confondent plus, et la sauvegarde porte un **manifeste** ([#2726](https://github.com/echonuit/vigiechiro-pr-companion/issues/2726)).
+- [x] Une restauration complète **remet les dossiers là où ils étaient** et **corrige la base** pour les y retrouver ; sur une autre machine, ils reviennent dans le dossier de travail et la base suit. Elle **vérifie avant de toucher** à quoi que ce soit, et **dit ce qui a changé de place** ([#2727](https://github.com/echonuit/vigiechiro-pr-companion/issues/2727), [ADR 2727](https://companion-dev.echonuit.fr/decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible/)).
+- [x] Une restauration qui **échoue en route rend la base d'avant**, et une sauvegarde écrite par une **version plus récente** est refusée sans que rien ne soit touché ([#2730](https://github.com/echonuit/vigiechiro-pr-companion/issues/2730)).
+- [x] **Un seul processus écrit** dans un dossier de travail : une seconde fenêtre est refusée en nommant l'occupante, et une restauration ne peut pas se lancer pendant qu'un autre processus travaille. Sans cela, toutes les garanties ci-dessus tombent ([#2731](https://github.com/echonuit/vigiechiro-pr-companion/issues/2731), [ADR 2731](https://companion-dev.echonuit.fr/decisions/2731-un-seul-processus-par-workspace/)).
 
 **Parcours rattaché** : transverse (tous parcours)<br>
 **Maquettes cibles** : *actions de menu non maquettées* (cf. [#2382](https://github.com/echonuit/vigiechiro-pr-companion/issues/2382))<br>

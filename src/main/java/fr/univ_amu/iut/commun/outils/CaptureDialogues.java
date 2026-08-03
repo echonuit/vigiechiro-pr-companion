@@ -1,8 +1,10 @@
 package fr.univ_amu.iut.commun.outils;
 
+import fr.univ_amu.iut.commun.di.Amorcage;
 import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.view.ActionAPropos;
+import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import java.nio.file.Path;
@@ -31,6 +33,10 @@ import javafx.scene.control.ButtonType;
 /// `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureDialogues {
 
+    /// Trace commune des trois ecritures : PMD refuse le litteral repete, et un seul endroit
+    /// suffit pour changer la forme de la trace.
+    private static final String TRACE = "Apercu ecrit dans ";
+
     private CaptureDialogues() {}
 
     public static void main(String[] args) throws InterruptedException {
@@ -58,6 +64,26 @@ public final class CaptureDialogues {
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
         enregistrer(messageGardeSaisie(), sortie.resolve("apercu-navigation-garde-saisie.png"));
         enregistrerAPropos(sortie.resolve("apercu-a-propos.png"));
+        enregistrerDossierOccupe(sortie.resolve("apercu-demarrage-dossier-occupe.png"));
+    }
+
+    /// Refus de démarrage quand une autre fenêtre occupe déjà le dossier de travail (#2731).
+    ///
+    /// Le dialogue et la phrase viennent tous deux de la **production** ([AlerteDemarrage#dialogue],
+    /// [Amorcage#messageDossierOccupe]) : rien n'est recopié ici, et une reformulation du refus
+    /// changera l'aperçu toute seule (ADR 0025).
+    ///
+    /// L'**occupant** est en revanche figé. Le vrai porte un identifiant de processus et un
+    /// horodatage : les rendre ferait changer l'aperçu à chaque régénération, et un diff qui bouge
+    /// sans que rien n'ait bougé finit par ne plus être lu. Même compromis que l'aperçu « À propos »,
+    /// qui fige le dossier de travail.
+    private static void enregistrerDossierOccupe(Path fichier) {
+        String occupantFige = "processus 4821, depuis 2026-08-03T21:14:07";
+        Alert alerte = AlerteDemarrage.dialogue(
+                "VigieChiro Companion est déjà ouvert", ApercuFx.enrouler(Amorcage.messageDossierOccupe(occupantFige)));
+        alerte.getDialogPane().setPrefWidth(540);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        System.out.println(TRACE + fichier.toAbsolutePath());
     }
 
     /// Rend le dialogue **de production** ([ConfirmationNavigation#dialogue]) portant le message réel.
@@ -70,7 +96,7 @@ public final class CaptureDialogues {
         Alert alerte = new ConfirmationNavigation().dialogue(ApercuFx.enrouler(message));
         alerte.getDialogPane().setPrefWidth(540);
         ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(TRACE + fichier.toAbsolutePath());
     }
 
     /// Dialogue **« À propos »** (#2144), avec le message que l'action produit réellement.
@@ -90,7 +116,7 @@ public final class CaptureDialogues {
         alerte.setHeaderText(ActionAPropos.ENTETE);
         alerte.getDialogPane().setPrefWidth(540);
         ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(TRACE + fichier.toAbsolutePath());
     }
 
     /// Garde « quitter sans enregistrer » (#178), avec le **vrai** message : celui que [GardeQuitter]

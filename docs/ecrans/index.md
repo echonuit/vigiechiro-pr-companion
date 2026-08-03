@@ -62,6 +62,40 @@ de la barre du haut permet de la **protéger** :
     discordance, et la restauration s'arrête **avant** d'avoir remplacé la base ou écrasé le moindre
     fichier : mieux vaut une restauration qui refuse qu'une restauration à moitié faite.
 
+    Deux refus peuvent se produire, et dans les deux cas **rien n'a été touché** :
+
+    - « **Cette sauvegarde a été écrite par une version plus récente de l'application** » : mettez
+      l'application à jour, puis recommencez. Sa base contient des informations que cette version ne
+      sait pas lire.
+    - « **La mise à jour de son schéma a échoué** » : la sauvegarde a bien été remise en place, mais
+      l'application n'a pas su la mettre à jour, et **votre base d'avant a été rétablie**. Essayez une
+      autre sauvegarde.
+
+## Ces fichiers que l'application dépose sans qu'on les lui demande
+
+Vous croiserez trois fichiers que vous n'avez pas créés. Aucun n'est un déchet, et aucun ne doit être
+supprimé pendant que l'application tourne.
+
+| Fichier | Quand il apparaît | À quoi il sert |
+|---|---|---|
+| `sauvegardes/vigiechiro-avant-migration-V39.db` | après une mise à jour de l'application, quand la base doit évoluer | une copie de votre base **juste avant** l'évolution. Si la mise à jour vous déplaît, c'est celle-là qu'on restaure |
+| `vigiechiro.db.avant-restauration` | à chaque restauration | l'état d'avant, mis de côté au cas où vous vous seriez trompé de sauvegarde |
+| `.verrou` | tant que l'application est ouverte | il empêche une **seconde fenêtre** d'écrire dans la même base en même temps |
+
+!!! note "Les fichiers « avant-migration » s'accumulent"
+    Un par évolution de la base, et l'application ne les supprime jamais : ils sont votre filet, elle
+    n'a pas à décider à votre place quand vous n'en avez plus besoin. Sur une grosse base, pensez à
+    faire le ménage de temps en temps, en gardant les plus récents.
+
+!!! warning "« VigieChiro Companion est déjà ouvert »"
+    L'application refuse de démarrer une **seconde fois** sur le même dossier de travail. Ce n'est pas
+    une précaution excessive : deux fenêtres qui écrivent la même base la corrompent, et vous ne vous
+    en apercevriez que bien plus tard.
+
+    Le message nomme le processus qui occupe la place. Fermez l'autre fenêtre, puis relancez. Si
+    l'application a été fermée brutalement, le verrou est libéré tout seul : il n'y a rien à
+    supprimer à la main.
+
 !!! warning "La sauvegarde de la base seule ne protège pas vos sons"
     La base contient vos **métadonnées** (sites, nuits, observations, validations) : pas l'**audio**, qui
     vit dans des dossiers à côté.

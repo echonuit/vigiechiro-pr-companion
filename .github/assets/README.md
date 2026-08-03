@@ -102,6 +102,17 @@ Le bandeau, les cartes d'activités, la recherche transverse et les menus qui le
 </tr>
 </table>
 
+<table>
+<tr>
+<th width="50%">Dossier de travail déjà ouvert</th>
+<th width="50%"></th>
+</tr>
+<tr>
+<td><a href="apercu-demarrage-dossier-occupe.png"><img src="apercu-demarrage-dossier-occupe.png" width="430" alt="Dossier de travail déjà ouvert"></a></td>
+<td></td>
+</tr>
+</table>
+
 ## Connexion à Vigie-Chiro
 
 La modale de jeton, son bandeau de refus et sa progression.

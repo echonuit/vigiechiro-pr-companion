@@ -43,11 +43,20 @@ public final class Amorcage {
     public static synchronized void reserverLeWorkspace() {
         Workspace workspace = Workspace.resolu();
         verrou = VerrouWorkspace.prendre(workspace)
-                .orElseThrow(() -> new DataAccessException(
-                        "Ce dossier de travail est déjà ouvert par une autre fenêtre de l'application ("
-                                + VerrouWorkspace.occupant(workspace) + "). Deux fenêtres qui écrivent"
-                                + " la même base la corrompent : fermez l'autre fenêtre, puis relancez.",
-                        null));
+                .orElseThrow(
+                        () -> new DataAccessException(messageDossierOccupe(VerrouWorkspace.occupant(workspace)), null));
+    }
+
+    /// La phrase servie à qui trouve le dossier de travail occupé.
+    ///
+    /// Elle vit ici, et non à l'intérieur du refus, pour que l'aperçu documentaire la rende **telle
+    /// quelle** avec un occupant figé : le vrai occupant porte un PID et un horodatage, et un aperçu
+    /// qui les afficherait changerait à chaque régénération. Même compromis que l'aperçu « À propos »,
+    /// qui fige le dossier de travail pour la même raison.
+    public static String messageDossierOccupe(String occupant) {
+        return "Ce dossier de travail est déjà ouvert par une autre fenêtre de l'application ("
+                + occupant + "). Deux fenêtres qui écrivent la même base la corrompent : fermez"
+                + " l'autre fenêtre, puis relancez.";
     }
 
     /// Rend le dossier de travail. Sans cela, un verrou mal rendu transformerait un incident en
