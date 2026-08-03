@@ -101,12 +101,19 @@ class ServiceSauvegardeTest {
 
         assertThat(bilan.dossier()).isDirectory().hasParent(destination);
         assertThat(bilan.dossier().resolve("base").resolve("vigiechiro.db")).isRegularFile();
+        // Le dossier porte le nom d'origine suivi d'un condensé du chemin (#2726) : c'est le manifeste
+        // qui dit lequel, et c'est lui qu'on interroge plutôt que de recopier le condensé en dur.
+        RacineSauvegardee emportee = ManifesteSauvegardeJson.lire(bilan.dossier())
+                .orElseThrow()
+                .racines()
+                .getFirst();
         assertThat(bilan.dossier()
                         .resolve("sessions")
-                        .resolve("Car040962-2026-Pass1-A1")
+                        .resolve(emportee.identifiant())
                         .resolve("transformes")
                         .resolve("seq.wav"))
                 .exists();
+        assertThat(emportee.identifiant()).startsWith("Car040962-2026-Pass1-A1-");
         assertThat(bilan.sessionsCopiees()).isEqualTo(1);
         assertThat(bilan.incomplete()).isFalse();
     }
