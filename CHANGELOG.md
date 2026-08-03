@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.160.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.159.0...v2.160.0) (2026-08-03)
+
+
+### Features
+
+* **commun:** cascader les domaines des trois ecrans restants ([#3139](https://github.com/echonuit/vigiechiro-pr-companion/issues/3139)) ([320871d](https://github.com/echonuit/vigiechiro-pr-companion/commit/320871d2dc7394f53bb4d4b707e02d3c9cc88c90)), closes [#3136](https://github.com/echonuit/vigiechiro-pr-companion/issues/3136) [#3095](https://github.com/echonuit/vigiechiro-pr-companion/issues/3095)
+
 # [2.159.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.158.0...v2.159.0) (2026-08-03)
 
 
