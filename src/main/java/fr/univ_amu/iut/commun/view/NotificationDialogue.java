@@ -30,10 +30,22 @@ public final class NotificationDialogue implements Notificateur {
 
     @Override
     public void notifier(NiveauNotification niveau, String entete, String message) {
-        Alert alerte = new Alert(type(niveau), message, ButtonType.OK);
-        alerte.setHeaderText(entete);
+        Alert alerte = dialogue(niveau, entete, message);
         alerte.initOwner(fenetre.get());
         alerte.showAndWait();
+    }
+
+    /// Le dialogue **sans l'ouvrir** (#3148).
+    ///
+    /// Deux choses en découlent, et la seconde est la vraie raison. D'abord l'aperçu documentaire peut
+    /// montrer le compte rendu de la **production** au lieu d'une reconstitution (ADR 0025). Ensuite,
+    /// et surtout, le choix du **type** de dialogue devient observable : cet adaptateur décide qu'un
+    /// avertissement se distingue d'une information, et rien ne le vérifiait, `showAndWait` figeant
+    /// tout test headless qui aurait voulu regarder.
+    public Alert dialogue(NiveauNotification niveau, String entete, String message) {
+        Alert alerte = new Alert(type(niveau), message, ButtonType.OK);
+        alerte.setHeaderText(entete);
+        return alerte;
     }
 
     /// Rend la bande chiffrée **dans** le dialogue, à la place de son texte.
