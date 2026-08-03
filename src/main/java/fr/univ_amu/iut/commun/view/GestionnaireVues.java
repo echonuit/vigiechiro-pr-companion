@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -37,7 +38,7 @@ public final class GestionnaireVues<T> {
     private final Function<String, Optional<String>> saisieNom;
 
     /// Compte rendu de restauration vers l'écran hôte (#3056), `null` tant qu'aucun ne l'a branché.
-    private BiConsumer<String, List<String>> compteRendu;
+    private BiConsumer<String, ResteDeRestauration> compteRendu;
 
     /// Pont **optionnel** vers le(s) sélecteur(s) de colonnes de la vue (#994) : quand il est fourni,
     /// enregistrer une vue capture **aussi** la disposition des colonnes, et la rejouer la restaure. `null`
@@ -240,9 +241,9 @@ public final class GestionnaireVues<T> {
     public void appliquer(VueSauvegardee vue) {
         DescripteurVue descripteur = DescripteurVueJson.interpreter(vue.descripteurJson());
         enApplication = true;
-        List<String> disparues = filtres.restaurer(descripteur.filtres());
+        ResteDeRestauration reste = filtres.restaurer(descripteur.filtres());
         enApplication = false;
-        rendreCompteDe(vue, disparues);
+        rendreCompteDe(vue, reste);
         if (adaptateurColonnes != null && !descripteur.colonnes().isEmpty()) {
             adaptateurColonnes.restaurer(descripteur.colonnes());
         }
@@ -251,25 +252,26 @@ public final class GestionnaireVues<T> {
         rafraichir();
     }
 
-    /// Dit à l'écran hôte qu'une vue s'est rejouée **amputée** de valeurs devenues introuvables (#3056).
+    /// Dit à l'écran hôte qu'une vue s'est rejouée **amputée** (#3056, puis #3093 pour les critères).
     ///
     /// Le cas se produit quand les libellés offerts ont changé - « Z1 » est devenu « 640380 · Z1 »
     /// en #2995 - ou quand une valeur mémorisée est absente du jeu de lignes courant (une espèce
-    /// qu'on n'a pas contactée cette fois-ci).
+    /// qu'on n'a pas contactée cette fois-ci). Une vue peut aussi porter un critère que le catalogue
+    /// de l'écran n'offre plus : [ResteDeRestauration] distingue les deux causes.
     ///
     /// La vue s'ouvre quand même : perdre l'accès à une vue enregistrée serait pire que le défaut.
     /// Mais elle **filtre moins** que lorsqu'elle a été enregistrée, et le taire laisserait croire le
     /// contraire. Bandeau et non modal : rejouer une vue est réversible et anodin (ADR 0023).
-    private void rendreCompteDe(VueSauvegardee vue, List<String> disparues) {
-        if (compteRendu == null || disparues.isEmpty()) {
+    private void rendreCompteDe(VueSauvegardee vue, ResteDeRestauration reste) {
+        if (compteRendu == null || reste.estVide()) {
             return;
         }
-        compteRendu.accept(vue.nom(), disparues);
+        compteRendu.accept(vue.nom(), reste);
     }
 
     /// Branche le **compte rendu** de restauration sur le bandeau de l'écran hôte. Optionnel : sans
     /// lui, une vue amputée se rejoue en silence, ce qui était le comportement avant #3056.
-    public GestionnaireVues<T> surRestauration(BiConsumer<String, List<String>> compteRendu) {
+    public GestionnaireVues<T> surRestauration(BiConsumer<String, ResteDeRestauration> compteRendu) {
         this.compteRendu = compteRendu;
         return this;
     }

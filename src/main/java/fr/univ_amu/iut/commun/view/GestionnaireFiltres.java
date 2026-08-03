@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -176,32 +177,40 @@ public final class GestionnaireFiltres<T> {
     /// réapplique la recherche texte, puis ré-ajoute chaque puce (l'éditeur repart de ses valeurs par défaut,
     /// appliquées à l'ajout) avant d'y restaurer les valeurs **en clair** via
     /// [CritereFiltre#restaurerValeurs(Node, List)]. L'entrée est **transportable / persistée** (base
-    /// `vue_sauvegardee`) et sert aussi de **mémoire de session** depuis #3071 : les critères inconnus
-    /// du catalogue sont ignorés.
+    /// `vue_sauvegardee`) et sert aussi de **mémoire de session** depuis #3071. Les critères inconnus du
+    /// catalogue ne sont pas posés, mais ils sont désormais **rapportés** (#3093).
     ///
-    /// **Rend les valeurs mémorisées qu'aucun critère n'a su replacer** (#3056) : une valeur renommée
-    /// ou absente du jeu courant ne coche rien, et comme rien de coché n'écarte rien, la vue rejouée
-    /// filtre alors **moins** que ce qu'elle promet. L'appelant décide quoi en dire ; l'ignorer
-    /// rendrait la dégradation invisible.
+    /// **Rend ce qu'aucun critère n'a su replacer** ([ResteDeRestauration], #3056 puis #3093) : une valeur
+    /// renommée ou absente du jeu courant ne coche rien, et un critère absent du catalogue de cet écran
+    /// n'est pas posé du tout. Comme rien de coché n'écarte rien, la restauration filtre alors **moins**
+    /// que ce qu'elle promet. L'appelant décide quoi en dire ; l'ignorer rendrait la dégradation
+    /// invisible.
     ///
-    /// @return les valeurs sans correspondance, dans l'ordre des critères rencontrés (vide en temps
-    ///     normal)
-    public List<String> restaurer(DescripteurFiltre descripteur) {
+    /// Les critères inconnus étaient auparavant jetés par un `ifPresent` sans branche « sinon » : le
+    /// silence portait donc sur les deux causes, alors que seule la première était rapportée.
+    ///
+    /// @return les valeurs et les critères laissés de côté (vide en temps normal)
+    public ResteDeRestauration restaurer(DescripteurFiltre descripteur) {
         reinitialiser();
         if (descripteur == null) {
-            return List.of();
+            return ResteDeRestauration.RIEN;
         }
         if (!descripteur.texte().isBlank()) {
             recherche.setText(descripteur.texte());
         }
-        List<String> sansCorrespondance = new ArrayList<>();
+        List<String> valeursPerdues = new ArrayList<>();
+        List<String> criteresInconnus = new ArrayList<>();
         for (DescripteurCritere memorise : descripteur.criteres()) {
-            critereParNom(memorise.nom()).ifPresent(critere -> {
-                ajouterPuce(critere);
-                sansCorrespondance.addAll(critere.restaurerValeurs(actifs.get(critere.nom()), memorise.valeurs()));
-            });
+            Optional<CritereFiltre<T>> connu = critereParNom(memorise.nom());
+            if (connu.isEmpty()) {
+                criteresInconnus.add(memorise.nom());
+                continue;
+            }
+            CritereFiltre<T> critere = connu.get();
+            ajouterPuce(critere);
+            valeursPerdues.addAll(critere.restaurerValeurs(actifs.get(critere.nom()), memorise.valeurs()));
         }
-        return List.copyOf(sansCorrespondance);
+        return new ResteDeRestauration(valeursPerdues, criteresInconnus);
     }
 
     /// **Décrit** l'état courant des filtres sous une forme **sémantique et transportable** (#537 étape 2) :

@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Severite;
+import java.util.ArrayList;
 import java.util.List;
 
 /// Retour d'une **opération** d'un écran (import CSV, export, valider, corriger, action refusée…) :
@@ -79,7 +80,7 @@ public record RetourOperation(String texte, Severite severite) {
     ///
     /// C'est l'unique endroit où l'IHM ajoute son « comment » : le modèle ne connaît pas les menus, et la
     /// ligne de commande en dit un autre.
-    /// Une **vue mémorisée rejouée amputée** de valeurs devenues introuvables (#3056).
+    /// Une **vue mémorisée rejouée amputée** de ce qui n'a pas pu être replacé (#3056, puis #3093).
     ///
     /// Le cas se produit quand les libellés offerts ont changé - « Z1 » est devenu « 640380 · Z1 » en
     /// #2995 - ou quand une valeur mémorisée est absente du jeu courant (une espèce qu'on n'a pas
@@ -87,9 +88,43 @@ public record RetourOperation(String texte, Severite severite) {
     /// enregistrement : le taire laisserait croire le contraire.
     ///
     /// Avertissement et non erreur : rien n'a échoué, et l'utilisateur n'a rien à réparer.
-    public static RetourOperation vueAmputee(String nomVue, List<String> valeurs) {
-        return avertissement("La vue « " + nomVue + " » a été rejouée sans " + manquantes(valeurs)
+    public static RetourOperation vueAmputee(String nomVue, ResteDeRestauration reste) {
+        return avertissement("La vue « " + nomVue + " » a été rejouée sans " + laisseDeCote(reste)
                 + " : elle filtre donc moins large qu'à son enregistrement.");
+    }
+
+    /// Des filtres **transportés d'un écran à l'autre** (« Voir sur la carte », #476) que l'écran
+    /// d'arrivée n'a pas su reprendre (#3093).
+    ///
+    /// Ce n'est pas une vue nommée : la phrase ne peut donc pas s'appuyer sur un nom, et doit dire
+    /// **d'où** vient l'écart. Le cas est ordinaire et non exceptionnel : Sons & validation offre dix
+    /// critères, l'analyse cinq, donc resserrer sur la probabilité puis basculer sur la carte élargit
+    /// forcément le résultat.
+    public static RetourOperation filtresNonRepris(ResteDeRestauration reste) {
+        return avertissement("Cet écran a repris vos filtres sans " + laisseDeCote(reste)
+                + " : il montre donc plus large que la liste d'où vous venez.");
+    }
+
+    /// Les filtres de la **mémoire de session** (#484) que la réouverture de l'écran n'a pas su
+    /// remettre en place (#3093). Les données ont changé entre-temps : c'est le cas le plus courant des
+    /// trois, et le plus discret, puisque personne n'a rien demandé.
+    public static RetourOperation filtresDeSessionAmputes(ResteDeRestauration reste) {
+        return avertissement("Vos filtres précédents ont été remis sans " + laisseDeCote(reste)
+                + " : l'écran montre donc plus large que la dernière fois.");
+    }
+
+    /// Ce qui n'a pas été replacé, **accordé** et **par cause**. Les deux natures se disent séparément :
+    /// une valeur disparue est passagère et tient aux données, un critère absent du catalogue est
+    /// structurel et tient à l'écran. Les confondre ferait chercher au mauvais endroit.
+    private static String laisseDeCote(ResteDeRestauration reste) {
+        List<String> morceaux = new ArrayList<>();
+        if (!reste.valeursPerdues().isEmpty()) {
+            morceaux.add(manquantes(reste.valeursPerdues()));
+        }
+        if (!reste.criteresInconnus().isEmpty()) {
+            morceaux.add(criteresAbsents(reste.criteresInconnus()));
+        }
+        return String.join(", ni ", morceaux);
     }
 
     /// Les valeurs perdues, **accordées**. Au singulier on nomme la valeur plutôt que de la compter :
@@ -98,6 +133,14 @@ public record RetourOperation(String texte, Severite severite) {
         return valeurs.size() == 1
                 ? "« " + valeurs.get(0) + " », qui n'existe plus"
                 : valeurs.size() + " valeurs qui n'existent plus (" + String.join(", ", valeurs) + ")";
+    }
+
+    /// Les critères que cet écran n'offre pas, **accordés**. Nommés par leur **clé** : l'écran ne connaît
+    /// pas ces critères, donc n'a pas leur intitulé (cf. [ResteDeRestauration]).
+    private static String criteresAbsents(List<String> criteres) {
+        return criteres.size() == 1
+                ? "le critère « " + criteres.get(0) + " », qu'il n'offre pas"
+                : criteres.size() + " critères qu'il n'offre pas (" + String.join(", ", criteres) + ")";
     }
 
     public static RetourOperation erreur(Throwable refus) {

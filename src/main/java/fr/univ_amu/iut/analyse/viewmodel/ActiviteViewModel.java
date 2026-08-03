@@ -8,6 +8,7 @@ import fr.univ_amu.iut.analyse.model.LigneActivite;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import java.util.LinkedHashSet;
@@ -289,8 +290,8 @@ public class ActiviteViewModel {
     /// Signale qu'une **vue mémorisée** vient d'être rejouée **amputée** de valeurs devenues
     /// introuvables (#3056) : elle filtre moins large qu'à son enregistrement, et l'utilisateur ne
     /// peut pas s'en apercevoir autrement.
-    public void signalerVueAmputee(String nomVue, List<String> valeursDisparues) {
-        retour.set(RetourOperation.vueAmputee(nomVue, valeursDisparues));
+    public void signalerVueAmputee(String nomVue, ResteDeRestauration reste) {
+        retour.set(RetourOperation.vueAmputee(nomVue, reste));
     }
 
     public void effacerRetour() {
