@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.di.Amorcage;
 import fr.univ_amu.iut.commun.model.ConfigurationJournalisation;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
+import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
@@ -62,10 +63,7 @@ public class App extends Application {
             // plutôt que de laisser deux instances écrire la même base : la seconde ne s'en
             // apercevrait qu'à un échec SQLite tardif, au milieu d'une écriture.
             LOG.log(Level.WARNING, dossierOccupe, () -> "Démarrage refusé : dossier de travail occupé");
-            Alert alerte = new Alert(Alert.AlertType.WARNING);
-            alerte.setHeaderText("VigieChiro Companion est déjà ouvert");
-            alerte.setContentText(dossierOccupe.getMessage());
-            alerte.showAndWait();
+            AlerteDemarrage.refusDeDemarrage("VigieChiro Companion est déjà ouvert", dossierOccupe.getMessage());
             Platform.exit();
             return;
         }
