@@ -117,4 +117,90 @@ class CritereLieuTest {
                 .contains("Communes", "Aix")
                 .doesNotContain("Carrés");
     }
+
+    /// Une valeur **qualifiée** (« 640380 · A1 ») telle que la produisent les écrans depuis #2992.
+    private static String qualifie(Ligne ligne) {
+        return ligne.point() == null ? null : ligne.carre() + CritereLieu.SEPARATEUR + ligne.point();
+    }
+
+    private static CritereFiltre<Ligne> avecPointsQualifies(List<Ligne> lignes) {
+        return CritereLieu.de(
+                () -> lignes,
+                List.of(
+                        new CritereLieu.Dimension<>("Carrés", Ligne::carre),
+                        new CritereLieu.Dimension<>("Points", CritereLieuTest::qualifie)));
+    }
+
+    private static List<String> cochees(Node editeur) {
+        return ((MenuButton) editeur)
+                .getItems().stream()
+                        .filter(CheckMenuItem.class::isInstance)
+                        .map(CheckMenuItem.class::cast)
+                        .filter(CheckMenuItem::isSelected)
+                        .map(CheckMenuItem::getText)
+                        .toList();
+    }
+
+    @Test
+    @DisplayName("#3158 : une valeur mémorisée avant la qualification retrouve son entrée")
+    void une_valeur_memorisee_avant_qualification_retrouve_son_entree() {
+        // Une vue enregistrée avant #2992 porte « A1 » nu. Le lieu n'a pas changé, seulement son
+        // écriture : la vue doit se rejouer, pas s'excuser.
+        CritereFiltre<Ligne> critere = avecPointsQualifies(LIGNES);
+        Node editeur = critere.editeur(ignore -> {});
+
+        List<String> perdues = critere.restaurerValeurs(editeur, List.of("A1"));
+
+        assertThat(cochees(editeur)).containsExactly("640380 · A1");
+        assertThat(perdues)
+                .as("rien n'est perdu : le bandeau de #3093 n'a rien à annoncer")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3158 : deux entrées reprennent la valeur, aucune n'est cochée")
+    void deux_entrees_candidates_ne_rattrapent_rien() {
+        // Le garde central. « Z1 » existe dans presque tous les carrés : cocher le premier venu
+        // filtrerait sur un point que l'utilisateur n'a pas choisi, et l'écran aurait l'air juste.
+        List<Ligne> deuxZ1 = List.of(new Ligne("Aix", "640380", "Z1"), new Ligne("Venelles", "870150", "Z1"));
+        CritereFiltre<Ligne> critere = avecPointsQualifies(deuxZ1);
+        Node editeur = critere.editeur(ignore -> {});
+
+        List<String> perdues = critere.restaurerValeurs(editeur, List.of("Z1"));
+
+        assertThat(cochees(editeur))
+                .as("deviner entre deux lieux serait pire que ne rien replacer")
+                .isEmpty();
+        assertThat(perdues)
+                .as("et #3093 le dit, pour que l'utilisateur tranche lui-même")
+                .containsExactly("Z1");
+    }
+
+    @Test
+    @DisplayName("#3158 : un fragment de valeur ne rattrape rien")
+    void un_fragment_ne_rattrape_rien() {
+        // Une valeur mémorisée est un lieu qui a existé, pas une amorce de recherche : la comparaison
+        // porte sur des segments entiers.
+        CritereFiltre<Ligne> critere = avecPointsQualifies(LIGNES);
+        Node editeur = critere.editeur(ignore -> {});
+
+        List<String> perdues = critere.restaurerValeurs(editeur, List.of("6403"));
+
+        assertThat(cochees(editeur)).isEmpty();
+        assertThat(perdues).containsExactly("6403");
+    }
+
+    @Test
+    @DisplayName("#3158 : le texte exact prime sur le rattrapage")
+    void le_texte_exact_prime() {
+        // Le carré « 640380 » est offert tel quel, et il est aussi un segment de « 640380 · A1 ». La
+        // valeur mémorisée désigne l'entrée qui porte son texte, sans quoi le rattrapage déplacerait
+        // des filtres qui fonctionnent.
+        CritereFiltre<Ligne> critere = avecPointsQualifies(LIGNES);
+        Node editeur = critere.editeur(ignore -> {});
+
+        critere.restaurerValeurs(editeur, List.of("640380"));
+
+        assertThat(cochees(editeur)).containsExactly("640380");
+    }
 }

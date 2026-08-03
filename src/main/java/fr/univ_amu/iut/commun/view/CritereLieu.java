@@ -2,8 +2,10 @@ package fr.univ_amu.iut.commun.view;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /// Fabrique du critère **« Lieu »** (#3097) : plusieurs dimensions géographiques confrontées à une même
 /// liste à cocher.
@@ -38,6 +40,22 @@ import java.util.function.Supplier;
 /// en-tête, qui ne renseignerait sur rien et ferait croire à une liste tronquée.
 public final class CritereLieu {
 
+    /// Le séparateur d'une valeur **qualifiée** par ce qui la désambiguïse : « 640380 · A1 » (#2992).
+    ///
+    /// Trois features l'écrivent encore en dur dans leur `pointQualifie` (`CriteresAudio`,
+    /// `CriteresMultisite`, `ContactHoraire`). Les y brancher demanderait de le remonter en
+    /// `commun.model` : `ContactHoraire` est un modèle, et un modèle ne dépend pas d'une vue
+    /// (`ArchitectureTest`). À faire avec #3157, qui qualifie le carré à son tour.
+    public static final String SEPARATEUR = " · ";
+
+    /// Rattrapage des valeurs mémorisées **avant** qualification (#3158) : « Z1 » désigne encore
+    /// « 640380 · Z1 », puisque la qualification n'a rien changé au lieu, seulement à son écriture.
+    ///
+    /// Elle ne rattrape que si **une seule** entrée reprend la valeur. Sur les écrans qui couvrent la
+    /// saison entière, « Z1 » existe dans presque tous les carrés : cocher le premier venu filtrerait
+    /// sur un point que l'utilisateur n'a pas choisi. Le silence laisse #3093 le dire.
+    private static final CritereListe.Rattrapage PAR_SEGMENT = CritereLieu::parSegment;
+
     private CritereLieu() {}
 
     /// Une **dimension** géographique offerte par le critère : son intitulé de groupe et ce qu'on lit
@@ -59,7 +77,24 @@ public final class CritereLieu {
                 "Lieu",
                 "Choisir un lieu",
                 () -> groupes(lignes.get(), offertes),
-                ligne -> valeursDe(ligne, offertes));
+                ligne -> valeursDe(ligne, offertes),
+                PAR_SEGMENT);
+    }
+
+    /// L'entrée dont **un segment** est exactement la valeur mémorisée, s'il n'y en a qu'une.
+    ///
+    /// La comparaison porte sur des segments entiers, jamais sur un fragment de texte : « 6403 » ne
+    /// désigne pas « 640380 · Vallon ». Une valeur mémorisée est un lieu qui a existé, pas une amorce
+    /// de recherche.
+    private static Optional<String> parSegment(String memorisee, List<String> entrees) {
+        List<String> candidates = entrees.stream()
+                .filter(entree -> segments(entree).contains(memorisee))
+                .toList();
+        return candidates.size() == 1 ? Optional.of(candidates.get(0)) : Optional.empty();
+    }
+
+    private static List<String> segments(String entree) {
+        return List.of(entree.split(Pattern.quote(SEPARATEUR)));
     }
 
     /// Les valeurs offertes, un groupe par dimension, dans l'ordre déclaré.
