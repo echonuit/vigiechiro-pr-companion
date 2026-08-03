@@ -909,9 +909,20 @@ Le véhicule par défaut de tout compte rendu d'opération (ADR 0023). Ce qu'il 
 <table>
 <tr>
 <th width="50%">Vue amputée longue</th>
+<th width="50%">Vue amputée, deux causes</th>
 </tr>
 <tr>
 <td><a href="apercu-bandeau-vue-amputee-longue.png"><img src="apercu-bandeau-vue-amputee-longue.png" width="430" alt="Vue amputée longue"></a></td>
+<td><a href="apercu-bandeau-vue-amputee-deux-causes.png"><img src="apercu-bandeau-vue-amputee-deux-causes.png" width="430" alt="Vue amputée, deux causes"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<th width="50%">Filtres non repris (transport)</th>
+</tr>
+<tr>
+<td><a href="apercu-bandeau-filtres-non-repris.png"><img src="apercu-bandeau-filtres-non-repris.png" width="430" alt="Filtres non repris"></a></td>
 </tr>
 </table>
 
