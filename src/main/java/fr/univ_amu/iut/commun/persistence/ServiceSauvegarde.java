@@ -37,7 +37,6 @@ public class ServiceSauvegarde {
 
     private static final String PREFIXE = "vigiechiro-sauvegarde-";
     private static final String PREFIXE_COMPLET = "vigiechiro-sauvegarde-complete-";
-    private static final String EXTENSION = ".db";
     private static final String SUFFIXE_FILET = ".avant-restauration";
     private static final String SOUS_DOSSIER_BASE = "base";
     private static final String SOUS_DOSSIER_SESSIONS = "sessions";
@@ -45,11 +44,13 @@ public class ServiceSauvegarde {
 
     private final SourceDeDonnees source;
     private final Horloge horloge;
+    private final InstantaneBase instantane;
 
     @Inject
     public ServiceSauvegarde(SourceDeDonnees source, Horloge horloge) {
         this.source = Objects.requireNonNull(source, "source");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.instantane = new InstantaneBase(this.source);
     }
 
     /// Écrit une sauvegarde cohérente de la base dans `dossierDestination` (créé au besoin), nommée
@@ -57,17 +58,7 @@ public class ServiceSauvegarde {
     /// par l'appelant** rend l'emplacement configurable (critère #148).
     public Path sauvegarder(Path dossierDestination) {
         Objects.requireNonNull(dossierDestination, "dossierDestination");
-        try {
-            Files.createDirectories(dossierDestination);
-            Path cible = fichierLibre(dossierDestination);
-            try (Connection cx = source.getConnection();
-                    Statement st = cx.createStatement()) {
-                st.execute("VACUUM INTO " + litteralSql(cible));
-            }
-            return cible;
-        } catch (IOException | SQLException echec) {
-            throw new DataAccessException("Sauvegarde de la base impossible vers " + dossierDestination, echec);
-        }
+        return instantane.ecrireDans(dossierDestination, PREFIXE + HORODATAGE.format(horloge.maintenant()));
     }
 
     /// Restaure la base depuis `sauvegarde`. Vérifie que le fichier est une base lisible, **met de côté**
@@ -107,18 +98,6 @@ public class ServiceSauvegarde {
         return source.workspace().racine().resolve("sauvegardes");
     }
 
-    /// Premier nom de fichier libre dans `dossier` : base horodatée, suffixée `-1`, `-2`… si l'horodatage
-    /// à la seconde entre en collision (deux sauvegardes dans la même seconde).
-    private Path fichierLibre(Path dossier) {
-        String base = PREFIXE + HORODATAGE.format(horloge.maintenant());
-        Path candidat = dossier.resolve(base + EXTENSION);
-        int suffixe = 1;
-        while (Files.exists(candidat)) {
-            candidat = dossier.resolve(base + "-" + suffixe++ + EXTENSION);
-        }
-        return candidat;
-    }
-
     /// Vérifie que `fichier` est une base SQLite **intègre** (`PRAGMA quick_check` renvoie `ok`), via une
     /// source jetable pointant dessus. Lève [DataAccessException] sinon.
     private static void verifierBaseLisible(Path fichier) {
@@ -141,11 +120,6 @@ public class ServiceSauvegarde {
         Files.deleteIfExists(base.resolveSibling(base.getFileName() + suffixe));
     }
 
-    /// Littéral chaîne SQL à partir d'un chemin (apostrophes doublées) pour l'ordre `VACUUM INTO`.
-    private static String litteralSql(Path chemin) {
-        return "'" + chemin.toString().replace("'", "''") + "'";
-    }
-
     /// **Sauvegarde complète** : base **et** dossiers de session (audio brut/transformé), prérequis d'un
     /// reset sûr (#1142). Contrairement à [#sauvegarder] (base seule, routine), produit un **dossier**
     /// `vigiechiro-sauvegarde-complete-AAAAMMJJ-HHMMSS/` contenant `base/vigiechiro.db` (instantané cohérent
@@ -159,12 +133,7 @@ public class ServiceSauvegarde {
         Objects.requireNonNull(dossierDestination, "dossierDestination");
         try {
             Path racineBackup = dossierLibreComplet(dossierDestination);
-            Path base = Files.createDirectories(racineBackup.resolve(SOUS_DOSSIER_BASE))
-                    .resolve(Workspace.FICHIER_BASE);
-            try (Connection cx = source.getConnection();
-                    Statement st = cx.createStatement()) {
-                st.execute("VACUUM INTO " + litteralSql(base));
-            }
+            instantane.ecrire(racineBackup.resolve(SOUS_DOSSIER_BASE).resolve(Workspace.FICHIER_BASE));
             Path dossierSessions = Files.createDirectories(racineBackup.resolve(SOUS_DOSSIER_SESSIONS));
             int copiees = 0;
             List<String> inaccessibles = new ArrayList<>();
