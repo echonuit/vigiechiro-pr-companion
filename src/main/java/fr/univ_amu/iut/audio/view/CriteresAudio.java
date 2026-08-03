@@ -5,9 +5,11 @@ import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
+import fr.univ_amu.iut.commun.view.CritereBooleen;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
+import fr.univ_amu.iut.commun.view.ValeursPresentes;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -17,7 +19,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiPredicate;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -181,10 +182,11 @@ final class CriteresAudio {
     /// d'une commune) n'apparaît qu'une fois : le coche vaut alors pour les deux.
     private static List<CritereListe.GroupeValeurs> lieuxPresents(List<LigneObservationAudio> lignes) {
         return List.of(
-                new CritereListe.GroupeValeurs("Communes", valeursDistinctes(lignes, LigneObservationAudio::commune)),
-                new CritereListe.GroupeValeurs("Carrés", valeursDistinctes(lignes, LigneObservationAudio::numeroCarre)),
-                new CritereListe.GroupeValeurs("Points", valeursDistinctes(lignes, CriteresAudio::pointQualifie)),
-                new CritereListe.GroupeValeurs("Sites", valeursDistinctes(lignes, LigneObservationAudio::nomSite)));
+                new CritereListe.GroupeValeurs("Communes", ValeursPresentes.de(lignes, LigneObservationAudio::commune)),
+                new CritereListe.GroupeValeurs(
+                        "Carrés", ValeursPresentes.de(lignes, LigneObservationAudio::numeroCarre)),
+                new CritereListe.GroupeValeurs("Points", ValeursPresentes.de(lignes, CriteresAudio::pointQualifie)),
+                new CritereListe.GroupeValeurs("Sites", ValeursPresentes.de(lignes, LigneObservationAudio::nomSite)));
     }
 
     /// Le point **qualifié par son carré**, « 640380 · A1 » (#2992). Le schéma pose `UNIQUE(site_id, code)` :
@@ -193,17 +195,6 @@ final class CriteresAudio {
     /// « A1 » y confondait donc silencieusement les A1 de plusieurs carrés.
     private static String pointQualifie(LigneObservationAudio ligne) {
         return ligne.codePoint() == null ? null : ligne.numeroCarre() + " · " + ligne.codePoint();
-    }
-
-    /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
-    private static List<String> valeursDistinctes(
-            List<LigneObservationAudio> lignes, Function<LigneObservationAudio, String> dimension) {
-        return lignes.stream()
-                .map(dimension)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .toList();
     }
 
     /// Les valeurs candidates d'une ligne face à la liste des lieux cochés : ses quatre champs
@@ -219,23 +210,7 @@ final class CriteresAudio {
     /// son retrait le désactive. Libellé en texte (l'étoile ⭐ ne rend pas dans toutes les polices, cf.
     /// [CellulesAudio] ; l'indication visuelle reste la colonne-icône dorée de la table).
     static CritereFiltre<LigneObservationAudio> references() {
-        return new CritereFiltre<LigneObservationAudio>() {
-            @Override
-            public String nom() {
-                return "references";
-            }
-
-            @Override
-            public String libelle() {
-                return "Références";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
-                applique.accept(LigneObservationAudio::reference); // filtre actif dès l'ajout de la puce
-                return null; // booléen : pas d'éditeur, la présence de la puce suffit
-            }
-        };
+        return CritereBooleen.de("references", "Références", LigneObservationAudio::reference);
     }
 
     /// Critère **Douteux seulement** (booléen, #160) : ne garde que les observations marquées « douteuses /
@@ -243,23 +218,7 @@ final class CriteresAudio {
     /// retrait le désactive. Pendant du critère [#references()] ; l'indicateur visuel reste le bouton de la
     /// barre d'actions.
     static CritereFiltre<LigneObservationAudio> douteux() {
-        return new CritereFiltre<LigneObservationAudio>() {
-            @Override
-            public String nom() {
-                return "douteux";
-            }
-
-            @Override
-            public String libelle() {
-                return "Douteux";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
-                applique.accept(LigneObservationAudio::douteux); // filtre actif dès l'ajout de la puce
-                return null; // booléen : pas d'éditeur, la présence de la puce suffit
-            }
-        };
+        return CritereBooleen.de("douteux", "Douteux", LigneObservationAudio::douteux);
     }
 
     /// Critère **Non identifiés** : garde les séquences **sans proposition Tadarida** (`taxonTadarida == null`)
@@ -274,43 +233,11 @@ final class CriteresAudio {
     /// Sur une nuit à 4 000 contacts dont douze relèvent d'espèces à enjeu, c'est ce qui remplace une
     /// recherche ligne par ligne.
     static CritereFiltre<LigneObservationAudio> aEnjeu(Predicate<LigneObservationAudio> estPrioritaire) {
-        return new CritereFiltre<LigneObservationAudio>() {
-            @Override
-            public String nom() {
-                return ClesCriteres.A_ENJEU;
-            }
-
-            @Override
-            public String libelle() {
-                return "Espèces à enjeu";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
-                applique.accept(estPrioritaire); // filtre actif dès l'ajout de la puce
-                return null; // booléen : pas d'éditeur, la présence de la puce suffit
-            }
-        };
+        return CritereBooleen.de(ClesCriteres.A_ENJEU, "Espèces à enjeu", estPrioritaire);
     }
 
     static CritereFiltre<LigneObservationAudio> nonIdentifie() {
-        return new CritereFiltre<LigneObservationAudio>() {
-            @Override
-            public String nom() {
-                return "non_identifie";
-            }
-
-            @Override
-            public String libelle() {
-                return "Non identifiés";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
-                applique.accept(ligne -> ligne.taxonTadarida() == null); // filtre actif dès l'ajout de la puce
-                return null; // booléen : pas d'éditeur, la présence de la puce suffit
-            }
-        };
+        return CritereBooleen.de("non_identifie", "Non identifiés", ligne -> ligne.taxonTadarida() == null);
     }
 
     /// Critère **Seuil de probabilité** : éditeur = **curseur** (0 à 100 %) dans la puce ; garde les

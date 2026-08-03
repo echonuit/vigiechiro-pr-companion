@@ -3,9 +3,11 @@ package fr.univ_amu.iut.analyse.view;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
+import fr.univ_amu.iut.commun.view.CritereBooleen;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
+import fr.univ_amu.iut.commun.view.ValeursPresentes;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -13,12 +15,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import javafx.scene.Node;
 
 /// Catalogue des **critères de filtrage** de l'inventaire analyse (patron « à la Notion », #537). Chaque
 /// critère est une entrée du menu « + Filtre » qui s'ajoute comme puce : **Statut** de revue et **Taxon
@@ -101,23 +100,7 @@ final class CriteresAnalyse {
     /// Porte l'onglet « Espèces prioritaires » ([#vuesParDefaut()]) : c'est l'information qu'un naturaliste
     /// cherche en premier, et l'inventaire d'une saison la noyait parmi des dizaines d'espèces.
     static CritereFiltre<ObservationAnalyse> aEnjeu(Predicate<ObservationAnalyse> estPrioritaire) {
-        return new CritereFiltre<ObservationAnalyse>() {
-            @Override
-            public String nom() {
-                return ClesCriteres.A_ENJEU;
-            }
-
-            @Override
-            public String libelle() {
-                return "Espèces à enjeu";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<ObservationAnalyse>> applique) {
-                applique.accept(estPrioritaire); // filtre actif dès l'ajout de la puce
-                return null; // booléen : pas d'éditeur, la présence de la puce suffit
-            }
-        };
+        return CritereBooleen.de(ClesCriteres.A_ENJEU, "Espèces à enjeu", estPrioritaire);
     }
 
     static CritereFiltre<ObservationAnalyse> natureNuit(Supplier<Set<Long>> opportunistes) {
@@ -133,7 +116,7 @@ final class CriteresAnalyse {
     /// « Taxon parent » quand il est cascade sur les lignes que les autres criteres laissent
     /// passer (#3095).
     static List<String> groupesDe(List<ObservationAnalyse> observations) {
-        return valeursDistinctes(observations, ObservationAnalyse::groupe);
+        return ValeursPresentes.de(observations, ObservationAnalyse::groupe);
     }
 
     static CritereFiltre<ObservationAnalyse> groupe(Supplier<? extends List<String>> groupesPresents) {
@@ -172,21 +155,11 @@ final class CriteresAnalyse {
     private static List<CritereListe.GroupeValeurs> lieuxPresents(List<ObservationAnalyse> observations) {
         return List.of(
                 new CritereListe.GroupeValeurs(
-                        "Communes", valeursDistinctes(observations, ObservationAnalyse::commune)),
+                        "Communes", ValeursPresentes.de(observations, ObservationAnalyse::commune)),
                 new CritereListe.GroupeValeurs(
-                        "Carrés", valeursDistinctes(observations, ObservationAnalyse::numeroCarre)),
-                new CritereListe.GroupeValeurs("Sites", valeursDistinctes(observations, ObservationAnalyse::nomSite)));
-    }
-
-    /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
-    private static List<String> valeursDistinctes(
-            List<ObservationAnalyse> observations, Function<ObservationAnalyse, String> dimension) {
-        return observations.stream()
-                .map(dimension)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .toList();
+                        "Carrés", ValeursPresentes.de(observations, ObservationAnalyse::numeroCarre)),
+                new CritereListe.GroupeValeurs(
+                        "Sites", ValeursPresentes.de(observations, ObservationAnalyse::nomSite)));
     }
 
     /// Les dimensions de lieu d'une observation, valeurs nulles écartées.

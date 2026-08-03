@@ -4,20 +4,19 @@ import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
+import fr.univ_amu.iut.commun.view.CritereBooleen;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
+import fr.univ_amu.iut.commun.view.ValeursPresentes;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
-import javafx.scene.Node;
 
 /// Catalogue des **critères de filtrage** de la vue Activité (patron « à la Notion », socle
 /// [fr.univ_amu.iut.commun.viewmodel.Filtres]), pendant du [CriteresAnalyse] mais sur [ContactHoraire].
@@ -70,20 +69,9 @@ final class CriteresActivite {
     /// porte son en-tête : sans lui, rien ne dit si « Ahetze » est une commune ou un carré.
     private static List<CritereListe.GroupeValeurs> lieuxPresents(List<ContactHoraire> contacts) {
         return List.of(
-                new CritereListe.GroupeValeurs("Communes", valeursDistinctes(contacts, ContactHoraire::commune)),
-                new CritereListe.GroupeValeurs("Carrés", valeursDistinctes(contacts, ContactHoraire::numeroCarre)),
-                new CritereListe.GroupeValeurs("Points", valeursDistinctes(contacts, ContactHoraire::pointQualifie)));
-    }
-
-    /// Les valeurs non nulles et distinctes d'une dimension, triées (ordre stable de la liste à cocher).
-    private static List<String> valeursDistinctes(
-            List<ContactHoraire> contacts, Function<ContactHoraire, String> dimension) {
-        return contacts.stream()
-                .map(dimension)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .toList();
+                new CritereListe.GroupeValeurs("Communes", ValeursPresentes.de(contacts, ContactHoraire::commune)),
+                new CritereListe.GroupeValeurs("Carrés", ValeursPresentes.de(contacts, ContactHoraire::numeroCarre)),
+                new CritereListe.GroupeValeurs("Points", ValeursPresentes.de(contacts, ContactHoraire::pointQualifie)));
     }
 
     /// Les dimensions de lieu d'un contact, valeurs nulles écartées.
@@ -103,7 +91,7 @@ final class CriteresActivite {
     /// Les taxons parents presents dans `contacts`, distincts et tries : le domaine du critere
     /// « Taxon parent » quand il est cascade (#3095).
     static List<String> groupesDe(List<ContactHoraire> contacts) {
-        return valeursDistinctes(contacts, ContactHoraire::groupe);
+        return ValeursPresentes.de(contacts, ContactHoraire::groupe);
     }
 
     static CritereFiltre<ContactHoraire> groupe(Supplier<? extends List<String>> groupesPresents) {
@@ -137,23 +125,7 @@ final class CriteresActivite {
     /// Porte l'onglet « Espèces prioritaires » ([#vuesParDefaut()]) : sur une nuit à plusieurs milliers de
     /// contacts, il répond d'un clic à « qu'ai-je entendu qui compte ? ».
     static CritereFiltre<ContactHoraire> aEnjeu(Predicate<ContactHoraire> estPrioritaire) {
-        return new CritereFiltre<ContactHoraire>() {
-            @Override
-            public String nom() {
-                return ClesCriteres.A_ENJEU;
-            }
-
-            @Override
-            public String libelle() {
-                return "Espèces à enjeu";
-            }
-
-            @Override
-            public Node editeur(Consumer<Predicate<ContactHoraire>> applique) {
-                applique.accept(estPrioritaire); // filtre actif dès l'ajout de la puce
-                return null; // booléen : pas d'éditeur, la présence de la puce suffit
-            }
-        };
+        return CritereBooleen.de(ClesCriteres.A_ENJEU, "Espèces à enjeu", estPrioritaire);
     }
 
     private static String libelleNuit(ContactHoraire contact) {
