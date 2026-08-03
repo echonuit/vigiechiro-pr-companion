@@ -2,8 +2,11 @@ package fr.univ_amu.iut.commun.view;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -93,6 +96,49 @@ public final class CritereListe {
             String invite,
             Supplier<? extends List<GroupeValeurs>> valeursPresentes,
             Function<T, ? extends Collection<String>> dimensions) {
+        return multipleParmi(cle, libelle, invite, valeursPresentes, dimensions, SANS_RATTRAPAGE);
+    }
+
+    /// Comment une valeur **mémorisée** retrouve son entrée quand aucune ne porte exactement son texte.
+    ///
+    /// Une vue sauvegardée persiste les valeurs cochées **en clair** ([DescripteurCritere#valeurs]).
+    /// Requalifier une entrée (« Z1 » devenu « 640380 · Z1 », #2992) rend donc introuvables toutes les
+    /// valeurs enregistrées avant elle. Depuis #3093 la perte est **annoncée**, ce qui vaut mieux qu'un
+    /// élargissement silencieux ; elle le serait néanmoins à chaque rejeu, pour un changement dont
+    /// l'utilisateur n'est pas l'auteur.
+    ///
+    /// Le rattrapage est ce qui manquait : la règle par laquelle une ancienne valeur désigne encore son
+    /// entrée. Elle appartient au critère, non au socle, parce qu'elle dépend de la **forme** des
+    /// valeurs : « 640380 » désigne « 640380 · Vallon » quand un lieu se qualifie par son carré, là où
+    /// un taxon parent ne se rattrape par rien.
+    @FunctionalInterface
+    public interface Rattrapage {
+
+        /// L'entrée que `memorisee` désigne encore, ou **vide** si aucune ne convient - **ou si
+        /// plusieurs conviennent**.
+        ///
+        /// Le second cas est le plus important : deviner entre deux entrées reviendrait à filtrer sur un
+        /// lieu que l'utilisateur n'a pas choisi. Rendre vide laisse #3093 dire ce qui n'a pas été
+        /// replacé, et l'utilisateur trancher lui-même.
+        Optional<String> retrouver(String memorisee, List<String> entrees);
+    }
+
+    /// Rattrapage **nul**, celui de tous les critères qui n'en déclarent pas : une valeur mémorisée se
+    /// replace sur son texte exact, ou pas du tout.
+    public static final Rattrapage SANS_RATTRAPAGE = (memorisee, entrees) -> Optional.empty();
+
+    /// La même fabrique, avec la règle par laquelle une valeur **mémorisée avant un renommage** retrouve
+    /// son entrée (#3158).
+    ///
+    /// @param rattrapage consulté **seulement** quand aucune entrée ne porte exactement la valeur
+    ///     mémorisée : le texte exact prime toujours
+    public static <T> CritereFiltre<T> multipleParmi(
+            String cle,
+            String libelle,
+            String invite,
+            Supplier<? extends List<GroupeValeurs>> valeursPresentes,
+            Function<T, ? extends Collection<String>> dimensions,
+            Rattrapage rattrapage) {
         return new CritereFiltre<T>() {
             @Override
             public String nom() {
@@ -126,19 +172,15 @@ public final class CritereListe {
             @Override
             public List<String> restaurerValeurs(Node editeur, List<String> valeurs) {
                 MenuButton bouton = (MenuButton) editeur;
-                Set<String> voulues = new LinkedHashSet<>(valeurs);
-                Set<String> replacees = new LinkedHashSet<>();
+                Map<String, String> cibles = cibles(bouton, valeurs, rattrapage);
+                Set<String> aCocher = new LinkedHashSet<>(cibles.values());
                 for (var item : bouton.getItems()) {
                     if (item instanceof CheckMenuItem coche) {
-                        boolean voulue = voulues.contains(coche.getText());
-                        coche.setSelected(voulue);
-                        if (voulue) {
-                            replacees.add(coche.getText());
-                        }
+                        coche.setSelected(aCocher.contains(coche.getText()));
                     }
                 }
                 return valeurs.stream()
-                        .filter(valeur -> !replacees.contains(valeur))
+                        .filter(valeur -> !cibles.containsKey(valeur))
                         .toList();
             }
         };
@@ -546,6 +588,34 @@ public final class CritereListe {
         }
         Set<String> ensemble = new LinkedHashSet<>(retenues);
         return ligne -> dimensions.apply(ligne).stream().anyMatch(ensemble::contains);
+    }
+
+    /// Ce que chaque valeur mémorisée désigne dans le menu : **elle-même** quand son entrée existe
+    /// encore, ce que le [Rattrapage] retrouve sinon. Une valeur absente de la table n'a rien trouvé, et
+    /// c'est elle que [CritereFiltre#restaurerValeurs] rend à son appelant (#3056, #3093).
+    ///
+    /// Deux valeurs mémorisées peuvent viser la **même** entrée (« 640380 » et « Vallon » après leur
+    /// fusion) : la table les garde toutes deux, pour qu'aucune ne soit rendue comme perdue, et le menu
+    /// ne coche l'entrée qu'une fois.
+    private static Map<String, String> cibles(MenuButton bouton, List<String> valeurs, Rattrapage rattrapage) {
+        List<String> entrees = entrees(bouton);
+        Map<String, String> cibles = new LinkedHashMap<>();
+        for (String valeur : valeurs) {
+            if (entrees.contains(valeur)) {
+                cibles.put(valeur, valeur);
+            } else {
+                rattrapage.retrouver(valeur, entrees).ifPresent(entree -> cibles.put(valeur, entree));
+            }
+        }
+        return cibles;
+    }
+
+    /// Les valeurs actuellement **offertes** par le menu, en-têtes et séparateurs écartés.
+    private static List<String> entrees(MenuButton bouton) {
+        return bouton.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(MenuItem::getText)
+                .toList();
     }
 
     private static List<String> cochees(MenuButton bouton) {
