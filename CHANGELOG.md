@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.161.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.160.0...v2.161.0) (2026-08-03)
+
+
+### Features
+
+* **workspace:** un seul processus écrit dans un dossier de travail ([#3141](https://github.com/echonuit/vigiechiro-pr-companion/issues/3141)) ([2adfdb1](https://github.com/echonuit/vigiechiro-pr-companion/commit/2adfdb19880ac964cbf011118a44c4a60d5d4e10)), closes [#2728](https://github.com/echonuit/vigiechiro-pr-companion/issues/2728) [#2729](https://github.com/echonuit/vigiechiro-pr-companion/issues/2729) [#2727](https://github.com/echonuit/vigiechiro-pr-companion/issues/2727) [#2730](https://github.com/echonuit/vigiechiro-pr-companion/issues/2730) [#2731](https://github.com/echonuit/vigiechiro-pr-companion/issues/2731) [#2731](https://github.com/echonuit/vigiechiro-pr-companion/issues/2731)
+
 # [2.160.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.159.0...v2.160.0) (2026-08-03)
 
 
