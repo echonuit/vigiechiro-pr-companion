@@ -47,6 +47,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
@@ -86,6 +87,25 @@ class MultisiteViewTest {
         return ligne(id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE);
     }
 
+    /// La même ligne, avec la commune résolue de son point : `point_commune` est une table latérale
+    /// (ADR 2791), et son absence est l'état normal d'un point sans GPS.
+    private static LignePassage ligneCommune(LignePassage ligne, String commune) {
+        return new LignePassage(
+                ligne.idPassage(),
+                ligne.numeroCarre(),
+                ligne.codePoint(),
+                ligne.annee(),
+                ligne.numeroPassage(),
+                ligne.dateEnregistrement(),
+                ligne.statut(),
+                ligne.verdict(),
+                ligne.etatAnalyse(),
+                ligne.analyseReleveeLe(),
+                ligne.campagne(),
+                commune,
+                ligne.nomSite());
+    }
+
     private static LignePassage ligne(
             long id, String carre, String point, int annee, int numero, String date, StatutWorkflow statut) {
         return new LignePassage(
@@ -112,7 +132,7 @@ class MultisiteViewTest {
         ouvrirAudio = mock(OuvrirAudio.class);
         when(service.listerPassages(anyString()))
                 .thenReturn(List.of(
-                        ligne(42L, "640380", "A1", 2026, 1, "2026-06-21"),
+                        ligneCommune(ligne(42L, "640380", "A1", 2026, 1, "2026-06-21"), "Ahetze"),
                         ligne(7L, "640381", "B2", 2025, 3, "2025-07-02", StatutWorkflow.VERIFIE)));
         when(service.agregerPourCarte(anyString())).thenReturn(List.of()); // carte (#152) : pas de NPE à l'init
         viewModel = new MultisiteViewModel(service, serviceSites, mock(ServiceCommunes.class), Optional.empty(), "u-1");
@@ -201,6 +221,26 @@ class MultisiteViewTest {
         // Barre de statut (#1023) : le résumé occupe la zone centre (agrégat top-level → gauche au défaut).
         assertThat(controleur.zonesStatutProperty().get().centre()).contains("2 passage");
         assertThat(controleur.zonesStatutProperty().get().gauche()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3163 : la colonne « Commune » montre pourquoi une ligne correspond, vide si non résolue")
+    void colonne_commune_visible_et_vide_si_non_resolue(FxRobot robot) {
+        // Le lieu se cherche et se coche par la commune depuis #2790, sans qu'aucune table ne la montre :
+        // des lignes apparaissaient au filtrage sans dire pourquoi elles correspondaient.
+        TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
+        TableColumn<?, ?> commune = table.getColumns().stream()
+                .filter(colonne -> "Commune".equals(colonne.getText()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Colonne « Commune » absente du tableau."));
+
+        assertThat(commune.isVisible())
+                .as("visible par défaut : une colonne masquée ne montrerait toujours rien")
+                .isTrue();
+        assertThat(commune.getCellData(0)).isEqualTo("Ahetze");
+        assertThat(commune.getCellData(1))
+                .as("un point sans commune résolue laisse la cellule vide, comme une nuit sans campagne")
+                .isEqualTo("");
     }
 
     @Test

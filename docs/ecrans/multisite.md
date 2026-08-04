@@ -46,8 +46,10 @@ seul reste pleinement exploitable.
 C'est aussi l'état où l'on arrive en cliquant **« Voir sur la carte »** depuis un site, un point ou un
 passage : le tableau se replie automatiquement pour centrer l'attention sur la carte.
 
-À **droite**, le **tableau** liste chaque passage (carré, point, année, numéro, date, **statut**,
-**verdict**, **analyse**, **campagne**). La barre du haut porte <!--inv:criteres-multisite-->7<!--/inv--> critères
+À **droite**, le **tableau** liste chaque passage (carré, **commune**, point, année, numéro, date,
+**statut**, **verdict**, **analyse**, **campagne**). La **commune** est celle déduite des coordonnées
+du point : elle répond à « pourquoi cette ligne sort-elle quand je cherche Ahetze ? », que le filtre
+seul laissait deviner. Elle reste **vide** tant qu'aucune commune n'a été résolue pour le point. La barre du haut porte <!--inv:criteres-multisite-->7<!--/inv--> critères
 (carré, lieu, statut, verdict, année, analyse, campagne) et permet de **tout effacer** ; un menu **☰** à droite de la barre regroupe les actions secondaires
 (**Vues** enregistrées et **export** de la sélection). On **trie** en cliquant l'en-tête d'une
 colonne (Année et N° de passage se trient numériquement), en plus du sélecteur d'ordres. Un
@@ -102,7 +104,7 @@ La colonne se trouve en **fin de tableau** : à côté de la carte, elle sort du
 défiler horizontalement. Replier la carte avec la poignée **◀ Carte** donne toute la largeur au
 tableau et montre toutes les colonnes d'un coup.
 
-![Carte repliée, tableau en pleine largeur : toutes les colonnes sont visibles, dont Analyse et Campagne. La dernière nuit n'est rattachée à aucune campagne, ce qui est un état normal et non une anomalie.](../assets/captures/apercu-multisite-tableau-plein.png)
+![Carte repliée, tableau en pleine largeur : toutes les colonnes sont visibles, dont Commune, Analyse et Campagne. La dernière nuit n'est rattachée à aucune campagne, ce qui est un état normal et non une anomalie.](../assets/captures/apercu-multisite-tableau-plein.png)
 
 Le rattachement lui-même se fait depuis la fenêtre **Modifier le passage**, décrite dans
 [Le passage](passage.md#rattacher-a-une-campagne).

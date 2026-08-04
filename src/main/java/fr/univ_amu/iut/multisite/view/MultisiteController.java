@@ -186,6 +186,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private TableColumn<LignePassage, String> colPoint;
 
+    /// Commune du point d'écoute (#3163), vide tant qu'aucune n'est résolue.
+    @FXML
+    private TableColumn<LignePassage, String> colCommune;
+
     @FXML
     private TableColumn<LignePassage, String> colAnnee;
 
@@ -313,7 +317,16 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // `selectedItem`, qui reste la DERNIÈRE ligne cochée : rien ne change pour eux.
         tableLignes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         ColonnesMultisite.configurer(
-                colCarre, colPoint, colAnnee, colNumero, colDate, colStatut, colVerdict, colAnalyse, colCampagne);
+                colCommune,
+                colCarre,
+                colPoint,
+                colAnnee,
+                colNumero,
+                colDate,
+                colStatut,
+                colVerdict,
+                colAnalyse,
+                colCampagne);
         // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant). La
         // disposition (ordre + visibilité) est retenue par écran et restaurée à la réouverture (#994).
         var colonnes = colonnesLignes();
@@ -586,6 +599,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         return List.of(
                 new GestionnaireColonnes.Colonne(colCarre, "Carré", true),
                 new GestionnaireColonnes.Colonne(colPoint, "Point", false),
+                new GestionnaireColonnes.Colonne(colCommune, "Commune", false),
                 new GestionnaireColonnes.Colonne(colAnnee, "Année", false),
                 new GestionnaireColonnes.Colonne(colNumero, "N° passage", false),
                 new GestionnaireColonnes.Colonne(colDate, "Date", false),
