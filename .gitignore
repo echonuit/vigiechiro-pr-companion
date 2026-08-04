@@ -110,3 +110,6 @@ CLAUDE.md
 vigiechiro.db
 connexion.json
 graphify-out/
+
+# Outillage de publication (#2738) : le lockfile est versionne, pas l arbre installe.
+node_modules/
