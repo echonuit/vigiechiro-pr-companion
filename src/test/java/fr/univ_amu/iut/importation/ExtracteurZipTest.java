@@ -15,6 +15,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -308,12 +309,18 @@ class ExtracteurZipTest {
         zos.closeEntry();
     }
 
-    /// Une entrée de `octets` octets identiques : assez grosse pour franchir plusieurs paliers de
-    /// progression, et pourtant instantanée à produire (des octets identiques se compressent presque à
-    /// rien, l'archive tient en quelques kilooctets).
+    /// Une entrée de `octets` octets **incompressibles**, assez grosse pour franchir plusieurs paliers de
+    /// progression.
+    ///
+    /// Le remplissage est pseudo-aléatoire à graine fixe, et non des octets identiques : ceux-ci se
+    /// compressent au millième, ce qui fait de l'archive une **bombe ZIP** au regard du garde de
+    /// ratio (#2732) et la fait refuser avant toute extraction. Les vraies données d'une carte SD sont
+    /// de l'audio, qui se compresse peu : la fixture doit leur ressembler sur ce point.
     private static void ecrireGros(ZipOutputStream zos, String nom, int octets) throws IOException {
+        byte[] contenu = new byte[octets];
+        new Random(1).nextBytes(contenu);
         zos.putNextEntry(new ZipEntry(nom));
-        zos.write(new byte[octets]);
+        zos.write(contenu);
         zos.closeEntry();
     }
 

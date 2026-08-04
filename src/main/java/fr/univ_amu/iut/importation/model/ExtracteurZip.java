@@ -17,7 +17,6 @@ import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
 /// Décompresse une **archive `.zip`** de carte SD vers un **dossier temporaire**, pour que l'import
@@ -79,21 +78,41 @@ public final class ExtracteurZip {
     /// @throws RegleMetierException si une entrée tente de s'évader du dossier (zip-slip)
     public static Path extraireVersDossierTemporaire(
             Path archiveZip, Path dossierBase, Consumer<Progression> surProgression, JetonAnnulation jeton) {
+        return extraireVersDossierTemporaire(
+                archiveZip, dossierBase, surProgression, jeton, BornesExtraction.parDefaut());
+    }
+
+    /// Variante à **bornes explicites** (#2732) : `bornes` refuse l'archive qui s'annonce hors limites
+    /// avant que le premier octet soit écrit, puis arrête celle qui écrit plus qu'elle n'annonçait. La
+    /// production passe par [BornesExtraction#parDefaut()] ; ce point d'entrée sert à éprouver les refus
+    /// sans dépendre de l'état réel du disque, et à toute utilisation qui aurait besoin d'autres bornes.
+    ///
+    /// @throws RegleMetierException si une borne de ressources est franchie (le temporaire éventuel est
+    ///     nettoyé, et le refus préalable n'en crée aucun)
+    public static Path extraireVersDossierTemporaire(
+            Path archiveZip,
+            Path dossierBase,
+            Consumer<Progression> surProgression,
+            JetonAnnulation jeton,
+            BornesExtraction bornes) {
+        InventaireArchive inventaire = inventorier(archiveZip, dossierBase, bornes);
         Path racine = creerDossierExtraction(dossierBase);
         try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(Files.newInputStream(archiveZip)))) {
-            int total = compterFichiers(archiveZip);
+            int total = inventaire.nbFichiers();
             int faits = 0;
+            long cumul = 0;
             ZipEntry entree;
             while ((entree = zis.getNextEntry()) != null) {
                 jeton.leverSiAnnule(); // arrêt au plus tôt, entre deux entrées
                 ZipEntry courante = entree;
                 int rang = faits;
-                extraireUneEntree(
-                        zis,
-                        racine,
-                        courante,
-                        jeton,
-                        octets -> surProgression.accept(progressionEnCours(rang, total, nomFichier(courante), octets)));
+                long dejaEcrit = cumul;
+                cumul += extraireUneEntree(zis, racine, courante, jeton, octets -> {
+                    // Le garde des octets RÉELS : une archive qui ment sur sa taille se trahit ici, et
+                    // nulle part avant, puisque le garde préalable lit justement ce mensonge.
+                    bornes.exigerCumulSousLePlafond(dejaEcrit + octets, inventaire);
+                    surProgression.accept(progressionEnCours(rang, total, nomFichier(courante), octets));
+                });
                 zis.closeEntry();
                 if (!courante.isDirectory()) {
                     surProgression.accept(progression(++faits, total, nomFichier(courante)));
@@ -125,11 +144,24 @@ public final class ExtracteurZip {
         }
     }
 
-    /// Nombre d'entrées « fichier » (hors dossiers) de l'archive, lu dans le répertoire central
-    /// (`ZipFile`) sans décompresser : sert de dénominateur à la progression « X / N ».
-    private static int compterFichiers(Path archiveZip) throws IOException {
-        try (ZipFile zf = new ZipFile(archiveZip.toFile())) {
-            return (int) zf.stream().filter(e -> !e.isDirectory()).count();
+    /// Inventorie l'archive et **la refuse si elle s'annonce hors bornes** (#2732), avant qu'un seul
+    /// octet ne soit écrit et avant même que le dossier temporaire n'existe.
+    ///
+    /// L'inventaire sert deux fois : il donne le dénominateur de la progression « X / N » (ce que faisait
+    /// l'ancien `compterFichiers`, à la même lecture du répertoire central), et le plafond auquel les
+    /// octets réellement écrits seront confrontés.
+    ///
+    /// Le dossier d'accueil est créé avant la mesure : l'espace disponible se lit sur un chemin qui
+    /// existe.
+    private static InventaireArchive inventorier(Path archiveZip, Path dossierBase, BornesExtraction bornes) {
+        try {
+            Files.createDirectories(dossierBase);
+            InventaireArchive inventaire = InventaireArchive.lire(archiveZip);
+            bornes.verifierAvantExtraction(inventaire, dossierBase);
+            return inventaire;
+        } catch (IOException e) {
+            throw new UncheckedIOException(
+                    "Lecture de l'archive impossible : " + archiveZip + " (" + e.getMessage() + ")", e);
         }
     }
 
@@ -160,7 +192,9 @@ public final class ExtracteurZip {
         return slash < 0 ? nom : nom.substring(slash + 1);
     }
 
-    private static void extraireUneEntree(
+    /// @return les octets écrits par cette entrée, que l'appelant cumule pour confronter l'archive à sa
+    ///     propre déclaration (#2732)
+    private static long extraireUneEntree(
             ZipInputStream zis, Path racine, ZipEntry entree, JetonAnnulation jeton, LongConsumer surPalier)
             throws IOException {
         Path cible = racine.resolve(entree.getName()).normalize();
@@ -170,11 +204,11 @@ public final class ExtracteurZip {
         }
         if (entree.isDirectory()) {
             Files.createDirectories(cible);
-            return;
+            return 0;
         }
         Files.createDirectories(cible.getParent());
         try (OutputStream os = Files.newOutputStream(cible)) {
-            CopieInterruptible.copier(zis, os, jeton, surPalier);
+            return CopieInterruptible.copier(zis, os, jeton, surPalier);
         }
     }
 
