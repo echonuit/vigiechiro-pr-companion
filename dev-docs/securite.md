@@ -31,10 +31,25 @@ données d'exemple ou de test.
 - **Token de session VigieChiro** : depuis l'intégration API (#716), l'app enregistre un **token de
   session** (fourni par la plateforme, péremption ~14 jours) dans **`connexion.json`** à la racine du
   workspace. Ce fichier est un **artefact local**, **ignoré par git** (`.gitignore`), jamais versionné.
-  À l'écriture, le fichier est **restreint au propriétaire** (POSIX `600`) sur les systèmes qui le
-  supportent, pour qu'un autre compte de la machine ne puisse pas lire le token (sans objet sous
-  Windows, où le fichier reste protégé par les ACL du profil). Un durcissement supplémentaire
-  (chiffrement au repos / keychain OS) reste suivi dans #1140.
+  Le fichier est **restreint au propriétaire** (POSIX `600`) sur les systèmes qui le supportent, pour
+  qu'un autre compte de la machine ne puisse pas lire le token. Sous Windows, il reste protégé par les
+  **ACL du profil utilisateur** : le dossier de travail vit sous le profil, dont les autres comptes non
+  administrateurs n'ont pas la clé. Protection réelle, mais **de nature différente**, et c'est pourquoi
+  elle est écrite plutôt que sous-entendue.
+
+    L'écriture passe par `commun.model.EcritureProtegee` (#2735), et non plus par un `writeString`
+    suivi d'un `chmod`. La différence n'est pas cosmétique : restreindre **après** avoir écrit laisse
+    une fenêtre pendant laquelle le fichier existe avec les permissions de l'umask, souvent `644`. Elle
+    se rouvrait à chaque **création** du fichier, donc à chaque reconnexion, puisque se déconnecter le
+    supprime. Le secret n'atterrit désormais que dans un fichier **créé déjà restreint**, déplacé sur sa
+    cible par un `ATOMIC_MOVE` - ce qui corrige au passage un `connexion.json` tronqué par une
+    interruption, que le lecteur traduisait en « non connecté » sans rien dire.
+
+    Ce garde est **structurel** (`SecretsEcritsProtegesTest`), parce que la fenêtre est un état
+    intermédiaire : après coup, les deux façons d'écrire laissent le même fichier à `600`, et aucun test
+    d'état final ne les distingue.
+
+    Un durcissement supplémentaire (chiffrement au repos / coffre système) est arbitré dans #2736.
 - **Un journal doit pouvoir être joint à un signalement** (#1845). L'utilisateur est invité à envoyer
   ses journaux avec un rapport d'anomalie : ils ne doivent donc porter **ni le jeton, ni les en-têtes,
   ni le corps envoyé**. Ils ne portent pas non plus l'**URL complète** d'un dépôt S3 : une URL
