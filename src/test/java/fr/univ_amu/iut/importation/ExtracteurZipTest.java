@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,6 +26,10 @@ import org.junit.jupiter.api.io.TempDir;
 /// Tests de l'[ExtracteurZip] (#139) : détection `.zip`, décompression vers un temporaire (contenu +
 /// sous-dossiers préservés), garde anti zip-slip, nettoyage récursif.
 class ExtracteurZipTest {
+
+    /// Taille de l'entrée volumineuse des tests d'annulation en cours de copie : au-delà de plusieurs
+    /// paliers de progression intra-entrée, pour que l'arrêt puisse se produire au milieu du fichier.
+    private static final int TAILLE_GROSSE_ENTREE = 12 * 1024 * 1024;
 
     @TempDir
     Path racine;
@@ -142,6 +147,80 @@ class ExtracteurZipTest {
     }
 
     @Test
+    @DisplayName("Une entrée volumineuse donne signe de vie : le volume écrit s'affiche par paliers (#2733)")
+    void progression_a_l_interieur_d_une_entree_volumineuse() throws IOException {
+        Path zip = racine.resolve("nuit.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            ecrireGros(zos, "gros.wav", TAILLE_GROSSE_ENTREE);
+        }
+
+        List<Progression> points = new ArrayList<>();
+        Path extrait = ExtracteurZip.extraireVersDossierTemporaire(zip, base, points::add);
+
+        try {
+            // Le dernier point est celui de fin de fichier ; tous les autres sont tombés PENDANT la
+            // copie, sans quoi l'écran resterait figé sur « 0 / 1 » du début à la fin.
+            List<Progression> pendantLEntree = points.subList(0, points.size() - 1);
+            Progression fin = points.get(points.size() - 1);
+
+            // Le nombre exact de paliers ne s'assure pas : le décompresseur rend des blocs de taille
+            // irrégulière, et le cumul dérive de quelques kilooctets d'un palier à l'autre. Ce qui se
+            // vérifie, c'est qu'une entrée de 12 Mio en produit plusieurs.
+            assertThat(pendantLEntree).hasSizeGreaterThanOrEqualTo(2);
+            assertThat(pendantLEntree.get(0).libelle()).contains("gros.wav").contains("4 Mo");
+            // La barre ne bouge pas pendant l'entrée : la taille décompressée n'est pas connue au fil de
+            // l'eau, et un avancement inventé vaudrait moins qu'un compteur honnête.
+            assertThat(pendantLEntree).allSatisfy(p -> assertThat(p.fraction()).isZero());
+            assertThat(fin.fraction()).isEqualTo(1.0);
+            assertThat(fin.libelle()).contains("1 / 1");
+            assertThat(extrait.resolve("gros.wav")).hasSize(TAILLE_GROSSE_ENTREE);
+        } finally {
+            ExtracteurZip.supprimerRecursivement(extrait);
+        }
+    }
+
+    @Test
+    @DisplayName("Annulation pendant une entrée volumineuse : l'arrêt n'attend pas la fin du fichier (#2733)")
+    void annulation_pendant_une_entree_volumineuse() throws IOException {
+        Path zip = racine.resolve("nuit.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            ecrireGros(zos, "gros.wav", TAILLE_GROSSE_ENTREE);
+        }
+        JetonAnnulation jeton = new JetonAnnulation();
+        // On annule à la première notification, et on relève au même instant la taille du fichier en
+        // train d'être écrit. Si la copie consulte le jeton pendant l'entrée, cette notification tombe à
+        // un palier intra-entrée et le fichier n'est écrit qu'en partie ; sinon la seule notification
+        // possible arrive l'entrée close, et le relevé vaut sa taille entière.
+        List<Long> releve = new ArrayList<>();
+        Consumer<Progression> annulerALaPremiereNotification = p -> {
+            if (releve.isEmpty()) {
+                releve.add(tailleDuFichierEnCours());
+                jeton.annuler();
+            }
+        };
+
+        assertThatThrownBy(() ->
+                        ExtracteurZip.extraireVersDossierTemporaire(zip, base, annulerALaPremiereNotification, jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        assertThat(releve)
+                .as("une notification doit tomber pendant la copie, sans quoi rien ne peut interrompre l'entrée")
+                .hasSize(1);
+        assertThat(releve.get(0))
+                .as(
+                        "la copie doit s'arrêter en cours d'entrée, pas une fois les %d octets écrits",
+                        TAILLE_GROSSE_ENTREE)
+                .isPositive()
+                .isLessThan(TAILLE_GROSSE_ENTREE);
+
+        try (Stream<Path> entrees = Files.list(base)) {
+            assertThat(entrees.filter(Files::isDirectory)
+                            .filter(p -> p.getFileName().toString().startsWith("import-zip-")))
+                    .isEmpty();
+        }
+    }
+
+    @Test
     @DisplayName("Garde zip-slip : une entrée qui s'évade du dossier est refusée (RegleMetierException)")
     void garde_zip_slip() throws IOException {
         Path zip = racine.resolve("malveillant.zip");
@@ -227,5 +306,29 @@ class ExtracteurZipTest {
         zos.putNextEntry(new ZipEntry(nom));
         zos.write(contenu.getBytes(StandardCharsets.UTF_8));
         zos.closeEntry();
+    }
+
+    /// Une entrée de `octets` octets identiques : assez grosse pour franchir plusieurs paliers de
+    /// progression, et pourtant instantanée à produire (des octets identiques se compressent presque à
+    /// rien, l'archive tient en quelques kilooctets).
+    private static void ecrireGros(ZipOutputStream zos, String nom, int octets) throws IOException {
+        zos.putNextEntry(new ZipEntry(nom));
+        zos.write(new byte[octets]);
+        zos.closeEntry();
+    }
+
+    /// Taille du plus gros fichier présent sous la base, relevée **pendant** l'extraction : le
+    /// temporaire `import-zip-*` est supprimé dès l'annulation, et après coup il n'y a plus rien à
+    /// mesurer.
+    private long tailleDuFichierEnCours() {
+        try (Stream<Path> arborescence = Files.walk(base)) {
+            return arborescence
+                    .filter(Files::isRegularFile)
+                    .mapToLong(p -> p.toFile().length())
+                    .max()
+                    .orElse(0L);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Relevé de la taille du fichier en cours impossible", e);
+        }
     }
 }

@@ -341,16 +341,18 @@ public class ImportationViewModel {
     }
 
     /// Variante de [#extraireSiZip(Path)] qui **notifie l'avancement** de la décompression (#146) via
-    /// `surProgression` (un `Progression` « X / N fichiers » par fichier extrait). Le callback est invoqué
-    /// hors du fil JavaFX : l'appelant (la vue) le marshale par le relais du socle vers
-    /// [#appliquerProgression].
+    /// `surProgression` : un `Progression` « X / N fichiers » par fichier extrait, et depuis #2733 des
+    /// points intermédiaires **pendant** un gros fichier (le volume déjà écrit), sans quoi l'affichage
+    /// resterait figé le temps d'une entrée de plusieurs Go. Le callback est invoqué hors du fil JavaFX :
+    /// l'appelant (la vue) le marshale par le relais du socle vers [#appliquerProgression].
     public Path extraireSiZip(Path chemin, Consumer<Progression> surProgression) {
         return extraireSiZip(chemin, surProgression, JetonAnnulation.neutre());
     }
 
-    /// Variante **annulable** de l'extraction (#146) : `jeton` interrompt la décompression entre deux
-    /// fichiers (le temporaire partiel est alors nettoyé par l'extracteur, et `dossierTemporaireZip` reste
-    /// `null` puisque l'affectation n'aboutit pas).
+    /// Variante **annulable** de l'extraction (#146, #2733) : `jeton` interrompt la décompression entre
+    /// deux fichiers **et pendant la copie de chacun**, ce qui rend « Annuler » réactif même sur une
+    /// entrée de plusieurs Go (le temporaire partiel est alors nettoyé par l'extracteur, et
+    /// `dossierTemporaireZip` reste `null` puisque l'affectation n'aboutit pas).
     public Path extraireSiZip(Path chemin, Consumer<Progression> surProgression, JetonAnnulation jeton) {
         nettoyerTemporaireZip(); // une nouvelle source remplace l'éventuel zip précédent
         if (ExtracteurZip.estZip(chemin)) {

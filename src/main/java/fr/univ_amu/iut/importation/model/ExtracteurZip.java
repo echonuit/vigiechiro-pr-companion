@@ -1,8 +1,10 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.CopieInterruptible;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -12,6 +14,7 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -27,8 +30,8 @@ import java.util.zip.ZipInputStream;
 /// l'extraction échouerait en `ENOSPC`. Le workspace vit sur le disque, là où l'import recopie ensuite
 /// les fichiers : l'extraction et l'import partagent donc le même volume.
 ///
-/// **Mémoire bornée** (#104) : chaque entrée est recopiée en **flux** ([java.io.InputStream#transferTo],
-/// tampon interne), jamais chargée entière en mémoire : un zip volumineux ne sature donc pas le tas.
+/// **Mémoire bornée** (#104) : chaque entrée est recopiée en **flux** ([CopieInterruptible], tampon
+/// explicite), jamais chargée entière en mémoire : un zip volumineux ne sature donc pas le tas.
 ///
 /// **Garde « zip-slip »** : une entrée dont le chemin s'évaderait du dossier d'extraction (`../…`) est
 /// refusée, pour ne pas écrire hors de la zone temporaire.
@@ -61,8 +64,14 @@ public final class ExtracteurZip {
     /// `surProgression` est notifié après chaque fichier extrait (« Décompression : X / N fichiers… »).
     /// Le callback peut être invoqué **hors du fil JavaFX** : l'appelant le marshale lui-même.
     ///
-    /// **Annulation** (#146) : `jeton` est vérifié avant chaque entrée ; une annulation lève
-    /// [OperationAnnuleeException] et le temporaire partiel est supprimé (cf. `catch RuntimeException`).
+    /// **Annulation** (#146, #2733) : `jeton` est vérifié avant chaque entrée, et **pendant** la copie de
+    /// chacune ([CopieInterruptible]) : une entrée de plusieurs Go rendait auparavant « Annuler »
+    /// inopérant pendant toute sa durée. Une annulation lève [OperationAnnuleeException] et le temporaire
+    /// partiel est supprimé (cf. `catch RuntimeException`).
+    ///
+    /// **Signe de vie sur une grosse entrée** (#2733) : le compteur « X / N fichiers » ne bouge pas tant
+    /// qu'un fichier n'est pas achevé. `surProgression` est donc aussi notifié par paliers **à
+    /// l'intérieur** d'une entrée, avec le volume déjà écrit.
     ///
     /// @param dossierBase volume d'accueil de l'extraction (workspace disque), créé s'il manque
     /// @param surProgression notifié à chaque fichier extrait (avancement déterminé)
@@ -77,11 +86,17 @@ public final class ExtracteurZip {
             ZipEntry entree;
             while ((entree = zis.getNextEntry()) != null) {
                 jeton.leverSiAnnule(); // arrêt au plus tôt, entre deux entrées
-                boolean estFichier = !entree.isDirectory();
-                extraireUneEntree(zis, racine, entree);
+                ZipEntry courante = entree;
+                int rang = faits;
+                extraireUneEntree(
+                        zis,
+                        racine,
+                        courante,
+                        jeton,
+                        octets -> surProgression.accept(progressionEnCours(rang, total, nomFichier(courante), octets)));
                 zis.closeEntry();
-                if (estFichier) {
-                    surProgression.accept(progression(++faits, total, nomFichier(entree)));
+                if (!courante.isDirectory()) {
+                    surProgression.accept(progression(++faits, total, nomFichier(courante)));
                 }
             }
             // Re-vérification finale : une annulation pendant la dernière entrée ne doit pas laisser
@@ -125,6 +140,18 @@ public final class ExtracteurZip {
         return new Progression(compteur + " · " + nomFichier, fraction);
     }
 
+    /// Point de progression **à l'intérieur** d'une entrée (#2733) : le compteur de fichiers n'a pas
+    /// bougé, mais le volume écrit dit que la copie avance.
+    ///
+    /// La fraction reste celle des fichiers **achevés**. La taille décompressée d'une entrée n'est pas
+    /// connue de façon fiable en lecture au fil de l'eau (`ZipEntry#getSize` vaut souvent `-1` tant que
+    /// l'entrée n'est pas close) : gonfler la barre annoncerait un avancement inventé. C'est le libellé
+    /// qui porte le signe de vie.
+    private static Progression progressionEnCours(int faits, int total, String nomFichier, long octetsEcrits) {
+        Progression achevee = progression(faits, total, nomFichier);
+        return new Progression(achevee.libelle() + " · " + Formats.octetsLisibles(octetsEcrits), achevee.fraction());
+    }
+
     /// Nom de fichier (dernier segment) d'une entrée zip, pour afficher le **fichier courant** (#146)
     /// sans le chemin interne complet de l'archive.
     private static String nomFichier(ZipEntry entree) {
@@ -133,7 +160,9 @@ public final class ExtracteurZip {
         return slash < 0 ? nom : nom.substring(slash + 1);
     }
 
-    private static void extraireUneEntree(ZipInputStream zis, Path racine, ZipEntry entree) throws IOException {
+    private static void extraireUneEntree(
+            ZipInputStream zis, Path racine, ZipEntry entree, JetonAnnulation jeton, LongConsumer surPalier)
+            throws IOException {
         Path cible = racine.resolve(entree.getName()).normalize();
         if (!cible.startsWith(racine)) {
             throw new RegleMetierException(
@@ -145,7 +174,7 @@ public final class ExtracteurZip {
         }
         Files.createDirectories(cible.getParent());
         try (OutputStream os = Files.newOutputStream(cible)) {
-            zis.transferTo(os); // recopie en flux : mémoire bornée (#104)
+            CopieInterruptible.copier(zis, os, jeton, surPalier);
         }
     }
 

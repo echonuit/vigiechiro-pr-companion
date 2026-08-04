@@ -669,15 +669,42 @@ mêmes exigences : mémoire bornée, annulation, pas d'archive partielle.
 **La solution.** `commun.model.EcrivainZip` (#2792), statique et sans JavaFX : `ecrire(destination,
 entrées texte, entrées fichier, progression, jeton)` renvoie la taille écrite. Deux natures d'entrées
 (`EntreeTexte` pour un contenu déjà en mémoire - un CSV -, `EntreeFichier` copiée **en flux**), le
-[JetonAnnulation](#occupation-dun-écran-pendant-un-traitement-long-socle-commun) vérifié **avant chaque
-entrée** avec re-vérification finale, la progression émise entrée par entrée (« Archive : X / N ·
-nom »), et l'archive **partielle supprimée** sur échec comme sur annulation (patron `ExtracteurZip`,
-en miroir).
+[JetonAnnulation](#occupation-dun-écran-pendant-un-traitement-long-socle-commun) vérifié avant chaque
+entrée, **pendant** la copie de chacune (cf. ci-dessous) et une dernière fois avant de conclure, la
+progression émise entrée par entrée (« Archive : X / N · nom »), et l'archive **partielle supprimée**
+sur échec comme sur annulation (patron `ExtracteurZip`, en miroir).
 
 **La règle.** Toute nouvelle archive « assemblée » (un manifeste + des fichiers) passe par
 `EcrivainZip` ; `CompacteurDepot` reste l'emballeur **du dépôt** (son nommage et son découpage sont un
 contrat de la plateforme, pas une variante d'options). La structure d'archive de l'export des sons
 (sous-dossier par session) est actée par l'ADR 2792.
+
+## Une copie longue s'interrompt en cours de route (socle `commun`)
+
+**Le problème.** Un jeton d'annulation consulté **entre deux unités de travail** ne protège que si les
+unités sont courtes. Deux boucles vérifiaient le jeton consciencieusement avant chaque entrée d'une
+archive, puis recopiaient l'entrée **d'un trait** (`transferTo` à la décompression, `Files.copy` à
+l'écriture). Sur une entrée de plusieurs gigaoctets - un cas ordinaire pour une nuit de terrain - le
+bouton « Annuler » restait sans effet pendant toute la durée de la copie, et la barre de progression
+figée sur le même « X / N fichiers ». Le trou était le même dans les deux sens, et corriger un seul
+côté aurait laissé l'autre en arrière (#2733).
+
+**La solution.** `commun.model.CopieInterruptible.copier(source, destination, jeton, surPalier)`
+recopie **bloc par bloc** (64 Kio) : le jeton est consulté entre deux blocs, et les octets cumulés sont
+notifiés tous les 4 Mio. La mémoire reste bornée comme avant (#104) : c'est le même flux, avec un
+tampon explicite. Le palier compte **dans les deux sens** : assez rapproché pour donner signe de vie,
+assez espacé pour ne pas inonder l'appelant, qui marshale chaque notification vers le fil JavaFX (une
+tranche de nuit ordinaire n'atteint jamais le palier et ne coûte donc aucune notification de plus).
+
+Elle ne ferme ni la source ni la destination : les deux appelants écrivent dans un flux d'archive
+qu'ils continuent d'alimenter. Et elle laisse la destination **en l'état** sur annulation : le
+nettoyage appartient à qui a commencé (temporaire d'extraction, archive partielle), et tous deux le
+faisaient déjà.
+
+**La règle.** Toute recopie dont la durée dépend de la taille d'un fichier utilisateur passe par
+`CopieInterruptible` : un `transferTo` ou un `Files.copy` dans une opération annulable est un bouton
+« Annuler » qui ment. Le corollaire vaut pour la progression : un compteur « X / N unités » ne suffit
+pas quand **une** unité peut durer des minutes.
 
 **Deux exports de sons, un seul comportement.** L'export « observations + sons » (#2793) et l'export
 de la **bibliothèque de sons de référence** (P10) passent tous deux par cet écrivain, derrière la même
