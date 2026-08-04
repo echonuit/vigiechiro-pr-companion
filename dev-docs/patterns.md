@@ -1226,6 +1226,34 @@ Deux corollaires, appris en posant la même colonne sur trois tables :
   elles porteraient la même valeur sur toutes les lignes. Une colonne ajoutée à ce groupe doit y être
   inscrite, sans quoi elle reste seule à s'afficher là où ses voisines s'effacent.
 
+## Confronter deux lectures d'une même donnée
+
+Quand une donnée se **dérive de deux sources** qui peuvent se contredire, l'écart mérite d'être montré :
+il est invisible sinon. C'est le rôle de l'**audit de cohérence**, et le patron se répète
+([ADR 3168](decisions/3168-un-audit-qui-ne-peut-pas-trancher-montre-sans-juger.md), premier cas : le
+département d'un point, lu par son carré et par sa commune).
+
+**Une classe par confrontation**, collaboratrice de `ServiceAuditCoherence` comme `BalayageDisque` et
+`AuditEnLigne`, branchée dans `auditerTout()`. Une catégorie s'ajoute à `CategorieConstat` et rejoint
+d'elle-même les puces de filtre, construites sur `values()`.
+
+Trois règles, apprises sur le premier cas :
+
+- **la sévérité est un contrat de sortie, pas une couleur.** `audit-coherence` rend `1` dès qu'un constat
+  est en erreur. Un écart dont le cas **normal** est d'exister doit donc être `INFO`, sinon la commande
+  échoue sur une base saine et les scripts qui l'appellent cassent ;
+- **montrer n'est pas trier.** Si l'audit ne dispose pas de quoi départager l'écart légitime du suspect,
+  il émet le même constat pour les deux et le dit. Un tri approximatif serait pire que pas de tri : il
+  ferait croire les faux positifs déjà écartés, et les vrais cesseraient d'être lus ;
+- **s'abstenir plutôt qu'affirmer.** Deux écritures qu'on ne sait pas comparer ne divergent pas. Un carré
+  corse porte `20` là où l'INSEE écrit `2A`/`2B` : comparer les chaînes telles quelles ferait de chaque
+  point corse une divergence. `RegionsFrancaises.memeDepartement` n'affirme que les écarts qu'elle sait
+  **démontrer**.
+
+**Où le constat vit.** Sur la **portée de ce qu'il décrit**, pas sur celle de ce qui l'a déclenché. Un
+écart de topologie (un point, un carré) sort de l'audit **global** ; l'audit ciblé d'une nuit
+(`auditerPassage`) le répéterait à chaque passage du même point sans rien apprendre.
+
 ## Icônes d'IHM : un pictogramme se pose, il ne s'écrit pas
 
 **Le problème.** Les libellés portaient leurs pictogrammes **en toutes lettres** dans le `text` des
