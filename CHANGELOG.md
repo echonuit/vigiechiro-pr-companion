@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.166.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.165.2...v2.166.0) (2026-08-04)
+
+
+### Features
+
+* **commun:** memoire de session sur les quatre ecrans, avec Tout effacer ([#3188](https://github.com/echonuit/vigiechiro-pr-companion/issues/3188)) ([bb695a9](https://github.com/echonuit/vigiechiro-pr-companion/commit/bb695a9bc053cba83dcd780e0cf5195a747c0683)), closes [#3093](https://github.com/echonuit/vigiechiro-pr-companion/issues/3093) [#3098](https://github.com/echonuit/vigiechiro-pr-companion/issues/3098)
+
 ## [2.165.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.165.1...v2.165.2) (2026-08-04)
 
 
