@@ -429,45 +429,47 @@ class GestionnaireFiltresTest {
                 CriteresAudio.rechercheTexte());
         assertThat(ignore).isNotNull();
 
-        // Ajouter la puce Lieu : valeurs distinctes groupées par dimension (communes, carrés, points,
-        // sites), triées au sein de chacune ; rien de coché n'écarte rien.
+        // Ajouter la puce Lieu : valeurs distinctes groupées par dimension (communes, carrés, points),
+        // triées au sein de chacune ; rien de coché n'écarte rien.
         robot.interact(() -> menuLocal.getItems().get(0).fire());
         MenuButton choixLieu = menuBoutonDe(pucesLocales, 0);
         // Les EN-TÊTES nomment les dimensions, dans l'ordre (#2992) : sans eux, rien ne dit si
-        // « Aix-en-Provence » est une commune ou un site.
-        assertThat(entetes(choixLieu)).containsExactly("Communes", "Carrés", "Points", "Sites");
+        // « Aix-en-Provence » est une commune ou un carré.
+        assertThat(entetes(choixLieu)).containsExactly("Communes", "Carrés", "Points");
         // Les valeurs COCHABLES, groupe par groupe. Le point est qualifié par son carré : le schéma pose
-        // UNIQUE(site_id, code), donc « A1 » seul désignerait autant de lieux qu'il y a de carrés.
+        // UNIQUE(site_id, code), donc « A1 » seul désignerait autant de lieux qu'il y a de carrés. Le
+        // carré, lui, porte son NOM CONVIVIAL (#3157) : il n'y a plus de groupe « Sites » offrant une
+        // seconde fois les mêmes lieux sous leur autre étiquette.
         assertThat(cochables(choixLieu))
                 .containsExactly(
                         "Aix-en-Provence",
                         "Venelles",
-                        "640380",
-                        "870150",
+                        "640380 · Jardin de Serge",
+                        "870150 · Le pré",
                         "640380 · A1",
-                        "870150 · B2",
-                        "Jardin de Serge",
-                        "Le pré");
+                        "870150 · B2");
         assertThat(vues).hasSize(2);
 
         // Cocher la COMMUNE « Aix-en-Provence » (lot 0) → seule la ligne 1 reste.
         robot.interact(() -> coche(choixLieu, "Aix-en-Provence").setSelected(true));
         assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L);
 
-        // Cocher AUSSI le CARRÉ « 870150 » → appartenance : chaque ligne passe par l'une de ses dimensions.
-        robot.interact(() -> coche(choixLieu, "870150").setSelected(true));
+        // Cocher AUSSI le CARRÉ de l'autre ligne → appartenance : chaque ligne passe par l'une de ses
+        // dimensions.
+        robot.interact(() -> coche(choixLieu, "870150 · Le pré").setSelected(true));
         assertThat(vues).hasSize(2);
 
-        // Le POINT seul, puis le SITE seul : chaque dimension filtre.
+        // Le POINT seul, puis le CARRÉ seul : chaque dimension filtre. Le carré retient par son entrée
+        // unique la ligne que son numéro retenait et celle que son nom retenait.
         robot.interact(() -> {
             coche(choixLieu, "Aix-en-Provence").setSelected(false);
-            coche(choixLieu, "870150").setSelected(false);
+            coche(choixLieu, "870150 · Le pré").setSelected(false);
             coche(choixLieu, "870150 · B2").setSelected(true);
         });
         assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
         robot.interact(() -> {
             coche(choixLieu, "870150 · B2").setSelected(false);
-            coche(choixLieu, "Jardin de Serge").setSelected(true);
+            coche(choixLieu, "640380 · Jardin de Serge").setSelected(true);
         });
         assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L);
     }
@@ -657,21 +659,25 @@ class GestionnaireFiltresTest {
                         CriteresAudio.lieu(() -> filtresLocaux.saufLui(ClesCriteres.LIEU))),
                 CriteresAudio.rechercheTexte());
 
-        // La puce Lieu, seule, offre les lieux des deux lignes.
+        // La puce Lieu, seule, offre les lieux des deux lignes. Le carré porte son nom convivial (#3157) :
+        // une entrée par carré, pas deux.
         local.poser(ClesCriteres.LIEU, List.of());
         MenuButton lieu = (MenuButton) pucesLocales.lookup(".critere-multiple");
-        assertThat(entreesDe(lieu)).contains("640380", "870150");
+        assertThat(entreesDe(lieu)).contains("640380 · Site", "870150 · Site");
 
         // 1. Le « tous sauf lui ». On coche un lieu : la table ne montre plus que lui, mais la puce doit
         // continuer d'offrir les AUTRES lieux. Lire la liste déjà filtrée la ferait s'auto-effondrer sur
         // le seul choix déjà fait, et l'on ne pourrait jamais en cocher un second.
+        //
+        // La valeur posée est le NUMÉRO NU, comme le transport « Voir sur la carte » l'envoie : le
+        // rattrapage de #3158 la replace sur l'entrée qualifiée, un seul carré la reprenant.
         local.poser(ClesCriteres.LIEU, List.of("640380"));
         rouvrir(lieu);
 
         assertThat(entreesDe(lieu))
                 .as("cocher 640380 ne doit pas retirer 870150 du menu : sinon la puce ne sait plus"
                         + " désigner qu'une seule valeur, celle déjà retenue")
-                .contains("640380", "870150");
+                .contains("640380 · Site", "870150 · Site");
 
         // 2. Le cascadage proprement dit, sur un AUTRE critère. Isoler les chiroptères vide le carré
         // 870150 : le proposer ferait cliquer sur un choix qui ne ramène rien.
@@ -679,7 +685,7 @@ class GestionnaireFiltresTest {
         local.poser(ClesCriteres.GROUPE, List.of("Chiroptères"));
         rouvrir(lieu);
 
-        assertThat(entreesDe(lieu)).contains("640380").doesNotContain("870150");
+        assertThat(entreesDe(lieu)).contains("640380 · Site").doesNotContain("870150 · Site");
     }
 
     /// Rejoue l'ouverture du menu, moment où le domaine se recalcule (#3095).

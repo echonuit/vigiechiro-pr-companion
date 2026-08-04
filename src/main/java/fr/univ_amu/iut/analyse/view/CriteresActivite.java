@@ -41,6 +41,9 @@ final class CriteresActivite {
     /// dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien de coché n'écarte
     /// rien.
     ///
+    /// Le carré porte son **nom convivial** quand il en a un (« 640380 · Vallon », #3157), depuis que la
+    /// projection le remonte (#3175). L'écran l'ignorait, non par choix, mais faute de l'avoir en main.
+    ///
     /// C'est la jumelle de `CriteresAnalyse.lieu` et de `CriteresAudio.lieu`, dont elle reprend le libellé
     /// et l'ordre des dimensions : le vocabulaire d'un critère se lit d'un écran à l'autre.
     ///
@@ -60,8 +63,8 @@ final class CriteresActivite {
                 contactsFiltres::get,
                 List.of(
                         new CritereLieu.Dimension<>("Communes", ContactHoraire::commune),
-                        new CritereLieu.Dimension<>("Carrés", ContactHoraire::numeroCarre),
-                        new CritereLieu.Dimension<>("Points", ContactHoraire::pointQualifie)));
+                        CritereLieu.carres(ContactHoraire::numeroCarre, ContactHoraire::nomSite),
+                        CritereLieu.points(ContactHoraire::pointQualifie)));
     }
 
     /// Critère **Nuit** (une nuit = un passage) : liste déroulante des nuits présentes (dates du soir),

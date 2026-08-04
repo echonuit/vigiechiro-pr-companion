@@ -800,26 +800,28 @@ class AnalyseViewTest {
                 CriteresAnalyse.rechercheTexte());
         assertThat(ignore).isNotNull();
 
-        // Valeurs distinctes groupées par dimension (communes, carrés, sites), triées au sein de chacune.
+        // Valeurs distinctes groupées par dimension (communes, carrés), triées au sein de chacune.
         // Le POINT n'y figure pas : ObservationAnalyse ne porte qu'un idPoint technique, pas un code.
+        // Le SITE non plus, et pour une tout autre raison : il n'est pas une dimension. Le carré porte
+        // son nom convivial dans SA propre entrée (#3157), au lieu d'un groupe qui doublait le premier.
         robot.interact(() -> menuLocal.getItems().get(0).fire());
         MenuButton choixLieu = menuBoutonDeLieu(pucesLocales);
-        assertThat(entetesLieu(choixLieu)).containsExactly("Communes", "Carrés", "Sites");
+        assertThat(entetesLieu(choixLieu)).containsExactly("Communes", "Carrés");
         assertThat(cochablesLieu(choixLieu))
-                .containsExactly("Aix-en-Provence", "Venelles", "640380", "870150", "Jardin de Serge", "Le pré");
+                .containsExactly("Aix-en-Provence", "Venelles", "640380 · Jardin de Serge", "870150 · Le pré");
         assertThat(vues).as("rien de coché n'écarte rien").hasSize(2);
 
         // La COMMUNE seule, puis le CARRÉ de l'autre ligne : appartenance, pas conjonction.
         robot.interact(() -> cocheLieu(choixLieu, "Aix-en-Provence").setSelected(true));
         assertThat(vues).extracting(ObservationAnalyse::taxonRetenu).containsExactly("Rhifer");
-        robot.interact(() -> cocheLieu(choixLieu, "870150").setSelected(true));
+        robot.interact(() -> cocheLieu(choixLieu, "870150 · Le pré").setSelected(true));
         assertThat(vues).as("une ligne passe par l'UNE de ses dimensions").hasSize(2);
 
-        // Le SITE seul : la troisième dimension filtre aussi.
+        // Le carré SEUL, par son entrée qualifiée : elle retient la ligne que son numéro retenait et
+        // celle que son nom retenait, puisqu'il n'y a jamais eu qu'un lieu derrière les deux.
         robot.interact(() -> {
             cocheLieu(choixLieu, "Aix-en-Provence").setSelected(false);
-            cocheLieu(choixLieu, "870150").setSelected(false);
-            cocheLieu(choixLieu, "Le pré").setSelected(true);
+            cocheLieu(choixLieu, "870150 · Le pré").setSelected(true);
         });
         assertThat(vues).extracting(ObservationAnalyse::taxonRetenu).containsExactly("Pippip");
     }

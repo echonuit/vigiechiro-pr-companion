@@ -128,25 +128,27 @@ final class CriteresAnalyse {
     }
 
     /// Critère **Lieu** (#2966, chantier #2790) : liste à cocher des lieux **présents dans les
-    /// observations filtrées**, toutes dimensions confondues, dans l'ordre commune, carré, site. Une
-    /// observation passe si **l'une** de ses dimensions figure parmi les valeurs cochées
-    /// ([CritereListe#multipleParmi]) ; rien de coché n'écarte rien.
+    /// observations filtrées**, dans l'ordre commune puis carré. Une observation passe si **l'une** de
+    /// ses dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien de coché
+    /// n'écarte rien.
     ///
     /// C'est la jumelle de `CriteresAudio.lieu` (#2794), dont elle reprend le libellé et l'ordre des
     /// dimensions à dessein : le vocabulaire d'un critère se lit d'un écran à l'autre, et deux ordres
     /// différents pour la même puce se paieraient à chaque va-et-vient.
     ///
+    /// Le carré porte son **nom convivial** quand il en a un (« 640380 · Vallon », #3157). Le groupe
+    /// « Sites » qui doublait le groupe « Carrés » a disparu : les deux désignaient le même objet.
+    ///
     /// **Une dimension de moins que la vue audio, et c'est délibéré** : le point n'y figure pas.
     /// [ObservationAnalyse] porte `idPoint`, un identifiant technique, et non un code affichable ; une
-    /// puce qui listerait des nombres opaques serait pire que son absence. Le point reviendra ici le
-    /// jour où la projection remontera son code, pas avant.
+    /// puce qui listerait des nombres opaques serait pire que son absence. Le point arrive avec #3161,
+    /// qui remonte son code.
     static CritereFiltre<ObservationAnalyse> lieu(Supplier<? extends List<ObservationAnalyse>> observationsFiltrees) {
         return CritereLieu.de(
                 observationsFiltrees::get,
                 List.of(
                         new CritereLieu.Dimension<>("Communes", ObservationAnalyse::commune),
-                        new CritereLieu.Dimension<>("Carrés", ObservationAnalyse::numeroCarre),
-                        new CritereLieu.Dimension<>("Sites", ObservationAnalyse::nomSite)));
+                        CritereLieu.carres(ObservationAnalyse::numeroCarre, ObservationAnalyse::nomSite)));
     }
 
     /// **Recherche texte** de la barre : vrai si un des champs cherchables d'une observation (taxon retenu,

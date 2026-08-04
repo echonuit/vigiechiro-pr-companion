@@ -83,29 +83,37 @@ class MemoireRevueAudioTest {
         // avec la puce visible et ne filtre plus : il montre plus que ce qu'il annonce.
         List<ResteDeRestauration> signalements = new ArrayList<>();
 
-        // Ouverture 1 : le carré « Z1 » est présent, on filtre dessus, puis on ferme (le retrait de la
-        // scène déclenche la mémorisation).
+        // Ouverture 1 : le carré « 640380 » est présent, on filtre dessus, puis on ferme (le retrait de
+        // la scène déclenche la mémorisation).
         TableView<LigneObservationAudio> premiere = tableAvecColonnes();
         robot.interact(() -> {
             racine.getChildren().add(premiere);
             GestionnaireFiltres<LigneObservationAudio> filtres =
-                    gestionnaireSur(ligneAuCarre("Z1"), ligneAuCarre("Z2"));
+                    gestionnaireSur(ligneAuCarre("640380"), ligneAuCarre("640381"));
             memoire.installer(premiere, filtres, reste -> {});
-            filtres.poser("lieu", List.of("Z1"));
+            filtres.poser("lieu", List.of("640380"));
         });
         robot.interact(() -> racine.getChildren().remove(premiere));
 
-        // Ouverture 2 : plus aucune ligne du carré « Z1 », la valeur mémorisée n'est donc plus offerte.
+        // Ouverture 2 : plus aucune ligne du carré « 640380 », la valeur mémorisée n'est plus offerte.
         TableView<LigneObservationAudio> seconde = tableAvecColonnes();
         robot.interact(() -> {
             racine.getChildren().add(seconde);
-            memoire.installer(seconde, gestionnaireSur(ligneAuCarre("Z2")), signalements::add);
+            memoire.installer(seconde, gestionnaireSur(ligneAuCarre("640381")), signalements::add);
         });
 
         assertThat(signalements)
                 .as("la mémoire de session doit dire ce qu'elle n'a pas su remettre en place")
                 .hasSize(1);
-        assertThat(signalements.get(0).valeursPerdues()).containsExactly("Z1");
+        // Ce qui se mémorise est l'étiquette affichée, et le carré porte son nom convivial depuis #3157.
+        // Le rattrapage (#3158) ne peut rien ici : ce n'est pas un renommage, c'est un lieu qui a
+        // réellement disparu du jeu de lignes.
+        //
+        // Les carrés de cette fixture sont des NUMÉROS, et non « Z1 » / « Z2 » comme avant #3157 : un
+        // carré nommé comme un code de point produisait deux entrées partageant le segment « Z1 » (le
+        // carré et le point « Z1 · A1 »), que le rattrapage refuse d'arbitrer. La collision était un
+        // artefact de fixture - un numéro de carré a six chiffres.
+        assertThat(signalements.get(0).valeursPerdues()).containsExactly("640380 · Site");
     }
 
     /// Une barre de filtres portant la puce « Lieu » de l'écran audio, alimentée par `lignes`.
