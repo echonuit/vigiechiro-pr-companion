@@ -38,7 +38,7 @@
     <TextField fx:id="champRecherche" promptText="Rechercher (espèce, carré…)" prefWidth="240.0"/>
     <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"/>
     <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS"/>
-    <Button fx:id="boutonToutEffacer" text="Tout effacer"
+    <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer"
             accessibleText="Effacer tous les filtres"/>
   </HBox>
 
