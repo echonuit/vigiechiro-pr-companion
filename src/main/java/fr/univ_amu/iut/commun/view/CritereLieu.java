@@ -14,20 +14,21 @@ import java.util.regex.Pattern;
 /// lui-même : « C'est la jumelle de `CriteresAudio.lieu` (#2794), dont elle reprend le libellé et
 /// l'ordre ». Ce qui variait tenait à **une** chose : quelles dimensions l'écran offre.
 ///
-/// ## Pourquoi les dimensions sont un paramètre
+/// ## Trois niveaux, dont un porte deux étiquettes
 ///
-/// Elles varient réellement d'un écran à l'autre, en **nombre** comme en **composition** :
+/// Le domaine n'a que **trois** niveaux géographiques, et non quatre : la **commune** (dérivée du GPS
+/// du point, ADR 2791), le **carré** et le **point d'écoute**. Ce qui ressemblait à une quatrième
+/// dimension, le « site », est le **nom convivial du carré** : `monitoring_site` porte
+/// `square_number` et `friendly_name` sur la même ligne.
 ///
-/// | Écran | Dimensions |
-/// |---|---|
-/// | Sons & validation | communes, carrés, points, sites |
-/// | Espèces & observations | communes, carrés, **sites** |
-/// | Activité de la nuit | communes, carrés, **points** |
-/// | Carte & passages | communes, carrés, **points** |
+/// Les deux s'offrent donc dans **une seule entrée** ([#carres]), « 640380 · Vallon », et non dans deux
+/// groupes qui retenaient les mêmes lignes (#3157, chantier #3151).
 ///
-/// Trois écrans sur quatre en offrent trois, et **pas les mêmes trois**. Aplatir cela derrière une
-/// fabrique à quatre dimensions fixes ferait trancher une question d'usage par une commodité
-/// d'implémentation ; la question, elle, est posée dans #3145 et attend sa réponse.
+/// ## Pourquoi les dimensions restent un paramètre
+///
+/// Leur composition varie d'un écran à l'autre : Espèces & observations n'offre pas le point tant que
+/// sa projection ne remonte pas son code (#3161). C'est un paramètre parce que l'usage en décide, pas
+/// une commodité d'implémentation.
 ///
 /// ## Sémantique
 ///
@@ -43,27 +44,90 @@ public final class CritereLieu {
     /// Le séparateur d'une valeur **qualifiée** par ce qui la désambiguïse : « 640380 · A1 » (#2992).
     ///
     /// Trois features l'écrivent encore en dur dans leur `pointQualifie` (`CriteresAudio`,
-    /// `CriteresMultisite`, `ContactHoraire`). Les y brancher demanderait de le remonter en
-    /// `commun.model` : `ContactHoraire` est un modèle, et un modèle ne dépend pas d'une vue
-    /// (`ArchitectureTest`). À faire avec #3157, qui qualifie le carré à son tour.
+    /// `CriteresMultisite`, `ContactHoraire`), et **ce n'est pas qu'une duplication à résorber** : leur
+    /// règle est l'inverse de celle de [#qualifier]. Pour un point, le suffixe **est** le lieu, et son
+    /// absence ne laisse rien à offrir ; pour un carré, le suffixe n'est qu'un nom, et son absence
+    /// laisse le numéro. Les fondre donnerait une entrée « 640380 » dans le groupe « Points » pour une
+    /// ligne sans point.
+    ///
+    /// Ce qui **pourrait** se partager est le seul séparateur. Cela demanderait de le remonter en
+    /// `commun.model`, `ContactHoraire` étant un modèle, et un modèle ne dépend pas d'une vue
+    /// (`ArchitectureTest`).
     public static final String SEPARATEUR = " · ";
 
-    /// Rattrapage des valeurs mémorisées **avant** qualification (#3158) : « Z1 » désigne encore
-    /// « 640380 · Z1 », puisque la qualification n'a rien changé au lieu, seulement à son écriture.
-    ///
-    /// Elle ne rattrape que si **une seule** entrée reprend la valeur. Sur les écrans qui couvrent la
-    /// saison entière, « Z1 » existe dans presque tous les carrés : cocher le premier venu filtrerait
-    /// sur un point que l'utilisateur n'a pas choisi. Le silence laisse #3093 le dire.
-    private static final CritereListe.Rattrapage PAR_SEGMENT = CritereLieu::parSegment;
-
     private CritereLieu() {}
+
+    /// Où se trouve, dans l'entrée d'**aujourd'hui**, la valeur telle qu'une vue d'**hier** l'a
+    /// mémorisée (#3158).
+    ///
+    /// Qualifier une entrée ne change pas le lieu, seulement son écriture ; encore faut-il savoir **de
+    /// quel côté** l'ancienne écriture a survécu. Sans cela, « 640380 » paraît désigner aussi bien le
+    /// carré « 640380 · Vallon » que le point « 640380 · A1 », puisque le point est qualifié **par**
+    /// son carré. Les deux se disputeraient la valeur, et le rattrapage s'abstiendrait toujours.
+    public enum EcritureAncienne {
+
+        /// L'entrée **commence** par elle : « 640380 » a donné « 640380 · Vallon » (#3157).
+        EN_TETE,
+
+        /// L'entrée **finit** par elle : « A1 » a donné « 640380 · A1 » (#2992).
+        EN_QUEUE;
+
+        /// Vrai si `entree` est l'écriture actuelle de `memorisee`, du côté que désigne cette constante.
+        private boolean reconnait(String entree, String memorisee) {
+            List<String> segments = segments(entree);
+            return memorisee.equals(this == EN_TETE ? segments.getFirst() : segments.getLast());
+        }
+    }
 
     /// Une **dimension** géographique offerte par le critère : son intitulé de groupe et ce qu'on lit
     /// sur une ligne.
     ///
     /// @param titre l'en-tête du groupe (« Communes », « Carrés »…), au pluriel comme les autres
     /// @param lecture ce que la dimension vaut pour une ligne, ou `null` si la ligne ne la porte pas
-    public record Dimension<T>(String titre, Function<T, String> lecture) {}
+    /// @param ecritureAncienne où retrouver, dans ses valeurs, une valeur mémorisée **avant**
+    ///     qualification, ou `null` si cette dimension n'a jamais changé d'écriture (la commune)
+    public record Dimension<T>(String titre, Function<T, String> lecture, EcritureAncienne ecritureAncienne) {
+
+        /// Une dimension qui n'a **jamais** changé d'écriture : rien à rattraper.
+        public Dimension(String titre, Function<T, String> lecture) {
+            this(titre, lecture, null);
+        }
+    }
+
+    /// La dimension **« Carrés »** : une entrée par carré, portant ses **deux étiquettes** quand la
+    /// seconde existe (« 640380 · Vallon »), son numéro seul sinon (#3157).
+    ///
+    /// Le numéro et le nom convivial ne sont pas deux dimensions : `monitoring_site` porte les deux
+    /// colonnes, et cocher « 640380 » puis « Vallon » retenait exactement les mêmes lignes. Les offrir
+    /// séparément allongeait le menu d'une entrée par carré sans rien ajouter, et laissait deux carrés
+    /// homonymes se confondre sous un même nom - le défaut que #2992 avait corrigé pour les points.
+    ///
+    /// @param numero le numéro officiel du carré, l'identité de l'entrée
+    /// @param nomConvivial le nom que l'utilisateur a donné au site, ou `null` s'il ne l'a pas nommé
+    public static <T> Dimension<T> carres(Function<T, String> numero, Function<T, String> nomConvivial) {
+        return new Dimension<>(
+                "Carrés", ligne -> qualifier(numero.apply(ligne), nomConvivial.apply(ligne)), EcritureAncienne.EN_TETE);
+    }
+
+    /// La dimension **« Points »** : un point **qualifié par son carré** (« 640380 · A1 », #2992), le
+    /// code seul n'étant unique que dans son carré (`UNIQUE(site_id, code)`).
+    ///
+    /// @param pointQualifie ce que vaut le point d'une ligne, déjà qualifié, ou `null` si elle n'en
+    ///     porte pas. La règle de qualification reste à la feature : son suffixe **est** le lieu, et
+    ///     un point sans code ne donne aucune entrée, là où un carré sans nom garde son numéro
+    public static <T> Dimension<T> points(Function<T, String> pointQualifie) {
+        return new Dimension<>("Points", pointQualifie, EcritureAncienne.EN_QUEUE);
+    }
+
+    /// Une valeur **qualifiée** par ce qui la désambiguïse ou la nomme : « 640380 · Vallon »,
+    /// « 640380 · A1 ». Rend le préfixe seul quand le suffixe manque, et `null` quand la ligne ne porte
+    /// pas le préfixe : un suffixe orphelin ne désigne rien.
+    public static String qualifier(String prefixe, String suffixe) {
+        if (prefixe == null) {
+            return null;
+        }
+        return suffixe == null || suffixe.isBlank() ? prefixe : prefixe + SEPARATEUR + suffixe;
+    }
 
     /// Le critère « Lieu » offrant `dimensions`, alimenté par `lignes`.
     ///
@@ -78,19 +142,30 @@ public final class CritereLieu {
                 "Choisir un lieu",
                 () -> groupes(lignes.get(), offertes),
                 ligne -> valeursDe(ligne, offertes),
-                PAR_SEGMENT);
+                memorisee -> rattraper(memorisee, lignes.get(), offertes));
     }
 
-    /// L'entrée dont **un segment** est exactement la valeur mémorisée, s'il n'y en a qu'une.
+    /// L'entrée qui est l'**écriture d'aujourd'hui** de `memorisee`, s'il n'y en a qu'une.
     ///
-    /// La comparaison porte sur des segments entiers, jamais sur un fragment de texte : « 6403 » ne
-    /// désigne pas « 640380 · Vallon ». Une valeur mémorisée est un lieu qui a existé, pas une amorce
-    /// de recherche.
-    private static Optional<String> parSegment(String memorisee, List<String> entrees) {
-        List<String> candidates = entrees.stream()
-                .filter(entree -> segments(entree).contains(memorisee))
+    /// Chaque dimension est interrogée sur **ses propres** valeurs, du côté qu'elle déclare : le carré
+    /// reconnaît « 640380 » en tête de « 640380 · Vallon », le point reconnaît « A1 » en queue de
+    /// « 640380 · A1 ». C'est ce cloisonnement qui rend la réponse univoque, là où un « un segment
+    /// quelque part » trouvait toujours deux prétendants, le point étant qualifié **par** son carré.
+    ///
+    /// La comparaison porte sur des **segments entiers**, jamais sur un fragment : « 6403 » ne désigne
+    /// pas « 640380 · Vallon ». Une valeur mémorisée est un lieu qui a existé, pas une amorce de
+    /// recherche.
+    ///
+    /// **Deux candidates ne donnent rien** : deviner entre deux lieux reviendrait à filtrer sur celui
+    /// que l'utilisateur n'a pas choisi. #3093 dit alors ce qui n'a pas été replacé.
+    private static <T> Optional<String> rattraper(String memorisee, List<T> lignes, List<Dimension<T>> dimensions) {
+        List<String> candidates = dimensions.stream()
+                .filter(dimension -> dimension.ecritureAncienne() != null)
+                .flatMap(dimension -> ValeursPresentes.de(lignes, dimension.lecture()).stream()
+                        .filter(valeur -> dimension.ecritureAncienne().reconnait(valeur, memorisee)))
+                .distinct()
                 .toList();
-        return candidates.size() == 1 ? Optional.of(candidates.get(0)) : Optional.empty();
+        return candidates.size() == 1 ? Optional.of(candidates.getFirst()) : Optional.empty();
     }
 
     private static List<String> segments(String entree) {

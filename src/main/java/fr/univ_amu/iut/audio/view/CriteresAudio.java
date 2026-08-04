@@ -161,8 +161,10 @@ final class CriteresAudio {
     }
 
     /// Critère **Lieu** (#2794, chantier #2790) : liste à cocher des lieux **présents dans les lignes
-    /// courantes**, toutes dimensions confondues - communes (lot 0 #2791), carrés, points, sites, dans
-    /// cet ordre. Une ligne passe si **l'un** de ses quatre champs figure parmi les valeurs cochées
+    /// courantes**, toutes dimensions confondues - communes (lot 0 #2791), carrés, points, dans cet
+    /// ordre. Le carré porte son **nom convivial** quand il en a un (« 640380 · Vallon », #3157) : ce
+    /// n'est pas un lieu de plus, c'est le même sous ses deux étiquettes. Une ligne passe si **l'un** de
+    /// ses champs figure parmi les valeurs cochées
     /// ([CritereListe#multipleParmi]) ; rien de coché n'écarte rien. C'est ce qui rend le scénario
     /// « espèce × lieu » jouable en direct : Analyse → clic espèce donne « l'espèce partout », la puce
     /// Lieu restreint à « Aix-en-Provence » sans repasser par la carte.
@@ -171,9 +173,8 @@ final class CriteresAudio {
                 lignesCourantes::get,
                 List.of(
                         new CritereLieu.Dimension<>("Communes", LigneObservationAudio::commune),
-                        new CritereLieu.Dimension<>("Carrés", LigneObservationAudio::numeroCarre),
-                        new CritereLieu.Dimension<>("Points", CriteresAudio::pointQualifie),
-                        new CritereLieu.Dimension<>("Sites", LigneObservationAudio::nomSite)));
+                        CritereLieu.carres(LigneObservationAudio::numeroCarre, LigneObservationAudio::nomSite),
+                        CritereLieu.points(CriteresAudio::pointQualifie)));
     }
 
     /// Le point **qualifié par son carré**, « 640380 · A1 » (#2992). Le schéma pose `UNIQUE(site_id, code)` :

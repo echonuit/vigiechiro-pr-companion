@@ -108,8 +108,10 @@ final class CriteresMultisite {
     /// **l'une** de ses dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien
     /// de coché n'écarte rien.
     ///
-    /// **Trois dimensions, pas quatre** : [LignePassage] ne porte pas le nom de site. C'est un écart avec
-    /// la vue audio (#2794), qui en a quatre, et il tient à la projection, pas à un choix d'ergonomie.
+    /// **Trois dimensions, et c'est le compte** : le domaine n'a que trois niveaux géographiques. Ce que
+    /// cet écran paraissait devoir à la vue audio, un groupe « Sites », n'était pas un niveau de plus
+    /// mais le **nom convivial du carré** ; les deux s'offrent désormais dans une entrée unique
+    /// (« 640380 · Vallon », #3157), ici comme ailleurs. L'écart relevé par #3145 n'en était pas un.
     ///
     /// **Le critère « Carré » subsiste à côté**, et ce n'est pas un doublon oublié. La raison invoquée
     /// jusqu'ici était la migration des vues mémorisées ; elle était vraie mais secondaire, et l'audit des
@@ -131,8 +133,8 @@ final class CriteresMultisite {
                 passagesFiltres::get,
                 List.of(
                         new CritereLieu.Dimension<>("Communes", LignePassage::commune),
-                        new CritereLieu.Dimension<>("Carrés", LignePassage::numeroCarre),
-                        new CritereLieu.Dimension<>("Points", CriteresMultisite::pointQualifie)));
+                        CritereLieu.carres(LignePassage::numeroCarre, LignePassage::nomSite),
+                        CritereLieu.points(CriteresMultisite::pointQualifie)));
     }
 
     /// Le point **qualifié par son carré**, « 640380 · A1 » (#2992). Le schéma pose `UNIQUE(site_id, code)` :
