@@ -52,7 +52,7 @@ public final class ManifesteSauvegardeJson {
     private static ManifesteSauvegarde interpreter(Path fichier) {
         ManifesteSauvegarde manifeste = analyser(fichier);
         if (manifeste == null || manifeste.version() <= 0) {
-            throw new DataAccessException(refus(fichier) + " Il ne porte pas de version.", null);
+            throw new RefusAvantEcriture(refus(fichier) + " Il ne porte pas de version.", null);
         }
         return manifeste;
     }
@@ -64,7 +64,7 @@ public final class ManifesteSauvegardeJson {
         try {
             return GSON.fromJson(Files.readString(fichier, StandardCharsets.UTF_8), ManifesteSauvegarde.class);
         } catch (IOException | RuntimeException illisible) {
-            throw new DataAccessException(refus(fichier), illisible);
+            throw new RefusAvantEcriture(refus(fichier), illisible);
         }
     }
 

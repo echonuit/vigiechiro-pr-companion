@@ -45,13 +45,13 @@ class RestaurationComplete {
         for (RacineSauvegardee attendue : manifeste.racines()) {
             Path copie = dossierBackup.resolve(SOUS_DOSSIER_SESSIONS).resolve(attendue.identifiant());
             if (!Files.isDirectory(copie)) {
-                throw new DataAccessException(
+                throw new RefusAvantEcriture(
                         "La sauvegarde annonce le dossier « " + attendue.identifiant()
                                 + " » (venu de " + attendue.cheminOrigine() + ") mais il n'y est pas."
                                 + " Restauration annulée, rien n'a été touché.",
                         null);
             }
-            verifierInventaire(copie, attendue, "dans la sauvegarde");
+            verifierInventaire(copie, attendue, Moment.DANS_LA_SAUVEGARDE);
         }
     }
 
@@ -102,7 +102,7 @@ class RestaurationComplete {
         } catch (IOException echec) {
             throw new DataAccessException("Impossible de remettre le dossier de son dans " + destination, echec);
         }
-        verifierInventaire(destination, emportee, "une fois remis en place");
+        verifierInventaire(destination, emportee, Moment.UNE_FOIS_REMIS_EN_PLACE);
         return new PlacementRacine(emportee.cheminOrigine(), destination.toString());
     }
 
@@ -127,7 +127,32 @@ class RestaurationComplete {
         return source.workspace().racine().resolve(nom == null ? "session" : nom.toString());
     }
 
-    private static void verifierInventaire(Path dossier, RacineSauvegardee attendue, String ou) {
+    /// Quand la vérification a lieu, ce qui décide de sa **nature** (#3146).
+    ///
+    /// Confrontée à la sauvegarde, elle précède toute écriture : une discordance est un **refus**, et
+    /// l'état local est intact. Confrontée à la destination, elle suit une copie : une discordance est
+    /// un **incident**, et l'état est celui d'une copie à moitié faite.
+    ///
+    /// Le même code de vérification sert les deux ; sans cette distinction, il faudrait choisir une
+    /// nature pour les deux et se tromper une fois sur deux.
+    private enum Moment {
+        DANS_LA_SAUVEGARDE("dans la sauvegarde", true),
+        UNE_FOIS_REMIS_EN_PLACE("une fois remis en place", false);
+
+        private final String enClair;
+        private final boolean avantToutEcriture;
+
+        Moment(String enClair, boolean avantToutEcriture) {
+            this.enClair = enClair;
+            this.avantToutEcriture = avantToutEcriture;
+        }
+
+        DataAccessException discordance(String message) {
+            return avantToutEcriture ? new RefusAvantEcriture(message, null) : new DataAccessException(message, null);
+        }
+    }
+
+    private static void verifierInventaire(Path dossier, RacineSauvegardee attendue, Moment moment) {
         InventaireDossier constate;
         try {
             constate = InventaireDossier.de(dossier);
@@ -139,12 +164,10 @@ class RestaurationComplete {
                 && constate.empreinte().equals(attendue.empreinte())) {
             return;
         }
-        throw new DataAccessException(
-                "Le dossier de son venu de " + attendue.cheminOrigine() + " ne correspond pas à ce que"
-                        + " la sauvegarde annonce, " + ou + " : " + attendue.fichiers() + " fichier(s) et "
-                        + attendue.octets() + " octet(s) attendus, " + constate.fichiers() + " et "
-                        + constate.octets() + " trouvés.",
-                null);
+        throw moment.discordance("Le dossier de son venu de " + attendue.cheminOrigine()
+                + " ne correspond pas à ce que la sauvegarde annonce, " + moment.enClair + " : "
+                + attendue.fichiers() + " fichier(s) et " + attendue.octets() + " octet(s) attendus, "
+                + constate.fichiers() + " et " + constate.octets() + " trouvés.");
     }
 
     /// Corrige **tous les chemins persistés** des sessions qui ont changé de place, en une seule

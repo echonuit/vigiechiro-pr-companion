@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.ConfigurationJournalisation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.RefusAvantEcriture;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -155,7 +156,14 @@ public final class Cli {
             ligne.getErr().println("Erreur d'usage : " + exception.getMessage());
             return CODE_ERREUR_ARGUMENTS;
         }
-        if (exception instanceof RegleMetierException || exception instanceof IllegalArgumentException) {
+        // `RefusAvantEcriture` rejoint les refus (#3146) : la persistance l'émet AVANT d'avoir écrit
+        // quoi que ce soit (fichier qui n'est pas une base, sauvegarde trop récente, dossier de travail
+        // occupé). L'état local est intact, c'est exactement ce que le code 2 promet. Une
+        // `DataAccessException` ordinaire, elle, enveloppe une panne en cours d'écriture et reste un
+        // incident : sa pile est l'information utile.
+        if (exception instanceof RegleMetierException
+                || exception instanceof IllegalArgumentException
+                || exception instanceof RefusAvantEcriture) {
             // Un `IllegalArgumentException` qui remonte jusqu'ici vient des validateurs (R1/R2 :
             // `ValidateurCarre`, `ValidateurCodePoint`) : c'est un refus métier, pas un incident. L'IHM le
             // traite déjà ainsi (`catch (RegleMetierException | IllegalArgumentException)`) ; la CLI s'aligne,

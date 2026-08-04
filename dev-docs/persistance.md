@@ -347,6 +347,30 @@ elle nomme déjà ce qui a échoué et dans quel état la base se retrouve, et l
 « Transaction annulée » générique devant le message qui renseigne. Le rollback a lieu dans les deux
 cas.
 
+### Une panne et un refus ne se disent pas avec le même mot
+
+La couche persistance connaît **deux** situations que rien ne permet de confondre du point de vue de
+l'appelant, et elle les distingue par le type (#3146) :
+
+| Type | Ce qui s'est passé | Code de sortie CLI |
+|---|---|---|
+| `DataAccessException` | une **panne** en cours d'écriture : l'état est incertain, la pile est l'information utile | `1` |
+| `RefusAvantEcriture` | un **refus** émis avant d'avoir écrit : le fichier désigné n'est pas une base, elle vient d'une version plus récente, le dossier de travail est occupé | `2` |
+
+Le nom du second porte l'invariant qui justifie le code 2 : **rien n'a été écrit**. La convention
+elle-même vient de #2294 : `2` dit « j'ai refusé, l'état local est intact », `1` dit « j'ai échoué en
+route ». Un script qui enchaîne ne peut agir que s'il sait lequel des deux s'est produit.
+
+!!! note "Pourquoi pas `RegleMetierException`, que la CLI classe déjà en refus"
+    Sa documentation dit qu'elle se distingue « de `DataAccessException`, qui enveloppe une panne
+    technique de persistance ». Réutiliser l'une pour l'autre brouillerait les deux notions : il
+    manquait un **troisième** mot, pas un synonyme.
+
+⚠️ La même vérification peut être un refus **ou** une panne selon **quand** elle a lieu. Confronter
+un dossier à son inventaire avant toute écriture est un refus ; l'y confronter après l'avoir copié
+est un incident. `RestaurationComplete.Moment` porte cette distinction plutôt que de la laisser au
+hasard d'un site de levée.
+
 ---
 
 Les DAO et services sont assemblés par Guice : voir **[Injection (Guice)](injection.md)**.
