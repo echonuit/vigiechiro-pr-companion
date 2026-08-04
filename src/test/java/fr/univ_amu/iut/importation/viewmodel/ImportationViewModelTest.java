@@ -789,9 +789,13 @@ class ImportationViewModelTest {
         Path workspace = Files.createDirectories(racine.resolve("workspace"));
         when(serviceImport.racineWorkspace()).thenReturn(workspace);
         Path zip = racine.resolve("nuit.zip");
+        // Contenu incompressible (graine fixe) : des octets identiques se compresseraient au millième et
+        // feraient de la fixture une bombe ZIP, refusée par les bornes de ressources (#2732).
+        byte[] contenu = new byte[12 * 1024 * 1024];
+        new java.util.Random(1).nextBytes(contenu);
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
             zos.putNextEntry(new ZipEntry("bruts/gros.wav"));
-            zos.write(new byte[12 * 1024 * 1024]);
+            zos.write(contenu);
             zos.closeEntry();
         }
         List<Progression> points = new ArrayList<>();
