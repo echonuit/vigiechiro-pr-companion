@@ -56,6 +56,37 @@ n'est conservé.
 - **Accès natifs cadrés** : sous Java 25 (accès natif strict), seuls les modules concernés sont
   autorisés (`--enable-native-access=javafx.graphics`, `--enable-native-access=org.xerial.sqlitejdbc`).
 
+### Archives ZIP : le seul fichier arbitraire que l'application ouvre
+
+Choisir un `.zip` comme source d'import fait ouvrir à l'application un fichier dont **rien ne garantit
+la provenance**. Deux bornes l'encadrent, et elles répondent à deux menaces différentes.
+
+**En chemins**, la garde « zip-slip » : une entrée dont le chemin s'évaderait du dossier d'extraction
+(`../../.ssh/authorized_keys`) est refusée. Le chemin résolu est normalisé puis confronté à la racine
+d'extraction.
+
+**En ressources** (#2732, `BornesExtraction`), parce qu'une archive n'a pas besoin de s'évader pour
+nuire : il lui suffit de remplir le disque, sur lequel vit aussi la base SQLite du workspace. Deux
+gardes, et le second existe parce que le premier se ferait berner :
+
+| Quand | Sur quoi | Ce qu'il attrape |
+|---|---|---|
+| Avant le premier octet écrit | l'inventaire **annoncé** (répertoire central, lu sans décompresser) | nombre d'entrées, taille d'une entrée, total, taux de décompression, espace disque disponible avec marge |
+| Pendant la copie | les octets **réellement** écrits | l'archive qui écrit plus qu'elle n'annonçait, c'est-à-dire la bombe ZIP, qui ment précisément sur ce que le premier garde lit |
+
+Le second garde n'a besoin d'aucune constante : il confronte l'archive à **sa propre déclaration**,
+celle sur laquelle l'espace disque vient d'être validé.
+
+Les défauts sont larges (une nuit de terrain fait quelques milliers de fichiers, une dizaine de
+gigaoctets, un taux de compression voisin de 2) et chacun se surcharge par propriété système
+(`vigiechiro.import.zip.max-entrees`, `…max-octets-par-entree`, `…max-octets-total`, `…ratio-max`,
+`…marge-disque-octets`). Il n'y a **pas** de réglage dans l'écran Réglages : un naturaliste n'a pas à
+choisir un plafond de taux de compression. C'est le message de refus qui nomme la limite atteinte et
+l'échappatoire.
+
+⚠️ Ces bornes protègent l'**import par l'IHM**, seul chemin qui accepte aujourd'hui une archive : la
+CLI ne prend qu'un dossier.
+
 ### Hôtes sortants
 
 Tous les appels réseau de l'application, exhaustivement - chacun **best-effort** (une panne dégrade

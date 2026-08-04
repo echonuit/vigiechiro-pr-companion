@@ -119,6 +119,28 @@ avant de poursuivre l'inspection comme pour un dossier ordinaire.
 
 ![Décompression d'une archive .zip choisie comme source : progression et annulation.](../assets/captures/apercu-import-decompression.png)
 
+Sur un gros fichier, le compteur « X / N fichiers » ne bouge pas pendant plusieurs minutes : le volume
+déjà écrit s'affiche alors à côté du nom, pour que vous voyiez que la décompression avance. « Annuler »
+répond immédiatement, y compris au milieu d'un fichier.
+
+### Une archive peut être refusée
+
+L'application ouvre là un fichier dont elle ne sait rien. Avant de décompresser, elle vérifie que
+l'archive ressemble à une carte SD et que le disque peut l'accueillir. Elle refuse, **sans rien avoir
+écrit** :
+
+- s'il **manque de la place** : le message dit ce qu'il faudrait et ce qui reste. Vous pouvez libérer
+  de l'espace, ou décompresser l'archive vous-même et désigner le dossier obtenu ;
+- si l'archive **se décompresserait démesurément** (une carte SD contient de l'audio, qui se comprime
+  peu : un facteur mille signale une archive piégée) ;
+- si elle contient **beaucoup trop de fichiers**, ou un fichier **démesuré**.
+
+Une archive qui se met à écrire **plus qu'elle n'avait annoncé** est également interrompue en cours de
+route, et le dossier temporaire est supprimé.
+
+Ces limites sont larges : une vraie nuit de terrain passe sans que vous ayez quoi que ce soit à régler.
+Si l'une d'elles gênait une archive pourtant légitime, le message vous indique quoi faire.
+
 ## L'inspection vous alerte
 
 L'inspection signale les anomalies **avant** l'import, pour éviter d'importer une mauvaise nuit.
