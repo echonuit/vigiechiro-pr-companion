@@ -1,6 +1,6 @@
 # Galerie des captures d'écran
 
-Captures de **référence** des 126 états d'écran de VigieChiro Companion, rendues **hors-écran** et
+Captures de **référence** de tous les états d'écran de VigieChiro Companion, rendues **hors-écran** et
 de façon **déterministe** via la *Headless Platform* de JavaFX 26 : deux exécutions produisent des PNG
 identiques au bit près. C'est ce qui permet de comparer d'une version à l'autre.
 
@@ -34,7 +34,8 @@ Trois garde-fous, vérifiés par [`check-captures.sh`](check-captures.sh) :
 2. chaque capture déclarée au manifeste existe sur le disque ;
 3. **chaque capture du disque est présentée dans ce document** - sans quoi la galerie se met à couvrir
    une partie du produit en laissant croire qu'elle le couvre tout entier. C'est ce qui était arrivé :
-   33 captures présentées sur 126.
+   33 captures présentées sur 126. Le compte exact n'est pas répété ici : il bouge à chaque chantier,
+   et `check-captures.sh` le rend à chaque exécution. Un nombre écrit en prose dérive tout seul.
 
 ## Sommaire
 
