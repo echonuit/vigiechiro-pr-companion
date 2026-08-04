@@ -150,6 +150,7 @@ nav:
     - 2727 · Une restauration vérifie en place: decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md
     - 2729 · Un script publié ne se modifie plus: decisions/2729-un-script-publie-ne-se-modifie-plus.md
     - 2731 · Un seul processus par dossier de travail: decisions/2731-un-seul-processus-par-workspace.md
+    - 2736 · Le clair est assumé et annoncé: decisions/2736-le-clair-est-assume-et-annonce.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
