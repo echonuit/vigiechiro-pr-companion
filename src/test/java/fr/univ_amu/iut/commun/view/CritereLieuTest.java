@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Predicate;
@@ -163,7 +164,7 @@ class CritereLieuTest {
                 () -> lignes,
                 List.of(
                         CritereLieu.carres(LigneSite::carre, LigneSite::nomSite),
-                        CritereLieu.points(ligne -> CritereLieu.qualifier(ligne.carre(), ligne.point()))));
+                        CritereLieu.points(ligne -> LieuQualifie.qualifier(ligne.carre(), ligne.point()))));
         Node editeur = critere.editeur(ignore -> {});
 
         List<String> perdues = critere.restaurerValeurs(editeur, List.of("640380", "A1"));
@@ -196,7 +197,7 @@ class CritereLieuTest {
 
     /// Une valeur **qualifiée** (« 640380 · A1 ») telle que la produisent les écrans depuis #2992.
     private static String qualifie(Ligne ligne) {
-        return ligne.point() == null ? null : ligne.carre() + CritereLieu.SEPARATEUR + ligne.point();
+        return ligne.point() == null ? null : ligne.carre() + LieuQualifie.SEPARATEUR + ligne.point();
     }
 
     private static CritereFiltre<Ligne> avecPointsQualifies(List<Ligne> lignes) {

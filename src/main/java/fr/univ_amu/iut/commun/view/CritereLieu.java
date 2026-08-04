@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -40,20 +41,6 @@ import java.util.regex.Pattern;
 /// est une entrée, et il faut la connaître pour choisir. Un groupe **sans valeur** n'affiche pas son
 /// en-tête, qui ne renseignerait sur rien et ferait croire à une liste tronquée.
 public final class CritereLieu {
-
-    /// Le séparateur d'une valeur **qualifiée** par ce qui la désambiguïse : « 640380 · A1 » (#2992).
-    ///
-    /// Trois features l'écrivent encore en dur dans leur `pointQualifie` (`CriteresAudio`,
-    /// `CriteresMultisite`, `ContactHoraire`), et **ce n'est pas qu'une duplication à résorber** : leur
-    /// règle est l'inverse de celle de [#qualifier]. Pour un point, le suffixe **est** le lieu, et son
-    /// absence ne laisse rien à offrir ; pour un carré, le suffixe n'est qu'un nom, et son absence
-    /// laisse le numéro. Les fondre donnerait une entrée « 640380 » dans le groupe « Points » pour une
-    /// ligne sans point.
-    ///
-    /// Ce qui **pourrait** se partager est le seul séparateur. Cela demanderait de le remonter en
-    /// `commun.model`, `ContactHoraire` étant un modèle, et un modèle ne dépend pas d'une vue
-    /// (`ArchitectureTest`).
-    public static final String SEPARATEUR = " · ";
 
     private CritereLieu() {}
 
@@ -106,7 +93,9 @@ public final class CritereLieu {
     /// @param nomConvivial le nom que l'utilisateur a donné au site, ou `null` s'il ne l'a pas nommé
     public static <T> Dimension<T> carres(Function<T, String> numero, Function<T, String> nomConvivial) {
         return new Dimension<>(
-                "Carrés", ligne -> qualifier(numero.apply(ligne), nomConvivial.apply(ligne)), EcritureAncienne.EN_TETE);
+                "Carrés",
+                ligne -> LieuQualifie.qualifier(numero.apply(ligne), nomConvivial.apply(ligne)),
+                EcritureAncienne.EN_TETE);
     }
 
     /// La dimension **« Points »** : un point **qualifié par son carré** (« 640380 · A1 », #2992), le
@@ -117,16 +106,6 @@ public final class CritereLieu {
     ///     un point sans code ne donne aucune entrée, là où un carré sans nom garde son numéro
     public static <T> Dimension<T> points(Function<T, String> pointQualifie) {
         return new Dimension<>("Points", pointQualifie, EcritureAncienne.EN_QUEUE);
-    }
-
-    /// Une valeur **qualifiée** par ce qui la désambiguïse ou la nomme : « 640380 · Vallon »,
-    /// « 640380 · A1 ». Rend le préfixe seul quand le suffixe manque, et `null` quand la ligne ne porte
-    /// pas le préfixe : un suffixe orphelin ne désigne rien.
-    public static String qualifier(String prefixe, String suffixe) {
-        if (prefixe == null) {
-            return null;
-        }
-        return suffixe == null || suffixe.isBlank() ? prefixe : prefixe + SEPARATEUR + suffixe;
     }
 
     /// Le critère « Lieu » offrant `dimensions`, alimenté par `lignes`.
@@ -169,7 +148,7 @@ public final class CritereLieu {
     }
 
     private static List<String> segments(String entree) {
-        return List.of(entree.split(Pattern.quote(SEPARATEUR)));
+        return List.of(entree.split(Pattern.quote(LieuQualifie.SEPARATEUR)));
     }
 
     /// Les valeurs offertes, un groupe par dimension, dans l'ordre déclaré.

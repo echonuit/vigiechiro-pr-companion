@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.multisite.view;
 
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -142,7 +143,7 @@ final class CriteresMultisite {
     /// lieux qu'il y a de carrés. Cet écran couvrant la saison entière, une entrée « A1 » y confondait
     /// silencieusement les A1 de tous les carrés. Qualifiée, chaque entrée désigne **un** lieu.
     private static String pointQualifie(LignePassage ligne) {
-        return ligne.codePoint() == null ? null : ligne.numeroCarre() + " · " + ligne.codePoint();
+        return ligne.codePoint() == null ? null : LieuQualifie.qualifier(ligne.numeroCarre(), ligne.codePoint());
     }
 
     static CritereFiltre<LignePassage> carre() {

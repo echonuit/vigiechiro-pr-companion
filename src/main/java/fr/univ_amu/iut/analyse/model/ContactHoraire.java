@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.analyse.model;
 
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.commun.model.Nuit;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -58,7 +59,7 @@ public record ContactHoraire(
     /// presque tous les carrés ont un « Z1 ». Le proposer nu dans une liste de filtre laisserait choisir
     /// une valeur qui en désigne plusieurs (#2992, corrigé sur les autres écrans avant d'arriver ici).
     public String pointQualifie() {
-        return codePoint == null ? null : numeroCarre + " · " + codePoint;
+        return codePoint == null ? null : LieuQualifie.qualifier(numeroCarre, codePoint);
     }
 
     /// La **nuit biologique** du contact : sa date du soir ([Nuit#de], bascule à midi), ou `null` si le
