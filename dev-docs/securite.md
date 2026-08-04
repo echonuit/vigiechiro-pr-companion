@@ -49,7 +49,9 @@ données d'exemple ou de test.
     intermédiaire : après coup, les deux façons d'écrire laissent le même fichier à `600`, et aucun test
     d'état final ne les distingue.
 
-    Un durcissement supplémentaire (chiffrement au repos / coffre système) est arbitré dans #2736.
+    **Il n'y aura pas de coffre système** : l'[ADR 2736](decisions/2736-le-clair-est-assume-et-annonce.md)
+    l'a tranché. Ranger le jeton au coffre pendant que les **localisations d'espèces protégées** restent
+    en clair dans la base du même dossier déplacerait la serrure sans déplacer la porte.
 - **Un journal doit pouvoir être joint à un signalement** (#1845). L'utilisateur est invité à envoyer
   ses journaux avec un rapport d'anomalie : ils ne doivent donc porter **ni le jeton, ni les en-têtes,
   ni le corps envoyé**. Ils ne portent pas non plus l'**URL complète** d'un dépôt S3 : une URL
@@ -58,6 +60,30 @@ données d'exemple ou de test.
 - Les workflows GitHub Actions tournent au **moindre privilège** (`maven.yml` : `permissions: contents:
   read`). N'élargir que là où c'est nécessaire (`contents: write` pour `capture-vues.yml`, qui pousse
   les aperçus).
+
+## Ce qui n'est pas protégé, et pourquoi
+
+Une page de sécurité qui n'énumère que ses protections se lit comme une promesse. Voici la liste
+complémentaire, celle des **non-protections assumées** ([ADR 2736](decisions/2736-le-clair-est-assume-et-annonce.md)).
+
+| Ce qui reste en clair | Où | Pourquoi c'est assumé |
+|---|---|---|
+| Les **localisations** des points d'écoute et des gîtes | `vigiechiro.db`, dossier de travail | Chiffrer le workspace demanderait une clé, dont aucun emplacement n'est bon (cf. ci-dessous). Le dossier appartient à l'utilisateur (ADR 0048) |
+| Le **jeton** de session | `connexion.json`, restreint à `600` | Session de ~14 jours, révocable ; un attaquant local qui le lit lit tout aussi bien la base d'à côté |
+| Les **sauvegardes** (base + audio) | là où l'utilisateur les range | Une sauvegarde chiffrée dont on perd la clé est perdue **au moment précis où elle sert** |
+| Les **exports** (CSV, sons) | fichier choisi par l'utilisateur | Ils sont faits pour être ouverts ailleurs : les chiffrer les rendrait inutilisables |
+
+**Pourquoi la clé est le vrai obstacle.** Dérivée d'un mot de passe, elle transforme la sauvegarde en
+piège. Stockée à côté de l'archive, elle ne protège de rien. Confiée à un coffre système, elle rend la
+sauvegarde illisible depuis une autre machine - ce qui est justement son usage.
+
+**Ce qui est fait à la place** : l'application **annonce** ce que ses archives emportent, plutôt que de
+décider à la place de l'utilisateur où elles peuvent être rangées (#3212).
+
+⚠️ **Ce que cela suppose du contexte** : le produit vise le **poste personnel** d'un naturaliste, pas
+un terminal partagé en environnement hostile. Un poste compromis expose les données locales et le
+jeton. Si le produit venait à stocker un secret **ré-utilisable ailleurs** (mot de passe, clé d'API
+personnelle), ou si la plateforme délivrait un jeton de longue durée, l'arbitrage serait à rouvrir.
 
 ## Surface applicative
 
