@@ -56,8 +56,16 @@ public class ServiceMultisite {
     /// En-tête du tableau / export CSV : ordre stable des colonnes (P5-CA2). `analyse` et
     /// `analyse_relevee_le` (#1338) closent la ligne : exporter la vue « Résultats à importer » sans dire
     /// l'état d'analyse (ni **de quand il date**) livrerait une liste que rien ne justifie.
+    ///
+    /// **`carre` s'appelait `site` jusqu'à #3192**, et portait déjà le numéro. Le mot désignait donc le
+    /// numéro ici et le **nom convivial** dans l'export des observations (`ExportObservationsCsv`), où
+    /// `Carré` et `Site` sont deux colonnes distinctes : un même en-tête pour deux choses selon le
+    /// fichier ouvert. Le renommage aligne ce CSV sur l'autre **et** sur la colonne « Carré » de
+    /// l'écran, et `nom_site` apporte l'étiquette qui manquait - les deux faces d'un même lieu
+    /// ([fr.univ_amu.iut.commun.view.CritereLieu], ADR 3157).
     private static final List<String> ENTETE = List.of(
-            "site",
+            "carre",
+            "nom_site",
             "point",
             "annee",
             "passage",
@@ -247,6 +255,7 @@ public class ServiceMultisite {
         for (LignePassage ligne : lignes) {
             table.add(Arrays.asList(
                     ligne.numeroCarre(),
+                    ligne.nomSite() == null ? "" : ligne.nomSite(),
                     ligne.codePoint(),
                     String.valueOf(ligne.annee()),
                     String.valueOf(ligne.numeroPassage()),

@@ -82,6 +82,22 @@ Une **campagne** regroupe les nuits d'un même suivi. Le tableau la porte de tro
 
 L'**export CSV** de la sélection porte une colonne `campagne`, en fin de ligne.
 
+### Les colonnes du fichier exporté
+
+Le fichier reprend la sélection affichée, une ligne par passage, séparateur `;` :
+
+```
+carre;nom_site;point;annee;passage;date;statut;verdict;analyse;analyse_relevee_le;campagne
+```
+
+`carre` porte le **numéro** du carré, `nom_site` le **nom** que vous lui avez donné (vide si vous ne
+l'avez pas nommé) : ce sont les deux étiquettes d'un même lieu, comme dans la puce « Lieu ».
+
+> **Si vous avez un script qui lit ce fichier** : la première colonne s'appelait `site` et portait déjà
+> le numéro de carré. Elle s'appelle désormais `carre`, et `nom_site` s'intercale en deuxième position.
+> Le mot « site » désignait le numéro ici et le nom dans l'export des observations : c'est cette
+> contradiction que le renommage supprime.
+
 La colonne se trouve en **fin de tableau** : à côté de la carte, elle sort du cadre et il faut faire
 défiler horizontalement. Replier la carte avec la poignée **◀ Carte** donne toute la largeur au
 tableau et montre toutes les colonnes d'un coup.
