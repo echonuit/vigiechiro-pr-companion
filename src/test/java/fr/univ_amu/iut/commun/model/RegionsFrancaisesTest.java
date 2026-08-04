@@ -46,6 +46,48 @@ class RegionsFrancaisesTest {
     }
 
     @Test
+    @DisplayName("#2848 : deux écritures d'un même département concordent, deux départements non")
+    void meme_departement() {
+        assertThat(RegionsFrancaises.memeDepartement("13", "13")).isTrue();
+        assertThat(RegionsFrancaises.memeDepartement("13", "84"))
+                .as("le seul écart que la méthode affirme est celui qu'elle sait démontrer")
+                .isFalse();
+        assertThat(RegionsFrancaises.memeDepartement("64", "40")).isFalse();
+    }
+
+    @Test
+    @DisplayName("#2848 : Corse et outre-mer s'abstiennent - le numéro de carré ne dit pas lequel")
+    void abstentions() {
+        // Un carré corse porte « 20 » : il ne distingue pas la Corse-du-Sud de la Haute-Corse. Trancher
+        // ici inventerait une divergence à chaque point corse.
+        assertThat(RegionsFrancaises.memeDepartement("20", "2A")).isTrue();
+        assertThat(RegionsFrancaises.memeDepartement("20", "2B")).isTrue();
+        assertThat(RegionsFrancaises.memeDepartement("2a", "20"))
+                .as("un code INSEE en minuscules reste le même département")
+                .isTrue();
+        // Même raisonnement outre-mer : « 97 » couvre 971 à 976.
+        assertThat(RegionsFrancaises.memeDepartement("97", "971")).isTrue();
+        assertThat(RegionsFrancaises.memeDepartement("97", "974")).isTrue();
+        assertThat(RegionsFrancaises.memeDepartement("2A", "13"))
+                .as("l'abstention corse ne doit pas devenir un laissez-passer général")
+                .isFalse();
+        assertThat(RegionsFrancaises.memeDepartement("13", "971"))
+                .as("13 n'est pas un préfixe de 971 : la comparaison par préfixe reste stricte")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#2848 : sans deux codes lisibles, la comparaison ne conclut pas - elle ne concorde pas")
+    void rien_a_confronter() {
+        // Le `false` n'est pas « ils divergent » : c'est « il n'y a rien à comparer ». L'appelant écarte
+        // ces cas avant d'appeler ; si un jour il oublie, mieux vaut un constat de trop qu'un silence.
+        assertThat(RegionsFrancaises.memeDepartement(null, "13")).isFalse();
+        assertThat(RegionsFrancaises.memeDepartement("13", null)).isFalse();
+        assertThat(RegionsFrancaises.memeDepartement("1", "13")).isFalse();
+        assertThat(RegionsFrancaises.memeDepartement("13", "")).isFalse();
+    }
+
+    @Test
     @DisplayName("La table porte les treize régions métropolitaines - une garde containsAll ne suffit pas")
     void treize_regions() {
         // Sans ce compte, la garde du référentiel (containsAll) resterait verte sur une table VIDE :

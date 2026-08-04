@@ -42,6 +42,35 @@ public final class RegionsFrancaises {
         return Set.copyOf(PAR_DEPARTEMENT.values());
     }
 
+    /// Deux écritures de département désignent-elles **le même** ? (#2848)
+    ///
+    /// Le produit lit un département de deux façons - par le numéro d'un carré ([RegionDuCarre], deux
+    /// chiffres) et par un code INSEE ([Commune#departement], deux ou trois caractères) - et ces deux
+    /// écritures ne se comparent pas à l'égalité de chaînes :
+    ///
+    /// - **Corse** : un carré porte `20`, l'INSEE écrit `2A` ou `2B`. Le numéro ne dit **pas lequel des
+    ///   deux**, et la table n'est indexée que sur `20` ;
+    /// - **outre-mer** : un carré porte `97`, l'INSEE écrit `971`, `972`, `974`… Là non plus le numéro
+    ///   ne dit pas lequel.
+    ///
+    /// Dans ces deux cas la méthode rend `true`, et c'est une **abstention**, pas une équivalence : deux
+    /// lectures qu'on ne sait pas départager ne sont pas une divergence à signaler. Le seul écart qu'elle
+    /// affirme est celui qu'elle sait démontrer.
+    ///
+    /// Un code nul ou trop court rend `false` : il n'y a rien à confronter, et l'appelant écarte le cas
+    /// avant d'appeler plutôt que de lire une réponse dans une absence.
+    public static boolean memeDepartement(String a, String b) {
+        if (a == null || b == null || a.length() < 2 || b.length() < 2) {
+            return false;
+        }
+        String gauche = normaliser(a);
+        String droite = normaliser(b);
+        // Le plus court préfixe l'autre : `97` couvre `971`, et `20` ne couvre que `20`.
+        return gauche.length() <= droite.length()
+                ? droite.regionMatches(true, 0, gauche, 0, gauche.length())
+                : gauche.regionMatches(true, 0, droite, 0, droite.length());
+    }
+
     /// Ramène les codes INSEE corses (`2A`/`2B`) sur la clé `20` de la table.
     private static String normaliser(String code) {
         if ("2A".equalsIgnoreCase(code) || "2B".equalsIgnoreCase(code)) {

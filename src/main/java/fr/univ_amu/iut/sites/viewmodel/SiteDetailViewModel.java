@@ -3,6 +3,7 @@ package fr.univ_amu.iut.sites.viewmodel;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.RegionDuCarre;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
@@ -318,8 +319,11 @@ public class SiteDetailViewModel {
         return site.commentaire() == null ? base : site.commentaire() + " · " + base;
     }
 
+    /// Le département affiché au bandeau : celui du **numéro de carré**, et non celui de la commune des
+    /// points. Les deux lectures peuvent se contredire, et l'audit de cohérence les confronte (#2848) ;
+    /// ici la règle ne se réécrit plus en `substring(0, 2)`, elle est lue là où l'ADR 2351 l'établit.
     private String departementDeCarre(String carre) {
-        return carre != null && carre.length() >= 2 ? carre.substring(0, 2) : Formats.VALEUR_ABSENTE;
+        return RegionDuCarre.departement(carre).orElse(Formats.VALEUR_ABSENTE);
     }
 
     private String libelleDerniereNuit(List<Passage> passagesDuSite) {
