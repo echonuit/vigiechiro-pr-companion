@@ -52,11 +52,16 @@ imposée aux trois :
 | Table | Absence | Pourquoi celle-là |
 |---|---|---|
 | Carte & passages | cellule **vide** | c'est ce que fait déjà la campagne d'une nuit non rattachée |
-| Sons & validation | **tiret** | toutes les colonnes de contexte de cette table marquent l'absence ainsi |
+| Sons & validation | **tiret** (`Formats.VALEUR_ABSENTE`) | toutes les colonnes de contexte de cette table marquent l'absence ainsi |
 | Espèces & observations | cellule **vide** | convention de ses trois tables |
 
 Uniformiser aurait demandé de changer des colonnes que le lot ne touchait pas, pour une cohérence que
 personne ne perçoit : ces tables ne se lisent pas côte à côte.
+
+Le dépôt dit « tiret » par habitude, mais le caractère est un **cadratin** (`Formats.VALEUR_ABSENTE`,
+U+2014), appliqué par `FormatLigneAudio.ouTiret`. Qui écrira le test qui manque (#3236) comparera donc
+à cette constante, jamais à un tiret d'imprimerie tapé à la main : les deux se ressemblent à l'écran et
+ne sont pas le même caractère.
 
 ## Décision 3 : sur la revue audio, c'est du contexte
 
