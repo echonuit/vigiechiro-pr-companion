@@ -18,10 +18,12 @@ on:
     branches: [main]
   workflow_dispatch: {}
 
+# Plancher du workflow : LECTURE seule. Chaque job déclare ce qu'il lui faut de plus (#2739).
+# Auparavant ce bloc accordait `contents/issues/pull-requests: write` aux TROIS jobs, dont la matrice
+# d'installeurs - trois runners qui compilent, empaquettent et exécutent jpackage, et qui n'ont
+# jamais eu besoin d'écrire une issue ni une pull request.
 permissions:
-  contents: write
-  issues: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: release
@@ -32,6 +34,12 @@ jobs:
     # Dormant tant que ENABLE_RELEASE n'est pas 'true' (cf. en-tête).
     if: vars.ENABLE_RELEASE == 'true'
     runs-on: ubuntu-latest
+    # Le seul job qui a besoin des trois : semantic-release crée le tag et la Release (`contents`),
+    # puis @semantic-release/github commente les issues et les pull requests que la version referme.
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
     outputs:
       tag: ${{ steps.tag.outputs.value }}
     steps:
@@ -66,6 +74,10 @@ jobs:
 
   installers:
     needs: release
+    # Téléverse les installeurs sur la Release (`gh release upload`) : rien d'autre. C'est le job le
+    # plus exposé - il compile, empaquette et exécute jpackage sur trois systèmes.
+    permissions:
+      contents: write
     # Seulement si semantic-release a réellement publié une version (tag non vide).
     if: needs.release.outputs.tag != ''
     strategy:
@@ -242,6 +254,9 @@ jobs:
   # Release reste un brouillon (pas de release publique aux assets manquants).
   publish:
     needs: [release, installers]
+    # Retire l'état brouillon de la Release : une seule commande `gh`, aucun code tiers.
+    permissions:
+      contents: write
     if: needs.release.outputs.tag != ''
     runs-on: ubuntu-latest
     steps:
