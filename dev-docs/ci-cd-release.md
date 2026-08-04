@@ -1,6 +1,6 @@
 # CI/CD et release
 
-Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->12<!--/inv--> workflows et le processus de
+Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->13<!--/inv--> workflows et le processus de
 publication.
 
 ## Les workflows
