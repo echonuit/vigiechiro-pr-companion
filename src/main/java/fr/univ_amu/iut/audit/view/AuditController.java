@@ -3,11 +3,14 @@ package fr.univ_amu.iut.audit.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
+import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.MemoireFiltres;
 import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.TableDonnees;
@@ -16,12 +19,17 @@ import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 
 /// Écran **Audit de cohérence** (feature `audit`) : affiche le résultat de l'audit disque / base global
@@ -64,34 +72,87 @@ public class AuditController {
     @FXML
     private StackPane enveloppeAuditerPassage;
 
+    @FXML
+    private TextField champRecherche;
+
+    @FXML
+    private MenuButton menuAjoutFiltre;
+
+    @FXML
+    private FlowPane pucesFiltres;
+
+    @FXML
+    private FlowPane barreOnglets;
+
+    @FXML
+    private Button boutonToutEffacer;
+
+    @FXML
+    private HBox bandeauRetour;
+
+    @FXML
+    private Label lblRetour;
+
+    @FXML
+    private Button btnFermerRetour;
+
     private final AuditViewModel viewModel;
     private final ExecuteurTache executeur;
 
     /// Contrat socle de navigation vers M-Passage (#1347) : `audit` ne dépend pas du `view` de `passage`.
     private final OuvrirPassage ouvrirPassage;
 
+    private final MemoireFiltres memoireFiltres;
+    private final DepotVues depotVues;
+
     private IndicateurOccupation occupation;
 
     @Inject
-    public AuditController(AuditViewModel viewModel, ExecuteurTache executeur, OuvrirPassage ouvrirPassage) {
+    public AuditController(
+            AuditViewModel viewModel,
+            ExecuteurTache executeur,
+            OuvrirPassage ouvrirPassage,
+            MemoireFiltres memoireFiltres,
+            DepotVues depotVues) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.memoireFiltres = Objects.requireNonNull(memoireFiltres, "memoireFiltres");
+        this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
     }
 
     @FXML
     private void initialize() {
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
-        colSeverite.setCellValueFactory(c -> texte(c.getValue().severite().name()));
-        colCategorie.setCellValueFactory(c -> texte(c.getValue().categorie().name()));
+        colSeverite.setCellValueFactory(c -> texte(c.getValue().severite().libelle()));
+        colCategorie.setCellValueFactory(c -> texte(c.getValue().categorie().libelle()));
         colPassage.setCellValueFactory(c -> texte(
                 c.getValue().idPassage() == null
                         ? "-"
                         : String.valueOf(c.getValue().idPassage())));
         colCible.setCellValueFactory(c -> texte(c.getValue().cible()));
         colDetail.setCellValueFactory(c -> texte(c.getValue().detail()));
-        tableConstats.setItems(viewModel.constats());
+        // La table montre les constats **que la barre laisse passer** (#3100) ; le résumé et le verdict
+        // restent calculés sur l'audit entier. Filtrer masque des lignes, cela ne rend pas l'écran sain.
+        //
+        // ⚠️ La `FilteredList` est **non modifiable** : posée telle quelle, `TableView` renonce à trier et
+        // **vide le sortOrder en silence** - la table cesse d'être triable sans que rien ne le dise. Le
+        // `SortedList` par-dessus, comparateur lié à celui de la table, est le même montage que les
+        // quatre autres écrans.
+        SortedList<ConstatAudit> constatsTries = new SortedList<>(viewModel.constatsFiltres());
+        constatsTries.comparatorProperty().bind(tableConstats.comparatorProperty());
+        tableConstats.setItems(constatsTries);
         tableConstats.setPlaceholder(new Label("Aucun écart de cohérence détecté."));
+        FiltresVuesAudit.installer(
+                new FiltresVuesAudit.Barre(
+                        champRecherche, menuAjoutFiltre, pucesFiltres, barreOnglets, boutonToutEffacer),
+                tableConstats,
+                viewModel,
+                memoireFiltres,
+                depotVues,
+                GestionnaireColonnes.colonnesParDefaut(tableConstats));
+        BandeauRetour.installer(
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
         // Un constat cite un passage : le double-clic l'ouvre (#1347). Jusqu'ici la table nommait le
         // coupable et laissait l'utilisateur le retrouver à la main, alors que partout ailleurs dans
         // l'application une ligne de table s'ouvre au double-clic.

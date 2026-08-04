@@ -13,6 +13,7 @@ import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import java.util.List;
@@ -65,6 +66,14 @@ class AuditVueIntegrationTest {
             @Provides
             OuvrirPassage ouvrirPassage() {
                 return (idPassage, contexte) -> {};
+            }
+
+            /// Dépôt de vues vide (#3100) : la barre de filtres n'affiche donc aucun onglet enregistré.
+            @Provides
+            DepotVues depotVues() {
+                DepotVues depot = mock(DepotVues.class);
+                when(depot.findByFeature("audit")).thenReturn(List.of());
+                return depot;
             }
         });
         FXMLLoader loader = new FXMLLoader(AuditController.class.getResource("Audit.fxml"));
@@ -122,5 +131,45 @@ class AuditVueIntegrationTest {
                 .hasSize(2);
         assertThat(robot.lookup("#boutonVerifierEnLigne").queryAs(Button.class).isDisabled())
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#3100 : la recherche restreint la table, « Tout effacer » la rétablit")
+    void la_recherche_restreint_la_table(FxRobot robot) {
+        // Preuve de bout en bout du câblage : le champ du FXML, le GestionnaireFiltres, les Filtres du
+        // view-model et la FilteredList de la table. Un test qui n'irait que jusqu'au view-model
+        // passerait même si le champ n'était relié à rien.
+        TableView<?> table = robot.lookup("#tableConstats").queryAs(TableView.class);
+
+        robot.clickOn("#champRecherche").write("orphelin");
+
+        assertThat(table.getItems())
+                .as("« Fichier orphelin. » est dans le détail du second constat, pas du premier")
+                .hasSize(1);
+
+        robot.interact(() -> trierSurLaPremiereColonne(table));
+
+        // Sans cette assertion, la suivante passerait pour une mauvaise raison. Une `FilteredList` posée
+        // nue est **non modifiable** : `TableView` renonce alors à trier et vide le `sortOrder` de
+        // lui-même. « Le tri est vide après le clic » ne prouve donc rien tant qu'on n'a pas montré
+        // qu'il ne l'était pas avant. C'est ce montage-là qui a été trouvé cassé (#3100).
+        assertThat(table.getSortOrder())
+                .as("le tri doit d'abord prendre : la table est enveloppée dans une SortedList")
+                .isNotEmpty();
+
+        robot.clickOn("#boutonToutEffacer");
+
+        assertThat(table.getItems())
+                .as("« Tout effacer » (#3097) vide aussi la recherche, pas seulement les puces")
+                .hasSize(2);
+        assertThat(table.getSortOrder())
+                .as("sur les écrans à table, le geste efface aussi le tri : le nôtre ne peut pas en différer")
+                .isEmpty();
+    }
+
+    /// Nomme le paramètre de type de la table, que `queryAs` rend joker : sans lui, poser une colonne
+    /// dans `getSortOrder()` ne compile pas, et le faire compiler demanderait un transtypage non vérifié.
+    private static <T> void trierSurLaPremiereColonne(TableView<T> table) {
+        table.getSortOrder().setAll(table.getColumns().get(0));
     }
 }

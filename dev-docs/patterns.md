@@ -803,6 +803,30 @@ Il existe **trois** chemins de restauration, et tous trois doivent lire ce retou
 sauvegardées, le transport d'un écran à l'autre (#476) et la mémoire de session (#484). En ignorer un
 laisse l'écran filtrer moins large qu'annoncé, sans rien dire.
 
+### Poser le socle sur un cinquième écran (#3100)
+
+L'« Audit de cohérence » a rejoint les quatre tables exploratoires. Le travail utile a été d'**installer
+la barre**, pas d'inventer quoi que ce soit : `FiltresVuesAudit` reprend trait pour trait le découpage de
+`FiltresVuesAudio` et de `FiltresVuesActivite` (nœuds du FXML regroupés en objet-paramètre, gestionnaire
+de filtres, vues, mémoire de session). Trois points valent d'être notés, parce qu'ils se reposeront au
+sixième écran :
+
+- **Ses clés restent chez lui.** `gravite`, `categorie` et `passage` ne sont partagées avec aucun autre
+  écran : elles vivent dans `CriteresAudit`, pas dans `ClesCriteres`, dont le contrat ne porte que les
+  clés réellement communes. ⚠️ `categorie` n'a **rien à voir** avec le `groupe` taxonomique des autres
+  écrans - c'est précisément la collision que `ClesCriteres` existe pour empêcher.
+- **Un écran doit pouvoir rendre compte avant de recevoir des filtres.** Celui-ci n'avait aucun bandeau
+  de retour. Le lui ajouter n'était pas de la décoration : sans lui, la mémoire de session aurait remis
+  des filtres amputés **en silence**. Un écran qu'on branche sur le socle gagne son `BandeauRetour` en
+  même temps que sa barre, jamais après.
+- **Une valeur mémorisée y survit moins bien qu'ailleurs.** Relancer l'audit renouvelle les constats :
+  les passages offerts changent d'une visite à l'autre. Ce qui est l'exception sur les autres écrans est
+  ici la règle, et c'est ce qui rend le compte rendu (#3093) indispensable plutôt que confortable.
+
+**Aucune vue par défaut**, contrairement aux quatre autres. Une vue « Bloquants seulement » se dessine
+sur une distribution de gravités réelle, que la base de démonstration ne produit pas encore (#3169) : la
+proposer sans l'avoir vue à l'œuvre serait deviner ce que l'observateur regarde en premier.
+
 ## Occupation d'un écran pendant un traitement long (socle `commun`)
 
 **Le problème.** Un traitement lourd (agrégats, inspection de dossier, appel réseau) exécuté
