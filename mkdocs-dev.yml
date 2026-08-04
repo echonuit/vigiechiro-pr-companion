@@ -144,6 +144,9 @@ nav:
     - 3053 · Une capture exige son libellé: decisions/3053-une-capture-exige-son-libelle.md
     - 2861 · Une donnée de point ne se montre pas sur une ligne agrégée: decisions/2861-une-donnee-de-point-ne-se-montre-pas-sur-une-ligne-agregee.md
     - 3082 · Désigner refuse, qualifier rend vide: decisions/3082-designer-refuse-qualifier-rend-vide.md
+    - 3092 · Un filtre ne change que ce qu'on regarde: decisions/3092-un-filtre-ne-change-que-ce-quon-regarde.md
+    - 3093 · Une restauration rend compte de deux causes: decisions/3093-une-restauration-rend-compte-de-deux-causes.md
+    - 3096 · Une clé de critère est un contrat de sérialisation: decisions/3096-une-cle-de-critere-est-un-contrat-de-serialisation.md
     - 3095 · Un domaine se calcule sans son propre critère: decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md
     - 3099 · Une puce présélectionnée annonce ce qu'elle filtre: decisions/3099-une-puce-preselectionnee-annonce-ce-quelle-filtre.md
     - 3157 · Un carré a un identifiant et une étiquette: decisions/3157-un-carre-a-un-identifiant-et-une-etiquette.md

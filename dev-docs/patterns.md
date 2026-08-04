@@ -856,6 +856,61 @@ Il existe **trois** chemins de restauration, et tous trois doivent lire ce retou
 sauvegardées, le transport d'un écran à l'autre (#476) et la mémoire de session (#484). En ignorer un
 laisse l'écran filtrer moins large qu'annoncé, sans rien dire.
 
+### La mémoire de session sépare les filtres du tri
+
+`MemoireFiltres` (#3098) retient l'état d'un écran d'une visite à l'autre, en **deux mémoires
+distinctes** :
+
+- `installer(ecran, ancrage, gestionnaireFiltres, compteRendu)` retient les **filtres**, un jeu par
+  écran. L'`ancrage` est n'importe quel nœud : il sert d'horloge de sortie, pas de contenu ;
+- `memoriserTri(ecran, table)` retient le **tri**, repéré par le `fx:id` de la table. Un écran en
+  appelle autant que de tables, un écran sans table n'en appelle aucune.
+
+**Pourquoi deux.** La première version en supposait une seule, un tri par écran. La réalité mesurée :
+« Sons & validation » a une table, « Carte & passages » une, « Espèces & observations » **trois**, et
+« Activité de la nuit » **aucune** - c'est un graphe. Une mémoire unique aurait confondu les trois
+tables de l'analyse et réclamé une table à un écran qui n'en a pas.
+
+⚠️ La restauration des filtres **rend compte** de ce qu'elle n'a pas su replacer : c'est le chemin le
+plus discret des trois, puisque personne n'a rien demandé
+([ADR 3093](decisions/3093-une-restauration-rend-compte-de-deux-causes.md)).
+
+### « Tout effacer » est un geste, pas un bouton
+
+Les cinq écrans à barre nomment ce geste **de la même façon** et lui font faire **la même chose** :
+retirer les filtres, effacer le tri de la table, et **oublier** ce que la mémoire de session
+s'apprêtait à remettre. Sans le troisième volet, les filtres qu'on vient d'effacer reviennent à la
+réouverture, et le bouton paraît n'avoir pas pris.
+
+Un écran sans table (« Activité de la nuit ») n'efface évidemment pas de tri, et son `accessibleText`
+le dit : « Effacer tous les filtres », sans « et le tri ».
+
+⚠️ « Carte & passages » a porté le libellé « Réinitialiser » jusqu'à la clôture de #3092 - le geste y
+était pourtant déjà identique. C'est l'écran **d'origine** du geste, resté sous l'ancien nom quand il
+s'est généralisé : un cas d'école de divergence par ancienneté, qu'aucun test ne signale.
+
+### Les filtres existent aussi en ligne de commande
+
+Un critère d'écran qui répond à une question métier a son équivalent en ligne de commande, à la même
+sémantique ([ADR 0014](decisions/0014-parite-cli-ihm.md)). L'état à la clôture de #3092 :
+
+| Écran | Commande jumelle | Parité |
+|---|---|---|
+| Sons & validation | `lister-observations` | 10 / 10 |
+| Activité de la nuit | `exporter-activite` | 5 / 5 |
+| Audit de cohérence | `audit-coherence` | 3 / 3 |
+| Ma saison | `solde-saison` | 2 / 2 |
+| Carte & passages | `lister-passages` | **0 / 7** |
+| Espèces & observations | *aucune* | **sans jumelle** |
+
+Les deux dernières lignes sont une dette **antérieure** au chantier, rendue visible en confrontant les
+inventaires complets plutôt que des exemples.
+
+Quand la règle est la même des deux côtés, elle s'écrit **une fois** dans `model` : `FiltreLieu` pour le
+lieu, `FiltresSaison` pour la recherche et le « reste à faire ». Un catalogue de `view` qui garderait sa
+propre copie finirait par diverger - c'est arrivé le jour même où #3219 a ajouté la recherche par nom de
+carré.
+
 ### Poser le socle sur un cinquième écran (#3100)
 
 L'« Audit de cohérence » a rejoint les quatre tables exploratoires. Le travail utile a été d'**installer
