@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.saison.viewmodel;
 
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
@@ -16,6 +17,7 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 
 /// État observable de l'écran **M-Saison** : une ligne par point suivi, plus le résumé d'en-tête et le
 /// signalement de fenêtre, tous **dérivés du même** [SoldeSaison] (ils ne peuvent pas diverger).
@@ -37,6 +39,13 @@ public class SaisonViewModel {
     private final String idUtilisateur;
 
     private final ObservableList<LigneSaison> lignes = FXCollections.observableArrayList();
+
+    /// Les lignes que les deux filtres de l'écran (#3103) laissent passer : ce que la **table** montre.
+    /// [#lignes] reste le solde entier de la saison, sur lequel se calculent le résumé et le
+    /// signalement. Chercher un lieu ne change pas ce qu'il y a à faire cette année.
+    private final FilteredList<LigneSaison> lignesFiltrees = new FilteredList<>(lignes);
+
+    private final Filtres<LigneSaison> filtres = new Filtres<>(lignesFiltrees, () -> {});
     private final ReadOnlyStringWrapper resume = new ReadOnlyStringWrapper(this, "resume", "");
     private final ReadOnlyStringWrapper signalement = new ReadOnlyStringWrapper(this, "signalement", "");
     private final ReadOnlyIntegerWrapper annee = new ReadOnlyIntegerWrapper(this, "annee", 0);
@@ -162,6 +171,19 @@ public class SaisonViewModel {
 
     public ObservableList<LigneSaison> lignes() {
         return lignes;
+    }
+
+    /// Les lignes retenues par la recherche de lieu et la case « Reste à faire » (#3103) : ce que la
+    /// table montre.
+    public ObservableList<LigneSaison> lignesFiltrees() {
+        return lignesFiltrees;
+    }
+
+    /// Socle de filtres composables (#537) sur les lignes de la saison. L'écran n'y branche que deux
+    /// prédicats : l'année et la campagne restent des `ComboBox`, parce qu'elles disent la structure du
+    /// travail et se lisent d'un coup d'œil (cf. [fr.univ_amu.iut.saison.view.CriteresSaison]).
+    public Filtres<LigneSaison> filtres() {
+        return filtres;
     }
 
     public ReadOnlyStringProperty resumeProperty() {

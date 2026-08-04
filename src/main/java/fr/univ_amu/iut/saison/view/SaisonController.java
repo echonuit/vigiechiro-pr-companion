@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.saison.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -13,14 +14,18 @@ import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.viewmodel.SaisonViewModel;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.util.StringConverter;
 
 /// Controller de l'écran **M-Saison** : une ligne par point suivi, l'état de ses deux passages en
@@ -47,6 +52,12 @@ public class SaisonController implements RafraichirAuRetour {
 
     @FXML
     private Label lblSignalement;
+
+    @FXML
+    private TextField champRechercheLieu;
+
+    @FXML
+    private CheckBox caseResteAFaire;
 
     @FXML
     private TableView<LigneSaison> tableSaison;
@@ -104,7 +115,17 @@ public class SaisonController implements RafraichirAuRetour {
         colResteAFaire.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 c.getValue().aJour() ? "rien" : c.getValue().resteAFaire()));
 
-        tableSaison.setItems(viewModel.lignes());
+        // La table montre les lignes que les deux filtres laissent passer (#3103) ; le résumé et le
+        // signalement restent calculés sur le solde entier. Chercher un lieu ne change pas ce qu'il y a
+        // à faire cette année.
+        //
+        // ⚠️ La `FilteredList` est non modifiable : posée telle quelle, `TableView` renonce à trier et
+        // vide son `sortOrder` en silence. D'où la `SortedList` par-dessus, comme sur les cinq écrans à
+        // barre de filtres.
+        SortedList<LigneSaison> lignesTriees = new SortedList<>(viewModel.lignesFiltrees());
+        lignesTriees.comparatorProperty().bind(tableSaison.comparatorProperty());
+        tableSaison.setItems(lignesTriees);
+        installerFiltres();
         lblResume.textProperty().bind(viewModel.resumeProperty());
         lblSignalement.textProperty().bind(viewModel.signalementProperty());
         // Le signalement ne réserve sa place que lorsqu'il a quelque chose à dire.
@@ -226,5 +247,36 @@ public class SaisonController implements RafraichirAuRetour {
             return "badge-opportuniste";
         }
         return cas.inexploitable() ? ColonneBadge.classe(cas.verdict()) : ColonneBadge.classe(cas.statut());
+    }
+
+    /// Branche les deux filtres ajoutés par #3103 sur le socle `Filtres` du view-model.
+    ///
+    /// Un champ vide et une case décochée ne posent **aucun** prédicat plutôt qu'un prédicat neutre :
+    /// c'est la même sémantique que la barre à puces des autres écrans, où rien de coché n'écarte rien.
+    private void installerFiltres() {
+        champRechercheLieu
+                .textProperty()
+                .addListener((obs, avant, saisie) ->
+                        viewModel.filtres().definir(CriteresSaison.RECHERCHE, predicatDeRecherche(saisie)));
+        caseResteAFaire
+                .selectedProperty()
+                .addListener((obs, avant, cochee) -> viewModel
+                        .filtres()
+                        .definir(
+                                CriteresSaison.RESTE_A_FAIRE,
+                                Boolean.TRUE.equals(cochee) ? CriteresSaison.resteAFaire() : null));
+    }
+
+    /// `null` quand la saisie ne cherche rien : le filtre est alors **retiré**, pas neutralisé.
+    ///
+    /// ⚠️ La différence n'est pas observable depuis l'écran - un prédicat neutre l'est par définition -
+    /// et aucun test ne la garde donc. C'est un choix de cohérence avec le socle, où un critère sans
+    /// valeur n'est pas un critère posé : le jour où cet écran gagnerait des puces ou `saufLui`, un
+    /// filtre « recherche » enregistré mais neutre s'y afficherait comme actif.
+    private static Predicate<LigneSaison> predicatDeRecherche(String saisie) {
+        if (saisie == null || NormalisationTexte.normaliser(saisie).isEmpty()) {
+            return null;
+        }
+        return ligne -> CriteresSaison.rechercheTexte().test(ligne, saisie);
     }
 }
