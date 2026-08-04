@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.166.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.166.1...v2.166.2) (2026-08-04)
+
+
+### Bug Fixes
+
+* **connexion:** le token ne passe plus par un fichier permissif, et s'écrit d'un seul coup ([#3202](https://github.com/echonuit/vigiechiro-pr-companion/issues/3202)) ([70300a3](https://github.com/echonuit/vigiechiro-pr-companion/commit/70300a323bf446b880f3bfd23335dcb67cfb11e9)), closes [#2735](https://github.com/echonuit/vigiechiro-pr-companion/issues/2735) [#2736](https://github.com/echonuit/vigiechiro-pr-companion/issues/2736) [#1140](https://github.com/echonuit/vigiechiro-pr-companion/issues/1140) [#2735](https://github.com/echonuit/vigiechiro-pr-companion/issues/2735)
+
 ## [2.166.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.166.0...v2.166.1) (2026-08-04)
 
 
