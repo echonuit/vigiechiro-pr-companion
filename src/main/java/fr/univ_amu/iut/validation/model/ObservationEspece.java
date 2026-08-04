@@ -25,6 +25,9 @@ package fr.univ_amu.iut.validation.model;
 /// @param taxonObservateur taxon saisi par l'observateur, ou `null` (non touchée)
 /// @param probObservateur probabilité saisie par l'observateur, ou `null`
 /// @param statut statut de revue dérivé (validée / corrigée / non touchée)
+/// @param commune nom de la commune du point d'écoute, ou `null` tant qu'aucune n'est résolue (#3165) :
+///     `point_commune` est une table latérale (ADR 2791), et son absence est l'état normal d'un point
+///     sans coordonnées
 public record ObservationEspece(
         long idObservation,
         long idSequence,
@@ -39,4 +42,5 @@ public record ObservationEspece(
         Double probTadarida,
         String taxonObservateur,
         Double probObservateur,
-        StatutObservation statut) {}
+        StatutObservation statut,
+        String commune) {}

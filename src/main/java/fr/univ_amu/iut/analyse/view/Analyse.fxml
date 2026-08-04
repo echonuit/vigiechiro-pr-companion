@@ -128,6 +128,10 @@
             <TableColumn fx:id="colObsCarre" text="Carré" prefWidth="90.0"/>
             <TableColumn fx:id="colObsRichesse" text="Espèces du carré" prefWidth="155.0"/>
             <TableColumn fx:id="colObsPoint" text="Point" prefWidth="70.0"/>
+            <!-- Commune (#3165) : sur CETTE table seulement. Les tables Espèces et Carrés
+                 agrègent plusieurs points, et un carré de 10 km peut chevaucher deux communes :
+                 une cellule unique y mentirait. -->
+            <TableColumn fx:id="colObsCommune" text="Commune" prefWidth="140.0"/>
             <TableColumn fx:id="colObsTadarida" text="Proposition Tadarida" prefWidth="180.0"/>
             <TableColumn fx:id="colObsObservateur" text="Votre taxon" prefWidth="150.0"/>
             <TableColumn fx:id="colObsStatut" text="Statut" prefWidth="110.0"/>

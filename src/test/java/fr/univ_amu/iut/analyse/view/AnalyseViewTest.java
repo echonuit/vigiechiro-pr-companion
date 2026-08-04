@@ -53,6 +53,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -105,7 +106,8 @@ class AnalyseViewTest {
                         0.9,
                         "Pippip",
                         0.95,
-                        StatutObservation.VALIDEE)));
+                        StatutObservation.VALIDEE,
+                        "Ahetze")));
         OuvrirPassage navigationPassage = ouvrirPassage;
         OuvrirAudio navigationAudio = ouvrirAudio;
         depotVues = mock(DepotVues.class);
@@ -307,6 +309,30 @@ class AnalyseViewTest {
         assertThat(especes.getItems())
                 .as("le retour recharge l'inventaire (plus de compteurs périmés)")
                 .hasSize(2);
+    }
+
+    @Test
+    @DisplayName("#3165 : la table des observations montre la commune, sur elle seule")
+    void colonne_commune_sur_la_table_des_observations(FxRobot robot) {
+        // Le lieu se cochait et se cherchait par la commune sans qu'aucune table ne la montre.
+        @SuppressWarnings("unchecked")
+        TableView<Object> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        TableView<?> observations = robot.lookup("#tableObservations").queryAs(TableView.class);
+        robot.interact(() -> especes.getSelectionModel().select(0));
+
+        TableColumn<?, ?> commune = observations.getColumns().stream()
+                .filter(colonne -> "Commune".equals(colonne.getText()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Colonne « Commune » absente de la table des observations."));
+        assertThat(commune.getCellData(0)).isEqualTo("Ahetze");
+
+        // Et sur ELLE SEULE : une ligne de la table des carrés agrège plusieurs points, dont un carré de
+        // 10 km peut en porter dans deux communes. Une cellule unique y mentirait.
+        TableView<?> carres = robot.lookup("#tableCarres").queryAs(TableView.class);
+        assertThat(carres.getColumns())
+                .extracting(TableColumn::getText)
+                .as("la commune n'a pas de sens sur une ligne qui agrège plusieurs points")
+                .doesNotContain("Commune");
     }
 
     @Test

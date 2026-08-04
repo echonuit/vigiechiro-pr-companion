@@ -908,6 +908,9 @@ class ObservationDaoTest {
         assertThat(detail).allSatisfy(observation -> {
             assertThat(observation.numeroCarre()).isEqualTo("640380");
             assertThat(observation.codePoint()).isEqualTo("A1");
+            // #3165 : la commune du point, que cette CTE ne joignait pas alors que sa voisine du même
+            // DAO le faisait - la table affichait donc un lieu sur lequel on filtrait sans le voir.
+            assertThat(observation.commune()).isEqualTo("Aix-en-Provence");
             assertThat(observation.statut()).isEqualTo(StatutObservation.VALIDEE);
             assertThat(observation.idObservation()).isPositive();
             assertThat(observation.idSequence()).isPositive();

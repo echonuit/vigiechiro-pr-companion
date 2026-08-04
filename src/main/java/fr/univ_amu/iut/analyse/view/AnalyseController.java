@@ -269,6 +269,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private TableColumn<ObservationEspece, String> colObsPoint;
 
+    /// Commune du point de l'observation (#3165) : le lieu se cochait sans se montrer.
+    @FXML
+    private TableColumn<ObservationEspece, String> colObsCommune;
+
     @FXML
     private TableColumn<ObservationEspece, String> colObsTadarida;
 
@@ -652,6 +656,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                         colObsCarre,
                         colObsRichesse,
                         colObsPoint,
+                        colObsCommune,
                         colObsTadarida,
                         colObsObservateur,
                         colObsStatut),
