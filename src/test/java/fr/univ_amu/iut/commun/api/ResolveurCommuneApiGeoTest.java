@@ -11,9 +11,14 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.PositionGeo;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -92,9 +97,12 @@ class ResolveurCommuneApiGeoTest {
     }
 
     private static HttpClient clientRepondant(int statut, String corps) throws IOException, InterruptedException {
-        HttpResponse<String> reponse = mock(HttpResponse.class);
+        byte[] octets = corps.getBytes(StandardCharsets.UTF_8);
+        HttpResponse<InputStream> reponse = mock(HttpResponse.class);
         when(reponse.statusCode()).thenReturn(statut);
-        when(reponse.body()).thenReturn(corps);
+        // Corps en flux depuis #3222 : lu sous plafond, en-tetes consultes (Content-Length annonce).
+        when(reponse.body()).thenAnswer(appel -> new ByteArrayInputStream(octets));
+        when(reponse.headers()).thenReturn(HttpHeaders.of(Map.of(), (nom, valeur) -> true));
         HttpClient client = mock(HttpClient.class);
         doReturn(reponse).when(client).send(any(), any());
         return client;

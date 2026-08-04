@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.PositionGeo;
 import fr.univ_amu.iut.commun.model.ResolveurCommune;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -60,11 +61,13 @@ public final class ResolveurCommuneApiGeo implements ResolveurCommune {
                     .header("Accept", "application/json")
                     .GET()
                     .build();
-            HttpResponse<String> reponse = client.send(requete, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<InputStream> reponse = client.send(requete, HttpResponse.BodyHandlers.ofInputStream());
+            // Corps lu sous plafond (#3222), comme les deux autres clients HTTP du produit.
+            String corps = CorpsReponse.sousPlafond(reponse, "API Géo " + position);
             if (reponse.statusCode() != 200) {
                 return Optional.empty();
             }
-            return lire(reponse.body());
+            return lire(corps);
         } catch (InterruptedException interruption) {
             Thread.currentThread().interrupt();
             return Optional.empty();

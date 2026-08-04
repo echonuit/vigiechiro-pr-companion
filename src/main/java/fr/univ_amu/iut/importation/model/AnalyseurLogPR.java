@@ -1,9 +1,9 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.LectureBornee;
+import fr.univ_amu.iut.commun.model.PlafondLecture;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -48,13 +48,16 @@ public final class AnalyseurLogPR {
     private static final Pattern BANDE = Pattern.compile("Bd\\.\\s*Freq\\.\\s*([^,]+)");
     private static final Pattern POURCENTAGE = Pattern.compile("(\\d{1,3})\\s*%");
 
-    /// Analyse le fichier journal pointé par `fichierLog` (lu en UTF-8).
+    /// Analyse le fichier journal pointé par `fichierLog` (lu en UTF-8), **sous plafond** (#3222) : le
+    /// journal vient de la carte, donc du dehors, et sa taille n'est pas contrôlée.
     ///
     /// @throws UncheckedIOException si le fichier est illisible
+    /// @throws fr.univ_amu.iut.commun.model.EntreeTropVolumineuse si le journal dépasse le plafond ; le
+    ///     message nomme la limite (cf. [PlafondLecture#journalCapteur()])
     public JournalParse analyser(Path fichierLog) {
         Objects.requireNonNull(fichierLog, "fichierLog");
         try {
-            return analyser(Files.readAllLines(fichierLog, StandardCharsets.UTF_8));
+            return analyser(LectureBornee.lignes(fichierLog, PlafondLecture.journalCapteur()));
         } catch (IOException e) {
             throw new UncheckedIOException("Lecture impossible du journal " + fichierLog, e);
         }
