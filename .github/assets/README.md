@@ -763,6 +763,15 @@ L'écran de revue, ses filtres, ses menus et ses états de sélection.
 
 <table>
 <tr>
+<th width="50%">Année illisible : la puce est marquée, la table reste entière</th>
+</tr>
+<tr>
+<td><a href="apercu-multisite-annee-invalide.png"><img src="apercu-multisite-annee-invalide.png" width="430" alt="Année invalide"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
 <th width="50%">Édition</th>
 <th width="50%">Carte pleine</th>
 </tr>

@@ -51,9 +51,11 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.Pane;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -128,6 +130,7 @@ public final class CaptureMultisite {
 
         rendreEcran(injecteur, sortie.resolve("apercu-multisite.png"));
         rendreEcranFiltre(injecteur, sortie.resolve("apercu-multisite-filtre.png"));
+        rendreAnneeInvalide(injecteur, sortie.resolve("apercu-multisite-annee-invalide.png"));
         rendreEcranEdition(injecteur, sortie.resolve("apercu-multisite-edition.png"));
         rendreEcranCartePleine(injecteur, sortie.resolve("apercu-multisite-carte-pleine.png"));
         rendreEcranTableauPlein(injecteur, sortie.resolve("apercu-multisite-tableau-plein.png"));
@@ -353,6 +356,33 @@ public final class CaptureMultisite {
 
     /// Rend le tableau **filtré** via la recherche de la barre à puces (#537 étape 6b), pour montrer la
     /// restriction du tableau et le résumé recalculé.
+    /// La puce **« Année » remplie d'une saisie illisible** (#3094).
+    ///
+    /// L'état que cette capture doit établir : la puce est **posée et remplie**, le champ est **marqué**
+    /// (bordure rouge, classe `champ-invalide`), et le tableau reste **entier**.
+    ///
+    /// C'est tout l'objet du correctif : une année illisible n'écarte rien, comme avant, mais elle le
+    /// **dit**. Sans cette capture, rien ne montre la différence entre « la table n'est pas filtrée
+    /// parce que la saisie est fausse » et « la table n'est pas filtrée du tout » - et c'est
+    /// exactement la confusion qui coûtait le plus cher en confiance.
+    private static void rendreAnneeInvalide(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource(FXML));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        if (!(vue.lookup("#menuAjoutFiltre") instanceof MenuButton menuAjout)) {
+            throw new IllegalStateException("Menu « + Filtre » introuvable : la puce Année ne peut pas être posée.");
+        }
+        ApercuFx.exigerParLibelle("le menu « + Filtre »", menuAjout.getItems(), MenuItem::getText, "Année")
+                .fire();
+        if (!(vue.lookup("#pucesFiltres") instanceof Pane puces)
+                || !(puces.lookup(".text-field") instanceof TextField champ)) {
+            throw new IllegalStateException("Champ de la puce Année introuvable après son ajout.");
+        }
+        // Le O majuscule à la place du zéro : la faute de frappe qui motivait #3094.
+        champ.setText("202O");
+        capturerCarte(new Scene(vue, 1100, 620), fichier);
+    }
+
     private static void rendreEcranFiltre(Injector injecteur, Path fichier) throws IOException {
         FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource(FXML));
         loader.setControllerFactory(injecteur::getInstance);
