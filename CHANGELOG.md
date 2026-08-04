@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.171.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.170.0...v2.171.0) (2026-08-04)
+
+
+### Features
+
+* **multisite:** montrer la commune dans la table des passages ([#3226](https://github.com/echonuit/vigiechiro-pr-companion/issues/3226)) ([f6e7c98](https://github.com/echonuit/vigiechiro-pr-companion/commit/f6e7c98787e9b481115ebfe6135aab0e7fdffa12)), closes [#2790](https://github.com/echonuit/vigiechiro-pr-companion/issues/2790) [#3163](https://github.com/echonuit/vigiechiro-pr-companion/issues/3163)
+
 # [2.170.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.169.1...v2.170.0) (2026-08-04)
 
 
