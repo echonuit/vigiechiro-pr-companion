@@ -66,6 +66,9 @@ de la barre du haut permet de la **protéger** :
     Rangez-la en conséquence : un disque que vous gardez vaut mieux qu'un dossier synchronisé sur un
     service en ligne. La localisation précise des gîtes d'espèces protégées ne se diffuse pas.
 
+    L'application vous le rappelle au moment d'écrire : la sauvegarde complète le dit **avant** de
+    copier, dans sa demande de confirmation, et la sauvegarde de la base le dit dans son compte rendu.
+
 !!! tip "Une restauration complète vérifie avant de toucher à quoi que ce soit"
     Chaque dossier de la sauvegarde est confronté à ce qu'elle annonce contenir. Une seule
     discordance, et la restauration s'arrête **avant** d'avoir remplacé la base ou écrasé le moindre
