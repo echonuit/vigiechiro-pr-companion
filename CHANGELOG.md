@@ -2,6 +2,14 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.167.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.166.2...v2.167.0) (2026-08-04)
+
+
+### Features
+
+* **analyse:** porter le code du point sur la projection du filtre ([#3203](https://github.com/echonuit/vigiechiro-pr-companion/issues/3203)) ([234a4e5](https://github.com/echonuit/vigiechiro-pr-companion/commit/234a4e566443091451d47719f418ae890176666f)), closes [#3160](https://github.com/echonuit/vigiechiro-pr-companion/issues/3160)
+* **audit:** installer la barre de filtres sur l'Audit de coherence ([#3201](https://github.com/echonuit/vigiechiro-pr-companion/issues/3201)) ([3d4a4c3](https://github.com/echonuit/vigiechiro-pr-companion/commit/3d4a4c39a967675da1d74f4966071db513dc5c82)), closes [#3056](https://github.com/echonuit/vigiechiro-pr-companion/issues/3056) [#3095](https://github.com/echonuit/vigiechiro-pr-companion/issues/3095) [#3096](https://github.com/echonuit/vigiechiro-pr-companion/issues/3096) [#3169](https://github.com/echonuit/vigiechiro-pr-companion/issues/3169)
+
 ## [2.166.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.166.1...v2.166.2) (2026-08-04)
 
 
