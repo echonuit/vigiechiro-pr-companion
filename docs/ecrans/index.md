@@ -94,10 +94,21 @@ supprimé pendant que l'application tourne.
 | `vigiechiro.db.avant-restauration` | à chaque restauration | l'état d'avant, mis de côté au cas où vous vous seriez trompé de sauvegarde |
 | `.verrou` | tant que l'application est ouverte | il empêche une **seconde fenêtre** d'écrire dans la même base en même temps |
 
-!!! note "Les fichiers « avant-migration » s'accumulent"
+!!! note "Les fichiers « avant-migration » s'accumulent, et l'application vous dit combien"
     Un par évolution de la base, et l'application ne les supprime jamais : ils sont votre filet, elle
     n'a pas à décider à votre place quand vous n'en avez plus besoin. Sur une grosse base, pensez à
     faire le ménage de temps en temps, en gardant les plus récents.
+
+    Encore faut-il savoir ce qu'il y a à ranger. **☰ → Restaurer une sauvegarde** ouvre désormais la
+    liste de ce que le dossier contient - date, taille, nature de chacune, et le **total occupé** -
+    au lieu d'un sélecteur de fichiers où l'on choisissait un `.db` sans rien savoir de lui.
+    « Parcourir… » reste là pour une sauvegarde rangée ailleurs.
+
+    ![Choisir une sauvegarde à restaurer](../../.github/assets/apercu-restauration-choix-sauvegarde.png)
+
+    En ligne de commande, `vigiechiro lister-sauvegardes` donne la même chose, et
+    `vigiechiro supprimer-sauvegarde --nom <nom> --confirmer` fait le ménage. Sans `--confirmer`, la
+    commande vous dit ce qui serait perdu et ne touche à rien.
 
 !!! warning "« VigieChiro Companion est déjà ouvert »"
     L'application refuse de démarrer une **seconde fois** sur le même dossier de travail. Ce n'est pas
