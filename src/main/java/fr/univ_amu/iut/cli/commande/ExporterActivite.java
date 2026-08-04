@@ -11,7 +11,7 @@ import fr.univ_amu.iut.analyse.model.LargeurTranche;
 import fr.univ_amu.iut.analyse.model.LigneActivite;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
-import fr.univ_amu.iut.validation.model.FiltreLieu;
+import fr.univ_amu.iut.validation.model.FiltresLieu;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -169,7 +169,7 @@ public final class ExporterActivite implements Callable<Integer> {
     /// **dans ce qu'il a reçu**, donc après les filtres précédents. « Taxons parents présents » après un
     /// `--lieu` annonce ceux du lieu retenu, et non ceux de toute la saison - ce qui serait trompeur.
     private List<ContactHoraire> restreindre(List<ContactHoraire> contacts) {
-        List<ContactHoraire> retenus = FiltreLieu.appliquer(contacts, lieux, FiltresActivite::dimensionsLieu);
+        List<ContactHoraire> retenus = FiltresLieu.parLieu(contacts, lieux, FiltresActivite::dimensionsLieu);
         retenus = FiltresActivite.parNuit(retenus, nuit);
         retenus = FiltresActivite.parTaxonParent(retenus, taxonParent);
         retenus = FiltresActivite.parNature(retenus, nature, service.nuitsOpportunistes());

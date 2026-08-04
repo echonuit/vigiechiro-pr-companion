@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 /// l'écran : le point exclu, la correspondance partielle, et le refus plutôt qu'un ensemble vide. Ce
 /// sont trois décisions de conception, prises avant le code ; les redécouvrir par accident coûterait
 /// plus cher que de les lire ici.
-class FiltreLieuTest {
+class FiltresLieuTest {
 
     private static LigneObservationAudio ligne(long id, String commune, String carre, String point, String site) {
         return new LigneObservationAudio(
@@ -58,18 +58,18 @@ class FiltreLieuTest {
     @DisplayName("#2971 : aucun lieu demandé n'écarte rien")
     void sans_lieu_rien_n_est_ecarte() {
         List<LigneObservationAudio> toutes = List.of(AHETZE, VENELLES);
-        assertThat(FiltreLieu.appliquer(toutes, List.of())).isEqualTo(toutes);
-        assertThat(FiltreLieu.appliquer(toutes, null)).isEqualTo(toutes);
-        assertThat(FiltreLieu.appliquer(toutes, List.of("  "))).isEqualTo(toutes);
+        assertThat(FiltresLieu.parLieu(toutes, List.of())).isEqualTo(toutes);
+        assertThat(FiltresLieu.parLieu(toutes, null)).isEqualTo(toutes);
+        assertThat(FiltresLieu.parLieu(toutes, List.of("  "))).isEqualTo(toutes);
     }
 
     @Test
     @DisplayName("#2971 : chaque dimension filtre : commune, carré, site")
     void chaque_dimension_filtre() {
         List<LigneObservationAudio> toutes = List.of(AHETZE, VENELLES);
-        assertThat(FiltreLieu.appliquer(toutes, List.of("Ahetze"))).containsExactly(AHETZE);
-        assertThat(FiltreLieu.appliquer(toutes, List.of("870150"))).containsExactly(VENELLES);
-        assertThat(FiltreLieu.appliquer(toutes, List.of("Le pré"))).containsExactly(VENELLES);
+        assertThat(FiltresLieu.parLieu(toutes, List.of("Ahetze"))).containsExactly(AHETZE);
+        assertThat(FiltresLieu.parLieu(toutes, List.of("870150"))).containsExactly(VENELLES);
+        assertThat(FiltresLieu.parLieu(toutes, List.of("Le pré"))).containsExactly(VENELLES);
     }
 
     @Test
@@ -78,15 +78,15 @@ class FiltreLieuTest {
         List<LigneObservationAudio> toutes = List.of(AHETZE, VENELLES);
         // « etang » sans accent trouve « Étang de la Tuilière » : en ligne de commande on tape à
         // l'aveugle, sans liste pour rappeler l'orthographe.
-        assertThat(FiltreLieu.appliquer(toutes, List.of("etang"))).containsExactly(AHETZE);
-        assertThat(FiltreLieu.appliquer(toutes, List.of("AHETZE"))).containsExactly(AHETZE);
-        assertThat(FiltreLieu.appliquer(toutes, List.of("venel"))).containsExactly(VENELLES);
+        assertThat(FiltresLieu.parLieu(toutes, List.of("etang"))).containsExactly(AHETZE);
+        assertThat(FiltresLieu.parLieu(toutes, List.of("AHETZE"))).containsExactly(AHETZE);
+        assertThat(FiltresLieu.parLieu(toutes, List.of("venel"))).containsExactly(VENELLES);
     }
 
     @Test
     @DisplayName("#2971 : plusieurs lieux cumulent, comme cocher deux cases")
     void plusieurs_lieux_cumulent() {
-        assertThat(FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("Ahetze", "Venelles")))
+        assertThat(FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("Ahetze", "Venelles")))
                 .as("appartenance : une ligne passe par l'un OU l'autre")
                 .containsExactly(AHETZE, VENELLES);
     }
@@ -97,14 +97,14 @@ class FiltreLieuTest {
         // Les deux lignes portent un point « A1 » dans des carrés différents : c'est précisément
         // l'ambiguïté que la puce règle en qualifiant, et que la CLI écarte en n'offrant pas le point.
         // Sans cette exclusion, « --lieu A1 » retiendrait les deux sans que rien ne le montre.
-        assertThatThrownBy(() -> FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("A1")))
+        assertThatThrownBy(() -> FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("A1")))
                 .isInstanceOf(RegleMetierException.class);
     }
 
     @Test
     @DisplayName("#2971 : un lieu sans correspondance est un REFUS, qui nomme les lieux présents")
     void sans_correspondance_le_filtre_refuse() {
-        assertThatThrownBy(() -> FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("Marseille")))
+        assertThatThrownBy(() -> FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("Marseille")))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("Marseille")
                 // Le refus doit DIRE ce qui existe : sans cela il laisse l'utilisateur deviner sa faute
@@ -122,11 +122,11 @@ class FiltreLieuTest {
         // Le cas d'une boucle de script qui interpole une variable vide parmi d'autres valeurs, ce qui
         // est l'usage même d'une option répétable. Sans le garde, la chaîne vide entre dans les
         // demandes, « contient "" » est toujours vrai, et le refus promis par l'ADR 3082 n'a pas lieu.
-        assertThatThrownBy(() -> FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("", "Marseille")))
+        assertThatThrownBy(() -> FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("", "Marseille")))
                 .as("« Marseille » reste introuvable, que la liste porte une valeur vide ou non")
                 .isInstanceOf(RegleMetierException.class);
 
-        assertThat(FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("")))
+        assertThat(FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("")))
                 .as("une demande vide SEULE ne désigne rien : elle n'écarte rien, comme --lieu absent")
                 .containsExactly(AHETZE, VENELLES);
     }
@@ -134,7 +134,7 @@ class FiltreLieuTest {
     @Test
     @DisplayName("#3191 : le refus cite plusieurs lieux au pluriel, et borne ce qu'il énumère")
     void le_refus_cite_au_pluriel_et_borne_son_enumeration() {
-        assertThatThrownBy(() -> FiltreLieu.appliquer(List.of(AHETZE), List.of("Marseille", "Toulon")))
+        assertThatThrownBy(() -> FiltresLieu.parLieu(List.of(AHETZE), List.of("Marseille", "Toulon")))
                 .as("deux valeurs demandées ne se citent pas comme une seule")
                 .hasMessageContaining("ces lieux (Marseille, Toulon)");
 
@@ -145,7 +145,7 @@ class FiltreLieuTest {
                 .map(LigneObservationAudio.class::cast)
                 .toList();
 
-        assertThatThrownBy(() -> FiltreLieu.appliquer(quinzeCarres, List.of("Marseille")))
+        assertThatThrownBy(() -> FiltresLieu.parLieu(quinzeCarres, List.of("Marseille")))
                 .hasMessageContaining("… (16 en tout)");
 
         // La borne EXACTE, sans quoi rien ne distingue « au-delà de douze » de « à partir de douze » :
@@ -155,7 +155,7 @@ class FiltreLieuTest {
                 .map(LigneObservationAudio.class::cast)
                 .toList();
 
-        assertThatThrownBy(() -> FiltreLieu.appliquer(douzeLieux, List.of("Marseille")))
+        assertThatThrownBy(() -> FiltresLieu.parLieu(douzeLieux, List.of("Marseille")))
                 .as("douze lieux tiennent dans un refus : c'est treize qui tronque")
                 .hasMessageNotContaining("en tout");
     }
@@ -168,10 +168,10 @@ class FiltreLieuTest {
         // listerait un lieu vide entre deux virgules, ce que personne ne saurait recopier.
         LigneObservationAudio sansCommune = ligne(3, null, "130711", "A1", null);
 
-        assertThat(FiltreLieu.appliquer(List.of(sansCommune), List.of("130711")))
+        assertThat(FiltresLieu.parLieu(List.of(sansCommune), List.of("130711")))
                 .as("le carré reste comparable, la commune manquante n'empêche rien")
                 .containsExactly(sansCommune);
-        assertThatThrownBy(() -> FiltreLieu.appliquer(List.of(sansCommune), List.of("Marseille")))
+        assertThatThrownBy(() -> FiltresLieu.parLieu(List.of(sansCommune), List.of("Marseille")))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("130711")
                 .as("le refus nomme le seul lieu présent, et rien d'autre")
@@ -186,13 +186,13 @@ class FiltreLieuTest {
     void le_carre_se_tape_par_l_une_ou_l_autre_etiquette() {
         // La contrepartie de la ligne ci-dessus : nommer les lieux qualifiés ne doit obliger personne à
         // taper un point médian. La correspondance reste partielle, comme depuis #2971.
-        assertThat(FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("640380")))
+        assertThat(FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("640380")))
                 .as("le numéro officiel, ce que tapent les scripts")
                 .containsExactly(AHETZE);
-        assertThat(FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("tuiliere")))
+        assertThat(FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("tuiliere")))
                 .as("le nom convivial, sans accent ni casse : c'est ainsi qu'on retient son propre carré")
                 .containsExactly(AHETZE);
-        assertThat(FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("640380 · Étang de la Tuilière")))
+        assertThat(FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("640380 · Étang de la Tuilière")))
                 .as("et la forme qualifiée, recopiée depuis un refus ou depuis l'écran")
                 .containsExactly(AHETZE);
     }

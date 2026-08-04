@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.validation.model.FiltreLieu;
+import fr.univ_amu.iut.validation.model.FiltresLieu;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -41,7 +41,7 @@ class FiltresActiviteTest {
         assertThat(FiltresActivite.dimensionsLieu(RHIFER))
                 .as("commune et carré, rien d'autre")
                 .containsExactly("Ahetze", "640380");
-        assertThatThrownBy(() -> FiltreLieu.appliquer(TOUS, List.of("A1"), FiltresActivite::dimensionsLieu))
+        assertThatThrownBy(() -> FiltresLieu.parLieu(TOUS, List.of("A1"), FiltresActivite::dimensionsLieu))
                 .isInstanceOf(RegleMetierException.class);
     }
 
@@ -64,10 +64,10 @@ class FiltresActiviteTest {
         assertThat(FiltresActivite.dimensionsLieu(nomme))
                 .as("le nom du site n'est pas une dimension de plus : c'est l'autre étiquette du carré")
                 .containsExactly("Ahetze", "640380 · Vallon");
-        assertThat(FiltreLieu.appliquer(List.of(nomme), List.of("vallon"), FiltresActivite::dimensionsLieu))
+        assertThat(FiltresLieu.parLieu(List.of(nomme), List.of("vallon"), FiltresActivite::dimensionsLieu))
                 .as("le nom seul retient ce carré, sans point médian à taper")
                 .containsExactly(nomme);
-        assertThat(FiltreLieu.appliquer(List.of(nomme), List.of("640380"), FiltresActivite::dimensionsLieu))
+        assertThat(FiltresLieu.parLieu(List.of(nomme), List.of("640380"), FiltresActivite::dimensionsLieu))
                 .as("le numéro seul aussi, comme depuis #3059")
                 .containsExactly(nomme);
     }
@@ -75,10 +75,10 @@ class FiltresActiviteTest {
     @Test
     @DisplayName("#3059 : --lieu retient sur la commune comme sur le carré, partiellement")
     void le_lieu_retient_sur_chaque_dimension() {
-        assertThat(FiltreLieu.appliquer(TOUS, List.of("ahetze"), FiltresActivite::dimensionsLieu))
+        assertThat(FiltresLieu.parLieu(TOUS, List.of("ahetze"), FiltresActivite::dimensionsLieu))
                 .as("insensible à la casse, comme --lieu de exporter-sons")
                 .containsExactly(RHIFER, SAUTERELLE);
-        assertThat(FiltreLieu.appliquer(TOUS, List.of("640380"), FiltresActivite::dimensionsLieu))
+        assertThat(FiltresLieu.parLieu(TOUS, List.of("640380"), FiltresActivite::dimensionsLieu))
                 .hasSize(3);
     }
 
@@ -148,7 +148,7 @@ class FiltresActiviteTest {
         assertThat(FiltresActivite.parNuit(TOUS, null)).isEqualTo(TOUS);
         assertThat(FiltresActivite.parTaxonParent(TOUS, "  ")).isEqualTo(TOUS);
         assertThat(FiltresActivite.parNature(TOUS, null, AUCUNE_OPPORTUNISTE)).isEqualTo(TOUS);
-        assertThat(FiltreLieu.appliquer(TOUS, List.of(), FiltresActivite::dimensionsLieu))
+        assertThat(FiltresLieu.parLieu(TOUS, List.of(), FiltresActivite::dimensionsLieu))
                 .isEqualTo(TOUS);
     }
 
@@ -181,7 +181,7 @@ class FiltresActiviteTest {
         assertThat(FiltresActivite.dimensionsLieu(sansCommune))
                 .as("le carré reste comparable, la commune manquante est écartée")
                 .containsExactly("640380");
-        assertThat(FiltreLieu.appliquer(List.of(sansCommune), List.of("640380"), FiltresActivite::dimensionsLieu))
+        assertThat(FiltresLieu.parLieu(List.of(sansCommune), List.of("640380"), FiltresActivite::dimensionsLieu))
                 .containsExactly(sansCommune);
     }
 }

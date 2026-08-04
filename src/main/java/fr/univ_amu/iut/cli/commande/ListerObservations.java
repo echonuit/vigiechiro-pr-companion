@@ -6,8 +6,8 @@ import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.validation.model.CriteresRevue;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
-import fr.univ_amu.iut.validation.model.FiltreLieu;
-import fr.univ_amu.iut.validation.model.FiltreProbabilite;
+import fr.univ_amu.iut.validation.model.FiltresLieu;
+import fr.univ_amu.iut.validation.model.FiltresProbabilite;
 import fr.univ_amu.iut.validation.model.FiltresRevue;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
@@ -168,11 +168,11 @@ public final class ListerObservations implements Callable<Integer> {
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
         List<LigneObservationAudio> retenues =
-                FiltreLieu.appliquer(selection.get().lignes(passage, criteres()), lieux);
+                FiltresLieu.parLieu(selection.get().lignes(passage, criteres()), lieux);
         retenues = FiltresRevue.parTaxonParent(retenues, taxonParent);
         retenues = FiltresRevue.nonIdentifiees(retenues, nonIdentifie);
         List<LigneObservationAudio> avantSeuil = FiltresRevue.parPlageHoraire(retenues, heureDebut, heureFin);
-        List<LigneObservationAudio> lignes = FiltreProbabilite.appliquer(avantSeuil, probaMin);
+        List<LigneObservationAudio> lignes = FiltresProbabilite.parSeuilMinimal(avantSeuil, probaMin);
         marqueurEnjeu = marqueur.get();
 
         if (json) {
@@ -183,7 +183,7 @@ public final class ListerObservations implements Callable<Integer> {
             sortie.println("Aucune observation ne correspond aux filtres pour le passage " + passage + ".");
             // Le seuil est le seul filtre qui peut légitimement tout écarter : on dit alors de combien
             // il faudrait l'abaisser, plutôt que de laisser l'utilisateur deviner (#2971).
-            FiltreProbabilite.avertissementSeuilTropHaut(avantSeuil, probaMin).ifPresent(sortie::println);
+            FiltresProbabilite.avertissementSeuilTropHaut(avantSeuil, probaMin).ifPresent(sortie::println);
             return 0;
         }
         sortie.printf(

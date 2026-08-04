@@ -18,7 +18,7 @@ import java.util.function.Predicate;
 /// L'écran offre cinq critères ; `exporter-activite` n'en offrait **aucun**, sachant exporter une nuit ou
 /// toutes et rien entre les deux. N'en livrer qu'un ou deux aurait reproduit la **parité de façade** que
 /// #2971 a déjà coûtée : vraie sur le cas qu'on regarde, fausse dès qu'on resserre comme on le fait en
-/// vrai. Les cinq sont donc offerts, le **lieu** par [fr.univ_amu.iut.validation.model.FiltreLieu]
+/// vrai. Les cinq sont donc offerts, le **lieu** par [fr.univ_amu.iut.validation.model.FiltresLieu]
 /// généralisé, les quatre autres ici.
 ///
 /// ## Un écart assumé, le même qu'en revue audio
@@ -132,7 +132,7 @@ public final class FiltresActivite {
     /// installation (ADR 3048 : une sortie machine ne retire pas, elle **dit**).
     ///
     /// Rien n'est retiré : le CSV garde ses colonnes et son code de sortie. Même patron que
-    /// [fr.univ_amu.iut.validation.model.FiltreProbabilite#avertissementSeuilTropHaut] - la décision est
+    /// [fr.univ_amu.iut.validation.model.FiltresProbabilite#avertissementSeuilTropHaut] - la décision est
     /// une fonction pure, la surface se contente de l'imprimer.
     public static Optional<String> avertissementReferentielVide(Set<String> prioritaires) {
         if (!prioritaires.isEmpty()) {

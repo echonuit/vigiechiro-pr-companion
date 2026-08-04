@@ -113,10 +113,7 @@ final class CriteresAudit {
 
     private static boolean correspond(ConstatAudit constat, String texte) {
         String aiguille = NormalisationTexte.normaliser(texte);
-        return contient(constat.cible(), aiguille) || contient(constat.detail(), aiguille);
-    }
-
-    private static boolean contient(String champ, String aiguille) {
-        return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
+        return NormalisationTexte.contient(constat.cible(), aiguille)
+                || NormalisationTexte.contient(constat.detail(), aiguille);
     }
 }

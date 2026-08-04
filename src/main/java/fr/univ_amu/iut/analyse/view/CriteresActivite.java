@@ -166,15 +166,11 @@ final class CriteresActivite {
 
     private static boolean correspond(ContactHoraire contact, String texte) {
         String aiguille = NormalisationTexte.normaliser(texte);
-        return contient(contact.taxon(), aiguille)
-                || contient(contact.nomEspece(), aiguille)
-                || contient(contact.commune(), aiguille)
-                || contient(contact.numeroCarre(), aiguille)
-                || contient(contact.codePoint(), aiguille)
-                || contient(contact.nomSite(), aiguille);
-    }
-
-    private static boolean contient(String champ, String aiguille) {
-        return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
+        return NormalisationTexte.contient(contact.taxon(), aiguille)
+                || NormalisationTexte.contient(contact.nomEspece(), aiguille)
+                || NormalisationTexte.contient(contact.commune(), aiguille)
+                || NormalisationTexte.contient(contact.numeroCarre(), aiguille)
+                || NormalisationTexte.contient(contact.codePoint(), aiguille)
+                || NormalisationTexte.contient(contact.nomSite(), aiguille);
     }
 }

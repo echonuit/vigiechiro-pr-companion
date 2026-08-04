@@ -10,8 +10,8 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
-import fr.univ_amu.iut.validation.model.FiltreLieu;
-import fr.univ_amu.iut.validation.model.FiltreProbabilite;
+import fr.univ_amu.iut.validation.model.FiltresLieu;
+import fr.univ_amu.iut.validation.model.FiltresProbabilite;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
@@ -125,8 +125,8 @@ public final class ExporterSons implements Callable<Integer> {
 
     @Override
     public Integer call() throws IOException {
-        List<LigneObservationAudio> avantSeuil = FiltreLieu.appliquer(lignesDeLaPortee(), lieux);
-        List<LigneObservationAudio> lignes = FiltreProbabilite.appliquer(avantSeuil, probaMin);
+        List<LigneObservationAudio> avantSeuil = FiltresLieu.parLieu(lignesDeLaPortee(), lieux);
+        List<LigneObservationAudio> lignes = FiltresProbabilite.parSeuilMinimal(avantSeuil, probaMin);
         MarqueurEspecesAEnjeu marqueur = new MarqueurEspecesAEnjeu(especesPrioritaires.get());
         ExportObservationsEtSons export = new ExportObservationsEtSons(sequences, sessions);
         ExportObservationsEtSons.Bilan bilan =
@@ -138,7 +138,7 @@ public final class ExporterSons implements Callable<Integer> {
                         + sortie.toAbsolutePath());
         // Une archive vide est un résultat valide, mais muet : sans cela, l'utilisateur ne saurait pas
         // que son seuil est passé juste au-dessus de tout le lot (#2971).
-        FiltreProbabilite.avertissementSeuilTropHaut(avantSeuil, probaMin)
+        FiltresProbabilite.avertissementSeuilTropHaut(avantSeuil, probaMin)
                 .ifPresent(avertissement -> spec.commandLine().getOut().println(avertissement));
         if (!bilan.sonsIntrouvables().isEmpty()) {
             spec.commandLine()

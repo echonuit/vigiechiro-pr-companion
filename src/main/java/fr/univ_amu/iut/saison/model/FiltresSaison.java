@@ -8,7 +8,7 @@ import java.util.List;
 ///
 /// Ils vivent dans `model` parce que **deux surfaces** posent la même question : la barre de l'écran et
 /// `solde-saison`. Écrite deux fois, la règle finit par diverger - c'est le motif que le dépôt applique
-/// déjà à [fr.univ_amu.iut.validation.model.FiltreLieu], lu par l'écran comme par la commande.
+/// déjà à [fr.univ_amu.iut.validation.model.FiltresLieu], lu par l'écran comme par la commande.
 public final class FiltresSaison {
 
     private FiltresSaison() {}
@@ -32,9 +32,9 @@ public final class FiltresSaison {
     /// passage et une phrase d'action, que « Reste à faire » interroge mieux qu'une recherche libre.
     public static boolean correspondAuLieu(LigneSaison ligne, String recherche) {
         String aiguille = NormalisationTexte.normaliser(recherche);
-        return contient(ligne.numeroCarre(), aiguille)
-                || contient(ligne.codePoint(), aiguille)
-                || contient(ligne.nomSite(), aiguille);
+        return NormalisationTexte.contient(ligne.numeroCarre(), aiguille)
+                || NormalisationTexte.contient(ligne.codePoint(), aiguille)
+                || NormalisationTexte.contient(ligne.nomSite(), aiguille);
     }
 
     /// Les points qui ne sont **pas à jour**, c'est-à-dire ceux dont il reste une action à mener.
@@ -43,9 +43,5 @@ public final class FiltresSaison {
     /// « Reste à faire » et le filtre pourraient un jour se contredire sur la même ligne.
     public static List<LigneSaison> resteAFaire(List<LigneSaison> lignes) {
         return lignes.stream().filter(ligne -> !ligne.aJour()).toList();
-    }
-
-    private static boolean contient(String champ, String aiguille) {
-        return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
     }
 }

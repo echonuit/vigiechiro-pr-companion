@@ -44,16 +44,16 @@ import java.util.stream.Stream;
 /// script enchaînerait sans voir la faute de frappe, et l'expert recevrait un ZIP creux. C'est la forme
 /// que demande l'ADR 2635, un refus dit ce qui manque, et c'est déjà la règle de
 /// [SelectionObservations] pour un lot vide.
-public final class FiltreLieu {
+public final class FiltresLieu {
 
-    private FiltreLieu() {}
+    private FiltresLieu() {}
 
     /// Les lignes dont **l'une** des dimensions correspond à **l'un** des lieux demandés (appartenance,
     /// comme cocher plusieurs cases). `lieux` vide n'écarte rien.
     ///
     /// @throws RegleMetierException si aucune ligne ne correspond, avec les lieux réellement présents
-    public static List<LigneObservationAudio> appliquer(List<LigneObservationAudio> lignes, List<String> lieux) {
-        return appliquer(lignes, lieux, FiltreLieu::dimensions);
+    public static List<LigneObservationAudio> parLieu(List<LigneObservationAudio> lignes, List<String> lieux) {
+        return parLieu(lignes, lieux, FiltresLieu::dimensions);
     }
 
     /// Le même filtre, sur **n'importe quelle ligne** qui sait dire ses dimensions de lieu (#3059).
@@ -64,7 +64,7 @@ public final class FiltreLieu {
     /// une par surface ; elle l'est désormais une fois par surface, et non une fois par type de ligne.
     ///
     /// @param dimensions ce qu'on lit sur une ligne pour la comparer (valeurs nulles ou vides ignorées)
-    public static <T> List<T> appliquer(List<T> lignes, List<String> lieux, Function<T, List<String>> dimensions) {
+    public static <T> List<T> parLieu(List<T> lignes, List<String> lieux, Function<T, List<String>> dimensions) {
         if (lieux == null || lieux.isEmpty()) {
             return lignes;
         }

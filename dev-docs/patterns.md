@@ -803,7 +803,7 @@ la commune, le carré et le point. Ce qui ressemblait à une quatrième dimensio
 **nom convivial du carré** - `monitoring_site` porte les deux colonnes sur la même ligne - et les deux
 tiennent dans une seule entrée, « 640380 · Vallon ». `CritereLieu.carres` et `CritereLieu.points`
 écrivent cette règle une fois pour les quatre écrans ; l'écriture partagée vit en
-`commun.model.LieuQualifie`, la **ligne de commande** devant la lire aussi (`FiltreLieu`), et un modèle
+`commun.model.LieuQualifie`, la **ligne de commande** devant la lire aussi (`FiltresLieu`), et un modèle
 ne pouvant pas dépendre d'une vue.
 
 **Une dimension qui change d'écriture déclare de quel côté** ([ADR 3158](decisions/3158-une-valeur-memorisee-se-rattrape-par-dimension.md)).
@@ -856,6 +856,37 @@ Il existe **trois** chemins de restauration, et tous trois doivent lire ce retou
 sauvegardées, le transport d'un écran à l'autre (#476) et la mémoire de session (#484). En ignorer un
 laisse l'écran filtrer moins large qu'annoncé, sans rien dire.
 
+### Les filtres de `model` : deux rôles, une convention de nom
+
+Six classes `Filtres*` vivent en `model`, hors du socle de vue. L'audit d'harmonisation de la clôture
+de #3092 a montré qu'elles ne relèvent pas de trois idiomes, comme leur forme le laissait croire, mais
+de **deux rôles**, et que seul leur **nommage** divergeait.
+
+| Rôle | Forme | Classes | Consommé par |
+|---|---|---|---|
+| **Prédicat composable** | objet chaînable + `accepte(ligne)` | `FiltresMultisite` | un service **et** un catalogue d'écran |
+| **Application à une liste** | `parX(List, critère) → List` | `FiltresActivite`, `FiltresRevue`, `FiltresLieu`, `FiltresProbabilite`, `FiltresSaison` | la **ligne de commande** |
+
+La différence est légitime et se garde : un écran a besoin d'un `Predicate` à poser dans son
+`Filtres<T>`, une commande a besoin d'une liste déjà réduite. Les convertir toutes à une seule forme
+ferait porter à l'une le coût de l'autre.
+
+**Ce qui, lui, ne se justifiait pas**, et a été aligné : deux classes portaient un nom **singulier** et
+une méthode `appliquer` là où les autres portent un pluriel et un verbe qui dit **sur quoi** l'on
+filtre. `FiltreLieu.appliquer` est devenu `FiltresLieu.parLieu`, `FiltreProbabilite.appliquer` est
+devenu `FiltresProbabilite.parSeuilMinimal`. Un nom qui dit son critère se lit sans ouvrir la classe.
+
+**Une règle lue des deux côtés s'écrit dans `model`.** `FiltresLieu` et `FiltresSaison` sont lues par
+la ligne de commande **et** par un catalogue d'écran ; un catalogue de `view` qui garderait sa propre
+copie finirait par diverger - c'est arrivé le jour même où #3219 a ajouté la recherche par nom de carré
+à « Ma saison ».
+
+⚠️ La comparaison de texte insensible à la casse et aux accents vit dans
+`commun.model.NormalisationTexte.contient`, et nulle part ailleurs. Six catalogues en avaient
+re-déclaré une copie privée identique - dont deux écrites par ce chantier même. La méthode partagée
+**normalise elle-même** l'aiguille et refuse une aiguille **vide**, là où les copies laissaient tout
+passer.
+
 ### La mémoire de session sépare les filtres du tri
 
 `MemoireFiltres` (#3098) retient l'état d'un écran d'une visite à l'autre, en **deux mémoires
@@ -906,7 +937,7 @@ sémantique ([ADR 0014](decisions/0014-parite-cli-ihm.md)). L'état à la clôtu
 Les deux dernières lignes sont une dette **antérieure** au chantier, rendue visible en confrontant les
 inventaires complets plutôt que des exemples.
 
-Quand la règle est la même des deux côtés, elle s'écrit **une fois** dans `model` : `FiltreLieu` pour le
+Quand la règle est la même des deux côtés, elle s'écrit **une fois** dans `model` : `FiltresLieu` pour le
 lieu, `FiltresSaison` pour la recherche et le « reste à faire ». Un catalogue de `view` qui garderait sa
 propre copie finirait par diverger - c'est arrivé le jour même où #3219 a ajouté la recherche par nom de
 carré.
