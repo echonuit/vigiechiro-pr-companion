@@ -44,7 +44,10 @@ final class FiltresVuesAudio {
             MarqueurEspecesAEnjeu marqueurEnjeu,
             Supplier<List<GestionnaireColonnes.Colonne>> colonnes) {
         // Barre de filtres « à la Notion » (#470/#471) : recherche texte permanente + « + Filtre » + puces,
-        // pilotant les filtres composables du view-model. Catalogue de critères : statut et groupe taxon.
+        // pilotant les filtres composables du view-model. Le catalogue est celui qui suit : l'énumérer ici
+        // ferait une seconde liste à tenir à jour, et c'est ainsi que ce commentaire a fini par annoncer
+        // deux critères là où il y en a dix (#3105). Le décompte, lui, est ancré dans
+        // `docs/ecrans/validation.md` et vérifié par `DocumentationAJourTest`.
         GestionnaireFiltres<LigneObservationAudio> gestionnaireFiltres = new GestionnaireFiltres<>(
                 barre.champRecherche(),
                 barre.menuAjoutFiltre(),
@@ -70,9 +73,10 @@ final class FiltresVuesAudio {
         // Mémoire de session (#484) : restaure le tri et l'état des filtres de la dernière ouverture, et les
         // re-mémorise à la fermeture. Placée après le gestionnaire de filtres (dont elle restitue l'état).
         memoire.installer(feature, table, gestionnaireFiltres, viewModel::signalerFiltresDeSessionAmputes);
-        // Onglets de vues mémorisées (#623) : enregistrent/rejouent l'état de la barre de filtres. Trois vues
-        // par défaut en lecture seule (« Tout », « À valider », « Chiroptères ») : au chargement, « Tout » (sans
-        // filtre) est active, d'où toujours un contexte modifiable, sans masquer d'observations.
+        // Onglets de vues mémorisées (#623) : enregistrent/rejouent l'état de la barre de filtres. Les vues
+        // par défaut sont en lecture seule et déclarées par `CriteresAudio.vuesParDefaut()` : au chargement,
+        // « Tout » (sans filtre) est active, d'où toujours un contexte modifiable, sans masquer
+        // d'observations.
         GestionnaireVues.avecDialogue(
                         barre.barreOnglets(),
                         gestionnaireFiltres,

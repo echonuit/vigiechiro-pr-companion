@@ -295,7 +295,7 @@ Une doc qui ment est **pire** qu'une doc absente : on la croit. Le dépôt l'ava
 | Les sous-commandes de l'annotation `@Command` de `CommandeRacine` | Le tableau de `dev-docs/cli.md` | Une commande livrée, testée, verte en CI… et **introuvable** dans sa propre doc |
 | Les `ActiviteAccueil` **liées dans l'injecteur** | La fiche `docs/ecrans/<pageDoc>.md` | Un **écran entier** offert à l'utilisateur, sans page |
 | Les fiches présentes sur le disque | La `nav` de `mkdocs.yml` **et** le tableau de `docs/ecrans/index.md` | Une page que le site ne publie pas, ou qu'on ne peut atteindre depuis l'index de sa section |
-| Les **chiffres balisés** `<!--inv:clé-->N<!--/inv-->` (#2385) | L'**inventaire réel du code** (contrats `Ouvrir*`, états de `StatutWorkflow`, features, sous-commandes) | Un décompte **figé dans la prose** qui dérive après un ajout : « 43 sous-commandes » quand le code en câble 44 |
+| Les **chiffres balisés** `<!--inv:clé-->N<!--/inv-->` (#2385) | L'**inventaire réel du code** (contrats `Ouvrir*`, états de `StatutWorkflow`, features, sous-commandes, **catalogues de critères de filtre**) | Un décompte **figé dans la prose** qui dérive après un ajout : « 43 sous-commandes » quand le code en câble 44 |
 
 Deux détails qui comptent :
 
@@ -328,6 +328,22 @@ reconnues :
 | `etats-workflow` | valeurs de l'enum `StatutWorkflow` |
 | `features` | dossiers de `fr.univ_amu.iut` hors `commun`, `cli`, `perf` |
 | `cli` | sous-commandes câblées dans `CommandeRacine` |
+| `workflows-ci` | fichiers `.yml` de `.github/workflows` |
+| `migrations` | fichiers `V*.sql` de `db/migration` |
+| `criteres-validation` | fabriques `CritereFiltre` de `CriteresAudio` |
+| `criteres-analyse` | fabriques `CritereFiltre` de `CriteresAnalyse` |
+| `criteres-activite` | fabriques `CritereFiltre` de `CriteresActivite` |
+| `criteres-multisite` | fabriques `CritereFiltre` de `CriteresMultisite` |
+| `criteres-audit` | fabriques `CritereFiltre` de `CriteresAudit` |
+
+Les cinq clés `criteres-*` (#3105) comptent les fabriques par **nom distinct** : plusieurs catalogues
+offrent des surcharges du même critère (`groupe`, `heure`), qui restent **une seule puce** à l'écran.
+La réflexion s'arrête au type de retour, sans rien invoquer : pas de toolkit JavaFX, pas de données.
+
+Ces cinq-là existent parce que la dérive s'était déjà produite : « Douteux » et « Non identifiés »
+ont vécu deux paliers sans figurer dans `validation.md`, et un commentaire de `FiltresVuesAudio`
+annonçait deux critères là où le code en câblait dix. Un décompte réécrit en prose finit toujours par
+mentir - la règle est donc de **nommer la source** dans un commentaire, et d'ancrer le **nombre** ici.
 
 Poser une balise sur une **clé non listée** échoue aussi : on ajoute d'abord la clé et son décompte au
 test (une clé = un fait que le code sait recalculer). Et le test exige qu'**au moins une** balise subsiste

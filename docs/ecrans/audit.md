@@ -42,6 +42,8 @@ celle des autres écrans :
 - un bouton **« + Filtre »** ajoute un critère sous forme de **puce** ; on retire une puce par sa croix ;
 - **« Tout effacer »** enlève d'un coup les puces **et** la recherche.
 
+Les <!--inv:criteres-audit-->3<!--/inv--> critères disponibles :
+
 | Critère | Ce qu'il garde |
 |---|---|
 | **Gravité** | les constats d'une gravité : Erreur, Avertissement, Information, Succès |
