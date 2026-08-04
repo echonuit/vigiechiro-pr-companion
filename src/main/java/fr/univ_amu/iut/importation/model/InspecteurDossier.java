@@ -1,9 +1,10 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.LectureBornee;
+import fr.univ_amu.iut.commun.model.PlafondLecture;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -53,9 +54,11 @@ public class InspecteurDossier {
         return new RapportInspection(dossierSource, cheminJournal, journal, releve, originaux, etat, cycles);
     }
 
+    /// Sous plafond (#3222) : c'est la **seconde porte** vers le même journal ([AnalyseurLogPR] le lit
+    /// aussi par son chemin), et une entrée externe se borne à toutes ses portes.
     private static List<String> lireLignesJournal(Path cheminJournal) {
         try {
-            return Files.readAllLines(cheminJournal, StandardCharsets.UTF_8);
+            return LectureBornee.lignes(cheminJournal, PlafondLecture.journalCapteur());
         } catch (IOException e) {
             throw new UncheckedIOException("Lecture impossible du journal " + cheminJournal, e);
         }

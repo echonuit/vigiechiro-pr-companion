@@ -2,7 +2,9 @@ package fr.univ_amu.iut.importation.model;
 
 import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.LectureBornee;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
+import fr.univ_amu.iut.commun.model.PlafondLecture;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -452,7 +454,8 @@ final class MoteurImport {
     /// conservées : comportement inchangé.
     private static Path copierReleveDeNuit(Path source, Path dossierSession, LocalDate dateNuit) {
         try {
-            List<String> filtrees = FiltreThLogNuit.filtrer(Files.readAllLines(source), dateNuit);
+            List<String> filtrees =
+                    FiltreThLogNuit.filtrer(LectureBornee.lignes(source, PlafondLecture.journalCapteur()), dateNuit);
             Files.createDirectories(dossierSession);
             Path cible = dossierSession.resolve(source.getFileName());
             Files.write(cible, filtrees);
