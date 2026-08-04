@@ -45,6 +45,7 @@ class ServiceAnalyseTest {
                 "640380",
                 "Étang",
                 10L,
+                null,
                 null);
         when(observationDao.observationsAnalyse(ID)).thenReturn(List.of(obs));
 

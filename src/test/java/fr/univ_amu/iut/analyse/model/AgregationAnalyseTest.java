@@ -18,6 +18,11 @@ class AgregationAnalyseTest {
     /// Observation d'analyse minimale : seuls les champs utiles à l'agrégation varient, le reste est
     /// constant (le statut n'intervient pas ici, le filtrage se fait en amont dans le service).
     private static ObservationAnalyse obs(String taxon, long idPassage, int annee, String carre, long idPoint) {
+        return obs(taxon, idPassage, annee, carre, idPoint, null);
+    }
+
+    private static ObservationAnalyse obs(
+            String taxon, long idPassage, int annee, String carre, long idPoint, String codePoint) {
         return new ObservationAnalyse(
                 taxon,
                 taxon + " (latin)",
@@ -29,7 +34,23 @@ class AgregationAnalyseTest {
                 carre,
                 "Site " + carre,
                 idPoint,
-                null);
+                null,
+                codePoint);
+    }
+
+    @Test
+    @DisplayName("#3160 : deux points HOMONYMES de carrés différents comptent pour deux")
+    void deux_points_homonymes_comptent_pour_deux() {
+        // La raison pour laquelle `idPoint` reste alors que `codePoint` arrive : le schéma pose
+        // UNIQUE(site_id, code), donc « A1 » désigne un point par carré. Compter sur le code
+        // rassemblerait en un seul les A1 de toute une saison, et la colonne « Points » de la table
+        // Espèces annoncerait moins de lieux qu'il n'y en a.
+        List<ObservationAnalyse> observations =
+                List.of(obs("Pippip", 1L, 2026, "640380", 10L, "A1"), obs("Pippip", 2L, 2026, "870150", 11L, "A1"));
+
+        assertThat(AgregationAnalyse.parEspece(observations).getFirst().nbPoints())
+                .as("deux lieux distincts, quel que soit le code qu'ils partagent")
+                .isEqualTo(2);
     }
 
     @Test

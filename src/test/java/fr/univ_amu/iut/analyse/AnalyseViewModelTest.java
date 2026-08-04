@@ -45,7 +45,7 @@ class AnalyseViewModelTest {
     private static ObservationAnalyse obs(
             String taxon, String vern, String groupe, StatutObservation statut, String carre) {
         return new ObservationAnalyse(
-                taxon, taxon + " (latin)", vern, groupe, statut, 1L, 2026, carre, "Étang", 10L, null);
+                taxon, taxon + " (latin)", vern, groupe, statut, 1L, 2026, carre, "Étang", 10L, null, null);
     }
 
     private static ObservationAnalyse chiro(String taxon, String vern, StatutObservation statut) {

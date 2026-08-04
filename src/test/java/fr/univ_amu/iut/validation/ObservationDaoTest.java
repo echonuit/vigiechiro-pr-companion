@@ -521,6 +521,12 @@ class ObservationDaoTest {
                 .as("commune du point (#2791) portée par la projection analyse")
                 .allSatisfy(o -> assertThat(o.commune()).isEqualTo("Aix-en-Provence"));
 
+        // #3160 : le CODE du point, à côté de son identifiant. La projection voisine du même DAO le
+        // remontait déjà ; c'est ce que l'utilisateur lit, et bientôt ce sur quoi il filtrera (#3161).
+        assertThat(observations)
+                .as("le code du point, affichable, et non le seul identifiant technique")
+                .allSatisfy(o -> assertThat(o.codePoint()).isEqualTo("A1"));
+
         // Espèce retenue = COALESCE(observateur, tadarida) ; statut dérivé ; contexte carré/point/passage/année.
         assertThat(observations)
                 .extracting(ObservationAnalyse::taxonRetenu)

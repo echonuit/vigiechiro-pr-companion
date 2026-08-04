@@ -19,7 +19,12 @@ package fr.univ_amu.iut.validation.model;
 /// @param annee année du passage (min/max de l'inventaire)
 /// @param numeroCarre numéro de carré du site
 /// @param nomSite nom convivial du site
-/// @param idPoint identifiant du point d'écoute (pour compter les points distincts)
+/// @param idPoint identifiant du point d'écoute, **pour compter les points distincts** : `UNIQUE(site_id,
+///     code)` ne rend un code unique que dans son carré, et compter sur `codePoint` confondrait les
+///     points homonymes de deux carrés
+/// @param codePoint code du point d'écoute (lettre + chiffre, ex. `A1`), ou `null` s'il n'en porte pas.
+///     C'est ce que l'utilisateur **lit** et ce sur quoi il filtre ; l'identifiant, lui, ne s'affiche
+///     jamais (#3160)
 public record ObservationAnalyse(
         String taxonRetenu,
         String nomLatin,
@@ -31,4 +36,5 @@ public record ObservationAnalyse(
         String numeroCarre,
         String nomSite,
         long idPoint,
-        String commune) {}
+        String commune,
+        String codePoint) {}
