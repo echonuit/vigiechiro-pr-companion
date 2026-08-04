@@ -1,14 +1,19 @@
 package fr.univ_amu.iut.importation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Empreintes;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -87,6 +92,49 @@ class CopieProtegeeTest {
         String message = CopieProtegee.messageEchec(source.resolve("a.wav"), "Permission denied");
 
         assertThat(message).contains("Échec de la copie protégée").contains("Permission denied");
+    }
+
+    @Test
+    @DisplayName("#3221 : annuler pendant un gros fichier arrête la copie sans attendre la fin")
+    void annulation_pendant_un_gros_fichier() throws IOException {
+        // Incompressible et assez gros pour franchir plusieurs paliers : c'est la forme d'un WAV.
+        byte[] contenu = new byte[12 * 1024 * 1024];
+        new java.util.Random(1).nextBytes(contenu);
+        Path gros = source.resolve("gros.wav");
+        Files.write(gros, contenu);
+        Path cible = destination.resolve("gros.wav");
+        JetonAnnulation jeton = new JetonAnnulation();
+        List<Long> releve = new ArrayList<>();
+
+        assertThatThrownBy(() -> copie.copier(gros, cible, jeton, octets -> {
+                    if (releve.isEmpty()) {
+                        releve.add(cible.toFile().length());
+                        jeton.annuler();
+                    }
+                }))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        // Le fait qui compte : la copie s'est arrêtée EN COURS de fichier. Avec un Files.copy d'un
+        // trait, le relevé vaudrait les 12 Mio entiers - et « Annuler » aurait menti pendant tout ce
+        // temps, sur le chemin le plus emprunté du produit.
+        assertThat(releve).hasSize(1);
+        assertThat(releve.get(0)).isPositive().isLessThan(contenu.length);
+    }
+
+    @Test
+    @DisplayName("#3221 : la copie ne relit plus la source pour l'empreinte, mais vérifie toujours la cible")
+    void empreinte_calculee_pendant_la_copie_et_cible_relue() throws IOException {
+        Path gros = source.resolve("gros.wav");
+        Files.write(gros, "des octets qui comptent".getBytes(StandardCharsets.UTF_8));
+        Path cible = destination.resolve("gros.wav");
+
+        Path ecrit = copie.copier(gros, cible, JetonAnnulation.neutre(), octets -> {});
+
+        // La garantie R9 tient toujours : la cible est RELUE du disque, seule façon de constater un
+        // disque plein ou une écriture tronquée. Comparer les octets qu'on vient d'écrire à eux-mêmes
+        // ne prouverait rien.
+        assertThat(ecrit).hasContent("des octets qui comptent");
+        assertThat(Empreintes.sha256Hex(ecrit)).isEqualTo(Empreintes.sha256Hex(gros));
     }
 
     /// Empreinte SHA-256 de chaque fichier du dossier (clé = nom de fichier).

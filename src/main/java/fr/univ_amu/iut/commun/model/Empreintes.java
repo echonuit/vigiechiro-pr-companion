@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.Objects;
 
 /// Calcul d'empreintes **SHA-256** (hexadécimal minuscule) sur des fichiers ou des tableaux
 /// d'octets.
@@ -67,6 +69,42 @@ public final class Empreintes {
             throw new IllegalStateException("Lecture impossible pour le SHA-256 : " + fichier, e);
         }
         return HexFormat.of().formatHex(digest.digest());
+    }
+
+    /// SHA-256 hexadécimal d'un fichier, **interruptible** : le jeton est consulté entre deux blocs
+    /// (#3221).
+    ///
+    /// Lire 5 Go pour une empreinte prend aussi longtemps que les copier. Rendre une copie annulable
+    /// sans rendre sa **vérification** annulable ne réglerait donc qu'à moitié : le bouton répondrait,
+    /// puis l'application resterait sourde pendant la relecture.
+    public static String sha256Hex(Path fichier, JetonAnnulation jeton) {
+        Objects.requireNonNull(jeton, "jeton");
+        MessageDigest digest = nouveauSha256();
+        byte[] tampon = new byte[1 << 16];
+        try (InputStream flux = Files.newInputStream(fichier)) {
+            int lus;
+            while ((lus = flux.read(tampon)) != -1) {
+                jeton.leverSiAnnule();
+                digest.update(tampon, 0, lus);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("Lecture impossible pour le SHA-256 : " + fichier, e);
+        }
+        return HexFormat.of().formatHex(digest.digest());
+    }
+
+    /// Enveloppe `flux` pour que son empreinte se calcule **au fil de sa lecture** (#3221), sans le
+    /// relire ensuite. À lire jusqu'au bout, puis à interroger par [#empreinteDe].
+    ///
+    /// C'est ce qui permet à une copie de rendre l'empreinte de sa source **sans passage
+    /// supplémentaire** : sur une nuit de plusieurs Go, un tiers d'entrées/sorties en moins.
+    public static DigestInputStream enComptantLEmpreinte(InputStream flux) {
+        return new DigestInputStream(flux, nouveauSha256());
+    }
+
+    /// L'empreinte hexadécimale accumulée par un flux enveloppé par [#enComptantLEmpreinte].
+    public static String empreinteDe(DigestInputStream flux) {
+        return HexFormat.of().formatHex(flux.getMessageDigest().digest());
     }
 
     /// SHA-256 hexadécimal d'un tableau d'octets.

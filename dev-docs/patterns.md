@@ -706,6 +706,24 @@ faisaient déjà.
 « Annuler » qui ment. Le corollaire vaut pour la progression : un compteur « X / N unités » ne suffit
 pas quand **une** unité peut durer des minutes.
 
+**Trois adoptions, trouvées l'une après l'autre.** La décompression (#2733), l'écriture d'archive - son
+jumeau, trouvé le jour même parce que la doc affirmait que les deux se suivaient « en miroir » - puis
+la **copie d'un enregistrement** à l'import (#3221), repérée par la passe d'harmonisation du lot
+#2722. La troisième était la plus discrète et la plus fréquentée : une nuit s'importe bien plus souvent
+qu'elle ne s'archive.
+
+**Et le corollaire qu'on oublie : ce qui *vérifie* doit s'interrompre aussi.** La copie protégée relit
+sa destination pour en comparer l'empreinte (garantie R9). Lire 5 Go pour un SHA-256 prend aussi
+longtemps que les copier : rendre la copie annulable sans rendre sa vérification annulable ne réglerait
+qu'à moitié - le bouton répondrait, puis l'application resterait sourde. D'où
+`Empreintes.sha256Hex(fichier, jeton)`.
+
+Au passage, la copie protégée est passée de **trois lectures complètes à deux** :
+`Empreintes.enComptantLEmpreinte` calcule l'empreinte de la source **pendant** la copie, au lieu de la
+demander à sa propre lecture. La relecture de la destination, elle, reste : comparer les octets qu'on
+vient d'écrire à eux-mêmes ne prouverait rien, alors que les relire du disque constate un disque plein
+ou une écriture tronquée.
+
 ## Un fichier s'écrit d'un seul coup (socle `commun`)
 
 **Le problème, deux fois.** Un `writeString` interrompu laisse un fichier **tronqué**, et son lecteur

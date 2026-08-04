@@ -1,12 +1,16 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.CopieInterruptible;
 import fr.univ_amu.iut.commun.model.Empreintes;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.security.DigestInputStream;
 import java.util.Objects;
+import java.util.function.LongConsumer;
 
 /// Copie protégée d'un fichier depuis la carte SD vers l'espace de travail (R9).
 ///
@@ -27,16 +31,41 @@ public class CopieProtegee {
     /// @return le chemin de la destination écrite
     /// @throws IllegalStateException si la copie n'est pas fidèle (empreintes différentes)
     public Path copier(Path source, Path destination) {
+        return copier(source, destination, JetonAnnulation.neutre(), octets -> {});
+    }
+
+    /// Variante **annulable** (#3221) : `jeton` est consulté pendant la copie **et** pendant la
+    /// relecture de vérification, `surPalier` reçoit le cumul écrit tous les quelques mégaoctets.
+    ///
+    /// Avant, un `Files.copy` recopiait le fichier d'un trait : sur un enregistrement de plusieurs Go -
+    /// un enregistreur qui ne découpe pas, ou le mode « conserver les originaux » - le bouton
+    /// « Annuler » restait sans effet pendant toute sa durée. Troisième et dernière occurrence de la
+    /// forme de défaut corrigée en #2733.
+    ///
+    /// **Deux passages au lieu de trois.** L'empreinte de la source se calcule désormais **pendant** la
+    /// copie ([Empreintes#enComptantLEmpreinte]), là où elle demandait sa propre lecture complète. La
+    /// relecture de la **destination**, elle, reste : comparer les octets qu'on vient d'écrire à
+    /// eux-mêmes ne prouverait rien, alors que les relire du disque constate un disque plein ou une
+    /// écriture tronquée. C'est toute la garantie R9.
+    ///
+    /// @throws fr.univ_amu.iut.commun.model.OperationAnnuleeException si le jeton est annulé ; la
+    ///     destination partielle reste sur place, l'appelant nettoyant déjà la session interrompue
+    public Path copier(Path source, Path destination, JetonAnnulation jeton, LongConsumer surPalier) {
         Objects.requireNonNull(source, "source");
         Objects.requireNonNull(destination, "destination");
+        Objects.requireNonNull(jeton, "jeton");
         try {
-            String empreinteSource = Empreintes.sha256Hex(source);
             Path parent = destination.getParent();
             if (parent != null) {
                 Files.createDirectories(parent);
             }
-            Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
-            String empreinteCopie = Empreintes.sha256Hex(destination);
+            String empreinteSource;
+            try (DigestInputStream lecture = Empreintes.enComptantLEmpreinte(Files.newInputStream(source));
+                    OutputStream ecriture = Files.newOutputStream(destination)) {
+                CopieInterruptible.copier(lecture, ecriture, jeton, surPalier);
+                empreinteSource = Empreintes.empreinteDe(lecture);
+            }
+            String empreinteCopie = Empreintes.sha256Hex(destination, jeton);
             if (!empreinteSource.equals(empreinteCopie)) {
                 throw new IllegalStateException(
                         "Copie non fidèle de " + source + " : empreinte SHA-256 divergente après copie.");
