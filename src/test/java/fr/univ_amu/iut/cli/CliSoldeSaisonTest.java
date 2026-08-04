@@ -109,6 +109,50 @@ class CliSoldeSaisonTest {
     }
 
     @Test
+    @DisplayName("#3092 : --lieu ne garde que les points du lieu cherché, l'en-tête reste celui de la saison")
+    void filtre_par_lieu() {
+        int code = cli.executer(new String[] {"solde-saison", "--annee", "2026", "--lieu", "A2"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        String texte = texteSortie();
+        assertThat(texte).contains("/ A2");
+        assertThat(texte)
+                .as("sans exclusion vérifiée, ce test passerait même si --lieu ne filtrait rien : A1 et"
+                        + " B1 doivent disparaître")
+                .doesNotContain("/ A1")
+                .doesNotContain("/ B1");
+        assertThat(texte)
+                .as("l'en-tête compte la saison entière, comme à l'écran : filtrer change ce qu'on"
+                        + " regarde, pas ce qu'il y a à faire")
+                .contains("3 point(s) suivi(s)");
+    }
+
+    @Test
+    @DisplayName("#3092 : --reste-a-faire écarte les points à jour")
+    void filtre_reste_a_faire() {
+        int code = cli.executer(new String[] {"solde-saison", "--annee", "2026", "--reste-a-faire"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        String texte = texteSortie();
+        assertThat(texte)
+                .as("A1 a ses deux passages déposés et jugés bons : c'est le seul point à jour de la"
+                        + " saison, et le seul que le filtre doit écarter")
+                .doesNotContain("/ A1");
+        assertThat(texte).contains("/ A2").contains("/ B1");
+    }
+
+    @Test
+    @DisplayName("#3092 : un filtre qui ne retient aucun point le dit")
+    void filtre_sans_resultat_le_dit() {
+        // Sans cette phrase, la commande afficherait l'en-tête puis rien, et l'on croirait la saison
+        // vide plutôt que le filtre trop étroit.
+        int code = cli.executer(new String[] {"solde-saison", "--annee", "2026", "--lieu", "ZZZZZZ"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("aucun point ne correspond aux filtres");
+    }
+
+    @Test
     @DisplayName("--format json : champs stables, action restante par point")
     void format_json() {
         int code = cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "json"}, sortie, erreur);

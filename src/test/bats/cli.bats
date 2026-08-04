@@ -562,6 +562,44 @@ EOF
   [[ "${output}" == *"Aucun point suivi"* ]]
 }
 
+@test "solde-saison : --lieu et --reste-a-faire filtrent les points, l'en-tete reste celui de la saison (#3092)" {
+  # Ce que seul le fat-jar prouve : picocli accepte les deux options, et le drapeau booleen
+  # --reste-a-faire ne reclame pas de valeur. Les tests Java pilotent la commande en processus.
+  local site
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  run cli ajouter-point --site "${site}" --code A1
+  [ "${status}" -eq 0 ]
+
+  # --lieu retient le point cherche.
+  run cli solde-saison --lieu 130711
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"130711"* ]]
+
+  # --lieu qui ne retient rien le DIT, au lieu d'un en-tete suivi du vide.
+  run cli solde-saison --lieu ZZZZZZ
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"aucun point ne correspond aux filtres"* ]]
+
+  # --reste-a-faire est un drapeau : il ne prend pas de valeur.
+  run cli solde-saison --reste-a-faire
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"130711"* ]]
+}
+
+@test "audit-coherence : --gravite et --categorie filtrent l'affichage, le code de sortie juge le workspace (#3092)" {
+  # Le point qui ne se voit qu'au niveau processus : le code de sortie. Un script d'integration lit
+  # ce code, et un filtre d'affichage ne doit pas faire passer un workspace abime pour sain.
+  run cli audit-coherence --gravite INFO
+  [ "${status}" -eq 0 ]
+
+  # Une valeur hors de l'enumeration est refusee par picocli (exit 2), pas ignoree en silence.
+  run cli audit-coherence --gravite PAS_UNE_GRAVITE
+  [ "${status}" -eq 2 ]
+
+  run cli audit-coherence --categorie DISQUE_MANQUANT
+  [ "${status}" -eq 0 ]
+}
+
 @test "cycle de vie d'une campagne : creer -> modifier -> supprimer, relu par lister-campagnes (#2355)" {
   # Ce qui se joue ici est ENTRE les commandes : une modification qui ne se relit pas, ou une
   # suppression qui laisse la ligne en place, ne se voit qu'en enchaînant. Les tests Java pilotent

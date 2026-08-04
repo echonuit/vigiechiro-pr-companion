@@ -96,6 +96,49 @@ class CliAuditTest {
     }
 
     @Test
+    @DisplayName("#3092 : --gravite ne garde que les constats de ce niveau")
+    void audit_filtre_par_gravite() {
+        semerJournalManquant();
+
+        int code = cli.executer(new String[] {"audit-coherence", "--gravite", "INFO"}, sortie, erreur);
+
+        assertThat(texteSortie())
+                .as("le constat DISQUE_MANQUANT est une ERREUR : --gravite INFO doit l'écarter")
+                .doesNotContain("DISQUE_MANQUANT");
+        assertThat(code)
+                .as("le code de sortie juge le WORKSPACE, pas la sélection : filtrer l'affichage ne rend"
+                        + " pas la base saine, exactement comme le verdict de l'écran reste calculé sur"
+                        + " l'audit entier")
+                .isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+    }
+
+    @Test
+    @DisplayName("#3092 : --categorie ne garde que cette nature de constat")
+    void audit_filtre_par_categorie() {
+        semerJournalManquant();
+
+        int code = cli.executer(
+                new String[] {"audit-coherence", "--categorie", "DISQUE_MANQUANT", "--json"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteSortie()).contains("DISQUE_MANQUANT");
+    }
+
+    @Test
+    @DisplayName("#3092 : un filtre qui ne retient rien le dit, plutôt que de paraître sain")
+    void audit_filtre_vide_le_dit() {
+        // Sans cette phrase, « audit-coherence --gravite SUCCES » sur une base abîmée afficherait le
+        // message « aucun écart détecté » : le filtre ferait passer un workspace cassé pour sain.
+        semerJournalManquant();
+
+        cli.executer(new String[] {"audit-coherence", "--gravite", "SUCCES"}, sortie, erreur);
+
+        assertThat(texteSortie())
+                .doesNotContain("aucun écart détecté")
+                .contains("Aucun constat ne correspond aux filtres");
+    }
+
+    @Test
     @DisplayName("Fichier attendu absent : --json contient la gravité ERREUR")
     void audit_erreur_json() {
         semerJournalManquant();

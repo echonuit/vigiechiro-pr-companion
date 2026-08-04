@@ -6,6 +6,7 @@ import com.google.inject.name.Named;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
 import fr.univ_amu.iut.saison.model.CasePassage;
+import fr.univ_amu.iut.saison.model.FiltresSaison;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
 import fr.univ_amu.iut.saison.model.SoldeSaison;
@@ -55,6 +56,18 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             description = "Ne garder que les points d'une campagne (fragment du nom, insensible à la casse).")
     private String campagne;
 
+    @Option(
+            names = "--lieu",
+            description = "Ne garder que les points dont le carré, le nom qu'on lui a donné ou le code"
+                    + " du point contient ce texte (insensible à la casse et aux accents).")
+    private String lieu;
+
+    @Option(
+            names = "--reste-a-faire",
+            description =
+                    "Ne garder que les points qui ne sont pas à jour : ceux dont il reste une" + " action à mener.")
+    private boolean resteAFaire;
+
     @Option(names = "--format", description = "Format de sortie : texte (défaut), csv ou json.")
     private String format = "texte";
 
@@ -78,20 +91,25 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         String id = idUtilisateur.get();
         SoldeSaison solde = annee != null ? service.soldePour(id, annee, campagne) : service.soldeCourant(id, campagne);
         PrintWriter sortie = spec.commandLine().getOut();
+        // Les deux filtres de l'écran « Ma saison » (#3103), portés ici à la clôture de #3092. Ils ne
+        // touchent QUE la liste des points : le solde reste celui de la saison entière, comme à l'écran.
+        // Filtrer change ce qu'on regarde, pas ce qu'il y a à faire - et les compteurs de SoldeSaison se
+        // déduisant de ses lignes, reconstruire le record ferait mentir l'en-tête.
+        List<LigneSaison> retenues = restreindre(solde.lignes());
         return switch (format.toLowerCase(Locale.ROOT)) {
             case "json" -> {
-                sortie.println(FormatJson.tableau(lignesJson(solde)));
+                sortie.println(FormatJson.tableau(lignesJson(retenues)));
                 yield 0;
             }
             case "csv" -> {
                 // print (et non println) pour préserver le formatage exact d'EcrivainCsv ; flush explicite
                 // car le PrintWriter de picocli n'auto-flush que sur println.
-                sortie.print(new EcrivainCsv().versChaine(lignesCsv(solde)));
+                sortie.print(new EcrivainCsv().versChaine(lignesCsv(retenues)));
                 sortie.flush();
                 yield 0;
             }
             case "texte" -> {
-                renduTexte(solde, sortie);
+                renduTexte(solde, retenues, sortie);
                 yield 0;
             }
             default -> {
@@ -101,7 +119,7 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         };
     }
 
-    private void renduTexte(SoldeSaison solde, PrintWriter sortie) {
+    private void renduTexte(SoldeSaison solde, List<LigneSaison> retenues, PrintWriter sortie) {
         if (solde.lignes().isEmpty()) {
             sortie.println("Aucun point suivi pour la saison " + solde.annee() + ".");
             return;
@@ -117,7 +135,13 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         sortie.println("Fenêtre du second passage : jusqu'au "
                 + solde.echeanceSecondPassage().format(JOUR_MOIS) + " (" + solde.pointsSecondPassageEnAttente()
                 + " point(s) en attente).");
-        for (LigneSaison ligne : solde.lignes()) {
+        if (retenues.isEmpty()) {
+            // Un filtre qui ne retient rien se DIT : sans cette ligne, la commande afficherait l'en-tête
+            // puis rien, et l'on croirait la saison sans point plutôt que le filtre trop étroit.
+            sortie.println("  (aucun point ne correspond aux filtres)");
+            return;
+        }
+        for (LigneSaison ligne : retenues) {
             String reste = ligne.resteAFaire().isEmpty() ? "rien" : ligne.resteAFaire();
             String hors = horsProtocole(ligne);
             sortie.println("  " + ligne.numeroCarre() + " / " + ligne.codePoint()
@@ -145,10 +169,17 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         return base;
     }
 
-    private static List<List<String>> lignesCsv(SoldeSaison solde) {
+    /// Applique `--lieu` puis `--reste-a-faire`. Les deux règles sont lues sur [FiltresSaison], la
+    /// même écriture que la barre de filtres de l'écran « Ma saison ».
+    private List<LigneSaison> restreindre(List<LigneSaison> lignes) {
+        List<LigneSaison> retenues = FiltresSaison.parLieu(lignes, lieu);
+        return resteAFaire ? FiltresSaison.resteAFaire(retenues) : retenues;
+    }
+
+    private static List<List<String>> lignesCsv(List<LigneSaison> retenues) {
         List<List<String>> lignes = new ArrayList<>();
         lignes.add(ENTETE_CSV);
-        for (LigneSaison ligne : solde.lignes()) {
+        for (LigneSaison ligne : retenues) {
             lignes.add(List.of(
                     ligne.numeroCarre(),
                     ligne.codePoint(),
@@ -164,9 +195,9 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         return lignes;
     }
 
-    private static List<Map<String, Object>> lignesJson(SoldeSaison solde) {
+    private static List<Map<String, Object>> lignesJson(List<LigneSaison> retenues) {
         List<Map<String, Object>> objets = new ArrayList<>();
-        for (LigneSaison ligne : solde.lignes()) {
+        for (LigneSaison ligne : retenues) {
             Map<String, Object> objet = new LinkedHashMap<>();
             objet.put("carre", ligne.numeroCarre());
             objet.put("point", ligne.codePoint());
