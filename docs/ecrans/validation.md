@@ -38,6 +38,8 @@ Les critères disponibles :
 | **Espèce** | une espèce précise (taxon retenu) | aucune tant que vous n'en choisissez pas une |
 | **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés, points, sites présents dans la table | aucun tant que vous ne cochez rien ; cocher plusieurs lieux les cumule |
 | **Références** | seulement les sons marqués « référence » | (puce booléenne : sa présence suffit) |
+| **Douteux** | seulement les observations que vous avez marquées « douteuses » | (puce booléenne : sa présence suffit) |
+| **Non identifiés** | seulement les séquences **sans proposition Tadarida** : présentes sur le disque, absentes du CSV, à identifier à la main | (puce booléenne : sa présence suffit) |
 | **Espèces à enjeu** | seulement les observations d'espèces **prioritaires** du Plan National d'Actions Chiroptères | (puce booléenne : sa présence suffit) |
 | **Proba** | les détections dont la probabilité Tadarida est **≥** au seuil du curseur | 50 % ; les observations **sans** probabilité sont toujours gardées |
 | **Heure** | les captures dont l'heure tombe dans la plage « de … à … » | **nuit (21 h → 6 h)** ; la plage gère le passage à minuit, et les captures sans heure sont gardées |
@@ -62,7 +64,34 @@ de chauves-souris.
 
 Les puces se **combinent en ET** : « Chiroptères » + « Proba ≥ 80 % » ne garde que les chauves-souris les
 plus sûres ; « Espèce : Grand rhinolophe » + « Lieu : Aix-en-Provence » isole une espèce sur une commune,
-prête à être exportée (CSV, ou archive ZIP avec les sons) depuis le menu ☰. Les **compteurs** de la barre de statut (À revoir / Validées / Corrigées) suivent en temps réel
+prête à être exportée (CSV, ou archive ZIP avec les sons) depuis le menu ☰.
+
+### Les listes s'adaptent à ce qui reste
+
+Quand vous ouvrez le menu d'une puce, il ne propose que les valeurs qui **ramènent encore quelque
+chose**, compte tenu des autres filtres posés. Isolez les chiroptères, et la puce « Lieu » cesse
+d'offrir les communes où vous n'avez entendu que des orthoptères : cliquer dessus n'aurait donné aucune
+ligne. Relâchez ce filtre, et elles réapparaissent.
+
+Une valeur que vous avez **cochée** et qui n'est plus disponible ne disparaît pas pour autant : elle
+reste cochée, grisée en italique. C'est délibéré. La retirer relâcherait votre filtre sans vous le dire,
+et l'écran montrerait alors **plus** que ce que la puce annonce. La voir grisée répond en même temps à
+la question qu'on se pose devant une table vide : « pourquoi n'y a-t-il rien ? ».
+
+### Quand un filtre ne peut pas être repris
+
+Trois situations vous font retrouver des filtres que vous n'avez pas posés à l'instant : rouvrir une
+**vue enregistrée**, arriver par « **Voir sur la carte** » depuis un autre écran, ou simplement
+**revenir** sur Sons & validation après en être sorti.
+
+Dans ces trois cas, il arrive qu'un filtre ne puisse pas être remis en place : la valeur n'existe plus
+dans vos données, ou l'écran d'arrivée n'offre pas ce critère (la carte des espèces ne connaît ni la
+probabilité ni l'heure). **Un bandeau vous le dit alors**, en nommant ce qui manque.
+
+Ce n'est jamais silencieux, et c'est le point important : sans ce message, l'écran montrerait plus de
+lignes que le filtre ne le laisse croire, et rien ne l'indiquerait.
+
+Les **compteurs** de la barre de statut (À revoir / Validées / Corrigées) suivent en temps réel
 le **sous-ensemble affiché**, pas la nuit entière : vous voyez toujours combien il reste à traiter dans ce
 que vous avez sous les yeux.
 

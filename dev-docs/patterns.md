@@ -706,6 +706,63 @@ est déjà une liste).
 **La règle.** Un nouveau critère sur dimension textuelle passe par `CritereListe` ; un éditeur écrit
 à la main ne se justifie que pour un type d'éditeur nouveau (curseur, plage horaire).
 
+### Les quatre briques ajoutées par le chantier #3092
+
+Le socle a gagné quatre composants partagés. Les recopier serait exactement la duplication que ce
+chantier a supprimée.
+
+| Brique | Ce qu'elle porte |
+|---|---|
+| `ClesCriteres` | les **clés partagées** entre écrans, et le concept de chacune |
+| `LibellesCriteres` | comment un critère **se nomme à l'écran**, à partir de sa clé |
+| `CritereBooleen` | la puce **sans éditeur**, dont la seule présence filtre |
+| `CritereLieu` | le critère géographique, **dimensions en paramètre** |
+| `ValeursPresentes` | les valeurs **distinctes, non nulles et triées** d'une dimension |
+
+**Clés et libellés sont deux préoccupations distinctes**, et volontairement séparés.
+`ClesCriteres` est un **contrat** : une clé y est le nom sous lequel une vue mémorisée se sérialise
+(`vue_sauvegardee`), donc la changer rendrait caduques les vues enregistrées. Une clé propre à un seul
+écran n'y a pas sa place. `LibellesCriteres` est de la **présentation**, et doit couvrir **toutes** les
+clés : un écran qui rend compte d'un critère qu'il n'offre pas nomme précisément celles qu'il ne
+connaît pas.
+
+⚠️ Un catalogue ne réécrit **jamais** une clé partagée en littéral : `ClesCriteresTest` le refuse. Sans
+cette garde, un cinquième écran nommerait « lieux » ce que quatre autres nomment « lieu », ou deux
+écrans nommeraient deux concepts « statut » - ce qui était arrivé.
+
+**Renommer une clé** sans casser les vues déjà enregistrées passe par `CritereFiltre.nomsHerites()`
+(défaut vide) : le critère déclare les noms qu'il a portés, et `critereParNom` les accepte. Aucune
+migration de base. Ce n'est **pas** un fourre-tout : n'y mettre que des noms réellement portés, sinon
+le compte rendu de restauration deviendrait muet sur de vraies clés inconnues.
+
+### Les domaines sont cascadés
+
+Depuis #3095, la liste de valeurs d'une puce se calcule sur les lignes que les **autres** critères
+laissent passer, via `Filtres.saufLui(cle)`, et se recalcule **à l'ouverture** du menu.
+
+⚠️ **Le piège** : passer la `FilteredList` de l'écran fait s'auto-effondrer la puce. Cette liste est
+déjà filtrée par **tous** les critères, y compris celui qu'on peuple : une fois « Aix » coché, le menu
+n'offrirait plus qu'« Aix », et l'on ne pourrait jamais cocher une seconde commune. Un critère à
+domaine consomme donc `saufLui`, jamais la liste affichée.
+
+Une valeur cochée devenue impossible **reste cochée et visible**, marquée `valeur-hors-jeu`. La retirer
+relâcherait le filtre en silence, et l'écran montrerait plus que ce qu'il annonce.
+
+Les dimensions d'un critère se classent en trois familles, et le classement se justifie en commentaire
+à côté du câblage : **facette** (cascade), **sélecteur** (ne cascade pas, sous peine de retirer du menu
+ce vers quoi on veut naviguer), **énumération fixe** (sans objet). Le raisonnement complet est dans
+l'[ADR 3095](decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md).
+
+### Une restauration rend toujours compte
+
+`GestionnaireFiltres.restaurer` rend un `ResteDeRestauration` : les **valeurs** qu'aucun critère n'a su
+replacer, et les **critères** absents du catalogue. Les deux causes sont distinguées parce qu'elles
+n'appellent pas la même réaction - une valeur disparue tient aux données, un critère absent à l'écran.
+
+Il existe **trois** chemins de restauration, et tous trois doivent lire ce retour : les vues
+sauvegardées, le transport d'un écran à l'autre (#476) et la mémoire de session (#484). En ignorer un
+laisse l'écran filtrer moins large qu'annoncé, sans rien dire.
+
 ## Occupation d'un écran pendant un traitement long (socle `commun`)
 
 **Le problème.** Un traitement lourd (agrégats, inspection de dossier, appel réseau) exécuté
