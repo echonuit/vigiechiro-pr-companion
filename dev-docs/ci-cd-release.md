@@ -333,6 +333,48 @@ gh api repos/<proprietaire>/<action>/git/ref/tags/<tag> --jq .object.sha
 gh api repos/<proprietaire>/<action>/git/tags/<sha> --jq .object.sha
 ```
 
+## L'inventaire des dépendances livrées, et sa surveillance (#2740)
+
+Le fat-jar embarque toutes les dépendances résolues par Maven. Leur état de vulnérabilité n'était
+vérifié nulle part : ni nous ni personne ne pouvait affirmer l'absence de CVE connue.
+
+**Le SBOM** : `cyclonedx-maven-plugin` produit `target/sbom.json` (CycloneDX 1.6) à la phase `package`,
+et il est **joint à chaque Release**, à côté des SHA-256, sous le nom `sbom-vX.Y.Z.json`.
+
+Il décrit ce qui est **livré** : portées `compile` et `runtime`, jamais `test`. Y mettre JUnit, AssertJ
+et Mockito ferait alerter un scanner sur des paquets qu'aucun utilisateur n'exécute. **25 composants**
+au moment de la mise en place.
+
+**La surveillance** : le workflow `securite-dependances.yml` reconstruit le SBOM et le scanne (grype),
+à trois moments qui répondent à trois questions différentes :
+
+| Déclenchement | La question |
+|---|---|
+| `schedule` (lundi 6 h UTC) | une vulnérabilité publiée cette nuit touche-t-elle du code que nous n'avons pas modifié ? |
+| `pull_request` sur `pom.xml` | est-ce qu'on **introduit** une dépendance vulnérable ? |
+| `workflow_dispatch` | vérification à la demande, avant une release |
+
+Le seuil bloque à partir de **haute**, et ce choix tient à une mesure : le premier scan a rendu
+**zéro** composant vulnérable. Au moment où l'inventaire est propre, être strict ne coûte rien - et
+c'est le seul moment où on peut l'être sans avoir d'abord à trier une dette existante. Un seuil posé
+au-dessus d'un lot d'alertes déjà présentes ne bloque jamais rien.
+
+!!! note "Ce que le premier scan a trouvé, et comment il a été traité"
+    Une seule dépendance en défaut : `com.google.guava:guava` **31.0.1-jre**, qui n'est pas une
+    dépendance de ce projet - elle arrive par **Guice 7**. Deux avis, tous deux sur la création de
+    fichiers temporaires et corrigés en 32.0.0 : GHSA-5mg8-w23w-74h3 (faible) et GHSA-7g45-4rm6-3mm3
+    (modéré).
+
+    **L'exposition réelle est nulle** : le code applicatif n'importe aucune classe Guava, donc
+    n'appelle ni `com.google.common.io.Files.createTempDir` ni `FileBackedOutputStream`. Guava est
+    quand même contrainte à `33.4.8-jre` dans le `dependencyManagement` : un inventaire qui signale ce
+    qu'on ne corrige pas cesse d'être lu.
+
+    ⚠️ **Le premier `grep` de vérification était faux** : `Files.createTempDir` correspond aussi au
+    début de `Files.createTempDirectory`, celui du **JDK**, employé par les outils de capture. Il
+    annonçait trois appels là où il n'y en avait aucun. La question « est-ce que ça nous concerne ? »
+    se pose sur les **imports**, pas sur la ressemblance des noms.
+
 ## Les droits de publication sont déclarés par job (#2739)
 
 Le plancher du workflow de release est en **lecture seule** ; chaque job déclare ce qu'il lui faut de
