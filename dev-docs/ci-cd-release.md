@@ -374,6 +374,40 @@ au-dessus d'un lot d'alertes déjà présentes ne bloque jamais rien.
     début de `Files.createTempDirectory`, celui du **JDK**, employé par les outils de capture. Il
     annonçait trois appels là où il n'y en avait aucun. La question « est-ce que ça nous concerne ? »
     se pose sur les **imports**, pas sur la ressemblance des noms.
+## Analyse statique de sécurité, et détection de secrets (#2741)
+
+Le dépôt est **public** depuis #169. `codeql.yml` cherche ce que ni PMD ni les tests ne cherchent :
+des **chemins de données** - une entrée qui atteint une commande, un chemin de fichier, une requête -
+plutôt que des règles de style ou de structure. Sur `main`, sur les PR, et **planifié** le lundi : les
+requêtes CodeQL évoluent, une base de code inchangée peut devenir signalable sans qu'un commit l'ait
+touchée.
+
+Deux choix qui méritent d'être dits :
+
+- **Le build est explicite**, pas `autobuild`. Ce projet a des exigences que la détection automatique
+  ne devine pas (JDK 25, JavaFX 26 en dépendances Maven) - et un `autobuild` qui échoue rend une
+  analyse **vide**, c'est-à-dire un vert qui ne veut rien dire.
+- **Jeu de requêtes `security-extended`** : le dépôt refuse déjà les `@SuppressWarnings` pour taire un
+  avertissement qualité ; le même esprit veut qu'on voie d'abord tout ce qui est signalable, quitte à
+  trier ensuite. Trier veut dire **distinguer vrai positif et bruit**, jamais supprimer en masse.
+
+### La détection de secrets n'est pas dans le code
+
+Elle est dans les **réglages du dépôt**, et l'état constaté est : `secret_scanning`,
+`secret_scanning_push_protection`, `secret_scanning_non_provider_patterns` et
+`secret_scanning_validity_checks` **tous désactivés** (seul `dependabot_security_updates` est actif).
+
+C'est ce que #2741 vise en premier : un jeton VigieChiro committé par mégarde - ils circulent en local
+pour les sondes d'API et les scripts, avec 14 jours de validité - ne serait détecté par rien.
+
+⚠️ **`push_protection` a un effet visible** : un `git push` contenant un secret détecté est **refusé**.
+C'est l'intérêt du réglage, et c'est aussi ce qui surprend un contributeur au mauvais moment ; il se
+décide, il ne se subit pas.
+
+`gitleaks-action` comme filet **indépendant** de GitHub reste possible, mais demande une clé de licence
+**gratuite** pour les dépôts d'organisation (`echonuit` en est une) : c'est un secret de dépôt à
+obtenir, donc une décision, pas une ligne de YAML.
+## Les droits de publication sont déclarés par job (#2739)
 
 ## Les droits de publication sont déclarés par job (#2739)
 

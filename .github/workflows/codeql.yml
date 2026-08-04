@@ -1,0 +1,66 @@
+# Analyse statique de sécurité (#2741, lot 3 du chantier #2720).
+#
+# Le dépôt est public depuis #169 et aucune analyse de sécurité n'y tournait. CodeQL cherche ce que
+# ni PMD ni les tests ne cherchent : des chemins de données - une entrée qui atteint une commande, un
+# chemin de fichier, une requête - plutôt que des règles de style ou de structure.
+#
+# Un seul langage, donc une configuration courte. Le build est explicite plutôt qu'`autobuild` : ce
+# projet a des exigences que la détection automatique ne devine pas (JDK 25, JavaFX 26 en dépendances
+# Maven, tests headless), et un `autobuild` qui échoue rend une analyse VIDE - c'est-à-dire un vert
+# qui ne veut rien dire.
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Lundi 5 h UTC, avant le scan des dépendances : les requêtes CodeQL évoluent, une base de code
+    # inchangée peut devenir signalable sans qu'un commit l'ait touchée.
+    - cron: "0 5 * * 1"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  analyser:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Déposer les résultats dans l'onglet « Security » du dépôt : c'est la seule écriture du job.
+      security-events: write
+      # Lecture des exécutions, exigée par codeql-action sur les dépôts privés comme publics.
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      - name: Initialiser CodeQL
+        uses: github/codeql-action/init@5595ccaf912efad79be6eef63a5619ff05969be3 # v4
+        with:
+          languages: java-kotlin
+          # `security-extended` plutôt que le jeu par défaut : le dépôt refuse déjà les
+          # `@SuppressWarnings` pour taire un avertissement qualité, le même esprit veut qu'on voie
+          # d'abord tout ce qui est signalable, quitte à trier ensuite.
+          queries: security-extended
+
+      - name: Compiler
+        # Sans tests : CodeQL analyse le code compilé, pas son comportement.
+        run: ./mvnw -B -DskipTests package
+
+      - name: Analyser
+        uses: github/codeql-action/analyze@5595ccaf912efad79be6eef63a5619ff05969be3 # v4
+        with:
+          category: "/language:java-kotlin"
