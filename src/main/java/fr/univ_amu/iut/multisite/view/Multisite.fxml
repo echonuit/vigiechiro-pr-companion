@@ -43,7 +43,7 @@
 
   <!-- Barre de filtres « à la Notion » (#537 étape 6b) : recherche permanente + « + Filtre » (Carré,
        Statut, Verdict, Année) + puces des filtres actifs, puis le TRI (axe d'ordonnancement, pas un
-       filtre) et Réinitialiser. Le menu « ☰ » des actions secondaires (Écouter, Exporter) est épinglé
+       filtre) et « Tout effacer ». Le menu « ☰ » des actions secondaires (Écouter, Exporter) est épinglé
        À DROITE. Les replis carte/tableau (#328) sont en bas ; l'édition des positions (#154, « ✎/💾 »)
        est superposée à la CARTE. -->
   <BorderPane styleClass="barre-filtres">
@@ -54,11 +54,12 @@
         <MenuButton fx:id="menuAjoutFiltre" text="+ Filtre" styleClass="menu-ajout-filtre"
                     accessibleText="Ajouter un filtre"/>
         <!-- hgrow + maxWidth : les puces occupent la largeur restante et s'alignent horizontalement (sinon le
-             FlowPane se limite à sa largeur préférée et les empile). Tri/Réinitialiser s'ancrent à droite. -->
+             FlowPane se limite à sa largeur préférée et les empile). Tri et « Tout effacer » s'ancrent à droite. -->
         <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
                   HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
         <ComboBox fx:id="choixTri" accessibleText="Trier les passages"/>
-        <Button fx:id="boutonReinitialiser" text="Réinitialiser" onAction="#reinitialiser"/>
+        <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer"
+                onAction="#toutEffacer" accessibleText="Effacer tous les filtres et le tri"/>
       </HBox>
     </center>
     <right>
