@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.173.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.173.0...v2.173.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* **importation:** la copie d'un enregistrement s'interrompt en cours de fichier ([#3232](https://github.com/echonuit/vigiechiro-pr-companion/issues/3232)) ([949b316](https://github.com/echonuit/vigiechiro-pr-companion/commit/949b316141b440ef049b6b2f681b0675f3d91311)), closes [#2733](https://github.com/echonuit/vigiechiro-pr-companion/issues/2733) [#3221](https://github.com/echonuit/vigiechiro-pr-companion/issues/3221) [#3221](https://github.com/echonuit/vigiechiro-pr-companion/issues/3221)
+
 # [2.173.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.172.0...v2.173.0) (2026-08-04)
 
 
