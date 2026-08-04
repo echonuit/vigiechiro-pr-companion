@@ -40,6 +40,7 @@
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
         <cyclonedx.maven.plugin.version>2.9.1</cyclonedx.maven.plugin.version>
+        <guava.version>33.4.8-jre</guava.version>
         <exec.maven.plugin.version>3.6.3</exec.maven.plugin.version>
         <spotless.maven.plugin.version>3.9.0</spotless.maven.plugin.version>
         <palantir.java.format.version>2.91.0</palantir.java.format.version>
@@ -124,6 +125,25 @@
         <testfx.setup.timeout>120000</testfx.setup.timeout>
         <testfx.launch.timeout>120000</testfx.launch.timeout>
     </properties>
+
+    <!-- Guava n'est PAS une dépendance de ce projet : elle arrive par Guice 7. Le premier scan du
+         SBOM (#2740) a montré que la version transitive, 31.0.1-jre, porte deux avis - GHSA-5mg8-w23w-74h3
+         (faible) et GHSA-7g45-4rm6-3mm3 (modéré), tous deux sur la création de fichiers temporaires,
+         corrigés en 32.0.0. Le code applicatif n'importe aucune classe Guava et n'appelle donc ni
+         `com.google.common.io.Files.createTempDir` ni `FileBackedOutputStream` ; on remonte quand même,
+         parce qu'un inventaire qui signale ce qu'on ne corrige pas cesse d'être lu.
+
+         À retirer le jour où Guice remontera Guava de lui-même : cette contrainte n'existe que pour
+         devancer sa dépendance transitive. -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Interface en ligne de commande : parseur d'arguments + sous-commandes (#614). -->
