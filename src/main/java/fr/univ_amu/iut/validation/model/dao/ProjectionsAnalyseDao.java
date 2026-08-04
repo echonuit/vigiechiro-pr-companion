@@ -93,8 +93,12 @@ public class ProjectionsAnalyseDao extends ProjectionGenerique {
             + " p.id AS passage_id, p.passage_number AS num_passage, p.year AS annee,"
             + " p.recording_date AS date_enr, ms.square_number AS carre, ms.friendly_name AS nom_site,"
             + " lp.code AS point_code, o.taxon_tadarida AS tadarida, o.prob_tadarida AS prob_tadarida,"
-            + " o.taxon_observer AS observer, o.prob_observer AS prob_observer"
+            + " o.taxon_observer AS observer, o.prob_observer AS prob_observer,"
+            + " pc.commune_name AS commune"
             + FragmentsSqlObservation.DE_OBSERVATION_AU_SITE
+            // Commune du point (#3165) : table latérale, LEFT JOIN - absente tant que non résolue,
+            // exactement comme dans la CTE voisine qui alimente le filtre.
+            + " LEFT JOIN point_commune pc ON pc.point_id = lp.id"
             + FragmentsSqlObservation.FILTRE_UTILISATEUR_HORS_PSEUDO
             + ")";
 
@@ -117,7 +121,8 @@ public class ProjectionsAnalyseDao extends ProjectionGenerique {
             (Double) rs.getObject(FragmentsSqlObservation.COL_PROB_TADARIDA),
             rs.getString(FragmentsSqlObservation.COL_OBSERVER),
             (Double) rs.getObject(FragmentsSqlObservation.COL_PROB_OBSERVER),
-            StatutObservation.valueOf(rs.getString(FragmentsSqlObservation.COL_STATUT)));
+            StatutObservation.valueOf(rs.getString(FragmentsSqlObservation.COL_STATUT)),
+            rs.getString("commune"));
 
     public ProjectionsAnalyseDao(SourceDeDonnees source) {
         super(source);

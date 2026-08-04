@@ -105,7 +105,8 @@ class AnalyseViewTest {
                         0.9,
                         "Pippip",
                         0.95,
-                        StatutObservation.VALIDEE)));
+                        StatutObservation.VALIDEE,
+                        null)));
         OuvrirPassage navigationPassage = ouvrirPassage;
         OuvrirAudio navigationAudio = ouvrirAudio;
         depotVues = mock(DepotVues.class);

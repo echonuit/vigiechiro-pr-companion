@@ -70,7 +70,8 @@ class ServiceAnalyseTest {
                 0.9,
                 "Pippip",
                 0.95,
-                StatutObservation.VALIDEE);
+                StatutObservation.VALIDEE,
+                null);
         when(observationDao.observationsDeLEspece(ID, "Pippip", StatutObservation.VALIDEE))
                 .thenReturn(List.of(detail));
 

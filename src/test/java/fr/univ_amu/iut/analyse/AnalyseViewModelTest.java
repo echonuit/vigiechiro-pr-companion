@@ -71,7 +71,8 @@ class AnalyseViewModelTest {
                 0.9,
                 "Pippip",
                 0.95,
-                StatutObservation.VALIDEE);
+                StatutObservation.VALIDEE,
+                null);
     }
 
     @Test
