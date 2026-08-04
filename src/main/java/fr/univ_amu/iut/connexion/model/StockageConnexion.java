@@ -5,18 +5,16 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.model.EcritureProtegee;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFileAttributeView;
-import java.nio.file.attribute.PosixFilePermission;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 /// Stockage local de la **connexion VigieChiro** (#727) : le token (fourni à
 /// [ClientVigieChiro][fr.univ_amu.iut.commun.api.ClientVigieChiro]
@@ -35,11 +33,6 @@ public final class StockageConnexion implements FournisseurToken {
 
     private static final String FICHIER = "connexion.json";
     private static final Gson GSON = new Gson();
-
-    /// Permissions POSIX du fichier de connexion : lecture/écriture pour le seul propriétaire (`600`).
-    /// Le token ne doit pas être lisible par les autres comptes de la machine.
-    private static final Set<PosixFilePermission> PERMS_PRIVEES =
-            Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
 
     private final Path fichier;
     private final Horloge horloge;
@@ -74,6 +67,11 @@ public final class StockageConnexion implements FournisseurToken {
 
     /// Enregistre le `token` et l'identité `profil` (qui peut être `null` tant que `GET /moi` n'a pas
     /// répondu), horodatés au jour courant. Écrase toute connexion précédente.
+    ///
+    /// L'écriture passe par [EcritureProtegee] (#2735) : le token n'atterrit **jamais** dans un fichier
+    /// plus permissif que lui, et le remplacement est atomique. Écrire puis restreindre, comme faisait
+    /// cette méthode, laissait le secret lisible par les autres comptes de la machine le temps d'un
+    /// appel - à chaque création du fichier, donc à chaque reconnexion.
     public void enregistrer(String token, ProfilVigieChiro profil) {
         Session session = new Session(
                 Objects.requireNonNull(token, "token"),
@@ -82,22 +80,9 @@ public final class StockageConnexion implements FournisseurToken {
                 profil == null ? null : profil.pseudo(),
                 profil == null ? null : profil.role());
         try {
-            Files.createDirectories(fichier.getParent());
-            Files.writeString(fichier, GSON.toJson(session));
-            restreindrePermissions();
+            EcritureProtegee.ecrire(fichier, GSON.toJson(session));
         } catch (IOException echec) {
             throw new UncheckedIOException("Impossible d'enregistrer la connexion : " + fichier, echec);
-        }
-    }
-
-    /// Restreint le fichier de connexion au seul propriétaire (POSIX `600`) après écriture : le token est
-    /// un secret, il ne doit pas être lisible par les autres comptes de la machine. **Sans objet** sur un
-    /// système de fichiers non POSIX (Windows), où [PosixFileAttributeView] est absente : le fichier reste
-    /// alors protégé par les ACL du profil utilisateur.
-    private void restreindrePermissions() throws IOException {
-        PosixFileAttributeView vue = Files.getFileAttributeView(fichier, PosixFileAttributeView.class);
-        if (vue != null) {
-            vue.setPermissions(PERMS_PRIVEES);
         }
     }
 
