@@ -43,7 +43,10 @@ public final class CopieInterruptible {
     /// @param surPalier notifié tous les [#PALIER_OCTETS] recopiés, avec le **cumul** écrit. Les paliers
     ///     ne tombent pas à des volumes ronds : un flux compressé rend des blocs de taille irrégulière,
     ///     et le cumul dérive de quelques kilooctets de l'un à l'autre
-    public static void copier(
+    /// @return les octets recopiés, comme le rendent `transferTo` et `Files.copy` à qui cette méthode se
+    ///     substitue. La décompression s'en sert pour confronter une archive à la taille qu'elle
+    ///     annonçait (#2732)
+    public static long copier(
             InputStream source, OutputStream destination, JetonAnnulation jeton, LongConsumer surPalier)
             throws IOException {
         byte[] tampon = new byte[TAILLE_BLOC_OCTETS];
@@ -59,5 +62,6 @@ public final class CopieInterruptible {
                 surPalier.accept(ecrits);
             }
         }
+        return ecrits;
     }
 }
