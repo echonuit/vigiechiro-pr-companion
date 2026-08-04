@@ -20,8 +20,8 @@ Le lot 4 l'a écrit, et trois questions se sont posées, dont les réponses ne s
 
 ## Décision 1 : montrer l'écart sans le trier
 
-Une divergence est **légitime** en bord de carré : un carré fait 10 km de côté et peut chevaucher deux
-départements. Elle peut aussi trahir un GPS relevé au mauvais endroit ou un numéro de carré mal recopié.
+Une divergence est **légitime** en bord de carré : le carroyage national ignore les limites administratives,
+et un carré de 2 km posé sur une frontière en chevauche deux ([R26](../../brief/docs/Analyse%20et%20conception/Mod%C3%A8le%20conceptuel/R%C3%A8gles%20m%C3%A9tier.md#r26)). Elle peut aussi trahir un GPS relevé au mauvais endroit ou un numéro de carré mal recopié.
 
 L'audit **ne dispose d'aucun moyen de les départager** : il n'a ni la géométrie du carré, ni la distance
 au bord. Il émet donc **le même constat** dans les deux cas, et le dit dans son détail (« l'écart est
@@ -37,7 +37,7 @@ terrain ; l'application lui apporte le rapprochement qu'il ne pouvait pas faire,
 ## Décision 2 : la sévérité informative est un **contrat de sortie**, pas une nuance d'affichage
 
 `audit-coherence` rend **1** dès qu'un constat est en erreur. Le chevauchement de département étant le
-cas **normal** d'un carré de 10 km, un `AVERTISSEMENT` - a fortiori une `ERREUR` - ferait échouer la
+cas **normal** d'un carré de bord, un `AVERTISSEMENT` - a fortiori une `ERREUR` - ferait échouer la
 commande sur une base parfaitement saine, et casserait tout script qui l'appelle.
 
 `Severite.INFO` n'est donc pas ici un réglage de couleur : c'est ce qui garde la commande utilisable.

@@ -327,7 +327,7 @@ class AnalyseViewTest {
         assertThat(commune.getCellData(0)).isEqualTo("Ahetze");
 
         // Et sur ELLE SEULE : une ligne de la table des carrés agrège plusieurs points, dont un carré de
-        // 10 km peut en porter dans deux communes. Une cellule unique y mentirait.
+        // 2 km peut en porter dans deux communes. Une cellule unique y mentirait.
         TableView<?> carres = robot.lookup("#tableCarres").queryAs(TableView.class);
         assertThat(carres.getColumns())
                 .extracting(TableColumn::getText)

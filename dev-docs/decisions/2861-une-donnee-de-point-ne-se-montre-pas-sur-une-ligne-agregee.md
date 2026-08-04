@@ -25,7 +25,8 @@ et leurs réponses ne se devinent pas.
 Une donnée du **point** ne s'affiche que sur une table dont **une ligne porte un point**. Les tables
 qui **agrègent** plusieurs points ne la reçoivent pas.
 
-Le cas qui tranche : un carré fait 10 km de côté et peut chevaucher **deux communes**. Sur la table des
+Le cas qui tranche : un carré fait 2 km de côté (R26) et peut chevaucher **deux communes** - une
+commune française fait 15 km² en moyenne, si bien qu'une maille de 4 km² tombe très souvent à cheval. Sur la table des
 carrés d'Espèces & observations, une cellule « Commune » unique afficherait l'une des deux, ou la
 première venue - elle **mentirait**, et d'autant plus discrètement qu'elle aurait l'air juste.
 

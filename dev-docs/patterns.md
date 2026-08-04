@@ -1207,7 +1207,7 @@ un sens sur cette ligne-là ? »** ([ADR 2861](decisions/2861-une-donnee-de-poin
 
 Une donnée du **point** (sa commune, ses coordonnées, son enregistreur) ne s'affiche que sur une table
 dont **une ligne porte un point**. Sur une table qui **agrège** - la table des carrés, celle des espèces
-- la cellule devrait choisir parmi plusieurs valeurs, et un carré de 10 km chevauchant deux communes la
+- la cellule devrait choisir parmi plusieurs valeurs, et un carré de 2 km chevauchant deux communes la
 ferait mentir d'autant plus discrètement qu'elle aurait l'air juste.
 
 Le critère se vérifie mécaniquement : **prendre la valeur de la première ligne du groupe donne-t-il la

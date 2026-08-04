@@ -94,7 +94,7 @@ final class ColonnesAnalyse {
                         c -> texte(richesseDuCarre.apply(c.getValue().numeroCarre())));
         col.point().setCellValueFactory(c -> texte(c.getValue().codePoint()));
         // Commune (#3165) : sur cette table seulement, où une ligne porte UN point. Les tables Espèces
-        // et Carrés agrègent plusieurs points, et un carré de 10 km peut chevaucher deux communes.
+        // et Carrés agrègent plusieurs points, et un carré de 2 km peut chevaucher deux communes.
         col.commune().setCellValueFactory(c -> texte(c.getValue().commune()));
         col.tadarida()
                 .setCellValueFactory(c -> texte(FormatAnalyse.taxonEtProb(

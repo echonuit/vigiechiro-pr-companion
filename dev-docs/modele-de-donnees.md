@@ -107,7 +107,7 @@ S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisi
     point d'écoute (`commune_name` + `commune_insee`), dérivée une fois de ses coordonnées GPS via
     l'API Géo puis persistée. L'**absence de ligne** dit « commune non résolue » (point sans GPS,
     hors ligne à la création) : le rattrapage la comblera. La commune s'attache au **point**, jamais
-    au carré - un carré de 10 km peut chevaucher plusieurs communes. Département et région ne sont
+    au carré - un carré de 2 km peut chevaucher plusieurs communes. Département et région ne sont
     pas stockés : ils se dérivent du code INSEE via `RegionsFrancaises` (ADR 2791, alignée sur
     l'ADR 2351).
 

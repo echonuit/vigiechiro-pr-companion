@@ -116,7 +116,7 @@ class CliAuditTest {
         int code = cli.executer(new String[] {"audit-coherence"}, sortie, erreur);
 
         assertThat(code)
-                .as("le chevauchement de département est le cas NORMAL d'un carré de 10 km : faire "
+                .as("le chevauchement de département est un cas NORMAL en bord de carré : faire "
                         + "rendre 1 casserait tous les scripts qui appellent cette commande")
                 .isEqualTo(Cli.CODE_SUCCES);
         assertThat(texteSortie()).contains("DEPARTEMENT_DIVERGENT").contains("Aix-en-Provence");

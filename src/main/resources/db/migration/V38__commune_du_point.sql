@@ -2,7 +2,7 @@
 -- point-dans-polygone officiel) puis persistee, pour donner un nom de lieu opposable aux filtres
 -- (« Aix-en-Provence » doit se trouver meme si le site s'appelle « Jardin de Serge »).
 --
--- La commune s'attache au POINT, jamais au carre : rien n'empeche un carre de 10 km d'etre a cheval
+-- La commune s'attache au POINT, jamais au carre : rien n'empeche un carre de 2 km d'etre a cheval
 -- sur plusieurs communes (ni meme sur deux departements). Departement et region ne sont PAS stockes :
 -- ils se derivent du code INSEE via la table partagee RegionsFrancaises (ADR 2791, alignee ADR 2351).
 --

@@ -21,7 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// Les **deux lectures** du département d'un point, confrontées (#2848).
 ///
 /// Ce que ces tests établissent, et qui ne se devine pas : l'audit **ne sait pas** distinguer une
-/// divergence légitime (un carré de 10 km à cheval sur deux départements) d'une divergence suspecte (un
+/// divergence légitime (un carré à cheval sur une limite de département) d'une divergence suspecte (un
 /// GPS mal pointé). Les deux produisent **le même constat**, et c'est la décision : ce qu'il apporte est
 /// de montrer l'écart à qui connaît le terrain, pas de le juger à sa place. D'où la sévérité `INFO` -
 /// vérifiée ici, parce qu'un `AVERTISSEMENT` ferait rendre 1 à `audit-coherence` sur un carré de bord.

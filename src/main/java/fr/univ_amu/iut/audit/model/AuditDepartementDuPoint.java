@@ -25,8 +25,9 @@ import java.util.Optional;
 ///
 /// ## Ce que le constat dit, et ce qu'il ne dit pas
 ///
-/// Il **montre** l'écart, il ne le juge pas. Un carré fait 10 km de côté et peut chevaucher deux
-/// départements : la divergence est alors parfaitement normale, et c'est même le cas le plus fréquent
+/// Il **montre** l'écart, il ne le juge pas. Un carré fait 2 km de côté (R26) et peut chevaucher deux
+/// départements dès qu'il touche une limite : la divergence est alors parfaitement normale, et c'est même le cas le
+/// plus fréquent
 /// attendu. Elle peut aussi trahir un GPS pointé au mauvais endroit ou un numéro de carré mal recopié -
 /// mais rien ici ne permet de départager les deux, et personne ne peut le faire à la place de
 /// l'utilisateur qui connaît son terrain. D'où [Severite#INFO], le seul niveau qui ne fasse pas rendre
@@ -89,7 +90,7 @@ public final class AuditDepartementDuPoint {
     private static String detail(Site site, PointDEcoute point, String duCarre, Commune commune, String delaCommune) {
         return "Le point " + point.code() + " est en " + commune.nom() + " (département " + delaCommune
                 + "), mais son carré " + site.numeroCarre() + " porte le département " + duCarre
-                + ". Un carré de 10 km peut chevaucher deux départements : l'écart est peut-être normal."
+                + ". Un carré posé sur une limite de département peut en chevaucher deux : l'écart est peut-être normal."
                 + " Sinon, vérifiez les coordonnées du point ou le numéro du carré.";
     }
 }

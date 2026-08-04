@@ -43,8 +43,9 @@ Quand les deux ne concordent pas, l'audit le dit, en **Information** :
 > Le point A1 est en Aix-en-Provence (département 13), mais son carré 840962 porte le département 84.
 
 !!! tip "Ce n'est pas forcément une erreur"
-    Un carré fait **10 km de côté** : il peut parfaitement chevaucher deux départements, et un point posé
-    près du bord tombe alors de l'autre côté. C'est même le cas le plus courant.
+    Un carré fait **2 km de côté** et le carroyage national ignore les limites administratives : un
+    carré posé sur une frontière de département en chevauche deux, et un point près du bord tombe
+    alors de l'autre côté.
 
     L'application **ne sait pas** distinguer ce cas d'un vrai problème : un GPS relevé au mauvais endroit,
     un numéro de carré mal recopié. Elle vous **montre** l'écart, vous seul connaissez le terrain. Si le
