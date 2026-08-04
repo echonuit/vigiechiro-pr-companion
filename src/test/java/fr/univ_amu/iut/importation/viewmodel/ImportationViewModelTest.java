@@ -49,6 +49,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
@@ -780,6 +781,30 @@ class ImportationViewModelTest {
         // Après import (marquerTermine), le dossier temporaire du zip est supprimé.
         viewModel.marquerTermine(new ResultatImport(null, null, "1925492", 1, 5, List.of()));
         assertThat(extrait).doesNotExist();
+    }
+
+    @Test
+    @DisplayName("#2733 : la décompression d'un gros fichier donne des nouvelles pendant l'entrée")
+    void extraction_notifie_pendant_un_gros_fichier() throws IOException {
+        Path workspace = Files.createDirectories(racine.resolve("workspace"));
+        when(serviceImport.racineWorkspace()).thenReturn(workspace);
+        Path zip = racine.resolve("nuit.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            zos.putNextEntry(new ZipEntry("bruts/gros.wav"));
+            zos.write(new byte[12 * 1024 * 1024]);
+            zos.closeEntry();
+        }
+        List<Progression> points = new ArrayList<>();
+
+        viewModel.extraireSiZip(zip, points::add);
+
+        // Le ViewModel relaie tels quels les points de l'extracteur vers la barre : ceux qui tombent
+        // PENDANT l'entrée doivent arriver aussi, sans quoi l'écran resterait figé le temps du gros
+        // fichier - ce que l'extracteur seul ne peut pas prouver.
+        assertThat(points).hasSizeGreaterThan(1);
+        assertThat(points.get(0).libelle()).contains("gros.wav").contains("Mo");
+        assertThat(points.get(points.size() - 1).libelle()).contains("1 / 1");
+        viewModel.nettoyerAuDepart();
     }
 
     @Test
