@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view.carte;
 
+import fr.univ_amu.iut.commun.model.RegionDuCarre;
 import java.util.Objects;
 import javafx.scene.paint.Color;
 
@@ -26,7 +27,12 @@ public record CarreGeo(String numeroCarre, EmpriseCarre emprise, Color remplissa
 
     /// Code département (2 premiers chiffres du numéro de carré, cf. brief Glossaire métier), ou chaîne
     /// vide si le numéro est trop court. Seule information géographique dérivable du numéro.
+    ///
+    /// La règle elle-même vit dans [RegionDuCarre#departement] (#2848) : elle s'écrivait ici, dans
+    /// [fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel] et dans la classe qui porte son ADR, et
+    /// trois copies d'une même règle finissent par diverger. Seule la **marque d'absence** reste propre
+    /// à ce record : la chaîne vide, sa forme historique.
     public String departement() {
-        return numeroCarre.length() >= 2 ? numeroCarre.substring(0, 2) : "";
+        return RegionDuCarre.departement(numeroCarre).orElse("");
     }
 }

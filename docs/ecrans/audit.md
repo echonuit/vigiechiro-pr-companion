@@ -30,6 +30,29 @@ Le bandeau du haut résume : *« 5 écarts : 1 erreur, 0 avertissement, 4 infos 
     état normal vous laisserait croire que le disque est intact, et un audit qui **crierait** sur un état
     normal finirait par ne plus être lu du tout.
 
+## « Département divergent » : deux lectures d'un même lieu
+
+Le département d'un point se lit de **deux façons**, et elles ne viennent pas du même endroit :
+
+- par le **numéro du carré** : ses deux premiers chiffres (`840962` est dans le Vaucluse) ;
+- par la **commune du point** : celle que ses coordonnées GPS ont désignée (Aix-en-Provence est dans les
+  Bouches-du-Rhône).
+
+Quand les deux ne concordent pas, l'audit le dit, en **Information** :
+
+> Le point A1 est en Aix-en-Provence (département 13), mais son carré 840962 porte le département 84.
+
+!!! tip "Ce n'est pas forcément une erreur"
+    Un carré fait **10 km de côté** : il peut parfaitement chevaucher deux départements, et un point posé
+    près du bord tombe alors de l'autre côté. C'est même le cas le plus courant.
+
+    L'application **ne sait pas** distinguer ce cas d'un vrai problème : un GPS relevé au mauvais endroit,
+    un numéro de carré mal recopié. Elle vous **montre** l'écart, vous seul connaissez le terrain. Si le
+    point n'a rien à faire là, vérifiez ses coordonnées ou le numéro du carré.
+
+Un point dont la commune n'a **pas** été résolue (pas de GPS, ou résolution jamais lancée) ne produit
+aucun constat : il n'y a pas de seconde lecture à confronter.
+
 ## Filtrer les constats
 
 Un audit de saison mêle des natures très différentes : une carte SD débranchée, un nom de fichier hors
