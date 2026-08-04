@@ -33,10 +33,10 @@ package fr.univ_amu.iut.commun.model;
 public enum Severite {
 
     /// L'opération a abouti, et il y a de quoi s'en féliciter.
-    SUCCES,
+    SUCCES("Succès"),
 
     /// Un fait à connaître, sans gravité : un guidage, un dénombrement, une action refusée sans échec.
-    INFO,
+    INFO("Information"),
 
     /// L'opération a abouti, mais quelque chose mérite l'attention : une nuit déjà importée qu'on
     /// réimporte quand même, un dossier mélangeant deux enregistreurs, un numéro de passage déjà pris.
@@ -44,8 +44,23 @@ public enum Severite {
     /// Ce niveau a manqué longtemps au `viewmodel`, et son absence n'a pas produit des messages mal
     /// classés : elle a fait **sortir du type** les avertissements, qui sont redevenus des chaînes libres
     /// portant un « ⚠ » (#2050). Quand un type ne sait pas exprimer un cas, le cas ne s'y plie pas.
-    AVERTISSEMENT,
+    AVERTISSEMENT("Avertissement"),
 
     /// L'opération a échoué.
-    ERREUR
+    ERREUR("Erreur");
+
+    private final String libelle;
+
+    Severite(String libelle) {
+        this.libelle = libelle;
+    }
+
+    /// Le nom **lisible** de la sévérité (#3100).
+    ///
+    /// Les écrans affichaient jusque-là `name()`, donc « AVERTISSEMENT » en majuscules au milieu
+    /// d'une interface française. C'est le même défaut que les clés brutes des comptes rendus, en
+    /// plus visible : là, c'est le contenu d'une colonne.
+    public String libelle() {
+        return libelle;
+    }
 }
