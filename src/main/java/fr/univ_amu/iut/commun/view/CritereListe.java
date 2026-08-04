@@ -120,12 +120,17 @@ public final class CritereListe {
         /// Le second cas est le plus important : deviner entre deux entrées reviendrait à filtrer sur un
         /// lieu que l'utilisateur n'a pas choisi. Rendre vide laisse #3093 dire ce qui n'a pas été
         /// replacé, et l'utilisateur trancher lui-même.
-        Optional<String> retrouver(String memorisee, List<String> entrees);
+        ///
+        /// Le critère répond depuis **son propre domaine**, que le socle ne connaît pas : ce qui
+        /// distingue « 640380 · Vallon » de « 640380 · A1 » n'est pas leur texte, c'est la **dimension**
+        /// dont chacune vient. Une proposition qui ne serait pas offerte par le menu est écartée par
+        /// l'appelant.
+        Optional<String> retrouver(String memorisee);
     }
 
     /// Rattrapage **nul**, celui de tous les critères qui n'en déclarent pas : une valeur mémorisée se
     /// replace sur son texte exact, ou pas du tout.
-    public static final Rattrapage SANS_RATTRAPAGE = (memorisee, entrees) -> Optional.empty();
+    public static final Rattrapage SANS_RATTRAPAGE = memorisee -> Optional.empty();
 
     /// La même fabrique, avec la règle par laquelle une valeur **mémorisée avant un renommage** retrouve
     /// son entrée (#3158).
@@ -604,7 +609,9 @@ public final class CritereListe {
             if (entrees.contains(valeur)) {
                 cibles.put(valeur, valeur);
             } else {
-                rattrapage.retrouver(valeur, entrees).ifPresent(entree -> cibles.put(valeur, entree));
+                // Une entrée que le menu n'offre pas ne se coche pas : le rattrapage propose, le menu
+                // dispose.
+                rattrapage.retrouver(valeur).filter(entrees::contains).ifPresent(entree -> cibles.put(valeur, entree));
             }
         }
         return cibles;
