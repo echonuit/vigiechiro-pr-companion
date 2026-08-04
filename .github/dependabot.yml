@@ -28,3 +28,17 @@ updates:
       - "github-actions"
     commit-message:
       prefix: "chore(deps)"
+
+  # Outillage de publication (semantic-release et ses greffons), figé par lockfile depuis #2738.
+  # Sans cette entrée, le lockfile fige aussi les correctifs de sécurité : figer sans surveiller
+  # échange un risque contre un autre.
+  - package-ecosystem: "npm"
+    directory: "/.github/release"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "ci"
+    commit-message:
+      prefix: "chore(deps)"

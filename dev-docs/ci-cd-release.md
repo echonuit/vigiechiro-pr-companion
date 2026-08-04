@@ -333,6 +333,42 @@ gh api repos/<proprietaire>/<action>/git/ref/tags/<tag> --jq .object.sha
 gh api repos/<proprietaire>/<action>/git/tags/<sha> --jq .object.sha
 ```
 
+## L'outillage de publication est figé, et répété à blanc (#2738)
+
+`semantic-release` et ses greffons vivent dans
+[`.github/release/`](https://github.com/echonuit/vigiechiro-pr-companion/tree/main/.github/release),
+avec **package.json + lockfile versionnés**, installés par `npm ci`.
+
+**Ce qui n'allait pas.** Le job de publication faisait `npx --yes -p semantic-release@24 …` **au
+moment de publier**, dans un job autorisé à écrire contenus, issues et PR. La résolution de versions
+se faisait à chaque exécution : un greffon compromis entre deux runs se serait exécuté avec les droits
+de publication sans qu'aucun diff du dépôt ne l'ait montré.
+
+**Deux configurations, et la seconde dérive de la première.**
+
+| Fichier | Greffons | Usage |
+|---|---|---|
+| `.releaserc.json` (racine) | les 5 | la publication, lancée **depuis la racine** |
+| `.github/release/release.config.js` | les 2 de **calcul** | la répétition à blanc des PR |
+
+La configuration d'analyse **importe** celle du dépôt et n'en garde que les greffons qui lisent : elle
+ne recopie donc pas les `parserOpts` (ceux qui tolèrent « `fix(ci) : sujet` », espace avant les
+deux-points). Une copie divergerait, et la version calculée en vérification ne serait plus celle que la
+publication calculera.
+
+**La répétition à blanc**, job `outillage-release` de `lint.yml`, à chaque PR : `npm ci`, une assertion
+sur la dérivation de la configuration, puis `semantic-release --dry-run`. Elle existe parce que
+`release.yml` ne se déclenche qu'au **push sur `main`** : aucune CI de PR ne traversait la chaîne de
+publication, donc une erreur d'installation ou de configuration ne se serait vue qu'à la **prochaine
+release**, sur un dépôt qui publie à chaque fusion.
+
+Elle ne peut pas publier : `--dry-run` n'écrit rien, et la configuration d'analyse n'embarque **aucun**
+greffon d'écriture.
+
+⚠️ **Le binaire se lance depuis la racine pour publier** (`./.github/release/node_modules/.bin/semantic-release`) :
+c'est `.releaserc.json` qui fait alors foi. Lancé **depuis `.github/release/`**, c'est la configuration
+d'analyse que cosmiconfig trouve en premier. Les deux ont été vérifiées en local, greffon par greffon.
+
 ## Dépendances
 
 Les mises à jour sont proposées par **Dependabot**

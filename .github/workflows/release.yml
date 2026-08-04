@@ -41,18 +41,21 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "lts/*"
+      - name: Installer l'outillage depuis le lockfile
+        # Auparavant `npx --yes -p semantic-release@24 …` : la résolution de versions se faisait à
+        # CHAQUE exécution, dans ce job autorisé à écrire contenus, issues et PR. Un plugin compromis
+        # entre deux runs s'y serait exécuté avec les droits de publication sans qu'aucun diff du
+        # dépôt ne l'ait montré (#2738). Le lockfile fige l'arbre entier ; `npm ci` refuse d'installer
+        # autre chose que lui, et toute montée de version passe par une PR relue.
+        run: npm ci --prefix .github/release
+
       - name: semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # Versions **figées** (majeure) de la chaîne : un bump majeur de semantic-release ou d'un
-        # plugin ne doit pas changer le comportement de publication sans modification du dépôt.
-        # @semantic-release/github est embarqué par le cœur ; changelog + git sont des plugins externes.
-        run: >-
-          npx --yes
-          -p semantic-release@24
-          -p @semantic-release/changelog@6
-          -p @semantic-release/git@10
-          semantic-release
+        # Lancé depuis la RACINE : c'est `.releaserc.json` qui fait foi ici, avec ses cinq greffons.
+        # (La configuration d'analyse de .github/release/ n'en garde que deux et ne sert qu'à la
+        # répétition à blanc des PR.)
+        run: ./.github/release/node_modules/.bin/semantic-release
       - name: Récupérer le tag fraîchement créé
         id: tag
         run: |
