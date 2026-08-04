@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.166.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.166.0...v2.166.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* **importation:** borner la décompression en ressources, pas seulement en chemins ([#3196](https://github.com/echonuit/vigiechiro-pr-companion/issues/3196)) ([dbd23f3](https://github.com/echonuit/vigiechiro-pr-companion/commit/dbd23f3fd34c56c93508688c7683445b9f5a528a)), closes [#2732](https://github.com/echonuit/vigiechiro-pr-companion/issues/2732) [#2041](https://github.com/echonuit/vigiechiro-pr-companion/issues/2041) [#2733](https://github.com/echonuit/vigiechiro-pr-companion/issues/2733) [#2733](https://github.com/echonuit/vigiechiro-pr-companion/issues/2733) [#2076](https://github.com/echonuit/vigiechiro-pr-companion/issues/2076) [#3195](https://github.com/echonuit/vigiechiro-pr-companion/issues/3195) [#2732](https://github.com/echonuit/vigiechiro-pr-companion/issues/2732)
+
 # [2.166.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.165.2...v2.166.0) (2026-08-04)
 
 
