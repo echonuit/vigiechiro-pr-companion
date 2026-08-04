@@ -13,8 +13,13 @@ Tadarida, statut À revoir / Validée / Corrigée affiché en **pastille coloré
 écrans de données, mesures d'identification…) que vous pouvez **filtrer**,
 **trier** et dont vous **choisissez les colonnes**, ainsi qu'un **panneau d'écoute pleine largeur**
 (sonogramme + spectrogramme) pour la ligne sélectionnée, où vous **repérez et rejouez le cri** dans la
-séquence. Les **colonnes de contexte** (passage, carré, point) s'affichent quand la source couvre plusieurs
-passages et se masquent pour un passage unique.
+séquence. Les **colonnes de contexte** (passage, carré, point, **commune**) s'affichent quand la source
+couvre plusieurs passages et se masquent pour un passage unique, où elles porteraient la même valeur sur
+toutes les lignes.
+
+La **commune** est celle déduite des coordonnées du point. Elle répond à « pourquoi cette ligne
+sort-elle quand je coche Ahetze ? », que la puce « Lieu » laissait deviner : le lieu se cochait sans se
+montrer. Un tiret marque un point dont aucune commune n'a encore été résolue.
 
 Le **tri** et les **filtres** que vous réglez sont **mémorisés le temps de la session** : si vous quittez
 puis rouvrez l'écran, vous retrouvez la revue là où vous l'aviez laissée, sans tout re-régler.
