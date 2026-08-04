@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.analyse.view;
 
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
@@ -128,8 +129,8 @@ final class CriteresAnalyse {
     }
 
     /// Critère **Lieu** (#2966, chantier #2790) : liste à cocher des lieux **présents dans les
-    /// observations filtrées**, dans l'ordre commune puis carré. Une observation passe si **l'une** de
-    /// ses dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien de coché
+    /// observations filtrées**, dans l'ordre commune, carré, point. Une observation passe si **l'une**
+    /// de ses dimensions figure parmi les valeurs cochées ([CritereListe#multipleParmi]) ; rien de coché
     /// n'écarte rien.
     ///
     /// C'est la jumelle de `CriteresAudio.lieu` (#2794), dont elle reprend le libellé et l'ordre des
@@ -139,16 +140,25 @@ final class CriteresAnalyse {
     /// Le carré porte son **nom convivial** quand il en a un (« 640380 · Vallon », #3157). Le groupe
     /// « Sites » qui doublait le groupe « Carrés » a disparu : les deux désignaient le même objet.
     ///
-    /// **Une dimension de moins que la vue audio, et c'est délibéré** : le point n'y figure pas.
-    /// [ObservationAnalyse] porte `idPoint`, un identifiant technique, et non un code affichable ; une
-    /// puce qui listerait des nombres opaques serait pire que son absence. Le point arrive avec #3161,
-    /// qui remonte son code.
+    /// Le **point** a manqué ici jusqu'à #3161, et l'écran s'en trouvait contredit : sa table
+    /// Observations affichait un code de point sur lequel on ne pouvait pas filtrer. La cause n'était
+    /// pas ergonomique mais tenait à une colonne non remontée, que #3160 a corrigée.
     static CritereFiltre<ObservationAnalyse> lieu(Supplier<? extends List<ObservationAnalyse>> observationsFiltrees) {
         return CritereLieu.de(
                 observationsFiltrees::get,
                 List.of(
                         new CritereLieu.Dimension<>("Communes", ObservationAnalyse::commune),
-                        CritereLieu.carres(ObservationAnalyse::numeroCarre, ObservationAnalyse::nomSite)));
+                        CritereLieu.carres(ObservationAnalyse::numeroCarre, ObservationAnalyse::nomSite),
+                        CritereLieu.points(CriteresAnalyse::pointQualifie)));
+    }
+
+    /// Le point **qualifié par son carré**, « 640380 · A1 » (#2992) : le schéma pose
+    /// `UNIQUE(site_id, code)`, donc un code seul désigne autant de lieux qu'il y a de carrés. Cet écran
+    /// couvre l'inventaire entier de l'utilisateur, où le cas est la règle plutôt que l'exception.
+    private static String pointQualifie(ObservationAnalyse observation) {
+        return observation.codePoint() == null
+                ? null
+                : LieuQualifie.qualifier(observation.numeroCarre(), observation.codePoint());
     }
 
     /// **Recherche texte** de la barre : vrai si un des champs cherchables d'une observation (taxon retenu,

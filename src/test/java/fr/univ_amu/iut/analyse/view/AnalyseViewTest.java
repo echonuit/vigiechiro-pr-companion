@@ -798,8 +798,8 @@ class AnalyseViewTest {
         // Barre autonome plutôt que le semis de l'écran : celui-ci n'a ni commune ni site distincts, et
         // l'étendre ferait porter à tous les autres cas un jeu de données qu'ils n'utilisent pas.
         ObservableList<ObservationAnalyse> source = FXCollections.observableArrayList(
-                obsLieu("Rhifer", "Aix-en-Provence", "640380", "Jardin de Serge"),
-                obsLieu("Pippip", "Venelles", "870150", "Le pré"));
+                obsLieu("Rhifer", "Aix-en-Provence", "640380", "Jardin de Serge", "A1"),
+                obsLieu("Pippip", "Venelles", "870150", "Le pré", "A1"));
         FilteredList<ObservationAnalyse> vues = new FilteredList<>(source);
         Filtres<ObservationAnalyse> filtresLocaux = new Filtres<>(vues, () -> {});
         MenuButton menuLocal = new MenuButton();
@@ -813,16 +813,29 @@ class AnalyseViewTest {
                 CriteresAnalyse.rechercheTexte());
         assertThat(ignore).isNotNull();
 
-        // Valeurs distinctes groupées par dimension (communes, carrés), triées au sein de chacune.
-        // Le POINT n'y figure pas : ObservationAnalyse ne porte qu'un idPoint technique, pas un code.
-        // Le SITE non plus, et pour une tout autre raison : il n'est pas une dimension. Le carré porte
-        // son nom convivial dans SA propre entrée (#3157), au lieu d'un groupe qui doublait le premier.
+        // Valeurs distinctes groupées par dimension (communes, carrés, points), triées au sein de
+        // chacune. Le SITE n'y figure pas : il n'est pas une dimension, mais le nom du carré, porté dans
+        // SA propre entrée (#3157) au lieu d'un groupe qui doublait le premier. Le POINT, lui, est
+        // arrivé avec #3161, une fois son code remonté par la projection (#3160).
         robot.interact(() -> menuLocal.getItems().get(0).fire());
         MenuButton choixLieu = menuBoutonDeLieu(pucesLocales);
-        assertThat(entetesLieu(choixLieu)).containsExactly("Communes", "Carrés");
+        assertThat(entetesLieu(choixLieu)).containsExactly("Communes", "Carrés", "Points");
         assertThat(cochablesLieu(choixLieu))
-                .containsExactly("Aix-en-Provence", "Venelles", "640380 · Jardin de Serge", "870150 · Le pré");
+                .as("les deux points s'appellent A1 : qualifiés par leur carré, ils restent deux lieux")
+                .containsExactly(
+                        "Aix-en-Provence",
+                        "Venelles",
+                        "640380 · Jardin de Serge",
+                        "870150 · Le pré",
+                        "640380 · A1",
+                        "870150 · A1");
         assertThat(vues).as("rien de coché n'écarte rien").hasSize(2);
+
+        // Le POINT seul : la dimension que cet écran n'avait pas. Cocher « 640380 · A1 » ne retient pas
+        // l'autre A1, celui de Venelles.
+        robot.interact(() -> cocheLieu(choixLieu, "640380 · A1").setSelected(true));
+        assertThat(vues).extracting(ObservationAnalyse::taxonRetenu).containsExactly("Rhifer");
+        robot.interact(() -> cocheLieu(choixLieu, "640380 · A1").setSelected(false));
 
         // La COMMUNE seule, puis le CARRÉ de l'autre ligne : appartenance, pas conjonction.
         robot.interact(() -> cocheLieu(choixLieu, "Aix-en-Provence").setSelected(true));
@@ -856,6 +869,11 @@ class AnalyseViewTest {
     }
 
     private static ObservationAnalyse obsLieu(String taxon, String commune, String carre, String site) {
+        return obsLieu(taxon, commune, carre, site, null);
+    }
+
+    private static ObservationAnalyse obsLieu(
+            String taxon, String commune, String carre, String site, String codePoint) {
         return new ObservationAnalyse(
                 taxon,
                 null,
@@ -868,7 +886,7 @@ class AnalyseViewTest {
                 site,
                 1L,
                 commune,
-                null);
+                codePoint);
     }
 
     /// Le `MenuButton` de l'unique puce posée : la puce est une `HBox` dont le second enfant est l'éditeur.
