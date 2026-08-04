@@ -66,6 +66,7 @@ public class ServiceMultisite {
     private static final List<String> ENTETE = List.of(
             "carre",
             "nom_site",
+            "commune",
             "point",
             "annee",
             "passage",
@@ -256,6 +257,7 @@ public class ServiceMultisite {
             table.add(Arrays.asList(
                     ligne.numeroCarre(),
                     ligne.nomSite() == null ? "" : ligne.nomSite(),
+                    ligne.commune() == null ? "" : ligne.commune(),
                     ligne.codePoint(),
                     String.valueOf(ligne.annee()),
                     String.valueOf(ligne.numeroPassage()),

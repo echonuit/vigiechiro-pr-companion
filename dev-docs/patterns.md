@@ -1200,6 +1200,32 @@ jamais une densité ni une pastille ad hoc. Un statut de `commun.model` passe pa
 un statut de feature reçoit un `classeBadge`/`classeCss` **côté feature** (jamais une surcharge dans
 `commun`, sous peine de cycle).
 
+### Ajouter une colonne : la question précède la donnée
+
+Avant de poser une colonne, la question n'est pas « la donnée est-elle disponible ? » mais **« a-t-elle
+un sens sur cette ligne-là ? »** ([ADR 2861](decisions/2861-une-donnee-de-point-ne-se-montre-pas-sur-une-ligne-agregee.md)).
+
+Une donnée du **point** (sa commune, ses coordonnées, son enregistreur) ne s'affiche que sur une table
+dont **une ligne porte un point**. Sur une table qui **agrège** - la table des carrés, celle des espèces
+- la cellule devrait choisir parmi plusieurs valeurs, et un carré de 10 km chevauchant deux communes la
+ferait mentir d'autant plus discrètement qu'elle aurait l'air juste.
+
+Le critère se vérifie mécaniquement : **prendre la valeur de la première ligne du groupe donne-t-il la
+même chose que prendre celle de n'importe quelle autre ?** `AgregationAnalyse` pose ainsi le **nom du
+site** sur une ligne de la table des carrés, en lisant la première observation - licite, puisque le
+groupe *est* un carré. La commune, elle, varie à l'intérieur d'un carré.
+
+Deux corollaires, appris en posant la même colonne sur trois tables :
+
+- **la marque d'absence est locale.** Une valeur non résolue est un état normal, et ce qui s'affiche
+  alors suit la convention de *sa* table (cellule vide ici, tiret là) plutôt qu'une règle imposée aux
+  trois : ces tables ne se lisent pas côte à côte, et uniformiser aurait demandé de toucher des colonnes
+  hors périmètre ;
+- **le contexte se masque quand il devient constant.** Sur un écran dont la source peut cibler un seul
+  passage (`ColonnesAudio.adapterAuContexte`), les colonnes qui décrivent ce passage disparaissent :
+  elles porteraient la même valeur sur toutes les lignes. Une colonne ajoutée à ce groupe doit y être
+  inscrite, sans quoi elle reste seule à s'afficher là où ses voisines s'effacent.
+
 ## Icônes d'IHM : un pictogramme se pose, il ne s'écrit pas
 
 **Le problème.** Les libellés portaient leurs pictogrammes **en toutes lettres** dans le `text` des
