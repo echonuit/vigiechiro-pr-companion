@@ -67,6 +67,11 @@ leur issue en `ReponseApi` ([ADR 0007](decisions/0007-retours-http-type-scelle-r
 seul endroit pour tout couvrir. Le dépôt S3, qui ne passe pas par lui (corps binaire, délai long), se
 consigne lui-même.
 
+**Ce qui est consigné vit dans `commun.api.JournalEchange`** (#2734) : la sévérité, le résumé, la
+cause lisible et la troncature du corps d'un refus. Le transport **émet** et appelle ; il ne décide
+plus de la forme du journal. Chercher « comment se fabrique cette ligne » mène donc à `JournalEchange`,
+pas au transport.
+
 La sévérité se décide **à l'émission**
 ([ADR 0008](decisions/0008-aucun-echec-silencieux-severite-a-l-emission.md)) :
 

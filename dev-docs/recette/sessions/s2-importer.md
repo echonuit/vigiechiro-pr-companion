@@ -107,6 +107,24 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
     « 🗑 Écraser et réimporter » ; « Écraser » enchaîne deux confirmations (principe, puis liste de ce
     qui sera supprimé).
 
+**Bloc · Décompression d'une grosse archive (#2733)** : non automatisable (perception du temps réel).
+Nécessite une archive dont **une seule entrée** dépasse le gigaoctet - une nuit non découpée, ou un
+`.zip` fabriqué pour l'occasion. Les tests couvrent le mécanisme sur quelques mégaoctets ; ce qui se
+vérifie ici est ce qu'un humain **ressent**.
+
+53. Pendant la décompression d'un fichier de plusieurs Go, le **volume écrit défile** à côté du nom du
+    fichier, alors que le compteur « X / N fichiers » reste immobile.
+54. « Annuler » pendant ce fichier arrête la décompression **sans attendre la fin du fichier** : le
+    retour à l'état neutre est perçu comme immédiat, pas au bout de plusieurs minutes.
+55. Après cette annulation, aucun dossier `import-zip-*` ne subsiste dans le dossier de travail.
+
+**Bloc · Archive refusée (#2732)** : automatisé au niveau unitaire, à confirmer **à l'écran** - c'est
+la lisibilité du bandeau qui se juge ici, pas la règle.
+
+56. Une archive dont le contenu décompressé dépasse la place disponible est refusée **avant** que quoi
+    que ce soit ne soit écrit ; le bandeau donne les deux volumes (nécessaire, disponible).
+57. Le bandeau du refus est lisible **en entier** : la phrase qui dit quoi faire n'est pas tronquée.
+
 ## Verdict par axe (dernière passe)
 
 | Écran | C | E | F | R | P | D |

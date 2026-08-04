@@ -706,6 +706,41 @@ faisaient déjà.
 « Annuler » qui ment. Le corollaire vaut pour la progression : un compteur « X / N unités » ne suffit
 pas quand **une** unité peut durer des minutes.
 
+## Un fichier s'écrit d'un seul coup (socle `commun`)
+
+**Le problème, deux fois.** Un `writeString` interrompu laisse un fichier **tronqué**, et son lecteur
+en tire une conclusion fausse : un `connexion.json` coupé se lit « non connecté » (une déconnexion
+inexpliquée plutôt qu'une erreur), un manifeste de sauvegarde coupé fait **refuser** une sauvegarde par
+ailleurs intacte.
+
+Et pour un **secret**, écrire puis restreindre les permissions laisse en plus une **fenêtre** : entre
+les deux appels, le fichier existe avec celles de l'umask, souvent `644`. Elle se rouvre à **chaque
+création** du fichier - donc à chaque reconnexion, puisque se déconnecter le supprime (#2735).
+
+**La solution.** `commun.model.EcritureAtomique` écrit dans un temporaire du **même dossier**, puis le
+déplace sur la cible par un `ATOMIC_MOVE` : un lecteur voit l'ancien contenu ou le nouveau, **jamais un
+fichier tronqué**. Deux points d'entrée, et le choix dit ce qu'on écrit :
+
+- `ecrire(cible, contenu)` pour ce qui n'est pas un secret - le manifeste de sauvegarde, un export ;
+- `ecrireSecret(cible, contenu)` pour un secret : le temporaire est **créé d'emblée** restreint au
+  propriétaire, donc le secret n'existe à aucun instant dans un fichier plus permissif que lui.
+
+⚠️ **Sur les JDK actuels, les deux donnent le même fichier**, et c'est mesuré : `Files.createTempFile`
+sans attribut crée déjà `rw-------`. Ce qui les distingue est la **garantie**, pas le résultat observé -
+`ecrireSecret` l'exige et la garderait si le JDK changeait son défaut. C'est aussi pourquoi PIT ne peut
+pas distinguer les deux chemins : équivalence par construction, pas couverture manquante.
+
+**La règle, et son garde.** Toute écriture d'un secret sur disque passe par `ecrireSecret`.
+`SecretsEcritsProtegesTest` l'exige en lisant le **source** : les classes porteuses de secret ne
+doivent contenir aucun `Files.write*` ni `newOutputStream`. Ce garde est structurel **par nécessité** -
+la fenêtre est un état *intermédiaire*, et après coup les deux façons d'écrire laissent exactement le
+même fichier à `600`. Aucun test d'état final ne les distingue ; sans le garde, un retour en arrière
+ne ferait rougir personne.
+
+Pour l'**atomicité seule**, il n'y a pas de garde équivalent, et c'est proportionné : un manifeste
+tronqué se fait refuser par la restauration, qui le valide déjà (#2726). Le défaut se voit ; celui d'un
+secret ne se voit pas.
+
 **Deux exports de sons, un seul comportement.** L'export « observations + sons » (#2793) et l'export
 de la **bibliothèque de sons de référence** (P10) passent tous deux par cet écrivain, derrière la même
 modale annulable et le même bilan chiffré. Le second écrivait auparavant dans un **dossier**, de façon

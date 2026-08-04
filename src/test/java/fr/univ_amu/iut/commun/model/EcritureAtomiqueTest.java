@@ -25,12 +25,16 @@ import org.junit.jupiter.api.io.TempDir;
 /// [fr.univ_amu.iut.architecture.SecretsEcritsProtegesTest] qui garde la forme d'écriture, faute de
 /// pouvoir garder l'instant.
 ///
-/// Survivant PIT **assumé** : l'inversion du test « le système de fichiers est-il POSIX ». Mesuré sous
-/// Java 25 avec un umask à `0002`, `Files.createTempFile` sans attribut crée déjà `rw-------` (là où
-/// `Files.createFile` donne `rw-rw-r--`) : les deux chemins donnent le même fichier, le mutant est
-/// **équivalent par construction**. L'attribut explicite reste parce que le JDK qualifie ce défaut d'
-/// « implementation specific ».
-class EcritureProtegeeTest {
+/// Survivants PIT **assumés**, tous de la même famille : le test « le système de fichiers est-il
+/// POSIX » et le drapeau `secret`. Mesuré sous Java 25 avec un umask à `0002`, `Files.createTempFile`
+/// sans attribut crée déjà `rw-------` (là où `Files.createFile` donne `rw-rw-r--`) : `ecrire` et
+/// `ecrireSecret` produisent donc **le même fichier**, et aucun mutant qui les échange ne peut être tué.
+///
+/// Ce n'est pas une couverture manquante mais une **équivalence par construction**. Les deux méthodes
+/// subsistent parce qu'elles ne promettent pas la même chose : `ecrireSecret` **exige** les permissions
+/// et les garderait si le JDK changeait son défaut, `ecrire` s'en remet à lui. Et le choix au point
+/// d'appel dit si le fichier est un secret, ce qu'aucune permission ne dira à sa place.
+class EcritureAtomiqueTest {
 
     private static final Set<PosixFilePermission> PROPRIETAIRE_SEUL =
             Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
@@ -43,7 +47,7 @@ class EcritureProtegeeTest {
     void creation_restreinte() throws IOException {
         Path cible = dossier.resolve("connexion.json");
 
-        EcritureProtegee.ecrire(cible, "{\"token\":\"secret\"}");
+        EcritureAtomique.ecrireSecret(cible, "{\"token\":\"secret\"}");
 
         assertThat(cible).hasContent("{\"token\":\"secret\"}");
         assertThat(permissions(cible)).containsExactlyInAnyOrderElementsOf(PROPRIETAIRE_SEUL);
@@ -59,10 +63,22 @@ class EcritureProtegeeTest {
         Files.createFile(cible, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-rw-rw-")));
         Files.writeString(cible, "ancien");
 
-        EcritureProtegee.ecrire(cible, "nouveau");
+        EcritureAtomique.ecrireSecret(cible, "nouveau");
 
         assertThat(cible).hasContent("nouveau");
         assertThat(permissions(cible)).containsExactlyInAnyOrderElementsOf(PROPRIETAIRE_SEUL);
+        assertThat(temporairesResiduels()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Écriture ordinaire (manifeste, export) : contenu remplacé, aucun temporaire résiduel")
+    void ecriture_ordinaire_remplace_et_ne_laisse_rien() throws IOException {
+        Path cible = dossier.resolve("connexion.json");
+        Files.writeString(cible, "{\"racines\":[]}");
+
+        EcritureAtomique.ecrire(cible, "{\"racines\":[\"a\"]}");
+
+        assertThat(cible).hasContent("{\"racines\":[\"a\"]}");
         assertThat(temporairesResiduels()).isEmpty();
     }
 
@@ -76,7 +92,7 @@ class EcritureProtegeeTest {
         Files.createDirectory(impossible);
         Files.writeString(impossible.resolve("dedans"), "x");
 
-        assertThatThrownBy(() -> EcritureProtegee.ecrire(impossible, "nouveau")).isInstanceOf(IOException.class);
+        assertThatThrownBy(() -> EcritureAtomique.ecrire(impossible, "nouveau")).isInstanceOf(IOException.class);
 
         assertThat(cible).hasContent("ancien");
         assertThat(temporairesResiduels())

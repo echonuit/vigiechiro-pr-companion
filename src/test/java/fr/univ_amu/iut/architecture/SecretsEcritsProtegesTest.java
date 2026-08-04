@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 /// **Un secret ne s'écrit pas en direct** (#2735).
 ///
 /// Écrire puis restreindre les permissions laisse une fenêtre pendant laquelle le fichier existe avec
-/// celles de l'umask, souvent `644`. `EcritureProtegee` supprime la fenêtre en créant le fichier
+/// celles de l'umask, souvent `644`. `EcritureAtomique` supprime la fenêtre en créant le fichier
 /// **déjà** restreint, et remplace la cible de façon atomique.
 ///
 /// Ce garde est **structurel**, et il l'est par nécessité : la fenêtre est un état **intermédiaire**.
@@ -30,11 +30,11 @@ class SecretsEcritsProtegesTest {
     private static final Path RACINE = Path.of("src/main/java/fr/univ_amu/iut");
 
     /// Les classes qui écrivent un secret sur le disque. Cette liste se complète : toute nouvelle
-    /// écriture de secret (jeton, identifiant, clé) doit y entrer, et passer par `EcritureProtegee`.
+    /// écriture de secret (jeton, identifiant, clé) doit y entrer, et passer par `EcritureAtomique`.
     private static final List<String> PORTEUSES_DE_SECRET = List.of("connexion/model/StockageConnexion.java");
 
     /// Les façons d'écrire un fichier qui posent les permissions **après** coup, c'est-à-dire toutes
-    /// celles qui ne passent pas par `EcritureProtegee`.
+    /// celles qui ne passent pas par `EcritureAtomique`.
     private static final Pattern ECRITURE_DIRECTE = Pattern.compile(
             "Files\\.write\\(|Files\\.writeString\\(|Files\\.newOutputStream\\(|new (File|Print)Writer\\(");
 
@@ -55,7 +55,7 @@ class SecretsEcritsProtegesTest {
 
         assertThat(fautifs)
                 .as("ces classes écrivent un secret en direct : le fichier existe alors brièvement avec les"
-                        + " permissions de l'umask. Passer par EcritureProtegee (commun.model), qui le crée"
+                        + " permissions de l'umask. Passer par EcritureAtomique (commun.model), qui le crée"
                         + " déjà restreint et remplace la cible de façon atomique.")
                 .isEmpty();
     }

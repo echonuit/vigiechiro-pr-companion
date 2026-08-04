@@ -148,6 +148,26 @@ public final class CaptureImport {
                 .appliquer(new Progression("Décompression : 740 / 3692 · PaRecPR1925492_20260423_034512.wav", 0.20));
         rendre(scene, sortie.resolve("apercu-import-decompression.png"));
 
+        // État « gros fichier en cours » (#2733) : sur une entrée de plusieurs Go, le compteur
+        // « X / N fichiers » et la barre ne bougent pas pendant des minutes. C'est le VOLUME écrit qui
+        // dit que la décompression avance - et c'est ce que cette capture doit montrer.
+        vm.progression()
+                .appliquer(new Progression(
+                        "Décompression : 740 / 3692 · PaRecPR1925492_20260423_034512.wav · 128 Mo", 0.20));
+        rendre(scene, sortie.resolve("apercu-import-decompression-volume.png"));
+
+        // Refus d'une archive (#2732) : ces messages sont rendus par le code de production
+        // (ImportationViewModel.signalerSourceIllisible → RetourOperation), pas recopiés ici.
+        vm.signalerSourceIllisible(new fr.univ_amu.iut.commun.model.RegleMetierException(
+                "Espace disque insuffisant pour décompresser : besoin d'environ 12,4 Go, seulement 3,1 Go"
+                        + " disponibles. Libérez de l'espace, ou décompressez l'archive vous-même."));
+        rendre(scene, sortie.resolve("apercu-import-archive-espace-disque.png"));
+
+        vm.signalerSourceIllisible(new fr.univ_amu.iut.commun.model.RegleMetierException(
+                "Archive zip interrompue : elle a écrit 12,4 Go alors qu'elle en annonçait 1 Mo. Une archive"
+                        + " qui ment sur sa taille n'est pas une carte SD."));
+        rendre(scene, sortie.resolve("apercu-import-archive-menteuse.png"));
+
         // Poser la source ramène l'état à PRET (réinitialisation pour nouveau dossier) ; on inspecte et on
         // rattache pour le « cas standard » de la maquette.
         vm.inspection().dossierSourceProperty().set(dossierSd);

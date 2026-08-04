@@ -37,7 +37,7 @@ données d'exemple ou de test.
   administrateurs n'ont pas la clé. Protection réelle, mais **de nature différente**, et c'est pourquoi
   elle est écrite plutôt que sous-entendue.
 
-    L'écriture passe par `commun.model.EcritureProtegee` (#2735), et non plus par un `writeString`
+    L'écriture passe par `commun.model.EcritureAtomique` (#2735), et non plus par un `writeString`
     suivi d'un `chmod`. La différence n'est pas cosmétique : restreindre **après** avoir écrit laisse
     une fenêtre pendant laquelle le fichier existe avec les permissions de l'umask, souvent `644`. Elle
     se rouvrait à chaque **création** du fichier, donc à chaque reconnexion, puisque se déconnecter le
@@ -122,9 +122,10 @@ ne tient pas.**
 
 !!! note "Pourquoi il n'y a pas de plafond de taux de compression"
     C'est le garde classique contre les bombes ZIP. Il a été écrit ici, puis **retiré** : il ne sépare
-    pas les deux populations dans ce domaine. Les fixtures de recette produites par le générateur de
-    cartes SD se décompressent **137 fois**, et un enregistrement réellement silencieux fait bien
-    davantage : de l'audio silencieux et une bombe sont **les mêmes octets**.
+    pas les deux populations dans ce domaine. Une carte SD du générateur de recette se décompresse
+    **environ 140 fois**, la nuit synthétique des parcours E2E **137 fois**, et un enregistrement
+    réellement silencieux fait bien davantage : de l'audio silencieux et une bombe sont **les mêmes
+    octets**.
 
     Il n'ajoutait rien à la garantie ci-dessus. Un taux énorme ne nuit que s'il aboutit à beaucoup
     d'octets écrits, ce que le total annoncé, le contrôle d'espace disque et le second garde bornent

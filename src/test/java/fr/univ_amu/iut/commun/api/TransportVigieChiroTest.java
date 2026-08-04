@@ -31,6 +31,15 @@ import org.junit.jupiter.api.Test;
 /// plus jamais un silence indistinct. Aucun appel réseau réel : pas de jeton et URL injoignable
 /// exercent les deux premières variantes, le triage des statuts est une fonction pure (JPMS interdit
 /// un serveur HTTP local en test).
+///
+/// Survivants PIT **assumés** sur [JournalEchange] (15 mutants tués sur 17, relevés à la clôture du
+/// lot #2722) : dans `extrait`, le libellé « (corps vide) » remplacé par une chaîne vide, et la borne
+/// de troncature décalée d'un caractère. Deux détails de mise en forme d'une ligne de journal, qu'un
+/// test épinglerait sans rien protéger.
+///
+/// Les trois autres étaient de **vrais trous**, et concernaient tous ce que le journal **promet** : que
+/// l'exception soit attachée à la trace d'une anomalie, et que la durée consignée soit une mesure
+/// plausible plutôt qu'une soustraction d'horloge fautive.
 class TransportVigieChiroTest {
 
     private static final FournisseurToken SANS_TOKEN = Optional::empty;
@@ -203,6 +212,67 @@ class TransportVigieChiroTest {
                 .doesNotContain("abc")
                 .doesNotContain("YWJjOg==")
                 .doesNotContain("Basic");
+        // Une anomalie emporte SA CAUSE : sans l'exception attachée, la trace dit qu'il y a eu un
+        // problème sans dire lequel, et le diagnostic reprend là où #1844 l'avait laissé.
+        assertThat(trace.getThrown())
+                .as("l'exception qui a causé l'échec est attachée à la trace")
+                .isNotNull();
+        // La durée consignée est une MESURE : on s'en sert pour distinguer un serveur lent d'un serveur
+        // muet. Une soustraction d'horloge fautive donnerait un nombre astronomique que personne ne
+        // regarderait, et la trace mentirait sans se trahir.
+        assertThat(dureeConsignee(trace.getMessage()))
+                .as("la durée d'un appel vers localhost:1 tient dans une minute")
+                .isBetween(0L, 60_000L);
+    }
+
+    /// La durée en millisecondes que porte un résumé d'échange (« … (12 ms) »).
+    private static long dureeConsignee(String resume) {
+        java.util.regex.Matcher trouve =
+                java.util.regex.Pattern.compile("\\((\\d+) ms\\)").matcher(resume);
+        assertThat(trouve.find()).as("le résumé porte une durée : %s", resume).isTrue();
+        return Long.parseLong(trouve.group(1));
+    }
+
+    @Test
+    @DisplayName("#1845 : un échange NOMINAL est consigné sans exception attachée")
+    void journal_d_un_echange_sans_echec() {
+        Logger journal = Logger.getLogger(TransportVigieChiro.class.getName());
+        List<LogRecord> captures = new ArrayList<>();
+        Handler capteur = capteurVers(captures);
+        capteur.setLevel(Level.ALL);
+        journal.addHandler(capteur);
+        journal.setLevel(Level.ALL);
+        try {
+            // Refusée avant tout appel (#2734) : une issue sans exception, donc une trace sans cause.
+            new TransportVigieChiro("https://api.exemple/api/v1", TOKEN_ABC)
+                    .deposerVersS3(
+                            "http://ailleurs.example/signe",
+                            () -> HttpRequest.BodyPublishers.ofString("x"),
+                            "application/zip");
+        } finally {
+            journal.removeHandler(capteur);
+        }
+
+        // Le refus local n'émet rien : il n'y a pas d'échange à consigner, et c'est bien ainsi - une
+        // trace sans appel ferait croire à un aller-retour réseau qui n'a pas eu lieu.
+        assertThat(captures)
+                .as("un refus qui n'émet aucun appel ne consigne aucun échange")
+                .isEmpty();
+    }
+
+    private static Handler capteurVers(List<LogRecord> captures) {
+        return new Handler() {
+            @Override
+            public void publish(LogRecord record) {
+                captures.add(record);
+            }
+
+            @Override
+            public void flush() {}
+
+            @Override
+            public void close() {}
+        };
     }
 
     @Test

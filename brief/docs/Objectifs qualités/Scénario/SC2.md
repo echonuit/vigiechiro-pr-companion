@@ -8,7 +8,9 @@ Le programme VigieChiro porte sur la faune et non sur les humains, mais les iden
 
 ## Critères d'acceptation
 
-- Les seuls services distants contactés sont **la plateforme Vigie-Chiro** (protocole), **GitHub** (annonce de version, au démarrage) et **GBIF** (fiche d'espèce, à la demande) ; ils sont énumérés dans [O8](../Objectifs%20qualités/O8.md), et aucun n'emporte d'identifiant traçant hors Vigie-Chiro.
+- Les seuls services distants contactés sont **la plateforme Vigie-Chiro** (protocole) et son **stockage** (les fichiers y transitent par une URL signée que la plateforme fournit), **GitHub** (annonce de version, au démarrage) et **GBIF** (fiche d'espèce, à la demande) ; ils sont énumérés dans [O8](../Objectifs%20qualités/O8.md), et aucun n'emporte d'identifiant traçant hors Vigie-Chiro.
+- L'adresse de stockage venant du **serveur**, elle est **vérifiée avant usage** : schéma `https` et hôte attendu. Une adresse inattendue est refusée sans qu'un octet parte - c'est le seul point où un serveur compromis pourrait rediriger les enregistrements.
+- Une **sauvegarde ou un export** emporte les localisations **en clair** : ce n'est pas un canal involontaire, mais l'application doit **dire ce que l'archive contient** pour que le geste soit éclairé.
 - La vérification de version au démarrage est une **lecture**, jamais un téléchargement ni une installation : rien ne se met à jour tout seul.
 - Les journaux applicatifs restent **locaux** ; la couche réseau n'y consigne ni jeton, ni en-têtes, ni corps envoyé, ni URL signée.
 - Le `.gitignore` du dépôt interdit le commit accidentel de fichiers de session contenant de vrais UUID.

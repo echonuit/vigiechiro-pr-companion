@@ -174,8 +174,11 @@
 
   <!-- 4. Action -->
   <HBox spacing="14.0" alignment="CENTER_LEFT">
-    <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
-    <StackPane fx:id="enveloppeImporter">
+    <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789).
+         `minWidth="-Infinity"` fige sa largeur préférée : le message d'erreur voisin porte `hgrow=ALWAYS`,
+         et un refus long rognait le libellé du bouton (constaté à la clôture du lot #2722, sur le refus
+         d'une archive trop grosse pour le disque). L'action ne se sacrifie pas à l'explication. -->
+    <StackPane fx:id="enveloppeImporter" minWidth="-Infinity">
       <Button fx:id="boutonImporter" text="Importer cette nuit" styleClass="bouton-primaire"
               onAction="#importer">
         <graphic>

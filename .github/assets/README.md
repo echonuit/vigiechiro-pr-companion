@@ -334,6 +334,28 @@ L'assistant et **tous ses chemins non nominaux** : c'est la vue la plus riche en
 
 <table>
 <tr>
+<th width="50%">Décompression d'un gros fichier (volume écrit)</th>
+<th width="50%">Archive refusée : espace disque</th>
+</tr>
+<tr>
+<td><a href="apercu-import-decompression-volume.png"><img src="apercu-import-decompression-volume.png" width="430" alt="Décompression d'un gros fichier : le volume écrit s'affiche"></a></td>
+<td><a href="apercu-import-archive-espace-disque.png"><img src="apercu-import-archive-espace-disque.png" width="430" alt="Archive refusée faute de place disque"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<th width="50%">Archive qui ment sur sa taille</th>
+<th width="50%"></th>
+</tr>
+<tr>
+<td><a href="apercu-import-archive-menteuse.png"><img src="apercu-import-archive-menteuse.png" width="430" alt="Archive interrompue : elle écrit plus qu'elle n'annonçait"></a></td>
+<td></td>
+</tr>
+</table>
+
+<table>
+<tr>
 <th width="50%">Doublon</th>
 <th width="50%">Écrasement principe</th>
 </tr>
