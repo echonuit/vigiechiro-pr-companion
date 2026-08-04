@@ -247,6 +247,20 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh release upload "${{ needs.release.outputs.tag }}" target/dist/* --clobber
 
+      - name: Joindre le SBOM à la Release
+        # Depuis UN seul runner : l'inventaire des dépendances est celui de la résolution Maven, il
+        # ne dépend pas du système qui empaquette (les natifs JavaFX mis à part, portés par des
+        # classifieurs). Trois copies identiques ne diraient rien de plus, et le nom du fichier ne
+        # pourrait plus être stable (#2740).
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cp target/sbom.json "sbom-${{ needs.release.outputs.tag }}.json"
+          gh release upload "${{ needs.release.outputs.tag }}" \
+            "sbom-${{ needs.release.outputs.tag }}.json" --clobber
+
   # Publication atomique : la Release est créée en **brouillon** par semantic-release (cf.
   # .releaserc.json, draftRelease), les installeurs y attachent leurs assets, et CE job ne retire le
   # brouillon (= rend la Release publique) qu'une fois TOUS les installeurs téléversés avec succès.

@@ -1,0 +1,85 @@
+# Inventaire et surveillance des dépendances livrées (#2740, lot 3 du chantier #2720).
+#
+# Ce que ce workflow répond, et que personne ne pouvait affirmer avant lui : « qu'est-ce que le
+# fat-jar embarque, et l'une de ces bibliothèques porte-t-elle une vulnérabilité connue ? »
+#
+# Trois déclenchements, pour trois questions différentes :
+# - `schedule` : une vulnérabilité publiée cette nuit concerne du code que nous n'avons pas touché.
+#   C'est le seul déclenchement qui la trouve.
+# - `pull_request` sur le pom : ne pas INTRODUIRE une dépendance vulnérable.
+# - `workflow_dispatch` : vérifier à la demande, avant une release par exemple.
+name: Sécurité des dépendances
+
+on:
+  schedule:
+    # Lundi 6 h UTC : le rapport est là au début de la semaine, pas au milieu d'une soirée de travail.
+    - cron: "0 6 * * 1"
+  pull_request:
+    paths:
+      - "pom.xml"
+      - ".github/workflows/securite-dependances.yml"
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  inventaire:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      - name: Produire le SBOM CycloneDX
+        # `makeBom` seul : l'inventaire vient de la RÉSOLUTION Maven, il n'a pas besoin que le
+        # fat-jar soit construit ni que les tests tournent.
+        run: ./mvnw -B org.cyclonedx:cyclonedx-maven-plugin:makeBom
+
+      - name: Ce que le SBOM déclare
+        # Une ligne lisible dans le journal : un inventaire qu'on ne lit jamais ne sert à personne.
+        run: |
+          python3 - <<'FIN'
+          import json
+          bom = json.load(open('target/sbom.json'))
+          composants = bom['components']
+          uniques = {(c.get('group', ''), c['name'], c.get('version', '')) for c in composants}
+          print(f"{len(uniques)} composant(s) livré(s), format {bom['bomFormat']} {bom['specVersion']}")
+          for groupe, nom, version in sorted(uniques):
+              print(f"  {groupe}:{nom} {version}")
+          FIN
+
+      - name: Scanner le SBOM
+        id: scan
+        uses: anchore/scan-action@e1165082ffb1fe366ebaf02d8526e7c4989ea9d2 # v7
+        with:
+          sbom: target/sbom.json
+          # Le seuil est strict PARCE QUE la mesure du jour est zéro : au moment où l'inventaire est
+          # propre, être strict ne coûte rien, et c'est le seul moment où on peut l'être sans avoir à
+          # trier une dette existante. Un seuil posé au-dessus d'un lot d'alertes déjà là ne bloque
+          # jamais rien.
+          severity-cutoff: high
+          fail-build: true
+          output-format: table
+
+      - name: Conserver le rapport
+        # Même quand le scan échoue : c'est là qu'on en a le plus besoin.
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: sbom-et-scan
+          path: |
+            target/sbom.json
+            ${{ steps.scan.outputs.sarif }}
+          if-no-files-found: warn
+          retention-days: 30
