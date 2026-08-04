@@ -14,20 +14,22 @@ import java.util.zip.ZipFile;
 /// inventaire sert donc à **refuser tôt** ce qui s'annonce déjà hors bornes, et à donner un plafond que
 /// [BornesExtraction] confronte ensuite aux octets **réellement** écrits.
 ///
+/// Il ne retient délibérément **pas** la taille compressée : elle ne servait qu'à calculer un taux de
+/// décompression, garde retiré parce qu'il ne sépare pas l'audio silencieux d'une bombe (cf.
+/// [BornesExtraction]).
+///
 /// @param nbFichiers entrées « fichier » (les dossiers ne comptent pas) : c'est aussi le dénominateur
 ///     de la progression « X / N »
 /// @param octetsAnnonces total décompressé annoncé, ou `0` si l'archive ne l'annonce pas
-/// @param octetsCompresses total compressé annoncé, ou `0` si l'archive ne l'annonce pas
 /// @param plusGrandeEntree taille décompressée annoncée de la plus grosse entrée
 /// @param nomPlusGrandeEntree son nom, pour que le refus désigne un fichier et pas un chiffre
 public record InventaireArchive(
-        int nbFichiers, long octetsAnnonces, long octetsCompresses, long plusGrandeEntree, String nomPlusGrandeEntree) {
+        int nbFichiers, long octetsAnnonces, long plusGrandeEntree, String nomPlusGrandeEntree) {
 
     /// Inventorie `archiveZip` par son répertoire central, sans rien décompresser.
     public static InventaireArchive lire(Path archiveZip) throws IOException {
         int fichiers = 0;
         long annonces = 0;
-        long compresses = 0;
         long plusGrande = 0;
         String nomPlusGrande = "";
         try (ZipFile zf = new ZipFile(archiveZip.toFile())) {
@@ -37,20 +39,12 @@ public record InventaireArchive(
                 // que de fabriquer un total négatif qui passerait toutes les bornes.
                 long taille = Math.max(0, entree.getSize());
                 annonces += taille;
-                compresses += Math.max(0, entree.getCompressedSize());
                 if (taille > plusGrande) {
                     plusGrande = taille;
                     nomPlusGrande = entree.getName();
                 }
             }
         }
-        return new InventaireArchive(fichiers, annonces, compresses, plusGrande, nomPlusGrande);
-    }
-
-    /// Facteur de décompression **annoncé** : une nuit de terrain tourne autour de 2 (le WAV se
-    /// compresse mal), une bombe ZIP à plusieurs milliers. Vaut `1` quand l'archive n'annonce rien, pour
-    /// qu'un inventaire muet ne se fasse pas passer pour suspect.
-    public long ratioAnnonce() {
-        return octetsCompresses <= 0 ? 1 : octetsAnnonces / octetsCompresses;
+        return new InventaireArchive(fichiers, annonces, plusGrande, nomPlusGrande);
     }
 }

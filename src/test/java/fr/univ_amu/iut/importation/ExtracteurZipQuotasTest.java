@@ -60,23 +60,45 @@ class ExtracteurZipQuotasTest {
     }
 
     @Test
-    @DisplayName("Bombe ZIP : un taux de décompression absurde est refusé d'emblée (#2732)")
-    void refus_bombe_zip_par_le_ratio() throws IOException {
-        Path zip = racine.resolve("bombe.zip");
-        // Des octets identiques se compressent au millième : c'est le principe même d'une bombe ZIP.
+    @DisplayName("Un contenu très compressible n'est PAS suspect en soi (#2732)")
+    void un_contenu_tres_compressible_passe() throws IOException {
+        Path zip = racine.resolve("silencieuse.zip");
+        // Des octets identiques se compressent au millième. C'est le profil d'une bombe ZIP... et aussi
+        // celui d'un enregistrement silencieux : ce sont les mêmes octets. Un plafond de taux de
+        // décompression a existé ici et a été retiré, parce qu'il refusait les fixtures de recette (137
+        // fois) sans rien protéger que le total annoncé et le disque ne bornent déjà.
         try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
-            zos.putNextEntry(new ZipEntry("gonfle.bin"));
+            zos.putNextEntry(new ZipEntry("bruts/nuit_silencieuse.wav"));
             zos.write(new byte[12 * 1024 * 1024]);
             zos.closeEntry();
         }
 
-        assertThatThrownBy(() -> ExtracteurZip.extraireVersDossierTemporaire(
-                        zip, base, p -> {}, JetonAnnulation.neutre(), bornesLarges(dossier -> DISQUE_VASTE)))
-                .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("se décompresserait")
-                .hasMessageContaining("piégée");
+        Path extrait = ExtracteurZip.extraireVersDossierTemporaire(
+                zip, base, p -> {}, JetonAnnulation.neutre(), bornesLarges(dossier -> DISQUE_VASTE));
 
-        assertThat(dossiersDExtraction()).isEmpty();
+        try {
+            assertThat(extrait.resolve("bruts/nuit_silencieuse.wav")).hasSize(12 * 1024 * 1024);
+        } finally {
+            ExtracteurZip.supprimerRecursivement(extrait);
+        }
+    }
+
+    @Test
+    @DisplayName("L'inventaire ne compte que les fichiers : un dossier n'est pas une entrée (#2732)")
+    void les_dossiers_ne_comptent_pas_dans_l_inventaire() throws IOException {
+        Path zip = racine.resolve("nuit.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            // Une archive produite par « compresser ce dossier » porte des entrées de DOSSIER explicites.
+            zos.putNextEntry(new ZipEntry("bruts/"));
+            zos.closeEntry();
+            ecrireEntree(zos, "bruts/a.wav", 1024);
+        }
+
+        InventaireArchive inventaire = InventaireArchive.lire(zip);
+
+        // Les compter ferait mentir le dénominateur de la progression (« X / N fichiers ») et gonflerait
+        // le nombre d'entrées confronté à la borne.
+        assertThat(inventaire.nbFichiers()).isEqualTo(1);
     }
 
     @Test
@@ -90,7 +112,7 @@ class ExtracteurZipQuotasTest {
                 zos.closeEntry();
             }
         }
-        BornesExtraction bornes = new BornesExtraction(3, Long.MAX_VALUE, Long.MAX_VALUE, 10_000, 0, d -> DISQUE_VASTE);
+        BornesExtraction bornes = new BornesExtraction(3, Long.MAX_VALUE, Long.MAX_VALUE, 0, d -> DISQUE_VASTE);
 
         assertThatThrownBy(() -> ExtracteurZip.extraireVersDossierTemporaire(
                         zip, base, p -> {}, JetonAnnulation.neutre(), bornes))
@@ -108,13 +130,16 @@ class ExtracteurZipQuotasTest {
     void refus_entree_trop_grosse() throws IOException {
         Path zip = racine.resolve("nuit.zip");
         ecrireArchive(zip, "bruts/enorme.wav", 2 * 1024 * 1024);
-        BornesExtraction bornes = new BornesExtraction(100, 1024 * 1024, Long.MAX_VALUE, 10_000, 0, d -> DISQUE_VASTE);
+        BornesExtraction bornes = new BornesExtraction(100, 1024 * 1024, Long.MAX_VALUE, 0, d -> DISQUE_VASTE);
 
         assertThatThrownBy(() -> ExtracteurZip.extraireVersDossierTemporaire(
                         zip, base, p -> {}, JetonAnnulation.neutre(), bornes))
                 .isInstanceOf(RegleMetierException.class)
-                // Le nom, pas le chemin interne : un chemin d'archive à rallonge ferait tronquer le refus.
-                .hasMessageContaining("enorme.wav");
+                // Le nom, et RIEN du chemin interne : un chemin d'archive à rallonge ferait tronquer le
+                // refus. Les deux assertions comptent - la première seule laisserait passer un « nom court »
+                // qui garde un bout de dossier.
+                .hasMessageContaining("« enorme.wav »")
+                .hasMessageNotContaining("bruts");
 
         assertThat(dossiersDExtraction()).isEmpty();
     }
@@ -124,7 +149,7 @@ class ExtracteurZipQuotasTest {
     void refus_total_trop_gros() throws IOException {
         Path zip = racine.resolve("nuit.zip");
         ecrireArchive(zip, "bruts/a.wav", 2 * 1024 * 1024);
-        BornesExtraction bornes = new BornesExtraction(100, Long.MAX_VALUE, 1024 * 1024, 10_000, 0, d -> DISQUE_VASTE);
+        BornesExtraction bornes = new BornesExtraction(100, Long.MAX_VALUE, 1024 * 1024, 0, d -> DISQUE_VASTE);
 
         assertThatThrownBy(() -> ExtracteurZip.extraireVersDossierTemporaire(
                         zip, base, p -> {}, JetonAnnulation.neutre(), bornes))
@@ -188,7 +213,7 @@ class ExtracteurZipQuotasTest {
     /// Des bornes que rien ne fait franchir, sauf l'espace disque fourni : pour éprouver un refus à la
     /// fois.
     private static BornesExtraction bornesLarges(fr.univ_amu.iut.commun.model.EspaceDisque espaceDisque) {
-        return new BornesExtraction(100_000, Long.MAX_VALUE, Long.MAX_VALUE, 100, 0, espaceDisque);
+        return new BornesExtraction(100_000, Long.MAX_VALUE, Long.MAX_VALUE, 0, espaceDisque);
     }
 
     private static void ecrireArchive(Path zip, String nom, int octets) throws IOException {

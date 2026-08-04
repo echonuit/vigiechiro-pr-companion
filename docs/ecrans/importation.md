@@ -131,9 +131,7 @@ l'archive ressemble à une carte SD et que le disque peut l'accueillir. Elle ref
 
 - s'il **manque de la place** : le message dit ce qu'il faudrait et ce qui reste. Vous pouvez libérer
   de l'espace, ou décompresser l'archive vous-même et désigner le dossier obtenu ;
-- si l'archive **se décompresserait démesurément** (une carte SD contient de l'audio, qui se comprime
-  peu : un facteur mille signale une archive piégée) ;
-- si elle contient **beaucoup trop de fichiers**, ou un fichier **démesuré**.
+- si elle contient **beaucoup trop de fichiers**, un fichier **démesuré**, ou un total démesuré.
 
 Une archive qui se met à écrire **plus qu'elle n'avait annoncé** est également interrompue en cours de
 route, et le dossier temporaire est supprimé.

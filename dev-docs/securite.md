@@ -71,18 +71,30 @@ gardes, et le second existe parce que le premier se ferait berner :
 
 | Quand | Sur quoi | Ce qu'il attrape |
 |---|---|---|
-| Avant le premier octet écrit | l'inventaire **annoncé** (répertoire central, lu sans décompresser) | nombre d'entrées, taille d'une entrée, total, taux de décompression, espace disque disponible avec marge |
+| Avant le premier octet écrit | l'inventaire **annoncé** (répertoire central, lu sans décompresser) | nombre d'entrées, taille d'une entrée, total, espace disque disponible avec marge |
 | Pendant la copie | les octets **réellement** écrits | l'archive qui écrit plus qu'elle n'annonçait, c'est-à-dire la bombe ZIP, qui ment précisément sur ce que le premier garde lit |
 
 Le second garde n'a besoin d'aucune constante : il confronte l'archive à **sa propre déclaration**,
-celle sur laquelle l'espace disque vient d'être validé.
+celle sur laquelle l'espace disque vient d'être validé. Ensemble, les deux tiennent une garantie
+simple : **on n'écrit jamais plus que ce qui a été déclaré, et on n'accepte jamais une déclaration qui
+ne tient pas.**
 
-Les défauts sont larges (une nuit de terrain fait quelques milliers de fichiers, une dizaine de
-gigaoctets, un taux de compression voisin de 2) et chacun se surcharge par propriété système
-(`vigiechiro.import.zip.max-entrees`, `…max-octets-par-entree`, `…max-octets-total`, `…ratio-max`,
-`…marge-disque-octets`). Il n'y a **pas** de réglage dans l'écran Réglages : un naturaliste n'a pas à
-choisir un plafond de taux de compression. C'est le message de refus qui nomme la limite atteinte et
-l'échappatoire.
+!!! note "Pourquoi il n'y a pas de plafond de taux de compression"
+    C'est le garde classique contre les bombes ZIP. Il a été écrit ici, puis **retiré** : il ne sépare
+    pas les deux populations dans ce domaine. Les fixtures de recette produites par le générateur de
+    cartes SD se décompressent **137 fois**, et un enregistrement réellement silencieux fait bien
+    davantage : de l'audio silencieux et une bombe sont **les mêmes octets**.
+
+    Il n'ajoutait rien à la garantie ci-dessus. Un taux énorme ne nuit que s'il aboutit à beaucoup
+    d'octets écrits, ce que le total annoncé, le contrôle d'espace disque et le second garde bornent
+    déjà. Le conserver, c'était payer des refus injustifiés pour une protection qu'on avait par
+    ailleurs.
+
+Les défauts sont larges (une nuit de terrain fait quelques milliers de fichiers et une dizaine de
+gigaoctets) et chacun se surcharge par propriété système (`vigiechiro.import.zip.max-entrees`,
+`…max-octets-par-entree`, `…max-octets-total`, `…marge-disque-octets`). Il n'y a **pas** de réglage
+dans l'écran Réglages : un naturaliste n'a pas à choisir un plafond d'entrées. C'est le message de
+refus qui nomme la limite atteinte et l'échappatoire.
 
 ⚠️ Ces bornes protègent l'**import par l'IHM**, seul chemin qui accepte aujourd'hui une archive : la
 CLI ne prend qu'un dossier.

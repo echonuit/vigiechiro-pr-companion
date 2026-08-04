@@ -17,29 +17,42 @@ import java.nio.file.Path;
 /// ## Deux gardes, parce qu'un seul se ferait berner
 ///
 /// 1. **Avant d'écrire le premier octet**, sur l'inventaire **annoncé** ([#verifierAvantExtraction]) :
-///    nombre d'entrées, taille de la plus grosse, total, taux de compression, et espace disque
-///    disponible avec marge.
+///    nombre d'entrées, taille de la plus grosse, total, et espace disque disponible avec marge.
 /// 2. **Pendant la copie**, sur les octets **réellement** écrits ([#exigerCumulSousLePlafond]) : une
 ///    bombe ZIP ment précisément sur ce que le premier garde lit. Le second la confronte à **sa propre
 ///    déclaration**, celle sur laquelle l'espace disque a été validé, et n'a donc besoin d'aucune
 ///    constante arbitraire.
 ///
+/// Ensemble, ils tiennent une garantie simple : **on n'écrit jamais plus que ce qui a été déclaré, et
+/// on n'accepte jamais une déclaration qui ne tient pas.**
+///
+/// ## Pourquoi il n'y a pas de plafond de taux de compression
+///
+/// C'est le garde classique contre les bombes ZIP, et il a été écrit ici avant d'être **retiré**. Il ne
+/// sépare pas les deux populations dans ce domaine : les fixtures de recette, produites par le
+/// générateur de cartes SD, se décompressent **137 fois**, et un enregistrement réellement silencieux
+/// fait bien davantage. Or de l'audio silencieux et une bombe sont **les mêmes octets** : aucun seuil
+/// ne distingue l'un de l'autre.
+///
+/// Il n'apporte de toute façon rien à la garantie ci-dessus. Un taux énorme ne nuit que s'il aboutit à
+/// beaucoup d'octets écrits, ce que le total annoncé, le contrôle d'espace disque et le second garde
+/// bornent déjà. Le conserver, c'était payer des refus injustifiés pour une protection qu'on avait par
+/// ailleurs.
+///
 /// ## Des défauts larges, surchargeables, mais pas un réglage
 ///
-/// Une vraie nuit fait quelques milliers de fichiers, une dizaine de gigaoctets et un taux de
-/// compression voisin de 2 : elle doit passer **sans que personne ait rien à régler**. Les défauts sont
-/// donc un à deux ordres de grandeur au-dessus, là où une bombe ZIP est à quatre ou cinq.
+/// Une vraie nuit fait quelques milliers de fichiers et une dizaine de gigaoctets : elle doit passer
+/// **sans que personne ait rien à régler**. Les défauts sont donc un à deux ordres de grandeur au-dessus.
 ///
 /// Chaque borne se surcharge par **propriété système** (patron de `vigiechiro.depot.taille-max-mo`),
 /// pour l'archive légitime mais inhabituelle. Il n'y a délibérément **pas** de réglage dans l'écran
-/// Réglages : un naturaliste n'a pas à choisir un plafond de taux de compression. C'est le **message de
-/// refus** qui doit nommer la limite atteinte, sans quoi la seule issue serait de renoncer à l'archive.
+/// Réglages : un naturaliste n'a pas à choisir un plafond d'entrées. C'est le **message de refus** qui
+/// doit nommer la limite atteinte, sans quoi la seule issue serait de renoncer à l'archive.
 ///
 /// @param maxEntrees nombre d'entrées « fichier » au-delà duquel l'archive est refusée
 /// @param maxOctetsParEntree taille décompressée annoncée maximale d'une entrée
 /// @param maxOctetsTotal total décompressé annoncé maximal, et plafond de repli quand l'archive
 ///     n'annonce aucune taille (le second garde n'a alors rien à quoi la confronter)
-/// @param ratioMax taux de décompression annoncé maximal
 /// @param margeDisqueOctets ce qu'on laisse libre sur le volume après extraction
 /// @param espaceDisque source de l'espace disponible, injectable pour éprouver le refus sans dépendre
 ///     de l'état réel de la machine
@@ -47,7 +60,6 @@ public record BornesExtraction(
         int maxEntrees,
         long maxOctetsParEntree,
         long maxOctetsTotal,
-        long ratioMax,
         long margeDisqueOctets,
         EspaceDisque espaceDisque) {
 
@@ -59,9 +71,6 @@ public record BornesExtraction(
 
     /// Une nuit pèse une dizaine de gigaoctets décompressés.
     private static final long DEFAUT_MAX_TOTAL = 500L * 1000 * 1000 * 1000;
-
-    /// Le WAV se compresse mal (taux voisin de 2) ; une bombe ZIP dépasse le millier.
-    private static final long DEFAUT_RATIO_MAX = 100;
 
     /// Même marge que le garde d'import (#2041), pour la même raison : ne pas rendre un volume
     /// exactement plein.
@@ -75,7 +84,6 @@ public record BornesExtraction(
                 (int) entier("max-entrees", DEFAUT_MAX_ENTREES),
                 entier("max-octets-par-entree", DEFAUT_MAX_PAR_ENTREE),
                 entier("max-octets-total", DEFAUT_MAX_TOTAL),
-                entier("ratio-max", DEFAUT_RATIO_MAX),
                 entier("marge-disque-octets", DEFAUT_MARGE_DISQUE),
                 EspaceDisque.reel());
     }
@@ -108,11 +116,6 @@ public record BornesExtraction(
             throw new RegleMetierException("Archive zip refusée : elle annonce "
                     + Formats.octetsLisibles(inventaire.octetsAnnonces()) + " décompressés, au-delà des "
                     + Formats.octetsLisibles(maxOctetsTotal) + " admis.");
-        }
-        if (inventaire.ratioAnnonce() > ratioMax) {
-            throw new RegleMetierException("Archive zip refusée : elle se décompresserait "
-                    + inventaire.ratioAnnonce() + " fois, un taux caractéristique d'une archive piégée (limite : "
-                    + ratioMax + "). Une carte SD contient de l'audio, qui se compresse peu.");
         }
         long requis = inventaire.octetsAnnonces() + margeDisqueOctets;
         long disponible = espaceDisque.disponibleOctets(destination);
