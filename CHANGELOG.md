@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.175.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.174.1...v2.175.0) (2026-08-04)
+
+
+### Features
+
+* **cli:** importer accepte une archive .zip, comme l'écran d'import ([#3244](https://github.com/echonuit/vigiechiro-pr-companion/issues/3244)) ([3d6660e](https://github.com/echonuit/vigiechiro-pr-companion/commit/3d6660e74a53ca13d6b48937cbb28202c47a2714)), closes [#3195](https://github.com/echonuit/vigiechiro-pr-companion/issues/3195) [#2732](https://github.com/echonuit/vigiechiro-pr-companion/issues/2732)
+
 ## [2.174.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.174.0...v2.174.1) (2026-08-04)
 
 
