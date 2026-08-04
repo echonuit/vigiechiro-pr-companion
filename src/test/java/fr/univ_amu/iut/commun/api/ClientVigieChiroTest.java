@@ -7,10 +7,12 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.io.ByteArrayInputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -267,9 +269,11 @@ class ClientVigieChiroTest {
     }
 
     private static HttpResponse<Object> reponse(int statut, String corps, Map<String, List<String>> entetes) {
+        byte[] octets = corps.getBytes(StandardCharsets.UTF_8);
         HttpResponse<Object> reponse = mock(HttpResponse.class);
         when(reponse.statusCode()).thenReturn(statut);
-        when(reponse.body()).thenReturn(corps);
+        // Corps en flux depuis #3222 (le transport le lit sous plafond), neuf a chaque appel.
+        when(reponse.body()).thenAnswer(appel -> new ByteArrayInputStream(octets));
         when(reponse.headers()).thenReturn(HttpHeaders.of(entetes, (nom, valeur) -> true));
         return reponse;
     }

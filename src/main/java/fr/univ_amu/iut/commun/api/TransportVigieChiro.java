@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.commun.api;
 
+import fr.univ_amu.iut.commun.model.EntreeTropVolumineuse;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -195,10 +197,16 @@ final class TransportVigieChiro {
             HttpRequest envoi = requete.requete();
             methode = envoi.method();
             chemin = envoi.uri().getPath();
-            HttpResponse<String> http = client.send(envoi, HttpResponse.BodyHandlers.ofString());
-            ReponseApi<String> reponse = triage(http);
+            HttpResponse<InputStream> http = client.send(envoi, HttpResponse.BodyHandlers.ofInputStream());
+            ReponseApi<String> reponse = triage(http.statusCode(), CorpsReponse.sousPlafond(http, chemin));
             JournalEchange.consigner(methode, chemin, reponse, debut, null);
             return new PolitiqueReessai.Issue<>(reponse, retryAfter(http));
+        } catch (EntreeTropVolumineuse trop) {
+            // Refus DÉFINITIF, pas panne : réémettre une réponse trop grosse la redonnerait trop grosse.
+            // Un `Refuse` hors 429/5xx n'est pas réessayable, la politique de reprise s'arrête donc ici.
+            ReponseApi<String> reponse = ReponseApi.refuse(0, trop.getMessage());
+            JournalEchange.consigner(methode, chemin, reponse, debut, trop);
+            return PolitiqueReessai.Issue.de(reponse);
         } catch (InterruptedException interrompu) {
             Thread.currentThread().interrupt();
             ReponseApi<String> reponse = ReponseApi.injoignable("appel interrompu");
@@ -311,10 +319,6 @@ final class TransportVigieChiro {
     /// son statut et son corps. Testable sans réseau.
     static ReponseApi<String> triage(int statut, String corps) {
         return statut >= 200 && statut < 300 ? ReponseApi.succes(corps) : ReponseApi.refuse(statut, corps);
-    }
-
-    private static ReponseApi<String> triage(HttpResponse<String> reponse) {
-        return triage(reponse.statusCode(), reponse.body());
     }
 
     /// En-tête `Authorization` (`Basic base64("<token>:")`), ou vide si aucun token (non connecté).

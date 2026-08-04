@@ -9,12 +9,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.PlafondLecture;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.http.HttpClient;
 import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +28,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -316,7 +321,7 @@ class TransportVigieChiroTest {
     @Test
     @DisplayName("#2619 : une LECTURE coupée est réessayée, puis aboutit")
     void lecture_reessaie_une_coupure_puis_reussit() throws Exception {
-        HttpResponse<String> ok = reponseTexte(200, "{\"_id\":\"u-1\"}");
+        HttpResponse<InputStream> ok = reponseTexte(200, "{\"_id\":\"u-1\"}");
         HttpClient client = mock(HttpClient.class);
         doThrow(new IOException("paquet perdu")).doReturn(ok).when(client).send(any(), any());
         List<Duration> attentes = new ArrayList<>();
@@ -356,7 +361,7 @@ class TransportVigieChiroTest {
     @Test
     @DisplayName("#2677 : une écriture de valeur absolue, elle, est réessayée")
     void ecriture_idempotente_est_reessayee() throws Exception {
-        HttpResponse<String> ok = reponseTexte(200, "{}");
+        HttpResponse<InputStream> ok = reponseTexte(200, "{}");
         HttpClient client = mock(HttpClient.class);
         doThrow(new IOException("paquet perdu")).doReturn(ok).when(client).send(any(), any());
         List<Duration> attentes = new ArrayList<>();
@@ -375,8 +380,8 @@ class TransportVigieChiroTest {
     @Test
     @DisplayName("#2677 : le Retry-After du serveur fait autorité hors S3 aussi (règle 3 de l'ADR)")
     void retry_after_fait_autorite_sur_une_lecture() throws Exception {
-        HttpResponse<String> tropVite = reponseTexte(429, "trop vite", Map.of("Retry-After", List.of("7")));
-        HttpResponse<String> ok = reponseTexte(200, "{}");
+        HttpResponse<InputStream> tropVite = reponseTexte(429, "trop vite", Map.of("Retry-After", List.of("7")));
+        HttpResponse<InputStream> ok = reponseTexte(200, "{}");
         HttpClient client = mock(HttpClient.class);
         doReturn(tropVite).doReturn(ok).when(client).send(any(), any());
         List<Duration> attentes = new ArrayList<>();
@@ -394,7 +399,7 @@ class TransportVigieChiroTest {
     @DisplayName("#2619 : une lecture refusée (4xx) n'est jamais rejouée")
     void lecture_ne_reessaie_pas_un_refus_definitif() throws Exception {
         // 401 : le jeton est mort, il ne ressuscitera pas à la seconde tentative.
-        HttpResponse<String> refus = reponseTexte(401, "{}");
+        HttpResponse<InputStream> refus = reponseTexte(401, "{}");
         HttpClient client = mock(HttpClient.class);
         doReturn(refus).when(client).send(any(), any());
         List<Duration> attentes = new ArrayList<>();
@@ -497,19 +502,90 @@ class TransportVigieChiroTest {
         return new PolitiqueReessai(delai -> {}, () -> 0.0);
     }
 
+    @AfterEach
+    void rendreLePlafond() {
+        System.clearProperty(PlafondLecture.PROPRIETE_CORPS);
+    }
+
+    @Test
+    @DisplayName("Un corps qui ANNONCE plus que le plafond est refusé sans être lu (#3222)")
+    void corps_annonce_hors_plafond_refuse_sans_lire() throws Exception {
+        System.setProperty(PlafondLecture.PROPRIETE_CORPS, "1024");
+        InputStream refuseDEtreLu = new InputStream() {
+            @Override
+            public int read() {
+                throw new AssertionError("un corps annoncé hors plafond ne doit pas être lu");
+            }
+        };
+        HttpResponse<InputStream> enorme =
+                reponseFlux(200, refuseDEtreLu, Map.of("Content-Length", List.of("999999999")));
+        HttpClient client = mock(HttpClient.class);
+        doReturn(enorme).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        ReponseApi<String> reponse = transport.lire("/donnees");
+
+        assertThat(reponse).isInstanceOf(ReponseApi.Refuse.class);
+        assertThat(((ReponseApi.Refuse<String>) reponse).corps())
+                .contains("/donnees")
+                .contains("-Dvigiechiro.reseau.corps.max-octets=");
+        assertThat(attentes)
+                .as("une réponse trop grosse le restera : il n'y a rien à rejouer")
+                .isEmpty();
+        verify(client, times(1)).send(any(), any());
+    }
+
+    @Test
+    @DisplayName("Un corps SANS Content-Length est compté en cours de lecture, et refusé au franchissement")
+    void corps_par_blocs_refuse_au_franchissement() throws Exception {
+        System.setProperty(PlafondLecture.PROPRIETE_CORPS, "1024");
+        // Encodage par blocs : le serveur n'annonce aucune taille, le premier garde n'a rien à lire.
+        HttpResponse<InputStream> parBlocs = reponseTexte(200, "x".repeat(5000));
+        HttpClient client = mock(HttpClient.class);
+        doReturn(parBlocs).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        ReponseApi<String> reponse = transport.lire("/moi/participations");
+
+        assertThat(reponse).isInstanceOf(ReponseApi.Refuse.class);
+        assertThat(((ReponseApi.Refuse<String>) reponse).corps()).contains("/moi/participations");
+        assertThat(attentes).isEmpty();
+    }
+
     /// Politique sans vraie attente qui **note** les durées demandées, pour compter les reprises.
     private static PolitiqueReessai sansAttente(List<Duration> attentes) {
         return new PolitiqueReessai(attentes::add, () -> 0.0);
     }
 
     /// Réponse **texte** : ce que rendent les lectures, là où [#reponse] sert les PUT S3 sans corps.
-    private static HttpResponse<String> reponseTexte(int statut, String corps) {
+    ///
+    /// Le corps est rendu en **flux** depuis #3222 : le transport le lit sous plafond, donc par blocs,
+    /// et ne peut plus recevoir une chaîne déjà chargée.
+    private static HttpResponse<InputStream> reponseTexte(int statut, String corps) {
         return reponseTexte(statut, corps, Map.of());
     }
 
     /// Variante **avec en-têtes**, pour exercer le `Retry-After` d'un `429` (#2677).
-    private static HttpResponse<String> reponseTexte(int statut, String corps, Map<String, List<String>> entetes) {
-        HttpResponse<String> reponse = mock(HttpResponse.class);
+    private static HttpResponse<InputStream> reponseTexte(int statut, String corps, Map<String, List<String>> entetes) {
+        byte[] octets = corps.getBytes(StandardCharsets.UTF_8);
+        HttpResponse<InputStream> reponse = mock(HttpResponse.class);
+        when(reponse.statusCode()).thenReturn(statut);
+        // Un flux NEUF a chaque appel : une reponse servie deux fois (reprise) rendrait sinon un flux
+        // deja consomme, donc un corps vide - et un test vert pour la mauvaise raison.
+        when(reponse.body()).thenAnswer(appel -> new ByteArrayInputStream(octets));
+        when(reponse.headers()).thenReturn(HttpHeaders.of(entetes, (nom, valeur) -> true));
+        return reponse;
+    }
+
+    /// Réponse dont le **corps est un flux fourni par le test** : c'est ce qui permet de vérifier qu'un
+    /// corps annoncé hors plafond n'est **pas lu**, en donnant un flux qui refuse de l'être.
+    private static HttpResponse<InputStream> reponseFlux(
+            int statut, InputStream corps, Map<String, List<String>> entetes) {
+        HttpResponse<InputStream> reponse = mock(HttpResponse.class);
         when(reponse.statusCode()).thenReturn(statut);
         when(reponse.body()).thenReturn(corps);
         when(reponse.headers()).thenReturn(HttpHeaders.of(entetes, (nom, valeur) -> true));

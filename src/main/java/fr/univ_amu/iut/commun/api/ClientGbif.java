@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.api;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
@@ -10,6 +11,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,8 +30,19 @@ public final class ClientGbif {
 
     private static final Duration DELAI = Duration.ofSeconds(5);
 
-    private final HttpClient client =
-            HttpClient.newBuilder().connectTimeout(DELAI).build();
+    private final HttpClient client;
+
+    public ClientGbif() {
+        this(HttpClient.newBuilder().connectTimeout(DELAI).build());
+    }
+
+    /// Constructeur d'injection : le client HTTP est fourni, pour que les tests simulent une réponse
+    /// (Mockito sur [HttpClient]) sans réseau réel - JPMS interdisant un serveur HTTP local en test.
+    /// Même patron que [ResolveurCommuneApiGeo], et posé pour la même raison : cette classe n'avait
+    /// aucun test, faute d'une couture par où l'éprouver.
+    ClientGbif(HttpClient client) {
+        this.client = Objects.requireNonNull(client, "client");
+    }
 
     /// Clé d'usage GBIF du taxon `nomLatin`, ou vide si non résolu (aucune correspondance ou erreur).
     public Optional<Long> cleUsage(String nomLatin) {
@@ -40,11 +53,15 @@ public final class ClientGbif {
             URI uri = URI.create(MATCH + URLEncoder.encode(nomLatin.strip(), StandardCharsets.UTF_8));
             HttpRequest requete =
                     HttpRequest.newBuilder(uri).timeout(DELAI).GET().build();
-            HttpResponse<String> reponse = client.send(requete, HttpResponse.BodyHandlers.ofString());
+            HttpResponse<InputStream> reponse = client.send(requete, HttpResponse.BodyHandlers.ofInputStream());
+            // Corps lu sous plafond (#3222) : GBIF est un service tiers, sa réponse est une entrée
+            // externe comme une autre. Un dépassement retombe dans le filet ci-dessous, donc en
+            // résolution vide : cette recherche est un confort, pas une garantie.
+            String corps = CorpsReponse.sousPlafond(reponse, "GBIF " + nomLatin);
             if (reponse.statusCode() != 200) {
                 return Optional.empty();
             }
-            JsonObject json = JsonParser.parseString(reponse.body()).getAsJsonObject();
+            JsonObject json = JsonParser.parseString(corps).getAsJsonObject();
             boolean correspond = json.has("matchType")
                     && !"NONE".equals(json.get("matchType").getAsString());
             if (correspond && json.has("usageKey")) {
