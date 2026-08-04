@@ -22,10 +22,10 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v5.6.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           java-version: '25'
           distribution: 'temurin'
@@ -38,6 +38,15 @@ jobs:
         # Spotless est opt-in (pas de binding Maven) : on l'exécute explicitement ici pour
         # qu'un code non formaté fasse échouer la CI, même sans le hook pre-commit local.
         run: ./mvnw -B spotless:check --file pom.xml
+
+      - name: Épinglage des actions et conteneurs
+        # Un tag peut être repointé sur un autre commit sans que rien ne bouge chez nous : ce qui
+        # s'exécute dans nos workflows changerait alors sans qu'aucun commit ne le dise (#2737).
+        # Sans cette garde, la prochaine action ajoutée le serait par tag et l'épinglage se
+        # déferait en silence.
+        run: |
+          chmod +x .github/scripts/verifie-epinglage.sh
+          ./.github/scripts/verifie-epinglage.sh
 
       - name: Complétude des captures de référence
         # Chaque vue FXML doit avoir au moins une capture de référence déclarée au manifeste

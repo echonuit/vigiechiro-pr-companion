@@ -40,14 +40,14 @@ jobs:
   capturer:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           # Sur `main`, on se place sur la branche (le job y committera). Sur une PR, checkout par
           # défaut de la tête de la PR : c'est le code qu'on veut rendre.
           ref: ${{ github.event_name == 'push' && 'main' || '' }}
 
       - name: Set up JDK 25
-        uses: actions/setup-java@v5.6.0
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
         with:
           java-version: '25'
           distribution: 'temurin'
