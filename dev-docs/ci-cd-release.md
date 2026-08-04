@@ -333,6 +333,29 @@ gh api repos/<proprietaire>/<action>/git/ref/tags/<tag> --jq .object.sha
 gh api repos/<proprietaire>/<action>/git/tags/<sha> --jq .object.sha
 ```
 
+## Les droits de publication sont déclarés par job (#2739)
+
+Le plancher du workflow de release est en **lecture seule** ; chaque job déclare ce qu'il lui faut de
+plus.
+
+| Job | Ce qu'il fait | Droits |
+|---|---|---|
+| `release` | tag, Release, commentaires sur les issues et PR que la version referme | `contents` + `issues` + `pull-requests` |
+| `installers` | `gh release upload`, après compilation et **jpackage sur trois systèmes** | `contents` |
+| `publish` | `gh release edit --draft=false` | `contents` |
+
+**Ce qui n'allait pas** : un **seul** bloc `permissions` au niveau du workflow accordait les trois
+droits en écriture aux trois jobs. La matrice d'installeurs - le job le plus exposé, qui compile et
+empaquette - pouvait donc écrire des issues et des pull requests, ce dont elle n'a jamais eu l'usage.
+
+Les trois autres workflows à droits d'écriture (`adr-rapport`, `capture-vues`, `flatpak`) sont
+**mono-job** et utilisent réellement chacun des leurs : leur bloc au niveau workflow est déjà, de
+fait, un bloc par job.
+
+⚠️ **Ce que cela ne fait pas** : `semantic-release` s'exécute toujours dans un job en écriture. L'en
+sortir suppose de réimplémenter en `git` + `gh` ce que font ses greffons d'écriture ; l'arbitrage est
+posé sur #2739.
+
 ## L'outillage de publication est figé, et répété à blanc (#2738)
 
 `semantic-release` et ses greffons vivent dans
