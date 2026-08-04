@@ -244,9 +244,25 @@ class AgregationActiviteTest {
         // temps, pas le lieu), l'EXPORT doit les distinguer, sans quoi on ne peut plus recouper.
         List<ContactHoraire> contacts = List.of(
                 new ContactHoraire(
-                        "PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", le21juin(22, 0), null, "640380", "A1", 1L),
+                        "PIPKUH",
+                        "Pipistrelle de Kuhl",
+                        "Chiroptères",
+                        le21juin(22, 0),
+                        null,
+                        "640380",
+                        "A1",
+                        1L,
+                        null),
                 new ContactHoraire(
-                        "PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", le21juin(22, 5), null, "640380", "B2", 2L));
+                        "PIPKUH",
+                        "Pipistrelle de Kuhl",
+                        "Chiroptères",
+                        le21juin(22, 5),
+                        null,
+                        "640380",
+                        "B2",
+                        2L,
+                        null));
 
         List<LigneActivite> lignes = AgregationActivite.pourExport(contacts, LargeurTranche.HEURE);
 
@@ -269,7 +285,8 @@ class AgregationActiviteTest {
                 null,
                 "640380",
                 "A1",
-                1L));
+                1L,
+                null));
 
         LigneActivite ligne =
                 AgregationActivite.pourExport(contacts, LargeurTranche.HEURE).get(0);

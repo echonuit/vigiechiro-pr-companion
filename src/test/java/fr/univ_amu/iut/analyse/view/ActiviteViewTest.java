@@ -593,7 +593,7 @@ class ActiviteViewTest {
 
     private static ContactHoraire contactLieu(String taxon, String commune, String carre, String point) {
         return new ContactHoraire(
-                taxon, taxon, "Chiroptères", LocalDateTime.of(2026, 6, 20, 22, 0), commune, carre, point, 1L);
+                taxon, taxon, "Chiroptères", LocalDateTime.of(2026, 6, 20, 22, 0), commune, carre, point, 1L, null);
     }
 
     /// Contacts d'un **passage donné**, pour distinguer les nuits du protocole des nuits opportunistes.
@@ -608,7 +608,8 @@ class ActiviteViewTest {
                     "Ahetze",
                     "640380",
                     "A1",
-                    idPassage));
+                    idPassage,
+                    null));
         }
         return contacts;
     }

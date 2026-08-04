@@ -55,6 +55,7 @@ class ContactHoraireTest {
                 commune,
                 carre,
                 point,
-                1L);
+                1L,
+                null);
     }
 }

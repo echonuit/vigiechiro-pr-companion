@@ -37,9 +37,30 @@ class ServiceActiviteTest {
                 .thenReturn(List.of(ligne("PIPKUH", "PIPPIP", "Pipistrelle de Kuhl", "Chiroptères", HEURE)));
 
         assertThat(service.contactsDuPassage(PASSAGE))
-                .as("taxon retenu (observateur prioritaire) et contexte commune/carré/point/passage portés")
+                .as("taxon retenu (observateur prioritaire) et contexte commune/carré/point/passage/site portés")
                 .containsExactly(new ContactHoraire(
-                        "PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", HEURE, "Ahetze", "640380", "A1", PASSAGE));
+                        "PIPKUH",
+                        "Pipistrelle de Kuhl",
+                        "Chiroptères",
+                        HEURE,
+                        "Ahetze",
+                        "640380",
+                        "A1",
+                        PASSAGE,
+                        "Mon site"));
+    }
+
+    @Test
+    void reporte_le_nom_du_site_ou_null_quand_il_n_est_pas_nomme() {
+        // #3175 : le nom convivial était disponible sur la ligne source et simplement pas reporté, comme
+        // la commune avant #2967. Il est facultatif : son absence est un état normal, pas une anomalie.
+        when(projections.lignesAudioDuPassage(PASSAGE))
+                .thenReturn(List.of(ligne("PIPKUH", "PIPPIP", "Pipistrelle de Kuhl", "Chiroptères", HEURE, null)));
+
+        assertThat(service.contactsDuPassage(PASSAGE))
+                .extracting(ContactHoraire::nomSite)
+                .as("un carré que l'utilisateur n'a pas nommé ne porte pas de nom, et cela ne fait pas échouer")
+                .containsExactly((String) null);
     }
 
     @Test
@@ -107,6 +128,16 @@ class ServiceActiviteTest {
 
     private static LigneObservationAudio ligne(
             String taxonObservateur, String taxonTadarida, String nomEspece, String groupe, LocalDateTime heure) {
+        return ligne(taxonObservateur, taxonTadarida, nomEspece, groupe, heure, "Mon site");
+    }
+
+    private static LigneObservationAudio ligne(
+            String taxonObservateur,
+            String taxonTadarida,
+            String nomEspece,
+            String groupe,
+            LocalDateTime heure,
+            String nomSite) {
         return new LigneObservationAudio(
                 1L,
                 10L,
@@ -115,7 +146,7 @@ class ServiceActiviteTest {
                 "2026-06-20",
                 "640380",
                 "A1",
-                "Mon site",
+                nomSite,
                 taxonTadarida,
                 taxonTadarida == null ? null : 0.9,
                 taxonObservateur,
