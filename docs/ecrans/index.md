@@ -104,7 +104,7 @@ supprimé pendant que l'application tourne.
     au lieu d'un sélecteur de fichiers où l'on choisissait un `.db` sans rien savoir de lui.
     « Parcourir… » reste là pour une sauvegarde rangée ailleurs.
 
-    ![Choisir une sauvegarde à restaurer](../../.github/assets/apercu-restauration-choix-sauvegarde.png)
+    ![Choisir une sauvegarde à restaurer : date, taille, nature et total.](../assets/captures/apercu-restauration-choix-sauvegarde.png)
 
     En ligne de commande, `vigiechiro lister-sauvegardes` donne la même chose, et
     `vigiechiro supprimer-sauvegarde --nom <nom> --confirmer` fait le ménage. Sans `--confirmer`, la
