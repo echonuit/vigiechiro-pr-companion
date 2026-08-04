@@ -117,6 +117,27 @@ class FiltreLieuTest {
     }
 
     @Test
+    @DisplayName("Une commune non résolue ne devient pas un lieu vide, ni au filtre ni au refus")
+    void une_commune_non_resolue_ne_devient_pas_un_lieu_vide() {
+        // Cas réel, pas théorique : un point sans GPS n'a pas de commune (`point_commune` est une table
+        // latérale, ADR 2791). Sans le garde, la ligne offrirait une dimension nulle - et le refus
+        // listerait un lieu vide entre deux virgules, ce que personne ne saurait recopier.
+        LigneObservationAudio sansCommune = ligne(3, null, "130711", "A1", null);
+
+        assertThat(FiltreLieu.appliquer(List.of(sansCommune), List.of("130711")))
+                .as("le carré reste comparable, la commune manquante n'empêche rien")
+                .containsExactly(sansCommune);
+        assertThatThrownBy(() -> FiltreLieu.appliquer(List.of(sansCommune), List.of("Marseille")))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("130711")
+                .as("le refus nomme le seul lieu présent, et rien d'autre")
+                .extracting(erreur -> erreur.getMessage().replace("130711", ""))
+                .asString()
+                .doesNotContain(", ,")
+                .doesNotContain(": ,");
+    }
+
+    @Test
     @DisplayName("#3159 : le carré se tape par son numéro, par son nom, ou tel que le refus l'écrit")
     void le_carre_se_tape_par_l_une_ou_l_autre_etiquette() {
         // La contrepartie de la ligne ci-dessus : nommer les lieux qualifiés ne doit obliger personne à

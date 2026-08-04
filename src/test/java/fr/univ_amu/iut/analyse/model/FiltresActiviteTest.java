@@ -35,15 +35,41 @@ class FiltresActiviteTest {
     @Test
     @DisplayName("#3059 : le point n'est PAS une dimension de lieu en ligne de commande")
     void le_point_n_est_pas_filtrable() {
-        // Le schéma pose UNIQUE(site_id, code) : « Z1 » désigne autant de lieux qu'il y a de carrés.
-        // L'écran s'en tire en le qualifiant (« 640380 · Z1 ») ; une option de ligne de commande ne le
-        // peut pas sans imposer un point médian à échapper dans chaque script. Même arbitrage que
-        // exporter-sons, et deux commandes qui traiteraient le lieu différemment seraient pires.
+        // Le schéma pose UNIQUE(site_id, code) : « Z1 » désigne autant de lieux qu'il y a de carrés, et
+        // « --lieu Z1 » ne désignerait donc rien de précis. Même arbitrage que exporter-sons, et deux
+        // commandes qui traiteraient le lieu différemment seraient pires que la limite elle-même.
         assertThat(FiltresActivite.dimensionsLieu(RHIFER))
                 .as("commune et carré, rien d'autre")
                 .containsExactly("Ahetze", "640380");
         assertThatThrownBy(() -> FiltreLieu.appliquer(TOUS, List.of("A1"), FiltresActivite::dimensionsLieu))
                 .isInstanceOf(RegleMetierException.class);
+    }
+
+    @Test
+    @DisplayName("#3159 : le carré se compare qualifié, et se tape par l'une ou l'autre étiquette")
+    void le_carre_se_compare_qualifie() {
+        // Ce que le refus nomme doit se recopier tel quel : il liste donc le carré comme l'écran
+        // l'affiche. Ce qui ne veut pas dire l'exiger - la correspondance reste partielle.
+        ContactHoraire nomme = new ContactHoraire(
+                RHIFER.taxon(),
+                RHIFER.nomEspece(),
+                RHIFER.groupe(),
+                RHIFER.heure(),
+                RHIFER.commune(),
+                RHIFER.numeroCarre(),
+                RHIFER.codePoint(),
+                RHIFER.idPassage(),
+                "Vallon");
+
+        assertThat(FiltresActivite.dimensionsLieu(nomme))
+                .as("le nom du site n'est pas une dimension de plus : c'est l'autre étiquette du carré")
+                .containsExactly("Ahetze", "640380 · Vallon");
+        assertThat(FiltreLieu.appliquer(List.of(nomme), List.of("vallon"), FiltresActivite::dimensionsLieu))
+                .as("le nom seul retient ce carré, sans point médian à taper")
+                .containsExactly(nomme);
+        assertThat(FiltreLieu.appliquer(List.of(nomme), List.of("640380"), FiltresActivite::dimensionsLieu))
+                .as("le numéro seul aussi, comme depuis #3059")
+                .containsExactly(nomme);
     }
 
     @Test

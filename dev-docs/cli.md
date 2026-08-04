@@ -247,10 +247,16 @@ mécanique, pas promis.
     ce qui apprend du même coup que le lot n'était pas vide et de combien descendre.
 
 !!! note "`--lieu` : ce qu'il couvre, et ce qu'il ne couvre pas"
-    Répétable, il retient les observations dont la **commune**, le **carré** ou le **nom de site**
-    correspond, en correspondance **partielle** et insensible à la casse comme aux accents : `--lieu aix`
-    trouve « Aix-en-Provence ». À l'écran on coche dans une liste fermée, en ligne de commande on tape à
+    Répétable, il retient les observations dont la **commune** ou le **carré** correspond, en
+    correspondance **partielle** et insensible à la casse comme aux accents : `--lieu aix` trouve
+    « Aix-en-Provence ». À l'écran on coche dans une liste fermée, en ligne de commande on tape à
     l'aveugle, sans rien pour rappeler l'orthographe.
+
+    Le **nom convivial** du carré n'est pas une valeur de plus : c'est l'autre étiquette du même lieu
+    ([ADR 3157](decisions/3157-un-carre-a-un-identifiant-et-une-etiquette.md)). `--lieu 640380` et
+    `--lieu vallon` retiennent donc le même carré, et le **refus** le nomme d'un seul tenant,
+    « 640380 · Vallon », comme l'écran l'affiche - pour que la valeur suggérée se recopie telle quelle.
+    Personne n'a pour autant à taper le point médian.
 
     **Le point n'en fait pas partie**, contrairement à la puce « Lieu » de l'écran. Le schéma pose
     `UNIQUE(site_id, code)` : un code seul (« A1 », « Z1 ») désigne autant de lieux qu'il y a de carrés.

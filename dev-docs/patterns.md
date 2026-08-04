@@ -718,8 +718,7 @@ clôture de l'EPIC #2790 : le patron n'existe que si le second usage l'adopte.
 **Le problème.** Chaque écran à barre de filtres « à la Notion » (#470/#537) écrivait son éditeur de
 puce en liste déroulante à choix unique. Une puce à valeur unique ne sait dire ni « ces trois
 carrés », ni « tout sauf les chiroptères » (#2615) ; et le critère « Lieu » de la vue audio (#2794)
-confronte la même liste de valeurs cochées à **quatre champs** d'une ligne (commune, carré, point,
-site).
+confronte la même liste de valeurs cochées à **plusieurs champs** d'une ligne (commune, carré, point).
 
 **La solution.** `CritereListe`, fabrique de `CritereFiltre` sur une dimension textuelle, en trois
 variantes : `simple` (liste déroulante, une valeur), `multiple` (cases à cocher, appartenance),
@@ -745,6 +744,20 @@ chantier a supprimée.
 | `CritereBooleen` | la puce **sans éditeur**, dont la seule présence filtre |
 | `CritereLieu` | le critère géographique, **dimensions en paramètre** |
 | `ValeursPresentes` | les valeurs **distinctes, non nulles et triées** d'une dimension |
+
+**Trois niveaux géographiques, pas quatre** ([ADR 3157](decisions/3157-un-carre-a-un-identifiant-et-une-etiquette.md)) :
+la commune, le carré et le point. Ce qui ressemblait à une quatrième dimension, le « site », est le
+**nom convivial du carré** - `monitoring_site` porte les deux colonnes sur la même ligne - et les deux
+tiennent dans une seule entrée, « 640380 · Vallon ». `CritereLieu.carres` et `CritereLieu.points`
+écrivent cette règle une fois pour les quatre écrans ; l'écriture partagée vit en
+`commun.model.LieuQualifie`, la **ligne de commande** devant la lire aussi (`FiltreLieu`), et un modèle
+ne pouvant pas dépendre d'une vue.
+
+**Une dimension qui change d'écriture déclare de quel côté** ([ADR 3158](decisions/3158-une-valeur-memorisee-se-rattrape-par-dimension.md)).
+Une vue mémorise le **texte** coché : requalifier une entrée le rend introuvable. Le socle demande donc
+au critère ce que la valeur désigne, plutôt que de comparer des chaînes qu'il ne sait pas interpréter.
+Le piège, s'il fallait le refaire : chercher un segment **n'importe où** ne rattrape jamais un carré,
+puisque le point est qualifié par lui.
 
 **Clés et libellés sont deux préoccupations distinctes**, et volontairement séparés.
 `ClesCriteres` est un **contrat** : une clé y est le nom sous lequel une vue mémorisée se sérialise
