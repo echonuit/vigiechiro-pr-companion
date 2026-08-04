@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.RefusAvantEcriture;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.VerrouWorkspace;
 import java.nio.file.Files;
@@ -44,7 +45,7 @@ public final class Amorcage {
         Workspace workspace = Workspace.resolu();
         verrou = VerrouWorkspace.prendre(workspace)
                 .orElseThrow(
-                        () -> new DataAccessException(messageDossierOccupe(VerrouWorkspace.occupant(workspace)), null));
+                        () -> new RefusAvantEcriture(messageDossierOccupe(VerrouWorkspace.occupant(workspace)), null));
     }
 
     /// La phrase servie à qui trouve le dossier de travail occupé.

@@ -115,7 +115,7 @@ class RestaurationBase {
         int versionSauvegarde = versionDeSchema(sauvegarde);
         int versionApplication = MigrationSchema.versionMaximale();
         if (versionSauvegarde > versionApplication) {
-            throw new DataAccessException(
+            throw new RefusAvantEcriture(
                     "Cette sauvegarde a été écrite par une version plus récente de l'application (schéma "
                             + versionSauvegarde + ", cette version connaît le " + versionApplication
                             + "). Rien n'a été touché. Mettez l'application à jour, puis recommencez.",
@@ -147,10 +147,10 @@ class RestaurationBase {
                 Statement st = cx.createStatement();
                 ResultSet rs = st.executeQuery("PRAGMA quick_check")) {
             if (!rs.next() || !"ok".equalsIgnoreCase(rs.getString(1))) {
-                throw new DataAccessException("Le fichier n'est pas une sauvegarde valide : " + fichier, null);
+                throw new RefusAvantEcriture("Le fichier n'est pas une sauvegarde valide : " + fichier, null);
             }
         } catch (SQLException echec) {
-            throw new DataAccessException("Fichier de sauvegarde illisible : " + fichier, echec);
+            throw new RefusAvantEcriture("Fichier de sauvegarde illisible : " + fichier, echec);
         }
     }
 

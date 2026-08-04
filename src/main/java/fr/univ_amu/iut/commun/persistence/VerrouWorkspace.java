@@ -70,7 +70,7 @@ public final class VerrouWorkspace implements AutoCloseable {
             return new VerrouWorkspace(null, null, fichier, false);
         }
         return prendre(workspace)
-                .orElseThrow(() -> new DataAccessException(
+                .orElseThrow(() -> new RefusAvantEcriture(
                         "Ce dossier de travail est déjà utilisé (" + occupant(workspace) + ") :"
                                 + " impossible de lancer " + operation + " en même temps. Fermez l'autre"
                                 + " fenêtre ou attendez la fin de l'opération en cours, puis recommencez.",

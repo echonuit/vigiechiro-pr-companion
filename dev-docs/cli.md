@@ -165,6 +165,13 @@ Suivent cette règle : `supprimer-passage`, `importer --ecraser`, `restaurer`, `
 exclusives : rien n'est écrit). `restaurer` rendait `1` sur stdout jusqu'à #2294, la
 convention n'était écrite nulle part, et c'est ainsi qu'elle a dérivé.
 
+**Les refus de la couche persistance en font partie depuis #3146** : un fichier qui n'est pas une
+base, une sauvegarde écrite par une version plus récente, un manifeste abîmé, un dossier de travail
+occupé. Tous sont émis **avant** la moindre écriture, et sortaient pourtant en `1`, avec une pile.
+Ils portent maintenant `RefusAvantEcriture`, que le gestionnaire d'erreurs classe avec les autres
+refus. Une `DataAccessException` ordinaire, elle, reste un incident : sa pile est l'information
+utile.
+
 `deposer-vigiechiro` étend la convention : `0` **seulement si le dépôt est complet** ; `1` si des
 fichiers restent à reprendre (relancer la même commande ne re-téléverse que les manquants). Le jeton
 vient de `--token`, sinon de la variable d'environnement `VIGIECHIRO_TOKEN`, sinon de la **connexion

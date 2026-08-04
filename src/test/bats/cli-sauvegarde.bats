@@ -105,7 +105,15 @@ importer_une_nuit_sur_a() {
   echo "ceci n'est pas une base SQLite" > "${faux}"
 
   run cli_sur "${MACHINE_A}" restaurer "${faux}" --confirmer
-  [ "${status}" -ne 0 ]
+
+  # Code 2 : « j'ai refusé, l'état local est intact » (#2294, #3146). Le 1 dirait « j'ai échoué en
+  # route », et un script qui enchaîne ne saurait plus s'il peut continuer. Le test se contentait
+  # d'un « non nul », qui accepte les deux.
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Refus :"* ]]
+  # La pile ne se voit QUE d'ici : elle est écrite par le journal, pas par le flux d'erreur, donc
+  # aucun test in-process ne peut la surveiller.
+  [[ "${output}" != *"	at fr.univ_amu"* ]]
 
   # Ce qui compte n'est pas le refus, c'est ce qu'il laisse derrière lui : la base d'avant, entière,
   # et pas de filet posé pour rien. Le refus précède le moindre remplacement (#2730).

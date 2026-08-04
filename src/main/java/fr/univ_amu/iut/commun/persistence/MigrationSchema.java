@@ -178,7 +178,7 @@ public class MigrationSchema {
             }
         }
         if (!derives.isEmpty()) {
-            throw new DataAccessException(refus(derives));
+            throw new RefusAvantEcriture(refus(derives));
         }
     }
 
