@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.164.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.163.0...v2.164.0) (2026-08-04)
+
+
+### Features
+
+* **analyse:** porter le nom convivial du site sur les projections de passage et de contact ([#3178](https://github.com/echonuit/vigiechiro-pr-companion/issues/3178)) ([28764a2](https://github.com/echonuit/vigiechiro-pr-companion/commit/28764a218faa4f934c25f9e8110b5ee02ff4bbca)), closes [#3175](https://github.com/echonuit/vigiechiro-pr-companion/issues/3175) [#3157](https://github.com/echonuit/vigiechiro-pr-companion/issues/3157) [#3175](https://github.com/echonuit/vigiechiro-pr-companion/issues/3175)
+
 # [2.163.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.162.2...v2.163.0) (2026-08-04)
 
 
