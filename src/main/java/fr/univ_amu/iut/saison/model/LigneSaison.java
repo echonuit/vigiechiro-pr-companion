@@ -22,6 +22,8 @@ import java.util.stream.Stream;
 /// @param passage2 état du second passage **protocolaire** (présent ou absent)
 /// @param horsProtocole nuits réalisées sur ce point mais hors protocole (opportunistes), dans l'ordre
 ///     des numéros de passage ; vide dans le cas courant
+/// @param nomSite nom **convivial** du carre, ou `null` s il n en a pas : la seconde etiquette du
+///     meme lieu (ADR 3157), par laquelle il se cherche aussi (#3215)
 /// @param resteAFaire phrase de l'action à mener sur ce point, ou chaîne **vide** si le point est à
 ///     jour
 public record LigneSaison(
@@ -31,7 +33,8 @@ public record LigneSaison(
         CasePassage passage1,
         CasePassage passage2,
         List<CasePassage> horsProtocole,
-        String resteAFaire) {
+        String resteAFaire,
+        String nomSite) {
 
     public LigneSaison {
         horsProtocole = List.copyOf(horsProtocole);

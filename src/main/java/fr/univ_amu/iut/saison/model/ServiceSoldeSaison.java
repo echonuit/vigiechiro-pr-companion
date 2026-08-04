@@ -190,7 +190,15 @@ public class ServiceSoldeSaison {
         CasePassage passage1 = nuit1.opportuniste() ? CasePassage.absente() : nuit1;
         CasePassage passage2 = nuit2.opportuniste() ? CasePassage.absente() : nuit2;
         String reste = resteAFaire(passage1, passage2, annee, aujourdhui);
-        return new LigneSaison(site.numeroCarre(), point.code(), point.id(), passage1, passage2, horsProtocole, reste);
+        return new LigneSaison(
+                site.numeroCarre(),
+                point.code(),
+                point.id(),
+                passage1,
+                passage2,
+                horsProtocole,
+                reste,
+                site.nomConvivial());
     }
 
     private CasePassage casePour(Long idPoint, int annee, int numero, Map<Long, String> nomsCampagnes) {
