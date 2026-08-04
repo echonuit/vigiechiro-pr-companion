@@ -256,6 +256,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private TableColumn<LigneObservationAudio, String> colPoint;
 
+    /// Commune du point d'écoute (#3164) : contexte, donc masquée sur un passage unique.
+    @FXML
+    private TableColumn<LigneObservationAudio, String> colCommune;
+
     @FXML
     private TableColumn<LigneObservationAudio, String> colDate;
 
@@ -404,6 +408,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 colPassage,
                 colCarre,
                 colPoint,
+                colCommune,
                 colDate,
                 colHeure,
                 colStatut,
@@ -469,7 +474,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 appuis.depotVues(),
                 FEATURE,
                 marqueurEnjeu,
-                this::colonnesTableAudio);
+                () -> ColonnesAudio.pourLeSelecteur(colonnes, colFme, colFreqTerminale));
 
         zonesStatut.bind(Bindings.createObjectBinding(this::zonesStatutCourantes, viewModel.comptageProperty()));
 
@@ -537,7 +542,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         GestionnaireColonnes.installerEtPersister(
                 tableObservations,
                 menuActions,
-                colonnesTableAudio(),
+                ColonnesAudio.pourLeSelecteur(colonnes, colFme, colFreqTerminale),
                 appuis.depotColonnes(),
                 FEATURE,
                 "principale",
@@ -548,34 +553,6 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 actionsMenu.menuCopier(tableObservations));
 
         occupation = new IndicateurOccupation(hoteOccupation, appuis.executeur());
-    }
-
-    /// Colonnes de la table audio proposées au sélecteur (#916), partagées entre le câblage `installer` et la
-    /// capture dans les vues mémorisées (#994). « Proposition Tadarida », colonne d'identité, reste toujours
-    /// affichée (verrouillée) mais déplaçable.
-    private List<GestionnaireColonnes.Colonne> colonnesTableAudio() {
-        return List.of(
-                new GestionnaireColonnes.Colonne(colTadarida, "Proposition Tadarida", true),
-                new GestionnaireColonnes.Colonne(colProba, "Proba.", false),
-                new GestionnaireColonnes.Colonne(colFrequence, "Fréquence", false),
-                new GestionnaireColonnes.Colonne(colFme, "FME", false),
-                new GestionnaireColonnes.Colonne(colFreqTerminale, "Fréq. terminale", false),
-                new GestionnaireColonnes.Colonne(colDebut, "Début", false),
-                new GestionnaireColonnes.Colonne(colDuree, "Durée", false),
-                new GestionnaireColonnes.Colonne(colObservateur, "Votre taxon", false),
-                new GestionnaireColonnes.Colonne(colCertitude, "Certitude", false),
-                new GestionnaireColonnes.Colonne(colFichier, "Fichier", false),
-                new GestionnaireColonnes.Colonne(colPassage, "Passage", false),
-                new GestionnaireColonnes.Colonne(colCarre, "Carré", false),
-                new GestionnaireColonnes.Colonne(colPoint, "Point", false),
-                new GestionnaireColonnes.Colonne(colDate, "Date", false),
-                new GestionnaireColonnes.Colonne(colHeure, "Heure", false),
-                new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
-                new GestionnaireColonnes.Colonne(colReference, "Référence", false),
-                new GestionnaireColonnes.Colonne(colCommentaire, "Commentaire", false),
-                new GestionnaireColonnes.Colonne(colValidateur, "Avis du validateur", false),
-                new GestionnaireColonnes.Colonne(colFil, "Discussion", false),
-                new GestionnaireColonnes.Colonne(colEnjeu, "Espèce à enjeu", false));
     }
 
     /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue à

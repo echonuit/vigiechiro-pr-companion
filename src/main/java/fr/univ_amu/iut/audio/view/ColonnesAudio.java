@@ -4,6 +4,7 @@ import fr.univ_amu.iut.audio.viewmodel.ComparateursAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatAvisValidateur;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,6 +37,7 @@ final class ColonnesAudio {
             TableColumn<LigneObservationAudio, String> passage,
             TableColumn<LigneObservationAudio, String> carre,
             TableColumn<LigneObservationAudio, String> point,
+            TableColumn<LigneObservationAudio, String> commune,
             TableColumn<LigneObservationAudio, String> date,
             TableColumn<LigneObservationAudio, LocalDateTime> heure,
             TableColumn<LigneObservationAudio, String> statut,
@@ -54,6 +56,9 @@ final class ColonnesAudio {
         col.passage().setVisible(!passageUnique);
         col.carre().setVisible(!passageUnique);
         col.point().setVisible(!passageUnique);
+        // La commune est du contexte au même titre (#3164) : sur un passage unique, toutes les
+        // lignes partagent celle de son point, et la colonne ne dirait rien de plus que l'en-tête.
+        col.commune().setVisible(!passageUnique);
         col.date().setVisible(!passageUnique);
     }
 
@@ -105,6 +110,12 @@ final class ColonnesAudio {
         col.point()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.ouTiret(c.getValue().codePoint())));
+        // Le tiret, et non la cellule vide de Carte & passages : c'est la convention de CETTE
+        // table, où toutes les colonnes de contexte marquent l'absence de la même façon. Une
+        // commune non résolue est un état normal (`point_commune` est une table latérale, ADR 2791).
+        col.commune()
+                .setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                        FormatLigneAudio.ouTiret(c.getValue().commune())));
         col.date()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.ouTiret(c.getValue().dateEnregistrement())));
@@ -135,5 +146,43 @@ final class ColonnesAudio {
         // un id stable pour les retrouver, cellules dédiées (icône + infobulle), et non triables.
         CellulesAudio.configurerIndicateurs(
                 col.reference(), col.commentaire(), col.fil(), col.enjeu(), aEnjeu, enregistrerCommentaire);
+    }
+
+    /// Colonnes de la table proposées au **sélecteur** (#916), partagées entre le câblage et la
+    /// capture dans les vues mémorisées (#994). « Proposition Tadarida », colonne d'identité, reste
+    /// toujours affichée (verrouillée) mais déplaçable.
+    ///
+    /// Ici plutôt que dans le contrôleur : c'est une **description des colonnes**, comme le reste de
+    /// cette classe, et l'y laisser repassait `SonsValidationController` au-dessus du plafond de God
+    /// class (#3164).
+    /// @param fme et `freqTerminale` : les deux **métriques acoustiques**, qui ne sont pas dans
+    ///     [Colonnes] parce qu'elles sont pilotées par [MetriquesAcoustiquesAudio] et non câblées ici
+    static List<GestionnaireColonnes.Colonne> pourLeSelecteur(
+            Colonnes col,
+            TableColumn<LigneObservationAudio, String> fme,
+            TableColumn<LigneObservationAudio, String> freqTerminale) {
+        return List.of(
+                new GestionnaireColonnes.Colonne(col.tadarida(), "Proposition Tadarida", true),
+                new GestionnaireColonnes.Colonne(col.proba(), "Proba.", false),
+                new GestionnaireColonnes.Colonne(col.frequence(), "Fréquence", false),
+                new GestionnaireColonnes.Colonne(fme, "FME", false),
+                new GestionnaireColonnes.Colonne(freqTerminale, "Fréq. terminale", false),
+                new GestionnaireColonnes.Colonne(col.debut(), "Début", false),
+                new GestionnaireColonnes.Colonne(col.duree(), "Durée", false),
+                new GestionnaireColonnes.Colonne(col.observateur(), "Votre taxon", false),
+                new GestionnaireColonnes.Colonne(col.certitude(), "Certitude", false),
+                new GestionnaireColonnes.Colonne(col.fichier(), "Fichier", false),
+                new GestionnaireColonnes.Colonne(col.passage(), "Passage", false),
+                new GestionnaireColonnes.Colonne(col.carre(), "Carré", false),
+                new GestionnaireColonnes.Colonne(col.point(), "Point", false),
+                new GestionnaireColonnes.Colonne(col.commune(), "Commune", false),
+                new GestionnaireColonnes.Colonne(col.date(), "Date", false),
+                new GestionnaireColonnes.Colonne(col.heure(), "Heure", false),
+                new GestionnaireColonnes.Colonne(col.statut(), "Statut", false),
+                new GestionnaireColonnes.Colonne(col.reference(), "Référence", false),
+                new GestionnaireColonnes.Colonne(col.commentaire(), "Commentaire", false),
+                new GestionnaireColonnes.Colonne(col.validateur(), "Avis du validateur", false),
+                new GestionnaireColonnes.Colonne(col.fil(), "Discussion", false),
+                new GestionnaireColonnes.Colonne(col.enjeu(), "Espèce à enjeu", false));
     }
 }
