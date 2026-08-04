@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.169.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.168.0...v2.169.0) (2026-08-04)
+
+
+### Features
+
+* **analyse:** offrir le point d'écoute au critère Lieu ([#3206](https://github.com/echonuit/vigiechiro-pr-companion/issues/3206)) ([f759802](https://github.com/echonuit/vigiechiro-pr-companion/commit/f75980218d8aaafa66bcbc76e6c6e3e8d1f9b593)), closes [#2992](https://github.com/echonuit/vigiechiro-pr-companion/issues/2992) [#3161](https://github.com/echonuit/vigiechiro-pr-companion/issues/3161)
+
 # [2.168.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.167.0...v2.168.0) (2026-08-04)
 
 
