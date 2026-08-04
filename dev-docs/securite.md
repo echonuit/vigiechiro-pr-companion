@@ -122,7 +122,7 @@ un confort, jamais un geste métier), sauf l'API VigieChiro qui porte le cœur d
 | Hôte | Usage | Authentifié |
 |---|---|---|
 | API VigieChiro (Eve) | sites, participations, résultats, dépôt d'une nuit | token de session |
-| URLs S3 pré-signées | téléchargement / téléversement des fichiers son | signature dans l'URL |
+| `*.s3.amazonaws.com` (URLs pré-signées) | téléchargement / téléversement des fichiers son | signature dans l'URL |
 | `archive-api.open-meteo.com` | pré-remplissage météo d'un passage | non |
 | `api.gbif.org` | clé d'usage des fiches d'espèces | non |
 | `geo.api.gouv.fr` | commune d'un point d'écoute depuis son GPS (#2791, ADR 2791) | non |
@@ -131,6 +131,35 @@ un confort, jamais un geste métier), sauf l'API VigieChiro qui porte le cœur d
 
 Hors ligne, l'application reste pleinement utilisable : ces enrichissements se taisent, et la
 commune des points se comble plus tard (`rattraper-communes`, ou les déclencheurs de l'IHM).
+
+### Les URL pré-signées sont vérifiées avant d'être suivies
+
+Une URL pré-signée est le seul endroit où **le serveur décide où partent les données** : c'est elle
+qu'on télécharge, et c'est vers elle que montent les enregistrements d'une nuit. Elle partait telle
+quelle dans `URI.create` (#2734) : une API compromise ou mal configurée pouvait donc les envoyer
+ailleurs, éventuellement en clair.
+
+`commun.api.UrlSigneeAdmise` la confronte à deux règles **avant** d'ouvrir la moindre connexion :
+
+- **`https` obligatoire**, sans échappatoire. Le serveur code le schéma en dur
+  (`vigiechiro-api/vigiechiro/resources/fichiers.py:188`) : une URL en clair ne vient pas du chemin
+  nominal.
+- **hôte admis** : `s3.amazonaws.com` ou l'un de ses sous-domaines. La comparaison exige le **point de
+  séparation** : `bucket.s3.amazonaws.com` passe, `s3.amazonaws.com.pirate.net` non, alors qu'un
+  `endsWith` naïf l'aurait admis.
+
+Le refus n'est pas réessayé (`ReponseApi.Refuse` hors 429/5xx) : insister ne rendra pas une URL
+inattendue acceptable.
+
+**L'allowlist reste visible et ouvrable.** Le serveur sait renvoyer autre chose : quand
+`DEV_FAKE_S3_URL` est configuré (`fichiers.py:125`), l'URL signée devient cette valeur suivie du nom
+d'objet. Une liste figée rendrait l'application inutilisable contre une instance de développement.
+D'où la propriété système `vigiechiro.s3.hotes`, qui **remplace** la liste, et un message de refus qui
+nomme l'hôte observé **et** la propriété : un changement d'hébergement doit être une ligne à ajouter,
+pas un mur.
+
+Une **sonde live** (`ContratApiVigieChiroLiveTest`, hors CI) confronte l'allowlist à l'URL que la
+plateforme sert vraiment : si l'hébergement change, elle rougit là plutôt que chez un utilisateur.
 
 ## Chaîne d'approvisionnement
 

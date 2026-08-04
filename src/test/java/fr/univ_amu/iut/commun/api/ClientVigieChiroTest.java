@@ -107,7 +107,24 @@ class ClientVigieChiroTest {
     void upload_s3_hors_ligne_est_false() {
         ClientVigieChiro client = clientHorsLigne("http://localhost:1/api/v1", TOKEN_ABC);
 
-        assertThat(client.televerserVersS3("http://localhost:1/s3/signe", new byte[] {1, 2, 3}, "audio/x-wav"))
+        // L'URL doit franchir le garde de #2734, sinon ce test rendrait « false » pour un refus d'hôte
+        // et non pour la panne réseau qu'il prétend éprouver.
+        System.setProperty(UrlSigneeAdmise.PROPRIETE_HOTES, "localhost");
+        try {
+            assertThat(client.televerserVersS3("https://localhost:1/s3/signe", new byte[] {1, 2, 3}, "audio/x-wav"))
+                    .isFalse();
+        } finally {
+            System.clearProperty(UrlSigneeAdmise.PROPRIETE_HOTES);
+        }
+    }
+
+    @Test
+    @DisplayName("#2734 : une URL de stockage en clair fait échouer le téléversement sans appel")
+    void upload_s3_en_clair_refuse() {
+        ClientVigieChiro client = clientHorsLigne("https://api.exemple/api/v1", TOKEN_ABC);
+
+        assertThat(client.televerserVersS3("http://ailleurs.example/s3/signe", new byte[] {1, 2, 3}, "audio/x-wav"))
+                .as("les octets d'une nuit ne partent pas vers un hôte inattendu")
                 .isFalse();
     }
 
@@ -163,13 +180,14 @@ class ClientVigieChiroTest {
         Files.write(fichier, new byte[] {1, 2, 3, 4, 5, 6, 7}); // 7 octets, chunk 3 → 3 parties (3+3+1)
 
         AtomicInteger putsS3 = new AtomicInteger();
-        HttpResponse<Object> urlPartie = reponse(200, "{\"s3_signed_url\": \"http://s3.exemple/part\"}", Map.of());
+        HttpResponse<Object> urlPartie = reponse(
+                200, "{\"s3_signed_url\": \"https://vigiechiro.s3.amazonaws.com/part?Signature=abc\"}", Map.of());
         HttpResponse<Object> s3ok = reponse(200, "", Map.of("ETag", List.of("\"etag-x\"")));
         HttpResponse<Object> finale = reponse(200, "{}", Map.of());
         HttpClient http = mock(HttpClient.class);
         when(http.send(any(), any())).thenAnswer(invocation -> {
             HttpRequest requete = invocation.getArgument(0);
-            if ("s3.exemple".equals(requete.uri().getHost())) {
+            if ("vigiechiro.s3.amazonaws.com".equals(requete.uri().getHost())) {
                 putsS3.incrementAndGet();
                 return s3ok;
             }
@@ -191,13 +209,14 @@ class ClientVigieChiroTest {
         Files.write(fichier, new byte[] {1, 2, 3, 4}); // 2 parties de 3+1, la 1re échoue
 
         AtomicInteger finalisations = new AtomicInteger();
-        HttpResponse<Object> urlPartie = reponse(200, "{\"s3_signed_url\": \"http://s3.exemple/part\"}", Map.of());
+        HttpResponse<Object> urlPartie = reponse(
+                200, "{\"s3_signed_url\": \"https://vigiechiro.s3.amazonaws.com/part?Signature=abc\"}", Map.of());
         HttpResponse<Object> s3refus = reponse(403, "", Map.of()); // partie refusée : 4xx, non rejouable
         HttpResponse<Object> finale = reponse(200, "{}", Map.of());
         HttpClient http = mock(HttpClient.class);
         when(http.send(any(), any())).thenAnswer(invocation -> {
             HttpRequest requete = invocation.getArgument(0);
-            if ("s3.exemple".equals(requete.uri().getHost())) {
+            if ("vigiechiro.s3.amazonaws.com".equals(requete.uri().getHost())) {
                 return s3refus;
             }
             if (requete.uri().getPath().endsWith("/multipart")) {
