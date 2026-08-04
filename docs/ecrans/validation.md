@@ -36,7 +36,7 @@ Les critères disponibles :
 | **Statut** | À revoir / Validée / Corrigée | À revoir (le plus utile pour la revue) |
 | **Taxon parent** | une catégorie taxonomique présente (Chiroptères, Oiseaux, Orthoptères…) | **Chiroptères** s'il est présent : « chauves-souris uniquement », qui écarte bruit, oiseaux et orthoptères |
 | **Espèce** | une espèce précise (taxon retenu) | aucune tant que vous n'en choisissez pas une |
-| **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés, points, sites présents dans la table | aucun tant que vous ne cochez rien ; cocher plusieurs lieux les cumule |
+| **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés et points présents dans la table, le carré portant son nom quand vous lui en avez donné un | aucun tant que vous ne cochez rien ; cocher plusieurs lieux les cumule |
 | **Références** | seulement les sons marqués « référence » | (puce booléenne : sa présence suffit) |
 | **Douteux** | seulement les observations que vous avez marquées « douteuses » | (puce booléenne : sa présence suffit) |
 | **Non identifiés** | seulement les séquences **sans proposition Tadarida** : présentes sur le disque, absentes du CSV, à identifier à la main | (puce booléenne : sa présence suffit) |
@@ -153,7 +153,12 @@ Sa liste est **groupée par nature de lieu**, et chaque point y paraît **préc�
 pas un détail d'affichage : un code de point n'est unique qu'à l'intérieur de son site, si bien que
 plusieurs carrés portent un « A1 ». Cocher « 640380 · A1 » ne retient donc que ce point-là.
 
-![La liste ouverte de la puce « Lieu » : quatre groupes nommés (Communes, Carrés, Points, Sites), le point paraissant sous la forme « 640380 · A1 ».](../assets/captures/apercu-liste-lieu.png)
+Un **carré nommé** paraît de la même façon sous ses deux étiquettes, « 640380 · Vallon ». Le numéro et
+le nom que vous lui avez donné désignent le même lieu : les cocher l'un ou l'autre reviendrait au même,
+et la liste ne vous fait donc plus choisir entre deux entrées identiques. Un carré que vous n'avez pas
+nommé garde son numéro seul.
+
+![La liste ouverte de la puce « Lieu » : trois groupes nommés (Communes, Carrés, Points), le carré paraissant sous la forme « 640380 · Vallon » et le point sous la forme « 640380 · A1 ».](../assets/captures/apercu-liste-lieu.png)
 
 ### Vues sauvegardées
 

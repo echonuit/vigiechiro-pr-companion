@@ -82,7 +82,11 @@ regardez**, chacun sous son intitulé. Cocher plusieurs valeurs les cumule : deu
 montrent les deux. Un point y paraît toujours **précédé de son carré** (« 640380 · Z1 »), parce qu'un
 même code de point se retrouve sur presque tous les carrés et ne désignerait rien de précis tout seul.
 
-![La liste ouverte de la puce « Lieu » : trois groupes nommés (Communes, Carrés, Points), le point paraissant sous la forme « 640380 · A1 ».](../assets/captures/apercu-activite-lieu.png)
+Un **carré nommé** porte de même ses deux étiquettes, « 640380 · Bois du bourg » : le numéro et le nom
+que vous lui avez donné désignent le même lieu, et la liste ne vous fait pas choisir entre deux entrées
+identiques. Un carré sans nom garde son numéro seul.
+
+![La liste ouverte de la puce « Lieu » : trois groupes nommés (Communes, Carrés, Points), le carré nommé paraissant sous la forme « 640380 · Bois du bourg » et le point sous la forme « 640380 · A1 ».](../assets/captures/apercu-activite-lieu.png)
 
 ![L'écran ouvert sur toutes les nuits : la courbe cumule les passages et l'aplat nocturne a disparu.](../assets/captures/apercu-activite-transverse.png)
 
@@ -109,4 +113,4 @@ Pour produire le même contenu **en tableau** plutôt qu'en image, la ligne de c
 
 Avec `--a-enjeu`, un fichier vide peut vouloir dire deux choses opposées : aucune espèce prioritaire dans ces nuits, ou **aucun référentiel chargé**. La commande le dit alors explicitement, pour que vous sachiez s'il faut lire le résultat ou réparer l'installation.
 
-Une différence assumée : le **point** n'y est pas filtrable. Un code de point se retrouve sur presque tous les carrés ; l'écran le montre précédé du sien, ce qu'une valeur d'option ne peut pas reproduire sans devenir pénible à écrire. `--lieu` porte donc la commune ou le carré.
+Une différence assumée : le **point** n'y est pas filtrable. Un code de point se retrouve sur presque tous les carrés, et `--lieu A1` ne désignerait donc rien de précis. `--lieu` porte la commune ou le carré, celui-ci par son numéro (`--lieu 640380`) comme par le nom que vous lui avez donné (`--lieu vallon`) : c'est le même lieu, et quand la commande refuse une valeur introuvable, elle nomme les carrés présents sous leurs deux étiquettes, telles que l'écran les montre.

@@ -105,9 +105,10 @@ Ces gains sont **secondaires** : ils enrichissent la validation sans en être un
 
 **Critères d'acceptation** :
 
-- [x] La vue « Sons & validation » offre un critère **« Lieu »** (commune, carré, point, site présents
+- [x] La vue « Sons & validation » offre un critère **« Lieu »** (commune, carré et point présents
       dans le sous-ensemble chargé) qui se combine avec le critère **Espèce**, et sa recherche texte
-      couvre ces mêmes champs.
+      couvre ces mêmes champs. Le carré y porte son **nom convivial** quand il en a un : les deux
+      étiquettes désignent le même lieu et tiennent dans une seule entrée (#3157).
 - [x] La **commune** d'un point est dérivée de ses coordonnées GPS et mémorisée
       ([C3](../Modèle%20conceptuel/C3%20-%20Point%20d%27écoute.md)) : « Aix-en-Provence » est trouvable
       même si le site porte un autre nom.

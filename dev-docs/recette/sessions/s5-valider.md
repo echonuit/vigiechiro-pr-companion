@@ -37,7 +37,9 @@ Consignées lors de la clôture du lot E (#2796), CLI sur machine de développem
 **Étape 1 · Isoler le sous-ensemble (vue audio)**
 
 1. Depuis « Espèces & observations », un clic sur l'espèce ouvre la vue audio sur elle (toutes nuits).
-2. La puce « Lieu » liste communes, carrés, points et sites réellement présents, dans cet ordre.
+2. La puce « Lieu » liste communes, carrés et points réellement présents, dans cet ordre ; un carré
+   nommé paraît sous ses deux étiquettes, « 640380 · Vallon », et un carré sans nom sous son numéro
+   seul.
 3. Cocher une commune restreint la table ; la barre de statut suit le sous-ensemble affiché.
 
 **Étape 2 · Exporter (menu ☰)**
