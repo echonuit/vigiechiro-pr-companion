@@ -119,7 +119,7 @@ class CliAuditTest {
                 .as("le chevauchement de département est un cas NORMAL en bord de carré : faire "
                         + "rendre 1 casserait tous les scripts qui appellent cette commande")
                 .isEqualTo(Cli.CODE_SUCCES);
-        assertThat(texteSortie()).contains("DEPARTEMENT_DIVERGENT").contains("Aix-en-Provence");
+        assertThat(texteSortie()).contains("DEPARTEMENT_DIVERGENT").contains("Départements 13 (commune) et 84 (carré)");
     }
 
     @Test

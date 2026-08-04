@@ -40,7 +40,7 @@ Le département d'un point se lit de **deux façons**, et elles ne viennent pas 
 
 Quand les deux ne concordent pas, l'audit le dit, en **Information** :
 
-> Le point A1 est en Aix-en-Provence (département 13), mais son carré 840962 porte le département 84.
+> Départements 13 (commune) et 84 (carré) : le point A1 est en Aix-en-Provence, son carré 840962 dit autre chose.
 
 !!! tip "Ce n'est pas forcément une erreur"
     Un carré fait **2 km de côté** et le carroyage national ignore les limites administratives : un

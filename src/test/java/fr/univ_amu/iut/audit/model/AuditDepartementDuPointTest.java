@@ -70,12 +70,11 @@ class AuditDepartementDuPointTest {
         assertThat(constat.categorie()).isEqualTo(CategorieConstat.DEPARTEMENT_DIVERGENT);
         assertThat(constat.cible()).isEqualTo("840962 / A1");
         assertThat(constat.detail())
-                .as("le détail doit dire QUELLE lecture donne QUEL département : sinon il faut rouvrir "
-                        + "deux écrans pour savoir quoi vérifier")
+                .as("les deux nombres ET leur source passent EN TÊTE : la colonne « Détail » tronque, et "
+                        + "ce constat est une comparaison - en montrer une moitié ne dit rien")
+                .startsWith("Départements 13 (commune) et 84 (carré) :")
                 .contains("Aix-en-Provence")
-                .contains("département 13")
-                .contains("carré 840962")
-                .contains("département 84");
+                .contains("840962");
     }
 
     @Test
