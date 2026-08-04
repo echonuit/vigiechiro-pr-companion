@@ -9,12 +9,15 @@ import fr.univ_amu.iut.cli.commande.CommandeRacine;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
+import fr.univ_amu.iut.commun.view.CritereFiltre;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.Normalizer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -651,8 +654,29 @@ class DocumentationAJourTest {
     private static final Pattern BALISE_INVENTAIRE = Pattern.compile("<!--inv:([a-z-]+)-->(\\d+)<!--/inv-->");
 
     /// Les clés d'inventaire connues (une par décompte que le code sait recalculer).
-    private static final Set<String> CLES_INVENTAIRE =
-            Set.of("ouvrir", "etats-workflow", "features", "cli", "workflows-ci", "migrations");
+    private static final Set<String> CLES_INVENTAIRE = Set.of(
+            "ouvrir",
+            "etats-workflow",
+            "features",
+            "cli",
+            "workflows-ci",
+            "migrations",
+            "criteres-validation",
+            "criteres-analyse",
+            "criteres-activite",
+            "criteres-multisite",
+            "criteres-audit");
+
+    /// Les catalogues de critères de filtre (#3105), par clé d'inventaire. Chaque écran à barre de
+    /// filtres ancre son décompte dans sa fiche : sans cela, un critère ajouté au code reste invisible
+    /// de la documentation, et c'est arrivé - « Douteux » et « Non identifiés » ont vécu deux paliers
+    /// sans être écrits nulle part.
+    private static final Map<String, String> CATALOGUES_CRITERES = Map.of(
+            "criteres-validation", "fr.univ_amu.iut.audio.view.CriteresAudio",
+            "criteres-analyse", "fr.univ_amu.iut.analyse.view.CriteresAnalyse",
+            "criteres-activite", "fr.univ_amu.iut.analyse.view.CriteresActivite",
+            "criteres-multisite", "fr.univ_amu.iut.multisite.view.CriteresMultisite",
+            "criteres-audit", "fr.univ_amu.iut.audit.view.CriteresAudit");
 
     /// Paquets de `fr.univ_amu.iut` qui **ne sont pas** des features métier (socle + surfaces transverses).
     private static final Set<String> PAQUETS_NON_FEATURE = Set.of("commun", "cli", "perf");
@@ -739,8 +763,34 @@ class DocumentationAJourTest {
                 (int) fichiersDe(
                         Path.of("src", "main", "resources", "db", "migration"),
                         nom -> nom.startsWith("V") && nom.endsWith(".sql"));
+            case String catalogue
+            when CATALOGUES_CRITERES.containsKey(catalogue) -> criteresDuCatalogue(CATALOGUES_CRITERES.get(catalogue));
             default -> throw new AssertionError("clé d'inventaire inconnue : " + cle);
         };
+    }
+
+    /// Les critères qu'un catalogue **offre** : ses fabriques qui rendent un `CritereFiltre`, comptées
+    /// par nom distinct.
+    ///
+    /// Compter les **noms** et non les méthodes est délibéré : plusieurs catalogues offrent des
+    /// surcharges du même critère (`groupe`, `heure`), qui restent une seule puce à l'écran. Compter les
+    /// méthodes annoncerait douze critères là où l'utilisateur en voit dix.
+    ///
+    /// La réflexion s'arrête au **type de retour** : elle n'invoque rien, donc elle ne réclame ni
+    /// toolkit JavaFX ni données. Une fabrique qui existerait sans être câblée ferait diverger ce
+    /// décompte - et ce serait une information utile, pas un faux positif : un critère qu'aucun écran
+    /// n'offre n'a pas à figurer dans une fiche.
+    private static int criteresDuCatalogue(String nomDeClasse) {
+        try {
+            Class<?> catalogue = Class.forName(nomDeClasse);
+            return (int) Arrays.stream(catalogue.getDeclaredMethods())
+                    .filter(methode -> CritereFiltre.class.equals(methode.getReturnType()))
+                    .map(Method::getName)
+                    .distinct()
+                    .count();
+        } catch (ClassNotFoundException introuvable) {
+            throw new AssertionError("catalogue de critères introuvable : " + nomDeClasse, introuvable);
+        }
     }
 
     /// Nombre de fichiers d'un dossier dont le nom satisfait le filtre.
