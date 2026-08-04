@@ -192,6 +192,17 @@ class ServiceMultisiteTest {
     }
 
     @Test
+    @DisplayName("#3175 : le nom convivial du site remonte dans la ligne, apparié à SON carré")
+    void nom_du_site_remonte() {
+        // Le nom convivial et le numéro de carré désignent le MÊME objet : `monitoring_site` porte les
+        // deux colonnes. Ce que ce test protège n'est pas la présence du champ mais son appariement :
+        // un nom pris sur le site voisin passerait toute autre vérification.
+        assertThat(service.listerPassages(ID_USER))
+                .extracting(LignePassage::numeroCarre, LignePassage::nomSite)
+                .containsOnly(tuple("640380", "Étang"), tuple("640381", "Forêt"));
+    }
+
+    @Test
     @DisplayName("#2355 : le nom de la campagne du passage remonte dans la ligne, vide pour les autres")
     void campagne_du_passage_remonte() {
         // Chaîne réelle : on crée une campagne et on y rattache la première nuit (640380 / A1 / 2025).

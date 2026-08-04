@@ -31,7 +31,8 @@ class CriteresMultisiteTest {
                 EtatAnalyse.SANS_OBJET,
                 null,
                 null,
-                "Aix-en-Provence");
+                "Aix-en-Provence",
+                null);
 
         assertThat(CriteresMultisite.rechercheTexte().test(ligne, "aix")).isTrue();
         assertThat(CriteresMultisite.rechercheTexte().test(ligne, "marseille")).isFalse();

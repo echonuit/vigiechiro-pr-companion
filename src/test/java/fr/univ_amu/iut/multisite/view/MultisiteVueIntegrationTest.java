@@ -99,7 +99,19 @@ class MultisiteVueIntegrationTest {
             EtatAnalyse analyse,
             String releveLe) {
         return new LignePassage(
-                id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE, verdict, analyse, releveLe, null, null);
+                id,
+                carre,
+                point,
+                annee,
+                numero,
+                date,
+                StatutWorkflow.DEPOSE,
+                verdict,
+                analyse,
+                releveLe,
+                null,
+                null,
+                null);
     }
 
     @SuppressWarnings("unchecked")
@@ -693,7 +705,8 @@ class MultisiteVueIntegrationTest {
                 EtatAnalyse.SANS_OBJET,
                 null,
                 null,
-                commune);
+                commune,
+                null);
     }
 
     /// Le `MenuButton` de l'unique puce posée : la puce est une `HBox` dont le second enfant est l'éditeur.

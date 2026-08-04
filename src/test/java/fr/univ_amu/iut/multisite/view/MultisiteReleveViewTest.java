@@ -71,6 +71,7 @@ class MultisiteReleveViewTest {
                 EtatAnalyse.SANS_OBJET,
                 null,
                 null,
+                null,
                 null);
     }
 
