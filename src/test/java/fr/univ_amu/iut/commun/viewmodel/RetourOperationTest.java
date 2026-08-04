@@ -206,4 +206,20 @@ class RetourOperationTest {
     private static ResteDeRestauration criteresInconnus(String... criteres) {
         return new ResteDeRestauration(List.of(), List.of(criteres));
     }
+
+    @Test
+    @DisplayName("#3095 : un choix devenu impossible dit le critère ET la valeur perdue")
+    void choix_remplace_nomme_le_critere_et_la_valeur() {
+        // Trouvé par PIT à la clôture de #3092 : ce message est affiché à l'utilisateur quand le
+        // cascadage retire de son menu la valeur qu'il avait choisie, et aucun test ne le couvrait.
+        // Sans les deux informations, la phrase n'apprend rien : « un choix est revenu par défaut »
+        // laisse chercher lequel, et pourquoi.
+        RetourOperation retour = RetourOperation.choixRemplace("Taxon parent", "Chiroptères");
+
+        assertThat(retour.texte()).contains("Taxon parent").contains("Chiroptères");
+        assertThat(retour.severite())
+                .as("c'est un avertissement : l'écran montre désormais plus large que ce que"
+                        + " l'utilisateur avait demandé")
+                .isEqualTo(Severite.AVERTISSEMENT);
+    }
 }
