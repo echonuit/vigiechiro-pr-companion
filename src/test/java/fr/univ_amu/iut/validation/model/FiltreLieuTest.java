@@ -117,6 +117,50 @@ class FiltreLieuTest {
     }
 
     @Test
+    @DisplayName("#3191 : une demande blanche ne dispense pas les autres de correspondre")
+    void une_demande_blanche_ne_dispense_pas_les_autres() {
+        // Le cas d'une boucle de script qui interpole une variable vide parmi d'autres valeurs, ce qui
+        // est l'usage même d'une option répétable. Sans le garde, la chaîne vide entre dans les
+        // demandes, « contient "" » est toujours vrai, et le refus promis par l'ADR 3082 n'a pas lieu.
+        assertThatThrownBy(() -> FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("", "Marseille")))
+                .as("« Marseille » reste introuvable, que la liste porte une valeur vide ou non")
+                .isInstanceOf(RegleMetierException.class);
+
+        assertThat(FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("")))
+                .as("une demande vide SEULE ne désigne rien : elle n'écarte rien, comme --lieu absent")
+                .containsExactly(AHETZE, VENELLES);
+    }
+
+    @Test
+    @DisplayName("#3191 : le refus cite plusieurs lieux au pluriel, et borne ce qu'il énumère")
+    void le_refus_cite_au_pluriel_et_borne_son_enumeration() {
+        assertThatThrownBy(() -> FiltreLieu.appliquer(List.of(AHETZE), List.of("Marseille", "Toulon")))
+                .as("deux valeurs demandées ne se citent pas comme une seule")
+                .hasMessageContaining("ces lieux (Marseille, Toulon)");
+
+        // Un refus qui déverserait deux cents communes ne se lirait pas : au-delà de douze, il tronque
+        // et annonce le total. C'est le seul endroit où l'utilisateur apprend qu'il n'a pas tout vu.
+        List<LigneObservationAudio> quinzeCarres = java.util.stream.IntStream.range(0, 15)
+                .mapToObj(rang -> ligne(rang, "Ahetze", "6403" + (10 + rang), "A1", null))
+                .map(LigneObservationAudio.class::cast)
+                .toList();
+
+        assertThatThrownBy(() -> FiltreLieu.appliquer(quinzeCarres, List.of("Marseille")))
+                .hasMessageContaining("… (16 en tout)");
+
+        // La borne EXACTE, sans quoi rien ne distingue « au-delà de douze » de « à partir de douze » :
+        // onze carrés et leur commune font douze lieux, qui doivent tous se lire.
+        List<LigneObservationAudio> douzeLieux = java.util.stream.IntStream.range(0, 11)
+                .mapToObj(rang -> ligne(rang, "Ahetze", "6403" + (10 + rang), "A1", null))
+                .map(LigneObservationAudio.class::cast)
+                .toList();
+
+        assertThatThrownBy(() -> FiltreLieu.appliquer(douzeLieux, List.of("Marseille")))
+                .as("douze lieux tiennent dans un refus : c'est treize qui tronque")
+                .hasMessageNotContaining("en tout");
+    }
+
+    @Test
     @DisplayName("Une commune non résolue ne devient pas un lieu vide, ni au filtre ni au refus")
     void une_commune_non_resolue_ne_devient_pas_un_lieu_vide() {
         // Cas réel, pas théorique : un point sans GPS n'a pas de commune (`point_commune` est une table
