@@ -143,6 +143,23 @@ importer_une_nuit_sur_a() {
   [[ "${output}" == *"130711"* ]]
 }
 
+@test "sauvegarder : le compte rendu dit ce que l'archive emporte (#3212)" {
+  importer_une_nuit_sur_a
+
+  # L'ADR 2736 a tranché de ne PAS chiffrer les sauvegardes. La contrepartie est que l'application
+  # annonce ce qu'elle écrit : sans cette phrase, l'utilisateur range en aveugle un fichier qui porte
+  # les localisations d'espèces protégées. Vérifié sur un vrai processus, pas seulement in-process.
+  run cli_sur "${MACHINE_A}" sauvegarder --dossier "${SAUVEGARDES}"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"localisations"* ]]
+  [[ "${output}" == *"en clair"* ]]
+
+  run cli_sur "${MACHINE_A}" sauvegarder --complet --dossier "${SAUVEGARDES}"
+  [ "${status}" -eq 0 ]
+  # La complète emporte en plus l'audio : elle le dit.
+  [[ "${output}" == *"enregistrements"* ]]
+}
+
 @test "sauvegarde complète : le manifeste dit d'où venait chaque dossier (#2726)" {
   importer_une_nuit_sur_a
 
