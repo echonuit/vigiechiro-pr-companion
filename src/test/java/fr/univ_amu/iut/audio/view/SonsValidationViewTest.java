@@ -812,9 +812,9 @@ class SonsValidationViewTest {
             "Ordre par défaut des colonnes (contexte, fichier, identification, indicateurs) et indicateurs non triables")
     void ordre_par_defaut_et_indicateurs_non_triables(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
-        // Les 17 premières colonnes par en-tête ; les 3 indicateurs (icônes, sans texte) par leur id.
+        // Les 18 premières colonnes par en-tête ; les 3 indicateurs (icônes, sans texte) par leur id.
         assertThat(table.getColumns().stream()
-                        .limit(17)
+                        .limit(18)
                         .map(TableColumn::getText)
                         .toList())
                 .containsExactly(
@@ -823,6 +823,9 @@ class SonsValidationViewTest {
                         "Passage",
                         "Carré",
                         "Point",
+                        // Commune (#3164) : contexte, à côté du carré et du point qu'elle
+                        // complète - et masquée avec eux sur un passage unique.
+                        "Commune",
                         "Fichier",
                         "Proposition Tadarida",
                         "Proba.",
@@ -838,9 +841,9 @@ class SonsValidationViewTest {
                         "Début",
                         "Durée",
                         "Statut");
-        assertThat(table.getColumns().get(17).getId()).isEqualTo("colReference");
-        assertThat(table.getColumns().get(18).getId()).isEqualTo("colCommentaire");
-        assertThat(table.getColumns().get(19).getId()).isEqualTo("colFil");
+        assertThat(table.getColumns().get(18).getId()).isEqualTo("colReference");
+        assertThat(table.getColumns().get(19).getId()).isEqualTo("colCommentaire");
+        assertThat(table.getColumns().get(20).getId()).isEqualTo("colFil");
         // Colonnes-indicateurs : non triables (trier une icône est déroutant, cf. « colonne vide triable »).
         assertThat(colonneParId(robot, "colReference").isSortable()).isFalse();
         assertThat(colonneParId(robot, "colCommentaire").isSortable()).isFalse();

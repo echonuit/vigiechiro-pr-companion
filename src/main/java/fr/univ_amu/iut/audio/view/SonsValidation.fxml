@@ -168,6 +168,10 @@
           <TableColumn fx:id="colPassage" text="Passage" prefWidth="150.0"/>
           <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
           <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
+          <!-- Commune (#3164) : elle se coche dans la puce « Lieu » et sort au CSV depuis #2790,
+               sans qu'aucune colonne ne la montre. Colonne de CONTEXTE : masquée sur un passage
+               unique, où toutes les lignes partagent la même. -->
+          <TableColumn fx:id="colCommune" text="Commune" prefWidth="140.0"/>
           <TableColumn fx:id="colFichier" text="Fichier" prefWidth="200.0"/>
           <TableColumn fx:id="colTadarida" text="Proposition Tadarida" prefWidth="180.0"/>
           <TableColumn fx:id="colProba" text="Proba." prefWidth="70.0"/>

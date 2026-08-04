@@ -36,6 +36,7 @@ final class ColonnesAudio {
             TableColumn<LigneObservationAudio, String> passage,
             TableColumn<LigneObservationAudio, String> carre,
             TableColumn<LigneObservationAudio, String> point,
+            TableColumn<LigneObservationAudio, String> commune,
             TableColumn<LigneObservationAudio, String> date,
             TableColumn<LigneObservationAudio, LocalDateTime> heure,
             TableColumn<LigneObservationAudio, String> statut,
@@ -54,6 +55,9 @@ final class ColonnesAudio {
         col.passage().setVisible(!passageUnique);
         col.carre().setVisible(!passageUnique);
         col.point().setVisible(!passageUnique);
+        // La commune est du contexte au même titre (#3164) : sur un passage unique, toutes les
+        // lignes partagent celle de son point, et la colonne ne dirait rien de plus que l'en-tête.
+        col.commune().setVisible(!passageUnique);
         col.date().setVisible(!passageUnique);
     }
 
@@ -105,6 +109,12 @@ final class ColonnesAudio {
         col.point()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.ouTiret(c.getValue().codePoint())));
+        // Le tiret, et non la cellule vide de Carte & passages : c'est la convention de CETTE
+        // table, où toutes les colonnes de contexte marquent l'absence de la même façon. Une
+        // commune non résolue est un état normal (`point_commune` est une table latérale, ADR 2791).
+        col.commune()
+                .setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                        FormatLigneAudio.ouTiret(c.getValue().commune())));
         col.date()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.ouTiret(c.getValue().dateEnregistrement())));
