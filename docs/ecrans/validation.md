@@ -29,7 +29,7 @@ Une nuit d'enregistrement produit souvent des centaines d'observations : la **ba
   recherche ignore la casse et les accents ;
 - un bouton **« + Filtre »** ajoute un critère sous forme de **puce** ; on retire une puce par sa croix.
 
-Les critères disponibles :
+Les <!--inv:criteres-validation-->10<!--/inv--> critères disponibles :
 
 | Critère | Ce qu'il garde | Par défaut |
 |---|---|---|

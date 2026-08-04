@@ -47,9 +47,8 @@ C'est aussi l'état où l'on arrive en cliquant **« Voir sur la carte »** depu
 passage : le tableau se replie automatiquement pour centrer l'attention sur la carte.
 
 À **droite**, le **tableau** liste chaque passage (carré, point, année, numéro, date, **statut**,
-**verdict**, **analyse**, **campagne**). La barre du haut permet de **filtrer** (carré, statut, verdict,
-année, analyse, campagne) et de
-**réinitialiser** les filtres ; un menu **☰** à droite de la barre regroupe les actions secondaires
+**verdict**, **analyse**, **campagne**). La barre du haut porte <!--inv:criteres-multisite-->7<!--/inv--> critères
+(carré, lieu, statut, verdict, année, analyse, campagne) et permet de **tout effacer** ; un menu **☰** à droite de la barre regroupe les actions secondaires
 (**Vues** enregistrées et **export** de la sélection). On **trie** en cliquant l'en-tête d'une
 colonne (Année et N° de passage se trient numériquement), en plus du sélecteur d'ordres. Un
 **double-clic** sur une ligne ouvre l'écran du passage correspondant.

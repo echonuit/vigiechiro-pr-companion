@@ -23,8 +23,8 @@ L'écran réunit :
   un pas large lisse la forme générale ;
 - une **case par espèce** détectée, avec son total ; les **cinq plus contactées** sont cochées par
   défaut, au-delà le graphe devient illisible ;
-- une **barre de filtres** (lieu, nuit, taxon parent, nature de la nuit, recherche libre) :
-  filtrer re-trace ;
+- une **barre de filtres** portant <!--inv:criteres-activite-->5<!--/inv--> critères (lieu, nuit,
+  taxon parent, nature de la nuit, espèces à enjeu) plus la recherche libre : filtrer re-trace ;
 - des **onglets** qui séparent les chiroptères du reste : le détecteur ne repère pas que des
   chauves-souris, et « Autres » réunit orthoptères, micromammifères, oiseaux et le reste du
   référentiel. Vos propres vues s'enregistrent à côté, avec « + Vue ».
