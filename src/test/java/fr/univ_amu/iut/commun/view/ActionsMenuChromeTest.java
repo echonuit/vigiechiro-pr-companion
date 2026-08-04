@@ -41,9 +41,9 @@ class ActionsMenuChromeTest {
     private final OccupationChrome occupation =
             new OccupationChrome(new ExecuteurTacheSynchrone(), new NavigationViewModel());
 
-    /// Les trois dialogues d'une action de sauvegarde, remplacés d'un coup : le sélecteur désigne
-    /// `choix`, l'utilisateur accepte, le compte rendu est avalé. Sans cela, `executer()` ouvrirait un
-    /// sélecteur natif et figerait le test.
+    /// Les **quatre** dialogues d'une action de sauvegarde, remplacés d'un coup : la liste des
+    /// sauvegardes et le sélecteur désignent `choix`, l'utilisateur accepte, le compte rendu est avalé.
+    /// Sans cela, `executer()` ouvrirait une fenêtre ou un sélecteur natif et figerait le test.
     private void neutraliserDialogues(ActionsSauvegarde actions, Path choix) {
         when(sauvegarde.dossierParDefaut()).thenReturn(DOSSIER);
         actions.selecteur().definir(new SelecteurFichier() {
@@ -63,6 +63,8 @@ class ActionsMenuChromeTest {
                         "les entrées ☰ désignent un dossier ou une sauvegarde, elles n'enregistrent pas de fichier");
             }
         });
+        // Depuis #3197, la restauration commence par la liste inventoriée, pas par le sélecteur natif.
+        actions.choix().definir((titre, dossier, entrees, repli) -> Optional.of(choix));
         actions.confirmateur().definir(message -> true);
         actions.notificateur().definir((niveau, entete, message) -> {});
     }
