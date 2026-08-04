@@ -37,7 +37,7 @@ La barre du haut porte <!--inv:criteres-analyse-->5<!--/inv--> critères, plus u
 |---|---|
 | **Statut** | les observations selon leur état de revue (à revoir, validée, corrigée) |
 | **Taxon parent** | une catégorie taxonomique présente (Chiroptères, Oiseaux, Orthoptères…) |
-| **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés, points, sites |
+| **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés et points présents dans l'inventaire, le carré portant son nom quand vous lui en avez donné un |
 | **Nature de la nuit** | les nuits du protocole, ou les participations opportunistes |
 | **Espèces à enjeu** | seulement les espèces prioritaires du Plan National d'Actions Chiroptères |
 
