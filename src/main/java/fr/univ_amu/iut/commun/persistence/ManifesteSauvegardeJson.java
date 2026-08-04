@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.persistence;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import fr.univ_amu.iut.commun.model.EcritureAtomique;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -32,10 +33,10 @@ public final class ManifesteSauvegardeJson {
     /// Écrit le manifeste à la racine du dossier de sauvegarde.
     public static void ecrire(Path dossierSauvegarde, ManifesteSauvegarde manifeste) throws IOException {
         Objects.requireNonNull(manifeste, "manifeste");
-        Files.writeString(
-                dossierSauvegarde.resolve(ManifesteSauvegarde.NOM_FICHIER),
-                GSON.toJson(manifeste),
-                StandardCharsets.UTF_8);
+        // Écriture atomique (#2735, généralisée à la clôture du lot #2722) : la restauration complète
+        // confronte chaque dossier à ce que ce manifeste annonce contenir. Tronqué par une interruption,
+        // il ferait refuser une sauvegarde par ailleurs intacte.
+        EcritureAtomique.ecrire(dossierSauvegarde.resolve(ManifesteSauvegarde.NOM_FICHIER), GSON.toJson(manifeste));
     }
 
     /// Lit le manifeste d'un dossier de sauvegarde. [Optional] vide s'il n'y en a pas.

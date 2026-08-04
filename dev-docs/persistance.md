@@ -201,6 +201,11 @@ vit en base.
     traiter comme absent ferait silencieusement moins bien que promis, sur la seule sauvegarde dont
     on ait la preuve qu'elle a un problème.
 
+    C'est précisément pourquoi il s'écrit **d'un seul coup** (`EcritureAtomique`, généralisé à la
+    clôture du lot #2722) : une interruption pendant son écriture le laissait tronqué, et ce refus
+    explicite tombait alors sur une sauvegarde par ailleurs **intacte**. Un lecteur voit désormais
+    l'ancien manifeste ou le nouveau, jamais un JSON coupé.
+
 ## Une restauration complète est vérifiée, puis basculée
 
 `ServiceSauvegarde.restaurerComplet` s'appuie sur le manifeste pour tenir la promesse en entier

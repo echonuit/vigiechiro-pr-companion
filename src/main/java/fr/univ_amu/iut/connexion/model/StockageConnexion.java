@@ -5,7 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
-import fr.univ_amu.iut.commun.model.EcritureProtegee;
+import fr.univ_amu.iut.commun.model.EcritureAtomique;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import java.io.IOException;
@@ -68,7 +68,7 @@ public final class StockageConnexion implements FournisseurToken {
     /// Enregistre le `token` et l'identité `profil` (qui peut être `null` tant que `GET /moi` n'a pas
     /// répondu), horodatés au jour courant. Écrase toute connexion précédente.
     ///
-    /// L'écriture passe par [EcritureProtegee] (#2735) : le token n'atterrit **jamais** dans un fichier
+    /// L'écriture passe par [EcritureAtomique] (#2735) : le token n'atterrit **jamais** dans un fichier
     /// plus permissif que lui, et le remplacement est atomique. Écrire puis restreindre, comme faisait
     /// cette méthode, laissait le secret lisible par les autres comptes de la machine le temps d'un
     /// appel - à chaque création du fichier, donc à chaque reconnexion.
@@ -80,7 +80,7 @@ public final class StockageConnexion implements FournisseurToken {
                 profil == null ? null : profil.pseudo(),
                 profil == null ? null : profil.role());
         try {
-            EcritureProtegee.ecrire(fichier, GSON.toJson(session));
+            EcritureAtomique.ecrireSecret(fichier, GSON.toJson(session));
         } catch (IOException echec) {
             throw new UncheckedIOException("Impossible d'enregistrer la connexion : " + fichier, echec);
         }
