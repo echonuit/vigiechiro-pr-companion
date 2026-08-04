@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.analyse.model;
 
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.time.LocalDate;
@@ -40,8 +41,13 @@ public final class FiltresActivite {
     private FiltresActivite() {}
 
     /// Les dimensions de lieu **comparables en ligne de commande** : commune et carré, sans le point.
+    ///
+    /// Le carré est écrit comme l'écran l'affiche, « 640380 · Vallon » (#3157), pour que le refus de
+    /// `--lieu` nomme les lieux tels qu'on les y voit. La correspondance restant partielle,
+    /// `--lieu 640380` et `--lieu vallon` retiennent l'un et l'autre ce carré.
     public static List<String> dimensionsLieu(ContactHoraire contact) {
-        return java.util.stream.Stream.of(contact.commune(), contact.numeroCarre())
+        return java.util.stream.Stream.of(
+                        contact.commune(), LieuQualifie.qualifier(contact.numeroCarre(), contact.nomSite()))
                 .filter(valeur -> valeur != null && !valeur.isBlank())
                 .toList();
     }

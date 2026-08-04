@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.validation.model;
 
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.util.LinkedHashSet;
@@ -12,17 +13,23 @@ import java.util.stream.Stream;
 /// Pendant CLI de la puce « Lieu » de l'écran, avec **trois écarts assumés** que la conception a
 /// arbitrés parce qu'ils ne se déduisent pas de l'IHM.
 ///
-/// ## Le point n'en fait pas partie
+/// ## Deux niveaux comparés, pas trois
 ///
-/// La puce couvre commune, carré, **point** et site. Ici, le point est écarté : le schéma pose
-/// `UNIQUE(site_id, code)`, donc un code seul (« A1 », « Z1 ») désigne autant de lieux qu'il y a de
-/// carrés. L'écran s'en tire en l'affichant **qualifié** (« 640380 · A1 », #2992), ce qui suppose une
-/// liste sous les yeux ; une ligne de commande n'en a pas, et `--lieu A1` rouvrirait le défaut sans que
-/// rien ne le montre. Reproduire la forme qualifiée imposerait par ailleurs un **point médian dans une
-/// valeur d'option**, à échapper dans chaque script.
+/// Le domaine a **trois** niveaux : la commune, le carré (dont le nom convivial n'est que la seconde
+/// étiquette, #3157) et le point. Ici, le **point** est écarté : le schéma pose `UNIQUE(site_id, code)`,
+/// donc un code seul (« A1 », « Z1 ») désigne autant de lieux qu'il y a de carrés. L'écran s'en tire en
+/// l'affichant **qualifié** (« 640380 · A1 », #2992), ce qui suppose une liste sous les yeux ; une
+/// ligne de commande n'en a pas, et `--lieu A1` rouvrirait le défaut sans que rien ne le montre.
 ///
 /// Le point restera atteignable par un croisement `--carre` / `--point`, sur le modèle de l'écran
 /// Activité où deux critères en **conjonction** désignent un point précis.
+///
+/// ## Le carré se compare qualifié, mais se tape comme on veut
+///
+/// Ce que le **refus** nomme doit se recopier tel quel dans la commande suivante ; il liste donc les
+/// carrés comme l'écran les montre, « 640380 · Vallon » (#3159). Personne n'est pour autant obligé de
+/// taper un point médian : la correspondance étant partielle, `--lieu 640380` et `--lieu vallon`
+/// retiennent ce même carré, comme avant.
 ///
 /// ## La correspondance est partielle
 ///
@@ -90,9 +97,14 @@ public final class FiltreLieu {
                 .anyMatch(valeur -> demandes.stream().anyMatch(valeur::contains));
     }
 
-    /// Les dimensions comparables d'une ligne : commune, carré, site. **Sans le point**, cf. l'en-tête.
+    /// Les dimensions comparables d'une ligne : la **commune** et le **carré**, celui-ci écrit comme
+    /// l'écran l'affiche, « 640380 · Vallon » (#3157). **Sans le point**, cf. l'en-tête.
+    ///
+    /// Le nom du site n'est pas une dimension de plus : c'est l'autre étiquette du carré, et les deux
+    /// tiennent dans une valeur. La correspondance étant partielle, `--lieu 640380` et `--lieu vallon`
+    /// continuent l'un et l'autre de retenir ce carré ; ce qui change est ce que le **refus** nomme.
     private static List<String> dimensions(LigneObservationAudio ligne) {
-        return Stream.of(ligne.commune(), ligne.numeroCarre(), ligne.nomSite())
+        return Stream.of(ligne.commune(), LieuQualifie.qualifier(ligne.numeroCarre(), ligne.nomSite()))
                 .filter(valeur -> valeur != null && !valeur.isBlank())
                 .toList();
     }

@@ -110,7 +110,25 @@ class FiltreLieuTest {
                 // Le refus doit DIRE ce qui existe : sans cela il laisse l'utilisateur deviner sa faute
                 // de frappe, et un ensemble vide rendu en silence serait pire encore.
                 .hasMessageContaining("Ahetze")
-                .hasMessageContaining("870150")
-                .hasMessageContaining("Le pré");
+                // Le carré est nommé D'UN SEUL TENANT, comme l'écran l'affiche (#3159) : ce que le refus
+                // liste doit se recopier tel quel dans la commande suivante. Deux entrées séparées,
+                // « 870150 » puis « Le pré », donneraient à croire à deux lieux là où il n'y en a qu'un.
+                .hasMessageContaining("870150 · Le pré");
+    }
+
+    @Test
+    @DisplayName("#3159 : le carré se tape par son numéro, par son nom, ou tel que le refus l'écrit")
+    void le_carre_se_tape_par_l_une_ou_l_autre_etiquette() {
+        // La contrepartie de la ligne ci-dessus : nommer les lieux qualifiés ne doit obliger personne à
+        // taper un point médian. La correspondance reste partielle, comme depuis #2971.
+        assertThat(FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("640380")))
+                .as("le numéro officiel, ce que tapent les scripts")
+                .containsExactly(AHETZE);
+        assertThat(FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("tuiliere")))
+                .as("le nom convivial, sans accent ni casse : c'est ainsi qu'on retient son propre carré")
+                .containsExactly(AHETZE);
+        assertThat(FiltreLieu.appliquer(List.of(AHETZE, VENELLES), List.of("640380 · Étang de la Tuilière")))
+                .as("et la forme qualifiée, recopiée depuis un refus ou depuis l'écran")
+                .containsExactly(AHETZE);
     }
 }
