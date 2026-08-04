@@ -144,6 +144,37 @@ refus qui nomme la limite atteinte et l'échappatoire.
 ⚠️ Ces bornes protègent l'**import par l'IHM**, seul chemin qui accepte aujourd'hui une archive : la
 CLI ne prend qu'un dossier.
 
+### Le même raisonnement, en mémoire (#3222)
+
+Ce que #2732 a posé sur le disque, #3222 le pose sur la **mémoire** : six lectures chargeaient une
+entrée externe **entière** avant de savoir si elle était exploitable - trois clients HTTP (plateforme
+VigieChiro, GBIF, API Géo) et trois lecteurs de fichiers de la carte (journal du capteur par ses deux
+portes, relevé climatique).
+
+Même paire de gardes, pour la même raison : **ce qui annonce sa taille est refusé avant d'être lu**
+(`Files.size` pour un fichier, `Content-Length` pour une réponse), **ce qui ne l'annonce pas est compté
+pendant la lecture** (une réponse en encodage par blocs n'a pas de `Content-Length`, et un plafond
+vérifié après avoir tout chargé ne protège de rien : la mémoire est déjà prise).
+
+Les plafonds viennent d'une **mesure sur la carte réelle** `Car640380-2026-Pass2-Z1`, pas d'une
+intuition - c'est la leçon du plafond de taux de compression retiré ci-dessus :
+
+| Ce qui est lu | Mesuré sur une nuit réelle | Plafond | Marge |
+|---|---|---|---|
+| Fichier de la carte (journal, relevé) | 1 862 o (22 lignes) | **32 Mio** (`vigiechiro.import.journal.max-octets`) | 17 000 fois une nuit, 70 fois une saison de dix ans |
+| Corps d'une réponse HTTP | 446 Kio (CSV d'observations, 4 032 lignes) | **64 Mio** (`vigiechiro.reseau.corps.max-octets`) | 147 fois le plus gros corps mesuré |
+
+!!! note "Le journal de saison n'existe pas"
+    La crainte qui motivait l'issue était une carte laissée en place toute une saison. La mesure l'a
+    corrigée : le journal consigne des **événements de session** (démarrage, mode, batterie, veille),
+    pas un enregistrement par fichier - 22 lignes pour une nuit qui a produit 4 031 observations. Une
+    saison de 250 nuits pèse ~465 Ko, dix ans ~4,7 Mo.
+
+Côté réseau, un dépassement devient un `ReponseApi.Refuse`, **jamais** un `Injoignable` : un
+`Injoignable` serait rejoué par la politique de reprise (#2354), et réémettre une requête dont la
+réponse est trop grosse la redonne trop grosse. Détail par [ADR
+3222](decisions/3222-une-entree-externe-se-lit-sous-plafond.md).
+
 ### Hôtes sortants
 
 Tous les appels réseau de l'application, exhaustivement - chacun **best-effort** (une panne dégrade
