@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.162.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.162.1...v2.162.2) (2026-08-04)
+
+
+### Bug Fixes
+
+* **commun:** une valeur de lieu mémorisée avant qualification retrouve son entrée ([#3172](https://github.com/echonuit/vigiechiro-pr-companion/issues/3172)) ([11e8e99](https://github.com/echonuit/vigiechiro-pr-companion/commit/11e8e99f75d21f044e9675999768da906bd4e901)), closes [#3093](https://github.com/echonuit/vigiechiro-pr-companion/issues/3093) [#3158](https://github.com/echonuit/vigiechiro-pr-companion/issues/3158) [#2992](https://github.com/echonuit/vigiechiro-pr-companion/issues/2992) [#3093](https://github.com/echonuit/vigiechiro-pr-companion/issues/3093) [#3158](https://github.com/echonuit/vigiechiro-pr-companion/issues/3158)
+
 ## [2.162.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.162.0...v2.162.1) (2026-08-03)
 
 
