@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -21,6 +22,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.PrintStream;
@@ -104,6 +106,51 @@ class CliAuditTest {
 
         assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
         assertThat(texteSortie()).contains("ERREUR").contains("DISQUE_MANQUANT");
+    }
+
+    @Test
+    @DisplayName("#2848 : le département divergent sort de la CLI, et n'y fait PAS échouer la commande")
+    void departement_divergent_sort_sans_faire_echouer() {
+        semerPointDeDepartementDivergent();
+
+        int code = cli.executer(new String[] {"audit-coherence"}, sortie, erreur);
+
+        assertThat(code)
+                .as("le chevauchement de département est le cas NORMAL d'un carré de 10 km : faire "
+                        + "rendre 1 casserait tous les scripts qui appellent cette commande")
+                .isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("DEPARTEMENT_DIVERGENT").contains("Aix-en-Provence");
+    }
+
+    @Test
+    @DisplayName("#2848 : --json porte le constat, sa gravité INFO et sa cible « carré / point »")
+    void departement_divergent_json() {
+        semerPointDeDepartementDivergent();
+
+        int code = cli.executer(new String[] {"audit-coherence", "--json"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie())
+                .as("l'écran et la commande lisent le MÊME rapport : ce qui s'affiche d'un côté doit "
+                        + "se scripter de l'autre")
+                .contains("DEPARTEMENT_DIVERGENT")
+                .contains("INFO")
+                .contains("840962 / A1");
+    }
+
+    /// Sème un point dont les **deux lectures** du département se contredisent : le carré `840962` le
+    /// place dans le Vaucluse, sa commune dans les Bouches-du-Rhône. Aucun passage, aucun fichier : ce
+    /// constat ne dépend que de la topologie.
+    private void semerPointDeDepartementDivergent() {
+        injecteur.getInstance(UtilisateurDao.class).insert(new Utilisateur("u-1", "Testeur"));
+        Site site = injecteur
+                .getInstance(SiteDao.class)
+                .insert(new Site(null, "840962", "Étang", Protocole.STANDARD, null, "2026-05-01", "u-1"));
+        Long idPoint = injecteur
+                .getInstance(PointDao.class)
+                .insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
+                .id();
+        injecteur.getInstance(PointCommuneDao.class).definir(idPoint, new Commune("Aix-en-Provence", "13001"));
     }
 
     /// Sème un passage dont le journal du capteur pointe vers un fichier sous le workspace mais
