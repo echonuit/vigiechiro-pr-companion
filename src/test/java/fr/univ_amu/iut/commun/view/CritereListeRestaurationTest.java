@@ -14,12 +14,19 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
 
-/// Ce que devient une **vue mémorisée** quand les valeurs offertes ont changé de libellé.
+/// Ce que devient une **vue mémorisée** quand les valeurs offertes ont changé de libellé, pour un
+/// critère qui **ne déclare aucun rattrapage** ([CritereListe#SANS_RATTRAPAGE], le cas de tous les
+/// critères sauf « Lieu »).
 ///
 /// Une vue sauvegardée persiste les valeurs cochées **en clair** (table `vue_sauvegardee`,
 /// [DescripteurCritere#valeurs]). Rien ne garantit qu'elles existeront encore : #2995 a renommé les
 /// entrées de la puce « Lieu » de « Z1 » en « 640380 · Z1 » pour qualifier le point par son carré, et
 /// toute vue enregistrée avant ce changement porte désormais des valeurs introuvables.
+///
+/// Depuis #3158, le critère « Lieu » **rattrape** ce cas : voir `CritereLieuTest`. Le rattrapage y
+/// resterait pourtant sans effet, la fixture ci-dessous portant **deux** carrés dont le point s'appelle
+/// « Z1 » : une valeur qui en désigne deux ne se replace nulle part, par construction. Ce qui se joue
+/// ici est donc bien le socle nu.
 @ExtendWith(ApplicationExtension.class)
 class CritereListeRestaurationTest {
 
