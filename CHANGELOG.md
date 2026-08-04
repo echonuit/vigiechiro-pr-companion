@@ -2,6 +2,14 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.170.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.169.1...v2.170.0) (2026-08-04)
+
+
+### Features
+
+* **multisite:** le CSV nomme le carré carre, et porte le nom du site ([#3223](https://github.com/echonuit/vigiechiro-pr-companion/issues/3223)) ([331d4a3](https://github.com/echonuit/vigiechiro-pr-companion/commit/331d4a3d212fd6f2a5f5d13aace8bc924dadacf0)), closes [#3192](https://github.com/echonuit/vigiechiro-pr-companion/issues/3192)
+* **saison:** chercher un carré par le nom qu'on lui a donné ([#3219](https://github.com/echonuit/vigiechiro-pr-companion/issues/3219)) ([ab2742e](https://github.com/echonuit/vigiechiro-pr-companion/commit/ab2742ec72ab3f39f2ddc0c33a5470c89a5f7746)), closes [#3215](https://github.com/echonuit/vigiechiro-pr-companion/issues/3215)
+
 ## [2.169.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.169.0...v2.169.1) (2026-08-04)
 
 
