@@ -87,6 +87,8 @@ import picocli.CommandLine.Spec;
             SynthetiserPassage.class,
             Sauvegarder.class,
             Restaurer.class,
+            ListerSauvegardes.class,
+            SupprimerSauvegarde.class,
             ResetGuide.class,
             Emplacements.class
         })

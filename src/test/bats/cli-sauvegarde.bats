@@ -174,3 +174,43 @@ importer_une_nuit_sur_a() {
   grep -q "cheminOrigine" "${backup}/manifeste.json"
   grep -q "${MACHINE_A}" "${backup}/manifeste.json"
 }
+
+@test "lister-sauvegardes : dossier vide, la commande le dit et sort en 0 (#3197)" {
+  # Une installation qui n a jamais migre ni sauvegarde : un etat, pas une anomalie.
+  run cli lister-sauvegardes
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Aucune sauvegarde"* ]]
+}
+
+@test "lister-sauvegardes : ce que sauvegarder vient d ecrire est vu, avec son total (#3197)" {
+  run cli sauvegarder
+  [ "${status}" -eq 0 ]
+
+  run cli lister-sauvegardes
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"vigiechiro-sauvegarde-"* ]]
+  [[ "${output}" == *"total"* ]]
+}
+
+@test "supprimer-sauvegarde : sans --confirmer, dit la perte et ne touche a rien, exit 2 (#3197)" {
+  run cli sauvegarder
+  [ "${status}" -eq 0 ]
+  local nom
+  nom=$(basename "$(find "${BATS_TEST_TMPDIR}/sauvegardes" -name 'vigiechiro-sauvegarde-*.db' | head -1)")
+  [ -n "${nom}" ]
+
+  run cli supprimer-sauvegarde --nom "${nom}"
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Rien n"*"supprim"* ]]
+  [ -f "${BATS_TEST_TMPDIR}/sauvegardes/${nom}" ]
+
+  run cli supprimer-sauvegarde --nom "${nom}" --confirmer
+  [ "${status}" -eq 0 ]
+  [ ! -f "${BATS_TEST_TMPDIR}/sauvegardes/${nom}" ]
+}
+
+@test "supprimer-sauvegarde : un nom inconnu est une erreur d usage, pas un succes silencieux (#3197)" {
+  run cli supprimer-sauvegarde --nom vigiechiro-sauvegarde-19700101-000000.db
+  [ "${status}" -ne 0 ]
+  [[ "${output}" == *"lister-sauvegardes"* ]]
+}
