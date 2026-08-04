@@ -142,6 +142,7 @@ nav:
     - 3048 · Une sortie machine dit, elle ne retire pas: decisions/3048-la-parite-dune-sortie-machine-est-de-dire.md
     - 3068 · Le déterminisme porte sur ce que le produit rend: decisions/3068-le-determinisme-porte-sur-ce-que-le-produit-rend.md
     - 3053 · Une capture exige son libellé: decisions/3053-une-capture-exige-son-libelle.md
+    - 2861 · Une donnée de point ne se montre pas sur une ligne agrégée: decisions/2861-une-donnee-de-point-ne-se-montre-pas-sur-une-ligne-agregee.md
     - 3082 · Désigner refuse, qualifier rend vide: decisions/3082-designer-refuse-qualifier-rend-vide.md
     - 3095 · Un domaine se calcule sans son propre critère: decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md
     - 3099 · Une puce présélectionnée annonce ce qu'elle filtre: decisions/3099-une-puce-preselectionnee-annonce-ce-quelle-filtre.md

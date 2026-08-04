@@ -54,6 +54,54 @@ class ServiceMultisiteExportTest {
     private Horloge horloge;
 
     @Test
+    @DisplayName("Le CSV porte la commune, comme la table depuis #3163")
+    void le_csv_porte_la_commune() {
+        // L'écran montre la commune depuis #3163 ; le fichier exporté ne la portait pas. Ce test exige
+        // la VALEUR, là où l'approbation ne montrerait qu'une colonne vide : la fixture partagée ne
+        // résout aucune commune, si bien qu'un en-tête présent n'y prouverait rien.
+        ServiceMultisite service = new ServiceMultisite(
+                siteDao, pointDao, passageDao, releves, resultats, communesDao, Optional.empty(), horloge);
+        LignePassage aix = new LignePassage(
+                1L,
+                "640380",
+                "A1",
+                2026,
+                1,
+                "2026-06-21",
+                StatutWorkflow.DEPOSE,
+                Verdict.OK,
+                EtatAnalyse.A_IMPORTER,
+                null,
+                null,
+                "Aix-en-Provence",
+                "Étang");
+        LignePassage sansCommune = new LignePassage(
+                2L,
+                "640381",
+                "B2",
+                2025,
+                3,
+                "2025-07-02",
+                StatutWorkflow.VERIFIE,
+                null,
+                EtatAnalyse.SANS_OBJET,
+                null,
+                null,
+                null,
+                null);
+
+        String csv = service.exporterCsv(List.of(aix, sansCommune));
+
+        assertThat(csv.lines().findFirst().orElseThrow())
+                .as("l'en-tête annonce la commune entre le nom de site et le point")
+                .contains("nom_site;commune;point");
+        assertThat(csv).contains("640380;Étang;Aix-en-Provence;A1;");
+        assertThat(csv)
+                .as("une commune non résolue laisse la cellule vide, comme dans la table")
+                .contains("640381;;;B2;");
+    }
+
+    @Test
     @DisplayName("exporterCsvVers écrit dans le fichier le même CSV que exporterCsv")
     void exporterCsvVers_ecrit_le_meme_csv(@TempDir Path dossier) throws Exception {
         ServiceMultisite service = new ServiceMultisite(

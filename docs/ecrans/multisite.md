@@ -89,11 +89,13 @@ L'**export CSV** de la sélection porte une colonne `campagne`, en fin de ligne.
 Le fichier reprend la sélection affichée, une ligne par passage, séparateur `;` :
 
 ```
-carre;nom_site;point;annee;passage;date;statut;verdict;analyse;analyse_relevee_le;campagne
+carre;nom_site;commune;point;annee;passage;date;statut;verdict;analyse;analyse_relevee_le;campagne
 ```
 
 `carre` porte le **numéro** du carré, `nom_site` le **nom** que vous lui avez donné (vide si vous ne
 l'avez pas nommé) : ce sont les deux étiquettes d'un même lieu, comme dans la puce « Lieu ».
+`commune` est celle déduite des coordonnées du point, vide tant qu'aucune n'a été résolue : le fichier
+porte ainsi les mêmes lieux que le tableau, ce qui n'était pas le cas avant.
 
 > **Si vous avez un script qui lit ce fichier** : la première colonne s'appelait `site` et portait déjà
 > le numéro de carré. Elle s'appelle désormais `carre`, et `nom_site` s'intercale en deuxième position.
