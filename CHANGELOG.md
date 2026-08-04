@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.163.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.162.2...v2.163.0) (2026-08-04)
+
+
+### Features
+
+* **persistance:** un refus et une panne cessent de se dire avec le même mot ([#3177](https://github.com/echonuit/vigiechiro-pr-companion/issues/3177)) ([8cfc662](https://github.com/echonuit/vigiechiro-pr-companion/commit/8cfc66229d8ac5a26b8c3055bbc3c71955ddd170)), closes [#2294](https://github.com/echonuit/vigiechiro-pr-companion/issues/2294) [#3146](https://github.com/echonuit/vigiechiro-pr-companion/issues/3146) [#3146](https://github.com/echonuit/vigiechiro-pr-companion/issues/3146)
+
 ## [2.162.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.162.1...v2.162.2) (2026-08-04)
 
 
