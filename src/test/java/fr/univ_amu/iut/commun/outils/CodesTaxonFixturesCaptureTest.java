@@ -63,6 +63,7 @@ class CodesTaxonFixturesCaptureTest {
     /// est là pour une raison lisible ; un mot qui manquerait ferait échouer le test, pas passer.
     private static final Set<String> MOTS_ORDINAIRES = Set.of(
             "Ahetze", // commune, dans un libellé de site de démonstration
+            "Bidart", // commune voisine d'Ahetze, semée pour que l'aperçu du critère « Lieu » ait deux communes
             "Groupe", // en-tête de colonne
             "Import", // libellé d'action
             "Testes", // fragment de nom de fichier de démonstration

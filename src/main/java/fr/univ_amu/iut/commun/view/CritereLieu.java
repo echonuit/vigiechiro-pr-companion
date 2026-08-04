@@ -27,9 +27,11 @@ import java.util.regex.Pattern;
 ///
 /// ## Pourquoi les dimensions restent un paramètre
 ///
-/// Leur composition varie d'un écran à l'autre : Espèces & observations n'offre pas le point tant que
-/// sa projection ne remonte pas son code (#3161). C'est un paramètre parce que l'usage en décide, pas
-/// une commodité d'implémentation.
+/// Les quatre écrans offrent aujourd'hui les **trois** niveaux (#3161 a comblé le dernier écart, sur
+/// Espèces & observations). Elles restent un paramètre pour autant : c'est l'usage d'un écran qui
+/// décide de ce qu'il offre, et un écran futur pourra légitimement s'en tenir à moins. Ce qui ne doit
+/// plus arriver, c'est qu'une dimension manque **sans que personne l'ait décidé** - le cas que le
+/// chantier #3151 a corrigé, où une colonne non remontée passait pour un choix d'ergonomie.
 ///
 /// ## Sémantique
 ///

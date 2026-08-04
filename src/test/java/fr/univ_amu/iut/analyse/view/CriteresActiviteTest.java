@@ -26,6 +26,14 @@ class CriteresActiviteTest {
         assertThat(RECHERCHE.test(kuhl, "640380")).as("carré").isTrue();
         assertThat(RECHERCHE.test(kuhl, "a1")).as("point").isTrue();
 
+        // Le nom du site est la seconde étiquette du carré (ADR 3157) : la puce le laissait cocher, la
+        // recherche ne le laissait pas taper. La projection le porte depuis #3175.
+        ContactHoraire nomme = new ContactHoraire(
+                "PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", null, "Ahetze", "640380", "A1", 1L, "Bois du bourg");
+        assertThat(RECHERCHE.test(nomme, "bourg"))
+                .as("un carré se cherche par son nom comme par son numéro")
+                .isTrue();
+
         ContactHoraire serotine = contact("EPTSER", "Sérotine commune", "Bénesse", "770123", "B2");
         assertThat(RECHERCHE.test(serotine, "serotine"))
                 .as("accents ignorés, taxon")

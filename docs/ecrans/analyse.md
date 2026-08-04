@@ -37,7 +37,7 @@ La barre du haut porte <!--inv:criteres-analyse-->5<!--/inv--> critères, plus u
 |---|---|
 | **Statut** | les observations selon leur état de revue (à revoir, validée, corrigée) |
 | **Taxon parent** | une catégorie taxonomique présente (Chiroptères, Oiseaux, Orthoptères…) |
-| **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés, points, sites |
+| **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés et points présents dans l'inventaire, le carré portant son nom quand vous lui en avez donné un |
 | **Nature de la nuit** | les nuits du protocole, ou les participations opportunistes |
 | **Espèces à enjeu** | seulement les espèces prioritaires du Plan National d'Actions Chiroptères |
 
@@ -120,6 +120,22 @@ code d'espèce** en mode *Par espèce*, par **numéro de carré, nom de site ou 
 carré* (la commune est celle déduite des coordonnées du point, voir [Mes sites](sites.md)). Le
 bouton **« Exporter… »** enregistre l'inventaire **affiché** (tel que filtré) en **CSV**, prêt pour un
 tableur ou un partage.
+
+### Restreindre à un lieu
+
+La puce **« Lieu »** coche un ou plusieurs lieux parmi ceux **présents dans ce que vous regardez**,
+groupés par nature : les **communes**, les **carrés** et les **points d'écoute**. Cocher plusieurs
+valeurs les cumule, et une observation est retenue dès qu'**un** de ses lieux figure parmi ceux cochés.
+
+Un carré paraît sous ses deux étiquettes quand vous lui avez donné un nom, « 640380 · Étang de la
+Tuilière » : le numéro et le nom désignent le même lieu, et la liste ne vous fait pas choisir entre deux
+entrées identiques. Un point paraît toujours **précédé de son carré**, « 640380 · A1 », parce qu'un même
+code de point se retrouve sur presque tous les carrés et ne désignerait rien de précis tout seul.
+
+![La liste ouverte de la puce « Lieu » : trois groupes nommés (Communes, Carrés, Points), les carrés paraissant sous la forme « 640380 · Étang de la Tuilière » et les points sous la forme « 640380 · A1 ».](../assets/captures/apercu-analyse-lieu.png)
+
+Une commune peut couvrir **plusieurs carrés** : la cocher les retient tous, ce qui répond à « qu'ai-je
+entendu sur cette commune ? » sans avoir à savoir combien de carrés elle recouvre.
 
 ## Vues sauvegardées
 
