@@ -6,7 +6,6 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 /// Déplace **tous les chemins persistés** d'une session vers une nouvelle racine (#2727).
@@ -24,17 +23,6 @@ import java.util.Map;
 /// d'une feature.
 final class ReecritureRacineSession {
 
-    private static final String CLE_SESSION = "session_id";
-    private static final String CLE_PASSAGE = "passage_id";
-
-    /// Les tables qui portent un chemin, avec la clé qui les rattache à la session ou à son passage.
-    private static final List<Colonne> COLONNES = List.of(
-            new Colonne("original_recording", CLE_SESSION),
-            new Colonne("listening_sequence", CLE_SESSION),
-            new Colonne("sensor_log", CLE_SESSION),
-            new Colonne("climate_log", CLE_SESSION),
-            new Colonne("identification_results", CLE_PASSAGE));
-
     private ReecritureRacineSession() {}
 
     /// Réécrit la racine de la session et tous les chemins qui en dépendent. Un chemin situé **hors**
@@ -47,7 +35,7 @@ final class ReecritureRacineSession {
             ps.setLong(2, session.id());
             ps.executeUpdate();
         }
-        for (Colonne colonne : COLONNES) {
+        for (TablesAChemin.TableAChemin colonne : TablesAChemin.toutes()) {
             Long cle = colonne.surLePassage() ? session.idPassage() : session.id();
             if (cle != null) {
                 reenracinerTable(cx, colonne, cle, ancienne, nouvelle);
@@ -55,7 +43,8 @@ final class ReecritureRacineSession {
         }
     }
 
-    private static void reenracinerTable(Connection cx, Colonne colonne, long cle, Path ancienne, Path nouvelle)
+    private static void reenracinerTable(
+            Connection cx, TablesAChemin.TableAChemin colonne, long cle, Path ancienne, Path nouvelle)
             throws SQLException {
         Map<Long, String> chemins = new LinkedHashMap<>();
         try (PreparedStatement ps = cx.prepareStatement(
@@ -85,13 +74,5 @@ final class ReecritureRacineSession {
         return chemin.startsWith(ancienne)
                 ? nouvelle.resolve(ancienne.relativize(chemin)).toString()
                 : stocke;
-    }
-
-    /// Table portant une colonne `file_path`, et la clé qui l'attache à la session (ou à son passage,
-    /// pour les résultats d'identification).
-    private record Colonne(String table, String cle) {
-        boolean surLePassage() {
-            return CLE_PASSAGE.equals(cle);
-        }
     }
 }

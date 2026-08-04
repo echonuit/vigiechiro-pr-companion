@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.model.dao;
 
+import fr.univ_amu.iut.commun.persistence.TablesAChemin;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -54,56 +55,19 @@ public class RattachementDao {
             ps.setLong(2, idSession);
             ps.executeUpdate();
         }
-        reprefixerTable(
-                cx,
-                "SELECT id, file_path, file_name FROM original_recording WHERE session_id = ?",
-                "UPDATE original_recording SET file_path = ?, file_name = ? WHERE id = ?",
-                idSession,
-                true,
-                ancienneRacine,
-                nouvelleRacine,
-                ancienPrefixe,
-                nouveauPrefixe);
-        reprefixerTable(
-                cx,
-                "SELECT id, file_path, file_name FROM listening_sequence WHERE session_id = ?",
-                "UPDATE listening_sequence SET file_path = ?, file_name = ? WHERE id = ?",
-                idSession,
-                true,
-                ancienneRacine,
-                nouvelleRacine,
-                ancienPrefixe,
-                nouveauPrefixe);
-        reprefixerTable(
-                cx,
-                "SELECT id, file_path FROM sensor_log WHERE session_id = ?",
-                "UPDATE sensor_log SET file_path = ? WHERE id = ?",
-                idSession,
-                false,
-                ancienneRacine,
-                nouvelleRacine,
-                ancienPrefixe,
-                nouveauPrefixe);
-        reprefixerTable(
-                cx,
-                "SELECT id, file_path FROM climate_log WHERE session_id = ?",
-                "UPDATE climate_log SET file_path = ? WHERE id = ?",
-                idSession,
-                false,
-                ancienneRacine,
-                nouvelleRacine,
-                ancienPrefixe,
-                nouveauPrefixe);
-        reprefixerTable(
-                cx,
-                "SELECT id, file_path FROM identification_results WHERE passage_id = ?",
-                "UPDATE identification_results SET file_path = ? WHERE id = ?",
-                idPassage,
-                false,
-                ancienneRacine,
-                nouvelleRacine,
-                ancienPrefixe,
-                nouveauPrefixe);
+        // Les tables à chemin viennent du socle (#3133) : elles étaient énumérées ici ET dans
+        // `ReecritureRacineSession`, et la septième aurait été ajoutée à un endroit sur deux. Ce que
+        // le rattachement en fait lui reste propre : lui seul renomme les noms logiques.
+        for (TablesAChemin.TableAChemin table : TablesAChemin.toutes()) {
+            reprefixerTable(
+                    cx,
+                    table,
+                    table.surLePassage() ? idPassage : idSession,
+                    ancienneRacine,
+                    nouvelleRacine,
+                    ancienPrefixe,
+                    nouveauPrefixe);
+        }
     }
 
     /// Recalcule, pour chaque ligne sélectionnée par `selectSql` (paramètre = `cle`), le `file_path` **physique**
@@ -114,15 +78,18 @@ public class RattachementDao {
     /// `id, file_path[, file_name]`).
     private static void reprefixerTable(
             Connection cx,
-            String selectSql,
-            String updateSql,
+            TablesAChemin.TableAChemin table,
             long cle,
-            boolean avecNom,
             Path ancienneRacine,
             Path nouvelleRacine,
             String ancienPrefixe,
             String nouveauPrefixe)
             throws SQLException {
+        boolean avecNom = table.avecNomDeFichier();
+        String selectSql = "SELECT id, file_path" + (avecNom ? ", file_name" : "") + " FROM " + table.table()
+                + " WHERE " + table.cle() + " = ?";
+        String updateSql =
+                "UPDATE " + table.table() + " SET file_path = ?" + (avecNom ? ", file_name = ?" : "") + " WHERE id = ?";
         Map<Long, String[]> lignes = new LinkedHashMap<>();
         try (PreparedStatement ps = cx.prepareStatement(selectSql)) {
             ps.setLong(1, cle);

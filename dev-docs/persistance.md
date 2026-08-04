@@ -222,9 +222,18 @@ vit en base.
     sur une autre machine puis demande `reset-guide` a répondu **PERDU**. Un test qui vérifie ce qu'on
     a écrit ne remplace pas un test qui demande à l'application si elle s'y retrouve.
 
-    ⚠️ `RattachementDao.reprefixerChemins` applique la même règle pour un autre besoin (renommer une
-    session rattachée), sans pouvoir partager ce code : le socle ne peut pas dépendre d'une feature.
-    Une septième table à chemin devra donc être ajoutée **aux deux endroits**.
+    L'inventaire de ces tables vit à **un seul endroit**, `TablesAChemin` (#3133). Il était écrit deux
+    fois, ici et dans `RattachementDao.reprefixerChemins`, qui applique la même règle pour renommer
+    une session rattachée : la septième table aurait été ajoutée à un endroit sur deux. Le socle ne
+    peut pas dépendre d'une feature, mais une feature dépend du socle, et cet inventaire est de la
+    connaissance de **schéma**.
+
+    Ce que chacun **fait** de chaque table lui reste propre : le socle réenracine, la feature
+    réenracine **et** renomme les noms logiques.
+
+    `TablesACheminTest` confronte cette liste aux colonnes de chemin déclarées par les 38 migrations.
+    C'est le second filet, et il attrape autre chose que la déduplication : une **migration** qui
+    ajoute une colonne de chemin à une table de plus, et que personne ne pense à inscrire.
 
 L'ordre est le point important : une seule discordance à l'étape 1 annule tout **avant que rien
 n'ait été touché**. La vérification passait auparavant après la bascule, ce qui revenait à découvrir
