@@ -14,7 +14,6 @@ import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.commun.view.AxeHoraire;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
-import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
@@ -23,6 +22,7 @@ import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.GrapheNocturne;
 import fr.univ_amu.iut.commun.view.LegendeExport;
 import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.MemoireFiltres;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.RepereEspeceAEnjeu;
@@ -79,6 +79,9 @@ public class ActiviteController implements EmplacementNavigation {
     /// d'axe (`HH`), puisqu'on donne la valeur exacte d'une tranche.
     private static final DateTimeFormatter HEURE_MINUTE = DateTimeFormatter.ofPattern("HH:mm");
 
+    /// Mémoire de session (#3098) : les filtres et le tri survivent à une sortie de l'écran.
+    private final MemoireFiltres memoire;
+
     private final ActiviteViewModel viewModel;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
@@ -116,6 +119,9 @@ public class ActiviteController implements EmplacementNavigation {
 
     @FXML
     private FlowPane pucesFiltres;
+
+    @FXML
+    private Button boutonToutEffacer;
 
     /// Conteneur des onglets de vues mémorisées (socle `GestionnaireVues`, #623).
     @FXML
@@ -161,12 +167,14 @@ public class ActiviteController implements EmplacementNavigation {
     @Inject
     public ActiviteController(
             ActiviteViewModel viewModel,
+            MemoireFiltres memoire,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
             VersionApplication version,
             DepotVues depotVues,
             EspecesPrioritaires especesPrioritaires) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.memoire = Objects.requireNonNull(memoire, "memoire");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.version = Objects.requireNonNull(version, "version");
@@ -178,37 +186,17 @@ public class ActiviteController implements EmplacementNavigation {
     private void initialize() {
         configurerAxeNocturne();
 
-        // Barre de filtres cascadés (socle Filtres) : Carré et Taxon parent en puces, recherche texte
-        // permanente. Chaque changement ré-agrège le sous-ensemble via le callback du ViewModel.
-        gestionnaireFiltres = new GestionnaireFiltres<>(
-                champRecherche,
-                menuAjoutFiltre,
-                pucesFiltres,
-                viewModel.filtres(),
-                List.of(
-                        // Cascadage (#3095) : le domaine se calcule sur les lignes que les AUTRES
-                        // criteres laissent passer. Lire la liste deja filtree ferait s auto-effondrer
-                        // la puce, qui n offrirait plus que la valeur deja retenue.
-                        CriteresActivite.lieu(() -> viewModel.filtres().saufLui(ClesCriteres.LIEU)),
-                        // « Nuit » n est PAS cascadee, et c est deliberé : c est un SELECTEUR,
-                        // pas une facette. Restreindre la liste des nuits a celles qui passent les
-                        // autres filtres retirerait du menu la nuit vers laquelle on veut aller,
-                        // et il faudrait defaire un filtre pour naviguer. Meme raison qui garde
-                        // annee et campagne en controles fixes sur Ma saison (#3103).
-                        CriteresActivite.nuit(viewModel::nuitsDisponibles),
-                        CriteresActivite.groupe(() ->
-                                CriteresActivite.groupesDe(viewModel.filtres().saufLui(ClesCriteres.GROUPE))),
-                        CriteresActivite.natureNuit(viewModel::nuitsOpportunistes),
-                        CriteresActivite.aEnjeu(contact -> marqueurEnjeu.aEnjeu(contact.taxon()))),
-                CriteresActivite.rechercheTexte());
-
-        // Onglets de vues (#623) : les vues par défaut partitionnent par catégorie du référentiel, et
-        // l'écran s'ouvre sur « Chiroptères » : Tadarida détecte aussi orthoptères et micromammifères,
-        // qui n'ont rien à faire dans la présélection des cinq taxons les plus contactés.
-        gestionnaireVues = GestionnaireVues.avecDialogue(
-                barreOnglets, gestionnaireFiltres, depotVues, "activite", CriteresActivite.vuesParDefaut());
-        // Une vue rejouée amputée de valeurs disparues filtre moins large qu'annoncé (#3056).
-        gestionnaireVues.surRestauration(viewModel::signalerVueAmputee);
+        // Barre de filtres, onglets de vues et mémoire de session : assemblés par
+        // `FiltresVuesActivite`, extrait pour tenir le plafond de concentration du portail qualité.
+        FiltresVuesActivite.Gestionnaires gestionnaires = FiltresVuesActivite.installer(
+                new FiltresVuesActivite.Barre(
+                        champRecherche, menuAjoutFiltre, pucesFiltres, barreOnglets, boutonToutEffacer),
+                viewModel,
+                memoire,
+                depotVues,
+                marqueurEnjeu);
+        gestionnaireFiltres = gestionnaires.filtres();
+        gestionnaireVues = gestionnaires.vues();
 
         choixTranche.setItems(FXCollections.observableArrayList(LargeurTranche.values()));
         choixTranche.setConverter(new StringConverter<>() {

@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.MemoireFiltres;
 import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
@@ -76,6 +77,9 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
 
     /// Zones de la barre de statut (#1023) : agrégat top-level → **centre** = résumé de l'inventaire,
     /// **droite** = état d'export quand un export a été produit ; la gauche reste au défaut du chrome.
+    /// Mémoire de session (#3098) : les filtres et le tri survivent à une sortie de l'écran.
+    private final MemoireFiltres memoire;
+
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
@@ -281,6 +285,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     @Inject
     public AnalyseController(
             AnalyseViewModel viewModel,
+            MemoireFiltres memoire,
             OuvrirPassage ouvrirPassage,
             OuvrirAudio ouvrirAudio,
             DepotVues depotVues,
@@ -289,6 +294,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
             ExecuteurTache executeur,
             EspecesPrioritaires especesPrioritaires) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.memoire = Objects.requireNonNull(memoire, "memoire");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
@@ -384,6 +390,13 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                         selecteurColonnes.adaptateur())
                 // Une vue rejouée amputée de valeurs disparues filtre moins large qu'annoncé (#3056).
                 .surRestauration(viewModel::signalerVueAmputee);
+
+        // Mémoire de session (#484, étendue à cet écran en #3098) : les filtres, plus le tri de CHACUNE
+        // des trois tables. Une mémoire qui n'en aurait retenu qu'une aurait choisi laquelle sans le dire.
+        memoire.installer(FEATURE, tableEspeces, gestionnaireFiltres, viewModel::signalerFiltresDeSessionAmputes);
+        memoire.memoriserTri(FEATURE, tableEspeces);
+        memoire.memoriserTri(FEATURE, tableCarres);
+        memoire.memoriserTri(FEATURE, tableObservations);
 
         // Bandeau de retour (export, échec de chargement, action refusée), mutualisé avec Sons & validation
         // (#1837) : libellé, visibilité, couleur de sévérité et croix de fermeture.
@@ -568,6 +581,19 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         carteAffichee.set(afficherCarte);
     }
 
+    /// « Tout effacer » (#3098) : retire tous les filtres, remet le tri à plat, et **oublie la mémoire
+    /// de session** de cet écran.
+    ///
+    /// Ce dernier point n'est pas accessoire. Sans lui, le geste viderait l'écran et la mémoire
+    /// remettrait tout à la visite suivante : le bouton paraîtrait ne pas avoir pris.
+    @FXML
+    private void toutEffacer() {
+        gestionnaireFiltres.reinitialiser();
+        tableEspeces.getSortOrder().clear();
+        tableCarres.getSortOrder().clear();
+        tableObservations.getSortOrder().clear();
+        memoire.oublier(FEATURE);
+    }
     /// « 📤 Exporter… » : demande où écrire, puis délègue au ViewModel l'écriture CSV de l'inventaire
     /// **affiché** (la liste filtrée courante, pas l'inventaire complet). La désignation passe par le port
     /// [SelecteurFichier] (#1431) : le geste est donc **jouable** dans un test, ce qu'il n'était pas.

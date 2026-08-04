@@ -294,6 +294,13 @@ public class ActiviteViewModel {
         retour.set(RetourOperation.vueAmputee(nomVue, reste));
     }
 
+    /// Les filtres de la **mémoire de session** (#484, étendue en #3098) que la réouverture de l'écran
+    /// n'a pas su remettre en place (#3093). Les données ont changé depuis la dernière visite : c'est
+    /// le chemin le plus discret des trois, puisque personne n'a rien demandé.
+    public void signalerFiltresDeSessionAmputes(ResteDeRestauration reste) {
+        retour.set(RetourOperation.filtresDeSessionAmputes(reste));
+    }
+
     public void effacerRetour() {
         retour.set(RetourOperation.AUCUN);
     }
