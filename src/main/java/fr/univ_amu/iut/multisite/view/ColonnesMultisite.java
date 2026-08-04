@@ -25,6 +25,7 @@ final class ColonnesMultisite {
 
     /// Câble les colonnes du tableau des passages.
     static void configurer(
+            TableColumn<LignePassage, String> commune,
             TableColumn<LignePassage, String> carre,
             TableColumn<LignePassage, String> point,
             TableColumn<LignePassage, String> annee,
@@ -35,6 +36,11 @@ final class ColonnesMultisite {
             TableColumn<LignePassage, String> analyse,
             TableColumn<LignePassage, String> campagne) {
         carre.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().numeroCarre()));
+        // Commune (#3163) : cellule vide quand le GPS du point n'a résolu aucune commune. C'est
+        // un état normal - `point_commune` est une table latérale (ADR 2791) - et non une anomalie
+        // à signaler dans la table.
+        commune.setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                c.getValue().commune() == null ? "" : c.getValue().commune()));
         point.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().codePoint()));
         annee.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper(String.valueOf(c.getValue().annee())));
