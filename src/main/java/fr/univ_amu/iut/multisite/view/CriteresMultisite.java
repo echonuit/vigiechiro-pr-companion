@@ -28,7 +28,10 @@ import javafx.scene.control.TextField;
 /// Catalogue des **critères de filtrage** de la vue multi-sites (patron « à la Notion », #537 étape 6b).
 /// Chaque critère est une puce ajoutable : **Carré** (n° de carré, champ texte), **Statut** de workflow,
 /// **Verdict** de vérification, **Année** et **Analyse** (état du traitement serveur, #1338). La
-/// **recherche texte** permanente ([#rechercheTexte()]) couvre carré, point, date et commune (#2791).
+/// **recherche texte** permanente ([#rechercheTexte()]) couvre carré, point, date, commune (#2791) et
+/// **nom de site** : un carré se cherche par l'une ou l'autre de ses deux étiquettes
+/// ([fr.univ_amu.iut.commun.view.CritereLieu], ADR 3157), et la puce le laissait cocher sans que la
+/// recherche le laisse taper.
 ///
 /// Pendant, côté multisite, du `CriteresAudio` / `CriteresAnalyse`. Les prédicats **réutilisent** la
 /// sémantique de [FiltresMultisite#accepte(LignePassage)] : aucune logique de filtrage dupliquée. Aucune
@@ -335,7 +338,8 @@ final class CriteresMultisite {
         return contient(ligne.numeroCarre(), aiguille)
                 || contient(ligne.codePoint(), aiguille)
                 || contient(ligne.dateEnregistrement(), aiguille)
-                || contient(ligne.commune(), aiguille);
+                || contient(ligne.commune(), aiguille)
+                || contient(ligne.nomSite(), aiguille);
     }
 
     private static boolean contient(String champ, String aiguille) {

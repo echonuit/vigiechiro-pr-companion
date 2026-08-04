@@ -828,7 +828,7 @@ L'écran de revue, ses filtres, ses menus et ses états de sélection.
 
 ## Espèces & observations
 
-<sub>`analyse/view/Analyse.fxml` &middot; 4 capture(s)</sub>
+<sub>`analyse/view/Analyse.fxml` &middot; 5 capture(s)</sub>
 
 <table>
 <tr>
@@ -849,6 +849,15 @@ L'écran de revue, ses filtres, ses menus et ses états de sélection.
 <tr>
 <td><a href="apercu-analyse-carte.png"><img src="apercu-analyse-carte.png" width="430" alt="Carte"></a></td>
 <td><a href="apercu-analyse-colonnes.png"><img src="apercu-analyse-colonnes.png" width="430" alt="Colonnes"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<th width="50%">Lieu</th>
+</tr>
+<tr>
+<td><a href="apercu-analyse-lieu.png"><img src="apercu-analyse-lieu.png" width="430" alt="Lieu"></a></td>
 </tr>
 </table>
 

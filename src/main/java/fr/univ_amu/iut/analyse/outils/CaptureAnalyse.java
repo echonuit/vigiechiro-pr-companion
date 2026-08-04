@@ -37,6 +37,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Region;
@@ -104,6 +106,7 @@ public final class CaptureAnalyse {
         rendre(injecteur, Regroupement.PAR_CARRE, sortie.resolve("apercu-analyse-carre.png"));
         rendreCarte(injecteur, sortie.resolve("apercu-analyse-carte.png"));
         rendreColonnes(injecteur, sortie.resolve("apercu-analyse-colonnes.png"));
+        rendreListeLieu(injecteur, sortie.resolve("apercu-analyse-lieu.png"));
 
         System.out.println("Apercus ecrits dans " + sortie.toAbsolutePath());
     }
@@ -127,6 +130,38 @@ public final class CaptureAnalyse {
         Parent vue = loader.load();
         Scene scene = new Scene(vue, 1080, 640);
         ApercuFx.capturerApresPreparation(scene, () -> preparer(vue, regroupement), fichier);
+    }
+
+    /// Aperçu de la **liste ouverte de la puce « Lieu »** (`apercu-analyse-lieu.png`, #3161).
+    ///
+    /// Cet écran offrait deux dimensions quand les autres en offraient trois : sa projection remontait
+    /// l'identifiant du point et non son code, si bien que la table affichait un point sur lequel on ne
+    /// pouvait pas filtrer. L'aperçu est le seul endroit où la liste se voit, et donc le seul où l'on
+    /// constate qu'elle en offre désormais trois.
+    ///
+    /// La puce est reconnue à **son contenu** et non à la première venue : « Taxon parent » porte la
+    /// même classe CSS, et un `findFirst()` rendrait un aperçu parfaitement lisible de la mauvaise puce
+    /// sous la bonne légende (ADR 3053, défaut déjà commis sur l'écran Activité).
+    private static void rendreListeLieu(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(AnalyseController.class.getResource(FXML_ANALYSE));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        if (!(vue.lookup("#menuAjoutFiltre") instanceof MenuButton menuAjout)) {
+            throw new IllegalStateException("Menu « + Filtre » introuvable : la puce ne peut pas être posée.");
+        }
+        ApercuFx.exigerParLibelle("le menu « + Filtre »", menuAjout.getItems(), MenuItem::getText, "Lieu")
+                .fire();
+        MenuButton puce = vue.lookupAll(".critere-multiple").stream()
+                .filter(MenuButton.class::isInstance)
+                .map(MenuButton.class::cast)
+                .filter(bouton -> bouton.getItems().stream().anyMatch(item -> "Carrés".equals(item.getText())))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException(
+                        "Aucune puce ne porte l'en-tête « Carrés » : ce n'est pas la liste « Lieu »."));
+        if (!ApercuFx.enregistrerMenuOuvert(puce, fichier)) {
+            throw new IllegalStateException("Popup de la puce non rendu : " + fichier + " n'aurait rien montré.");
+        }
+        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
     /// Rend l'écran par espèce avec le **panneau de sélection des colonnes ouvert** (`apercu-analyse-colonnes`,
@@ -216,9 +251,9 @@ public final class CaptureAnalyse {
         long[] pauvre;
         try (Connection cx = source.getConnection()) {
             executer(cx, "INSERT INTO recorder(serial_number) VALUES ('SN-1')");
-            riche = semerCarre(cx, "640380", "Étang de la Tuilière", "A1");
-            moyen = semerCarre(cx, "640250", "Prairie de l'Adour", "B1");
-            pauvre = semerCarre(cx, "640315", "Lisière du Bois", "C1");
+            riche = semerCarre(cx, "640380", "Étang de la Tuilière", "A1", "Ahetze");
+            moyen = semerCarre(cx, "640250", "Prairie de l'Adour", "B1", "Bidart");
+            pauvre = semerCarre(cx, "640315", "Lisière du Bois", "C1", "Ahetze");
         }
         ObservationDao observations = injecteur.getInstance(ObservationDao.class);
         // Carré riche : 3 espèces (Pipistrelle validée, Noctule non touchée, Molosse corrigé).
@@ -235,7 +270,8 @@ public final class CaptureAnalyse {
 
     /// Seede la chaîne d'un carré (site/point/passage/séquence/résultats) et renvoie
     /// `{idSequence, idResultats}` pour y rattacher des observations.
-    private static long[] semerCarre(Connection cx, String carre, String site, String pointCode) throws SQLException {
+    private static long[] semerCarre(Connection cx, String carre, String site, String pointCode, String commune)
+            throws SQLException {
         long idSite = insererCle(
                 cx,
                 "INSERT INTO monitoring_site(square_number, friendly_name, protocol, created_at, user_id)"
@@ -244,6 +280,13 @@ public final class CaptureAnalyse {
                 site,
                 ID_UTILISATEUR);
         long idPoint = insererCle(cx, "INSERT INTO listening_point(code, site_id) VALUES (?, ?)", pointCode, idSite);
+        // La commune du point (ADR 2791) : sans elle, le groupe « Communes » du critère « Lieu »
+        // reste vide, et son en-tête ne s'affiche pas - l'aperçu documenterait un critère amputé.
+        // Deux carrés partagent Ahetze : une commune couvre plusieurs carrés, et la liste le montre.
+        executer(
+                cx,
+                "INSERT INTO point_commune(point_id, commune_name, commune_insee) VALUES (" + idPoint + ", '" + commune
+                        + "', '64000')");
         long idPassage = insererCle(
                 cx,
                 "INSERT INTO passage(passage_number, year, recording_date, start_time, end_time,"

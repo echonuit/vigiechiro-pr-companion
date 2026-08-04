@@ -170,7 +170,8 @@ final class CriteresActivite {
                 || contient(contact.nomEspece(), aiguille)
                 || contient(contact.commune(), aiguille)
                 || contient(contact.numeroCarre(), aiguille)
-                || contient(contact.codePoint(), aiguille);
+                || contient(contact.codePoint(), aiguille)
+                || contient(contact.nomSite(), aiguille);
     }
 
     private static boolean contient(String champ, String aiguille) {

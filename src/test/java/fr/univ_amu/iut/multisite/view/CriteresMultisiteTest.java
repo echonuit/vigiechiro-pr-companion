@@ -32,10 +32,15 @@ class CriteresMultisiteTest {
                 null,
                 null,
                 "Aix-en-Provence",
-                null);
+                "Jardin de Serge");
 
         assertThat(CriteresMultisite.rechercheTexte().test(ligne, "aix")).isTrue();
         assertThat(CriteresMultisite.rechercheTexte().test(ligne, "marseille")).isFalse();
+        // Le nom du site est la seconde étiquette du carré (ADR 3157) : la puce le laissait cocher, la
+        // recherche ne le laissait pas taper. La projection le porte depuis #3175.
+        assertThat(CriteresMultisite.rechercheTexte().test(ligne, "serge"))
+                .as("un carré se cherche par son nom comme par son numéro")
+                .isTrue();
     }
 
     @Test

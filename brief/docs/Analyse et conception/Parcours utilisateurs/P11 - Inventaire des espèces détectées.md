@@ -11,6 +11,10 @@ La chaîne de production (sites → import → vérification → dépôt) et la 
     - **Par espèce** : une ligne par espèce (son groupe taxonomique, ses compteurs, sa période d'activité) - *qu'ai-je détecté ?*
     - **Par carré** : une ligne par carré (sa **richesse** : nombre d'espèces distinctes, volume d'observations) - *où est-ce le plus riche ?*
 3. Un **filtre de statut** restreint la lecture (par exemple aux passages déjà déposés) ; tout changement de regroupement ou de filtre **ré-interroge** les données et met à jour le résumé.
+   Un filtre de **lieu** le complète, aux trois niveaux du domaine : la commune, le carré (sous ses deux
+   étiquettes, numéro et nom convivial) et le **point d'écoute**. Ce dernier a manqué jusqu'à #3161,
+   non par choix mais parce que la projection ne remontait pas son code : l'écran affichait un point
+   sur lequel on ne pouvait pas filtrer.
 4. Sur une espèce qui l'intrigue, l'utilisateur **ouvre sa fiche** (double-clic sur la ligne) pour retrouver ses critères et sa répartition, et **copie** son nom latin ou vernaculaire vers un tableur ou un courriel (clic droit, `Copier ▸`) : l'inventaire est un point de départ vers le reste de son travail, pas un cul-de-sac.
 
 ## Règles métier visibles

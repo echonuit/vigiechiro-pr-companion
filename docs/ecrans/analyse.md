@@ -121,6 +121,22 @@ carré* (la commune est celle déduite des coordonnées du point, voir [Mes site
 bouton **« Exporter… »** enregistre l'inventaire **affiché** (tel que filtré) en **CSV**, prêt pour un
 tableur ou un partage.
 
+### Restreindre à un lieu
+
+La puce **« Lieu »** coche un ou plusieurs lieux parmi ceux **présents dans ce que vous regardez**,
+groupés par nature : les **communes**, les **carrés** et les **points d'écoute**. Cocher plusieurs
+valeurs les cumule, et une observation est retenue dès qu'**un** de ses lieux figure parmi ceux cochés.
+
+Un carré paraît sous ses deux étiquettes quand vous lui avez donné un nom, « 640380 · Étang de la
+Tuilière » : le numéro et le nom désignent le même lieu, et la liste ne vous fait pas choisir entre deux
+entrées identiques. Un point paraît toujours **précédé de son carré**, « 640380 · A1 », parce qu'un même
+code de point se retrouve sur presque tous les carrés et ne désignerait rien de précis tout seul.
+
+![La liste ouverte de la puce « Lieu » : trois groupes nommés (Communes, Carrés, Points), les carrés paraissant sous la forme « 640380 · Étang de la Tuilière » et les points sous la forme « 640380 · A1 ».](../assets/captures/apercu-analyse-lieu.png)
+
+Une commune peut couvrir **plusieurs carrés** : la cocher les retient tous, ce qui répond à « qu'ai-je
+entendu sur cette commune ? » sans avoir à savoir combien de carrés elle recouvre.
+
 ## Vues sauvegardées
 
 Une combinaison de filtres utile peut être **enregistrée sous un nom** pour être rejouée d'un clic. Les
