@@ -2,11 +2,15 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
   M-Audit - écran « Audit de cohérence » (feature audit, prisme « Collecte & passages »). Lance l'audit
@@ -32,6 +36,35 @@
         <Button fx:id="boutonAuditerPassage" text="Auditer ce passage"
                 onAction="#auditerLePassageSelectionne"/>
       </StackPane>
+    </HBox>
+
+    <!-- Onglets de vues mémorisées (#623) : rejouer une combinaison de filtres enregistrée. -->
+    <FlowPane fx:id="barreOnglets" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="barre-onglets"/>
+
+    <!-- Barre de filtres « à la Notion » (#3100, palier 5 du chantier #3092) : recherche permanente sur
+         la cible et le détail, puces pour Gravité / Catégorie / Passage, et « Tout effacer ». Un audit
+         de saison produit des constats de natures mêlées, et la question posée est toujours de la même
+         forme : « qu'est-ce qui est bloquant ? », « qu'est-ce qui concerne cette nuit ? ». -->
+    <HBox spacing="10.0" alignment="CENTER_LEFT">
+      <TextField fx:id="champRecherche" promptText="Rechercher (cible, détail…)" minWidth="-Infinity"
+                 prefWidth="260.0"/>
+      <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"/>
+      <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
+                HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+      <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer"
+              accessibleText="Effacer tous les filtres et le tri"/>
+    </HBox>
+
+    <!-- Compte rendu des restaurations amputées (#3056/#3093) : une vue rejouée ou des filtres de
+         session remis sans tout ce qu'ils portaient montrent plus large qu'annoncé. Relancer l'audit
+         renouvelle les constats, donc ce cas est ici la règle plutôt que l'exception. -->
+    <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
+      <Label fx:id="lblRetour" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+      <Button fx:id="btnFermerRetour" styleClass="fermer-retour" accessibleText="Fermer le message">
+        <graphic>
+          <FontIcon iconLiteral="fas-times"/>
+        </graphic>
+      </Button>
     </HBox>
 
     <TableView fx:id="tableConstats" VBox.vgrow="ALWAYS">
