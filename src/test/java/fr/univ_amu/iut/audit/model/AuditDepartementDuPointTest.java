@@ -130,6 +130,17 @@ class AuditDepartementDuPointTest {
     }
 
     @Test
+    @DisplayName("#2848 : un numéro de carré illisible ne produit rien - il n'y a pas de PREMIÈRE lecture")
+    void carre_illisible() {
+        // Le pendant de la commune non résolue, sur l'autre lecture. Un numéro trop court ne dit aucun
+        // département : le signaler comme divergent accuserait le point d'un défaut qui est celui du
+        // carré, et qui relève d'un autre contrôle (R1, six chiffres).
+        semer("6", "A1", new Commune("Aix-en-Provence", "13001"));
+
+        assertThat(audit.auditer()).isEmpty();
+    }
+
+    @Test
     @DisplayName("#2848 : la Corse ne diverge pas d'elle-même - 20 côté carré, 2A/2B côté INSEE")
     void corse_ne_diverge_pas() {
         semer("200001", "A1", new Commune("Ajaccio", "2A004"));
