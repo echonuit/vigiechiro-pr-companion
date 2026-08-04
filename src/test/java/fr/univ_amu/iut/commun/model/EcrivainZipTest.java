@@ -25,6 +25,10 @@ import org.junit.jupiter.api.io.TempDir;
 /// d'entrée commençant par « / », invalide en pratique.
 class EcrivainZipTest {
 
+    /// Taille d'une entrée « volumineuse » : au-delà de plusieurs paliers de progression intra-entrée,
+    /// pour que l'annulation puisse se produire au milieu du fichier.
+    private static final int TAILLE_GROSSE_ENTREE = 12 * 1024 * 1024;
+
     @TempDir
     Path dossier;
 
@@ -182,12 +186,40 @@ class EcrivainZipTest {
                         archive,
                         List.of(),
                         List.of(new EcrivainZip.EntreeFichier("a.wav", source)),
-                        progression -> jeton.annuler(), // annulé pendant l'unique (donc dernière) entrée
+                        progression -> jeton.annuler(), // annulé une fois l'unique (donc dernière) entrée close
                         jeton));
 
         assertThat(archive)
                 .as("l'archive ne doit pas « aboutir » sur une annulation tardive")
                 .doesNotExist();
+    }
+
+    @Test
+    @DisplayName("Annulation pendant une entrée volumineuse : l'arrêt n'attend pas la fin du fichier (#2733)")
+    void annulation_pendant_une_entree_volumineuse() throws IOException {
+        Path source = Files.write(dossier.resolve("gros.wav"), new byte[TAILLE_GROSSE_ENTREE]);
+        Path archive = dossier.resolve("export.zip");
+        JetonAnnulation jeton = new JetonAnnulation();
+        java.util.List<Progression> notifications = new java.util.ArrayList<>();
+
+        assertThatExceptionOfType(OperationAnnuleeException.class)
+                .isThrownBy(() -> EcrivainZip.ecrire(
+                        archive,
+                        List.of(),
+                        List.of(new EcrivainZip.EntreeFichier("sons/gros.wav", source)),
+                        progression -> {
+                            notifications.add(progression);
+                            jeton.annuler();
+                        },
+                        jeton));
+
+        // « 0 / 1 » : l'entrée n'est pas close quand la notification tombe. C'est ce qui distingue une
+        // annulation qui agit PENDANT la copie d'une annulation qui attend poliment la fin du fichier.
+        assertThat(notifications.get(0).libelle())
+                .as("la première notification doit tomber pendant la copie de l'entrée")
+                .contains("0 / 1")
+                .contains("Mo");
+        assertThat(archive).doesNotExist();
     }
 
     @Test
