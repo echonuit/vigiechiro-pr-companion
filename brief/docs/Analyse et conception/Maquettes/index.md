@@ -143,6 +143,9 @@ L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titr
 - [M-MultiSite](M-MultiSite.md), [M-Analyse](M-Analyse.md) et [M-SonsValidation](M-SonsValidation.md) partagent le **même socle de tableau réactif**, décrit **une seule fois ici** (chaque fiche y renvoie plutôt que de le redécrire à sa façon) :
     - des **onglets de vues mémorisées** (« à la Notion ») en tête de tableau, pas un sous-menu du ☰ ;
     - un **constructeur de filtres à puces** : un bouton **« + Filtre »** ouvre le choix du critère, et chaque filtre actif devient une **puce cumulable** (et non une rangée de listes déroulantes fixes) ;
+    - **« Tout effacer »**, un geste en trois volets : les puces, la recherche **et** le tri du tableau, plus l'oubli de ce que la mémoire de session s'apprêtait à remettre (chantier #3092) ;
+    - des **listes de valeurs cascadées** : une puce n'offre que les valeurs que les **autres** filtres laissent passer, et **jamais** en tenant compte d'elle-même - sinon elle s'effondrerait sur la valeur déjà cochée ([ADR 3095](https://companion-dev.echonuit.fr/decisions/3095-un-domaine-se-calcule-sans-son-propre-critere/)) ;
+    - un **bandeau de compte rendu** quand un filtre n'a pas pu être remis en place : une **valeur** disparue des données ne se dit pas comme un **critère** que l'écran d'arrivée n'offre pas ([ADR 3093](https://companion-dev.echonuit.fr/decisions/3093-une-restauration-rend-compte-de-deux-causes/)) ;
     - un **choix des colonnes** affichées, dans le **menu outils ☰**.
 
 ## Cas non maquettés (documentés textuellement)

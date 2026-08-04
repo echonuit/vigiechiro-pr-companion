@@ -73,7 +73,7 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
   <rect x="46" y="362" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/><text x="66" y="372" class="filt-off">Plesp</text><text x="226" y="372" class="filt-num">13</text>
   <rect x="46" y="386" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/><text x="66" y="396" class="filt-off">Barbar</text><text x="226" y="396" class="filt-num">9</text>
 
-  <rect x="44" y="450" width="128" height="22" rx="3" class="ctrl"/><text x="108" y="465" class="ctrl-txt">Réinitialiser</text>
+  <rect x="44" y="450" width="128" height="22" rx="3" class="ctrl"/><text x="108" y="465" class="ctrl-txt">Tout effacer</text>
 
   <!-- En-tete du graphe -->
   <text x="264" y="112" class="section-title">Activité par tranche horaire</text>
@@ -141,7 +141,7 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
 - **Bande nocturne** (`bandeNuit`) : aplat très pâle entre le coucher et le lever du soleil calculés au point d'écoute. C'est la même source que la cohérence horaire de [M-Diagnostic](M-Diagnostic.md). Quand le GPS du point manque, la bande disparaît et le graphe reste traçable.
 - **Axe des ordonnées** (`axeContacts`) : nombre de contacts dans la tranche. Le pas se choisit sur des valeurs rondes ; le titre d'axe rappelle la tranche courante, qui change avec le sélecteur.
 - **Sélecteur de tranche** (`groupeTranche`) : 15, 30 ou 60 minutes. Le graphe se recalcule, la sélection d'espèces est conservée.
-- **Barre de filtres** (`barreFiltres`) : recherche permanente et puces « + Filtre » (lieu, nuit, taxon parent, nature de la nuit), sur le socle partagé avec Espèces & observations. Chaque puce se retire d'un clic, et le sous-ensemble filtré est **ré-agrégé** en direct : filtrer, c'est re-tracer.
+- **Barre de filtres** (`barreFiltres`) : recherche permanente et puces « + Filtre » (lieu, nuit, taxon parent, nature de la nuit, espèces à enjeu), sur le socle partagé avec les quatre autres tableaux exploratoires. Chaque puce se retire d'un clic, et le sous-ensemble filtré est **ré-agrégé** en direct : filtrer, c'est re-tracer.
 - **Onglets** (`barreOnglets`) : socle des vues mémorisées, partageant les taxons par **catégorie du référentiel** (Chiroptères, Orthoptères et cigales, Autres mammifères), plus « Tout ». Tadarida ne détecte pas que des chauves-souris, et sans cette séparation la présélection des plus contactés peut retenir une sauterelle. L'utilisateur enregistre ses propres vues à côté.
 - **Sémantique du vide** : une sélection vide signifie « rien », pas « pas de filtre », l'écran le dit alors en nommant la dimension responsable.
 - **Espèces** (`listeEspeces`) : cochées par défaut sur les **cinq plus contactées**. Au-delà, le graphe devient illisible. Le compteur à droite de chaque espèce respecte les autres filtres actifs.

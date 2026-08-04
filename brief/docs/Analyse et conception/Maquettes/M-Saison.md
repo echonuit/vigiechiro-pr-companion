@@ -121,6 +121,20 @@ L'écran répond à une seule question, celle qu'un observateur se pose au milie
 - **Résumé d'en-tête** (`lblResume`) : les passages attendus **ventilés** - faits, à refaire, à réaliser - puis l'**échéance de la fenêtre du second passage**. La somme des trois vaut le total attendu (5 + 1 + 2 = 8 ci-dessus) : un décompte qui ne ferme pas laisse chercher où sont les manquants, ce qu'une proportion seule (« 5 sur 8 ») faisait. Les **nuits hors protocole** se comptent **à côté**, jamais dans le total, et la mention disparaît s'il n'y en a aucune. Ce décompte et les lignes du tableau proviennent de la **même source** : ils ne peuvent pas diverger.
 - **La campagne est un filtre, pas une colonne** (issue #2355). Une ligne du solde est un **point**, avec ses **deux** passages, qui peuvent relever de campagnes différentes : une colonne aurait dû en choisir une à afficher. Le filtre retient un point dès qu'**au moins un** de ses passages relève de la campagne, et le montre **en entier** - c'est l'état complet du point qui dit ce qu'il reste à y faire.
     Le sélecteur **Campagne** (`choixCampagne`) est posé à côté de celui de l'année. Il n'apparaît que s'il y a une campagne à proposer : coupée la fonctionnalité, ou aucune campagne créée, il est **retiré de la mise en page** (`managed=false`) et non simplement masqué - sans quoi il laisserait un trou dans la barre.
+- **Deux filtres s'ajoutent aux sélecteurs, sans les remplacer** (issue #3103, chantier #3092). Cet écran
+  est le seul tableau de l'application à **ne pas** prendre la barre à puces du socle, et c'est délibéré :
+  une saison **est** une année et une campagne, et garder ces deux sélecteurs toujours visibles donne la
+  lecture immédiate « je suis sur telle saison » qu'une puce parmi d'autres ferait perdre. C'est un
+  **tableau de bord**, pas une table exploratoire.
+    La limite était ailleurs : sur un jeu conséquent, les deux questions qu'on pose à la liste n'avaient
+    aucune réponse directe. Un champ **« Chercher un lieu »** (`champRechercheLieu`) retient les points
+    dont le carré, le nom qu'on lui a donné ou le code du point correspond ; une case **« Reste à faire »**
+    (`caseResteAFaire`) ne garde que les points qui ne sont pas à jour - la raison d'être de l'écran.
+    ⚠️ Ces deux filtres ne touchent **que la liste des points** : le résumé d'en-tête continue de compter
+    la **saison entière**. Filtrer change ce qu'on regarde, pas ce qu'il y a à faire
+    ([ADR 3092](https://companion-dev.echonuit.fr/decisions/3092-un-filtre-ne-change-que-ce-quon-regarde/)).
+    Les deux existent aussi en ligne de commande (`solde-saison --lieu`, `--reste-a-faire`), sur la même
+    écriture de la règle.
 - **Colonne « Hors protocole »** (`colHorsProtocole`, issue #2525) : les nuits **opportunistes** réalisées sur ce point. Elles ont leur colonne précisément pour ne pas occuper celle d'un passage attendu : les voir en « Passage 1 » se lirait « le passage 1 est fait » alors que la ligne réclame encore de poser l'enregistreur (ligne 3 de la maquette). Les colonnes de passage restent donc sur « Non planifié » tant que le passage du protocole manque réellement, et ces nuits ne comptent pas dans le décompte ([R34](../Modèle%20conceptuel/Règles%20métier.md#r34)).
 - **Colonnes Passage 1 et Passage 2** (`colPassage1`, `colPassage2`) : l'état du passage et sa date, ou son absence. **Les états et leurs couleurs sont repris du modèle existant** ; l'écran ne crée pas un second vocabulaire de statuts, ce qui obligerait l'utilisateur à en apprendre deux.
 - **Un passage inexploitable compte comme restant à faire** : c'est le cas où un décompte naïf induit en erreur, puisque le passage existe en base mais ne vaut rien pour le protocole.

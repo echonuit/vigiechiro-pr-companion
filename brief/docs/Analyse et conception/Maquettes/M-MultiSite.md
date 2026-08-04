@@ -83,7 +83,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   <rect x="302" y="102" width="126" height="26" rx="13" class="puce"/>
   <text x="316" y="119" class="puce-txt">Année : 2026  ✕</text>
   <rect x="436" y="102" width="104" height="26" rx="4" class="btn-secondary"/>
-  <text x="488" y="119" class="btn-txt-dark" text-anchor="middle">Réinitialiser</text>
+  <text x="488" y="119" class="btn-txt-dark" text-anchor="middle">Tout effacer</text>
   <rect x="1046" y="102" width="114" height="26" rx="4" class="btn-secondary"/>
   <text x="1103" y="119" class="btn-txt-dark" text-anchor="middle">☰ Colonnes ▾</text>
 
@@ -174,7 +174,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
 
 - **Carte (à gauche)** : chaque **carré** (maille 2 km du carroyage national, indigo) affiche son numéro dans le coin ; ses **points d'écoute** sont des marqueurs **colorés selon le statut** du dernier passage. Un point **sans GPS** est posé **au centre de son carré** ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26), [R27](../Modèle%20conceptuel/Règles%20métier.md#r27)). Une **légende** repliée en bas à gauche et un bouton **⤢** (recadrer) en haut à droite complètent. La carte montre **tous** les sites : elle n'est **pas** restreinte par les filtres du tableau.
 - **Tableau (à droite)** : un passage par ligne (carré, **commune**, point, année, n° de passage, date, statut, verdict, **analyse**, **campagne**). La colonne **Commune** (#3163) dit **pourquoi** une ligne correspond quand on filtre ou cherche par commune : le lieu se cochait sans se montrer. Vide tant que le GPS du point n'a résolu aucune commune, comme la campagne d'une nuit non rattachée. On **trie** en cliquant un en-tête (Année et N° se trient numériquement) ; un **double-clic** ouvre [M-Passage](M-Passage.md). La colonne **Campagne** ([C16](../Modèle%20conceptuel/C16%20-%20Campagne.md)) reste vide pour un passage non rattaché : le rattachement est **facultatif**, ce n'est pas une anomalie.
-- **Onglets de vues + filtres à puces** (socle partagé, décrit une fois dans le [pattern visuel partagé](index.md)) : en tête, des **onglets de vues mémorisées** (« Tous les passages », les vues enregistrées, **＋** pour en créer une) ; en dessous, un bouton **＋ Filtre** puis les filtres actifs sous forme de **puces cumulables** (statut, verdict, année, carré, analyse, campagne), plus **Réinitialiser**. Le menu **☰** porte l'**écoute**, l'**export** (CSV), le **choix des colonnes** et les **actions groupées** sur les lignes cochées ; **pas** les vues.
+- **Onglets de vues + filtres à puces** (socle partagé, décrit une fois dans le [pattern visuel partagé](index.md)) : en tête, des **onglets de vues mémorisées** (« Tous les passages », les vues enregistrées, **＋** pour en créer une) ; en dessous, un bouton **＋ Filtre** puis les filtres actifs sous forme de **puces cumulables** (statut, verdict, année, carré, analyse, campagne), plus **Tout effacer**. Le menu **☰** porte l'**écoute**, l'**export** (CSV), le **choix des colonnes** et les **actions groupées** sur les lignes cochées ; **pas** les vues.
 - **Actions groupées** : plusieurs lignes se cochent (Ctrl+clic, Maj+clic pour une plage), et le menu
   **☰** propose alors quatre gestes de la chaîne de production sur la sélection : **préparer le dépôt**,
   **téléverser**, **importer les résultats**, **déclencher le calcul**. Une fenêtre annonce d'abord
