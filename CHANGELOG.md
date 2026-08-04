@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.165.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.164.0...v2.165.0) (2026-08-04)
+
+
+### Features
+
+* **commun:** un carré, une entrée, ses deux étiquettes ([#3183](https://github.com/echonuit/vigiechiro-pr-companion/issues/3183)) ([7ae13ef](https://github.com/echonuit/vigiechiro-pr-companion/commit/7ae13ef3df41fe31b0d56430cb9ea2bdc5082531)), closes [#3158](https://github.com/echonuit/vigiechiro-pr-companion/issues/3158) [#2992](https://github.com/echonuit/vigiechiro-pr-companion/issues/2992) [#3157](https://github.com/echonuit/vigiechiro-pr-companion/issues/3157) [#3145](https://github.com/echonuit/vigiechiro-pr-companion/issues/3145)
+
 # [2.164.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.163.0...v2.164.0) (2026-08-04)
 
 
