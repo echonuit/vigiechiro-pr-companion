@@ -21,7 +21,7 @@ Le lot 4 l'a écrit, et trois questions se sont posées, dont les réponses ne s
 ## Décision 1 : montrer l'écart sans le trier
 
 Une divergence est **légitime** en bord de carré : le carroyage national ignore les limites administratives,
-et un carré de 2 km posé sur une frontière en chevauche deux ([R26](../../brief/docs/Analyse%20et%20conception/Mod%C3%A8le%20conceptuel/R%C3%A8gles%20m%C3%A9tier.md#r26)). Elle peut aussi trahir un GPS relevé au mauvais endroit ou un numéro de carré mal recopié.
+et un carré de 2 km posé sur une frontière en chevauche deux ([R26](https://brief.echonuit.fr/Analyse%20et%20conception/Mod%C3%A8le%20conceptuel/R%C3%A8gles%20m%C3%A9tier/#r26)). Elle peut aussi trahir un GPS relevé au mauvais endroit ou un numéro de carré mal recopié.
 
 L'audit **ne dispose d'aucun moyen de les départager** : il n'a ni la géométrie du carré, ni la distance
 au bord. Il émet donc **le même constat** dans les deux cas, et le dit dans son détail (« l'écart est
