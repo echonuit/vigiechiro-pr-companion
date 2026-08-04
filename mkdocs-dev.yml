@@ -145,6 +145,8 @@ nav:
     - 3082 · Désigner refuse, qualifier rend vide: decisions/3082-designer-refuse-qualifier-rend-vide.md
     - 3095 · Un domaine se calcule sans son propre critère: decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md
     - 3099 · Une puce présélectionnée annonce ce qu'elle filtre: decisions/3099-une-puce-preselectionnee-annonce-ce-quelle-filtre.md
+    - 3157 · Un carré a un identifiant et une étiquette: decisions/3157-un-carre-a-un-identifiant-et-une-etiquette.md
+    - 3158 · Une valeur mémorisée se rattrape par dimension: decisions/3158-une-valeur-memorisee-se-rattrape-par-dimension.md
     - 2727 · Une restauration vérifie en place: decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md
     - 2729 · Un script publié ne se modifie plus: decisions/2729-un-script-publie-ne-se-modifie-plus.md
     - 2731 · Un seul processus par dossier de travail: decisions/2731-un-seul-processus-par-workspace.md
