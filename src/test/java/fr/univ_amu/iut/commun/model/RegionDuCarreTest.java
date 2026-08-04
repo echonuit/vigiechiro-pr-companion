@@ -41,6 +41,23 @@ class RegionDuCarreTest {
     }
 
     @Test
+    @DisplayName("#2848 : le département du carré s'obtient seul, sans passer par la région")
+    void departement_seul() {
+        // Rendu public par #2848 : l'audit confronte cette lecture à celle de la commune, et la fiche
+        // site la réécrivait en `substring(0, 2)` pour son compte.
+        assertThat(RegionDuCarre.departement("640380")).contains("64");
+        assertThat(RegionDuCarre.departement("200001"))
+                .as("le numérotage carré écrit la Corse « 20 », là où l'INSEE écrit 2A/2B")
+                .contains("20");
+        assertThat(RegionDuCarre.departement("970123"))
+                .as("outre-mer : le département se lit, même si aucune région ne s'en déduit")
+                .contains("97");
+        assertThat(RegionDuCarre.departement(null)).isEmpty();
+        assertThat(RegionDuCarre.departement("6")).isEmpty();
+        assertThat(RegionDuCarre.departement("")).isEmpty();
+    }
+
+    @Test
     @DisplayName("Les 95 départements métropolitains sont couverts, sans trou")
     void couverture_complete() {
         for (int departement = 1; departement <= 95; departement++) {

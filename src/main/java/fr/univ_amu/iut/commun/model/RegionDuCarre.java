@@ -27,10 +27,24 @@ public final class RegionDuCarre {
     /// [LibellesReferentiel#region(String)] : c'est l'oubli de cette traduction qui a fait lire
     /// « region Provence-Alpes-Cote dAzur » en pied d'écran pendant des mois (#3049).
     public static Optional<String> pour(String numeroCarre) {
+        return departement(numeroCarre).flatMap(RegionsFrancaises::pourDepartement);
+    }
+
+    /// Le **département** que porte le numéro de carré (ses deux premiers chiffres), ou **vide** si le
+    /// numéro ne permet pas de conclure : nul ou trop court.
+    ///
+    /// Rendu public par #2848, qui confronte cette lecture à celle de la commune du point. La règle
+    /// « les deux premiers chiffres » se réécrivait ailleurs en `substring(0, 2)` ; ici elle vit avec
+    /// l'ADR qui l'établit.
+    ///
+    /// ⚠️ Ce n'est **pas** le code officiel : la Corse y porte `20`, là où l'INSEE écrit `2A`/`2B`, et
+    /// l'outre-mer y tient sur deux caractères là où le code en compte trois. Pour confronter cette
+    /// écriture à celle d'un code INSEE, passer par [RegionsFrancaises#memeDepartement].
+    public static Optional<String> departement(String numeroCarre) {
         if (numeroCarre == null || numeroCarre.length() < 2) {
             return Optional.empty();
         }
-        return RegionsFrancaises.pourDepartement(numeroCarre.substring(0, 2));
+        return Optional.of(numeroCarre.substring(0, 2));
     }
 
     /// Toutes les régions que le numérotage peut produire : sert à la garde qui les confronte au

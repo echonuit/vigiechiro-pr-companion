@@ -42,7 +42,16 @@ public enum CategorieConstat {
     /// le comportement voulu (c'est ce qui rend possible la restauration depuis une base vierge, #1050, et
     /// le reset guidé, #1419). Ce n'est pas l'absence du point qui mérite d'être dite, c'est ce qu'elle
     /// **cache**.
-    POINT_SERVEUR_IGNORE("Localité serveur ignorée");
+    POINT_SERVEUR_IGNORE("Localité serveur ignorée"),
+    /// Les **deux lectures** du département d'un point ne concordent pas (#2848) : celle de son carré
+    /// (les deux premiers chiffres du numéro, ADR 2351) et celle de sa commune (le préfixe du code
+    /// INSEE, ADR 2791).
+    ///
+    /// L'écart est **légitime** en bord de carré - un carré fait 10 km de côté et peut chevaucher deux
+    /// départements. Il peut aussi trahir un GPS pointé au mauvais endroit ou un numéro de carré mal
+    /// recopié. Le constat **montre** sans juger : d'où la [Severite#INFO], seul niveau qui ne fait pas
+    /// rendre 1 à `audit-coherence`.
+    DEPARTEMENT_DIVERGENT("Département divergent");
 
     private final String libelle;
 

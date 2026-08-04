@@ -21,6 +21,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
@@ -62,6 +63,7 @@ public class ServiceAuditCoherence {
     private final PresenceFichiers presenceFichiers;
     private final BalayageDisque balayage;
     private final AuditEnLigne auditEnLigne;
+    private final AuditDepartementDuPoint departements;
 
     public ServiceAuditCoherence(
             SourceDeDonnees source,
@@ -83,9 +85,11 @@ public class ServiceAuditCoherence {
         this.presenceFichiers = new PresenceFichiers(workspace);
         this.balayage = new BalayageDisque();
         this.auditEnLigne = new AuditEnLigne(verificationDepot, auditPointsServeur, this.passageDao);
+        this.departements = new AuditDepartementDuPoint(this.siteDao, this.pointDao, new PointCommuneDao(source));
     }
 
-    /// Audite tous les passages, puis les dossiers de session orphelins du workspace.
+    /// Audite tous les passages, puis les dossiers de session orphelins du workspace, puis les
+    /// **départements divergents** des points ([AuditDepartementDuPoint], #2848).
     public RapportAudit auditerTout() {
         List<ConstatAudit> constats = new ArrayList<>();
         Set<String> racinesConnues = new HashSet<>();
@@ -95,10 +99,16 @@ public class ServiceAuditCoherence {
             constats.addAll(auditerUnPassage(passage, session));
         }
         constats.addAll(balayage.dossiersOrphelins(workspace.racine(), racinesConnues));
+        constats.addAll(departements.auditer());
         return new RapportAudit(constats);
     }
 
-    /// Audite un passage précis (sans le balayage des dossiers orphelins, propre au workspace entier).
+    /// Audite un passage précis (sans le balayage des dossiers orphelins, propre au workspace entier,
+    /// ni la confrontation des départements, propre au **point**).
+    ///
+    /// L'audit ciblé répond à « cette nuit est-elle bien rangée ? » après réparation (#1347). Un
+    /// département divergent est une propriété du point, que rejouer un import ne change pas : le
+    /// signaler ici le répéterait à chaque nuit du même point sans jamais rien apprendre de neuf.
     ///
     /// @throws IllegalArgumentException si le passage est introuvable
     public RapportAudit auditerPassage(Long idPassage) {
