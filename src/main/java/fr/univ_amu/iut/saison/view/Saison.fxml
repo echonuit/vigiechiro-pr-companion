@@ -1,10 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.geometry.Insets?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -24,6 +26,16 @@
              fonctionnalité `campagne` est coupée. Un sélecteur qui ne propose rien n'aide personne. -->
         <Label fx:id="lblCampagne" text="Campagne"/>
         <ComboBox fx:id="choixCampagne" prefWidth="220.0"/>
+
+        <!-- Chercher un lieu et isoler ce qui reste (#3103). Ces deux-là s'AJOUTENT aux sélecteurs
+             ci-dessus, qui restent des contrôles fixes : une saison est une année et une campagne, et
+             les garder toujours visibles donne la lecture immédiate « je suis sur telle saison ». Sur un
+             jeu conséquent, en revanche, « où en est ce lieu ? » et « qu'est-ce qu'il me reste à
+             faire ? » n'avaient aucune réponse directe. -->
+        <TextField fx:id="champRechercheLieu" promptText="Chercher un lieu (carré, point…)"
+                   minWidth="-Infinity" prefWidth="230.0"/>
+        <CheckBox fx:id="caseResteAFaire" minWidth="-Infinity" text="Reste à faire"
+                  accessibleText="N'afficher que les points qui ne sont pas à jour"/>
     </HBox>
 
     <Label fx:id="lblResume" wrapText="true"/>

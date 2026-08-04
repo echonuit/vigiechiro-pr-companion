@@ -86,7 +86,20 @@ class SaisonViewTest {
                                 CasePassage.absente(),
                                 List.of(new CasePassage(
                                         99L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 25), true, null)),
-                                "Poser l'enregistreur avant le 31/07")));
+                                "Poser l'enregistreur avant le 31/07"),
+                        // Un point À JOUR (#3103) : « reste à faire » vide. Sans lui, le filtre « Reste
+                        // à faire » garderait les quatre lignes et ne discriminerait rien - la fixture
+                        // ne portait que des points en retard.
+                        new LigneSaison(
+                                "640004",
+                                "D1",
+                                4L,
+                                new CasePassage(
+                                        77L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 10), false, null),
+                                new CasePassage(
+                                        78L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 8, 12), false, null),
+                                List.of(),
+                                "")));
         when(service.soldeCourant(anyString(), org.mockito.ArgumentMatchers.isNull()))
                 .thenReturn(solde);
         when(service.soldePour(anyString(), anyInt())).thenReturn(solde);
@@ -115,7 +128,7 @@ class SaisonViewTest {
     @DisplayName("une ligne par point suivi")
     void une_ligne_par_point(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableSaison").queryAs(TableView.class);
-        assertThat(table.getItems()).hasSize(3);
+        assertThat(table.getItems()).hasSize(4);
     }
 
     @Test
@@ -152,5 +165,60 @@ class SaisonViewTest {
                 .isFalse();
         assertThat(robot.lookup("#lblCampagne").queryAs(Label.class).isManaged())
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#3103 : chercher un lieu restreint la table, vider la recherche la rétablit")
+    void chercher_un_lieu_restreint_la_table(FxRobot robot) {
+        // Preuve de bout en bout : le champ du FXML, le socle Filtres du view-model, la FilteredList et
+        // la SortedList de la table. Un test qui n'irait que jusqu'au view-model passerait même si le
+        // champ n'était relié à rien.
+        TableView<?> table = robot.lookup("#tableSaison").queryAs(TableView.class);
+
+        robot.clickOn("#champRechercheLieu").write("640002");
+
+        assertThat(table.getItems()).hasSize(1);
+
+        robot.doubleClickOn("#champRechercheLieu").eraseText("640002".length());
+
+        assertThat(table.getItems())
+                .as("vider la recherche rend la saison entière")
+                .hasSize(4);
+    }
+
+    @Test
+    @DisplayName("#3103 : « Reste à faire » écarte les points à jour, et les rend en se décochant")
+    void reste_a_faire_ecarte_les_points_a_jour(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableSaison").queryAs(TableView.class);
+
+        robot.clickOn("#caseResteAFaire");
+
+        assertThat(table.getItems())
+                .as("le point 640004 est à jour : c'est le seul que le filtre doit écarter")
+                .hasSize(3);
+
+        robot.clickOn("#caseResteAFaire");
+
+        assertThat(table.getItems()).hasSize(4);
+    }
+
+    @Test
+    @DisplayName("#3103 : la table reste triable une fois posée sur la liste filtrée")
+    void la_table_reste_triable(FxRobot robot) {
+        // Une `FilteredList` posée nue est non modifiable : `TableView` renonce alors à trier et vide
+        // son `sortOrder` de lui-même, sans rien dire. Le défaut ne se voit ni à la compilation, ni sur
+        // une capture - seulement en essayant de trier.
+        TableView<?> table = robot.lookup("#tableSaison").queryAs(TableView.class);
+
+        robot.interact(() -> trierSurLaPremiereColonne(table));
+
+        assertThat(table.getSortOrder()).isNotEmpty();
+        assertThat(table.getItems()).as("trier ne perd aucune ligne").hasSize(4);
+    }
+
+    /// Nomme le paramètre de type de la table, que `queryAs` rend joker : sans lui, poser une colonne
+    /// dans `getSortOrder()` ne compile pas, et le faire compiler demanderait un transtypage non vérifié.
+    private static <T> void trierSurLaPremiereColonne(TableView<T> table) {
+        table.getSortOrder().setAll(table.getColumns().get(0));
     }
 }
