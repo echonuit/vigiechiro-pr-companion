@@ -82,6 +82,29 @@ class CliSauvegardeTest {
     }
 
     @Test
+    @DisplayName("#3212 : les deux formes disent ce que l'archive emporte (parité avec l'IHM)")
+    void sauvegarder_dit_ce_qu_elle_emporte() throws IOException {
+        int codeSimple = cli.executer(new String[] {"sauvegarder"}, sortie, erreur);
+
+        assertThat(codeSimple).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie())
+                .as("l'ADR 2736 ne chiffre pas : la contrepartie est de dire ce qu'on écrit")
+                .contains("localisations")
+                .contains("en clair");
+
+        // Les deux invocations écrivent dans le même tampon : l'assertion suivante porte donc sur le
+        // cumul, ce qui reste discriminant (seule la branche complète parle d'enregistrements).
+        declarerSession(seederSession("Car040962-2026-Pass1-A1"), 1);
+        int codeComplet = cli.executer(new String[] {"sauvegarder", "--complet"}, sortie, erreur);
+
+        assertThat(codeComplet).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie())
+                .as("la complète emporte aussi les enregistrements")
+                .contains("localisations")
+                .contains("enregistrements");
+    }
+
+    @Test
     @DisplayName("sauvegarder --complet, carte SD non montée : code 2 et dossiers manquants listés")
     void sauvegarder_complet_incomplet() throws IOException {
         declarerSession(seederSession("Car040962-2026-Pass1-A1"), 1);

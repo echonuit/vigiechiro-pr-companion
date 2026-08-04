@@ -35,6 +35,25 @@ import java.util.Optional;
 /// à faire hors opération concurrente.
 public class ServiceSauvegarde {
 
+    /// Ce qu'une sauvegarde de la **base** emporte, dit à l'utilisateur (#3212).
+    ///
+    /// L'[ADR 2736](https://companion-dev.echonuit.fr/decisions/2736-le-clair-est-assume-et-annonce/) a
+    /// tranché de **ne pas chiffrer** : une clé dérivée d'un mot de passe ferait de la sauvegarde un
+    /// piège au moment précis où elle sert. Cette décision n'est tenable que si l'application **dit ce
+    /// qu'elle écrit** - sinon l'utilisateur range en aveugle un fichier qui porte les localisations
+    /// d'espèces protégées, éventuellement dans un dossier synchronisé sur un service en ligne.
+    ///
+    /// La phrase vit **ici**, et non dans chaque surface : l'IHM et la CLI doivent dire la **même
+    /// chose**, et deux copies d'un même avertissement divergent (ADR 0014). Un constat, jamais une
+    /// alarme : sauvegarder est une bonne pratique, le message ne doit pas en dissuader.
+    public static final String CE_QU_ELLE_EMPORTE =
+            "Elle contient vos localisations de points d'écoute, en clair : rangez-la en conséquence.";
+
+    /// Ce qu'une sauvegarde **complète** emporte en plus : l'audio (#3212). Même règle de partage.
+    public static final String CE_QUE_LA_COMPLETE_EMPORTE =
+            "Elle contient vos localisations de points d'écoute et vos enregistrements, en clair :"
+                    + " rangez-la en conséquence.";
+
     private static final String PREFIXE = "vigiechiro-sauvegarde-";
     private static final String PREFIXE_COMPLET = "vigiechiro-sauvegarde-complete-";
 

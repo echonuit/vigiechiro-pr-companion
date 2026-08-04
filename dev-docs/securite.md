@@ -78,7 +78,10 @@ piège. Stockée à côté de l'archive, elle ne protège de rien. Confiée à u
 sauvegarde illisible depuis une autre machine - ce qui est justement son usage.
 
 **Ce qui est fait à la place** : l'application **annonce** ce que ses archives emportent, plutôt que de
-décider à la place de l'utilisateur où elles peuvent être rangées (#3212).
+décider à la place de l'utilisateur où elles peuvent être rangées (#3212). La phrase vit dans
+`ServiceSauvegarde.CE_QU_ELLE_EMPORTE` et sa variante complète : **une seule source pour les deux
+surfaces**, l'IHM la disant dans sa confirmation ou son compte rendu, la CLI sur sa sortie standard.
+Deux copies d'un même avertissement divergent (ADR 0014).
 
 ⚠️ **Ce que cela suppose du contexte** : le produit vise le **poste personnel** d'un naturaliste, pas
 un terminal partagé en environnement hostile. Un poste compromis expose les données locales et le

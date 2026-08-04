@@ -70,7 +70,7 @@ final class ActionsSauvegarde {
                 fichier -> notificateur.notifier(
                         NiveauNotification.INFORMATION,
                         "Sauvegarde créée",
-                        "La base a été sauvegardée dans :\n" + fichier),
+                        "La base a été sauvegardée dans :\n" + fichier + "\n\n" + ServiceSauvegarde.CE_QU_ELLE_EMPORTE),
                 echec -> signalerEchec("Sauvegarde impossible", echec));
     }
 
@@ -92,7 +92,8 @@ final class ActionsSauvegarde {
             return;
         }
         if (!confirmateur.confirmer("La sauvegarde complète copie la base ET tous vos dossiers de session"
-                + " (l'audio). Elle peut peser plusieurs gigaoctets et prendre du temps. Continuer ?")) {
+                + " (l'audio). Elle peut peser plusieurs gigaoctets et prendre du temps.\n\n"
+                + ServiceSauvegarde.CE_QUE_LA_COMPLETE_EMPORTE + "\n\nContinuer ?")) {
             return;
         }
         occupation.occuper(

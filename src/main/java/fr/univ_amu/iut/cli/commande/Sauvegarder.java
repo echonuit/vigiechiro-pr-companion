@@ -68,12 +68,14 @@ public final class Sauvegarder implements Callable<Integer> {
             sortie.println("Base sauvegardée : " + fichier);
             sortie.println("⚠ L'audio n'est PAS dans cette sauvegarde. Utilisez --complet pour l'inclure :"
                     + " la plateforme ne rend pas l'audio d'un dépôt en archives.");
+            sortie.println(ServiceSauvegarde.CE_QU_ELLE_EMPORTE);
             return 0;
         }
 
         BilanSauvegarde bilan = sauvegarde.sauvegarderComplet(destination);
         sortie.println("Sauvegarde complète : " + bilan.dossier());
         sortie.println(bilan.enClair());
+        sortie.println(ServiceSauvegarde.CE_QUE_LA_COMPLETE_EMPORTE);
         if (bilan.incomplete()) {
             sortie.println("⚠ Sauvegarde INCOMPLÈTE : les dossiers ci-dessus n'ont pas été copiés.");
             return CODE_INCOMPLETE;

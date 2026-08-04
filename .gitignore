@@ -109,3 +109,4 @@ CLAUDE.md
 # (contient le token de session, un secret). Restent sur le poste, hors-git.
 vigiechiro.db
 connexion.json
+graphify-out/

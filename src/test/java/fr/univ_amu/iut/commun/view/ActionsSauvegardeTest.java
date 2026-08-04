@@ -120,6 +120,40 @@ class ActionsSauvegardeTest {
     }
 
     @Test
+    @DisplayName("#3212 : la sauvegarde de la base dit ce qu'elle emporte (les localisations, en clair)")
+    void sauvegarde_simple_dit_ce_qu_elle_emporte() {
+        choix = Optional.of(DOSSIER);
+        when(service.sauvegarder(DOSSIER)).thenReturn(FICHIER);
+
+        action.sauvegarder();
+
+        // L'ADR 2736 a tranché de ne pas chiffrer. Cette décision n'est tenable que si l'application
+        // dit ce qu'elle écrit : sans cette phrase, l'utilisateur range en aveugle un fichier qui porte
+        // les localisations d'espèces protégées.
+        assertThat(annonces)
+                .singleElement()
+                .satisfies(
+                        annonce -> assertThat(annonce).contains("localisations").contains("en clair"));
+    }
+
+    @Test
+    @DisplayName("#3212 : la sauvegarde complète l'annonce AVANT de copier, dans sa confirmation")
+    void sauvegarde_complete_annonce_avant_de_copier() {
+        choix = Optional.of(DOSSIER);
+        when(service.sauvegarderComplet(DOSSIER)).thenReturn(new BilanSauvegarde(DOSSIER, 3, List.of()));
+
+        action.sauvegarderComplet();
+
+        // Avant, et non après : c'est au moment de choisir où la ranger que l'information sert.
+        assertThat(confirmations)
+                .singleElement()
+                .satisfies(question -> assertThat(question)
+                        .contains("localisations")
+                        .as("la complète emporte aussi les enregistrements")
+                        .contains("enregistrements"));
+    }
+
+    @Test
     @DisplayName("#1405 : sélecteur annulé : aucune copie, aucun compte rendu")
     void selecteur_annule_ne_sauvegarde_rien() {
         choix = Optional.empty();
