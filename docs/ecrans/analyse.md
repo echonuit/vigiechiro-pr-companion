@@ -60,7 +60,7 @@ voir [Agir sur une ligne](../personnaliser-les-tableaux.md#agir-sur-une-ligne-do
 
 L'écran est en **maître-détail**. En sélectionnant une espèce dans l'inventaire (mode *Par espèce*), le
 panneau du bas liste **toutes ses observations à travers les passages** : date et n° de passage, carré,
-point, **proposition Tadarida** (avec sa probabilité), **votre taxon** (la saisie de l'observateur, ou
+point, **commune**, **proposition Tadarida** (avec sa probabilité), **votre taxon** (la saisie de l'observateur, ou
 `—` si la séquence n'a pas encore été revue) et le **statut**. C'est la réponse à « où et quand ai-je
 détecté cette espèce ? », toutes nuits confondues.
 
