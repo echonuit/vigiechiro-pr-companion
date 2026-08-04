@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.165.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.165.0...v2.165.1) (2026-08-04)
+
+
+### Bug Fixes
+
+* **cli:** le refus de --lieu nomme les carrés comme l'écran les montre ([#3185](https://github.com/echonuit/vigiechiro-pr-companion/issues/3185)) ([ba077a8](https://github.com/echonuit/vigiechiro-pr-companion/commit/ba077a8d5c28d0c11caca7fcce4bb3853765ba49)), closes [#3159](https://github.com/echonuit/vigiechiro-pr-companion/issues/3159) [#3159](https://github.com/echonuit/vigiechiro-pr-companion/issues/3159)
+
 # [2.165.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.164.0...v2.165.0) (2026-08-04)
 
 
