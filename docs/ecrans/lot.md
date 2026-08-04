@@ -139,6 +139,15 @@ vous dit où en est le calcul :
 | **Un premier essai a échoué…** | La plateforme a relancé le calcul d'elle-même. Patientez. |
 | **L'analyse a échoué** | Le motif est indiqué. |
 
+!!! note "« URL de stockage refusée »"
+    Vos enregistrements montent vers un espace de stockage dont **la plateforme fournit l'adresse**.
+    L'application vérifie cette adresse avant d'y envoyer quoi que ce soit : si elle n'est pas celle
+    attendue, ou si elle n'est pas chiffrée (`https`), le dépôt est **refusé sans rien envoyer**.
+
+    Ce refus est anormal : il signifie que l'hébergement de Vigie-Chiro a changé, ou que quelque chose
+    s'interpose. **Signalez-le** plutôt que de contourner. Rien n'a été envoyé, et votre nuit est
+    intacte : le dépôt pourra être relancé une fois la cause connue.
+
 L'application **n'interroge pas la plateforme en permanence** : elle affiche le dernier état qu'elle
 connaît, en précisant de quand il date : y compris hors connexion. Le bouton **« Actualiser »**
 redemande l'état à Vigie-Chiro, et vous pouvez fermer l'application entre-temps : le calcul se

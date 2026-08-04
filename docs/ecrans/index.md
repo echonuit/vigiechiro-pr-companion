@@ -57,6 +57,15 @@ de la barre du haut permet de la **protéger** :
   de travail et la base est corrigée pour les y retrouver : elle ne désigne jamais un dossier absent.
   L'application vous dit ce qui a changé de place, et ce que la sauvegarde ne contenait pas.
 
+!!! warning "Une sauvegarde contient vos localisations, en clair"
+    Une sauvegarde n'est **pas chiffrée** : elle porte la base - donc les **coordonnées de vos points
+    d'écoute** - et, pour la sauvegarde complète, vos enregistrements. C'est ce qui la rend utile :
+    lisible par une autre installation de l'application, sans mot de passe à retrouver le jour où tout
+    le reste a échoué.
+
+    Rangez-la en conséquence : un disque que vous gardez vaut mieux qu'un dossier synchronisé sur un
+    service en ligne. La localisation précise des gîtes d'espèces protégées ne se diffuse pas.
+
 !!! tip "Une restauration complète vérifie avant de toucher à quoi que ce soit"
     Chaque dossier de la sauvegarde est confronté à ce qu'elle annonce contenir. Une seule
     discordance, et la restauration s'arrête **avant** d'avoir remplacé la base ou écrasé le moindre
