@@ -16,7 +16,7 @@ Chaque ligne est un **écart**, et se lit de gauche à droite :
 
 | Colonne | Ce qu'elle dit |
 |---|---|
-| **Gravité** | `ERREUR` (à traiter), `AVERTISSEMENT` (à regarder), `INFO` (normal, mais bon à savoir) |
+| **Gravité** | **Erreur** (à traiter), **Avertissement** (à regarder), **Information** (normal, mais bon à savoir) |
 | **Catégorie** | la nature de l'écart (fichier manquant, préfixe non conforme, dépôt divergent…) |
 | **Passage** | la nuit concernée : **double-cliquez** pour l'ouvrir |
 | **Cible** | le fichier ou l'élément en cause |
@@ -25,10 +25,40 @@ Chaque ligne est un **écart**, et se lit de gauche à droite :
 Le bandeau du haut résume : *« 5 écarts : 1 erreur, 0 avertissement, 4 infos »*.
 
 !!! tip "Tout n'est pas une anomalie"
-    Un constat en **INFO** ne demande souvent **aucune action** : une nuit **archivée** n'a plus ses
+    Un constat en **Information** ne demande souvent **aucune action** : une nuit **archivée** n'a plus ses
     fichiers sur le disque, et c'est **voulu**. L'audit le dit : parce qu'un audit qui se tairait sur un
     état normal vous laisserait croire que le disque est intact, et un audit qui **crierait** sur un état
     normal finirait par ne plus être lu du tout.
+
+## Filtrer les constats
+
+Un audit de saison mêle des natures très différentes : une carte SD débranchée, un nom de fichier hors
+convention, un dépôt inachevé. La **barre de filtres** vous laisse poser la question qui vous occupe :
+*« qu'est-ce qui est bloquant ? »*, *« qu'est-ce qui concerne cette nuit-là ? »*. Elle fonctionne comme
+celle des autres écrans :
+
+- un **champ de recherche** permanent cherche dans la **Cible** et le **Détail** : les deux colonnes en
+  texte libre. La recherche ignore la casse et les accents ;
+- un bouton **« + Filtre »** ajoute un critère sous forme de **puce** ; on retire une puce par sa croix ;
+- **« Tout effacer »** enlève d'un coup les puces **et** la recherche.
+
+| Critère | Ce qu'il garde |
+|---|---|
+| **Gravité** | les constats d'une gravité : Erreur, Avertissement, Information, Succès |
+| **Catégorie** | les constats d'une nature : fichier absent du disque, préfixe non conforme, dépôt divergent… |
+| **Passage** | les constats qui accusent une nuit précise. Un constat qui ne cite **aucune** nuit (un fichier orphelin, un serveur injoignable) n'a rien à y désigner : il n'apparaît pas dans la liste des passages |
+
+Aucune puce n'est posée d'avance : un audit se lit d'abord **en entier**. Vous filtrez ensuite pour
+travailler.
+
+!!! warning "Relancer l'audit peut faire disparaître ce que vous filtriez"
+    Vos filtres sont **remis en place** quand vous revenez sur l'écran. Mais entre-temps, l'audit a pu
+    être relancé : la nuit 42 que vous suiviez n'a peut-être plus de constat du tout. Quand un filtre ne
+    peut pas être repris, un **bandeau vous le dit** : l'écran montre alors **plus large** que ce que
+    vous aviez demandé, et vous devez le savoir pour ne pas croire l'avoir déjà réduit.
+
+Vous pouvez aussi **enregistrer une vue** (les onglets au-dessus de la barre) pour retrouver d'un clic une
+combinaison qui vous sert souvent : par exemple les erreurs de dépôt d'une campagne.
 
 ## Aller au passage accusé
 
