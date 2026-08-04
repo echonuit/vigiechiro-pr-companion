@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
@@ -182,7 +183,7 @@ final class CriteresAudio {
     /// passage (sources « un lot de passages » et « une espèce à travers les passages ») ; une entrée
     /// « A1 » y confondait donc silencieusement les A1 de plusieurs carrés.
     private static String pointQualifie(LigneObservationAudio ligne) {
-        return ligne.codePoint() == null ? null : ligne.numeroCarre() + " · " + ligne.codePoint();
+        return ligne.codePoint() == null ? null : LieuQualifie.qualifier(ligne.numeroCarre(), ligne.codePoint());
     }
 
     /// Critère **Références seulement** (booléen) : ne garde que les observations archivées en référence
