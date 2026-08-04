@@ -6,16 +6,22 @@ import fr.univ_amu.iut.audit.model.ContexteAuditPassage;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.commun.model.Severite;
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 
 /// ViewModel de l'écran **Audit de cohérence** : lance l'audit **global** disque / base
 /// ([ServiceAuditCoherence#auditerTout]) et, à la demande, la vérification **en ligne**
@@ -25,8 +31,17 @@ public class AuditViewModel {
 
     private final ServiceAuditCoherence service;
     private final ObservableList<ConstatAudit> constats = FXCollections.observableArrayList();
+
+    /// Les constats **retenus par la barre de filtres** (#3100). C'est cette liste que la table montre ;
+    /// [#constats] reste le résultat entier de l'audit, sur lequel se calculent le résumé et le verdict.
+    /// Masquer des lignes n'efface pas des constats.
+    private final FilteredList<ConstatAudit> constatsFiltres = new FilteredList<>(constats);
+
+    private final Filtres<ConstatAudit> filtres = new Filtres<>(constatsFiltres, () -> {});
     private final ReadOnlyStringWrapper resume = new ReadOnlyStringWrapper(this, "resume", "");
     private final ReadOnlyBooleanWrapper sain = new ReadOnlyBooleanWrapper(this, "sain", true);
+    private final ReadOnlyObjectWrapper<RetourOperation> retour =
+            new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
     @Inject
     public AuditViewModel(ServiceAuditCoherence service) {
@@ -93,6 +108,41 @@ public class AuditViewModel {
 
     public ObservableList<ConstatAudit> constats() {
         return constats;
+    }
+
+    /// Les constats que la barre de filtres laisse passer (#3100) : ce que la **table** montre.
+    public ObservableList<ConstatAudit> constatsFiltres() {
+        return constatsFiltres;
+    }
+
+    /// Socle de filtres composables (#537) sur les constats : la barre à puces de l'écran y branche et
+    /// y retire ses prédicats (gravité, catégorie, passage, recherche).
+    public Filtres<ConstatAudit> filtres() {
+        return filtres;
+    }
+
+    /// Retour de la **dernière opération** avec sa sévérité, pour le bandeau de l'écran.
+    public ReadOnlyObjectProperty<RetourOperation> retourProperty() {
+        return retour.getReadOnlyProperty();
+    }
+
+    /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
+    public void effacerRetour() {
+        retour.set(RetourOperation.AUCUN);
+    }
+
+    /// Signale qu'une **vue mémorisée** vient d'être rejouée **amputée** de valeurs devenues
+    /// introuvables (#3056) : elle filtre moins large qu'à son enregistrement.
+    public void signalerVueAmputee(String nomVue, ResteDeRestauration reste) {
+        retour.set(RetourOperation.vueAmputee(nomVue, reste));
+    }
+
+    /// Les filtres de la **mémoire de session** (#484, étendue en #3098) que la réouverture de l'écran
+    /// n'a pas su remettre en place (#3093) : les constats ont changé depuis la dernière visite, parce
+    /// qu'entre-temps l'audit a été relancé. C'est le chemin le plus discret des trois, puisque
+    /// personne n'a rien demandé.
+    public void signalerFiltresDeSessionAmputes(ResteDeRestauration reste) {
+        retour.set(RetourOperation.filtresDeSessionAmputes(reste));
     }
 
     public ReadOnlyStringProperty resumeProperty() {
