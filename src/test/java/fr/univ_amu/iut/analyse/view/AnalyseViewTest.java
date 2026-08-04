@@ -200,6 +200,7 @@ class AnalyseViewTest {
                 "640380",
                 "Étang",
                 1L,
+                null,
                 null);
     }
 
@@ -217,6 +218,7 @@ class AnalyseViewTest {
                 "640380",
                 "Étang",
                 1L,
+                null,
                 null);
     }
 
@@ -224,7 +226,18 @@ class AnalyseViewTest {
     /// rabattre, donc aucune fiche n'est constructible, quelle que soit la source universelle préférée.
     private static ObservationAnalyse obsSansFiche(String taxon, String vern) {
         return new ObservationAnalyse(
-                taxon, null, vern, "Chiroptères", StatutObservation.VALIDEE, 42L, 2026, "640380", "Étang", 1L, null);
+                taxon,
+                null,
+                vern,
+                "Chiroptères",
+                StatutObservation.VALIDEE,
+                42L,
+                2026,
+                "640380",
+                "Étang",
+                1L,
+                null,
+                null);
     }
 
     @Test
@@ -844,7 +857,18 @@ class AnalyseViewTest {
 
     private static ObservationAnalyse obsLieu(String taxon, String commune, String carre, String site) {
         return new ObservationAnalyse(
-                taxon, null, taxon, "Chiroptères", StatutObservation.VALIDEE, 42L, 2026, carre, site, 1L, commune);
+                taxon,
+                null,
+                taxon,
+                "Chiroptères",
+                StatutObservation.VALIDEE,
+                42L,
+                2026,
+                carre,
+                site,
+                1L,
+                commune,
+                null);
     }
 
     /// Le `MenuButton` de l'unique puce posée : la puce est une `HBox` dont le second enfant est l'éditeur.

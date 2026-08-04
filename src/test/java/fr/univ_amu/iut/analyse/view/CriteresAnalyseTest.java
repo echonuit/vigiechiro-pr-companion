@@ -19,7 +19,7 @@ class CriteresAnalyseTest {
 
     private static ObservationAnalyse obs(String taxon, String vern, String latin, String carre, String site) {
         return new ObservationAnalyse(
-                taxon, latin, vern, "Chiroptères", StatutObservation.VALIDEE, 1L, 2026, carre, site, 10L, null);
+                taxon, latin, vern, "Chiroptères", StatutObservation.VALIDEE, 1L, 2026, carre, site, 10L, null, null);
     }
 
     @Test
@@ -36,7 +36,8 @@ class CriteresAnalyseTest {
                 "130711",
                 "Jardin de Serge",
                 10L,
-                "Aix-en-Provence");
+                "Aix-en-Provence",
+                null);
         assertThat(recherche.test(o, "aix")).isTrue();
         assertThat(recherche.test(o, "marseille")).isFalse();
     }
