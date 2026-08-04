@@ -156,7 +156,7 @@ jobs:
 
       - name: Soumettre à winget-pkgs
         if: steps.garde.outputs.present == 'true'
-        uses: vedantmgoyal9/winget-releaser@v2
+        uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
         with:
           # Identifiant stable, à vie. Éditeur = le projet Echonuit (cohérent avec le
           # --vendor de l'installeur et l'app-id Flatpak fr.echonuit.* ; ADR 0047).

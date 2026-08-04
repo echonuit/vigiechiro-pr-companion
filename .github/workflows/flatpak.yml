@@ -75,7 +75,7 @@ jobs:
       APP_ID: fr.echonuit.VigieChiroCompanion
       MANIFESTE: flatpak/fr.echonuit.VigieChiroCompanion.yml
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: main
 
@@ -83,7 +83,7 @@ jobs:
       # bloc x-checker-data. `--edit-only` : modifie les fichiers, ne commite pas,
       # n'ouvre pas de PR. La suite du job décide si ça mérite d'être proposé.
       - name: Recalculer le manifeste depuis la dernière release
-        uses: docker://ghcr.io/flathub/flatpak-external-data-checker:latest
+        uses: docker://ghcr.io/flathub/flatpak-external-data-checker@sha256:58cbad601261c2ebaae2e18b6f639c09aa5809ef941dcff7284f68928ebb790d  # :latest du 2026-08-04
         with:
           args: --update --edit-only flatpak/fr.echonuit.VigieChiroCompanion.yml
 
