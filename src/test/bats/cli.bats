@@ -172,6 +172,55 @@ setup() {
   [[ "${output}" == *"A1"* ]]
 }
 
+@test "importer : une archive .zip s importe comme un dossier, exit 0 (#3195)" {
+  # Parite CLI/IHM sur un VRAI processus : le fat-jar recoit une archive, la decompresse sous le
+  # workspace, importe, et efface son temporaire. Aucun test in-process ne voit le packaging.
+  command -v python3 >/dev/null 2>&1 || skip "python3 requis pour fabriquer le WAV et l archive"
+
+  local sd="${BATS_TEST_TMPDIR}/sd"
+  fabriquer_carte_sd "${sd}"
+  python3 -c "import shutil, sys; shutil.make_archive(sys.argv[1], 'zip', sys.argv[2])" \
+    "${BATS_TEST_TMPDIR}/carte" "${sd}"
+
+  local site point
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+
+  run cli importer --point "${point}" --source "${BATS_TEST_TMPDIR}/carte.zip"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Import réussi"* ]]
+
+  # Le temporaire d extraction ne survit pas a la commande : un script n a aucun ecran ou repasser.
+  [ -z "$(find "${BATS_TEST_TMPDIR}" -maxdepth 1 -type d -name 'import-zip-*' 2>/dev/null)" ]
+}
+
+@test "importer : une archive hors bornes est refusee, exit 2, rien d importe (#3195, #2732)" {
+  # LE parcours que #2732 n avait aucun moyen d exercer bout en bout : ses bornes ne vivaient que
+  # derriere l IHM. On abaisse la borne d entrees plutot que de fabriquer une bombe - ce qu on eprouve
+  # est le CHEMIN du refus jusqu au code de sortie du processus.
+  command -v python3 >/dev/null 2>&1 || skip "python3 requis pour fabriquer le WAV et l archive"
+
+  local sd="${BATS_TEST_TMPDIR}/sd"
+  fabriquer_carte_sd "${sd}"
+  python3 -c "import shutil, sys; shutil.make_archive(sys.argv[1], 'zip', sys.argv[2])" \
+    "${BATS_TEST_TMPDIR}/carte" "${sd}"
+
+  local site point
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+
+  run cli_avec_option_jvm -Dvigiechiro.import.zip.max-entrees=1 \
+    importer --point "${point}" --source "${BATS_TEST_TMPDIR}/carte.zip"
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Archive zip refus"* ]]
+  [[ "${output}" == *"max-entrees"* ]]
+
+  # Rien d importe, et rien de laisse derriere.
+  run cli lister-passages
+  [[ "${output}" != *"130711"* ]]
+  [ -z "$(find "${BATS_TEST_TMPDIR}" -maxdepth 1 -type d -name 'import-zip-*' 2>/dev/null)" ]
+}
+
 @test "importer : --conserver-originaux et --sans-originaux s'excluent, exit 2 (#2181, #2294)" {
   # Contrat HORS-LIGNE : le conflit de flags est vérifié dès le lancement, AVANT toute lecture de la
   # source ou accès réseau. On sème un point (creer-site -> ajouter-point, qui écrit l'id sur stdout),

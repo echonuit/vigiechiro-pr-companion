@@ -108,6 +108,114 @@ class CliImportTest {
         assertThat(sortie.tout()).contains("s'excluent");
     }
 
+    @Test
+    @DisplayName("#3195 : une archive .zip s'importe comme un dossier (parité avec l'IHM)")
+    void archive_zip_sImporte() throws IOException {
+        Path archive = zipper(sd, racine.resolve("carte.zip"), null);
+
+        int code = importerDepuis(archive);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(injecteur.getInstance(PassageDao.class).findByPoint(idPoint))
+                .as("l'archive a bien produit un passage, comme le dossier équivalent")
+                .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#3195 : une archive « compresser ce dossier » est dépliée, journal et WAV retrouvés")
+    void archive_avec_dossier_racine_unique() throws IOException {
+        Path archive = zipper(sd, racine.resolve("carte-enveloppee.zip"), "Car640380-2026-Pass3-Z1");
+
+        int code = importerDepuis(archive);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(injecteur.getInstance(PassageDao.class).findByPoint(idPoint)).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#3195 : le temporaire d'extraction ne survit pas à la commande")
+    void temporaire_nettoye_apres_import() throws IOException {
+        Path archive = zipper(sd, racine.resolve("carte.zip"), null);
+
+        importerDepuis(archive);
+
+        assertThat(temporairesDExtraction())
+                .as("un script n'a aucun écran où repasser : le temporaire se nettoie ici ou jamais")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3195 : une archive hors bornes (#2732) est refusée en code 2, et le temporaire est nettoyé")
+    void archive_hors_bornes_refusee() throws IOException {
+        // On abaisse la borne plutôt que de fabriquer une bombe : ce qu'on éprouve est le CHEMIN du
+        // refus jusqu'au code de sortie, pas la capacité de BornesExtraction à compter (couverte ailleurs).
+        System.setProperty("vigiechiro.import.zip.max-entrees", "1");
+        try {
+            Path archive = zipper(sd, racine.resolve("carte.zip"), null);
+
+            SortieCapturee sortie = new SortieCapturee();
+            int code = cli.executer(argsImportDepuis(archive), sortie.sortie(), sortie.erreur());
+
+            assertThat(code).isEqualTo(2);
+            assertThat(sortie.tout()).contains("Archive zip refusée").contains("max-entrees");
+            assertThat(temporairesDExtraction())
+                    .as("un refus laisse le disque comme il l'a trouvé")
+                    .isEmpty();
+        } finally {
+            System.clearProperty("vigiechiro.import.zip.max-entrees");
+        }
+    }
+
+    private int importerDepuis(Path source) {
+        SortieCapturee sortie = new SortieCapturee();
+        return cli.executer(argsImportDepuis(source), sortie.sortie(), sortie.erreur());
+    }
+
+    private String[] argsImportDepuis(Path source) {
+        return new String[] {
+            "importer",
+            "--source",
+            source.toString(),
+            "--point",
+            String.valueOf(idPoint),
+            "--annee",
+            "2026",
+            "--passage",
+            "3"
+        };
+    }
+
+    /// Dossiers d'extraction laissés sous le workspace. Le préfixe est celui que pose
+    /// `ExtracteurZip.creerDossierExtraction` : un filtre approximatif ne trouverait jamais rien, et
+    /// ces assertions passeraient quoi qu'il arrive.
+    private List<Path> temporairesDExtraction() throws IOException {
+        Path base = racine.resolve("ws");
+        if (!Files.isDirectory(base)) {
+            return List.of();
+        }
+        try (var flux = Files.list(base)) {
+            return flux.filter(Files::isDirectory)
+                    .filter(d -> d.getFileName().toString().startsWith("import-zip-"))
+                    .toList();
+        }
+    }
+
+    /// Zippe `dossier` dans `archive`. Si `prefixe` est non-`null`, tout est placé sous ce dossier
+    /// racine unique : c'est ce que produit un « compresser ce dossier » de l'explorateur de fichiers.
+    private static Path zipper(Path dossier, Path archive, String prefixe) throws IOException {
+        try (java.util.zip.ZipOutputStream zip = new java.util.zip.ZipOutputStream(Files.newOutputStream(archive))) {
+            try (var flux = Files.list(dossier)) {
+                for (Path fichier : flux.filter(Files::isRegularFile).sorted().toList()) {
+                    String nom = fichier.getFileName().toString();
+                    zip.putNextEntry(new java.util.zip.ZipEntry(prefixe == null ? nom : prefixe + "/" + nom));
+                    zip.write(Files.readAllBytes(fichier));
+                    zip.closeEntry();
+                }
+            }
+        }
+        return archive;
+    }
+
     private int importerAvec(String... options) {
         SortieCapturee sortie = new SortieCapturee();
         return cli.executer(argsImport(options), sortie.sortie(), sortie.erreur());

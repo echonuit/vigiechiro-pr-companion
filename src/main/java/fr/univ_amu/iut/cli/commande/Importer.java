@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.importation.model.ApercuEcrasement;
+import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.ReglageConservationOriginaux;
@@ -47,8 +48,10 @@ public final class Importer implements Callable<Integer> {
     @Option(
             names = "--source",
             required = true,
-            paramLabel = "<dir>",
-            description = "Dossier de la carte SD (ou copie) à importer. Lu en seule lecture.")
+            paramLabel = "<chemin>",
+            description = "Dossier de la carte SD (ou copie), ou archive .zip de ce dossier. Lu en"
+                    + " seule lecture ; une archive est décompressée sous le dossier de travail, puis"
+                    + " le temporaire est effacé.")
     private Path source;
 
     @Option(
@@ -117,6 +120,34 @@ public final class Importer implements Callable<Integer> {
 
     @Override
     public Integer call() {
+        // Une archive est décompressée sous le workspace, puis effacée quoi qu'il arrive : un script
+        // n'a aucun écran où repasser, donc le temporaire se nettoie ici ou jamais (#3195).
+        Path temporaire = ExtracteurZip.estZip(source) ? extraireArchive() : null;
+        try {
+            return importerDepuis(temporaire == null ? source : ExtracteurZip.racineEffective(temporaire));
+        } finally {
+            if (temporaire != null) {
+                ExtracteurZip.supprimerRecursivement(temporaire);
+            }
+        }
+    }
+
+    /// Décompresse l'archive désignée par `--source` **sous le workspace**, jamais sous `/tmp` : ce
+    /// dernier est souvent un tmpfs en RAM, où une nuit de ~10 Go finit en « Aucun espace disponible ».
+    /// Même choix que l'écran d'import, et pour la même raison.
+    ///
+    /// Les bornes de ressources (#2732), la garde « zip-slip » et l'inventaire préalable viennent avec
+    /// [ExtracteurZip] : un refus y lève une `RegleMetierException`, que la CLI traduit déjà en code 2.
+    private Path extraireArchive() {
+        Path base = service.racineWorkspace();
+        // Même filet anti-fuite que l'IHM : un import précédent interrompu a pu laisser un temporaire.
+        ExtracteurZip.nettoyerTemporairesResiduels(base);
+        // Sur la sortie d'erreur : stdout reste le compte rendu, qu'un script peut vouloir analyser.
+        spec.commandLine().getErr().println("Décompression de l'archive…");
+        return ExtracteurZip.extraireVersDossierTemporaire(source, base);
+    }
+
+    private Integer importerDepuis(Path source) {
         PrintWriter sortie = spec.commandLine().getOut();
 
         PointDEcoute pointDEcoute = pointDao.findById(point)
