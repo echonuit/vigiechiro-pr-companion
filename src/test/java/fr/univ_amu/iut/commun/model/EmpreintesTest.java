@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -61,6 +62,38 @@ class EmpreintesTest {
 
         assertThat(Empreintes.empreinteCourte(petit)).isNotEqualTo(Empreintes.empreinteCourte(different));
         assertThat(Empreintes.empreinteCourte(petit)).isEqualTo(Empreintes.sha256Hex(contenu));
+    }
+
+    @Test
+    @DisplayName("#3221 : l'empreinte d'un fichier s'interrompt, comme la copie qu'elle vérifie")
+    void empreinte_interruptible() throws IOException {
+        Path fichier = dossier.resolve("gros.wav");
+        Files.write(fichier, contenuPseudoAleatoire(4 * 1024 * 1024, 7));
+        JetonAnnulation jeton = new JetonAnnulation();
+        jeton.annuler();
+
+        // Lire 5 Go pour un SHA-256 prend aussi longtemps que les copier : rendre la copie annulable
+        // sans rendre sa vérification annulable ne réglerait qu'à moitié.
+        assertThatExceptionOfType(OperationAnnuleeException.class)
+                .isThrownBy(() -> Empreintes.sha256Hex(fichier, jeton));
+    }
+
+    @Test
+    @DisplayName("#3221 : l'empreinte calculée au fil de la lecture vaut celle du fichier")
+    void empreinte_au_fil_de_la_lecture() throws IOException {
+        byte[] contenu = contenuPseudoAleatoire(3 * 1024 * 1024, 11);
+        Path fichier = dossier.resolve("source.wav");
+        Files.write(fichier, contenu);
+
+        String auFilDeLEau;
+        try (var lecture = Empreintes.enComptantLEmpreinte(Files.newInputStream(fichier))) {
+            lecture.transferTo(java.io.OutputStream.nullOutputStream());
+            auFilDeLEau = Empreintes.empreinteDe(lecture);
+        }
+
+        // Comparée à l'empreinte du TABLEAU d'octets, pas à celle du même fichier relu : deux chemins
+        // de code distincts, sans quoi deux « vides » se ressembleraient et l'assertion ne dirait rien.
+        assertThat(auFilDeLEau).isEqualTo(Empreintes.sha256Hex(contenu)).hasSize(64);
     }
 
     /// Contenu déterministe par graine (pas de Random partagé : chaque test décrit son contenu).

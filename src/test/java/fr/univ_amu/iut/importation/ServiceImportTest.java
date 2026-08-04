@@ -62,6 +62,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.LongConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -596,13 +597,15 @@ class ServiceImportTest {
 
         // CopieProtegee instrumentée : compte les copies de .wav effectivement réalisées.
         AtomicInteger copiesWav = new AtomicInteger();
+        // Depuis #3221, l'import passe par la variante ANNULABLE : compter sur la signature à deux
+        // arguments ne verrait plus rien passer, et le test rendrait un zéro rassurant.
         CopieProtegee copieComptee = new CopieProtegee() {
             @Override
-            public Path copier(Path s, Path d) {
+            public Path copier(Path s, Path d, JetonAnnulation jeton, LongConsumer surPalier) {
                 if (s.getFileName().toString().toLowerCase().endsWith(".wav")) {
                     copiesWav.incrementAndGet();
                 }
-                return super.copier(s, d);
+                return super.copier(s, d, jeton, surPalier);
             }
         };
         ServiceImport reprise = new ServiceImport(
@@ -640,13 +643,15 @@ class ServiceImportTest {
                 new byte[] {1, 2, 3});
 
         AtomicInteger copiesWav = new AtomicInteger();
+        // Depuis #3221, l'import passe par la variante ANNULABLE : compter sur la signature à deux
+        // arguments ne verrait plus rien passer, et le test rendrait un zéro rassurant.
         CopieProtegee copieComptee = new CopieProtegee() {
             @Override
-            public Path copier(Path s, Path d) {
+            public Path copier(Path s, Path d, JetonAnnulation jeton, LongConsumer surPalier) {
                 if (s.getFileName().toString().toLowerCase().endsWith(".wav")) {
                     copiesWav.incrementAndGet();
                 }
-                return super.copier(s, d);
+                return super.copier(s, d, jeton, surPalier);
             }
         };
         ServiceImport reprise = new ServiceImport(

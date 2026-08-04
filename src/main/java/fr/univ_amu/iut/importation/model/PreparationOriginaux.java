@@ -130,7 +130,7 @@ final class PreparationOriginaux {
                         + termine.element().getFileName()
                         + (termine.resultat().dejaFidele() ? " (déjà présent)" : ""),
                 new EchelleProgression(0, totalEtapes),
-                (index, original) -> copierUn(original, index + 1, dossierBruts, prefixe, suivi),
+                (index, original) -> copierUn(original, index + 1, dossierBruts, prefixe, suivi, jeton),
                 progres,
                 jeton);
         // Ordre du plan préservé : le socle rend les résultats dans l'ordre de la liste d'entrée, ce qui
@@ -143,17 +143,24 @@ final class PreparationOriginaux {
     /// Copie un original vers son **nom final R6** (pas d'état intermédiaire au nom d'origine, donc
     /// aucun doublon ni conflit lors du renommage si une version renommée traînait déjà, reprise #231).
     ///
-    /// Appelé sur un thread virtuel du socle, qui a déjà acquis le créneau et vérifié l'annulation.
+    /// Appelé sur un thread virtuel du socle, qui a déjà acquis le créneau et vérifié l'annulation
+    /// **avant** le fichier. Le jeton redescend malgré tout jusqu'à la copie (#3221) : sur un
+    /// enregistrement de plusieurs Go, ce contrôle-là ne suffisait pas, et « Annuler » restait sans
+    /// effet pendant toute la durée du fichier.
+    ///
     /// Une copie qui échoue (R9 non fidèle, disque plein) est **fatale**, contrairement aux rejets de la
     /// transformation (#155) : sa `RuntimeException` traverse le socle telle quelle.
-    private CopieRealisee copierUn(Path original, int numero, Path dossierBruts, Prefixe prefixe, SuiviFichiers suivi) {
+    private CopieRealisee copierUn(
+            Path original, int numero, Path dossierBruts, Prefixe prefixe, SuiviFichiers suivi, JetonAnnulation jeton) {
         suivi.copieDemarree(numero);
         Path cible = dossierBruts.resolve(
                 Renommeur.nomApresRenommage(original.getFileName().toString(), prefixe));
-        boolean dejaFidele =
-                Files.isRegularFile(cible) && Empreintes.sha256Hex(cible).equals(Empreintes.sha256Hex(original));
+        // La comparaison d'empreintes lit deux fichiers en entier : elle aussi doit pouvoir s'arrêter.
+        boolean dejaFidele = Files.isRegularFile(cible)
+                && Empreintes.sha256Hex(cible, jeton).equals(Empreintes.sha256Hex(original, jeton));
         if (!dejaFidele) {
-            copie.copier(original, cible); // écrase une cible corrompue (REPLACE_EXISTING + vérif R9)
+            // Écrase une cible corrompue (vérification R9 conservée), et s'interrompt en cours de fichier.
+            copie.copier(original, cible, jeton, octets -> {});
         }
         suivi.copieTerminee(numero);
         return new CopieRealisee(cible.getFileName().toString(), numero, dejaFidele);
