@@ -28,8 +28,13 @@ public final class CriteresSaison {
 
     private CriteresSaison() {}
 
-    /// **Recherche de lieu** : le numéro de carré et le code du point, les deux colonnes d'identité de
-    /// la table. Insensible à la casse et aux accents.
+    /// **Recherche de lieu** : le numéro de carré, le **nom** que l'utilisateur lui a donné, et le code
+    /// du point. Insensible à la casse et aux accents.
+    ///
+    /// Le nom n'est pas un troisième lieu : c'est la **seconde étiquette du carré**
+    /// ([fr.univ_amu.iut.commun.view.CritereLieu], ADR 3157). Il a manqué ici jusqu'à #3215, alors qu'un
+    /// carré se cherche par son nom sur les quatre autres écrans - et que c'est la raison même pour
+    /// laquelle on lui en donne un.
     ///
     /// Les autres colonnes ne s'y prêtent pas : ce sont des états de passage et une phrase d'action, que
     /// la case « Reste à faire » interroge mieux qu'une recherche libre.
@@ -48,7 +53,9 @@ public final class CriteresSaison {
 
     private static boolean correspond(LigneSaison ligne, String texte) {
         String aiguille = NormalisationTexte.normaliser(texte);
-        return contient(ligne.numeroCarre(), aiguille) || contient(ligne.codePoint(), aiguille);
+        return contient(ligne.numeroCarre(), aiguille)
+                || contient(ligne.codePoint(), aiguille)
+                || contient(ligne.nomSite(), aiguille);
     }
 
     private static boolean contient(String champ, String aiguille) {

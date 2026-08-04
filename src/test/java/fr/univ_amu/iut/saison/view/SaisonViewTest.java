@@ -67,7 +67,8 @@ class SaisonViewTest {
                                         42L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 20), false, null),
                                 CasePassage.absente(),
                                 List.of(),
-                                "Poser l'enregistreur avant le 30/09"),
+                                "Poser l'enregistreur avant le 30/09",
+                                null),
                         new LigneSaison(
                                 "640002",
                                 "B1",
@@ -75,7 +76,8 @@ class SaisonViewTest {
                                 CasePassage.absente(),
                                 CasePassage.absente(),
                                 List.of(),
-                                "Poser l'enregistreur avant le 31/07"),
+                                "Poser l'enregistreur avant le 31/07",
+                                null),
                         // #2525 : la nuit opportuniste ne prend PAS la place du passage 1 protocolaire,
                         // qui reste manquant : elle vit dans la colonne « Hors protocole ».
                         new LigneSaison(
@@ -86,7 +88,8 @@ class SaisonViewTest {
                                 CasePassage.absente(),
                                 List.of(new CasePassage(
                                         99L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 25), true, null)),
-                                "Poser l'enregistreur avant le 31/07"),
+                                "Poser l'enregistreur avant le 31/07",
+                                null),
                         // Un point À JOUR (#3103) : « reste à faire » vide. Sans lui, le filtre « Reste
                         // à faire » garderait les quatre lignes et ne discriminerait rien - la fixture
                         // ne portait que des points en retard.
@@ -99,7 +102,8 @@ class SaisonViewTest {
                                 new CasePassage(
                                         78L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 8, 12), false, null),
                                 List.of(),
-                                "")));
+                                "",
+                                null)));
         when(service.soldeCourant(anyString(), org.mockito.ArgumentMatchers.isNull()))
                 .thenReturn(solde);
         when(service.soldePour(anyString(), anyInt())).thenReturn(solde);

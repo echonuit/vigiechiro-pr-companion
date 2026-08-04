@@ -24,7 +24,7 @@ class SaisonViewModelTest {
     private static final String ID = "u-test";
 
     private static LigneSaison ligne(String carre, String point, CasePassage p1, CasePassage p2, String reste) {
-        return new LigneSaison(carre, point, 1L, p1, p2, List.of(), reste);
+        return new LigneSaison(carre, point, 1L, p1, p2, List.of(), reste, null);
     }
 
     private static CasePassage depose(String date) {

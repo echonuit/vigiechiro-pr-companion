@@ -160,6 +160,18 @@ class ServiceSoldeSaisonTest {
     }
 
     @Test
+    @DisplayName("#3215 : le nom convivial du carré remonte dans la ligne, apparié à SON carré")
+    void nom_du_site_remonte() {
+        // Ce que ce test protège n'est pas la présence du champ mais son appariement : un nom pris sur
+        // le carré voisin passerait toute autre vérification, et la recherche trouverait le mauvais lieu.
+        SoldeSaison solde = service.soldePour(ID_USER, 2026);
+
+        assertThat(solde.lignes())
+                .extracting(LigneSaison::numeroCarre, LigneSaison::nomSite)
+                .contains(tuple("640001", "Site 640001"), tuple("640002", "Site 640002"));
+    }
+
+    @Test
     @DisplayName("la colonne « reste à faire » formule une action, cas par cas")
     void reste_a_faire_par_cas() {
         SoldeSaison solde = service.soldePour(ID_USER, 2026);

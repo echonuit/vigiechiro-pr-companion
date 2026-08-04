@@ -28,7 +28,7 @@ class SaisonFiltresTest {
     private static final String ID = "u-test";
 
     private static LigneSaison ligne(String carre, String point, String reste) {
-        return new LigneSaison(carre, point, 1L, depose(), depose(), List.of(), reste);
+        return new LigneSaison(carre, point, 1L, depose(), depose(), List.of(), reste, null);
     }
 
     private static CasePassage depose() {
@@ -48,12 +48,32 @@ class SaisonFiltresTest {
     @DisplayName("#3103 : la recherche porte sur le carré ET le code du point")
     void la_recherche_porte_sur_le_carre_et_le_point() {
         // « Où en est ce lieu précis ? » : sur cet écran, un lieu se nomme par son carré ou par le code
-        // de son point. Ce sont les deux seules colonnes d'identité de la table.
+        // de son point. Ce sont les deux colonnes d'identité de la table.
         LigneSaison aix = ligne("640380", "A1", "");
 
         assertThat(CriteresSaison.rechercheTexte().test(aix, "640380")).isTrue();
         assertThat(CriteresSaison.rechercheTexte().test(aix, "a1")).isTrue();
         assertThat(CriteresSaison.rechercheTexte().test(aix, "b2")).isFalse();
+    }
+
+    @Test
+    @DisplayName("#3215 : un carré se cherche aussi par le NOM qu'on lui a donné")
+    void un_carre_se_cherche_par_son_nom() {
+        // Le nom n'est pas un troisième lieu : c'est la seconde étiquette du carré (ADR 3157). Il se
+        // cochait dans la puce « Lieu » des quatre autres écrans et ne se tapait pas ici, alors que
+        // c'est la raison même pour laquelle on donne un nom à un carré.
+        LigneSaison nomme =
+                new LigneSaison("640380", "A1", 1L, depose(), depose(), List.of(), "", "Étang de la Tuilière");
+
+        assertThat(CriteresSaison.rechercheTexte().test(nomme, "tuiliere"))
+                .as("accents et casse ignorés, comme sur le numéro")
+                .isTrue();
+        assertThat(CriteresSaison.rechercheTexte().test(nomme, "640380"))
+                .as("le numéro continue de trouver le même lieu")
+                .isTrue();
+        assertThat(CriteresSaison.rechercheTexte().test(ligne("640380", "A1", ""), "tuiliere"))
+                .as("un carré sans nom ne se trouve pas par un nom qu'il n'a pas")
+                .isFalse();
     }
 
     @Test
