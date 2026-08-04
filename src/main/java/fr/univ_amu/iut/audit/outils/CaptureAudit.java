@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.audit.view.AuditController;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -25,6 +26,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
@@ -152,6 +154,19 @@ public final class CaptureAudit {
                     false,
                     idSession));
         }
+        semerUnDepartementDivergent(source, idPoint);
+    }
+
+    /// Le second écart de l'aperçu (#2848) : le carré `640380` place ce point dans les
+    /// **Pyrénées-Atlantiques**, sa commune dans les **Landes**.
+    ///
+    /// Saint-Martin-de-Seignanx **touche** la frontière des deux départements : c'est donc le cas
+    /// **légitime** qui est montré, pas une saisie fautive. C'est délibéré - l'aperçu documente ce que le
+    /// constat dit vraiment (« l'écart est peut-être normal »), et non un défaut à corriger. Une capture
+    /// montrant un point à 700 km de son carré laisserait croire que ce constat n'apparaît que sur des
+    /// bases abîmées.
+    private static void semerUnDepartementDivergent(SourceDeDonnees source, Long idPoint) {
+        new PointCommuneDao(source).definir(idPoint, new Commune("Saint-Martin-de-Seignanx", "40252"));
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage

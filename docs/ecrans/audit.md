@@ -8,7 +8,7 @@ diverger : un disque débranché, un fichier renommé à la main, un dépôt inc
 L'écran **Audit de cohérence** existe pour que plus rien ne diverge en silence. Il **confronte** les trois
 et vous **énumère** les écarts.
 
-![L'audit de cohérence : une nuit dont les fichiers ont disparu du disque, et un nom de fichier qui ne respecte pas la convention.](../assets/captures/apercu-audit.png)
+![L'audit de cohérence : trois écarts sur une même nuit. Un audio incomplet (information), un nom de fichier sans le préfixe attendu (erreur), et un département divergent entre le carré 640380 et la commune Saint-Martin-de-Seignanx (information).](../assets/captures/apercu-audit.png)
 
 ## Lire un constat
 
