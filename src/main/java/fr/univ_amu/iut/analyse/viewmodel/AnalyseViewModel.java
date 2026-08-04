@@ -152,6 +152,13 @@ public class AnalyseViewModel {
         retour.set(RetourOperation.vueAmputee(nomVue, reste));
     }
 
+    /// Les filtres de la **mémoire de session** (#484, étendue en #3098) que la réouverture de l'écran
+    /// n'a pas su remettre en place (#3093). Les données ont changé depuis la dernière visite : c'est
+    /// le chemin le plus discret des trois, puisque personne n'a rien demandé.
+    public void signalerFiltresDeSessionAmputes(ResteDeRestauration reste) {
+        retour.set(RetourOperation.filtresDeSessionAmputes(reste));
+    }
+
     /// Des filtres **transportés** depuis un autre écran (« Voir sur la carte », #476) que l'analyse n'a
     /// pas su reprendre en entier (#3093). Ce n'est pas une vue nommée : le message dit d'où vient
     /// l'écart plutôt que de citer un nom.

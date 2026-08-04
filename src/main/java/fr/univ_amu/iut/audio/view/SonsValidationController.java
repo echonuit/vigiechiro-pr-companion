@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.MemoireFiltres;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -86,7 +87,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private final ActionsMenuAudio actionsMenu;
 
     /// Mémoire de session (tri, #484) : conserve l'état de la table entre deux ouvertures de la vue.
-    private final MemoireRevueAudio memoire;
+    private final MemoireFiltres memoire;
 
     /// Réglages réactifs (#1006) : câble les options de lecture du menu ☰ ([LecteurAudio]) aux mêmes
     /// Property que l'onglet « Audio » de l'écran Réglages (persistance + synchro).
@@ -120,6 +121,18 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// Porteur de choix exposé aux tests (#1431) : `demandeurParticipation().definir(double)`.
     DemandeurDeChoixModifiable<ParticipationVigieChiro> demandeurParticipation() {
         return dialogues.participation();
+    }
+
+    /// « Tout effacer » (#3098) : retire tous les filtres, remet le tri à plat, et **oublie la mémoire
+    /// de session** de cet écran.
+    ///
+    /// Ce dernier point n'est pas accessoire. Sans lui, le geste viderait l'écran et la mémoire
+    /// remettrait tout à la visite suivante : le bouton paraîtrait ne pas avoir pris.
+    @FXML
+    private void toutEffacer() {
+        gestionnaireFiltres.reinitialiser();
+        tableObservations.getSortOrder().clear();
+        memoire.oublier(FEATURE);
     }
 
     @FXML
@@ -350,7 +363,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
             OuvrirPassage ouvrirPassage,
             Optional<OuvrirAnalyse> ouvrirAnalyse,
             OuvrirMultisite ouvrirMultisite,
-            MemoireRevueAudio memoire,
+            MemoireFiltres memoire,
             AppuisAudio appuis,
             ActionsMenuAudio actionsMenu,
             ReglagesReactifs reactifs) {
