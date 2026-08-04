@@ -60,6 +60,26 @@ pas de rappel et ne programme pas de sortie terrain.
 Un **sélecteur d'année** en tête d'écran permet de revenir sur les saisons antérieures, consultables en
 lecture. Par défaut, l'écran affiche la **saison courante**.
 
+## Trouver un lieu, isoler ce qui reste
+
+Sur une saison chargée (plusieurs carrés, plusieurs points par carré), la liste devient longue et deux
+questions n'ont pas de réponse directe dans le tableau. Deux contrôles y répondent, à côté des
+sélecteurs d'année et de campagne :
+
+- **Chercher un lieu** : la saisie garde les lignes dont le **carré** ou le **code du point**
+  correspond. La recherche ignore la casse et les accents. Vider le champ rend la saison entière.
+- **Reste à faire** : la case ne garde que les points qui ne sont **pas à jour**, c'est-à-dire ceux dont
+  la colonne « Reste à faire » porte une action. Décocher rend la saison entière.
+
+!!! note "L'en-tête continue de compter toute la saison"
+    Filtrer change ce que **le tableau montre**, pas ce qu'il y a **à faire**. Le résumé et le
+    signalement de fenêtre restent calculés sur la saison entière : chercher un lieu ne fait pas
+    disparaître les passages qui vous attendent ailleurs.
+
+Les sélecteurs **Saison** et **Campagne** restent, eux, des listes déroulantes toujours visibles : une
+saison *est* une année et une campagne, et les garder sous les yeux donne la lecture immédiate « je suis
+sur telle saison ».
+
 ## Ouvrir un point
 
 Un **double-clic** sur une ligne ouvre le **passage concerné** ; s'il n'existe pas encore de passage
