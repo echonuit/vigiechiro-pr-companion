@@ -71,6 +71,7 @@ class ServiceMultisiteExportTest {
                         EtatAnalyse.A_IMPORTER,
                         "2026-07-14T09:00:00Z",
                         null,
+                        null,
                         null),
                 new LignePassage(
                         2L,
@@ -82,6 +83,7 @@ class ServiceMultisiteExportTest {
                         StatutWorkflow.VERIFIE,
                         null,
                         EtatAnalyse.SANS_OBJET,
+                        null,
                         null,
                         null,
                         null));

@@ -97,7 +97,8 @@ public class ServiceActivite {
                 ligne.commune(),
                 ligne.numeroCarre(),
                 ligne.codePoint(),
-                ligne.idPassage());
+                ligne.idPassage(),
+                ligne.nomSite());
     }
 
     /// Taxon **retenu** d'une ligne : la correction de l'observateur si elle existe, sinon la proposition

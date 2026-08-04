@@ -183,6 +183,7 @@ class MultisiteViewModelTest {
                 EtatAnalyse.SANS_OBJET,
                 null,
                 null,
+                null,
                 null);
     }
 

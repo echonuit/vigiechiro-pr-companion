@@ -21,7 +21,7 @@ class FiltresActiviteTest {
 
     private static ContactHoraire contact(
             String taxon, String groupe, LocalDateTime heure, String commune, String point, Long passage) {
-        return new ContactHoraire(taxon, taxon, groupe, heure, commune, "640380", point, passage);
+        return new ContactHoraire(taxon, taxon, groupe, heure, commune, "640380", point, passage, null);
     }
 
     private static final ContactHoraire RHIFER =

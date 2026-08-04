@@ -168,6 +168,7 @@ class TraitementLotTest {
                 EtatAnalyse.SANS_OBJET,
                 null,
                 null,
+                null,
                 null);
     }
 

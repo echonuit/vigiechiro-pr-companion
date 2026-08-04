@@ -197,7 +197,7 @@ class ActiviteViewModelTest {
 
     private static ContactHoraire contact(
             String taxon, LocalDateTime heure, String commune, String point, long idPassage) {
-        return new ContactHoraire(taxon, "n", "Chiroptères", heure, commune, "640380", point, idPassage);
+        return new ContactHoraire(taxon, "n", "Chiroptères", heure, commune, "640380", point, idPassage, null);
     }
 
     @Test
@@ -234,7 +234,8 @@ class ActiviteViewModelTest {
                     null,
                     carre,
                     "A1",
-                    1L));
+                    1L,
+                    null));
         }
         return contacts;
     }

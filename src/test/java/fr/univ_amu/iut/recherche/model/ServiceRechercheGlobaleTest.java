@@ -62,7 +62,8 @@ class ServiceRechercheGlobaleTest {
                 EtatAnalyse.SANS_OBJET,
                 null,
                 null,
-                commune);
+                commune,
+                null);
     }
 
     @BeforeEach

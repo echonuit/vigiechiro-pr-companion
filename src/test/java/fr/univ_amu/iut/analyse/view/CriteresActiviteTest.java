@@ -14,7 +14,7 @@ class CriteresActiviteTest {
     private static final BiPredicate<ContactHoraire, String> RECHERCHE = CriteresActivite.rechercheTexte();
 
     private static ContactHoraire contact(String taxon, String nom, String commune, String carre, String point) {
-        return new ContactHoraire(taxon, nom, "Chiroptères", null, commune, carre, point, 1L);
+        return new ContactHoraire(taxon, nom, "Chiroptères", null, commune, carre, point, 1L, null);
     }
 
     @Test

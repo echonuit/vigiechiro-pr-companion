@@ -26,6 +26,9 @@ import fr.univ_amu.iut.commun.model.Verdict;
 /// @param campagne nom de la **campagne** de rattachement (#2355), ou `null` si le passage n'est
 ///     rattaché à aucune : le rattachement est facultatif, et la feature `campagne` est désactivable
 ///     (coupée, la colonne reste vide partout)
+/// @param nomSite nom **convivial** du site d'appartenance, ou `null` si l'utilisateur ne l'a pas
+///     nommé. Il désigne le même objet que `numeroCarre` (`monitoring_site` porte les deux colonnes) :
+///     c'est une étiquette de plus sur le carré, pas un lieu de plus (#3175)
 /// @param analyseReleveeLe horodatage ISO de **notre dernière lecture** de l'état serveur, ou `null` si
 ///     on ne l'a jamais demandé. Le cache est un relevé daté, pas une vérité : la vue doit pouvoir dire
 ///     de quand l'information date (patron « État observé »)
@@ -41,4 +44,5 @@ public record LignePassage(
         EtatAnalyse etatAnalyse,
         String analyseReleveeLe,
         String campagne,
-        String commune) {}
+        String commune,
+        String nomSite) {}

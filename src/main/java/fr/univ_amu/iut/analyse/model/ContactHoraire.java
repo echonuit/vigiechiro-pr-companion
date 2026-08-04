@@ -31,6 +31,9 @@ import java.time.LocalDateTime;
 /// @param numeroCarre numéro du carré du passage, ou `null`
 /// @param codePoint code du point d'écoute du passage, ou `null`
 /// @param idPassage identifiant du passage d'où vient le contact, ou `null`
+/// @param nomSite nom **convivial** du site, ou `null` s'il n'est pas nommé. Il désigne le même objet
+///     que `numeroCarre` (`monitoring_site` porte les deux colonnes) : une étiquette de plus sur le
+///     carré, pas un lieu de plus (#3175)
 public record ContactHoraire(
         String taxon,
         String nomEspece,
@@ -39,13 +42,14 @@ public record ContactHoraire(
         String commune,
         String numeroCarre,
         String codePoint,
-        Long idPassage) {
+        Long idPassage,
+        String nomSite) {
 
-    /// Constructeur de compatibilité **sans contexte géographique** (commune/carré/point/passage nuls) :
-    /// pour les usages qui n'agrègent ou ne trient que par espèce et heure (agrégation pure, sélection
-    /// d'espèces), où les dimensions de filtre n'ont pas de sens.
+    /// Constructeur de compatibilité **sans contexte géographique** (commune/carré/point/passage/site
+    /// nuls) : pour les usages qui n'agrègent ou ne trient que par espèce et heure (agrégation pure,
+    /// sélection d'espèces), où les dimensions de filtre n'ont pas de sens.
     public ContactHoraire(String taxon, String nomEspece, String groupe, LocalDateTime heure) {
-        this(taxon, nomEspece, groupe, heure, null, null, null, null);
+        this(taxon, nomEspece, groupe, heure, null, null, null, null, null);
     }
 
     /// Le **point qualifié par son carré** (« 640380 · A1 »), ou `null` si le contact n'a pas de point.

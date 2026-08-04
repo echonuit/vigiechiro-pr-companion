@@ -89,7 +89,19 @@ class MultisiteViewTest {
     private static LignePassage ligne(
             long id, String carre, String point, int annee, int numero, String date, StatutWorkflow statut) {
         return new LignePassage(
-                id, carre, point, annee, numero, date, statut, Verdict.OK, EtatAnalyse.SANS_OBJET, null, null, null);
+                id,
+                carre,
+                point,
+                annee,
+                numero,
+                date,
+                statut,
+                Verdict.OK,
+                EtatAnalyse.SANS_OBJET,
+                null,
+                null,
+                null,
+                null);
     }
 
     @Start

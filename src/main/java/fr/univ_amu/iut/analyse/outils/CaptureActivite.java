@@ -222,17 +222,21 @@ public final class CaptureActivite {
         controleur.ouvrirSur(new ContextePassage(1L, 2, new ContexteSite(LIEUX[0][1], LIEUX[0][2], null)));
     }
 
-    /// Le lieu de chacune des trois nuits : commune, carré, point (#2967).
+    /// Le lieu de chacune des trois nuits : commune, carré, point, **nom du site** (#2967, #3175).
     ///
-    /// Trois triplets **choisis pour ce que la puce « Lieu » doit montrer**, et non au hasard : deux
+    /// Trois quadruplets **choisis pour ce que la puce « Lieu » doit montrer**, et non au hasard : deux
     /// nuits partagent leur commune et leur carré en changeant de point, la troisième change tout. La
     /// liste ouverte présente donc deux communes, deux carrés et trois points - de quoi voir à la fois le
     /// **groupement** par dimension et la **qualification** du point par son carré. Un semis à un seul
     /// lieu aurait rendu une liste d'une ligne par groupe, où rien de tout cela ne se lit.
+    ///
+    /// **Un seul des deux carrés est nommé**, et c'est délibéré : le nom convivial est facultatif
+    /// (`friendly_name` n'est pas `NOT NULL`). L'aperçu montre ainsi les deux écritures d'un carré côte
+    /// à côte, celle qui porte son nom et celle qui n'en a pas.
     private static final String[][] LIEUX = {
-        {"Ahetze", "640380", "A1"},
-        {"Ahetze", "640380", "B2"},
-        {"Biarritz", "870150", "Z1"},
+        {"Ahetze", "640380", "A1", "Bois du bourg"},
+        {"Ahetze", "640380", "B2", "Bois du bourg"},
+        {"Biarritz", "870150", "Z1", null},
     };
 
     /// Contacts de démonstration : cinq espèces avec une forme de nuit plausible (comptes par heure de
@@ -270,7 +274,8 @@ public final class CaptureActivite {
                             LIEUX[nuit][0],
                             LIEUX[nuit][1],
                             LIEUX[nuit][2],
-                            null));
+                            null,
+                            LIEUX[nuit][3]));
                 }
             }
         }

@@ -169,7 +169,8 @@ public class ServiceMultisite {
                             EtatAnalyse.deduire(passage.statutWorkflow(), releve, importes.contains(passage.id())),
                             releve.map(ReleveTraitement::releveLe).orElse(null),
                             passage.idCampagne() == null ? null : nomsCampagnes.get(passage.idCampagne()),
-                            communes.get(point.id()));
+                            communes.get(point.id()),
+                            site.nomConvivial());
                     if (filtres.accepte(ligne)) {
                         lignes.add(ligne);
                     }
