@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.177.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.176.0...v2.177.0) (2026-08-04)
+
+
+### Features
+
+* **audit:** signaler quand les deux lectures d'un departement divergent ([#3246](https://github.com/echonuit/vigiechiro-pr-companion/issues/3246)) ([93e0555](https://github.com/echonuit/vigiechiro-pr-companion/commit/93e0555b7a1a63409894b768fcda17d2601b0cce)), closes [#1347](https://github.com/echonuit/vigiechiro-pr-companion/issues/1347) [#2848](https://github.com/echonuit/vigiechiro-pr-companion/issues/2848)
+
 # [2.176.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.175.0...v2.176.0) (2026-08-04)
 
 
