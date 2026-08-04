@@ -36,6 +36,8 @@ Une nuit d'enregistrement produit souvent des centaines d'observations : la **ba
 
 Les <!--inv:criteres-validation-->10<!--/inv--> critères disponibles :
 
+> Les gestes de la barre (recherche, « + Filtre », puces, « Tout effacer »), la façon dont les listes de valeurs s'adaptent aux autres filtres, et le bandeau qui prévient quand un filtre n'a pas pu être remis en place sont décrits une fois pour tous les écrans dans [Personnaliser les tableaux](../personnaliser-les-tableaux.md#filtrer-la-barre-a-puces).
+
 | Critère | Ce qu'il garde | Par défaut |
 |---|---|---|
 | **Statut** | À revoir / Validée / Corrigée | À revoir (le plus utile pour la revue) |

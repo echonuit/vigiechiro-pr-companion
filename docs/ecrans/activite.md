@@ -25,6 +25,8 @@ L'écran réunit :
   défaut, au-delà le graphe devient illisible ;
 - une **barre de filtres** portant <!--inv:criteres-activite-->5<!--/inv--> critères (lieu, nuit,
   taxon parent, nature de la nuit, espèces à enjeu) plus la recherche libre : filtrer re-trace ;
+
+> Les gestes de la barre (recherche, « + Filtre », puces, « Tout effacer »), la façon dont les listes de valeurs s'adaptent aux autres filtres, et le bandeau qui prévient quand un filtre n'a pas pu être remis en place sont décrits une fois pour tous les écrans dans [Personnaliser les tableaux](../personnaliser-les-tableaux.md#filtrer-la-barre-a-puces).
 - des **onglets** qui séparent les chiroptères du reste : le détecteur ne repère pas que des
   chauves-souris, et « Autres » réunit orthoptères, micromammifères, oiseaux et le reste du
   référentiel. Vos propres vues s'enregistrent à côté, avec « + Vue ».
