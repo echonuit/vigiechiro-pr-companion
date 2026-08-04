@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -30,6 +31,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
@@ -343,7 +345,30 @@ class ServiceAuditCoherenceTest {
         });
     }
 
+    @Test
+    @DisplayName("#2848 : le département divergent sort de l'audit GLOBAL, et pas de l'audit ciblé")
+    void departement_divergent_seulement_dans_l_audit_global() {
+        // Le carré 040962 est dans l'Allier ; la commune du point le place dans les Bouches-du-Rhône.
+        Long idPassage = creerPassage(1);
+        new PointCommuneDao(source).definir(pointDuPassage(idPassage), new Commune("Aix-en-Provence", "13001"));
+
+        assertThat(service.auditerTout().constats())
+                .as("l'audit global est la porte que prennent l'écran Diagnostic ET `audit-coherence`")
+                .extracting(ConstatAudit::categorie)
+                .contains(CategorieConstat.DEPARTEMENT_DIVERGENT);
+        assertThat(service.auditerPassage(idPassage).constats())
+                .as("l'audit ciblé répond à « cette nuit est-elle bien rangée ? » après réparation "
+                        + "(#1347) : un département divergent s'y répéterait à chaque nuit du point "
+                        + "sans jamais rien apprendre de neuf")
+                .extracting(ConstatAudit::categorie)
+                .doesNotContain(CategorieConstat.DEPARTEMENT_DIVERGENT);
+    }
+
     // --- Fabriques -------------------------------------------------------------------------------
+
+    private long pointDuPassage(Long idPassage) {
+        return passageDao.findById(idPassage).orElseThrow().idPoint();
+    }
 
     private Long creerPassage(int numeroPassage) {
         return JeuDeDonneesPassage.dans(source)
