@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import fr.univ_amu.iut.commun.model.SondeAccessibilite;
 import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.BilanSauvegarde;
+import fr.univ_amu.iut.commun.persistence.InventaireSauvegardes;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -38,6 +39,10 @@ final class ActionsSauvegarde {
     /// Compte rendu de l'action : porteur partagé injectable (#1405), double capturant en test.
     private final NotificateurModifiable notificateur;
 
+    /// Choix de la sauvegarde à restaurer : porteur partagé injectable (#3197), double répondant en
+    /// test. Quatrième du socle, et posé pour la même raison mécanique que les trois autres.
+    private final ChoixSauvegardeModifiable choix;
+
     /// @param service service de sauvegarde/restauration
     /// @param occupation voile d'occupation du chrome (#1215)
     /// @param fenetre fournisseur de la fenêtre propriétaire des dialogues (évalué au clic)
@@ -54,6 +59,7 @@ final class ActionsSauvegarde {
         Objects.requireNonNull(fenetre, "fenetre");
         this.selecteur = new SelecteurFichierModifiable(new SelecteurFichierJavaFx(fenetre));
         this.notificateur = new NotificateurModifiable(new NotificationDialogue(fenetre));
+        this.choix = new ChoixSauvegardeModifiable(new ChoixSauvegardeJavaFx(fenetre));
     }
 
     /// Demande un dossier (par défaut `<workspace>/sauvegardes`, emplacement **configurable**), y écrit une
@@ -131,8 +137,15 @@ final class ActionsSauvegarde {
     /// Restaure une sauvegarde **complète** (#1346) : la base **et** les dossiers de session. Destructif :
     /// l'état local est écrasé, donc confirmé.
     void restaurerComplet() {
-        Optional<Path> dossier =
-                selecteur.choisirDossier("Choisir un dossier de sauvegarde complète à restaurer", dossierParDefaut());
+        Path racine = service.dossierParDefaut();
+        Optional<Path> dossier = choix.choisir(
+                "Quelle sauvegarde complète restaurer ?",
+                racine,
+                InventaireSauvegardes.lire(racine).stream()
+                        .filter(entree -> entree.nature() == InventaireSauvegardes.Nature.COMPLETE)
+                        .toList(),
+                () -> selecteur.choisirDossier(
+                        "Choisir un dossier de sauvegarde complète à restaurer", dossierParDefaut()));
         if (dossier.isEmpty()) {
             return;
         }
@@ -153,8 +166,15 @@ final class ActionsSauvegarde {
     /// Demande un fichier de sauvegarde, **confirme** le remplacement (destructif) puis restaure **hors du
     /// fil JavaFX** (#1215). En cas de succès, joue [#apresRestauration] pour relire la base restaurée.
     void restaurer() {
-        Optional<Path> fichier = selecteur.choisirFichier(
-                "Choisir une sauvegarde à restaurer", dossierParDefaut(), FiltreFichier.baseSqlite());
+        Path dossier = service.dossierParDefaut();
+        Optional<Path> fichier = choix.choisir(
+                "Quelle sauvegarde restaurer ?",
+                dossier,
+                InventaireSauvegardes.lire(dossier).stream()
+                        .filter(entree -> entree.nature() != InventaireSauvegardes.Nature.COMPLETE)
+                        .toList(),
+                () -> selecteur.choisirFichier(
+                        "Choisir une sauvegarde à restaurer", dossierParDefaut(), FiltreFichier.baseSqlite()));
         if (fichier.isEmpty()) {
             return;
         }
@@ -198,6 +218,12 @@ final class ActionsSauvegarde {
     /// Porteur de désignation exposé aux tests (#1405) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {
         return selecteur;
+    }
+
+    /// Porteur de choix d'une sauvegarde exposé aux tests (#3197) : `choix().definir(double)`.
+    /// Sans lui, un test de restauration se heurterait au `showAndWait()` de la vraie fenêtre.
+    ChoixSauvegardeModifiable choix() {
+        return choix;
     }
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.

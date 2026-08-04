@@ -117,11 +117,11 @@ Le bandeau, les cartes d'activités, la recherche transverse et les menus qui le
 <table>
 <tr>
 <th width="50%">Restauration : version trop récente</th>
-<th width="50%"></th>
+<th width="50%">Restauration : quelle sauvegarde ?</th>
 </tr>
 <tr>
 <td><a href="apercu-restauration-version-trop-recente.png"><img src="apercu-restauration-version-trop-recente.png" width="430" alt="Restauration : version trop récente"></a></td>
-<td></td>
+<td><a href="apercu-restauration-choix-sauvegarde.png"><img src="apercu-restauration-choix-sauvegarde.png" width="430" alt="Restauration : choix d'une sauvegarde, avec date, taille et total"></a></td>
 </tr>
 </table>
 

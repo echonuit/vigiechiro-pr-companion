@@ -91,6 +91,12 @@ class ActionsSauvegardeTest {
                         "la sauvegarde écrit elle-même dans le dossier choisi : elle ne passe pas par un sélecteur d'enregistrement");
             }
         });
+        // Depuis #3197, la restauration ne commence plus par un sélecteur natif mais par la liste
+        // inventoriée. Le double répond comme le sélecteur : le chemin voulu, ou rien (annulation).
+        action.choix().definir((titre, dossier, entrees, repli) -> {
+            selections.add(titre);
+            return choix;
+        });
         action.confirmateur().definir(message -> {
             confirmations.add(message);
             return confirme;
@@ -267,7 +273,7 @@ class ActionsSauvegardeTest {
 
         action.restaurer();
 
-        assertThat(selections).containsExactly("Choisir une sauvegarde à restaurer");
+        assertThat(selections).containsExactly("Quelle sauvegarde restaurer ?");
         assertThat(confirmations)
                 .as("aucun fichier désigné : il n'y a rien à confirmer")
                 .isEmpty();

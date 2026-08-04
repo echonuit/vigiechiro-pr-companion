@@ -4,19 +4,23 @@ import fr.univ_amu.iut.commun.di.Amorcage;
 import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.BilanRestauration;
+import fr.univ_amu.iut.commun.persistence.InventaireSauvegardes;
 import fr.univ_amu.iut.commun.persistence.PlacementRacine;
 import fr.univ_amu.iut.commun.view.ActionAPropos;
 import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.view.ContenuChoixSauvegarde;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 
@@ -71,6 +75,7 @@ public final class CaptureDialogues {
         enregistrerDossierOccupe(sortie.resolve("apercu-demarrage-dossier-occupe.png"));
         enregistrerRestaurationDeplacee(sortie.resolve("apercu-restauration-nuits-deplacees.png"));
         enregistrerSauvegardeTropRecente(sortie.resolve("apercu-restauration-version-trop-recente.png"));
+        enregistrerChoixSauvegarde(sortie.resolve("apercu-restauration-choix-sauvegarde.png"));
     }
 
     /// Compte rendu d'une restauration complète qui a **déplacé** des nuits (#2727).
@@ -185,6 +190,42 @@ public final class CaptureDialogues {
     /// Feuilles de style partagées (palette + base, dans `commun/view`) pour que les dialogues aient le
     /// même thème indigo que l'application. Les CSS spécifiques aux features ne sont pas appliquées (elles
     /// introduiraient une dépendance interdite depuis `commun`).
+
+    /// Fenêtre « quelle sauvegarde restaurer ? » (#3197).
+    ///
+    /// Elle remplace un `FileChooser` **natif**, où l'utilisateur désignait un `.db` sans voir ni sa
+    /// date, ni sa taille, ni ce que l'ensemble occupait - au moment précis où le geste écrase sa base.
+    /// Les entrées sont figées ici pour que l'aperçu ne change pas à chaque régénération, mais leurs
+    /// **natures** sont les trois réelles : c'est le filet de migration, celui que personne n'a demandé,
+    /// qui explique le total.
+    private static void enregistrerChoixSauvegarde(Path fichier) {
+        List<InventaireSauvegardes.Entree> entrees = List.of(
+                new InventaireSauvegardes.Entree(
+                        "vigiechiro-sauvegarde-20260801-101500.db",
+                        Instant.parse("2026-08-01T10:15:00Z"),
+                        412L * 1024 * 1024,
+                        InventaireSauvegardes.Nature.BASE),
+                new InventaireSauvegardes.Entree(
+                        "vigiechiro-avant-migration-V39.db",
+                        Instant.parse("2026-07-02T08:00:00Z"),
+                        398L * 1024 * 1024,
+                        InventaireSauvegardes.Nature.FILET_MIGRATION),
+                new InventaireSauvegardes.Entree(
+                        "vigiechiro-avant-migration-V37.db",
+                        Instant.parse("2026-05-14T21:30:00Z"),
+                        351L * 1024 * 1024,
+                        InventaireSauvegardes.Nature.FILET_MIGRATION),
+                new InventaireSauvegardes.Entree(
+                        "vigiechiro-sauvegarde-complete-20260410-090000",
+                        Instant.parse("2026-04-10T09:00:00Z"),
+                        6L * 1024 * 1024 * 1024,
+                        InventaireSauvegardes.Nature.COMPLETE));
+        ContenuChoixSauvegarde contenu = new ContenuChoixSauvegarde(entrees, entree -> {}, () -> {}, () -> {});
+        Scene scene = new Scene(contenu.racine());
+        scene.getStylesheets().addAll(styles());
+        ApercuFx.enregistrerPng(scene, fichier);
+    }
+
     private static List<String> styles() {
         List<String> feuilles = new ArrayList<>();
         for (String nom : List.of("palette.css", "base.css")) {
