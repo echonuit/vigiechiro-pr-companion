@@ -9,6 +9,7 @@ import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.CiblePassage;
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -36,6 +37,7 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
@@ -502,6 +504,12 @@ public final class CaptureMultisite {
                 .id();
         Long pointB = pointDao.insert(new PointDEcoute(null, "B2", 43.4040, -1.5470, null, chenes.id()))
                 .id();
+
+        // Commune du point (#3163) : résolue sur le premier carré, pas sur le second. Même raison que
+        // pour la campagne juste dessous - une capture où toutes les lignes la porteraient laisserait
+        // croire qu'elle est toujours là, et une capture où aucune ne l'aurait montrerait une colonne
+        // vide, ce qui documenterait l'état dégradé plutôt que la fonctionnalité.
+        new PointCommuneDao(source).definir(pointA, new Commune("Ahetze", "64014"));
 
         // Campagnes (#2355) : deux suivis distincts, et une nuit volontairement NON rattachée. Le
         // rattachement est facultatif ; une capture où toutes les lignes seraient rattachées laisserait
