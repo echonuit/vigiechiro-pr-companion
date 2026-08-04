@@ -5,15 +5,12 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BooleanSupplier;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /// Mécanique HTTP du client VigieChiro (#1284) : authentifier, émettre, et surtout **trier l'issue**
 /// de chaque appel en [ReponseApi] (non connecté / injoignable / refusé / succès).
@@ -26,11 +23,6 @@ import java.util.logging.Logger;
 /// en nom d'utilisateur et mot de passe vide, soit `Authorization: Basic base64("<token>:")`
 /// (convention du backend Eve).
 final class TransportVigieChiro {
-
-    private static final Logger LOG = Logger.getLogger(TransportVigieChiro.class.getName());
-
-    /// Longueur maximale du corps d'un refus consigné (#1845).
-    private static final int CORPS_REFUS_MAX = 300;
 
     /// Libellé du geste S3 dans le journal : le dépôt ne passe pas par [#emettre] (corps binaire, délai
     /// long), il se consigne donc lui-même.
@@ -122,6 +114,10 @@ final class TransportVigieChiro {
     /// Télécharge une URL **déjà signée** (S3, #1132) : aucun en-tête `Authorization` (S3 refuse une
     /// authentification surnuméraire, la signature de l'URL fait foi), donc jamais « non connecté ».
     ReponseApi<String> telecharger(String url) {
+        Optional<String> refus = UrlSigneeAdmise.motifDeRefus(url);
+        if (refus.isPresent()) {
+            return ReponseApi.refuse(0, refus.get());
+        }
         return emettre(
                 Rejeu.AUTORISE,
                 () -> HttpRequest.newBuilder(URI.create(url))
@@ -201,78 +197,18 @@ final class TransportVigieChiro {
             chemin = envoi.uri().getPath();
             HttpResponse<String> http = client.send(envoi, HttpResponse.BodyHandlers.ofString());
             ReponseApi<String> reponse = triage(http);
-            journaliser(methode, chemin, reponse, debut, null);
+            JournalEchange.consigner(methode, chemin, reponse, debut, null);
             return new PolitiqueReessai.Issue<>(reponse, retryAfter(http));
         } catch (InterruptedException interrompu) {
             Thread.currentThread().interrupt();
             ReponseApi<String> reponse = ReponseApi.injoignable("appel interrompu");
-            journaliser(methode, chemin, reponse, debut, interrompu);
+            JournalEchange.consigner(methode, chemin, reponse, debut, interrompu);
             return PolitiqueReessai.Issue.de(reponse);
         } catch (RuntimeException | IOException indisponible) {
-            ReponseApi<String> reponse = ReponseApi.injoignable(cause(indisponible));
-            journaliser(methode, chemin, reponse, debut, indisponible);
+            ReponseApi<String> reponse = ReponseApi.injoignable(JournalEchange.cause(indisponible));
+            JournalEchange.consigner(methode, chemin, reponse, debut, indisponible);
             return PolitiqueReessai.Issue.de(reponse);
         }
-    }
-
-    /// Consigne l'issue d'un échange (#1845). Le journal était **muet sur le réseau** : face à
-    /// « l'application dit *envoyées* mais la plateforme n'affiche rien » (#1844), il ne permettait de
-    /// trancher aucune hypothèse, et le diagnostic a dû se faire en lisant les sources de l'API.
-    ///
-    /// Ce qui est consigné : méthode, **chemin**, issue, durée. Ce qui ne l'est **jamais** : le jeton et
-    /// les en-têtes (le secret ne doit pas fuir dans un journal joint à un rapport d'anomalie), le corps
-    /// **envoyé**, et l'URL complète - une URL S3 pré-signée porte sa signature dans sa requête.
-    private static void journaliser(
-            String methode, String chemin, ReponseApi<String> reponse, long debutNanos, Exception echec) {
-        Level niveau = niveauDe(reponse);
-        if (!LOG.isLoggable(niveau)) {
-            return;
-        }
-        long millis = (System.nanoTime() - debutNanos) / 1_000_000L;
-        if (echec == null) {
-            LOG.log(niveau, () -> resume(methode, chemin, reponse, millis));
-        } else {
-            LOG.log(niveau, echec, () -> resume(methode, chemin, reponse, millis));
-        }
-    }
-
-    /// Sévérité de l'issue, décidée **à l'émission** (ADR 0008) : un échange nominal - ou un appel non
-    /// émis faute de jeton - reste au détail ; une anomalie (refus du serveur, plateforme injoignable)
-    /// monte à `WARNING` pour être visible sans avoir à régler quoi que ce soit.
-    static Level niveauDe(ReponseApi<String> reponse) {
-        return switch (reponse) {
-            case ReponseApi.Succes<String> ignore -> Level.FINE;
-            case ReponseApi.NonConnecte<String> ignore -> Level.FINE;
-            case ReponseApi.Injoignable<String> ignore -> Level.WARNING;
-            case ReponseApi.Refuse<String> ignore -> Level.WARNING;
-        };
-    }
-
-    /// Résumé consigné d'un échange. Le corps d'un **refus** y figure, tronqué : c'est l'explication du
-    /// serveur (`_issues`, « invalid field »…), l'élément le plus diagnostique qui soit - et c'est
-    /// précisément ce qui manquait pour comprendre #1844.
-    static String resume(String methode, String chemin, ReponseApi<String> reponse, long millis) {
-        return "Vigie-Chiro " + methode + " " + chemin + " → " + issue(reponse) + " (" + millis + " ms)";
-    }
-
-    private static String issue(ReponseApi<String> reponse) {
-        return switch (reponse) {
-            case ReponseApi.Succes<String> ignore -> "succès";
-            case ReponseApi.NonConnecte<String> ignore -> "non connecté (appel non émis)";
-            case ReponseApi.Injoignable<String>(String cause) -> "injoignable : " + cause;
-            case ReponseApi.Refuse<String>(int statut, String corps) ->
-                "refusé HTTP " + statut + " : " + extrait(corps);
-        };
-    }
-
-    /// Début du corps d'un refus : assez pour lire l'explication du serveur, pas assez pour déverser une
-    /// réponse entière dans le journal.
-    private static String extrait(String corps) {
-        if (corps == null || corps.isBlank()) {
-            return "(corps vide)";
-        }
-        String net = corps.strip();
-        return net.length() <= CORPS_REFUS_MAX ? net : net.substring(0, CORPS_REFUS_MAX) + "…";
     }
 
     /// Corps d'un `PUT` S3, construit au dernier moment : lire un fichier peut échouer (IOException),
@@ -318,6 +254,13 @@ final class TransportVigieChiro {
     /// que la variante de l'issue). Une panne réseau ou un fichier illisible devient une issue
     /// [ReponseApi.Injoignable] (réessayable), un statut hors 2xx un [ReponseApi.Refuse] (429/5xx seulement).
     private PolitiqueReessai.Issue<String> uneDepose(String urlSignee, CorpsAEnvoyer corps, String mime) {
+        Optional<String> refus = UrlSigneeAdmise.motifDeRefus(urlSignee);
+        if (refus.isPresent()) {
+            // Refus AVANT d'ouvrir la moindre connexion : les octets d'une nuit ne partent pas vers un
+            // hôte inattendu, fût-ce pour s'y voir refuser. Un `Refuse` hors 429/5xx n'est pas
+            // réessayable, donc la politique de reprise s'arrête ici plutôt que d'insister.
+            return PolitiqueReessai.Issue.de(ReponseApi.refuse(0, refus.get()));
+        }
         long debut = System.nanoTime();
         String chemin = "?";
         try {
@@ -332,16 +275,16 @@ final class TransportVigieChiro {
             ReponseApi<String> reponse = http.statusCode() >= 200 && http.statusCode() < 300
                     ? ReponseApi.succes(etag(http))
                     : triage(http.statusCode(), "");
-            journaliser(GESTE_S3, chemin, reponse, debut, null);
+            JournalEchange.consigner(GESTE_S3, chemin, reponse, debut, null);
             return new PolitiqueReessai.Issue<>(reponse, retryAfter(http));
         } catch (InterruptedException interrompu) {
             Thread.currentThread().interrupt();
             ReponseApi<String> reponse = ReponseApi.injoignable("appel interrompu");
-            journaliser(GESTE_S3, chemin, reponse, debut, interrompu);
+            JournalEchange.consigner(GESTE_S3, chemin, reponse, debut, interrompu);
             return PolitiqueReessai.Issue.de(reponse);
         } catch (RuntimeException | IOException indisponible) {
-            ReponseApi<String> reponse = ReponseApi.injoignable(cause(indisponible));
-            journaliser(GESTE_S3, chemin, reponse, debut, indisponible);
+            ReponseApi<String> reponse = ReponseApi.injoignable(JournalEchange.cause(indisponible));
+            JournalEchange.consigner(GESTE_S3, chemin, reponse, debut, indisponible);
             return PolitiqueReessai.Issue.de(reponse);
         }
     }
@@ -372,15 +315,6 @@ final class TransportVigieChiro {
 
     private static ReponseApi<String> triage(HttpResponse<String> reponse) {
         return triage(reponse.statusCode(), reponse.body());
-    }
-
-    /// Cause lisible d'une indisponibilité, pour le message « VigieChiro injoignable : ... ».
-    static String cause(Exception indisponible) {
-        if (indisponible instanceof HttpTimeoutException) {
-            return "délai d'attente dépassé";
-        }
-        String message = indisponible.getMessage();
-        return message == null || message.isBlank() ? indisponible.getClass().getSimpleName() : message;
     }
 
     /// En-tête `Authorization` (`Basic base64("<token>:")`), ou vide si aucun token (non connecté).

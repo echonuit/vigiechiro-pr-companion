@@ -275,6 +275,12 @@ class ContratApiVigieChiroLiveTest {
                 .extract()
                 .path("s3_signed_url");
         assertThat(urlSignee).as("URL S3 signée du CSV").isNotNull();
+        // La carte contre le terrain (#2734) : l'URL que la plateforme sert VRAIMENT doit passer
+        // l'allowlist du client. Si l'hébergement change, cette sonde rougit ici plutôt que chez un
+        // utilisateur, dont le dépôt échouerait sans qu'on comprenne pourquoi.
+        assertThat(UrlSigneeAdmise.motifDeRefus(urlSignee))
+                .as("l'URL servie par la plateforme doit être admise par le client")
+                .isEmpty();
 
         // Téléchargement direct, SANS Authorization (la signature de l'URL fait foi) et SANS ré-encoder
         // l'URL (sinon la signature casse). Un seul appel ramène toutes les observations.

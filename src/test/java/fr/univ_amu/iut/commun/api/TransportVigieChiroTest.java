@@ -36,6 +36,18 @@ class TransportVigieChiroTest {
     private static final FournisseurToken SANS_TOKEN = Optional::empty;
     private static final FournisseurToken TOKEN_ABC = () -> Optional.of("abc");
 
+    /// La **forme réelle** d'une URL signée : `resources/fichiers.py:188` du miroir de l'API les construit
+    /// toutes en `https://<bucket>.s3.amazonaws.com/<objet>`, schéma codé en dur.
+    ///
+    /// Ces fixtures déposaient auparavant vers `http://s3.exemple/…`, du HTTP en clair sur un canal que
+    /// la plateforme sert toujours en `https` : elles ne ressemblaient pas à ce qu'elles prétendaient
+    /// éprouver, et le garde de #2734 les a refusées à juste titre.
+    private static final String URL_S3_SIGNEE =
+            "https://vigiechiro.s3.amazonaws.com/5f2b?AWSAccessKeyId=AK&Expires=1&Signature=abc";
+
+    private static final String URL_S3_PARTIE =
+            "https://vigiechiro.s3.amazonaws.com/5f2b?partNumber=1&AWSAccessKeyId=AK&Signature=abc";
+
     @Test
     @DisplayName("enteteAuthorization : Basic base64(token:) ; token en username, mot de passe vide")
     void entete_authorization() {
@@ -64,7 +76,31 @@ class TransportVigieChiroTest {
         assertThat(transport.lire("/moi")).isInstanceOf(ReponseApi.Injoignable.class);
         assertThat(transport.ecrire("PATCH", "/participations/p1", "{}", "e1", TransportVigieChiro.Rejeu.INTERDIT))
                 .isInstanceOf(ReponseApi.Injoignable.class);
-        assertThat(transport.telecharger("http://localhost:1/s3/signe")).isInstanceOf(ReponseApi.Injoignable.class);
+
+        // Le téléchargement visait la même chose, mais son URL était en http : depuis #2734 elle serait
+        // refusée avant tout appel, et le test prouverait le garde au lieu de la panne réseau. On passe
+        // donc par l'échappatoire prévue pour les instances de développement, ce qui l'éprouve aussi.
+        System.setProperty(UrlSigneeAdmise.PROPRIETE_HOTES, "localhost");
+        try {
+            assertThat(transport.telecharger("https://localhost:1/s3/signe"))
+                    .isInstanceOf(ReponseApi.Injoignable.class);
+        } finally {
+            System.clearProperty(UrlSigneeAdmise.PROPRIETE_HOTES);
+        }
+    }
+
+    @Test
+    @DisplayName("#2734 : une URL de stockage en clair est refusée sans qu'aucun appel ne parte")
+    void url_signee_en_clair_refusee_sans_appel() {
+        // Aucun client HTTP n'est fourni : si le transport tentait l'appel, il partirait pour de vrai.
+        TransportVigieChiro transport = new TransportVigieChiro("https://api.exemple/api/v1", TOKEN_ABC);
+
+        ReponseApi<String> issue = transport.telecharger("http://ailleurs.example/s3/signe");
+
+        assertThat(issue).isInstanceOf(ReponseApi.Refuse.class);
+        assertThat(issue.estReessayable())
+                .as("insister ne rendra pas une URL en clair acceptable")
+                .isFalse();
     }
 
     @Test
@@ -83,29 +119,29 @@ class TransportVigieChiroTest {
     @Test
     @DisplayName("cause : un délai dépassé est nommé ; les autres pannes gardent leur message")
     void cause_lisible() {
-        assertThat(TransportVigieChiro.cause(new HttpTimeoutException("request timed out")))
+        assertThat(JournalEchange.cause(new HttpTimeoutException("request timed out")))
                 .isEqualTo("délai d'attente dépassé");
-        assertThat(TransportVigieChiro.cause(new java.net.ConnectException("Connection refused")))
+        assertThat(JournalEchange.cause(new java.net.ConnectException("Connection refused")))
                 .isEqualTo("Connection refused");
-        assertThat(TransportVigieChiro.cause(new IllegalStateException())).isEqualTo("IllegalStateException");
+        assertThat(JournalEchange.cause(new IllegalStateException())).isEqualTo("IllegalStateException");
     }
 
     @Test
     @DisplayName("#1845 : la sévérité se décide à l'émission, anomalie visible, échange nominal au détail")
     void severite_decidee_a_l_emission() {
-        assertThat(TransportVigieChiro.niveauDe(ReponseApi.succes("{}"))).isEqualTo(Level.FINE);
-        assertThat(TransportVigieChiro.niveauDe(ReponseApi.nonConnecte()))
+        assertThat(JournalEchange.niveauDe(ReponseApi.succes("{}"))).isEqualTo(Level.FINE);
+        assertThat(JournalEchange.niveauDe(ReponseApi.nonConnecte()))
                 .as("un appel non émis faute de jeton n'est pas une anomalie")
                 .isEqualTo(Level.FINE);
-        assertThat(TransportVigieChiro.niveauDe(ReponseApi.injoignable("délai dépassé")))
+        assertThat(JournalEchange.niveauDe(ReponseApi.injoignable("délai dépassé")))
                 .isEqualTo(Level.WARNING);
-        assertThat(TransportVigieChiro.niveauDe(ReponseApi.refuse(422, "boom"))).isEqualTo(Level.WARNING);
+        assertThat(JournalEchange.niveauDe(ReponseApi.refuse(422, "boom"))).isEqualTo(Level.WARNING);
     }
 
     @Test
     @DisplayName("#1845 : le résumé porte méthode, chemin, issue et durée, et le corps d'un REFUS")
     void resume_consigne_l_essentiel() {
-        String refus = TransportVigieChiro.resume(
+        String refus = JournalEchange.resume(
                 "PATCH", "/participations/p1", ReponseApi.refuse(422, "{\"_issues\": {\"numero\": \"invalid\"}}"), 12);
 
         assertThat(refus)
@@ -122,7 +158,7 @@ class TransportVigieChiroTest {
     void resume_tronque_un_corps_volumineux() {
         String enorme = "x".repeat(5000);
 
-        String resume = TransportVigieChiro.resume("GET", "/moi", ReponseApi.refuse(500, enorme), 3);
+        String resume = JournalEchange.resume("GET", "/moi", ReponseApi.refuse(500, enorme), 3);
 
         assertThat(resume)
                 .as("le corps est coupé et l'ellipse le signale ; la durée reste en fin de ligne")
@@ -201,7 +237,7 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        boolean depose = transport.deposerVersS3("http://s3.exemple/signe", octetUnique(), "application/zip");
+        boolean depose = transport.deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip");
 
         assertThat(depose).as("la seconde tentative aboutit").isTrue();
         assertThat(attentes).as("une seule attente : une coupure, une reprise").hasSize(1);
@@ -311,7 +347,7 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        boolean depose = transport.deposerVersS3("http://s3.exemple/signe", octetUnique(), "application/zip");
+        boolean depose = transport.deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip");
 
         assertThat(depose).isFalse();
         assertThat(attentes).as("aucune attente : un 4xx ne se rejoue pas").isEmpty();
@@ -328,7 +364,7 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        boolean depose = transport.deposerVersS3("http://s3.exemple/signe", octetUnique(), "application/zip");
+        boolean depose = transport.deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip");
 
         assertThat(depose).isTrue();
         assertThat(attentes).as("le délai du serveur fait autorité").containsExactly(Duration.ofSeconds(2));
@@ -343,7 +379,7 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        boolean depose = transport.deposerVersS3("http://s3.exemple/signe", octetUnique(), "application/zip");
+        boolean depose = transport.deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip");
 
         assertThat(depose).isFalse();
         assertThat(attentes).as("premier plan : 4 tentatives, donc 3 attentes").hasSize(3);
@@ -358,8 +394,8 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente());
 
-        ReponseApi<String> issue = transport.deposerPartie(
-                "http://s3.exemple/part-1", octetUnique(), "application/zip", SuiviReprise.SILENCIEUX);
+        ReponseApi<String> issue =
+                transport.deposerPartie(URL_S3_PARTIE, octetUnique(), "application/zip", SuiviReprise.SILENCIEUX);
 
         assertThat(issue).isEqualTo(ReponseApi.succes("etag-abc"));
     }
@@ -374,8 +410,8 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        ReponseApi<String> issue = transport.deposerPartie(
-                "http://s3.exemple/part-1", octetUnique(), "application/zip", SuiviReprise.SILENCIEUX);
+        ReponseApi<String> issue =
+                transport.deposerPartie(URL_S3_PARTIE, octetUnique(), "application/zip", SuiviReprise.SILENCIEUX);
 
         assertThat(issue).isEqualTo(ReponseApi.succes("etag-2"));
         assertThat(attentes).hasSize(1);
