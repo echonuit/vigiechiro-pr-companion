@@ -19,6 +19,49 @@ permissions:
   contents: read
 
 jobs:
+  outillage-release:
+    # release.yml ne se déclenche qu'au push sur `main` : aucune CI de PR ne traverse la chaîne de
+    # publication, donc une erreur d'installation ou de configuration ne se verrait qu'à la prochaine
+    # release - c'est-à-dire en production, sur un dépôt qui publie à chaque fusion (#2738).
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0 # semantic-release lit l'historique et les tags
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: "lts/*"
+
+      - name: Installer l'outillage depuis le lockfile
+        # `npm ci` échoue si le lockfile ne correspond pas au package.json : c'est la garantie que
+        # ce qui s'installera au moment de publier est exactement ce que le dépôt déclare.
+        run: npm ci --prefix .github/release
+
+      - name: La configuration d'analyse dérive bien de celle du dépôt
+        # Elle ne recopie pas les parserOpts, elle les hérite : une copie divergerait, et la version
+        # calculée en vérification ne serait plus celle que la publication calculera.
+        run: |
+          node -e "
+            const c = require('./.github/release/release.config.js');
+            const noms = c.plugins.map((p) => (Array.isArray(p) ? p[0] : p));
+            const attendus = ['@semantic-release/commit-analyzer', '@semantic-release/release-notes-generator'];
+            if (JSON.stringify(noms) !== JSON.stringify(attendus)) {
+              throw new Error('greffons d\'analyse inattendus : ' + noms.join(', '));
+            }
+            const motif = c.plugins[0][1] && c.plugins[0][1].parserOpts && c.plugins[0][1].parserOpts.headerPattern;
+            if (!motif) {
+              throw new Error('parserOpts non hérités de .releaserc.json : la version calculée divergerait');
+            }
+            console.log('Configuration d\'analyse : ' + noms.length + ' greffon(s), parserOpts hérités.');
+          "
+
+      - name: Répétition à blanc de la chaîne de publication
+        # `--dry-run` n'écrit rien et la configuration d'analyse n'embarque aucun greffon d'écriture :
+        # cette étape ne peut pas publier. Elle prouve que l'outillage s'installe, que les greffons se
+        # chargent et que l'historique git est lisible.
+        run: cd .github/release && ./node_modules/.bin/semantic-release --dry-run
+
   lint:
     runs-on: ubuntu-latest
     steps:
