@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.168.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.167.0...v2.168.0) (2026-08-04)
+
+
+### Features
+
+* **saison:** chercher un lieu et isoler ce qui reste a faire ([#3205](https://github.com/echonuit/vigiechiro-pr-companion/issues/3205)) ([6ada547](https://github.com/echonuit/vigiechiro-pr-companion/commit/6ada547525e3ae0cdc62225261b192058f944745))
+
 # [2.167.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.166.2...v2.167.0) (2026-08-04)
 
 
