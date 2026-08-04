@@ -298,6 +298,41 @@ robot de Flathub. Publier une version ne demande aucun geste côté paquet.
     fichier à chaque appel et échouerait avant d'y arriver. Le `.deb` installé normalement, lui, garde
     cette catégorie fautive.
 
+## Épinglage des actions et conteneurs (#2737)
+
+Chaque `uses:` désigne un **contenu**, jamais un nom : une action est figée sur un **SHA de commit**,
+un conteneur sur un **digest**.
+
+```yaml
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+- uses: docker://ghcr.io/flathub/flatpak-external-data-checker@sha256:58cbad60…
+```
+
+**Pourquoi, alors qu'un tag semble suffire.** Un tag est déplaçable. `actions/checkout@v7` peut être
+repointé sur un autre commit sans que rien ne bouge chez nous : ce qui s'exécute dans nos workflows
+changerait alors sans qu'aucun commit ne le dise. Un numéro plus précis n'y change rien - `@v5.6.0`
+**ressemble** à une version figée, c'est un tag comme un autre.
+
+C'est le prérequis du reste du lot : une attestation de provenance atteste d'un binaire produit par un
+code qu'on ne saurait pas identifier, et un SBOM décrit une construction non reproductible.
+
+**Le commentaire de version est obligatoire**, et la garde le vérifie : sans lui, plus personne ne sait
+quelle version tourne, et une mise à jour Dependabot n'aurait rien de lisible à modifier.
+
+**Épingler ne gèle rien.** Dependabot met à jour un SHA épinglé **et** son commentaire. On échange une
+mise à jour invisible contre une mise à jour qui passe par une PR.
+
+**La garde** : [`verifie-epinglage.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/verifie-epinglage.sh),
+dans le job `lint`. Elle refuse toute référence non figée **et** tout SHA sans commentaire de version.
+Sans elle, la prochaine action ajoutée le serait par tag et l'épinglage se déferait en silence - la
+forme même du défaut corrigé. Pour résoudre un tag :
+
+```bash
+gh api repos/<proprietaire>/<action>/git/ref/tags/<tag> --jq .object.sha
+# si l'objet est de type « tag » (tag annoté), déréférencer :
+gh api repos/<proprietaire>/<action>/git/tags/<sha> --jq .object.sha
+```
+
 ## Dépendances
 
 Les mises à jour sont proposées par **Dependabot**
