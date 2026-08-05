@@ -40,7 +40,7 @@ Un point sur lequel aucune nuit n'a encore de campagne ne propose rien, et ce n'
 le rattachement est facultatif. La campagne retenue s'applique à **toutes les nuits** de cet import,
 une demande d'import ne visant qu'un seul carré.
 
-Pour créer une campagne, voir [Le passage](passage.md#gerer-les-campagnes).
+Pour créer une campagne, voir [Le passage](passage.md#rattacher-a-une-campagne).
 
 Le bouton **Importer cette nuit** applique aux enregistrements le préfixe
 `CarXXXXXX-AAAA-PassN-YY-`, puis les transforme en séquences de 5 s ralenties dix fois (une séquence

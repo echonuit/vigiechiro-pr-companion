@@ -669,7 +669,7 @@ mêmes exigences : mémoire bornée, annulation, pas d'archive partielle.
 **La solution.** `commun.model.EcrivainZip` (#2792), statique et sans JavaFX : `ecrire(destination,
 entrées texte, entrées fichier, progression, jeton)` renvoie la taille écrite. Deux natures d'entrées
 (`EntreeTexte` pour un contenu déjà en mémoire - un CSV -, `EntreeFichier` copiée **en flux**), le
-[JetonAnnulation](#occupation-dun-écran-pendant-un-traitement-long-socle-commun) vérifié avant chaque
+[JetonAnnulation](#occupation-dun-ecran-pendant-un-traitement-long-socle-commun) vérifié avant chaque
 entrée, **pendant** la copie de chacune (cf. ci-dessous) et une dernière fois avant de conclure, la
 progression émise entrée par entrée (« Archive : X / N · nom »), et l'archive **partielle supprimée**
 sur échec comme sur annulation (patron `ExtracteurZip`, en miroir).

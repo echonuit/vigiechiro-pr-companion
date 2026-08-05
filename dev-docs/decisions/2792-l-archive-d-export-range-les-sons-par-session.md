@@ -53,7 +53,7 @@ fichier, session comprise). Pas d'option de compression : le WAV se comprime mal
 - La CLI `exporter-sons` (#2795) produit **la même archive** : la structure est un contrat partagé
   par les deux surfaces, pas un détail de la vue audio.
 - L'écrivain sous-jacent est le patron socle `EcrivainZip`
-  ([patterns](../patterns.md#écrivain-zip-généraliste-socle-commun)) : annulation sans archive
+  ([patterns](../patterns.md#ecrivain-zip-generaliste-socle-commun)) : annulation sans archive
   partielle, mémoire bornée.
 - Tout futur export « assemblé » (rapport + pièces) a un précédent à suivre : contenu en mémoire à la
   racine, fichiers rangés par leur unité d'origine.
