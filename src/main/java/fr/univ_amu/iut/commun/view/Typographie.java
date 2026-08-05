@@ -1,7 +1,10 @@
 package fr.univ_amu.iut.commun.view;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.scene.text.Font;
 
 /// La police du produit, **embarquée** plutôt qu'empruntée à la machine (#3361).
@@ -40,6 +43,13 @@ public final class Typographie {
     /// Chargées à la taille par défaut de JavaFX : la taille réelle vient du CSS, pas d'ici.
     private static final List<String> FICHIERS = List.of("/fonts/NotoSans-Regular.ttf", "/fonts/NotoSans-Bold.ttf");
 
+    private static final Logger LOG = Logger.getLogger(Typographie.class.getName());
+
+    /// La suite du message d'alerte, identique dans les trois cas : ce qu'on perd, et ce qui continue.
+    private static final String REPLI =
+            ". Le rendu retombe sur la police du système : il redevient dépendant de la machine, et un "
+                    + "libellé peut se tronquer ici sans se tronquer ailleurs (ADR 3361).";
+
     private static boolean installee;
 
     private Typographie() {}
@@ -49,6 +59,12 @@ public final class Typographie {
     /// **Best-effort par contrat** : une police introuvable ne fait pas échouer le démarrage. Le produit
     /// retomberait alors sur la police du système, c'est-à-dire sur le comportement d'avant - dégradé,
     /// mais jamais bloquant. Un écran qui ne s'ouvre pas serait un remède pire que le mal.
+    ///
+    /// ⚠️ Best-effort ne veut pas dire **muet** (ADR 0008) :
+    /// les trois façons d'échouer - ressource absente, police illisible, lecture impossible - sont
+    /// **journalisées**. Sans cela, le produit reviendrait en silence au défaut que cette classe existe
+    /// pour supprimer, et personne ne saurait pourquoi un libellé tronque sur une machine et pas sur une
+    /// autre. Le cliquet du dépôt a d'ailleurs refusé la première version, qui avalait l'exception.
     public static synchronized void installer() {
         if (installee) {
             return;
@@ -57,11 +73,15 @@ public final class Typographie {
         for (String chemin : FICHIERS) {
             try (InputStream flux = Typographie.class.getResourceAsStream(chemin)) {
                 if (flux == null) {
+                    LOG.warning(() -> "Police absente du jar : " + chemin + REPLI);
                     continue;
                 }
-                Font.loadFont(flux, -1);
-            } catch (Exception ignoree) {
-                // Voir le contrat best-effort ci-dessus : on continue avec la police du système.
+                if (Font.loadFont(flux, -1) == null) {
+                    // `loadFont` rend null sans lever quand le fichier n'est pas une police lisible.
+                    LOG.warning(() -> "Police illisible : " + chemin + REPLI);
+                }
+            } catch (IOException echec) {
+                LOG.log(Level.WARNING, echec, () -> "Police non chargée : " + chemin + REPLI);
             }
         }
     }
