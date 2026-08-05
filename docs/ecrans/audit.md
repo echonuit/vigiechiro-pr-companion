@@ -142,3 +142,22 @@ chose des deux.
 
 La commande sort en **`0`** si aucun écart d'erreur n'est trouvé : un script peut donc s'en servir comme
 d'un feu vert.
+
+Elle offre les **mêmes filtres** que la barre de l'écran :
+
+```bash
+./vigiechiro audit-coherence --gravite ERREUR              # ce qui bloque
+./vigiechiro audit-coherence --categorie DEPARTEMENT_DIVERGENT
+./vigiechiro audit-coherence --contient "carte sd"         # cible et détail
+```
+
+!!! warning "Le code de sortie suit le filtre"
+    Filtrer change **ce que la commande promet**. `--gravite INFO` sur une base qui contient de vraies
+    erreurs sort en **`0`** : aucune erreur n'a été **affichée**, et le code décrit ce qui a été affiché.
+
+    C'est ce qui rend les filtres utilisables en script. Si vous voulez un feu vert sur la base entière,
+    lancez la commande **sans filtre**.
+
+Un filtre dont la valeur existe mais ne correspond à rien rend simplement un rapport **vide**, en `0`.
+Une valeur qui n'existe pas (`--gravite CATASTROPHE`) est refusée avant que l'audit ne tourne, en `2` :
+c'est une faute de frappe, pas un résultat.

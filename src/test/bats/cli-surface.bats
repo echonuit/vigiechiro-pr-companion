@@ -76,6 +76,28 @@ COMMANDES_LOCALES_SANS_ARG=(
   [[ "${output}" == *"aucun écart"* ]]
 }
 
+# Les filtres de #3258 : deux niveaux que les tests Java en processus ne voient pas - l'analyse des
+# arguments par picocli, et le code de sortie REEL du processus.
+@test "audit-coherence --categorie : valeur valide sans correspondance, rapport vide, exit 0 (#3258)" {
+  # Un critère qui QUALIFIE rend vide sans refuser (ADR 3082) : sur une base fraîche, aucune
+  # catégorie ne correspond, et c'est une réponse - pas une faute de frappe.
+  run cli audit-coherence --categorie DEPARTEMENT_DIVERGENT
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"aucun écart"* ]]
+}
+
+@test "audit-coherence --gravite hors liste : refus d'usage de picocli, exit 2 (#3258)" {
+  # Le refus arrive AVANT que l'audit ne tourne : c'est la frappe qui est fautive, pas la base.
+  run cli audit-coherence --gravite CATASTROPHE
+  [ "${status}" -eq 2 ]
+}
+
+@test "audit-coherence --contient : la recherche est acceptée et n'ouvre rien de plus (#3258)" {
+  run cli audit-coherence --contient aix
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"aucun écart"* ]]
+}
+
 @test "api : le groupe affiche son aide et sort en succès (#3006)" {
   # Groupe imbriqué (une première dans ce dépôt) : sans sous-commande il se comporte comme la racine.
   run cli api

@@ -39,6 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// [fr.univ_amu.iut.commun.persistence.SourceDeDonnees] que la CLI).
 class CliAuditTest {
 
+    private static final String ID_USER = "u-1";
     private static final String SERIE = "1925492";
 
     @TempDir
@@ -138,14 +139,93 @@ class CliAuditTest {
                 .contains("840962 / A1");
     }
 
+    @Test
+    @DisplayName("#3258 : --categorie ne garde que cette nature de constat")
+    void filtre_categorie() {
+        semerJournalManquant();
+        semerPointDeDepartementDivergent();
+
+        cli.executer(new String[] {"audit-coherence", "--categorie", "DEPARTEMENT_DIVERGENT"}, sortie, erreur);
+
+        assertThat(texteSortie()).contains("DEPARTEMENT_DIVERGENT").doesNotContain("DISQUE_MANQUANT");
+    }
+
+    @Test
+    @DisplayName("#3258 : le CODE DE SORTIE décrit ce qui a été imprimé, pas la base entière")
+    void le_code_de_sortie_suit_le_filtre() {
+        // La base porte une vraie erreur (fichier absent) ET un constat informatif. Filtrer sur le
+        // second n'imprime aucune erreur : rendre 1 mentirait à qui lit la sortie, et rendrait l'option
+        // inutilisable en script - or c'est son seul usage.
+        semerJournalManquant();
+        semerPointDeDepartementDivergent();
+
+        assertThat(cli.executer(new String[] {"audit-coherence"}, sortie, erreur))
+                .as("sans filtre, l'erreur est bien là")
+                .isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+
+        SortieCapturee filtree = new SortieCapturee();
+        assertThat(cli.executer(
+                        new String[] {"audit-coherence", "--gravite", "INFO"}, filtree.sortie(), filtree.erreur()))
+                .as("filtré sur les infos, plus aucune erreur n'est imprimée : le code suit")
+                .isEqualTo(Cli.CODE_SUCCES);
+    }
+
+    @Test
+    @DisplayName("#3258 : --contient cherche la cible ET le détail, casse et accents ignorés")
+    void filtre_recherche() {
+        semerPointDeDepartementDivergent();
+
+        // « aix » sans majuscule ni tiret doit trouver « Aix-en-Provence » du détail.
+        cli.executer(new String[] {"audit-coherence", "--contient", "aix"}, sortie, erreur);
+
+        assertThat(texteSortie()).contains("DEPARTEMENT_DIVERGENT");
+    }
+
+    @Test
+    @DisplayName("#3258 : une valeur valide qui ne correspond à rien rend VIDE, elle ne refuse pas")
+    void filtre_sans_correspondance() {
+        semerPointDeDepartementDivergent();
+
+        int code = cli.executer(new String[] {"audit-coherence", "--categorie", "DISQUE_ORPHELIN"}, sortie, erreur);
+
+        assertThat(code)
+                .as("un critère qui QUALIFIE rend vide sans refuser (ADR 3082) : l'ensemble vide est "
+                        + "une réponse, pas une faute de frappe")
+                .isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("aucun écart");
+    }
+
+    @Test
+    @DisplayName("#3258 : une gravité hors liste est une erreur d'USAGE, refusée par picocli")
+    void gravite_inconnue_refusee() {
+        int code = cli.executer(new String[] {"audit-coherence", "--gravite", "CATASTROPHE"}, sortie, erreur);
+
+        assertThat(code)
+                .as("la valeur n'existe pas dans l'énumération : c'est la frappe qui est fautive, pas "
+                        + "la base - et le refus arrive avant que l'audit ne tourne")
+                .isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+    }
+
+    /// L'utilisateur porteur des sites, posé **une seule fois** (#3258).
+    ///
+    /// Les deux fabriques le créaient chacune de leur côté, ce qui allait tant qu'aucun test ne les
+    /// appelait toutes les deux : la clé unique de `user` refuse le second INSERT. Or le cas qui décide
+    /// du code de sortie a besoin des DEUX - une vraie erreur ET un constat informatif dans la même base.
+    private void utilisateur() {
+        UtilisateurDao dao = injecteur.getInstance(UtilisateurDao.class);
+        if (dao.findById(ID_USER).isEmpty()) {
+            dao.insert(new Utilisateur(ID_USER, "Testeur"));
+        }
+    }
+
     /// Sème un point dont les **deux lectures** du département se contredisent : le carré `840962` le
     /// place dans le Vaucluse, sa commune dans les Bouches-du-Rhône. Aucun passage, aucun fichier : ce
     /// constat ne dépend que de la topologie.
     private void semerPointDeDepartementDivergent() {
-        injecteur.getInstance(UtilisateurDao.class).insert(new Utilisateur("u-1", "Testeur"));
+        utilisateur();
         Site site = injecteur
                 .getInstance(SiteDao.class)
-                .insert(new Site(null, "840962", "Étang", Protocole.STANDARD, null, "2026-05-01", "u-1"));
+                .insert(new Site(null, "840962", "Étang", Protocole.STANDARD, null, "2026-05-01", ID_USER));
         Long idPoint = injecteur
                 .getInstance(PointDao.class)
                 .insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
@@ -157,10 +237,10 @@ class CliAuditTest {
     /// **absent** : le seul écart attendu est une erreur `DISQUE_MANQUANT`. Les bruts ne conviennent
     /// plus : ce sont des copies optionnelles, dont l'absence est silencieuse (ADR 0048).
     private void semerJournalManquant() {
-        injecteur.getInstance(UtilisateurDao.class).insert(new Utilisateur("u-1", "Testeur"));
+        utilisateur();
         Site site = injecteur
                 .getInstance(SiteDao.class)
-                .insert(new Site(null, "040962", "Étang", Protocole.STANDARD, null, "2026-05-01", "u-1"));
+                .insert(new Site(null, "040962", "Étang", Protocole.STANDARD, null, "2026-05-01", ID_USER));
         Long idPoint = injecteur
                 .getInstance(PointDao.class)
                 .insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
