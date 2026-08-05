@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.183.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.182.0...v2.183.0) (2026-08-05)
+
+
+### Features
+
+* **cli:** audit-coherence gagne --contient, et dit ce que ses filtres masquent ([#3280](https://github.com/echonuit/vigiechiro-pr-companion/issues/3280)) ([c3455fb](https://github.com/echonuit/vigiechiro-pr-companion/commit/c3455fb4d3fb81bdce21d267cd51093a9732f9b9)), closes [#3258](https://github.com/echonuit/vigiechiro-pr-companion/issues/3258) [#3168](https://github.com/echonuit/vigiechiro-pr-companion/issues/3168) [#3092](https://github.com/echonuit/vigiechiro-pr-companion/issues/3092) [#3272](https://github.com/echonuit/vigiechiro-pr-companion/issues/3272) [#3272](https://github.com/echonuit/vigiechiro-pr-companion/issues/3272) [#3272](https://github.com/echonuit/vigiechiro-pr-companion/issues/3272) [#3258](https://github.com/echonuit/vigiechiro-pr-companion/issues/3258)
+
 # [2.182.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.181.0...v2.182.0) (2026-08-05)
 
 
