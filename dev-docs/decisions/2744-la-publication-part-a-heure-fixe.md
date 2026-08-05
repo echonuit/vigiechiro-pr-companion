@@ -92,4 +92,5 @@ exercé.
   branches et deux fils de version pour un produit qui a un mainteneur.
 - **Déclenchement manuel seul** : le contrôle est total, mais rien ne sort si personne n'y pense -
   et la dérive silencieuse est justement ce qu'on corrige.
-- **Statu quo** : il a déjà coûté le débranchement de deux canaux de distribution.
+- **Statu quo** : il pesait déjà sur des décisions en aval, et surtout il rendait la recette (#1363)
+  injouable - une version qu'aucun humain ne peut valider n'est pas une version, c'est un instantané.
