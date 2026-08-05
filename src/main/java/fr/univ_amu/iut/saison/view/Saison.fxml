@@ -32,7 +32,7 @@
              les garder toujours visibles donne la lecture immédiate « je suis sur telle saison ». Sur un
              jeu conséquent, en revanche, « où en est ce lieu ? » et « qu'est-ce qu'il me reste à
              faire ? » n'avaient aucune réponse directe. -->
-        <TextField fx:id="champRechercheLieu" promptText="Chercher un lieu (carré, point…)"
+        <TextField fx:id="champRechercheLieu" promptText="Chercher un lieu (carré, nom, point, commune)"
                    minWidth="-Infinity" prefWidth="275.0"/>
         <CheckBox fx:id="caseResteAFaire" minWidth="-Infinity" text="Reste à faire"
                   accessibleText="N'afficher que les points qui ne sont pas à jour"/>
