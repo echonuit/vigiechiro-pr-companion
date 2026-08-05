@@ -32,10 +32,9 @@
              les garder toujours visibles donne la lecture immédiate « je suis sur telle saison ». Sur un
              jeu conséquent, en revanche, « où en est ce lieu ? » et « qu'est-ce qu'il me reste à
              faire ? » n'avaient aucune réponse directe. -->
-        <!-- 345 px, et non 310 : à 310 le libellé tenait EN LOCAL et tronquait EN CI de 13 px. Les polices
-             du runner sont plus larges que celles d'un poste de développement, et c'est l'image de la CI
-             qui fait foi. La marge est donc délibérée : la raser au plus juste rouvrirait le défaut à la
-             première retouche du libellé. -->
+        <!-- 345 px pour un libellé qui en demande ~320. La marge n'est plus là pour absorber un écart
+             entre machines - #3361 l'a supprimé en embarquant la police - mais pour qu'une retouche du
+             libellé ne rouvre pas la troncature. Elle a coûté trois allers-retours avec la CI. -->
         <TextField fx:id="champRechercheLieu" promptText="Chercher un lieu (carré, nom, point, commune)"
                    minWidth="-Infinity" prefWidth="345.0"/>
         <CheckBox fx:id="caseResteAFaire" minWidth="-Infinity" text="Reste à faire"
