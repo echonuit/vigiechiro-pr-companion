@@ -615,10 +615,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         ouvrirPassage.ouvrir(ligne.idPassage(), new ContexteSite(ligne.numeroCarre(), ligne.codePoint(), null));
     }
 
-    /// « Réinitialiser » : retire tous les filtres (recherche + puces) via le gestionnaire, et efface le
+    /// « Tout effacer » : retire tous les filtres (recherche + puces) via le gestionnaire, et efface le
     /// tri par clic d'en-tête (#145).
     @FXML
-    private void reinitialiser() {
+    private void toutEffacer() {
         gestionnaireFiltres.reinitialiser();
         tableLignes.getSortOrder().clear();
         // #3098 : sans cet oubli, la memoire de session remettrait les filtres a la visite suivante et

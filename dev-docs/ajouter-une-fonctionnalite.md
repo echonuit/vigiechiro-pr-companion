@@ -106,6 +106,38 @@ public class MaFeatureController {
     `GestionnaireColonnes.adaptateurMonoTable(cle, table, colonnes)` pour une table, ou un adaptateur à
     plusieurs entrées de map pour une vue multi-tables.
 
+!!! tip "Tables exploratoires : la barre de filtres du socle"
+    Si votre table **explore un corpus** (par opposition au détail d'un seul objet), elle prend la barre
+    « à la Notion » plutôt qu'un filtre écrit à la main. Six écrans la portent ; en écrire un septième à
+    la main serait la duplication que le chantier #3092 a supprimée.
+
+    Cinq gestes, dans cet ordre :
+
+    1. le **ViewModel** expose deux listes - `trucs()` (tout) et `trucsFiltres()` (une `FilteredList`) -
+       plus son `Filtres<Truc>` ;
+    2. la **table** se pose sur une `SortedList` **par-dessus** la liste filtrée, comparateur lié à celui
+       de la table. ⚠️ Une `FilteredList` posée nue est **non modifiable** : `TableView` renonce alors à
+       trier et **vide son `sortOrder` en silence** ;
+    3. un **catalogue** `CriteresMaFeature` déclare les critères (`CritereListe`, `CritereBooleen`,
+       `CritereLieu`) ; les clés **partagées** viennent de `ClesCriteres`, les clés propres restent chez
+       vous ([ADR 3096](decisions/3096-une-cle-de-critere-est-un-contrat-de-serialisation.md)) ;
+    4. un collaborateur `FiltresVuesMaFeature` assemble barre, vues mémorisées et mémoire de session -
+       le contrôleur lui passe les nœuds du FXML regroupés, ce qui le garde sous le plafond `GodClass` ;
+    5. le FXML gagne la barre **et le bandeau de retour** : sans lui, la mémoire de session remettrait
+       des filtres amputés en silence
+       ([ADR 3093](decisions/3093-une-restauration-rend-compte-de-deux-causes.md)).
+
+    Deux règles à ne pas rater, parce qu'elles ne font rougir aucun test :
+
+    - le **domaine** d'une puce se calcule sur `filtres().saufLui(CLE)`, jamais sur la liste affichée -
+      sinon la puce s'auto-effondre sur la valeur déjà cochée
+      ([ADR 3095](decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md)) ;
+    - si l'écran porte un **verdict ou un résumé** sur l'ensemble, il se calcule sur la liste **non
+      filtrée** ([ADR 3092](decisions/3092-un-filtre-ne-change-que-ce-quon-regarde.md)).
+
+    Enfin, le décompte des critères s'ancre dans la fiche d'écran par une balise
+    `<!--inv:criteres-mafeature-->N<!--/inv-->`, et la clé s'ajoute à `DocumentationAJourTest`.
+
 ## 5. Le module Guice (`di/`) + l'auto-découverte
 
 Un module qui publie service/VM, **hérité de `ModuleDeFeature`** (le DSL du socle) :

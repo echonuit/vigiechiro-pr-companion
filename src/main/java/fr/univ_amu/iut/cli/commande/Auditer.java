@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import fr.univ_amu.iut.audit.model.CategorieConstat;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
@@ -32,6 +33,12 @@ public final class Auditer implements Callable<Integer> {
             paramLabel = "<id>",
             description = "Limite l'audit à ce passage. Sans cette option, audite tout le workspace.")
     private Long idPassage;
+
+    @Option(names = "--gravite", description = "Ne garde que les constats de ce niveau : ${COMPLETION-CANDIDATES}.")
+    private Severite gravite;
+
+    @Option(names = "--categorie", description = "Ne garde que cette nature de constat : ${COMPLETION-CANDIDATES}.")
+    private CategorieConstat categorie;
 
     @Option(names = "--json", description = "Émet les constats au format JSON (tableau) plutôt qu'en texte.")
     private boolean json;
@@ -67,7 +74,12 @@ public final class Auditer implements Callable<Integer> {
             System.setProperty("vigiechiro.token", token);
         }
         RapportAudit rapport = calculer();
-        sortie.println(json ? enJson(rapport) : enTexte(rapport));
+        // Les deux filtres de l'écran (#3100), portés ici à la clôture de #3092. Ils ne touchent QUE
+        // l'affichage : le code de sortie continue de juger le RAPPORT ENTIER, comme le verdict « sain »
+        // de l'écran reste calculé sur l'audit entier. Sans cela, « --gravite INFO » sur un workspace
+        // abîmé rendrait 0, et un script d'intégration conclurait que tout va bien.
+        List<ConstatAudit> retenus = restreindre(rapport.constats());
+        sortie.println(json ? enJson(retenus) : enTexte(rapport, retenus));
         return rapport.aDesErreurs() ? 1 : 0;
     }
 
@@ -81,9 +93,17 @@ public final class Auditer implements Callable<Integer> {
         return idPassage == null ? audit.auditerTout() : audit.auditerPassage(idPassage);
     }
 
-    private static String enJson(RapportAudit rapport) {
-        List<Map<String, ?>> lignes =
-                rapport.constats().stream().map(Auditer::projeter).toList();
+    /// Applique `--gravite` puis `--categorie`. Chaque option retient une valeur **exacte**, comme la
+    /// puce correspondante de l'écran : c'est la sémantique de `CritereListe.enumeration`.
+    private List<ConstatAudit> restreindre(List<ConstatAudit> constats) {
+        return constats.stream()
+                .filter(constat -> gravite == null || constat.severite() == gravite)
+                .filter(constat -> categorie == null || constat.categorie() == categorie)
+                .toList();
+    }
+
+    private static String enJson(List<ConstatAudit> constats) {
+        List<Map<String, ?>> lignes = constats.stream().map(Auditer::projeter).toList();
         return FormatJson.tableau(lignes);
     }
 
@@ -97,12 +117,18 @@ public final class Auditer implements Callable<Integer> {
         return champs;
     }
 
-    private static String enTexte(RapportAudit rapport) {
+    private static String enTexte(RapportAudit rapport, List<ConstatAudit> retenus) {
         if (rapport.sain()) {
             return "Cohérence disque / base : aucun écart détecté.";
         }
+        if (retenus.isEmpty()) {
+            // Un filtre qui ne retient rien se DIT. Sans cette phrase, la commande rendrait « aucun
+            // écart détecté » sur un workspace abîmé : le filtre ferait passer la panne pour la santé.
+            return "Aucun constat ne correspond aux filtres ("
+                    + rapport.constats().size() + " constat(s) au total).";
+        }
         StringBuilder texte = new StringBuilder();
-        for (ConstatAudit constat : rapport.constats()) {
+        for (ConstatAudit constat : retenus) {
             texte.append('[').append(constat.severite()).append("] ").append(constat.categorie());
             if (constat.idPassage() != null) {
                 texte.append(" (passage ").append(constat.idPassage()).append(')');

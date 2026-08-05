@@ -68,6 +68,8 @@ celle des autres écrans :
 
 Les <!--inv:criteres-audit-->3<!--/inv--> critères disponibles :
 
+> Les gestes de la barre (recherche, « + Filtre », puces, « Tout effacer »), la façon dont les listes de valeurs s'adaptent aux autres filtres, et le bandeau qui prévient quand un filtre n'a pas pu être remis en place sont décrits une fois pour tous les écrans dans [Personnaliser les tableaux](../personnaliser-les-tableaux.md#filtrer-la-barre-a-puces).
+
 | Critère | Ce qu'il garde |
 |---|---|
 | **Gravité** | les constats d'une gravité : Erreur, Avertissement, Information, Succès |

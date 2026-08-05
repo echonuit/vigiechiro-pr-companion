@@ -61,11 +61,75 @@ quand le tableau vous convient.
     (l'inventaire en haut ou le détail des observations en bas) ; le menu ☰ règle, lui, l'**inventaire
     affiché** (par espèce ou par carré selon le regroupement choisi).
 
+## Filtrer : la barre à puces
+
+Cinq écrans portent la même **barre de filtres** : Sons & validation, Espèces & observations, Activité
+de la nuit, Carte & passages et Audit de cohérence. Les gestes y sont identiques, seuls les critères
+changent (chaque fiche d'écran donne les siens).
+
+![La barre de filtres de Sons & validation : le champ de recherche, le bouton « + Filtre », les puces posées et « Tout effacer ».](assets/captures/apercu-sons-validation-filtres.png)
+
+- un **champ de recherche** permanent, à gauche, cherche dans les colonnes en texte libre de l'écran ;
+  il ignore la casse et les accents ;
+- **« + Filtre »** ajoute un critère sous forme de **puce**. On retire une puce par sa croix ;
+- **« Tout effacer »** enlève d'un coup les puces, la recherche **et** le tri du tableau.
+
+Une puce qu'on vient d'ajouter **n'écarte rien** tant qu'on n'y a rien choisi : elle ouvre son menu et
+attend. Deux exceptions sur Sons & validation (Statut et Taxon parent), qui filtrent dès l'ajout parce
+que la revue commence presque toujours par là - et elles **affichent leur valeur** sur la puce, pour
+qu'on voie ce qu'elles font.
+
+### Les listes de valeurs s'adaptent à ce qui reste
+
+Les valeurs offertes par une puce sont **celles réellement présentes**, recalculées à chaque ouverture
+de son menu, en tenant compte des **autres** filtres déjà posés. Si vous avez restreint à une commune,
+le menu « Point » ne propose plus que les points de cette commune.
+
+Le critère qu'on est en train d'ouvrir ne se compte **pas** lui-même : sans cela, une fois « Aix »
+coché, le menu ne proposerait plus qu'« Aix » et vous ne pourriez jamais cocher une seconde commune.
+
+Une valeur que vous aviez cochée et qui n'est plus disponible **reste cochée**, grisée en italique. La
+retirer relâcherait votre filtre sans vous le dire, et le tableau montrerait alors **plus** que ce que
+la puce annonce.
+
+### Quand un filtre ne peut pas être remis en place
+
+Trois situations vous rendent des filtres que vous n'avez pas posés à l'instant : rouvrir une **vue
+enregistrée**, arriver depuis un autre écran par « **Voir sur la carte** », ou simplement **revenir**
+sur un écran que vous aviez quitté.
+
+Dans ces trois cas, un filtre peut ne pas être remis : la valeur n'existe plus dans vos données, ou
+l'écran d'arrivée n'offre pas ce critère. **Un bandeau vous le dit**, en nommant ce qui manque.
+
+![Le bandeau d'une vue rejouée sans une valeur devenue introuvable.](assets/captures/apercu-bandeau-vue-amputee.png)
+
+Les deux causes ne se disent pas de la même façon, parce qu'elles n'appellent pas la même réaction :
+une **valeur** disparue peut revenir avec vos données, un **critère** que l'écran n'offre pas ne
+reviendra pas ici.
+
+![Le même bandeau quand les deux causes se cumulent : une valeur introuvable et des critères que cet écran n'offre pas.](assets/captures/apercu-bandeau-vue-amputee-deux-causes.png)
+
+Arriver d'un autre écran donne sa propre formulation, qui dit d'où l'on vient :
+
+![Le bandeau affiché à l'arrivée sur un écran qui n'offre pas tous les filtres de celui qu'on vient de quitter.](assets/captures/apercu-bandeau-filtres-non-repris.png)
+
+Ce n'est jamais silencieux, et c'est le point important : sans ce message, l'écran montrerait plus de
+lignes que le filtre ne le laisse croire, et rien ne l'indiquerait.
+
+!!! note "« Ma saison » filtre autrement, et c'est voulu"
+    L'écran **Ma saison** garde ses deux listes déroulantes (l'année et la campagne) au lieu de puces :
+    une saison **est** une année et une campagne, et les garder sous les yeux dit tout de suite où l'on
+    se trouve. Il porte en plus une **recherche de lieu** et une case **« Reste à faire »**.
+
 ## Vos réglages sont mémorisés
 
 L'application **retient** l'ordre et la visibilité des colonnes que vous choisissez : à la réouverture
 de l'écran, le tableau se rouvre **tel que vous l'aviez laissé** (réglage propre à chaque écran).
 
-Et si vous utilisez les **vues enregistrées** (les onglets « à la Notion » au-dessus des tableaux de
-Carte & passages, Sons & validation et Espèces & observations), chaque vue mémorise **aussi** sa
-disposition de colonnes : basculer d'une vue à l'autre rejoue à la fois ses filtres **et** ses colonnes.
+L'application retient de la même façon les **filtres** que vous aviez posés et le **tri** du
+tableau : revenir sur un écran vous le rend tel que vous l'aviez laissé. Si un filtre ne peut pas être
+remis, le bandeau décrit plus haut vous le dit.
+
+Et si vous utilisez les **vues enregistrées** (les onglets « à la Notion » au-dessus des tableaux),
+chaque vue mémorise **aussi** sa disposition de colonnes : basculer d'une vue à l'autre rejoue à la fois
+ses filtres **et** ses colonnes.

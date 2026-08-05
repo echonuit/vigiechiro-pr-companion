@@ -31,20 +31,20 @@ import java.util.Optional;
 /// pourquoi. Le refus nomme la plage **et** la raison, parce que l'erreur vient d'une confusion d'unité
 /// et non d'une faute de frappe.
 ///
-/// ## Ce qu'il ne fait pas, contrairement à [FiltreLieu]
+/// ## Ce qu'il ne fait pas, contrairement à [FiltresLieu]
 ///
 /// Un résultat **vide** n'est pas un refus ici. Un seuil est un nombre : il ne peut pas désigner
 /// quelque chose qui n'existe pas, et « aucune détection au-dessus de 0,99 » est une réponse, pas une
 /// faute. Un nom de lieu, lui, se tape de travers, et c'est ce qui justifiait le refus là-bas.
-public final class FiltreProbabilite {
+public final class FiltresProbabilite {
 
-    private FiltreProbabilite() {}
+    private FiltresProbabilite() {}
 
     /// Les lignes dont la probabilité Tadarida atteint `seuil`, **plus celles qui n'en ont pas**.
     /// `seuil` nul n'écarte rien.
     ///
     /// @throws RegleMetierException si le seuil sort de l'intervalle `[0, 1]`
-    public static List<LigneObservationAudio> appliquer(List<LigneObservationAudio> lignes, Double seuil) {
+    public static List<LigneObservationAudio> parSeuilMinimal(List<LigneObservationAudio> lignes, Double seuil) {
         if (seuil == null) {
             return lignes;
         }
@@ -77,7 +77,7 @@ public final class FiltreProbabilite {
     public static Optional<String> avertissementSeuilTropHaut(List<LigneObservationAudio> avantSeuil, Double seuil) {
         if (seuil == null
                 || avantSeuil.isEmpty()
-                || !appliquer(avantSeuil, seuil).isEmpty()) {
+                || !parSeuilMinimal(avantSeuil, seuil).isEmpty()) {
             return Optional.empty();
         }
         return avantSeuil.stream()

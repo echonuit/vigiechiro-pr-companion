@@ -124,7 +124,7 @@ Les gains de productivité avancés (regroupement multi-nuits P9, bibliothèque 
 - [x] Une barre de filtres au-dessus de la liste propose : taxon (multi-select), groupe taxonomique (Pipistrelles / Murins / Noctules / etc., cf. [C15](../Modèle%20conceptuel/C15%20-%20Groupe%20taxonomique.md)), seuil de probabilité min/max, plage horaire (timestamp début/fin), statut de validation (À voir / Validée / Corrigée).
 - [x] Les filtres se cumulent en logique ET.
 - [ ] Compteur visible : « N/M observations affichées (filtre actif) ».
-- [ ] Bouton « Réinitialiser les filtres » bien visible.
+- [x] Bouton **« Tout effacer »** bien visible (livré sous ce nom, et non « Réinitialiser » : le geste efface aussi le tri et la mémoire de session, chantier #3092).
 - [x] Les filtres actifs sont affichés sous forme de **chips supprimables** au-dessus de la liste.
 - [x] Les filtres sont mémorisés en session (pas persistés entre redémarrages, sauf si combinés à [E0.S7](E0%20-%20Fondations%20de%20persistance.md#e0s7) reprise de validation).
 - [x] Compatible avec le tri de [E7.S2](#e7s2).

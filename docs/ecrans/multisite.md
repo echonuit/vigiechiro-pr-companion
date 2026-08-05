@@ -52,7 +52,10 @@ du point : elle répond à « pourquoi cette ligne sort-elle quand je cherche Ah
 seul laissait deviner. Elle reste **vide** tant qu'aucune commune n'a été résolue pour le point. La barre du haut porte <!--inv:criteres-multisite-->7<!--/inv--> critères
 (carré, lieu, statut, verdict, année, analyse, campagne) et permet de **tout effacer** ; un menu **☰** à droite de la barre regroupe les actions secondaires
 (**Vues** enregistrées et **export** de la sélection). On **trie** en cliquant l'en-tête d'une
-colonne (Année et N° de passage se trient numériquement), en plus du sélecteur d'ordres. Un
+colonne (Année et N° de passage se trient numériquement), en plus du sélecteur d'ordres.
+
+> Les gestes de la barre (recherche, « + Filtre », puces, « Tout effacer »), la façon dont les listes de valeurs s'adaptent aux autres filtres, et le bandeau qui prévient quand un filtre n'a pas pu être remis en place sont décrits une fois pour tous les écrans dans [Personnaliser les tableaux](../personnaliser-les-tableaux.md#filtrer-la-barre-a-puces).
+ Un
 **double-clic** sur une ligne ouvre l'écran du passage correspondant.
 
 ![Le menu ☰ de « Carte & passages », aucune ligne cochée : écouter le passage sélectionné et les quatre actions groupées sont grisées, chacune disant ce qui lui manque. Restent actives « Écouter la sélection filtrée », « Exporter… » et le réglage des colonnes.](../assets/captures/apercu-multisite-menu-actions.png)

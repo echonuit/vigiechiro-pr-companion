@@ -335,15 +335,11 @@ final class CriteresMultisite {
 
     private static boolean correspond(LignePassage ligne, String texte) {
         String aiguille = NormalisationTexte.normaliser(texte);
-        return contient(ligne.numeroCarre(), aiguille)
-                || contient(ligne.codePoint(), aiguille)
-                || contient(ligne.dateEnregistrement(), aiguille)
-                || contient(ligne.commune(), aiguille)
-                || contient(ligne.nomSite(), aiguille);
-    }
-
-    private static boolean contient(String champ, String aiguille) {
-        return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
+        return NormalisationTexte.contient(ligne.numeroCarre(), aiguille)
+                || NormalisationTexte.contient(ligne.codePoint(), aiguille)
+                || NormalisationTexte.contient(ligne.dateEnregistrement(), aiguille)
+                || NormalisationTexte.contient(ligne.commune(), aiguille)
+                || NormalisationTexte.contient(ligne.nomSite(), aiguille);
     }
 
     private static Predicate<LignePassage> predicatCarre(String texte) {

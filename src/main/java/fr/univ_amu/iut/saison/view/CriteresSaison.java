@@ -1,6 +1,6 @@
 package fr.univ_amu.iut.saison.view;
 
-import fr.univ_amu.iut.commun.model.NormalisationTexte;
+import fr.univ_amu.iut.saison.model.FiltresSaison;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import java.util.function.BiPredicate;
 import java.util.function.Predicate;
@@ -38,8 +38,11 @@ public final class CriteresSaison {
     ///
     /// Les autres colonnes ne s'y prêtent pas : ce sont des états de passage et une phrase d'action, que
     /// la case « Reste à faire » interroge mieux qu'une recherche libre.
+    ///
+    /// La règle vit dans [FiltresSaison] : `solde-saison --lieu` la lit aussi depuis la clôture de
+    /// #3092, et deux écritures d'une même règle finissent par diverger.
     public static BiPredicate<LigneSaison, String> rechercheTexte() {
-        return CriteresSaison::correspond;
+        return FiltresSaison::correspondAuLieu;
     }
 
     /// **« Reste à faire »** : les points qui ne sont **pas** à jour.
@@ -51,14 +54,7 @@ public final class CriteresSaison {
         return ligne -> !ligne.aJour();
     }
 
-    private static boolean correspond(LigneSaison ligne, String texte) {
-        String aiguille = NormalisationTexte.normaliser(texte);
-        return contient(ligne.numeroCarre(), aiguille)
-                || contient(ligne.codePoint(), aiguille)
-                || contient(ligne.nomSite(), aiguille);
-    }
+    // La recherche et « Reste à faire » sont écrites une seule fois, dans `saison.model.FiltresSaison`,
+    // parce que `solde-saison` pose les mêmes deux questions que cette barre.
 
-    private static boolean contient(String champ, String aiguille) {
-        return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
-    }
 }

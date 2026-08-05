@@ -70,7 +70,7 @@ rattrapage de la correspondance partielle de `--lieu`, où l'on tape à l'aveugl
 
 - **Ne rien rattraper**, en s'appuyant sur le bandeau de #3093. Honnête, mais il aurait averti à chaque
   rejeu de chaque vue existante, pour un changement subi.
-- **La correspondance partielle de `FiltreLieu`.** À l'écran, la valeur vient d'une liste fermée et non
+- **La correspondance partielle de `FiltresLieu`.** À l'écran, la valeur vient d'une liste fermée et non
   d'une frappe : accepter un fragment transformerait une restauration en recherche approximative.
 - **Migrer les vues stockées** en réécrivant leur contenu en base. Irréversible, et faux dès qu'un site
   est renommé après coup ; le rattrapage se recalcule à chaque ouverture sur le domaine réel.

@@ -384,20 +384,16 @@ final class CriteresAudio {
 
     private static boolean correspond(LigneObservationAudio ligne, String texte) {
         String aiguille = NormalisationTexte.normaliser(texte);
-        return contient(ligne.nomFichier(), aiguille)
-                || contient(ligne.taxonTadarida(), aiguille)
-                || contient(ligne.nomTadarida(), aiguille)
-                || contient(ligne.taxonObservateur(), aiguille)
-                || contient(ligne.nomEspece(), aiguille)
-                || contient(ligne.commentaire(), aiguille)
-                || contient(ligne.numeroCarre(), aiguille)
-                || contient(ligne.codePoint(), aiguille)
-                || contient(ligne.nomSite(), aiguille)
-                || contient(ligne.commune(), aiguille);
-    }
-
-    private static boolean contient(String champ, String aiguille) {
-        return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
+        return NormalisationTexte.contient(ligne.nomFichier(), aiguille)
+                || NormalisationTexte.contient(ligne.taxonTadarida(), aiguille)
+                || NormalisationTexte.contient(ligne.nomTadarida(), aiguille)
+                || NormalisationTexte.contient(ligne.taxonObservateur(), aiguille)
+                || NormalisationTexte.contient(ligne.nomEspece(), aiguille)
+                || NormalisationTexte.contient(ligne.commentaire(), aiguille)
+                || NormalisationTexte.contient(ligne.numeroCarre(), aiguille)
+                || NormalisationTexte.contient(ligne.codePoint(), aiguille)
+                || NormalisationTexte.contient(ligne.nomSite(), aiguille)
+                || NormalisationTexte.contient(ligne.commune(), aiguille);
     }
 
     /// Espèces présentes dans `lignes`, une par **taxon retenu**, **distinctes** et triées par libellé

@@ -323,13 +323,13 @@ class MultisiteViewTest {
 
     @Test
     @DisplayName("Réinitialiser vide la recherche et réaffiche tous les passages")
-    void reinitialiser_vide_la_recherche(FxRobot robot) {
+    void tout_effacer_vide_la_recherche(FxRobot robot) {
         TextField recherche = robot.lookup("#champRecherche").queryAs(TextField.class);
         robot.clickOn("#champRecherche").write("640380");
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(recherche.getText()).isEqualTo("640380");
 
-        robot.clickOn("#boutonReinitialiser");
+        robot.clickOn("#boutonToutEffacer");
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(recherche.getText()).isEmpty();

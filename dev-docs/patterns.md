@@ -803,7 +803,7 @@ la commune, le carré et le point. Ce qui ressemblait à une quatrième dimensio
 **nom convivial du carré** - `monitoring_site` porte les deux colonnes sur la même ligne - et les deux
 tiennent dans une seule entrée, « 640380 · Vallon ». `CritereLieu.carres` et `CritereLieu.points`
 écrivent cette règle une fois pour les quatre écrans ; l'écriture partagée vit en
-`commun.model.LieuQualifie`, la **ligne de commande** devant la lire aussi (`FiltreLieu`), et un modèle
+`commun.model.LieuQualifie`, la **ligne de commande** devant la lire aussi (`FiltresLieu`), et un modèle
 ne pouvant pas dépendre d'une vue.
 
 **Une dimension qui change d'écriture déclare de quel côté** ([ADR 3158](decisions/3158-une-valeur-memorisee-se-rattrape-par-dimension.md)).
@@ -855,6 +855,92 @@ n'appellent pas la même réaction - une valeur disparue tient aux données, un 
 Il existe **trois** chemins de restauration, et tous trois doivent lire ce retour : les vues
 sauvegardées, le transport d'un écran à l'autre (#476) et la mémoire de session (#484). En ignorer un
 laisse l'écran filtrer moins large qu'annoncé, sans rien dire.
+
+### Les filtres de `model` : deux rôles, une convention de nom
+
+Six classes `Filtres*` vivent en `model`, hors du socle de vue. L'audit d'harmonisation de la clôture
+de #3092 a montré qu'elles ne relèvent pas de trois idiomes, comme leur forme le laissait croire, mais
+de **deux rôles**, et que seul leur **nommage** divergeait.
+
+| Rôle | Forme | Classes | Consommé par |
+|---|---|---|---|
+| **Prédicat composable** | objet chaînable + `accepte(ligne)` | `FiltresMultisite` | un service **et** un catalogue d'écran |
+| **Application à une liste** | `parX(List, critère) → List` | `FiltresActivite`, `FiltresRevue`, `FiltresLieu`, `FiltresProbabilite`, `FiltresSaison` | la **ligne de commande** |
+
+La différence est légitime et se garde : un écran a besoin d'un `Predicate` à poser dans son
+`Filtres<T>`, une commande a besoin d'une liste déjà réduite. Les convertir toutes à une seule forme
+ferait porter à l'une le coût de l'autre.
+
+**Ce qui, lui, ne se justifiait pas**, et a été aligné : deux classes portaient un nom **singulier** et
+une méthode `appliquer` là où les autres portent un pluriel et un verbe qui dit **sur quoi** l'on
+filtre. `FiltreLieu.appliquer` est devenu `FiltresLieu.parLieu`, `FiltreProbabilite.appliquer` est
+devenu `FiltresProbabilite.parSeuilMinimal`. Un nom qui dit son critère se lit sans ouvrir la classe.
+
+**Une règle lue des deux côtés s'écrit dans `model`.** `FiltresLieu` et `FiltresSaison` sont lues par
+la ligne de commande **et** par un catalogue d'écran ; un catalogue de `view` qui garderait sa propre
+copie finirait par diverger - c'est arrivé le jour même où #3219 a ajouté la recherche par nom de carré
+à « Ma saison ».
+
+⚠️ La comparaison de texte insensible à la casse et aux accents vit dans
+`commun.model.NormalisationTexte.contient`, et nulle part ailleurs. Six catalogues en avaient
+re-déclaré une copie privée identique - dont deux écrites par ce chantier même. La méthode partagée
+**normalise elle-même** l'aiguille et refuse une aiguille **vide**, là où les copies laissaient tout
+passer.
+
+### La mémoire de session sépare les filtres du tri
+
+`MemoireFiltres` (#3098) retient l'état d'un écran d'une visite à l'autre, en **deux mémoires
+distinctes** :
+
+- `installer(ecran, ancrage, gestionnaireFiltres, compteRendu)` retient les **filtres**, un jeu par
+  écran. L'`ancrage` est n'importe quel nœud : il sert d'horloge de sortie, pas de contenu ;
+- `memoriserTri(ecran, table)` retient le **tri**, repéré par le `fx:id` de la table. Un écran en
+  appelle autant que de tables, un écran sans table n'en appelle aucune.
+
+**Pourquoi deux.** La première version en supposait une seule, un tri par écran. La réalité mesurée :
+« Sons & validation » a une table, « Carte & passages » une, « Espèces & observations » **trois**, et
+« Activité de la nuit » **aucune** - c'est un graphe. Une mémoire unique aurait confondu les trois
+tables de l'analyse et réclamé une table à un écran qui n'en a pas.
+
+⚠️ La restauration des filtres **rend compte** de ce qu'elle n'a pas su replacer : c'est le chemin le
+plus discret des trois, puisque personne n'a rien demandé
+([ADR 3093](decisions/3093-une-restauration-rend-compte-de-deux-causes.md)).
+
+### « Tout effacer » est un geste, pas un bouton
+
+Les cinq écrans à barre nomment ce geste **de la même façon** et lui font faire **la même chose** :
+retirer les filtres, effacer le tri de la table, et **oublier** ce que la mémoire de session
+s'apprêtait à remettre. Sans le troisième volet, les filtres qu'on vient d'effacer reviennent à la
+réouverture, et le bouton paraît n'avoir pas pris.
+
+Un écran sans table (« Activité de la nuit ») n'efface évidemment pas de tri, et son `accessibleText`
+le dit : « Effacer tous les filtres », sans « et le tri ».
+
+⚠️ « Carte & passages » a porté le libellé « Réinitialiser » jusqu'à la clôture de #3092 - le geste y
+était pourtant déjà identique. C'est l'écran **d'origine** du geste, resté sous l'ancien nom quand il
+s'est généralisé : un cas d'école de divergence par ancienneté, qu'aucun test ne signale.
+
+### Les filtres existent aussi en ligne de commande
+
+Un critère d'écran qui répond à une question métier a son équivalent en ligne de commande, à la même
+sémantique ([ADR 0014](decisions/0014-parite-cli-ihm.md)). L'état à la clôture de #3092 :
+
+| Écran | Commande jumelle | Parité |
+|---|---|---|
+| Sons & validation | `lister-observations` | 10 / 10 |
+| Activité de la nuit | `exporter-activite` | 5 / 5 |
+| Audit de cohérence | `audit-coherence` | 3 / 3 |
+| Ma saison | `solde-saison` | 2 / 2 |
+| Carte & passages | `lister-passages` | **0 / 7** |
+| Espèces & observations | *aucune* | **sans jumelle** |
+
+Les deux dernières lignes sont une dette **antérieure** au chantier, rendue visible en confrontant les
+inventaires complets plutôt que des exemples.
+
+Quand la règle est la même des deux côtés, elle s'écrit **une fois** dans `model` : `FiltresLieu` pour le
+lieu, `FiltresSaison` pour la recherche et le « reste à faire ». Un catalogue de `view` qui garderait sa
+propre copie finirait par diverger - c'est arrivé le jour même où #3219 a ajouté la recherche par nom de
+carré.
 
 ### Poser le socle sur un cinquième écran (#3100)
 

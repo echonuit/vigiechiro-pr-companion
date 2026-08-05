@@ -33,6 +33,8 @@ Une table récapitule vos espèces. Un sélecteur **Regrouper** propose deux ang
 
 La barre du haut porte <!--inv:criteres-analyse-->5<!--/inv--> critères, plus une recherche libre :
 
+> Les gestes de la barre (recherche, « + Filtre », puces, « Tout effacer »), la façon dont les listes de valeurs s'adaptent aux autres filtres, et le bandeau qui prévient quand un filtre n'a pas pu être remis en place sont décrits une fois pour tous les écrans dans [Personnaliser les tableaux](../personnaliser-les-tableaux.md#filtrer-la-barre-a-puces).
+
 | Critère | Ce qu'il garde |
 |---|---|
 | **Statut** | les observations selon leur état de revue (à revoir, validée, corrigée) |

@@ -170,15 +170,11 @@ final class CriteresAnalyse {
 
     private static boolean correspond(ObservationAnalyse observation, String texte) {
         String aiguille = NormalisationTexte.normaliser(texte);
-        return contient(observation.taxonRetenu(), aiguille)
-                || contient(observation.nomVernaculaireFr(), aiguille)
-                || contient(observation.nomLatin(), aiguille)
-                || contient(observation.numeroCarre(), aiguille)
-                || contient(observation.nomSite(), aiguille)
-                || contient(observation.commune(), aiguille);
-    }
-
-    private static boolean contient(String champ, String aiguille) {
-        return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
+        return NormalisationTexte.contient(observation.taxonRetenu(), aiguille)
+                || NormalisationTexte.contient(observation.nomVernaculaireFr(), aiguille)
+                || NormalisationTexte.contient(observation.nomLatin(), aiguille)
+                || NormalisationTexte.contient(observation.numeroCarre(), aiguille)
+                || NormalisationTexte.contient(observation.nomSite(), aiguille)
+                || NormalisationTexte.contient(observation.commune(), aiguille);
     }
 }
