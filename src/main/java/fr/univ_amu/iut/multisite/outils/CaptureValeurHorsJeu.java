@@ -164,7 +164,7 @@ public final class CaptureValeurHorsJeu {
         if (!marquee) {
             throw new IllegalStateException("Menu apres restriction : "
                     + puce.getItems().stream().map(MenuItem::getText).toList()
-                    + " — aucune valeur marquee « hors jeu » dans le menu Lieu :"
+                    + " - aucune valeur marquee « hors jeu » dans le menu Lieu :"
                     + " la capture montrerait autre chose que ce que sa legende annonce.");
         }
     }
