@@ -13,7 +13,8 @@ public final class FiltresSaison {
 
     private FiltresSaison() {}
 
-    /// Les lignes dont le **carré** ou le **code du point** contient `recherche`, insensible à la casse
+    /// Les lignes dont le **carré** ou le **code du point** ou la **commune** contient `recherche`, insensible à la
+    /// casse
     /// et aux accents. Une recherche vide ou absente ne retient rien de particulier : la ligne de
     /// commande passe `null` quand `--lieu` n'est pas donné.
     public static List<LigneSaison> parLieu(List<LigneSaison> lignes, String recherche) {
@@ -25,7 +26,8 @@ public final class FiltresSaison {
                 .toList();
     }
 
-    /// Vrai si le **carré**, le **nom qu'on lui a donné** ou le **code du point** contient `recherche`.
+    /// Vrai si le **carré**, le **nom qu'on lui a donné** ou le **code du point** ou la **commune** contient
+    /// `recherche`.
     ///
     /// Le nom n'est pas un troisième lieu : c'est la **seconde étiquette du carré** (ADR 3157), ajoutée
     /// à la recherche par #3219. Les autres colonnes ne s'y prêtent pas : elles portent des états de
@@ -34,7 +36,8 @@ public final class FiltresSaison {
         String aiguille = NormalisationTexte.normaliser(recherche);
         return NormalisationTexte.contient(ligne.numeroCarre(), aiguille)
                 || NormalisationTexte.contient(ligne.codePoint(), aiguille)
-                || NormalisationTexte.contient(ligne.nomSite(), aiguille);
+                || NormalisationTexte.contient(ligne.nomSite(), aiguille)
+                || NormalisationTexte.contient(ligne.commune(), aiguille);
     }
 
     /// Les points qui ne sont **pas à jour**, c'est-à-dire ceux dont il reste une action à mener.

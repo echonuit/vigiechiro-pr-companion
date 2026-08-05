@@ -72,7 +72,8 @@ class SaisonViewTest {
                                 // #3289 : un carré NOMMÉ, pour que la colonne ait deux étiquettes à
                                 // montrer. Les trois autres restent anonymes : c'est le contraste qui
                                 // dit que la qualification n'invente pas de séparateur.
-                                "Vallon des Sources"),
+                                "Vallon des Sources",
+                                "Ahetze"),
                         new LigneSaison(
                                 "640002",
                                 "B1",
@@ -81,6 +82,7 @@ class SaisonViewTest {
                                 CasePassage.absente(),
                                 List.of(),
                                 "Poser l'enregistreur avant le 31/07",
+                                null,
                                 null),
                         // #2525 : la nuit opportuniste ne prend PAS la place du passage 1 protocolaire,
                         // qui reste manquant : elle vit dans la colonne « Hors protocole ».
@@ -93,6 +95,7 @@ class SaisonViewTest {
                                 List.of(new CasePassage(
                                         99L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 25), true, null)),
                                 "Poser l'enregistreur avant le 31/07",
+                                null,
                                 null),
                         // Un point À JOUR (#3103) : « reste à faire » vide. Sans lui, le filtre « Reste
                         // à faire » garderait les quatre lignes et ne discriminerait rien - la fixture
@@ -107,6 +110,7 @@ class SaisonViewTest {
                                         78L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 8, 12), false, null),
                                 List.of(),
                                 "",
+                                null,
                                 null)));
         when(service.soldeCourant(anyString(), org.mockito.ArgumentMatchers.isNull()))
                 .thenReturn(solde);
@@ -158,6 +162,24 @@ class SaisonViewTest {
                 .isEqualTo("Vallon des Sources");
         assertThat(nom.getCellData(1))
                 .as("un carré sans nom laisse la cellule VIDE, il n'invente pas d'étiquette")
+                .isEqualTo("");
+    }
+
+    @Test
+    @DisplayName("#3313 : la colonne « Commune » montre le lieu par lequel on peut aussi chercher")
+    void colonne_commune(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableSaison").queryAs(TableView.class);
+        TableColumn<?, ?> commune = table.getColumns().stream()
+                .filter(colonne -> "Commune".equals(colonne.getText()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Colonne « Commune » absente du tableau."));
+
+        assertThat(commune.isVisible())
+                .as("visible : une colonne masquée ne montrerait rien, et la recherche retient sur elle")
+                .isTrue();
+        assertThat(commune.getCellData(0)).isEqualTo("Ahetze");
+        assertThat(commune.getCellData(1))
+                .as("commune non résolue : cellule vide, comme « Hors protocole » quand il n'y a rien")
                 .isEqualTo("");
     }
 

@@ -28,7 +28,7 @@ class SaisonFiltresTest {
     private static final String ID = "u-test";
 
     private static LigneSaison ligne(String carre, String point, String reste) {
-        return new LigneSaison(carre, point, 1L, depose(), depose(), List.of(), reste, null);
+        return new LigneSaison(carre, point, 1L, depose(), depose(), List.of(), reste, null, null);
     }
 
     private static CasePassage depose() {
@@ -63,7 +63,7 @@ class SaisonFiltresTest {
         // cochait dans la puce « Lieu » des quatre autres écrans et ne se tapait pas ici, alors que
         // c'est la raison même pour laquelle on donne un nom à un carré.
         LigneSaison nomme =
-                new LigneSaison("640380", "A1", 1L, depose(), depose(), List.of(), "", "Étang de la Tuilière");
+                new LigneSaison("640380", "A1", 1L, depose(), depose(), List.of(), "", "Étang de la Tuilière", null);
 
         assertThat(CriteresSaison.rechercheTexte().test(nomme, "tuiliere"))
                 .as("accents et casse ignorés, comme sur le numéro")

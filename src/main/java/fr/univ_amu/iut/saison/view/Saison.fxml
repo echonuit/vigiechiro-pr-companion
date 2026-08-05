@@ -46,6 +46,7 @@
             <TableColumn fx:id="colCarre" text="Carré" prefWidth="75.0"/>
             <TableColumn fx:id="colNomSite" text="Nom du carré" prefWidth="150.0"/>
             <TableColumn fx:id="colPoint" text="Point" prefWidth="65.0"/>
+            <TableColumn fx:id="colCommune" text="Commune" prefWidth="140.0"/>
             <TableColumn fx:id="colPassage1" text="Passage 1" prefWidth="170.0"/>
             <TableColumn fx:id="colPassage2" text="Passage 2" prefWidth="170.0"/>
             <!-- Nuits réalisées sur ce point mais HORS protocole (opportunistes, #2525) : elles ne

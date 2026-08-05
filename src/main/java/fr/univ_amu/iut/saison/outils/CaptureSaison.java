@@ -5,6 +5,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -26,6 +27,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.saison.view.SaisonController;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
@@ -96,10 +98,11 @@ public final class CaptureSaison {
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         Path fichier = sortie.resolve("apercu-saison.png");
-        // 1100 depuis #3289 : la colonne « Nom du carré » ajoute 150 px, et à 900 la table débordait -
-        // « Reste à faire », qui est la raison d être de l écran, se faisait tronquer. 1100 est la
-        // largeur la plus courante des aperçus du dépôt ; celui-ci en était le plus étroit.
-        ApercuFx.enregistrerPng(new Scene(vue, 1100, 520), fichier);
+        // 1180 depuis #3313 : « Nom du carré » (#3289) puis « Commune » ont ajouté 290 px, et la table
+        // débordait à chaque fois - « Reste à faire », qui est la raison d être de l écran, se
+        // faisait tronquer. Vérifié sur capture les deux fois. 1180 est une largeur que le dépôt
+        // emploie déjà ; cet aperçu en était le plus étroit avant #3289.
+        ApercuFx.enregistrerPng(new Scene(vue, 1180, 520), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
@@ -145,6 +148,15 @@ public final class CaptureSaison {
                 .id();
         Long d1 = pointDao.insert(new PointDEcoute(null, "D1", null, null, null, chenes.id()))
                 .id();
+
+        // Les communes (#3313) : trois points sur quatre en ont une, D1 non. Une capture où TOUS en
+        // auraient une ne montrerait pas la cellule vide, qui est l'état normal d'un point sans GPS -
+        // c'est le défaut qu'on avait laissé passer sur la colonne « Commune » de Carte & passages, et
+        // qu'il avait fallu corriger à la clôture du lot 3.
+        PointCommuneDao communes = new PointCommuneDao(source);
+        communes.definir(a1, new Commune("Ahetze", "64014"));
+        communes.definir(b2, new Commune("Ahetze", "64014"));
+        communes.definir(c1, new Commune("Bidart", "64125"));
 
         // A1 : passage 1 déposé, passage 2 prêt à déposer → « Téléverser la nuit du 21/08 ».
         passage(passageDao, 1, "2026-06-20", StatutWorkflow.DEPOSE, Verdict.OK, a1);
