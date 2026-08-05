@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.model;
 import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.validation.model.FiltresTaxonParent;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
@@ -69,19 +70,8 @@ public final class FiltresAnalyse {
     ///
     /// @throws RegleMetierException si aucune observation ne relève de ce taxon parent
     public static List<ObservationAnalyse> parTaxonParent(List<ObservationAnalyse> observations, String groupe) {
-        if (groupe == null || groupe.isBlank()) {
-            return observations;
-        }
-        String demande = NormalisationTexte.normaliser(groupe);
-        List<ObservationAnalyse> retenues = observations.stream()
-                .filter(observation -> observation.groupe() != null
-                        && NormalisationTexte.normaliser(observation.groupe()).contains(demande))
-                .toList();
-        if (retenues.isEmpty()) {
-            throw new RegleMetierException("Aucune observation pour le taxon parent « " + groupe
-                    + " ». Taxons parents présents : " + resumer(observations) + ".");
-        }
-        return retenues;
+        return FiltresTaxonParent.parTaxonParent(
+                observations, groupe, ObservationAnalyse::groupe, "Aucune observation");
     }
 
     /// Les observations des nuits de la **nature** demandée. `nature` nul n'écarte rien.
@@ -115,16 +105,5 @@ public final class FiltresAnalyse {
     public static List<ObservationAnalyse> aEnjeu(
             List<ObservationAnalyse> observations, Predicate<ObservationAnalyse> estPrioritaire) {
         return observations.stream().filter(estPrioritaire).toList();
-    }
-
-    /// Les taxons parents présents, pour que le refus nomme ce qui existe plutôt que de laisser chercher.
-    private static String resumer(List<ObservationAnalyse> observations) {
-        List<String> presents = observations.stream()
-                .map(ObservationAnalyse::groupe)
-                .filter(groupe -> groupe != null && !groupe.isBlank())
-                .distinct()
-                .sorted()
-                .toList();
-        return presents.isEmpty() ? "aucun" : String.join(", ", presents);
     }
 }

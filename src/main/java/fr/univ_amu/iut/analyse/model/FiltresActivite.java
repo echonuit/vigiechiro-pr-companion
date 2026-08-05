@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.model;
 import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.validation.model.FiltresTaxonParent;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -74,20 +75,7 @@ public final class FiltresActivite {
     ///
     /// @throws RegleMetierException si aucun contact ne relève de ce taxon parent
     public static List<ContactHoraire> parTaxonParent(List<ContactHoraire> contacts, String groupe) {
-        if (groupe == null || groupe.isBlank()) {
-            return contacts;
-        }
-        String demande = NormalisationTexte.normaliser(groupe);
-        List<ContactHoraire> retenus = contacts.stream()
-                .filter(c -> c.groupe() != null
-                        && NormalisationTexte.normaliser(c.groupe()).contains(demande))
-                .toList();
-        if (retenus.isEmpty()) {
-            throw new RegleMetierException("Aucun contact pour le taxon parent « " + groupe
-                    + " ». Taxons parents présents : "
-                    + resumer(contacts.stream().map(ContactHoraire::groupe)) + ".");
-        }
-        return retenus;
+        return FiltresTaxonParent.parTaxonParent(contacts, groupe, ContactHoraire::groupe, "Aucun contact");
     }
 
     /// Les contacts des nuits de la **nature** demandée. `nature` nul n'écarte rien.
