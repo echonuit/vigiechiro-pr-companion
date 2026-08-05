@@ -12,7 +12,7 @@ import java.util.List;
 /// Les deux lisent un site, mais pas dans le même contexte, et l'un d'eux **déduit** ce que l'autre
 /// doit **lire**. Un site atteint par une participation est nécessairement verrouillé (on ne rejoint
 /// pas un carré ouvert, #142), et le lecteur de participations code donc `verrouille = true` : c'est
-/// juste là-bas. Appliqué au catalogue, ce raccourci annoncerait **20 517 sites verrouillés**, ce qui
+/// juste là-bas. Appliqué au catalogue, ce raccourci annoncerait **20 572 sites verrouillés**, ce qui
 /// est faux pour la plupart d'entre eux.
 ///
 /// Ici, `verrouille` se lit du document, et vaut `false` quand le champ manque : on ne présume pas

@@ -42,6 +42,22 @@ public final class RegionsFrancaises {
         return Set.copyOf(PAR_DEPARTEMENT.values());
     }
 
+    /// Ce code désigne-t-il un **département** ? (#3298)
+    ///
+    /// La table sert ici d'annuaire plutôt que de convertisseur : elle porte les 95 départements
+    /// métropolitains, et sait donc dire qu'un `00`, un `98` ou un `99` n'en est pas un. C'est ce que
+    /// [RegionDuCarre#departement] demande pour ne pas prendre le préfixe d'un carré d'outre-mer pour un
+    /// numéro de département.
+    ///
+    /// ⚠️ **Métropole seulement.** Un vrai département d'outre-mer (`971`…`976`) rend `false` ici, parce
+    /// qu'il n'a pas de déclinaison régionale dans le référentiel d'activité et n'entre donc pas dans
+    /// cette table. Ce n'est pas gênant pour l'usage prévu - c'est le préfixe d'un **numéro de carré**
+    /// qu'on lui soumet, or ces numéros sont faits de chiffres et ne portent jamais `971` sur deux
+    /// caractères. Y soumettre un code INSEE serait un contresens.
+    public static boolean estUnDepartement(String code) {
+        return code != null && code.length() >= 2 && PAR_DEPARTEMENT.containsKey(normaliser(code));
+    }
+
     /// Deux écritures de département désignent-elles **le même** ? (#2848)
     ///
     /// Le produit lit un département de deux façons - par le numéro d'un carré ([RegionDuCarre], deux

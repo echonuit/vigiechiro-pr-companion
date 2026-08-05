@@ -140,6 +140,22 @@ class AuditDepartementDuPointTest {
     }
 
     @Test
+    @DisplayName("#3298 : un carré d'outre-mer ne produit AUCUN constat - « 00 » n'est pas un département")
+    void carre_outre_mer() {
+        // Mesuré, pas supposé : le catalogue de la plateforme porte 307 carrés « 00xxxx », et AUCUN
+        // « 97xxxx ». « 000294 » est à Saint-Joseph et « 001293 » à Salazie, La Réunion. L'audit
+        // signalait « Départements 974 (commune) et 00 (carré) » à chaque fois - une divergence que
+        // rien sur le terrain n'aurait pu faire taire, puisque 00 n'est pas un département.
+        semer("000294", "Z2", new Commune("Saint-Joseph", "97412"));
+        semer("981234", "Z1", new Commune("Marseille", "13055"));
+
+        assertThat(audit.auditer())
+                .as("un préfixe qui ne désigne pas de département ne porte pas de première lecture : "
+                        + "c'est le même silence que devant un numéro trop court")
+                .isEmpty();
+    }
+
+    @Test
     @DisplayName("#2848 : la Corse ne diverge pas d'elle-même - 20 côté carré, 2A/2B côté INSEE")
     void corse_ne_diverge_pas() {
         semer("200001", "A1", new Commune("Ajaccio", "2A004"));

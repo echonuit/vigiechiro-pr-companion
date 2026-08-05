@@ -55,15 +55,35 @@ côtés du balayage des dossiers orphelins, l'autre contrôle de portée non-pas
 ## Décision 4 : deux écritures qu'on ne sait pas départager ne divergent pas
 
 Les deux lectures ne s'écrivent pas dans le même alphabet : un carré corse porte `20` là où l'INSEE
-écrit `2A`/`2B`, et l'outre-mer porte `97` contre `971`. Comparer les chaînes telles quelles ferait de
-**chaque point corse** une divergence.
+écrit `2A`/`2B`. Comparer les chaînes telles quelles ferait de **chaque point corse** une divergence.
 
-`RegionsFrancaises.memeDepartement` rend donc `true` dans ces cas, et **c'est une abstention, pas une
-équivalence** : `20` ne dit pas laquelle des deux Corses, `97` ne dit pas lequel des six départements
-d'outre-mer. La méthode n'affirme que les écarts qu'elle sait **démontrer**.
+`RegionsFrancaises.memeDepartement` rend donc `true` dans ce cas, et **c'est une abstention, pas une
+équivalence** : `20` ne dit pas laquelle des deux Corses. La méthode n'affirme que les écarts qu'elle
+sait **démontrer**.
 
 C'est le même principe que la décision 1, appliqué un cran plus bas : entre se taire et affirmer sans
 savoir, un outil de diagnostic se tait.
+
+!!! warning "Corrigé le 2026-08-05 : l'outre-mer ne s'écrit pas comme cette ADR le croyait (#3298)"
+    Cette décision affirmait aussi que « l'outre-mer porte `97` contre `971` », et fondait là-dessus une
+    seconde abstention. **C'était une supposition sur le numérotage, et elle est fausse.**
+
+    Le recensement du catalogue de la plateforme - 20 572 sites, page par page - donne pour préfixes de
+    carré hors `01`-`95` : `00` (307 carrés), `98` (313), `99` (127), `96` (1). **Aucun `97`.** Les
+    carrés d'outre-mer sont numérotés `00xxxx` : `000294` est à Saint-Joseph, `001293` à Salazie.
+
+    L'abstention protégeait donc une écriture qui n'existe pas, pendant que le cas réel produisait une
+    divergence **systématiquement fausse** : `00` ne sera jamais égal à `974`, et aucune vérification de
+    terrain n'aurait pu la faire taire.
+
+    Le remède ne touche pas au principe, qui reste juste : il le déplace d'un cran. Un préfixe qui ne
+    **désigne pas** de département ne porte **pas de lecture du tout**
+    ([RegionDuCarre#departement] rend vide, via `RegionsFrancaises.estUnDepartement`), et l'audit se tait
+    comme devant un numéro trop court. Il n'y a plus deux écritures à départager : il n'y en a qu'une.
+
+    Ce que l'épisode enseigne dépasse le correctif : les trois autres décisions de cette ADR reposent sur
+    des faits **observés dans le code**, celle-ci reposait sur un format **supposé**. C'est la mesure de
+    #3257, faite sur les données réelles, qui l'a mise au jour - pas une relecture.
 
 ## Conséquences
 

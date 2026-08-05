@@ -57,7 +57,7 @@ public final class CatalogueApi {
                                 lire("/protocoles/{id}/sites"),
                                 lire("/protocoles/{id}/sites/grille_stoc"),
                                 lire("/protocoles/{id}/sites/tracet")),
-                        "Le catalogue entier est lisible et paginé (20 517 sites au 2026-07-31)."
+                        "Le catalogue entier est lisible et paginé (20 572 sites au 2026-08-05)."
                                 + " ⚠️ « /sites/liste » trompe deux fois : chaque document y est réduit à son"
                                 + " « _id » (ni titre ni localité), et son enveloppe n'est pas celle d'Eve"
                                 + " (« _items » contient les documents PUIS le total, en deux blocs). Elle ne"
