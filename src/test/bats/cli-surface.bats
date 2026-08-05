@@ -90,6 +90,11 @@ COMMANDES_LOCALES_SANS_ARG=(
   # Le refus arrive AVANT que l'audit ne tourne : c'est la frappe qui est fautive, pas la base.
   run cli audit-coherence --gravite CATASTROPHE
   [ "${status}" -eq 2 ]
+  # Le code 2 seul ne prouve RIEN : une option INEXISTANTE rend 2 elle aussi, et c'est ainsi que ce
+  # cas est resté vert sur un jar où les trois options avaient disparu. Le message les distingue -
+  # « Invalid value » dit que l'option existe et que c'est sa valeur qui est refusée.
+  [[ "${output}" == *"Invalid value for option '--gravite'"* ]]
+  [[ "${output}" != *"Unknown option"* ]]
 }
 
 @test "audit-coherence --contient : la recherche est acceptée et n'ouvre rien de plus (#3258)" {
