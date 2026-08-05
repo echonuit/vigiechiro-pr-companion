@@ -35,7 +35,7 @@
   <!-- Barre de filtres (patron « à la Notion », socle Filtres) : recherche permanente, menu « + Filtre »
        (Carré, Taxon parent) et puces des filtres actifs. Le sous-ensemble filtré est ré-agrégé en direct. -->
   <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-filtres">
-    <TextField fx:id="champRecherche" promptText="Rechercher (espèce, carré…)" prefWidth="240.0"/>
+    <TextField fx:id="champRecherche" promptText="Rechercher (espèce, carré…)" minWidth="-Infinity" prefWidth="270.0"/>
     <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"/>
     <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS"/>
     <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer"
