@@ -119,16 +119,25 @@ public final class CaptureMultisite {
         System.exit(0);
     }
 
-    private static void capturer() throws IOException {
+    /// Workspace temporaire, injecteur, schema migre et graine semee : tout ce qu'il faut avant de rendre
+    /// un ecran multisite.
+    ///
+    /// Extrait de [#capturer] pour que [CaptureValeurHorsJeu] parte du **meme** jeu (#3169) : sans la
+    /// graine, l'ecran se charge sur une base vide et le critere Lieu n'offre que les lieux du
+    /// rapprochement VigieChiro - pas ceux dont la capture parle.
+    static Injector preparer() throws IOException {
         Path workspace = Files.createTempDirectory("vc-capture-multisite");
         System.setProperty("vigiechiro.workspace", workspace.toString());
-        Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
-
         Injector injecteur = creerInjecteur();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
-
         seeder(injecteur, source);
+        return injecteur;
+    }
+
+    private static void capturer() throws IOException {
+        Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
+        Injector injecteur = preparer();
 
         rendreEcran(injecteur, sortie.resolve("apercu-multisite.png"));
         rendreEcranFiltre(injecteur, sortie.resolve("apercu-multisite-filtre.png"));

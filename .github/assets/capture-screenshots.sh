@@ -41,6 +41,7 @@ MAINS=(
   "fr.univ_amu.iut.lot.outils.CaptureCompteRenduDepot"
   "fr.univ_amu.iut.multisite.outils.CaptureCompteRenduReleve"
   "fr.univ_amu.iut.multisite.outils.CaptureMultisite"
+  "fr.univ_amu.iut.multisite.outils.CaptureValeurHorsJeu"
   "fr.univ_amu.iut.saison.outils.CaptureSaison"
   "fr.univ_amu.iut.analyse.outils.CaptureAnalyse"
   "fr.univ_amu.iut.analyse.outils.CaptureActivite"
