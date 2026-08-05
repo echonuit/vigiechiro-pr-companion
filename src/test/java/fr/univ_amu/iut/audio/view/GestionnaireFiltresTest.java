@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
@@ -185,6 +186,53 @@ class GestionnaireFiltresTest {
 
         // Sélectionner « Grand Rhinolophe » (taxon retenu Rhifer, corrigé depuis Bruit) → seule cette obs.
         robot.interact(() -> choix.setValue(choix.getItems().get(0)));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
+    }
+
+    @Test
+    @DisplayName("#3336 : la puce Certitude filtre celle de l'OBSERVATEUR, pas celle du validateur")
+    void filtre_certitude(FxRobot robot) {
+        // Le piege que ce cas épingle : les deux champs existent (`certitude` et `certitudeValidateur`)
+        // et une puce qui viserait le second donnerait une parité de façade - meme nom que
+        // `lister-observations --certitude`, résultats différents. Les deux lignes portent donc des
+        // valeurs CROISÉES : seule celle de l'observateur doit décider.
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligneCertitude(1, Certitude.SUR, Certitude.POSSIBLE),
+                ligneCertitude(2, Certitude.POSSIBLE, Certitude.SUR),
+                ligneCertitude(3, null, Certitude.SUR));
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.certitude()),
+                CriteresAudio.rechercheTexte());
+        assertThat(ignore).isNotNull();
+
+        // Ajouter la puce n'écarte rien tant qu'aucun niveau n'est choisi.
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        assertThat(vues).as("une puce ajoutée n'écarte rien").hasSize(3);
+
+        ComboBox<Object> choix = comboDe(pucesLocales);
+        List<String> libelles = choix.getItems().stream()
+                .map(niveau -> choix.getConverter().toString(niveau))
+                .toList();
+        assertThat(libelles).containsExactly("Sûr", "Probable", "Possible");
+
+        // « Sur » : la ligne 1 (observateur SUR), et surtout PAS la ligne 2 dont seul le validateur l'est.
+        robot.interact(() -> choix.setValue(choix.getItems().get(0)));
+        assertThat(vues)
+                .as("la ligne 2 est SUR cote validateur : la retenir prouverait qu'on filtre le mauvais champ")
+                .extracting(LigneObservationAudio::idObservation)
+                .containsExactly(1L);
+
+        // « Possible » : la ligne 2. La ligne 3 n'a aucune certitude déclarée et n'est retenue par aucun
+        // niveau - ne rien déclarer n'est pas un quatrième niveau.
+        robot.interact(() -> choix.setValue(choix.getItems().get(2)));
         assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
     }
 
@@ -768,6 +816,43 @@ class GestionnaireFiltresTest {
                 null,
                 null,
                 null,
+                null,
+                0,
+                null);
+    }
+
+    /// Observation portant des certitudes **croisées** : celle de l'observateur et celle du validateur
+    /// différentes, pour qu'un filtre visant le mauvais champ se voie (#3336).
+    private static LigneObservationAudio ligneCertitude(long id, Certitude observateur, Certitude validateur) {
+        return new LigneObservationAudio(
+                id,
+                10 + id,
+                7L,
+                1,
+                "2026-06-20",
+                "640380",
+                "A1",
+                "Site",
+                "Pippip",
+                0.9,
+                null,
+                null,
+                StatutObservation.VALIDEE,
+                false,
+                null,
+                45,
+                null,
+                "Pippip",
+                null,
+                "Chiroptères",
+                "PaRec_" + id + ".wav",
+                0.2,
+                0.4,
+                null,
+                false,
+                observateur,
+                "Pippip",
+                validateur,
                 null,
                 0,
                 null);

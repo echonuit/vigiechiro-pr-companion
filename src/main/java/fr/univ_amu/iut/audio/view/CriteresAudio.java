@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
+import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.PlageNuit;
@@ -88,6 +89,33 @@ final class CriteresAudio {
                 FormatLigneAudio::libelleStatut,
                 statut -> ligne -> ligne.statut() == statut,
                 StatutObservation.NON_TOUCHEE);
+    }
+
+    /// Critère **Certitude** (#3336) : éditeur = liste déroulante des trois niveaux que l'observateur
+    /// déclare lui-même (Sûr / Probable / Possible).
+    ///
+    /// Il filtre la certitude **de l'observateur** (`ligne.certitude()`), pas celle du validateur : c'est
+    /// celle que `lister-observations --certitude` retient déjà, et une puce qui viserait l'autre champ
+    /// donnerait une parité de façade - même nom, résultats différents.
+    ///
+    /// Une ligne sans certitude déclarée n'est retenue par aucune valeur : ne rien déclarer n'est pas un
+    /// quatrième niveau, c'est l'absence de déclaration.
+    ///
+    /// ## Pourquoi cette puce existe
+    ///
+    /// L'inventaire de parité se lit d'habitude dans un seul sens - chaque critère de l'écran a-t-il son
+    /// option ? Pris dans l'autre sens à la clôture des suites de #3092, il a montré l'asymétrie
+    /// inverse : la ligne de commande savait filtrer là où l'écran ne le savait pas. La certitude est
+    /// pourtant une donnée que l'observateur pose **pour y revenir**, et « montre-moi ce que j'ai marqué
+    /// possible » est une question de fin de saison.
+    static CritereFiltre<LigneObservationAudio> certitude() {
+        return CritereListe.enumeration(
+                "certitude",
+                "Certitude",
+                "Toutes",
+                List.of(Certitude.values()),
+                Certitude::libelle,
+                certitude -> ligne -> ligne.certitude() == certitude);
     }
 
     /// Critère **Taxon parent** : éditeur = liste déroulante des groupes taxonomiques **présents dans les lignes

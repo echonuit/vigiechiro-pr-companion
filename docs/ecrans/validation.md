@@ -34,7 +34,7 @@ Une nuit d'enregistrement produit souvent des centaines d'observations : la **ba
   recherche ignore la casse et les accents ;
 - un bouton **« + Filtre »** ajoute un critère sous forme de **puce** ; on retire une puce par sa croix.
 
-Les <!--inv:criteres-validation-->10<!--/inv--> critères disponibles :
+Les <!--inv:criteres-validation-->11<!--/inv--> critères disponibles :
 
 > Les gestes de la barre (recherche, « + Filtre », puces, « Tout effacer »), la façon dont les listes de valeurs s'adaptent aux autres filtres, et le bandeau qui prévient quand un filtre n'a pas pu être remis en place sont décrits une fois pour tous les écrans dans [Personnaliser les tableaux](../personnaliser-les-tableaux.md#filtrer-la-barre-a-puces).
 
@@ -43,6 +43,7 @@ Les <!--inv:criteres-validation-->10<!--/inv--> critères disponibles :
 | **Statut** | À revoir / Validée / Corrigée | À revoir (le plus utile pour la revue) |
 | **Taxon parent** | une catégorie taxonomique présente (Chiroptères, Oiseaux, Orthoptères…) | **Chiroptères** s'il est présent : « chauves-souris uniquement », qui écarte bruit, oiseaux et orthoptères |
 | **Espèce** | une espèce précise (taxon retenu) | aucune tant que vous n'en choisissez pas une |
+| **Certitude** | les observations auxquelles **vous** avez attribué ce niveau : Sûr, Probable ou Possible | aucun tant que vous n'en choisissez pas un ; une observation sans certitude déclarée n'est retenue par aucun niveau |
 | **Lieu** | les observations d'un ou plusieurs lieux à cocher : communes, carrés et points présents dans la table, le carré portant son nom quand vous lui en avez donné un | aucun tant que vous ne cochez rien ; cocher plusieurs lieux les cumule |
 | **Références** | seulement les sons marqués « référence » | (puce booléenne : sa présence suffit) |
 | **Douteux** | seulement les observations que vous avez marquées « douteuses » | (puce booléenne : sa présence suffit) |
