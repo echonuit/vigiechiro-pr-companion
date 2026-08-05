@@ -13,9 +13,21 @@
 # résulte ne redéclenche pas ce workflow.
 name: release
 
+# TRAIN DE PUBLICATION (#2744, ADR 2744) : une cadence fixe, plus un déclenchement au commit.
+#
+# Ce workflow partait à CHAQUE fusion sur `main`. Mécaniquement, le dépôt publiait 3 à 37 versions par
+# jour - 497 tags, jusqu'à 31 dans la même journée. Chacune portait un vrai changement (95 % de `feat`
+# et `fix` sur les 120 dernières), mais une seule : aucune version ne correspondait à un état qu'on
+# puisse décrire, ni valider par la recette (#1363), et les canaux de packaging avaient dû être
+# débranchés pour ne pas suivre ce rythme.
+#
+# Mercredi : ni le lundi (la semaine n'a rien produit encore), ni le vendredi (personne ne corrige le
+# samedi). Un défaut découvert le mercredi a deux jours ouvrés devant lui.
+#
+# `workflow_dispatch` reste : un correctif urgent n'attend pas le train.
 on:
-  push:
-    branches: [main]
+  schedule:
+    - cron: "0 6 * * 3"
   workflow_dispatch: {}
 
 # Plancher du workflow : LECTURE seule. Chaque job déclare ce qu'il lui faut de plus (#2739).

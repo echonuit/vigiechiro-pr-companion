@@ -333,6 +333,19 @@ gh api repos/<proprietaire>/<action>/git/ref/tags/<tag> --jq .object.sha
 gh api repos/<proprietaire>/<action>/git/tags/<sha> --jq .object.sha
 ```
 
+## La publication part à heure fixe (#2744)
+
+`release.yml` ne se déclenche plus au push sur `main` mais **le mercredi à 6 h UTC**, plus
+`workflow_dispatch` pour un correctif urgent.
+
+**Pourquoi** : au push, le dépôt publiait 3 à 37 fois par jour - 497 tags, jusqu'à 31 dans la même
+journée. Ces versions n'étaient pas vides (95 % de `feat` et `fix` sur les 120 dernières) mais
+**atomisées** : une version = un changement, donc aucune validable par la recette (#1363) ni
+descriptible. Et le coût était déjà payé en aval : winget et Flathub avaient été passés en manuel à
+cause du rythme.
+
+Détail et alternatives écartées : [ADR 2744](decisions/2744-la-publication-part-a-heure-fixe.md).
+
 ## Les artefacts publiés portent une attestation de provenance (#2742)
 
 `actions/attest-build-provenance` s'applique à chaque artefact de `target/dist` (installeurs et

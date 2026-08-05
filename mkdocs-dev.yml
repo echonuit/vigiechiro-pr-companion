@@ -158,6 +158,7 @@ nav:
     - 2731 · Un seul processus par dossier de travail: decisions/2731-un-seul-processus-par-workspace.md
     - 2732 · On n'écrit pas plus que ce qui est déclaré: decisions/2732-on-n-ecrit-pas-plus-que-ce-qui-est-declare.md
     - 2736 · Le clair est assumé et annoncé: decisions/2736-le-clair-est-assume-et-annonce.md
+    - 2744 · La publication part à heure fixe: decisions/2744-la-publication-part-a-heure-fixe.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
