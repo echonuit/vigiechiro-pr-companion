@@ -68,7 +68,7 @@ for chemin in sorted(glob.glob(f'{dossier}/*.yml')):
     if ecritures and len(jobs) > 1:
         problemes.append(
             f"{nom} : plancher en écriture ({', '.join(ecritures)}) dans un workflow de "
-            f"{len(jobs)} jobs — ces droits sont accordés à TOUS, y compris à "
+            f"{len(jobs)} jobs : ces droits sont accordés à TOUS, y compris à "
             f"{', '.join(sorted(jobs))}"
         )
 
