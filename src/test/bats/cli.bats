@@ -611,6 +611,31 @@ EOF
   [[ "${output}" == *"Aucun point suivi"* ]]
 }
 
+@test "lister-passages : les filtres restreignent, et un filtre sans resultat le dit (#3269)" {
+  # Ce que seul le fat-jar prouve : picocli accepte les quatre options, convertit les enumerations, et
+  # refuse une valeur hors enumeration avec le bon code de sortie.
+  local site
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  run cli ajouter-point --site "${site}" --code A1
+  [ "${status}" -eq 0 ]
+
+  # Sans filtre : la commande repond, base vide ou non.
+  run cli lister-passages
+  [ "${status}" -eq 0 ]
+
+  # Un carre qui n existe pas retient zero passage, et le DIT au lieu de paraitre vide.
+  run cli lister-passages --carre 999999
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Aucun passage"* ]]
+
+  # Une valeur hors enumeration est refusee par picocli (exit 2), pas ignoree en silence.
+  run cli lister-passages --statut PAS_UN_STATUT
+  [ "${status}" -eq 2 ]
+
+  run cli lister-passages --verdict PAS_UN_VERDICT
+  [ "${status}" -eq 2 ]
+}
+
 @test "solde-saison : --lieu et --reste-a-faire filtrent les points, l'en-tete reste celui de la saison (#3092)" {
   # Ce que seul le fat-jar prouve : picocli accepte les deux options, et le drapeau booleen
   # --reste-a-faire ne reclame pas de valeur. Les tests Java pilotent la commande en processus.

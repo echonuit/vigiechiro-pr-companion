@@ -4,6 +4,9 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.cli.model.RegistrePassages;
 import fr.univ_amu.iut.cli.model.RegistrePassages.LignePassage;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import java.io.PrintWriter;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +24,18 @@ import picocli.CommandLine.Spec;
         name = "lister-passages",
         description = "Liste les passages enregistrés (carré, point, année, statut, verdict).")
 public final class ListerPassages implements Callable<Integer> {
+
+    @Option(names = "--carre", description = "Ne garde que les passages de ce carré (n° exact).")
+    private String carre;
+
+    @Option(names = "--annee", description = "Ne garde que les passages de cette année.")
+    private Integer annee;
+
+    @Option(names = "--statut", description = "Ne garde que ce statut de workflow : ${COMPLETION-CANDIDATES}.")
+    private StatutWorkflow statut;
+
+    @Option(names = "--verdict", description = "Ne garde que ce verdict de vérification : ${COMPLETION-CANDIDATES}.")
+    private Verdict verdict;
 
     @Option(
             names = "--json",
@@ -40,15 +55,23 @@ public final class ListerPassages implements Callable<Integer> {
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
-        List<LignePassage> passages = registre.lister();
+        List<LignePassage> toutes = registre.lister();
+        List<LignePassage> passages = restreindre(toutes);
 
         if (json) {
             sortie.println(FormatJson.tableau(
                     passages.stream().map(ListerPassages::enObjet).toList()));
             return 0;
         }
-        if (passages.isEmpty()) {
+        if (toutes.isEmpty()) {
             sortie.println("Aucun passage enregistré.");
+            return 0;
+        }
+        if (passages.isEmpty()) {
+            // Un filtre qui ne retient rien se DIT. Sans cette distinction, « Aucun passage enregistré »
+            // s'afficherait sur une base qui en porte, et le filtre ferait passer une base peuplée pour
+            // une base vide.
+            sortie.println("Aucun passage ne correspond aux filtres (" + toutes.size() + " passage(s) au total).");
             return 0;
         }
         sortie.println(passages.size() + " passage(s) :");
@@ -65,6 +88,39 @@ public final class ListerPassages implements Callable<Integer> {
     }
 
     /// Projection JSON d'un passage (clés stables pour les scripts).
+    /// Applique les filtres au moyen du **même prédicat que l'écran** « Carte & passages » :
+    /// `FiltresMultisite` est un record portant tous les critères, dont `accepte` ignore ceux qui sont
+    /// `null`. Aucune règle n'est donc réécrite ici (#3269).
+    ///
+    /// ⚠️ Trois des sept critères de l'écran manquent encore : **Lieu**, **Analyse** et **Campagne**.
+    /// Ce n'est pas un oubli d'ergonomie mais une limite des **données** : la ligne que
+    /// [fr.univ_amu.iut.cli.model.RegistrePassages] compose ne porte ni la commune du point, ni l'état
+    /// d'analyse, ni la campagne du passage. Les ajouter demande d'étendre cette lecture, pas d'ajouter
+    /// une option.
+    private List<LignePassage> restreindre(List<LignePassage> passages) {
+        FiltresMultisite filtres = new FiltresMultisite(carre, statut, verdict, annee, null, null);
+        return passages.stream().filter(ligne -> accepte(filtres, ligne)).toList();
+    }
+
+    /// Traduit la ligne de la CLI vers celle que `FiltresMultisite` sait juger. Les deux décrivent le
+    /// même passage, sous deux projections : celle de la commande ne porte pas la carte.
+    private static boolean accepte(FiltresMultisite filtres, LignePassage ligne) {
+        return filtres.accepte(new fr.univ_amu.iut.multisite.model.LignePassage(
+                ligne.idPassage(),
+                ligne.carre(),
+                ligne.codePoint(),
+                ligne.annee(),
+                ligne.numeroPassage(),
+                null,
+                ligne.statut(),
+                ligne.verdict(),
+                null,
+                null,
+                null,
+                null,
+                null));
+    }
+
     private static Map<String, Object> enObjet(LignePassage ligne) {
         Map<String, Object> objet = new LinkedHashMap<>();
         objet.put("passage", ligne.idPassage());
