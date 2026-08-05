@@ -565,6 +565,20 @@ ne se verrait qu'à la **prochaine release**.
 Elle ne peut pas publier : `--dry-run` n'écrit rien, et la configuration d'analyse n'embarque **aucun**
 greffon d'écriture.
 
+⚠️ **Ce qu'elle prouve dépend du déclencheur** (#3345), et il faut le savoir avant de lire son vert :
+
+| Déclencheur | Jusqu'où va `semantic-release` | Ce que le vert dit |
+|---|---|---|
+| `pull_request` | s'arrête sur « triggered by a pull request », **après** avoir chargé les greffons | l'outillage s'installe, les greffons se chargent |
+| `push` sur `main` | va jusqu'à l'analyse de l'historique et au calcul de version | **le contrôle est réel** |
+
+Le job déclare `contents: write` **pour lui seul**, alors qu'il n'écrit rien : `semantic-release`
+vérifie qu'il *pourrait* pousser un tag dès `verifyConditions`, y compris en `--dry-run`. Sous le
+plancher `contents: read` du workflow il échouait donc sur `main` par `EGITNOPERMISSION`, **sauf**
+quand un checkout devenu obsolète le faisait sortir plus tôt : le vert signifiait alors « contrôle
+sauté ». Ce cas de sortie anticipée subsiste les jours de fusion dense ; le `concurrency` du workflow
+le borne sans le supprimer.
+
 ⚠️ **Le binaire se lance depuis la racine pour publier** (`./.github/release/node_modules/.bin/semantic-release`) :
 c'est `.releaserc.json` qui fait alors foi. Lancé **depuis `.github/release/`**, c'est la configuration
 d'analyse que cosmiconfig trouve en premier. Les deux ont été vérifiées en local, greffon par greffon.
