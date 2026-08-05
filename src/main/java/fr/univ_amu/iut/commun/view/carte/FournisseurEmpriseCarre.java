@@ -3,8 +3,10 @@ package fr.univ_amu.iut.commun.view.carte;
 import java.util.List;
 import java.util.Optional;
 
-/// Fournit l'[EmpriseCarre] d'un carré. **Pluggable** : le numéro de carré n'encodant pas de coordonnées
-/// (cf. [CarreGeo#departement()]), l'emprise vient d'une source au choix :
+/// Fournit l'[EmpriseCarre] d'un carré. **Pluggable** : le numéro de carré n'encode **pas** de
+/// coordonnées - la seule chose qu'on en tire est son département
+/// ([fr.univ_amu.iut.commun.model.RegionDuCarre#departement], ADR 2351) - et l'emprise vient donc d'une
+/// source au choix :
 ///
 /// - [EmpriseAutourDesPoints] : repli **livré maintenant**, déduit du barycentre des points géolocalisés ;
 /// - *(à venir)* carroyage **officiel** Vigie-Chiro (service/référentiel externe), branché derrière cette
