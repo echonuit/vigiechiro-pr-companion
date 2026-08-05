@@ -49,7 +49,7 @@
   <BorderPane styleClass="barre-filtres">
     <center>
       <HBox spacing="8.0" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
-        <TextField fx:id="champRecherche" promptText="Rechercher (carré, point, commune, date…)" minWidth="-Infinity" prefWidth="310.0"
+        <TextField fx:id="champRecherche" promptText="Rechercher (carré, point, commune, date…)" minWidth="-Infinity" prefWidth="330.0"
                    accessibleText="Rechercher dans les passages"/>
         <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"
                     accessibleText="Ajouter un filtre"/>
