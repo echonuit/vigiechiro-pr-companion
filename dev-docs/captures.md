@@ -104,10 +104,43 @@ sequenceDiagram
     Dev->>Main: push (code d'un écran modifié)
     Main->>CV: déclenche
     CV->>CV: capture-screenshots.sh (Capture* en headless)
+    CV->>CV: filtrer-bruit-cartes.sh (rend les cartes inchangées)
     CV->>Main: commit des apercu-*.png [skip ci]
     CV-->>Docs: workflow_run (terminé)
     Docs->>Docs: rebuild + republie le site
 ```
+
+### Le bruit des cartes, et pourquoi on cesse de le committer
+
+Les aperçus qui portent un fond OpenStreetMap changent à **presque chaque exécution** sans qu'aucun
+code n'ait bougé. Mesuré sur les 30 derniers commits d'aperçus : `apercu-analyse-carte.png` a changé
+**28 fois**, `apercu-multisite-carte-pleine.png` **27**, les huit aperçus d'import **18**. L'écart est
+sub-perceptible : deux versions consécutives ouvertes côte à côte sont indiscernables.
+
+Trois coûts, dont le dernier est le seul qui compte vraiment : l'historique se remplit de commits qui
+ne disent rien ; les PR d'aperçus **conflictent entre elles** en permanence (les PNG sont binaires,
+git ne sait pas les fusionner) ; et le jour où une **vraie** régression touche une de ces images, elle
+devient indiscernable du bruit.
+
+[`filtrer-bruit-cartes.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/filtrer-bruit-cartes.sh)
+rend leur version committée aux aperçus de carte dont l'écart reste **sous 3 %**. Il ne cherche pas à
+rendre les tuiles déterministes - elles sont une entrée **extérieure** au dépôt, et l'ADR 3068 a
+tranché qu'on ne les figerait pas : une carte figée serait plus stable et **moins vraie**. Il cesse
+seulement de committer l'insignifiant.
+
+⚠️ **La tolérance ne vaut que pour une liste explicite.** Partout ailleurs, le moindre pixel reste
+committé, et c'est délibéré : sur un plein écran de 1080x640, une puce ajoutée pèse **0,6 %**, un
+libellé corrigé bien moins. Un seuil **global** aurait avalé ces changements-là, c'est-à-dire
+exactement ceux que la galerie existe pour montrer.
+
+Le seuil se mesure des deux côtés : le bruit vaut **0,34 %** (ADR 3068) à **1,6 %** (mesure du
+2026-08-05), et une tuile réellement différente pèse **9,5 %** sur `apercu-analyse-carte`, encore
+**4,4 %** sur l'aperçu le plus défavorable, où la carte n'occupe qu'une bande. 3 % se place entre les
+deux, du côté prudent.
+
+⚠️ `apercu-passage-rattachement.png` bouge aussi (10 fois sur 30) et n'est **pas** dans la liste :
+`CapturePassage` ne monte aucune carte. Son instabilité a donc une autre cause, **non élucidée**, et
+lui appliquer cette tolérance masquerait des changements qui ne sont pas du bruit de tuiles.
 
 ## Les garde-fous de présence
 

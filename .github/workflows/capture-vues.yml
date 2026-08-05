@@ -74,6 +74,13 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          # Les aperçus de carte changent à presque chaque exécution sans qu'aucun code n'ait bougé
+          # (tuiles OpenStreetMap, entrée extérieure au dépôt). On rend leur version committée à ceux
+          # dont l'écart reste sous le seuil : sans cela, chaque exécution produit une PR qui
+          # conflicte avec la précédente, et une vraie régression finit noyée dans ce bruit.
+          chmod +x .github/assets/filtrer-bruit-cartes.sh
+          .github/assets/filtrer-bruit-cartes.sh
+
           git add .github/assets/apercu-*.png
           if git diff --cached --quiet; then
             echo "Aucun aperçu modifié : rien à committer."
