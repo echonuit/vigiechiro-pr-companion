@@ -74,6 +74,22 @@ public class ServiceAnalyse {
     /// Exporte l'inventaire **par espèce** (les lignes fournies, dans l'ordre voulu) en CSV.
     public void exporterEspeces(Path destination, List<EspeceAgregee> especes) {
         Objects.requireNonNull(destination, "destination");
+        new EcrivainCsv().ecrire(destination, tableEspeces(especes));
+    }
+
+    /// Exporte l'inventaire **par carré** (les lignes fournies) en CSV.
+    public void exporterCarres(Path destination, List<CarreEspeces> carres) {
+        Objects.requireNonNull(destination, "destination");
+        new EcrivainCsv().ecrire(destination, tableCarres(carres));
+    }
+
+    /// L'inventaire par espèce **en lignes de cellules**, en-tête compris.
+    ///
+    /// Extraite de l'export (#3269) pour que `lister-especes` rende sur la sortie standard exactement ce
+    /// que `--sortie` écrirait : mêmes colonnes, mêmes valeurs, même échappement, puisque c'est le même
+    /// [EcrivainCsv] qui met en forme. Deux CSV qui différeraient selon leur destination seraient un
+    /// piège à script.
+    public static List<List<String>> tableEspeces(List<EspeceAgregee> especes) {
         List<List<String>> table = new ArrayList<>();
         table.add(ENTETE_ESPECES);
         for (EspeceAgregee espece : especes) {
@@ -89,12 +105,11 @@ public class ServiceAnalyse {
                     Integer.toString(espece.anneeMin()),
                     Integer.toString(espece.anneeMax())));
         }
-        new EcrivainCsv().ecrire(destination, table);
+        return table;
     }
 
-    /// Exporte l'inventaire **par carré** (les lignes fournies) en CSV.
-    public void exporterCarres(Path destination, List<CarreEspeces> carres) {
-        Objects.requireNonNull(destination, "destination");
+    /// L'inventaire par carré **en lignes de cellules**, en-tête compris. Voir [#tableEspeces].
+    public static List<List<String>> tableCarres(List<CarreEspeces> carres) {
         List<List<String>> table = new ArrayList<>();
         table.add(ENTETE_CARRES);
         for (CarreEspeces carre : carres) {
@@ -106,7 +121,7 @@ public class ServiceAnalyse {
                     Integer.toString(carre.anneeMin()),
                     Integer.toString(carre.anneeMax())));
         }
-        new EcrivainCsv().ecrire(destination, table);
+        return table;
     }
 
     private static String chaine(String valeur) {

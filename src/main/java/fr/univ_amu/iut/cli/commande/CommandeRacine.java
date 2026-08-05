@@ -59,6 +59,8 @@ import picocli.CommandLine.Spec;
             ImporterVigieChiro.class,
             PublierCorrectionsVigieChiro.class,
             ListerObservations.class,
+            ListerEspeces.class,
+            ListerCarres.class,
             ValiderObservations.class,
             CorrigerObservations.class,
             MarquerDouteux.class,

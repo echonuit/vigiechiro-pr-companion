@@ -54,6 +54,7 @@ COMMANDES_OPTIONS_REQUISES=(
 COMMANDES_LOCALES_SANS_ARG=(
   audit-coherence sauvegarder reset-guide retro-empreintes
   solde-saison lister-campagnes rattraper-communes lister-sauvegardes
+  lister-especes lister-carres
 )
 
 @test "surface : les commandes locales sans option requise s'exécutent sur base fraîche (exit 0) (#1592)" {
@@ -67,7 +68,7 @@ COMMANDES_LOCALES_SANS_ARG=(
     n=$((n + 1))
   done
   echo "commandes locales sans argument vérifiées : ${n}"
-  [ "${n}" -eq 8 ]
+  [ "${n}" -eq 10 ]
 }
 
 @test "audit-coherence : base fraîche, aucun écart disque/base annoncé, exit 0 (#1592)" {
@@ -158,6 +159,48 @@ COMMANDES_LOCALES_SANS_ARG=(
   mkdir -p "${BATS_TEST_TMPDIR}/carte"
   run cli reactiver --passage 9999 --source "${BATS_TEST_TMPDIR}/carte"
   [[ "${output}" != *"☰"* ]]
+}
+
+# Les deux inventaires (#3269) portent les cinq critères de l'écran « Espèces & observations ». Aucun test
+# Java in-process ne voit ce que ces cas regardent : le VRAI fat-jar, l'analyse picocli des options, et le
+# code de sortie. Une option qui disparaîtrait du jar rendrait 2 comme un refus de valeur - d'où le message.
+@test "lister-especes : les cinq critères existent dans le jar, et une base vide ne se lit pas comme un lieu absent (#3269)" {
+  run cli lister-especes --statut VALIDEE --taxon-parent Chiroptères --lieu 640380 \
+    --nature protocole --a-enjeu
+  # Deux choses d'un coup. Que les cinq options existent dans le jar : une seule qui manquerait rendrait
+  # « Unknown option » et un exit 2. Et que la base vide se constate AVANT de filtrer : sans cette garde,
+  # `--lieu` refuserait en disant « ce lieu n'existe pas » là où la vérité est qu'il n'y a rien du tout.
+  [ "${status}" -eq 0 ]
+  [[ "${output}" != *"Unknown option"* ]]
+  [[ "${output}" != *"Exception"* ]]
+  [[ "${output}" == *"nom_latin"* ]]
+}
+
+@test "lister-especes --statut hors liste : refus d'usage, exit 2 (#3269)" {
+  run cli lister-especes --statut CATASTROPHE
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Invalid value for option '--statut'"* ]]
+  [[ "${output}" != *"Unknown option"* ]]
+}
+
+@test "lister-carres --format inconnu : refus avant toute lecture de la base, exit 2 (#3269)" {
+  run cli lister-carres --format xml
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"Format non pris en charge"* ]]
+}
+
+@test "lister-especes --sortie : le fichier est écrit, en csv comme en json (#3269)" {
+  # `--sortie` posé avec `--format json` était ignoré en silence par la commande dont celle-ci s'inspire :
+  # l'utilisateur croyait avoir écrit un fichier qui n'existait pas. Vérifié sur les deux formats.
+  run cli lister-especes --sortie "${BATS_TEST_TMPDIR}/inventaire.csv"
+  [ "${status}" -eq 0 ]
+  [ -f "${BATS_TEST_TMPDIR}/inventaire.csv" ]
+  grep -q "nom_latin" "${BATS_TEST_TMPDIR}/inventaire.csv"
+
+  run cli lister-carres --format json --sortie "${BATS_TEST_TMPDIR}/inventaire.json"
+  [ "${status}" -eq 0 ]
+  [ -f "${BATS_TEST_TMPDIR}/inventaire.json" ]
+  grep -q "carres" "${BATS_TEST_TMPDIR}/inventaire.json"
 }
 
 @test "synchroniser-vigiechiro reste un alias : les scripts existants ne cassent pas (#1866)" {
