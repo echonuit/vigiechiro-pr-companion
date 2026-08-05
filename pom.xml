@@ -299,10 +299,19 @@
             <scope>test</scope>
         </dependency>
 
-        <!-- Icônes FontAwesome5 via Ikonli (FontIcon en FXML). ikonli-javafx tire ikonli-core. -->
+        <!-- Icônes FontAwesome5 via Ikonli (FontIcon en FXML). -->
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
             <artifactId>ikonli-javafx</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
+        <!-- Déclaré explicitement (#2747) alors qu'`ikonli-javafx` le tire : le code du dépôt s'en sert
+             DIRECTEMENT (`Ikon`, `IkonHandler`), et `dependency:analyze` le signalait à juste titre en
+             « used undeclared ». Une dépendance dont on écrit le nom dans ses imports se déclare : sans
+             cela, une montée d'`ikonli-javafx` qui cesserait de la tirer casserait la compilation. -->
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-core</artifactId>
             <version>${ikonli.version}</version>
         </dependency>
         <dependency>
@@ -523,6 +532,36 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <version>${maven.dependency.plugin.version}</version>
+                <configuration>
+                    <!-- `dependency:analyze` marche depuis que Dependabot a monté ce greffon en 3.11.0
+                         (#3112). Mais sa sortie était NOYÉE dans des faux positifs structurels : on ne
+                         lit pas un rapport dont le bruit domine, et un outil qu'on ne lit pas retombe
+                         en désuétude aussi sûrement qu'un outil cassé (#2747).
+
+                         Chaque exclusion ci-dessous nomme sa raison. Aucune ne masque un vrai signal :
+                         le seul qu'il y avait, `ikonli-core` utilisé sans être déclaré, est corrigé par
+                         une déclaration explicite dans les dépendances. -->
+                    <ignoredUnusedDeclaredDependencies>
+                        <!-- Un BOM et un agrégat n'ont, par construction, aucune classe à utiliser. -->
+                        <ignoredUnusedDeclaredDependency>org.junit:junit-bom</ignoredUnusedDeclaredDependency>
+                        <ignoredUnusedDeclaredDependency>org.junit.jupiter:junit-jupiter</ignoredUnusedDeclaredDependency>
+                        <!-- Liaison de journalisation : résolue à l'EXÉCUTION, jamais référencée à la
+                             compilation. La retirer rendrait les tests bavards, pas rouges. -->
+                        <ignoredUnusedDeclaredDependency>org.slf4j:slf4j-nop</ignoredUnusedDeclaredDependency>
+                        <!-- Même artefact que ceux vus « used undeclared » plus bas, à ceci près que
+                             Maven les résout AVEC un classifieur de plateforme (`linux`, `win`, `mac`).
+                             L'analyseur voit deux artefacts là où il n'y en a qu'un. -->
+                        <ignoredUnusedDeclaredDependency>org.openjfx:*</ignoredUnusedDeclaredDependency>
+                    </ignoredUnusedDeclaredDependencies>
+                    <ignoredUsedUndeclaredDependencies>
+                        <!-- Le revers du classifieur de plateforme : cf. ci-dessus. -->
+                        <ignoredUsedUndeclaredDependency>org.openjfx:*</ignoredUsedUndeclaredDependency>
+                        <!-- Tirés par l'agrégat `junit-jupiter`, qui EST déclaré : les déclarer un à un
+                             dupliquerait ce que l'agrégat existe pour éviter. -->
+                        <ignoredUsedUndeclaredDependency>org.junit.jupiter:junit-jupiter-api</ignoredUsedUndeclaredDependency>
+                        <ignoredUsedUndeclaredDependency>org.junit.jupiter:junit-jupiter-params</ignoredUsedUndeclaredDependency>
+                    </ignoredUsedUndeclaredDependencies>
+                </configuration>
                 <executions>
                     <execution>
                         <id>exposer-chemins-dependances</id>
