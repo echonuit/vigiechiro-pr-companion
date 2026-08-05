@@ -65,7 +65,8 @@ class TraiterPassagesTest {
     }
 
     private static LignePassage ligne(long id, String point) {
-        return new LignePassage(id, "640380", point, 2026, 1, StatutWorkflow.VERIFIE, Verdict.OK);
+        return new LignePassage(
+                id, "640380", point, 2026, 1, StatutWorkflow.VERIFIE, Verdict.OK, null, null, null, null);
     }
 
     /// La commande avec la seule action « téléverser » branchée ; les trois autres absentes.

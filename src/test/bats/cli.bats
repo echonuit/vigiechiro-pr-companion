@@ -634,6 +634,17 @@ EOF
 
   run cli lister-passages --verdict PAS_UN_VERDICT
   [ "${status}" -eq 2 ]
+
+  run cli lister-passages --analyse PAS_UN_ETAT
+  [ "${status}" -eq 2 ]
+
+  # --lieu est repetable : picocli doit accepter plusieurs occurrences sans broncher. Le REFUS d'un
+  # lieu absent (ADR 3082) est deja garde par #3199 sur lister-observations, qui lit la meme regle.
+  run cli lister-passages --lieu 130711 --lieu 640380
+  [ "${status}" -eq 0 ]
+
+  run cli lister-passages --campagne ens
+  [ "${status}" -eq 0 ]
 }
 
 @test "solde-saison : --lieu et --reste-a-faire filtrent les points, l'en-tete reste celui de la saison (#3092)" {
