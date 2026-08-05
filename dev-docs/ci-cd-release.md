@@ -333,6 +333,33 @@ gh api repos/<proprietaire>/<action>/git/ref/tags/<tag> --jq .object.sha
 gh api repos/<proprietaire>/<action>/git/tags/<sha> --jq .object.sha
 ```
 
+## Les artefacts publiés portent une attestation de provenance (#2742)
+
+`actions/attest-build-provenance` s'applique à chaque artefact de `target/dist` (installeurs et
+archives portables) et au SBOM, dans le job `installers`.
+
+**Ce que ça ajoute aux SHA-256 déjà publiés** : l'empreinte prouve qu'un fichier est *identique à
+celui publié*, elle ne dit rien de **qui** l'a produit - et elle est publiée au même endroit que le
+fichier, donc sa confiance vaut celle qu'on accorde à la page du projet. L'attestation lie le binaire
+à un **commit** et à une **exécution** de ce workflow, et se vérifie contre **Sigstore**, hors de notre
+portée.
+
+```bash
+gh attestation verify <fichier> --repo echonuit/vigiechiro-pr-companion
+```
+
+**Elle est produite sur la sortie de build, avant tout téléversement**, pour la même raison que
+l'empreinte : une corruption survenue au téléversement se retrouverait sinon *attestée*. Les `.sha256`
+sont exclus - attester une empreinte de trois lignes n'apprend rien.
+
+**Les deux droits ajoutés au job sont bornés** : `id-token: write` ne sert qu'à prouver à Sigstore qui
+construit, `attestations: write` n'écrit que dans le magasin d'attestations du dépôt. Ni l'un ni
+l'autre ne touche au code, aux issues ou aux pull requests - le moindre privilège de #2739 tient.
+
+⚠️ **Elle ne remplace pas la signature des installeurs** (#2112, EPIC #2104) : la signature parle aux
+systèmes d'exploitation (SmartScreen, Gatekeeper), l'attestation parle à qui veut auditer. Les deux
+sont complémentaires, aucune ne rend l'autre inutile.
+
 ## L'inventaire des dépendances livrées, et sa surveillance (#2740)
 
 Le fat-jar embarque toutes les dépendances résolues par Maven. Leur état de vulnérabilité n'était
