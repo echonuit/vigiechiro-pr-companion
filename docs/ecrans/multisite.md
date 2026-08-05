@@ -71,6 +71,12 @@ plateforme) et **copier** son n° de carré. Le même menu laisse **choisir et r
 voir [Agir sur une ligne](../personnaliser-les-tableaux.md#agir-sur-une-ligne-double-clic-et-clic-droit)
 et [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
+!!! tip "Le nom que vous avez donné au carré"
+    La recherche de cet écran retient une ligne sur le **nom** du carré autant que sur son numéro. Ce
+    nom se voit dans les entrées de la puce « Lieu » (`640380 · Vallon`), et il a désormais **sa propre
+    colonne**, « Nom du carré ». Elle est **masquée au départ** - ce tableau en compte déjà beaucoup -
+    et s'active par « Colonnes… ».
+
 Quand un filtre est actif, le tableau et le résumé se recalculent en conséquence :
 
 ![La vue Carte & passages filtrée (ici par verdict) : le résumé est recalculé.](../assets/captures/apercu-multisite-filtre.png)

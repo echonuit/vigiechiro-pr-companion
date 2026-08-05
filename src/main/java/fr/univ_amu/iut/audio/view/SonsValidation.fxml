@@ -173,6 +173,7 @@
           <TableColumn fx:id="colHeure" text="Heure" prefWidth="80.0"/>
           <TableColumn fx:id="colPassage" text="Passage" prefWidth="150.0"/>
           <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
+          <TableColumn fx:id="colNomSite" text="Nom du carré" prefWidth="150.0" visible="false"/>
           <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
           <!-- Commune (#3164) : elle se coche dans la puce « Lieu » et sort au CSV depuis #2790,
                sans qu'aucune colonne ne la montre. Colonne de CONTEXTE : masquée sur un passage

@@ -36,6 +36,7 @@ final class ColonnesAudio {
             TableColumn<LigneObservationAudio, String> fichier,
             TableColumn<LigneObservationAudio, String> passage,
             TableColumn<LigneObservationAudio, String> carre,
+            TableColumn<LigneObservationAudio, String> nomSite,
             TableColumn<LigneObservationAudio, String> point,
             TableColumn<LigneObservationAudio, String> commune,
             TableColumn<LigneObservationAudio, String> date,
@@ -107,6 +108,12 @@ final class ColonnesAudio {
         col.carre()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.ouTiret(c.getValue().numeroCarre())));
+        // Le nom du carré (#3300) : la recherche libre de cet écran retient une ligne sur lui
+        // (`CriteresAudio.correspond`), et seule la puce « Lieu » le montrait. La colonne arrive
+        // MASQUÉE - cette table en compte déjà 22, et le sélecteur (#919) est là pour ça.
+        col.nomSite()
+                .setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                        c.getValue().nomSite() == null ? "" : c.getValue().nomSite()));
         col.point()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.ouTiret(c.getValue().codePoint())));
@@ -174,6 +181,7 @@ final class ColonnesAudio {
                 new GestionnaireColonnes.Colonne(col.fichier(), "Fichier", false),
                 new GestionnaireColonnes.Colonne(col.passage(), "Passage", false),
                 new GestionnaireColonnes.Colonne(col.carre(), "Carré", false),
+                new GestionnaireColonnes.Colonne(col.nomSite(), "Nom du carré", false),
                 new GestionnaireColonnes.Colonne(col.point(), "Point", false),
                 new GestionnaireColonnes.Colonne(col.commune(), "Commune", false),
                 new GestionnaireColonnes.Colonne(col.date(), "Date", false),

@@ -199,6 +199,12 @@ Les mesures **FME** et **fréquence terminale** demandent d'analyser le signal d
 **remplissent au fil de l'écoute** (un tiret « — » tant que la ligne n'a pas été sélectionnée), pour ne pas
 analyser toute la nuit d'un coup.
 
+!!! tip "Le nom que vous avez donné au carré"
+    La recherche de cet écran retient une ligne sur le **nom** du carré autant que sur son numéro. Ce
+    nom se voit dans les entrées de la puce « Lieu » (`640380 · Vallon`), et il a désormais **sa propre
+    colonne**, « Nom du carré ». Elle est **masquée au départ** - ce tableau est le plus dense de
+    l'application - et s'active ici.
+
 ## Repérer et écouter le cri
 
 Le **panneau d'écoute** montre le **sonogramme** et le **spectrogramme** de la séquence sélectionnée. Comme

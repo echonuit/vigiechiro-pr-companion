@@ -254,6 +254,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private TableColumn<LigneObservationAudio, String> colCarre;
 
     @FXML
+    private TableColumn<LigneObservationAudio, String> colNomSite;
+
+    @FXML
     private TableColumn<LigneObservationAudio, String> colPoint;
 
     /// Commune du point d'écoute (#3164) : contexte, donc masquée sur un passage unique.
@@ -407,6 +410,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 colFichier,
                 colPassage,
                 colCarre,
+                colNomSite,
                 colPoint,
                 colCommune,
                 colDate,

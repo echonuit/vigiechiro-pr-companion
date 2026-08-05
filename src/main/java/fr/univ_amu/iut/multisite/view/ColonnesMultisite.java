@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.multisite.view;
 
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import java.util.Comparator;
+import java.util.List;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.control.TableColumn;
 
@@ -24,9 +26,16 @@ final class ColonnesMultisite {
     private ColonnesMultisite() {}
 
     /// Câble les colonnes du tableau des passages.
-    static void configurer(
+    /// Les colonnes de la table, en **un seul objet** (#3300).
+    ///
+    /// Elles étaient onze paramètres positionnels du **même type** : deux d'entre eux échangés se
+    /// compilaient sans un mot et se lisaient à l'écran comme un défaut de données. C'est le patron que
+    /// `ColonnesAudio.Colonnes` applique déjà, et l'arbitrage de l'EPIC #2483 : un objet de paramètres
+    /// avant d'ajouter le onzième.
+    record Colonnes(
             TableColumn<LignePassage, String> commune,
             TableColumn<LignePassage, String> carre,
+            TableColumn<LignePassage, String> nomSite,
             TableColumn<LignePassage, String> point,
             TableColumn<LignePassage, String> annee,
             TableColumn<LignePassage, String> numero,
@@ -34,7 +43,27 @@ final class ColonnesMultisite {
             TableColumn<LignePassage, String> statut,
             TableColumn<LignePassage, String> verdict,
             TableColumn<LignePassage, String> analyse,
-            TableColumn<LignePassage, String> campagne) {
+            TableColumn<LignePassage, String> campagne) {}
+
+    static void configurer(Colonnes col) {
+        TableColumn<LignePassage, String> commune = col.commune();
+        TableColumn<LignePassage, String> carre = col.carre();
+        TableColumn<LignePassage, String> point = col.point();
+        TableColumn<LignePassage, String> annee = col.annee();
+        TableColumn<LignePassage, String> numero = col.numero();
+        TableColumn<LignePassage, String> date = col.date();
+        TableColumn<LignePassage, String> statut = col.statut();
+        TableColumn<LignePassage, String> verdict = col.verdict();
+        TableColumn<LignePassage, String> analyse = col.analyse();
+        TableColumn<LignePassage, String> campagne = col.campagne();
+        // Le nom du carré (#3300) : la recherche libre de cet écran retient une ligne sur lui
+        // (`CriteresMultisite.correspond`), et seule la puce « Lieu » le montrait. Qui tape « Vallon »
+        // dans la recherche voyait des lignes sans savoir pourquoi.
+        col.nomSite()
+                .setCellValueFactory(cellule -> new ReadOnlyStringWrapper(
+                        cellule.getValue().nomSite() == null
+                                ? ""
+                                : cellule.getValue().nomSite()));
         carre.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().numeroCarre()));
         // Commune (#3163) : cellule vide quand le GPS du point n'a résolu aucune commune. C'est
         // un état normal - `point_commune` est une table latérale (ADR 2791) - et non une anomalie
@@ -88,5 +117,26 @@ final class ColonnesMultisite {
         return ligne.analyseReleveeLe() == null
                 ? texte
                 : texte + "\n\nDernier état connu le " + ligne.analyseReleveeLe() + ".";
+    }
+
+    /// Le catalogue des colonnes pour le sélecteur (#919), extrait du contrôleur qui touchait le
+    /// plafond de God class (#3300). C'est de la connaissance sur les **colonnes**, pas sur l'écran.
+    static List<GestionnaireColonnes.Colonne> pourLeSelecteur(Colonnes col) {
+        return List.of(
+                new GestionnaireColonnes.Colonne(col.carre(), "Carré", true),
+                // Le nom du carré (#3300) : inscrit au sélecteur, MASQUÉ au départ. Les colonnes de cette
+                // table totalisent déjà 1 360 px dans une scène partagée avec la carte - elle défilait
+                // horizontalement avant cet ajout. Le nom se voit dans la puce « Lieu » ; cette colonne
+                // le rend disponible dans le tableau pour qui le veut, sans l'imposer à qui ne le veut pas.
+                new GestionnaireColonnes.Colonne(col.nomSite(), "Nom du carré", false),
+                new GestionnaireColonnes.Colonne(col.point(), "Point", false),
+                new GestionnaireColonnes.Colonne(col.commune(), "Commune", false),
+                new GestionnaireColonnes.Colonne(col.annee(), "Année", false),
+                new GestionnaireColonnes.Colonne(col.numero(), "N° passage", false),
+                new GestionnaireColonnes.Colonne(col.date(), "Date", false),
+                new GestionnaireColonnes.Colonne(col.statut(), "Statut", false),
+                new GestionnaireColonnes.Colonne(col.verdict(), "Verdict", false),
+                new GestionnaireColonnes.Colonne(col.analyse(), "Analyse", false),
+                new GestionnaireColonnes.Colonne(col.campagne(), "Campagne", false));
     }
 }

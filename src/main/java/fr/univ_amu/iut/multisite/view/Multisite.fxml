@@ -149,6 +149,7 @@
           <TableView fx:id="tableLignes" VBox.vgrow="ALWAYS">
             <columns>
               <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
+              <TableColumn fx:id="colNomSite" text="Nom du carré" prefWidth="150.0" visible="false"/>
               <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
               <!-- Commune (#3163) : le lieu se cherche et se coche par elle depuis #2790, sans qu'aucune
                    table ne la montre - des lignes apparaissaient au filtrage sans dire pourquoi elles

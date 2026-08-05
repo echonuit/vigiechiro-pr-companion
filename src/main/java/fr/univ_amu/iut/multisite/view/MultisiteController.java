@@ -44,9 +44,6 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
-import javafx.geometry.Insets;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -184,6 +181,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private TableColumn<LignePassage, String> colCarre;
 
     @FXML
+    private TableColumn<LignePassage, String> colNomSite;
+
+    @FXML
     private TableColumn<LignePassage, String> colPoint;
 
     /// Commune du point d'écoute (#3163), vide tant qu'aucune n'est résolue.
@@ -316,20 +316,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // Les gestes de ligne existants (double-clic, « Écouter le passage ») continuent de lire
         // `selectedItem`, qui reste la DERNIÈRE ligne cochée : rien ne change pour eux.
         tableLignes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        ColonnesMultisite.configurer(
-                colCommune,
-                colCarre,
-                colPoint,
-                colAnnee,
-                colNumero,
-                colDate,
-                colStatut,
-                colVerdict,
-                colAnalyse,
-                colCampagne);
+        ColonnesMultisite.configurer(colonnes());
         // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant). La
         // disposition (ordre + visibilité) est retenue par écran et restaurée à la réouverture (#994).
-        var colonnes = colonnesLignes();
+        var colonnes = colonnesDeLaTable();
         // Menu de ligne (#1796) : « Ouvrir le passage » et « Écouter le passage » (actions de ligne) devant
         // « Colonnes… ». « Relever les analyses » reste au ☰ : c'est une action d'écran (toutes les nuits
         // déposées), pas de ligne.
@@ -384,7 +374,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                         depotVues,
                         FEATURE,
                         CriteresMultisite.vuesParDefaut(),
-                        GestionnaireColonnes.adaptateurMonoTable("principale", tableLignes, this::colonnesLignes))
+                        GestionnaireColonnes.adaptateurMonoTable("principale", tableLignes, this::colonnesDeLaTable))
                 // Une vue rejouée amputée de valeurs disparues filtre moins large qu'annoncé (#3056).
                 .surRestauration(viewModel::signalerVueAmputee);
 
@@ -494,37 +484,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// [EditionPositionsCarte]). Icônes seules, à portée de la carte qu'ils pilotent ; les `id` sont
     /// conservés pour les tests/CSS.
     private void installerOverlaysCarte() {
-        Node legende = LegendeCarte.creer();
-        StackPane.setAlignment(legende, Pos.BOTTOM_LEFT);
-        StackPane.setMargin(legende, new Insets(8));
-        zoneCarte.getChildren().add(legende);
-
-        Button recadrer = new Button();
-        StyleControlesCarte.overlay(
-                recadrer, "bouton-recadrer", "fas-expand", "Recadrer la carte sur les éléments visibles");
-        recadrer.setOnAction(evenement -> carte.recadrer());
-        StackPane.setAlignment(recadrer, Pos.TOP_RIGHT);
-        StackPane.setMargin(recadrer, new Insets(8));
-        zoneCarte.getChildren().add(recadrer);
-
-        boutonEditerPositions = new ToggleButton();
-        boutonEditerPositions.setId("boutonEditerPositions");
-        StyleControlesCarte.overlay(
-                boutonEditerPositions, "bouton-editer-positions", "fas-pen", "Éditer les positions des points");
-        boutonEditerPositions.setOnAction(evenement -> basculerEdition());
-        boutonEnregistrerPositions = new Button();
-        boutonEnregistrerPositions.setId("boutonEnregistrerPositions");
-        StyleControlesCarte.overlay(
-                boutonEnregistrerPositions,
-                "bouton-editer-positions",
-                "fas-save",
-                "Enregistrer les positions déplacées");
-        boutonEnregistrerPositions.setOnAction(evenement -> enregistrerPositions());
-        VBox controlesEdition = new VBox(6, boutonEditerPositions, boutonEnregistrerPositions);
-        controlesEdition.setPickOnBounds(false);
-        StackPane.setAlignment(controlesEdition, Pos.TOP_LEFT);
-        StackPane.setMargin(controlesEdition, new Insets(8));
-        zoneCarte.getChildren().add(controlesEdition);
+        var controles = OverlaysCarteMultisite.poser(
+                zoneCarte, carte::recadrer, this::basculerEdition, this::enregistrerPositions);
+        boutonEditerPositions = controles.editer();
+        boutonEnregistrerPositions = controles.enregistrer();
     }
 
     /// Replie (ou rouvre) la **carte** : le tableau prend alors toute la largeur. Délégué à
@@ -595,18 +558,27 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     }
 
     /// Colonnes du tableau multi-sites proposées au sélecteur (#919). « Carré » est l'identité (verrouillée).
-    private List<GestionnaireColonnes.Colonne> colonnesLignes() {
-        return List.of(
-                new GestionnaireColonnes.Colonne(colCarre, "Carré", true),
-                new GestionnaireColonnes.Colonne(colPoint, "Point", false),
-                new GestionnaireColonnes.Colonne(colCommune, "Commune", false),
-                new GestionnaireColonnes.Colonne(colAnnee, "Année", false),
-                new GestionnaireColonnes.Colonne(colNumero, "N° passage", false),
-                new GestionnaireColonnes.Colonne(colDate, "Date", false),
-                new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
-                new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false),
-                new GestionnaireColonnes.Colonne(colAnalyse, "Analyse", false),
-                new GestionnaireColonnes.Colonne(colCampagne, "Campagne", false));
+
+    /// Le catalogue des colonnes, pour le sélecteur (#919). Le corps vit dans [ColonnesMultisite] :
+    /// ce contrôleur touchait le plafond de God class, et ce catalogue est de la connaissance sur les
+    /// colonnes, pas sur l'écran - même extraction que `ColonnesAudio.pourLeSelecteur`.
+    private List<GestionnaireColonnes.Colonne> colonnesDeLaTable() {
+        return ColonnesMultisite.pourLeSelecteur(colonnes());
+    }
+
+    private ColonnesMultisite.Colonnes colonnes() {
+        return new ColonnesMultisite.Colonnes(
+                colCommune,
+                colCarre,
+                colNomSite,
+                colPoint,
+                colAnnee,
+                colNumero,
+                colDate,
+                colStatut,
+                colVerdict,
+                colAnalyse,
+                colCampagne);
     }
 
     private void ouvrirPassageDeLaLigne(LignePassage ligne) {
