@@ -1,6 +1,6 @@
 # CI/CD et release
 
-Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->13<!--/inv--> workflows et le processus de
+Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->14<!--/inv--> workflows et le processus de
 publication.
 
 ## Les workflows
@@ -407,8 +407,6 @@ décide, il ne se subit pas.
 `gitleaks-action` comme filet **indépendant** de GitHub reste possible, mais demande une clé de licence
 **gratuite** pour les dépôts d'organisation (`echonuit` en est une) : c'est un secret de dépôt à
 obtenir, donc une décision, pas une ligne de YAML.
-## Les droits de publication sont déclarés par job (#2739)
-
 ## Les droits de publication sont déclarés par job (#2739)
 
 Le plancher du workflow de release est en **lecture seule** ; chaque job déclare ce qu'il lui faut de
