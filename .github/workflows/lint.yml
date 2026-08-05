@@ -94,6 +94,15 @@ jobs:
           ./.github/scripts/verifie-epinglage.sh --auto-test
           ./.github/scripts/verifie-epinglage.sh
 
+      - name: Moindre privilège des workflows
+        # #2739 a retiré les droits d'écriture du plancher de release.yml pour les déclarer job par
+        # job. Rien ne l'empêchait de se défaire : une PR qui les remettrait au plancher passerait
+        # toutes les autres gardes (#3294).
+        run: |
+          chmod +x .github/scripts/verifie-permissions.sh
+          ./.github/scripts/verifie-permissions.sh --auto-test
+          ./.github/scripts/verifie-permissions.sh
+
       - name: Aucun jeton VigieChiro en clair
         # Le scan de secrets de GitHub ne reconnaît que les motifs de FOURNISSEURS ; un jeton
         # VigieChiro est une chaîne opaque qu'aucun catalogue ne connaît, et les motifs
