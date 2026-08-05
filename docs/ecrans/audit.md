@@ -144,3 +144,31 @@ chose des deux.
 
 La commande sort en **`0`** si aucun écart d'erreur n'est trouvé : un script peut donc s'en servir comme
 d'un feu vert.
+
+Elle offre les **mêmes filtres** que la barre de l'écran :
+
+```bash
+./vigiechiro audit-coherence --gravite ERREUR                   # ce qui bloque
+./vigiechiro audit-coherence --categorie DEPARTEMENT_DIVERGENT  # une nature
+./vigiechiro audit-coherence --contient "carte sd"              # cible et détail
+```
+
+!!! warning "Le code de sortie ne suit **pas** le filtre"
+    Filtrer change ce qui s'**affiche**, jamais ce que le code de sortie **juge**. `--gravite INFO` sur
+    un dossier de travail abîmé n'affiche aucune erreur, et sort pourtant en **`1`**.
+
+    C'est voulu : sans cela, un script d'intégration qui filtre pourrait conclure que tout va bien sur
+    une base cassée. Le `1` répond toujours à « ce dossier a-t-il un problème ? », jamais à « le filtre
+    a-t-il trouvé quelque chose ? ».
+
+    Pour que ce `1` ne paraisse pas sorti de nulle part, la commande **dit ce qu'elle a masqué** :
+
+    ```
+    1 constat(s) affiché(s) sur 3. L'audit entier compte 1 erreur(s), 0 avertissement(s),
+    2 info(s), et c'est lui que juge le code de sortie.
+    ```
+
+Un filtre dont la valeur existe mais ne correspond à rien le dit aussi (« Aucun constat ne correspond
+aux filtres »), plutôt que d'afficher « aucun écart détecté » : un filtre ne doit jamais faire passer
+une panne pour la santé. Une valeur qui **n'existe pas** (`--gravite CATASTROPHE`) est refusée avant que
+l'audit ne tourne, en `2` : c'est une faute de frappe, pas un résultat.

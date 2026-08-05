@@ -39,6 +39,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// [fr.univ_amu.iut.commun.persistence.SourceDeDonnees] que la CLI).
 class CliAuditTest {
 
+    private static final String ID_USER = "u-1";
     private static final String SERIE = "1925492";
 
     @TempDir
@@ -141,6 +142,63 @@ class CliAuditTest {
     }
 
     @Test
+    @DisplayName("#3258 : un filtre qui masque une PARTIE le dit, et dit ce que juge le code de sortie")
+    void audit_filtre_partiel_le_dit() {
+        // Le cas que #3092 n'avait pas couvert : le filtre ne retient pas RIEN, il retient MOINS. La
+        // ligne de résumé comptait alors l'audit entier sous une liste réduite - on lisait une ligne
+        // puis « 2 constat(s) : 1 erreur(s) », et on cherchait la seconde. Pire, le code de sortie 1
+        // n'était rattaché à rien de visible.
+        semerJournalManquant();
+        semerPointDeDepartementDivergent();
+
+        int code = cli.executer(new String[] {"audit-coherence", "--gravite", "INFO"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteSortie())
+                .as("afficher zéro erreur en rendant 1 est correct, mais SEULEMENT si la sortie l'explique")
+                .contains("constat(s) affiché(s) sur")
+                .contains("L'audit entier compte")
+                .contains("c'est lui que juge le code de sortie");
+    }
+
+    @Test
+    @DisplayName("#3258 : sans filtre, la ligne de résumé ne change pas d'un mot")
+    void audit_sans_filtre_resume_inchange() {
+        semerJournalManquant();
+
+        cli.executer(new String[] {"audit-coherence"}, sortie, erreur);
+
+        assertThat(texteSortie())
+                .as("la divulgation ne concerne que le cas filtré : l'appel nu garde sa formulation")
+                .contains("constat(s) : ")
+                .doesNotContain("affiché(s) sur");
+    }
+
+    @Test
+    @DisplayName("#3258 : --contient cherche la cible ET le détail, casse et accents ignorés")
+    void audit_filtre_par_recherche() {
+        semerJournalManquant();
+        semerPointDeDepartementDivergent();
+
+        // « aix » sans majuscule ni tiret doit trouver « Aix-en-Provence », qui n'est que dans le détail.
+        cli.executer(new String[] {"audit-coherence", "--contient", "aix"}, sortie, erreur);
+
+        assertThat(texteSortie()).contains("DEPARTEMENT_DIVERGENT").doesNotContain("DISQUE_MANQUANT");
+    }
+
+    @Test
+    @DisplayName("#3258 : --contient ne répond pas sur les colonnes qui ont leur propre option")
+    void audit_recherche_ignore_les_colonnes_a_option() {
+        semerJournalManquant();
+
+        // « erreur » est la GRAVITÉ du constat, pas un mot de sa cible ni de son détail. Le faire
+        // répondre ici doublerait --gravite, en moins précis.
+        cli.executer(new String[] {"audit-coherence", "--contient", "erreur"}, sortie, erreur);
+
+        assertThat(texteSortie()).contains("Aucun constat ne correspond aux filtres");
+    }
+
+    @Test
     @DisplayName("Fichier attendu absent : --json contient la gravité ERREUR")
     void audit_erreur_json() {
         semerJournalManquant();
@@ -181,14 +239,27 @@ class CliAuditTest {
                 .contains("840962 / A1");
     }
 
+    /// L'utilisateur porteur des sites, posé **une seule fois** (#3258).
+    ///
+    /// Les deux fabriques le créaient chacune de leur côté, ce qui tenait tant qu'aucun test ne les
+    /// appelait toutes les deux : la clé unique de `user` refuse le second INSERT. Or les cas qui
+    /// éprouvent un filtre PARTIEL ont besoin des deux - une vraie erreur ET un constat informatif dans
+    /// la même base, sans quoi il n'y a rien à masquer.
+    private void utilisateur() {
+        UtilisateurDao dao = injecteur.getInstance(UtilisateurDao.class);
+        if (dao.findById(ID_USER).isEmpty()) {
+            dao.insert(new Utilisateur(ID_USER, "Testeur"));
+        }
+    }
+
     /// Sème un point dont les **deux lectures** du département se contredisent : le carré `840962` le
     /// place dans le Vaucluse, sa commune dans les Bouches-du-Rhône. Aucun passage, aucun fichier : ce
     /// constat ne dépend que de la topologie.
     private void semerPointDeDepartementDivergent() {
-        injecteur.getInstance(UtilisateurDao.class).insert(new Utilisateur("u-1", "Testeur"));
+        utilisateur();
         Site site = injecteur
                 .getInstance(SiteDao.class)
-                .insert(new Site(null, "840962", "Étang", Protocole.STANDARD, null, "2026-05-01", "u-1"));
+                .insert(new Site(null, "840962", "Étang", Protocole.STANDARD, null, "2026-05-01", ID_USER));
         Long idPoint = injecteur
                 .getInstance(PointDao.class)
                 .insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
@@ -200,10 +271,10 @@ class CliAuditTest {
     /// **absent** : le seul écart attendu est une erreur `DISQUE_MANQUANT`. Les bruts ne conviennent
     /// plus : ce sont des copies optionnelles, dont l'absence est silencieuse (ADR 0048).
     private void semerJournalManquant() {
-        injecteur.getInstance(UtilisateurDao.class).insert(new Utilisateur("u-1", "Testeur"));
+        utilisateur();
         Site site = injecteur
                 .getInstance(SiteDao.class)
-                .insert(new Site(null, "040962", "Étang", Protocole.STANDARD, null, "2026-05-01", "u-1"));
+                .insert(new Site(null, "040962", "Étang", Protocole.STANDARD, null, "2026-05-01", ID_USER));
         Long idPoint = injecteur
                 .getInstance(PointDao.class)
                 .insert(new PointDEcoute(null, "A1", null, null, null, site.id()))
