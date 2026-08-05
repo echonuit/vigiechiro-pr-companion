@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.StackPane?>
+
+<!--
+  Table des observations de la vue « Sons & validation », extraite en sous-vue (#2745).
+
+  Pourquoi une vue à part : les 23 colonnes et leur câblage représentaient un quart des instructions de
+  SonsValidationController, qui vivait à 199 pour un plafond NcssCount de 200. Aucun regroupement de
+  méthodes ne pouvait les déplacer : ce sont des CHAMPS injectés, et seul un découpage de la vue les sort.
+  Voir dev-docs/decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md.
+
+  Cette vue ne connaît que la table : ce qui a besoin d'elle ET d'autre chose (panneau d'écoute, menu ☰,
+  filtres) reste câblé par le contrôleur parent, qui l'obtient par `tableauController.table()`.
+-->
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="fr.univ_amu.iut.audio.view.TableObservationsController">
+  <TableView fx:id="tableObservations">
+    <columns>
+      <!-- Ordre par défaut voulu pour les tables à espèces : contexte (Date + Passage/Carré/Point,
+           masqués pour un passage unique) puis fichier, puis identification, statut et indicateurs. -->
+      <TableColumn fx:id="colDate" text="Date" prefWidth="110.0"/>
+      <TableColumn fx:id="colHeure" text="Heure" prefWidth="80.0"/>
+      <TableColumn fx:id="colPassage" text="Passage" prefWidth="150.0"/>
+      <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
+      <TableColumn fx:id="colNomSite" text="Nom du carré" prefWidth="150.0" visible="false"/>
+      <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
+      <!-- Commune (#3164) : elle se coche dans la puce « Lieu » et sort au CSV depuis #2790,
+           sans qu'aucune colonne ne la montre. Colonne de CONTEXTE : masquée sur un passage
+           unique, où toutes les lignes partagent la même. -->
+      <TableColumn fx:id="colCommune" text="Commune" prefWidth="140.0"/>
+      <TableColumn fx:id="colFichier" text="Fichier" prefWidth="200.0"/>
+      <TableColumn fx:id="colTadarida" text="Proposition Tadarida" prefWidth="180.0"/>
+      <TableColumn fx:id="colProba" text="Proba." prefWidth="70.0"/>
+      <TableColumn fx:id="colObservateur" text="Votre taxon" prefWidth="180.0"/>
+      <TableColumn fx:id="colCertitude" text="Certitude" prefWidth="90.0"/>
+      <TableColumn fx:id="colValidateur" text="Avis du validateur" prefWidth="180.0"/>
+      <TableColumn fx:id="colFrequence" text="Fréquence" prefWidth="100.0"/>
+      <TableColumn fx:id="colFme" text="FME" prefWidth="90.0"/>
+      <TableColumn fx:id="colFreqTerminale" text="Fréq. term." prefWidth="120.0"/>
+      <TableColumn fx:id="colDebut" text="Début" prefWidth="80.0"/>
+      <TableColumn fx:id="colDuree" text="Durée" prefWidth="80.0"/>
+      <TableColumn fx:id="colStatut" text="Statut" prefWidth="110.0"/>
+      <!-- Les colonnes-indicateurs portent une ICÔNE en en-tête, posée par CellulesAudio
+           avec son libellé accessible et son infobulle : un glyphe seul n'annonce rien à un
+           lecteur d'écran, et n'explique rien au survol (#794). -->
+      <TableColumn fx:id="colReference" prefWidth="50.0"/>
+      <TableColumn fx:id="colCommentaire" prefWidth="50.0"/>
+      <TableColumn fx:id="colFil" prefWidth="50.0"/>
+      <TableColumn fx:id="colEnjeu" prefWidth="50.0"/>
+    </columns>
+  </TableView>
+  <Label fx:id="lblVide" styleClass="audio-vide" wrapText="true"/>
+</StackPane>

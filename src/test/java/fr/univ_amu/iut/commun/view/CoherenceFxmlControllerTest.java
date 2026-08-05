@@ -40,6 +40,8 @@ class CoherenceFxmlControllerTest {
     private static final Pattern COMMENTAIRE = Pattern.compile("(?s)<!--.*?-->");
     private static final Pattern CONTROLLER = Pattern.compile("fx:controller\\s*=\\s*\"([^\"]+)\"");
     private static final Pattern FX_ID = Pattern.compile("fx:id\\s*=\\s*\"([^\"]+)\"");
+    /// Le `fx:id` porté par une **inclusion** : lui seul autorise un champ `<fx:id>Controller` (ADR 2745).
+    private static final Pattern FX_ID_INCLUSION = Pattern.compile("<fx:include[^>]*fx:id\\s*=\\s*\"([^\"]+)\"");
     private static final Pattern HANDLER = Pattern.compile("\\bon[A-Z][A-Za-z]*\\s*=\\s*\"#([A-Za-z_][A-Za-z0-9_]*)\"");
 
     static Stream<Path> fichiersFxml() throws Exception {
@@ -76,12 +78,23 @@ class CoherenceFxmlControllerTest {
         Set<String> champsFxml = champsAnnotesFxml(controleur);
         Set<String> methodes = nomsDeMethodes(controleur);
 
+        // Le controller d'une sous-vue (ADR 2745) s'injecte sous un nom que JavaFX FABRIQUE : le
+        // `fx:id` de l'inclusion, suffixé « Controller ». `<fx:include fx:id="tableau" …/>` remplit donc
+        // un champ `tableauController`, et aucun `fx:id="tableauController"` n'existe ni ne doit exister.
+        // La tolérance reste étroite : seuls les `fx:id` portés par une INCLUSION l'ouvrent, pas ceux
+        // d'un nœud ordinaire.
+        for (String inclusion : extraire(FX_ID_INCLUSION, contenu)) {
+            fxIds.add(inclusion + "Controller");
+        }
+
         SoftAssertions verifs = new SoftAssertions();
         for (String champ : champsFxml) {
             verifs.assertThat(fxIds)
                     .as(
                             "Le champ @FXML « %s » de %s n'a pas de fx:id=\"%s\" dans %s : le champ restera null "
-                                    + "(NullPointerException au chargement). Vérifie l'orthographe de l'fx:id (cf. l'issue de la feature).",
+                                    + "(NullPointerException au chargement). Vérifie l'orthographe de l'fx:id (cf. l'issue de la feature). "
+                                    + "S'il s'agit du controller d'une sous-vue (ADR 2745), le nom attendu est celui du fx:id de "
+                                    + "l'INCLUSION suffixé « Controller » : <fx:include fx:id=\"x\" …/> remplit un champ « xController ».",
                             champ, controleur.getSimpleName(), champ, nom)
                     .contains(champ);
         }

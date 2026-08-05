@@ -59,6 +59,12 @@ class DecisionsRespecteesTest {
     private static final Pattern IMPORT_INTERNE =
             Pattern.compile("^import (?:static )?fr\\.univ_amu\\.iut\\.(\\w+)\\.", Pattern.MULTILINE);
 
+    /// Une inclusion de sous-vue, dont on retient la ressource incluse (relative au FXML qui l'inclut).
+    private static final Pattern INCLUSION_FXML = Pattern.compile("<fx:include[^>]*source=\"([^\"]+)\"");
+
+    /// La classe déclarée `fx:controller` d'un FXML.
+    private static final Pattern CONTROLLER_FXML = Pattern.compile("fx:controller=\"([^\"]+)\"");
+
     @Test
     @DisplayName("ADR 0038 : l'échelle de sévérité compte quatre niveaux, et son ordre porte la sémantique")
     void l_echelle_de_severite_a_quatre_niveaux_dans_l_ordre() {
@@ -209,6 +215,68 @@ class DecisionsRespecteesTest {
                         + "que « archivé » est un état observé, pas un statut de workflow. Une telle valeur "
                         + "réintroduirait précisément la confusion que la décision a écartée.")
                 .noneMatch(nom -> nom.contains("ARCHIV"));
+    }
+
+    @Test
+    @DisplayName("ADR 2745 : le controller d'une sous-vue ne s'injecte rien, son parent lui passe tout")
+    void une_sous_vue_ne_s_injecte_pas_son_modele() {
+        // Le piège que cette garde ferme a réellement eu lieu, au premier fx:include du dépôt (#2745).
+        // Un controller de sous-vue avec un constructeur @Inject se construit très bien : FXMLLoader
+        // propage la controllerFactory Guice aux inclusions. Mais les ViewModel du dépôt sont
+        // délibérément NON-SINGLETON (« un VM frais par chargement d'écran »), si bien que la sous-vue
+        // reçoit un SECOND modèle, vide, et câble ses nœuds dessus.
+        //
+        // Rien ne rougit : ça compile, la vue se charge, l'écran s'affiche. La table est simplement
+        // vide et les actions ne portent sur rien. Une sous-vue reçoit donc son modèle de son parent.
+        Map<String, String> fautifs = new TreeMap<>();
+        Set<String> inclusions = new TreeSet<>();
+
+        for (Path fxml : fichiers(SOURCES, ".fxml")) {
+            Matcher inclusion = INCLUSION_FXML.matcher(lire(fxml));
+            while (inclusion.find()) {
+                Path incluse = fxml.getParent().resolve(inclusion.group(1));
+                inclusions.add(incluse.getFileName().toString());
+                Matcher controller = CONTROLLER_FXML.matcher(lire(incluse));
+                if (!controller.find()) {
+                    continue; // Une inclusion peut être purement décorative : pas de controller, rien à juger.
+                }
+                String classe = controller.group(1);
+                Path source =
+                        SOURCES.resolve(classe.replace("fr.univ_amu.iut.", "").replace('.', '/') + ".java");
+                if (Files.exists(source) && lire(source).contains("@Inject")) {
+                    fautifs.put(incluse.getFileName().toString(), classe);
+                }
+            }
+        }
+
+        // Non-vacuité : sans inclusion trouvée, ce test passerait au vert en n'ayant rien examiné, et
+        // annoncerait une règle tenue que personne ne vérifierait plus (cf. l'ADR 0035 en tête de classe).
+        assertThat(inclusions)
+                .as(
+                        "Aucun fx:include trouvé sous %s : ce test n'aurait rien examiné. Soit les inclusions "
+                                + "ont disparu, soit le motif de détection a cessé de correspondre - dans les deux "
+                                + "cas, le vert de cette garde ne mesurerait plus rien.",
+                        SOURCES)
+                .isNotEmpty();
+
+        assertThat(fautifs)
+                .as("Ces controllers de sous-vue portent une injection alors que leur parent doit leur "
+                        + "passer ce dont ils ont besoin (ADR 2745). Un ViewModel injecté ici est un SECOND "
+                        + "modèle, vide : l'écran se chargera sans rien signaler, et ses nœuds resteront "
+                        + "inertes. Remplacez le constructeur @Inject par une méthode « installer(...) » "
+                        + "appelée depuis l'initialize() du parent.")
+                .isEmpty();
+    }
+
+    /// Les fichiers d'extension donnée sous une racine, triés pour un diagnostic stable.
+    private static List<Path> fichiers(Path racine, String extension) {
+        try (Stream<Path> chemins = Files.walk(racine)) {
+            return chemins.filter(c -> c.getFileName().toString().endsWith(extension))
+                    .sorted()
+                    .toList();
+        } catch (IOException echec) {
+            throw new UncheckedIOException("parcours de " + racine, echec);
+        }
     }
 
     private static String lire(Path fichier) {
