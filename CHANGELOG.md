@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.181.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.180.0...v2.181.0) (2026-08-05)
+
+
+### Features
+
+* **ci:** une garde refuse un jeton VigieChiro en clair ([#3274](https://github.com/echonuit/vigiechiro-pr-companion/issues/3274)) ([0bab426](https://github.com/echonuit/vigiechiro-pr-companion/commit/0bab426d400bd9fad2842101830743ac71851442)), closes [#2741](https://github.com/echonuit/vigiechiro-pr-companion/issues/2741) [#2741](https://github.com/echonuit/vigiechiro-pr-companion/issues/2741)
+
 # [2.180.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.179.0...v2.180.0) (2026-08-05)
 
 
