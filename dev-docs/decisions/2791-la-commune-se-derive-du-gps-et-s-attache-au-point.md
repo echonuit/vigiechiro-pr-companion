@@ -17,7 +17,7 @@ et il ne peut venir que du GPS : c'est le seul fait géographique exact que port
 
 ### 1. La commune s'attache au point, jamais au carré
 
-Rien n'empêche un carré de 10 km d'être à cheval sur plusieurs communes, ni même sur deux
+Rien n'empêche un carré de 2 km (R26) d'être à cheval sur plusieurs communes, ni même sur deux
 départements : toute correspondance carré → commune serait fausse par construction. La commune est
 dérivée des coordonnées GPS du **point** (point-dans-polygone) et vit à côté de lui.
 

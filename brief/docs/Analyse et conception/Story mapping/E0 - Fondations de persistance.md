@@ -248,6 +248,7 @@
 **Critères d'acceptation** :
 
 - [x] Un **audit en lecture seule** vérifie, par passage, la présence disque, le préfixe attendu et la cohérence des unités déposées, plus un **balayage inverse** des orphelins ; **en ligne**, il confronte le dépôt au serveur et se **dégrade proprement hors connexion**.
+- [x] L'audit confronte aussi les **dérivations d'une même donnée** quand elles peuvent se contredire : le **département** d'un point, lu par son carré ([R1](../Modèle%20conceptuel/Règles%20métier.md#r1)) et par sa commune ([C3](../Modèle%20conceptuel/C3%20-%20Point%20d'écoute.md)). Le carroyage national ignorant les limites administratives ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26)), l'écart est **souvent légitime** : le constat le **montre sans le juger**, en **information**, et ne fait donc jamais échouer l'audit.
 - [x] Un **bilan de récupérabilité** classe chaque nuit **Disque → Serveur → Perdu** (un **dépôt ZIP** est « perdu » côté serveur) en lisant le **mode de dépôt réel**, jamais présumé.
 - [x] Le **reset guidé** est ordonné : dire ce qu'on perdrait + acceptation, **exiger que la plateforme réponde avant de détruire**, sauvegarder, base neuve, repeupler depuis le serveur, audit final.
 - [x] Une nuit **« perdue »** reste navigable en **passage archivé**, réactivable plus tard ([E4.S6](E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s6)).

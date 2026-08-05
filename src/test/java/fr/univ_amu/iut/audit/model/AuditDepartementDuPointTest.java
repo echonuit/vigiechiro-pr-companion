@@ -21,7 +21,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// Les **deux lectures** du département d'un point, confrontées (#2848).
 ///
 /// Ce que ces tests établissent, et qui ne se devine pas : l'audit **ne sait pas** distinguer une
-/// divergence légitime (un carré de 10 km à cheval sur deux départements) d'une divergence suspecte (un
+/// divergence légitime (un carré à cheval sur une limite de département) d'une divergence suspecte (un
 /// GPS mal pointé). Les deux produisent **le même constat**, et c'est la décision : ce qu'il apporte est
 /// de montrer l'écart à qui connaît le terrain, pas de le juger à sa place. D'où la sévérité `INFO` -
 /// vérifiée ici, parce qu'un `AVERTISSEMENT` ferait rendre 1 à `audit-coherence` sur un carré de bord.
@@ -70,12 +70,11 @@ class AuditDepartementDuPointTest {
         assertThat(constat.categorie()).isEqualTo(CategorieConstat.DEPARTEMENT_DIVERGENT);
         assertThat(constat.cible()).isEqualTo("840962 / A1");
         assertThat(constat.detail())
-                .as("le détail doit dire QUELLE lecture donne QUEL département : sinon il faut rouvrir "
-                        + "deux écrans pour savoir quoi vérifier")
+                .as("les deux nombres ET leur source passent EN TÊTE : la colonne « Détail » tronque, et "
+                        + "ce constat est une comparaison - en montrer une moitié ne dit rien")
+                .startsWith("Départements 13 (commune) et 84 (carré) :")
                 .contains("Aix-en-Provence")
-                .contains("département 13")
-                .contains("carré 840962")
-                .contains("département 84");
+                .contains("840962");
     }
 
     @Test
@@ -127,6 +126,17 @@ class AuditDepartementDuPointTest {
                 .as("une commune non résolue est un état normal (point sans GPS, rattrapage jamais "
                         + "lancé) : en faire un constat noierait l'audit dès la première base")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2848 : un numéro de carré illisible ne produit rien - il n'y a pas de PREMIÈRE lecture")
+    void carre_illisible() {
+        // Le pendant de la commune non résolue, sur l'autre lecture. Un numéro trop court ne dit aucun
+        // département : le signaler comme divergent accuserait le point d'un défaut qui est celui du
+        // carré, et qui relève d'un autre contrôle (R1, six chiffres).
+        semer("6", "A1", new Commune("Aix-en-Provence", "13001"));
+
+        assertThat(audit.auditer()).isEmpty();
     }
 
     @Test

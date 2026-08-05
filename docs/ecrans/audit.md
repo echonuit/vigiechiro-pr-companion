@@ -8,7 +8,7 @@ diverger : un disque débranché, un fichier renommé à la main, un dépôt inc
 L'écran **Audit de cohérence** existe pour que plus rien ne diverge en silence. Il **confronte** les trois
 et vous **énumère** les écarts.
 
-![L'audit de cohérence : une nuit dont les fichiers ont disparu du disque, et un nom de fichier qui ne respecte pas la convention.](../assets/captures/apercu-audit.png)
+![L'audit de cohérence : trois écarts sur une même nuit. Un audio incomplet (information), un nom de fichier sans le préfixe attendu (erreur), et un département divergent entre le carré 640380 et la commune Saint-Martin-de-Seignanx (information).](../assets/captures/apercu-audit.png)
 
 ## Lire un constat
 
@@ -40,11 +40,12 @@ Le département d'un point se lit de **deux façons**, et elles ne viennent pas 
 
 Quand les deux ne concordent pas, l'audit le dit, en **Information** :
 
-> Le point A1 est en Aix-en-Provence (département 13), mais son carré 840962 porte le département 84.
+> Départements 13 (commune) et 84 (carré) : le point A1 est en Aix-en-Provence, son carré 840962 dit autre chose.
 
 !!! tip "Ce n'est pas forcément une erreur"
-    Un carré fait **10 km de côté** : il peut parfaitement chevaucher deux départements, et un point posé
-    près du bord tombe alors de l'autre côté. C'est même le cas le plus courant.
+    Un carré fait **2 km de côté** et le carroyage national ignore les limites administratives : un
+    carré posé sur une frontière de département en chevauche deux, et un point près du bord tombe
+    alors de l'autre côté.
 
     L'application **ne sait pas** distinguer ce cas d'un vrai problème : un GPS relevé au mauvais endroit,
     un numéro de carré mal recopié. Elle vous **montre** l'écart, vous seul connaissez le terrain. Si le

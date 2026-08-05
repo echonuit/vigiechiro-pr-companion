@@ -25,8 +25,9 @@ import java.util.Optional;
 ///
 /// ## Ce que le constat dit, et ce qu'il ne dit pas
 ///
-/// Il **montre** l'écart, il ne le juge pas. Un carré fait 10 km de côté et peut chevaucher deux
-/// départements : la divergence est alors parfaitement normale, et c'est même le cas le plus fréquent
+/// Il **montre** l'écart, il ne le juge pas. Un carré fait 2 km de côté (R26) et peut chevaucher deux
+/// départements dès qu'il touche une limite : la divergence est alors parfaitement normale, et c'est même le cas le
+/// plus fréquent
 /// attendu. Elle peut aussi trahir un GPS pointé au mauvais endroit ou un numéro de carré mal recopié -
 /// mais rien ici ne permet de départager les deux, et personne ne peut le faire à la place de
 /// l'utilisateur qui connaît son terrain. D'où [Severite#INFO], le seul niveau qui ne fasse pas rendre
@@ -84,12 +85,19 @@ public final class AuditDepartementDuPoint {
                 detail(site, point, duCarre, commune.get(), delaCommune)));
     }
 
-    /// Le détail nomme les **deux** lectures et **leurs sources**. Dire « départements 13 et 84 » sans
-    /// dire lequel vient d'où obligerait à rouvrir deux écrans pour savoir quoi vérifier.
+    /// Le détail nomme les **deux** lectures et **leurs sources**, et il les nomme **en tête**.
+    ///
+    /// Dire « départements 13 et 84 » sans dire lequel vient d'où obligerait à rouvrir deux écrans pour
+    /// savoir quoi vérifier. Mais la place compte autant que le contenu : la colonne « Détail » de la
+    /// table **tronque**, et la revue visuelle de la clôture a montré la phrase coupée à
+    /// « …(départeme… » - c'est-à-dire juste avant la moitié de la comparaison. Ce constat **est** une
+    /// comparaison ; en montrer une seule moitié ne dit rien. Les deux nombres et leur source passent
+    /// donc avant la prose, pour tenir dans ce que la cellule laisse voir.
     private static String detail(Site site, PointDEcoute point, String duCarre, Commune commune, String delaCommune) {
-        return "Le point " + point.code() + " est en " + commune.nom() + " (département " + delaCommune
-                + "), mais son carré " + site.numeroCarre() + " porte le département " + duCarre
-                + ". Un carré de 10 km peut chevaucher deux départements : l'écart est peut-être normal."
+        return "Départements " + delaCommune + " (commune) et " + duCarre + " (carré) : le point "
+                + point.code() + " est en " + commune.nom() + ", son carré " + site.numeroCarre()
+                + " dit autre chose."
+                + " Un carré posé sur une limite de département peut en chevaucher deux : l'écart est peut-être normal."
                 + " Sinon, vérifiez les coordonnées du point ou le numéro du carré.";
     }
 }

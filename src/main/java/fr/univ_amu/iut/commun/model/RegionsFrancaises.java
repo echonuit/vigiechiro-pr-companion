@@ -65,10 +65,11 @@ public final class RegionsFrancaises {
         }
         String gauche = normaliser(a);
         String droite = normaliser(b);
-        // Le plus court préfixe l'autre : `97` couvre `971`, et `20` ne couvre que `20`.
-        return gauche.length() <= droite.length()
-                ? droite.regionMatches(true, 0, gauche, 0, gauche.length())
-                : gauche.regionMatches(true, 0, droite, 0, droite.length());
+        // On ne compare que ce que les DEUX écritures disent : `97` face à `971` s'arrête à `97`, et
+        // deux codes de même longueur se comparent en entier. Écrite avec un ternaire sur la plus
+        // courte, cette ligne produisait un mutant équivalent - deux façons de dire la même chose.
+        int communes = Math.min(gauche.length(), droite.length());
+        return gauche.regionMatches(true, 0, droite, 0, communes);
     }
 
     /// Ramène les codes INSEE corses (`2A`/`2B`) sur la clé `20` de la table.
