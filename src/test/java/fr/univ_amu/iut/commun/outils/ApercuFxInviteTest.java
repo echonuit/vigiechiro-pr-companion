@@ -10,6 +10,7 @@ import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -75,6 +76,90 @@ class ApercuFxInviteTest {
         assertThat(fichier)
                 .as("une capture dont l'invite est amputée ne doit pas être écrite")
                 .doesNotExist();
+    }
+
+    @Test
+    @DisplayName("#3337 : la bascule tombe à la largeur du texte plus les marges, pas ailleurs")
+    void le_seuil_est_celui_du_texte_plus_les_marges() throws InterruptedException {
+        // Les comparaisons de `LisibiliteCapture` survivaient à PIT parce que les cas précédents sont
+        // LOIN du seuil (140 px et 420 px) : décaler une borne ou un signe n'y change aucun verdict.
+        //
+        // Plutôt que de viser un pixel - fragile, les polices de la CI rendant ~7 % plus large - ce cas
+        // **cherche** la largeur de bascule par dichotomie, puis la confronte à ce qu'elle doit valoir :
+        // la largeur du texte, plus les marges internes du champ. Une addition mise à la place de la
+        // soustraction déplacerait ce point de deux fois les marges ; mesurer une police par défaut au
+        // lieu de celle du champ le déplacerait bien davantage.
+        AtomicReference<double[]> mesures = new AtomicReference<>();
+        CountDownLatch fini = new CountDownLatch(1);
+        Platform.runLater(() -> {
+            try {
+                double basse = 40;
+                double haute = 1400;
+                // Dichotomie : on cherche la plus petite largeur qui NE fait PAS échouer la capture.
+                for (int i = 0; i < 24; i++) {
+                    double milieu = (basse + haute) / 2;
+                    if (echoue(sceneAvecChampGrandePolice(milieu))) {
+                        basse = milieu;
+                    } else {
+                        haute = milieu;
+                    }
+                }
+                // Ce que la bascule DOIT valoir : largeur du texte + marges internes.
+                TextField temoin = champDeLargeur(haute);
+                Text mesure = new Text(INVITE);
+                mesure.setFont(temoin.getFont());
+                double attendu = mesure.getLayoutBounds().getWidth()
+                        + temoin.getInsets().getLeft()
+                        + temoin.getInsets().getRight();
+                mesures.set(new double[] {haute, attendu});
+            } finally {
+                fini.countDown();
+            }
+        });
+        assertThat(fini.await(30, TimeUnit.SECONDS)).isTrue();
+
+        double bascule = mesures.get()[0];
+        double attendu = mesures.get()[1];
+        assertThat(bascule)
+                .as("bascule mesurée %.1f px, attendue %.1f px (texte + marges)", bascule, attendu)
+                .isCloseTo(attendu, org.assertj.core.data.Offset.offset(3.0));
+    }
+
+    /// Comme [#sceneAvecChamp], mais le champ porte une police **nettement plus grande** que le défaut.
+    ///
+    /// Sans cet écart, mesurer l'invite avec la police du champ ou avec celle par défaut donne le même
+    /// résultat en headless - les deux sont la même - et la ligne qui applique la police du champ
+    /// devient invisible : elle survit à sa suppression sans qu'aucun test ne bronche.
+    private static Scene sceneAvecChampGrandePolice(double largeurChamp) {
+        Scene scene = sceneAvecChamp(largeurChamp);
+        TextField champ = (TextField)
+                ((javafx.scene.layout.VBox) scene.getRoot()).getChildren().get(0);
+        champ.setFont(javafx.scene.text.Font.font(champ.getFont().getFamily(), 28));
+        return scene;
+    }
+
+    /// Vrai si la capture de `scene` est refusée. Sur le fil JavaFX, sans écrire de fichier.
+    private static boolean echoue(Scene scene) {
+        // Sans passe de mise en page, `champ.getWidth()` vaut 0 et le garde ne mesure rien : la scène
+        // paraîtrait saine à toute largeur. Les autres cas passent par `enregistrerPng`, qui monte un
+        // Stage et provoque cette passe ; ici on la déclenche à la main.
+        scene.getRoot().applyCss();
+        scene.getRoot().layout();
+        try {
+            LisibiliteCapture.refuserToutTexteIllisible(scene);
+            return false;
+        } catch (IllegalStateException _) {
+            return true;
+        }
+    }
+
+    /// Un champ **monté dans une scène** (donc mesuré) portant l'invite, à la largeur voulue.
+    private static TextField champDeLargeur(double largeur) {
+        Scene scene = sceneAvecChampGrandePolice(largeur);
+        scene.getRoot().applyCss();
+        scene.getRoot().layout();
+        return (TextField)
+                ((javafx.scene.layout.VBox) scene.getRoot()).getChildren().get(0);
     }
 
     @Test
