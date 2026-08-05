@@ -812,9 +812,9 @@ class SonsValidationViewTest {
             "Ordre par défaut des colonnes (contexte, fichier, identification, indicateurs) et indicateurs non triables")
     void ordre_par_defaut_et_indicateurs_non_triables(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
-        // Les 18 premières colonnes par en-tête ; les 3 indicateurs (icônes, sans texte) par leur id.
+        // Les 19 premières colonnes par en-tête ; les 3 indicateurs (icônes, sans texte) par leur id.
         assertThat(table.getColumns().stream()
-                        .limit(18)
+                        .limit(19)
                         .map(TableColumn::getText)
                         .toList())
                 .containsExactly(
@@ -822,6 +822,10 @@ class SonsValidationViewTest {
                         "Heure",
                         "Passage",
                         "Carré",
+                        // Nom du carré (#3300) : la recherche libre retient une ligne sur lui, et seule
+                        // la puce « Lieu » le montrait. Colonne MASQUÉE au départ, cette table en
+                        // comptant déjà 22 - elle existe pour qui la coche.
+                        "Nom du carré",
                         "Point",
                         // Commune (#3164) : contexte, à côté du carré et du point qu'elle
                         // complète - et masquée avec eux sur un passage unique.
@@ -841,9 +845,10 @@ class SonsValidationViewTest {
                         "Début",
                         "Durée",
                         "Statut");
-        assertThat(table.getColumns().get(18).getId()).isEqualTo("colReference");
-        assertThat(table.getColumns().get(19).getId()).isEqualTo("colCommentaire");
-        assertThat(table.getColumns().get(20).getId()).isEqualTo("colFil");
+        // Les indices ont glissé d'un cran avec « Nom du carré » (#3300).
+        assertThat(table.getColumns().get(19).getId()).isEqualTo("colReference");
+        assertThat(table.getColumns().get(20).getId()).isEqualTo("colCommentaire");
+        assertThat(table.getColumns().get(21).getId()).isEqualTo("colFil");
         // Colonnes-indicateurs : non triables (trier une icône est déroutant, cf. « colonne vide triable »).
         assertThat(colonneParId(robot, "colReference").isSortable()).isFalse();
         assertThat(colonneParId(robot, "colCommentaire").isSortable()).isFalse();

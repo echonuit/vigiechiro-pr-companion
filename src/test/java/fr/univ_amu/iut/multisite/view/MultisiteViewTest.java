@@ -244,6 +244,34 @@ class MultisiteViewTest {
     }
 
     @Test
+    @DisplayName("#3300 : le nom du carré a sa colonne, masquée au départ mais câblée et offerte")
+    void colonne_nom_du_carre_disponible_mais_masquee() {
+        // La recherche libre de cet écran retient une ligne sur ce nom (`CriteresMultisite.correspond`),
+        // et seule la puce « Lieu » le montrait. La colonne arrive MASQUÉE : les colonnes de cette table
+        // totalisent déjà 1 360 px dans une scène partagée avec la carte, et elle défilait
+        // horizontalement avant cet ajout - l'ouvrir par défaut poussait la date hors de vue, ce qu'un
+        // test préexistant a signalé.
+        TableColumn<LignePassage, String> carre = new TableColumn<>();
+        TableColumn<LignePassage, String> nom = new TableColumn<>();
+        ColonnesMultisite.configurer(new ColonnesMultisite.Colonnes(
+                new TableColumn<>(),
+                carre,
+                nom,
+                new TableColumn<>(),
+                new TableColumn<>(),
+                new TableColumn<>(),
+                new TableColumn<>(),
+                new TableColumn<>(),
+                new TableColumn<>(),
+                new TableColumn<>(),
+                new TableColumn<>()));
+
+        assertThat(nom.getCellValueFactory())
+                .as("câblée : sans cela, la colonne cochée resterait vide")
+                .isNotNull();
+    }
+
+    @Test
     @DisplayName("Ajouter une puce « Statut » et choisir VERIFIE filtre le tableau sur ce critère")
     void filtre_statut_via_la_barre_a_puces(FxRobot robot) {
         MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);

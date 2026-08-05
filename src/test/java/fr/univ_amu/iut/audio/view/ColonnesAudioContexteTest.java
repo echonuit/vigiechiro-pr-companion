@@ -36,6 +36,7 @@ class ColonnesAudioContexteTest {
                 colonne(),
                 colonne(),
                 colonne(),
+                colonne(),
                 new TableColumn<LigneObservationAudio, LocalDateTime>(),
                 colonne(),
                 colonne(),
@@ -94,5 +95,22 @@ class ColonnesAudioContexteTest {
         assertThat(col.tadarida().isVisible()).isTrue();
         assertThat(col.fichier().isVisible()).isTrue();
         assertThat(col.statut().isVisible()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#3300 : le nom du carré a sa colonne, masquée au départ mais offerte au sélecteur")
+    void nom_du_carre_disponible_mais_masque() {
+        // La recherche libre de cet écran retient une ligne sur ce nom (`CriteresAudio.correspond`), et
+        // seule la puce « Lieu » le montrait. La colonne existe donc, mais MASQUÉE : cette table en
+        // compte 22, et le sélecteur (#919) est fait pour ça.
+        ColonnesAudio.Colonnes col = colonnes();
+        ColonnesAudio.configurer(col, ligne -> false, (id, texte) -> {});
+
+        assertThat(col.nomSite().getCellValueFactory())
+                .as("câblée : sans cela, la colonne cochée resterait vide")
+                .isNotNull();
+        assertThat(ColonnesAudio.pourLeSelecteur(col, new TableColumn<>(), new TableColumn<>()))
+                .as("offerte au sélecteur, sinon elle serait inatteignable")
+                .anySatisfy(colonne -> assertThat(colonne.libelle()).isEqualTo("Nom du carré"));
     }
 }

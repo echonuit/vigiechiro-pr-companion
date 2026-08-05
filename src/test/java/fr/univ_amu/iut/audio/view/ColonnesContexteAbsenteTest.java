@@ -79,6 +79,7 @@ class ColonnesContexteAbsenteTest {
                 colonne(),
                 colonne(),
                 colonne(),
+                colonne(),
                 new TableColumn<LigneObservationAudio, LocalDateTime>(),
                 colonne(),
                 colonne(),
