@@ -299,6 +299,36 @@ robot de Flathub. Publier une version ne demande aucun geste côté paquet.
     fichier à chaque appel et échouerait avant d'y arriver. Le `.deb` installé normalement, lui, garde
     cette catégorie fautive.
 
+## Toute garde de CI porte sa propre preuve (#2947, #3293)
+
+Une garde qui **accepte à tort ne rougit pas** : elle passe au vert, sur un dépôt propre, exactement
+comme si elle faisait son travail. C'est le seul type de défaut qui se présente sous la forme d'un
+succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
+
+| Garde | Ce qu'elle vérifie | Où elle tourne |
+|---|---|---|
+| `verifie-titre-pr.sh` | Conventional Commits, cadratin, élision sans apostrophe | `titre-pr.yml` |
+| `verifie-epinglage.sh` | actions figées sur un SHA, aucune divergence de version | `lint.yml` |
+| `verifie-jeton.sh` | aucun jeton VigieChiro en clair | `lint.yml` |
+| `check-captures.sh` | chaque vue a une capture, chaque capture existe et est présentée | `lint.yml` |
+| `check-capture-mains.sh` | chaque outil de capture est enregistré dans `MAINS` | `lint.yml` |
+| `check-doc-images.sh` | chaque capture citée par la doc existe et est déclarée | `docs.yml` |
+| `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
+
+**Le modèle vient de #2947** (`verifie-titre-pr.sh`) et il est le bon : le script **se réinvoque
+lui-même** sur un cas connu, donc le cas de test et le chemin réel sont le même code **par
+construction**. Les gardes qui balaient une arborescence l'appliquent en rendant leur racine
+surchargeable par variable d'environnement, et en montant un bac jetable.
+
+Deux exigences, apprises de ce qui a failli passer :
+
+- **Des contrôles négatifs.** Une règle qui refuse tout est aussi inutile qu'une règle qui accepte
+  tout. Chaque auto-test contient des cas qui doivent **rester verts** - un `.fxml` hors d'un dossier
+  `view/`, un `Capture*` sans `main`, une capture que la doc ne cite pas.
+- **Éprouver l'auto-test lui-même.** En neutralisant une règle, le cas correspondant doit rougir - et
+  **lui seul**. Vécu pendant #3293 : une première tentative de neutralisation n'avait rien modifié, et
+  le vert obtenu ne prouvait rien.
+
 ## Épinglage des actions et conteneurs (#2737)
 
 Chaque `uses:` désigne un **contenu**, jamais un nom : une action est figée sur un **SHA de commit**,
