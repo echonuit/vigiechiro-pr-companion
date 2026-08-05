@@ -58,7 +58,7 @@
              de TextField sans en poser aucune. -->
         <TextField fx:id="champRecherche" promptText="Rechercher (espèce, fichier, commentaire…)"
                    accessibleText="Rechercher dans les observations"
-                   minWidth="-Infinity" prefWidth="320.0"/>
+                   minWidth="-Infinity" prefWidth="345.0"/>
         <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"
                     accessibleText="Ajouter un filtre"/>
         <!-- hgrow + maxWidth : le FlowPane des puces occupe toute la largeur restante de la rangée, sinon il

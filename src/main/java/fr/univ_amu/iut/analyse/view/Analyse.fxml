@@ -44,7 +44,7 @@
   <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-filtres">
     <ComboBox fx:id="choixRegroupement" minWidth="-Infinity" accessibleText="Regrouper par espèce ou par carré"/>
     <TextField fx:id="champRecherche" promptText="Rechercher (espèce, carré…)"
-               accessibleText="Rechercher dans l'inventaire" minWidth="-Infinity" prefWidth="270.0"/>
+               accessibleText="Rechercher dans l'inventaire" minWidth="-Infinity" prefWidth="300.0"/>
     <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"
                 accessibleText="Ajouter un filtre"/>
     <!-- hgrow + maxWidth : les puces occupent la largeur restante et s'alignent horizontalement (sinon le
