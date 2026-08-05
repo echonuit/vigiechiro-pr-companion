@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
+import fr.univ_amu.iut.commun.view.Typographie;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.passage.model.BackfillHorodatageCapture;
 import java.io.IOException;
@@ -36,6 +37,8 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        // La police du produit, avant toute scène : sans elle, le rendu dépend de la machine (#3361).
+        Typographie.installer();
         // Filet global (#795) : une exception non capturée (fil JavaFX ou tâche de fond) était jusqu'ici
         // perdue en console. On la signale à l'utilisateur par une alerte, et on la **journalise** avec sa
         // trace (#1523) : un incident laisse désormais une trace inspectable, même à message nul.

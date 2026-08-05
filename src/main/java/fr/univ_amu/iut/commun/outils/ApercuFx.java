@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.outils;
 
+import fr.univ_amu.iut.commun.view.Typographie;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -64,6 +65,9 @@ public final class ApercuFx {
     /// passe de layout/CSS complete (les controles virtualises comme `TableView` peuplent leurs
     /// lignes) avant le `snapshot`, qui reste deterministe. Le stage est referme aussitot.
     public static void enregistrerPng(Scene scene, Path fichier) {
+        // Les 41 outils de capture montent leurs scènes sans le chrome : la police s'installe donc
+        // ici aussi, sans quoi les aperçus rendraient avec celle du système (#3361).
+        Typographie.installer();
         Stage stageTransitoire = new Stage();
         stageTransitoire.setScene(scene);
         stageTransitoire.show();

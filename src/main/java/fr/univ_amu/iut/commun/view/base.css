@@ -5,7 +5,10 @@
  * définies dans palette.css, chargée sur toutes les scènes. base.css les consomme.
  */
 .root {
-    -fx-font-family: "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
+    /* « Noto Sans » est EMBARQUEE dans le jar (Typographie, #3361) : c'est ce qui rend le produit
+     * identique sur toutes les machines. Les suivantes ne sont qu'un filet si le chargement échoue -
+     * et elles ne servaient jamais, aucune n'étant installée ni sur un poste Linux ni sur le runner. */
+    -fx-font-family: "Noto Sans", "Segoe UI", "Roboto", "Helvetica Neue", sans-serif;
     -fx-background-color: -couleur-fond;
 }
 
