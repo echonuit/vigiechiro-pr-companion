@@ -50,7 +50,12 @@ public final class CaptureSonsValidationColonnes {
         GraineSonsValidation.rendre(
                 injecteur,
                 GraineSonsValidation.dossierSortie().resolve("apercu-sons-validation-colonnes.png"),
-                1500,
+                // 1800 depuis la clôture de #3151 : la commune (#3164) puis « Nom du carré » (#3300) ont
+                // ajouté 290 px à cette table, et à 1500 les quatre dernières colonnes tombaient hors
+                // champ - « Avis du validateur », « Fréquence », FME et « Fréq. terminale ». Or c'est
+                // précisément ce que cette capture doit montrer, et ce que son texte alternatif promet.
+                // Le défaut ne faisait rougir aucun test : il s'est vu en ouvrant l'image.
+                1800,
                 vue -> {
                     afficherToutesLesColonnes(vue);
                     GraineSonsValidation.selectionner(vue, 0);

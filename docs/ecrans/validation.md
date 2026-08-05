@@ -194,7 +194,7 @@ séquence, la **date d'enregistrement**, l'**heure de capture**, la **fréquence
 **certitude**, un **indicateur de commentaire**, et les mesures d'identification **FME** (fréquence de
 moindre énergie) et **fréquence terminale**, calculées sur le cri sélectionné.
 
-![La table avec toutes les colonnes affichées, dont la fréquence médiane et les mesures FME / fréquence terminale.](../assets/captures/apercu-sons-validation-colonnes.png)
+![La table avec toutes les colonnes activées : le contexte (date, heure, passage, carré, nom du carré, point, commune), le fichier, l'identification, la certitude, l'avis du validateur et la fréquence médiane. La table est plus large que l'écran : FME et fréquence terminale se rejoignent en la faisant défiler.](../assets/captures/apercu-sons-validation-colonnes.png)
 
 Les mesures **FME** et **fréquence terminale** demandent d'analyser le signal du cri : elles se
 **remplissent au fil de l'écoute** (un tiret « — » tant que la ligne n'a pas été sélectionnée), pour ne pas

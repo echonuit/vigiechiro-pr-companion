@@ -43,6 +43,33 @@ class CriteresAnalyseTest {
     }
 
     @Test
+    @DisplayName("#3151 : la recherche couvre le CODE DU POINT, que la table affiche")
+    void recherche_couvre_le_code_du_point() {
+        // La documentation partagée promet que le champ de recherche « cherche dans les colonnes en
+        // texte libre de l'écran ». La table des observations montre une colonne « Point » que la
+        // recherche ignorait, alors que les quatre autres écrans la cherchent : la promesse était
+        // fausse ici seule.
+        ObservationAnalyse o = new ObservationAnalyse(
+                "Rhifer",
+                "Rhinolophus ferrumequinum",
+                "Grand rhinolophe",
+                "Chiroptères",
+                StatutObservation.VALIDEE,
+                1L,
+                2026,
+                "130711",
+                "Jardin de Serge",
+                10L,
+                "Aix-en-Provence",
+                "Z41");
+
+        assertThat(recherche.test(o, "z41")).isTrue();
+        assertThat(recherche.test(o, "z99"))
+                .as("sans exclusion vérifiée, ce test passerait même si la recherche ne filtrait rien")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("La recherche texte est insensible à la casse et aux accents")
     void recherche_insensible_casse_accents() {
         ObservationAnalyse o =
