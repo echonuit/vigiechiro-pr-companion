@@ -74,10 +74,17 @@ jobs:
 
   installers:
     needs: release
-    # Téléverse les installeurs sur la Release (`gh release upload`) : rien d'autre. C'est le job le
-    # plus exposé - il compile, empaquette et exécute jpackage sur trois systèmes.
+    # Téléverse les installeurs sur la Release (`gh release upload`). C'est le job le plus exposé -
+    # il compile, empaquette et exécute jpackage sur trois systèmes.
+    #
+    # `id-token` et `attestations` sont exigés par l'attestation de provenance (#2742) et ne donnent
+    # rien d'autre : le jeton OIDC ne sert qu'à prouver à Sigstore QUI construit, et `attestations`
+    # n'écrit que dans le magasin d'attestations de ce dépôt. Ni l'un ni l'autre ne permet de toucher
+    # au code, aux issues ou aux pull requests.
     permissions:
       contents: write
+      id-token: write
+      attestations: write
     # Seulement si semantic-release a réellement publié une version (tag non vide).
     if: needs.release.outputs.tag != ''
     strategy:
@@ -241,6 +248,23 @@ jobs:
           done
           cat ./*.sha256
 
+      - name: Attester la provenance des artefacts
+        # Ce que l'empreinte SHA-256 ne dit pas : QUI a produit le fichier. Elle prouve qu'il est
+        # identique à celui publié, mais elle est publiée au même endroit que lui - sa confiance vaut
+        # celle qu'on accorde à la page du projet. L'attestation, elle, lie le binaire à un COMMIT et
+        # à une EXÉCUTION de ce workflow, et se vérifie contre Sigstore, hors de notre portée.
+        #
+        # Produite ici, sur la sortie de build et AVANT le téléversement, pour la même raison que
+        # l'empreinte : une corruption survenue au téléversement se retrouverait sinon attestée.
+        #
+        # Les `.sha256` sont exclus : attester une empreinte de trois lignes n'apprend rien, et
+        # allonge la liste que l'utilisateur doit lire.
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: |
+            target/dist/*
+            !target/dist/*.sha256
+
       - name: Téléverser l'installeur sur la Release (brouillon), avant publication
         shell: bash
         env:
@@ -258,6 +282,21 @@ jobs:
         run: |
           set -euo pipefail
           cp target/sbom.json "sbom-${{ needs.release.outputs.tag }}.json"
+
+      - name: Attester la provenance du SBOM
+        # Le SBOM est publié comme les binaires : il se prouve comme eux. Sans cela, l'inventaire des
+        # dépendances serait le seul artefact de la Release qu'on demanderait de croire sur parole.
+        if: matrix.os == 'ubuntu-latest'
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: sbom-${{ needs.release.outputs.tag }}.json
+
+      - name: Téléverser le SBOM
+        if: matrix.os == 'ubuntu-latest'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
           gh release upload "${{ needs.release.outputs.tag }}" \
             "sbom-${{ needs.release.outputs.tag }}.json" --clobber
 

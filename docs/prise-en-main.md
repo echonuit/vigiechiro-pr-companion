@@ -84,9 +84,39 @@ Une réponse `OK` (ou, sous Windows, deux empreintes identiques) signifie que le
 
 !!! warning "Ce que l'empreinte prouve, et ce qu'elle ne prouve pas"
     Elle prouve que le fichier est **identique** à celui publié sur la page des Releases : elle
-    détecte un téléchargement corrompu ou tronqué. Elle ne remplace pas une **signature** : elle
-    n'atteste pas de l'identité de l'auteur, puisqu'elle est publiée au même endroit que les
-    fichiers. Sa confiance vaut celle que vous accordez à la page du projet.
+    détecte un téléchargement corrompu ou tronqué. Elle ne dit rien de **qui** l'a produit, puisqu'elle
+    est publiée au même endroit que les fichiers : sa confiance vaut celle que vous accordez à la page
+    du projet.
+
+    C'est exactement ce que l'**attestation de provenance** ci-dessous ajoute.
+
+## Vérifier d'où vient le fichier (attestation)
+
+Chaque fichier publié porte une **attestation de provenance** : la preuve, vérifiable ailleurs que
+chez nous, qu'il a été produit par le workflow de publication de ce projet, à partir d'un commit
+précis.
+
+Il faut [l'outil `gh` de GitHub](https://cli.github.com/), puis :
+
+```bash
+gh attestation verify VigieChiroCompanion-2.21.1-x64.msi \
+  --repo echonuit/vigiechiro-pr-companion
+```
+
+Une réponse `✓ Verification succeeded!` signifie que ce fichier **sort bien de notre chaîne de
+publication**. Elle nomme le dépôt, le workflow et le commit d'origine.
+
+!!! note "Pourquoi c'est plus fort que l'empreinte"
+    L'empreinte et le fichier viennent du même endroit : qui contrôlerait la page pourrait publier les
+    deux. L'attestation, elle, est signée au moment de la construction et déposée dans un **journal
+    public** ([Sigstore](https://www.sigstore.dev/)) que nous ne contrôlons pas. La falsifier
+    demanderait de compromettre ce journal, pas seulement notre dépôt.
+
+    Elle ne remplace pas la **signature** des installeurs, qui parle aux systèmes d'exploitation
+    (SmartScreen, Gatekeeper) : celle-là viendra séparément. L'attestation parle à qui veut vérifier.
+
+Le **SBOM** publié à côté des installeurs - l'inventaire des bibliothèques embarquées, `sbom-vX.Y.Z.json` -
+est attesté de la même façon.
 
 ## Lancer depuis les sources
 
