@@ -23,7 +23,23 @@ jobs:
     # release.yml ne se déclenche qu'au push sur `main` : aucune CI de PR ne traverse la chaîne de
     # publication, donc une erreur d'installation ou de configuration ne se verrait qu'à la prochaine
     # release - c'est-à-dire en production, sur un dépôt qui publie à chaque fusion (#2738).
+    #
+    # ⚠️ Ce que ce job prouve DÉPEND du déclencheur, et c'est à savoir avant de lire son vert (#3345) :
+    #   - sur une PR, `semantic-release` s'arrête sur « triggered by a pull request » APRÈS avoir chargé
+    #     les greffons mais AVANT d'analyser l'historique. Le vert dit « ça s'installe et ça se charge » ;
+    #   - sur `main`, il va jusqu'à l'analyse et au calcul de version. C'est là que le contrôle est réel.
     runs-on: ubuntu-latest
+    # `contents: write` alors que ce job n'écrit rien : `semantic-release` vérifie qu'il POURRAIT pousser
+    # un tag dès `verifyConditions`, y compris en `--dry-run`. Sous le plancher `contents: read` du
+    # workflow, il échouait donc sur `main` par `EGITNOPERMISSION` - sauf quand un checkout obsolète le
+    # faisait sortir plus tôt, ce qui produisait un vert signifiant « contrôle sauté » (#3345).
+    #
+    # Le droit accordé est borné et VÉRIFIÉ SUR PLACE : l'invocation est en `--dry-run`, et l'étape
+    # « La configuration d'analyse dérive bien de celle du dépôt » échoue si la liste des greffons n'est
+    # pas exactement commit-analyzer + release-notes-generator, donc si un greffon d'écriture y entrait.
+    # Déclaration par job et non plancher : c'est le patron posé par #2739, que garde `verifie-permissions.sh`.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -58,9 +74,23 @@ jobs:
 
       - name: Répétition à blanc de la chaîne de publication
         # `--dry-run` n'écrit rien et la configuration d'analyse n'embarque aucun greffon d'écriture :
-        # cette étape ne peut pas publier. Elle prouve que l'outillage s'installe, que les greffons se
-        # chargent et que l'historique git est lisible.
-        run: cd .github/release && ./node_modules/.bin/semantic-release --dry-run
+        # cette étape ne peut pas publier. Elle prouve que l'outillage s'installe et que les greffons se
+        # chargent ; sur `main` seulement, elle prouve en plus que l'historique est lisible et qu'une
+        # version se calcule (sur une PR, semantic-release s'arrête avant, cf. l'en-tête du job).
+        run: |
+          cd .github/release
+          ./node_modules/.bin/semantic-release --dry-run 2>&1 | tee ../../repetition.log
+          etat=${PIPESTATUS[0]}
+          # Un checkout devenu obsolète (une autre fusion a atterri entre-temps) fait sortir
+          # semantic-release en 0 AVANT l'analyse. Le vert dirait alors « rien vérifié » sans le dire :
+          # c'est le faux vert de #3345. On ne rougit pas pour autant - la course est bénigne et un
+          # rouge les jours de fusion dense apprendrait à ne plus lire ce job - mais on l'ANNONCE.
+          if grep -q "behind the remote" ../../repetition.log; then
+            echo "::warning::Copie locale en retard sur le distant : la répétition à blanc s'est arrêtée avant l'analyse. Ce vert ne dit rien de l'historique ni du calcul de version."
+            echo "## Répétition à blanc : non jouée" >> "$GITHUB_STEP_SUMMARY"
+            echo "La copie locale était en retard sur \`main\` (fusion concurrente) : \`semantic-release\` s'est arrêté avant d'analyser l'historique." >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$etat"
 
   lint:
     runs-on: ubuntu-latest
