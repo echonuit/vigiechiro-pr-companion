@@ -25,10 +25,16 @@ trois choses.
    c'est un instantané.
 2. **Aucune version n'est descriptible.** Ses notes tiennent en une ligne. L'utilisateur qui suit les
    Releases voit défiler des numéros, pas des états.
-3. **Le coût a déjà été payé, en aval et en silence.** Les soumissions **winget** et **Flathub** sont
-   passées en déclenchement **manuel**, et `flatpak.yml` le dit en toutes lettres : « ce dépôt publie
-   entre 3 et 37 fois par jour ». On avait donc déjà débranché l'automatisation des canaux plutôt que
-   de corriger la cadence - et depuis, les canaux accusent du retard.
+3. **La cadence a déjà pesé sur une décision, en aval.** Les soumissions **winget** et **Flathub**
+   sont en déclenchement **manuel**, et `flatpak.yml` compte la cadence parmi ses raisons : « ce dépôt
+   publie entre 3 et 37 fois par jour, soit autant de constructions complètes du SDK Flathub et autant
+   de commits de mise à jour sur `main` ».
+
+   ⚠️ **Cette raison-là n'est pas la principale, et il faut le dire pour ne pas se tromper de
+   conclusion** : le paquet n'est **pas encore accepté** sur Flathub (#2191), et le même fichier note
+   qu'un déclenchement sur `release: released` ne partirait de toute façon **jamais** (l'événement est
+   produit avec le `GITHUB_TOKEN`, qui ne déclenche aucun workflow). Les canaux ne sont donc pas « en
+   retard » : ils n'ont **rien à distribuer** pour l'instant.
 
 ## Décision
 
@@ -63,10 +69,13 @@ exercé.
 
 ## Conséquences
 
-- **Les canaux de packaging redeviennent automatisables.** `winget.yml` et `flatpak.yml` avaient été
-  débranchés à cause du rythme ; à une version par semaine, la raison tombe. Ce n'est pas fait ici -
-  c'est une décision par canal, avec ses propres risques (une PR Flathub engage un dépôt tiers), et
-  cela fera l'objet d'une issue de suite.
+- **Un argument tombe pour les canaux de packaging, mais rien n'y change aujourd'hui.** La cadence
+  était l'une des raisons du déclenchement manuel de `winget.yml` et `flatpak.yml` ; à une version par
+  semaine, elle ne tient plus. Les autres raisons, elles, demeurent : le paquet n'est **pas accepté**
+  sur Flathub (#2191), et après acceptation ce sont les **robots de Flathub** qui prendront le relais
+  des montées de version, toutes les deux heures - notre workflow restera utile pour ce qu'ils ne font
+  pas, attester que le paquet **démarre**. Il n'y a donc rien à rebrancher, ni maintenant ni
+  probablement plus tard.
 - **La recette (#1363) devient jouable** : un train par semaine, c'est une version à valider par
   semaine.
 - **Les numéros de version ralentissent.** `2.181.0` aujourd'hui ; le rythme passera de ~20 mineures

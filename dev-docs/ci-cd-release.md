@@ -341,8 +341,9 @@ gh api repos/<proprietaire>/<action>/git/tags/<sha> --jq .object.sha
 **Pourquoi** : au push, le dépôt publiait 3 à 37 fois par jour - 497 tags, jusqu'à 31 dans la même
 journée. Ces versions n'étaient pas vides (95 % de `feat` et `fix` sur les 120 dernières) mais
 **atomisées** : une version = un changement, donc aucune validable par la recette (#1363) ni
-descriptible. Et le coût était déjà payé en aval : winget et Flathub avaient été passés en manuel à
-cause du rythme.
+descriptible. La cadence pesait par ailleurs sur une décision en aval : elle compte parmi les raisons du
+déclenchement manuel de winget et Flathub - sans en être la principale, le paquet n'étant pas encore
+accepté sur Flathub (#2191).
 
 Détail et alternatives écartées : [ADR 2744](decisions/2744-la-publication-part-a-heure-fixe.md).
 
