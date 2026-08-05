@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!--
+  Section « 2. Inspection du dossier », extraite en sous-vue (#2745).
+
+  Pourquoi une vue à part : ImportationController vivait à 195 pour un plafond NcssCount de 200. Cette
+  section est un compte rendu en LECTURE SEULE de ce que l'inspection a trouvé : elle ne pilote rien,
+  ne collecte aucune saisie, et ses neuf champs n'étaient lus que par son propre câblage. C'est la
+  carte la moins dispersée de l'écran, mesuré avant de couper.
+  Voir dev-docs/decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md.
+
+  ⚠️ L'inclusion garde le fx:id `sectionInspection` : le parent lie la visibilité de la section entière
+  à l'état « dossier inspecté », il a donc besoin du nœud autant que du controller.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.importation.view.SectionInspectionController"
+      styleClass="carte-section" spacing="6.0">
+  <Label text="2. Inspection du dossier" styleClass="section-titre"/>
+  <Label text="Lecture seule : aucun fichier n'est modifié pour l'instant."
+         styleClass="section-sous"/>
+  <Label fx:id="labelJournal" styleClass="insp-detail">
+    <graphic><FontIcon fx:id="iconeJournal" styleClass="insp-icone"/></graphic>
+  </Label>
+  <Label fx:id="labelReleve" styleClass="insp-detail">
+    <graphic><FontIcon fx:id="iconeReleve" styleClass="insp-icone"/></graphic>
+  </Label>
+  <Label fx:id="labelOriginaux" styleClass="insp-detail">
+    <graphic><FontIcon fx:id="iconeOriginaux" styleClass="insp-icone"/></graphic>
+  </Label>
+  <Label fx:id="labelNommage" styleClass="insp-detail"/>
+  <!-- Ce que l'inspection a relevé (#33, #147) : mélange d'enregistreurs, désaccord entre le journal
+       et les fichiers, nuit déjà importée. Un compte rendu, dont la vue compose le contenu. -->
+  <VBox fx:id="zoneAvertissements" visible="false" managed="false"/>
+  <!-- Découpage par nuit (#…) : une carte laissée tourner plusieurs nuits produit une ligne par nuit
+       (chacune deviendra un passage). Visible seulement s'il y a plus d'une nuit. Décochez celles à
+       exclure (ex. une nuit tronquée). -->
+  <VBox fx:id="zoneNuits" spacing="6.0" visible="false" managed="false">
+    <Label text="Plusieurs nuits détectées sur cette carte : chacune deviendra un passage distinct (même point, n° de passage consécutifs). Décochez celles que vous ne voulez pas importer."
+           styleClass="section-sous" wrapText="true"/>
+    <!-- La table des nuits est construite par programme (TableNuits) et insérée ici par le controller. -->
+  </VBox>
+</VBox>
