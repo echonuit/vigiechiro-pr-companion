@@ -65,33 +65,10 @@
     </HBox>
   </VBox>
 
-  <!-- 2. Inspection -->
-  <VBox fx:id="sectionInspection" styleClass="carte-section" spacing="6.0">
-    <Label text="2. Inspection du dossier" styleClass="section-titre"/>
-    <Label text="Lecture seule : aucun fichier n'est modifié pour l'instant."
-           styleClass="section-sous"/>
-    <Label fx:id="labelJournal" styleClass="insp-detail">
-      <graphic><FontIcon fx:id="iconeJournal" styleClass="insp-icone"/></graphic>
-    </Label>
-    <Label fx:id="labelReleve" styleClass="insp-detail">
-      <graphic><FontIcon fx:id="iconeReleve" styleClass="insp-icone"/></graphic>
-    </Label>
-    <Label fx:id="labelOriginaux" styleClass="insp-detail">
-      <graphic><FontIcon fx:id="iconeOriginaux" styleClass="insp-icone"/></graphic>
-    </Label>
-    <Label fx:id="labelNommage" styleClass="insp-detail"/>
-    <!-- Ce que l'inspection a relevé (#33, #147) : mélange d'enregistreurs, désaccord entre le journal
-         et les fichiers, nuit déjà importée. Un compte rendu, dont la vue compose le contenu. -->
-    <VBox fx:id="zoneAvertissements" visible="false" managed="false"/>
-    <!-- Découpage par nuit (#…) : une carte laissée tourner plusieurs nuits produit une ligne par nuit
-         (chacune deviendra un passage). Visible seulement s'il y a plus d'une nuit. Décochez celles à
-         exclure (ex. une nuit tronquée). -->
-    <VBox fx:id="zoneNuits" spacing="6.0" visible="false" managed="false">
-      <Label text="Plusieurs nuits détectées sur cette carte : chacune deviendra un passage distinct (même point, n° de passage consécutifs). Décochez celles que vous ne voulez pas importer."
-             styleClass="section-sous" wrapText="true"/>
-      <!-- La table des nuits est construite par programme (TableNuits) et insérée ici par le controller. -->
-    </VBox>
-  </VBox>
+  <!-- 2. Inspection. Sous-vue depuis #2745 : compte rendu en lecture seule, neuf champs @FXML dans
+       un controller à 195 de NcssCount pour un plafond de 200. L'inclusion GARDE le fx:id
+       `sectionInspection`, le parent liant la visibilité de la section à « dossier inspecté ». -->
+  <fx:include fx:id="sectionInspection" source="SectionInspection.fxml"/>
 
   <!-- 3. Rattachement -->
   <VBox styleClass="carte-section" spacing="10.0">

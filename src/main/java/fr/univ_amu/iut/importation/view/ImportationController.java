@@ -18,8 +18,6 @@ import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.view.VisibiliteGeree;
-import fr.univ_amu.iut.commun.view.VueCompteRendu;
-import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -52,7 +50,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.converter.NumberStringConverter;
-import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'assistant **M-Import** (`Importation.fxml`).
 ///
@@ -105,29 +102,12 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     @FXML
     private VBox sectionInspection;
 
+    /// Controller de la sous-vue `SectionInspection.fxml`, injecté par le `fx:include` (#2745) : il
+    /// possède les neuf champs du compte rendu d'inspection et leur câblage. Le nom est imposé par
+    /// JavaFX, qui concatène le `fx:id` de l'inclusion (`sectionInspection`) et le suffixe
+    /// `Controller`.
     @FXML
-    private Label labelJournal;
-
-    @FXML
-    private FontIcon iconeJournal;
-
-    @FXML
-    private Label labelReleve;
-
-    @FXML
-    private FontIcon iconeReleve;
-
-    @FXML
-    private Label labelOriginaux;
-
-    @FXML
-    private FontIcon iconeOriginaux;
-
-    @FXML
-    private Label labelNommage;
-
-    @FXML
-    private VBox zoneAvertissements;
+    private SectionInspectionController sectionInspectionController;
 
     @FXML
     private ComboBox<Site> comboSites;
@@ -215,9 +195,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
 
     @FXML
     private PanneauCompteRendu compteRenduChiffre;
-
-    @FXML
-    private VBox zoneNuits;
 
     /// Jeton d'annulation (#146) de l'opération longue **en cours** (décompression ou import), créé au
     /// lancement et déclenché par le bouton « Annuler ». `null` hors traitement. Accédé uniquement sur le
@@ -327,54 +304,12 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                         },
                         inspection.dossierSourceProperty()));
 
-        // 2. Inspection : section visible une fois le dossier inspecté.
+        // 2. Inspection : section visible une fois le dossier inspecté. Son CONTENU est une sous-vue
+        // (#2745), à qui l'on passe NOTRE modèle : elle n'injecte rien, les ViewModel étant
+        // non-singleton. La visibilité de la section reste ici, le nœud étant celui de l'inclusion.
         VisibiliteGeree.lier(sectionInspection, inspection.inspecteProperty());
-        // Présence dite par l'icône et la couleur, plus par un glyphe dans le texte (#2099, ADR 0035).
-        DetailInspection.lier(
-                labelJournal,
-                iconeJournal,
-                inspection.aUnJournalProperty(),
-                Bindings.createStringBinding(
-                        () -> inspection.aUnJournalProperty().get()
-                                ? "Journal du capteur : "
-                                        + inspection.resumeJournalProperty().get()
-                                : "Aucun journal LogPR : import en mode dégradé (enregistreur déduit des"
-                                        + " fichiers, paramètres limités)",
-                        inspection.aUnJournalProperty(),
-                        inspection.resumeJournalProperty()));
-        DetailInspection.lier(
-                labelReleve,
-                iconeReleve,
-                inspection.aUnReleveClimatiqueProperty(),
-                Bindings.createStringBinding(
-                        () -> inspection.aUnReleveClimatiqueProperty().get()
-                                ? "Relevé climatique détecté"
-                                : "Relevé climatique absent",
-                        inspection.aUnReleveClimatiqueProperty()));
-        DetailInspection.lierPresent(
-                labelOriginaux,
-                iconeOriginaux,
-                inspection.nombreOriginauxProperty().asString("%d enregistrement(s) WAV détecté(s)"));
-        labelNommage
-                .textProperty()
-                .bind(Bindings.createStringBinding(
-                        () -> "État du nommage : "
-                                + FormatsImport.libelleNommage(
-                                        inspection.etatNommageProperty().get()),
-                        inspection.etatNommageProperty()));
-        // Ce que l'inspection a relevé (#33, #147) : mélange d'enregistreurs, désaccord journal/fichiers,
-        // nuit déjà importée. Trois libellés jusqu'ici, un compte rendu désormais - ils décrivent le même
-        // dossier au même instant, et chacun joignait ses listes dans une phrase (#2050).
-        inspection.avertissementsProperty().addListener((observable, avant, rendu) -> afficherAvertissements(rendu));
-        afficherAvertissements(inspection.avertissementsProperty().get());
-
-        // Table des nuits (#…) : construite par programme ([TableNuits]) et insérée dans sa zone, visible
-        // seulement quand la carte contient plusieurs nuits.
-        VisibiliteGeree.lier(zoneNuits, inspection.plusieursNuitsProperty());
-        // Table + avertissement de blocage de la numérotation multi-nuits (#801), délégués à un helper
-        // dédié pour garder ce contrôleur sous le plafond de taille.
-        ZoneNuits.remplir(
-                zoneNuits, inspection.nuits(), viewModel.coordinationNuits().blocageProperty());
+        sectionInspectionController.installer(
+                inspection, viewModel.coordinationNuits().blocageProperty());
     }
 
     /// Section 3 : combos site/point, champs année/n° de passage, aperçu du préfixe et avertissement de
@@ -496,19 +431,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // Compte rendu chiffré de fin d'import (#2358), branché par son propre collaborateur : ce qu'il dit
         // et où mène son action suivante se lisent mieux ensemble qu'au milieu des liaisons de contrôles.
         new CompteRenduDeFinImport(viewModel, ouvrirPassage).brancher(compteRenduChiffre);
-    }
-
-    /// Remplace les avertissements d'inspection affichés. Tous les détails sont montrés : ils nomment des
-    /// séries, des dates et des passages, tous en petit nombre, et il n'y a pas de liste voisine vers
-    /// laquelle renvoyer.
-    private void afficherAvertissements(CompteRendu rendu) {
-        zoneAvertissements
-                .getChildren()
-                .setAll(VueCompteRendu.rendre(rendu, VueCompteRendu.SANS_PLAFOND)
-                        .getChildren());
-        zoneAvertissements.getStyleClass().setAll(VueCompteRendu.CLASSE_RACINE);
-        zoneAvertissements.setVisible(!rendu.estVide());
-        zoneAvertissements.setManaged(!rendu.estVide());
     }
 
     /// « Parcourir » : demande le **dossier** de la nuit puis charge la source.
