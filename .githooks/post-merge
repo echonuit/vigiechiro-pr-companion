@@ -14,6 +14,26 @@
 #   moment), une seule ligne d'avertissement remplace le mur d'erreurs Maven
 #
 # Le cas git pull --rebase est couvert par le hook post-rewrite.
+#
+# Ce hook met aussi à jour le graphe graphify, si et seulement si l'opt-in
+# VIGIECHIRO_GRAPHIFY=1 est posé (voir .githooks/post-commit). C'est ici que ça
+# compte le plus : les PR arrivent par fusion, donc un merge apporte d'un coup tout
+# ce qu'un post-commit local n'a jamais vu passer.
+
+if [ "${VIGIECHIRO_GRAPHIFY}" = "1" ] && command -v graphify >/dev/null 2>&1 \
+        && [ -f graphify-out/graph.json ]; then
+    FICHIERS_GRAPHE=$(git diff --name-only ORIG_HEAD HEAD -- src pom.xml .github/workflows dev-docs docs brief '*.mcd')
+    if [ -n "${FICHIERS_GRAPHE}" ]; then
+        PYTHON_GRAPHE=python3
+        if [ -f graphify-out/.graphify_python ]; then
+            CANDIDAT_GRAPHE=$(cat graphify-out/.graphify_python)
+            [ -x "${CANDIDAT_GRAPHE}" ] && PYTHON_GRAPHE="${CANDIDAT_GRAPHE}"
+        fi
+        echo "post-merge : mise à jour du graphe graphify en arrière-plan (graphify-out/rebuild.log)"
+        nohup "${PYTHON_GRAPHE}" scripts/graphify/rebuild.py ${FICHIERS_GRAPHE} \
+            >graphify-out/rebuild.log 2>&1 </dev/null &
+    fi
+fi
 
 git diff --quiet ORIG_HEAD HEAD -- src pom.xml && exit 0
 

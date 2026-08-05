@@ -1,0 +1,50 @@
+#!/bin/bash
+# Post-commit hook : met à jour le graphe de connaissance graphify après un commit.
+#
+# Installé automatiquement par git-build-hook-maven-plugin au premier ./mvnw exécuté
+# dans le repo (qui configure core.hooksPath=.githooks).
+#
+# OPT-IN : ce hook ne fait RIEN tant que VIGIECHIRO_GRAPHIFY=1 n'est pas exporté.
+# Un contributeur qui n'utilise pas graphify ne voit aucune différence, et le hook
+# ne coûte rien à qui n'a jamais construit de graphe.
+#
+# Pour l'activer :
+#   export VIGIECHIRO_GRAPHIFY=1        (dans ~/.zshrc ou ~/.bashrc)
+#   /graphify .                          (une première fois, pour créer le graphe)
+#
+# Comportement :
+# - Skip si l'opt-in est absent, si graphify n'est pas installé, ou si aucun graphe
+#   n'existe encore (rien à mettre à jour tant qu'il n'a pas été construit une fois)
+# - Sinon relance en ARRIÈRE-PLAN scripts/graphify/rebuild.py sur les fichiers du
+#   commit : extraction AST du code modifié, les quatre passes de pont, puis
+#   clustering et rapport. Environ 20 s, sans bloquer le terminal.
+# - La documentation demande un LLM, que le hook n'a pas : un `.md` modifié pose le
+#   drapeau graphify-out/.needs_update, à résorber en session par
+#   `/graphify . --update`. Le graphe du code, lui, reste à jour tout seul.
+#
+# Le journal du rebuild est dans graphify-out/rebuild.log (jamais versionné).
+
+[ "${VIGIECHIRO_GRAPHIFY}" = "1" ] || exit 0
+command -v graphify >/dev/null 2>&1 || exit 0
+[ -f graphify-out/graph.json ] || exit 0
+
+# Premier commit d'un dépôt : pas de HEAD~1, on ne diffe rien et on sort.
+git rev-parse --verify HEAD~1 >/dev/null 2>&1 || exit 0
+
+FICHIERS=$(git diff --name-only HEAD~1 HEAD -- src pom.xml .github/workflows dev-docs docs brief '*.mcd')
+[ -n "${FICHIERS}" ] || exit 0
+
+# L'interpréteur retenu par graphify (uv tool, pipx ou système), sinon python3.
+PYTHON=python3
+if [ -f graphify-out/.graphify_python ]; then
+    CANDIDAT=$(cat graphify-out/.graphify_python)
+    [ -x "${CANDIDAT}" ] && PYTHON="${CANDIDAT}"
+fi
+
+echo "post-commit : mise à jour du graphe graphify en arrière-plan (graphify-out/rebuild.log)"
+# Détaché et sans descripteur ouvert : git attend la fermeture de stdout/stderr,
+# un simple & suffirait à faire patienter le terminal jusqu'à la fin du rebuild.
+nohup "${PYTHON}" scripts/graphify/rebuild.py ${FICHIERS} \
+    >graphify-out/rebuild.log 2>&1 </dev/null &
+
+exit 0
