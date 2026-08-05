@@ -92,6 +92,21 @@ class CliSoldeSaisonTest {
                 .idPassage();
     }
 
+    /// Un point sur un carré **sans nom convivial** (#3289). La fixture en pose un par défaut
+    /// (« Site de test ») ; il faut donc l'annuler explicitement. C'est justement le carré anonyme qui
+    /// dit si la qualification laisse un séparateur orphelin.
+    private static void semerSansNom(SourceDeDonnees source, String idUser, String carre, String point) {
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(idUser)
+                .carre(carre)
+                .nomSite(null)
+                .point(point)
+                .nuit(1, 2026, "2026-06-24")
+                .statut(StatutWorkflow.DEPOSE)
+                .verdict(Verdict.OK)
+                .semer();
+    }
+
     private String texteSortie() {
         return capture.texte();
     }
@@ -106,6 +121,39 @@ class CliSoldeSaisonTest {
         assertThat(csv).contains("Reste à faire");
         assertThat(csv).contains("640001").contains("A2").contains("Téléverser la nuit du 21/08");
         assertThat(csv).contains("Refaire le 1er passage");
+    }
+
+    @Test
+    @DisplayName("#3289 : les trois sorties montrent le nom du carré, par lequel --lieu sait déjà trouver")
+    void le_nom_du_carre_se_montre_sur_les_trois_sorties() {
+        // Le défaut : `--lieu` retient une ligne sur le nom (FiltresSaison, #3219), et aucune des trois
+        // sorties ne le rendait. Un script qui filtre par un nom ne pouvait pas savoir LEQUEL il avait
+        // trouvé.
+        cli.executer(new String[] {"solde-saison", "--annee", "2026"}, sortie, erreur);
+        assertThat(texteSortie())
+                .as("texte : les deux étiquettes, la sortie n'ayant pas de contrainte de largeur")
+                .contains("640001 · Site 640001");
+
+        SortieCapturee csv = new SortieCapturee();
+        cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "csv"}, csv.sortie(), csv.erreur());
+        assertThat(csv.texte()).contains("Nom du carré").contains("Site 640001");
+
+        SortieCapturee json = new SortieCapturee();
+        cli.executer(
+                new String[] {"solde-saison", "--annee", "2026", "--format", "json"}, json.sortie(), json.erreur());
+        assertThat(json.texte()).contains("\"nom_site\"").contains("Site 640001");
+    }
+
+    @Test
+    @DisplayName("#3289 : un carré sans nom garde son numéro seul, sans séparateur orphelin")
+    void un_carre_sans_nom_reste_nu() {
+        // `LieuQualifie.qualifier` rend le préfixe seul quand le suffixe est absent. Sans ce cas, un
+        // carré anonyme afficherait « 640003 · » - un séparateur qui n'annonce rien.
+        semerSansNom(source, idUser, "640003", "C1");
+
+        cli.executer(new String[] {"solde-saison", "--annee", "2026"}, sortie, erreur);
+
+        assertThat(texteSortie()).contains("640003 / C1").doesNotContain("640003 ·");
     }
 
     @Test

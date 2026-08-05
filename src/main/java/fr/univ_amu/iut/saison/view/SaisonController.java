@@ -66,6 +66,9 @@ public class SaisonController implements RafraichirAuRetour {
     private TableColumn<LigneSaison, String> colCarre;
 
     @FXML
+    private TableColumn<LigneSaison, String> colNomSite;
+
+    @FXML
     private TableColumn<LigneSaison, String> colPoint;
 
     @FXML
@@ -98,6 +101,16 @@ public class SaisonController implements RafraichirAuRetour {
     @FXML
     private void initialize() {
         colCarre.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().numeroCarre()));
+        // Le nom du carré a sa PROPRE colonne (#3289). La recherche de cet écran retient une ligne sur
+        // ce nom depuis #3219, et l'écran n'ayant pas de puce « Lieu », il n'apparaissait NULLE PART -
+        // une recherche qui trouve sans montrer demande de croire son résultat sur parole.
+        //
+        // Qualifier la colonne « Carré » en « 640380 · Vallon », comme les entrées de la puce ailleurs,
+        // a été essayé d'abord : la capture régénérée montrait « 640380 · … ». Dans une table dense, ce
+        // remède remplaçait un numéro nu par un numéro suivi d'une ellipse, qui n'apprend rien. La
+        // question que #3219 laissait ouverte est donc tranchée, et par l'image.
+        colNomSite.setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                c.getValue().nomSite() == null ? "" : c.getValue().nomSite()));
         colPoint.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().codePoint()));
 
         colPassage1.setCellValueFactory(

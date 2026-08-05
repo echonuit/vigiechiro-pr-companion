@@ -31,6 +31,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -68,7 +69,10 @@ class SaisonViewTest {
                                 CasePassage.absente(),
                                 List.of(),
                                 "Poser l'enregistreur avant le 30/09",
-                                null),
+                                // #3289 : un carré NOMMÉ, pour que la colonne ait deux étiquettes à
+                                // montrer. Les trois autres restent anonymes : c'est le contraste qui
+                                // dit que la qualification n'invente pas de séparateur.
+                                "Vallon des Sources"),
                         new LigneSaison(
                                 "640002",
                                 "B1",
@@ -133,6 +137,28 @@ class SaisonViewTest {
     void une_ligne_par_point(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableSaison").queryAs(TableView.class);
         assertThat(table.getItems()).hasSize(4);
+    }
+
+    @Test
+    @DisplayName("#3289 : la colonne « Carré » montre les deux étiquettes, celle par laquelle on cherche")
+    void colonne_carre_montre_les_deux_etiquettes(FxRobot robot) {
+        // Le défaut : la recherche de cet écran retient une ligne sur le nom du carré (#3219), et
+        // l'écran n'ayant pas de puce « Lieu », ce nom n'apparaissait NULLE PART. On trouvait sans voir
+        // pourquoi.
+        TableView<?> table = robot.lookup("#tableSaison").queryAs(TableView.class);
+        TableColumn<?, ?> carre = table.getColumns().getFirst();
+        TableColumn<?, ?> nom = table.getColumns().get(1);
+
+        assertThat(carre.getText()).isEqualTo("Carré");
+        assertThat(nom.getText()).isEqualTo("Nom du carré");
+        assertThat(carre.getCellData(0)).isEqualTo("640001");
+        assertThat(nom.getCellData(0))
+                .as("le nom a sa propre colonne : qualifié dans « Carré », il se faisait tronquer en "
+                        + "« 640001 · … » - vérifié sur la capture régénérée")
+                .isEqualTo("Vallon des Sources");
+        assertThat(nom.getCellData(1))
+                .as("un carré sans nom laisse la cellule VIDE, il n'invente pas d'étiquette")
+                .isEqualTo("");
     }
 
     @Test
