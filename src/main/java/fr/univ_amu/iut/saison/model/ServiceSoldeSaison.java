@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.saison.model;
 
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.passage.model.Campagne;
@@ -9,6 +10,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
@@ -60,6 +62,7 @@ public class ServiceSoldeSaison {
 
     private final SiteDao siteDao;
     private final PointDao pointDao;
+    private final PointCommuneDao communeDao;
     private final PassageDao passageDao;
     private final PassageOpportunisteDao opportunistes;
 
@@ -77,6 +80,7 @@ public class ServiceSoldeSaison {
             SiteDao siteDao,
             PointDao pointDao,
             PassageDao passageDao,
+            PointCommuneDao communeDao,
             PassageOpportunisteDao opportunistes,
             SiteTiersDao carresDeTiers,
             Optional<ServiceCampagne> campagnes,
@@ -84,6 +88,7 @@ public class ServiceSoldeSaison {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
+        this.communeDao = Objects.requireNonNull(communeDao, "communeDao");
         this.opportunistes = Objects.requireNonNull(opportunistes, "opportunistes");
         this.carresDeTiers = Objects.requireNonNull(carresDeTiers, "carresDeTiers");
         this.campagnes = Objects.requireNonNull(campagnes, "campagnes");
@@ -198,7 +203,11 @@ public class ServiceSoldeSaison {
                 passage2,
                 horsProtocole,
                 reste,
-                site.nomConvivial());
+                site.nomConvivial(),
+                // La commune du point (#3313) : lue au même endroit que partout ailleurs, la table
+                // latérale `point_commune` (ADR 2791). Absente tant qu'elle n'est pas résolue - un point
+                // sans GPS, un rattrapage jamais lancé - et c'est un état normal, pas un manque.
+                communeDao.pour(point.id()).map(Commune::nom).orElse(null));
     }
 
     private CasePassage casePour(Long idPoint, int annee, int numero, Map<Long, String> nomsCampagnes) {

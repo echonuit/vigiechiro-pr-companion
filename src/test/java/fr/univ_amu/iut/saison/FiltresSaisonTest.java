@@ -25,7 +25,7 @@ class FiltresSaisonTest {
     }
 
     private static LigneSaison ligne(String carre, String point, String reste, String nomSite) {
-        return new LigneSaison(carre, point, 1L, depose(), depose(), List.of(), reste, nomSite);
+        return new LigneSaison(carre, point, 1L, depose(), depose(), List.of(), reste, nomSite, null);
     }
 
     private static CasePassage depose() {
@@ -80,5 +80,27 @@ class FiltresSaisonTest {
         LigneSaison accentue = ligne("640380", "Éolienne", "");
 
         assertThat(FiltresSaison.correspondAuLieu(accentue, "eolienne")).isTrue();
+    }
+
+    @Test
+    @DisplayName("#3313 : un point se cherche aussi par sa commune")
+    void recherche_par_commune() {
+        LigneSaison aixois = new LigneSaison(
+                "130711",
+                "A1",
+                1L,
+                CasePassage.absente(),
+                CasePassage.absente(),
+                List.of(),
+                "",
+                null,
+                "Aix-en-Provence");
+        LigneSaison ailleurs = new LigneSaison(
+                "640001", "B1", 2L, CasePassage.absente(), CasePassage.absente(), List.of(), "", null, "Ahetze");
+
+        assertThat(FiltresSaison.parLieu(List.of(aixois, ailleurs), "aix"))
+                .as("casse et tiret ignorés, comme partout ailleurs ; et l'exclusion est vérifiée, sans "
+                        + "quoi le test passerait même si le filtre ne filtrait rien")
+                .containsExactly(aixois);
     }
 }

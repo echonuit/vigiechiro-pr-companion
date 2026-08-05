@@ -26,6 +26,9 @@ import java.util.stream.Stream;
 ///     meme lieu (ADR 3157), par laquelle il se cherche aussi (#3215)
 /// @param resteAFaire phrase de l'action à mener sur ce point, ou chaîne **vide** si le point est à
 ///     jour
+/// @param commune commune du point (#3313), ou `null` tant qu'elle n'est pas résolue. Une ligne porte
+///     **un seul point**, donc une seule commune : le critère de l'ADR 2861 est satisfait, là où une
+///     ligne agrégée devrait choisir parmi plusieurs
 public record LigneSaison(
         String numeroCarre,
         String codePoint,
@@ -34,7 +37,8 @@ public record LigneSaison(
         CasePassage passage2,
         List<CasePassage> horsProtocole,
         String resteAFaire,
-        String nomSite) {
+        String nomSite,
+        String commune) {
 
     public LigneSaison {
         horsProtocole = List.copyOf(horsProtocole);

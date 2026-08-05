@@ -72,6 +72,9 @@ public class SaisonController implements RafraichirAuRetour {
     private TableColumn<LigneSaison, String> colPoint;
 
     @FXML
+    private TableColumn<LigneSaison, String> colCommune;
+
+    @FXML
     private TableColumn<LigneSaison, String> colPassage1;
 
     @FXML
@@ -112,6 +115,11 @@ public class SaisonController implements RafraichirAuRetour {
         colNomSite.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 c.getValue().nomSite() == null ? "" : c.getValue().nomSite()));
         colPoint.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().codePoint()));
+        // La commune du point (#3313). Une ligne porte UN point, donc une seule commune : le critère
+        // de l'ADR 2861 est satisfait. Non résolue, la cellule reste vide - c'est la convention de cette
+        // table, qui laisse déjà vide « Hors protocole » quand il n'y a rien à dire.
+        colCommune.setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                c.getValue().commune() == null ? "" : c.getValue().commune()));
 
         colPassage1.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper(texteCase(c.getValue().passage1())));

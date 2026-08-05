@@ -41,6 +41,7 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             "Carré",
             "Nom du carré",
             "Point",
+            "Commune",
             "Statut P1",
             "Date P1",
             "Verdict P1",
@@ -148,6 +149,7 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             String hors = horsProtocole(ligne);
             sortie.println("  " + LieuQualifie.qualifier(ligne.numeroCarre(), ligne.nomSite())
                     + " / " + ligne.codePoint()
+                    + (ligne.commune() == null ? "" : " (" + ligne.commune() + ")")
                     + "   P1 " + descriptif(ligne.passage1())
                     + "   P2 " + descriptif(ligne.passage2())
                     + (hors.isEmpty() ? "" : "   [hors protocole : " + hors + "]")
@@ -187,6 +189,7 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
                     ligne.numeroCarre(),
                     ligne.nomSite() == null ? "" : ligne.nomSite(),
                     ligne.codePoint(),
+                    ligne.commune() == null ? "" : ligne.commune(),
                     statut(ligne.passage1()),
                     date(ligne.passage1()),
                     verdict(ligne.passage1()),
@@ -206,6 +209,7 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             objet.put("carre", ligne.numeroCarre());
             objet.put("nom_site", champ(ligne.nomSite()));
             objet.put("point", ligne.codePoint());
+            objet.put("commune", champ(ligne.commune()));
             objet.put("statut1", champ(statut(ligne.passage1())));
             objet.put("date1", champ(date(ligne.passage1())));
             objet.put("verdict1", champ(verdict(ligne.passage1())));
@@ -244,7 +248,13 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
     }
 
     /// Une chaîne vide (champ de passage absent) devient `null` en JSON, plus juste pour un script.
+    ///
+    /// ⚠️ Elle accepte aussi le `null` d'entrée depuis #3313. Les champs de passage venaient toujours
+    /// non nuls ; le **nom du carré** (#3289) et la **commune** (#3313), eux, sont absents quand
+    /// l'utilisateur n'en a pas donné ou que la résolution n'a pas eu lieu. Sans cette garde, un carré
+    /// sans nom faisait échouer `--format json` sur un NullPointerException - un défaut latent que
+    /// #3289 avait introduit et qu'aucun test n'attrapait, faute d'un cas croisant « sans nom » et JSON.
     private static Object champ(String valeur) {
-        return valeur.isEmpty() ? null : valeur;
+        return valeur == null || valeur.isEmpty() ? null : valeur;
     }
 }

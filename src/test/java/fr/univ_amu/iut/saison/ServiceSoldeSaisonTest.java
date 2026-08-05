@@ -7,6 +7,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -25,6 +26,7 @@ import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
 import fr.univ_amu.iut.saison.model.SoldeSaison;
 import fr.univ_amu.iut.sites.di.SitesModule;
+import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
@@ -112,6 +114,7 @@ class ServiceSoldeSaisonTest {
                 siteDao,
                 pointDao,
                 injecteur.getInstance(PassageDao.class),
+                injecteur.getInstance(PointCommuneDao.class),
                 opportunistes,
                 carresDeTiers,
                 Optional.of(campagnes),
@@ -391,6 +394,7 @@ class ServiceSoldeSaisonTest {
                 siteDao,
                 injecteur.getInstance(PointDao.class),
                 injecteur.getInstance(PassageDao.class),
+                injecteur.getInstance(PointCommuneDao.class),
                 opportunistes,
                 carresDeTiers,
                 Optional.of(campagnes),
@@ -404,5 +408,25 @@ class ServiceSoldeSaisonTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Carré absent : " + carre))
                 .id();
+    }
+
+    @Test
+    @DisplayName("#3313 : la commune du point remonte sur sa ligne, absente si non résolue")
+    void commune_du_point_remonte() {
+        // Une ligne porte UN point, donc une seule commune : le critère de l'ADR 2861 est satisfait.
+        // Le test vérifie l'APPARIEMENT (tuple), pas la seule présence : une commune prise sur le point
+        // voisin ferait trouver le mauvais lieu et passerait toute autre vérification.
+        Long idPoint = injecteur.getInstance(PointDao.class).findBySite(idDuCarre("640001")).stream()
+                .filter(point -> "A1".equals(point.code()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Point A1 absent du carré 640001."))
+                .id();
+        injecteur.getInstance(PointCommuneDao.class).definir(idPoint, new Commune("Ahetze", "64014"));
+
+        assertThat(service.soldePour(ID_USER, 2026).lignes())
+                .extracting(LigneSaison::codePoint, LigneSaison::commune)
+                .contains(tuple("A1", "Ahetze"))
+                .as("un point sans commune résolue la laisse absente : c'est un état normal")
+                .contains(tuple("A2", null));
     }
 }

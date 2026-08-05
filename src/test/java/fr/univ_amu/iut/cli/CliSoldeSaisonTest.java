@@ -145,6 +145,21 @@ class CliSoldeSaisonTest {
     }
 
     @Test
+    @DisplayName("#3313 : --format json sur un carré SANS nom ni commune, sans planter")
+    void json_tolere_les_champs_absents() {
+        // Défaut latent introduit par #3289 : `champ()` appelait `isEmpty()` sur le nom, qui peut être
+        // NUL. Aucun test ne croisait « carré sans nom » et « format json », si bien que la commande
+        // échouait sur un NullPointerException que personne ne voyait. La commune ajoute un second
+        // champ nullable ; la garde vaut pour les deux.
+        semerSansNom(source, idUser, "640003", "C1");
+
+        int code = cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "json"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("\"nom_site\": null").contains("\"commune\": null");
+    }
+
+    @Test
     @DisplayName("#3289 : un carré sans nom garde son numéro seul, sans séparateur orphelin")
     void un_carre_sans_nom_reste_nu() {
         // `LieuQualifie.qualifier` rend le préfixe seul quand le suffixe est absent. Sans ce cas, un
