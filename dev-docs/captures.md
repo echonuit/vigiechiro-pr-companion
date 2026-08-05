@@ -116,8 +116,24 @@ absente (lancés en CI) :
 
 | Garde | Vérifie |
 |---|---|
-| [`check-captures.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/check-captures.sh) | Chaque vue FXML `src/main/**/view/*.fxml` est **déclarée** au `captures.manifest`, et chaque capture déclarée existe. *(Aucune vue livrée sans capture.)* |
+| [`check-captures.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/check-captures.sh) | Chaque vue FXML `src/main/**/view/*.fxml` est **déclarée** au `captures.manifest`, chaque capture déclarée existe, et chaque capture **écrite par un outil** est présentée dans la galerie. *(Aucune vue livrée sans capture, aucune capture que personne ne regarde.)* |
 | [`check-doc-images.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/check-doc-images.sh) | Chaque capture **référencée par une page de doc** existe et est au manifeste. *(Aucune page ne pointe une image absente.)* |
+
+### Pourquoi la dernière règle lit le **code** et non le disque
+
+Les PNG ne naissent pas dans la branche : le job `capturer` les produit sur `main`, **après** fusion.
+Une règle qui part des fichiers présents sur le disque ne peut donc rien voir dans la pull request qui
+ajoute une capture - le fichier n'existe pas encore, la PR passe au vert de bonne foi, et le manque
+n'apparaît qu'une fois `main` **déjà rouge**.
+
+Le coût n'est pas local à qui oublie : `lint` rougit sur `main`, donc **toutes** les PR ouvertes se
+mettent à échouer, et le diagnostic part dans la mauvaise direction puisque la PR qui échoue n'a rien à
+voir avec la capture manquante. C'est arrivé avec #3119, corrigé par #3126, puis fermé par #3129.
+
+Ce qui **est** dans la branche, c'est le code de l'outil de capture. La règle y lit les noms de fichiers
+écrits, en écartant les lignes de commentaire : celles-ci citent volontiers des captures **passées**
+(une réplique reconstruite, remplacée depuis par un rendu réel), qui n'existent plus et n'ont rien à
+faire en galerie. Les deux cas sont tenus par l'auto-test du script, positif et négatif.
 
 Le [`captures.manifest`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/captures.manifest)
 associe chaque vue FXML à ses aperçus.
