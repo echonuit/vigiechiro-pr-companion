@@ -40,12 +40,21 @@ par `ApercuFx`. Souvent en **deux états** (vide / peuplé) pour montrer les cas
 
 #### L'exception assumée : les tuiles OpenStreetMap
 
-Les quatre aperçus qui montrent la carte (`apercu-multisite`, `-filtre`, `-edition`, `-carte-pleine`)
-**varient légèrement d'un build à l'autre**, sans qu'aucun code ne change.
+Les aperçus qui montrent une carte **varient d'un build à l'autre**, sans qu'aucun code ne change. Ils
+sont **seize**, pas quatre : aux quatre de `multisite` s'ajoutent `apercu-analyse-carte`, les huit
+aperçus d'import (dont l'assistant porte une bande cartographique en bas) et les deux modales de point.
+La liste exhaustive vit dans `filtrer-bruit-cartes.sh`.
 
-C'est mesuré, pas supposé : **0,34 %** des pixels (2 302 sur 682 000), confinés au panneau de carte, en
-tracés fins de routes. Une tuile absente en ferait 65 000 - il ne s'agit donc pas d'un chargement
-incomplet, mais du **rendu servi par OpenStreetMap**, qui n'est pas identique à chaque requête.
+C'est mesuré, pas supposé - et le chiffre a été **revu à la hausse** en cartographiant les écarts entre
+les **30** versions successives d'`apercu-analyse-carte` (2026-08-05, 435 paires) : médiane **1,22 %**,
+maximum **2,51 %**. Le **0,34 %** annoncé auparavant venait d'un échantillon plus étroit et
+sous-estimait l'amplitude réelle. Une tuile absente en ferait 9,5 % : il ne s'agit donc pas d'un
+chargement incomplet, mais du **rendu servi par OpenStreetMap**, qui n'est pas identique à chaque
+requête.
+
+⚠️ Cette même matrice montre que les versions **n'errent pas au hasard** : 30 versions se réduisent à
+**18 états distincts**, dont un revenant **7 fois** à des dates non consécutives. La variation est donc
+**discrète**, ce qu'un bruit de rendu continu ne produirait jamais.
 
 Aucune attente ne corrige cela, et ça a été vérifié : la condition de stabilité est satisfaite, et
 porter la quiétude exigée de 0,75 s à 3 s ne change rien (#3068).
@@ -56,8 +65,9 @@ rendrait l'image plus stable et moins vraie. La variabilité résiduelle est min
 élément produit par le dépôt.
 
 Ce qui vient de **nous** reste donc strictement déterministe, et c'est là-dessus que la règle d'or
-s'applique. Le corollaire pratique : sur ces quatre fichiers, un diff de captures n'est pas un signal -
-la revue se fait à l'œil, pas au `cmp`.
+s'applique. Le corollaire pratique : sur ces seize fichiers, un diff de captures n'est pas un signal -
+la revue se fait à l'œil, pas au `cmp`. Depuis, la CI cesse d'ailleurs de **committer** ces écarts sous
+le seuil : voir [Le bruit des cartes](#le-bruit-des-cartes-et-pourquoi-on-cesse-de-le-committer).
 
 ### L'injecteur se compose depuis la racine
 
@@ -123,7 +133,7 @@ git ne sait pas les fusionner) ; et le jour où une **vraie** régression touche
 devient indiscernable du bruit.
 
 [`filtrer-bruit-cartes.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/filtrer-bruit-cartes.sh)
-rend leur version committée aux aperçus de carte dont l'écart reste **sous 3 %**. Il ne cherche pas à
+rend leur version committée aux aperçus de carte dont l'écart reste **sous 4 %**. Il ne cherche pas à
 rendre les tuiles déterministes - elles sont une entrée **extérieure** au dépôt, et l'ADR 3068 a
 tranché qu'on ne les figerait pas : une carte figée serait plus stable et **moins vraie**. Il cesse
 seulement de committer l'insignifiant.
@@ -133,10 +143,19 @@ committé, et c'est délibéré : sur un plein écran de 1080x640, une puce ajou
 libellé corrigé bien moins. Un seuil **global** aurait avalé ces changements-là, c'est-à-dire
 exactement ceux que la galerie existe pour montrer.
 
-Le seuil se mesure des deux côtés : le bruit vaut **0,34 %** (ADR 3068) à **1,6 %** (mesure du
-2026-08-05), et une tuile réellement différente pèse **9,5 %** sur `apercu-analyse-carte`, encore
-**4,4 %** sur l'aperçu le plus défavorable, où la carte n'occupe qu'une bande. 3 % se place entre les
-deux, du côté prudent.
+Le seuil se mesure des deux côtés. Le bruit a été **cartographié** : matrice des écarts entre les
+**30** versions successives d'`apercu-analyse-carte`, soit 435 paires. Médiane **1,22 %**, maximum
+**2,51 %**, toutes sous 3 %. (L'ADR 3068 annonçait 0,34 % : un sous-estimé, mesuré sur un échantillon
+plus étroit.) En face, une tuile réellement différente pèse **9,5 %** sur cet aperçu, encore **4,4 %**
+sur le cas le plus défavorable, où la carte n'occupe qu'une bande. **4 %** laisse donc un point de
+marge au-dessus du bruit observé, en restant sous le coût d'une vraie tuile.
+
+**Ce que la matrice apprend d'autre, et qui vaut pour la suite** : les versions ne *dérivent* pas,
+elles **oscillent** entre un nombre fini d'états - 18 états distincts pour 30 versions, dont un qui
+revient **7 fois** à des dates non consécutives. Un bruit de rendu continu ne produirait jamais deux
+versions identiques au bit près à des semaines d'intervalle. La cause est donc **discrète**, ce qui
+rend un instantané de tuiles servi localement d'autant plus pertinent : il ferait s'effondrer cet
+ensemble sur un seul état.
 
 ⚠️ `apercu-passage-rattachement.png` bouge aussi (10 fois sur 30) et n'est **pas** dans la liste :
 `CapturePassage` ne monte aucune carte. Son instabilité a donc une autre cause, **non élucidée**, et

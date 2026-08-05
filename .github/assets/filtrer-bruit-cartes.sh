@@ -28,19 +28,31 @@
 #
 # ## Le seuil, et pourquoi celui-là
 #
-# 3 %, et la marge se mesure des deux côtés :
+# 4 %, et la marge se mesure des deux côtés.
 #
-#   - le **bruit** vaut 0,34 % (mesure de l'ADR 3068) à 1,6 % (mesure du 2026-08-05 entre deux
-#     commits consécutifs d'`apercu-analyse-carte`) ;
+# Le **bruit** a été cartographié : matrice des écarts entre les **30** versions successives
+# d'`apercu-analyse-carte` (2026-08-05, 435 paires). Médiane **1,22 %**, maximum **2,51 %**.
+# L'ADR 3068 annonçait 0,34 % : un sous-estimé, mesuré sur un échantillon plus étroit.
+#
+#   - le **bruit** plafonne donc à 2,51 % sur l'échantillon le plus large dont on dispose ;
 #   - une **vraie** différence de tuile change un carré de 256x256. Sur `apercu-analyse-carte`
 #     (1080x640) cela pèse 9,5 % ; sur l'aperçu le plus défavorable, où la carte n'occupe qu'une
 #     bande de 195 px de haut (`apercu-import-assistant`, 1100x1032), encore 4,4 %.
 #
-# Le seuil se place donc entre 1,6 % et 4,4 %, et 3 % s'y tient du côté prudent.
+# Le seuil se place donc entre 2,51 % et 4,4 %, et 4 % y laisse un point de marge au-dessus du bruit
+# observé sans atteindre le coût d'une vraie tuile - vérifié : 4,43 % mesurés sur ce cas.
+#
+# ## Ce que la matrice apprend en plus
+#
+# Les versions ne **dérivent** pas, elles **oscillent** entre un nombre fini d'états : 18 états
+# distincts pour 30 versions, dont un revenant **7 fois** à des dates non consécutives. Un bruit de
+# rendu continu ne produirait jamais deux versions identiques au bit près à des semaines d'écart. La
+# cause est **discrète**, ce qui rend un instantané de tuiles servi localement d'autant plus
+# pertinent : il ferait s'effondrer cet ensemble sur un seul état.
 set -euo pipefail
 
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SEUIL_PCT="${SEUIL_BRUIT_CARTES:-3}"
+SEUIL_PCT="${SEUIL_BRUIT_CARTES:-4}"
 
 # Aperçus portant un fond cartographique. Liste **explicite**, comme les inventaires de
 # `cli-surface.bats` : une capture qui gagne une carte doit être ajoutée ici sciemment, et le garde
@@ -111,7 +123,12 @@ for nom in "${CAPTURES_CARTE[@]}"; do
     continue
   fi
 
-  total="$(magick identify -format "%[fx:w*h]" "${ICI}/${nom}")"
+  # Largeur et hauteur SÉPARÉMENT, multipliées par bash : `%[fx:w*h]` rend une notation scientifique
+  # (« 1.1352e+06 ») dès que le produit dépasse le million, que `$(( ))` ne sait pas lire. Le défaut
+  # n'apparaît pas sur une capture de 1080x640, seulement sur les plus grandes - il a fallu l'essai
+  # sur `apercu-import-assistant` (1100x1032) pour le voir.
+  dimensions="$(magick identify -format "%w %h" "${ICI}/${nom}")"
+  total=$(( ${dimensions% *} * ${dimensions#* } ))
   # Arithmétique entière : le pourcentage est porté au centième pour rester lisible.
   pct_x100=$((differents * 10000 / total))
   seuil_x100=$((SEUIL_PCT * 100))
