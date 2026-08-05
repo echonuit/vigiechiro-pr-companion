@@ -313,6 +313,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `check-captures.sh` | chaque vue a une capture, chaque capture existe et est présentée | `lint.yml` |
 | `check-capture-mains.sh` | chaque outil de capture est enregistré dans `MAINS` | `lint.yml` |
 | `check-doc-images.sh` | chaque capture citée par la doc existe et est déclarée | `docs.yml` |
+| `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
 
 **Le modèle vient de #2947** (`verifie-titre-pr.sh`) et il est le bon : le script **se réinvoque
@@ -522,9 +523,15 @@ Les trois autres workflows à droits d'écriture (`adr-rapport`, `capture-vues`,
 **mono-job** et utilisent réellement chacun des leurs : leur bloc au niveau workflow est déjà, de
 fait, un bloc par job.
 
+**Et rien ne le laisse se défaire** : `verifie-permissions.sh` (#3294) refuse un plancher en écriture
+dans un workflow à **plusieurs jobs**, où les droits seraient accordés à tous. Elle ne fige pas la
+liste attendue par job - #2742 a dû ajouter `id-token` et `attestations` pour les attestations, et une
+liste figée aurait rougi sur un ajout voulu, puis se serait fait élargir machinalement. Un workflow
+**mono-job** garde son plancher : plancher et job y désignent la même chose.
+
 ⚠️ **Ce que cela ne fait pas** : `semantic-release` s'exécute toujours dans un job en écriture. L'en
-sortir suppose de réimplémenter en `git` + `gh` ce que font ses greffons d'écriture ; l'arbitrage est
-posé sur #2739.
+sortir suppose de réimplémenter en `git` + `gh` ce que font ses greffons d'écriture ; l'arbitrage,
+rendu, est consigné sur #2739.
 
 ## L'outillage de publication est figé, et répété à blanc (#2738)
 
