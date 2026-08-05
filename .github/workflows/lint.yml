@@ -91,6 +91,17 @@ jobs:
           chmod +x .github/scripts/verifie-epinglage.sh
           ./.github/scripts/verifie-epinglage.sh
 
+      - name: Aucun jeton VigieChiro en clair
+        # Le scan de secrets de GitHub ne reconnaît que les motifs de FOURNISSEURS ; un jeton
+        # VigieChiro est une chaîne opaque qu'aucun catalogue ne connaît, et les motifs
+        # personnalisés demandent GitHub Advanced Security, indisponible ici (#2741).
+        # L'autotest tourne d'abord : une garde dont le motif a été relâché passerait sinon au vert
+        # sur un dépôt propre, sans que rien ne le dise.
+        run: |
+          chmod +x .github/scripts/verifie-jeton.sh
+          ./.github/scripts/verifie-jeton.sh --autotest
+          ./.github/scripts/verifie-jeton.sh
+
       - name: Complétude des captures de référence
         # Chaque vue FXML doit avoir au moins une capture de référence déclarée au manifeste
         # (les captures illustrent la documentation).
