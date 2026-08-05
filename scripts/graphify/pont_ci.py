@@ -38,6 +38,22 @@ def noeud(i, label, sf, ligne=1, ft='code'):
     return i
 
 
+# Un fichier lance par un workflow peut deja etre dans le graphe, extrait par l'AST.
+# Son identifiant y perd l'extension (`scripts_adr_rapport`) la ou nid() la garde
+# (`scripts_adr_rapport_py`) : sans ce rapprochement, le renvoi fabrique un second
+# noeud pour le meme fichier, et le lien CI pointe sur une coquille au lieu du script
+# reellement analyse. Le noeud AST du FICHIER se reconnait a son libelle, qui est le
+# nom du fichier ; ses fonctions portent le leur.
+ast_par_fichier = {n['source_file']: n['id'] for n in nodes.values()
+                   if n.get('_origin') == 'ast' and n.get('source_file')
+                   and n.get('label') == Path(n['source_file']).name}
+
+
+def noeud_fichier(chemin, ligne=1):
+    """Le noeud AST du fichier s'il est deja dans le graphe, sinon un noeud de renvoi."""
+    return ast_par_fichier.get(str(chemin)) or noeud(nid(chemin), Path(chemin).name, chemin, ligne)
+
+
 def lier(s, t, rel, ctx, sf, ligne):
     if s == t or (s, t, rel) in vues:
         return 0
@@ -100,7 +116,7 @@ for p in sorted(wf_dir.glob('*.yml')) + sorted(wf_dir.glob('*.yaml')):
         for sc in re.findall(r'((?:\./)?(?:\.github|scripts)/[\w./-]+\.(?:sh|py|bash))', ln):
             q = Path(sc.lstrip('./'))
             if q.exists():
-                n_script += lier(wid, noeud(nid(q), q.name, q), 'references', 'ci_script', p, i)
+                n_script += lier(wid, noeud_fichier(q, i), 'references', 'ci_script', p, i)
         # appels d'un autre workflow
         for uses in re.findall(r'uses:\s*\./\.github/workflows/([\w.-]+)', ln):
             if uses in wf_par_fichier:
