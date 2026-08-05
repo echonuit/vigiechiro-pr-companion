@@ -105,6 +105,55 @@ class CliListerPassagesFiltresTest {
     }
 
     @Test
+    @DisplayName("#3269 : --lieu retient par le n° de carré comme par le point qualifié")
+    void filtre_par_lieu() {
+        int code = cli.executer(new String[] {"lister-passages", "--lieu", "710255"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("710255").doesNotContain("640380");
+
+        capture.vider();
+        code = cli.executer(new String[] {"lister-passages", "--lieu", "640380 · A1"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie())
+                .as("un point se désigne qualifié par son carré : « A1 » seul en désignerait autant"
+                        + " qu'il y a de carrés (#2992)")
+                .contains("640380")
+                .doesNotContain("710255");
+    }
+
+    @Test
+    @DisplayName("#3269 : --analyse retient l'état déduit, sans que la règle soit réécrite")
+    void filtre_par_etat_analyse() {
+        // L'état d'analyse se DÉDUIT du statut, il ne se lit pas : « Déposé » est sur la plateforme et
+        // n'a aucun relevé, donc JAMAIS_RELEVE ; « Importé » n'y est pas, donc SANS_OBJET. Les deux
+        // passages semés portent ainsi deux états distincts, et chaque valeur discrimine réellement.
+        // La règle vit dans `EtatAnalyse.deduire`, la même que celle de l'écran.
+        int code = cli.executer(new String[] {"lister-passages", "--analyse", "JAMAIS_RELEVE"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("640380").doesNotContain("710255");
+
+        capture.vider();
+        code = cli.executer(new String[] {"lister-passages", "--analyse", "SANS_OBJET"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("710255").doesNotContain("640380");
+    }
+
+    @Test
+    @DisplayName("#3269 : --campagne ne retient rien quand aucune nuit n'est rattachée")
+    void filtre_par_campagne_sans_rattachement() {
+        // Une nuit non rattachée n'est JAMAIS retenue par une campagne : c'est la règle de
+        // `FiltresMultisite`, pas une invention de la commande.
+        int code = cli.executer(new String[] {"lister-passages", "--campagne", "ENS"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("Aucun passage ne correspond aux filtres");
+    }
+
+    @Test
     @DisplayName("#3269 : une valeur hors énumération est refusée, pas ignorée en silence")
     void statut_inconnu_refuse() {
         int code = cli.executer(new String[] {"lister-passages", "--statut", "PAS_UN_STATUT"}, sortie, erreur);
