@@ -98,7 +98,10 @@ jobs:
       - name: Installer MkDocs Material
         run: pip install -r docs/requirements.txt
       - name: Garde-fou captures de doc
-        run: bash .github/assets/check-doc-images.sh
+        # L'auto-test d'abord : une règle relâchée passerait sinon au vert sur un dépôt cohérent.
+        run: |
+          bash .github/assets/check-doc-images.sh --auto-test
+          bash .github/assets/check-doc-images.sh
       - name: Construire le site utilisateur (strict)
         run: mkdocs build --strict
       # Site DÉVELOPPEUR (config autonome) construit dans site-dev/, plus imbriqué sous le site

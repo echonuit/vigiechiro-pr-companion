@@ -22,11 +22,11 @@
 #
 # ## Elle porte sa propre preuve
 #
-# `--autotest` fait passer neuf lignes connues - quatre fuites, cinq usages légitimes - par le MÊME
+# `--auto-test` fait passer neuf lignes connues - quatre fuites, cinq usages légitimes - par le MÊME
 # motif que le balayage. Une garde qu'on n'a jamais vue rougir n'est pas une garde : celle-ci se le
 # prouve à chaque exécution, et la CI lance les deux modes.
 #
-# Usage : ./.github/scripts/verifie-jeton.sh [--autotest]
+# Usage : ./.github/scripts/verifie-jeton.sh [--auto-test]
 set -uo pipefail
 
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -78,7 +78,7 @@ autotest() {
   echo "Autotest de la garde jeton : OK (${#fuites[@]} fuites détectées, ${#legitimes[@]} usages légitimes tolérés)."
 }
 
-if [ "${1:-}" = "--autotest" ]; then
+if [ "${1:-}" = "--auto-test" ]; then
   autotest
   exit $?
 fi

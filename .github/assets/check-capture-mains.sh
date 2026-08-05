@@ -14,10 +14,74 @@
 
 set -euo pipefail
 
-ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RACINE="$(cd "$ICI/../.." && pwd)"
+# Auto-test (#3293), sur le modèle de `verifie-titre-pr.sh` (#2947) : ce script se réinvoque sur une
+# arborescence jetable, donc le cas de test et le chemin réel sont le même code.
+if [ "${1:-}" = "--auto-test" ]; then
+    echecs=0
+    verifie() { # <attendu> <libellé>
+        code=0
+        MAINS_ASSETS="$bac/assets" MAINS_SOURCES="$bac/src" "$0" >/dev/null 2>&1 || code=$?
+        if [ "${code}" = "$1" ]; then
+            echo "  ✔ $2"
+        else
+            echo "  ✘ $2 : attendu $1, obtenu ${code}"
+            echecs=1
+        fi
+    }
+
+    outil() { # <chemin relatif sous src> <avec main ?>
+        mkdir -p "$bac/src/$(dirname "$1")"
+        if [ "${2:-oui}" = "oui" ]; then
+            printf 'class X { public static void main(String[] a) {} }\n' > "$bac/src/$1"
+        else
+            printf 'class X { }\n' > "$bac/src/$1"
+        fi
+    }
+
+    monter() { # un bac COMPLET et cohérent : un outil, déclaré
+        rm -rf "$bac"
+        mkdir -p "$bac/assets"
+        outil fr/univ_amu/iut/exemple/outils/CaptureExemple.java
+        printf 'MAINS=(\n  "fr.univ_amu.iut.exemple.outils.CaptureExemple"\n)\n' \
+            > "$bac/assets/capture-screenshots.sh"
+    }
+
+    bac="$(mktemp -d)"
+    trap 'rm -rf "$bac"' EXIT
+
+    monter
+    verifie 0 "un outil enregistré dans MAINS passe"
+
+    monter
+    outil fr/univ_amu/iut/exemple/outils/CaptureOubliee.java
+    verifie 1 "un outil de capture absent de MAINS est refusé"
+
+    monter
+    rm "$bac/src/fr/univ_amu/iut/exemple/outils/CaptureExemple.java"
+    verifie 1 "une entrée MAINS sans classe correspondante est refusée"
+
+    # Contrôles NÉGATIFS : la règle vise les outils AVEC un main, sous outils/, nommés Capture*.
+    monter
+    outil fr/univ_amu/iut/exemple/outils/CaptureSocle.java non
+    verifie 0 "un Capture* sans main (socle partagé) ne déclenche pas"
+
+    monter
+    outil fr/univ_amu/iut/exemple/ailleurs/CaptureHorsOutils.java
+    verifie 0 "un Capture* hors d'un dossier outils/ ne déclenche pas"
+
+    if [ "${echecs}" = 0 ]; then
+        echo "Auto-test de la garde MAINS captures : OK"
+    else
+        echo "Auto-test de la garde MAINS captures : ÉCHEC - les règles ne font plus ce qu'elles promettent."
+    fi
+    exit "${echecs}"
+fi
+
+# Les deux racines sont surchargeables : l'auto-test vise une arborescence jetable en réinvoquant CE
+# script, donc sans recopier une seule règle. Par défaut, le dépôt réel.
+ICI="${MAINS_ASSETS:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+SOURCES="${MAINS_SOURCES:-$(cd "$ICI/../.." && pwd)/src/main/java}"
 SCRIPT="$ICI/capture-screenshots.sh"
-SOURCES="$RACINE/src/main/java"
 erreurs=0
 
 # Entrées MAINS déclarées : les littéraux FQCN entre guillemets du script (seul endroit où ils

@@ -21,11 +21,11 @@
 #
 # ## Elle porte sa propre preuve
 #
-# `--autotest` fait passer huit lignes connues - quatre à refuser, quatre à accepter - par les MÊMES
+# `--auto-test` fait passer huit lignes connues - quatre à refuser, quatre à accepter - par les MÊMES
 # règles que le balayage, plus un cas de divergence de versions. Une garde qu'on n'a jamais vue rougir
 # n'est pas une garde ; celle-ci se le prouve à chaque exécution, et la CI lance les deux modes.
 #
-# Usage : ./.github/scripts/verifie-epinglage.sh [--autotest]
+# Usage : ./.github/scripts/verifie-epinglage.sh [--auto-test]
 set -euo pipefail
 
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -79,7 +79,7 @@ autotest() {
   echo "Autotest de la garde épinglage : OK (${#a_refuser[@]} refusées, ${#a_accepter[@]} acceptées)."
 }
 
-if [ "${1:-}" = "--autotest" ]; then
+if [ "${1:-}" = "--auto-test" ]; then
   autotest
   exit $?
 fi

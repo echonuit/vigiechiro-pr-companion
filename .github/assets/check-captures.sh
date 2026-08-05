@@ -13,10 +13,81 @@
 
 set -euo pipefail
 
-ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RACINE="$(cd "$ICI/../.." && pwd)"
+# Auto-test (#3293), sur le modèle de `verifie-titre-pr.sh` (#2947) : un garde qui cesse de détecter
+# reste vert, et c'est le seul défaut qui se présente sous la forme d'un succès. Chaque cas monte une
+# arborescence jetable, RÉINVOQUE ce script dessus, et compare le code de sortie à l'attendu - le cas
+# de test et le chemin réel sont donc le même code, par construction.
+if [ "${1:-}" = "--auto-test" ]; then
+    echecs=0
+    verifie() { # <attendu> <libellé> ; l'arborescence est déjà montée dans $bac
+        code=0
+        CAPTURES_ASSETS="$bac/assets" CAPTURES_SOURCES="$bac/src" "$0" >/dev/null 2>&1 || code=$?
+        if [ "${code}" = "$1" ]; then
+            echo "  ✔ $2"
+        else
+            echo "  ✘ $2 : attendu $1, obtenu ${code}"
+            echecs=1
+        fi
+    }
+
+    monter() { # remet un bac COMPLET et cohérent, que chaque cas abîme ensuite d'une seule façon
+        rm -rf "$bac"
+        mkdir -p "$bac/assets" "$bac/src/fr/exemple/vue/view"
+        : > "$bac/src/fr/exemple/vue/view/Ecran.fxml"
+        printf 'fr/exemple/vue/view/Ecran.fxml : apercu-ecran.png\n' > "$bac/assets/captures.manifest"
+        : > "$bac/assets/apercu-ecran.png"
+        printf 'apercu-ecran.png\n' > "$bac/assets/README.md"
+    }
+
+    bac="$(mktemp -d)"
+    trap 'rm -rf "$bac"' EXIT
+
+    monter
+    verifie 0 "un manifeste complet et cohérent passe"
+
+    monter
+    : > "$bac/src/fr/exemple/vue/view/Oubliee.fxml"
+    verifie 1 "une vue non déclarée au manifeste est refusée"
+
+    monter
+    rm "$bac/src/fr/exemple/vue/view/Ecran.fxml"
+    verifie 1 "une vue déclarée mais absente du code est refusée"
+
+    monter
+    rm "$bac/assets/apercu-ecran.png"
+    verifie 1 "une capture déclarée mais absente du disque est refusée"
+
+    monter
+    printf 'fr/exemple/vue/view/Ecran.fxml :\n' > "$bac/assets/captures.manifest"
+    verifie 1 "une vue sans aucune capture déclarée est refusée"
+
+    monter
+    : > "$bac/assets/README.md"
+    verifie 1 "une capture absente de la galerie est refusée"
+
+    # Contrôles NÉGATIFS : la règle doit rester étroite.
+    monter
+    mkdir -p "$bac/src/fr/exemple/ailleurs"
+    : > "$bac/src/fr/exemple/ailleurs/PasUneVue.fxml"
+    verifie 0 "un .fxml hors d'un dossier view/ ne déclenche pas"
+
+    monter
+    printf '# un commentaire\n\n' >> "$bac/assets/captures.manifest"
+    verifie 0 "commentaires et lignes vides du manifeste sont ignorés"
+
+    if [ "${echecs}" = 0 ]; then
+        echo "Auto-test de la garde captures : OK"
+    else
+        echo "Auto-test de la garde captures : ÉCHEC - les règles ne font plus ce qu'elles promettent."
+    fi
+    exit "${echecs}"
+fi
+
+# Les deux racines sont surchargeables : l'auto-test vise une arborescence jetable en réinvoquant CE
+# script, donc sans recopier une seule règle. Par défaut, le dépôt réel.
+ICI="${CAPTURES_ASSETS:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
+SOURCES="${CAPTURES_SOURCES:-$(cd "$ICI/../.." && pwd)/src/main/java}"
 MANIFESTE="$ICI/captures.manifest"
-SOURCES="$RACINE/src/main/java"
 erreurs=0
 
 # Vues déclarées au manifeste (partie avant le « : »), normalisées.

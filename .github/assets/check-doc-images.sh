@@ -10,8 +10,65 @@
 # Exit 0 si tout est cohérent, 1 sinon (détails sur stdout).
 set -uo pipefail
 
+# Auto-test (#3293), sur le modèle de `verifie-titre-pr.sh` (#2947) : ce script se réinvoque sur une
+# arborescence jetable, donc le cas de test et le chemin réel sont le même code.
+if [ "${1:-}" = "--auto-test" ]; then
+    echecs=0
+    verifie() { # <attendu> <libellé>
+        code=0
+        DOC_IMAGES_RACINE="$bac" "$0" >/dev/null 2>&1 || code=$?
+        if [ "${code}" = "$1" ]; then
+            echo "  ✔ $2"
+        else
+            echo "  ✘ $2 : attendu $1, obtenu ${code}"
+            echecs=1
+        fi
+    }
+
+    monter() { # un bac COMPLET : une page qui référence une capture présente et déclarée
+        rm -rf "$bac"
+        mkdir -p "$bac/.github/assets" "$bac/docs"
+        printf 'fr/exemple/view/Ecran.fxml : apercu-exemple.png\n' > "$bac/.github/assets/captures.manifest"
+        : > "$bac/.github/assets/apercu-exemple.png"
+        printf '![Un écran](../.github/assets/apercu-exemple.png)\n' > "$bac/docs/page.md"
+    }
+
+    bac="$(mktemp -d)"
+    trap 'rm -rf "$bac"' EXIT
+
+    monter
+    verifie 0 "une capture référencée, présente et déclarée passe"
+
+    monter
+    rm "$bac/.github/assets/apercu-exemple.png"
+    verifie 1 "une capture référencée mais absente du disque est refusée"
+
+    monter
+    printf 'fr/exemple/view/Ecran.fxml : apercu-autre.png\n' > "$bac/.github/assets/captures.manifest"
+    : > "$bac/.github/assets/apercu-autre.png"
+    verifie 1 "une capture présente mais non déclarée au manifeste est refusée"
+
+    # Contrôles NÉGATIFS : la règle ne vise que les captures citées par la doc.
+    monter
+    : > "$bac/.github/assets/apercu-jamais-citee.png"
+    verifie 0 "une capture que la doc ne cite pas ne déclenche pas"
+
+    monter
+    rm "$bac/docs/page.md"
+    verifie 0 "une doc sans aucune capture n'a rien à vérifier"
+
+    if [ "${echecs}" = 0 ]; then
+        echo "Auto-test de la garde images de doc : OK"
+    else
+        echo "Auto-test de la garde images de doc : ÉCHEC - les règles ne font plus ce qu'elles promettent."
+    fi
+    exit "${echecs}"
+fi
+
+# La racine est surchargeable : l'auto-test vise une arborescence jetable en réinvoquant CE script,
+# donc sans recopier une seule règle. Par défaut, le dépôt réel.
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-RACINE="$(cd "$ICI/../.." && pwd)"
+RACINE="${DOC_IMAGES_RACINE:-$(cd "$ICI/../.." && pwd)}"
 cd "$RACINE"
 
 ASSETS=".github/assets"
