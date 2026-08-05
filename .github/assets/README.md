@@ -795,6 +795,15 @@ L'écran de revue, ses filtres, ses menus et ses états de sélection.
 
 <table>
 <tr>
+<th width="50%">Valeur hors jeu : cochée, mise à part, elle ne ramène plus rien</th>
+</tr>
+<tr>
+<td><a href="apercu-valeur-hors-jeu.png"><img src="apercu-valeur-hors-jeu.png" width="430" alt="Valeur hors jeu"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
 <th width="50%">Édition</th>
 <th width="50%">Carte pleine</th>
 </tr>

@@ -92,6 +92,12 @@ Une valeur que vous aviez cochée et qui n'est plus disponible **reste cochée**
 retirer relâcherait votre filtre sans vous le dire, et le tableau montrerait alors **plus** que ce que
 la puce annonce.
 
+![Le menu « Lieu » de Carte & passages : les valeurs offertes en haut, et en bas, isolée et grisée, la valeur cochée que les autres filtres ont mise hors jeu.](assets/captures/apercu-valeur-hors-jeu.png)
+
+Elle est rangée **à part, en fin de liste** : ce qui reste atteignable est au-dessus, ce qui ne ramène
+plus rien en dessous. La coche répond du même coup à la question qu'on se pose devant un tableau vide,
+« pourquoi n'y a-t-il rien ? ».
+
 ### Quand un filtre ne peut pas être remis en place
 
 Trois situations vous rendent des filtres que vous n'avez pas posés à l'instant : rouvrir une **vue
