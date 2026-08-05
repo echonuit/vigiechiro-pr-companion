@@ -54,13 +54,13 @@
     Deux écarts de dispositif, tenus par un autre moyen : il n'y a **pas de bascule** vers une vue
     arborescente, puisque [E5.S1](#e5s1) n'est pas construite ; et le filtre n'est **pas par colonne**
     mais par **puces** ajoutées à la demande (#3092), sept critères qui se cumulent en ET. La
-    réconciliation de cette section avec le dispositif réel est ouverte en #3330. Voir aussi la note de
+    réconciliation est **faite** (#3330) : les cases ci-dessous portent désormais l'état réel. Voir aussi la note de
     [E5.S3](#e5s3), qui enregistre déjà le même écart pour les filtres avancés.
 
 - [ ] Une bascule permet de basculer entre la vue arborescente ([E5.S1](#e5s1)) et la vue tabulaire.
-- [ ] La vue tabulaire affiche une ligne par passage avec colonnes : Site (n° carré + nom), Point, Année, N° passage, Date de session d'enregistrement, Statut d'avancement, Verdict, Date de dépôt.
+- [x] La vue tabulaire affiche une ligne par passage avec colonnes : Site (n° carré + nom), Point, Année, N° passage, Date de session d'enregistrement, Statut d'avancement, Verdict. **La date de dépôt manque** (une seule colonne Date), et trois colonnes non prévues s'y ajoutent : Commune, Campagne, Analyse.
 - [x] Toutes les colonnes sont **triables** (clic sur l'en-tête).
-- [ ] Chaque colonne propose un **filtre rapide** :
+- [x] Filtrage livré, **autrement** : une barre à puces (#3092) plutôt qu'un filtre par colonne. Sept critères cumulés en ET, dont site, point, année, statut et verdict. Le libellé d'origine :
     - colonnes textuelles : input texte avec match partiel (Site, Point)
     - colonnes énumérées : multi-sélection (Statut d'avancement, Verdict)
     - colonnes dates : sélecteur de plage
@@ -88,9 +88,9 @@
 **Critères d'acceptation** :
 
 - [ ] Un bouton « Filtres avancés » ouvre un panneau de composition de filtres avec une logique ET entre les critères, OU à l'intérieur d'une même catégorie.
-- [ ] Les critères disponibles couvrent : site (multi-select), point (multi-select), année, plage de n° de passage, plage de dates d'enregistrement, plage de dates de dépôt, statut d'avancement (multi-select), verdict (multi-select), enregistreur (par n° de série).
+- [x] Critères couverts : site et point (par la puce **Lieu**), année, statut, verdict - plus deux que ce critère n'annonçait pas, **campagne** et **état d'analyse**. ⚠️ En **mono**-sélection, non multi. **Manquent vraiment** : les plages de dates (enregistrement, dépôt), la plage de n° de passage (seule l'égalité existe) et l'**enregistreur** par n° de série. Ces quatre-là restent des **cibles**, ni livrées ni abandonnées.
 - [x] Un compteur en bas de panneau indique « N passages correspondent à ces critères ».
-- [ ] Bouton « Appliquer » : la vue tabulaire ([E5.S2](#e5s2)) se rafraîchit avec les résultats filtrés.
+- [x] Rafraîchissement livré **sans bouton** : les puces s'appliquent à la volée. Un bouton « Appliquer » supposait un panneau de composition, que la barre à puces remplace.
 - [x] Bouton « Sauvegarder cette vue » : permet de nommer le jeu de filtres et de le retrouver dans un menu de « Vues sauvegardées ».
 - [x] Les vues sauvegardées sont **persistées** en BD et restent disponibles après redémarrage.
 - [ ] Possibilité de définir une vue comme « vue par défaut à l'ouverture ».
