@@ -124,6 +124,7 @@ Les gains de productivité avancés (regroupement multi-nuits P9, bibliothèque 
 - [x] Une barre de filtres au-dessus de la liste propose : taxon (multi-select), groupe taxonomique (Pipistrelles / Murins / Noctules / etc., cf. [C15](../Modèle%20conceptuel/C15%20-%20Groupe%20taxonomique.md)), seuil de probabilité min/max, plage horaire (timestamp début/fin), statut de validation (À voir / Validée / Corrigée).
 - [x] Les filtres se cumulent en logique ET.
 - [ ] Compteur visible : « N/M observations affichées (filtre actif) ».
+    ⚠️ **Partiellement livré** (vérifié le 2026-08-05) : la barre de statut affiche « N observation(s) » **du sous-ensemble filtré** (`ComptageAudio.de(observationsFiltrees)`, #470) et une progression « X / N revues ». Manquent le **M** (total hors filtre) et la mention **(filtre actif)** : devant « 12 observation(s) », on ne sait pas si c'est 12 sur 12 ou 12 sur 400.
 - [x] Bouton **« Tout effacer »** bien visible (livré sous ce nom, et non « Réinitialiser » : le geste efface aussi le tri et la mémoire de session, chantier #3092).
 - [x] Les filtres actifs sont affichés sous forme de **chips supprimables** au-dessus de la liste.
 - [x] Les filtres sont mémorisés en session (pas persistés entre redémarrages, sauf si combinés à [E0.S7](E0%20-%20Fondations%20de%20persistance.md#e0s7) reprise de validation).

@@ -157,6 +157,7 @@
 **Critères d'acceptation** :
 
 - [ ] Le contexte de validation est persisté en BD : dernière observation vue, filtres actifs (taxon, groupe, seuil de probabilité, plage horaire), mode de validation choisi (inventaire/activité).
+    ✅ **Vérifié le 2026-08-05, aucune dérive** : `MemoireFiltres` se déclare mémoire **de session** (singleton Guice, #484 généralisé en #3098). Les filtres survivent à un changement d'écran, pas à un redémarrage. La case est donc légitimement décochée, et [E7](E7%20-%20Valider%20les%20r%C3%A9sultats%20Tadarida.md) l'énonce déjà.
 - [ ] Au retour sur l'écran de validation pour le même passage, le contexte est restauré automatiquement.
 - [x] Les observations déjà validées ou corrigées sont persistées et conservent leur statut.
 - [ ] Test d'intégration : validation partielle, fermeture, réouverture, vérification de la restauration.
