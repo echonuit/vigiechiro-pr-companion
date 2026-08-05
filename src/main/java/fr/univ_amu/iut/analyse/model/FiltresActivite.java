@@ -139,7 +139,7 @@ public final class FiltresActivite {
             return Optional.empty();
         }
         return Optional.of("Référentiel des espèces à enjeu vide : --a-enjeu ne peut rien retenir. Le "
-                + "fichier sera vide pour cette raison, et non parce qu'aucune espèce prioritaire n'a été "
+                + "résultat sera vide pour cette raison, et non parce qu'aucune espèce prioritaire n'a été "
                 + "détectée.");
     }
 
