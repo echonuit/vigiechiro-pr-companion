@@ -167,6 +167,26 @@ class CliInventaireTest {
     }
 
     @Test
+    @DisplayName("#3269 : --a-enjeu lit le VRAI référentiel du Plan National d'Actions")
+    void filtre_par_espece_a_enjeu() {
+        semer();
+        int code = executer("lister-especes", "--a-enjeu");
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        // Deux côtés, parce qu'un seul mentirait. Nyctalus leisleri EST prioritaire (V36) : sa présence
+        // prouve que le référentiel est bien chargé et bien câblé jusqu'à la commande. Sans elle, un
+        // référentiel vide ou une liaison cassée rendrait la sortie vide - et les exclusions ci-dessous
+        // passeraient au vert pour la pire des raisons.
+        assertThat(capture.texte())
+                .as("Nyctalus leisleri est prioritaire au PNA Chiroptères")
+                .contains("Nyclei");
+        assertThat(capture.texte())
+                .as("Pipistrellus kuhlii ne l'est pas, et un épervier n'est pas un chiroptère")
+                .doesNotContain("Pipkuh")
+                .doesNotContain("Accnis");
+    }
+
+    @Test
     @DisplayName("#3269 : un format inconnu se refuse avant de lire la base")
     void format_inconnu_refuse() {
         int code = executer("lister-carres", "--format", "xml");
