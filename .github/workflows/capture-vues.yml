@@ -63,6 +63,22 @@ jobs:
           chmod +x .github/assets/capture-screenshots.sh
           .github/assets/capture-screenshots.sh
 
+      # `filtrer-bruit-cartes.sh` compare les aperçus de carte à leur version committée. L'image
+      # `ubuntu-latest` ne fournit AUCUN ImageMagick : sans cette étape, la suivante échoue.
+      - name: Installer ImageMagick (comparaison des aperçus de carte)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+
+      # Sur une PR comme sur `main`, et c'est le correctif de fond : ce filtre vivait DANS l'étape de
+      # publication, donc sous `if: push`. Aucune PR ne l'exerçait. #3359 a ainsi pu être fusionnée
+      # cassée - elle exigeait `magick`, absent du runner - et n'a échoué qu'ensuite, sur `main`,
+      # quatre exécutions de suite, en bloquant la publication des aperçus sans que rien ne rougisse
+      # côté PR. Sorti ici, il tourne partout ; sur une PR il ne modifie que des fichiers du plan de
+      # travail, que personne ne committe.
+      - name: Filtrer le bruit des cartes
+        run: |
+          chmod +x .github/assets/filtrer-bruit-cartes.sh
+          .github/assets/filtrer-bruit-cartes.sh
+
       - name: Publier les aperçus via une PR auto-mergée
         # Uniquement sur `main` : une PR vérifie que les écrans se rendent, elle ne publie rien.
         if: github.event_name == 'push'
@@ -74,13 +90,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          # Les aperçus de carte changent à presque chaque exécution sans qu'aucun code n'ait bougé
-          # (tuiles OpenStreetMap, entrée extérieure au dépôt). On rend leur version committée à ceux
-          # dont l'écart reste sous le seuil : sans cela, chaque exécution produit une PR qui
-          # conflicte avec la précédente, et une vraie régression finit noyée dans ce bruit.
-          chmod +x .github/assets/filtrer-bruit-cartes.sh
-          .github/assets/filtrer-bruit-cartes.sh
-
+          # Le bruit des cartes a déjà été filtré par l'étape précédente : ce qui reste modifié dans
+          # le plan de travail est ce qui mérite d'être committé.
           git add .github/assets/apercu-*.png
           if git diff --cached --quiet; then
             echo "Aucun aperçu modifié : rien à committer."
