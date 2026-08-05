@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!--
+  Étape 3 du dépôt : téléverser sur Vigie-Chiro, extraite en sous-vue (#2745).
+
+  Pourquoi une vue à part : LotController vivait à 199 pour un plafond NcssCount de 200. Cette carte
+  emportait à elle seule dix champs @FXML, quatre gestionnaires et deux méthodes de câblage.
+  Voir dev-docs/decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.lot.view.EtapeTeleversementController"
+      spacing="4.0" styleClass="carte-section">
+  <Label text="3. Téléverser sur Vigie-Chiro" styleClass="section-titre"/>
+  <Label text="Téléversez la nuit directement sur Vigie-Chiro (les séquences transformées, au format attendu par la plateforme). En cas de besoin, un dépôt manuel des archives ZIP reste possible depuis le dossier :"
+         styleClass="section-sous" wrapText="true"/>
+  <Label fx:id="lblCheminDepot" styleClass="chemin" wrapText="true"/>
+  <!-- Téléversement automatisé (#142) et repli manuel côte à côte : quand le téléversement direct est
+       indisponible (application non connectée), l'enveloppe de btnTeleverser est démanagée et « Ouvrir le
+       dossier » reste seul à gauche. Le message d'avancement/bilan du téléversement suit en dessous.
+       Enveloppes StackPane (#789) : un Button désactivé n'affiche pas de Tooltip, on l'expose sur son
+       enveloppe pour expliquer le grisage au survol. -->
+  <HBox spacing="8.0" alignment="CENTER_LEFT">
+    <StackPane fx:id="enveloppeTeleverser" alignment="CENTER_LEFT">
+      <Button fx:id="btnTeleverser" text="Téléverser sur Vigie-Chiro"
+              styleClass="bouton-primaire" onAction="#televerserVigieChiro">
+        <graphic>
+          <FontIcon fx:id="iconeTeleverser" iconLiteral="fas-cloud"/>
+        </graphic>
+      </Button>
+    </StackPane>
+    <StackPane fx:id="enveloppeOuvrirDepot" alignment="CENTER_LEFT">
+      <Button fx:id="btnOuvrirDepot" text="Ouvrir le dossier (dépôt manuel)"
+              styleClass="bouton-secondaire" onAction="#ouvrirDossierDepot">
+        <graphic>
+          <FontIcon iconLiteral="fas-folder-open"/>
+        </graphic>
+      </Button>
+    </StackPane>
+    <!-- Annulation coopérative du dépôt (#1044) : visible seulement pendant un téléversement. Le
+         fichier en cours se termine d'abord (jamais d'arrêt au milieu d'un fichier) ; « Reprendre le
+         dépôt » ne renverra ensuite que les manquants. -->
+    <Button fx:id="btnAnnulerDepot" styleClass="bouton-secondaire" onAction="#annulerDepotVigieChiro"
+            visible="false" managed="false">
+      <tooltip>
+        <Tooltip text="Termine le fichier en cours puis s'arrête. Le passage reste « Dépôt en cours » : reprendre le dépôt ne renverra que les fichiers manquants."/>
+      </tooltip>
+    </Button>
+    <!-- Réinitialiser le dépôt (#984) : efface le suivi local pour forcer un nouveau téléversement.
+         Visible dès qu'un plan de dépôt existe (câblé par le contrôleur). -->
+    <Button fx:id="btnReinitialiserDepot" text="Réinitialiser le dépôt"
+            styleClass="bouton-secondaire" onAction="#reinitialiserDepot" visible="false" managed="false">
+      <graphic>
+        <FontIcon iconLiteral="fas-sync-alt"/>
+      </graphic>
+      <tooltip>
+        <Tooltip text="Efface le suivi local de dépôt pour permettre un nouveau téléversement. Les archives ZIP sur disque et la participation Vigie-Chiro sont conservées."/>
+      </tooltip>
+    </Button>
+  </HBox>
+  <!-- Table de dépôt (#983) : une ligne par unité téléversée (état persisté depot_unite #981),
+       réhydratée à l'ouverture et vivante pendant un dépôt. Masquée tant qu'aucun dépôt automatique
+       n'a été entamé. -->
+  <TableView fx:id="tableDepot" minHeight="150.0" prefHeight="170.0" visible="false" managed="false"/>
+  <!-- Compte rendu chiffré de la fin de dépôt (#2653), sous la table qu'il ne remplace pas : la table
+       garde le détail par fichier, la bande porte le verdict, les proportions, le volume téléversé et
+       l'action suivante (« Lancer la participation », l'étape 4 que rien ne désignait). Masquée tant
+       qu'aucun dépôt n'est terminé. -->
+  <VBox fx:id="zoneCompteRenduDepot" visible="false" managed="false"/>
+</VBox>

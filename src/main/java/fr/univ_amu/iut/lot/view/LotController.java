@@ -31,10 +31,8 @@ import fr.univ_amu.iut.lot.model.SuiviArchives;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.EtapeDepot;
 import fr.univ_amu.iut.lot.viewmodel.LigneArchive;
-import fr.univ_amu.iut.lot.viewmodel.LigneDepot;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -112,9 +110,6 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private HBox stepper;
 
     @FXML
-    private Label lblCheminDepot;
-
-    @FXML
     private VBox checklist;
 
     @FXML
@@ -157,40 +152,12 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private MenuButton menuOutils;
 
     @FXML
-    private StackPane enveloppeTeleverser;
-
-    @FXML
-    private Button btnTeleverser;
-
-    /// Icône du bouton de téléversement : elle suit son libellé, qui change de sens (téléverser / reprendre).
-    @FXML
-    private FontIcon iconeTeleverser;
-
-    @FXML
-    private TableView<LigneDepot> tableDepot;
-
-    @FXML
-    private VBox zoneCompteRenduDepot;
-
-    @FXML
-    private Button btnAnnulerDepot;
-
-    @FXML
-    private StackPane enveloppeOuvrirDepot;
-
-    @FXML
-    private Button btnOuvrirDepot;
-
-    @FXML
     private Button btnSupprimerArchives;
 
     /// Carte « Libérer l'espace disque » (#2028) : masquée tant qu'elle n'a rien à proposer, pour ne pas
     /// occuper le même rang visuel que les étapes avec un bouton grisé et une consigne sans objet.
     @FXML
     private VBox zoneLibererEspace;
-
-    @FXML
-    private Button btnReinitialiserDepot;
 
     @FXML
     private Label lblEtatLot;
@@ -222,6 +189,12 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     /// Câblage de la zone de suivi, extrait de ce contrôleur (#1263).
     private SuiviTraitementUI suiviTraitement;
+
+    /// Controller de la sous-vue `EtapeTeleversement.fxml`, injecté par le `fx:include` (#2745) : il
+    /// possède l'étape ③, sa table de dépôt et ses quatre gestes. Le nom du champ est imposé par JavaFX,
+    /// qui concatène le `fx:id` de l'inclusion (`televersement`) et le suffixe `Controller`.
+    @FXML
+    private EtapeTeleversementController televersementController;
 
     @Inject
     public LotController(
@@ -304,8 +277,17 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 depotViewModel.suiviLignes().enCoursProperty(),
                 depotViewModel.suiviLignes().echecsProperty(),
                 depotViewModel.suiviLignes().totalProperty()));
-        // Étape ③ : la cible du téléversement est le sous-dossier depot/ (archives ZIP), pas la session.
-        lblCheminDepot.textProperty().bind(viewModel.cheminDepotProperty());
+        // Étape ③ (téléverser) : sous-vue depuis #2745, à qui l'on passe NOS appuis. Elle n'injecte rien :
+        // les ViewModel du lot sont non-singleton, s'en procurer lui en donnerait de nouveaux, vides.
+        televersementController.installer(new AppuisTeleversement(
+                viewModel,
+                depotViewModel,
+                executeur,
+                depotColonnes,
+                ouvreurDeLien,
+                confirmateur,
+                () -> contexte.idPassage(),
+                () -> suiviTraitement.lancer(depotViewModel)));
 
         // Stepper du dépôt (#251), reconstruit à chaque changement d'étapes (mêmes styles que M-Passage).
         viewModel.etapes().addListener((ListChangeListener<EtapeDepot>) changement -> majStepper());
@@ -328,42 +310,6 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // partiel, verrouillé si la nuit est déjà analysée), câblées à part (#1263).
         EtapeDeposerUI.cabler(
                 btnDeposer, iconeDeposer, enveloppeDeposer, viewModel, depotViewModel, traitementViewModel);
-
-        // Téléversement VigieChiro (#142), étape ③ : masqué hors application connectée (contexte de capture
-        // sans `connexion`). Actif une fois le dépôt préparé, hors génération et hors téléversement en cours.
-        //
-        // Le grisage pendant la génération (#1998) : il pourrait sembler que le pipeline le rend inutile,
-        // puisqu'il n'y a plus à attendre l'étape ② pour téléverser. Il reste **nécessaire**, mais pour une
-        // autre raison que l'attente : les deux opérations écrivent le MÊME fichier `<préfixe>-N.zip`
-        // (CompacteurDepot.ecrireArchive et SourceArchivesRegenerables.resoudre), donc les laisser se
-        // recouvrir corromprait des archives. Ce qui a disparu, c'est l'obligation de lancer ② d'abord.
-        // Un libellé restitue l'avancement puis le bilan (ou l'erreur). La visibilité porte sur l'ENVELOPPE
-        // (et non le bouton), pour que l'infobulle du grisage (#789) et le bouton disparaissent ensemble.
-        // L'étape ② n'est plus un passage obligé quand on est connecté (#1998) : le stepper doit le
-        // savoir, et seul le controller connaît les deux ViewModels.
-        viewModel.declarerDepotAutomatiqueDisponible(depotViewModel.disponible());
-        enveloppeTeleverser.setVisible(depotViewModel.disponible());
-        enveloppeTeleverser.setManaged(depotViewModel.disponible());
-        btnTeleverser
-                .disableProperty()
-                .bind(viewModel
-                        .peutDeposerProperty()
-                        .not()
-                        .or(depotViewModel.enCoursProperty())
-                        .or(viewModel.generationEnCoursProperty()));
-        // Explique le grisage (#789) au survol de l'enveloppe : cas « déjà déposé » distingué des autres.
-        IndicateurBlocage.expliquer(
-                enveloppeTeleverser,
-                Bindings.when(viewModel.deposeProperty())
-                        .then("Passage déjà déposé sur Vigie-Chiro : le téléversement est terminé.")
-                        .otherwise(Bindings.when(btnTeleverser.disableProperty())
-                                .then("Téléversement possible une fois le dépôt préparé (statut « Prêt à"
-                                        + " déposer »), et hors génération ou envoi en cours. Générer les"
-                                        + " archives n'est pas un préalable : le téléversement produit"
-                                        + " lui-même ce dont il a besoin.")
-                                .otherwise("Téléverser la nuit sur Vigie-Chiro (marque ensuite le passage"
-                                        + " déposé).")));
-        lierTableDepot();
 
         // Archives de dépôt (#110) : titre = plafond configuré ; bouton actif une fois le lot préparé et
         // hors génération en cours ; la liste reflète les ZIP produits.
@@ -408,28 +354,14 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 depotColonnes,
                 "lot",
                 "principale",
-                MenuLigne.item("Ouvrir le dossier", tableArchives, ligne -> ouvrirDossierDepot()),
+                MenuLigne.item(
+                        "Ouvrir le dossier", tableArchives, ligne -> televersementController.ouvrirDossierDepot()),
                 MenuCopier.creer(
                         tableArchives,
                         new MenuCopier.Entree<>(
                                 "Chemin du dossier",
                                 ligne -> chemin(viewModel.cheminDepotProperty().get()))));
         tableArchives.setItems(viewModel.suiviLignes().lignes());
-
-        // Étape ③ : « Ouvrir le dossier » seulement quand les archives sont réellement prêtes (#259), pas
-        // dès qu'un chemin existe : les ZIP sont écrits sous leur nom final pendant la génération, ouvrir
-        // (ou téléverser) avant la fin exposerait un fichier partiel. Donc activé après une génération
-        // réussie (liste non vide) et hors génération en cours.
-        btnOuvrirDepot
-                .disableProperty()
-                .bind(Bindings.isEmpty(viewModel.suiviLignes().lignes()).or(viewModel.generationEnCoursProperty()));
-        // Explique le grisage (#789) : pas d'archives à ouvrir tant qu'elles ne sont pas générées.
-        IndicateurBlocage.expliquer(
-                enveloppeOuvrirDepot,
-                Bindings.when(btnOuvrirDepot.disableProperty())
-                        .then("Aucune archive de dépôt à ouvrir : générez d'abord les archives (ou patientez"
-                                + " la fin de la génération en cours).")
-                        .otherwise("Ouvrir le sous-dossier « depot/ » pour un dépôt manuel des archives ZIP."));
 
         // Nettoyage post-dépôt (#…) : « Supprimer les archives » actif seulement une fois le passage déposé
         // et s'il reste des archives ZIP sur disque (le VM lit le disque à chaque chargement d'état).
@@ -600,68 +532,6 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 viewModel::echecGeneration);
     }
 
-    /// Téléverse la nuit sur VigieChiro **hors fil JavaFX** (#142), étape ③ automatisée, via le socle
-    /// étendu (#1252/#1253) : même patron que la génération d'archives. Les statuts (« Dépôt en cours » /
-    /// « Déposé ») sont posés par le moteur reprenable (#982) ; l'IHM ne fait que les restituer.
-    ///
-    /// L'**annulation** (#1044) reste coopérative **côté ViewModel**, style « retour partiel » :
-    /// « Annuler le dépôt » pose un drapeau que le moteur lit entre deux fichiers, termine l'unité en vol
-    /// et rend un **bilan honnête par le chemin de succès** (jamais d'unité fantôme ; « Reprendre le
-    /// dépôt » ne renverra que le manquant). En test synchrone, l'annulation se joue au premier point de
-    /// contrôle du moteur (cf. `dev-docs/patterns.md`, § occupation).
-    @FXML
-    private void televerserVigieChiro() {
-        Long idPassage = contexte.idPassage();
-        depotViewModel.marquerEnCours();
-        RelaisSuiviDepot suivi = new RelaisSuiviDepot(depotViewModel.suiviLignes(), executeur.surFilJavaFx());
-        executeur.executer(
-                () -> depotViewModel.televerser(idPassage, suivi),
-                bilan -> {
-                    depotViewModel.appliquerBilan(bilan);
-                    // Statut honnête (#982) : le moteur a déjà posé le bon statut (jamais « Déposé » sur un
-                    // dépôt partiel) ; on recharge l'état pour le refléter.
-                    viewModel.ouvrirSur(idPassage);
-                },
-                depotViewModel::echec);
-    }
-
-    /// Câble la table de dépôt (#983) : lignes persistées (`depot_unite` #981) + événements du moteur
-    /// reprenable (#982). Visible seulement quand un dépôt a été entamé (liaison vivante sur la liste).
-    /// Quand il reste des unités non déposées, l'action devient une reprise : « Retenter les échecs ».
-    private void lierTableDepot() {
-        TableSuiviDepot.configurer(tableDepot);
-        // Sélecteur de colonnes (#1800) : la table de dépôt n'avait aucun menu contextuel, alors que sa
-        // voisine (archives) en a un sur le même écran. Disposition retenue par écran (#994), clé « depot ».
-        var colonnesDepot = GestionnaireColonnes.colonnesParDefaut(tableDepot);
-        GestionnaireColonnes.installerClicDroit(
-                tableDepot,
-                colonnesDepot,
-                // LigneDepot ne porte pas de chemin : son identifiant est la clé qu'on recoupe côté
-                // plateforme, c'est donc lui qu'on offre à la copie.
-                MenuCopier.creer(
-                        tableDepot, new MenuCopier.Entree<>("Identifiant", ligne -> chemin(ligne.identifiant()))));
-        GestionnaireColonnes.persister(tableDepot, colonnesDepot, depotColonnes, "lot", "depot");
-        tableDepot.setItems(depotViewModel.suiviLignes().lignes());
-        var depotEntame = Bindings.isNotEmpty(depotViewModel.suiviLignes().lignes());
-        lierAffichage(tableDepot, depotEntame);
-        // « Réinitialiser le dépôt » (#984) : visible dès qu'un plan existe, désactivé pendant un dépôt.
-        lierAffichage(btnReinitialiserDepot, depotEntame);
-        btnReinitialiserDepot.disableProperty().bind(depotViewModel.enCoursProperty());
-        // Étape 3 (téléverser / reprendre, et l'annulation coopérative) : câblage déporté, comme l'étape 4.
-        EtapeTeleverserUI.cabler(btnTeleverser, iconeTeleverser, btnAnnulerDepot, depotViewModel);
-        // Compte rendu de fin de dépôt (#2653) : l'action suivante est fournie ICI, parce que « Lancer la
-        // participation » est l'étape ④ de cet écran et que le ViewModel n'a pas à savoir où mènent ses
-        // boutons. Même geste que le bouton de l'étape ④, pour qu'il n'y ait qu'un seul chemin.
-        CompteRenduDepotUI.cabler(zoneCompteRenduDepot, depotViewModel, () -> suiviTraitement.lancer(depotViewModel));
-    }
-
-    /// Demande l'annulation coopérative du dépôt en cours (#1044) : délégué au ViewModel, le moteur
-    /// s'arrête entre deux fichiers.
-    @FXML
-    private void annulerDepotVigieChiro() {
-        depotViewModel.demanderAnnulation();
-    }
-
     /// Relais du suivi par archive (#820) vers la table : chaque événement, émis **hors fil JavaFX** et dans
     /// le désordre (compression parallèle #814), est rejoué sur le fil JavaFX (fourni par le socle,
     /// [ExecuteurTache#surFilJavaFx()] - immédiat en test synchrone) pour muter les lignes observables du VM
@@ -702,16 +572,6 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         return valeur == null ? "" : valeur;
     }
 
-    /// Ouvre le sous-dossier `depot/` dans le gestionnaire de fichiers du système (#251), pour aider au
-    /// téléversement manuel (étape ③). Sans chemin, le bouton est désactivé ; l'ouverture ne lève jamais.
-    @FXML
-    private void ouvrirDossierDepot() {
-        String chemin = viewModel.cheminDepotProperty().get();
-        if (chemin != null && !chemin.isBlank()) {
-            ouvreurDeLien.ouvrir(Path.of(chemin).toUri().toString());
-        }
-    }
-
     /// Supprime les archives ZIP de dépôt (#…) **après confirmation**, une fois le passage déposé, pour
     /// libérer l'espace disque (régénérables au besoin). La confirmation passe par [#confirmateur]
     /// (injectable), et le bouton n'est actif que dans l'état adéquat.
@@ -722,20 +582,6 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
                 Elles ont déjà été téléversées sur Vigie-Chiro et pourront être régénérées si besoin.""")) {
             viewModel.supprimerArchives();
-        }
-    }
-
-    /// Réinitialise le dépôt (#984) : efface le suivi local pour permettre un nouveau téléversement (ex.
-    /// dépôt orphelin d'avant le rattachement `lien_participation`). Confirmation ([#confirmateur],
-    /// injectable). Recharge la table (plan vidé) et l'état du passage (retour « Prêt à déposer »).
-    @FXML
-    private void reinitialiserDepot() {
-        if (confirmateur.confirmer("""
-                Réinitialiser le dépôt de cette nuit ?
-
-                Le suivi local est effacé pour permettre un nouveau téléversement ; les archives ZIP sur disque et la participation Vigie-Chiro sont conservées.""")) {
-            depotViewModel.reinitialiser(contexte.idPassage());
-            viewModel.ouvrirSur(contexte.idPassage());
         }
     }
 
