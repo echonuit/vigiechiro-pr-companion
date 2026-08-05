@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Provider;
+import com.google.inject.util.Providers;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.RapportReconstruction;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
@@ -33,7 +34,7 @@ class ReconstruirePassageTest {
     private final ServiceReconstructionPassages service = mock(ServiceReconstructionPassages.class);
 
     private CommandLine ligne(StringWriter sortie) {
-        Provider<Optional<ServiceReconstructionPassages>> provider = () -> Optional.of(service);
+        Provider<Optional<ServiceReconstructionPassages>> provider = Providers.of(Optional.of(service));
         CommandLine ligne = new CommandLine(new ReconstruirePassage(provider));
         ligne.setOut(new PrintWriter(sortie, true));
         ligne.setErr(new PrintWriter(new StringWriter(), true));

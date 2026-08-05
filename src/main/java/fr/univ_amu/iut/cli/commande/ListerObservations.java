@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.function.Supplier;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -113,10 +114,16 @@ public final class ListerObservations implements Callable<Integer> {
     /// Tirer le service ici ouvrirait la base trop tôt.
     private final Provider<SelectionObservations> selection;
 
-    /// Repère des **espèces à enjeu** (#2353), pour le drapeau de la sortie texte et le champ JSON. Même
-    /// `Provider` que la sélection, et pour la même raison : picocli instancie toutes les sous-commandes
-    /// avant la migration du schéma, or le référentiel se lit en base.
-    private final Provider<MarqueurEspecesAEnjeu> marqueur;
+    /// Repère des **espèces à enjeu** (#2353), pour le drapeau de la sortie texte et le champ JSON.
+    /// Différé pour la même raison que la sélection : picocli instancie toutes les sous-commandes avant
+    /// la migration du schéma, or le référentiel se lit en base.
+    ///
+    /// ⚠️ Un [java.util.function.Supplier] et non un `Provider` (#3228). Ce champ n'est **pas** un point
+    /// d'injection : il dérive du `Provider` reçu au constructeur. Or `com.google.inject.Provider` n'est
+    /// pas annoté `@FunctionalInterface` et hérite de `jakarta.inject.Provider` : `javac` l'accepte
+    /// comme cible de lambda, **ecj le refuse**. L'IDE écrivant dans le même `target/classes` que Maven,
+    /// la classe en erreur y restait et faisait échouer toute construction de la CLI, très loin d'ici.
+    private final Supplier<MarqueurEspecesAEnjeu> marqueur;
 
     @Inject
     public ListerObservations(

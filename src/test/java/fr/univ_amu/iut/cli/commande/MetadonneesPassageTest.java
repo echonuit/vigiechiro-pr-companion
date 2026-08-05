@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.Provider;
+import com.google.inject.util.Providers;
 import fr.univ_amu.iut.cli.model.ErreurUsage;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -46,9 +47,9 @@ class MetadonneesPassageTest {
     private final ServiceConditionsPassage conditions = mock(ServiceConditionsPassage.class);
 
     private CommandLine ligne(StringWriter sortie) {
-        Provider<Optional<SynchronisationParticipation>> passerelle = () -> Optional.of(synchronisation);
-        Provider<Optional<RattrapageMetadonnees>> lot = () -> Optional.of(rattrapage);
-        Provider<ServiceConditionsPassage> services = () -> conditions;
+        Provider<Optional<SynchronisationParticipation>> passerelle = Providers.of(Optional.of(synchronisation));
+        Provider<Optional<RattrapageMetadonnees>> lot = Providers.of(Optional.of(rattrapage));
+        Provider<ServiceConditionsPassage> services = Providers.of(conditions);
         CommandLine ligne = new CommandLine(new MetadonneesPassage(passerelle, lot, services));
         ligne.setOut(new PrintWriter(sortie, true));
         ligne.setErr(new PrintWriter(new StringWriter(), true));
