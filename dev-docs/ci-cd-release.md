@@ -73,7 +73,8 @@ ramène au plus long des deux, et un packaging cassé rougit même quand les tes
 
 ## La release (semantic-release + jpackage)
 
-À chaque push sur `main`, **[semantic-release](https://semantic-release.gitbook.io)** analyse les
+À chaque **train de publication** - le mercredi à 6 h UTC, ou sur déclenchement manuel (#2744) -
+**[semantic-release](https://semantic-release.gitbook.io)** analyse les
 **[Conventional Commits](https://www.conventionalcommits.org/fr/)** pour calculer la version, créer le
 tag `vX.Y.Z` et la **Release GitHub** (en brouillon), et mettre à jour `CHANGELOG.md` (format
 [Keep a Changelog](https://keepachangelog.com/fr/)). Puis une **matrice** construit les installeurs
@@ -520,9 +521,9 @@ publication calculera.
 
 **La répétition à blanc**, job `outillage-release` de `lint.yml`, à chaque PR : `npm ci`, une assertion
 sur la dérivation de la configuration, puis `semantic-release --dry-run`. Elle existe parce que
-`release.yml` ne se déclenche qu'au **push sur `main`** : aucune CI de PR ne traversait la chaîne de
-publication, donc une erreur d'installation ou de configuration ne se serait vue qu'à la **prochaine
-release**, sur un dépôt qui publie à chaque fusion.
+**aucune CI de PR ne traverse `release.yml`** : il se déclenchait alors au push sur `main`, et depuis
+#2744 il part au train du mercredi. Dans les deux cas, une erreur d'installation ou de configuration
+ne se verrait qu'à la **prochaine release**.
 
 Elle ne peut pas publier : `--dry-run` n'écrit rien, et la configuration d'analyse n'embarque **aucun**
 greffon d'écriture.

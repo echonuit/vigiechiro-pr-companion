@@ -87,8 +87,11 @@ jobs:
         # s'exécute dans nos workflows changerait alors sans qu'aucun commit ne le dise (#2737).
         # Sans cette garde, la prochaine action ajoutée le serait par tag et l'épinglage se
         # déferait en silence.
+        # L'autotest tourne d'abord, comme pour la garde jeton : une règle relâchée passerait sinon au
+        # vert sur un dépôt propre, sans que rien ne le dise.
         run: |
           chmod +x .github/scripts/verifie-epinglage.sh
+          ./.github/scripts/verifie-epinglage.sh --autotest
           ./.github/scripts/verifie-epinglage.sh
 
       - name: Aucun jeton VigieChiro en clair

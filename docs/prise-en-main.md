@@ -92,9 +92,12 @@ Une réponse `OK` (ou, sous Windows, deux empreintes identiques) signifie que le
 
 ## Vérifier d'où vient le fichier (attestation)
 
-Chaque fichier publié porte une **attestation de provenance** : la preuve, vérifiable ailleurs que
-chez nous, qu'il a été produit par le workflow de publication de ce projet, à partir d'un commit
-précis.
+Chaque **installeur**, chaque **archive portable** et le **SBOM** portent une **attestation de
+provenance** : la preuve, vérifiable ailleurs que chez nous, qu'ils ont été produits par le workflow
+de publication de ce projet, à partir d'un commit précis.
+
+Les petits fichiers `.sha256`, eux, n'en ont pas : ils ne contiennent que l'empreinte du fichier
+d'à côté, et c'est ce fichier-là qu'il faut vérifier.
 
 Il faut [l'outil `gh` de GitHub](https://cli.github.com/), puis :
 
@@ -115,8 +118,8 @@ publication**. Elle nomme le dépôt, le workflow et le commit d'origine.
     Elle ne remplace pas la **signature** des installeurs, qui parle aux systèmes d'exploitation
     (SmartScreen, Gatekeeper) : celle-là viendra séparément. L'attestation parle à qui veut vérifier.
 
-Le **SBOM** publié à côté des installeurs - l'inventaire des bibliothèques embarquées, `sbom-vX.Y.Z.json` -
-est attesté de la même façon.
+Le **SBOM** - `sbom-vX.Y.Z.json`, l'inventaire des bibliothèques embarquées - se vérifie de la même
+manière que les installeurs.
 
 ## Lancer depuis les sources
 
