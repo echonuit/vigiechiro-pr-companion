@@ -100,6 +100,58 @@ class ApercuFxElisionTest {
     }
 
     @Test
+    @DisplayName("#3337 : le refus nomme le contrôle par son fx:id quand il en a un")
+    void le_refus_nomme_l_identifiant(@TempDir Path dossier) throws InterruptedException {
+        // Branche sans AUCUNE couverture jusqu'ici, montrée par PIT. Elle décide de ce qu'on lit dans le
+        // message : un `#identifiant` mène droit au FXML fautif, là où un extrait de texte oblige à le
+        // chercher. C'est la seule information qui rende le refus actionnable sur un libellé long.
+        Button bouton = new Button("Retirer la référence");
+        bouton.setId("boutonRetirerReference");
+        Path fichier = dossier.resolve("apercu.png");
+
+        Throwable refus = executerSurLeFilFx(() -> ApercuFx.enregistrerPng(barreEtroite(bouton), fichier));
+
+        assertThat(refus).isInstanceOf(IllegalStateException.class);
+        assertThat(refus.getMessage())
+                .as("l'identifiant prime sur le texte : il désigne le nœud du FXML, pas son contenu")
+                .contains("#boutonRetirerReference")
+                .doesNotContain("« Retirer la référence »");
+    }
+
+    @Test
+    @DisplayName("#3337 : un libellé sans fx:id est cité par son texte, abrégé au-delà de 40 caractères")
+    void le_refus_abrege_un_texte_long(@TempDir Path dossier) throws InterruptedException {
+        // La borne de 40 caractères survivait à PIT. Elle n'est pas cosmétique : le message énumère
+        // plusieurs libellés séparés par « | », et un texte entier les noierait.
+        String texte = "Retirer la référence de cette observation pour la repasser en revue";
+        Path fichier = dossier.resolve("apercu.png");
+
+        Throwable refus = executerSurLeFilFx(() -> ApercuFx.enregistrerPng(barreEtroite(new Button(texte)), fichier));
+
+        assertThat(refus).isInstanceOf(IllegalStateException.class);
+        assertThat(refus.getMessage())
+                .as("40 caractères puis une ellipse : la borne se lit dans le message")
+                .contains("« " + texte.substring(0, 40) + "… »")
+                .doesNotContain(texte);
+    }
+
+    @Test
+    @DisplayName("#3337 : à 40 caractères pile, le texte est cité ENTIER - la borne est un `>`")
+    void le_refus_ne_abrege_pas_a_quarante_pile(@TempDir Path dossier) throws InterruptedException {
+        // Cerne la BORNE, que le cas précédent ne pouvait pas voir avec ses 67 caractères : à 40 pile,
+        // rien n'est retiré. Un `>=` à la place du `>` amputerait le dernier caractère et poserait une
+        // ellipse là où le texte tient - PIT y survivait.
+        String texte = "Retirer la reference de cette observatio";
+        assertThat(texte).hasSize(40);
+        Path fichier = dossier.resolve("apercu.png");
+
+        Throwable refus = executerSurLeFilFx(() -> ApercuFx.enregistrerPng(barreEtroite(new Button(texte)), fichier));
+
+        assertThat(refus).isInstanceOf(IllegalStateException.class);
+        assertThat(refus.getMessage()).contains("« " + texte + " »").doesNotContain("…");
+    }
+
+    @Test
     @DisplayName("Un libellé marqué « abregeable » assume sa troncature : la capture passe")
     void libelle_abregeable_tolere(@TempDir Path dossier) throws InterruptedException {
         // Le déficit d'une barre doit bien tomber quelque part. Le FXML désigne qui le porte, et cette
