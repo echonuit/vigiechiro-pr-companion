@@ -65,6 +65,11 @@ if [ "${1:-}" = "--auto-test" ]; then
     : > "$bac/assets/README.md"
     verifie 1 "une capture absente de la galerie est refusée"
 
+    monter
+    mkdir -p "$bac/src/fr/exemple/vue/outils"
+    printf 'class CaptureX { String f = "apercu-neuve.png"; }\n' > "$bac/src/fr/exemple/vue/outils/CaptureX.java"
+    verifie 1 "une capture écrite par un outil, absente de la galerie, est refusée (#3129)"
+
     # Contrôles NÉGATIFS : la règle doit rester étroite.
     monter
     mkdir -p "$bac/src/fr/exemple/ailleurs"
@@ -74,6 +79,12 @@ if [ "${1:-}" = "--auto-test" ]; then
     monter
     printf '# un commentaire\n\n' >> "$bac/assets/captures.manifest"
     verifie 0 "commentaires et lignes vides du manifeste sont ignorés"
+
+    monter
+    mkdir -p "$bac/src/fr/exemple/vue/outils"
+    printf 'class CaptureX {\n  /// remplace apercu-disparue.png, une replique reconstruite\n}\n' \
+      > "$bac/src/fr/exemple/vue/outils/CaptureX.java"
+    verifie 0 "une capture citée en commentaire seulement ne déclenche pas (#3129)"
 
     if [ "${echecs}" = 0 ]; then
         echo "Auto-test de la garde captures : OK"
@@ -143,8 +154,33 @@ for png in "$ICI"/apercu-*.png; do
   fi
 done
 
+# 5. Chaque capture qu'un outil ÉCRIT est présentée dans la galerie (#3129).
+#
+# La règle 4 part des PNG **présents sur le disque**. Or ils ne naissent pas dans la branche : le job
+# `capturer` les produit sur `main`, APRÈS fusion. Sur une PR qui ajoute une capture, le fichier
+# n'existe pas encore, la règle 4 ne voit rien, et la PR passe au vert de bonne foi. Le manque
+# n'apparaît qu'une fois `main` déjà rouge, et le coût est payé par TOUTES les PR ouvertes.
+#
+# Vécu : #3119 a ajouté deux aperçus sans les inscrire à la galerie. CI verte, `main` rouge après
+# fusion, diagnostic parti dans la mauvaise direction. Corrigé par #3126, puis par cette règle.
+#
+# Ce qui EST dans la branche, c'est le **code de l'outil**. On lit donc les noms qu'il écrit. Les
+# lignes de commentaire sont écartées : elles citent volontiers des captures **passées** (une réplique
+# remplacée par un rendu réel), qui n'existent plus et n'ont rien à faire en galerie.
+nb_ecrites=0
+while IFS= read -r png; do
+  [[ -n "$png" ]] || continue
+  nb_ecrites=$((nb_ecrites + 1))
+  if ! grep -qF "$png" "$ICI/README.md"; then
+    echo "❌ Capture écrite par un outil mais absente de la galerie README.md : $png"
+    erreurs=$((erreurs + 1))
+  fi
+done < <(grep -rh --include='Capture*.java' -E 'apercu-[a-z0-9-]+\.png' "$SOURCES" 2>/dev/null \
+           | grep -vE '^[[:space:]]*(///|\*|//)' \
+           | grep -oE 'apercu-[a-z0-9-]+\.png' | sort -u)
+
 if [[ $erreurs -gt 0 ]]; then
   echo "Garde captures : $erreurs problème(s) : voir ci-dessus."
   exit 1
 fi
-echo "Garde captures : OK ($nb_vues vues couvertes, $nb_galerie captures toutes présentées dans la galerie)."
+echo "Garde captures : OK ($nb_vues vues couvertes, $nb_galerie captures sur disque et $nb_ecrites écrites par un outil, toutes présentées dans la galerie)."
