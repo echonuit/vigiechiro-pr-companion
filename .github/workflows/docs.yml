@@ -51,11 +51,19 @@ on:
   # ce workflow commit les PNG en `[skip ci]` (anti-récursion), ce qui bloquerait
   # un déclencheur push mais PAS workflow_run (immunisé au [skip ci]). Sans cela,
   # une capture régénérée serait mergée sans reconstruire le site -> images
-  # publiées périmées. (Le nom doit suivre `name:` de capture-vues.yml.)
+  # publiées périmées.
   # Corollaire : ne JAMAIS écrire ce marqueur de saut dans un message de commit
   # qui modifie la doc, sinon la republication par push est sautée elle aussi.
+  #
+  # Le nom doit suivre `name:` de capture-vues.yml À LA LETTRE : GitHub apparie par
+  # égalité stricte, et un nom qui ne correspond à rien n'arme rien SANS jamais rougir.
+  # Vécu (#3279) : #1439 a renommé « Aperçus des vues (main) » en « Aperçus des vues »,
+  # la référence est restée ici, et la republication a cessé pendant trois semaines.
+  # C'est pourquoi la restriction à `main` vit maintenant dans le `if:` du job et non
+  # dans le nom : capture-vues.yml tourne aussi sur les PR, et une intention rangée
+  # dans un libellé se recasse au renommage suivant.
   workflow_run:
-    workflows: ["Aperçus des vues (main)"]
+    workflows: ["Aperçus des vues"]
     types: [completed]
   workflow_dispatch: {}
 
@@ -72,8 +80,15 @@ concurrency:
 jobs:
   build:
     # Déclenché par « Aperçus des vues » : ne reconstruire que si la régénération
-    # des captures a réussi (sinon rien de neuf à publier).
-    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    # des captures a réussi (sinon rien de neuf à publier) ET si elle vient de `main`.
+    # Le filtre de branche n'est pas une précaution : « Aperçus des vues » tourne aussi
+    # sur les PR, où il REND les aperçus sans en committer aucun. Sans ce filtre, chaque
+    # run de PR republierait les trois sites, car les étapes de publication ne se gardent
+    # que par `github.event_name != 'pull_request'` - vrai pour un événement workflow_run.
+    if: >-
+      github.event_name != 'workflow_run'
+      || (github.event.workflow_run.conclusion == 'success'
+          && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
