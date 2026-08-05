@@ -87,59 +87,9 @@
     <SplitPane dividerPositions="0.52" styleClass="split">
 
       <!-- ============ Colonne gauche : sélection d'écoute ============ -->
-      <VBox spacing="10.0" styleClass="colonne-liste">
-        <HBox spacing="10.0" alignment="CENTER_LEFT">
-          <Label fx:id="lblListeTitre" text="Sélection d'écoute" styleClass="colonne-titre"
-                 minWidth="-Infinity">
-            <graphic><FontIcon iconLiteral="fas-list-ul"/></graphic>
-          </Label>
-          <Region HBox.hgrow="ALWAYS"/>
-          <Button fx:id="boutonPersonnaliser" text="Personnaliser…" styleClass="bouton-secondaire"
-                  minWidth="-Infinity" onAction="#personnaliser">
-            <graphic><FontIcon iconLiteral="fas-sliders-h"/></graphic>
-          </Button>
-          <Button fx:id="boutonRegenerer" text="Régénérer" styleClass="bouton-secondaire"
-                  minWidth="-Infinity" onAction="#regenerer">
-            <graphic><FontIcon iconLiteral="fas-sync-alt"/></graphic>
-          </Button>
-          <MenuButton fx:id="menuOutils" styleClass="menu-actions" accessibleText="Outils : colonnes">
-            <graphic>
-              <FontIcon iconLiteral="fas-bars"/>
-            </graphic>
-          </MenuButton>
-        </HBox>
-
-        <!-- Répartition des verdicts PAR FICHIER (#1524, lot 6a) : barre empilée tricolore (Bon / Mauvais
-             / Inexploitable) + queue « non jugé » grise qui recule au fil du jugement. Remplace la barre
-             de progression d'écoute : un segment rouge dominant signale d'un coup d'œil un enregistrement
-             à problème. La progression d'écoute reste lisible (colonne « Écouté » + barre de statut). -->
-        <VBox spacing="4.0">
-          <BarreVerdicts fx:id="barreVerdicts" maxWidth="Infinity"/>
-          <HBox spacing="10.0" alignment="CENTER_LEFT">
-            <Label fx:id="lblRepartitionVerdicts" styleClass="progression-texte"/>
-            <Region HBox.hgrow="ALWAYS"/>
-            <Label text="Aucun seuil d'écoute obligatoire" styleClass="progression-hint"/>
-          </HBox>
-        </VBox>
-
-        <!-- Erreur de chargement / régénération de la sélection d'écoute (#795) : jusqu'ici avalée
-             (messageProperty du ViewModel non branché) ; masquée tant qu'il n'y a pas d'erreur. -->
-        <Label fx:id="lblSelectionMessage" styleClass="message-erreur" wrapText="true"
-               visible="false" managed="false"/>
-
-        <TableView fx:id="tableSequences" VBox.vgrow="ALWAYS" styleClass="table-sequences">
-          <columns>
-            <TableColumn fx:id="colPosition" text="N°" prefWidth="48.0"/>
-            <TableColumn fx:id="colFichier" text="Fichier" prefWidth="220.0"/>
-            <TableColumn fx:id="colDuree" text="Durée" prefWidth="80.0"/>
-            <TableColumn fx:id="colEcoute" text="Écouté" prefWidth="70.0"/>
-            <TableColumn fx:id="colVerdict" text="Verdict" prefWidth="120.0"/>
-          </columns>
-          <placeholder>
-            <Label text="Aucune séquence à écouter pour l'instant." wrapText="true"/>
-          </placeholder>
-        </TableView>
-      </VBox>
+      <!-- Sous-vue depuis #2745 : treize champs @FXML dans un controller à 191 de NcssCount pour un
+           plafond de 200. Son controller est injecté sous le nom `colonneSelectionController`. -->
+      <fx:include fx:id="colonneSelection" source="SelectionEcoute.fxml"/>
 
       <!-- ============ Colonne droite : détail + verdict ============ -->
       <!-- Sur une fenêtre courte, la colonne défile au lieu de laisser l'AudioView (hauteur mini)

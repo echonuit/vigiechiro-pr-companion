@@ -5,14 +5,12 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
-import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
-import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
@@ -21,7 +19,6 @@ import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
-import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -34,13 +31,9 @@ import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.MenuButton;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyEvent;
@@ -72,6 +65,12 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
 
     /// Façade de navigation de la feature : ouvre la modale « Personnaliser la sélection » (#1431).
     private final NavigationQualification navigation;
+    /// Controller de la sous-vue `SelectionEcoute.fxml`, injecté par le `fx:include` (#2745) : il
+    /// possède les treize champs de la colonne gauche et leur câblage. Le nom est imposé par JavaFX,
+    /// qui concatène le `fx:id` de l'inclusion (`colonneSelection`) et le suffixe `Controller`.
+    @FXML
+    private SelectionEcouteController colonneSelectionController;
+
     private IndicateurOccupation occupation;
 
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
@@ -122,40 +121,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
 
     @FXML
     private Label lblAnomalie;
-
-    @FXML
-    private Label lblListeTitre;
-
-    /// Répartition des verdicts par fichier (#1524, lot 6a) : barre empilée tricolore + queue « non
-    /// jugé », en remplacement de la barre de progression d'écoute.
-    @FXML
-    private BarreVerdicts barreVerdicts;
-
-    @FXML
-    private Label lblRepartitionVerdicts;
-
-    /// Menu ☰ « outils » (#920) : porte l'entrée « Colonnes… » (le clic droit de la table la porte aussi).
-    @FXML
-    private MenuButton menuOutils;
-
-    @FXML
-    private TableView<SequenceEnSelection> tableSequences;
-
-    @FXML
-    private TableColumn<SequenceEnSelection, String> colPosition;
-
-    @FXML
-    private TableColumn<SequenceEnSelection, String> colFichier;
-
-    @FXML
-    private TableColumn<SequenceEnSelection, String> colDuree;
-
-    @FXML
-    private TableColumn<SequenceEnSelection, Boolean> colEcoute;
-
-    /// Colonne « Verdict » : badge du verdict par fichier de chaque séquence (#1524, lot 6a).
-    @FXML
-    private TableColumn<SequenceEnSelection, VerdictFichier> colVerdict;
 
     @FXML
     private Label lblSeqNumero;
@@ -213,11 +178,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
 
     @FXML
     private Button btnFermerRetour;
-
-    /// Erreur de chargement / régénération de la sélection d'écoute (#795), branchée à
-    /// `selectionVm.messageProperty()` (jusqu'ici non affichée, donc avalée).
-    @FXML
-    private Label lblSelectionMessage;
 
     /// Confirmation de succès locale (#797) : « ✓ Verdict enregistré », visible tant que le verdict à
     /// l'écran correspond à l'état persisté (ENREGISTRE).
@@ -281,11 +241,11 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     @FXML
     private void initialize() {
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
-        // Densite et habillage de table uniformes (#690).
-        TableDonnees.uniformiser(tableSequences);
-        // Sélecteur de colonnes (#920) : clic droit + ☰ « outils » ; disposition retenue par écran (#994).
-        GestionnaireColonnes.installerEtPersister(
-                tableSequences, menuOutils, colonnesSequences(), depotColonnes, "qualification", "principale");
+        // Colonne gauche (sélection d'écoute) : sous-vue depuis #2745, à qui l'on passe NOS appuis.
+        // Les deux gestes de son en-tête restent ici : « Personnaliser… » ouvre une modale que seul
+        // ce controller sait situer, et « Régénérer » passe par NOS porteurs de confirmation et de
+        // compte rendu - en fabriquer d'autres là-bas les rendrait insubstituables (ADR 0010).
+        colonneSelectionController.installer(selectionVm, depotColonnes, this::personnaliser, this::regenerer);
         // Bandeau : identité de la nuit (VM sélection) + statut/verdict persistés (VM verdict).
         lblTitreContexte.textProperty().bind(selectionVm.titreContexteProperty());
         lblPlageHoraire.textProperty().bind(selectionVm.plageHoraireProperty());
@@ -311,33 +271,14 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
 
         lierPrecheck();
 
-        // Liste de la sélection + progression d'écoute.
-        lblListeTitre
-                .textProperty()
-                .bind(Bindings.createStringBinding(
-                        () -> "Sélection d'écoute (" + selectionVm.lignes().size() + " séquences)",
-                        selectionVm.lignes()));
-        tableSequences.setItems(selectionVm.lignes());
-        colPosition.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(Integer.toString(c.getValue().position() + 1)));
-        colFichier.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(c.getValue().sequence().nomFichier()));
-        colDuree.setCellValueFactory(c -> new ReadOnlyStringWrapper(
-                Formats.dureeSecondes(c.getValue().sequence().dureeSecondes())));
-        // État d'écoute posé en icône, pas écrit en glyphe (#2237) : un pictogramme d'état binaire se
-        // pose comme le badge de verdict, il ne se glisse pas dans une chaîne « ✓/○ ».
-        MarqueurEcoute.lier(colEcoute);
-        // Verdict par fichier (#1524, lot 6a) : 3 boutons sur la séquence courante + colonne badge,
-        // externalisés pour garder le contrôleur sous les plafonds PMD (GodClass / NcssCount).
-        VerdictParFichier.lier(selectionVm, boutonBon, boutonMauvais, boutonInexploitable, colVerdict);
-        tableSequences
-                .getSelectionModel()
-                .selectedItemProperty()
-                .addListener((obs, ancien, nouveau) -> selectionVm.selectionner(nouveau));
-        // Barre tricolore des verdicts par fichier (#1524) : suit la liste, se recompose à chaque verdict
-        // rendu. Le résumé chiffré (« 7 Bon · 3 Mauvais · … ») légende la barre en dessous.
-        barreVerdicts.suivre(selectionVm.lignes());
-        lblRepartitionVerdicts.textProperty().bind(barreVerdicts.resumeProperty());
+        // Verdict par fichier (#1524, lot 6a) : la colonne badge de la sous-vue et les trois boutons
+        // de la colonne droite jugent la MÊME séquence, ils se câblent donc ensemble.
+        VerdictParFichier.lier(
+                selectionVm,
+                boutonBon,
+                boutonMauvais,
+                boutonInexploitable,
+                colonneSelectionController.colonneVerdict());
 
         // Détail de la séquence courante.
         lblSeqNumero
@@ -427,9 +368,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         // suit une action irréversible (régénérer efface la progression d'écoute, d'où sa confirmation).
         BandeauRetour.installer(
                 bandeauRetour, lblRetour, btnFermerRetour, verdictVm.retourProperty(), verdictVm::effacerRetour);
-        lblSelectionMessage.textProperty().bind(selectionVm.messageProperty());
-        lblSelectionMessage.visibleProperty().bind(selectionVm.messageProperty().isNotEmpty());
-        lblSelectionMessage.managedProperty().bind(selectionVm.messageProperty().isNotEmpty());
     }
 
     /// Ouvre l'écran sur le passage `passage` : les deux VM se synchronisent sur le même passage.
@@ -531,17 +469,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
                 .and(audioView.errorMessageProperty().isEmpty());
         lblChargementAudio.visibleProperty().bind(enChargement);
         lblChargementAudio.managedProperty().bind(enChargement);
-    }
-
-    /// Colonnes de la sélection d'écoute proposées au sélecteur (#920). « Fichier » est l'identité
-    /// (verrouillée) ; les autres sont masquables.
-    private List<GestionnaireColonnes.Colonne> colonnesSequences() {
-        return List.of(
-                new GestionnaireColonnes.Colonne(colPosition, "N°", false),
-                new GestionnaireColonnes.Colonne(colFichier, "Fichier", true),
-                new GestionnaireColonnes.Colonne(colDuree, "Durée", false),
-                new GestionnaireColonnes.Colonne(colEcoute, "Écouté", false),
-                new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false));
     }
 
     /// Ouvre la modale de personnalisation de la sélection (R12) : choix de la méthode et de la taille,
