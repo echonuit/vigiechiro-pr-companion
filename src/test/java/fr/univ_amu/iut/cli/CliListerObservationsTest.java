@@ -41,6 +41,7 @@ class CliListerObservationsTest {
     private long idValidee;
     private long idCorrigeeDouteuse;
     private long idPassage;
+    private long idPassageSansObservation;
 
     @BeforeEach
     void preparer() {
@@ -135,8 +136,29 @@ class CliListerObservationsTest {
         assertThat(sortieTexte()).contains("Aucune observation ne correspond");
     }
 
+    @Test
+    @DisplayName("#3269 : sur un passage sans observation, --lieu ne prétend pas que le lieu manque")
+    void passage_sans_observation_ne_se_lit_pas_comme_un_lieu_absent() {
+        // `--lieu` DÉSIGNE, donc refuse un lieu absent des lignes (ADR 3082). Sur un passage qui n'a
+        // aucune observation, il refusait TOUT lieu en code 2, avec « Lieux présents : aucun » - alors que
+        // la vérité est qu'il n'y a rien à situer. La commande avait déjà la bonne phrase ; elle
+        // s'exécutait après le refus, donc jamais. Relevé à la passe 7 de la clôture des suites de #3092.
+        int code = cli.executer(
+                new String[] {
+                    "lister-observations", "--passage", String.valueOf(idPassageSansObservation), "--lieu", "130711"
+                },
+                sortie,
+                erreur);
+
+        assertThat(code)
+                .as("un passage vide est un constat, pas une erreur d'invocation")
+                .isZero();
+        assertThat(capture.tout()).contains("Aucune observation").doesNotContain("Lieux présents");
+    }
+
     /// Un passage et trois observations qui couvrent les trois statuts : une non revue, une validée (le
-    /// taxon de l'observateur est celui de Tadarida), une corrigée **et** douteuse.
+    /// taxon de l'observateur est celui de Tadarida), une corrigée **et** douteuse. Puis une **seconde**
+    /// nuit, sur le même point, sans aucune observation.
     private void semer() {
         JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(injecteur.getInstance(SourceDeDonnees.class))
                 .carre("130711")
@@ -148,5 +170,13 @@ class CliListerObservationsTest {
         idValidee = jeu.ajouterObservationValidee("Nyclei");
         idCorrigeeDouteuse =
                 jeu.ajouterObservation("Pipkuh", "Pippip", ModeValidation.MANUEL, true, Certitude.PROBABLE);
+
+        // Une seconde nuit, sur le même point, SANS aucune observation : l'état qu'aucun test ne voyait.
+        idPassageSansObservation = JeuDeDonneesPassage.dans(injecteur.getInstance(SourceDeDonnees.class))
+                .carre("130711")
+                .point("Z41")
+                .nuit(2, 2026, "2026-07-14")
+                .semer()
+                .idPassage();
     }
 }

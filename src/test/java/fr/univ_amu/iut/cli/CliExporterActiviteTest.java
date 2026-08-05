@@ -118,4 +118,25 @@ class CliExporterActiviteTest {
         assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
         assertThat(tampon.tout()).contains("Format non pris en charge");
     }
+
+    @Test
+    @DisplayName("#3269 : sur une portée sans contact, --lieu ne prétend pas que le lieu manque")
+    void base_vide_ne_se_lit_pas_comme_un_lieu_absent() throws Exception {
+        // `--lieu` DÉSIGNE, donc refuse un lieu absent des lignes (ADR 3082). Sans garde, sur une base
+        // sans aucun contact il refusait TOUT lieu en code 2, avec « Lieux présents : aucun » - mettant
+        // en cause une valeur qui n'y était pour rien. Défaut relevé à la passe 7 de la clôture des
+        // suites de #3092, sur le même patron que `lister-passages` et `lister-especes`.
+        Path sortie = workspace.resolve("activite-lieu.csv");
+        SortieCapturee tampon = new SortieCapturee();
+
+        int code = executer(tampon, "exporter-activite", "--tout", "--sortie", sortie.toString(), "--lieu", "640380");
+
+        assertThat(code)
+                .as("un export vide est un résultat valide, pas une erreur d'invocation")
+                .isEqualTo(Cli.CODE_SUCCES);
+        assertThat(tampon.tout()).doesNotContain("Lieux présents");
+        assertThat(Files.exists(sortie))
+                .as("le CSV garde ses en-têtes : un script qui en attend un en reçoit un")
+                .isTrue();
+    }
 }
