@@ -1,9 +1,7 @@
 package fr.univ_amu.iut.validation.model;
 
-import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.util.List;
-import java.util.Objects;
 
 /// Les trois critères de l'écran **Sons & validation** qui manquaient en ligne de commande (#3082).
 ///
@@ -36,19 +34,7 @@ public final class FiltresRevue {
     ///
     /// @throws RegleMetierException si aucune ligne ne relève de ce taxon parent
     public static List<LigneObservationAudio> parTaxonParent(List<LigneObservationAudio> lignes, String groupe) {
-        if (groupe == null || groupe.isBlank()) {
-            return lignes;
-        }
-        String demande = NormalisationTexte.normaliser(groupe);
-        List<LigneObservationAudio> retenues = lignes.stream()
-                .filter(ligne -> ligne.groupe() != null
-                        && NormalisationTexte.normaliser(ligne.groupe()).contains(demande))
-                .toList();
-        if (retenues.isEmpty()) {
-            throw new RegleMetierException("Aucune observation pour le taxon parent « " + groupe
-                    + " » parmi celles retenues. Taxons parents présents : " + presents(lignes) + ".");
-        }
-        return retenues;
+        return FiltresTaxonParent.parTaxonParent(lignes, groupe, LigneObservationAudio::groupe, "Aucune observation");
     }
 
     /// Les séquences **non identifiées** : présentes sur le disque, absentes du CSV Tadarida, donc sans
@@ -101,16 +87,5 @@ public final class FiltresRevue {
             throw new RegleMetierException(
                     "Heure hors bornes : " + option + " " + heure + ". Les heures vont de 0 à 23.");
         }
-    }
-
-    /// Les taxons parents réellement présents, triés : ce qu'un refus doit nommer pour être corrigeable.
-    private static String presents(List<LigneObservationAudio> lignes) {
-        List<String> groupes = lignes.stream()
-                .map(LigneObservationAudio::groupe)
-                .filter(Objects::nonNull)
-                .distinct()
-                .sorted()
-                .toList();
-        return groupes.isEmpty() ? "aucun" : String.join(", ", groupes);
     }
 }
