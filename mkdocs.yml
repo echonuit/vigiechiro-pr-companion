@@ -116,3 +116,9 @@ extra_css:
 exclude_docs: |
   benchmarks/
   requirements.txt
+
+# Validation des liens (#2887). MkDocs vérifie par défaut que le FICHIER cité existe, mais pas que
+# l'ANCRE y existe : un `#titre-renomme` passait donc en silence, y compris en `--strict`. Mesuré, le
+# dépôt en portait quatre, toutes écrites à la main en gardant les accents que le slug retire.
+validation:
+  anchors: warn

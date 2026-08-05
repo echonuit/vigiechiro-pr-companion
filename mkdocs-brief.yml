@@ -186,3 +186,9 @@ nav:
           - M-Activite: Analyse et conception/Maquettes/M-Activite.md
           - M-Saison: Analyse et conception/Maquettes/M-Saison.md
           - M-CompteRendu: Analyse et conception/Maquettes/M-CompteRendu.md
+
+# Validation des liens (#2887). MkDocs vérifie par défaut que le FICHIER cité existe, mais pas que
+# l'ANCRE y existe : un `#titre-renomme` passait donc en silence, y compris en `--strict`. Mesuré, le
+# dépôt en portait quatre, toutes écrites à la main en gardant les accents que le slug retire.
+validation:
+  anchors: warn

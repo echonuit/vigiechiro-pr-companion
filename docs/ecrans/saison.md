@@ -105,7 +105,7 @@ calculés à partir du même solde, ils ne peuvent pas se contredire.
 
 Le sélecteur n'apparaît que s'il y a une campagne à proposer. Tant que vous n'en avez créé aucune, la
 barre reste telle quelle : un contrôle vide n'aide personne. Pour en créer une, voir
-[Le passage](passage.md#gerer-les-campagnes).
+[Le passage](passage.md#rattacher-a-une-campagne).
 
 Le même filtre existe en ligne de commande : `vigiechiro solde-saison --campagne ens`.
 
