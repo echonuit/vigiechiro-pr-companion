@@ -7,6 +7,7 @@ import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.Severite;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -39,6 +40,13 @@ public final class Auditer implements Callable<Integer> {
 
     @Option(names = "--categorie", description = "Ne garde que cette nature de constat : ${COMPLETION-CANDIDATES}.")
     private CategorieConstat categorie;
+
+    @Option(
+            names = "--contient",
+            paramLabel = "<texte>",
+            description = "Ne garde que les constats dont la cible ou le détail contient ce texte "
+                    + "(casse et accents ignorés), comme la recherche libre de l'écran.")
+    private String contient;
 
     @Option(names = "--json", description = "Émet les constats au format JSON (tableau) plutôt qu'en texte.")
     private boolean json;
@@ -99,7 +107,21 @@ public final class Auditer implements Callable<Integer> {
         return constats.stream()
                 .filter(constat -> gravite == null || constat.severite() == gravite)
                 .filter(constat -> categorie == null || constat.categorie() == categorie)
+                .filter(constat -> contient == null || correspond(constat))
                 .toList();
+    }
+
+    /// Même recherche que la barre de l'écran (`CriteresAudit.rechercheTexte`) : la **cible** et le
+    /// **détail**, les deux colonnes en texte libre, casse et accents ignorés. Les autres colonnes ont
+    /// leur option ; les inclure ici ferait répondre `--contient erreur` sur toutes les lignes en
+    /// erreur, ce que `--gravite` dit mieux.
+    private boolean correspond(ConstatAudit constat) {
+        String aiguille = NormalisationTexte.normaliser(contient);
+        return contientNormalise(constat.cible(), aiguille) || contientNormalise(constat.detail(), aiguille);
+    }
+
+    private static boolean contientNormalise(String champ, String aiguille) {
+        return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
     }
 
     private static String enJson(List<ConstatAudit> constats) {
@@ -139,14 +161,30 @@ public final class Auditer implements Callable<Integer> {
                     .append(constat.detail())
                     .append(System.lineSeparator());
         }
-        texte.append(rapport.constats().size())
-                .append(" constat(s) : ")
-                .append(rapport.nombre(Severite.ERREUR))
+        int total = rapport.constats().size();
+        if (retenus.size() < total) {
+            // Le filtre a masqué quelque chose : la ligne de résumé DOIT dire qu'elle compte l'audit
+            // entier. Sans ce « sur N », elle listait un constat puis annonçait « 3 constat(s) : 1
+            // erreur(s) » - un lecteur y voyait trois lignes et cherchait les deux autres. Et surtout,
+            // c'est ce total que juge le code de sortie : afficher zéro erreur en rendant 1 est correct,
+            // mais seulement si la sortie l'explique.
+            texte.append(retenus.size())
+                    .append(" constat(s) affiché(s) sur ")
+                    .append(total)
+                    .append(". ");
+        } else {
+            texte.append(total).append(" constat(s) : ");
+        }
+        if (retenus.size() < total) {
+            texte.append("L'audit entier compte ");
+        }
+        texte.append(rapport.nombre(Severite.ERREUR))
                 .append(" erreur(s), ")
                 .append(rapport.nombre(Severite.AVERTISSEMENT))
                 .append(" avertissement(s), ")
                 .append(rapport.nombre(Severite.INFO))
-                .append(" info(s).");
+                .append(" info(s)");
+        texte.append(retenus.size() < total ? ", et c'est lui que juge le code de sortie." : ".");
         return texte.toString();
     }
 }

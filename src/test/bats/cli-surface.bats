@@ -76,6 +76,30 @@ COMMANDES_LOCALES_SANS_ARG=(
   [[ "${output}" == *"aucun écart"* ]]
 }
 
+# Les trois filtres (#3092 pour --gravite/--categorie, #3258 pour --contient) n'avaient aucune garde
+# sur le VRAI processus : ni l'analyse des arguments par picocli, ni les codes de sortie réels.
+@test "audit-coherence --categorie : valeur valide sans correspondance, exit 0 sur base fraîche (#3258)" {
+  run cli audit-coherence --categorie DEPARTEMENT_DIVERGENT
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"aucun écart"* ]]
+}
+
+@test "audit-coherence --contient : la recherche libre est acceptée (#3258)" {
+  run cli audit-coherence --contient aix
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"aucun écart"* ]]
+}
+
+@test "audit-coherence --gravite hors liste : refus d'usage, exit 2 (#3258)" {
+  run cli audit-coherence --gravite CATASTROPHE
+  [ "${status}" -eq 2 ]
+  # Le code 2 seul ne prouve RIEN : une option INEXISTANTE rend 2 elle aussi, et c'est ainsi que ce
+  # cas est resté vert sur un jar où les options avaient disparu. Le message les distingue :
+  # « Invalid value » dit que l'option existe et que c'est sa valeur qui est refusée.
+  [[ "${output}" == *"Invalid value for option '--gravite'"* ]]
+  [[ "${output}" != *"Unknown option"* ]]
+}
+
 @test "api : le groupe affiche son aide et sort en succès (#3006)" {
   # Groupe imbriqué (une première dans ce dépôt) : sans sous-commande il se comporte comme la racine.
   run cli api
