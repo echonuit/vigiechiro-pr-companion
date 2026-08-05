@@ -10,7 +10,6 @@ import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
@@ -320,100 +319,38 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         lblDureeEnregistree.textProperty().bind(viewModel.dureeEnregistreeProperty());
         lblNbSequences.textProperty().bind(viewModel.nombreSequencesProperty().asString());
 
-        boutonVerifier
-                .disableProperty()
-                .bind(viewModel.verificationDisponibleProperty().not());
-        // « Vérifier » n'apparaît que si la feature `qualification` est activée (feature-flag #1087) : quand
-        // elle est coupée, le contrat est absent et la carte est retirée plutôt que laissée sans effet.
-        boolean verificationActive = ouvrirVerification.isPresent();
-        boutonVerifier.setVisible(verificationActive);
-        boutonVerifier.setManaged(verificationActive);
-        // « Diagnostic » n'apparaît que si la feature `diagnostic` est activée (feature-flag #1087) : quand
-        // elle est coupée, le contrat est absent et la carte est retirée plutôt que laissée sans effet.
-        boolean diagnosticActif = ouvrirDiagnostic.isPresent();
-        boutonDiagnostic.setVisible(diagnosticActif);
-        boutonDiagnostic.setManaged(diagnosticActif);
-        // « Activité de la nuit » n'apparaît que si la feature `activite-nuit` est activée (#2352,
-        // OPTIONNELLE depuis la clôture du lot #2352) : coupée, le contrat est absent et la carte est retirée.
-        boolean activiteActive = ouvrirActivite.isPresent();
-        boutonActivite.setVisible(activiteActive);
-        boutonActivite.setManaged(activiteActive);
-        // « Synthèse de la nuit » (#2351) : même montage, feature `synthese-nuit`, OPTIONNELLE depuis la
-        // clôture du lot : coupée, le contrat est absent et la carte est retirée.
-        boolean syntheseActive = ouvrirSynthese.isPresent();
-        boutonSynthese.setVisible(syntheseActive);
-        boutonSynthese.setManaged(syntheseActive);
-        boutonValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
-        boutonDepot.disableProperty().bind(viewModel.depotDisponibleProperty().not());
-        IndicateurBlocage.expliquer(
-                enveloppeDepot,
-                Bindings.when(viewModel.depotDisponibleProperty())
-                        .then("Préparer le dépôt : constituer le jeu Tadarida à téléverser.")
-                        .otherwise(Bindings.when(viewModel.motifs().depot().isEmpty())
-                                .then("Le dépôt se prépare une fois la nuit vérifiée.")
-                                .otherwise(viewModel.motifs().depot())));
-        // « Préparer le dépôt » n'apparaît que si la feature `lot` est activée (feature-flag #1087) : quand
-        // elle est coupée, le contrat est absent et la carte est retirée plutôt que laissée sans effet.
-        boolean depotActif = ouvrirLot.isPresent();
-        enveloppeDepot.setVisible(depotActif);
-        enveloppeDepot.setManaged(depotActif);
-        // Suppression gatée en amont (#789) : un passage déposé n'est pas supprimable (le service le refuse).
-        // Plutôt que de laisser l'utilisateur découvrir le refus APRÈS la confirmation, on grise le bouton et
-        // on explique le blocage par un tooltip posé sur l'enveloppe (un Button désactivé n'en affiche pas).
-        boutonSupprimer
-                .disableProperty()
-                .bind(viewModel.suppressionPossibleProperty().not());
-        // « Voir la participation » (#1124) : actif seulement quand le passage est lié à une participation ;
-        // désactivé, il documente ce qui manque (affordance #789) plutôt que de disparaître.
-        boutonOuvrirPortail.disableProperty().bind(lienParticipation.isEmpty());
-        IndicateurBlocage.expliquer(
-                enveloppeOuvrirPortail,
-                Bindings.when(lienParticipation.isNotEmpty())
-                        .then("Ouvre la participation liée sur le portail Vigie-Chiro (navigateur).")
-                        .otherwise("Ce passage n'est pas encore lié à une participation Vigie-Chiro :"
-                                + " elle est créée à l'import (connecté) ou au premier dépôt."));
-        IndicateurBlocage.expliquer(
-                enveloppeSupprimer,
-                Bindings.when(viewModel.suppressionPossibleProperty())
-                        .then("Supprimer définitivement ce passage et toute sa nuit (séquences, relevés).")
-                        .otherwise("Suppression impossible : ce passage est déposé sur Vigie-Chiro."
-                                + " Annulez d'abord le dépôt."));
-        // « Modifier le passage » ouvre toujours la modale (la météo et le micro sont éditables à tout
-        // statut, y compris sur un passage déposé ou reconstruit). Le renommage (année/n°), lui, est
-        // verrouillé sur un passage déposé (#1134) : ce verrou vit désormais DANS la modale, pas sur le
-        // bouton. On ne grise donc plus que s'il n'y a aucun passage chargé.
-        boutonRattachement.disableProperty().bind(viewModel.statutProperty().isNull());
-        IndicateurBlocage.expliquer(
-                enveloppeRattachement,
-                Bindings.when(viewModel.renommagePossibleProperty())
-                        .then("Modifier le passage : année, n° (renomme la nuit), météo et micro.")
-                        .otherwise("Modifier le passage : météo et micro. L'année et le n° sont verrouillés"
-                                + " (passage déposé, identité serveur)."));
-        // « Annuler le dépôt » n'a de sens que sur un passage déposé : le bouton n'apparaît (et n'occupe
-        // de place) que dans ce cas, au lieu de rester grisé en permanence dans la barre d'actions.
-        enveloppeAnnulerDepot.visibleProperty().bind(viewModel.annulationDepotPertinenteProperty());
-        enveloppeAnnulerDepot.managedProperty().bind(viewModel.annulationDepotPertinenteProperty());
-        boutonAnnulerDepot
-                .disableProperty()
-                .bind(viewModel.annulationDepotDisponibleProperty().not());
-        IndicateurBlocage.expliquer(
-                enveloppeAnnulerDepot,
-                Bindings.when(viewModel.annulationDepotDisponibleProperty())
-                        .then("Ramener ce passage de « Déposé » à « Prêt à déposer », sans toucher aux"
-                                + " validations déjà saisies.")
-                        .otherwise(viewModel.motifs().annulationDepot()));
-        // « Réactiver ce passage » (#1302) : gaté en amont (#789). L'action n'apparaît utile que s'il
-        // manque de l'audio (fichiers déplacés ou supprimés, disque incomplet).
-        boutonReactiver
-                .disableProperty()
-                .bind(viewModel.reactivationPossibleProperty().not());
-        IndicateurBlocage.expliquer(
-                enveloppeReactiver,
-                Bindings.when(viewModel.reactivationPossibleProperty())
-                        .then("Réactiver ce passage : réimporte les fichiers d'origine et les rebranche,"
-                                + " après vérification que ce sont bien les mêmes.")
-                        .otherwise(viewModel.motifs().reactivation()));
-        lblIndiceAction.textProperty().bind(viewModel.motifs().verification());
+        // Cartes d'action : disponibilité (feature-flag #1087), activation selon l'état, et
+        // explication du grisage posée sur l'ENVELOPPE (un Button désactivé n'affiche pas de
+        // tooltip, #789). Extrait dans CartesActionPassage (#2745) : cinquante instructions qui
+        // répétaient les trois mêmes règles.
+        CartesActionPassage.cabler(
+                new CartesActionPassage.Cartes(
+                        boutonVerifier,
+                        boutonDiagnostic,
+                        boutonActivite,
+                        boutonSynthese,
+                        boutonValidation,
+                        boutonDepot,
+                        enveloppeDepot,
+                        boutonSupprimer,
+                        enveloppeSupprimer,
+                        boutonOuvrirPortail,
+                        enveloppeOuvrirPortail,
+                        boutonRattachement,
+                        enveloppeRattachement,
+                        boutonAnnulerDepot,
+                        enveloppeAnnulerDepot,
+                        boutonReactiver,
+                        enveloppeReactiver,
+                        lblIndiceAction),
+                viewModel,
+                new CartesActionPassage.Disponibilites(
+                        ouvrirVerification.isPresent(),
+                        ouvrirDiagnostic.isPresent(),
+                        ouvrirActivite.isPresent(),
+                        ouvrirSynthese.isPresent(),
+                        ouvrirLot.isPresent()),
+                lienParticipation);
 
         // Mise en avant de la « prochaine action » : le liseré recommandé se déplace selon le statut
         // (Vérifier → Préparer le dépôt → Sons & validation), au lieu de rester figé sur Vérifier.
