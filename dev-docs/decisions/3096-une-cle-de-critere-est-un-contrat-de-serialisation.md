@@ -4,6 +4,12 @@
 - **Chantier** : #3096, palier 3 du chantier #3092
 - **Vérification** : certaine - `ClesCriteresTest#aucune_cle_publiee_deux_fois`
 
+!!! note "Sa jumelle : la **valeur**, quand celle-ci porte sur la **clé**"
+    Une vue sauvegardée persiste deux choses, et deux ADR nées la même semaine en traitent une chacune :
+    la **clé** du critère (celle-ci, chantier #3092) et la **valeur** cochée, qui se rattrape par
+    dimension ([ADR 3158](3158-une-valeur-memorisee-se-rattrape-par-dimension.md), chantier #3151).
+    Écrites en parallèle, elles ne se citaient pas ; le rapprochement a été fait à la clôture de #3151.
+
 ## Contexte
 
 Chaque critère de filtre porte un **nom court** (`statut`, `groupe`, `lieu`) qui sert à deux choses très

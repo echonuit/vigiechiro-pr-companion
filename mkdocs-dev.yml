@@ -149,6 +149,7 @@ nav:
     - 3096 · Une clé de critère est un contrat de sérialisation: decisions/3096-une-cle-de-critere-est-un-contrat-de-serialisation.md
     - 3095 · Un domaine se calcule sans son propre critère: decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md
     - 3099 · Une puce présélectionnée annonce ce qu'elle filtre: decisions/3099-une-puce-preselectionnee-annonce-ce-quelle-filtre.md
+    - 3151 · Un écran n'offre pas ce qu'il ne montre pas: decisions/3151-un-ecran-n-offre-pas-ce-qu-il-ne-montre-pas.md
     - 3157 · Un carré a un identifiant et une étiquette: decisions/3157-un-carre-a-un-identifiant-et-une-etiquette.md
     - 3158 · Une valeur mémorisée se rattrape par dimension: decisions/3158-une-valeur-memorisee-se-rattrape-par-dimension.md
     - 3168 · Un audit qui ne peut pas trancher montre sans juger: decisions/3168-un-audit-qui-ne-peut-pas-trancher-montre-sans-juger.md

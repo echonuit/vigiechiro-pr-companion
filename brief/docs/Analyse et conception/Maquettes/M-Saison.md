@@ -128,13 +128,25 @@ L'écran répond à une seule question, celle qu'un observateur se pose au milie
   **tableau de bord**, pas une table exploratoire.
     La limite était ailleurs : sur un jeu conséquent, les deux questions qu'on pose à la liste n'avaient
     aucune réponse directe. Un champ **« Chercher un lieu »** (`champRechercheLieu`) retient les points
-    dont le carré, le nom qu'on lui a donné ou le code du point correspond ; une case **« Reste à faire »**
+    dont le carré, le nom qu'on lui a donné, le code du point ou la **commune** correspond ; une case **« Reste à faire »**
     (`caseResteAFaire`) ne garde que les points qui ne sont pas à jour - la raison d'être de l'écran.
     ⚠️ Ces deux filtres ne touchent **que la liste des points** : le résumé d'en-tête continue de compter
     la **saison entière**. Filtrer change ce qu'on regarde, pas ce qu'il y a à faire
     ([ADR 3092](https://companion-dev.echonuit.fr/decisions/3092-un-filtre-ne-change-que-ce-quon-regarde/)).
     Les deux existent aussi en ligne de commande (`solde-saison --lieu`, `--reste-a-faire`), sur la même
     écriture de la règle.
+- **Colonnes « Nom du carré » et « Commune »** (`colNomSite`, `colCommune`, chantier #3151) : le lieu
+  se **montre** là où il se cherche. Le champ « Chercher un lieu » retenait une ligne sur le nom du carré
+  (#3219) puis sur la commune, et cet écran n'ayant **pas** de puce « Lieu » - contrairement aux quatre
+  autres tableaux - ces deux valeurs n'apparaissaient nulle part : on trouvait sans voir pourquoi
+  ([ADR 3151](https://companion-dev.echonuit.fr/decisions/3151-un-ecran-n-offre-pas-ce-qu-il-ne-montre-pas/)).
+    Les deux cellules restent **vides** quand il n'y a rien à dire - un carré sans nom, un point dont la
+    commune n'est pas résolue - comme « Hors protocole » quand aucune nuit opportuniste n'existe.
+    ⚠️ La **forme** de ces colonnes s'est jouée sur des captures, pas sur un raisonnement. Qualifier
+    « Carré » en « 640380 · Vallon », comme les entrées de puce des autres écrans, paraissait évident :
+    l'aperçu régénéré montrait « 640380 · … ». Il a fallu une colonne dédiée, puis élargir l'aperçu, pour
+    que le nom **et** « Reste à faire » tiennent ensemble. Le croquis ci-dessus, lui, date d'avant ces
+    deux colonnes.
 - **Colonne « Hors protocole »** (`colHorsProtocole`, issue #2525) : les nuits **opportunistes** réalisées sur ce point. Elles ont leur colonne précisément pour ne pas occuper celle d'un passage attendu : les voir en « Passage 1 » se lirait « le passage 1 est fait » alors que la ligne réclame encore de poser l'enregistreur (ligne 3 de la maquette). Les colonnes de passage restent donc sur « Non planifié » tant que le passage du protocole manque réellement, et ces nuits ne comptent pas dans le décompte ([R34](../Modèle%20conceptuel/Règles%20métier.md#r34)).
 - **Colonnes Passage 1 et Passage 2** (`colPassage1`, `colPassage2`) : l'état du passage et sa date, ou son absence. **Les états et leurs couleurs sont repris du modèle existant** ; l'écran ne crée pas un second vocabulaire de statuts, ce qui obligerait l'utilisateur à en apprendre deux.
 - **Un passage inexploitable compte comme restant à faire** : c'est le cas où un décompte naïf induit en erreur, puisque le passage existe en base mais ne vaut rien pour le protocole.

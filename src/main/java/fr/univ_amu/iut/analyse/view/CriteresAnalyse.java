@@ -161,8 +161,19 @@ final class CriteresAnalyse {
                 : LieuQualifie.qualifier(observation.numeroCarre(), observation.codePoint());
     }
 
-    /// **Recherche texte** de la barre : vrai si un des champs cherchables d'une observation (taxon retenu,
-    /// nom vernaculaire, nom latin, n° de carré, nom de site) contient l'aiguille (insensible casse/accents).
+    /// **Recherche texte** de la barre : vrai si un des champs cherchables d'une observation contient
+    /// l'aiguille, insensible à la casse et aux accents. Ce sont **les colonnes en texte libre de
+    /// l'écran**, ce que la documentation promet : taxon retenu, nom vernaculaire, nom latin, n° de
+    /// carré, nom du carré, commune et **code du point**.
+    ///
+    /// Le code du point manquait (#3151, passe 4 de la clôture) : la table l'affiche, les quatre autres
+    /// écrans le cherchent, et la promesse était donc fausse ici seule. La commune, elle, avait rejoint
+    /// la recherche avec #2840 sans que cette phrase suive.
+    ///
+    /// ⚠️ Ne pas transposer l'arbitrage de `FiltresLieu`, qui écarte le point **en ligne de commande**
+    /// parce qu'un code seul est ambigu entre carrés et qu'une commande n'a pas de liste sous les yeux.
+    /// Ici la table montre le carré sur chaque ligne : une recherche « A1 » qui remonte plusieurs carrés
+    /// se lit sans ambiguïté.
     /// Fournie au [fr.univ_amu.iut.commun.view.GestionnaireFiltres], qui l'applique au champ permanent.
     static BiPredicate<ObservationAnalyse, String> rechercheTexte() {
         return CriteresAnalyse::correspond;
@@ -175,6 +186,7 @@ final class CriteresAnalyse {
                 || NormalisationTexte.contient(observation.nomLatin(), aiguille)
                 || NormalisationTexte.contient(observation.numeroCarre(), aiguille)
                 || NormalisationTexte.contient(observation.nomSite(), aiguille)
-                || NormalisationTexte.contient(observation.commune(), aiguille);
+                || NormalisationTexte.contient(observation.commune(), aiguille)
+                || NormalisationTexte.contient(observation.codePoint(), aiguille);
     }
 }
