@@ -133,6 +133,15 @@ jobs:
           ./.github/scripts/verifie-permissions.sh --auto-test
           ./.github/scripts/verifie-permissions.sh
 
+      - name: Les renvois entre workflows visent un libellé existant
+        # Un `workflow_run` désigne le workflow attendu par son `name:`, apparié par égalité stricte.
+        # Un libellé mort n'arme rien et ne rougit pas : il n'y a AUCUN run à regarder. #3279 l'a payé
+        # trois semaines de documentation non republiée, repérées à l'œil et non par la CI (#3287).
+        run: |
+          chmod +x .github/scripts/verifie-renvois-workflows.sh
+          ./.github/scripts/verifie-renvois-workflows.sh --auto-test
+          ./.github/scripts/verifie-renvois-workflows.sh
+
       - name: Aucun jeton VigieChiro en clair
         # Le scan de secrets de GitHub ne reconnaît que les motifs de FOURNISSEURS ; un jeton
         # VigieChiro est une chaîne opaque qu'aucun catalogue ne connaît, et les motifs

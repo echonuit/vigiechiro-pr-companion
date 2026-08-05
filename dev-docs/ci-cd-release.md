@@ -314,6 +314,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `check-capture-mains.sh` | chaque outil de capture est enregistré dans `MAINS` | `lint.yml` |
 | `check-doc-images.sh` | chaque capture citée par la doc existe et est déclarée | `docs.yml` |
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
+| `verifie-renvois-workflows.sh` | chaque `workflow_run` vise le `name:` d'un workflow existant | `lint.yml` |
 | `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
 
 **Le modèle vient de #2947** (`verifie-titre-pr.sh`) et il est le bon : le script **se réinvoque
