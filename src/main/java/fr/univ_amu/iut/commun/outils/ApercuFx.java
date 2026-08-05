@@ -122,6 +122,18 @@ public final class ApercuFx {
     /// à charge pour l'appelant de le dire et de continuer : un aperçu manquant ne doit pas faire échouer
     /// tout un job de capture.
     ///
+    /// ## La feuille de style suit le menu (#3169, relevé à la passe 8)
+    ///
+    /// Le popup se rend dans la scène de son **hôte**, et cet hôte était une scène nue : aucune règle de
+    /// `design.css` ne s'y appliquait. Tant qu'un menu ne portait que du texte ordinaire, le rendu par
+    /// défaut passait pour juste. Le jour où une entrée a porté un **sens** par sa classe CSS - la valeur
+    /// « hors jeu », grisée et en italique - la capture a montré une entrée strictement identique aux
+    /// autres, sous une légende qui la disait grisée.
+    ///
+    /// Le garde de l'appelant ne pouvait pas le voir : il vérifie que la **classe** est posée, pas que
+    /// quelque chose a changé à l'écran. C'est le même piège que celui des dialogues, dont la méthode
+    /// voisine prend ses feuilles en paramètre depuis longtemps.
+    ///
     /// @param menu le bouton de menu dont on veut montrer le contenu déployé
     /// @param fichier le PNG à écrire
     /// @return `true` si l'aperçu a été écrit, `false` si le popup ne s'est pas rendu
@@ -131,7 +143,9 @@ public final class ApercuFx {
         apercu.getItems().addAll(items);
 
         Stage hote = new Stage();
-        hote.setScene(new Scene(new javafx.scene.layout.StackPane(), 500, 300));
+        Scene sceneHote = new Scene(new javafx.scene.layout.StackPane(), 500, 300);
+        feuillesDe(menu).forEach(sceneHote.getStylesheets()::add);
+        hote.setScene(sceneHote);
         hote.show();
         apercu.show(hote);
         try {
@@ -207,6 +221,31 @@ public final class ApercuFx {
             longueurLigne += mot.length();
         }
         return enroule.toString();
+    }
+
+    /// Les feuilles de style qui gouvernent `menu`, à reporter sur l'hôte du popup.
+    ///
+    /// Lues sur la vue plutôt que codées en dur : l'outil de capture monte déjà le vrai écran, avec les
+    /// feuilles que son FXML lui donne. Nommer `design.css` ici en ferait une seconde source de vérité,
+    /// qui divergerait le jour où un écran en ajoute une - `Multisite.fxml` en déclare **trois**.
+    ///
+    /// Elles se cherchent **sur les ancêtres autant que sur la scène** : l'attribut `stylesheets` d'un
+    /// FXML garnit le nœud **racine** ([javafx.scene.Parent#getStylesheets]), pas la scène. Ne regarder
+    /// que la scène rendait une liste vide sur tous les écrans du dépôt - premier correctif de cette
+    /// méthode, écrit puis mesuré faux.
+    static List<String> feuillesDe(MenuButton menu) {
+        List<String> feuilles = new java.util.ArrayList<>();
+        if (menu.getScene() != null) {
+            feuilles.addAll(menu.getScene().getStylesheets());
+        }
+        for (javafx.scene.Node noeud = menu; noeud != null; noeud = noeud.getParent()) {
+            if (noeud instanceof javafx.scene.Parent parent) {
+                parent.getStylesheets().stream()
+                        .filter(f -> !feuilles.contains(f))
+                        .forEach(feuilles::add);
+            }
+        }
+        return List.copyOf(feuilles);
     }
 
     public static void enregistrerDialogPane(
