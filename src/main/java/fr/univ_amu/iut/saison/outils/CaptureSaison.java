@@ -96,7 +96,10 @@ public final class CaptureSaison {
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         Path fichier = sortie.resolve("apercu-saison.png");
-        ApercuFx.enregistrerPng(new Scene(vue, 900, 520), fichier);
+        // 1100 depuis #3289 : la colonne « Nom du carré » ajoute 150 px, et à 900 la table débordait -
+        // « Reste à faire », qui est la raison d être de l écran, se faisait tronquer. 1100 est la
+        // largeur la plus courante des aperçus du dépôt ; celui-ci en était le plus étroit.
+        ApercuFx.enregistrerPng(new Scene(vue, 1100, 520), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 

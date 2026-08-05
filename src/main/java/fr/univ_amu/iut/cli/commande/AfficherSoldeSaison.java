@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.FiltresSaison;
 import fr.univ_amu.iut.saison.model.LigneSaison;
@@ -38,6 +39,7 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
 
     private static final List<String> ENTETE_CSV = List.of(
             "Carré",
+            "Nom du carré",
             "Point",
             "Statut P1",
             "Date P1",
@@ -144,7 +146,8 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         for (LigneSaison ligne : retenues) {
             String reste = ligne.resteAFaire().isEmpty() ? "rien" : ligne.resteAFaire();
             String hors = horsProtocole(ligne);
-            sortie.println("  " + ligne.numeroCarre() + " / " + ligne.codePoint()
+            sortie.println("  " + LieuQualifie.qualifier(ligne.numeroCarre(), ligne.nomSite())
+                    + " / " + ligne.codePoint()
                     + "   P1 " + descriptif(ligne.passage1())
                     + "   P2 " + descriptif(ligne.passage2())
                     + (hors.isEmpty() ? "" : "   [hors protocole : " + hors + "]")
@@ -182,6 +185,7 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         for (LigneSaison ligne : retenues) {
             lignes.add(List.of(
                     ligne.numeroCarre(),
+                    ligne.nomSite() == null ? "" : ligne.nomSite(),
                     ligne.codePoint(),
                     statut(ligne.passage1()),
                     date(ligne.passage1()),
@@ -200,6 +204,7 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         for (LigneSaison ligne : retenues) {
             Map<String, Object> objet = new LinkedHashMap<>();
             objet.put("carre", ligne.numeroCarre());
+            objet.put("nom_site", champ(ligne.nomSite()));
             objet.put("point", ligne.codePoint());
             objet.put("statut1", champ(statut(ligne.passage1())));
             objet.put("date1", champ(date(ligne.passage1())));

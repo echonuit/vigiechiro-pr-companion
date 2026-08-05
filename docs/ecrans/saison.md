@@ -16,7 +16,7 @@ point pour la saison choisie :
 
 | Colonne | Contenu |
 |---|---|
-| **Carré**, **Point** | l'identité du point (numéro de carré, code du point) |
+| **Carré**, **Nom du carré**, **Point** | l'identité du point. Le **nom** est celui que vous avez donné au carré ; c'est aussi par lui que la recherche le trouve, à côté du numéro et du code du point. La colonne reste **vide** pour un carré auquel vous n'avez pas donné de nom |
 | **Passage 1** | l'état du premier passage et sa date, ou « Non planifié » s'il manque |
 | **Passage 2** | l'état du second passage et sa date, ou « Non planifié » s'il manque |
 | **Reste à faire** | **la phrase d'action** à mener sur ce point, ou « rien » si le point est à jour |
