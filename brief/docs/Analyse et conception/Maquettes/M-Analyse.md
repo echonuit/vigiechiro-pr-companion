@@ -200,6 +200,16 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
 | **Clic droit** sur une ligne | Menu de la ligne : fiche de l'espèce, Écouter et Ouvrir le passage (détail), `Copier ▸`, `Colonnes…` |
 | Bouton **📤 Exporter** | Exporte l'inventaire courant (CSV) |
 
+!!! tip "Les deux tables existent aussi en ligne de commande (#3269)"
+    `lister-especes` et `lister-carres` rendent les deux modes du sélecteur **Regrouper**, avec les
+    **cinq** critères de la barre à puces (`--statut`, `--taxon-parent`, `--lieu`, `--nature`,
+    `--a-enjeu`) et les mêmes colonnes que l'export. **Deux** commandes plutôt qu'une à `--regrouper` :
+    leurs colonnes n'ont rien en commun, et un script ne doit pas avoir à deviner celles qu'il recevra.
+
+    Un écart assumé : l'écran fait **cocher** dans une liste de valeurs présentes, la ligne de commande
+    reçoit un **fragment tapé** et compare partiellement. Et le **point d'écoute**, filtrable à l'écran
+    parce qu'il y paraît qualifié par son carré, ne l'est pas en ligne de commande.
+
 ## Variante - mode carte (choroplèthe de richesse)
 
 Le bouton **« 🗺️ Carte »** remplace la table d'inventaire par une **carte de répartition** : la zone maître affiche le **carroyage officiel**, chaque carré teinté en **vert d'autant plus opaque qu'il est riche en espèces** (choroplèthe de richesse). Le panneau de détail sous la carte reste inchangé.

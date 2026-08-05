@@ -38,7 +38,12 @@ class CliListerPassagesFiltresTest {
         injecteur = Cli.injecteurApplicatif();
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
+    }
 
+    /// Semé **à la demande**, et non dans le `@BeforeEach` : un cas au moins doit voir la base vide, et
+    /// c'est celui qui compte le plus - c'est là qu'un critère qui désigne peut mentir sur la cause.
+    /// Sa jumelle `CliInventaireTest` est bâtie de la même façon, pour la même raison.
+    private void semer() {
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         // `semerSquelette()` est le TERMINAL : tout ce qui décrit le passage se pose avant lui. Posées
         // après, les valeurs ne touchent qu'un objet déjà inséré, et la fixture sème ses défauts.
@@ -63,6 +68,7 @@ class CliListerPassagesFiltresTest {
     @Test
     @DisplayName("#3269 : --carre ne garde que les passages de ce carré")
     void filtre_par_carre() {
+        semer();
         int code = cli.executer(new String[] {"lister-passages", "--carre", "640380"}, sortie, erreur);
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
@@ -75,6 +81,7 @@ class CliListerPassagesFiltresTest {
     @Test
     @DisplayName("#3269 : --annee et --statut se cumulent, comme les puces de l'écran")
     void filtres_se_cumulent() {
+        semer();
         int code = cli.executer(
                 new String[] {"lister-passages", "--annee", "2025", "--statut", "IMPORTE"}, sortie, erreur);
 
@@ -85,6 +92,7 @@ class CliListerPassagesFiltresTest {
     @Test
     @DisplayName("#3269 : un filtre qui ne retient rien le dit, plutôt que de paraître vide")
     void filtre_sans_resultat_le_dit() {
+        semer();
         // Sans cette phrase, la commande afficherait « Aucun passage enregistré » sur une base qui en
         // porte deux : le filtre ferait passer une base peuplée pour une base vide.
         int code = cli.executer(new String[] {"lister-passages", "--carre", "999999"}, sortie, erreur);
@@ -98,6 +106,7 @@ class CliListerPassagesFiltresTest {
     @Test
     @DisplayName("#3269 : les filtres valent aussi pour --json, que les scripts consomment")
     void filtres_valent_pour_json() {
+        semer();
         int code = cli.executer(new String[] {"lister-passages", "--carre", "640380", "--json"}, sortie, erreur);
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
@@ -107,6 +116,7 @@ class CliListerPassagesFiltresTest {
     @Test
     @DisplayName("#3269 : --lieu retient par le n° de carré comme par le point qualifié")
     void filtre_par_lieu() {
+        semer();
         int code = cli.executer(new String[] {"lister-passages", "--lieu", "710255"}, sortie, erreur);
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
@@ -126,6 +136,7 @@ class CliListerPassagesFiltresTest {
     @Test
     @DisplayName("#3269 : --analyse retient l'état déduit, sans que la règle soit réécrite")
     void filtre_par_etat_analyse() {
+        semer();
         // L'état d'analyse se DÉDUIT du statut, il ne se lit pas : « Déposé » est sur la plateforme et
         // n'a aucun relevé, donc JAMAIS_RELEVE ; « Importé » n'y est pas, donc SANS_OBJET. Les deux
         // passages semés portent ainsi deux états distincts, et chaque valeur discrimine réellement.
@@ -145,6 +156,7 @@ class CliListerPassagesFiltresTest {
     @Test
     @DisplayName("#3269 : --campagne ne retient rien quand aucune nuit n'est rattachée")
     void filtre_par_campagne_sans_rattachement() {
+        semer();
         // Une nuit non rattachée n'est JAMAIS retenue par une campagne : c'est la règle de
         // `FiltresMultisite`, pas une invention de la commande.
         int code = cli.executer(new String[] {"lister-passages", "--campagne", "ENS"}, sortie, erreur);
@@ -156,10 +168,27 @@ class CliListerPassagesFiltresTest {
     @Test
     @DisplayName("#3269 : une valeur hors énumération est refusée, pas ignorée en silence")
     void statut_inconnu_refuse() {
+        semer();
         int code = cli.executer(new String[] {"lister-passages", "--statut", "PAS_UN_STATUT"}, sortie, erreur);
 
         assertThat(code)
                 .as("picocli doit refuser l'invocation plutôt que de filtrer sur rien")
                 .isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+    }
+
+    @Test
+    @DisplayName("#3269 : sur une base vide, --lieu ne prétend pas que le lieu manque")
+    void base_vide_ne_se_lit_pas_comme_un_lieu_absent() {
+        // Pas de `semer()` : c'est le sujet. `--lieu` DÉSIGNE, donc refuse un lieu absent des lignes
+        // (ADR 3082). Sur une base sans aucun passage il refuserait donc TOUT lieu, en disant « ce lieu
+        // n'existe pas » là où la vérité est qu'il n'y a aucun passage : deux constats opposés, et deux
+        // conduites opposées. La règle vaut aussi pour `lister-especes`, où le même piège s'est reposé.
+        int code = cli.executer(new String[] {"lister-passages", "--lieu", "640380"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(capture.tout())
+                .as("la base vide se constate AVANT de filtrer")
+                .contains("Aucun passage enregistré")
+                .doesNotContain("Lieux présents");
     }
 }

@@ -151,6 +151,11 @@ public final class ExporterActivite implements Callable<Integer> {
             return ExitCode.USAGE;
         }
 
+        // Pas de garde de portée vide ici, à dessein (ADR 3269, cas écarté) : `--lieu` et
+        // `--taxon-parent` refusent même sur un ensemble vide, ce que #3082 a tranché. La court-circuiter
+        // ferait de plus sauter la VALIDATION des arguments - une `--nature` inconnue, une `--nuit`
+        // illisible - qui doit refuser quelle que soit la base : c'est la faute que `bats` a relevée
+        // quand cette garde a été essayée ici.
         List<ContactHoraire> contacts = restreindre(
                 portee.tout
                         ? service.contactsDeLUtilisateur(utilisateur.get())

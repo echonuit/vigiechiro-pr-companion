@@ -203,6 +203,16 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
 | **◀ Carte** / **Tableau ▶** | Replient / rouvrent un panneau |
 | Marqueur de point (carte) | Survol = mini-stats ; en mode édition, glisser pour corriger la position (contraint au carré, [R26](../Modèle%20conceptuel/Règles%20métier.md#r26)) |
 
+!!! tip "Les sept critères existent aussi en ligne de commande (#3269)"
+    `lister-passages` porte les **sept** puces de cet écran (`--carre`, `--lieu`, `--annee`,
+    `--statut`, `--verdict`, `--analyse`, `--campagne`), sur le **même prédicat** : `FiltresMultisite`
+    juge des deux côtés, aucune règle n'est réécrite. C'est l'écran de pilotage de la saison, donc celui
+    qu'un script de suivi veut interroger.
+
+    ⚠️ `--analyse` porte un état **déduit**, jamais lu en base. Et une base sans aucun passage le dit
+    **avant** tout filtrage, sinon `--lieu` refuserait le lieu là où la vérité est qu'il n'y a rien
+    ([ADR 3269](https://companion-dev.echonuit.fr/decisions/3269-un-ensemble-vide-se-constate-avant-de-filtrer/)).
+
 ---
 
 ## Variante - vues sauvegardées

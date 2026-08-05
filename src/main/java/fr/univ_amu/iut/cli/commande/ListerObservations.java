@@ -167,6 +167,9 @@ public final class ListerObservations implements Callable<Integer> {
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
+        // Pas de garde de passage vide ici, à dessein (ADR 3269, cas écarté) : `--taxon-parent` refuse
+        // même sur un ensemble vide, ce que #3082 a tranché sur cette commande précisément. Sur un
+        // `--passage` qui n'existe pas, un succès silencieux masquerait que le passage est inconnu.
         List<LigneObservationAudio> retenues =
                 FiltresLieu.parLieu(selection.get().lignes(passage, criteres()), lieux);
         retenues = FiltresRevue.parTaxonParent(retenues, taxonParent);

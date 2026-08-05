@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Path;
 import java.util.List;
+import javafx.scene.Scene;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.layout.VBox;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,5 +58,35 @@ class ApercuFxMenuTest {
         robot.interact(() -> ApercuFx.enregistrerMenuOuvert(menu, tmp.resolve("vide.png")));
 
         assertThat(menu.getItems()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3169 : les feuilles se cherchent sur les ANCÊTRES, là où le FXML les pose")
+    void les_feuilles_se_cherchent_sur_les_ancetres() {
+        // Le popup vit dans la scène de son HÔTE, et cet hôte était nu : aucune règle de `design.css`
+        // ne s'y appliquait. Tant qu'un menu ne portait que du texte ordinaire, le rendu par défaut
+        // passait pour juste. Le jour où une entrée a porté un SENS par sa classe - la valeur « hors
+        // jeu », grisée et en italique (#3095) - la capture a montré une entrée identique aux autres,
+        // sous une légende qui la disait grisée. Mesuré sur le PNG : l'encre des deux lignes valait
+        // (134,126,134) et (131,124,128), soit la même. Passe 8 de la clôture des suites de #3092.
+        //
+        // Ce cas épingle le piège qui a fait échouer mon PREMIER correctif : l'attribut `stylesheets`
+        // d'un FXML garnit le nœud RACINE, pas la scène. Ne lire que la scène rendait une liste vide
+        // sur tous les écrans du dépôt, et le correctif ne changeait rien.
+        MenuButton menu = new MenuButton("", null, new MenuItem("Aix-en-Provence"));
+        VBox racine = new VBox(new VBox(menu));
+        racine.getStylesheets().add("design.css");
+        Scene scene = new Scene(racine, 300, 120);
+        scene.getStylesheets().add("palette.css");
+
+        assertThat(ApercuFx.feuillesDe(menu))
+                .as("celle de la scène ET celle de l'ancêtre, même à deux niveaux de profondeur")
+                .containsExactlyInAnyOrder("palette.css", "design.css");
+    }
+
+    @Test
+    @DisplayName("#3169 : un menu hors scène ne fait pas échouer la lecture des feuilles")
+    void un_menu_hors_scene_ne_leve_pas() {
+        assertThat(ApercuFx.feuillesDe(new MenuButton())).isEmpty();
     }
 }
