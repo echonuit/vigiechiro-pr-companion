@@ -84,8 +84,22 @@ CAPTURES_CARTE=(
   apercu-sites-modale-point-creation.png
 )
 
-if ! command -v compare > /dev/null 2>&1 || ! command -v magick > /dev/null 2>&1; then
-  echo "::error::ImageMagick (compare, magick) est requis pour filtrer le bruit des cartes." >&2
+# ImageMagick s'invoque de deux façons selon sa version, et les deux existent dans la nature :
+# la **7** regroupe tous les outils sous `magick` (`magick identify`), la **6** - celle du paquet
+# `imagemagick` d'Ubuntu 24.04, donc du runner - expose `identify` et `compare` comme commandes
+# propres, et n'a pas de `magick` du tout.
+#
+# ⚠️ La première version de ce script exigeait `magick` : elle passait sur un poste en ImageMagick 7
+# et échouait en CI, où ImageMagick n'était même pas installé. Le garde était juste, l'exigence non.
+# On accepte donc les deux formes, et le message d'erreur nomme le paquet à installer.
+if command -v magick > /dev/null 2>&1; then
+  identifier() { magick identify "$@"; }
+  comparer() { magick compare "$@"; }
+elif command -v identify > /dev/null 2>&1 && command -v compare > /dev/null 2>&1; then
+  identifier() { identify "$@"; }
+  comparer() { compare "$@"; }
+else
+  echo "::error::ImageMagick est requis pour filtrer le bruit des cartes (paquet « imagemagick »)." >&2
   exit 1
 fi
 
@@ -114,7 +128,7 @@ for nom in "${CAPTURES_CARTE[@]}"; do
 
   # `compare -metric AE` écrit le NOMBRE de pixels différents sur stderr, et sort en 1 dès qu'il y a
   # une différence : ce code n'est pas une erreur ici, d'où le `|| true`.
-  differents="$(compare -metric AE "${avant}" "${ICI}/${nom}" null: 2>&1 || true)"
+  differents="$(comparer -metric AE "${avant}" "${ICI}/${nom}" null: 2>&1 || true)"
   rm -f "${avant}"
   differents="${differents%%[^0-9]*}"
   if [ -z "${differents}" ]; then
@@ -127,7 +141,7 @@ for nom in "${CAPTURES_CARTE[@]}"; do
   # (« 1.1352e+06 ») dès que le produit dépasse le million, que `$(( ))` ne sait pas lire. Le défaut
   # n'apparaît pas sur une capture de 1080x640, seulement sur les plus grandes - il a fallu l'essai
   # sur `apercu-import-assistant` (1100x1032) pour le voir.
-  dimensions="$(magick identify -format "%w %h" "${ICI}/${nom}")"
+  dimensions="$(identifier -format "%w %h" "${ICI}/${nom}")"
   total=$(( ${dimensions% *} * ${dimensions#* } ))
   # Arithmétique entière : le pourcentage est porté au centième pour rester lisible.
   pct_x100=$((differents * 10000 / total))
