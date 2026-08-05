@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Tableau des passages de la vue multisite, extrait en sous-vue (#2745).
+
+  Pourquoi une vue à part : MultisiteController vivait à 182 pour un plafond NcssCount de 200, et ce
+  tableau portait douze champs @FXML (la table et ses onze colonnes) sur trente-neuf.
+  Voir dev-docs/decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md.
+
+  ⚠️ L'inclusion garde le fx:id `panneauTableau` : la barre du bas replie ce panneau (#328, #370), le
+  parent a donc besoin du nœud autant que du controller.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.multisite.view.PanneauPassagesController"
+      spacing="6.0">
+  <TableView fx:id="tableLignes" VBox.vgrow="ALWAYS">
+    <columns>
+      <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
+      <TableColumn fx:id="colNomSite" text="Nom du carré" prefWidth="150.0" visible="false"/>
+      <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
+      <!-- Commune (#3163) : le lieu se cherche et se coche par elle depuis #2790, sans qu'aucune
+           table ne la montre - des lignes apparaissaient au filtrage sans dire pourquoi elles
+           correspondaient. Vide tant que le GPS du point n'a pas résolu de commune. -->
+      <TableColumn fx:id="colCommune" text="Commune" prefWidth="140.0"/>
+      <TableColumn fx:id="colAnnee" text="Année" prefWidth="70.0"/>
+      <TableColumn fx:id="colNumero" text="N° passage" prefWidth="115.0"/>
+      <TableColumn fx:id="colDate" text="Date" prefWidth="120.0"/>
+      <TableColumn fx:id="colStatut" text="Statut" prefWidth="120.0"/>
+      <TableColumn fx:id="colVerdict" text="Verdict" prefWidth="100.0"/>
+      <!-- #1338 : où en est l'analyse Tadarida de la nuit, et ses observations sont-elles déjà
+           là. L'infobulle porte la date du relevé : le cache est un état observé, pas une vérité. -->
+      <TableColumn fx:id="colAnalyse" text="Analyse" prefWidth="120.0"/>
+      <!-- Campagne (#2355) : regroupe les nuits qui relèvent du même suivi. Vide si la nuit
+           n'est rattachée à aucune campagne, ou si la feature est désactivée. -->
+      <TableColumn fx:id="colCampagne" text="Campagne" prefWidth="140.0"/>
+    </columns>
+    <placeholder>
+      <Label text="Aucun passage à afficher (ajustez éventuellement les filtres)." wrapText="true"/>
+    </placeholder>
+  </TableView>
+  <Label text="Astuce : double-cliquez une ligne pour ouvrir l'écran du passage."
+         styleClass="section-sous"/>
+</VBox>

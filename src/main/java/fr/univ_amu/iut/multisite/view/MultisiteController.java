@@ -23,7 +23,6 @@ import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
-import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -42,17 +41,13 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
-import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SplitPane;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.FlowPane;
@@ -175,45 +170,6 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private MenuItem itemDeclencherCalculSelection;
 
     @FXML
-    private TableView<LignePassage> tableLignes;
-
-    @FXML
-    private TableColumn<LignePassage, String> colCarre;
-
-    @FXML
-    private TableColumn<LignePassage, String> colNomSite;
-
-    @FXML
-    private TableColumn<LignePassage, String> colPoint;
-
-    /// Commune du point d'écoute (#3163), vide tant qu'aucune n'est résolue.
-    @FXML
-    private TableColumn<LignePassage, String> colCommune;
-
-    @FXML
-    private TableColumn<LignePassage, String> colAnnee;
-
-    @FXML
-    private TableColumn<LignePassage, String> colNumero;
-
-    @FXML
-    private TableColumn<LignePassage, String> colDate;
-
-    @FXML
-    private TableColumn<LignePassage, String> colStatut;
-
-    @FXML
-    private TableColumn<LignePassage, String> colVerdict;
-
-    /// Où en est l'analyse Tadarida de la nuit (#1338) : câblage délégué à [ColonnesMultisite].
-    @FXML
-    private TableColumn<LignePassage, String> colAnalyse;
-
-    /// Campagne de rattachement de la nuit (#2355), vide si aucune.
-    @FXML
-    private TableColumn<LignePassage, String> colCampagne;
-
-    @FXML
     private Label lblRetour;
 
     @FXML
@@ -233,6 +189,12 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private VBox panneauTableau;
+
+    /// Controller de la sous-vue `PanneauPassages.fxml`, injecté par le `fx:include` (#2745) : il
+    /// possède la table et ses onze colonnes. Le nom est imposé par JavaFX, qui concatène le `fx:id`
+    /// de l'inclusion (`panneauTableau`) et le suffixe `Controller`.
+    @FXML
+    private PanneauPassagesController panneauTableauController;
 
     @FXML
     private SplitPane splitCarteTableau;
@@ -310,42 +272,33 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private void initialize() {
-        // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
-        TableDonnees.uniformiserNavigable(tableLignes);
-        // Multi-sélection (#2357, lot 3) : plusieurs lignes se cochent pour recevoir la même action.
-        // Les gestes de ligne existants (double-clic, « Écouter le passage ») continuent de lire
-        // `selectedItem`, qui reste la DERNIÈRE ligne cochée : rien ne change pour eux.
-        tableLignes.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        ColonnesMultisite.configurer(colonnes());
+        // Tableau des passages : sous-vue depuis #2745, à qui l'on passe NOS lignes. Elle n'injecte
+        // rien, le ViewModel étant non-singleton (ADR 2745).
+        panneauTableauController.installer(viewModel.lignes());
         // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant). La
         // disposition (ordre + visibilité) est retenue par écran et restaurée à la réouverture (#994).
-        var colonnes = colonnesDeLaTable();
+        var colonnes = panneauTableauController.pourLeSelecteur();
         // Menu de ligne (#1796) : « Ouvrir le passage » et « Écouter le passage » (actions de ligne) devant
         // « Colonnes… ». « Relever les analyses » reste au ☰ : c'est une action d'écran (toutes les nuits
         // déposées), pas de ligne.
         GestionnaireColonnes.installer(
-                tableLignes,
+                panneauTableauController.table(),
                 menuActions,
                 colonnes,
-                MenuLigne.item("Ouvrir le passage", tableLignes, this::ouvrirPassageDeLaLigne),
-                MenuLigne.item("Écouter le passage", tableLignes, ligne -> ecouterPassage()),
-                vigieChiro.item(tableLignes, LignePassage::idPassage),
+                MenuLigne.item("Ouvrir le passage", panneauTableauController.table(), this::ouvrirPassageDeLaLigne),
+                MenuLigne.item("Écouter le passage", panneauTableauController.table(), ligne -> ecouterPassage()),
+                vigieChiro.item(panneauTableauController.table(), LignePassage::idPassage),
                 MenuCopier.creer(
-                        tableLignes,
+                        panneauTableauController.table(),
                         new MenuCopier.Entree<>(
                                 "N° de passage",
                                 ligne -> ligne.idPassage() == null ? "" : String.valueOf(ligne.idPassage())),
                         new MenuCopier.Entree<>("Carré", LignePassage::numeroCarre)));
-        GestionnaireColonnes.persister(tableLignes, colonnes, depotColonnes, FEATURE, "principale");
-        // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus
-        // la liste (déjà filtrée/ordonnée par le VM) ; performant (~4000 lignes) et le tri colonne
-        // persiste à travers les rafraîchissements de filtres.
-        SortedList<LignePassage> lignesTriees = new SortedList<>(viewModel.lignes());
-        lignesTriees.comparatorProperty().bind(tableLignes.comparatorProperty());
-        tableLignes.setItems(lignesTriees);
+        GestionnaireColonnes.persister(
+                panneauTableauController.table(), colonnes, depotColonnes, FEATURE, "principale");
         // Double-clic → ouvre M-Passage ; clic droit sélectionne la ligne survolée pour le menu de ligne
         // (contrat socle, aucune dépendance vers passage.view).
-        DoubleClicLigne.installer(tableLignes, this::ouvrirPassageDeLaLigne);
+        DoubleClicLigne.installer(panneauTableauController.table(), this::ouvrirPassageDeLaLigne);
 
         // Barre de filtres à puces (#537 étape 6b) : Carré / Statut / Verdict / Année + recherche. Le tri
         // (choixTri) reste un contrôle fixe : c'est un axe d'ordonnancement, pas un filtre.
@@ -374,13 +327,20 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                         depotVues,
                         FEATURE,
                         CriteresMultisite.vuesParDefaut(),
-                        GestionnaireColonnes.adaptateurMonoTable("principale", tableLignes, this::colonnesDeLaTable))
+                        GestionnaireColonnes.adaptateurMonoTable(
+                                "principale",
+                                panneauTableauController.table(),
+                                panneauTableauController::pourLeSelecteur))
                 // Une vue rejouée amputée de valeurs disparues filtre moins large qu'annoncé (#3056).
                 .surRestauration(viewModel::signalerVueAmputee);
 
         // Mémoire de session (#484, étendue à cet écran en #3098).
-        memoire.installer(FEATURE, tableLignes, gestionnaireFiltres, viewModel::signalerFiltresDeSessionAmputes);
-        memoire.memoriserTri(FEATURE, tableLignes);
+        memoire.installer(
+                FEATURE,
+                panneauTableauController.table(),
+                gestionnaireFiltres,
+                viewModel::signalerFiltresDeSessionAmputes);
+        memoire.memoriserTri(FEATURE, panneauTableauController.table());
 
         choixTri.getItems().setAll(TriMultisite.values());
         choixTri.setConverter(Convertisseurs.parLibelle(tri -> tri == null ? "" : tri.libelle()));
@@ -392,8 +352,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // visible (sinon le comparateur de colonne masquerait le tri du VM). #145.
         viewModel
                 .triProperty()
-                .addListener(
-                        (obs, ancien, nouveau) -> tableLignes.getSortOrder().clear());
+                .addListener((obs, ancien, nouveau) ->
+                        panneauTableauController.table().getSortOrder().clear());
 
         lblResume.textProperty().bind(viewModel.resumeProperty());
         // Barre de statut (#1023) : le résumé « N sites… » occupe la zone centre (agrégat top-level, pas
@@ -414,8 +374,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                         itemImporterResultatsSelection,
                         itemDeclencherCalculSelection),
                 viewModel.nonVideProperty(),
-                tableLignes.getSelectionModel().selectedItemProperty(),
-                Bindings.size(tableLignes.getSelectionModel().getSelectedItems()),
+                panneauTableauController.table().getSelectionModel().selectedItemProperty(),
+                Bindings.size(
+                        panneauTableauController.table().getSelectionModel().getSelectedItems()),
                 actions,
                 reconstruction.disponible(),
                 viewModel.releveAnalysesDisponible());
@@ -456,7 +417,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // - clic d'un carré sur la carte → pose une puce « carré » qui filtre le tableau par ce carré ;
         carte.setOnCarreClic(carreGeo -> gestionnaireFiltres.poser("carre", List.of(carreGeo.numeroCarre())));
         // - sélection d'une ligne du tableau → met le carré correspondant en surbrillance sur la carte.
-        tableLignes
+        panneauTableauController
+                .table()
                 .getSelectionModel()
                 .selectedItemProperty()
                 .addListener(
@@ -559,28 +521,6 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
 
     /// Colonnes du tableau multi-sites proposées au sélecteur (#919). « Carré » est l'identité (verrouillée).
 
-    /// Le catalogue des colonnes, pour le sélecteur (#919). Le corps vit dans [ColonnesMultisite] :
-    /// ce contrôleur touchait le plafond de God class, et ce catalogue est de la connaissance sur les
-    /// colonnes, pas sur l'écran - même extraction que `ColonnesAudio.pourLeSelecteur`.
-    private List<GestionnaireColonnes.Colonne> colonnesDeLaTable() {
-        return ColonnesMultisite.pourLeSelecteur(colonnes());
-    }
-
-    private ColonnesMultisite.Colonnes colonnes() {
-        return new ColonnesMultisite.Colonnes(
-                colCommune,
-                colCarre,
-                colNomSite,
-                colPoint,
-                colAnnee,
-                colNumero,
-                colDate,
-                colStatut,
-                colVerdict,
-                colAnalyse,
-                colCampagne);
-    }
-
     private void ouvrirPassageDeLaLigne(LignePassage ligne) {
         // Le nom convivial du site n'est pas porté par la vue agrégée : carré + point suffisent au
         // fil d'Ariane de M-Passage (nomSite n'y est pas utilisé).
@@ -592,7 +532,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private void toutEffacer() {
         gestionnaireFiltres.reinitialiser();
-        tableLignes.getSortOrder().clear();
+        panneauTableauController.table().getSortOrder().clear();
         // #3098 : sans cet oubli, la memoire de session remettrait les filtres a la visite suivante et
         // le bouton paraitrait ne pas avoir pris.
         memoire.oublier(FEATURE);
@@ -624,7 +564,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         List<Long> nuitsDeposees = viewModel.nuitsDeposees();
         new DialogueProgression(executeur)
                 .lancer(
-                        tableLignes.getScene().getWindow(),
+                        panneauTableauController.table().getScene().getWindow(),
                         "Relevé de l'état des analyses",
                         (suivi, jeton) -> viewModel.releverPuisCharger(nuitsDeposees, suivi, jeton),
                         resultat -> {
@@ -674,7 +614,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// action, pas un geste - la surface, elle, ne bouge plus.
     private void lancerSurLaSelection(Optional<ActionGroupee> action) {
         List<LignePassage> selection =
-                List.copyOf(tableLignes.getSelectionModel().getSelectedItems());
+                List.copyOf(panneauTableauController.table().getSelectionModel().getSelectedItems());
         if (selection.isEmpty()) { // l'item est grisé sinon : garde de ceinture
             return;
         }
@@ -688,8 +628,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private void exporter() {
         MenuActionsMultisite.exporter(
                 selecteur,
-                tableLignes,
-                chemin -> viewModel.exporter(chemin, MenuActionsMultisite.lignesAffichees(tableLignes)));
+                panneauTableauController.table(),
+                chemin -> viewModel.exporter(
+                        chemin, MenuActionsMultisite.lignesAffichees(panneauTableauController.table())));
     }
 
     /// « 🎧 Écouter le passage sélectionné » : ouvre la vue audio unifiée sur les observations de ce
@@ -697,8 +638,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// est ici toujours présente.
     @FXML
     private void ecouterPassage() {
-        ouvrirAudio.ouvrir(
-                SourcesAudioMultisite.parPassage(tableLignes.getSelectionModel().getSelectedItem()));
+        ouvrirAudio.ouvrir(SourcesAudioMultisite.parPassage(
+                panneauTableauController.table().getSelectionModel().getSelectedItem()));
     }
 
     /// « 🎧 Écouter la sélection filtrée » : ouvre la vue audio unifiée sur les observations de **tous** les
@@ -708,6 +649,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// toute façon ré-appliqué côté vue audio (`ORDRE_AUDIO`), mais on garde un contrat cohérent.
     @FXML
     private void ecouterLot() {
-        ouvrirAudio.ouvrir(SourcesAudioMultisite.parLot(new ArrayList<>(tableLignes.getItems())));
+        ouvrirAudio.ouvrir(SourcesAudioMultisite.parLot(
+                new ArrayList<>(panneauTableauController.table().getItems())));
     }
 }
