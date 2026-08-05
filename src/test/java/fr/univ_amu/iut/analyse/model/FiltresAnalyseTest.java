@@ -46,6 +46,11 @@ class FiltresAnalyseTest {
         assertThat(FiltresAnalyse.parStatut(toutes, null)).isEqualTo(toutes);
         assertThat(FiltresAnalyse.parTaxonParent(toutes, null)).isEqualTo(toutes);
         assertThat(FiltresAnalyse.parTaxonParent(toutes, "  ")).isEqualTo(toutes);
+        // `parNature` manquait à cet inventaire : PIT l'a montré en survivant à un retour vide sur sa
+        // garde de nullité (clôture des suites de #3092). Un critère oublié ici est un critère dont on
+        // ne sait pas s'il écarte tout quand on ne le pose pas.
+        assertThat(FiltresAnalyse.parNature(toutes, null, Set.of())).isEqualTo(toutes);
+        assertThat(FiltresAnalyse.parNature(toutes, "  ", Set.of())).isEqualTo(toutes);
     }
 
     @Test
@@ -72,6 +77,21 @@ class FiltresAnalyseTest {
     }
 
     @Test
+    @DisplayName("#3269 : le refus n'énumère pas un taxon parent vide")
+    void le_refus_nenumere_pas_un_groupe_vide() {
+        // Une auto-souche hors référentiel peut n'avoir aucun groupe. Sans le filtre, la phrase se
+        // terminerait par « Taxons parents présents : , Chiroptères » - une virgule qui ne désigne rien,
+        // dans le message même qui doit aider à retrouver la bonne valeur. Dernier survivant PIT.
+        ObservationAnalyse sansGroupe = observation("Xxxxxx", null, StatutObservation.NON_TOUCHEE, 13L);
+
+        assertThatThrownBy(() -> FiltresAnalyse.parTaxonParent(List.of(PIPISTRELLE, sansGroupe), "Oiseaux"))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Chiroptères")
+                .hasMessageNotContaining(", ,")
+                .hasMessageNotContaining(": ,");
+    }
+
+    @Test
     @DisplayName("#3269 : QUALIFIER rend légitimement vide, sans refuser")
     void qualifier_rend_vide() {
         // « Aucune espèce à enjeu dans cet inventaire » est une réponse, souvent celle qu'on cherchait.
@@ -79,6 +99,27 @@ class FiltresAnalyseTest {
                 .isEmpty();
         assertThat(FiltresAnalyse.parNature(List.of(PIPISTRELLE), "opportuniste", Set.of()))
                 .isEmpty();
+
+        // Et il RETIENT ce qui correspond. Sans ce second côté, `aEnjeu` pourrait rendre une liste vide
+        // en toutes circonstances sans qu'aucune assertion ne bronche : PIT y a survécu, précisément
+        // parce que le seul cas testé attendait le vide.
+        assertThat(FiltresAnalyse.aEnjeu(List.of(PIPISTRELLE, ORTHOPTERE), o -> o.equals(PIPISTRELLE)))
+                .containsExactly(PIPISTRELLE);
+    }
+
+    @Test
+    @DisplayName("#3269 : une dimension de lieu absente est écartée, pas comparée")
+    void dimension_absente_ecartee() {
+        // Une observation dont la commune n'est pas résolue est un état légitime (#2989) : le point peut
+        // n'avoir aucune coordonnée. La dimension ne doit alors pas être offerte à la comparaison, sinon
+        // `--lieu` confronterait une valeur tapée à un null. PIT a survécu à l'ouverture de ce filtre.
+        ObservationAnalyse sansCommune = new ObservationAnalyse(
+                "Pippip", "Pippip", "Pippip", "Chiroptères", null, 12L, 2026, "640380", "Vallon", 1L, null, "A1");
+
+        assertThat(FiltresAnalyse.dimensionsLieu(sansCommune))
+                .as("seul le carré reste comparable")
+                .hasSize(1)
+                .allSatisfy(dimension -> assertThat(dimension).contains("640380"));
     }
 
     @Test
