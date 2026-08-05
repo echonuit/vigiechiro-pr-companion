@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.180.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.179.0...v2.180.0) (2026-08-05)
+
+
+### Features
+
+* **ci:** CodeQL cherche ce que ni PMD ni les tests ne cherchent ([#3263](https://github.com/echonuit/vigiechiro-pr-companion/issues/3263)) ([3b06062](https://github.com/echonuit/vigiechiro-pr-companion/commit/3b0606261b5216471cca2fb1e9234dee9f84c704)), closes [#169](https://github.com/echonuit/vigiechiro-pr-companion/issues/169) [#2741](https://github.com/echonuit/vigiechiro-pr-companion/issues/2741) [#2740](https://github.com/echonuit/vigiechiro-pr-companion/issues/2740) [#2741](https://github.com/echonuit/vigiechiro-pr-companion/issues/2741)
+
 # [2.179.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.178.0...v2.179.0) (2026-08-04)
 
 
