@@ -63,6 +63,7 @@ final class FiltresVuesAudio {
                                 viewModel::signalerChoixRemplace),
                         CriteresAudio.taxon(() -> viewModel.filtres().saufLui(ClesCriteres.TAXON)),
                         CriteresAudio.lieu(() -> viewModel.filtres().saufLui(ClesCriteres.LIEU)),
+                        CriteresAudio.certitude(),
                         CriteresAudio.references(),
                         CriteresAudio.douteux(),
                         CriteresAudio.nonIdentifie(),

@@ -929,7 +929,7 @@ peuvent vivre dans un `@Mixin`, qu'un relevé par `grep` sur la classe ne voit p
 
 | Écran | Commande jumelle | Parité |
 |---|---|---|
-| Sons & validation | `lister-observations` | 10 / 10 |
+| Sons & validation | `lister-observations` | 11 / 11 |
 | Activité de la nuit | `exporter-activite` | 5 / 5 |
 | Audit de cohérence | `audit-coherence` | 3 / 3 |
 | Ma saison | `solde-saison` | 4 / 4 |
@@ -940,14 +940,14 @@ Les six écrans sont à parité. Les deux dernières lignes valaient **0 / 7** e
 clôture de #3092 : une dette **antérieure** au chantier, rendue visible en confrontant les inventaires
 complets plutôt que des exemples, et soldée par ses suites (#3269).
 
-Deux réserves, que le tableau ne montre pas :
+Une réserve, que le tableau ne montre pas : le critère **Lieu** a trois dimensions à l'écran (commune,
+carré, point) et **deux** en ligne de commande, un code de point seul désignant autant de lieux qu'il y
+a de carrés. Écart assumé, porté par la clôture de #3151.
 
-- Le critère **Lieu** a trois dimensions à l'écran (commune, carré, point) et **deux** en ligne de
-  commande : un code de point seul désignerait autant de lieux qu'il y a de carrés. Écart assumé, porté
-  par la clôture de #3151.
-- L'asymétrie existe aussi **dans l'autre sens**, qu'un inventaire écran → CLI rate par construction :
-  `lister-observations --certitude` filtre sur la certitude observateur, dont l'écran n'a **aucune
-  puce**.
+⚠️ **Lire l'inventaire dans les deux sens.** La question habituelle - *chaque critère de l'écran a-t-il
+son option ?* - rate par construction l'asymétrie inverse. C'est ainsi qu'on a trouvé
+`lister-observations --certitude`, qui filtrait sans que l'écran offre la puce correspondante (#3336,
+livrée : Sons & validation passe de 10 à 11 critères). Rien ne dit que ce soit la dernière.
 
 Quand la règle est la même des deux côtés, elle s'écrit **une fois** dans `model` : `FiltresLieu` pour le
 lieu, `FiltresSaison` pour la recherche et le « reste à faire ». Un catalogue de `view` qui garderait sa
