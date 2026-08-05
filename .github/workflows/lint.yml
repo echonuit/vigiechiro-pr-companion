@@ -91,7 +91,7 @@ jobs:
         # vert sur un dépôt propre, sans que rien ne le dise.
         run: |
           chmod +x .github/scripts/verifie-epinglage.sh
-          ./.github/scripts/verifie-epinglage.sh --autotest
+          ./.github/scripts/verifie-epinglage.sh --auto-test
           ./.github/scripts/verifie-epinglage.sh
 
       - name: Aucun jeton VigieChiro en clair
@@ -102,14 +102,16 @@ jobs:
         # sur un dépôt propre, sans que rien ne le dise.
         run: |
           chmod +x .github/scripts/verifie-jeton.sh
-          ./.github/scripts/verifie-jeton.sh --autotest
+          ./.github/scripts/verifie-jeton.sh --auto-test
           ./.github/scripts/verifie-jeton.sh
 
       - name: Complétude des captures de référence
         # Chaque vue FXML doit avoir au moins une capture de référence déclarée au manifeste
         # (les captures illustrent la documentation).
+        # L'auto-test d'abord : une règle relâchée passerait sinon au vert sur un dépôt cohérent.
         run: |
           chmod +x .github/assets/check-captures.sh
+          ./.github/assets/check-captures.sh --auto-test
           ./.github/assets/check-captures.sh
 
       - name: Enregistrement des outils de capture
@@ -117,6 +119,7 @@ jobs:
         # tableau MAINS de capture-screenshots.sh, sinon ses PNG ne seraient jamais régénérés.
         run: |
           chmod +x .github/assets/check-capture-mains.sh
+          ./.github/assets/check-capture-mains.sh --auto-test
           ./.github/assets/check-capture-mains.sh
 
       - name: Portail qualité (PMD, bloquant)
