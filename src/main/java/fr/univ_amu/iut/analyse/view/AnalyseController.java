@@ -15,7 +15,6 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
-import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.MemoireFiltres;
 import fr.univ_amu.iut.commun.view.MenuCopier;
@@ -234,53 +233,11 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private VBox panneauDetail;
 
+    /// Controller de la sous-vue `DetailObservations.fxml`, injecté par le `fx:include` (#2745) : il
+    /// possède les quinze champs du panneau et leur câblage. Le nom est imposé par JavaFX, qui
+    /// concatène le `fx:id` de l'inclusion (`panneauDetail`) et le suffixe `Controller`.
     @FXML
-    private Label lblDetailTitre;
-
-    @FXML
-    private Label lblDetailVide;
-
-    @FXML
-    private Button boutonOuvrirPassage;
-
-    @FXML
-    private Button boutonEcouter;
-
-    /// Enveloppes (non désactivées) des actions du détail : portent le tooltip d'explication du blocage,
-    /// qu'un Button désactivé n'affiche pas. Cf. [IndicateurBlocage] (#789).
-    @FXML
-    private StackPane enveloppeEcouter;
-
-    @FXML
-    private StackPane enveloppeOuvrirPassage;
-
-    @FXML
-    private TableView<ObservationEspece> tableObservations;
-
-    @FXML
-    private TableColumn<ObservationEspece, String> colObsPassage;
-
-    @FXML
-    private TableColumn<ObservationEspece, String> colObsCarre;
-
-    @FXML
-    private TableColumn<ObservationEspece, String> colObsRichesse;
-
-    @FXML
-    private TableColumn<ObservationEspece, String> colObsPoint;
-
-    /// Commune du point de l'observation (#3165) : le lieu se cochait sans se montrer.
-    @FXML
-    private TableColumn<ObservationEspece, String> colObsCommune;
-
-    @FXML
-    private TableColumn<ObservationEspece, String> colObsTadarida;
-
-    @FXML
-    private TableColumn<ObservationEspece, String> colObsObservateur;
-
-    @FXML
-    private TableColumn<ObservationEspece, String> colObsStatut;
+    private DetailObservationsController panneauDetailController;
 
     /// Repère des **espèces à enjeu** (#2353) : lu une fois à la construction, le référentiel ne bougeant
     /// pas en cours de session. Partagé par la cellule d'espèce et le critère de filtre.
@@ -319,7 +276,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         // → écoute, #792) ; les tables espèces/carrés ne servent qu'à la sélection.
         TableDonnees.uniformiser(tableEspeces);
         TableDonnees.uniformiser(tableCarres);
-        TableDonnees.uniformiserNavigable(tableObservations);
+        TableDonnees.uniformiserNavigable(panneauDetailController.table());
         configurerColonnes();
         tableEspeces.setItems(viewModel.especes());
         tableCarres.setItems(viewModel.carres());
@@ -334,7 +291,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         selecteurColonnes = new SelecteurColonnesAnalyse(
                 tableEspeces,
                 tableCarres,
-                tableObservations,
+                panneauDetailController.table(),
                 menuOutils,
                 () -> viewModel.regroupementProperty().get());
         selecteurColonnes.installer(
@@ -345,11 +302,12 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                                 new MenuCopier.Entree<>("Nom latin", EspeceAgregee::nomLatin),
                                 new MenuCopier.Entree<>("Nom vernaculaire", EspeceAgregee::nomVernaculaireFr))),
                 List.of(
-                        MenuLigne.item("Écouter", tableObservations, this::ecouter),
-                        MenuLigne.item("Ouvrir le passage", tableObservations, this::ouvrirPassageDe),
+                        MenuLigne.item("Écouter", panneauDetailController.table(), this::ecouter),
+                        MenuLigne.item("Ouvrir le passage", panneauDetailController.table(), this::ouvrirPassageDe),
                         itemFicheEspeceObs,
                         MenuCopier.creer(
-                                tableObservations, new MenuCopier.Entree<>("Carré", ObservationEspece::numeroCarre))));
+                                panneauDetailController.table(),
+                                new MenuCopier.Entree<>("Carré", ObservationEspece::numeroCarre))));
         selecteurColonnes.persister(depotColonnes, FEATURE);
         // Clic droit : sélectionne la ligne (cible du menu contextuel). Double-clic : ouvre la fiche de
         // l'espèce, même cible que l'item « Fiche de l'espèce » du menu (#1794).
@@ -400,7 +358,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         memoire.installer(FEATURE, tableEspeces, gestionnaireFiltres, viewModel::signalerFiltresDeSessionAmputes);
         memoire.memoriserTri(FEATURE, tableEspeces);
         memoire.memoriserTri(FEATURE, tableCarres);
-        memoire.memoriserTri(FEATURE, tableObservations);
+        memoire.memoriserTri(FEATURE, panneauDetailController.table());
 
         // Bandeau de retour (export, échec de chargement, action refusée), mutualisé avec Sons & validation
         // (#1837) : libellé, visibilité, couleur de sévérité et croix de fermeture.
@@ -440,7 +398,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
 
         // La colonne « Espèces du carré » du détail lit la richesse depuis l'inventaire par carré : le
         // collaborateur se tient à jour à chaque changement de cet inventaire (chargement, filtre statut).
-        richesseParCarre.brancher(viewModel.carresCarte(), tableObservations);
+        richesseParCarre.brancher(viewModel.carresCarte(), panneauDetailController.table());
 
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
         chargerObservations();
@@ -461,7 +419,17 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     /// observations à travers les passages ; double-clic ou bouton « Ouvrir le passage » navigue vers
     /// M-Passage (contrat socle [OuvrirPassage], aucune dépendance vers `passage.view`).
     private void configurerDetail() {
-        tableObservations.setItems(viewModel.observations());
+        // Le panneau lui-même est une sous-vue (#2745) : titre, placeholder, colonnes et activation des
+        // deux boutons y vivent. Elle reçoit NOS appuis et n'injecte rien, le ViewModel étant
+        // non-singleton. Les trois gestes lui arrivent en fonctions : ils ont besoin de la sélection de
+        // l'inventaire et de la source audio, qui se décident ici.
+        panneauDetailController.installer(
+                viewModel,
+                this::richesseDuCarre,
+                this::ecouter,
+                this::ouvrirPassageDe,
+                () -> actionFicheEspece.ouvrirOuSignaler(
+                        especeDe(tableEspeces.getSelectionModel().getSelectedItem()), viewModel::signaler));
 
         // Le panneau détail n'a de sens qu'en regroupement Par espèce : on le retire du SplitPane en Par
         // carré pour rendre toute la hauteur à la table des carrés (plutôt qu'un placeholder inutile).
@@ -474,38 +442,6 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
             viewModel.selectionnerEspece(espece, statutCourant());
             configurerFiches(especeDe(espece));
         });
-
-        lblDetailTitre.textProperty().bind(viewModel.detailTitreProperty());
-
-        // Placeholder tant qu'aucune observation n'est listée (aucune espèce sélectionnée).
-        var detailVide = Bindings.isEmpty(viewModel.observations());
-        lblDetailVide.visibleProperty().bind(detailVide);
-        lblDetailVide.managedProperty().bind(detailVide);
-
-        // Actions du détail actives seulement quand une observation est sélectionnée.
-        var selection = tableObservations.getSelectionModel().selectedItemProperty();
-        boutonOuvrirPassage.disableProperty().bind(selection.isNull());
-        boutonEcouter.disableProperty().bind(selection.isNull());
-        // Explique le grisage (#789) sur les enveloppes (un Button désactivé n'affiche pas de tooltip).
-        IndicateurBlocage.expliquer(
-                enveloppeEcouter,
-                Bindings.when(selection.isNull())
-                        .then("Sélectionnez une observation dans le tableau pour l'écouter et la valider.")
-                        .otherwise("Écouter l'observation sélectionnée et la valider."));
-        IndicateurBlocage.expliquer(
-                enveloppeOuvrirPassage,
-                Bindings.when(selection.isNull())
-                        .then("Sélectionnez une observation dans le tableau pour ouvrir son passage.")
-                        .otherwise("Ouvrir le passage de l'observation sélectionnée."));
-
-        // Double-clic sur une observation → fiche de l'espèce (#1794). Toutes les observations du détail
-        // portent la même espèce ; seule l'agrégée sélectionnée porte le nom latin/vernaculaire, donc c'est
-        // elle qu'on ouvre. L'écoute d'une détection reste le bouton « Écouter » et « Ouvrir le passage » le
-        // sien.
-        DoubleClicLigne.installer(
-                tableObservations,
-                observation -> actionFicheEspece.ouvrirOuSignaler(
-                        especeDe(tableEspeces.getSelectionModel().getSelectedItem()), viewModel::signaler));
     }
 
     /// L'espèce ciblée par « Fiche de l'espèce » : code, nom latin et nom vernaculaire de la ligne
@@ -595,7 +531,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         gestionnaireFiltres.reinitialiser();
         tableEspeces.getSortOrder().clear();
         tableCarres.getSortOrder().clear();
-        tableObservations.getSortOrder().clear();
+        panneauDetailController.table().getSortOrder().clear();
         memoire.oublier(FEATURE);
     }
     /// « 📤 Exporter… » : demande où écrire, puis délègue au ViewModel l'écriture CSV de l'inventaire
@@ -609,28 +545,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                 .ifPresent(viewModel::exporter);
     }
 
-    /// « Ouvrir le passage → » : ouvre M-Passage pour l'observation sélectionnée du détail.
-    @FXML
-    private void ouvrirPassage() {
-        ObservationEspece observation = tableObservations.getSelectionModel().getSelectedItem();
-        if (observation != null) {
-            ouvrirPassageDe(observation);
-        }
-    }
-
     private void ouvrirPassageDe(ObservationEspece observation) {
         ouvrirPassage.ouvrir(
                 observation.idPassage(),
                 new ContexteSite(observation.numeroCarre(), observation.codePoint(), observation.nomSite()));
-    }
-
-    /// « 🎧 Écouter / valider » : ouvre la **vue audio unifiée** sur **toutes les observations de l'espèce
-    /// sélectionnée** (source `ParEspece`, à travers les passages, avec le filtre de statut courant),
-    /// **pré-focalisée sur la détection cliquée** (écoute + valider/corriger/référence), via le contrat
-    /// socle [OuvrirAudio]. Au retour, [#rafraichirAuRetour()] met l'inventaire à jour.
-    @FXML
-    private void ecouterValider() {
-        ecouter(tableObservations.getSelectionModel().getSelectedItem());
     }
 
     /// Ouvre la vue audio sur `observation` (écoute + valider/corriger/référence). Partagé par le bouton
@@ -650,17 +568,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                 marqueurEnjeu);
         ColonnesAnalyse.carres(
                 new ColonnesAnalyse.Carres(colCarre, colSite, colRichesse, colDetectionsCarre, colPeriodeCarre));
-        ColonnesAnalyse.observations(
-                new ColonnesAnalyse.Observations(
-                        colObsPassage,
-                        colObsCarre,
-                        colObsRichesse,
-                        colObsPoint,
-                        colObsCommune,
-                        colObsTadarida,
-                        colObsObservateur,
-                        colObsStatut),
-                this::richesseDuCarre);
+        // Les colonnes du détail sont câblées par sa sous-vue, qui les possède (#2745).
     }
 
     /// Libellé du passage d'une observation : date d'enregistrement et n° de passage (`2026-06-22 · n°2`).
