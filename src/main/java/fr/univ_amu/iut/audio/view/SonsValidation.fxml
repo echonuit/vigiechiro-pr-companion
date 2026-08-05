@@ -163,45 +163,10 @@
 
   <SplitPane fx:id="separateur" orientation="VERTICAL" dividerPositions="0.5" VBox.vgrow="ALWAYS">
 
-    <!-- Haut : la table des observations, pleine largeur. -->
-    <StackPane>
-      <TableView fx:id="tableObservations">
-        <columns>
-          <!-- Ordre par défaut voulu pour les tables à espèces : contexte (Date + Passage/Carré/Point,
-               masqués pour un passage unique) puis fichier, puis identification, statut et indicateurs. -->
-          <TableColumn fx:id="colDate" text="Date" prefWidth="110.0"/>
-          <TableColumn fx:id="colHeure" text="Heure" prefWidth="80.0"/>
-          <TableColumn fx:id="colPassage" text="Passage" prefWidth="150.0"/>
-          <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
-          <TableColumn fx:id="colNomSite" text="Nom du carré" prefWidth="150.0" visible="false"/>
-          <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
-          <!-- Commune (#3164) : elle se coche dans la puce « Lieu » et sort au CSV depuis #2790,
-               sans qu'aucune colonne ne la montre. Colonne de CONTEXTE : masquée sur un passage
-               unique, où toutes les lignes partagent la même. -->
-          <TableColumn fx:id="colCommune" text="Commune" prefWidth="140.0"/>
-          <TableColumn fx:id="colFichier" text="Fichier" prefWidth="200.0"/>
-          <TableColumn fx:id="colTadarida" text="Proposition Tadarida" prefWidth="180.0"/>
-          <TableColumn fx:id="colProba" text="Proba." prefWidth="70.0"/>
-          <TableColumn fx:id="colObservateur" text="Votre taxon" prefWidth="180.0"/>
-          <TableColumn fx:id="colCertitude" text="Certitude" prefWidth="90.0"/>
-          <TableColumn fx:id="colValidateur" text="Avis du validateur" prefWidth="180.0"/>
-          <TableColumn fx:id="colFrequence" text="Fréquence" prefWidth="100.0"/>
-          <TableColumn fx:id="colFme" text="FME" prefWidth="90.0"/>
-          <TableColumn fx:id="colFreqTerminale" text="Fréq. term." prefWidth="120.0"/>
-          <TableColumn fx:id="colDebut" text="Début" prefWidth="80.0"/>
-          <TableColumn fx:id="colDuree" text="Durée" prefWidth="80.0"/>
-          <TableColumn fx:id="colStatut" text="Statut" prefWidth="110.0"/>
-          <!-- Les colonnes-indicateurs portent une ICÔNE en en-tête, posée par CellulesAudio
-               avec son libellé accessible et son infobulle : un glyphe seul n'annonce rien à un
-               lecteur d'écran, et n'explique rien au survol (#794). -->
-          <TableColumn fx:id="colReference" prefWidth="50.0"/>
-          <TableColumn fx:id="colCommentaire" prefWidth="50.0"/>
-          <TableColumn fx:id="colFil" prefWidth="50.0"/>
-          <TableColumn fx:id="colEnjeu" prefWidth="50.0"/>
-        </columns>
-      </TableView>
-      <Label fx:id="lblVide" styleClass="audio-vide" wrapText="true"/>
-    </StackPane>
+    <!-- Haut : la table des observations, pleine largeur. Sous-vue depuis #2745 : ses 23 colonnes
+         etaient des champs @FXML du controller, et NcssCount compte les declarations de champs.
+         Le controller de la sous-vue est injecte ici sous le nom `tableauController`. -->
+    <fx:include fx:id="tableau" source="TableObservations.fxml"/>
 
     <!-- Bas : écoute pleine largeur + revue. minHeight pour que le spectrogramme ne soit jamais écrasé
          par la table quand on tire le diviseur (cf. incident #329 : vgrow qui aplatit l'AudioView). -->

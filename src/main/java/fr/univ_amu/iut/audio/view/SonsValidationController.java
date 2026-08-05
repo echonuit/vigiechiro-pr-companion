@@ -24,23 +24,19 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
-import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
-import fr.univ_amu.iut.validation.model.MarqueurEspecesAEnjeu;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.Taxon;
 import java.io.File;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
@@ -48,9 +44,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
-import javafx.scene.control.SelectionMode;
 import javafx.scene.control.SeparatorMenuItem;
-import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
@@ -64,7 +58,8 @@ import javafx.scene.layout.VBox;
 /// d'écoute (détail + `AudioView`) et la revue au [AudioViewModel]. Les actions communes (valider /
 /// corriger / basculer la référence) sont toujours offertes ; les actions propres à la source (import
 /// CSV / export `_Vu` d'un passage, export bibliothèque des références) ne s'affichent dans le menu
-/// « ☰ » que pour la source concernée, et les colonnes de **contexte** (passage / carré / point) sont
+/// « ☰ » que pour la source concernée, et les colonnes de **contexte** (passage / carré / point)
+/// sont
 /// masquées quand la source est un **unique passage** (elles y seraient constantes). Aucun accès base
 /// ni logique métier ici (règle ArchUnit `view_sans_jdbc`).
 public class SonsValidationController implements EmplacementNavigation, ResumeStatut {
@@ -106,7 +101,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// [DialoguesAudio] - ils forment une unité (« ce que l'écran demande à l'utilisateur »), et le
     /// contrôleur touchait son plafond de taille.
     private final DialoguesAudio dialogues =
-            new DialoguesAudio(() -> this.tableObservations.getScene().getWindow());
+            new DialoguesAudio(() -> this.tableauController.table().getScene().getWindow());
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
     ConfirmateurModifiable confirmateur() {
@@ -131,7 +126,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private void toutEffacer() {
         gestionnaireFiltres.reinitialiser();
-        tableObservations.getSortOrder().clear();
+        tableauController.table().getSortOrder().clear();
         memoire.oublier(FEATURE);
     }
 
@@ -157,14 +152,6 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// Barre de filtres « à la Notion » (#470/#471) : recherche + « + Filtre » + puces, pilotant
     /// [AudioViewModel#filtres]. Mémorisée pour la réinitialiser lors d'une navigation ciblée.
     private GestionnaireFiltres<LigneObservationAudio> gestionnaireFiltres;
-
-    /// Repère des **espèces à enjeu** (#2353) : lu une fois à l'ouverture, le référentiel ne bougeant pas
-    /// en cours de session. Partagé par la colonne-indicateur et le critère de filtre.
-    private MarqueurEspecesAEnjeu marqueurEnjeu;
-
-    /// Aiguillage des actions de revue selon la sélection (unitaire vs lot, #479), partagé par les boutons et
-    /// les raccourcis clavier.
-    private ActionsSelectionAudio actionsSelection;
 
     @FXML
     private MenuButton menuActions;
@@ -208,90 +195,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private MenuItem itemExporterBiblio;
 
-    @FXML
-    private TableView<LigneObservationAudio> tableObservations;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colTadarida;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colProba;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colFrequence;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colFme;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colFreqTerminale;
-
-    /// Colonne « Heure » typée par l'**instant** de capture (et non une chaîne) : le tri par défaut de
-    /// [LocalDateTime] est chronologique et gère le passage à minuit (00:15 après 22:00). L'affichage « HH:mm »
-    /// est produit par une cellule dédiée. #530.
-    @FXML
-    private TableColumn<LigneObservationAudio, LocalDateTime> colHeure;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colDebut;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colDuree;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colObservateur;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colCertitude;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colFichier;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colPassage;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colCarre;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colNomSite;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colPoint;
-
-    /// Commune du point d'écoute (#3164) : contexte, donc masquée sur un passage unique.
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colCommune;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colDate;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colStatut;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colReference;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colCommentaire;
-
     /// Hôte du fil de discussion (#1417), à droite du lecteur : masqué tant qu'aucun message n'existe.
     @FXML
     private StackPane hoteDiscussion;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colValidateur;
-
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colFil;
-
-    /// Colonne-indicateur **espèce à enjeu** (#2353) : bouclier sur les lignes dont le taxon retenu est
-    /// une espèce prioritaire du plan national.
-    @FXML
-    private TableColumn<LigneObservationAudio, String> colEnjeu;
-
-    @FXML
-    private Label lblVide;
 
     @FXML
     private Label lblAstuceDepot;
@@ -387,66 +293,30 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         this.reactifs = Objects.requireNonNull(reactifs, "reactifs");
     }
 
-    /// Colonnes injectées par le FXML, regroupées ([ColonnesAudio.Colonnes]) : construites une fois,
-    /// partagées entre le câblage initial et l'adaptation à la source.
-    private ColonnesAudio.Colonnes colonnes;
-
     /// Items du ☰ pilotés par le workflow / la source, regroupés ([MenuAudio.Items]).
     private MenuAudio.Items itemsMenu;
 
-    /// Câble les colonnes de la table (valeur, cellules, comparateurs de tri). Le détail vit dans
-    /// [ColonnesAudio] (unité cohésive extraite pour garder ce contrôleur sous le seuil de God Class) ; on
-    /// lui passe les colonnes injectées par le FXML, regroupées.
-    private void configurerColonnes() {
-        marqueurEnjeu = new MarqueurEspecesAEnjeu(appuis.especesPrioritaires());
-        colonnes = new ColonnesAudio.Colonnes(
-                colTadarida,
-                colProba,
-                colFrequence,
-                colDebut,
-                colDuree,
-                colObservateur,
-                colCertitude,
-                colFichier,
-                colPassage,
-                colCarre,
-                colNomSite,
-                colPoint,
-                colCommune,
-                colDate,
-                colHeure,
-                colStatut,
-                colReference,
-                colCommentaire,
-                colValidateur,
-                colFil,
-                colEnjeu);
-        ColonnesAudio.configurer(
-                colonnes, ligne -> marqueurEnjeu.aEnjeu(ligne.taxonRetenu()), viewModel.actions()::commenter);
-    }
+    /// Controller de la sous-vue `TableObservations.fxml`, injecté par le `fx:include` (#2745) : il
+    /// possède la table, ses 23 colonnes et leur câblage. Le nom du champ est imposé par JavaFX, qui
+    /// concatène le `fx:id` de l'inclusion (`tableau`) et le suffixe `Controller`.
+    @FXML
+    private TableObservationsController tableauController;
 
     @FXML
     private void initialize() {
-        // Densite et habillage de table uniformes (#690).
-        TableDonnees.uniformiser(tableObservations);
-        configurerColonnes();
+        // La table, ses colonnes, son tri, sa multi-sélection et la revue au clavier vivent désormais
+        // dans la sous-vue TableObservations.fxml (#2745). Ce controller n'en garde que ce qui a besoin
+        // d'elle ET d'un nœud d'ici : panneau d'écoute, menu ☰, filtres, gestionnaire de colonnes.
+        //
+        // ⚠️ La sous-vue reçoit NOTRE modèle, elle ne se l'injecte pas : AudioViewModel est non-singleton
+        // (« un VM frais par chargement d'écran »), et une injection lui en donnerait un second, vide.
+        tableauController.installer(viewModel, appuis);
+        TableView<LigneObservationAudio> table = tableauController.table();
+        ActionsSelectionAudio actionsSelection = tableauController.actionsSelection();
 
         // « Voir sur la carte » rouvre l'analyse : masqué si la feature `analyse` est coupée (#1087).
         itemVoirCarte.setVisible(ouvrirAnalyse.isPresent());
 
-        // Rendre les en-têtes cliquables réellement triants : la table est alimentée par une FilteredList
-        // (non triable en place) ; on l'enveloppe dans une SortedList dont le comparateur suit celui de la
-        // table. Sans cela, cliquer un en-tête ne réordonnait rien. L'ordre initial reste l'ordre de revue.
-        SortedList<LigneObservationAudio> triees = new SortedList<>(viewModel.observationsFiltrees());
-        triees.comparatorProperty().bind(tableObservations.comparatorProperty());
-        tableObservations.setItems(triees);
-        // Multi-sélection (#479) : traiter un lot d'un coup. Le suivi audio/détail suit la DERNIÈRE ligne
-        // sélectionnée (selectedItemProperty), les actions opèrent sur tout le lot via actionsSelection.
-        tableObservations.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-        actionsSelection = new ActionsSelectionAudio(tableObservations, viewModel);
-        // Revue au clavier (#478) : Entrée = valider, R = référence, N = prochaine « À revoir » ; ↑/↓ =
-        // navigation native. Entrée/R passent par actionsSelection (unitaire si 1 ligne, lot si plusieurs).
-        RevueClavier.installer(tableObservations, viewModel, actionsSelection);
         // Menu « Certitude » (#1139) : déclaration manuelle Sûr/Probable/Possible sur la sélection,
         // en miroir de la « Confiance observateur » du site (vide par défaut). Items et blocage câblés
         // dans MenuCertitude (classe dédiée, seuil de God Class).
@@ -454,38 +324,44 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // Fil de discussion avec le validateur (#1417) : le panneau vit à droite du lecteur et suit la
         // sélection ; il ne s'ouvre que si la ligne porte réellement des messages. Câblage délégué
         // (PanneauDiscussion.installer), comme MenuCertitude : ce contrôleur est au plafond de NcssCount.
-        PanneauDiscussion.installer(hoteDiscussion, tableObservations, viewModel, appuis.executeur());
+        PanneauDiscussion.installer(hoteDiscussion, table, viewModel, appuis.executeur());
         // Double-clic sur une observation → fiche de l'espèce (#1794), même cible que « Fiche de l'espèce »
         // du menu ☰. Le clic droit sélectionne la ligne survolée sans casser une sélection multiple.
         // Sur un taxon sans fiche (« Bruit », « Oiseau »), le motif part dans le bandeau plutôt que dans le
         // vide : le geste restait muet et passait pour cassé (#1834).
-        DoubleClicLigne.installer(tableObservations, ligne -> actionsMenu.ouvrirFiche(ligne, viewModel::signaler));
+        DoubleClicLigne.installer(table, ligne -> actionsMenu.ouvrirFiche(ligne, viewModel::signaler));
 
         // Synchronisation de la sélection dans les deux sens, et items de fiche qui la suivent : déléguée
         // à SelectionTableAudio, comme MenuCertitude et PanneauDiscussion : ce contrôleur est au plafond
         // de NcssCount, et les deux écouteurs forment un tout (la garde d'égalité de l'un empêche la
         // boucle avec l'autre).
-        SelectionTableAudio.installer(tableObservations, viewModel, actionsMenu, itemFicheEspece);
+        SelectionTableAudio.installer(table, viewModel, actionsMenu, itemFicheEspece);
 
         // Barre de filtres « à la Notion » (#470/#471), mémoire de session (#484) et onglets de vues
         // mémorisées (#623) : assemblage délégué à FiltresVuesAudio, qui rend le gestionnaire (gardé pour
         // les navigations ciblées et le transport des filtres vers l'analyse).
         gestionnaireFiltres = FiltresVuesAudio.installer(
                 new FiltresVuesAudio.Barre(champRecherche, menuAjoutFiltre, pucesFiltres, barreOnglets),
-                tableObservations,
+                table,
                 viewModel,
                 memoire,
                 appuis.depotVues(),
                 FEATURE,
-                marqueurEnjeu,
-                () -> ColonnesAudio.pourLeSelecteur(colonnes, colFme, colFreqTerminale));
+                tableauController.marqueurEnjeu(),
+                () -> tableauController.pourLeSelecteur());
 
         zonesStatut.bind(Bindings.createObjectBinding(this::zonesStatutCourantes, viewModel.comptageProperty()));
 
         // Panneau d'écoute : config AudioView (normalisations, expansion ×10, source, dispose) + repérage du
         // cri (#482) + métriques FME/fréq. terminale (#500) + options de lecture (#483). Détail dans le helper.
         PanneauEcouteAudio.installer(
-                audioView, viewModel, tableObservations, colFme, colFreqTerminale, menuActions, reactifs);
+                audioView,
+                viewModel,
+                table,
+                tableauController.colonneFme(),
+                tableauController.colonneFrequenceTerminale(),
+                menuActions,
+                reactifs);
 
         choixMode.getItems().setAll(ModeRevue.values());
         choixMode.setConverter(LibellesAudio.converter(mode -> mode == null ? "" : LibellesAudio.mode(mode)));
@@ -529,7 +405,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // terminer (bandeau de retour, #795) et quand l'audio n'est pas tout là (bandeau d'archive, #1301) :
         // trois messages de la même zone, câblés dans MessagesEcranAudio : ce contrôleur est au plafond
         // de NcssCount.
-        MessagesEcranAudio.installer(lblVide, bandeauRetour, lblRetour, btnFermerRetour, lblBandeauArchive, viewModel);
+        MessagesEcranAudio.installer(
+                tableauController.labelVide(), bandeauRetour, lblRetour, btnFermerRetour, lblBandeauArchive, viewModel);
 
         // Encart d'explication à la place du lecteur quand le fichier de la séquence sélectionnée n'est
         // plus sur disque (jamais un lecteur inerte, #1301).
@@ -544,17 +421,17 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // et item « Colonnes… » du ☰ ouvrent le même panneau. La proposition Tadarida, colonne d'identité,
         // reste toujours affichée (visibilité verrouillée) mais peut être déplacée comme les autres.
         GestionnaireColonnes.installerEtPersister(
-                tableObservations,
+                table,
                 menuActions,
-                ColonnesAudio.pourLeSelecteur(colonnes, colFme, colFreqTerminale),
+                tableauController.pourLeSelecteur(),
                 appuis.depotColonnes(),
                 FEATURE,
                 "principale",
-                actionsMenu.itemOuvrirPassage(tableObservations),
+                actionsMenu.itemOuvrirPassage(table),
                 actionsMenu.itemFicheContexte(),
                 new SeparatorMenuItem(),
-                MenuValidationAudio.creer(tableObservations, actionsSelection, choixTaxon::getValue),
-                actionsMenu.menuCopier(tableObservations));
+                MenuValidationAudio.creer(table, actionsSelection, choixTaxon::getValue),
+                actionsMenu.menuCopier(table));
 
         occupation = new IndicateurOccupation(hoteOccupation, appuis.executeur());
     }
@@ -597,10 +474,11 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 erreur -> viewModel.signalerErreur(source, erreur));
     }
 
-    /// Adapte l'affichage à la source : colonnes de contexte masquées si la source est un unique passage
+    /// Adapte l'affichage à la source : colonnes de contexte masquées si la source est un unique
+    /// passage
     /// ([ColonnesAudio#adapterAuContexte]) et items du menu « ☰ » propres à la source ([MenuAudio#adapter]).
     private void adapterAffichage(SourceObservations source) {
-        ColonnesAudio.adapterAuContexte(colonnes, source.cibleUnPassageUnique());
+        ColonnesAudio.adapterAuContexte(tableauController.colonnes(), source.cibleUnPassageUnique());
         MenuAudio.adapter(itemsMenu, source, importVigieChiro, publicationCorrections, actionsMenu.donneesVigieChiro());
         // Astuce de découvrabilité du glisser-déposer (#1015) : rien ne signalait qu'un CSV Tadarida
         // peut être déposé sur l'écran. Le rappel discret suit la même règle d'activation que le dépôt
@@ -613,8 +491,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private void selectionnerObservation(Long idObservation) {
         for (LigneObservationAudio ligne : viewModel.observationsFiltrees()) {
             if (idObservation.equals(ligne.idObservation())) {
-                tableObservations.getSelectionModel().select(ligne);
-                tableObservations.scrollTo(ligne);
+                tableauController.table().getSelectionModel().select(ligne);
+                tableauController.table().scrollTo(ligne);
                 return;
             }
         }
@@ -631,7 +509,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         return ChromeAudio.zonesStatut(
                 source,
                 viewModel.comptageProperty().get(),
-                ComptageEnjeu.de(viewModel.observationsFiltrees(), ligne -> marqueurEnjeu.aEnjeu(ligne.taxonRetenu())));
+                ComptageEnjeu.de(
+                        viewModel.observationsFiltrees(),
+                        ligne -> tableauController.marqueurEnjeu().aEnjeu(ligne.taxonRetenu())));
     }
 
     @Override
@@ -641,22 +521,22 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     @FXML
     private void valider() {
-        actionsSelection.valider();
+        tableauController.actionsSelection().valider();
     }
 
     @FXML
     private void corriger() {
-        actionsSelection.corriger(choixTaxon.getValue());
+        tableauController.actionsSelection().corriger(choixTaxon.getValue());
     }
 
     @FXML
     private void basculerReference() {
-        actionsSelection.basculerReference();
+        tableauController.actionsSelection().basculerReference();
     }
 
     @FXML
     private void basculerDouteux() {
-        actionsSelection.basculerDouteux();
+        tableauController.actionsSelection().basculerDouteux();
     }
 
     /// « 🗺 Voir sur la carte » (#476) : rouvre l'analyse « Espèces & observations » directement sur la
@@ -697,7 +577,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 source,
                 occupation,
                 new DialogueProgression(appuis.executeur()),
-                () -> tableObservations.getScene().getWindow(),
+                () -> tableauController.table().getScene().getWindow(),
                 confirmateur(),
                 demandeurParticipation());
     }
@@ -713,7 +593,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 source,
                 occupation,
                 new DialogueProgression(appuis.executeur()),
-                () -> tableObservations.getScene().getWindow(),
+                () -> tableauController.table().getScene().getWindow(),
                 confirmateur());
     }
 
@@ -738,7 +618,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 viewModel,
                 selecteur(),
                 new DialogueProgression(appuis.executeur()),
-                () -> tableObservations.getScene().getWindow());
+                () -> tableauController.table().getScene().getWindow());
     }
 
     /// « Exporter la bibliothèque » : désignation de l'archive puis écriture dans la modale annulable,
@@ -749,6 +629,6 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 viewModel,
                 selecteur(),
                 new DialogueProgression(appuis.executeur()),
-                () -> tableObservations.getScene().getWindow());
+                () -> tableauController.table().getScene().getWindow());
     }
 }
