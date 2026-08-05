@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-08-05
 - **Chantier** : #2745, lot 4 (#2724) du chantier de dette #2720
-- **Vérification** : certaine - `DecisionsRespecteesTest#une_sous_vue_ne_s_injecte_pas_son_modele`
+- **Vérification** : certaine - `DecisionsRespecteesTest#une_sous_vue_ne_se_procure_pas_ce_qui_doit_etre_unique`
 
 ## Contexte
 
@@ -50,7 +50,11 @@ accesseurs. Une sous-vue n'est pas une frontière étanche : c'est un regroupeme
 
 ## La conséquence qui n'était pas prévue, et qu'il faut connaître
 
-⚠️ **Une sous-vue ne doit pas injecter son ViewModel : elle le reçoit de son parent.**
+⚠️ **Une sous-vue ne se procure rien de ce qui doit être unique : elle le reçoit de son parent.**
+
+> *Règle élargie le 2026-08-05 (#3335).* Elle a d'abord été écrite « une sous-vue ne doit pas injecter
+> son **ViewModel** », d'après le seul cas rencontré. Le ViewModel n'en est qu'un ; le **porteur de
+> dialogue** en est un autre, et il est plus piégeux (voir plus bas).
 
 Le premier découpage donnait au sous-contrôleur un constructeur `@Inject` prenant `AudioViewModel`,
 par symétrie avec son parent. `FXMLLoader` propage bien la `controllerFactory` Guice aux inclusions,
@@ -70,6 +74,30 @@ La règle qui en découle vaut pour toute sous-vue à venir : **le parent appell
 sous-vue vit dans cette méthode plutôt que dans un `initialize()`. L'ordre le permet : JavaFX charge
 les inclusions et appelle leurs `initialize()` **avant** celui du parent, si bien que le champ
 `<fx:id>Controller` est disponible quand le parent s'initialise.
+
+### Le second cas, plus piégeux : les porteurs de l'ADR 0010
+
+[L'ADR 0010](0010-dialogues-bloquants-sont-des-ports.md) fait des dialogues bloquants des **ports
+injectables**, pour qu'un test les remplace. Ce qu'elle ne disait pas, la question ne se posant pas
+avant les sous-vues : **un port n'est un point de substitution que s'il est unique.**
+
+Un test parent écrit `controleur.confirmateur().definir(stub)`. Si une sous-vue avait le sien, le
+double ne s'y appliquerait pas : sous TestFX headless, le `showAndWait()` figerait le test, ou celui-ci
+passerait en ne vérifiant rien.
+
+Et ce cas **échappe à la détection par `@Inject`** : le dépôt ne fabrique pas ces porteurs par
+injection mais en initialiseur de champ, `new ConfirmateurModifiable()`. C'est pourquoi la garde
+cherche les deux formes.
+
+### Pourquoi c'est la panne de l'ADR 3018, à un autre étage
+
+[L'ADR 3018](3018-un-outil-compose-depuis-la-racine.md) constate qu'« un injecteur amputé et une
+fonctionnalité désactivée produisent le même écran ». La forme est identique ici : un composant **se
+procure** localement ce qu'il aurait dû **recevoir**, l'injecteur satisfait la demande sans broncher,
+et le résultat n'a pas l'air cassé - il a l'air d'un produit configuré autrement.
+
+3018 en tire que ce genre de règle « ne peut pas tenir par la vigilance ». C'est la raison pour
+laquelle celle-ci est gardée plutôt qu'écrite.
 
 ## Le prix
 
