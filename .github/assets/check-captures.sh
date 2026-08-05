@@ -80,6 +80,18 @@ if [ "${1:-}" = "--auto-test" ]; then
     printf '# un commentaire\n\n' >> "$bac/assets/captures.manifest"
     verifie 0 "commentaires et lignes vides du manifeste sont ignorés"
 
+    # Sous-vues (ADR 2745) : incluses, donc couvertes par la capture de leur hôte.
+    monter
+    : > "$bac/src/fr/exemple/vue/view/Morceau.fxml"
+    printf '<fx:include fx:id="m" source="Morceau.fxml"/>\n' > "$bac/src/fr/exemple/vue/view/Ecran.fxml"
+    verifie 0 "une sous-vue incluse par une autre vue n'a pas besoin de sa propre capture (#2745)"
+
+    # ... mais la tolérance reste ÉTROITE : une vue que personne n'inclut la réclame toujours.
+    monter
+    : > "$bac/src/fr/exemple/vue/view/Morceau.fxml"
+    printf '<fx:include fx:id="m" source="UneAutre.fxml"/>\n' > "$bac/src/fr/exemple/vue/view/Ecran.fxml"
+    verifie 1 "une vue non incluse reste refusée, même si des inclusions existent ailleurs (#2745)"
+
     monter
     mkdir -p "$bac/src/fr/exemple/vue/outils"
     printf 'class CaptureX {\n  /// remplace apercu-disparue.png, une replique reconstruite\n}\n' \
@@ -104,13 +116,19 @@ erreurs=0
 # Vues déclarées au manifeste (partie avant le « : »), normalisées.
 declarees="$(grep -vE '^[[:space:]]*(#|$)' "$MANIFESTE" | sed 's/[[:space:]]*:.*//' | sed 's/[[:space:]]//g')"
 
-# 1. Chaque *.fxml sous **/view/ doit être déclaré.
+# 1. Chaque *.fxml sous **/view/ doit être déclaré, SAUF s'il est inclus par une autre vue.
+#
+# Une sous-vue (`fx:include`, ADR 2745) n'a pas de capture propre : elle n'est jamais affichée seule,
+# elle est rendue DANS la vue qui l'inclut, et c'est la capture de celle-ci qui la montre. Lui
+# réclamer une entrée au manifeste ferait déclarer deux fois la même image, qui divergerait ensuite.
 while IFS= read -r fxml; do
   rel="${fxml#"$SOURCES"/}"
-  if ! grep -qxF "$rel" <<< "$declarees"; then
-    echo "❌ Vue sans capture déclarée au manifeste : $rel"
-    erreurs=$((erreurs + 1))
+  grep -qxF "$rel" <<< "$declarees" && continue
+  if grep -rlq --include='*.fxml' -e "fx:include[^>]*source=\"$(basename "$rel")\"" "$SOURCES"; then
+    continue
   fi
+  echo "❌ Vue sans capture déclarée au manifeste : $rel"
+  erreurs=$((erreurs + 1))
 done < <(find "$SOURCES" -path '*/view/*.fxml' | sort)
 
 # 2 + 3. Chaque vue déclarée existe ; chaque capture déclarée existe.
