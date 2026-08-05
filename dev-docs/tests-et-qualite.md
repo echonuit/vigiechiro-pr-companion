@@ -56,8 +56,28 @@ headless vient de `glass.platform=Headless`, pas de TestFX. Le `argLine` ajoute 
       désormais `byte-buddy-agent` en `-javaagent` via `maven-dependency-plugin:properties`
       (`${net.bytebuddy:byte-buddy-agent:jar}` dans l'`argLine`) : plus d'auto-attachement, prêt pour
       le JDK 26.
-    - **`sun.misc.Unsafe`** *(à surveiller)* : le warning vient de **Guava** (transitif), pas du code
-      du projet. Il disparaîtra avec une montée de version de Guava ; rien à faire ici pour l'instant.
+    - **`sun.misc.Unsafe`** *(à surveiller)* : le warning ne vient **pas** du code du projet, mais il ne
+      vient pas non plus de Guava. **Mesuré le 2026-08-06** (#2747), sur JDK 25.0.3, en lançant `AppTest` :
+
+        ```
+        WARNING: sun.misc.Unsafe::staticFieldBase has been called by
+                 com.google.inject.internal.aop.HiddenClassDefiner (guice-7.0.0.jar)
+        WARNING: sun.misc.Unsafe::staticFieldBase will be removed in a future release
+        ```
+
+        C'est **Guice 7.0.0**, dans la génération de proxys AOP. La version précédente de cette page
+        accusait Guava : c'est cette erreur qui a fait attendre une montée de Guava, laquelle a bien eu
+        lieu (33.4.8-jre, #2740) **sans rien changer** - elle ne pouvait pas.
+
+        ⚠️ **Ce n'est pas « rien à faire pour l'instant », c'est une échéance.** La JEP 498 retirera
+        l'accès, et `--sun-misc-unsafe-memory-access=allow` (posé au `pom.xml` pour `javafx:run` et le
+        lanceur jpackage, et au manifeste Flatpak) ne fait que la repousser. Le jour où le drapeau
+        disparaît, l'application ne démarre plus.
+
+        **Ce qui la lèverait** : une version de Guice qui cesse d'utiliser `Unsafe`. 7.0.0 est la
+        dernière publiée ; Dependabot suit la dépendance et proposera la montée. Le drapeau se retire
+        **le jour où ce warning cesse d'apparaître**, et pas avant : le vérifier se fait en une
+        commande, `./mvnw test -Dtest=AppTest` puis chercher « sun.misc.Unsafe » dans la sortie.
 
 !!! danger "Lancer les tests avec le bon JDK"
     Utilisez un **JDK 25 standard** (`25.0.2-open` / Temurin), **pas** un JDK packagé FX (`fx-zulu`) :
