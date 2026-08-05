@@ -65,6 +65,11 @@ class DecisionsRespecteesTest {
     /// La classe déclarée `fx:controller` d'un FXML.
     private static final Pattern CONTROLLER_FXML = Pattern.compile("fx:controller=\"([^\"]+)\"");
 
+    /// Un porteur de test fabriqué sur place. Les `*Modifiable` du dépôt (confirmation, compte rendu,
+    /// désignation de fichier) ne sont pas injectés mais construits en initialiseur de champ : c'est la
+    /// forme que `@Inject` ne verrait pas, et pourtant la même faute (ADR 0010 + 2745, #3335).
+    private static final Pattern PORTEUR_FABRIQUE = Pattern.compile("new (\\w+Modifiable)\\s*\\(");
+
     @Test
     @DisplayName("ADR 0038 : l'échelle de sévérité compte quatre niveaux, et son ordre porte la sémantique")
     void l_echelle_de_severite_a_quatre_niveaux_dans_l_ordre() {
@@ -218,8 +223,8 @@ class DecisionsRespecteesTest {
     }
 
     @Test
-    @DisplayName("ADR 2745 : le controller d'une sous-vue ne s'injecte rien, son parent lui passe tout")
-    void une_sous_vue_ne_s_injecte_pas_son_modele() {
+    @DisplayName("ADR 2745 : une sous-vue ne se procure rien de ce qui doit être unique")
+    void une_sous_vue_ne_se_procure_pas_ce_qui_doit_etre_unique() {
         // Le piège que cette garde ferme a réellement eu lieu, au premier fx:include du dépôt (#2745).
         // Un controller de sous-vue avec un constructeur @Inject se construit très bien : FXMLLoader
         // propage la controllerFactory Guice aux inclusions. Mais les ViewModel du dépôt sont
@@ -227,7 +232,17 @@ class DecisionsRespecteesTest {
         // reçoit un SECOND modèle, vide, et câble ses nœuds dessus.
         //
         // Rien ne rougit : ça compile, la vue se charge, l'écran s'affiche. La table est simplement
-        // vide et les actions ne portent sur rien. Une sous-vue reçoit donc son modèle de son parent.
+        // vide et les actions ne portent sur rien.
+        //
+        // ⚠️ Le ViewModel n'est qu'un cas (#3335). Un PORTEUR de dialogue en est un autre, et il est
+        // plus piégeux parce qu'il ne s'injecte pas : le dépôt le fabrique en initialiseur de champ
+        // (`new ConfirmateurModifiable()`, neuf contrôleurs le font). Or l'ADR 0010 en fait un point de
+        // SUBSTITUTION pour les tests, et un point de substitution n'en est un que s'il est unique : un
+        // test parent qui pose son double sur `controleur.confirmateur()` ne toucherait pas celui de la
+        // sous-vue, et le `showAndWait()` figerait le test headless.
+        //
+        // Même panne que l'ADR 3018 à un autre étage : un composant se procure localement ce qu'il
+        // aurait dû recevoir, et le résultat n'a pas l'air cassé.
         Map<String, String> fautifs = new TreeMap<>();
         Set<String> inclusions = new TreeSet<>();
 
@@ -243,8 +258,16 @@ class DecisionsRespecteesTest {
                 String classe = controller.group(1);
                 Path source =
                         SOURCES.resolve(classe.replace("fr.univ_amu.iut.", "").replace('.', '/') + ".java");
-                if (Files.exists(source) && lire(source).contains("@Inject")) {
-                    fautifs.put(incluse.getFileName().toString(), classe);
+                if (!Files.exists(source)) {
+                    continue;
+                }
+                String code = lire(source);
+                Matcher porteur = PORTEUR_FABRIQUE.matcher(code);
+                if (code.contains("@Inject")) {
+                    fautifs.put(incluse.getFileName().toString(), classe + " : constructeur @Inject");
+                } else if (porteur.find()) {
+                    fautifs.put(
+                            incluse.getFileName().toString(), classe + " : fabrique son propre " + porteur.group(1));
                 }
             }
         }
@@ -260,10 +283,11 @@ class DecisionsRespecteesTest {
                 .isNotEmpty();
 
         assertThat(fautifs)
-                .as("Ces controllers de sous-vue portent une injection alors que leur parent doit leur "
-                        + "passer ce dont ils ont besoin (ADR 2745). Un ViewModel injecté ici est un SECOND "
-                        + "modèle, vide : l'écran se chargera sans rien signaler, et ses nœuds resteront "
-                        + "inertes. Remplacez le constructeur @Inject par une méthode « installer(...) » "
+                .as("Ces controllers de sous-vue se procurent ce que leur parent doit leur passer "
+                        + "(ADR 2745). Un ViewModel obtenu ici est un SECOND modèle, vide ; un porteur "
+                        + "fabriqué ici est un SECOND point de substitution, que les doubles des tests "
+                        + "parents n'atteindront pas (ADR 0010). Dans les deux cas l'écran se charge sans "
+                        + "rien signaler. Passez-les en paramètres d'une méthode « installer(...) » "
                         + "appelée depuis l'initialize() du parent.")
                 .isEmpty();
     }

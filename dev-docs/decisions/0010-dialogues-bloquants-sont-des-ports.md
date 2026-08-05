@@ -23,6 +23,7 @@ En production, l'implémentation ouvre l'`Alert`. En test, on injecte un double 
 ## Conséquences
 
 - Les tests vérifient le **contrat** (« confirmation demandée avant l'action », « compte rendu émis avec tel message ») sans geler, et sans dépendre du rendu.
+- ⚠️ **Un port ne vaut que s'il est unique.** Précision ajoutée le 2026-08-05 (#3335) : la substitution repose sur le fait que le code testé et le test désignent **la même instance**. Depuis que les écrans se découpent en sous-vues ([ADR 2745](2745-une-vue-riche-se-decoupe-en-sous-vues.md)), une sous-vue qui fabriquerait son propre porteur ferait porter le double du test parent sur un autre objet : le `showAndWait()` figerait le test headless, ou celui-ci passerait en ne vérifiant rien. Une sous-vue **reçoit** donc le porteur de son parent. Gardé par `DecisionsRespecteesTest#une_sous_vue_ne_se_procure_pas_ce_qui_doit_etre_unique`.
 - Le même port sert le socle d'occupation (#1014) : voile de fenêtre, opération critique (#906), confirmations - tout passe par des collaborateurs injectables.
 - Coût : un port de plus à câbler par surface interactive. C'est le prix de la testabilité, et il est modeste.
 
