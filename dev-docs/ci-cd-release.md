@@ -391,22 +391,46 @@ Deux choix qui méritent d'être dits :
   avertissement qualité ; le même esprit veut qu'on voie d'abord tout ce qui est signalable, quitte à
   trier ensuite. Trier veut dire **distinguer vrai positif et bruit**, jamais supprimer en masse.
 
-### La détection de secrets n'est pas dans le code
+### La détection de secrets : ce qui est actif, et ce qui ne peut pas l'être
 
-Elle est dans les **réglages du dépôt**, et l'état constaté est : `secret_scanning`,
-`secret_scanning_push_protection`, `secret_scanning_non_provider_patterns` et
-`secret_scanning_validity_checks` **tous désactivés** (seul `dependabot_security_updates` est actif).
+| Réglage | État | Pourquoi |
+|---|---|---|
+| `secret_scanning` | ✅ activé | gratuit sur dépôt public |
+| `secret_scanning_push_protection` | ✅ activé | gratuit sur dépôt public |
+| `secret_scanning_non_provider_patterns` | ❌ indisponible | GitHub Advanced Security |
+| `secret_scanning_validity_checks` | ❌ indisponible | GitHub Advanced Security |
 
-C'est ce que #2741 vise en premier : un jeton VigieChiro committé par mégarde - ils circulent en local
-pour les sondes d'API et les scripts, avec 14 jours de validité - ne serait détecté par rien.
+⚠️ **L'API accepte d'activer les deux derniers et ne le fait pas** : elle rend `200` en les laissant à
+`disabled`. Il faut **relire l'état** pour s'en apercevoir - un appel qui réussit n'est pas un réglage
+qui s'applique. L'organisation est au plan `free`, où `advanced_security_enabled` vaut `false`.
 
-⚠️ **`push_protection` a un effet visible** : un `git push` contenant un secret détecté est **refusé**.
-C'est l'intérêt du réglage, et c'est aussi ce qui surprend un contributeur au mauvais moment ; il se
-décide, il ne se subit pas.
+`push_protection` **refuse un `git push`** contenant un secret reconnu. C'est son intérêt, et c'est
+aussi ce qui surprend un contributeur au mauvais moment.
 
-`gitleaks-action` comme filet **indépendant** de GitHub reste possible, mais demande une clé de licence
-**gratuite** pour les dépôts d'organisation (`echonuit` en est une) : c'est un secret de dépôt à
-obtenir, donc une décision, pas une ligne de YAML.
+### Pourquoi une garde maison en plus (#2741)
+
+Ce qui reste actif ne reconnaît que les **motifs de fournisseurs** : clés AWS, jetons GitHub, Stripe.
+Or le secret que ce dépôt risque de laisser fuir est un **jeton VigieChiro**, lu dans
+`localStorage['auth-session-token']` : une chaîne **opaque**, sans préfixe distinctif, qu'aucun
+catalogue ne connaît. Ce qui l'attraperait - les motifs personnalisés - demande GHAS.
+
+[`verifie-jeton.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/verifie-jeton.sh)
+cherche donc le **contexte** et non la forme : le nom de la clé, une affectation, et une valeur
+littérale d'au moins 12 caractères. Les quatre usages légitimes du dépôt passent par construction (le
+marque-place `XXXX`, la variable d'environnement, le secret Actions, la propriété Maven vide).
+
+Un détecteur générique par **entropie** aurait été le mauvais outil ici : ce dépôt contient des
+empreintes SHA-256 en clair partout - manifestes de sauvegarde, fixtures de recette - et il aurait
+hurlé sur chacune.
+
+**La garde porte sa propre preuve** : `--autotest` fait passer neuf lignes connues - quatre fuites,
+cinq usages légitimes - par le **même** motif que le balayage, et la CI lance les deux modes. Sans
+cela, un motif relâché passerait au vert sur un dépôt propre sans que rien ne le dise. Éprouvé :
+en portant le seuil de 12 à 40 caractères, l'autotest signale les quatre fuites non détectées.
+
+⚠️ Elle lit le contenu **versionné** (`git grep`) : un fichier non suivi lui échappe. C'est le bon
+périmètre pour une garde de CI - ce qui part chez tout le monde - mais ce n'est pas un filet local.
+
 ## Les droits de publication sont déclarés par job (#2739)
 
 Le plancher du workflow de release est en **lecture seule** ; chaque job déclare ce qu'il lui faut de
