@@ -151,14 +151,15 @@ public final class ExporterActivite implements Callable<Integer> {
             return ExitCode.USAGE;
         }
 
-        List<ContactHoraire> tous = portee.tout
-                ? service.contactsDeLUtilisateur(utilisateur.get())
-                : service.contactsDuPassage(portee.passage);
-        // Constater l'ensemble vide AVANT les filtres qui DÉSIGNENT (ADR 3269). Sans cela, sur une portée
-        // sans aucun contact, `--lieu` et `--taxon-parent` refusaient en code 2 (« Lieux présents :
-        // aucun »), mettant en cause une valeur qui n'y était pour rien. Un export vide est ici un
-        // résultat valide, que la commande sait déjà écrire : le CSV garde ses en-têtes.
-        List<ContactHoraire> contacts = tous.isEmpty() ? tous : restreindre(tous);
+        // Pas de garde de portée vide ici, à dessein (ADR 3269, cas écarté) : `--lieu` et
+        // `--taxon-parent` refusent même sur un ensemble vide, ce que #3082 a tranché. La court-circuiter
+        // ferait de plus sauter la VALIDATION des arguments - une `--nature` inconnue, une `--nuit`
+        // illisible - qui doit refuser quelle que soit la base : c'est la faute que `bats` a relevée
+        // quand cette garde a été essayée ici.
+        List<ContactHoraire> contacts = restreindre(
+                portee.tout
+                        ? service.contactsDeLUtilisateur(utilisateur.get())
+                        : service.contactsDuPassage(portee.passage));
         List<LigneActivite> lignes = AgregationActivite.pourExport(contacts, tranche.get());
         Path ecrit = ExportActiviteCsv.ecrire(tranche.get(), lignes, sortie);
         spec.commandLine()

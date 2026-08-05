@@ -167,19 +167,11 @@ public final class ListerObservations implements Callable<Integer> {
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
-        List<LigneObservationAudio> avantLieu = selection.get().lignes(passage, criteres());
-        // Constater l'ensemble vide AVANT le filtre qui DÉSIGNE (ADR 3269). `--lieu` refuse un lieu absent
-        // des lignes, donc sur un passage sans observation il refusait TOUT lieu, en code 2, avec
-        // « Lieux présents : aucun » - là où la vérité est qu'il n'y a rien à situer.
-        //
-        // La commande avait déjà la bonne phrase ; elle s'exécutait seulement trop tard, après que le
-        // refus eut coupé le chemin.
-        if (avantLieu.isEmpty()) {
-            sortie.println(
-                    json ? "[]" : "Aucune observation ne correspond aux filtres pour le passage " + passage + ".");
-            return 0;
-        }
-        List<LigneObservationAudio> retenues = FiltresLieu.parLieu(avantLieu, lieux);
+        // Pas de garde de passage vide ici, à dessein (ADR 3269, cas écarté) : `--taxon-parent` refuse
+        // même sur un ensemble vide, ce que #3082 a tranché sur cette commande précisément. Sur un
+        // `--passage` qui n'existe pas, un succès silencieux masquerait que le passage est inconnu.
+        List<LigneObservationAudio> retenues =
+                FiltresLieu.parLieu(selection.get().lignes(passage, criteres()), lieux);
         retenues = FiltresRevue.parTaxonParent(retenues, taxonParent);
         retenues = FiltresRevue.nonIdentifiees(retenues, nonIdentifie);
         List<LigneObservationAudio> avantSeuil = FiltresRevue.parPlageHoraire(retenues, heureDebut, heureFin);
