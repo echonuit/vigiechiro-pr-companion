@@ -49,15 +49,15 @@
   <BorderPane styleClass="barre-filtres">
     <center>
       <HBox spacing="8.0" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
-        <TextField fx:id="champRecherche" promptText="Rechercher (carré, point, date…)" prefWidth="220.0"
+        <TextField fx:id="champRecherche" promptText="Rechercher (carré, point, date…)" minWidth="-Infinity" prefWidth="275.0"
                    accessibleText="Rechercher dans les passages"/>
-        <MenuButton fx:id="menuAjoutFiltre" text="+ Filtre" styleClass="menu-ajout-filtre"
+        <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"
                     accessibleText="Ajouter un filtre"/>
         <!-- hgrow + maxWidth : les puces occupent la largeur restante et s'alignent horizontalement (sinon le
              FlowPane se limite à sa largeur préférée et les empile). Tri et « Tout effacer » s'ancrent à droite. -->
         <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
                   HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-        <ComboBox fx:id="choixTri" accessibleText="Trier les passages"/>
+        <ComboBox fx:id="choixTri" minWidth="-Infinity" accessibleText="Trier les passages"/>
         <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer"
                 onAction="#toutEffacer" accessibleText="Effacer tous les filtres et le tri"/>
       </HBox>

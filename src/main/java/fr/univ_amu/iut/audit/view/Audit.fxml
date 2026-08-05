@@ -47,7 +47,7 @@
          forme : « qu'est-ce qui est bloquant ? », « qu'est-ce qui concerne cette nuit ? ». -->
     <HBox spacing="10.0" alignment="CENTER_LEFT">
       <TextField fx:id="champRecherche" promptText="Rechercher (cible, détail…)" minWidth="-Infinity"
-                 prefWidth="260.0"/>
+                 prefWidth="300.0"/>
       <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"/>
       <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
                 HBox.hgrow="ALWAYS" maxWidth="Infinity"/>

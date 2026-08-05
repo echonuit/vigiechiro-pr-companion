@@ -8,12 +8,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import javafx.embed.swing.SwingFXUtils;
-import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Labeled;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.image.WritableImage;
@@ -32,120 +29,12 @@ import javax.imageio.ImageIO;
 /// `fr.univ_amu.iut.sites.outils.CaptureEcrans`).
 public final class ApercuFx {
 
+    /// Classe CSS par laquelle un FXML **assume** qu'un libelle se raccourcisse quand la place
+    /// manque. Le critere vit dans [LisibiliteCapture] ; la constante reste ici, ou les outils de
+    /// capture la cherchent depuis toujours.
+    public static final String ABREGEABLE = LisibiliteCapture.ABREGEABLE;
+
     private ApercuFx() {}
-
-    /// Tolerance de comparaison, en pixels : la mise en page produit des ecarts d'arrondi qui ne sont
-    /// pas des elisions.
-    private static final double TOLERANCE_PX = 1.0;
-
-    /// Refuse la capture si un libelle enroulable y a ete **comprime**, plutot que d'ecrire une image
-    /// qui ment.
-    ///
-    /// L'application monte ses vues dans un `ScrollPane` permanent : ce qui deborde **defile**. La
-    /// capture n'a pas ce recours - elle rend une scene de taille fixe, et ce qui deborde se
-    /// **comprime**. Un `Label` en `wrapText` se rabat alors sur une ligne et se termine par une
-    /// ellipse. Rien ne le signalait : la capture etait produite, elle avait l'air normale, et elle
-    /// mentait (#2049).
-    ///
-    /// Le critere porte sur **le libelle**, pas sur la scene : un libelle comprime occupe moins de
-    /// hauteur que celle qu'il demanderait pour la largeur dont il dispose. Comparer plutot la hauteur
-    /// du contenu a celle de la scene ne marcherait pas - mesure sur Diagnostic, cet ecart vaut 1,6 sur
-    /// un ecran ou **rien** n'est elide, ses conteneurs extensibles absorbant la place sans rien perdre.
-    private static void refuserToutLibelleComprime(Scene scene) {
-        List<String> comprimes = new ArrayList<>();
-        collecterComprimes(scene.getRoot(), comprimes);
-        if (!comprimes.isEmpty()) {
-            throw new IllegalStateException("Capture tronquee : " + comprimes.size()
-                    + " libelle(s) rendu(s) avec une ellipse, donc illisibles. « manque N px » = la scene"
-                    + " est trop courte pour un libelle enroulable ; « tronque » = le controle est trop"
-                    + " etroit pour son texte (le figer par minWidth=\"-Infinity\", elargir la colonne, ou"
-                    + " assumer l'abregement par la classe CSS « " + ABREGEABLE + " »). En cause : "
-                    + String.join(" | ", comprimes));
-        }
-    }
-
-    private static void collecterComprimes(Node noeud, List<String> comprimes) {
-        // Un noeud masque a une hauteur nulle tout en gardant une hauteur preferee : sans ce filtre, tout
-        // libelle conditionnel passe pour comprime. C'est le premier faux positif rencontre - le repere GPS
-        // du Diagnostic, absent quand le passage est introuvable.
-        if (!noeud.isVisible()) {
-            return;
-        }
-        if (noeud instanceof Labeled libelle && libelle.isWrapText() && libelle.getWidth() > 0) {
-            double manque = libelle.prefHeight(libelle.getWidth()) - libelle.getHeight();
-            if (manque > TOLERANCE_PX) {
-                comprimes.add(resumer(libelle) + " (manque " + Math.round(manque) + " px)");
-            }
-        }
-        if (noeud instanceof Labeled large && estTronqueEnLargeur(large)) {
-            comprimes.add(resumer(large) + " (tronque, manque " + Math.round(largeurManquante(large)) + " px)");
-        }
-        if (noeud instanceof Parent parent) {
-            parent.getChildrenUnmodifiable().forEach(enfant -> collecterComprimes(enfant, comprimes));
-        }
-    }
-
-    /// Classe CSS par laquelle un FXML **assume** qu'un libelle se raccourcisse quand la place manque.
-    ///
-    /// Le deficit d'une barre doit bien tomber quelque part : figer tous ses controles ne le supprime pas,
-    /// il le deplace. Cette classe designe celui qui le porte - typiquement un selecteur, dont la valeur
-    /// se relit au deroule, plutot qu'un libelle d'action, qui ne se relit nulle part.
-    ///
-    /// Elle vit dans le FXML et non dans une liste tenue ici : l'exception se lit a l'endroit ou elle
-    /// s'applique, par celui qui modifie la vue.
-    public static final String ABREGEABLE = "abregeable";
-
-    /// Vrai si le texte de `libelle` ne tient pas dans sa largeur, donc s'affiche avec une ellipse.
-    ///
-    /// Pendant longtemps rien ne l'a signale : c'est le mecanisme derriere cinq issues nees d'une revue a
-    /// l'oeil (#1641, #1701, #1873, #1579, #2012). Un test verifie qu'un bouton **fait** ce qu'il doit ;
-    /// il ne verifie pas qu'on puisse **lire** ce qu'il dit.
-    private static boolean estTronqueEnLargeur(Labeled libelle) {
-        // Un libelle enroulable ne s'ellipse pas horizontalement : il passe a la ligne - JavaFX coupe meme
-        // un mot insecable caractere par caractere - et c'est la compression VERTICALE qui le guette, deja
-        // couverte plus haut.
-        //
-        // LIMITE CONNUE (#2265). Cette mesure verticale peut mentir dans un cas : rendu HORS d'une fenetre
-        // montree (le snapshot d'un `DialogPane`), un libelle enroulable dont la largeur est contrainte
-        // sous ce qu'il faudrait peut rester haut d'une SEULE ligne, `prefHeight` retombant sur cette meme
-        // hauteur - l'ecart mesure vaut alors zero et la troncature passe inapercue (#2243).
-        //
-        // Aucun controle geometrique ne referme ce trou de facon fiable : toute construction reproductible
-        // s'enroule correctement, ou declenche deja la mesure verticale. Un controle de plus serait donc du
-        // code qu'aucun test ne peut voir echouer. La parade est A LA SOURCE - pre-enrouler les textes
-        // d'une capture, cf. `CaptureConfirmationsImport#enrouler(CompteRendu)`.
-        return !libelle.isWrapText()
-                && libelle.getWidth() > 0
-                && libelle.getText() != null
-                && !libelle.getText().isBlank()
-                && !libelle.getStyleClass().contains(ABREGEABLE)
-                && !dansUnParentAbregeable(libelle)
-                && largeurManquante(libelle) > TOLERANCE_PX;
-    }
-
-    /// Un controle compose (`ComboBox`, `MenuButton`) rend son texte dans un libelle **interne**, que le
-    /// FXML ne peut pas marquer. La tolerance posee sur le controle vaut donc pour sa doublure.
-    private static boolean dansUnParentAbregeable(Labeled libelle) {
-        for (Node parent = libelle.getParent(); parent != null; parent = parent.getParent()) {
-            if (parent.getStyleClass().contains(ABREGEABLE)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static double largeurManquante(Labeled libelle) {
-        return libelle.prefWidth(-1) - libelle.getWidth();
-    }
-
-    /// De quoi retrouver le libelle fautif : son identifiant s'il en a un, sinon le debut de son texte.
-    private static String resumer(Labeled libelle) {
-        if (libelle.getId() != null && !libelle.getId().isBlank()) {
-            return "#" + libelle.getId();
-        }
-        String texte = libelle.getText() == null ? "" : libelle.getText();
-        return "« " + (texte.length() > 40 ? texte.substring(0, 40) + "…" : texte) + " »";
-    }
 
     /// L'element dont le libelle vaut `attendu`, ou une **erreur** nommant ce qui etait offert.
     ///
@@ -180,7 +69,7 @@ public final class ApercuFx {
         stageTransitoire.show();
         scene.getRoot().applyCss();
         scene.getRoot().layout();
-        refuserToutLibelleComprime(scene);
+        LisibiliteCapture.refuserToutTexteIllisible(scene);
         WritableImage image = scene.snapshot(null);
         stageTransitoire.hide();
         ecrire(image, fichier);
@@ -204,7 +93,7 @@ public final class ApercuFx {
         preparation.run();
         scene.getRoot().applyCss();
         scene.getRoot().layout();
-        refuserToutLibelleComprime(scene);
+        LisibiliteCapture.refuserToutTexteIllisible(scene);
         WritableImage image = scene.snapshot(null);
         stageTransitoire.hide();
         ecrire(image, fichier);

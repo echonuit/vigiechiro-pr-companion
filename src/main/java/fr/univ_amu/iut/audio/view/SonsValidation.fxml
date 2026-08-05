@@ -51,9 +51,15 @@
   <BorderPane styleClass="barre-filtres">
     <center>
       <HBox spacing="8.0" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
+        <!-- Largeur calée sur l'invite, et non l'inverse (#3170) : à 240 px elle était coupée NET,
+             sans ellipse (« Rechercher (espèce, fichier, comm »). Une invite tronquée ne dit plus ce
+             que la recherche couvre, et c'est tout ce qu'elle a à dire. Le garde de capture ne la
+             voyait pas : il refuse les libellés rendus AVEC une ellipse, or JavaFX rogne une invite
+             de TextField sans en poser aucune. -->
         <TextField fx:id="champRecherche" promptText="Rechercher (espèce, fichier, commentaire…)"
-                   accessibleText="Rechercher dans les observations" prefWidth="240.0"/>
-        <MenuButton fx:id="menuAjoutFiltre" text="+ Filtre" styleClass="menu-ajout-filtre"
+                   accessibleText="Rechercher dans les observations"
+                   minWidth="-Infinity" prefWidth="320.0"/>
+        <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"
                     accessibleText="Ajouter un filtre"/>
         <!-- hgrow + maxWidth : le FlowPane des puces occupe toute la largeur restante de la rangée, sinon il
              se limite à sa largeur préférée (~prefWrapLength) et empile les puces verticalement. -->
