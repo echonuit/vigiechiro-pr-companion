@@ -923,19 +923,31 @@ s'est généralisé : un cas d'école de divergence par ancienneté, qu'aucun te
 ### Les filtres existent aussi en ligne de commande
 
 Un critère d'écran qui répond à une question métier a son équivalent en ligne de commande, à la même
-sémantique ([ADR 0014](decisions/0014-parite-cli-ihm.md)). L'état à la clôture de #3092 :
+sémantique ([ADR 0014](decisions/0014-parite-cli-ihm.md)). L'état à la clôture des **suites** de #3092,
+mesuré sur le **binaire** (`<commande> --help`) et non sur les sources - les options d'une commande
+peuvent vivre dans un `@Mixin`, qu'un relevé par `grep` sur la classe ne voit pas :
 
 | Écran | Commande jumelle | Parité |
 |---|---|---|
 | Sons & validation | `lister-observations` | 10 / 10 |
 | Activité de la nuit | `exporter-activite` | 5 / 5 |
 | Audit de cohérence | `audit-coherence` | 3 / 3 |
-| Ma saison | `solde-saison` | 2 / 2 |
-| Carte & passages | `lister-passages` | **0 / 7** |
-| Espèces & observations | *aucune* | **sans jumelle** |
+| Ma saison | `solde-saison` | 4 / 4 |
+| Carte & passages | `lister-passages` | 7 / 7 |
+| Espèces & observations | `lister-especes`, `lister-carres` | 5 / 5 |
 
-Les deux dernières lignes sont une dette **antérieure** au chantier, rendue visible en confrontant les
-inventaires complets plutôt que des exemples.
+Les six écrans sont à parité. Les deux dernières lignes valaient **0 / 7** et **sans jumelle** à la
+clôture de #3092 : une dette **antérieure** au chantier, rendue visible en confrontant les inventaires
+complets plutôt que des exemples, et soldée par ses suites (#3269).
+
+Deux réserves, que le tableau ne montre pas :
+
+- Le critère **Lieu** a trois dimensions à l'écran (commune, carré, point) et **deux** en ligne de
+  commande : un code de point seul désignerait autant de lieux qu'il y a de carrés. Écart assumé, porté
+  par la clôture de #3151.
+- L'asymétrie existe aussi **dans l'autre sens**, qu'un inventaire écran → CLI rate par construction :
+  `lister-observations --certitude` filtre sur la certitude observateur, dont l'écran n'a **aucune
+  puce**.
 
 Quand la règle est la même des deux côtés, elle s'écrit **une fois** dans `model` : `FiltresLieu` pour le
 lieu, `FiltresSaison` pour la recherche et le « reste à faire ». Un catalogue de `view` qui garderait sa

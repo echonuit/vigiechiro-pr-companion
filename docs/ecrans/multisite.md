@@ -93,6 +93,14 @@ Une **campagne** regroupe les nuits d'un même suivi. Le tableau la porte de tro
 
 L'**export CSV** de la sélection porte une colonne `campagne`, en fin de ligne.
 
+!!! tip "Les mêmes filtres en ligne de commande"
+    `vigiechiro lister-passages` offre les **sept** critères de cet écran : `--carre`, `--lieu`
+    (répétable), `--annee`, `--statut`, `--verdict`, `--analyse` et `--campagne`. Ils se cumulent comme
+    les puces, et `--json` en donne une version exploitable par un script.
+
+    La question qui demande trois clics ici - « les passages de ce carré, vérifiés, de cette année » -
+    s'écrit `vigiechiro lister-passages --carre 640380 --statut VERIFIE --annee 2026`.
+
 ### Les colonnes du fichier exporté
 
 Le fichier reprend la sélection affichée, une ligne par passage, séparateur `;` :

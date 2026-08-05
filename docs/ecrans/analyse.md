@@ -139,6 +139,17 @@ code de point se retrouve sur presque tous les carrés et ne désignerait rien d
 Une commune peut couvrir **plusieurs carrés** : la cocher les retient tous, ce qui répond à « qu'ai-je
 entendu sur cette commune ? » sans avoir à savoir combien de carrés elle recouvre.
 
+!!! tip "Le même inventaire en ligne de commande"
+    `vigiechiro lister-especes` rend la table *Par espèce*, `vigiechiro lister-carres` la table *Par
+    carré*, avec les **mêmes cinq critères** que la barre à puces : `--statut`, `--taxon-parent`,
+    `--lieu` (répétable), `--nature` et `--a-enjeu`. `--format json` remplace le CSV, et `--sortie
+    <fichier>` écrit à la place de l'écran - dans les deux formats.
+
+    Une différence utile à connaître : à l'écran vous **cochez** dans une liste, en ligne de commande
+    vous **tapez** un fragment, qui correspond partiellement (« chirop » retient « Chiroptères »).
+    Le **point d'écoute** ne s'y filtre pas : un code seul, « A1 », se retrouve sur presque tous les
+    carrés et ne désignerait rien de précis.
+
 ## Vues sauvegardées
 
 Une combinaison de filtres utile peut être **enregistrée sous un nom** pour être rejouée d'un clic. Les

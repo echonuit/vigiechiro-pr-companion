@@ -45,6 +45,18 @@
 
 **Critères d'acceptation** :
 
+!!! note "Livré, mais autrement que décrit ici"
+    Le **tableau** est livré. Ses colonnes réelles sont Carré, Nom du carré, Commune, Point, Année,
+    N° passage, Date, Statut, Verdict, Analyse et Campagne : trois de plus qu'annoncé (**Commune**,
+    **Campagne**, **Analyse**), et **une** colonne Date là où le critère en demandait deux (session
+    d'enregistrement **et** dépôt).
+
+    Deux écarts de dispositif, tenus par un autre moyen : il n'y a **pas de bascule** vers une vue
+    arborescente, puisque [E5.S1](#e5s1) n'est pas construite ; et le filtre n'est **pas par colonne**
+    mais par **puces** ajoutées à la demande (#3092), sept critères qui se cumulent en ET. La
+    réconciliation de cette section avec le dispositif réel est ouverte en #3330. Voir aussi la note de
+    [E5.S3](#e5s3), qui enregistre déjà le même écart pour les filtres avancés.
+
 - [ ] Une bascule permet de basculer entre la vue arborescente ([E5.S1](#e5s1)) et la vue tabulaire.
 - [ ] La vue tabulaire affiche une ligne par passage avec colonnes : Site (n° carré + nom), Point, Année, N° passage, Date de session d'enregistrement, Statut d'avancement, Verdict, Date de dépôt.
 - [x] Toutes les colonnes sont **triables** (clic sur l'en-tête).
