@@ -49,12 +49,33 @@ class RegionDuCarreTest {
         assertThat(RegionDuCarre.departement("200001"))
                 .as("le numérotage carré écrit la Corse « 20 », là où l'INSEE écrit 2A/2B")
                 .contains("20");
-        assertThat(RegionDuCarre.departement("970123"))
-                .as("outre-mer : le département se lit, même si aucune région ne s'en déduit")
-                .contains("97");
         assertThat(RegionDuCarre.departement(null)).isEmpty();
         assertThat(RegionDuCarre.departement("6")).isEmpty();
         assertThat(RegionDuCarre.departement("")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3298 : un préfixe qui n'est pas un département ne porte AUCUNE lecture")
+    void prefixe_qui_n_est_pas_un_departement() {
+        // Ce test remplace une assertion qui affirmait « 970123 » → « 97 ». Elle encodait une SUPPOSITION
+        // sur le numérotage. Le recensement du catalogue (20 572 sites) dit autre chose : il n'existe
+        // aucun carré « 97xxxx », et l'outre-mer est numéroté « 00xxxx » - « 000294 » est à
+        // Saint-Joseph, « 001293 » à Salazie, La Réunion.
+        //
+        // Rendre « 00 » comme un département faisait signaler une divergence SYSTÉMATIQUEMENT fausse :
+        // « 00 » ne sera jamais égal à « 974 », et rien sur le terrain n'aurait pu la faire taire.
+        assertThat(RegionDuCarre.departement("000294"))
+                .as("outre-mer : le préfixe ne désigne pas de département, donc aucune lecture")
+                .isEmpty();
+        assertThat(RegionDuCarre.departement("981234")).isEmpty();
+        assertThat(RegionDuCarre.departement("991234")).isEmpty();
+        assertThat(RegionDuCarre.departement("961234")).isEmpty();
+        assertThat(RegionDuCarre.departement("970123"))
+                .as("cette écriture n'existe pas au catalogue, et 97 n'est pas un département non plus")
+                .isEmpty();
+        assertThat(RegionDuCarre.departement("640380"))
+                .as("le cas courant n'est pas affecté")
+                .contains("64");
     }
 
     @Test

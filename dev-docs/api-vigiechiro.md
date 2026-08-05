@@ -166,7 +166,7 @@ prévenir : celle-ci rougit.
 
 | Ressource | Lectures | À savoir |
 |---|---|---|
-| `sites` | `/sites`, `/sites/{id}`, `/sites/liste`, `/moi/sites`, `/protocoles/{id}/sites[/grille_stoc\|/tracet]` | catalogue entier lisible et paginé (**20 517 sites** au 2026-07-31). ⚠️ `/sites/liste` trompe deux fois : chaque document est réduit à son `_id` (759 Ko, non paginé), et son enveloppe n'est **pas** celle d'Eve (`_items` contient les documents **puis le total**, en deux blocs). Elle ne dispense pas de paginer `/sites` pour recenser les points |
+| `sites` | `/sites`, `/sites/{id}`, `/sites/liste`, `/moi/sites`, `/protocoles/{id}/sites[/grille_stoc\|/tracet]` | catalogue entier lisible et paginé (**20 572 sites** au 2026-08-05, recensés page par page). ⚠️ `/sites/liste` trompe deux fois : chaque document est réduit à son `_id` (759 Ko, non paginé), et son enveloppe n'est **pas** celle d'Eve (`_items` contient les documents **puis le total**, en deux blocs). Elle ne dispense pas de paginer `/sites` pour recenser les points |
 | `participations` | `/participations`, `/participations/{id}[/pieces_jointes]`, `/moi/participations`, `/sites/{id}/participations` | `/moi/participations` embarque le site : c'est de là que le client dérive vos sites (#718) |
 | `donnees` | `/donnees`, `/donnees/{id}[/fichiers]`, `/participations/{id}/donnees` | ⚠️ la collection nue `/donnees` est déclarée mais **répond 503** en pratique : passer par la participation |
 | `taxons` | `/taxons`, `/taxons/{id}`, `/taxons/liste` | `/taxons/liste` rend le référentiel entier, sans pagination |

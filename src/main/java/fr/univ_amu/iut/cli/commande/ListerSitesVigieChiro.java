@@ -34,7 +34,7 @@ import picocli.CommandLine.Spec;
 /// ## Ce qu'elle ne cache pas
 ///
 /// Le catalogue fait plus de deux cents pages. Lire un **échantillon** est légitime, l'annoncer comme
-/// un tout ne l'est pas : chaque sortie porte donc son dénominateur (« 300 site(s) lus sur 20517
+/// un tout ne l'est pas : chaque sortie porte donc son dénominateur (« 300 site(s) lus sur 20572
 /// annoncés »), et la sortie `--json` est une **enveloppe** plutôt qu'un tableau nu - un script qui lit
 /// la sortie standard ne verrait jamais un avertissement posé ailleurs.
 ///
