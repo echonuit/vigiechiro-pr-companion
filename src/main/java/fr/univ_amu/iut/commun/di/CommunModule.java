@@ -27,7 +27,6 @@ import fr.univ_amu.iut.commun.view.ActionRestaurer;
 import fr.univ_amu.iut.commun.view.ActionRestaurerComplet;
 import fr.univ_amu.iut.commun.view.ActionSauvegarder;
 import fr.univ_amu.iut.commun.view.ActionSauvegarderComplet;
-import fr.univ_amu.iut.commun.view.ActionSourceEspece;
 import fr.univ_amu.iut.commun.view.AnnonceChrome;
 import fr.univ_amu.iut.commun.view.DescripteurReglage;
 import fr.univ_amu.iut.commun.view.ExecuteurFiche;
@@ -108,7 +107,6 @@ public class CommunModule extends AbstractModule {
         // « À propos » (#2108) : version, JDK, système et dossier de travail. Voisine des journaux
         // parce qu'on cherche les deux au même moment, pour renseigner un signalement.
         actions.addBinding().to(ActionAPropos.class);
-        actions.addBinding().to(ActionSourceEspece.class);
         actions.addBinding().to(ActionOuvrirReglages.class);
         // Recherche globale du chrome (#144) : OptionalBinder VIDE (feature `recherche` désactivable, #1087).
         // `RechercheModule` fait `setBinding` quand elle est active ; sinon MainController masque la barre.
