@@ -2,11 +2,10 @@ package fr.univ_amu.iut.audio.outils;
 
 import fr.univ_amu.iut.audio.viewmodel.CompteRenduChiffreImportVigieChiro;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
-import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -75,25 +74,9 @@ public final class CaptureImportVigieChiro {
         VBox cadre = new VBox(bande);
         cadre.setStyle("-fx-padding: 16; -fx-background-color: #f5f6f8;");
         Scene scene = new Scene(cadre, LARGEUR, -1);
-        scene.getStylesheets().addAll(styles());
+        // Habillage commun (#3374) : la paire palette+base, posée au niveau où la palette vit.
+        Habillage.poser(scene);
         ApercuFx.enregistrerPng(scene, fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
-    }
-
-    /// Feuilles de style partagées (palette indigo + base + design de la bande) : sans elles, l'image
-    /// montrerait le thème par défaut de JavaFX et non celui de l'application.
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        for (String nom : List.of("palette.css", "base.css")) {
-            var url = ConfirmationNavigation.class.getResource(nom);
-            if (url != null) {
-                feuilles.add(url.toExternalForm());
-            }
-        }
-        var design = PanneauCompteRendu.class.getResource("design.css");
-        if (design != null) {
-            feuilles.add(design.toExternalForm());
-        }
-        return feuilles;
     }
 }

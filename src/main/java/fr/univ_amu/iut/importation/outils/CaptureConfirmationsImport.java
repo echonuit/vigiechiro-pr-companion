@@ -109,7 +109,7 @@ public final class CaptureConfirmationsImport {
     private static void enregistrerCompteRendu(CompteRendu compteRendu, Path fichier) {
         Alert alerte = new ConfirmationNavigation().dialogue(enrouler(compteRendu));
         alerte.getDialogPane().setPrefWidth(540);
-        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
@@ -147,20 +147,8 @@ public final class CaptureConfirmationsImport {
         // boutons, même titre. Seul le message est enroulé, par le socle ([ApercuFx#enrouler]).
         Alert alerte = new ConfirmationNavigation().dialogue(ApercuFx.enrouler(message));
         alerte.getDialogPane().setPrefWidth(540);
-        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
-    }
-
-    /// Feuilles de style partagées (palette + base) : le même thème indigo que l'application.
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        for (String nom : List.of("palette.css", "base.css")) {
-            var url = ConfirmationNavigation.class.getResource(nom);
-            if (url != null) {
-                feuilles.add(url.toExternalForm());
-            }
-        }
-        return feuilles;
     }
 
     /// Confirmateur qui **enregistre** ce qu'on lui demande, au lieu de l'afficher - le même double que

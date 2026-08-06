@@ -2,12 +2,10 @@ package fr.univ_amu.iut.audio.outils;
 
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
-import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
+import fr.univ_amu.iut.commun.view.Habillage;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -61,21 +59,9 @@ public final class CaptureExportSons {
                 "Export des observations et des sons",
                 new Progression("Archive : 213 / 721 · Car130711-2026-Pass1-Z41_223114_000.wav", 213 / 721.0));
         Scene scene = new Scene(contenu);
-        scene.getStylesheets().addAll(styles());
+        // Habillage commun (#3374) : la paire palette+base, posée au niveau où la palette vit.
+        Habillage.poser(scene);
         ApercuFx.enregistrerPng(scene, fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
-    }
-
-    /// Feuilles de style partagées (palette indigo + base), comme les autres captures de dialogue : sans
-    /// elles, l'image montrerait le thème par défaut de JavaFX et non celui de l'application.
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        for (String nom : List.of("palette.css", "base.css")) {
-            var url = ConfirmationNavigation.class.getResource(nom);
-            if (url != null) {
-                feuilles.add(url.toExternalForm());
-            }
-        }
-        return feuilles;
     }
 }

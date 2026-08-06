@@ -7,13 +7,13 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.TriPublication;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -110,7 +110,7 @@ public final class CapturePublicationCorrections {
         Alert alerte = new ConfirmationNavigation("Publier les corrections vers Vigie-Chiro ?")
                 .dialogue(ApercuFx.enrouler(PublicationCorrectionsViewModel.recapitulatif(tri, true)));
         alerte.getDialogPane().setPrefWidth(560);
-        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
@@ -121,7 +121,8 @@ public final class CapturePublicationCorrections {
                 "Publication des corrections",
                 new Progression("Récupération des identifiants et des échanges avec le validateur… (page 3/12)", 0.25));
         Scene scene = new Scene(contenu);
-        scene.getStylesheets().addAll(styles());
+        // Habillage commun (#3374) : la paire palette+base, posée au niveau où la palette vit.
+        Habillage.poser(scene);
         ApercuFx.enregistrerPng(scene, fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
@@ -149,7 +150,8 @@ public final class CapturePublicationCorrections {
         VBox cadre = new VBox(bande);
         cadre.setStyle("-fx-padding: 16; -fx-background-color: #f5f6f8;");
         Scene scene = new Scene(cadre, LARGEUR_COMPTE_RENDU, -1);
-        scene.getStylesheets().addAll(styles());
+        // Habillage commun (#3374) : la paire palette+base, posée au niveau où la palette vit.
+        Habillage.poser(scene);
         var design = PanneauCompteRendu.class.getResource("design.css");
         if (design != null) {
             scene.getStylesheets().add(design.toExternalForm());
@@ -165,17 +167,4 @@ public final class CapturePublicationCorrections {
     /// motif, là où deux causes distinctes en donneraient deux d'un élément.
     private static final String REFUS_ANCRAGE_PERIME =
             "HTTP 404 (ancrage périmé : réimportez depuis Vigie-Chiro puis republiez)";
-
-    /// Feuilles de style partagées (palette indigo + base), comme les autres captures de dialogue : sans
-    /// elles, l'image montrerait le thème par défaut de JavaFX et non celui de l'application.
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        for (String nom : List.of("palette.css", "base.css")) {
-            var url = ConfirmationNavigation.class.getResource(nom);
-            if (url != null) {
-                feuilles.add(url.toExternalForm());
-            }
-        }
-        return feuilles;
-    }
 }

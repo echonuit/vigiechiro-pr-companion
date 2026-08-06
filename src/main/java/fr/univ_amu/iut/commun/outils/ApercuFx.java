@@ -262,16 +262,18 @@ public final class ApercuFx {
         return List.copyOf(feuilles);
     }
 
-    public static void enregistrerDialogPane(
-            javafx.scene.control.DialogPane pane, java.util.List<String> feuillesStyle, Path fichier) {
+    /// Capture un [javafx.scene.control.DialogPane] hors-ecran, sur un fond qui simule la modalite.
+    ///
+    /// ⚠️ Cette methode prenait la liste des feuilles de style en parametre, et ses huit appelants y
+    /// passaient tous le meme couple `palette.css` + `base.css`, recopie chez chacun. Depuis #3374,
+    /// [Habillage] pose cette paire lui-meme, **au niveau ou la palette vit** - ce que huit copies
+    /// independantes ne pouvaient pas garantir. Le parametre n'offrait donc plus qu'une facon de se
+    /// tromper : il a ete retire, et les huit helpers avec.
+    public static void enregistrerDialogPane(javafx.scene.control.DialogPane pane, Path fichier) {
         javafx.scene.layout.StackPane conteneur = new javafx.scene.layout.StackPane(pane);
         // Fond sombre translucide pour simuler le background de l'application modale
         conteneur.setStyle("-fx-background-color: rgba(0, 0, 0, 0.4); -fx-padding: 30;");
         Scene scene = new Scene(conteneur);
-        if (feuillesStyle != null) {
-            scene.getStylesheets().addAll(feuillesStyle);
-        }
-        // Apres les feuilles fournies, pour la meme raison qu'a la scene hote d'un menu (#3374).
         Habillage.poser(scene);
         // applyCss() AVANT layout() (#1468) : sans passe CSS, les libellés n'ont pas encore leurs métriques
         // de police, et un texte à enrouler reste sur une ligne unique - que le snapshot coupe par une
@@ -283,8 +285,7 @@ public final class ApercuFx {
 
     /// Capture un [javafx.scene.control.Dialog] hors-ecran en extrayant son [DialogPane].
     /// A appeler sur le thread JavaFX.
-    public static void enregistrerDialog(
-            javafx.scene.control.Dialog<?> dialog, java.util.List<String> feuillesStyle, Path fichier) {
-        enregistrerDialogPane(dialog.getDialogPane(), feuillesStyle, fichier);
+    public static void enregistrerDialog(javafx.scene.control.Dialog<?> dialog, Path fichier) {
+        enregistrerDialogPane(dialog.getDialogPane(), fichier);
     }
 }

@@ -68,4 +68,4 @@ supprimer.
 
 ⚠️ **Le produit, lui, reste sensible au fuseau de la machine qui l'exécute.** Épingler les captures ne
 le corrige pas. Le fuseau d'une nuit est-il celui du site d'écoute ou celui de l'observateur qui
-dépouille ? C'est une question de conception, et elle appelle son propre chantier.
+dépouille ? C'est une question de conception, ouverte en **#3406**.
