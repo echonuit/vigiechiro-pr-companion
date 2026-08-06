@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.commun.outils;
 
 import fr.univ_amu.iut.commun.view.BandeauRetour;
-import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import java.util.concurrent.CountDownLatch;
@@ -87,9 +86,11 @@ public final class MesureBandeauRetour {
         Scene scene = new Scene(racine, LARGEUR, 600);
         // Habillage commun (#3374). La mesure porte sur des HAUTEURS de texte enroule : rendue
         // avec une autre police que le produit, elle mesurait un bandeau qui n'existe pas.
+        // `design.css` vient de `Habillage` avec le reste du trio. Elle était ajoutée ici, sur la
+        // SCÈNE, quand `poser` met palette+base sur le nœud racine : une feuille du nœud racine
+        // l'emporte sur une feuille de scène, si bien que `base.css` passait DEVANT `design.css` -
+        // l'inverse de l'ordre du chrome, sans que rien ne le signale.
         Habillage.poser(scene);
-        scene.getStylesheets()
-                .add(ConfirmationNavigation.class.getResource("design.css").toExternalForm());
         // La largeur doit être IMPOSÉE avant la mise en page, sinon le libellé calcule sa taille sur une
         // seule ligne et toutes les longueurs rendent la même hauteur - une mesure qui ne mesure rien.
         racine.resize(LARGEUR, 600);
