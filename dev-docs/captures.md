@@ -133,33 +133,35 @@ git ne sait pas les fusionner) ; et le jour où une **vraie** régression touche
 devient indiscernable du bruit.
 
 [`filtrer-bruit-cartes.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/filtrer-bruit-cartes.sh)
-rend leur version committée aux aperçus de carte dont l'écart reste **sous 4 %**. Il ne cherche pas à
-rendre les tuiles déterministes - elles sont une entrée **extérieure** au dépôt, et l'ADR 3068 a
-tranché qu'on ne les figerait pas : une carte figée serait plus stable et **moins vraie**. Il cesse
-seulement de committer l'insignifiant.
+rend leur version committée aux aperçus de carte dont **seul le fond cartographique** a changé. Il ne
+cherche pas à rendre les tuiles déterministes - elles sont une entrée **extérieure** au dépôt, et
+l'ADR 3068 a tranché qu'on ne les figerait pas. Il cesse seulement de committer l'insignifiant.
 
-⚠️ **La tolérance ne vaut que pour une liste explicite.** Partout ailleurs, le moindre pixel reste
-committé, et c'est délibéré : sur un plein écran de 1080x640, une puce ajoutée pèse **0,6 %**, un
-libellé corrigé bien moins. Un seuil **global** aurait avalé ces changements-là, c'est-à-dire
-exactement ceux que la galerie existe pour montrer.
+### Un masque, et non plus un seuil
 
-Le seuil se mesure des deux côtés. Le bruit a été **cartographié** : matrice des écarts entre les
-**30** versions successives d'`apercu-analyse-carte`, soit 435 paires. Médiane **1,22 %**, maximum
-**2,51 %**, toutes sous 3 %. (L'ADR 3068 annonçait 0,34 % : un sous-estimé, mesuré sur un échantillon
-plus étroit.) En face, une tuile réellement différente pèse **9,5 %** sur cet aperçu, encore **4,4 %**
-sur le cas le plus défavorable, où la carte n'occupe qu'une bande. **4 %** laisse donc un point de
-marge au-dessus du bruit observé, en restant sous le coût d'une vraie tuile.
+La première version comparait un **pourcentage de pixels** à un seuil de 4 %. Ce seuil n'a pas tenu à
+la mesure : après #3375, le bruit de tuiles **seul** vaut jusqu'à **23,8 %** de l'image sur
+`apercu-multisite-carte-pleine` et 9,7 % sur `apercu-multisite-edition`. Aucun pourcentage global ne
+sépare le bruit du signal, puisque les deux vivent dans la même zone.
 
-**Ce que la matrice apprend d'autre, et qui vaut pour la suite** : les versions ne *dérivent* pas,
-elles **oscillent** entre un nombre fini d'états - 18 états distincts pour 30 versions, dont un qui
-revient **7 fois** à des dates non consécutives. Un bruit de rendu continu ne produirait jamais deux
-versions identiques au bit près à des semaines d'intervalle. La cause est donc **discrète**, ce qui
-rend un instantané de tuiles servi localement d'autant plus pertinent : il ferait s'effondrer cet
-ensemble sur un seul état.
+Ce que #3375 a rendu possible : **hors de la carte, la CI et un poste de développement rendent au
+pixel près** - `apercu-accueil.png` sort identique au bit près, et sur `apercu-analyse-carte` les
+bandes de texte tombent de 29 % et 37,9 % d'écart à **0,00 %**. La bonne question devient donc
+« quelque chose a-t-il changé **hors** de la carte ? », à tolérance **zéro**.
 
-⚠️ `apercu-passage-rattachement.png` bouge aussi (10 fois sur 30) et n'est **pas** dans la liste :
-`CapturePassage` ne monte aucune carte. Son instabilité a donc une autre cause, **non élucidée**, et
-lui appliquer cette tolérance masquerait des changements qui ne sont pas du bruit de tuiles.
+C'est strictement mieux que le seuil : celui-ci faisait de ces fichiers un non-signal **entier** ; le
+masque leur rend leur valeur de signal **partout sauf dans le rectangle de la carte**. Éprouvé : un
+changement de 40x12 px hors carte, sur l'aperçu où la carte couvre 72,9 % de l'image, est **détecté**
+(533 pixels) là où un seuil de 4 % ne l'aurait jamais vu.
+
+Les rectangles sont **mesurés** : depuis #3375, un diff entre la version de la CI et une régénération
+locale ne contient plus que les tuiles, donc sa boîte englobante **est** la carte.
+
+⚠️ Ce que le masque ne voit pas : un changement **à l'intérieur** de la carte - un marqueur déplacé,
+un carré recoloré. C'est l'arbitrage de l'ADR 3068, réduit au seul rectangle au lieu de toute l'image.
+
+⚠️ `apercu-passage-rattachement.png` bouge aussi et n'est **pas** dans la liste : `CapturePassage` ne
+monte aucune carte. Son instabilité a une autre cause, non élucidée.
 
 ## Les garde-fous de présence
 

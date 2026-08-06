@@ -1,103 +1,80 @@
 #!/usr/bin/env bash
 #
-# Rend leur version committée aux aperçus de CARTE dont l'écart n'est que du bruit de tuiles.
+# Rend leur version committée aux aperçus de CARTE dont **seul le fond cartographique** a changé.
 #
 # ## Le problème
 #
 # Les aperçus qui portent un fond OpenStreetMap changent à presque chaque exécution de la CI sans
-# qu'aucun code n'ait bougé. Mesuré sur les 30 derniers commits d'aperçus :
-# `apercu-analyse-carte.png` a changé 28 fois, `apercu-multisite-carte-pleine.png` 27, les huit
-# aperçus d'import 18. L'écart est sub-perceptible - deux versions consécutives ouvertes côte à côte
-# sont indiscernables - mais il suffit à produire un commit, une PR, et un conflit avec la PR
-# d'aperçus suivante (les PNG sont binaires : git ne sait pas les fusionner).
+# qu'aucun code n'ait bougé : `apercu-analyse-carte.png` a changé dans 28 des 30 commits d'aperçus
+# précédant #3359. Trois coûts, dont le dernier est le seul qui compte : l'historique se remplit de
+# commits qui ne disent rien ; les PR d'aperçus **conflictent entre elles** en permanence, les PNG
+# étant binaires ; et le jour où une **vraie** régression touche une de ces images, elle devient
+# indiscernable du bruit.
 #
-# Trois coûts, dont le dernier est le vrai : l'historique se remplit de commits qui ne disent rien,
-# les PR d'aperçus conflictent en permanence, et le jour où une VRAIE régression touche une de ces
-# images, elle devient indiscernable du bruit.
+# ## Pourquoi un masque, et non plus un seuil
 #
-# ## Ce que ce script fait, et ne fait pas
+# La première version comparait un **pourcentage de pixels** à un seuil de 4 %. Mesure faite après
+# #3375 - qui a rendu la CI et un poste de développement identiques partout sauf dans les tuiles - ce
+# seuil ne pouvait pas tenir : le bruit de tuiles **seul** vaut jusqu'à **23,8 %** de l'image sur
+# `apercu-multisite-carte-pleine`, et 9,7 % sur `apercu-multisite-edition`. Aucun pourcentage global
+# ne sépare le bruit du signal, les deux vivant dans la même zone.
 #
-# Il ne cherche pas à rendre les tuiles déterministes : elles sont une entrée **extérieure** au
-# dépôt, et l'[ADR 3068] a tranché qu'on ne les figerait pas - une carte figée serait plus stable et
-# moins vraie. Il cesse simplement de **committer l'insignifiant**.
+# Ce que #3375 a rendu possible, en revanche : **hors de la carte, la CI et un poste rendent au pixel
+# près** - `apercu-accueil.png` sort identique au bit près. La bonne question n'est donc plus « de
+# combien ça diffère ? » mais « quelque chose a-t-il changé **hors** de la carte ? », à tolérance
+# **zéro**.
 #
-# ⚠️ La tolérance ne vaut QUE pour les aperçus listés ci-dessous. Partout ailleurs, le moindre pixel
-# reste committé, et c'est délibéré : sur un plein écran de 1080x640, une puce ajoutée pèse 0,6 %, un
-# libellé corrigé bien moins. Un seuil **global** aurait avalé ces changements-là - exactement ceux
-# que la galerie existe pour montrer.
+# C'est strictement mieux que le seuil : avec lui, un diff sur ces fichiers n'était un signal nulle
+# part ; avec le masque, il redevient un signal **partout sauf dans le rectangle de la carte**.
 #
-# ## Le seuil, et pourquoi celui-là
-#
-# 4 %, et la marge se mesure des deux côtés.
-#
-# Le **bruit** a été cartographié : matrice des écarts entre les **30** versions successives
-# d'`apercu-analyse-carte` (2026-08-05, 435 paires). Médiane **1,22 %**, maximum **2,51 %**.
-# L'ADR 3068 annonçait 0,34 % : un sous-estimé, mesuré sur un échantillon plus étroit.
-#
-#   - le **bruit** plafonne donc à 2,51 % sur l'échantillon le plus large dont on dispose ;
-#   - une **vraie** différence de tuile change un carré de 256x256. Sur `apercu-analyse-carte`
-#     (1080x640) cela pèse 9,5 % ; sur l'aperçu le plus défavorable, où la carte n'occupe qu'une
-#     bande de 195 px de haut (`apercu-import-assistant`, 1100x1032), encore 4,4 %.
-#
-# Le seuil se place donc entre 2,51 % et 4,4 %, et 4 % y laisse un point de marge au-dessus du bruit
-# observé sans atteindre le coût d'une vraie tuile - vérifié : 4,43 % mesurés sur ce cas.
-#
-# ## Ce que la matrice apprend en plus
-#
-# Les versions ne **dérivent** pas, elles **oscillent** entre un nombre fini d'états : 18 états
-# distincts pour 30 versions, dont un revenant **7 fois** à des dates non consécutives. Un bruit de
-# rendu continu ne produirait jamais deux versions identiques au bit près à des semaines d'écart. La
-# cause est **discrète**, ce qui rend un instantané de tuiles servi localement d'autant plus
-# pertinent : il ferait s'effondrer cet ensemble sur un seul état.
+# ⚠️ Ce que le masque ne voit pas : un changement **à l'intérieur** de la carte - un marqueur déplacé,
+# un carré recoloré. C'est le prix, et c'est l'arbitrage déjà écrit dans l'ADR 3068 (« sur ces
+# fichiers, la revue se fait à l'œil, pas au `cmp` ») - sauf qu'il ne porte désormais que sur le
+# rectangle, et non sur toute l'image.
 set -euo pipefail
 
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SEUIL_PCT="${SEUIL_BRUIT_CARTES:-4}"
 
-# Aperçus portant un fond cartographique. Liste **explicite**, comme les inventaires de
-# `cli-surface.bats` : une capture qui gagne une carte doit être ajoutée ici sciemment, et le garde
-# ci-dessous refuse un nom qui n'existe pas.
+# Aperçus à fond cartographique, et le rectangle `x1,y1,x2,y2` de leur carte.
 #
-# Établie par MESURE (quelles captures bougent d'un commit d'aperçus à l'autre) puis **vérifiée** :
-# chaque outil producteur monte bien une carte, et `apercu-import-assistant.png` a été ouverte pour
-# confirmer la bande cartographique en bas de l'assistant.
+# Les rectangles sont **mesurés**, pas estimés : depuis #3375, un diff entre la version de la CI et
+# une régénération locale ne contient plus **que** les tuiles, donc sa boîte englobante **est** la
+# carte. Relevé du 2026-08-06, avec une marge de quelques pixels sur chaque bord.
 #
-# ⚠️ `apercu-passage-rattachement.png` bouge aussi (10 fois sur 30) et n'est **pas** ici :
-# `CapturePassage` ne monte aucune carte. Son instabilité a donc une autre cause, non élucidée, et
-# lui appliquer cette tolérance masquerait des changements qui ne sont pas du bruit de tuiles.
-CAPTURES_CARTE=(
-  apercu-analyse-carte.png
-  apercu-multisite.png
-  apercu-multisite-annee-invalide.png
-  apercu-multisite-carte-pleine.png
-  apercu-multisite-edition.png
-  apercu-multisite-filtre.png
-  apercu-import-assistant.png
-  apercu-import-decompression-volume.png
-  apercu-import-en-cours.png
-  apercu-import-incoherence.png
-  apercu-import-melange.png
-  apercu-import-multi-nuits.png
-  apercu-import-rattachement-avertissements.png
-  apercu-import-rejets.png
-  apercu-sites-modale-point.png
-  apercu-sites-modale-point-creation.png
+# ⚠️ Une capture dont la mise en page bouge doit voir son rectangle **remesuré** : trop petit, le bruit
+# repasse et l'on recommence à committer pour rien ; trop grand, on s'aveugle sur une bande qui n'est
+# pas la carte. Le garde ci-dessous refuse un nom qui n'existe pas ; il ne peut rien dire du rectangle.
+CARTES=(
+  "apercu-analyse-carte.png 190,138,1068,424"
+  "apercu-multisite.png 12,138,469,568"
+  "apercu-multisite-annee-invalide.png 12,144,469,571"
+  "apercu-multisite-carte-pleine.png 12,90,1088,571"
+  "apercu-multisite-edition.png 12,90,865,571"
+  "apercu-multisite-filtre.png 12,138,469,568"
+  "apercu-import-assistant.png 35,679,1065,880"
+  "apercu-import-decompression-volume.png 524,825,547,849"
+  "apercu-import-en-cours.png 35,679,1065,880"
+  "apercu-import-incoherence.png 35,743,1065,944"
+  "apercu-import-melange.png 35,743,1065,944"
+  "apercu-import-multi-nuits.png 35,787,1065,988"
+  "apercu-import-rattachement-avertissements.png 35,679,1065,880"
+  "apercu-import-rejets.png 35,679,1065,880"
+  "apercu-sites-modale-point.png 18,331,464,457"
+  "apercu-sites-modale-point-creation.png 18,331,464,457"
 )
 
-# ImageMagick s'invoque de deux façons selon sa version, et les deux existent dans la nature :
-# la **7** regroupe tous les outils sous `magick` (`magick identify`), la **6** - celle du paquet
-# `imagemagick` d'Ubuntu 24.04, donc du runner - expose `identify` et `compare` comme commandes
-# propres, et n'a pas de `magick` du tout.
+# ImageMagick s'invoque de deux façons selon sa version, et les deux existent dans la nature : la **7**
+# regroupe tous les outils sous `magick`, la **6** - celle du paquet `imagemagick` d'Ubuntu 24.04, donc
+# du runner - expose `compare` et `convert` comme commandes propres, et n'a pas de `magick`.
 #
-# ⚠️ La première version de ce script exigeait `magick` : elle passait sur un poste en ImageMagick 7
-# et échouait en CI, où ImageMagick n'était même pas installé. Le garde était juste, l'exigence non.
-# On accepte donc les deux formes, et le message d'erreur nomme le paquet à installer.
+# ⚠️ La première version de ce script exigeait `magick` : elle passait sur un poste en ImageMagick 7 et
+# échouait en CI. Le garde était juste, l'exigence non (#3370).
 if command -v magick > /dev/null 2>&1; then
-  identifier() { magick identify "$@"; }
   comparer() { magick compare "$@"; }
-elif command -v identify > /dev/null 2>&1 && command -v compare > /dev/null 2>&1; then
-  identifier() { identify "$@"; }
+  masquer() { magick "$@"; }
+elif command -v compare > /dev/null 2>&1 && command -v convert > /dev/null 2>&1; then
   comparer() { compare "$@"; }
+  masquer() { convert "$@"; }
 else
   echo "::error::ImageMagick est requis pour filtrer le bruit des cartes (paquet « imagemagick »)." >&2
   exit 1
@@ -105,15 +82,14 @@ fi
 
 restaurees=0
 gardees=0
-for nom in "${CAPTURES_CARTE[@]}"; do
+for entree in "${CARTES[@]}"; do
+  read -r nom rect <<< "${entree}"
   chemin=".github/assets/${nom}"
 
   if [ ! -f "${ICI}/${nom}" ]; then
-    echo "::error::${nom} est déclarée dans CAPTURES_CARTE mais n'existe pas. Liste à corriger." >&2
+    echo "::error::${nom} est déclarée dans CARTES mais n'existe pas. Liste à corriger." >&2
     exit 1
   fi
-
-  # Une capture non modifiée n'a rien à comparer.
   if git diff --quiet -- "${chemin}" 2>/dev/null; then
     continue
   fi
@@ -126,37 +102,28 @@ for nom in "${CAPTURES_CARTE[@]}"; do
     continue
   fi
 
-  # `compare -metric AE` écrit le NOMBRE de pixels différents sur stderr, et sort en 1 dès qu'il y a
-  # une différence : ce code n'est pas une erreur ici, d'où le `|| true`.
-  differents="$(comparer -metric AE "${avant}" "${ICI}/${nom}" null: 2>&1 || true)"
-  rm -f "${avant}"
+  # La carte est noircie des DEUX côtés : ce qui reste est tout le produit, et rien que lui.
+  IFS=',' read -r x1 y1 x2 y2 <<< "${rect}"
+  avant_masque="$(mktemp --suffix=.png)"
+  apres_masque="$(mktemp --suffix=.png)"
+  masquer "${avant}" -fill black -draw "rectangle ${x1},${y1} ${x2},${y2}" "${avant_masque}"
+  masquer "${ICI}/${nom}" -fill black -draw "rectangle ${x1},${y1} ${x2},${y2}" "${apres_masque}"
+
+  differents="$(comparer -metric AE "${avant_masque}" "${apres_masque}" null: 2>&1 || true)"
+  rm -f "${avant}" "${avant_masque}" "${apres_masque}"
   differents="${differents%%[^0-9]*}"
+
   if [ -z "${differents}" ]; then
     echo "  ${nom} : comparaison impossible (dimensions différentes ?), gardée."
     gardees=$((gardees + 1))
-    continue
-  fi
-
-  # Largeur et hauteur SÉPARÉMENT, multipliées par bash : `%[fx:w*h]` rend une notation scientifique
-  # (« 1.1352e+06 ») dès que le produit dépasse le million, que `$(( ))` ne sait pas lire. Le défaut
-  # n'apparaît pas sur une capture de 1080x640, seulement sur les plus grandes - il a fallu l'essai
-  # sur `apercu-import-assistant` (1100x1032) pour le voir.
-  dimensions="$(identifier -format "%w %h" "${ICI}/${nom}")"
-  total=$(( ${dimensions% *} * ${dimensions#* } ))
-  # Arithmétique entière : le pourcentage est porté au centième pour rester lisible.
-  pct_x100=$((differents * 10000 / total))
-  seuil_x100=$((SEUIL_PCT * 100))
-
-  if [ "${pct_x100}" -lt "${seuil_x100}" ]; then
+  elif [ "${differents}" -eq 0 ]; then
     git checkout -- "${chemin}"
-    printf "  %-46s %2d,%02d %% -> bruit, version committée rendue\n" \
-      "${nom}" $((pct_x100 / 100)) $((pct_x100 % 100))
+    printf "  %-46s hors carte : identique -> version committée rendue\n" "${nom}"
     restaurees=$((restaurees + 1))
   else
-    printf "  %-46s %2d,%02d %% -> au-dessus du seuil, gardée\n" \
-      "${nom}" $((pct_x100 / 100)) $((pct_x100 % 100))
+    printf "  %-46s hors carte : %s pixel(s) changé(s) -> gardée\n" "${nom}" "${differents}"
     gardees=$((gardees + 1))
   fi
 done
 
-echo "Bruit des cartes : ${restaurees} rendue(s), ${gardees} gardée(s) (seuil ${SEUIL_PCT} %)."
+echo "Bruit des cartes : ${restaurees} rendue(s), ${gardees} gardée(s)."
