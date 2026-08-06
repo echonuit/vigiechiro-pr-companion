@@ -125,7 +125,11 @@ public final class Auditer implements Callable<Integer> {
     }
 
     private static String enJson(List<ConstatAudit> constats) {
-        List<Map<String, ?>> lignes = constats.stream().map(Auditer::projeter).toList();
+        // Le temoin de type explicite n'est pas decoratif : sans lui, `map` infere
+        // `Stream<Map<String, capture-of ?>>`, que javac assigne a `List<Map<String, ?>>` et
+        // qu'ecj refuse. Divergence de la meme famille que #3228, trouvee par le meme moyen.
+        List<Map<String, ?>> lignes =
+                constats.stream().<Map<String, ?>>map(Auditer::projeter).toList();
         return FormatJson.tableau(lignes);
     }
 

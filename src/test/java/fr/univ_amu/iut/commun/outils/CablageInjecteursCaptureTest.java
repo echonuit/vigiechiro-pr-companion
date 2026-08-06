@@ -104,7 +104,9 @@ class CablageInjecteursCaptureTest {
             return arbre.filter(Files::isRegularFile)
                     .filter(chemin -> chemin.getFileName().toString().startsWith("Capture"))
                     .filter(chemin -> chemin.getFileName().toString().endsWith(".java"))
-                    .map(CablageInjecteursCaptureTest::classeDe)
+                    // Temoin de type explicite : sans lui, `map` infere `Stream<Class<capture-of ?>>`,
+                    // que javac assigne a `List<Class<?>>` et qu'ecj refuse (#3366).
+                    .<Class<?>>map(CablageInjecteursCaptureTest::classeDe)
                     .sorted(Comparator.comparing(Class::getSimpleName))
                     .toList();
         } catch (IOException echec) {

@@ -250,7 +250,17 @@ public final class CapturePassage {
                         Provider<Horloge> horloge = getProvider(Horloge.class);
                         OptionalBinder.newOptionalBinder(binder(), SynchronisationParticipation.class)
                                 .setBinding()
-                                .toProvider(() -> passerelleDApercu(source.get()));
+                                // Classe anonyme et non lambda : `com.google.inject.Provider` n'a qu'une
+                                // methode abstraite mais n'est pas annote `@FunctionalInterface`, et javac
+                                // l'accepte comme cible de lambda la ou ecj le refuse (#3228). `Providers.of`
+                                // ne conviendrait pas ici : il evaluerait MAINTENANT, dans configure(), alors
+                                // que `source.get()` n'a de sens qu'a l'injection.
+                                .toProvider(new Provider<SynchronisationParticipation>() {
+                                    @Override
+                                    public SynchronisationParticipation get() {
+                                        return passerelleDApercu(source.get());
+                                    }
+                                });
                         // L'hydratation d'un squelette, posée pour la même raison et par le même
                         // conditionnement qu'en production : ReconstructionModule ne se charge qu'avec
                         // ConnexionModule, donc « connecté » veut bien dire « hydratation disponible ».
@@ -258,12 +268,17 @@ public final class CapturePassage {
                         // sur une nuit sans séquence (#2554).
                         OptionalBinder.newOptionalBinder(binder(), HydratationSquelette.class)
                                 .setBinding()
-                                .toProvider(() -> new HydratationSquelette(
-                                        source.get(),
-                                        new ClientVigieChiro("http://localhost:1", Optional::empty),
-                                        workspace.get(),
-                                        horloge.get(),
-                                        Optional.empty()));
+                                .toProvider(new Provider<HydratationSquelette>() {
+                                    @Override
+                                    public HydratationSquelette get() {
+                                        return new HydratationSquelette(
+                                                source.get(),
+                                                new ClientVigieChiro("http://localhost:1", Optional::empty),
+                                                workspace.get(),
+                                                horloge.get(),
+                                                Optional.empty());
+                                    }
+                                });
                     }
 
                     private SynchronisationParticipation passerelleDApercu(SourceDeDonnees source) {
