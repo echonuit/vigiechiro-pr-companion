@@ -94,6 +94,35 @@ class PoliceCouvreLIhmTest {
                 .isFalse();
     }
 
+    @Test
+    @DisplayName("#3412 : aucune feuille de style ne demande une police par un ALIAS seul")
+    void aucune_feuille_ne_s_en_remet_a_un_alias() throws IOException {
+        // `sans-serif` et `monospace` ne sont pas des polices : ce sont des **alias**, que chaque
+        // système résout à sa façon. Une feuille qui les cite SEULS rouvre le défaut de l'ADR 3361 -
+        // et elle passe inaperçue, puisque du texte s'affiche quand même.
+        //
+        // Les citer en DERNIER, après une famille embarquée, reste légitime : c'est un filet.
+        Set<String> fautives = new TreeSet<>();
+        try (Stream<Path> feuilles = Files.walk(Path.of("src/main/java"))) {
+            for (Path feuille :
+                    feuilles.filter(f -> f.toString().endsWith(".css")).toList()) {
+                for (String ligne : Files.readString(feuille).split("\n")) {
+                    String regle = ligne.trim();
+                    if (regle.startsWith("-fx-font-family:")
+                            && !regle.contains("\"")
+                            && (regle.contains("monospace") || regle.contains("sans-serif"))) {
+                        fautives.add(feuille.getFileName() + " : " + regle);
+                    }
+                }
+            }
+        }
+
+        assertThat(fautives)
+                .as("une police demandée par un alias seul dépend de la machine : nommer d'abord une "
+                        + "famille embarquée (Typographie.FAMILLE, FAMILLE_MONO). #3412")
+                .isEmpty();
+    }
+
     private static boolean estUneSourceDIhm(Path source) {
         String chemin = source.toString().replace('\\', '/');
         if (!chemin.endsWith(".java") && !chemin.endsWith(".fxml")) {

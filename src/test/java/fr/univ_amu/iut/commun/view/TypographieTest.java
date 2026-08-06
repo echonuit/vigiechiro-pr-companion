@@ -29,7 +29,12 @@ class TypographieTest {
     @Test
     @DisplayName("#3361 : les deux fichiers de police sont dans les ressources, et ne sont pas vides")
     void les_fichiers_sont_embarques() throws Exception {
-        for (String chemin : new String[] {"/fonts/NotoSans-Regular.ttf", "/fonts/NotoSans-Bold.ttf"}) {
+        for (String chemin : new String[] {
+            "/fonts/NotoSans-Regular.ttf",
+            "/fonts/NotoSans-Bold.ttf",
+            "/fonts/NotoSansMono-Regular.ttf",
+            "/fonts/NotoSansMono-Bold.ttf"
+        }) {
             try (InputStream flux = Typographie.class.getResourceAsStream(chemin)) {
                 assertThat(flux)
                         .as(
@@ -41,6 +46,15 @@ class TypographieTest {
                         .as("« %s » ne doit pas être un fichier vide ou tronqué", chemin)
                         .isGreaterThan(100_000);
             }
+        }
+    }
+
+    /// Le contenu d'une feuille de style du module, telle que le jar la porte.
+    private static String lire(String ressource) {
+        try (InputStream flux = Typographie.class.getResourceAsStream(ressource)) {
+            return new String(flux.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (java.io.IOException echec) {
+            throw new java.io.UncheckedIOException(echec);
         }
     }
 
@@ -63,6 +77,30 @@ class TypographieTest {
                 .as("la police embarquée doit être citée EN PREMIER : placée après, elle ne servirait "
                         + "que si les autres manquent, ce qui est précisément le cas qu'on veut supprimer")
                 .contains("-fx-font-family: \"" + Typographie.FAMILLE + "\"");
+    }
+
+    @Test
+    @DisplayName("#3412 : la MONOSPACE est demandée par son nom, jamais par l'alias générique")
+    void la_monospace_est_nommee() {
+        // `monospace` est un alias, au même titre que `sans-serif` : chaque système le résout à sa
+        // façon. Le défaut que l'ADR 3361 a corrigé se rejouait à l'identique dans ces deux feuilles.
+        Typographie.installer();
+
+        assertThat(Font.getFamilies())
+                .as("la famille monospace embarquée doit être connue de JavaFX")
+                .contains(Typographie.FAMILLE_MONO);
+
+        for (String feuille :
+                new String[] {"/fr/univ_amu/iut/lot/view/lot.css", "/fr/univ_amu/iut/importation/view/importation.css"
+                }) {
+            String css = lire(feuille);
+            assertThat(css)
+                    .as(
+                            "« %s » doit demander la police par son NOM : l'alias seul rendrait le texte "
+                                    + "dépendant de la machine",
+                            feuille)
+                    .contains("\"" + Typographie.FAMILLE_MONO + "\"");
+        }
     }
 
     @Test

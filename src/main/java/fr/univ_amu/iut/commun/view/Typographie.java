@@ -40,8 +40,20 @@ public final class Typographie {
     /// Le nom de famille tel que JavaFX l'enregistre, à citer en tête de `base.css`.
     public static final String FAMILLE = "Noto Sans";
 
+    /// La **monospace**, pour les chemins de fichiers et les valeurs brutes (#3412).
+    ///
+    /// `monospace` est un **alias générique**, exactement comme `sans-serif` : chaque système le résout
+    /// à sa façon, et deux utilisateurs ne voient pas la même chose. Le défaut de l'ADR 3361 se rejouait
+    /// donc à l'identique dans les deux feuilles qui le demandaient - `lot.css` pour le chemin du
+    /// dossier de dépôt, `importation.css` pour les valeurs d'aperçu.
+    public static final String FAMILLE_MONO = "Noto Sans Mono";
+
     /// Chargées à la taille par défaut de JavaFX : la taille réelle vient du CSS, pas d'ici.
-    private static final List<String> FICHIERS = List.of("/fonts/NotoSans-Regular.ttf", "/fonts/NotoSans-Bold.ttf");
+    private static final List<String> FICHIERS = List.of(
+            "/fonts/NotoSans-Regular.ttf",
+            "/fonts/NotoSans-Bold.ttf",
+            "/fonts/NotoSansMono-Regular.ttf",
+            "/fonts/NotoSansMono-Bold.ttf");
 
     private static final Logger LOG = Logger.getLogger(Typographie.class.getName());
 
