@@ -86,6 +86,7 @@ class ColonnesContexteAbsenteTest {
                 colonne(),
                 colonne(),
                 colonne(),
+                colonne(),
                 colonne());
     }
 

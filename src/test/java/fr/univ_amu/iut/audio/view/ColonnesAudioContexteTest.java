@@ -43,6 +43,7 @@ class ColonnesAudioContexteTest {
                 colonne(),
                 colonne(),
                 colonne(),
+                colonne(),
                 colonne());
     }
 

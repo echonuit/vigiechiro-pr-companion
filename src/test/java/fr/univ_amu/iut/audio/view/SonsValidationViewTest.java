@@ -617,6 +617,24 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName("#3348 : la recherche interroge le commentaire, l'écran peut donc le MONTRER")
+    void le_texte_du_commentaire_a_sa_colonne(FxRobot robot) {
+        // `CriteresAudio.correspond` interroge `commentaire()`. L'indicateur 💬 dit qu'un commentaire
+        // existe et le donne au survol, ligne à ligne : sur une liste filtrée, rien ne permettait de
+        // BALAYER ce qui avait répondu. C'est la thèse de l'ADR 3151 - offrir sans montrer laisse un
+        // résultat à croire - sur une dimension qui n'a rien de géographique.
+        TableColumn<?, ?> texte = colonneParId(robot, "colTexteCommentaire");
+
+        assertThat(texte.getText())
+                .as("un libellé, contrairement à la colonne-indicateur qui n'en porte pas")
+                .isEqualTo("Commentaire (texte)");
+        assertThat(texte.isVisible())
+                .as("masquée par défaut, comme « Nom du carré » (#3300) : la table la plus dense du "
+                        + "produit ne subit pas un texte long, le sélecteur le rend disponible")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("Indicateurs référence / commentaire : en-tête et cellules en icônes Ikonli colorées")
     void indicateurs_en_icones(FxRobot robot) {
         TableColumn<?, ?> ref = colonneParId(robot, "colReference");
@@ -845,10 +863,13 @@ class SonsValidationViewTest {
                         "Début",
                         "Durée",
                         "Statut");
-        // Les indices ont glissé d'un cran avec « Nom du carré » (#3300).
+        // Les indices ont glissé d'un cran avec « Nom du carré » (#3300), puis d'un autre avec
+        // « Commentaire (texte) » (#3348), posée contre son indicateur : le texte et l'icône qui en
+        // signale l'existence se lisent au même endroit.
         assertThat(table.getColumns().get(19).getId()).isEqualTo("colReference");
         assertThat(table.getColumns().get(20).getId()).isEqualTo("colCommentaire");
-        assertThat(table.getColumns().get(21).getId()).isEqualTo("colFil");
+        assertThat(table.getColumns().get(21).getId()).isEqualTo("colTexteCommentaire");
+        assertThat(table.getColumns().get(22).getId()).isEqualTo("colFil");
         // Colonnes-indicateurs : non triables (trier une icône est déroutant, cf. « colonne vide triable »).
         assertThat(colonneParId(robot, "colReference").isSortable()).isFalse();
         assertThat(colonneParId(robot, "colCommentaire").isSortable()).isFalse();
