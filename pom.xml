@@ -486,6 +486,33 @@
                                         <exclude>META-INF/native-image/**</exclude>
                                     </excludes>
                                 </filter>
+                                <!-- L'outillage ne part pas chez l'utilisateur (#2746).
+                                     ==================================================
+                                     Captures de documentation, bancs de mesure et graines de données
+                                     sont bâtis avec le produit mais ne SONT pas le produit : ils
+                                     portent 47 points d'entrée `main` qui n'ont rien à faire dans le
+                                     binaire d'un naturaliste, et ils sont déjà exclus de la couverture
+                                     (`**/outils/**`, cf. le greffon JaCoCo).
+
+                                     ⚠️ Le motif est la SURFACE, pas le poids. Mesuré : l'outillage pèse
+                                     600 Ko décompressés quand `org/sqlite` en pèse 21,6 Mo. Le jar ne
+                                     maigrira pas visiblement, et ce n'est pas le but.
+
+                                     Rien ne casse côté outillage : `capture-screenshots.sh` et les
+                                     bancs lancent leurs `main` par `exec-maven-plugin` sur le
+                                     CLASSPATH MAVEN (`-cp %classpath`, donc `target/classes`), jamais
+                                     par ce jar.
+
+                                     Rien ne casse côté produit : `ArchitectureTest#produit_sans_outillage`
+                                     (PR A) interdit à la production de dépendre de ces paquets. Sans
+                                     cette règle, cette exclusion serait une panne à retardement. -->
+                                <filter>
+                                    <artifact>${project.groupId}:${project.artifactId}</artifact>
+                                    <excludes>
+                                        <exclude>fr/univ_amu/iut/**/outils/**</exclude>
+                                        <exclude>fr/univ_amu/iut/perf/**</exclude>
+                                    </excludes>
+                                </filter>
                             </filters>
                             <transformers>
                                 <!-- Main-Class = Launcher (et non App, qui étend Application) : le
