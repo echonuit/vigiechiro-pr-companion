@@ -39,10 +39,41 @@ public record RapportSynchro(String libelle, int nombre, String souci, String pr
 
     /// Rendu unique pour le bandeau de connexion, M-Sites et la CLI : « 385 taxons », « 12 nuit(s)
     /// récupérée(s) (40 restent à compléter) », ou « sites non récupérés (Vigie-Chiro injoignable : ...) ».
+    ///
+    /// Le libellé s'**accorde** au nombre (#1373) : le bandeau de connexion annonçait « 1 sites ».
     public String enClair() {
         if (souci != null) {
             return libelle + " non récupérés (" + souci + ")";
         }
-        return precision == null ? nombre + " " + libelle : nombre + " " + libelle + " (" + precision + ")";
+        String accorde = accorder(nombre, libelle);
+        return precision == null ? nombre + " " + accorde : nombre + " " + accorde + " (" + precision + ")";
+    }
+
+    /// Accorde un libellé **écrit au pluriel** avec le nombre qui le précède (#1373).
+    ///
+    /// Deux precautions, parce qu'un simple retrait du « s » final se trompe sur nos propres libellés :
+    ///
+    /// - l'accord porte sur **chaque mot** (« nuits opportunistes » donne « nuit opportuniste », et non
+    ///   « nuit opportunistes ») ;
+    /// - un libellé qui porte **déjà** sa marque d'accord (« nuit(s) récupérée(s) ») est rendu tel quel :
+    ///   lui retirer une lettre le mutilerait.
+    ///
+    /// Zéro se dit au singulier, comme en français courant (« 0 site »).
+    static String accorder(int nombre, String libelle) {
+        if (nombre >= 2 || libelle.contains("(")) {
+            return libelle;
+        }
+        return java.util.Arrays.stream(libelle.split(" ", -1))
+                .map(RapportSynchro::auSingulier)
+                .collect(java.util.stream.Collectors.joining(" "));
+    }
+
+    /// Un mot au singulier : sans sa marque de pluriel s'il en porte une, intact sinon.
+    ///
+    /// Le `length() > 1` garde contre un mot réduit à « s », qu'on rendrait vide. PIT y survit (frontière
+    /// `>= 1`) et c'est **assumé** : aucun libellé du produit ne contient un mot d'une lettre, et un test
+    /// qui le poserait serait creux.
+    private static String auSingulier(String mot) {
+        return mot.length() > 1 && mot.endsWith("s") ? mot.substring(0, mot.length() - 1) : mot;
     }
 }
