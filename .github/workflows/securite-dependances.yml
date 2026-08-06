@@ -18,6 +18,9 @@ on:
     paths:
       - "pom.xml"
       - ".github/workflows/securite-dependances.yml"
+      # Le garde de fraîcheur ne tourne pour de vrai que le lundi. Une étape que seul un `schedule`
+      # exerce peut être fusionnée cassée : ce chemin la fait tourner sur la PR qui la modifie.
+      - ".github/scripts/verifie-fraicheur-actions.sh"
   workflow_dispatch: {}
 
 concurrency:
@@ -83,3 +86,71 @@ jobs:
             ${{ steps.scan.outputs.sarif }}
           if-no-files-found: warn
           retention-days: 30
+
+  # La seconde chaîne d'approvisionnement : celle qui CONSTRUIT et PUBLIE (#3382).
+  #
+  # Le job ci-dessus répond de ce que le fat-jar embarque. Celui-ci répond des actions GitHub qui le
+  # fabriquent, le signent et le publient - un autre approvisionnement, aussi capable de vieillir.
+  #
+  # `verifie-epinglage.sh` (lint.yml) garde leur COHÉRENCE : tout figé par SHA, aucune divergence.
+  # C'est vrai indéfiniment, y compris quand l'amont a pris une majeure d'avance. Mesuré au
+  # 2026-08-06 : `attest-build-provenance` était sur v3.0.0 (août 2025) quand l'amont en était à
+  # v4.1.1, sur l'action qui SIGNE la provenance des binaires livrés. Rien n'avait rougi, et
+  # Dependabot - actif, proposant d'autres montées la semaine même - ne l'avait jamais proposée.
+  fraicheur-des-actions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Les actions épinglées ont-elles pris du retard ?
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          chmod +x .github/scripts/verifie-fraicheur-actions.sh
+
+          # ⚠️ Trois tentatives, parce que l'API bafouille. Vu en local : un appel qui rend la liste
+          # attendue, rejoué à l'identique trente secondes plus tard, revient vide. Sans reprise, ce
+          # hoquet se lirait « version indéterminée », donc ROUGE, et un garde qui rougit au hasard
+          # s'apprend à ignorer aussi vite qu'un garde qui se tait.
+          #
+          # Un échec qui PERSISTE, lui, reste rouge, et c'est voulu : un SHA qui ne porte plus aucun
+          # tag est en soi une nouvelle - le tag a été déplacé ou supprimé en amont.
+          insiste() {
+            local essai
+            for essai in 1 2 3; do
+              resultat=$(gh api "$@" 2>/dev/null || true)
+              [ -n "$resultat" ] && { printf '%s' "$resultat"; return 0; }
+              [ "$essai" -lt 3 ] && sleep 3
+            done
+            return 1
+          }
+
+          # Pour chaque action épinglée : le tag que porte NOTRE SHA, et la dernière release amont.
+          mesure=$(mktemp)
+          while IFS=$'\t' read -r depot sha _commentaire; do
+            [ -n "$depot" ] || continue
+            tags=$(insiste "repos/$depot/tags" --paginate \
+                     --jq ".[] | select(.commit.sha==\"$sha\") | .name" || true)
+            # On préfère le tag précis (vX.Y.Z) au tag flottant de majeure (vX), que certaines
+            # actions sont seules à porter. Sans ce repli, elles seraient déclarées « indéterminées ».
+            #
+            # ⚠️ `|| true` : un `grep` qui ne trouve rien rend 1, et sous `set -e` il tuerait le job
+            # AVANT le jugement. Le cas se produit vraiment - `winget-releaser` ne porte que `v2`.
+            # Vu en rejouant ce bloc en local, où il sortait sans afficher une seule ligne.
+            epingle=$(printf '%s\n' "$tags" | grep -E '^v?[0-9]+\.[0-9]+' | head -1 || true)
+            [ -n "$epingle" ] || epingle=$(printf '%s\n' "$tags" | grep -E '^v?[0-9]' | head -1 || true)
+            amont=$(insiste "repos/$depot/releases/latest" --jq .tag_name || true)
+            printf '%s\t%s\t%s\n' "$depot" "${epingle:-?}" "${amont:-?}" >> "$mesure"
+          done < <(./.github/scripts/verifie-fraicheur-actions.sh --inventaire)
+
+          verdict=$(./.github/scripts/verifie-fraicheur-actions.sh < "$mesure") && frais=0 || frais=1
+          printf '%s\n' "$verdict"
+
+          {
+            echo "## Fraîcheur des actions épinglées"
+            echo
+            printf '%s\n' "$verdict" | sed 's/^/    /'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit "$frais"

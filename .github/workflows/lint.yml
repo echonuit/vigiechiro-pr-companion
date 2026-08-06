@@ -153,6 +153,15 @@ jobs:
           ./.github/scripts/verifie-jeton.sh --auto-test
           ./.github/scripts/verifie-jeton.sh
 
+      - name: Le garde de fraîcheur des épinglages sait encore rougir
+        # Il ne mesure pour de vrai que le lundi, dans `securite-dependances.yml`, parce que la mesure
+        # demande le réseau et que l'amont bouge sans nous. Son autotest, lui, est hors ligne : c'est
+        # le seul contrôle qui passe à chaque PR, et sans lui un seuil relâché - une majeure de retard
+        # requalifiée en simple avertissement - passerait au vert sans que rien ne le dise (#3382).
+        run: |
+          chmod +x .github/scripts/verifie-fraicheur-actions.sh
+          ./.github/scripts/verifie-fraicheur-actions.sh --auto-test
+
       - name: La veille de fraîcheur du contrat API sait encore rougir
         # Elle ne tourne pour de vrai que dans api-live.yml, une fois par semaine : son autotest est
         # le seul endroit où on la voit à l'œuvre à chaque PR. Sans lui, un durcissement de seuil ou

@@ -475,6 +475,46 @@ au-dessus d'un lot d'alertes déjà présentes ne bloque jamais rien.
     début de `Files.createTempDirectory`, celui du **JDK**, employé par les outils de capture. Il
     annonçait trois appels là où il n'y en avait aucun. La question « est-ce que ça nous concerne ? »
     se pose sur les **imports**, pas sur la ressemblance des noms.
+
+### La seconde chaîne d'approvisionnement : celle qui construit (#3382)
+
+Le SBOM répond de ce que le fat-jar **embarque**. Restaient les **actions GitHub** qui le fabriquent,
+le signent et le publient - un autre approvisionnement, aussi capable de vieillir, et que rien ne
+regardait.
+
+`verifie-epinglage.sh` garde leur **cohérence** : tout figé par SHA, aucune divergence entre deux
+emplacements. C'est une propriété du dépôt, vraie indéfiniment, **y compris quand l'amont a pris une
+majeure d'avance**. Un SHA figé reste figé.
+
+Mesuré au 2026-08-06 : `actions/attest-build-provenance` était épinglée sur **v3.0.0** (août 2025)
+quand l'amont en était à **v4.1.1** (juin 2026) - sur l'action qui **signe la provenance des binaires
+livrés**. Huit autres actions étaient à jour. Rien n'avait rougi, et Dependabot, actif et proposant
+d'autres montées la semaine même, ne l'avait **jamais** proposée, pour une raison qui reste inconnue :
+les deux hypothèses examinées (le SHA porte deux tags ; `release.yml` serait ignoré) ont toutes deux
+été réfutées.
+
+D'où un second job dans `securite-dependances.yml`, hebdomadaire, qui **mesure** l'écart au lieu de
+compter sur le mécanisme censé le combler :
+
+| Écart constaté | Verdict |
+|---|---|
+| même version | rien à dire |
+| retard dans la même majeure | **avertissement**, non bloquant |
+| retard d'une **majeure entière** | **rouge** |
+| version indéterminée après trois tentatives | **rouge** |
+
+L'asymétrie est délibérée. L'amont publie pour des raisons qui ne nous regardent pas : un rouge à
+chaque release amont s'apprendrait à ignorer aussi vite qu'un garde muet. Une majeure de retard, elle,
+n'est pas du bruit de fond - c'est le cas qui a échappé à tout le monde pendant six mois.
+
+⚠️ **Trois tentatives, parce que l'API bafouille.** Vu en écrivant le garde : un appel qui rend la
+liste attendue, rejoué à l'identique, revient vide. Sans reprise, ce hoquet se lirait « version
+indéterminée », donc rouge. Un échec qui **persiste** reste rouge, et c'est voulu : un SHA qui ne porte
+plus aucun tag est en soi une nouvelle - le tag a été déplacé ou supprimé en amont.
+
+L'autotest, lui, est **hors ligne** et tourne dans `lint.yml` à chaque PR : c'est le seul contrôle qui
+voit ce garde entre deux lundis.
+
 ## Analyse statique de sécurité, et détection de secrets (#2741)
 
 Le dépôt est **public** depuis #169. `codeql.yml` cherche ce que ni PMD ni les tests ne cherchent :
