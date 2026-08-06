@@ -309,12 +309,11 @@ La **source** de la fiche dépend du taxon :
 - **autres taxons** (oiseaux, orthoptères…) : une source **universelle** par nom scientifique, **GBIF**
   par défaut ou **Wikipédia FR** au choix.
 
-Ce choix se règle une fois pour toutes dans le **☰ du bandeau** (en haut à droite de la fenêtre), via la
-case **« Fiches espèces sur Wikipédia (sinon GBIF) »** : décochée (le défaut), les fiches hors
-chauves-souris s'ouvrent sur GBIF ; cochée, sur Wikipédia FR. Le réglage est **mémorisé** d'une session à
-l'autre.
+Ce choix se règle une fois pour toutes dans **[Réglages](reglages.md) ▸ Général**, via la case
+**« Fiches espèces sur Wikipédia (sinon GBIF) »** : décochée (le défaut), les fiches hors chauves-souris
+s'ouvrent sur GBIF ; cochée, sur Wikipédia FR. Le réglage est **mémorisé** d'une session à l'autre.
 
-![Le menu principal (☰) du bandeau : la case « Fiches espèces sur Wikipédia (sinon GBIF) » choisit la source des fiches hors chauves-souris.](../assets/captures/apercu-fiche-espece-source.png)
+![L'onglet « Général » des Réglages : la case « Fiches espèces sur Wikipédia (sinon GBIF) » choisit la source des fiches hors chauves-souris.](../assets/captures/apercu-reglages.png)
 
 ## Validation d'un passage (Tadarida)
 

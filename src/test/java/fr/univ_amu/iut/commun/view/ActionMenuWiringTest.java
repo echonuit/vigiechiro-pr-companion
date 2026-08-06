@@ -46,6 +46,10 @@ class ActionMenuWiringTest {
         //
         // « À propos » (#2108) suit immédiatement « Ouvrir le dossier des journaux » : les deux servent
         // le même geste (renseigner un signalement d'anomalie) et on les cherche au même moment.
+        //
+        // La source des fiches espèces n'est plus ici (#1375) : elle faisait doublon avec l'onglet
+        // « Général » des Réglages, qui est sa place. Le menu ne garde que ce qu'on ne trouve pas
+        // ailleurs.
         assertThat(ordonnees)
                 .containsExactly(
                         "ActionSauvegarder",
@@ -55,7 +59,6 @@ class ActionMenuWiringTest {
                         "ActionResetGuide",
                         "ActionOuvrirJournaux",
                         "ActionAPropos",
-                        "ActionSourceEspece",
                         "ActionOuvrirReglages",
                         "ActionConnexion");
     }
