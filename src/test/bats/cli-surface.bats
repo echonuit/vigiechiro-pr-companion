@@ -210,3 +210,22 @@ COMMANDES_LOCALES_SANS_ARG=(
   [ "${status}" -eq 2 ]
   [[ "${output}" == *"jeton"* ]]
 }
+
+@test "paquet : le jar distribué ne contient aucune classe d'outillage (#2746)" {
+  # L'outillage (captures de documentation, bancs de mesure, graines de données) est bâti AVEC le
+  # produit et partait AVEC lui : 80 classes et 47 points d'entrée `main` dans le binaire d'un
+  # naturaliste. Le greffon `shade` les exclut désormais.
+  #
+  # ⚠️ `ArchitectureTest#produit_sans_outillage` garde la DÉPENDANCE, pas l'EMPAQUETAGE. Retirer le
+  # `<filter>` du pom laisserait cette règle verte, et le jar repartirait chargé sans que rien ne le
+  # dise. Le compte à zéro de la PR #3373 avait été fait à la main : ce test le rejoue.
+  local classes
+  classes=$(unzip -Z1 "${JAR}" | grep -cE '^fr/univ_amu/iut/([a-z_]+/)*outils/.*\.class$|^fr/univ_amu/iut/perf/.*\.class$' || true)
+  [ "${classes}" -eq 0 ]
+
+  # Non-vacuité : un `unzip` muet ou un jar vide donnerait aussi zéro ci-dessus. On exige de voir
+  # les classes du produit, sans quoi la mesure ne mesure rien.
+  local nous
+  nous=$(unzip -Z1 "${JAR}" | grep -cE '^fr/univ_amu/iut/.*\.class$' || true)
+  [ "${nous}" -gt 500 ]
+}
