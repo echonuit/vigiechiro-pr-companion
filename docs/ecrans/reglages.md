@@ -53,14 +53,15 @@ ce domaine propose. Aujourd'hui :
 Une modification est **enregistrée immédiatement** et **conservée d'une session à l'autre**. Seul
 l'**effet** des bascules de l'onglet « Fonctionnalités » s'applique au **prochain démarrage**.
 
-!!! note "Un réglage, parfois à deux endroits"
-    Certains réglages restent aussi accessibles là où on en a besoin : la source des fiches espèces
-    figure également dans le menu principal (☰). Les deux emplacements pilotent le **même** réglage et restent
-    synchronisés.
+!!! note "Un réglage, un seul endroit"
+    Deux réglages ont eu, un temps, deux domiciles ; ils n'en ont plus qu'un, et c'est ici.
 
-    « Conserver les originaux » figurait aussi sur l'écran d'import ; il n'y est plus. C'est une option
-    de ré-analyse, dont l'immense majorité des imports n'a pas à se soucier : elle vit désormais ici,
-    où on la trouve quand on la cherche.
+    La **source des fiches espèces** figurait aussi dans le menu principal (☰). Un même réglage à deux
+    endroits n'aide pas : on cherche celui qu'on ne trouve pas, et on doute d'avoir modifié le bon.
+
+    « **Conserver les originaux** » figurait aussi sur l'écran d'import. C'est une option de ré-analyse,
+    dont l'immense majorité des imports n'a pas à se soucier : elle vit désormais ici, où on la trouve
+    quand on la cherche.
 
 ## Où l'application range ses données (onglet « Emplacements ») {#emplacements}
 

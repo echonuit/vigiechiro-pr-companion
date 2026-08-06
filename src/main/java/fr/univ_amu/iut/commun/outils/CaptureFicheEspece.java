@@ -10,7 +10,6 @@ import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
-import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
@@ -29,9 +28,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// contenu du popup.
 ///
 /// - `apercu-fiche-espece.png` : le menu ☰ de **Sons & validation**, où « Fiche de l'espèce » ouvre la
-///   fiche de la proposition Tadarida sélectionnée ;
-/// - `apercu-fiche-espece-source.png` : le menu ☰ du **bandeau**, avec la préférence « Fiches espèces sur
-///   Wikipédia (sinon GBIF) » qui choisit la source des fiches hors chiroptères (#849).
+///   fiche de la proposition Tadarida sélectionnée.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh`.
 public final class CaptureFicheEspece {
@@ -61,7 +58,6 @@ public final class CaptureFicheEspece {
 
     private static void capturer() throws IOException {
         capturerMenu(menuSonsValidation(), "apercu-fiche-espece.png");
-        capturerMenu(menuBandeau(), "apercu-fiche-espece-source.png");
     }
 
     /// Le menu ☰ de Sons & validation (extrait) : « Fiche de l'espèce » y voisine « Voir sur la carte » et
@@ -80,29 +76,18 @@ public final class CaptureFicheEspece {
 
     /// Item de menu avec son icône, comme le socle en construit.
     ///
-    /// ⚠️ Ces deux menus sont **reconstruits** ici, ce que l'ADR 0025 proscrit : ils dérivent
-    /// du produit sans que rien ne rougisse.
+    /// ⚠️ Ce menu est **reconstruit** ici, ce que l'ADR 0025 proscrit : il dérive du produit sans
+    /// que rien ne rougisse.
     /// C'est exactement ce qui vient de se produire : le passage des pictogrammes aux
     /// icônes (#1933) a laissé ici des libellés qui n'existent plus. Remis d'aplomb faute de
-    /// mieux ; le vrai remède est de bâtir ces menus depuis les `ActionMenu` du socle.
+    /// mieux ; le vrai remède est de bâtir ce menu depuis les `ActionMenu` du socle.
+    ///
+    /// Le menu du bandeau, lui, n'est plus reconstruit du tout : sa capture est tombée avec
+    /// l'entrée « Fiches espèces sur Wikipédia » (#1375). Une dérive possible en moins.
     private static MenuItem itemIcone(String iconeLiteral, String libelle) {
         MenuItem item = new MenuItem(libelle);
         item.setGraphic(new FontIcon(iconeLiteral));
         return item;
-    }
-
-    /// Le menu ☰ du bandeau (extrait) : la préférence de source des fiches, parmi les outils.
-    private static ContextMenu menuBandeau() {
-        ContextMenu menu = new ContextMenu();
-        menu.getItems()
-                .addAll(
-                        itemIcone("fas-save", "Sauvegarder la base…"),
-                        itemIcone("fas-broom", "Purger les originaux importés…"),
-                        new SeparatorMenuItem(),
-                        new CheckMenuItem("Fiches espèces sur Wikipédia (sinon GBIF)"),
-                        new SeparatorMenuItem(),
-                        itemIcone("fas-plug", "Se connecter à Vigie-Chiro…"));
-        return menu;
     }
 
     private static void capturerMenu(ContextMenu menu, String fichier) throws IOException {
