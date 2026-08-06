@@ -38,11 +38,12 @@ if [ "${1:-}" = "--auto-test" ]; then
         fi
     }
 
-    monter() { # un bac COMPLET et cohérent : un outil, déclaré
+    monter() { # un bac COMPLET et cohérent : un outil déclaré, langue et fuseau épinglés
         rm -rf "$bac"
         mkdir -p "$bac/assets"
         outil fr/univ_amu/iut/exemple/outils/CaptureExemple.java
-        printf 'MAINS=(\n  "fr.univ_amu.iut.exemple.outils.CaptureExemple"\n)\n' \
+        printf 'MAINS=(\n  "fr.univ_amu.iut.exemple.outils.CaptureExemple"\n)\nLOCALISATION="%s"\n' \
+            "-Duser.language=fr -Duser.country=FR -Duser.timezone=Europe/Paris" \
             > "$bac/assets/capture-screenshots.sh"
     }
 
@@ -68,6 +69,17 @@ if [ "${1:-}" = "--auto-test" ]; then
     monter
     outil fr/univ_amu/iut/exemple/ailleurs/CaptureHorsOutils.java
     verifie 0 "un Capture* hors d'un dossier outils/ ne déclenche pas"
+
+    # L'épinglage de la langue et du fuseau (#3389) : sans lui, un aperçu montre la machine qui l'a
+    # rendu et non le produit, et RIEN ne le signale - c'est ce qui a laissé « Cancel » dans une
+    # galerie francophone. Le cas nominal est couvert par `monter`, qui l'inclut.
+    monter
+    verifie 0 "un script qui épingle langue et fuseau passe"
+
+    monter
+    grep -v 'user.language' "$bac/assets/capture-screenshots.sh" > "$bac/tmp" \
+        && mv "$bac/tmp" "$bac/assets/capture-screenshots.sh"
+    verifie 1 "un script qui n'épingle plus la langue est refusé"
 
     if [ "${echecs}" = 0 ]; then
         echo "Auto-test de la garde MAINS captures : OK"
@@ -110,6 +122,17 @@ while IFS= read -r fqcn; do
     erreurs=$((erreurs + 1))
   fi
 done <<<"$mains"
+
+# 3. La langue et le fuseau doivent rester ÉPINGLÉS (#3389). Sans eux, JavaFX résout les libellés par
+# défaut de ButtonType via `Locale.getDefault()` et formate les horodatages dans le fuseau du système :
+# la galerie montre alors la machine qui l'a rendue plutôt que le produit, sans que rien ne le signale.
+# C'est un contrôle STATIQUE : le vérifier par le rendu coûterait deux passes complètes de capture.
+for propriete in "-Duser.language=fr" "-Duser.country=FR" "-Duser.timezone=Europe/Paris"; do
+  if ! grep -qF -- "$propriete" "$SCRIPT"; then
+    echo "❌ Épinglage perdu dans capture-screenshots.sh (la galerie redeviendrait dépendante de la machine) : $propriete"
+    erreurs=$((erreurs + 1))
+  fi
+done
 
 if [[ $erreurs -gt 0 ]]; then
   echo "Garde MAINS captures : $erreurs problème(s) : voir ci-dessus."

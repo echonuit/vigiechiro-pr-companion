@@ -73,6 +73,25 @@ MAINS=(
 )
 JAVA_BIN="${JAVA_HOME:+$JAVA_HOME/bin/}java"
 
+# Langue et fuseau EPINGLES (#3389). Sans cela, un apercu ne montre pas le produit mais la machine
+# qui l'a rendu : JavaFX resout les libelles par defaut de ButtonType via Locale.getDefault() (« Cancel »
+# sur un runner anglais, « Annuler » sur un poste francais, donc un bouton plus large, donc une fenetre
+# auto-dimensionnee qui n'a plus les memes dimensions), et formate les horodatages dans le fuseau du
+# systeme (09:12 en UTC contre 11:12 a Paris).
+#
+# Ici et non dans capture-vues.yml : c'est ce script que la CI ET un poste lancent. Un reglage pose dans
+# le workflow n'aurait discipline que la CI, et deplace l'ecart au lieu de le supprimer.
+#
+# Par les proprietes JVM et non par LC_ALL : `fr_FR.UTF-8` n'est pas forcement genere sur un runner,
+# auquel dire le contraire ne ferait que retomber en silence sur la locale par defaut. `user.language`
+# et `user.country` ne dependent, eux, d'aucune locale systeme. TZ est double par `user.timezone`, que
+# la JVM lit en priorite.
+#
+# La valeur est le francais, pas une locale neutre : la galerie documente un produit francophone, et
+# doit montrer ce que son utilisateur voit.
+export TZ="Europe/Paris"
+LOCALISATION="-Duser.language=fr -Duser.country=FR -Duser.timezone=Europe/Paris"
+
 echo "[capture] Compilation des classes et ressources..."
 ./mvnw -q -DskipTests compile
 
@@ -81,7 +100,7 @@ for MAIN in "${MAINS[@]}"; do
   ./mvnw -q org.codehaus.mojo:exec-maven-plugin:exec \
     -Dexec.executable="$JAVA_BIN" \
     -Dexec.classpathScope=runtime \
-    -Dexec.args="--enable-native-access=ALL-UNNAMED,javafx.graphics -Dglass.platform=Headless -Dprism.order=sw -Djava.awt.headless=true -cp %classpath $MAIN" \
+    -Dexec.args="--enable-native-access=ALL-UNNAMED,javafx.graphics -Dglass.platform=Headless -Dprism.order=sw -Djava.awt.headless=true $LOCALISATION -cp %classpath $MAIN" \
     -Dcapture.outDir="$ICI"
 done
 
