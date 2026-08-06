@@ -39,6 +39,10 @@ public final class Habillage {
     /// Police et habillage du socle.
     private static final String FEUILLE_DE_BASE = "/fr/univ_amu/iut/commun/view/base.css";
 
+    /// Les composants partagés (badges, cartes-sections, puces). Le chrome la déclare **après**
+    /// `base.css`, et l'ordre porte du sens : `design.css` doit pouvoir la reprendre.
+    private static final String FEUILLE_DESIGN = "/fr/univ_amu/iut/commun/view/design.css";
+
     private Habillage() {}
 
     /// Fabrique la scène d'une fenêtre de l'application, habillée.
@@ -80,10 +84,15 @@ public final class Habillage {
         if (insererApres(surLaRacine, base) || insererApres(surLaScene, base)) {
             return;
         }
-        // Aucune des deux, nulle part : un contenu de dialogue monté seul. Poser `base.css` sans
-        // `palette.css` la laisserait sans ses couleurs - la paire va ensemble.
+        // Aucune des deux, nulle part : un contenu de dialogue monté seul. On pose alors le **trio du
+        // chrome**, dans son ordre - `MainView.fxml` déclare `palette, base, design`.
+        //
+        // ⚠️ Poser `base.css` sans `palette.css` la laisserait sans ses couleurs ; la poser sans
+        // `design.css` prive la scène des composants partagés (badges, cartes-sections) que son
+        // contenu utilise pourtant. Une scène nue n'est pas moins l'application qu'une autre.
         surLaRacine.add(0, url(FEUILLE_PALETTE));
         surLaRacine.add(1, base);
+        surLaRacine.add(2, url(FEUILLE_DESIGN));
     }
 
     /// Insère `base.css` juste après `palette.css` dans cette liste, si elle s'y trouve.
