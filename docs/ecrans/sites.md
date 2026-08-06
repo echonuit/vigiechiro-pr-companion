@@ -97,7 +97,7 @@ création, dernière nuit importée, nombre de passages), ses **points d'écoute
 ![Le détail d'un site : bandeau d'identité, points d'écoute et tableau des passages.](../assets/captures/apercu-sites-detail.png)
 
 Le tableau des passages se **trie**, se **réorganise** et laisse **choisir ses colonnes** (clic droit ou
-menu ☰ « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
+menu principal (☰) « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 Un **double-clic** sur une ligne ouvre l'écran du passage. Le **clic droit** réunit les actions de cette
 nuit : **ouvrir le passage**, ouvrir sa page **Vigie-Chiro** (grisée si le passage n'est pas lié à la

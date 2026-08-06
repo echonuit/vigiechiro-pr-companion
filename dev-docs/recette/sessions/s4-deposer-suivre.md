@@ -118,7 +118,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 
 *Bloc E · Un lot de trois nuits, pour de vrai*
 
-43. Cocher trois nuits (Ctrl+clic) : les quatre entrées de lot du menu ☰ s'activent et annoncent
+43. Cocher trois nuits (Ctrl+clic) : les quatre entrées de lot du menu principal (☰) s'activent et annoncent
     « des 3 lignes cochées ».
 44. « Préparer le dépôt des 3 lignes cochées… » : l'annonce dit **3 sur 3**, aucune écartée.
 45. Rejouer la même action : l'annonce dit **0 sur 3**, les trois écartées « dépôt déjà préparé », et
@@ -132,7 +132,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
     normalement, aucune archive n'est renvoyée deux fois.
 50. Le compte rendu final donne **une ligne par nuit**, dans l'ordre de la sélection.
 51. **Débrancher le réseau** avant « Importer les résultats des 3 lignes cochées… » : les trois
-    remontent en échec avec un motif qui dit quoi faire (« Connectez-vous depuis le menu ☰ … »), et le
+    remontent en échec avec un motif qui dit quoi faire (« Connectez-vous depuis le menu principal (☰) … »), et le
     lot va au bout au lieu de s'arrêter à la première.
 52. **Réseau très dégradé** (bridage à quelques dizaines de ko/s, ou coupures brèves répétées), pour
     provoquer de vraies **temporisations de reprise** : pendant l'attente affichée « nouvelle tentative
@@ -150,7 +150,7 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 *Bloc F · Les deux mécanismes de lot, l'un après l'autre (#2755)*
 
 > Ces trois cases existent parce qu'une affirmation du bilan de l'EPIC #2349 n'est **pas** vérifiée : que
-> les deux mécanismes de traitement groupé cohabitent sans se gêner. Ils sont dans le **même menu ☰**, à
+> les deux mécanismes de traitement groupé cohabitent sans se gêner. Ils sont dans le **même menu principal (☰)**, à
 > quatre entrées d'intervalle, et rafraîchissent la **même table** par deux chemins qui ne se connaissent
 > pas. Aucun test ne les joue à la suite, et aucun ne le peut aujourd'hui : cliquer une entrée de lot
 > ouvre une vraie fenêtre de progression, que `TraitementLot` n'expose pas aux tests.

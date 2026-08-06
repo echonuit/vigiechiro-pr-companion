@@ -9,7 +9,7 @@ sondage.
 ![L'écran de qualification : sélection de séquences, vue audio et verdict.](../assets/captures/apercu-qualification.png)
 
 Le tableau de la **sélection d'écoute** se **trie**, se **réorganise** et laisse **choisir ses colonnes**
-(clic droit ou menu ☰ « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
+(clic droit ou menu principal (☰) « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 - un **pré-check synthétique** (couverture horaire de la nuit, nombre de fichiers, cohérence du
   renommage) qui repère d'emblée un défaut grossier ;

@@ -248,7 +248,7 @@ public class ServicePassage {
                 + date
                 + " est hors de la fenêtre attendue ["
                 + fenetre.get().debut()
-                + " → "
+                + " -> "
                 + fenetre.get().fin()
                 + "] pour un site PointFixeStandard. Alerte non bloquante."));
     }
@@ -292,7 +292,7 @@ public class ServicePassage {
                         + autre.numeroPassage()
                         + " ("
                         + dateAutre
-                        + ") sur ce point. Intervalle conseillé ≥ 1 mois. Alerte non bloquante."));
+                        + ") sur ce point. Intervalle conseillé : au moins 1 mois. Alerte non bloquante."));
             }
         }
         return resultat;

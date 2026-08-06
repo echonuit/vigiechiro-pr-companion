@@ -21,7 +21,7 @@ référence explique *en détail* ce que chaque écran propose.
 | [Synthèse de la nuit](synthese.md) | Ce que chaque espèce a produit, et ce que ce nombre vaut au regard du référentiel national |
 | [Diagnostic](diagnostic.md) | Diagnostic d'une nuit (climat, anomalies) |
 | [Audit de cohérence](audit.md) | Confronter disque, base et Vigie-Chiro : plus rien ne diverge en silence |
-| [Réglages](reglages.md) | Préférences de l'application, par domaine (menu ☰) |
+| [Réglages](reglages.md) | Préférences de l'application, par domaine (menu principal (☰)) |
 
 L'écran **Qualification** propose en plus des [raccourcis clavier](../raccourcis-clavier.md) dédiés
 (verdict, écoute, navigation) pour traiter les séquences rapidement.

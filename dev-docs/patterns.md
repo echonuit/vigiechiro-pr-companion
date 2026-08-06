@@ -451,7 +451,7 @@ Guice), sans que le socle connaisse les contributeurs. Il injecte l'ensemble et 
 **Dans cette application.** Quatre points d'extension suivent ce patron, chacun avec un helper du DSL
 [`ModuleDeFeature`](injection.md#ce-que-publie-un-module-de-feature) : `ActiviteAccueil` (carte
 d'accueil, `activite(...)`), `IndicateurAccueil` (compteur, `indicateur(...)`), `OngletReglages`
-(onglet de l'écran Réglages, `ongletReglages(...)`) et `ActionMenu` (entrée du menu ☰, `actionMenu(...)`).
+(onglet de l'écran Réglages, `ongletReglages(...)`) et `ActionMenu` (entrée du menu principal (☰), `actionMenu(...)`).
 Le contrat est **agnostique de JavaFX** (dans `commun/view`), la feature ne fournit que des données
 (un descripteur, un libellé…), et c'est le socle (`MainController`, `EcranReglagesController`,
 `ConstructeurMenuOutils`) qui construit les widgets. Exemple : une bascule de menu déclare une

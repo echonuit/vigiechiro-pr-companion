@@ -375,7 +375,7 @@ final class MoteurImport {
                         + " Go disponibles. Libérez de l'espace"
                         + (conserverOriginaux
                                 ? ", ou désactivez « Conserver les originaux pour ré-analyse ultérieure »"
-                                        + " dans Réglages ▸ Import (divise par deux la place nécessaire)."
+                                        + " dans Réglages > Import (divise par deux la place nécessaire)."
                                 : "."));
             }
             return volume;

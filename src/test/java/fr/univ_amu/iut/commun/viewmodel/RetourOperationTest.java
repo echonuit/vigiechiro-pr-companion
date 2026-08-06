@@ -55,7 +55,7 @@ class RetourOperationTest {
         assertThat(RetourOperation.erreur(refus).texte())
                 .as("le modèle dit ce qui manque, l'IHM dit où le régler")
                 .contains("Dépôt Vigie-Chiro indisponible.")
-                .contains("menu ☰");
+                .contains("menu principal");
     }
 
     @Test

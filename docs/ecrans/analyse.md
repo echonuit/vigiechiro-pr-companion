@@ -53,7 +53,7 @@ L'espèce retenue pour chaque observation est le **taxon validé** par l'observa
 **proposition Tadarida** ; les pseudo-taxons « bruit » et « oiseau » sont exclus.
 
 Les tableaux de cet écran (l'inventaire et le détail des observations) se **trient**, se **réorganisent**
-et laissent **choisir leurs colonnes** (clic droit sur le tableau ou menu ☰ « outils ») :
+et laissent **choisir leurs colonnes** (clic droit sur le tableau ou menu principal (☰) « outils ») :
 voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 Le **clic droit** réunit aussi les actions de la ligne visée : la **fiche de l'espèce**, et sur le détail
@@ -86,7 +86,7 @@ directement, dans votre **navigateur**, la fiche d'information de l'espèce ; un
 même **« Fiche de l'espèce »** sur les deux tables. Pratique pour vérifier un critère avant de trancher une
 identification. Comme dans [Sons & validation](validation.md#consulter-la-fiche-dune-espece), la source
 s'adapte au taxon : **Plan National d'Actions Chiroptères** pour les chauves-souris, **GBIF** ou
-**Wikipédia FR** (selon le réglage du menu ☰ du bandeau) pour les autres.
+**Wikipédia FR** (selon le réglage du menu principal (☰) du bandeau) pour les autres.
 
 Toutes les lignes n'ont pas de fiche : un pseudo-taxon (**Bruit**, **Oiseau**) ou un couple d'espèces n'en
 a aucune. Dans le menu, l'entrée est alors **grisée** avec la mention « aucune fiche disponible » ; au

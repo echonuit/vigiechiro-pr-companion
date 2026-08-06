@@ -203,7 +203,7 @@ public class PassageViewModel {
         // visible via la date d'enregistrement (plage horaire).
         titreContexte.set(new ContextePassage(idPassage, detail.numeroPassage(), contexte).identiteStatut());
         numeroPassage = detail.numeroPassage();
-        plageHoraire.set(detail.dateEnregistrement() + "  " + detail.heureDebut() + " → " + detail.heureFin());
+        plageHoraire.set(detail.dateEnregistrement() + "  " + detail.heureDebut() + " -> " + detail.heureFin());
         enregistreur.set("PR " + detail.idEnregistreur());
         statut.set(detail.statut());
         verdict.set(detail.verdict());
@@ -235,10 +235,10 @@ public class PassageViewModel {
         // divergent la désynchroniserait tout autant. Mais le motif d'origine lui fait dire « cette nuit
         // est déposée » à quelqu'un qui ne l'a jamais déposée : il dit désormais d'où elle vient.
         String motifVerification = nuitRecuperee
-                ? "🔒 Cette nuit vient de Vigie-Chiro, où elle est déjà déposée : son verdict s'y décide," + " pas ici."
+                ? "Cette nuit vient de Vigie-Chiro, où elle est déjà déposée : son verdict s'y décide," + " pas ici."
                 : nuitDeposee
-                        ? "🔒 Verdict figé : cette nuit est déposée, son verdict ne change plus."
-                        : nuitTransformee ? "" : "🔒 La vérification sera possible une fois la nuit transformée.";
+                        ? "Verdict figé : cette nuit est déposée, son verdict ne change plus."
+                        : nuitTransformee ? "" : "La vérification sera possible une fois la nuit transformée.";
         validationVerrouillee.set(!surLaPlateforme);
         // Accès à l'écran de dépôt (M-Lot) dès le passage vérifié ET **même une fois déposé** (#…) : on doit
         // pouvoir y revenir pour consulter les archives ou les supprimer, sans avoir à annuler le dépôt.

@@ -34,7 +34,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 public class RattachementViewModel {
 
     /// Sépare un avant et un après (récapitulatif de rattachement, réalignement d'heures).
-    private static final String VERS = " → ";
+    private static final String VERS = " -> ";
 
     private final ServicePassage service;
     private final ServiceRattachement rattachement;

@@ -39,7 +39,7 @@ C'est le cas de la barre de filtres de l'inventaire (#1873) et de la barre d'act
 
 ## Ce qui a été écarté
 
-**Verser les actions secondaires dans un menu ☰** (c'était la piste que je recommandais en ouvrant #2012). Elle **détruit** l'affordance construite par #789, #1300 et #1302 : un `MenuItem` désactivé ne reçoit pas le survol, donc pas d'infobulle, et l'idiome du projet veut alors que le motif passe **dans le libellé**. Or ces motifs sont des phrases entières (« Suppression impossible : ce passage est déposé sur Vigie-Chiro. Annulez d'abord le dépôt. »). Six actions déplacées, c'étaient six explications à réécrire en suffixes courts, avec perte.
+**Verser les actions secondaires dans un menu principal (☰)** (c'était la piste que je recommandais en ouvrant #2012). Elle **détruit** l'affordance construite par #789, #1300 et #1302 : un `MenuItem` désactivé ne reçoit pas le survol, donc pas d'infobulle, et l'idiome du projet veut alors que le motif passe **dans le libellé**. Or ces motifs sont des phrases entières (« Suppression impossible : ce passage est déposé sur Vigie-Chiro. Annulez d'abord le dépôt. »). Six actions déplacées, c'étaient six explications à réécrire en suffixes courts, avec perte.
 
 Le constat qui la fondait reste vrai : **huit actions de même poids visuel en tête d'écran, ce n'est plus une barre, c'est une liste.** Mais cela se traite en décidant lesquelles méritent d'être toujours visibles, une question de produit, pas de mise en page.
 

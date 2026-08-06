@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.fixture.SortieCapturee;
+import fr.univ_amu.iut.validation.model.ServiceValidation;
 import java.io.PrintStream;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
@@ -149,6 +150,28 @@ class CliListerObservationsTest {
                 .contains("\"carre\":")
                 .contains("\"point\":")
                 .contains("\"commune\":");
+    }
+
+    @Test
+    @DisplayName("#3348 : le commentaire se rend aussi en ligne de commande - drapeau en texte, texte en JSON")
+    void le_commentaire_se_rend_en_cli() {
+        // Parité CLI/IHM (ADR 0014), constatée à la passe 2 de la clôture des suites de #3151 : l'écran
+        // cherche le commentaire, l'indique par une icône et - depuis #3348 - le montre en colonne. La
+        // ligne de commande ne l'avait NI émis NI signalé.
+        injecteur.getInstance(ServiceValidation.class).commenter(idNonTouchee, "Signal double, a revoir");
+
+        cli.executer(new String[] {"lister-observations", "--passage", String.valueOf(idPassage)}, sortie, erreur);
+        assertThat(sortieTexte())
+                .as("la colonne DRAPEAUX signale, elle ne raconte pas : « commente », pas le texte")
+                .contains("commente");
+
+        capture.vider();
+        cli.executer(
+                new String[] {"lister-observations", "--passage", String.valueOf(idPassage), "--json"}, sortie, erreur);
+        assertThat(sortieTexte())
+                .as("le contenu se lit en JSON, comme l'écran le lit dans sa colonne")
+                .contains("\"commentaire\":")
+                .contains("Signal double");
     }
 
     @Test

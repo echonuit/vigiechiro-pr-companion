@@ -491,6 +491,6 @@ s'il en reste : un script de fin de saison ne conclura donc pas au vert sur un r
 ### Importer les observations
 
 L'import des identifications Tadarida ne se fait pas depuis cet écran : il vit dans
-**« Sons & validation »** (menu ☰ « Importer depuis Vigie-Chiro », ou glisser-déposer d'un fichier CSV
+**« Sons & validation »** (menu principal (☰) « Importer depuis Vigie-Chiro », ou glisser-déposer d'un fichier CSV
 `_Vu`), là où vous écoutez et validez les sons. Si l'analyse n'est pas encore terminée, l'application vous
 dit **pourquoi** il n'y a rien à importer (jamais lancée, planifiée, en cours, ou en échec).

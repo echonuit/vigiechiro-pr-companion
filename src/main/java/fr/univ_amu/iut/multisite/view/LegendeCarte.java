@@ -92,7 +92,7 @@ final class LegendeCarte {
     private static Node ligneDensite() {
         Rectangle faible = echantillon(ConstructeurDonneesCarte.couleurDensite(1, 10));
         Rectangle forte = echantillon(ConstructeurDonneesCarte.couleurDensite(10, 10));
-        HBox ligne = new HBox(6, faible, forte, new Label("peu → beaucoup"));
+        HBox ligne = new HBox(6, faible, forte, new Label("peu -> beaucoup"));
         ligne.setAlignment(Pos.CENTER_LEFT);
         return ligne;
     }

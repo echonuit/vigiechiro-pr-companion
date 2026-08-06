@@ -42,7 +42,7 @@ Consignées lors de la clôture du lot E (#2796), CLI sur machine de développem
    seul.
 3. Cocher une commune restreint la table ; la barre de statut suit le sous-ensemble affiché.
 
-**Étape 2 · Exporter (menu ☰)**
+**Étape 2 · Exporter (menu principal (☰))**
 
 4. L'item « Exporter les observations et les sons (ZIP)… » est actif dès qu'une observation est
    affichée, et grisé avec explication quand la table est vide.

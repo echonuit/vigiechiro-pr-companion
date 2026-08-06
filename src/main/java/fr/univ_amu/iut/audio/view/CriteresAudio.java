@@ -272,7 +272,8 @@ final class CriteresAudio {
                 curseur.setPrefWidth(120);
                 Label valeur = new Label();
                 valeur.textProperty()
-                        .bind(curseur.valueProperty().map(v -> "≥ " + FormatLigneAudio.probabilite(v.doubleValue())));
+                        .bind(curseur.valueProperty()
+                                .map(v -> "au moins " + FormatLigneAudio.probabilite(v.doubleValue())));
                 curseur.valueProperty()
                         .addListener((obs, avant, seuil) -> applique.accept(auMoins(seuil.doubleValue())));
                 applique.accept(auMoins(curseur.getValue())); // application initiale (défaut 50 %)

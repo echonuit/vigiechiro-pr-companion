@@ -168,7 +168,7 @@ public class MaFeatureModule extends ModuleDeFeature {
 !!! tip "Contribuer aux points d'extension"
     Une feature peut aussi ajouter un **compteur** d'accueil (`indicateur(...)`), un **onglet de
     réglages** (`ongletReglages(...)`, cf. `OngletReglages` + `DescripteurReglage`) et une **entrée de
-    menu ☰** (`actionMenu(...)`, cf. `ActionMenu`) : toujours sans toucher le socle.
+    menu principal (☰)** (`actionMenu(...)`, cf. `ActionMenu`) : toujours sans toucher le socle.
 
 ## 6. Brancher la navigation (inversion de dépendance)
 

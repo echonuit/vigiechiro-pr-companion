@@ -151,7 +151,7 @@ Mécanismes à retenir :
   | `activite(X)` | `ActiviteAccueil` | une carte sur l'accueil |
   | `indicateur(X)` | `IndicateurAccueil` | un compteur du tableau de bord |
   | `ongletReglages(X)` | `OngletReglages` | un onglet de l'écran Réglages |
-  | `actionMenu(X)` | `ActionMenu` | une entrée du menu ☰ |
+  | `actionMenu(X)` | `ActionMenu` | une entrée du menu principal (☰) |
 
   Chaque helper encapsule un `Multibinder.newSetBinder(binder(), …).addBinding().to(X)`. Les points
   non couverts (ex. `RapprochementVigieChiro`, un `OptionalBinder`) restent exprimés directement.

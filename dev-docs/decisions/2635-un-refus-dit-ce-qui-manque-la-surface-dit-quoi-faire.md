@@ -6,7 +6,7 @@
 
 ## Contexte
 
-Six refus du modèle nommaient le **menu ☰**. Ils n'étaient pas mal écrits : chacun l'avait été à un
+Six refus du modèle nommaient le **menu principal (☰)**. Ils n'étaient pas mal écrits : chacun l'avait été à un
 moment où une seule surface appelait ce code, et le chemin de menu était alors l'information la plus
 utile qu'on pouvait donner.
 
@@ -14,7 +14,7 @@ Le produit a changé sous eux. Les mêmes lectures distantes servent aujourd'hui
 réactivation, la complétion, l'application **et** la ligne de commande. Le symptôme est apparu à la
 parité CLI de #2554 : `vigiechiro reactiver` répondait
 
-> Non connecté à Vigie-Chiro : collez un jeton (**menu ☰** > Se connecter) avant de **reconstruire** un
+> Non connecté à Vigie-Chiro : collez un jeton (**menu principal (☰)** > Se connecter) avant de **reconstruire** un
 > passage.
 
 Un menu à qui travaille dans un terminal, et un geste que l'utilisateur ne demandait pas. Deux messages
@@ -31,7 +31,7 @@ de l'environnement. Chaque surface possède son formateur :
 
 | Surface | Ce qu'elle ajoute |
 |---|---|
-| application | `commun.viewmodel.GesteAttendu` : « menu ☰ > Se connecter à Vigie-Chiro » |
+| application | `commun.viewmodel.GesteAttendu` : « menu principal (☰) > Se connecter à Vigie-Chiro » |
 | ligne de commande | `cli.GesteAttenduCli` : « vigiechiro connexion --token \<jeton\> » |
 
 **Personne ne perd de guidage**, et c'était la condition : l'utilisateur de l'application - la surface

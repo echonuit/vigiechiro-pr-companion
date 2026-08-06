@@ -94,7 +94,7 @@ manquait pour comprendre #1844.
 
 ## Accès utilisateur
 
-Le menu ☰ → **« Ouvrir le dossier des journaux »** (une `ActionMenu` socle du groupe Maintenance, cf.
+Le menu principal (☰) → **« Ouvrir le dossier des journaux »** (une `ActionMenu` socle du groupe Maintenance, cf.
 [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)) ouvre `<workspace>/logs/` dans le
 gestionnaire de fichiers : l'utilisateur retrouve la trace d'un incident et la joint à un signalement.
 

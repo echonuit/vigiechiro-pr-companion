@@ -181,7 +181,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   **combien** de nuits seront traitées et **lesquelles** seront écartées, chacune avec son motif ; un
   compte rendu final donne le sort de chacune.
 
-    !!! note "Pourquoi dans le menu ☰, et non dans une barre d'actions contextuelle"
+    !!! note "Pourquoi dans le menu principal (☰), et non dans une barre d'actions contextuelle"
         La story [E5.S4](../Story%20mapping/E5%20-%20Naviguer%20dans%20le%20volume%20multi-sites.md#e5s4)
         imaginait une barre apparaissant sous le tableau dès deux lignes cochées. Le menu **☰** existait
         déjà, il est l'endroit où l'utilisateur cherche les actions de cet écran, et une barre qui

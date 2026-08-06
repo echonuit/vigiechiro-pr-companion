@@ -91,7 +91,7 @@ public final class MoteurWorkflowPassage {
         if (!estTransitionAutorisee(actuel, cible)) {
             throw new RegleMetierException("Transition de workflow interdite : « "
                     + actuel.libelle()
-                    + " » → « "
+                    + " » -> « "
                     + cible.libelle()
                     + " ». Seul le passage à l'étape suivante est autorisé"
                     + suivant(actuel)

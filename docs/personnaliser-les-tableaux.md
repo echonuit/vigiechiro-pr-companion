@@ -40,7 +40,7 @@ ce qui est disponible.
 
 ![Le sélecteur de colonnes ouvert sur l'écran « Espèces & observations » : cases pour afficher ou masquer chaque colonne, poignées pour les réordonner. La colonne d'identité (« Espèce ») reste cochée et grisée.](assets/captures/apercu-analyse-colonnes.png)
 
-## Ouvrir le sélecteur : clic droit **ou** menu ☰
+## Ouvrir le sélecteur : clic droit **ou** menu principal (☰)
 
 Deux chemins mènent au **même** panneau « Colonnes… » :
 
@@ -58,7 +58,7 @@ quand le tableau vous convient.
 
 !!! tip "Un écran, plusieurs tableaux"
     Sur l'écran **« Espèces & observations »**, le clic droit règle **le tableau que vous visez**
-    (l'inventaire en haut ou le détail des observations en bas) ; le menu ☰ règle, lui, l'**inventaire
+    (l'inventaire en haut ou le détail des observations en bas) ; le menu principal (☰) règle, lui, l'**inventaire
     affiché** (par espèce ou par carré selon le regroupement choisi).
 
 ## Filtrer : la barre à puces

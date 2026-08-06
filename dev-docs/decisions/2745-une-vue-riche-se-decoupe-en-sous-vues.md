@@ -44,7 +44,7 @@ Le critère de découpe est la **cohésion de la vue**, pas le nombre de champs 
 coupait déjà. Ici, le `SplitPane` séparait la table du panneau d'écoute ; la frontière existait, elle
 n'a pas été inventée pour l'occasion.
 
-Ce qui a besoin de la sous-vue **et** d'un nœud du parent (panneau d'écoute, menu ☰, barre de filtres,
+Ce qui a besoin de la sous-vue **et** d'un nœud du parent (panneau d'écoute, menu principal (☰), barre de filtres,
 gestionnaire de colonnes) reste câblé par le parent, qui obtient ce dont il a besoin par des
 accesseurs. Une sous-vue n'est pas une frontière étanche : c'est un regroupement de nœuds.
 

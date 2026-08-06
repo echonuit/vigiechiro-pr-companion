@@ -72,7 +72,7 @@ de chauves-souris.
 
 Les puces se **combinent en ET** : « Chiroptères » + « Proba ≥ 80 % » ne garde que les chauves-souris les
 plus sûres ; « Espèce : Grand rhinolophe » + « Lieu : Aix-en-Provence » isole une espèce sur une commune,
-prête à être exportée (CSV, ou archive ZIP avec les sons) depuis le menu ☰.
+prête à être exportée (CSV, ou archive ZIP avec les sons) depuis le menu principal (☰).
 
 ### Les listes s'adaptent à ce qui reste
 
@@ -180,12 +180,12 @@ et la **croix** le supprime.
 ## Choisir et organiser les colonnes
 
 Comme tous les tableaux de l'application, celui-ci se **trie**, se **réorganise** et laisse **choisir ses
-colonnes** (clic droit ou menu ☰ « outils ») : le fonctionnement commun est décrit dans
+colonnes** (clic droit ou menu principal (☰) « outils ») : le fonctionnement commun est décrit dans
 [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 Le **clic droit** sur une observation réunit par ailleurs ses actions : **ouvrir le passage**, la
 **fiche de l'espèce**, le sous-menu **Validation ▸** (valider, corriger, certitude, référence, douteux)
-et **Copier ▸** (nom latin, n° de carré). Vous n'êtes donc plus obligé de remonter au menu ☰ ni aux
+et **Copier ▸** (nom latin, n° de carré). Vous n'êtes donc plus obligé de remonter au menu principal (☰) ni aux
 boutons pour agir sur la ligne que vous écoutez :
 voir [Agir sur une ligne](../personnaliser-les-tableaux.md#agir-sur-une-ligne-double-clic-et-clic-droit).
 
@@ -214,7 +214,7 @@ les cris de chauves-souris sont des **ultrasons**, le son est **ralenti dix fois
 
 Quand une observation pointe un cri précis dans la séquence, la **fenêtre de ce cri** (entre son début et
 sa fin) est **surlignée** sur le sonogramme et le spectrogramme, et la **lecture s'y positionne**
-directement : vous entendez le bon cri sans chercher. Le menu ☰ propose deux options d'écoute : la
+directement : vous entendez le bon cri sans chercher. Le menu principal (☰) propose deux options d'écoute : la
 **lecture automatique** à chaque sélection (activée par défaut) et la **lecture en boucle**.
 
 ## Quand l'audio n'est plus sur le disque
@@ -301,7 +301,7 @@ mention « aucune fiche disponible » ; au **double-clic**, rien ne s'ouvre et u
 (« Aucune fiche disponible pour « Bruit » »). Sur une nuit réelle, où l'essentiel des lignes est du
 bruit, c'est le cas le plus fréquent : le double-clic ne reste jamais sans réponse.
 
-![Le menu ☰ de Sons & validation, où « Fiche de l'espèce (Pipistrelle commune) » ouvre la fiche de la proposition Tadarida sélectionnée.](../assets/captures/apercu-fiche-espece.png)
+![Le menu principal (☰) de Sons & validation, où « Fiche de l'espèce (Pipistrelle commune) » ouvre la fiche de la proposition Tadarida sélectionnée.](../assets/captures/apercu-fiche-espece.png)
 
 La **source** de la fiche dépend du taxon :
 
@@ -314,7 +314,7 @@ case **« Fiches espèces sur Wikipédia (sinon GBIF) »** : décochée (le déf
 chauves-souris s'ouvrent sur GBIF ; cochée, sur Wikipédia FR. Le réglage est **mémorisé** d'une session à
 l'autre.
 
-![Le menu ☰ du bandeau : la case « Fiches espèces sur Wikipédia (sinon GBIF) » choisit la source des fiches hors chauves-souris.](../assets/captures/apercu-fiche-espece-source.png)
+![Le menu principal (☰) du bandeau : la case « Fiches espèces sur Wikipédia (sinon GBIF) » choisit la source des fiches hors chauves-souris.](../assets/captures/apercu-fiche-espece-source.png)
 
 ## Validation d'un passage (Tadarida)
 
@@ -323,7 +323,7 @@ d'identification 24 à 48 h plus tard, voir le [parcours](../parcours/index.md))
 d'**importer le fichier CSV** de résultats Tadarida, puis d'**exporter** le fichier `_Vu` réinjectable
 (avec, en option, la trace du mode de validation). Ces actions propres au passage vivent dans le menu « ☰ ».
 
-![Le menu ☰ ouvert sur un passage : import du CSV Tadarida, import et publication vers Vigie-Chiro, ouverture des données sur le portail, options d'export et d'écoute. Les entrées sans objet sont grisées et disent pourquoi.](../assets/captures/apercu-sons-validation-menu-actions.png)
+![Le menu principal (☰) ouvert sur un passage : import du CSV Tadarida, import et publication vers Vigie-Chiro, ouverture des données sur le portail, options d'export et d'écoute. Les entrées sans objet sont grisées et disent pourquoi.](../assets/captures/apercu-sons-validation-menu-actions.png)
 
 Les entrées **liées à Vigie-Chiro** n'apparaissent que sur un **passage** et quand l'application est
 [connectée](../connexion-vigiechiro.md) : sur le corpus de référence, ou hors connexion, le menu se
@@ -535,4 +535,4 @@ et les fichiers son sous `sons/`, prête à être transmise sans autre manipulat
 sans rien laisser derrière elle, et **compte les sons dont le fichier a quitté le disque** (le CSV
 continue de les nommer).
 
-![Le menu ☰ sur le corpus de référence : les trois exports (CSV des observations, observations + sons, bibliothèque de sons), les entrées propres à un passage restant masquées.](../assets/captures/apercu-menu-references.png)
+![Le menu principal (☰) sur le corpus de référence : les trois exports (CSV des observations, observations + sons, bibliothèque de sons), les entrées propres à un passage restant masquées.](../assets/captures/apercu-menu-references.png)

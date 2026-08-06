@@ -45,9 +45,14 @@ public final class RenduPng {
     /// passe de layout et de CSS complète avant le `snapshot`, qui reste déterministe. Le stage est
     /// refermé aussitôt. À appeler sur le fil JavaFX.
     public static void enregistrer(Scene scene, Path fichier) {
-        // La police embarquée s'installe ici aussi : une scène montée hors du chrome rendrait sinon
-        // avec celle du système (#3361).
-        Typographie.installer();
+        // Habillage complet, et non la seule police (#3374) : ce point d'entrée gardait le raisonnement
+        // de #3361 - « installer la police suffit » - que #3374 a démenti. Enregistrer une famille ne la
+        // **sélectionne** pas : c'est `base.css` qui la demande. Une scène montée hors du chrome rendait
+        // donc encore avec celle du système, la police enregistrée en pure perte.
+        //
+        // Sans effet sur l'unique appelant d'aujourd'hui (`ExportGraphe` passe déjà par `Habillage`),
+        // mais le prochain qui ne le ferait pas retomberait dans le défaut sans que rien ne le dise.
+        Habillage.poser(scene);
         Stage stageTransitoire = new Stage();
         stageTransitoire.setScene(scene);
         stageTransitoire.show();

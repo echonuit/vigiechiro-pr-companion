@@ -126,7 +126,7 @@ public final class CaptureBandeauRetour {
 
     /// Un refus métier que nous avons rédigé, déjà porteur de son geste attendu (ADR 2635).
     private static String refusEcritParNous() {
-        return "La connexion à Vigie-Chiro est requise. Connectez-vous depuis le menu ☰ > Se connecter,"
+        return "La connexion à Vigie-Chiro est requise. Connectez-vous depuis le menu principal > Se connecter,"
                 + " puis recommencez.";
     }
 

@@ -158,9 +158,9 @@ Certains écrans secondaires ne font pas l'objet d'une maquette complète mais s
 - **Sélecteur de taxon de correction** : autocomplete sur code à 6 lettres. Décrit dans [M-SonsValidation](M-SonsValidation.md).
 - **Confirmation « Marquer déposé »** : avant transition vers le statut Déposé (c'est le libellé réel du bouton). Décrite dans [M-Lot](M-Lot.md).
 - **Écran de connexion à Vigie-Chiro** : saisie du jeton d'API, trois états (connecté / enregistré non vérifié / non connecté). Cf. [E9.S1](../Story%20mapping/E9%20-%20Intégration%20plateforme%20VigieChiro.md#e9s1).
-- **Écran de réglages** : onglets auto-découverts (Général, Fonctionnalités, Emplacements, Dépôt, Import, Audio), ouvert depuis le menu ☰. Cf. [E0.S9](../Story%20mapping/E0%20-%20Fondations%20de%20persistance.md#e0s9).
+- **Écran de réglages** : onglets auto-découverts (Général, Fonctionnalités, Emplacements, Dépôt, Import, Audio), ouvert depuis le menu principal (☰). Cf. [E0.S9](../Story%20mapping/E0%20-%20Fondations%20de%20persistance.md#e0s9).
 - **Écran d'audit de cohérence** et **reset guidé** : accessible aussi par une carte de l'accueil. Cf. [E0.S11](../Story%20mapping/E0%20-%20Fondations%20de%20persistance.md#e0s11).
 - **Modale de reconstruction** d'un passage déposé absent de la machine. Cf. [E9.S5](../Story%20mapping/E9%20-%20Intégration%20plateforme%20VigieChiro.md#e9s5).
 - **Modale de réactivation** d'un passage archivé (retrouver ses fichiers). Cf. [E4.S6](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s6).
-- **Fenêtre « À propos »** : version de l'application et crédits, ouverte depuis le menu ☰.
+- **Fenêtre « À propos »** : version de l'application et crédits, ouverte depuis le menu principal (☰).
 - **Bandeau d'annonce de mise à jour** : masqué par défaut, signale une version plus récente (cf. « capacités transverses » du [story mapping](../Story%20mapping/index.md)).

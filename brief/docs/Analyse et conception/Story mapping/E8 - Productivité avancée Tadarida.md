@@ -112,7 +112,7 @@ Ces gains sont **secondaires** : ils enrichissent la validation sans en être un
 - [x] La **commune** d'un point est dérivée de ses coordonnées GPS et mémorisée
       ([C3](../Modèle%20conceptuel/C3%20-%20Point%20d%27écoute.md)) : « Aix-en-Provence » est trouvable
       même si le site porte un autre nom.
-- [x] Le menu ☰ produit une **archive ZIP** du sous-ensemble affiché : `observations.csv` (identique à
+- [x] Le menu principal (☰) produit une **archive ZIP** du sous-ensemble affiché : `observations.csv` (identique à
       l'export CSV seul) et les sons rangés **par nuit**, dédupliqués.
 - [x] L'écriture est **annulable** et montre sa progression ; l'annulation comme l'échec ne laissent
       **aucune archive partielle**.
@@ -121,5 +121,5 @@ Ces gains sont **secondaires** : ils enrichissent la validation sans en être un
 - [x] La **ligne de commande** produit la même archive (`exporter-sons --passage | --espece --sortie`).
 
 **Parcours rattaché** : [P13](../Parcours%20utilisateurs/P13%20-%20Envoyer%20un%20sous-ensemble%20à%20un%20expert.md)<br>
-**Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (menu ☰ + modale de progression)<br>
+**Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (menu principal (☰) + modale de progression)<br>
 **Dépendances** : [E7.S1](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s1), [E8.S3](#e8s3)<br>

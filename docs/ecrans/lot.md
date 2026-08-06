@@ -42,7 +42,7 @@ sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une
 
 ![Génération des archives en cours : indicateur d'activité, actions désactivées.](../assets/captures/apercu-lot-generation.png)
 
-Le tableau de suivi des archives laisse **choisir et réordonner ses colonnes** (clic droit ou menu ☰
+Le tableau de suivi des archives laisse **choisir et réordonner ses colonnes** (clic droit ou menu principal (☰)
 « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md). La **table de dépôt**
 de l'étape 3 offre le même réglage, mémorisé séparément.
 

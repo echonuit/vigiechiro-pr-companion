@@ -63,7 +63,7 @@
     </VBox>
   </HBox>
   <Label styleClass="field-hint" wrapText="true"
-         text="Degrés décimaux (43.5298 ; virgule tolérée) ou degrés/minutes/secondes (43°31'47&quot;N) : collez depuis n'importe quelle source. Latitude −90..90, longitude −180..180."/>
+         text="Degrés décimaux (43.5298 ; virgule tolérée) ou degrés/minutes/secondes (43°31'47&quot;N) : collez depuis n'importe quelle source. Latitude -90..90, longitude -180..180."/>
 
   <!-- Contrôle du carré STOC (#733) : ce que la grille officielle dit de la position saisie - elle confirme
        le carré du site, ou signale que le point tombe ailleurs. Masqué tant qu'il n'y a rien à dire (hors
