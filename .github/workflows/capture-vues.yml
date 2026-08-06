@@ -56,6 +56,40 @@ jobs:
           check-latest: false
           cache: maven
 
+      # La police SYSTÈME du runner, alignée sur celle que l'application déclare (#3417).
+      #
+      # Le produit embarque Noto Sans et la demande par `base.css` : il ne dépend plus de la machine
+      # pour **peindre**. Il en dépend encore pour **mesurer** - `ChoiceBoxSkin`, et tout skin qui
+      # calcule sa taille avec un nœud de texte hors du graphe de scène, utilise `Font.getDefault()`,
+      # à laquelle aucune feuille de style ne s'applique. Mesuré : « 1 heure » fait 46,92 px en Noto
+      # Sans et 50,22 px dans la police système du runner, d'où un contrôle plus large de 4 px et un
+      # graphique décalé d'autant.
+      #
+      # Pourquoi aligner le runner plutôt que corriger le code : il n'existe pas UN rendu utilisateur,
+      # il dépend de la police système de chacun. La galerie rendait donc comme personne en
+      # particulier - une machine où mesure et peinture se contredisent. La seule référence non
+      # arbitraire est celle où les deux coïncident, c'est-à-dire une machine dont la police système
+      # EST celle que l'application déclare.
+      #
+      # ⚠️ Ce n'est pas un correctif du produit : chez un utilisateur dont le système résout `System`
+      # autrement, ce contrôle reste plus large de 4 px. Le sujet est suivi en #3417.
+      - name: Aligner la police système sur celle de l'application
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq fonts-noto-core
+          mkdir -p ~/.config/fontconfig
+          cat > ~/.config/fontconfig/fonts.conf <<'FIN'
+          <?xml version="1.0"?>
+          <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+          <fontconfig>
+            <alias><family>sans-serif</family><prefer><family>Noto Sans</family></prefer></alias>
+            <alias><family>system-ui</family><prefer><family>Noto Sans</family></prefer></alias>
+            <alias><family>monospace</family><prefer><family>Noto Sans Mono</family></prefer></alias>
+          </fontconfig>
+          FIN
+          fc-cache -f > /dev/null
+          echo "sans-serif  -> $(fc-match sans-serif)"
+          echo "monospace   -> $(fc-match monospace)"
+
       # Sur une PR comme sur `main` : si un écran ne se rend plus, le job échoue ici. C'est le seul
       # endroit qui exerce réellement les injecteurs partiels de capture jusqu'au chargement du FXML.
       - name: Générer les aperçus PNG (hors-écran)
