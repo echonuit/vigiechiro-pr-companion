@@ -32,8 +32,12 @@ primaryStage.setScene(Habillage.scene(racine));   // la fenêtre principale
 Habillage.poser(sceneDejaConstruite);             // une scène qu'on n'a pas fabriquée
 ```
 
-Il pose ce que **toute** fenêtre du produit porte : la police embarquée, `palette.css` et `base.css`,
-dans l'ordre du chrome.
+Il pose ce que **toute** fenêtre du produit porte : la police embarquée et le **trio** du chrome -
+`palette.css`, `base.css`, `design.css` - dans cet ordre.
+
+Les trois vont ensemble et chacune dépend de la précédente : `base.css` consomme les couleurs de
+`palette.css`, et `design.css` reprend l'une et l'autre pour les composants partagés (badges,
+cartes-sections, bouton primaire). En poser deux sur trois donne une fenêtre qui **paraît** habillée.
 
 Sans lui, la règle tenait par la vigilance, et elle a lâché : `base.css` était déclarée à la main dans
 **deux** FXML sur des dizaines, si bien que **dix fenêtres sur onze** - toutes les modales - rendaient
