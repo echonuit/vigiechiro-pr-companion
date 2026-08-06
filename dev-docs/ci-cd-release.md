@@ -730,6 +730,35 @@ avis de portée `development`, ce qu'est tout cet arbre : au 2026-08-04, quatre 
 (`brace-expansion` ×3, `picomatch`) l'ont été sans que le compte affiché bouge. Pour cet arbre, c'est
 `npm audit` qui fait foi.
 
+### ⚠️ Le train ne commente pas les issues, et c'est le train qui l'impose
+
+`@semantic-release/github` commente par défaut chaque issue et PR incluse dans une version. Le premier
+départ du train, déclenché à la main le 2026-08-06 sur **104 commits**, est tombé exactement là :
+
+```
+TypeError: Cannot destructure property 'repository' of '(intermediate value)' as it is undefined.
+    at @semantic-release/github/lib/success.js:81
+```
+
+La cause n'est pas un bogue de circonstance, c'est une **conséquence structurelle de l'ADR 2744**. Le
+greffon découpe les commits en lots de **100** et construit, pour chaque lot, une requête GraphQL avec
+**un champ par commit**, chacun demandant `associatedPullRequests(first: 100)` - soit **10 000 nœuds**
+dans une seule requête. GitHub la refuse, renvoie `data: null`, et le greffon déstructure `repository`
+sur `undefined`.
+
+Tant que la publication partait **à chaque fusion**, un lot comptait quelques commits. Depuis qu'elle
+part **une fois par semaine**, il en compte une centaine : l'échec se serait reproduit **chaque
+mercredi**, à 6 h UTC, sans personne pour le voir.
+
+`successCommentCondition: false` supprime l'appel. Le commentaire perdu n'était de toute façon pas
+souhaitable ici : il aurait notifié une centaine d'issues à chaque train.
+
+⚠️ **Ce que cet échec laisse derrière lui** est le vrai enseignement : le tag `v2.184.0` avait été
+créé et la Release déposée en brouillon **avant** l'étape qui a échoué. Le job `release` étant rouge,
+`installers` et `publish` ont été **sautés** - donc ni binaires attachés, ni brouillon levé. Une
+version peut donc exister à moitié. C'est ce qu'il faut regarder d'abord quand un train échoue :
+`gh release list` avant `gh run view`.
+
 ## Dépendances
 
 Les mises à jour sont proposées par **Dependabot**
