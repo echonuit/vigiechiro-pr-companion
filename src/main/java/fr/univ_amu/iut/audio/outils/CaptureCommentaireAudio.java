@@ -1,10 +1,9 @@
 package fr.univ_amu.iut.audio.outils;
 
-import fr.univ_amu.iut.audio.view.SonsValidationController;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.view.Habillage;
 import java.net.URL;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -74,20 +73,11 @@ public final class CaptureCommentaireAudio {
         StackPane conteneur = new StackPane(contenu);
         conteneur.setStyle("-fx-background-color: rgba(0, 0, 0, 0.4); -fx-padding: 30;");
         Scene scene = new Scene(conteneur);
-        scene.getStylesheets().addAll(styles());
+        // Habillage commun (#3374) : la paire palette+base, posée au niveau où la palette vit.
+        Habillage.poser(scene);
 
         ApercuFx.enregistrerPng(scene, fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
-    }
-
-    /// Feuilles de style : palette + base partagées (thème indigo) et `sons-validation.css` (style propre du
-    /// popup de commentaire). Les ressources absentes sont ignorées.
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        ajouter(feuilles, ancreCssPartagee(), "palette.css");
-        ajouter(feuilles, ancreCssPartagee(), "base.css");
-        ajouter(feuilles, SonsValidationController.class, "sons-validation.css");
-        return feuilles;
     }
 
     private static void ajouter(List<String> feuilles, Class<?> ancre, String nom) {

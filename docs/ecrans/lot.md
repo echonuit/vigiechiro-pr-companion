@@ -23,7 +23,7 @@ déposer ».
 
 ![L'état « Prêt à déposer » : l'étape « Générer les archives » devient active.](../assets/captures/apercu-lot-deposer.png)
 
-Ce que l'on téléverse sur Vigie-Chiro, ce sont des **archives ZIP** (≤ 700 Mo par défaut, réglable dans [Réglages](reglages.md)), découpées depuis les
+Ce que l'on téléverse sur Vigie-Chiro, ce sont des **archives ZIP** (au plus 700 Mo par défaut, réglable dans [Réglages](reglages.md)), découpées depuis les
 séquences et écrites dans le sous-dossier `depot/` de la session. La génération peut être **longue**
 sur une grosse nuit : elle s'exécute en arrière-plan, avec un indicateur d'activité, et les actions
 sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une archive incomplète).

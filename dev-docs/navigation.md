@@ -18,8 +18,43 @@ centrale** via le [`Navigateur`](https://github.com/echonuit/vigiechiro-pr-compa
 
 Le [`MainController`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/MainController.java)
 lie le centre à la `vueCentraleProperty()` du `Navigateur`, reconstruit le fil d'Ariane à chaque
-changement d'historique, et pose les raccourcis (Alt+← retour, Alt+Début accueil). Les changements
+changement d'historique, et pose les raccourcis (Alt+Gauche pour revenir, Alt+Début pour l'accueil). Les changements
 d'écran arrivent en léger fondu.
+
+## Toute fenêtre passe par `Habillage`
+
+Une fenêtre de l'application ne se construit **jamais** par `new Scene(...)` : elle se demande à
+[`Habillage`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/Habillage.java).
+
+```java
+modale.setScene(Habillage.scene(vue));            // une modale
+primaryStage.setScene(Habillage.scene(racine));   // la fenêtre principale
+Habillage.poser(sceneDejaConstruite);             // une scène qu'on n'a pas fabriquée
+```
+
+Il pose ce que **toute** fenêtre du produit porte : la police embarquée, `palette.css` et `base.css`,
+dans l'ordre du chrome.
+
+Sans lui, la règle tenait par la vigilance, et elle a lâché : `base.css` était déclarée à la main dans
+**deux** FXML sur des dizaines, si bien que **dix fenêtres sur onze** - toutes les modales - rendaient
+avec la police par défaut de JavaFX, différente de celle de la fenêtre qui les portait et différente
+d'une machine à l'autre ([ADR 3374](decisions/3374-une-fenetre-porte-son-habillage-ou-elle-n-est-pas-le-produit.md)).
+
+Les **outils de capture** empruntent le même chemin. Un aperçu montre donc l'écran tel que
+l'utilisateur le voit **par construction**, et non parce qu'on y a pensé.
+
+!!! warning "Deux pièges, dont un silencieux"
+    **L'ordre compte.** `base.css` consomme `-couleur-fond`, défini par `palette.css`. Posée à un autre
+    **niveau** que la palette, la couleur ne se résout pas : JavaFX **avale la règle** en journalisant un
+    `ClassCastException`, et la fenêtre s'ouvre sans son fond sans que rien n'échoue. `Habillage` insère
+    donc `base.css` juste après `palette.css`, dans la liste où celle-ci vit.
+
+    **Un caractère non couvert par la police part en repli** vers une police du système, et deux
+    machines ne replient pas sur la même. `PoliceCouvreLIhmTest` refuse tout caractère affiché que la
+    fonte embarquée ne porte pas ([ADR 3389](decisions/3389-ce-que-l-application-affiche-tient-dans-la-police-embarquee.md)).
+
+`ScenesHabilleesTest` verrouille l'invariant : un `new Scene(...)` hors de `Habillage` fait échouer la
+construction, en nommant le fichier fautif.
 
 ## Le `Navigateur` : une pile d'écrans vivants
 

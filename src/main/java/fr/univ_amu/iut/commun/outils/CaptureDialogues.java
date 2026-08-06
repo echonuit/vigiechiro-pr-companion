@@ -11,11 +11,11 @@ import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.ContenuChoixSauvegarde;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -119,7 +119,7 @@ public final class CaptureDialogues {
     private static void enregistrerCompteRendu(NiveauNotification niveau, String entete, String message, Path fichier) {
         Alert alerte = new NotificationDialogue().dialogue(niveau, entete, ApercuFx.enrouler(message));
         alerte.getDialogPane().setPrefWidth(620);
-        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
         System.out.println(TRACE + fichier.toAbsolutePath());
     }
 
@@ -138,7 +138,7 @@ public final class CaptureDialogues {
         Alert alerte = AlerteDemarrage.dialogue(
                 "VigieChiro Companion est déjà ouvert", ApercuFx.enrouler(Amorcage.messageDossierOccupe(occupantFige)));
         alerte.getDialogPane().setPrefWidth(540);
-        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
         System.out.println(TRACE + fichier.toAbsolutePath());
     }
 
@@ -151,7 +151,7 @@ public final class CaptureDialogues {
         // boutons, même titre. Seul le message est enroulé (cf. [#enrouler]).
         Alert alerte = new ConfirmationNavigation().dialogue(ApercuFx.enrouler(message));
         alerte.getDialogPane().setPrefWidth(540);
-        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
         System.out.println(TRACE + fichier.toAbsolutePath());
     }
 
@@ -171,7 +171,7 @@ public final class CaptureDialogues {
         Alert alerte = new Alert(Alert.AlertType.INFORMATION, ApercuFx.enrouler(resume), ButtonType.OK);
         alerte.setHeaderText(ActionAPropos.ENTETE);
         alerte.getDialogPane().setPrefWidth(540);
-        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
         System.out.println(TRACE + fichier.toAbsolutePath());
     }
 
@@ -222,18 +222,8 @@ public final class CaptureDialogues {
                         InventaireSauvegardes.Nature.COMPLETE));
         ContenuChoixSauvegarde contenu = new ContenuChoixSauvegarde(entrees, entree -> {}, () -> {}, () -> {});
         Scene scene = new Scene(contenu.racine());
-        scene.getStylesheets().addAll(styles());
+        // Habillage commun (#3374) : la paire palette+base, posée au niveau où la palette vit.
+        Habillage.poser(scene);
         ApercuFx.enregistrerPng(scene, fichier);
-    }
-
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        for (String nom : List.of("palette.css", "base.css")) {
-            var url = ConfirmationNavigation.class.getResource(nom);
-            if (url != null) {
-                feuilles.add(url.toExternalForm());
-            }
-        }
-        return feuilles;
     }
 }

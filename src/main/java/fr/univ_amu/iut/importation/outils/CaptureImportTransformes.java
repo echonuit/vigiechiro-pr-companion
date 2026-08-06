@@ -1,12 +1,9 @@
 package fr.univ_amu.iut.importation.outils;
 
 import fr.univ_amu.iut.commun.outils.ApercuFx;
-import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.importation.view.ActionImportTransformes;
 import fr.univ_amu.iut.importation.view.ActionImportTransformes.ModeImport;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -69,20 +66,7 @@ public final class CaptureImportTransformes {
         alerte.getButtonTypes().setAll(referencer, copier, annuler);
         alerte.getDialogPane().setPrefWidth(560);
 
-        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
-    }
-
-    /// Feuilles de style partagées (palette + base) pour que le dialogue porte le thème indigo de
-    /// l'application, comme [fr.univ_amu.iut.commun.outils.CaptureDialogues].
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        for (String nom : List.of("palette.css", "base.css")) {
-            var url = ConfirmationNavigation.class.getResource(nom);
-            if (url != null) {
-                feuilles.add(url.toExternalForm());
-            }
-        }
-        return feuilles;
     }
 }

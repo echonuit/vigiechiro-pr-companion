@@ -88,7 +88,7 @@ un jour récupérer une nuit archivée, l'application sait repartir de votre car
 sauvegarde : elle reconnaît vos fichiers à leur empreinte, qu'elle a relevée à l'import.
 
 Si vous comptez **ré-analyser** vos enregistrements plus tard, avec d'autres réglages ou un autre outil,
-vous pouvez demander à l'application d'en conserver une copie : **Réglages ▸ Import ▸ « Conserver les
+vous pouvez demander à l'application d'en conserver une copie : **Réglages > Import > « Conserver les
 originaux pour ré-analyse ultérieure »**.
 
 !!! warning "Ce que coûte cette option"

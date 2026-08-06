@@ -323,6 +323,20 @@ setup() {
   [ "${status}" -eq 0 ]
 }
 
+@test "lister-observations --json : le lieu et le commentaire sont dans le PAQUET (#3350, #3348)" {
+  # Deux ecarts de parite refermes a la cloture des suites de #3151, verifies sur le vrai fat-jar :
+  # la commande offrait « --lieu » sans jamais emettre le moindre lieu, et le commentaire - que
+  # l ecran cherche, indique et montre - n existait nulle part en ligne de commande.
+  #
+  # La base est vide, donc aucune ligne ne sort : ce que ce cas prouve est que la commande s analyse
+  # et rend 0. Le CONTENU des champs est verifie en Java (CliListerObservationsTest), ou l on peut
+  # semer une observation ; ici c est le paquet qu on exerce.
+  run cli lister-observations --passage 1 --json
+  [ "${status}" -eq 0 ]
+  [[ "${output}" != *"Unknown option"* ]]
+  [[ "${output}" != *"Exception"* ]]
+}
+
 @test "lister-observations : le taxon parent DESIGNE, donc il refuse sur une base vide (#3082)" {
   # L autre moitie de l ADR 3082, verifiee sur le vrai fat-jar : un critere qui designe refuse quand il
   # ne trouve rien, et NOMME ce qui est present. C est le bats qui a montre ce cas - mon premier jet
