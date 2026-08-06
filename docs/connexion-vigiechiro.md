@@ -25,6 +25,8 @@ navigateur, valable **14 jours**. La fenêtre **☰ → Se connecter à Vigie-Ch
 3. **Coller le jeton** : sur l'onglet Vigie-Chiro connecté, cliquez le marque-page (il copie votre
    jeton), puis collez-le dans le champ et **Se connecter**.
 
+![La fenêtre de connexion : les trois étapes, le champ du jeton et le bandeau d'état.](assets/captures/apercu-connexion.png)
+
 Une fois connecté, la fenêtre affiche votre **identité** (pseudo) et un **résumé de la
 synchronisation** (par exemple « 385 taxons, 3 sites »). Le jeton est conservé localement dans votre
 dossier de travail - jamais dans un dépôt git.

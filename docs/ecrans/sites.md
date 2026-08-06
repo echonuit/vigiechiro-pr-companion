@@ -7,9 +7,14 @@ de départ de tout le reste : vous ne pouvez pas importer une nuit tant qu'un si
 ## Mes sites
 
 L'écran **Mes sites** liste vos sites sous forme de cartes. Chaque carte indique le numéro de carré,
-son nom, le nombre de **points d'écoute**, le nombre de **passages** enregistrés dans l'année, et un
-**badge de fraîcheur** rappelant la date du dernier passage. Un bouton **Importer une nuit** est
-proposé sur chaque carte, et **+ Nouveau site** en haut à droite.
+son nom, sa commune, le nombre de **points d'écoute** avec leurs codes, le nombre de **passages**
+enregistrés dans l'année et combien **restent à vérifier**, et un **badge de fraîcheur** rappelant la
+date du dernier passage. Quand le carré porte beaucoup de points, les codes sont **résumés** (« A1 ·
+B2 · C3 (+ 5 rapatriés) ») plutôt qu'énumérés.
+
+Une carte n'offre qu'un **chevron ›** qui ouvre le détail : c'est de là que partent les actions du
+carré, **Importer une nuit** compris. En haut à droite, **+ Nouveau site** et, une fois
+[connecté](../connexion-vigiechiro.md), **Récupérer depuis Vigie-Chiro**.
 
 ![L'écran « Mes sites » : une carte par site, avec ses statistiques et un badge de fraîcheur.](../assets/captures/apercu-sites-mes-sites.png)
 
@@ -96,8 +101,13 @@ création, dernière nuit importée, nombre de passages), ses **points d'écoute
 
 ![Le détail d'un site : bandeau d'identité, points d'écoute et tableau des passages.](../assets/captures/apercu-sites-detail.png)
 
-Le tableau des passages se **trie**, se **réorganise** et laisse **choisir ses colonnes** (clic droit ou
-menu principal (☰) « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
+Le tableau porte sept colonnes : **Date**, **Point**, **N° passage**, **Statut**, **Verdict**,
+**Enregistreur** et **Déposé le**. Les deux dernières disent d'où vient la nuit et si elle est partie :
+`Déposé le` reste vide (« — ») tant que le dépôt n'a pas eu lieu, y compris sur un passage déjà
+**vérifié**, ce qui distingue d'un coup d'œil ce qui est prêt de ce qui est parti.
+
+Il se **trie**, se **réorganise** et laisse **choisir ses colonnes** (clic droit ou menu principal (☰)
+« outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 Un **double-clic** sur une ligne ouvre l'écran du passage. Le **clic droit** réunit les actions de cette
 nuit : **ouvrir le passage**, ouvrir sa page **Vigie-Chiro** (grisée si le passage n'est pas lié à la
