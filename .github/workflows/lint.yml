@@ -153,6 +153,15 @@ jobs:
           ./.github/scripts/verifie-jeton.sh --auto-test
           ./.github/scripts/verifie-jeton.sh
 
+      - name: La veille de fraîcheur du contrat API sait encore rougir
+        # Elle ne tourne pour de vrai que dans api-live.yml, une fois par semaine : son autotest est
+        # le seul endroit où on la voit à l'œuvre à chaque PR. Sans lui, un durcissement de seuil ou
+        # un `skipped` compté comme une exécution réelle passeraient inaperçus jusqu'au jour où on
+        # compterait sur elle (#2748).
+        run: |
+          chmod +x .github/scripts/veille-contrat-api.sh
+          ./.github/scripts/veille-contrat-api.sh --auto-test
+
       - name: Complétude des captures de référence
         # Chaque vue FXML doit avoir au moins une capture de référence déclarée au manifeste
         # (les captures illustrent la documentation).

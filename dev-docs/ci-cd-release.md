@@ -14,7 +14,7 @@ publication.
 | [titre-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | Non - **informatif**, et volontairement (cf. ci-dessous) |
 | [capture-vues.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml) | push `main` | Régénère les aperçus PNG (cf. [Captures](captures.md)) | — |
 | [release.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | push `main` | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true) | — |
-| [api-live.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/api-live.yml) | hebdomadaire (lundi) + manuel | Contrat de l'API Vigie-Chiro, **en lecture seule** ; sépare « jeton mort » (warning) de « contrat cassé » (rouge) | — |
+| [api-live.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/api-live.yml) | hebdomadaire (lundi) + manuel | Contrat de l'API Vigie-Chiro, **en lecture seule** ; sépare « jeton mort » (warning) de « contrat cassé » (rouge), et **rougit au bout de trois semaines sans vérification réelle** (cf. ci-dessous) | — |
 | [adr-rapport.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/adr-rapport.yml) | hebdomadaire + manuel | Rapport ADR (calibration des cliquets et des loupes) | — |
 | [mutation-model.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-model.yml) | quotidien (3 h UTC) + manuel | Mesure de mutation PIT sur **un paquet `model` par tour** (rotation sans état, cycle de 17 jours), **E2E et `commun.api` exclus** : bilan dans le résumé du job, rapport détaillé en artefact | — |
 | [mutation-ihm.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-ihm.yml) | quotidien (5 h UTC) + manuel | Mesure de mutation PIT sur les vues d'**une feature par tour** (rotation sans état, cycle de 15 jours), **E2E exclus** | — |
@@ -26,6 +26,33 @@ publication.
     Codespaces. Il se déclenchait sur une branche `solution` **absente de ce dépôt** : il n'a jamais
     tourné et l'image n'a jamais existé, si bien que le conteneur ne pouvait plus se construire.
     Le `.devcontainer/` reconstruit désormais depuis son `Dockerfile` et ses features (#2388).
+
+!!! warning "Le vert du contrat API dit maintenant ce qu'il a vérifié"
+    Un jeton VigieChiro vit **14 jours** face à un passage **hebdomadaire** : il expire donc
+    régulièrement, et `api-live.yml` reste volontairement vert dans ce cas, avec un avertissement.
+    Un rouge permanent ne signalerait plus rien.
+
+    L'angle mort, mesuré en #2748 : ce vert-là ne distinguait pas « contrat vérifié » de « contrat
+    **sauté** ». Deux passages verts d'affilée n'avaient rien vérifié, la dernière exécution réelle
+    remontant à 16 jours. Personne ne l'avait vu, et c'est le point : il n'y avait rien à voir.
+
+    Chaque passage se termine désormais par une **veille de fraîcheur**
+    ([`veille-contrat-api.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/veille-contrat-api.sh)),
+    dont le verdict s'affiche dans le **résumé du run**, vert compris :
+
+    - sous **21 jours** (trois passages hebdomadaires manqués) : vert, avec la date de la dernière
+      vérification réelle ;
+    - au-delà : **rouge**. Tolérer une expiration reste juste ; ne plus jamais vérifier ne l'est pas.
+
+    Elle ne **persiste rien** : l'historique des passages *est* la date recherchée, lue par
+    `actions: read`. Un fichier commité, un artefact (90 jours) ou un cache (7 jours) deviendraient
+    chacun une seconde chose à surveiller, dont la première panne serait, ici encore, un silence.
+
+    ⚠️ Elle reconnaît un passage vérifié au **nom** de son étape (`Contrat API (lecture seule)`).
+    Renommer cette étape sans reporter le nom dans `ETAPE_CONTRAT` casserait la détection : la veille
+    refuse alors de conclure et dit que c'est **elle** qui est en cause, plutôt que d'annoncer un
+    rassurant « jamais joué ». Son autotest tourne à chaque PR dans `lint.yml`, seul endroit où on la
+    voit à l'œuvre entre deux lundis.
 
 !!! info "Workflows « dormants »"
     Pages et release ne s'activent que via des **variables de dépôt** (`ENABLE_PAGES`,
