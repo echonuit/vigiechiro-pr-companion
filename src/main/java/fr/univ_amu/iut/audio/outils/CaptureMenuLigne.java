@@ -2,13 +2,11 @@ package fr.univ_amu.iut.audio.outils;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.audio.view.SonsValidationController;
-import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -102,7 +100,10 @@ public final class CaptureMenuLigne {
             System.out.println("[capture-menu-ligne] popup non rendu (headless) : " + fichier + " ignoré.");
             return;
         }
-        scenePopup.getStylesheets().addAll(styles());
+        // Habillage commun (#3374). L'ancien helper `styles()` posait bien palette+base, mais
+        // n'installait PAS la police embarquee : `base.css` demandait alors une famille non
+        // enregistree, et le popup rendait avec celle du systeme.
+        Habillage.poser(scenePopup);
         Parent racine = scenePopup.getRoot();
         racine.applyCss();
         racine.layout();
@@ -116,18 +117,6 @@ public final class CaptureMenuLigne {
         System.out.println("[capture-menu-ligne] écrit " + sortie.toAbsolutePath() + " (" + (int) image.getWidth() + "x"
                 + (int) image.getHeight() + ")");
         menu.hide();
-    }
-
-    /// Feuilles de style partagées (palette indigo + base), comme les autres captures de menu.
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        for (String nom : List.of("palette.css", "base.css")) {
-            var url = Navigateur.class.getResource(nom);
-            if (url != null) {
-                feuilles.add(url.toExternalForm());
-            }
-        }
-        return feuilles;
     }
 
     private static Parent charger(FXMLLoader loader) {

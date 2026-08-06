@@ -1,10 +1,8 @@
 package fr.univ_amu.iut.commun.outils;
 
-import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.Habillage;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -118,7 +116,8 @@ public final class CaptureFicheEspece {
             System.out.println("[capture-fiche] popup non rendu (headless) : " + fichier + " ignoré.");
             return;
         }
-        scenePopup.getStylesheets().addAll(styles());
+        // Habillage commun (#3374) : meme helper duplique, meme police manquante.
+        Habillage.poser(scenePopup);
         Parent racine = scenePopup.getRoot();
         racine.applyCss();
         racine.layout();
@@ -132,17 +131,5 @@ public final class CaptureFicheEspece {
         System.out.println("[capture-fiche] écrit " + sortie.toAbsolutePath() + " (" + (int) image.getWidth() + "x"
                 + (int) image.getHeight() + ")");
         menu.hide();
-    }
-
-    /// Feuilles de style partagées (palette indigo + base, dans `commun/view`), comme les dialogues.
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        for (String nom : List.of("palette.css", "base.css")) {
-            var url = Navigateur.class.getResource(nom);
-            if (url != null) {
-                feuilles.add(url.toExternalForm());
-            }
-        }
-        return feuilles;
     }
 }
