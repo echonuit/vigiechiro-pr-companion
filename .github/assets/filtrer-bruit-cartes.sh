@@ -33,7 +33,81 @@
 # rectangle, et non sur toute l'image.
 set -euo pipefail
 
-ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# Auto-test (#3385), sur le modele de `check-captures.sh` (#3293) et de `verifie-titre-pr.sh` (#2947) :
+# un garde qui cesse de detecter reste vert, et c'est le seul defaut qui se presente sous la forme d'un
+# succes. Chaque cas monte un depot jetable, REINVOQUE ce script dessus, et compare le resultat a
+# l'attendu - le cas de test et le chemin reel sont donc le meme code, par construction.
+#
+# Ce mode existe parce que ce script a ete livre SANS lui : ses deux cas etaient joues a la main, et
+# rien n'aurait signale qu'il cesse de filtrer. C'est la faute que la cloture de #3385 a relevee dans
+# son propre travail.
+if [ "${1:-}" = "--auto-test" ]; then
+    if ! command -v magick > /dev/null 2>&1 && ! command -v convert > /dev/null 2>&1; then
+        echo "auto-test ignore : ImageMagick absent." >&2
+        exit 0
+    fi
+    dessiner() { if command -v magick > /dev/null 2>&1; then magick "$@"; else convert "$@"; fi; }
+
+    # `$0` est RELATIF quand le script est invoque depuis la racine du depot : apres le `cd` dans le
+    # bac, il ne resout plus rien et le script ne s'executait pas du tout - l'auto-test concluait
+    # « gardee » pour la mauvaise raison. Premier defaut que ce mode a trouve : le sien.
+    moi="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+    echecs=0
+    bac="$(mktemp -d)"
+    trap 'rm -rf "${bac}"' EXIT
+
+    monter() { # un depot jetable avec UNE capture committee, carte au centre
+        rm -rf "${bac}/depot"
+        mkdir -p "${bac}/depot/.github/assets"
+        git -C "${bac}/depot" init -q
+        git -C "${bac}/depot" config user.email t@t
+        git -C "${bac}/depot" config user.name t
+        dessiner -size 200x200 xc:white \
+            -fill gray -draw "rectangle 50,50 150,150" \
+            "${bac}/depot/.github/assets/apercu-test-carte.png"
+        git -C "${bac}/depot" add -A
+        git -C "${bac}/depot" commit -qm base
+    }
+
+    lancer() { # rend 0 si la capture a ete RENDUE (donc jugee bruit), 1 si elle a ete gardee
+        ( cd "${bac}/depot" \
+          && CARTES_ASSETS="${bac}/depot/.github/assets" \
+             CARTES_LISTE="apercu-test-carte.png 50,50,150,150" \
+             "${moi}" > /dev/null 2>&1
+          cd "${bac}/depot" && git diff --quiet -- .github/assets/apercu-test-carte.png )
+    }
+
+    verifie() { # <attendu:rendue|gardee> <libelle>
+        if lancer; then obtenu=rendue; else obtenu=gardee; fi
+        if [ "${obtenu}" = "$1" ]; then echo "  ✔ $2"; else
+            echo "  ✘ $2 : attendue ${1}, obtenue ${obtenu}"; echecs=1
+        fi
+    }
+
+    monter
+    dessiner "${bac}/depot/.github/assets/apercu-test-carte.png" \
+        -fill black -draw "rectangle 60,60 140,140" \
+        "${bac}/depot/.github/assets/apercu-test-carte.png"
+    verifie rendue "un changement ENTIEREMENT dans la carte est du bruit"
+
+    monter
+    dessiner "${bac}/depot/.github/assets/apercu-test-carte.png" \
+        -fill black -draw "rectangle 10,10 30,20" \
+        "${bac}/depot/.github/assets/apercu-test-carte.png"
+    verifie gardee "un changement HORS carte est garde, si petit soit-il"
+
+    monter
+    dessiner "${bac}/depot/.github/assets/apercu-test-carte.png" \
+        -fill black -draw "rectangle 60,60 140,140" -fill black -draw "rectangle 10,10 30,20" \
+        "${bac}/depot/.github/assets/apercu-test-carte.png"
+    verifie gardee "du bruit de carte NE MASQUE PAS un changement hors carte"
+
+    [ "${echecs}" = 0 ] && echo "Auto-test : les trois cas passent." || echo "Auto-test : ECHEC." >&2
+    exit "${echecs}"
+fi
+
+# Surchargeables par l'auto-test, qui vise un depot jetable plutot que la galerie reelle.
+ICI="${CARTES_ASSETS:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 
 # Aperçus à fond cartographique, et le rectangle `x1,y1,x2,y2` de leur carte.
 #
@@ -44,6 +118,9 @@ ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # ⚠️ Une capture dont la mise en page bouge doit voir son rectangle **remesuré** : trop petit, le bruit
 # repasse et l'on recommence à committer pour rien ; trop grand, on s'aveugle sur une bande qui n'est
 # pas la carte. Le garde ci-dessous refuse un nom qui n'existe pas ; il ne peut rien dire du rectangle.
+if [ -n "${CARTES_LISTE:-}" ]; then
+  CARTES=("${CARTES_LISTE}")
+else
 CARTES=(
   "apercu-analyse-carte.png 190,138,1068,424"
   "apercu-multisite.png 12,138,469,568"
@@ -62,6 +139,7 @@ CARTES=(
   "apercu-sites-modale-point.png 18,331,464,457"
   "apercu-sites-modale-point-creation.png 18,331,464,457"
 )
+fi
 
 # ImageMagick s'invoque de deux façons selon sa version, et les deux existent dans la nature : la **7**
 # regroupe tous les outils sous `magick`, la **6** - celle du paquet `imagemagick` d'Ubuntu 24.04, donc
