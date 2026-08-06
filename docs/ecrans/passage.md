@@ -11,7 +11,7 @@ C'est l'écran sur lequel vous revenez entre chaque étape du [parcours](../parc
 De haut en bas :
 
 - **En-tête** : l'identifiant de la nuit (carré / point / numéro / année) et les actions sur le
-  passage (**Modifier le rattachement**, **Supprimer**). Le bouton **Voir la participation** ouvre
+  passage (**Modifier le passage**, **Supprimer**). Le bouton **Voir la participation** ouvre
   la participation liée sur le **portail Vigie-Chiro** dans votre navigateur, pour vérifier d'un
   coup d'œil que la nuit est rattachée au bon endroit ; il reste grisé tant que le passage n'est
   pas lié (la participation est créée à l'import connecté, ou au premier dépôt).
