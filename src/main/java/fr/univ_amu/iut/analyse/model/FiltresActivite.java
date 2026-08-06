@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 /// Restreindre des [ContactHoraire] **en ligne de commande** (#3059), aux mêmes conditions que la barre
 /// de filtres de l'écran Activité.
@@ -41,14 +42,17 @@ public final class FiltresActivite {
 
     private FiltresActivite() {}
 
-    /// Les dimensions de lieu **comparables en ligne de commande** : commune et carré, sans le point.
+    /// Les dimensions de lieu **comparables en ligne de commande** : commune, carré, et **point qualifié
+    /// par son carré** (#3350) - la sortie porte les deux, elle désambiguïse donc un code seul.
     ///
     /// Le carré est écrit comme l'écran l'affiche, « 640380 · Vallon » (#3157), pour que le refus de
     /// `--lieu` nomme les lieux tels qu'on les y voit. La correspondance restant partielle,
     /// `--lieu 640380` et `--lieu vallon` retiennent l'un et l'autre ce carré.
     public static List<String> dimensionsLieu(ContactHoraire contact) {
-        return java.util.stream.Stream.of(
-                        contact.commune(), LieuQualifie.qualifier(contact.numeroCarre(), contact.nomSite()))
+        return Stream.of(
+                        contact.commune(),
+                        LieuQualifie.qualifier(contact.numeroCarre(), contact.nomSite()),
+                        LieuQualifie.qualifier(contact.numeroCarre(), contact.codePoint()))
                 .filter(valeur -> valeur != null && !valeur.isBlank())
                 .toList();
     }
@@ -151,5 +155,13 @@ public final class FiltresActivite {
                 .sorted()
                 .toList();
         return presentes.isEmpty() ? "aucune" : String.join(", ", presentes);
+    }
+
+    /// Ce que le **refus** enumere : commune et carre, sans le point (#3350). Le point evincait la
+    /// moitie des carres sous la borne du message, mesure faite.
+    public static List<String> dimensionsNommees(ContactHoraire contact) {
+        return Stream.of(contact.commune(), LieuQualifie.qualifier(contact.numeroCarre(), contact.nomSite()))
+                .filter(valeur -> valeur != null && !valeur.isBlank())
+                .toList();
     }
 }

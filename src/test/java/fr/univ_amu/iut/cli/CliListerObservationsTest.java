@@ -124,6 +124,34 @@ class CliListerObservationsTest {
     }
 
     @Test
+    @DisplayName("#3350 : la commande MONTRE le lieu qu'elle offre de filtrer, en texte comme en JSON")
+    void le_lieu_se_montre() {
+        // Elle offrait `--lieu` sans jamais émettre le moindre lieu : le filtre portait sur ce que la
+        // sortie taisait, et rien ne permettait de vérifier qu'il avait retenu ce qu'on croyait. C'est
+        // la thèse de l'ADR 3151 - un écran n'offre pas ce qu'il ne montre pas - appliquée à la CLI.
+        int code = cli.executer(
+                new String[] {"lister-observations", "--passage", String.valueOf(idPassage)}, sortie, erreur);
+
+        assertThat(code).isZero();
+        assertThat(sortieTexte())
+                .as("le lieu du passage, en tête : `--passage` est obligatoire, donc toutes les lignes "
+                        + "le partagent et une colonne par ligne serait redondante")
+                .contains("Lieu : ");
+
+        capture.vider();
+        int codeJson = cli.executer(
+                new String[] {"lister-observations", "--passage", String.valueOf(idPassage), "--json"}, sortie, erreur);
+
+        assertThat(codeJson).isZero();
+        assertThat(sortieTexte())
+                .as("le JSON le porte LIGNE À LIGNE, comme le CSV d'exporter-sons : une sortie machine "
+                        + "se lit détachée de son contexte, elle n'a pas d'en-tête où se raccrocher")
+                .contains("\"carre\":")
+                .contains("\"point\":")
+                .contains("\"commune\":");
+    }
+
+    @Test
     @DisplayName("Filtre qui ne retient rien : la commande le DIT, sans faire croire au vide du passage")
     void aucun_resultat_se_dit() {
         int code = cli.executer(

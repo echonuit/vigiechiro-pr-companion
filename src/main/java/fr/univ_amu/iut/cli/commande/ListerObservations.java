@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.commun.model.Certitude;
+import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.validation.model.CriteresRevue;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.FiltresLieu;
@@ -19,6 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 import picocli.CommandLine.Command;
@@ -53,8 +55,9 @@ public final class ListerObservations implements Callable<Integer> {
     @Option(
             names = "--lieu",
             paramLabel = "<lieu>",
-            description = "Ne garde que les observations de ce lieu (commune, carré ou nom de site). "
-                    + "Correspondance partielle, casse et accents ignorés. Répétable pour en cumuler plusieurs.")
+            description = "Ne garde que les observations de ce lieu (commune, carré, nom de site ou "
+                    + "point). Correspondance partielle, casse et accents ignorés. Répétable pour en "
+                    + "cumuler plusieurs.")
     private List<String> lieux = new ArrayList<>();
 
     /// Seuil de probabilité Tadarida (#2971), à l'échelle 0..1 comme la sortie de `lister-observations`.
@@ -196,6 +199,11 @@ public final class ListerObservations implements Callable<Integer> {
             FiltresProbabilite.avertissementSeuilTropHaut(avantSeuil, probaMin).ifPresent(sortie::println);
             return 0;
         }
+        // Le lieu du passage, en tête (#3350). La commande offrait `--lieu` sans jamais montrer de
+        // lieu : le filtre portait sur ce que la sortie taisait, et l'utilisateur n'avait aucun moyen
+        // de vérifier qu'il avait retenu ce qu'il croyait. Une seule ligne suffit ici, `--passage`
+        // étant obligatoire : toutes les observations listées partagent le même point.
+        lieuDuPassage(lignes).ifPresent(sortie::println);
         sortie.printf(
                 "%-8s %-26s %-12s %-22s %-12s %-9s %s%n",
                 "ID", "FICHIER", "TADARIDA", "VOTRE TAXON", "STATUT", "CERTITUDE", "DRAPEAUX");
@@ -214,6 +222,20 @@ public final class ListerObservations implements Callable<Integer> {
         sortie.println(lignes.size() + " observation(s). Ces identifiants alimentent les gestes de revue "
                 + "(valider-observations, corriger-observations, discussion…).");
         return 0;
+    }
+
+    /// Le lieu du passage listé, tel que la puce « Lieu » l'écrit : « 640380 · A1 · Ahetze » (#3350).
+    ///
+    /// Rendu **vide** plutôt qu'approximatif si aucune ligne ne porte de carré : il n'y a alors rien à
+    /// affirmer, et une ligne « lieu : - » ferait croire à une donnée manquante là où c'est la question
+    /// qui n'a pas de sens.
+    private Optional<String> lieuDuPassage(List<LigneObservationAudio> lignes) {
+        return lignes.stream()
+                .findFirst()
+                .map(ligne -> LieuQualifie.qualifier(
+                        LieuQualifie.qualifier(ligne.numeroCarre(), ligne.codePoint()), ligne.commune()))
+                .filter(lieu -> !lieu.isBlank())
+                .map(lieu -> "Lieu : " + lieu);
     }
 
     /// Ce qui se voit d'un coup d'œil sans encombrer une colonne : douteux, référence, avis d'un validateur,
@@ -241,6 +263,12 @@ public final class ListerObservations implements Callable<Integer> {
     private Map<String, Object> champs(LigneObservationAudio ligne) {
         Map<String, Object> champs = new LinkedHashMap<>();
         champs.put("id", ligne.idObservation());
+        // Le lieu, comme le CSV d'`exporter-sons` le porte déjà (#3350) : une sortie machine se lit
+        // ligne à ligne, souvent détachée de son contexte. Le mode texte s'en tire avec un en-tête,
+        // le JSON non.
+        champs.put("carre", ligne.numeroCarre());
+        champs.put("point", ligne.codePoint());
+        champs.put("commune", ligne.commune());
         champs.put("fichier", ligne.nomFichier());
         champs.put("taxonTadarida", ligne.taxonTadarida());
         champs.put("probTadarida", ligne.probTadarida());

@@ -41,13 +41,16 @@ public final class FiltresAnalyse {
 
     private FiltresAnalyse() {}
 
-    /// Les dimensions de lieu **comparables en ligne de commande** : commune et carré, sans le point.
+    /// Les dimensions de lieu **comparables en ligne de commande** : commune, carré, et **point qualifié
+    /// par son carré** (#3350) - la sortie porte les deux, elle désambiguïse donc un code seul.
     ///
     /// Le carré est écrit comme l'écran l'affiche, « 640380 · Vallon » (#3157), pour que le refus de
     /// `--lieu` nomme les lieux tels qu'on les y voit.
     public static List<String> dimensionsLieu(ObservationAnalyse observation) {
         return Stream.of(
-                        observation.commune(), LieuQualifie.qualifier(observation.numeroCarre(), observation.nomSite()))
+                        observation.commune(),
+                        LieuQualifie.qualifier(observation.numeroCarre(), observation.nomSite()),
+                        LieuQualifie.qualifier(observation.numeroCarre(), observation.codePoint()))
                 .filter(valeur -> valeur != null && !valeur.isBlank())
                 .toList();
     }
@@ -105,5 +108,14 @@ public final class FiltresAnalyse {
     public static List<ObservationAnalyse> aEnjeu(
             List<ObservationAnalyse> observations, Predicate<ObservationAnalyse> estPrioritaire) {
         return observations.stream().filter(estPrioritaire).toList();
+    }
+
+    /// Ce que le **refus** enumere : commune et carre, sans le point (#3350). Le point evincait la
+    /// moitie des carres sous la borne du message, mesure faite.
+    public static List<String> dimensionsNommees(ObservationAnalyse observation) {
+        return Stream.of(
+                        observation.commune(), LieuQualifie.qualifier(observation.numeroCarre(), observation.nomSite()))
+                .filter(valeur -> valeur != null && !valeur.isBlank())
+                .toList();
     }
 }

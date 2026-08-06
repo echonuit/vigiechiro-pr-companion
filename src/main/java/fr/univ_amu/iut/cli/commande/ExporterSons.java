@@ -72,8 +72,9 @@ public final class ExporterSons implements Callable<Integer> {
     @Option(
             names = "--lieu",
             paramLabel = "<lieu>",
-            description = "Ne garde que les observations de ce lieu (commune, carré ou nom de site). "
-                    + "Correspondance partielle, casse et accents ignorés. Répétable pour en cumuler plusieurs.")
+            description = "Ne garde que les observations de ce lieu (commune, carré, nom de site ou "
+                    + "point). Correspondance partielle, casse et accents ignorés. Répétable pour en "
+                    + "cumuler plusieurs.")
     private List<String> lieux = new ArrayList<>();
 
     /// Seuil de probabilité Tadarida (#2971), à l'échelle 0..1 comme la sortie de `lister-observations`.
