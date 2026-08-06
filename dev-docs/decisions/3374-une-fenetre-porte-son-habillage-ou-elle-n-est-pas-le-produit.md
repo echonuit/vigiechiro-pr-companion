@@ -53,7 +53,7 @@ entre les deux machines.
 ## Décision
 
 Un point de passage unique, `Habillage`, définit ce que porte toute fenêtre du produit - la police
-embarquée, `palette.css`, `base.css`, dans l'ordre du chrome - et **les fenêtres comme les captures**
+embarquée et le trio du chrome (`palette.css`, `base.css`, `design.css`) - et **les fenêtres comme les captures**
 s'en servent. Un aperçu montre alors l'écran de l'utilisateur par **construction**, non parce qu'on y
 a pensé.
 
@@ -78,6 +78,21 @@ Ajouter `@base.css` aux dix FXML aurait marché, et se serait défait au onzièm
 JavaFX **avale la règle** en journalisant un `ClassCastException` sur `-fx-background-color`. La
 fenêtre s'ouvre sans son fond, sans que rien n'échoue. Un premier essai l'a produit. `Habillage`
 insère donc `base.css` juste après `palette.css`, **dans la liste où celle-ci vit**.
+
+### Amendement : le trio, et non la paire
+
+Cette ADR a d'abord fait poser **deux** feuilles sur trois. `MainView.fxml` en déclare trois, et la
+soustraction n'a été faite par personne - moi compris, qui ai vérifié l'ordre, le niveau et le silence
+de l'échec, mais **jamais l'inventaire**.
+
+Conséquence visible dans la galerie depuis le premier jour : trois aperçus de compte rendu s'y
+publiaient **sans style** - texte nu là où l'application montre une pastille, barre de progression
+vide, bouton gris au lieu du bouton primaire (900x178 contre 900x240). Un écran que l'utilisateur ne
+voit jamais, publié comme s'il était le produit.
+
+C'est la forme du défaut de l'[ADR 3412](3412-un-alias-n-est-pas-une-police.md), un cran plus loin :
+là, on avait cherché des familles nommées sans voir les alias ; ici, on a vérifié un **ordre** sans
+vérifier une **liste**.
 
 ### Ce que le garde a trouvé et que la lecture n'avait pas vu
 
