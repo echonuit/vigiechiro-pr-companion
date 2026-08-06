@@ -2,10 +2,10 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
+import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
@@ -150,12 +150,18 @@ final class CorrespondanceParticipation {
         return rfc1123Utc(jour, fin);
     }
 
-    /// Formate un instant **local** (fuseau système de l'observateur) au format datetime attendu par Eve :
-    /// **RFC 1123 en UTC** (ex. `Fri, 04 Jul 2026 19:00:00 GMT`). Eve refuse l'ISO 8601 en entrée (vérifié
-    /// en réel) et stocke en UTC.
+    /// Formate une heure **du site** au format datetime attendu par Eve : **RFC 1123 en UTC**
+    /// (ex. `Fri, 04 Jul 2026 19:00:00 GMT`). Eve refuse l'ISO 8601 en entrée (vérifié en réel) et
+    /// stocke en UTC.
+    ///
+    /// ⚠️ Le fuseau vient de [FuseauDuSite], pas de `ZoneId.systemDefault()`. Ces heures sont produites
+    /// par l'enregistreur **posé sur le site**, pas par la personne qui dépouille : les convertir avec
+    /// le fuseau du poste faisait partir un instant différent selon la machine - `19:00 GMT` depuis
+    /// Paris, `21:00 GMT` depuis un poste en UTC, et depuis Cayenne un **changement de date** (#3406).
+    /// C'est une donnée déposée sur la plateforme nationale, pas un affichage.
     private static String rfc1123Utc(LocalDate jour, LocalTime heure) {
         return LocalDateTime.of(jour, heure)
-                .atZone(ZoneId.systemDefault())
+                .atZone(FuseauDuSite.ZONE)
                 .withZoneSameInstant(ZoneOffset.UTC)
                 .format(DateTimeFormatter.RFC_1123_DATE_TIME);
     }

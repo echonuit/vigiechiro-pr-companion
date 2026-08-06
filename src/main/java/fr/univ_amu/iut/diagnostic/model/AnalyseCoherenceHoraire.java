@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.diagnostic.model;
 
 import fr.univ_amu.iut.commun.model.EphemerideSolaire;
+import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -20,8 +21,10 @@ import java.util.Optional;
 /// de minuit et au changement d'heure.
 public final class AnalyseCoherenceHoraire {
 
-    /// Fuseau des horaires saisis (programme national français).
-    private static final ZoneId FUSEAU_SITE = ZoneId.of("Europe/Paris");
+    /// Fuseau des horaires saisis. La décision vivait ici, seule ; elle est désormais au socle
+    /// ([FuseauDuSite]) parce que le **chemin d'écriture** vers la plateforme en avait besoin et
+    /// employait, lui, le fuseau de la machine (#3406).
+    private static final ZoneId FUSEAU_SITE = FuseauDuSite.ZONE;
 
     private AnalyseCoherenceHoraire() {}
 
