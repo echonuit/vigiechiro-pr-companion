@@ -41,7 +41,8 @@ cette ligne.
     2026-08-06 après #3375 : **66 aperçus sur 138** diffèrent encore entre la CI et un poste, pour des
     causes **étrangères à la police** - au moins les libellés par défaut des boutons de dialogue, que
     JavaFX localise selon la machine (« Cancel » en CI, « Annuler » ici), et un décalage vertical de
-    quelques pixels sur les écrans à graphique. Cf. #3391.
+    quelques pixels sur les écrans à graphique, et le **fuseau horaire** (`09:12` en CI contre `11:12`
+    ici). Mesuré et instruit par #3389, dans le chantier #3385.
 
     La police était **une** cause, et la seule que cette ADR traite. Elle n'était pas la seule.
 
@@ -66,7 +67,7 @@ Ajouter `@base.css` aux dix FXML aurait marché, et se serait défait au onzièm
   défaut d'origine, resté entier à côté de #3361 ;
 - **le verdict du garde de troncature cesse de dépendre de la police** - la cause des trois
   allers-retours de la clôture du chantier #3151. Il ne devient pas pour autant *transportable* :
-  d'autres causes de divergence subsistent (#3391), et un rejeu local reste à confirmer par la CI ;
+  d'autres causes de divergence subsistent (#3389), et un rejeu local reste à confirmer par la CI ;
 - 108 aperçus sur 138 changent à la première régénération. C'est la mesure de ce qui ne montrait pas
   le produit.
 
