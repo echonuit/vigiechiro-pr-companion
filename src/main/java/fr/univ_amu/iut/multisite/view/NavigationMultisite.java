@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -12,7 +13,6 @@ import java.io.UncheckedIOException;
 import java.util.Objects;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -74,7 +74,7 @@ public class NavigationMultisite implements OuvrirMultisite {
             modale.initOwner(parent);
             modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Compléter une nuit récupérée");
-            modale.setScene(new Scene(vue));
+            modale.setScene(Habillage.scene(vue));
             Modales.fermerParEchap(modale);
             // Rafraîchir l'écran appelant à TOUTE fermeture (bouton « Fermer », croix, Échap), et non au seul
             // bouton : sinon fermer par la croix laissait la table périmée, sans la nuit reconstruite (#1647).

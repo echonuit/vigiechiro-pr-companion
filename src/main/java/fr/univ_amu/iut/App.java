@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
 import fr.univ_amu.iut.commun.view.Typographie;
@@ -20,7 +21,6 @@ import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
@@ -93,7 +93,7 @@ public class App extends Application {
         loader.setControllerFactory(injector::getInstance);
         Parent root = loader.load();
 
-        primaryStage.setScene(new Scene(root));
+        primaryStage.setScene(Habillage.scene(root));
         primaryStage.setTitle("VigieChiro Companion");
         chargerIcones(primaryStage);
 

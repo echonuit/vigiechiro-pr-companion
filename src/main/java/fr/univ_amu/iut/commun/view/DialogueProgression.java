@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
-import javafx.scene.Scene;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -30,7 +29,7 @@ public final class DialogueProgression extends SuiviProgression {
         modale.initOwner(proprietaire);
         modale.initModality(Modality.WINDOW_MODAL);
         modale.setTitle(titre);
-        modale.setScene(new Scene(contenu));
+        modale.setScene(Habillage.scene(contenu));
         // Fermer la fenêtre = renoncer : on demande l'annulation plutôt que de laisser le travail orphelin.
         modale.setOnCloseRequest(evenement -> jeton.annuler());
         modale.show();

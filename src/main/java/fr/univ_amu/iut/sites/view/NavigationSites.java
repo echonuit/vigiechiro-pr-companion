@@ -6,6 +6,7 @@ import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -17,7 +18,6 @@ import java.io.UncheckedIOException;
 import java.util.Objects;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -130,7 +130,7 @@ public class NavigationSites implements OuvrirSite {
         modale.initOwner(parent);
         modale.initModality(Modality.WINDOW_MODAL);
         modale.setTitle(titreFenetre);
-        modale.setScene(new Scene(vue));
+        modale.setScene(Habillage.scene(vue));
         Modales.fermerParEchap(modale);
         modale.show();
     }

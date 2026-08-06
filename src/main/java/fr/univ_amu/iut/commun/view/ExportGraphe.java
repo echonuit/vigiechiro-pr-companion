@@ -73,7 +73,7 @@ public final class ExportGraphe {
                 .addAll(lignesLegende.stream().map(ExportGraphe::ligne).toList());
         racine.getStyleClass().add("export-graphe");
 
-        Scene scene = new Scene(racine, LARGEUR, HAUTEUR);
+        Scene scene = Habillage.scene(racine, LARGEUR, HAUTEUR);
         scene.getStylesheets()
                 .addAll(
                         ExportGraphe.class
