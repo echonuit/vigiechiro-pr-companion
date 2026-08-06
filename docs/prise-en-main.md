@@ -135,22 +135,33 @@ sont immédiats.
 
 ## Découvrir l'écran d'accueil
 
-Au lancement, l'application ouvre son **écran d'accueil**. Le bandeau vous invite à
-« sélectionner une activité pour traiter une nuit d'enregistrement », et propose cinq points
-d'entrée :
+Au lancement, l'application ouvre son **écran d'accueil**. Il annonce **deux entrées** : collecter vos
+nuits d'enregistrement d'un côté, exploiter vos espèces observées de l'autre. C'est la séparation qui
+structure tout le reste, et les activités se rangent dessous.
 
-![L'écran d'accueil de VigieChiro Companion et ses cinq activités.](assets/captures/apercu-accueil.png)
+![L'écran d'accueil de VigieChiro Companion et ses deux entrées.](assets/captures/apercu-accueil.png)
+
+**Collecte & passages** : la production de la donnée.
 
 | Activité | À quoi elle sert |
 |---|---|
-| **Mes sites** | Gérer vos carrés et points d'écoute. C'est le point de départ : on déclare d'abord *où* l'on capture. |
-| **Importer une nuit** | Importer une nuit de Passive Recorder depuis la carte SD. |
-| **Sons & validation** | Écouter, valider et exporter votre corpus de sons de référence. |
+| **Mes sites** | Vos carrés et points d'écoute. C'est le point de départ : on déclare d'abord *où* l'on capture. |
 | **Carte & passages** | La carte de vos sites et le tableau de tous vos passages, avec filtres, tri et export. |
+| **Ma saison** | Ce qu'il vous reste à faire, point par point. |
+| **Audit de cohérence** | Vérifier que fichiers, base et dépôts restent en correspondance, et réparer. |
 
-Depuis ces points d'entrée, vous atteignez ensuite les autres écrans : un **site** donne accès à
-ses **passages** (les nuits), et un passage ouvre les écrans de **qualification**, de **dépôt**,
-de **validation** des espèces et de **diagnostic**.
+**Espèces & biodiversité** : l'exploitation de la donnée.
+
+| Activité | À quoi elle sert |
+|---|---|
+| **Espèces & observations** | L'inventaire de vos espèces détectées : où, quand, combien. |
+| **Activité de la nuit** | La forme d'une nuit : les contacts par tranche horaire et par espèce. |
+| **Sons & validation** | Écouter, valider et exporter votre corpus de sons de référence. |
+
+**L'import n'est pas sur l'accueil**, et c'est voulu : on importe une nuit *dans* un carré, donc le
+geste part du site. Depuis ces entrées, vous atteignez les autres écrans : un **site** donne accès à
+ses **passages** (les nuits), et un passage ouvre les écrans de **qualification**, de **dépôt**, de
+**validation** des espèces et de **diagnostic**.
 
 La barre du haut affiche un fil d'Ariane qui rappelle où vous vous trouvez et permet de revenir en
 arrière.
