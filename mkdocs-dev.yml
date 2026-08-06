@@ -155,6 +155,7 @@ nav:
     - 3168 · Un audit qui ne peut pas trancher montre sans juger: decisions/3168-un-audit-qui-ne-peut-pas-trancher-montre-sans-juger.md
     - 3361 · La typographie est embarquée: decisions/3361-la-typographie-est-embarquee.md
     - 3374 · Une fenêtre porte son habillage: decisions/3374-une-fenetre-porte-son-habillage-ou-elle-n-est-pas-le-produit.md
+    - 3350 · C'est la sortie qui désambiguïse: decisions/3350-c-est-la-sortie-qui-desambigue-pas-le-critere-qui-se-restreint.md
     - 3222 · Une entrée externe se lit sous plafond: decisions/3222-une-entree-externe-se-lit-sous-plafond.md
     - 3269 · Un ensemble vide se constate avant de filtrer: decisions/3269-un-ensemble-vide-se-constate-avant-de-filtrer.md
     - 2727 · Une restauration vérifie en place: decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md

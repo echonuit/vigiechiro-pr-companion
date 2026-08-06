@@ -123,7 +123,7 @@ public final class ListerPassages implements Callable<Integer> {
         // Le lieu se filtre à part : c'est le seul critère à porter PLUSIEURS dimensions (commune, carré,
         // nom du carré, point), et la règle en vit dans `FiltresLieu`, lue aussi par lister-observations
         // et exporter-activite. Une seconde écriture ici finirait par en diverger.
-        return FiltresLieu.parLieu(retenus, lieux, ListerPassages::dimensionsDuLieu);
+        return FiltresLieu.parLieu(retenus, lieux, ListerPassages::dimensionsDuLieu, ListerPassages::dimensionsNommees);
     }
 
     /// Les noms sous lesquels un passage se laisse désigner par `--lieu`, dans l'ordre où l'écran les
@@ -139,6 +139,23 @@ public final class ListerPassages implements Callable<Integer> {
             noms.add(ligne.nomSite());
         }
         noms.add(LieuQualifie.qualifier(ligne.carre(), ligne.codePoint()));
+        return noms;
+    }
+
+    /// Ce que le **refus** énumère : la commune et le carré, sans le point (#3350).
+    ///
+    /// Cette commande comparait déjà le point, et son refus les listait donc tous : sur quinze carrés,
+    /// 31 entrées au lieu de 15, dont la borne de douze ne montrait plus que **six carrés**. Le point
+    /// évinçait ce qui sert à corriger une faute de frappe.
+    private static List<String> dimensionsNommees(LignePassage ligne) {
+        List<String> noms = new ArrayList<>();
+        if (ligne.commune() != null) {
+            noms.add(ligne.commune());
+        }
+        noms.add(ligne.carre());
+        if (ligne.nomSite() != null) {
+            noms.add(ligne.nomSite());
+        }
         return noms;
     }
 

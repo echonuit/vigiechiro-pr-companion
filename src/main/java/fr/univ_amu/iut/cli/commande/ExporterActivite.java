@@ -107,9 +107,9 @@ public final class ExporterActivite implements Callable<Integer> {
     @Option(
             names = "--lieu",
             paramLabel = "<lieu>",
-            description = "Restreint à une commune ou un carré (répétable). Correspondance partielle, "
-                    + "insensible à la casse et aux accents. Le point n'est pas filtrable : un code seul "
-                    + "désigne autant de lieux qu'il y a de carrés.")
+            description = "Restreint à une commune, un carré ou un point (répétable). Correspondance "
+                    + "partielle, insensible à la casse et aux accents. Un code de point seul (« A1 ») "
+                    + "retient les A1 de tous les carrés : la sortie porte le carré, elle les distingue.")
     private List<String> lieux = List.of();
 
     @Option(
@@ -174,7 +174,8 @@ public final class ExporterActivite implements Callable<Integer> {
     /// **dans ce qu'il a reçu**, donc après les filtres précédents. « Taxons parents présents » après un
     /// `--lieu` annonce ceux du lieu retenu, et non ceux de toute la saison - ce qui serait trompeur.
     private List<ContactHoraire> restreindre(List<ContactHoraire> contacts) {
-        List<ContactHoraire> retenus = FiltresLieu.parLieu(contacts, lieux, FiltresActivite::dimensionsLieu);
+        List<ContactHoraire> retenus = FiltresLieu.parLieu(
+                contacts, lieux, FiltresActivite::dimensionsLieu, FiltresActivite::dimensionsNommees);
         retenus = FiltresActivite.parNuit(retenus, nuit);
         retenus = FiltresActivite.parTaxonParent(retenus, taxonParent);
         retenus = FiltresActivite.parNature(retenus, nature, service.nuitsOpportunistes());

@@ -117,9 +117,8 @@ class FiltresAnalyseTest {
                 "Pippip", "Pippip", "Pippip", "Chiroptères", null, 12L, 2026, "640380", "Vallon", 1L, null, "A1");
 
         assertThat(FiltresAnalyse.dimensionsLieu(sansCommune))
-                .as("seul le carré reste comparable")
-                .hasSize(1)
-                .allSatisfy(dimension -> assertThat(dimension).contains("640380"));
+                .as("le carré et son point restent comparables (#3350), la commune manquante est écartée")
+                .containsExactly("640380 · Vallon", "640380 · A1");
     }
 
     @Test

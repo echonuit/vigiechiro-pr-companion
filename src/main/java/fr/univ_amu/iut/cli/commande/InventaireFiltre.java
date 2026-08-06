@@ -35,9 +35,9 @@ public final class InventaireFiltre {
     @Option(
             names = "--lieu",
             paramLabel = "<lieu>",
-            description = "Restreint à une commune ou un carré (répétable). Correspondance partielle, "
-                    + "insensible à la casse et aux accents. Le point n'est pas filtrable : un code seul "
-                    + "désigne autant de lieux qu'il y a de carrés.")
+            description = "Restreint à une commune, un carré ou un point (répétable). Correspondance "
+                    + "partielle, insensible à la casse et aux accents. Un code de point seul (« A1 ») "
+                    + "retient les A1 de tous les carrés : la sortie porte le carré, elle les distingue.")
     private List<String> lieux = List.of();
 
     @Option(
@@ -71,7 +71,8 @@ public final class InventaireFiltre {
             // qu'il n'y a rien du tout. Piège déjà payé sur `lister-passages`, et de même forme ici.
             return observations;
         }
-        List<ObservationAnalyse> retenues = FiltresLieu.parLieu(observations, lieux, FiltresAnalyse::dimensionsLieu);
+        List<ObservationAnalyse> retenues = FiltresLieu.parLieu(
+                observations, lieux, FiltresAnalyse::dimensionsLieu, FiltresAnalyse::dimensionsNommees);
         retenues = FiltresAnalyse.parTaxonParent(retenues, taxonParent);
         retenues = FiltresAnalyse.parStatut(retenues, statut);
         retenues = FiltresAnalyse.parNature(retenues, nature, nuitsOpportunistes);

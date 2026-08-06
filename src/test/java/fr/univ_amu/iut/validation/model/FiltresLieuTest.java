@@ -10,10 +10,15 @@ import org.junit.jupiter.api.Test;
 
 /// Garde du filtre `--lieu` (#2971), pendant CLI de la puce « Lieu ».
 ///
-/// Ce que ces cas épinglent n'est pas seulement le comportement, mais les **écarts assumés** avec
-/// l'écran : le point exclu, la correspondance partielle, et le refus plutôt qu'un ensemble vide. Ce
-/// sont trois décisions de conception, prises avant le code ; les redécouvrir par accident coûterait
+/// Ce que ces cas épinglent n'est pas seulement le comportement, mais les **décisions de conception**
+/// : la correspondance partielle, le refus plutôt qu'un ensemble vide, et - depuis #3350 - le fait que
+/// le point se **compare** mais ne s'**énumère** pas au refus. Les redécouvrir par accident coûterait
 /// plus cher que de les lire ici.
+///
+/// ⚠️ Le point était **exclu** jusqu'à #3350, et deux cas l'affirmaient. L'argument - « une ligne de
+/// commande n'a pas de liste sous les yeux pour distinguer les A1 de deux carrés » - a été démenti par
+/// l'inventaire : toutes les sorties qui offrent `--lieu` portent le carré. Ce n'est pas le critère qui
+/// doit se restreindre, c'est la sortie qui désambiguïse.
 class FiltresLieuTest {
 
     private static LigneObservationAudio ligne(long id, String commune, String carre, String point, String site) {
@@ -92,13 +97,34 @@ class FiltresLieuTest {
     }
 
     @Test
-    @DisplayName("#2971 : le point n'est PAS une dimension du filtre, contrairement à la puce")
-    void le_point_n_est_pas_filtrable() {
-        // Les deux lignes portent un point « A1 » dans des carrés différents : c'est précisément
-        // l'ambiguïté que la puce règle en qualifiant, et que la CLI écarte en n'offrant pas le point.
-        // Sans cette exclusion, « --lieu A1 » retiendrait les deux sans que rien ne le montre.
-        assertThatThrownBy(() -> FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("A1")))
-                .isInstanceOf(RegleMetierException.class);
+    @DisplayName("#3350 : le point EST une dimension du filtre, et un code seul retient les deux carrés")
+    void le_point_est_filtrable() {
+        // Ce test disait l'inverse jusqu'à #3350, sur l'argument qu'un code seul (« A1 ») désigne
+        // autant de lieux qu'il y a de carrés et qu'une ligne de commande n'a pas de liste sous les
+        // yeux pour les distinguer. L'inventaire a démenti la prémisse : les sorties qui offrent
+        // `--lieu` portent toutes le carré, donc elles distinguent ces deux lignes. Ce n'est pas le
+        // critère qui doit se restreindre, c'est la sortie qui désambiguïse.
+        assertThat(FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("A1")))
+                .as("les deux carrés ont un point « A1 » : les deux passent, et la sortie les sépare")
+                .containsExactly(AHETZE, VENELLES);
+    }
+
+    @Test
+    @DisplayName("#3350 : le point qualifié par son carré ne désigne qu'une ligne")
+    void le_point_qualifie_designe_un_seul_lieu() {
+        // Le corollaire de ce qui précède : qui veut UN point le qualifie, exactement comme l'écran
+        // l'écrit (#2992). Sans cela, accepter le point n'aurait fait qu'élargir sans rien offrir.
+        assertThat(FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("640380 · A1")))
+                .containsExactly(AHETZE);
+    }
+
+    @Test
+    @DisplayName("#3350 : un code de point absent reste un refus, il ne rend pas un ensemble vide")
+    void un_point_absent_refuse() {
+        // Élargir les dimensions ne doit pas affaiblir le refus : « Z9 » n'existe nulle part.
+        assertThatThrownBy(() -> FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("Z9")))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Z9");
     }
 
     @Test
@@ -171,14 +197,15 @@ class FiltresLieuTest {
         assertThat(FiltresLieu.parLieu(List.of(sansCommune), List.of("130711")))
                 .as("le carré reste comparable, la commune manquante n'empêche rien")
                 .containsExactly(sansCommune);
+        // La liste des lieux présents est lue TELLE QUELLE, au lieu d'ôter le numéro de carré du
+        // message pour voir ce qui reste : cette technique supposait exactement deux dimensions, et
+        // #3350 en a ajouté une troisième - le point qualifié - qu'elle prenait pour un résidu vide.
         assertThatThrownBy(() -> FiltresLieu.parLieu(List.of(sansCommune), List.of("Marseille")))
                 .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("130711")
-                .as("le refus nomme le seul lieu présent, et rien d'autre")
-                .extracting(erreur -> erreur.getMessage().replace("130711", ""))
-                .asString()
-                .doesNotContain(", ,")
-                .doesNotContain(": ,");
+                .extracting(erreur -> lieuxPresents(erreur.getMessage()))
+                .as("le refus nomme le seul carré, et RIEN d'autre : ni entrée vide pour la commune non "
+                        + "résolue, ni le point - qui se compare mais ne s'énumère pas (#3350)")
+                .isEqualTo(List.of("130711"));
     }
 
     @Test
@@ -195,5 +222,15 @@ class FiltresLieuTest {
         assertThat(FiltresLieu.parLieu(List.of(AHETZE, VENELLES), List.of("640380 · Étang de la Tuilière")))
                 .as("et la forme qualifiée, recopiée depuis un refus ou depuis l'écran")
                 .containsExactly(AHETZE);
+    }
+
+    /// Les lieux que le refus enumere, dans l ordre, tels qu on pourrait les recopier.
+    ///
+    /// Lire la liste plutot que de fouiller la chaine : une entree vide se voit alors comme une chaine
+    /// vide dans le resultat, sans dependre du nombre de dimensions comparees.
+    private static List<String> lieuxPresents(String message) {
+        String marqueur = "Lieux présents (communes et carrés) : ";
+        String liste = message.substring(message.indexOf(marqueur) + marqueur.length());
+        return List.of(liste.substring(0, liste.length() - 1).split(", ", -1));
     }
 }

@@ -33,16 +33,17 @@ class FiltresActiviteTest {
     private static final List<ContactHoraire> TOUS = List.of(RHIFER, PIPKUH, SAUTERELLE);
 
     @Test
-    @DisplayName("#3059 : le point n'est PAS une dimension de lieu en ligne de commande")
-    void le_point_n_est_pas_filtrable() {
-        // Le schéma pose UNIQUE(site_id, code) : « Z1 » désigne autant de lieux qu'il y a de carrés, et
-        // « --lieu Z1 » ne désignerait donc rien de précis. Même arbitrage que exporter-sons, et deux
-        // commandes qui traiteraient le lieu différemment seraient pires que la limite elle-même.
+    @DisplayName("#3350 : le point EST une dimension de lieu, mais il ne s'énumère pas au refus")
+    void le_point_se_compare_mais_ne_s_enumere_pas() {
+        // Disait l'inverse jusqu'à #3350, au motif qu'un code seul (« Z1 ») désigne autant de lieux
+        // qu'il y a de carrés. L'inventaire a démenti la prémisse : le CSV d'exporter-activite porte
+        // les colonnes « Carré » et « Point », donc la sortie distingue ce que le code seul confond.
         assertThat(FiltresActivite.dimensionsLieu(RHIFER))
-                .as("commune et carré, rien d'autre")
-                .containsExactly("Ahetze", "640380");
-        assertThatThrownBy(() -> FiltresLieu.parLieu(TOUS, List.of("A1"), FiltresActivite::dimensionsLieu))
-                .isInstanceOf(RegleMetierException.class);
+                .as("commune, carré, et point qualifié par son carré")
+                .containsExactly("Ahetze", "640380", "640380 · A1");
+        // Ce que le refus NOMME reste la commune et le carré : mesuré sur quinze carrés, y ajouter les
+        // points faisait passer la liste de 15 à 31 entrées et n'en montrait plus que six sous la borne.
+        assertThat(FiltresActivite.dimensionsNommees(RHIFER)).containsExactly("Ahetze", "640380");
     }
 
     @Test
@@ -63,7 +64,7 @@ class FiltresActiviteTest {
 
         assertThat(FiltresActivite.dimensionsLieu(nomme))
                 .as("le nom du site n'est pas une dimension de plus : c'est l'autre étiquette du carré")
-                .containsExactly("Ahetze", "640380 · Vallon");
+                .containsExactly("Ahetze", "640380 · Vallon", "640380 · A1");
         assertThat(FiltresLieu.parLieu(List.of(nomme), List.of("vallon"), FiltresActivite::dimensionsLieu))
                 .as("le nom seul retient ce carré, sans point médian à taper")
                 .containsExactly(nomme);
@@ -180,7 +181,7 @@ class FiltresActiviteTest {
 
         assertThat(FiltresActivite.dimensionsLieu(sansCommune))
                 .as("le carré reste comparable, la commune manquante est écartée")
-                .containsExactly("640380");
+                .containsExactly("640380", "640380 · C3");
         assertThat(FiltresLieu.parLieu(List.of(sansCommune), List.of("640380"), FiltresActivite::dimensionsLieu))
                 .containsExactly(sansCommune);
     }
