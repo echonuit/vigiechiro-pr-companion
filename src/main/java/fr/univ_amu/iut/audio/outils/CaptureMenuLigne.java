@@ -108,8 +108,14 @@ public final class CaptureMenuLigne {
         // redimensionner la fenetre. Le menu se mesure donc dans une police et se peint dans une autre.
         //
         // Invisible sur un poste ou le repli systeme EST Noto Sans - retirer la police embarquee ne
-        // change pas la taille d'un pixel - et bien reel en CI, ou le meme code rend 309x134 quand un
-        // poste rend 289x144. Cf. #3417 : la scene hote n'y peut rien non plus, sonde faite.
+        // change pas la taille d'un pixel - et bien reel en CI, qui rendait 309x134 quand un poste
+        // rendait 289x144.
+        //
+        // Ce que la MESURE a tranche (#3417) : habiller la scene HOTE suffit, et les deux
+        // environnements produisent desormais le meme fichier au bit pres. Une sonde m'avait fait
+        // conclure l'inverse - `racine.setStyle(...)` ne changeait rien - mais elle testait un style
+        // EN LIGNE, quand un popup herite des FEUILLES de la scene qui l'ouvre. Elle repondait non a
+        // une question qu'on ne lui avait pas posee.
         Habillage.poser(scenePopup);
         Parent racine = scenePopup.getRoot();
         racine.applyCss();
