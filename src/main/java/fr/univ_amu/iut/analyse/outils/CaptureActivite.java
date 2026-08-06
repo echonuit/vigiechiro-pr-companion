@@ -155,8 +155,40 @@ public final class CaptureActivite {
     /// Charge `Activite.fxml`, l'ouvre sur le passage de démonstration puis rend la scène hors-écran en
     /// PNG. Scène bornée sous 1000 px (le rendu headless plafonne le blit à 1000×1000).
     private static void rendre(Injector injecteur, Path fichier) throws IOException {
-        ApercuFx.enregistrerPng(new Scene(ouvrir(injecteur), 980, 620), fichier);
+        Scene scene = new Scene(ouvrir(injecteur), 980, 620);
+        ApercuFx.enregistrerPng(scene, fichier);
+        sonder(scene);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// SONDE TEMPORAIRE (#3417). A retirer une fois la cause trouvee.
+    ///
+    /// Cet ecran rend 94 448 octets en CI et 101 289 sur un poste, et la difference se localise sur la
+    /// largeur du `ChoiceBox` « Tranche horaire », dont le graphe herite du deplacement. Le cas est
+    /// **irreproductible en local** - le repli systeme y est trop proche de la police embarquee - donc
+    /// on lit l'etat reel dans le journal du runner plutot que de raisonner d'ici.
+    private static void sonder(Scene scene) {
+        javafx.scene.Node noeud = scene.getRoot().lookup("#choixTranche");
+        System.out.println("[sonde-3417] police par defaut : " + javafx.scene.text.Font.getDefault());
+        System.out.println("[sonde-3417] « Noto Sans » enregistree : "
+                + javafx.scene.text.Font.getFamilies().contains("Noto Sans"));
+        System.out.println("[sonde-3417] feuilles racine : " + scene.getRoot().getStylesheets());
+        System.out.println("[sonde-3417] feuilles scene  : " + scene.getStylesheets());
+        if (noeud instanceof javafx.scene.control.ChoiceBox<?> choix) {
+            System.out.println("[sonde-3417] choixTranche largeur=" + choix.getWidth() + " prefWidth="
+                    + choix.prefWidth(-1) + " hauteur=" + choix.getHeight() + " items=" + choix.getItems());
+            javafx.scene.Node fleche = choix.lookup(".arrow");
+            javafx.scene.Node zone = choix.lookup(".open-button");
+            System.out.println("[sonde-3417] fleche=" + (fleche == null ? "absente" : fleche.getBoundsInParent())
+                    + " zone=" + (zone == null ? "absente" : zone.getBoundsInParent()));
+            javafx.scene.Node libelle = choix.lookup(".label");
+            if (libelle instanceof javafx.scene.control.Labeled l) {
+                System.out.println("[sonde-3417] libelle « " + l.getText() + " » police=" + l.getFont() + " largeur="
+                        + l.getBoundsInParent().getWidth());
+            }
+        } else {
+            System.out.println("[sonde-3417] choixTranche introuvable : " + noeud);
+        }
     }
 
     /// Aperçu de l'**image exportée** (#2352) : passe par le vrai geste d'export du controller, qui
