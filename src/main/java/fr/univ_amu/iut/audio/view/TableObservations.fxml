@@ -50,6 +50,11 @@
            lecteur d'écran, et n'explique rien au survol (#794). -->
       <TableColumn fx:id="colReference" prefWidth="50.0"/>
       <TableColumn fx:id="colCommentaire" prefWidth="50.0"/>
+      <!-- Le TEXTE du commentaire (#3348), masque par defaut comme « Nom du carre » : la recherche
+           libre l'interroge, donc l'ecran doit pouvoir le montrer. L'indicateur 💬 ci-dessus dit
+           qu'un commentaire existe et le donne au survol ; cette colonne le rend BALAYABLE sur une
+           liste filtree, ce qu'une infobulle ligne a ligne ne permet pas. -->
+      <TableColumn fx:id="colTexteCommentaire" text="Commentaire (texte)" prefWidth="240.0" visible="false"/>
       <TableColumn fx:id="colFil" prefWidth="50.0"/>
       <TableColumn fx:id="colEnjeu" prefWidth="50.0"/>
     </columns>

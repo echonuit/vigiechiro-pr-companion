@@ -95,6 +95,9 @@ public class TableObservationsController {
     private TableColumn<LigneObservationAudio, String> colCommentaire;
 
     @FXML
+    private TableColumn<LigneObservationAudio, String> colTexteCommentaire;
+
+    @FXML
     private TableColumn<LigneObservationAudio, String> colValidateur;
 
     @FXML
@@ -167,6 +170,7 @@ public class TableObservationsController {
                 colStatut,
                 colReference,
                 colCommentaire,
+                colTexteCommentaire,
                 colValidateur,
                 colFil,
                 colEnjeu);

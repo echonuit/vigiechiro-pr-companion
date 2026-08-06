@@ -44,6 +44,7 @@ final class ColonnesAudio {
             TableColumn<LigneObservationAudio, String> statut,
             TableColumn<LigneObservationAudio, String> reference,
             TableColumn<LigneObservationAudio, String> commentaire,
+            TableColumn<LigneObservationAudio, String> texteCommentaire,
             TableColumn<LigneObservationAudio, String> validateur,
             TableColumn<LigneObservationAudio, String> fil,
             TableColumn<LigneObservationAudio, String> enjeu) {}
@@ -151,6 +152,12 @@ final class ColonnesAudio {
 
         // Indicateurs référence / commentaire : en-tête et cellule rendus par une icône Ikonli colorée,
         // un id stable pour les retrouver, cellules dédiées (icône + infobulle), et non triables.
+        // Le TEXTE du commentaire (#3348) : meme cellule elidee a infobulle que les autres colonnes
+        // longues, donc le contenu entier reste atteignable quand la colonne est etroite.
+        col.texteCommentaire()
+                .setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                        FormatLigneAudio.ouTiret(c.getValue().commentaire())));
+        col.texteCommentaire().setCellFactory(colonne -> CellulesAudio.avecInfobulle());
         CellulesAudio.configurerIndicateurs(
                 col.reference(), col.commentaire(), col.fil(), col.enjeu(), aEnjeu, enregistrerCommentaire);
     }
@@ -189,6 +196,7 @@ final class ColonnesAudio {
                 new GestionnaireColonnes.Colonne(col.statut(), "Statut", false),
                 new GestionnaireColonnes.Colonne(col.reference(), "Référence", false),
                 new GestionnaireColonnes.Colonne(col.commentaire(), "Commentaire", false),
+                new GestionnaireColonnes.Colonne(col.texteCommentaire(), "Commentaire (texte)", false),
                 new GestionnaireColonnes.Colonne(col.validateur(), "Avis du validateur", false),
                 new GestionnaireColonnes.Colonne(col.fil(), "Discussion", false),
                 new GestionnaireColonnes.Colonne(col.enjeu(), "Espèce à enjeu", false));
