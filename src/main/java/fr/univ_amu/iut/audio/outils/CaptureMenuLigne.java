@@ -72,7 +72,7 @@ public final class CaptureMenuLigne {
         controleur.ouvrirSur(new SourceObservations.References(GraineSonsValidation.ID_UTILISATEUR));
 
         Stage stage = new Stage();
-        stage.setScene(new Scene(vue, 1280, 720));
+        stage.setScene(Habillage.scene(vue, 1280, 720));
         stage.show();
 
         if (!(vue.lookup("#tableObservations") instanceof TableView<?> table)) {
@@ -91,7 +91,7 @@ public final class CaptureMenuLigne {
 
     private static void ecrire(ContextMenu menu, String fichier) throws IOException {
         Stage hote = new Stage();
-        hote.setScene(new Scene(new javafx.scene.layout.StackPane(), 500, 300));
+        hote.setScene(Habillage.scene(new javafx.scene.layout.StackPane(), 500, 300));
         hote.show();
         menu.show(hote);
 
@@ -103,6 +103,13 @@ public final class CaptureMenuLigne {
         // Habillage commun (#3374). L'ancien helper `styles()` posait bien palette+base, mais
         // n'installait PAS la police embarquee : `base.css` demandait alors une famille non
         // enregistree, et le popup rendait avec celle du systeme.
+        // ⚠️ Trop tard pour la TAILLE. Le popup se dimensionne a `show()`, **avant** qu'aucune feuille
+        // ne lui soit attachee ; `applyCss` + `layout` repeignent ensuite dans la bonne police sans
+        // redimensionner la fenetre. Le menu se mesure donc dans une police et se peint dans une autre.
+        //
+        // Invisible sur un poste ou le repli systeme EST Noto Sans - retirer la police embarquee ne
+        // change pas la taille d'un pixel - et bien reel en CI, ou le meme code rend 309x134 quand un
+        // poste rend 289x144. Cf. #3417 : la scene hote n'y peut rien non plus, sonde faite.
         Habillage.poser(scenePopup);
         Parent racine = scenePopup.getRoot();
         racine.applyCss();

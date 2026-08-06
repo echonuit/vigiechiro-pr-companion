@@ -107,7 +107,7 @@ public final class CaptureFicheEspece {
 
     private static void capturerMenu(ContextMenu menu, String fichier) throws IOException {
         Stage stage = new Stage();
-        stage.setScene(new Scene(new StackPane(), 500, 300));
+        stage.setScene(Habillage.scene(new StackPane(), 500, 300));
         stage.show();
         menu.show(stage);
 
@@ -117,6 +117,9 @@ public final class CaptureFicheEspece {
             return;
         }
         // Habillage commun (#3374) : meme helper duplique, meme police manquante.
+        // ⚠️ Trop tard pour la TAILLE : le popup s'est dimensionne a `show()`, avec la police de
+        // la scene qui l'a ouvert. C'est pour cela que la scene HOTE est habillee elle aussi -
+        // sans quoi le menu se mesure dans une police et se peint dans une autre (#3414).
         Habillage.poser(scenePopup);
         Parent racine = scenePopup.getRoot();
         racine.applyCss();
