@@ -63,10 +63,31 @@ frontières de modules la rendent coûteuse à défaire :
 point d'injection du retriever côté application, ou un `StorageService` configurable). Le « non » est
 motivé par un rapport coût/bénéfice, pas par un principe.
 
-**Ce qui change en pratique** : depuis #3359, la CI ne **committe** plus les écarts sous 4 % sur ces
-seize aperçus. On garde la source vivante et sa variabilité ; on cesse simplement d'en faire un commit,
-une PR et un conflit à chaque exécution. Le corollaire de 2026-08-01 - « sur ces fichiers, un diff n'est
-pas un signal » - reste vrai, et devient enfin sans conséquence sur l'historique.
+**Ce qui change en pratique** : la CI ne **committe** plus le bruit de ces seize aperçus. On garde la
+source vivante et sa variabilité ; on cesse d'en faire un commit, une PR et un conflit à chaque
+exécution.
+
+## Seconde révision, du 2026-08-06 : le corollaire est tombé
+
+Ce document affirmait, dans ses conséquences, que « sur ces fichiers, un diff de captures n'est pas un
+signal » et que « la revue s'y fait à l'œil, pas au `cmp` ». **Ce n'est plus vrai**, et c'est une bonne
+nouvelle.
+
+#3375 a fait porter l'habillage à toute fenêtre. Depuis, **hors de la carte, la CI et un poste de
+développement rendent au pixel près** : `apercu-accueil.png` sort identique au bit près, et sur
+`apercu-analyse-carte` les bandes de texte passent de 29 % et 37,9 % d'écart à **0,00 %**.
+
+#3381 en tire la conséquence : le seuil de 4 % - qui ne tenait de toute façon pas, le bruit de tuiles
+**seul** valant jusqu'à **23,8 %** de l'image - cède la place à un **masque**. On compare **hors** du
+rectangle de la carte, à tolérance **zéro**.
+
+Le corollaire se restreint donc au seul rectangle :
+
+> Un diff de capture **est** un signal partout, **sauf** à l'intérieur du rectangle de la carte. La
+> revue se fait au `cmp` dehors, à l'œil dedans.
+
+Éprouvé : un changement de 40x12 px hors carte, sur l'aperçu où la carte couvre 72,9 % de l'image, est
+détecté - il pèse 0,07 %, qu'aucun seuil global n'aurait vu.
 
 ⚠️ Un défaut **distinct** existait au même endroit, et a été corrigé : l'attente des tuiles était un
 délai fixe de six secondes, donc une course contre le réseau. Une capture pouvait partir avec des tuiles
@@ -89,10 +110,13 @@ la source de tuiles rendrait l'image plus stable et **moins vraie**.
 
 ## Conséquences
 
-- **Sur ces quatre fichiers, un diff de captures n'est pas un signal.** La revue s'y fait à l'œil, pas au
-  `cmp`. C'est le corollaire pratique, et il n'est pas anodin : au cours du chantier #3050, cette
-  variation m'a fait conclure **deux fois** qu'un changement modifiait le rendu alors qu'il n'y était pour
-  rien.
+- **Sur ces seize fichiers, un diff de capture n'est pas un signal À L'INTÉRIEUR du rectangle de la
+  carte** - et en est un partout ailleurs depuis #3381 (voir la révision ci-dessus). Écrit « quatre »
+  jusqu'au 2026-08-06, alors que la portée avait été corrigée à seize plus haut dans ce même document :
+  une révision partielle laisse une incohérence, et celle-ci a vécu une journée.
+- Le corollaire d'origine n'était pas anodin : au cours du chantier #3050, cette variation m'a fait
+  conclure **deux fois** qu'un changement modifiait le rendu alors qu'il n'y était pour rien. C'est
+  précisément ce que le masque supprime hors de la carte.
 - Le contrôle qui tranche reste le même, et il est désormais écrit : avant de lire un écart entre deux
   images, **mesurer ce que produit l'absence de changement** - deux exécutions du même code.
 - La règle d'or, elle, ne bouge pas pour tout le reste : signaux de synthèse plutôt qu'audio réel, pas
