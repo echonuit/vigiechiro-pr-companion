@@ -53,10 +53,41 @@ Ce qui reste **ne se corrige pas ici**, à aucune version de `semantic-release` 
 automatically`. Elles partiront quand `npm` publiera une version qui les embarque corrigées, et que
 `semantic-release` la reprendra.
 
-⚠️ **Ne pas lire un nombre d'alertes Dependabot comme une mesure de l'exposition** : GitHub
-**auto-écarte** les avis de portée `development`, ce qu'est tout cet arbre. Au 2026-08-04, quatre avis
-(trois sur `brace-expansion`, un sur `picomatch`) ont été écartés ainsi, sans que le compte affiché
-bouge. `npm audit`, lui, les voit. C'est `npm audit` qui fait foi ici.
+⚠️ **Ne pas lire un nombre d'alertes Dependabot comme une mesure de l'exposition.** GitHub
+**auto-écarte** les avis de portée `development`, ce qu'est tout cet arbre : au 2026-08-04, quatre avis
+ont été écartés ainsi sans que le compte affiché bouge. Et la montée en `semantic-release@25` a fait
+passer `npm audit` de 18 paquets à 7, **sans changer le compte d'alertes** (6 avant, 6 après) - seule
+la composition et la gravité avaient bougé (4 hautes → 1). C'est `npm audit` qui fait foi ici, pas le
+compteur.
+
+## Les alertes de cet arbre sont écartées, et c'est vérifiable (#3390)
+
+Les six alertes Dependabot restantes (`undici` ×3, `ip-address` ×3) ont été **écartées** au motif
+`not_used` - « le code vulnérable n'est pas réellement utilisé ». Ce n'est pas une commodité, c'est un
+fait qui se vérifie en trois points :
+
+- `.releaserc.json` liste **cinq** greffons, et `@semantic-release/npm` n'en fait pas partie ;
+- `release.config.js` non plus : **zéro** occurrence dans les deux fichiers ;
+- la répétition à blanc charge ses greffons **un par un** dans son journal, et aucun ne vient de ce
+  paquet.
+
+Le CLI `npm` que `semantic-release` embarque est donc **installé et jamais invoqué**. `undici` et
+`ip-address`, qui vivent dedans, ne sont jamais chargés.
+
+⚠️ Écarter n'est pas ignorer : un avis **futur** sur ces paquets ouvrira une alerte neuve. Et si
+`@semantic-release/npm` entrait un jour dans la configuration, la justification tomberait avec - c'est
+la première chose à rouvrir dans ce cas.
+
+### Les deux pistes qui ne marchent pas, mesurées plutôt que supposées
+
+**Forcer une `npm` plus récente** (`overrides`) : essayé avec la dernière publiée, `12.0.2`.
+L'arbre se résout, et l'audit rend **exactement les mêmes 7 paquets vulnérables**. `npm` embarque ses
+propres dépendances : en changer la version ne change pas ce qu'elle transporte.
+
+**Retirer `@semantic-release/npm`** : impossible proprement. C'est une dépendance **directe** de
+`semantic-release` (`^13.1.1`), qui tire `npm@^11.6.2` - donc tout le sous-arbre. `npm` ne sait pas
+supprimer une dépendance, seulement en forcer la version, et l'aliaser vers un paquet inerte est
+exactement le genre d'astuce qui casse une chaîne de publication en silence.
 
 ## Pourquoi la version de Node est épinglée
 
