@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.commun.view;
 
-import fr.univ_amu.iut.commun.outils.ApercuFx;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
@@ -30,7 +29,9 @@ import javafx.scene.layout.VBox;
 public final class ExportGraphe {
 
     /// Dimensions de la scène d'export : assez large pour que les étiquettes, la légende et les lignes de
-    /// contexte tiennent sans être comprimées : `ApercuFx` refuse une image aux libellés tronqués.
+    /// contexte tiennent sans être comprimées. Le rendu passe par [RenduPng], qui écrit la scène telle
+    /// qu'elle a été redessinée : le contrôle de lisibilité des captures de documentation ne s'applique
+    /// pas ici, l'utilisateur ne pouvant pas corriger une mise en page qu'il ne voit pas (#2746).
     private static final int LARGEUR = 1100;
 
     private static final int HAUTEUR = 640;
@@ -81,7 +82,7 @@ public final class ExportGraphe {
                         ExportGraphe.class
                                 .getResource("/fr/univ_amu/iut/commun/view/design.css")
                                 .toExternalForm());
-        ApercuFx.enregistrerPng(scene, fichier);
+        RenduPng.enregistrer(scene, fichier);
     }
 
     /// Une ligne de contexte. Non enroulable : la scène est assez large, et un libellé comprimé ferait

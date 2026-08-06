@@ -1,14 +1,11 @@
 package fr.univ_amu.iut.commun.outils;
 
+import fr.univ_amu.iut.commun.view.RenduPng;
 import fr.univ_amu.iut.commun.view.Typographie;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Scene;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.ContextMenu;
@@ -17,7 +14,6 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import javax.imageio.ImageIO;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -73,10 +69,13 @@ public final class ApercuFx {
         stageTransitoire.show();
         scene.getRoot().applyCss();
         scene.getRoot().layout();
+        // ⚠️ Ce contrôle reste ICI et n'a pas suivi dans [RenduPng] (#2746) : une capture de
+        // documentation ne doit jamais partir avec un libellé tronqué, mais un export utilisateur
+        // porte sur une scène redessinée que personne ne peut corriger. Voir RenduPng.
         LisibiliteCapture.refuserToutTexteIllisible(scene);
         WritableImage image = scene.snapshot(null);
         stageTransitoire.hide();
-        ecrire(image, fichier);
+        RenduPng.ecrire(image, fichier);
     }
 
     /// Variante de [#enregistrerPng] pour les scenes dont le contenu se prepare de facon
@@ -100,7 +99,7 @@ public final class ApercuFx {
         LisibiliteCapture.refuserToutTexteIllisible(scene);
         WritableImage image = scene.snapshot(null);
         stageTransitoire.hide();
-        ecrire(image, fichier);
+        RenduPng.ecrire(image, fichier);
     }
 
     /// Capture un **menu ouvert** (le popup d'un [MenuButton]) hors-écran, et l'écrit en PNG.
@@ -162,24 +161,12 @@ public final class ApercuFx {
             racine.layout();
             SnapshotParameters params = new SnapshotParameters();
             params.setFill(Color.WHITE);
-            ecrire(racine.snapshot(params, null), fichier);
+            RenduPng.ecrire(racine.snapshot(params, null), fichier);
             return true;
         } finally {
             apercu.hide();
             hote.hide();
             apercu.getItems().clear();
-        }
-    }
-
-    private static void ecrire(WritableImage image, Path fichier) {
-        try {
-            Path parent = fichier.getParent();
-            if (parent != null) {
-                Files.createDirectories(parent);
-            }
-            ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", fichier.toFile());
-        } catch (IOException echec) {
-            throw new UncheckedIOException("Ecriture PNG impossible : " + fichier, echec);
         }
     }
 

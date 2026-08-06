@@ -73,6 +73,29 @@ class ArchitectureTest {
     }
 
     @Test
+    @DisplayName("Le produit ne dépend pas de son outillage : rien hors « outils » n'importe « outils » (#2746)")
+    void produit_sans_outillage() {
+        // L'outillage (captures de documentation, bancs de mesure, graines de données) est bâti avec le
+        // produit mais n'est pas le produit. Il porte 47 points d'entrée `main` qui n'ont rien à faire
+        // dans le binaire d'un naturaliste, et il est déjà exclu de la couverture (`**/outils/**`).
+        //
+        // Cette règle est la condition pour l'en retirer : tant qu'une classe de production en dépend,
+        // l'exclusion casserait une fonctionnalité. C'était le cas jusqu'ici, pour un seul franchissement
+        // - `ExportGraphe` appelait `ApercuFx.enregistrerPng` pour l'export d'image offert à
+        // l'utilisateur (#2352, #2618). Le geste vit désormais dans `commun.view.RenduPng`.
+        //
+        // Le sens compte : l'outillage a parfaitement le droit de dépendre du produit, c'est même sa
+        // raison d'être. C'est l'inverse qui est interdit.
+        noClasses()
+                .that()
+                .resideOutsideOfPackages("..outils..", "..perf..")
+                .should()
+                .dependOnClassesThat()
+                .resideInAnyPackage("..outils..", "..perf..")
+                .check(classes);
+    }
+
+    @Test
     @DisplayName("La lecture brute de l'API n'est appelée que par le groupe « api » de la CLI (#3006)")
     void lecture_brute_reservee_au_groupe_api() {
         // `ClientVigieChiro.lectureBrute` rend le corps sans le nommer ni l'interpréter : c'est
