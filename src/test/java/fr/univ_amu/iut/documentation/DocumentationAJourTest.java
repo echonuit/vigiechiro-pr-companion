@@ -30,6 +30,7 @@ import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
@@ -97,6 +98,92 @@ class DocumentationAJourTest {
                         + "tableau de dev-docs/cli.md. Une commande qu'on ne documente pas est une commande "
                         + "que personne ne trouvera : ajoutez-lui sa ligne.")
                 .isEmpty();
+    }
+
+    /// Les fiches d'écran, par vue **propriétaire**. Une table explicite et non une règle de nommage :
+    /// cinq écrans portent un nom de fichier différent de leur classe, et une correspondance devinée
+    /// produirait cinq faux positifs (#2750).
+    private static final Map<String, String> FICHE_PAR_ECRAN = Map.ofEntries(
+            Map.entry("Activite", "activite"),
+            Map.entry("Analyse", "analyse"),
+            Map.entry("Audit", "audit"),
+            Map.entry("Diagnostic", "diagnostic"),
+            Map.entry("EcranReglages", "reglages"),
+            Map.entry("Importation", "importation"),
+            Map.entry("Lot", "lot"),
+            Map.entry("MainView", "accueil"),
+            Map.entry("MesSites", "sites"),
+            Map.entry("Multisite", "multisite"),
+            Map.entry("Passage", "passage"),
+            Map.entry("Qualification", "qualification"),
+            Map.entry("Saison", "saison"),
+            Map.entry("SiteDetail", "sites"),
+            Map.entry("SonsValidation", "validation"),
+            Map.entry("Synthese", "synthese"));
+
+    @Test
+    @DisplayName("Chaque écran déclaré en FXML a une fiche, et chaque fiche déclarée existe")
+    void chaque_ecran_a_sa_fiche() throws IOException {
+        Set<String> vues = vuesFxml();
+        Set<String> sousVues = vuesIncluses();
+        Set<String> ecrans = vues.stream()
+                .filter(vue -> !sousVues.contains(vue))
+                .filter(vue -> !vue.contains("Modale"))
+                .collect(Collectors.toCollection(TreeSet::new));
+
+        // Non-vacuité : une extraction qui ne trouverait plus de FXML certifierait que tout est
+        // documenté, en n'ayant rien lu.
+        assertThat(vues).as("aucune vue FXML trouvée : l'extraction est cassée").hasSizeGreaterThan(20);
+        assertThat(sousVues)
+                .as("aucune sous-vue trouvée : le motif `fx:include` ne reconnaît plus rien")
+                .isNotEmpty();
+
+        SoftAssertions verifs = new SoftAssertions();
+        for (String ecran : ecrans) {
+            verifs.assertThat(FICHE_PAR_ECRAN)
+                    .as(
+                            "l'écran %s n'a pas de fiche déclarée. Un écran livré sans page de documentation "
+                                    + "n'existe pour personne : ajoutez `docs/ecrans/<fiche>.md` et l'entrée ici.",
+                            ecran)
+                    .containsKey(ecran);
+        }
+        for (Map.Entry<String, String> entree : FICHE_PAR_ECRAN.entrySet()) {
+            verifs.assertThat(Path.of("docs", "ecrans", entree.getValue() + ".md"))
+                    .as("la fiche déclarée pour %s n'existe pas", entree.getKey())
+                    .exists();
+            verifs.assertThat(ecrans)
+                    .as(
+                            "%s a une fiche mais n'est plus un écran (renommé, devenu sous-vue ou modale ?) : "
+                                    + "retirez l'entrée, sinon la table protège un écran qui n'existe plus",
+                            entree.getKey())
+                    .contains(entree.getKey());
+        }
+        verifs.assertAll();
+    }
+
+    /// Les vues FXML du produit, par leur nom de fichier sans extension.
+    private static Set<String> vuesFxml() throws IOException {
+        try (Stream<Path> arbre = Files.walk(Path.of("src", "main", "java"))) {
+            return arbre.filter(chemin -> chemin.getFileName().toString().endsWith(".fxml"))
+                    .map(chemin -> chemin.getFileName().toString().replace(".fxml", ""))
+                    .collect(Collectors.toCollection(TreeSet::new));
+        }
+    }
+
+    /// Les vues qu'un autre FXML **inclut** : ce sont des sous-vues, pas des écrans (ADR 2745).
+    private static Set<String> vuesIncluses() throws IOException {
+        Pattern inclusion = Pattern.compile("<fx:include[^>]*source=\"([^\"]+)\"");
+        Set<String> incluses = new TreeSet<>();
+        try (Stream<Path> arbre = Files.walk(Path.of("src", "main", "java"))) {
+            for (Path fxml : arbre.filter(c -> c.getFileName().toString().endsWith(".fxml"))
+                    .toList()) {
+                Matcher trouve = inclusion.matcher(Files.readString(fxml));
+                while (trouve.find()) {
+                    incluses.add(trouve.group(1).replace(".fxml", ""));
+                }
+            }
+        }
+        return incluses;
     }
 
     @Test
