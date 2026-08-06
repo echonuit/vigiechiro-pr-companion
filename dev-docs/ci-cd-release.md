@@ -611,10 +611,33 @@ le borne sans le supprimer.
 c'est `.releaserc.json` qui fait alors foi. Lancé **depuis `.github/release/`**, c'est la configuration
 d'analyse que cosmiconfig trouve en premier. Les deux ont été vérifiées en local, greffon par greffon.
 
+### Ce que le lockfile ne figeait pas : Node (#3264)
+
+Les deux workflows qui installent cet outillage demandent `node-version: "24"`, et non `lts/*`. Un
+lockfile fige l'arbre ; `lts/*` laissait flotter le **runtime qui l'exécute**. Au prochain passage de
+majeure LTS, le job de publication aurait changé de Node **sans PR ni relecture** - exactement ce que
+#2738 cherchait à empêcher pour les paquets, laissé ouvert pour l'interpréteur.
+
+L'occasion l'a rendu concret : `semantic-release@25` exige `^22.14.0 || >= 24.10.0`. Avec `lts/*`, la
+satisfaction de cette contrainte dépendait de ce que le runner avait en cache ce jour-là.
+
+### L'arbre de publication et ses alertes
+
+Le passage en `semantic-release@25` (#3264) ramène `npm audit` de **18 paquets vulnérables (15
+hautes)** à **7 (2 hautes)**. Il **réduit sans résoudre** : les deux hautes restantes vivent dans le
+`npm` que `semantic-release` embarque, et `npm audit fix` le dit lui-même (`is a bundled dependency of
+npm@… · It cannot be fixed automatically`). Aucune version de `semantic-release` ne les corrige : il
+faut que `npm` publie, et que `semantic-release` reprenne.
+
+⚠️ **Un compte d'alertes Dependabot n'est pas une mesure d'exposition.** GitHub **auto-écarte** les
+avis de portée `development`, ce qu'est tout cet arbre : au 2026-08-04, quatre avis
+(`brace-expansion` ×3, `picomatch`) l'ont été sans que le compte affiché bouge. Pour cet arbre, c'est
+`npm audit` qui fait foi.
+
 ## Dépendances
 
 Les mises à jour sont proposées par **Dependabot**
 ([`.github/dependabot.yml`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/dependabot.yml)),
-**mensuellement**, pour `maven` et `github-actions`. **JavaFX (`org.openjfx:*`) est volontairement
-exclu** de l'automatisation : ses bumps ont un impact fort (rendu, Headless Platform) et se décident à
-la main.
+**mensuellement**, pour `maven`, `github-actions` et l'outillage de publication (`npm`, dans
+`/.github/release`). **JavaFX (`org.openjfx:*`) est volontairement exclu** de l'automatisation : ses
+bumps ont un impact fort (rendu, Headless Platform) et se décident à la main.
