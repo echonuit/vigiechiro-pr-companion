@@ -74,7 +74,7 @@
 }
 
 .apercu-valeur {
-    -fx-font-family: monospace;
+    -fx-font-family: "Noto Sans Mono", monospace;
     -fx-font-size: 13px;
     -fx-text-fill: #5d4e00;
 }

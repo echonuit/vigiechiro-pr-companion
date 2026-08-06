@@ -10,7 +10,7 @@
 /* Panneaux d'étape : composant partagé carte-section (design.css, #694). */
 
 .chemin {
-  -fx-font-family: monospace;
+  -fx-font-family: "Noto Sans Mono", monospace;
   -fx-font-size: 12px;
   -fx-text-fill: -couleur-primaire-sombre;
 }
