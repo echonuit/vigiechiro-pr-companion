@@ -9,6 +9,7 @@ publication.
 |---|---|---|---|
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `build` | push `main` + PR | « Java CI » : `./mvnw -B verify -Djacoco.haltOnFailure=true` (compilation + tous les tests dont ArchUnit + **seuils de couverture JaCoCo bloquants**) | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `paquet` | push `main` + PR | Assemblage du fat-jar (`package -DskipTests`) puis smoke-test, **E2E CLI bats** et idempotence du packaging. **En parallèle** de `build` | **Oui** |
+| [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `second-compilateur` | push `main` + PR | Recompile **tout** avec le compilateur **Eclipse** (`-Pecj`), sans les tests : ce que `javac` accepte, un autre compilateur conforme ne l'accepte pas forcément (cf. plus bas). **En parallèle** des deux autres | **Oui** |
 | [lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml) | push `main` + PR | « Quality gate » (statique) : `spotless:check` + complétude des captures + `./mvnw -Pquality-gate compile pmd:check` (**PMD bloquant**) | **Oui** |
 | [docs.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml) | push/PR sur la doc | Construit les **deux** sites MkDocs (`--strict`) ; déploie Pages (dormant tant que `ENABLE_PAGES` ≠ true) | Build oui |
 | [titre-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | Non - **informatif**, et volontairement (cf. ci-dessous) |
@@ -514,6 +515,61 @@ plus aucun tag est en soi une nouvelle - le tag a été déplacé ou supprimé e
 
 L'autotest, lui, est **hors ligne** et tourne dans `lint.yml` à chaque PR : c'est le seul contrôle qui
 voit ce garde entre deux lundis.
+
+## Deux compilateurs, pas un (#3366)
+
+`javac` n'est pas la norme du langage, c'en est **une** mise en oeuvre. #3228 l'a coûté cher : une
+lambda visant `com.google.inject.Provider` - une interface à méthode unique, mais **non annotée**
+`@FunctionalInterface` - que `javac` accepte et qu'**ecj refuse**. Le défaut ne se manifeste pas à la
+compilation Maven, mais quand l'IDE écrit ses classes en erreur dans le **même** `target/classes`, et
+que le `./mvnw test` suivant échoue **à l'exécution**, sur des tests sans rapport, avec un message qui
+ne nomme jamais la cause. Une occurrence a produit 133 erreurs.
+
+Le job `second-compilateur` recompile donc **tout** avec ecj (`./mvnw -Pecj clean test-compile`), sans
+les tests ni la couverture : seule la compilation est rejouée, par un autre compilateur conforme.
+
+### Ce que la mesure a donné, avant de décider
+
+L'issue demandait de mesurer plutôt que de croire. Sur le dépôt tel qu'il était :
+
+| | |
+|---|---|
+| Divergences **réelles** trouvées | **4** |
+| dont manquées par le balayage textuel de #3228 | **2** |
+| Avertissements ecj | **1293** |
+| Erreurs après correction | **0** |
+
+Deux familles, et la seconde n'avait pas de nom :
+
+- **lambda visant un `Provider`** : deux occurrences dans `CapturePassage`, que le balayage textuel de
+  #3228 n'avait pas vues. Corrigées en classe anonyme - et **pas** avec `Providers.of`, qui évaluerait
+  dans `configure()` alors que le fournisseur n'a de sens qu'à l'injection ;
+- **capture de générique sur `map(...).toList()`** : `Stream<Map<String, capture-of ?>>` que `javac`
+  assigne à `List<Map<String, ?>>` et qu'ecj refuse. Deux occurrences, corrigées par un **témoin de
+  type explicite** (`.<Map<String, ?>>map(...)`).
+
+C'est l'argument décisif contre l'alternative étroite qui avait été envisagée, une garde textuelle sur
+la forme connue : **le balayage textuel avait déjà tourné, et il en avait manqué deux**. Une garde ne
+voit que ce qu'on lui a appris ; un compilateur voit ce qu'il refuse.
+
+### Les 1293 avertissements, et pourquoi on ne bloque pas dessus
+
+Ce ne sont pas des défauts. Un job qui rougirait dessus serait désactivé en trois semaines, et on
+serait revenu au point de départ en ayant payé le trajet. **Seules les erreurs bloquent.**
+
+### ⚠️ `module-info.java` est exclu de cette passe, et c'est un renoncement assumé
+
+Sous `plexus-compiler-eclipse`, ecj ne résout ni les modules automatiques (`com.google.gson`,
+`info.picocli`) ni `org.xerial.sqlitejdbc`, et rendait **six erreurs qui ne disent rien du code** -
+`useModulePath=false` n'y change rien. Le profil exclut donc `module-info.java` et compile sur le
+classpath. `javac` vérifie le module à chaque build : ce second avis n'a pas à le refaire.
+
+### Le contrôle qui empêche ce job de mentir
+
+Une faute dans le profil ferait retomber la compilation sur **javac**, et le job resterait **vert** en
+n'ayant rien comparé. L'étape exige donc de voir **deux** passes `Compiling with eclipse` dans le
+journal - une pour les sources, une pour les tests - et échoue sinon en le disant. Vérifié dans les
+deux sens : 2 avec `-Pecj`, **0** sans.
 
 ## Analyse statique de sécurité, et détection de secrets (#2741)
 

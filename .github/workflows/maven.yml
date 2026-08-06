@@ -63,6 +63,45 @@ jobs:
         # job, le gate de couverture doit vivre ici et non dans lint.yml.
         run: ./mvnw -B verify -Djacoco.haltOnFailure=true --file pom.xml
 
+  second-compilateur:
+    name: analyser-ecj
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      - name: Recompiler tout avec le compilateur Eclipse
+        # Ni les tests ni la couverture : seule la COMPILATION est rejouee, et par un autre
+        # compilateur conforme. #3228 a coute une heure de diagnostic sur une lambda visant
+        # `com.google.inject.Provider`, que javac accepte et qu'ecj refuse ; le balayage textuel
+        # d'alors en avait trouve cinq, et ce second compilateur en a trouve DEUX de plus qu'il
+        # avait manquees, plus deux divergences d'inference d'une famille que personne n'avait
+        # nommee (#3366).
+        #
+        # On ne bloque QUE sur les erreurs. Les 1293 avertissements d'ecj sur ce depot ne sont pas
+        # des defauts : un job qui rougirait dessus serait desactive en trois semaines, et on
+        # serait revenu au point de depart en ayant paye le trajet.
+        run: |
+          set -euo pipefail
+          ./mvnw -B -Pecj clean test-compile --file pom.xml | tee /tmp/ecj.log
+
+          # ⚠️ Sans ce controle, une faute dans le profil ferait retomber le build sur JAVAC et le
+          # job resterait VERT en n'ayant rien compare. C'est la panne que #3345 a apprise ici :
+          # un vert qui ne dit pas qu'il n'a rien verifie.
+          passes=$(grep -c "Compiling with eclipse" /tmp/ecj.log || true)
+          if [ "$passes" -lt 2 ]; then
+            echo "::error::ecj n'a pas compile les deux jeux de sources ($passes passe(s) vue(s) sur 2 attendues) : ce vert ne comparerait rien."
+            exit 1
+          fi
+          echo "Second compilateur : $passes passes ecj (sources et tests), aucune erreur."
+
   paquet:
     name: paquet
     runs-on: ubuntu-latest

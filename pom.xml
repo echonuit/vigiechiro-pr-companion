@@ -36,6 +36,9 @@
         <audio.view.version>1.15.1</audio.view.version>
 
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
+        <!-- Second compilateur, profil `ecj` seulement (#3366) : jamais dans le build par défaut. -->
+        <plexus.compiler.eclipse.version>2.16.2</plexus.compiler.eclipse.version>
+        <ecj.version>3.46.0</ecj.version>
         <maven.surefire.plugin.version>3.5.6</maven.surefire.plugin.version>
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
         <maven.dependency.plugin.version>3.11.0</maven.dependency.plugin.version>
@@ -855,6 +858,54 @@
              Bindé sur la phase verify (APRÈS shade : sur package, jpackage empaquetterait le jar mince).
              Usage : ./mvnw -Pinstaller -Djpackage.type=deb -DskipTests verify
              Type par OS : deb/rpm (Linux), dmg/pkg (macOS), msi/exe (Windows). Sortie : target/dist/. -->
+        <!-- Profil ecj : recompile TOUT avec le compilateur Eclipse, en plus de javac (#3366).
+             Deux compilateurs conformes n'acceptent pas exactement le même code : #3228 a coûté une
+             heure de diagnostic sur une lambda visant `com.google.inject.Provider`, que javac accepte
+             et qu'ecj refuse (l'interface n'est pas @FunctionalInterface). Le balayage en a trouvé
+             CINQ. La CI ne compilant qu'avec javac, la prochaine divergence passerait de la même
+             façon - et se manifesterait de la pire : des classes en erreur laissées dans target/,
+             puis un échec à l'EXÉCUTION, sur des tests sans rapport, avec un message qui ne nomme
+             jamais la cause.
+             Ne remplace pas javac, s'y ajoute : c'est la divergence qu'on cherche, pas un verdict.
+             Usage : ./mvnw -Pecj clean test-compile -->
+        <profile>
+            <id>ecj</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-compiler-plugin</artifactId>
+                        <version>${maven.compiler.plugin.version}</version>
+                        <configuration>
+                            <compilerId>eclipse</compilerId>
+                            <release>${maven.compiler.release}</release>
+                            <!-- Sur le CLASSPATH, et sans module-info : sous plexus-compiler-eclipse,
+                                 ecj ne resout pas les modules automatiques (com.google.gson,
+                                 info.picocli) ni org.xerial.sqlitejdbc, et rendait six erreurs qui
+                                 ne disent rien du code. javac, lui, verifie module-info a chaque
+                                 build : ce second avis n'a pas a le refaire. -->
+                            <useModulePath>false</useModulePath>
+                            <excludes>
+                                <exclude>module-info.java</exclude>
+                            </excludes>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.codehaus.plexus</groupId>
+                                <artifactId>plexus-compiler-eclipse</artifactId>
+                                <version>${plexus.compiler.eclipse.version}</version>
+                            </dependency>
+                            <dependency>
+                                <groupId>org.eclipse.jdt</groupId>
+                                <artifactId>ecj</artifactId>
+                                <version>${ecj.version}</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <profile>
             <id>installer</id>
             <properties>
