@@ -12,6 +12,12 @@
 #     expiré (14 jours de validité côté Eve) : ce n'est pas une dérive du contrat, on ne
 #     crie pas au loup, mais le résumé du run dit quoi faire ;
 #   - ROUGE  : le serveur répond et le contrat ne tient plus → à regarder vite.
+#
+# ⚠️ Ce vert-là a un angle mort, mesuré en #2748 : il ne distingue pas « contrat vérifié » de
+# « contrat sauté ». Deux passages verts d'affilée n'avaient rien vérifié, la dernière exécution
+# réelle remontant à 16 jours, et personne ne l'avait vu parce qu'il n'y avait rien à voir. D'où un
+# QUATRIÈME état, porté par l'étape de veille en fin de job : ROUGE au-delà de trois semaines sans
+# vérification réelle. Tolérer une expiration reste juste ; ne plus jamais vérifier ne l'est pas.
 name: Contrat API live (hebdomadaire)
 
 on:
@@ -26,6 +32,9 @@ concurrency:
 
 permissions:
   contents: read
+  # Lire l'historique des passages : c'est là que vit la date de la dernière vérification réelle,
+  # ce qui évite d'en persister une copie qui dériverait à son tour (#2748).
+  actions: read
 
 jobs:
   contrat:
@@ -71,7 +80,52 @@ jobs:
       - name: Contrat API (lecture seule)
         # Jamais -Dvigiechiro.write=true ici : les probes d'écriture restent un geste humain
         # opt-in (participation de rebut, cf. dev-docs/api-vigiechiro.md).
+        #
+        # ⚠️ Le NOM de cette étape est lu par la veille ci-dessous pour reconnaître, dans
+        # l'historique, un passage qui a réellement vérifié. Le renommer sans reporter le nouveau
+        # nom dans ETAPE_CONTRAT (.github/scripts/veille-contrat-api.sh) casserait la détection ;
+        # la veille refuse de conclure dans ce cas plutôt que d'annoncer un « jamais joué ».
+        id: contrat
         if: steps.jeton.outputs.valide == 'true'
         env:
           VIGIECHIRO_TOKEN: ${{ secrets.VIGIECHIRO_TOKEN }}
         run: ./mvnw -B -Papi-live test -Dvigiechiro.token="$VIGIECHIRO_TOKEN" --file pom.xml
+
+      - name: Depuis quand le contrat n'a-t-il pas été vérifié ?
+        # Tourne à CHAQUE passage, y compris quand le contrat a été sauté et surtout quand il a
+        # échoué : c'est le seul endroit où un vert dit ce qu'il a réellement vérifié (#2748).
+        # `always()` et non `success()` : l'information vaut d'autant plus que quelque chose cloche.
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEPOT: ${{ github.repository }}
+          PASSAGE: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          chmod +x .github/scripts/veille-contrat-api.sh
+
+          # L'historique EST la mesure : rien n'est stocké. Vingt passages couvrent largement les
+          # trois semaines du seuil, même avec des déclenchements manuels intercalés.
+          historique=$(mktemp)
+          for couple in $(gh api "repos/$DEPOT/actions/workflows/api-live.yml/runs?per_page=20&status=completed" \
+                            --jq ".workflow_runs[] | select(.id != $PASSAGE) | \"\(.id):\(.created_at)\""); do
+            quand=${couple#*:}
+            gh api "repos/$DEPOT/actions/runs/${couple%%:*}/jobs" \
+              --jq '.jobs[].steps[] | "\(.name)\t\(.conclusion)"' \
+              | sed "s|^|$quand\t|" >> "$historique"
+          done
+
+          # Le passage courant n'est pas dans l'historique (il n'est pas terminé) : on le déclare.
+          maintenant=""
+          [ "${{ steps.contrat.outcome }}" = "success" ] && maintenant="--joue-maintenant"
+
+          verdict=$(./.github/scripts/veille-contrat-api.sh $maintenant < "$historique") && frais=0 || frais=1
+          printf '%s\n' "$verdict"
+
+          {
+            echo "## Fraîcheur du contrat API"
+            echo
+            printf '%s\n' "$verdict" | sed 's/^/    /'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          exit "$frais"
