@@ -2,9 +2,8 @@ package fr.univ_amu.iut.commun.outils;
 
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
@@ -86,7 +85,11 @@ public final class MesureBandeauRetour {
                 bandeau, libelle, fermer, new SimpleObjectProperty<>(RetourOperation.erreur(message)), () -> {});
         VBox racine = new VBox(bandeau);
         Scene scene = new Scene(racine, LARGEUR, 600);
-        scene.getStylesheets().addAll(styles());
+        // Habillage commun (#3374). La mesure porte sur des HAUTEURS de texte enroule : rendue
+        // avec une autre police que le produit, elle mesurait un bandeau qui n'existe pas.
+        Habillage.poser(scene);
+        scene.getStylesheets()
+                .add(ConfirmationNavigation.class.getResource("design.css").toExternalForm());
         // La largeur doit être IMPOSÉE avant la mise en page, sinon le libellé calcule sa taille sur une
         // seule ligne et toutes les longueurs rendent la même hauteur - une mesure qui ne mesure rien.
         racine.resize(LARGEUR, 600);
@@ -95,16 +98,5 @@ public final class MesureBandeauRetour {
         System.out.printf(
                 "  %-45s %4d car. -> libellé %4.0f x %3.0f px, bandeau %3.0f px%n",
                 cas, message.length(), libelle.getWidth(), libelle.getHeight(), bandeau.getHeight());
-    }
-
-    private static List<String> styles() {
-        List<String> feuilles = new ArrayList<>();
-        for (String nom : List.of("palette.css", "base.css", "design.css")) {
-            var url = ConfirmationNavigation.class.getResource(nom);
-            if (url != null) {
-                feuilles.add(url.toExternalForm());
-            }
-        }
-        return feuilles;
     }
 }

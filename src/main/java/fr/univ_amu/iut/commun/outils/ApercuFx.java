@@ -1,7 +1,7 @@
 package fr.univ_amu.iut.commun.outils;
 
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.RenduPng;
-import fr.univ_amu.iut.commun.view.Typographie;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,9 +61,7 @@ public final class ApercuFx {
     /// passe de layout/CSS complete (les controles virtualises comme `TableView` peuplent leurs
     /// lignes) avant le `snapshot`, qui reste deterministe. Le stage est referme aussitot.
     public static void enregistrerPng(Scene scene, Path fichier) {
-        // Les 41 outils de capture montent leurs scènes sans le chrome : la police s'installe donc
-        // ici aussi, sans quoi les aperçus rendraient avec celle du système (#3361).
-        Typographie.installer();
+        preparerRendu(scene);
         Stage stageTransitoire = new Stage();
         stageTransitoire.setScene(scene);
         stageTransitoire.show();
@@ -78,6 +76,25 @@ public final class ApercuFx {
         RenduPng.ecrire(image, fichier);
     }
 
+    /// Met la scene dans l'etat ou l'application la montre : police embarquee et feuilles de socle.
+    ///
+    /// ## Ce que `Typographie.installer()` ne suffisait pas a faire
+    ///
+    /// Enregistrer une famille de police ne la **selectionne** pas : c'est `base.css` qui la demande.
+    /// Or les outils de capture montent la vue **seule**, sans le chrome qui la portait.
+    ///
+    /// **Mesure (2026-08-06)** : apres #3364, la CI a regenere 138 apercus ; seuls les 37 qui montent
+    /// le chrome ont change. `apercu-saison.png` et `apercu-audit.png` sont ressortis identiques **au
+    /// bit pres**, leur ecart CI/local intact a 28,8 % des pixels. Sur `apercu-accueil.png`, qui porte
+    /// le chrome, l'ecart CI/local est tombe a **zero pixel**. La police embarquee marchait ; elle
+    /// n'atteignait pas ces scenes-la.
+    ///
+    /// En passant par [Habillage] - le meme que les fenetres de l'application - un apercu montre
+    /// l'ecran tel qu'il est vu, par construction (ADR 3374).
+    private static void preparerRendu(Scene scene) {
+        Habillage.poser(scene);
+    }
+
     /// Variante de [#enregistrerPng] pour les scenes dont le contenu se prepare de facon
     /// **asynchrone** (p. ex. une `AudioView` qui charge un WAV en fond et peint un spectrogramme).
     ///
@@ -88,6 +105,9 @@ public final class ApercuFx {
     /// echoue). En montrant l'unique Stage avant la boucle, on contourne ce defaut. A appeler sur le
     /// thread JavaFX.
     public static void capturerApresPreparation(Scene scene, Runnable preparation, Path fichier) {
+        // Ce point d'entree n'installait meme pas la police : les captures asynchrones (AudioView)
+        // echappaient donc entierement a #3364.
+        preparerRendu(scene);
         Stage stageTransitoire = new Stage();
         stageTransitoire.setScene(scene);
         stageTransitoire.show();
@@ -148,6 +168,9 @@ public final class ApercuFx {
         Stage hote = new Stage();
         Scene sceneHote = new Scene(new javafx.scene.layout.StackPane(), 500, 300);
         feuillesDe(menu).forEach(sceneHote.getStylesheets()::add);
+        // Apres les feuilles heritees : `base.css` se glisse derriere `palette.css`, donc devant
+        // aucune d'elles (#3374).
+        Habillage.poser(sceneHote);
         hote.setScene(sceneHote);
         hote.show();
         apercu.show(hote);
@@ -248,6 +271,8 @@ public final class ApercuFx {
         if (feuillesStyle != null) {
             scene.getStylesheets().addAll(feuillesStyle);
         }
+        // Apres les feuilles fournies, pour la meme raison qu'a la scene hote d'un menu (#3374).
+        Habillage.poser(scene);
         // applyCss() AVANT layout() (#1468) : sans passe CSS, les libellés n'ont pas encore leurs métriques
         // de police, et un texte à enrouler reste sur une ligne unique - que le snapshot coupe par une
         // ellipse. C'est ce qui obligeait les captures de dialogue à pré-découper leurs messages à la main.

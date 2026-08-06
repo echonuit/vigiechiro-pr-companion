@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import java.io.IOException;
@@ -11,7 +12,6 @@ import java.io.UncheckedIOException;
 import java.util.Objects;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -43,7 +43,7 @@ public final class NavigationConnexion {
             Stage modale = new Stage();
             modale.initModality(Modality.APPLICATION_MODAL);
             modale.setTitle("Connexion Vigie-Chiro");
-            modale.setScene(new Scene(vue));
+            modale.setScene(Habillage.scene(vue));
             Modales.fermerParEchap(modale);
             modale.show();
         } catch (IOException echec) {

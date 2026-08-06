@@ -7,7 +7,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import javafx.scene.Scene;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -50,7 +49,7 @@ public final class ChoixSauvegardeJavaFx implements ChoixSauvegarde {
                 },
                 modale::close);
 
-        modale.setScene(new Scene(contenu.racine()));
+        modale.setScene(Habillage.scene(contenu.racine()));
         modale.showAndWait();
         return Optional.ofNullable(choisi.get());
     }
