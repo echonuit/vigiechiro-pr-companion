@@ -44,8 +44,14 @@ class EphemerideSolaireTest {
     /// Tolérance alignée sur la précision que la classe documente (« environ une minute »), et non
     /// cinq fois plus lâche qu'elle. Vérifié : les valeurs de référence existantes passent déjà.
     private static void proche(Optional<LocalTime> obtenu, LocalTime attendu) {
+        proche(obtenu, attendu, 1);
+    }
+
+    /// Variante à tolérance choisie, pour l'ancrage externe : la précision de la formule dépend de la
+    /// saison, et une seule tolérance pour tous les cas mentirait sur l'un ou sur l'autre.
+    private static void proche(Optional<LocalTime> obtenu, LocalTime attendu, int minutes) {
         assertThat(obtenu).isPresent();
-        assertThat(obtenu.orElseThrow()).isCloseTo(attendu, within(1, ChronoUnit.MINUTES));
+        assertThat(obtenu.orElseThrow()).isCloseTo(attendu, within(minutes, ChronoUnit.MINUTES));
     }
 
     private static long dureeDuJourMinutes(double latitude, double longitude, LocalDate jour) {
@@ -179,6 +185,23 @@ class EphemerideSolaireTest {
         LocalTime coucher =
                 EphemerideSolaire.coucher(PARIS_LAT, PARIS_LON, jour).orElseThrow();
         assertThat(coucher).isAfter(lever);
+    }
+
+    @Test
+    @DisplayName("Ancrage sur une référence EXTERNE, aux équinoxes : la date absolue est tenue")
+    void ancrage_sur_une_reference_externe() {
+        // Rien ici ne vient de notre implémentation : les valeurs sont celles d'api.sunrise-sunset.org,
+        // mise en œuvre NOAA indépendante, au même seuil d'horizon (-0,833°). Une valeur reprise de
+        // notre sortie ne prouverait que notre accord avec nous-mêmes.
+        //
+        // ⚠️ La tolérance est de CINQ minutes, et non d'une, parce que la mesure l'impose : l'écart
+        // atteint 3 min 38 s sur le lever du 25 mars. La formule du lever simplifiée est précise à la
+        // minute près des solstices - là où les autres tests l'éprouvent - et à quelques minutes près
+        // des équinoxes. Resserrer ferait échouer le test contre l'algorithme, pas contre un défaut.
+        proche(EphemerideSolaire.lever(PARIS_LAT, PARIS_LON, LocalDate.of(2026, 3, 25)), LocalTime.of(5, 41, 1), 5);
+        proche(EphemerideSolaire.coucher(PARIS_LAT, PARIS_LON, LocalDate.of(2026, 3, 25)), LocalTime.of(18, 12, 5), 5);
+        proche(EphemerideSolaire.lever(PARIS_LAT, PARIS_LON, LocalDate.of(2026, 9, 25)), LocalTime.of(5, 40, 0), 5);
+        proche(EphemerideSolaire.coucher(PARIS_LAT, PARIS_LON, LocalDate.of(2026, 9, 25)), LocalTime.of(17, 44, 30), 5);
     }
 
     @Test
