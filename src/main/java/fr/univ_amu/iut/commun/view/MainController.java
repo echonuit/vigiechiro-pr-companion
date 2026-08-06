@@ -186,7 +186,8 @@ public class MainController {
         // averti à la sortie (cf. Navigateur#peutQuitter, #906) plutôt que bloqué en silence. Sa visibilité
         // (présent hors accueil) est gérée par rafraichirNavigation() et suivie par l'enveloppe. Le tooltip
         // rappelle l'action et les raccourcis (#796).
-        IndicateurBlocage.expliquer(enveloppeRetour, "Revenir à l'écran précédent (Alt+←, Alt+Début pour l'accueil).");
+        IndicateurBlocage.expliquer(
+                enveloppeRetour, "Revenir à l'écran précédent (Alt+Gauche, Alt+Début pour l'accueil).");
         enveloppeRetour.visibleProperty().bind(boutonRetour.visibleProperty());
         enveloppeRetour.managedProperty().bind(boutonRetour.managedProperty());
 
@@ -246,7 +247,7 @@ public class MainController {
         }
 
         // Raccourcis clavier de navigation, posés dès que la scène est disponible :
-        //  - Alt+← : ← Retour (écran précédent réel) ;
+        //  - Alt+Gauche : ← Retour (écran précédent réel) ;
         //  - Alt+Début : retour direct à l'accueil (saut en tête du fil).
         // Pas de Backspace (conflit avec la saisie texte) ni d'Échap (réservé aux modales). Les deux
         // raccourcis passent par le Navigateur, qui respecte la garde de saisie et le verrou (#54).

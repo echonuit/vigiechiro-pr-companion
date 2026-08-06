@@ -116,14 +116,14 @@ public final class ReferentielActivite {
     private static void ajouter(Map<Cle, SeuilsActivite> table, String ligne, List<String> refusees) {
         String[] champs = ligne.split(";", -1);
         if (champs.length < 8) {
-            refusees.add(ligne + " → colonnes manquantes");
+            refusees.add(ligne + " -> colonnes manquantes");
             return;
         }
         Optional<ConfianceReferentiel> confiance = ConfianceReferentiel.depuis(champs[7]);
         if (confiance.isEmpty()) {
             // Une confiance illisible n'est pas une confiance moyenne : la ligne est écartée plutôt que
             // rangée d'office du côté fiable.
-            refusees.add(ligne + " → confiance inconnue : " + champs[7]);
+            refusees.add(ligne + " -> confiance inconnue : " + champs[7]);
             return;
         }
         try {
@@ -140,7 +140,7 @@ public final class ReferentielActivite {
         } catch (NumberFormatException quantileIllisible) {
             // Même raison : une ligne dont un quantile ne se lit pas ne doit pas produire de seuil. Mais
             // elle ne disparaît pas pour autant : un rejet silencieux serait un trou invisible.
-            refusees.add(ligne + " → quantile illisible : " + quantileIllisible.getMessage());
+            refusees.add(ligne + " -> quantile illisible : " + quantileIllisible.getMessage());
         }
     }
 

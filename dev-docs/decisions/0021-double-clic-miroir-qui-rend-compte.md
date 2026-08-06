@@ -6,7 +6,7 @@
 
 ## Contexte
 
-Les tables de l'application avaient des gestes divergents : le double-clic ouvrait l'écoute sur un écran, le passage sur un autre, rien ailleurs ; la « Fiche de l'espèce » s'atteignait au clic droit sur l'Inventaire et par le menu ☰ sur Sons & validation. Le chantier #1792 a unifié ces gestes, en ouvrant le double-clic à la fiche sur les vues espèces.
+Les tables de l'application avaient des gestes divergents : le double-clic ouvrait l'écoute sur un écran, le passage sur un autre, rien ailleurs ; la « Fiche de l'espèce » s'atteignait au clic droit sur l'Inventaire et par le menu principal (☰) sur Sons & validation. Le chantier #1792 a unifié ces gestes, en ouvrant le double-clic à la fiche sur les vues espèces.
 
 Cette unification a immédiatement produit un défaut, remonté de l'usage réel sur une vraie nuit (#1834). Sur Sons & validation, la quasi-totalité des lignes sont des **pseudo-taxons** (« Bruit », « Oiseau ») qui n'ont **pas de fiche**. Le double-clic y était volontairement **inerte** : rien ne s'ouvrait, et rien ne l'expliquait. L'utilisateur en a conclu, légitimement, que la fonctionnalité était cassée. L'Inventaire avait exactement le même trou (#1837).
 

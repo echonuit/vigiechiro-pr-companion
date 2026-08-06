@@ -24,7 +24,7 @@
 
 **Critères d'acceptation** :
 
-- [ ] Une action « Se connecter à Vigie-Chiro » (menu ☰) accepte un **jeton d'API personnel**.
+- [ ] Une action « Se connecter à Vigie-Chiro » (menu principal (☰)) accepte un **jeton d'API personnel**.
 - [ ] Le jeton est **vérifié** par un appel serveur (`GET /moi`) ; en cas de succès, l'identité (login, profil) est mémorisée.
 - [ ] Le jeton est stocké **localement** dans le workspace, avec des **permissions restreintes** (600) et **hors du dépôt Git**.
 - [ ] Le jeton **expire au bout de 14 jours** : passé ce délai, l'application se considère déconnectée **sans appel réseau**.

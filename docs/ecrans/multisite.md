@@ -58,7 +58,7 @@ colonne (Année et N° de passage se trient numériquement), en plus du sélecte
  Un
 **double-clic** sur une ligne ouvre l'écran du passage correspondant.
 
-![Le menu ☰ de « Carte & passages », aucune ligne cochée : écouter le passage sélectionné et les quatre actions groupées sont grisées, chacune disant ce qui lui manque. Restent actives « Écouter la sélection filtrée », « Exporter… » et le réglage des colonnes.](../assets/captures/apercu-multisite-menu-actions.png)
+![Le menu principal (☰) de « Carte & passages », aucune ligne cochée : écouter le passage sélectionné et les quatre actions groupées sont grisées, chacune disant ce qui lui manque. Restent actives « Écouter la sélection filtrée », « Exporter… » et le réglage des colonnes.](../assets/captures/apercu-multisite-menu-actions.png)
 
 Une entrée **grisée** dit ce qui lui manque : « Écouter le passage sélectionné » n'est active qu'une
 fois une ligne choisie. Deux autres entrées n'apparaissent que dans leur contexte : **Reconstruire un
@@ -67,7 +67,7 @@ passage manquant…** en mode connecté, et **Reculer les analyses** quand un re
 Un **clic droit** sur une ligne réunit les actions de ce passage : **ouvrir le passage**,
 **écouter le passage**, ouvrir sa page **Vigie-Chiro** (grisée si le passage n'est pas lié à la
 plateforme) et **copier** son n° de carré. Le même menu laisse **choisir et réordonner les colonnes**
-(entrée « Colonnes… », également dans le menu ☰) :
+(entrée « Colonnes… », également dans le menu principal (☰)) :
 voir [Agir sur une ligne](../personnaliser-les-tableaux.md#agir-sur-une-ligne-double-clic-et-clic-droit)
 et [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
@@ -145,7 +145,7 @@ menu **☰** l'une des quatre actions groupées :
 
 Le libellé de chaque entrée dit combien de lignes sont cochées, et pourquoi il est grisé s'il l'est.
 
-![Le même menu ☰ avec trois lignes cochées : les quatre actions groupées sont actives et annoncent chacune « des 3 lignes cochées ».](../assets/captures/apercu-multisite-menu-selection.png)
+![Le même menu principal (☰) avec trois lignes cochées : les quatre actions groupées sont actives et annoncent chacune « des 3 lignes cochées ».](../assets/captures/apercu-multisite-menu-selection.png)
 
 ### On vous dit d'abord ce qui sera écarté
 

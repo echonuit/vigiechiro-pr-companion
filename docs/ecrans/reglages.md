@@ -55,7 +55,7 @@ l'**effet** des bascules de l'onglet « Fonctionnalités » s'applique au **proc
 
 !!! note "Un réglage, parfois à deux endroits"
     Certains réglages restent aussi accessibles là où on en a besoin : la source des fiches espèces
-    figure également dans le menu ☰. Les deux emplacements pilotent le **même** réglage et restent
+    figure également dans le menu principal (☰). Les deux emplacements pilotent le **même** réglage et restent
     synchronisés.
 
     « Conserver les originaux » figurait aussi sur l'écran d'import ; il n'y est plus. C'est une option

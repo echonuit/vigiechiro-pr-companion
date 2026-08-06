@@ -16,7 +16,7 @@ Deux fois, à deux chantiers d'écart, ce mot a menti.
 
 Entre les deux, rien n'a signalé la récidive. La règle posée par #1855 existait, elle était juste, et elle vivait **uniquement dans le corps d'un message de commit** : un endroit que personne ne relit.
 
-Une troisième question est alors revenue (#1866) : le menu ☰ de « Sons & validation » dit « **Importer** depuis VigieChiro… » là où Mes sites dit « **Récupérer** depuis VigieChiro ». Même plateforme, même direction, deux verbes. Est-ce le même défaut ? Non, et la raison mérite d'être écrite : c'est précisément ce qui distingue une incohérence d'une distinction utile.
+Une troisième question est alors revenue (#1866) : le menu principal (☰) de « Sons & validation » dit « **Importer** depuis VigieChiro… » là où Mes sites dit « **Récupérer** depuis VigieChiro ». Même plateforme, même direction, deux verbes. Est-ce le même défaut ? Non, et la raison mérite d'être écrite : c'est précisément ce qui distingue une incohérence d'une distinction utile.
 
 ## Décision
 

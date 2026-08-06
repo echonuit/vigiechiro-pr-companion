@@ -26,9 +26,10 @@ public final class GesteAttendu {
     private static String ou(Besoin besoin) {
         return switch (besoin) {
             case Besoin.Connexion ignore ->
-                "Connectez-vous depuis le menu ☰ > Se connecter à Vigie-Chiro," + " puis recommencez.";
+                "Connectez-vous depuis le menu principal > Se connecter à Vigie-Chiro," + " puis recommencez.";
             case Besoin.Fonctionnalite fonctionnalite ->
-                "Réactivez-la depuis le menu ☰ > Fonctionnalités (« " + fonctionnalite.nom() + " »), puis recommencez.";
+                "Réactivez-la depuis le menu principal > Fonctionnalités (« " + fonctionnalite.nom()
+                        + " »), puis recommencez.";
         };
     }
 }

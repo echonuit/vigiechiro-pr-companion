@@ -43,4 +43,4 @@ Certaines surfaces résistent à ce principe. Un `Alert` se montre par `showAndW
 
 - **Reconstruire à l'identique, avec rigueur.** C'est l'état d'avant #1468, et la rigueur n'a pas suffi : la dérive a été constatée, pas redoutée. Rien dans la chaîne ne peut la signaler.
 - **Piloter l'IHM réelle jusqu'à l'état voulu**, à la manière d'un test TestFX. Coûteux, fragile, et impraticable dans le harnais headless, où la plateforme refuse un nouveau `Stage` après l'attente de chargement audio.
-- **Renoncer à documenter les modales.** C'était l'état avant #1865 : la surface qui bouge le plus (menu ☰, confirmation, progression) était précisément l'angle mort. Les cinq défauts d'IHM des chantiers #1405/#1431 ont tous été trouvés **en ouvrant une capture**, aucun par un test.
+- **Renoncer à documenter les modales.** C'était l'état avant #1865 : la surface qui bouge le plus (menu principal (☰), confirmation, progression) était précisément l'angle mort. Les cinq défauts d'IHM des chantiers #1405/#1431 ont tous été trouvés **en ouvrant une capture**, aucun par un test.

@@ -273,7 +273,7 @@ class TraitementLotTest {
                 .as("le fait vient du modèle, le geste de l'application : sans lui, vingt refus sans remède")
                 .anySatisfy(motif -> assertThat(motif.libelle())
                         .contains("n'est pas connectée à Vigie-Chiro.")
-                        .contains("menu ☰ > Se connecter à Vigie-Chiro"));
+                        .contains("menu principal > Se connecter à Vigie-Chiro"));
     }
 
     @Test

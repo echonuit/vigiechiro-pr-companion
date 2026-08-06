@@ -93,7 +93,7 @@ d'écart, ce mot a menti (#1855, #1838) : d'où la règle de l'[ADR 0022](decisi
 | **Téléverser** / **Déposer** | Le **dépôt** des fichiers d'une nuit vérifiée. Voir l'entrée « Dépôt » du glossaire utilisateur. | « Téléverser sur Vigie-Chiro » |
 
 !!! warning "« Importer » et « Récupérer » ne sont pas interchangeables, et ce n'est pas une incohérence"
-    Le menu ☰ dit « **Importer** depuis VigieChiro… » là où Mes sites dit « **Récupérer** depuis
+    Le menu principal (☰) dit « **Importer** depuis VigieChiro… » là où Mes sites dit « **Récupérer** depuis
     VigieChiro » : même plateforme, même direction, deux verbes. C'est **voulu**, ils ne portent pas le
     même objet (règle 2 de l'ADR 0022). Aligner les deux reviendrait à écrire « Récupérer depuis la
     carte SD », ce que personne n'écrirait.

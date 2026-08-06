@@ -231,6 +231,6 @@ public class ReconstructionViewModel {
     /// demandait plus (#2554, passe 8).
     private ServiceReconstructionPassages exiger() {
         return service.orElseThrow(() -> new RegleMetierException("Compléter une nuit demande la connexion"
-                + " Vigie-Chiro : connectez-vous (menu ☰ > Se connecter à Vigie-Chiro) puis recommencez."));
+                + " Vigie-Chiro : connectez-vous (menu principal > Se connecter à Vigie-Chiro) puis recommencez."));
     }
 }

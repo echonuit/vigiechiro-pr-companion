@@ -245,6 +245,11 @@ public final class ListerObservations implements Callable<Integer> {
         if (ligne.douteux()) {
             marques.append("douteux ");
         }
+        // « commente » et non le texte : la colonne DRAPEAUX signale, elle ne raconte pas. Le contenu
+        // se lit en JSON, comme l'ecran le lit dans sa colonne (#3348).
+        if (ligne.commentaire() != null && !ligne.commentaire().isBlank()) {
+            marques.append("commente ");
+        }
         if (ligne.reference()) {
             marques.append("reference ");
         }
@@ -284,6 +289,10 @@ public final class ListerObservations implements Callable<Integer> {
         champs.put("douteux", ligne.douteux());
         champs.put("reference", ligne.reference());
         champs.put("aEnjeu", marqueurEnjeu.aEnjeu(ligne.taxonRetenu()));
+        // Le commentaire (#3348) : l'ecran le cherche, l'indique et - depuis #3348 - le MONTRE
+        // dans une colonne. Il n'existait nulle part en ligne de commande, ni emis ni signale.
+        // Parite CLI/IHM (ADR 0014) : ce que l'un montre, l'autre doit pouvoir le rendre.
+        champs.put("commentaire", ligne.commentaire());
         champs.put("messages", ligne.nbMessages());
         return champs;
     }

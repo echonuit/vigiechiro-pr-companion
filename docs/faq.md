@@ -132,7 +132,7 @@ séquence.
 
 Deux entrées du menu **☰** préparent un signalement utile.
 
-![Le menu ☰ déployé : sauvegardes, purge, journaux, « À propos », réglages et connexion.](assets/captures/apercu-menu-outils.png)
+![Le menu principal (☰) déployé : sauvegardes, purge, journaux, « À propos », réglages et connexion.](assets/captures/apercu-menu-outils.png)
 
 **☰ → « À propos »** donne la **version** que vous utilisez, ainsi que votre système et votre dossier
 de travail. Sans la version, un défaut est difficile à reproduire : la même manipulation peut très

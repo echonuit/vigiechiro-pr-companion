@@ -24,7 +24,7 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
    biodiversité), 5 cartes (Mes sites, Carte & passages, Audit de cohérence, Espèces & observations,
    Sons & validation).
 2. Le bandeau de compteurs est masqué sans donnée.
-3. Le fil d'Ariane, la recherche (Ctrl+F) et le menu ☰ sont présents.
+3. Le fil d'Ariane, la recherche (Ctrl+F) et le menu principal (☰) sont présents.
 
 **Étape 2 · Connexion (modale)**
 
@@ -33,7 +33,7 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 6. Token bidon : 401 « Token invalide ou expiré… ».
 7. Réseau coupé : « Vigie-Chiro est injoignable… le jeton n'est peut-être pas en cause ».
 8. Succès : bandeau vert « référentiel à jour : N taxons, N sites », badge vert identité + rôle.
-9. Déconnexion : confirmation, badge repasse gris, l'entrée du menu ☰ redevient « Se connecter… ».
+9. Déconnexion : confirmation, badge repasse gris, l'entrée du menu principal (☰) redevient « Se connecter… ».
 
 **Étape 3 · Mes sites**
 

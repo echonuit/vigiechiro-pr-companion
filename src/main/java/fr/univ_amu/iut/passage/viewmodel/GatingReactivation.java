@@ -73,6 +73,6 @@ final class GatingReactivation {
                     + " participation Vigie-Chiro d'où récupérer la liste de ses fichiers.";
         }
         return "Cette nuit a été rapatriée de Vigie-Chiro, mais ses observations n'ont pas encore été"
-                + " récupérées : connectez-vous à Vigie-Chiro (menu ☰) pour pouvoir la réactiver.";
+                + " récupérées : connectez-vous à Vigie-Chiro (menu principal) pour pouvoir la réactiver.";
     }
 }

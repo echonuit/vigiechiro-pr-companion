@@ -118,7 +118,7 @@
 **Critères d'acceptation** :
 
 - [x] La vue tabulaire ([E5.S2](#e5s2)) permet la sélection multiple (Ctrl+clic, Maj+clic pour plage).
-- [x] Les actions groupées sont proposées par le menu **☰**, chaque entrée disant combien de lignes sont cochées et, si elle est grisée, ce qui lui manque. *(Pas de barre d'actions contextuelle : le menu ☰ est déjà l'endroit où l'on cherche les actions de cet écran, et une barre qui apparaît décale le tableau au moment où l'on vient d'y cliquer.)*
+- [x] Les actions groupées sont proposées par le menu **☰**, chaque entrée disant combien de lignes sont cochées et, si elle est grisée, ce qui lui manque. *(Pas de barre d'actions contextuelle : le menu principal (☰) est déjà l'endroit où l'on cherche les actions de cet écran, et une barre qui apparaît décale le tableau au moment où l'on vient d'y cliquer.)*
 - [x] Quatre actions de la chaîne de production : **préparer le dépôt**, **téléverser**, **importer les résultats**, **déclencher le calcul**.
 - [x] Une annonce **préalable** dit combien de passages seront traités et **nomme** les écartés avec leur motif ; on peut renoncer.
 - [x] Si l'action échoue partiellement, un récapitulatif post-action liste chaque passage avec son sort et sa raison.
@@ -129,7 +129,7 @@
 - [ ] Journal d'opérations **persisté** pour audit. *(Reste à faire.)*
 
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), Notes pour Samuel<br>
-**Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (actions groupées du menu ☰)<br>
+**Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (actions groupées du menu principal (☰))<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E5.S2](#e5s2)<br>
 
 ---

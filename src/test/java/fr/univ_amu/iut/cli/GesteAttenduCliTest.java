@@ -28,8 +28,8 @@ class GesteAttenduCliTest {
         String pourLApplication = GesteAttendu.message(refus);
         String pourLeTerminal = GesteAttenduCli.message(refus);
 
-        assertThat(pourLApplication).contains("menu ☰").doesNotContain("vigiechiro connexion");
-        assertThat(pourLeTerminal).contains("vigiechiro connexion").doesNotContain("menu ☰ > Se connecter");
+        assertThat(pourLApplication).contains("menu principal").doesNotContain("vigiechiro connexion");
+        assertThat(pourLeTerminal).contains("vigiechiro connexion").doesNotContain("menu principal > Se connecter");
         // L'énoncé, lui, est le même des deux côtés : c'est le fait, il n'appartient à aucune surface.
         assertThat(pourLApplication).contains("n'est pas connectée à Vigie-Chiro");
         assertThat(pourLeTerminal).contains("n'est pas connectée à Vigie-Chiro");

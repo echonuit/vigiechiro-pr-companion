@@ -171,7 +171,7 @@ final class ConstructeurDonneesCarte {
     /// poser. C'est la même exception que le terminal (ADR 0035, décision 6) : le pictogramme se rend en
     /// icône **là où un composant le rend**, pas sur une surface qui n'a que du texte.
     private static String infobullePointApproche(CarreAgrege carre, PointAgrege point) {
-        return infobullePoint(carre, point) + SAUT + "⚠ Position approximative (centre du carré, GPS manquant)";
+        return infobullePoint(carre, point) + SAUT + "Position approximative (centre du carré, GPS manquant)";
     }
 
     /// Répartition des statuts dominants des points (ordre du workflow), p. ex. `Vérifié ×2, Déposé ×1`.

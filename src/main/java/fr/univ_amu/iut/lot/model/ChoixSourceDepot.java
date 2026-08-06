@@ -90,7 +90,7 @@ final class ChoixSourceDepot {
         // repli silencieux changerait ce qu'il advient de son audio cote serveur sans qu'il l'ait voulu.
         if (!archivesPresentes(lot) && !disquePermetArchives(lot)) {
             throw new RegleMetierException("Espace disque insuffisant pour générer les archives de dépôt."
-                    + " Libérez de la place, ou choisissez « Séquences WAV » dans Réglages ▸ Dépôt (plus"
+                    + " Libérez de la place, ou choisissez « Séquences WAV » dans Réglages > Dépôt (plus"
                     + " lent, mais sans archive à écrire).");
         }
         return new SourceArchivesRegenerables(

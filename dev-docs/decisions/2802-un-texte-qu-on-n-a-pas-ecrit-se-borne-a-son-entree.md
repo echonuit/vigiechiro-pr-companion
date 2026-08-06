@@ -31,7 +31,7 @@ En triant les dix-sept par **origine du texte**, un second défaut est apparu, p
 passaient `refus.getMessage()` au lieu du `Throwable`, et court-circuitaient donc [`GesteAttendu`] -
 l'enrichissement « où le régler » que l'[ADR 2635](2635-un-refus-dit-ce-qui-manque-la-surface-dit-quoi-faire.md)
 venait de livrer. Un refus qui disait « la connexion à Vigie-Chiro est requise » perdait « depuis le
-menu ☰ > Se connecter, puis recommencez ».
+menu principal (☰) > Se connecter, puis recommencez ».
 
 Les deux défauts ont la même cause : **on passait une chaîne là où on avait un objet**, et la chaîne
 perdait en route ce que l'objet savait.

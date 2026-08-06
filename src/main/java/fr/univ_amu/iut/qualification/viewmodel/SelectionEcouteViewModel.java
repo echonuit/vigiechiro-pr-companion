@@ -199,7 +199,7 @@ public class SelectionEcouteViewModel {
     private void appliquerContexte(ContexteVerification contexte) {
         String quadruplet = quadrupletLisible(contexte);
         titreContexte.set(quadruplet + " (" + contexte.annee() + ")");
-        plageHoraire.set(contexte.date() + "  " + contexte.heureDebut() + " → " + contexte.heureFin());
+        plageHoraire.set(contexte.date() + "  " + contexte.heureDebut() + " -> " + contexte.heureFin());
         volumetrie.set(contexte.sequencesTotales()
                 + " séquences · durée enregistrée "
                 + Formats.dureeLisible(contexte.dureeEnregistreeSecondes()));

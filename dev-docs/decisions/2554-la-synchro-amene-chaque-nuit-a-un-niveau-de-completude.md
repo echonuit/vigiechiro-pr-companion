@@ -43,7 +43,7 @@ Trois règles encadrent cette politique.
 - La synchro devient une **opération longue**, mesurée à 10,5 s pour deux nuits (≈ 9 000 séquences, 24 542 observations) sur compte réel, soit de l'ordre de deux minutes pour cent nuits. Elle n'est pas **bornée** pour autant : l'**annulation** remplace la borne, ce qui n'est tenable que parce que chaque nuit est écrite entièrement ou pas du tout, et que la synchro est idempotente. Interrompue, elle reprend au tour suivant.
 - La synchro tournant **aussi à la connexion**, les deux surfaces portent la même barre et le même bouton « Annuler ».
 - Le parallélisme s'arrête au **réseau** : les téléchargements partent par huit (borne d'entrée/sortie), les écritures restent en série, SQLite étant mono-écrivain.
-- Un modèle **ne nomme ni la surface ni le geste** dans ses refus. Les mêmes lectures distantes servent désormais la reconstruction, la réactivation, l'IHM et la CLI : un message qui disait « avant de reconstruire un passage (menu ☰ > Se connecter) » servait un menu à qui travaille dans un terminal, et un geste à qui en faisait un autre.
+- Un modèle **ne nomme ni la surface ni le geste** dans ses refus. Les mêmes lectures distantes servent désormais la reconstruction, la réactivation, l'IHM et la CLI : un message qui disait « avant de reconstruire un passage (menu principal (☰) > Se connecter) » servait un menu à qui travaille dans un terminal, et un geste à qui en faisait un autre.
 
 ## Alternatives écartées
 
