@@ -65,7 +65,11 @@ d'architecture** qui structurent son code.
 - **Tests automatisés** avec **JUnit 5**, **AssertJ**, **TestFX** (IHM, headless), **Mockito** et
   **ApprovalTests**. Des tests **end-to-end** rejouent les parcours métier de bout en bout.
 - **Qualité de code** outillée et **bloquante en CI** : **Spotless** (Palantir Java Format, déclenché
-  en *pre-commit*), **PMD**, et une **couverture minimale** vérifiée par **JaCoCo**. Les valeurs de
+  en *pre-commit*), **PMD**, une **couverture minimale** vérifiée par **JaCoCo**, et une **seconde
+  compilation** par le compilateur **Eclipse** en plus de `javac`. Deux mises en œuvre conformes
+  n'acceptent pas exactement le même code, et ce qui ne passe que chez l'une empoisonne le
+  `target/classes` partagé avec l'IDE : l'échec survient alors à l'exécution, bien plus tard et très
+  loin de sa cause. Les valeurs de
   ces seuils, et la justification de chacune, vivent dans le `pom.xml` du dépôt applicatif : les
   répéter ici les ferait diverger au premier ajustement.
 - **Intégration continue** sur **GitHub Actions** : à chaque *push*, build + tests + portail qualité ;
