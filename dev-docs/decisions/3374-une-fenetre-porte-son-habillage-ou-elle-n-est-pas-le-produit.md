@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté - 2026-08-06
 - **Chantier** : #3374, suite de l'[ADR 3361](3361-la-typographie-est-embarquee.md)
-- **Vérification** : certaine - `ScenesHabilleesTest`, et la mesure ci-dessous
+- **Vérification** : certaine - `ScenesHabilleesTest#toutes_les_scenes_passent_par_habillage`
 
 ## Contexte
 
