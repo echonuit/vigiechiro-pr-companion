@@ -60,7 +60,7 @@ jobs:
           fetch-depth: 0 # semantic-release a besoin de tout l'historique + des tags
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: "lts/*"
+          node-version: "24"
       - name: Installer l'outillage depuis le lockfile
         # Auparavant `npx --yes -p semantic-release@24 …` : la résolution de versions se faisait à
         # CHAQUE exécution, dans ce job autorisé à écrire contenus, issues et PR. Un plugin compromis

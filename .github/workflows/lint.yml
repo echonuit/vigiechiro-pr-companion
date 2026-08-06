@@ -47,7 +47,7 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
-          node-version: "lts/*"
+          node-version: "24"
 
       - name: Installer l'outillage depuis le lockfile
         # `npm ci` échoue si le lockfile ne correspond pas au package.json : c'est la garantie que

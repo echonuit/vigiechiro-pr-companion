@@ -42,8 +42,26 @@ cd .github/release && ./node_modules/.bin/semantic-release --dry-run
 
 ## Ce que l'audit dit aujourd'hui
 
-`npm audit` signale **18 paquets vulnérables** (15 hautes, 3 moyennes) dans l'arbre transitif, pour
-l'essentiel le `npm` que `semantic-release` embarque (`@npmcli/arborist`, `pacote`, `sigstore`…). Ces
-vulnérabilités **existaient déjà** avec `npx --yes` ; la différence est qu'elles sont désormais
-**visibles**. Elles ne sont pas corrigées ici : `npm audit fix --force` changerait de majeure, et le
-traitement des alertes de dépendances est l'objet de #2740.
+`npm audit` signale **7 paquets vulnérables** (2 hautes, 5 moyennes), contre **18** (15 hautes) avant
+le passage en `semantic-release@25` (#3264). Ces vulnérabilités **existaient déjà** avec `npx --yes` ;
+la différence est qu'elles sont désormais **visibles**, et c'était l'objet du lockfile.
+
+Ce qui reste **ne se corrige pas ici**, à aucune version de `semantic-release` : les deux hautes
+(`brace-expansion`, `ip-address`) vivent dans le `npm` que `semantic-release` **embarque**
+(`node_modules/npm`, aujourd'hui 11.19.0). `npm audit` les annonce « corrigeables sans majeure », mais
+`npm audit fix` répond lui-même `is a bundled dependency of npm@… · It cannot be fixed
+automatically`. Elles partiront quand `npm` publiera une version qui les embarque corrigées, et que
+`semantic-release` la reprendra.
+
+⚠️ **Ne pas lire un nombre d'alertes Dependabot comme une mesure de l'exposition** : GitHub
+**auto-écarte** les avis de portée `development`, ce qu'est tout cet arbre. Au 2026-08-04, quatre avis
+(trois sur `brace-expansion`, un sur `picomatch`) ont été écartés ainsi, sans que le compte affiché
+bouge. `npm audit`, lui, les voit. C'est `npm audit` qui fait foi ici.
+
+## Pourquoi la version de Node est épinglée
+
+Les workflows demandent `node-version: "24"` et non `lts/*`. Un lockfile fige l'arbre, mais `lts/*`
+laissait flotter le **runtime qui l'exécute** : au prochain passage de majeure LTS, le job de
+publication aurait changé de Node sans PR ni relecture. `semantic-release@25` exige d'ailleurs
+`^22.14.0 || >= 24.10.0` - avec `lts/*`, la satisfaction de cette contrainte dépendait de ce que le
+runner avait en cache ce jour-là.
