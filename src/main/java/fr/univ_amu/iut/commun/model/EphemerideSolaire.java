@@ -14,7 +14,10 @@ import java.util.Optional;
 /// protocole chiroptère (activité nocturne).
 ///
 /// **Algorithme** : « sunrise equation » de la NOAA (approximation du mouvement apparent du soleil),
-/// précise à environ une minute aux latitudes tempérées, ce qui suffit très largement pour un repère
+/// précise à environ une minute aux latitudes tempérées **près des solstices**, et à quelques minutes
+/// près des équinoxes - mesuré contre une mise en œuvre NOAA indépendante : 3 min 38 s d'écart sur le
+/// lever à Paris le 25 mars 2026, 6 min 14 s à Tromsø. C'est la précision connue de la formule du
+/// lever simplifiée, et elle suffit très largement pour un repère
 /// de cohérence horaire. Aucune dépendance, entièrement testable hors ligne.
 ///
 /// **Fuseau** : les heures renvoyées sont en **Temps universel coordonné (UTC)**. La conversion vers
