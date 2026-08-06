@@ -661,6 +661,7 @@ class DocumentationAJourTest {
             "cli",
             "workflows-ci",
             "migrations",
+            "tests-bats",
             "criteres-validation",
             "criteres-analyse",
             "criteres-activite",
@@ -763,10 +764,36 @@ class DocumentationAJourTest {
                 (int) fichiersDe(
                         Path.of("src", "main", "resources", "db", "migration"),
                         nom -> nom.startsWith("V") && nom.endsWith(".sql"));
+            case "tests-bats" -> casesBats();
             case String catalogue
             when CATALOGUES_CRITERES.containsKey(catalogue) -> criteresDuCatalogue(CATALOGUES_CRITERES.get(catalogue));
             default -> throw new AssertionError("clé d'inventaire inconnue : " + cle);
         };
+    }
+
+    /// Les cas `@test` déclarés par le harnais bats, tous fichiers confondus.
+    ///
+    /// Le chiffre vivait en prose à deux endroits, et il annonçait **21** pour **89** réels - un facteur
+    /// quatre, accumulé sans que rien ne le dise (#2749). Compter la ligne `@test` en début de ligne suit
+    /// exactement ce que bats reconnaît comme un cas.
+    private static int casesBats() {
+        try (Stream<Path> fichiers = Files.list(Path.of("src", "test", "bats"))) {
+            return fichiers.filter(chemin -> chemin.getFileName().toString().endsWith(".bats"))
+                    .mapToInt(DocumentationAJourTest::casesDuFichier)
+                    .sum();
+        } catch (IOException echec) {
+            throw new UncheckedIOException("harnais bats illisible", echec);
+        }
+    }
+
+    private static int casesDuFichier(Path fichier) {
+        try {
+            return (int) Files.readAllLines(fichier).stream()
+                    .filter(ligne -> ligne.startsWith("@test"))
+                    .count();
+        } catch (IOException echec) {
+            throw new UncheckedIOException("fichier bats illisible : " + fichier, echec);
+        }
     }
 
     /// Les critères qu'un catalogue **offre** : ses fabriques qui rendent un `CritereFiltre`, comptées
