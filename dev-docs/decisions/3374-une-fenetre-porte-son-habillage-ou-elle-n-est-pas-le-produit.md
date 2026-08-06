@@ -32,8 +32,18 @@ chrome. Comparaison du rendu de la CI à celui d'un poste de développement, aux
 | `apercu-audit.png` | non | 197 612 px sur 691 200 (28,6 %), écart max 230/255 |
 
 **Zéro pixel** sur l'écran qui porte la feuille : les deux environnements produisent le **même
-fichier**. Il n'y a donc rien à aligner côté anticrénelage - hypothèse envisagée, et écartée par
-cette ligne. Toute la divergence tenait au choix de la police.
+fichier**. Il n'y a donc rien à aligner côté **anticrénelage** - hypothèse envisagée, et écartée par
+cette ligne.
+
+!!! warning "Ce que cette ligne ne dit pas"
+    « Zéro pixel » vaut pour `apercu-accueil.png`, mesuré. En **généraliser** la portée - « la CI et un
+    poste rendent désormais identique » - était un pas de trop, fait le jour même. Mesure du
+    2026-08-06 après #3375 : **66 aperçus sur 138** diffèrent encore entre la CI et un poste, pour des
+    causes **étrangères à la police** - au moins les libellés par défaut des boutons de dialogue, que
+    JavaFX localise selon la machine (« Cancel » en CI, « Annuler » ici), et un décalage vertical de
+    quelques pixels sur les écrans à graphique. Cf. #3391.
+
+    La police était **une** cause, et la seule que cette ADR traite. Elle n'était pas la seule.
 
 Elle écarte aussi un diagnostic antérieur, qui lisait dans l'écart de 224/255 la preuve de deux
 polices différentes : c'en était bien une, mais entre la vue **avec** et **sans** `base.css`, pas
@@ -54,8 +64,9 @@ Ajouter `@base.css` aux dix FXML aurait marché, et se serait défait au onzièm
 
 - **Les modales cessent de rendre dans une autre police que la fenêtre qui les porte.** C'était le
   défaut d'origine, resté entier à côté de #3361 ;
-- **le verdict du garde de troncature devient transportable** : ce qui tient en CI tient en local, et
-  réciproquement. C'est ce qui avait coûté trois allers-retours à la seule clôture du chantier #3151 ;
+- **le verdict du garde de troncature cesse de dépendre de la police** - la cause des trois
+  allers-retours de la clôture du chantier #3151. Il ne devient pas pour autant *transportable* :
+  d'autres causes de divergence subsistent (#3391), et un rejeu local reste à confirmer par la CI ;
 - 108 aperçus sur 138 changent à la première régénération. C'est la mesure de ce qui ne montrait pas
   le produit.
 
