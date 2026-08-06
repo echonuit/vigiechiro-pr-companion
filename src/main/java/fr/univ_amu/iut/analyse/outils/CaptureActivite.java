@@ -168,6 +168,19 @@ public final class CaptureActivite {
     /// **irreproductible en local** - le repli systeme y est trop proche de la police embarquee - donc
     /// on lit l'etat reel dans le journal du runner plutot que de raisonner d'ici.
     private static void sonder(Scene scene) {
+        // Mesure DIRECTE du meme texte dans les deux polices : si « System » est plus large en CI et
+        // « Noto Sans » identique, alors la largeur du controle a ete calculee AVANT la feuille.
+        for (String mot : new String[] {"1 heure", "30 min", "15 min"}) {
+            javafx.scene.text.Text avecNoto = new javafx.scene.text.Text(mot);
+            avecNoto.setFont(javafx.scene.text.Font.font("Noto Sans", 13));
+            javafx.scene.text.Text avecSysteme = new javafx.scene.text.Text(mot);
+            avecSysteme.setFont(javafx.scene.text.Font.getDefault());
+            System.out.printf(
+                    "[sonde-3417] « %s » : Noto Sans %.2f px, System %.2f px%n",
+                    mot,
+                    avecNoto.getLayoutBounds().getWidth(),
+                    avecSysteme.getLayoutBounds().getWidth());
+        }
         javafx.scene.Node noeud = scene.getRoot().lookup("#choixTranche");
         System.out.println("[sonde-3417] police par defaut : " + javafx.scene.text.Font.getDefault());
         System.out.println("[sonde-3417] « Noto Sans » enregistree : "
