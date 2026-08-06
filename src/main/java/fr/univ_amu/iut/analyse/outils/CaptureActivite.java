@@ -156,8 +156,17 @@ public final class CaptureActivite {
     /// PNG. Scène bornée sous 1000 px (le rendu headless plafonne le blit à 1000×1000).
     private static void rendre(Injector injecteur, Path fichier) throws IOException {
         Scene scene = new Scene(ouvrir(injecteur), 980, 620);
+        largeurDu(scene, "AVANT tout rendu");
         ApercuFx.enregistrerPng(scene, fichier);
         sonder(scene);
+        // Remede teste : invalider la taille calculee, puis refaire une passe CSS + layout.
+        if (scene.getRoot().lookup("#choixTranche") instanceof javafx.scene.control.Control c) {
+            c.setPrefWidth(javafx.scene.layout.Region.USE_COMPUTED_SIZE);
+            c.requestLayout();
+            scene.getRoot().applyCss();
+            scene.getRoot().layout();
+        }
+        largeurDu(scene, "APRES invalidation + seconde passe");
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
@@ -167,6 +176,15 @@ public final class CaptureActivite {
     /// largeur du `ChoiceBox` « Tranche horaire », dont le graphe herite du deplacement. Le cas est
     /// **irreproductible en local** - le repli systeme y est trop proche de la police embarquee - donc
     /// on lit l'etat reel dans le journal du runner plutot que de raisonner d'ici.
+    private static void largeurDu(Scene scene, String quand) {
+        if (scene.getRoot().lookup("#choixTranche") instanceof javafx.scene.control.ChoiceBox<?> c) {
+            System.out.println(
+                    "[sonde-3417] " + quand + " : largeur=" + c.getWidth() + " prefWidth=" + c.prefWidth(-1));
+        } else {
+            System.out.println("[sonde-3417] " + quand + " : controle introuvable");
+        }
+    }
+
     private static void sonder(Scene scene) {
         // Mesure DIRECTE du meme texte dans les deux polices : si « System » est plus large en CI et
         // « Noto Sans » identique, alors la largeur du controle a ete calculee AVANT la feuille.
