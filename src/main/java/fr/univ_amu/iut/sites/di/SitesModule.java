@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.api.ResolveurCommuneApiGeo;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
+import fr.univ_amu.iut.commun.model.CommunePoint;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
@@ -85,6 +86,12 @@ public class SitesModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), CoordonneesPoint.class)
                 .setBinding()
                 .to(CoordonneesPointSites.class);
+        // Port socle CommunePoint (#3442) : même montage, pour la commune du point - déjà dérivée de son
+        // GPS (ADR 2791) et stockée dans `point_commune`. Elle donne le TERRITOIRE, donc le fuseau des
+        // heures de la nuit : sans elle, une nuit de La Réunion se déposerait à l'heure de la métropole.
+        OptionalBinder.newOptionalBinder(binder(), CommunePoint.class)
+                .setBinding()
+                .to(CommunePointSites.class);
         // Port socle ReferentielPoint (axe 4) : `sites` fournit l'identité VigieChiro d'un point (code +
         // id du site) à `passage`/`lot` via le même montage d'inversion.
         OptionalBinder.newOptionalBinder(binder(), ReferentielPoint.class)
