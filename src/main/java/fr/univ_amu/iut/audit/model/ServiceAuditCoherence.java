@@ -261,23 +261,46 @@ public class ServiceAuditCoherence {
             return;
         }
         String prefixe = prefixeOpt.get().prefixeFichier();
+        List<String> fautifs = new ArrayList<>();
         for (EnregistrementOriginal original : originaux) {
-            signalerPrefixe(constats, passage.id(), original.nomFichier(), prefixe);
+            ajouterSiFautif(fautifs, original.nomFichier(), prefixe);
         }
         for (SequenceDEcoute sequence : sequences) {
-            signalerPrefixe(constats, passage.id(), sequence.nomFichier(), prefixe);
+            ajouterSiFautif(fautifs, sequence.nomFichier(), prefixe);
+        }
+        constatPrefixe(passage.id(), fautifs, prefixe).ifPresent(constats::add);
+    }
+
+    private static void ajouterSiFautif(List<String> fautifs, String nom, String prefixe) {
+        if (nom != null && !nom.startsWith(prefixe)) {
+            fautifs.add(nom);
         }
     }
 
-    private void signalerPrefixe(List<ConstatAudit> constats, Long idPassage, String nom, String prefixe) {
-        if (nom != null && !nom.startsWith(prefixe)) {
-            constats.add(new ConstatAudit(
-                    Severite.ERREUR,
-                    CategorieConstat.PREFIXE_NON_CONFORME,
-                    idPassage,
-                    nom,
-                    "Nom « " + nom + " » sans le préfixe attendu « " + prefixe + " »."));
+    /// **Un seul** constat par passage, portant le décompte - jamais une erreur par fichier (#3490).
+    ///
+    /// Mesuré sur un workspace de recette réel : la boucle par fichier produisait **4236** constats
+    /// `PREFIXE_NON_CONFORME` contre 2 `DOSSIER_ORPHELIN`, rendant ces derniers matériellement
+    /// invisibles. Le seul écran qui confronte disque et base ne confrontait plus rien : il
+    /// ensevelissait.
+    ///
+    /// C'est la règle déjà posée pour [CategorieConstat#AUDIO_INDISPONIBLE], appliquée ici : « un seul
+    /// constat informatif portant le décompte, jamais une erreur par fichier ».
+    ///
+    /// ⚠️ Agréger n'est pas taire. Quatre mille exemples n'aident pas, zéro non plus : le constat garde
+    /// le **compte** (l'ampleur), le **préfixe attendu** (ce qu'il faudrait) et **un exemple** (ce qu'on
+    /// a). C'est ce qu'il faut pour décider d'un renommage.
+    private static Optional<ConstatAudit> constatPrefixe(Long idPassage, List<String> fautifs, String prefixe) {
+        if (fautifs.isEmpty()) {
+            return Optional.empty();
         }
+        return Optional.of(new ConstatAudit(
+                Severite.ERREUR,
+                CategorieConstat.PREFIXE_NON_CONFORME,
+                idPassage,
+                ciblePassage(idPassage),
+                fautifs.size() + " fichier(s) sans le préfixe attendu « " + prefixe + " », par exemple « "
+                        + fautifs.getFirst() + " »."));
     }
 
     // --- C3 : unités déposées divergentes (renommage après dépôt), sans réseau ------------------
