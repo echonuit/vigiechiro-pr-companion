@@ -9,9 +9,19 @@ import javafx.beans.property.SimpleBooleanProperty;
 /// Préférence **« conserver les originaux »** de l'import, extraite de [ImportationViewModel] (Extract
 /// Class) : porte le choix éditable (la case de la vue), son défaut persisté et sa mémorisation.
 ///
-/// **Partagée** (singleton) entre la **vue** (qui lie bidirectionnellement la case) et le **ViewModel**
-/// (qui lit la valeur au lancement de l'import), de sorte que le choix survive à la réouverture de
-/// l'écran : le ViewModel, lui, est recréé à chaque chargement FXML, alors que cette préférence, non.
+/// ## Le propriétaire du réglage a changé, et cette classe ne l'avait pas suivi (#3471)
+///
+/// La case vivait autrefois **sur l'écran d'import**, liée bidirectionnellement à la propriété
+/// ci-dessous, et [#memoriser] la persistait au lancement. Le contrat se tenait.
+///
+/// Depuis, la case a **déménagé dans Réglages ▸ Import** (réglage avancé), qui écrit la clé
+/// directement. Cette classe est pourtant restée un **instantané pris au démarrage** : elle lisait le
+/// réglage dans son constructeur, en `@Singleton`, et ne le relisait jamais. Cocher la case puis
+/// importer ne conservait donc rien - et pire, `memoriser()` réécrivait la valeur périmée par-dessus
+/// celle qu'on venait de poser.
+///
+/// Elle lit désormais **au moment de servir**, comme le fait la commande CLI `importer` depuis
+/// toujours. Les deux surfaces ne peuvent plus diverger.
 ///
 /// VM-agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seul `javafx.beans` est importé,
 /// jamais `javafx.scene`. La persistance passe par le service socle [Reglages] (jamais un DAO).
@@ -27,8 +37,11 @@ public final class PreferenceConservation {
 
     public PreferenceConservation(Reglages reglages) {
         this.reglages = Objects.requireNonNull(reglages, "reglages");
-        // Restaure le dernier choix, ou le défaut si la clé est absente en base.
-        conserverOriginaux.set(reglages.lireBooleen(CLE, ReglageConservationOriginaux.DEFAUT));
+        conserverOriginaux.set(lireLeReglage());
+    }
+
+    private boolean lireLeReglage() {
+        return reglages.lireBooleen(CLE, ReglageConservationOriginaux.DEFAUT);
     }
 
     /// Propriété **éditable** : la vue y lie bidirectionnellement sa case à cocher (`true` = copie dans
@@ -37,14 +50,14 @@ public final class PreferenceConservation {
         return conserverOriginaux;
     }
 
-    /// Valeur courante du choix (`true` = conserver les originaux).
+    /// Valeur courante du choix (`true` = conserver les originaux), **relue** à chaque appel.
+    ///
+    /// Relire coûte une lecture de réglage par import - négligeable devant les minutes que dure une
+    /// transformation - et supprime toute fenêtre pendant laquelle l'écran et la base divergeraient.
     public boolean valeur() {
-        return conserverOriginaux.get();
-    }
-
-    /// Mémorise le choix courant (persistance), pour qu'il survive d'une session à l'autre. À appeler au
-    /// lancement d'un import.
-    public void memoriser() {
-        reglages.ecrireBooleen(CLE, conserverOriginaux.get());
+        boolean courant = lireLeReglage();
+        // La propriété reste alignée pour les liaisons éventuelles : elle suit la base, jamais l'inverse.
+        conserverOriginaux.set(courant);
+        return courant;
     }
 }

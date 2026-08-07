@@ -284,8 +284,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         lierDossierEtInspection(viewModel.inspection());
         lierRattachement(viewModel.rattachement());
         lierAction();
-        // Option « conserver les originaux » : la case reflète le choix persisté (défaut : conservation
-        // activée) et le met à jour dans les deux sens ; il est mémorisé au lancement de l'import.
+        // La case « conserver les originaux » ne vit plus ici : elle a rejoint Réglages ▸ Import
+        // (réglage avancé), qui en est désormais le seul propriétaire. L'import se contente de LIRE la
+        // préférence au moment de s'en servir (#3471).
         // Glisser-déposer (#139) d'un dossier/.zip sur tout l'écran, gelé pendant un traitement.
         GlisserDeposerImport.installer(racineImport, this::traitementEnCours, this::chargerSource);
         viewModel.chargerSites();
@@ -578,7 +579,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     private void lancerImportNuitsHorsFil() {
         // Mémorise le choix « conserver les originaux » (survit aux sessions) au lancement, puis capture les
         // nuits incluses + leurs n° dans un instantané immuable (fil JavaFX).
-        conservation.memoriser();
         var demande = viewModel
                 .coordinationNuits()
                 .preparerDemande(viewModel.inspection().dossier(), conservation.valeur());
