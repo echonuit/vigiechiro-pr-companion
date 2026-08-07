@@ -65,8 +65,9 @@ espèces quelques jours plus tard.
 
 ## 📖 Découvrir les écrans
 
-L'application compte treize écrans, documentés un par un. **Cliquez sur une vignette pour
-ouvrir sa page de documentation** (rôle, captures commentées, astuces).
+L'application compte <!--inv:ecrans-->16<!--/inv--> écrans, documentés un par un. Les plus
+fréquentés ont leur vignette ci-dessous : **cliquez pour ouvrir la page** (rôle, captures commentées,
+astuces). Les autres sont dans [le sommaire des écrans](https://companion.echonuit.fr/ecrans/).
 
 <table>
   <tr>

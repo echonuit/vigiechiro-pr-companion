@@ -756,6 +756,7 @@ class DocumentationAJourTest {
             "workflows-ci",
             "migrations",
             "tables",
+            "ecrans",
             "tests-bats",
             "criteres-validation",
             "criteres-analyse",
@@ -861,6 +862,8 @@ class DocumentationAJourTest {
                         nom -> nom.startsWith("V") && nom.endsWith(".sql"));
             case "tests-bats" -> casesBats();
             case "tables" -> tablesDuSchema();
+            case "ecrans" ->
+                (int) fichiersDe(Path.of("docs", "ecrans"), nom -> nom.endsWith(".md") && !"index.md".equals(nom));
             case String catalogue
             when CATALOGUES_CRITERES.containsKey(catalogue) -> criteresDuCatalogue(CATALOGUES_CRITERES.get(catalogue));
             default -> throw new AssertionError("clé d'inventaire inconnue : " + cle);
