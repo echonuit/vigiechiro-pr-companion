@@ -41,6 +41,20 @@ réglés, la préparation reste bloquée. Voir l'écran [Préparer le dépôt](e
 
 En temps normal, **vous n'avez pas à téléverser à la main** : connectée à Vigie-Chiro, l'application **dépose la nuit directement** (bouton « Téléverser sur Vigie-Chiro »), reprend sur coupure, puis vous lancez l'analyse. Le dépôt navigateur reste un **repli hors connexion** : l'écran Préparer le dépôt ouvre alors le dossier `depot/`, et vous revenez « Marquer déposé ». Voir l'écran [Préparer le dépôt](ecrans/lot.md).
 
+### Les heures d'une nuit changent-elles si je dépouille depuis l'étranger ?
+
+Non. Les heures de début et de fin d'une nuit sont celles du **site d'écoute** : « 21:00 » veut dire
+21 h là où l'enregistreur était posé, quel que soit le fuseau réglé sur l'ordinateur qui dépouille.
+C'est aussi ce que l'application dépose sur Vigie-Chiro.
+
+Auparavant, la conversion partait du fuseau de la machine : la même nuit pouvait arriver sur la
+plateforme décalée de plusieurs heures, voire **datée du lendemain**, selon l'ordinateur utilisé.
+
+!!! warning "Ce que cela laisse faux, pour l'instant"
+    Le fuseau du site est celui de la **France métropolitaine**. Sur un carré d'outre-mer, les heures
+    déposées restent décalées - c'était déjà le cas avant, et pour tout le monde. Les dériver de la
+    position du point est prévu.
+
 ## Validation des espèces
 
 ### L'action « Sons & validation » est grisée
