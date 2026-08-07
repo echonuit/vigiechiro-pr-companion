@@ -104,8 +104,8 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
   <text x="40" y="352" class="section">Résumé de la nuit</text>
   <rect x="40" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="172" y="406" class="stat-num" text-anchor="middle">38,4 Go</text><text x="172" y="426" class="stat-label" text-anchor="middle">VOLUME BRUTS</text>
   <rect x="325" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="457" y="406" class="stat-num" text-anchor="middle">17 Go</text><text x="457" y="426" class="stat-label" text-anchor="middle">VOLUME TRANSFORMÉ</text>
-  <rect x="610" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="742" y="406" class="stat-num" text-anchor="middle">5 h 1 min</text><text x="742" y="426" class="stat-label" text-anchor="middle">DURÉE ENREGISTRÉE</text>
-  <rect x="895" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="1027" y="406" class="stat-num" text-anchor="middle">3 614</text><text x="1027" y="426" class="stat-label" text-anchor="middle">SÉQUENCES</text>
+  <rect x="610" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="742" y="406" class="stat-num" text-anchor="middle">1 h 58 min</text><text x="742" y="426" class="stat-label" text-anchor="middle">DURÉE ENREGISTRÉE</text>
+  <rect x="895" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="1027" y="406" class="stat-num" text-anchor="middle">2 109</text><text x="1027" y="426" class="stat-label" text-anchor="middle">SÉQUENCES</text>
 
   <!-- Actions « avancer » (cartes). Vérifier = mise en avant ; Validation = verrouillée. -->
   <text x="40" y="476" class="section">Actions</text>

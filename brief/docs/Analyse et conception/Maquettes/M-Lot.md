@@ -86,7 +86,7 @@ La vue déroule le dépôt en **quatre étapes** (un stepper les rappelle en tê
   <text x="540" y="186" class="info-label">STATUT</text>
   <text x="540" y="203" class="info-value">Vérifié</text>
   <text x="700" y="186" class="info-label">SÉQUENCES</text>
-  <text x="700" y="203" class="info-value">3 614 · 17,2 Go</text>
+  <text x="700" y="203" class="info-value">2 109 · 5,4 Go</text>
   <text x="900" y="186" class="info-label">FORME DU DÉPÔT</text>
   <text x="900" y="203" class="info-value">Archives ZIP (≤ 700 Mo)</text>
 
@@ -95,7 +95,7 @@ La vue déroule le dépôt en **quatre étapes** (un stepper les rappelle en tê
   <text x="40" y="262" class="section-sub">Contrôles de cohérence (R33). Un ✗ bloque ; un ⚠ laisse déposer.</text>
   <rect x="40" y="272" width="1120" height="128" rx="4" class="card"/>
   <text x="58" y="298" class="check-ok">✓</text><text x="80" y="298" class="check-row">Verdict de vérification : OK</text>
-  <text x="58" y="322" class="check-ok">✓</text><text x="80" y="322" class="check-row">Transformation des enregistrements : 1 572 originaux → 3 614 séquences</text>
+  <text x="58" y="322" class="check-ok">✓</text><text x="80" y="322" class="check-row">Transformation des enregistrements : 1 572 originaux → 2 109 séquences</text>
   <text x="58" y="346" class="check-ok">✓</text><text x="80" y="346" class="check-row">Nommage des fichiers : préfixe Car640380-2026-Pass2-A1- conforme</text>
   <text x="58" y="370" class="check-ok">✓</text><text x="80" y="370" class="check-row">Journal du capteur : LogPR1925492.txt présent</text>
   <text x="58" y="392" class="check-warn">⚠</text><text x="80" y="392" class="check-row" fill="#5d4e00">Relevé climatique absent : sonde non installée ou défaillante. Le dépôt reste possible.</text>

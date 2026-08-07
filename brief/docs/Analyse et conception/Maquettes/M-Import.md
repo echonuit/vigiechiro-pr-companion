@@ -301,7 +301,7 @@ Après le clic sur **📥 Importer cette nuit**, l'écran passe en mode progress
   <rect x="106" y="332" width="483" height="12" rx="6" class="progress-bar"/>
   <text x="1140" y="343" class="progress-pct" text-anchor="end">47 %</text>
   <text x="106" y="368" class="step-detail-mono">→ Car640380-2026-Pass2-A1-PaRecPR1925492_20260622_223415.wav</text>
-  <text x="106" y="386" class="step-sub">1 706 séquences produites sur ~3 614 prévues</text>
+  <text x="106" y="386" class="step-sub">996 séquences produites sur ~2 109 prévues</text>
 
   <rect x="40" y="424" width="170" height="34" rx="4" class="btn-secondary"/>
   <text x="125" y="446" class="btn-txt-dark" text-anchor="middle">Fermer la fenêtre</text>
