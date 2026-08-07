@@ -95,8 +95,8 @@ Les deux tournent **en parallèle** et rendent leur verdict indépendamment : le
 ramène au plus long des deux, et un packaging cassé rougit même quand les tests échouent.
 
 !!! warning "Ce qui ne gagne rien à être optimisé"
-    L'installation d'`apt`/`bats` coûte **9 s**, pas davantage : c'est vérifié. Les ~140 s du harnais
-    sont les **21 tests eux-mêmes**, qui lancent chacun un JVM sur le fat-jar. Chercher un cache apt
+    L'installation d'`apt`/`bats` coûte **9 s**, pas davantage : c'est vérifié. Le reste du harnais,
+    ce sont **les tests eux-mêmes**, qui lancent chacun un JVM sur le fat-jar. Chercher un cache apt
     ici ne rapporte rien - l'hypothèse a été faite, mesurée, et démentie.
 
 ## La release (semantic-release + jpackage)

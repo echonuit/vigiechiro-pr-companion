@@ -20,7 +20,7 @@ qu'on a choisi d'ancrer. Quinze jours plus tard, le lot 5 a mesuré ce que cette
 
 | Ce que la prose annonçait | Le réel | Facteur |
 |---|---|---|
-| « les 21 tests bats », à deux endroits | **89** | ×4,2 |
+| « les 21 tests bats », à **trois** endroits | **89** | ×4,2 |
 | « treize écrans » (README) | **16** | |
 | « 31 tables après `V02`→`V35` » | **33** après `V38` | |
 | « ~3600 séquences » pour une vraie nuit | **2109** | ×1,7 |
@@ -74,6 +74,10 @@ qu'il n'y en a pas d'autre.
   divergents : c'étaient trois **deltas** d'ADR, et le total, 138, était juste partout. Lire la phrase
   entière avant de conclure à une dérive.
 - Un chiffre en prose devient un **signal** : soit il est daté, soit il manque une balise.
+- **Un chiffre faux a des jumeaux, et le balayage qui corrige n'est pas celui qui compte.** La
+  correction de #2749 avait trouvé deux « 21 tests bats » ; l'audit d'harmonisation de la clôture
+  en a rendu un **troisième**, dans un encadré du même fichier, survivant d'une journée. Corriger
+  une occurrence et chercher ses jumelles sont deux gestes distincts.
 
 ## Alternatives écartées
 

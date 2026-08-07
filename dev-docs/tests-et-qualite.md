@@ -341,9 +341,15 @@ l'application compte **<!--inv:features-->N<!--/inv--> features** métier
     **Si le code sait recalculer un chiffre, la documentation le porte en balise.** Sinon, elle ne
     l'écrit pas du tout.
 
-    La raison n'est pas l'élégance, c'est une mesure : « les 21 tests bats » vivait à deux endroits
-    quand il y en avait **89** - un facteur quatre, accumulé sans que rien ne le dise (#2749). Et
-    personne n'avait mal fait : un chiffre juste le jour où on l'écrit devient faux tout seul.
+    La raison n'est pas l'élégance, c'est une mesure : « les 21 tests bats » vivait à **trois**
+    endroits quand il y en avait **89** - un facteur quatre, accumulé sans que rien ne le dise
+    (#2749). Et personne n'avait mal fait : un chiffre juste le jour où on l'écrit devient faux tout
+    seul.
+
+    ⚠️ Trois, et non deux : la correction n'en avait trouvé que deux, et le troisième a survécu une
+    journée de plus, dans un encadré du même fichier. **Un chiffre faux a des jumeaux**, et le
+    balayage qui corrige n'est pas celui qui compte - c'est l'audit d'harmonisation de la clôture qui
+    a rendu le troisième.
 
     Trois cas, trois gestes :
 

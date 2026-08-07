@@ -325,7 +325,7 @@ même fonctionnalité dans tout le projet : pour modifier un écran, on touche p
 **La solution.** Regrouper le code **par fonctionnalité** : `sites/`, `passage/`… chacun contenant ses
 4 couches. Une feature devient une **tranche verticale** autonome.
 
-**Dans cette application.** Les 10 features sont des paquets autonomes ; le socle `commun/` porte le partagé
+**Dans cette application.** Les <!--inv:features-->16<!--/inv--> features sont des paquets autonomes ; le socle `commun/` porte le partagé
 (chrome, persistance, DI). On ouvre, modifie ou supprime une feature sans naviguer ailleurs.
 
 **Principes.** **Forte cohésion / faible couplage** ; **OCP** à l'échelle du produit (ajouter une
@@ -858,9 +858,10 @@ laisse l'écran filtrer moins large qu'annoncé, sans rien dire.
 
 ### Les filtres de `model` : deux rôles, une convention de nom
 
-Six classes `Filtres*` vivent en `model`, hors du socle de vue. L'audit d'harmonisation de la clôture
-de #3092 a montré qu'elles ne relèvent pas de trois idiomes, comme leur forme le laissait croire, mais
-de **deux rôles**, et que seul leur **nommage** divergeait.
+Des classes `Filtres*` vivent en `model`, hors du socle de vue. L'audit d'harmonisation de la clôture
+de #3092 en a compté six et a montré qu'elles ne relèvent pas de trois idiomes, comme leur forme le
+laissait croire, mais de **deux rôles**, et que seul leur **nommage** divergeait. Elles sont huit
+aujourd'hui : le compte bouge, les deux rôles tiennent.
 
 | Rôle | Forme | Classes | Consommé par |
 |---|---|---|---|
