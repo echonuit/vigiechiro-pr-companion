@@ -63,6 +63,75 @@ jobs:
         # job, le gate de couverture doit vivre ici et non dans lint.yml.
         run: ./mvnw -B verify -Djacoco.haltOnFailure=true --file pom.xml
 
+  # Rejoue TOUTE la suite sous un second fuseau (#3450). Ce n'est pas une redite du job `build` :
+  # c'est le seul dispositif qui tienne la propriété « ce que le produit calcule pour une nuit ne
+  # dépend pas du fuseau de la machine ».
+  #
+  # ## Pourquoi il existe
+  #
+  # Le produit datait les nuits d'écoute avec `ZoneId.systemDefault()`, donc avec le fuseau du poste
+  # qui dépouille. La MÊME nuit partait à la plateforme nationale à 19:00, 21:00 ou - depuis Cayenne -
+  # LE LENDEMAIN (ADR 3406). Le correctif est fait ; rien n'empêchait qu'il revienne.
+  #
+  # ## Pourquoi pas un garde textuel, comme les quatre autres de ce dépôt
+  #
+  # Il a été écrit, puis jeté : vérifié contre les lignes fautives d'origine, il aurait manqué les
+  # DEUX moitiés du défaut. L'écriture portait `.atZone(ZoneId.systemDefault())` deux lignes après ses
+  # types locaux, hors de portée d'une détection ligne à ligne ; et la lecture écrivait
+  # `.atZoneSameInstant(...)`, qui a l'air juste - ça l'est partout ailleurs. Un garde qui ne voit ni
+  # l'un ni l'autre est pire que pas de garde : il fait croire la propriété tenue (ADR 2748).
+  #
+  # La propriété est donc COMPORTEMENTALE, pas syntaxique. Ce qui a effectivement mordu, c'est la CI
+  # - parce que son fuseau n'est pas celui du poste de développement, où `systemDefault()` EST
+  # `Europe/Paris` : les deux moitiés du code y parlaient le même fuseau par accident, et aucune
+  # reproduction locale n'était possible.
+  #
+  # ## Pourquoi toute la suite, et pas une liste de classes sensibles
+  #
+  # Une liste ne voit que ce qu'on y a mis, et se démode en silence. Le garde porte sur la forme du
+  # défaut, jamais sur les cas connus au moment de l'écrire (ADR 3412). Ici, la « forme » est le fuseau
+  # lui-même : toute classe qui en dépendra rougira, y compris celles qui n'existent pas encore.
+  #
+  # ## Pourquoi America/Cayenne
+  #
+  # Trois propriétés qu'aucun autre choix ne réunit : c'est un territoire français, donc un cas RÉEL du
+  # produit (#3442) ; l'écart avec Europe/Paris franchit MINUIT, donc un défaut y change la DATE et pas
+  # seulement l'heure ; et il n'observe PAS l'heure d'été, là où Europe/Paris l'observe - un décalage
+  # fixe se comporte autrement qu'un décalage saisonnier.
+  #
+  # ⚠️ Ce que ce job NE voit pas : un défaut qui donnerait le même résultat sous les deux fuseaux.
+  # Il compare deux points, il ne balaie pas l'espace des fuseaux.
+  fuseau-alternatif:
+    name: fuseau-alternatif
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      - name: Rejouer la suite sous America/Cayenne
+        # Le fuseau passe par l'ENVIRONNEMENT, pas par `-Duser.timezone` sur la ligne Maven : surefire
+        # fabrique ses propres JVM (`forkCount=1C`), et une propriété donnée à Maven ne descend pas
+        # forcément dedans. L'environnement, lui, est hérité par les forks. Une première version de ce
+        # job employait `-D` : elle aurait pu être VERTE avec toute la suite tournant sous le fuseau du
+        # runner, c'est-à-dire sans rien vérifier du tout.
+        #
+        # `VC_FUSEAU_ATTENDU` arme `FuseauDExecutionTest`, qui vérifie DEPUIS L'INTÉRIEUR de la suite
+        # que la JVM tourne bien sous ce fuseau. Sans lui, ce job ne prouverait pas ce qu'il annonce -
+        # et un dispositif cassé se présenterait ici sous la forme d'un succès.
+        env:
+          TZ: America/Cayenne
+          VC_FUSEAU_ATTENDU: America/Cayenne
+        run: |
+          echo "Fuseau du shell : $(date +%Z' (%z)')"
+          ./mvnw -B test --file pom.xml
+
   second-compilateur:
     name: analyser-ecj
     runs-on: ubuntu-latest
