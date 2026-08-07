@@ -59,9 +59,27 @@ débit, nb séquences, **mémoire crête**.
 
 ## Relevés (machine de référence)
 
-> **Machine de référence** : poste comparable à ceux de l'IUT (_préciser CPU / RAM / SSD si besoin_).
-> JDK 25 standard. Chiffres **mesurés** (pas des placeholders) ; relancer 2-3 fois et garder l'ordre de
-> grandeur. La 1ʳᵉ utilisation du jour (JIT + cache disque froids) donne les valeurs « froid ».
+> **Machine de référence** : poste comparable à ceux de l'IUT, JDK 25 standard. Chiffres **mesurés**
+> (pas des placeholders) ; relancer 2-3 fois et garder l'ordre de grandeur. La 1ʳᵉ utilisation du jour
+> (JIT + cache disque froids) donne les valeurs « froid ».
+
+!!! warning "Les relevés ci-dessous n'ont pas de machine nommée"
+    Cette section a porté des mois durant un « préciser CPU / RAM / SSD si besoin » que personne n'a
+    rempli, et le poste exact qui a produit ces chiffres n'a jamais été consigné : il est aujourd'hui
+    irrécupérable. Les relevés gardent donc leur valeur d'**ordre de grandeur** et perdent celle de
+    point de comparaison - on ne peut pas dire si une machine est plus lente que « la référence ».
+
+    Un champ à remplir à la main reste vide : c'est **le banc** qui nomme désormais sa machine, et la
+    ligne voyage avec la mesure. `BancImport` ouvre sur :
+
+    ```text
+    machine         : 11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz · 8 cœurs · RAM 30.4 Gio
+    exécution       : 25.0.3+9-LTS · Linux 6.17.0-41-generic · heap max 7788 Mo
+    ```
+
+    Le processeur et la mémoire se lisent sous `/proc` ; ailleurs la ligne écrit « non lu sur cette
+    plateforme » plutôt que de laisser croire à une mesure. **Le prochain relevé complet remplace ce
+    tableau et lui rend sa machine** : il suffira de coller cette en-tête au-dessus.
 
 ### O5 : couche données (`BancMesure`)
 

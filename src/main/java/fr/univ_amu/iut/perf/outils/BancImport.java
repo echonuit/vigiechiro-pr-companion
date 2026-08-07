@@ -33,6 +33,7 @@ import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -67,7 +68,65 @@ public final class BancImport {
                     + "22/04/26 - 16:02:21 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
                     + " 8-120kHz\n";
 
+    /// Le fichier Linux qui décrit le processeur, et la clé qui en porte le modèle.
+    private static final Path CPUINFO = Path.of("/proc/cpuinfo");
+
+    /// Le fichier Linux qui décrit la mémoire, et la clé qui en porte la taille totale (en kio).
+    private static final Path MEMINFO = Path.of("/proc/meminfo");
+
+    /// Ce qu'on écrit quand la machine ne se laisse pas lire : un aveu, jamais un chiffre plausible.
+    private static final String INCONNU = "non lu sur cette plateforme";
+
     private BancImport() {}
+
+    /// Imprime la machine qui produit la mesure.
+    ///
+    /// Un relevé sans sa machine ne veut rien dire, et la page des benchmarks a porté pendant des mois
+    /// un « _préciser CPU / RAM / SSD si besoin_ » que personne n'a rempli (#2749). Un champ à remplir
+    /// à la main reste vide ; une ligne que le banc imprime voyage avec le relevé.
+    ///
+    /// Le modèle de processeur et la mémoire totale se lisent sous `/proc` : ailleurs, la ligne le
+    /// **dit** plutôt que de laisser croire à une mesure.
+    private static void imprimerMachine() {
+        System.out.printf(
+                Locale.ROOT,
+                "  machine         : %s · %d cœurs · RAM %s%n",
+                champProc(CPUINFO, "model name"),
+                Runtime.getRuntime().availableProcessors(),
+                memoireTotale());
+        System.out.printf(
+                Locale.ROOT,
+                "  exécution       : %s · %s · heap max %d Mo%n",
+                System.getProperty("java.runtime.version"),
+                System.getProperty("os.name") + " " + System.getProperty("os.version"),
+                Runtime.getRuntime().maxMemory() / MIO);
+    }
+
+    /// Première valeur portée par `cle` dans un fichier `/proc` de la forme `clé : valeur`.
+    private static String champProc(Path fichier, String cle) {
+        try (Stream<String> lignes = Files.lines(fichier)) {
+            return lignes.filter(ligne -> ligne.startsWith(cle))
+                    .findFirst()
+                    .map(ligne -> ligne.substring(ligne.indexOf(':') + 1).trim())
+                    .orElse(INCONNU);
+        } catch (IOException | RuntimeException _) {
+            return INCONNU;
+        }
+    }
+
+    /// Mémoire totale de la machine, en Gio, telle que `/proc/meminfo` l'annonce (en kio).
+    private static String memoireTotale() {
+        String brut = champProc(MEMINFO, "MemTotal");
+        if (INCONNU.equals(brut)) {
+            return INCONNU;
+        }
+        try {
+            long kio = Long.parseLong(brut.replace("kB", "").trim());
+            return String.format(Locale.ROOT, "%.1f Gio", kio * 1024.0 / GIO);
+        } catch (NumberFormatException _) {
+            return INCONNU;
+        }
+    }
 
     public static void main(String[] args) throws IOException {
         Path racine = Path.of(System.getProperty(
@@ -105,6 +164,7 @@ public final class BancImport {
                 frequenceHz,
                 tailleSource / (double) GIO,
                 tailleSource / (double) MIO);
+        imprimerMachine();
         System.out.printf(Locale.ROOT, "  génération nuit : %.2f s%n", genS);
 
         // Mesure de l'import : chrono total + bornes de phase + mémoire crête. La progression émet
