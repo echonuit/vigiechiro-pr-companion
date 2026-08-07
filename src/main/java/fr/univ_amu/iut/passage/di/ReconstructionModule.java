@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
+import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
@@ -85,8 +86,9 @@ public class ReconstructionModule extends ModuleDeFeature {
             Optional<ImportObservations> importObservations,
             Workspace workspace,
             Horloge horloge,
-            @Named(QUALIFIANT) HydratationSquelette hydratation) {
+            @Named(QUALIFIANT) HydratationSquelette hydratation,
+            FuseauDuPoint fuseaux) {
         return new ServiceReconstructionPassages(
-                source, client, pointParLocalite, importObservations, workspace, horloge, hydratation);
+                source, client, pointParLocalite, importObservations, workspace, horloge, hydratation, fuseaux);
     }
 }

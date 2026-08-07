@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
+import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -174,7 +175,7 @@ class AllerRetourParticipationLiveTest {
         // Ce que l'application enverrait aujourd'hui pour cette nuit, mapping compris.
         Passage nuit = nuitDEssai("1925492", "21:00", "06:00");
         ParticipationADeposer envoi = CorrespondanceParticipation.versParticipation(
-                "Z41", nuit, MaterielMicro.vide(1L), relire().configuration());
+                "Z41", nuit, MaterielMicro.vide(1L), relire().configuration(), FuseauDuSite.ZONE);
         assertThat(envoyer(envoi).estReussie()).isTrue();
 
         Map<String, String> relue = relire().configuration();
@@ -195,7 +196,7 @@ class AllerRetourParticipationLiveTest {
 
         Passage nuit = nuitDEssai(Enregistreur.INCONNU, "21:00", "06:00");
         ParticipationADeposer envoi = CorrespondanceParticipation.versParticipation(
-                "Z41", nuit, MaterielMicro.vide(1L), relire().configuration());
+                "Z41", nuit, MaterielMicro.vide(1L), relire().configuration(), FuseauDuSite.ZONE);
         assertThat(envoyer(envoi).estReussie()).isTrue();
 
         assertThat(relire().configuration())
@@ -232,7 +233,7 @@ class AllerRetourParticipationLiveTest {
     /// Un aller-retour complet : mapping local -> `PATCH` -> relecture -> heures locales.
     private static HeuresRelues cycle(Passage nuit) {
         ParticipationADeposer envoi = CorrespondanceParticipation.versParticipation(
-                "Z41", nuit, MaterielMicro.vide(1L), relire().configuration());
+                "Z41", nuit, MaterielMicro.vide(1L), relire().configuration(), FuseauDuSite.ZONE);
         assertThat(envoyer(envoi).estReussie())
                 .as("écriture des dates acceptée")
                 .isTrue();

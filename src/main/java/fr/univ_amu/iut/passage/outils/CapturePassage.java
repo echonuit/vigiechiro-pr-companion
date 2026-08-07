@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
+import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
@@ -292,7 +293,10 @@ public final class CapturePassage {
                                 new FenetreObserveeNuit(
                                         new SessionDao(source),
                                         new EnregistrementOriginalDao(source),
-                                        new SequenceDao(source)));
+                                        new SequenceDao(source)),
+                                // Aperçu : aucune commune résolue, donc le repli métropole - ce que
+                                // montrent les captures, et ce qu'attend leur déterminisme.
+                                new FuseauDuPoint(idPoint -> Optional.empty()));
                     }
                 });
     }

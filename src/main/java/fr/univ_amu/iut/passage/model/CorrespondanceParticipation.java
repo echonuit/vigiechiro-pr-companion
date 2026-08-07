@@ -2,11 +2,11 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
-import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
@@ -38,12 +38,16 @@ final class CorrespondanceParticipation {
     /// Corps de participation (push) : `point` = code de la localité, fenêtre de nuit en **RFC 1123 UTC**,
     /// bloc météo (#702) et configuration matérielle (#697). Le commentaire n'est pas synchronisé.
     static ParticipationADeposer versParticipation(
-            String codePoint, Passage passage, MaterielMicro micro, Map<String, String> configurationDistante) {
+            String codePoint,
+            Passage passage,
+            MaterielMicro micro,
+            Map<String, String> configurationDistante,
+            ZoneId fuseauDuSite) {
         exigerBornesDeNuit(passage);
         return new ParticipationADeposer(
                 codePoint,
-                debutVc(passage),
-                finVc(passage),
+                debutVc(passage, fuseauDuSite),
+                finVc(passage, fuseauDuSite),
                 meteo(passage),
                 configuration(passage, micro, configurationDistante),
                 null);
@@ -51,8 +55,9 @@ final class CorrespondanceParticipation {
 
     /// Variante **création** (`POST`) : la participation n'existe pas encore, il n'y a aucune configuration
     /// distante à préserver.
-    static ParticipationADeposer versParticipation(String codePoint, Passage passage, MaterielMicro micro) {
-        return versParticipation(codePoint, passage, micro, Map.of());
+    static ParticipationADeposer versParticipation(
+            String codePoint, Passage passage, MaterielMicro micro, ZoneId fuseauDuSite) {
+        return versParticipation(codePoint, passage, micro, Map.of(), fuseauDuSite);
     }
 
     // --- push : local -> API -----------------------------------------------------------------------
@@ -160,19 +165,20 @@ final class CorrespondanceParticipation {
     }
 
     /// Début de nuit en RFC 1123 UTC. Les bornes sont garanties présentes par [#exigerBornesDeNuit].
-    private static String debutVc(Passage passage) {
-        return rfc1123Utc(LocalDate.parse(passage.dateEnregistrement()), LocalTime.parse(passage.heureDebut()));
+    private static String debutVc(Passage passage, ZoneId fuseauDuSite) {
+        return rfc1123Utc(
+                LocalDate.parse(passage.dateEnregistrement()), LocalTime.parse(passage.heureDebut()), fuseauDuSite);
     }
 
     /// Fin de nuit en RFC 1123 UTC ; la nuit **franchit minuit** quand l'heure de fin ne suit pas l'heure de
     /// début (date de fin = lendemain). Les bornes sont garanties présentes par [#exigerBornesDeNuit].
-    private static String finVc(Passage passage) {
+    private static String finVc(Passage passage, ZoneId fuseauDuSite) {
         LocalDate jour = LocalDate.parse(passage.dateEnregistrement());
         LocalTime fin = LocalTime.parse(passage.heureFin());
         if (!fin.isAfter(LocalTime.parse(passage.heureDebut()))) {
             jour = jour.plusDays(1);
         }
-        return rfc1123Utc(jour, fin);
+        return rfc1123Utc(jour, fin, fuseauDuSite);
     }
 
     /// Formate une heure **du site** au format datetime attendu par Eve : **RFC 1123 en UTC**
@@ -184,9 +190,9 @@ final class CorrespondanceParticipation {
     /// le fuseau du poste faisait partir un instant différent selon la machine - `19:00 GMT` depuis
     /// Paris, `21:00 GMT` depuis un poste en UTC, et depuis Cayenne un **changement de date** (#3406).
     /// C'est une donnée déposée sur la plateforme nationale, pas un affichage.
-    private static String rfc1123Utc(LocalDate jour, LocalTime heure) {
+    private static String rfc1123Utc(LocalDate jour, LocalTime heure, ZoneId fuseauDuSite) {
         return LocalDateTime.of(jour, heure)
-                .atZone(FuseauDuSite.ZONE)
+                .atZone(fuseauDuSite)
                 .withZoneSameInstant(ZoneOffset.UTC)
                 .format(DateTimeFormatter.RFC_1123_DATE_TIME);
     }

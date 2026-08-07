@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -62,18 +63,27 @@ public record ParticipationOrpheline(
     /// reconstruire → envoyer retranchait un décalage horaire**. Une nuit de 21 h était descendue à
     /// 15 h en quatre allers-retours, entraînant la météo avec elle (Open-Meteo est interrogé sur la
     /// fenêtre du passage). Un cliquet, pas un décalage ponctuel.
+    /// Variante **historique**, qui lit dans le fuseau de la métropole.
+    ///
+    /// ⚠️ À n'employer que là où le point n'est pas connu. Partout où il l'est, passer par
+    /// [#horodatage(String, ZoneId)] : depuis #3442, l'écriture emploie le fuseau du **territoire** du
+    /// site, et relire dans un autre casserait le point fixe décrit ci-dessus.
     static Optional<LocalDateTime> horodatage(String borne) {
+        return horodatage(borne, FuseauDuSite.ZONE);
+    }
+
+    /// La borne renvoyée par la plateforme, ramenée à l'heure murale du site (#3442).
+    ///
+    /// `fuseau` vient de `FuseauDuPoint.pour(idPoint)` : c'est **le même** que celui dont l'écriture se
+    /// sert pour cette nuit. Les deux moitiés de la boucle doivent parler le même fuseau, sans quoi
+    /// chaque cycle « reconstruire puis envoyer » déplace la nuit - le cliquet de #1860.
+    static Optional<LocalDateTime> horodatage(String borne, ZoneId fuseau) {
         if (borne == null || borne.isBlank()) {
             return Optional.empty();
         }
         try {
-            // Le fuseau du SITE, comme à l'écriture (#3406). Relire avec celui de la machine quand
-            // l'écriture emploie celui du site casserait le point fixe : quatre cycles
-            // « reconstruire puis envoyer » recommenceraient à déplacer la nuit, ce que le cliquet de
-            // #1860 existe pour empêcher. Les deux moitiés de la boucle doivent parler le même fuseau.
-            return Optional.of(OffsetDateTime.parse(borne)
-                    .atZoneSameInstant(FuseauDuSite.ZONE)
-                    .toLocalDateTime());
+            return Optional.of(
+                    OffsetDateTime.parse(borne).atZoneSameInstant(fuseau).toLocalDateTime());
         } catch (DateTimeParseException premiere) {
             try {
                 // Sans décalage, rien à convertir : la borne est déjà une heure murale.
