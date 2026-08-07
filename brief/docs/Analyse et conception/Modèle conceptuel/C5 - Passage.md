@@ -7,8 +7,8 @@ L'unité métier centrale : une nuit complète d'enregistrement sur un point d'u
 | n° de passage | entier | typiquement 1 ou 2 | Le protocole impose deux passages annuels (cf. [R3](Règles%20métier.md#r3)). |
 | année | entier | 4 chiffres | Ex. 2026. |
 | date d'enregistrement | date | obligatoire | Date du **soir** où l'enregistrement démarre. |
-| heure de début | heure | obligatoire | Lue du journal du capteur. |
-| heure de fin | heure | obligatoire | Lue du journal du capteur. |
+| heure de début | heure | obligatoire | Lue du journal du capteur, donc exprimée dans le fuseau du **site d'écoute** - pas dans celui du poste qui dépouille ([ADR 3406](https://companion-dev.echonuit.fr/decisions/3406-une-nuit-porte-le-fuseau-de-son-site/)). |
+| heure de fin | heure | obligatoire | Lue du journal du capteur, même fuseau que l'heure de début. |
 | paramètres d'acquisition | structure | extraits du journal du capteur | Fe, FL, FPH, S.R., gain, bande de fréquence, durée enregistrement, seuil SD. Sérialisés tels quels. |
 | statut d'avancement | énum | `Importé` / `Transformé` / `Vérifié` / `Prêt à déposer` / **`Dépôt en cours`** / `Déposé` | Progression de la chaîne. **`Dépôt en cours`** est né du dépôt par API : le téléversement a commencé et est **reprenable** (cf. voisins ci-dessous). Le passage ne devient `Déposé` que lorsque toutes les unités sont en ligne. |
 | verdict final de vérification | énum | `Non vérifié` / `OK` / `Utilisable` / `Inexploitable` | **Dérivé** des verdicts par fichier son de la [sélection d'écoute](C11%20-%20Sélection%20d%27écoute.md), **surchargeable** à la main. Un passage `Inexploitable` ne peut pas être déposé ([R14](Règles%20métier.md#r14)). |

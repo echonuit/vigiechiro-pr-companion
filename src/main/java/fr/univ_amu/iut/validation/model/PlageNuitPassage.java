@@ -3,6 +3,7 @@ package fr.univ_amu.iut.validation.model;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.EphemerideSolaire;
+import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.PositionGeo;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -23,9 +24,13 @@ import java.util.Optional;
 /// [CoordonneesPoint], implémenté par `sites` : pas de dépendance directe `validation → sites`).
 public class PlageNuitPassage {
 
-    /// Fuseau des horaires (programme national français) : le calcul solaire est en UTC, on repasse en
-    /// heure locale pour donner des heures pleines cohérentes avec la saisie.
-    private static final ZoneId FUSEAU_SITE = ZoneId.of("Europe/Paris");
+    /// Fuseau des horaires : le calcul solaire est en UTC, on repasse en heure locale pour donner des
+    /// heures pleines cohérentes avec la saisie.
+    ///
+    /// Vient de [FuseauDuSite] et non d'un `ZoneId.of` recopié ici ([ADR 3406]) : c'est bien une heure
+    /// **de site**, et cette classe est celle où l'écart d'outre-mer se voit le mieux - le coucher est
+    /// calculé aux coordonnées du point, puis rendu dans le fuseau de la métropole (#3442).
+    private static final ZoneId FUSEAU_SITE = FuseauDuSite.ZONE;
 
     private final PassageDao passageDao;
     private final CoordonneesPoint coordonnees;
