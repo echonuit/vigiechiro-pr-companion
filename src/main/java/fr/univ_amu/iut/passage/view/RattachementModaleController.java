@@ -12,6 +12,7 @@ import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.Vent;
+import fr.univ_amu.iut.passage.viewmodel.CompteRenduRattachement;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
 import fr.univ_amu.iut.passage.viewmodel.SaisiePassageConditions;
 import java.util.Objects;
@@ -426,7 +427,7 @@ public class RattachementModaleController {
                 brut -> {
                     operationEnCours.set(false);
                     // Le renommage a eu lieu AVANT l'envoi : il se dit, même si l'envoi a échoué (#3449).
-                    RattachementViewModel.Envoi issue = RattachementViewModel.compteRenduDe(sequencesRenommees, brut);
+                    RattachementViewModel.Envoi issue = CompteRenduRattachement.de(sequencesRenommees, brut);
                     viewModel.signalerEnvoi(issue);
                     ensuite.accept(issue);
                 },

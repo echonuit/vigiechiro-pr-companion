@@ -30,7 +30,7 @@ class CompteRenduRattachementTest {
         @Test
         @DisplayName("#3449 : un envoi empêché ne masque plus le renommage réussi")
         void envoiEmpecheDitQuandMemeLeRenommage() {
-            Envoi compose = RattachementViewModel.compteRenduDe(6, new Envoi.Empeche(ECHEC));
+            Envoi compose = CompteRenduRattachement.de(6, new Envoi.Empeche(ECHEC));
 
             assertThat(compose.retour().texte())
                     .as("ce qui a été fait se dit avant ce qui n'a pas pu l'être")
@@ -41,7 +41,7 @@ class CompteRenduRattachementTest {
         @Test
         @DisplayName("#3449 : un succès partiel n'est pas une erreur, mais il doit être lu")
         void succesPartielNestPasUneErreur() {
-            Envoi compose = RattachementViewModel.compteRenduDe(6, new Envoi.Empeche(ECHEC));
+            Envoi compose = CompteRenduRattachement.de(6, new Envoi.Empeche(ECHEC));
 
             // Le registre compte autant que le texte : un bandeau rouge sur une opération dont la partie
             // irréversible a abouti pousse l'utilisateur à recommencer.
@@ -54,7 +54,7 @@ class CompteRenduRattachementTest {
         @Test
         @DisplayName("Quand tout réussit, les deux faits se disent ensemble")
         void toutReussiDitLesDeuxFaits() {
-            Envoi compose = RattachementViewModel.compteRenduDe(6, new Envoi.Abouti("Métadonnées envoyées."));
+            Envoi compose = CompteRenduRattachement.de(6, new Envoi.Abouti("Métadonnées envoyées."));
 
             assertThat(compose.retour().texte())
                     .startsWith("6 séquence(s) renommée(s).")
@@ -64,7 +64,7 @@ class CompteRenduRattachementTest {
         @Test
         @DisplayName("Sans envoi à faire, le renommage se dit seul")
         void sansEnvoiLeRenommageSeDitSeul() {
-            Envoi compose = RattachementViewModel.compteRenduDe(6, new Envoi.SansObjet());
+            Envoi compose = CompteRenduRattachement.de(6, new Envoi.SansObjet());
 
             assertThat(compose.retour().texte()).isEqualTo("6 séquence(s) renommée(s).");
         }
@@ -79,7 +79,7 @@ class CompteRenduRattachementTest {
         void envoiIntact() {
             Envoi envoi = new Envoi.Empeche(ECHEC);
 
-            assertThat(RattachementViewModel.compteRenduDe(0, envoi))
+            assertThat(CompteRenduRattachement.de(0, envoi))
                     .as("rien à ajouter : l'échec de l'envoi EST le compte rendu")
                     .isSameAs(envoi);
         }
@@ -87,7 +87,7 @@ class CompteRenduRattachementTest {
         @Test
         @DisplayName("Un envoi abouti reste un succès qui ferme la modale")
         void aboutiResteFermant() {
-            Envoi compose = RattachementViewModel.compteRenduDe(0, new Envoi.Abouti("Métadonnées envoyées."));
+            Envoi compose = CompteRenduRattachement.de(0, new Envoi.Abouti("Métadonnées envoyées."));
 
             assertThat(compose.peutFermer()).isTrue();
         }
