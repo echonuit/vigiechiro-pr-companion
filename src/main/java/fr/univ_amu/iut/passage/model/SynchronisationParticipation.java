@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
+import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
@@ -50,6 +51,11 @@ public final class SynchronisationParticipation {
     /// Ce que les enregistrements de la nuit prouvent de ses horaires (#1878).
     private final FenetreObserveeNuit fenetreObservee;
 
+    /// Le fuseau des heures de la nuit, dérivé de la commune du point (#3442). Sert aux DEUX
+    /// moitiés : ce qu'on envoie et ce qu'on relit. Les séparer déplacerait la nuit à chaque
+    /// aller-retour, cliquet de #1860.
+    private final FuseauDuPoint fuseaux;
+
     public SynchronisationParticipation(
             ClientVigieChiro client,
             LienVigieChiroDao liens,
@@ -57,7 +63,8 @@ public final class SynchronisationParticipation {
             MaterielMicroDao materielDao,
             EnregistreurDao enregistreurDao,
             ReferentielPoint referentielPoint,
-            FenetreObserveeNuit fenetreObservee) {
+            FenetreObserveeNuit fenetreObservee,
+            FuseauDuPoint fuseaux) {
         this.client = Objects.requireNonNull(client, "client");
         this.liens = Objects.requireNonNull(liens, "liens");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
@@ -65,6 +72,7 @@ public final class SynchronisationParticipation {
         this.enregistreurDao = Objects.requireNonNull(enregistreurDao, "enregistreurDao");
         this.referentielPoint = Objects.requireNonNull(referentielPoint, "referentielPoint");
         this.fenetreObservee = Objects.requireNonNull(fenetreObservee, "fenetreObservee");
+        this.fuseaux = Objects.requireNonNull(fuseaux, "fuseaux");
     }
 
     /// L'`_id` de la participation liée à `idPassage`, ou vide s'il n'a pas encore été déposé/rattaché.
@@ -81,8 +89,8 @@ public final class SynchronisationParticipation {
                 .orElseThrow(() -> new RegleMetierException("Site non rattaché à Vigie-Chiro : connectez-vous et"
                         + " synchronisez vos sites avant de créer la participation."));
 
-        ParticipationADeposer participation =
-                CorrespondanceParticipation.versParticipation(point.code(), passage, materielDao.pour(idPassage));
+        ParticipationADeposer participation = CorrespondanceParticipation.versParticipation(
+                point.code(), passage, materielDao.pour(idPassage), fuseaux.pour(passage.idPoint()));
         ResultatEcriture resultat = client.creerParticipation(objectidSite, participation);
         resultat.id()
                 .ifPresent(id ->
@@ -105,7 +113,11 @@ public final class SynchronisationParticipation {
         // remplace le dictionnaire entier ; sans elle, chaque envoi effacerait les champs saisis sur le web
         // que l'app ne modélise pas (micro0_numero_serie, micro1_*, canal_*).
         ParticipationADeposer maj = CorrespondanceParticipation.versParticipation(
-                point.code(), passage, materielDao.pour(idPassage), distant.configuration());
+                point.code(),
+                passage,
+                materielDao.pour(idPassage),
+                distant.configuration(),
+                fuseaux.pour(passage.idPoint()));
         ResultatEcriture ecriture = client.modifierParticipation(objectid, distant.etag(), maj);
         // #1885 : le réalignement a modifié les données de l'utilisateur, il ne peut pas rester tacite.
         return new EnvoiParticipation(ecriture, realignementEntre(declare, passage));

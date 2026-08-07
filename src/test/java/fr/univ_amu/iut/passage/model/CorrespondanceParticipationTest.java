@@ -5,9 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
+import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /// Correspondance **pure** passage ↔ participation (axe 4) : construction du corps API (push, dates RFC 1123
@@ -29,7 +32,8 @@ class CorrespondanceParticipationTest {
         Passage passage = passage("{\"vent\":\"FAIBLE\",\"couvertureNuageuse\":\"DE_25_A_50\"}");
         MaterielMicro micro = new MaterielMicro(42L, PositionMicro.CANOPEE, 4.0, "ICS");
 
-        ParticipationADeposer p = CorrespondanceParticipation.versParticipation("Z41", passage, micro);
+        ParticipationADeposer p =
+                CorrespondanceParticipation.versParticipation("Z41", passage, micro, FuseauDuSite.ZONE);
 
         assertThat(p.point()).isEqualTo("Z41");
         // Les dates se comparent EN DUR, telles qu'Eve les recevra (#3406).
@@ -54,8 +58,8 @@ class CorrespondanceParticipationTest {
     @Test
     @DisplayName("versParticipation : sans météo ni micro → meteo null, config réduite au détecteur")
     void vers_participation_minimale() {
-        ParticipationADeposer p =
-                CorrespondanceParticipation.versParticipation("Z41", passage(null), MaterielMicro.vide(42L));
+        ParticipationADeposer p = CorrespondanceParticipation.versParticipation(
+                "Z41", passage(null), MaterielMicro.vide(42L), FuseauDuSite.ZONE);
 
         assertThat(p.meteo()).isNull();
         assertThat(p.configuration())
@@ -65,8 +69,8 @@ class CorrespondanceParticipationTest {
     @Test
     @DisplayName("#1844 : le n° de série part sous la clé CANONIQUE, celle que lit le formulaire web")
     void vers_participation_utilise_la_cle_canonique() {
-        ParticipationADeposer p =
-                CorrespondanceParticipation.versParticipation("Z41", passage(null), MaterielMicro.vide(42L));
+        ParticipationADeposer p = CorrespondanceParticipation.versParticipation(
+                "Z41", passage(null), MaterielMicro.vide(42L), FuseauDuSite.ZONE);
 
         assertThat(p.configuration())
                 .as("l'app poussait « numserie », que le front ne lie pas : le n° arrivait invisible")
@@ -83,8 +87,8 @@ class CorrespondanceParticipationTest {
                 "canal_expansion_temps", "OUI",
                 "detecteur_enregistreur_numserie", "ANCIEN");
 
-        ParticipationADeposer p =
-                CorrespondanceParticipation.versParticipation("Z41", passage(null), MaterielMicro.vide(42L), distante);
+        ParticipationADeposer p = CorrespondanceParticipation.versParticipation(
+                "Z41", passage(null), MaterielMicro.vide(42L), distante, FuseauDuSite.ZONE);
 
         assertThat(p.configuration())
                 .as("les champs du formulaire web que l'app ne modélise pas survivent à l'envoi")
@@ -103,8 +107,8 @@ class CorrespondanceParticipationTest {
         String meteo =
                 MeteoPassage.definirReleve(null, new MeteoReleve(8.6, 5.2, Vent.FAIBLE, CouvertureNuageuse.DE_0_A_25));
 
-        ParticipationADeposer p =
-                CorrespondanceParticipation.versParticipation("Z41", passage(meteo), MaterielMicro.vide(42L));
+        ParticipationADeposer p = CorrespondanceParticipation.versParticipation(
+                "Z41", passage(meteo), MaterielMicro.vide(42L), FuseauDuSite.ZONE);
 
         assertThat(p.meteo().temperatureDebut())
                 .as("8,6 °C s'arrondit à 9 : un décimal serait refusé par le serveur")
@@ -116,9 +120,12 @@ class CorrespondanceParticipationTest {
     @DisplayName("#1828 : un n° de série sentinelle n'est PAS publié, le type reste vrai, le mensonge ne part pas")
     void vers_participation_ne_publie_pas_une_sentinelle() {
         ParticipationADeposer squelette = CorrespondanceParticipation.versParticipation(
-                "Z41", passageAvecEnregistreur(Enregistreur.INCONNU), MaterielMicro.vide(42L));
+                "Z41", passageAvecEnregistreur(Enregistreur.INCONNU), MaterielMicro.vide(42L), FuseauDuSite.ZONE);
         ParticipationADeposer degrade = CorrespondanceParticipation.versParticipation(
-                "Z41", passageAvecEnregistreur(Enregistreur.INCONNU_IMPORT), MaterielMicro.vide(42L));
+                "Z41",
+                passageAvecEnregistreur(Enregistreur.INCONNU_IMPORT),
+                MaterielMicro.vide(42L),
+                FuseauDuSite.ZONE);
 
         assertThat(squelette.configuration())
                 .as("« INCONNU » est un aveu, pas un numéro : la plateforme ne doit pas le recevoir")
@@ -214,8 +221,8 @@ class CorrespondanceParticipationTest {
             for (String posteDeDepouillement : new String[] {"Europe/Paris", "UTC", "America/Cayenne"}) {
                 TimeZone.setDefault(TimeZone.getTimeZone(posteDeDepouillement));
 
-                ParticipationADeposer p =
-                        CorrespondanceParticipation.versParticipation("Z41", passage(null), MaterielMicro.vide(42L));
+                ParticipationADeposer p = CorrespondanceParticipation.versParticipation(
+                        "Z41", passage(null), MaterielMicro.vide(42L), FuseauDuSite.ZONE);
 
                 assertThat(p.dateDebut())
                         .as("nuit du 3 juillet, 21:00 sur le site, dépouillée depuis « %s »", posteDeDepouillement)
@@ -240,7 +247,8 @@ class CorrespondanceParticipationTest {
         // `NOT NULL` (V01__schema.sql), et les deux chemins de dépôt chargent par le DAO. L'invariant n'est
         // donc tenu QUE par SQLite : ce test le tient dans le code, pour le jour où un passage sera bâti
         // ailleurs qu'en base (depuis la plateforme, en mémoire).
-        assertThatThrownBy(() -> CorrespondanceParticipation.versParticipation("Z41", ampute, MaterielMicro.vide(42L)))
+        assertThatThrownBy(() -> CorrespondanceParticipation.versParticipation(
+                        "Z41", ampute, MaterielMicro.vide(42L), FuseauDuSite.ZONE))
                 .as("une nuit sans %s doit être refusée au dépôt", borneAbsente)
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("bornes complètes");
@@ -313,8 +321,8 @@ class CorrespondanceParticipationTest {
         LocalDateTime debut = attenduDebut;
         LocalDateTime fin = attenduFin;
         for (int cycle = 0; cycle < 4; cycle++) {
-            ParticipationADeposer envoi =
-                    CorrespondanceParticipation.versParticipation("Z41", nuit, MaterielMicro.vide(42L));
+            ParticipationADeposer envoi = CorrespondanceParticipation.versParticipation(
+                    "Z41", nuit, MaterielMicro.vide(42L), FuseauDuSite.ZONE);
             debut = ParticipationOrpheline.horodatage(commeEve(envoi.dateDebut()))
                     .orElseThrow();
             fin = ParticipationOrpheline.horodatage(commeEve(envoi.dateFin())).orElseThrow();
@@ -324,6 +332,37 @@ class CorrespondanceParticipationTest {
         assertThat(debut)
                 .as("quatre cycles « reconstruire puis envoyer » ne doivent pas plus déplacer la nuit qu'un"
                         + " seul : c'est exactement ce qui a fait descendre 21:00 à 15:00 (#1860)")
+                .isEqualTo(attenduDebut);
+        assertThat(fin).isEqualTo(attenduFin);
+    }
+
+    @ParameterizedTest(name = "sous {0}")
+    @CsvSource({"Europe/Paris", "Indian/Reunion", "America/Cayenne", "Pacific/Noumea"})
+    @DisplayName("#3442 : le point fixe tient sous le fuseau du TERRITOIRE, pas seulement sous celui de Paris")
+    void la_boucle_reste_un_point_fixe_sous_tout_territoire(String fuseauDuTerritoire) {
+        // Le cas ci-dessus prouve le point fixe pour la métropole. Il ne dit rien du jour où l'écriture
+        // emploie le fuseau d'un site ultramarin : c'est précisément là que se rejoue #1860, si l'une
+        // des deux moitiés reste à l'heure de Paris. Corriger un seul côté est le défaut que la CI a
+        // rattrapé sur #3434, et qu'aucune reproduction locale n'aurait montré.
+        ZoneId fuseau = ZoneId.of(fuseauDuTerritoire);
+        Passage nuit = passage(null);
+        LocalDateTime attenduDebut = LocalDateTime.of(2026, 7, 3, 21, 0);
+        LocalDateTime attenduFin = LocalDateTime.of(2026, 7, 4, 5, 0);
+
+        LocalDateTime debut = attenduDebut;
+        LocalDateTime fin = attenduFin;
+        for (int cycle = 0; cycle < 4; cycle++) {
+            ParticipationADeposer envoi =
+                    CorrespondanceParticipation.versParticipation("Z41", nuit, MaterielMicro.vide(42L), fuseau);
+            debut = ParticipationOrpheline.horodatage(commeEve(envoi.dateDebut()), fuseau)
+                    .orElseThrow();
+            fin = ParticipationOrpheline.horodatage(commeEve(envoi.dateFin()), fuseau)
+                    .orElseThrow();
+            nuit = avecHeures(nuit, debut, fin);
+        }
+
+        assertThat(debut)
+                .as("une nuit de %s ne doit pas plus se déplacer qu'une nuit de métropole", fuseauDuTerritoire)
                 .isEqualTo(attenduDebut);
         assertThat(fin).isEqualTo(attenduFin);
     }

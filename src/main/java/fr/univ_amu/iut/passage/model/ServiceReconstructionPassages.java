@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro.Phase;
 import fr.univ_amu.iut.commun.model.Besoin;
+import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -80,6 +81,11 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
 
     private final PointParLocalite pointParLocalite;
 
+    /// Lit les bornes que la plateforme rend, dans le fuseau du site auquel elles appartiennent
+    /// (#3442). Extrait de ce service : il n'existe qu'UN endroit où une borne distante devient
+    /// une heure locale, et c'est ce qui empêche qu'une des quatre conversions oublie son fuseau.
+    private final HorairesDistants horaires;
+
     /// Port de l'import des observations (#1264), **optionnel** comme partout ailleurs : la feature
     /// « Import VigieChiro » est désactivable (#1057), et un module ne peut pas exiger en dur ce qu'une
     /// autre feature fournit : l'injecteur ne se construirait plus. Absent, [#reconstruire] le **dit**.
@@ -102,7 +108,8 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             Optional<ImportObservations> importObservations,
             Workspace workspace,
             Horloge horloge,
-            HydratationSquelette hydratation) {
+            HydratationSquelette hydratation,
+            FuseauDuPoint fuseaux) {
         Objects.requireNonNull(source, "source");
         this.passageDao = new PassageDao(source);
         this.liens = new LienVigieChiroDao(source);
@@ -110,6 +117,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         this.sequenceDao = new SequenceDao(source);
         this.plateforme = new PlateformeReconstruction(client);
         this.pointParLocalite = Objects.requireNonNull(pointParLocalite, "pointParLocalite");
+        this.horaires = new HorairesDistants(fuseaux);
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
         this.creationStructure = new CreationPassageArchive(source, workspace, horloge);
         this.hydratation = Objects.requireNonNull(hydratation, "hydratation");
@@ -327,7 +335,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             }
             ParticipationOrpheline orpheline = enOrpheline(participation);
             Optional<Long> idPoint = pointParLocalite.pour(orpheline.numeroCarre(), orpheline.codePoint());
-            Optional<LocalDateTime> debut = ParticipationOrpheline.horodatage(orpheline.dateDebut());
+            Optional<LocalDateTime> debut = horaires.lire(idPoint, orpheline.dateDebut());
             if (idPoint.isEmpty() || debut.isEmpty()) {
                 continue;
             }
@@ -350,7 +358,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
                     annee,
                     numeroPassage,
                     candidat.orpheline().codePoint());
-            LocalDateTime fin = detail.flatMap(connu -> ParticipationOrpheline.horodatage(connu.dateFin()))
+            LocalDateTime fin = detail.flatMap(connu -> horaires.lire(candidat.idPoint(), connu.dateFin()))
                     .orElse(candidat.debut());
             Long idPassage = creationStructure
                     .creerNuitRapatriee(candidat.idPoint(), numeroPassage, candidat.debut(), fin, prefixe, detail)
@@ -512,11 +520,11 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
                         "Le point d'écoute de cette participation (carré " + carre + ", localité " + localite
                                 + ") n'existe pas localement. Créez d'abord le site et le point, puis"
                                 + " recommencez."));
-        LocalDateTime debut = ParticipationOrpheline.horodatage(detail.dateDebut())
+        LocalDateTime debut = horaires.lire(idPoint, detail.dateDebut())
                 .orElseThrow(() -> new RegleMetierException(
                         "La participation ne porte pas de date de début exploitable : impossible de dater la"
                                 + " nuit."));
-        LocalDateTime fin = ParticipationOrpheline.horodatage(detail.dateFin()).orElse(debut);
+        LocalDateTime fin = horaires.lire(idPoint, detail.dateFin()).orElse(debut);
 
         // Où trouver les observations : le CSV téléchargé d'un coup (#1565) si la plateforme l'expose,
         // sinon la pagination donnees (repli, l'ancien chemin). Dans les deux cas on récupère les NOMS des

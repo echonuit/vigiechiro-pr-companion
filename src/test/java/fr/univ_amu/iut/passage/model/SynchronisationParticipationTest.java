@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -68,7 +69,15 @@ class SynchronisationParticipationTest {
     @BeforeEach
     void preparer() {
         sync = new SynchronisationParticipation(
-                client, liens, passageDao, materielDao, enregistreurDao, referentielPoint, fenetreObservee);
+                client,
+                liens,
+                passageDao,
+                materielDao,
+                enregistreurDao,
+                referentielPoint,
+                fenetreObservee,
+                // Aucune commune resolue : repli metropole, soit le comportement d'avant #3442.
+                new FuseauDuPoint(idPoint -> Optional.empty()));
     }
 
     @Test

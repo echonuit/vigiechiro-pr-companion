@@ -25,6 +25,7 @@ import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -126,7 +127,8 @@ class ServiceReconstructionPassagesTest {
                 Optional.of(importObservations),
                 new Workspace(dossier),
                 new HorlogeFigee(MAINTENANT),
-                hydratation(Optional.of(importObservations)));
+                hydratation(Optional.of(importObservations)),
+                new FuseauDuPoint(idPointDemande -> Optional.empty()));
     }
 
     /// Le noyau de **contenu** de la synchro (#2557), branché sur la même plateforme bouchonnée : c'est lui
@@ -322,7 +324,8 @@ class ServiceReconstructionPassagesTest {
                 Optional.empty(),
                 new Workspace(dossier),
                 new HorlogeFigee(MAINTENANT),
-                hydratation(Optional.empty()));
+                hydratation(Optional.empty()),
+                new FuseauDuPoint(idPointDemande -> Optional.empty()));
 
         assertThatThrownBy(() -> sansImport.reconstruire(PARTICIPATION))
                 .isInstanceOf(RegleMetierException.class)
