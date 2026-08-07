@@ -39,8 +39,25 @@ C'est la généralisation d'une décision **déjà prise ailleurs** : `AnalyseCo
 `FUSEAU_SITE = ZoneId.of("Europe/Paris")`, motivé de la même façon. Elle ne régissait qu'un écran ;
 elle régit maintenant le dépôt.
 
-Les six `ZoneId.systemDefault()` restants sont conservés **délibérément** : ce sont des horodatages
-techniques - noms de sauvegardes, messages, avis - où le fuseau de l'observateur est le bon.
+Les `ZoneId.systemDefault()` restants sont conservés **délibérément** : ce sont des horodatages
+techniques - sauvegardes, messages, avis - où le fuseau de l'observateur est le bon.
+
+!!! warning "Amendement (2026-08-07, clôture des suites) - un chiffre était faux"
+    Cette ADR annonçait « **six** `systemDefault()` restants ». Il y en a **quatre** :
+    `FormatAvisValidateur`, `Discussion`, `ListerSauvegardes`, `ContenuChoixSauvegarde`. Les deux
+    autres occurrences étaient des **commentaires** citant le terme, dans `FuseauDuSite` et
+    `CorrespondanceParticipation` - dont celui que cette ADR a fait écrire.
+
+    L'inventaire était aussi **trop étroit**. Le fuseau de la machine s'emprunte par d'autres
+    constructions, et le relevé complet en donne **dix** : les quatre ci-dessus, trois `LocalDate.now()`
+    (deux datent un export, une est le port `HorlogeSysteme`) et trois `LocalDateTime.now()`
+    (`HorlogeSysteme`, `RegistreMigrations`, `VerrouWorkspace`). Toutes légitimes - aucune ne convertit
+    une heure de site - mais aucune n'avait été regardée avant d'écrire « six ».
+
+    C'est la **troisième fois** dans ce chantier qu'un décompte gonfle en comptant des commentaires
+    pour du code, après les « vingt-six caractères d'IHM » qui étaient huit
+    ([ADR 3389](3389-ce-que-l-application-affiche-tient-dans-la-police-embarquee.md)). Un `grep -c`
+    compte des **lignes**, pas des appels.
 
 ## Ce que cette décision laisse faux, et qui est assumé
 
