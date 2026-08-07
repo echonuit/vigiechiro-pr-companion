@@ -165,7 +165,34 @@ class DocumentationAJourTest {
                             entree.getKey())
                     .contains(entree.getKey());
         }
+        for (String fiche : fichesEcrans()) {
+            verifs.assertThat(fichesAttendues())
+                    .as(
+                            "la fiche docs/ecrans/%s.md n'est réclamée par aucun écran FXML et n'est pas "
+                                    + "déclarée dans FICHES_SANS_ECRAN_FXML. Soit son écran a disparu et la "
+                                    + "fiche est morte, soit c'est une surface sans FXML : dites laquelle.",
+                            fiche)
+                    .contains(fiche);
+        }
         verifs.assertAll();
+    }
+
+    /// Les fiches que la documentation est censée porter : celles des écrans FXML, plus celles des
+    /// surfaces qui n'en ont pas.
+    private static Set<String> fichesAttendues() {
+        Set<String> attendues = new TreeSet<>(FICHE_PAR_ECRAN.values());
+        attendues.addAll(FICHES_SANS_ECRAN_FXML);
+        return attendues;
+    }
+
+    /// Les pages de `docs/ecrans/`, hors sommaire : c'est ce que compte `<!--inv:ecrans-->`.
+    private static Set<String> fichesEcrans() throws IOException {
+        try (Stream<Path> pages = Files.list(Path.of("docs", "ecrans"))) {
+            return pages.map(chemin -> chemin.getFileName().toString())
+                    .filter(nom -> nom.endsWith(".md") && !"index.md".equals(nom))
+                    .map(nom -> nom.substring(0, nom.length() - ".md".length()))
+                    .collect(Collectors.toCollection(TreeSet::new));
+        }
     }
 
     /// Les vues FXML du produit, par leur nom de fichier sans extension.
@@ -774,6 +801,17 @@ class DocumentationAJourTest {
             "criteres-activite", "fr.univ_amu.iut.analyse.view.CriteresActivite",
             "criteres-multisite", "fr.univ_amu.iut.multisite.view.CriteresMultisite",
             "criteres-audit", "fr.univ_amu.iut.audit.view.CriteresAudit");
+
+    /// Les fiches de `docs/ecrans/` qui ne correspondent à **aucun FXML**, et n'en attendent pas.
+    ///
+    /// La recherche globale (Ctrl+F) est un **chrome** : `RechercheChrome` se construit en code, par-dessus
+    /// l'écran courant. Elle mérite sa fiche - l'utilisateur la voit et s'en sert - mais elle n'a ni vue
+    /// FXML ni contrôleur, donc [#FICHE_PAR_ECRAN] ne peut pas la porter.
+    ///
+    /// ⚠️ Sans cette liste, les deux inventaires d'écrans **divergent en silence** : `FICHE_PAR_ECRAN`
+    /// en connaît 15, `docs/ecrans/` en porte 16, et rien ne dit lequel a raison. Déclarer l'écart le
+    /// rend intentionnel, et rend le compte de `<!--inv:ecrans-->` vérifiable de bout en bout.
+    private static final Set<String> FICHES_SANS_ECRAN_FXML = Set.of("recherche");
 
     /// Paquets de `fr.univ_amu.iut` qui **ne sont pas** des features métier (socle + surfaces transverses).
     private static final Set<String> PAQUETS_NON_FEATURE = Set.of("commun", "cli", "perf");
