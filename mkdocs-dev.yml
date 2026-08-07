@@ -186,6 +186,7 @@ nav:
     - S5 · Valider: recette/sessions/s5-valider.md
     - S6 · Exploiter et piloter: recette/sessions/s6-exploiter-piloter.md
     - S8 · Récupérer une nuit déposée: recette/sessions/s8-recuperer-une-nuit.md
+    - Passe ciblée · constats en attente: recette/sessions/passe-ciblee-constats-en-attente.md
   - Interface en ligne de commande (CLI): cli.md
   - Tests et qualité: tests-et-qualite.md
   - Contrat de l'API VigieChiro: api-vigiechiro.md
