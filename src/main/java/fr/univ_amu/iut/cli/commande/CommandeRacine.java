@@ -32,7 +32,10 @@ import picocli.CommandLine.Spec;
         },
         subcommands = {
             CreerSite.class,
+            ModifierSite.class,
+            SupprimerSite.class,
             AjouterPoint.class,
+            ModifierPoint.class,
             ListerSites.class,
             ListerSitesVigieChiro.class,
             ListerParticipationsVigieChiro.class,
