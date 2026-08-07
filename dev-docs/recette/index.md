@@ -50,6 +50,9 @@ issues produites → renvois et décisions → notes de méthode.
 - [S2 · Importer une nuit](sessions/s2-importer.md) : importation, passage, diagnostic (+ cas dégradés).
 - [S3 · Vérifier](sessions/s3-verifier.md) : qualification, raccourcis, écoute *(à rejouer au delta : écran refondu #1524)*.
 - [S4 · Déposer et suivre](sessions/s4-deposer-suivre.md) : lot, dépôt réel, suivi *(à jouer)*.
+- [Passe ciblée · constats en attente](sessions/passe-ciblee-constats-en-attente.md) : les huit
+  constats qu'une image fixe ne peut pas juger, tranchés avant d'ouvrir les chantiers voisins
+  *(à jouer)*.
 
 ## La fiche d'évaluation : six axes
 
@@ -151,7 +154,10 @@ Pour **revalider** aux jalons suivants sans tout re-piloter à la main, on rejou
 ## Où ça vit
 
 - `dev-docs/recette/index.md` : **cette page**, la méthode.
-- `dev-docs/recette/sessions/` : les **scripts de session** figés (S1-S4 complets, S5 et S6 partielles ; S7 à venir).
+- `dev-docs/recette/sessions/` : les **scripts de session** figés. S1 et S2 ont été jouées ; S3 est à
+  rejouer au delta ; S4 et S8 sont écrites mais **à jouer** ; S5 et S6 restent **partielles** ; S7
+  n'existe pas encore. S'y ajoute la **passe ciblée** ci-dessus, qui ne vise que les constats en
+  attente.
 - `recette/fixtures/spec/` : les **specs** (YAML) des cartes SD, matérialisées par le générateur
   déterministe ; voir [Fixtures (générateur de cartes SD)](fixtures.md).
 - L'**EPIC** (label `recette`) : le déroulé vivant, les comptes-rendus, la task-list des issues.
