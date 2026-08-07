@@ -53,7 +53,10 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | Commande | Options | Parcours | Service |
 |---|---|---|---|
 | `creer-site` | `--carre <n> [--nom ..] [--protocole ..] [--commentaire ..]` | A10 | `ServiceSites.creerSite` |
+| `modifier-site` | `--site <id> --carre <n> [--nom ..] [--protocole ..] [--commentaire ..]` | A10 | `ServiceSites.modifierSite` |
+| `supprimer-site` | `--site <id> [--confirmer]` | A10 | `ServiceSites.supprimerSite` |
 | `ajouter-point` | `--site <id> --code <c> [--lat ..] [--lon ..] [--description ..]` | A10 | `ServiceSites.ajouterPoint` |
+| `modifier-point` | `--point <id> --site <id> --code <c> [--lat ..] [--lon ..] [--description ..]` | A10 | `ServiceSites.modifierPoint` |
 | `lister-sites` | `[--json]` | A10 | `ServiceSites` (lecture) |
 | `lister-sites-vigiechiro` | `[--portee mes\|plateforme] [--pages <n> \| --tout] [--point <code>] [--carre <n>] [--recenser] [--json] [--token <jeton>]` | #3003 | `ClientVigieChiro.sitesPlateforme` / `ClientVigieChiro.mesSites`. Interroge le **catalogue de la plateforme** (20 517 sites) ou vos sites. `--recenser` compte les sites par **code de point** : c'est ainsi qu'on établit qu'un code comme `Z1` est porté par des centaines de carrés (#2993). Chaque sortie porte son **dénominateur** (« 300 lus sur 20517 annoncés, 3 pages sur 206 ») et signale les sites **sans point ponctuel** (transects routiers, dont les localités sont des lignes) : un échantillon ne doit jamais passer pour un recensement. Les filtres sont appliqués **chez nous**, ce backend ignorant `where=` en silence |
 | `lister-participations-vigiechiro` | `[--json] [--token <jeton>]` | #3005 | `ClientVigieChiro.mesParticipations`. Vos nuits déposées, **avec leur identifiant** : c'est lui que réclament `importer-vigiechiro --participation` et `reconstruire-passage --participation`, et qu'aucune commande ne donnait. `reconstruire-passage` sans argument ne liste que les participations **orphelines** ; une nuit déjà rattachée n'apparaissait nulle part |
