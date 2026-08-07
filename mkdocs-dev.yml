@@ -190,6 +190,7 @@ nav:
     - Passe ciblée · constats en attente: recette/sessions/passe-ciblee-constats-en-attente.md
   - Interface en ligne de commande (CLI): cli.md
   - Tests et qualité: tests-et-qualite.md
+  - Audit des filtres tabulaires: audit-filtres-vues-tabulaires.md
   - Contrat de l'API VigieChiro: api-vigiechiro.md
   - Performance et benchmarks: performance.md
   - Observabilité: observabilite.md
