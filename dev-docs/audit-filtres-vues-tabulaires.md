@@ -6,11 +6,13 @@
 **Périmètre :** vues JavaFX contenant une `TableView`, filtres associés, vues mémorisées,
 documentation utilisateur et captures générées du dépôt.
 
-!!! success "Audit historique, principaux constats traités"
+!!! success "Audit historique, un seul point encore ouvert"
     Ce document conserve le diagnostic posé sur `dde1ac07b`. Entre cet audit et la révision de suivi,
     le chantier d'uniformisation a corrigé l'essentiel des risques relevés : restauration complète,
     listes cascadées, clés sémantiques, fabriques communes, mémoire de session, action « Tout effacer »,
     filtres de l'Audit et garde documentaire. La section suivante relie chaque constat à son traitement.
+
+    Il reste **l'unicité des clés d'un catalogue** ([#3492](https://github.com/echonuit/vigiechiro-pr-companion/issues/3492)), et une **surveillance** de volumétrie sur la fiche site. Le reste est traité, décidé ou assumé.
 
 ## Synthèse
 
@@ -44,6 +46,29 @@ de durcir ses contrats**.
 | Clés ambiguës et critères communs dupliqués | **Corrigé** | `7f1654520`, `0092b522d` et `cfbfdb059` : clés par concept, critère booléen et critère Lieu mutualisés |
 | Documentation désynchronisée | **Corrigé et gardé** | `8c4990d8e` : les catalogues sont ancrés dans `DocumentationAJourTest` |
 | Audit de cohérence sans filtres | **Corrigé** | `3d4a4c39a` : recherche, Gravité, Catégorie, Passage, vues et mémoire de session |
+| Ma saison sans recherche ni « Reste à faire » | **Corrigé** | #3103 : recherche de lieu et case « Reste à faire », écrites une fois dans `FiltresSaison` |
+| Ne pas généraliser aux tables opérationnelles | **Décidé** | [ADR 3479](decisions/3479-toute-table-n-a-pas-vocation-a-etre-exploree.md) : trois natures d'écran, et c'est la nature qui décide |
+| Résumé de Ma saison sur le sous-ensemble affiché | **Écarté** | divergence assumée et écrite dans `SaisonController` : « chercher un lieu ne change pas ce qu'il y a à faire cette année ». Cohérent avec l'ADR 3479, qui classe cet écran en **analytique borné** et non en exploratoire |
+| Unicité des clés d'un catalogue | **Ouvert** | [#3492](https://github.com/echonuit/vigiechiro-pr-companion/issues/3492) : `ClesCriteres` a levé l'ambiguïté entre écrans, mais rien ne refuse deux critères de même clé dans un même catalogue |
+| Fiche site sans filtre | **Surveillance** | volontaire tant que la liste des passages reste bornée ; une recherche légère avant d'introduire les vues mémorisées |
+
+⚠️ Ce tableau a lui-même sous-déclaré son avancement : deux lignes (Ma saison, tables opérationnelles)
+décrivaient des travaux **faits** que le suivi ne mentionnait pas, et l'unicité des clés, seul reste
+réel, n'y figurait pas du tout. Le vérifier a demandé d'ouvrir le code, pas de relire le tableau.
+
+### Les critères de réussite, un par un
+
+L'audit se ferme sur sept critères. Six sont tenus ; le premier a été **reformulé** plutôt qu'atteint.
+
+| Critère | État |
+|---|---|
+| Deux contrôles de même apparence ont la même règle d'activation | **reformulé** : la distinction par type est conservée et **écrite** (ADR 3479, point 3). L'audit visait l'uniformité du geste, le produit a choisi la prévisibilité de la règle |
+| Toute puce visible a un effet réel ou affiche son erreur | tenu (`013f76e39`) |
+| Aucune restauration amputée ne reste silencieuse | tenu (`aaa963e82`) |
+| Même chemin de remise à zéro sur les vues exploratoires | tenu (`bb695a9bc`) |
+| Vocabulaire des clés non ambigu **et testé** | **à moitié** : non ambigu (`7f1654520`), pas encore testé (#3492) |
+| Le catalogue documenté correspond au catalogue présenté | tenu et **gardé** (`8c4990d8e`) |
+| Les tables opérationnelles restent volontairement simples | tenu, et devenu une décision (ADR 3479) |
 
 Les sections suivantes restent formulées comme au moment de l'audit : elles expliquent les défauts qui
 ont motivé ces changements et servent de trace de conception.
