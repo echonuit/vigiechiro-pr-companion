@@ -111,34 +111,44 @@ ICI="${CARTES_ASSETS:-$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)}"
 
 # Aperçus à fond cartographique, et le rectangle `x1,y1,x2,y2` de leur carte.
 #
-# Les rectangles sont **mesurés**, pas estimés : depuis #3375, un diff entre la version de la CI et
-# une régénération locale ne contient plus **que** les tuiles, donc sa boîte englobante **est** la
-# carte. Relevé du 2026-08-06, avec une marge de quelques pixels sur chaque bord.
+# Les rectangles ne sont plus écrits ici : ils sont **dérivés de la scène** au moment du rendu, par
+# `ZoneCarteApercu`, et déposés dans un `apercu-<nom>.png.carte` à côté de chaque aperçu. Ces fichiers
+# ne sont **jamais committés** : produits par `capture-screenshots.sh`, consommés ici, dans la même
+# exécution.
 #
-# ⚠️ Une capture dont la mise en page bouge doit voir son rectangle **remesuré** : trop petit, le bruit
-# repasse et l'on recommence à committer pour rien ; trop grand, on s'aveugle sur une bande qui n'est
-# pas la carte. Le garde ci-dessous refuse un nom qui n'existe pas ; il ne peut rien dire du rectangle.
+# ## Pourquoi ce changement (#3439)
+#
+# Cette liste était recopiée à la main, et un rectangle recopié se démode **en silence**. C'est arrivé :
+# `apercu-sites-modale-point` déclarait `18,331,464,457` pour une carte réellement en `25,363,535,601`.
+# Faux des DEUX côtés à la fois - 144 lignes de carte laissées dehors, où le bruit repassait (8 commits
+# d'aperçus sur 20, contre 1 sur 20 pour un masque juste), et 31 lignes de **texte d'aide** effacées, où
+# une régression n'aurait fait rougir personne. La liste était en outre **incomplète** : le rendu dépose
+# 19 zones, elle en déclarait 16.
+#
+# La scène, elle, sait où est la carte. Un rectangle dérivé ne peut pas se démoder : une modale qui
+# grandit, une carte qu'on allonge, un écran cartographique qu'on ajoute, et la zone suit. La question
+# « les autres rectangles sont-ils justes ? » cesse même de se poser, puisque plus personne ne les écrit.
 if [ -n "${CARTES_LISTE:-}" ]; then
+  # Injection de l'auto-test, qui monte un dépôt jetable sans passer par le rendu JavaFX.
   CARTES=("${CARTES_LISTE}")
 else
-CARTES=(
-  "apercu-analyse-carte.png 190,138,1068,424"
-  "apercu-multisite.png 12,138,469,568"
-  "apercu-multisite-annee-invalide.png 12,144,469,571"
-  "apercu-multisite-carte-pleine.png 12,90,1088,571"
-  "apercu-multisite-edition.png 12,90,865,571"
-  "apercu-multisite-filtre.png 12,138,469,568"
-  "apercu-import-assistant.png 35,679,1065,880"
-  "apercu-import-decompression-volume.png 524,825,547,849"
-  "apercu-import-en-cours.png 35,679,1065,880"
-  "apercu-import-incoherence.png 35,743,1065,944"
-  "apercu-import-melange.png 35,743,1065,944"
-  "apercu-import-multi-nuits.png 35,787,1065,988"
-  "apercu-import-rattachement-avertissements.png 35,679,1065,880"
-  "apercu-import-rejets.png 35,679,1065,880"
-  "apercu-sites-modale-point.png 18,331,464,457"
-  "apercu-sites-modale-point-creation.png 18,331,464,457"
-)
+  CARTES=()
+  for zone in "${ICI}"/apercu-*.png.carte; do
+    [ -e "${zone}" ] || continue
+    nom="$(basename "${zone%.carte}")"
+    CARTES+=("${nom} $(head -n 1 "${zone}")")
+  done
+
+  # Zéro rectangle ne veut PAS dire « aucune carte » : le produit en porte quatre. Cela veut dire que le
+  # rendu n'a pas déposé ses zones - script lancé hors de son enchaînement, `ZoneCarteApercu` cassé,
+  # aperçus repris d'ailleurs. Sans ce refus, le filtre passerait en silence et le bruit des cartes
+  # repartirait en commit, ce que ce script existe précisément pour empêcher. Un dispositif qui ne
+  # vérifie plus rien doit le dire, pas afficher un succès.
+  if [ ${#CARTES[@]} -eq 0 ]; then
+    echo "::error::Aucune zone de carte trouvée à côté des aperçus (${ICI}/apercu-*.png.carte)." >&2
+    echo "::error::Ces fichiers sont déposés par le rendu : lancez .github/assets/capture-screenshots.sh d'abord." >&2
+    exit 1
+  fi
 fi
 
 # ImageMagick s'invoque de deux façons selon sa version, et les deux existent dans la nature : la **7**
