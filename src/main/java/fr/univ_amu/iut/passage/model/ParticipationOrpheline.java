@@ -1,9 +1,9 @@
 package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
+import fr.univ_amu.iut.commun.model.FuseauDuSite;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -67,8 +67,12 @@ public record ParticipationOrpheline(
             return Optional.empty();
         }
         try {
+            // Le fuseau du SITE, comme à l'écriture (#3406). Relire avec celui de la machine quand
+            // l'écriture emploie celui du site casserait le point fixe : quatre cycles
+            // « reconstruire puis envoyer » recommenceraient à déplacer la nuit, ce que le cliquet de
+            // #1860 existe pour empêcher. Les deux moitiés de la boucle doivent parler le même fuseau.
             return Optional.of(OffsetDateTime.parse(borne)
-                    .atZoneSameInstant(ZoneId.systemDefault())
+                    .atZoneSameInstant(FuseauDuSite.ZONE)
                     .toLocalDateTime());
         } catch (DateTimeParseException premiere) {
             try {

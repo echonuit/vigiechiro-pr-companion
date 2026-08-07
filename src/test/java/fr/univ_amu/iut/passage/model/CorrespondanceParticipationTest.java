@@ -10,6 +10,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
+import java.util.TimeZone;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -26,9 +27,15 @@ class CorrespondanceParticipationTest {
         ParticipationADeposer p = CorrespondanceParticipation.versParticipation("Z41", passage, micro);
 
         assertThat(p.point()).isEqualTo("Z41");
-        // Dates revérifiées par aller-retour vers le fuseau local (déterministe quel que soit le fuseau).
-        assertThat(instantLocal(p.dateDebut())).isEqualTo(LocalDateTime.of(2026, 7, 3, 21, 0));
-        assertThat(instantLocal(p.dateFin())).isEqualTo(LocalDateTime.of(2026, 7, 4, 5, 0)); // franchit minuit
+        // Les dates se comparent EN DUR, telles qu'Eve les recevra (#3406).
+        //
+        // ⚠️ Elles étaient vérifiées par un aller-retour vers le fuseau local, sous le motif
+        // « déterministe quel que soit le fuseau ». Il l'était en effet - en reconvertissant avec le
+        // MÊME `systemDefault()` qui avait produit la valeur, si bien que l'aller-retour s'annulait.
+        // Ce cas restait vert alors que la donnée déposée était fausse : depuis un poste en UTC, cette
+        // nuit partait en `21:00 GMT` au lieu de `19:00 GMT`.
+        assertThat(p.dateDebut()).isEqualTo("Fri, 3 Jul 2026 19:00:00 GMT");
+        assertThat(p.dateFin()).isEqualTo("Sat, 4 Jul 2026 03:00:00 GMT"); // franchit minuit
         assertThat(p.meteo().vent()).isEqualTo("FAIBLE");
         assertThat(p.meteo().couverture()).isEqualTo("25-50");
         assertThat(p.configuration())
@@ -189,6 +196,32 @@ class CorrespondanceParticipationTest {
         assertThat(vide.typeMicro()).isNull();
         assertThat(vide.positionMicro()).isNull();
         assertThat(vide.hauteurMetres()).isNull();
+    }
+
+    @Test
+    @DisplayName("#3406 : ce qui part vers la plateforme ne dépend PAS du fuseau du poste qui dépouille")
+    void le_depot_ne_depend_pas_du_poste() {
+        // Les heures d'un passage viennent de l'enregistreur posé sur le SITE. Les convertir avec le
+        // fuseau de la machine faisait partir un instant différent selon le poste - et depuis Cayenne,
+        // un changement de DATE. C'est une donnée déposée sur la plateforme nationale.
+        TimeZone origine = TimeZone.getDefault();
+        try {
+            for (String posteDeDepouillement : new String[] {"Europe/Paris", "UTC", "America/Cayenne"}) {
+                TimeZone.setDefault(TimeZone.getTimeZone(posteDeDepouillement));
+
+                ParticipationADeposer p =
+                        CorrespondanceParticipation.versParticipation("Z41", passage(null), MaterielMicro.vide(42L));
+
+                assertThat(p.dateDebut())
+                        .as("nuit du 3 juillet, 21:00 sur le site, dépouillée depuis « %s »", posteDeDepouillement)
+                        .isEqualTo("Fri, 3 Jul 2026 19:00:00 GMT");
+                assertThat(p.dateFin())
+                        .as("fin de nuit, dépouillée depuis « %s »", posteDeDepouillement)
+                        .isEqualTo("Sat, 4 Jul 2026 03:00:00 GMT");
+            }
+        } finally {
+            TimeZone.setDefault(origine);
+        }
     }
 
     private static Passage passage(String donneesMeteo) {
