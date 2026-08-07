@@ -1260,3 +1260,60 @@
   -fx-icon-color: -couleur-enjeu;
   -fx-icon-size: 15px;
 }
+
+/* --------------------------------------------------------------------------------------------- */
+/* Les dialogues du socle (#1499)                                                                  */
+/*                                                                                                 */
+/* Un `Alert` vit dans sa propre scene : il n'herite pas des feuilles de la fenetre qui l'ouvre, et */
+/* `Habillage.poser(DialogPane)` les lui attache. Mais les attacher ne suffisait pas : aucune regle */
+/* ne visait les dialogues, si bien que la confirmation gardait le rendu Modena par defaut au       */
+/* milieu d'une application habillee. Mesure : la capture etait identique AU BIT PRES avant et      */
+/* apres l'attachement.                                                                            */
+
+.dialog-pane {
+    -fx-background-color: -couleur-fond;
+    -fx-padding: 4px;
+}
+
+.dialog-pane > .content.label,
+.dialog-pane .content {
+    -fx-text-fill: -couleur-texte;
+    -fx-padding: 14px 16px 6px 16px;
+}
+
+.dialog-pane > .header-panel {
+    -fx-background-color: -couleur-primaire-voile;
+    -fx-padding: 12px 16px;
+}
+
+.dialog-pane > .header-panel .label {
+    -fx-text-fill: -couleur-nuit;
+    -fx-font-weight: bold;
+}
+
+/* La barre de boutons : les memes teintes que les actions de l'application, plutot que le gris du
+   theme. Le bouton par defaut porte deja `:default` ; on n'invente pas de classe a poser a la main,
+   qui serait oubliee au dialogue suivant. */
+.dialog-pane > .button-bar > .container {
+    -fx-padding: 10px 12px 12px 12px;
+}
+
+.dialog-pane .button {
+    -fx-background-color: -couleur-primaire-voile;
+    -fx-text-fill: -couleur-texte;
+    -fx-background-radius: 4px;
+    -fx-padding: 6px 16px;
+}
+
+.dialog-pane .button:hover {
+    -fx-background-color: -couleur-primaire-fond;
+}
+
+.dialog-pane .button:default {
+    -fx-background-color: -couleur-primaire;
+    -fx-text-fill: -couleur-texte-clair;
+}
+
+.dialog-pane .button:default:hover {
+    -fx-background-color: -couleur-primaire-sombre;
+}

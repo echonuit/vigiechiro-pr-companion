@@ -25,6 +25,7 @@ public final class AlerteDemarrage {
     /// non une reconstitution (ADR 0025).
     public static Alert dialogue(String entete, String explication) {
         Alert alerte = new Alert(Alert.AlertType.WARNING);
+        Habillage.poser(alerte.getDialogPane());
         alerte.setHeaderText(entete);
         alerte.setContentText(explication);
         return alerte;

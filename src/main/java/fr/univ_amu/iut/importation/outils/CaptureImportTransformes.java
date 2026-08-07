@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.importation.outils;
 
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.importation.view.ActionImportTransformes;
 import fr.univ_amu.iut.importation.view.ActionImportTransformes.ModeImport;
 import java.nio.file.Path;
@@ -58,6 +59,7 @@ public final class CaptureImportTransformes {
         // des libellés et du texte RÉELS exposés par l'action : ni les boutons ni le message ne sont
         // recomposés ici (ADR 0025). On illustre la variante « dossier hors espace de travail ».
         Alert alerte = new Alert(Alert.AlertType.CONFIRMATION);
+        Habillage.poser(alerte.getDialogPane());
         alerte.setHeaderText(ActionImportTransformes.ENTETE_MODE);
         alerte.setContentText(ApercuFx.enrouler(ActionImportTransformes.questionMode(true)));
         ButtonType referencer = new ButtonType(ModeImport.REFERENCER.libelle(), ButtonBar.ButtonData.OTHER);
