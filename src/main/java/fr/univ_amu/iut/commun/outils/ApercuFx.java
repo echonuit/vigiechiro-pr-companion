@@ -71,9 +71,13 @@ public final class ApercuFx {
         // documentation ne doit jamais partir avec un libellé tronqué, mais un export utilisateur
         // porte sur une scène redessinée que personne ne peut corriger. Voir RenduPng.
         LisibiliteCapture.refuserToutTexteIllisible(scene);
+        // Mesure PENDANT que la scene est en place (des bornes n'ont de sens qu'apres layout), ecriture
+        // APRES la fermeture du stage. Cf. [#deposerZoneCarte] : y toucher au disque est deja trop.
+        String zoneCarte = ZoneCarteApercu.rectangleDe(scene).orElse(null);
         WritableImage image = scene.snapshot(null);
         stageTransitoire.hide();
         RenduPng.ecrire(image, fichier);
+        ZoneCarteApercu.deposer(zoneCarte, fichier);
     }
 
     /// Met la scene dans l'etat ou l'application la montre : police embarquee et feuilles de socle.
@@ -117,9 +121,11 @@ public final class ApercuFx {
         scene.getRoot().applyCss();
         scene.getRoot().layout();
         LisibiliteCapture.refuserToutTexteIllisible(scene);
+        String zoneCarte = ZoneCarteApercu.rectangleDe(scene).orElse(null);
         WritableImage image = scene.snapshot(null);
         stageTransitoire.hide();
         RenduPng.ecrire(image, fichier);
+        ZoneCarteApercu.deposer(zoneCarte, fichier);
     }
 
     /// Capture un **menu ouvert** (le popup d'un [MenuButton]) hors-écran, et l'écrit en PNG.
