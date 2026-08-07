@@ -167,6 +167,7 @@ nav:
     - 3406 · Une nuit porte le fuseau de son site: decisions/3406-une-nuit-porte-le-fuseau-de-son-site.md
     - 2750 · Un chiffre recalculable ne s'écrit pas à la main: decisions/2750-un-chiffre-que-le-code-sait-recalculer-ne-s-ecrit-pas-a-la-main.md
     - 3450 · Une propriété de fuseau se tient en rejouant: decisions/3450-une-propriete-de-fuseau-se-tient-en-rejouant-pas-en-relisant.md
+    - 3451 · Un invariant tenu par la base se double d'un refus: decisions/3451-un-invariant-tenu-par-la-base-se-double-d-un-refus.md
     - 2753 · Une règle absente et assumée: decisions/2753-une-regle-absente-et-assumee-vaut-mieux-qu-une-regle-contournee.md
     - 3269 · Un ensemble vide se constate avant de filtrer: decisions/3269-un-ensemble-vide-se-constate-avant-de-filtrer.md
     - 2727 · Une restauration vérifie en place: decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md
