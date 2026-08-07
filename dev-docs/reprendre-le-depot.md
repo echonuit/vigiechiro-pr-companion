@@ -48,8 +48,8 @@ Ce sont des **interrupteurs**, pas des secrets : `gh variable list` les montre.
 | Où | Ce qui en dépend | Comment on y accède |
 |---|---|---|
 | **Plateforme VigieChiro** | le contrat API, les sondes live, l'import et le dépôt réels | compte naturaliste sur le site, rôle Observateur suffisant en lecture |
-| **Flathub** | le paquet Flatpak et sa mise à jour automatique | dépôt de manifeste chez Flathub, PR ouvertes par leur robot de vérification |
-| **winget** | le paquet Windows | soumission **manuelle** aujourd'hui, `WINGET_TOKEN` absent |
+| **Flathub** | **rien pour l'instant** : le paquet n'y est pas (#2191) | la soumission a été fermée par leur robot, checklist incomplète |
+| **winget** | **rien pour l'instant** : le paquet n'y est pas (#2110) | la première soumission est manuelle ; `WINGET_TOKEN` absent |
 | **Zenodo** | le jeu de données d'exemple « une nuit » | dépôt public, DOI figé |
 | **GitHub Pages** | les trois sites de documentation | `DOCS_DEPLOY_TOKEN` |
 
@@ -61,8 +61,25 @@ C'est la partie que personne ne devine en lisant la CI.
 |---|---|---|
 | Renouveler `VIGIECHIRO_TOKEN` | tous les **14 jours** | le contrat API cesse de vérifier ; la veille rougit à 21 jours |
 | **Vérifier le train de publication** | chaque **mercredi** après 6 h UTC | l'ADR 2744 le déclare humain : les notes doivent **agréger la semaine**, pas un commit |
-| Soumettre le paquet winget | à chaque version notable | la version Windows reste en retard sur les autres |
 | Regarder les aperçus régénérés | après une PR qui touche l'IHM | une capture fausse illustre la documentation sans que rien ne rougisse |
+
+!!! warning "Deux canaux de distribution sont outillés et n'ont jamais rien distribué"
+    C'est le piège le plus coûteux de cette page, parce qu'il se lit à l'envers : `.github/workflows/`
+    porte `winget.yml` **et** `flatpak.yml`, `flatpak/` porte un manifeste versionné et validé. Tout
+    donne à croire que les paquets existent et se mettent à jour. **Ils n'existent pas.**
+
+    - **winget** : `Echonuit.VigieChiroCompanion` est absent de `microsoft/winget-pkgs`. Le workflow
+      ne sait faire qu'une **mise à jour** - `winget-releaser` refuse une première soumission, et son
+      en-tête le dit. Tant que le paquet n'est pas déposé une fois **à la main**, ce workflow n'a rien
+      à mettre à jour. Il manque aussi le secret `WINGET_TOKEN` et un fork de `winget-pkgs`. Cf. #2110.
+    - **Flathub** : ni `fr.echonuit.VigieChiroCompanion` ni l'ancien identifiant n'ont de dépôt chez
+      Flathub. La PR de soumission a été fermée par le robot pour checklist incomplète, et deux points
+      manquants sont des **actes humains** - une vidéo de l'application lancée en Flatpak, et une
+      attestation personnelle. Cf. #2191.
+
+    ⚠️ L'identifiant Flatpak a **changé** entre-temps (ADR 0047) : la PR fermée soumettait
+    `io.github.iutinfoaix_s201.VigieChiro`, le manifeste porte aujourd'hui `fr.echonuit.…`. Reprendre
+    la soumission n'est donc pas qu'une formalité de checklist.
 
 !!! warning "Le train mérite un œil, même vert"
     Son premier départ réel a échoué **après** avoir créé le tag et déposé la Release en brouillon :
