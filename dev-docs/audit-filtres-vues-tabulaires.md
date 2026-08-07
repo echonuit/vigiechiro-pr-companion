@@ -36,14 +36,14 @@ de durcir ses contrats**.
 
 | Constat initial | État | Traitement |
 |---|---|---|
-| Critère disparu ignoré à la restauration | **Corrigé** | `aaa963e82` — la restauration rend désormais critères inconnus et valeurs perdues |
-| Domaines de valeurs figés à l'ouverture | **Corrigé** | `45a821951` et `320871d2d` — listes cascadées sur les autres critères |
+| Critère disparu ignoré à la restauration | **Corrigé** | `aaa963e82` : la restauration rend désormais critères inconnus et valeurs perdues |
+| Domaines de valeurs figés à l'ouverture | **Corrigé** | `45a821951` et `320871d2d` : listes cascadées sur les autres critères |
 | Activation différente selon le type de critère | **Assumée** | distinction conservée entre booléen, seuil/plage et liste ; les raccourcis restent aussi portés par les vues par défaut |
-| Réinitialisation et mémoire différentes | **Corrigé** | `bb695a9bc` — mémoire commune sur les quatre écrans initiaux et action « Tout effacer » |
-| Année invalide mais puce apparemment active | **Corrigé** | `013f76e39` — une année illisible n'est plus décrite comme un filtre actif |
-| Clés ambiguës et critères communs dupliqués | **Corrigé** | `7f1654520`, `0092b522d` et `cfbfdb059` — clés par concept, critère booléen et critère Lieu mutualisés |
-| Documentation désynchronisée | **Corrigé et gardé** | `8c4990d8e` — les catalogues sont ancrés dans `DocumentationAJourTest` |
-| Audit de cohérence sans filtres | **Corrigé** | `3d4a4c39a` — recherche, Gravité, Catégorie, Passage, vues et mémoire de session |
+| Réinitialisation et mémoire différentes | **Corrigé** | `bb695a9bc` : mémoire commune sur les quatre écrans initiaux et action « Tout effacer » |
+| Année invalide mais puce apparemment active | **Corrigé** | `013f76e39` : une année illisible n'est plus décrite comme un filtre actif |
+| Clés ambiguës et critères communs dupliqués | **Corrigé** | `7f1654520`, `0092b522d` et `cfbfdb059` : clés par concept, critère booléen et critère Lieu mutualisés |
+| Documentation désynchronisée | **Corrigé et gardé** | `8c4990d8e` : les catalogues sont ancrés dans `DocumentationAJourTest` |
+| Audit de cohérence sans filtres | **Corrigé** | `3d4a4c39a` : recherche, Gravité, Catégorie, Passage, vues et mémoire de session |
 
 Les sections suivantes restent formulées comme au moment de l'audit : elles expliquent les défauts qui
 ont motivé ces changements et servent de trace de conception.
@@ -246,7 +246,7 @@ mais un test de contrat sur les clés et libellés apporterait déjà un garde-f
 
 ## Vues à faire évoluer
 
-### Audit de cohérence — priorité fonctionnelle
+### Audit de cohérence : priorité fonctionnelle
 
 L'Audit est une vue globale et non bornée. Ses colonnes correspondent directement à des dimensions de
 filtrage utiles :
@@ -260,7 +260,7 @@ Il devrait être le premier écran supplémentaire à adopter le socle commun. D
 « Erreurs », « Avertissements » et éventuellement « Avec passage » répondraient aux tâches courantes
 sans masquer l'inventaire complet.
 
-### Ma saison — à confirmer par la volumétrie et les usages
+### Ma saison : à confirmer par la volumétrie et les usages
 
 Année et Campagne sont des **paramètres de périmètre** cohérents et doivent rester visibles. Pour une
 grande saison, deux filtres complémentaires pourraient devenir utiles :
@@ -270,7 +270,7 @@ grande saison, deux filtres complémentaires pourraient devenir utiles :
 
 Le résumé doit continuer à être calculé sur exactement le même sous-ensemble que la table.
 
-### Tables contextuelles et opérationnelles — ne pas généraliser sans besoin
+### Tables contextuelles et opérationnelles : ne pas généraliser sans besoin
 
 La Synthèse, la Qualification, les suivis d'import/dépôt et la modale de reconstruction ne doivent pas
 recevoir le patron complet par simple souci d'homogénéité. Leur périmètre est court ou leur table sert une
@@ -307,7 +307,7 @@ opérationnel** est assumé.
 
 ## Plan de traitement recommandé
 
-### Étape 1 — sécuriser les contrats
+### Étape 1 : sécuriser les contrats
 
 - rendre visibles les critères inconnus et les valeurs perdues à la restauration ;
 - faire remonter les échecs de `poser` ;
@@ -315,14 +315,14 @@ opérationnel** est assumé.
 - valider les valeurs saisies, notamment l'année ;
 - ajouter les tests de non-régression correspondants.
 
-### Étape 2 — fixer la politique commune
+### Étape 2 : fixer la politique commune
 
 - décider domaine stable ou liste réellement cascadée ;
 - uniformiser la règle d'activation ;
 - uniformiser la remise à zéro ;
 - décider ce qui est mémorisé automatiquement entre deux ouvertures.
 
-### Étape 3 — réduire la duplication
+### Étape 3 : réduire la duplication
 
 - extraire une fabrique de critère booléen ;
 - extraire une fabrique de champ texte ou numérique validé ;
@@ -330,13 +330,13 @@ opérationnel** est assumé.
 - centraliser les clés réellement partagées ;
 - conserver dans chaque fonctionnalité uniquement son prédicat métier.
 
-### Étape 4 — étendre avec discernement
+### Étape 4 : étendre avec discernement
 
 - équiper d'abord l'Audit ;
 - mesurer le besoin sur Ma saison et la fiche site ;
 - ne pas équiper les tables transitoires sans scénario utilisateur concret.
 
-### Étape 5 — remettre la documentation sous contrôle
+### Étape 5 : remettre la documentation sous contrôle
 
 - corriger les catalogues documentés ;
 - supprimer les commentaires périmés ;
