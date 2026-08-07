@@ -44,9 +44,16 @@ Le **schéma physique** est plus proche de la machine. On le donne en notation *
 (IE / *crow's foot*, celle de Mermaid) : relations binaires, clés étrangères explicites. C'est la
 traduction du MCD ci-dessus. **19 tables à l'origine**, créées par
 [`V01__schema.sql`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/resources/db/migration/V01__schema.sql) ;
-le schéma courant en compte **31** après les migrations ultérieures (`V02`→`V35`),
-clés étrangères **`ON DELETE CASCADE`** (supprimer un passage emporte sa session, ses séquences, ses
-observations…).
+le schéma courant en compte **<!--inv:tables-->33<!--/inv-->**, au terme des
+**<!--inv:migrations-->38<!--/inv-->** migrations versionnées ; clés étrangères
+**`ON DELETE CASCADE`** (supprimer un passage emporte sa session, ses séquences, ses observations…).
+
+!!! note "Pourquoi ces deux chiffres sont balisés et pas le premier"
+    Les 19 tables d'origine sont un **fait d'histoire** : `V01__schema.sql` ne changera plus, les
+    migrations étant en ajout seul. Les deux autres bougent à chaque migration, et ils avaient
+    dérivé - la page annonçait 31 tables « après `V02`→`V35` » quand il y en avait 33 après `V38`.
+    Le garde les recalcule désormais : le compte de tables vient du schéma **appliqué**, pas d'un
+    comptage de `CREATE TABLE` (une reconstruction de table en crée une de plus et la renomme).
 
 ```mermaid
 erDiagram
