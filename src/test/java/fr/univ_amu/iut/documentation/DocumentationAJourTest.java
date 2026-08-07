@@ -8,6 +8,9 @@ import com.google.inject.TypeLiteral;
 import fr.univ_amu.iut.cli.commande.CommandeRacine;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import java.io.IOException;
@@ -15,6 +18,10 @@ import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -748,6 +755,8 @@ class DocumentationAJourTest {
             "cli",
             "workflows-ci",
             "migrations",
+            "tables",
+            "ecrans",
             "tests-bats",
             "criteres-validation",
             "criteres-analyse",
@@ -852,10 +861,49 @@ class DocumentationAJourTest {
                         Path.of("src", "main", "resources", "db", "migration"),
                         nom -> nom.startsWith("V") && nom.endsWith(".sql"));
             case "tests-bats" -> casesBats();
+            case "tables" -> tablesDuSchema();
+            case "ecrans" ->
+                (int) fichiersDe(Path.of("docs", "ecrans"), nom -> nom.endsWith(".md") && !"index.md".equals(nom));
             case String catalogue
             when CATALOGUES_CRITERES.containsKey(catalogue) -> criteresDuCatalogue(CATALOGUES_CRITERES.get(catalogue));
             default -> throw new AssertionError("clé d'inventaire inconnue : " + cle);
         };
+    }
+
+    /// Les tables du schéma **courant**, obtenues en appliquant les migrations puis en interrogeant
+    /// `sqlite_master`.
+    ///
+    /// ⚠️ Compter les `CREATE TABLE` des migrations donnerait un faux : une reconstruction de table
+    /// crée une jumelle temporaire (`observation_v13`), copie, supprime l'originale et **renomme**.
+    /// Le `CREATE` et le `DROP` ne se compensent que par hasard, et un `ALTER TABLE ... RENAME`
+    /// n'apparaît dans aucun des deux. Seul le schéma appliqué dit la vérité - c'est ce qui a laissé
+    /// la doc annoncer 31 tables quand il y en avait 33 (#2749).
+    private static int tablesDuSchema() throws IOException {
+        Path dossier = Files.createTempDirectory("inv-tables-");
+        try {
+            SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+            new MigrationSchema(source).migrer();
+            try (Connection connexion = source.getConnection();
+                    Statement requete = connexion.createStatement();
+                    ResultSet lignes = requete.executeQuery("SELECT COUNT(*) FROM sqlite_master WHERE type = 'table'"
+                            + " AND name NOT LIKE 'sqlite_%'")) {
+                lignes.next();
+                return lignes.getInt(1);
+            } catch (SQLException e) {
+                throw new IOException("Schéma illisible : le décompte des tables ne peut pas conclure.", e);
+            }
+        } finally {
+            supprimerRecursivement(dossier);
+        }
+    }
+
+    /// Efface l'arborescence temporaire du décompte de tables (les plus profonds d'abord).
+    private static void supprimerRecursivement(Path racine) throws IOException {
+        try (Stream<Path> chemins = Files.walk(racine)) {
+            for (Path chemin : chemins.sorted(Comparator.reverseOrder()).toList()) {
+                Files.deleteIfExists(chemin);
+            }
+        }
     }
 
     /// Les cas `@test` déclarés par le harnais bats, tous fichiers confondus.

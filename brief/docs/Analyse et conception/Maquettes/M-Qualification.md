@@ -127,7 +127,7 @@ L'écran est divisé en **2 colonnes** surmontant un **bandeau de décision en p
   <text x="320" y="125" class="info-label">DATE / PLAGE</text>
   <text x="320" y="142" class="info-value">22/06/2026 · 20:25 → 07:47</text>
   <text x="560" y="125" class="info-label">VOLUMÉTRIE</text>
-  <text x="560" y="142" class="info-value">3 614 séquences · 5 h 1 min</text>
+  <text x="560" y="142" class="info-value">2 109 séquences · 1 h 58 min</text>
   <text x="835" y="125" class="info-label">VERDICT ACTUEL</text>
   <text x="835" y="142" class="info-value" fill="#6a737d" font-style="italic">non saisi</text>
   <text x="1010" y="125" class="info-label">STATUT</text>
@@ -430,7 +430,7 @@ Activée par le bouton **Personnaliser…** dans l'en-tête de la liste. Permet 
   <text x="444" y="194" class="radio-sub">reproductibilité d'une session à l'autre).</text>
 
   <text x="124" y="252" class="field-label">Taille de la sélection</text>
-  <text x="124" y="269" class="field-hint">Entre 10 et 30 séquences, réparties sur les ~3 600 séquences de la nuit.</text>
+  <text x="124" y="269" class="field-hint">Entre 10 et 30 séquences, réparties sur les ~2 100 séquences de la nuit.</text>
 
   <rect x="124" y="290" width="450" height="6" rx="3" class="slider-track"/>
   <rect x="124" y="290" width="450" height="6" rx="3" class="slider-track-fill"/>

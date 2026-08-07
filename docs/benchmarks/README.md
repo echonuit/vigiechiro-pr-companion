@@ -59,9 +59,27 @@ débit, nb séquences, **mémoire crête**.
 
 ## Relevés (machine de référence)
 
-> **Machine de référence** : poste comparable à ceux de l'IUT (_préciser CPU / RAM / SSD si besoin_).
-> JDK 25 standard. Chiffres **mesurés** (pas des placeholders) ; relancer 2-3 fois et garder l'ordre de
-> grandeur. La 1ʳᵉ utilisation du jour (JIT + cache disque froids) donne les valeurs « froid ».
+> **Machine de référence** : poste comparable à ceux de l'IUT, JDK 25 standard. Chiffres **mesurés**
+> (pas des placeholders) ; relancer 2-3 fois et garder l'ordre de grandeur. La 1ʳᵉ utilisation du jour
+> (JIT + cache disque froids) donne les valeurs « froid ».
+
+!!! warning "Les relevés ci-dessous n'ont pas de machine nommée"
+    Cette section a porté des mois durant un « préciser CPU / RAM / SSD si besoin » que personne n'a
+    rempli, et le poste exact qui a produit ces chiffres n'a jamais été consigné : il est aujourd'hui
+    irrécupérable. Les relevés gardent donc leur valeur d'**ordre de grandeur** et perdent celle de
+    point de comparaison - on ne peut pas dire si une machine est plus lente que « la référence ».
+
+    Un champ à remplir à la main reste vide : c'est **le banc** qui nomme désormais sa machine, et la
+    ligne voyage avec la mesure. `BancImport` ouvre sur :
+
+    ```text
+    machine         : 11th Gen Intel(R) Core(TM) i5-1145G7 @ 2.60GHz · 8 cœurs · RAM 30.4 Gio
+    exécution       : 25.0.3+9-LTS · Linux 6.17.0-41-generic · heap max 7788 Mo
+    ```
+
+    Le processeur et la mémoire se lisent sous `/proc` ; ailleurs la ligne écrit « non lu sur cette
+    plateforme » plutôt que de laisser croire à une mesure. **Le prochain relevé complet remplace ce
+    tableau et lui rend sa machine** : il suffira de coller cette en-tête au-dessus.
 
 ### O5 : couche données (`BancMesure`)
 
@@ -78,13 +96,23 @@ Les deux opérations sont **largement sous les cibles** (facteur ~4 à ~10). Rap
 
 | Fichiers | Taille src | Temps total | copie (R9) | transfo (#12) | persist. (O7) | Débit | Mémoire crête | Séquences |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 100 | 146 Mo | 0,55 s | 0,33 s | 0,18 s | 0,04 s | ~184 f/s · 269 Mo/s | 172 Mo | 400 |
-| 500 | 732 Mo | 2,38 s | 1,56 s | 0,75 s | 0,07 s | ~210 f/s · 308 Mo/s | 569 Mo | 2000 |
-| 1000 | 1,43 Gio | 3,97 s | 2,77 s | 1,09 s | 0,11 s | ~252 f/s · 369 Mo/s | 626 Mo | 4000 |
+| 100 | 146 Mo | 0,55 s | 0,33 s | 0,18 s | 0,04 s | ~184 f/s · 269 Mo/s | 172 Mo | 100 |
+| 500 | 732 Mo | 2,38 s | 1,56 s | 0,75 s | 0,07 s | ~210 f/s · 308 Mo/s | 569 Mo | 500 |
+| 1000 | 1,43 Gio | 3,97 s | 2,77 s | 1,09 s | 0,11 s | ~252 f/s · 369 Mo/s | 626 Mo | 1000 |
 
 _Reproduire une ligne : `-Dperf.import.fichiers=<100|500|1000> -Dperf.import.secondes=2.0`
 (fréquence par défaut 384000). La commande d'exemple plus haut utilise la durée par défaut de 5 s :
 ajouter `-Dperf.import.secondes=2.0` pour retrouver exactement ces chiffres._
+
+!!! note "La colonne « Séquences » ne vient pas de la même mesure que les autres"
+    Les temps, débits et crêtes sont **datés** : ils valent pour la machine de référence, et les
+    rejouer ailleurs donnera autre chose. Le nombre de séquences, lui, ne dépend pas de la machine :
+    c'est `ceil(D / 5)` appliqué à des fichiers de 2 s, donc **une séquence par fichier**, partout.
+
+    Cette colonne annonçait 400 / 2000 / 4000 - quatre séquences pour un fichier de 2 s, ce qui est
+    `ceil(2 / 0,5)` : le découpage d'**avant #504**, qui tranchait à 5 s *au rythme de sortie* et
+    produisait donc des tranches de 0,5 s réelles. Le correctif a changé la règle sans que ce tableau
+    en soit averti. Vérifié en rejouant la première ligne : 100 fichiers → **100 séquences**.
 
 **Lectures clés (O3)** :
 - Le temps **croît ~linéairement** avec la taille (débit ~stable 180-250 fichiers/s) → tenue dans la
@@ -95,9 +123,25 @@ ajouter `-Dperf.import.secondes=2.0` pour retrouver exactement ces chiffres._
   avant la transaction unique O7), puis est récupérée par le GC entre deux nuits → stable d'un import à
   l'autre.
 
-**Ordre de grandeur de référence** : une **vraie nuit** (~1572 fichiers) s'importe en
-**~6-8 s** (~200 fichiers/s), produit ~3600 séquences, avec une empreinte ~600-700 Mo. _(Chiffres
-machine de référence ; un poste plus modeste sera plus lent : refaire la mesure le cas échéant.)_
+!!! warning "600-700 Mo et 83 Mo décrivent la même chose"
+    Les deux chiffres circulent, et ils ne se contredisent pas : ils ne mesurent pas la même
+    grandeur. La **crête** de ce tableau est ce que la JVM a *occupé* sous un heap généreux ; le
+    **live set** de #104 est ce qu'elle avait *vivant* au même instant.
+
+    Sous `-Xmx2g`, G1 laisse s'accumuler le déchet transitoire - les `byte[]` PCM déjà morts - et ne
+    déclenche qu'au seuil : la crête échantillonnée dit surtout où est ce seuil. Contraindre le heap
+    déplace le seuil sans gêner le travail : la même nuit s'importe sous **`-Xmx128m`** avec un live
+    set de **82-83 Mo**, au même débit (#104).
+
+    Conséquence pratique : **la crête de ce tableau ne dimensionne pas la RAM nécessaire**. Elle dit
+    ce que l'import prend quand on le laisse faire, pas ce dont il a besoin. C'est le second chiffre
+    qu'il faut regarder pour savoir si une machine tient.
+
+**Ordre de grandeur de référence** : une **vraie nuit** (1572 fichiers) s'importe en
+**~6-8 s** (~200 fichiers/s), produit **2109 séquences**, avec une empreinte ~600-700 Mo. _(Le temps et
+l'empreinte sont ceux de la machine de référence ; un poste plus modeste sera plus lent. Le nombre de
+séquences, lui, est un **fait de la nuit** : `Car640380-2026-Pass2-Z1` porte 1572 bruts et 2109
+transformés, et notre import les reproduit au bit près - c'est ce que #504 a vérifié.)_
 
 ## Réactivité IHM (freeze > 200 ms) : procédure semi-manuelle
 
