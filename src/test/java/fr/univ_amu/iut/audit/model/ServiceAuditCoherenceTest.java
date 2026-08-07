@@ -268,6 +268,61 @@ class ServiceAuditCoherenceTest {
     }
 
     @Test
+    @DisplayName("#3490 : plusieurs fichiers mal préfixés donnent UN constat chiffré, pas un par fichier")
+    void prefixe_non_conforme_agrege_par_passage() throws IOException {
+        // Mesuré sur un workspace de recette réel : 4236 constats PREFIXE_NON_CONFORME contre 2
+        // DOSSIER_ORPHELIN. Les avertissements utiles y étaient matériellement invisibles, et le seul
+        // écran qui confronte disque et base ne confrontait plus rien : il ensevelissait.
+        //
+        // Le principe est déjà écrit pour AUDIO_INDISPONIBLE : « un seul constat informatif portant le
+        // décompte, jamais une erreur par fichier ».
+        Long idPassage = creerPassage(1);
+        Long idSession = creerSession(idPassage, 4096L);
+        Path bruts = Files.createDirectories(racineSession.resolve("bruts"));
+        for (int numero = 1; numero <= 3; numero++) {
+            String nom = "MAUVAIS_NOM_" + numero + ".wav";
+            Path fichier = Files.write(bruts.resolve(nom), new byte[16]);
+            originalDao.insert(
+                    new EnregistrementOriginal(null, nom, fichier.toString(), 12.0, 384_000, null, idSession));
+        }
+
+        List<ConstatAudit> constats = service.auditerPassage(idPassage).constats();
+
+        assertThat(constats)
+                .filteredOn(c -> c.categorie() == CategorieConstat.PREFIXE_NON_CONFORME)
+                .as("trois fichiers fautifs, un seul constat")
+                .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#3490 : le constat agrégé garde de quoi diagnostiquer - le compte, le préfixe attendu, un exemple")
+    void prefixe_agrege_garde_de_quoi_diagnostiquer() throws IOException {
+        // Agréger ne doit pas revenir à taire : quatre mille exemples n'aident pas, mais zéro non plus.
+        Long idPassage = creerPassage(1);
+        Long idSession = creerSession(idPassage, 4096L);
+        Path bruts = Files.createDirectories(racineSession.resolve("bruts"));
+        for (int numero = 1; numero <= 2; numero++) {
+            String nom = "MAUVAIS_NOM_" + numero + ".wav";
+            Path fichier = Files.write(bruts.resolve(nom), new byte[16]);
+            originalDao.insert(
+                    new EnregistrementOriginal(null, nom, fichier.toString(), 12.0, 384_000, null, idSession));
+        }
+
+        ConstatAudit constat = service.auditerPassage(idPassage).constats().stream()
+                .filter(c -> c.categorie() == CategorieConstat.PREFIXE_NON_CONFORME)
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(constat.detail())
+                .as("le compte dit l'ampleur")
+                .contains("2")
+                .as("le préfixe attendu dit ce qu'il faudrait")
+                .contains("Car")
+                .as("un exemple dit ce qu'on a")
+                .contains("MAUVAIS_NOM_");
+    }
+
+    @Test
     @DisplayName("ADR 0048 : les bruts absents ne sont ni une erreur ni un constat (ils sont une option)")
     void bruts_absents_ne_sont_pas_une_erreur() throws IOException {
         Long idPassage = creerSessionCoherente(1);
