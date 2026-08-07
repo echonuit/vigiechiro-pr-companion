@@ -80,12 +80,12 @@ filtres.
 
 Les captures illustrent clairement ces familles :
 
-- [Sons & validation avec une puce active](../.github/assets/apercu-sons-validation-filtres.png) ;
-- [Carte & passages avec un filtre de carré](../.github/assets/apercu-multisite-filtre.png) ;
-- [Espèces & observations](../.github/assets/apercu-analyse.png) ;
-- [Ma saison et ses deux sélecteurs fixes](../.github/assets/apercu-saison.png) ;
-- [Synthèse et sa bascule métier](../.github/assets/apercu-synthese.png) ;
-- [Audit sans outil de filtrage](../.github/assets/apercu-audit.png).
+- [Sons & validation avec une puce active](https://github.com/echonuit/vigiechiro-pr-companion/blob/dde1ac07b/.github/assets/apercu-sons-validation-filtres.png) ;
+- [Carte & passages avec un filtre de carré](https://github.com/echonuit/vigiechiro-pr-companion/blob/dde1ac07b/.github/assets/apercu-multisite-filtre.png) ;
+- [Espèces & observations](https://github.com/echonuit/vigiechiro-pr-companion/blob/dde1ac07b/.github/assets/apercu-analyse.png) ;
+- [Ma saison et ses deux sélecteurs fixes](https://github.com/echonuit/vigiechiro-pr-companion/blob/dde1ac07b/.github/assets/apercu-saison.png) ;
+- [Synthèse et sa bascule métier](https://github.com/echonuit/vigiechiro-pr-companion/blob/dde1ac07b/.github/assets/apercu-synthese.png) ;
+- [Audit sans outil de filtrage](https://github.com/echonuit/vigiechiro-pr-companion/blob/dde1ac07b/.github/assets/apercu-audit.png).
 
 ## Ce qui est déjà bien uniformisé
 
@@ -280,6 +280,14 @@ La table des passages d'une fiche site mérite seulement une surveillance de vol
 difficile à parcourir, une recherche légère peut suffire avant d'introduire les vues mémorisées.
 
 ## Standard cible proposé
+
+!!! success "Ce standard est devenu une décision"
+    Il ne se lit plus ici pour être appliqué : il vit dans
+    [l'ADR 3479](decisions/3479-toute-table-n-a-pas-vocation-a-etre-exploree.md), avec la taxonomie
+    des trois natures qui décide **qui** doit le respecter. Un audit se lit une fois, un contrat se
+    relit à chaque écran ajouté. La section ci-dessous reste la formulation d'origine, comme trace
+    de conception.
+
 
 Une table **exploratoire ou potentiellement volumineuse** devrait respecter le contrat suivant :
 
