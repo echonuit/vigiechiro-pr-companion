@@ -856,6 +856,13 @@ Il existe **trois** chemins de restauration, et tous trois doivent lire ce retou
 sauvegardées, le transport d'un écran à l'autre (#476) et la mémoire de session (#484). En ignorer un
 laisse l'écran filtrer moins large qu'annoncé, sans rien dire.
 
+!!! tip "Avant de filtrer, décider si la table s'explore"
+    Une nouvelle `TableView` ne reçoit pas la barre de filtres par défaut, et pas non plus par
+    imitation de l'écran d'à côté. L'[ADR 3479](decisions/3479-toute-table-n-a-pas-vocation-a-etre-exploree.md)
+    distingue trois natures - **exploratoire**, **analytique bornée**, **opérationnelle ou
+    transitoire** - et seule la première reçoit le contrat complet. Équiper une table de suivi
+    d'import ajoute un catalogue de critères devant une liste qu'on regarde défiler.
+
 ### Les filtres de `model` : deux rôles, une convention de nom
 
 Des classes `Filtres*` vivent en `model`, hors du socle de vue. L'audit d'harmonisation de la clôture
