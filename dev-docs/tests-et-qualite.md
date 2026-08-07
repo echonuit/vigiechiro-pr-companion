@@ -337,6 +337,27 @@ test recalcule. On écrit le nombre entre deux commentaires :
 l'application compte **<!--inv:features-->N<!--/inv--> features** métier
 ```
 
+!!! warning "Règle de rédaction : un chiffre d'inventaire ne s'écrit pas en dur"
+    **Si le code sait recalculer un chiffre, la documentation le porte en balise.** Sinon, elle ne
+    l'écrit pas du tout.
+
+    La raison n'est pas l'élégance, c'est une mesure : « les 21 tests bats » vivait à deux endroits
+    quand il y en avait **89** - un facteur quatre, accumulé sans que rien ne le dise (#2749). Et
+    personne n'avait mal fait : un chiffre juste le jour où on l'écrit devient faux tout seul.
+
+    Trois cas, trois gestes :
+
+    - **le code sait compter** → balise `<!--inv:clé-->N<!--/inv-->`, plus une entrée dans
+      `DocumentationAJourTest` ;
+    - **le code ne sait pas** (un commentaire de workflow, une note de PR) → **écrire la phrase sans
+      le nombre**. « les tests bats, qui lancent chacun un JVM » dit ce qu'il faut sans rien promettre ;
+    - **le chiffre est une mesure datée** (« 66 aperçus sur 138 différaient le 6 août ») → il reste en
+      dur, et c'est **juste** : ce n'est pas un inventaire, c'est un constat, et un constat a une date.
+
+    ⚠️ Le troisième cas se confond avec le premier au premier coup d'œil. Un balayage a compté « 51,
+    66, 108 aperçus » comme des inventaires divergents : c'étaient trois **deltas** d'ADR, et le total,
+    138, était juste partout. Lire la phrase entière avant de conclure à une dérive.
+
 où `N` est le chiffre (`15` aujourd'hui). Un commentaire HTML **ne s'affiche pas** : la phrase se lit
 « 15 features » comme avant, mais `chaque_chiffre_balise_egale_l_inventaire_reel` relit `N` et le
 confronte au code. Une divergence fait **rougir la CI**, le message portant le vrai chiffre. Clés
