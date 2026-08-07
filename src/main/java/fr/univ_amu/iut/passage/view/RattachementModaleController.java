@@ -12,6 +12,7 @@ import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.Vent;
+import fr.univ_amu.iut.passage.viewmodel.CompteRenduRattachement;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
 import fr.univ_amu.iut.passage.viewmodel.SaisiePassageConditions;
 import java.util.Objects;
@@ -394,8 +395,10 @@ public class RattachementModaleController {
                 && !confirmateur.confirmer(viewModel.recapProperty().get() + "\n\nAppliquer ce rattachement ?")) {
             return;
         }
+        // Lu AVANT d'appliquer : après, le préfixe courant a bougé et le compte retombe à zéro (#3449).
+        int renommees = viewModel.sequencesARenommer();
         if (viewModel.appliquer()) {
-            pousserPuis(issue -> {
+            pousserPuis(renommees, issue -> {
                 apresSucces.run();
                 // #1839 puis #1885 : on ne ferme QUE s'il n'y a rien à lire. Fermer sur un refus rendait le
                 // message invisible - c'est ainsi que l'échec passait inaperçu ; fermer sur un réalignement
@@ -411,17 +414,20 @@ public class RattachementModaleController {
     /// **reste ouverte** et affiche ce que l'envoi a donné. Rejouable après un échec réseau.
     @FXML
     private void envoyerVersVigieChiro() {
-        pousserPuis(issue -> {});
+        // Envoi seul : aucun renommage à rapporter.
+        pousserPuis(0, issue -> {});
     }
 
     /// Exécute l'envoi hors du fil JavaFX, affiche son compte rendu (succès **comme** échec), puis passe la
     /// main à `ensuite`. L'occupation grise les commandes le temps de l'aller-retour réseau.
-    private void pousserPuis(java.util.function.Consumer<RattachementViewModel.Envoi> ensuite) {
+    private void pousserPuis(int sequencesRenommees, java.util.function.Consumer<RattachementViewModel.Envoi> ensuite) {
         operationEnCours.set(true);
         executeur.executer(
                 viewModel::pousserVersVigieChiro,
-                issue -> {
+                brut -> {
                     operationEnCours.set(false);
+                    // Le renommage a eu lieu AVANT l'envoi : il se dit, même si l'envoi a échoué (#3449).
+                    RattachementViewModel.Envoi issue = CompteRenduRattachement.de(sequencesRenommees, brut);
                     viewModel.signalerEnvoi(issue);
                     ensuite.accept(issue);
                 },

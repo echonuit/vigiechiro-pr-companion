@@ -390,6 +390,13 @@ public class RattachementViewModel {
         return !avant.equals(apres);
     }
 
+    /// Combien de séquences un « Appliquer » renommerait, ou **zéro** si le rattachement ne change pas
+    /// (#3449). La vue le lit **avant** d'appliquer : après, le préfixe courant a bougé et
+    /// [#entraineRenommage] est retombé à faux.
+    public int sequencesARenommer() {
+        return entraineRenommage() ? nombreSequences : 0;
+    }
+
     private void majRecap() {
         if (carre == null) {
             recap.set("");
