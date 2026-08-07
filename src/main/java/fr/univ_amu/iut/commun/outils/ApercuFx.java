@@ -275,6 +275,11 @@ public final class ApercuFx {
         conteneur.setStyle("-fx-background-color: rgba(0, 0, 0, 0.4); -fx-padding: 30;");
         Scene scene = new Scene(conteneur);
         Habillage.poser(scene);
+        // Et le panneau lui-même (#1499) : habiller la scène hôte ne suffit pas. Un `DialogPane` porte
+        // ses propres feuilles, et c'est là que vivent les règles `.dialog-pane`. Sans cette ligne, la
+        // capture montrait le rendu Modena par défaut - icône système comprise - alors que le dialogue
+        // de production, lui, était habillé : l'aperçu mentait dans le sens rassurant inverse.
+        Habillage.poser(pane);
         // applyCss() AVANT layout() (#1468) : sans passe CSS, les libellés n'ont pas encore leurs métriques
         // de police, et un texte à enrouler reste sur une ligne unique - que le snapshot coupe par une
         // ellipse. C'est ce qui obligeait les captures de dialogue à pré-découper leurs messages à la main.

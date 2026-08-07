@@ -4,6 +4,7 @@ import java.util.List;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.DialogPane;
+import javafx.scene.layout.Region;
 
 /// Ce qu'une fenêtre de l'application porte **toujours** : sa police et ses feuilles de socle.
 ///
@@ -121,7 +122,20 @@ public final class Habillage {
                 feuilles.add(feuille);
             }
         }
-        panneau.setGraphic(null);
+        retirerLIconeSysteme(panneau);
+    }
+
+    /// Retire l'icône que JavaFX pose sur un dialogue portant un en-tête.
+    ///
+    /// ⚠️ `setGraphic(null)` ne retire **rien**, et c'est contre-intuitif : quand le graphique est nul,
+    /// c'est le **skin** qui fournit l'icône par défaut de l'`AlertType`. Mettre `null` ne fait donc que
+    /// laisser le thème décider. Un premier essai l'a cru, et « À propos » a garde son « i » pendant que
+    /// les confirmations d'import perdaient leur « ? » - non pas grâce au correctif, mais parce qu'elles
+    /// n'ont pas d'en-tête du tout.
+    ///
+    /// On fournit donc un graphique **vide** plutôt qu'aucun : le skin n'a plus rien à substituer.
+    private static void retirerLIconeSysteme(DialogPane panneau) {
+        panneau.setGraphic(new Region());
     }
 
     /// Insère `base.css` juste après `palette.css` dans cette liste, si elle s'y trouve.

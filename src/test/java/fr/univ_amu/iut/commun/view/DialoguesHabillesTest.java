@@ -7,6 +7,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,17 @@ class DialoguesHabillesTest {
     /// Ce qu'on cherche : une construction de dialogue, et le geste qui doit la suivre.
     private static final String CONSTRUCTION = "new Alert(";
 
-    private static final String HABILLAGE = "Habillage.poser(";
+    /// ⚠️ Compter `Habillage.poser(` tout court **ne suffit pas** : il existe une surcharge qui prend
+    /// une `Scene`, et habiller la scene hote d un dialogue ne pose RIEN sur son panneau. Une premiere
+    /// version de ce garde s y est laissee prendre - `ApercuFx` n appelait que la variante `Scene`, le
+    /// garde etait vert, et la capture montrait encore l icone systeme.
+    ///
+    /// On exige donc un appel dont l argument **est** un panneau de dialogue. `ApercuFx`
+    /// `enregistrerDialogPane` compte aussi : c est un point de passage, qui habille le panneau qu on
+    /// lui confie - un outil de capture qui le lui remet a donc fait le necessaire.
+    private static final Pattern HABILLAGE =
+            Pattern.compile("Habillage\\.poser\\(\\s*(?:[\\w.]*getDialogPane\\(\\)|\\w*[Pp]ane\\w*)\\s*\\)"
+                    + "|enregistrerDialogPane\\(");
 
     @Test
     @DisplayName("#1499 : chaque Alert construit est habillé, pas seulement le premier du fichier")
@@ -64,6 +75,7 @@ class DialoguesHabillesTest {
         // un garde qui ne détecte plus est vert, et c'est le seul défaut qui se présente en succès.
         String nu = "Alert a = new Alert(AlertType.CONFIRMATION);";
         String habille = nu + "\nHabillage.poser(a.getDialogPane());";
+        String sceneSeule = nu + "\nHabillage.poser(scene);";
         String deuxDontUnNu = habille + "\n" + nu;
 
         assertThat(occurrences(nu, CONSTRUCTION) > occurrences(nu, HABILLAGE)).isTrue();
@@ -71,6 +83,9 @@ class DialoguesHabillesTest {
                 .isFalse();
         assertThat(occurrences(deuxDontUnNu, CONSTRUCTION) > occurrences(deuxDontUnNu, HABILLAGE))
                 .as("le second dialogue d'un fichier compte autant que le premier")
+                .isTrue();
+        assertThat(occurrences(sceneSeule, CONSTRUCTION) > occurrences(sceneSeule, HABILLAGE))
+                .as("habiller la scène hôte ne pose rien sur le panneau du dialogue")
                 .isTrue();
     }
 
@@ -80,6 +95,10 @@ class DialoguesHabillesTest {
             compte++;
         }
         return compte;
+    }
+
+    private static int occurrences(String texte, Pattern motif) {
+        return (int) motif.matcher(texte).results().count();
     }
 
     private static Stream<Path> sources() {
