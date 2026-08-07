@@ -390,7 +390,6 @@ public class ImportationViewModel {
     /// Précondition : rattachement complet ([#peutImporter()] vrai), garanti par l'appelant.
     public DemandeImport preparerImport() {
         // Mémorise le choix « conserver les originaux » au moment de lancer l'import (survit aux sessions).
-        conservation.memoriser();
         return new DemandeImport(
                 inspection.dossier(),
                 rattachement.idPointSelectionne(),

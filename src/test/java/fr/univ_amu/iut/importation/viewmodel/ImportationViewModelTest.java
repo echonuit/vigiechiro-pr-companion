@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -562,25 +563,28 @@ class ImportationViewModelTest {
     }
 
     @Test
-    @DisplayName(
-            "« Conserver les originaux » lit le réglage persisté (défaut activé) et le mémorise au lancement de l'import")
-    void conserver_originaux_lit_et_persiste_le_reglage() {
+    @DisplayName("#3471 : l'import LIT le réglage au lancement, et ne le réécrit plus")
+    void conserver_originaux_lit_le_reglage_sans_le_reecrire() {
         // À la construction, le défaut est lu depuis Reglages : **ne pas conserver** (#2063). Copier les
         // bruts est une option de ré-analyse, pas un dû : rien dans l'application n'en dépend.
         assertThat(conservation.conserverOriginauxProperty().get()).isFalse();
 
-        // L'utilisateur active l'option puis lance l'import : le choix est mémorisé au moment de
-        // préparer la demande.
+        // L'utilisateur coche la case dans Réglages ▸ Import, qui persiste immédiatement.
+        when(reglages.lireBooleen(PreferenceConservation.CLE, false)).thenReturn(true);
+
         Site site = site(1L, "640380");
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
         prepareRattachement(site, point);
-        conservation.conserverOriginauxProperty().set(true);
 
-        viewModel.preparerImport();
+        assertThat(viewModel.preparerImport().conserverOriginaux())
+                .as("l'import doit suivre le réglage courant, pas l'instantané pris au démarrage")
+                .isTrue();
 
-        verify(reglages).ecrireBooleen(PreferenceConservation.CLE, true);
+        // Et il ne réécrit RIEN : l'onglet Réglages est le seul propriétaire de la clé. L'écriture
+        // différée de l'import rejouait un instantané périmé et écrasait le choix qu'on venait de poser.
+        verify(reglages, never()).ecrireBooleen(eq(PreferenceConservation.CLE), anyBoolean());
     }
 
     @Test

@@ -8,10 +8,14 @@ import java.util.List;
 /// Onglet « Import » de l'écran Réglages (#928) : préférences du parcours d'import, contribué par le
 /// module `importation`.
 ///
-/// Le descripteur pointe la **même clé** que la case « Conserver les originaux » de l'écran d'import
-/// ([ReglageConservationOriginaux]) : c'est le même réglage persistant. L'écran d'import garde sa
-/// sémantique différée (mémorisation au lancement de l'import) ; l'onglet, lui, persiste
-/// immédiatement.
+/// Cet onglet est le **seul propriétaire** du réglage « Conserver les originaux »
+/// ([ReglageConservationOriginaux]) : il le persiste immédiatement, et l'écran d'import se contente de
+/// le **lire** au moment de s'en servir.
+///
+/// Il y avait auparavant **deux écrivains sur la même clé, à deux temporalités** : l'onglet écrivait
+/// tout de suite, l'écran d'import avait une « sémantique différée » qui mémorisait au lancement. La
+/// case ayant déménagé ici, cette écriture différée ne portait plus aucun choix d'utilisateur : elle
+/// rejouait un instantané pris au démarrage et **écrasait** ce qu'on venait de régler (#3471).
 public final class OngletReglagesImport implements OngletReglages {
 
     @Override
