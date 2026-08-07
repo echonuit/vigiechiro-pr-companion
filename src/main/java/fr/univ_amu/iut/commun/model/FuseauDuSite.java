@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.commun.model;
 
 import java.time.ZoneId;
+import java.util.Map;
+import java.util.Set;
 
 /// Le fuseau dans lequel s'interprètent les heures d'une **nuit d'écoute** (#3406).
 ///
@@ -35,8 +37,62 @@ import java.time.ZoneId;
 /// Trois instants pour une seule nuit, sur une donnée **déposée sur la plateforme nationale**.
 public final class FuseauDuSite {
 
-    /// Le fuseau des heures saisies et enregistrées sur le site.
+    /// Le fuseau des heures saisies et enregistrées sur le site, **en métropole** - et le repli quand
+    /// rien ne permet de conclure ([#pour]).
     public static final ZoneId ZONE = ZoneId.of("Europe/Paris");
 
+    /// Département INSEE (`971`…`988`) → fuseau, pour les territoires où la question se pose (#3442).
+    ///
+    /// ## Pourquoi le département, et non les coordonnées
+    ///
+    /// La commune d'un point est **déjà dérivée de son GPS** ([ADR 2791]) et stockée à côté de lui ;
+    /// `Commune.departement()` en tire déjà `971`…`976`. Un code INSEE désigne un territoire **sans
+    /// ambiguïté**, là où des boîtes englobantes seraient une liste écrite à la main - donc une liste
+    /// qui se démode en silence, ce que l'[ADR 3439] vient de condamner sur les masques de carte.
+    ///
+    /// ## Pourquoi le numéro de carré ne pouvait pas servir
+    ///
+    /// Il ne porte pas le département outre-mer : ces carrés sont numérotés `00xxxx`, `98`, `99`, et le
+    /// catalogue de la plateforme n'en porte **aucun** en `97` (#3298, 1 847 points recensés).
+    ///
+    /// ## Ce que cette table ne prétend pas couvrir
+    ///
+    /// La **Polynésie française** (`987`) est absente **délibérément** : elle s'étend sur trois fuseaux
+    /// (Tahiti `-10:00`, Marquises `-09:30`, Gambier `-09:00`), qu'un code départemental ne distingue
+    /// pas. Lui attribuer un fuseau unique serait faux pour deux archipels sur trois, et faux **en
+    /// silence**. Elle retombe donc sur le repli, comme aujourd'hui, jusqu'à ce qu'une donnée plus fine
+    /// existe.
+    private static final Map<String, ZoneId> PAR_DEPARTEMENT = Map.ofEntries(
+            Map.entry("971", ZoneId.of("America/Guadeloupe")),
+            Map.entry("972", ZoneId.of("America/Martinique")),
+            Map.entry("973", ZoneId.of("America/Cayenne")),
+            Map.entry("974", ZoneId.of("Indian/Reunion")),
+            Map.entry("975", ZoneId.of("America/Miquelon")),
+            Map.entry("976", ZoneId.of("Indian/Mayotte")),
+            Map.entry("977", ZoneId.of("America/St_Barthelemy")),
+            Map.entry("978", ZoneId.of("America/Marigot")),
+            Map.entry("986", ZoneId.of("Pacific/Wallis")),
+            Map.entry("988", ZoneId.of("Pacific/Noumea")));
+
     private FuseauDuSite() {}
+
+    /// Le fuseau du site dont le point est situé dans `commune`, ou [#ZONE] quand la commune est
+    /// inconnue ou métropolitaine.
+    ///
+    /// Le repli n'est pas un aveu : pour la métropole il est **juste**, et pour un point dont la commune
+    /// n'est pas encore résolue - création hors ligne, point sans GPS, rattrapage non passé (ADR 2791) -
+    /// il rend exactement le comportement d'avant ce chantier. On ne dégrade jamais ; on précise quand
+    /// on peut.
+    public static ZoneId pour(Commune commune) {
+        if (commune == null) {
+            return ZONE;
+        }
+        return PAR_DEPARTEMENT.getOrDefault(commune.departement(), ZONE);
+    }
+
+    /// Les départements dont le fuseau est **connu** de cette table, pour la garde qui la confronte au
+    /// référentiel.
+    public static Set<String> departementsConnus() {
+        return PAR_DEPARTEMENT.keySet();
+    }
 }
