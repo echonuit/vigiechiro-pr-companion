@@ -491,8 +491,15 @@ public class ServiceImport {
         return synchronisation
                 .map(sync -> {
                     try {
-                        sync.creerPour(idPassage);
-                        return true;
+                        // ⚠️ On lit le RÉSULTAT, pas l'absence d'exception (#3448). Ce transport rapporte
+                        // ses échecs en **rendant** un `ResultatEcriture`, comme son propre doc-comment le
+                        // dit : « le succès se lit sur echec, pas sur id ». Un refus de la plateforme (jeton
+                        // absent, 401, site non verrouillé) revient donc normalement.
+                        //
+                        // Le code déduisait le succès du fait que l'appel n'avait pas levé, et annonçait
+                        // « Participation créée sur Vigie-Chiro » là où rien n'avait été écrit. Relevé en
+                        // séance : la base ne portait aucun lien, et le journal aucun POST.
+                        return sync.creerPour(idPassage).estReussie();
                     } catch (RegleMetierException horsPortee) {
                         // Site non rattaché / point manquant : non bloquant pour l'import (repli au dépôt).
                         return false;

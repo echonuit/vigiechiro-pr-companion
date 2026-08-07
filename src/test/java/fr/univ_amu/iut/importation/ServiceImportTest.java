@@ -7,7 +7,9 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
@@ -257,6 +259,10 @@ class ServiceImportTest {
     @DisplayName("Phase 1d-B : la participation Vigie-Chiro est créée à l'import (best-effort) pour le passage")
     void participation_creee_a_l_import() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        // ⚠️ Le stub est indispensable : sans lui le mock rend `null`, ce qui ne lève pas. Le test
+        // passait donc sur un contrat que la vraie classe n'honore jamais - c'est ce qui a laissé
+        // #3448 vivre.
+        when(sync.creerPour(anyLong())).thenReturn(ResultatEcriture.reussie("6a666e6b31218bab07d0c0ee"));
         ServiceImport avecSync = new ServiceImport(
                 new InspecteurDossier(new AnalyseurLogPR()),
                 OutilsImport.reels(new CopieProtegee(), new Renommeur(), new TransformationAudio()),
@@ -317,6 +323,35 @@ class ServiceImportTest {
                 .as("l'import aboutit malgré le refus distant")
                 .isNotNull();
         assertThat(resultat.participationCreee()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#3448 : une création REFUSÉE par la plateforme n'est pas annoncée comme réussie")
+    void participation_refusee_par_la_plateforme_non_annoncee() {
+        // Le transport de ce dépôt rapporte ses échecs en RENDANT un résultat, pas en levant : c'est écrit
+        // en tête de `ResultatEcriture` (« le succès se lit sur echec, pas sur id »). Un appel refusé
+        // revient donc normalement, et « ça n'a pas levé » ne prouve rien.
+        //
+        // Relevé en séance le 2026-08-07 : l'import affichait « Participation créée sur Vigie-Chiro »
+        // alors que la base ne portait aucun lien et que le journal ne montrait aucun POST.
+        SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        when(sync.creerPour(anyLong())).thenReturn(ResultatEcriture.echouee("HTTP 401 : jeton absent"));
+        ServiceImport avecSync = new ServiceImport(
+                new InspecteurDossier(new AnalyseurLogPR()),
+                OutilsImport.reels(new CopieProtegee(), new Renommeur(), new TransformationAudio()),
+                new AgregatImportDao(source),
+                new UniteDeTravail(source),
+                new Workspace(racine.resolve("ws")),
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                idPassage -> 0,
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
+                Optional.of(sync));
+
+        ResultatImport resultat = avecSync.importer(sd, idPoint, prefixe);
+
+        assertThat(resultat.participationCreee())
+                .as("annoncer une écriture distante qui a été refusée fait croire à une nuit déclarée")
+                .isFalse();
     }
 
     @Test
