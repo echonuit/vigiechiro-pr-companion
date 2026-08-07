@@ -16,7 +16,7 @@ import picocli.CommandLine.Spec;
 /// `creer-site` (#615) : crée un site (carré) et **écrit son identifiant** sur la sortie standard, pour
 /// l'enchaînement de scripts : par exemple `SITE=$(vigiechiro creer-site --carre 640380)`. Réutilise
 /// [ServiceSites#creerSite] sans logique nouvelle ; les refus métier (carré mal formé R1, carré déjà
-/// déclaré R5) sortent en échec d'exécution (code 1).
+/// déclaré R5) sortent en refus métier (code 2, état intact).
 @Command(name = "creer-site", description = "Crée un site (carré) et écrit son identifiant (exploitable en script).")
 public final class CreerSite implements Callable<Integer> {
 

@@ -234,14 +234,30 @@ public class ServiceSites {
     ///
     /// @throws RegleMetierException si au moins un point du site porte un passage
     public void supprimerSite(Long idSite) {
-        for (PointDEcoute point : pointDao.findBySite(idSite)) {
-            if (!passageDao.findByPoint(point.id()).isEmpty()) {
-                throw new RegleMetierException("Suppression refusée : le point « "
-                        + point.code()
-                        + " » porte au moins un passage. Supprimez d'abord les passages rattachés.");
-            }
+        List<String> bloquants = pointsPortantUnPassage(idSite);
+        if (!bloquants.isEmpty()) {
+            throw new RegleMetierException("Suppression refusée : le point « "
+                    + bloquants.getFirst()
+                    + " » porte au moins un passage. Supprimez d'abord les passages rattachés.");
         }
         siteDao.delete(idSite);
+    }
+
+    /// Les codes des points qui **empêchent** la suppression du site, dans l'ordre des points (#1383).
+    ///
+    /// Lecture seule, extraite de [#supprimerSite] pour qu'une surface puisse dire **avant d'agir** que
+    /// le geste sera refusé, plutôt que de le découvrir en le tentant. La ligne de commande s'en sert
+    /// pour refuser d'emblée au lieu de faire confirmer une perte vouée à l'échec.
+    ///
+    /// Le refus lui-même reste ici : deux surfaces qui rejoueraient la règle chacune de leur côté
+    /// finiraient par ne plus dire la même chose.
+    ///
+    /// @return les codes bloquants, vide si le site peut être supprimé
+    public List<String> pointsPortantUnPassage(Long idSite) {
+        return pointDao.findBySite(idSite).stream()
+                .filter(point -> !passageDao.findByPoint(point.id()).isEmpty())
+                .map(PointDEcoute::code)
+                .toList();
     }
 
     /// Rappels non bloquants à présenter après création d'un site (R3, règle soft).

@@ -139,6 +139,76 @@ setup() {
   [ "${status}" -eq 2 ]
 }
 
+@test "modifier-site : le carre et le nom changent, exit 0 (#1383)" {
+  local site
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+
+  run cli modifier-site --site "${site}" --carre 640380 --nom "Etang de la Tuiliere"
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"640380"* ]]
+
+  run cli lister-sites
+  [[ "${output}" == *"640380"* ]]
+}
+
+@test "modifier-site vers un carre deja declare : refus metier, exit 2 (#1383)" {
+  # R5 : le carre est l'identite du site chez l'utilisateur. Le refus vient du service, pas de la CLI.
+  local premier
+  premier=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  cli creer-site --carre 640380 --protocole STANDARD > /dev/null 2>&1
+
+  # Refus METIER : code 2 (etat intact, convention #2294), pas 1 qui signale un echec inattendu.
+  run cli modifier-site --site "${premier}" --carre 640380
+  [ "${status}" -eq 2 ]
+}
+
+@test "modifier-point : le code change, exit 0 (#1383)" {
+  local site point
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+
+  run cli modifier-point --point "${point}" --site "${site}" --code B2
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"B2"* ]]
+}
+
+@test "modifier-point sur un site qui n'est pas le sien : refus metier, exit 2 (#1383)" {
+  # L'appartenance est verifiee par le service : une faute de frappe sur --point ne doit pas corriger
+  # le point d'un autre site en silence.
+  local site autre point
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  autre=$(cli creer-site --carre 640380 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+
+  run cli modifier-point --point "${point}" --site "${autre}" --code B2
+  [ "${status}" -eq 2 ]
+}
+
+@test "supprimer-site sans --confirmer : chiffre la perte et ne touche a rien, exit 2 (#1383)" {
+  local site
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  cli ajouter-point --site "${site}" --code A1 > /dev/null 2>&1
+
+  run cli supprimer-site --site "${site}"
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"A1"* ]]
+
+  # Et surtout : le site est toujours la. Un garde qui annonce sans agir doit vraiment n'avoir rien fait.
+  run cli lister-sites
+  [[ "${output}" == *"130711"* ]]
+}
+
+@test "supprimer-site --confirmer : le site disparait, exit 0 (#1383)" {
+  local site
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+
+  run cli supprimer-site --site "${site}" --confirmer
+  [ "${status}" -eq 0 ]
+
+  run cli lister-sites
+  [[ "${output}" != *"130711"* ]]
+}
+
 @test "rattraper-communes : base vide, rien a rattraper, exit 0 (#2791)" {
   run cli rattraper-communes
   [ "${status}" -eq 0 ]
