@@ -40,6 +40,7 @@ public final class ChoixParBoutons<T> implements DemandeurDeChoix<T> {
     @Override
     public Optional<T> choisir(String entete, String question, List<T> options, Function<T, String> libelle) {
         Alert alerte = new Alert(AlertType.CONFIRMATION);
+        Habillage.poser(alerte.getDialogPane());
         alerte.setTitle(titre);
         alerte.setHeaderText(entete);
         alerte.setContentText(question);

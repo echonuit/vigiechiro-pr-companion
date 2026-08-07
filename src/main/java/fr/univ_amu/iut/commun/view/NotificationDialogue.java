@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import javafx.scene.control.Alert;
@@ -44,6 +43,7 @@ public final class NotificationDialogue implements Notificateur {
     /// tout test headless qui aurait voulu regarder.
     public Alert dialogue(NiveauNotification niveau, String entete, String message) {
         Alert alerte = new Alert(type(niveau), message, ButtonType.OK);
+        Habillage.poser(alerte.getDialogPane());
         alerte.setHeaderText(entete);
         return alerte;
     }
@@ -61,12 +61,7 @@ public final class NotificationDialogue implements Notificateur {
         Alert alerte = new Alert(type(niveau), "", ButtonType.OK);
         alerte.setHeaderText(entete);
         alerte.getDialogPane().setContent(bande);
-        for (String feuille : List.of("palette.css", "design.css")) {
-            var url = PanneauCompteRendu.class.getResource(feuille);
-            if (url != null) {
-                alerte.getDialogPane().getStylesheets().add(url.toExternalForm());
-            }
-        }
+        Habillage.poser(alerte.getDialogPane());
         alerte.initOwner(fenetre.get());
         alerte.showAndWait();
     }

@@ -46,6 +46,7 @@ public class App extends Application {
             LOG.log(Level.SEVERE, erreur, () -> "Exception non capturée sur le fil « " + fil.getName() + " »");
             Platform.runLater(() -> {
                 Alert alerte = new Alert(Alert.AlertType.ERROR);
+                Habillage.poser(alerte.getDialogPane());
                 alerte.setHeaderText("Une erreur inattendue est survenue");
                 alerte.setContentText(String.valueOf(erreur.getMessage()));
                 alerte.showAndWait();

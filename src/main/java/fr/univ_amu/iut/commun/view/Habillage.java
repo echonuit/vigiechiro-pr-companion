@@ -3,6 +3,8 @@ package fr.univ_amu.iut.commun.view;
 import java.util.List;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.DialogPane;
+import javafx.scene.layout.Region;
 
 /// Ce qu'une fenêtre de l'application porte **toujours** : sa police et ses feuilles de socle.
 ///
@@ -93,6 +95,47 @@ public final class Habillage {
         surLaRacine.add(0, url(FEUILLE_PALETTE));
         surLaRacine.add(1, base);
         surLaRacine.add(2, url(FEUILLE_DESIGN));
+    }
+
+    /// Pose les feuilles de socle sur le panneau d'un **dialogue** (#1499).
+    ///
+    /// Un `Alert` vit dans sa **propre scène** : il n'hérite pas des feuilles de la fenêtre qui l'ouvre.
+    /// Sans ce geste, la confirmation s'affiche avec le rendu par défaut de JavaFX - titre doublé, icône
+    /// « ? » système, boutons gris - au milieu d'une application entièrement habillée. C'est le même
+    /// mécanisme que pour les scènes, à ceci près qu'un dialogue n'a pas de nœud racine à nous : les
+    /// feuilles vont sur le `DialogPane` lui-même.
+    ///
+    /// Deux classes posaient déjà ces feuilles à la main, **chacune sa copie de la même boucle**, et
+    /// quatre autres ne les posaient pas du tout. Un seul point de passage, comme pour les fenêtres :
+    /// `DialoguesHabillesTest` verrouille l'invariant.
+    /// ⚠️ **Attacher les feuilles ne suffit pas**, et l'oublier donne un correctif inerte qui se
+    /// présente en succès. Aucune règle ne visait les dialogues : le premier essai a attaché les trois
+    /// feuilles et la capture du dialogue est restée identique **au bit près**. `design.css` porte
+    /// désormais les règles `.dialog-pane`, et ce point de passage retire en plus l'**icône système**
+    /// (le « ? ») que JavaFX pose sur une confirmation, laquelle ne s'enlève pas par le CSS.
+    public static void poser(DialogPane panneau) {
+        Typographie.installer();
+        List<String> feuilles = panneau.getStylesheets();
+        for (String ressource : new String[] {FEUILLE_PALETTE, FEUILLE_DE_BASE, FEUILLE_DESIGN}) {
+            String feuille = url(ressource);
+            if (!feuilles.contains(feuille)) {
+                feuilles.add(feuille);
+            }
+        }
+        retirerLIconeSysteme(panneau);
+    }
+
+    /// Retire l'icône que JavaFX pose sur un dialogue portant un en-tête.
+    ///
+    /// ⚠️ `setGraphic(null)` ne retire **rien**, et c'est contre-intuitif : quand le graphique est nul,
+    /// c'est le **skin** qui fournit l'icône par défaut de l'`AlertType`. Mettre `null` ne fait donc que
+    /// laisser le thème décider. Un premier essai l'a cru, et « À propos » a garde son « i » pendant que
+    /// les confirmations d'import perdaient leur « ? » - non pas grâce au correctif, mais parce qu'elles
+    /// n'ont pas d'en-tête du tout.
+    ///
+    /// On fournit donc un graphique **vide** plutôt qu'aucun : le skin n'a plus rien à substituer.
+    private static void retirerLIconeSysteme(DialogPane panneau) {
+        panneau.setGraphic(new Region());
     }
 
     /// Insère `base.css` juste après `palette.css` dans cette liste, si elle s'y trouve.
