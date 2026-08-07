@@ -1,18 +1,23 @@
 package fr.univ_amu.iut.passage.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /// Correspondance **pure** passage ↔ participation (axe 4) : construction du corps API (push, dates RFC 1123
 /// UTC + météo + configuration) et retraduction météo/config (pull), sans réseau ni base.
@@ -224,6 +229,51 @@ class CorrespondanceParticipationTest {
         }
     }
 
+    @ParameterizedTest(name = "sans {0}")
+    @MethodSource("nuitsSansBorne")
+    @DisplayName("#3451 : une nuit dont une borne manque est REFUSÉE, jamais déposée amputée")
+    void une_borne_manquante_refuse_le_depot(String borneAbsente, Passage ampute) {
+        // Ce que ce garde remplace : un `return null` par borne, qui retirait simplement le champ du corps
+        // envoyé. La nuit partait sur la plateforme NATIONALE sans ses horaires, et rien ne le disait.
+        //
+        // Le cas n'est pas atteignable par la base - `recording_date`, `start_time` et `end_time` y sont
+        // `NOT NULL` (V01__schema.sql), et les deux chemins de dépôt chargent par le DAO. L'invariant n'est
+        // donc tenu QUE par SQLite : ce test le tient dans le code, pour le jour où un passage sera bâti
+        // ailleurs qu'en base (depuis la plateforme, en mémoire).
+        assertThatThrownBy(() -> CorrespondanceParticipation.versParticipation("Z41", ampute, MaterielMicro.vide(42L)))
+                .as("une nuit sans %s doit être refusée au dépôt", borneAbsente)
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("bornes complètes");
+    }
+
+    private static Stream<Arguments> nuitsSansBorne() {
+        return Stream.of(
+                Arguments.of("date d'enregistrement", avecBornes(null, "21:00:00", "05:00:00")),
+                Arguments.of("heure de début", avecBornes("2026-07-03", null, "05:00:00")),
+                Arguments.of("heure de fin", avecBornes("2026-07-03", "21:00:00", null)));
+    }
+
+    /// La nuit de référence, dont une borne est remplacée - `null` pour la faire manquer.
+    private static Passage avecBornes(String date, String heureDebut, String heureFin) {
+        Passage complet = passage(null);
+        return new Passage(
+                complet.id(),
+                complet.numeroPassage(),
+                complet.annee(),
+                date,
+                heureDebut,
+                heureFin,
+                complet.parametresAcquisition(),
+                complet.statutWorkflow(),
+                complet.verdictVerification(),
+                complet.commentaire(),
+                complet.donneesMeteo(),
+                complet.deposeLe(),
+                complet.idPoint(),
+                complet.idEnregistreur(),
+                complet.idCampagne());
+    }
+
     private static Passage passage(String donneesMeteo) {
         // Nuit du 3→4 juillet : début 21:00, fin 05:00 (franchit minuit).
         return new Passage(
@@ -242,12 +292,6 @@ class CorrespondanceParticipationTest {
                 7L,
                 "1997632",
                 null);
-    }
-
-    private static LocalDateTime instantLocal(String rfc1123) {
-        return ZonedDateTime.parse(rfc1123, DateTimeFormatter.RFC_1123_DATE_TIME)
-                .withZoneSameInstant(ZoneId.systemDefault())
-                .toLocalDateTime();
     }
 
     @Test
