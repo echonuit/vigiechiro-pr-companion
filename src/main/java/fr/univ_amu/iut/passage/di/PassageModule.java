@@ -6,6 +6,7 @@ import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
+import fr.univ_amu.iut.commun.model.CommunePoint;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
@@ -93,6 +94,14 @@ public class PassageModule extends ModuleDeFeature {
         // complète installe SitesModule, dont le `setBinding` fournit l'implémentation réelle. Les
         // injecteurs partiels (captures, tests de module) restent construisibles grâce à ce défaut.
         OptionalBinder.newOptionalBinder(binder(), CoordonneesPoint.class)
+                .setDefault()
+                .toInstance(idPoint -> Optional.empty());
+
+        // Port socle CommunePoint (#3442) : même montage. Cette feature CONSOMME la commune du point pour
+        // en déduire le FUSEAU des heures de la nuit, sans dépendre de `sites`. Le défaut vide n'est pas
+        // une commodité de test : il dit « commune non résolue », cas réel d'un point sans GPS ou d'un
+        // rattrapage non passé, et l'appelant retombe alors sur Europe/Paris - le comportement d'avant.
+        OptionalBinder.newOptionalBinder(binder(), CommunePoint.class)
                 .setDefault()
                 .toInstance(idPoint -> Optional.empty());
 
