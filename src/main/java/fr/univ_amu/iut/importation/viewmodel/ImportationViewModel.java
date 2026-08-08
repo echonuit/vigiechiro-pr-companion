@@ -354,6 +354,9 @@ public class ImportationViewModel {
     /// entrée de plusieurs Go (le temporaire partiel est alors nettoyé par l'extracteur, et
     /// `dossierTemporaireZip` reste `null` puisque l'affectation n'aboutit pas).
     public Path extraireSiZip(Path chemin, Consumer<Progression> surProgression, JetonAnnulation jeton) {
+        // #1490 : ce que l'utilisateur a DÉSIGNÉ, avant toute extraction. Le dossier de travail
+        // deviendra peut-être un temporaire ; son choix, lui, ne change pas.
+        inspection.source().origineProperty().set(chemin);
         nettoyerTemporaireZip(); // une nouvelle source remplace l'éventuel zip précédent
         if (ExtracteurZip.estZip(chemin)) {
             Path base = serviceImport.racineWorkspace();

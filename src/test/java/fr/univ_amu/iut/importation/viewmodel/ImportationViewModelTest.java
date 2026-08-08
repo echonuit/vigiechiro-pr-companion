@@ -788,6 +788,41 @@ class ImportationViewModelTest {
     }
 
     @Test
+    @DisplayName("#1490 : l'écran retient le .zip désigné, pas le temporaire d'extraction")
+    void origine_designee_est_le_zip_pas_le_temporaire() throws IOException {
+        Path workspace = Files.createDirectories(racine.resolve("workspace"));
+        when(serviceImport.racineWorkspace()).thenReturn(workspace);
+        Path zip = racine.resolve("nuit.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            zos.putNextEntry(new ZipEntry("LogPR1925492.txt"));
+            zos.write("journal".getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+        }
+
+        Path extrait = viewModel.extraireSiZip(zip);
+
+        // Le dossier de travail reste le temporaire : c'est là que l'import lit.
+        assertThat(extrait).isDirectory().startsWith(workspace);
+        // Mais ce que l'utilisateur a DÉSIGNÉ est l'archive, et c'est elle qu'il doit relire à l'écran.
+        // Un chemin `import-zip-<horodatage>` sous le workspace ne lui dit rien et n'est pas son choix.
+        assertThat(viewModel.inspection().source().origineProperty().get()).isEqualTo(zip);
+        assertThat(viewModel.inspection().source().libelleProperty().get())
+                .contains("nuit.zip")
+                .doesNotContain("import-zip");
+    }
+
+    @Test
+    @DisplayName("#1490 : un dossier désigné s'affiche tel quel, sans mention d'archive")
+    void origine_designee_dossier_reste_nue() throws IOException {
+        Path dossier = Files.createDirectories(racine.resolve("carte-sd"));
+
+        Path rendu = viewModel.extraireSiZip(dossier);
+
+        assertThat(rendu).isEqualTo(dossier);
+        assertThat(viewModel.inspection().source().libelleProperty().get()).isEqualTo(dossier.toString());
+    }
+
+    @Test
     @DisplayName("#2733 : la décompression d'un gros fichier donne des nouvelles pendant l'entrée")
     void extraction_notifie_pendant_un_gros_fichier() throws IOException {
         Path workspace = Files.createDirectories(racine.resolve("workspace"));
