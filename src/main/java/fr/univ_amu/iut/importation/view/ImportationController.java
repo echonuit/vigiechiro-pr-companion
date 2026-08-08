@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.AuDepartEcran;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.DefilementChrome;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
@@ -86,6 +87,10 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// rendu. Contrat du socle ([OuvrirPassage]) et non la vue de `passage`, pour ne pas dépendre du `view`
     /// d'une autre feature (règle ArchUnit `pas_de_dependance_inter_feature_vers_la_vue`).
     private final OuvrirPassage ouvrirPassage;
+
+    /// Port du chrome (#1486) : l'écran demande qu'une de ses zones vienne dans le champ, sans
+    /// connaître le défilement qui l'y amène.
+    private final DefilementChrome defilement;
 
     /// Nuit déjà récupérée de Vigie-Chiro (#2580) : reconnaissance et geste associé, tenus à part.
     private final ZoneNumeroPassage zoneNumeroPassage;
@@ -222,12 +227,14 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
             PreferenceConservation conservation,
             ExecuteurTache executeur,
             FabriqueActionImportTransformes fabriqueImportTransformes,
-            OuvrirPassage ouvrirPassage) {
+            OuvrirPassage ouvrirPassage,
+            DefilementChrome defilement) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.conservation = Objects.requireNonNull(conservation, "conservation");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.fabriqueImportTransformes = Objects.requireNonNull(fabriqueImportTransformes, "fabriqueImportTransformes");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.defilement = Objects.requireNonNull(defilement, "defilement");
         this.zoneNumeroPassage = new ZoneNumeroPassage(viewModel, this.ouvrirPassage);
     }
 
@@ -351,6 +358,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 .isEqualTo(EtatImport.EN_COURS)
                 .or(viewModel.etatProperty().isEqualTo(EtatImport.EXTRACTION));
         VisibiliteGeree.lier(zoneProgression, traitement);
+        // #1486 : au clic, la vue remontait en haut alors que tout ce qui se passe vit en bas. On suit
+        // donc ce qui paraît - la progression pendant, le compte rendu après. Deux moments, deux
+        // cibles : pendant, on veut voir avancer ; après, on veut lire.
+        suivreQuandParait(zoneProgression);
+        suivreQuandParait(compteRenduChiffre);
         barreProgression.progressProperty().bind(viewModel.progression().fractionProperty());
         labelProgression.textProperty().bind(viewModel.progression().messageProperty());
         // Table de suivi par fichier (#947) : visible seulement quand un plan de nuit est établi (liaison
@@ -505,6 +517,16 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 },
                 viewModel::marquerAnnule,
                 viewModel::signalerSourceIllisible);
+    }
+
+    /// Amène `zone` dans le champ **au moment où elle paraît** (#1486). Rien ne se passe si elle est
+    /// déjà visible, ni si l'écran tient tout entier à l'écran.
+    private void suivreQuandParait(javafx.scene.Node zone) {
+        zone.visibleProperty().addListener((obs, avant, visible) -> {
+            if (Boolean.TRUE.equals(visible)) {
+                defilement.revele(zone);
+            }
+        });
     }
 
     /// Vrai si un traitement est en cours (import `EN_COURS` ou décompression `EXTRACTION`) : le formulaire
