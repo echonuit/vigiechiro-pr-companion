@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -141,19 +142,27 @@ public final class CaptureImport {
 
         // État « décompression d'un .zip » (#146) : avant toute inspection, la barre de progression
         // déterminée « X / N fichiers » s'affiche avec un temps restant estimé et un bouton « Annuler »
-        // (le formulaire est gelé). Le court délai laisse l'ETA s'établir (sinon « ~0 s » à t≈0).
+        // (le formulaire est gelé). L'écoulé est POSÉ (#3483) : lu à l'horloge, il ferait entrer la
+        // vitesse de la machine dans le PNG. 2,5 s à 20 % → « ~10 s restant », partout.
         vm.marquerExtractionEnCours();
-        dormir(2500);
         vm.progression()
-                .appliquer(new Progression("Décompression : 740 / 3692 · PaRecPR1925492_20260423_034512.wav", 0.20));
+                .appliquer(
+                        new Progression("Décompression : 740 / 3692 · PaRecPR1925492_20260423_034512.wav", 0.20),
+                        Duration.ofMillis(2500));
         rendre(scene, sortie.resolve("apercu-import-decompression.png"));
 
         // État « gros fichier en cours » (#2733) : sur une entrée de plusieurs Go, le compteur
         // « X / N fichiers » et la barre ne bougent pas pendant des minutes. C'est le VOLUME écrit qui
         // dit que la décompression avance - et c'est ce que cette capture doit montrer.
+        //
+        // Même fraction que ci-dessus, un moment plus tard : l'écoulé posé est donc PLUS GRAND, et
+        // l'estimation grandit avec lui (3,5 s à 20 % → « ~14 s restant »). C'est exactement ce que
+        // raconte l'état documenté - le temps passe, le compteur non.
         vm.progression()
-                .appliquer(new Progression(
-                        "Décompression : 740 / 3692 · PaRecPR1925492_20260423_034512.wav · 128 Mo", 0.20));
+                .appliquer(
+                        new Progression(
+                                "Décompression : 740 / 3692 · PaRecPR1925492_20260423_034512.wav · 128 Mo", 0.20),
+                        Duration.ofMillis(3500));
         rendre(scene, sortie.resolve("apercu-import-decompression-volume.png"));
 
         // Refus d'une archive (#2732) : ces messages sont rendus par le code de production
@@ -188,9 +197,12 @@ public final class CaptureImport {
 
         // État « import en cours » (#33/#146) : barre de progression déterminée, temps restant estimé,
         // bouton « Annuler », formulaire gelé. Phase de copie en début d'import (l'ETA y est parlant).
+        // Écoulé posé, comme plus haut : 2,5 s à 12,6 % → « ~17 s restant ».
         vm.marquerEnCours();
-        dormir(2500);
-        vm.progression().appliquer(new Progression("Copie 48/191 · PaRecPR1925492_20260422_205518.wav", 0.126));
+        vm.progression()
+                .appliquer(
+                        new Progression("Copie 48/191 · PaRecPR1925492_20260422_205518.wav", 0.126),
+                        Duration.ofMillis(2500));
         rendre(scene, sortie.resolve("apercu-import-en-cours.png"));
 
         // État « mélange » (#33) : dossier mêlant deux enregistreurs → avertissement à l'inspection
@@ -335,16 +347,6 @@ public final class CaptureImport {
                 scene,
                 fichier,
                 (ajustee, cible) -> ApercuFx.capturerApresPreparation(ajustee, AttenteTuiles::attendre, cible));
-    }
-
-    /// Pause (outil de capture uniquement) : laisse s'écouler un peu de temps après le début d'une
-    /// opération pour que l'estimation du temps restant (#146) soit représentative sur l'aperçu.
-    private static void dormir(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
     }
 
     /// Dossier d'exemple **mélangé** (chemin déterministe) : journal + relevé de la série 1925492 mais

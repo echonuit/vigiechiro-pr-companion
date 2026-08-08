@@ -43,6 +43,7 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
@@ -236,8 +237,11 @@ public final class CaptureMultisite {
         // La barre « Nuit en cours » reste affichée après un lot (elle suit `reconstruit`) : on la laisse
         // à l'état où la dernière nuit l'a laissée, sinon l'aperçu montre une barre vide que le produit
         // n'affiche jamais.
+        // Écoulé posé plutôt que lu à l'horloge (#3483), comme tout outil de capture. Ici il ne change
+        // rien à l'image - une opération terminée n'affiche pas d'estimation - mais l'exception qui
+        // resterait sans conséquence aujourd'hui deviendrait le précédent qui autorise la suivante.
         viewModel.progression().demarrer("Terminé.");
-        viewModel.progression().appliquer(new Progression("Terminé.", 1.0));
+        viewModel.progression().appliquer(new Progression("Terminé.", 1.0), Duration.ZERO);
         viewModel.restituerLot(new ServiceReconstructionPassages.BilanReconstructionGroupe(2, 0, 20, 41, true));
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
         journaliser(fichier);

@@ -38,12 +38,20 @@ par `ApercuFx`. Souvent en **deux états** (vide / peuplé) pour montrer les cas
     La règle porte sur **ce que le produit rend**. Une entrée **extérieure** au dépôt n'y est pas
     soumise : voir l'exception des tuiles ci-dessous, qui est la seule.
 
+    **Un aperçu pose ce qu'il ne peut pas reproduire**
+    ([ADR 3483](decisions/3483-un-apercu-pose-ce-qu-il-ne-peut-pas-reproduire.md)). Une capture
+    construit sa base, épingle son fuseau, impose sa locale : tout cela, elle le maîtrise. Le **temps
+    qui passe**, non. Un état de progression se pose donc avec son écoulé,
+    `progression.appliquer(point, Duration.ofMillis(2500))`, jamais avec la surcharge qui lit
+    l'horloge - sinon c'est la vitesse de la machine qui écrit le chiffre affiché. Gardé par
+    `ArchitectureTest#capture_pose_son_temps_ecoule`, qui refuse l'appel dans tout `..outils..`.
+
 #### L'exception assumée : les tuiles OpenStreetMap
 
-Les aperçus qui montrent une carte **varient d'un build à l'autre**, sans qu'aucun code ne change. Ils
-sont **seize**, pas quatre : aux quatre de `multisite` s'ajoutent `apercu-analyse-carte`, les huit
-aperçus d'import (dont l'assistant porte une bande cartographique en bas) et les deux modales de point.
-La liste exhaustive vit dans `filtrer-bruit-cartes.sh`.
+Les aperçus qui montrent une carte **varient d'un build à l'autre**, sans qu'aucun code ne change. Il
+n'en existe plus de liste écrite : depuis #3439, chaque rendu **dépose** le rectangle de sa carte à
+côté du PNG (`apercu-<nom>.png.carte`), et le filtre le lit aussitôt. Le compte se constate donc à
+l'exécution - **19** zones au dernier relevé, quand la liste tenue à la main en déclarait **16**.
 
 C'est mesuré, pas supposé - et le chiffre a été **revu à la hausse** en cartographiant les écarts entre
 les **30** versions successives d'`apercu-analyse-carte` (2026-08-05, 435 paires) : médiane **1,22 %**,
@@ -65,9 +73,10 @@ rendrait l'image plus stable et moins vraie. La variabilité résiduelle est min
 élément produit par le dépôt.
 
 Ce qui vient de **nous** reste donc strictement déterministe, et c'est là-dessus que la règle d'or
-s'applique. Le corollaire pratique : sur ces seize fichiers, un diff de captures n'est pas un signal -
-la revue se fait à l'œil, pas au `cmp`. Depuis, la CI cesse d'ailleurs de **committer** ces écarts sous
-le seuil : voir [Le bruit des cartes](#le-bruit-des-cartes-et-pourquoi-on-cesse-de-le-committer).
+s'applique. Le corollaire pratique : sur un aperçu à carte, un diff **dans le rectangle** n'est pas un
+signal - la revue s'y fait à l'œil. Partout ailleurs, y compris sur ces mêmes fichiers, la tolérance
+est **zéro** et la comparaison se fait au `cmp` : voir
+[Le bruit des cartes](#le-bruit-des-cartes-et-pourquoi-on-cesse-de-le-committer).
 
 ### L'injecteur se compose depuis la racine
 
@@ -154,14 +163,26 @@ masque leur rend leur valeur de signal **partout sauf dans le rectangle de la ca
 changement de 40x12 px hors carte, sur l'aperçu où la carte couvre 72,9 % de l'image, est **détecté**
 (533 pixels) là où un seuil de 4 % ne l'aurait jamais vu.
 
-Les rectangles sont **mesurés** : depuis #3375, un diff entre la version de la CI et une régénération
-locale ne contient plus que les tuiles, donc sa boîte englobante **est** la carte.
+Les rectangles sont **dérivés de la scène** au moment du rendu, plus recopiés à la main
+([ADR 3439](decisions/3439-un-masque-se-derive-de-la-scene-il-ne-se-recopie-pas.md)). Une carte se
+reconnaît à la classe de style `carte-sites`, `ZoneCarteApercu` en mesure les bornes pendant que la
+scène est montée, et dépose un `apercu-<nom>.png.carte` que le filtre lit dans la foulée. Ces fichiers
+ne sont **jamais committés** : produits et consommés dans la même exécution, les committer les ferait
+vieillir, c'est-à-dire retomber dans le défaut qu'ils corrigent.
+
+La liste tenue à la main s'était démodée dans les trois sens à la fois : elle oubliait des cartes
+(16 déclarées pour 19 réelles), elle couvrait ce qui n'en était pas (**55 %** du masque de
+`multisite-edition` tombait sur un tableau de données, comparé à rien), et elle avait servi à cacher
+autre chose - une estimation de temps restant, corrigée depuis à sa source
+([ADR 3483](decisions/3483-un-apercu-pose-ce-qu-il-ne-peut-pas-reproduire.md)).
 
 ⚠️ Ce que le masque ne voit pas : un changement **à l'intérieur** de la carte - un marqueur déplacé,
 un carré recoloré. C'est l'arbitrage de l'ADR 3068, réduit au seul rectangle au lieu de toute l'image.
 
-⚠️ `apercu-passage-rattachement.png` bouge aussi et n'est **pas** dans la liste : `CapturePassage` ne
-monte aucune carte. Son instabilité a une autre cause, non élucidée.
+⚠️ `apercu-passage-rattachement.png` bougeait aussi sans porter de carte, et la cause est désormais
+connue : **écrire sur disque entre le `snapshot` et la fermeture du stage** laisse passer une
+validation de formulaire, ce qui change les captures **suivantes** du même outil - mesuré à
+40 543 pixels. La mesure se fait pendant que la scène est montée, l'écriture après `RenduPng.ecrire`.
 
 ## Les garde-fous de présence
 

@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.viewmodel;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.Progression;
+import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -80,6 +81,62 @@ class ProgressionOperationTest {
         progression.appliquer(new Progression("Compression 9/20", 0.45));
         assertThat(progression.fractionProperty().get()).isEqualTo(0.6);
         assertThat(progression.messageProperty().get()).contains("Compression 9/20");
+    }
+
+    @Test
+    @DisplayName("#3483 : un écoulé POSÉ sort l'horloge du calcul, dans ses deux états")
+    void ecoule_pose_ignore_l_horloge() {
+        // L'horloge a deux états, et le posé doit l'emporter dans les deux.
+        //
+        // 1. Aucune référence temporelle (`demarrer` jamais appelé) : le chemin horloge rendrait un
+        //    écoulé NUL, donc AUCUNE estimation. Si l'estimation apparaît, c'est le posé qui a servi.
+        ProgressionOperation sansReference = new ProgressionOperation();
+        sansReference.appliquer(new Progression("Décompression : 740 / 3692", 0.20), Duration.ofMillis(2500));
+        assertThat(sansReference.messageProperty().get()).isEqualTo("Décompression : 740 / 3692 · ~10 s restant");
+
+        // 2. Référence posée à l'instant : le chemin horloge rendrait un écoulé quasi nul, donc une
+        //    estimation quasi nulle. Le message doit être le MÊME qu'au cas 1.
+        ProgressionOperation demarree = new ProgressionOperation();
+        demarree.demarrer("Préparation de la décompression…");
+        demarree.appliquer(new Progression("Décompression : 740 / 3692", 0.20), Duration.ofMillis(2500));
+        assertThat(demarree.messageProperty().get())
+                .isEqualTo(sansReference.messageProperty().get());
+    }
+
+    @Test
+    @DisplayName("#3483 : les trois états capturés par CaptureImport annoncent une durée fixée d'avance")
+    void les_etats_captures_annoncent_une_duree_fixee() {
+        // Ces trois couples (écoulé, fraction) sont ceux que `CaptureImport` pose, DANS SA SÉQUENCE. Les
+        // figer ici rend l'écart VISIBLE en test si quelqu'un les retouche, plutôt qu'en revue visuelle
+        // six semaines plus tard. Les valeurs tombent juste : 10,0 - 14,0 - 17,3 s, loin d'un demi
+        // arrondissable, donc à l'abri d'un basculement d'arrondi.
+        //
+        // ⚠️ La séquence compte, et ce test l'a montré en échouant : posé tel quel à la suite des deux
+        // premiers, le troisième état annonçait « ~10 s » et non « ~17 s ». La fraction est MONOTONE
+        // (#814), donc 0,126 après 0,20 ne redescend pas et l'estimation se calcule sur 0,20. Dans la
+        // capture, `marquerEnCours()` appelle `demarrer` entre les deux et remet la fraction à zéro -
+        // c'est pourquoi l'image est juste. Un outil qui poserait une fraction plus basse SANS repartir
+        // afficherait l'estimation de l'état précédent, sans rien pour le signaler.
+        ProgressionOperation progression = new ProgressionOperation();
+        progression.demarrer("Préparation de la décompression…"); // cf. marquerExtractionEnCours()
+
+        progression.appliquer(new Progression("Décompression", 0.20), Duration.ofMillis(2500));
+        assertThat(progression.messageProperty().get()).isEqualTo("Décompression · ~10 s restant");
+
+        progression.appliquer(new Progression("Décompression · 128 Mo", 0.20), Duration.ofMillis(3500));
+        assertThat(progression.messageProperty().get()).isEqualTo("Décompression · 128 Mo · ~14 s restant");
+
+        progression.demarrer("Préparation…"); // cf. marquerEnCours()
+        progression.appliquer(new Progression("Copie 48/191", 0.126), Duration.ofMillis(2500));
+        assertThat(progression.messageProperty().get()).isEqualTo("Copie 48/191 · ~17 s restant");
+    }
+
+    @Test
+    @DisplayName("#3483 : un écoulé négatif ne produit pas d'estimation à rebours")
+    void ecoule_negatif_sans_estimation() {
+        ProgressionOperation progression = new ProgressionOperation();
+        progression.appliquer(new Progression("Décompression", 0.20), Duration.ofSeconds(-5));
+        assertThat(progression.messageProperty().get()).isEqualTo("Décompression");
     }
 
     @Test
