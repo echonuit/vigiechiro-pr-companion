@@ -149,8 +149,32 @@ La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/mave
   fait que le statique (Spotless, captures, PMD). Les outils
   (`**/outils/**` : capture d'écran, bancs de mesure) sont **exclus** du calcul (ils sont validés
   par exécution, pas par tests unitaires).
-- **PIT** (profil `-Pmutation`) évalue la **qualité** des tests par mutation. Lent : à lancer à la
-  demande, pas dans le cycle normal.
+- **PIT** (profil `-Pmutation`) évalue la **qualité** des tests par mutation.
+
+### Quand lancer PIT
+
+**Pas à chaque tour de rouge-vert-refactor** : il est lent, et la boucle doit rester de l'ordre de la
+minute. **Une fois, quand la boucle s'arrête**, c'est-à-dire dès qu'un comportement est **complet** -
+pas à la clôture du chantier, où le trou découvert porterait sur du code livré depuis plusieurs PR
+(cf. [Cycle de vie d'un chantier](https://companion-dev.echonuit.fr/cycle-de-chantier/)).
+
+```bash
+env -u DISPLAY ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
+  -DtargetClasses="fr.univ_amu.iut.<feature>.model.*" \
+  -DtargetTests="fr.univ_amu.iut.<feature>.*"
+```
+
+Quatre points sans lesquels la mesure ne vaut rien :
+
+- **la phase `test-compile` est obligatoire.** Sans elle, la mesure meurt en silence (`MINION_DIED`),
+  et un dispositif muet ressemble à un dispositif satisfait ;
+- **cibler les classes pures.** Une façade de délégation ne produit que des survivants sans valeur ;
+- **le pourcentage ne dit rien** : ce sont les **survivants**, lus un par un. Un **vrai trou** (on écrit
+  le test), un **défensif inatteignable** (on l'assume, sans test creux), un **artefact de ciblage** (on
+  élargit `targetTests` et on remesure) ;
+- ⚠️ **« aucun test ne couvre cette ligne » n'est pas « cette ligne est atteignable ».** Confondre les
+  deux fait écrire un correctif pour un défaut qui n'existe pas ; c'est arrivé sur #3451, où le schéma
+  déclarait déjà les colonnes `NOT NULL`.
 
 ---
 

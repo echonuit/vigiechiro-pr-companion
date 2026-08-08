@@ -8,8 +8,19 @@ le **flux de contribution**, cette page décrit le niveau au-dessus : comment on
 **clôt** un chantier entier.
 
 Le principe : un chantier ne se termine pas au dernier `feat:` mergé. Une fois le cœur livré, une
-**clôture en 10 passes** garantit que l'évolution est intégrée, cohérente entre les deux surfaces
-(IHM et CLI), documentée, testée, harmonisée, **regardée**, et que la suite est cadrée.
+**clôture en 12 passes** (numérotées **0 à 11**) garantit que l'évolution est intégrée, cohérente
+entre les deux surfaces (IHM et CLI), documentée, testée, harmonisée, **regardée**, et que la suite
+est cadrée.
+
+!!! info "Pourquoi la numérotation commence à 0 et pas à 1"
+    Les passes **1 à 9 ne changent pas de numéro**, et c'est délibéré. Le dépôt compte **42 citations**
+    de passes numérotées, dont **35 dans `dev-docs/decisions/`** - des documents que la règle déclare
+    **immuables**. Décaler la série rendrait fausses 35 références qu'on s'interdit d'éditer, sans que
+    rien ne rougisse. Les deux passes ajoutées se placent donc **aux extrémités** : la 0 en tête, la 10
+    et la 11 en queue.
+
+    Le « 0 » n'est pas un pis-aller : l'ouverture d'un chantier a **déjà** son étape 0, et c'est déjà
+    *relire l'existant avant d'agir*. La même figure aux deux bouts.
 
 !!! note "Où est la règle courte ?"
     La version concise pour les contributeurs vit dans la section « Cycle de vie d'un chantier » de
@@ -67,6 +78,51 @@ Avant de cartographier quoi que ce soit, donc :
     **Un audit de clôture produit un comptage, pas une lecture.** Le comptage était exact ; il mélangeait
     deux problèmes de profondeur différente, et l'un des deux avait déjà une analyse ailleurs.
 
+### Interroger le graphe du dépôt, pour ce que `grep` ne relie pas
+
+Le tri « par concept, pas par mot-clé » exigé ci-dessus se heurte à un outil qui ne sait chercher que
+des **chaînes**. Le dépôt se donne donc un **graphe de connaissances**, reconstruit régulièrement dans
+`graphify-out/` (hors du suivi Git) : environ **21 800 nœuds** et **77 500 arêtes** couvrant le code,
+les workflows, les tests `bats`, la documentation utilisateur, les dev-docs et le brief, **mêlés dans le
+même graphe**.
+
+```bash
+graphify query "<question>" --budget 2500   # depuis la racine du dépôt
+```
+
+Ce qu'il apporte et que `grep` ne peut pas donner :
+
+- les arêtes `calls` descendent au niveau **méthode** : « qui appelle réellement ceci ? » et,
+  symétriquement, « ce code sert-il encore à quelqu'un ? » ;
+- les arêtes `conceptually_related_to` répondent à « **qui d'autre fait X ?** » quand X est une **idée**
+  et non un identifiant ;
+- il **traverse les corpus** : quelles maquettes du brief décrivent ce composant, quelles pages
+  documentent cet écran, quelles ADR citent ce workflow.
+
+Trois moments l'appellent, et ce sont les trois où l'on croit déjà savoir : l'**ouverture** (étape 0 et
+cartographie), l'**investigation d'un défaut** (chercher le jumeau), et l'**audit global de la passe 7**.
+
+!!! tip "Ce qu'il a trouvé, et que les `grep` avaient manqué"
+    - passe 7 du lot 4 de #3151, « qui d'autre dérive un département ? » : `grep` sur
+      `departementDeCarre` et `RegionDuCarre` donnait **deux** écritures de la règle, le graphe en a
+      montré une **troisième**, `CarreGeo.departement()`, qui ne cite aucun de ces noms. Ses arêtes ont
+      révélé du même coup qu'elle n'avait **aucun appelant** ;
+    - #3197 : `ServiceReset.executer` et `ServiceImport.ecraserEtImporter` écrivent eux aussi dans
+      `sauvegardes/` - deux sources d'accumulation que l'issue ne nommait pas ;
+    - #2739 : un **troisième** job (`publish`) dans `release.yml`, absent de l'en-tête du fichier, et
+      les deux ADR qui référencent ce workflow. La forme du remède en a changé.
+
+!!! warning "Deux limites, et la seconde décide de comment on lit sa sortie"
+    **Il ne modélise que NOTRE code.** Aucun nœud pour le JDK ni pour les bibliothèques : demander qui
+    appelle `Files.readAllLines` rend zéro, et un zéro se lit comme une absence. Sur ces questions-là
+    `grep` est le bon outil et le graphe est muet - mesuré sur #3222, six lectures d'API JDK.
+
+    **Sa traversée est bruitée**, il photographie un commit (`built_at_commit`) donc il **vieillit**, et
+    14 % de ses arêtes sont **inférées**. Sa sortie est une **hypothèse à confirmer** par une mesure
+    exacte - lecture du fichier, `grep` ciblé -, **jamais un inventaire**. C'est exactement le régime que
+    la passe 6 impose déjà au `grep` : *un zéro se confirme à la main*. Le graphe **oriente** la
+    recherche, il ne remplace pas la lecture.
+
 ### Au commencement de chaque issue : rappeler ce qu'on fait et pourquoi maintenant
 
 Un chantier s'enchaîne vite : issue, PR, CI, fusion, issue suivante. À ce rythme, le **pourquoi** se
@@ -116,13 +172,217 @@ issue libre pour prise, et personne ne la reprendra. Au triage (étape 0), une r
     lâche exactement quand ça va vite, c'est-à-dire quand les collisions arrivent. Il complète l'étape 0,
     il ne la remplace pas.
 
-## À la clôture : les 10 passes
+## Pendant l'issue : rouge, vert, refactor, autant de fois qu'il le faut
 
-Elles s'exécutent **dans l'ordre** : l'audit d'intégration peut révéler du travail à faire avant de
-documenter, la cohérence CLI peut révéler une commande à ajouter (qui sera alors documentée et
-testée par les passes suivantes), l'harmonisation peut **casser un écran sans casser un test** (d'où la
-revue visuelle **juste après** elle), la revue visuelle peut faire émerger de nouveaux chantiers, et le
-bilan vient en dernier.
+Le cycle décrit longuement comment on **clôt**. Ce qui se passe entre le commentaire de prise et la
+pull request tenait, jusqu'à #3505, en une consigne implicite et fausse :
+[Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md) numérotait « Tester » en **étape 8 sur 8**.
+La page qui apprend à écrire une fonctionnalité enseignait l'ordre inverse de celui qu'on veut.
+
+### C'est une BOUCLE, pas une étape
+
+Rouge, vert, refactor n'est pas une checklist qu'on parcourt une fois par issue. C'est un **tour**, et
+une issue en compte **autant que de petits pas** : quelques minutes chacun, souvent plusieurs dizaines
+avant que le comportement soit complet.
+
+> Une issue = N tours. Pas un tour avec N assertions dedans.
+
+**Un petit pas est le plus petit comportement observable** qu'on puisse rendre rouge puis vert : pas
+« la fonctionnalité », pas « la classe », pas « la méthode ». *Le refus quand la date manque*. *La
+conversion d'une borne quand le point est connu*. *Le cas où la liste est vide*. On écrit le test de
+ce pas-là, on le voit rouge, on écrit **le minimum** qui le rend vert, on regarde ce qu'il y a à
+retravailler, et on recommence avec le pas suivant.
+
+Trois raisons, et la troisième est celle qui décide :
+
+- **le diagnostic est gratuit.** Quand un pas casse, la cause est dans les trois lignes qu'on vient
+  d'écrire. Sur un grand pas, elle est quelque part dans une heure de travail ;
+- **le refactor devient possible.** On ne retravaille sereinement qu'un code couvert : chaque tour
+  élargit le filet sous les pas suivants. Un refactoring tenté après coup, sur du code écrit d'un bloc,
+  se fait sans filet - c'est-à-dire qu'il ne se fait pas ;
+- **le pas suivant se choisit en connaissance de cause.** Le vert précédent apprend quelque chose sur le
+  domaine, et il arrive qu'il démente le plan. Sur #3483, le tour qui figeait les états capturés a rendu
+  visible la monotonie de la fraction, qui n'était dans aucun plan.
+
+!!! tip "Le signal que le pas était trop grand"
+    **Le rouge dure.** Si l'on reste plus de quelques minutes en rouge, ou s'il faut écrire plusieurs
+    classes pour revenir au vert, le pas était trop gros : on **revient au dernier vert** et on le coupe
+    en deux. Rester longtemps en rouge fait perdre ce que la boucle apporte - on retombe dans « j'écris
+    tout, je teste après », avec un test écrit avant en guise d'alibi.
+
+    Le corollaire vaut aussi dans l'autre sens : un pas qui passe au vert **du premier coup, sans rien
+    écrire**, dit que le test ne testait rien de neuf.
+
+### Le rouge d'abord, parce qu'il ne coûte rien à ce moment-là
+
+Le dépôt tient déjà la moitié de cette règle, sous un autre nom : **un garde-fou de non-régression se
+vérifie en le voyant rouge** (passe 6, [ADR 2748](decisions/2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md)).
+Le rouge du TDD est cette même exigence, déplacée **avant** le code, là où elle est gratuite.
+
+Après coup, elle se paie. Sur #3483, la règle ArchUnit qui interdit à un outil de capture de lire
+l'horloge a dû être vérifiée en **réintroduisant le défaut à la main**, en relançant, puis en
+restaurant. Trois gestes, un risque d'oublier le dernier, et une confiance qui repose sur le fait
+qu'on ait bien tout remis en place. Écrite d'abord, elle était rouge sans cérémonie.
+
+### Sur un défaut, le premier test REPRODUIT
+
+Une correction n'a pas de « comportement attendu » tant qu'on n'a pas compris le défaut. Le premier
+geste n'est donc pas « écrire le test », c'est **écrire le test qui reproduit** : il échoue parce que
+le produit est faux, et il passe au vert quand il ne l'est plus. Un test de caractérisation reste du
+rouge d'abord.
+
+Le corollaire vaut pour les gardes de **forme** ([ADR 3412](decisions/3412-un-alias-n-est-pas-une-police.md)) :
+on ne sait ce qu'il faut interdire qu'une fois le défaut lu. Le garde s'écrit donc après l'analyse mais
+**avant** le correctif, et se confronte aux **lignes fautives d'origine** - c'est ce qui a fait
+abandonner un garde textuel sur les fuseaux, qui aurait manqué les deux moitiés du défaut.
+
+**Et avant de corriger, chercher le jumeau.** Un défaut a rarement un seul site : la question n'est pas
+« où est ce symptôme ? » mais « **qui d'autre fait la même chose ?** ». C'est le moment d'interroger le
+[graphe du dépôt](#interroger-le-graphe-du-depot-pour-ce-que-grep-ne-relie-pas) plutôt que de se fier à
+un `grep` sur le nom de la méthode fautive : sur #3197, il a désigné deux services qui écrivaient au
+même endroit sans que l'issue les nomme. Le test qui reproduit doit couvrir **tous** les jumeaux
+trouvés, sans quoi le correctif en laisse un derrière lui.
+
+### Un rouge inattendu est une trouvaille
+
+Un test qui échoue **pour une autre raison que celle qu'on attendait** vient de dire quelque chose. Le
+réflexe est de corriger jusqu'au vert ; le bon geste est de **lire le message avant de corriger**.
+
+Vécu sur #3483 : le test qui figeait les trois états capturés annonçait « ~10 s » là où on attendait
+« ~17 s ». La cause n'était pas dans le correctif mais dans la **monotonie de la fraction** (#814) :
+une fraction plus basse posée après une plus haute ne redescend pas, et l'estimation se calcule donc
+sur l'ancienne. La capture était juste par accident de séquence, et rien ne le disait. Sans ce
+rouge-là, la règle serait restée invisible jusqu'au jour où un outil aurait posé une fraction
+décroissante.
+
+### REFACTOR : à chaque tour, et à la bonne échelle
+
+**Le refactoring appartient au cycle, pas seulement à la clôture.** Il est **tenté à chaque tour de
+boucle**, c'est-à-dire des dizaines de fois par issue : pas nécessairement appliqué, mais
+systématiquement **regardé**. C'est la troisième phase du tour, pas une étape de fin d'issue - la sauter
+« parce qu'on y reviendra » est la façon habituelle de ne jamais y revenir. Le moment le moins cher pour
+retravailler un code est celui où l'on se souvient encore pourquoi il est ainsi, et ce moment dure un
+tour.
+
+Ce qui se regarde à ce moment-là est **petit** : un nom qui ne dit pas ce que fait la méthode, une
+duplication qui vient d'apparaître entre le pas précédent et celui-ci, une condition qui gagnerait à
+être nommée. Ce qui déborde du pas courant n'appartient pas au tour : ça se note, et ça revient en
+passe 7.
+
+Il ne remplace pas la **passe 7** et n'entre pas en concurrence avec la règle des petites PR, parce que
+ce sont **deux échelles** :
+
+| | REFACTOR du cycle | Passe 7, harmonisation |
+| --- | --- | --- |
+| Portée | le code qu'on vient de toucher | l'application entière |
+| Moment | à chaque barre verte | à la clôture du chantier |
+| Filet | le test qu'on vient de rendre vert | la suite complète |
+| Décision | seul | **discutée** avec la direction |
+
+Sans cette frontière, l'une des deux règles cède à l'autre. Avec elle, elles ne se croisent jamais.
+
+Ce que le cycle attrape et que la passe 7 attrape mal : sur #3442, le PMD `GodClass` a mordu
+**pendant** l'issue et forcé l'extraction de `HorairesDistants`. Le résultat porte un **concept nommé**
+- *une borne distante se lit dans le fuseau de son point* - parce qu'il a été écrit par quelqu'un qui
+avait encore la raison en tête. Une passe 7 aurait produit la même extraction, au bon endroit, sous un
+nom quelconque.
+
+### Quand la boucle s'arrête : la mutation, tout de suite
+
+La boucle tourne **tant que le comportement n'est pas complet**. Quand elle s'arrête - plus de petit
+pas à faire, la fonctionnalité tient debout - vient la seule mesure qui dise ce que tous ces tours ont
+vraiment couvert.
+
+La **passe 6** exige PIT. À la clôture, c'est-à-dire souvent **plusieurs pull requests après** que le
+code a été écrit : le trou découvert porte alors sur du code déjà livré, et le contexte est froid.
+
+**PIT tourne donc dès qu'un comportement est complet**, sur les classes que l'issue vient de livrer. La
+passe 6 devient alors une **vérification que ça a été fait**, pas la première exécution.
+
+Le cadrage, sans lequel la mesure ne vaut rien :
+
+- **cibler les classes pures.** Une façade de délégation ne rend que des survivants sans valeur ;
+- **une phase est obligatoire** (`test-compile`), sinon la mesure meurt en silence (`MINION_DIED`) ;
+- **le pourcentage ne dit rien.** Ce sont les **survivants**, lus un par un, qui parlent : un **vrai
+  trou** (on écrit le test), un **défensif inatteignable** (on l'assume, sans test creux), un
+  **artefact de ciblage** (on élargit `targetTests` et on remesure) ;
+- **une couverture de mutation dit « aucun test ne couvre cette ligne », jamais « cette ligne est
+  atteignable »** ([ADR 3451](decisions/3451-un-invariant-tenu-par-la-base-se-double-d-un-refus.md)).
+  Confondre les deux fait écrire un correctif pour un défaut qui n'existe pas ; c'est arrivé.
+
+Le mode d'emploi complet est dans [Tests et qualité](tests-et-qualite.md).
+
+## À la clôture d'une issue : ce qu'on laisse derrière soi
+
+Une issue se ferme sur deux textes qu'on relira dans six mois **sans le fil** : son **corps**, et celui
+de sa **pull request**.
+
+### Le corps porte la vérité, les commentaires portent le journal
+
+Une issue vit : la prémisse se révèle fausse, une mesure contredit l'intuition, le remède change. Rien
+de cela ne doit rester **uniquement** en commentaire.
+
+- **le corps** dit l'**état courant de la vérité** : ce qu'on fait, pourquoi, ce qui a été décidé ;
+- **les commentaires** portent le **journal** : mesures, trouvailles incidentes, pistes essayées.
+
+D'où la règle : **tout commentaire qui change la lecture de l'issue est suivi d'une édition du corps.**
+Le commentaire reste comme trace, le corps porte la conclusion.
+
+C'est la généralisation d'une règle qui n'existait qu'au triage (étape 0) : « un recadrage laissé en
+commentaire sous un corps périmé ne recadre rien ». Elle vaut pour toute la vie d'une issue, pas
+seulement quand on la déplace d'un chantier à l'autre.
+
+!!! warning "Deux dettes de ce type, laissées dans le dépôt"
+    Sur #3451, une prémisse fausse - une mesure de mutation lue comme « ce code est atteignable » - a
+    été corrigée **en commentaire**, le corps gardant la version fausse. Sur #3439, une mesure erronée
+    a connu le même sort. Qui ouvre ces issues aujourd'hui lit d'abord l'erreur, et la correction
+    ensuite, s'il descend jusque-là.
+
+### Le test de lecture à froid, avant de fusionner
+
+Avant de fusionner : **le corps de la pull request et celui de l'issue se lisent-ils correctement dans
+six mois, sans la discussion ?** Ils doivent dire ce qui a été fait et pourquoi, pas retracer les
+hésitations qui y ont mené.
+
+Ce n'est pas de la cosmétique. Le **titre de la pull request devient le sujet du commit de squash**, et
+son corps est ce qu'atteint quiconque remonte depuis `git log`. C'est la seule trace qui survive à la
+fermeture de l'onglet.
+
+## À la clôture : les 12 passes
+
+Elles s'exécutent **dans l'ordre** : la relecture des ADR remet l'existant en tête avant qu'on touche
+à quoi que ce soit, l'audit d'intégration peut révéler du travail à faire avant de documenter, la
+cohérence CLI peut révéler une commande à ajouter (qui sera alors documentée et testée par les passes
+suivantes), l'harmonisation peut **casser un écran sans casser un test** (d'où la revue visuelle
+**juste après** elle), la revue visuelle peut faire émerger de nouveaux chantiers, les ADR s'écrivent
+quand toutes les décisions sont prises, et le bilan vient en dernier parce qu'il y renvoie.
+
+### 0. Relecture des ADR existantes
+
+Un chantier de plusieurs semaines écrit du code sous des règles qu'il a cessé de voir. Cette passe les
+remet en tête **avant** que la clôture ne commence, et pose une seule question de vérification :
+
+> Le chantier a-t-il **contredit** une décision existante, et si oui, l'a-t-il fait exprès ?
+
+Un chantier a parfaitement le droit de dépasser une ADR : #3442 a rendu faux ce que l'[ADR 3406](decisions/3406-une-nuit-porte-le-fuseau-de-son-site.md)
+assumait sur l'outre-mer, et c'était le progrès attendu. Ce qui n'est pas permis, c'est que le
+dépassement soit **silencieux** : une ADR qu'on contredit sans le dire laisse deux règles opposées dans
+le dépôt, et le prochain lecteur appliquera celle qu'il trouvera en premier.
+
+La lecture se fait contre **`origin/main`**, pas contre la branche du chantier : d'autres chantiers ont
+pu écrire des ADR pendant celui-ci, et le rebase de la passe 1 arriverait trop tard pour les découvrir.
+
+!!! tip "Signal concret"
+    `git log --oneline <sha-d-ouverture>..origin/main -- dev-docs/decisions/` liste les décisions
+    apparues **pendant** le chantier : ce sont les plus susceptibles d'avoir été ignorées, puisqu'elles
+    n'existaient pas quand le plan a été écrit.
+
+    Et la question se pose aussi **à l'envers** : parmi les ADR que le chantier respecte, certaines
+    régissent-elles du code **hors du delta** qu'il faudrait aligner ? C'est ce qui a manqué à une
+    clôture où un garde de surface CLI (`cli-surface.bats`) avait été tenu à jour, mais pas le garde de
+    comportement (`cli.bats`) que la même décision régit.
+
+### 1. Audit d'intégration
 
 ### 1. Audit d'intégration
 
@@ -185,11 +445,34 @@ colle au code livré : [Architecture](architecture.md), [Patterns et principes](
 [Injection (Guice)](injection.md), [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md) si le
 chantier a introduit un **nouveau pattern d'extension** que les futures features devront suivre.
 
-Toute **décision structurante** prise pendant le chantier - un choix d'architecture ou de domaine qu'un
-développeur futur pourrait raisonnablement remettre en cause faute d'en connaître les raisons - donne une
-**[ADR](decisions/index.md)** : une par décision, immuable, expliquant le pourquoi.
+Les **ADR ne s'écrivent plus ici** : elles se rédigent en **passe 10**, quand toutes les décisions du
+chantier sont prises. Cette passe-ci ne traite que les pages de description.
 
-Chaque ADR **déclare comment elle est vérifiée** ([ADR 2465](decisions/2465-une-adr-declare-comment-elle-est-verifiee.md)) : une puce `- **Vérification** : certaine | probable | humaine, <référence>` dans son en-tête, au même titre que `Statut` et `Chantier`. Un garde-fou fait rougir la CI si elle manque, ou si le test/script nommé n'existe pas. `certaine` nomme un test ou script déterministe ; `probable` nomme un script de suspects et son **cliquet** ; `humaine` donne le motif, et peut adjoindre une **loupe**. Voir la section « Comment une ADR est vérifiée » de l'[index des décisions](decisions/index.md).
+#### Chercher ce qui est devenu FAUX, pas ce qu'on a à ajouter
+
+« Mettre à jour pour que la doc colle au code » se lit spontanément comme « qu'ai-je à **ajouter** ? ».
+Le mode de panne est l'inverse : une page qui décrivait fidèlement un mécanisme **remplacé** ne signale
+rien, ne rougit nulle part, et se lit comme vraie.
+
+Mesuré : #3439 a remplacé les rectangles de masque des aperçus, écrits à la main, par des rectangles
+**dérivés de la scène**. `dev-docs/captures.md` a continué pendant une semaine à décrire « seize »
+fichiers énumérés dans un script, et à qualifier de « non élucidée » une instabilité que le même
+chantier venait d'élucider. Rien ne l'a signalé ; c'est un lecteur qui l'a trouvé.
+
+L'instrument est mécanique : **partir des fichiers que le chantier a touchés, et chercher qui les
+cite**, plutôt que de partir de sa mémoire.
+
+```bash
+git diff --name-only origin/main... | while read -r f; do
+  grep -rl "$(basename "$f")" docs dev-docs brief 2>/dev/null
+done | sort -u
+```
+
+Le nom d'une classe, d'un script ou d'un fichier suffit à trouver ses mentions ; pour un **concept**
+qui n'a pas de nom stable, la même question se pose au
+[graphe du dépôt](#interroger-le-graphe-du-depot-pour-ce-que-grep-ne-relie-pas), qui relie code, doc et
+brief. Ce qui décrit un mécanisme disparu se corrige **ou se supprime** : une page à moitié vraie égare
+plus qu'une page absente.
 
 ### 4. Passe de doc utilisateur
 
@@ -256,12 +539,38 @@ réponse : sur 41 commandes, **zéro** sans test, là où les greps naïfs en an
 un « aucun test » sorti d'un grep n'est qu'une **hypothèse**, à confirmer en ouvrant les fichiers
 **avant** d'en faire une issue. Une issue fausse coûte plus cher que le trou qu'elle prétend signaler.
 
+Le **second signal** le moins cher à obtenir est le [graphe du dépôt](#interroger-le-graphe-du-depot-pour-ce-que-grep-ne-relie-pas) :
+ses arêtes `calls` entrantes disent qui exerce réellement une méthode, y compris depuis un test qui ne
+cite pas son nom. Il ne dispense pas d'ouvrir le fichier - sa sortie est elle aussi une hypothèse - mais
+deux hypothèses obtenues **par des chemins différents** valent mieux que la même deux fois.
+
 **Un garde-fou de non-régression se vérifie en le voyant rouge.** Un test écrit pour empêcher un défaut
 de revenir ne prouve rien tant qu'on ne l'a pas vu **échouer** avec le défaut en place. Deux gestes,
 complémentaires : **PIT ciblé** sur les classes du chantier (`-Pmutation`, exhaustif là où il
 s'applique) et la **mutation à la main** pour ce que PIT ne mute pas - attribut d'annotation, câblage,
 FXML, sonde réseau. Le mode d'emploi et les quatre contre-exemples qui ont motivé la règle sont dans
 [Tests et qualité](tests-et-qualite.md#un-garde-fou-de-non-regression-se-verifie-en-le-voyant-rouge).
+
+**Un dispositif n'est pas toujours un test.** La règle vaut à l'identique pour un **job d'intégration
+continue**, un **script** de vérification, un **cliquet** : tout ce dont le vert prétend dire quelque
+chose. C'est même là que le faux vert est le plus difficile à voir, parce que personne ne relit un job
+qui passe.
+
+Mesuré sur #3450 : le job `fuseau-alternatif`, écrit pour rejouer toute la suite sous `America/Cayenne`,
+passait le fuseau par `-Duser.timezone` sur la **ligne Maven**. Or surefire fabrique ses propres JVM
+(`forkCount=1C`), qui n'en héritent pas. Le job aurait été **vert en rejouant la suite dans le fuseau du
+runner**, c'est-à-dire en ne vérifiant rien de ce qu'il annonçait. Il a fallu passer par
+l'**environnement**, et lui adjoindre un test qui **vérifie depuis l'intérieur de la suite** que le
+fuseau annoncé est bien celui qui tourne.
+
+Le contrôle tient en une phrase, et il se pose avant de croire un vert : **ce vert existerait-il si
+c'était cassé ?** ([ADR 2748](decisions/2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md))
+
+!!! note "PIT a normalement déjà tourné"
+    Depuis #3505, la mutation se lance **quand un comportement est complet**, pendant l'issue et non à
+    la clôture (voir « Pendant l'issue » ci-dessus). Cette passe **vérifie que ça a été fait** et
+    rattrape ce qui a été livré sans mesure. Trouver ici un trou que la mutation aurait signalé cinq
+    pull requests plus tôt est le signal que la règle du cycle a été sautée.
 
 !!! warning "Deux dispositifs qu'on saute quand on est pressé"
     Ce sont **toujours les deux mêmes** qui manquent à l'appel, parce qu'ils demandent une commande de
@@ -328,6 +637,14 @@ pas sur le seul périmètre du chantier :
 Cet audit doit être **exhaustif et scrupuleux** : l'enjeu est de **comprendre ce qui sous-tend la
 demande initiale** (le concept réel, au-delà de la formulation du ticket) et d'en repérer **tous les
 axes** possibles. On ne s'arrête pas au premier doublon évident.
+
+**C'est ici que le [graphe du dépôt](#interroger-le-graphe-du-depot-pour-ce-que-grep-ne-relie-pas) est
+le plus utile**, parce que les deux questions de l'audit sont des questions de **concept** et qu'aucune
+ne se pose en termes d'identifiants. « Qu'est-ce qui ressemble à ce qu'on vient d'écrire ? » est
+exactement ce que rendent les arêtes `conceptually_related_to` ; « qu'est-ce qui en bénéficierait ? »
+se lit dans les appelants de l'ancienne façon de faire. La règle a été apprise ici même : c'est à cette
+passe que trois `grep` bien choisis annonçaient deux écritures d'une même règle de dérivation là où le
+graphe en montrait trois. La troisième n'avait aucun appelant, ce qu'aucun `grep` n'aurait dit.
 
 **Second temps : le refactoring de conceptualisation.** Retravailler l'application pour que sa
 structure **exprime mieux ce concept** et la rende à la fois plus **lisible** et plus
@@ -412,18 +729,49 @@ Un chantier en révèle d'autres (dette assumée, palier différé, idée née e
 **créer les issues** correspondantes (reliées à un nouvel EPIC si elles forment un ensemble), pour ne
 pas perdre le contexte encore frais.
 
-### 10. Phase de bilan
+### 10. Écriture des ADR du chantier
+
+Toute **décision structurante** prise pendant le chantier - un choix d'architecture ou de domaine qu'un
+développeur futur pourrait raisonnablement remettre en cause faute d'en connaître les raisons - donne
+une **[ADR](decisions/index.md)** : une par décision, immuable, expliquant le pourquoi. Le numéro de
+l'ADR **est** celui de l'issue.
+
+Chaque ADR **déclare comment elle est vérifiée** ([ADR 2465](decisions/2465-une-adr-declare-comment-elle-est-verifiee.md)) : une puce `- **Vérification** : certaine | probable | humaine, <référence>` dans son en-tête, au même titre que `Statut` et `Chantier`. Un garde-fou fait rougir la CI si elle manque, ou si le test/script nommé n'existe pas. `certaine` nomme un test ou script déterministe ; `probable` nomme un script de suspects et son **cliquet** ; `humaine` donne le motif, et peut adjoindre une **loupe**. Voir la section « Comment une ADR est vérifiée » de l'[index des décisions](decisions/index.md).
+
+**Pourquoi ici et pas en passe 3.** Parce que les passes 4 à 9 **produisent** des décisions, et qu'on ne
+peut pas écrire en début de clôture ce qu'on n'a pas encore décidé. Le constat est mesuré, pas
+supposé : les cinq ADR du chantier #3151 - 3406, 3439, 3450, 3451, 3483 - portent **toutes** la mention
+« suite de », c'est-à-dire qu'aucune n'est née à l'endroit où le cycle les demandait. L'ADR 3439 est
+sortie de la **revue visuelle** (passe 8), l'ADR 3483 d'une trouvaille faite en retirant ce que 3439
+masquait. Un cycle qui exige une chose impossible obtient qu'on l'ignore.
+
+Cette passe **balaie donc les passes 0 à 9** et pose, pour chacune, la même question : *une décision
+a-t-elle été prise ici, qu'un lecteur futur pourrait défaire faute d'en connaître la raison ?* Trois
+sources reviennent :
+
+- la **passe 0**, quand le chantier a délibérément **dépassé** une ADR existante : le dépassement
+  s'écrit, sinon deux règles opposées cohabitent dans le dépôt ;
+- la **passe 7**, où un refactoring de conceptualisation tranche presque toujours quelque chose ;
+- la **passe 8**, où l'on découvre ce qu'aucun test ne dit.
+
+⚠️ Une décision **de ne pas faire** est une décision. « On garde la dépendance aux tuiles
+OpenStreetMap », « on n'ajoute aucune protection de branche », « la Polynésie reste hors de la table de
+dérivation » : ce sont des ADR, et ce sont celles qu'on oublie, parce qu'elles ne laissent pas de code
+derrière elles.
+
+### 11. Phase de bilan
 
 Une **synthèse** courte : ce qui a été livré, la **dette restante**, les **décisions** prises et leur
 pourquoi. Elle se dépose dans le corps de l'EPIC (au moment de le clore) et, si elle change une
 règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`. Le bilan **renvoie** aux
-[ADR](decisions/index.md) écrites en passe 3 plutôt que de redérouler le raisonnement des décisions.
+[ADR](decisions/index.md) écrites en passe 10 plutôt que de redérouler le raisonnement des décisions -
+c'est la raison pour laquelle il vient **après** elles et non l'inverse.
 
 **Et il se montre.** Un chantier d'IHM se juge sur ce qu'il change à l'écran, or le bilan est un texte :
 il décrit des captures que son lecteur n'a pas sous les yeux. La passe 8 les a pourtant toutes ouvertes,
 recadrées et regardées : ce travail reste dans la tête de qui l'a fait.
 
-La passe 10 produit donc un **artefact visuel** : une page qui met les états **avant / après** côte à
+La passe 11 produit donc un **artefact visuel** : une page qui met les états **avant / après** côte à
 côte, une ligne par conséquence visible du chantier, avec la phrase qui dit ce qu'on doit y voir. Elle
 sert deux fois :
 
@@ -444,7 +792,7 @@ documenter une décision déjà prise.
 
 ## Les suites d'une clôture se closent aussi
 
-La passe 9 crée des issues ; la passe 10 les nomme « dette restante » et clôt l'EPIC. Ces issues, une
+La passe 9 crée des issues ; la passe 11 les nomme « dette restante » et clôt l'EPIC. Ces issues, une
 fois livrées, forment un **nouveau delta** - et rien ne les rattrape si l'on considère que le chantier
 est fini.
 
@@ -452,7 +800,7 @@ Le dépôt l'a vécu **trois fois** : les suites de l'EPIC #1662 ont formé l'EP
 ont formé le delta clos par #1920 ; les suites de #1838 ont eu leur propre clôture (#1921). Le patron
 est donc régulier, pas accidentel.
 
-**Les suites d'un chantier se closent par les mêmes 10 passes**, appliquées à leur seul delta
+**Les suites d'un chantier se closent par les mêmes 12 passes**, appliquées à leur seul delta
 (`git log <sha-de-la-clôture-précédente>..origin/main`, filtré sur les commits du chantier). C'est peu
 coûteux - le périmètre est étroit - et c'est là qu'on trouve ce que le travail de suite a laissé
 derrière lui : une capacité livrée d'un seul côté, un état visuel sans capture, une règle construite par
@@ -476,16 +824,40 @@ trompé : une analyse fausse laissée en place oriente le chantier suivant.
 - [ ] 3. Issues créées et reliées à l'EPIC
 
 ## Clôture de chantier
+- [ ] 0. Relecture des ADR existantes (contre `origin/main`) : une décision a-t-elle été **contredite**, et si oui délibérément ?
 - [ ] 1. Audit d'intégration (rebase sur `main`, points d'accroche, régressions)
 - [ ] 2. Cohérence CLI ↔ UI (capacités métier exposées des deux côtés, ou « sans objet »)
-- [ ] 3. Doc développeur (dev-docs) à jour + ADR pour toute décision structurante (dev-docs/decisions/)
+- [ ] 3. Doc développeur (dev-docs) : ce qui manque **et ce qui est devenu FAUX** (partir des fichiers touchés, chercher qui les cite)
 - [ ] 4. Doc utilisateur (docs/) + captures
 - [ ] 5. Brief projet (`brief/`, dans la PR du chantier) répercuté si un élément de conception change
 - [ ] 6. Tests : inventaire des usages **depuis le diff** (chemins non nominaux, parité CLI ↔ IHM), E2E qui **traversent les coutures**, **PIT ciblé** (survivants lus un par un) et **E2E `bats`** si la CLI bouge, non-automatisable reporté en **recette**
 - [ ] 7. Harmonisation : **audit global** (ce qui ressemble / bénéficierait, exhaustif) puis **refactoring de conceptualisation** (lisibilité ; duplication et abstraction = outils) ; **choix, doutes, conséquences discutés avec l'utilisateur**
 - [ ] 8. Revue visuelle : **toute conséquence visible** couverte par une capture (captures **ajoutées** si besoin), régénérées et ouvertes une par une
 - [ ] 9. Nouveaux chantiers identifiés + issues créées
-- [ ] 10. Bilan (livré / dette / décisions) **+ artefact visuel avant/après soumis avant de clore**
+- [ ] 10. ADR du chantier écrites (balayer les passes 0 à 9 ; une décision **de ne pas faire** en est une)
+- [ ] 11. Bilan (livré / dette / décisions) **+ artefact visuel avant/après soumis avant de clore**
+```
+
+## Modèle de cycle d'une issue (rouge, vert, refactor)
+
+Le bloc **↻** se répète à **chaque petit pas**, jusqu'à ce que le comportement soit complet : une issue
+en compte des dizaines. Ce qui l'encadre ne se fait qu'une fois.
+
+```markdown
+Avant la boucle
+- [ ] Le comportement est découpé en **petits pas** : le prochain fait observable, pas la fonctionnalité
+- [ ] Jumeaux cherchés (graphe du dépôt, pas seulement `grep`) : le défaut a-t-il d'autres sites ?
+
+↻ À chaque pas, jusqu'à ce que le comportement soit complet
+- [ ] ROUGE : le test échoue, et **pour la raison attendue** (sur un défaut : il le **reproduit**)
+- [ ] VERT : le **minimum** qui fait passer
+- [ ] REFACTOR **tenté** : ce que ce pas vient de toucher, à comportement constant
+- [ ] Le rouge a duré ? Le pas était trop gros : revenir au dernier vert et le couper en deux
+
+Quand la boucle s'arrête
+- [ ] **PIT ciblé** sur les classes pures livrées, survivants lus un par un
+- [ ] Corps de l'issue **édité** si une découverte a changé sa lecture (pas seulement commenté)
+- [ ] Lecture à froid : corps de la PR et de l'issue compréhensibles dans six mois, sans le fil
 ```
 
 ## Modèle de commencement d'issue (à **commenter sur l'issue**, avant la première ligne de code)

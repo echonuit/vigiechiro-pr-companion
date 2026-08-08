@@ -151,7 +151,8 @@ gh pr create --fill
 ## 5. Cycle de vie d'un chantier
 
 Un **chantier** est une évolution d'ampleur **EPIC**, répartie sur **plusieurs PR** (le §4 décrit
-_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 10 passes.
+_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 12 passes,
+numérotées **0 à 11** (les passes 1 à 9 gardent leur numéro : 35 ADR **immuables** les citent).
 
 **À l'ouverture**, dans cet ordre : **trier et regrouper les issues existantes** (balayage **par
 concept** et non par mot-clé, recherche des EPIC vivants et des issues « différées de #N », décision des
@@ -162,6 +163,13 @@ les patterns en place plutôt que réinventer) ; puis rédiger un plan ; puis d�
 Le triage vient **en premier** parce qu'une issue est rattachée au chantier qui a remarqué son
 **symptôme**, pas à celui qui traite sa **cause** : deux issues sur le même sujet, écrites depuis deux
 angles, ne se ressemblent pas, et le recoupement se découvre alors au **conflit de fusion**.
+
+Le balayage **par concept** ne se fait pas au `grep`, qui ne sait chercher que des chaînes. Le dépôt se
+donne un **graphe de connaissances** (`graphify-out/`, hors suivi Git : code, workflows, `bats`, docs et
+brief mêlés) qu'on interroge par `graphify query "<question>" --budget 2500`. Il répond à « qui d'autre
+fait X ? » quand X est une idée, et donne les appelants réels au niveau **méthode**. ⚠️ Il ne modélise
+**que notre code** (rien du JDK ni des bibliothèques) et sa traversée est **bruitée** : sa sortie est une
+**hypothèse à confirmer**, jamais un inventaire.
 
 **Au commencement de chaque issue**, avant la première ligne de code : dire **ce qu'il y a à faire**,
 **pourquoi maintenant**, et **dans quelle continuité** ça s'inscrit. Le troisième est celui qu'on saute,
@@ -178,14 +186,48 @@ oubliée est pire que rien : elle fait passer une issue libre pour prise. Elle r
 est-elle prise ? », **pas** à « est-ce la même que celle-là sous d'autres mots ? » : cette seconde
 question reste le travail du triage.
 
+**Pendant l'issue : rouge, vert, refactor - une BOUCLE, pas une étape.** Le tour se répète à chaque
+**petit pas**, et une issue en compte **autant que de pas** : quelques minutes chacun, souvent plusieurs
+dizaines avant que le comportement soit complet. Un petit pas est le plus petit **fait observable**
+qu'on puisse rendre rouge puis vert (« le refus quand la date manque »), pas la fonctionnalité.
+
+Le test s'écrit **avant** le code, et sur un défaut le premier test **reproduit** le défaut. C'est la
+règle « un garde-fou se vérifie en le voyant rouge » déplacée là où elle est gratuite : après coup, il
+faut réintroduire le défaut à la main pour obtenir le même rouge. Un test qui échoue **pour une autre
+raison que prévu** est une **trouvaille** : lire le message avant de corriger. ⚠️ **Si le rouge dure**
+plus de quelques minutes, le pas était trop gros : revenir au dernier vert et le couper en deux.
+
+**Le REFACTOR est la troisième phase de CHAQUE tour**, pas une étape de fin d'issue ni la seule passe 7 :
+le moment le moins cher pour retravailler un code est celui où l'on s'en souvient, et ce moment dure un
+tour. Ce sont **deux échelles** et elles ne se croisent pas : le tour retravaille **le pas qu'on vient de
+faire**, sous le test qu'on vient de rendre vert et seul ; la passe 7 retravaille **l'application**, et se
+discute. Ce qui déborde du pas courant se note et revient en passe 7.
+
+**Quand la boucle s'arrête**, le comportement étant complet : lancer **PIT** sur les classes pures que
+l'issue a livrées et lire les **survivants** un par un. Attendre la passe 6 fait découvrir le trou
+plusieurs PR après le code.
+
+**Le corps de l'issue porte la vérité, les commentaires portent le journal.** Une prémisse démentie, une
+mesure qui corrige la précédente, un remède qui change : tout commentaire qui change la lecture de
+l'issue est **suivi d'une édition du corps**. Et avant de fusionner : le corps de la PR **et** celui de
+l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
+
 **À la clôture** (dans l'ordre) :
 
+0. **Relecture des ADR existantes**, contre `origin/main` : le chantier a-t-il **contredit** une décision
+   en place, et si oui délibérément ? Un chantier a le droit de dépasser une ADR, pas de le faire en
+   silence : deux règles opposées resteraient dans le dépôt, et le prochain lecteur appliquerait la
+   première trouvée.
 1. **Audit d'intégration** : vérifier que les évolutions de `main` survenues pendant le chantier n'ont
    rien laissé à rajouter (rebase, nouveaux points d'accroche à câbler, régressions).
 2. **Cohérence CLI ↔ UI** : quand le chantier ajoute/change une **capacité métier**, la **CLI**
    (`fr.univ_amu.iut.cli`) doit exposer l'équivalent (même comportement) ; aligner si petit, sinon
    ouvrir une issue. « Sans objet » si le chantier est purement présentationnel.
-3. **Doc développeur** (site `dev-docs/`) à jour **+ une ADR** (`dev-docs/decisions/`) pour toute **décision structurante** prise pendant le chantier. Son numéro **ne se choisit pas** : c'est celui de l'issue qui porte la décision (le lot, à défaut l'EPIC). Le compteur séquentiel est clos à 0048, voir le [journal](dev-docs/decisions/index.md). Chaque ADR **déclare comment elle est vérifiée** (puce `**Vérification** : certaine | probable | humaine`, [ADR 2465](dev-docs/decisions/2465-une-adr-declare-comment-elle-est-verifiee.md)) : un garde-fou fait rougir la CI si elle manque.
+3. **Doc développeur** (site `dev-docs/`) à jour. ⚠️ Chercher aussi **ce qui est devenu FAUX**, pas
+   seulement ce qu'il y a à ajouter : une page qui décrit fidèlement un mécanisme **remplacé** ne rougit
+   nulle part et se lit comme vraie. Partir des **fichiers touchés** et chercher qui les **cite** dans
+   `docs/`, `dev-docs/` et `brief/`, plutôt que de partir de sa mémoire. Les **ADR s'écrivent en passe
+   10**, pas ici.
 4. **Doc utilisateur** (site `docs/`) + **captures** autant que nécessaire.
 5. **Brief projet** (`brief/`, dans ce dépôt) : répercuter dans le **brief projet** (document de
    conception vivant : besoin, parcours utilisateurs, maquettes, MCD - **pas** un sujet pédagogique) les
@@ -203,7 +245,11 @@ question reste le travail du triage.
    « pas vérifié ». ⚠️ Un **garde-fou de non-régression se vérifie en le voyant rouge** : **PIT ciblé**
    (`-Pmutation`, exhaustif sur une classe et rapide) pour le code Java, **mutation à la main** pour ce
    que PIT ne mute pas (attribut d'annotation, câblage, FXML, sonde réseau). Un test vert n'est qu'une
-   **hypothèse** sur ce qu'il couvre.
+   **hypothèse** sur ce qu'il couvre. ⚠️ Et **un dispositif n'est pas toujours un test** : la même règle
+   vaut pour un **job de CI** ou un **script**, là où le faux vert se voit le moins. Vécu : un job écrit
+   pour rejouer la suite sous un autre fuseau passait celui-ci par `-D` sur la ligne Maven, que les forks
+   surefire n'héritent pas - il aurait été vert en ne vérifiant rien. **Ce vert existerait-il si c'était
+   cassé ?** PIT a normalement déjà tourné pendant l'issue ; cette passe **vérifie que ça a été fait**.
 7. **Harmonisation** : prendre du recul sur **l'application entière**, en deux temps. D'abord un
    **audit global**, exhaustif et scrupuleux (qu'est-ce qui **ressemble** au résultat du chantier,
    qu'est-ce qui en **bénéficierait**), pour comprendre ce qui **sous-tend** la demande initiale. Puis
@@ -219,14 +265,23 @@ question reste le travail du triage.
    précédente (CSS, socle) qui est la plus à même de casser un écran sans casser un test, d'où cette
    relecture **juste après** elle.
 9. **Nouveaux chantiers** identifiés + **issues** créées.
-10. **Bilan** : ce qui a été livré, dette restante, décisions (qui **renvoient aux ADR** de la passe 3).
-    **Et il se montre** : la passe 10 produit un **artefact visuel avant / après**, une ligne par
+10. **ADR du chantier écrites** (`dev-docs/decisions/`), pour toute **décision structurante**. Le numéro
+    **ne se choisit pas** : c'est celui de l'issue qui porte la décision (le lot, à défaut l'EPIC) ; le
+    compteur séquentiel est clos à 0048, voir le [journal](dev-docs/decisions/index.md). Chaque ADR
+    **déclare comment elle est vérifiée** (puce `**Vérification** : certaine | probable | humaine`,
+    [ADR 2465](dev-docs/decisions/2465-une-adr-declare-comment-elle-est-verifiee.md)) : un garde-fou fait
+    rougir la CI si elle manque. **Ici et non en passe 3**, parce que les passes 4 à 9 **produisent** des
+    décisions : sur le chantier #3151, les cinq ADR sont nées après la passe 3, aucune à l'endroit prévu.
+    ⚠️ Une décision **de ne pas faire** est une décision, et c'est celle qu'on oublie : elle ne laisse pas
+    de code derrière elle.
+11. **Bilan** : ce qui a été livré, dette restante, décisions (qui **renvoient aux ADR** de la passe 10).
+    **Et il se montre** : la passe 11 produit un **artefact visuel avant / après**, une ligne par
     conséquence visible, soumis **avant** de clore l'EPIC. Un chantier d'IHM se juge sur ce qu'il change
     à l'écran, et un bilan écrit demande qu'on le croie là où une capture le montre. Ce qui n'a **pas**
     été corrigé y figure aussi : une troncature montrée et assumée vaut mieux qu'une omission.
 
 **Les suites se closent aussi.** Les issues créées en passe 9, une fois livrées, forment un **nouveau
-delta** : il se clôt par les **mêmes 10 passes**, appliquées à lui seul. Et un bilan est une
+delta** : il se clôt par les **mêmes 12 passes**, appliquées à lui seul. Et un bilan est une
 **hypothèse** : quand une suite est traitée, relire ce que le bilan précédent en disait et le corriger
 s'il s'est trompé.
 
