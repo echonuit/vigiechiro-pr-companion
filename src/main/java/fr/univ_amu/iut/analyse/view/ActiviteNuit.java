@@ -28,7 +28,7 @@ public final class ActiviteNuit implements ActiviteAccueil {
 
     @Override
     public int ordre() {
-        return 20;
+        return 30;
     }
 
     @Override

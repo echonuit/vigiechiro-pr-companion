@@ -155,8 +155,8 @@ structure tout le reste, et les activités se rangent dessous.
 | Activité | À quoi elle sert |
 |---|---|
 | **Espèces & observations** | L'inventaire de vos espèces détectées : où, quand, combien. |
-| **Activité de la nuit** | La forme d'une nuit : les contacts par tranche horaire et par espèce. |
 | **Sons & validation** | Écouter, valider et exporter votre corpus de sons de référence. |
+| **Activité de la nuit** | La forme d'une nuit : les contacts par tranche horaire et par espèce. |
 
 **L'import n'est pas sur l'accueil**, et c'est voulu : on importe une nuit *dans* un carré, donc le
 geste part du site. Depuis ces entrées, vous atteignez les autres écrans : un **site** donne accès à
