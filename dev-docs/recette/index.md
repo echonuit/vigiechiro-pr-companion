@@ -68,7 +68,10 @@ issues produites → renvois et décisions → notes de méthode.
 - [S7 · Réglages](sessions/s7-reglages.md) : les onglets contribués par les features, les interrupteurs de fonctionnalités, le chrome et les états dégradés *(à jouer)*.
 - [Passe ciblée · constats en attente](sessions/passe-ciblee-constats-en-attente.md) : les huit
   constats qu'une image fixe ne peut pas juger, tranchés avant d'ouvrir les chantiers voisins
-  *(à jouer)*.
+  *(jouée le 2026-08-07)*.
+- [Passe de coutures · stabilisation](sessions/passe-verification-stabilisation.md) : les correctifs
+  de la stabilisation tiennent-ils **ensemble** ? Un parcours qui traverse quatre écrans, là où chaque
+  session n'en déroule qu'un. Condition d'entrée de la campagne 2 *(à jouer)*.
 
 ## La fiche d'évaluation : six axes
 
