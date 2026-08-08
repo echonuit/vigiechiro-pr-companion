@@ -16,6 +16,7 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -444,5 +445,11 @@ public class PassageViewModel {
     /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
     public void effacerRetour() {
         retour.set(RetourOperation.AUCUN);
+    }
+    /// Dossier de session du passage affiché, s'il en a un (#3482). La confirmation de suppression s'en
+    /// sert pour **situer** les fichiers qu'elle ne détruit pas : la cascade s'arrête à la base, et
+    /// l'utilisateur doit savoir où retrouver son audio.
+    public Optional<Path> cheminSession(Long idPassage) {
+        return service.cheminSession(idPassage);
     }
 }
