@@ -79,6 +79,8 @@ de la barre du haut permet de la **protéger** :
     - « **Cette sauvegarde a été écrite par une version plus récente de l'application** » : mettez
       l'application à jour, puis recommencez. Sa base contient des informations que cette version ne
       sait pas lire.
+
+    ![Le refus d'une sauvegarde écrite par une version plus récente : rien n'a été touché.](../assets/captures/apercu-restauration-version-trop-recente.png)
     - « **La mise à jour de son schéma a échoué** » : la sauvegarde a bien été remise en place, mais
       l'application n'a pas su la mettre à jour, et **votre base d'avant a été rétablie**. Essayez une
       autre sauvegarde.
@@ -94,6 +96,8 @@ de la barre du haut permet de la **protéger** :
       pas dans l'archive. La nuit revient, son audio non - c'est le cas à regarder en premier.
     - **la sauvegarde est trop ancienne** pour porter la liste de ses dossiers. L'application ne peut
       alors rien replacer, et vous le dit plutôt que de deviner.
+
+    ![Une restauration qui aboutit et demande un regard : les nuits déplacées sont nommées une par une.](../assets/captures/apercu-restauration-nuits-deplacees.png)
 
     Dans les trois cas la base est restaurée. Ce qui est signalé porte sur les **sons**, pas sur vos
     métadonnées.
@@ -133,6 +137,8 @@ supprimé pendant que l'application tourne.
     Le message nomme le processus qui occupe la place. Fermez l'autre fenêtre, puis relancez. Si
     l'application a été fermée brutalement, le verrou est libéré tout seul : il n'y a rien à
     supprimer à la main.
+
+    ![Le refus au démarrage : le dossier de travail est déjà ouvert, et le message nomme le processus qui l'occupe.](../assets/captures/apercu-demarrage-dossier-occupe.png)
 
 !!! warning "La sauvegarde de la base seule ne protège pas vos sons"
     La base contient vos **métadonnées** (sites, nuits, observations, validations) : pas l'**audio**, qui
