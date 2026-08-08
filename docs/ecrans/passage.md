@@ -98,6 +98,19 @@ Le **renommage** (année et n° de passage) reste verrouillé lui aussi : ces va
 serveur donne à la nuit. Et **Sons & validation** reste ouvert : les observations sont là, vous pouvez
 les écouter et les valider dès maintenant, sans attendre que l'audio revienne.
 
+## Supprimer un passage n'efface pas vos enregistrements
+
+**Supprimer** retire la nuit de votre base : le passage, ses séquences, ses relevés, et - c'est le point
+grave que la fenêtre de confirmation vous rappelle - vos **validations**, que rien ne régénère.
+
+Vos **fichiers audio, eux, restent sur le disque**. C'est délibéré : ils sont ce que l'application ne
+sait pas reconstituer. La confirmation vous indique **où** ils se trouvent, pour que vous puissiez les
+retrouver, les archiver, ou [réimporter la nuit](#reactiver-un-passage-reimporter-les-fichiers-dorigine) plus tard à partir d'eux.
+
+Quand vous n'en voulez vraiment plus, l'[audit de cohérence](audit.md#faire-le-menage-retirer-les-dossiers-sans-nuit)
+les liste sous **« Dossier sans session »** et propose de les retirer, en chiffrant d'abord la place que
+vous regagnerez.
+
 ## Le volume des bruts
 
 Le **Résumé de la nuit** affiche le **volume des bruts** : la copie des enregistrements d'origine, si

@@ -106,6 +106,31 @@ Sélectionnez un constat qui cite un passage, puis **« Auditer ce passage »**.
 tant qu'aucune nuit n'est sélectionnée, et son infobulle vous dit **pourquoi**. La même action figure au
 **clic droit** de la ligne, si vous préférez rester sur le tableau.
 
+## Faire le ménage : retirer les dossiers sans nuit
+
+Supprimer un passage retire sa ligne en base, mais **laisse ses fichiers sur le disque**. C'est
+délibéré : vos enregistrements sont ce que l'application ne sait **pas** reconstituer. Une base se
+rejoue par un réimport tant que les WAV sont là ; l'inverse n'est jamais vrai.
+
+Ces dossiers restent donc là, sans nuit pour les réclamer, et pèsent **plusieurs gigaoctets chacun**.
+L'audit les repère - ce sont les constats **« Dossier sans session »** - et c'est ici que vous les
+retirez, quand vous êtes sûr de ne plus en vouloir.
+
+Le bouton **« Retirer N dossier(s) orphelin(s) »** porte le nombre : vous savez ce qu'il emporte avant
+de cliquer. Il reste désactivé quand il n'y a rien à retirer.
+
+Avant d'agir, une fenêtre **chiffre la perte** : combien de dossiers, lesquels, et la place que vous
+allez regagner. C'est ce dernier chiffre qui décide - c'est pour lui qu'on fait le ménage.
+
+!!! danger "Ce retrait est définitif"
+    Les enregistrements supprimés ne sont **pas** récupérables : ni corbeille, ni annulation. Si vous
+    reconnaissez dans la liste une nuit que vous vouliez garder, renoncez et
+    [reconstruisez-la](passage.md) d'abord.
+
+Après coup, l'application dit ce qui s'est **réellement** passé. Si un dossier a résisté - il est ouvert
+dans une autre fenêtre, cas courant sous Windows - il est **nommé**, et le message vous avertit au lieu
+d'annoncer un ménage fait. Fermez la fenêtre en question et relancez.
+
 ## Vérifier en ligne
 
 **« Vérifier en ligne »** ajoute les écarts qui demandent le réseau : ce que Vigie-Chiro a **réellement
