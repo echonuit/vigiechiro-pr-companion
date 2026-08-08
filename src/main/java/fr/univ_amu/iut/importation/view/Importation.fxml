@@ -93,7 +93,12 @@
       </VBox>
       <VBox spacing="4.0">
         <Label text="N° de passage" styleClass="field-label"/>
-        <TextField fx:id="champPassage" prefWidth="100.0"/>
+        <!-- Enveloppe (#1489) : le champ est grisé tant qu'aucun point n'est choisi, parce que le n° est
+             PROPOSÉ d'après le point ; un champ désactivé n'ayant pas d'infobulle, le conteneur porte
+             l'explication (socle #789). -->
+        <StackPane fx:id="enveloppePassage">
+          <TextField fx:id="champPassage" prefWidth="100.0"/>
+        </StackPane>
       </VBox>
     </HBox>
     <!-- Campagne (#2631) : proposée d'après le dernier passage du point choisi, jamais imposée. Ligne
