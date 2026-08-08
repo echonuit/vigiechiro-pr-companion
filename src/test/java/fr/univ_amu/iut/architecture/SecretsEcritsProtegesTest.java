@@ -59,4 +59,43 @@ class SecretsEcritsProtegesTest {
                         + " déjà restreint et remplace la cible de façon atomique.")
                 .isEmpty();
     }
+
+    /// Les classes dont le fichier ne doit **jamais** se lire à moitié écrit.
+    ///
+    /// La raison diffère de celle des secrets - il ne s'agit pas d'une fenêtre de permissions - mais la
+    /// forme interdite est la même : une écriture directe ouvre la cible en la **tronquant**, et tout ce
+    /// qui arrive ensuite (coupure, disque plein, machine éteinte) laisse un fichier incomplet à sa
+    /// place définitive.
+    ///
+    /// ⚠️ Ce qui rend le cas de l'amorçage coûteux, c'est que **sa lecture pardonne**, et qu'elle a
+    /// raison de pardonner : un fichier illisible rend une configuration vide plutôt que d'empêcher
+    /// l'application de s'ouvrir. Les deux décisions sont bonnes séparément et forment ensemble un
+    /// défaut muet - l'application redémarre sur les emplacements par défaut, et l'utilisateur retrouve
+    /// un produit qui marche dans lequel toutes ses nuits ont disparu (#3507).
+    private static final List<String> ECRITS_D_UN_SEUL_COUP =
+            List.of("commun/model/ConfigurationAmorcage.java", "commun/persistence/ManifesteSauvegardeJson.java");
+
+    @Test
+    @DisplayName("#3507 : aucun fichier lu au démarrage ne s'écrit en direct")
+    void aucun_fichier_d_amorcage_ecrit_en_direct() throws IOException {
+        List<String> fautifs = new ArrayList<>();
+        for (String source : ECRITS_D_UN_SEUL_COUP) {
+            Path chemin = RACINE.resolve(source);
+            assertThat(chemin)
+                    .as("la liste des fichiers écrits d'un seul coup cite un fichier absent")
+                    .exists();
+            if (ECRITURE_DIRECTE
+                    .matcher(Files.readString(chemin, StandardCharsets.UTF_8))
+                    .find()) {
+                fautifs.add(source);
+            }
+        }
+
+        assertThat(fautifs)
+                .as("ces classes écrivent en direct un fichier qu'on relit au démarrage : une coupure en"
+                        + " laisse un tronqué à sa place définitive, et la lecture indulgente le remplace"
+                        + " silencieusement par des valeurs par défaut. Passer par EcritureAtomique.ecrire"
+                        + " (commun.model), qui écrit à côté puis remplace la cible d'un seul coup.")
+                .isEmpty();
+    }
 }

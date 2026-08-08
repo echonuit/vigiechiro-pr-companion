@@ -37,6 +37,25 @@ class ConfigurationAmorcageTest {
     }
 
     @Test
+    @DisplayName("Un dossier accentué survit à l'aller-retour, et le fichier reste en ASCII")
+    void un_chemin_accentue_se_relit_a_l_identique() throws IOException {
+        // L'écriture passe par EcritureAtomique, qui écrit en UTF-8 ; la lecture par
+        // `Properties.load(InputStream)`, qui lit en ISO-8859-1. Les deux ne s'accordent que parce que
+        // `store(OutputStream)` échappe le non-ASCII : le fichier produit est purement ASCII, donc
+        // identique dans les deux encodages. Remplacer ce détour par un `StringWriter` paraîtrait plus
+        // simple et casserait exactement ce cas (#3507).
+        ConfigurationAmorcage ecrite =
+                new ConfigurationAmorcage(Optional.of(Path.of("/donnees/Nuits été/Vallon-Béni")), Optional.empty());
+
+        ecrite.enregistrerDans(dossier);
+
+        assertThat(ConfigurationAmorcage.lueDepuis(dossier)).isEqualTo(ecrite);
+        assertThat(Files.readString(dossier.resolve("amorcage.properties")).chars())
+                .as("un fichier non ASCII se relirait faux, l'écriture et la lecture n'ayant pas le" + " même encodage")
+                .allMatch(caractere -> caractere < 128);
+    }
+
+    @Test
     @DisplayName("Un seul emplacement choisi : l'autre reste au défaut, il n'est pas écrit vide")
     void une_seule_cle_laisse_l_autre_absente() throws IOException {
         new ConfigurationAmorcage(Optional.empty(), Optional.of(Path.of("/coffre/vigiechiro.db")))

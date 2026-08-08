@@ -1,8 +1,9 @@
 package fr.univ_amu.iut.commun.model;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
@@ -116,14 +117,35 @@ public record ConfigurationAmorcage(Optional<Path> espaceDeTravail, Optional<Pat
     /// Écrit cette configuration dans `dossier`, en le créant au besoin. Une valeur absente est
     /// **omise** du fichier plutôt qu'écrite vide : relire ce qu'on vient d'écrire redonne la même
     /// configuration.
+    ///
+    /// L'écriture passe par [EcritureAtomique] : ce fichier est relu **avant que quoi que ce soit ne
+    /// démarre**, et [#lueDepuis] pardonne un fichier illisible en rendant une configuration vide.
+    /// Écrit en direct, il serait tronqué à l'ouverture du flux, et une coupure laisserait un fichier
+    /// incomplet que le prochain lancement remplacerait **en silence** par les emplacements par défaut
+    /// (#3507). L'indulgence de la lecture est une bonne décision ; c'est à l'écriture de garantir
+    /// qu'elle ne voie jamais un fichier à moitié écrit.
     public void enregistrerDans(Path dossier) throws IOException {
         Properties proprietes = new Properties();
         espaceDeTravail.ifPresent(chemin -> proprietes.setProperty(CLE_ESPACE_DE_TRAVAIL, chemin.toString()));
         cheminBase.ifPresent(chemin -> proprietes.setProperty(CLE_BASE, chemin.toString()));
         Files.createDirectories(dossier);
-        try (OutputStream flux = Files.newOutputStream(dossier.resolve(FICHIER))) {
-            proprietes.store(flux, "VigieChiro Companion - emplacements lus au demarrage");
-        }
+        EcritureAtomique.ecrire(dossier.resolve(FICHIER), rendu(proprietes));
+    }
+
+    /// Le texte exact que `Properties.store` aurait écrit dans un flux d'octets.
+    ///
+    /// ⚠️ Le détour par un flux d'octets n'est pas une lourdeur : `store(OutputStream)` écrit en
+    /// **ISO-8859-1** et échappe tout caractère non ASCII en séquence Unicode à quatre chiffres
+    /// hexadécimaux, quand `store(Writer)` écrirait le texte brut. (La séquence ne peut pas être citée
+    /// ici : Java l'interprète jusque dans les commentaires, et un exemple ferait échouer la
+    /// compilation.)
+    /// Or [#lueDepuis] relit avec `load(InputStream)`, donc en ISO-8859-1. Passer par un
+    /// `StringWriter` paraîtrait plus simple et casserait la relecture du **premier dossier de travail
+    /// accentué** venu. Le rendu obtenu ici est purement ASCII, donc identique en UTF-8.
+    private static String rendu(Properties proprietes) throws IOException {
+        ByteArrayOutputStream tampon = new ByteArrayOutputStream();
+        proprietes.store(tampon, "VigieChiro Companion - emplacements lus au demarrage");
+        return tampon.toString(StandardCharsets.ISO_8859_1);
     }
 
     private static Optional<Path> chemin(Properties proprietes, String cle) {
