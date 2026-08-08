@@ -33,10 +33,10 @@ pas attribuer.
 
 | Capacité livrée | Session propriétaire |
 | --- | --- |
-| Menu ☰, accueil, modale de connexion (#1375, #1373, #3433) | [S1](s1-premier-contact.md) |
-| Import, rattachement, suppression d'un passage (#3448, #3449, #3471, #3482) | [S2](s2-importer.md) |
-| Audit : constats chiffrés, retrait des orphelins (#3490, #3482) | [S6](s6-exploiter-piloter.md) |
-| Réglages et habillage des dialogues (#1499, #3437) | S7 *(à écrire)* |
+| Accueil, modale de connexion, menu ☰ (#1373, #3433) | [S1, étape 6](s1-premier-contact.md) |
+| Import, rattachement, suppression d'un passage (#3448, #3449, #3482) | [S2, étape 6](s2-importer.md) |
+| Audit : constats chiffrés, retrait des orphelins (#3490, #3482) | [S6, étape 8](s6-exploiter-piloter.md) |
+| Réglages, « conserver les originaux », habillage des dialogues (#3471, #1499, #3437) | [S7](s7-reglages.md) |
 
 Deux livraisons ne sont **pas** en recette, et c'est délibéré :
 
@@ -111,21 +111,18 @@ qu'on veut éprouver.
 
 ### Étape 5 · L'audit voit ce que la suppression a laissé
 
-- [ ] **PC2-09** · Ouvrir l'audit et relancer : un constat « **Dossier sans session** » désigne le
-      dossier de PC2-07.
-- [ ] **PC2-10** · Le bouton de retrait porte le **nombre** de dossiers concernés.
-- [ ] **PC2-11** · Cliquer, répondre **non** : le dossier est **toujours** sur le disque.
-- [ ] **PC2-12** · Recommencer, répondre **oui** : le dossier a disparu, et le bandeau annonce le nombre
-      retiré **et** la place regagnée.
-- [ ] **PC2-13** · Le bouton est redevenu **désactivé**.
+- [ ] **PC2-09** · Ouvrir l'audit et relancer : un constat « **Dossier sans session** » désigne
+      **exactement** le dossier de PC2-07, et le bouton de retrait s'active.
 
-> PC2-09 est la couture qui justifie tout le reste : la suppression laisse un dossier, l'audit le
-> ramasse. Aucune des deux sessions propriétaires ne peut la vérifier seule, puisqu'elle relie **deux
-> écrans** que deux sessions différentes possèdent.
+> PC2-09 est la couture, et cette passe s'arrête là. La suppression laisse un dossier sur un écran, et
+> un **autre** écran le ramasse : aucune des deux sessions propriétaires ne peut vérifier ce lien seule,
+> puisqu'il relie deux écrans que **deux sessions différentes** possèdent.
 >
-> ⚠️ **PC2-11 est le cas de sécurité.** Un ménage qui s'exécute quand on a répondu non détruit des
-> enregistrements irremplaçables. C'est la seule case de ce script dont l'échec justifierait d'arrêter
-> la campagne sur-le-champ.
+> Ce que le retrait fait ensuite - le libellé chiffré, la confirmation, le refus qui ne détruit rien, le
+> compte rendu - appartient à l'écran d'audit, donc à
+> [S6, étape 8](s6-exploiter-piloter.md). Le rejouer ici serait la duplication que la règle d'unicité
+> interdit. Ce qui se vérifie ici, c'est que l'audit **voit** ce que la suppression a laissé, et le
+> désigne sans se tromper de dossier.
 
 ## Ce qu'on fait des résultats
 
