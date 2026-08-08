@@ -8,8 +8,10 @@ import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.commun.viewmodel.GesteAttendu;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.LongSupplier;
@@ -105,14 +107,29 @@ final class ActionsFichePassage {
     /// (`ConfirmationNavigation` via [CompteRendu]), le port `Confirmateur` transportant la structure
     /// depuis #2060 - et le porteur injectable la déléguant tel quel depuis #2223.
     private CompteRendu demandeSuppression() {
-        int menacees = compteurValidations.menaceesPourPassage(idPassage.getAsLong());
-        List<Constat> constats = menacees == 0
-                ? List.of()
-                : List.of(Constat.de(
-                        menacees
-                                + " validation(s) Tadarida (correction, référence, commentaire) seront"
-                                + " définitivement perdues.",
-                        Severite.ERREUR));
+        long passage = idPassage.getAsLong();
+        int menacees = compteurValidations.menaceesPourPassage(passage);
+        List<Constat> constats = new ArrayList<>();
+        if (menacees > 0) {
+            constats.add(Constat.de(
+                    menacees
+                            + " validation(s) Tadarida (correction, référence, commentaire) seront"
+                            + " définitivement perdues.",
+                    Severite.ERREUR));
+        }
+        // #3482 : ce que la suppression NE fait pas est aussi important que ce qu'elle fait. « Toute sa
+        // nuit (séquences, relevés) » se lit comme « mes WAV partent » ; ils restent, et c'est
+        // délibéré (l'audio est irremplaçable, la base se rejoue par un réimport). La CLI le disait déjà
+        // - `supprimer-passage` imprime « Les fichiers restent sur le disque : … » - et le doc-comment de
+        // cette classe-ci affirmait que les deux surfaces ne racontaient pas deux histoires.
+        viewModel
+                .cheminSession(passage)
+                .ifPresent(chemin -> constats.add(new Constat(
+                        "Les fichiers audio restent sur le disque.",
+                        Severite.INFO,
+                        List.of(new Detail(
+                                chemin.toString(),
+                                "à retirer depuis l'audit de cohérence si vous n'en voulez plus")))));
         return new CompteRendu(
                 "", "", constats, "Supprimer définitivement ce passage et toute sa nuit (séquences, relevés) ?");
     }

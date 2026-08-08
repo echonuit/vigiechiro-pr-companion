@@ -3,8 +3,10 @@ package fr.univ_amu.iut.audit.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
+import fr.univ_amu.iut.audit.viewmodel.RetraitOrphelins;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
+import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
@@ -15,6 +17,8 @@ import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -67,6 +71,13 @@ public class AuditController {
     @FXML
     private Button boutonAuditerPassage;
 
+    @FXML
+    private Button boutonRetirerOrphelins;
+
+    /// Enveloppe du bouton de retrait : même raison que ci-dessus (un bouton désactivé n'a pas d'infobulle).
+    @FXML
+    private StackPane enveloppeRetirerOrphelins;
+
     /// Enveloppe du bouton : un `Button` désactivé n'affiche pas d'infobulle, l'explication se pose donc
     /// sur son conteneur (socle #789).
     @FXML
@@ -104,6 +115,16 @@ public class AuditController {
 
     private final MemoireFiltres memoireFiltres;
     private final DepotVues depotVues;
+
+    /// Confirmation du **seul geste destructif** de l'écran (#3482) : porteur injectable du socle
+    /// (#1013), stub déterministe en test. Un `Alert.showAndWait()` en dur figerait TestFX headless, et
+    /// le retrait resterait à jamais non testé.
+    private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
+
+    /// Porteur de confirmation exposé aux tests : `confirmateur().definir(stub)`.
+    ConfirmateurModifiable confirmateur() {
+        return confirmateur;
+    }
 
     private IndicateurOccupation occupation;
 
@@ -172,6 +193,26 @@ public class AuditController {
                 },
                 tableConstats.getSelectionModel().selectedItemProperty());
         boutonAuditerPassage.disableProperty().bind(sansPassageSelectionne);
+        // Retrait des dossiers orphelins (#3482) : le libellé PORTE le nombre, pour qu'on sache ce que
+        // le clic va emporter avant de cliquer - et non seulement dans la modale qui suit.
+        BooleanBinding sansOrphelin = Bindings.createBooleanBinding(
+                () -> viewModel.dossiersOrphelins().isEmpty(), viewModel.constats());
+        boutonRetirerOrphelins.disableProperty().bind(sansOrphelin.or(occupation.enCoursProperty()));
+        boutonRetirerOrphelins
+                .textProperty()
+                .bind(Bindings.createStringBinding(
+                        () -> {
+                            int nombre = viewModel.dossiersOrphelins().size();
+                            return nombre == 0
+                                    ? "Retirer les dossiers orphelins"
+                                    : "Retirer " + nombre + " dossier(s) orphelin(s)";
+                        },
+                        viewModel.constats()));
+        IndicateurBlocage.expliquer(
+                enveloppeRetirerOrphelins,
+                Bindings.when(sansOrphelin)
+                        .then("Aucun dossier de session sans passage : il n'y a rien à retirer.")
+                        .otherwise("Supprime du disque les dossiers de session qu'aucun passage ne réclame."));
         IndicateurBlocage.expliquer(
                 enveloppeAuditerPassage,
                 Bindings.when(sansPassageSelectionne)
@@ -215,6 +256,46 @@ public class AuditController {
                 "Vérification en ligne…",
                 viewModel::calculerAvecEnLigne,
                 viewModel::appliquer,
+                viewModel::signalerErreur);
+    }
+
+    /// Retire du disque les dossiers de session qu'aucun passage ne réclame (#3482, ADR-3482).
+    ///
+    /// ## Trois temps, et deux d'entre eux hors du fil JavaFX
+    ///
+    /// 1. **mesurer** ce que pèsent les dossiers (parcours disque) ;
+    /// 2. **demander** confirmation en chiffrant la perte - sur le fil JavaFX, c'est une modale ;
+    /// 3. **retirer**, puis relancer l'audit et poser le compte rendu de ce qui s'est **réellement**
+    ///    produit.
+    ///
+    /// La mesure précède la question parce qu'une confirmation qui ne chiffre rien ne permet pas de
+    /// décider : « retirer 3 dossiers » et « retirer 3 dossiers, 42 Go » n'appellent pas la même réponse.
+    @FXML
+    private void retirerLesDossiersOrphelins() {
+        List<Path> dossiers = viewModel.dossiersOrphelins();
+        if (dossiers.isEmpty()) {
+            return;
+        }
+        occupation.occuper(
+                "Mesure des dossiers…",
+                () -> viewModel.mesurer(dossiers),
+                octets -> demanderPuisRetirer(dossiers, octets),
+                viewModel::signalerErreur);
+    }
+
+    private void demanderPuisRetirer(List<Path> dossiers, long octets) {
+        if (!confirmateur.confirmer(RetraitOrphelins.confirmation(dossiers, octets))) {
+            return;
+        }
+        occupation.occuper(
+                "Retrait des dossiers…",
+                () -> viewModel.retirer(dossiers),
+                retour -> {
+                    // Relancer AVANT de poser le retour : l'audit rafraîchi vide la liste des orphelins
+                    // (donc le bouton et son libellé), et `appliquer` ne touche pas au bandeau.
+                    viewModel.rafraichir();
+                    viewModel.appliquerRetour(retour);
+                },
                 viewModel::signalerErreur);
     }
 

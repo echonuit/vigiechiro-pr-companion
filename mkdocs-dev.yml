@@ -182,6 +182,7 @@ nav:
     - 2736 · Le clair est assumé et annoncé: decisions/2736-le-clair-est-assume-et-annonce.md
     - 2744 · La publication part à heure fixe: decisions/2744-la-publication-part-a-heure-fixe.md
     - 2745 · Une vue riche se découpe en sous-vues: decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md
+    - 3482 · L'audit ramasse ce qu'une suppression laisse: decisions/3482-l-audit-ramasse-ce-qu-une-suppression-laisse.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

@@ -10,6 +10,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.audit.model.CategorieConstat;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
+import fr.univ_amu.iut.audit.model.NettoyageDossiersOrphelins;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
@@ -58,7 +59,7 @@ class AuditVueIntegrationTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             AuditViewModel viewModel() {
-                return new AuditViewModel(service);
+                return new AuditViewModel(service, new NettoyageDossiersOrphelins());
             }
 
             /// Navigation constat → passage (#1347) : cet écran-ci ne la teste pas (c'est l'objet de

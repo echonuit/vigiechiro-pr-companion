@@ -40,6 +40,7 @@ import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -255,6 +256,28 @@ class PassageActionsFicheViewTest {
                             .isEqualTo(Severite.ERREUR);
                 }));
         verify(service).supprimer(ID_PASSAGE);
+    }
+
+    @Test
+    @DisplayName("#3482 : la confirmation dit que les FICHIERS restent, et où")
+    void suppression_dit_que_les_fichiers_restent(FxRobot robot) {
+        when(service.cheminSession(anyLong())).thenReturn(Optional.of(Path.of("/ws/Car130711-2026-Pass2-Z1")));
+
+        cliquer(robot, "#boutonSupprimer");
+
+        // La CLI le disait déjà (« Les fichiers restent sur le disque : … ») ; la modale, non - alors que
+        // son doc-comment affirme que les deux surfaces ne racontent pas deux histoires. Un utilisateur
+        // qui lit « toute sa nuit (séquences, relevés) » en conclut que ses WAV partent. Ils restent.
+        assertThat(comptesRendus)
+                .singleElement()
+                .satisfies(rendu -> assertThat(rendu.constats())
+                        .as("un constat doit situer les fichiers conservés")
+                        .anySatisfy(constat -> {
+                            assertThat(constat.fait()).contains("restent");
+                            assertThat(constat.details())
+                                    .anySatisfy(
+                                            detail -> assertThat(detail.sujet()).contains("Car130711-2026-Pass2-Z1"));
+                        }));
     }
 
     @Test
