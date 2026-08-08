@@ -170,6 +170,7 @@ nav:
     - 3439 · Un masque se dérive de la scène: decisions/3439-un-masque-se-derive-de-la-scene-il-ne-se-recopie-pas.md
     - 3450 · Une propriété de fuseau se tient en rejouant: decisions/3450-une-propriete-de-fuseau-se-tient-en-rejouant-pas-en-relisant.md
     - 3451 · Un invariant tenu par la base se double d'un refus: decisions/3451-un-invariant-tenu-par-la-base-se-double-d-un-refus.md
+    - 3483 · Un aperçu pose ce qu'il ne peut pas reproduire: decisions/3483-un-apercu-pose-ce-qu-il-ne-peut-pas-reproduire.md
     - 2753 · Une règle absente et assumée: decisions/2753-une-regle-absente-et-assumee-vaut-mieux-qu-une-regle-contournee.md
     - 3269 · Un ensemble vide se constate avant de filtrer: decisions/3269-un-ensemble-vide-se-constate-avant-de-filtrer.md
     - 2727 · Une restauration vérifie en place: decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md
