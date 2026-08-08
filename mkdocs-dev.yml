@@ -174,6 +174,7 @@ nav:
     - 3483 · Un aperçu pose ce qu'il ne peut pas reproduire: decisions/3483-un-apercu-pose-ce-qu-il-ne-peut-pas-reproduire.md
     - 3505 · Le cycle décrit aussi le travail: decisions/3505-le-cycle-decrit-aussi-le-travail-pas-seulement-sa-cloture.md
     - 3510 · Une capacité sait comment on la vérifie: decisions/3510-une-capacite-sait-comment-on-la-verifie-a-la-main.md
+    - 3535 · Un inventaire ne se duplique pas, il se cite: decisions/3535-un-inventaire-ne-se-duplique-pas-il-se-cite.md
     - 2753 · Une règle absente et assumée: decisions/2753-une-regle-absente-et-assumee-vaut-mieux-qu-une-regle-contournee.md
     - 3269 · Un ensemble vide se constate avant de filtrer: decisions/3269-un-ensemble-vide-se-constate-avant-de-filtrer.md
     - 2727 · Une restauration vérifie en place: decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md

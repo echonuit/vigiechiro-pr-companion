@@ -635,9 +635,14 @@ Quatre gestes, donc, dans cette passe.
 ailleurs il n'est qu'écran de transit. Une case déposée dans la mauvaise session sera jouée deux fois ou
 jamais. La table des sessions vit dans l'[index de la recette](recette/index.md).
 
-⚠️ **Toutes les sessions n'existent pas.** S7 n'est pas écrite ; S5 et S6 sont partielles ; S4 et S8
-sont écrites mais **jamais jouées**. Quand le chantier touche un de ces écrans, cela se **dit** - une
-issue, pas un silence : sinon la capacité est réputée vérifiable par un script qui n'existe pas.
+⚠️ **Toutes les sessions ne sont pas au même état** : certaines sont partielles, d'autres écrites mais
+jamais jouées. Quand le chantier touche un de ces écrans, cela se **dit** - une issue, pas un silence :
+sinon la capacité est réputée vérifiable par un script qui ne la couvre pas.
+
+L'état de chaque session se lit dans l'[index de la recette](recette/index.md), **et nulle part
+ailleurs**. La première version de cette page recopiait la liste ici : les deux copies ont divergé en
+**quelques heures**, S7 ayant été écrite (#3517) le jour même où ce paragraphe affirmait qu'elle
+n'existait pas. Un inventaire ne se duplique pas, il se cite.
 
 **2. Écrire les cases à leur place**, sous forme de points numérotés `Sxx-NN`, groupés par étape du
 parcours. **Une case = un fait observable**, jamais un contrôle groupé. Elles s'écrivent **pour un

@@ -247,8 +247,9 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    pas là, et cela tient en trois pièces : le **geste**, l'**observation attendue**, et la **fixture**.
    Si aucune fixture ne porte le cas, **étendre la spec du générateur** fait partie de la passe - une
    donnée bricolée à la main ne revient pas à la campagne suivante. Une case = **un fait observable**,
-   jamais un contrôle groupé. Session inexistante (S7) ou jamais jouée (S4, S8) : **le dire en issue**,
-   sinon la capacité est réputée vérifiable par un script qui n'existe pas. ⚠️ Un **garde-fou de non-régression se vérifie en le voyant rouge** : **PIT ciblé**
+   jamais un contrôle groupé. Session **partielle ou jamais jouée** (état dans
+   `dev-docs/recette/index.md`, seule source) : **le dire en issue**, sinon la capacité est réputée
+   vérifiable par un script qui ne la couvre pas. ⚠️ Un **garde-fou de non-régression se vérifie en le voyant rouge** : **PIT ciblé**
    (`-Pmutation`, exhaustif sur une classe et rapide) pour le code Java, **mutation à la main** pour ce
    que PIT ne mute pas (attribut d'annotation, câblage, FXML, sonde réseau). Un test vert n'est qu'une
    **hypothèse** sur ce qu'il couvre. ⚠️ Et **un dispositif n'est pas toujours un test** : la même règle

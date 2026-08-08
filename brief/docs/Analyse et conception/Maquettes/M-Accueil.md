@@ -155,7 +155,7 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 - **Tableau de bord** : quatre compteurs chiffrés (**Sites**, **Points d'écoute**, **Passages**, **Observations**), chacun avec sa pastille d'icône colorée. Les valeurs sont **recalculées à chaque affichage** de l'accueil (elles reflètent l'état de la base après un import ou une déclaration de site). Le bandeau est **masqué tant qu'aucune donnée** n'existe (premier lancement).
 - **Sections-prismes** : les cartes d'activité sont regroupées en deux sections selon leur **prisme** :
   - **🛰️ Collecte & passages** (*produire la donnée*) : **Mes sites**, **Carte & passages** puis **Audit de cohérence** ;
-  - **🍃 Espèces & biodiversité** (*exploiter la donnée*) : **Espèces & observations** puis **Sons & validation**.
+  - **🍃 Espèces & biodiversité** (*exploiter la donnée*) : **Espèces & observations**, **Sons & validation**, puis **Activité de la nuit**.
 - **Cartes** : chaque carte affiche une **pastille d'icône**, un **titre** et une **description** courte, teintés par la **couleur d'accent** de la fonctionnalité ; un **chevron** `›` apparaît au survol et la carte entière est cliquable.
 
 ### Interactions clés
@@ -167,6 +167,7 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 | Carte **Audit de cohérence** | Ouvre l'écran d'audit (vérifier base et fichiers, reset guidé) |
 | Carte **Espèces & observations** | Ouvre [M-Analyse](M-Analyse.md) (inventaire transverse) |
 | Carte **Sons & validation** | Ouvre [M-SonsValidation](M-SonsValidation.md) (source *références* : écoute, validation, export bibliothèque) |
+| Carte **Activité de la nuit** | Ouvre [M-Activite](M-Activite.md) (contacts par tranche horaire et par espèce) |
 | Menu **☰** | Outils transverses : sauvegarde, restauration, connexion à Vigie-Chiro, à propos |
 | Compteur du tableau de bord | Repère visuel (non cliquable) ; reflète l'état courant de la base |
 | Champ **Rechercher** (Ctrl+F) | Recherche globale ([M-Recherche](M-Recherche.md)), disponible sur tous les écrans |
