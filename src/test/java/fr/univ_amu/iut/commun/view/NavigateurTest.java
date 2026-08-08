@@ -106,6 +106,87 @@ class NavigateurTest {
     }
 
     @Test
+    @DisplayName("#3519 : revenir() sur un historique d'une seule entrée ne le vide pas")
+    void revenir_a_la_racine_ne_vide_pas_l_historique() {
+        // Le cas était couvert par `peutRevenir()).isFalse()`, qui vérifie le DRAPEAU et non le GESTE :
+        // rien n'appelait `revenir()` à la racine. La borne `historique.size() <= 1` passait donc pour
+        // tenue alors que la remplacer par `<` laissait `historique.remove(0)` vider la pile.
+        Parent accueil = new Group();
+        Navigateur navigateur = navigateur(new NavigationViewModel(), accueil);
+
+        navigateur.revenir();
+
+        assertThat(navigateur.historique()).extracting(EtapeNavigation::id).containsExactly("accueil");
+        assertThat(navigateur.getVueCentrale()).isSameAs(accueil);
+        assertThat(navigateur.peutRevenir()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#3519 : revenirAIndex refuse l'écran courant, un index négatif et un index hors pile")
+    void revenir_a_index_hors_bornes_est_sans_effet() {
+        Navigateur navigateur = navigateur(new NavigationViewModel(), new Group());
+        navigateur.ouvrirRacine(new Group(), "sites", "Mes sites", null);
+        Parent passage = new Group();
+        EcranQuiSeRafraichit ecran = new EcranQuiSeRafraichit();
+        navigateur.empiler(passage, "passage", "Passage", ecran);
+        List<String> attendu = List.of("accueil", "sites", "passage");
+
+        // `size() - 1` désigne l'écran DÉJÀ affiché : y « revenir » n'a pas de sens. Le test existant
+        // n'exerçait qu'un index médian, si bien que les deux bornes de la garde restaient libres.
+        navigateur.revenirAIndex(2);
+        assertThat(navigateur.historique()).extracting(EtapeNavigation::id).containsExactlyElementsOf(attendu);
+
+        navigateur.revenirAIndex(-1);
+        assertThat(navigateur.historique()).extracting(EtapeNavigation::id).containsExactlyElementsOf(attendu);
+
+        navigateur.revenirAIndex(3);
+        assertThat(navigateur.historique()).extracting(EtapeNavigation::id).containsExactlyElementsOf(attendu);
+
+        assertThat(navigateur.getVueCentrale()).isSameAs(passage);
+
+        // ⚠️ L'assertion qui MORD est celle-ci, et elle a été trouvée en mutant à la main : relâcher la
+        // borne (`>=` en `>`) laisse passer l'index de l'écran courant, mais la boucle de dépilage ne
+        // retire alors rien - l'historique reste identique et les assertions ci-dessus restent vertes.
+        // Le seul effet observable est le hook de retour, déclenché sur un écran qu'on n'a jamais quitté :
+        // cliquer le segment de fil de l'écran affiché le rechargerait.
+        assertThat(ecran.retours).isZero();
+    }
+
+    @Test
+    @DisplayName("#3519 : l'anti-ré-entrance s'applique aussi à l'accueil, en index 0")
+    void anti_reentrance_a_l_index_zero() {
+        // `existant >= 0` : avec `>`, l'étape d'index 0 - l'accueil - échappait à l'anti-ré-entrance et
+        // se dédoublait dans l'historique. Le test d'anti-ré-entrance existant porte sur l'index 1.
+        Navigateur navigateur = navigateur(new NavigationViewModel(), new Group());
+        navigateur.ouvrirRacine(new Group(), "sites", "Mes sites", null);
+        navigateur.empiler(new Group(), "passage", "Passage", null);
+        Parent accueilRevisite = new Group();
+
+        navigateur.empiler(accueilRevisite, "accueil", "Accueil", null);
+
+        assertThat(navigateur.historique()).extracting(EtapeNavigation::id).containsExactly("accueil");
+        assertThat(navigateur.getVueCentrale()).isSameAs(accueilRevisite);
+    }
+
+    @Test
+    @DisplayName("#3519 : le fil marque le DERNIER segment comme courant, les précédents restent cliquables")
+    void fil_marque_le_dernier_segment_comme_courant() {
+        // `i == historique.size() - 1` portait un mutant arithmétique survivant : le marqueur « courant »
+        // pouvait désigner le mauvais segment sans qu'aucune assertion ne le voie, les tests existants
+        // ne comparant que les LIBELLÉS du fil.
+        Navigateur navigateur = navigateur(new NavigationViewModel(), new Group());
+        navigateur.ouvrirRacine(new Group(), "sites", "Mes sites", null);
+        navigateur.empiler(new Group(), "passage", "Passage", null);
+
+        List<Lieu> fil = navigateur.filActuel();
+
+        assertThat(fil).extracting(Lieu::libelle).containsExactly("Accueil", "Mes sites", "Passage");
+        assertThat(fil.get(fil.size() - 1).ouvrir()).isNull();
+        assertThat(fil.subList(0, fil.size() - 1))
+                .allSatisfy(lieu -> assertThat(lieu.ouvrir()).isNotNull());
+    }
+
+    @Test
     @DisplayName("anti-ré-entrance : empiler un id déjà présent dépile jusqu'à lui (pas de doublon)")
     void anti_reentrance() {
         Navigateur navigateur = navigateur(new NavigationViewModel(), new Group());
@@ -224,6 +305,18 @@ class NavigateurTest {
         @Override
         public void auDepartEcran() {
             departs++;
+        }
+    }
+
+    /// Faux controller qui compte les rafraîchissements au retour (#3519). C'est le **seul** effet
+    /// observable d'un `revenirAIndex` qui accepterait l'index de l'écran courant : la boucle de
+    /// dépilage ne retire rien, mais le hook se déclenche sur un écran qu'on n'a jamais quitté.
+    private static final class EcranQuiSeRafraichit implements RafraichirAuRetour {
+        private int retours;
+
+        @Override
+        public void rafraichirAuRetour() {
+            retours++;
         }
     }
 
