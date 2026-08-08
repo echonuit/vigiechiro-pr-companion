@@ -1,0 +1,199 @@
+# S7 · Réglages, interrupteurs OFF, états dégradés
+
+> **Écrans propriétaires** : Réglages (tous les onglets) et le **chrome** de l'application. · **Statut :
+> à jouer.**
+> Session propriétaire au sens de la [méthode](../index.md) : c'est **ici** que l'écran est déroulé en
+> entier, et nulle part ailleurs.
+
+## Objectif
+
+Un réglage se juge sur **une** question, et ce n'est pas « la case est-elle cochée ? » :
+
+> **Quand prend-il effet, et l'a-t-il vraiment pris ?**
+
+L'écran porte les trois réponses possibles, et elles ne se vérifient pas de la même façon :
+
+| Quand | Exemples | Ce qu'il faut faire pour le voir |
+| --- | --- | --- |
+| **immédiatement** | source des fiches espèces, palette daltonienne | changer, puis regarder l'écran concerné |
+| **au moment de s'en servir** | conserver les originaux (#3471) | changer **sans redémarrer**, puis déclencher l'action |
+| **au prochain démarrage** | fonctionnalités, emplacements | changer, **quitter, relancer**, puis regarder |
+
+La deuxième ligne est celle qui a produit un défaut réel : le réglage était lu au démarrage et mémorisé,
+donc le changer en cours de route ne changeait rien. **Un réglage vérifié dans une seule position, ou
+après redémarrage, laisse passer exactement ce défaut-là** - il aurait suffi que la valeur soit bonne
+par hasard.
+
+## L'écran ne se déroule pas depuis cette page
+
+⚠️ **Les onglets sont contribués par les features**, et n'apparaissent que s'ils ont quelque chose à
+montrer (`EcranReglagesController.estAffichable`). La liste **change** quand une feature est ajoutée ou
+désactivée, et c'est voulu.
+
+Ce script ne fige donc **pas** le nombre d'onglets : il déroule ceux qui sont **présents**. Une case qui
+verrouillerait la liste attendue deviendrait fausse à la première feature ajoutée, et serait mise à jour
+sans qu'on regarde ce qu'elle vérifie. Le comptage est le travail de `DocumentationAJourTest`, qui sait
+lire le code ; le vôtre est de regarder ce que chaque onglet **fait**.
+
+Au moment d'écrire ce script, six onglets se présentent : **Général**, **Emplacements**,
+**Fonctionnalités**, **Import**, **Audio**, **Dépôt**. Si vous en voyez un de plus, il n'a pas de cases
+ici : c'est un **constat**, pas un échec, et il ouvre une issue pour compléter cette session.
+
+## Environnement
+
+Base **jetable** : la session bascule des fonctionnalités et déplace le dossier de travail.
+
+```bash
+env -u DISPLAY ./mvnw -q test-compile exec:java@generer-sd \
+  -Dexec.args="recette/fixtures/spec /tmp/recette-sd"
+```
+
+Une carte **`sd-nominale`** suffit : elle ne sert qu'à l'étape 4, pour observer l'effet d'un réglage
+d'import. Il faut aussi une **nuit déjà importée** pour l'étape 3 (on n'écoute pas sans séquences).
+
+⚠️ **Lancer l'application sans AUCUNE propriété `-Dvigiechiro.*`.** Ce n'est pas une précaution de
+forme : sur ce chemin précis, une propriété système **gagne en silence** sur le réglage persisté. C'est
+vrai de l'emplacement de travail (elle a produit un faux positif à l'instruction de #3459) **et** des
+fonctionnalités, dont la résolution consulte `vigiechiro.feature.<id>` **avant** le réglage enregistré.
+Une session jouée avec une propriété posée vérifierait la propriété, pas l'écran.
+
+## Le script
+
+Une case = **un fait observable**. Les étapes 1 à 5 se jouent **sans redémarrer** ; les étapes 6 et 7
+exigent un redémarrage et le disent.
+
+### Étape 1 · L'écran s'ouvre et se peuple
+
+- [ ] **S7-01** · Ouvrir les Réglages : l'écran affiche un bandeau d'onglets, pas un cadre vide.
+- [ ] **S7-02** · Chaque onglet visible porte un **titre** et, s'il en a une, son **icône**.
+- [ ] **S7-03** · Chaque réglage affiche son **libellé** et sa **description** : aucun n'est nu.
+
+> S7-03 n'est pas cosmétique. Un commutateur sans description oblige à deviner ce qu'il fait, et c'est
+> sur ce genre de devinette qu'un utilisateur coche « conserver les originaux » sans savoir qu'il double
+> son occupation disque.
+
+### Étape 2 · Général : un réglage à effet immédiat
+
+- [ ] **S7-04** · Onglet **Général**, basculer « Fiches espèces sur Wikipédia (sinon GBIF) ».
+- [ ] **S7-05** · **Sans redémarrer**, ouvrir une fiche d'espèce hors chiroptères : la source consultée
+      est bien celle qu'on vient de choisir.
+- [ ] **S7-06** · Rebasculer, rouvrir une fiche : la source a changé **dans l'autre sens**.
+
+> S7-06 est le garde-fou de S7-05 : un réglage figé sur la bonne valeur passe le premier cas et rate le
+> second. Les deux positions, toujours.
+
+### Étape 3 · Audio : ce qui change l'écoute
+
+- [ ] **S7-07** · Activer « Lecture automatique à la sélection », ouvrir une nuit, sélectionner une
+      séquence : la lecture **démarre seule**.
+- [ ] **S7-08** · Activer « Lecture en boucle » : la séquence en cours **se répète**.
+- [ ] **S7-09** · Activer « Spectrogramme adapté au daltonisme » : la palette du spectrogramme **change**.
+- [ ] **S7-10** · Activer « Inclure le mode de validation à l'export _Vu », exporter : le CSV porte une
+      colonne « mode de validation ».
+- [ ] **S7-11** · Désactiver ce dernier, réexporter : la colonne **a disparu**.
+
+> S7-10 et S7-11 se lisent dans le **fichier produit**, jamais à l'écran : c'est le seul endroit où ce
+> réglage a un effet observable.
+
+### Étape 4 · Import : le réglage lu au moment de s'en servir (#3471)
+
+- [ ] **S7-12** · Onglet **Import**, cocher « Conserver les originaux ». Importer `sd-nominale` : le
+      dossier de la nuit contient un sous-dossier `bruts/` **non vide**.
+- [ ] **S7-13** · **Sans quitter l'application**, décocher le réglage. Réimporter : il n'y a **pas** de
+      `bruts/`.
+- [ ] **S7-14** · Recocher, réimporter une troisième fois : `bruts/` est **de retour**.
+
+> ⚠️ **Ne pas redémarrer entre S7-12 et S7-13.** C'est tout l'objet de #3471 : le réglage était lu une
+> fois au démarrage et mémorisé, donc le changer en cours de session ne changeait rien. Un redémarrage
+> masquerait exactement le défaut que ces trois cases existent pour attraper.
+>
+> S7-14 n'est pas un doublon : il vérifie que le retour à la première valeur **fonctionne aussi**, et
+> non qu'on a seulement appris à lire une fois de plus.
+
+### Étape 5 · Dépôt : une énumération et un entier
+
+- [ ] **S7-15** · Onglet **Dépôt**, « Forme du dépôt » propose **deux** formes (archives ZIP, séquences
+      WAV) et retient celle qu'on choisit.
+- [ ] **S7-16** · « Taille maximale d'une archive (Mo) » accepte une valeur, et la **refuse** si elle
+      est absurde (zéro, négative, texte) en le disant plutôt qu'en l'ignorant.
+- [ ] **S7-17** · Rouvrir les Réglages : les deux valeurs choisies sont **toujours là**.
+
+> S7-16 est le seul champ **libre** de l'écran, donc le seul endroit où une saisie invalide peut
+> exister. Un champ qui avale une valeur absurde sans rien dire est le mode de panne à guetter ici.
+
+### Étape 6 · Fonctionnalités : les interrupteurs, et ce qu'ils ne coupent pas
+
+- [ ] **S7-18** · Onglet **Fonctionnalités** : chaque fonctionnalité **désactivable** porte un
+      interrupteur.
+- [ ] **S7-19** · Une fonctionnalité **du cœur** n'en porte **pas** : elle est présentée comme toujours
+      active, sans commutateur à actionner.
+- [ ] **S7-20** · Désactiver une fonctionnalité optionnelle : un message annonce que l'effet arrive **au
+      prochain démarrage**.
+- [ ] **S7-21** · Quitter, relancer : l'entrée correspondante a **disparu** du menu ☰ ou de l'écran qui
+      la portait.
+- [ ] **S7-22** · La réactiver, quitter, relancer : l'entrée est **revenue**, et l'écran fonctionne.
+
+> S7-19 mérite d'être joué même s'il paraît trivial : une fonctionnalité socle dont d'autres dépendent
+> ne doit pas offrir un interrupteur qui ne coupe rien. Un commutateur sans effet est pire qu'une
+> absence de commutateur, parce qu'il se coche.
+>
+> S7-22 est la moitié qu'on saute. Vérifier qu'une désactivation retire l'entrée sans vérifier que la
+> réactivation la ramène laisse la porte ouverte à un aller sans retour.
+
+### Étape 7 · Emplacements : ce que le réglage fait, et ce qu'il ne fait pas
+
+- [ ] **S7-23** · Onglet **Emplacements** : le **dossier de travail** et la **base de données** sont
+      affichés, chacun avec son emplacement courant et son défaut.
+- [ ] **S7-24** · L'écran annonce que choisir un emplacement change **où l'application ira lire au
+      prochain démarrage**, et **ne déplace pas** les données existantes.
+- [ ] **S7-25** · Choisir un nouveau dossier de travail : un **avis de redémarrage** apparaît, et il est
+      difficile à manquer.
+- [ ] **S7-26** · Quitter, relancer, rouvrir les Réglages : l'emplacement affiché est bien le **nouveau**.
+- [ ] **S7-27** · Vérifier l'ancien dossier sur le disque : les données y sont **toujours**, conformément
+      à ce qu'annonçait S7-24.
+
+> ⚠️ S7-25 et S7-27 portent le constat qui a motivé #3459 : un utilisateur au disque saturé cherche à
+> **déplacer**, là où le réglage **repointe**. Les deux cases vérifient que l'écran ne laisse pas croire
+> autre chose. Le déplacement effectif des fichiers est un besoin distinct (#3486), pas un défaut de
+> cet écran.
+
+### Étape 8 · Le chrome : les fenêtres que l'application ouvre
+
+- [ ] **S7-28** · Provoquer une confirmation (supprimer un passage, par exemple) : la fenêtre porte la
+      **typographie et les couleurs du produit**, pas celles du système.
+- [ ] **S7-29** · Elle n'affiche **aucune icône système** (le point d'interrogation ou l'avertissement
+      du bureau).
+- [ ] **S7-30** · Son bouton par défaut se **distingue** visuellement de l'autre.
+- [ ] **S7-31** · Provoquer un message d'erreur et un message d'information : ils portent le même
+      habillage, et leur **sévérité** se lit.
+
+> Le chrome appartient à cette session parce qu'il n'appartient à aucun écran : il apparaît **par-dessus**
+> tous. Le vérifier ailleurs reviendrait à le vérifier partout, c'est-à-dire nulle part.
+
+### Étape 9 · États dégradés
+
+- [ ] **S7-32** 🔒 · Hors connexion, ouvrir les Réglages : l'écran s'ouvre, et ce qui dépend du réseau
+      le **dit** plutôt que de rester muet ou de faire attendre.
+- [ ] **S7-33** · Rendre le dossier de travail inaccessible (le renommer hors de l'application), puis
+      ouvrir les Réglages : l'écran **dit** que l'emplacement est introuvable, et propose d'en choisir
+      un autre.
+
+> S7-33 est le cas qu'aucun test automatisé ne joue et que la vraie vie produit : un disque externe
+> débranché, un dossier synchronisé encore en cours. Si l'écran ne dit rien, l'utilisateur conclut que
+> l'application est cassée.
+
+## Ce qu'on fait des résultats
+
+Une case rouge se qualifie avant d'ouvrir une issue :
+
+1. **le réglage ne prend pas effet** - c'est le défaut, et sa gravité se lit dans la colonne « quand »
+   du tableau d'objectif : un réglage à effet immédiat qui ne fait rien se remarque, un réglage lu au
+   moment de servir qui ne fait rien passe pour un caprice de l'utilisateur ;
+2. **il prend effet, mais l'écran annonce autre chose** - défaut de ce que l'écran *fait comprendre*,
+   et non de ce qu'il fait. #3459 en est l'exemple : le mécanisme était sain ;
+3. **le cas était mal écrit** - il supposait un onglet, une fonctionnalité ou une donnée qu'on n'avait
+   pas.
+
+⚠️ **Avant d'ouvrir une issue sur un réglage qui « ne marche pas », vérifier qu'aucune propriété
+système ne le surcharge.** C'est la première hypothèse à écarter sur cet écran, et celle qui a déjà
+coûté une instruction complète.
