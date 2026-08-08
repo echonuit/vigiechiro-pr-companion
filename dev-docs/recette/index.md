@@ -29,7 +29,7 @@ ailleurs il n'est qu'écran de transit (seule la fluidité de la transition est 
 | S4 | Déposer et suivre (lot, dépôt réel, suivi) | lot |
 | S5 | Valider (sur une nuit déposée) | [Sons & validation](sessions/s5-valider.md) (partielle : parcours expert #2790), fiche espèce |
 | S6 | Exploiter et piloter (vues agrégées) | [Activité de la nuit](sessions/s6-exploiter-piloter.md) (écrite), puis Carte & passages, Espèces & observations, Audit, recherche |
-| S7 | Réglages, interrupteurs OFF, états dégradés | reglages (5 onglets) + chrome |
+| S7 | Réglages, interrupteurs OFF, états dégradés | [Réglages](sessions/s7-reglages.md) (tous les onglets, contribués par les features) + chrome |
 | S8 | Récupérer une nuit déposée (P12 de bout en bout, carte SD réelle) | Connexion, Mes sites, Toutes mes nuits, passage |
 
 Chaque session se joue en trois temps : une **passe statique** en solo (préparation, postée en
@@ -65,6 +65,7 @@ issues produites → renvois et décisions → notes de méthode.
 - [S2 · Importer une nuit](sessions/s2-importer.md) : importation, passage, diagnostic (+ cas dégradés).
 - [S3 · Vérifier](sessions/s3-verifier.md) : qualification, raccourcis, écoute *(à rejouer au delta : écran refondu #1524)*.
 - [S4 · Déposer et suivre](sessions/s4-deposer-suivre.md) : lot, dépôt réel, suivi *(à jouer)*.
+- [S7 · Réglages](sessions/s7-reglages.md) : les onglets contribués par les features, les interrupteurs de fonctionnalités, le chrome et les états dégradés *(à jouer)*.
 - [Passe ciblée · constats en attente](sessions/passe-ciblee-constats-en-attente.md) : les huit
   constats qu'une image fixe ne peut pas juger, tranchés avant d'ouvrir les chantiers voisins
   *(à jouer)*.
