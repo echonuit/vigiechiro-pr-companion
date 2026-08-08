@@ -240,9 +240,15 @@ l'issue se lisent-ils dans six mois **sans** le fil de discussion ?
    par motif se trompe dans les **deux sens** (homonymes, tests qui pilotent le service sans porter la
    clé de vue, commande invoquée en kebab-case vs classe instanciée). **Confirmer chaque zéro à la
    main** avant d'en faire une issue. Un E2E vaut par ce qu'il **traverse** : **fusionner** deux scénarios quand le
-   défaut probable est **entre** eux. Ce qui n'est pas automatisable part en **recette**
-   (`dev-docs/recette/sessions/`, une case = un fait observable), sinon « pas automatisable » devient
-   « pas vérifié ». ⚠️ Un **garde-fou de non-régression se vérifie en le voyant rouge** : **PIT ciblé**
+   défaut probable est **entre** eux. ⚠️ **La recette se prépare, elle ne se remplit pas des restes** :
+   **toute capacité ajoutée** a sa case `Sxx-NN` dans sa **session propriétaire**
+   (`dev-docs/recette/sessions/`), parce qu'une capacité dont personne ne sait comment la vérifier à la
+   main n'est pas finie. Une case est terminée quand elle est **rejouable** par quelqu'un qui n'était
+   pas là, et cela tient en trois pièces : le **geste**, l'**observation attendue**, et la **fixture**.
+   Si aucune fixture ne porte le cas, **étendre la spec du générateur** fait partie de la passe - une
+   donnée bricolée à la main ne revient pas à la campagne suivante. Une case = **un fait observable**,
+   jamais un contrôle groupé. Session inexistante (S7) ou jamais jouée (S4, S8) : **le dire en issue**,
+   sinon la capacité est réputée vérifiable par un script qui n'existe pas. ⚠️ Un **garde-fou de non-régression se vérifie en le voyant rouge** : **PIT ciblé**
    (`-Pmutation`, exhaustif sur une classe et rapide) pour le code Java, **mutation à la main** pour ce
    que PIT ne mute pas (attribut d'annotation, câblage, FXML, sonde réseau). Un test vert n'est qu'une
    **hypothèse** sur ce qu'il couvre. ⚠️ Et **un dispositif n'est pas toujours un test** : la même règle

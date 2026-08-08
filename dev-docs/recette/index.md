@@ -35,6 +35,21 @@ ailleurs il n'est qu'écran de transit (seule la fluidité de la transition est 
 Chaque session se joue en trois temps : une **passe statique** en solo (préparation, postée en
 commentaire), la **session interactive** (pilotage écran par écran), puis un **triage à froid**.
 
+## D'où viennent les cases : la passe 6 d'un chantier
+
+Un script ne se remplit pas au moment de jouer la campagne : il se remplit **à la clôture de chaque
+chantier**, en [passe 6](../cycle-de-chantier.md). La règle y est posée ainsi :
+
+> Une capacité ajoutée par le chantier n'est pas finie tant qu'on ne sait pas comment la vérifier à la
+> main, et que ce « comment » n'est pas écrit là où on le retrouvera.
+
+Une case est terminée quand elle est **rejouable** par quelqu'un qui n'a pas fait le chantier, autant
+de fois que nécessaire. Trois pièces, et il en manque une seule pour qu'elle redevienne une intention :
+le **geste**, l'**observation attendue**, et la **fixture**. C'est pour cette dernière que les cartes SD
+sont **générées** depuis une spec plutôt que stockées : une donnée fabriquée à la main pour une campagne
+ne revient pas à la suivante. Quand le cas n'est porté par aucune fixture, **étendre la spec du
+générateur fait partie de la passe 6**.
+
 ## Les scripts de session
 
 Chaque session a son **script figé**, versionné sous `recette/sessions/`. Un script est à la fois la
