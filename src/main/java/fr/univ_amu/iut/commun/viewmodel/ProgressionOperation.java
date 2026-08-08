@@ -87,8 +87,10 @@ public final class ProgressionOperation {
     }
 
     /// Joint au `libelle` une estimation du temps restant par **extrapolation linéaire**
-    /// (restant ≈ écoulé × (1−fraction)/fraction). N'ajoute rien tant que l'avancement est nul, déjà
-    /// terminé, ou trop récent pour estimer. Pur (temps écoulé en paramètre), donc testable directement.
+    /// (restant ≈ écoulé × (1−fraction)/fraction). N'ajoute rien quand l'avancement est nul, déjà
+    /// terminé, ou quand l'écoulé est **nul** - et nul seulement : quelques microsecondes donnent
+    /// « ~0 s restant », pas l'absence de mention. Pur (temps écoulé en paramètre), donc testable
+    /// directement.
     static String avecTempsRestant(String libelle, double fraction, long ecouleNanos) {
         if (fraction <= 0.0 || fraction >= 1.0 || ecouleNanos <= 0) {
             return libelle;
