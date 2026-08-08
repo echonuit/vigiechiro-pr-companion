@@ -611,12 +611,57 @@ précisément dans les **coutures** entre deux étapes. Quand deux scénarios pa
 est simple : deux étapes se fusionnent quand le défaut probable est **entre** elles. À l'inverse,
 fusionner sans couture à exercer ne produit qu'un test-fleuve illisible - la longueur n'est pas le but.
 
-**Ce qui ne peut pas être automatisé va en recette.** Certaines vérifications ne se scriptent pas :
-finesse du rendu, fluidité perçue, geste qui exige un vrai serveur, une vraie carte SD ou du matériel.
-Elles ne disparaissent pas pour autant : elles s'écrivent dans la [recette](recette/index.md), sur le
-script de la **session propriétaire** de l'écran (`recette/sessions/`), sous forme de **cases
-numérotées `Sxx-NN`** - une case = **un fait observable**, jamais un contrôle groupé. Sans ce report,
-« pas automatisable » devient silencieusement « pas vérifié ».
+#### Préparer la recette : toute capacité ajoutée sait comment on la vérifie
+
+La [recette](recette/index.md) n'est pas le déversoir de ce qui a résisté à l'automatisation. C'est
+l'endroit où vit **le procédé de vérification** d'une capacité : le geste à faire, ce qu'on doit voir,
+et de quoi le refaire.
+
+> **Une capacité ajoutée par le chantier n'est pas finie tant qu'on ne sait pas comment la vérifier à
+> la main, et que ce « comment » n'est pas écrit là où on le retrouvera.**
+
+Le critère qui dit qu'une case est terminée est la **rejouabilité** : quelqu'un qui n'a pas fait le
+chantier doit pouvoir la refaire, dans six mois, autant de fois que nécessaire, et obtenir la même
+chose. Il tient en trois pièces, et il en manque **une seule** pour que la case redevienne une
+intention :
+
+| Pièce | Ce qu'elle répond | Ce qui arrive si elle manque |
+| --- | --- | --- |
+| le **geste** | qu'est-ce que je fais ? | la case se rejoue différemment à chaque campagne |
+| l'**observation attendue** | qu'est-ce que je dois voir ? | on coche « ça marche » sans référence |
+| la **fixture** | sur quelles données ? | la donnée se bricole, donc le résultat ne se compare pas |
+
+Quatre gestes, donc, dans cette passe.
+
+**1. Désigner la session propriétaire.** Un écran est déroulé **en entier** dans **une seule** session ;
+ailleurs il n'est qu'écran de transit. Une case déposée dans la mauvaise session sera jouée deux fois ou
+jamais. La table des sessions vit dans l'[index de la recette](recette/index.md).
+
+⚠️ **Toutes les sessions n'existent pas.** S7 n'est pas écrite ; S5 et S6 sont partielles ; S4 et S8
+sont écrites mais **jamais jouées**. Quand le chantier touche un de ces écrans, cela se **dit** - une
+issue, pas un silence : sinon la capacité est réputée vérifiable par un script qui n'existe pas.
+
+**2. Écrire les cases à leur place**, sous forme de points numérotés `Sxx-NN`, groupés par étape du
+parcours. **Une case = un fait observable**, jamais un contrôle groupé. Elles s'écrivent **pour un
+lecteur qui n'était pas là** : « le bandeau annonce la nuit du 22/04 et le nombre de fichiers retenus »
+se rejoue, « vérifier que l'import marche » non.
+
+**3. Fournir de quoi les jouer.** Si aucune des fixtures existantes ne porte le cas - une nuit sans GPS,
+un journal qui contredit les WAV, un volume qui déborde -, **étendre la spec du générateur** fait partie
+de cette passe. Les cartes SD de recette sont **générées** depuis quelques kilo-octets de spec
+précisément pour revenir à l'identique (voir [Fixtures](recette/fixtures.md)) ; une donnée fabriquée à
+la main pour l'occasion ne se retrouvera pas à la campagne suivante, et la case deviendra injouable
+sans que personne ne l'ait décidé.
+
+**4. Relire le statut de la session.** L'index de la recette porte un inventaire - qui a été joué, ce
+qui est partiel, ce qui reste à écrire - et un inventaire vieillit tout seul. C'est le même geste que
+la relecture de la doc périmée en passe 3.
+
+!!! warning "Ce que cette passe empêche, et qui se déguise bien"
+    L'ancienne formulation - *ce qui ne peut pas être automatisé va en recette* - laissait « pas
+    automatisable » devenir silencieusement « **pas vérifié** ». La règle actuelle ferme aussi la
+    variante suivante, plus difficile à voir : une case **écrite mais injouable**, faute de fixture ou
+    faute de session où la déposer. Elle a l'apparence d'une vérification prévue, et elle se coche.
 
 ### 7. Passe d'harmonisation
 
@@ -830,7 +875,8 @@ trompé : une analyse fausse laissée en place oriente le chantier suivant.
 - [ ] 3. Doc développeur (dev-docs) : ce qui manque **et ce qui est devenu FAUX** (partir des fichiers touchés, chercher qui les cite)
 - [ ] 4. Doc utilisateur (docs/) + captures
 - [ ] 5. Brief projet (`brief/`, dans la PR du chantier) répercuté si un élément de conception change
-- [ ] 6. Tests : inventaire des usages **depuis le diff** (chemins non nominaux, parité CLI ↔ IHM), E2E qui **traversent les coutures**, **PIT ciblé** (survivants lus un par un) et **E2E `bats`** si la CLI bouge, non-automatisable reporté en **recette**
+- [ ] 6. Tests : inventaire des usages **depuis le diff** (chemins non nominaux, parité CLI ↔ IHM), E2E qui **traversent les coutures**, **PIT ciblé** (survivants lus un par un) et **E2E `bats`** si la CLI bouge
+- [ ] 6b. Recette **préparée** : chaque capacité ajoutée a sa case `Sxx-NN` dans sa **session propriétaire** (geste + observation attendue), la **fixture** existe ou la spec du générateur est étendue, session manquante ou jamais jouée **signalée en issue**
 - [ ] 7. Harmonisation : **audit global** (ce qui ressemble / bénéficierait, exhaustif) puis **refactoring de conceptualisation** (lisibilité ; duplication et abstraction = outils) ; **choix, doutes, conséquences discutés avec l'utilisateur**
 - [ ] 8. Revue visuelle : **toute conséquence visible** couverte par une capture (captures **ajoutées** si besoin), régénérées et ouvertes une par une
 - [ ] 9. Nouveaux chantiers identifiés + issues créées
