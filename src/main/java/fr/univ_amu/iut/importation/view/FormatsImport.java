@@ -23,14 +23,28 @@ final class FormatsImport {
                 : "Carré " + site.numeroCarre() + " - " + site.nomConvivial();
     }
 
-    /// État du nommage des fichiers inspectés (bruts à renommer / déjà préfixés / aucun).
+    /// État du nommage des fichiers inspectés, dit par **ce qu'on va en faire** (#1487).
+    ///
+    /// ## Pourquoi le libellé nomme des opérations plutôt qu'un état
+    ///
+    /// « Fichiers bruts (seront renommés) » se lit « on va renommer **mes** fichiers ». Ce sont les
+    /// copies, et la phrase qui le disait a rejoint les réglages avancés avec la case « Conserver les
+    /// originaux » : elle y est parfaite, et l'utilisateur inquiet ne l'ouvrira jamais. Ce libellé est le
+    /// seul qu'il lira, et c'est le mot **« copiés »** qui lève la crainte.
+    ///
+    /// Les opérations sont nommées **dans l'ordre où elles se produisent**, et seulement celles qui ont
+    /// lieu : des fichiers déjà préfixés ne sont pas renommés, les annoncer tels remplacerait une phrase
+    /// trompeuse par une autre.
+    ///
+    /// ⚠️ Vaut pour le chemin de **l'assistant**. « J'ai déjà les transformés… » est une action séparée
+    /// ([ActionImportTransformes]) qui ne passe pas par cette inspection, donc jamais par ce libellé.
     static String libelleNommage(EtatNommage etat) {
         if (etat == null) {
             return Formats.VALEUR_ABSENTE;
         }
         return switch (etat) {
-            case BRUT -> "fichiers bruts (seront renommés)";
-            case PREFIXE -> "fichiers déjà préfixés";
+            case BRUT -> "fichiers bruts (seront copiés, renommés et transformés)";
+            case PREFIXE -> "fichiers déjà préfixés (seront copiés et transformés)";
             case VIDE -> "aucun fichier";
         };
     }
