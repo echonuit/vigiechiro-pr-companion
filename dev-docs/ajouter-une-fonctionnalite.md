@@ -8,6 +8,16 @@ on le câble à l'injection, puis on le **branche à la navigation** sans casser
     Une feature simple comme `bibliotheque/` ou `diagnostic/` est un bon gabarit. Calquez sa
     structure, les tests suivront le même moule.
 
+!!! danger "Cette numérotation décrit une ANATOMIE, pas une chronologie"
+    Les huit sections ci-dessous disent **de quoi une feature est faite**, dans l'ordre où on la lit.
+    Elles ne disent **pas** dans quel ordre on l'écrit.
+
+    Dans le temps, **le test vient en premier** : le cycle de travail est
+    [rouge, vert, refactor](cycle-de-chantier.md#pendant-lissue-rouge-vert-refactor-autant-de-fois-quil-le-faut), à chaque
+    comportement. Jusqu'à #3505 cette page numérotait « Tester » en **8 sur 8**, ce qui se lisait comme
+    une consigne d'écrire les tests en dernier - et c'en était une. La section 8 rassemble donc les
+    **outils et niveaux** de test, pas le moment où l'on s'en sert.
+
 ## 1. Créer le paquet et ses 4 couches
 
 Sous `src/main/java/fr/univ_amu/iut/`, créez `mafeature/` avec les 4 sous-paquets. Chacun a une
@@ -244,7 +254,12 @@ Les écrans documentés ont un aperçu PNG régénéré en CI. Pour le vôtre :
     [`AttenteAudio`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/outils/AttenteAudio.java)
     pour afficher un spectrogramme réel dans la capture.
 
-## 8. Tester
+## 8. Les niveaux de test (à écrire AVANT le code qu'ils couvrent)
+
+Chaque puce ci-dessous répond à « **avec quoi** je teste ceci ? ». Le **quand** est réglé ailleurs et
+ne dépend pas du niveau : le test s'écrit d'abord et on le voit **rouge**, sinon il faudra réintroduire
+le défaut à la main pour savoir ce qu'il couvre vraiment
+([cycle d'une issue](cycle-de-chantier.md#pendant-lissue-rouge-vert-refactor-autant-de-fois-quil-le-faut)).
 
 - **ViewModel / service** : tests unitaires (JUnit 5 + AssertJ), Mockito pour les dépendances.
 - **Vue** : test d'intégration **TestFX** (headless) qui charge le FXML et vérifie les bindings.
