@@ -84,6 +84,11 @@ d'architecture** qui structurent son code.
 - **Lancement depuis les sources** : `./mvnw javafx:run` suffit dans un environnement Java 25.
 - **Mode CLI** (sans IHM) pour les opérations scriptables (import d'une nuit, export d'un CSV),
   utilisable en automatisation et en CI.
+- **Un seul processus écrit à la fois** dans un dossier de travail. Lancer l'application une seconde
+  fois sur le même dossier est **refusé**, avec le nom du processus qui occupe la place : deux
+  fenêtres qui écrivent la même base la corrompent, et le défaut ne se verrait que bien plus tard. Le
+  verrou est un verrou **de fichier système**, donc relâché si le processus meurt : une fermeture
+  brutale ne condamne pas le dossier.
 
 ## Composant audio fourni
 

@@ -83,6 +83,21 @@ de la barre du haut permet de la **protéger** :
       l'application n'a pas su la mettre à jour, et **votre base d'avant a été rétablie**. Essayez une
       autre sauvegarde.
 
+!!! tip "« Sauvegarde restaurée, à un détail près »"
+    Une restauration peut aboutir **et** vous demander un regard. C'est ce que dit ce titre, et le
+    compte rendu qui l'accompagne nomme précisément ce qui a bougé. Trois cas :
+
+    - **une nuit a changé de place.** Vos dossiers de son ne sont pas forcément là où ils étaient
+      quand la sauvegarde a été prise. L'application les replace et vous dit lesquels : rien n'est
+      perdu, mais le chemin a changé.
+    - **une nuit manque à la sauvegarde.** Elle existait dans la base restaurée, ses sons n'étaient
+      pas dans l'archive. La nuit revient, son audio non - c'est le cas à regarder en premier.
+    - **la sauvegarde est trop ancienne** pour porter la liste de ses dossiers. L'application ne peut
+      alors rien replacer, et vous le dit plutôt que de deviner.
+
+    Dans les trois cas la base est restaurée. Ce qui est signalé porte sur les **sons**, pas sur vos
+    métadonnées.
+
 ## Ces fichiers que l'application dépose sans qu'on les lui demande
 
 Vous croiserez trois fichiers que vous n'avez pas créés. Aucun n'est un déchet, et aucun ne doit être
