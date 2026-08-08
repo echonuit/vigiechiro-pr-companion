@@ -13,6 +13,8 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -109,6 +111,32 @@ class ArchitectureTest {
                 .resideOutsideOfPackages("..cli.commande.api..", "..commun.api..")
                 .should()
                 .callMethod(ClientVigieChiro.class, "lectureBrute", String.class)
+                .check(classes);
+    }
+
+    @Test
+    @DisplayName("Un outil de capture pose son temps écoulé, il ne le lit pas à l'horloge (#3483)")
+    void capture_pose_son_temps_ecoule() {
+        // `ProgressionOperation.appliquer(Progression)` calcule l'estimation du temps restant à partir de
+        // l'horloge, depuis la référence posée par `demarrer`. C'est juste pour une opération réelle.
+        // Pour une capture, c'est la VITESSE DE LA MACHINE qui entre dans le PNG :
+        // `apercu-import-decompression-volume.png` annonçait « ~13 s restant » sur l'intégration continue
+        // et « ~15 s » sur un poste, pour le même état posé - un écart que la revue visuelle a mis des
+        // semaines à imputer, parce qu'il ressemble à du bruit de rendu.
+        //
+        // La surcharge `appliquer(Progression, Duration)` reçoit l'écoulé de l'appelant. Cette règle rend
+        // le bon geste obligatoire au lieu de le laisser à la vigilance : un aperçu ne se relit pas assez
+        // souvent pour qu'un chiffre faux s'y remarque.
+        //
+        // `..perf..` est exclu à dessein : un banc de mesure lit l'horloge parce que MESURER LA MACHINE
+        // est sa raison d'être. Il ne publie pas d'image.
+        noClasses()
+                .that()
+                .resideInAPackage("..outils..")
+                .and()
+                .resideOutsideOfPackages("..perf..")
+                .should()
+                .callMethod(ProgressionOperation.class, "appliquer", Progression.class)
                 .check(classes);
     }
 
