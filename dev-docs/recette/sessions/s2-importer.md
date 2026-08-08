@@ -36,7 +36,9 @@ import (copie protégée + renommage + transformation), puis les cas dégradés 
 8. Le rattachement propose site, point, année, numéro.
 9. La carte de confirmation montre le carré et le point choisi en indigo.
 10. L'aperçu du préfixe `CarXXXXXX-AAAA-PassN-YY-` suit la saisie.
-11. La case « Conserver les originaux sur le disque » est présente.
+11. Le formulaire ne porte **plus** de case « Conserver les originaux » : le réglage a rejoint
+    **Réglages ▸ Import** (#3471), où [S7](s7-reglages.md) le déroule. Ici on vérifie seulement
+    qu'il n'en reste pas de trace, et que rien ne demande deux fois la même chose.
 12. « Importer cette nuit » affiche une barre de progression déterminée.
 13. Une estimation de temps restant s'affiche.
 14. Un bouton « Annuler » est disponible pendant l'import.
@@ -124,6 +126,34 @@ la lisibilité du bandeau qui se juge ici, pas la règle.
 56. Une archive dont le contenu décompressé dépasse la place disponible est refusée **avant** que quoi
     que ce soit ne soit écrit ; le bandeau donne les deux volumes (nécessaire, disponible).
 57. Le bandeau du refus est lisible **en entier** : la phrase qui dit quoi faire n'est pas tronquée.
+
+**Étape 6 · Ce que l'import, le rattachement et la suppression **annoncent** (stabilisation #3424)**
+
+> Ces six faits portent sur le **compte rendu**, pas sur l'action : dans les quatre cas, l'action était
+> juste et le message mentait. Ils se jugent donc sur ce que l'écran **dit**, confronté à ce qui s'est
+> réellement produit - et deux d'entre eux exigent de regarder **ailleurs que dans l'application**.
+
+58. 🔌 Connecté, importer une nuit : le compte rendu annonce une participation créée, **et** elle existe
+    réellement sur la plateforme (« Voir la participation » l'ouvre). #3448
+59. 🔒 Déconnecté, importer : le compte rendu **ne prétend pas** avoir créé de participation.
+60. Rattacher une nuit dont des séquences doivent être renommées : le compte rendu **chiffre** les
+    séquences renommées. #3449
+61. 🔒 Faire échouer l'envoi (se déconnecter avant de valider) : le compte rendu dit **à la fois** le
+    renommage réussi **et** l'échec de l'envoi, et non l'échec seul.
+62. « 🗑 Supprimer » : la confirmation dit que les **fichiers audio restent sur le disque**, et affiche
+    **où**. #3482
+63. Après confirmation, regarder le disque : le dossier de la nuit est **toujours là**, conformément à
+    ce qu'annonçait la confirmation.
+
+> Le point 58 ne se coche pas sur le message : c'est exactement ce que #3448 a corrigé, l'écran
+> annonçant une création qui n'avait pas eu lieu. Le fait observable est **sur la plateforme**.
+>
+> Le point 61 est la moitié qu'on perdait : une opération en deux temps dont la seconde échoue
+> annonçait un échec sec, et l'utilisateur ne savait pas si la première avait abouti - donc s'il pouvait
+> relancer sans risque.
+>
+> Ce que devient le dossier du point 63 se joue en [S6](s6-exploiter-piloter.md), à l'audit : c'est lui
+> qui le ramasse.
 
 ## Verdict par axe (dernière passe)
 
