@@ -111,4 +111,24 @@ class UrlSigneeAdmiseTest {
                 .as("ouvrir un hôte n'ouvre pas le HTTP en clair")
                 .isPresent();
     }
+
+    @Test
+    @DisplayName("Une virgule en trop dans la surcharge n'ouvre pas la porte à tout")
+    void une_entree_vide_de_la_surcharge_n_admet_rien() {
+        // Trouvé par mutation (clôture du chantier #2720) : le `filter(hote -> !hote.isEmpty())` de
+        // `hotesAdmis` survivait à sa suppression, faute de test. Une entrée vide n'est pas inerte -
+        // la comparaison admet un hôte qui « se termine par . + admis », donc par « . » tout court.
+        //
+        // Un nom de domaine pleinement qualifié PEUT se terminer par un point (`exemple.com.` est un
+        // FQDN valide, et `URI.getHost()` le rend tel quel). Sans le filtre, une virgule de trop dans
+        // la propriété suffirait donc à admettre n'importe quel hôte écrit sous cette forme.
+        System.setProperty(PROPRIETE, "s3.interne.example,,autre.example");
+
+        assertThat(UrlSigneeAdmise.motifDeRefus("https://s3.interne.example/5f2b"))
+                .as("les entrées réelles restent admises malgré la virgule en trop")
+                .isEmpty();
+        assertThat(UrlSigneeAdmise.motifDeRefus("https://attaquant.example./5f2b"))
+                .as("un FQDN à point final ne doit pas être admis par une entrée vide")
+                .isPresent();
+    }
 }

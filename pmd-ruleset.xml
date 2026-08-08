@@ -51,10 +51,16 @@
             <property name="methodReportLevel" value="50"/>
             <!-- 200 lignes par classe = God Class détectable en dernier recours,
                  avant même que GodClass ne s'active.
-                 ⚠ Quatre contrôleurs vivent dans les huit derniers points :
-                 SonsValidationController 199, AnalyseController et LotController 197,
-                 ImportationController 193. Le prochain ajout dans l'un d'eux demandera
-                 un Extract Class, pas un relèvement du seuil. -->
+                 ⚠ La règle qui compte : quand un contrôleur approche le plafond, la
+                 réponse est un Extract Class, jamais un relèvement du seuil.
+                 Les quatre valeurs qui vivaient ici (199, 197, 197, 193) ont été
+                 mesurées AVANT l'extraction des contrôleurs du lot 4 (#2745), qui a
+                 fait fondre les quatre de 15 % en lignes physiques. Elles sont donc
+                 périmées, et dans le sens qui trompe : elles annoncent une urgence
+                 que le code n'a plus. On ne les remplace pas par d'autres, parce que
+                 PMD ne rapporte pas les NCSS sous le seuil - un chiffre que l'outil
+                 ne sait pas rendre ne s'écrit pas à la main (ADR 2750). Le jour où
+                 l'un d'eux repasse au-dessus de 200, lint.yml le dira. -->
             <property name="classReportLevel" value="200"/>
         </properties>
     </rule>
