@@ -23,6 +23,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -213,6 +214,44 @@ class ImportationViewTest {
         assertThat(c3.getStroke())
                 .as("le point sans GPS choisi reste surligné (indigo)")
                 .isEqualTo(Color.web("#3f51b5"));
+    }
+
+    @Test
+    @DisplayName("#1489 : le n° de passage est grisé tant qu'aucun point n'est choisi")
+    void numero_de_passage_grise_sans_point(FxRobot robot) {
+        TextField champPassage = robot.lookup("#champPassage").queryAs(TextField.class);
+        ComboBox<Site> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);
+        ComboBox<PointDEcoute> comboPoints = robot.lookup("#comboPoints").queryAs(ComboBox.class);
+
+        // Sans point, le n° est proposé automatiquement dès qu'on en choisit un : laisser le champ
+        // saisissable avant, c'est promettre une saisie qui sera écrasée sans un mot.
+        assertThat(champPassage.isDisabled()).as("aucun point choisi").isTrue();
+
+        robot.interact(() -> comboSites.getSelectionModel().select(0));
+        assertThat(champPassage.isDisabled())
+                .as("un site ne suffit pas : c'est le POINT qui décide du n° proposé")
+                .isTrue();
+
+        robot.interact(() -> comboPoints.getSelectionModel().select(0));
+        assertThat(champPassage.isDisabled()).as("point choisi").isFalse();
+    }
+
+    @Test
+    @DisplayName("#3454 : le sélecteur de point ne réclame plus un site quand le site est choisi")
+    void invite_du_selecteur_de_point_suit_le_site(FxRobot robot) {
+        ComboBox<Site> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);
+        ComboBox<PointDEcoute> comboPoints = robot.lookup("#comboPoints").queryAs(ComboBox.class);
+
+        assertThat(comboPoints.getPromptText()).contains("site");
+
+        robot.interact(() -> comboSites.getSelectionModel().select(0));
+
+        // L'invite servait d'explication au grisage ; le site choisi, elle ment et demande deux fois la
+        // même chose. Le site peut d'ailleurs être renseigné d'emblée, quand on vient d'un carré.
+        assertThat(comboPoints.getPromptText())
+                .as("le site est choisi : réclamer un site n'a plus de sens")
+                .doesNotContain("d'abord un site");
+        assertThat(comboPoints.getPromptText()).isNotBlank();
     }
 
     /// Pastille (cercle) du marqueur dont le libellé vaut `code`, dans la carte de confirmation.

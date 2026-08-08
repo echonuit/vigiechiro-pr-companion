@@ -8,11 +8,17 @@ trois temps**.
 
 ![L'assistant d'import : dossier source, inspection, rattachement.](../assets/captures/apercu-import-assistant.png)
 
-1. **Dossier source** : désignez le dossier de la carte SD (ou une copie déjà sur disque).
+1. **Dossier source** : désignez le dossier de la carte SD (ou une copie déjà sur disque). Si vous
+   choisissez une **archive `.zip`**, le champ affiche **l'archive que vous avez désignée**, suivie de
+   « (décompressé) » : l'application travaille dans un dossier temporaire, mais c'est bien votre choix
+   qui reste affiché.
 2. **Inspection** (lecture seule) : l'application détecte le journal du capteur, le relevé climatique
    et les enregistrements WAV, et annonce ce qu'elle va renommer. **Aucun fichier de la carte n'est
    modifié à ce stade.**
-3. **Rattachement** : indiquez le site, le point d'écoute, l'année et le numéro de passage ; un
+3. **Rattachement** : indiquez le site, le point d'écoute, l'année et le numéro de passage. Le
+   **numéro reste grisé tant qu'aucun point n'est choisi**, parce qu'il vous est **proposé d'après le
+   point** : le premier numéro libre pour ce point et cette année. Le saisir avant reviendrait à le voir
+   remplacé sans un mot. Un
    aperçu montre le préfixe qui sera appliqué. Une **carte de confirmation** (lecture seule) affiche le
    **carré du site** et **ses points**, le **point choisi en surbrillance** (indigo) et les autres en
    gris : un coup d'œil pour vérifier qu'on rattache la nuit au bon endroit. Une case

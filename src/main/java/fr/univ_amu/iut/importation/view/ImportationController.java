@@ -121,6 +121,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     @FXML
     private TextField champAnnee;
 
+    /// Enveloppe du n° de passage (#1489) : un champ désactivé n'affiche pas d'infobulle, l'explication
+    /// se pose donc sur son conteneur (socle #789).
+    @FXML
+    private StackPane enveloppePassage;
+
     @FXML
     private TextField champPassage;
 
@@ -295,15 +300,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// Sections 1-2 : chemin du dossier source + section d'inspection (journal, relevé, compte, nommage,
     /// avertissements #33), liées au sous-VM d'inspection.
     private void lierDossierEtInspection(InspectionImportViewModel inspection) {
-        // 1. Dossier source (affichage en lecture seule du chemin choisi).
-        champDossier
-                .textProperty()
-                .bind(Bindings.createStringBinding(
-                        () -> {
-                            Path dossier = inspection.dossierSourceProperty().get();
-                            return dossier == null ? "" : dossier.toString();
-                        },
-                        inspection.dossierSourceProperty()));
+        // 1. Dossier source : le champ montre ce que l'utilisateur a **désigné** (#1490), pas le dossier
+        // de travail. Pour un `.zip`, les deux diffèrent - le travail se fait dans un
+        // `import-zip-<horodatage>` sous le workspace - et c'est ce chemin interne qui s'affichait, alors
+        // que l'utilisateur ne l'a pas choisi et n'y reconnaît pas son archive.
+        champDossier.textProperty().bind(inspection.source().libelleProperty());
 
         // 2. Inspection : section visible une fois le dossier inspecté. Son CONTENU est une sous-vue
         // (#2745), à qui l'on passe NOTRE modèle : elle n'injecte rien, les ViewModel étant
@@ -389,7 +390,26 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 .disableProperty()
                 .bind(traitement.or(comboSites.valueProperty().isNull()));
         champAnnee.disableProperty().bind(traitement);
-        champPassage.disableProperty().bind(traitement);
+        // #1489 : le n° de passage est **proposé** dès qu'un point est choisi (`CoordinationNuits`
+        // pré-remplit le premier bloc libre). Laisser le champ saisissable avant, c'est promettre une
+        // saisie qui sera écrasée sans un mot - et la nuit part alors sous un numéro que l'utilisateur
+        // n'a pas voulu. L'année n'est PAS grisée : elle vient de l'horloge, rien ne l'écrase.
+        champPassage
+                .disableProperty()
+                .bind(traitement.or(comboPoints.valueProperty().isNull()));
+        IndicateurBlocage.expliquer(
+                enveloppePassage,
+                Bindings.when(comboPoints.valueProperty().isNull())
+                        .then("Choisissez d'abord un point : le n° de passage est proposé d'après lui.")
+                        .otherwise("Numéro de la nuit pour ce point et cette année."));
+        // #3454 : l'invite du sélecteur de point sert d'explication au grisage, et le site peut être
+        // renseigné d'emblée quand on vient d'un carré. Une invite qui réclame encore un site demande
+        // alors deux fois la même chose, et fait douter d'un choix déjà fait.
+        comboPoints
+                .promptTextProperty()
+                .bind(Bindings.when(comboSites.valueProperty().isNull())
+                        .then("Choisissez d'abord un site")
+                        .otherwise("Choisissez un point"));
         // Pré-contrôle R5 (#108) : la zone n'apparaît qu'en cas de doublon de n° de passage (avertissement
         // non vide) ; elle porte l'avertissement + un bouton pour adopter le prochain n° libre (gelé
         // pendant l'import). Même patron que les avertissements « mélange »/« incohérence » ci-dessus.

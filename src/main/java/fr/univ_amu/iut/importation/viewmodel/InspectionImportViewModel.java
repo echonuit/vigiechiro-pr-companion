@@ -44,6 +44,10 @@ public class InspectionImportViewModel {
     /// Dossier source choisi (carte SD ou copie disque), modifiable par la vue (champ + « Parcourir »).
     private final ObjectProperty<Path> dossierSource = new SimpleObjectProperty<>(this, "dossierSource");
 
+    /// Ce que l'utilisateur a **désigné**, distinct du dossier de travail ci-dessus (#1490) : pour une
+    /// archive, les deux diffèrent. Voir [SourceDesignee].
+    private final SourceDesignee source = new SourceDesignee();
+
     private final ReadOnlyBooleanWrapper inspecte = new ReadOnlyBooleanWrapper(this, "inspecte", false);
     private final ReadOnlyBooleanWrapper aUnJournal = new ReadOnlyBooleanWrapper(this, "aUnJournal", false);
     private final ReadOnlyBooleanWrapper aUnReleveClimatique =
@@ -285,6 +289,11 @@ public class InspectionImportViewModel {
     /// Dossier source à inspecter puis importer (lié au champ + bouton « Parcourir » de la vue).
     public ObjectProperty<Path> dossierSourceProperty() {
         return dossierSource;
+    }
+
+    /// La source **désignée** par l'utilisateur et son libellé d'affichage (#1490).
+    public SourceDesignee source() {
+        return source;
     }
 
     /// `true` dès qu'une inspection a réussi (pilote l'affichage de la section « Inspection »).
