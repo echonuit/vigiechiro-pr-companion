@@ -196,7 +196,7 @@ nav:
     - S7 · Réglages: recette/sessions/s7-reglages.md
     - S8 · Récupérer une nuit déposée: recette/sessions/s8-recuperer-une-nuit.md
     - Passe ciblée · constats en attente: recette/sessions/passe-ciblee-constats-en-attente.md
-    - Passe de vérification · stabilisation: recette/sessions/passe-verification-stabilisation.md
+    - Passe de coutures · stabilisation: recette/sessions/passe-verification-stabilisation.md
   - Interface en ligne de commande (CLI): cli.md
   - Tests et qualité: tests-et-qualite.md
   - Audit des filtres tabulaires: audit-filtres-vues-tabulaires.md
