@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Comparator;
 import java.util.stream.Stream;
 
 /// Copie d'arborescence, partagée par la sauvegarde complète et la restauration complète.
@@ -29,6 +30,23 @@ final class ArborescenceFichiers {
                     Files.createDirectories(destination.getParent());
                     Files.copy(chemin, destination, StandardCopyOption.REPLACE_EXISTING);
                 }
+            }
+        }
+    }
+
+    /// Efface `cible` et tout ce qu'elle contient. Une cible absente n'est pas une erreur.
+    ///
+    /// ⚠️ Elle **lève** plutôt que d'ignorer, contrairement aux suppressions best-effort du dépôt
+    /// (`ExtracteurZip`, `SupprimerSauvegarde`) : ici l'appelant a besoin de savoir. Une bascule de
+    /// restauration qui ne parvient pas à retirer l'ancien dossier ne doit pas enchaîner sur le
+    /// renommage comme si de rien n'était (#3514).
+    static void supprimerRecursivement(Path cible) throws IOException {
+        if (!Files.exists(cible)) {
+            return;
+        }
+        try (Stream<Path> arbre = Files.walk(cible)) {
+            for (Path chemin : arbre.sorted(Comparator.reverseOrder()).toList()) {
+                Files.deleteIfExists(chemin);
             }
         }
     }
