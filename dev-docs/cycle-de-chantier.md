@@ -384,8 +384,6 @@ pu écrire des ADR pendant celui-ci, et le rebase de la passe 1 arriverait trop 
 
 ### 1. Audit d'intégration
 
-### 1. Audit d'intégration
-
 `main` a **évolué pendant** le chantier (autres PR mergées, nouvelles features, nouvelles
 conventions). Cette passe vérifie que rien n'a été laissé de côté avant de finaliser :
 
