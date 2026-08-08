@@ -21,8 +21,9 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 **Étape 1 · Premier lancement (workspace vierge)**
 
 1. L'accueil affiche le hero « Deux entrées… » et ses 2 sections (Collecte & passages / Espèces &
-   biodiversité), 5 cartes (Mes sites, Carte & passages, Audit de cohérence, Espèces & observations,
-   Sons & validation).
+   biodiversité). Les cartes sont **contribuées par les features** : ne pas figer leur liste ici, mais
+   vérifier que chacune de celles qui s'affichent porte un intitulé, une destination annoncée, et
+   **ouvre bien ce qu'elle annonce**.
 2. Le bandeau de compteurs est masqué sans donnée.
 3. Le fil d'Ariane, la recherche (Ctrl+F) et le menu principal (☰) sont présents.
 
@@ -33,6 +34,7 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 6. Token bidon : 401 « Token invalide ou expiré… ».
 7. Réseau coupé : « Vigie-Chiro est injoignable… le jeton n'est peut-être pas en cause ».
 8. Succès : bandeau vert « référentiel à jour : N taxons, N sites », badge vert identité + rôle.
+   Avec **un seul** site, le bandeau écrit « 1 site » et non « 1 sites » (#1373).
 9. Déconnexion : confirmation, badge repasse gris, l'entrée du menu principal (☰) redevient « Se connecter… ».
 
 **Étape 3 · Mes sites**
@@ -59,6 +61,22 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 21. Création vs édition : titre et bouton dynamiques.
 22. Garde de validité : code « 1 lettre + chiffres », GPS décimal/DMS synchronisés avec la carte-outil.
 23. « Annuler » ne touche rien.
+
+**Étape 6 · Ce que la stabilisation a changé au premier contact** (#3424)
+
+24. La modale de connexion s'ouvre **sans saut** : la saisie est en place, rien ne se replace après
+    coup. #1373
+25. Pendant la récupération qui suit « Se connecter », **rien ne se redimensionne** : le contenu ne sort
+    pas avant que le bandeau d'état ait pris sa place.
+26. Le menu ☰ ne porte **plus** d'entrée « fiche espèce » : la source des fiches vit dans
+    **Réglages ▸ Général**, où [S7](s7-reglages.md) la déroule. #3433
+27. Le menu ☰ porte toujours ses autres entrées, et chacune ouvre ce qu'elle annonce.
+
+> Le point 27 est le garde-fou du 26 : retirer un doublon est juste, en emporter un voisin ne l'est pas.
+> Il coûte quelques secondes et couvre la seule façon dont ce retrait pouvait mal tourner.
+>
+> Les points 24 et 25 sont **perceptifs** : aucun test ne voit un contenu qui se replace, il voit un
+> contenu correct une fois posé. C'est précisément ce qui les met ici plutôt qu'en TestFX.
 
 ## Verdict par axe (dernière passe)
 
