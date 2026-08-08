@@ -7,6 +7,7 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.audit.model.AuditPointsServeur;
+import fr.univ_amu.iut.audit.model.NettoyageDossiersOrphelins;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.model.ServiceRecuperabilite;
 import fr.univ_amu.iut.audit.model.ServiceReset;
@@ -115,6 +116,6 @@ public class AuditModule extends ModuleDeFeature {
     /// ViewModel de l'écran d'audit. **Non-singleton** (un VM frais par chargement FXML).
     @Provides
     AuditViewModel fournirAuditViewModel(ServiceAuditCoherence service) {
-        return new AuditViewModel(service);
+        return new AuditViewModel(service, new NettoyageDossiersOrphelins());
     }
 }

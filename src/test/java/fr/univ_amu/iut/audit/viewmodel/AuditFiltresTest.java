@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.audit.model.CategorieConstat;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
+import fr.univ_amu.iut.audit.model.NettoyageDossiersOrphelins;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -30,7 +31,7 @@ class AuditFiltresTest {
     private static AuditViewModel viewModelAvec(ConstatAudit... constats) {
         ServiceAuditCoherence service = Mockito.mock(ServiceAuditCoherence.class);
         Mockito.when(service.auditerTout()).thenReturn(new RapportAudit(List.of(constats)));
-        AuditViewModel viewModel = new AuditViewModel(service);
+        AuditViewModel viewModel = new AuditViewModel(service, new NettoyageDossiersOrphelins());
         viewModel.rafraichir();
         return viewModel;
     }

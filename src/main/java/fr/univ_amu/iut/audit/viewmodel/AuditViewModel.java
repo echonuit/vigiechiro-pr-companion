@@ -3,12 +3,14 @@ package fr.univ_amu.iut.audit.viewmodel;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.model.ContexteAuditPassage;
+import fr.univ_amu.iut.audit.model.NettoyageDossiersOrphelins;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -30,6 +32,7 @@ import javafx.collections.transformation.FilteredList;
 public class AuditViewModel {
 
     private final ServiceAuditCoherence service;
+    private final NettoyageDossiersOrphelins nettoyage;
     private final ObservableList<ConstatAudit> constats = FXCollections.observableArrayList();
 
     /// Les constats **retenus par la barre de filtres** (#3100). C'est cette liste que la table montre ;
@@ -44,8 +47,9 @@ public class AuditViewModel {
             new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
     @Inject
-    public AuditViewModel(ServiceAuditCoherence service) {
+    public AuditViewModel(ServiceAuditCoherence service, NettoyageDossiersOrphelins nettoyage) {
         this.service = Objects.requireNonNull(service, "service");
+        this.nettoyage = Objects.requireNonNull(nettoyage, "nettoyage");
     }
 
     /// (Re)lance l'audit **disque / base** (hors ligne, rapide) et applique le résultat.
@@ -143,6 +147,32 @@ public class AuditViewModel {
     /// personne n'a rien demandé.
     public void signalerFiltresDeSessionAmputes(ResteDeRestauration reste) {
         retour.set(RetourOperation.filtresDeSessionAmputes(reste));
+    }
+
+    /// Les dossiers de session que **plus aucun passage** ne réclame, tels que le dernier audit les a
+    /// relevés (#3482). Le socle de filtres n'entre pas en jeu : masquer une ligne à l'écran ne fait pas
+    /// disparaître un dossier du disque, et le ménage porte sur ce que l'audit a trouvé, pas sur ce que
+    /// la barre laisse voir.
+    public List<Path> dossiersOrphelins() {
+        return RetraitOrphelins.dossiers(constats);
+    }
+
+    /// La place qu'occupent `dossiers`, pour l'annoncer avant de demander confirmation. Lit le disque :
+    /// à appeler **hors fil JavaFX**.
+    public long mesurer(List<Path> dossiers) {
+        return nettoyage.mesurer(dossiers);
+    }
+
+    /// Retire `dossiers` du disque et **pose le compte rendu de ce qui s'est réellement produit** - un
+    /// dossier resté en place bascule le bandeau en avertissement plutôt que d'annoncer un ménage fait.
+    /// Écrit sur le disque : à appeler **hors fil JavaFX** ; le retour est ensuite posé sur le fil.
+    public RetourOperation retirer(List<Path> dossiers) {
+        return RetraitOrphelins.compteRendu(nettoyage.retirer(dossiers));
+    }
+
+    /// Pose un retour déjà calculé (le retrait s'exécute hors fil, le bandeau se met à jour dessus).
+    public void appliquerRetour(RetourOperation nouveau) {
+        retour.set(nouveau);
     }
 
     public ReadOnlyStringProperty resumeProperty() {

@@ -36,6 +36,14 @@
         <Button fx:id="boutonAuditerPassage" text="Auditer ce passage"
                 onAction="#auditerLePassageSelectionne"/>
       </StackPane>
+      <!-- Retrait des dossiers de session orphelins (#3482, ADR-3482) : la seule action de l'audit qui
+           ÉCRIT sur le disque. Supprimer un passage laisse volontairement ses fichiers ; c'est ici qu'on
+           les ramasse, en connaissance de cause. Le libellé porte le nombre, le clic chiffre la perte
+           avant d'agir. Désactivé tant que l'audit n'a relevé aucun dossier orphelin. -->
+      <StackPane fx:id="enveloppeRetirerOrphelins">
+        <Button fx:id="boutonRetirerOrphelins" text="Retirer les dossiers orphelins"
+                styleClass="bouton-danger" onAction="#retirerLesDossiersOrphelins"/>
+      </StackPane>
     </HBox>
 
     <!-- Onglets de vues mémorisées (#623) : rejouer une combinaison de filtres enregistrée. -->
