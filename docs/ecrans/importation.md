@@ -13,8 +13,10 @@ trois temps**.
    « (décompressé) » : l'application travaille dans un dossier temporaire, mais c'est bien votre choix
    qui reste affiché.
 2. **Inspection** (lecture seule) : l'application détecte le journal du capteur, le relevé climatique
-   et les enregistrements WAV, et annonce ce qu'elle va renommer. **Aucun fichier de la carte n'est
-   modifié à ce stade.**
+   et les enregistrements WAV, et annonce ce qu'elle va en faire. L'**état du nommage** nomme les
+   opérations dans l'ordre : vos enregistrements seront **copiés**, puis renommés et transformés. C'est
+   sur les **copies** que tout se passe. **Vos fichiers d'origine ne sont jamais modifiés**, ni pendant
+   l'inspection ni après.
 3. **Rattachement** : indiquez le site, le point d'écoute, l'année et le numéro de passage. Le
    **numéro reste grisé tant qu'aucun point n'est choisi**, parce qu'il vous est **proposé d'après le
    point** : le premier numéro libre pour ce point et cette année. Le saisir avant reviendrait à le voir
