@@ -31,10 +31,12 @@ class RestaurationComplete {
 
     private final SourceDeDonnees source;
     private final UniteDeTravail uniteDeTravail;
+    private final BasculeRacines bascules;
 
     RestaurationComplete(SourceDeDonnees source) {
         this.source = source;
         this.uniteDeTravail = new UniteDeTravail(source);
+        this.bascules = new BasculeRacines(source.workspace());
     }
 
     /// Confronte chaque dossier de la sauvegarde à l'inventaire que le manifeste en donne. Une
@@ -57,16 +59,45 @@ class RestaurationComplete {
 
     /// Replace les dossiers et corrige la base. À appeler **après** [#verifierLaSauvegarde] et après
     /// la restauration de la base : les `root_path` réécrits sont ceux de la base restaurée.
+    ///
+    /// ## Tout copier, tout vérifier, puis basculer
+    ///
+    /// Les copies se font **à côté** de leur destination, sous un suffixe `.en-cours`, et rien ne
+    /// prend sa place définitive avant que **toutes** aient été copiées et vérifiées. Une panne
+    /// d'écriture - disque plein, permission, disque débranché - ne laisse alors que des temporaires,
+    /// balayés dans la foulée, et l'état local est celui d'avant (#3514).
+    ///
+    /// ⚠️ **Ce n'est pas de l'atomicité, et il ne faut pas le dire.** Basculer trois dossiers, ce sont
+    /// trois renommages, et aucune astuce ne les rendra indivisibles. Ce qu'on gagne est de ramener la
+    /// fenêtre d'une **copie complète** - des minutes, des gigaoctets - à une **suite de renommages**,
+    /// des millisecondes ; et de rendre l'échec réparable plutôt que muet. Un journal de bascule
+    /// relu au démarrage supprimerait l'état mixte résiduel, au prix d'un dispositif dont la panne
+    /// serait du même genre que celle qu'il répare : écarté à l'ouverture de l'issue.
     BilanRestauration replacer(Path dossierBackup, ManifesteSauvegarde manifeste) {
         // AVANT toute réécriture : une fois les racines déplacées, plus aucune ne correspondrait à
         // son origine dans le manifeste, et la nuit qu'on vient de restaurer serait annoncée absente.
         List<String> absentes = absentesDuManifeste(manifeste);
-        List<PlacementRacine> placements = new ArrayList<>();
-        for (RacineSauvegardee emportee : manifeste.racines()) {
-            placements.add(remettre(dossierBackup, emportee));
+        List<BasculeRacines.EnAttente> attentes = new ArrayList<>();
+        try {
+            for (RacineSauvegardee emportee : manifeste.racines()) {
+                Path copie = dossierBackup.resolve(SOUS_DOSSIER_SESSIONS).resolve(emportee.identifiant());
+                // Enregistrée AVANT les vérifications : elles peuvent refuser, et le temporaire existe
+                // déjà. L'appelant ne le nettoierait jamais s'il ne le connaissait pas.
+                BasculeRacines.EnAttente attente = bascules.preparer(copie, emportee.cheminOrigine());
+                attentes.add(attente);
+                verifierInventaire(attente.temporaire(), emportee, Moment.UNE_FOIS_REMIS_EN_PLACE);
+                bascules.refuserSiLaDestinationPorteAutreChose(attente);
+            }
+            List<PlacementRacine> placements = new ArrayList<>();
+            for (BasculeRacines.EnAttente attente : attentes) {
+                placements.add(attente.basculer());
+            }
+            reecrireLesChemins(placements);
+            return new BilanRestauration(true, placements, absentes);
+        } catch (RuntimeException echec) {
+            attentes.forEach(BasculeRacines.EnAttente::abandonner);
+            throw echec;
         }
-        reecrireLesChemins(placements);
-        return new BilanRestauration(true, placements, absentes);
     }
 
     /// Restauration d'une sauvegarde **sans manifeste** : le comportement d'avant #2726, faute de
@@ -92,39 +123,6 @@ class RestaurationComplete {
                     "Restauration des dossiers de session impossible depuis " + dossierBackup, echec);
         }
         return BilanRestauration.sansManifeste();
-    }
-
-    private PlacementRacine remettre(Path dossierBackup, RacineSauvegardee emportee) {
-        Path copie = dossierBackup.resolve(SOUS_DOSSIER_SESSIONS).resolve(emportee.identifiant());
-        Path destination = destinationPour(emportee.cheminOrigine());
-        try {
-            ArborescenceFichiers.copier(copie, destination);
-        } catch (IOException echec) {
-            throw new DataAccessException("Impossible de remettre le dossier de son dans " + destination, echec);
-        }
-        verifierInventaire(destination, emportee, Moment.UNE_FOIS_REMIS_EN_PLACE);
-        return new PlacementRacine(emportee.cheminOrigine(), destination.toString());
-    }
-
-    /// Où remettre une racine : **à son emplacement d'origine s'il est encore là**, sinon dans le
-    /// workspace, sous son nom de dossier.
-    ///
-    /// Le critère est que le dossier d'origine **existe déjà** et soit inscriptible, et non que son
-    /// parent soit créable. La nuance évite un piège coûteux : `/mnt/disque-a` est un point de
-    /// montage vide quand le disque n'est pas branché : le juger « créable » y déverserait des
-    /// gigaoctets sur le disque système, que le montage du vrai disque masquerait ensuite. Mieux
-    /// vaut un dossier déplacé et annoncé qu'un dossier écrit dans un trou.
-    ///
-    /// Conséquence assumée : restaurer une nuit qu'on vient de supprimer la remet dans le workspace,
-    /// et non à sa place, puisque sa place n'existe plus. Le compte rendu le dit, et la base pointe
-    /// vers l'endroit réel.
-    private Path destinationPour(String cheminOrigine) {
-        Path origine = Path.of(cheminOrigine);
-        if (Files.isDirectory(origine) && Files.isWritable(origine)) {
-            return origine;
-        }
-        Path nom = origine.getFileName();
-        return source.workspace().racine().resolve(nom == null ? "session" : nom.toString());
     }
 
     /// Quand la vérification a lieu, ce qui décide de sa **nature** (#3146).

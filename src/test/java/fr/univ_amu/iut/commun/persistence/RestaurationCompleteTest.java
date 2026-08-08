@@ -137,21 +137,32 @@ class RestaurationCompleteTest {
     }
 
     @Test
-    @DisplayName("une copie qui arrive amputée est refusée, pas rangée en silence")
-    void copie_amputee_refusee() throws IOException {
+    @DisplayName("un fichier que la sauvegarde n'a pas fait refuser AVANT toute écriture, et il survit")
+    void destination_portant_un_fichier_en_trop_refusee_avant_ecriture() throws IOException {
         seederNuit(disque.resolve("Nuit-01"), "audio d'origine");
         Path backup = service.sauvegarderComplet(racine.resolve("sauvegardes")).dossier();
-        // La destination existe déjà et contient un fichier de trop : la copie écrasante laissera un
-        // dossier qui ne correspond plus à l'inventaire du manifeste.
         Path repli = workspaceDir.resolve("Nuit-01");
         Files.createDirectories(repli.resolve("transformes"));
         Files.writeString(repli.resolve("transformes").resolve("intrus.wav"), "fichier en trop");
         supprimerRecursif(disque.resolve("Nuit-01"));
 
+        // Avant #3514, la copie s'écrasait par-dessus : l'intrus survivait, l'inventaire ne
+        // correspondait plus, et la restauration échouait APRÈS avoir remplacé la base. La bascule
+        // remplace la destination entière, donc l'intrus disparaîtrait : on refuse avant de basculer
+        // plutôt que d'effacer en silence un fichier que l'utilisateur avait posé là.
         assertThatThrownBy(() -> service.restaurerComplet(backup))
-                .as("vérifier la sauvegarde ne suffit pas : ce qui compte est ce qui ARRIVE")
-                .isInstanceOf(DataAccessException.class)
-                .hasMessageContaining("une fois remis en place");
+                .as("un refus, pas une panne : l'état local est intact et la CLI peut en tirer un code 2")
+                .isInstanceOf(RefusAvantEcriture.class)
+                .hasMessageContaining("intrus.wav")
+                .hasMessageContaining("Rien n'a été touché");
+
+        assertThat(repli.resolve("transformes").resolve("intrus.wav"))
+                .as("restaurer ne doit pas devenir un moyen détourné d'effacer ce qui traînait là")
+                .exists();
+        assertThat(racinesEnBase())
+                .as("et la base n'a pas bougé")
+                .containsExactly(disque.resolve("Nuit-01").toString());
+        assertThat(temporairesResiduels()).isEmpty();
     }
 
     @Test
@@ -211,6 +222,81 @@ class RestaurationCompleteTest {
         assertThat(bilan.enClair())
                 .as("et il annonce ce qu'il n'a PAS pu faire, plutôt que de laisser croire à mieux")
                 .contains("antérieure au format actuel");
+    }
+
+    @Test
+    @DisplayName("un fichier posé là où la nuit doit revenir fait refuser, il n'est pas effacé")
+    void un_fichier_occupant_la_destination_fait_refuser() throws IOException {
+        seederNuit(disque.resolve("Nuit-01"), "audio d'origine");
+        Path backup = service.sauvegarderComplet(racine.resolve("sauvegardes")).dossier();
+        supprimerRecursif(disque);
+        Files.createDirectories(workspaceDir);
+        // La bascule remplace la destination : sans refus, ce fichier disparaîtrait pour laisser la
+        // place au dossier. C'est la même perte qu'un fichier en trop DANS la destination.
+        Files.writeString(workspaceDir.resolve("Nuit-01"), "un fichier de l'utilisateur, pas une nuit");
+
+        assertThatThrownBy(() -> service.restaurerComplet(backup))
+                .isInstanceOf(RefusAvantEcriture.class)
+                .hasMessageContaining("est un fichier")
+                .hasMessageContaining("Rien n'a été touché");
+
+        assertThat(workspaceDir.resolve("Nuit-01")).hasContent("un fichier de l'utilisateur, pas une nuit");
+        assertThat(temporairesResiduels()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("un temporaire abandonné par une tentative précédente ne contamine pas la suivante")
+    void un_temporaire_perime_ne_contamine_pas_la_restauration() throws IOException {
+        seederNuit(disque.resolve("Nuit-01"), "audio d'origine");
+        Path backup = service.sauvegarderComplet(racine.resolve("sauvegardes")).dossier();
+        supprimerRecursif(disque);
+        // Ce qu'une machine éteinte en pleine bascule laisse derrière elle : un `.en-cours` incomplet,
+        // et de surcroît porteur d'un fichier que la sauvegarde n'a pas.
+        Path perime = workspaceDir.resolve("Nuit-01.en-cours");
+        Files.createDirectories(perime.resolve("transformes"));
+        Files.writeString(perime.resolve("transformes").resolve("reste.wav"), "reste d'une tentative morte");
+
+        service.restaurerComplet(backup);
+
+        Path repli = workspaceDir.resolve("Nuit-01");
+        assertThat(repli.resolve("transformes").resolve("reste.wav"))
+                .as("sans vidage préalable du temporaire, le reste passait dans la destination : la copie"
+                        + " écrase les fichiers homonymes, elle ne retire pas les surnuméraires")
+                .doesNotExist();
+        assertThat(repli.resolve("transformes").resolve("seq.wav")).hasContent("audio d'origine");
+        assertThat(temporairesResiduels()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("un dossier vide de plus dans la destination n'est pas un motif de refus")
+    void un_dossier_vide_en_trop_ne_fait_pas_refuser() throws IOException {
+        seederNuit(disque.resolve("Nuit-01"), "audio d'origine");
+        Path backup = service.sauvegarderComplet(racine.resolve("sauvegardes")).dossier();
+        supprimerRecursif(disque);
+        // Un dossier vide n'emporte aucune donnée : refuser sur lui ferait échouer des restaurations
+        // légitimes pour rien.
+        Files.createDirectories(workspaceDir.resolve("Nuit-01").resolve("dossier-vide"));
+
+        service.restaurerComplet(backup);
+
+        assertThat(workspaceDir.resolve("Nuit-01").resolve("transformes").resolve("seq.wav"))
+                .hasContent("audio d'origine");
+    }
+
+    /// Les dossiers de bascule laissés derrière : ils vivent à côté de leur destination, dans le
+    /// workspace, et aucun ne doit survivre à un échec.
+    private List<Path> temporairesResiduels() throws IOException {
+        return temporairesResiduelsSous(workspaceDir);
+    }
+
+    private static List<Path> temporairesResiduelsSous(Path dossier) throws IOException {
+        if (!Files.isDirectory(dossier)) {
+            return List.of();
+        }
+        try (Stream<Path> contenu = Files.list(dossier)) {
+            return contenu.filter(chemin -> chemin.getFileName().toString().contains(".en-cours"))
+                    .toList();
+        }
     }
 
     private Path seederNuit(Path racineSession, String contenu) throws IOException {
