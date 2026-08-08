@@ -132,6 +132,40 @@ class ProgressionOperationTest {
     }
 
     @Test
+    @DisplayName("#3505 : sans référence temporelle, le chemin horloge n'estime RIEN")
+    void chemin_horloge_sans_reference_n_estime_rien() {
+        // Le chemin qui lit l'horloge n'était couvert par aucune assertion - justement parce qu'il n'est
+        // pas déterministe -, et deux mutants y survivaient. Il porte pourtant une propriété qui, elle,
+        // est déterministe : sans `demarrer()`, l'écoulé vaut ZÉRO, donc aucune estimation. C'est ce sur
+        // quoi `SuiviProgression.apercu` s'appuie pour montrer un état « avant estimation possible ».
+        ProgressionOperation progression = new ProgressionOperation();
+
+        progression.appliquer(new Progression("Compression 10/20", 0.5));
+
+        assertThat(progression.messageProperty().get()).isEqualTo("Compression 10/20");
+    }
+
+    @Test
+    @DisplayName("#3505 : l'estimation se compte depuis demarrer(), pas depuis l'origine de l'horloge")
+    void chemin_horloge_estime_depuis_la_reference_posee() {
+        // ⚠️ Premier jet faux, et c'est le test qui avait tort : j'attendais « aucune estimation », parce
+        // que la Javadoc dit « trop récent pour estimer ». Le code n'exclut en réalité qu'un écoulé NUL -
+        // quelques microsecondes donnent « ~0 s restant », pas l'absence de mention.
+        //
+        // La propriété qui tient vraiment est celle que la classe annonce : l'écoulé se compte depuis la
+        // référence posée, jamais depuis l'origine de `System.nanoTime()`. Un mutant qui ADDITIONNE au
+        // lieu de soustraire annonce « ~6460 min restant » là où deux instructions se suivent.
+        ProgressionOperation progression = new ProgressionOperation();
+        progression.demarrer("Préparation…");
+
+        progression.appliquer(new Progression("Compression 10/20", 0.5));
+
+        assertThat(progression.messageProperty().get())
+                .startsWith("Compression 10/20 · ~")
+                .doesNotContain("min");
+    }
+
+    @Test
     @DisplayName("#3483 : un écoulé négatif ne produit pas d'estimation à rebours")
     void ecoule_negatif_sans_estimation() {
         ProgressionOperation progression = new ProgressionOperation();
