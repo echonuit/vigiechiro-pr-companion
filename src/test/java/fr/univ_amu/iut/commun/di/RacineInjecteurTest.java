@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -66,5 +68,18 @@ class RacineInjecteurTest {
         // Feature recherche (#144) : son contrat socle est bien fourni par RechercheModule (filet de
         // sécurité si le module disparaissait ou si le binding cassait avant l'arrivée du chrome).
         assertThat(injecteur.getInstance(RechercheGlobale.class)).isNotNull();
+    }
+
+    @Test
+    void le_port_de_mutation_et_la_revision_observable_sont_la_meme_instance() {
+        System.setProperty("vigiechiro.workspace", workspaceJetable.toString());
+
+        Injector injecteur = RacineInjecteur.creer();
+
+        // Le service signale par le port, l'écran observe la révision : s'ils ne désignent pas le même
+        // objet, le signal part dans le vide et rien ne rougit. C'est la panne silencieuse que ce
+        // câblage doit rendre impossible (#3541).
+        assertThat(injecteur.getInstance(JournalMutations.class))
+                .isSameAs(injecteur.getInstance(RevisionDonnees.class));
     }
 }
