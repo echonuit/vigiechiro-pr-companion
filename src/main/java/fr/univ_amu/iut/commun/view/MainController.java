@@ -55,6 +55,7 @@ public class MainController {
     private final Set<ActionMenu> actionsMenu;
     private final BandeauAnnonce bandeau;
     private final OccupationChrome occupationChrome;
+    private final DefilementChrome defilementChrome;
 
     /// Racine `StackPane` de la fenêtre : hôte du voile d'occupation du chrome (#1215).
     @FXML
@@ -146,6 +147,7 @@ public class MainController {
             OuvrirPassage ouvrirPassage,
             Set<ActionMenu> actionsMenu,
             OccupationChrome occupationChrome,
+            DefilementChrome defilementChrome,
             BandeauAnnonce bandeau) {
         this.navigation = navigation;
         this.navigateur = navigateur;
@@ -157,6 +159,7 @@ public class MainController {
         this.actionsMenu = actionsMenu;
         this.bandeau = bandeau;
         this.occupationChrome = occupationChrome;
+        this.defilementChrome = defilementChrome;
     }
 
     /// Appelée par le `FXMLLoader` une fois les `@FXML` injectés. Câble les bindings.
@@ -225,6 +228,10 @@ public class MainController {
         defilementCentral.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         defilementCentral.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
         defilementCentral.getStyleClass().add("defilement-central");
+        // Le port de révélation (#1486) reçoit ce défilement : les écrans peuvent désormais demander
+        // qu'une de leurs zones soit amenée dans le champ sans connaître le chrome, comme ils posent
+        // déjà un voile par l'OccupationChrome.
+        defilementChrome.installer(defilementCentral);
         // Sommet initial sans animation ; chaque changement d'écran ensuite arrive en fondu (confort).
         defilementCentral.setContent(navigateur.getVueCentrale());
         racine.setCenter(defilementCentral);
