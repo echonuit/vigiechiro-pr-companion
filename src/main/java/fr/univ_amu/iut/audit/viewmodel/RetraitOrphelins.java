@@ -62,9 +62,12 @@ public final class RetraitOrphelins {
                 .map(resistant -> nom(resistant.dossier()))
                 .reduce((premier, second) -> premier + ", " + second)
                 .orElse("");
-        return RetourOperation.avertissement(
-                fait + " " + bilan.resistants().size() + " dossier(s) n'ont pas pu être retirés : " + restes
-                        + ". Ils sont peut-être ouverts dans une autre fenêtre.");
+        // Le motif vient du système : « le processus ne peut pas accéder au fichier » dit à
+        // l'utilisateur de fermer sa fenêtre, là où « le dossier est encore là » ne lui apprend rien.
+        String motif = bilan.resistants().getFirst().raison();
+        String explication = motif.isBlank() ? "Ils sont peut-être ouverts dans une autre fenêtre." : motif + ".";
+        return RetourOperation.avertissement(fait + " " + bilan.resistants().size()
+                + " dossier(s) n'ont pas pu être retirés : " + restes + ". " + explication);
     }
 
     /// Le nom du dossier plutôt que son chemin entier : c'est sous ce nom que l'utilisateur reconnaît une

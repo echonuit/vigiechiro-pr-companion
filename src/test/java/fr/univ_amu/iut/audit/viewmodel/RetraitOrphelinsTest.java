@@ -96,7 +96,8 @@ class RetraitOrphelinsTest {
         void retrait_partiel_n_est_pas_un_succes() {
             RetourOperation retour = RetraitOrphelins.compteRendu(new BilanNettoyage(
                     List.of(Path.of(PASS2)),
-                    List.of(new BilanNettoyage.DossierResistant(Path.of(PASS3), "le dossier est encore là")),
+                    List.of(new BilanNettoyage.DossierResistant(
+                            Path.of(PASS3), "Le processus ne peut pas accéder au fichier")),
                     1024L));
 
             // C'est le mode de panne de #3448, transposé : annoncer un ménage fait quand un dossier
@@ -104,6 +105,8 @@ class RetraitOrphelinsTest {
             // ouvert dans l'explorateur résiste : ce cas est courant, pas tordu.
             assertThat(retour.severite()).isEqualTo(Severite.AVERTISSEMENT);
             assertThat(retour.texte()).contains("Car130711-2026-Pass3-Z1");
+            // Le motif du système remonte jusqu'au bandeau : c'est lui qui dit quoi faire ensuite.
+            assertThat(retour.texte()).contains("Le processus ne peut pas accéder au fichier");
         }
 
         @Test
