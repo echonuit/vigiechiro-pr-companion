@@ -32,6 +32,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
@@ -181,6 +182,30 @@ class RattachementModaleViewTest {
         assertThat(annee.getValue()).isEqualTo(2026);
         assertThat(numero.getValue()).isEqualTo(1);
         assertThat(recap.getText()).contains("Aucun changement");
+    }
+
+    @Test
+    @DisplayName("#1494 : l'avertissement irréversible est épinglé, il ne défile pas avec le formulaire")
+    void recap_epingle_hors_du_corps_defilant(FxRobot robot) {
+        Label recap = robot.lookup("#labelRecap").queryAs(Label.class);
+        ScrollPane corps = robot.lookup(".corps-modale").queryAs(ScrollPane.class);
+
+        // Le récapitulatif annonce « Action irréversible » ; le bandeau « Météo pré-remplie », lui, est
+        // épinglé hors du corps défilant (#2496). Laisser le premier dans le corps inverse la
+        // hiérarchie : le plus grave sort du champ d'un coup de molette, le moins grave reste.
+        assertThat(ancetres(recap))
+                .as("le récapitulatif ne doit pas vivre dans le corps défilant")
+                .doesNotContain(corps);
+        assertThat(recap.getScene()).as("mais il reste bien dans la modale").isNotNull();
+    }
+
+    /// Les ancêtres de `noeud`, jusqu'à la racine de la scène.
+    private static java.util.List<javafx.scene.Node> ancetres(javafx.scene.Node noeud) {
+        java.util.List<javafx.scene.Node> chemin = new java.util.ArrayList<>();
+        for (javafx.scene.Node courant = noeud.getParent(); courant != null; courant = courant.getParent()) {
+            chemin.add(courant);
+        }
+        return chemin;
     }
 
     @Test

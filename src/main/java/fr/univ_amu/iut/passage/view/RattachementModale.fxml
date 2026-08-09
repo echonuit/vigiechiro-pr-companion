@@ -188,11 +188,18 @@
                   GridPane.rowIndex="2" GridPane.columnIndex="1"/>
       </GridPane>
 
-      <Separator/>
-
-      <Label fx:id="labelRecap" styleClass="recap-rattachement" wrapText="true"/>
     </VBox>
   </ScrollPane>
+
+  <!-- Récapitulatif de rattachement, ÉPINGLÉ (#1494) : il annonce « Action irréversible », et il vivait
+       au bout du corps défilant - un coup de molette le sortait du champ pendant que « Météo
+       pré-remplie », infiniment moins critique, restait visible parce qu'épinglé (#2496). La hiérarchie
+       était inversée.
+
+       Sa place est ici, entre le corps et le pied : il décrit ce que « Appliquer » va faire, donc il se
+       lit près du bouton qui le fera, pas au bout d'un formulaire. -->
+  <Separator/>
+  <Label fx:id="labelRecap" styleClass="recap-rattachement" wrapText="true"/>
 
   <!-- Bandeau de retour partagé (ADR 0023), ÉPINGLÉ (#2496) : le canal s'appelait « messageErreur » alors
        qu'il portait aussi des succès et des guidages de saisie (#1917). Hors du corps défilant, un message
