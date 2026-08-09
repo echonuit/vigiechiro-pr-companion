@@ -3,6 +3,8 @@ package fr.univ_amu.iut.commun.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.ResultatRecherche;
+import fr.univ_amu.iut.commun.viewmodel.AccueilViewModel;
+import fr.univ_amu.iut.commun.viewmodel.AccueilViewModel.CompteurAccueil;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.Comparator;
 import java.util.List;
@@ -48,7 +50,7 @@ public class MainController {
     private final NavigationViewModel navigation;
     private final Navigateur navigateur;
     private final Set<ActiviteAccueil> activites;
-    private final Set<IndicateurAccueil> indicateurs;
+    private final AccueilViewModel accueilViewModel;
     private final Optional<RechercheGlobale> recherche;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
@@ -141,7 +143,7 @@ public class MainController {
             NavigationViewModel navigation,
             Navigateur navigateur,
             Set<ActiviteAccueil> activites,
-            Set<IndicateurAccueil> indicateurs,
+            AccueilViewModel accueilViewModel,
             Optional<RechercheGlobale> recherche,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
@@ -152,7 +154,7 @@ public class MainController {
         this.navigation = navigation;
         this.navigateur = navigateur;
         this.activites = activites;
-        this.indicateurs = indicateurs;
+        this.accueilViewModel = accueilViewModel;
         this.recherche = recherche;
         this.ouvrirSite = ouvrirSite;
         this.ouvrirPassage = ouvrirPassage;
@@ -205,11 +207,20 @@ public class MainController {
         horizon.heightProperty().bind(hero.heightProperty());
         hero.setClip(horizon);
 
-        // Tableau de bord : les compteurs se rafraîchissent à chaque retour sur l'accueil (après un
-        // import, une déclaration de site…), pour refléter l'état courant de la base.
+        // Tableau de bord : le bandeau suit désormais la DONNÉE (#1376). Une synchronisation déroulée
+        // par-dessus l'accueil se voit sans qu'on ait navigué.
+        accueilViewModel.compteurs().addListener((ListChangeListener<CompteurAccueil>) c -> peuplerIndicateurs());
+
+        // ⚠️ Le rafraîchissement au retour sur l'accueil RESTE, et ce n'est pas une ceinture-bretelles.
+        // Seule la synchronisation annonce ses mutations aujourd'hui ; l'import, la création d'un site
+        // et la suppression n'émettent pas encore (#3542). Sans cette ligne, l'accueil cesserait de
+        // suivre ces gestes-là : la correction de #1376 introduirait la régression qu'elle corrige,
+        // sur un périmètre plus large. Elle se retire dans #3542, quand tous les émetteurs seront en
+        // place, et pas avant. Le double calcul qui en résulte après une mutation annoncée est
+        // idempotent, et se paie une fois par retour d'écran.
         navigation.vueCouranteProperty().addListener((obs, ancien, nouveau) -> {
             if ("accueil".equals(nouveau)) {
-                peuplerIndicateurs();
+                accueilViewModel.relire();
             }
         });
 
@@ -383,26 +394,15 @@ public class MainController {
         return section;
     }
 
-    /// Bâtit le bandeau de compteurs (tableau de bord) à partir des [IndicateurAccueil] des
-    /// features, triés par `ordre()` et recalculés à la volée. Le bandeau reste **masqué** tant
-    /// que la base est vide (premier lancement) : l'accueil reste épuré plutôt que d'afficher une
-    /// rangée de « 0 ».
+    /// Restitue le bandeau de compteurs depuis [AccueilViewModel]. Le chrome ne calcule plus rien :
+    /// il redessine quand la liste observable change, c'est-a-dire quand la donnee bouge (#1376).
     private void peuplerIndicateurs() {
-        // Instantané unique des compteurs : chaque valeur() déclenche un COUNT(*) et tout se passe
-        // sur le fil JavaFX. On lit donc chaque indicateur UNE seule fois (pour décider de la
-        // visibilité ET pour l'affichage), au lieu de rappeler valeur() à la construction de chaque
-        // pastille.
-        record Compteur(IndicateurAccueil indicateur, long valeur) {}
-        var compteurs = indicateurs.stream()
-                .sorted(Comparator.comparingInt(IndicateurAccueil::ordre))
-                .map(i -> new Compteur(i, i.valeur()))
-                .toList();
-        boolean aDesDonnees = compteurs.stream().mapToLong(Compteur::valeur).sum() > 0;
+        boolean aDesDonnees = accueilViewModel.aDesDonnees();
         bandeauIndicateurs.setVisible(aDesDonnees);
         bandeauIndicateurs.setManaged(aDesDonnees);
         bandeauIndicateurs.getChildren().clear();
         if (aDesDonnees) {
-            compteurs.stream()
+            accueilViewModel.compteurs().stream()
                     .map(c -> CartesAccueil.pastille(c.indicateur(), c.valeur()))
                     .forEach(bandeauIndicateurs.getChildren()::add);
         }

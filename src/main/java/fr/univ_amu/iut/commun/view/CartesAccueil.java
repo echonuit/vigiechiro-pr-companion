@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.viewmodel.IndicateurAccueil;
 import javafx.animation.TranslateTransition;
 import javafx.scene.AccessibleRole;
 import javafx.scene.Node;

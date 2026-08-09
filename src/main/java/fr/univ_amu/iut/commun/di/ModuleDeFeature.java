@@ -4,8 +4,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import fr.univ_amu.iut.commun.view.ActionMenu;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
-import fr.univ_amu.iut.commun.view.IndicateurAccueil;
 import fr.univ_amu.iut.commun.view.OngletReglages;
+import fr.univ_amu.iut.commun.viewmodel.IndicateurAccueil;
 
 /// Base des modules Guice de **feature** : un [AbstractModule] doté d'un petit **DSL de contribution**
 /// qui masque le boilerplate des `Multibinder` des points d'extension du socle (carte d'accueil,

@@ -71,7 +71,7 @@ class ConnexionProgressionIntegreeViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             ConnexionViewModel viewModel() {
-                return new ConnexionViewModel(stockage, client, Set.of());
+                return new ConnexionViewModel(stockage, client, Set.of(), () -> {});
             }
 
             @Provides

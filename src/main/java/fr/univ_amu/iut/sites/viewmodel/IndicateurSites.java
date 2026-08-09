@@ -1,7 +1,7 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
 import com.google.inject.Inject;
-import fr.univ_amu.iut.commun.view.IndicateurAccueil;
+import fr.univ_amu.iut.commun.viewmodel.IndicateurAccueil;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.Objects;
 

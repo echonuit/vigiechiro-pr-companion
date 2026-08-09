@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.viewmodel.IndicateurAccueil;
 import java.nio.file.Path;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;

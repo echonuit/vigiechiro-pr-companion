@@ -7,6 +7,7 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -224,6 +225,33 @@ class MainViewTest {
 
         FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
         assertThat(bandeau.isVisible()).isTrue();
+        assertThat(robot.lookup(".indicateur-libelle").queryAllAs(Label.class))
+                .extracting(Label::getText)
+                .contains("Sites");
+    }
+
+    @Test
+    @DisplayName("#1376 : les compteurs suivent une mutation survenue SANS changement de vue")
+    void bandeau_suit_une_mutation_sans_navigation(FxRobot robot) {
+        FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
+        assertThat(bandeau.isVisible())
+                .as("base vide au départ : le bandeau est masqué")
+                .isFalse();
+
+        // Le geste réel de #1376 : la connexion s'ouvre PAR-DESSUS l'accueil et sa synchronisation
+        // importe des sites. On ne quitte pas l'accueil, et on n'y revient pas : c'est précisément
+        // l'aller-retour de `bandeau_affiche_compteurs_apres_donnees` qui masquait le défaut.
+        robot.interact(() -> {
+            new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
+            injector.getInstance(ServiceSites.class)
+                    .creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, "u-1");
+            injector.getInstance(JournalMutations.class).mutationStructurelleValidee();
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(bandeau.isVisible())
+                .as("le bandeau paraît sans qu'on ait navigué")
+                .isTrue();
         assertThat(robot.lookup(".indicateur-libelle").queryAllAs(Label.class))
                 .extracting(Label::getText)
                 .contains("Sites");
