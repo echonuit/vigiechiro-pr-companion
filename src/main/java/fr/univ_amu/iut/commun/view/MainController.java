@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.ResultatRecherche;
+import fr.univ_amu.iut.commun.viewmodel.IndicateurAccueil;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.Comparator;
 import java.util.List;
