@@ -5,6 +5,7 @@ import fr.univ_amu.iut.analyse.model.ExportSyntheseCsv;
 import fr.univ_amu.iut.analyse.model.LigneSynthese;
 import fr.univ_amu.iut.analyse.model.ServiceSynthese;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.ContexteActivite;
 import fr.univ_amu.iut.commun.model.ReferentielActivite;
 import java.io.IOException;
@@ -34,7 +35,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "synthetiser-passage",
         description = "Synthétise une nuit : contacts par espèce et classe d'activité au regard du référentiel.")
-public final class SynthetiserPassage implements Callable<Integer> {
+public final class SynthetiserPassage implements Callable<Integer>, LectureSeule {
 
     @Option(
             names = "--passage",

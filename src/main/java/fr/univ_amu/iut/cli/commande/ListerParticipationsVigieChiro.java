@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
@@ -32,7 +33,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "lister-participations-vigiechiro",
         description = "Liste vos participations Vigie-Chiro (identifiant, site, point, date).")
-public final class ListerParticipationsVigieChiro implements Callable<Integer> {
+public final class ListerParticipationsVigieChiro implements Callable<Integer>, LectureSeule {
 
     @Option(names = "--json", description = "Émet une enveloppe JSON plutôt qu'un tableau texte.")
     private boolean json;

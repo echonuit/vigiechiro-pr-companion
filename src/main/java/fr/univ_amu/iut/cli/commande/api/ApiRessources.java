@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande.api;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.api.CatalogueApi;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
@@ -22,7 +23,7 @@ import picocli.CommandLine.Spec;
 /// Avec `--sonder`, la commande **confronte la carte au serveur** : la colonne « répond » porte le
 /// statut observé. Sans, elle affiche ce qu'on **sait** ; c'est une carte, pas un état.
 @Command(name = "ressources", description = "Liste les ressources lisibles de l'API et leurs chemins.")
-public final class ApiRessources implements Callable<Integer> {
+public final class ApiRessources implements Callable<Integer>, LectureSeule {
 
     @Option(
             names = "--sonder",

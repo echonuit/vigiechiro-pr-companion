@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.LotPagine;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
@@ -42,7 +43,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "lister-sites-vigiechiro",
         description = "Interroge le catalogue des sites de Vigie-Chiro (les vôtres, ou toute la plateforme).")
-public final class ListerSitesVigieChiro implements Callable<Integer> {
+public final class ListerSitesVigieChiro implements Callable<Integer>, LectureSeule {
 
     /// Portée de la lecture : vos sites (dérivés de vos participations) ou le catalogue entier.
     public enum Portee {

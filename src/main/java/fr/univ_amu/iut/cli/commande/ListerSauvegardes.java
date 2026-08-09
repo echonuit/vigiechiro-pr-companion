@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.persistence.InventaireSauvegardes;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
@@ -37,7 +38,7 @@ import picocli.CommandLine.Spec;
         name = "lister-sauvegardes",
         description = "Liste les sauvegardes et les filets de migration présents, avec leur date, "
                 + "leur taille et le total occupé.")
-public final class ListerSauvegardes implements Callable<Integer> {
+public final class ListerSauvegardes implements Callable<Integer>, LectureSeule {
 
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 

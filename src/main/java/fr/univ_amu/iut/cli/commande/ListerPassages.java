@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.cli.model.RegistrePassages;
 import fr.univ_amu.iut.cli.model.RegistrePassages.LignePassage;
 import fr.univ_amu.iut.commun.model.LieuQualifie;
@@ -27,7 +28,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "lister-passages",
         description = "Liste les passages enregistrés (carré, point, année, statut, verdict).")
-public final class ListerPassages implements Callable<Integer> {
+public final class ListerPassages implements Callable<Integer>, LectureSeule {
 
     @Option(names = "--carre", description = "Ne garde que les passages de ce carré (n° exact).")
     private String carre;

@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.cli.commande.api;
 
+import fr.univ_amu.iut.cli.LectureSeule;
 import java.util.concurrent.Callable;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
@@ -31,7 +32,7 @@ import picocli.CommandLine.Spec;
         name = "api",
         description = "Interrogation brute de l'API Vigie-Chiro (lecture seule, exploration).",
         subcommands = {ApiLire.class, ApiRessources.class})
-public final class GroupeApi implements Callable<Integer> {
+public final class GroupeApi implements Callable<Integer>, LectureSeule {
 
     @Spec
     private CommandSpec spec;

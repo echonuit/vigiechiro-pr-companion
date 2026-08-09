@@ -31,7 +31,10 @@ import java.util.concurrent.ConcurrentHashMap;
 public final class VerrouWorkspace implements AutoCloseable {
 
     /// Nom du fichier de verrou, à la racine du workspace.
-    static final String NOM_FICHIER = ".verrou";
+    /// Nom du fichier de verrou. **Public** parce qu'un test hors de ce paquet doit pouvoir simuler
+    /// une occupation par un autre processus, ce qu'un verrou pris ici ne ferait pas : il serait
+    /// reentrant (#3498).
+    public static final String NOM_FICHIER = ".verrou";
 
     /// Ce que **ce processus** verrouille déjà. Une JVM ne peut pas prendre deux fois le même verrou
     /// de fichier, et n'a d'ailleurs pas à se protéger d'elle-même : l'IHM tient le verrou pour toute

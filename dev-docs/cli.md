@@ -153,6 +153,32 @@ globale `--workspace <dir>` est consommée par `main()` **avant** de bâtir l'in
 la propriété système `vigiechiro.workspace`, lue par `CommunModule`). Sans elle, le workspace par
 défaut est `<Documents>/VigieChiro-Companion`.
 
+### Le dossier de travail est réservé pendant l'écriture (#3498)
+
+L'application graphique **réserve** le dossier de travail pour toute sa durée (`VerrouWorkspace`,
+#2731) ; la CLI ne le demandait jamais et écrivait donc par-dessus, alors que la doc du verrou nomme
+elle-même le cas : « deux instances graphiques, **une IHM et une CLI**, ou une restauration pendant un
+import ». Depuis #3498, `Cli.migrerPuisExecuter` prend le verrou **par défaut**, pour toute la durée
+de la commande. Un dossier déjà occupé donne un refus : code `2`, état intact.
+
+Une commande s'en dispense en portant l'interface marqueur `fr.univ_amu.iut.cli.LectureSeule`. **La
+déclaration porte sur les lectrices, pas sur les écrivaines**, et le sens compte : oublier de déclarer
+une écrivaine laisserait son écriture échapper au verrou, en silence ; oublier une lectrice fait
+refuser une consultation pendant que l'application est ouverte, ce qui se voit et se signale le jour
+même. « Lecture seule » veut dire : ne touche ni la base ni les dossiers du dossier de travail.
+Interroger le réseau, ou écrire **hors** du dossier de travail (`lister-carres --sortie`,
+`synthetiser-passage --sortie`), reste de la lecture seule - tout comme écrire la configuration
+d'amorçage, qui vit ailleurs et s'écrit d'un seul coup (#3507). C'est pourquoi `emplacements` est
+lectrice : elle sert à **repointer** le dossier de travail, et la verrouiller refuserait de déménager
+à qui déménage parce que la place actuelle est occupée.
+
+⚠️ La migration du schéma prend le verrou de son côté : une commande de lecture sur une base à mettre
+à jour peut donc être refusée, et c'est voulu - mettre à jour le schéma est une écriture.
+
+`ClassementLectureEcritureTest` exige que **chaque** commande soit classée : elle porte le marqueur,
+ou elle figure dans la liste des écrivaines, tenue dans ce test. Le garde ne juge pas le classement -
+aucune analyse statique n'y arrive - il rend l'**oubli** impossible.
+
 ### Codes de sortie
 
 | Code | Signification |

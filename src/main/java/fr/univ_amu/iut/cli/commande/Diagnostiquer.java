@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.Diagnostic;
@@ -33,7 +34,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "diagnostiquer",
         description = "Bilan matériel d'une nuit (climat, anomalies, cohérence horaire, GPS) en lecture seule.")
-public final class Diagnostiquer implements Callable<Integer> {
+public final class Diagnostiquer implements Callable<Integer>, LectureSeule {
 
     private static final DateTimeFormatter HEURE = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT);
 

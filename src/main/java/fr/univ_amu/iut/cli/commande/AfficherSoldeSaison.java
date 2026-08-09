@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
 import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.saison.model.CasePassage;
@@ -33,7 +34,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "solde-saison",
         description = "Solde d'une saison : passages faits, manquants et action restante, point par point.")
-public final class AfficherSoldeSaison implements Callable<Integer> {
+public final class AfficherSoldeSaison implements Callable<Integer>, LectureSeule {
 
     private static final DateTimeFormatter JOUR_MOIS = DateTimeFormatter.ofPattern("dd/MM");
 

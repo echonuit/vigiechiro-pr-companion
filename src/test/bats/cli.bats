@@ -837,3 +837,36 @@ EOF
   run cli traiter-passages --action preparer-depot --passage 999999
   [[ "${output}" != *"☰"* ]]
 }
+
+@test "dossier de travail occupé : l'écriture est refusée exit 2, la lecture passe exit 0 (#3498)" {
+  # L'IHM réserve le dossier pour toute sa durée (VerrouWorkspace, #2731) ; la CLI ne le demandait
+  # jamais. Un test in-process ne prouve rien ici : le verrou est réentrant dans une JVM, et c'est
+  # justement le code de sortie d'un VRAI processus qu'on veut voir.
+  run cli lister-sites
+  [ "${status}" -eq 0 ] # la base est migrée : sans ça le refus viendrait de la migration
+
+  # ⚠️ `flock(1)` ne conviendrait pas : il pose un verrou flock(2), indépendant des verrous POSIX que
+  # `FileChannel.tryLock` utilise. Le test serait vert sans rien bloquer.
+  python3 - "${BATS_TEST_TMPDIR}/.verrou" "${BATS_TEST_TMPDIR}/.pris" << 'FIN' &
+import fcntl, pathlib, sys, time
+
+canal = open(sys.argv[1], "w")
+fcntl.lockf(canal, fcntl.LOCK_EX)
+pathlib.Path(sys.argv[2]).write_text("pris")
+time.sleep(120)
+FIN
+  occupant=$!
+  for _ in $(seq 1 100); do [ -f "${BATS_TEST_TMPDIR}/.pris" ] && break; sleep 0.1; done
+  [ -f "${BATS_TEST_TMPDIR}/.pris" ]
+
+  run cli creer-site --carre 640380 --nom "Aix centre"
+  code_ecriture="${status}"
+  message="${output}"
+  run cli lister-sites
+  code_lecture="${status}"
+  kill "${occupant}" 2>/dev/null || true
+
+  [ "${code_ecriture}" -eq 2 ] # un refus, pas une panne : rien n'a été touché (convention #2294)
+  [[ "${message}" == *"déjà utilisé"* ]]
+  [ "${code_lecture}" -eq 0 ] # refuser une lecture coûterait plus que la protection ne rapporte
+}

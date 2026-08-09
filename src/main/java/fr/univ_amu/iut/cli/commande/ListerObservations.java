@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.LieuQualifie;
 import fr.univ_amu.iut.validation.model.CriteresRevue;
@@ -41,7 +42,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "lister-observations",
         description = "Liste les observations d'un passage (identifiant, fichier, avis, statut), avec filtres.")
-public final class ListerObservations implements Callable<Integer> {
+public final class ListerObservations implements Callable<Integer>, LectureSeule {
 
     @Option(
             names = "--passage",

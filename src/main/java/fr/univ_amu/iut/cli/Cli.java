@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.RefusAvantEcriture;
+import fr.univ_amu.iut.commun.persistence.VerrouWorkspace;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -106,12 +107,55 @@ public final class Cli {
     }
 
     /// Stratégie d'exécution : migre la base **si une sous-commande est invoquée** (une invocation qui se
-    /// limite à l'aide/usage n'a pas besoin de la base), puis délègue à la stratégie standard de picocli.
+    /// limite à l'aide/usage n'a pas besoin de la base), **réserve le dossier de travail** si elle peut
+    /// l'écrire, puis délègue à la stratégie standard de picocli.
+    ///
+    /// Le verrou se prend **par défaut** : une commande ne s'en dispense qu'en portant [LectureSeule],
+    /// et l'interface dit pourquoi la déclaration va dans ce sens-là (#3498).
     private int migrerPuisExecuter(ParseResult parseResult) {
-        if (parseResult.hasSubcommand()) {
-            injecteur.getInstance(MigrationSchema.class).migrer();
+        if (!parseResult.hasSubcommand()) {
+            return new CommandLine.RunLast().execute(parseResult);
         }
-        return new CommandLine.RunLast().execute(parseResult);
+        // ⚠️ Le gestionnaire d'exceptions de picocli ne voit QUE ce que lève la commande. Un refus né
+        // ici - migration ou verrou - lui échappe et retombait en code 1, « échec, état incertain »,
+        // alors que rien n'a été touché. On le traduit donc sur place (#3498).
+        try {
+            injecteur.getInstance(MigrationSchema.class).migrer();
+            if (litSeulement(parseResult)) {
+                return new CommandLine.RunLast().execute(parseResult);
+            }
+            // Tenu pour toute la commande, et relâché quoi qu'il arrive : une commande qui échoue ne
+            // doit pas laisser le dossier réservé derrière elle.
+            try (VerrouWorkspace verrou =
+                    VerrouWorkspace.pourOperationExclusive(Workspace.resolu(), nomDe(parseResult))) {
+                return new CommandLine.RunLast().execute(parseResult);
+            }
+        } catch (RefusAvantEcriture refus) {
+            LOG.fine(() -> "Refus avant écriture, hors exécution de la commande : " + refus.getMessage());
+            parseResult.commandSpec().commandLine().getErr().println("Refus : " + refus.getMessage());
+            return CODE_REFUS;
+        }
+    }
+
+    /// La sous-commande la plus profonde ne fait-elle que lire ?
+    ///
+    /// On descend jusqu'à la feuille : c'est elle qui s'exécute, et un groupe intermédiaire ne dit rien
+    /// de ce que fait la commande qu'il porte.
+    private static boolean litSeulement(ParseResult parseResult) {
+        return feuille(parseResult).commandSpec().userObject() instanceof LectureSeule;
+    }
+
+    /// Nom de la sous-commande invoquée, pour que le refus dise **ce qu'on n'a pas pu lancer**.
+    private static String nomDe(ParseResult parseResult) {
+        return "« " + feuille(parseResult).commandSpec().name() + " »";
+    }
+
+    private static ParseResult feuille(ParseResult parseResult) {
+        ParseResult courant = parseResult;
+        while (courant.hasSubcommand()) {
+            courant = courant.subcommand();
+        }
+        return courant;
     }
 
     /// Erreurs de **parsing** (commande inconnue, option requise manquante ou mal typée) → message français

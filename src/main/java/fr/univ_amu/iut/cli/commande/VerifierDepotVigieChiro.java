@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.lot.model.BilanVerification;
 import fr.univ_amu.iut.lot.model.VerificationDepot;
@@ -26,7 +27,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "verifier-depot-vigiechiro",
         description = "Vérifie côté plateforme (journal de traitement + données) qu’un dépôt a bien été traité.")
-public final class VerifierDepotVigieChiro implements Callable<Integer> {
+public final class VerifierDepotVigieChiro implements Callable<Integer>, LectureSeule {
 
     /// Limite d’affichage des fichiers manquants (au-delà : « … et N autres »).
     private static final int MANQUANTES_AFFICHEES = 20;

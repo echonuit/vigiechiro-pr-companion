@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.analyse.model.AgregationAnalyse;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
@@ -33,7 +34,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "lister-especes",
         description = "Liste l'inventaire par espèce : détections, passages, carrés et points, par taxon.")
-public final class ListerEspeces implements Callable<Integer> {
+public final class ListerEspeces implements Callable<Integer>, LectureSeule {
 
     @Mixin
     private InventaireFiltre filtre;

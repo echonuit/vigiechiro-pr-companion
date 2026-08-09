@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
@@ -27,7 +28,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "lister-selection",
         description = "Affiche la sélection d'écoute d'un passage : verdict par fichier + verdict final proposé.")
-public final class ListerSelection implements Callable<Integer> {
+public final class ListerSelection implements Callable<Integer>, LectureSeule {
 
     @Option(
             names = "--passage",
