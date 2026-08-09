@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CommunePoint;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
@@ -177,8 +178,13 @@ public class SitesModule extends ModuleDeFeature {
     @Provides
     @Singleton
     ServiceSites fournirServiceSites(
-            SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge, PointCommuneDao communes) {
-        return new ServiceSites(siteDao, pointDao, passageDao, horloge, communes);
+            SiteDao siteDao,
+            PointDao pointDao,
+            PassageDao passageDao,
+            Horloge horloge,
+            PointCommuneDao communes,
+            JournalMutations journal) {
+        return new ServiceSites(siteDao, pointDao, passageDao, horloge, communes, journal);
     }
 
     /// Commune d'un point (table latérale `point_commune`, #2791).

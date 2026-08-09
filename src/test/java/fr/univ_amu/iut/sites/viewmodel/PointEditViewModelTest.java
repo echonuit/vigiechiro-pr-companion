@@ -52,7 +52,8 @@ class PointEditViewModelTest {
         pointDao = new PointDao(source);
         PassageDao passageDao = new PassageDao(source);
         communeDao = new PointCommuneDao(source);
-        service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.now()), communeDao);
+        service = new ServiceSites(
+                siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.now()), communeDao, () -> {});
         // Contrôle du carré STOC absent (#733) : le cas hors connexion, où la saisie doit rester entière.
         viewModel = new PointEditViewModel(
                 service, new ServiceCommunes(pointDao, communeDao, position -> Optional.empty()), Optional.empty());

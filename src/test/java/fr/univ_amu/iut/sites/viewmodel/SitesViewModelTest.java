@@ -68,7 +68,7 @@ class SitesViewModelTest {
         enregistreurDao.insert(new Enregistreur("1925492", "V1.01", null));
         liens = new LienVigieChiroDao(source);
         HorlogeFigee horloge = new HorlogeFigee(JOUR_FIXE);
-        service = new ServiceSites(siteDao, pointDao, passageDao, horloge, new PointCommuneDao(source));
+        service = new ServiceSites(siteDao, pointDao, passageDao, horloge, new PointCommuneDao(source), () -> {});
         viewModel = new SitesViewModel(service, passageDao, horloge, liens, ID_USER, Optional.empty());
     }
 

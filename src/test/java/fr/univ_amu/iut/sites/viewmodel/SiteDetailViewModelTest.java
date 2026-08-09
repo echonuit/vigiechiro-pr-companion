@@ -60,7 +60,7 @@ class SiteDetailViewModelTest {
         passageDao = new PassageDao(source);
         new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
         HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
-        service = new ServiceSites(siteDao, pointDao, passageDao, horloge, new PointCommuneDao(source));
+        service = new ServiceSites(siteDao, pointDao, passageDao, horloge, new PointCommuneDao(source), () -> {});
         liens = new LienVigieChiroDao(source);
         viewModel =
                 new SiteDetailViewModel(service, pointDao, passageDao, horloge, new PortailVigieChiro(liens), liens);

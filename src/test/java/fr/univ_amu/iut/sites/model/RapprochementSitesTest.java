@@ -68,8 +68,8 @@ class RapprochementSitesTest {
         pointDao = new PointDao(source);
         PassageDao passageDao = new PassageDao(source);
         communeDao = new PointCommuneDao(source);
-        service =
-                new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 6, 1)), communeDao);
+        service = new ServiceSites(
+                siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 6, 1)), communeDao, () -> {});
         liens = new LienVigieChiroDao(source);
         siteTiers = new SiteTiersDao(source);
         rapprochement = new RapprochementSites(

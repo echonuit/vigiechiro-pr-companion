@@ -45,7 +45,12 @@ class ServiceSitesMockTest {
     @DisplayName("R5 : si un carré identique existe déjà, le service refuse sans tenter d'insérer")
     void unicite_carre_refusee_sans_insertion() {
         ServiceSites service = new ServiceSites(
-                siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 1, 1)), mock(PointCommuneDao.class));
+                siteDao,
+                pointDao,
+                passageDao,
+                new HorlogeFigee(LocalDate.of(2026, 1, 1)),
+                mock(PointCommuneDao.class),
+                () -> {});
         when(siteDao.findByUtilisateur("u-1"))
                 .thenReturn(List.of(new Site(1L, "640380", null, Protocole.STANDARD, null, "2026-01-01", "u-1")));
 
@@ -59,7 +64,12 @@ class ServiceSitesMockTest {
     @DisplayName("Carré libre : le service délègue l'insertion au DAO")
     void carre_libre_delegue_insertion() {
         ServiceSites service = new ServiceSites(
-                siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 1, 1)), mock(PointCommuneDao.class));
+                siteDao,
+                pointDao,
+                passageDao,
+                new HorlogeFigee(LocalDate.of(2026, 1, 1)),
+                mock(PointCommuneDao.class),
+                () -> {});
         Site attendu = new Site(7L, "640380", null, Protocole.STANDARD, null, "2026-01-01", "u-1");
         when(siteDao.findByUtilisateur("u-1")).thenReturn(List.of());
         when(siteDao.insert(ArgumentMatchers.any())).thenReturn(attendu);

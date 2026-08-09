@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.model;
 
 import fr.univ_amu.iut.commun.model.Alerte;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
@@ -40,14 +41,21 @@ public class ServiceSites {
     private final PassageDao passageDao;
     private final Horloge horloge;
     private final PointCommuneDao communes;
+    private final JournalMutations journal;
 
     public ServiceSites(
-            SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge, PointCommuneDao communes) {
+            SiteDao siteDao,
+            PointDao pointDao,
+            PassageDao passageDao,
+            Horloge horloge,
+            PointCommuneDao communes,
+            JournalMutations journal) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.communes = Objects.requireNonNull(communes, "communes");
+        this.journal = Objects.requireNonNull(journal, "journal");
     }
 
     /// Crée un site de suivi (P1).
@@ -74,7 +82,9 @@ public class ServiceSites {
                 commentaire,
                 horloge.aujourdhui().toString(),
                 idUtilisateur);
-        return siteDao.insert(aCreer);
+        Site cree = siteDao.insert(aCreer);
+        journal.mutationStructurelleValidee();
+        return cree;
     }
 
     /// Modifie la fiche d'un site existant (bouton « ✏ Modifier » de M-Site-detail).
@@ -149,7 +159,9 @@ public class ServiceSites {
                     "Le code de point « " + code + " » existe déjà dans ce site (unicité code/point).");
         }
         PointDEcoute aCreer = new PointDEcoute(null, code, latitude, longitude, description, site.id(), synchronise);
-        return pointDao.insert(aCreer);
+        PointDEcoute ajoute = pointDao.insert(aCreer);
+        journal.mutationStructurelleValidee();
+        return ajoute;
     }
 
     /// Met à jour un point d'écoute existant (édition depuis la modale).
@@ -241,6 +253,7 @@ public class ServiceSites {
                     + " » porte au moins un passage. Supprimez d'abord les passages rattachés.");
         }
         siteDao.delete(idSite);
+        journal.mutationStructurelleValidee();
     }
 
     /// Les codes des points qui **empêchent** la suppression du site, dans l'ordre des points (#1383).

@@ -49,7 +49,8 @@ class SiteEditPorteeTest {
                 new PointDao(source),
                 new PassageDao(source),
                 new HorlogeFigee(LocalDate.of(2026, 4, 22)),
-                new PointCommuneDao(source));
+                new PointCommuneDao(source),
+                () -> {});
         viewModel = new SiteEditViewModel(service, liens, "u-1");
     }
 
