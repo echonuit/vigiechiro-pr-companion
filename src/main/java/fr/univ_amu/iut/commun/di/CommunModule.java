@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.SourceUniverselle;
@@ -43,6 +44,7 @@ import fr.univ_amu.iut.commun.view.ResolveurFiche;
 import fr.univ_amu.iut.commun.view.ResolveurFicheGbif;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.OngletReglagesGeneral;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import java.util.List;
 
 /// Module Guice du socle : fournit le [Workspace], la [SourceDeDonnees] et le socle IHM
@@ -73,6 +75,11 @@ public class CommunModule extends AbstractModule {
         // Surchargent les défauts @ImplementedBy (identité + synchrone) réservés aux tests.
         bind(ExecuteurFiche.class).to(ExecuteurFicheAsynchrone.class).in(Singleton.class);
         bind(ExecuteurTache.class).to(ExecuteurTacheAsynchrone.class).in(Singleton.class);
+        // Signal de mutation (#3541) : le service annonce par le port, l'écran observe la révision.
+        // Les DEUX doivent désigner le même objet, sinon le signal part dans le vide sans que rien ne
+        // rougisse : d'où le `to(...)` vers la classe concrète plutôt qu'un second `@Provides`, et le
+        // singleton porté par `RevisionDonnees` elle-même.
+        bind(JournalMutations.class).to(RevisionDonnees.class);
         // Point d'extension « onglets de réglages » (#927) : `Set<OngletReglages>` est toujours
         // injectable (écran Réglages + menu ☰), chaque feature y ajoutant son onglet via son module.
         // Le socle contribue lui-même l'onglet « Général » (#928 : source des fiches espèces, puis
@@ -141,6 +148,16 @@ public class CommunModule extends AbstractModule {
     /// Résolveur de fiche espèce (#922) : convertit l'URL de recherche GBIF en URL de fiche en résolvant
     /// la clé d'usage via l'API GBIF. Singleton (réutilise le client HTTP). Les liens PNA/Wikipédia, déjà
     /// directs, passent inchangés.
+    /// Révision observable des mutations structurelles (#3541), câblée sur le **fil d'affichage**
+    /// réel : un import ou une synchronisation signalent depuis un fil d'arrière-plan, et une
+    /// `Property` JavaFX se mute sur le fil JavaFX. `ExecuteurTache#surFilJavaFx()` reposte en
+    /// production et exécute immédiatement en test, ce qui garde les tests déterministes.
+    @Provides
+    @Singleton
+    RevisionDonnees fournirRevisionDonnees(ExecuteurTache executeur) {
+        return new RevisionDonnees(executeur.surFilJavaFx());
+    }
+
     @Provides
     @Singleton
     ResolveurFiche fournirResolveurFiche() {
