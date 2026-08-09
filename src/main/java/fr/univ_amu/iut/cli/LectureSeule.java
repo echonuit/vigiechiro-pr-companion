@@ -26,9 +26,15 @@ package fr.univ_amu.iut.cli;
 ///
 /// ## Ce que « lecture seule » veut dire ici
 ///
-/// **Ne touche ni la base, ni les dossiers du workspace, ni la configuration d'amorçage.** Interroger
-/// le réseau ou écrire un CSV **hors** du dossier de travail reste de la lecture seule : le verrou
-/// protège le dossier de travail, pas le disque entier.
+/// **Ne touche ni la base ni les dossiers du dossier de travail.** Interroger le réseau, ou écrire
+/// **hors** du dossier de travail, reste de la lecture seule : le verrou protège le dossier de
+/// travail, pas le disque entier. C'est le cas d'un CSV exporté à l'emplacement demandé
+/// (`lister-carres --sortie`), et c'est aussi celui de la **configuration d'amorçage**, qui vit dans
+/// le dossier de configuration et se protège toute seule, en s'écrivant d'un seul coup (#3507).
+///
+/// ⚠️ `emplacements` est lectrice pour cette raison, et pas seulement par technicité : elle sert à
+/// **repointer** le dossier de travail. La verrouiller reviendrait à refuser de déménager à qui
+/// déménage justement parce que la place actuelle est occupée ou abîmée.
 ///
 /// ⚠️ La migration, elle, prend le verrou de son côté quand elle a quelque chose à appliquer
 /// ([MigrationSchema]) : une commande de lecture sur une base à mettre à jour peut donc être refusée,

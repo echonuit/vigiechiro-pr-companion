@@ -94,6 +94,24 @@ class CliVerrouWorkspaceTest {
         }
     }
 
+    @Test
+    @DisplayName("emplacements passe sur un dossier occupé : elle sert justement à en changer")
+    void emplacements_passe_sur_un_dossier_occupe() throws IOException {
+        // Elle écrit - mais dans le dossier de CONFIGURATION, jamais dans le dossier de travail. La
+        // verrouiller reviendrait à refuser de déménager à qui déménage parce que la place actuelle
+        // est occupée. La CI l'a montré avant qu'on y pense : sept tests rouges, tous sur cette
+        // commande.
+        cli.executer(new String[] {"lister-sites"}, sortie, erreur);
+        capture.vider();
+
+        try (Occupation ignore = new Occupation(workspace)) {
+            int code = cli.executer(new String[] {"emplacements"}, sortie, erreur);
+
+            assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+            assertThat(capture.texte()).contains("Emplacements");
+        }
+    }
+
     /// Le dossier de travail, tenu par « quelqu'un d'autre ».
     ///
     /// Le verrou de fichier brut, et non `VerrouWorkspace.prendre` : celui-ci inscrirait le dossier

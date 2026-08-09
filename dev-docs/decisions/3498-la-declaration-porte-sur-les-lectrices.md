@@ -20,9 +20,8 @@ bouts à la fois.
 
 Poser le verrou demande de savoir **quelles commandes écrivent**. Aucun signal mécanique ne le dit :
 
-- le **nom** ne prouve rien - `metadonnees-passage` rattrape et envoie des métadonnées,
-  `emplacements --reinitialiser` réécrit la configuration d'amorçage, et ni l'un ni l'autre ne
-  s'annonce ;
+- le **nom** ne prouve rien - `metadonnees-passage` rattrape et envoie des métadonnées sans que rien
+  ne l'annonce, tandis qu'`emplacements` écrit, mais ailleurs ;
 - le **service appelé** classe `lister-sites` parmi les écrivains, `ServiceSites` sachant écrire ;
 - l'**analyse d'appels** ne tranche pas non plus. Mesuré sur les 65 commandes avec ArchUnit, en
   suivant les appels jusqu'aux primitives : elle rate `supprimer-site` et signale `lister-carres`,
@@ -45,9 +44,16 @@ l'une que l'autre - c'est **le sens dans lequel une erreur se paie** :
 La liste des lectrices est aussi la plus **stable** : une commande qui lit le restera, alors qu'une
 commande qui se met à écrire ne rappellera à personne qu'il faut la déclarer.
 
-« Lecture seule » veut dire : **ne touche ni la base, ni les dossiers du dossier de travail, ni la
-configuration d'amorçage**. Interroger le réseau, ou écrire un fichier **hors** du dossier de travail,
-reste de la lecture seule : le verrou protège le dossier de travail, pas le disque.
+« Lecture seule » veut dire : **ne touche ni la base ni les dossiers du dossier de travail**.
+Interroger le réseau, ou écrire **hors** du dossier de travail, reste de la lecture seule : le verrou
+protège le dossier de travail, pas le disque. La **configuration d'amorçage** en fait partie - elle
+vit dans le dossier de configuration et se protège toute seule, en s'écrivant d'un seul coup (#3507).
+
+⚠️ Cette frontière n'est pas une commodité, et elle a coûté un aller-retour. `emplacements` avait
+d'abord été classée écrivaine, au motif qu'elle écrit la configuration d'amorçage ; sept tests ont
+rougi en intégration continue. Le remède n'était pas de les isoler : la commande sert à **repointer**
+le dossier de travail, et la verrouiller revient à refuser de déménager à qui déménage justement parce
+que la place actuelle est occupée ou abîmée. `CliVerrouWorkspaceTest` fige ce cas.
 
 Le refus est un `RefusAvantEcriture`, donc un code de sortie **2** : rien n'a été touché. Il est
 traduit dans `migrerPuisExecuter`, car le gestionnaire d'exceptions de picocli ne voit que ce que lève
@@ -68,7 +74,7 @@ bon côté.
 
 - Une commande nouvelle arrive **protégée** : ne rien faire la verrouille. Le garde force alors sa
   conceptrice à trancher, plutôt que de la laisser hériter d'un défaut.
-- Vingt-deux commandes sont déclarées lectrices, dont le groupe `api` et ses deux filles, en lecture
+- Vingt-trois commandes sont déclarées lectrices, dont le groupe `api` et ses deux filles, en lecture
   seule par charte ([ADR 3006](3006-le-groupe-api-est-borne.md)).
 - La migration du schéma prend le verrou de son côté : une commande de lecture sur une base à mettre à
   jour peut donc être refusée. C'est voulu - mettre à jour le schéma est une écriture.

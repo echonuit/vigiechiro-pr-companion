@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.ServiceEmplacements;
 import fr.univ_amu.iut.commun.model.SondeAccessibilite;
 import fr.univ_amu.iut.commun.model.SondeAccessibilite.Verdict;
@@ -30,7 +31,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "emplacements",
         description = "Voir ou changer où vivent le dossier de travail et la base (effet au prochain démarrage).")
-public final class Emplacements implements Callable<Integer> {
+public final class Emplacements implements Callable<Integer>, LectureSeule {
 
     private static final int CODE_SUCCES = 0;
     // Un refus (dossier inutilisable, options exclusives) n'écrit RIEN : l'état reste intact. La CLI

@@ -29,8 +29,8 @@ class ClassementLectureEcritureTest {
 
     /// Les commandes qui **écrivent** dans le dossier de travail, et prennent donc le verrou.
     ///
-    /// Deux d'entre elles ne se devinent pas au nom : `metadonnees-passage` rattrape et envoie des
-    /// métadonnées, et `emplacements --reinitialiser` réécrit la configuration d'amorçage.
+    /// L'une d'elles ne se devine pas au nom : `metadonnees-passage` rattrape et envoie des
+    /// métadonnées. À l'inverse `emplacements` écrit, mais **ailleurs** : elle est lectrice ici.
     private static final Set<String> ECRIVAINS = Set.of(
             "ajouter-point",
             "constituer-selection",
@@ -40,7 +40,6 @@ class ClassementLectureEcritureTest {
             "deposer",
             "deposer-vigiechiro",
             "discussion",
-            "emplacements",
             "exporter-activite",
             "exporter-lot",
             "exporter-observations",
