@@ -42,6 +42,12 @@ portail, **« Verrouillé sur Vigie-Chiro »** (vert) quand il est en plus verro
 c'est l'état **favorable**, celui qui autorise le dépôt des nuits. Pas de badge : le site n'est pas
 encore rattaché (connectez-vous ou synchronisez).
 
+!!! note "Renommer un site déjà connu de Vigie-Chiro reste local"
+    Le **nom convivial** est le vôtre : il vous aide à vous y retrouver dans votre liste. Sur un site
+    que le portail connaît déjà - relié ou verrouillé - le modifier **ne remonte rien** : Vigie-Chiro
+    continuera d'afficher le nom qu'il a. La modale vous le rappelle sous le champ, pour que l'écart
+    entre les deux affichages ne vous surprenne pas.
+
 Le bouton **Récupérer depuis Vigie-Chiro** (en haut à droite) récupère à la demande vos sites et
 points déclarés sur le portail : les sites manquants sont créés localement, ceux déjà présents sont
 simplement reliés - vos données locales ne sont **jamais écrasées**. C'est la même synchronisation
