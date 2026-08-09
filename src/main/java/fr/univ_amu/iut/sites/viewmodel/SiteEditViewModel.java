@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -36,6 +37,10 @@ public class SiteEditViewModel {
 
     private final ServiceSites service;
 
+    /// Correspondances Vigie-Chiro : elles disent si le site édité existe déjà côté plateforme,
+    /// donc si son renommage local créerait un écart visible (#1380).
+    private final LienVigieChiroDao liens;
+
     /// Utilisateur propriétaire des sites : nécessaire à la création (R5, unicité du carré par
     /// utilisateur) ; l'édition, elle, part du site existant.
     private final String idUtilisateur;
@@ -48,6 +53,12 @@ public class SiteEditViewModel {
 
     private final ReadOnlyStringWrapper titre = new ReadOnlyStringWrapper(this, "titre", "");
     private final ReadOnlyStringWrapper libelleBouton = new ReadOnlyStringWrapper(this, "libelleBouton", "Créer");
+
+    /// Portée de l'édition en cours (#1380) : ce que le geste atteint, quand il n'atteint pas tout.
+    /// Absent en déclaration et sur un site que la plateforme ne connaît pas - il n'y a alors aucun
+    /// écart à annoncer, et un message permanent sur le cas nominal serait du bruit.
+    private final ReadOnlyObjectWrapper<RetourOperation> porteeEdition =
+            new ReadOnlyObjectWrapper<>(this, "porteeEdition", RetourOperation.AUCUN);
     /// Compte rendu de la dernière tentative d'enregistrement, avec sa sévérité (#1917). Il s'appelait
     /// `messageErreur` : la sévérité vivait dans son **nom**, ce qui l'empêchait de porter autre chose
     /// qu'un échec. Or un champ mal rempli n'est pas une panne, c'est un guidage.
@@ -66,7 +77,8 @@ public class SiteEditViewModel {
     /// Site en cours d'édition ; `null` en création.
     private Site siteEnEdition;
 
-    public SiteEditViewModel(ServiceSites service, String idUtilisateur) {
+    public SiteEditViewModel(ServiceSites service, LienVigieChiroDao liens, String idUtilisateur) {
+        this.liens = Objects.requireNonNull(liens, "liens");
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         carreValide = Bindings.createBooleanBinding(() -> numeroCarre.get().matches("\\d{6}"), numeroCarre);
@@ -84,6 +96,7 @@ public class SiteEditViewModel {
         retour.set(RetourOperation.AUCUN);
         titre.set("Nouveau site de suivi");
         libelleBouton.set("Créer");
+        porteeEdition.set(RetourOperation.AUCUN);
     }
 
     /// Configure la modale en **mode édition** : champs pré-remplis depuis le site existant.
@@ -96,6 +109,7 @@ public class SiteEditViewModel {
         retour.set(RetourOperation.AUCUN);
         titre.set("Modifier le site · Carré " + site.numeroCarre());
         libelleBouton.set("Enregistrer");
+        porteeEdition.set(porteeDe(site));
     }
 
     /// Tente d'enregistrer le site (déclaration ou édition).
@@ -180,5 +194,25 @@ public class SiteEditViewModel {
 
     private static String ouVide(String valeur) {
         return valeur == null ? "" : valeur;
+    }
+    /// Ce que l'édition de `site` atteint (#1380).
+    ///
+    /// Sur un site que Vigie-Chiro connaît déjà - enregistré **ou** verrouillé - le renommage local ne
+    /// remonte rien : le portail continuera d'afficher l'ancien nom. L'édition reste utile (un nom
+    /// d'usage aide à s'y retrouver), c'est le **silence** qui créait une incohérence perçue.
+    ///
+    /// Les deux états sont traités ensemble à dessein : dès qu'une correspondance existe, l'écart entre
+    /// les deux noms est visible. Ne le dire que sur les verrouillés laisserait la moitié des cas muets.
+    private RetourOperation porteeDe(Site site) {
+        StatutPlateforme statut = StatutPlateforme.duSite(site.id(), liens);
+        if (statut == StatutPlateforme.ABSENT) {
+            return RetourOperation.AUCUN;
+        }
+        return RetourOperation.info("Modification locale : le nom ne sera pas transmis à Vigie-Chiro.");
+    }
+
+    /// Portée de l'édition en cours, à afficher à côté des champs qu'elle concerne (#1380).
+    public ReadOnlyObjectProperty<RetourOperation> porteeEditionProperty() {
+        return porteeEdition.getReadOnlyProperty();
     }
 }

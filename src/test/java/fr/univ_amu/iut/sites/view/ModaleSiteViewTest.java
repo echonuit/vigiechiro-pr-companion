@@ -15,6 +15,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -58,10 +59,14 @@ class ModaleSiteViewTest {
     @Start
     void start(Stage stage) throws Exception {
         service = mock(ServiceSites.class);
+        // Aucune correspondance Vigie-Chiro : le mock rend des collections vides, donc tout site y est
+        // ABSENT et la modale n'annonce aucune portée. C'est le cas nominal de cette classe de tests ;
+        // les trois états de la portée se vérifient sans IHM (SiteEditPorteeTest).
+        LienVigieChiroDao liens = mock(LienVigieChiroDao.class);
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             SiteEditViewModel viewModel() {
-                return new SiteEditViewModel(service, ID_USER);
+                return new SiteEditViewModel(service, liens, ID_USER);
             }
         });
         FXMLLoader loader = new FXMLLoader(ModaleSiteController.class.getResource("ModaleSite.fxml"));

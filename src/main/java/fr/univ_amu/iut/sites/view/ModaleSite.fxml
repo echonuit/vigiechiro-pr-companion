@@ -52,6 +52,10 @@
 
   <Label text="Nom convivial (optionnel)" styleClass="field-label"/>
   <TextField fx:id="champNom" promptText="Étang de la Tuilière"/>
+  <!-- Portée de l'édition (#1380) : sur un site que Vigie-Chiro connaît déjà, le renommage reste local.
+       Le libellé est posé SOUS le champ qu'il commente, et non en tête de modale : il qualifie ce
+       champ-là, et remonté il ne voudrait plus rien dire. Masqué quand il n'y a rien à annoncer. -->
+  <Label fx:id="lblPorteeEdition" styleClass="field-hint"/>
 
   <Label text="PROTOCOLE" styleClass="section-label"/>
   <ComboBox fx:id="champProtocole" prefWidth="240.0"/>

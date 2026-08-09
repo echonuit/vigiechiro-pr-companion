@@ -256,8 +256,8 @@ public class SitesModule extends ModuleDeFeature {
     /// unicité du carré **par utilisateur**) ; l'édition, elle, part du site existant.
     @Provides
     SiteEditViewModel fournirSiteEditViewModel(
-            ServiceSites service, @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new SiteEditViewModel(service, idUtilisateur);
+            ServiceSites service, LienVigieChiroDao liens, @Named("idUtilisateurCourant") String idUtilisateur) {
+        return new SiteEditViewModel(service, liens, idUtilisateur);
     }
 
     private static String creerUtilisateurLocal(UtilisateurDao utilisateurDao) {
