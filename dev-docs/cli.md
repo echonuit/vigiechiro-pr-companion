@@ -102,7 +102,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `exporter-activite` | `(--passage <id> \| --tout) --sortie <fichier> [--tranche 15\|30\|60] [--format csv]` | #2352 | `ServiceActivite.contactsDuPassage` + `AgregationActivite.parEspece` + `ExportActiviteCsv`. Facette **données** de la courbe d'activité (pendant CLI de l'export image de l'IHM), rattachée à la nuit biologique. Une ligne par **(carré, point, nuit, espèce, tranche)** : chaque ligne porte son lieu, sans quoi un export couvrant plusieurs nuits ne se recouperait pas (#2613). `--tout` couvre la vue transverse de l'écran. **Non gouvernée par la fonctionnalité `activite-nuit`** : l'agrégation est une capacité stable de `analyse`, celle-ci ne gouvernant que l'accès à la vue |
 | `audit-coherence` | `[--passage <id>] [--gravite <niveau>] [--categorie <nature>] [--contient <texte>] [--json] [--online] [--token <jeton>]` | #1133, #1254, #1347 | `ServiceAuditCoherence` : confronte **disque, base et serveur**. `--gravite` et `--categorie` sont les **deux puces** de l'écran « Audit de cohérence » (#3100), portées ici à la clôture de #3092 ; chacune retient une valeur **exacte**. ⚠️ Elles filtrent **l'affichage seul** : le **code de sortie continue de juger le rapport entier**, sans quoi `--gravite INFO` sur un workspace abîmé rendrait `0` et un script d'intégration conclurait que tout va bien. Sans `--passage`, audite tout le workspace ; avec, une seule nuit (utile après l'avoir réparée). `--online` ajoute les constats qui demandent le réseau (dépôts, points). `0` ssi aucun constat d'erreur |
 | `sauvegarder` | `[--complet] [--dossier <dir>]` | #148, #1346 | `ServiceSauvegarde` : instantané cohérent de la base (`VACUUM INTO`). `--complet` emporte **aussi l'audio** (dossiers de session), c'est la **seule sauvegarde qui protège vraiment**, la plateforme ne rendant pas l'audio d'un dépôt en archives. Le bilan **dit ce qui n'a pas pu être copié** (carte SD non montée) et sort en `2` : une sauvegarde qu'on croit complète et qui ne l'est pas vaut moins que pas de sauvegarde |
-| `restaurer` | `<chemin> [--complet] --confirmer` | #148, #1346 | `ServiceSauvegarde.restaurer` / `restaurerComplet` : remet la base (et, avec `--complet`, les dossiers de son, **remis là où ils étaient**, avec les `root_path` corrigés et un compte rendu de ce qui a changé de place, #2727). **Écrase l'état local** : `--confirmer` est obligatoire. La base courante est mise de côté (`vigiechiro.db.avant-restauration`) |
+| `restaurer` | `<chemin> [--complet] --confirmer` | #148, #1346 | `ServiceSauvegarde.restaurer` / `restaurerComplet` : remet la base (et, avec `--complet`, les dossiers de son, **remis là où ils étaient**, avec les `root_path` corrigés et un compte rendu de ce qui a changé de place, #2727). **Écrase l'état local** : `--confirmer` est obligatoire. La base courante est mise de côté (`vigiechiro.db.avant-restauration`). **Trois codes** : `0` restauration entière, **`10`** restaurée mais il manque quelque chose, `2` refus (#3500) |
 | `lister-sauvegardes` | `[--dossier <d>] [--json]` | #3197 | `InventaireSauvegardes.lire`. Ce que `sauvegardes/` contient : nom, date, taille, et le **total**. L'application y écrit un filet complet avant **chaque** migration de schéma et n'en supprime jamais aucun - délibérément (ADR 0048 : le filet appartient à l'utilisateur), mais jusqu'ici sans que rien ne dise combien il y en avait ni ce qu'ils pesaient. La commande **observe** : elle ne purge rien et ne conseille rien. Les sauvegardes complètes étant des **dossiers**, leur taille est celle de leur contenu - un inventaire qui ne verrait que les fichiers mentirait là où le chiffre compte |
 | `supprimer-sauvegarde` | `--nom <nom> [--dossier <d>] --confirmer` | #3197 | Le ménage que la doc conseille, **explicitement demandé**. Même parade que `supprimer-passage` : sans `--confirmer`, la commande **chiffre la perte et ne touche à rien**, sortie `2`. Un nom inconnu est une **erreur d'usage**, pas un succès silencieux : croire avoir supprimé ce qu'on n'a pas touché est précisément ce qu'on veut éviter |
 | `reset-guide` | `[--json] [--executer --confirmer [--accepter-perte] [--sauvegarde <dir>]]` | #1151, #1419 | Sans `--executer` : **lecture seule**, ce que deviendrait l'audio de chaque nuit si l'on repartait d'une base neuve (disque / serveur / **perdu**), code `2` dès qu'une nuit est en « perdu », pour qu'un script puisse refuser d'enchaîner. Avec `--executer` : `ServiceReset` mène la procédure (sauvegarde complète → base neuve → repeuplement depuis VigieChiro → audit final). Il **refuse de démarrer** si la perte n'est pas acceptée, **ou si VigieChiro ne répond pas**, une base neuve qu'on ne peut pas repeupler est une destruction sèche. Dans les deux cas, la base reste **intacte** |
@@ -186,6 +186,7 @@ aucune analyse statique n'y arrive - il rend l'**oubli** impossible.
 | `0` | succès |
 | `1` | échec d'exécution : accès aux données, E/S, incident inattendu (état **incertain**) |
 | `2` | mauvaise invocation (commande inconnue, argument requis manquant ou mal formé) **ou refus** (règle métier, ou garde destructive : état **intact**, rien n'a été fait) |
+| `10` | **succès partiel**, sur les seules commandes qui le documentent (`verifier-maj`, `restaurer`) : l'opération a abouti, mais quelque chose reste à regarder |
 
 **`2` dit aussi « j'ai refusé, je n'ai rien fait ».** Les commandes **destructives** exigent un drapeau
 explicite (`--confirmer`, `--ecraser`) : sans lui, elles **chiffrent la perte** et sortent en `2` sans
@@ -204,6 +205,20 @@ occupé. Tous sont émis **avant** la moindre écriture, et sortaient pourtant e
 Ils portent maintenant `RefusAvantEcriture`, que le gestionnaire d'erreurs classe avec les autres
 refus. Une `DataAccessException` ordinaire, elle, reste un incident : sa pile est l'information
 utile.
+
+**Un troisième code quand « réussi » ne suffit pas (#3500).** `restaurer --complet` imprimait qu'une
+nuit manquait, puis sortait en `0` : le fait était dit dans un texte qu'un script ne lit pas. Elle rend
+maintenant **`10`** quand la restauration laisse un **manque** - la sauvegarde ne dit pas d'où venaient
+les dossiers, ou une nuit connue de la base n'y était pas.
+
+⚠️ Pas `1` ni `2` : la restauration a **réussi**. Confondre « ça n'a pas marché » avec « ça a marché,
+regarde quand même » est exactement ce que `verifier-maj` a payé avant elle.
+
+⚠️ Et pas sur les dossiers simplement **replacés ailleurs**, qui restent `0` : c'est le cas normal
+d'une restauration sur une autre machine, l'usage principal de `--complet`, et le compte rendu nomme
+déjà l'ancienne et la nouvelle adresse. Un `10` permanent s'apprend à s'ignorer, et emporterait avec
+lui celui qui compte. L'IHM, elle, garde son avertissement sur les trois cas : elle parle à quelqu'un
+qui lit le compte rendu ([ADR 3500](decisions/3500-le-code-de-sortie-distingue-le-manque-du-deplacement.md)).
 
 `deposer-vigiechiro` étend la convention : `0` **seulement si le dépôt est complet** ; `1` si des
 fichiers restent à reprendre (relancer la même commande ne re-téléverse que les manquants). Le jeton
