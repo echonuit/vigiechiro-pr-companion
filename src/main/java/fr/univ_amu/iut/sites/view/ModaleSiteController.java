@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.sites.model.Site;
@@ -75,6 +76,10 @@ public class ModaleSiteController {
     @FXML
     private Button boutonValider;
 
+    /// Portée de l'édition (#1380) : posé sous le champ « Nom convivial », qu'il commente.
+    @FXML
+    private Label lblPorteeEdition;
+
     @Inject
     public ModaleSiteController(SiteEditViewModel viewModel) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -87,6 +92,7 @@ public class ModaleSiteController {
         // son contenu (ADR 2493, #1534).
         Modales.suivreLaCroissance(racine, bandeauRetour.managedProperty());
         titreModale.textProperty().bind(viewModel.titreProperty());
+        LibelleRetour.installer(lblPorteeEdition, viewModel.porteeEditionProperty());
         champCarre.textProperty().bindBidirectional(viewModel.numeroCarreProperty());
         champNom.textProperty().bindBidirectional(viewModel.nomProperty());
         champCommentaire.textProperty().bindBidirectional(viewModel.commentaireProperty());
