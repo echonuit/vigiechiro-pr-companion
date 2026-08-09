@@ -42,6 +42,14 @@ portail, **« Verrouillé sur Vigie-Chiro »** (vert) quand il est en plus verro
 c'est l'état **favorable**, celui qui autorise le dépôt des nuits. Pas de badge : le site n'est pas
 encore rattaché (connectez-vous ou synchronisez).
 
+!!! warning "« Trop rapprochés pour le protocole »"
+    Chaque carte de point indique la distance **au point le plus proche du même carré**. En dessous de
+    **200 m**, elle passe en avertissement et dit pourquoi : deux points si proches ne conviennent pas
+    au protocole, et la cause est souvent une **coordonnée saisie de travers** plutôt qu'un vrai
+    voisinage. Vérifiez la position sur la carte avant de déplacer quoi que ce soit sur le terrain.
+
+    Au-delà du seuil, la distance est une simple information : elle ne réclame rien.
+
 !!! note "Renommer un site déjà connu de Vigie-Chiro reste local"
     Le **nom convivial** est le vôtre : il vous aide à vous y retrouver dans votre liste. Sur un site
     que le portail connaît déjà - relié ou verrouillé - le modifier **ne remonte rien** : Vigie-Chiro
