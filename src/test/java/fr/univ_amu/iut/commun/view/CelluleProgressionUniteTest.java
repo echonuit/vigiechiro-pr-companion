@@ -69,8 +69,8 @@ class CelluleProgressionUniteTest {
         LigneSuivi terminee = new LigneSuivi(2);
         terminee.terminer();
         assertThat(enfants(celluleAffichant(terminee)))
-                .extracting(Node::getClass)
-                .containsExactly(FontIcon.class, Label.class);
+                .extracting(n -> n.getClass().getSimpleName())
+                .containsExactly("FontIcon", "Label");
     }
 
     @Test
@@ -131,7 +131,9 @@ class CelluleProgressionUniteTest {
 
         ligne.terminer();
 
-        assertThat(enfants(cellule)).extracting(Node::getClass).containsExactly(FontIcon.class, Label.class);
+        assertThat(enfants(cellule))
+                .extracting(n -> n.getClass().getSimpleName())
+                .containsExactly("FontIcon", "Label");
         assertThat(libelleDe(cellule)).isEqualTo("Terminée");
     }
 
