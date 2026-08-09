@@ -112,13 +112,37 @@ final class CartesPointsSite {
     /// L'alerte est une **icône** (#2221), plus un « ⚠ » écrit dans le texte : la sévérité se pose, elle ne
     /// s'écrit pas ([IconesSeverite]), et la couleur de l'icône vient de la même classe que le texte.
     private static Label etiquetteProximite(double metres, boolean tropProche) {
-        Label proximite = new Label("à " + distanceLisible(metres) + " du point le plus proche");
+        Label proximite = new Label(libelleProximite(metres, tropProche));
         proximite.getStyleClass().add(tropProche ? "carte-point-alerte" : STYLE_DESC);
         if (tropProche) {
             proximite.setGraphic(IconesSeverite.icone(Severite.AVERTISSEMENT, "carte-point-alerte"));
         }
         proximite.setWrapText(true);
         return proximite;
+    }
+
+    /// Texte de l'étiquette de proximité (#1379).
+    ///
+    /// ## Pourquoi l'alerte porte une phrase et pas seulement un chiffre
+    ///
+    /// « à 120 m du point le plus proche » avec une icône d'avertissement **signale** sans **expliquer** :
+    /// l'utilisateur voit qu'on lui reproche quelque chose, sans savoir quoi ni s'il doit agir. C'est le
+    /// même défaut que le « ⚠ » écrit dans le texte que l'icône a remplacé (#2221), sous une forme plus
+    /// polie.
+    ///
+    /// La règle existait, mais seulement dans le code : [CartePoint#SEUIL_PROXIMITE_METRES] est un
+    /// « garde-fou de protocole », et [CartePoint#tropProche] documente la double cause - des points
+    /// réellement trop rapprochés, **ou** une coordonnée saisie de travers. C'est cette phrase-là qu'il
+    /// fallait porter à l'écran.
+    ///
+    /// Le cas neutre reste nu : accrocher la règle au cas nominal en ferait du bruit permanent, et
+    /// l'alerte cesserait de se distinguer.
+    static String libelleProximite(double metres, boolean tropProche) {
+        String base = "à " + distanceLisible(metres) + " du point le plus proche";
+        if (!tropProche) {
+            return base;
+        }
+        return base + " : trop rapprochés pour le protocole, vérifiez la position ou la saisie GPS.";
     }
 
     /// Distance lisible : mètres arrondis en deçà de 1 km, kilomètres à une décimale au-delà.
