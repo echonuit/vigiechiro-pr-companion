@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.maj.model.VerificateurMiseAJour;
 import fr.univ_amu.iut.maj.model.VersionDisponible;
@@ -26,7 +27,7 @@ import picocli.CommandLine.Spec;
 /// - `1` : la vérification n'a pas abouti - hors ligne, service injoignable, ou version locale
 ///   inconnue parce que l'application ne tourne pas depuis un artefact publié.
 @Command(name = "verifier-maj", description = "Indique si une version plus récente de l'application est publiée.")
-public final class VerifierMiseAJour implements java.util.concurrent.Callable<Integer> {
+public final class VerifierMiseAJour implements java.util.concurrent.Callable<Integer>, LectureSeule {
 
     /// Code distinct du succès : « à jour » et « mise à jour disponible » sont deux réponses
     /// normales, pas un succès et un échec.

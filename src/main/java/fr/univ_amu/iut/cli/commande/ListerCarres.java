@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.analyse.model.AgregationAnalyse;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
@@ -32,7 +33,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "lister-carres",
         description = "Liste l'inventaire par carré : richesse en espèces et détections, par carré prospecté.")
-public final class ListerCarres implements Callable<Integer> {
+public final class ListerCarres implements Callable<Integer>, LectureSeule {
 
     @Mixin
     private InventaireFiltre filtre;

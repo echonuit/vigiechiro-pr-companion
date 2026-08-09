@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import java.io.PrintWriter;
@@ -18,7 +19,7 @@ import picocli.CommandLine.Spec;
 /// `lister-campagnes` (#2355) : liste les campagnes de suivi, de la plus récente à la plus ancienne.
 /// Lecture pure de [ServiceCampagne]. Option `--json` pour une sortie scriptable.
 @Command(name = "lister-campagnes", description = "Liste les campagnes de suivi.")
-public final class ListerCampagnes implements Callable<Integer> {
+public final class ListerCampagnes implements Callable<Integer>, LectureSeule {
 
     @Option(names = "--json", description = "Émet la liste au format JSON plutôt qu'en texte.")
     private boolean json;

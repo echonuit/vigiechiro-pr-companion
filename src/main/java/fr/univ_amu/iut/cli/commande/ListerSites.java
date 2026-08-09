@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -28,7 +29,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "lister-sites",
         description = "Liste les sites et leurs points d'écoute (pour retrouver les identifiants).")
-public final class ListerSites implements Callable<Integer> {
+public final class ListerSites implements Callable<Integer>, LectureSeule {
 
     @Option(
             names = "--json",

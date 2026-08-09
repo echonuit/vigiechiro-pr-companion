@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande.api;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Besoin;
@@ -37,7 +38,7 @@ import picocli.CommandLine.Spec;
 /// inventer ni effacer »). Aucun sondage répété non plus (#1338) : on interroge le serveur quand
 /// l'utilisateur le demande, pas en boucle.
 @Command(name = "lire", description = "Lit un chemin de l'API (GET) et rend le corps tel quel.")
-public final class ApiLire implements Callable<Integer> {
+public final class ApiLire implements Callable<Integer>, LectureSeule {
 
     /// `max_results=<n>` dans la requête, quel que soit ce qui l'entoure.
     private static final Pattern MAX_RESULTS = Pattern.compile("max_results=(\\d+)");

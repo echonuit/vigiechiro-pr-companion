@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.GesteAttenduCli;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
@@ -43,7 +44,7 @@ import picocli.CommandLine.Spec;
         name = "etat-traitement-vigiechiro",
         description = "Où en est l'analyse Tadarida de la nuit déposée ? (0 = terminé, 3 = en cours,"
                 + " 1 = en échec, 4 = jamais lancée, 2 = indisponible)")
-public final class EtatTraitementVigieChiro implements Callable<Integer> {
+public final class EtatTraitementVigieChiro implements Callable<Integer>, LectureSeule {
 
     /// Analyse terminée : les observations sont récupérables.
     private static final int TERMINE = 0;

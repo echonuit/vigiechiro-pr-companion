@@ -7,6 +7,7 @@ import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.Severite;
 import java.io.PrintWriter;
@@ -27,7 +28,7 @@ import picocli.CommandLine.Spec;
         name = "audit-coherence",
         description = "Audite la cohérence disque / base en lecture seule : fichiers manquants ou orphelins, "
                 + "préfixes non conformes, unités déposées divergentes.")
-public final class Auditer implements Callable<Integer> {
+public final class Auditer implements Callable<Integer>, LectureSeule {
 
     @Option(
             names = "--passage",

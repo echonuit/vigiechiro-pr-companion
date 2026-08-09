@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -35,7 +36,7 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "statut-passage",
         description = "Inspecte un passage en lecture seule : statut, verdict, volumes, séquences, résultats Tadarida.")
-public final class StatutPassage implements Callable<Integer> {
+public final class StatutPassage implements Callable<Integer>, LectureSeule {
 
     @Option(
             names = "--passage",

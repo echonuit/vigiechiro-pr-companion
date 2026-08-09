@@ -2,6 +2,7 @@ package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import java.io.PrintWriter;
@@ -23,7 +24,7 @@ import picocli.CommandLine.Spec;
         name = "pre-check",
         description =
                 "Affiche le pré-check consultatif d'une nuit (3 feux : couverture, nombre de fichiers, renommage).")
-public final class PreCheck implements Callable<Integer> {
+public final class PreCheck implements Callable<Integer>, LectureSeule {
 
     @Option(
             names = "--passage",
