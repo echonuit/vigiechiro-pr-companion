@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.view.DefilementChrome;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
@@ -133,6 +134,12 @@ class ImportationControllerGardeTest {
         // La navigation vers le passage créé n'est jamais empruntée ici : ces tests lisent le prédicat de
         // garde, pas le pied du compte rendu. Doublure inerte, comme la fabrique ci-dessus.
         return new ImportationController(
-                viewModel, conservation, new ExecuteurTacheSynchrone(), fabrique, mock(OuvrirPassage.class));
+                viewModel,
+                conservation,
+                new ExecuteurTacheSynchrone(),
+                fabrique,
+                mock(OuvrirPassage.class),
+                // Aucun chrome ici : le port de révélation (#1486) reste muet, comme en capture.
+                new DefilementChrome());
     }
 }
