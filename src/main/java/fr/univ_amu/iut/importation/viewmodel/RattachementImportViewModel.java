@@ -70,11 +70,15 @@ public class RattachementImportViewModel {
 
     private final ReadOnlyStringWrapper apercuPrefixe = new ReadOnlyStringWrapper(this, "apercuPrefixe", "");
 
-    /// Avertissement **non bloquant** (#33, #111) : non vide quand le dossier contient des originaux déjà
-    /// préfixés dont le préfixe **ne concorde pas** avec le rattachement choisi (leurs noms seront
-    /// conservés). Recalculé à chaque changement de rattachement ou de dossier inspecté.
-    /// La discordance de prefixe (#111), **typee** : les fichiers deja prefixes gardent leur nom, rien
-    /// n'echoue. Le « ⚠ » de tete a disparu avec l'arrivee du niveau AVERTISSEMENT (#2045).
+    /// Discordance de préfixe (#111), **bloquante depuis #1493** : non vide quand le dossier contient des
+    /// originaux déjà préfixés dont le préfixe **ne concorde pas** avec le rattachement choisi.
+    ///
+    /// Elle n'était qu'un avertissement - « leurs noms seront conservés » - et c'est précisément ce qui
+    /// posait problème : des fichiers estampillés d'un carré, rattachés à un autre, **partiraient tels
+    /// quels au dépôt**. Un avertissement qu'on écarte d'un clic ne protège pas d'une donnée fausse.
+    /// Elle entre donc dans `peutImporter`, et son niveau passe d'avertissement à **erreur**.
+    ///
+    /// Recalculée à chaque changement de rattachement ou de dossier inspecté.
     private final ReadOnlyObjectWrapper<RetourOperation> avertissementPrefixe =
             new ReadOnlyObjectWrapper<>(this, "avertissementPrefixe", RetourOperation.AUCUN);
 
@@ -283,9 +287,11 @@ public class RattachementImportViewModel {
                 nomsOriginaux.stream().filter(Prefixe::estNomPrefixe).anyMatch(nom -> !nom.startsWith(attendu));
         avertissementPrefixe.set(
                 discordant
-                        ? RetourOperation.avertissement("Certains fichiers sont déjà préfixés mais ne"
-                                + " correspondent pas au rattachement choisi (préfixe attendu : " + attendu
-                                + "). Leurs noms seront conservés.")
+                        ? RetourOperation.erreur("Certains fichiers sont déjà préfixés pour un autre"
+                                + " rattachement (préfixe attendu ici : " + attendu + "). L'import est"
+                                + " bloqué : leurs noms partiraient tels quels au dépôt, sous le nom d'un"
+                                + " autre carré. Corrigez le rattachement pour qu'il corresponde à ces"
+                                + " fichiers, ou repartez des originaux non préfixés.")
                         : RetourOperation.AUCUN);
     }
 }

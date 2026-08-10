@@ -330,12 +330,23 @@ l'indique explicitement et les **fichiers temporaires sont purgés** pour ne pas
 - **Numéro de passage déjà pris** : au rattachement, si ce numéro est déjà utilisé sur ce point, un
   pré-contrôle vous en **avertit** avant l'import.
 - **Fichiers déjà préfixés** : si les enregistrements portent déjà un préfixe Vigie-Chiro (nuit déjà
-  renommée), l'application **ne le double pas** et **signale toute discordance** entre ce préfixe et le
-  rattachement demandé.
+  renommée), l'application **ne le double pas**. Tant que ce préfixe **correspond** au rattachement
+  choisi, l'import se déroule normalement - réimporter une nuit déjà renommée est un parcours prévu.
 - **Enregistrements déjà ralentis** : un fichier dont le son a **déjà** subi l'expansion temporelle ×10 est
   **rejeté** (avec explication dans le rapport), pour éviter une **double expansion** qui rendrait les
   fréquences dix fois trop basses. Importez toujours les **fichiers bruts** issus du capteur.
 
-Ces avertissements sont **non bloquants** : ils vous alertent en ambre sans vous empêcher d'importer.
+Ces avertissements-là sont **non bloquants** : ils vous alertent sans vous empêcher d'importer.
 
-![Deux avertissements de rattachement en ambre : le numéro de passage choisi est déjà pris (avec le prochain numéro libre proposé), et certains fichiers portent un préfixe qui ne correspond pas au rattachement demandé. Ni l'un ni l'autre ne bloque l'import.](../assets/captures/apercu-import-rattachement-avertissements.png)
+!!! danger "Un préfixe qui ne correspond pas au rattachement **bloque** l'import"
+    Si les fichiers portent le préfixe d'un **autre** carré ou d'un autre passage - par exemple
+    `Car130711-…` alors que vous les rattachez au carré `640380` - l'import est **refusé**.
+
+    Ce n'est pas une précaution de forme. Les noms existants ne sont jamais réécrits : ces fichiers
+    partiraient **tels quels** au dépôt, et la participation du 640380 recevrait des sons estampillés
+    d'un autre carré. La donnée serait incohérente avec elle-même, sur la plateforme nationale.
+
+    **Deux sorties** : corrigez le rattachement pour qu'il corresponde aux fichiers, ou repartez des
+    **originaux non préfixés** issus du capteur.
+
+![Deux avertissements de rattachement en ambre : le numéro de passage choisi est déjà pris (avec le prochain numéro libre proposé), et certains fichiers portent un préfixe qui ne correspond pas au rattachement demandé. Le premier n'empêche pas d'importer ; le second, si.](../assets/captures/apercu-import-rattachement-avertissements.png)

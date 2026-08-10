@@ -390,8 +390,21 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                         .then("Import en cours…")
                         .otherwise(Bindings.when(viewModel.peutImporter())
                                 .then("Lancer l'import de la nuit inspectée.")
-                                .otherwise("Pour lancer l'import : inspectez un dossier, choisissez le site"
-                                        + " et le point, et renseignez un numéro de passage valide.")));
+                                // #1493 : la discordance de préfixe est une cause de blocage à part. La
+                                // confondre avec « il manque un champ » enverrait chercher une saisie
+                                // absente là où c'est le dossier qui ne correspond pas.
+                                .otherwise(Bindings.when(Bindings.createBooleanBinding(
+                                                () -> viewModel
+                                                        .rattachement()
+                                                        .avertissementPrefixeProperty()
+                                                        .get()
+                                                        .present(),
+                                                viewModel.rattachement().avertissementPrefixeProperty()))
+                                        .then("Ces fichiers portent déjà le préfixe d'un autre rattachement :"
+                                                + " voyez le message au-dessus du numéro de passage.")
+                                        .otherwise("Pour lancer l'import : inspectez un dossier, choisissez"
+                                                + " le site et le point, et renseignez un numéro de passage"
+                                                + " valide."))));
         boutonParcourir.disableProperty().bind(traitement);
         boutonTransformes.disableProperty().bind(traitement);
         boutonZip.disableProperty().bind(traitement);

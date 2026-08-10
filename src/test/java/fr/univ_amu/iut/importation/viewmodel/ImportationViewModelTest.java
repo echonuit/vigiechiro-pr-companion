@@ -279,6 +279,56 @@ class ImportationViewModelTest {
     }
 
     @Test
+    @DisplayName("#1493 : un préfixe discordant BLOQUE l'import, il ne se contente pas d'avertir")
+    void prefixe_discordant_bloque_l_import() throws IOException {
+        // Un dossier déjà préfixé pour le carré 130711, rattaché au 640380 : le nom physique
+        // contredirait le rattachement logique, et les fichiers partiraient tels quels au dépôt.
+        Path dejaPrefixe = Files.createDirectories(racine.resolve("sd-prefixee"));
+        JournalDeCapteur.ecrire(dejaPrefixe, "1925492", LocalDate.of(2026, 4, 22));
+        Files.writeString(dejaPrefixe.resolve("Car130711-2026-Pass1-Z1-PaRecPR1925492_20260422_203922.wav"), "wav");
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(dejaPrefixe)).thenReturn(inspecteur.inspecter(dejaPrefixe));
+
+        viewModel.inspection().dossierSourceProperty().set(dejaPrefixe);
+        viewModel.inspecter();
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+
+        // L'avertissement existait déjà ; ce qui manquait, c'est la conséquence. Un avertissement qu'on
+        // écarte d'un clic ne protège pas d'une donnée fausse (décision reconfirmée le 2026-08-07).
+        assertThat(viewModel.rattachement().avertissementPrefixeProperty().get().present())
+                .as("la discordance est bien détectée")
+                .isTrue();
+        assertThat(viewModel.peutImporter().get())
+                .as("et elle bloque désormais l'import")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1493 : un préfixe CONCORDANT laisse importer")
+    void prefixe_concordant_laisse_importer() throws IOException {
+        Path concordant = Files.createDirectories(racine.resolve("sd-concordante"));
+        JournalDeCapteur.ecrire(concordant, "1925492", LocalDate.of(2026, 4, 22));
+        Files.writeString(concordant.resolve("Car640380-2026-Pass1-A1-PaRecPR1925492_20260422_203922.wav"), "wav");
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(concordant)).thenReturn(inspecteur.inspecter(concordant));
+
+        viewModel.inspection().dossierSourceProperty().set(concordant);
+        viewModel.inspecter();
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.rattachement().numeroPassageProperty().set(1);
+
+        // Le garde-fou du garde-fou : bloquer sur TOUT dossier préfixé serait une régression franche,
+        // puisque réimporter une nuit déjà renommée est un parcours légitime.
+        assertThat(viewModel.peutImporter().get()).isTrue();
+    }
+
+    @Test
     @DisplayName("Changer de dossier source après inspection invalide l'inspection (réinspection requise)")
     void changer_dossier_reinitialise_l_inspection() {
         Site site = site(1L, "640380");
