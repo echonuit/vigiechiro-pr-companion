@@ -204,7 +204,7 @@ Exemple, la fonctionnalité « Fiche de l'espèce » (#844) :
 | `ResolveurFiche` | `ResolveurFicheIdentite` (aucun réseau) | `ResolveurFicheGbif` (résout la clé via l'API GBIF) |
 | `ResolveurCommune` | lambda dans les tests (aucun réseau) | `ResolveurCommuneApiGeo` (commune d'un point via l'API Géo, #2791) |
 | `ExecuteurFiche` | `ExecuteurFicheSynchrone` (déterministe) | `ExecuteurFicheAsynchrone` (hors fil JavaFX + `Platform.runLater`) |
-| `ExecuteurTache` (#793) | `ExecuteurTacheSynchrone` (déterministe) | `ExecuteurTacheAsynchrone` (thread virtuel + `Platform.runLater`) |
+| `ExecuteurTache` (#793) | `ExecuteurTacheSynchrone` (déterministe) | `ExecuteurTacheAsynchrone` (thread virtuel + `Platform.runLater`, **exécution sur place sans toolkit** : la CLI n'a pas de fil d'affichage) |
 
 Une **surcharge explicite** (`bind(...).to(...)` ou `@Provides`) l'emporte toujours sur le défaut. Les
 tests E2E l'exploitent via `Modules.override(RacineInjecteur.modules()).with(...)` pour injecter un faux

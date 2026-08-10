@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import java.io.IOException;
@@ -59,6 +60,9 @@ public final class CaptureAccueil {
         System.exit(0);
     }
 
+    /// En-tete partagee des trois points semes : PMD refuse le meme litteral trois fois.
+    private static final String POINT = "INSERT INTO listening_point (code, gps_lat, gps_lon, site_id)";
+
     private static void capturer() throws IOException {
         Path workspace = Files.createTempDirectory("vc-capture-accueil");
         System.setProperty("vigiechiro.workspace", workspace.toString());
@@ -68,8 +72,6 @@ public final class CaptureAccueil {
 
         // Le rendu de l'accueil interroge les compteurs du tableau de bord (#141) : on migre donc le
         // schema pour que les tables existent (compteurs a 0 sur une base neuve, bandeau masque).
-        // On ne seme PAS de donnees ici : ce serait coupler le socle a une feature (sites), ce que
-        // l'ArchitectureTest interdit (slices acycliques). L'apercu illustre donc l'accueil « vierge ».
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
 
@@ -78,7 +80,50 @@ public final class CaptureAccueil {
         // Espèces & biodiversité) ; hauteur ajustée pour ne pas rogner les cartes (l'app réelle défile).
         ApercuFx.enregistrerPng(new Scene(chrome, 1180, 760), sortie.resolve("apercu-accueil.png"));
 
+        // Second etat : le bandeau de compteurs RENSEIGNE (#3537, passe 8 de la cloture du lot 1).
+        // Aucune capture ne le montrait, alors que c'est ce que le lot a rendu vivant.
+        semerDeuxSitesEtLeursPoints(source);
+        // L'outil annonce sa mutation comme n'importe quel ecrivain (#3541) : `AccueilViewModel` est un
+        // SINGLETON qui a lu les compteurs sur base vide, et recharger le FXML lui rend le meme objet.
+        // Sans cette ligne, les deux apercus sortent identiques - ce qu'un `md5sum` a montre.
+        injecteur.getInstance(JournalMutations.class).mutationStructurelleValidee();
+        Parent chromePeuple = chargerFxml(injecteur, CHROME);
+        ApercuFx.enregistrerPng(new Scene(chromePeuple, 1180, 760), sortie.resolve("apercu-accueil-compteurs.png"));
+
         System.out.println("Apercu d'accueil ecrit dans " + sortie.toAbsolutePath());
+    }
+
+    /// Seme deux sites et leurs points, **en SQL**, pour que le bandeau de compteurs ait quelque chose
+    /// a montrer.
+    ///
+    /// En SQL et non par les DAO : ceux-ci vivent dans la feature `sites`, et un outil de `commun` qui
+    /// les importerait coupleraient le socle a une feature - ce que l'ArchitectureTest interdit (slices
+    /// acycliques). Le SQL, lui, ne cite aucune classe de feature.
+    ///
+    /// Deux compteurs sur quatre restent a zero, et c'est **voulu** : l'apercu montre du meme coup
+    /// l'etat attenue d'une pastille vide (classe `indicateur-vide`), que rien n'illustrait non plus.
+    private static void semerDeuxSitesEtLeursPoints(SourceDeDonnees source) {
+        executer(
+                source,
+                "INSERT INTO user (local_id, display_name) VALUES ('u-apercu', 'Observatrice')",
+                "INSERT INTO monitoring_site (square_number, friendly_name, protocol, created_at, user_id)"
+                        + " VALUES ('640380', 'Etang de la Tuiliere', 'STANDARD', '2026-05-31', 'u-apercu')",
+                "INSERT INTO monitoring_site (square_number, friendly_name, protocol, created_at, user_id)"
+                        + " VALUES ('840962', 'Plateau de Sault', 'STANDARD', '2026-05-31', 'u-apercu')",
+                POINT + " VALUES ('A1', 43.4010, -1.5740, 1)",
+                POINT + " VALUES ('B2', 43.4040, -1.5470, 1)",
+                POINT + " VALUES ('C1', 44.0910, 5.4120, 2)");
+    }
+
+    private static void executer(SourceDeDonnees source, String... ordres) {
+        try (java.sql.Connection cx = source.getConnection();
+                java.sql.Statement st = cx.createStatement()) {
+            for (String ordre : ordres) {
+                st.executeUpdate(ordre);
+            }
+        } catch (java.sql.SQLException echec) {
+            throw new IllegalStateException("Semis de l'apercu d'accueil impossible", echec);
+        }
     }
 
     private static Parent chargerFxml(Injector injecteur, String chemin) throws IOException {

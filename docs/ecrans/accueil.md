@@ -5,6 +5,22 @@ L'**écran d'accueil** est le point d'entrée de l'application. Les activités y
 
 ![L'écran d'accueil et ses deux prismes : « Collecte & passages » et « Espèces & biodiversité ».](../assets/captures/apercu-accueil.png)
 
+## Le bandeau de compteurs
+
+Au-dessus des cartes, quatre compteurs disent ce que contient votre base : sites, points d'écoute,
+passages, observations. Un compteur **à zéro** reste affiché, en gris atténué : il vous dit ce qui
+n'a pas encore commencé, sans attirer l'œil.
+
+![Le bandeau de compteurs : deux sites et trois points d'écoute renseignés, passages et observations
+encore à zéro.](../assets/captures/apercu-accueil-compteurs.png)
+
+Les compteurs **suivent la base**, pas vos déplacements dans l'application : si une synchronisation
+ou un import ajoute des données pendant que vous êtes sur l'accueil, ils changent sous vos yeux, sans
+que vous ayez à quitter l'écran et à y revenir.
+
+Le bandeau reste **masqué** tant que la base est vide, au premier lancement : l'accueil reste épuré
+plutôt que d'afficher une rangée de zéros.
+
 ## Collecte & passages
 
 Le workflow de **production** de la donnée : vos carrés, vos points d'écoute et vos nuits de capture.
