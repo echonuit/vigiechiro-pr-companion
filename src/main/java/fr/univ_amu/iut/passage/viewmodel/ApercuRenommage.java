@@ -35,7 +35,10 @@ record ApercuRenommage(Prefixe avant, Prefixe apres, int nombreSequences) {
         }
         return "Rattachement : "
                 + avant.nomDossierSession()
-                + " → "
+                // « -> » en ASCII, et non la flèche U+2192 : la Noto Sans embarquée ne la couvre pas,
+                // donc elle partirait en repli vers une police du système (#3389, ADR 0035). Le code
+                // d'origine le savait - c'est en extrayant cette classe que je l'ai « améliorée ».
+                + " -> "
                 + apres.nomDossierSession()
                 + " : "
                 + nombreSequences
