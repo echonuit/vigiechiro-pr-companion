@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.persistence;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Empreintes;
+import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import java.io.IOException;
@@ -68,11 +69,21 @@ public class ServiceSauvegarde {
     private final SourceDeDonnees source;
     private final Horloge horloge;
     private final InstantaneBase instantane;
+    private final EspaceDisque espaceDisque;
 
     @Inject
     public ServiceSauvegarde(SourceDeDonnees source, Horloge horloge) {
+        this(source, horloge, EspaceDisque.reel());
+    }
+
+    /// Variante à **espace disque injecté** : la restauration complète choisit son régime d'après la
+    /// place libre (#3563), et un test doit pouvoir éprouver les trois sans dépendre de la machine.
+    /// Même couture que `CompacteurDepot` et `OutilsImport`, qui gardent aussi une fabrique par défaut
+    /// plutôt qu'un binding.
+    ServiceSauvegarde(SourceDeDonnees source, Horloge horloge, EspaceDisque espaceDisque) {
         this.source = Objects.requireNonNull(source, "source");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.espaceDisque = Objects.requireNonNull(espaceDisque, "espaceDisque");
         this.instantane = new InstantaneBase(this.source);
     }
 
@@ -156,7 +167,7 @@ public class ServiceSauvegarde {
     /// @throws DataAccessException si un dossier de la sauvegarde ne correspond pas à son inventaire
     public BilanRestauration restaurerComplet(Path dossierBackup) {
         Objects.requireNonNull(dossierBackup, "dossierBackup");
-        RestaurationComplete restauration = new RestaurationComplete(source);
+        RestaurationComplete restauration = new RestaurationComplete(source, espaceDisque);
         Optional<ManifesteSauvegarde> manifeste = ManifesteSauvegardeJson.lire(dossierBackup);
         manifeste.ifPresent(present -> restauration.verifierLaSauvegarde(dossierBackup, present));
         restaurer(dossierBackup.resolve(SOUS_DOSSIER_BASE).resolve(Workspace.FICHIER_BASE));

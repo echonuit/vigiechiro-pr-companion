@@ -16,17 +16,23 @@ import java.util.Objects;
 /// @param placements où chaque racine du manifeste a été remise
 /// @param absentesDeLaSauvegarde `root_path` connus de la base mais absents du manifeste : la
 ///     sauvegarde ne les contenait pas, leur dossier reste introuvable
+/// @param regime comment les dossiers ont été replacés, ce qui dit la garantie **qu'on aurait eue**
+///     si le disque avait lâché en route (#3563)
 public record BilanRestauration(
-        boolean manifestePresent, List<PlacementRacine> placements, List<String> absentesDeLaSauvegarde) {
+        boolean manifestePresent,
+        List<PlacementRacine> placements,
+        List<String> absentesDeLaSauvegarde,
+        RegimeRestauration regime) {
 
     public BilanRestauration {
         placements = List.copyOf(Objects.requireNonNull(placements, "placements"));
         absentesDeLaSauvegarde = List.copyOf(Objects.requireNonNull(absentesDeLaSauvegarde, "absentesDeLaSauvegarde"));
+        Objects.requireNonNull(regime, "regime");
     }
 
     /// Restauration d'une sauvegarde sans manifeste : rien n'a pu être replacé ni corrigé.
     public static BilanRestauration sansManifeste() {
-        return new BilanRestauration(false, List.of(), List.of());
+        return new BilanRestauration(false, List.of(), List.of(), RegimeRestauration.COPIE_DIRECTE);
     }
 
     /// `true` si quelque chose mérite l'attention de l'utilisateur : une nuit a changé de place, une
@@ -72,6 +78,13 @@ public record BilanRestauration(
                     .append(lignes(deplacees.stream()
                             .map(BilanRestauration::nuitDeplacee)
                             .toList()));
+        }
+        if (regime == RegimeRestauration.RACINE_PAR_RACINE) {
+            // La contrepartie de la souplesse. Sans cette phrase, l'utilisateur croit avoir eu la
+            // garantie forte, et un incident ultérieur le trouverait sans explication (#3563).
+            resume.append("\n\nLa place ne permettait pas de tout préparer avant de basculer : les nuits"
+                    + " ont été remises une nuit à la fois. Chacune est complète, mais si l'opération"
+                    + " avait été interrompue, les premières auraient été en place et pas les dernières.");
         }
         if (!absentesDeLaSauvegarde.isEmpty()) {
             resume.append("\n\n")

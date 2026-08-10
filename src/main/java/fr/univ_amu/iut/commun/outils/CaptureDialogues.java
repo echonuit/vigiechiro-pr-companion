@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.InventaireSauvegardes;
 import fr.univ_amu.iut.commun.persistence.PlacementRacine;
+import fr.univ_amu.iut.commun.persistence.RegimeRestauration;
 import fr.univ_amu.iut.commun.view.ActionAPropos;
 import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
@@ -94,7 +95,8 @@ public final class CaptureDialogues {
                         new PlacementRacine(
                                 "/media/disque-terrain/Car130711-2026-Pass1-A1",
                                 "/home/naturaliste/Documents/VigieChiro-Companion/Car130711-2026-Pass1-A1")),
-                List.of("/media/carte-sd/Car640380-2026-Pass3-Z2"));
+                List.of("/media/carte-sd/Car640380-2026-Pass3-Z2"),
+                RegimeRestauration.ENSEMBLE);
         enregistrerCompteRendu(
                 NiveauNotification.AVERTISSEMENT,
                 "Sauvegarde restaurée, à un détail près",

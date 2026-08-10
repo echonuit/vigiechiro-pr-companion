@@ -42,7 +42,7 @@ final class BasculeRacines {
     /// la condition d'un renommage. Le poser dans un dossier temporaire du système ferait de la
     /// bascule une seconde copie, et rendrait le remède inutile.
     EnAttente preparer(Path source, String cheminOrigine) {
-        Path destination = destinationPour(cheminOrigine);
+        Path destination = destinationPour(Path.of(cheminOrigine));
         Path temporaire = destination.resolveSibling(destination.getFileName() + SUFFIXE_EN_COURS);
         try {
             // Un `.en-cours` laissé par une tentative morte contaminerait la copie : elle écrase les
@@ -67,8 +67,9 @@ final class BasculeRacines {
     /// Conséquence assumée : restaurer une nuit qu'on vient de supprimer la remet dans le workspace,
     /// et non à sa place, puisque sa place n'existe plus. Le compte rendu le dit, et la base pointe
     /// vers l'endroit réel.
-    private Path destinationPour(String cheminOrigine) {
-        Path origine = Path.of(cheminOrigine);
+    /// Où une racine atterrira. Visible du paquet : [BesoinDePlace] en a besoin **avant** toute copie,
+    /// pour savoir sur quel système de fichiers la place doit être cherchée (#3563).
+    Path destinationPour(Path origine) {
         if (Files.isDirectory(origine) && Files.isWritable(origine)) {
             return origine;
         }
