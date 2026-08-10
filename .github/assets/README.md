@@ -68,6 +68,14 @@ Le bandeau, les cartes d'activités, la recherche transverse et les menus qui le
 <td><a href="apercu-accueil.png"><img src="apercu-accueil.png" width="430" alt="Accueil"></a></td>
 <td><a href="apercu-recherche.png"><img src="apercu-recherche.png" width="430" alt="Recherche transverse"></a></td>
 </tr>
+<tr>
+<th width="50%">Accueil, compteurs renseignés</th>
+<th width="50%"></th>
+</tr>
+<tr>
+<td><a href="apercu-accueil-compteurs.png"><img src="apercu-accueil-compteurs.png" width="430" alt="Accueil avec le bandeau de compteurs : deux renseignés, deux à zéro en gris atténué"></a></td>
+<td></td>
+</tr>
 </table>
 
 <table>
