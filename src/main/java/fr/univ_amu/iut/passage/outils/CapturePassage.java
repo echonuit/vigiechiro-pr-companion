@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -637,7 +638,10 @@ public final class CapturePassage {
             try (PreparedStatement ps = cx.prepareStatement(insertSite, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, NUMERO_CARRE);
                 ps.setString(2, NOM_SITE);
-                ps.setString(3, "STANDARD");
+                // La colonne `protocol` stocke le LIBELLÉ persisté, pas le nom de la constante :
+                // `Protocole.parLibelle` refuse « STANDARD ». Personne ne relisait cette colonne sur ce
+                // chemin, donc la fixture mentait sans conséquence - jusqu'à ce qu'un lecteur arrive (#1495).
+                ps.setString(3, Protocole.STANDARD.libelle());
                 ps.setString(4, "Aix-en-Provence");
                 ps.setString(5, "2026-01-01");
                 ps.setString(6, ID_UTILISATEUR);
