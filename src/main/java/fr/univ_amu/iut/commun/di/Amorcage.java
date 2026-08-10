@@ -55,9 +55,10 @@ public final class Amorcage {
     /// qui les afficherait changerait à chaque régénération. Même compromis que l'aperçu « À propos »,
     /// qui fige le dossier de travail pour la même raison.
     public static String messageDossierOccupe(String occupant) {
-        return "Ce dossier de travail est déjà ouvert par une autre fenêtre de l'application ("
-                + occupant + "). Deux fenêtres qui écrivent la même base la corrompent : fermez"
-                + " l'autre fenêtre, puis relancez.";
+        return "Ce dossier de travail est déjà ouvert par une autre fenêtre de l'application"
+                + VerrouWorkspace.complementOccupant(occupant)
+                + ". Deux fenêtres qui écrivent la même base la corrompent : fermez l'autre fenêtre,"
+                + " puis relancez.";
     }
 
     /// Rend le dossier de travail. Sans cela, un verrou mal rendu transformerait un incident en

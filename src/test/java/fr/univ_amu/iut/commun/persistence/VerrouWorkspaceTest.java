@@ -2,10 +2,14 @@ package fr.univ_amu.iut.commun.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Workspace;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -115,6 +119,57 @@ class VerrouWorkspaceTest {
                 .as("et l'opération finie, le workspace est rendu : un verrou d'opération ne survit pas"
                         + " à son opération")
                 .isPresent();
+    }
+
+    @Test
+    @DisplayName("un verrou tenu par un tiers : le refus ne montre pas de parenthèses vides (#3571)")
+    void occupant_inconnu_ne_laisse_pas_de_parentheses_vides() throws Exception {
+        Files.createDirectories(racine.resolve("ws"));
+        // Un verrou POSIX pris SANS rien inscrire : c'est ce que laisse un processus tiers, un fichier
+        // tronqué, ou une tentative morte. Les tests de #3498 posaient exactement ce verrou-là, et
+        // assertaient « déjà utilisé » sans jamais regarder ce qui suivait.
+        try (FileChannel canal = FileChannel.open(
+                        racine.resolve("ws").resolve(VerrouWorkspace.NOM_FICHIER),
+                        StandardOpenOption.CREATE,
+                        StandardOpenOption.WRITE);
+                FileLock ignore = canal.lock()) {
+
+            assertThatThrownBy(() -> VerrouWorkspace.pourOperationExclusive(workspace(), "la migration"))
+                    .isInstanceOf(RefusAvantEcriture.class)
+                    .as("« déjà utilisé () » promet un nom et n'en donne aucun : c'est pire que de ne"
+                            + " rien promettre")
+                    .hasMessageNotContaining("()")
+                    .hasMessageContaining("une autre instance");
+        }
+    }
+
+    @Test
+    @DisplayName("un verrou pris par l'application : le refus NOMME l'occupant (#3571)")
+    void occupant_connu_est_nomme() {
+        try (VerrouWorkspace tenu = VerrouWorkspace.prendre(workspace()).orElseThrow()) {
+            // Depuis un autre « processus » du point de vue du verrou : ici on lit le fichier, ce que
+            // fait le message. Sans ce test, le repli de l'occupant inconnu suffirait à tout couvrir,
+            // et le nom pourrait disparaître sans que rien ne rougisse.
+            assertThat(VerrouWorkspace.occupant(workspace()))
+                    .as("le fichier porte de quoi retrouver le coupable")
+                    .contains("processus " + ProcessHandle.current().pid());
+        }
+    }
+
+    @Test
+    @DisplayName("le complément d'occupant : le nom quand on l'a, rien du tout sinon (#3571)")
+    void complement_d_occupant() {
+        assertThat(VerrouWorkspace.complementOccupant("processus 4821, depuis 2026-08-03T21:14:07"))
+                .isEqualTo(" (processus 4821, depuis 2026-08-03T21:14:07)");
+        assertThat(VerrouWorkspace.complementOccupant(""))
+                .as("des parenthèses vides promettent un nom et n'en donnent aucun")
+                .isEmpty();
+        assertThat(VerrouWorkspace.complementOccupant("   \n  "))
+                .as("un fichier tronqué ne laisse parfois que du blanc")
+                .isEmpty();
+        assertThat(VerrouWorkspace.complementOccupant(null))
+                .as("et la lecture peut ne rien rendre du tout")
+                .isEmpty();
     }
 
     private Workspace workspace() {

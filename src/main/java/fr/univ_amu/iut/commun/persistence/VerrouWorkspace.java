@@ -74,7 +74,7 @@ public final class VerrouWorkspace implements AutoCloseable {
         }
         return prendre(workspace)
                 .orElseThrow(() -> new RefusAvantEcriture(
-                        "Ce dossier de travail est déjà utilisé (" + occupant(workspace) + ") :"
+                        "Ce dossier de travail est déjà utilisé par " + quiLOccupe(workspace) + " :"
                                 + " impossible de lancer " + operation + " en même temps. Fermez l'autre"
                                 + " fenêtre ou attendez la fin de l'opération en cours, puis recommencez.",
                         null));
@@ -115,6 +115,31 @@ public final class VerrouWorkspace implements AutoCloseable {
         } catch (IOException illisible) {
             return "";
         }
+    }
+
+    /// Ce qu'on écrit dans le refus : le nom quand on l'a, une formule **honnête** quand on ne l'a pas.
+    ///
+    /// ⚠️ Le message affichait « déjà utilisé **()** » dès que le verrou venait d'ailleurs que d'un
+    /// `VerrouWorkspace` - un processus tiers, un fichier tronqué, une tentative morte. Des parenthèses
+    /// vides promettent un nom et n'en donnent aucun, ce qui est pire que de ne rien promettre : le
+    /// lecteur cherche l'information manquante au lieu d'agir (#3571).
+    ///
+    /// Les deux formes disent la même chose à l'utilisateur - **quelqu'un d'autre est dans ce dossier,
+    /// fermez-le** - et l'une lui donne en plus de quoi retrouver le coupable.
+    /// Le **complément** qui nomme l'occupant, ou rien du tout : ` (processus 4821, depuis …)`, ou la
+    /// chaîne vide. À coller derrière la phrase de chaque surface, qui garde son propre sujet.
+    ///
+    /// Pure et publique parce que **deux** messages la portent : le refus d'une opération, ici, et
+    /// l'alerte de démarrage de l'application ([Amorcage#messageDossierOccupe]). Les deux affichaient
+    /// des parenthèses vides dès que le verrou venait d'ailleurs qu'un `VerrouWorkspace` - un processus
+    /// tiers, un fichier tronqué, une tentative morte (#3571).
+    public static String complementOccupant(String inscrit) {
+        String propre = inscrit == null ? "" : inscrit.strip();
+        return propre.isEmpty() ? "" : " (" + propre + ")";
+    }
+
+    private static String quiLOccupe(Workspace workspace) {
+        return "une autre instance" + complementOccupant(occupant(workspace));
     }
 
     /// `true` tant que ce verrou est tenu par ce processus.
