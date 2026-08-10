@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.cli.commande.Restaurer;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -31,6 +32,11 @@ class CliSauvegardeTest {
 
     @TempDir
     Path workspace;
+
+    /// Un disque externe : la nuit y vit, hors du dossier de travail. C'est ce qui rend une racine
+    /// « déplaçable » à la restauration.
+    @TempDir
+    Path disque;
 
     private Injector injecteur;
     private Cli cli;
@@ -134,6 +140,82 @@ class CliSauvegardeTest {
         assertThat(capture.texteErreur())
                 .as("un refus part sur stderr, pour ne pas se mêler au compte rendu")
                 .contains("--confirmer");
+    }
+
+    @Test
+    @DisplayName("restaurer une sauvegarde amputée : code distinct, pas un succès (#3500)")
+    void restaurer_une_sauvegarde_amputee() throws IOException {
+        declarerSession(seederSession("Car040962-2026-Pass1-A1"), 1);
+        // La carte SD retirée : la nuit est connue de la base, sa racine n'existe pas, la sauvegarde
+        // ne la contiendra donc pas.
+        declarerSession(workspace.resolve("Car040962-2026-Pass2-B2"), 2);
+        Path sauvegardes = workspace.resolve("sauvegardes");
+        cli.executer(new String[] {"sauvegarder", "--complet", "--dossier", sauvegardes.toString()}, sortie, erreur);
+        capture.vider();
+        Path source = uniqueSauvegarde(sauvegardes);
+
+        int code =
+                cli.executer(new String[] {"restaurer", source.toString(), "--complet", "--confirmer"}, sortie, erreur);
+
+        assertThat(texteSortie())
+                .as("garde du dispositif : sans cette phrase la sauvegarde n'est pas amputée, et le test"
+                        + " passerait au vert sans rien éprouver")
+                .contains("n'étaient pas dans la sauvegarde");
+        assertThat(texteSortie())
+                .as("un 10 sans phrase renvoie l'utilisateur à la documentation : le compte rendu doit"
+                        + " DIRE que la restauration est incomplète, et nommer le code")
+                .contains("INCOMPLÈTE")
+                .contains("code de sortie 10");
+        assertThat(code)
+                .as("la restauration a RÉUSSI - ni 1 ni 2 - mais un script qui teste $? doit apprendre"
+                        + " qu'il manque une nuit, au lieu de le lire dans un texte qu'il ne lit pas")
+                .isEqualTo(Restaurer.CODE_A_REGARDER);
+    }
+
+    @Test
+    @DisplayName("restaurer sur une autre machine : les dossiers atterrissent ailleurs, et c'est 0 (#3500)")
+    void restaurer_des_dossiers_deplaces_reste_un_succes() throws IOException {
+        // La nuit vit sur un disque externe, hors du dossier de travail. On sauvegarde, le disque
+        // disparaît : la nuit sera replacée dans le dossier de travail, donc « déplacée ».
+        Path surLeDisque = disque.resolve("Car040962-2026-Pass1-A1");
+        Files.createDirectories(surLeDisque.resolve("transformes"));
+        Files.writeString(surLeDisque.resolve("transformes").resolve("seq.wav"), "audio");
+        declarerSession(surLeDisque, 1);
+        Path sauvegardes = workspace.resolve("sauvegardes");
+        cli.executer(new String[] {"sauvegarder", "--complet", "--dossier", sauvegardes.toString()}, sortie, erreur);
+        Path source = uniqueSauvegarde(sauvegardes);
+        capture.vider();
+        supprimerRecursivement(disque);
+
+        int code =
+                cli.executer(new String[] {"restaurer", source.toString(), "--complet", "--confirmer"}, sortie, erreur);
+
+        assertThat(texteSortie())
+                .as("garde du dispositif : sans cette phrase rien n'a été déplacé, et le test ne dirait"
+                        + " rien du cas qu'il prétend éprouver")
+                .contains("n'ont pas retrouvé leur emplacement d'origine");
+        assertThat(code)
+                .as("c'est l'usage PRINCIPAL de la sauvegarde complète : restaurer ailleurs. Rendre 10 ici"
+                        + " apprendrait aux scripts à ignorer un 10 permanent, donc aussi celui qui compte")
+                .isEqualTo(Cli.CODE_SUCCES);
+    }
+
+    private static void supprimerRecursivement(Path racine) throws IOException {
+        try (var contenu = Files.walk(racine)) {
+            contenu.sorted(java.util.Comparator.reverseOrder()).forEach(chemin -> {
+                try {
+                    Files.delete(chemin);
+                } catch (IOException echec) {
+                    throw new java.io.UncheckedIOException(echec);
+                }
+            });
+        }
+    }
+
+    private static Path uniqueSauvegarde(Path dossier) throws IOException {
+        try (var contenu = Files.list(dossier)) {
+            return contenu.filter(Files::isDirectory).findFirst().orElseThrow();
+        }
     }
 
     private Path seederSession(String nom) throws IOException {

@@ -214,3 +214,26 @@ importer_une_nuit_sur_a() {
   [ "${status}" -ne 0 ]
   [[ "${output}" == *"lister-sauvegardes"* ]]
 }
+
+@test "restaurer une sauvegarde amputée : exit 10, la réussite ne se confond pas avec l'intégralité (#3500)" {
+  importer_une_nuit_sur_a
+  # La nuit reste connue de la base, son dossier disparaît : la trace exacte d'une carte SD retirée,
+  # ou d'un disque externe débranché au moment de la sauvegarde. Elle ne sera donc pas dans l'archive.
+  local nuit
+  nuit=$(ls -d "${MACHINE_A}"/Car* | head -1)
+  rm -rf "${nuit}"
+  # Elle sort en 2 : la sauvegarde est incomplète, et le dit (#1346). C'est le point de départ
+  # voulu ; sans ce `|| true`, `set -e` arrêterait le test avant la restauration.
+  cli_sur "${MACHINE_A}" sauvegarder --complet --dossier "${SAUVEGARDES}" >/dev/null 2>&1 || true
+  local backup
+  backup=$(ls -d "${SAUVEGARDES}"/vigiechiro-sauvegarde-complete-* | head -1)
+
+  run cli_sur "${MACHINE_B}" restaurer "${backup}" --complet --confirmer
+
+  # Garde du dispositif : sans cette phrase la sauvegarde n'est pas amputée, et le test ne prouve rien.
+  [[ "${output}" == *"n'étaient pas dans la sauvegarde"* ]]
+  # La restauration a RÉUSSI : ni 1 ni 2. Mais un script qui teste $? doit apprendre qu'il manque une
+  # nuit, au lieu de le lire dans un texte qu'il ne lit pas.
+  [ "${status}" -eq 10 ]
+  [[ "${output}" == *"INCOMPLÈTE"* ]]
+}

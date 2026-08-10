@@ -31,6 +31,9 @@ public final class Restaurer implements Callable<Integer> {
     /// doit pouvoir le distinguer d'un échec en cours de route (`1`), qui laisserait l'état incertain.
     private static final int CODE_REFUS = 2;
 
+    /// Restauration **réussie**, mais qui laisse un manque.
+    public static final int CODE_A_REGARDER = 10;
+
     @Parameters(
             index = "0",
             paramLabel = "<source>",
@@ -77,6 +80,14 @@ public final class Restaurer implements Callable<Integer> {
             // Une restauration complète déplace des gigaoctets et corrige la base : dire où ils ont
             // atterri, et ce qui manquait, fait partie du compte rendu (#2727).
             sortie.println(bilan.enClair());
+            if (bilan.laisseUnManque()) {
+                // Le manque était imprimé, et la commande sortait quand même en 0 : un script qui teste
+                // `$?` concluait à une restauration entière. C'est le défaut que le chantier existait
+                // pour tuer, réapparu sur la surface scriptable (#3500).
+                sortie.println("\nRestauration terminée, mais INCOMPLÈTE : voir ci-dessus ce qui manque"
+                        + " (code de sortie " + CODE_A_REGARDER + ").");
+                return CODE_A_REGARDER;
+            }
         } else {
             sauvegarde.restaurer(source);
             sortie.println("Base restaurée depuis : " + source);

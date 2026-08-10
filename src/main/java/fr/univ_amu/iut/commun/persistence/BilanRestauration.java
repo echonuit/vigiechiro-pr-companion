@@ -37,6 +37,21 @@ public record BilanRestauration(
                 || placements.stream().anyMatch(PlacementRacine::deplacee);
     }
 
+    /// `true` si la restauration laisse un **manque** : on ne sait pas ce qu'on a remplacé, ou une nuit
+    /// connue de la base n'était pas dans la sauvegarde.
+    ///
+    /// ⚠️ Plus étroit qu'[#appelleUnRegard()], et volontairement : une nuit simplement **replacée
+    /// ailleurs** n'est pas un manque. C'est le cas normal d'une restauration sur une autre machine,
+    /// c'est-à-dire l'usage principal de la sauvegarde complète - le compte rendu nomme déjà l'ancienne
+    /// et la nouvelle adresse.
+    ///
+    /// L'IHM lit [#appelleUnRegard()], qui est juste devant quelqu'un qui lit ce compte rendu ; la CLI
+    /// lit celui-ci, parce qu'elle parle à un script (#3500). Les deux surfaces divergent, et c'est
+    /// écrit.
+    public boolean laisseUnManque() {
+        return !manifestePresent || !absentesDeLaSauvegarde.isEmpty();
+    }
+
     /// Résumé prêt à afficher (IHM comme CLI).
     public String enClair() {
         if (!manifestePresent) {
