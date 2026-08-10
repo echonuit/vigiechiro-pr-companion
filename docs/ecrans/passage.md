@@ -325,14 +325,22 @@ rebranché en silence : vos observations pointeraient alors sur un autre son que
 
 ## Modifier le passage
 
-Le bouton **Modifier le passage** ouvre une fenêtre pour corriger le **rattachement** (année, numéro de
-passage, si une nuit a été rattachée par erreur), saisir les **conditions de dépôt** (relevé météo,
-matériel du micro) et renseigner l'**enregistreur**.
+Le bouton **Modifier le passage** ouvre une fenêtre pour corriger le **rattachement** (point d'écoute,
+année, numéro de passage, si une nuit a été rattachée par erreur), saisir les **conditions de dépôt**
+(relevé météo, matériel du micro) et renseigner l'**enregistreur**.
+
+Le **point d'écoute** se corrige parmi les points **du même carré** : se tromper de point au moment de
+l'import est un cas courant, et le corriger renomme les séquences comme le fait un changement d'année ou
+de numéro. Le récapitulatif en bas de la fenêtre montre le préfixe **avant** et **après** avant que vous
+ne validiez.
+
+Changer de **carré**, en revanche, ne se fait pas ici : ce n'est pas une correction de saisie mais un
+autre geste, et il n'a pas sa place dans une fenêtre de retouche.
 
 ![La fenêtre « Modifier le passage » : rattachement, enregistreur et conditions de dépôt.](../assets/captures/apercu-passage-rattachement.png)
 
-Sur un passage **déjà déposé**, l'année et le numéro sont **verrouillés** (ils forment l'identité de la
-nuit côté Vigie-Chiro), mais la **météo et le micro restent modifiables**. C'est utile, par exemple, pour
+Sur un passage **déjà déposé**, le point, l'année et le numéro sont **verrouillés** (ils forment
+l'identité de la nuit côté Vigie-Chiro), mais la **météo et le micro restent modifiables**. C'est utile, par exemple, pour
 compléter à la main la météo d'un passage **reconstruit** que la plateforme n'a pas rapatriée.
 
 ### Rattacher à une campagne

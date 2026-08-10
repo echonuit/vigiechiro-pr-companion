@@ -91,7 +91,10 @@ class RattachementModaleViewTest {
                         conditionsService,
                         propositions,
                         Optional.empty(),
-                        Optional.empty());
+                        Optional.empty(),
+                        // Sans `sites` dans cet injecteur : le port rend une liste vide, et la modale
+                        // garde le point courant comme seul choix (#1495).
+                        numeroCarre -> java.util.List.of());
                 return viewModel;
             }
         });
