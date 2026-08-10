@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.persistence;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,10 +32,12 @@ public class BaseNeuve {
     private static final String SUFFIXE_FILET = ".avant-reset";
 
     private final SourceDeDonnees source;
+    private final JournalMutations journal;
 
     @Inject
-    public BaseNeuve(SourceDeDonnees source) {
+    public BaseNeuve(SourceDeDonnees source, JournalMutations journal) {
         this.source = Objects.requireNonNull(source, "source");
+        this.journal = Objects.requireNonNull(journal, "journal");
     }
 
     /// Efface la base et la recrée vide (schéma migré, référentiel semé). Renvoie le **filet** : la copie
@@ -45,7 +48,12 @@ public class BaseNeuve {
     /// @throws DataAccessException si le fichier ne peut être ni copié ni supprimé
     public Path repartirDeZero() {
         try (VerrouWorkspace verrou = VerrouWorkspace.pourOperationExclusive(source.workspace(), "la remise à zéro")) {
-            return effacerEtRecreer();
+            Path filet = effacerEtRecreer();
+            // Les quatre compteurs de l'accueil retombent a zero d'un coup : c'est la mutation la plus
+            // structurelle qui soit, et elle ne passait par aucun emetteur (constat de la passe 2 du
+            // lot #3537). Apres le geste, jamais avant : un effacement qui echoue n'annonce rien.
+            journal.mutationStructurelleValidee();
+            return filet;
         }
     }
 

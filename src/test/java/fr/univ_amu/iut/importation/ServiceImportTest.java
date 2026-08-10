@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -138,10 +139,27 @@ class ServiceImportTest {
                 workspace,
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
-                Optional.empty());
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31)), () -> {}),
+                Optional.empty(),
+                journal);
 
         sd = preparerCarteSD(racine.resolve("sd"));
+    }
+
+    /// Compte les annonces de mutation structurelle (#3537, passe 2 de la clôture du lot 1).
+    private final int[] annonces = {0};
+
+    private final JournalMutations journal = () -> annonces[0]++;
+
+    @Test
+    @DisplayName("#3537 : importer une nuit annonce la mutation, une seule fois")
+    void importer_une_nuit_annonce() {
+        service.importer(sd, idPoint, prefixe);
+
+        // L'import ecrit le passage en SQL brut (AgregatImportDao), hors de PassageDao : c'est ce qui
+        // l'avait fait manquer a l'inventaire de #3542. Le compteur de passages de l'accueil restait
+        // perime apres le geste le plus courant du produit.
+        assertThat(annonces[0]).isEqualTo(1);
     }
 
     @Test
@@ -271,8 +289,9 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
-                Optional.of(sync));
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31)), () -> {}),
+                Optional.of(sync),
+                () -> {});
 
         ResultatImport resultat = avecSync.importer(sd, idPoint, prefixe);
 
@@ -312,8 +331,9 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
-                Optional.of(sync));
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31)), () -> {}),
+                Optional.of(sync),
+                () -> {});
 
         ResultatImport resultat = avecSync.importer(sd, idPoint, prefixe);
 
@@ -344,8 +364,9 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
-                Optional.of(sync));
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31)), () -> {}),
+                Optional.of(sync),
+                () -> {});
 
         ResultatImport resultat = avecSync.importer(sd, idPoint, prefixe);
 
@@ -444,8 +465,9 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
-                Optional.empty());
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31)), () -> {}),
+                Optional.empty(),
+                () -> {});
     }
 
     /// Volume total des WAV d'un dossier source, base du besoin estimé.
@@ -651,8 +673,9 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
-                Optional.empty());
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31)), () -> {}),
+                Optional.empty(),
+                () -> {});
 
         ResultatImport resultat = reprise.importer(sd, idPoint, prefixe);
 
@@ -697,8 +720,9 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
-                Optional.empty());
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31)), () -> {}),
+                Optional.empty(),
+                () -> {});
 
         ResultatImport resultat = reprise.importer(sd, idPoint, prefixe);
 
@@ -1028,8 +1052,9 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 3,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
-                Optional.empty());
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31)), () -> {}),
+                Optional.empty(),
+                () -> {});
 
         // Quadruplet déjà pris → le passage est résolu et interrogé (3) ; n° libre → aucun passage (0).
         assertThat(avecCompteur.apercuEcrasement(idPoint, 2026, 2).validations())

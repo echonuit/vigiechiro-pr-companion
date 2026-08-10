@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
@@ -145,7 +146,8 @@ public class ImportationModule extends ModuleDeFeature {
             Horloge horloge,
             CompteurValidations compteurValidations,
             ServiceSauvegarde serviceSauvegarde,
-            Optional<SynchronisationParticipation> synchronisation) {
+            Optional<SynchronisationParticipation> synchronisation,
+            JournalMutations journalMutations) {
         return new ServiceImport(
                 inspecteur,
                 outils,
@@ -155,7 +157,8 @@ public class ImportationModule extends ModuleDeFeature {
                 horloge,
                 compteurValidations,
                 serviceSauvegarde,
-                synchronisation);
+                synchronisation,
+                journalMutations);
     }
 
     /// ViewModel de l'assistant M-Import. **Non-singleton** (un VM frais par chargement FXML : un

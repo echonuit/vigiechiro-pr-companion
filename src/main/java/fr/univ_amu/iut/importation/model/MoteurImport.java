@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.model;
 
 import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.LectureBornee;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.PlafondLecture;
@@ -51,6 +52,9 @@ final class MoteurImport {
     private final DecoupageParallele decoupage;
     private final FabriqueEntitesImport fabriqueEntites;
     private final AgregatImportDao agregatDao;
+    /// Nomme sa nature en entier : dans ce paquet, `journal` designe deja le LOG DU CAPTEUR
+    /// ([JournalParse]). Deux journaux, deux choses sans rapport ; le compilateur l'a signale.
+    private final JournalMutations journalMutations;
     private final UniteDeTravail uniteDeTravail;
     private final Workspace workspace;
 
@@ -66,7 +70,8 @@ final class MoteurImport {
             AgregatImportDao agregatDao,
             UniteDeTravail uniteDeTravail,
             Workspace workspace,
-            EspaceDisque espaceDisque) {
+            EspaceDisque espaceDisque,
+            JournalMutations journalMutations) {
         this.copie = Objects.requireNonNull(copie, "copie");
         this.preparation = Objects.requireNonNull(preparation, "preparation");
         this.decoupage = Objects.requireNonNull(decoupage, "decoupage");
@@ -75,6 +80,7 @@ final class MoteurImport {
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
         this.espaceDisque = Objects.requireNonNull(espaceDisque, "espaceDisque");
+        this.journalMutations = Objects.requireNonNull(journalMutations, "journalMutations");
     }
 
     /// Importe **plusieurs nuits** d'une même carte en **un passage par nuit** (même point, n° de passage
@@ -281,52 +287,83 @@ final class MoteurImport {
             if (releveEntite != null) {
                 agregatDao.insererReleve(cx, ids[1], releveEntite);
             }
-            for (TransformationOriginal t : transformations) {
-                EnregistrementOriginal original = new EnregistrementOriginal(
-                        null,
-                        t.nomOriginal(),
-                        t.cheminOriginal().toString(),
-                        t.dureeSourceSecondes(),
-                        t.frequenceSourceHz(),
-                        null,
-                        new EmpreinteContenu(t.tailleSourceOctets(), t.sha256()));
-                long idOriginal = agregatDao.insererOriginal(cx, ids[1], original);
-                for (SequenceProduite sp : t.sequences()) {
-                    // #530 : l'heure réelle de la tranche est encodée dans son nom (_AAAAMMJJ_HHMMSS_000),
-                    // extraite ici pour être persistée (recorded_at) et servir le tri / filtre par heure.
-                    // #1299 : taille et empreinte courte, calculées à l'écriture de la tranche, sont
-                    // persistées comme preuves d'identité (réactivation d'un passage archivé).
-                    SequenceDEcoute sequence = new SequenceDEcoute(
-                            null,
-                            sp.nomFichier(),
-                            null,
-                            sp.index(),
-                            sp.offsetSourceSecondes(),
-                            sp.dureeSecondes(),
-                            sp.chemin().toString(),
-                            false,
-                            null,
-                            Prefixe.horodatageDe(sp.nomFichier()).orElse(null),
-                            new EmpreinteContenu(sp.octets(), sp.empreinte()));
-                    agregatDao.insererSequence(cx, ids[1], idOriginal, sequence);
-                }
-            }
+            insererOriginauxEtSequences(cx, ids[1], transformations);
         });
+        // APRES le commit de l'unite de travail (le port l'exige) : la nuit importee est un passage de
+        // plus a l'inventaire, et l'ecrasement en retire un. Une seule annonce pour la transaction,
+        // qu'elle ait ecrase ou non.
+        journalMutations.mutationStructurelleValidee();
 
-        Passage passagePersiste = avecId(passage, ids[0]);
-        SessionDEnregistrement sessionPersistee =
-                new SessionDEnregistrement(ids[1], session.cheminRacine(), volumeOriginaux, volumeSequences, ids[0]);
+        return compteRenduDeLaNuit(
+                avecId(passage, ids[0]),
+                new SessionDEnregistrement(ids[1], session.cheminRacine(), volumeOriginaux, volumeSequences, ids[0]),
+                journal,
+                transformations,
+                rapportImport,
+                new VolumesImport(octetsLus, volumeOriginaux, volumeSequences));
+    }
+
+    /// Assemble le compte rendu de la nuit importée. Extrait d'[#importerUneNuit] pour la garder sous le
+    /// plafond NCSS : la méthode y était déjà au plafond, et l'annonce de mutation (#3537) l'a fait
+    /// déborder. Pur assemblage, aucune décision.
+    private static ResultatImport compteRenduDeLaNuit(
+            Passage passage,
+            SessionDEnregistrement session,
+            JournalParse journal,
+            List<TransformationOriginal> transformations,
+            RapportImport rapportImport,
+            VolumesImport volumes) {
         int nombreSequences =
                 transformations.stream().mapToInt(t -> t.sequences().size()).sum();
         return new ResultatImport(
-                passagePersiste,
-                sessionPersistee,
+                passage,
+                session,
                 journal.numeroSerie(),
                 transformations.size(),
                 nombreSequences,
                 journal.messagesAnomalies(),
                 rapportImport,
-                new VolumesImport(octetsLus, volumeOriginaux, volumeSequences));
+                volumes);
+    }
+
+    /// Insère les **originaux** de la nuit et, sous chacun, ses **séquences découpées**. Extrait
+    /// d'[#importerUneNuit] pour la garder sous le plafond NCSS : c'est le bloc le plus volumineux de sa
+    /// transaction, et le seul qui se nomme d'un trait.
+    ///
+    /// Sur la même connexion transactionnelle que le reste de l'agrégat : tout ou rien (O7).
+    private void insererOriginauxEtSequences(
+            java.sql.Connection cx, long idSession, List<TransformationOriginal> transformations)
+            throws java.sql.SQLException {
+        for (TransformationOriginal t : transformations) {
+            EnregistrementOriginal original = new EnregistrementOriginal(
+                    null,
+                    t.nomOriginal(),
+                    t.cheminOriginal().toString(),
+                    t.dureeSourceSecondes(),
+                    t.frequenceSourceHz(),
+                    null,
+                    new EmpreinteContenu(t.tailleSourceOctets(), t.sha256()));
+            long idOriginal = agregatDao.insererOriginal(cx, idSession, original);
+            for (SequenceProduite sp : t.sequences()) {
+                // #530 : l'heure réelle de la tranche est encodée dans son nom (_AAAAMMJJ_HHMMSS_000),
+                // extraite ici pour être persistée (recorded_at) et servir le tri / filtre par heure.
+                // #1299 : taille et empreinte courte, calculées à l'écriture de la tranche, sont
+                // persistées comme preuves d'identité (réactivation d'un passage archivé).
+                SequenceDEcoute sequence = new SequenceDEcoute(
+                        null,
+                        sp.nomFichier(),
+                        null,
+                        sp.index(),
+                        sp.offsetSourceSecondes(),
+                        sp.dureeSecondes(),
+                        sp.chemin().toString(),
+                        false,
+                        null,
+                        Prefixe.horodatageDe(sp.nomFichier()).orElse(null),
+                        new EmpreinteContenu(sp.octets(), sp.empreinte()));
+                agregatDao.insererSequence(cx, idSession, idOriginal, sequence);
+            }
+        }
     }
 
     /// Remappe la progression **locale** d'une nuit (fraction 0→1) dans sa **tranche globale**

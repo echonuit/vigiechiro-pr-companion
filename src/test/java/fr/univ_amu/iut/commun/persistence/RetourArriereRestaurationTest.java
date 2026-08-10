@@ -46,7 +46,7 @@ class RetourArriereRestaurationTest {
         workspaceDir = racine.resolve("ws");
         source = new SourceDeDonnees(new Workspace(workspaceDir));
         new MigrationSchema(source).migrer();
-        service = new ServiceSauvegarde(source, new HorlogeFigee(LocalDateTime.of(2026, 8, 3, 9, 0)));
+        service = new ServiceSauvegarde(source, new HorlogeFigee(LocalDateTime.of(2026, 8, 3, 9, 0)), () -> {});
     }
 
     @Test
@@ -80,7 +80,7 @@ class RetourArriereRestaurationTest {
         Path vierge = racine.resolve("poste-neuf");
         SourceDeDonnees sourceVierge = new SourceDeDonnees(new Workspace(vierge));
         ServiceSauvegarde surPosteNeuf =
-                new ServiceSauvegarde(sourceVierge, new HorlogeFigee(LocalDateTime.of(2026, 8, 3, 9, 0)));
+                new ServiceSauvegarde(sourceVierge, new HorlogeFigee(LocalDateTime.of(2026, 8, 3, 9, 0)), () -> {});
 
         assertThatThrownBy(() -> surPosteNeuf.restaurer(sauvegarde))
                 .isInstanceOf(DataAccessException.class)
