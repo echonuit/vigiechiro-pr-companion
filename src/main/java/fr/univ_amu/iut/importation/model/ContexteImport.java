@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.model;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import java.nio.file.Path;
+import java.util.List;
 
 /// Invariants d'**une opération d'import** (mono- ou multi-nuits) : ce qui ne change pas d'une nuit à
 /// l'autre au sein du même import. Regroupé en objet-paramètre pour que le cœur [MoteurImport#importerUneNuit]
@@ -28,4 +29,12 @@ record ContexteImport(
         boolean conserverOriginaux,
         boolean ecraser,
         JetonAnnulation jeton,
-        SuiviFichiers suiviFichiers) {}
+        SuiviFichiers suiviFichiers,
+        /// Enregistrements d'un **autre capteur** que celui du journal (#1492), écartés de l'import et
+        /// signalés au compte rendu. Vide dans le cas courant, et en mode dégradé sans journal.
+        List<Path> ecartesHorsSerie) {
+
+    ContexteImport {
+        ecartesHorsSerie = List.copyOf(ecartesHorsSerie);
+    }
+}

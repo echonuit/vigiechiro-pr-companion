@@ -223,8 +223,8 @@ final class MoteurImport {
                 agregatDao.doublonsDeNuitPourRapport(ecraser, journal.numeroSerie(), String.valueOf(dateNuit));
 
         // Bilan d'import résilient (#155) : tri transformés / rejetés + rapport, délégué à la fabrique.
-        RapportImportFabrique.BilanImport bilan =
-                RapportImportFabrique.bilan(ctx.dossierSource(), rapport, resultatsDecoupage, doublonsNuit);
+        RapportImportFabrique.BilanImport bilan = RapportImportFabrique.bilan(
+                ctx.dossierSource(), rapport, resultatsDecoupage, doublonsNuit, ctx.ecartesHorsSerie());
         List<TransformationOriginal> transformations = bilan.transformations();
         if (transformations.isEmpty()) {
             supprimerSessionPartielle(dossierSession);

@@ -24,7 +24,8 @@ final class RapportImportFabrique {
             Path dossierSource,
             RapportInspection inspection,
             List<ResultatDecoupage> resultats,
-            List<PassageExistant> doublonsNuit) {
+            List<PassageExistant> doublonsNuit,
+            List<Path> ecartesHorsSerie) {
         List<TransformationOriginal> transformations = resultats.stream()
                 .filter(ResultatDecoupage::reussi)
                 .map(ResultatDecoupage::transformation)
@@ -39,6 +40,15 @@ final class RapportImportFabrique {
         }
         for (ResultatDecoupage rejet : rejets) {
             lignes.add(new LigneRapport(rejet.nomFichier(), StatutImportFichier.REJETE, rejet.erreur()));
+        }
+        // #1492 : les enregistrements d'un autre capteur sont écartés de l'import, pas escamotés. Ils
+        // figurent au compte rendu au même titre que les fichiers non pertinents - un fichier qui
+        // disparaît sans un mot est pire qu'un fichier importé à tort, parce que rien ne le rattrape.
+        for (Path ecarte : ecartesHorsSerie) {
+            lignes.add(new LigneRapport(
+                    ecarte.getFileName().toString(),
+                    StatutImportFichier.IGNORE,
+                    "enregistré par un autre capteur que celui du journal"));
         }
         lignes.addAll(lignesIgnorees(dossierSource, inspection));
         return new BilanImport(transformations, rejets, new RapportImport(lignes, doublonsNuit));

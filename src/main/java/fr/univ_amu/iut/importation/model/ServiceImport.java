@@ -406,7 +406,10 @@ public class ServiceImport {
                     conserverOriginaux,
                     false,
                     jeton,
-                    suiviFichiers);
+                    suiviFichiers,
+                    // Multi-nuits : le tri par série reste à faire (#1492 borne le mono-nuit). Chaque nuit
+                    // porte sa propre sous-liste d'originaux, et l'écarter demanderait de trier par nuit.
+                    List.of());
             ResultatImportMultiNuits resultat = moteur.importerNuits(ctx, prefixeBase, nuits, progres);
             // Une participation VigieChiro par nuit persistée (best-effort), réutilisée au dépôt. Chaque
             // nuit porte le sien : sur une carte multi-nuits, certaines peuvent être publiées et d'autres
@@ -463,6 +466,13 @@ public class ServiceImport {
         // si aucune nuit horodatée n'a pu être déduite (WAV sans horodatage exploitable).
         List<NuitDetectee> nuits = rapport.partitionNuits();
         LocalDate dateNuit = nuits.size() == 1 ? nuits.getFirst().dateNuit() : journal.dateDebut();
+        // #1492 : n'importer que la série du journal. Un dossier qui mélange deux enregistreurs était
+        // signalé puis importé EN ENTIER - le passage portait l'enregistreur du journal et contenait des
+        // séquences d'un autre capteur. Les écartés ne disparaissent pas : ils figurent au compte rendu.
+        //
+        // Sans journal (mode dégradé #107), l'identité vient d'un repli déduit des noms : on ne trie pas,
+        // faute d'une référence qui ne soit pas elle-même tirée des fichiers.
+        TriParSerie tri = TriParSerie.selon(rapport.originaux(), sansJournal ? null : journal.numeroSerie());
         ContexteImport ctx = new ContexteImport(
                 rapport,
                 journal,
@@ -472,8 +482,16 @@ public class ServiceImport {
                 conserverOriginaux,
                 ecraser,
                 jeton,
-                suiviFichiers);
-        return moteur.importerUneNuit(ctx, prefixe, rapport.originaux(), dateNuit, progres);
+                suiviFichiers,
+                tri.ecartes());
+        // #1492 : n'importer que la série du journal. Un dossier qui mélange deux enregistreurs était
+        // signalé puis importé EN ENTIER - le passage portait l'enregistreur du journal et contenait des
+        // séquences d'un autre capteur. Les écartés ne disparaissent pas : ils figurent au compte rendu
+        // (IGNORE), au même titre que les fichiers non pertinents.
+        //
+        // Sans journal (mode dégradé #107), `sansJournal` est vrai et l'identité vient d'un repli déduit
+        // des noms : on ne trie pas, faute d'une référence qui ne soit pas elle-même tirée des fichiers.
+        return moteur.importerUneNuit(ctx, prefixe, tri.retenus(), dateNuit, progres);
     }
 
     /// Crée la participation VigieChiro du passage fraîchement importé, **au mieux** : si l'observateur est
