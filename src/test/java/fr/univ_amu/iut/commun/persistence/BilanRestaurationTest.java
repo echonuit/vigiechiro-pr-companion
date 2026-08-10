@@ -67,6 +67,21 @@ class BilanRestaurationTest {
                 .doesNotContain("venait de");
     }
 
+    @Test
+    @DisplayName("le régime dégradé appelle un regard, même si rien n'a bougé ni manqué")
+    void le_regime_degrade_appelle_un_regard() {
+        BilanRestauration bilan = new BilanRestauration(
+                true,
+                List.of(new PlacementRacine("/media/disque/Nuit-01", "/media/disque/Nuit-01")),
+                List.of(),
+                RegimeRestauration.RACINE_PAR_RACINE);
+
+        assertThat(bilan.appelleUnRegard())
+                .as("sinon le paragraphe qui dit la garantie moindre s'affiche sous un titre rassurant,"
+                        + " et personne ne le lit")
+                .isTrue();
+    }
+
     private static BilanRestauration deuxNuitsDeplacees() {
         return new BilanRestauration(
                 true,

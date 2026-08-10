@@ -36,10 +36,16 @@ public record BilanRestauration(
     }
 
     /// `true` si quelque chose mérite l'attention de l'utilisateur : une nuit a changé de place, une
-    /// nuit manque, ou la sauvegarde est trop ancienne pour qu'on sache la replacer.
+    /// nuit manque, la sauvegarde est trop ancienne pour qu'on sache la replacer, ou la garantie a été
+    /// **dégradée** faute de place (#3563).
+    ///
+    /// ⚠️ Le régime dégradé y figure parce que la capture de la passe 8 a montré l'inverse : le compte
+    /// rendu portait le paragraphe qui dit la garantie moindre, sous un titre « Sauvegarde restaurée »
+    /// en information. Un paragraphe d'avertissement sous un titre rassurant ne se lit pas.
     public boolean appelleUnRegard() {
         return !manifestePresent
                 || !absentesDeLaSauvegarde.isEmpty()
+                || regime == RegimeRestauration.RACINE_PAR_RACINE
                 || placements.stream().anyMatch(PlacementRacine::deplacee);
     }
 

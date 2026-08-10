@@ -122,6 +122,8 @@ Le bandeau, les cartes d'activités, la recherche transverse et les menus qui le
 <tr>
 <td><a href="apercu-restauration-version-trop-recente.png"><img src="apercu-restauration-version-trop-recente.png" width="430" alt="Restauration : version trop récente"></a></td>
 <td><a href="apercu-restauration-choix-sauvegarde.png"><img src="apercu-restauration-choix-sauvegarde.png" width="430" alt="Restauration : choix d'une sauvegarde, avec date, taille et total"></a></td>
+<td><a href="apercu-restauration-une-nuit-a-la-fois.png"><img src="apercu-restauration-une-nuit-a-la-fois.png" width="430" alt="Restauration menée une nuit à la fois, faute de place"></a></td>
+<td><a href="apercu-restauration-place-insuffisante.png"><img src="apercu-restauration-place-insuffisante.png" width="430" alt="Refus faute de place : combien libérer et où"></a></td>
 </tr>
 </table>
 

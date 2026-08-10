@@ -118,6 +118,10 @@ de la barre du haut permet de la **protéger** :
     Elle ne refuse que s'il n'y a même pas la place pour **une seule** nuit, et vous dit alors combien
     libérer.
 
+    ![Une restauration menée une nuit à la fois : le compte rendu dit ce que la garantie a perdu.](../assets/captures/apercu-restauration-une-nuit-a-la-fois.png)
+
+    ![Le refus faute de place : combien libérer, où, et rien n'a été touché.](../assets/captures/apercu-restauration-place-insuffisante.png)
+
 ## Ces fichiers que l'application dépose sans qu'on les lui demande
 
 Vous croiserez trois fichiers que vous n'avez pas créés. Aucun n'est un déchet, et aucun ne doit être
