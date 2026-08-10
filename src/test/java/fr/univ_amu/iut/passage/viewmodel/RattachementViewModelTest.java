@@ -68,7 +68,13 @@ class RattachementViewModelTest {
                 .when(propositions.pour(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(java.util.List.of());
         viewModel = new RattachementViewModel(
-                service, rattachement, conditionsPassage, propositions, Optional.empty(), Optional.empty());
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.empty(),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
     }
 
     private static DetailPassage detail(int numero, int annee, int nombreSequences) {
@@ -416,7 +422,13 @@ class RattachementViewModelTest {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         when(sync.pousserVers(ID)).thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.reussie("part-1")));
         RattachementViewModel avecSync = new RattachementViewModel(
-                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -440,7 +452,13 @@ class RattachementViewModelTest {
                         Optional.of(
                                 new EnvoiParticipation.Realignement("15:00:00", "15:00:00", "21:30:00", "06:15:00"))));
         RattachementViewModel avecSync = new RattachementViewModel(
-                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -466,7 +484,13 @@ class RattachementViewModelTest {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         when(sync.pousserVers(ID)).thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.reussie()));
         RattachementViewModel avecSync = new RattachementViewModel(
-                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -488,7 +512,13 @@ class RattachementViewModelTest {
         when(sync.pousserVers(ID))
                 .thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.echouee("HTTP 412 : etag périmé")));
         RattachementViewModel avecSync = new RattachementViewModel(
-                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -508,7 +538,13 @@ class RattachementViewModelTest {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         when(sync.pousserVers(ID)).thenThrow(new RegleMetierException("Point d'écoute introuvable"));
         RattachementViewModel avecSync = new RattachementViewModel(
-                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -547,7 +583,13 @@ class RattachementViewModelTest {
     void tirer_depuis_vigiechiro_recupere() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         RattachementViewModel avecSync = new RattachementViewModel(
-                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
         when(service.detailPassage(ID))
                 .thenReturn(detailMeteo(new MeteoReleve(9.0, 3.0, Vent.FORT, CouvertureNuageuse.DE_75_A_100)));
         avecSync.ouvrirSur(ID, "040962", "A1");
@@ -570,7 +612,13 @@ class RattachementViewModelTest {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         doThrow(new RegleMetierException("pas lié")).when(sync).tirerDepuis(ID);
         RattachementViewModel avecSync = new RattachementViewModel(
-                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.of(sync),
+                Optional.empty(),
+                numeroCarre -> java.util.List.of());
         when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -617,7 +665,8 @@ class RattachementViewModelTest {
                                 conditionsPassage,
                                 propositions,
                                 Optional.of(mock(SynchronisationParticipation.class)),
-                                Optional.empty())
+                                Optional.empty(),
+                                numeroCarre -> java.util.List.of())
                         .peutRecuperer())
                 .isTrue();
     }
@@ -632,7 +681,13 @@ class RattachementViewModelTest {
         when(campagneService.campagneDePassage(ID)).thenReturn(Optional.of(suivi));
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         RattachementViewModel vm = new RattachementViewModel(
-                service, rattachement, conditionsPassage, propositions, Optional.empty(), Optional.of(campagneService));
+                service,
+                rattachement,
+                conditionsPassage,
+                propositions,
+                Optional.empty(),
+                Optional.of(campagneService),
+                numeroCarre -> java.util.List.of());
 
         vm.ouvrirSur(ID, "040962", "A1");
 
