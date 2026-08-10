@@ -175,11 +175,15 @@ class RattachementImportViewModelTest {
         RetourOperation discordance = vm.avertissementPrefixeProperty().get();
         assertThat(discordance.texte())
                 .as("discordance détectée sur l'ensemble du dossier")
-                .contains("ne correspondent pas")
+                .contains("déjà préfixés pour un autre rattachement")
                 .contains("Car640380-2026-Pass1-A1-"); // préfixe attendu rappelé
+        assertThat(discordance.texte())
+                .as("#1493 : le message dit l'impasse ET comment en sortir")
+                .contains("bloqué")
+                .contains("Corrigez le rattachement");
         assertThat(discordance.severite())
-                .as("les noms sont conservés, rien n'échoue")
-                .isEqualTo(Severite.AVERTISSEMENT);
+                .as("#1493 : ce n'est plus un avertissement qu'on écarte, c'est un refus")
+                .isEqualTo(Severite.ERREUR);
         assertThat(discordance.texte()).doesNotContain("⚠");
 
         // Corriger le n° de passage vers celui des fichiers ne suffit pas (carré/point/année diffèrent).

@@ -170,6 +170,12 @@ public class ImportationViewModel {
         peutImporter = Bindings.createBooleanBinding(
                 () -> inspection.estInspecte()
                         && rattachement.estComplet()
+                        // #1493 : une discordance de préfixe BLOQUE. Elle n'était qu'un avertissement,
+                        // « leurs noms seront conservés » - autrement dit des fichiers estampillés
+                        // Car130711 rattachés au carré 640380, qui partiraient tels quels au dépôt : la
+                        // participation du 640380 recevrait des sons portant le nom d'un autre carré.
+                        // Un avertissement qu'on écarte d'un clic ne protège pas d'une donnée fausse.
+                        && !rattachement.avertissementPrefixeProperty().get().present()
                         && (inspection.plusieursNuits()
                                 ? coordinationNuits.numerotationValideProperty().get()
                                 : !controleNumeroPassage.estBloque()),
@@ -178,6 +184,7 @@ public class ImportationViewModel {
                 rattachement.siteSelectionneProperty(),
                 rattachement.pointSelectionneProperty(),
                 rattachement.numeroPassageProperty(),
+                rattachement.avertissementPrefixeProperty(),
                 controleNumeroPassage.dejaUtiliseProperty(),
                 controleNumeroPassage.nuitRecupereeProperty(),
                 coordinationNuits.numerotationValideProperty());
