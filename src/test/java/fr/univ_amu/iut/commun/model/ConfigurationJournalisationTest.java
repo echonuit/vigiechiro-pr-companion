@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -16,6 +17,30 @@ import org.junit.jupiter.api.io.TempDir;
 /// réel), pour ne pas polluer les autres tests : en test, aucun fichier de log n'est écrit, car ni
 /// `App.start()` ni `Cli.main()` ne s'y exécutent.
 class ConfigurationJournalisationTest {
+
+    @Test
+    @DisplayName("Le retrait de la console laisse le fichier de journal en place (#3570)")
+    void retire_la_console_et_seulement_elle(@TempDir Path racine) throws Exception {
+        Logger jetable = Logger.getAnonymousLogger();
+        jetable.setUseParentHandlers(false);
+        ConsoleHandler console = new ConsoleHandler();
+        jetable.addHandler(console);
+        FileHandler fichier = ConfigurationJournalisation.installer(jetable, racine.resolve("logs"));
+        try {
+            ConfigurationJournalisation.retirerLaConsole(jetable);
+
+            assertThat(jetable.getHandlers())
+                    .as("la pile d'un incident partait sur la sortie d'erreur de l'utilisateur, en plus"
+                            + " de la phrase que la CLI écrit : c'est la console qu'on retire")
+                    .noneMatch(ConsoleHandler.class::isInstance);
+            assertThat(jetable.getHandlers())
+                    .as("et SEULEMENT elle : sans le fichier, la trace ne serait plus nulle part")
+                    .contains(fichier);
+        } finally {
+            fichier.close();
+            console.close();
+        }
+    }
 
     @Test
     @DisplayName("Installe un fichier de journal tournant dans le dossier des logs (créé au besoin)")

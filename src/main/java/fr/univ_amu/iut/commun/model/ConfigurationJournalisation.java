@@ -3,7 +3,9 @@ package fr.univ_amu.iut.commun.model;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
@@ -50,6 +52,39 @@ public final class ConfigurationJournalisation {
         loggerApplication.setLevel(Level.FINE);
         configuree = true;
         loggerApplication.info(() -> "Journalisation initialisée : " + dossierLogs);
+    }
+
+    /// Comme [#configurer(Path)], mais **sans la console** : réservé à la ligne de commande (#3570).
+    ///
+    /// La JVM installe d'office un `ConsoleHandler` sur le logger racine, que personne n'avait retiré.
+    /// Un incident partait donc **deux fois** vers l'utilisateur : la phrase que la CLI écrit, et le
+    /// `SEVERE` avec sa pile entière, déversé sur la sortie d'erreur par le journal. `dev-docs/cli.md`
+    /// promet « message seul, jamais la trace » ; la promesse était fausse pour **tout** incident de la
+    /// CLI, pas seulement pour ceux du démarrage.
+    ///
+    /// ⚠️ Pour la CLI **seulement**, et c'est un arbitrage : l'IHM garde sa console, parce que personne
+    /// ne script sa sortie et qu'un développeur qui lance `javafx:run` y lit ses journaux. Le trajet des
+    /// journaux est un choix de **surface**, pas un réglage global.
+    ///
+    /// La trace, elle, n'est pas perdue : elle reste dans `<workspace>/logs/`, qui est l'endroit prévu
+    /// pour la lire.
+    public static synchronized void configurerSansConsole(Path dossierLogs) {
+        // AVANT de configurer, et non après : `configurer` journalise elle-même son installation, et
+        // cette ligne partait sur la sortie d'erreur de tout script. Retirer la console ensuite laissait
+        // passer exactement une ligne parasite - le genre de reste qui fait dire « c'est corrigé ».
+        retirerLaConsole(Logger.getLogger(""));
+        configurer(dossierLogs);
+    }
+
+    /// Retire les `ConsoleHandler` de `racine`, et **eux seuls** : le fichier de journal reste.
+    ///
+    /// Séparée pour être éprouvée sans toucher au logger racine réel, comme [#installer].
+    static void retirerLaConsole(Logger racine) {
+        for (Handler installe : racine.getHandlers()) {
+            if (installe instanceof ConsoleHandler) {
+                racine.removeHandler(installe);
+            }
+        }
     }
 
     /// Crée `dossierLogs` et installe un fichier de journal tournant sur le logger `racine`. Renvoie le

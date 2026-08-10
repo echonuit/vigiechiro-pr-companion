@@ -146,6 +146,18 @@ appellent les services.
   (`RegleMetierException` ou l'`IllegalArgumentException` des validateurs) sort en `2` (état intact) ; toute
   autre exception (échec inattendu, état incertain) en `1` (message seul, jamais la trace).
 
+⚠️ **« Jamais la trace » n'était vrai qu'à moitié jusqu'à #3570**, et de deux façons. D'abord
+`Cli.main` amorce la journalisation et migre la base **avant** d'entrer dans la commande, donc hors du
+gestionnaire de picocli : une exception née là sortait par la JVM, `Exception in thread "main"` et pile
+complète, en code `1` - y compris un `RefusAvantEcriture` que #3498 avait pourtant appris à traduire en
+`2`. Ensuite, la JVM installe d'office un `ConsoleHandler` que personne ne retirait : **tout** incident
+reversait donc sa pile sur la sortie d'erreur, en plus de la phrase.
+
+Les deux sont corrigés : le classement exception vers code vit dans `VerdictCli`, appelable des deux
+côtés, et la CLI **retire la console** au démarrage (`ConfigurationJournalisation.configurerSansConsole`).
+L'IHM garde la sienne : le trajet des journaux est un choix de surface, et personne ne script la sortie
+d'une fenêtre. La trace n'est pas perdue, elle est dans `<workspace>/logs/`.
+
 ### Workspace surchargeable
 
 Comme l'IHM, la CLI travaille dans un **workspace** (qui contient la base `vigiechiro.db`). L'option
