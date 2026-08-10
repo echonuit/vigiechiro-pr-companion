@@ -73,9 +73,15 @@
 
       <!-- Rattachement : année + n° de passage (le site et le point ne changent pas). -->
       <Label text="Rattachement" styleClass="section-sous"/>
-      <Label text="Corrige l'année et/ou le n° de passage. Le site et le point ne changent pas."
+      <Label text="Corrige le point d'écoute, l'année et/ou le n° de passage. Le site ne change pas."
              styleClass="section-sous" wrapText="true"/>
       <HBox spacing="24.0">
+        <!-- Correction du point (#1495) : bornée aux points du MÊME carré. Déplacer une nuit d'un carré
+             à l'autre n'est pas une correction de saisie, c'est un autre geste. -->
+        <VBox spacing="4.0">
+          <Label text="Point d'écoute" styleClass="bandeau-label"/>
+          <ComboBox fx:id="champPoint" prefWidth="130.0"/>
+        </VBox>
         <VBox spacing="4.0">
           <Label text="Année" styleClass="bandeau-label"/>
           <Spinner fx:id="spinnerAnnee" editable="true" prefWidth="130.0"/>
@@ -87,7 +93,7 @@
       </HBox>
       <!-- Passage déposé (#1134) : renommage verrouillé, mais météo/micro restent éditables. Indice masqué sinon. -->
       <Label fx:id="indiceRenommageVerrouille"
-             text="Passage déposé : l'année et le n° sont verrouillés (identité serveur). Vous pouvez ajuster la météo et le micro ci-dessous."
+             text="Passage déposé : le point, l'année et le n° sont verrouillés (identité serveur). Vous pouvez ajuster la météo et le micro ci-dessous."
              styleClass="section-sous" wrapText="true"/>
 
       <!-- Rattachement facultatif à une campagne (#2355). Ligne masquée si la feature `campagne` est coupée. -->

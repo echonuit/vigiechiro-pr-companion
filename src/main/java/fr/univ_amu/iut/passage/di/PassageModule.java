@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
+import fr.univ_amu.iut.commun.model.PointsDuCarre;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -64,6 +65,7 @@ import fr.univ_amu.iut.passage.view.NavigationPassage;
 import fr.univ_amu.iut.passage.viewmodel.IndicateurPassages;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
+import java.util.List;
 import java.util.Optional;
 
 /// Module Guice de la feature `passage` : fournit ses DAO à partir de la [SourceDeDonnees]
@@ -112,6 +114,13 @@ public class PassageModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), ReferentielPoint.class)
                 .setDefault()
                 .toInstance(idPoint -> Optional.empty());
+
+        // Port socle PointsDuCarre (#1495) : cette feature CONSOMME la liste des points d'un carré, pour
+        // offrir la correction du point d'écoute. Défaut no-op ici - sans `sites`, la liste est vide et
+        // l'écran n'offre simplement pas le choix.
+        OptionalBinder.newOptionalBinder(binder(), PointsDuCarre.class)
+                .setDefault()
+                .toInstance(numeroCarre -> List.of());
 
         // Passerelle SynchronisationParticipation (axe 4) : OptionalBinder VIDE (ni défaut ni binding). Le
         // module réel SynchronisationParticipationModule (chargé par RacineInjecteur avec la connexion) pose
@@ -418,8 +427,15 @@ public class PassageModule extends ModuleDeFeature {
             ServiceConditionsPassage conditions,
             PropositionsEnregistreur propositionsEnregistreur,
             Optional<SynchronisationParticipation> synchronisation,
-            Optional<ServiceCampagne> campagneService) {
+            Optional<ServiceCampagne> campagneService,
+            PointsDuCarre pointsDuCarre) {
         return new RattachementViewModel(
-                service, rattachement, conditions, propositionsEnregistreur, synchronisation, campagneService);
+                service,
+                rattachement,
+                conditions,
+                propositionsEnregistreur,
+                synchronisation,
+                campagneService,
+                pointsDuCarre);
     }
 }

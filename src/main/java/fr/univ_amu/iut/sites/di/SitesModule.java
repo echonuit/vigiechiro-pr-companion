@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
+import fr.univ_amu.iut.commun.model.PointsDuCarre;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.ResolveurCommune;
@@ -98,6 +99,11 @@ public class SitesModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), ReferentielPoint.class)
                 .setBinding()
                 .to(InfosPointSites.class);
+        // Port socle PointsDuCarre (#1495) : sens « un carré vers ses points », pour que « Modifier le
+        // passage » puisse proposer les points FRÈRES sans que `passage` dépende de `sites`.
+        OptionalBinder.newOptionalBinder(binder(), PointsDuCarre.class)
+                .setBinding()
+                .to(PointsDuCarreSites.class);
         // Port socle PointParLocalite (#1305) : sens INVERSE du précédent, retrouver le point local d'une
         // participation distante (carré + localité). Même montage d'inversion, pour reconstruire un passage
         // jamais importé ici sans que `passage` dépende de `sites`.

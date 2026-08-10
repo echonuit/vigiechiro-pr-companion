@@ -72,6 +72,10 @@ public class RattachementModaleController {
     @FXML
     private VBox racine;
 
+    /// Point d'écoute du passage (#1495) : bornée aux points du même carré.
+    @FXML
+    private ComboBox<String> champPoint;
+
     @FXML
     private Spinner<Integer> spinnerAnnee;
 
@@ -202,6 +206,11 @@ public class RattachementModaleController {
 
         // Passage déposé (#1134) : l'année et le n° sont l'identité serveur, on verrouille les deux spinners
         // - mais la modale reste ouverte pour éditer la météo et le micro. Un indice sous les spinners le dit.
+        champPoint.setItems(viewModel.point().disponibles());
+        champPoint.valueProperty().bindBidirectional(viewModel.point().choisiProperty());
+        // Grisé avec les deux autres champs de rattachement : le point fait partie du préfixe, donc du
+        // renommage que le dépôt verrouille (#1495).
+        champPoint.disableProperty().bind(viewModel.renommageVerrouilleProperty());
         spinnerAnnee.disableProperty().bind(viewModel.renommageVerrouilleProperty());
         spinnerNumero.disableProperty().bind(viewModel.renommageVerrouilleProperty());
         indiceRenommageVerrouille.visibleProperty().bind(viewModel.renommageVerrouilleProperty());

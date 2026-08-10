@@ -84,7 +84,10 @@ class RattachementModaleFermetureViewTest {
                         mock(ServiceConditionsPassage.class),
                         propositions,
                         Optional.of(synchronisation),
-                        Optional.empty());
+                        Optional.empty(),
+                        // Sans `sites` dans cet injecteur : le port rend une liste vide, et la modale
+                        // garde le point courant comme seul choix (#1495).
+                        numeroCarre -> java.util.List.of());
             }
         });
         FXMLLoader loader = new FXMLLoader(RattachementModaleController.class.getResource("RattachementModale.fxml"));

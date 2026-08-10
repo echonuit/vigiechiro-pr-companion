@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
+import fr.univ_amu.iut.commun.model.PointsDuCarre;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -72,7 +73,8 @@ public class RattachementViewModel {
 
     private Long idPassage;
     private String carre;
-    private String codePoint;
+    /// Le point d'écoute et ses frères (#1495), sortis d'ici pour rester sous le plafond de cohésion.
+    private final ChoixDuPoint choixDuPoint;
     private int anneeActuelle;
     private int numeroActuel;
     private int nombreSequences;
@@ -83,7 +85,9 @@ public class RattachementViewModel {
             ServiceConditionsPassage conditionsPassage,
             PropositionsEnregistreur propositionsEnregistreur,
             Optional<SynchronisationParticipation> synchronisation,
-            Optional<ServiceCampagne> campagneService) {
+            Optional<ServiceCampagne> campagneService,
+            PointsDuCarre pointsDuCarre) {
+        this.choixDuPoint = new ChoixDuPoint(pointsDuCarre);
         this.service = Objects.requireNonNull(service, "service");
         this.synchronisation = Objects.requireNonNull(synchronisation, "synchronisation");
         this.rattachement = Objects.requireNonNull(rattachement, "rattachement");
@@ -92,6 +96,7 @@ public class RattachementViewModel {
         this.conditions = new SaisiePassageConditions(conditionsPassage, propositionsEnregistreur, messages);
         annee.addListener((observable, avant, apres) -> majRecap());
         numeroPassage.addListener((observable, avant, apres) -> majRecap());
+        choixDuPoint.choisiProperty().addListener((observable, avant, apres) -> majRecap());
     }
 
     /// Sous-ViewModel des conditions de dépôt (météo + micro), lié aux champs de la modale.
@@ -104,7 +109,7 @@ public class RattachementViewModel {
     public void ouvrirSur(Long idPassage, String carre, String codePoint) {
         this.idPassage = Objects.requireNonNull(idPassage, "idPassage");
         this.carre = Objects.requireNonNull(carre, "carre");
-        this.codePoint = Objects.requireNonNull(codePoint, "codePoint");
+        choixDuPoint.charger(carre, codePoint);
         DetailPassage detail = service.detailPassage(idPassage);
         anneeActuelle = detail.annee();
         numeroActuel = detail.numeroPassage();
@@ -143,6 +148,13 @@ public class RattachementViewModel {
     ///     invalide, ou échec opérationnel (R5, disque, base) dont le motif est dans
     ///     [#retourProperty])
     public boolean valider() {
+        // Le verrou de dépôt était tenu **positionnellement** : `appliquer()` s'abstenait d'appeler cette
+        // méthode, et l'écran grisait les deux champs. Rien ne l'interdisait ici, donc un troisième
+        // appelant - ou un champ qu'on oublie de griser - le contournait sans bruit. Un invariant tenu
+        // ailleurs se double d'un refus (#1495, dans l'esprit de l'ADR 3451).
+        if (renommageVerrouille.get()) {
+            return false;
+        }
         if (numeroPassage.get() < 1) {
             return false;
         }
@@ -151,7 +163,12 @@ public class RattachementViewModel {
         }
         try {
             rattachement.modifierRattachement(
-                    idPassage, new Prefixe(carre, annee.get(), numeroPassage.get(), codePoint));
+                    idPassage,
+                    new Prefixe(
+                            carre,
+                            annee.get(),
+                            numeroPassage.get(),
+                            choixDuPoint.choisiProperty().get()));
             messages.effacer();
             return true;
         } catch (RuntimeException echec) {
@@ -379,40 +396,35 @@ public class RattachementViewModel {
     }
 
     /// `true` si appliquer le rattachement courant **renommera effectivement** les séquences sur le disque
-    /// (le préfixe de session change). `false` si rien ne change : l'action n'a alors aucun effet disque
-    /// irréversible. La vue s'en sert pour ne demander une confirmation que dans ce cas (#798).
+    /// (le préfixe de session change). La vue s'en sert pour ne demander une confirmation que dans ce cas
+    /// (#798).
     public boolean entraineRenommage() {
-        if (carre == null) {
-            return false;
-        }
-        String avant = new Prefixe(carre, anneeActuelle, numeroActuel, codePoint).nomDossierSession();
-        String apres = new Prefixe(carre, annee.get(), numeroPassage.get(), codePoint).nomDossierSession();
-        return !avant.equals(apres);
+        return apercu().map(ApercuRenommage::entraineRenommage).orElse(false);
     }
 
     /// Combien de séquences un « Appliquer » renommerait, ou **zéro** si le rattachement ne change pas
-    /// (#3449). La vue le lit **avant** d'appliquer : après, le préfixe courant a bougé et
-    /// [#entraineRenommage] est retombé à faux.
+    /// (#3449). La vue le lit **avant** d'appliquer : après, le préfixe courant a bougé.
     public int sequencesARenommer() {
-        return entraineRenommage() ? nombreSequences : 0;
+        return apercu().map(ApercuRenommage::sequencesARenommer).orElse(0);
+    }
+
+    /// L'aperçu du renommage, vide tant que la modale n'est pas ouverte sur un passage.
+    private Optional<ApercuRenommage> apercu() {
+        if (carre == null) {
+            return Optional.empty();
+        }
+        return Optional.of(new ApercuRenommage(
+                new Prefixe(carre, anneeActuelle, numeroActuel, choixDuPoint.actuel()),
+                new Prefixe(
+                        carre,
+                        annee.get(),
+                        numeroPassage.get(),
+                        choixDuPoint.choisiProperty().get()),
+                nombreSequences));
     }
 
     private void majRecap() {
-        if (carre == null) {
-            recap.set("");
-        } else if (!entraineRenommage()) {
-            recap.set("Aucun changement de rattachement.");
-        } else {
-            String avant = new Prefixe(carre, anneeActuelle, numeroActuel, codePoint).nomDossierSession();
-            String apres = new Prefixe(carre, annee.get(), numeroPassage.get(), codePoint).nomDossierSession();
-            recap.set("Rattachement : "
-                    + avant
-                    + VERS
-                    + apres
-                    + " : "
-                    + nombreSequences
-                    + " séquence(s) de la nuit seront renommées. Action irréversible.");
-        }
+        recap.set(apercu().map(ApercuRenommage::texte).orElse(""));
     }
 
     public IntegerProperty anneeProperty() {
@@ -442,5 +454,9 @@ public class RattachementViewModel {
     /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
     public void effacerRetour() {
         messages.effacer();
+    }
+    /// Le point d'écoute du passage et les frères entre lesquels le corriger (#1495).
+    public ChoixDuPoint point() {
+        return choixDuPoint;
     }
 }
