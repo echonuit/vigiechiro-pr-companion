@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import java.util.Objects;
 import javafx.stage.Window;
@@ -31,13 +32,21 @@ final class PorteurSauvegarde {
 
     private final ActionsSauvegarde actions;
 
-    PorteurSauvegarde(ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation) {
+    PorteurSauvegarde(
+            ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation, JournalMutations journal) {
         Objects.requireNonNull(navigateur, "navigateur");
+        Objects.requireNonNull(journal, "journal");
         this.actions = new ActionsSauvegarde(
                 Objects.requireNonNull(service, "service"),
                 Objects.requireNonNull(occupation, "occupation"),
                 () -> proprietaire,
-                navigateur::afficherAccueil);
+                () -> {
+                    // Une restauration remplace la base entiere : c'est la plus structurelle des
+                    // mutations. Elle ne passe par aucun service de domaine, d'ou l'annonce ici, au
+                    // seul endroit que les deux chemins (base seule et sauvegarde complete) traversent.
+                    journal.mutationStructurelleValidee();
+                    navigateur.afficherAccueil();
+                });
     }
 
     /// L'action, prête à jouer sous `proprietaire` (la fenêtre du clic).

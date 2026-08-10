@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegionDuCarre;
@@ -56,6 +57,7 @@ public class SiteDetailViewModel {
 
     /// Correspondances VigieChiro : elles disent si ce site est enregistré, et s'il est verrouillé (#734).
     private final LienVigieChiroDao liens;
+    private final JournalMutations journal;
 
     private Site site;
 
@@ -98,13 +100,15 @@ public class SiteDetailViewModel {
             PassageDao passageDao,
             Horloge horloge,
             PortailVigieChiro portail,
-            LienVigieChiroDao liens) {
+            LienVigieChiroDao liens,
+            JournalMutations journal) {
         this.service = Objects.requireNonNull(service, "service");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.portail = Objects.requireNonNull(portail, "portail");
         this.liens = Objects.requireNonNull(liens, "liens");
+        this.journal = Objects.requireNonNull(journal, "journal");
         // La bascule d'affichage re-projette la liste (points utilisés seuls <-> tous), #1738.
         afficherTousLesPoints.addListener((observable, avant, apres) -> projeterPoints());
     }
@@ -174,6 +178,9 @@ public class SiteDetailViewModel {
                     "Le point « " + point.code() + " » porte au moins un passage : suppression bloquée.");
         }
         pointDao.delete(point.id());
+        // ⚠️ Seule ecriture structurelle du depot qui ne passe pas par un service (#3542) : l'annonce
+        // est donc posee ici, a cote de l'ecriture. Le court-circuit lui-meme est une dette a part.
+        journal.mutationStructurelleValidee();
         rafraichir();
     }
 

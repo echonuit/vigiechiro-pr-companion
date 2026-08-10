@@ -72,7 +72,7 @@ class ActionsMenuChromeTest {
     @Test
     @DisplayName("#1405 : « Sauvegarder la base » sauvegarde - et ne restaure rien")
     void entree_sauvegarder() {
-        ActionSauvegarder entree = new ActionSauvegarder(sauvegarde, navigateur, occupation);
+        ActionSauvegarder entree = new ActionSauvegarder(sauvegarde, navigateur, occupation, () -> {});
         neutraliserDialogues(entree.porteur().actions(), DOSSIER);
         when(sauvegarde.sauvegarder(DOSSIER)).thenReturn(FICHIER);
 
@@ -86,7 +86,7 @@ class ActionsMenuChromeTest {
     @Test
     @DisplayName("#1405 : « Sauvegarde complète » emporte l'audio - ce n'est pas la sauvegarde simple")
     void entree_sauvegarder_complet() {
-        ActionSauvegarderComplet entree = new ActionSauvegarderComplet(sauvegarde, navigateur, occupation);
+        ActionSauvegarderComplet entree = new ActionSauvegarderComplet(sauvegarde, navigateur, occupation, () -> {});
         neutraliserDialogues(entree.porteur().actions(), DOSSIER);
         when(sauvegarde.sauvegarderComplet(DOSSIER)).thenReturn(new BilanSauvegarde(DOSSIER, 2, List.of()));
 
@@ -101,7 +101,7 @@ class ActionsMenuChromeTest {
     @Test
     @DisplayName("#1405 : « Restaurer une sauvegarde » restaure la base seule - et n'écrase pas l'audio")
     void entree_restaurer() {
-        ActionRestaurer entree = new ActionRestaurer(sauvegarde, navigateur, occupation);
+        ActionRestaurer entree = new ActionRestaurer(sauvegarde, navigateur, occupation, () -> {});
         neutraliserDialogues(entree.porteur().actions(), FICHIER);
 
         entree.executer(null);
@@ -117,7 +117,7 @@ class ActionsMenuChromeTest {
         // Le service REND un bilan depuis #2727 : sans ce stub, le mock rendrait null et le compte
         // rendu casserait sur un défaut du test, pas du code.
         when(sauvegarde.restaurerComplet(DOSSIER)).thenReturn(BilanRestauration.sansManifeste());
-        ActionRestaurerComplet entree = new ActionRestaurerComplet(sauvegarde, navigateur, occupation);
+        ActionRestaurerComplet entree = new ActionRestaurerComplet(sauvegarde, navigateur, occupation, () -> {});
         neutraliserDialogues(entree.porteur().actions(), DOSSIER);
 
         entree.executer(null);

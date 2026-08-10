@@ -73,7 +73,8 @@ class ServicePassageDetailTest {
                 sessionDao,
                 sequenceDao,
                 new ServiceDisponibiliteAudio(sessionDao, sequenceDao, new Workspace(dossier)),
-                new PassageOpportunisteDao(source));
+                new PassageOpportunisteDao(source),
+                () -> {});
         conditions = new ServiceConditionsPassage(
                 passageDao,
                 new MaterielMicroDao(source),

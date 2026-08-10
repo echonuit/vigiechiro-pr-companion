@@ -51,8 +51,8 @@ class CreationPassageArchiveTest {
                 .position(43.5, 5.4)
                 .semerSiteEtPoint()
                 .idPoint();
-        creation =
-                new CreationPassageArchive(source, new Workspace(dossier), new HorlogeFigee(LocalDate.of(2026, 7, 17)));
+        creation = new CreationPassageArchive(
+                source, new Workspace(dossier), new HorlogeFigee(LocalDate.of(2026, 7, 17)), () -> {});
     }
 
     private static ParticipationDetail detailComplet() {

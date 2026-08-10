@@ -29,6 +29,7 @@ import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
@@ -95,6 +96,11 @@ class ServiceReconstructionPassagesTest {
     private ClientVigieChiro client;
     private ImportObservations importObservations;
     private PassageDao passageDao;
+
+    /// Compte les annonces de mutation structurelle (#3542) : ce que le rapport de synchro ne dit pas.
+    private final int[] annonces = {0};
+
+    private final JournalMutations journal = () -> annonces[0]++;
     private SessionDao sessionDao;
     private SequenceDao sequenceDao;
     private LienVigieChiroDao liens;
@@ -128,14 +134,15 @@ class ServiceReconstructionPassagesTest {
                 new Workspace(dossier),
                 new HorlogeFigee(MAINTENANT),
                 hydratation(Optional.of(importObservations)),
-                new FuseauDuPoint(idPointDemande -> Optional.empty()));
+                new FuseauDuPoint(idPointDemande -> Optional.empty()),
+                journal);
     }
 
     /// Le noyau de **contenu** de la synchro (#2557), branché sur la même plateforme bouchonnée : c'est lui
     /// qui hydrate les nuits sans séquences, celles qui viennent d'être créées comme les squelettes déjà là.
     private HydratationSquelette hydratation(Optional<ImportObservations> importateur) {
         return new HydratationSquelette(
-                source, client, new Workspace(dossier), new HorlogeFigee(MAINTENANT), importateur);
+                source, client, new Workspace(dossier), new HorlogeFigee(MAINTENANT), importateur, journal);
     }
 
     @Test
@@ -325,7 +332,8 @@ class ServiceReconstructionPassagesTest {
                 new Workspace(dossier),
                 new HorlogeFigee(MAINTENANT),
                 hydratation(Optional.empty()),
-                new FuseauDuPoint(idPointDemande -> Optional.empty()));
+                new FuseauDuPoint(idPointDemande -> Optional.empty()),
+                journal);
 
         assertThatThrownBy(() -> sansImport.reconstruire(PARTICIPATION))
                 .isInstanceOf(RegleMetierException.class)
@@ -482,6 +490,28 @@ class ServiceReconstructionPassagesTest {
                         new DonneeVigieChiro("d-1", SEQ_1, List.of(observation(), observation())),
                         new DonneeVigieChiro("d-2", SEQ_2, List.of(observation())))));
         when(importObservations.importer(anyLong(), any(), anyBoolean())).thenReturn("3 observation(s) importée(s).");
+    }
+
+    @Test
+    @DisplayName("#3542 : un squelette créé annonce la mutation, alors même que le rapport compte ZÉRO")
+    void squelette_cree_annonce_meme_si_le_rapport_compte_zero() {
+        when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detailComplet()));
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.empty()));
+
+        Optional<RapportSynchro> rapport = service.synchroniser(client);
+
+        // Le rapport compte les nuits RÉCUPÉRÉES, pas les passages CRÉÉS : déduire l'effet structurel de
+        // son compteur produisait un faux négatif, l'accueil gardant un compteur de passages périmé.
+        assertThat(rapport)
+                .hasValueSatisfying(
+                        compteRendu -> assertThat(compteRendu.nombre()).isZero());
+        assertThat(passageDao.findAll())
+                .as("un passage a pourtant bien été écrit")
+                .hasSize(1);
+        assertThat(annonces[0])
+                .as("et il a été annoncé, indépendamment du compte rendu")
+                .isPositive();
     }
 
     @Test

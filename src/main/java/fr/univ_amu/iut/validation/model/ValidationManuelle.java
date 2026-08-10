@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.validation.model;
 
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -18,10 +19,12 @@ public class ValidationManuelle {
 
     private final ObservationDao observationDao;
     private final TaxonDao taxonDao;
+    private final JournalMutations journal;
 
-    public ValidationManuelle(ObservationDao observationDao, TaxonDao taxonDao) {
+    public ValidationManuelle(ObservationDao observationDao, TaxonDao taxonDao, JournalMutations journal) {
         this.observationDao = Objects.requireNonNull(observationDao, "observationDao");
         this.taxonDao = Objects.requireNonNull(taxonDao, "taxonDao");
+        this.journal = Objects.requireNonNull(journal, "journal");
     }
 
     /// Valide la séquence `idSequence` avec le taxon `codeTaxonObservateur`. Au plus **une** observation
@@ -64,6 +67,8 @@ public class ValidationManuelle {
                 null,
                 null,
                 null); // certitudeObservateur : vide tant que l'observateur ne l'a pas saisie
-        return observationDao.insert(manuelle);
+        Observation ajoutee = observationDao.insert(manuelle);
+        journal.mutationStructurelleValidee();
+        return ajoutee;
     }
 }

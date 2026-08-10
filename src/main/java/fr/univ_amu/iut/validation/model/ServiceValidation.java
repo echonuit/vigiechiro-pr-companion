@@ -2,14 +2,12 @@ package fr.univ_amu.iut.validation.model;
 
 import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
-import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.IdentiteSequence;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
-import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.dao.MessageObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
@@ -91,14 +89,13 @@ public class ServiceValidation implements CompteurValidations {
             ResultatsIdentificationDao resultatsDao,
             ObservationDao observationDao,
             TaxonDao taxonDao,
-            SessionDao sessionDao,
             SequenceDao sequenceDao,
             ParserCsvTadarida parser,
             ExportVuCsv export,
             UniteDeTravail uniteDeTravail,
-            Horloge horloge,
             MessageObservationDao messageDao,
-            LienVigieChiroDao liens) {
+            LienVigieChiroDao liens,
+            NoyauImportObservations noyau) {
         this.resultatsDao = Objects.requireNonNull(resultatsDao, "resultatsDao");
         this.observationDao = Objects.requireNonNull(observationDao, "observationDao");
         this.taxonDao = Objects.requireNonNull(taxonDao, "taxonDao");
@@ -109,8 +106,7 @@ public class ServiceValidation implements CompteurValidations {
         this.preservation = new PreservationValidations(resultatsDao, observationDao);
         this.fils = new FilsDiscussionVigieChiro(observationDao, messageDao, uniteDeTravail);
         this.ancrage = new EtatAncragePassage(resultatsDao, observationDao, liens);
-        this.noyau = new NoyauImportObservations(
-                resultatsDao, observationDao, taxonDao, sessionDao, sequenceDao, uniteDeTravail, horloge, preservation);
+        this.noyau = Objects.requireNonNull(noyau, "noyau");
     }
 
     // ---------------------------------------------------------------------------------------------

@@ -72,7 +72,7 @@ class ValidationManuelleTest {
                     idSession);
         }
         observationDao = new ObservationDao(source);
-        validationManuelle = new ValidationManuelle(observationDao, new TaxonDao(source));
+        validationManuelle = new ValidationManuelle(observationDao, new TaxonDao(source), () -> {});
     }
 
     @Test

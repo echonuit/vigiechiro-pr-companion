@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
@@ -66,6 +67,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     private static final String ETAPE_FIN = "Terminé.";
 
     private final PassageDao passageDao;
+    private final JournalMutations journal;
     private final LienVigieChiroDao liens;
 
     /// Pour reconnaître un **squelette** (#1710) : un passage rattaché mais dont la session archivée n'a
@@ -109,8 +111,10 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             Workspace workspace,
             Horloge horloge,
             HydratationSquelette hydratation,
-            FuseauDuPoint fuseaux) {
+            FuseauDuPoint fuseaux,
+            JournalMutations journal) {
         Objects.requireNonNull(source, "source");
+        this.journal = Objects.requireNonNull(journal, "journal");
         this.passageDao = new PassageDao(source);
         this.liens = new LienVigieChiroDao(source);
         this.sessionDao = new SessionDao(source);
@@ -119,7 +123,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         this.pointParLocalite = Objects.requireNonNull(pointParLocalite, "pointParLocalite");
         this.horaires = new HorairesDistants(fuseaux);
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
-        this.creationStructure = new CreationPassageArchive(source, workspace, horloge);
+        this.creationStructure = new CreationPassageArchive(source, workspace, horloge, journal);
         this.hydratation = Objects.requireNonNull(hydratation, "hydratation");
     }
 
@@ -579,6 +583,9 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         try {
             liens.supprimer(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage));
             passageDao.delete(idPassage);
+            // La compensation change l'inventaire autant que la creation qu'elle defait : sans cette
+            // annonce, le compteur de passages resterait trop haut apres une reconstruction interrompue.
+            journal.mutationStructurelleValidee();
         } catch (RuntimeException echecCompensation) {
             cause.addSuppressed(echecCompensation);
         }

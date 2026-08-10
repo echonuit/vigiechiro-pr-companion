@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -72,8 +73,9 @@ public class ReconstructionModule extends ModuleDeFeature {
             ClientVigieChiro client,
             Workspace workspace,
             Horloge horloge,
-            Optional<ImportObservations> importObservations) {
-        return new HydratationSquelette(source, client, workspace, horloge, importObservations);
+            Optional<ImportObservations> importObservations,
+            JournalMutations journal) {
+        return new HydratationSquelette(source, client, workspace, horloge, importObservations, journal);
     }
 
     @Provides
@@ -87,8 +89,17 @@ public class ReconstructionModule extends ModuleDeFeature {
             Workspace workspace,
             Horloge horloge,
             @Named(QUALIFIANT) HydratationSquelette hydratation,
-            FuseauDuPoint fuseaux) {
+            FuseauDuPoint fuseaux,
+            JournalMutations journal) {
         return new ServiceReconstructionPassages(
-                source, client, pointParLocalite, importObservations, workspace, horloge, hydratation, fuseaux);
+                source,
+                client,
+                pointParLocalite,
+                importObservations,
+                workspace,
+                horloge,
+                hydratation,
+                fuseaux,
+                journal);
     }
 }
