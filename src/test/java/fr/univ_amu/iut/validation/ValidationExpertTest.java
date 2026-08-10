@@ -28,6 +28,7 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.MessageObservation;
+import fr.univ_amu.iut.validation.model.NoyauImportObservations;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -106,18 +107,26 @@ class ValidationExpertTest {
                 false,
                 jeu.idSession()));
 
+        var resultatsDao = new fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao(source);
         service = new ServiceValidation(
-                new fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao(source),
+                resultatsDao,
                 observationDao,
                 taxonDao,
-                sessionDao,
                 sequenceDao,
                 new ParserCsvTadarida(),
                 new ExportVuCsv(),
                 new UniteDeTravail(source),
-                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 messageDao,
-                new LienVigieChiroDao(source));
+                new LienVigieChiroDao(source),
+                new NoyauImportObservations(
+                        resultatsDao,
+                        observationDao,
+                        taxonDao,
+                        sessionDao,
+                        sequenceDao,
+                        new UniteDeTravail(source),
+                        new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                        () -> {}));
     }
 
     @Test

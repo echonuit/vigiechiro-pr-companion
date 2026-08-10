@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
@@ -22,6 +23,7 @@ import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.EspecesPrioritairesTaxon;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
+import fr.univ_amu.iut.validation.model.NoyauImportObservations;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
 import fr.univ_amu.iut.validation.model.RapprochementTaxons;
 import fr.univ_amu.iut.validation.model.SelectionObservations;
@@ -148,10 +150,29 @@ public class ValidationModule extends ModuleDeFeature {
         return new SelectionObservations(projections, especesPrioritaires);
     }
 
+    /// Noyau d'import des observations (#3542) : **fourni** plutôt qu'assemblé par [ServiceValidation],
+    /// qui n'avait besoin de `sessionDao` et de l'[Horloge] que pour le construire. Le sortir de là rend
+    /// au service deux paramètres et lui évite de porter le journal des mutations qu'il n'utilise pas.
     @Provides
     @Singleton
-    ValidationManuelle fournirValidationManuelle(ObservationDao observationDao, TaxonDao taxonDao) {
-        return new ValidationManuelle(observationDao, taxonDao);
+    NoyauImportObservations fournirNoyauImport(
+            ResultatsIdentificationDao resultatsDao,
+            ObservationDao observationDao,
+            TaxonDao taxonDao,
+            SessionDao sessionDao,
+            SequenceDao sequenceDao,
+            UniteDeTravail uniteDeTravail,
+            Horloge horloge,
+            JournalMutations journal) {
+        return new NoyauImportObservations(
+                resultatsDao, observationDao, taxonDao, sessionDao, sequenceDao, uniteDeTravail, horloge, journal);
+    }
+
+    @Provides
+    @Singleton
+    ValidationManuelle fournirValidationManuelle(
+            ObservationDao observationDao, TaxonDao taxonDao, JournalMutations journal) {
+        return new ValidationManuelle(observationDao, taxonDao, journal);
     }
 
     @Provides
@@ -178,25 +199,23 @@ public class ValidationModule extends ModuleDeFeature {
             ResultatsIdentificationDao resultatsDao,
             ObservationDao observationDao,
             TaxonDao taxonDao,
-            SessionDao sessionDao,
             SequenceDao sequenceDao,
             ParserCsvTadarida parser,
             ExportVuCsv export,
             UniteDeTravail uniteDeTravail,
-            Horloge horloge,
             MessageObservationDao messageDao,
-            LienVigieChiroDao liens) {
+            LienVigieChiroDao liens,
+            NoyauImportObservations noyau) {
         return new ServiceValidation(
                 resultatsDao,
                 observationDao,
                 taxonDao,
-                sessionDao,
                 sequenceDao,
                 parser,
                 export,
                 uniteDeTravail,
-                horloge,
                 messageDao,
-                liens);
+                liens,
+                noyau);
     }
 }

@@ -62,7 +62,8 @@ class GestesNuitRecupereeTest {
                 sessionDao,
                 sequenceDao,
                 new ServiceDisponibiliteAudio(sessionDao, sequenceDao, new Workspace(dossier)),
-                new PassageOpportunisteDao(source));
+                new PassageOpportunisteDao(source),
+                () -> {});
     }
 
     /// Une nuit **récupérée** : rattachée à une participation, et sans le moindre WAV posé.

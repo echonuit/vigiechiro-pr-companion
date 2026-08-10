@@ -4,6 +4,7 @@ import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.model.JournalMutations;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.beans.property.ReadOnlyLongProperty;
 import javafx.beans.property.ReadOnlyLongWrapper;
 
@@ -31,6 +32,10 @@ public final class RevisionDonnees implements JournalMutations {
     private final Executor filAffichage;
     private final ReadOnlyLongWrapper revision = new ReadOnlyLongWrapper(this, "revision", 0L);
 
+    /// Vrai quand une avancée est déjà postée sur le fil d'affichage et pas encore appliquée.
+    /// Posé depuis n'importe quel fil émetteur, baissé sur le fil d'affichage : d'où l'atomique.
+    private final AtomicBoolean avanceePostee = new AtomicBoolean(false);
+
     public RevisionDonnees(Executor filAffichage) {
         this.filAffichage = Objects.requireNonNull(filAffichage, "filAffichage");
     }
@@ -41,10 +46,29 @@ public final class RevisionDonnees implements JournalMutations {
         return revision.getReadOnlyProperty();
     }
 
-    /// La révision avance, **sur le fil d'affichage**. Appelable depuis n'importe quel fil ; les deux
-    /// règles d'appel (après validation, une fois par opération métier) appartiennent au port.
+    /// La révision avance, **sur le fil d'affichage**. Appelable depuis n'importe quel fil.
+    ///
+    /// **Les signaux en rafale sont amortis** (#3542) : tant qu'une avancée est déjà postée et pas
+    /// encore appliquée, les suivantes ne postent rien. Une synchronisation qui crée deux cent
+    /// cinquante sites un par un produit donc **un** réveil, pas deux cent cinquante relectures de
+    /// quatre `COUNT(*)`.
+    ///
+    /// C'est ce qui permet à l'émetteur de garder une règle triviale (« tu écris, tu signales »)
+    /// plutôt que de devoir reconnaître lui-même la frontière d'une opération métier : la question se
+    /// tranche ici, en un endroit, sous test.
+    ///
+    /// Aucune mutation n'est perdue pour autant. Le lecteur **relit tout** à chaque réveil : ce qui
+    /// compte est qu'il finisse à jour, pas qu'il soit réveillé autant de fois qu'il y a eu
+    /// d'écritures.
     @Override
     public void mutationStructurelleValidee() {
-        filAffichage.execute(() -> revision.set(revision.get() + 1));
+        // Le drapeau se baisse AVANT l'avancée : une mutation survenue pendant que les lecteurs
+        // réagissent est une mutation neuve, et doit reposter. L'inverse l'avalerait.
+        if (avanceePostee.compareAndSet(false, true)) {
+            filAffichage.execute(() -> {
+                avanceePostee.set(false);
+                revision.set(revision.get() + 1);
+            });
+        }
     }
 }

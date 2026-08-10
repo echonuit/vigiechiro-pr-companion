@@ -95,7 +95,8 @@ class ServicePassageMockTest {
                 sessionDao,
                 sequenceDao,
                 mock(ServiceDisponibiliteAudio.class),
-                opportunistes);
+                opportunistes,
+                () -> {});
     }
 
     /// Conditions de la nuit (météo), extraites de ServicePassage (#1192).

@@ -89,7 +89,8 @@ class ServicePassageTest {
                 new SessionDao(source),
                 new SequenceDao(source),
                 new ServiceDisponibiliteAudio(new SessionDao(source), new SequenceDao(source), new Workspace(dossier)),
-                opportunistesDao);
+                opportunistesDao,
+                () -> {});
         rattachement = new ServiceRattachement(
                 passageDao,
                 new SessionDao(source),

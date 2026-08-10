@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -41,6 +42,7 @@ public final class CreationPassageArchive {
     private static final String ENREGISTREUR_INCONNU = Enregistreur.INCONNU;
 
     private final PassageDao passageDao;
+    private final JournalMutations journal;
     private final SessionDao sessionDao;
     private final SequenceDao sequenceDao;
     private final EnregistrementOriginalDao originalDao;
@@ -53,7 +55,8 @@ public final class CreationPassageArchive {
     /// commit par ligne (#1522). Construit depuis la même [SourceDeDonnees] que les DAO.
     private final UniteDeTravail uniteDeTravail;
 
-    public CreationPassageArchive(SourceDeDonnees source, Workspace workspace, Horloge horloge) {
+    public CreationPassageArchive(
+            SourceDeDonnees source, Workspace workspace, Horloge horloge, JournalMutations journal) {
         Objects.requireNonNull(source, "source");
         this.passageDao = new PassageDao(source);
         this.sessionDao = new SessionDao(source);
@@ -64,6 +67,7 @@ public final class CreationPassageArchive {
         this.uniteDeTravail = new UniteDeTravail(source);
         this.workspace = Objects.requireNonNull(workspace, "workspace");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.journal = Objects.requireNonNull(journal, "journal");
     }
 
     /// Résultat de la création : l'identifiant du passage créé et le **nombre de séquences** recréées.
@@ -219,7 +223,7 @@ public final class CreationPassageArchive {
             String idEnregistreur,
             String donneesMeteo) {
         int annee = debut.getYear();
-        return passageDao
+        Long idCree = passageDao
                 .insert(new Passage(
                         null,
                         numeroPassage,
@@ -237,6 +241,11 @@ public final class CreationPassageArchive {
                         idEnregistreur,
                         null))
                 .id();
+        // Le squelette d'une nuit rapatriee compte dans l'inventaire au meme titre qu'un passage cree a
+        // la main : c'est l'ecriture qui l'a manque a l'inventaire de #3542, parce qu'elle s'ecrit
+        // `passageDao` puis `.insert(` sur la ligne suivante.
+        journal.mutationStructurelleValidee();
+        return idCree;
     }
 
     /// Session **sans audio d'emblée** : le passage naît sans fichier (rien n'a jamais été importé

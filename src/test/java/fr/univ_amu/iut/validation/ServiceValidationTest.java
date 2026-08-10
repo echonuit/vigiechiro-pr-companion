@@ -28,6 +28,7 @@ import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.LigneObservation;
 import fr.univ_amu.iut.validation.model.ModeRevue;
+import fr.univ_amu.iut.validation.model.NoyauImportObservations;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
 import fr.univ_amu.iut.validation.model.ResultatParseTadarida;
@@ -114,14 +115,21 @@ class ServiceValidationTest {
                 resultatsDao,
                 observationDao,
                 taxonDao,
-                sessionDao,
                 sequenceDao,
                 parser,
                 new ExportVuCsv(),
                 new UniteDeTravail(source),
-                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 new MessageObservationDao(source),
-                new LienVigieChiroDao(source));
+                new LienVigieChiroDao(source),
+                new NoyauImportObservations(
+                        resultatsDao,
+                        observationDao,
+                        taxonDao,
+                        sessionDao,
+                        sequenceDao,
+                        new UniteDeTravail(source),
+                        new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                        () -> {}));
     }
 
     private void insererSequence(EnregistrementOriginalDao originalDao, SequenceDao sequenceDao, String base) {

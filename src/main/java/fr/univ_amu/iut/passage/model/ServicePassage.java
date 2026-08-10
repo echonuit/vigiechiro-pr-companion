@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.model.Alerte;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
@@ -55,6 +56,7 @@ public class ServicePassage {
     private static final String ID_PASSAGE = "idPassage";
 
     private final PassageDao passageDao;
+    private final JournalMutations journal;
     private final MoteurWorkflowPassage moteur;
     private final Horloge horloge;
     private final SessionDao sessionDao;
@@ -77,8 +79,10 @@ public class ServicePassage {
             SessionDao sessionDao,
             SequenceDao sequenceDao,
             ServiceDisponibiliteAudio disponibilite,
-            PassageOpportunisteDao opportunistes) {
+            PassageOpportunisteDao opportunistes,
+            JournalMutations journal) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
+        this.journal = Objects.requireNonNull(journal, "journal");
         this.moteur = Objects.requireNonNull(moteur, "moteur");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
@@ -184,7 +188,9 @@ public class ServicePassage {
                 idPoint,
                 idEnregistreur,
                 null);
-        return passageDao.insert(aCreer);
+        Passage cree = passageDao.insert(aCreer);
+        journal.mutationStructurelleValidee();
+        return cree;
     }
 
     /// Vérifications de protocole non bloquantes (R3 + R4) à présenter à l'utilisateur après saisie
@@ -405,6 +411,7 @@ public class ServicePassage {
             throw new RegleMetierException("Suppression refusée : un passage déposé ne peut pas être supprimé.");
         }
         passageDao.delete(idPassage);
+        journal.mutationStructurelleValidee();
     }
 
     /// Pourquoi une nuit récupérée n'annule pas son dépôt. Nommé ici pour que le service et l'écran

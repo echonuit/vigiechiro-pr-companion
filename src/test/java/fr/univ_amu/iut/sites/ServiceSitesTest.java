@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -62,7 +63,55 @@ class ServiceSitesTest {
         passageDao = new PassageDao(source);
         enregistreurDao = new EnregistreurDao(source);
         communeDao = new PointCommuneDao(source);
-        service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(JOUR_FIXE), communeDao);
+        service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(JOUR_FIXE), communeDao, journal);
+    }
+
+    /// Compte les annonces de mutation structurelle (#3542). Un compteur plutôt qu'un mock : le contrat
+    /// tient en un appel sans retour.
+    private final int[] annonces = {0};
+
+    private final JournalMutations journal = () -> annonces[0]++;
+
+    // --- Annonce des mutations structurelles (#3542) ---
+
+    @Test
+    @DisplayName("#3542 : créer un site annonce une mutation structurelle")
+    void creer_site_annonce() {
+        service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+
+        assertThat(annonces[0]).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3542 : ajouter un point annonce une mutation structurelle")
+    void ajouter_point_annonce() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        annonces[0] = 0;
+
+        service.ajouterPoint(site.id(), "A1", 43.4, -1.5, null);
+
+        assertThat(annonces[0]).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3542 : supprimer un site annonce une mutation structurelle")
+    void supprimer_site_annonce() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        annonces[0] = 0;
+
+        service.supprimerSite(site.id());
+
+        assertThat(annonces[0]).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3542 : une création REFUSÉE n'annonce rien")
+    void creation_refusee_n_annonce_rien() {
+        // Le carré doit faire six chiffres : le refus part avant toute écriture, et rien n'a changé.
+        assertThatThrownBy(() -> service.creerSite("64", "Étang", Protocole.STANDARD, null, ID_USER))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThat(annonces[0]).isZero();
     }
 
     // --- Création de site (R1, protocole, R5) ---

@@ -2,11 +2,9 @@ package fr.univ_amu.iut.connexion.viewmodel;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
-import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
-import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import java.util.ArrayList;
@@ -30,7 +28,6 @@ public class ConnexionViewModel {
     private final StockageConnexion stockage;
     private final ClientVigieChiro client;
     private final Set<RapprochementVigieChiro> rapprocheurs;
-    private final JournalMutations journal;
 
     /// Résumé humain de la dernière synchronisation (ex. « 385 taxons, 3 sites »), vide si aucune.
     /// Écrit hors du fil JavaFX par [#amorcerRapprochements], lu ensuite par le controller ; `volatile`
@@ -42,14 +39,10 @@ public class ConnexionViewModel {
     private final ReadOnlyBooleanWrapper jetonEnregistre = new ReadOnlyBooleanWrapper(this, "jetonEnregistre", false);
 
     public ConnexionViewModel(
-            StockageConnexion stockage,
-            ClientVigieChiro client,
-            Set<RapprochementVigieChiro> rapprocheurs,
-            JournalMutations journal) {
+            StockageConnexion stockage, ClientVigieChiro client, Set<RapprochementVigieChiro> rapprocheurs) {
         this.stockage = Objects.requireNonNull(stockage, "stockage");
         this.client = Objects.requireNonNull(client, "client");
         this.rapprocheurs = Set.copyOf(Objects.requireNonNull(rapprocheurs, "rapprocheurs"));
-        this.journal = Objects.requireNonNull(journal, "journal");
     }
 
     /// Recalcule l'état affiché depuis le stockage local (sans réseau). À appeler sur le fil JavaFX.
@@ -122,26 +115,11 @@ public class ConnexionViewModel {
     /// du fil JavaFX (appelé depuis [#connecter]).
     private void amorcerRapprochements(Consumer<Progression> suivi, JetonAnnulation jeton) {
         List<String> parties = new ArrayList<>();
-        boolean aEcrit = false;
-        try {
-            // Ordre (#1776) : structure d'abord (sites, taxons), puis ce qui en dépend (passages sur points locaux).
-            for (RapprochementVigieChiro rapprocheur : RapprochementVigieChiro.ordonnes(rapprocheurs)) {
-                Optional<RapportSynchro> rapport = rapprocheur.synchroniser(client, suivi, jeton);
-                if (rapport.isPresent()) {
-                    parties.add(rapport.get().enClair());
-                    aEcrit = aEcrit || rapport.get().aEcrit();
-                }
-            }
-            resumeSynchro = String.join(", ", parties);
-        } finally {
-            // Le signal part depuis un `finally` parce qu'une annulation traverse cette boucle en levant
-            // (#2558) : renoncer au milieu n'efface pas les sites déjà écrits, et l'accueil doit les
-            // montrer. Une seule annonce pour toute la synchro : le port demande une émission par
-            // opération métier, pas par rapprocheur (#3541).
-            if (aEcrit) {
-                journal.mutationStructurelleValidee();
-            }
+        // Ordre (#1776) : structure d'abord (sites, taxons), puis ce qui en dépend (passages sur points locaux).
+        for (RapprochementVigieChiro rapprocheur : RapprochementVigieChiro.ordonnes(rapprocheurs)) {
+            rapprocheur.synchroniser(client, suivi, jeton).ifPresent(rapport -> parties.add(rapport.enClair()));
         }
+        resumeSynchro = String.join(", ", parties);
     }
 
     /// Résumé de la dernière synchronisation déclenchée par [#connecter] (ex. « 385 taxons, 3 sites »),

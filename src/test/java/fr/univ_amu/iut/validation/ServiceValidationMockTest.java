@@ -29,6 +29,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
+import fr.univ_amu.iut.validation.model.NoyauImportObservations;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -102,14 +103,21 @@ class ServiceValidationMockTest {
                 resultatsDao,
                 observationDao,
                 taxonDao,
-                sessionDao,
                 sequenceDao,
                 new ParserCsvTadarida(),
                 new ExportVuCsv(),
                 uniteDeTravail,
-                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 messageDao,
-                liens);
+                liens,
+                new NoyauImportObservations(
+                        resultatsDao,
+                        observationDao,
+                        taxonDao,
+                        sessionDao,
+                        sequenceDao,
+                        uniteDeTravail,
+                        new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                        () -> {}));
     }
 
     /// Calcul de plage nuit (#549), sorti de ServiceValidation avec les projections audio (#1193).

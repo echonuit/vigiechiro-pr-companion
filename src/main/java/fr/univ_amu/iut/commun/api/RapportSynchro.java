@@ -28,16 +28,6 @@ public record RapportSynchro(String libelle, int nombre, String souci, String pr
         return new RapportSynchro(libelle, 0, souci);
     }
 
-    /// Vrai si ce rapport dit que quelque chose a **réellement été écrit** en base (#1376).
-    ///
-    /// Un rapport existe aussi quand la synchronisation a été **empêchée** (souci porté, `nombre` à 0)
-    /// et quand elle n'a **rien trouvé à faire** (aucun souci, mais `nombre` à 0) : dans les deux cas
-    /// la base est inchangée. Les distinguer de l'écriture évite d'annoncer une mutation qui n'a pas
-    /// eu lieu, et donc de faire clignoter l'accueil sur une plateforme injoignable.
-    public boolean aEcrit() {
-        return souci == null && nombre > 0;
-    }
-
     /// Le même rapport, avec ce que son seul compteur passerait sous silence (#2557).
     ///
     /// Un « 12 nuit(s) récupérée(s) » est **vrai** et pourtant trompeur quand quarante autres sont restées

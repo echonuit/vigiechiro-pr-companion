@@ -211,19 +211,6 @@ public class MainController {
         // par-dessus l'accueil se voit sans qu'on ait navigué.
         accueilViewModel.compteurs().addListener((ListChangeListener<CompteurAccueil>) c -> peuplerIndicateurs());
 
-        // ⚠️ Le rafraîchissement au retour sur l'accueil RESTE, et ce n'est pas une ceinture-bretelles.
-        // Seule la synchronisation annonce ses mutations aujourd'hui ; l'import, la création d'un site
-        // et la suppression n'émettent pas encore (#3542). Sans cette ligne, l'accueil cesserait de
-        // suivre ces gestes-là : la correction de #1376 introduirait la régression qu'elle corrige,
-        // sur un périmètre plus large. Elle se retire dans #3542, quand tous les émetteurs seront en
-        // place, et pas avant. Le double calcul qui en résulte après une mutation annoncée est
-        // idempotent, et se paie une fois par retour d'écran.
-        navigation.vueCouranteProperty().addListener((obs, ancien, nouveau) -> {
-            if ("accueil".equals(nouveau)) {
-                accueilViewModel.relire();
-            }
-        });
-
         // La zone d'accueil déclarée dans le FXML devient la base de l'historique (Navigateur) ; le
         // centre du BorderPane suit ensuite le sommet de l'historique (toute navigation passe par lui).
         Parent accueil = (Parent) racine.getCenter();

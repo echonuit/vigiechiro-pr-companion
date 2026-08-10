@@ -53,11 +53,7 @@ public final class AccueilViewModel {
 
     /// Relit chaque indicateur **une seule fois** par révision : `valeur()` déclenche un `COUNT(*)`,
     /// et le rappeler pour décider de la visibilité puis pour l'affichage le paierait deux fois.
-    ///
-    /// Publique tant que tous les gestes n'annoncent pas leurs mutations (#3542) : le chrome la
-    /// rappelle au retour sur l'accueil, faute de quoi un import ou une création de site cesseraient
-    /// d'être suivis. Elle redeviendra privée quand ce filet n'aura plus lieu d'être.
-    public void relire() {
+    private void relire() {
         List<CompteurAccueil> releve = indicateurs.stream()
                 .sorted(Comparator.comparingInt(IndicateurAccueil::ordre))
                 .map(indicateur -> new CompteurAccueil(indicateur, indicateur.valeur()))

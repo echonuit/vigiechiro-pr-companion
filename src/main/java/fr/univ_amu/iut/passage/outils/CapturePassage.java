@@ -277,7 +277,8 @@ public final class CapturePassage {
                                                 new ClientVigieChiro("http://localhost:1", Optional::empty),
                                                 workspace.get(),
                                                 horloge.get(),
-                                                Optional.empty());
+                                                Optional.empty(),
+                                                () -> {});
                                     }
                                 });
                     }

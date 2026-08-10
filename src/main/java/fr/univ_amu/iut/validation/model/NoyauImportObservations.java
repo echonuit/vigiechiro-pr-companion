@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.validation.model;
 
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
@@ -38,6 +39,7 @@ import java.util.Set;
 public final class NoyauImportObservations {
 
     private final ResultatsIdentificationDao resultatsDao;
+    private final JournalMutations journal;
     private final ObservationDao observationDao;
     private final TaxonDao taxonDao;
     private final SessionDao sessionDao;
@@ -54,15 +56,16 @@ public final class NoyauImportObservations {
             SequenceDao sequenceDao,
             UniteDeTravail uniteDeTravail,
             Horloge horloge,
-            PreservationValidations preservation) {
+            JournalMutations journal) {
         this.resultatsDao = Objects.requireNonNull(resultatsDao, "resultatsDao");
+        this.journal = Objects.requireNonNull(journal, "journal");
         this.observationDao = Objects.requireNonNull(observationDao, "observationDao");
         this.taxonDao = Objects.requireNonNull(taxonDao, "taxonDao");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
-        this.preservation = Objects.requireNonNull(preservation, "preservation");
+        this.preservation = new PreservationValidations(resultatsDao, observationDao);
     }
 
     /// Importe les `lignes` d'observations sur le passage, `source` et `format` traçant la provenance dans
@@ -156,6 +159,9 @@ public final class NoyauImportObservations {
             preservees[0] = preservation.reappliquer(neuves, validationsAnciennes);
             observationDao.insererTout(connexion, neuves);
         });
+        // APRES le commit de l'unite de travail, jamais dedans : un signal pose sur une transaction
+        // qui echoue ensuite ferait afficher un etat qui n'existe pas.
+        journal.mutationStructurelleValidee();
         int perdues = validationsAnciennes.taille() - preservees[0];
         return new BilanImport(insere[0], retenues.size(), ignorees, taxonsAutoCrees.size(), preservees[0], perdues);
     }

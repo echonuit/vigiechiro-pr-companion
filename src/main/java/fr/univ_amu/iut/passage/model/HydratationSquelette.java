@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -100,10 +101,11 @@ public final class HydratationSquelette {
             ClientVigieChiro client,
             Workspace workspace,
             Horloge horloge,
-            Optional<ImportObservations> importObservations) {
+            Optional<ImportObservations> importObservations,
+            JournalMutations journal) {
         Objects.requireNonNull(source, "source");
         this.plateforme = new PlateformeReconstruction(Objects.requireNonNull(client, "client"));
-        this.structure = new CreationPassageArchive(source, workspace, horloge);
+        this.structure = new CreationPassageArchive(source, workspace, horloge, journal);
         this.liens = new LienVigieChiroDao(source);
         this.sessionDao = new SessionDao(source);
         this.sequenceDao = new SequenceDao(source);

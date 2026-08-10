@@ -99,6 +99,42 @@ class RevisionDonneesTest {
     }
 
     @Test
+    @DisplayName("#3542 : des mutations en rafale ne réveillent le lecteur qu'une fois")
+    void les_mutations_en_rafale_sont_amorties() {
+        FilRetenu fil = new FilRetenu();
+        RevisionDonnees revision = new RevisionDonnees(fil);
+        int[] reveils = {0};
+        revision.revisionProperty().addListener((observable, avant, apres) -> reveils[0]++);
+
+        // Une synchronisation crée les sites un par un (RapprochementSites) : sans amortissement, 250
+        // créations feraient 250 relectures de quatre COUNT(*) sur le fil d'affichage.
+        for (int i = 0; i < 250; i++) {
+            revision.mutationStructurelleValidee();
+        }
+        fil.deroulerTout();
+
+        assertThat(reveils[0]).as("un seul réveil pour la rafale").isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3542 : une mutation postée APRÈS le réveil précédent réveille de nouveau")
+    void une_mutation_posterieure_reveille_de_nouveau() {
+        FilRetenu fil = new FilRetenu();
+        RevisionDonnees revision = new RevisionDonnees(fil);
+        int[] reveils = {0};
+        revision.revisionProperty().addListener((observable, avant, apres) -> reveils[0]++);
+
+        revision.mutationStructurelleValidee();
+        fil.deroulerTout();
+        // L'amortissement ne doit pas devenir un étouffoir : une fois la rafale écoulée, la mutation
+        // suivante est bien un événement neuf.
+        revision.mutationStructurelleValidee();
+        fil.deroulerTout();
+
+        assertThat(reveils[0]).isEqualTo(2);
+    }
+
+    @Test
     @DisplayName("un service ne connaît que le port, jamais la révision ni JavaFX")
     void un_service_ne_connait_que_le_port() {
         RevisionDonnees revision = new RevisionDonnees(Runnable::run);

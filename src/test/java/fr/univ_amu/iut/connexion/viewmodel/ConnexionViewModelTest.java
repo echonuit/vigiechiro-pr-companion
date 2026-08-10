@@ -16,7 +16,6 @@ import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro.Phase;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Horloge;
-import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import java.nio.file.Path;
@@ -51,16 +50,10 @@ class ConnexionViewModelTest {
     private StockageConnexion stockage;
     private ConnexionViewModel viewModel;
 
-    /// Compte les annonces de mutation (#1376). Un compteur plutot qu'un mock : le contrat tient en un
-    /// appel, et un mock sans `when()` rendrait `null` la ou on lit un nombre.
-    private final int[] annonces = {0};
-
-    private final JournalMutations journal = () -> annonces[0]++;
-
     @BeforeEach
     void preparer() {
         stockage = new StockageConnexion(new Workspace(workspace), Horloge.figeeAu(LocalDate.of(2026, 1, 1)));
-        viewModel = new ConnexionViewModel(stockage, client, Set.of(rapprocheur), journal);
+        viewModel = new ConnexionViewModel(stockage, client, Set.of(rapprocheur));
     }
 
     @Test
@@ -81,45 +74,6 @@ class ConnexionViewModelTest {
     }
 
     @Test
-    @DisplayName("#1376 : une synchronisation qui a écrit annonce UNE mutation")
-    void synchro_qui_ecrit_annonce_une_mutation() {
-        when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
-        when(rapprocheur.synchroniser(eq(client), any(), any()))
-                .thenReturn(Optional.of(new RapportSynchro("site(s)", 3)));
-
-        viewModel.connecter("TOK123");
-
-        // Une par opération métier, pas une par rapprocheur : c'est la règle d'appel du port (#3541).
-        assertThat(annonces[0]).isEqualTo(1);
-    }
-
-    @Test
-    @DisplayName("#1376 : une synchronisation EMPÊCHÉE n'annonce rien")
-    void synchro_empechee_n_annonce_rien() {
-        when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
-        when(rapprocheur.synchroniser(eq(client), any(), any()))
-                .thenReturn(Optional.of(RapportSynchro.empechee("site(s)", "Vigie-Chiro injoignable")));
-
-        viewModel.connecter("TOK123");
-
-        // Le rapport EXISTE (l'utilisateur doit savoir), et pourtant la base est inchangée : annoncer
-        // ferait relire quatre COUNT(*) et clignoter l'accueil sur une panne réseau.
-        assertThat(annonces[0]).isZero();
-    }
-
-    @Test
-    @DisplayName("#1376 : une synchronisation qui n'avait rien à faire n'annonce rien")
-    void synchro_sans_rien_a_faire_n_annonce_rien() {
-        when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
-        when(rapprocheur.synchroniser(eq(client), any(), any()))
-                .thenReturn(Optional.of(new RapportSynchro("site(s)", 0)));
-
-        viewModel.connecter("TOK123");
-
-        assertThat(annonces[0]).isZero();
-    }
-
-    @Test
     @DisplayName("#1776 : la structure (sites) est rapprochée AVANT les dépendants (passages), pas l'ordre du Set")
     void connecter_amorce_la_structure_avant_les_dependants() {
         RapprochementVigieChiro sites = mock(RapprochementVigieChiro.class);
@@ -131,7 +85,7 @@ class ConnexionViewModelTest {
         when(passages.synchroniser(eq(client), any(), any()))
                 .thenReturn(Optional.of(new RapportSynchro("passage(s) rapatrié(s)", 2)));
         // Le passage est donné AVANT le site dans le Set : l'ordre ne doit venir que des phases, pas de l'entrée.
-        ConnexionViewModel avecDeux = new ConnexionViewModel(stockage, client, Set.of(passages, sites), journal);
+        ConnexionViewModel avecDeux = new ConnexionViewModel(stockage, client, Set.of(passages, sites));
 
         avecDeux.connecter("TOK123");
 

@@ -103,7 +103,8 @@ class HydratationSqueletteTest {
                 client,
                 new Workspace(dossier),
                 new HorlogeFigee(LocalDateTime.of(2026, 7, 26, 2, 0)),
-                Optional.of(importObservations));
+                Optional.of(importObservations),
+                () -> {});
     }
 
     /// Une nuit **rapatriée par la synchro** : passage + session archivée, aucune séquence, aucun original,
@@ -412,7 +413,8 @@ class HydratationSqueletteTest {
                 client,
                 new Workspace(dossier),
                 new HorlogeFigee(LocalDateTime.of(2026, 7, 26, 2, 0)),
-                Optional.empty());
+                Optional.empty(),
+                () -> {});
 
         assertThatThrownBy(() -> sansImport.hydraterSiSquelette(
                         idPassage, HydratationSquelette.Source.COMPLETE, progres -> {}, JetonAnnulation.neutre()))
