@@ -213,7 +213,8 @@ vit en base.
 
 1. **vérifier** chaque dossier de la sauvegarde contre l'inventaire du manifeste ;
 2. **restaurer la base** (avec son filet `vigiechiro.db.avant-restauration`) ;
-3. **replacer** les dossiers ;
+3. **étaler** les dossiers à côté de leur destination, sous un suffixe `.en-cours`, puis les
+   **basculer** par un renommage (#3514) ;
 4. **réécrire les chemins persistés** en une transaction.
 
 !!! danger "`root_path` n'est pas le seul chemin en base"
@@ -243,6 +244,32 @@ vit en base.
 L'ordre est le point important : une seule discordance à l'étape 1 annule tout **avant que rien
 n'ait été touché**. La vérification passait auparavant après la bascule, ce qui revenait à découvrir
 le problème une fois la base remplacée.
+
+### Ce que l'étalement coûte, et pourquoi il n'est pas toujours possible
+
+L'étalement ramène la fenêtre d'une **copie complète** - des minutes, des gigaoctets - à une **suite
+de renommages**. Il se paie en place : la copie coexiste avec l'original jusqu'à la bascule.
+
+⚠️ C'est exactement ce que l'[ADR 2727](decisions/2727-une-restauration-verifie-en-place-et-replace-ou-cest-possible.md)
+avait refusé, en chiffrant le cas ordinaire (« restaurer 40 Go par-dessus ses propres 40 Go
+demanderait 80 Go libres ») et en concluant qu'« un dispositif de sûreté qui empêche l'usage normal
+n'est pas un dispositif de sûreté ». Le reproche reste juste ; ce qui change, c'est qu'on n'est plus
+obligé de choisir une fois pour toutes. Le régime est décidé **par la place réellement libre**
+(#3563), sans toucher au disque : le manifeste porte les octets de chaque racine.
+
+| Place libre là où les nuits atterrissent | Régime | Ce qu'une panne laisserait |
+|---|---|---|
+| ≥ ce que pèsent toutes les nuits qui y vont | tout étaler, tout vérifier, puis tout basculer | des temporaires, et l'état d'avant |
+| ≥ la plus grosse d'entre elles | une nuit à la fois | les premières en place, pas les dernières - **et le compte rendu le dit** |
+| en dessous | refus **chiffré** : combien il manque, et où | rien |
+
+Le besoin est compté **par dossier d'accueil**, et non en un total unique : une nuit dont le disque
+externe est rebranché y retourne, les autres vont dans le dossier de travail. Un total unique
+confronté à la seule place du dossier de travail se tromperait **dans le sens dangereux**.
+
+⚠️ En régime dégradé, **dès la première bascule, « rien n'a été touché » cesse d'être vrai**. Un refus
+survenu ensuite est donc requalifié en incident : le laisser passer pour un refus donnerait à un
+script un code qui promet un état intact au-dessus d'un état partiel.
 
 Où revient un dossier : **à son emplacement d'origine s'il existe encore et qu'il est inscriptible**,
 sinon dans le workspace, sous son nom d'origine. Le critère est que le dossier existe, et non que son
@@ -276,8 +303,13 @@ Qui le prend, et pour combien de temps :
 |---|---|
 | l'application graphique | toute la durée de son exécution : c'est elle l'occupante |
 | la migration | seulement si elle a **réellement** quelque chose à appliquer |
+| **toute commande CLI**, sauf celles déclarées `LectureSeule` | toute la durée de la commande (#3498) |
 | la restauration (simple et complète), la remise à zéro | le temps de l'opération |
-| les commandes de lecture | jamais |
+| les commandes de lecture | jamais - c'est le sens de la déclaration `LectureSeule` |
+
+Qui est lectrice ne se recopie pas ici : la liste vit dans le code, portée par l'interface marqueur, et
+`ClassementLectureEcritureTest` exige que **chaque** commande soit classée. Voir
+[CLI](cli.md#le-dossier-de-travail-est-reserve-pendant-lecriture-3498).
 
 La nuance sur la migration est délibérée : une commande de lecture lancée pendant que l'IHM tourne ne
 migre rien, et la faire échouer sur un verrou lui coûterait plus que la protection ne lui rapporte.

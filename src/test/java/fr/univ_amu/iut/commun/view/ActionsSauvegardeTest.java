@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.BilanSauvegarde;
 import fr.univ_amu.iut.commun.persistence.PlacementRacine;
+import fr.univ_amu.iut.commun.persistence.RegimeRestauration;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Files;
@@ -287,7 +288,8 @@ class ActionsSauvegardeTest {
         // Le service REND un bilan depuis #2727 : sans ce stub, le mock rendrait null et le compte
         // rendu casserait sur un défaut du test, pas du code. Ici, le cas nominal : tout est revenu
         // à sa place.
-        when(service.restaurerComplet(DOSSIER)).thenReturn(new BilanRestauration(true, List.of(), List.of()));
+        when(service.restaurerComplet(DOSSIER))
+                .thenReturn(new BilanRestauration(true, List.of(), List.of(), RegimeRestauration.ENSEMBLE));
 
         action.restaurerComplet();
 
@@ -313,7 +315,8 @@ class ActionsSauvegardeTest {
                 .thenReturn(new BilanRestauration(
                         true,
                         List.of(new PlacementRacine("/mnt/disque-a/Nuit-01", "/home/moi/vigiechiro/Nuit-01")),
-                        List.of()));
+                        List.of(),
+                        RegimeRestauration.ENSEMBLE));
 
         action.restaurerComplet();
 

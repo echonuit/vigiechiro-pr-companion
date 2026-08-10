@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.InventaireSauvegardes;
 import fr.univ_amu.iut.commun.persistence.PlacementRacine;
+import fr.univ_amu.iut.commun.persistence.RegimeRestauration;
 import fr.univ_amu.iut.commun.view.ActionAPropos;
 import fr.univ_amu.iut.commun.view.AlerteDemarrage;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
@@ -68,6 +69,12 @@ public final class CaptureDialogues {
         System.exit(0);
     }
 
+    /// Chemins **figés** : un aperçu qui varierait à chaque régénération ne documenterait rien. Deux
+    /// nuits d'un même disque de terrain, une par carré.
+    private static final String NUIT_Z1 = "/media/disque-terrain/Car640380-2026-Pass2-Z1";
+
+    private static final String NUIT_A1 = "/media/disque-terrain/Car130711-2026-Pass1-A1";
+
     private static void capturer() {
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
         enregistrer(messageGardeSaisie(), sortie.resolve("apercu-navigation-garde-saisie.png"));
@@ -76,6 +83,8 @@ public final class CaptureDialogues {
         enregistrerRestaurationDeplacee(sortie.resolve("apercu-restauration-nuits-deplacees.png"));
         enregistrerSauvegardeTropRecente(sortie.resolve("apercu-restauration-version-trop-recente.png"));
         enregistrerChoixSauvegarde(sortie.resolve("apercu-restauration-choix-sauvegarde.png"));
+        enregistrerRestaurationUneNuitALaFois(sortie.resolve("apercu-restauration-une-nuit-a-la-fois.png"));
+        enregistrerPlaceInsuffisante(sortie.resolve("apercu-restauration-place-insuffisante.png"));
     }
 
     /// Compte rendu d'une restauration complète qui a **déplacé** des nuits (#2727).
@@ -89,12 +98,11 @@ public final class CaptureDialogues {
                 true,
                 List.of(
                         new PlacementRacine(
-                                "/media/disque-terrain/Car640380-2026-Pass2-Z1",
-                                "/home/naturaliste/Documents/VigieChiro-Companion/Car640380-2026-Pass2-Z1"),
+                                NUIT_Z1, "/home/naturaliste/Documents/VigieChiro-Companion/Car640380-2026-Pass2-Z1"),
                         new PlacementRacine(
-                                "/media/disque-terrain/Car130711-2026-Pass1-A1",
-                                "/home/naturaliste/Documents/VigieChiro-Companion/Car130711-2026-Pass1-A1")),
-                List.of("/media/carte-sd/Car640380-2026-Pass3-Z2"));
+                                NUIT_A1, "/home/naturaliste/Documents/VigieChiro-Companion/Car130711-2026-Pass1-A1")),
+                List.of("/media/carte-sd/Car640380-2026-Pass3-Z2"),
+                RegimeRestauration.ENSEMBLE);
         enregistrerCompteRendu(
                 NiveauNotification.AVERTISSEMENT,
                 "Sauvegarde restaurée, à un détail près",
@@ -104,6 +112,39 @@ public final class CaptureDialogues {
 
     /// Refus d'une sauvegarde écrite par une version plus récente (#2730). Rien n'a été touché, et
     /// c'est ce que l'aperçu doit rendre lisible.
+    /// Compte rendu d'une restauration menée **une nuit à la fois**, faute de place pour tout étaler
+    /// d'abord (#3563).
+    ///
+    /// C'est l'état qu'aucune capture ne montrait, et le plus facile à oublier : la restauration a
+    /// réussi, donc rien ne rougit ; ce qui a changé est la **garantie**, et elle ne se lit que dans
+    /// cette phrase. Le texte vient de [BilanRestauration#enClair], il n'est pas recopié.
+    private static void enregistrerRestaurationUneNuitALaFois(Path fichier) {
+        BilanRestauration bilan = new BilanRestauration(
+                true,
+                List.of(new PlacementRacine(NUIT_Z1, NUIT_Z1), new PlacementRacine(NUIT_A1, NUIT_A1)),
+                List.of(),
+                RegimeRestauration.RACINE_PAR_RACINE);
+        // Le niveau et le titre sont DEDUITS du bilan, comme le fait la vue : une capture qui les
+        // affirmerait mentirait le jour où la règle change - et c'est précisément ce qui est arrivé ici,
+        // la première version montrait un avertissement là où le produit rendait une information.
+        enregistrerCompteRendu(
+                bilan.appelleUnRegard() ? NiveauNotification.AVERTISSEMENT : NiveauNotification.INFORMATION,
+                bilan.appelleUnRegard() ? "Sauvegarde restaurée, à un détail près" : "Sauvegarde restaurée",
+                "La base et les dossiers de son ont été restaurés.\n\n" + bilan.enClair(),
+                fichier);
+    }
+
+    /// Le refus faute de place, **chiffré** (#3563) : combien libérer, et où.
+    private static void enregistrerPlaceInsuffisante(Path fichier) {
+        enregistrerCompteRendu(
+                NiveauNotification.AVERTISSEMENT,
+                "Restauration impossible",
+                "Il n'y a pas assez de place dans /media/cle-usb pour restaurer sans risque : la plus"
+                        + " grosse nuit pèse 4,2 Go et il reste 1,8 Go. Libérez 2,4 Go, ou restaurez vers"
+                        + " un autre emplacement. Rien n'a été touché.",
+                fichier);
+    }
+
     private static void enregistrerSauvegardeTropRecente(Path fichier) {
         enregistrerCompteRendu(
                 NiveauNotification.AVERTISSEMENT,

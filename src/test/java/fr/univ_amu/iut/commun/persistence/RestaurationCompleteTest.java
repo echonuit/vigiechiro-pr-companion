@@ -54,6 +54,79 @@ class RestaurationCompleteTest {
     }
 
     @Test
+    @DisplayName("place juste insuffisante pour tout étaler : on dégrade, on ne refuse pas (#3563)")
+    void place_insuffisante_pour_l_ensemble_degrade_au_lieu_de_refuser() throws IOException {
+        seederNuit(disque.resolve("Nuit-01"), "audio d'origine");
+        seederNuit(disque.resolve("Nuit-02"), "second audio");
+        Path backup = service.sauvegarderComplet(racine.resolve("sauvegardes")).dossier();
+        long total = octetsDuManifeste(backup);
+        // Un octet de moins que le total : de quoi étaler une nuit, pas les deux.
+        ServiceSauvegarde serre = avecEspace(total - 1);
+
+        BilanRestauration bilan = serre.restaurerComplet(backup);
+
+        assertThat(bilan.regime())
+                .as("refuser ici serait la rigidité que l'ADR 2727 reprochait déjà à la zone temporaire :"
+                        + " la place suffit pour une nuit à la fois, donc la restauration doit aboutir")
+                .isEqualTo(RegimeRestauration.RACINE_PAR_RACINE);
+        assertThat(bilan.enClair())
+                .as("la garantie est moindre, et c'est la contrepartie de la souplesse : il faut le DIRE")
+                .contains("une nuit à la fois");
+    }
+
+    @Test
+    @DisplayName("pas même de quoi étaler une nuit : refus chiffré, et rien n'a été touché (#3563)")
+    void place_insuffisante_pour_une_seule_nuit_refuse_sans_rien_toucher() throws IOException {
+        Path nuit = seederNuit(disque.resolve("Nuit-01"), "audio d'origine");
+        Path backup = service.sauvegarderComplet(racine.resolve("sauvegardes")).dossier();
+        Files.writeString(nuit.resolve("transformes").resolve("seq.wav"), "modifié depuis la sauvegarde");
+        ServiceSauvegarde sansPlace = avecEspace(0);
+
+        assertThatThrownBy(() -> sansPlace.restaurerComplet(backup))
+                .isInstanceOf(RefusAvantEcriture.class)
+                .hasMessageContaining("Libérez")
+                .hasMessageContaining("Rien n'a été touché");
+
+        assertThat(nuit.resolve("transformes").resolve("seq.wav"))
+                .as("le refus doit précéder toute écriture : l'audio local est celui d'avant")
+                .hasContent("modifié depuis la sauvegarde");
+        assertThat(temporairesResiduels())
+                .as("et aucune zone temporaire n'a été ouverte")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("dégradé, une panne après la première bascule n'est plus un refus (#3563)")
+    void en_degrade_une_panne_apres_la_premiere_bascule_devient_un_incident() throws IOException {
+        seederNuit(disque.resolve("Nuit-01"), "audio d'origine");
+        Path seconde = seederNuit(disque.resolve("Nuit-02"), "second audio");
+        Path backup = service.sauvegarderComplet(racine.resolve("sauvegardes")).dossier();
+        // Un intrus dans la destination de la seconde nuit : la garde de #3514 refuse d'écraser ce que
+        // la sauvegarde ne contient pas. Le refus tombera donc APRÈS la bascule de la première.
+        Files.writeString(seconde.resolve("transformes").resolve("intrus.wav"), "à ne pas effacer");
+        ServiceSauvegarde serre = avecEspace(octetsDuManifeste(backup) - 1);
+
+        assertThatThrownBy(() -> serre.restaurerComplet(backup))
+                .as("« rien n'a été touché » serait faux : une nuit est déjà en place, et un script qui"
+                        + " lirait un refus conclurait à un état intact")
+                .isInstanceOf(DataAccessException.class)
+                .isNotInstanceOf(RefusAvantEcriture.class)
+                .hasMessageContaining("1 nuit(s) en place");
+    }
+
+    /// Un `ServiceSauvegarde` qui croit le disque à `octetsLibres`, quel que soit le dossier.
+    private ServiceSauvegarde avecEspace(long octetsLibres) {
+        return new ServiceSauvegarde(
+                source, new HorlogeFigee(LocalDateTime.of(2026, 8, 2, 10, 0)), dossier -> octetsLibres);
+    }
+
+    private static long octetsDuManifeste(Path backup) {
+        return ManifesteSauvegardeJson.lire(backup).orElseThrow().racines().stream()
+                .mapToLong(RacineSauvegardee::octets)
+                .sum();
+    }
+
+    @Test
     @DisplayName("sur la machine d'origine, la nuit revient à sa place et la base n'est pas touchée")
     void restauration_sur_la_machine_d_origine() throws IOException {
         Path nuit = seederNuit(disque.resolve("Nuit-01"), "audio d'origine");

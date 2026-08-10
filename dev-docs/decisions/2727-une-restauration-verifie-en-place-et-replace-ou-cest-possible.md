@@ -1,6 +1,6 @@
 # ADR 2727 - Une restauration **vérifie en place**, et replace un dossier là où il peut réellement aller
 
-- **Statut** : Accepté - 2026-08-03
+- **Statut** : Accepté - 2026-08-03, **amendé** par [ADR 3563](3563-le-regime-de-restauration-suit-la-place-disponible.md) : la zone temporaire n'est plus écartée une fois pour toutes, elle est conditionnée à la place réellement libre
 - **Chantier** : #2727, lot 1 (#2721) du chantier de dette #2720
 - **Vérification** : certaine - `RestaurationCompleteTest#restauration_sur_une_autre_machine`
 

@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.persistence;
 
+import fr.univ_amu.iut.commun.model.EspaceDisque;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -32,9 +33,11 @@ class RestaurationComplete {
     private final SourceDeDonnees source;
     private final UniteDeTravail uniteDeTravail;
     private final BasculeRacines bascules;
+    private final EspaceDisque espaceDisque;
 
-    RestaurationComplete(SourceDeDonnees source) {
+    RestaurationComplete(SourceDeDonnees source, EspaceDisque espaceDisque) {
         this.source = source;
+        this.espaceDisque = espaceDisque;
         this.uniteDeTravail = new UniteDeTravail(source);
         this.bascules = new BasculeRacines(source.workspace());
     }
@@ -77,27 +80,78 @@ class RestaurationComplete {
         // AVANT toute réécriture : une fois les racines déplacées, plus aucune ne correspondrait à
         // son origine dans le manifeste, et la nuit qu'on vient de restaurer serait annoncée absente.
         List<String> absentes = absentesDuManifeste(manifeste);
+        RegimeRestauration regime =
+                BesoinDePlace.de(manifeste, bascules::destinationPour).regimePour(espaceDisque);
+        List<PlacementRacine> placements = regime == RegimeRestauration.ENSEMBLE
+                ? toutEtalerPuisBasculer(dossierBackup, manifeste)
+                : uneNuitALaFois(dossierBackup, manifeste);
+        reecrireLesChemins(placements);
+        return new BilanRestauration(true, placements, absentes, regime);
+    }
+
+    /// Le régime nominal : rien ne prend sa place définitive avant que **toutes** les nuits aient été
+    /// étalées et vérifiées. Une panne ne laisse alors que des temporaires, balayés dans la foulée.
+    private List<PlacementRacine> toutEtalerPuisBasculer(Path dossierBackup, ManifesteSauvegarde manifeste) {
         List<BasculeRacines.EnAttente> attentes = new ArrayList<>();
         try {
             for (RacineSauvegardee emportee : manifeste.racines()) {
-                Path copie = dossierBackup.resolve(SOUS_DOSSIER_SESSIONS).resolve(emportee.identifiant());
                 // Enregistrée AVANT les vérifications : elles peuvent refuser, et le temporaire existe
                 // déjà. L'appelant ne le nettoierait jamais s'il ne le connaissait pas.
-                BasculeRacines.EnAttente attente = bascules.preparer(copie, emportee.cheminOrigine());
+                BasculeRacines.EnAttente attente = etaler(dossierBackup, emportee);
                 attentes.add(attente);
-                verifierInventaire(attente.temporaire(), emportee, Moment.UNE_FOIS_REMIS_EN_PLACE);
-                bascules.refuserSiLaDestinationPorteAutreChose(attente);
+                verifier(attente, emportee);
             }
             List<PlacementRacine> placements = new ArrayList<>();
             for (BasculeRacines.EnAttente attente : attentes) {
                 placements.add(attente.basculer());
             }
-            reecrireLesChemins(placements);
-            return new BilanRestauration(true, placements, absentes);
+            return placements;
         } catch (RuntimeException echec) {
             attentes.forEach(BasculeRacines.EnAttente::abandonner);
             throw echec;
         }
+    }
+
+    /// Le régime dégradé, quand la place ne permet pas d'étaler tout le monde : une nuit est étalée,
+    /// vérifiée, basculée, puis on passe à la suivante (#3563).
+    ///
+    /// ⚠️ **Dès la première bascule, « rien n'a été touché » cesse d'être vrai.** Un refus survenu
+    /// ensuite ne peut donc plus se présenter comme un refus : il deviendrait un code de sortie qui
+    /// promet un état intact au-dessus d'un état mixte. Il est requalifié en incident, ce qu'il est.
+    private List<PlacementRacine> uneNuitALaFois(Path dossierBackup, ManifesteSauvegarde manifeste) {
+        List<PlacementRacine> placements = new ArrayList<>();
+        for (RacineSauvegardee emportee : manifeste.racines()) {
+            BasculeRacines.EnAttente attente = null;
+            try {
+                attente = etaler(dossierBackup, emportee);
+                verifier(attente, emportee);
+                placements.add(attente.basculer());
+            } catch (RuntimeException echec) {
+                if (attente != null) {
+                    attente.abandonner();
+                }
+                throw placements.isEmpty() ? echec : etatMixte(placements, echec);
+            }
+        }
+        return placements;
+    }
+
+    private BasculeRacines.EnAttente etaler(Path dossierBackup, RacineSauvegardee emportee) {
+        Path copie = dossierBackup.resolve(SOUS_DOSSIER_SESSIONS).resolve(emportee.identifiant());
+        return bascules.preparer(copie, emportee.cheminOrigine());
+    }
+
+    private void verifier(BasculeRacines.EnAttente attente, RacineSauvegardee emportee) {
+        verifierInventaire(attente.temporaire(), emportee, Moment.UNE_FOIS_REMIS_EN_PLACE);
+        bascules.refuserSiLaDestinationPorteAutreChose(attente);
+    }
+
+    private static DataAccessException etatMixte(List<PlacementRacine> deja, RuntimeException cause) {
+        return new DataAccessException(
+                "La restauration s'est arrêtée après avoir remis " + deja.size()
+                        + " nuit(s) en place : la place ne permettait pas de toutes les préparer d'abord."
+                        + " L'état local est partiel, et la sauvegarde reste intacte pour recommencer.",
+                cause);
     }
 
     /// Restauration d'une sauvegarde **sans manifeste** : le comportement d'avant #2726, faute de

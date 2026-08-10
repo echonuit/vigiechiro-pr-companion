@@ -57,11 +57,29 @@ class BilanRestaurationTest {
     @DisplayName("sans déplacement, le compte rendu reste court")
     void sans_deplacement_le_compte_rendu_reste_court() {
         BilanRestauration bilan = new BilanRestauration(
-                true, List.of(new PlacementRacine("/media/disque/Nuit-01", "/media/disque/Nuit-01")), List.of());
+                true,
+                List.of(new PlacementRacine("/media/disque/Nuit-01", "/media/disque/Nuit-01")),
+                List.of(),
+                RegimeRestauration.ENSEMBLE);
 
         assertThat(bilan.enClair())
                 .as("rien n'a bougé : l'annoncer serait du bruit")
                 .doesNotContain("venait de");
+    }
+
+    @Test
+    @DisplayName("le régime dégradé appelle un regard, même si rien n'a bougé ni manqué")
+    void le_regime_degrade_appelle_un_regard() {
+        BilanRestauration bilan = new BilanRestauration(
+                true,
+                List.of(new PlacementRacine("/media/disque/Nuit-01", "/media/disque/Nuit-01")),
+                List.of(),
+                RegimeRestauration.RACINE_PAR_RACINE);
+
+        assertThat(bilan.appelleUnRegard())
+                .as("sinon le paragraphe qui dit la garantie moindre s'affiche sous un titre rassurant,"
+                        + " et personne ne le lit")
+                .isTrue();
     }
 
     private static BilanRestauration deuxNuitsDeplacees() {
@@ -72,7 +90,8 @@ class BilanRestaurationTest {
                                 "/media/disque-terrain/Car640380-2026-Pass2-Z1", TRAVAIL + "/Car640380-2026-Pass2-Z1"),
                         new PlacementRacine(
                                 "/media/disque-terrain/Car130711-2026-Pass1-A1", TRAVAIL + "/Car130711-2026-Pass1-A1")),
-                List.of());
+                List.of(),
+                RegimeRestauration.ENSEMBLE);
     }
 
     private static List<String> lignesDePuce(String texte) {
