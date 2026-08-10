@@ -182,6 +182,33 @@ exigent un redémarrage et le disent.
 > débranché, un dossier synchronisé encore en cours. Si l'écran ne dit rien, l'utilisateur conclut que
 > l'application est cassée.
 
+### Étape 10 · Sauvegarder et restaurer
+
+Le menu ☰ appartient au chrome, donc à cette session. Ces cases n'y étaient pas : la capacité était
+livrée et testée, sans qu'aucun script ne dise comment la vérifier à la main.
+
+**Fixture** : une sauvegarde complète prise sur une base portant **au moins deux nuits** (la carte SD
+de recette importée deux fois suffit), et un **support amovible** pour les deux derniers cas - une clé
+USB dont on remplit l'espace libre avec des fichiers quelconques jusqu'au seuil voulu.
+
+- [ ] **S7-34** · ☰ > « Sauvegarde complète (base + audio)… » : la demande de confirmation annonce le
+      **volume** et rappelle que l'archive porte les localisations **en clair**, avant de copier.
+- [ ] **S7-35** · Renommer un dossier de nuit hors de l'application, puis restaurer cette sauvegarde
+      complète : le compte rendu **nomme la nuit déplacée** et dit où elle a atterri. Rouvrir l'écoute
+      de cette nuit : l'audio est retrouvé.
+- [ ] **S7-36** · Pointer le dossier de travail vers un support dont l'espace libre est **inférieur au
+      total** des nuits de la sauvegarde mais **supérieur à la plus grosse**, puis restaurer : la
+      restauration aboutit, et le compte rendu dit que les nuits ont été remises **une nuit à la
+      fois**.
+- [ ] **S7-37** · Remplir le support jusqu'à laisser **moins que la plus grosse nuit**, puis
+      restaurer : refus qui dit **combien libérer et où**. Vérifier ensuite que l'audio local et la
+      base sont **ceux d'avant** : rien n'a été touché.
+
+> S7-36 et S7-37 sont les deux faces d'un même arbitrage (ADR 3563) : on dégrade la garantie plutôt
+> que l'usage, et on ne refuse que lorsque même une nuit ne tient pas. Une recette qui ne jouerait que
+> le refus laisserait croire que l'application est rigide ; une qui ne jouerait que le régime dégradé
+> laisserait croire qu'elle accepte tout.
+
 ## Ce qu'on fait des résultats
 
 Une case rouge se qualifie avant d'ouvrir une issue :
