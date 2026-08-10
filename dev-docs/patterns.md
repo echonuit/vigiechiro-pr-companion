@@ -1775,6 +1775,48 @@ sequenceDiagram
 **Principes.** **Faible couplage** View↔ViewModel et **DIP** (la vue dépend d'abstractions
 observables, pas de logique).
 
+### Le signal de mutation : « tu écris, tu signales »
+
+**Le problème.** Un binding observe une `Property`. Il ne sait pas observer **SQLite**. Tant qu'une
+écriture en base ne laisse aucune trace observable, un écran ne peut se rafraîchir qu'en se rappelant
+lui-même, typiquement au retour de navigation - et il rate donc tout ce qui survient pendant qu'il est
+affiché.
+
+**La solution.** Un **port** que l'écriture appelle, et un **compteur observable** que l'écran lit.
+
+| Pièce | Où | Rôle |
+|---|---|---|
+| `JournalMutations` | `commun.model` | le port, sans JavaFX (`model` ne peut pas en dépendre) |
+| `RevisionDonnees` | `commun.viewmodel` | `ReadOnlyLongProperty` incrémentée à chaque signal |
+
+**La règle d'appel tient en trois mots : tu écris, tu signales.** Après validation, jamais avant. Elle
+a d'abord été énoncée autrement - *une fois par opération métier* - et cette version-là n'a pas tenu :
+`RapprochementSites` crée les sites **en boucle** en appelant le même service qu'un ajout manuel, et ce
+service ne peut pas savoir s'il sert un geste ou une synchronisation de deux cent cinquante. La
+frontière d'une opération métier n'est **pas visible depuis l'endroit qui écrit**.
+
+**La rafale se règle donc chez le lecteur** : `RevisionDonnees` ne poste pas de nouvelle avancée tant
+que la précédente n'est pas appliquée. Deux cent cinquante signaux, un réveil. Un endroit, sous test,
+au lieu d'une vigilance dans chaque appelant. Voir
+[ADR 3537](decisions/3537-un-signal-se-pose-a-l-ecriture.md).
+
+⚠️ **Ce qui émet, et ce qui n'émet pas.** Seules les mutations **structurelles** : celles qui peuvent
+changer l'inventaire affiché (sites, points, passages, observations). Une validation, un verdict, une
+disposition de colonnes ne changent aucun de ces nombres, et les annoncer ferait relire quatre
+`COUNT(*)` pour un affichage identique.
+
+⚠️ **Un `grep` ne suffit pas à trouver les écritures.** Deux inventaires successifs en ont manqué :
+`CreationPassageArchive` nomme son DAO sur une ligne et appelle `insert` sur la suivante ;
+`MoteurImport` écrit le passage en **SQL brut**, hors de `PassageDao`. C'est le même constat que
+l'[ADR 3498](decisions/3498-la-declaration-porte-sur-les-lectrices.md) fait sur les commandes CLI :
+ni le nom, ni le service appelé, ni l'analyse d'appels ne tranchent, et ils se trompent **dans les deux
+sens**.
+
+**Principes.** **DIP** (le service dépend d'un port, pas de JavaFX) et **Observer** (l'émetteur ignore
+ses lecteurs).
+
+---
+
 !!! note "API fluente (le « builder » le plus proche)"
     Les liaisons s'écrivent souvent avec l'**API fluente** de JavaFX :
     `Bindings.when(cond).then(a).otherwise(b)`, `Bindings.createStringBinding(...)`. C'est un

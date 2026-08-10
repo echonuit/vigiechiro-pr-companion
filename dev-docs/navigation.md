@@ -160,6 +160,14 @@ L'accueil agrège ce que **chaque feature publie** au conteneur (multibinding Gu
 automatiquement : pour qu'un nouvel écran apparaisse à l'accueil, il suffit de publier son
 `ActiviteAccueil`.
 
+**Les compteurs suivent la donnée, pas la navigation** (#1376). Ils étaient recalculés à
+l'initialisation puis à chaque retour sur l'accueil, si bien qu'une synchronisation déroulée
+*par-dessus* l'accueil ne se voyait qu'après un aller-retour. Depuis, `AccueilViewModel` recalcule sa
+liste observable à chaque **révision des données** (`JournalMutations` / `RevisionDonnees`, cf.
+[Patterns](patterns.md#le-signal-de-mutation-tu-ecris-tu-signales)), et le chrome ne fait plus que la
+restituer. Le contrat `IndicateurAccueil` vit en `commun.viewmodel` : cinq accesseurs de types
+primitifs, aucune classe JavaFX, et désormais un ViewModel parmi ses lecteurs.
+
 ---
 
 Pour câbler tout cela à l'injection, voir **[Injection (Guice)](injection.md)**.

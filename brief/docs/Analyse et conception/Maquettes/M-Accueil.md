@@ -169,12 +169,12 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 | Carte **Sons & validation** | Ouvre [M-SonsValidation](M-SonsValidation.md) (source *références* : écoute, validation, export bibliothèque) |
 | Carte **Activité de la nuit** | Ouvre [M-Activite](M-Activite.md) (contacts par tranche horaire et par espèce) |
 | Menu **☰** | Outils transverses : sauvegarde, restauration, connexion à Vigie-Chiro, à propos |
-| Compteur du tableau de bord | Repère visuel (non cliquable) ; reflète l'état courant de la base |
+| Compteur du tableau de bord | Repère visuel (non cliquable) ; **suit la base en direct**, y compris pendant qu'on reste sur l'accueil (import, synchronisation, restauration) |
 | Champ **Rechercher** (Ctrl+F) | Recherche globale ([M-Recherche](M-Recherche.md)), disponible sur tous les écrans |
 
 ### Notes pour l'implémentation
 
-- **Inversion de dépendance** : le socle (`commun.view`, `MainController`) bâtit l'accueil à partir des `Set<ActiviteAccueil>` et `Set<IndicateurAccueil>` injectés ; chaque fonctionnalité **publie sa carte et ses compteurs** via un `Multibinder` Guice. Ajouter une activité à l'accueil = une implémentation + une ligne de binding, **sans retoucher le socle** (graphe de slices acyclique, garanti par `ArchitectureTest`).
+- **Inversion de dépendance** : le socle bâtit l'accueil à partir des `Set<ActiviteAccueil>` et `Set<IndicateurAccueil>` injectés ; chaque fonctionnalité **publie sa carte et ses compteurs** via un `Multibinder` Guice. Ajouter une activité à l'accueil = une implémentation + une ligne de binding, **sans retoucher le socle** (graphe de slices acyclique, garanti par `ArchitectureTest`). Les **cartes** sont bâties par `MainController` (`commun.view`) ; les **compteurs** le sont par `AccueilViewModel` (`commun.viewmodel`), qui les recalcule à chaque révision des données et que la vue se contente de restituer. Le contrat `IndicateurAccueil` vit donc lui aussi en `commun.viewmodel` : son contenu (cinq accesseurs de types primitifs, aucune classe JavaFX) n'a jamais rien eu d'une vue.
 - **Prismes** : l'ordre des sections suit l'énumération `Prisme` (Collecte & passages, puis Espèces & biodiversité) ; l'ordre des cartes **dans** un prisme suit le rang `ordre()` déclaré par chaque carte.
 - **Bandeau nocturne** : `StackPane` clippé à ses bornes (le filigrane lune déborde volontairement). Le `FlowPane` des compteurs et celui des sections se réagencent selon la largeur de la fenêtre.
 - **Icônes** : codes [Ikonli](https://kordamp.org/ikonli/) FontAwesome 5 fournis par chaque fonctionnalité sous forme de **chaîne** (le socle construit le `FontIcon`) ; les emojis de la maquette ne sont qu'un substitut basse fidélité.
