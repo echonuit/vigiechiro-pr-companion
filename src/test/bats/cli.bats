@@ -870,3 +870,20 @@ FIN
   [[ "${message}" == *"déjà utilisé"* ]]
   [ "${code_lecture}" -eq 0 ] # refuser une lecture coûterait plus que la protection ne rapporte
 }
+
+@test "une base illisible : un message, jamais la trace, et le code de l'incident (#3570)" {
+  # `main` appelle la journalisation puis la migration AVANT d'entrer dans la commande, donc hors du
+  # gestionnaire d'erreurs de picocli. Un test en processus ne verrait rien : il ne survit pas au
+  # `System.exit` de `main`. Seul le vrai binaire montre ce que l'utilisateur reçoit.
+  printf 'ceci n est pas une base sqlite' > "${BATS_TEST_TMPDIR}/vigiechiro.db"
+
+  run cli lister-sites
+
+  # Ce qui compte d'abord : l'ABSENCE de pile. `dev-docs/cli.md` promet « message seul, jamais la
+  # trace ». Sans cette assertion, un code redevenu juste par accident ferait taire le test.
+  [[ "${output}" != *"Exception in thread"* ]]
+  [[ "${output}" != *"at fr.univ_amu.iut"* ]]
+  # Une base illisible est un incident, pas un refus : l'état est incertain (convention #2294).
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"Échec"* ]]
+}

@@ -3,11 +3,9 @@ package fr.univ_amu.iut.cli;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.cli.commande.CommandeRacine;
 import fr.univ_amu.iut.cli.di.CliModule;
-import fr.univ_amu.iut.cli.model.ErreurUsage;
 import fr.univ_amu.iut.commun.di.Amorcage;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.ConfigurationJournalisation;
-import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.RefusAvantEcriture;
@@ -186,41 +184,31 @@ public final class Cli {
         return argument instanceof OptionSpec option ? option.longestName() : argument.paramLabel();
     }
 
-    /// Erreurs d'**exécution** d'une commande : une [ErreurUsage] (invocation invalide détectée dans la
-    /// logique, ex. point introuvable) sort en [#CODE_ERREUR_ARGUMENTS] ; un **refus métier**
-    /// (`RegleMetierException` **ou** l'`IllegalArgumentException` des validateurs R1/R2) sort en
-    /// [#CODE_REFUS] (état intact, rien n'a été fait, convention #2294) ; toute autre exception en
-    /// [#CODE_ERREUR_EXECUTION] (échec inattendu, état incertain). On imprime le **message** à l'utilisateur
-    /// (jamais la trace, qui parasiterait la sortie d'un script) et on **journalise** l'échec (#1523), à la
-    /// parité de l'IHM : un refus métier discrètement (FINE, sans trace), un échec **inattendu** avec sa
-    /// trace (SEVERE, reste inspectable dans `<workspace>/logs/`). Une simple erreur d'usage ne mérite ni
-    /// l'un ni l'autre.
+    /// Erreurs d'**exécution** d'une commande. Le classement vit dans [VerdictCli], parce que `main` en a
+    /// besoin **avant** que picocli n'existe (#3570) ; ici on ne fait qu'imprimer et journaliser.
+    ///
+    /// On imprime le **message**, jamais la trace : elle parasiterait la sortie d'un script, et elle
+    /// reste inspectable dans `<workspace>/logs/`. ⚠️ Ce n'était vrai qu'à moitié jusqu'à #3570 : la JVM
+    /// installe un `ConsoleHandler` que personne ne retirait, si bien que le `SEVERE` reversait la pile
+    /// entière sur la sortie d'erreur. La CLI le retire désormais au démarrage.
     private static int gererErreurExecution(Exception exception, CommandLine ligne, ParseResult parseResult) {
-        if (exception instanceof ErreurUsage) {
-            ligne.getErr().println("Erreur d'usage : " + exception.getMessage());
-            return CODE_ERREUR_ARGUMENTS;
+        VerdictCli verdict = VerdictCli.de(exception);
+        journaliser(verdict, exception);
+        ligne.getErr().println(verdict.phrase());
+        return verdict.code();
+    }
+
+    /// Journalise selon la nature, à la parité de l'IHM : un refus discrètement, un incident avec sa
+    /// trace - qui reste inspectable dans `<workspace>/logs/` (#1523) sans parasiter la sortie d'un
+    /// script. Une simple erreur d'usage ne mérite ni l'un ni l'autre.
+    private static void journaliser(VerdictCli verdict, Exception echec) {
+        switch (verdict.nature()) {
+            case USAGE -> {
+                // Rien : une faute de frappe n'est pas un événement.
+            }
+            case REFUS -> LOG.fine(() -> "Refus métier d'une commande CLI : " + echec.getMessage());
+            case INCIDENT -> LOG.log(Level.SEVERE, echec, () -> "Échec inattendu d'une commande CLI");
         }
-        // `RefusAvantEcriture` rejoint les refus (#3146) : la persistance l'émet AVANT d'avoir écrit
-        // quoi que ce soit (fichier qui n'est pas une base, sauvegarde trop récente, dossier de travail
-        // occupé). L'état local est intact, c'est exactement ce que le code 2 promet. Une
-        // `DataAccessException` ordinaire, elle, enveloppe une panne en cours d'écriture et reste un
-        // incident : sa pile est l'information utile.
-        if (exception instanceof RegleMetierException
-                || exception instanceof IllegalArgumentException
-                || exception instanceof RefusAvantEcriture) {
-            // Un `IllegalArgumentException` qui remonte jusqu'ici vient des validateurs (R1/R2 :
-            // `ValidateurCarre`, `ValidateurCodePoint`) : c'est un refus métier, pas un incident. L'IHM le
-            // traite déjà ainsi (`catch (RegleMetierException | IllegalArgumentException)`) ; la CLI s'aligne,
-            // pour ne pas noyer les logs sous une trace SEVERE à chaque saisie invalide.
-            LOG.fine(() -> "Refus métier d'une commande CLI : " + exception.getMessage());
-            // Le message du modèle dit ce qui MANQUE ; c'est ici qu'on ajoute quoi taper (#2635). Avant,
-            // il arrivait avec « menu ☰ > Se connecter » écrit dedans, servi à qui n'a pas de menu.
-            ligne.getErr().println("Refus : " + GesteAttenduCli.message(exception));
-            return CODE_REFUS;
-        }
-        LOG.log(Level.SEVERE, exception, () -> "Échec inattendu d'une commande CLI");
-        ligne.getErr().println("Échec : " + exception.getMessage());
-        return CODE_ERREUR_EXECUTION;
     }
 
     /// Point d'entrée processus : extrait l'option globale `--workspace`, positionne
@@ -233,15 +221,36 @@ public final class Cli {
         }
         // Journalisation après la résolution du workspace (pour écrire dans le bon dossier), avant tout
         // travail : la CLI aussi laisse une trace de ses incidents (#1523).
-        ConfigurationJournalisation.configurer(Workspace.resolu().dossierLogs());
-        // Migrer AVANT de composer l'injecteur (ADR 1038, #2187) : `applicative()` compose l'injecteur,
-        // ce qui lit les drapeaux de fonctionnalités en base ; une base à jour est donc nécessaire ici.
-        // Seulement si la base existe déjà : une aide sur une installation neuve ne doit créer aucun
-        // fichier (picocli n'a pas besoin de base pour imprimer un usage). Le cas « base absente + vraie
-        // sous-commande » reste couvert par la migration différée de `migrerPuisExecuter`, qui la crée.
-        Amorcage.migrerSiPresente();
-        int code = applicative().executer(restants.toArray(new String[0]), System.out, System.err);
-        System.exit(code);
+        System.exit(executerOuRendreCompte(restants));
+    }
+
+    /// Ce que `main` fait vraiment, séparé pour que son **échec** ait un gestionnaire.
+    ///
+    /// ⚠️ Les deux appels ci-dessous s'exécutent **avant** que picocli n'existe, donc hors de son
+    /// gestionnaire d'erreurs. Sans ce `catch`, leurs exceptions sortaient par la JVM :
+    /// `Exception in thread "main"`, la pile entière, et le code `1` - y compris pour un
+    /// `RefusAvantEcriture`, que #3498 avait pourtant appris à traduire en `2`. `dev-docs/cli.md`
+    /// promet « message seul, jamais la trace » : cette promesse était fausse sur ce chemin (#3570).
+    private static int executerOuRendreCompte(List<String> restants) {
+        try {
+            // Journalisation après la résolution du workspace (pour écrire dans le bon dossier), avant
+            // tout travail : la CLI aussi laisse une trace de ses incidents (#1523).
+            ConfigurationJournalisation.configurerSansConsole(Workspace.resolu().dossierLogs());
+            // Migrer AVANT de composer l'injecteur (ADR 1038, #2187) : `applicative()` compose
+            // l'injecteur, ce qui lit les drapeaux de fonctionnalités en base ; une base à jour est donc
+            // nécessaire ici. Seulement si la base existe déjà : une aide sur une installation neuve ne
+            // doit créer aucun fichier. Le cas « base absente + vraie sous-commande » reste couvert par
+            // la migration différée de `migrerPuisExecuter`, qui la crée.
+            Amorcage.migrerSiPresente();
+            return applicative().executer(restants.toArray(new String[0]), System.out, System.err);
+        } catch (RuntimeException echec) {
+            VerdictCli verdict = VerdictCli.de(echec);
+            journaliser(verdict, echec);
+            // `System.err` et non une `CommandLine` : picocli n'a pas encore été construit, et c'est
+            // précisément la raison pour laquelle ce chemin n'avait pas de gestionnaire.
+            System.err.println(verdict.phrase());
+            return verdict.code();
+        }
     }
 
     /// Retire l'option globale `--workspace <dir>` du tableau d'arguments (où qu'elle soit) et renvoie sa
