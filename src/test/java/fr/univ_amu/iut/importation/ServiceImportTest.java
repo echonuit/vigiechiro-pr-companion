@@ -185,6 +185,33 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName("#1492 : un dossier mélangé n'importe que la série du journal, et dit ce qu'il écarte")
+    void melange_n_importe_que_la_serie_du_journal() throws IOException {
+        Path melange = racine.resolve("sd-melange");
+        Files.createDirectories(melange);
+        JournalDeCapteur.ecrire(melange, SERIE, LocalDate.of(2026, 4, 22));
+        ecrireWav(melange.resolve("PaRecPR" + SERIE + "_20260422_203922.wav"));
+        ecrireWav(melange.resolve("PaRecPR" + SERIE + "_20260422_204326.wav"));
+        // Un fichier du voisin, tombé dans le même dossier : jusqu'ici il était importé en entier, et le
+        // passage portait l'enregistreur du journal avec des séquences d'un autre capteur.
+        ecrireWav(melange.resolve("PaRecPR1648011_20260422_210000.wav"));
+
+        ResultatImport resultat = service.importer(melange, idPoint, prefixe);
+
+        assertThat(resultat.nombreOriginaux())
+                .as("seuls les deux enregistrements du journal sont importés")
+                .isEqualTo(2);
+        assertThat(resultat.passage().idEnregistreur()).isEqualTo(SERIE);
+        // Écarté ne veut pas dire escamoté : un fichier qui disparaît sans un mot est pire qu'un fichier
+        // importé à tort, parce que rien ne le rattrape.
+        assertThat(resultat.rapport().lignes()).anySatisfy(ligne -> {
+            assertThat(ligne.nomFichier()).isEqualTo("PaRecPR1648011_20260422_210000.wav");
+            assertThat(ligne.statut()).isEqualTo(StatutImportFichier.IGNORE);
+            assertThat(ligne.detail()).contains("autre capteur");
+        });
+    }
+
+    @Test
     @DisplayName("#2358 : l'import mesure ce qu'il a lu sur la carte et ce qu'il a écrit sur le disque")
     void import_mesure_les_volumes_lus_et_ecrits() {
         long volumeSource = volumeSourceDe(sd);

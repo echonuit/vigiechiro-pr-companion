@@ -153,6 +153,22 @@ L'inspection signale les anomalies **avant** l'import, pour éviter d'importer u
 
 Un **mélange** dans le dossier (plusieurs enregistreurs aux séries différentes) déclenche un
 avertissement, sans bloquer l'import :
+!!! note "Seuls les enregistrements du journal sont importés"
+    Quand un dossier mélange deux capteurs, l'import ne prend que les enregistrements portant la
+    **série du journal**. Les autres ne sont **pas** importés, et ne disparaissent pas pour autant : ils
+    figurent dans le rapport de fin, marqués **ignorés**, avec la raison - « enregistré par un autre
+    capteur que celui du journal ».
+
+    Sans cette règle, la nuit importée porterait l'enregistreur du journal **et** des séquences venues
+    d'ailleurs : une donnée qui se contredit elle-même, et qui partirait telle quelle au dépôt.
+
+    Vos fichiers d'origine ne sont pas touchés : rien n'est déplacé ni supprimé sur la carte. Si les
+    enregistrements écartés vous appartiennent aussi, importez-les à part, avec **leur** journal.
+
+⚠️ Cette règle s'applique à l'import d'**une nuit**. Sans journal (mode dégradé), rien n'est écarté :
+l'application ne peut pas décider laquelle des séries est la bonne quand la référence vient elle-même
+des fichiers.
+
 
 ![Cas « mélange » : un avertissement signale que le dossier contient plusieurs enregistreurs (séries différentes).](../assets/captures/apercu-import-melange.png)
 
