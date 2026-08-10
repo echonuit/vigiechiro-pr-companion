@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
 import com.google.inject.Inject;
-import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import javafx.stage.Window;
 
@@ -14,9 +13,8 @@ public final class ActionRestaurer implements ActionMenu {
     private final PorteurSauvegarde porteur;
 
     @Inject
-    ActionRestaurer(
-            ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation, JournalMutations journal) {
-        this.porteur = new PorteurSauvegarde(service, navigateur, occupation, journal);
+    ActionRestaurer(ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation) {
+        this.porteur = new PorteurSauvegarde(service, navigateur, occupation);
     }
 
     @Override

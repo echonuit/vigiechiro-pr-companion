@@ -3,6 +3,7 @@ package fr.univ_amu.iut.importation.model;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.NommageSequences;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -62,6 +63,8 @@ import java.util.function.Consumer;
 public class ServiceImportReference {
 
     private final PointDao pointDao;
+    /// Nomme sa nature en entier : dans ce paquet, `journal` designe le LOG DU CAPTEUR.
+    private final JournalMutations journalMutations;
     private final SiteDao siteDao;
     private final AgregatImportDao agregatDao;
     private final UniteDeTravail uniteDeTravail;
@@ -78,8 +81,10 @@ public class ServiceImportReference {
             UniteDeTravail uniteDeTravail,
             Workspace workspace,
             Horloge horloge,
-            ServiceDisponibiliteAudio disponibiliteAudio) {
+            ServiceDisponibiliteAudio disponibiliteAudio,
+            JournalMutations journalMutations) {
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
+        this.journalMutations = Objects.requireNonNull(journalMutations, "journalMutations");
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.agregatDao = Objects.requireNonNull(agregatDao, "agregatDao");
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
@@ -249,6 +254,8 @@ public class ServiceImportReference {
                 }
             }
         });
+        // APRES le commit : un passage de reference est un passage de plus a l'inventaire.
+        journalMutations.mutationStructurelleValidee();
         return idPassage[0];
     }
 

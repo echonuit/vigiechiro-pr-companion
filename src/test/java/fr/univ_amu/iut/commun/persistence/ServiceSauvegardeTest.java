@@ -36,7 +36,24 @@ class ServiceSauvegardeTest {
         new MigrationSchema(source).migrer();
         utilisateurDao = new UtilisateurDao(source);
         // Horloge figée → horodatage déterministe dans le nom de fichier.
-        service = new ServiceSauvegarde(source, new HorlogeFigee(LocalDateTime.of(2026, 7, 7, 14, 30, 15)));
+        service = new ServiceSauvegarde(source, new HorlogeFigee(LocalDateTime.of(2026, 7, 7, 14, 30, 15)), () -> {});
+    }
+
+    @Test
+    @DisplayName("#3537 : restaurer annonce la mutation, depuis le service et non depuis la vue")
+    void restaurer_annonce() throws Exception {
+        SourceDeDonnees source = new SourceDeDonnees(new Workspace(workspaceDir));
+        new MigrationSchema(source).migrer();
+        int[] annonces = {0};
+        ServiceSauvegarde service = new ServiceSauvegarde(
+                source, new HorlogeFigee(LocalDateTime.of(2026, 5, 31, 12, 0)), () -> annonces[0]++);
+        Path sauvegarde = service.sauvegarder(workspaceDir.resolve("sauvegardes"));
+
+        service.restaurer(sauvegarde);
+
+        // L'annonce vivait dans PorteurSauvegarde, une classe de VUE : la commande CLI `restaurer`
+        // remplaçait donc la base entière sans rien annoncer (passe 2 de la clôture du lot 1).
+        assertThat(annonces[0]).isEqualTo(1);
     }
 
     @Test

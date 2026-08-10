@@ -104,8 +104,9 @@ class GenerationCartesSDImportCliquetTest {
                 workspace,
                 new HorlogeFigee(DATE_FIGEE),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(DATE_FIGEE)),
-                Optional.empty());
+                new ServiceSauvegarde(source, new HorlogeFigee(DATE_FIGEE), () -> {}),
+                Optional.empty(),
+                () -> {});
     }
 
     private List<Path> specsAvecRejets() throws IOException {

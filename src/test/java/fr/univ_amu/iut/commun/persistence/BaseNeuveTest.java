@@ -19,6 +19,20 @@ class BaseNeuveTest {
     Path dossier;
 
     @Test
+    @DisplayName("#3537 : repartir de zéro annonce la mutation")
+    void repartir_de_zero_annonce() {
+        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        new MigrationSchema(source).migrer();
+        int[] annonces = {0};
+
+        new BaseNeuve(source, () -> annonces[0]++).repartirDeZero();
+
+        // Les quatre compteurs de l'accueil retombent à zéro d'un coup. C'est la mutation la plus
+        // structurelle du produit, et elle ne passait par aucun émetteur avant la clôture du lot 1.
+        assertThat(annonces[0]).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("#1419 : la base est vidée et recréée, schéma à jour, référentiel semé, aucune donnée")
     void la_base_repart_vide_mais_utilisable() {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
@@ -27,7 +41,7 @@ class BaseNeuveTest {
         utilisateurs.insert(new Utilisateur("u-1", "Testeur"));
         assertThat(utilisateurs.findAll()).hasSize(1);
 
-        new BaseNeuve(source).repartirDeZero();
+        new BaseNeuve(source, () -> {}).repartirDeZero();
 
         assertThat(utilisateurs.findAll())
                 .as("les données sont parties : c'est le but")
@@ -47,11 +61,12 @@ class BaseNeuveTest {
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
 
-        Path filet = new BaseNeuve(source).repartirDeZero();
+        Path filet = new BaseNeuve(source, () -> {}).repartirDeZero();
 
         assertThat(filet).exists();
         // Le filet est une vraie base : `restaurer` sait la relire, et l'utilisateur y est encore.
-        new ServiceSauvegarde(source, new fr.univ_amu.iut.commun.model.HorlogeFigee(java.time.LocalDate.now()))
+        new ServiceSauvegarde(
+                        source, new fr.univ_amu.iut.commun.model.HorlogeFigee(java.time.LocalDate.now()), () -> {})
                 .restaurer(filet);
         assertThat(new UtilisateurDao(source).findAll())
                 .as("la base d'avant se restaure : le reset est réversible tant que le filet est là")
@@ -69,7 +84,7 @@ class BaseNeuveTest {
         Path wal = base.resolveSibling(base.getFileName() + "-wal");
         Files.writeString(wal, "journal périmé");
 
-        new BaseNeuve(source).repartirDeZero();
+        new BaseNeuve(source, () -> {}).repartirDeZero();
 
         assertThat(wal).doesNotExist();
     }

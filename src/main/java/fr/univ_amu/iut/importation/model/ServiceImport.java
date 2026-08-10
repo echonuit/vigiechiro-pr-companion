@@ -3,6 +3,7 @@ package fr.univ_amu.iut.importation.model;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -90,7 +91,8 @@ public class ServiceImport {
             Horloge horloge,
             CompteurValidations compteurValidations,
             ServiceSauvegarde serviceSauvegarde,
-            Optional<SynchronisationParticipation> synchronisation) {
+            Optional<SynchronisationParticipation> synchronisation,
+            JournalMutations journalMutations) {
         this.inspecteur = Objects.requireNonNull(inspecteur, "inspecteur");
         this.agregatDao = Objects.requireNonNull(agregatDao, "agregatDao");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
@@ -109,7 +111,8 @@ public class ServiceImport {
                 agregatDao,
                 uniteDeTravail,
                 workspace,
-                outils.espaceDisque());
+                outils.espaceDisque(),
+                journalMutations);
     }
 
     /// Inspecte (lecture seule) le dossier SD sans rien importer : utile pour prévisualiser le

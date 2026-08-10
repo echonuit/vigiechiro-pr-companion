@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Workspace;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -68,22 +69,24 @@ public class ServiceSauvegarde {
 
     private final SourceDeDonnees source;
     private final Horloge horloge;
+    private final JournalMutations journal;
     private final InstantaneBase instantane;
     private final EspaceDisque espaceDisque;
 
     @Inject
-    public ServiceSauvegarde(SourceDeDonnees source, Horloge horloge) {
-        this(source, horloge, EspaceDisque.reel());
+    public ServiceSauvegarde(SourceDeDonnees source, Horloge horloge, JournalMutations journal) {
+        this(source, horloge, EspaceDisque.reel(), journal);
     }
 
     /// Variante à **espace disque injecté** : la restauration complète choisit son régime d'après la
     /// place libre (#3563), et un test doit pouvoir éprouver les trois sans dépendre de la machine.
     /// Même couture que `CompacteurDepot` et `OutilsImport`, qui gardent aussi une fabrique par défaut
     /// plutôt qu'un binding.
-    ServiceSauvegarde(SourceDeDonnees source, Horloge horloge, EspaceDisque espaceDisque) {
+    ServiceSauvegarde(SourceDeDonnees source, Horloge horloge, EspaceDisque espaceDisque, JournalMutations journal) {
         this.source = Objects.requireNonNull(source, "source");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.espaceDisque = Objects.requireNonNull(espaceDisque, "espaceDisque");
+        this.journal = Objects.requireNonNull(journal, "journal");
         this.instantane = new InstantaneBase(this.source);
     }
 
@@ -105,6 +108,10 @@ public class ServiceSauvegarde {
     public void restaurer(Path sauvegarde) {
         Objects.requireNonNull(sauvegarde, "sauvegarde");
         new RestaurationBase(source).executer(sauvegarde);
+        // La base entiere est remplacee : c'est la plus structurelle des mutations. L'annonce est ici
+        // et non dans la vue, sans quoi la CLI `restaurer` serait muette (constat de la passe 2 du lot
+        // #3537). `restaurerComplet` passe par cette methode : une seule annonce couvre les deux.
+        journal.mutationStructurelleValidee();
     }
 
     /// Dossier de sauvegarde **par défaut** (`<workspace>/sauvegardes`) : proposé quand l'utilisateur ne

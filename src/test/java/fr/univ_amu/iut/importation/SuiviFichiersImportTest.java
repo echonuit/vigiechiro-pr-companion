@@ -81,8 +81,9 @@ class SuiviFichiersImportTest {
                 workspace,
                 horloge,
                 idPassage -> 0,
-                new ServiceSauvegarde(source, horloge),
-                Optional.empty());
+                new ServiceSauvegarde(source, horloge, () -> {}),
+                Optional.empty(),
+                () -> {});
     }
 
     @Test

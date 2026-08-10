@@ -50,7 +50,7 @@ class RestaurationCompleteTest {
         disque = racine.resolve("disque-externe");
         source = new SourceDeDonnees(new Workspace(workspaceDir));
         new MigrationSchema(source).migrer();
-        service = new ServiceSauvegarde(source, new HorlogeFigee(LocalDateTime.of(2026, 8, 2, 10, 0)));
+        service = new ServiceSauvegarde(source, new HorlogeFigee(LocalDateTime.of(2026, 8, 2, 10, 0)), () -> {});
     }
 
     @Test
@@ -117,7 +117,7 @@ class RestaurationCompleteTest {
     /// Un `ServiceSauvegarde` qui croit le disque à `octetsLibres`, quel que soit le dossier.
     private ServiceSauvegarde avecEspace(long octetsLibres) {
         return new ServiceSauvegarde(
-                source, new HorlogeFigee(LocalDateTime.of(2026, 8, 2, 10, 0)), dossier -> octetsLibres);
+                source, new HorlogeFigee(LocalDateTime.of(2026, 8, 2, 10, 0)), dossier -> octetsLibres, () -> {});
     }
 
     private static long octetsDuManifeste(Path backup) {

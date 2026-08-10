@@ -46,7 +46,7 @@ class ManifesteSauvegardeTest {
         workspaceDir = racine.resolve("ws");
         source = new SourceDeDonnees(new Workspace(workspaceDir));
         new MigrationSchema(source).migrer();
-        service = new ServiceSauvegarde(source, new HorlogeFigee(LocalDateTime.of(2026, 8, 2, 10, 0, 0)));
+        service = new ServiceSauvegarde(source, new HorlogeFigee(LocalDateTime.of(2026, 8, 2, 10, 0, 0)), () -> {});
     }
 
     @Test
