@@ -71,9 +71,9 @@ public final class CaptureDialogues {
 
     /// Chemins **figés** : un aperçu qui varierait à chaque régénération ne documenterait rien. Deux
     /// nuits d'un même disque de terrain, une par carré.
-    private static final String NUIT_Z1 = NUIT_Z1;
+    private static final String NUIT_Z1 = "/media/disque-terrain/Car640380-2026-Pass2-Z1";
 
-    private static final String NUIT_A1 = NUIT_A1;
+    private static final String NUIT_A1 = "/media/disque-terrain/Car130711-2026-Pass1-A1";
 
     private static void capturer() {
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
