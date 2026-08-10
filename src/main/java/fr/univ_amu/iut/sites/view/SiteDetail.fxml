@@ -72,11 +72,6 @@
         </graphic>
       </Button>
     </StackPane>
-    <MenuButton fx:id="menuOutils" styleClass="menu-actions" accessibleText="Outils : colonnes">
-      <graphic>
-        <FontIcon iconLiteral="fas-bars"/>
-      </graphic>
-    </MenuButton>
   </FlowPane>
 
   <HBox styleClass="bandeau-infos" spacing="0.0">
@@ -130,11 +125,22 @@
   <Label fx:id="lblAucunPoint" styleClass="section-sous" wrapText="true" managed="false" visible="false"
          text="Aucun point d'écoute déclaré. Cliquez « + Ajouter un point » pour en créer un."/>
 
-  <Label text="Passages enregistrés sur ce site" styleClass="section-titre">
-    <graphic>
-      <FontIcon iconLiteral="fas-calendar-alt"/>
-    </graphic>
-  </Label>
+  <!-- Titre de section ET son menu d'outils (#1379). Le menu ne pilote QUE ce tableau (choix des
+       colonnes) : il vivait dans le header, à côté de « Modifier » et « Supprimer » qui agissent sur le
+       site entier, à un écran de distance de ce qu'il commande. Un outil se pose près de son objet. -->
+  <HBox alignment="CENTER_LEFT" spacing="8.0">
+    <Label text="Passages enregistrés sur ce site" styleClass="section-titre">
+      <graphic>
+        <FontIcon iconLiteral="fas-calendar-alt"/>
+      </graphic>
+    </Label>
+    <Region HBox.hgrow="ALWAYS"/>
+    <MenuButton fx:id="menuOutils" styleClass="menu-actions" accessibleText="Outils : colonnes du tableau">
+      <graphic>
+        <FontIcon iconLiteral="fas-bars"/>
+      </graphic>
+    </MenuButton>
+  </HBox>
   <TableView fx:id="tablePassages" prefHeight="320.0" VBox.vgrow="ALWAYS">
     <columns>
       <TableColumn fx:id="colDate" text="Date" prefWidth="110.0"/>
