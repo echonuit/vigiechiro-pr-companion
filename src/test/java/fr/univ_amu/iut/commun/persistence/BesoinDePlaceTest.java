@@ -129,6 +129,17 @@ class BesoinDePlaceTest {
                 .containsEntry(TRAVAIL, new BesoinDePlace.Besoin(5, 5));
     }
 
+    @Test
+    @DisplayName("une sauvegarde sans aucune nuit ne demande rien, même sur un disque plein")
+    void aucune_nuit_ne_demande_rien() {
+        BesoinDePlace besoin = BesoinDePlace.de(manifeste(), origine -> origine);
+
+        assertThat(besoin.regimePour(dossier -> 0))
+                .as("refuser une restauration qui n'a rien à replacer serait absurde : il n'y a pas de"
+                        + " dossier d'accueil, donc pas de place à trouver")
+                .isEqualTo(RegimeRestauration.ENSEMBLE);
+    }
+
     private static BesoinDePlace surUnSeulDossier(long petite, long grosse) {
         return new BesoinDePlace(Map.of(TRAVAIL, new BesoinDePlace.Besoin(petite + grosse, grosse)));
     }
