@@ -25,8 +25,25 @@ public final class ExecuteurTacheAsynchrone implements ExecuteurTache {
 
     /// Chaque événement émis par le travail (progression, suivi) est reposté sur le fil JavaFX, dans
     /// l'ordre de soumission (garantie [Platform#runLater]).
+    ///
+    /// **Sans toolkit, il n'y a pas de fil à rejoindre** (#3542) : la CLI tourne dans un processus où
+    /// JavaFX n'a jamais démarré, et `Platform.runLater` y lève `IllegalStateException`. Elle exécute
+    /// pourtant le même code de domaine que l'IHM, et depuis que les écritures annoncent leurs
+    /// mutations, ce code passe par ici. Un `creer-site` en ligne de commande échouait donc, alors
+    /// qu'il n'a **personne à réveiller**.
+    ///
+    /// On exécute alors **sur place**. C'est exact et non un pis-aller : le report existe pour
+    /// respecter le fil propriétaire des propriétés observables ; là où aucune vue n'observe, il n'y a
+    /// rien à respecter. Le défaut a été trouvé par les E2E `bats` sur le vrai fat-jar, qu'aucun test
+    /// Java in-process ne pouvait voir.
     @Override
     public Executor surFilJavaFx() {
-        return Platform::runLater;
+        return commande -> {
+            try {
+                Platform.runLater(commande);
+            } catch (IllegalStateException toolkitAbsent) {
+                commande.run();
+            }
+        };
     }
 }
