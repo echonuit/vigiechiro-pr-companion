@@ -5,7 +5,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,6 +21,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
@@ -51,11 +55,19 @@ class SaisonViewTest {
     private OuvrirPassage ouvrirPassage;
     private OuvrirSite ouvrirSite;
 
+    /// Le signal de mutation (#3591) : le test l'actionne comme le ferait un import ou une synchro.
+    private RevisionDonnees revision;
+
+    private ServiceSoldeSaison serviceObserve;
+    private SaisonController controleur;
+
     @Start
     void demarrer(Stage stage) throws Exception {
+        revision = new RevisionDonnees(Runnable::run);
         ouvrirPassage = mock(OuvrirPassage.class);
         ouvrirSite = mock(OuvrirSite.class);
         ServiceSoldeSaison service = mock(ServiceSoldeSaison.class);
+        serviceObserve = service;
         SoldeSaison solde = new SoldeSaison(
                 2026,
                 LocalDate.of(2026, 7, 20),
@@ -115,6 +127,8 @@ class SaisonViewTest {
         when(service.soldeCourant(anyString(), org.mockito.ArgumentMatchers.isNull()))
                 .thenReturn(solde);
         when(service.soldePour(anyString(), anyInt())).thenReturn(solde);
+        when(service.soldePour(anyString(), anyInt(), org.mockito.ArgumentMatchers.any()))
+                .thenReturn(solde);
 
         Injector injecteur = Guice.createInjector(new AbstractModule() {
             @Override
@@ -127,13 +141,48 @@ class SaisonViewTest {
             SaisonViewModel viewModel() {
                 return new SaisonViewModel(service, "u-test");
             }
+
+            @Provides
+            RevisionDonnees revision() {
+                return revision;
+            }
         });
 
         FXMLLoader loader = new FXMLLoader(SaisonController.class.getResource("Saison.fxml"));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
+        controleur = loader.getController();
         stage.setScene(new Scene(vue, 1000, 600));
         stage.show();
+    }
+
+    @Test
+    @DisplayName("#3591 : une mutation structurelle rafraîchit le solde SANS qu'on ait navigué")
+    void une_mutation_rafraichit_sans_navigation(FxRobot robot) {
+        // L'ouverture lit par `soldeCourant` ; on repart donc de zéro pour ne compter que ce que la
+        // mutation provoque.
+        clearInvocations(serviceObserve);
+
+        // Une nuit arrive d'ailleurs : import, synchro, restauration. L'écran ne bouge pas.
+        robot.interact(() -> revision.mutationStructurelleValidee());
+
+        // Exactement une relecture. Sans le signal, l'écran attendait qu'on le quitte et qu'on y
+        // revienne (`rafraichirAuRetour`), et la saison affichée restait celle d'avant.
+        verify(serviceObserve, times(1)).soldePour(anyString(), anyInt(), org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("#3591 : un écran quitté ne recharge plus, l'abonnement est rendu")
+    void un_ecran_quitte_ne_recharge_plus(FxRobot robot) {
+        robot.interact(() -> controleur.auDepartEcran());
+        clearInvocations(serviceObserve);
+
+        robot.interact(() -> revision.mutationStructurelleValidee());
+
+        // `RevisionDonnees` est un SINGLETON, le ViewModel de cet écran ne l'est délibérément pas. Sans
+        // ce retrait, chaque réouverture laisserait un listener accroché à une vue morte, et la dixième
+        // mutation déclencherait dix rechargements dont neuf pour personne.
+        verify(serviceObserve, never()).soldePour(anyString(), anyInt(), org.mockito.ArgumentMatchers.any());
     }
 
     @Test
