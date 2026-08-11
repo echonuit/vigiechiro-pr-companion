@@ -6,9 +6,35 @@ d'enregistrement.
 
 ## Installer l'application
 
-Les fichiers sont sur la page
-[Releases](https://github.com/echonuit/vigiechiro-pr-companion/releases) du projet. Deux
-formes vous sont proposées pour chaque système, et le choix n'est pas anodin.
+Sous **Windows**, le plus court passe par le gestionnaire de paquets intégré. Sinon, les fichiers sont
+sur la page [Releases](https://github.com/echonuit/vigiechiro-pr-companion/releases) du projet, sous
+plusieurs formes, et le choix n'est pas anodin.
+
+### Sous Windows, le plus court : `winget`
+
+Windows 10 et 11 embarquent un **gestionnaire de paquets**. Une commande suffit, dans PowerShell ou
+dans l'invite de commandes :
+
+```powershell
+winget install Echonuit.VigieChiroCompanion
+```
+
+Rien à télécharger vous-même, rien à vérifier à la main : winget récupère l'installeur, **contrôle son
+empreinte** avant de l'exécuter, et l'installe **sans droits d'administration** - l'application se
+pose dans votre dossier personnel. C'est le même installeur que celui de la page des Releases, servi
+autrement.
+
+Plus tard, pour mettre à jour :
+
+```powershell
+winget upgrade Echonuit.VigieChiroCompanion
+```
+
+!!! note "winget ne sert pas forcément la toute dernière version"
+    Nous publions souvent, et nous ne poussons sur winget que les versions qui **apportent quelque
+    chose à l'utilisateur**. Celle que winget vous propose peut donc être en retard de quelques
+    numéros sur la page des Releases. `winget show Echonuit.VigieChiroCompanion` dit ce qui est servi
+    aujourd'hui ; pour avoir la toute dernière, prenez l'installeur ou l'archive portable ci-dessous.
 
 ### Installer, ou simplement décompresser
 

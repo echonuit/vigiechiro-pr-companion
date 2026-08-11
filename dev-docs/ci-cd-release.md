@@ -358,6 +358,19 @@ Le workflow fait trois choses avant de soumettre, et la deuxième est celle qui 
 
 `max-versions-to-keep: 5` : le dépôt communautaire n'a pas vocation à archiver notre historique.
 
+!!! warning "Le fork doit être à jour avant un dispatch"
+    Le fork `echonuit/winget-pkgs` prend du retard entre deux soumissions, espacées de plusieurs
+    semaines par construction. Au 2026-08-11 il était **7969 commits en retard**, donc antérieur à la
+    fusion de notre propre manifeste.
+
+    ```bash
+    gh repo sync echonuit/winget-pkgs --source microsoft/winget-pkgs
+    ```
+
+    Ce n'est pas une précaution de principe : les versions récentes de `winget-releaser` lancent
+    `komac sync-fork` **avant** la mise à jour, ce que la nôtre (épinglée sur `v2`, un commit de
+    **novembre 2024**) ne fait pas.
+
 !!! warning "La garde du secret rougit, et c'est un changement"
     `winget.yml` sortait **en vert** quand `WINGET_TOKEN` manquait. Ce choix était juste tant qu'il se
     déclenchait sur `release: released` : rougir à chaque publication aurait été du bruit sur un canal
