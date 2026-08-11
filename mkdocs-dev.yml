@@ -176,6 +176,7 @@ nav:
     - 3510 · Une capacité sait comment on la vérifie: decisions/3510-une-capacite-sait-comment-on-la-verifie-a-la-main.md
     - 3535 · Un inventaire ne se duplique pas, il se cite: decisions/3535-un-inventaire-ne-se-duplique-pas-il-se-cite.md
     - 3563 · Le régime de restauration suit la place disponible: decisions/3563-le-regime-de-restauration-suit-la-place-disponible.md
+    - 3572 · Une sauvegarde ne porte son nom qu'une fois complète: decisions/3572-une-sauvegarde-ne-porte-son-nom-qu-une-fois-complete.md
     - 3507 · L'amorçage s'écrit d'un seul coup: decisions/3507-l-amorcage-s-ecrit-d-un-seul-coup.md
     - 3514 · Restaurer n'efface pas ce que la sauvegarde ignore: decisions/3514-restaurer-n-efface-pas-ce-que-la-sauvegarde-ignore.md
     - 3498 · La déclaration porte sur les lectrices: decisions/3498-la-declaration-porte-sur-les-lectrices.md

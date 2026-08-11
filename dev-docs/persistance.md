@@ -206,6 +206,24 @@ vit en base.
     explicite tombait alors sur une sauvegarde par ailleurs **intacte**. Un lecteur voit désormais
     l'ancien manifeste ou le nouveau, jamais un JSON coupé.
 
+## Une sauvegarde ne porte son nom qu'une fois complète
+
+Elle vérifie **d'abord** la place : la base plus les racines de session accessibles, confrontées à
+l'espace libre de la destination. Un manque est un refus **chiffré**, avant la première copie - même
+geste que l'import, le lot et la restauration, que la sauvegarde était seule à ne pas faire (#3572).
+
+Elle se construit ensuite sous un nom de **chantier** (`en-chantier-vigiechiro-sauvegarde-complete-…`)
+et n'est **renommée** qu'après l'écriture du manifeste.
+
+⚠️ Le renommage ferme ce qu'un nettoyage à l'échec ne fermerait pas : une coupure de courant ou un
+`kill -9` ne laissent tourner aucun code. Sans lui, un dossier interrompu portait le nom d'une
+sauvegarde complète, `InventaireSauvegardes` le listait comme telle - il classe sur le **préfixe** du
+nom - et le restaurer empruntait `replacerSansManifeste`, le chemin d'avant #2726 : dossiers déversés à
+la racine, chemins non corrigés. **L'absence de manifeste voulait dire deux choses opposées** : « cette
+sauvegarde est ancienne » et « cette sauvegarde est tronquée ».
+
+Le marqueur est en **tête** du nom, et pas en suffixe, pour cette raison exacte.
+
 ## Une restauration complète est vérifiée, puis basculée
 
 `ServiceSauvegarde.restaurerComplet` s'appuie sur le manifeste pour tenir la promesse en entier

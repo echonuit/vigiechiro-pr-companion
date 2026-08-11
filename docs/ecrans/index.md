@@ -48,6 +48,13 @@ de la barre du haut permet de la **protéger** :
 - **Sauvegarde complète (base + audio)…** : la base **et** tous vos dossiers de son. C'est la **seule
   sauvegarde qui protège vraiment** : voir l'encadré ci-dessous. Elle peut peser plusieurs gigaoctets et
   prendre du temps : l'application vous le dit avant de commencer.
+!!! tip "Une sauvegarde qui n'a pas abouti ne vous sera pas proposée"
+    L'application vérifie **avant de copier** qu'il y a la place, et vous dit combien libérer si ce
+    n'est pas le cas. Et tant qu'une sauvegarde n'est pas terminée, elle porte un nom provisoire :
+    si l'ordinateur s'éteint en cours de route, le dossier resté sur le disque **n'apparaîtra pas**
+    dans la liste des sauvegardes. Vous ne risquez donc pas de restaurer une sauvegarde à moitié
+    écrite en croyant qu'elle est complète.
+
 - **Restaurer une sauvegarde…** : vous choisissez un fichier de sauvegarde ; après **confirmation**,
   l'application **remplace** la base courante par celle-ci. Par sécurité, l'**état courant est d'abord mis
   de côté** (fichier `vigiechiro.db.avant-restauration`), et l'application revient à l'accueil pour
