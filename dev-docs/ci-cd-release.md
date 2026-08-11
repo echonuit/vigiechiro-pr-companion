@@ -371,6 +371,26 @@ Le workflow fait trois choses avant de soumettre, et la deuxième est celle qui 
     Mesuré en ouvrant #2213 : le secret était **absent**, et le workflow n'avait **jamais** été
     exécuté depuis sa fusion. Le premier dispatch aurait rendu un vert sans rien publier.
 
+!!! danger "« does not exist in microsoft/winget-pkgs » accuse le mauvais coupable"
+    Message rendu par komac au premier dispatch réel, alors que le paquet **y était** depuis la
+    veille. Il ne veut pas dire ce qu'il dit.
+
+    Komac résout le paquet avec le jeton qu'on lui donne. Un jeton qu'il ne peut pas employer rend une
+    réponse **vide**, et une réponse vide se lit chez lui comme « le paquet n'existe pas ». Le
+    coupable désigné est donc le paquet, quand la cause est le jeton.
+
+    Ce qu'il faut savoir avant d'y passer du temps, parce que chaque essai coûte un runner Windows et
+    une installation de MSI :
+
+    - le paquet, le chemin, le fork et komac se vérifient **en local**, en quelques secondes :
+      `GITHUB_TOKEN=$(gh auth token) komac list-versions Echonuit.VigieChiroCompanion` ;
+    - un jeton **valide mais copié avec un retour à la ligne** produit exactement ce symptôme : il
+      s'authentifie quand on le teste à la main, et l'en-tête `Authorization` qu'il forme dans la CI
+      est invalide. D'où `printf '%s'` et non `echo` pour le poser.
+
+    `verifie-secret-winget.sh --verifie-l-acces` rend maintenant ce diagnostic **au début du
+    workflow**, en nommant la cause.
+
 ## Toute garde de CI porte sa propre preuve (#2947, #3293)
 
 Une garde qui **accepte à tort ne rougit pas** : elle passe au vert, sur un dépôt propre, exactement
@@ -387,7 +407,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `check-doc-images.sh` | chaque capture citée par la doc existe et est déclarée | `docs.yml` |
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `verifie-renvois-workflows.sh` | chaque `workflow_run` vise le `name:` d'un workflow existant | `lint.yml` |
-| `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |
+| `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé, propre, et **utilisable** avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |
 | `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
 
 **Le modèle vient de #2947** (`verifie-titre-pr.sh`) et il est le bon : le script **se réinvoque
