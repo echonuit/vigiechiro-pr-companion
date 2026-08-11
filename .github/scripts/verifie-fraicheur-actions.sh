@@ -46,8 +46,21 @@ inventorier() {
     | sort -u
 }
 
-### Juge la fraîcheur. Écrit son verdict, rend 0 (rien de grave) ou 1 (une majeure de retard, ou
-### une mesure qu'on n'a pas pu faire).
+# Un tag ne dit rien quand il ne bouge jamais : seuils sur l'ÂGE du commit épinglé face au HEAD amont.
+# Calibrés sur une mesure du 2026-08-11, où le pire écart du dépôt était de 143 jours : la garde est
+# donc muette sur un dépôt sain, et le cas qui lui avait échappé (608 jours) est rouge.
+AGE_AVERTISSEMENT=180
+AGE_ROUGE=365
+
+### Vrai si la chaîne ressemble à une version (`v2`, `7.0.1`), faux pour `main`, `master`, `sans-tag`.
+ressemble_a_une_version() {
+  printf '%s' "$1" | grep -qE '^v?[0-9]'
+}
+
+### Juge la fraîcheur. Écrit son verdict, rend 0 (rien de grave) ou 1 (une majeure de retard, un âge
+### excessif, ou une mesure qu'on n'a pas pu faire).
+###
+### Entrée : `dépôt<TAB>tag épinglé<TAB>tag amont<TAB>retard en jours<TAB>commentaire`
 juger() {
   local inventaire="$1"
 
@@ -61,32 +74,60 @@ juger() {
   local rouges=0 avertis=0 ajour=0 lignes=0
   local sortie_rouge="" sortie_avertie=""
 
-  while IFS=$'\t' read -r depot epingle amont; do
+  while IFS=$'\t' read -r depot epingle amont retard commentaire; do
     [ -n "$depot" ] || continue
     lignes=$((lignes + 1))
 
-    # Une résolution ratée ne DOIT PAS se lire comme « à jour » : c'est le silence qu'on combat.
-    if [ -z "$amont" ] || [ "$amont" = "?" ] || [ -z "$epingle" ] || [ "$epingle" = "?" ]; then
-      sortie_rouge+="   $depot : version indéterminée (épinglé « ${epingle:-?} », amont « ${amont:-?} »)"$'\n'
-      rouges=$((rouges + 1))
-      continue
+    local motif_rouge="" motif_avert=""
+
+    # ---- 1. Les tags, quand ils veulent dire quelque chose -------------------------------------
+    if [ -z "$epingle" ] || [ "$epingle" = "?" ]; then
+      # Notre SHA ne porte aucun tag. Deux cas très différents, que le COMMENTAIRE sépare.
+      if [ -z "${commentaire:-}" ]; then
+        # Sans commentaire, on ne peut pas distinguer « tag disparu » de « épinglage hors tag
+        # assumé ». On ne tranche donc pas en faveur du rassurant : c'est le silence qu'on combat.
+        motif_rouge="version indéterminée (aucun tag sur le SHA, aucun commentaire pour dire l'intention)"
+      elif ressemble_a_une_version "$commentaire"; then
+        # Le commentaire annonce une version : le tag a donc été déplacé ou supprimé en amont.
+        # C'est en soi une nouvelle, et le motif d'origine de ce garde.
+        motif_rouge="le commentaire annonce « $commentaire » mais le SHA ne porte plus aucun tag"
+      fi
+      # Sinon (`# main @ …`) : épinglage hors tag ASSUMÉ. Rien à dire côté tags, l'âge tranchera.
+    elif [ -z "$amont" ] || [ "$amont" = "?" ]; then
+      motif_rouge="version indéterminée en amont (épinglé « $epingle »)"
+    elif [ "$epingle" != "$amont" ]; then
+      local maj_e maj_a
+      maj_e=$(printf '%s' "$epingle" | sed -E 's/^v?([0-9]+).*/\1/')
+      maj_a=$(printf '%s' "$amont" | sed -E 's/^v?([0-9]+).*/\1/')
+      if [ "$maj_e" != "$maj_a" ]; then
+        motif_rouge="$epingle -> $amont (une MAJEURE de retard)"
+      else
+        motif_avert="$epingle -> $amont"
+      fi
     fi
 
-    if [ "$epingle" = "$amont" ]; then
-      ajour=$((ajour + 1))
-      continue
+    # ---- 2. L'âge, qui voit ce que les tags cachent ---------------------------------------------
+    # Le cas vécu : `winget-releaser` n'a qu'un tag `v2`, immobile depuis novembre 2024, pendant que
+    # l'action installait un `komac` de mars 2026. Tag épinglé = tag amont = `v2` : AUCUN écart à
+    # signaler, et vingt et un mois de retard réel. Un tag qui ne bouge jamais rend ce garde aveugle.
+    if [ -n "${retard:-}" ] && printf '%s' "$retard" | grep -qE '^[0-9]+$'; then
+      if [ "$retard" -ge "$AGE_ROUGE" ]; then
+        motif_rouge="${motif_rouge:+$motif_rouge ; }commit épinglé vieux de $retard jours face au HEAD amont"
+      elif [ "$retard" -ge "$AGE_AVERTISSEMENT" ]; then
+        motif_avert="${motif_avert:+$motif_avert ; }commit épinglé vieux de $retard jours face au HEAD amont"
+      fi
+    elif [ -n "${retard:-}" ]; then
+      motif_rouge="${motif_rouge:+$motif_rouge ; }âge indéterminé"
     fi
 
-    local maj_e maj_a
-    maj_e=$(printf '%s' "$epingle" | sed -E 's/^v?([0-9]+).*/\1/')
-    maj_a=$(printf '%s' "$amont" | sed -E 's/^v?([0-9]+).*/\1/')
-
-    if [ "$maj_e" != "$maj_a" ]; then
-      sortie_rouge+="   $depot : $epingle -> $amont (une MAJEURE de retard)"$'\n'
+    if [ -n "$motif_rouge" ]; then
+      sortie_rouge+="   $depot : $motif_rouge"$'\n'
       rouges=$((rouges + 1))
-    else
-      sortie_avertie+="   $depot : $epingle -> $amont"$'\n'
+    elif [ -n "$motif_avert" ]; then
+      sortie_avertie+="   $depot : $motif_avert"$'\n'
       avertis=$((avertis + 1))
+    else
+      ajour=$((ajour + 1))
     fi
   done <<< "$inventaire"
 
@@ -154,6 +195,37 @@ autotest() {
 
   verifier "inventaire vide" "" rouge "Inventaire vide"
 
+  # ---- L'ÂGE : ce que les tags cachent (#2213) ------------------------------------------------
+  # Le cas vécu, rejoué : tag épinglé = tag amont = `v2`, donc aucun écart de version, et pourtant
+  # vingt et un mois de retard réel. C'est exactement le vert que ce garde rendait.
+  verifier "un tag immobile masque un commit de 608 jours" \
+    "$(printf 'vedantmgoyal9/winget-releaser\tv2\tv2\t608\tv2')" \
+    rouge "vieux de 608 jours"
+
+  verifier "âge au-dessus du seuil d avertissement, non bloquant" \
+    "$(printf 'anchore/scan-action\tv7\tv7\t200\tv7')" \
+    vert "non bloquant"
+
+  # Contrôles NÉGATIFS : la règle doit rester étroite.
+  verifier "un âge sous les seuils ne dit rien" \
+    "$(printf 'actions/checkout\tv7\tv7\t143\tv7')" \
+    vert "1 à jour"
+
+  # Épinglage hors tag ASSUMÉ : le commentaire ne prétend pas être une version, l âge est frais.
+  verifier "épinglage sur main, récent, accepté" \
+    "$(printf 'vedantmgoyal9/winget-releaser\t?\tv2\t0\tmain @ 2026-07-28')" \
+    vert "1 à jour"
+
+  # Mais un commentaire qui ANNONCE une version que le SHA ne porte plus reste une nouvelle.
+  verifier "le tag annoncé a disparu en amont" \
+    "$(printf 'actions/checkout\t?\tv7\t3\tv7')" \
+    rouge "ne porte plus aucun tag"
+
+  # Et sans commentaire du tout, on ne conclut pas au rassurant.
+  verifier "ni tag ni commentaire" \
+    "$(printf 'actions/checkout\t?\tv7\t3\t')" \
+    rouge "aucun commentaire pour dire"
+
   # Le mode inventaire, sur des workflows fabriqués : il voit les épinglages et ignore le reste.
   local bac
   bac=$(mktemp -d)
@@ -188,7 +260,7 @@ autotest() {
     echo "Autotest de la fraîcheur : $echecs échec(s)."
     return 1
   fi
-  echo "Autotest de la fraîcheur : OK (7 cas, dont 4 rouges vérifiés sur leur message)."
+  echo "Autotest de la fraîcheur : OK (13 cas, dont 7 rouges vérifiés sur leur message)."
 }
 
 # ---------------------------------------------------------------------------------------------

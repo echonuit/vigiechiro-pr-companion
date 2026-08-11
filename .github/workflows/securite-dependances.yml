@@ -128,7 +128,7 @@ jobs:
 
           # Pour chaque action épinglée : le tag que porte NOTRE SHA, et la dernière release amont.
           mesure=$(mktemp)
-          while IFS=$'\t' read -r depot sha _commentaire; do
+          while IFS=$'\t' read -r depot sha commentaire; do
             [ -n "$depot" ] || continue
             tags=$(insiste "repos/$depot/tags" --paginate \
                      --jq ".[] | select(.commit.sha==\"$sha\") | .name" || true)
@@ -141,7 +141,23 @@ jobs:
             epingle=$(printf '%s\n' "$tags" | grep -E '^v?[0-9]+\.[0-9]+' | head -1 || true)
             [ -n "$epingle" ] || epingle=$(printf '%s\n' "$tags" | grep -E '^v?[0-9]' | head -1 || true)
             amont=$(insiste "repos/$depot/releases/latest" --jq .tag_name || true)
-            printf '%s\t%s\t%s\n' "$depot" "${epingle:-?}" "${amont:-?}" >> "$mesure"
+
+            # L'ÂGE du commit épinglé face au HEAD amont. C'est ce que la comparaison de tags ne
+            # peut pas voir : `winget-releaser` ne porte qu'un tag `v2`, immobile depuis novembre
+            # 2024, si bien que « tag épinglé = tag amont » annonçait « à jour » sur vingt et un
+            # mois de retard réel (#2213). Un tag qui ne bouge jamais rend la mesure par tags muette.
+            d_pin=$(insiste "repos/$depot/commits/$sha" --jq .commit.author.date || true)
+            branche=$(insiste "repos/$depot" --jq .default_branch || true)
+            d_head=""
+            [ -n "$branche" ] && d_head=$(insiste "repos/$depot/commits/$branche" --jq .commit.author.date || true)
+            retard="?"
+            if [ -n "$d_pin" ] && [ -n "$d_head" ]; then
+              retard=$(( ( $(date -d "${d_head%%T*}" +%s) - $(date -d "${d_pin%%T*}" +%s) ) / 86400 ))
+              [ "$retard" -lt 0 ] && retard=0
+            fi
+
+            printf '%s\t%s\t%s\t%s\t%s\n' \
+              "$depot" "${epingle:-?}" "${amont:-?}" "$retard" "${commentaire:-}" >> "$mesure"
           done < <(./.github/scripts/verifie-fraicheur-actions.sh --inventaire)
 
           verdict=$(./.github/scripts/verifie-fraicheur-actions.sh < "$mesure") && frais=0 || frais=1
