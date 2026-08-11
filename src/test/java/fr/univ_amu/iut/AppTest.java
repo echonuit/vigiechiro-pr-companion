@@ -21,8 +21,11 @@ import org.testfx.framework.junit5.Start;
 @ExtendWith(ApplicationExtension.class)
 class AppTest {
 
+    private Stage stage;
+
     @Start
     void start(Stage stage) throws Exception {
+        this.stage = stage;
         // Workspace JETABLE, comme les 108 autres classes de test. Sans lui, ce test-ci écrivait dans
         // `~/Documents/VigieChiro-Companion` - le VRAI dossier de l'utilisateur - et se heurtait au verrou
         // exclusif (#2731) dès qu'une autre session travaillait sur la machine. Le symptôme était un
@@ -34,8 +37,19 @@ class AppTest {
     }
 
     @AfterEach
-    void nettoyerWorkspace() {
+    void nettoyerWorkspace(FxRobot robot) {
         System.clearProperty("vigiechiro.workspace");
+        // ⚠️ TestFX RÉUTILISE le Stage primaire d'une classe de test à l'autre, dans le même fork. Les
+        // tailles minimales posées par App.start (#3452) y resteraient donc collées, et la modale de la
+        // classe suivante hériterait d'un plancher qui l'empêche de grandir : son test de croissance
+        // échouait sur « 600 n'est pas supérieur à 600 ».
+        //
+        // Le fichier connaissait déjà ce canal de fuite - il remet la scène à null juste au-dessus. La
+        // contrainte de taille passait par le même, et rien ne la relâchait.
+        robot.interact(() -> {
+            stage.setMinWidth(0);
+            stage.setMinHeight(0);
+        });
     }
 
     @Test
