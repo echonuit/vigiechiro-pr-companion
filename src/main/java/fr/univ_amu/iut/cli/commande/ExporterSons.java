@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.cli.model.ErreurUsage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -19,7 +20,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import picocli.CommandLine.ArgGroup;
@@ -135,7 +135,7 @@ public final class ExporterSons implements Callable<Integer> {
         spec.commandLine()
                 .getOut()
                 .println("Archive écrite : " + bilan.observations() + " observation(s), " + bilan.sonsCopies()
-                        + " son(s), " + String.format(Locale.FRENCH, "%.1f Mo", bilan.octets() / 1_048_576.0) + " → "
+                        + " son(s), " + Formats.octetsLisibles(bilan.octets()) + " → "
                         + sortie.toAbsolutePath());
         // Une archive vide est un résultat valide, mais muet : sans cela, l'utilisateur ne saurait pas
         // que son seuil est passé juste au-dessus de tout le lot (#2971).

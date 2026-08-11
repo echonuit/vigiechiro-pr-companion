@@ -3,7 +3,6 @@ package fr.univ_amu.iut.lot.viewmodel;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.EtatLot;
-import java.util.Locale;
 
 /// Formatage **textuel** pur des éléments de l'écran M-Lot (récapitulatif, message d'état, ligne
 /// d'archive), extrait de [LotViewModel] pour l'alléger (cohésion / seuil GodClass). Sans état ni
@@ -21,13 +20,9 @@ public final class FormatsLot {
     /// rend sa sévérité par la **couleur** (rouge), pas par une icône ni un glyphe écrit dans la chaîne -
     /// l'écrire ici le disait une seconde fois, à la merci des polices.
     static String messageEspaceInsuffisant(long requisOctets, long disponibleOctets) {
-        return "Espace disque insuffisant : environ " + enGigaoctets(requisOctets)
-                + " Go estimés pour les archives, seulement " + enGigaoctets(disponibleOctets)
-                + " Go disponibles. Libérez de l'espace avant de générer.";
-    }
-
-    private static String enGigaoctets(long octets) {
-        return String.format(Locale.FRENCH, "%.1f", octets / 1_000_000_000.0);
+        return "Espace disque insuffisant : environ " + Formats.octetsLisibles(requisOctets)
+                + " estimés pour les archives, seulement " + Formats.octetsLisibles(disponibleOctets)
+                + " disponibles. Libérez de l'espace avant de générer.";
     }
 
     /// Récapitulatif du lot : « N séquences · volume ».

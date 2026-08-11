@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import fr.univ_amu.iut.passage.model.EmpreinteContenu;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -409,8 +410,9 @@ final class MoteurImport {
             long disponible = espaceDisque.disponibleOctets(dossierCible);
             if (disponible < requis) {
                 throw new RegleMetierException("Espace disque insuffisant pour importer cette nuit : besoin"
-                        + " d'environ " + enGigaoctets(requis) + " Go, seulement " + enGigaoctets(disponible)
-                        + " Go disponibles. Libérez de l'espace"
+                        + " d'environ " + Formats.octetsLisibles(requis) + ", seulement "
+                        + Formats.octetsLisibles(disponible)
+                        + " disponibles. Libérez de l'espace"
                         + (conserverOriginaux
                                 ? ", ou désactivez « Conserver les originaux pour ré-analyse ultérieure »"
                                         + " dans Réglages > Import (divise par deux la place nécessaire)."
@@ -420,11 +422,6 @@ final class MoteurImport {
         } catch (IOException e) {
             throw new UncheckedIOException("Espace disque illisible pour " + dossierCible, e);
         }
-    }
-
-    /// Volume en gigaoctets (base 1000), arrondi au dixième, pour un message lisible.
-    private static String enGigaoctets(long octets) {
-        return String.format(java.util.Locale.FRANCE, "%.1f", octets / 1_000_000_000.0);
     }
 
     /// Nombre d'étapes de progression d'une nuit (#33) : N transformations, précédées de N copies

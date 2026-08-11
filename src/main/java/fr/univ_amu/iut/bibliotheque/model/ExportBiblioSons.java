@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.EcrivainCsv;
 import fr.univ_amu.iut.commun.model.EcrivainZip;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -124,9 +125,7 @@ public record ExportBiblioSons(List<EntreeBiblio> entrees) {
     private Progression annonce(List<EcrivainZip.EntreeFichier> sons) {
         long octets = sons.stream().mapToLong(son -> taille(son.source())).sum();
         return new Progression(
-                nombre() + " référence(s) · " + sons.size() + " son(s) · ~"
-                        + String.format(java.util.Locale.FRENCH, "%.1f Mo", octets / 1_048_576.0),
-                0.0);
+                nombre() + " référence(s) · " + sons.size() + " son(s) · ~" + Formats.octetsLisibles(octets), 0.0);
     }
 
     /// La taille du fichier, ou `0` s'il est parti entre la vérification et l'annonce : le volume

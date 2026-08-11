@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot.model;
 import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -10,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -210,11 +210,9 @@ public final class CompacteurDepot {
         long disponible = espaceDisque.disponibleOctets(dossierSortie);
         if (disponible < requis) {
             throw new RegleMetierException("Espace disque insuffisant pour générer les archives de dépôt :"
-                    + " besoin d'environ "
-                    + enGigaoctets(requis)
-                    + " Go, seulement "
-                    + enGigaoctets(disponible)
-                    + " Go disponibles sur le disque de destination. Libérez de l'espace puis relancez la génération.");
+                    + " il en faut environ " + Formats.octetsLisibles(requis) + ", seulement "
+                    + Formats.octetsLisibles(disponible) + " disponibles sur le disque de destination."
+                    + " Libérez de l'espace puis relancez la génération.");
         }
     }
 
@@ -234,11 +232,6 @@ public final class CompacteurDepot {
     /// complexite que le sequencement creait lui-meme.
     public long espaceRequisPourLaFenetre() {
         return SourceArchivesRegenerables.FENETRE * tailleMaxOctets + MARGE_SECURITE_OCTETS;
-    }
-
-    /// Formate un nombre d'octets en gigaoctets (base 1000, une décimale) pour les messages utilisateur.
-    private static String enGigaoctets(long octets) {
-        return String.format(Locale.FRENCH, "%.1f", octets / 1_000_000_000.0);
     }
 
     /// **Planifie sans rien ecrire** (#1994) : la partition des `fichiers` en lots, dont chacun deviendra
