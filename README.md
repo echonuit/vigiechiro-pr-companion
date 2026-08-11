@@ -17,6 +17,7 @@
 <p align="center">
   <a href="https://companion.echonuit.fr/"><img alt="Documentation en ligne" src="https://img.shields.io/badge/%F0%9F%93%96_documentation-en_ligne-1e8449"></a>
   <a href="https://github.com/echonuit/vigiechiro-pr-companion/releases"><img alt="Dernière version" src="https://img.shields.io/github/v/release/echonuit/vigiechiro-pr-companion?label=release&color=3f51b5"></a>
+  <a href="https://github.com/microsoft/winget-pkgs/tree/master/manifests/e/Echonuit/VigieChiroCompanion"><img alt="Version servie par winget" src="https://img.shields.io/winget/v/Echonuit.VigieChiroCompanion?label=winget&color=0078d4"></a>
   <a href="https://github.com/echonuit/vigiechiro-pr-companion/actions/workflows/maven.yml"><img alt="Intégration continue" src="https://github.com/echonuit/vigiechiro-pr-companion/actions/workflows/maven.yml/badge.svg"></a>
   <a href="https://github.com/echonuit/vigiechiro-pr-companion/actions/workflows/lint.yml"><img alt="Portail qualité" src="https://github.com/echonuit/vigiechiro-pr-companion/actions/workflows/lint.yml/badge.svg"></a>
   <a href="LICENSE"><img alt="Licence GPLv3" src="https://img.shields.io/badge/licence-GPLv3-blue"></a>
@@ -107,6 +108,21 @@ propre *runtime* (**aucun Java à installer**).
 | Windows | `.msi` | Non (embarqué) |
 | macOS (Apple Silicon) | `.dmg` | Non (embarqué) |
 | Linux (Debian/Ubuntu) | `.deb` | Non (embarqué) |
+
+Chaque système dispose aussi d'une **archive portable** qui ne s'installe pas et ne demande **aucun
+droit d'administration** : on décompresse et on lance. Sous Linux, une **AppImage** fait la même chose
+en un fichier unique.
+
+Sous **Windows**, le gestionnaire de paquets intégré évite le téléchargement manuel :
+
+```powershell
+winget install Echonuit.VigieChiroCompanion
+```
+
+Il installe **sans droits d'administration**, et `winget upgrade Echonuit.VigieChiroCompanion` remplace
+ensuite la version en place. Le badge `winget` en haut de page dit la version qui y est servie : nous
+n'y poussons que les versions qui apportent quelque chose à l'utilisateur, elle peut donc être un peu
+en retrait de la dernière release.
 
 La prise en main pas à pas est dans la
 [documentation utilisateur](https://companion.echonuit.fr/prise-en-main/).

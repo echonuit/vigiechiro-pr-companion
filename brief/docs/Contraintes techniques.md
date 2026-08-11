@@ -81,6 +81,14 @@ d'architecture** qui structurent son code.
 - **Installeurs natifs** produits par **jpackage**, un par système : `.msi` (Windows), `.dmg`
   (macOS Apple Silicon), `.deb` (Debian/Ubuntu). Chacun embarque le *runtime* : **aucun Java à
   installer**.
+- **Archives portables**, une par système, issues de la même *app-image* : on décompresse et on lance,
+  **sans droit d'administration**. C'est la marche du bas, pour essayer le produit ou travailler sur
+  un poste qu'on n'administre pas - un ordinateur de laboratoire, une machine prêtée. Sous Linux, une
+  **AppImage** offre la même chose en un fichier unique, et s'intègre au menu des applications.
+- **Gestionnaire de paquets sous Windows** : `winget install Echonuit.VigieChiroCompanion`. Le paquet
+  s'installe **par utilisateur**, donc sans UAC, et `winget upgrade` remplace la version en place au
+  lieu de la doubler. Toutes les versions publiées n'y sont pas poussées : on y met celles qui
+  apportent quelque chose à l'utilisateur.
 - **Lancement depuis les sources** : `./mvnw javafx:run` suffit dans un environnement Java 25.
 - **Mode CLI** (sans IHM) pour les opérations scriptables (import d'une nuit, export d'un CSV),
   utilisable en automatisation et en CI.
