@@ -114,6 +114,45 @@ class ServiceSitesTest {
         assertThat(annonces[0]).isZero();
     }
 
+    @Test
+    @DisplayName("#3584 : supprimer un point sans passage le retire et annonce la mutation")
+    void supprimer_point_sans_passage() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        PointDEcoute b2 = service.ajouterPoint(site.id(), "B2", null, null, null);
+        annonces[0] = 0;
+
+        service.supprimerPoint(b2.id());
+
+        assertThat(pointDao.findBySite(site.id())).isEmpty();
+        assertThat(annonces[0]).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3584 : un point qui porte un passage est refusé, et le refus dit quoi faire")
+    void supprimer_point_porteur_refuse() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        PointDEcoute a1 = service.ajouterPoint(site.id(), "A1", null, null, null);
+        enregistreurDao.insert(new Enregistreur("1925492", "V1.01", null));
+        JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .surLePoint(a1.id())
+                .enregistreur("1925492")
+                .nuit(1, 2026, "2026-06-20")
+                .heures("21:00:00", "05:00:00")
+                .statut(StatutWorkflow.TRANSFORME)
+                .semerPassage();
+        annonces[0] = 0;
+
+        assertThatThrownBy(() -> service.supprimerPoint(a1.id()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("A1")
+                // ADR 2635 : un refus dit ce qui manque, la surface dit quoi faire. Le message de
+                // l'écran, lui, s'arrêtait à « suppression bloquée ».
+                .hasMessageContaining("Supprimez d'abord les passages rattachés");
+        assertThat(pointDao.findById(a1.id())).as("rien n'a été supprimé").isPresent();
+        assertThat(annonces[0]).as("un refus n'annonce rien").isZero();
+    }
+
     // --- Création de site (R1, protocole, R5) ---
 
     @Test

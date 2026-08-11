@@ -250,13 +250,11 @@ public class SitesModule extends ModuleDeFeature {
     @Provides
     SiteDetailViewModel fournirSiteDetailViewModel(
             ServiceSites service,
-            PointDao pointDao,
             PassageDao passageDao,
             Horloge horloge,
             PortailVigieChiro portail,
-            LienVigieChiroDao liens,
-            JournalMutations journal) {
-        return new SiteDetailViewModel(service, pointDao, passageDao, horloge, portail, liens, journal);
+            LienVigieChiroDao liens) {
+        return new SiteDetailViewModel(service, passageDao, horloge, portail, liens);
     }
 
     @Provides

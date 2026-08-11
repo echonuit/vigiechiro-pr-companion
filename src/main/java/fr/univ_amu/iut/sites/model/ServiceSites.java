@@ -181,8 +181,7 @@ public class ServiceSites {
     public PointDEcoute modifierPoint(
             Long idPoint, Long idSite, String code, Double latitude, Double longitude, String description) {
         ValidateurCodePoint.exigerValide(code); // R2
-        PointDEcoute existant = pointDao.findById(idPoint)
-                .orElseThrow(() -> new RegleMetierException("Point introuvable : " + idPoint));
+        PointDEcoute existant = pointDao.findById(idPoint).orElseThrow(() -> pointIntrouvable(idPoint));
         if (!existant.idSite().equals(idSite)) {
             throw new RegleMetierException("Le point " + idPoint + " n'appartient pas au site " + idSite + ".");
         }
@@ -210,8 +209,7 @@ public class ServiceSites {
     ///
     /// @throws RegleMetierException si le point est introuvable
     public PointDEcoute deplacerPoint(Long idPoint, Double latitude, Double longitude) {
-        PointDEcoute existant = pointDao.findById(idPoint)
-                .orElseThrow(() -> new RegleMetierException("Point introuvable : " + idPoint));
+        PointDEcoute existant = pointDao.findById(idPoint).orElseThrow(() -> pointIntrouvable(idPoint));
         return modifierPoint(idPoint, existant.idSite(), existant.code(), latitude, longitude, existant.description());
     }
 
@@ -253,6 +251,37 @@ public class ServiceSites {
                     + " » porte au moins un passage. Supprimez d'abord les passages rattachés.");
         }
         siteDao.delete(idSite);
+        journal.mutationStructurelleValidee();
+    }
+
+    /// Le refus commun aux trois gestes qui prennent un identifiant de point. Factorisé parce que le
+    /// troisième appelant a fait mordre PMD, et qu'un message d'erreur recopié finit par diverger -
+    /// c'est exactement ce qui a produit #3584.
+    private static RegleMetierException pointIntrouvable(Long idPoint) {
+        return new RegleMetierException("Point introuvable : " + idPoint);
+    }
+
+    /// Supprime un **point d'écoute** si aucun passage n'y est rattaché (#3584).
+    ///
+    /// Même règle dure que [#supprimerSite], au niveau du point : le schéma cascade
+    /// `listening_point → passage`, donc un `DELETE` non gardé détruirait silencieusement les nuits du
+    /// point (et leurs sessions, séquences…).
+    ///
+    /// Ce geste vivait dans `SiteDetailViewModel`, avec sa propre copie de la règle. C'était la seule
+    /// écriture structurelle du dépôt hors service, et les deux copies avaient **déjà divergé** : l'une
+    /// disait quoi faire (« Supprimez d'abord les passages rattachés »), l'autre s'arrêtait à
+    /// « suppression bloquée ». La doc-comment de [#pointsPortantUnPassage] l'avait écrit noir sur
+    /// blanc avant que ça n'arrive.
+    ///
+    /// @throws RegleMetierException si le point porte au moins un passage
+    public void supprimerPoint(Long idPoint) {
+        PointDEcoute point = pointDao.findById(idPoint).orElseThrow(() -> pointIntrouvable(idPoint));
+        if (!passageDao.findByPoint(idPoint).isEmpty()) {
+            throw new RegleMetierException("Suppression refusée : le point « "
+                    + point.code()
+                    + " » porte au moins un passage. Supprimez d'abord les passages rattachés.");
+        }
+        pointDao.delete(idPoint);
         journal.mutationStructurelleValidee();
     }
 

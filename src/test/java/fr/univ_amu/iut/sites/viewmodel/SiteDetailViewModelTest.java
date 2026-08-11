@@ -62,8 +62,7 @@ class SiteDetailViewModelTest {
         HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
         service = new ServiceSites(siteDao, pointDao, passageDao, horloge, new PointCommuneDao(source), () -> {});
         liens = new LienVigieChiroDao(source);
-        viewModel = new SiteDetailViewModel(
-                service, pointDao, passageDao, horloge, new PortailVigieChiro(liens), liens, () -> {});
+        viewModel = new SiteDetailViewModel(service, passageDao, horloge, new PortailVigieChiro(liens), liens);
     }
 
     @Test

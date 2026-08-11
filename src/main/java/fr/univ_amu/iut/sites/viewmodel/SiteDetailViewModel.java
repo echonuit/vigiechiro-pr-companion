@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Horloge;
-import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegionDuCarre;
@@ -13,7 +12,6 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -50,14 +48,12 @@ import javafx.collections.ObservableList;
 public class SiteDetailViewModel {
 
     private final ServiceSites service;
-    private final PointDao pointDao;
     private final PassageDao passageDao;
     private final Horloge horloge;
     private final PortailVigieChiro portail;
 
     /// Correspondances VigieChiro : elles disent si ce site est enregistré, et s'il est verrouillé (#734).
     private final LienVigieChiroDao liens;
-    private final JournalMutations journal;
 
     private Site site;
 
@@ -96,19 +92,15 @@ public class SiteDetailViewModel {
 
     public SiteDetailViewModel(
             ServiceSites service,
-            PointDao pointDao,
             PassageDao passageDao,
             Horloge horloge,
             PortailVigieChiro portail,
-            LienVigieChiroDao liens,
-            JournalMutations journal) {
+            LienVigieChiroDao liens) {
         this.service = Objects.requireNonNull(service, "service");
-        this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.portail = Objects.requireNonNull(portail, "portail");
         this.liens = Objects.requireNonNull(liens, "liens");
-        this.journal = Objects.requireNonNull(journal, "journal");
         // La bascule d'affichage re-projette la liste (points utilisés seuls <-> tous), #1738.
         afficherTousLesPoints.addListener((observable, avant, apres) -> projeterPoints());
     }
@@ -168,19 +160,15 @@ public class SiteDetailViewModel {
         service.supprimerSite(site.id());
     }
 
-    /// Supprime un point d'écoute, en rejouant le garde-fou du service : refus si des passages y
-    /// sont rattachés. En cas de succès, la liste est rafraîchie.
+    /// Supprime un point d'écoute, puis rafraîchit la liste.
+    ///
+    /// La règle (refus si des passages sont rattachés) et l'écriture vivent dans [ServiceSites]
+    /// depuis #3584. Elles étaient ici, en **copie** : les deux versions du refus avaient déjà cessé
+    /// de dire la même chose.
     ///
     /// @throws RegleMetierException si des passages utilisent ce point
     public void supprimerPoint(PointDEcoute point) {
-        if (!passageDao.findByPoint(point.id()).isEmpty()) {
-            throw new RegleMetierException(
-                    "Le point « " + point.code() + " » porte au moins un passage : suppression bloquée.");
-        }
-        pointDao.delete(point.id());
-        // ⚠️ Seule ecriture structurelle du depot qui ne passe pas par un service (#3542) : l'annonce
-        // est donc posee ici, a cote de l'ecriture. Le court-circuit lui-meme est une dette a part.
-        journal.mutationStructurelleValidee();
+        service.supprimerPoint(point.id());
         rafraichir();
     }
 
