@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.NavigationSites;
@@ -104,6 +105,95 @@ class ParcoursNavigationE2ETest {
         robot.interact(retour::fire); // liste → accueil
         assertThat(navigation.vueCouranteProperty().get()).isEqualTo("accueil");
         assertThat(retour.isVisible()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#1378 : « Voir sur la carte » EMPILE le contexte, le retour ramène au carré")
+    void voir_sur_la_carte_empile_le_contexte(FxRobot robot) {
+        NavigationSites nav = injector.getInstance(NavigationSites.class);
+        Button retour = robot.lookup("#boutonRetour").queryAs(Button.class);
+
+        robot.interact(nav::ouvrirAccueil);
+        robot.interact(() -> nav.ouvrirDetail(etang));
+        assertThat(libellesDuFil(robot)).containsExactly("Accueil", "Mes sites", "Carré 640380");
+
+        // Le GESTE du constat S1-11, et non l'appel de la couche : on tire le vrai bouton de l'écran, qui
+        // traverse son action, le port transversal et le chrome. Les autres cas de ce fichier passent par
+        // l'objet de navigation ; celui-ci seul prouve le parcours entier.
+        Button voirLaCarte = robot.lookup("#boutonVoirCarte").queryAs(Button.class);
+        robot.interact(voirLaCarte::fire);
+
+        // Le fil portait « Accueil › Carte & passages » : le chemin parcouru disparaissait, et avec lui
+        // le moyen de revenir à ce qu'on regardait.
+        assertThat(libellesDuFil(robot)).containsExactly("Accueil", "Mes sites", "Carré 640380", "Carte & passages");
+
+        robot.interact(retour::fire);
+        assertThat(navigation.vueCouranteProperty().get())
+                .as("« venant de la vue Carré 130711, on aurait préféré que le retour aille là »")
+                .isEqualTo("site-detail");
+    }
+
+    @Test
+    @DisplayName("#1378 : rouvrir la carte déjà dans la pile y DÉPILE, elle ne s'y ajoute pas deux fois")
+    void rouvrir_la_carte_deja_empilee_depile(FxRobot robot) {
+        NavigationSites nav = injector.getInstance(NavigationSites.class);
+        NavigationMultisite carte = injector.getInstance(NavigationMultisite.class);
+
+        // La carte doit être PLUS BAS que la racine, sinon le test ne prouve rien : dépiler jusqu'à
+        // l'élément 1 et repartir de zéro donnent le même fil, et la mutation survit (constaté).
+        robot.interact(nav::ouvrirAccueil);
+        robot.interact(() -> carte.ouvrirSurCarre("640380"));
+        robot.interact(() -> nav.ouvrirDetail(etang));
+        assertThat(libellesDuFil(robot)).containsExactly("Accueil", "Mes sites", "Carte & passages", "Carré 640380");
+
+        robot.interact(() -> carte.ouvrirSurCarre("640380"));
+
+        // C'est le cas du segment de fil du chrome audio, qui remonte vers « Carte & passages » en
+        // appelant ouvrirSurCarre : l'anti-ré-entrance d'`empiler` dépile jusqu'à l'écran existant au
+        // lieu d'en ajouter un second. Je l'avais AFFIRMÉ en passant à `empiler` ; ce test le vérifie.
+        assertThat(libellesDuFil(robot))
+                .as("la pile se raccourcit jusqu'à la carte, sans repartir de l'accueil")
+                .containsExactly("Accueil", "Mes sites", "Carte & passages");
+    }
+
+    @Test
+    @DisplayName("#1378 : « voir le point » et « placer le point » empilent aussi le contexte")
+    void voir_et_placer_un_point_empilent_aussi(FxRobot robot) {
+        NavigationSites nav = injector.getInstance(NavigationSites.class);
+        NavigationMultisite carte = injector.getInstance(NavigationMultisite.class);
+
+        robot.interact(nav::ouvrirAccueil);
+        robot.interact(() -> nav.ouvrirDetail(etang));
+
+        robot.interact(() -> carte.ouvrirSurPoint("640380", 43.4010, -1.5740));
+        assertThat(libellesDuFil(robot))
+                .as("« voir sur la carte » depuis un point vient du carré, comme le bouton d'en-tête")
+                .containsExactly("Accueil", "Mes sites", "Carré 640380", "Carte & passages");
+
+        robot.interact(() -> nav.ouvrirDetail(etang));
+        robot.interact(() -> carte.ouvrirSurCarrePourPlacer("640380"));
+        assertThat(libellesDuFil(robot))
+                .as("« placer sur la carte » aussi : les trois entrées contextuelles se valent")
+                .containsExactly("Accueil", "Mes sites", "Carré 640380", "Carte & passages");
+    }
+
+    @Test
+    @DisplayName("#1378 : depuis l'accueil, la carte reste une RACINE")
+    void carte_depuis_l_accueil_reste_une_racine(FxRobot robot) {
+        NavigationSites nav = injector.getInstance(NavigationSites.class);
+        NavigationMultisite carte = injector.getInstance(NavigationMultisite.class);
+
+        // Il faut PARTIR DE LOIN, sinon le test ne prouve rien : depuis l'accueil seul, empiler et
+        // repartir de zéro donnent la même pile, et la mutation survit (constaté).
+        robot.interact(nav::ouvrirAccueil);
+        robot.interact(() -> nav.ouvrirDetail(etang));
+        assertThat(libellesDuFil(robot)).containsExactly("Accueil", "Mes sites", "Carré 640380");
+
+        robot.interact(carte::ouvrirAccueil);
+
+        // Le garde-fou du correctif : ouvrir la carte depuis SA PROPRE carte d'accueil n'a aucun contexte
+        // à préserver. L'empiler partout ferait un fil qui ne se vide jamais.
+        assertThat(libellesDuFil(robot)).containsExactly("Accueil", "Carte & passages");
     }
 
     @Test
