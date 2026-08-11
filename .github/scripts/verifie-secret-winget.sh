@@ -53,8 +53,14 @@ CHEMIN_PAQUET="manifests/e/Echonuit/VigieChiroCompanion"
 SONDE="${WINGET_SONDE:-gh}"
 
 ### Contrôle 3, en ligne. Rend 0 si le jeton s'authentifie ET voit le paquet.
+###
+### ⚠️ Il RAPPORTE la réponse de l'API, il ne l'avale pas. La première version faisait
+### `2>/dev/null` : un 404, un 401, un dépassement de quota et un hoquet réseau y devenaient le même
+### silence, et la garde en tirait un diagnostic unique (« le jeton ne voit pas le paquet ») qu'elle
+### n'avait pas les moyens de porter. Un dispositif qui cache sa propre preuve fait exactement ce
+### qu'on lui demande de détecter ailleurs.
 verifier_l_acces() {
-  local login vu
+  local login vu erreur
   login=$(GH_TOKEN="$1" "$SONDE" api user --jq .login 2>/dev/null) || login=""
   if [ -z "$login" ]; then
     echo "❌ WINGET_TOKEN est posé, mais il ne s'authentifie pas auprès de GitHub."
@@ -66,15 +72,24 @@ verifier_l_acces() {
     return 1
   fi
 
+  erreur=$(GH_TOKEN="$1" "$SONDE" api "repos/microsoft/winget-pkgs/contents/$CHEMIN_PAQUET" 2>&1 >/dev/null)
   vu=$(GH_TOKEN="$1" "$SONDE" api "repos/microsoft/winget-pkgs/contents/$CHEMIN_PAQUET" --jq '.[].name' 2>/dev/null) || vu=""
   if [ -z "$vu" ]; then
-    echo "❌ WINGET_TOKEN s'authentifie (« $login »), mais ne voit pas le paquet dans winget-pkgs."
+    echo "❌ WINGET_TOKEN s'authentifie (« $login »), mais l'interrogation du paquet ne rend rien."
     echo
     echo "   Chemin interrogé : $CHEMIN_PAQUET"
-    echo "   C'est CE constat que komac annonce sous la forme trompeuse « does not exist in"
-    echo "   microsoft/winget-pkgs ». Le paquet existe ; c'est le jeton qui ne le lit pas."
-    echo "   Un PAT « classic » doit porter le scope public_repo ; un jeton restreint par une"
-    echo "   autorisation SSO d'organisation non validée donne le même silence."
+    echo "   Réponse de l'API : ${erreur:-<vide, sans message d erreur>}"
+    echo
+    echo "   Lire ce message AVANT de conclure : il sépare des causes que le silence confondait."
+    echo "     - « Not Found » (404)      : le jeton n'a pas le droit de lire ce dépôt public."
+    echo "                                  Un PAT « classic » avec public_repo l'a ; un jeton"
+    echo "                                  fine-grained restreint à des dépôts choisis ne l'a pas."
+    echo "     - « Bad credentials » (401): jeton expiré ou révoqué."
+    echo "     - « rate limit »           : rien à voir avec les droits, réessayer plus tard."
+    echo "     - un message réseau        : ni le jeton ni les droits ne sont en cause."
+    echo
+    echo "   C'est ce même constat que komac annonce sous la forme trompeuse « does not exist in"
+    echo "   microsoft/winget-pkgs » : le paquet existe, c'est la lecture qui échoue."
     return 1
   fi
 
@@ -110,11 +125,13 @@ FIN
 #!/usr/bin/env bash
 exit 1
 FIN
+  # L'aveugle parle : elle rend sur STDERR ce que rend vraiment `gh` sur un 404. C'est ce message
+  # que la garde doit RAPPORTER, faute de quoi elle diagnostique sans preuve.
   cat > "$bac/sonde-aveugle" <<'FIN'
 #!/usr/bin/env bash
 case "$*" in
   *"api user"*) echo "echonuit" ;;
-  *contents*)   exit 1 ;;
+  *contents*)   echo "gh: Not Found (HTTP 404)" >&2; exit 1 ;;
 esac
 FIN
   chmod +x "$bac"/sonde-*
@@ -154,8 +171,20 @@ FIN
   verifie 0 "sans --verifie-l-acces, aucune sonde n est appelée" \
     "WINGET_TOKEN=ghp_x WINGET_SONDE='$bac/sonde-muette' '$MOI'"
 
+  # ⚠️ Le cas qui manquait, et son absence a coûté un faux diagnostic : la garde doit RAPPORTER la
+  # réponse de l'API, pas seulement rougir. Sans lui, elle rougissait aussi bien sur un 404 que sur
+  # un hoquet réseau, en attribuant les deux au jeton.
+  sortie_aveugle=$(WINGET_TOKEN=ghp_x WINGET_SONDE="$bac/sonde-aveugle" "$MOI" --verifie-l-acces 2>&1)
+  if printf '%s' "$sortie_aveugle" | grep -qF "HTTP 404"; then
+    echo "  ✔ la réponse de l API est RAPPORTÉE, pas avalée"
+  else
+    echo "  ✘ la réponse de l API est RAPPORTÉE, pas avalée : « HTTP 404 » absent du message"
+    printf '%s\n' "$sortie_aveugle" | sed 's/^/      /'
+    echecs=1
+  fi
+
   if [ "${echecs}" = 0 ]; then
-    echo "Auto-test de la garde secret winget : OK (12 cas, dont 8 rouges)."
+    echo "Auto-test de la garde secret winget : OK (13 cas, dont 8 rouges)."
   else
     echo "Auto-test de la garde secret winget : ÉCHEC - la règle ne fait plus ce qu'elle promet."
   fi
