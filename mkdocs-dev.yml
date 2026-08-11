@@ -205,6 +205,7 @@ nav:
     - S6 · Exploiter et piloter: recette/sessions/s6-exploiter-piloter.md
     - S7 · Réglages: recette/sessions/s7-reglages.md
     - S8 · Récupérer une nuit déposée: recette/sessions/s8-recuperer-une-nuit.md
+    - S9 · Installer et mettre à jour: recette/sessions/s9-installer-mettre-a-jour.md
     - Passe ciblée · constats en attente: recette/sessions/passe-ciblee-constats-en-attente.md
     - Passe de coutures · stabilisation: recette/sessions/passe-verification-stabilisation.md
   - Interface en ligne de commande (CLI): cli.md
