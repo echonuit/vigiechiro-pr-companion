@@ -65,13 +65,19 @@ jobs:
       # des artefacts de Release, pas sur les sources.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Vérifier la présence du secret WINGET_TOKEN
+      - name: Vérifier que le secret WINGET_TOKEN est posé ET utilisable
         shell: bash
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
         # Elle ROUGIT si le secret manque, et les étapes suivantes ne s'exécutent alors pas : plus
         # besoin de les garder une par une derrière une condition.
-        run: bash .github/scripts/verifie-secret-winget.sh
+        #
+        # `--verifie-l-acces` va plus loin que la présence, et il a fallu un échec pour l'admettre :
+        # un jeton posé mais inutilisable fait échouer la soumission TRÈS loin d'ici, sur un message
+        # qui accuse le paquet (« does not exist in microsoft/winget-pkgs ») alors que le paquet est
+        # là. Deux appels d'API ici épargnent un runner Windows, un téléchargement de MSI et une
+        # installation complète pour arriver au mauvais diagnostic.
+        run: bash .github/scripts/verifie-secret-winget.sh --verifie-l-acces
 
       - name: Résoudre la version à soumettre
         id: version
