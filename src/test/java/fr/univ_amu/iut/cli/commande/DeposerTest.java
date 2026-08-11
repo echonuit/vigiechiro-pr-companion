@@ -17,7 +17,7 @@ class DeposerTest {
         assertThat(texte)
                 .contains("Passage #12 déposé le 2026-06-20T10:00:00")
                 .contains("128 séquence(s)")
-                .contains("512 Mo");
+                .contains("537 Mo");
     }
 
     @Test

@@ -74,7 +74,7 @@ class StatutPassageTest {
                 .contains("Déposé")
                 .contains("OK")
                 .contains("déposé le 2026-06-20")
-                .contains("bruts 4,2 Go, séquences 512 Mo")
+                .contains("bruts 4,5 Go, séquences 537 Mo")
                 .contains("128 (durée enregistrée 10 min 40 s)")
                 .contains("début 18,5 °C")
                 .contains("vent moyen")

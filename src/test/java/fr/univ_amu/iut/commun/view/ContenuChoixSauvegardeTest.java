@@ -35,17 +35,17 @@ class ContenuChoixSauvegardeTest {
             new InventaireSauvegardes.Entree(
                     "vigiechiro-sauvegarde-20260801-101500.db",
                     Instant.parse("2026-08-01T10:15:00Z"),
-                    3L * 1024 * 1024,
+                    3L * 1_000_000,
                     InventaireSauvegardes.Nature.BASE),
             new InventaireSauvegardes.Entree(
                     "vigiechiro-avant-migration-V39.db",
                     Instant.parse("2026-07-02T08:00:00Z"),
-                    5L * 1024 * 1024,
+                    5L * 1_000_000,
                     InventaireSauvegardes.Nature.FILET_MIGRATION),
             new InventaireSauvegardes.Entree(
                     "vigiechiro-sauvegarde-complete-20260610-090000",
                     Instant.parse("2026-06-10T09:00:00Z"),
-                    12L * 1024 * 1024,
+                    12L * 1_000_000,
                     InventaireSauvegardes.Nature.COMPLETE));
 
     private final List<InventaireSauvegardes.Entree> restaurees = new ArrayList<>();

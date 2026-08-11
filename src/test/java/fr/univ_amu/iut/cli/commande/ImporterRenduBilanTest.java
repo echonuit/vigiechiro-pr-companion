@@ -47,7 +47,7 @@ class ImporterRenduBilanTest {
     void les_volumes_sont_dits() {
         String texte = Importer.rendreBilan(resultat(new VolumesImport(7_000_000, 0, 7_000_000), false), QUADRUPLET);
 
-        assertThat(texte).contains("Lu / écrit  : 7 Mo lus sur la source, 7 Mo écrits");
+        assertThat(texte).contains("Lu / écrit  : 7,0 Mo lus sur la source, 7,0 Mo écrits");
     }
 
     @Test
@@ -61,7 +61,7 @@ class ImporterRenduBilanTest {
         assertThat(sansBruts)
                 .as("annoncer une part à zéro fait chercher ce qui n'a pas eu lieu")
                 .doesNotContain("bruts conservés");
-        assertThat(avecBruts).contains("dont 3 Mo de bruts conservés");
+        assertThat(avecBruts).contains("dont 3,0 Mo de bruts conservés");
     }
 
     @Test

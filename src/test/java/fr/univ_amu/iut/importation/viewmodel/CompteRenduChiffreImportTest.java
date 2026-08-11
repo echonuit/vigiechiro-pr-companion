@@ -235,7 +235,7 @@ class CompteRenduChiffreImportTest {
         @DisplayName("Les valeurs sont lisibles, pas des octets bruts")
         void valeurs_lisibles() {
             assertThat(rendu().volumes().get(0).segments().getFirst().valeurLisible())
-                    .isEqualTo("4,7 Go");
+                    .isEqualTo("5,0 Go");
         }
     }
 
