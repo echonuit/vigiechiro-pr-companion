@@ -20,8 +20,8 @@ publication.
 | [adr-rapport.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/adr-rapport.yml) | hebdomadaire + manuel | Rapport ADR (calibration des cliquets et des loupes) | — |
 | [mutation-model.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-model.yml) | quotidien (3 h UTC) + manuel | Mesure de mutation PIT sur **un paquet `model` par tour** (rotation sans état, cycle de 17 jours), **E2E et `commun.api` exclus** : bilan dans le résumé du job, rapport détaillé en artefact | — |
 | [mutation-ihm.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-ihm.yml) | quotidien (5 h UTC) + manuel | Mesure de mutation PIT sur les vues d'**une feature par tour** (rotation sans état, cycle de 15 jours), **E2E exclus** | — |
-| [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | release | Paquet Flatpak (cf. plus bas) | — |
-| [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | release | Soumission winget (inerte sans `WINGET_TOKEN`) | — |
+| [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | **manuel** (`workflow_dispatch`) | Paquet Flatpak (cf. plus bas) | — |
+| [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | **manuel** (`workflow_dispatch`) | Soumission d'une version choisie à winget-pkgs (cf. plus bas) | — |
 
 !!! note "L'image devcontainer pré-buildée a été retirée"
     Un workflow `devcontainer-image.yml` publiait une image sur GHCR pour accélérer le démarrage des
@@ -328,6 +328,49 @@ robot de Flathub. Publier une version ne demande aucun geste côté paquet.
     fichier à chaque appel et échouerait avant d'y arriver. Le `.deb` installé normalement, lui, garde
     cette catégorie fautive.
 
+## winget (#2213)
+
+Le paquet **`Echonuit.VigieChiroCompanion`** est servi par winget depuis le **2026-08-10**
+([winget-pkgs#405848](https://github.com/microsoft/winget-pkgs/pull/405848), version 2.34.2). Son
+identité est figée à vie : `Scope: user` (installation dans `%LOCALAPPDATA%`, **sans UAC**) et un
+`UpgradeCode` constant, tous deux décidés avant la première soumission ([ADR 0045](decisions/0045-l-upgradecode-windows-est-une-constante-d-identite.md),
+[ADR 0047](decisions/0047-l-identite-de-distribution-est-le-projet-echonuit.md)).
+
+### Publier une version sur winget
+
+Ce n'est **pas** automatique, et c'est délibéré (mêmes raisons que Flatpak : un dépôt communautaire à
+modération humaine face à un dépôt qui publiait 3 à 37 fois par jour). On pousse les versions qui
+apportent quelque chose à l'utilisateur :
+
+```bash
+gh workflow run winget.yml -f tag=v2.184.0     # vide = la dernière publiée
+```
+
+Le workflow fait trois choses avant de soumettre, et la deuxième est celle qui compte :
+
+1. **Il recalcule l'empreinte du MSI** et la compare au `.sha256` publié. Soumettre un manifeste qui
+   décrit un fichier différent de celui servi ferait échouer la validation de winget **après coup, et
+   chez eux**.
+2. **Il installe le MSI puis le LANCE**, 45 secondes, sur un runner Windows, et relit le journal que
+   l'application écrit. C'est le contrôle qui manquait à la v2.32.3 : paquet installable, validé par
+   le pipeline de Microsoft, **incapable de démarrer**. Leur validation ne lance pas l'application.
+3. **Il soumet** via `winget-releaser`, qui ouvre la PR depuis le fork `echonuit/winget-pkgs`.
+
+`max-versions-to-keep: 5` : le dépôt communautaire n'a pas vocation à archiver notre historique.
+
+!!! warning "La garde du secret rougit, et c'est un changement"
+    `winget.yml` sortait **en vert** quand `WINGET_TOKEN` manquait. Ce choix était juste tant qu'il se
+    déclenchait sur `release: released` : rougir à chaque publication aurait été du bruit sur un canal
+    qu'on savait inerte.
+
+    Il a cessé de l'être quand le workflow est passé en `workflow_dispatch` **seul**. Un dispatch est
+    un geste délibéré : on le lance parce qu'on veut soumettre. Un vert qui n'a rien soumis annonce
+    une publication qui n'a pas eu lieu, et c'est le seul type de défaut qui se présente sous la
+    forme d'un succès.
+
+    Mesuré en ouvrant #2213 : le secret était **absent**, et le workflow n'avait **jamais** été
+    exécuté depuis sa fusion. Le premier dispatch aurait rendu un vert sans rien publier.
+
 ## Toute garde de CI porte sa propre preuve (#2947, #3293)
 
 Une garde qui **accepte à tort ne rougit pas** : elle passe au vert, sur un dépôt propre, exactement
@@ -344,6 +387,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `check-doc-images.sh` | chaque capture citée par la doc existe et est déclarée | `docs.yml` |
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `verifie-renvois-workflows.sh` | chaque `workflow_run` vise le `name:` d'un workflow existant | `lint.yml` |
+| `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |
 | `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
 
 **Le modèle vient de #2947** (`verifie-titre-pr.sh`) et il est le bon : le script **se réinvoque

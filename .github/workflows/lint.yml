@@ -171,6 +171,15 @@ jobs:
           chmod +x .github/scripts/veille-contrat-api.sh
           ./.github/scripts/veille-contrat-api.sh --auto-test
 
+      - name: La garde du secret winget sait encore rougir
+        # Elle ne tourne pour de vrai que dans winget.yml, sur dispatch manuel, c'est-à-dire quelques
+        # fois par an : son autotest est le seul endroit où on la voit à l'œuvre entre deux
+        # soumissions. Elle a passé neuf mois à ne savoir que RÉUSSIR - un secret absent sortait en
+        # vert - et c'est précisément le défaut que cet autotest fige (#2213).
+        run: |
+          chmod +x .github/scripts/verifie-secret-winget.sh
+          ./.github/scripts/verifie-secret-winget.sh --auto-test
+
       - name: Complétude des captures de référence
         # Chaque vue FXML doit avoir au moins une capture de référence déclarée au manifeste
         # (les captures illustrent la documentation).
