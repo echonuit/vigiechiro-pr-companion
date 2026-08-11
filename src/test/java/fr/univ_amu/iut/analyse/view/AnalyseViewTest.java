@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +30,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
@@ -85,8 +88,12 @@ class AnalyseViewTest {
     private AnalyseController controleur;
     private final List<String> urlsFiche = new ArrayList<>();
 
+    /// Le signal de mutation (#3592) : le test l'actionne comme le ferait un import Tadarida.
+    private RevisionDonnees revision;
+
     @Start
     void start(Stage stage) throws Exception {
+        revision = new RevisionDonnees(Runnable::run);
         service = mock(ServiceAnalyse.class);
         ouvrirPassage = mock(OuvrirPassage.class);
         ouvrirAudio = mock(OuvrirAudio.class);
@@ -127,6 +134,11 @@ class AnalyseViewTest {
             @Provides
             AnalyseViewModel viewModel() {
                 return new AnalyseViewModel(service, "u-1");
+            }
+
+            @Provides
+            RevisionDonnees revision() {
+                return revision;
             }
 
             @Provides
@@ -240,6 +252,32 @@ class AnalyseViewTest {
                 1L,
                 null,
                 null);
+    }
+
+    @Test
+    @DisplayName("#3592 : une mutation structurelle recharge l'inventaire SANS qu'on ait navigué")
+    void une_mutation_recharge_l_inventaire(FxRobot robot) {
+        // On compte à partir de la mutation : l'ouverture a déjà lu une fois.
+        clearInvocations(service);
+
+        // Un import Tadarida ajoute des observations. L'écran ne bouge pas.
+        robot.interact(() -> revision.mutationStructurelleValidee());
+
+        // Sans le signal, l'écran attendait qu'on le quitte et qu'on y revienne (`rafraichirAuRetour`).
+        verify(service, times(1)).observationsAnalyse(anyString());
+    }
+
+    @Test
+    @DisplayName("#3592 : un écran quitté ne recharge plus, l'abonnement est rendu")
+    void un_ecran_quitte_ne_recharge_plus(FxRobot robot) {
+        robot.interact(() -> controleur.auDepartEcran());
+        clearInvocations(service);
+
+        robot.interact(() -> revision.mutationStructurelleValidee());
+
+        // `RevisionDonnees` est un SINGLETON, `AnalyseViewModel` ne l'est délibérément pas. Sans ce
+        // retrait, chaque réouverture laisserait une écoute accrochée à une vue morte.
+        verify(service, never()).observationsAnalyse(anyString());
     }
 
     @Test
