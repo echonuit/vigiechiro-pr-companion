@@ -21,11 +21,25 @@
 #   1. Le paquet doit DÉJÀ exister dans winget-pkgs. winget-releaser refuse
 #      explicitement la première soumission (« Please add atleast one version of
 #      the package before using this action ») : elle se fait à la main, une fois.
+#      ✅ Fait le 2026-08-10 : `Echonuit.VigieChiroCompanion` 2.34.2, via
+#      https://github.com/microsoft/winget-pkgs/pull/405848. Ce workflow ne sait
+#      donc plus que METTRE À JOUR, ce qui est désormais le cas nominal.
 #   2. Un FORK de `microsoft/winget-pkgs` sous `echonuit`.
 #   3. Un SECRET `WINGET_TOKEN` : un PAT « classic » avec le scope `public_repo`.
 #      Le GITHUB_TOKEN ne convient pas, il ne peut pas pousser sur un dépôt tiers.
 #
-# Sans le secret, le workflow s'arrête proprement, en vert, au lieu de rougir.
+# SANS LE SECRET, CE WORKFLOW ROUGIT, ET C'EST UN CHANGEMENT (#2213)
+#
+# Il sortait auparavant en vert, avec un `::notice::`. C'était juste tant qu'il se
+# déclenchait sur `release: released` : rougir à chaque publication aurait été du
+# bruit sur un canal qu'on savait inerte. Ça ne l'est plus depuis qu'il est en
+# `workflow_dispatch` SEUL : un dispatch est un geste délibéré, on le lance parce
+# qu'on veut soumettre. Un vert qui n'a rien soumis annonce une publication qui
+# n'a pas eu lieu.
+#
+# La garde vit dans `.github/scripts/verifie-secret-winget.sh` et porte son
+# `--auto-test`, joué à chaque PR par `lint.yml` : c'est le seul endroit où on la
+# voit à l'œuvre entre deux soumissions.
 
 name: winget
 
@@ -47,22 +61,20 @@ jobs:
     # MSI que les utilisateurs recevront.
     runs-on: windows-latest
     steps:
+      # Le checkout ne sert qu'à la garde ci-dessous : tout le reste de ce workflow travaille sur
+      # des artefacts de Release, pas sur les sources.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
       - name: Vérifier la présence du secret WINGET_TOKEN
-        id: garde
         shell: bash
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
-        run: |
-          if [ -z "$WINGET_TOKEN" ]; then
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::WINGET_TOKEN absent : soumission ignorée. Voir l'en-tête de ce workflow."
-          else
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          fi
+        # Elle ROUGIT si le secret manque, et les étapes suivantes ne s'exécutent alors pas : plus
+        # besoin de les garder une par une derrière une condition.
+        run: bash .github/scripts/verifie-secret-winget.sh
 
       - name: Résoudre la version à soumettre
         id: version
-        if: steps.garde.outputs.present == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -77,7 +89,6 @@ jobs:
           echo "Version à soumettre : $tag"
 
       - name: Récupérer le MSI et vérifier son empreinte
-        if: steps.garde.outputs.present == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -98,7 +109,6 @@ jobs:
           fi
 
       - name: Installer le MSI, puis le LANCER
-        if: steps.garde.outputs.present == 'true'
         shell: pwsh
         # Le contrôle qui manquait. La validation automatique de Microsoft installe le
         # paquet et vérifie le manifeste, mais ne lance pas l'application : leur propre
@@ -155,7 +165,6 @@ jobs:
           Write-Output "Journal présent, aucune erreur de chargement."
 
       - name: Soumettre à winget-pkgs
-        if: steps.garde.outputs.present == 'true'
         uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
         with:
           # Identifiant stable, à vie. Éditeur = le projet Echonuit (cohérent avec le
