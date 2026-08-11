@@ -165,7 +165,15 @@ jobs:
           Write-Output "Journal présent, aucune erreur de chargement."
 
       - name: Soumettre à winget-pkgs
-        uses: vedantmgoyal9/winget-releaser@4ffc7888bffd451b357355dc214d43bb9f23917e # v2
+        # ⚠️ Épinglé sur `main`, et non sur le tag `v2` : ce tag n'a jamais bougé depuis un commit de
+        # NOVEMBRE 2024, alors que l'action installe `komac` à sa DERNIÈRE version (2.16.0, mars 2026).
+        # Vingt et un mois d'écart entre la colle et l'outil qu'elle pilote. Deux conséquences vécues :
+        # `release-notes-url` n'existe pas dans la v2 et y était silencieusement ignoré (le journal du
+        # run le dit en `Unexpected input(s)`), et `komac sync-fork` - que `main` lance avant la mise à
+        # jour - n'y est pas, alors que notre fork prend des milliers de commits de retard entre deux
+        # soumissions. Un tag figé rend l'action INVISIBLE à `verifie-fraicheur-actions.sh`, qui compare
+        # des tags : v2 face à v2, aucun écart, rien à signaler (#2213).
+        uses: vedantmgoyal9/winget-releaser@b3a5dae0047c6180023acba3f548c55fdf6b7193 # main @ 2026-07-28
         with:
           # Identifiant stable, à vie. Éditeur = le projet Echonuit (cohérent avec le
           # --vendor de l'installeur et l'app-id Flatpak fr.echonuit.* ; ADR 0047).
