@@ -61,7 +61,7 @@ class RetraitOrphelinsTest {
                     RetraitOrphelins.confirmation(List.of(Path.of(PASS2), Path.of(PASS3)), 3_221_225_472L);
 
             assertThat(demande.titre()).contains("2");
-            assertThat(demande.conclusion()).contains("3,0 Go");
+            assertThat(demande.conclusion()).contains("3,2 Go");
             // On nomme les dossiers : c'est ce qui permet à l'utilisateur de reconnaître une nuit qu'il
             // croyait perdue avant de la supprimer pour de bon.
             assertThat(demande.constats()).hasSize(2);
@@ -88,7 +88,7 @@ class RetraitOrphelinsTest {
                     new BilanNettoyage(List.of(Path.of(PASS2), Path.of(PASS3)), List.of(), 3_221_225_472L));
 
             assertThat(retour.severite()).isEqualTo(Severite.SUCCES);
-            assertThat(retour.texte()).contains("2").contains("3,0 Go");
+            assertThat(retour.texte()).contains("2").contains("3,2 Go");
         }
 
         @Test

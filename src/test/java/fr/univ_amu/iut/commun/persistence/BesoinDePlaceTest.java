@@ -83,7 +83,7 @@ class BesoinDePlaceTest {
         BesoinDePlace besoin =
                 new BesoinDePlace(Map.of(TRAVAIL, new BesoinDePlace.Besoin(20L * 1024 * 1024, 5L * 1024 * 1024)));
 
-        assertThatThrownBy(() -> besoin.regimePour(dossier -> 1024L * 1024)).hasMessageContaining("Libérez 4 Mo");
+        assertThatThrownBy(() -> besoin.regimePour(dossier -> 1024L * 1024)).hasMessageContaining("Libérez 4,2 Mo");
     }
 
     @Test

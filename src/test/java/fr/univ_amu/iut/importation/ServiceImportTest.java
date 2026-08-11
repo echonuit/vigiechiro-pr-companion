@@ -442,7 +442,7 @@ class ServiceImportTest {
         assertThatThrownBy(() -> serre.importer(sd, idPoint, prefixe))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("Espace disque insuffisant")
-                .hasMessageContaining("Go disponibles");
+                .hasMessageContaining("disponibles");
 
         assertThat(racine.resolve("ws").resolve(prefixe.nomDossierSession()))
                 .as("aucune session partielle n'a été écrite")

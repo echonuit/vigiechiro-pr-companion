@@ -82,10 +82,11 @@ public class LotViewModel {
     public LotViewModel(ServiceLot service) {
         this.service = Objects.requireNonNull(service, "service");
         this.espaceDisque = new AnticipationEspaceDisque(service);
-        // Titre reflétant le **plafond configuré** (#110) : en Mo base 1000 (cohérent avec la contrainte
-        // « 700 Mo » Tadarida), et non Formats.octetsLisibles qui raisonne en base 1024.
-        long plafondMo = service.plafondArchiveOctets() / 1_000_000;
-        titreArchives.set("Archives de dépôt Tadarida (au plus " + plafondMo + " Mo)");
+        // Titre reflétant le **plafond configuré** (#110). La conversion était faite ici parce que
+        // `Formats` raisonnait en base 1024, incompatible avec la contrainte « 700 Mo » de Tadarida ;
+        // depuis #3573 il compte en base 1000 comme le reste du produit, et cette raison a disparu.
+        titreArchives.set(
+                "Archives de dépôt Tadarida (au plus " + Formats.octetsLisibles(service.plafondArchiveOctets()) + ")");
     }
 
     /// Ouvre l'écran de dépôt du passage `idPassage`. Une erreur (passage introuvable) est restituée

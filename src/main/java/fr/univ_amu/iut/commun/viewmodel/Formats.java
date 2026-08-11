@@ -39,13 +39,23 @@ public final class Formats {
     /// @return libellé d'affichage (locale FR)
     public static String octetsLisibles(long octets) {
         long valeur = Math.max(0, octets);
-        if (valeur >= 1_073_741_824L) {
-            return String.format(Locale.FRANCE, "%.1f Go", valeur / 1_073_741_824.0);
+        if (valeur >= 1_000_000_000L) {
+            return avecUnite(valeur / 1_000_000_000.0, "Go");
         }
-        if (valeur >= 1_048_576L) {
-            return String.format(Locale.FRANCE, "%.0f Mo", valeur / 1_048_576.0);
+        if (valeur >= 1_000_000L) {
+            return avecUnite(valeur / 1_000_000.0, "Mo");
         }
-        return String.format(Locale.FRANCE, "%d Ko", valeur / 1024);
+        return String.format(Locale.FRANCE, "%d Ko", valeur / 1000);
+    }
+
+    /// Une décimale **en dessous de dix**, aucune au-dessus.
+    ///
+    /// Sous dix, la décimale porte de l'information : « 1,6 Mo » et « 2 Mo » ne disent pas la même
+    /// chose d'un export, et c'est dans cette plage que vivent la plupart de nos volumes annoncés.
+    /// Au-dessus, elle n'est plus que du bruit - personne ne décide rien à « 128,3 Go » qu'il ne
+    /// déciderait à « 128 Go ».
+    private static String avecUnite(double valeur, String unite) {
+        return String.format(Locale.FRANCE, valeur < 10 ? "%.1f %s" : "%.0f %s", valeur, unite);
     }
 
     /// Température lisible : `8,5 °C` (1 décimale, virgule décimale FR), ou [#VALEUR_ABSENTE] si non

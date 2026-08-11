@@ -4,6 +4,7 @@ import fr.univ_amu.iut.bibliotheque.model.ExportBiblioSons;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.ExportObservationsCsv;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -89,7 +90,7 @@ public final class ExporteurAudio {
                 exportSons.exporter(lignes, destination, marqueur::aEnjeu, progres, jeton);
         StringBuilder message = new StringBuilder("Archive créée : " + destination.getFileName() + " - "
                 + bilan.observations() + " observation(s), " + bilan.sonsCopies() + " son(s), "
-                + String.format(java.util.Locale.FRENCH, "%.1f Mo", bilan.octets() / 1_048_576.0) + ".");
+                + Formats.octetsLisibles(bilan.octets()) + ".");
         if (!bilan.sonsIntrouvables().isEmpty()) {
             message.append(" ")
                     .append(bilan.sonsIntrouvables().size())
@@ -109,7 +110,7 @@ public final class ExporteurAudio {
         ExportBiblioSons.Bilan bilan = export.exporterVers(destination, progres, jeton);
         StringBuilder message = new StringBuilder("Bibliothèque exportée : " + destination.getFileName() + " - "
                 + export.nombre() + " référence(s), " + bilan.sonsCopies() + " son(s), "
-                + String.format(java.util.Locale.FRENCH, "%.1f Mo", bilan.octets() / 1_048_576.0) + ".");
+                + Formats.octetsLisibles(bilan.octets()) + ".");
         if (!bilan.sonsIntrouvables().isEmpty()) {
             message.append(" ")
                     .append(bilan.sonsIntrouvables().size())

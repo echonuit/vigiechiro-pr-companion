@@ -239,7 +239,7 @@ class LotVueIntegrationTest {
         // fixture de départ « 2 séquences · 8 Ko ».
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.VERIFIE, "/ws/session-42", 5, 3_145_728L, List.of(), null));
 
-        assertThat(controleur.zonesStatutProperty().get().centre()).endsWith("5 séquences · 3 Mo");
+        assertThat(controleur.zonesStatutProperty().get().centre()).endsWith("5 séquences · 3,1 Mo");
     }
 
     @Test

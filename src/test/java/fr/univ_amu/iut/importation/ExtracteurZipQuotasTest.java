@@ -52,8 +52,8 @@ class ExtracteurZipQuotasTest {
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("Espace disque insuffisant")
                 // Les deux chiffres, sans quoi le refus n'est pas actionnable : ce qu'il faut, ce qu'il y a.
-                .hasMessageContaining("12 Mo")
-                .hasMessageContaining("976 Ko");
+                .hasMessageContaining("13 Mo")
+                .hasMessageContaining("1,0 Mo");
 
         assertThat(dossiersDExtraction())
                 .as("le refus doit précéder la création du temporaire, pas la nettoyer après coup")

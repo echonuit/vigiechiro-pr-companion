@@ -99,7 +99,7 @@ class ExportObservationsEtSonsTest {
         assertThat(etapes).isNotEmpty();
         assertThat(etapes.get(0).libelle())
                 .as("annonce d'ouverture : observations, sons dédupliqués, volume lu sur le disque")
-                .isEqualTo("2 observation(s) · 2 son(s) · ~1,5 Mo");
+                .isEqualTo("2 observation(s) · 2 son(s) · ~1,6 Mo");
         assertThat(etapes.get(1).libelle())
                 .as("la copie suit l'annonce, entrée par entrée")
                 .startsWith("Archive : ");

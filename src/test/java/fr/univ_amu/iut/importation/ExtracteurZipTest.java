@@ -169,7 +169,7 @@ class ExtracteurZipTest {
             // irrégulière, et le cumul dérive de quelques kilooctets d'un palier à l'autre. Ce qui se
             // vérifie, c'est qu'une entrée de 12 Mio en produit plusieurs.
             assertThat(pendantLEntree).hasSizeGreaterThanOrEqualTo(2);
-            assertThat(pendantLEntree.get(0).libelle()).contains("gros.wav").contains("4 Mo");
+            assertThat(pendantLEntree.get(0).libelle()).contains("gros.wav").contains("4,2 Mo");
             // La barre ne bouge pas pendant l'entrée : la taille décompressée n'est pas connue au fil de
             // l'eau, et un avancement inventé vaudrait moins qu'un compteur honnête.
             assertThat(pendantLEntree).allSatisfy(p -> assertThat(p.fraction()).isZero());

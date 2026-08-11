@@ -3,6 +3,7 @@ package fr.univ_amu.iut.validation.model;
 import fr.univ_amu.iut.commun.model.EcrivainZip;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -94,8 +95,7 @@ public class ExportObservationsEtSons {
     private static Progression annonce(int observations, List<EcrivainZip.EntreeFichier> sons) {
         long octets = sons.stream().mapToLong(son -> taille(son.source())).sum();
         return new Progression(
-                observations + " observation(s) · " + sons.size() + " son(s) · ~"
-                        + String.format(java.util.Locale.FRENCH, "%.1f Mo", octets / 1_048_576.0),
+                observations + " observation(s) · " + sons.size() + " son(s) · ~" + Formats.octetsLisibles(octets),
                 0.0);
     }
 

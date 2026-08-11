@@ -57,8 +57,8 @@ class LectureBorneeTest {
         assertThatThrownBy(() -> LectureBornee.lignes(journal, PlafondLecture.journalCapteur()))
                 .isInstanceOf(EntreeTropVolumineuse.class)
                 .hasMessageContaining("LogPR1925492.txt")
-                .hasMessageContaining("2 Mo")
-                .hasMessageContaining("1 Mo")
+                .hasMessageContaining("2,1 Mo")
+                .hasMessageContaining("1,0 Mo")
                 .hasMessageContaining("-Dvigiechiro.import.journal.max-octets=");
     }
 
@@ -93,7 +93,7 @@ class LectureBorneeTest {
         assertThatThrownBy(() -> LectureBornee.texte(source, plafond, "/donnees"))
                 .isInstanceOf(EntreeTropVolumineuse.class)
                 .hasMessageContaining("/donnees")
-                .hasMessageContaining("1 Mo");
+                .hasMessageContaining("1,0 Mo");
 
         assertThat(source.lus())
                 .as("un plafond vérifié après coup ne protège de rien : la mémoire est déjà prise")

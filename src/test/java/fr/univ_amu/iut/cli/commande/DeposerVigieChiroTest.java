@@ -177,8 +177,8 @@ class DeposerVigieChiroTest {
         String complet = DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 14, List.of(), 4_500_000_000L));
         String partiel = DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 9, List.of("Car-10.zip"), 2_900_000_000L));
 
-        assertThat(complet).contains("14 fichier(s) téléversé(s) (4,2 Go)");
-        assertThat(partiel).contains("9 fichier(s) téléversé(s) (2,7 Go)").contains("1 en échec");
+        assertThat(complet).contains("14 fichier(s) téléversé(s) (4,5 Go)");
+        assertThat(partiel).contains("9 fichier(s) téléversé(s) (2,9 Go)").contains("1 en échec");
     }
 
     @Test
