@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -33,7 +34,7 @@ final class RemplacementSession {
         try {
             ResultatImport resultat = reimport.get();
             if (miseDeCote != null) {
-                ExtracteurZip.supprimerRecursivement(miseDeCote); // ancien physique désormais obsolète
+                ArborescenceFichiers.effacerAuMieux(miseDeCote); // ancien physique désormais obsolète
             }
             return resultat;
         } catch (RuntimeException echec) {
@@ -49,7 +50,7 @@ final class RemplacementSession {
             return null;
         }
         Path miseDeCote = dossierSession.resolveSibling(dossierSession.getFileName() + ".remplace");
-        ExtracteurZip.supprimerRecursivement(miseDeCote); // reliquat d'un écrasement précédent interrompu
+        ArborescenceFichiers.effacerAuMieux(miseDeCote); // reliquat d'un écrasement précédent interrompu
         try {
             Files.move(dossierSession, miseDeCote);
             return miseDeCote;
@@ -67,7 +68,7 @@ final class RemplacementSession {
         if (miseDeCote == null) {
             return;
         }
-        ExtracteurZip.supprimerRecursivement(dossierSession); // nouvel import partiel
+        ArborescenceFichiers.effacerAuMieux(dossierSession); // nouvel import partiel
         try {
             Files.move(miseDeCote, dossierSession);
         } catch (IOException restaurationImpossible) {

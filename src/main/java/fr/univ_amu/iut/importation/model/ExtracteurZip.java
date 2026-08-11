@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.CopieInterruptible;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -11,7 +12,6 @@ import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.LongConsumer;
@@ -122,13 +122,13 @@ public final class ExtracteurZip {
             // l'extraction « aboutir » et la source être inspectée (le catch ci-dessous nettoie).
             jeton.leverSiAnnule();
         } catch (IOException e) {
-            supprimerRecursivement(racine);
+            ArborescenceFichiers.effacerAuMieux(racine);
             // On expose la cause (ex. « Aucun espace disponible sur le périphérique ») : sans elle,
             // l'utilisateur ne saurait pas qu'il s'agit d'un manque de place disque.
             throw new UncheckedIOException(
                     "Décompression du zip impossible : " + archiveZip + " (" + e.getMessage() + ")", e);
         } catch (RuntimeException e) {
-            supprimerRecursivement(racine);
+            ArborescenceFichiers.effacerAuMieux(racine);
             throw e;
         }
         return racine;
@@ -212,20 +212,6 @@ public final class ExtracteurZip {
         }
     }
 
-    /// Supprime récursivement `dossier` (nettoyage du temporaire après import, succès ou échec).
-    /// **Best-effort** : on n'interrompt pas le flux si un fichier résiste (le temporaire système sera
-    /// de toute façon recyclé). Sans effet si `dossier` est `null` ou absent.
-    public static void supprimerRecursivement(Path dossier) {
-        if (dossier == null || !Files.exists(dossier)) {
-            return;
-        }
-        try (Stream<Path> chemins = Files.walk(dossier)) {
-            chemins.sorted(Comparator.reverseOrder()).forEach(ExtracteurZip::supprimerSilencieux);
-        } catch (IOException ignore) {
-            // Best-effort : un nettoyage incomplet du temporaire n'est pas une erreur métier.
-        }
-    }
-
     private static void supprimerSilencieux(Path chemin) {
         try {
             Files.deleteIfExists(chemin);
@@ -270,7 +256,7 @@ public final class ExtracteurZip {
         try (Stream<Path> entrees = Files.list(dossierBase)) {
             entrees.filter(Files::isDirectory)
                     .filter(p -> p.getFileName().toString().startsWith("import-zip-"))
-                    .forEach(ExtracteurZip::supprimerRecursivement);
+                    .forEach(ArborescenceFichiers::effacerAuMieux);
         } catch (IOException ignore) {
             // Best-effort : un balayage incomplet n'est pas une erreur métier.
         }

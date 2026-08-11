@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.importation.model.BornesExtraction;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import java.io.IOException;
@@ -71,7 +72,7 @@ class ExtractionCarteReelleTest {
                     .as("la décompression rend compte de son avancement")
                     .isNotEmpty();
         } finally {
-            ExtracteurZip.supprimerRecursivement(extrait);
+            ArborescenceFichiers.effacerAuMieux(extrait);
         }
     }
 

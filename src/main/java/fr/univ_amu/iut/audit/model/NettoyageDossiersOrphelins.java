@@ -1,10 +1,10 @@
 package fr.univ_amu.iut.audit.model;
 
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -37,7 +37,7 @@ public class NettoyageDossiersOrphelins {
             }
             // Mesurer AVANT de supprimer : après, il n'y a plus rien à peser.
             long taille = tailleDe(dossier);
-            String echec = supprimerRecursivement(dossier);
+            String echec = premierEchec(dossier);
             if (Files.exists(dossier)) {
                 resistants.add(new BilanNettoyage.DossierResistant(dossier, echec));
             } else {
@@ -77,34 +77,16 @@ public class NettoyageDossiersOrphelins {
         }
     }
 
-    /// Supprime le contenu puis le dossier, et **rend la première raison d'échec** rencontrée (chaîne
-    /// vide si tout est parti).
+    /// La **première** raison qui a résisté, ou rien du tout.
     ///
-    /// La suppression continue après un échec - un fichier verrouillé ne doit pas laisser les autres en
-    /// place - mais la cause n'est **pas avalée** (ADR 0008) : c'est elle qui dira à l'utilisateur
-    /// pourquoi son ménage n'a pas abouti. « Le dossier est encore là » ne l'aide en rien ; « le
-    /// processus ne peut pas accéder au fichier » lui dit de fermer sa fenêtre.
-    private static String supprimerRecursivement(Path dossier) {
-        try (Stream<Path> chemins = Files.walk(dossier)) {
-            // `toList` et non `findFirst` : il faut parcourir TOUT l'arbre pour supprimer ce qui peut
-            // l'être, là où un court-circuit s'arrêterait au premier fichier récalcitrant.
-            List<String> echecs = chemins.sorted(Comparator.reverseOrder())
-                    .map(NettoyageDossiersOrphelins::supprimer)
-                    .filter(raison -> !raison.isEmpty())
-                    .toList();
-            return echecs.isEmpty() ? "" : echecs.getFirst();
-        } catch (IOException echec) {
-            return raisonLisible(echec);
-        }
-    }
-
-    private static String supprimer(Path chemin) {
-        try {
-            Files.deleteIfExists(chemin);
-            return "";
-        } catch (IOException echec) {
-            return raisonLisible(echec);
-        }
+    /// Se ramène au contrat « au mieux » d'[ArborescenceFichiers#effacerAuMieux] (#3574), qui porte la
+    /// raison précisément pour cet appelant : c'est le seul dont l'utilisateur attend une explication,
+    /// et la lui retirer aurait obligé à refaire le parcours pour la retrouver.
+    private static String premierEchec(Path dossier) {
+        return ArborescenceFichiers.effacerAuMieux(dossier).stream()
+                .findFirst()
+                .map(echec -> raisonLisible(echec.cause()))
+                .orElse("");
     }
 
     /// Le message du système, ou à défaut le type de la panne : une raison vide vaudrait le silence

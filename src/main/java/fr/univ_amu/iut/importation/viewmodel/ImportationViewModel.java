@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
@@ -516,7 +517,7 @@ public class ImportationViewModel {
     /// Appelé après l'import (succès/échec) et au changement de source.
     private void nettoyerTemporaireZip() {
         if (dossierTemporaireZip != null) {
-            ExtracteurZip.supprimerRecursivement(dossierTemporaireZip);
+            ArborescenceFichiers.effacerAuMieux(dossierTemporaireZip);
             dossierTemporaireZip = null;
         }
     }

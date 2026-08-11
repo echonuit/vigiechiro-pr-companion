@@ -3,18 +3,16 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.model.ErreurUsage;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.commun.persistence.InventaireSauvegardes;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.Objects;
 import java.util.concurrent.Callable;
-import java.util.stream.Stream;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Model.CommandSpec;
 import picocli.CommandLine.Option;
@@ -97,11 +95,11 @@ public final class SupprimerSauvegarde implements Callable<Integer> {
     }
 
     /// Une sauvegarde complète est un **dossier** : la supprimer, c'est supprimer son contenu d'abord.
+    /// Enveloppe le contrat **qui lève** : ici l'échec doit se voir, et la commande le rend en code de
+    /// sortie. Envelopper est une décision de l'appelant, pas une politique de l'utilitaire (#3574).
     private static void supprimerRecursivement(Path cible) {
-        try (Stream<Path> arborescence = Files.walk(cible)) {
-            for (Path chemin : arborescence.sorted(Comparator.reverseOrder()).toList()) {
-                Files.deleteIfExists(chemin);
-            }
+        try {
+            ArborescenceFichiers.supprimerRecursivement(cible);
         } catch (IOException echec) {
             throw new UncheckedIOException("Suppression impossible de " + cible, echec);
         }

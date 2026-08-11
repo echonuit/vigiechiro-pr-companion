@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.importation.model.BornesExtraction;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.InventaireArchive;
@@ -79,7 +80,7 @@ class ExtracteurZipQuotasTest {
         try {
             assertThat(extrait.resolve("bruts/nuit_silencieuse.wav")).hasSize(12 * 1024 * 1024);
         } finally {
-            ExtracteurZip.supprimerRecursivement(extrait);
+            ArborescenceFichiers.effacerAuMieux(extrait);
         }
     }
 
@@ -206,7 +207,7 @@ class ExtracteurZipQuotasTest {
             assertThat(extrait.resolve("bruts/PaRecPR1925492_20260422_203922.wav"))
                     .hasSize(3 * 1024 * 1024);
         } finally {
-            ExtracteurZip.supprimerRecursivement(extrait);
+            ArborescenceFichiers.effacerAuMieux(extrait);
         }
     }
 

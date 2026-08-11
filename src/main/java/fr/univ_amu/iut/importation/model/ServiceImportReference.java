@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.InventaireTransformesReferences.OriginalTransforme;
 import fr.univ_amu.iut.importation.model.InventaireTransformesReferences.SequenceTransformee;
@@ -146,7 +147,7 @@ public class ServiceImportReference {
             materialiser(referencer, dossierTransformes, originaux, progres, jeton);
             jeton.leverSiAnnule();
         } catch (RuntimeException echec) {
-            ExtracteurZip.supprimerRecursivement(dossierSession);
+            ArborescenceFichiers.effacerAuMieux(dossierSession);
             throw echec;
         }
 
