@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import fr.univ_amu.iut.passage.model.EmpreinteContenu;
@@ -376,7 +377,7 @@ final class MoteurImport {
 
     /// Supprime la **session partielle** (dossier `bruts/`+`transformes/` en cours de constitution)
     /// laissée par un import **annulé** (#146), pour ne pas accumuler des fichiers à moitié copiés.
-    /// Best-effort (cf. [ExtracteurZip#supprimerRecursivement]).
+    /// Best-effort (cf. [ArborescenceFichiers#effacerAuMieux]).
     /// La session d'une nuit importée. Rien n'y déclare l'état des originaux : qu'ils aient été copiés
     /// ou laissés sur la carte, leur présence est **observée** sur le disque (ADR 0048), et leur absence
     /// n'est pas une anomalie - la copie des bruts est une option de ré-analyse (ADR 0036).
@@ -434,7 +435,7 @@ final class MoteurImport {
     }
 
     private static void supprimerSessionPartielle(Path dossierSession) {
-        ExtracteurZip.supprimerRecursivement(dossierSession);
+        ArborescenceFichiers.effacerAuMieux(dossierSession);
     }
 
     /// Vérifie l'annulation **hors du bloc try/catch de nettoyage** (#146) : si annulé, supprime la

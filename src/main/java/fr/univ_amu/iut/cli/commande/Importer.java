@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.importation.model.ApercuEcrasement;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
@@ -127,7 +128,7 @@ public final class Importer implements Callable<Integer> {
             return importerDepuis(temporaire == null ? source : ExtracteurZip.racineEffective(temporaire));
         } finally {
             if (temporaire != null) {
-                ExtracteurZip.supprimerRecursivement(temporaire);
+                ArborescenceFichiers.effacerAuMieux(temporaire);
             }
         }
     }

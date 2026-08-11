@@ -5,15 +5,13 @@ import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /// Découpe (#12) en **parallèle** la transformation R10/R11 des originaux d'une nuit, extraite de
 /// [ServiceImport].
@@ -94,18 +92,11 @@ final class DecoupageParallele {
     }
 
     /// Supprime récursivement un dossier (nettoyage du temporaire de découpage). Sans échec si absent.
+    /// Enveloppe le contrat **qui lève** : un temporaire de découpe qui résiste fausserait le lot
+    /// suivant. Envelopper est une décision de l'appelant, pas une politique de l'utilitaire (#3574).
     private static void supprimerRecursif(Path dossier) {
-        if (!Files.exists(dossier)) {
-            return;
-        }
-        try (Stream<Path> arbre = Files.walk(dossier)) {
-            arbre.sorted(Comparator.reverseOrder()).forEach(chemin -> {
-                try {
-                    Files.delete(chemin);
-                } catch (IOException e) {
-                    throw new UncheckedIOException("Nettoyage du temporaire impossible : " + chemin, e);
-                }
-            });
+        try {
+            ArborescenceFichiers.supprimerRecursivement(dossier);
         } catch (IOException e) {
             throw new UncheckedIOException("Nettoyage du temporaire impossible : " + dossier, e);
         }

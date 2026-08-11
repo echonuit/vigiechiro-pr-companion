@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -69,7 +70,7 @@ class ExtracteurZipTest {
             assertThat(extrait).isNotEqualTo(racine); // dossier temporaire distinct, source intacte
             assertThat(zip).exists(); // R9 : l'archive source n'est pas modifiée
         } finally {
-            ExtracteurZip.supprimerRecursivement(extrait);
+            ArborescenceFichiers.effacerAuMieux(extrait);
         }
     }
 
@@ -94,7 +95,7 @@ class ExtracteurZipTest {
             assertThat(points.get(2).fraction()).isEqualTo(1.0);
             assertThat(points.get(2).libelle()).contains("3 / 3");
         } finally {
-            ExtracteurZip.supprimerRecursivement(extrait);
+            ArborescenceFichiers.effacerAuMieux(extrait);
         }
     }
 
@@ -176,7 +177,7 @@ class ExtracteurZipTest {
             assertThat(fin.libelle()).contains("1 / 1");
             assertThat(extrait.resolve("gros.wav")).hasSize(TAILLE_GROSSE_ENTREE);
         } finally {
-            ExtracteurZip.supprimerRecursivement(extrait);
+            ArborescenceFichiers.effacerAuMieux(extrait);
         }
     }
 
@@ -253,7 +254,7 @@ class ExtracteurZipTest {
             assertThat(source.resolve("bruts/PaRecPR1925492_20260422_203922.wav"))
                     .exists();
         } finally {
-            ExtracteurZip.supprimerRecursivement(extrait);
+            ArborescenceFichiers.effacerAuMieux(extrait);
         }
     }
 
@@ -270,7 +271,7 @@ class ExtracteurZipTest {
         try {
             assertThat(ExtracteurZip.racineEffective(extrait)).isEqualTo(extrait);
         } finally {
-            ExtracteurZip.supprimerRecursivement(extrait);
+            ArborescenceFichiers.effacerAuMieux(extrait);
         }
     }
 
@@ -296,11 +297,11 @@ class ExtracteurZipTest {
         Path dossier = Files.createDirectories(racine.resolve("a/b/c"));
         Files.writeString(dossier.resolve("f.txt"), "x");
 
-        ExtracteurZip.supprimerRecursivement(racine.resolve("a"));
+        ArborescenceFichiers.effacerAuMieux(racine.resolve("a"));
 
         assertThat(racine.resolve("a")).doesNotExist();
         // Idempotent / tolérant : un second appel (dossier absent) ne lève pas.
-        ExtracteurZip.supprimerRecursivement(racine.resolve("a"));
+        ArborescenceFichiers.effacerAuMieux(racine.resolve("a"));
     }
 
     private static void ecrire(ZipOutputStream zos, String nom, String contenu) throws IOException {
