@@ -358,6 +358,19 @@ Le workflow fait trois choses avant de soumettre, et la deuxième est celle qui 
 
 `max-versions-to-keep: 5` : le dépôt communautaire n'a pas vocation à archiver notre historique.
 
+!!! warning "Le fork doit être à jour avant un dispatch"
+    Le fork `echonuit/winget-pkgs` prend du retard entre deux soumissions, espacées de plusieurs
+    semaines par construction. Au 2026-08-11 il était **7969 commits en retard**, donc antérieur à la
+    fusion de notre propre manifeste.
+
+    ```bash
+    gh repo sync echonuit/winget-pkgs --source microsoft/winget-pkgs
+    ```
+
+    Ce n'est pas une précaution de principe : les versions récentes de `winget-releaser` lancent
+    `komac sync-fork` **avant** la mise à jour, ce que la nôtre (épinglée sur `v2`, un commit de
+    **novembre 2024**) ne fait pas.
+
 !!! warning "La garde du secret rougit, et c'est un changement"
     `winget.yml` sortait **en vert** quand `WINGET_TOKEN` manquait. Ce choix était juste tant qu'il se
     déclenchait sur `release: released` : rougir à chaque publication aurait été du bruit sur un canal
@@ -390,6 +403,30 @@ Le workflow fait trois choses avant de soumettre, et la deuxième est celle qui 
 
     `verifie-secret-winget.sh --verifie-l-acces` rend maintenant ce diagnostic **au début du
     workflow**, en nommant la cause.
+
+!!! danger "La cause réelle, et elle n'était dans aucune de ces listes : 8 jours de durée de vie"
+    Ce qu'a fini par dire l'API, une fois la sonde réparée pour ne plus avaler sa réponse :
+
+    ```
+    The 'Microsoft Open Source' enterprise forbids access via a personal access tokens (classic)
+    if the token's lifetime is greater than 8 days.  (HTTP 403)
+    ```
+
+    **403, pas 404.** Le jeton était du bon type, au bon scope, valide et sans espace parasite. Seule
+    sa **durée de vie** le disqualifiait, par une politique de l'entreprise qui héberge `winget-pkgs`.
+
+    Trois enseignements, et le troisième est le plus cher payé :
+
+    1. **`WINGET_TOKEN` se refait avant chaque soumission**, avec une expiration de 8 jours au plus.
+       C'est documenté dans [Reprendre le dépôt](reprendre-le-depot.md).
+    2. **Un message d'erreur d'outil tiers n'est pas un diagnostic.** komac disait « le paquet
+       n'existe pas » là où l'API disait « votre jeton vit trop longtemps ».
+    3. **Une sonde qui avale la réponse de l'API fabrique de faux diagnostics.** La première version
+       du contrôle d'accès faisait `2>/dev/null` : elle a conclu, avec aplomb, que le jeton n'avait
+       pas les droits de lecture. C'était faux, et rien dans son verdict ne permettait de le voir. Un
+       dispositif qui conclut sans montrer sa preuve appartient à la même famille que ceux que la
+       section « Toute garde de CI porte sa propre preuve » combat - il se trouve seulement qu'ici,
+       c'est la garde elle-même qui en était atteinte.
 
 ## Toute garde de CI porte sa propre preuve (#2947, #3293)
 

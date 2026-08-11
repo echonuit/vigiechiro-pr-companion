@@ -18,11 +18,41 @@ l'architecture et muette sur les accès.
 |---|---|---|
 | `VIGIECHIRO_TOKEN` | `api-live.yml` | le contrat API hebdomadaire **ne vérifie plus rien** - le workflow reste vert avec un avertissement, et la veille de fraîcheur rougit au bout de 21 jours (ADR 2748) |
 | `DOCS_DEPLOY_TOKEN` | `docs.yml` | les trois sites de documentation ne se déploient plus |
-| `WINGET_TOKEN` | `winget.yml` | ⚠️ **il n'existe pas** : le workflow est **inerte**, et c'est voulu. La soumission winget se fait à la main |
+| `WINGET_TOKEN` | `winget.yml` | la soumission winget **rougit** au lieu de partir. PAT « classic », scope `public_repo`, **expiration à 8 jours au plus** (cf. ci-dessous) |
 
 `GITHUB_TOKEN` est fourni par GitHub à chaque exécution : rien à créer.
 
-### ⚠️ Le seul secret qui expire : `VIGIECHIRO_TOKEN`
+### ⚠️ Les deux secrets qui expirent
+
+Ils n'expirent pas pour les mêmes raisons et ne se renouvellent pas au même rythme.
+
+| Secret | Durée de vie | Ce qui l'impose |
+|---|---|---|
+| `VIGIECHIRO_TOKEN` | **14 jours** | la plateforme Vigie-Chiro |
+| `WINGET_TOKEN` | **8 jours au plus** | une politique de l'entreprise **Microsoft Open Source** |
+
+#### `WINGET_TOKEN` : huit jours, et ce n'est pas négociable
+
+L'entreprise propriétaire de `microsoft/winget-pkgs` refuse tout PAT « classic » dont la **durée de
+vie dépasse 8 jours**. Un jeton du bon type, au bon scope et parfaitement valide est rejeté sur ce
+seul critère, avec un **403** :
+
+```
+The 'Microsoft Open Source' enterprise forbids access via a personal access tokens (classic)
+if the token's lifetime is greater than 8 days.
+```
+
+⚠️ **Ce refus ne ressemble pas à un refus.** komac le traduit par « `Echonuit.VigieChiroCompanion`
+does not exist in microsoft/winget-pkgs », c'est-à-dire en accusant le paquet. Le diagnostic a coûté
+trois dispatchs, et l'erreur d'attribution a d'abord visé les droits du jeton, puis sa forme, avant
+que la sonde ne rapporte le message réel. `verifie-secret-winget.sh --verifie-l-acces` le nomme
+désormais au début du workflow.
+
+**Conséquence pratique** : n'entretenez pas ce secret. Créez le jeton **juste avant** de pousser une
+version sur winget - la soumission est manuelle et rare, les deux gestes vont ensemble. Un jeton posé
+« pour plus tard » sera périmé au moment utile.
+
+### ⚠️ Le secret qui expire le plus souvent : `VIGIECHIRO_TOKEN`
 
 Il vit **14 jours**. Il se récupère dans le navigateur, connecté à la plateforme, sous
 `localStorage['auth-session-token']`, puis :
@@ -49,7 +79,7 @@ Ce sont des **interrupteurs**, pas des secrets : `gh variable list` les montre.
 |---|---|---|
 | **Plateforme VigieChiro** | le contrat API, les sondes live, l'import et le dépôt réels | compte naturaliste sur le site, rôle Observateur suffisant en lecture |
 | **Flathub** | **rien pour l'instant** : le paquet n'y est pas (#2191) | la soumission a été fermée par leur robot, checklist incomplète |
-| **winget** | **rien pour l'instant** : le paquet n'y est pas (#2110) | la première soumission est manuelle ; `WINGET_TOKEN` absent |
+| **winget** | la distribution Windows : `Echonuit.VigieChiroCompanion`, en ligne depuis le 2026-08-10 | fork `echonuit/winget-pkgs` + `WINGET_TOKEN` ; on y pousse une version à la main (#2213) |
 | **Zenodo** | le jeu de données d'exemple « une nuit » | dépôt public, DOI figé |
 | **GitHub Pages** | les trois sites de documentation | `DOCS_DEPLOY_TOKEN` |
 
@@ -62,17 +92,17 @@ C'est la partie que personne ne devine en lisant la CI.
 | Renouveler `VIGIECHIRO_TOKEN` | tous les **14 jours** | le contrat API cesse de vérifier ; la veille rougit à 21 jours |
 | **Vérifier le train de publication** | chaque **mercredi** après 6 h UTC | l'ADR 2744 le déclare humain : les notes doivent **agréger la semaine**, pas un commit |
 | Regarder les aperçus régénérés | après une PR qui touche l'IHM | une capture fausse illustre la documentation sans que rien ne rougisse |
+| **Pousser une version sur winget** : refaire `WINGET_TOKEN` (8 jours max), **puis** `gh workflow run winget.yml -f tag=vX.Y.Z` | quand une version **apporte quelque chose à l'utilisateur** | winget continue de servir l'ancienne, indéfiniment. Rien ne rougit : le canal n'est pas cassé, il est simplement en retard |
 
-!!! warning "Deux canaux de distribution sont outillés et n'ont jamais rien distribué"
+!!! warning "Un canal de distribution est outillé et n'a jamais rien distribué"
     C'est le piège le plus coûteux de cette page, parce qu'il se lit à l'envers : `.github/workflows/`
     porte `winget.yml` **et** `flatpak.yml`, `flatpak/` porte un manifeste versionné et validé. Tout
-    donne à croire que les paquets existent et se mettent à jour. **Ils n'existent pas.**
+    donne à croire que les **deux** paquets existent et se mettent à jour. Un seul existe.
 
-    - **winget** : `Echonuit.VigieChiroCompanion` est absent de `microsoft/winget-pkgs`. Le workflow
-      ne sait faire qu'une **mise à jour** - `winget-releaser` refuse une première soumission, et son
-      en-tête le dit. Tant que le paquet n'est pas déposé une fois **à la main**, ce workflow n'a rien
-      à mettre à jour. Il manque aussi le secret `WINGET_TOKEN` et un fork de `winget-pkgs`. Cf. #2110.
-    - **Flathub** : ni `fr.echonuit.VigieChiroCompanion` ni l'ancien identifiant n'ont de dépôt chez
+    - **winget** : ✅ en ligne depuis le 2026-08-10, `Echonuit.VigieChiroCompanion`. Le canal marche,
+      mais **ne se remplit pas tout seul** : chaque version se pousse à la main (voir le tableau des
+      gestes ci-dessus). Cf. #2213.
+    - **Flathub** : ❌ ni `fr.echonuit.VigieChiroCompanion` ni l'ancien identifiant n'ont de dépôt chez
       Flathub. La PR de soumission a été fermée par le robot pour checklist incomplète, et deux points
       manquants sont des **actes humains** - une vidéo de l'application lancée en Flatpak, et une
       attestation personnelle. Cf. #2191.
