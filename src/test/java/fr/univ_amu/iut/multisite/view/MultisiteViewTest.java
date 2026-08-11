@@ -4,8 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +27,7 @@ import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -76,6 +79,9 @@ class MultisiteViewTest {
     /// URLs ouvertes par le navigateur factice (« Ouvrir sur Vigie-Chiro » de ligne, #1799).
     private final List<String> urlsOuvertes = new ArrayList<>();
 
+    /// Le signal de mutation (#3599) : le test l'actionne comme le ferait un import ou une synchro.
+    private RevisionDonnees revision;
+
     private ServiceMultisite service;
     private MultisiteController controleur;
     private ServiceSites serviceSites;
@@ -126,6 +132,7 @@ class MultisiteViewTest {
 
     @Start
     void start(Stage stage) throws Exception {
+        revision = new RevisionDonnees(Runnable::run);
         service = mock(ServiceMultisite.class);
         serviceSites = mock(ServiceSites.class);
         ouvrirPassage = mock(OuvrirPassage.class);
@@ -141,6 +148,11 @@ class MultisiteViewTest {
         PortailVigieChiro portail = mock(PortailVigieChiro.class);
         when(portail.pageParticipation(any())).thenReturn(Optional.of(LIEN_PORTAIL));
         Injector injector = Guice.createInjector(new AbstractModule() {
+            @Provides
+            RevisionDonnees revision() {
+                return revision;
+            }
+
             @Override
             protected void configure() {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
@@ -209,6 +221,29 @@ class MultisiteViewTest {
 
     /// Noms de fichier **proposés** par l'export.
     private final List<String> nomsProposes = new ArrayList<>();
+
+    @Test
+    @DisplayName("#3599 : une mutation structurelle recharge l'écran SANS qu'on ait navigué")
+    void une_mutation_recharge_sans_navigation(FxRobot robot) {
+        clearInvocations(service);
+
+        robot.interact(() -> revision.mutationStructurelleValidee());
+
+        // Sans le signal, l'écran attendait qu'on le quitte et qu'on y revienne (`rafraichirAuRetour`).
+        verify(service, times(1)).listerPassages(anyString());
+    }
+
+    @Test
+    @DisplayName("#3599 : un écran quitté ne recharge plus, l'abonnement est rendu")
+    void un_ecran_quitte_ne_recharge_plus(FxRobot robot) {
+        robot.interact(() -> controleur.auDepartEcran());
+        clearInvocations(service);
+
+        robot.interact(() -> revision.mutationStructurelleValidee());
+
+        // `RevisionDonnees` est un SINGLETON, `MultisiteViewModel` ne l'est délibérément pas.
+        verify(service, never()).listerPassages(anyString());
+    }
 
     @Test
     @DisplayName("Le tableau liste les passages agrégés ; le résumé les compte")
