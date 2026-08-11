@@ -3,8 +3,6 @@ package fr.univ_amu.iut.analyse.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
-import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
-import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import fr.univ_amu.iut.commun.view.ActionFicheEspece;
 import fr.univ_amu.iut.commun.view.AuDepartEcran;
@@ -17,7 +15,7 @@ import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
-import fr.univ_amu.iut.commun.view.MemoireFiltres;
+import fr.univ_amu.iut.commun.view.MemoireEcran;
 import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
@@ -80,7 +78,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
     /// Zones de la barre de statut (#1023) : agrégat top-level → **centre** = résumé de l'inventaire,
     /// **droite** = état d'export quand un export a été produit ; la gauche reste au défaut du chrome.
     /// Mémoire de session (#3098) : les filtres et le tri survivent à une sortie de l'écran.
-    private final MemoireFiltres memoire;
+    private final MemoireEcran memoire;
 
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
@@ -98,8 +96,6 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
     private final ChangeListener<Number> surRevision = (observable, avant, apres) -> chargerObservations();
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAudio ouvrirAudio;
-    private final DepotVues depotVues;
-    private final DepotDispositionColonnes depotColonnes;
 
     /// Action réutilisable « Fiche de l'espèce » (#846) : configure l'item du menu contextuel de la table
     /// des espèces selon la ligne sélectionnée et ouvre la fiche dans le navigateur.
@@ -256,11 +252,9 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
     @Inject
     public AnalyseController(
             AnalyseViewModel viewModel,
-            MemoireFiltres memoire,
+            MemoireEcran memoire,
             OuvrirPassage ouvrirPassage,
             OuvrirAudio ouvrirAudio,
-            DepotVues depotVues,
-            DepotDispositionColonnes depotColonnes,
             ActionFicheEspece actionFicheEspece,
             ExecuteurTache executeur,
             EspecesPrioritaires especesPrioritaires,
@@ -270,8 +264,6 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
         this.memoire = Objects.requireNonNull(memoire, "memoire");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
-        this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
-        this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.actionFicheEspece = Objects.requireNonNull(actionFicheEspece, "actionFicheEspece");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.marqueurEnjeu = new MarqueurEspecesAEnjeu(especesPrioritaires);
@@ -320,7 +312,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
                         MenuCopier.creer(
                                 panneauDetailController.table(),
                                 new MenuCopier.Entree<>("Carré", ObservationEspece::numeroCarre))));
-        selecteurColonnes.persister(depotColonnes, FEATURE);
+        selecteurColonnes.persister(memoire.colonnes(), FEATURE);
         // Clic droit : sélectionne la ligne (cible du menu contextuel). Double-clic : ouvre la fiche de
         // l'espèce, même cible que l'item « Fiche de l'espèce » du menu (#1794).
         // Sur un taxon sans fiche (« Bruit », « Oiseau », couple sans binôme), le motif part dans le bandeau
@@ -358,7 +350,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
         GestionnaireVues.avecDialogue(
                         barreOnglets,
                         gestionnaireFiltres,
-                        depotVues,
+                        memoire.vues(),
                         FEATURE,
                         CriteresAnalyse.vuesParDefaut(),
                         selecteurColonnes.adaptateur())
@@ -367,10 +359,11 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
 
         // Mémoire de session (#484, étendue à cet écran en #3098) : les filtres, plus le tri de CHACUNE
         // des trois tables. Une mémoire qui n'en aurait retenu qu'une aurait choisi laquelle sans le dire.
-        memoire.installer(FEATURE, tableEspeces, gestionnaireFiltres, viewModel::signalerFiltresDeSessionAmputes);
-        memoire.memoriserTri(FEATURE, tableEspeces);
-        memoire.memoriserTri(FEATURE, tableCarres);
-        memoire.memoriserTri(FEATURE, panneauDetailController.table());
+        memoire.filtres()
+                .installer(FEATURE, tableEspeces, gestionnaireFiltres, viewModel::signalerFiltresDeSessionAmputes);
+        memoire.filtres().memoriserTri(FEATURE, tableEspeces);
+        memoire.filtres().memoriserTri(FEATURE, tableCarres);
+        memoire.filtres().memoriserTri(FEATURE, panneauDetailController.table());
 
         // Bandeau de retour (export, échec de chargement, action refusée), mutualisé avec Sons & validation
         // (#1837) : libellé, visibilité, couleur de sévérité et croix de fermeture.
@@ -560,7 +553,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
         tableEspeces.getSortOrder().clear();
         tableCarres.getSortOrder().clear();
         panneauDetailController.table().getSortOrder().clear();
-        memoire.oublier(FEATURE);
+        memoire.filtres().oublier(FEATURE);
     }
     /// « 📤 Exporter… » : demande où écrire, puis délègue au ViewModel l'écriture CSV de l'inventaire
     /// **affiché** (la liste filtrée courante, pas l'inventaire complet). La désignation passe par le port

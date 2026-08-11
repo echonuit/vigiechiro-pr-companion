@@ -2,8 +2,6 @@ package fr.univ_amu.iut.multisite.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
-import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
-import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
@@ -14,7 +12,7 @@ import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
-import fr.univ_amu.iut.commun.view.MemoireFiltres;
+import fr.univ_amu.iut.commun.view.MemoireEcran;
 import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
@@ -72,7 +70,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// Zones de la barre de statut (#1023) : cet agrégat top-level ne renseigne que le **centre** (résumé
     /// « N sites… ») ; la gauche (identité) reste au défaut du chrome.
     /// Mémoire de session (#3098) : les filtres et le tri survivent à une sortie de l'écran.
-    private final MemoireFiltres memoire;
+    private final MemoireEcran memoire;
 
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
@@ -89,8 +87,6 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private final NavigationMultisite navigation;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAudio ouvrirAudio;
-    private final DepotVues depotVues;
-    private final DepotDispositionColonnes depotColonnes;
     private final ExecuteurTache executeur;
 
     /// Traitement en lot (#2357) : il porte ses propres ports de dialogue, que les tests d'écran
@@ -236,13 +232,11 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     @Inject
     public MultisiteController(
             MultisiteViewModel viewModel,
-            MemoireFiltres memoire,
+            MemoireEcran memoire,
             ReconstructionViewModel reconstruction,
             NavigationMultisite navigation,
             OuvrirPassage ouvrirPassage,
             OuvrirAudio ouvrirAudio,
-            DepotVues depotVues,
-            DepotDispositionColonnes depotColonnes,
             ExecuteurTache executeur,
             ActionVigieChiroPassage vigieChiro,
             ActionsDeLot actions) {
@@ -252,8 +246,6 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
-        this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
-        this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
         this.actions = Objects.requireNonNull(actions, "actions");
@@ -295,7 +287,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                                 ligne -> ligne.idPassage() == null ? "" : String.valueOf(ligne.idPassage())),
                         new MenuCopier.Entree<>("Carré", LignePassage::numeroCarre)));
         GestionnaireColonnes.persister(
-                panneauTableauController.table(), colonnes, depotColonnes, FEATURE, "principale");
+                panneauTableauController.table(), colonnes, memoire.colonnes(), FEATURE, "principale");
         // Double-clic → ouvre M-Passage ; clic droit sélectionne la ligne survolée pour le menu de ligne
         // (contrat socle, aucune dépendance vers passage.view).
         DoubleClicLigne.installer(panneauTableauController.table(), this::ouvrirPassageDeLaLigne);
@@ -324,7 +316,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         GestionnaireVues.avecDialogue(
                         barreOnglets,
                         gestionnaireFiltres,
-                        depotVues,
+                        memoire.vues(),
                         FEATURE,
                         CriteresMultisite.vuesParDefaut(),
                         GestionnaireColonnes.adaptateurMonoTable(
@@ -335,12 +327,13 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 .surRestauration(viewModel::signalerVueAmputee);
 
         // Mémoire de session (#484, étendue à cet écran en #3098).
-        memoire.installer(
-                FEATURE,
-                panneauTableauController.table(),
-                gestionnaireFiltres,
-                viewModel::signalerFiltresDeSessionAmputes);
-        memoire.memoriserTri(FEATURE, panneauTableauController.table());
+        memoire.filtres()
+                .installer(
+                        FEATURE,
+                        panneauTableauController.table(),
+                        gestionnaireFiltres,
+                        viewModel::signalerFiltresDeSessionAmputes);
+        memoire.filtres().memoriserTri(FEATURE, panneauTableauController.table());
 
         choixTri.getItems().setAll(TriMultisite.values());
         choixTri.setConverter(Convertisseurs.parLibelle(tri -> tri == null ? "" : tri.libelle()));
@@ -535,7 +528,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         panneauTableauController.table().getSortOrder().clear();
         // #3098 : sans cet oubli, la memoire de session remettrait les filtres a la visite suivante et
         // le bouton paraitrait ne pas avoir pris.
-        memoire.oublier(FEATURE);
+        memoire.filtres().oublier(FEATURE);
     }
 
     /// « ☁ Reconstruire un passage manquant… » (#1396) : ouvre la modale qui liste les nuits déposées sur
