@@ -548,6 +548,37 @@ compter sur le mécanisme censé le combler :
 | retard dans la même majeure | **avertissement**, non bloquant |
 | retard d'une **majeure entière** | **rouge** |
 | version indéterminée après trois tentatives | **rouge** |
+| commit épinglé **180 jours** plus vieux que le HEAD amont | **avertissement**, non bloquant |
+| commit épinglé **365 jours** plus vieux que le HEAD amont | **rouge** |
+
+#### Un tag qui ne bouge jamais rendait cette mesure aveugle (#2213)
+
+Les quatre premières lignes comparent des **tags**. Elles ne peuvent donc rien voir quand l'amont n'en
+publie plus.
+
+Mesuré le 2026-08-11 : `vedantmgoyal9/winget-releaser` ne porte qu'un tag `v2`, posé sur un commit de
+**novembre 2024**, alors que sa branche par défaut vivait toujours (juillet 2026). Tag épinglé = tag
+amont = `v2` : **aucun écart**, verdict « à jour », et **vingt et un mois** de retard réel sur l'action
+qui soumet nos paquets Windows. Le coût n'était pas théorique : `release-notes-url` y était
+silencieusement ignoré, et `komac sync-fork` en était absent.
+
+D'où la mesure d'**âge**, qui ne dépend d'aucun tag : la date du commit épinglé face à celle du HEAD
+amont. Elle mesure **notre** retard, pas le rythme de publication de l'amont - une action dormante
+reste à zéro jour, puisque son HEAD ne bouge pas non plus.
+
+Les seuils sont **calibrés sur une mesure**, pas choisis : au moment de la pose, le pire écart du dépôt
+était de **143 jours** (`anchore/scan-action`). La garde est donc muette sur l'état sain du jour, et le
+cas qui lui avait échappé (608 jours) est rouge.
+
+⚠️ **Un épinglage hors tag reste licite**, et c'est ce que winget-releaser exige désormais : le
+commentaire dit alors l'intention (`# main @ 2026-07-28`). La garde distingue trois cas, parce que
+confondre les deux derniers reviendrait à se rassurer :
+
+| Le SHA ne porte aucun tag, et le commentaire… | Lecture |
+|---|---|
+| annonce une version (`# v7`) | le tag a été **déplacé ou supprimé** en amont : **rouge** |
+| annonce autre chose (`# main @ …`) | épinglage hors tag **assumé** : seul l'âge juge |
+| est **absent** | on ne peut pas trancher, donc on ne tranche pas au rassurant : **rouge** |
 
 L'asymétrie est délibérée. L'amont publie pour des raisons qui ne nous regardent pas : un rouge à
 chaque release amont s'apprendrait à ignorer aussi vite qu'un garde muet. Une majeure de retard, elle,
