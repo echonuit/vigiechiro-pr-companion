@@ -2,12 +2,14 @@ package fr.univ_amu.iut.saison.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
+import fr.univ_amu.iut.commun.view.AuDepartEcran;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
@@ -17,6 +19,7 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
@@ -34,7 +37,7 @@ import javafx.util.StringConverter;
 ///
 /// Implémente [RafraichirAuRetour] : revenir d'un passage ouvert depuis le tableau recharge le solde,
 /// pour ne pas reproduire le défaut de compteurs figés d'accueil (#1376).
-public class SaisonController implements RafraichirAuRetour {
+public class SaisonController implements RafraichirAuRetour, AuDepartEcran {
 
     private static final DateTimeFormatter JOUR_MOIS = DateTimeFormatter.ofPattern("dd/MM");
 
@@ -87,6 +90,13 @@ public class SaisonController implements RafraichirAuRetour {
     private TableColumn<LigneSaison, String> colResteAFaire;
 
     private final SaisonViewModel viewModel;
+
+    /// Le signal de mutation du socle (#3541), SINGLETON. Cet écran ne l'est délibérément pas.
+    private final RevisionDonnees revision;
+
+    /// L'écoute de la révision, gardée en **champ** pour pouvoir être retirée : une lambda posée à
+    /// l'abonnement et recréée au désabonnement ne retirerait rien.
+    private final ChangeListener<Number> surRevision = (observable, avant, apres) -> rafraichirDepuisLaDonnee();
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirSite ouvrirSite;
 
@@ -95,8 +105,10 @@ public class SaisonController implements RafraichirAuRetour {
     private boolean programmationSelection;
 
     @Inject
-    public SaisonController(SaisonViewModel viewModel, OuvrirPassage ouvrirPassage, OuvrirSite ouvrirSite) {
+    public SaisonController(
+            SaisonViewModel viewModel, OuvrirPassage ouvrirPassage, OuvrirSite ouvrirSite, RevisionDonnees revision) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.revision = Objects.requireNonNull(revision, "revision");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
     }
@@ -164,6 +176,12 @@ public class SaisonController implements RafraichirAuRetour {
         viewModel.chargerCourant();
         peuplerAnnees();
         installerFiltreCampagne();
+
+        // Ce qui arrive d'AILLEURS pendant qu'on regarde l'écran (#3591) : un import, une synchro, une
+        // restauration. `rafraichirAuRetour` ci-dessous couvre l'autre moitié, ce qu'une sous-activité
+        // a changé pendant que l'écran était masqué - un verdict, un dépôt : des `update`, qui
+        // n'émettent pas. Les deux mécanismes coexistent parce qu'ils ne disent pas la même chose.
+        revision.revisionProperty().addListener(surRevision);
     }
 
     /// Filtre par campagne (#2610), **effacé de la mise en page** quand il n'y a rien à proposer :
@@ -209,6 +227,25 @@ public class SaisonController implements RafraichirAuRetour {
         // De retour d'un passage/point ouvert depuis le tableau : le solde a pu changer (#1376). On
         // recharge la saison affichée sans déranger le choix d'année.
         viewModel.charger(viewModel.annee());
+    }
+
+    /// Recharge la saison affichée quand la **donnée** a bougé ailleurs. Passe par le même chemin que
+    /// le rafraîchissement au retour : l'année choisie et la campagne retenue sont conservées, le
+    /// ViewModel les mémorisant délibérément.
+    private void rafraichirDepuisLaDonnee() {
+        viewModel.charger(viewModel.annee());
+    }
+
+    /// Rend l'abonnement quand l'écran quitte l'historique (#230).
+    ///
+    /// `RevisionDonnees` est un **singleton** ; le ViewModel de cet écran ne l'est délibérément pas
+    /// (« un VM frais par chargement de vue évite que des listeners de vues fermées restent
+    /// accrochés »). Sans ce retrait, le singleton garderait une référence forte vers l'écoute d'une
+    /// vue morte, et chaque réouverture en ajouterait une : à la dixième, une mutation déclencherait
+    /// dix rechargements dont neuf pour personne.
+    @Override
+    public void auDepartEcran() {
+        revision.revisionProperty().removeListener(surRevision);
     }
 
     private void ouvrirLigne(LigneSaison ligne) {
