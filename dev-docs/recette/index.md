@@ -31,6 +31,7 @@ ailleurs il n'est qu'écran de transit (seule la fluidité de la transition est 
 | S6 | Exploiter et piloter (vues agrégées) | [Activité de la nuit](sessions/s6-exploiter-piloter.md) (écrite), puis Carte & passages, Espèces & observations, Audit, recherche |
 | S7 | Réglages, interrupteurs OFF, états dégradés | [Réglages](sessions/s7-reglages.md) (tous les onglets, contribués par les features) + chrome |
 | S8 | Récupérer une nuit déposée (P12 de bout en bout, carte SD réelle) | Connexion, Mes sites, Toutes mes nuits, passage |
+| S9 | [Installer et mettre à jour](sessions/s9-installer-mettre-a-jour.md) (winget, machine Windows réelle) | aucun : la session se joue **avant** l'application |
 
 Chaque session se joue en trois temps : une **passe statique** en solo (préparation, postée en
 commentaire), la **session interactive** (pilotage écran par écran), puis un **triage à froid**.
