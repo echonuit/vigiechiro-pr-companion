@@ -40,6 +40,31 @@ final class ArborescenceFichiers {
     /// (`ExtracteurZip`, `SupprimerSauvegarde`) : ici l'appelant a besoin de savoir. Une bascule de
     /// restauration qui ne parvient pas à retirer l'ancien dossier ne doit pas enchaîner sur le
     /// renommage comme si de rien n'était (#3514).
+    /// Ce que pèse un dossier, fichiers réguliers seulement.
+    ///
+    /// Vient d'`InventaireSauvegardes`, où elle était privée : la sauvegarde en a eu besoin pour
+    /// mesurer la place requise **avant** de copier (#3572), et une seconde implémentation aurait été
+    /// la huitième variante du même parcours d'arborescence dans ce dépôt.
+    ///
+    /// ⚠️ Un fichier qui disparaît pendant le parcours compte pour **zéro** plutôt que de faire échouer
+    /// la mesure : observer ne doit jamais être plus fragile que ce qu'on observe.
+    static long octets(Path dossier) throws IOException {
+        try (Stream<Path> arborescence = Files.walk(dossier)) {
+            return arborescence
+                    .filter(Files::isRegularFile)
+                    .mapToLong(ArborescenceFichiers::tailleOuZero)
+                    .sum();
+        }
+    }
+
+    private static long tailleOuZero(Path fichier) {
+        try {
+            return Files.size(fichier);
+        } catch (IOException disparu) {
+            return 0L;
+        }
+    }
+
     static void supprimerRecursivement(Path cible) throws IOException {
         if (!Files.exists(cible)) {
             return;
