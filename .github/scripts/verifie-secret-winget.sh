@@ -80,7 +80,25 @@ verifier_l_acces() {
     echo "   Chemin interrogé : $CHEMIN_PAQUET"
     echo "   Réponse de l'API : ${erreur:-<vide, sans message d erreur>}"
     echo
+    # Le cas RÉELLEMENT rencontré, et le seul que personne n'avait envisagé : ce n'est ni un droit
+    # manquant ni un jeton mort, c'est une politique de l'entreprise qui héberge winget-pkgs.
+    if printf '%s' "$erreur" | grep -qiE "lifetime|enterprise"; then
+      echo "   ⚠️ C'EST LA POLITIQUE D'ENTREPRISE DE MICROSOFT, PAS UN DÉFAUT DE VOTRE JETON."
+      echo
+      echo "   L'entreprise « Microsoft Open Source », propriétaire de winget-pkgs, refuse tout PAT"
+      echo "   « classic » dont la DURÉE DE VIE dépasse 8 JOURS. Un jeton parfaitement valide, au bon"
+      echo "   type et au bon scope, est rejeté sur ce seul critère."
+      echo
+      echo "   Refaire un PAT « classic », scope public_repo, expiration à 8 JOURS OU MOINS, puis :"
+      echo "     printf '%s' \"\$PAT\" | gh secret set WINGET_TOKEN --repo echonuit/vigiechiro-pr-companion"
+      echo
+      echo "   Ce jeton est donc PÉRISSABLE et le restera. Le geste réaliste est d'en créer un juste"
+      echo "   avant chaque soumission, qui est de toute façon un geste manuel et rare."
+      return 1
+    fi
+
     echo "   Lire ce message AVANT de conclure : il sépare des causes que le silence confondait."
+    echo "     - « lifetime … 8 days » (403) : politique d'entreprise de Microsoft, cf. ci-dessus."
     echo "     - « Not Found » (404)      : le jeton n'a pas le droit de lire ce dépôt public."
     echo "                                  Un PAT « classic » avec public_repo l'a ; un jeton"
     echo "                                  fine-grained restreint à des dépôts choisis ne l'a pas."
@@ -171,6 +189,30 @@ FIN
   verifie 0 "sans --verifie-l-acces, aucune sonde n est appelée" \
     "WINGET_TOKEN=ghp_x WINGET_SONDE='$bac/sonde-muette' '$MOI'"
 
+  # Le cas RÉEL du 2026-08-11, rejoué : la politique d'entreprise de Microsoft. La garde doit le
+  # NOMMER, sinon le prochain qui le rencontre repart sur les fausses pistes (droits, jeton mort)
+  # que ce même message avait suggérées la première fois.
+  cat > "$bac/sonde-politique" <<'FIN'
+#!/usr/bin/env bash
+case "$*" in
+  *"api user"*) echo "nedseb" ;;
+  *contents*)   echo "gh: The 'Microsoft Open Source' enterprise forbids access via a personal access tokens (classic) if the token's lifetime is greater than 8 days. (HTTP 403)" >&2; exit 1 ;;
+esac
+FIN
+  chmod +x "$bac/sonde-politique"
+
+  verifie 1 "un jeton refusé par la politique d entreprise est refusé" \
+    "WINGET_TOKEN=ghp_x WINGET_SONDE='$bac/sonde-politique' '$MOI' --verifie-l-acces"
+
+  sortie_politique=$(WINGET_TOKEN=ghp_x WINGET_SONDE="$bac/sonde-politique" "$MOI" --verifie-l-acces 2>&1)
+  if printf '%s' "$sortie_politique" | grep -qF "POLITIQUE D'ENTREPRISE"; then
+    echo "  ✔ la politique d entreprise est NOMMÉE, pas confondue avec un défaut de droits"
+  else
+    echo "  ✘ la politique d entreprise est NOMMÉE : le message ne la distingue pas"
+    printf '%s\n' "$sortie_politique" | sed 's/^/      /'
+    echecs=1
+  fi
+
   # ⚠️ Le cas qui manquait, et son absence a coûté un faux diagnostic : la garde doit RAPPORTER la
   # réponse de l'API, pas seulement rougir. Sans lui, elle rougissait aussi bien sur un 404 que sur
   # un hoquet réseau, en attribuant les deux au jeton.
@@ -184,7 +226,7 @@ FIN
   fi
 
   if [ "${echecs}" = 0 ]; then
-    echo "Auto-test de la garde secret winget : OK (13 cas, dont 8 rouges)."
+    echo "Auto-test de la garde secret winget : OK (15 cas, dont 9 rouges)."
   else
     echo "Auto-test de la garde secret winget : ÉCHEC - la règle ne fait plus ce qu'elle promet."
   fi
