@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -63,6 +64,11 @@ public class ServiceSauvegarde {
     /// Huit suffisent largement : le condensé ne départage que les racines d'une même base, elles se
     /// comptent en dizaines, et il reste lisible à l'œil dans un nom de dossier.
     private static final int LONGUEUR_CONDENSE = 8;
+    /// Ce que porte une sauvegarde **en cours de constitution**. En tête du nom, et non en
+    /// suffixe : `InventaireSauvegardes` classe sur le **préfixe**, donc un suffixe la laisserait
+    /// passer pour complète (#3572).
+    static final String PREFIXE_EN_CHANTIER = "en-chantier-";
+
     private static final String SOUS_DOSSIER_BASE = "base";
     private static final String SOUS_DOSSIER_SESSIONS = "sessions";
     private static final DateTimeFormatter HORODATAGE = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
@@ -132,6 +138,7 @@ public class ServiceSauvegarde {
     public BilanSauvegarde sauvegarderComplet(Path dossierDestination) {
         Objects.requireNonNull(dossierDestination, "dossierDestination");
         try {
+            refuserSiLaPlaceManque(dossierDestination);
             Path racineBackup = dossierLibreComplet(dossierDestination);
             instantane.ecrire(racineBackup.resolve(SOUS_DOSSIER_BASE).resolve(Workspace.FICHIER_BASE));
             Path dossierSessions = Files.createDirectories(racineBackup.resolve(SOUS_DOSSIER_SESSIONS));
@@ -148,7 +155,10 @@ public class ServiceSauvegarde {
                 }
             }
             ManifesteSauvegardeJson.ecrire(racineBackup, ManifesteSauvegarde.courant(emportees));
-            return new BilanSauvegarde(racineBackup, emportees.size(), inaccessibles);
+            // Le nom n'arrive qu'ICI, et c'est toute la décision : une sauvegarde ne porte le sien
+            // qu'une fois complète (#3572).
+            Path nommee = nommer(racineBackup);
+            return new BilanSauvegarde(nommee, emportees.size(), inaccessibles);
         } catch (IOException | SQLException echec) {
             throw new DataAccessException("Sauvegarde complète impossible vers " + dossierDestination, echec);
         }
@@ -224,15 +234,60 @@ public class ServiceSauvegarde {
         return racines;
     }
 
+    /// Refuse **avant la première copie** quand la place manque, en chiffrant ce qui manque.
+    ///
+    /// L'import, le lot et la restauration gardent tous la place avant d'écrire ; la sauvegarde, qui
+    /// écrit le plus et vers un support **choisi par l'utilisateur** - souvent une clé, souvent
+    /// petite - ne le faisait pas (#3572). Elle copiait jusqu'à saturation, échouait à mi-parcours, et
+    /// laissait un dossier qui ressemblait à une sauvegarde.
+    ///
+    /// ⚠️ Le besoin se mesure **sur le disque** ici, contrairement à la restauration où le manifeste le
+    /// portait déjà : les racines existent, il n'y a pas encore de manifeste à lire. Une racine
+    /// inaccessible ne compte pas - elle ne sera pas copiée, et la sauvegarde l'annonce (#1346).
+    private void refuserSiLaPlaceManque(Path dossierDestination) throws IOException, SQLException {
+        Files.createDirectories(dossierDestination);
+        long requis = Files.size(source.workspace().cheminBaseDeDonnees());
+        for (Path racineSession : racinesSessions()) {
+            if (Files.isDirectory(racineSession)) {
+                requis += ArborescenceFichiers.octets(racineSession);
+            }
+        }
+        long libre = espaceDisque.disponibleOctets(dossierDestination);
+        if (libre < requis) {
+            throw new RefusAvantEcriture(
+                    "Il n'y a pas assez de place dans " + dossierDestination + " : la sauvegarde pèse "
+                            + Formats.octetsLisibles(requis) + " et il reste " + Formats.octetsLisibles(libre)
+                            + ". Libérez " + Formats.octetsLisibles(Math.max(1024, requis - libre))
+                            + ", ou sauvegardez vers un autre emplacement. Rien n'a été touché.",
+                    null);
+        }
+    }
+
+    /// Donne enfin son nom à la sauvegarde, une fois le manifeste écrit.
+    ///
+    /// Le renommage ferme ce qu'un nettoyage à l'échec ne fermerait pas : une coupure de courant ou un
+    /// `kill -9` ne laissent tourner aucun code. Tant que le dossier porte son nom de chantier,
+    /// `InventaireSauvegardes` ne le reconnaît pas, et il ne peut donc pas se faire passer pour une
+    /// sauvegarde complète.
+    private Path nommer(Path enChantier) throws IOException {
+        Path nommee =
+                enChantier.resolveSibling(enChantier.getFileName().toString().substring(PREFIXE_EN_CHANTIER.length()));
+        return Files.move(enChantier, nommee);
+    }
+
     /// Premier dossier de sauvegarde complète libre (horodaté, suffixé `-1`, `-2`… en cas de collision).
+    ///
+    /// Il est créé sous un nom **de chantier**, que rien ne reconnaît comme une sauvegarde : le nom
+    /// définitif n'arrive qu'avec [#nommer]. La collision se cherche sur le nom **définitif**, sans quoi
+    /// deux sauvegardes de la même seconde se marcheraient dessus au renommage.
     private Path dossierLibreComplet(Path dossier) throws IOException {
         Files.createDirectories(dossier);
         String base = PREFIXE_COMPLET + HORODATAGE.format(horloge.maintenant());
-        Path candidat = dossier.resolve(base);
+        String nom = base;
         int suffixe = 1;
-        while (Files.exists(candidat)) {
-            candidat = dossier.resolve(base + "-" + suffixe++);
+        while (Files.exists(dossier.resolve(nom)) || Files.exists(dossier.resolve(PREFIXE_EN_CHANTIER + nom))) {
+            nom = base + "-" + suffixe++;
         }
-        return Files.createDirectories(candidat);
+        return Files.createDirectories(dossier.resolve(PREFIXE_EN_CHANTIER + nom));
     }
 }

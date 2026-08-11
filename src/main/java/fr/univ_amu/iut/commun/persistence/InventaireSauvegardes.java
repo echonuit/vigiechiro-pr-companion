@@ -109,7 +109,7 @@ public final class InventaireSauvegardes {
 
     private static Entree entree(Path chemin, Nature nature) {
         try {
-            long octets = nature == Nature.COMPLETE ? tailleDuContenu(chemin) : Files.size(chemin);
+            long octets = nature == Nature.COMPLETE ? ArborescenceFichiers.octets(chemin) : Files.size(chemin);
             return new Entree(
                     chemin.getFileName().toString(),
                     Files.getLastModifiedTime(chemin).toInstant(),
@@ -117,25 +117,6 @@ public final class InventaireSauvegardes {
                     nature);
         } catch (IOException e) {
             throw new UncheckedIOException("Lecture impossible de la sauvegarde " + chemin, e);
-        }
-    }
-
-    private static long tailleDuContenu(Path dossier) throws IOException {
-        try (Stream<Path> arborescence = Files.walk(dossier)) {
-            return arborescence
-                    .filter(Files::isRegularFile)
-                    .mapToLong(InventaireSauvegardes::tailleOuZero)
-                    .sum();
-        }
-    }
-
-    /// Un fichier qui disparaît pendant le parcours ne fait pas échouer l'inventaire : il compte pour
-    /// zéro. Observer ne doit jamais être plus fragile que ce qu'on observe.
-    private static long tailleOuZero(Path fichier) {
-        try {
-            return Files.size(fichier);
-        } catch (IOException illisible) {
-            return 0;
         }
     }
 }

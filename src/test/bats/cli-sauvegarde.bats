@@ -237,3 +237,17 @@ importer_une_nuit_sur_a() {
   [ "${status}" -eq 10 ]
   [[ "${output}" == *"INCOMPLÈTE"* ]]
 }
+
+@test "sauvegarde complète : rien ne reste sous un nom de chantier (#3572)" {
+  # Une sauvegarde ne porte son nom qu'une fois complète : elle se construit sous « en-chantier-… »,
+  # et n'est renommée qu'après l'écriture du manifeste. Vu du vrai binaire, le dossier final ne doit
+  # donc jamais garder ce préfixe - sinon la sauvegarde suivante, elle, ne serait pas reconnue.
+  importer_une_nuit_sur_a
+  cli_sur "${MACHINE_A}" sauvegarder --complet --dossier "${SAUVEGARDES}" >/dev/null 2>&1
+
+  run bash -c "ls -1 '${SAUVEGARDES}'"
+
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"vigiechiro-sauvegarde-complete-"* ]]
+  [[ "${output}" != *"en-chantier-"* ]]
+}

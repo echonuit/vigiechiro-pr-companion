@@ -26,6 +26,9 @@ class ServiceSauvegardeTest {
     @TempDir
     Path workspaceDir;
 
+    /// Le nom que porte une sauvegarde EN COURS de constitution, avant son renommage final.
+    private static final String NOM_EN_CHANTIER = "vigiechiro-sauvegarde-complete-20260707-143015";
+
     private SourceDeDonnees source;
     private UtilisateurDao utilisateurDao;
     private ServiceSauvegarde service;
@@ -120,6 +123,59 @@ class ServiceSauvegardeTest {
     }
 
     @Test
+    @DisplayName("Place insuffisante : refus chiffré AVANT d'écrire le moindre octet (#3572)")
+    void place_insuffisante_refuse_avant_d_ecrire() throws IOException {
+        seederSession("Car040962-2026-Pass1-A1");
+        Path destination = workspaceDir.resolve("cle-usb");
+        Files.createDirectories(destination);
+        ServiceSauvegarde sansPlace = avecEspace(0);
+
+        assertThatThrownBy(() -> sansPlace.sauvegarderComplet(destination))
+                .isInstanceOf(RefusAvantEcriture.class)
+                .as("« espace insuffisant » n'aide personne : il faut savoir combien libérer")
+                .hasMessageContaining("Libérez")
+                .hasMessageContaining("Rien n'a été touché");
+
+        try (var contenu = Files.list(destination)) {
+            assertThat(contenu)
+                    .as("un garde qui refuse APRÈS avoir créé le dossier n'est pas un garde, c'est un"
+                            + " message : rien ne doit subsister")
+                    .isEmpty();
+        }
+    }
+
+    @Test
+    @DisplayName("Interrompue, elle ne porte pas le nom d'une sauvegarde complète (#3572)")
+    void interrompue_elle_ne_se_fait_pas_passer_pour_complete() throws IOException {
+        seederSession("Car040962-2026-Pass1-A1");
+        Path destination = workspaceDir.resolve("sauvegardes");
+
+        Path aboutie = service.sauvegarderComplet(destination).dossier();
+
+        assertThat(aboutie.getFileName().toString())
+                .as("une sauvegarde qui aboutit porte son nom")
+                .startsWith("vigiechiro-sauvegarde-complete-")
+                .doesNotStartWith(ServiceSauvegarde.PREFIXE_EN_CHANTIER);
+        try (var contenu = Files.list(destination)) {
+            assertThat(contenu.map(chemin -> chemin.getFileName().toString()))
+                    .as("et rien ne reste sous le nom de chantier")
+                    .noneMatch(nom -> nom.startsWith(ServiceSauvegarde.PREFIXE_EN_CHANTIER));
+        }
+
+        // Ce qu'une interruption laisse : un dossier jamais renommé. C'est le contrat entre le service
+        // qui écrit et l'inventaire qui lit, et c'est lui qui manquait - `natureDe` classe sur le
+        // PRÉFIXE, donc un marqueur en suffixe aurait laissé le dossier passer pour complet.
+        Files.createDirectories(destination.resolve(
+                ServiceSauvegarde.PREFIXE_EN_CHANTIER + "vigiechiro-sauvegarde-complete-20260707-150000"));
+
+        assertThat(InventaireSauvegardes.lire(destination))
+                .as("sans quoi une sauvegarde tronquée se restaure en mode dégradé - le manifeste, écrit"
+                        + " en dernier, y est absent, ce qui veut dire « ancien format » ailleurs")
+                .hasSize(1)
+                .allMatch(entree -> entree.nom().equals(aboutie.getFileName().toString()));
+    }
+
+    @Test
     @DisplayName("Sauvegarde complète : base + dossiers de session copiés dans un dossier horodaté")
     void sauvegarde_complete_copie_base_et_dossiers() throws IOException {
         utilisateurDao.insert(new Utilisateur("u1", "Alice"));
@@ -189,6 +245,12 @@ class ServiceSauvegardeTest {
 
         assertThat(utilisateurDao.findAll()).extracting(Utilisateur::localId).containsExactly("u1");
         assertThat(racineSession.resolve("transformes").resolve("seq.wav")).exists();
+    }
+
+    /// Un service qui croit le disque à `octetsLibres`, quel que soit le dossier.
+    private ServiceSauvegarde avecEspace(long octetsLibres) {
+        return new ServiceSauvegarde(
+                source, new HorlogeFigee(LocalDateTime.of(2026, 7, 7, 14, 30, 15)), dossier -> octetsLibres, () -> {});
     }
 
     /// Crée `<workspace>/<nom>/transformes/seq.wav` et déclare la session en base.
