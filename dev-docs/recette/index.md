@@ -23,7 +23,7 @@ ailleurs il n'est qu'écran de transit (seule la fluidité de la transition est 
 
 | # | Session (~1 h) | Écrans propriétaires |
 |---|---|---|
-| S1 | Premier contact (base vierge, connexion, déclarer un site) | accueil, Connexion, Mes sites, carré, Point |
+| S1 | Premier contact (base vierge, connexion, déclarer un site) | accueil (dont le **bandeau de compteurs vivant**, #1376), Connexion, Mes sites, carré, Point |
 | S2 | Importer une nuit (carte SD vers le pivot) | importation (+ cas dégradés), Rattachement, passage, diagnostic |
 | S3 | Vérifier (pré-check + écoute + verdict) | qualification (+ raccourcis clavier) |
 | S4 | Déposer et suivre (lot, dépôt réel, suivi) | lot |
