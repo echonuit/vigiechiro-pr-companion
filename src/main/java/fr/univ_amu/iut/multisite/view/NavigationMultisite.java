@@ -39,25 +39,25 @@ public class NavigationMultisite implements OuvrirMultisite {
 
     /// Affiche l'écran **M-Multisite** (vue agrégée des passages) dans la zone centrale du chrome.
     public void ouvrirAccueil() {
-        publier();
+        publierEnRacine();
     }
 
     /// Ouvre la vue multi-sites et **focalise** la carte sur le carré `numeroCarre` (« voir sur la carte »).
     @Override
     public void ouvrirSurCarre(String numeroCarre) {
-        publier().focaliserSur(numeroCarre);
+        publierEnEmpilant().focaliserSur(numeroCarre);
     }
 
     /// Ouvre la vue multi-sites et **focalise** la carte sur un **point précis** (carré + GPS, #154).
     @Override
     public void ouvrirSurPoint(String numeroCarre, double latitude, double longitude) {
-        publier().focaliserSurPoint(numeroCarre, latitude, longitude);
+        publierEnEmpilant().focaliserSurPoint(numeroCarre, latitude, longitude);
     }
 
     /// Ouvre la vue multi-sites, focalise sur le carré et **active l'édition** pour *placer* un point sans GPS.
     @Override
     public void ouvrirSurCarrePourPlacer(String numeroCarre) {
-        publier().focaliserSurCarrePourPlacer(numeroCarre);
+        publierEnEmpilant().focaliserSurCarrePourPlacer(numeroCarre);
     }
 
     /// Ouvre la modale **« Reconstruire un passage manquant »** (#1396) au-dessus de la vue multi-sites.
@@ -86,13 +86,34 @@ public class NavigationMultisite implements OuvrirMultisite {
     }
 
     /// Charge `Multisite.fxml`, le publie dans la zone centrale et renvoie son controller.
-    private MultisiteController publier() {
+    /// Publie la vue **en racine** : la carte ouverte depuis sa propre carte d'accueil n'a aucun contexte
+    /// à préserver, et l'empiler ferait un fil qui ne se vide jamais.
+    private MultisiteController publierEnRacine() {
+        return publier(true);
+    }
+
+    /// Publie la vue **en l'empilant** (#1378) : on arrive d'un carré, d'un point ou d'un passage, et le
+    /// chemin parcouru doit survivre - sans quoi « ← Retour » ramène à l'accueil au lieu de l'écran d'où
+    /// l'on vient, et le fil d'Ariane ment sur la façon dont on est arrivé là.
+    ///
+    /// L'**anti-ré-entrance** d'[Navigateur#empiler] fait le reste : appelée depuis un fil d'Ariane qui
+    /// remonte vers « Carte & passages » (chrome audio), la vue est déjà dans la pile, et l'on y dépile
+    /// au lieu d'en ajouter une seconde.
+    private MultisiteController publierEnEmpilant() {
+        return publier(false);
+    }
+
+    private MultisiteController publier(boolean enRacine) {
         FXMLLoader loader = ChargeurFxml.chargeur(NavigationMultisite.class, "Multisite.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
             MultisiteController controleur = loader.getController();
-            navigateur.ouvrirRacine(vue, "multisite", "Carte & passages", controleur);
+            if (enRacine) {
+                navigateur.ouvrirRacine(vue, "multisite", "Carte & passages", controleur);
+            } else {
+                navigateur.empiler(vue, "multisite", "Carte & passages", controleur);
+            }
             return controleur;
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
