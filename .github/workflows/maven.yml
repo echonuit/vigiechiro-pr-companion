@@ -260,34 +260,30 @@ jobs:
         # Deux conditions, pas une : le processus doit tenir debout, ET la sortie doit être exempte
         # d'erreur de chargement. Une exception sur un fil de fond ne tue pas le processus - s'en
         # tenir à la survie fabriquerait un vert creux.
+        # La logique vit dans un script depuis #3617 : elle sert aussi aux EMBALLAGES, vérifiés dans
+        # `release.yml`, qu'aucune PR ne traverse. Une étape écrite là-bas peut être fusionnée cassée
+        # et ne se découvrir qu'au train suivant, en bloquant la publication. Ici, elle est exercée
+        # pour de vrai à chaque PR.
         run: |
           set -euo pipefail
-          journal=$(mktemp)
-          env -u DISPLAY JAVA_TOOL_OPTIONS=-Dglass.platform=Headless \
-            target/dist/VigieChiroCompanion/bin/VigieChiroCompanion >"$journal" 2>&1 &
-          pid=$!
+          chmod +x .github/scripts/verifie-demarrage-emballage.sh
+          ./.github/scripts/verifie-demarrage-emballage.sh \
+            target/dist/VigieChiroCompanion/bin/VigieChiroCompanion \
+            --secondes 45 --libelle "app-image (runtime jlink)"
 
-          tenu=0
-          while [ "$tenu" -lt 45 ] && kill -0 "$pid" 2>/dev/null; do
-            sleep 1
-            tenu=$((tenu + 1))
-          done
-
-          if kill -0 "$pid" 2>/dev/null; then
-            kill "$pid" 2>/dev/null || true
-            wait "$pid" 2>/dev/null || true
-          else
-            set +e; wait "$pid"; code=$?; set -e
-            echo "::error::Le paquet s'est arrêté seul après ${tenu} s (code ${code}) : il ne démarre pas."
-            sed -n '1,120p' "$journal"
-            exit 1
-          fi
-
-          if grep -qE 'NoClassDefFoundError|ClassNotFoundException|Exception in Application start method' "$journal"; then
-            echo "::error::Le paquet reste en vie mais son démarrage a levé une erreur de chargement."
-            grep -nE 'NoClassDefFoundError|ClassNotFoundException|Exception in Application start method' "$journal" | head -20
-            sed -n '1,120p' "$journal"
-            exit 1
-          fi
-
-          echo "Le paquet démarre sur son propre runtime et tient ${tenu} s, sans erreur de chargement."
+      - name: L'archive portable survit-elle à son emballage ? (#3617)
+        # L'app-image ci-dessus démarre : c'est la CHARGE UTILE. L'archive portable en est
+        # l'ENVELOPPE, et `tar.gz` a été choisi pour une raison précise - il préserve le bit
+        # exécutable du lanceur. Cette propriété n'était vérifiée nulle part.
+        #
+        # On empaquette, on ré-extrait AILLEURS (pas par-dessus l'original, qui masquerait une perte
+        # de permission), et on relance depuis l'extraction. C'est le trajet réel de l'utilisateur.
+        run: |
+          set -euo pipefail
+          bac=$(mktemp -d)
+          tar -czf "$bac/portable.tar.gz" -C target/dist VigieChiroCompanion
+          tar -xzf "$bac/portable.tar.gz" -C "$bac"
+          ./.github/scripts/verifie-demarrage-emballage.sh \
+            "$bac/VigieChiroCompanion/bin/VigieChiroCompanion" \
+            --secondes 30 --libelle "archive portable (tar.gz ré-extraite)"
+          rm -rf "$bac"
