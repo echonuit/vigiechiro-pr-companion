@@ -224,6 +224,23 @@ sauvegarde est ancienne » et « cette sauvegarde est tronquée ».
 
 Le marqueur est en **tête** du nom, et pas en suffixe, pour cette raison exacte.
 
+### Le garde refuse aussi quand il n'a pas pu tout voir
+
+Le garde pèse les racines de session avec `ArborescenceFichiers.peser`, qui rend **ce qu'elle a lu et
+ce qu'elle n'a pas pu ouvrir**. Si la liste des illisibles n'est pas vide, il refuse **avant** de
+comparer à la place libre, en nommant le dossier et sa cause système.
+
+⚠️ Le refus tombe avant la comparaison, pas après : annoncer « il manque N Go » sur une mesure
+incomplète enverrait l'utilisateur libérer de l'espace pour un problème de **droits**.
+
+La même pesée sert `InventaireSauvegardes`, qui **ignore** les illisibles et affiche ce qu'il sait :
+un affichage n'a pas à se briser parce qu'un dossier a résisté. Un geste, deux besoins, et c'est
+l'appelant qui tranche - comme `supprimerRecursivement` et `effacerAuMieux`
+([ADR 3627](decisions/3627-une-mesure-dit-ce-qu-elle-n-a-pas-pu-lire.md), [ADR 3574](decisions/3574-un-effacement-dit-son-contrat-dans-son-nom.md)).
+
+⚠️ Le parcours est une **file explicite** et non `Files.walk` : `walk` lève sur le premier dossier
+interdit et interrompt tout, alors qu'on veut mesurer le reste et rapporter ce qui a résisté.
+
 ## Une restauration complète est vérifiée, puis basculée
 
 `ServiceSauvegarde.restaurerComplet` s'appuie sur le manifeste pour tenir la promesse en entier
