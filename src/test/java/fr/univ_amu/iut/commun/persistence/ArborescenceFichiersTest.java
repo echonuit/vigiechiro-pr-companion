@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.TailleFichier;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -90,6 +91,55 @@ class ArborescenceFichiersTest {
     void supprimer_recursivement_sur_l_absence() {
         assertThatCode(() -> ArborescenceFichiers.supprimerRecursivement(racine.resolve("jamais-cree")))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("#3627 : peser rend le total ET nomme ce qu'elle n'a pas pu lire")
+    void peser_nomme_ce_qu_elle_n_a_pas_pu_lire() throws IOException {
+        Path dossier = Files.createDirectories(racine.resolve("nuit"));
+        Files.writeString(dossier.resolve("lisible.wav"), "12345");
+        Path opaque = Files.writeString(dossier.resolve("opaque.wav"), "ceci ne sera jamais pesé");
+
+        ArborescenceFichiers.Pesee pesee = ArborescenceFichiers.peser(dossier, illisible(opaque));
+
+        assertThat(pesee.octets())
+                .as("le reste du dossier reste mesuré : s'arrêter au premier trou ne dirait pas combien"
+                        + " pèse ce qu'on a pu lire, et l'appelant a besoin des deux")
+                .isEqualTo(5L);
+        assertThat(pesee.illisibles())
+                .as("sans cette liste, le zéro du fichier opaque se confond avec un fichier vide")
+                .extracting(ArborescenceFichiers.EchecLecture::chemin)
+                .containsExactly(opaque);
+        assertThat(pesee.complete()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#3627 : tout lisible, la pesée se déclare complète")
+    void peser_sur_un_dossier_entierement_lisible() throws IOException {
+        Path dossier = Files.createDirectories(racine.resolve("nuit-saine"));
+        Files.writeString(dossier.resolve("a.wav"), "123");
+        Files.writeString(dossier.resolve("b.wav"), "45");
+
+        ArborescenceFichiers.Pesee pesee = ArborescenceFichiers.peser(dossier, TailleFichier.reelle());
+
+        // Sans ce cas, `complete()` pourrait rendre `false` en toutes circonstances et l'autre test
+        // resterait vert : le garde refuserait alors TOUTE sauvegarde, ce qui est une panne aussi.
+        assertThat(pesee.octets()).isEqualTo(5L);
+        assertThat(pesee.complete()).isTrue();
+    }
+
+    /// Une pesée qui échoue sur un fichier précis, et se comporte normalement sur les autres.
+    ///
+    /// ⚠️ C'est le port qui rend ce test possible : `Files.size` ne lève pas sur commande. Un dossier
+    /// en `chmod 000` ferait échouer le **parcours** avant la pesée, et un lien mort est écarté par
+    /// `isRegularFile` - la panne réelle n'a pas d'équivalent portable qu'on puisse fabriquer.
+    private TailleFichier illisible(Path interdit) {
+        return fichier -> {
+            if (fichier.equals(interdit)) {
+                throw new IOException("Permission non accordée");
+            }
+            return Files.size(fichier);
+        };
     }
 
     /// Un dossier dont le contenu ne peut pas être retiré : le parent est en lecture seule.
