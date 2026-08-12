@@ -163,8 +163,15 @@ public class ReactivationModaleController {
         // rendu ses dernières lignes sous la ligne de flottaison (cf. reconstruction #1534). La fenêtre suit
         // désormais les TROIS révélations, par le patron commun - la bande chiffrée (#2358) en fait partie,
         // sans quoi elle repousserait à son tour les boutons hors de la fenêtre.
+        // #3453, troisième cas : le message d'erreur paraît sur `erreurProperty`, qui n'était ni
+        // déclarée ici, ni le moteur d'une zone déclarée. La fenêtre ne suivait donc pas - et c'est le
+        // pire moment pour déborder, puisque c'est là qu'on a quelque chose à lire.
         Modales.suivreLaCroissance(
-                racine, ancrageDemarre, viewModel.compteRenduProperty(), viewModel.rapportProperty());
+                racine,
+                ancrageDemarre,
+                viewModel.compteRenduProperty(),
+                viewModel.rapportProperty(),
+                viewModel.erreurProperty());
 
         boutonAnnuler.visibleProperty().bind(operationEnCours);
         boutonAnnuler.managedProperty().bind(operationEnCours);

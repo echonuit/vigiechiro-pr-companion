@@ -61,6 +61,20 @@ public final class Modales {
     ///
     /// @param racine la racine de la modale, celle que porte la scène
     /// @param revelations les propriétés dont un changement fait paraître du contenu
+    /// ⚠️ **Déclarez CHAQUE révélation** - ou la propriété qui la pilote. C'est la seule règle de cet
+    /// appel, et elle s'oublie en silence : une zone non déclarée fait déborder le contenu **pendant tout
+    /// le transitoire**, puis tout se recale d'un coup à la première révélation surveillée. L'utilisateur
+    /// voit un sursaut ; aucune capture ne le montre, puisqu'elle photographie un état stabilisé et
+    /// jamais le chemin pour y arriver.
+    ///
+    /// Le défaut a été trouvé **trois fois** (#3453) : la zone de progression de la connexion, la ligne
+    /// « Communication avec Vigie-Chiro… » du rattachement, et le message d'erreur de la réactivation.
+    /// Les trois avaient un argument de moins que de zones qui paraissent.
+    ///
+    /// Aucun garde-fou ne le vérifie, et c'est **délibéré** : distinguer « surveillé directement » de
+    /// « surveillé par son moteur » demanderait d'analyser les liaisons JavaFX, et une règle plus grossière
+    /// rendrait une majorité de candidats légitimes - la loupe bruyante que le dépôt écarte (ADR 3479).
+    /// La règle vit donc ici, là où on l'appelle.
     public static void suivreLaCroissance(Region racine, ObservableValue<?>... revelations) {
         Objects.requireNonNull(racine, "racine");
         for (ObservableValue<?> revelation : revelations) {

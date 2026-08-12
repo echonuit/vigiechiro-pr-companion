@@ -123,7 +123,11 @@ public class ConnexionModaleController {
         // modale ayant été dimensionnée à l'ouverture SANS lui, sa venue poussait les boutons du bas hors
         // de la fenêtre (#1534). On fait suivre à la fenêtre la croissance de son contenu, comme les
         // autres modales à révélation.
-        Modales.suivreLaCroissance(racine, bandeauStatut.managedProperty());
+        // #3453 : la zone de progression paraît AVANT le bandeau, pendant l'appel réseau. Ne surveiller
+        // que le bandeau laissait le contenu déborder tout le transitoire, puis se recaler d'un coup à
+        // l'arrivée du bandeau - ce que l'utilisateur voit comme un sursaut, et qu'aucune capture ne
+        // montre : elle photographie un état stabilisé, jamais le chemin pour y arriver.
+        Modales.suivreLaCroissance(racine, bandeauStatut.managedProperty(), zoneProgression.managedProperty());
         labelIdentite.textProperty().bind(viewModel.identiteProperty());
         // Le badge d'identité vire au vert quand on est connecté, au gris sinon (affordance d'état).
         viewModel.connecteProperty().addListener((obs, ancien, connecte) -> majBadgeIdentite(connecte));

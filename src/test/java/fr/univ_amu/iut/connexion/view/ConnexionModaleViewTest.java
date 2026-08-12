@@ -26,6 +26,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -101,6 +102,30 @@ class ConnexionModaleViewTest {
         Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
         assertThat(bandeau.isVisible()).isTrue();
         assertThat(bandeau.getText()).contains("Marque-page copié");
+    }
+
+    @Test
+    @DisplayName("#3453 : la zone de progression aussi agrandit la fenêtre, AVANT que le bandeau n'arrive")
+    void zone_de_progression_agrandit_la_fenetre(FxRobot robot) {
+        StackPane zone = robot.lookup("#zoneProgression").queryAs(StackPane.class);
+        Stage fenetre = (Stage) robot.lookup("#racine").query().getScene().getWindow();
+        double avant = fenetre.getHeight();
+
+        // Le TRANSITOIRE, et non l'état stabilisé : pendant la récupération du référentiel, la zone de
+        // progression paraît seule - le bandeau, lui, n'arrive qu'à la fin. Ne surveiller que le bandeau
+        // laissait donc le contenu déborder tout le temps de l'appel réseau, puis se recaler d'un coup.
+        //
+        // C'est précisément ce qu'aucune capture ne peut montrer : elle photographie un état stabilisé,
+        // jamais le chemin pour y arriver. D'où un constat qui n'est sorti que d'une séance pilotée.
+        robot.interact(() -> {
+            zone.setVisible(true);
+            zone.setManaged(true);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(fenetre.getHeight())
+                .as("la fenêtre suit la zone de progression, sans attendre le bandeau")
+                .isGreaterThan(avant);
     }
 
     @Test
