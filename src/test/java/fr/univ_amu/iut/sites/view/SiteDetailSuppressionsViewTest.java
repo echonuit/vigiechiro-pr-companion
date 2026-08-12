@@ -15,6 +15,7 @@ import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -56,6 +57,9 @@ class SiteDetailSuppressionsViewTest {
     private static final String CARRE = "640380";
     private static final String CODE_POINT = "A1";
 
+    /// L injecteur applicatif du test : sert a jouer, depuis le test, ce que fait la synchronisation.
+    private Injector injecteur;
+
     /// Ce que le confirmateur a **demandé**.
     private final List<String> confirmations = new ArrayList<>();
 
@@ -74,7 +78,8 @@ class SiteDetailSuppressionsViewTest {
     void start(Stage stage) throws Exception {
         Path workspace = Files.createTempDirectory("vc-suppressions-site");
         System.setProperty("vigiechiro.workspace", workspace.toString());
-        Injector injector = RacineInjecteur.creer();
+        injecteur = RacineInjecteur.creer();
+        Injector injector = injecteur;
         source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
@@ -138,6 +143,43 @@ class SiteDetailSuppressionsViewTest {
 
     private List<PointDEcoute> pointsEnBase() {
         return new PointDao(source).findBySite(site.id());
+    }
+
+    @Test
+    @DisplayName("#3593 : un point rapatrié par la synchro paraît SANS qu'on ait navigué")
+    void un_point_rapatrie_parait_sans_navigation(FxRobot robot) {
+        revelerPointsNonUtilises(robot);
+        assertThat(cartesDePoint(robot)).hasSize(1);
+
+        // Ce que fait la synchronisation : elle rapatrie un point sur ce carré, et annonce sa mutation.
+        robot.interact(() ->
+                injecteur.getInstance(ServiceSites.class).ajouterPointSynchronise(site.id(), "B2", 43.6, 5.5, null));
+
+        assertThat(cartesDePoint(robot))
+                .as("la fiche montre le point rapatrié, sans qu'on l'ait quittée ni rouverte")
+                .hasSize(2);
+    }
+
+    @Test
+    @DisplayName("#3593 : un écran quitté ne recharge plus, l'abonnement est rendu")
+    void un_ecran_quitte_ne_recharge_plus(FxRobot robot) {
+        revelerPointsNonUtilises(robot);
+        robot.interact(() -> controleur.auDepartEcran());
+
+        robot.interact(() ->
+                injecteur.getInstance(ServiceSites.class).ajouterPointSynchronise(site.id(), "B2", 43.6, 5.5, null));
+
+        // `RevisionDonnees` est un SINGLETON, `SiteDetailViewModel` ne l'est délibérément pas : sans ce
+        // retrait, chaque réouverture laisserait une écoute accrochée à une vue morte.
+        assertThat(cartesDePoint(robot)).hasSize(1);
+    }
+
+    /// Les cartes de point actuellement rendues, comptées par leur lien « Supprimer » : une par carte.
+    private java.util.Set<Node> cartesDePoint(FxRobot robot) {
+        return robot.lookup("#cartesPoints")
+                .lookup((Node noeud) ->
+                        noeud instanceof Hyperlink lien && lien.getText().contains("Supprimer"))
+                .queryAll();
     }
 
     /// Le lien « Supprimer » **de la carte du point** (à ne pas confondre avec le bouton « Supprimer »
