@@ -32,6 +32,7 @@ import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -104,6 +105,11 @@ class PassageActionsFicheViewTest {
         ServiceReactivationPassage reactivation = mock(ServiceReactivationPassage.class);
 
         Injector injector = Guice.createInjector(new AbstractModule() {
+            @Provides
+            RevisionDonnees revision() {
+                return new RevisionDonnees(Runnable::run);
+            }
+
             @Override
             protected void configure() {
                 // Écrans voisins : présents mais inertes (ce test ne navigue pas).

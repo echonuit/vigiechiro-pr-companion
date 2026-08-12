@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.AuDepartEcran;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
@@ -29,6 +30,7 @@ import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.view.Stepper;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.passage.viewmodel.ActionRecommandee;
 import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
@@ -41,6 +43,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
@@ -62,12 +65,19 @@ import javafx.scene.layout.StackPane;
 /// [OuvrirVerification], [OuvrirDiagnostic], [OuvrirLot] et [OuvrirValidation] (sans dépendre des
 /// features `qualification`, `diagnostic`, `lot` ni `validation`). Aucun accès base de données ni
 /// logique métier ici (règle ArchUnit `view_sans_jdbc`).
-public class PassageController implements EmplacementNavigation, RafraichirAuRetour, ResumeStatut {
+public class PassageController implements EmplacementNavigation, RafraichirAuRetour, ResumeStatut, AuDepartEcran {
 
     /// Pseudo-classe CSS portant le liseré « prochaine action recommandée » sur la carte concernée.
     private static final PseudoClass RECOMMANDEE = PseudoClass.getPseudoClass("recommandee");
 
     private final PassageViewModel viewModel;
+
+    /// Le signal de mutation du socle (#3541), dépaqueté des appuis comme les autres.
+    private final RevisionDonnees revision;
+
+    /// L'écoute de la révision (#3626), gardée en **champ** pour pouvoir être retirée : une lambda
+    /// recréée au désabonnement ne retirerait rien.
+    private final ChangeListener<Number> surRevision = (observable, avant, apres) -> rafraichirAuRetour();
     private final Optional<OuvrirVerification> ouvrirVerification;
     private final Optional<OuvrirDiagnostic> ouvrirDiagnostic;
     private final Optional<OuvrirActivite> ouvrirActivite;
@@ -264,6 +274,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         this.compteurValidations = Objects.requireNonNull(compteurValidations, "compteurValidations");
         Objects.requireNonNull(appuis, "appuis");
         this.executeur = appuis.executeur();
+        this.revision = appuis.revision();
         this.portail = appuis.portail();
         this.ouvreurDeLien = appuis.ouvreurDeLien();
         this.ouvrirSynthese = appuis.ouvrirSynthese();
@@ -287,6 +298,12 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
 
     @FXML
     private void initialize() {
+        // Ce qui arrive d'AILLEURS pendant qu'on regarde la nuit (#3626) : une synchronisation qui
+        // HYDRATE un squelette rapatrie, et lui donne enfin ses sequences. `rafraichirAuRetour` couvre
+        // l'autre moitie, ce qu'une sous-activite (M-Qualification, M-Lot...) a fait avancer pendant
+        // que l'ecran etait masque - des `update` de statut, qui n'emettent pas.
+        revision.revisionProperty().addListener(surRevision);
+
         // Barre de statut 3 zones (#1022, EPIC #1016) : identité à gauche, statut (+ verdict) au centre,
         // volumétrie de la nuit à droite. Le contexte n'est plus la seule zone renseignée.
         zonesStatut.bind(Bindings.createObjectBinding(
@@ -407,6 +424,13 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         if (idPassage != null) {
             ouvrirSur(idPassage, contexte);
         }
+    }
+
+    /// Rend l'abonnement quand l'écran quitte l'historique (#230) : `RevisionDonnees` est un singleton,
+    /// ce ViewModel ne l'est délibérément pas.
+    @Override
+    public void auDepartEcran() {
+        revision.revisionProperty().removeListener(surRevision);
     }
 
     /// Libellé identifiant ce passage pour le fil d'Ariane (« Détails du passage N° X »), valide une

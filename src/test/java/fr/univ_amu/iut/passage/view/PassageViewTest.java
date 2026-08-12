@@ -2,7 +2,11 @@ package fr.univ_amu.iut.passage.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
@@ -24,6 +28,7 @@ import fr.univ_amu.iut.commun.view.OuvrirSynthese;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -63,12 +68,19 @@ class PassageViewTest {
     private final AtomicReference<Long> depotOuvert = new AtomicReference<>();
     private final AtomicReference<String> carteFocalisee = new AtomicReference<>();
     private final PortailVigieChiro portail = mock(PortailVigieChiro.class);
+
+    /// Le signal de mutation (#3626) : le test l'actionne comme le ferait une synchronisation qui
+    /// hydrate un squelette rapatrié.
+    private final RevisionDonnees revision = new RevisionDonnees(Runnable::run);
+
+    private ServicePassage serviceObserve;
     private final List<String> urlsOuvertes = new ArrayList<>();
     private PassageController controleur;
 
     @Start
     void start(Stage stage) throws Exception {
         ServicePassage service = mock(ServicePassage.class);
+        serviceObserve = service;
         ServiceReactivationPassage reactivation = mock(ServiceReactivationPassage.class);
         when(service.detailPassage(anyLong()))
                 .thenReturn(new DetailPassage(
@@ -88,6 +100,11 @@ class PassageViewTest {
                         null,
                         new DecompteAudio(30, 30)));
         Injector injector = Guice.createInjector(new AbstractModule() {
+            @Provides
+            RevisionDonnees revision() {
+                return revision;
+            }
+
             @Override
             protected void configure() {
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
@@ -156,6 +173,32 @@ class PassageViewTest {
         controleur.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
         stage.setScene(new Scene(vue, 1100, 700));
         stage.show();
+    }
+
+    @Test
+    @DisplayName("#3626 : une nuit hydratée par la synchro se remet à jour SANS qu'on ait navigué")
+    void une_hydratation_rafraichit_sans_navigation(FxRobot robot) {
+        // On compte à partir de la mutation : l'ouverture a déjà lu la projection une fois.
+        clearInvocations(serviceObserve);
+
+        // La synchronisation hydrate le squelette affiché : elle écrit ses observations, donc annonce.
+        robot.interact(() -> revision.mutationStructurelleValidee());
+
+        // Sans le signal, l'écran gardait sa projection - « 0 séquence » - jusqu'à ce qu'on le quitte
+        // et qu'on y revienne.
+        verify(serviceObserve, times(1)).detailPassage(anyLong());
+    }
+
+    @Test
+    @DisplayName("#3626 : un écran quitté ne recharge plus, l'abonnement est rendu")
+    void un_ecran_quitte_ne_recharge_plus(FxRobot robot) {
+        robot.interact(() -> controleur.auDepartEcran());
+        clearInvocations(serviceObserve);
+
+        robot.interact(() -> revision.mutationStructurelleValidee());
+
+        // `RevisionDonnees` est un SINGLETON, `PassageViewModel` ne l'est délibérément pas.
+        verify(serviceObserve, never()).detailPassage(anyLong());
     }
 
     @Test

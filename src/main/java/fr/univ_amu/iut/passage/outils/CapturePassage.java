@@ -33,6 +33,7 @@ import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.di.CampagneModule;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Campagne;
@@ -333,7 +334,8 @@ public final class CapturePassage {
                                 url -> {},
                                 // Synthèse absente de l'injecteur de capture : la carte se masque, comme
                                 // elle le ferait la feature coupée. L'aperçu montre l'écran sans elle.
-                                Optional.empty()))
+                                Optional.empty(),
+                                injecteur.getInstance(RevisionDonnees.class)))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         PassageController controleur = loader.getController();

@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -62,7 +63,8 @@ class PassageControllerEmplacementTest {
                         mock(PortailVigieChiro.class),
                         url -> {},
                         // Synthèse absente : ce test porte sur le fil d'Ariane, pas sur les cartes.
-                        Optional.empty()));
+                        Optional.empty(),
+                        new RevisionDonnees(Runnable::run)));
     }
 
     @Test
