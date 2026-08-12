@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
+import fr.univ_amu.iut.commun.view.AuDepartEcran;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
@@ -21,6 +22,7 @@ import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.LignePassage;
@@ -33,6 +35,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -64,9 +67,16 @@ import javafx.stage.Window;
 /// Implémente aussi [ResumeStatut] (#693) : le titre (nom du site) et le sous-titre (commune, protocole),
 /// jusqu'ici en en-tête, sont déportés en barre de statut (zones gauche = contexte, centre = résumé) ; le
 /// gros titre était partiellement redondant avec le fil d'Ariane, et les actions restent en tête d'écran.
-public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
+public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, AuDepartEcran {
 
     private final SiteDetailViewModel viewModel;
+
+    /// Le signal de mutation du socle (#3541), SINGLETON. Cet écran ne l'est délibérément pas.
+    private final RevisionDonnees revision;
+
+    /// L'écoute de la révision, gardée en **champ** pour pouvoir être retirée : une lambda recréée au
+    /// désabonnement ne retirerait rien.
+    private final ChangeListener<Number> surRevision = (observable, avant, apres) -> rafraichirAuRetour();
     private final NavigationSites navigation;
     private final OuvrirPassage ouvrirPassage;
     private final Optional<OuvrirImportation> ouvrirImportation;
@@ -191,8 +201,10 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
             OuvrirMultisite ouvrirMultisite,
             DepotDispositionColonnes depotColonnes,
             OuvreurDeLien ouvreurDeLien,
-            ActionVigieChiroPassage vigieChiro) {
+            ActionVigieChiroPassage vigieChiro,
+            RevisionDonnees revision) {
         this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
+        this.revision = Objects.requireNonNull(revision, "revision");
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
@@ -218,6 +230,13 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         }
     }
 
+    /// Rend l'abonnement quand l'écran quitte l'historique (#230) : `RevisionDonnees` est un singleton,
+    /// ce ViewModel ne l'est délibérément pas.
+    @Override
+    public void auDepartEcran() {
+        revision.revisionProperty().removeListener(surRevision);
+    }
+
     @Override
     public ReadOnlyObjectProperty<ZonesStatut> zonesStatutProperty() {
         return zonesStatut.getReadOnlyProperty();
@@ -234,6 +253,11 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private void initialize() {
+        // Ce qui arrive d'AILLEURS pendant qu'on regarde la fiche (#3593) : une synchro qui rapatrie
+        // des points sur ce carré. `rafraichirAuRetour` couvre l'autre moitié, ce qu'un passage ouvert
+        // depuis le tableau a fait avancer pendant que la fiche était masquée.
+        revision.revisionProperty().addListener(surRevision);
+
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
         TableDonnees.uniformiserNavigable(tablePassages);
         // Sélecteur de colonnes (#921) + menu de ligne « Ouvrir le passage » (#1796) au clic droit ; le ☰
