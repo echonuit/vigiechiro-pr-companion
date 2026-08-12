@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.TailleFichier;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -145,6 +146,31 @@ class ServiceSauvegardeTest {
     }
 
     @Test
+    @DisplayName("#3627 : un fichier illisible ne se compte pas pour zéro, il fait refuser")
+    void fichier_illisible_fait_refuser_plutot_que_conclure() throws IOException {
+        Path racine = seederSession("Car040962-2026-Pass1-A1");
+        Path opaque = racine.resolve("transformes").resolve("seq.wav");
+        Path destination = workspaceDir.resolve("cle-usb");
+        Files.createDirectories(destination);
+        // La place est LARGEMENT suffisante pour ce que la pesée sait compter. C'est tout le piège :
+        // le fichier illisible pesait zéro, le total tenait, et la copie partait pour échouer plus loin.
+        ServiceSauvegarde avecUnTrou = avecEspaceEtPesee(Long.MAX_VALUE, opaque);
+
+        assertThatThrownBy(() -> avecUnTrou.sauvegarderComplet(destination))
+                .isInstanceOf(RefusAvantEcriture.class)
+                .as("un refus qui ne dit pas quel fichier débloquer est un mur")
+                .hasMessageContaining(opaque.toString())
+                .hasMessageContaining("Permission non accordée")
+                .hasMessageContaining("Rien n'a été touché");
+
+        try (var contenu = Files.list(destination)) {
+            assertThat(contenu)
+                    .as("le refus vient AVANT la première copie, sinon il ne protège de rien")
+                    .isEmpty();
+        }
+    }
+
+    @Test
     @DisplayName("Interrompue, elle ne porte pas le nom d'une sauvegarde complète (#3572)")
     void interrompue_elle_ne_se_fait_pas_passer_pour_complete() throws IOException {
         seederSession("Car040962-2026-Pass1-A1");
@@ -248,6 +274,22 @@ class ServiceSauvegardeTest {
     }
 
     /// Un service qui croit le disque à `octetsLibres`, quel que soit le dossier.
+    /// Un service dont la pesée bute sur `interdit`, et lit normalement tout le reste.
+    private ServiceSauvegarde avecEspaceEtPesee(long octetsLibres, Path interdit) {
+        TailleFichier pesee = fichier -> {
+            if (fichier.equals(interdit)) {
+                throw new IOException("Permission non accordée");
+            }
+            return Files.size(fichier);
+        };
+        return new ServiceSauvegarde(
+                source,
+                new HorlogeFigee(LocalDateTime.of(2026, 7, 7, 14, 30, 15)),
+                dossier -> octetsLibres,
+                pesee,
+                () -> {});
+    }
+
     private ServiceSauvegarde avecEspace(long octetsLibres) {
         return new ServiceSauvegarde(
                 source, new HorlogeFigee(LocalDateTime.of(2026, 7, 7, 14, 30, 15)), dossier -> octetsLibres, () -> {});
