@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.Region;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
@@ -37,30 +38,40 @@ class AppTest {
                 "vigiechiro.workspace", Files.createTempDirectory("vc-app").toString());
         stage.setScene(null); // évite la fuite de Scene entre tests (TestFX réutilise le Stage)
         new App().start(stage);
-        reposerALaTailleDOuverture();
     }
 
-    /// Repose la fenêtre à la taille où l'application s'ouvre, avant que quoi que ce soit ne se mesure.
+    /// Met la mise en page à la taille d'ouverture **sans toucher au Stage**, et rend le contenu et le
+    /// champ visible du défilement central.
     ///
-    /// ⚠️ Le Stage primaire est **partagé par toutes les classes de test d'un même fork**, et il en
-    /// garde la **taille**. Toute modale qui suit sa croissance appelle `sizeToScene()` sur la fenêtre
-    /// qui la porte : en test, c'est celle-ci, et elle en ressort à la taille d'une modale. Or
-    /// [App#start] dimensionne la **scène** et compte sur l'ajustement automatique, qu'un Stage déjà
-    /// dimensionné n'écoute plus : la scène d'accueil est alors comprimée dans la fenêtre laissée par
-    /// une autre classe.
+    /// ## Pourquoi on ne redimensionne pas la fenêtre
     ///
-    /// Sans ce rappel, le verdict dépend de l'**ordre d'exécution** : vert quand cette classe passe la
-    /// première dans son fork, rouge dès qu'une classe de test s'ajoute ailleurs dans le dépôt et
-    /// redistribue les forks. C'est ce qui est arrivé : #3452 a été fusionnée verte, et c'est #3453,
-    /// qui ne touche pas l'accueil, qui a fait sortir le rouge.
+    /// ⚠️ `setWidth`/`setHeight` font passer un Stage en dimensionnement **explicite** : il cesse
+    /// **définitivement** de s'ajuster aux scènes qu'on lui pose ensuite. Sans conséquence pour une
+    /// fenêtre qu'on jette, mais le Stage du harnais TestFX est **partagé par toutes les classes d'un
+    /// même fork** : figé ici, il fait échouer les suivantes sur des noeuds « invisibles », très loin
+    /// de la cause et seulement selon l'ordre d'exécution.
     ///
-    /// `Modales.suivreLaCroissance` connaissait déjà ce canal - son doc-comment le décrit pour une
-    /// version antérieure qui figeait le Stage. `sizeToScene()` a réglé le figeage, pas le **partage**.
-    private void reposerALaTailleDOuverture() {
+    /// C'est exactement le défaut de #1940, que #1967 avait prédit revenir : « rien ne l'empêche […]
+    /// aucun test ne rougit si on la réécrit ». Il est revenu par **ici**, en corrigeant #3452 : le
+    /// garde posé alors surveille `Modales`, pas une classe de test qui fige le Stage elle-même.
+    ///
+    /// La mesure porte donc sur la **mise en page** : on redimensionne la racine, on force une passe,
+    /// on lit. C'est ce que #3452 veut savoir - à cette taille, l'accueil coupe-t-il ses activités ? -
+    /// et cela ne laisse aucune trace derrière.
+    private double[] mesurerADimensionDOuverture(FxRobot robot) {
         Rectangle2D ecran = Screen.getPrimary().getVisualBounds();
         TailleOuverture ouverture = TailleOuverture.bornee(ecran.getWidth(), ecran.getHeight());
-        stage.setWidth(ouverture.largeur());
-        stage.setHeight(ouverture.hauteur());
+        ScrollPane defilement = robot.lookup(".defilement-central").queryAs(ScrollPane.class);
+        double[] mesures = new double[2];
+        robot.interact(() -> {
+            Region racine = (Region) stage.getScene().getRoot();
+            racine.resize(ouverture.largeur(), ouverture.hauteur());
+            racine.applyCss();
+            racine.layout();
+            mesures[0] = defilement.getContent().getBoundsInLocal().getHeight();
+            mesures[1] = defilement.getViewportBounds().getHeight();
+        });
+        return mesures;
     }
 
     @AfterEach
@@ -79,6 +90,17 @@ class AppTest {
         });
     }
 
+    /// Vérifie que cette classe rend le Stage partagé **tel qu'elle l'a reçu** : ajustable.
+    ///
+    /// ⚠️ C'est le garde que #1967 réclamait, et qu'il avait raison de réclamer : « rien ne l'empêche de
+    /// revenir […] aucun test ne rougit si on la réécrit ». Il est revenu **par ici**, en corrigeant
+    /// #3452 : `setWidth`/`setHeight` sur ce Stage l'ont refigé, et la CI l'a signalé sur une classe
+    /// sans rapport - `LotDepotConnecteViewTest`, noeud « invisible » - au hasard de la répartition des
+    /// forks. Le garde posé par #1967 vit dans `ModalesTest` et surveille le **socle** ; il ne pouvait
+    /// pas voir une classe de test qui fige le Stage elle-même.
+    ///
+    /// La propriété est nommée plutôt que l'accident reproduit : ce Stage suit encore les scènes qu'on
+    /// lui pose. Un Stage passé en dimensionnement explicite ne le fait plus, définitivement.
     @Test
     void le_chrome_principal_est_affiche(FxRobot robot) {
         Label titre = robot.lookup("#titreApplication").queryAs(Label.class);
@@ -102,10 +124,9 @@ class AppTest {
     @Test
     @DisplayName("#3452 : à la taille d'ouverture, l'accueil tient dans la fenêtre")
     void l_accueil_tient_dans_la_fenetre_d_ouverture(FxRobot robot) {
-        ScrollPane defilement = robot.lookup(".defilement-central").queryAs(ScrollPane.class);
-
-        double contenu = defilement.getContent().getBoundsInLocal().getHeight();
-        double champ = defilement.getViewportBounds().getHeight();
+        double[] mesures = mesurerADimensionDOuverture(robot);
+        double contenu = mesures[0];
+        double champ = mesures[1];
 
         // Mesuré avant correctif : la fenêtre s'ouvrait à 960x640, l'accueil demandait 816 px de contenu
         // pour 586 disponibles. Les 230 px manquants étaient exactement les deux cartes du bas - « Ma
