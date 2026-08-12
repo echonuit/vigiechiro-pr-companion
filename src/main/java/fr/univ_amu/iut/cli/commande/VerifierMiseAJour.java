@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.LectureSeule;
 import fr.univ_amu.iut.commun.model.VersionApplication;
+import fr.univ_amu.iut.maj.model.ConseilDeMiseAJour;
 import fr.univ_amu.iut.maj.model.VerificateurMiseAJour;
 import fr.univ_amu.iut.maj.model.VersionDisponible;
 import java.io.PrintWriter;
@@ -68,6 +69,10 @@ public final class VerifierMiseAJour implements java.util.concurrent.Callable<In
         VersionDisponible disponible = proposee.orElseThrow();
         sortie.println("Version " + version.libelle() + " installée ; " + disponible.numero() + " est disponible.");
         sortie.println(disponible.adresse());
+        // La MÊME phrase que l'annonce de l'IHM, parce qu'elle vient du modèle (ADR 0014) : sous
+        // Windows, renvoyer la seule page des Releases pousse un utilisateur winget à poser un MSI
+        // par-dessus une installation gérée par le gestionnaire de paquets.
+        ConseilDeMiseAJour.pourCeSysteme().ifPresent(sortie::println);
         return CODE_MISE_A_JOUR_DISPONIBLE;
     }
 }
