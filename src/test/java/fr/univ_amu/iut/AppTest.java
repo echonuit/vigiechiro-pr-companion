@@ -2,9 +2,12 @@ package fr.univ_amu.iut;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.view.TailleOuverture;
 import java.nio.file.Files;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -34,6 +37,30 @@ class AppTest {
                 "vigiechiro.workspace", Files.createTempDirectory("vc-app").toString());
         stage.setScene(null); // évite la fuite de Scene entre tests (TestFX réutilise le Stage)
         new App().start(stage);
+        reposerALaTailleDOuverture();
+    }
+
+    /// Repose la fenêtre à la taille où l'application s'ouvre, avant que quoi que ce soit ne se mesure.
+    ///
+    /// ⚠️ Le Stage primaire est **partagé par toutes les classes de test d'un même fork**, et il en
+    /// garde la **taille**. Toute modale qui suit sa croissance appelle `sizeToScene()` sur la fenêtre
+    /// qui la porte : en test, c'est celle-ci, et elle en ressort à la taille d'une modale. Or
+    /// [App#start] dimensionne la **scène** et compte sur l'ajustement automatique, qu'un Stage déjà
+    /// dimensionné n'écoute plus : la scène d'accueil est alors comprimée dans la fenêtre laissée par
+    /// une autre classe.
+    ///
+    /// Sans ce rappel, le verdict dépend de l'**ordre d'exécution** : vert quand cette classe passe la
+    /// première dans son fork, rouge dès qu'une classe de test s'ajoute ailleurs dans le dépôt et
+    /// redistribue les forks. C'est ce qui est arrivé : #3452 a été fusionnée verte, et c'est #3453,
+    /// qui ne touche pas l'accueil, qui a fait sortir le rouge.
+    ///
+    /// `Modales.suivreLaCroissance` connaissait déjà ce canal - son doc-comment le décrit pour une
+    /// version antérieure qui figeait le Stage. `sizeToScene()` a réglé le figeage, pas le **partage**.
+    private void reposerALaTailleDOuverture() {
+        Rectangle2D ecran = Screen.getPrimary().getVisualBounds();
+        TailleOuverture ouverture = TailleOuverture.bornee(ecran.getWidth(), ecran.getHeight());
+        stage.setWidth(ouverture.largeur());
+        stage.setHeight(ouverture.hauteur());
     }
 
     @AfterEach
@@ -60,7 +87,20 @@ class AppTest {
     }
 
     @Test
-    @DisplayName("#3452 : au premier lancement, l'accueil tient dans la fenêtre")
+    @DisplayName("#3452 : l'application pose le plancher en deçà duquel elle est inutilisable")
+    void l_application_pose_les_tailles_minimales() {
+        // ⚠️ Ce test ne prouve PAS que la fenêtre s'ouvre à la taille voulue, et aucun test de cette
+        // classe ne le peut : une scène attachée à un Stage déjà affiché prend la taille du Stage, si
+        // bien qu'il ne reste aucune trace lisible de celle qu'on lui avait demandée. Remplacer le
+        // calcul de [App#start] par deux littéraux ne fait rougir personne ici - mesuré, pas supposé.
+        // Ce qui reste couvert : le calcul lui-même par `TailleOuvertureTest`, et le fait que cette
+        // taille SUFFIT à l'accueil par le test suivant.
+        assertThat(stage.getMinWidth()).isEqualTo(TailleOuverture.LARGEUR_MINIMALE);
+        assertThat(stage.getMinHeight()).isEqualTo(TailleOuverture.HAUTEUR_MINIMALE);
+    }
+
+    @Test
+    @DisplayName("#3452 : à la taille d'ouverture, l'accueil tient dans la fenêtre")
     void l_accueil_tient_dans_la_fenetre_d_ouverture(FxRobot robot) {
         ScrollPane defilement = robot.lookup(".defilement-central").queryAs(ScrollPane.class);
 
