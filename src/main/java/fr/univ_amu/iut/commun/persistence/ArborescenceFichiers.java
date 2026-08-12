@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.persistence;
 
+import fr.univ_amu.iut.commun.model.TailleFichier;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,36 +37,77 @@ public final class ArborescenceFichiers {
         }
     }
 
-    /// Efface `cible` et tout ce qu'elle contient. Une cible absente n'est pas une erreur.
-    ///
-    /// ⚠️ Elle **lève** plutôt que d'ignorer, contrairement aux suppressions best-effort du dépôt
-    /// (`ExtracteurZip`, `SupprimerSauvegarde`) : ici l'appelant a besoin de savoir. Une bascule de
-    /// restauration qui ne parvient pas à retirer l'ancien dossier ne doit pas enchaîner sur le
-    /// renommage comme si de rien n'était (#3514).
-    /// Ce que pèse un dossier, fichiers réguliers seulement.
+    /// Ce que pèse un dossier, fichiers réguliers seulement, **pour qui veut l'afficher**.
     ///
     /// Vient d'`InventaireSauvegardes`, où elle était privée : la sauvegarde en a eu besoin pour
     /// mesurer la place requise **avant** de copier (#3572), et une seconde implémentation aurait été
     /// la huitième variante du même parcours d'arborescence dans ce dépôt.
     ///
-    /// ⚠️ Un fichier qui disparaît pendant le parcours compte pour **zéro** plutôt que de faire échouer
-    /// la mesure : observer ne doit jamais être plus fragile que ce qu'on observe.
+    /// ⚠️ Un fichier illisible compte pour **zéro** : observer ne doit jamais être plus fragile que ce
+    /// qu'on observe, et refuser d'afficher une taille parce qu'un fichier a bougé serait absurde.
+    /// C'est juste pour un **inventaire**, et faux pour une **décision** - un garde qui additionne ces
+    /// zéros conclut « il y a la place » depuis un silence (#3627). Qui décide appelle [#peser].
     public static long octets(Path dossier) throws IOException {
-        try (Stream<Path> arborescence = Files.walk(dossier)) {
-            return arborescence
-                    .filter(Files::isRegularFile)
-                    .mapToLong(ArborescenceFichiers::tailleOuZero)
-                    .sum();
-        }
+        return peser(dossier, TailleFichier.reelle()).octets();
     }
 
-    private static long tailleOuZero(Path fichier) {
+    /// Ce que pèse un dossier, **et ce qu'on n'a pas pu lire**.
+    ///
+    /// Même parcours que [#octets], autre contrat : la mesure ne se tait pas sur ses trous. C'est le
+    /// second des deux besoins que #3574 avait déjà séparés pour l'effacement, et que la pesée
+    /// confondait encore.
+    ///
+    /// ⚠️ Elle ne **lève** pas pour autant. Une mesure qui s'interrompt au premier fichier illisible ne
+    /// dirait pas combien pèse le reste, et l'appelant qui veut refuser a besoin des deux : le total
+    /// connu, et ce qui manque à ce total.
+    ///
+    /// @param taille le port de lecture, injectable parce que l'illisibilité ne se fabrique pas de
+    ///     façon portable sur un vrai système de fichiers
+    public static Pesee peser(Path dossier, TailleFichier taille) throws IOException {
+        List<EchecLecture> illisibles = new ArrayList<>();
+        long total;
+        try (Stream<Path> arborescence = Files.walk(dossier)) {
+            total = arborescence
+                    .filter(Files::isRegularFile)
+                    .mapToLong(fichier -> peserOuNoter(fichier, taille, illisibles))
+                    .sum();
+        }
+        return new Pesee(total, List.copyOf(illisibles));
+    }
+
+    /// Le zéro reste, mais il n'est plus seul : le fichier rejoint la liste des illisibles, et c'est
+    /// elle qui empêche l'appelant de prendre ce total pour un compte complet.
+    private static long peserOuNoter(Path fichier, TailleFichier taille, List<EchecLecture> illisibles) {
         try {
-            return Files.size(fichier);
-        } catch (IOException disparu) {
+            return taille.octets(fichier);
+        } catch (IOException illisible) {
+            illisibles.add(new EchecLecture(fichier, illisible));
             return 0L;
         }
     }
+
+    /// Ce qu'un dossier pèse, et ce que ce total **ne compte pas**.
+    ///
+    /// @param octets la somme de ce qui a pu être lu, donc un **minorant** dès que `illisibles` n'est
+    ///     pas vide : c'est exactement pourquoi il ne faut pas en conclure qu'il y a la place
+    /// @param illisibles ce qui n'a pas pu être pesé, avec la raison
+    public record Pesee(long octets, List<EchecLecture> illisibles) {
+
+        /// Vrai quand le total compte tout ce que le dossier contient. Seul cas où une **décision**
+        /// peut s'appuyer dessus.
+        public boolean complete() {
+            return illisibles.isEmpty();
+        }
+    }
+
+    /// Ce qui n'a pas pu être pesé, et pourquoi.
+    ///
+    /// La raison fait partie du contrat pour la même raison que dans [EchecEffacement] : l'appelant en
+    /// rend compte à l'utilisateur, et un refus qui ne dit pas quoi débloquer est un mur.
+    ///
+    /// @param chemin le fichier dont la taille est restée inconnue
+    /// @param cause l'échec système, dont le message est ce qu'on montre
+    public record EchecLecture(Path chemin, IOException cause) {}
 
     /// Efface `cible` et son contenu **au mieux**, et rend ce qui a résisté.
     ///
@@ -112,6 +154,12 @@ public final class ArborescenceFichiers {
     /// @param cause l'échec système, dont le message est ce qu'on montre
     public record EchecEffacement(Path chemin, IOException cause) {}
 
+    /// Efface `cible` et tout ce qu'elle contient. Une cible absente n'est pas une erreur.
+    ///
+    /// ⚠️ Elle **lève** plutôt que d'ignorer, contrairement aux suppressions best-effort du dépôt
+    /// (`ExtracteurZip`, `SupprimerSauvegarde`) : ici l'appelant a besoin de savoir. Une bascule de
+    /// restauration qui ne parvient pas à retirer l'ancien dossier ne doit pas enchaîner sur le
+    /// renommage comme si de rien n'était (#3514).
     public static void supprimerRecursivement(Path cible) throws IOException {
         if (!Files.exists(cible)) {
             return;

@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JournalMutations;
+import fr.univ_amu.iut.commun.model.TailleFichier;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.io.IOException;
@@ -78,6 +79,7 @@ public class ServiceSauvegarde {
     private final JournalMutations journal;
     private final InstantaneBase instantane;
     private final EspaceDisque espaceDisque;
+    private final TailleFichier tailleFichier;
 
     @Inject
     public ServiceSauvegarde(SourceDeDonnees source, Horloge horloge, JournalMutations journal) {
@@ -89,9 +91,23 @@ public class ServiceSauvegarde {
     /// Même couture que `CompacteurDepot` et `OutilsImport`, qui gardent aussi une fabrique par défaut
     /// plutôt qu'un binding.
     ServiceSauvegarde(SourceDeDonnees source, Horloge horloge, EspaceDisque espaceDisque, JournalMutations journal) {
+        this(source, horloge, espaceDisque, TailleFichier.reelle(), journal);
+    }
+
+    /// Variante à **pesée injectée** en plus (#3627). Les deux ports vont ensemble : le garde d'espace
+    /// confronte ce que la sauvegarde pèse à ce que le support offre, et il faut pouvoir éprouver les
+    /// deux côtés de cette comparaison. Un fichier illisible ne se fabrique pas de façon portable, d'où
+    /// le port plutôt qu'un test conditionnel.
+    ServiceSauvegarde(
+            SourceDeDonnees source,
+            Horloge horloge,
+            EspaceDisque espaceDisque,
+            TailleFichier tailleFichier,
+            JournalMutations journal) {
         this.source = Objects.requireNonNull(source, "source");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.espaceDisque = Objects.requireNonNull(espaceDisque, "espaceDisque");
+        this.tailleFichier = Objects.requireNonNull(tailleFichier, "tailleFichier");
         this.journal = Objects.requireNonNull(journal, "journal");
         this.instantane = new InstantaneBase(this.source);
     }
@@ -247,11 +263,15 @@ public class ServiceSauvegarde {
     private void refuserSiLaPlaceManque(Path dossierDestination) throws IOException, SQLException {
         Files.createDirectories(dossierDestination);
         long requis = Files.size(source.workspace().cheminBaseDeDonnees());
+        List<ArborescenceFichiers.EchecLecture> illisibles = new ArrayList<>();
         for (Path racineSession : racinesSessions()) {
             if (Files.isDirectory(racineSession)) {
-                requis += ArborescenceFichiers.octets(racineSession);
+                ArborescenceFichiers.Pesee pesee = ArborescenceFichiers.peser(racineSession, tailleFichier);
+                requis += pesee.octets();
+                illisibles.addAll(pesee.illisibles());
             }
         }
+        refuserSiLaMesureEstPartielle(illisibles);
         long libre = espaceDisque.disponibleOctets(dossierDestination);
         if (libre < requis) {
             throw new RefusAvantEcriture(
@@ -261,6 +281,29 @@ public class ServiceSauvegarde {
                             + ", ou sauvegardez vers un autre emplacement. Rien n'a été touché.",
                     null);
         }
+    }
+
+    /// Refuse quand la pesée n'a **pas tout vu**, plutôt que de comparer un minorant à la place libre.
+    ///
+    /// Un fichier illisible pèse zéro dans le total. Additionnés, ces zéros font une sauvegarde qui
+    /// paraît tenir, part, et échoue à mi-parcours : exactement la panne que ce garde existe pour
+    /// empêcher (#3627). C'est la forme que l'ADR 2213 décrit - un dispositif ne conclut pas avant
+    /// d'avoir rapporté ce qu'il a vu.
+    ///
+    /// Le refus **nomme** le premier fichier et sa raison, sur le modèle de `BesoinDePlace` : « il y a
+    /// un problème » n'aide personne à le lever.
+    private void refuserSiLaMesureEstPartielle(List<ArborescenceFichiers.EchecLecture> illisibles) {
+        if (illisibles.isEmpty()) {
+            return;
+        }
+        ArborescenceFichiers.EchecLecture premier = illisibles.getFirst();
+        throw new RefusAvantEcriture(
+                "Impossible de mesurer ce que la sauvegarde va peser : " + illisibles.size()
+                        + " fichier(s) sont illisibles, dont " + premier.chemin() + " ("
+                        + premier.cause().getMessage() + "). La sauvegarde est annulée plutôt que tentée à"
+                        + " l'aveugle : elle échouerait en cours de copie en laissant un dossier qui"
+                        + " ressemble à une sauvegarde. Rien n'a été touché.",
+                premier.cause());
     }
 
     /// Donne enfin son nom à la sauvegarde, une fois le manifeste écrit.
