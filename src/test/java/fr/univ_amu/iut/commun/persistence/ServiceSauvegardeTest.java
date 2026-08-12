@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.TailleFichier;
@@ -167,6 +168,35 @@ class ServiceSauvegardeTest {
             assertThat(contenu)
                     .as("le refus vient AVANT la première copie, sinon il ne protège de rien")
                     .isEmpty();
+        }
+    }
+
+    @Test
+    @DisplayName("#3634 : un dossier de nuit illisible est un REFUS, pas un incident")
+    void dossier_illisible_est_un_refus_et_non_un_incident() throws IOException {
+        Path racineSession = seederSession("Car040962-2026-Pass1-A1");
+        Path interdit = Files.createDirectories(racineSession.resolve("cache"));
+        Files.writeString(interdit.resolve("dedans.wav"), "hors de portée");
+        assertThat(interdit.toFile().setReadable(false)).isTrue();
+        Path destination = workspaceDir.resolve("cle-usb");
+        Files.createDirectories(destination);
+
+        try {
+            Throwable echec = catchThrowable(() -> avecEspace(Long.MAX_VALUE).sauvegarderComplet(destination));
+
+            // Le coeur de #3634 : `UncheckedIOException` n'est PAS une `IOException`. Elle traversait le
+            // `catch (IOException | SQLException)` et `VerdictCli` la rangeait dans sa branche par
+            // défaut : « Échec », code 1, état incertain. Or le garde tourne AVANT la première copie.
+            // La chaîne jusqu'au code de sortie 2 se referme dans `VerdictCliTest`, qui fige déjà
+            // « RefusAvantEcriture → REFUS ». `VerdictCli` est de portée paquet : la rappeler d'ici
+            // demanderait de l'ouvrir, pour prouver une seconde fois ce qui l'est déjà.
+            assertThat(echec)
+                    .as("« état incertain » sur une opération qui n'a rien touché envoie l'utilisateur"
+                            + " vérifier des données intactes")
+                    .isInstanceOf(RefusAvantEcriture.class)
+                    .hasMessageContaining(interdit.toString());
+        } finally {
+            assertThat(interdit.toFile().setReadable(true)).isTrue();
         }
     }
 

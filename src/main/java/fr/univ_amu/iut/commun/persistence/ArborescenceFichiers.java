@@ -2,11 +2,15 @@ package fr.univ_amu.iut.commun.persistence;
 
 import fr.univ_amu.iut.commun.model.TailleFichier;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Deque;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -65,14 +69,39 @@ public final class ArborescenceFichiers {
     ///     façon portable sur un vrai système de fichiers
     public static Pesee peser(Path dossier, TailleFichier taille) throws IOException {
         List<EchecLecture> illisibles = new ArrayList<>();
-        long total;
-        try (Stream<Path> arborescence = Files.walk(dossier)) {
-            total = arborescence
-                    .filter(Files::isRegularFile)
-                    .mapToLong(fichier -> peserOuNoter(fichier, taille, illisibles))
-                    .sum();
+        Deque<Path> aVisiter = new ArrayDeque<>();
+        aVisiter.add(dossier);
+        long total = 0L;
+        while (!aVisiter.isEmpty()) {
+            total += peserLeContenu(aVisiter.remove(), taille, aVisiter, illisibles);
         }
         return new Pesee(total, List.copyOf(illisibles));
+    }
+
+    /// Pèse un dossier, empile ses sous-dossiers, et **note** celui qu'on n'a pas pu ouvrir.
+    ///
+    /// ⚠️ Le parcours est explicite parce que `Files.walk` **lève** sur le premier dossier qu'il ne peut
+    /// pas lister, et interrompt le flux : on n'apprend ni ce que pèse le reste, ni combien de dossiers
+    /// ont résisté (#3634). Même choix que [#effacerAuMieux], qui continue après un récalcitrant.
+    ///
+    /// ⚠️ `NOFOLLOW_LINKS` sur le test de dossier, et lui seul : c'est ce que fait `Files.walk` par
+    /// défaut, et sans lui un lien vers un dossier ancêtre ferait **tourner ce parcours sans fin**. Un
+    /// lien vers un fichier, lui, reste pesé comme avant - `isRegularFile` suit le lien.
+    private static long peserLeContenu(
+            Path dossier, TailleFichier taille, Deque<Path> aVisiter, List<EchecLecture> illisibles) {
+        long total = 0L;
+        try (DirectoryStream<Path> entrees = Files.newDirectoryStream(dossier)) {
+            for (Path entree : entrees) {
+                if (Files.isDirectory(entree, LinkOption.NOFOLLOW_LINKS)) {
+                    aVisiter.add(entree);
+                } else if (Files.isRegularFile(entree)) {
+                    total += peserOuNoter(entree, taille, illisibles);
+                }
+            }
+        } catch (IOException ferme) {
+            illisibles.add(new EchecLecture(dossier, ferme));
+        }
+        return total;
     }
 
     /// Le zéro reste, mais il n'est plus seul : le fichier rejoint la liste des illisibles, et c'est
