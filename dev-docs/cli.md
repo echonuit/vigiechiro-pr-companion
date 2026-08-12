@@ -177,12 +177,18 @@ Une commande s'en dispense en portant l'interface marqueur `fr.univ_amu.iut.cli.
 déclaration porte sur les lectrices, pas sur les écrivaines**, et le sens compte : oublier de déclarer
 une écrivaine laisserait son écriture échapper au verrou, en silence ; oublier une lectrice fait
 refuser une consultation pendant que l'application est ouverte, ce qui se voit et se signale le jour
-même. « Lecture seule » veut dire : ne touche ni la base ni les dossiers du dossier de travail.
+même. « Lecture seule » veut dire : ne touche ni la base ni les dossiers de session.
 Interroger le réseau, ou écrire **hors** du dossier de travail (`lister-carres --sortie`,
 `synthetiser-passage --sortie`), reste de la lecture seule - tout comme écrire la configuration
 d'amorçage, qui vit ailleurs et s'écrit d'un seul coup (#3507). C'est pourquoi `emplacements` est
 lectrice : elle sert à **repointer** le dossier de travail, et la verrouiller refuserait de déménager
 à qui déménage parce que la place actuelle est occupée.
+
+⚠️ **Le journal fait exception.** `Cli.main` amorce la journalisation avant tout, donc **toute**
+commande crée et écrit `<dossier de travail>/logs` - les lectrices comprises. C'est voulu : un incident
+doit laisser une trace même sur une commande qui ne fait que lire, et deux processus qui écrivent
+chacun ses lignes dans un journal ne se corrompent pas, là où deux processus qui écrivent la même base
+le feraient (#3575).
 
 ⚠️ La migration du schéma prend le verrou de son côté : une commande de lecture sur une base à mettre
 à jour peut donc être refusée, et c'est voulu - mettre à jour le schéma est une écriture.

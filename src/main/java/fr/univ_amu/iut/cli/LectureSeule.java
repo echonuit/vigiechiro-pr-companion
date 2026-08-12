@@ -26,11 +26,21 @@ package fr.univ_amu.iut.cli;
 ///
 /// ## Ce que « lecture seule » veut dire ici
 ///
-/// **Ne touche ni la base ni les dossiers du dossier de travail.** Interroger le réseau, ou écrire
-/// **hors** du dossier de travail, reste de la lecture seule : le verrou protège le dossier de
-/// travail, pas le disque entier. C'est le cas d'un CSV exporté à l'emplacement demandé
-/// (`lister-carres --sortie`), et c'est aussi celui de la **configuration d'amorçage**, qui vit dans
-/// le dossier de configuration et se protège toute seule, en s'écrivant d'un seul coup (#3507).
+/// **Ne touche ni la base ni les dossiers de session.** Interroger le réseau, ou écrire **hors** du
+/// dossier de travail, reste de la lecture seule : le verrou protège les données, pas le disque
+/// entier. C'est le cas d'un CSV exporté à l'emplacement demandé (`lister-carres --sortie`), et c'est
+/// aussi celui de la **configuration d'amorçage**, qui vit dans le dossier de configuration et se
+/// protège toute seule, en s'écrivant d'un seul coup (#3507).
+///
+/// ⚠️ **Le journal fait exception, et il faut le dire** (#3575). `Cli.main` amorce la journalisation
+/// avant tout, donc **toute** commande crée et écrit `<dossier de travail>/logs`, les vingt-trois
+/// lectrices comprises. C'est voulu : un incident doit laisser une trace même sur une commande qui ne
+/// fait que lire, et deux processus qui écrivent chacun ses lignes dans un fichier de journal ne se
+/// corrompent pas - ce que deux processus qui écrivent la même base feraient.
+///
+/// La définition d'origine disait « ni les dossiers du dossier de travail », ce que **les vingt-trois
+/// commandes qu'elle décrit contredisaient**. La décision n'a pas changé ; c'est sa formulation qui
+/// promettait plus qu'elle ne tenait.
 ///
 /// ⚠️ `emplacements` est lectrice pour cette raison, et pas seulement par technicité : elle sert à
 /// **repointer** le dossier de travail. La verrouiller reviendrait à refuser de déménager à qui
