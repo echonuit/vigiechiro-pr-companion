@@ -224,7 +224,9 @@ public class RattachementModaleController {
                 bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
         // #2496 : le bandeau est épinglé sous le corps défilant ; quand il paraît, la fenêtre suit sa
         // croissance (bornée, elle reste sous la taille de l'écran) pour ne pas rogner le pied.
-        Modales.suivreLaCroissance(racine, bandeauRetour.managedProperty());
+        // #3453, jumeau : « Communication avec Vigie-Chiro… » paraît pendant l'appel réseau, exactement
+        // comme la zone de progression de la modale de connexion. Même forme, même oubli.
+        Modales.suivreLaCroissance(racine, bandeauRetour.managedProperty(), ligneOccupation.managedProperty());
 
         // Validation « en direct » (#790) : « Appliquer » reste désactivé tant que l'année n'a pas 4
         // chiffres et le n° de passage au moins 1 ; chaque spinner rougit sur une valeur hors domaine. Le
