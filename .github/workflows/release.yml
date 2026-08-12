@@ -228,6 +228,51 @@ jobs:
           rm -rf VigieChiroCompanion VigieChiroCompanion.app
           ls -l
 
+      - name: Ouvrir chaque emballage et le lancer (#3617)
+        # Placée AVANT les empreintes et l'attestation, à dessein : un artefact qui ne démarre pas ne
+        # doit être ni certifié, ni attesté, ni téléversé. Un emballage cassé bloque la publication au
+        # lieu d'arriver chez l'utilisateur.
+        #
+        # Ce que ça ajoute au reste : `maven.yml` prouve à chaque PR que l'APP-IMAGE démarre, mais
+        # personne n'ouvrait les ENVELOPPES. Or chacune a été choisie pour ce qu'elle préserve, donc
+        # chacune a une façon connue de casser - le bit exécutable pour `tar.gz`, les liens
+        # symboliques d'un bundle `.app` pour `ditto`, et l'AppImage a déjà fait échouer la v2.21.0.
+        #
+        # ⚠️ Windows n'est pas couvert ici : le script est en bash et le suivi d'un lanceur en
+        # sous-système graphique depuis Git Bash n'a pas pu être éprouvé. Un faux échec y bloquerait
+        # une publication. Le `.msi`, lui, est installé ET lancé par `winget.yml`.
+        if: matrix.portable != 'windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x .github/scripts/verifie-demarrage-emballage.sh
+          bac=$(mktemp -d)
+          cd target/dist
+
+          case "${RUNNER_OS}" in
+            Linux)
+              tar -xzf ./*-portable.tar.gz -C "$bac"
+              "${GITHUB_WORKSPACE}/.github/scripts/verifie-demarrage-emballage.sh" \
+                "$bac/VigieChiroCompanion/bin/VigieChiroCompanion" \
+                --secondes 30 --libelle "archive portable Linux"
+
+              appimage=$(ls ./*.AppImage)
+              chmod +x "$appimage"
+              # --appimage-extract-and-run : les runners n'ont pas toujours FUSE, ce dont une AppImage
+              # a besoin pour se monter. Sans cette option, l'échec est obscur et sans rapport.
+              APPIMAGE_EXTRACT_AND_RUN=1 \
+                "${GITHUB_WORKSPACE}/.github/scripts/verifie-demarrage-emballage.sh" \
+                "$(pwd)/$appimage" --secondes 30 --libelle "AppImage"
+              ;;
+            macOS)
+              ditto -x -k ./*-portable.zip "$bac"
+              "${GITHUB_WORKSPACE}/.github/scripts/verifie-demarrage-emballage.sh" \
+                "$bac/VigieChiroCompanion.app/Contents/MacOS/VigieChiroCompanion" \
+                --secondes 30 --libelle "archive portable macOS (bundle .app par ditto)"
+              ;;
+          esac
+          rm -rf "$bac"
+
       - name: Calculer l'empreinte SHA-256 de chaque artefact
         # Les installeurs ne sont pas signés : l'empreinte est le seul moyen, pour l'utilisateur, de
         # vérifier ce qu'il a téléchargé.

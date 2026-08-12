@@ -171,6 +171,15 @@ jobs:
           chmod +x .github/scripts/veille-contrat-api.sh
           ./.github/scripts/veille-contrat-api.sh --auto-test
 
+      - name: La garde du démarrage des emballages sait encore rougir
+        # Elle ne tourne pour de vrai que dans `release.yml` (les enveloppes) et `maven.yml`
+        # (l'app-image et l'aller-retour tar.gz). `release.yml` n'étant traversé par AUCUNE PR, son
+        # étape pourrait être fusionnée cassée et ne se découvrir qu'au train suivant, en bloquant la
+        # publication. Cet autotest est la seule chose qui la voie entre deux releases (#3617).
+        run: |
+          chmod +x .github/scripts/verifie-demarrage-emballage.sh
+          ./.github/scripts/verifie-demarrage-emballage.sh --auto-test
+
       - name: La garde du secret winget sait encore rougir
         # Elle ne tourne pour de vrai que dans winget.yml, sur dispatch manuel, c'est-à-dire quelques
         # fois par an : son autotest est le seul endroit où on la voit à l'œuvre entre deux

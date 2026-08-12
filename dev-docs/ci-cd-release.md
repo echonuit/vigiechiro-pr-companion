@@ -208,6 +208,39 @@ obscur à la clé.
     est une dépendance qu'il faut déclarer, parce que rien ne la rend visible tant que le poste qui
     construit la possède.
 
+### Les emballages sont ouverts avant d'être publiés (#3617)
+
+`maven.yml` prouve à chaque PR que l'**app-image** démarre (#2299, né de la v2.32.3). Personne
+n'ouvrait les **enveloppes**. Or chacune a été choisie *pour ce qu'elle préserve*, ce qui est une
+autre façon de dire que chacune a une façon connue de casser : `tar.gz` pour le **bit exécutable**,
+`ditto` pour les liens d'un bundle `.app`, `appimagetool` qui a déjà fait échouer la v2.21.0.
+
+Chaque emballage est donc **ré-ouvert et lancé** là où il est produit, par
+[`verifie-demarrage-emballage.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/verifie-demarrage-emballage.sh) :
+
+| Où | Ce qui est ouvert |
+|---|---|
+| `maven.yml`, chaque PR | l'app-image, puis un **aller-retour `tar.gz`** : on empaquette, on ré-extrait ailleurs, on relance |
+| `release.yml`, runner Linux | l'archive portable `.tar.gz` et l'**AppImage** |
+| `release.yml`, runner macOS | l'archive portable, extraite par `ditto` (bundle `.app`) |
+
+**L'étape est placée avant le calcul des empreintes**, à dessein : un artefact qui ne démarre pas ne
+doit être ni certifié, ni attesté, ni téléversé. Un emballage cassé **bloque la publication** au lieu
+d'arriver chez l'utilisateur.
+
+!!! warning "Ce qui n'est pas couvert, et pourquoi c'est dit"
+    **L'archive portable Windows.** Le script est en bash, et le suivi d'un lanceur en sous-système
+    graphique depuis Git Bash n'a pas pu être éprouvé : un faux échec y bloquerait une publication.
+    Le `.msi`, lui, est installé **et lancé** par `winget.yml`.
+
+    **Les installeurs `.deb` et `.dmg`**, qui demandent une installation et non une simple extraction.
+
+!!! note "Pourquoi un script plutôt que des lignes dans le workflow"
+    Parce que `release.yml` **n'est traversé par aucune PR**. Une étape écrite là peut être fusionnée
+    cassée et ne se découvrir qu'au train suivant, en bloquant la publication - c'est le piège
+    général des étapes que seul un déclencheur rare exerce. Sortie en script, la logique porte son
+    `--auto-test` (joué à chaque PR par `lint.yml`) et `maven.yml` l'exerce **en vrai**.
+
 ### Les empreintes SHA-256 (#2107)
 
 Les installeurs ne sont **pas signés**. Sans empreinte, un utilisateur n'a donc **aucun moyen** de
@@ -445,6 +478,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `verifie-renvois-workflows.sh` | chaque `workflow_run` vise le `name:` d'un workflow existant | `lint.yml` |
 | `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé, propre, et **utilisable** avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |
+| `verifie-demarrage-emballage.sh` | un emballage de distribution, une fois **ouvert**, démarre et ne lève aucune erreur de chargement | `maven.yml` et `release.yml` (autotest : `lint.yml`) |
 | `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
 
 **Le modèle vient de #2947** (`verifie-titre-pr.sh`) et il est le bon : le script **se réinvoque
