@@ -1,6 +1,6 @@
 # ADR 3498 - La déclaration porte sur les lectrices, pas sur les écrivaines
 
-- **Statut** : Accepté - 2026-08-09
+- **Statut** : Accepté - 2026-08-09, **amendé** par [ADR 3575](3575-le-journal-fait-exception-et-le-cliquet-ne-recopie-rien.md) : le journal fait exception à la définition, et le cliquet devient un compteur au lieu d'une liste dérivable
 - **Chantier** : #3498, lot 1 du chantier #3518 ; défaut trouvé à la passe 1 de la clôture de #2720
 - **Vérification** : certaine - `ClassementLectureEcritureTest#aucune_commande_n_est_sans_classement`
 

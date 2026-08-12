@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.TreeSet;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
@@ -25,88 +24,38 @@ import picocli.CommandLine;
 /// travail). Il dit qu'un **choix a été fait** : la commande porte le marqueur, ou elle est écrite
 /// noir sur blanc ci-dessous. C'est l'oubli silencieux qu'il rend impossible, pas l'erreur de
 /// jugement - celle-là se corrige en revue, et se paie du bon côté ([LectureSeule]).
+///
+/// ⚠️ Le cliquet est un **compteur**, et non la liste des écrivaines qu'il portait d'abord (#3575).
+/// Cette liste était **intégralement dérivable** : les deux assertions d'alors se refermaient l'une sur
+/// l'autre - toute commande non marquée devait y figurer, et elle ne pouvait contenir que des commandes
+/// non marquées - si bien qu'elle valait exactement l'ensemble que le code déclare déjà. Ce qui force
+/// la décision n'est pas la liste, c'est le **message**, qui nomme la commande fautive.
 class ClassementLectureEcritureTest {
 
-    /// Les commandes qui **écrivent** dans le dossier de travail, et prennent donc le verrou.
+    /// Combien de commandes prennent le verrou, c'est-à-dire n'ont **pas** été déclarées lectrices.
     ///
-    /// L'une d'elles ne se devine pas au nom : `metadonnees-passage` rattrape et envoie des
-    /// métadonnées. À l'inverse `emplacements` écrit, mais **ailleurs** : elle est lectrice ici.
-    private static final Set<String> ECRIVAINS = Set.of(
-            "ajouter-point",
-            "constituer-selection",
-            "corriger-observations",
-            "creer-campagne",
-            "creer-site",
-            "deposer",
-            "deposer-vigiechiro",
-            "discussion",
-            "exporter-activite",
-            "exporter-lot",
-            "exporter-observations",
-            "exporter-sons",
-            "exporter-vu",
-            "importer",
-            "importer-tadarida",
-            "importer-transformes",
-            "importer-vigiechiro",
-            "lancer-traitement-vigiechiro",
-            "marquer-douteux",
-            "marquer-reference",
-            "metadonnees-passage",
-            "modifier-campagne",
-            "modifier-point",
-            "modifier-site",
-            "poser-certitude",
-            "publier-corrections-vigiechiro",
-            "qualifier",
-            "qualifier-fichier",
-            "rattacher-campagne",
-            "rattraper-communes",
-            "reactiver",
-            "reconstruire-passage",
-            "recuperer-vigiechiro",
-            "reinitialiser-depot",
-            "reset-guide",
-            "restaurer",
-            "retro-empreintes",
-            "sauvegarder",
-            "supprimer-campagne",
-            "supprimer-passage",
-            "supprimer-sauvegarde",
-            "supprimer-site",
-            "traiter-passages",
-            "valider-observations");
+    /// Un cliquet, pas un inventaire : il ne dit rien de plus que le code, il oblige seulement à
+    /// trancher quand la surface bouge. Le chiffre se met à jour **en même temps** que la décision.
+    private static final int ECRIVAINES_ATTENDUES = 44;
 
     @Test
-    @DisplayName("chaque commande est déclarée lectrice, ou inscrite parmi les écrivaines")
+    @DisplayName("le nombre de commandes qui prennent le verrou est celui qu'on a décidé")
     void aucune_commande_n_est_sans_classement() {
-        List<String> sansClassement = new ArrayList<>();
-        for (Class<?> commande : toutesLesCommandes()) {
-            String nom = nomDe(commande);
-            if (!LectureSeule.class.isAssignableFrom(commande) && !ECRIVAINS.contains(nom)) {
-                sansClassement.add(nom + " (" + commande.getSimpleName() + ")");
-            }
-        }
-        assertThat(sansClassement)
-                .as("une commande nouvelle doit trancher : si elle ne touche pas au dossier de travail,"
-                        + " lui faire porter LectureSeule ; sinon l'inscrire dans ECRIVAINS, ici même."
-                        + " Le verrou la protège déjà - c'est la lecture verrouillée à tort qu'on évite")
-                .isEmpty();
-    }
-
-    @Test
-    @DisplayName("la liste des écrivaines ne garde pas de commande disparue ou devenue lectrice")
-    void la_liste_des_ecrivaines_ne_ment_pas() {
-        Set<String> nomsReels = new TreeSet<>();
+        List<String> ecrivaines = new ArrayList<>();
         for (Class<?> commande : toutesLesCommandes()) {
             if (!LectureSeule.class.isAssignableFrom(commande)) {
-                nomsReels.add(nomDe(commande));
+                ecrivaines.add(nomDe(commande) + " (" + commande.getSimpleName() + ")");
             }
         }
-        assertThat(ECRIVAINS)
-                .as("une entrée qui ne correspond plus à rien ferait passer pour classée une commande"
-                        + " renommée - le garde dirait vert sur une surface qu'il ne décrit plus")
-                .isSubsetOf(nomsReels);
+
+        // Les noms sont portés par la collection, qu'AssertJ affiche en cas d'échec : les répéter dans
+        // le message doublerait une liste de quarante-cinq entrées et rendrait le reproche illisible.
+        assertThat(ecrivaines)
+                .as("une commande nouvelle doit trancher : si elle ne touche pas au dossier de travail,"
+                        + " lui faire porter LectureSeule ; sinon monter ce compteur, ici même, en sachant"
+                        + " ce qu'on fait. Le verrou la protège déjà - c'est la lecture verrouillée à tort"
+                        + " qu'on évite")
+                .hasSize(ECRIVAINES_ATTENDUES);
     }
 
     /// Toutes les commandes câblées, groupes imbriqués compris : `api` porte deux filles, et c'est la
