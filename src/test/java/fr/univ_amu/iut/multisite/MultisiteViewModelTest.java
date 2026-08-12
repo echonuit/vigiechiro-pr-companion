@@ -330,6 +330,26 @@ class MultisiteViewModelTest {
     }
 
     @Test
+    @DisplayName("#3599 : un rafraîchissement venu de la DONNÉE laisse le compte rendu en place")
+    void un_rafraichissement_venu_de_la_donnee_garde_le_compte_rendu() {
+        SuiviTraitement suivi = mock(SuiviTraitement.class);
+        when(suivi.releverTout(anyList(), any(), any())).thenReturn(new SuiviTraitement.BilanReleveGroupe(2, 1));
+        when(service.listerPassages(ID)).thenReturn(List.of(ligne("640380", "A1", 2026, 1, StatutWorkflow.DEPOSE)));
+        when(service.agregerPourCarte(ID)).thenReturn(List.of());
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, communes, Optional.of(suivi), ID);
+        vm.appliquerReleve(vm.releverPuisCharger(List.of(1L, 2L, 3L), progression -> {}, JetonAnnulation.neutre()));
+        assertThat(vm.compteRenduReleveProperty().get()).isNotNull();
+
+        // Une nuit arrive d'ailleurs pendant qu'on lit « 2 / 3 relevées ». L'utilisateur n'a rien
+        // demandé : effacer lui ferait racheter un aller-retour réseau pour retrouver son chiffre.
+        vm.appliquerDepuisLaDonnee(vm.charger());
+
+        assertThat(vm.compteRenduReleveProperty().get())
+                .as("le compte rendu rapporte une opération passée, pas le contenu du tableau (ADR 0031)")
+                .isNotNull();
+    }
+
+    @Test
     @DisplayName("#2757 : un rechargement efface le compte rendu, qui deviendrait périmé sans mentir")
     void un_rechargement_efface_le_compte_rendu() {
         SuiviTraitement suivi = mock(SuiviTraitement.class);

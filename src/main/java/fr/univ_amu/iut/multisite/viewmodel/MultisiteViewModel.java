@@ -208,6 +208,32 @@ public class MultisiteViewModel {
         carresCarte.setAll(donnees.carte());
     }
 
+    /// Applique des données rechargées à la suite d'une mutation venue d'**ailleurs** (#3599) : une
+    /// synchronisation, un import, une restauration. Le tableau et la carte se mettent à jour ; le
+    /// **compte rendu du relevé survit**.
+    ///
+    /// ## Pourquoi cette exception à #2757
+    ///
+    /// [#publierLignes] efface le compte rendu à chaque reprojection, et c'est juste **quand
+    /// l'utilisateur a demandé le rechargement** : il a changé un filtre, il est revenu sur l'écran.
+    /// Ici il n'a rien demandé, et le compte rendu qu'on effacerait a été payé par une **attente
+    /// réseau** - le relevé groupé interroge la plateforme nuit par nuit. Le lui reprendre l'obligerait
+    /// à racheter son chiffre.
+    ///
+    /// Un compte rendu rapporte « ce qui vient de se passer »
+    /// ([ADR 0031](../../../../../../../dev-docs/decisions/0031-un-retour-n-est-pas-un-compte-rendu.md)) :
+    /// un fait passé, dont la vérité ne dépend pas de ce que l'écran montre ensuite. « 9 / 12 relevées »
+    /// porte son propre dénominateur - ce sont les nuits interrogées, pas les lignes du tableau.
+    ///
+    /// Le compte rendu est **repris par-dessus** la reprojection plutôt que conditionné dedans :
+    /// `publierLignes` est le rappel du socle de filtres, que tous les chemins traversent, et y glisser
+    /// un drapeau rendrait son comportement dépendant d'un état invisible.
+    public void appliquerDepuisLaDonnee(DonneesMultisite donnees) {
+        CompteRenduChiffre aConserver = compteRenduReleve.get();
+        appliquer(donnees);
+        compteRenduReleve.set(aConserver);
+    }
+
     /// Publie un état **neutre** dans le message de l'écran : ni un succès, ni une erreur. Sert au
     /// renoncement (#2636), où rien n'a raté et où l'utilisateur a simplement arrêté.
     public void signalerInfo(String message) {

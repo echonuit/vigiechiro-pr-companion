@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
@@ -96,6 +97,11 @@ class MultisiteReleveViewTest {
         PortailVigieChiro portail = mock(PortailVigieChiro.class);
         when(portail.pageParticipation(any())).thenReturn(Optional.empty());
         Injector injector = Guice.createInjector(new AbstractModule() {
+            @Provides
+            RevisionDonnees revision() {
+                return new RevisionDonnees(Runnable::run);
+            }
+
             @Override
             protected void configure() {
                 bind(OuvrirPassage.class).toInstance(mock(OuvrirPassage.class));
