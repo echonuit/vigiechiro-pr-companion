@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
+import fr.univ_amu.iut.commun.view.TailleOuverture;
 import fr.univ_amu.iut.commun.view.Typographie;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.passage.model.BackfillHorodatageCapture;
@@ -20,9 +21,11 @@ import java.util.logging.Logger;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 
 /// Point d'entrée JavaFX du SAÉ 2.01 - VigieChiro Companion.
@@ -94,7 +97,16 @@ public class App extends Application {
         loader.setControllerFactory(injector::getInstance);
         Parent root = loader.load();
 
-        primaryStage.setScene(Habillage.scene(root));
+        // #3452 : sans dimensionnement, JavaFX retombe sur la taille PRÉFÉRÉE du contenu - mesurée à
+        // 960x640, où l'accueil (818 px de contenu) ouvrait sur deux cartes d'activité coupées.
+        //
+        // La taille se pose sur la SCÈNE, jamais par `setWidth`/`setHeight` sur la fenêtre : ces deux-là
+        // figent le Stage et tuent son auto-ajustement au contenu.
+        Rectangle2D ecran = Screen.getPrimary().getVisualBounds();
+        TailleOuverture taille = TailleOuverture.bornee(ecran.getWidth(), ecran.getHeight());
+        primaryStage.setScene(Habillage.scene(root, taille.largeur(), taille.hauteur()));
+        primaryStage.setMinWidth(TailleOuverture.LARGEUR_MINIMALE);
+        primaryStage.setMinHeight(TailleOuverture.HAUTEUR_MINIMALE);
         primaryStage.setTitle("VigieChiro Companion");
         chargerIcones(primaryStage);
 
