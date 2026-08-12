@@ -2,7 +2,9 @@ package fr.univ_amu.iut.maj.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.AnnonceChrome;
+import fr.univ_amu.iut.maj.model.ConseilDeMiseAJour;
 import fr.univ_amu.iut.maj.model.VerificateurMiseAJour;
+import fr.univ_amu.iut.maj.model.VersionDisponible;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -30,10 +32,18 @@ public final class AnnonceMiseAJour implements AnnonceChrome {
     public Optional<Annonce> chercher() {
         return verificateur
                 .versionAProposer()
-                .map(disponible -> new Annonce(
-                        "La version " + disponible.numero() + " est disponible (vous utilisez la " + version.libelle()
-                                + ").",
-                        "Voir cette version",
-                        disponible.adresse()));
+                .map(disponible -> new Annonce(message(disponible), "Voir cette version", disponible.adresse()));
+    }
+
+    /// Le message, augmenté du geste conseillé quand il y en a un.
+    ///
+    /// La phrase de conseil vient du modèle et non d'ici : `verifier-maj` rend **exactement la même**
+    /// (ADR 0014). La composer dans la vue la ferait diverger de la CLI au premier ajustement.
+    private String message(VersionDisponible disponible) {
+        String base =
+                "La version " + disponible.numero() + " est disponible (vous utilisez la " + version.libelle() + ").";
+        return ConseilDeMiseAJour.pourCeSysteme()
+                .map(conseil -> base + " " + conseil)
+                .orElse(base);
     }
 }
