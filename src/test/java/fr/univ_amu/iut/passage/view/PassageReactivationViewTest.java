@@ -31,6 +31,7 @@ import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.model.ChoixRebranchement;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -113,6 +114,11 @@ class PassageReactivationViewTest {
                         new DecompteAudio(0, 30)));
 
         Injector injector = Guice.createInjector(new AbstractModule() {
+            @Provides
+            RevisionDonnees revision() {
+                return new RevisionDonnees(Runnable::run);
+            }
+
             @Override
             protected void configure() {
                 bind(NavigationPassage.class).toInstance(navigation);
