@@ -10,6 +10,35 @@ Les installeurs ne sont pas signés : votre système peut afficher un avertissem
 ouverture (Gatekeeper sur macOS, SmartScreen sur Windows). Autorisez l'application pour continuer.
 Voir la [Prise en main](prise-en-main.md).
 
+### Comment mettre à jour l'application ?
+
+L'application vous prévient elle-même quand une version plus récente existe, en nommant **les deux
+numéros** : celui que vous utilisez et celui qui est disponible. Vous savez ainsi si vous avez deux
+jours ou deux ans de retard, ce qui change ce qu'il y a à en faire.
+
+Le geste dépend de la façon dont vous avez installé :
+
+=== "Installé par winget (Windows)"
+
+    ```powershell
+    winget upgrade Echonuit.VigieChiroCompanion
+    ```
+
+=== "Installeur téléchargé"
+
+    Reprenez l'installeur de la nouvelle version sur la page
+    [Releases](https://github.com/echonuit/vigiechiro-pr-companion/releases) et lancez-le : il
+    remplace la version en place.
+
+=== "Archive portable"
+
+    Remplacez le dossier décompressé par celui de la nouvelle version.
+
+!!! note "Vos données ne sont jamais touchées"
+    La base et les journaux vivent **ailleurs**, dans votre dossier personnel : une mise à jour
+    remplace le programme, pas votre travail. C'est vrai des trois gestes ci-dessus, et même d'une
+    désinstallation.
+
 ## Sites et import
 
 ### Je n'arrive pas à importer une nuit

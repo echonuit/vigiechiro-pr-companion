@@ -47,6 +47,31 @@ class ConseilDeMiseAJourTest {
     }
 
     @Test
+    @DisplayName("la frontiere lit vraiment os.name, elle ne rend pas vide par principe")
+    void laFrontiereLitVraimentLaPropriete() {
+        // Sans ce test, muter `pourCeSysteme()` en « rend toujours vide » SURVIT sous Linux, où la
+        // reponse attendue est deja vide : le mutant y est equivalent. Mesure PIT a l'appui (#3616).
+        // On pilote donc la propriete plutot que de dependre du systeme qui execute les tests.
+        String avant = System.getProperty("os.name");
+        try {
+            System.setProperty("os.name", "Windows 11");
+            assertThat(ConseilDeMiseAJour.pourCeSysteme())
+                    .isPresent()
+                    .get(org.assertj.core.api.InstanceOfAssertFactories.STRING)
+                    .contains("winget upgrade");
+
+            System.setProperty("os.name", "Linux");
+            assertThat(ConseilDeMiseAJour.pourCeSysteme()).isEmpty();
+        } finally {
+            if (avant == null) {
+                System.clearProperty("os.name");
+            } else {
+                System.setProperty("os.name", avant);
+            }
+        }
+    }
+
+    @Test
     @DisplayName("le conseil PROPOSE le geste winget, il ne l'impose pas")
     void leConseilProposeSansImposer() {
         String conseil = ConseilDeMiseAJour.pour("Windows 11").orElseThrow();
