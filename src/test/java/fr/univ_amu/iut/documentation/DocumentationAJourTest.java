@@ -16,8 +16,11 @@ import fr.univ_amu.iut.commun.view.CritereFiltre;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -660,11 +663,83 @@ class DocumentationAJourTest {
     }
 
     private static Optional<Path> chercherSource(String nomDeFichier) {
-        try (Stream<Path> sources = Files.walk(Path.of("src", "test", "java"))) {
-            return sources.filter(chemin -> chemin.getFileName().toString().equals(nomDeFichier))
-                    .findFirst();
+        return chercherSource(Path.of("src", "test", "java"), nomDeFichier);
+    }
+
+    /// Cherche un fichier par son nom sous `racine`, **sans se briser sur ce qui bouge**.
+    ///
+    /// ⚠️ `Files.walk` interrompt tout au premier chemin dont il ne peut pas lire les attributs, et il y
+    /// en a : la suite tourne avec `forkCount=1C`, et six tests d'approbation déposent puis effacent un
+    /// `.received` **dans cette arborescence** pendant qu'on la parcourt. Le fichier est listé, puis
+    /// disparaît avant qu'on lise ses attributs, et le garde s'écroule en annonçant un
+    /// `NoSuchFileException` sur un fichier que l'auteur de la PR n'a jamais vu (#3642).
+    ///
+    /// `walkFileTree` appelle `visitFileFailed` là où `walk` lève : le chemin est sauté, la recherche
+    /// continue.
+    ///
+    /// ## Pourquoi ce saut est SILENCIEUX, contrairement à l'ADR 3627
+    ///
+    /// Là-bas, ce qu'on n'avait pas pu lire devait être **rapporté**, parce qu'un garde d'espace en
+    /// tirait une décision. Ici on cherche une source **nommée** : un `.received` volatil n'est pas ce
+    /// qu'on cherche, et le rapporter serait la loupe bruyante que l'ADR 3479 écarte.
+    ///
+    /// Ce n'est pas une entorse à l'ADR 2213 : rien n'est conclu depuis ce silence. Si le parcours
+    /// ratait la vraie source, il le **dirait** - « aucune classe n'existe » - et le verdict pencherait
+    /// du côté sûr, un faux rouge plutôt qu'un faux vert.
+    ///
+    /// @param racine paramètre plutôt que constante parce que l'échec de lecture ne se fabrique pas
+    ///     autrement : on ne va pas retirer un droit dans `src/test/java` pour éprouver ce parcours
+    static Optional<Path> chercherSource(Path racine, String nomDeFichier) {
+        List<Path> trouve = new ArrayList<>();
+        try {
+            Files.walkFileTree(racine, new SimpleFileVisitor<Path>() {
+                @Override
+                public FileVisitResult visitFile(Path chemin, BasicFileAttributes attributs) {
+                    if (chemin.getFileName().toString().equals(nomDeFichier)) {
+                        trouve.add(chemin);
+                        return FileVisitResult.TERMINATE;
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
+
+                @Override
+                public FileVisitResult visitFileFailed(Path chemin, IOException disparu) {
+                    return FileVisitResult.CONTINUE;
+                }
+            });
         } catch (IOException echec) {
-            throw new UncheckedIOException("parcours de src/test/java", echec);
+            throw new UncheckedIOException("parcours de " + racine, echec);
+        }
+        return trouve.stream().findFirst();
+    }
+
+    @Test
+    @DisplayName("#3642 : chercher une source ne s'écroule pas sur un chemin devenu illisible")
+    void la_recherche_de_source_tolere_ce_qui_bouge(@TempDir Path racine) throws IOException {
+        Path atteignable = Files.createDirectories(racine.resolve("atteignable"));
+        Files.writeString(atteignable.resolve("CibleTest.java"), "class CibleTest {}");
+        Path opaque = Files.createDirectories(racine.resolve("opaque"));
+        Files.writeString(opaque.resolve("Cachee.java"), "hors de portée");
+        assertThat(opaque.toFile().setReadable(false))
+                .as("sans ce droit retiré, le test ne prouverait rien : il faut que le parcours BUTE")
+                .isTrue();
+
+        try {
+            // ⚠️ C'est le nom ABSENT qui rend ce test déterministe. Cherchant un fichier qui existe,
+            // `Files.walk` s'arrête au premier trouvé : selon l'ordre de listage du système de fichiers,
+            // il peut ne jamais atteindre le dossier illisible, et le test serait vert une fois sur
+            // deux. Cherchant ce qui n'existe pas, il doit parcourir TOUT, donc buter à coup sûr.
+            assertThat(chercherSource(racine, "JamaisEcriteTest.java"))
+                    .as("le parcours doit aller au bout et rendre « rien trouvé », pas s'interrompre :"
+                            + " six tests d'approbation déposent puis effacent un .received sous"
+                            + " src/test/java pendant que ce garde le parcourt")
+                    .isEmpty();
+
+            assertThat(chercherSource(racine, "CibleTest.java"))
+                    .as("et ce qui reste lisible se trouve encore")
+                    .isPresent();
+        } finally {
+            assertThat(opaque.toFile().setReadable(true)).isTrue();
         }
     }
 
