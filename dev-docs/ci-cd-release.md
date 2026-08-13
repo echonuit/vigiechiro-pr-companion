@@ -86,9 +86,7 @@ fausse** : les étapes de packaging ne s'exécutaient qu'après le succès des t
 **masquait** l'état du packaging, qu'on n'apprenait qu'au tour suivant.
 
 Or ces étapes ne dépendent que de l'**assemblage** : `package -DskipTests` suffit (~20 s en local, et
-la quasi-totalité des <!--inv:tests-bats-->104<!--/inv--> tests bats passent sur ce seul artefact
-- `scripts-ci.bats` fait exception : il éprouve un script de `.github/scripts/` et n'a besoin d'aucun
-jar, cf. #3508). D'où la séparation :
+les <!--inv:tests-bats-->100<!--/inv--> tests bats passent sur ce seul artefact). D'où la séparation :
 
 | Job | Ce dont il dépend | Ce qu'il prouve |
 |---|---|---|
