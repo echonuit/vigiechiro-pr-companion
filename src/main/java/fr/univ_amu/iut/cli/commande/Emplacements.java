@@ -132,6 +132,10 @@ public final class Emplacements implements Callable<Integer>, LectureSeule {
         sortie.println("Emplacements (effet au prochain démarrage)");
         sortie.println(String.format(LIGNE, "Dossier de travail", courant.espaceDeTravail()));
         sortie.println(String.format(LIGNE, "Base de données", courant.base()));
+        // Depuis #3570 la CLI n'imprime plus la pile d'un incident : le détail n'existe qu'ici. L'IHM
+        // ouvre ce dossier depuis son menu ; sans cette ligne, la ligne de commande écrit un diagnostic
+        // à un endroit qu'elle ne nomme jamais (#3624).
+        sortie.println(String.format(LIGNE, "Journaux", courant.journaux()));
         sortie.println(String.format(LIGNE, "Personnalisés", courant.personnalise() ? "oui" : "non (défauts)"));
         sortie.println(String.format(LIGNE, "Défaut travail", courant.espaceDeTravailParDefaut()));
         sortie.println(String.format(LIGNE, "Défaut base", courant.baseParDefaut()));
@@ -141,6 +145,7 @@ public final class Emplacements implements Callable<Integer>, LectureSeule {
         Map<String, Object> objet = new LinkedHashMap<>();
         objet.put("espaceDeTravail", courant.espaceDeTravail().toString());
         objet.put("base", courant.base().toString());
+        objet.put("journaux", courant.journaux().toString());
         objet.put("personnalise", courant.personnalise());
         objet.put("espaceDeTravailParDefaut", courant.espaceDeTravailParDefaut().toString());
         objet.put("baseParDefaut", courant.baseParDefaut().toString());
