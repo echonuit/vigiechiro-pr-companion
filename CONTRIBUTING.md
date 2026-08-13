@@ -310,7 +310,7 @@ Reproduire les contrôles **en local** (la CI les répartit sur les deux workflo
 
 ```bash
 ./mvnw -Pquality-gate compile pmd:check         # PMD bloquant (lint.yml)
-./mvnw -B verify -Djacoco.haltOnFailure=true    # tests + couverture bloquante (maven.yml)
+./mvnw -B verify -Djacoco.haltOnFailure=true    # tests + couverture + dépendances (maven.yml)
 ./mvnw spotless:check                           # formatage (lint.yml)
 ```
 
