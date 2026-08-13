@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
@@ -277,6 +278,53 @@ class SaisonViewTest {
                 .isFalse();
         assertThat(robot.lookup("#lblCampagne").queryAs(Label.class).isManaged())
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#3544 : une campagne créée APRÈS l'ouverture fait réapparaître le sélecteur au retour")
+    void selecteur_campagne_reapparait_au_retour(FxRobot robot) {
+        ComboBox<?> choix = robot.lookup("#choixCampagne").queryAs(ComboBox.class);
+        assertThat(choix.isManaged())
+                .as("à l'ouverture, aucune campagne : le sélecteur est retiré de la mise en page")
+                .isFalse();
+
+        // Le geste de l'issue : on descend sur un passage, on crée une campagne depuis la modale de
+        // rattachement, et on revient. La liste n'était rechargée qu'à l'ouverture de l'écran.
+        when(serviceObserve.campagnesProposables()).thenReturn(List.of(new Campagne(1L, "Suivi ENS 2026", 2026, null)));
+        robot.interact(() -> controleur.rafraichirAuRetour());
+
+        assertThat(choix.isVisible()).as("le sélecteur reparaît").isTrue();
+        assertThat(choix.isManaged())
+                .as("et il reprend sa place dans la mise en page, pas seulement sa visibilité")
+                .isTrue();
+        assertThat(robot.lookup("#lblCampagne").queryAs(Label.class).isManaged())
+                .as("son libellé revient avec lui")
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("#3544 : recharger la liste ne DÉFAIT pas la campagne retenue (ADR 3095)")
+    void recharger_les_campagnes_garde_le_choix(FxRobot robot) {
+        Campagne ens = new Campagne(1L, "Suivi ENS 2026", 2026, null);
+        when(serviceObserve.campagnesProposables()).thenReturn(List.of(ens));
+        robot.interact(() -> controleur.rafraichirAuRetour());
+
+        ComboBox<Campagne> choix = robot.lookup("#choixCampagne").queryAs(ComboBox.class);
+        robot.interact(() -> choix.setValue(ens));
+        assertThat(choix.getValue()).isEqualTo(ens);
+
+        // Un second retour, la liste contenant toujours cette campagne. Ce qu'on mesure ici n'est PAS
+        // `choix.getValue()` : il survit à un `clear()`, je l'ai vérifié en mutant. Le dégât d'un
+        // rechargement qui défait le choix se lit **côté service** - une saison relue SANS filtre,
+        // c'est-à-dire le tableau de l'utilisateur qui se rouvre en grand sous ses yeux.
+        clearInvocations(serviceObserve);
+        robot.interact(() -> controleur.rafraichirAuRetour());
+
+        assertThat(choix.getValue())
+                .as("la campagne retenue existe toujours : recharger ne doit pas la défaire")
+                .isEqualTo(ens);
+        verify(serviceObserve, never()).soldePour(anyString(), anyInt(), org.mockito.ArgumentMatchers.isNull());
+        verify(serviceObserve, times(1)).soldePour(anyString(), anyInt(), eq("Suivi ENS 2026"));
     }
 
     @Test
