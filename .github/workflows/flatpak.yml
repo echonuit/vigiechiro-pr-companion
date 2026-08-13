@@ -19,7 +19,7 @@
 # découvrir après acceptation en constatant que le robot officiel ne s'est jamais
 # déclenché.
 #
-# DEUX PARTIS PRIS
+# QUATRE PARTIS PRIS
 #
 # 1. `--edit-only` plutôt que de laisser l'outil ouvrir la PR lui-même. On veut
 #    CONSTRUIRE et DÉMARRER le Flatpak avant de proposer quoi que ce soit. Une
@@ -38,6 +38,17 @@
 #    pas un point de relecture mais le seul transport disponible. Ce qui autorise cette
 #    fusion sans regard humain, c'est que le paquet vient d'être construit et DÉMARRÉ :
 #    la mise à jour est dérivée d'une release, pas une décision de conception.
+#
+# 4. L'entrée `forcer` existe parce que la construction et le démarrage n'étaient
+#    atteignables QUE par une montée de version : leurs pas sont gardés par
+#    `steps.diff.outputs.change`. Un changement de manifeste qui n'aligne pas une
+#    version - épingler une extension du SDK, corriger une permission, changer le
+#    lanceur - traversait donc ce workflow sans que rien ne soit construit ni
+#    démarré, et en rendait un vert. Ce vert-là ne disait pas « le paquet marche »,
+#    il disait « il n'y avait pas de version à aligner », ce qui n'est pas la même
+#    chose. `forcer` ouvre la porte de l'épreuve sans qu'il y ait de version à
+#    suivre. Le pas qui PROPOSE, lui, reste gardé par le changement : quand rien n'a
+#    bougé, il n'y a rien à proposer.
 
 name: flatpak
 
@@ -58,6 +69,11 @@ on:
   # le relais des montées de version, toutes les deux heures. Ce workflow restera
   # utile pour ce que ces robots ne font pas : attester que le paquet DÉMARRE.
   workflow_dispatch:
+    inputs:
+      forcer:
+        description: Construire et démarrer même sans montée de version
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -103,7 +119,7 @@ jobs:
           fi
 
       - name: Installer flatpak et son constructeur
-        if: steps.diff.outputs.change == 'true'
+        if: steps.diff.outputs.change == 'true' || inputs.forcer
         run: |
           set -euo pipefail
           sudo apt-get update
@@ -112,7 +128,7 @@ jobs:
             flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Construire le Flatpak
-        if: steps.diff.outputs.change == 'true'
+        if: steps.diff.outputs.change == 'true' || inputs.forcer
         working-directory: flatpak
         # --disable-rofiles-fuse : le runner n'expose pas FUSE.
         # --install-deps-from : tire la Platform, le SDK et l'extension openjdk.
@@ -128,7 +144,7 @@ jobs:
             "${RUNNER_TEMP}/flatpak-build" "${APP_ID}.yml"
 
       - name: Démarrage réel du Flatpak
-        if: steps.diff.outputs.change == 'true'
+        if: steps.diff.outputs.change == 'true' || inputs.forcer
         # Mêmes deux conditions que le job `paquet` de maven.yml : tenir debout ET
         # n'avoir levé aucune erreur de chargement. Une exception sur un fil de
         # fond ne tue pas le processus ; se fier à la seule survie fabriquerait un
@@ -156,6 +172,9 @@ jobs:
 
           echo "Le Flatpak démarre et tient 45 s, sans erreur de chargement."
 
+      # Volontairement SANS `|| inputs.forcer` : forcer sert à ÉPROUVER, pas à
+      # proposer. Quand le manifeste n'a pas bougé, il n'y a rien à committer, et
+      # une PR vide échouerait au push.
       - name: Proposer la mise à jour, puis la fusionner
         if: steps.diff.outputs.change == 'true'
         env:

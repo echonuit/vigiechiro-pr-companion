@@ -3,7 +3,16 @@ runtime: org.freedesktop.Platform
 runtime-version: '25.08'
 sdk: org.freedesktop.Sdk
 sdk-extensions:
-  - org.freedesktop.Sdk.Extension.openjdk
+  # L'extension VERSIONNÉE, et non `…Extension.openjdk` tout court. Sa documentation dit
+  # ce qu'est la non versionnée : « the current latest (NON-LTS) version ». Elle suit donc
+  # le Java qui change tous les six mois, et sur la branche 25.08 elle rendait déjà un
+  # jdk-26. Le produit, lui, est en 25 LTS partout : `maven.compiler.release` vaut 25, les
+  # workflows déclarent java-version 25, et le fat-jar publié porte un bytecode 69.
+  # Le Flatpak était ainsi le SEUL emballage à s'exécuter sur un JDK qu'aucun test ne
+  # traverse - et cela importe d'autant plus que le lanceur passe
+  # `--sun-misc-unsafe-memory-access=allow`, dont le retrait est daté par la version du
+  # JDK (#2747) : à laisser flotter, l'échéance arrive ici sans que rien ne l'annonce.
+  - org.freedesktop.Sdk.Extension.openjdk25
 command: vigiechiro-runner
 rename-desktop-file: VigieChiroCompanion.desktop
 
@@ -36,7 +45,10 @@ modules:
   - name: openjdk
     buildsystem: simple
     build-commands:
-      - /usr/lib/sdk/openjdk/install.sh
+      # Le chemin porte le numéro de l'extension. La destination, elle, ne change pas :
+      # l'extension versionnée installe aussi dans /app/jre, donc le lanceur plus bas
+      # reste inchangé.
+      - /usr/lib/sdk/openjdk25/install.sh
 
   - name: vigiechiro
     buildsystem: simple
