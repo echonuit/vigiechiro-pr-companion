@@ -6,6 +6,7 @@ import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
 import fr.univ_amu.iut.saison.model.SoldeSaison;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.IntStream;
@@ -87,15 +88,35 @@ public class SaisonViewModel {
         }
     }
 
+    /// Réinterroge les campagnes proposables (#3544). Appelée à l'ouverture **et au retour** sur
+    /// l'écran : une campagne peut naître ailleurs, depuis la modale de rattachement d'un passage, et
+    /// la liste n'avait jusqu'ici aucun moyen de se remplir après coup.
+    public void rechargerCampagnes() {
+        chargerCampagnes();
+    }
+
     /// Peuple la liste des campagnes proposées, sentinelle « toutes » en tête. Vide si la
     /// fonctionnalité est coupée : la vue n'affiche alors pas le sélecteur.
+    ///
+    /// ⚠️ **`setAll`, et surtout pas `clear()` puis `addAll()`.** La différence n'est pas
+    /// stylistique, elle est **mesurée** : la liste est celle du `ComboBox` du filtre, et un
+    /// `clear()` remet sa valeur à `null`. La liaison bidirectionnelle propage alors ce `null`
+    /// jusqu'ici, et la saison se recharge **sans filtre** - le tableau se rouvre en grand sous les
+    /// yeux de l'utilisateur, à chaque retour sur l'écran, sans qu'il ait rien demandé. C'est la
+    /// précaution que l'ADR 3095 tire de son propre chantier : recalculer ne doit pas **défaire** un
+    /// choix de l'utilisateur.
+    ///
+    /// `setAll` remplace le contenu sans passer par la liste vide, et la valeur survit. Vérifié en
+    /// mutant dans les deux sens : `SaisonViewTest#recharger_les_campagnes_garde_le_choix` est vert
+    /// ici et **rouge** dès qu'on revient à `clear()` + `addAll()`.
     private void chargerCampagnes() {
         List<Campagne> proposables = service.campagnesProposables();
-        campagnes.clear();
+        List<Campagne> voulues = new ArrayList<>();
         if (!proposables.isEmpty()) {
-            campagnes.add(null); // sentinelle « Toutes les campagnes »
-            campagnes.addAll(proposables);
+            voulues.add(null); // sentinelle « Toutes les campagnes »
+            voulues.addAll(proposables);
         }
+        campagnes.setAll(voulues);
     }
 
     /// Nom de la campagne retenue, ou `null` pour ne pas restreindre. Le service filtre sur le **nom**

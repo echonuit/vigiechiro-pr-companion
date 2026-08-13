@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.SuitLaRevision;
+import fr.univ_amu.iut.commun.view.VisibiliteGeree;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.saison.model.CasePassage;
@@ -17,6 +18,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.transformation.SortedList;
@@ -174,14 +177,13 @@ public class SaisonController implements RafraichirAuRetour, SuitLaRevision {
     /// Le tableau **et** le résumé se restreignent ensemble, le ViewModel rechargeant le solde entier
     /// à chaque changement : les deux viennent de la même source, comme l'exige #2356.
     private void installerFiltreCampagne() {
-        boolean aProposer = !viewModel.campagnes().isEmpty();
-        lblCampagne.setVisible(aProposer);
-        lblCampagne.setManaged(aProposer);
-        choixCampagne.setVisible(aProposer);
-        choixCampagne.setManaged(aProposer);
-        if (!aProposer) {
-            return;
-        }
+        // #3544 : items, convertisseur et liaison sont installés **toujours**, y compris quand il n'y a
+        // rien à proposer. La version précédente sortait ici, et l'écran restant vivant dans la pile du
+        // Navigateur, plus rien ne pouvait faire réapparaître le sélecteur si une campagne naissait
+        // ensuite. Ce qui se décide au montage, c'est le câblage ; ce qui varie, c'est la liste.
+        BooleanBinding aProposer = Bindings.isNotEmpty(viewModel.campagnes());
+        VisibiliteGeree.lier(lblCampagne, aProposer);
+        VisibiliteGeree.lier(choixCampagne, aProposer);
         choixCampagne.setItems(viewModel.campagnes());
         // Convertisseur écrit ici : `Convertisseurs` existe dans `multisite` et `importation`, mais en
         // portée paquet dans chacun. Le mutualiser dépasserait cette issue.
@@ -210,6 +212,12 @@ public class SaisonController implements RafraichirAuRetour, SuitLaRevision {
     public void rafraichirAuRetour() {
         // De retour d'un passage/point ouvert depuis le tableau : le solde a pu changer (#1376). On
         // recharge la saison affichée sans déranger le choix d'année.
+        //
+        // Et les CAMPAGNES avec (#3544) : la première a pu naître pendant la descente, depuis la modale
+        // de rattachement. Ce n'est pas une mutation structurelle au sens de l'ADR 3580 - une campagne
+        // n'est pas un des quatre compteurs - donc la révision ne l'annonce pas, et c'est bien au retour
+        // que la liste doit être réinterrogée.
+        viewModel.rechargerCampagnes();
         viewModel.charger(viewModel.annee());
     }
 
