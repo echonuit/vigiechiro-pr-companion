@@ -131,7 +131,7 @@ La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/mave
 
 | Workflow | Commande | Bloquant ? |
 |---|---|---|
-| Build + tests + couverture (`maven.yml`) | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
+| Build + tests + couverture + hygiène des dépendances (`maven.yml`) | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
 | Formatage (`lint.yml`) | `./mvnw -B spotless:check` | **Oui** |
 | Portail qualité PMD (`lint.yml`) | `./mvnw -B -Pquality-gate compile pmd:check` | **Oui** |
 
