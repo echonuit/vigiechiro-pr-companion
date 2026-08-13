@@ -472,18 +472,18 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Su
         replis.basculerTableau();
     }
 
-    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur l'agrégat
-    /// (← Retour ou fil d'Ariane) : un passage ouvert depuis le tableau a pu avancer pendant qu'on
-    /// était dessus. On rejoue le chargement (filtres et tri courants préservés) pour réafficher les
-    /// statuts/verdicts réels plutôt qu'un état périmé.
     /// {@inheritDoc} Ce qui arrive d'AILLEURS pendant qu'on regarde : un import, une
-    /// synchronisation, une restauration. Le [#rafraichirAuRetour()] ci-dessus couvre l'autre
-    /// moitie, ce qu'une sous-activite a change pendant que l'ecran etait masque.
+    /// synchronisation, une restauration. Le [#rafraichirAuRetour()] ci-dessous couvre l'autre
+    /// moitié, ce qu'une sous-activité a changé pendant que l'écran était masqué.
     @Override
     public void rafraichirDepuisLaDonnee() {
         chargerDepuisLaDonnee();
     }
 
+    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur l'agrégat
+    /// (← Retour ou fil d'Ariane) : un passage ouvert depuis le tableau a pu avancer pendant qu'on
+    /// était dessus. On rejoue le chargement (filtres et tri courants préservés) pour réafficher les
+    /// statuts/verdicts réels plutôt qu'un état périmé.
     @Override
     public void rafraichirAuRetour() {
         // Un passage modifié ailleurs peut changer le statut dominant d'un point (#152) : on recharge tout.
