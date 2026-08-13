@@ -9,9 +9,11 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.EnvoiParticipation;
@@ -74,6 +76,16 @@ class RattachementModaleFermetureViewTest {
                         null,
                         new DecompteAudio(0, 0)));
         Injector injector = Guice.createInjector(new AbstractModule() {
+
+            /// Le `Navigateur` du socle abonne les écrans qui déclarent `SuitLaRevision` (ADR 3651) :
+            /// il réclame donc la révision, que cet injecteur partiel doit lier comme les autres
+            /// pièces du socle. Exécution en ligne : le test n'a pas de fil JavaFX à attendre.
+            @Provides
+            @Singleton
+            RevisionDonnees revision() {
+                return new RevisionDonnees(Runnable::run);
+            }
+
             @Provides
             RattachementViewModel viewModel() {
                 var propositions = mock(fr.univ_amu.iut.passage.model.PropositionsEnregistreur.class);

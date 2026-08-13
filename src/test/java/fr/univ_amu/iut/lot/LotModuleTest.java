@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Reglages;
@@ -12,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.lot.di.LotModule;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
@@ -49,6 +52,16 @@ class LotModuleTest {
         new MigrationSchema(source).migrer();
 
         Injector injecteur = Guice.createInjector(new LotModule(), new AbstractModule() {
+
+            /// Le `Navigateur` du socle abonne les écrans qui déclarent `SuitLaRevision` (ADR 3651) :
+            /// il réclame donc la révision, que cet injecteur partiel doit lier comme les autres
+            /// pièces du socle. Exécution en ligne : le test n'a pas de fil JavaFX à attendre.
+            @Provides
+            @Singleton
+            RevisionDonnees revision() {
+                return new RevisionDonnees(Runnable::run);
+            }
+
             @Override
             protected void configure() {
                 bind(SiteDao.class).toInstance(new SiteDao(source));
