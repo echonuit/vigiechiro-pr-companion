@@ -160,7 +160,9 @@ class VerrouWorkspaceTest {
     @DisplayName("le complément d'occupant : le nom quand on l'a, rien du tout sinon (#3571)")
     void complement_d_occupant() {
         assertThat(VerrouWorkspace.complementOccupant("processus 4821, depuis 2026-08-03T21:14:07"))
-                .isEqualTo(" (processus 4821, depuis 2026-08-03T21:14:07)");
+                .as("l'instant se lit en français : la table de choix d'une sauvegarde écrit"
+                        + " « 01/08/2026 12:15 » deux écrans plus loin (#3640)")
+                .isEqualTo(" (processus 4821, depuis 03/08/2026 21:14)");
         assertThat(VerrouWorkspace.complementOccupant(""))
                 .as("des parenthèses vides promettent un nom et n'en donnent aucun")
                 .isEmpty();
@@ -170,6 +172,24 @@ class VerrouWorkspaceTest {
         assertThat(VerrouWorkspace.complementOccupant(null))
                 .as("et la lecture peut ne rien rendre du tout")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3640 : ce qui n'est pas un horodatage reconnu s'affiche tel quel")
+    void complement_d_occupant_sur_ce_qui_n_est_pas_de_nous() {
+        // Ce fichier est écrit par un processus et lu par un AUTRE, parfois d'une version différente,
+        // parfois pas écrit par nous du tout. Ne reformater que ce qu'on reconnaît rend le repli
+        // gratuit : pas de code de compatibilité, pas d'exception, et le comportement d'avant subsiste
+        // exactement là où il doit subsister.
+        assertThat(VerrouWorkspace.complementOccupant("processus 4821, depuis le 3 août à 21h"))
+                .as("un verrou d'une version antérieure : verbatim, ni exception ni bouillie")
+                .isEqualTo(" (processus 4821, depuis le 3 août à 21h)");
+        assertThat(VerrouWorkspace.complementOccupant("verrou pose par un outil tiers"))
+                .as("rien de reconnaissable : on n'invente pas")
+                .isEqualTo(" (verrou pose par un outil tiers)");
+        assertThat(VerrouWorkspace.complementOccupant("processus 4821, depuis 2026-13-45T99:99:99"))
+                .as("une date impossible n'est pas une date : elle passe verbatim plutôt que de lever")
+                .isEqualTo(" (processus 4821, depuis 2026-13-45T99:99:99)");
     }
 
     private Workspace workspace() {

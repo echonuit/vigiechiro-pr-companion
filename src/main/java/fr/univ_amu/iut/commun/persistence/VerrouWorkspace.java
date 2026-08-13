@@ -10,9 +10,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /// Le **verrou d'un workspace** : un seul processus à la fois y écrit (#2731).
 ///
@@ -40,6 +44,13 @@ public final class VerrouWorkspace implements AutoCloseable {
     /// de fichier, et n'a d'ailleurs pas à se protéger d'elle-même : l'IHM tient le verrou pour toute
     /// sa durée, et une restauration lancée depuis cette IHM doit passer.
     private static final Set<Path> DETENUS = ConcurrentHashMap.newKeySet();
+
+    /// L'horodatage tel que [#inscrireLOccupant] l'écrit, repéré pour être reformaté à l'affichage.
+    private static final Pattern HORODATAGE_ISO =
+            Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?(\\.\\d+)?");
+
+    /// La forme que le reste du produit donne à une date et une heure.
+    private static final DateTimeFormatter AFFICHAGE = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final FileChannel canal;
     private final FileLock verrou;
@@ -135,7 +146,34 @@ public final class VerrouWorkspace implements AutoCloseable {
     /// tiers, un fichier tronqué, une tentative morte (#3571).
     public static String complementOccupant(String inscrit) {
         String propre = inscrit == null ? "" : inscrit.strip();
-        return propre.isEmpty() ? "" : " (" + propre + ")";
+        return propre.isEmpty() ? "" : " (" + enFrancais(propre) + ")";
+    }
+
+    /// Rend lisible l'horodatage **reconnu** dans la chaîne inscrite, et lui seul.
+    ///
+    /// L'instant est **écrit en ISO** et **formaté ici** : le fichier est relu par un autre processus,
+    /// parfois d'une version différente, et un format localisé y serait un mauvais support - un instant
+    /// qu'on ne peut ni comparer ni trier. Mais il finit dans une phrase française, deux écrans après
+    /// une table qui écrit `01/08/2026 12:15` : l'y laisser en `2026-08-03T21:14:07` donnait à lire un
+    /// format de machine au milieu du texte (#3640).
+    ///
+    /// ⚠️ **Ne remplace que ce qu'elle reconnaît**, et c'est ce qui rend le repli gratuit : un verrou
+    /// écrit par une version antérieure, posé par un outil tiers ou tronqué ne porte aucun horodatage
+    /// ISO valide, donc il ressort **verbatim** - exactement le comportement d'avant, sans une ligne de
+    /// code de compatibilité. Une date impossible ne lève pas : elle n'est simplement pas reconnue.
+    private static String enFrancais(String inscrit) {
+        Matcher trouve = HORODATAGE_ISO.matcher(inscrit);
+        if (!trouve.find()) {
+            return inscrit;
+        }
+        try {
+            LocalDateTime instant = LocalDateTime.parse(trouve.group());
+            return new StringBuilder(inscrit)
+                    .replace(trouve.start(), trouve.end(), instant.format(AFFICHAGE))
+                    .toString();
+        } catch (DateTimeParseException pasUneDate) {
+            return inscrit;
+        }
     }
 
     private static String quiLOccupe(Workspace workspace) {
