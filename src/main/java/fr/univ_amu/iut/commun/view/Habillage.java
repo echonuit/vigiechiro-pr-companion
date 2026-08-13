@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
+import java.net.URL;
 import java.util.List;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -150,7 +151,20 @@ public final class Habillage {
     }
 
     /// URL d'une feuille du module, telle que `getStylesheets()` l'attend.
+    ///
+    /// ⚠️ **Nomme la feuille manquante**, comme [ChargeurFxml] nomme son FXML (#3700). Sans cela, un
+    /// `target/classes` périmé donnait ici une `NullPointerException` **nue** : aucune indication de la
+    /// ressource en cause, et aucun remède. Pire, comme cette méthode sert à habiller l'alerte que le
+    /// filet global affiche, l'incident se rejouait à l'infini - une exécution réelle a produit
+    /// **16 217 exceptions**, dont une seule portait le diagnostic.
     private static String url(String ressource) {
-        return Habillage.class.getResource(ressource).toExternalForm();
+        URL emplacement = Habillage.class.getResource(ressource);
+        if (emplacement == null) {
+            throw new IllegalStateException("Feuille de style introuvable sur le classpath : « " + ressource
+                    + " » (attendue à côté de " + Habillage.class.getName() + "). Le dossier target/classes est"
+                    + " probablement obsolète après un « git pull » : reconstruisez avec"
+                    + " « ./mvnw clean javafx:run ».");
+        }
+        return emplacement.toExternalForm();
     }
 }
