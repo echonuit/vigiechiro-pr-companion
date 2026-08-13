@@ -55,13 +55,31 @@ insiste() {
   return 1
 }
 
+# Le verdict va dans le JOURNAL **et** dans le résumé d'exécution. Le résumé seul ne suffit pas : une
+# étape verte dont le journal est vide ne distingue pas « la CI n'a pas dérivé » de « le script s'est
+# tu ». Vu sur la première exécution en CI, où le journal ne portait que la ligne de commande.
+rendre() {
+  printf '%s\n' "$1"
+  [ -n "${GITHUB_STEP_SUMMARY:-}" ] && printf '%s\n' "$1" >> "${GITHUB_STEP_SUMMARY}"
+  return 0
+}
+
 besoin=$((FENETRE * 2))
 
 # Durées en minutes des exécutions RÉUSSIES sur `main`, de la plus récente à la plus ancienne. Les
 # échouées sont écartées : une suite qui s'arrête au premier rouge est courte pour une mauvaise raison.
-durees=$(insiste "repos/${DEPOT}/actions/workflows/${WORKFLOW}/runs?branch=main&status=success&per_page=${besoin}" \
-  --jq '[.workflow_runs[] | select(.run_started_at != null and .updated_at != null)
-         | ((.updated_at | fromdateiso8601) - (.run_started_at | fromdateiso8601)) / 60]' || true)
+#
+# ⚠️ La série est INJECTABLE par `SERIE_DUREES_FICHIER` (un tableau JSON de minutes), et c'est ce qui
+# rend ce script éprouvable. Écrit sans cette couture, il allait chercher ses propres données : aucun
+# test ne pouvait lui en fabriquer, et sa vérification se réduisait à trois lancements à la main, qui
+# ne se rejouent pas. C'est exactement ce que l'ADR 3624 nomme - un fait que rien ne peut faire rougir.
+if [ -n "${SERIE_DUREES_FICHIER:-}" ]; then
+  durees=$(cat "${SERIE_DUREES_FICHIER}")
+else
+  durees=$(insiste "repos/${DEPOT}/actions/workflows/${WORKFLOW}/runs?branch=main&status=success&per_page=${besoin}" \
+    --jq '[.workflow_runs[] | select(.run_started_at != null and .updated_at != null)
+           | ((.updated_at | fromdateiso8601) - (.run_started_at | fromdateiso8601)) / 60]' || true)
+fi
 
 if [ -z "${durees}" ]; then
   echo "::warning title=Durée du portail::Historique des exécutions illisible après trois tentatives."
@@ -70,11 +88,9 @@ fi
 
 nombre=$(printf '%s' "${durees}" | jq 'length')
 if [ "${nombre}" -lt "${besoin}" ]; then
-  {
-    echo "### Durée du portail qualité"
-    echo
-    echo "Pas encore assez d'historique : ${nombre} exécution(s) réussie(s) sur ${besoin} nécessaires."
-  } >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+  rendre "### Durée du portail qualité
+
+Pas encore assez d'historique : ${nombre} exécution(s) réussie(s) sur ${besoin} nécessaires."
   exit 0
 fi
 
@@ -90,17 +106,15 @@ derive=$(jq -n "((${recente} / ${precedente}) - 1) * 100")
 fmt() { printf '%.1f' "$1"; }
 derive_affichee=$(printf '%+.1f' "${derive}")
 
-{
-  echo "### Durée du portail qualité"
-  echo
-  echo "| Fenêtre | Médiane |"
-  echo "|---|---|"
-  echo "| ${FENETRE} dernières exécutions | **$(fmt "${recente}") min** |"
-  echo "| les ${FENETRE} d'avant | $(fmt "${precedente}") min |"
-  echo "| dérive | **${derive_affichee} %** (seuil d'avertissement : ${SEUIL_POURCENT} %) |"
-  echo
-  echo "Comparaison de deux **médianes** : une exécution isolément longue ne la déplace pas."
-} >> "${GITHUB_STEP_SUMMARY:-/dev/stdout}"
+rendre "### Durée du portail qualité
+
+| Fenêtre | Médiane |
+|---|---|
+| ${FENETRE} dernières exécutions | **$(fmt "${recente}") min** |
+| les ${FENETRE} d'avant | $(fmt "${precedente}") min |
+| dérive | **${derive_affichee} %** (seuil d'avertissement : ${SEUIL_POURCENT} %) |
+
+Comparaison de deux **médianes** : une exécution isolément longue ne la déplace pas."
 
 # `jq` rend `true`/`false` ; `|| true` parce qu'un test qui rend faux tuerait le script sous `set -e`
 # AVANT le message, et le dispositif se tairait au moment précis où il a quelque chose à dire.
