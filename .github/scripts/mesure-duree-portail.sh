@@ -37,6 +37,51 @@ set -euo pipefail
 # est la pire des deux façons de casser. Vu en le lançant la première fois.
 export LC_ALL=C
 
+# Auto-test (#3661). Doctrine du dépôt : chaque garde de CI porte ses propres cas, lancés par
+# `lint.yml`. Ce script est arrivé avec un fichier `bats` à la place - la seule exception des onze -,
+# ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils n'ont aucun besoin.
+#
+# ⚠️ Le premier cas est celui qui compte : la série RÉELLE du dépôt, ses deux aberrantes comprises,
+# doit rester muette. Un avertisseur qui crie sur l'historique existant s'apprend à ignorer dès le
+# premier jour, et c'est cette propriété-là qui décide s'il sera lu.
+if [ "${1-}" = "--auto-test" ]; then
+    echecs=0
+    serie=$(mktemp)
+    trap 'rm -f "${serie}"' EXIT
+
+    joue() { # <attendu: muet|avertit|court> <libellé> <durées…>
+        local attendu="$1" libelle="$2"
+        shift 2
+        printf '[%s]' "$(printf '%s,' "$@" | sed 's/,$//')" > "${serie}"
+        sortie=$(SERIE_DUREES_FICHIER="${serie}" "$0" depot/quelconque maven.yml 2>&1)
+        obtenu=muet
+        printf '%s' "${sortie}" | grep -q "::warning" && obtenu=avertit
+        printf '%s' "${sortie}" | grep -q "Pas encore assez d.historique" && obtenu=court
+        if [ "${obtenu}" = "${attendu}" ]; then
+            echo "  ✔ ${libelle}"
+        else
+            echo "  ✘ ${libelle} : attendu ${attendu}, obtenu ${obtenu}"
+            echecs=1
+        fi
+    }
+
+    joue muet "la série réelle du dépôt, aberrantes comprises, ne déclenche rien" \
+        12.1 10.6 11.2 12.1 21.8 10.8 11.1 11.6 12.1 10.6 10.0 10.6 \
+        11.0 10.9 23.7 10.4 11.3 10.7 10.5 11.9 10.2 11.4 10.8 9.7
+    joue avertit "une dérive nette au-delà du seuil avertit" \
+        14.0 14.2 13.8 14.1 13.9 14.3 14.0 13.7 14.2 14.1 13.8 14.0 \
+        11.0 10.9 11.2 10.8 11.1 10.7 11.3 10.9 11.0 11.2 10.8 11.1
+    # Contrôle NÉGATIF : la règle doit rester étroite. Une seule exécution à plus du double, dans une
+    # série par ailleurs stable, ne doit pas suffire - c'est le cas qui a écarté le butoir « médiane
+    # + 30 % », et sans lui rien ne distinguerait les deux dispositifs.
+    joue muet "une aberrante isolée ne suffit pas à faire crier" \
+        24.0 10.9 11.2 10.8 11.1 10.7 11.3 10.9 11.0 11.2 10.8 11.1 \
+        11.0 10.9 11.2 10.8 11.1 10.7 11.3 10.9 11.0 11.2 10.8 11.1
+    joue court "sans assez d'historique, il le dit au lieu de conclure" 11.0 10.9 11.2 10.8 11.1
+
+    exit "${echecs}"
+fi
+
 DEPOT="${1:?depot attendu, ex. echonuit/vigiechiro-pr-companion}"
 WORKFLOW="${2:?fichier de workflow attendu, ex. maven.yml}"
 FENETRE="${3:-12}"

@@ -240,6 +240,12 @@ jobs:
         # commentaire pour qu'il ne la compte pas. Il ferme le trou de la passe 6 de clôture.
         run: python3 scripts/adr/verifie_scripts.py
 
+      - name: Auto-test du garde de durée du portail (bloquant, #3661)
+        # Il est arrivé avec un fichier `bats` plutôt qu'un auto-test - la seule exception des onze
+        # scripts -, ce qui faisait attendre à ses cas l'assemblage d'un fat-jar de 80 Mo dont ils
+        # n'ont aucun besoin. Rentré dans le rang, il s'exécute ici, sans rien construire.
+        run: bash .github/scripts/mesure-duree-portail.sh --auto-test
+
       - name: Auto-test du garde de titre de PR (bloquant, #2947)
         # Même raisonnement que l'étape précédente, appliqué au garde qui vit hors de `scripts/adr`.
         # Il refuse deux choses : un titre hors Conventional Commits, et un tiret cadratin. La seconde
