@@ -55,6 +55,13 @@ de la barre du haut permet de la **protéger** :
     dans la liste des sauvegardes. Vous ne risquez donc pas de restaurer une sauvegarde à moitié
     écrite en croyant qu'elle est complète.
 
+    Elle refuse aussi quand elle **ne peut pas savoir** ce qu'elle emporterait : si un fichier de vos
+    nuits ne se laisse pas lire (droits retirés, disque externe capricieux), le message le **nomme**
+    et la sauvegarde est annulée plutôt que tentée à l'aveugle. Un fichier qu'on ne sait pas peser
+    compterait pour zéro, la sauvegarde paraîtrait tenir, partirait, et échouerait en cours de copie
+    en laissant un dossier qui ressemble à une sauvegarde. Rendez le fichier lisible, ou retirez la
+    nuit concernée, puis recommencez.
+
 - **Restaurer une sauvegarde…** : vous choisissez un fichier de sauvegarde ; après **confirmation**,
   l'application **remplace** la base courante par celle-ci. Par sécurité, l'**état courant est d'abord mis
   de côté** (fichier `vigiechiro.db.avant-restauration`), et l'application revient à l'accueil pour
