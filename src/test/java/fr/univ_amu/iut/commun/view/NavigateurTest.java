@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import java.util.List;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -27,7 +28,7 @@ class NavigateurTest {
     }
 
     private Navigateur navigateur(NavigationViewModel navigation, Parent accueil) {
-        Navigateur navigateur = new Navigateur(navigation);
+        Navigateur navigateur = new Navigateur(navigation, new RevisionDonnees(Runnable::run));
         navigateur.memoriserAccueil(accueil);
         return navigateur;
     }
@@ -233,7 +234,7 @@ class NavigateurTest {
     @Test
     @DisplayName("afficherAccueil est sans effet tant qu'aucun accueil n'a été mémorisé")
     void afficher_accueil_sans_memorisation_est_neutre() {
-        Navigateur navigateur = new Navigateur(new NavigationViewModel());
+        Navigateur navigateur = new Navigateur(new NavigationViewModel(), new RevisionDonnees(Runnable::run));
         Parent vue = new Group();
         navigateur.empiler(vue, "x", "X", null);
 
@@ -306,6 +307,69 @@ class NavigateurTest {
         public void auDepartEcran() {
             departs++;
         }
+    }
+
+    /// Faux controller qui compte les rechargements demandés par la **donnée** (contrat
+    /// [SuitLaRevision]) : l'abonnement est posé et rendu par le `Navigateur`, pas par l'écran.
+    private static final class EcranQuiSuitLaDonnee implements SuitLaRevision {
+        private int rechargements;
+
+        @Override
+        public void rafraichirDepuisLaDonnee() {
+            rechargements++;
+        }
+    }
+
+    @Test
+    @DisplayName("Un écran de l'historique qui déclare le contrat suit la révision des données")
+    void un_ecran_empile_suit_la_revision() {
+        RevisionDonnees revision = new RevisionDonnees(Runnable::run);
+        Navigateur navigateur = new Navigateur(new NavigationViewModel(), revision);
+        navigateur.memoriserAccueil(new Group());
+        EcranQuiSuitLaDonnee saison = new EcranQuiSuitLaDonnee();
+        navigateur.empiler(new Group(), "saison", "Ma saison", saison);
+
+        revision.mutationStructurelleValidee();
+
+        assertThat(saison.rechargements)
+                .as("l'écran n'a rien fait pour s'abonner : c'est le Navigateur qui l'a posé")
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Relibeller l'étape courante ne RÉ-abonne pas : une mutation reste un rechargement")
+    void relibeller_ne_reabonne_pas() {
+        RevisionDonnees revision = new RevisionDonnees(Runnable::run);
+        Navigateur navigateur = new Navigateur(new NavigationViewModel(), revision);
+        navigateur.memoriserAccueil(new Group());
+        EcranQuiSuitLaDonnee passage = new EcranQuiSuitLaDonnee();
+        navigateur.empiler(new Group(), "passage", "Détails du passage", passage);
+
+        // #1213 : le chargement asynchrone se termine, l'étape est REMPLACÉE par sa jumelle relibellée.
+        // La vue, elle, n'a pas bougé : l'écran n'a été ni quitté ni rouvert.
+        navigateur.actualiserLibelleCourant(passage, "Détails du passage N° 2");
+        revision.mutationStructurelleValidee();
+
+        assertThat(passage.rechargements)
+                .as("un abonnement de plus ferait relire la base deux fois pour un seul import")
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Un écran sorti de l'historique ne suit plus la révision")
+    void un_ecran_sorti_ne_suit_plus_la_revision() {
+        RevisionDonnees revision = new RevisionDonnees(Runnable::run);
+        Navigateur navigateur = new Navigateur(new NavigationViewModel(), revision);
+        navigateur.memoriserAccueil(new Group());
+        EcranQuiSuitLaDonnee saison = new EcranQuiSuitLaDonnee();
+        navigateur.empiler(new Group(), "saison", "Ma saison", saison);
+
+        navigateur.revenir();
+        revision.mutationStructurelleValidee();
+
+        assertThat(saison.rechargements)
+                .as("`RevisionDonnees` est un singleton : sans retrait, l'écoute survit à l'écran")
+                .isZero();
     }
 
     /// Faux controller qui compte les rafraîchissements au retour (#3519). C'est le **seul** effet

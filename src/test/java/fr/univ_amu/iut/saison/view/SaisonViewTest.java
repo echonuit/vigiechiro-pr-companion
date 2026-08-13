@@ -18,9 +18,11 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.saison.model.CasePassage;
 import fr.univ_amu.iut.saison.model.LigneSaison;
@@ -30,6 +32,7 @@ import fr.univ_amu.iut.saison.viewmodel.SaisonViewModel;
 import java.time.LocalDate;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
@@ -59,6 +62,10 @@ class SaisonViewTest {
     private RevisionDonnees revision;
 
     private ServiceSoldeSaison serviceObserve;
+    /// Le chrome de navigation, bâti à la main : c'est LUI qui abonne l'écran à la révision et
+    /// qui rend l'abonnement quand l'étape sort de l'historique.
+    private Navigateur navigateur;
+
     private SaisonController controleur;
 
     @Start
@@ -152,6 +159,8 @@ class SaisonViewTest {
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
+        navigateur = new Navigateur(new NavigationViewModel(), revision);
+        navigateur.empiler(vue, "saison", "Ma saison", controleur);
         stage.setScene(new Scene(vue, 1000, 600));
         stage.show();
     }
@@ -174,7 +183,9 @@ class SaisonViewTest {
     @Test
     @DisplayName("#3591 : un écran quitté ne recharge plus, l'abonnement est rendu")
     void un_ecran_quitte_ne_recharge_plus(FxRobot robot) {
-        robot.interact(() -> controleur.auDepartEcran());
+        // Le depart REEL d'un ecran : le Navigateur le retire de l'historique. C'est lui qui rend
+        // l'abonnement (contrat SuitLaRevision), l'ecran n'a plus rien a faire pour cela.
+        robot.interact(() -> navigateur.ouvrirRacine(new Group(), "ailleurs", "Ailleurs", null));
         clearInvocations(serviceObserve);
 
         robot.interact(() -> revision.mutationStructurelleValidee());

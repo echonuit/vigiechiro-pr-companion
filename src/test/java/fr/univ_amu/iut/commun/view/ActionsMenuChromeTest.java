@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.BilanSauvegarde;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -37,7 +38,7 @@ class ActionsMenuChromeTest {
     private static final Path FICHIER = Path.of("/tmp/sauvegardes/vigiechiro.db");
 
     private final ServiceSauvegarde sauvegarde = mock(ServiceSauvegarde.class);
-    private final Navigateur navigateur = new Navigateur(new NavigationViewModel());
+    private final Navigateur navigateur = new Navigateur(new NavigationViewModel(), new RevisionDonnees(Runnable::run));
     private final OccupationChrome occupation =
             new OccupationChrome(new ExecuteurTacheSynchrone(), new NavigationViewModel());
 
