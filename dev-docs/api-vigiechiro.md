@@ -594,10 +594,31 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
   `PUT` S3 `application/zip`, finalisation : **verte**. Un rouge sur cette probe veut donc dire que **le
   mode de dépôt par défaut est cassé**, et non, comme son libellé le laissait croire, qu'il faudrait
   revenir au WAV.
-- **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur → le **push point→site est abandonné** ;
-  le pull (`RapprochementSites`) reste la seule direction de synchronisation des sites : exécuté à la
-  connexion, et rejouable **à la demande** depuis M-Sites (« Récupérer depuis VigieChiro », #1045,
-  passerelle `SynchronisationSites` activée par `OptionalBinder`).
+- **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur. ⚠️ **Ce verdict était exact et la conclusion
+  qu'on en tirait était fausse** (#3694). Il en avait été déduit que le « push point→site » était
+  impossible ; la sonde éprouvait simplement **la mauvaise route**. Lecture de la source
+  (`vigiechiro/resources/sites.py`) :
+
+    | Route | Politique d'accès |
+    |---|---|
+    | `PATCH /sites/{id}` | `_check_edit_acess` : **propriétaire non verrouillé**, ou administrateur. Sinon 403 |
+    | **`PUT /sites/{id}/localites`** | propriétaire non verrouillé, administrateur, **ou non-propriétaire validé sur le protocole du site** |
+
+    Le portail passe par la **seconde**, et c'est par elle qu'un point a pu être créé sur un carré
+    appartenant à un autre observateur (`Z41` sur 130711, le 2026-07-04, une semaine **avant** que la
+    sonde ne rende son 403).
+
+    ⚠️ **Elle remplace la liste entière** : `mongo_update = {'$set': {'localites': payload['localites']}}`.
+    Envoyer le seul point neuf **efface tous les autres** - 41 localités sur ce carré, sur la donnée d'un
+    tiers. Même forme que le `PATCH` de `configuration` d'une participation (#1844) : on part du distant,
+    on y ajoute, on renvoie l'ensemble.
+
+    Le schéma d'une localité : `nom` (**requis**, unique dans la liste), `coordonnee`, `geometries`
+    (`GeometryCollection`, coordonnées en **`[lat, lon]`**), `representatif`, `habitats`.
+
+    Le pull (`RapprochementSites`) reste la direction **implémentée** : exécuté à la connexion, et
+    rejouable **à la demande** depuis M-Sites (« Récupérer depuis VigieChiro », #1045, passerelle
+    `SynchronisationSites` activée par `OptionalBinder`).
 - **Aller-retour d'écriture (#1862)** : **quatre verdicts confirmés en réel** (exécutée le 2026-07-18 sur
   la participation de rebut `6a50f790…`, quatre probes vertes).
 
