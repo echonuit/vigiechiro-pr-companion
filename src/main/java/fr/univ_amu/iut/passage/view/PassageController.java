@@ -548,7 +548,13 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                 idPassage,
                 contexte.numeroCarre(),
                 contexte.codePoint(),
-                () -> viewModel.ouvrirSur(idPassage, contexte));
+                // #3455 : le rappel repasse par CE contrôleur, et non par `viewModel.ouvrirSur`.
+                // Le ViewModel rechargeait bien ses propriétés - le titre et le fil d'Ariane suivaient,
+                // celui-ci se recalculant à chaque affichage - mais `actualiserFil` n'était jamais
+                // appelée, et le libellé figé dans l'étape de navigation gardait l'ANCIEN numéro. Le
+                // bouton Retour d'un écran ouvert ensuite annonçait donc une nuit qui n'existait plus
+                // sous ce nom, pendant que le fil d'Ariane annonçait la bonne.
+                () -> ouvrirSur(idPassage, contexte));
     }
 
     /// « Voir sur la carte » : ouvre la vue multi-sites centrée/surlignée sur le carré de ce passage.
