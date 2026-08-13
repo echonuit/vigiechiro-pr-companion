@@ -130,8 +130,11 @@ public final class CapturePassage {
     private static final String APERCU_ECRIT = "Apercu ecrit dans ";
     private static final String FXML_RATTACHEMENT = "RattachementModale.fxml";
     private static final int NB_SEQUENCES = 60;
-    private static final long VOLUME_ORIGINAUX_OCTETS = 5L * 1024 * 1024 * 1024; // 5 Go
-    private static final long VOLUME_SEQUENCES_OCTETS = 180L * 1024 * 1024; // 180 Mo
+    /// Volumes posés en **base 1000**, celle dans laquelle `Formats` les rend depuis #3573. Écrits en
+    /// base 1024, ils affichaient « 189 Mo » là où le littéral disait 180 : le chiffre publié n'était
+    /// plus celui qu'on avait choisi, et aucun test ne rougit là-dessus (#3624).
+    private static final long VOLUME_ORIGINAUX_OCTETS = 5_000_000_000L;
+    private static final long VOLUME_SEQUENCES_OCTETS = 180_000_000L;
 
     private CapturePassage() {}
 

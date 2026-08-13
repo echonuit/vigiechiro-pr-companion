@@ -239,27 +239,31 @@ public final class CaptureDialogues {
     /// Les entrées sont figées ici pour que l'aperçu ne change pas à chaque régénération, mais leurs
     /// **natures** sont les trois réelles : c'est le filet de migration, celui que personne n'a demandé,
     /// qui explique le total.
+    ///
+    /// ⚠️ Les volumes sont posés en **base 1000**, celle dans laquelle `Formats` les rend depuis
+    /// #3573. Écrits en base 1024, ils affichaient « 432 Mo » là où le littéral disait 412 : le
+    /// chiffre publié n'était plus celui qu'on avait choisi, et aucun test ne rougit là-dessus.
     private static void enregistrerChoixSauvegarde(Path fichier) {
         List<InventaireSauvegardes.Entree> entrees = List.of(
                 new InventaireSauvegardes.Entree(
                         "vigiechiro-sauvegarde-20260801-101500.db",
                         Instant.parse("2026-08-01T10:15:00Z"),
-                        412L * 1024 * 1024,
+                        412_000_000L,
                         InventaireSauvegardes.Nature.BASE),
                 new InventaireSauvegardes.Entree(
                         "vigiechiro-avant-migration-V39.db",
                         Instant.parse("2026-07-02T08:00:00Z"),
-                        398L * 1024 * 1024,
+                        398_000_000L,
                         InventaireSauvegardes.Nature.FILET_MIGRATION),
                 new InventaireSauvegardes.Entree(
                         "vigiechiro-avant-migration-V37.db",
                         Instant.parse("2026-05-14T21:30:00Z"),
-                        351L * 1024 * 1024,
+                        351_000_000L,
                         InventaireSauvegardes.Nature.FILET_MIGRATION),
                 new InventaireSauvegardes.Entree(
                         "vigiechiro-sauvegarde-complete-20260410-090000",
                         Instant.parse("2026-04-10T09:00:00Z"),
-                        6L * 1024 * 1024 * 1024,
+                        6_000_000_000L,
                         InventaireSauvegardes.Nature.COMPLETE));
         ContenuChoixSauvegarde contenu = new ContenuChoixSauvegarde(entrees, entree -> {}, () -> {}, () -> {});
         Scene scene = new Scene(contenu.racine());
