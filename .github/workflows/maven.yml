@@ -132,6 +132,70 @@ jobs:
           echo "Fuseau du shell : $(date +%Z' (%z)')"
           ./mvnw -B test --file pom.xml
 
+  # Rejoue TOUTE la suite dans UN SEUL fork, en ordre inverse (#1967). Ce n'est pas une redite du job
+  # `build` : c'est le seul dispositif qui tienne la propriété « une classe de test rend le harnais
+  # comme elle l'a trouvé ».
+  #
+  # ## Pourquoi il existe
+  #
+  # TestFX RÉUTILISE le Stage primaire d'une classe de test à l'autre dans un même fork. Une classe qui
+  # le laisse modifié fait échouer les SUIVANTES, sur des noeuds « invisibles » ou des tailles absurdes,
+  # très loin de leur cause. Trois occurrences, toutes vertes en CI le jour de leur fusion :
+  #
+  # | Ce qui fuyait | Découvert par |
+  # |---|---|
+  # | `setWidth`/`setHeight` dans `Modales` (#1940) | une classe sans rapport, au hasard des forks |
+  # | les tailles minimales posées par `App.start` (#3607) | la modale de la classe suivante |
+  # | `setWidth`/`setHeight` dans `AppTest` (#3452) | `LotDepotConnecteViewTest`, puis deux E2E |
+  #
+  # ⚠️ Chaque fois, `main` était VERT - par chance de répartition des classes entre forks. #1967 avait
+  # prédit le retour du défaut et proposé ce job ; il avait raison sur les deux.
+  #
+  # ## Pourquoi un seul fork
+  #
+  # `forkCount=1C` répartit les classes sur autant de JVM que de coeurs : deux classes qui se marchent
+  # dessus n'y atterrissent ensemble que par hasard, et ce hasard change avec la machine, le nombre de
+  # classes, et l'ordre. Un fork unique met TOUTES les classes dans le même harnais : la fuite n'a plus
+  # nulle part où se cacher. C'est aussi ce qui rend ce job lent, et pourquoi il vit à part de `build`.
+  #
+  # ## Pourquoi toute la suite, et pas une liste de classes sensibles
+  #
+  # Même raison que pour `fuseau-alternatif` : une liste ne voit que ce qu'on y a mis, et se démode en
+  # silence. Le garde porte sur la FORME du défaut (un harnais partagé qu'on ne rend pas intact), jamais
+  # sur les cas connus au moment de l'écrire (ADR 3412). Les classes qui n'existent pas encore sont
+  # couvertes.
+  #
+  # ## Pourquoi l'ordre inverse en plus
+  #
+  # Un fork unique en ordre NORMAL ne prouve qu'un ordre. Les trois fuites ci-dessus étaient
+  # directionnelles : A casse B, mais B ne casse pas A. Inverser expose l'autre sens, et c'est
+  # effectivement dans ce sens-là que la deuxième a été trouvée.
+  #
+  # ⚠️ Ce que ce job NE voit pas : une fuite qui ne mord que dans l'ordre NORMAL à fork unique, et une
+  # fuite entre deux classes qu'aucun des deux ordres ne met dans cette séquence. Il éprouve deux
+  # ordres, il ne balaie pas leurs permutations.
+  ordre-alternatif:
+    name: ordre-alternatif
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      - name: Rejouer la suite dans un fork unique, en ordre inverse
+        # Les deux propriétés sont celles de surefire, et elles ont été éprouvées à la main avant
+        # d'atterrir ici : c'est avec elles que les trois fuites du tableau ci-dessus se reproduisent
+        # de façon déterministe en local, et sans elles qu'aucune ne se reproduit. Un job qui poserait
+        # un nom de propriété inexact tournerait dans la configuration par défaut et serait VERT sans
+        # rien vérifier - un dispositif cassé se présentant sous la forme d'un succès (ADR 2748).
+        run: ./mvnw -B test --file pom.xml -Dsurefire.forkCount=1 -Dsurefire.runOrder=reversealphabetical
+
   second-compilateur:
     name: analyser-ecj
     runs-on: ubuntu-latest
