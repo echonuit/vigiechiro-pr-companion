@@ -128,11 +128,17 @@ class FiletAvantMigrationTest {
                 .doesNotContain("point_commune");
     }
 
-    /// Ramène la base à l'état « V37 et V38 pas encore appliquées » : on retire leurs versions du
-    /// registre et on défait ce que V38 avait créé.
+    /// Ramène la base à l'état « V37 et suivantes pas encore appliquées » : on retire leurs versions du
+    /// registre et on **défait ce qu'elles avaient fait**.
+    ///
+    /// ⚠️ Cette méthode gagne une ligne à **chaque migration ajoutée** au-delà de V37, sans quoi la
+    /// remontée rejoue une migration sur un schéma qui la porte déjà - et échoue sur un
+    /// « duplicate column » très loin de sa cause. C'est le prix du point de rebroussement figé à V37 ;
+    /// il se paie au moment d'écrire la migration, jamais après.
     private void redescendreEnVersion37() throws SQLException {
         executer("DELETE FROM schema_version WHERE version >= 37");
-        executer("DROP TABLE IF EXISTS point_commune");
+        executer("DROP TABLE IF EXISTS point_commune"); // V38
+        executer("ALTER TABLE depot_unite DROP COLUMN echec_definitif"); // V39
     }
 
     /// Noms des fichiers du dossier de sauvegardes, **liste vide** s'il n'existe pas : un dossier

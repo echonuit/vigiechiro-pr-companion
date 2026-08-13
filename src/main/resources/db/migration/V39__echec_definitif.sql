@@ -1,0 +1,24 @@
+-- V39 - Un echec de depot dit s'il vaut la peine d'etre retente (#3469, campagne 2 #3424).
+--
+-- Le transport sait deja distinguer un incident rejouable d'un refus definitif : c'est
+-- ReponseApi.estReessayable(), dont PolitiqueReessai se sert pour renoncer tout de suite sur un 4xx
+-- (« ne deviendra jamais valide en reessayant »). Mais cette information mourait avec l'appel :
+-- TeleverseurArchive.Resultat la reduisait a une chaine de caracteres, et le plan ne gardait que
+-- cette chaine.
+--
+-- Consequence vecue : treize archives refusees en 403, un utilisateur qui clique « Retenter les
+-- echecs », treize refus de plus, puis un depot fait a la main sans comprendre. La reprise offrait
+-- ce qu'elle ne pouvait pas tenir, sur une information que l'application avait eue.
+--
+-- ATTENTION - une COLONNE, et non un statut 'refuse' a cote de 'echec'. Le reflexe serait le statut,
+-- et il serait dangereux : DepotUniteDao.restantes() rend « tout sauf depose », et toutesDeposees()
+-- vaut « restantes() est vide ». Retirer les unites refusees de restantes() - ce qu'il faudrait pour
+-- que la reprise cesse de les reprendre - ferait donc basculer le passage en DEPOSE alors qu'il
+-- manque des sons. On echangerait une reprise inutile contre un passage qui se dit depose a tort.
+--
+-- Avec une colonne, restantes() et toutesDeposees() ne bougent pas : rien n'est laisse en rade, et
+-- c'est l'OFFRE de reprise qui change, pas la mecanique.
+--
+-- Defaut a 0 : les lignes anterieures se relisent comme des echecs ordinaires, ce qui est le
+-- comportement d'avant cette migration.
+ALTER TABLE depot_unite ADD COLUMN echec_definitif INTEGER NOT NULL DEFAULT 0;
