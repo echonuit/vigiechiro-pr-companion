@@ -74,6 +74,10 @@ class SiteDetailSuppressionsViewTest {
     private Long idPoint;
     private SiteDetailController controleur;
 
+    /// La vue de la fiche, gardée en champ : un écran QUITTÉ sort du graphe de scène, et
+    /// `robot.lookup` ne le voit plus. Les requêtes partent donc de la vue, pas de la fenêtre.
+    private Parent vue;
+
     @Start
     void start(Stage stage) throws Exception {
         Path workspace = Files.createTempDirectory("vc-suppressions-site");
@@ -103,7 +107,7 @@ class SiteDetailSuppressionsViewTest {
         // sur le controller, donc de remplacer ses deux dialogues avant le premier clic.
         FXMLLoader loader = new FXMLLoader(SiteDetailController.class.getResource("SiteDetail.fxml"));
         loader.setControllerFactory(injector::getInstance);
-        Parent vue = loader.load();
+        vue = loader.load();
         controleur = loader.getController();
         controleur.confirmateur().definir(message -> {
             confirmations.add(message);
@@ -164,7 +168,9 @@ class SiteDetailSuppressionsViewTest {
     @DisplayName("#3593 : un écran quitté ne recharge plus, l'abonnement est rendu")
     void un_ecran_quitte_ne_recharge_plus(FxRobot robot) {
         revelerPointsNonUtilises(robot);
-        robot.interact(() -> controleur.auDepartEcran());
+        // Le départ RÉEL d'un écran : le Navigateur le retire de l'historique. C'est lui qui rend
+        // l'abonnement (contrat SuitLaRevision), l'écran n'a plus rien à faire pour cela.
+        robot.interact(() -> injecteur.getInstance(Navigateur.class).afficherAccueil());
 
         robot.interact(() ->
                 injecteur.getInstance(ServiceSites.class).ajouterPointSynchronise(site.id(), "B2", 43.6, 5.5, null));
@@ -176,7 +182,8 @@ class SiteDetailSuppressionsViewTest {
 
     /// Les cartes de point actuellement rendues, comptées par leur lien « Supprimer » : une par carte.
     private java.util.Set<Node> cartesDePoint(FxRobot robot) {
-        return robot.lookup("#cartesPoints")
+        return robot.from(vue)
+                .lookup("#cartesPoints")
                 .lookup((Node noeud) ->
                         noeud instanceof Hyperlink lien && lien.getText().contains("Supprimer"))
                 .queryAll();

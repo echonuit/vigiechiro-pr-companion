@@ -87,6 +87,10 @@ fichiers de la nuit. Vos nuits sont donc consultables dès la première synchron
     prochain passage. Si le compte rendu indique plutôt « N non récupérée(s), à réessayer », c'est la
     liaison avec la plateforme qui a manqué, pas l'analyse : relancez la synchronisation.
 
+    Quand cette reprise aboutit, la nuit se remplit **sous vos yeux** : si sa fiche est ouverte, son
+    nombre de séquences cesse d'afficher zéro sans que vous ayez à la rouvrir (voir
+    [Ce qui est affiché suit vos données](index.md#ce-qui-est-affiche-suit-vos-donnees)).
+
 !!! info "La synchronisation peut être longue"
     Elle va chercher le contenu de **chaque** nuit du compte. Sur un historique fourni, comptez
     plusieurs minutes à la première fois. Une barre indique où elle en est, et **Annuler** l'interrompt

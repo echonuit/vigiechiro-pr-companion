@@ -24,12 +24,14 @@ import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
+import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
@@ -45,6 +47,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -85,6 +88,10 @@ class AnalyseViewTest {
     private OuvrirPassage ouvrirPassage;
     private OuvrirAudio ouvrirAudio;
     private DepotVues depotVues;
+    /// Le chrome de navigation, bâti à la main : c'est LUI qui abonne l'écran à la révision et
+    /// qui rend l'abonnement quand l'étape sort de l'historique.
+    private Navigateur navigateur;
+
     private AnalyseController controleur;
     private final List<String> urlsFiche = new ArrayList<>();
 
@@ -166,6 +173,8 @@ class AnalyseViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
+        navigateur = new Navigateur(new NavigationViewModel(), revision);
+        navigateur.empiler(vue, "analyse", "Espèces & observations", controleur);
         // Désignation du fichier d'export (#1431) : sans ce double, « Exporter… » ouvrirait un FileChooser
         // natif, qui fige le test. C'est pourquoi ce geste n'était couvert nulle part - la Javadoc de
         // `exporter()` le disait franchement : « le dialog vit dans la vue (non testé en TestFX) ».
@@ -270,7 +279,9 @@ class AnalyseViewTest {
     @Test
     @DisplayName("#3592 : un écran quitté ne recharge plus, l'abonnement est rendu")
     void un_ecran_quitte_ne_recharge_plus(FxRobot robot) {
-        robot.interact(() -> controleur.auDepartEcran());
+        // Le depart REEL d'un ecran : le Navigateur le retire de l'historique. C'est lui qui rend
+        // l'abonnement (contrat SuitLaRevision), l'ecran n'a plus rien a faire pour cela.
+        robot.interact(() -> navigateur.ouvrirRacine(new Group(), "ailleurs", "Ailleurs", null));
         clearInvocations(service);
 
         robot.interact(() -> revision.mutationStructurelleValidee());

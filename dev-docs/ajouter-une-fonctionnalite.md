@@ -206,6 +206,17 @@ Pour qu'un **autre** écran ouvre le vôtre **sans dépendre de votre `view`**, 
     [`RafraichirAuRetour`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/RafraichirAuRetour.java)
     sur le controller : le `Navigateur` le recharge au retour.
 
+!!! note "Données modifiées pendant qu'on les regarde ?"
+    C'est une **autre** question, et elle a une autre réponse. Un import, une synchronisation, une
+    restauration écrivent sans que l'utilisateur ait quitté l'écran : le retour ne se produit jamais.
+    Déclarez alors
+    [`SuitLaRevision`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/SuitLaRevision.java)
+    et implémentez `rafraichirDepuisLaDonnee()`. Le `Navigateur` s'occupe de l'abonnement et de sa
+    restitution, cf. [Patrons › Le signal de mutation](patterns.md#le-signal-de-mutation-tu-ecris-tu-signales).
+
+    Les deux contrats se déclarent **ensemble** : ils ne couvrent pas les mêmes écritures. Et si votre
+    écran **écrit**, la règle vaut aussi dans l'autre sens : tu écris, tu signales.
+
 ### Développer une feature derrière un flag
 
 Le champ `Categorie` de `fonctionnalite()` pilote la **désactivabilité** de la feature (cf.

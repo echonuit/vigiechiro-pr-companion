@@ -42,6 +42,12 @@ public record EtapeNavigation(String id, String libelle, Parent vue, Object cont
         return controleur instanceof AuDepartEcran d ? d : null;
     }
 
+    /// Le hook de **suivi de la donnée** déclaré par l'écran, ou `null` s'il n'en déclare pas. Le
+    /// [Navigateur] l'abonne à la révision tant que l'étape est dans l'historique.
+    public SuitLaRevision suitLaRevision() {
+        return controleur instanceof SuitLaRevision s ? s : null;
+    }
+
     /// Le **résumé de barre de statut** déclaré par l'écran, ou `null` s'il n'en déclare pas.
     public ResumeStatut resumeStatut() {
         return controleur instanceof ResumeStatut r ? r : null;

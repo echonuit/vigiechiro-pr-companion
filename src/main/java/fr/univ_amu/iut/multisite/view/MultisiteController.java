@@ -3,7 +3,6 @@ package fr.univ_amu.iut.multisite.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
-import fr.univ_amu.iut.commun.view.AuDepartEcran;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
@@ -22,10 +21,10 @@ import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.SuitLaRevision;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
-import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -40,7 +39,6 @@ import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -68,7 +66,7 @@ import javafx.scene.layout.VBox;
 /// Implémente [RafraichirAuRetour] : quand on revient sur l'agrégat après avoir ouvert un passage et
 /// l'avoir fait avancer (vérification, dépôt, validation), le tableau est rechargé pour refléter le
 /// nouveau statut/verdict (sinon il afficherait un état périmé, l'écran restant vivant dans la pile).
-public class MultisiteController implements RafraichirAuRetour, ResumeStatut, AuDepartEcran {
+public class MultisiteController implements RafraichirAuRetour, ResumeStatut, SuitLaRevision {
 
     /// Zones de la barre de statut (#1023) : cet agrégat top-level ne renseigne que le **centre** (résumé
     /// « N sites… ») ; la gauche (identité) reste au défaut du chrome.
@@ -82,13 +80,6 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Au
     private static final String FEATURE = "multisite";
 
     private final MultisiteViewModel viewModel;
-
-    /// Le signal de mutation du socle (#3541), SINGLETON. Cet écran ne l'est délibérément pas.
-    private final RevisionDonnees revision;
-
-    /// L'écoute de la révision, gardée en **champ** pour pouvoir être retirée : une lambda recréée au
-    /// désabonnement ne retirerait rien.
-    private final ChangeListener<Number> surRevision = (observable, avant, apres) -> chargerDepuisLaDonnee();
 
     /// ViewModel de la modale de reconstruction (#1396) : le controller ne s'en sert que pour **savoir**
     /// si l'action a un sens ici (connexion VigieChiro présente) ; la modale reçoit le sien.
@@ -249,10 +240,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Au
             OuvrirAudio ouvrirAudio,
             ExecuteurTache executeur,
             ActionVigieChiroPassage vigieChiro,
-            ActionsDeLot actions,
-            RevisionDonnees revision) {
+            ActionsDeLot actions) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
-        this.revision = Objects.requireNonNull(revision, "revision");
         this.memoire = Objects.requireNonNull(memoire, "memoire");
         this.reconstruction = Objects.requireNonNull(reconstruction, "reconstruction");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -435,11 +424,6 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Au
 
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
 
-        // Ce qui arrive d'AILLEURS pendant qu'on regarde l'écran (#3599) : un import, une synchro, une
-        // restauration. `rafraichirAuRetour` couvre l'autre moitié, ce qu'une sous-activité a changé
-        // pendant que l'écran était masqué - un verdict, un dépôt : des `update`, qui n'émettent pas.
-        revision.revisionProperty().addListener(surRevision);
-
         chargerDonnees();
     }
 
@@ -460,13 +444,6 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Au
                 viewModel::charger,
                 viewModel::appliquerDepuisLaDonnee,
                 viewModel::signalerErreur);
-    }
-
-    /// Rend l'abonnement quand l'écran quitte l'historique (#230) : `RevisionDonnees` est un singleton,
-    /// ce ViewModel ne l'est délibérément pas.
-    @Override
-    public void auDepartEcran() {
-        revision.revisionProperty().removeListener(surRevision);
     }
 
     /// Superpose à la carte ses contrôles : la **légende** (bas-gauche, #152), le bouton **« ⤢ recadrer »**
@@ -499,6 +476,14 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut, Au
     /// (← Retour ou fil d'Ariane) : un passage ouvert depuis le tableau a pu avancer pendant qu'on
     /// était dessus. On rejoue le chargement (filtres et tri courants préservés) pour réafficher les
     /// statuts/verdicts réels plutôt qu'un état périmé.
+    /// {@inheritDoc} Ce qui arrive d'AILLEURS pendant qu'on regarde : un import, une
+    /// synchronisation, une restauration. Le [#rafraichirAuRetour()] ci-dessus couvre l'autre
+    /// moitie, ce qu'une sous-activite a change pendant que l'ecran etait masque.
+    @Override
+    public void rafraichirDepuisLaDonnee() {
+        chargerDepuisLaDonnee();
+    }
+
     @Override
     public void rafraichirAuRetour() {
         // Un passage modifié ailleurs peut changer le statut dominant d'un point (#152) : on recharge tout.

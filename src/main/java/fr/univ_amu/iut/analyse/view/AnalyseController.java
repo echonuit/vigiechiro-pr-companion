@@ -5,7 +5,6 @@ import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import fr.univ_amu.iut.commun.view.ActionFicheEspece;
-import fr.univ_amu.iut.commun.view.AuDepartEcran;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
@@ -24,10 +23,10 @@ import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.SuitLaRevision;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
-import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
@@ -45,7 +44,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -73,7 +71,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// Implémente [RafraichirAuRetour] : l'écran reste vivant dans l'historique du [Navigateur] ; quand on y
 /// revient après avoir modifié des observations ailleurs (validation d'un passage…), l'inventaire est
 /// rechargé pour ne pas afficher des compteurs périmés.
-public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDepartEcran {
+public class AnalyseController implements RafraichirAuRetour, ResumeStatut, SuitLaRevision {
 
     /// Zones de la barre de statut (#1023) : agrégat top-level → **centre** = résumé de l'inventaire,
     /// **droite** = état d'export quand un export a été produit ; la gauche reste au défaut du chrome.
@@ -88,12 +86,6 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
 
     private final AnalyseViewModel viewModel;
 
-    /// Le signal de mutation du socle (#3541), SINGLETON. Cet écran ne l'est délibérément pas.
-    private final RevisionDonnees revision;
-
-    /// L'écoute de la révision, gardée en **champ** pour pouvoir être retirée : une lambda recréée au
-    /// désabonnement ne retirerait rien.
-    private final ChangeListener<Number> surRevision = (observable, avant, apres) -> chargerObservations();
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAudio ouvrirAudio;
 
@@ -257,10 +249,8 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
             OuvrirAudio ouvrirAudio,
             ActionFicheEspece actionFicheEspece,
             ExecuteurTache executeur,
-            EspecesPrioritaires especesPrioritaires,
-            RevisionDonnees revision) {
+            EspecesPrioritaires especesPrioritaires) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
-        this.revision = Objects.requireNonNull(revision, "revision");
         this.memoire = Objects.requireNonNull(memoire, "memoire");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
@@ -407,11 +397,6 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
 
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
 
-        // Ce qui arrive d'AILLEURS pendant qu'on regarde l'inventaire (#3592) : un import Tadarida, une
-        // synchro. `rafraichirAuRetour` couvre l'autre moitié, ce qu'une sous-activité a changé pendant
-        // que l'écran était masqué - une validation, une correction : des `update`, qui n'émettent pas.
-        revision.revisionProperty().addListener(surRevision);
-
         chargerObservations();
     }
 
@@ -505,19 +490,17 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, AuDe
 
     /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] au **retour** sur l'écran : des
     /// observations ont pu être validées/corrigées entre-temps, l'inventaire est donc ré-interrogé.
+    /// {@inheritDoc} Ce qui arrive d'AILLEURS pendant qu'on regarde : un import, une
+    /// synchronisation, une restauration. Le [#rafraichirAuRetour()] ci-dessus couvre l'autre
+    /// moitie, ce qu'une sous-activite a change pendant que l'ecran etait masque.
     @Override
-    public void rafraichirAuRetour() {
+    public void rafraichirDepuisLaDonnee() {
         chargerObservations();
     }
 
-    /// Rend l'abonnement à la révision quand l'écran quitte l'historique (#230).
-    ///
-    /// `RevisionDonnees` est un **singleton** ; `AnalyseViewModel` ne l'est délibérément pas. Sans ce
-    /// retrait, le singleton garderait une référence forte vers l'écoute d'une vue morte, et chaque
-    /// réouverture en ajouterait une.
     @Override
-    public void auDepartEcran() {
-        revision.revisionProperty().removeListener(surRevision);
+    public void rafraichirAuRetour() {
+        chargerObservations();
     }
 
     /// Rejoue un descripteur de filtres transporté depuis une autre vue (« Voir sur la carte » depuis

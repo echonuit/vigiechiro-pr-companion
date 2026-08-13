@@ -5,7 +5,6 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirSynthese;
-import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -25,28 +24,16 @@ public final class AppuisPassage {
     /// feature est conditionnable, et la carte se masque quand elle est coupée.
     private final Optional<OuvrirSynthese> ouvrirSynthese;
 
-    /// Le signal de mutation du socle (#3541). Entre ici plutôt que par un douzième paramètre du
-    /// contrôleur : c'est exactement ce pour quoi cet objet existe, et un signal de socle est un appui
-    /// au même titre que l'exécuteur hors fil.
-    private final RevisionDonnees revision;
-
     @Inject
     public AppuisPassage(
             ExecuteurTache executeur,
             PortailVigieChiro portail,
             OuvreurDeLien ouvreurDeLien,
-            Optional<OuvrirSynthese> ouvrirSynthese,
-            RevisionDonnees revision) {
+            Optional<OuvrirSynthese> ouvrirSynthese) {
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.portail = Objects.requireNonNull(portail, "portail");
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
         this.ouvrirSynthese = Objects.requireNonNull(ouvrirSynthese, "ouvrirSynthese");
-        this.revision = Objects.requireNonNull(revision, "revision");
-    }
-
-    /// Le signal de mutation, que le contrôleur écoute pour voir ce qui arrive d'ailleurs (#3626).
-    RevisionDonnees revision() {
-        return revision;
     }
 
     ExecuteurTache executeur() {

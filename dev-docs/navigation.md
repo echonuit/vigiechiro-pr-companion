@@ -90,12 +90,35 @@ mémorise le `controller` de l'écran et en dérive, par `instanceof`, des **con
 | [`GardeQuitter`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/GardeQuitter.java) | L'écran a une **saisie non enregistrée** | Demande confirmation avant de quitter |
 | [`EmplacementNavigation`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/EmplacementNavigation.java) | L'écran a une **place hiérarchique** (ex. `Mes sites › Carré N › Passage`) | Alimente le fil d'Ariane (segments cliquables) |
 | [`RafraichirAuRetour`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/RafraichirAuRetour.java) | L'écran affiche des données qu'une **sous-activité peut modifier** | Recharge ses données quand on y **revient** |
+| [`AuDepartEcran`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/AuDepartEcran.java) | L'écran tient une **ressource à rendre** : un fichier temporaire, un verrou | Appelé quand l'écran **quitte l'historique** |
+| [`SuitLaRevision`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/SuitLaRevision.java) | L'écran affiche un **inventaire** qu'un import, une synchro ou une restauration peut changer **sous les yeux** de l'utilisateur | Le `Navigateur` l'abonne à la révision tant qu'il est dans l'historique, et **rend** l'abonnement à sa sortie |
 | [`ResumeStatut`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/ResumeStatut.java) | L'écran a une **info vivante** à afficher en pied (compteurs, avancement) | Alimente les **3 zones de la barre de statut** |
 
 !!! example "Pourquoi `RafraichirAuRetour` existe"
     M-Passage ouvre M-Qualification ; un verdict y fait avancer le statut. Sans contrat, revenir
     ré-afficherait le passage **périmé** (instance vivante). En l'implémentant, le `Navigateur` le
-    recharge au retour. M-Multisite et M-Site-detail (tableaux de passages) l'implémentent aussi.
+    recharge au retour. Cinq écrans le déclarent : Ma saison, Espèces & observations, Carte &
+    passages, la fiche site et M-Passage.
+
+!!! warning "Il ne couvre que la moitié de la question"
+    `RafraichirAuRetour` répond à « une sous-activité a travaillé pendant que j'étais masqué ». Il ne
+    dit **rien** de ce qui survient pendant qu'on regarde : une synchronisation lancée depuis le menu
+    ☰, un import, une restauration. C'est le rôle de `SuitLaRevision` et du
+    [signal de mutation](patterns.md#le-signal-de-mutation-tu-ecris-tu-signales).
+
+    Les deux **coexistent** parce qu'ils ne couvrent pas les mêmes écritures : le retour voit les
+    `update` (un verdict, un dépôt), la révision voit les `insert` / `delete`. Les cinq écrans
+    d'inventaire déclarent donc les deux.
+
+!!! note "Le cycle de l'abonnement appartient au `Navigateur`, pas à l'écran"
+    Un écran qui déclare `SuitLaRevision` fournit **une méthode** et rien d'autre : ni champ, ni
+    `ChangeListener`, ni `RevisionDonnees` dans son constructeur. C'est le `Navigateur` qui abonne
+    l'étape à son entrée dans l'historique et qui **rend** l'abonnement à sa sortie, exactement là où
+    il appelle déjà `auDepartEcran()`.
+
+    Le repère est la **vue**, pas l'étape : `actualiserLibelleCourant` remplace une étape par sa
+    jumelle relibellée sans que l'écran ait bougé. La pose est donc idempotente, et le retrait ne se
+    déclenche que si plus aucune étape ne porte cette vue.
 
 ### Convention de la barre de statut (`ResumeStatut`)
 

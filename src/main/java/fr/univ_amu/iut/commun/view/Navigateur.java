@@ -3,14 +3,18 @@ package fr.univ_amu.iut.commun.view;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -44,33 +48,71 @@ public class Navigateur {
     private final ObservableList<EtapeNavigation> historiqueLectureSeule =
             FXCollections.unmodifiableObservableList(historique);
     private final ObjectProperty<Parent> vueCentrale = new SimpleObjectProperty<>(this, "vueCentrale");
+    private final RevisionDonnees revision;
+    // Abonnements à la révision, indexés par **vue** et non par étape : une étape est un record
+    // remplaçable (relibellage #1213), la vue est l'écran vivant. `IdentityHashMap` parce que le repère
+    // est l'identité du nœud, jamais son `equals`.
+    private final Map<Parent, ChangeListener<Number>> abonnements = new IdentityHashMap<>();
     private Confirmateur confirmateur = new ConfirmationNavigation();
     private EtapeNavigation accueil;
 
     @Inject
-    public Navigateur(NavigationViewModel navigation) {
+    public Navigateur(NavigationViewModel navigation, RevisionDonnees revision) {
         this.navigation = navigation;
-        // Hook de **départ d'écran** (#230) : quand une étape est retirée de l'historique (retour, retour
-        // accueil, nouvelle racine, clic d'un ancêtre), on prévient son controller s'il déclare
-        // [AuDepartEcran], pour qu'il libère ses ressources (ex. l'import supprime son temporaire .zip).
-        // Un seul listener couvre toutes les opérations qui dépilent. Le nettoyage ne doit jamais lever.
+        this.revision = Objects.requireNonNull(revision, "revision");
+        // Un seul listener porte les DEUX bouts du cycle de vie d'un écran dans l'historique : ce qu'il
+        // faut lui rendre quand il sort, et ce qu'il faut lui poser quand il entre. Le nettoyage ne
+        // doit jamais lever.
         historique.addListener((ListChangeListener<EtapeNavigation>) changement -> {
             while (changement.next()) {
-                if (!changement.wasRemoved()) {
-                    continue;
-                }
                 for (EtapeNavigation retiree : changement.getRemoved()) {
                     // Un `setAll` re-place l'accueil (retiré puis ré-ajouté) et
                     // [#actualiserLibelleCourant] remplace l'étape par sa jumelle relibellée (#1213) :
                     // on ne notifie pas un écran dont la VUE est encore dans l'historique (il n'est pas
                     // réellement quitté). Comparaison par identité de vue, pas par égalité d'étape.
-                    boolean vueEncorePresente = historique.stream().anyMatch(etape -> etape.vue() == retiree.vue());
-                    if (retiree.auDepartEcran() != null && !vueEncorePresente) {
-                        retiree.auDepartEcran().auDepartEcran();
+                    if (!vuePresente(retiree.vue())) {
+                        rendreAbonnement(retiree.vue());
+                        // Hook de **départ d'écran** (#230) : l'écran libère ses ressources (ex. l'import
+                        // supprime son temporaire .zip).
+                        if (retiree.auDepartEcran() != null) {
+                            retiree.auDepartEcran().auDepartEcran();
+                        }
                     }
+                }
+                for (EtapeNavigation ajoutee : changement.getAddedSubList()) {
+                    poserAbonnement(ajoutee);
                 }
             }
         });
+    }
+
+    /// `true` si cette vue est **encore** dans l'historique, quelle que soit l'étape qui la porte. Le
+    /// repère est la vue et non l'étape : deux étapes distinctes peuvent désigner le même écran vivant.
+    private boolean vuePresente(Parent vue) {
+        return historique.stream().anyMatch(etape -> etape.vue() == vue);
+    }
+
+    /// Abonne l'écran à la révision des données s'il déclare [SuitLaRevision] et qu'il ne l'est pas
+    /// déjà. L'idempotence est **nécessaire**, pas défensive : relibeller l'étape courante la retire et
+    /// la replace, ce qui rejouerait la pose sur un écran déjà abonné.
+    private void poserAbonnement(EtapeNavigation etape) {
+        SuitLaRevision suiveur = etape.suitLaRevision();
+        if (suiveur == null || abonnements.containsKey(etape.vue())) {
+            return;
+        }
+        ChangeListener<Number> ecoute = (observable, avant, apres) -> suiveur.rafraichirDepuisLaDonnee();
+        abonnements.put(etape.vue(), ecoute);
+        revision.revisionProperty().addListener(ecoute);
+    }
+
+    /// Rend l'abonnement d'un écran qui quitte l'historique. `RevisionDonnees` est un **singleton** et un
+    /// écran ne l'est pas : sans ce retrait, l'écoute survivrait à la vue et ferait recharger un écran
+    /// que plus personne ne regarde.
+    private void rendreAbonnement(Parent vue) {
+        ChangeListener<Number> ecoute = abonnements.remove(vue);
+        if (ecoute != null) {
+            revision.revisionProperty().removeListener(ecoute);
+        }
     }
 
     /// Propriété observable de la vue centrale courante (sommet de l'historique). Le [MainController] y

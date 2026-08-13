@@ -12,6 +12,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -24,6 +25,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
@@ -111,6 +113,16 @@ class QualificationVueIntegrationTest {
                 .thenReturn(new SelectionDEcoute(99L, MethodeSelection.ALEATOIRE, 3, ID_PASSAGE));
 
         Injector injector = Guice.createInjector(new AbstractModule() {
+
+            /// Le `Navigateur` du socle abonne les écrans qui déclarent `SuitLaRevision` (ADR 3651) :
+            /// il réclame donc la révision, que cet injecteur partiel doit lier comme les autres
+            /// pièces du socle. Exécution en ligne : le test n'a pas de fil JavaFX à attendre.
+            @Provides
+            @Singleton
+            RevisionDonnees revision() {
+                return new RevisionDonnees(Runnable::run);
+            }
+
             @Provides
             QualificationViewModel verdict() {
                 return new QualificationViewModel(service);
