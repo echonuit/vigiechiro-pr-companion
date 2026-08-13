@@ -61,6 +61,7 @@
         <slf4j.version>2.0.18</slf4j.version>
         <approvaltests.version>31.0.0</approvaltests.version>
         <archunit.version>1.4.2</archunit.version>
+        <hamcrest.version>2.1</hamcrest.version>
         <!-- Suite de contrat API « vivante » (profil -Papi-live, hors CI) : REST-assured tape l'API
              VigieChiro réelle et valide les réponses contre les JSON Schema de src/test/resources. -->
         <restassured.version>6.0.1</restassured.version>
@@ -186,6 +187,16 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Le coeur de Mockito, utilisé DIRECTEMENT (`mock`, `when`, `verify`) et non seulement par
+             l'extension JUnit ci-dessus : le déclarer évite d'en dépendre en transitif, où une montée de
+             `mockito-junit-jupiter` pourrait le laisser tomber et casser le build loin de sa cause
+             (#3515). -->
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
         <!-- Backend SLF4J « no-op » côté test : des libs de test tirent slf4j-api sans binding, d'où le
              « No SLF4J providers were found » répété à chaque fork. slf4j-nop fournit un backend
              silencieux (logs ignorés, comme le comportement par défaut actuel). Test uniquement. -->
@@ -228,6 +239,14 @@
             <version>${testfx.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Hamcrest, utilisé directement par les assertions TestFX du dépôt. Il arrivait en transitif
+             de `testfx-core` (#3515). -->
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest</artifactId>
+            <version>${hamcrest.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.testfx</groupId>
             <artifactId>testfx-junit5</artifactId>
@@ -268,10 +287,16 @@
             <version>${gson.version}</version>
         </dependency>
 
-        <!-- ArchUnit : tests d'architecture (règles de couches / absence de cycles). -->
+        <!-- ArchUnit : tests d'architecture (règles de couches / absence de cycles).
+
+             L'artefact « core », et non `archunit-junit5` : `ArchitectureTest` est écrit avec
+             `ClassFileImporter` et de simples `@Test`, jamais avec `@AnalyzeClasses`/`@ArchTest`, et
+             c'est la convention du projet (IMPL-CONVENTIONS). `archunit-junit5` n'apportait donc que
+             son moteur, inutilisé, et `archunit` en transitif - ce que `dependency:analyze` signalait
+             des deux côtés à la fois (#3515). -->
         <dependency>
             <groupId>com.tngtech.archunit</groupId>
-            <artifactId>archunit-junit5</artifactId>
+            <artifactId>archunit</artifactId>
             <version>${archunit.version}</version>
             <scope>test</scope>
         </dependency>
@@ -282,6 +307,14 @@
         <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
+            <version>${restassured.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- `JsonPath` est employé directement par les sondes de contrat, pas seulement à travers les
+             assertions de REST-assured qui l'apportait en transitif (#3515). -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>json-path</artifactId>
             <version>${restassured.version}</version>
             <scope>test</scope>
         </dependency>
@@ -591,12 +624,30 @@
                         <ignoredUsedUndeclaredDependency>org.junit.jupiter:junit-jupiter-api</ignoredUsedUndeclaredDependency>
                         <ignoredUsedUndeclaredDependency>org.junit.jupiter:junit-jupiter-params</ignoredUsedUndeclaredDependency>
                     </ignoredUsedUndeclaredDependencies>
+                    <!-- Le rapport devient un VERDICT (#3515). Jusqu'ici il signalait cinq écarts en
+                         terminant en succès, et n'était lié à aucune phase ni appelé par aucun
+                         workflow : il ne tournait que si quelqu'un le tapait. Un écart de plus se
+                         serait ajouté au bruit sans que personne ne le voie - la forme la plus durable
+                         du faux vert (ADR 2748). -->
+                    <failOnWarning>true</failOnWarning>
                 </configuration>
                 <executions>
                     <execution>
                         <id>exposer-chemins-dependances</id>
                         <goals>
                             <goal>properties</goal>
+                        </goals>
+                    </execution>
+                    <!-- Lié à `verify`, la phase que la CI lance sur CHAQUE PR (job `build`), et non à
+                         une phase du cycle local : une garde qui ne s'exercerait que sur `main` serait
+                         une garde qu'aucune PR ne rencontre, et le dépôt sait ce que cela coûte.
+                         `analyze-only` et non `analyze` : les classes sont déjà construites à ce
+                         stade, refourcher un cycle les recompilerait pour rien. -->
+                    <execution>
+                        <id>verdict-dependances</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>analyze-only</goal>
                         </goals>
                     </execution>
                 </executions>
