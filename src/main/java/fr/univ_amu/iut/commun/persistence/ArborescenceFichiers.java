@@ -29,7 +29,12 @@ public final class ArborescenceFichiers {
     /// courant. Il est aussi ce qui rend la **destination** décisive, et c'est tout le sujet de
     /// #2726 : deux racines qui visent la même destination fusionnent ici, en silence.
     public static void copier(Path origine, Path cible) throws IOException {
-        try (Stream<Path> arbre = Files.walk(origine)) {
+        copier(origine, cible, GestesFichiers.reels());
+    }
+
+    /// [#copier(Path, Path)], avec les gestes de disque injectés (#3525).
+    static void copier(Path origine, Path cible, GestesFichiers gestes) throws IOException {
+        try (Stream<Path> arbre = gestes.parcourir(origine)) {
             for (Path chemin : (Iterable<Path>) arbre::iterator) {
                 Path destination = cible.resolve(origine.relativize(chemin).toString());
                 if (Files.isDirectory(chemin)) {
@@ -162,14 +167,19 @@ public final class ArborescenceFichiers {
     /// @return ce qui a résisté, du plus profond au plus haut, **avec la raison** - sans elle, un
     ///     appelant qui rend compte à l'utilisateur devrait refaire le parcours pour la retrouver
     public static List<EchecEffacement> effacerAuMieux(Path cible) {
+        return effacerAuMieux(cible, GestesFichiers.reels());
+    }
+
+    /// [#effacerAuMieux(Path)], avec les gestes de disque injectés (#3525).
+    static List<EchecEffacement> effacerAuMieux(Path cible, GestesFichiers gestes) {
         List<EchecEffacement> restants = new ArrayList<>();
         if (!Files.exists(cible)) {
             return restants;
         }
-        try (Stream<Path> arbre = Files.walk(cible)) {
+        try (Stream<Path> arbre = gestes.parcourir(cible)) {
             for (Path chemin : arbre.sorted(Comparator.reverseOrder()).toList()) {
                 try {
-                    Files.deleteIfExists(chemin);
+                    gestes.supprimer(chemin);
                 } catch (IOException resiste) {
                     restants.add(new EchecEffacement(chemin, resiste));
                 }
@@ -203,12 +213,17 @@ public final class ArborescenceFichiers {
     /// restauration qui ne parvient pas à retirer l'ancien dossier ne doit pas enchaîner sur le
     /// renommage comme si de rien n'était (#3514).
     public static void supprimerRecursivement(Path cible) throws IOException {
+        supprimerRecursivement(cible, GestesFichiers.reels());
+    }
+
+    /// [#supprimerRecursivement(Path)], avec les gestes de disque injectés (#3525).
+    static void supprimerRecursivement(Path cible, GestesFichiers gestes) throws IOException {
         if (!Files.exists(cible)) {
             return;
         }
-        try (Stream<Path> arbre = Files.walk(cible)) {
+        try (Stream<Path> arbre = gestes.parcourir(cible)) {
             for (Path chemin : arbre.sorted(Comparator.reverseOrder()).toList()) {
-                Files.deleteIfExists(chemin);
+                gestes.supprimer(chemin);
             }
         } catch (UncheckedIOException parcours) {
             // Ramenée au type annoncé : sans cela, un sous-dossier illisible ferait remonter une
