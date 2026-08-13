@@ -209,18 +209,18 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         viewModel.chargerSite(site);
     }
 
-    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur la fiche
-    /// (← Retour ou fil d'Ariane) : un passage ouvert depuis le tableau a pu avancer pendant qu'on
-    /// était dessus. On recharge points et passages du site courant pour réafficher les statuts/
-    /// verdicts réels plutôt qu'un état périmé.
     /// {@inheritDoc} Ce qui arrive d'AILLEURS pendant qu'on regarde : un import, une
-    /// synchronisation, une restauration. Le [#rafraichirAuRetour()] ci-dessus couvre l'autre
-    /// moitie, ce qu'une sous-activite a change pendant que l'ecran etait masque.
+    /// synchronisation, une restauration. Le [#rafraichirAuRetour()] ci-dessous couvre l'autre
+    /// moitié, ce qu'une sous-activité a changé pendant que l'écran était masqué.
     @Override
     public void rafraichirDepuisLaDonnee() {
         rafraichirAuRetour();
     }
 
+    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur la fiche
+    /// (← Retour ou fil d'Ariane) : un passage ouvert depuis le tableau a pu avancer pendant qu'on
+    /// était dessus. On recharge points et passages du site courant pour réafficher les statuts/
+    /// verdicts réels plutôt qu'un état périmé.
     @Override
     public void rafraichirAuRetour() {
         if (viewModel.siteCourant() != null) {

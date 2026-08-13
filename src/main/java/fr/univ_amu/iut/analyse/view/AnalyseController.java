@@ -488,16 +488,16 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut, Suit
         carteAffichee.set(!carteAffichee.get());
     }
 
-    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] au **retour** sur l'écran : des
-    /// observations ont pu être validées/corrigées entre-temps, l'inventaire est donc ré-interrogé.
     /// {@inheritDoc} Ce qui arrive d'AILLEURS pendant qu'on regarde : un import, une
-    /// synchronisation, une restauration. Le [#rafraichirAuRetour()] ci-dessus couvre l'autre
-    /// moitie, ce qu'une sous-activite a change pendant que l'ecran etait masque.
+    /// synchronisation, une restauration. Le [#rafraichirAuRetour()] ci-dessous couvre l'autre
+    /// moitié, ce qu'une sous-activité a changé pendant que l'écran était masqué.
     @Override
     public void rafraichirDepuisLaDonnee() {
         chargerObservations();
     }
 
+    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] au **retour** sur l'écran : des
+    /// observations ont pu être validées/corrigées entre-temps, l'inventaire est donc ré-interrogé.
     @Override
     public void rafraichirAuRetour() {
         chargerObservations();
