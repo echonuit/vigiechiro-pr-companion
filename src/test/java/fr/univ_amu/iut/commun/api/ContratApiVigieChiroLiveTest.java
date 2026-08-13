@@ -525,40 +525,59 @@ class ContratApiVigieChiroLiveTest {
         return participation;
     }
 
+    /// Identifiant d'un protocole, qu'Eve l'ait **embarqué** ou laissé en référence nue.
+    ///
+    /// ⚠️ Le premier jet de cette sonde comparait `String.valueOf(...)` à un identifiant : sur
+    /// `GET /moi`, `protocole` est un **objet embarqué**, si bien que la comparaison portait sur le
+    /// `toString()` d'une Map et rendait toujours faux. La sonde a rougi, et **ce n'était pas le fait
+    /// qu'elle mesurait** : c'était elle. Vérifier le dispositif avant de lire son verdict, y compris
+    /// quand ce verdict va dans le sens qu'on attendait.
+    private static String identifiantDuProtocole(Object protocole) {
+        return protocole instanceof Map<?, ?> embarque
+                ? String.valueOf(embarque.get("_id"))
+                : String.valueOf(protocole);
+    }
+
     @Test
-    @DisplayName("PROBE Phase 4 (#941) : PATCH /sites/{id} (localites, If-Match) est-il autorisé à"
-            + " l'observateur ? (échec 403/405 = push point→site abandonné)")
-    void probe_patch_site_localites() {
-        supposerEcritureAutorisee();
-        // Site d'une participation de l'observateur (site régional : il y participe sans en être
-        // propriétaire : le cas réel du terrain).
+    @DisplayName("#3694 : la précondition du push point→site (validé sur le protocole du site) est"
+            + " lisible, et c'est tout ce qui s'éprouve sans risque")
+    void precondition_du_push_point_vers_site() {
+        // ⚠️ Cette sonde REMPLACE `probe_patch_site_localites`, qui visait `PATCH /sites/{id}` et en
+        // concluait « push point→site abandonné ». Sa mesure était juste - 403 - et sa conclusion fausse :
+        // le portail passe par `PUT /sites/{id}/localites`, une AUTRE route, à la politique d'accès
+        // différente. Un dispositif qui vise à côté et conclut fermement referme une piste ouverte ; celui
+        // -ci a coûté un an de conception partie d'un « impossible ».
+        //
+        // Ce qu'on n'éprouve PLUS, et délibérément : l'écriture elle-même. `set_localite` fait
+        // `{'$set': {'localites': ...}}`, donc elle REMPLACE la liste entière - 41 localités sur le carré
+        // d'essai, appartenant à un autre observateur. Une sonde qui se trompe de corps détruirait de la
+        // donnée de terrain irremplaçable. La source du backend fait foi (`vigiechiro/resources/sites.py`,
+        // lue le 2026-08-13) ; ce qui reste vérifiable sans rien casser, c'est la PRÉCONDITION.
         String idSite = api().when()
                 .get("/moi/participations")
                 .then()
                 .statusCode(200)
                 .extract()
                 .path("_items[0].site._id");
-
-        var reponseSite = api().when().get("/sites/{id}", idSite).then().statusCode(200);
-        String etag = reponseSite.extract().path("_etag");
-        List<Map<String, Object>> localites = reponseSite.extract().path("localites");
-        assertThat(etag).as("_etag du site (requis en If-Match)").isNotNull();
-
-        // PATCH quasi no-op : renvoyer les localités TELLES QUELLES (aucune coordonnée altérée). Le
-        // statut de la réponse EST le verdict : 200 = l'observateur peut écrire (le push point→site de
-        // la Phase 4 est faisable), 403/405 = interdit (on abandonne le push, le pull reste possible).
-        int statut = api().header("If-Match", etag)
-                .contentType("application/json")
-                .body(Map.of("localites", localites))
-                .when()
-                .patch("/sites/{id}", idSite)
+        String protocoleDuSite = api().when()
+                .get("/sites/{id}", idSite)
                 .then()
+                .statusCode(200)
                 .extract()
-                .statusCode();
-        assertThat(statut)
-                .as("VERDICT Phase 4 : 200 = push autorisé ; 403/405 = interdit (abandonner 4b) ;"
-                        + " 422 = schéma du corps à ajuster (re-sonder)")
-                .isEqualTo(200);
+                .path("protocole._id");
+        List<Map<String, Object>> mesProtocoles =
+                api().when().get("/moi").then().statusCode(200).extract().path("protocoles");
+
+        boolean valideSurCeProtocole = mesProtocoles.stream()
+                .filter(inscription -> protocoleDuSite.equals(identifiantDuProtocole(inscription.get("protocole"))))
+                .anyMatch(inscription -> Boolean.TRUE.equals(inscription.get("valide")));
+
+        assertThat(valideSurCeProtocole)
+                .as("`set_localite` autorise un NON-propriétaire validé sur le protocole du site. Sans"
+                        + " cette inscription, le push serait refusé pour une raison qui n'a rien à voir"
+                        + " avec la route : c'est la première chose à regarder avant de conclure quoi que"
+                        + " ce soit sur un 403")
+                .isTrue();
     }
 
     /// Petit ZIP d'essai en mémoire (une entrée texte) : suffisant pour sonder l'acceptation du format,
