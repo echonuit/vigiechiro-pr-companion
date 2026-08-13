@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.BeforeAll;
@@ -150,6 +152,54 @@ class ContratApiVigieChiroLiveTest {
         assertThat(participations.getFirst().point())
                 .as("point (code localité) non nul")
                 .isNotNull();
+    }
+
+    @Test
+    @DisplayName("GET /moi/sites vs /moi/participations (#3458) : un carré qu'on POSSÈDE mais où l'on n'a"
+            + " pas encore déposé n'est visible que du premier")
+    void moi_sites_voit_les_carres_possedes_sans_nuit() {
+        ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
+
+        // `mesSites()` dérive des participations (#718), et son propre doc-comment le dit : elle « ne rend
+        // que ceux où vous avez une nuit ». La question de cette sonde est de savoir si `/moi/sites`, que
+        // le client n'appelle pas, comble exactement ce trou - un carré activé sur le portail, sans dépôt.
+        List<SiteVigieChiro> parParticipations = client.mesSites().enOptionnel().orElseThrow();
+        Set<String> avecNuit =
+                parParticipations.stream().map(SiteVigieChiro::id).collect(Collectors.toSet());
+
+        List<Map<String, Object>> possedes = api().when()
+                .get("/moi/sites")
+                .then()
+                .statusCode(200)
+                .extract()
+                .jsonPath()
+                .getList("_items");
+
+        List<String> sansNuit = possedes.stream()
+                .filter(site -> !avecNuit.contains(String.valueOf(site.get("_id"))))
+                .map(site -> site.get("_id") + " · " + site.get("titre"))
+                .toList();
+
+        // ⚠️ La RÉPONSE de la sonde s'imprime, elle ne s'assère pas : sa valeur dépend du compte, et exiger
+        // une liste non vide rendrait rouge un compte qui n'a simplement aucun carré neuf. Ce qui s'assère
+        // ci-dessous est le CONTRAT : l'endpoint répond, et ses items portent de quoi construire l'union.
+        System.out.printf(
+                "%n[#3458] /moi/participations : %d site(s) · /moi/sites : %d · possédés SANS nuit : %d%n",
+                parParticipations.size(), possedes.size(), sansNuit.size());
+        sansNuit.forEach(site -> System.out.println("        " + site));
+        if (sansNuit.isEmpty()) {
+            System.out.println("        aucun : ce compte n'a pas de carré activé sans dépôt AUJOURD'HUI."
+                    + " La sonde n'a donc pas tranché - relancer avec un carré fraîchement activé.");
+        }
+
+        assertThat(possedes)
+                .as("/moi/sites doit répondre une collection Eve : sans elle, l'union des deux sources"
+                        + " n'est pas implémentable, et le carré neuf reste invisible (#3458)")
+                .isNotNull();
+        assertThat(possedes.stream().allMatch(site -> site.get("_id") != null && site.get("titre") != null))
+                .as("chaque site possédé porte _id et titre : c'est ce dont le rapprochement a besoin pour"
+                        + " dédupliquer contre les sites venus des participations")
+                .isTrue();
     }
 
     @Test
