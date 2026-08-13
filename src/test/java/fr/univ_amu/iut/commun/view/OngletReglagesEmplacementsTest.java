@@ -81,6 +81,31 @@ class OngletReglagesEmplacementsTest {
     }
 
     @Test
+    @DisplayName("#3543 : après un Appliquer réussi, « Rétablir les défauts » s'allume, sans redémarrage")
+    void appliquer_allume_retablir() {
+        OngletReglagesEmplacements onglet = onglet(
+                selecteurQuiRepond(choix.resolve("nuits"), choix.resolve("coffre")),
+                notificateurQuiCapture(),
+                () -> {});
+
+        Region racine = construire(onglet);
+        Button reinitialiser = bouton(racine, "emplacements-reinitialiser");
+        assertThat(surFx(reinitialiser::isDisabled))
+                .as("au départ, rien n'a été écrit : il n'y a rien à rétablir")
+                .isTrue();
+
+        surFx(() -> boutons(racine, "emplacements-choisir").forEach(Button::fire));
+        surFx(() -> bouton(racine, "emplacements-appliquer").fire());
+
+        // Une configuration personnalisée existe maintenant : le geste que ce bouton propose est
+        // devenu possible. Il restait grisé jusqu'au redémarrage, parce que son état avait été
+        // photographié au montage du formulaire, que le cache ne reconstruit jamais.
+        assertThat(surFx(reinitialiser::isDisabled))
+                .as("une configuration personnalisée a été écrite : il y a désormais quelque chose à rétablir")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("Réinitialiser efface le choix, rétablit les défauts, désactive son bouton et montre l'avis")
     void reinitialiser_efface_le_choix() throws Exception {
         // On part d'une configuration personnalisée : le service l'écrit d'abord.
