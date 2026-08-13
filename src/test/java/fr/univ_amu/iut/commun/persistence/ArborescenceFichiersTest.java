@@ -128,6 +128,33 @@ class ArborescenceFichiersTest {
         assertThat(pesee.complete()).isTrue();
     }
 
+    @Test
+    @DisplayName("#3634 : un dossier illisible est rapporté, et le reste est quand même mesuré")
+    void peser_rapporte_un_dossier_illisible_et_continue() throws IOException {
+        Path dossier = Files.createDirectories(racine.resolve("nuit"));
+        Files.writeString(dossier.resolve("lisible.wav"), "12345");
+        Path interdit = Files.createDirectories(dossier.resolve("cache"));
+        Files.writeString(interdit.resolve("dedans.wav"), "ce qu'on ne verra pas");
+        assertThat(interdit.toFile().setReadable(false))
+                .as("sans ce droit retiré, le test ne prouverait rien : il faut que le parcours BUTE")
+                .isTrue();
+
+        try {
+            ArborescenceFichiers.Pesee pesee = ArborescenceFichiers.peser(dossier, TailleFichier.reelle());
+
+            assertThat(pesee.octets())
+                    .as("s'arrêter au premier dossier interdit ne dirait pas ce que pèse le reste, et"
+                            + " l'appelant qui veut refuser a besoin des deux")
+                    .isEqualTo(5L);
+            assertThat(pesee.illisibles())
+                    .as("un dossier qu'on n'a pas pu ouvrir est exactement ce qu'une mesure doit savoir dire")
+                    .extracting(ArborescenceFichiers.EchecLecture::chemin)
+                    .containsExactly(interdit);
+        } finally {
+            assertThat(interdit.toFile().setReadable(true)).isTrue();
+        }
+    }
+
     /// Une pesée qui échoue sur un fichier précis, et se comporte normalement sur les autres.
     ///
     /// ⚠️ C'est le port qui rend ce test possible : `Files.size` ne lève pas sur commande. Un dossier
