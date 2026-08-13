@@ -43,14 +43,14 @@ final class TeleverseurArchive {
         // plus jamais un « refusé par VigieChiro » générique quand c'était le réseau.
         ReponseApi<FichierSigne> declaration = client.creerFichier(titre, participationId);
         if (!(declaration instanceof ReponseApi.Succes<FichierSigne>(FichierSigne signe))) {
-            return Resultat.echec("déclaration du fichier : " + causeDe(declaration));
+            return Resultat.echec("déclaration du fichier : " + causeDe(declaration), declaration);
         }
         if (!client.televerserVersS3(signe.urlSignee(), fichier, mime(titre), progression, reprise)) {
             return Resultat.echec("téléversement S3 refusé (réseau ou fichier illisible)");
         }
         ReponseApi<String> finalisation = client.finaliserFichier(signe.id());
         if (finalisation.echec().isPresent()) {
-            return Resultat.echec("finalisation : " + causeDe(finalisation));
+            return Resultat.echec("finalisation : " + causeDe(finalisation), finalisation);
         }
         return Resultat.reussi(signe.id(), octets);
     }
@@ -68,12 +68,12 @@ final class TeleverseurArchive {
             long octets) {
         ReponseApi<String> declaration = client.creerFichierMultipart(titre, participationId);
         if (!(declaration instanceof ReponseApi.Succes<String>(String fichierId))) {
-            return Resultat.echec("déclaration multipart : " + causeDe(declaration));
+            return Resultat.echec("déclaration multipart : " + causeDe(declaration), declaration);
         }
         ReponseApi<String> depot = client.deposerEnParts(fichierId, fichier, mime(titre), progression, reprise);
         if (depot.echec().isPresent()) {
             client.abandonnerFichier(fichierId);
-            return Resultat.echec("téléversement multipart : " + causeDe(depot));
+            return Resultat.echec("téléversement multipart : " + causeDe(depot), depot);
         }
         return Resultat.reussi(fichierId, octets);
     }
@@ -111,13 +111,27 @@ final class TeleverseurArchive {
     /// avant #2586, où le garde-fou d'espace disque parcourait les originaux puis oubliait le volume.
     ///
     /// @param octets taille du fichier parti, `0` sur un échec (rien n'est en ligne) ou un fichier illisible
-    record Resultat(String fichierId, String raison, long octets) {
+    record Resultat(String fichierId, String raison, boolean definitif, long octets) {
         static Resultat reussi(String fichierId, long octets) {
-            return new Resultat(fichierId, null, Math.max(0, octets));
+            return new Resultat(fichierId, null, false, Math.max(0, octets));
         }
 
+        /// Échec dont on ne sait pas s'il se retente : **conservateur**, donc rejouable.
+        ///
+        /// ⚠️ C'est le cas du `PUT` S3 **d'un seul bloc**, qui rend un `boolean` et a donc déjà perdu
+        /// le statut quand on arrive ici. Le supposer définitif retirerait une reprise légitime après
+        /// une simple coupure ; le supposer rejouable rend le comportement d'avant #3469. On préfère
+        /// donc reproposer une reprise inutile plutôt que d'en refuser une qui aurait marché.
         static Resultat echec(String raison) {
-            return new Resultat(null, raison, 0);
+            return new Resultat(null, raison, false, 0);
+        }
+
+        /// Échec dont la **réponse** dit s'il se retente (#3469).
+        ///
+        /// Le caractère définitif vient de `ReponseApi.estReessayable()`, et jamais d'une lecture du
+        /// texte de la raison : la même panne s'y écrit de trop de façons pour qu'on la redevine.
+        static Resultat echec(String raison, ReponseApi<?> reponse) {
+            return new Resultat(null, raison, !reponse.estReessayable(), 0);
         }
 
         boolean reussi() {

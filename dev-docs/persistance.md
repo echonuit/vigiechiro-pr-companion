@@ -40,7 +40,7 @@ Les trois premières migrations posent l'essentiel : `V01__schema.sql` (le sché
 `V02__seed_taxons.sql` (données de référence), `V03__perf_indexes.sql` (index). Les suivantes le font
 **évoluer**, migration après migration. Le dossier
 [`db/migration/`](https://github.com/echonuit/vigiechiro-pr-companion/tree/main/src/main/resources/db/migration)
-en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations-->38<!--/inv--> à ce jour).
+en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations-->39<!--/inv--> à ce jour).
 
 !!! tip "Ajouter une migration"
     1. Créez `db/migration/Vnn__description.sql`, où `nn` est le **numéro qui suit la dernière
@@ -223,6 +223,21 @@ la racine, chemins non corrigés. **L'absence de manifeste voulait dire deux cho
 sauvegarde est ancienne » et « cette sauvegarde est tronquée ».
 
 Le marqueur est en **tête** du nom, et pas en suffixe, pour cette raison exacte.
+
+### Un échec de dépôt dit s'il vaut la peine d'être retenté
+
+Le transport distingue déjà un incident rejouable d'un refus définitif : `ReponseApi.estReessayable()`,
+dont `PolitiqueReessai` se sert pour renoncer tout de suite sur un `4xx`. Depuis `V39__echec_definitif.sql`
+(#3469), le **plan** le retient aussi : `depot_unite.echec_definitif` porte ce que l'appel savait.
+
+⚠️ **Une colonne, et non un statut `refuse` à côté de `echec`.** Le réflexe serait le statut, et il serait
+dangereux : `DepotUniteDao.restantes()` rend « tout sauf `depose` », et `toutesDeposees()` vaut
+« `restantes()` est vide ». Retirer les unités refusées de `restantes()` ferait donc basculer le passage
+en **Déposé** alors qu'il manque des sons. Avec une colonne, la mécanique de reprise ne bouge pas : c'est
+l'**offre** de reprise qui change.
+
+`mettreAJour` **efface** ce caractère définitif, `marquerEchec` le pose : une unité finalement déposée
+après un refus ne doit plus être annoncée irrécupérable.
 
 ### Le garde refuse aussi quand il n'a pas pu tout voir
 

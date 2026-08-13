@@ -51,8 +51,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.DoubleConsumer;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -449,6 +451,58 @@ class DepotVigieChiroTest {
         DepotUnite enEchec = depotUnites.restantes(idPassage).getFirst();
         assertThat(enEchec.statut()).isEqualTo(StatutDepotUnite.ECHEC);
         assertThat(enEchec.messageErreur()).contains("déclaration");
+    }
+
+    @Test
+    @DisplayName("#3469 : un refus serveur est consigné DÉFINITIF, un incident réseau reste rejouable")
+    void le_plan_retient_si_l_echec_valait_la_peine_d_etre_retente(@TempDir Path dossier) throws IOException {
+        Path refuse = fichier(dossier, "refuse.wav");
+        Path coupe = fichier(dossier, "coupe.wav");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        // 403 : le serveur a dit non. Retenter ne le fera pas changer d'avis - c'est ce que la
+        // politique de réessai sait déjà (« un 4xx ne deviendra jamais valide en réessayant »), et
+        // c'est exactement ce que le plan perdait.
+        when(client.creerFichier(eq("refuse.wav"), anyString())).thenReturn(ReponseApi.refuse(403, ""));
+        // Injoignable : le réseau a lâché. Celui-là mérite qu'on repropose la reprise.
+        when(client.creerFichier(eq("coupe.wav"), anyString())).thenReturn(ReponseApi.injoignable("connexion perdue"));
+
+        depot.deposer(idPassage, List.of(refuse, coupe));
+
+        Map<String, DepotUnite> parNom = depotUnites.restantes(idPassage).stream()
+                .collect(Collectors.toMap(DepotUnite::identifiantUnite, unite -> unite));
+        assertThat(parNom.get("refuse.wav").refuseDefinitivement())
+                .as("sans cette distinction, « Retenter les échecs » propose treize téléversements qui"
+                        + " ne peuvent pas aboutir, et l'utilisateur dépose à la main sans comprendre")
+                .isTrue();
+        assertThat(parNom.get("coupe.wav").refuseDefinitivement())
+                .as("une coupure réseau n'est pas un refus : la reprise doit rester offerte, sinon on"
+                        + " corrige un défaut en en créant le symétrique")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#3469 : un dépôt qui aboutit après un refus n'est plus annoncé irrécupérable")
+    void un_succes_efface_le_refus_precedent(@TempDir Path dossier) throws IOException {
+        Path fichier = fichier(dossier, "seconde-chance.wav");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier(anyString(), anyString()))
+                .thenReturn(ReponseApi.refuse(403, ""))
+                .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenReturn(true);
+        when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
+
+        depot.deposer(idPassage, List.of(fichier));
+        assertThat(depotUnites.restantes(idPassage).getFirst().refuseDefinitivement())
+                .isTrue();
+
+        depot.deposer(idPassage, List.of(fichier));
+
+        // Le cas que la remise à zéro protège : sans elle, une unité finalement déposée continuerait
+        // de porter son refus, et le compte rendu annoncerait irrécupérable ce qui est en ligne.
+        assertThat(depotUnites.toutesDeposees(idPassage)).isTrue();
+        assertThat(depotUnites.parPassage(idPassage).getFirst().echecDefinitif())
+                .isFalse();
     }
 
     @Test

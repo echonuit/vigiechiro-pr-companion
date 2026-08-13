@@ -34,6 +34,7 @@ public class DepotUniteDao extends DaoGenerique<DepotUnite, Long> {
             StatutDepotUnite.parValeur(rs.getString("statut")),
             rs.getString("fichier_id_distant"),
             rs.getString("message_erreur"),
+            rs.getBoolean("echec_definitif"),
             rs.getString("maj_le"));
 
     public DepotUniteDao(SourceDeDonnees source) {
@@ -75,6 +76,7 @@ public class DepotUniteDao extends DaoGenerique<DepotUnite, Long> {
                 unite.statut(),
                 unite.fichierIdDistant(),
                 unite.messageErreur(),
+                unite.echecDefinitif(),
                 unite.majLe());
     }
 
@@ -150,14 +152,37 @@ public class DepotUniteDao extends DaoGenerique<DepotUnite, Long> {
 
     /// Avancement d'une unité : nouveau statut, id distant du fichier créé (ou `null`), message
     /// d'erreur (ou `null`), horodatage. Committée immédiatement (persistance au fil de l'eau).
+    ///
+    /// ⚠️ Elle **efface** le caractère définitif d'un refus précédent (#3469) : une unité qui repart
+    /// « en cours » ou qui aboutit n'est plus refusée. Sans cette remise à zéro, une unité déposée
+    /// avec succès après un refus continuerait d'être annoncée comme irrécupérable.
     public void mettreAJour(
             long id, StatutDepotUnite statut, String fichierIdDistant, String messageErreur, String majLe) {
         executerMaj(
-                "UPDATE depot_unite SET statut = ?, fichier_id_distant = ?, message_erreur = ?, maj_le = ?"
-                        + " WHERE id = ?",
+                "UPDATE depot_unite SET statut = ?, fichier_id_distant = ?, message_erreur = ?,"
+                        + " echec_definitif = 0, maj_le = ? WHERE id = ?",
                 statut.valeur(),
                 fichierIdDistant,
                 messageErreur,
+                majLe,
+                id);
+    }
+
+    /// Consigne un échec **en disant s'il vaut la peine d'être retenté** (#3469).
+    ///
+    /// Méthode à part plutôt qu'un sixième paramètre à [#mettreAJour] : seul le chemin d'échec porte
+    /// cette information, et l'ajouter partout obligerait les trois autres appelants à répondre à une
+    /// question qui ne se pose pas chez eux.
+    ///
+    /// @param definitif ce que `ReponseApi.estReessayable()` a dit de la réponse, **pas** une lecture
+    ///     du texte de la raison : la même panne s'écrit de trop de façons pour qu'on la redevine
+    public void marquerEchec(long id, String raison, boolean definitif, String majLe) {
+        executerMaj(
+                "UPDATE depot_unite SET statut = ?, fichier_id_distant = NULL, message_erreur = ?,"
+                        + " echec_definitif = ?, maj_le = ? WHERE id = ?",
+                StatutDepotUnite.ECHEC.valeur(),
+                raison,
+                definitif ? 1 : 0,
                 majLe,
                 id);
     }
