@@ -17,9 +17,27 @@ command: vigiechiro-runner
 rename-desktop-file: VigieChiroCompanion.desktop
 
 finish-args:
-  # Affichage. Wayland en premier, X11 en repli : le parc des naturalistes est hétérogène.
-  - --socket=wayland
-  - --socket=fallback-x11
+  # Affichage : X11 INCONDITIONNEL, et surtout PAS `fallback-x11`.
+  #
+  # `fallback-x11` n'accorde X11 que si Wayland est ABSENT. Or JavaFX rend par GTK
+  # en X11 et ne parle pas Wayland : sur une session Wayland - c'est-a-dire GNOME
+  # et KDE par defaut aujourd'hui - le bac a sable recevait `WAYLAND_DISPLAY` mais
+  # ni `DISPLAY` ni socket X, et l'application mourait au demarrage sur
+  # `UnsupportedOperationException: Unable to open DISPLAY`.
+  #
+  # Le repli etait donc exactement a l'envers : il retirait X11 precisement dans le
+  # cas ou il est indispensable. Constate en installant le paquet construit par
+  # Flathub sur un poste GNOME/Wayland ordinaire.
+  #
+  # `--socket=wayland` a ete RETIRE, et pas seulement par gout du moindre privilege :
+  # le linter de Flathub refuse `finish-args-contains-both-x11-and-wayland`. Les deux
+  # seules formes admises sont `wayland + fallback-x11`, qui nous casse, et `x11`
+  # seul. Le declarer serait de toute facon accorder un acces dont l'application ne
+  # sait rien faire. A revoir le jour ou JavaFX rendra nativement en Wayland.
+  #
+  # Sur une session Wayland, l'hote expose XWayland : `--socket=x11` y donne donc un
+  # affichage, et c'est ainsi que le paquet fonctionne sur GNOME et KDE.
+  - --socket=x11
   - --share=ipc
   - --device=dri
 

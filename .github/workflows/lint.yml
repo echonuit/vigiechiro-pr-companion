@@ -124,6 +124,19 @@ jobs:
           ./.github/scripts/verifie-epinglage.sh --auto-test
           ./.github/scripts/verifie-epinglage.sh
 
+      - name: Le Flatpak peut ouvrir une fenêtre sous Wayland
+        # `--socket=fallback-x11` n'accorde X11 que si Wayland est ABSENT, alors que JavaFX rend par
+        # GTK en X11. Sur GNOME et KDE - donc chez la plupart des utilisateurs - le paquet mourait au
+        # démarrage sur « Unable to open DISPLAY », et RIEN ne l'a vu : le pas « Démarrage réel » de
+        # flatpak.yml tourne en headless, donc sans affichage, et les essais locaux passaient tous
+        # `--nosocket=wayland`, ce qui prenait par accident le seul chemin qui marche.
+        # C'est une politique de permissions, lisible dans le manifeste : on la garde ici, hors ligne,
+        # plutôt que d'installer un compositeur sur le runner.
+        run: |
+          chmod +x .github/scripts/verifie-affichage-flatpak.sh
+          ./.github/scripts/verifie-affichage-flatpak.sh --auto-test
+          ./.github/scripts/verifie-affichage-flatpak.sh
+
       - name: Moindre privilège des workflows
         # #2739 a retiré les droits d'écriture du plancher de release.yml pour les déclarer job par
         # job. Rien ne l'empêchait de se défaire : une PR qui les remettrait au plancher passerait

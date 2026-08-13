@@ -123,7 +123,9 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          sudo apt-get install -y flatpak flatpak-builder
+          # xvfb et xdotool : le démarrage se fait désormais sur un VRAI serveur X,
+          # et l'on exige qu'une fenêtre soit mappée. Cf. le pas « Démarrage réel ».
+          sudo apt-get install -y flatpak flatpak-builder xvfb xdotool
           flatpak remote-add --if-not-exists --user \
             flathub https://dl.flathub.org/repo/flathub.flatpakrepo
 
@@ -145,32 +147,68 @@ jobs:
 
       - name: Démarrage réel du Flatpak
         if: steps.diff.outputs.change == 'true' || inputs.forcer
-        # Mêmes deux conditions que le job `paquet` de maven.yml : tenir debout ET
-        # n'avoir levé aucune erreur de chargement. Une exception sur un fil de
-        # fond ne tue pas le processus ; se fier à la seule survie fabriquerait un
-        # vert creux. Le code 124 est celui de `timeout` : il signe la survie.
+        # TROIS conditions : tenir debout, n'avoir levé aucune erreur de chargement,
+        # et surtout AVOIR OUVERT UNE FENÊTRE.
+        #
+        # Ce pas tournait avec `-Dglass.platform=Headless`, c'est-à-dire SANS
+        # affichage. Il attestait donc « le paquet se charge », jamais « le paquet
+        # s'affiche », et il ne pouvait pas voir que le manifeste ne démarrait sur
+        # aucun bureau Wayland (#2191). Un vert qui ne portait pas sur la propriété
+        # qui a cassé.
+        #
+        # Il tourne maintenant sur un VRAI serveur X, et exige une fenêtre mappée.
+        #
+        # ⚠️ Ce qu'il ne prouve toujours PAS : le runner n'a pas de session Wayland,
+        # donc `fallback-x11` y accorderait X11 et le manifeste fautif passerait ici.
+        # C'est `verifie-affichage-flatpak.sh` (lint.yml) qui garde ce cas-là, sur la
+        # politique déclarée. Les deux sont complémentaires, aucun ne suffit.
         run: |
           set -euo pipefail
+          Xvfb :99 -screen 0 1280x900x24 -nolisten tcp >/dev/null 2>&1 &
+          xvfb=$!
+          trap 'kill "$xvfb" 2>/dev/null || true' EXIT
+          sleep 3
+
           journal=$(mktemp)
-          set +e
-          timeout 45 flatpak run --env=JAVA_TOOL_OPTIONS=-Dglass.platform=Headless \
-            "$APP_ID" >"$journal" 2>&1
-          code=$?
-          set -e
+          # DISPLAY posé sur l'HÔTE, et non via --env : flatpak monte dans le bac à
+          # sable la socket X correspondant au DISPLAY de l'hôte au lancement. Avec
+          # `--env=DISPLAY=:99` seul, le bac ne reçoit que X0 et l'application démarre
+          # sans jamais mapper de fenêtre, SANS la moindre erreur au journal.
+          DISPLAY=:99 flatpak run "$APP_ID" >"$journal" 2>&1 &
+          appli=$!
 
-          if [ "$code" -ne 124 ]; then
-            echo "::error::Le Flatpak s'est arrêté seul (code ${code}) : il ne démarre pas."
+          fenetre=""
+          for _ in $(seq 1 40); do
+            sleep 2
+            fenetre=$(DISPLAY=:99 xdotool search --onlyvisible --name . 2>/dev/null | head -1) || true
+            [ -n "$fenetre" ] && break
+            kill -0 "$appli" 2>/dev/null || break
+          done
+
+          if ! kill -0 "$appli" 2>/dev/null; then
+            wait "$appli" || true
+            echo "::error::Le Flatpak s'est arrêté seul : il ne démarre pas."
             sed -n '1,120p' "$journal"
             exit 1
           fi
 
-          if grep -qE 'NoClassDefFoundError|ClassNotFoundException|Exception in Application start method' "$journal"; then
-            echo "::error::Le Flatpak reste en vie mais son démarrage a levé une erreur de chargement."
+          if [ -z "$fenetre" ]; then
+            echo "::error::Le Flatpak reste en vie mais n'a ouvert AUCUNE fenêtre en 80 s."
             sed -n '1,120p' "$journal"
+            kill "$appli" 2>/dev/null || true
             exit 1
           fi
 
-          echo "Le Flatpak démarre et tient 45 s, sans erreur de chargement."
+          if grep -qE 'NoClassDefFoundError|ClassNotFoundException|Unable to open DISPLAY|Exception in Application start method' "$journal"; then
+            echo "::error::Une fenêtre existe, mais le démarrage a levé une erreur."
+            sed -n '1,120p' "$journal"
+            kill "$appli" 2>/dev/null || true
+            exit 1
+          fi
+
+          titre=$(DISPLAY=:99 xdotool getwindowname "$fenetre" 2>/dev/null || echo '?')
+          kill "$appli" 2>/dev/null || true
+          echo "Le Flatpak démarre et ouvre une fenêtre « ${titre} », sans erreur."
 
       # Volontairement SANS `|| inputs.forcer` : forcer sert à ÉPROUVER, pas à
       # proposer. Quand le manifeste n'a pas bougé, il n'y a rien à committer, et
