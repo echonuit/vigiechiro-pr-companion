@@ -92,6 +92,12 @@ public class ReprefixeurSession {
             return flux.filter(Files::isRegularFile)
                     .filter(chemin -> chemin.getFileName().toString().startsWith(ancienPrefixe))
                     .collect(ArrayList::new, List::add, List::addAll);
+        } catch (UncheckedIOException parcours) {
+            // ⚠️ `Files.walk` n'annonce pas l'échec de parcours en `IOException` : il l'enveloppe dans
+            // une `UncheckedIOException` levée pendant l'itération, qui n'hérite pas d'`IOException` et
+            // traverserait donc la signature déclarée - le diagnostic de l'appelant ne s'appliquerait
+            // jamais (#3632). On la ramène au type annoncé.
+            throw parcours.getCause();
         }
     }
 

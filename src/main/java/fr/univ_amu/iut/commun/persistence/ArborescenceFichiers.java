@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.persistence;
 
 import fr.univ_amu.iut.commun.model.TailleFichier;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -38,6 +39,12 @@ public final class ArborescenceFichiers {
                     Files.copy(chemin, destination, StandardCopyOption.REPLACE_EXISTING);
                 }
             }
+            // ⚠️ `Files.walk` n'annonce pas l'échec de parcours en `IOException` : il l'enveloppe dans une
+            // `UncheckedIOException` levée PENDANT l'itération, qui n'hérite pas d'`IOException` et
+            // traverserait donc la signature déclarée. On la ramène au type annoncé, sans quoi le
+            // diagnostic de l'appelant ne s'applique jamais (#3632).
+        } catch (UncheckedIOException parcours) {
+            throw parcours.getCause();
         }
     }
 
@@ -169,6 +176,12 @@ public final class ArborescenceFichiers {
             }
         } catch (IOException illisible) {
             restants.add(new EchecEffacement(cible, illisible));
+        } catch (UncheckedIOException parcours) {
+            // ⚠️ Son contrat dit « ne lève jamais », et elle est appelée dans des `finally` : une
+            // exception levée là REMPLACE le résultat de l'opération, si bien qu'un import réussi
+            // ressortait en échec brut à cause de son ménage. `Files.walk` enveloppe son échec de
+            // parcours dans une `UncheckedIOException`, que le `catch` ci-dessus ne voit pas (#3632).
+            restants.add(new EchecEffacement(cible, parcours.getCause()));
         }
         return restants;
     }
@@ -197,6 +210,11 @@ public final class ArborescenceFichiers {
             for (Path chemin : arbre.sorted(Comparator.reverseOrder()).toList()) {
                 Files.deleteIfExists(chemin);
             }
+        } catch (UncheckedIOException parcours) {
+            // Ramenée au type annoncé : sans cela, un sous-dossier illisible ferait remonter une
+            // exception non déclarée, et la bascule de restauration enchaînerait sur son renommage
+            // sans le diagnostic que #3514 lui a donné (#3632).
+            throw parcours.getCause();
         }
     }
 }

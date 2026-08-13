@@ -124,4 +124,28 @@ class NettoyageDossiersOrphelinsTest {
             assertThat(bilan.octetsLiberes()).isZero();
         }
     }
+
+    @Test
+    @DisplayName("#3632 : un sous-dossier illisible compte pour zéro, comme le contrat l'écrit")
+    void taille_de_compte_zero_sur_un_dossier_ferme() throws IOException {
+        // Le doc-comment de `tailleDe` promet noir sur blanc : « Un fichier illisible compte pour zéro
+        // plutôt que de faire échouer la mesure : mieux vaut annoncer un gain prudent qu'aucun gain. »
+        // Le code faisait l'inverse : `Files.walk` enveloppe son échec de parcours dans une
+        // `UncheckedIOException`, que le `catch (IOException)` ne voit pas, et le gain estimé du
+        // nettoyage cassait au lieu d'annoncer un chiffre prudent.
+        Path dossier = Files.createDirectories(workspace.resolve("orphelin"));
+        Files.writeString(dossier.resolve("lisible.wav"), "12345");
+        Path ferme = Files.createDirectories(dossier.resolve("ferme"));
+        Files.writeString(ferme.resolve("tenu.wav"), "abc");
+        assertThat(ferme.toFile().setReadable(false, false)).isTrue();
+
+        long taille = NettoyageDossiersOrphelins.tailleDe(dossier);
+
+        assertThat(taille)
+                .as("ce qui a pu être lu reste compté : observer ne doit pas être plus fragile que ce"
+                        + " qu'on observe")
+                .isEqualTo(5L);
+
+        assertThat(ferme.toFile().setReadable(true, false)).isTrue();
+    }
 }

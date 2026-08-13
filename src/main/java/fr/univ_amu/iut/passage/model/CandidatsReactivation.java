@@ -47,6 +47,12 @@ final class CandidatsReactivation {
                             .add(fichier));
         } catch (IOException e) {
             throw new UncheckedIOException("Exploration impossible du dossier " + dossier, e);
+        } catch (UncheckedIOException parcours) {
+            // Elle enveloppe déjà, mais `Files.walk` lève la sienne PENDANT l'itération, et celle-là
+            // sortait telle quelle - avec le message du JDK, sans le dossier en cause. On la ré-habille
+            // du même message que l'autre branche, pour que l'appelant lise la même phrase quel que
+            // soit l'étage où la lecture a échoué (#3632).
+            throw new UncheckedIOException("Exploration impossible du dossier " + dossier, parcours.getCause());
         }
         return new CandidatsReactivation(index);
     }

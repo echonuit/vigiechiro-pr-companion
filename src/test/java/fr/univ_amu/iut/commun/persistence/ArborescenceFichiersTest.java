@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.TailleFichier;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -167,6 +168,70 @@ class ArborescenceFichiersTest {
             }
             return Files.size(fichier);
         };
+    }
+
+    @Test
+    @DisplayName("#3632 : effacerAuMieux tient sa promesse de ne jamais lever, même sur un dossier fermé")
+    void efface_au_mieux_ne_leve_pas_sur_un_dossier_ferme() throws IOException {
+        Path temporaire = arborescenceIllisible("zip-extrait");
+
+        // Elle est appelée dans des `finally` (Importer, ImportationViewModel) : une exception levée
+        // là REMPLACE le résultat de l'opération, donc un import réussi ressortirait en échec brut à
+        // cause de son ménage. C'est ce que « ne lève jamais » existe pour empêcher.
+        List<ArborescenceFichiers.EchecEffacement> restants = new ArrayList<>();
+        assertThatCode(() -> restants.addAll(ArborescenceFichiers.effacerAuMieux(temporaire)))
+                .doesNotThrowAnyException();
+        assertThat(restants)
+                .as("se taire ne suffit pas : l'appelant doit pouvoir dire CE QUI a résisté")
+                .isNotEmpty();
+
+        rendreLisible(temporaire.resolve("ferme"));
+    }
+
+    @Test
+    @DisplayName("#3632 : supprimerRecursivement lève ce qu'elle annonce, pas une exception non déclarée")
+    void supprimer_recursivement_leve_en_ioexception_sur_un_dossier_ferme() throws IOException {
+        Path cible = arborescenceIllisible("a-supprimer");
+
+        // `Files.walk` enveloppe son échec de parcours dans une `UncheckedIOException`, qui n'hérite
+        // PAS d'`IOException` : sans rattrapage, elle traverse la signature déclarée et le diagnostic
+        // de l'appelant ne s'applique jamais.
+        assertThatThrownBy(() -> ArborescenceFichiers.supprimerRecursivement(cible))
+                .isInstanceOf(IOException.class);
+
+        rendreLisible(cible.resolve("ferme"));
+    }
+
+    @Test
+    @DisplayName("#3632 : copier lève ce qu'elle annonce sur une origine partiellement illisible")
+    void copier_leve_en_ioexception_sur_un_dossier_ferme() throws IOException {
+        Path origine = arborescenceIllisible("origine");
+
+        assertThatThrownBy(() -> ArborescenceFichiers.copier(origine, racine.resolve("copie")))
+                .isInstanceOf(IOException.class);
+
+        rendreLisible(origine.resolve("ferme"));
+    }
+
+    /// Un arbre dont un SOUS-DOSSIER ne se laisse pas lister.
+    ///
+    /// ⚠️ Contrairement à l'illisibilité d'un **fichier** - que `Files.size` ne signale pas, d'où le
+    /// port `TailleFichier` de #3627 - celle d'un **dossier** se fabrique de façon portable : c'est le
+    /// parcours lui-même qui échoue, et `Files.walk` l'enveloppe dans une `UncheckedIOException`.
+    private Path arborescenceIllisible(String nom) throws IOException {
+        Path dossier = Files.createDirectories(racine.resolve(nom));
+        Files.writeString(dossier.resolve("lisible.wav"), "12345");
+        Path ferme = Files.createDirectories(dossier.resolve("ferme"));
+        Files.writeString(ferme.resolve("tenu.wav"), "abc");
+        assertThat(ferme.toFile().setReadable(false, false))
+                .as("sans ce droit retiré, le test ne prouverait rien : il faut que le PARCOURS échoue")
+                .isTrue();
+        return dossier;
+    }
+
+    /// Rend le dossier lisible, sans quoi `@TempDir` échoue à nettoyer et fait rougir un test voisin.
+    private void rendreLisible(Path dossier) {
+        assertThat(dossier.toFile().setReadable(true, false)).isTrue();
     }
 
     /// Un dossier dont le contenu ne peut pas être retiré : le parent est en lecture seule.

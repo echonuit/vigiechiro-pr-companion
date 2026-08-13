@@ -231,6 +231,12 @@ public final class BancImport {
                         throw new UncheckedIOException("Nettoyage du workspace impossible : " + chemin, echec);
                     }
                 });
+            } catch (UncheckedIOException parcours) {
+                // ⚠️ La branche `Files.delete` ci-dessus enveloppe déjà, mais `Files.walk` lève la
+                // sienne PENDANT l'itération, avec le message du JDK et sans dire quel dossier a
+                // résisté. On la ré-habille de la même phrase, pour que le banc dise la même chose
+                // quel que soit l'étage où le nettoyage a échoué (#3632).
+                throw new UncheckedIOException("Nettoyage du workspace impossible : " + racine, parcours.getCause());
             }
         }
         Files.createDirectories(racine);
