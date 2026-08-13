@@ -351,3 +351,27 @@ jobs:
             "$bac/VigieChiroCompanion/bin/VigieChiroCompanion" \
             --secondes 30 --libelle "archive portable (tar.gz ré-extraite)"
           rm -rf "$bac"
+
+  # Surveille l'ALLONGEMENT du portail, que rien ne mesurait (#3508). Il AVERTIT, il ne bloque pas :
+  # un rouge se relève, un avertissement qui porte la comparaison en clair s'instruit.
+  #
+  # ⚠️ `needs: build` sans condition de branche, donc exercé par CHAQUE PR. Une étape réservée à
+  # `main` n'est jamais jouée avant sa fusion, et peut être fusionnée cassée - le dépôt l'a déjà payé.
+  # Rien n'est écrit ici, donc rien n'exige d'être réservé à `main` : la série lue est de toute façon
+  # celle de `main`, et une PR y lit la même tendance que lui.
+  duree-du-portail:
+    name: duree-du-portail
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Le portail met-il plus de temps qu'avant ?
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          chmod +x .github/scripts/mesure-duree-portail.sh
+          ./.github/scripts/mesure-duree-portail.sh "${{ github.repository }}" maven.yml
