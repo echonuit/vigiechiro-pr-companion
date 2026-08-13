@@ -241,6 +241,27 @@ l'appelant qui tranche - comme `supprimerRecursivement` et `effacerAuMieux`
 ⚠️ Le parcours est une **file explicite** et non `Files.walk` : `walk` lève sur le premier dossier
 interdit et interrompt tout, alors qu'on veut mesurer le reste et rapporter ce qui a résisté.
 
+### Partout ailleurs, qui parcourt rattrape ce que le parcours lève
+
+`Files.walk` reste employé ailleurs, et il y a un piège que neuf sites du dépôt ont partagé : il
+n'annonce **pas** son échec de parcours en `IOException`, il l'enveloppe dans une
+`UncheckedIOException` levée **pendant l'itération**. Elle n'hérite pas d'`IOException` : le `catch`
+voisin ne la voit pas, et une méthode qui déclare `throws IOException` la laisse sortir d'un autre
+type. Le rattrapage écrit ne rattrape donc rien du cas pour lequel il a été écrit.
+
+Trois gestes, selon le contrat du site - et c'est bien le contrat qui décide, pas une règle unique :
+
+| Le site promet | Le geste |
+|---|---|
+| de ne **jamais lever** (`effacerAuMieux`) | rapporter le dossier illisible dans sa liste |
+| une mesure **d'affichage** (`ArborescenceFichiers.octets`) | compter ce qui a pu être lu |
+| `throws IOException` (`copier`, `InventaireDossier`, `BasculeRacines`…) | ramener la cause au type annoncé |
+
+`ParcoursDeDossierTest` tient le cliquet : tout fichier appelant `Files.walk` doit rattraper
+l'`UncheckedIOException`. Interdire `walk` au profit d'un helper unique a été **écarté** - ces sites
+ont des contrats opposés, et un seul nom pour des comportements contraires est précisément ce que
+l'ADR 3574 a démêlé (#3632).
+
 ## Une restauration complète est vérifiée, puis basculée
 
 `ServiceSauvegarde.restaurerComplet` s'appuie sur le manifeste pour tenir la promesse en entier

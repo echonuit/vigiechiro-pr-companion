@@ -6,7 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
 
 /// Retire du disque les dossiers de session qu'aucun passage ne réclame plus (#3482).
 ///
@@ -57,22 +56,22 @@ public class NettoyageDossiersOrphelins {
                 .sum();
     }
 
-    /// Taille cumulée des fichiers sous `dossier`. Un fichier illisible compte pour zéro plutôt que de
-    /// faire échouer la mesure : mieux vaut annoncer un gain prudent qu'aucun gain.
+    /// Taille cumulée des fichiers sous `dossier`, déléguée à la mesure d'affichage du dépôt.
+    ///
+    /// ⚠️ C'était une **neuvième** implémentation du même parcours, et elle ne tenait pas le contrat
+    /// que son propre commentaire annonçait : « un fichier illisible compte pour zéro plutôt que de
+    /// faire échouer la mesure ». `Files.walk` enveloppe l'échec de parcours dans une
+    /// `UncheckedIOException` que le `catch (IOException)` ne voyait pas, si bien qu'un sous-dossier
+    /// fermé faisait **lever** la mesure - et l'absorber en rendant `0` aurait annoncé « aucun gain »,
+    /// ce que le contrat refuse tout autant (#3632).
+    ///
+    /// [ArborescenceFichiers#octets] porte exactement ce contrat : elle compte ce qu'elle a pu lire, et
+    /// ne se laisse pas arrêter par ce qu'elle n'a pas pu. Qui **décide** appelle `peser` (#3627) ; ici
+    /// on ne fait qu'annoncer un gain, donc `octets` est le bon des deux.
     static long tailleDe(Path dossier) {
-        try (Stream<Path> chemins = Files.walk(dossier)) {
-            return chemins.filter(Files::isRegularFile)
-                    .mapToLong(NettoyageDossiersOrphelins::tailleOuZero)
-                    .sum();
-        } catch (IOException _) {
-            return 0L;
-        }
-    }
-
-    private static long tailleOuZero(Path fichier) {
         try {
-            return Files.size(fichier);
-        } catch (IOException _) {
+            return ArborescenceFichiers.octets(dossier);
+        } catch (IOException illisible) {
             return 0L;
         }
     }

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.persistence;
 
 import fr.univ_amu.iut.commun.model.Empreintes;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -43,6 +44,12 @@ record InventaireDossier(int fichiers, long octets, String empreinte) {
                 octets += taille;
                 lignes.add(relatifNormalise(racine, chemin) + "\t" + taille);
             }
+        } catch (UncheckedIOException parcours) {
+            // ⚠️ `Files.walk` n'annonce pas l'échec de parcours en `IOException` : il l'enveloppe dans
+            // une `UncheckedIOException` levée pendant l'itération, qui n'hérite pas d'`IOException` et
+            // traverserait donc la signature déclarée - le diagnostic de l'appelant ne s'appliquerait
+            // jamais (#3632). On la ramène au type annoncé.
+            throw parcours.getCause();
         }
         lignes.sort(String::compareTo);
         String canonique = String.join("\n", lignes);
