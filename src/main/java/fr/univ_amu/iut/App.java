@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
+import fr.univ_amu.iut.commun.view.SignalementIncident;
 import fr.univ_amu.iut.commun.view.TailleOuverture;
 import fr.univ_amu.iut.commun.view.Typographie;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
@@ -45,16 +46,15 @@ public class App extends Application {
         // Filet global (#795) : une exception non capturée (fil JavaFX ou tâche de fond) était jusqu'ici
         // perdue en console. On la signale à l'utilisateur par une alerte, et on la **journalise** avec sa
         // trace (#1523) : un incident laisse désormais une trace inspectable, même à message nul.
-        Thread.setDefaultUncaughtExceptionHandler((fil, erreur) -> {
-            LOG.log(Level.SEVERE, erreur, () -> "Exception non capturée sur le fil « " + fil.getName() + " »");
-            Platform.runLater(() -> {
-                Alert alerte = new Alert(Alert.AlertType.ERROR);
-                Habillage.poser(alerte.getDialogPane());
-                alerte.setHeaderText("Une erreur inattendue est survenue");
-                alerte.setContentText(String.valueOf(erreur.getMessage()));
-                alerte.showAndWait();
-            });
-        });
+        // ⚠️ Le filet vit dans sa propre classe depuis qu'il a bouclé sur lui-même (#3700) : habiller
+        // l'alerte échouait pour la raison même qu'elle rapportait, et l'échec repassait par ici.
+        Thread.setDefaultUncaughtExceptionHandler(new SignalementIncident(LOG, Platform::runLater, erreur -> {
+            Alert alerte = new Alert(Alert.AlertType.ERROR);
+            Habillage.poser(alerte.getDialogPane());
+            alerte.setHeaderText("Une erreur inattendue est survenue");
+            alerte.setContentText(String.valueOf(erreur.getMessage()));
+            alerte.showAndWait();
+        }));
 
         // Migrer, PUIS composer (ADR 1038). La composition lit `app_setting` pour filtrer les features
         // (Fonctionnalites.filtreActives) : migrer d'abord garantit que les drapeaux sont lus dans une
