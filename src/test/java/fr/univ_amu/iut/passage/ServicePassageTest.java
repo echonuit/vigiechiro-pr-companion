@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,10 @@ class ServicePassageTest {
     Path dossier;
 
     private SourceDeDonnees source;
+    /// Ce que le service a annonce au socle. Un compteur plutot qu'un no-op : sans lui, l'absence
+    /// d'annonce ne se distingue pas d'une annonce qu'on ne regarde pas.
+    private final AtomicInteger annonces = new AtomicInteger();
+
     private ServicePassage service;
     private ServiceRattachement rattachement;
     private PassageDao passageDao;
@@ -90,7 +95,7 @@ class ServicePassageTest {
                 new SequenceDao(source),
                 new ServiceDisponibiliteAudio(new SessionDao(source), new SequenceDao(source), new Workspace(dossier)),
                 opportunistesDao,
-                () -> {});
+                annonces::incrementAndGet);
         rattachement = new ServiceRattachement(
                 passageDao,
                 new SessionDao(source),
@@ -414,6 +419,31 @@ class ServicePassageTest {
         assertThat(juge.verdictVerification()).isEqualTo(Verdict.DOUTEUX);
         assertThat(passageDao.findById(passage.id()).orElseThrow().verdictVerification())
                 .isEqualTo(Verdict.DOUTEUX);
+    }
+
+    @Test
+    @DisplayName("ADR 3580 : poser un verdict n'annonce AUCUNE mutation structurelle")
+    void poser_verdict_n_annonce_pas_de_mutation_structurelle() {
+        Passage passage = service.creerPassage(
+                idPoint, SERIE, 1, LocalDate.of(2026, 6, 20), "21:30:00", "05:15:00", null, null, null);
+        Passage verifie = service.changerStatut(passage, StatutWorkflow.TRANSFORME);
+        verifie = service.changerStatut(verifie, StatutWorkflow.VERIFIE);
+        // La creation, elle, est structurelle : elle a bien annonce. On repart de la pour ne compter
+        // que ce que le verdict provoque.
+        assertThat(annonces.get()).isEqualTo(1);
+        annonces.set(0);
+
+        service.poserVerdict(verifie, Verdict.DOUTEUX);
+
+        // C'est la moitie portante de l'ADR 3580, et la seule qu'aucun autre test ne tient. Le signal
+        // est STRUCTUREL : un verdict est un `update`, il ne change aucun des quatre compteurs, donc il
+        // n'emet pas. C'est pour cela que `RafraichirAuRetour` reste necessaire a cote de la revision.
+        // Le jour ou quelqu'un elargit le signal a toute ecriture metier, ce test rougit AVANT que la
+        // raison d'etre des deux mecanismes ne devienne fausse en silence.
+        assertThat(annonces.get())
+                .as("un verdict n'est pas une mutation structurelle : l'annoncer ferait relire quatre"
+                        + " COUNT(*) inchanges a chaque jugement")
+                .isZero();
     }
 
     @Test
