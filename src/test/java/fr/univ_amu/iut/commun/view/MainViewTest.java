@@ -7,7 +7,6 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -241,11 +240,13 @@ class MainViewTest {
         // Le geste réel de #1376 : la connexion s'ouvre PAR-DESSUS l'accueil et sa synchronisation
         // importe des sites. On ne quitte pas l'accueil, et on n'y revient pas : c'est précisément
         // l'aller-retour de `bandeau_affiche_compteurs_apres_donnees` qui masquait le défaut.
+        // ⚠️ On ne poste PAS le signal à la main ici. `creerSite` l'émet lui-même, et c'est ce maillon
+        // que ce test doit tenir : avec une annonce explicite en plus, il resterait vert même si le
+        // service cessait d'annoncer, c'est-à-dire précisément quand le défaut #1376 reviendrait.
         robot.interact(() -> {
             new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
             injector.getInstance(ServiceSites.class)
                     .creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, "u-1");
-            injector.getInstance(JournalMutations.class).mutationStructurelleValidee();
         });
         WaitForAsyncUtils.waitForFxEvents();
 
