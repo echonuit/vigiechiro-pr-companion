@@ -1,6 +1,6 @@
 # ADR 3482 - L'audit ramasse ce qu'une suppression laisse, et une confirmation dit aussi ce qu'elle ne fait pas
 
-- **Statut** : Accepté - 2026-08-08
+- **Statut** : Accepté - 2026-08-08, **amendé** par [ADR 3624](3624-un-fait-que-rien-ne-peut-faire-rougir-s-ancre-autrement.md)
 - **Chantier** : #3482, relevé au test manuel de la campagne de recette 2 (#3424)
 - **Vérification** : certaine - `AuditRetraitOrphelinsViewTest#accepter_retire_et_rend_compte`
 
