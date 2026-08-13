@@ -3,7 +3,6 @@ package fr.univ_amu.iut.commun.persistence;
 import fr.univ_amu.iut.commun.model.TailleFichier;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -80,12 +79,17 @@ public final class ArborescenceFichiers {
     /// @param taille le port de lecture, injectable parce que l'illisibilité ne se fabrique pas de
     ///     façon portable sur un vrai système de fichiers
     public static Pesee peser(Path dossier, TailleFichier taille) throws IOException {
+        return peser(dossier, taille, GestesFichiers.reels());
+    }
+
+    /// [#peser(Path, TailleFichier)], avec les gestes de disque injectés (#3525).
+    static Pesee peser(Path dossier, TailleFichier taille, GestesFichiers gestes) throws IOException {
         List<EchecLecture> illisibles = new ArrayList<>();
         Deque<Path> aVisiter = new ArrayDeque<>();
         aVisiter.add(dossier);
         long total = 0L;
         while (!aVisiter.isEmpty()) {
-            total += peserLeContenu(aVisiter.remove(), taille, aVisiter, illisibles);
+            total += peserLeContenu(aVisiter.remove(), taille, aVisiter, illisibles, gestes);
         }
         return new Pesee(total, List.copyOf(illisibles));
     }
@@ -100,10 +104,14 @@ public final class ArborescenceFichiers {
     /// défaut, et sans lui un lien vers un dossier ancêtre ferait **tourner ce parcours sans fin**. Un
     /// lien vers un fichier, lui, reste pesé comme avant - `isRegularFile` suit le lien.
     private static long peserLeContenu(
-            Path dossier, TailleFichier taille, Deque<Path> aVisiter, List<EchecLecture> illisibles) {
+            Path dossier,
+            TailleFichier taille,
+            Deque<Path> aVisiter,
+            List<EchecLecture> illisibles,
+            GestesFichiers gestes) {
         long total = 0L;
-        try (DirectoryStream<Path> entrees = Files.newDirectoryStream(dossier)) {
-            for (Path entree : entrees) {
+        try (Stream<Path> entrees = gestes.lister(dossier)) {
+            for (Path entree : entrees.toList()) {
                 if (Files.isDirectory(entree, LinkOption.NOFOLLOW_LINKS)) {
                     aVisiter.add(entree);
                 } else if (Files.isRegularFile(entree)) {

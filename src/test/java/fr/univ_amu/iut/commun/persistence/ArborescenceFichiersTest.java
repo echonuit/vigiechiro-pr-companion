@@ -44,7 +44,6 @@ class ArborescenceFichiersTest {
                 .as("un nettoyage de temporaire ne doit pas transformer une opération réussie en échec,"
                         + " mais se taire laisserait l'appelant sans rien à dire")
                 .isNotEmpty();
-        rendreEffacable(verrouille);
     }
 
     @Test
@@ -65,7 +64,6 @@ class ArborescenceFichiersTest {
                 .as("s'arrêter au premier échec laisserait derrière lui tout ce qui était effaçable")
                 .doesNotExist();
         assertThat(restants).as("et ce qui a résisté est nommé, avec sa raison").isNotEmpty();
-        rendreEffacable(verrou);
     }
 
     @Test
@@ -89,7 +87,6 @@ class ArborescenceFichiersTest {
                 .as("une bascule de restauration qui ne parvient pas à retirer l'ancien dossier ne doit"
                         + " pas enchaîner sur le renommage comme si de rien n'était")
                 .isInstanceOf(IOException.class);
-        rendreEffacable(verrouille);
     }
 
     @Test
@@ -141,12 +138,10 @@ class ArborescenceFichiersTest {
         Files.writeString(dossier.resolve("lisible.wav"), "12345");
         Path interdit = Files.createDirectories(dossier.resolve("cache"));
         Files.writeString(interdit.resolve("dedans.wav"), "ce qu'on ne verra pas");
-        assertThat(interdit.toFile().setReadable(false))
-                .as("sans ce droit retiré, le test ne prouverait rien : il faut que le parcours BUTE")
-                .isTrue();
 
-        try {
-            ArborescenceFichiers.Pesee pesee = ArborescenceFichiers.peser(dossier, TailleFichier.reelle());
+        {
+            ArborescenceFichiers.Pesee pesee =
+                    ArborescenceFichiers.peser(dossier, TailleFichier.reelle(), listageQuiRefuse(interdit));
 
             assertThat(pesee.octets())
                     .as("s'arrêter au premier dossier interdit ne dirait pas ce que pèse le reste, et"
@@ -156,8 +151,6 @@ class ArborescenceFichiersTest {
                     .as("un dossier qu'on n'a pas pu ouvrir est exactement ce qu'une mesure doit savoir dire")
                     .extracting(ArborescenceFichiers.EchecLecture::chemin)
                     .containsExactly(interdit);
-        } finally {
-            assertThat(interdit.toFile().setReadable(true)).isTrue();
         }
     }
 
@@ -215,18 +208,13 @@ class ArborescenceFichiersTest {
     }
 
     /// Un dossier dont le contenu ne peut pas être retiré : le parent est en lecture seule.
+    /// Un arbre ordinaire. Ce qui **résiste** ne vient plus du système mais du double
+    /// [#suppressionQuiResiste] : `File.setWritable(false)` n'empêche pas la suppression sous Windows,
+    /// et la fixture échouait donc **avant** que le test n'éprouve quoi que ce soit (#3525).
     private Path arborescenceQuiResiste() throws IOException {
         Path dossier = Files.createDirectories(racine.resolve("verrouille"));
         Files.writeString(dossier.resolve("tenu.txt"), "ne s'en va pas");
-        assertThat(dossier.toFile().setWritable(false))
-                .as("sans ce droit retiré, le test ne prouverait rien : il faut que la suppression ÉCHOUE")
-                .isTrue();
         return dossier;
-    }
-
-    /// Rend le dossier effaçable, sans quoi `@TempDir` échoue à nettoyer et fait rougir un test voisin.
-    private void rendreEffacable(Path dossier) {
-        assertThat(dossier.toFile().setWritable(true)).isTrue();
     }
 
     /// Des gestes réels, sauf sur `interdit` que la suppression refuse.
@@ -237,11 +225,6 @@ class ArborescenceFichiersTest {
     /// rien sur la plateforme qui a le plus de façons de refuser un accès.
     private static GestesFichiers suppressionQuiResiste(Path interdit) {
         return new GestesFichiers() {
-            @Override
-            public Stream<Path> parcourir(Path racine) throws IOException {
-                return Files.walk(racine);
-            }
-
             @Override
             public void supprimer(Path chemin) throws IOException {
                 if (chemin.startsWith(interdit)) {
@@ -267,10 +250,22 @@ class ArborescenceFichiersTest {
                             new AccessDeniedException(racine.resolve("ferme").toString()));
                 });
             }
+        };
+    }
 
+    /// Des gestes réels, sauf le listage de `interdit`, qui refuse de s'ouvrir.
+    ///
+    /// ⚠️ L'échec arrive à l'**ouverture** et non pendant l'itération, contrairement à
+    /// [#parcoursQuiEchoue] : c'est ce qui distingue une pesée, qui note et continue, d'un parcours
+    /// récursif, qui s'arrête.
+    private static GestesFichiers listageQuiRefuse(Path interdit) {
+        return new GestesFichiers() {
             @Override
-            public void supprimer(Path chemin) throws IOException {
-                Files.deleteIfExists(chemin);
+            public Stream<Path> lister(Path dossier) throws IOException {
+                if (dossier.equals(interdit)) {
+                    throw new AccessDeniedException(dossier.toString());
+                }
+                return Files.list(dossier);
             }
         };
     }
