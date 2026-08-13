@@ -11,7 +11,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -52,6 +54,15 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
     /// Dossiers choisis, en attente d'être écrits. Initialisés sur les emplacements effectifs.
     private final ObjectProperty<Path> travailChoisi = new SimpleObjectProperty<>();
     private final ObjectProperty<Path> dossierBaseChoisi = new SimpleObjectProperty<>();
+
+    /// Une configuration personnalisée **existe sur le disque** (#3543). Le bouton « Rétablir » s'y
+    /// lie au lieu d'être grisé une fois pour toutes au montage : sa valeur d'alors ne se reprenait
+    /// jamais, `formulairePersonnalise()` mettant sa racine en cache.
+    ///
+    /// ⚠️ Elle ne se dérive **pas** des chemins choisis. Avant « Appliquer », ceux-ci ne sont qu'une
+    /// intention, et un bouton lié à eux s'allumerait sur un choix que rien n'a écrit. Elle bascule
+    /// donc dans [#appliquer()] et [#reinitialiser()], **après** que le service a rendu la main.
+    private final BooleanProperty configurationPersonnalisee = new SimpleBooleanProperty();
 
     private VBox racine;
     private VBox avisRedemarrage;
@@ -113,7 +124,8 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
                         "Le fichier vigiechiro.db : observations, validations, liens Vigie-Chiro.",
                         dossierBaseChoisi,
                         courant.baseParDefaut().getParent()));
-        racine.getChildren().add(boutons(courant.personnalise()));
+        configurationPersonnalisee.set(courant.personnalise());
+        racine.getChildren().add(boutons());
         avisRedemarrage = avisRedemarrage();
         racine.getChildren().add(avisRedemarrage);
         return racine;
@@ -184,15 +196,17 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
         }
     }
 
-    private Node boutons(boolean personnalise) {
+    private Node boutons() {
         Button appliquer = new Button("Appliquer");
         appliquer.getStyleClass().addAll("emplacements-appliquer", "bouton-primaire");
         appliquer.setOnAction(evenement -> appliquer());
 
         Button reinitialiser = new Button("Rétablir les emplacements par défaut");
         reinitialiser.getStyleClass().add("emplacements-reinitialiser");
-        reinitialiser.setDisable(!personnalise);
-        reinitialiser.setOnAction(evenement -> reinitialiser(reinitialiser));
+        // Lié, et non posé : rien à rétablir tant qu'aucune configuration n'a été écrite, et le
+        // bouton suit désormais l'écriture au lieu de l'instant du montage.
+        reinitialiser.disableProperty().bind(configurationPersonnalisee.not());
+        reinitialiser.setOnAction(evenement -> reinitialiser());
 
         HBox rangee = new HBox(appliquer, reinitialiser);
         rangee.getStyleClass().add("emplacements-boutons");
@@ -202,6 +216,7 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
     private void appliquer() {
         try {
             service.enregistrer(travailChoisi.get(), dossierBaseChoisi.get());
+            configurationPersonnalisee.set(true);
             afficherAvis();
         } catch (IOException echec) {
             notificateur.notifier(
@@ -211,13 +226,13 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
         }
     }
 
-    private void reinitialiser(Button declencheur) {
+    private void reinitialiser() {
         try {
             service.reinitialiser();
             Emplacements defaut = service.emplacementsCourants();
             travailChoisi.set(defaut.espaceDeTravail());
             dossierBaseChoisi.set(defaut.base().getParent());
-            declencheur.setDisable(true);
+            configurationPersonnalisee.set(false);
             afficherAvis();
         } catch (IOException echec) {
             notificateur.notifier(
