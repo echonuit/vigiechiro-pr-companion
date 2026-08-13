@@ -18,8 +18,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /// **Importe et relie** les sites de l'observateur VigieChiro à la connexion (#728/#718).
 ///
@@ -150,6 +152,8 @@ public class RapprochementSites implements RapprochementVigieChiro {
             if (local == null) {
                 local = creerDepuis(distant);
                 localesParCarre.put(carre, local);
+            } else {
+                completerLesPoints(local, distant);
             }
             // Propriété du carré (#2525) : réévaluée à chaque synchro, dans les deux sens (un carré peut
             // changer de main côté plateforme). Sans profil lisible, `appartientAUnTiers` répond faux.
@@ -162,24 +166,63 @@ public class RapprochementSites implements RapprochementVigieChiro {
         }
     }
 
+    /// Complète un site **déjà relié** avec les points distants qui lui manquent (#3458).
+    ///
+    /// ## Le trou que cela ferme
+    ///
+    /// Les points ne venaient que par la branche « créer » : un site déclaré **avant** de se connecter -
+    /// le parcours nominal de qui découvre l'application - était relié mais **jamais peuplé**. Vécu sur
+    /// le carré 130711 : 41 localités sur la plateforme, **une** dans Companion, celle saisie à la main.
+    /// L'utilisateur ressaisit alors ses points, et un point ressaisi ne correspond à rien côté
+    /// plateforme : le dépôt le refuse plus tard, loin de la cause.
+    ///
+    /// ⚠️ **On n'écrit que ce qui manque.** Un point de même code déjà local est laissé **intact** :
+    /// c'est de la donnée saisie par l'utilisateur, et une synchro qui tourne toute seule à la connexion
+    /// n'a pas à déplacer son point ni à le requalifier en « rapatrié ». Le rapprochement entre un point
+    /// local et son homologue distant de mêmes coordonnées sous un autre nom est une **fusion**, qui
+    /// demande un choix explicite et vient à part.
+    ///
+    /// ⚠️ **Le filtre par code n'est pas ce qui protège cette saisie**, et la mutation l'a montré : le
+    /// retirer laisse le test passer, parce que `ajouterPoint` lève déjà sur l'unicité et que le
+    /// best-effort avale. Il est là pour que la protection soit **explicite** plutôt qu'accidentelle, et
+    /// pour ne pas produire quarante et une exceptions avalées à chaque synchronisation - un journal qui
+    /// crie « Point Z1 ignoré » sur le cas nominal apprend à ne plus être lu.
+    private void completerLesPoints(Site local, SiteVigieChiro distant) {
+        Set<String> codesLocaux = serviceSites.listerPoints(local.id()).stream()
+                .map(PointDEcoute::code)
+                .collect(Collectors.toSet());
+        for (PointVigieChiro point : distant.points()) {
+            if (!codesLocaux.add(point.code())) {
+                continue;
+            }
+            ajouterPointRapatrie(local, distant, point);
+        }
+    }
+
     /// Crée le site local (carré + titre en nom) et ses points d'écoute depuis les localités du site
     /// distant. Un point au code/GPS invalide est ignoré, sans faire échouer le site.
     private Site creerDepuis(SiteVigieChiro distant) {
         Site site =
                 serviceSites.creerSite(distant.numeroCarre(), distant.titre(), Protocole.STANDARD, null, idUtilisateur);
         for (PointVigieChiro point : distant.points()) {
-            try {
-                // Marqué synchronisé (#1738) : rapatrié en masse, il pourra être masqué de la fiche site
-                // tant qu'aucune nuit ne s'y rattache, contrairement à un point ajouté à la main.
-                serviceSites.ajouterPointSynchronise(
-                        site.id(), point.code(), point.latitude(), point.longitude(), null);
-            } catch (RuntimeException pointInvalide) {
-                LOG.log(
-                        Level.FINE,
-                        pointInvalide,
-                        () -> "Point " + point.code() + " ignoré (carré " + distant.numeroCarre() + ")");
-            }
+            ajouterPointRapatrie(site, distant, point);
         }
         return site;
+    }
+
+    /// Pose un point rapatrié, **best-effort** : un point au code ou au GPS invalide est ignoré, sans
+    /// emporter les quarante autres ni le site lui-même.
+    ///
+    /// Marqué synchronisé (#1738) : rapatrié en masse, il pourra être masqué de la fiche site tant
+    /// qu'aucune nuit ne s'y rattache, contrairement à un point ajouté à la main.
+    private void ajouterPointRapatrie(Site site, SiteVigieChiro distant, PointVigieChiro point) {
+        try {
+            serviceSites.ajouterPointSynchronise(site.id(), point.code(), point.latitude(), point.longitude(), null);
+        } catch (RuntimeException pointInvalide) {
+            LOG.log(
+                    Level.FINE,
+                    pointInvalide,
+                    () -> "Point " + point.code() + " ignoré (carré " + distant.numeroCarre() + ")");
+        }
     }
 }
