@@ -616,9 +616,25 @@ introduites, et vérifier à la main les garde-fous que PIT ne peut pas atteindr
 
 | Workflow | Commande | Bloquant ? |
 |---|---|---|
-| « Java CI » ([maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml)), tests **+ couverture** | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
+| « Java CI » ([maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml)), tests **+ couverture** **+ hygiène des dépendances** | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
 | « Quality gate » ([lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml)), formatage | `./mvnw -B spotless:check` | **Oui** |
 | « Quality gate », portail PMD | `./mvnw -B -Pquality-gate compile pmd:check` | **Oui** |
+
+L'**hygiène des dépendances** est verrouillée dans la première ligne : `dependency:analyze-only` est
+lié à la phase `verify` et **échoue sur écart** (`failOnWarning`). Jusqu'à #3515 il n'était lié à
+aucune phase et n'apparaissait dans aucun workflow - il ne tournait que si quelqu'un le tapait, et
+signalait cinq écarts en terminant en succès.
+
+Deux familles d'écarts, deux gestes opposés : **utilisée sans être déclarée** veut dire qu'on compile
+grâce à une transitive, qui disparaîtra le jour où son porteur montera de version - la déclarer ;
+**déclarée sans être utilisée** veut dire qu'on porte un artefact pour rien - le retirer, après avoir
+vérifié que ce n'est pas un faux positif de l'analyseur, qui lit le bytecode et ne voit donc ni les
+liaisons résolues à l'exécution ni les artefacts résolus avec un classifieur de plateforme. Les
+exclusions du `pom.xml` nomment chacune sa raison ; une exclusion sans motif est le même bruit sous un
+autre nom.
+
+⚠️ Ne pas mêler une **déclaration** à une **montée de version** : les deux dans la même PR rendent un
+éventuel rouge illisible.
 
 `lint.yml` vérifie aussi la **complétude des captures** (cf. [Captures](captures.md)). Une PR doit
 passer **les deux** workflows (cf. [CI/CD et release](ci-cd-release.md)).
