@@ -36,6 +36,10 @@ import java.util.Objects;
 /// l'inverse), le graphe reste acyclique (contrôlé par `ArchitectureTest`).
 public class ServiceSites {
 
+    /// Le refus des trois lectures par identifiant. Extrait en constante parce que le portail
+    /// qualité compte les littéraux répétés, et qu'un message d'erreur recopié finit par diverger.
+    private static final String SITE_INTROUVABLE = "Site introuvable : ";
+
     private final SiteDao siteDao;
     private final PointDao pointDao;
     private final PassageDao passageDao;
@@ -104,8 +108,7 @@ public class ServiceSites {
     public Site modifierSite(
             Long idSite, String numeroCarre, String nomConvivial, Protocole protocole, String commentaire) {
         ValidateurCarre.exigerValide(numeroCarre); // R1
-        Site existant =
-                siteDao.findById(idSite).orElseThrow(() -> new RegleMetierException("Site introuvable : " + idSite));
+        Site existant = siteDao.findById(idSite).orElseThrow(() -> new RegleMetierException(SITE_INTROUVABLE + idSite));
         boolean carreDejaPris = siteDao.findByUtilisateur(existant.idUtilisateur()).stream()
                 .anyMatch(autre ->
                         autre.numeroCarre().equals(numeroCarre) && !autre.id().equals(idSite)); // R5
@@ -149,8 +152,7 @@ public class ServiceSites {
 
     private PointDEcoute ajouterPoint(
             Long idSite, String code, Double latitude, Double longitude, String description, boolean synchronise) {
-        Site site =
-                siteDao.findById(idSite).orElseThrow(() -> new RegleMetierException("Site introuvable : " + idSite));
+        Site site = siteDao.findById(idSite).orElseThrow(() -> new RegleMetierException(SITE_INTROUVABLE + idSite));
         ValidateurCodePoint.exigerValide(code); // R2
         boolean codeDejaPris =
                 pointDao.findBySite(site.id()).stream().anyMatch(p -> p.code().equals(code));
@@ -214,6 +216,12 @@ public class ServiceSites {
     }
 
     /// Sites d'un utilisateur, triés par numéro de carré.
+    /// Le site d'identifiant `idSite`, **relu en base**. Utile après une modification : le
+    /// `Site` est un record, celui qu'on détenait porte encore les anciennes valeurs.
+    public Site site(Long idSite) {
+        return siteDao.findById(idSite).orElseThrow(() -> new RegleMetierException(SITE_INTROUVABLE + idSite));
+    }
+
     public List<Site> listerSites(String idUtilisateur) {
         return siteDao.findByUtilisateur(idUtilisateur);
     }

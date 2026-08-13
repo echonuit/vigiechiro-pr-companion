@@ -209,6 +209,21 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         viewModel.chargerSite(site);
     }
 
+    /// Le libellé de cet écran dans la pile de navigation, **dérivé du site courant** (#3672). Lu par
+    /// [NavigationSites] à l'empilement, et re-lu après une modification : le numéro de carré est
+    /// modifiable, et un libellé figé annoncerait un carré qui n'existe plus sous ce nom.
+    String libelleFil() {
+        return "Carré " + viewModel.siteCourant().numeroCarre();
+    }
+
+    /// Ce que fait l'écran quand la modale « Modifier » a écrit (#3672) : il **relit son site**, puis
+    /// relibelle son étape de navigation. Passer `viewModel::rafraichir` ne faisait ni l'un ni
+    /// l'autre - c'est la forme de défaut que #3455 a corrigée sur M-Passage.
+    private void rechargerApresModification() {
+        viewModel.rechargerSiteCourant();
+        navigation.actualiserFil(this, libelleFil());
+    }
+
     /// {@inheritDoc} Ce qui arrive d'AILLEURS pendant qu'on regarde : un import, une
     /// synchronisation, une restauration. Le [#rafraichirAuRetour()] ci-dessous couvre l'autre
     /// moitié, ce qu'une sous-activité a changé pendant que l'écran était masqué.
@@ -393,7 +408,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         // La modale porte la saisie, la validation en direct et le refus métier (#1431). Le Dialog bâti
         // ici se terminait par un showAndWait : le geste était injouable dans un test, et sa capture de
         // documentation était une réplique reconstruite à la main.
-        navigation.ouvrirModaleEditionSite(fenetre(), viewModel.siteCourant(), viewModel::rafraichir);
+        navigation.ouvrirModaleEditionSite(fenetre(), viewModel.siteCourant(), this::rechargerApresModification);
     }
 
     @FXML

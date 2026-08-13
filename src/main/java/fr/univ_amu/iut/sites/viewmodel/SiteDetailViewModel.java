@@ -130,6 +130,18 @@ public class SiteDetailViewModel {
         return site;
     }
 
+    /// Relit le **site lui-même** puis recharge le reste (#3672).
+    ///
+    /// ⚠️ [#rafraichir()] ne suffit pas après une modification. Il recharge points, passages, bandeau
+    /// et statut, mais le champ `site` est un **record détenu**, posé une seule fois par
+    /// [#chargerSite(Site)] : il garde donc l'ancien numéro de carré, l'ancien nom et l'ancien
+    /// protocole. Or c'est de lui que dérivent le numéro affiché, le département, le titre, le
+    /// contexte transmis à un passage qu'on ouvre d'ici, et la cible de « Voir sur la carte ».
+    public void rechargerSiteCourant() {
+        this.site = service.site(site.id());
+        rafraichir();
+    }
+
     /// Recharge points et passages depuis la base et met à jour toutes les propriétés observables.
     public void rafraichir() {
         List<PointDEcoute> pointsDuSite = service.listerPoints(site.id());

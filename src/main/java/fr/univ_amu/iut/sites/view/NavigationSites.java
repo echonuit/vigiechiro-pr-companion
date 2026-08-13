@@ -60,7 +60,14 @@ public class NavigationSites implements OuvrirSite {
         Parent vue = lire(loader);
         SiteDetailController controller = loader.getController();
         controller.afficher(site);
-        navigateur.empiler(vue, "site-detail", "Carré " + site.numeroCarre(), controller);
+        navigateur.empiler(vue, "site-detail", controller.libelleFil(), controller);
+    }
+
+    /// Relibelle l'étape de la fiche après une modification du site (#3672), sur le modèle de
+    /// `NavigationPassage#actualiserFil`. L'étape est au sommet à ce moment-là : le `Navigateur` la
+    /// remplace par sa jumelle relibellée.
+    void actualiserFil(SiteDetailController controleur, String libelle) {
+        navigateur.actualiserLibelleCourant(controleur, libelle);
     }
 
     // ----- Contrat socle OuvrirSite (segments « Mes sites » / « Carré N » cliquables d'un autre fil) -----
