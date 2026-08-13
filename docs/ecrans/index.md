@@ -37,6 +37,30 @@ annuler pour revenir enregistrer, ou confirmer pour quitter en abandonnant les m
 
 ![Confirmation avant de quitter un écran avec des modifications non enregistrées.](../assets/captures/apercu-navigation-garde-saisie.png)
 
+## Ce qui est affiché suit vos données
+
+Une synchronisation, un import ou une restauration peuvent ajouter des nuits, des points ou des
+observations **pendant que vous regardez un écran**. Vous n'avez pas à en sortir et à y revenir pour
+les voir : les écrans concernés se remettent à jour d'eux-mêmes.
+
+| Ce qui se met à jour tout seul | Ce que vous y voyez changer |
+|---|---|
+| Les **compteurs de l'accueil** | sites, points, nuits, observations |
+| [Ma saison](saison.md) | le solde de la saison, quand une nuit arrive |
+| [Espèces & observations](analyse.md) | l'inventaire, quand un import ajoute des observations |
+| [Carte & passages](multisite.md) | la carte et la liste des nuits |
+| La **fiche d'un carré** (depuis [Mes sites](sites.md)) | les points qu'une synchronisation y rapatrie |
+| La **fiche d'une nuit** ([Passage](passage.md)) | son nombre de séquences, quand la synchronisation la remplit |
+
+!!! note "Pourquoi cette liste et pas « tous les écrans »"
+    Ce sont les écrans qui affichent un **inventaire** : des choses qu'on compte, et dont le nombre
+    peut changer sans vous. Un écran de travail sur une seule nuit, lui, montre ce que vous êtes en
+    train d'y faire : le rafraîchir sous vos doigts vous ferait perdre le fil plutôt que gagner du
+    temps.
+
+    La **liste** « Mes sites » n'en fait pas partie aujourd'hui : c'est sa fiche de carré qui suit la
+    donnée, pas la page qui les rassemble.
+
 ## Sauvegarder et restaurer la base
 
 Tout votre travail (sites, points, passages, observations) vit dans une **base locale**. Le menu **« ☰ »**

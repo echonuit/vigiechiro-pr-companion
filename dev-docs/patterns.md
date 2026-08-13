@@ -1812,6 +1812,40 @@ l'[ADR 3498](decisions/3498-la-declaration-porte-sur-les-lectrices.md) fait sur 
 ni le nom, ni le service appelé, ni l'analyse d'appels ne tranchent, et ils se trompent **dans les deux
 sens**.
 
+**Côté lecteur, une méthode.** Un écran qui veut suivre la donnée déclare
+[`SuitLaRevision`](navigation.md#les-contrats-optionnels-dun-ecran) et n'a **rien** d'autre à faire :
+
+```java
+public class SaisonController implements RafraichirAuRetour, SuitLaRevision {
+
+    @Override
+    public void rafraichirDepuisLaDonnee() {
+        // ce que l'écran fait déjà pour se recharger
+    }
+}
+```
+
+Il ne connaît ni `RevisionDonnees`, ni écouteur, ni `addListener` : le `Navigateur` pose l'abonnement
+quand l'étape entre dans l'historique et le **rend** quand elle en sort, au même endroit que
+[`AuDepartEcran`](navigation.md#les-contrats-optionnels-dun-ecran).
+
+⚠️ **Pourquoi le cycle a quitté les écrans.** Les cinq premiers l'ont porté eux-mêmes : un champ
+`ChangeListener`, un `addListener`, un `removeListener`. Trois lignes, cinq fois, dont **une seule**
+empêchait une fuite : `RevisionDonnees` est un singleton, un écran ne l'est pas, et un abonnement non
+rendu survit à sa vue. Un cycle de vie qu'on peut oublier est un cycle de vie mal placé. Le
+`Navigateur` porte déjà celui des quatre autres contrats ; celui-ci l'a rejoint.
+
+⚠️ **L'abonnement se repère par la VUE, pas par l'étape.** Une étape est un record remplaçable :
+`actualiserLibelleCourant` (#1213) la remplace par sa jumelle relibellée, un `setAll` retire puis
+replace l'accueil. Dans les deux cas l'écran n'a pas bougé, et ré-abonner ferait relire la base deux
+fois pour un seul import (`NavigateurTest#relibeller_ne_reabonne_pas`).
+
+**Les deux mécanismes coexistent, et ce n'est pas une transition inachevée.**
+[`RafraichirAuRetour`](navigation.md#les-contrats-optionnels-dun-ecran) couvre les `update` (un
+verdict, un dépôt, un statut de workflow), que le signal n'annonce **pas** ; le signal couvre les
+`insert` / `delete`, que le retour ne voit pas quand ils surviennent sous les yeux de l'utilisateur.
+Les cinq écrans qui rechargent au retour déclarent donc les deux.
+
 **Principes.** **DIP** (le service dépend d'un port, pas de JavaFX) et **Observer** (l'émetteur ignore
 ses lecteurs).
 

@@ -114,7 +114,11 @@ Le chrome (fenêtre + zone centrale + fil d'Ariane) est porté par le socle
   [`EmplacementNavigation`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/EmplacementNavigation.java)
   (fil d'Ariane hiérarchique),
   [`RafraichirAuRetour`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/RafraichirAuRetour.java)
-  (recharger ses données quand on y revient).
+  (recharger ses données quand on y revient),
+  [`AuDepartEcran`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/AuDepartEcran.java)
+  (rendre une ressource quand l'écran quitte l'historique : un fichier temporaire, un verrou),
+  [`SuitLaRevision`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/SuitLaRevision.java)
+  (se recharger quand une écriture structurelle est validée, le `Navigateur` portant l'abonnement).
 
 **Comment une feature en ouvre une autre sans en dépendre** (inversion de dépendance) : le socle
 publie un **contrat** `Ouvrir*` dans `commun.view`, la feature cible l'**implémente** via sa classe

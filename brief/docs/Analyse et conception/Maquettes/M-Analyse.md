@@ -346,6 +346,7 @@ Le bouton **« 🗺️ Carte »** remplace la table d'inventaire par une **carte
 ### Notes pour l'implémentation
 
 - **Lecture transverse** : l'écran agrège les observations de **tous** les passages de l'utilisateur, en **consultation seule** ; il ne modifie aucune observation (les décisions se prennent dans [M-SonsValidation](M-SonsValidation.md), et l'inventaire les **reflète** au retour).
+- **Deux façons d'être à jour** : le retour ci-dessus couvre ce qu'une sous-activité a changé pendant que l'écran était masqué. Il ne couvre pas ce qui arrive **pendant** qu'on le regarde : un import Tadarida ajoute des observations sans qu'on ait bougé. L'écran suit donc aussi le **signal de mutation** du socle, qui l'avertit de toute écriture structurelle validée. Les deux coexistent : le premier voit les `update` (un verdict), le second les `insert` / `delete`.
 - **Maître-détail** : `SplitPane` vertical (inventaire ou carte en haut, observations en bas). La zone maître est un `StackPane` à trois états (table **Par espèce**, table **Par carré**, **carte de répartition**) ; le **regroupement** choisit la table, le bouton **« 🗺️ Carte »** bascule sur la carte.
 - **Carte de répartition** : réutilise le composant socle `CarteSites` (le même que [M-MultiSite](M-MultiSite.md)) ; la couleur des carrés (choroplèthe de richesse) est calculée côté `view`, le `ViewModel` restant agnostique de JavaFX.
 - **Taxon retenu** : taxon observateur si validé, sinon Tadarida ([R17](../Modèle%20conceptuel/Règles%20métier.md#r17)).

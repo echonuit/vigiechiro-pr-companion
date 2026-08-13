@@ -190,7 +190,7 @@ Un observateur qui ouvre l'écran en début de saison, ou qui vient de déclarer
 
 - **Les règles restent dans `passage/model/ServicePassage`** : l'écran les **consomme**, il ne les réimplémente pas. C'est la condition pour que R3 et R4 n'existent pas en deux exemplaires divergents.
 - **Carte d'accueil** via le contrat `ActiviteAccueil` et le prisme *Collecte & passages*, sans toucher au chrome ([M-Accueil](M-Accueil.md)).
-- **Rafraîchissement** : le tableau et le résumé se recalculent quand les données changent. Le défaut déjà signalé sur les compteurs d'accueil (#1376) ne doit pas se reproduire ici.
+- **Rafraîchissement** : le tableau et le résumé se recalculent quand les données changent. Le défaut déjà signalé sur les compteurs d'accueil (#1376) ne doit pas se reproduire ici. Cette exigence était **plus ancienne que le moyen de la tenir** : l'écran a d'abord rechargé au retour de navigation, faute de mieux, ce qui laissait passer tout ce qui survenait pendant qu'on le regardait. Il suit désormais le **signal de mutation** du socle, et l'exigence est tenue au sens propre.
 - **`TableView`** avec une `cellFactory` pour les pastilles d'état, réutilisant les couleurs de statut existantes de [M-MultiSite](M-MultiSite.md).
 - **Icônes** : `FontIcon` Ikonli, pas d'emoji (règle #700).
 - **Fonctionnalité optionnelle** : l'écran doit rester cohérent quand la campagne est désactivée. Le service la consomme en `Optional<ServiceCampagne>` ; coupée, aucun point ne relève d'une campagne et le solde reste entier. Le futur sélecteur ([#2610](https://github.com/echonuit/vigiechiro-pr-companion/issues/2610)) ne doit alors pas apparaître.
