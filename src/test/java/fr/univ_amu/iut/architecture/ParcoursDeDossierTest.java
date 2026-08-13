@@ -38,11 +38,6 @@ class ParcoursDeDossierTest {
 
     private static final Path SOURCES = Path.of("src", "main", "java");
 
-    /// ⚠️ Exclusion nommée, comme celles du `pom.xml`. `BancImport` est de l'outillage de performance,
-    /// exclu du binaire livré ([ADR 2746]) : #3610 l'avait déjà écarté de l'unification des
-    /// effacements pour la même raison. Le jour où il rentre dans le binaire, cette ligne saute.
-    private static final List<String> HORS_BINAIRE_LIVRE = List.of("BancImport.java");
-
     @Test
     @DisplayName("#3632 : tout parcours d'arborescence rattrape l'échec que Files.walk lui lève")
     void tout_parcours_rattrape_l_echec_de_parcours() throws IOException {
@@ -56,9 +51,10 @@ class ParcoursDeDossierTest {
                         + " qui s'en serait débarrassé")
                 .isNotEmpty();
 
+        // ⚠️ Aucune exclusion, et c'est délibéré. `BancImport` est de l'outillage de performance exclu
+        // du binaire livré (ADR 2746), donc un candidat naturel à la dispense - mais une garde sans
+        // exception se relit sans se demander pourquoi celle-là, et le rattrapage y coûtait deux lignes.
         List<Path> sansRattrapage = parcourent.stream()
-                .filter(chemin ->
-                        !HORS_BINAIRE_LIVRE.contains(chemin.getFileName().toString()))
                 .filter(chemin -> !contient(chemin, "catch (UncheckedIOException"))
                 .toList();
 
