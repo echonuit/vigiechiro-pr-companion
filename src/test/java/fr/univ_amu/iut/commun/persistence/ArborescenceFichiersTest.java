@@ -56,9 +56,9 @@ class ArborescenceFichiersTest {
         Path libre = Files.writeString(melange.resolve("libre.txt"), "effaçable");
         Path verrou = Files.createDirectories(melange.resolve("verrou"));
         Files.writeString(verrou.resolve("tenu.txt"), "ne s'en va pas");
-        assertThat(verrou.toFile().setWritable(false)).isTrue();
 
-        List<ArborescenceFichiers.EchecEffacement> restants = ArborescenceFichiers.effacerAuMieux(melange);
+        List<ArborescenceFichiers.EchecEffacement> restants =
+                ArborescenceFichiers.effacerAuMieux(melange, suppressionQuiResiste(verrou));
 
         assertThat(libre)
                 .as("s'arrêter au premier échec laisserait derrière lui tout ce qui était effaçable")
@@ -207,7 +207,6 @@ class ArborescenceFichiersTest {
                 .isInstanceOf(IOException.class);
     }
 
-    /// Un dossier dont le contenu ne peut pas être retiré : le parent est en lecture seule.
     /// Un arbre ordinaire. Ce qui **résiste** ne vient plus du système mais du double
     /// [#suppressionQuiResiste] : `File.setWritable(false)` n'empêche pas la suppression sous Windows,
     /// et la fixture échouait donc **avant** que le test n'éprouve quoi que ce soit (#3525).
