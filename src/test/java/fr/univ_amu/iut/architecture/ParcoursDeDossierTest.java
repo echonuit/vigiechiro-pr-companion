@@ -56,6 +56,7 @@ class ParcoursDeDossierTest {
         // exception se relit sans se demander pourquoi celle-là, et le rattrapage y coûtait deux lignes.
         List<Path> sansRattrapage = parcourent.stream()
                 .filter(chemin -> !contient(chemin, "catch (UncheckedIOException"))
+                .filter(chemin -> !rendLeFluxSansLeConsommer(chemin))
                 .toList();
 
         assertThat(sansRattrapage).as("""
@@ -75,6 +76,32 @@ class ParcoursDeDossierTest {
                     .filter(chemin -> contient(chemin, motif))
                     .sorted()
                     .toList();
+        }
+    }
+
+    /// Vrai quand le fichier ne fait que **passer le flux** à un appelant, sans le consommer.
+    ///
+    /// ⚠️ Ce cas a été révélé par le cliquet lui-même, en attrapant `GestesFichiers` - le port ajouté
+    /// par #3525 pour rendre l'échec de disque injectable. Il fait `return Files.walk(racine)` et rien
+    /// d'autre : l'`UncheckedIOException` surviendra dans la **boucle de l'appelant**, pas ici, et lui
+    /// demander de la rattraper serait lui demander l'impossible.
+    ///
+    /// La règle était donc d'un cran trop grossière : le contrat porte sur qui **consomme** un
+    /// parcours, pas sur qui appelle `Files.walk`. Ce n'est pas une exception au cliquet - c'est le
+    /// cliquet dit plus juste.
+    private static boolean rendLeFluxSansLeConsommer(Path fichier) {
+        return lignesAvecUnParcours(fichier).allMatch(ligne -> ligne.strip().startsWith("return Files.walk("));
+    }
+
+    private static Stream<String> lignesAvecUnParcours(Path fichier) {
+        try {
+            return Files.readString(fichier, StandardCharsets.UTF_8)
+                    .lines()
+                    .filter(ligne -> ligne.contains("Files.walk("))
+                    .toList()
+                    .stream();
+        } catch (IOException illisible) {
+            return Stream.empty();
         }
     }
 
