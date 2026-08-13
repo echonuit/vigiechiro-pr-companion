@@ -133,6 +133,58 @@ class RapprochementSitesTest {
     }
 
     @Test
+    @DisplayName("#3458 : un site créé AVANT la connexion reçoit quand même les points de la plateforme")
+    void un_site_existant_recoit_les_points_distants() {
+        // Le cas nominal de qui découvre l'application : on déclare son carré, puis on se connecte.
+        // Vécu sur le carré 130711 : la plateforme en porte 41, Companion en affichait un seul.
+        Site existant = service.creerSite("130711", "Mon carré", Protocole.STANDARD, null, ID_USER);
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(siteDistant(
+                        "s1",
+                        "130711",
+                        List.of(new PointVigieChiro("Z1", 43.52, 5.46), new PointVigieChiro("Z41", 43.51, 5.45))))));
+
+        rapprochement.synchroniser(client);
+        rapprochement.synchroniser(client); // rejeu : les points ne doivent pas se dupliquer
+
+        assertThat(pointDao.findBySite(existant.id()))
+                .as("relier un site sans lui donner ses points oblige l'utilisateur à les ressaisir, et"
+                        + " un point ressaisi ne correspond à rien sur la plateforme : le dépôt échoue")
+                .extracting(PointDEcoute::code)
+                .containsExactly("Z1", "Z41");
+        assertThat(pointDao.findBySite(existant.id())).allMatch(PointDEcoute::synchronise);
+    }
+
+    @Test
+    @DisplayName("#3458 : un point saisi à la main n'est ni dupliqué ni écrasé par son homonyme distant")
+    void un_point_manuel_survit_au_rapatriement() {
+        Site existant = service.creerSite("130711", "Mon carré", Protocole.STANDARD, null, ID_USER);
+        // Même CODE que le distant, mais les coordonnées de l'utilisateur : c'est sa saisie.
+        service.ajouterPoint(existant.id(), "Z1", 1.0, 2.0, "posé à la main");
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(siteDistant(
+                        "s1",
+                        "130711",
+                        List.of(new PointVigieChiro("Z1", 43.52, 5.46), new PointVigieChiro("Z41", 43.51, 5.45))))));
+
+        rapprochement.synchroniser(client);
+
+        List<PointDEcoute> points = pointDao.findBySite(existant.id());
+        assertThat(points).extracting(PointDEcoute::code).containsExactlyInAnyOrder("Z1", "Z41");
+        PointDEcoute z1 = points.stream()
+                .filter(point -> point.code().equals("Z1"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(z1.latitude())
+                .as("une synchro qui tourne toute seule à la connexion ne réécrit pas la saisie de"
+                        + " l'utilisateur : déplacer son point sans le lui dire serait pire que ne rien faire")
+                .isEqualTo(1.0);
+        assertThat(z1.synchronise())
+                .as("et il reste un point À LUI, donc toujours visible sur la fiche (#1738)")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("hors-ligne (aucun site distant) : rien créé, rapport vide")
     void hors_ligne_ne_cree_rien() {
         when(client.mesSites()).thenReturn(ReponseApi.succes(List.of()));
