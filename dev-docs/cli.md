@@ -116,7 +116,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `marquer-reference` | `[--retirer] (--observation <ids> \| --passage <id> [filtres] [--confirmer])` | P10, #1311 | Verse (ou retire) les observations dans la **bibliothèque de sons de référence** - la source `References` de l'écran, et la matière de son export |
 | `poser-certitude` | `(--certitude <SUR\|PROBABLE\|POSSIBLE> \| --effacer) (--observation <ids> \| --passage <id> [filtres] [--confirmer])` | #1139, #1311 | Déclare la **certitude observateur**. Il faut **choisir explicitement** : elle ne se déduit **ni** de la probabilité Tadarida **ni** d'une validation, et reste **vide par défaut**. C'est un jugement, que la plateforme exigera avec le taxon (#723) et qu'un naturaliste lira comme la parole de l'observateur |
 | `discussion` | `--observation <id> [--message <texte> --confirmer]` | #1417, #1418 | Le **fil d'échange avec le validateur** du MNHN. Sans `--message`, le **lit** (le fil vient de la base, rafraîchi à chaque import). Avec, **y répond**, ⚠️ **écriture définitive** : le serveur ajoute par `$push` et n'offre aucune route de suppression. `--confirmer` est donc obligatoire, et le message n'est écrit localement **qu'après** que le serveur l'a accepté |
-| `emplacements` | `[--definir-travail <dir>] [--definir-base <dir>] [--reinitialiser] [--json]` | #1038 | Parité CLI de l'onglet « Emplacements » ([ADR 1038](decisions/1038-la-configuration-d-amorcage-vit-hors-de-la-base.md)) : `ServiceEmplacements`. Sans option, **affiche** où vivent le dossier de travail et la base (et leurs défauts). `--definir-*` **sonde** chaque dossier (un fichier ou un dossier non inscriptible est refusé, code `2` : rien n'est écrit) puis **écrit** le choix ; `--reinitialiser` l'efface. Ne déplace **rien** : change le pointeur lu au prochain démarrage, pas les données - une base pointée vers un dossier vide démarre neuve. `--reinitialiser` et `--definir-*` sont exclusifs (code `2`) |
+| `emplacements` | `[--definir-travail <dir>] [--definir-base <dir>] [--reinitialiser] [--json]` | #1038 | Parité CLI de l'onglet « Emplacements » ([ADR 1038](decisions/1038-la-configuration-d-amorcage-vit-hors-de-la-base.md)) : `ServiceEmplacements`. Sans option, **affiche** où vivent le dossier de travail, la base et les **journaux** (et leurs défauts). Les journaux y figurent parce que la CLI n'imprime plus la pile d'un incident : le détail n'existe qu'une fois, dans ce dossier, et l'IHM est seule à savoir l'ouvrir (#3624). `--definir-*` **sonde** chaque dossier (un fichier ou un dossier non inscriptible est refusé, code `2` : rien n'est écrit) puis **écrit** le choix ; `--reinitialiser` l'efface. Ne déplace **rien** : change le pointeur lu au prochain démarrage, pas les données - une base pointée vers un dossier vide démarre neuve. `--reinitialiser` et `--definir-*` sont exclusifs (code `2`) |
 | `--help` / `-h`, `--version` / `-V`, ou aucun argument | — | — | — |
 
 ### Socle : registre de commandes picocli (#614)
@@ -189,6 +189,10 @@ commande crée et écrit `<dossier de travail>/logs` - les lectrices comprises. 
 doit laisser une trace même sur une commande qui ne fait que lire, et deux processus qui écrivent
 chacun ses lignes dans un journal ne se corrompent pas, là où deux processus qui écrivent la même base
 le feraient (#3575).
+
+    C'est aussi pourquoi `emplacements` **nomme** ce dossier : la trace retirée de la console doit
+    rester trouvable sans le deviner. `cli.bats` le vérifie des deux bouts - la pile est dans le
+    fichier, et la commande désigne le dossier réellement écrit.
 
 ⚠️ La migration du schéma prend le verrou de son côté : une commande de lecture sur une base à mettre
 à jour peut donc être refusée, et c'est voulu - mettre à jour le schéma est une écriture.

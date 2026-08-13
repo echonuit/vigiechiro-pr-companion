@@ -165,4 +165,40 @@ class CliEmplacementsTest {
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         assertThat(texteSortie()).contains("\"personnalise\"").contains("\"espaceDeTravail\"");
     }
+
+    @Test
+    @DisplayName("emplacements : le dossier des journaux est nommé, en texte comme en JSON (#3624)")
+    void afficher_nomme_le_dossier_des_journaux() {
+        // Depuis #3570 la CLI n'imprime plus la pile : le détail d'un incident n'existe qu'une fois,
+        // dans ce dossier. L'IHM l'ouvre depuis son menu ; la CLI n'a que cette commande pour le dire.
+        // Ne pas le nommer laisse le seul exemplaire du diagnostic à un endroit qu'on ne peut deviner.
+        //
+        // ⚠️ On vérifie la RELATION (les journaux sont sous le dossier de travail annoncé), pas un
+        // chemin absolu : `preparer()` efface `vigiechiro.workspace`, donc `Workspace.resolu()` écrit
+        // ici désignerait le vrai dossier de la machine et le test passerait pour de mauvaises raisons.
+        int codeTexte = cli.executer(new String[] {"emplacements"}, sortie, erreur);
+
+        assertThat(codeTexte).isEqualTo(Cli.CODE_SUCCES);
+        String texte = texteSortie();
+        Path travail = Path.of(valeurDe(texte, "Dossier de travail"));
+        assertThat(valeurDe(texte, "Journaux"))
+                .isEqualTo(travail.resolve("logs").toString());
+
+        capture.vider();
+        int codeJson = cli.executer(new String[] {"emplacements", "--json"}, sortie, erreur);
+
+        assertThat(codeJson).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie())
+                .as("un script qui range les diagnostics a besoin du chemin, pas d'une phrase")
+                .contains("\"journaux\"");
+    }
+
+    /// La valeur de la ligne `  <étiquette>  : <valeur>` du compte rendu textuel.
+    private static String valeurDe(String texte, String etiquette) {
+        return texte.lines()
+                .filter(ligne -> ligne.stripLeading().startsWith(etiquette))
+                .map(ligne -> ligne.substring(ligne.indexOf(" : ") + 3).strip())
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Aucune ligne « " + etiquette + " » dans :\n" + texte));
+    }
 }

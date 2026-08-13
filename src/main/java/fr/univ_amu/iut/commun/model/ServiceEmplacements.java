@@ -30,9 +30,15 @@ public final class ServiceEmplacements {
     /// @param base fichier de base effectif au prochain démarrage
     /// @param espaceDeTravailParDefaut ce que vaudrait l'espace de travail sans configuration
     /// @param baseParDefaut ce que vaudrait la base sans configuration
+    /// @param journaux dossier des journaux applicatifs, sous l'espace de travail effectif
     /// @param personnalise `true` si une configuration d'amorçage est écrite (emplacements choisis)
     public record Emplacements(
-            Path espaceDeTravail, Path base, Path espaceDeTravailParDefaut, Path baseParDefaut, boolean personnalise) {}
+            Path espaceDeTravail,
+            Path base,
+            Path journaux,
+            Path espaceDeTravailParDefaut,
+            Path baseParDefaut,
+            boolean personnalise) {}
 
     /// Emplacements effectifs au prochain démarrage, avec leurs défauts et le fait qu'ils soient ou non
     /// personnalisés.
@@ -43,6 +49,7 @@ public final class ServiceEmplacements {
         return new Emplacements(
                 effectif.racine(),
                 effectif.cheminBaseDeDonnees(),
+                effectif.dossierLogs(),
                 defaut.racine(),
                 defaut.cheminBaseDeDonnees(),
                 personnalise);

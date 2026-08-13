@@ -887,3 +887,29 @@ FIN
   [ "${status}" -eq 1 ]
   [[ "${output}" == *"Échec"* ]]
 }
+
+@test "la trace retirée de la console est bien dans le journal, et emplacements dit où (#3624)" {
+  # Le test précédent prouve la MOITIÉ de la promesse : la console n'a plus la pile. Celle-ci prouve
+  # l'autre, la seule qui rende le retrait acceptable - la trace existe encore, dans un fichier. Sans
+  # elle, une journalisation cassée rendrait exactement le même vert : plus de pile nulle part.
+  printf 'ceci n est pas une base sqlite' > "${BATS_TEST_TMPDIR}/vigiechiro.db"
+
+  run cli lister-sites
+  [ "${status}" -eq 1 ]
+
+  journal="${BATS_TEST_TMPDIR}/logs/vigiechiro-0.log"
+  [ -f "${journal}" ]
+  # La pile de NOS classes, pas seulement une ligne d'horodatage : c'est elle qu'on est allé chercher.
+  grep -q "at fr.univ_amu.iut" "${journal}"
+
+  # Et le chemin se trouve sans le deviner. L'IHM ouvre ce dossier depuis son menu ; la ligne de
+  # commande n'a que cette commande pour le dire, et elle doit désigner le dossier réellement écrit.
+  #
+  # La base volontairement corrompue est retirée d'abord : `main` migre avant d'entrer dans la
+  # commande, donc `emplacements` échouerait sur elle. Le dossier de travail, lui, ne bouge pas.
+  rm "${BATS_TEST_TMPDIR}/vigiechiro.db"
+  run cli emplacements
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Journaux"* ]]
+  [[ "${output}" == *"${BATS_TEST_TMPDIR}/logs"* ]]
+}

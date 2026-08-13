@@ -124,7 +124,10 @@ public final class CaptureLot {
     private static final Prefixe PREFIXE = new Prefixe(NUMERO_CARRE, 2026, 1, CODE_POINT);
     private static final Prefixe PREFIXE_INCOHERENT = new Prefixe(NUMERO_CARRE, 2026, 2, CODE_POINT);
     private static final String NOM_ORIGINAL = PREFIXE.nommerOriginal("PaRecPR" + SERIE + "_20260620_213000.wav");
-    private static final long VOLUME_SEQUENCES_OCTETS = 180L * 1024 * 1024; // 180 Mo
+    /// Volumes posés en **base 1000**, celle dans laquelle `Formats` les rend depuis #3573. Écrits en
+    /// base 1024, ils affichaient « 189 Mo » là où le littéral disait 180 : le chiffre publié n'était
+    /// plus celui qu'on avait choisi, et aucun test ne rougit là-dessus (#3624).
+    private static final long VOLUME_SEQUENCES_OCTETS = 180_000_000L;
 
     /// Racine d'affichage **déterministe** du dossier de session (R22) montrée à l'écran. On
     /// n'utilise pas le `@TempDir` aléatoire : son suffixe se retrouverait dans les PNG commités et
@@ -433,7 +436,7 @@ public final class CaptureLot {
                 .insert(new SessionDEnregistrement(
                         null,
                         RACINE_DEMO + "/" + PREFIXE.nomDossierSession(),
-                        5L * 1024 * 1024 * 1024,
+                        5_000_000_000L,
                         VOLUME_SEQUENCES_OCTETS,
                         passage.id()));
         long idOriginal = new EnregistrementOriginalDao(source)
