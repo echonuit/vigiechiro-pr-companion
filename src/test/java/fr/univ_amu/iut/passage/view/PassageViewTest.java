@@ -82,6 +82,10 @@ class PassageViewTest {
     /// qui rend l'abonnement quand l'étape sort de l'historique.
     private Navigateur navigateur;
 
+    /// Le ViewModel de l'écran, gardé pour le **contrôle du dispositif** de #3455 : rejouer l'ancien
+    /// chemin à la main doit reproduire le défaut.
+    private PassageViewModel viewModelObserve;
+
     private PassageController controleur;
 
     @Start
@@ -89,27 +93,38 @@ class PassageViewTest {
         ServicePassage service = mock(ServicePassage.class);
         serviceObserve = service;
         ServiceReactivationPassage reactivation = mock(ServiceReactivationPassage.class);
-        when(service.detailPassage(anyLong()))
-                .thenReturn(new DetailPassage(
-                        2,
-                        2026,
-                        "2026-06-22",
-                        "20:25:00",
-                        "07:47:00",
-                        "1925492",
-                        StatutWorkflow.VERIFIE,
-                        Verdict.OK,
-                        null,
-                        4096L,
-                        1024L,
-                        30,
-                        150.0,
-                        null,
-                        new DecompteAudio(30, 30)));
+        when(service.detailPassage(anyLong())).thenReturn(detailAvecNumero(2));
+        navigateur = new Navigateur(new NavigationViewModel(), revision);
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             RevisionDonnees revision() {
                 return revision;
+            }
+
+            /// Le MÊME chrome que celui du test (#3455) : sans cette liaison, Guice en fabrique
+            /// un second à la volée, le contrôleur relibelle celui-là, et le test lit l'autre.
+            @Provides
+            Navigateur navigateur() {
+                return navigateur;
+            }
+
+            /// Double de navigation qui joue la modale « Modifier le passage » sans l'ouvrir :
+            /// elle exécute son rappel de succès, c'est-à-dire exactement ce que fait un
+            /// renommage réussi. Le chemin testé reste celui de la production - le rappel que
+            /// `modifierRattachement` passe - au lieu d'un appel direct au ViewModel.
+            @Provides
+            NavigationPassage navigation(Injector injecteur) {
+                return new NavigationPassage(injecteur, navigateur) {
+                    @Override
+                    public void ouvrirModaleRattachement(
+                            javafx.stage.Window parent,
+                            Long idPassage,
+                            String carre,
+                            String codePoint,
+                            Runnable apresSucces) {
+                        apresSucces.run();
+                    }
+                };
             }
 
             @Override
@@ -133,7 +148,8 @@ class PassageViewTest {
 
             @Provides
             PassageViewModel viewModel(PortailVigieChiro portail) {
-                return new PassageViewModel(service, reactivation, portail);
+                viewModelObserve = new PassageViewModel(service, reactivation, portail);
+                return viewModelObserve;
             }
 
             @Provides
@@ -177,11 +193,50 @@ class PassageViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        navigateur = new Navigateur(new NavigationViewModel(), revision);
         navigateur.empiler(vue, "passage", "Détails du passage", controleur);
         controleur.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
         stage.setScene(new Scene(vue, 1100, 700));
         stage.show();
+    }
+
+    @Test
+    @DisplayName("#3455 : après un renommage, le bouton Retour annonce le NOUVEAU numéro")
+    void le_bouton_retour_suit_le_renommage(FxRobot robot) {
+        // La nuit devient le n° 7 : c'est ce que la modale « Modifier le passage » vient d'écrire.
+        when(serviceObserve.detailPassage(anyLong())).thenReturn(detailAvecNumero(7));
+
+        // Le chemin RÉEL : le rappel de succès que `modifierRattachement` passe à la modale. C'est lui
+        // qui court-circuitait le contrôleur, donc `actualiserFil`.
+        robot.clickOn("#boutonRattachement");
+
+        // On descend sur un écran enfant : c'est là que le bouton Retour de cet écran devient lisible.
+        robot.interact(() -> navigateur.empiler(new Group(), "qualification", "Vérifier l'enregistrement", null));
+
+        assertThat(navigateur.libelleRetour())
+                .as("le fil d'Ariane, lui, se recalcule à chaque affichage : les deux ne peuvent pas"
+                        + " annoncer deux numéros différents pour la même nuit")
+                .isEqualTo("Détails du passage N° 7");
+    }
+
+    @Test
+    @DisplayName("#3455 : contrôle du dispositif - passer par le ViewModel seul REPRODUIT le défaut")
+    void controle_du_dispositif_le_viewmodel_seul_ne_relibelle_pas(FxRobot robot) {
+        when(serviceObserve.detailPassage(anyLong())).thenReturn(detailAvecNumero(7));
+
+        // L'ancien chemin, joué à la main : le ViewModel recharge ses propriétés, mais
+        // `PassageController#ouvrirSur` - qui appelle `actualiserFil` - n'est jamais exécutée.
+        robot.interact(() -> viewModelObserve.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", null)));
+        robot.interact(() -> navigateur.empiler(new Group(), "qualification", "Vérifier l'enregistrement", null));
+
+        // Sans ce contrôle, le test ci-dessus prouverait seulement que la modale marche. Il faut que
+        // l'ancien chemin échoue pour que le nouveau prouve quelque chose.
+        //
+        // La référence n'est PAS le libellé brut : l'ouverture de l'écran a déjà relibellé l'étape en
+        // « N° 2 », par `PassageController#ouvrirSur`. Ce qu'on constate ici, c'est qu'elle y RESTE
+        // alors que la nuit s'appelle désormais 7.
+        assertThat(navigateur.libelleRetour())
+                .as("le libellé de l'étape est un String figé : rien ne le relibelle par ce chemin")
+                .isEqualTo("Détails du passage N° 2");
     }
 
     @Test
@@ -380,5 +435,26 @@ class PassageViewTest {
         robot.interact(bouton::fire);
 
         assertThat(urlsOuvertes).containsExactly("https://vigiechiro.herokuapp.com/#/participations/6a4961f5");
+    }
+
+    /// La projection de la nuit, à un **numéro de passage** près : c'est la seule chose que le
+    /// renommage change, et la seule que ces tests font varier.
+    private static DetailPassage detailAvecNumero(int numero) {
+        return new DetailPassage(
+                numero,
+                2026,
+                "2026-06-22",
+                "20:25:00",
+                "07:47:00",
+                "1925492",
+                StatutWorkflow.VERIFIE,
+                Verdict.OK,
+                null,
+                4096L,
+                1024L,
+                30,
+                150.0,
+                null,
+                new DecompteAudio(30, 30));
     }
 }
