@@ -72,8 +72,8 @@ modules:
     sources:
       - type: file
         dest-filename: vigiechiro.deb
-        url: https://github.com/echonuit/vigiechiro-pr-companion/releases/download/v2.34.4/vigiechirocompanion_2.34.4_amd64-x64.deb
-        sha256: a35407b37e497d3bf0e7db256a72779824c9c9cdc1abdc5d0ba63fa62f141ea1
+        url: https://github.com/echonuit/vigiechiro-pr-companion/releases/download/v2.185.0/vigiechirocompanion_2.185.0_amd64-x64.deb
+        sha256: 6fa16f3ca801bffbc7730ea5f8e2b6ad40bdfe9ade585588c5e76a0b38c31387
         # Le robot de Flathub détecte les nouvelles versions et ouvre la mise à jour tout seul :
         # c'est ce qui rend la maintenance quasi nulle une fois le paquet accepté.
         x-checker-data:
