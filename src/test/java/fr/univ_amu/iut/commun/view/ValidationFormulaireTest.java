@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.CasDeRecette;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.DialogPane;
@@ -18,6 +19,7 @@ class ValidationFormulaireTest {
 
     @Test
     @DisplayName("gaterBouton lie l'état désactivé du bouton à la validité (vrai → actif, faux → grisé)")
+    @CasDeRecette("S1-13")
     void gater_bouton_suit_la_validite() {
         DialogPane pane = new DialogPane();
         ButtonType valider = new ButtonType("Valider", ButtonType.OK.getButtonData());
@@ -35,6 +37,7 @@ class ValidationFormulaireTest {
 
     @Test
     @DisplayName("marquerInvalide ajoute/retire la classe champ-invalide selon l'état, réactivement")
+    @CasDeRecette("S1-13")
     void marquer_invalide_bascule_la_classe() {
         TextField champ = new TextField();
         SimpleBooleanProperty invalide = new SimpleBooleanProperty(true);
