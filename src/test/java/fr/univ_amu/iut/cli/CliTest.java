@@ -467,4 +467,21 @@ class CliTest {
                 .as("l'alias doit mener à l'aide de la commande canonique, pas à celle de la racine")
                 .contains("Usage: vigiechiro recuperer-vigiechiro");
     }
+
+    @Test
+    @DisplayName("#3738 : une sortie redirigée ne porte aucune séquence ANSI, sur aucune plateforme")
+    void aucune_couleur_quand_la_sortie_est_redirigee() {
+        // ⚠️ C'est l'invariant que Windows violait, et que rien ne surveillait : picocli colorisait son
+        // aide là-bas et pas sous Linux, si bien que `contains("Usage: vigiechiro recuperer-vigiechiro")`
+        // échouait sur une chaîne où `ESC[1m` s'était glissé après « Usage: ».
+        //
+        // Ce test porte sur l'ABSENCE du caractère d'échappement, et non sur le texte : c'est la seule
+        // formulation qui rougisse quel que soit l'endroit où la couleur se serait réintroduite.
+        cli.executer(new String[] {"recuperer-vigiechiro", "--help"}, sortie, erreur);
+
+        assertThat(texteSortie())
+                .as("un script qui filtre la sortie, un journal de CI ou une console qui ne rend pas"
+                        + " l'ANSI y liraient « \u2190[1mvigiechiro » au lieu du texte")
+                .doesNotContain("\u001B[");
+    }
 }
