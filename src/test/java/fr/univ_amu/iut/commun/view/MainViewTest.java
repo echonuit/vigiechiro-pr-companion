@@ -138,6 +138,7 @@ class MainViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-03")
     @DisplayName("Le fil d'Ariane reflète le parcours ; cliquer un ancêtre y ramène")
     void fil_ariane_reflete_le_parcours(FxRobot robot) {
         robot.interact(() -> {
@@ -206,6 +207,7 @@ class MainViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-02")
     @DisplayName("Tableau de bord : le bandeau de compteurs est masqué quand la base est vide (#141)")
     void bandeau_masque_si_base_vide(FxRobot robot) {
         FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
@@ -233,6 +235,7 @@ class MainViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-09")
     @DisplayName("#1376 : les compteurs suivent une mutation survenue SANS changement de vue")
     void bandeau_suit_une_mutation_sans_navigation(FxRobot robot) {
         FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
@@ -274,6 +277,7 @@ class MainViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-03")
     @DisplayName("#144 : Ctrl+F est actif sur le chrome et donne le focus au champ de recherche")
     void ctrl_f_active_la_recherche(FxRobot robot) {
         var ctrlF = new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN);
