@@ -166,4 +166,75 @@ class AgregationSyntheseTest {
 
         assertThat(synthese).isEmpty();
     }
+
+    @Test
+    @DisplayName("Le tri par contacts décroissants prime sur l'ordre d'arrivée des espèces")
+    void tri_par_contacts_decroissants_meme_arrivee_en_second() throws IOException {
+        // La Barbastelle arrive EN PREMIER dans le flux mais avec moins de contacts : si le tri
+        // disparaissait, l'ordre resterait celui d'insertion (Barbar, Pipkuh) et ce test ne le
+        // distinguerait pas d'un simple contenu correct.
+        List<LigneSynthese> synthese = AgregationSynthese.de(
+                List.of(
+                        contact("Barbar", "seqC.wav", StatutObservation.VALIDEE),
+                        contact("Pipkuh", "seqA.wav", StatutObservation.VALIDEE),
+                        contact("Pipkuh", "seqA.wav", StatutObservation.VALIDEE),
+                        contact("Pipkuh", "seqB.wav", StatutObservation.VALIDEE)),
+                false,
+                referentiel(),
+                ContexteActivite.NATIONAL);
+
+        assertThat(synthese)
+                .extracting(LigneSynthese::codeTaxon)
+                .as("Pipkuh (3 contacts) doit passer devant Barbar (1 contact) malgré son arrivée plus tardive")
+                .containsExactly("Pipkuh", "Barbar");
+    }
+
+    @Test
+    @DisplayName("Sans nom vernaculaire connu, la ligne retombe sur le code taxon")
+    void nom_espece_absent_retombe_sur_le_code_taxon() throws IOException {
+        List<LigneSynthese> synthese = AgregationSynthese.de(
+                List.of(contactSansNomEspece("Tetvir", "seqA.wav", StatutObservation.VALIDEE)),
+                false,
+                referentiel(),
+                ContexteActivite.NATIONAL);
+
+        assertThat(synthese.get(0).nomEspece())
+                .as("aucune cellule vide : à défaut de nom vernaculaire, le code taxon sert d'étiquette")
+                .isEqualTo("Tetvir");
+    }
+
+    private static LigneObservationAudio contactSansNomEspece(String taxon, String fichier, StatutObservation statut) {
+        return new LigneObservationAudio(
+                1L,
+                1L,
+                1L,
+                1,
+                "2026-07-03",
+                "130711",
+                "Z41",
+                "Test",
+                taxon,
+                0.9,
+                null,
+                null,
+                statut,
+                false,
+                null,
+                45,
+                null, // nomEspece : justement ce que ce test met à l'épreuve
+                null,
+                null,
+                "Chiroptères",
+                fichier,
+                0.0,
+                5.0,
+                LocalDateTime.of(2026, 7, 3, 22, 0),
+                false,
+                null,
+                null,
+                null,
+                null,
+                0,
+                null);
+    }
 }

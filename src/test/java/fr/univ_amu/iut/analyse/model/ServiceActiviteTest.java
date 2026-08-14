@@ -126,6 +126,31 @@ class ServiceActiviteTest {
                 .containsExactly("PIPKUH");
     }
 
+    @Test
+    void delegue_la_fenetre_enregistree_a_fenetre_observee() {
+        FenetreObserveeNuit.Bornes bornes = new FenetreObserveeNuit.Bornes(
+                LocalDateTime.of(2026, 6, 20, 21, 0), LocalDateTime.of(2026, 6, 21, 6, 30));
+        when(fenetreObservee.pour(PASSAGE)).thenReturn(Optional.of(bornes));
+
+        assertThat(service.fenetreEnregistree(PASSAGE)).contains(bornes);
+    }
+
+    @Test
+    void fenetre_enregistree_vide_quand_la_nuit_n_a_laisse_aucune_trace() {
+        when(fenetreObservee.pour(PASSAGE)).thenReturn(Optional.empty());
+
+        assertThat(service.fenetreEnregistree(PASSAGE)).isEmpty();
+    }
+
+    @Test
+    void delegue_les_nuits_opportunistes_a_leur_source() {
+        when(nuitsOpportunistes.identifiants()).thenReturn(java.util.Set.of(PASSAGE, 8L));
+
+        assertThat(service.nuitsOpportunistes())
+                .as("un délégué renvoyant du vide par défaut ne dirait rien : il faut un contenu concret à retrouver")
+                .containsExactlyInAnyOrder(PASSAGE, 8L);
+    }
+
     private static LigneObservationAudio ligne(
             String taxonObservateur, String taxonTadarida, String nomEspece, String groupe, LocalDateTime heure) {
         return ligne(taxonObservateur, taxonTadarida, nomEspece, groupe, heure, "Mon site");

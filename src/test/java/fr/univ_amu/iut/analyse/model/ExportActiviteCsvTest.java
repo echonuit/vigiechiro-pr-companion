@@ -39,6 +39,32 @@ class ExportActiviteCsvTest {
     }
 
     @Test
+    void un_caractere_special_en_premiere_position_declenche_deja_l_echappement() {
+        // La détection ne cherche pas un caractère spécial "quelque part" mais dès le PREMIER : un nom
+        // qui commence par lui (position 0) doit être aussi bien échappé qu'un nom qui le contient plus loin.
+        assertThat(ExportActiviteCsv.contenu(LargeurTranche.HEURE, List.of(ligneAvecNomEspece(";Kuhl"))))
+                .contains("\";Kuhl\"");
+        assertThat(ExportActiviteCsv.contenu(LargeurTranche.HEURE, List.of(ligneAvecNomEspece("\"Kuhl"))))
+                .contains("\"\"\"Kuhl\"");
+        assertThat(ExportActiviteCsv.contenu(LargeurTranche.HEURE, List.of(ligneAvecNomEspece("\nKuhl"))))
+                .contains("\"\nKuhl\"");
+        assertThat(ExportActiviteCsv.contenu(LargeurTranche.HEURE, List.of(ligneAvecNomEspece("\rKuhl"))))
+                .contains("\"\rKuhl\"");
+    }
+
+    private static LigneActivite ligneAvecNomEspece(String nomEspece) {
+        return new LigneActivite(
+                "640380",
+                "A1",
+                LocalDate.of(2026, 6, 21),
+                "PIPKUH",
+                nomEspece,
+                "Chiroptères",
+                LocalDateTime.of(2026, 6, 21, 22, 0),
+                1);
+    }
+
+    @Test
     void aucune_ligne_ecrit_les_en_tetes_seules() {
         String csv = ExportActiviteCsv.contenu(LargeurTranche.HEURE, List.of());
 

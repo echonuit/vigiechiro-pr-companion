@@ -19,6 +19,7 @@ import fr.univ_amu.iut.audit.model.SourceAudio;
 import fr.univ_amu.iut.commun.persistence.BilanSauvegarde;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.commun.view.GroupeMenu;
 import fr.univ_amu.iut.commun.view.OccupationChrome;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
@@ -70,6 +71,18 @@ class ActionResetGuideTest {
         assertThat(fermetures)
                 .as("le reset a abouti : l'application se ferme, ses écrans tenant l'ancienne base")
                 .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("l'entrée s'annonce dans le menu ☰ avec son libellé, son rang et son icône")
+    void annonce_sa_place_dans_le_menu() {
+        ActionResetGuide entree =
+                new ActionResetGuide(fournir(recuperabilite), fournir(reset), fournir(sauvegarde), occupation);
+
+        assertThat(entree.groupe()).isEqualTo(GroupeMenu.BASE);
+        assertThat(entree.ordre()).isEqualTo(35);
+        assertThat(entree.libelle()).isEqualTo("Repartir d'une base neuve…");
+        assertThat(entree.iconeLiteral()).isEqualTo("fas-recycle");
     }
 
     @Test

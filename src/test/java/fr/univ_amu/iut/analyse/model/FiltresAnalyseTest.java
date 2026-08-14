@@ -145,4 +145,21 @@ class FiltresAnalyseTest {
                 .anyMatch(dimension -> dimension.contains("640380"))
                 .noneMatch(dimension -> dimension.equals("A1"));
     }
+
+    @Test
+    @DisplayName("#3350 : dimensionsNommees énumère commune et carré, jamais le point")
+    void dimensions_nommees_excluent_le_point() {
+        // Contrairement à dimensionsLieu, ce que le REFUS énumère (#3350) ne porte pas le point : il
+        // évinçait la moitié des carrés sous la borne du message.
+        assertThat(FiltresAnalyse.dimensionsNommees(PIPISTRELLE)).containsExactly("Ahetze", "640380 · Vallon");
+    }
+
+    @Test
+    @DisplayName("#3350 : dimensionsNommees écarte une commune absente plutôt que de la comparer")
+    void dimensions_nommees_ecarte_la_commune_absente() {
+        ObservationAnalyse sansCommune = new ObservationAnalyse(
+                "Pippip", "Pippip", "Pippip", "Chiroptères", null, 12L, 2026, "640380", "Vallon", 1L, null, "A1");
+
+        assertThat(FiltresAnalyse.dimensionsNommees(sansCommune)).containsExactly("640380 · Vallon");
+    }
 }

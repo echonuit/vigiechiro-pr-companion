@@ -299,4 +299,46 @@ class AgregationActiviteTest {
         assertThat(AgregationActivite.parEspece(List.of(), LargeurTranche.DEMI_HEURE))
                 .isEmpty();
     }
+
+    @Test
+    void une_plage_reduite_a_un_seul_instant_est_quand_meme_comblee() {
+        // debutMinutes == finMinutes : la borne est INCLUSE (finMinutes < debutMinutes ne l'exclut pas).
+        // Une plage figée sur une seule tranche doit donc encore recevoir son zéro, pas être traitée
+        // comme une plage vide.
+        List<CourbeEspece> courbes = AgregationActivite.parEspece(
+                List.of(contact("PIPKUH", "Pipistrelle de Kuhl", le21juin(21, 0))), LargeurTranche.HEURE);
+
+        // 22 h = 240 min depuis 18 h : une seule minute de plage, sur une tranche sans contact.
+        List<CourbeEspece> comblee = AgregationActivite.comblerLesCreux(courbes, LargeurTranche.HEURE, 240, 240);
+
+        assertThat(comblee.get(0).points())
+                .as("21 h (contact réel) puis le zéro de la plage réduite à 22 h")
+                .extracting(PointActivite::nombre)
+                .containsExactly(1, 0);
+    }
+
+    @Test
+    void comblerLesCreux_sur_des_courbes_sans_aucun_point_les_laisse_intactes() {
+        // Aucune nuit de référence à déduire (aucun point sur aucune courbe) : la liste fournie doit
+        // revenir telle quelle, avec sa courbe vide dedans, pas un résultat vidé de son contenu.
+        CourbeEspece courbeVide = new CourbeEspece("PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", 0, List.of());
+
+        List<CourbeEspece> resultat =
+                AgregationActivite.comblerLesCreux(List.of(courbeVide), LargeurTranche.HEURE, 0, 60);
+
+        assertThat(resultat)
+                .as("la courbe sans point reste présente, pas de sortie vidée par erreur")
+                .containsExactly(courbeVide);
+    }
+
+    @Test
+    void replierSurLaNuit_sur_des_courbes_sans_aucun_point_les_laisse_intactes() {
+        CourbeEspece courbeVide = new CourbeEspece("PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", 0, List.of());
+
+        List<CourbeEspece> resultat = AgregationActivite.replierSurLaNuit(List.of(courbeVide));
+
+        assertThat(resultat)
+                .as("sans nuit de référence à déduire, la liste fournie revient telle quelle")
+                .containsExactly(courbeVide);
+    }
 }
