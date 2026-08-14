@@ -956,6 +956,31 @@ celui-là.
 La vidéo est conservée en artefact **14 jours** : elle se revoit un temps, puis s'efface, et rien
 ne part dans git.
 
+### Ce que la séance écrit à côté du film : les repères (#3774)
+
+Un film d'un bloc ne sert à personne pour trancher un cas : personne ne regardera trente minutes.
+La séance dépose donc, à côté de la vidéo, un **journal de repères**
+(`target/recette-filmee/reperes.tsv`) qui dit **quand** chaque cas s'est joué.
+
+```text
+# repères de séance (#3774) : epoch_ms	borne	test	cas
+1786725329321	debut	ConnexionViewModelTest.injoignable_conserve_le_jeton	S1-07
+1786725329581	fin	ConnexionViewModelTest.injoignable_conserve_le_jeton	S1-07
+```
+
+Les instants sont des **millisecondes depuis l'époque**, la même grandeur que `date +%s%3N` : c'est
+ce qui permettra au montage de les ramener à des positions dans la vidéo. Seuls les tests qui citent
+un cas (`@CasDeRecette`) sont encadrés ; les autres ne montrent rien qu'on irait chercher.
+
+⚠️ Deux propriétés vont ensemble, et seul le profil `recette-filmee` les pose :
+`recette.autodetection` charge l'extension, `recette.reperes` lui dit où écrire. Un `mvn test`
+ordinaire ne voit ni l'une ni l'autre, ne charge donc rien et n'écrit rien. `CablageDesReperesTest`
+garde ce câblage, parce qu'il casserait **en silence** : une extension que le moteur n'appelle pas
+produit un journal vide, et un journal vide ressemble à une séance où aucun test ne cite de cas.
+
+C'est aussi pourquoi le journal part dans l'artefact avec le film : depuis la CI, c'est le seul
+moyen de constater que l'extension a bien été chargée. Le film, lui, sortirait pareil.
+
 ```bash
 gh workflow run recette-filmee.yml                                  # le passage normal
 gh workflow run recette-filmee.yml -f sans_gestionnaire_de_fenetres=true   # le témoin
