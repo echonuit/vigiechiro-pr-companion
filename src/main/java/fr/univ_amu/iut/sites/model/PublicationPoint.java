@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.LocalitesDuSite;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import java.util.Objects;
 
 /// Publie un point d'écoute **sur la plateforme** (#3458), sans effacer ceux des autres.
@@ -32,9 +33,11 @@ import java.util.Objects;
 public class PublicationPoint {
 
     private final ClientVigieChiro client;
+    private final PointPublieDao publies;
 
-    public PublicationPoint(ClientVigieChiro client) {
+    public PublicationPoint(ClientVigieChiro client, PointPublieDao publies) {
         this.client = Objects.requireNonNull(client, "client");
+        this.publies = Objects.requireNonNull(publies, "publies");
     }
 
     /// Ce qu'une publication peut donner.
@@ -56,8 +59,20 @@ public class PublicationPoint {
         record Refuse(String cause, String geste) implements Resultat {}
     }
 
-    /// Publie `point` sur le site distant `idSite`.
-    public Resultat publier(String idSite, PointVigieChiro point) {
+    /// Publie `point` sur le site distant `idSite`, et **retient** qu'il y est.
+    ///
+    /// ⚠️ `idPointLocal` sert à cette mémoire, et à rien d'autre : sans elle, l'écran reproposerait le
+    /// geste indéfiniment. Le marquage suit la réussite - et **aussi** le cas « déjà présent », qui
+    /// constate la même vérité : le point est en ligne.
+    public Resultat publier(String idSite, PointVigieChiro point, long idPointLocal) {
+        Resultat resultat = envoyer(idSite, point);
+        if (resultat instanceof Resultat.Publie || resultat instanceof Resultat.DejaPresent) {
+            publies.marquer(idPointLocal);
+        }
+        return resultat;
+    }
+
+    private Resultat envoyer(String idSite, PointVigieChiro point) {
         Objects.requireNonNull(idSite, "idSite");
         Objects.requireNonNull(point, "point");
 

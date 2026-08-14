@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -15,6 +16,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.LocalitesDuSite;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -24,9 +26,12 @@ class PublicationPointTest {
 
     private static final String SITE = "5eb12120cbe7410011f0a97f";
     private static final PointVigieChiro Z42 = new PointVigieChiro("Z42", 43.52, 5.46);
+    /// Identifiant du point LOCAL : il ne sert qu'à retenir qu'il est en ligne.
+    private static final long ID_LOCAL = 7L;
 
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
-    private final PublicationPoint publication = new PublicationPoint(client);
+    private final PointPublieDao publies = mock(PointPublieDao.class);
+    private final PublicationPoint publication = new PublicationPoint(client, publies);
 
     @Test
     @DisplayName("#3458 : l'envoi contient les localités existantes ET la nouvelle")
@@ -35,7 +40,7 @@ class PublicationPointTest {
         when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(existantes));
         when(client.remplacerLocalites(anyString(), any())).thenReturn(ReponseApi.succes("{}"));
 
-        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42);
+        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42, ID_LOCAL);
 
         ArgumentCaptor<JsonArray> envoye = ArgumentCaptor.forClass(JsonArray.class);
         verify(client).remplacerLocalites(anyString(), envoye.capture());
@@ -57,7 +62,7 @@ class PublicationPointTest {
         when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(new LocalitesDuSite("etag-1", brutes)));
         when(client.remplacerLocalites(anyString(), any())).thenReturn(ReponseApi.succes("{}"));
 
-        publication.publier(SITE, Z42);
+        publication.publier(SITE, Z42, ID_LOCAL);
 
         ArgumentCaptor<JsonArray> envoye = ArgumentCaptor.forClass(JsonArray.class);
         verify(client).remplacerLocalites(anyString(), envoye.capture());
@@ -75,7 +80,7 @@ class PublicationPointTest {
         when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localites("etag-1")));
         when(client.remplacerLocalites(anyString(), any())).thenReturn(ReponseApi.succes("{}"));
 
-        publication.publier(SITE, Z42);
+        publication.publier(SITE, Z42, ID_LOCAL);
 
         ArgumentCaptor<JsonArray> envoye = ArgumentCaptor.forClass(JsonArray.class);
         verify(client).remplacerLocalites(anyString(), envoye.capture());
@@ -102,7 +107,7 @@ class PublicationPointTest {
                 .thenReturn(ReponseApi.succes(localites("etag-1", "Z1")))
                 .thenReturn(ReponseApi.succes(localites("etag-2", "Z1", "Z50")));
 
-        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42);
+        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42, ID_LOCAL);
 
         assertThat(resultat).isInstanceOf(PublicationPoint.Resultat.ModifieEntreTemps.class);
         verify(client, never()).remplacerLocalites(anyString(), any());
@@ -113,7 +118,7 @@ class PublicationPointTest {
     void un_point_deja_present_ne_se_republie_pas() {
         when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localites("etag-1", "Z42")));
 
-        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42);
+        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42, ID_LOCAL);
 
         assertThat(resultat).isEqualTo(new PublicationPoint.Resultat.DejaPresent("Z42"));
         verify(client, never()).remplacerLocalites(anyString(), any());
@@ -124,7 +129,7 @@ class PublicationPointTest {
     void le_refus_dit_quoi_faire() {
         when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.refuse(403, ""));
 
-        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42);
+        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42, ID_LOCAL);
 
         assertThat(resultat)
                 .asInstanceOf(
@@ -134,6 +139,41 @@ class PublicationPointTest {
                 .as("« accès refusé » n'apprend rien : la plateforme exige d'être validé sur le protocole"
                         + " du site, et c'est ça qu'il faut dire")
                 .contains("validé sur son protocole");
+    }
+
+    @Test
+    @DisplayName("#3458 : une publication réussie est RETENUE, pour ne pas reproposer le geste")
+    void une_publication_reussie_est_retenue() {
+        when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localites("etag-1")));
+        when(client.remplacerLocalites(anyString(), any())).thenReturn(ReponseApi.succes("{}"));
+
+        publication.publier(SITE, Z42, ID_LOCAL);
+
+        verify(publies).marquer(ID_LOCAL);
+    }
+
+    @Test
+    @DisplayName("#3458 : un point déjà présent est retenu AUSSI : la vérité est la même, il est en ligne")
+    void un_point_deja_present_est_retenu() {
+        when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localites("etag-1", "Z42")));
+
+        publication.publier(SITE, Z42, ID_LOCAL);
+
+        // Sans cela, un point publié depuis un autre poste - ou avant cette mémoire - se reproposerait
+        // indéfiniment, et chaque clic rendrait « déjà présent » sans que l'écran n'apprenne rien.
+        verify(publies).marquer(ID_LOCAL);
+    }
+
+    @Test
+    @DisplayName("#3458 : un refus ou un renoncement ne retient RIEN")
+    void un_echec_ne_retient_rien() {
+        when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.refuse(403, ""));
+
+        publication.publier(SITE, Z42, ID_LOCAL);
+
+        // Retenir sur un échec serait pire que ne rien retenir : l'écran annoncerait un point en ligne
+        // qui n'y est pas, et le dépôt qui s'y rattache échouerait plus tard, loin de la cause.
+        verify(publies, never()).marquer(anyLong());
     }
 
     private static LocalitesDuSite localites(String etag, String... noms) {

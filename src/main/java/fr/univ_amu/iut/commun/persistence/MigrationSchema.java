@@ -72,7 +72,8 @@ public class MigrationSchema {
         "V36__taxon_prioritaire_pna.sql",
         "V37__statut_recupere.sql",
         "V38__commune_du_point.sql",
-        "V39__echec_definitif.sql"
+        "V39__echec_definitif.sql",
+        "V40__point_publie.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";
