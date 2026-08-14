@@ -2,7 +2,6 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegionDuCarre;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -152,17 +151,6 @@ public class SiteDetailViewModel {
         suppressionPossible.set(passagesDuSite.isEmpty());
         lienPortail.set(portail.pageSite(site.id()).orElse(""));
         statutPlateforme.set(StatutPlateforme.duSite(site.id(), liens));
-    }
-
-    /// Modifie la fiche du site courant (bouton header `✏ Modifier`) puis recharge l'écran pour
-    /// refléter les nouvelles valeurs (titre, bandeau).
-    ///
-    /// @throws RegleMetierException si le carré est déjà déclaré par un autre site (refus côté
-    ///     service)
-    /// @throws IllegalArgumentException si le numéro de carré est mal formé (R1)
-    public void modifierSite(String numeroCarre, String nomConvivial, Protocole protocole, String commentaire) {
-        this.site = service.modifierSite(site.id(), numeroCarre, nomConvivial, protocole, commentaire);
-        rafraichir();
     }
 
     /// Supprime le site courant (bouton header `🗑 Supprimer`).

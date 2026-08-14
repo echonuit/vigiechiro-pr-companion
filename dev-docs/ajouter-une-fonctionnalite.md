@@ -217,6 +217,20 @@ Pour qu'un **autre** écran ouvre le vôtre **sans dépendre de votre `view`**, 
     Les deux contrats se déclarent **ensemble** : ils ne couvrent pas les mêmes écritures. Et si votre
     écran **écrit**, la règle vaut aussi dans l'autre sens : tu écris, tu signales.
 
+!!! note "Un bouton grisé, un contrôle masqué, un libellé calculé ?"
+    Ne les **posez** pas au montage. Un `setDisable(!x)` ou un `setVisible(x)` lu dans `initialize()`
+    fige la valeur de cet instant, et l'écran restant vivant dans la pile du `Navigateur`, aucune
+    reconstruction ne la reprendra. Faites porter l'état par une **propriété**, et liez le contrôle
+    (`disableProperty().bind(...)`, `VisibiliteGeree.lier(...)`), cf.
+    [Patrons › Un état de contrôle se lie](patterns.md#un-etat-de-controle-se-lie-il-ne-se-photographie-pas).
+
+    Trois exceptions **légitimes**, où le fait ne peut pas changer en cours de session : ce qui dérive
+    d'un drapeau de fonctionnalité, d'une ressource embarquée, ou ce qui vit dans une modale rebâtie à
+    chaque ouverture.
+
+    Et si le **libellé de navigation** de votre écran dérive de la donnée, il se relibelle : cf.
+    [Navigation › Un libellé dérivé de la donnée](navigation.md#un-libelle-derive-de-la-donnee-se-relibelle).
+
 ### Développer une feature derrière un flag
 
 Le champ `Categorie` de `fonctionnalite()` pilote la **désactivabilité** de la feature (cf.

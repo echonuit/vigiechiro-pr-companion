@@ -69,8 +69,14 @@ public class ReconstructionViewModel {
         this.service = Objects.requireNonNull(service, "service");
     }
 
-    /// Vrai si la reconstruction est possible dans ce contexte (connecté à VigieChiro). Faux, l'appelant
-    /// **retire** l'action plutôt que d'offrir un bouton qui échouerait.
+    /// Vrai si la reconstruction est **composée** dans cette application, c'est-à-dire si le module de
+    /// connexion est installé. Faux, l'appelant **retire** l'action plutôt que d'offrir un bouton qui
+    /// échouerait.
+    ///
+    /// ⚠️ Ce n'est **pas** un état de session : la valeur est fixée à la construction de l'injecteur et
+    /// ne bouge plus. Le mot « connecté » figurait ici et se lisait comme le contraire, au point de
+    /// faire suspecter un état photographié au montage lors du balayage #3545. C'est bien un invariant
+    /// de composition, comme un drapeau de fonctionnalité.
     public boolean disponible() {
         return service.isPresent();
     }
