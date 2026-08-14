@@ -24,6 +24,7 @@ import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -134,6 +135,7 @@ class SiteDetailViewModelTest {
     }
 
     @Test
+    @CasDeRecette("S1-18")
     @DisplayName("La fiche d'identité reprend carré, département dérivé, protocole et création")
     void fiche_identite() {
         Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, "Aix", ID_USER);
@@ -148,6 +150,7 @@ class SiteDetailViewModelTest {
     }
 
     @Test
+    @CasDeRecette("S1-20")
     @DisplayName("Les cartes de points portent l'état GPS et le compteur de passages")
     void cartes_points_gps_et_compteur() {
         Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
@@ -195,6 +198,7 @@ class SiteDetailViewModelTest {
     }
 
     @Test
+    @CasDeRecette("S1-21")
     @DisplayName("Le tableau des passages est trié du plus récent au plus ancien")
     void passages_tries_par_date_decroissante() {
         Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
@@ -217,6 +221,7 @@ class SiteDetailViewModelTest {
     }
 
     @Test
+    @CasDeRecette("S1-19")
     @DisplayName("Tant qu'un passage est rattaché, la suppression du site est impossible et refusée")
     void suppression_site_refusee_avec_passage() {
         Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);

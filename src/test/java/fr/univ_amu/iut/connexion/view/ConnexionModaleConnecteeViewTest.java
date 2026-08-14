@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
+import fr.univ_amu.iut.recette.CasDeRecette;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -73,6 +74,7 @@ class ConnexionModaleConnecteeViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-11")
     @DisplayName("#798 : « Se déconnecter » confirme avant d'effacer le jeton local")
     void deconnexion_confirme_avant_effacement(FxRobot robot) {
         List<String> demandes = new ArrayList<>();
