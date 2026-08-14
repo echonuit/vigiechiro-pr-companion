@@ -129,34 +129,101 @@ verifier_tout() {
 
 # --------------------------------------------------------------------------------------------
 
-# On NE COUPE PAS. On DIT où regarder.
+# Ne garder que les images où quelque chose est à l'écran, mesuré IMAGE PAR IMAGE (#3707).
 #
-# Trois tentatives de découpage automatique ont échoué, et surtout : le contrôle censé attraper
-# une coupe ratée a lui aussi rendu vert sur un extrait noir aux trois quarts. Les deux
-# s'appuyaient sur `blackdetect`, qui exige une durée de noir CONTINUE - or le contenu est fait
-# de fenêtres brèves entrelacées de noir, que ce filtre ne voit pas.
+# ## Pourquoi pas `blackdetect`, qui semblait fait pour ça
 #
-# Plutôt que d'empiler un troisième garde sur un instrument qui ne mesure pas la bonne chose, on
-# retire le composant : la vidéo est livrée entière, et le script ANNONCE la plage où quelque
-# chose se passe. Un fichier long mais complet, avec un repère juste, vaut mieux qu'un extrait
-# court et faux. Découper proprement demandera une mesure de luminance image par image ; c'est
-# une suite, pas un correctif.
-situer_le_contenu() {
-    local f="$1" plages duree fin_du_noir debut_du_noir
-    [ -s "$f" ] || { echo "⚠️ rien n'a été filmé"; return 1; }
-    duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$f" 2>/dev/null)
-    plages=$(ffmpeg -nostdin -loglevel info -i "$f" -vf "blackdetect=d=0.4:pic_th=0.98" \
-             -f null - 2>&1 | grep -oE "black_start:[0-9.]+ black_end:[0-9.]+")
+# Il ne rend que des plages de noir CONTINU. Or une séance de recette est faite de fenêtres
+# brèves entrelacées de noir : les tests ouvrent et ferment leur fenêtre. Trois découpages
+# fondés dessus ont échoué, et - le pire - le contrôle censé attraper une coupe ratée
+# s'appuyait sur le MÊME filtre : il était donc aveugle à la même chose que la coupe, et a
+# rendu vert sur un extrait noir aux trois quarts.
+#
+# ## La grandeur qui sépare vraiment
+#
+# `signalstats` rend une luminance moyenne par image. Mesuré sur une séance réelle :
+#
+#     908 images à 16,01   (le noir)
+#      22 images à 216-226 (l'application)
+#
+# Aucune valeur entre les deux. Le seuil est donc loin des deux modes, et insensible au
+# réglage. ⚠️ Une image noire vaut 16 et NON zéro : « différent de zéro » ne marcherait pas.
+#
+# ## Et le contrôle mesure CE QUE LA COUPE A DÉCIDÉ
+#
+# C'est la leçon de #3696 : un contrôle qui mesure autre chose que la coupe reproduit son
+# angle mort. Ici la coupe retient les images au-dessus du seuil, et le contrôle recompte,
+# sur le MONTAGE, la proportion d'images au-dessus du même seuil.
+LUMINANCE_SEUIL=50
+LUMINANCE_MARGE=0.2      # un peu avant et après : ne pas couper au ras du geste
+LUMINANCE_ECART=1.5      # deux segments plus proches que ça n'en font qu'un
 
-    if [ -z "$plages" ]; then
-        LC_NUMERIC=C printf '   contenu : sur toute la durée (%.1f s)\n' "${duree:-0}"
-        return 0
+# Rend « temps luminance » par image.
+profil_luminance() {
+    ffmpeg -nostdin -loglevel info -i "$1" \
+        -vf "signalstats,metadata=print:key=lavfi.signalstats.YAVG" -f null - 2>&1 \
+        | grep -oE "pts_time:[0-9.]+|YAVG=[0-9.]+" | paste - - \
+        | sed 's/pts_time://; s/YAVG=//'
+}
+
+# Rend la proportion d'images au-dessus du seuil, entre 0 et 1.
+part_utile() {
+    profil_luminance "$1" | awk -v s="$LUMINANCE_SEUIL" \
+        '{n++; if ($2 > s) u++} END {print (n ? u / n : 0)}'
+}
+
+couper_par_luminance() {
+    local brut="$1" sortie="$2" segments filtre part
+    [ -s "$brut" ] || { echo "⚠️ rien n'a été filmé"; return 1; }
+
+    # Les plages où la luminance dépasse le seuil, élargies puis fusionnées quand elles se
+    # touchent presque : sans cela, on obtiendrait une rafale de micro-plans hachés.
+    segments=$(profil_luminance "$brut" | awk -v s="$LUMINANCE_SEUIL" -v m="$LUMINANCE_MARGE" \
+        -v e="$LUMINANCE_ECART" '
+        $2 > s {
+            if (debut == "") { debut = $1; fin = $1; next }
+            if ($1 - fin > e) { printf "%.2f %.2f\n", (debut - m < 0 ? 0 : debut - m), fin + m; debut = $1 }
+            fin = $1
+        }
+        END { if (debut != "") printf "%.2f %.2f\n", (debut - m < 0 ? 0 : debut - m), fin + m }')
+
+    if [ -z "$segments" ]; then
+        echo "⚠️ aucune image au-dessus du seuil de luminance : le brut est conservé tel quel."
+        mv -f "$brut" "$sortie"
+        return 1
     fi
-    fin_du_noir=$(printf '%s' "$plages" | head -1 | grep -oE "black_end:[0-9.]+" | cut -d: -f2)
-    debut_du_noir=$(printf '%s' "$plages" | tail -1 | grep -oE "black_start:[0-9.]+" | cut -d: -f2)
-    LC_NUMERIC=C printf '   contenu : à regarder entre %.1f s et %.1f s (sur %.1f s filmés)\n' \
-        "${fin_du_noir:-0}" "${debut_du_noir:-$duree}" "${duree:-0}"
-    echo "   ⚠️ le noir intercalé n'est pas retiré : les tests ouvrent et ferment leur fenêtre."
+
+    filtre=$(printf '%s\n' "$segments" | awk '{printf "%sbetween(t,%s,%s)", (NR>1 ? "+" : ""), $1, $2}')
+    ffmpeg -nostdin -loglevel error -i "$brut" \
+        -vf "select='${filtre}',setpts=N/FRAME_RATE/TB" -an \
+        -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" >/dev/null 2>&1
+
+    # ⚠️ LE CONTRÔLE, sur la même grandeur que la coupe. Une coupe qui vise à côté rend un
+    # fichier COURT, donc d'apparence saine : seule cette mesure la démasque.
+    #
+    # Le seuil est à 0,6, et non plus haut, parce que 100 % est INATTEIGNABLE : le segment
+    # retenu contient lui-même du noir, aux transitions entre deux tests qui ferment et
+    # rouvrent leur fenêtre. Mesuré sur une séance réelle, marge comprise :
+    #
+    #     marge 0,0 s -> 86 %      marge 0,2 s -> 75 %
+    #     marge 0,1 s -> 80 %      marge 0,4 s -> 67 %
+    #
+    # tandis que le défaut à attraper - une coupe qui vise à côté - donnait 25 %. L'écart
+    # entre 25 % et 75 % est large : le contrôle se place dedans. Le mettre à 0,8 refuserait
+    # une marge légitime, ce qui ferait de lui un garde qui crie sur du bon travail, et donc
+    # un garde qu'on apprendrait à ignorer.
+    part=$(part_utile "$sortie")
+    if awk -v p="$part" 'BEGIN{exit !(p < 0.6)}'; then
+        echo "⚠️ la coupe a visé à côté : seules $(awk -v p="$part" 'BEGIN{printf "%.0f", p*100}') % des"
+        echo "   images retenues sont au-dessus du seuil. Le brut est conservé tel quel."
+        mv -f "$brut" "$sortie"
+        return 1
+    fi
+
+    rm -f "$brut"
+    LC_NUMERIC=C printf '   coupe : %d segment(s), %.0f %% des images retenues sont utiles\n' \
+        "$(printf '%s\n' "$segments" | wc -l)" "$(awk -v p="$part" 'BEGIN{print p*100}')"
+    return 0
 }
 
 lancer() {
@@ -194,12 +261,13 @@ lancer() {
     # annoncée par le fichier est juste - ce qu'aucun `kill` n'a donné.
     # Corollaire : pas de `-nostdin`, puisque c'est justement par là qu'on lui parle. Le tube
     # reste ouvert côté écrivain (fd 3), sans quoi ffmpeg lirait EOF et s'arrêterait aussitôt.
+    local brut="${sortie%.mkv}-brut.mkv"
     local tube="${sortie}.tube"
     rm -f "$tube"; mkfifo "$tube"
 
     ffmpeg -loglevel error -f x11grab -framerate 10 -video_size "${TAILLE%x*}" \
         -i "$ECRAN" -t 900 -c:v libx264 -preset ultrafast -crf 26 -g 20 -flush_packets 1 \
-        -pix_fmt yuv420p -y "$sortie" < "$tube" >/dev/null 2>&1 &
+        -pix_fmt yuv420p -y "$brut" < "$tube" >/dev/null 2>&1 &
     local film=$!
     exec 3> "$tube"
 
@@ -212,7 +280,7 @@ lancer() {
     wait "$film" 2>/dev/null
     rm -f "$tube"
 
-    situer_le_contenu "$sortie"
+    couper_par_luminance "$brut" "$sortie"
 
     local duree=0
     [ -s "$sortie" ] && duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$sortie" 2>/dev/null)
@@ -244,6 +312,8 @@ auto_test() {
         fi
     }
 
+    export -f part_utile profil_luminance couper_par_luminance
+    export LUMINANCE_SEUIL LUMINANCE_MARGE LUMINANCE_ECART
     echo "AUTO-TEST"
 
     # --- le profil, sur des poms fabriqués ---
@@ -275,6 +345,19 @@ auto_test() {
     essai "écran AVEC gestionnaire de fenêtres" vert  verifier_pointeur :92
     essai "écran SANS gestionnaire de fenêtres" rouge verifier_pointeur :91
     essai "écran inexistant"                    rouge verifier_pointeur :77
+
+    # --- la coupe par luminance, sur des vidéos FABRIQUÉES dont on connaît le contenu ---
+    ffmpeg -nostdin -loglevel error -f lavfi -i color=black:s=320x240:r=10 -t 3 \
+        -c:v libx264 -preset ultrafast -pix_fmt yuv420p -y "$tmp/noir.mkv" >/dev/null 2>&1
+    ffmpeg -nostdin -loglevel error -f lavfi -i color=white:s=320x240:r=10 -t 3 \
+        -c:v libx264 -preset ultrafast -pix_fmt yuv420p -y "$tmp/blanc.mkv" >/dev/null 2>&1
+
+    essai "une vidéo entièrement noire n'a rien d'utile" rouge \
+        bash -c 'p=$(part_utile "$1"); awk -v p="$p" "BEGIN{exit !(p > 0.5)}"' _ "$tmp/noir.mkv"
+    essai "une vidéo entièrement claire est utile"       vert  \
+        bash -c 'p=$(part_utile "$1"); awk -v p="$p" "BEGIN{exit !(p > 0.5)}"' _ "$tmp/blanc.mkv"
+    essai "couper une vidéo noire est REFUSÉ"            rouge \
+        bash -c 'cp "$1" "$2"; couper_par_luminance "$2" "$3"' _ "$tmp/noir.mkv" "$tmp/n2.mkv" "$tmp/n3.mkv"
 
     kill "$nu" "$avec" "$wm" 2>/dev/null
 
