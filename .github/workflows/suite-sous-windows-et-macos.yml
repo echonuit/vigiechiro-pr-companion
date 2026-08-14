@@ -11,7 +11,23 @@
 name: Suite complète sous Windows et macOS
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      classes:
+        description: "Classes à éprouver (vide = toute la suite). Ex : VerrouWorkspaceTest,CliTest"
+        required: false
+        type: string
+        default: ""
+      plateformes:
+        description: "Où l'éprouver"
+        required: false
+        type: choice
+        default: "les deux"
+        options:
+          - "les deux"
+          - "windows seulement"
+          - "macos seulement"
+
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,12 +37,33 @@ permissions:
   contents: read
 
 jobs:
+  # ⚠️ La matrice se calcule, elle ne se filtre pas. Un `if:` sur les étapes laisserait le job démarrer
+  # pour ne rien faire - une machine allumée, un artefact vide, et une pastille verte qui ne dit pas si
+  # la plateforme a été éprouvée ou seulement visitée.
+  choisir:
+    runs-on: ubuntu-latest
+    outputs:
+      matrice: ${{ steps.calcul.outputs.matrice }}
+    steps:
+      - name: Sur quelles plateformes ?
+        id: calcul
+        shell: bash
+        run: |
+          case "${{ inputs.plateformes }}" in
+            "windows seulement") matrice='["windows-latest"]' ;;
+            "macos seulement")   matrice='["macos-latest"]' ;;
+            *)                   matrice='["windows-latest","macos-latest"]' ;;
+          esac
+          echo "matrice=${matrice}" >> "${GITHUB_OUTPUT}"
+          echo "Plateformes retenues : ${matrice}" >> "${GITHUB_STEP_SUMMARY}"
+
   denombrer:
     name: denombrer (${{ matrix.os }})
+    needs: choisir
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, macos-latest]
+        os: ${{ fromJSON(needs.choisir.outputs.matrice) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
     steps:
@@ -42,15 +79,29 @@ jobs:
 
       # ⚠️ `failure.ignore` : on veut le DÉNOMBREMENT, pas le premier échec. Sans lui la suite
       # s'arrête et ne rend qu'une moitié de compte rendu, c'est-à-dire aucun.
-      - name: Lancer toute la suite, sans s'arrêter au premier rouge
+      # ⚠️ `-Dtest=` seulement quand des classes sont demandées : passer `-Dtest=` vide ne veut pas dire
+      # « tout » pour surefire, il n'exécute alors plus rien. Le DÉFAUT reste la suite entière - c'est
+      # lui que l'étape 3 de #3526 programmera, et une valeur par défaut qui rétrécit sans le dire
+      # serait la pire des économies.
+      - name: Lancer la suite, sans s'arrêter au premier rouge
         shell: bash
-        run: ./mvnw -B test --file pom.xml -Dglass.platform=Headless -Dmaven.test.failure.ignore=true
+        env:
+          CLASSES: ${{ inputs.classes }}
+        run: |
+          if [ -n "${CLASSES}" ]; then
+            ./mvnw -B test --file pom.xml -Dglass.platform=Headless -Dmaven.test.failure.ignore=true \
+              -Dtest="${CLASSES}" -Dsurefire.failIfNoSpecifiedTests=false
+          else
+            ./mvnw -B test --file pom.xml -Dglass.platform=Headless -Dmaven.test.failure.ignore=true
+          fi
 
       # `always()` : c'est justement quand la suite s'est mal passée qu'on veut le tri. Une étape de
       # compte rendu qui ne tourne qu'au vert ne rend compte de rien.
       - name: Trier les échecs, TestFX à part
         if: always()
         shell: bash
+        env:
+          CLASSES: ${{ inputs.classes }}
         run: ./.github/scripts/trie-les-echecs-de-plateforme.sh
 
       - name: Conserver les rapports, pour trier plus finement si le compte surprend
