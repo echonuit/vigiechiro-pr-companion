@@ -1,8 +1,6 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
-import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
-import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegionDuCarre;
@@ -15,7 +13,6 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -61,12 +58,9 @@ public class SiteDetailViewModel {
     /// Correspondances VigieChiro : elles disent si ce site est enregistré, et s'il est verrouillé (#734).
     private final LienVigieChiroDao liens;
 
-    /// Mémoire des points **poussés vers** la plateforme (#3458), lue une fois par rafraîchissement.
-    private final PointPublieDao publies;
-
-    /// Publication d'un point (#3458). `Optional` **vide** hors de l'application complète (injecteurs de
-    /// capture, tests) : la fiche n'offre alors simplement pas le geste, patron de `ControleCarreStoc`.
-    private final Optional<PublicationPoint> publication;
+    /// Publication d'un point vers la plateforme (#3458) : ses empêchements, sa mémoire, son
+    /// déclenchement. Extraite d'ici, où elle faisait franchir le seuil God-class.
+    private final PublicationDepuisLaFiche publication;
 
     private Site site;
 
@@ -109,14 +103,12 @@ public class SiteDetailViewModel {
             Horloge horloge,
             PortailVigieChiro portail,
             LienVigieChiroDao liens,
-            PointPublieDao publies,
-            Optional<PublicationPoint> publication) {
+            PublicationDepuisLaFiche publication) {
         this.service = Objects.requireNonNull(service, "service");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.portail = Objects.requireNonNull(portail, "portail");
         this.liens = Objects.requireNonNull(liens, "liens");
-        this.publies = Objects.requireNonNull(publies, "publies");
         this.publication = Objects.requireNonNull(publication, "publication");
         // La bascule d'affichage re-projette la liste (points utilisés seuls <-> tous), #1738.
         afficherTousLesPoints.addListener((observable, avant, apres) -> projeterPoints());
@@ -201,66 +193,19 @@ public class SiteDetailViewModel {
         rafraichir();
     }
 
-    /// La publication d'un point est-elle **installée** ? Faux hors de l'application complète : la fiche
-    /// n'affiche alors aucune action « Publier », comme elle masque « Importer une nuit » quand la feature
-    /// d'importation est absente (#1087).
+    /// Cf. [PublicationDepuisLaFiche#installee()].
     public boolean publicationInstallee() {
-        return publication.isPresent();
+        return publication.installee();
     }
 
-    /// Ce qui **empêche** de publier cette carte, ou vide si le geste est possible (#3458). La chaîne
-    /// rendue est l'explication du gris : elle dit quoi faire, pas seulement ce qui manque.
-    ///
-    /// Les motifs sont énumérés dans l'ordre où ils bloquent le chemin de l'utilisateur : se connecter,
-    /// puis déclarer le carré, puis placer le point.
-    ///
-    /// ⚠️ **Le verrouillage n'en fait pas partie**, alors que c'est lui qui refusera le propriétaire.
-    /// Voir [PublicationPoint#connecte()] : la plateforme accepte le participant validé sur un carré
-    /// verrouillé, et Companion ne sait pas lequel des deux cas est le sien. Griser ici mentirait à la
-    /// moitié des utilisateurs ; le refus est donc rendu compte, pas prédit.
+    /// Cf. [PublicationDepuisLaFiche#empechement(long, CartePoint)].
     public Optional<String> empechementPublication(CartePoint carte) {
-        Objects.requireNonNull(carte, "carte");
-        if (publication.isEmpty()) {
-            return Optional.of("La publication vers Vigie-Chiro n'est pas disponible.");
-        }
-        if (!publication.get().connecte()) {
-            return Optional.of("Connectez-vous à Vigie-Chiro pour publier ce point.");
-        }
-        if (objectidDuSite().isEmpty()) {
-            return Optional.of("Ce carré n'est pas encore enregistré sur Vigie-Chiro."
-                    + " Déclarez-le sur la plateforme avant d'y ajouter des points.");
-        }
-        if (!carte.gpsPresent()) {
-            return Optional.of("Ce point n'a pas de coordonnées, et une localité Vigie-Chiro en exige."
-                    + " Placez-le sur la carte avant de le publier.");
-        }
-        return Optional.empty();
+        return publication.empechement(site.id(), carte);
     }
 
-    /// Publie ce point sur la plateforme et retient qu'il y est (#3458).
-    ///
-    /// **Bloquant** (réseau) : à appeler hors du fil JavaFX. Ne touche aucune propriété observable et ne
-    /// rafraîchit pas : l'appelant le fait au retour, sur le fil JavaFX.
-    ///
-    /// @throws IllegalStateException si le geste n'était pas possible ; la vue le gate par
-    ///     [#empechementPublication(CartePoint)], et l'appeler quand même est une faute de câblage
+    /// Cf. [PublicationDepuisLaFiche#publier(long, CartePoint)]. **Bloquant** : hors du fil JavaFX.
     public PublicationPoint.Resultat publier(CartePoint carte) {
-        Objects.requireNonNull(carte, "carte");
-        empechementPublication(carte).ifPresent(motif -> {
-            throw new IllegalStateException("Publication impossible : " + motif);
-        });
-        PointDEcoute point = carte.point();
-        return publication
-                .orElseThrow()
-                .publier(
-                        objectidDuSite().orElseThrow(),
-                        new PointVigieChiro(point.code(), point.latitude(), point.longitude()),
-                        point.id());
-    }
-
-    /// `_id` VigieChiro du site courant, s'il est relié.
-    private Optional<String> objectidDuSite() {
-        return liens.objectidPour(LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()));
+        return publication.publier(site.id(), carte);
     }
 
     public ReadOnlyStringProperty titreProperty() {
@@ -326,7 +271,7 @@ public class SiteDetailViewModel {
     private void mettreAJourCartesPoints(List<PointDEcoute> pointsDuSite) {
         // Une seule lecture pour tout le site (#3458) : une requête par carte ferait N requêtes pour
         // afficher un écran qui n'en demande qu'une.
-        Set<Long> dejaPublies = Set.copyOf(publies.parSite(site.id()));
+        Set<Long> dejaPublies = publication.publiesDuSite(site.id());
         List<CartePoint> cartes = new ArrayList<>();
         for (PointDEcoute point : pointsDuSite) {
             Double distanceProche = ProximitePoints.distanceAuPlusProche(point, pointsDuSite);

@@ -45,6 +45,7 @@ import fr.univ_amu.iut.sites.view.NavigationSites;
 import fr.univ_amu.iut.sites.viewmodel.IndicateurPoints;
 import fr.univ_amu.iut.sites.viewmodel.IndicateurSites;
 import fr.univ_amu.iut.sites.viewmodel.PointEditViewModel;
+import fr.univ_amu.iut.sites.viewmodel.PublicationDepuisLaFiche;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
@@ -262,6 +263,15 @@ public class SitesModule extends ModuleDeFeature {
         return new PointPublieDao(source);
     }
 
+    /// Publication d'un point depuis la fiche site (#3458). `Optional` **vide** hors de l'application
+    /// complète : `PublicationPointModule` n'y est pas chargé, et la fiche n'offre pas le geste.
+    @Provides
+    @Singleton
+    PublicationDepuisLaFiche fournirPublicationDepuisLaFiche(
+            PointPublieDao publies, LienVigieChiroDao liens, Optional<PublicationPoint> publication) {
+        return new PublicationDepuisLaFiche(publies, liens, publication);
+    }
+
     @Provides
     SiteDetailViewModel fournirSiteDetailViewModel(
             ServiceSites service,
@@ -269,9 +279,8 @@ public class SitesModule extends ModuleDeFeature {
             Horloge horloge,
             PortailVigieChiro portail,
             LienVigieChiroDao liens,
-            PointPublieDao publies,
-            Optional<PublicationPoint> publication) {
-        return new SiteDetailViewModel(service, passageDao, horloge, portail, liens, publies, publication);
+            PublicationDepuisLaFiche publication) {
+        return new SiteDetailViewModel(service, passageDao, horloge, portail, liens, publication);
     }
 
     @Provides

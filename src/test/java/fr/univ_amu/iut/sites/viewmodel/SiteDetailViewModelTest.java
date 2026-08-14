@@ -77,7 +77,12 @@ class SiteDetailViewModelTest {
     /// ViewModel muni (ou non) de la publication de points (#3458).
     private SiteDetailViewModel avecPublication(Optional<PublicationPoint> publication) {
         return new SiteDetailViewModel(
-                service, passageDao, horloge, new PortailVigieChiro(liens), liens, publies, publication);
+                service,
+                passageDao,
+                horloge,
+                new PortailVigieChiro(liens),
+                liens,
+                new PublicationDepuisLaFiche(publies, liens, publication));
     }
 
     /// Publication réelle, branchée sur un fournisseur de jeton contrôlé : `null` simule « pas connecté ».

@@ -153,6 +153,19 @@ Vigie-Chiro » sur l'écran Mes sites).
   point. Chaque carte indique aussi la **distance au point le plus proche** du site ; si deux points sont
   **anormalement rapprochés** (sous le seuil de protocole), une **icône d'avertissement** le signale, pour
   repérer une saisie GPS erronée ou des points trop serrés.
+- **Publier un point sur Vigie-Chiro** : sur un point que **vous** avez créé, le lien
+  **« Publier sur Vigie-Chiro »** l'ajoute aux points du carré sur la plateforme, sans toucher à ceux
+  qui y sont déjà. Une fois le point en ligne, la carte l'indique par **« Publié sur Vigie-Chiro »** et
+  ne repropose plus le geste. Les points **rapatriés** de la plateforme, eux, ne l'affichent pas : ils y
+  sont déjà. Le lien reste **grisé**, avec son motif, tant que vous n'êtes pas connecté, que le carré
+  n'est pas enregistré sur la plateforme, ou que le point n'a pas de coordonnées.
+
+    !!! note "Si la plateforme refuse"
+        Vigie-Chiro peut refuser l'ajout, et Companion ne peut pas le prévoir. Deux raisons : le carré
+        est **le vôtre et déjà verrouillé** (un carré verrouillé est figé, seul un administrateur
+        Vigie-Chiro peut le rouvrir), ou il appartient à **quelqu'un d'autre** et vous n'êtes pas
+        validé sur son protocole. Le message vous dit laquelle vérifier. Dans les deux cas, **rien
+        n'est modifié** sur la plateforme.
 - **Passages enregistrés** : un tableau récapitulant, pour chaque nuit, sa date, son point, son
   numéro, son **statut** (Transformé, Vérifié, Déposé...), son **verdict** et son enregistreur.
 
