@@ -303,13 +303,13 @@ class PointEditViewModelTest {
     void la_case_publier_ne_s_offre_qu_a_la_creation() {
         PointEditViewModel vm = avecPublication();
         vm.preparerCreation(site);
-        assertThat(vm.publicationOfferteProperty().get()).isTrue();
+        assertThat(vm.publication().offerteProperty().get()).isTrue();
 
         PointDEcoute existant = service.ajouterPoint(site.id(), "A1", 43.5, 5.4, null);
         vm.preparerEdition(site, existant);
 
         // La carte du point porte déjà l'action : deux chemins pour un même geste finissent par diverger.
-        assertThat(vm.publicationOfferteProperty().get()).isFalse();
+        assertThat(vm.publication().offerteProperty().get()).isFalse();
     }
 
     @Test
@@ -321,15 +321,15 @@ class PointEditViewModelTest {
         vm.codeProperty().set("A1");
         vm.latitudeProperty().set("43.52");
         vm.longitudeProperty().set("5.46");
-        assertThat(vm.empechementPublicationProperty().get()).isEmpty();
+        assertThat(vm.publication().empechementProperty().get()).isEmpty();
 
-        vm.publierEnsuiteProperty().set(true);
+        vm.publication().demandeeProperty().set(true);
         vm.longitudeProperty().set("");
 
         // Laisser la case cochée sous un contrôle désactivé donnerait à lire une intention qui ne
         // partira pas. La décocher est visible ; le silence ne le serait pas.
-        assertThat(vm.publierEnsuiteProperty().get()).isFalse();
-        assertThat(vm.empechementPublicationProperty().get()).contains("coordonnées");
+        assertThat(vm.publication().demandeeProperty().get()).isFalse();
+        assertThat(vm.publication().empechementProperty().get()).contains("coordonnées");
         assertThat(vm.pointAPublier()).isEmpty();
     }
 
@@ -341,7 +341,7 @@ class PointEditViewModelTest {
         vm.latitudeProperty().set("43.52");
         vm.longitudeProperty().set("5.46");
 
-        assertThat(vm.empechementPublicationProperty().get()).contains("pas encore enregistré");
+        assertThat(vm.publication().empechementProperty().get()).contains("pas encore enregistré");
     }
 
     @Test
@@ -353,7 +353,7 @@ class PointEditViewModelTest {
         vm.codeProperty().set("A1");
         vm.latitudeProperty().set("43.52");
         vm.longitudeProperty().set("5.46");
-        vm.publierEnsuiteProperty().set(true);
+        vm.publication().demandeeProperty().set(true);
 
         assertThat(vm.enregistrer()).isTrue();
 
@@ -393,7 +393,7 @@ class PointEditViewModelTest {
         vm.codeProperty().set("A1");
         vm.latitudeProperty().set("43.52");
         vm.longitudeProperty().set("5.46");
-        vm.publierEnsuiteProperty().set(true);
+        vm.publication().demandeeProperty().set(true);
         assertThat(vm.enregistrer()).isTrue();
 
         // Le carré cesse d'être relié APRÈS que la case a été cochée, et sans qu'aucun champ ne bouge :

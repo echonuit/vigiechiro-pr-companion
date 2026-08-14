@@ -151,17 +151,17 @@ public class ModalePointController {
                         .otherwise("Corrigez d'abord les champs signalés en rouge (code, latitude, longitude)."));
         // Publier après l'enregistrement (#3458). La case n'existe qu'en création, et se grise avec son
         // motif dès qu'un obstacle apparaît - typiquement les coordonnées effacées après l'avoir cochée.
-        chkPublier.selectedProperty().bindBidirectional(viewModel.publierEnsuiteProperty());
+        chkPublier.selectedProperty().bindBidirectional(viewModel.publication().demandeeProperty());
         chkPublier
                 .disableProperty()
-                .bind(viewModel.empechementPublicationProperty().isNotEmpty());
-        enveloppePublier.visibleProperty().bind(viewModel.publicationOfferteProperty());
+                .bind(viewModel.publication().empechementProperty().isNotEmpty());
+        enveloppePublier.visibleProperty().bind(viewModel.publication().offerteProperty());
         enveloppePublier.managedProperty().bind(enveloppePublier.visibleProperty());
         IndicateurBlocage.expliquer(
                 enveloppePublier,
-                Bindings.when(viewModel.empechementPublicationProperty().isEmpty())
+                Bindings.when(viewModel.publication().empechementProperty().isEmpty())
                         .then("Ajouter ce point aux localités du carré sur Vigie-Chiro dès son enregistrement.")
-                        .otherwise(viewModel.empechementPublicationProperty()));
+                        .otherwise(viewModel.publication().empechementProperty()));
         // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « messageErreur » et ne pouvait
         // donc rien porter d'autre qu'un échec ; la sévérité vit maintenant dans la valeur.
         BandeauRetour.installer(

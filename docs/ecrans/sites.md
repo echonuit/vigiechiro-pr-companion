@@ -160,6 +160,11 @@ Vigie-Chiro » sur l'écran Mes sites).
   sont déjà. Le lien reste **grisé**, avec son motif, tant que vous n'êtes pas connecté, que le carré
   n'est pas enregistré sur la plateforme, ou que le point n'a pas de coordonnées.
 
+    Au moment où vous **créez** un point, la fenêtre propose de le publier dans la foulée : cochez
+    **« Publier ce point sur Vigie-Chiro après l'enregistrement »**. La case reste grisée, avec son
+    motif, tant que le geste n'est pas possible ; si vous effacez les coordonnées après l'avoir cochée,
+    elle se décoche. Le compte rendu s'affiche sur la fiche du carré, une fois la fenêtre refermée.
+
     !!! warning "Si un point du même code existe déjà, ailleurs"
         Vigie-Chiro n'accepte qu'un seul point par code sur un carré. Si un point porte déjà ce code
         **à une autre position**, Companion ne publie rien et vous dit à quelle distance il se trouve.
