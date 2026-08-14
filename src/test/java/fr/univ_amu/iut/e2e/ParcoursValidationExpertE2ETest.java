@@ -35,6 +35,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -112,11 +114,14 @@ class ParcoursValidationExpertE2ETest {
 
     @Test
     @DisplayName("#1417 : l'expert a contredit l'observateur, l'écran le MONTRE, et donne sa discussion à lire")
-    void le_troisieme_avis_arrive_jusqu_a_l_ecran(FxRobot robot) {
-        WaitForAsyncUtils.waitForFxEvents();
-
+    void le_troisieme_avis_arrive_jusqu_a_l_ecran(FxRobot robot) throws TimeoutException {
         TableView<LigneObservationAudio> table =
                 robot.lookup("#tableObservations").queryAs(TableView.class);
+        // L'ouverture (controleur.ouvrirSur, dans @Start) charge la table hors du fil JavaFX
+        // (occupation.occuper) : `waitForFxEvents` ne fait que vider la file du fil FX, il n'attend pas
+        // ce thread en tache de fond. Sans cette attente, la table est encore vide quand l'assertion
+        // tombe, un échec qui ne se produit que sur une machine lente, donc en CI.
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !table.getItems().isEmpty());
         assertThat(table.getItems())
                 .as("l'import a bien ramené l'observation de la plateforme")
                 .isNotEmpty();

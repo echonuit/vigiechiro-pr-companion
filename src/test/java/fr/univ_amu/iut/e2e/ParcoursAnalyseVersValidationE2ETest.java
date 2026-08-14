@@ -24,6 +24,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -37,6 +39,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours** : depuis la vue transverse **« Espèces & observations »** (`analyse`), on
 /// sélectionne une espèce puis une de ses détections et on déclenche **« Écouter / valider »** ; le
@@ -76,16 +79,21 @@ class ParcoursAnalyseVersValidationE2ETest {
 
     @Test
     @DisplayName("Analyse → « Écouter / valider » ouvre la vue audio pré-focalisée sur l'observation")
-    void analyse_ecouter_ouvre_la_validation_ciblee(FxRobot robot) {
+    void analyse_ecouter_ouvre_la_validation_ciblee(FxRobot robot) throws TimeoutException {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
 
-        // 1) Ouvrir l'écran transverse (navigation socle réelle).
+        // 1) Ouvrir l'écran transverse (navigation socle réelle). L'inventaire est chargé hors du fil
+        // JavaFX (AnalyseController.chargerObservations, occupation.occuper) : sans cette attente, la
+        // table est encore vide quand l'assertion tombe, un échec qui ne se produit que sur une machine
+        // lente, donc en CI.
         robot.interact(() -> injector.getInstance(NavigationAnalyse.class).ouvrir());
         assertThat(navigation.getVueCourante()).isEqualTo("analyse");
-
-        // 2) Sélectionner l'espèce → son détail liste l'observation seedée.
         TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !especes.getItems().isEmpty());
         assertThat(especes.getItems()).hasSize(1);
+
+        // 2) Sélectionner l'espèce → son détail liste l'observation seedée (chargé en direct sur le fil
+        // JavaFX par le listener de sélection, donc synchrone : pas d'attente nécessaire ici).
         robot.interact(() -> especes.getSelectionModel().select(0));
         TableView<?> observations = robot.lookup("#tableObservations").queryAs(TableView.class);
         assertThat(observations.getItems()).hasSize(1);
@@ -94,9 +102,13 @@ class ParcoursAnalyseVersValidationE2ETest {
         robot.interact(() -> observations.getSelectionModel().select(0));
         robot.interact(robot.lookup("#boutonEcouter").queryAs(Button.class)::fire);
 
-        // 4) On est sur la vue audio unifiée, pré-focalisée sur la bonne observation.
+        // 4) On est sur la vue audio unifiée, pré-focalisée sur la bonne observation. L'ouverture
+        // (SonsValidationController.ouvrirSur) est elle aussi asynchrone (occupation.occuper) : la
+        // sélection de la ligne cible n'est posée que dans le callback de succès.
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
         TableView<?> tableValidation = robot.lookup("#tableObservations").queryAs(TableView.class);
+        WaitForAsyncUtils.waitFor(
+                5, TimeUnit.SECONDS, () -> tableValidation.getSelectionModel().getSelectedItem() != null);
         Object selection = tableValidation.getSelectionModel().getSelectedItem();
         assertThat(selection).isInstanceOf(LigneObservationAudio.class);
         assertThat(((LigneObservationAudio) selection).idObservation()).isEqualTo(idObservation);
