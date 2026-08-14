@@ -1,0 +1,62 @@
+# Que donne la suite ENTIÈRE sous Windows et macOS ? Personne ne le sait : elle n'y a jamais tourné.
+#
+# Ce workflow ne programme rien et ne bloque rien. Il **compte**, et c'est tout ce qu'on lui demande
+# pour l'instant (étape 1 de #3526). Les étapes suivantes - rendre les fixtures portables, programmer
+# l'exécution, brancher le train de publication - dépendent toutes du chiffre qu'il produit, et les
+# décider avant de l'avoir serait décider sans savoir.
+#
+# ⚠️ Manuel, et délibérément. Un `schedule` posé aujourd'hui rougirait dès sa première nuit sur du
+# bruit de fixture probable, et un dispositif qui commence par du bruit ne se relit plus jamais - il
+# devient un onglet qu'on ferme.
+name: Suite complète sous Windows et macOS
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  denombrer:
+    name: denombrer (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      # ⚠️ `failure.ignore` : on veut le DÉNOMBREMENT, pas le premier échec. Sans lui la suite
+      # s'arrête et ne rend qu'une moitié de compte rendu, c'est-à-dire aucun.
+      - name: Lancer toute la suite, sans s'arrêter au premier rouge
+        shell: bash
+        run: ./mvnw -B test --file pom.xml -Dglass.platform=Headless -Dmaven.test.failure.ignore=true
+
+      # `always()` : c'est justement quand la suite s'est mal passée qu'on veut le tri. Une étape de
+      # compte rendu qui ne tourne qu'au vert ne rend compte de rien.
+      - name: Trier les échecs, TestFX à part
+        if: always()
+        shell: bash
+        run: ./.github/scripts/trie-les-echecs-de-plateforme.sh
+
+      - name: Conserver les rapports, pour trier plus finement si le compte surprend
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: rapports-${{ matrix.os }}
+          path: target/surefire-reports/
+          retention-days: 14
