@@ -271,6 +271,13 @@ lancer() {
     local film=$!
     exec 3> "$tube"
 
+    # Le journal de repères (#3774) s'écrit en AJOUT, pour survivre à une séance interrompue. Il
+    # doit donc être retiré AVANT celle-ci, sans quoi deux séances successives mêleraient leurs
+    # instants dans le même fichier - et le montage taillerait des extraits dans le film
+    # d'aujourd'hui à des positions calculées sur celui d'hier. Un tel extrait s'ouvre, montre une
+    # interface, et ne montre pas le bon geste : rien ne le signalerait.
+    rm -f "$RACINE/target/recette-filmee/reperes.tsv"
+
     ( cd "$RACINE" && DISPLAY="$ECRAN" ./mvnw -B test -Precette-filmee \
         -Dtest="$classe" -DfailIfNoSpecifiedTests=false )
     local code=$?

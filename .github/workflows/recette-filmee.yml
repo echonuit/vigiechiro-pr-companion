@@ -94,12 +94,18 @@ jobs:
           [ "$verdict" = "vert" ] || { echo "::error::Le lancement filmé a échoué."; exit 1; }
           echo "Le runner pilote : les cinq conditions sont réunies et le test a tourné filmé."
 
-      - name: Conserver la vidéo
+      - name: Conserver la vidéo et les repères
         if: always() && inputs.sans_gestionnaire_de_fenetres != true
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: recette-filmee-${{ inputs.classe }}
-          path: target/recette/*.mkv
+          # Le journal de repères part avec le film (#3774). Sans lui, la vidéo est un bloc dont
+          # personne ne saura où regarder pour trancher un cas donné - et surtout, il est le seul
+          # moyen de constater DEPUIS LA CI que l'extension a bien été chargée : un journal absent
+          # ou vide dit que le câblage a lâché, là où le film, lui, sortirait pareil.
+          path: |
+            target/recette/*.mkv
+            target/recette-filmee/reperes.tsv
           # Rétention bornée, décidée en séance : la vidéo se revoit un temps, puis s'efface.
           # Rien ne part dans git.
           retention-days: 14
