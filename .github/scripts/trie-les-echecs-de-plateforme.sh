@@ -69,7 +69,14 @@ read -r cre ere rre <<< "$(compte reste)"
     echo "| Le reste | ${cre} | **${ere}** | **${rre}** |"
     echo
     if [ $((efx + rfx + ere + rre)) -eq 0 ]; then
-        echo "**Aucun échec.** La suite passe telle quelle sur cette plateforme."
+        # ⚠️ La conclusion suit le PÉRIMÈTRE. Dire « la suite passe » après un passage ciblé
+        # contredisait l'en-tête posé trois lignes plus haut - et c'était la moitié rassurante de la
+        # contradiction, donc celle qu'on retient. Vu sur la première utilisation réelle de l'outil.
+        if [ -n "${CLASSES:-}" ]; then
+            echo "**Aucun échec** sur les classes demandées. Le reste de la suite n'a pas été exécuté."
+        else
+            echo "**Aucun échec.** La suite passe telle quelle sur cette plateforme."
+        fi
     else
         echo "#### Les classes en cause"
         echo
