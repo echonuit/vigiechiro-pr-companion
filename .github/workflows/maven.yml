@@ -375,3 +375,49 @@ jobs:
         run: |
           chmod +x .github/scripts/mesure-duree-portail.sh
           ./.github/scripts/mesure-duree-portail.sh "${{ github.repository }}" maven.yml
+
+  # Le contrat de SYSTÈME DE FICHIERS sur les trois plateformes livrées (#3525). Le produit part en
+  # MSI, DMG et DEB ; ses tests ne tournaient que sous Linux - 21 jobs contre un, et ce dernier lance
+  # `msiexec`, pas la suite. Le premier contact du code avec Windows avait donc lieu APRÈS la fusion.
+  #
+  # ⚠️ Ciblé, et non la suite entière : le gate dure onze minutes, et les minutes Windows coûtent le
+  # double, macOS dix fois. Ce qui mérite les trois plateformes, c'est ce qui touche le disque -
+  # renommage atomique, verrou, ZIP, copie entre volumes, emplacement de la configuration -, pas l'IHM
+  # ni le domaine.
+  #
+  # ⚠️ Il s'exécute sur CHAQUE PR et décide lui-même s'il a quelque chose à vérifier. Un filtre
+  # `paths:` l'aurait rendu ABSENT du récapitulatif la plupart du temps - et dans un dépôt sans
+  # protection de branche, un job absent se lit exactement comme un job vert (ADR 2748). Ici son
+  # silence est explicite : il le dit et il finit vert.
+  contrat-fichiers:
+    name: contrat-fichiers (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      - name: Ce diff touche-t-il le contrat de système de fichiers ?
+        id: portee
+        shell: bash
+        run: ./.github/scripts/porte-sur-le-contrat-de-fichiers.sh
+
+      - name: Le contrat tient-il sur cette plateforme ?
+        if: steps.portee.outputs.concerne == 'oui'
+        shell: bash
+        run: |
+          ./mvnw -B test --file pom.xml -Dglass.platform=Headless \
+            -Dsurefire.forkCount=1 \
+            -Dtest='EcritureAtomiqueTest,VerrouWorkspaceTest,ExtracteurZipTest,ExtracteurZipQuotasTest,BornesExtractionTest,RestaurationCompleteTest,ArborescenceFichiersTest,ConfigurationAmorcageTest'

@@ -6,10 +6,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.TailleFichier;
 import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -34,13 +37,13 @@ class ArborescenceFichiersTest {
     void efface_au_mieux_rend_ce_qui_resiste() throws IOException {
         Path verrouille = arborescenceQuiResiste();
 
-        List<ArborescenceFichiers.EchecEffacement> restants = ArborescenceFichiers.effacerAuMieux(verrouille);
+        List<ArborescenceFichiers.EchecEffacement> restants =
+                ArborescenceFichiers.effacerAuMieux(verrouille, suppressionQuiResiste(verrouille));
 
         assertThat(restants)
                 .as("un nettoyage de temporaire ne doit pas transformer une opération réussie en échec,"
                         + " mais se taire laisserait l'appelant sans rien à dire")
                 .isNotEmpty();
-        rendreEffacable(verrouille);
     }
 
     @Test
@@ -53,15 +56,14 @@ class ArborescenceFichiersTest {
         Path libre = Files.writeString(melange.resolve("libre.txt"), "effaçable");
         Path verrou = Files.createDirectories(melange.resolve("verrou"));
         Files.writeString(verrou.resolve("tenu.txt"), "ne s'en va pas");
-        assertThat(verrou.toFile().setWritable(false)).isTrue();
 
-        List<ArborescenceFichiers.EchecEffacement> restants = ArborescenceFichiers.effacerAuMieux(melange);
+        List<ArborescenceFichiers.EchecEffacement> restants =
+                ArborescenceFichiers.effacerAuMieux(melange, suppressionQuiResiste(verrou));
 
         assertThat(libre)
                 .as("s'arrêter au premier échec laisserait derrière lui tout ce qui était effaçable")
                 .doesNotExist();
         assertThat(restants).as("et ce qui a résisté est nommé, avec sa raison").isNotEmpty();
-        rendreEffacable(verrou);
     }
 
     @Test
@@ -80,11 +82,11 @@ class ArborescenceFichiersTest {
     void supprimer_recursivement_leve() throws IOException {
         Path verrouille = arborescenceQuiResiste();
 
-        assertThatThrownBy(() -> ArborescenceFichiers.supprimerRecursivement(verrouille))
+        assertThatThrownBy(() ->
+                        ArborescenceFichiers.supprimerRecursivement(verrouille, suppressionQuiResiste(verrouille)))
                 .as("une bascule de restauration qui ne parvient pas à retirer l'ancien dossier ne doit"
                         + " pas enchaîner sur le renommage comme si de rien n'était")
                 .isInstanceOf(IOException.class);
-        rendreEffacable(verrouille);
     }
 
     @Test
@@ -136,12 +138,10 @@ class ArborescenceFichiersTest {
         Files.writeString(dossier.resolve("lisible.wav"), "12345");
         Path interdit = Files.createDirectories(dossier.resolve("cache"));
         Files.writeString(interdit.resolve("dedans.wav"), "ce qu'on ne verra pas");
-        assertThat(interdit.toFile().setReadable(false))
-                .as("sans ce droit retiré, le test ne prouverait rien : il faut que le parcours BUTE")
-                .isTrue();
 
-        try {
-            ArborescenceFichiers.Pesee pesee = ArborescenceFichiers.peser(dossier, TailleFichier.reelle());
+        {
+            ArborescenceFichiers.Pesee pesee =
+                    ArborescenceFichiers.peser(dossier, TailleFichier.reelle(), listageQuiRefuse(interdit));
 
             assertThat(pesee.octets())
                     .as("s'arrêter au premier dossier interdit ne dirait pas ce que pèse le reste, et"
@@ -151,8 +151,6 @@ class ArborescenceFichiersTest {
                     .as("un dossier qu'on n'a pas pu ouvrir est exactement ce qu'une mesure doit savoir dire")
                     .extracting(ArborescenceFichiers.EchecLecture::chemin)
                     .containsExactly(interdit);
-        } finally {
-            assertThat(interdit.toFile().setReadable(true)).isTrue();
         }
     }
 
@@ -173,79 +171,101 @@ class ArborescenceFichiersTest {
     @Test
     @DisplayName("#3632 : effacerAuMieux tient sa promesse de ne jamais lever, même sur un dossier fermé")
     void efface_au_mieux_ne_leve_pas_sur_un_dossier_ferme() throws IOException {
-        Path temporaire = arborescenceIllisible("zip-extrait");
+        Path temporaire = Files.createDirectories(racine.resolve("zip-extrait"));
 
         // Elle est appelée dans des `finally` (Importer, ImportationViewModel) : une exception levée
         // là REMPLACE le résultat de l'opération, donc un import réussi ressortirait en échec brut à
         // cause de son ménage. C'est ce que « ne lève jamais » existe pour empêcher.
         List<ArborescenceFichiers.EchecEffacement> restants = new ArrayList<>();
-        assertThatCode(() -> restants.addAll(ArborescenceFichiers.effacerAuMieux(temporaire)))
+        assertThatCode(() ->
+                        restants.addAll(ArborescenceFichiers.effacerAuMieux(temporaire, parcoursQuiEchoue(temporaire))))
                 .doesNotThrowAnyException();
         assertThat(restants)
                 .as("se taire ne suffit pas : l'appelant doit pouvoir dire CE QUI a résisté")
                 .isNotEmpty();
-
-        rendreLisible(temporaire.resolve("ferme"));
     }
 
     @Test
     @DisplayName("#3632 : supprimerRecursivement lève ce qu'elle annonce, pas une exception non déclarée")
     void supprimer_recursivement_leve_en_ioexception_sur_un_dossier_ferme() throws IOException {
-        Path cible = arborescenceIllisible("a-supprimer");
+        Path cible = Files.createDirectories(racine.resolve("a-supprimer"));
 
         // `Files.walk` enveloppe son échec de parcours dans une `UncheckedIOException`, qui n'hérite
         // PAS d'`IOException` : sans rattrapage, elle traverse la signature déclarée et le diagnostic
         // de l'appelant ne s'applique jamais.
-        assertThatThrownBy(() -> ArborescenceFichiers.supprimerRecursivement(cible))
+        assertThatThrownBy(() -> ArborescenceFichiers.supprimerRecursivement(cible, parcoursQuiEchoue(cible)))
                 .isInstanceOf(IOException.class);
-
-        rendreLisible(cible.resolve("ferme"));
     }
 
     @Test
     @DisplayName("#3632 : copier lève ce qu'elle annonce sur une origine partiellement illisible")
     void copier_leve_en_ioexception_sur_un_dossier_ferme() throws IOException {
-        Path origine = arborescenceIllisible("origine");
+        Path origine = Files.createDirectories(racine.resolve("origine"));
 
-        assertThatThrownBy(() -> ArborescenceFichiers.copier(origine, racine.resolve("copie")))
+        assertThatThrownBy(
+                        () -> ArborescenceFichiers.copier(origine, racine.resolve("copie"), parcoursQuiEchoue(origine)))
                 .isInstanceOf(IOException.class);
-
-        rendreLisible(origine.resolve("ferme"));
     }
 
-    /// Un arbre dont un SOUS-DOSSIER ne se laisse pas lister.
-    ///
-    /// ⚠️ Contrairement à l'illisibilité d'un **fichier** - que `Files.size` ne signale pas, d'où le
-    /// port `TailleFichier` de #3627 - celle d'un **dossier** se fabrique de façon portable : c'est le
-    /// parcours lui-même qui échoue, et `Files.walk` l'enveloppe dans une `UncheckedIOException`.
-    private Path arborescenceIllisible(String nom) throws IOException {
-        Path dossier = Files.createDirectories(racine.resolve(nom));
-        Files.writeString(dossier.resolve("lisible.wav"), "12345");
-        Path ferme = Files.createDirectories(dossier.resolve("ferme"));
-        Files.writeString(ferme.resolve("tenu.wav"), "abc");
-        assertThat(ferme.toFile().setReadable(false, false))
-                .as("sans ce droit retiré, le test ne prouverait rien : il faut que le PARCOURS échoue")
-                .isTrue();
-        return dossier;
-    }
-
-    /// Rend le dossier lisible, sans quoi `@TempDir` échoue à nettoyer et fait rougir un test voisin.
-    private void rendreLisible(Path dossier) {
-        assertThat(dossier.toFile().setReadable(true, false)).isTrue();
-    }
-
-    /// Un dossier dont le contenu ne peut pas être retiré : le parent est en lecture seule.
+    /// Un arbre ordinaire. Ce qui **résiste** ne vient plus du système mais du double
+    /// [#suppressionQuiResiste] : `File.setWritable(false)` n'empêche pas la suppression sous Windows,
+    /// et la fixture échouait donc **avant** que le test n'éprouve quoi que ce soit (#3525).
     private Path arborescenceQuiResiste() throws IOException {
         Path dossier = Files.createDirectories(racine.resolve("verrouille"));
         Files.writeString(dossier.resolve("tenu.txt"), "ne s'en va pas");
-        assertThat(dossier.toFile().setWritable(false))
-                .as("sans ce droit retiré, le test ne prouverait rien : il faut que la suppression ÉCHOUE")
-                .isTrue();
         return dossier;
     }
 
-    /// Rend le dossier effaçable, sans quoi `@TempDir` échoue à nettoyer et fait rougir un test voisin.
-    private void rendreEffacable(Path dossier) {
-        assertThat(dossier.toFile().setWritable(true)).isTrue();
+    /// Des gestes réels, sauf sur `interdit` que la suppression refuse.
+    ///
+    /// ⚠️ Fabriqué plutôt que demandé au système : `File.setWritable(false)` n'empêche pas la
+    /// suppression sous Windows, et sept tests de cette classe le disaient en échouant au premier
+    /// passage de la matrice trois plateformes (#3525). Un test qui ne prouve rien hors POSIX ne prouve
+    /// rien sur la plateforme qui a le plus de façons de refuser un accès.
+    private static GestesFichiers suppressionQuiResiste(Path interdit) {
+        return new GestesFichiers() {
+            @Override
+            public void supprimer(Path chemin) throws IOException {
+                if (chemin.startsWith(interdit)) {
+                    throw new IOException("Suppression refusée : " + chemin);
+                }
+                Files.deleteIfExists(chemin);
+            }
+        };
+    }
+
+    /// Des gestes réels, sauf le parcours, qui échoue **pendant l'itération**.
+    ///
+    /// ⚠️ C'est le point du défaut #3632 : `Files.walk` n'annonce pas l'échec de parcours à la
+    /// construction du flux mais à sa **consommation**, enveloppé dans une `UncheckedIOException` que
+    /// le `catch (IOException)` voisin ne voit pas. Un double qui lèverait tout de suite éprouverait
+    /// autre chose.
+    private static GestesFichiers parcoursQuiEchoue(Path racine) {
+        return new GestesFichiers() {
+            @Override
+            public Stream<Path> parcourir(Path aParcourir) {
+                return Stream.of(aParcourir).peek(chemin -> {
+                    throw new UncheckedIOException(
+                            new AccessDeniedException(racine.resolve("ferme").toString()));
+                });
+            }
+        };
+    }
+
+    /// Des gestes réels, sauf le listage de `interdit`, qui refuse de s'ouvrir.
+    ///
+    /// ⚠️ L'échec arrive à l'**ouverture** et non pendant l'itération, contrairement à
+    /// [#parcoursQuiEchoue] : c'est ce qui distingue une pesée, qui note et continue, d'un parcours
+    /// récursif, qui s'arrête.
+    private static GestesFichiers listageQuiRefuse(Path interdit) {
+        return new GestesFichiers() {
+            @Override
+            public Stream<Path> lister(Path dossier) throws IOException {
+                if (dossier.equals(interdit)) {
+                    throw new AccessDeniedException(dossier.toString());
+                }
+                return Files.list(dossier);
+            }
+        };
     }
 }

@@ -3,7 +3,6 @@ package fr.univ_amu.iut.commun.persistence;
 import fr.univ_amu.iut.commun.model.TailleFichier;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
@@ -29,7 +28,12 @@ public final class ArborescenceFichiers {
     /// courant. Il est aussi ce qui rend la **destination** décisive, et c'est tout le sujet de
     /// #2726 : deux racines qui visent la même destination fusionnent ici, en silence.
     public static void copier(Path origine, Path cible) throws IOException {
-        try (Stream<Path> arbre = Files.walk(origine)) {
+        copier(origine, cible, GestesFichiers.reels());
+    }
+
+    /// [#copier(Path, Path)], avec les gestes de disque injectés (#3525).
+    static void copier(Path origine, Path cible, GestesFichiers gestes) throws IOException {
+        try (Stream<Path> arbre = gestes.parcourir(origine)) {
             for (Path chemin : (Iterable<Path>) arbre::iterator) {
                 Path destination = cible.resolve(origine.relativize(chemin).toString());
                 if (Files.isDirectory(chemin)) {
@@ -75,12 +79,17 @@ public final class ArborescenceFichiers {
     /// @param taille le port de lecture, injectable parce que l'illisibilité ne se fabrique pas de
     ///     façon portable sur un vrai système de fichiers
     public static Pesee peser(Path dossier, TailleFichier taille) throws IOException {
+        return peser(dossier, taille, GestesFichiers.reels());
+    }
+
+    /// [#peser(Path, TailleFichier)], avec les gestes de disque injectés (#3525).
+    static Pesee peser(Path dossier, TailleFichier taille, GestesFichiers gestes) throws IOException {
         List<EchecLecture> illisibles = new ArrayList<>();
         Deque<Path> aVisiter = new ArrayDeque<>();
         aVisiter.add(dossier);
         long total = 0L;
         while (!aVisiter.isEmpty()) {
-            total += peserLeContenu(aVisiter.remove(), taille, aVisiter, illisibles);
+            total += peserLeContenu(aVisiter.remove(), taille, aVisiter, illisibles, gestes);
         }
         return new Pesee(total, List.copyOf(illisibles));
     }
@@ -95,10 +104,14 @@ public final class ArborescenceFichiers {
     /// défaut, et sans lui un lien vers un dossier ancêtre ferait **tourner ce parcours sans fin**. Un
     /// lien vers un fichier, lui, reste pesé comme avant - `isRegularFile` suit le lien.
     private static long peserLeContenu(
-            Path dossier, TailleFichier taille, Deque<Path> aVisiter, List<EchecLecture> illisibles) {
+            Path dossier,
+            TailleFichier taille,
+            Deque<Path> aVisiter,
+            List<EchecLecture> illisibles,
+            GestesFichiers gestes) {
         long total = 0L;
-        try (DirectoryStream<Path> entrees = Files.newDirectoryStream(dossier)) {
-            for (Path entree : entrees) {
+        try (Stream<Path> entrees = gestes.lister(dossier)) {
+            for (Path entree : entrees.toList()) {
                 if (Files.isDirectory(entree, LinkOption.NOFOLLOW_LINKS)) {
                     aVisiter.add(entree);
                 } else if (Files.isRegularFile(entree)) {
@@ -162,14 +175,19 @@ public final class ArborescenceFichiers {
     /// @return ce qui a résisté, du plus profond au plus haut, **avec la raison** - sans elle, un
     ///     appelant qui rend compte à l'utilisateur devrait refaire le parcours pour la retrouver
     public static List<EchecEffacement> effacerAuMieux(Path cible) {
+        return effacerAuMieux(cible, GestesFichiers.reels());
+    }
+
+    /// [#effacerAuMieux(Path)], avec les gestes de disque injectés (#3525).
+    static List<EchecEffacement> effacerAuMieux(Path cible, GestesFichiers gestes) {
         List<EchecEffacement> restants = new ArrayList<>();
         if (!Files.exists(cible)) {
             return restants;
         }
-        try (Stream<Path> arbre = Files.walk(cible)) {
+        try (Stream<Path> arbre = gestes.parcourir(cible)) {
             for (Path chemin : arbre.sorted(Comparator.reverseOrder()).toList()) {
                 try {
-                    Files.deleteIfExists(chemin);
+                    gestes.supprimer(chemin);
                 } catch (IOException resiste) {
                     restants.add(new EchecEffacement(chemin, resiste));
                 }
@@ -203,12 +221,17 @@ public final class ArborescenceFichiers {
     /// restauration qui ne parvient pas à retirer l'ancien dossier ne doit pas enchaîner sur le
     /// renommage comme si de rien n'était (#3514).
     public static void supprimerRecursivement(Path cible) throws IOException {
+        supprimerRecursivement(cible, GestesFichiers.reels());
+    }
+
+    /// [#supprimerRecursivement(Path)], avec les gestes de disque injectés (#3525).
+    static void supprimerRecursivement(Path cible, GestesFichiers gestes) throws IOException {
         if (!Files.exists(cible)) {
             return;
         }
-        try (Stream<Path> arbre = Files.walk(cible)) {
+        try (Stream<Path> arbre = gestes.parcourir(cible)) {
             for (Path chemin : arbre.sorted(Comparator.reverseOrder()).toList()) {
-                Files.deleteIfExists(chemin);
+                gestes.supprimer(chemin);
             }
         } catch (UncheckedIOException parcours) {
             // Ramenée au type annoncé : sans cela, un sous-dossier illisible ferait remonter une
