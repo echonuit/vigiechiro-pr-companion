@@ -3,14 +3,18 @@ package fr.univ_amu.iut.sites.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
+import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -80,9 +84,52 @@ public class ModaleSiteController {
     @FXML
     private Label lblPorteeEdition;
 
+    /// Enveloppe non désactivée du bouton de vérification : porte l'infobulle du grisage (#789).
+    @FXML
+    private StackPane enveloppeVerifierCarre;
+
+    @FXML
+    private Button btnVerifierCarre;
+
+    /// Ce que la plateforme a répondu sur le carré saisi (#3458).
+    @FXML
+    private Label messageCarreExistant;
+
+    /// Exécuteur du socle (#1014) : interroger la plateforme est un appel **réseau**, il ne doit pas
+    /// tourner sur le fil JavaFX. Synchrone en test (déterministe), en arrière-plan en production.
+    private final ExecuteurTache executeur;
+
+    /// Une recherche est en cours : le bouton se grise le temps de l'appel, sans quoi deux clics rapides
+    /// en lanceraient deux.
+    ///
+    /// ⚠️ **Une propriété, et non un `setDisable`** : `disableProperty` est **liée** au carré valide, et
+    /// JavaFX refuse d'affecter une valeur liée (« A bound value cannot be set »). Le patron du dépôt est
+    /// de faire entrer l'occupation **dans** le binding (#1254), pas de la poser par-dessus.
+    private final BooleanProperty rechercheEnCours = new SimpleBooleanProperty(this, "rechercheEnCours", false);
+
     @Inject
-    public ModaleSiteController(SiteEditViewModel viewModel) {
+    public ModaleSiteController(SiteEditViewModel viewModel, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
+    }
+
+    /// Interroge la plateforme **hors du fil JavaFX**, puis applique le verdict.
+    ///
+    /// Le bouton se désactive pendant l'appel : sans cela, deux clics rapides lanceraient deux
+    /// recherches. Un échec technique remet le geste à portée, et le dit.
+    @FXML
+    private void verifierCarre() {
+        rechercheEnCours.set(true);
+        executeur.executer(
+                viewModel::chercherCarreExistant,
+                verdict -> {
+                    viewModel.appliquerRechercheCarre(verdict);
+                    rechercheEnCours.set(false);
+                },
+                echec -> {
+                    rechercheEnCours.set(false);
+                    viewModel.appliquerRechercheCarre(new RechercheCarreExistant.Verdict.Indisponible());
+                });
     }
 
     @FXML
@@ -127,6 +174,20 @@ public class ModaleSiteController {
                         .then("Enregistrer ce site de suivi.")
                         .otherwise("Renseignez d'abord un numéro de carré à 6 chiffres."));
         ValidationFormulaire.marquerInvalide(champCarre, viewModel.carreInvalideEtSaisi());
+
+        // « Ce carré existe-t-il déjà ? » (#3458). Le geste n'apparaît que si la recherche est installée
+        // (hors application complète, l'Optional est vide) ; il se grise tant que le carré n'a pas ses
+        // six chiffres, puisqu'il n'y aurait rien à chercher.
+        enveloppeVerifierCarre.setVisible(viewModel.rechercheCarreDisponible());
+        enveloppeVerifierCarre.setManaged(viewModel.rechercheCarreDisponible());
+        btnVerifierCarre.disableProperty().bind(viewModel.carreValide().not().or(rechercheEnCours));
+        IndicateurBlocage.expliquer(
+                enveloppeVerifierCarre,
+                Bindings.when(viewModel.carreValide())
+                        .then("Demander à Vigie-Chiro si ce carré y est déjà déclaré.")
+                        .otherwise("Renseignez d'abord un numéro de carré à 6 chiffres."));
+        LibelleRetour.installer(messageCarreExistant, viewModel.retourCarreExistantProperty());
+        Modales.suivreLaCroissance(racine, messageCarreExistant.managedProperty());
 
         // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « messageErreur » et ne pouvait
         // donc rien porter d'autre qu'un échec ; la sévérité vit maintenant dans la valeur.

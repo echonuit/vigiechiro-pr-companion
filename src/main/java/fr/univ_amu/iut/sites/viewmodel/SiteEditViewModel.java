@@ -4,9 +4,11 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
@@ -77,18 +79,62 @@ public class SiteEditViewModel {
     /// Site en cours d'édition ; `null` en création.
     private Site siteEnEdition;
 
-    public SiteEditViewModel(ServiceSites service, LienVigieChiroDao liens, String idUtilisateur) {
+    /// « Ce carré existe-t-il déjà ? » (#3458). **Optionnel**, car il a besoin de la plateforme : absent
+    /// (injecteurs partiels, feature de connexion éteinte), la vérification n'est simplement pas offerte
+    /// et la déclaration reste entière. Même montage que `ControleCarreStoc`.
+    private final Optional<RechercheCarreExistant> recherche;
+
+    /// Ce que la plateforme a répondu sur le carré saisi, avec sa gravité. Vide tant qu'on n'a rien
+    /// demandé - et une **absence de réponse n'est pas une réponse** : voir
+    /// [RechercheCarreExistant.Verdict.Indisponible].
+    private final ReadOnlyObjectWrapper<RetourOperation> retourCarreExistant =
+            new ReadOnlyObjectWrapper<>(this, "retourCarreExistant", RetourOperation.AUCUN);
+
+    public SiteEditViewModel(
+            ServiceSites service,
+            LienVigieChiroDao liens,
+            String idUtilisateur,
+            Optional<RechercheCarreExistant> recherche) {
         this.liens = Objects.requireNonNull(liens, "liens");
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        this.recherche = Objects.requireNonNull(recherche, "recherche");
         carreValide = Bindings.createBooleanBinding(() -> numeroCarre.get().matches("\\d{6}"), numeroCarre);
         carreInvalideEtSaisi = Bindings.createBooleanBinding(
                 () -> !numeroCarre.get().isEmpty() && !numeroCarre.get().matches("\\d{6}"), numeroCarre);
     }
 
+    /// La vérification « ce carré existe-t-il déjà ? » est-elle **installée** (#3458) ? Faux hors de
+    /// l'application complète : la modale n'affiche alors pas le geste, plutôt qu'un bouton mort.
+    public boolean rechercheCarreDisponible() {
+        return recherche.isPresent();
+    }
+
+    /// Interroge la plateforme sur le carré saisi.
+    ///
+    /// **Bloquant** (réseau) : à appeler hors du fil JavaFX, puis passer le verdict à
+    /// [#appliquerRechercheCarre]. Même découpage que `PointEditViewModel#controlerCarre`.
+    public RechercheCarreExistant.Verdict chercherCarreExistant() {
+        if (recherche.isEmpty() || !carreValide.get()) {
+            return new RechercheCarreExistant.Verdict.Indisponible();
+        }
+        return recherche.get().chercher(numeroCarre.get());
+    }
+
+    /// Applique un verdict de [#chercherCarreExistant] aux propriétés observables, **sur le fil JavaFX**.
+    public void appliquerRechercheCarre(RechercheCarreExistant.Verdict verdict) {
+        retourCarreExistant.set(new RetourOperation(verdict.message(), verdict.severite()));
+    }
+
+    /// Ce que la plateforme a dit du carré saisi, avec sa gravité.
+    public ReadOnlyObjectProperty<RetourOperation> retourCarreExistantProperty() {
+        return retourCarreExistant.getReadOnlyProperty();
+    }
+
     /// Configure la modale en **mode déclaration** d'un nouveau site.
     public void preparerCreation() {
         siteEnEdition = null;
+        retourCarreExistant.set(RetourOperation.AUCUN);
         numeroCarre.set("");
         nom.set("");
         protocole.set(Protocole.STANDARD);
@@ -179,6 +225,17 @@ public class SiteEditViewModel {
     /// Le bouton d'enregistrement n'est ouvert que si le carré est valide (#790) : on **empêche** au lieu
     /// d'avertir après coup.
     public BooleanBinding peutEnregistrer() {
+        return carreValide;
+    }
+
+    /// Le numéro de carré a ses **six chiffres** : il y a donc quelque chose à chercher sur la
+    /// plateforme (#3458).
+    ///
+    /// ⚠️ Exposé à part de [#peutEnregistrer()], qui vaut la même chose **aujourd'hui**. Les deux
+    /// questions sont distinctes : « ce carré est-il cherchable » et « ce formulaire est-il
+    /// enregistrable ». Les confondre ferait griser la recherche le jour où l'enregistrement gagnera une
+    /// condition qui ne la concerne pas.
+    public BooleanBinding carreValide() {
         return carreValide;
     }
 

@@ -3,6 +3,7 @@ package fr.univ_amu.iut.sites.model;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.model.Severite;
 import java.util.List;
 import java.util.Objects;
 import java.util.logging.Level;
@@ -32,21 +33,70 @@ public class RechercheCarreExistant {
     }
 
     /// Ce que la plateforme répond sur un numéro de carré.
+    ///
+    /// Le verdict porte **son message et sa gravité**, comme [VerdictCarre] : la vue les rend, elle ne
+    /// les compose pas, et ils restent éprouvables sans IHM.
     public sealed interface Verdict {
 
+        /// Le message à afficher, tel quel.
+        String message();
+
+        /// La gravité, dont la vue tire sa couleur et son icône.
+        Severite severite();
+
         /// Aucun site ne porte ce carré : il est libre, la déclaration a un sens.
-        record Inexistant() implements Verdict {}
+        record Inexistant() implements Verdict {
+            @Override
+            public String message() {
+                return "Ce carré n'existe pas encore sur Vigie-Chiro : vous pouvez le déclarer ici.";
+            }
+
+            @Override
+            public Severite severite() {
+                return Severite.SUCCES;
+            }
+        }
 
         /// Le carré est **déjà déclaré**. Les titres disent sous quel protocole, ce qui compte : un même
         /// carré porte un site par protocole, et « il existe » sans dire lequel n'aide pas.
-        record DejaDeclare(List<String> titres) implements Verdict {}
+        record DejaDeclare(List<String> titres) implements Verdict {
+
+            /// Le message dit **quoi faire**, et non seulement ce qui est : redéclarer un carré déjà
+            /// présent est exactement ce qui a produit le dépôt manqué à l'origine de #3458.
+            @Override
+            public String message() {
+                return "Ce carré existe déjà sur Vigie-Chiro (" + String.join(", ", titres)
+                        + "). Ne le redéclarez pas : récupérez-le depuis « Mes sites », "
+                        + "« Récupérer depuis Vigie-Chiro ».";
+            }
+
+            @Override
+            public Severite severite() {
+                return Severite.AVERTISSEMENT;
+            }
+        }
 
         /// On ne sait pas : hors connexion, plateforme injoignable, ou refus.
         ///
         /// ⚠️ **Ce n'est pas « il n'existe pas »**, et les confondre serait le pire des deux mondes :
         /// l'utilisateur déclarerait un carré déjà pris en croyant avoir vérifié. C'est exactement la
         /// panne que cette classe existe pour éviter.
-        record Indisponible() implements Verdict {}
+        record Indisponible() implements Verdict {
+
+            /// ⚠️ Ce cas **parle**, là où [ControleCarreStoc] se tait. Le contrôle du carré STOC est
+            /// automatique : son silence est discret. Ici l'utilisateur a **cliqué** ; ne rien afficher
+            /// lui ferait croire que le geste a échoué, ou pire, que le carré est libre.
+            @Override
+            public String message() {
+                return "Vérification impossible : Vigie-Chiro est injoignable ou vous n'êtes pas"
+                        + " connecté. Ce carré n'a donc PAS été vérifié.";
+            }
+
+            @Override
+            public Severite severite() {
+                return Severite.INFO;
+            }
+        }
     }
 
     /// Cherche `numeroCarre` sur la plateforme.

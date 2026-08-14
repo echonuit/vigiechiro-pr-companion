@@ -21,6 +21,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
+import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -67,7 +68,7 @@ class ModaleSiteViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             SiteEditViewModel viewModel() {
-                return new SiteEditViewModel(service, liens, ID_USER);
+                return new SiteEditViewModel(service, liens, ID_USER, Optional.empty());
             }
         });
         FXMLLoader loader = new FXMLLoader(ModaleSiteController.class.getResource("ModaleSite.fxml"));

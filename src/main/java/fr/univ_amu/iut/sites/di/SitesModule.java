@@ -32,6 +32,7 @@ import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
 import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.RapprochementNuitsOpportunistes;
 import fr.univ_amu.iut.sites.model.RapprochementSites;
+import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.SynchronisationSites;
@@ -129,6 +130,10 @@ public class SitesModule extends ModuleDeFeature {
         // la plateforme, donc elle a besoin de la connexion). `PublicationPointModule` fait `setBinding`
         // dans l'app complète ; sinon l'Optional reste vide et la fiche n'offre pas le geste.
         OptionalBinder.newOptionalBinder(binder(), PublicationPoint.class);
+        // « Ce carré existe-t-il déjà ? » (#3458) : même montage, même raison - la recherche interroge la
+        // plateforme. `RechercheCarreExistantModule` fait `setBinding` dans l'app complète ; sinon
+        // l'Optional reste vide et la modale de déclaration n'offre pas le geste.
+        OptionalBinder.newOptionalBinder(binder(), RechercheCarreExistant.class);
         // Rapprochement des sites locaux avec VigieChiro (#728), invoqué à la connexion.
         Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
                 .addBinding()
@@ -296,8 +301,11 @@ public class SitesModule extends ModuleDeFeature {
     /// unicité du carré **par utilisateur**) ; l'édition, elle, part du site existant.
     @Provides
     SiteEditViewModel fournirSiteEditViewModel(
-            ServiceSites service, LienVigieChiroDao liens, @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new SiteEditViewModel(service, liens, idUtilisateur);
+            ServiceSites service,
+            LienVigieChiroDao liens,
+            @Named("idUtilisateurCourant") String idUtilisateur,
+            Optional<RechercheCarreExistant> recherche) {
+        return new SiteEditViewModel(service, liens, idUtilisateur, recherche);
     }
 
     private static String creerUtilisateurLocal(UtilisateurDao utilisateurDao) {

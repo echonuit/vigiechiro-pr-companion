@@ -37,8 +37,18 @@
     <!-- minWidth=USE_PREF_SIZE : sans cela, la HBox rogne le libellé (« N° de car… »). -->
     <Label text="N° de carré *" styleClass="field-label" minWidth="-Infinity"/>
     <TextField fx:id="champCarre" promptText="640380" prefWidth="120.0"/>
+    <!-- « Ce carré existe-t-il déjà ? » (#3458). L'enveloppe porte l'infobulle : un bouton désactivé
+         n'en affiche pas (patron #789). Absente hors de l'application complète, où la recherche n'est
+         pas installée. -->
+    <StackPane fx:id="enveloppeVerifierCarre">
+      <Button fx:id="btnVerifierCarre" text="Vérifier sur Vigie-Chiro" styleClass="bouton-secondaire"
+              onAction="#verifierCarre"/>
+    </StackPane>
   </HBox>
   <Label text="6 chiffres, tel qu'il figure sur la grille Vigie-Chiro" styleClass="field-hint" wrapText="true"/>
+  <!-- Ce que la plateforme a répondu sur ce carré : distinct du bandeau de retour, qui porte l'issue de
+       l'enregistrement. Les confondre effacerait l'un par l'autre. -->
+  <Label fx:id="messageCarreExistant" wrapText="true" managed="false" visible="false"/>
   <!-- Bandeau de retour partagé (ADR 0023) : remplace le libellé « messageErreur », dont le NOM portait
        la sévérité et interdisait donc d'y dire autre chose qu'un échec (#1917). -->
   <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
