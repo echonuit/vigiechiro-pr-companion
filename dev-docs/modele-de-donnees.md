@@ -44,8 +44,8 @@ Le **schéma physique** est plus proche de la machine. On le donne en notation *
 (IE / *crow's foot*, celle de Mermaid) : relations binaires, clés étrangères explicites. C'est la
 traduction du MCD ci-dessus. **19 tables à l'origine**, créées par
 [`V01__schema.sql`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/resources/db/migration/V01__schema.sql) ;
-le schéma courant en compte **<!--inv:tables-->33<!--/inv-->**, au terme des
-**<!--inv:migrations-->39<!--/inv-->** migrations versionnées ; clés étrangères
+le schéma courant en compte **<!--inv:tables-->34<!--/inv-->**, au terme des
+**<!--inv:migrations-->40<!--/inv-->** migrations versionnées ; clés étrangères
 **`ON DELETE CASCADE`** (supprimer un passage emporte sa session, ses séquences, ses observations…).
 
 !!! note "Pourquoi ces deux chiffres sont balisés et pas le premier"
@@ -108,6 +108,16 @@ accents), **SQL** (anglais).
 
 S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisite) et `schema_version`
 (suivi des [migrations](persistance.md#les-migrations-de-schema)).
+
+!!! note "Point publié sur Vigie-Chiro (V40, #3458)"
+    Depuis `V40__point_publie.sql`, la table latérale `point_publie` retient qu'un point d'écoute
+    créé ici a été **poussé** vers la plateforme (`PUT /sites/{id}/localites`). Sans cette mémoire,
+    l'écran reproposerait le geste indéfiniment.
+
+    ⚠️ **À ne pas confondre avec `listening_point.synchronise`** (#1738), qui dit l'inverse :
+    « **rapatrié de** la plateforme », et sert à masquer les points rapatriés inutilisés. Réutiliser
+    ce drapeau ferait disparaître de la fiche un point qu'on vient de créer pour s'en servir, et
+    mentirait sur sa provenance. Deux faits distincts, deux endroits.
 
 !!! note "Commune d'un point (V38, #2791)"
     Depuis `V38__commune_du_point.sql`, la table latérale `point_commune` porte la commune d'un

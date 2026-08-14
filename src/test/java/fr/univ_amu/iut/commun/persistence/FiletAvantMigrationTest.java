@@ -139,6 +139,7 @@ class FiletAvantMigrationTest {
         executer("DELETE FROM schema_version WHERE version >= 37");
         executer("DROP TABLE IF EXISTS point_commune"); // V38
         executer("ALTER TABLE depot_unite DROP COLUMN echec_definitif"); // V39
+        executer("DROP TABLE IF EXISTS point_publie"); // V40
     }
 
     /// Noms des fichiers du dossier de sauvegardes, **liste vide** s'il n'existe pas : un dossier
