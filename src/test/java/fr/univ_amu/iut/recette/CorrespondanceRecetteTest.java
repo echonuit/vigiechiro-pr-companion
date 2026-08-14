@@ -187,18 +187,26 @@ class CorrespondanceRecetteTest {
 
     private static void lireLeCode() {
         JavaClasses classes = new ClassFileImporter().importPackages("fr.univ_amu.iut");
-        classes.forEach(classe -> classe.getMethods()
-                .forEach(methode -> methode.tryGetAnnotationOfType(CasDeRecette.class)
-                        .ifPresent(annotation -> {
-                            String nom = classe.getSimpleName() + "." + methode.getName();
-                            for (String id : List.of(annotation.value())) {
-                                cites.computeIfAbsent(id, k -> new LinkedHashSet<>())
-                                        .add(nom);
-                                jugements
-                                        .computeIfAbsent(id, k -> EnumSet.noneOf(Jugement.class))
-                                        .add(annotation.jugement());
-                            }
-                        })));
+        classes.forEach(classe -> {
+            // Les exemples qui éprouvent l'outillage citent de vrais identifiants sans rien couvrir :
+            // les compter gonflerait l'index de tests qui n'exercent pas le produit. Voir
+            // FixtureDeRecette, où l'exclusion est expliquée et rendue portante.
+            if (classe.isAnnotatedWith(FixtureDeRecette.class)) {
+                return;
+            }
+            classe.getMethods()
+                    .forEach(methode -> methode.tryGetAnnotationOfType(CasDeRecette.class)
+                            .ifPresent(annotation -> {
+                                String nom = classe.getSimpleName() + "." + methode.getName();
+                                for (String id : List.of(annotation.value())) {
+                                    cites.computeIfAbsent(id, k -> new LinkedHashSet<>())
+                                            .add(nom);
+                                    jugements
+                                            .computeIfAbsent(id, k -> EnumSet.noneOf(Jugement.class))
+                                            .add(annotation.jugement());
+                                }
+                            }));
+        });
     }
 
     private static String lire(Path fichier) {

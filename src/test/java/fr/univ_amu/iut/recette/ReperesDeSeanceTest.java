@@ -125,8 +125,15 @@ class ReperesDeSeanceTest {
     // ----------------------------------------------------------------------------------------
     // Les séances d'exemple. Imbriquées et statiques : le moteur les exécute sur demande, et
     // surefire ne les ramasse pas (leur nom ne finit pas par Test).
+    //
+    // ⚠️ Elles portent de VRAIS identifiants de cas, sans quoi le premier devoir du garde de
+    // correspondance - « tout identifiant cité existe » - les refuserait. Elles ne couvrent
+    // évidemment rien, d'où @FixtureDeRecette, qui les retire du recensement. Que la seconde cite
+    // S1-26, un cas perceptif, n'est pas un hasard : retirer l'exclusion fait alors rougir le
+    // build tout de suite, plutôt que de gonfler l'index en silence.
     // ----------------------------------------------------------------------------------------
 
+    @FixtureDeRecette
     @ExtendWith(ReperesDeSeance.class)
     static class SeanceExemple {
 
@@ -142,6 +149,7 @@ class ReperesDeSeanceTest {
         }
     }
 
+    @FixtureDeRecette
     @ExtendWith(ReperesDeSeance.class)
     static class SeanceMulticas {
 
