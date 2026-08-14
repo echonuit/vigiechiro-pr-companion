@@ -64,11 +64,23 @@ class CartesAccueilTest {
     /// « Espèces & observations » **tient** alors sur une ligne : le test mesurerait une carte qui
     /// n'existe pas, et resterait vert avec le défaut en place.
     ///
-    /// ⚠️ Les feuilles ne suffisent pas, et c'est ce que le premier passage sous **macOS** a montré
-    /// (#3526). Elles étaient posées à la main, mais [Typographie#installer] ne l'était pas : la police
-    /// embarquée n'était donc pas enregistrée auprès de JavaFX, `base.css` la demandait en vain, et le
-    /// rendu retombait sur la police du **système**. Sous Linux, plus large, le titre s'enroulait et le
-    /// test passait ; sous macOS il tenait sur une ligne. Le test mesurait la machine, pas la carte.
+    /// ⚠️ Les feuilles ne suffisent pas, et ce test l'a montré de la pire façon (#3526) : les poser à la
+    /// main sans appeler [Typographie#installer] laisse la police embarquée **non enregistrée** auprès
+    /// de JavaFX. `base.css` la demandait alors en vain, et le rendu retombait sur la police du système.
+    ///
+    /// Ce n'était pas une différence de plateforme, contrairement à ce que le premier diagnostic disait.
+    /// `installer()` garde un `static boolean installee` : l'enregistrement est **global au JVM et fait
+    /// une seule fois**. Dans un fork surefire, ce test voyait donc « Noto Sans » **si un autre test
+    /// l'avait installée avant lui**, et la police du système sinon - c'est l'ordre d'exécution qui
+    /// décidait. Sous Linux le repli est assez large pour que l'assertion tienne dans les deux cas ;
+    /// sous macOS il est étroit, et le verdict basculait avec l'ordre.
+    ///
+    /// La preuve est au dossier : le **même commit**, sur la **même image** `macos-26-arm64`
+    /// (`20260728.0273.1`), a rendu vert à 8 h 14 et rouge à 15 h 34. Un test dont le verdict dépend de
+    /// ses voisins, pas de ce qu'il mesure.
+    ///
+    /// Le titre court mesure 20,43 px avec la police embarquée, contre 17,666 px relevés sous macOS avec
+    /// celle du système : c'est l'écart qui faisait tenir « Espèces & observations » sur une ligne.
     ///
     /// `Habillage.scene(...)` fait les deux - installer la police, poser le trio du chrome - et c'est
     /// la raison d'être de ce patron : une scène montée à la main en oublie toujours une moitié.
