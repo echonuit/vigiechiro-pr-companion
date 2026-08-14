@@ -5,24 +5,25 @@ import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.FormatsLot;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
-import java.util.function.Supplier;
+import javafx.beans.value.ObservableValue;
 
 /// Calcule les **3 zones de la barre de statut** de M-Lot (#693 / #823), extrait de [LotController] pour
 /// la cohésion (seuil NCSS du contrôleur). **Pur** : lit les propriétés des ViewModels + le contexte
 /// courant, sans effet de bord.
 ///
 /// Zone gauche = contexte du passage ; zone centre = statut + récapitulatif ; zone droite = **état
-/// vivant**, une seule info par priorité décroissante : dépôt en cours (#982) > génération (#769) >
-/// espace disque insuffisant > bilan des archives au repos (#805).
+/// vivant**, une seule info par priorité décroissante : lancement d'analyse > dépôt en cours (#982) >
+/// génération (#769) > espace disque insuffisant > bilan des archives au repos (#805).
 final class ZonesStatutLot {
 
     private final LotViewModel viewModel;
     private final DepotViewModel depotViewModel;
-    private final Supplier<ContextePassage> contexte;
+    private final ObservableValue<ContextePassage> contexte;
 
-    /// `contexte` est fourni en [Supplier] car le contexte courant du contrôleur change à chaque
-    /// `ouvrirSur` : on lit toujours la valeur du moment au calcul.
-    ZonesStatutLot(LotViewModel viewModel, DepotViewModel depotViewModel, Supplier<ContextePassage> contexte) {
+    /// `contexte` est une [ObservableValue] et non un `Supplier` (#3548) : le contexte change à chaque
+    /// `ouvrirSur`, et un `Supplier` permet bien de lire la valeur du moment mais n'annonce jamais
+    /// qu'elle a changé. Le binding qui appelle [#calculer] doit pouvoir le **déclarer**.
+    ZonesStatutLot(LotViewModel viewModel, DepotViewModel depotViewModel, ObservableValue<ContextePassage> contexte) {
         this.viewModel = viewModel;
         this.depotViewModel = depotViewModel;
         this.contexte = contexte;
@@ -33,7 +34,7 @@ final class ZonesStatutLot {
     }
 
     private String contexteGauche() {
-        ContextePassage courant = contexte.get();
+        ContextePassage courant = contexte.getValue();
         return courant == null ? "" : courant.identiteStatut();
     }
 
