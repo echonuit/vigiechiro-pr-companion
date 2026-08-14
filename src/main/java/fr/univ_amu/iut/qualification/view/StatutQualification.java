@@ -22,6 +22,17 @@ final class StatutQualification {
         return contexte == null ? "" : contexte.identiteStatut();
     }
 
+    /// La sortie anticipée « volumétrie vide » est **défensive**, comme sa jumelle de `ZonesStatutLot` :
+    /// elle couvre l'instant où le verdict est appliqué avant la sélection, dans le même `occuper`.
+    ///
+    /// Aucun état **stable** ne combine un statut renseigné et une volumétrie vide, et c'est un relevé
+    /// (#3739) : les cinq sites d'écriture ont été lus. La volumétrie n'est vidée que par
+    /// `SelectionEcouteViewModel#reinitialiser`, atteint depuis `appliquer` (qui la repose aussitôt) et
+    /// depuis `signalerErreur`, que le contrôleur appelle **toujours** avec celui du verdict, lequel met
+    /// alors le statut à `null`.
+    ///
+    /// D'où un mutant PIT qui **survivra** ici (`return statut` → `return ""`) : équivalent dans tout état
+    /// atteignable.
     private static String centre(QualificationViewModel verdict, SelectionEcouteViewModel selection) {
         var statutWorkflow = verdict.statutProperty().get();
         String statut = statutWorkflow == null ? "" : statutWorkflow.libelle();

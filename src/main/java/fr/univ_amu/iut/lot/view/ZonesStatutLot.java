@@ -38,6 +38,17 @@ final class ZonesStatutLot {
         return courant == null ? "" : courant.identiteStatut();
     }
 
+    /// La sortie anticipée « récapitulatif vide » est **défensive** et le restera : elle n'existe que pour
+    /// l'instant qui sépare les deux écritures de [LotViewModel#appliquer], où le statut est déjà posé et
+    /// le récapitulatif pas encore. Sans elle, cet instant afficherait « Prêt à déposer · ».
+    ///
+    /// Aucun état **stable** ne l'emprunte, et c'est un relevé, pas une intuition : les quatre sites
+    /// d'écriture ont été lus (#3739). `recap` ne vaut jamais le vide en dehors de `reinitialiser()`, qui
+    /// vide `statut` deux lignes plus haut, et `recapLisible` produit toujours « N séquences · volume ».
+    ///
+    /// D'où un mutant PIT qui **survivra** ici (`return statut` → `return ""`) : il est équivalent dans
+    /// tout état atteignable. Le couvrir demanderait de fabriquer un état que le ViewModel ne sait pas
+    /// tenir, ce qui ne garderait rien.
     private String centreStatutRecap() {
         String statut = viewModel.statutProperty().get();
         String recap = viewModel.recapProperty().get();

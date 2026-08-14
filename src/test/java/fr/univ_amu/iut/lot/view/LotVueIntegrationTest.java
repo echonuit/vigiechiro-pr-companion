@@ -544,6 +544,34 @@ class LotVueIntegrationTest {
     }
 
     @Test
+    @DisplayName("#3739 : pendant la génération, la zone droite de la barre de statut annonce la progression")
+    void zone_droite_annonce_la_generation(FxRobot robot) {
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
+
+        robot.interact(() -> viewModel.marquerGenerationEnCours());
+
+        // L'état était déjà monté par deux tests voisins, mais personne ne lisait la barre : sans lecteur,
+        // le binding ne se recalcule pas, et PIT rapportait ces lignes en NO_COVERAGE (#3739).
+        assertThat(controleur.zonesStatutProperty().get().droite()).isEqualTo("Préparation des archives…");
+    }
+
+    @Test
+    @DisplayName("#3739 : espace disque insuffisant, la zone droite le dit")
+    void zone_droite_annonce_l_espace_insuffisant(FxRobot robot) {
+        when(service.espaceDisqueDisponible("/ws/session-42")).thenReturn(5_000_000_000L); // 5 Go dispo
+        when(service.estimationTailleDepotOctets(anyLong())).thenReturn(9_000_000_000L); // 9 Go estimés
+
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
+
+        // Le texte exact est celui de l'alerte sous le bouton « Générer ». Qu'il tienne dans la zone est
+        // une autre question, mesurée et ouverte en #3743 : ce garde porte sur ce que la zone DIT.
+        assertThat(controleur.zonesStatutProperty().get().droite())
+                .startsWith("Espace disque insuffisant :")
+                .contains("9,0 Go") // requis
+                .contains("5,0 Go"); // disponible
+    }
+
+    @Test
     @DisplayName("#769 : la barre de progression est présente mais masquée au repos")
     void barre_generation_presente_et_masquee_au_repos(FxRobot robot) {
         var barre = robot.lookup("#barreGeneration").queryAs(javafx.scene.control.ProgressBar.class);
