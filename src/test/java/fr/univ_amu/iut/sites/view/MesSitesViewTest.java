@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
@@ -133,6 +134,7 @@ class MesSitesViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-16")
     @DisplayName("#1045 : le bouton « Récupérer depuis Vigie-Chiro » est visible dans l'app complète")
     void bouton_synchro_visible(FxRobot robot) {
         Button bouton = robot.lookup("#btnSyncVigieChiro").queryAs(Button.class);
@@ -143,6 +145,7 @@ class MesSitesViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-17")
     @DisplayName("#1212 : l'overlay d'occupation est en place, masqué une fois le chargement terminé")
     void overlay_occupation_masque_apres_chargement(FxRobot robot) {
         Node voile = robot.lookup(".occupation-voile").query();
@@ -154,6 +157,7 @@ class MesSitesViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-14")
     @DisplayName("Les cartes des sites seedés sont affichées")
     void affiche_les_cartes(FxRobot robot) {
         List<String> titres = robot.lookup(".carte-titre").queryAllAs(Label.class).stream()
