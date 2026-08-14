@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.persistence;
 
 import fr.univ_amu.iut.commun.model.Workspace;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
@@ -142,13 +143,42 @@ public final class VerrouWorkspace implements AutoCloseable {
             if (!Files.isRegularFile(fichier)) {
                 return "";
             }
-            String contenu = Files.readString(fichier, StandardCharsets.UTF_8);
+            String contenu = lireLeContenu(fichier);
             // ⚠️ Ce qui ne porte pas la sentinelle vient d'une version antérieure ou d'un outil tiers :
             // on le rend tel quel plutôt que d'en amputer le premier caractère. Même règle que #3640 -
             // ne transformer que ce qu'on reconnaît rend la compatibilité gratuite.
             return contenu.startsWith(SENTINELLE) ? contenu.substring(SENTINELLE.length()) : contenu;
         } catch (IOException illisible) {
             return "";
+        }
+    }
+
+    /// Le contenu du fichier, en évitant l'octet que le détenteur verrouille.
+    ///
+    /// ⚠️ Deux lectures, et l'ordre compte. `Files.readString` lit **tout le fichier depuis l'octet 0**,
+    /// donc il traverse la zone verrouillée : sous Windows, où un verrou est impératif, il échoue même
+    /// quand un seul octet est pris. Déplacer le contenu hors de cet octet ne suffisait pas - il fallait
+    /// que le **lecteur** l'évite aussi. C'est la moitié du remède que le premier correctif de #3693
+    /// avait manquée, et que la matrice de #3525 a désignée.
+    ///
+    /// La lecture entière vient d'abord parce qu'elle est la seule qui rende un fichier **sans
+    /// sentinelle** - version antérieure, outil tiers - dans son intégralité. Elle réussit toujours sous
+    /// POSIX, et sous Windows dès que personne ne tient le verrou. Quand elle échoue, c'est qu'un
+    /// détenteur est là : on relit alors **à partir de l'octet 1**, celui que ce détenteur a laissé
+    /// libre.
+    private static String lireLeContenu(Path fichier) throws IOException {
+        try {
+            return Files.readString(fichier, StandardCharsets.UTF_8);
+        } catch (IOException verrouille) {
+            try (FileChannel canal = FileChannel.open(fichier, StandardOpenOption.READ)) {
+                long apresLOctetDuVerrou = canal.size() - 1;
+                if (apresLOctetDuVerrou <= 0) {
+                    return "";
+                }
+                ByteBuffer tampon = ByteBuffer.allocate((int) apresLOctetDuVerrou);
+                canal.read(tampon, OCTET_DU_VERROU + 1);
+                return StandardCharsets.UTF_8.decode(tampon.flip()).toString();
+            }
         }
     }
 
