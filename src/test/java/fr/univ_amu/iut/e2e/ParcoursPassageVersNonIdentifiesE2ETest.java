@@ -28,6 +28,8 @@ import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -42,6 +44,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours** : l'écran **« Sons & validation »** d'un passage (source `ParPassage`) réunit
 /// désormais les observations Tadarida **et** les **séquences non identifiées** (sons présents sur disque
@@ -98,15 +101,20 @@ class ParcoursPassageVersNonIdentifiesE2ETest {
     /// Ouvre l'écran « Sons & validation » du passage (source `ParPassage`) via le contrat socle, comme la
     /// carte « Sons & validation » de M-Passage, et renvoie sa table d'observations.
     @SuppressWarnings("unchecked")
-    private TableView<LigneObservationAudio> ouvrirSonsEtValidation(FxRobot robot) {
+    private TableView<LigneObservationAudio> ouvrirSonsEtValidation(FxRobot robot) throws TimeoutException {
         robot.interact(() -> injector.getInstance(OuvrirValidation.class).ouvrir(contextePassage));
-        return (TableView<LigneObservationAudio>)
+        TableView<LigneObservationAudio> table = (TableView<LigneObservationAudio>)
                 (TableView<?>) robot.lookup("#tableObservations").queryAs(TableView.class);
+        // L'ouverture (SonsValidationController.ouvrirSur) charge la table hors du fil JavaFX
+        // (occupation.occuper) : sans cette attente, la table est encore vide quand l'appelant lit son
+        // contenu, un échec qui ne se produit que sur une machine lente, donc en CI.
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !table.getItems().isEmpty());
+        return table;
     }
 
     @Test
     @DisplayName("« Sons & validation » d'un passage sans CSV liste ses séquences non identifiées (sans observation)")
-    void sons_et_validation_liste_les_non_identifies(FxRobot robot) {
+    void sons_et_validation_liste_les_non_identifies(FxRobot robot) throws TimeoutException {
         // Sans CSV importé, la liste fusionnée du passage ne contient que les séquences non identifiées.
         TableView<LigneObservationAudio> table = ouvrirSonsEtValidation(robot);
 
@@ -130,7 +138,7 @@ class ParcoursPassageVersNonIdentifiesE2ETest {
 
     @Test
     @DisplayName("Valider une séquence non identifiée à la main crée une observation (corrigée) qui persiste")
-    void valider_manuellement_une_sequence(FxRobot robot) {
+    void valider_manuellement_une_sequence(FxRobot robot) throws TimeoutException {
         TableView<LigneObservationAudio> table = ouvrirSonsEtValidation(robot);
         long idSequence = table.getItems().get(0).idSequence();
 
