@@ -35,8 +35,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
@@ -89,7 +91,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private final ReglagesReactifs reactifs;
 
     /// Source courante, mémorisée pour adapter colonnes / actions / fil d'Ariane.
-    private SourceObservations source;
+    /// **Observable** depuis #3752 : la barre de statut la lit pour sa zone gauche, et un champ nu
+    /// ne peut pas etre declare en dependance d'un binding. Sans elle, la barre restait a
+    /// `ZonesStatut.VIDE` quand l'ouverture echouait - donc retiree du layout, pas seulement pale.
+    private final ObjectProperty<SourceObservations> source = new SimpleObjectProperty<>(this, "source");
 
     /// Zones exposées à la **barre de statut** ([ResumeStatut], #495) : total d'observations en centre,
     /// avancement de la revue à droite, mis à jour en direct. La gauche reste au défaut du chrome
@@ -350,7 +355,17 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 tableauController.marqueurEnjeu(),
                 () -> tableauController.pourLeSelecteur());
 
-        zonesStatut.bind(Bindings.createObjectBinding(this::zonesStatutCourantes, viewModel.comptageProperty()));
+        // #3752 : la liste enonce ce que `zonesStatutCourantes` lit VRAIMENT. Il manquait la source -
+        // lue pour la zone gauche - et la liste filtree, lue pour le compteur d'especes a enjeu.
+        // `bind()` evalue le calcul tout de suite, source encore nulle, donc `ZonesStatut.VIDE` : les
+        // trois zones vides retirent la barre du layout, et rien ne la ramenait sur le chemin d'erreur
+        // (`reinitialiser()` repose la MEME instance `ComptageAudio.VIDE`).
+        //
+        // C'est CE champ-ci qui est declare, et non `viewModel.sourceProperty()` : le ViewModel porte
+        // un homonyme, pose dans le meme appel, qui aurait invalide au bon moment sans etre la valeur
+        // lue. Un binding juste par coincidence est ce que le lot 3 passait son temps a defaire.
+        zonesStatut.bind(Bindings.createObjectBinding(
+                this::zonesStatutCourantes, source, viewModel.comptageProperty(), viewModel.observationsFiltrees()));
 
         // Panneau d'écoute : config AudioView (normalisations, expansion ×10, source, dispose) + repérage du
         // cri (#482) + métriques FME/fréq. terminale (#500) + options de lecture (#483). Détail dans le helper.
@@ -415,7 +430,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
         // Glisser-déposer d'un CSV Tadarida sur l'écran : alternative au FileChooser natif (qui coince
         // parfois en devcontainer / bureau distant). Actif seulement pour la source workflow (ParPassage).
-        DepotFichier.installer(racine, () -> source != null && source.permetWorkflowTadarida(), this::deposerFichiers);
+        DepotFichier.installer(
+                racine, () -> source.get() != null && source.get().permetWorkflowTadarida(), this::deposerFichiers);
 
         // Gestion des colonnes (afficher/masquer + réordonner par glisser) : menu contextuel (clic droit)
         // et item « Colonnes… » du ☰ ouvrent le même panneau. La proposition Tadarida, colonne d'identité,
@@ -457,7 +473,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// (si non nulle) une fois la table chargée, ce qui déclenche l'écoute de sa séquence. Le filtre de
     /// statut est remis à zéro avant le ciblage pour que la détection visée soit visible.
     public void ouvrirSur(SourceObservations source, Long idObservationCible) {
-        this.source = Objects.requireNonNull(source, "source");
+        this.source.set(Objects.requireNonNull(source, "source"));
         adapterAffichage(source);
         // Chargement des sons **hors du fil JavaFX** (#1214) : résolution de la source en arrière-plan
         // sous l'overlay, puis application (ou erreur, filet #795) sur le fil JavaFX, enfin le ciblage.
@@ -501,13 +517,13 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// Emplacement dans le fil d'Ariane, **piloté par la source**. Détail dans [ChromeAudio].
     @Override
     public List<Lieu> emplacement() {
-        return ChromeAudio.emplacement(source, ouvrirSite, ouvrirPassage, ouvrirAnalyse, ouvrirMultisite);
+        return ChromeAudio.emplacement(source.get(), ouvrirSite, ouvrirPassage, ouvrirAnalyse, ouvrirMultisite);
     }
 
     /// Zones de la **barre de statut**, dérivées de la source et du comptage. Détail dans [ChromeAudio].
     private ZonesStatut zonesStatutCourantes() {
         return ChromeAudio.zonesStatut(
-                source,
+                source.get(),
                 viewModel.comptageProperty().get(),
                 ComptageEnjeu.de(
                         viewModel.observationsFiltrees(),
@@ -553,7 +569,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// sur le portail Vigie-Chiro (#1124). Détail dans [ActionDonneesVigieChiro].
     @FXML
     private void ouvrirDonneesVigieChiro() {
-        actionsMenu.donneesVigieChiro().ouvrir(source);
+        actionsMenu.donneesVigieChiro().ouvrir(source.get());
     }
 
     /// « Importer / Réimporter un CSV Tadarida » : demande le fichier puis [ImportTadarida] (import, ou
@@ -574,7 +590,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         ImportVigieChiroUI.lancer(
                 importVigieChiro,
                 viewModel,
-                source,
+                source.get(),
                 occupation,
                 new DialogueProgression(appuis.executeur()),
                 () -> tableauController.table().getScene().getWindow(),
@@ -590,7 +606,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private void publierCorrections() {
         PublicationCorrectionsUI.lancer(
                 publicationCorrections,
-                source,
+                source.get(),
                 occupation,
                 new DialogueProgression(appuis.executeur()),
                 () -> tableauController.table().getScene().getWindow(),
