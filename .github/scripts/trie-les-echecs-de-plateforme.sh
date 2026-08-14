@@ -54,6 +54,15 @@ read -r cre ere rre <<< "$(compte reste)"
 {
     echo "### Ce que la suite donne sur ${RUNNER_OS:-cette plateforme}"
     echo
+    # ⚠️ Dire SUR QUOI le compte a porté. Sans cette ligne, « aucun échec » sur trois classes se relirait
+    # comme « aucun échec » tout court - et c'est le genre de malentendu qui fait programmer un train de
+    # publication sur une preuve qui n'existe pas (#3754).
+    if [ -n "${CLASSES:-}" ]; then
+        echo "⚠️ **Passage ciblé** : \`${CLASSES}\`. Ce compte ne dit **rien** du reste de la suite."
+    else
+        echo "Passage **complet** : toutes les classes de test."
+    fi
+    echo
     echo "| Famille | Classes | Échecs | Erreurs |"
     echo "|---|---|---|---|"
     echo "| TestFX (\`ApplicationExtension\`) | ${cfx} | **${efx}** | **${rfx}** |"
