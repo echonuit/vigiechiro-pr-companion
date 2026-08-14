@@ -559,6 +559,12 @@ L'écran qui porte l'état d'avancement d'une nuit.
 <td><a href="apercu-diagnostic-retour.png"><img src="apercu-diagnostic-retour.png" width="430" alt="Retour"></a></td>
 <td><a href="apercu-diagnostic-export.png"><img src="apercu-diagnostic-export.png" width="430" alt="Export"></a></td>
 </tr>
+<tr>
+<th colspan="2">Erreur d'ouverture, rendue dans le chrome : la barre de statut dit de quel passage il s'agit</th>
+</tr>
+<tr>
+<td colspan="2"><a href="apercu-diagnostic-erreur-statut.png"><img src="apercu-diagnostic-erreur-statut.png" width="860" alt="Erreur d'ouverture avec la barre de statut"></a></td>
+</tr>
 </table>
 
 ## Audit de cohérence

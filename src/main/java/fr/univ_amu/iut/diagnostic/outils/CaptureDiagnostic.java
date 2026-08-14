@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.diagnostic.view.DiagnosticController;
+import fr.univ_amu.iut.diagnostic.view.NavigationDiagnostic;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -132,6 +133,22 @@ public final class CaptureDiagnostic {
         System.exit(0);
     }
 
+    /// Trace de sortie, partagee par les trois rendus (PMD refuse la troisieme copie du litteral).
+    private static final String ECRIT = "Apercu ecrit dans ";
+
+    /// Chrome principal : seul lui porte la barre de statut, qu'aucune vue ne rend elle-même.
+    private static final String CHROME = "/fr/univ_amu/iut/commun/view/MainView.fxml";
+
+    /// **1250 et non 1100** (la largeur d'ouverture de l'application) : en dessous, la barre du haut du
+    /// chrome se tronque sur cet écran, et le garde de lisibilité refuse la capture - à juste titre.
+    /// Mesuré en descendant : 7 libellés tronqués à 1100 et 1150, 2 à 1200, aucun à partir de 1250.
+    ///
+    /// Le seuil est **au-dessus** de la largeur d'ouverture : c'est un défaut du produit, pas de la
+    /// capture, et il est ouvert à part (#3760). Élargir ici documente la barre de statut sans faire semblant
+    /// que le problème n'existe pas ; la capture porte donc une largeur qu'aucun utilisateur n'a par
+    /// défaut, et c'est écrit.
+    private static final int LARGEUR_CHROME = 1250;
+
     /// Identifiant volontairement absent de la base : le chargement échoue et l'écran rend son bandeau.
     private static final long PASSAGE_INEXISTANT = 999_999L;
 
@@ -157,6 +174,11 @@ public final class CaptureDiagnostic {
         // - on ne vérifiait que « rien n'est déplacé » quand il est absent. Ouvrir sur un passage
         // inexistant produit le cas réel sans mock : le chargement échoue et l'écran le dit.
         rendre(injecteur, PASSAGE_INEXISTANT, sortie.resolve("apercu-diagnostic-retour.png"));
+        // Le MÊME état, mais rendu **dans le chrome** (#3540, lot 3) : c'est la seule façon de voir la
+        // barre de statut, qui n'appartient pas à `Diagnostic.fxml`. Aucune capture ne la montrait, et
+        // c'est précisément la zone que ce lot a corrigée : sur ce chemin d'erreur, sa zone gauche
+        // restait vide, l'écran n'annonçant plus de quel passage il parlait.
+        rendreDansLeChrome(creerInjecteur(), PASSAGE_INEXISTANT, sortie.resolve("apercu-diagnostic-erreur-statut.png"));
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
@@ -175,7 +197,25 @@ public final class CaptureDiagnostic {
         // Capture hors-chrome : le fil d'Ariane n'est pas rendu ; le contexte n'a donc pas à être réel.
         controleur.ouvrirSur(new ContextePassage(idPassage, 1, new ContexteSite(NUMERO_CARRE, "A1", null)));
         ApercuFx.enregistrerPng(new Scene(vue, 1000, 660), fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// Rend l'écran **dans le chrome** (`MainView.fxml`), par sa vraie navigation, pour que la **barre de
+    /// statut** soit rendue : elle appartient au chrome, jamais à la vue, et aucun aperçu de M-Diagnostic
+    /// ne la montrait.
+    ///
+    /// La navigation est passée par `NavigationDiagnostic` plutôt qu'en chargeant le FXML à la main :
+    /// c'est elle qui empile la vue et donne au chrome son `ResumeStatut`, donc le seul chemin où la
+    /// barre se remplit comme en production (ADR 0025).
+    private static void rendreDansLeChrome(Injector injecteur, long idPassage, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(CaptureDiagnostic.class.getResource(CHROME));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent chrome = loader.load();
+        injecteur
+                .getInstance(NavigationDiagnostic.class)
+                .ouvrir(new ContextePassage(idPassage, 1, new ContexteSite(NUMERO_CARRE, "A1", null)));
+        ApercuFx.enregistrerPng(new Scene(chrome, LARGEUR_CHROME, 720), fichier);
+        System.out.println(ECRIT + fichier.toAbsolutePath());
     }
 
     /// Aperçu de l'**image exportée** du graphe climatique (#2618) : passe par le vrai geste du
@@ -189,7 +229,7 @@ public final class CaptureDiagnostic {
         controleur.ouvrirSur(new ContextePassage(idPassage, 2, new ContexteSite(NUMERO_CARRE, "A1", null)));
         // Date FIXE : les PNG sont versionnés, un LocalDate.now() reverserait une capture par jour.
         controleur.exporterVers(fichier, LocalDate.of(2026, 6, 23));
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(ECRIT + fichier.toAbsolutePath());
     }
 
     /// Seede un site, un point géolocalisé et un point sans GPS, et quatre passages déposés (chacun
