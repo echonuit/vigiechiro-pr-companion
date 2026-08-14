@@ -73,7 +73,10 @@ class VerrouWorkspaceTest {
     void le_fichier_dit_qui_occupe() throws Exception {
         try (VerrouWorkspace verrou = VerrouWorkspace.prendre(workspace()).orElseThrow()) {
             assertThat(verrou.detenu()).isTrue();
-            String contenu = Files.readString(racine.resolve("ws").resolve(".verrou"));
+            // ⚠️ Par `occupant` et non par `Files.readString` : cette dernière lit depuis l'octet 0,
+            // donc traverse la zone verrouillée, et échoue sous Windows où un verrou est impératif
+            // (#3693). Lire le fichier « en direct » ici éprouvait une capacité que le produit n'a pas.
+            String contenu = VerrouWorkspace.occupant(workspace());
 
             assertThat(contenu)
                     .as("« le workspace est utilisé » sans dire par qui n'aide personne à s'en sortir")
