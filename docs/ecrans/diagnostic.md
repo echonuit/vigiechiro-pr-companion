@@ -50,6 +50,16 @@ sans coordonnées. Le reste du diagnostic (courbe, anomalies, évènements) deme
 
 ![L'écran de diagnostic sans coordonnées GPS : repère « non renseigné », cohérence horaire absente.](../assets/captures/apercu-diagnostic-sans-gps.png)
 
+## Quand le diagnostic ne peut pas être chargé
+
+Un passage dont la carte SD n'a pas encore été importée n'a pas de session d'enregistrement : il n'y a
+rien à diagnostiquer, et l'écran le dit dans un bandeau plutôt que de rester vide sans explication.
+
+La **barre de statut**, en bas, continue d'indiquer de quel passage il s'agit - c'est au moment où
+quelque chose ne va pas qu'on a le plus besoin de savoir sur quelle nuit on se trouve.
+
+![L'écran de diagnostic après un échec de chargement : le bandeau explique, et la barre de statut nomme toujours le passage.](../assets/captures/apercu-diagnostic-erreur-statut.png)
+
 ## Exporter la courbe
 
 ![L'image exportée du graphe climatique : la courbe redessinée, avec sous elle le passage, le nombre de mesures et la provenance.](../assets/captures/apercu-diagnostic-export.png)

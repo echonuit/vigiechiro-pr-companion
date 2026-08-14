@@ -1,6 +1,6 @@
 # ADR 3547 - Un binding déclare ce qu'il lit, et rien ne le vérifie
 
-- **Statut** : Accepté - 2026-08-14
+- **Statut** : Accepté - 2026-08-14, **amendé** par [ADR 3540](3540-un-cliquet-qui-compte-n-est-pas-la-preuve-de-la-regle.md) : sa vérification est **humaine** (le relevé consigné), le cliquet ne prouvant que le comptage
 - **Chantier** : #3547 (lot 3 du chantier #3536)
 - **Vérification** : certaine - `DeclarationDesBindingsTest#tout_nouveau_binding_est_vu`
 - **Prolonge** : [ADR 3664](3664-un-releve-qui-n-a-pas-ouvert-les-fichiers-est-une-hypothese.md)
