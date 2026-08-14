@@ -362,6 +362,35 @@ robot de Flathub. Publier une version ne demande aucun geste côté paquet.
     fichier à chaque appel et échouerait avant d'y arriver. Le `.deb` installé normalement, lui, garde
     cette catégorie fautive.
 
+### Dépôt Flatpak auto-hébergé (#9760)
+
+Le paquet est soumis à Flathub depuis #2191, sans être encore accepté : leur revue exige un point de
+contact humain avant la première fusion, et une rotation de mainteneurs interne n'y change rien. En
+attendant, `flatpak.yml` peut publier le **même** paquet - construit et démarré par la même vérification
+- dans un dépôt Flatpak que ce projet héberge lui-même, indépendant de Flathub.
+
+**Mécanisme** : la construction de `flatpak-builder` exporte désormais vers `--repo`, en plus du
+`--install` local qui sert au démarrage réel. C'est ce dépôt-là, déjà éprouvé par le pas qui le précède,
+qu'un `.flatpakrepo` généré à la volée puis
+[`peaceiris/actions-gh-pages`](https://github.com/peaceiris/actions-gh-pages) publient vers
+`echonuit/flatpak` (branche `gh-pages`, domaine `flatpak.echonuit.fr`) - le même patron que
+`companion`/`companion-dev`/`brief` dans [docs.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml).
+
+**Dormant par construction**, comme la publication de la doc : tant que la variable
+`ENABLE_FLATPAK_REPO` n'est pas à `true` ou que le secret `FLATPAK_DEPLOY_TOKEN` n'est pas posé, ces
+deux pas s'effacent en `::notice::` plutôt que de rougir. Pour l'activer :
+
+1. Créer le dépôt de publication `echonuit/flatpak` (vide, `gh-pages` sera créée par l'action) et pointer
+   `flatpak.echonuit.fr` dessus (CNAME + enregistrement DNS, comme les trois domaines de doc).
+2. Poser un PAT avec `contents: write` sur ce seul dépôt dans le secret `FLATPAK_DEPLOY_TOKEN`.
+3. Poser la variable de dépôt `ENABLE_FLATPAK_REPO=true`.
+
+**Non signé pour l'instant** (`NoGpgVerify=true` dans le `.flatpakrepo` généré, installation par
+`flatpak remote-add --no-gpg-verify`). Signer suppose une clé GPG dont la partie privée doit être
+engendrée **hors** de cette CI et déposée directement en secret d'organisation - jamais dans un commit,
+un journal de build ou ailleurs où elle transiterait en clair -, ce qui en fait une décision distincte de
+la publication elle-même plutôt qu'un préalable.
+
 ## winget (#2213)
 
 Le paquet **`Echonuit.VigieChiroCompanion`** est servi par winget depuis le **2026-08-10**

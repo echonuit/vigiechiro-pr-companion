@@ -138,10 +138,18 @@ jobs:
         # flatpak-builder écrit `builddir/` et `.flatpak-builder/` dans le dossier
         # courant, soit des centaines de Mo au milieu des sources versionnées. Le
         # premier essai a fini en push rejeté par GitHub (objet de 147 Mo).
+        #
+        # --repo : exporte la construction vers un dépôt ostree, EN PLUS de
+        # l'installer localement. flatpak-builder installe alors depuis ce même
+        # dépôt plutôt que depuis un état intermédiaire : le pas « Démarrage réel »
+        # qui suit éprouve donc exactement ce que « Publier le dépôt Flatpak
+        # auto-hébergé », plus bas, s'apprête à publier - jamais un artefact distinct
+        # qui aurait pu diverger.
         run: |
           set -euo pipefail
           flatpak-builder --disable-rofiles-fuse --install-deps-from=flathub \
             --state-dir="${RUNNER_TEMP}/flatpak-etat" \
+            --repo="${RUNNER_TEMP}/flatpak-repo" \
             --user --install --force-clean \
             "${RUNNER_TEMP}/flatpak-build" "${APP_ID}.yml"
 
@@ -209,6 +217,57 @@ jobs:
           titre=$(DISPLAY=:99 xdotool getwindowname "$fenetre" 2>/dev/null || echo '?')
           kill "$appli" 2>/dev/null || true
           echo "Le Flatpak démarre et ouvre une fenêtre « ${titre} », sans erreur."
+
+      # Dépôt Flatpak auto-hébergé, en attendant l'acceptation sur Flathub (#2191).
+      #
+      # Dormant tant que ENABLE_FLATPAK_REPO != 'true' OU que FLATPAK_DEPLOY_TOKEN
+      # n'est pas posé : même garde-fou d'inertie que docs.yml pour companion/
+      # companion-dev/brief, pour la même raison — ce changement peut être fusionné
+      # avant que le dépôt de publication, le domaine et le jeton existent, et la
+      # publication démarrera d'elle-même le jour où ils sont posés.
+      #
+      # NON SIGNÉ pour l'instant (`NoGpgVerify=true` dans le .flatpakrepo généré
+      # ci-dessous). Signer suppose une clé GPG dont la partie privée doit être
+      # engendrée hors de cette CI et déposée directement en secret, jamais
+      # transitant par un commit, un journal de build ou une conversation : décision
+      # à part, pas un blocage pour publier une première fois.
+      - name: Vérifier la présence du secret FLATPAK_DEPLOY_TOKEN
+        id: garde-flatpak-repo
+        env:
+          FLATPAK_DEPLOY_TOKEN: ${{ secrets.FLATPAK_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$FLATPAK_DEPLOY_TOKEN" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::FLATPAK_DEPLOY_TOKEN absent : publication du dépôt Flatpak auto-hébergé ignorée."
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Générer le .flatpakrepo
+        if: (steps.diff.outputs.change == 'true' || inputs.forcer) && vars.ENABLE_FLATPAK_REPO == 'true' && steps.garde-flatpak-repo.outputs.present == 'true'
+        run: |
+          set -euo pipefail
+          fichier="${RUNNER_TEMP}/flatpak-repo/${APP_ID}.flatpakrepo"
+          {
+            echo "[Flatpak Repo]"
+            echo "Title=VigieChiro Companion (dépôt auto-hébergé)"
+            echo "Url=https://flatpak.echonuit.fr/"
+            echo "Homepage=https://companion.echonuit.fr/"
+            echo "Comment=En attendant l'acceptation sur Flathub (#2191)"
+            echo "Description=Publié depuis ce dépôt à chaque montée de version. Non signé pour l'instant : ajouté avec --no-gpg-verify."
+            echo "NoGpgVerify=true"
+          } > "$fichier"
+
+      - name: Publier le dépôt Flatpak auto-hébergé (flatpak.echonuit.fr)
+        if: (steps.diff.outputs.change == 'true' || inputs.forcer) && vars.ENABLE_FLATPAK_REPO == 'true' && steps.garde-flatpak-repo.outputs.present == 'true'
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
+        with:
+          personal_token: ${{ secrets.FLATPAK_DEPLOY_TOKEN }}
+          external_repository: echonuit/flatpak
+          publish_branch: gh-pages
+          publish_dir: ${{ runner.temp }}/flatpak-repo
+          cname: flatpak.echonuit.fr
+          full_commit_message: "build(flatpak): republier le dépôt depuis ${{ github.sha }}"
 
       # Volontairement SANS `|| inputs.forcer` : forcer sert à ÉPROUVER, pas à
       # proposer. Quand le manifeste n'a pas bougé, il n'y a rien à committer, et
