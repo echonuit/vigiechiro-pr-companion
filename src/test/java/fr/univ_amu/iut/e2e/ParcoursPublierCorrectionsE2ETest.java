@@ -44,6 +44,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -123,11 +125,14 @@ class ParcoursPublierCorrectionsE2ETest {
 
     @Test
     @DisplayName("#1838 : nuit importée par CSV, l'écran la montre sans ancrage, et publier va le chercher")
-    void publier_une_nuit_importee_par_csv(FxRobot robot) {
-        WaitForAsyncUtils.waitForFxEvents();
-
+    void publier_une_nuit_importee_par_csv(FxRobot robot) throws TimeoutException {
         TableView<LigneObservationAudio> table =
                 robot.lookup("#tableObservations").queryAs(TableView.class);
+        // L'ouverture (controleur.ouvrirSur, dans @Start) charge la table hors du fil JavaFX
+        // (occupation.occuper) : waitForFxEvents ne fait que vider la file du fil FX, il n'attend pas
+        // ce thread en tache de fond. Sans cette attente, la table est encore vide quand l'assertion
+        // tombe, un échec qui ne se produit que sur une machine lente, donc en CI (#3733).
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !table.getItems().isEmpty());
         assertThat(table.getItems()).as("l'import rapide a bien rempli l'écran").hasSize(1);
 
         Observation avant = observations().getFirst();
