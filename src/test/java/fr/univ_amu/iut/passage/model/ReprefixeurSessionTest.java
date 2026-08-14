@@ -85,7 +85,9 @@ class ReprefixeurSessionTest {
                         nouvelle,
                         ANCIEN.prefixeFichier(),
                         NOUVEAU.prefixeFichier()))
-                .isEqualTo("/ws/Car040962-2026-Pass2-A1/foo_LogPR.txt");
+                // ⚠️ Le jumeau de l'assertion ci-dessus, laissé en littéral lors de la première passe :
+                // il n'a rougi qu'au dispatch complet, cinq lignes plus bas que sa correction (#3526).
+                .isEqualTo(Path.of("/ws/Car040962-2026-Pass2-A1/foo_LogPR.txt").toString());
     }
 
     @Test

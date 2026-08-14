@@ -59,17 +59,34 @@ class CartesAccueilTest {
                 .isLessThanOrEqualTo(description.getLayoutBounds().getWidth());
     }
 
-    /// Monte la carte dans une **scène qui porte les feuilles du chrome**, puis applique le CSS et la
-    /// mise en page. Sans cela le titre garde la police par défaut (~13 px) au lieu de son `15px bold`,
-    /// et « Espèces & observations » **tient** alors sur une ligne : le test mesurerait une carte qui
+    /// Monte la carte dans une **scène habillée**, puis applique le CSS et la mise en page. Sans les
+    /// feuilles du chrome le titre garde la police par défaut (~13 px) au lieu de son `15px bold`, et
+    /// « Espèces & observations » **tient** alors sur une ligne : le test mesurerait une carte qui
     /// n'existe pas, et resterait vert avec le défaut en place.
+    ///
+    /// ⚠️ Les feuilles ne suffisent pas, et ce test l'a montré de la pire façon (#3526) : les poser à la
+    /// main sans appeler [Typographie#installer] laisse la police embarquée **non enregistrée** auprès
+    /// de JavaFX. `base.css` la demandait alors en vain, et le rendu retombait sur la police du système.
+    ///
+    /// Ce n'était pas une différence de plateforme, contrairement à ce que le premier diagnostic disait.
+    /// `installer()` garde un `static boolean installee` : l'enregistrement est **global au JVM et fait
+    /// une seule fois**. Dans un fork surefire, ce test voyait donc « Noto Sans » **si un autre test
+    /// l'avait installée avant lui**, et la police du système sinon - c'est l'ordre d'exécution qui
+    /// décidait. Sous Linux le repli est assez large pour que l'assertion tienne dans les deux cas ;
+    /// sous macOS il est étroit, et le verdict basculait avec l'ordre.
+    ///
+    /// La preuve est au dossier : le **même commit**, sur la **même image** `macos-26-arm64`
+    /// (`20260728.0273.1`), a rendu vert à 8 h 14 et rouge à 15 h 34. Un test dont le verdict dépend de
+    /// ses voisins, pas de ce qu'il mesure.
+    ///
+    /// Le titre court mesure 20,43 px avec la police embarquée, contre 17,666 px relevés sous macOS avec
+    /// celle du système : c'est l'écart qui faisait tenir « Espèces & observations » sur une ligne.
+    ///
+    /// `Habillage.scene(...)` fait les deux - installer la police, poser le trio du chrome - et c'est
+    /// la raison d'être de ce patron : une scène montée à la main en oublie toujours une moitié.
     private static VBox carte(String titre) {
         VBox carte = (VBox) CartesAccueil.carte(new ActiviteDeTest(titre));
-        Scene scene = new Scene(new StackPane(carte));
-        scene.getStylesheets()
-                .addAll(
-                        CartesAccueil.class.getResource("palette.css").toExternalForm(),
-                        CartesAccueil.class.getResource("base.css").toExternalForm());
+        Scene scene = Habillage.scene(new StackPane(carte));
         scene.getRoot().applyCss();
         scene.getRoot().layout();
         return carte;

@@ -5,12 +5,39 @@
 # l'exécution, brancher le train de publication - dépendent toutes du chiffre qu'il produit, et les
 # décider avant de l'avoir serait décider sans savoir.
 #
-# ⚠️ Manuel, et délibérément. Un `schedule` posé aujourd'hui rougirait dès sa première nuit sur du
-# bruit de fixture probable, et un dispositif qui commence par du bruit ne se relit plus jamais - il
-# devient un onglet qu'on ferme.
+# ⚠️ Il était manuel au départ, délibérément : un `schedule` posé avant le tri aurait rougi dès sa
+# première nuit sur du bruit de fixture, et un dispositif qui commence par du bruit devient un onglet
+# qu'on ferme. Les onze échecs relevés à l'étape 1 sont corrigés, donc il se programme (#3526).
 name: Suite complète sous Windows et macOS
 
+# ⚠️ Le titre du run porte le **marqueur** que la veille du train lit (`veille-plateformes.sh`). Il
+# distingue un passage complet d'un passage ciblé, ce que l'API des runs ne permet pas autrement :
+# elle ne rend pas les entrées d'un `workflow_dispatch`.
+#
+# Filtrer sur le seul déclencheur aurait été plus simple, et laissait le train sans **issue de
+# secours** : si le mardi rougit sur une instabilité, plus rien ne peut produire de preuve avant le
+# mardi suivant, et la publication reste bloquée une semaine sur du bruit. Un passage manuel *complet*
+# est une preuve tout aussi bonne qu'un passage programmé - c'est le passage *ciblé* qui n'en est pas
+# une. Le marqueur dit lequel des deux.
+#
+# Renommer `[complet]` sans reporter le nom dans la veille casserait la détection ; elle refuse alors
+# de conclure et dit que c'est elle qui est en cause, plutôt que d'annoncer un rassurant « jamais joué ».
+run-name: >-
+  ${{ (github.event_name == 'schedule' || inputs.classes == '')
+      && '[complet] toute la suite'
+      || format('[ciblé] {0}', inputs.classes) }}
+
 on:
+  # ⚠️ Le MARDI, la veille du train du mercredi 6 h. La preuve est ainsi fraîche de moins de 24 h **au
+  # moment précis où elle sert de condition** - et non « quotidienne » comme l'issue le proposait
+  # d'abord : chaque passage coûte ~1 h 40 de machine (48 min par plateforme), et une preuve d'hier ne
+  # vaut pas mieux qu'une preuve d'avant-hier si le train ne part que le lendemain.
+  #
+  # Le prix est qu'une régression peut vivre une semaine avant d'être vue. Elle ne sera jamais
+  # **publiée**, ce qui est le risque qu'on couvre ici.
+  schedule:
+    - cron: "0 6 * * 2"
+  # Conservé : un doute n'attend pas le mardi, et depuis #3754 une question ciblée coûte trois minutes.
   workflow_dispatch:
     inputs:
       classes:
