@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.MenuCopier;
@@ -78,6 +79,9 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
 
     /// Action de ligne « Ouvrir sur Vigie-Chiro » (#1799) : page de la participation liée au passage.
     private final ActionVigieChiroPassage vigieChiro;
+
+    /// Travail lourd hors du fil JavaFX (#1014) : la publication d'un point appelle le réseau.
+    private final ExecuteurTache executeur;
 
     /// Contexte du site (nom en zone gauche, commune/protocole en zone centre) déporté en barre de statut
     /// (#693) au lieu d'un en-tête titre/sous-titre.
@@ -193,7 +197,9 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
             OuvrirMultisite ouvrirMultisite,
             DepotDispositionColonnes depotColonnes,
             OuvreurDeLien ouvreurDeLien,
-            ActionVigieChiroPassage vigieChiro) {
+            ActionVigieChiroPassage vigieChiro,
+            ExecuteurTache executeur) {
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -335,7 +341,14 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         // ceux de l'écran (#1405) : les cartes fabriquaient jusqu'ici leur propre confirmateur, que
         // personne n'exposait - donc que personne ne pouvait remplacer en test.
         CartesPointsSite.installer(
-                cartesPoints, lblAucunPoint, viewModel, navigation, ouvrirMultisite, confirmateur, notificateur);
+                cartesPoints,
+                lblAucunPoint,
+                viewModel,
+                navigation,
+                ouvrirMultisite,
+                confirmateur,
+                notificateur,
+                executeur);
         // Révélation des points rapatriés non utilisés (#1738) : la synchro ramène tous les points du carré,
         // mais la fiche ne montre par défaut que ceux qui SERVENT (au moins un passage). Ce lien n'apparaît
         // que s'il reste des points à révéler ; son libellé suit l'état (Afficher N… / Masquer…).

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.model;
 
 import com.google.gson.JsonArray;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.LocalitesDuSite;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
@@ -34,10 +35,24 @@ public class PublicationPoint {
 
     private final ClientVigieChiro client;
     private final PointPublieDao publies;
+    private final FournisseurToken token;
 
-    public PublicationPoint(ClientVigieChiro client, PointPublieDao publies) {
+    public PublicationPoint(ClientVigieChiro client, PointPublieDao publies, FournisseurToken token) {
         this.client = Objects.requireNonNull(client, "client");
         this.publies = Objects.requireNonNull(publies, "publies");
+        this.token = Objects.requireNonNull(token, "token");
+    }
+
+    /// Un jeton est-il enregistré ? La **seule** condition d'échec qui se sache d'avance.
+    ///
+    /// ⚠️ Ne pas chercher à en déduire davantage. Le refus d'écriture (403) dépend de choses que
+    /// Companion ne connaît pas : le propriétaire du carré, et la validation de l'observateur sur son
+    /// protocole. Les liens de site viennent de `GET /moi/participations` et non de `/moi/sites` (#718,
+    /// cf. [ClientVigieChiro#mesSites()]), donc un carré relié peut appartenir à quelqu'un d'autre.
+    /// Prédire le refus à partir du verrouillage bloquerait le participant validé, à qui la plateforme
+    /// dit oui.
+    public boolean connecte() {
+        return token.token().isPresent();
     }
 
     /// Ce qu'une publication peut donner.
@@ -102,16 +117,28 @@ public class PublicationPoint {
 
     /// Traduit un échec d'API en refus qui **dit quoi faire**.
     ///
-    /// Le 403 est le cas nommé : la plateforme n'autorise l'écriture des localités qu'au propriétaire du
-    /// site ou à un observateur **validé sur son protocole**. Sans cette précision, l'utilisateur lit un
-    /// « accès refusé » et n'a aucune idée de ce qui lui manque.
+    /// Le 403 est le cas nommé, et il a **deux causes** que `set_localite` traite dans la même branche :
+    ///
+    /// | Cas | Écriture des localités |
+    /// |---|---|
+    /// | Propriétaire, carré **non verrouillé** | autorisée |
+    /// | Propriétaire, carré **verrouillé** | **403** |
+    /// | Non-propriétaire **validé** sur le protocole | autorisée, même verrouillé |
+    /// | Non-propriétaire non validé | **403** |
+    ///
+    /// ⚠️ La première version de ce message ne nommait que la seconde cause (« ce carré ne vous appartient
+    /// pas »). Pour le cas le plus courant - **son propre carré, verrouillé** - il était faux, et il
+    /// envoyait vérifier une inscription qui n'y était pour rien. Les deux causes sont donc nommées, la
+    /// plus probable d'abord.
     private static Resultat refus(ReponseApi<?> reponse, String pendant) {
         if (reponse instanceof ReponseApi.Refuse<?> refuse && refuse.statut() == 403) {
             return new Resultat.Refuse(
                     "La plateforme refuse d'écrire les points de ce carré.",
-                    "Ce carré ne vous appartient pas : pour y ajouter un point, il faut être inscrit et"
-                            + " validé sur son protocole. Vérifiez votre inscription sur le portail"
-                            + " Vigie-Chiro, ou demandez au propriétaire du carré d'ajouter le point.");
+                    "Deux causes possibles. Si ce carré est le vôtre, il est sans doute déjà"
+                            + " verrouillé : un carré verrouillé est figé, et seul un administrateur"
+                            + " Vigie-Chiro peut le rouvrir. S'il appartient à quelqu'un d'autre, il faut"
+                            + " être inscrit et validé sur son protocole : vérifiez votre inscription sur"
+                            + " le portail, ou demandez au propriétaire d'ajouter le point.");
         }
         return new Resultat.Refuse(
                 "Impossible de " + pendant + ".",

@@ -2,15 +2,18 @@ package fr.univ_amu.iut.sites.view;
 
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.viewmodel.CartePoint;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.Locale;
+import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.scene.Node;
@@ -46,19 +49,25 @@ final class CartesPointsSite {
     /// Compte rendu : le porteur **de l'écran** (#1405), double capturant en test.
     private final NotificateurModifiable notificateur;
 
+    /// Publier appelle le **réseau** : le travail part hors du fil JavaFX, sans quoi le clic ne ferait
+    /// rien pendant plusieurs secondes (#1014). Synchrone en test, donc déterministe.
+    private final ExecuteurTache executeur;
+
     private CartesPointsSite(
             FlowPane cartesPoints,
             SiteDetailViewModel viewModel,
             NavigationSites navigation,
             OuvrirMultisite ouvrirMultisite,
             ConfirmateurModifiable confirmateur,
-            NotificateurModifiable notificateur) {
+            NotificateurModifiable notificateur,
+            ExecuteurTache executeur) {
         this.cartesPoints = cartesPoints;
         this.viewModel = viewModel;
         this.navigation = navigation;
         this.ouvrirMultisite = ouvrirMultisite;
         this.confirmateur = confirmateur;
         this.notificateur = notificateur;
+        this.executeur = executeur;
     }
 
     /// Installe le rendu des cartes sur `cartesPoints` : repli d'état vide lié à `lblAucunPoint` (#791,
@@ -72,12 +81,13 @@ final class CartesPointsSite {
             NavigationSites navigation,
             OuvrirMultisite ouvrirMultisite,
             ConfirmateurModifiable confirmateur,
-            NotificateurModifiable notificateur) {
+            NotificateurModifiable notificateur,
+            ExecuteurTache executeur) {
         var aucunPoint = Bindings.isEmpty(cartesPoints.getChildren());
         lblAucunPoint.visibleProperty().bind(aucunPoint);
         lblAucunPoint.managedProperty().bind(aucunPoint);
-        CartesPointsSite cartes =
-                new CartesPointsSite(cartesPoints, viewModel, navigation, ouvrirMultisite, confirmateur, notificateur);
+        CartesPointsSite cartes = new CartesPointsSite(
+                cartesPoints, viewModel, navigation, ouvrirMultisite, confirmateur, notificateur, executeur);
         viewModel.points().addListener((ListChangeListener<CartePoint>) changement -> cartes.reconstruire());
         cartes.reconstruire();
     }
@@ -199,8 +209,93 @@ final class CartesPointsSite {
                                 + " Supprimez d'abord les passages rattachés."
                         : "Supprimer ce point d'écoute.");
         HBox actions = new HBox(editer, actionSupprimer);
+        actionPublier(carte).ifPresent(actions.getChildren()::add);
         actions.getStyleClass().add("carte-point-actions");
         return actions;
+    }
+
+    /// Action **« Publier sur Vigie-Chiro »** (#3458), ou l'état qui la remplace.
+    ///
+    /// Trois cas la font disparaître plutôt que griser : la publication n'est pas installée (injecteur
+    /// sans connexion), le point **vient de** la plateforme (l'y renvoyer n'a pas de sens), ou il y a
+    /// **déjà été poussé** - et c'est alors un état qui s'affiche, pas une action.
+    ///
+    /// ⚠️ **Le carré verrouillé n'est pas grisé**, alors que c'est lui qui refusera son propriétaire.
+    /// `PUT /sites/{id}/localites` accepte un participant validé sur le protocole même verrouillé, et
+    /// refuse le propriétaire dès qu'il l'est ; les liens de site venant de `GET /moi/participations`
+    /// (#718), Companion ne sait pas dans quel cas il se trouve. Le refus est donc **rendu compte**,
+    /// avec son geste, plutôt que deviné.
+    private Optional<Node> actionPublier(CartePoint carte) {
+        if (!viewModel.publicationInstallee() || carte.venuDeLaPlateforme()) {
+            return Optional.empty();
+        }
+        if (carte.publie()) {
+            return Optional.of(etiquettePubliee());
+        }
+        Hyperlink publier = new Hyperlink("Publier sur Vigie-Chiro");
+        publier.setGraphic(new FontIcon("fas-cloud-upload-alt"));
+        Optional<String> empechement = viewModel.empechementPublication(carte);
+        publier.setDisable(empechement.isPresent());
+        publier.setOnAction(evenement -> publierPoint(carte, publier));
+        return Optional.of(IndicateurBlocage.enrober(
+                publier, empechement.orElse("Ajouter ce point aux localités du carré sur Vigie-Chiro.")));
+    }
+
+    /// État « déjà en ligne » : un libellé, pas un lien. Le geste n'a plus lieu d'être, et le proposer
+    /// encore ferait cliquer pour apprendre qu'il n'y a rien à faire.
+    private static Label etiquettePubliee() {
+        Label publie = new Label("Publié sur Vigie-Chiro");
+        publie.getStyleClass().add(STYLE_DESC);
+        publie.setGraphic(IconesSeverite.icone(Severite.SUCCES, STYLE_DESC));
+        publie.setTooltip(new Tooltip("Ce point a été ajouté aux localités du carré depuis Companion."));
+        return publie;
+    }
+
+    /// Lance la publication **hors du fil JavaFX**, puis rend compte et recharge la fiche.
+    ///
+    /// Le lien se désactive pendant l'appel : sans cela, deux clics rapides enverraient deux fois le
+    /// même point. Il n'est réarmé qu'en cas d'échec technique ; dans tous les autres cas la fiche est
+    /// reconstruite, et la carte avec.
+    private void publierPoint(CartePoint carte, Hyperlink lien) {
+        lien.setDisable(true);
+        executeur.executer(
+                () -> viewModel.publier(carte),
+                resultat -> {
+                    rendreCompte(carte, resultat);
+                    viewModel.rafraichir();
+                },
+                erreur -> {
+                    lien.setDisable(false);
+                    alerteErreur("La publication du point « " + carte.point().code() + " » a échoué : "
+                            + erreur.getMessage());
+                });
+    }
+
+    /// Rend compte des **quatre** issues possibles. Un refus porte son `geste` et pas seulement sa
+    /// cause (ADR 2635) : « accès refusé » n'apprend rien à qui doit agir.
+    private void rendreCompte(CartePoint carte, PublicationPoint.Resultat resultat) {
+        String code = carte.point().code();
+        switch (resultat) {
+            case PublicationPoint.Resultat.Publie ignore ->
+                notificateur.notifier(
+                        NiveauNotification.INFORMATION,
+                        "Point publié",
+                        "Le point « " + code + " » a été ajouté aux localités du carré sur Vigie-Chiro.");
+            case PublicationPoint.Resultat.DejaPresent(String nom) ->
+                notificateur.notifier(
+                        NiveauNotification.INFORMATION,
+                        "Déjà sur Vigie-Chiro",
+                        "Une localité « " + nom + " » existe déjà sur ce carré : rien n'a été envoyé."
+                                + " Le point est désormais suivi comme publié.");
+            case PublicationPoint.Resultat.ModifieEntreTemps ignore ->
+                notificateur.notifier(
+                        NiveauNotification.AVERTISSEMENT,
+                        "Le carré a changé entre-temps",
+                        "Quelqu'un a modifié les points de ce carré pendant l'envoi. Rien n'a été"
+                                + " modifié sur Vigie-Chiro : synchronisez, puis réessayez.");
+            case PublicationPoint.Resultat.Refuse(String cause, String geste) ->
+                notificateur.notifier(NiveauNotification.AVERTISSEMENT, cause, geste);
+        }
     }
 
     private void supprimerPoint(CartePoint carte) {

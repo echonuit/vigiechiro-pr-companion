@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.time.LocalDate;
@@ -19,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -53,6 +56,10 @@ public class SiteDetailViewModel {
 
     /// Correspondances VigieChiro : elles disent si ce site est enregistré, et s'il est verrouillé (#734).
     private final LienVigieChiroDao liens;
+
+    /// Publication d'un point vers la plateforme (#3458) : ses empêchements, sa mémoire, son
+    /// déclenchement. Extraite d'ici, où elle faisait franchir le seuil God-class.
+    private final PublicationDepuisLaFiche publication;
 
     private Site site;
 
@@ -94,12 +101,14 @@ public class SiteDetailViewModel {
             PassageDao passageDao,
             Horloge horloge,
             PortailVigieChiro portail,
-            LienVigieChiroDao liens) {
+            LienVigieChiroDao liens,
+            PublicationDepuisLaFiche publication) {
         this.service = Objects.requireNonNull(service, "service");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.portail = Objects.requireNonNull(portail, "portail");
         this.liens = Objects.requireNonNull(liens, "liens");
+        this.publication = Objects.requireNonNull(publication, "publication");
         // La bascule d'affichage re-projette la liste (points utilisés seuls <-> tous), #1738.
         afficherTousLesPoints.addListener((observable, avant, apres) -> projeterPoints());
     }
@@ -172,6 +181,21 @@ public class SiteDetailViewModel {
         rafraichir();
     }
 
+    /// Cf. [PublicationDepuisLaFiche#installee()].
+    public boolean publicationInstallee() {
+        return publication.installee();
+    }
+
+    /// Cf. [PublicationDepuisLaFiche#empechement(long, CartePoint)].
+    public Optional<String> empechementPublication(CartePoint carte) {
+        return publication.empechement(site.id(), carte);
+    }
+
+    /// Cf. [PublicationDepuisLaFiche#publier(long, CartePoint)]. **Bloquant** : hors du fil JavaFX.
+    public PublicationPoint.Resultat publier(CartePoint carte) {
+        return publication.publier(site.id(), carte);
+    }
+
     public ReadOnlyStringProperty titreProperty() {
         return titre.getReadOnlyProperty();
     }
@@ -233,10 +257,17 @@ public class SiteDetailViewModel {
     }
 
     private void mettreAJourCartesPoints(List<PointDEcoute> pointsDuSite) {
+        // Une seule lecture pour tout le site (#3458) : une requête par carte ferait N requêtes pour
+        // afficher un écran qui n'en demande qu'une.
+        Set<Long> dejaPublies = publication.publiesDuSite(site.id());
         List<CartePoint> cartes = new ArrayList<>();
         for (PointDEcoute point : pointsDuSite) {
             Double distanceProche = ProximitePoints.distanceAuPlusProche(point, pointsDuSite);
-            cartes.add(new CartePoint(point, passageDao.findByPoint(point.id()).size(), distanceProche));
+            cartes.add(new CartePoint(
+                    point,
+                    passageDao.findByPoint(point.id()).size(),
+                    distanceProche,
+                    dejaPublies.contains(point.id())));
         }
         toutesLesCartes.clear();
         toutesLesCartes.addAll(cartes);

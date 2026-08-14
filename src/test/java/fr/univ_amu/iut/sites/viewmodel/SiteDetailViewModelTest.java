@@ -2,8 +2,11 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 import static org.assertj.core.api.Assertions.within;
 
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
@@ -22,13 +25,16 @@ import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
+import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -49,6 +55,8 @@ class SiteDetailViewModelTest {
     private PointDao pointDao;
     private SiteDetailViewModel viewModel;
     private LienVigieChiroDao liens;
+    private PointPublieDao publies;
+    private HorlogeFigee horloge;
 
     @BeforeEach
     void preparer() {
@@ -59,10 +67,29 @@ class SiteDetailViewModelTest {
         pointDao = new PointDao(source);
         passageDao = new PassageDao(source);
         new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
-        HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
+        horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
         service = new ServiceSites(siteDao, pointDao, passageDao, horloge, new PointCommuneDao(source), () -> {});
         liens = new LienVigieChiroDao(source);
-        viewModel = new SiteDetailViewModel(service, passageDao, horloge, new PortailVigieChiro(liens), liens);
+        publies = new PointPublieDao(source);
+        viewModel = avecPublication(publicationAvecJeton("jeton-de-test"));
+    }
+
+    /// ViewModel muni (ou non) de la publication de points (#3458).
+    private SiteDetailViewModel avecPublication(Optional<PublicationPoint> publication) {
+        return new SiteDetailViewModel(
+                service,
+                passageDao,
+                horloge,
+                new PortailVigieChiro(liens),
+                liens,
+                new PublicationDepuisLaFiche(publies, liens, publication));
+    }
+
+    /// Publication réelle, branchée sur un fournisseur de jeton contrôlé : `null` simule « pas connecté ».
+    /// Aucun appel réseau n'a lieu tant qu'on ne publie pas ; ces tests s'arrêtent au **garde**.
+    private Optional<PublicationPoint> publicationAvecJeton(String jeton) {
+        FournisseurToken token = () -> Optional.ofNullable(jeton);
+        return Optional.of(new PublicationPoint(new ClientVigieChiro(token), publies, token));
     }
 
     @Test
@@ -273,6 +300,91 @@ class SiteDetailViewModelTest {
                 .extracting(c -> c.point().code())
                 .containsExactly("A1");
         assertThat(viewModel.nombrePointsMasquesProperty().get()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3458 : une carte sait si SON point a été publié, sans une requête par carte")
+    void la_carte_porte_l_etat_publie() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        PointDEcoute a1 = service.ajouterPoint(site.id(), "A1", 43.5, 5.4, null);
+        service.ajouterPoint(site.id(), "B2", 43.6, 5.5, null);
+        publies.marquer(a1.id());
+
+        viewModel.chargerSite(site);
+
+        assertThat(viewModel.points())
+                .as("l'état vient de la table de présence, pas du drapeau `synchronise` qui dit l'inverse")
+                .extracting(c -> c.point().code(), CartePoint::publie)
+                .containsExactlyInAnyOrder(tuple("A1", true), tuple("B2", false));
+    }
+
+    @Test
+    @DisplayName("#3458 : un carré VERROUILLÉ ne grise PAS l'action, même s'il refusera son propriétaire")
+    void un_carre_verrouille_ne_grise_pas_la_publication() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        PointDEcoute a1 = service.ajouterPoint(site.id(), "A1", 43.5, 5.4, null);
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()), "6a4961f5", true));
+        viewModel.chargerSite(site);
+
+        // `PUT /sites/{id}/localites` refuse le PROPRIÉTAIRE d'un carré verrouillé, mais accepte un
+        // participant VALIDÉ sur le protocole, verrouillé ou non. Les liens de site venant de
+        // `/moi/participations` et non de `/moi/sites` (#718), Companion ne sait pas dans quel cas il est.
+        // Griser ici bloquerait le participant validé, à qui la plateforme dit oui : le refus se rend
+        // compte, il ne se devine pas.
+        assertThat(viewModel.empechementPublication(carteDe(a1)))
+                .as("verrouillé n'est PAS un empêchement connu de nous")
+                .isEmpty();
+        assertThat(viewModel.statutPlateformeProperty().get())
+                .as("et pourtant le statut, lui, dit bien verrouillé : les deux lectures diffèrent")
+                .isEqualTo(StatutPlateforme.VERROUILLE);
+    }
+
+    @Test
+    @DisplayName("#3458 : les empêchements se nomment dans l'ordre où ils bloquent le chemin")
+    void les_empechements_disent_quoi_faire() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        PointDEcoute sansGps = service.ajouterPoint(site.id(), "A1", null, null, null);
+
+        viewModel = avecPublication(publicationAvecJeton(null));
+        viewModel.chargerSite(site);
+        assertThat(viewModel.empechementPublication(carteDe(sansGps)))
+                .as("sans jeton, parler de coordonnées serait du bruit : c'est la connexion qui bloque")
+                .hasValueSatisfying(motif -> assertThat(motif).contains("Connectez-vous"));
+
+        viewModel = avecPublication(publicationAvecJeton("jeton-de-test"));
+        viewModel.chargerSite(site);
+        assertThat(viewModel.empechementPublication(carteDe(sansGps)))
+                .as("connecté, mais le carré n'est pas déclaré : rien à quoi rattacher le point")
+                .hasValueSatisfying(motif -> assertThat(motif).contains("pas encore enregistré"));
+
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()), "6a4961f5", false));
+        viewModel.rafraichir();
+        assertThat(viewModel.empechementPublication(carteDe(sansGps)))
+                .as("reste le point lui-même : une localité Vigie-Chiro exige des coordonnées")
+                .hasValueSatisfying(motif -> assertThat(motif).contains("coordonnées"));
+    }
+
+    @Test
+    @DisplayName("#3458 : sans la feature installée, la fiche n'offre aucune publication")
+    void sans_la_feature_la_fiche_n_offre_rien() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        PointDEcoute a1 = service.ajouterPoint(site.id(), "A1", 43.5, 5.4, null);
+        viewModel = avecPublication(Optional.empty());
+        viewModel.chargerSite(site);
+
+        assertThat(viewModel.publicationInstallee()).isFalse();
+        assertThat(viewModel.empechementPublication(carteDe(a1))).isNotEmpty();
+        assertThatThrownBy(() -> viewModel.publier(carteDe(a1)))
+                .as("publier sans garde est une faute de câblage, pas une issue à rendre compte")
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    /// La carte du point de code donné, telle que le ViewModel vient de la composer.
+    private CartePoint carteDe(PointDEcoute point) {
+        return viewModel.points().stream()
+                .filter(carte -> carte.point().id().equals(point.id()))
+                .findFirst()
+                .orElseThrow();
     }
 
     /// `surLePoint` : ces tests construisent plusieurs points eux-mêmes et rattachent leur nuit à l'un

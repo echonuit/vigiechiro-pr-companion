@@ -29,6 +29,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
+import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.RapprochementNuitsOpportunistes;
 import fr.univ_amu.iut.sites.model.RapprochementSites;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
@@ -36,6 +37,7 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.SynchronisationSites;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
+import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import fr.univ_amu.iut.sites.view.ActiviteMesSites;
@@ -43,6 +45,7 @@ import fr.univ_amu.iut.sites.view.NavigationSites;
 import fr.univ_amu.iut.sites.viewmodel.IndicateurPoints;
 import fr.univ_amu.iut.sites.viewmodel.IndicateurSites;
 import fr.univ_amu.iut.sites.viewmodel.PointEditViewModel;
+import fr.univ_amu.iut.sites.viewmodel.PublicationDepuisLaFiche;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
@@ -122,6 +125,10 @@ public class SitesModule extends ModuleDeFeature {
         // la connexion. ControleCarreStocModule fait `setBinding` dans l'app complète ; sinon l'Optional
         // reste vide et la modale de point ne contrôle rien (la saisie manuelle reste entière).
         OptionalBinder.newOptionalBinder(binder(), ControleCarreStoc.class);
+        // Publication d'un point vers la plateforme (#3458) : même montage, même raison (elle écrit sur
+        // la plateforme, donc elle a besoin de la connexion). `PublicationPointModule` fait `setBinding`
+        // dans l'app complète ; sinon l'Optional reste vide et la fiche n'offre pas le geste.
+        OptionalBinder.newOptionalBinder(binder(), PublicationPoint.class);
         // Rapprochement des sites locaux avec VigieChiro (#728), invoqué à la connexion.
         Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
                 .addBinding()
@@ -247,14 +254,33 @@ public class SitesModule extends ModuleDeFeature {
         return new SitesViewModel(service, passageDao, horloge, liens, idUtilisateur, synchronisation);
     }
 
+    /// Mémoire des points poussés vers la plateforme (#3458). Fournie **inconditionnellement** : le fait
+    /// qu'un point soit en ligne est local, et doit rester lisible même quand la publication elle-même
+    /// n'est pas installée.
+    @Provides
+    @Singleton
+    PointPublieDao fournirPointPublieDao(SourceDeDonnees source) {
+        return new PointPublieDao(source);
+    }
+
+    /// Publication d'un point depuis la fiche site (#3458). `Optional` **vide** hors de l'application
+    /// complète : `PublicationPointModule` n'y est pas chargé, et la fiche n'offre pas le geste.
+    @Provides
+    @Singleton
+    PublicationDepuisLaFiche fournirPublicationDepuisLaFiche(
+            PointPublieDao publies, LienVigieChiroDao liens, Optional<PublicationPoint> publication) {
+        return new PublicationDepuisLaFiche(publies, liens, publication);
+    }
+
     @Provides
     SiteDetailViewModel fournirSiteDetailViewModel(
             ServiceSites service,
             PassageDao passageDao,
             Horloge horloge,
             PortailVigieChiro portail,
-            LienVigieChiroDao liens) {
-        return new SiteDetailViewModel(service, passageDao, horloge, portail, liens);
+            LienVigieChiroDao liens,
+            PublicationDepuisLaFiche publication) {
+        return new SiteDetailViewModel(service, passageDao, horloge, portail, liens, publication);
     }
 
     @Provides

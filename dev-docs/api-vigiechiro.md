@@ -616,9 +616,31 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
     Le schéma d'une localité : `nom` (**requis**, unique dans la liste), `coordonnee`, `geometries`
     (`GeometryCollection`, coordonnées en **`[lat, lon]`**), `representatif`, `habitats`.
 
-    Le pull (`RapprochementSites`) reste la direction **implémentée** : exécuté à la connexion, et
-    rejouable **à la demande** depuis M-Sites (« Récupérer depuis VigieChiro », #1045, passerelle
-    `SynchronisationSites` activée par `OptionalBinder`).
+    Le pull (`RapprochementSites`) est exécuté à la connexion, et rejouable **à la demande** depuis
+    M-Sites (« Récupérer depuis VigieChiro », #1045, passerelle `SynchronisationSites` activée par
+    `OptionalBinder`). Le **push** l'est depuis #3458 : `PublicationPoint`, offert sur la carte du point
+    de la fiche site (passerelle `PublicationPoint` activée par `PublicationPointModule`).
+
+    ⚠️ **Le 403 de cette route n'est pas prédictible depuis Companion**, et c'est ce qui décide de la
+    forme de l'action à l'écran. Deux cas y mènent, et rien ne les distingue dans la réponse :
+
+    | Cas | Écriture des localités |
+    |---|---|
+    | Propriétaire, carré **non verrouillé** | autorisée |
+    | Propriétaire, carré **verrouillé** | **403** |
+    | Non-propriétaire **validé** sur le protocole | autorisée, **même verrouillé** |
+    | Non-propriétaire non validé | **403** |
+
+    `set_localite` refuse donc le propriétaire dès que son carré est verrouillé (`tests/test_sites.py`
+    le dit dans ses propres mots : *« Now owner cannot remove localites »*), et seul un administrateur
+    peut rouvrir un carré verrouillé. **`StatutPlateforme.VERROUILLE` s'inverse ici** : état favorable
+    pour déposer une nuit, état refusé pour ajouter un point sur son propre carré.
+
+    On serait tenté d'en faire un garde. **Il ne faut pas** : les liens de site viennent de
+    `GET /moi/participations` et non de `/moi/sites` (#718, cf. `ClientVigieChiro.mesSites`), donc un
+    carré relié peut appartenir à quelqu'un d'autre, et Companion ne connaît ni le propriétaire, ni la
+    validation sur le protocole. Griser sur « verrouillé » bloquerait le participant validé, à qui la
+    plateforme dit oui. Le refus est **rendu compte avec son geste**, pas deviné.
 - **Aller-retour d'écriture (#1862)** : **quatre verdicts confirmés en réel** (exécutée le 2026-07-18 sur
   la participation de rebut `6a50f790…`, quatre probes vertes).
 
