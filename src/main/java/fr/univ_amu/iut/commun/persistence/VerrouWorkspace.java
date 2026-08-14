@@ -45,6 +45,23 @@ public final class VerrouWorkspace implements AutoCloseable {
     /// sa durée, et une restauration lancée depuis cette IHM doit passer.
     private static final Set<Path> DETENUS = ConcurrentHashMap.newKeySet();
 
+    /// Le **seul** octet verrouillé, et le nom de l'occupant commence juste après.
+    ///
+    /// ⚠️ Verrouiller le fichier entier rendait la fonctionnalité de #3571 **inerte sous Windows** :
+    /// là-bas un verrou est **impératif**, et le second processus - celui qu'on refuse - ne pouvait
+    /// pas relire le nom qu'il devait afficher. Sous POSIX il est consultatif, la lecture passait, et
+    /// aucun test ne pouvait le voir avant la matrice trois plateformes de #3525.
+    ///
+    /// L'exclusion ne faiblit pas : deux prises se chevauchent toujours sur cet octet. Et la
+    /// cohabitation de deux versions tient dans les deux sens - une version antérieure verrouille tout
+    /// le fichier, donc l'octet 0 avec, et une version nouvelle se voit refusée ; l'inverse aussi.
+    private static final long OCTET_DU_VERROU = 0L;
+
+    /// L'octet-sentinelle qui précède le nom de l'occupant : c'est lui qui porte le verrou, et il est
+    /// retiré à la relecture. Un fichier qui ne le porte pas vient d'une version antérieure ou d'un
+    /// outil tiers, et se lit **tel quel** (#3693).
+    private static final String SENTINELLE = "#";
+
     /// L'horodatage tel que [#inscrireLOccupant] l'écrit, repéré pour être reformaté à l'affichage.
     private static final Pattern HORODATAGE_ISO =
             Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?(\\.\\d+)?");
@@ -99,7 +116,7 @@ public final class VerrouWorkspace implements AutoCloseable {
             Files.createDirectories(fichier.getParent());
             FileChannel canal = FileChannel.open(
                     fichier, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.READ);
-            FileLock verrou = canal.tryLock();
+            FileLock verrou = canal.tryLock(OCTET_DU_VERROU, 1, false);
             if (verrou == null) {
                 canal.close();
                 return Optional.empty();
@@ -122,7 +139,14 @@ public final class VerrouWorkspace implements AutoCloseable {
     public static String occupant(Workspace workspace) {
         try {
             Path fichier = fichierDe(workspace);
-            return Files.isRegularFile(fichier) ? Files.readString(fichier, StandardCharsets.UTF_8) : "";
+            if (!Files.isRegularFile(fichier)) {
+                return "";
+            }
+            String contenu = Files.readString(fichier, StandardCharsets.UTF_8);
+            // ⚠️ Ce qui ne porte pas la sentinelle vient d'une version antérieure ou d'un outil tiers :
+            // on le rend tel quel plutôt que d'en amputer le premier caractère. Même règle que #3640 -
+            // ne transformer que ce qu'on reconnaît rend la compatibilité gratuite.
+            return contenu.startsWith(SENTINELLE) ? contenu.substring(SENTINELLE.length()) : contenu;
         } catch (IOException illisible) {
             return "";
         }
@@ -209,7 +233,10 @@ public final class VerrouWorkspace implements AutoCloseable {
     private static void inscrireLOccupant(FileChannel canal) throws IOException {
         String occupant = "processus " + ProcessHandle.current().pid() + ", depuis " + LocalDateTime.now();
         canal.truncate(0);
-        canal.write(StandardCharsets.UTF_8.encode(occupant));
+        canal.position(0);
+        // La sentinelle occupe l'octet verrouillé ; le nom vient derrière, donc hors de la zone que
+        // Windows refuse de laisser lire (#3693).
+        canal.write(StandardCharsets.UTF_8.encode(SENTINELLE + occupant));
         canal.force(true);
     }
 }
