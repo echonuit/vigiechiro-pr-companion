@@ -54,6 +54,15 @@ class ServiceAnalyseTest {
     }
 
     @Test
+    @DisplayName("nuitsOpportunistes délègue à sa source, avec un contenu concret")
+    void nuits_opportunistes_delegue_a_sa_source() {
+        // Un délégué qui rendrait du vide par défaut ne le dirait pas : il faut un contenu concret pour
+        // distinguer « ça délègue » de « ça rend toujours rien ».
+        assertThat(new ServiceAnalyse(observationDao, () -> Set.of(10L, 11L)).nuitsOpportunistes())
+                .containsExactlyInAnyOrder(10L, 11L);
+    }
+
+    @Test
     @DisplayName("observationsDeLEspece délègue au DAO le détail filtré par statut")
     void observations_de_l_espece_delegue_au_dao() {
         ObservationEspece detail = new ObservationEspece(
