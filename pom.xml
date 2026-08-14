@@ -194,6 +194,16 @@
             <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- Déclarée bien qu'apportée par le testkit : le test nomme `DiscoverySelectors` en propre
+             pour désigner la classe à faire exécuter, et `analyze-only` refuse - à raison - qu'on
+             s'appuie sur une transitivité. Sans elle, une mise à jour du testkit pourrait retirer
+             cette dépendance sous nos pieds. -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-engine</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
