@@ -150,7 +150,12 @@ class QualificationViewTest {
     void barre_de_statut_3_zones(FxRobot robot) {
         var zones = controleur.zonesStatutProperty().get();
         assertThat(zones.gauche()).isEqualTo("Carré 640380 · A1 · N° 2");
-        assertThat(zones.centre()).as("statut + volumétrie").contains("séquences");
+        // L'assertion disait « statut + volumétrie » et ne regardait que la volumétrie : le PIT de #3548
+        // l'a montré en supprimant le statut de la composition sans faire rougir ce test.
+        assertThat(zones.centre())
+                .as("statut + volumétrie")
+                .startsWith("Transformé · ")
+                .contains("séquences");
         assertThat(zones.droite())
                 .as("progression d'écoute (pas d'anomalie ici)")
                 .contains("écoutées");

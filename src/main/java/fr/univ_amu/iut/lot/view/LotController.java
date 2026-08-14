@@ -40,8 +40,10 @@ import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -94,7 +96,11 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private final ZonesStatutLot zonesStatutLot;
 
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
-    private ContextePassage contexte;
+    ///
+    /// **Observable** depuis #3548 : la barre de statut le lit, et un champ nu ne peut pas être déclaré
+    /// en dépendance d'un binding. Sans cette propriété, la zone gauche restait vide quand l'ouverture
+    /// de l'écran échouait, faute de quoi que ce soit à invalider.
+    private final ObjectProperty<ContextePassage> contexte = new SimpleObjectProperty<>(this, "contexte");
 
     /// Statut du workflow, déporté en zone centre de la barre de statut (#693) au lieu d'un sous-titre.
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
@@ -216,7 +222,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.traitementViewModel = Objects.requireNonNull(traitementViewModel, "traitementViewModel");
-        this.zonesStatutLot = new ZonesStatutLot(viewModel, depotViewModel, () -> contexte);
+        this.zonesStatutLot = new ZonesStatutLot(viewModel, depotViewModel, contexte);
     }
 
     @Override
@@ -244,7 +250,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         suiviTraitement = SuiviTraitementUI.installer(
                 traitementViewModel,
                 executeur,
-                () -> contexte.idPassage(),
+                () -> contexte.get().idPassage(),
                 depotViewModel.participationLieeProperty(),
                 zoneTraitement,
                 lblEtatTraitement,
@@ -270,8 +276,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // `marquerLancementEnCours` pose `lancementEnCours` puis `enCours`, et c'est la seconde écriture -
         // déclarée - qui invalidait la liaison. Sur un dépôt déjà en cours, `enCours` ne change pas : plus
         // rien n'invalide, et l'annonce du lancement reste invisible.
+        //
+        // #3548 : le contexte du passage manquait pour la même raison. `bind()` évalue le calcul tout de
+        // suite, ici avant `ouvrirSur` : la zone gauche naît vide, et seule une dépendance déclarée la
+        // refait. Sur le chemin d'erreur d'ouverture, aucune ne bougeait.
         zonesStatut.bind(Bindings.createObjectBinding(
                 zonesStatutLot::calculer,
+                contexte,
                 viewModel.statutProperty(),
                 viewModel.recapProperty(),
                 viewModel.generationEnCoursProperty(),
@@ -294,7 +305,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 depotColonnes,
                 ouvreurDeLien,
                 confirmateur,
-                () -> contexte.idPassage(),
+                () -> contexte.get().idPassage(),
                 () -> suiviTraitement.lancer(depotViewModel)));
 
         // Stepper du dépôt (#251), reconstruit à chaque changement d'étapes (mêmes styles que M-Passage).
@@ -487,7 +498,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// Ouvre l'écran sur le passage `passage`. Appelée par [NavigationLot] après le chargement FXML ;
     /// mémorise le contexte pour le fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
-        this.contexte = passage;
+        this.contexte.set(passage);
         viewModel.ouvrirSur(passage.idPassage());
         // Réhydrate la table de dépôt (#983) depuis l'état persisté : un dépôt interrompu réaffiche ses
         // unités (déposées/échecs) et propose la reprise.
@@ -501,7 +512,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// dépôt` (rendu par le chrome). Le segment passage rouvre M-Passage.
     @Override
     public List<Lieu> emplacement() {
-        return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Préparer le dépôt");
+        return EmplacementPassage.emplacementEnfant(contexte.get(), ouvrirSite, ouvrirPassage, "Préparer le dépôt");
     }
 
     @FXML

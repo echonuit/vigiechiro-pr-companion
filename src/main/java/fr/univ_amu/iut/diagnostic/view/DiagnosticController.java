@@ -30,8 +30,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.chart.NumberAxis;
@@ -61,7 +63,11 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private final OuvrirPassage ouvrirPassage;
 
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
-    private ContextePassage contexte;
+    ///
+    /// **Observable** depuis #3548 : la barre de statut le lit, et un champ nu ne peut pas être déclaré
+    /// en dépendance d'un binding. Sans cette propriété, la zone gauche restait vide quand l'ouverture
+    /// de l'écran échouait, faute de quoi que ce soit à invalider.
+    private final ObjectProperty<ContextePassage> contexte = new SimpleObjectProperty<>(this, "contexte");
 
     /// Enregistreur diagnostiqué, déporté en zone centre de la barre de statut (#693) au lieu d'un sous-titre.
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
@@ -167,7 +173,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
                     "T° (°C) / Humidité (%)",
                     fenetreNuitSurAxe(),
                     List.of(
-                            LegendeExport.identite(contexte),
+                            LegendeExport.identite(contexte.get()),
                             "Climat de la nuit · " + viewModel.mesures().size() + " mesures",
                             LegendeExport.provenance(version.libelle(), dateExport)),
                     fichier);
@@ -186,7 +192,8 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     /// Compose les 3 zones de la barre de statut (#1022) : identité du passage (gauche), matériel du
     /// diagnostic (centre), et à droite l'**alerte prioritaire** : hors-nuit puis relevé climatique absent.
     private ZonesStatut calculerZonesStatut() {
-        String gauche = contexte == null ? "" : contexte.identiteStatut();
+        ContextePassage courant = contexte.get();
+        String gauche = courant == null ? "" : courant.identiteStatut();
         String releveAbsent = viewModel.releveClimatiqueAbsentProperty().get() ? "Relevé climatique absent" : "";
         // La barre de statut est neutre (ADR 0039) : elle n'affiche que le TEXTE de l'alerte, sa sévérité
         // restant portée par le label inline. `AUCUN` a un texte vide, que `premierNonVide` saute.
@@ -210,8 +217,13 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private void initialize() {
         // Barre de statut 3 zones (#1022, EPIC #1016) : contexte du passage à gauche, matériel (enregistreur)
         // au centre, alerte prioritaire à droite (hors-nuit > relevé climatique absent).
+        // #3548 : `contexte` figure dans la liste parce que le calcul le lit. `bind()` évalue tout de
+        // suite, ici avant `ouvrirSur` : la zone gauche naît vide, et seule une dépendance déclarée la
+        // refait. Sur le chemin d'erreur d'ouverture, aucune ne bougeait, et l'écran n'annonçait plus de
+        // quel passage il parlait au moment précis où l'utilisateur en avait besoin.
         zonesStatut.bind(Bindings.createObjectBinding(
                 this::calculerZonesStatut,
+                contexte,
                 viewModel.enregistreurProperty(),
                 viewModel.alerteHorsNuitProperty(),
                 viewModel.releveClimatiqueAbsentProperty(),
@@ -268,7 +280,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     /// Ouvre le diagnostic du passage `passage`. Appelée par [NavigationDiagnostic] après le chargement
     /// du FXML ; mémorise le contexte pour le fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
-        this.contexte = passage;
+        this.contexte.set(passage);
         viewModel.ouvrirSur(passage.idPassage());
     }
 
@@ -276,7 +288,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     /// matériel` (rendu par le chrome). Le segment passage rouvre M-Passage.
     @Override
     public List<Lieu> emplacement() {
-        return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Diagnostic matériel");
+        return EmplacementPassage.emplacementEnfant(contexte.get(), ouvrirSite, ouvrirPassage, "Diagnostic matériel");
     }
 
     /// Bascule l'icône et la classe d'état de la ligne GPS (#1497) : marqueur de localisation vert

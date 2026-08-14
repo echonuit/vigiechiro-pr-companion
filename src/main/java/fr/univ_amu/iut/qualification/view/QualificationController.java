@@ -29,8 +29,10 @@ import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -74,7 +76,11 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     private IndicateurOccupation occupation;
 
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
-    private ContextePassage contexte;
+    ///
+    /// **Observable** depuis #3548 : la barre de statut le lit, et un champ nu ne peut pas être déclaré
+    /// en dépendance d'un binding. Cet écran-ci restait juste par accident (le libellé d'attente de
+    /// `progressionTexte` invalidait à sa place) ; l'accident est devenu un contrat.
+    private final ObjectProperty<ContextePassage> contexte = new SimpleObjectProperty<>(this, "contexte");
 
     /// Zones de la barre de statut (#1021) : identité / statut+volumétrie / état vivant, recomposées à
     /// chaque changement des propriétés observées.
@@ -263,7 +269,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         // Barre de statut 3 zones (#1021, EPIC #1016), même modèle que M-Lot : identité à gauche,
         // statut + volumétrie au centre, état vivant à droite (anomalie de pré-check > progression d'écoute).
         zonesStatut.bind(Bindings.createObjectBinding(
-                () -> StatutQualification.zones(contexte, verdictVm, selectionVm),
+                () -> StatutQualification.zones(contexte.get(), verdictVm, selectionVm),
+                contexte,
                 verdictVm.statutProperty(),
                 selectionVm.volumetrieProperty(),
                 verdictVm.preCheckAnomalieProperty(),
@@ -374,7 +381,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// Appelée par [NavigationQualification] après le chargement du FXML ; mémorise le contexte pour le
     /// fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
-        this.contexte = passage;
+        this.contexte.set(passage);
         Long idPassage = passage.idPassage();
         // Ouverture **hors du fil JavaFX** (#1210) : vérification + sélection d'écoute chargées en
         // arrière-plan sous l'overlay, puis appliquées (ou l'erreur routée, filet #795) sur le fil FX.
@@ -400,7 +407,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// désormais porté par le chrome (plus de fil ni de retour internes à l'écran).
     @Override
     public List<Lieu> emplacement() {
-        return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Vérifier l'enregistrement");
+        return EmplacementPassage.emplacementEnfant(
+                contexte.get(), ouvrirSite, ouvrirPassage, "Vérifier l'enregistrement");
     }
 
     @FXML
