@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.api;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import fr.univ_amu.iut.commun.model.Certitude;
 import java.util.List;
@@ -20,6 +21,42 @@ final class RequetesVigieChiro {
             .create();
 
     private RequetesVigieChiro() {}
+
+    /// Corps de `PUT /sites/#id/localites` (#3458) : `{"localites": [...]}`.
+    ///
+    /// ⚠️ Les localités sont **recopiées telles quelles**, sans passer par Gson ni par un record : le
+    /// backend **remplace la liste entière**, donc tout champ qu'on normaliserait au passage serait
+    /// effacé pour toutes les autres localités du site. C'est précisément ce que fait le client
+    /// officiel, qui reconstruit chaque localité sur trois champs et perd `habitats`.
+    static String localites(JsonArray localites) {
+        JsonObject corps = new JsonObject();
+        corps.add("localites", localites);
+        return GSON.toJson(corps);
+    }
+
+    /// Une localité au format de la plateforme : `nom`, `geometries`, `representatif`.
+    ///
+    /// ⚠️ **L'ordre des coordonnées est `[latitude, longitude]`**, à rebours du GeoJSON. Le dépôt l'a
+    /// déjà payé une fois (#1277) : une inversion rend un point « parfaitement plausible », et personne
+    /// ne s'en aperçoit avant le terrain. `representatif` vaut `false`, comme le pose le client officiel.
+    static JsonObject localite(PointVigieChiro point) {
+        JsonArray coordonnees = new JsonArray();
+        coordonnees.add(point.latitude());
+        coordonnees.add(point.longitude());
+        JsonObject geometrie = new JsonObject();
+        geometrie.addProperty("type", "Point");
+        geometrie.add("coordinates", coordonnees);
+        JsonArray geometries = new JsonArray();
+        geometries.add(geometrie);
+        JsonObject collection = new JsonObject();
+        collection.addProperty("type", "GeometryCollection");
+        collection.add("geometries", geometries);
+        JsonObject localite = new JsonObject();
+        localite.addProperty("nom", point.code());
+        localite.add("geometries", collection);
+        localite.addProperty("representatif", false);
+        return localite;
+    }
 
     /// Corps de `POST /sites/#id/participations` (création de participation).
     static String participation(ParticipationADeposer participation) {

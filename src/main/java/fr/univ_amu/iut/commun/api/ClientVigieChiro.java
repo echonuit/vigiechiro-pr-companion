@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.api;
 
+import com.google.gson.JsonArray;
 import fr.univ_amu.iut.commun.model.Certitude;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,6 +34,8 @@ public final class ClientVigieChiro {
     private static final String CHEMIN_PARTICIPATIONS = "/participations/";
     /// Chemin des participations de l'observateur courant (source des sites et des participations).
     private static final String CHEMIN_MOI_PARTICIPATIONS = "/moi/participations";
+    /// Préfixe de chemin d'un site (`GET .../#id`, `PUT .../#id/localites`).
+    private static final String CHEMIN_SITES = "/sites/";
     /// Garde-fou de pagination (`GET …/donnees`) : une participation a des milliers de fichiers, jamais
     /// des centaines de milliers ; on plafonne le nombre de pages pour éviter toute boucle. À
     /// [PaginationEve#TAILLE_PAGE] éléments par page, 500 pages couvrent 50 000 éléments (une nuit en
@@ -45,6 +48,11 @@ public final class ClientVigieChiro {
 
     /// Racine des ressources « fichier » de l'API (déclaration, finalisation, multipart, abandon).
     private static final String CHEMIN_FICHIERS = "/fichiers";
+
+    /// Méthode HTTP des écritures qui **remplacent** : localités d'un site, message, partie
+    /// multipart. Extraite parce que PMD compte les littéraux, et parce qu'un « PUT » qui traîne
+    /// en trois exemplaires se transforme un jour en « PATCH » à deux endroits sur trois.
+    private static final String PUT = "PUT";
 
     private final TransportVigieChiro transport;
 
@@ -124,6 +132,32 @@ public final class ClientVigieChiro {
     public ReponseApi<LotPagine<SiteVigieChiro>> sitesPlateforme(int pages, SuiviPagination suivi) {
         int bornees = Math.clamp(pages, 1, PAGES_MAX);
         return PaginationEve.parcourirBorne(bornees, this::pageSites, SitesVigieChiro::sites, suivi);
+    }
+
+    /// Les localités d'un site **telles quelles**, avec l'`_etag` du site (#3458).
+    ///
+    /// Lecture séparée de [#mesSites] parce qu'elle sert à **réécrire** : elle rend le JSON non
+    /// interprété, seul moyen de renvoyer intacts les champs qu'on ne sait pas lire.
+    public ReponseApi<LocalitesDuSite> localitesDuSite(String idSite) {
+        return transport.lire(CHEMIN_SITES + idSite).lireAvec(ReponsesVigieChiro::localitesDuSite);
+    }
+
+    /// Remplace **toute** la liste des localités d'un site (`PUT /sites/{id}/localites`, #3458).
+    ///
+    /// ⚠️ **Aucun `If-Match` n'est envoyé, et ce n'est pas un oubli** : `set_localite` appelle
+    /// `sites.update(...)` **sans `if_match`** côté backend, si bien que l'en-tête n'y changerait rien -
+    /// le serveur retente jusqu'à passer. La protection contre l'écrasement concurrent est donc
+    /// **entièrement côté client**, dans [fr.univ_amu.iut.sites.model.PublicationPoint], qui relit
+    /// l'`_etag` juste avant d'écrire. Croire que cet en-tête protège serait le pire des deux mondes.
+    ///
+    /// @param localites la liste **complète** : ce qui n'y figure pas est effacé
+    public ReponseApi<String> remplacerLocalites(String idSite, JsonArray localites) {
+        return transport.ecrire(
+                PUT,
+                CHEMIN_SITES + idSite + "/localites",
+                RequetesVigieChiro.localites(localites),
+                null,
+                TransportVigieChiro.Rejeu.INTERDIT);
     }
 
     /// **Lecture brute** d'un chemin de l'API, réservée à l'exploration (`vigiechiro api lire`).
@@ -347,7 +381,7 @@ public final class ClientVigieChiro {
         // ce `PUT` **empile** par `$push` côté serveur. Le rejouer poste le message deux fois, sur des
         // données partagées avec un validateur du MNHN, et aucune route ne permet de le retirer.
         return transport.ecrire(
-                "PUT", chemin, RequetesVigieChiro.message(texte), null, TransportVigieChiro.Rejeu.INTERDIT);
+                PUT, chemin, RequetesVigieChiro.message(texte), null, TransportVigieChiro.Rejeu.INTERDIT);
     }
 
     /// Déclare un **fichier** à téléverser (`POST /fichiers`, étape 1/3) : renvoie son `_id` et l'URL S3
@@ -447,7 +481,7 @@ public final class ClientVigieChiro {
                 // qui dépose des octets, et il a son propre réessai depuis #2354.
                 ReponseApi<String> url = transport
                         .ecrire(
-                                "PUT",
+                                PUT,
                                 CHEMIN_FICHIERS + "/" + fichierId + "/multipart",
                                 RequetesVigieChiro.demandePartie(numero),
                                 null,

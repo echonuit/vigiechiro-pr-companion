@@ -1,0 +1,105 @@
+package fr.univ_amu.iut.sites.model;
+
+import com.google.gson.JsonArray;
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.LocalitesDuSite;
+import fr.univ_amu.iut.commun.api.PointVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
+import java.util.Objects;
+
+/// Publie un point d'écoute **sur la plateforme** (#3458), sans effacer ceux des autres.
+///
+/// ## Pourquoi cette classe existe
+///
+/// `PUT /sites/{id}/localites` **remplace la liste entière** (`{'$set': {'localites': ...}}`). Ajouter un
+/// point suppose donc de renvoyer tous les autres - souvent ceux d'un observateur qui n'est pas nous :
+/// le carré d'essai en porte quarante et un, et son propriétaire est quelqu'un d'autre.
+///
+/// ⚠️ **Et le serveur ne protège pas cette écriture.** `set_localite` appelle `sites.update(...)` **sans
+/// `if_match`**, là où `taxons.py` et `protocoles.py` en posent un ; le socle du backend le commente
+/// lui-même : *« No if_match, in case of race condition, repeatedly try the update »*. Une modification
+/// concurrente est donc écrasée **sans erreur et sans trace**. Le client officiel, lui, n'envoie aucun
+/// `_etag` : il écrase en aveugle.
+///
+/// ## La garde, et ce qu'elle ne peut pas
+///
+/// On lit, on construit l'union, puis on **relit juste avant d'écrire** : si l'`_etag` du site a bougé
+/// entre les deux, on renonce. La fenêtre tombe sous la seconde.
+///
+/// ⚠️ **Elle ne se ferme pas.** Sur une collision exacte - une écriture concurrente entre notre relecture
+/// et notre envoi - on écrase sans le savoir. Seul le serveur pourrait l'empêcher, et il ne le fait pas.
+/// C'est un risque **assumé**, pas un oubli : le dire ici vaut mieux que laisser croire à une garantie.
+public class PublicationPoint {
+
+    private final ClientVigieChiro client;
+
+    public PublicationPoint(ClientVigieChiro client) {
+        this.client = Objects.requireNonNull(client, "client");
+    }
+
+    /// Ce qu'une publication peut donner.
+    public sealed interface Resultat {
+
+        /// Le point est en ligne.
+        record Publie() implements Resultat {}
+
+        /// Une localité portait déjà ce nom : rien n'a été envoyé. La plateforme impose leur unicité,
+        /// et écraser la sienne reviendrait à déplacer le point de quelqu'un.
+        record DejaPresent(String nom) implements Resultat {}
+
+        /// Le site a changé entre la lecture et l'envoi : rien n'a été envoyé, pour ne pas écraser ce
+        /// qu'on n'a pas lu.
+        record ModifieEntreTemps() implements Resultat {}
+
+        /// La plateforme a refusé, ou n'a pas répondu. `geste` dit **quoi faire**, pas seulement ce qui
+        /// s'est passé (ADR 2635).
+        record Refuse(String cause, String geste) implements Resultat {}
+    }
+
+    /// Publie `point` sur le site distant `idSite`.
+    public Resultat publier(String idSite, PointVigieChiro point) {
+        Objects.requireNonNull(idSite, "idSite");
+        Objects.requireNonNull(point, "point");
+
+        ReponseApi<LocalitesDuSite> lecture = client.localitesDuSite(idSite);
+        if (!(lecture instanceof ReponseApi.Succes<LocalitesDuSite>(LocalitesDuSite avant))) {
+            return refus(lecture, "lire les localités du site");
+        }
+        if (avant.contient(point.code())) {
+            return new Resultat.DejaPresent(point.code());
+        }
+
+        JsonArray union = avant.avecEnPlus(point);
+
+        // La relecture est le coeur de la garde : entre la première lecture et maintenant, le site a pu
+        // changer. Écrire l'union d'un état périmé effacerait ce qui s'y est ajouté depuis.
+        ReponseApi<LocalitesDuSite> relecture = client.localitesDuSite(idSite);
+        if (!(relecture instanceof ReponseApi.Succes<LocalitesDuSite>(LocalitesDuSite juste))) {
+            return refus(relecture, "relire les localités avant d'écrire");
+        }
+        if (!juste.etag().equals(avant.etag())) {
+            return new Resultat.ModifieEntreTemps();
+        }
+
+        ReponseApi<String> envoi = client.remplacerLocalites(idSite, union);
+        return envoi instanceof ReponseApi.Succes<String> ? new Resultat.Publie() : refus(envoi, "publier le point");
+    }
+
+    /// Traduit un échec d'API en refus qui **dit quoi faire**.
+    ///
+    /// Le 403 est le cas nommé : la plateforme n'autorise l'écriture des localités qu'au propriétaire du
+    /// site ou à un observateur **validé sur son protocole**. Sans cette précision, l'utilisateur lit un
+    /// « accès refusé » et n'a aucune idée de ce qui lui manque.
+    private static Resultat refus(ReponseApi<?> reponse, String pendant) {
+        if (reponse instanceof ReponseApi.Refuse<?> refuse && refuse.statut() == 403) {
+            return new Resultat.Refuse(
+                    "La plateforme refuse d'écrire les points de ce carré.",
+                    "Ce carré ne vous appartient pas : pour y ajouter un point, il faut être inscrit et"
+                            + " validé sur son protocole. Vérifiez votre inscription sur le portail"
+                            + " Vigie-Chiro, ou demandez au propriétaire du carré d'ajouter le point.");
+        }
+        return new Resultat.Refuse(
+                "Impossible de " + pendant + ".",
+                "Vérifiez votre connexion à Vigie-Chiro, puis réessayez. Rien n'a été modifié sur la" + " plateforme.");
+    }
+}

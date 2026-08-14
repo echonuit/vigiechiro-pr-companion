@@ -97,6 +97,30 @@ final class ReponsesVigieChiro {
         }
     }
 
+    /// Les localités d'un site **non interprétées**, avec l'`_etag` du site (#3458).
+    ///
+    /// Rien n'est projeté ici, et c'est le point : ces localités seront **renvoyées telles quelles** lors
+    /// d'une publication, qui remplace la liste entière. Tout champ qu'on lirait à moitié serait effacé
+    /// pour toutes les autres localités du site.
+    ///
+    /// Vide si l'`_etag` manque : sans lui, on ne saurait pas voir que le site a bougé, et publier
+    /// reviendrait à écraser à l'aveugle.
+    static Optional<LocalitesDuSite> localitesDuSite(String corps) {
+        try {
+            JsonObject objet = JsonParser.parseString(corps).getAsJsonObject();
+            String etag = texte(objet, "_etag");
+            if (etag == null) {
+                return Optional.empty();
+            }
+            JsonElement localites = objet.get("localites");
+            JsonArray brutes =
+                    localites != null && localites.isJsonArray() ? localites.getAsJsonArray() : new JsonArray();
+            return Optional.of(new LocalitesDuSite(etag, brutes));
+        } catch (RuntimeException illisible) {
+            return Optional.empty();
+        }
+    }
+
     /// Fichier signé depuis `POST /fichiers` (#142) : `_id` + `s3_signed_url` (URL S3 pré-signée pour le
     /// `PUT`). Vide si l'un des deux manque ou si le corps est illisible.
     static Optional<FichierSigne> fichierSigne(String corps) {
