@@ -22,6 +22,13 @@
     </licenses>
 
     <properties>
+        <!-- Mode d'affichage des tests FX. Ces trois valeurs sont celles d'AUJOURD'HUI : sans
+             surcharge, rien ne change, et la CI existante n'est pas touchée. Le profil
+             `recette-filmee` les bascule ensemble ; les poser une par une est justement ce qu'il
+             faut éviter, puisque deux d'entre elles échouent SANS RIEN DIRE (voir ce profil). -->
+        <recette.glass.platform>Headless</recette.glass.platform>
+        <recette.testfx.robot>glass</recette.testfx.robot>
+        <recette.awt.headless>true</recette.awt.headless>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
 
@@ -680,10 +687,10 @@
                          absente sans la dépendance monocle). Le headless vient ici de
                          glass.platform=Headless, pas de TestFX. -->
                     <systemPropertyVariables>
-                        <glass.platform>Headless</glass.platform>
+                        <glass.platform>${recette.glass.platform}</glass.platform>
                         <prism.order>sw</prism.order>
-                        <java.awt.headless>true</java.awt.headless>
-                        <testfx.robot>glass</testfx.robot>
+                        <java.awt.headless>${recette.awt.headless}</java.awt.headless>
+                        <testfx.robot>${recette.testfx.robot}</testfx.robot>
                         <!-- Coupe-circuits d'interblocage TestFX, calibrés en propriétés plus haut
                              (#2120). TestFX les lit via Long.getLong au premier FxToolkitContext :
                              ils doivent donc être posés sur la JVM FORKÉE, pas sur celle de Maven. -->
@@ -896,6 +903,32 @@
     </build>
 
     <profiles>
+        <!-- Profil recette-filmee : bascule les tests FX en mode FENÊTRÉ, pour qu'un parcours
+             puisse être piloté ET filmé (#3696, EPIC #3667).
+             Les trois propriétés vont ENSEMBLE, et c'est tout l'intérêt du profil : les poser à la
+             main, c'est en oublier une, et deux d'entre elles échouent SANS RIEN DIRE.
+               - glass.platform=Headless laisse le test passer, simplement sans fenêtre ;
+               - java.awt.headless=true lève une HeadlessException, donc rougit ;
+               - testfx.robot=glass appelle le portail RemoteDesktop et s'y BLOQUE.
+             ⚠️ Ce profil ne suffit PAS. Deux conditions ne sont pas des propriétés Maven et
+             vivent dans `.github/scripts/lance-test-filme.sh`, qui les vérifie avant de lancer :
+               - `WAYLAND_DISPLAY` doit être RETIRÉ de l'environnement, sans quoi le java.awt.Robot
+                 du JDK route par le portail : le clic est émis et n'atterrit jamais, sans erreur ;
+               - un gestionnaire de fenêtres doit tourner sur le DISPLAY visé, sans quoi le
+                 pointeur ne bouge pas du tout, même pour xdotool.
+             Passer par le script plutôt que par ce profil seul.
+             Coût mesuré : 3,1 s contre 2,4 s en headless, soit environ 30 %, pas un ordre de
+             grandeur - les 33 s observées en chemin étaient le robot réessayant contre le portail.
+             Usage : .github/scripts/lance-test-filme.sh <ClasseDeTest> -->
+        <profile>
+            <id>recette-filmee</id>
+            <properties>
+                <recette.glass.platform>gtk</recette.glass.platform>
+                <recette.testfx.robot>awt</recette.testfx.robot>
+                <recette.awt.headless>false</recette.awt.headless>
+            </properties>
+        </profile>
+
         <!-- ========== Profils (hors build par défaut) : installer / jpackage-mac (installeurs natifs
              jpackage), mutation (tests PIT), quality-gate (PMD + JaCoCo bloquants), api-live (contrat
              REST-assured contre l'API réelle, hors CI) ========== -->
