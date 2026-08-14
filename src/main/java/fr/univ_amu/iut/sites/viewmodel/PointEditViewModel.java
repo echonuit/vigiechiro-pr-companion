@@ -218,9 +218,13 @@ public class PointEditViewModel {
     /// Rend l'identifiant seulement si la case est cochée **et** que rien n'empêche le geste : entre le
     /// clic sur la case et le clic sur « Ajouter », les coordonnées ont pu être effacées.
     public Optional<Long> pointAPublier() {
-        return publierEnsuite.get() && empechementPublication.get().isEmpty() && idDernierPointEnregistre != null
-                ? Optional.of(idDernierPointEnregistre)
-                : Optional.empty();
+        if (!publierEnsuite.get() || idDernierPointEnregistre == null) {
+            return Optional.empty();
+        }
+        // ⚠️ On REDEMANDE, au lieu de relire le motif affiché. Celui-ci ne se recalcule qu'à la saisie
+        // des coordonnées ; or la session peut expirer, ou le lien du carré disparaître, sans qu'aucun
+        // champ ne bouge. Relire l'affichage rendrait ce garde d'accord avec un écran périmé.
+        return empechementActuel().isEmpty() ? Optional.of(idDernierPointEnregistre) : Optional.empty();
     }
 
     /// Recalcule le motif du gris, et **décoche** la case s'il vient d'apparaître.
@@ -228,16 +232,20 @@ public class PointEditViewModel {
     /// Laisser la case cochée sous un contrôle désactivé donnerait à lire une intention qui ne partira
     /// pas. La décocher est visible - la case est sous les yeux - là où le silence ne le serait pas.
     private void majEmpechementPublication() {
-        if (!publicationOfferte.get() || idSite == null) {
-            empechementPublication.set("");
-            return;
-        }
-        boolean gpsPresent = parserCoordonnee(latitude.get()) != null && parserCoordonnee(longitude.get()) != null;
-        String motif = publication.empechement(idSite, gpsPresent).orElse("");
+        String motif = empechementActuel();
         empechementPublication.set(motif);
         if (!motif.isEmpty()) {
             publierEnsuite.set(false);
         }
+    }
+
+    /// Ce qui empêche de publier **maintenant**, calculé et non relu. Chaîne vide si rien n'empêche.
+    private String empechementActuel() {
+        if (!publicationOfferte.get() || idSite == null) {
+            return "";
+        }
+        boolean gpsPresent = parserCoordonnee(latitude.get()) != null && parserCoordonnee(longitude.get()) != null;
+        return publication.empechement(idSite, gpsPresent).orElse("");
     }
 
     public StringProperty codeProperty() {

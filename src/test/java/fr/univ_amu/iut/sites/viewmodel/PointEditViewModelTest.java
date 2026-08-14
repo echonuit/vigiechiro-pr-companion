@@ -384,6 +384,28 @@ class PointEditViewModelTest {
                 .isEmpty();
     }
 
+    @Test
+    @DisplayName("#3458 : un empêchement apparu SANS toucher aux champs annule quand même l'envoi")
+    void un_empechement_survenu_apres_le_clic_annule_l_envoi() {
+        relierLeSiteALaPlateforme();
+        PointEditViewModel vm = avecPublication();
+        vm.preparerCreation(site);
+        vm.codeProperty().set("A1");
+        vm.latitudeProperty().set("43.52");
+        vm.longitudeProperty().set("5.46");
+        vm.publierEnsuiteProperty().set(true);
+        assertThat(vm.enregistrer()).isTrue();
+
+        // Le carré cesse d'être relié APRÈS que la case a été cochée, et sans qu'aucun champ ne bouge :
+        // rien ne relance le calcul du motif affiché. Un garde qui relirait l'écran serait d'accord avec
+        // un état périmé, et l'envoi partirait vers un carré qui n'existe plus côté plateforme.
+        liens.supprimer(LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()));
+
+        assertThat(vm.pointAPublier())
+                .as("le garde REDEMANDE au lieu de relire, sinon il entérine l'écran plutôt que la vérité")
+                .isEmpty();
+    }
+
     /// ViewModel muni d'une publication installée et connectée.
     private PointEditViewModel avecPublication() {
         return new PointEditViewModel(
