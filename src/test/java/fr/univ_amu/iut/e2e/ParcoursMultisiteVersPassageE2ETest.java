@@ -85,12 +85,16 @@ class ParcoursMultisiteVersPassageE2ETest {
 
     @Test
     @DisplayName("M-Multisite : le passage figure dans la vue agrégée, le double-clic ouvre M-Passage")
-    void multisite_drill_vers_passage(FxRobot robot) {
+    void multisite_drill_vers_passage(FxRobot robot) throws TimeoutException {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
 
-        // 1) Ouvrir la vue agrégée multi-sites (navigation socle réelle).
+        // 1) Ouvrir la vue agrégée multi-sites (navigation socle réelle). Le chargement de l'agrégat
+        // tourne hors du fil JavaFX (occupation.occuper, MultisiteController) : sans cette attente, la
+        // table est encore vide quand l'assertion tombe, un échec qui ne se produit que sur une machine
+        // lente, donc en CI.
         robot.interact(() -> injector.getInstance(NavigationMultisite.class).ouvrirAccueil());
         TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !table.getItems().isEmpty());
         assertThat(table.getItems()).hasSize(1);
         assertThat(navigation.getVueCourante()).isEqualTo("multisite");
 
@@ -98,7 +102,13 @@ class ParcoursMultisiteVersPassageE2ETest {
         doubleClicVersPassage(robot, navigation);
 
         assertThat(navigation.getVueCourante()).isEqualTo("passage");
-        assertThat(robot.lookup("#boutonVerifier").queryAs(Button.class)).isNotNull();
+        Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
+        assertThat(verifier).isNotNull();
+        // navigation.getVueCourante() bascule dès le changement d'écran, avant que le chargement du
+        // passage (lui aussi asynchrone) n'ait appliqué ses données ; le fil d'Ariane ci-dessous n'est
+        // renseigné qu'à la fin de ce chargement (navigation.actualiserFil, même callback que
+        // verificationDisponibleProperty). Attendre l'un garantit l'autre.
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !verifier.isDisabled());
 
         // 3) Le fil d'Ariane GLOBAL situe le passage sous son site, même atteint via multisite (#140) :
         // Accueil › Mes sites › Carré 640380 › Détails du passage N° 1 (emplacement, pas l'historique).
@@ -115,13 +125,24 @@ class ParcoursMultisiteVersPassageE2ETest {
 
     @Test
     @DisplayName("Multisite → Passage → enfant : cliquer « Détails du passage » dans le fil rouvre M-Passage")
-    void multisite_enfant_clic_fil_rouvre_le_passage(FxRobot robot) {
+    void multisite_enfant_clic_fil_rouvre_le_passage(FxRobot robot) throws TimeoutException {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
 
-        // 1) Multisite → double-clic → M-Passage (atteint sans passer par le site).
+        // 1) Multisite → double-clic → M-Passage (atteint sans passer par le site). Mêmes attentes que
+        // multisite_drill_vers_passage : chargement de l'agrégat puis chargement du passage, tous deux
+        // asynchrones.
         robot.interact(() -> injector.getInstance(NavigationMultisite.class).ouvrirAccueil());
+        WaitForAsyncUtils.waitFor(
+                5,
+                TimeUnit.SECONDS,
+                () -> !robot.lookup("#tableLignes")
+                        .queryAs(TableView.class)
+                        .getItems()
+                        .isEmpty());
         doubleClicVersPassage(robot, navigation);
         assertThat(navigation.getVueCourante()).isEqualTo("passage");
+        Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !verifier.isDisabled());
 
         // 2) M-Passage → écran enfant (carte « Diagnostic matériel »).
         robot.interact(robot.lookup("#boutonDiagnostic").queryButton()::fire);
@@ -153,14 +174,23 @@ class ParcoursMultisiteVersPassageE2ETest {
     /// parallèles), TestFX peut ne pas enregistrer le double-clic ou naviguer avec un léger différé,
     /// laissant l'écran sur la vue intermédiaire quand l'assertion tombe. On attend donc que la navigation
     /// aboutisse réellement, avec quelques réessais ; l'assertion de l'appelant tranche clairement sinon.
+    ///
+    /// Entre le moment où `table.getItems()` n'est plus vide et celui où TestFX peut localiser la cellule
+    /// correspondante, il reste une passe de layout JavaFX à consommer : sans l'attendre, `doubleClickOn`
+    /// peut lever `FxRobotException` (« returned no nodes ») avant même le premier essai. On attend donc
+    /// que la cellule soit effectivement interrogeable avant de cliquer, à chaque essai.
     private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
         for (int essai = 1; essai <= 3; essai++) {
-            robot.doubleClickOn(DATE_NUIT);
             try {
+                WaitForAsyncUtils.waitFor(
+                        3,
+                        TimeUnit.SECONDS,
+                        () -> robot.lookup(DATE_NUIT).tryQuery().isPresent());
+                robot.doubleClickOn(DATE_NUIT);
                 WaitForAsyncUtils.waitFor(3, TimeUnit.SECONDS, () -> "passage".equals(navigation.getVueCourante()));
                 return;
             } catch (TimeoutException reessai) {
-                // Navigation pas encore aboutie : on retente (le double-clic n'a peut-être pas « pris »).
+                // Cellule pas encore rendue ou navigation pas encore aboutie : on retente.
             }
         }
     }

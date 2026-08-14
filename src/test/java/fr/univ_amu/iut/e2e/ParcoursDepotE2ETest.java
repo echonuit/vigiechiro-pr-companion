@@ -24,10 +24,13 @@ import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,6 +39,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours (fil rouge P1 → P4)** : sur le **vrai chrome** de l'application (injecteur
 /// applicatif `RacineInjecteur`), on enchaîne plusieurs écrans via la **navigation réelle** et on
@@ -94,24 +98,41 @@ class ParcoursDepotE2ETest {
 
     @Test
     @DisplayName("Fil rouge : un passage importé est vérifié puis déposé via les écrans (Transformé → Déposé)")
-    void parcours_verifier_puis_deposer(FxRobot robot) {
+    void parcours_verifier_puis_deposer(FxRobot robot) throws TimeoutException {
         PassageDao passages = new PassageDao(source);
         assertThat(statut(passages)).isEqualTo(StatutWorkflow.TRANSFORME);
 
-        // 1) Entrer sur M-Passage (navigation socle, comme un double-clic depuis M-Sites).
+        // 1) Entrer sur M-Passage (navigation socle, comme un double-clic depuis M-Sites). Le chargement
+        // du passage tourne hors du fil JavaFX (occupation.occuper) : sans cette attente, l'assertion
+        // ci-dessous tombe pendant que verificationDisponibleProperty est encore à sa valeur par défaut
+        // (désactivé), un échec qui ne se produit que sur une machine lente, donc en CI.
         robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
         Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !verifier.isDisabled());
         assertThat(verifier.isDisabled()).isFalse();
 
-        // 2) Vérifier → M-Qualification, poser le verdict OK puis enregistrer.
+        // 2) Vérifier → M-Qualification, poser le verdict OK puis enregistrer. M-Qualification se charge
+        // elle aussi hors du fil JavaFX (#1210) : sans cette attente, le clic sur « Enregistrer » part
+        // pendant que le chargement est encore en vol, qui atterrit ensuite et écrase le verdict qu'on
+        // venait de choisir (verdictVm.appliquer(...) réapplique l'état lu en base) - le passage reste
+        // alors « Transformé ».
         robot.interact(verifier::fire);
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> !robot.lookup("#tableSequences")
+                        .queryAs(TableView.class)
+                        .getItems()
+                        .isEmpty());
         robot.interact(robot.lookup("#boutonOk").queryAs(Button.class)::fire);
         robot.interact(robot.lookup("#boutonEnregistrer").queryAs(Button.class)::fire);
         assertThat(statut(passages)).isEqualTo(StatutWorkflow.VERIFIE);
 
-        // 3) Revenir sur M-Passage : le dépôt est désormais disponible.
+        // 3) Revenir sur M-Passage : le dépôt est désormais disponible. Même attente qu'à l'étape 1 : le
+        // rechargement du passage est asynchrone.
         robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
         Button depot = robot.lookup("#boutonDepot").queryAs(Button.class);
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> !depot.isDisabled());
         assertThat(depot.isDisabled()).isFalse();
 
         // 4) Préparer le dépôt → M-Lot : préparer puis déposer.
