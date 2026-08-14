@@ -177,12 +177,25 @@ class ServiceSauvegardeTest {
         Path racineSession = seederSession("Car040962-2026-Pass1-A1");
         Path interdit = Files.createDirectories(racineSession.resolve("cache"));
         Files.writeString(interdit.resolve("dedans.wav"), "hors de portée");
-        assertThat(interdit.toFile().setReadable(false)).isTrue();
         Path destination = workspaceDir.resolve("cle-usb");
         Files.createDirectories(destination);
 
-        try {
-            Throwable echec = catchThrowable(() -> avecEspace(Long.MAX_VALUE).sauvegarderComplet(destination));
+        // ⚠️ L'illisibilité est FABRIQUÉE : `File.setReadable(false)` rend `false` sous Windows, et ce
+        // test y échouait avant d'éprouver quoi que ce soit (#3526). Le geste `lister` est celui qui
+        // échoue quand un dossier ne se laisse pas ouvrir - à l'ouverture, pas pendant l'itération.
+        GestesFichiers dossierFerme = new GestesFichiers() {
+            @Override
+            public java.util.stream.Stream<Path> lister(Path aLister) throws IOException {
+                if (aLister.equals(interdit)) {
+                    throw new java.nio.file.AccessDeniedException(aLister.toString());
+                }
+                return Files.list(aLister);
+            }
+        };
+
+        {
+            Throwable echec = catchThrowable(
+                    () -> avecEspaceEtGestes(Long.MAX_VALUE, dossierFerme).sauvegarderComplet(destination));
 
             // Le coeur de #3634 : `UncheckedIOException` n'est PAS une `IOException`. Elle traversait le
             // `catch (IOException | SQLException)` et `VerdictCli` la rangeait dans sa branche par
@@ -195,8 +208,6 @@ class ServiceSauvegardeTest {
                             + " vérifier des données intactes")
                     .isInstanceOf(RefusAvantEcriture.class)
                     .hasMessageContaining(interdit.toString());
-        } finally {
-            assertThat(interdit.toFile().setReadable(true)).isTrue();
         }
     }
 
@@ -305,6 +316,17 @@ class ServiceSauvegardeTest {
 
     /// Un service qui croit le disque à `octetsLibres`, quel que soit le dossier.
     /// Un service dont la pesée bute sur `interdit`, et lit normalement tout le reste.
+    /// Un service dont le DOSSIER `interdit` ne se laisse pas lister (#3526).
+    private ServiceSauvegarde avecEspaceEtGestes(long octetsLibres, GestesFichiers gestes) {
+        return new ServiceSauvegarde(
+                source,
+                new HorlogeFigee(LocalDateTime.of(2026, 7, 7, 14, 30, 15)),
+                dossier -> octetsLibres,
+                TailleFichier.reelle(),
+                gestes,
+                () -> {});
+    }
+
     private ServiceSauvegarde avecEspaceEtPesee(long octetsLibres, Path interdit) {
         TailleFichier pesee = fichier -> {
             if (fichier.equals(interdit)) {
@@ -317,6 +339,7 @@ class ServiceSauvegardeTest {
                 new HorlogeFigee(LocalDateTime.of(2026, 7, 7, 14, 30, 15)),
                 dossier -> octetsLibres,
                 pesee,
+                GestesFichiers.reels(),
                 () -> {});
     }
 

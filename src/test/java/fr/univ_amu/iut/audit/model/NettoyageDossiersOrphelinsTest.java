@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audit.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.persistence.GestesFichiers;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -137,15 +138,23 @@ class NettoyageDossiersOrphelinsTest {
         Files.writeString(dossier.resolve("lisible.wav"), "12345");
         Path ferme = Files.createDirectories(dossier.resolve("ferme"));
         Files.writeString(ferme.resolve("tenu.wav"), "abc");
-        assertThat(ferme.toFile().setReadable(false, false)).isTrue();
 
-        long taille = NettoyageDossiersOrphelins.tailleDe(dossier);
+        // ⚠️ L'illisibilité est FABRIQUÉE et non demandée au système : `File.setReadable(false)` rend
+        // `false` sous Windows, et ce test échouait donc là-bas avant même d'éprouver quoi que ce soit
+        // (#3526). Même couture que `GestesFichiers` pour #3525.
+        long taille = NettoyageDossiersOrphelins.tailleDe(dossier, new GestesFichiers() {
+            @Override
+            public java.util.stream.Stream<Path> lister(Path aLister) throws IOException {
+                if (aLister.equals(ferme)) {
+                    throw new java.nio.file.AccessDeniedException(aLister.toString());
+                }
+                return Files.list(aLister);
+            }
+        });
 
         assertThat(taille)
                 .as("ce qui a pu être lu reste compté : observer ne doit pas être plus fragile que ce"
                         + " qu'on observe")
                 .isEqualTo(5L);
-
-        assertThat(ferme.toFile().setReadable(true, false)).isTrue();
     }
 }

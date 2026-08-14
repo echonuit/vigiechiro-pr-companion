@@ -80,6 +80,7 @@ public class ServiceSauvegarde {
     private final InstantaneBase instantane;
     private final EspaceDisque espaceDisque;
     private final TailleFichier tailleFichier;
+    private final GestesFichiers gestes;
 
     @Inject
     public ServiceSauvegarde(SourceDeDonnees source, Horloge horloge, JournalMutations journal) {
@@ -91,7 +92,7 @@ public class ServiceSauvegarde {
     /// Même couture que `CompacteurDepot` et `OutilsImport`, qui gardent aussi une fabrique par défaut
     /// plutôt qu'un binding.
     ServiceSauvegarde(SourceDeDonnees source, Horloge horloge, EspaceDisque espaceDisque, JournalMutations journal) {
-        this(source, horloge, espaceDisque, TailleFichier.reelle(), journal);
+        this(source, horloge, espaceDisque, TailleFichier.reelle(), GestesFichiers.reels(), journal);
     }
 
     /// Variante à **pesée injectée** en plus (#3627). Les deux ports vont ensemble : le garde d'espace
@@ -103,11 +104,13 @@ public class ServiceSauvegarde {
             Horloge horloge,
             EspaceDisque espaceDisque,
             TailleFichier tailleFichier,
+            GestesFichiers gestes,
             JournalMutations journal) {
         this.source = Objects.requireNonNull(source, "source");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.espaceDisque = Objects.requireNonNull(espaceDisque, "espaceDisque");
         this.tailleFichier = Objects.requireNonNull(tailleFichier, "tailleFichier");
+        this.gestes = Objects.requireNonNull(gestes, "gestes");
         this.journal = Objects.requireNonNull(journal, "journal");
         this.instantane = new InstantaneBase(this.source);
     }
@@ -266,7 +269,7 @@ public class ServiceSauvegarde {
         List<ArborescenceFichiers.EchecLecture> illisibles = new ArrayList<>();
         for (Path racineSession : racinesSessions()) {
             if (Files.isDirectory(racineSession)) {
-                ArborescenceFichiers.Pesee pesee = ArborescenceFichiers.peser(racineSession, tailleFichier);
+                ArborescenceFichiers.Pesee pesee = ArborescenceFichiers.peser(racineSession, tailleFichier, gestes);
                 requis += pesee.octets();
                 illisibles.addAll(pesee.illisibles());
             }

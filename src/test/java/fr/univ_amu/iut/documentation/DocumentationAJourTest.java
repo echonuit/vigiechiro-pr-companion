@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.documentation;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -16,6 +17,7 @@ import fr.univ_amu.iut.commun.view.CritereFiltre;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.Method;
+import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -716,6 +718,18 @@ class DocumentationAJourTest {
     @Test
     @DisplayName("#3642 : chercher une source ne s'écroule pas sur un chemin devenu illisible")
     void la_recherche_de_source_tolere_ce_qui_bouge(@TempDir Path racine) throws IOException {
+        // ⚠️ POSIX seulement, et **assumé** plutôt qu'injecté. `File.setReadable(false)` rend `false`
+        // sous Windows : ce test y échouait avant d'éprouver quoi que ce soit (#3526).
+        //
+        // Ailleurs, la réponse a été de rendre l'échec injectable (`GestesFichiers`, `TailleFichier`) -
+        // parce que le contrat éprouvé était celui du **produit**, et qu'il compte sur la plateforme où
+        // le produit est livré en MSI. Ici, ce qui est éprouvé est la recherche de fichiers source du
+        // **garde de documentation** : elle n'est pas livrée sous Windows, et n'y rencontrera jamais un
+        // dossier illisible. Y coudre un port serait de la mécanique sans contrepartie.
+        assumeTrue(
+                FileSystems.getDefault().supportedFileAttributeViews().contains("posix"),
+                "système de fichiers non POSIX : un dossier illisible ne s'y fabrique pas ainsi");
+
         Path atteignable = Files.createDirectories(racine.resolve("atteignable"));
         Files.writeString(atteignable.resolve("CibleTest.java"), "class CibleTest {}");
         Path opaque = Files.createDirectories(racine.resolve("opaque"));
