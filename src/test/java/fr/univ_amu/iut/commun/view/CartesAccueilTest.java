@@ -59,17 +59,22 @@ class CartesAccueilTest {
                 .isLessThanOrEqualTo(description.getLayoutBounds().getWidth());
     }
 
-    /// Monte la carte dans une **scène qui porte les feuilles du chrome**, puis applique le CSS et la
-    /// mise en page. Sans cela le titre garde la police par défaut (~13 px) au lieu de son `15px bold`,
-    /// et « Espèces & observations » **tient** alors sur une ligne : le test mesurerait une carte qui
+    /// Monte la carte dans une **scène habillée**, puis applique le CSS et la mise en page. Sans les
+    /// feuilles du chrome le titre garde la police par défaut (~13 px) au lieu de son `15px bold`, et
+    /// « Espèces & observations » **tient** alors sur une ligne : le test mesurerait une carte qui
     /// n'existe pas, et resterait vert avec le défaut en place.
+    ///
+    /// ⚠️ Les feuilles ne suffisent pas, et c'est ce que le premier passage sous **macOS** a montré
+    /// (#3526). Elles étaient posées à la main, mais [Typographie#installer] ne l'était pas : la police
+    /// embarquée n'était donc pas enregistrée auprès de JavaFX, `base.css` la demandait en vain, et le
+    /// rendu retombait sur la police du **système**. Sous Linux, plus large, le titre s'enroulait et le
+    /// test passait ; sous macOS il tenait sur une ligne. Le test mesurait la machine, pas la carte.
+    ///
+    /// `Habillage.scene(...)` fait les deux - installer la police, poser le trio du chrome - et c'est
+    /// la raison d'être de ce patron : une scène montée à la main en oublie toujours une moitié.
     private static VBox carte(String titre) {
         VBox carte = (VBox) CartesAccueil.carte(new ActiviteDeTest(titre));
-        Scene scene = new Scene(new StackPane(carte));
-        scene.getStylesheets()
-                .addAll(
-                        CartesAccueil.class.getResource("palette.css").toExternalForm(),
-                        CartesAccueil.class.getResource("base.css").toExternalForm());
+        Scene scene = Habillage.scene(new StackPane(carte));
         scene.getRoot().applyCss();
         scene.getRoot().layout();
         return carte;
