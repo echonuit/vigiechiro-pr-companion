@@ -3,6 +3,8 @@ package fr.univ_amu.iut.commun.api;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -62,6 +64,25 @@ public record LocalitesDuSite(String etag, JsonArray brutes) {
     /// et l'appelant ne doit rien en conclure.
     public Optional<PointVigieChiro> localite(String nom) {
         return trouver(nom).map(LocalitesVigieChiro::lireUnPoint);
+    }
+
+    /// Toutes les localités **dont on sait lire la position** (#3750).
+    ///
+    /// Celles dont la géométrie est absente ou malformée sont écartées : on ne peut rien confronter à une
+    /// position qu'on ne connaît pas, et les compter parmi les candidates d'un appariement laisserait
+    /// croire qu'on les a examinées.
+    public List<PointVigieChiro> positions() {
+        List<PointVigieChiro> points = new ArrayList<>();
+        for (JsonElement element : brutes) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            PointVigieChiro point = LocalitesVigieChiro.lireUnPoint(element.getAsJsonObject());
+            if (point != null) {
+                points.add(point);
+            }
+        }
+        return List.copyOf(points);
     }
 
     /// L'objet JSON de la localité de ce nom, tel quel.
