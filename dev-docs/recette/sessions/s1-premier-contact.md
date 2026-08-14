@@ -71,10 +71,10 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 
 **Étape 6 · Ce que la stabilisation a changé au premier contact** (#3424)
 
-- **S1-26** · La modale de connexion s'ouvre **sans saut** : la saisie est en place, rien ne se replace après
-  coup. #1373
-- **S1-27** · Pendant la récupération qui suit « Se connecter », **rien ne se redimensionne** : le contenu ne sort
-  pas avant que le bandeau d'état ait pris sa place.
+- **S1-26** · *perceptif* · La modale de connexion s'ouvre **sans saut** : la saisie est en place, rien ne se
+  replace après coup. #1373
+- **S1-27** · *perceptif* · Pendant la récupération qui suit « Se connecter », **rien ne se redimensionne** : le
+  contenu ne sort pas avant que le bandeau d'état ait pris sa place.
 - **S1-28** · Le menu ☰ ne porte **plus** d'entrée « fiche espèce » : la source des fiches vit dans
   **Réglages ▸ Général**, où [S7](s7-reglages.md) la déroule. #3433
 - **S1-29** · Le menu ☰ porte toujours ses autres entrées, et chacune ouvre ce qu'elle annonce.
@@ -84,6 +84,12 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 >
 > **S1-26** et **S1-27** sont **perceptifs** : aucun test ne voit un contenu qui se replace, il voit un
 > contenu correct une fois posé. C'est précisément ce qui les met ici plutôt qu'en TestFX.
+>
+> Cette phrase était vraie, elle était au bon endroit, et **aucune machine ne la lisait** : le garde de
+> correspondance rangeait ces deux cas parmi ceux « qu'il reste à couvrir », c'est-à-dire dans la file
+> des tests à écrire, alors qu'il n'y a rien à y écrire. La marque `*perceptif*` en tête de case le dit
+> désormais à une machine (#3764) : elle leur donne leur propre bac, et fait rougir le garde si un test
+> prétend les asserter.
 
 ## Verdict par axe (dernière passe)
 

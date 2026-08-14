@@ -62,6 +62,27 @@ Gabarit d'un script : en-tête (écrans propriétaires · features · statut) �
 [raccourcis] → **le script** (points numérotés `Sxx-NN`, groupés par étape) → **verdict par axe** →
 issues produites → renvois et décisions → notes de méthode.
 
+### Trois états, et « couvert » reste réservé à ce que la CI prouve (#3764)
+
+Une case est dans l'une de **trois** situations. Les réduire à deux fabrique un vert creux :
+
+| État | Qui tranche | Comment il se déclare |
+|---|---|---|
+| **Asserté** | la CI, et elle rougit quand le logiciel a tort | un test porte `@CasDeRecette("S1-02")` |
+| **Perceptif** | un humain, en regardant | la case porte la marque `*perceptif*`, posée en passe 6 |
+| **Non couvert** | personne | ni l'une, ni l'autre |
+
+⚠️ Le deuxième état n'est **pas** une couverture, et c'est tout l'enjeu. Un scénario qui *joue* un cas
+perceptif le cite comme n'importe quel test - c'est le seul lien vers le script - si bien que sans
+distinction il gonflerait le compte des couverts d'un cas que **personne n'a regardé**. Un tel
+scénario se déclare donc `@CasDeRecette("S1-26", jugement = HUMAIN)`.
+
+**Les deux sources se tiennent l'une l'autre.** Le script dit ce qu'un cas *demande*, le code dit ce
+qu'un test *prouve*, et `CorrespondanceRecetteTest` les confronte : il rougit sur un cas marqué
+perceptif que du code prétend asserter, comme sur un scénario qui se déclare humain là où le script
+n'a rien marqué. Sans ce recoupement, la marque dériverait comme la prose avait dérivé avant #3728 -
+le script disait « perceptifs » en toutes lettres, et aucune machine ne le lisait.
+
 - [S1 · Premier contact](sessions/s1-premier-contact.md) : accueil, connexion, sites, points.
 - [S2 · Importer une nuit](sessions/s2-importer.md) : importation, passage, diagnostic (+ cas dégradés).
 - [S3 · Vérifier](sessions/s3-verifier.md) : qualification, raccourcis, écoute *(à rejouer au delta : écran refondu #1524)*.
