@@ -262,7 +262,14 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
         // Statut du workflow déporté en zone centre de la barre de statut (#693), plus de sous-titre.
         // Barre de statut 3 zones (#823) : gauche = contexte du passage, centre = statut + récap, droite =
-        // état vivant (par priorité : dépôt en cours > génération > espace insuffisant > bilan archives).
+        // état vivant (par priorité : lancement > dépôt en cours > génération > espace insuffisant >
+        // bilan archives).
+        //
+        // #3546 : la liste ci-dessous doit énoncer **tout** ce que [ZonesStatutLot] lit, y compris le
+        // lancement, qui passe en premier. Il manquait, et le défaut se cachait derrière une séquence :
+        // `marquerLancementEnCours` pose `lancementEnCours` puis `enCours`, et c'est la seconde écriture -
+        // déclarée - qui invalidait la liaison. Sur un dépôt déjà en cours, `enCours` ne change pas : plus
+        // rien n'invalide, et l'annonce du lancement reste invisible.
         zonesStatut.bind(Bindings.createObjectBinding(
                 zonesStatutLot::calculer,
                 viewModel.statutProperty(),
@@ -272,6 +279,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 viewModel.espaceDepotSuffisantProperty(),
                 viewModel.raisonEspaceInsuffisantProperty(),
                 viewModel.suiviLignes().lignes(),
+                depotViewModel.lancementEnCoursProperty(),
                 depotViewModel.enCoursProperty(),
                 depotViewModel.suiviLignes().deposeesProperty(),
                 depotViewModel.suiviLignes().enCoursProperty(),

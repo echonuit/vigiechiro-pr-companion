@@ -53,6 +53,10 @@ class LotViewTest {
     private DepotVigieChiro depot;
     private LotController controleur;
 
+    /// Le ViewModel de depot que l ecran a recu (#3546) : `@Provides` sans portee en fabrique un
+    /// nouveau a chaque injection, et en redemander un ici n atteindrait pas celui du binding.
+    private DepotViewModel depotObserve;
+
     @Start
     void start(Stage stage) throws Exception {
         service = mock(ServiceLot.class);
@@ -69,7 +73,8 @@ class LotViewTest {
 
                     @Provides
                     DepotViewModel depotViewModel() {
-                        return new DepotViewModel(service, Optional.of(depot));
+                        depotObserve = new DepotViewModel(service, Optional.of(depot));
+                        return depotObserve;
                     }
 
                     // Suivi du traitement serveur (#1263) : absent ici. Sans participation liee ni
@@ -103,6 +108,26 @@ class LotViewTest {
                 .map(noeud -> ((Label) noeud).getText())
                 .filter(texte -> texte != null && !texte.isBlank())
                 .toList();
+    }
+
+    @Test
+    @DisplayName("#3546 : un lancement pendant un dépôt s'annonce, même si « en cours » ne rebouge pas")
+    void le_lancement_s_annonce_quand_en_cours_ne_change_pas(FxRobot robot) {
+        // Un téléversement est en route : la zone droite annonce le dépôt.
+        robot.interact(() -> depotObserve.marquerEnCours());
+        assertThat(controleur.zonesStatutProperty().get().droite()).startsWith("Dépôt");
+
+        // Puis un lancement démarre. `marquerLancementEnCours` pose `lancementEnCours` PUIS `enCours`,
+        // mais `enCours` vaut déjà `true` : sa seconde écriture n'émet aucun événement. C'est le seul
+        // chemin où la propriété manquante est observable **seule**, et il passe par l'API publique.
+        //
+        // Le test naïf a été essayé : sans le dépôt en cours ci-dessus, il est **vert alors que le défaut
+        // est là**, parce que `enCours` change alors de valeur et invalide la liaison juste après.
+        robot.interact(() -> depotObserve.marquerLancementEnCours());
+
+        assertThat(controleur.zonesStatutProperty().get().droite())
+                .as("le binding doit DÉCLARER `lancementEnCoursProperty`, qu'il lit en premier")
+                .isEqualTo("Lancement de l'analyse sur Vigie-Chiro…");
     }
 
     @Test
