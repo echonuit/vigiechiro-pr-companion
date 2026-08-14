@@ -636,6 +636,15 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
     peut rouvrir un carré verrouillé. **`StatutPlateforme.VERROUILLE` s'inverse ici** : état favorable
     pour déposer une nuit, état refusé pour ajouter un point sur son propre carré.
 
+    ⚠️ **Un homonyme n'est pas le même point** (#3458). La plateforme impose l'unicité du `nom` d'une
+    localité, et l'on pourrait croire qu'un nom déjà pris signifie « c'est déjà le nôtre ». Une
+    participation **nomme** sa localité (`'point': {'type': 'string'}` au schéma des participations) :
+    déplacer une localité déplacerait donc, sans préavis, toutes les nuits qui s'y rattachent, y compris
+    celles d'autres observateurs. `PublicationPoint` compare donc les **positions** avant de conclure, et
+    rend `AilleursSurLaPlateforme` au delà de `ECART_MEME_POINT_METRES` (15 m). Rien n'est envoyé, et
+    surtout **rien n'est retenu** : marquer le point publié figerait la confusion, puisque le geste ne
+    serait plus reproposé. Position distante illisible : même verdict, par prudence.
+
     On serait tenté d'en faire un garde. **Il ne faut pas** : les liens de site viennent de
     `GET /moi/participations` et non de `/moi/sites` (#718, cf. `ClientVigieChiro.mesSites`), donc un
     carré relié peut appartenir à quelqu'un d'autre, et Companion ne connaît ni le propriétaire, ni la
