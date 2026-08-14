@@ -7,16 +7,12 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
-import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
-import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Files;
@@ -67,19 +63,19 @@ class SiteDetailPublierPointViewTest {
         Injector injector = Guice.createInjector(RacineInjecteur.modules());
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-01-01", ID_USER));
+
+        // Trois points du MÊME carré, semés par la fixture : le cliquet des semis de topologie (#2865)
+        // tient la dette du semis à la main à zéro, et un test neuf ne la rouvre pas.
+        long idSite = semerPoint(source, "A1", 43.52, 5.46, false).idSite();
+        long idPublie = semerPoint(source, "C3", 43.53, 5.47, false).idPoint();
+        new PointPublieDao(source).marquer(idPublie);
+        // Rapatrié : `synchronise` dit « venu DE » la plateforme, l'inverse de « poussé VERS ».
+        semerPoint(source, "Z9", 43.54, 5.48, true);
+
         new LienVigieChiroDao(source)
                 .upsert(new LienVigieChiro(
-                        LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()), "6a4961f587bc8dba39481180", false));
-
-        PointDao points = new PointDao(source);
-        points.insert(new PointDEcoute(null, "A1", 43.52, 5.46, "Chêne", site.id(), false));
-        PointDEcoute publie = points.insert(new PointDEcoute(null, "C3", 43.53, 5.47, null, site.id(), false));
-        new PointPublieDao(source).marquer(publie.id());
-        // Rapatrié : `synchronise` dit « venu DE » la plateforme, l'inverse de « poussé VERS ».
-        points.insert(new PointDEcoute(null, "Z9", 43.54, 5.48, null, site.id(), true));
+                        LienVigieChiro.ENTITE_SITE, String.valueOf(idSite), "6a4961f587bc8dba39481180", false));
+        Site site = new SiteDao(source).findById(idSite).orElseThrow();
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
@@ -92,6 +88,22 @@ class SiteDetailPublierPointViewTest {
     @AfterEach
     void nettoyerWorkspace() {
         System.clearProperty("vigiechiro.workspace");
+    }
+
+    /// Un point du carré d'essai, semé par la fixture. Les appels partagent le carré : ils retombent tous
+    /// sur le **même** site, sans doublonner.
+    private static JeuDeDonneesPassage semerPoint(
+            SourceDeDonnees source, String code, double latitude, double longitude, boolean rapatrie) {
+        JeuDeDonneesPassage semis = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre("640380")
+                .nomSite("Étang")
+                .point(code)
+                .position(latitude, longitude);
+        if (rapatrie) {
+            semis.pointRapatrie();
+        }
+        return semis.semerSiteEtPoint();
     }
 
     @Test
