@@ -8,15 +8,15 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -31,35 +31,61 @@ import org.junit.jupiter.api.Test;
 /// jour où ils divergent, le code atteste ce que la session ne dit plus. Ce n'est pas une crainte
 /// théorique : `s1-premier-contact.md` désignait les cas 24 et 25 là où il parlait des 26 et 27.
 ///
-/// ## Ses DEUX devoirs, et le second est celui qu'on oublie
+/// ## Ses TROIS devoirs, et le deuxième est celui qu'on oublie
 ///
 /// 1. tout identifiant cité par un test **existe** dans une session ;
-/// 2. les cas que **rien** ne couvre sont **listés**.
+/// 2. les cas que **rien** ne couvre sont **listés** ;
+/// 3. le script et le code disent la **même chose** du juge (#3764).
 ///
-/// ⚠️ Sans le second, un garde qui ne trouve rien à redire est **indiscernable** d'un garde qui ne
+/// ⚠️ Sans le deuxième, un garde qui ne trouve rien à redire est **indiscernable** d'un garde qui ne
 /// lit pas le document. Le premier devoir seul serait vert sur un dépôt où aucun test ne cite quoi
 /// que ce soit.
 ///
 /// « Aucun test » reste parfaitement recevable : c'est même le cas normal pour les cas perceptifs,
 /// que la passe 6 envoie en recette **parce qu'**ils ne sont pas automatisables. Ce garde ne
 /// réclame donc pas la couverture, il refuse qu'elle soit **tacite**.
+///
+/// ## Ce que le troisième devoir a changé
+///
+/// Les cas perceptifs étaient jusqu'ici indiscernables des cas non couverts : deux bacs pour trois
+/// situations. Le script les marque désormais `*perceptif*`, ce qui leur donne le leur, et surtout
+/// permet de **confronter** les deux sources - voir [RepartitionDesCas], où le tri vit pour pouvoir
+/// être éprouvé sur des situations que ce dépôt ne contient pas.
 class CorrespondanceRecetteTest {
 
     private static final Path SESSIONS = Path.of("dev-docs", "recette", "sessions");
 
-    /// Un cas se déclare `- **S1-04** · texte` : la convention de S9 et S3, désormais celle de S1.
-    private static final Pattern CAS = Pattern.compile("^- \\*\\*(S\\d+-\\d+)\\*\\* ·", Pattern.MULTILINE);
+    /// Un cas se déclare `- **S1-04** · texte`, et `- **S1-26** · *perceptif* · texte` s'il ne se
+    /// tranche qu'à l'oeil. Le second groupe capture cette marque.
+    private static final Pattern CAS =
+            Pattern.compile("^- \\*\\*(S\\d+-\\d+)\\*\\* ·( \\*perceptif\\* ·)?", Pattern.MULTILINE);
 
-    /// Les cas déclarés par les sessions, par identifiant.
+    /// Les cas déclarés par les sessions, par identifiant, associés au fichier qui les porte.
     private static Map<String, String> declares;
+
+    /// Ceux d'entre eux que le script marque `*perceptif*`.
+    private static Set<String> perceptifs;
 
     /// Les cas cités par le code, et par quel test.
     private static Map<String, Set<String>> cites;
 
+    /// Ce que les tests qui les citent prétendent prouver.
+    private static Map<String, Set<Jugement>> jugements;
+
+    /// Le tri qui en découle, calculé une fois.
+    private static RepartitionDesCas tri;
+
     @BeforeAll
     static void lire() {
-        declares = casDeclares();
-        cites = casCites();
+        declares = new LinkedHashMap<>();
+        perceptifs = new LinkedHashSet<>();
+        lireLesScripts();
+
+        cites = new LinkedHashMap<>();
+        jugements = new LinkedHashMap<>();
+        lireLeCode();
+
+        tri = RepartitionDesCas.repartir(declares.keySet(), perceptifs, jugements);
     }
 
     @Test
@@ -85,21 +111,62 @@ class CorrespondanceRecetteTest {
                 .as("Aucun cas de recette n'a été lu sous %s : le garde ne garde plus rien.", SESSIONS)
                 .isNotEmpty();
 
-        Set<String> nonCouverts = new TreeSet<>(declares.keySet());
-        nonCouverts.removeAll(cites.keySet());
-
         System.out.printf(
-                "%nCorrespondance recette : %d cas déclarés, %d couverts, %d non couverts.%n",
-                declares.size(), declares.size() - nonCouverts.size(), nonCouverts.size());
-        nonCouverts.forEach(cas -> System.out.printf("  non couvert · %s · %s%n", cas, declares.get(cas)));
+                "%nCorrespondance recette : %d cas déclarés, %d assertés, %d perceptifs, %d non couverts.%n",
+                declares.size(),
+                tri.assertes().size(),
+                tri.perceptifs().size(),
+                tri.nonCouverts().size());
+
+        tri.perceptifs()
+                .forEach(cas -> System.out.printf(
+                        "  perceptif   · %s · %s · %s%n",
+                        cas,
+                        declares.get(cas),
+                        cites.containsKey(cas) ? "joué par " + joindre(cites.get(cas)) : "à jouer"));
+        tri.nonCouverts().forEach(cas -> System.out.printf("  non couvert · %s · %s%n", cas, declares.get(cas)));
+    }
+
+    @Test
+    @DisplayName("Le script et le code disent la même chose du juge")
+    void le_script_et_le_code_s_accordent_sur_le_juge() {
+        // Le devoir neuf de #3764, et le seul des trois qui puisse rougir sur le contenu du dépôt.
+        // Les deux sources se recoupent : c'est ce recoupement qui les tient l'une par l'autre.
+        String explications = tri.desaccords().entrySet().stream()
+                .map(desaccord -> explication(desaccord.getKey(), desaccord.getValue()))
+                .collect(Collectors.joining(System.lineSeparator() + "  "));
+
+        assertThat(tri.desaccords())
+                .as("Le script et le code ne disent pas la même chose du juge :%n  %s", explications)
+                .isEmpty();
     }
 
     // ----------------------------------------------------------------------------------------
 
-    private static Map<String, String> casDeclares() {
-        Map<String, String> trouves = new LinkedHashMap<>();
+    private static String explication(String cas, Jugement ceQueDitLeCode) {
+        String tests = joindre(cites.getOrDefault(cas, Set.of()));
+        // ⚠️ Les parenthèses ne sont pas décoratives : sans elles, `.formatted` ne s'applique qu'au
+        // DERNIER fragment de la concaténation, et le message part avec ses `%s` intacts. Le témoin
+        // du chantier l'a montré avant qu'un lecteur ait à le subir.
+        if (ceQueDitLeCode == Jugement.AUTOMATIQUE) {
+            return ("%s est marqué *perceptif* dans %s, mais %s prétend l'asserter. Ou bien le script"
+                            + " a tort et le cas est automatisable - retirez la marque -, ou bien le"
+                            + " test surestime ce qu'il prouve.")
+                    .formatted(cas, declares.get(cas), tests);
+        }
+        return ("%s se déclare jugé par un humain dans %s, mais %s ne le marque pas *perceptif*. Ou"
+                        + " bien le cas relève de l'oeil - marquez-le -, ou bien ce scénario doit"
+                        + " asserter.")
+                .formatted(cas, tests, declares.get(cas));
+    }
+
+    private static String joindre(Set<String> noms) {
+        return String.join(", ", noms);
+    }
+
+    private static void lireLesScripts() {
         if (!Files.isDirectory(SESSIONS)) {
-            return trouves;
+            return;
         }
         try (Stream<Path> fichiers = Files.list(SESSIONS)) {
             fichiers.filter(f -> f.getFileName().toString().endsWith(".md"))
@@ -107,26 +174,31 @@ class CorrespondanceRecetteTest {
                     .forEach(f -> {
                         Matcher m = CAS.matcher(lire(f));
                         while (m.find()) {
-                            trouves.putIfAbsent(m.group(1), f.getFileName().toString());
+                            declares.putIfAbsent(m.group(1), f.getFileName().toString());
+                            if (m.group(2) != null) {
+                                perceptifs.add(m.group(1));
+                            }
                         }
                     });
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return trouves;
     }
 
-    private static Map<String, Set<String>> casCites() {
+    private static void lireLeCode() {
         JavaClasses classes = new ClassFileImporter().importPackages("fr.univ_amu.iut");
-        Map<String, Set<String>> trouves = new LinkedHashMap<>();
         classes.forEach(classe -> classe.getMethods()
                 .forEach(methode -> methode.tryGetAnnotationOfType(CasDeRecette.class)
                         .ifPresent(annotation -> {
-                            List<String> cas = new ArrayList<>(List.of(annotation.value()));
-                            cas.forEach(id -> trouves.computeIfAbsent(id, k -> new LinkedHashSet<>())
-                                    .add(classe.getSimpleName() + "." + methode.getName()));
+                            String nom = classe.getSimpleName() + "." + methode.getName();
+                            for (String id : List.of(annotation.value())) {
+                                cites.computeIfAbsent(id, k -> new LinkedHashSet<>())
+                                        .add(nom);
+                                jugements
+                                        .computeIfAbsent(id, k -> EnumSet.noneOf(Jugement.class))
+                                        .add(annotation.jugement());
+                            }
                         })));
-        return trouves;
     }
 
     private static String lire(Path fichier) {
