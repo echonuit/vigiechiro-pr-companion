@@ -194,6 +194,22 @@ class ModaleSiteViewTest {
     }
 
     @Test
+    @DisplayName("#3458 : sans la vérification installée, la modale n'affiche pas de bouton mort")
+    void sans_recherche_installee_pas_de_bouton_mort(FxRobot robot) {
+        // Cette classe monte le ViewModel avec un `Optional.empty()` : c'est l'injecteur partiel (capture
+        // d'écran, feature de connexion éteinte), où la plateforme n'est pas joignable par construction.
+        enCreation(robot);
+        StackPane enveloppe = robot.lookup("#enveloppeVerifierCarre").queryAs(StackPane.class);
+
+        assertThat(enveloppe.isVisible())
+                .as("un bouton qui ne peut rien faire vaut moins que pas de bouton du tout")
+                .isFalse();
+        assertThat(enveloppe.isManaged())
+                .as("et il ne doit pas réserver sa place dans la ligne du carré")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("#1970 : le grisage de « Créer » dit POURQUOI, et le motif suit la saisie")
     void le_grisage_dit_pourquoi(FxRobot robot) {
         // Avant #1970, le motif vivait dans un message que le ViewModel n'émettait que si l'on cliquait

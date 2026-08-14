@@ -102,6 +102,14 @@ public class SiteEditViewModel {
         carreValide = Bindings.createBooleanBinding(() -> numeroCarre.get().matches("\\d{6}"), numeroCarre);
         carreInvalideEtSaisi = Bindings.createBooleanBinding(
                 () -> !numeroCarre.get().isEmpty() && !numeroCarre.get().matches("\\d{6}"), numeroCarre);
+        // Un verdict porte sur LE numéro qu'on a cherché : dès qu'il change, il ne dit plus rien de ce
+        // qui est à l'écran. Le laisser afficherait « ce carré n'existe pas encore » sous un carré que
+        // personne n'a vérifié - la panne même de #3458, avec en plus la preuve visuelle du contraire.
+        //
+        // ⚠️ Le jumeau `PointEditViewModel` n'a pas ce besoin : son contrôle du carré STOC est
+        // **automatique** et se relance à chaque frappe. Ici le geste est manuel - une requête réseau par
+        // clic -, donc c'est l'effacement qui tient le rôle.
+        numeroCarre.addListener((observable, avant, apres) -> retourCarreExistant.set(RetourOperation.AUCUN));
     }
 
     /// La vérification « ce carré existe-t-il déjà ? » est-elle **installée** (#3458) ? Faux hors de
