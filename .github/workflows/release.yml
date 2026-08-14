@@ -42,7 +42,34 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # ⚠️ Le train ne part pas sans preuve que la suite passe **sur les plateformes qu'on livre** (#3526).
+  #
+  # Ce qu'on craint est de publier un MSI cassé sur sa propre plateforme, et l'empêcher de partir est
+  # la seule sanction proportionnée : le train du mercredi est la dernière porte avant publication.
+  #
+  # ⚠️ La veille garde le cas le plus sournois, celui qu'un simple « le job est vert » manquerait : un
+  # job qui **ne tourne plus du tout**. Un `schedule` peut être retardé, sauté sous charge, et il est
+  # désactivé après soixante jours sans activité. Son silence passerait pour un feu vert.
+  preuve-des-plateformes:
+    if: vars.ENABLE_RELEASE == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: La suite a-t-elle été éprouvée récemment sous Windows et macOS ?
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh api "repos/${{ github.repository }}/actions/workflows/suite-sous-windows-et-macos.yml/runs?per_page=30" \
+            --jq '.workflow_runs[] | select(.conclusion != null) | "\(.updated_at)\t\(.conclusion)\t\(.event)"' \
+            | ./.github/scripts/veille-plateformes.sh
+
   release:
+    needs: preuve-des-plateformes
     # Dormant tant que ENABLE_RELEASE n'est pas 'true' (cf. en-tête).
     if: vars.ENABLE_RELEASE == 'true'
     runs-on: ubuntu-latest
