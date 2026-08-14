@@ -97,6 +97,39 @@ class AuditPointsServeurTest {
     }
 
     @Test
+    @DisplayName("#3750 : le seuil est celui de la publication, en MÈTRES, et il est borné des deux côtés")
+    void le_seuil_est_partage_et_borne() {
+        // Le point local est à (43,5 ; 5,4). Un degré de latitude vaut ~111 km, donc :
+        //  - +1,1e-4° ≈ 12,2 m : SOUS le seuil commun (15 m), donc le même endroit ;
+        //  - +2,0e-4° ≈ 22,3 m : AU DESSUS, donc deux endroits.
+        //
+        // ⚠️ Le premier cas est exactement celui que l'ancienne règle tranchait à l'envers : elle
+        // comparait axe par axe avec une tolérance de 1e-4 DEGRÉ, et 1,1e-4 la dépassait. L'audit
+        // déclarait donc « position différente » là où la publication d'un point disait « déjà présent ».
+        assertThat(auditPourDistantA(43.5 + 1.1e-4, 5.4))
+                .as("12 m : sous le seuil commun, l'audit ne signale plus rien")
+                .isEmpty();
+
+        assertThat(auditPourDistantA(43.5 + 2.0e-4, 5.4))
+                .as("22 m : au delà, la divergence reste dite - sans quoi le seuil ne bornerait rien")
+                .extracting(ConstatAudit::categorie)
+                .containsExactly(CategorieConstat.POINT_DIVERGENT);
+    }
+
+    /// Les constats rendus quand la plateforme place `A1` à cette position.
+    private List<ConstatAudit> auditPourDistantA(double latitude, double longitude) {
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
+                        OBJECTID_SITE,
+                        "Étang",
+                        true,
+                        "040962",
+                        null,
+                        List.of(new PointVigieChiro("A1", latitude, longitude))))));
+        return audit.auditer();
+    }
+
+    @Test
     @DisplayName("Point identique (code + position) : aucun constat")
     void point_identique() {
         when(client.mesSites())

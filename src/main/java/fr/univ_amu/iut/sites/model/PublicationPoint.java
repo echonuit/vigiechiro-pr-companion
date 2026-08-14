@@ -133,16 +133,6 @@ public class PublicationPoint {
         return envoi instanceof ReponseApi.Succes<String> ? new Resultat.Publie() : refus(envoi, "publier le point");
     }
 
-    /// Écart (m) en deçà duquel une localité homonyme est **le même point** (#3458).
-    ///
-    /// Le seuil ne protège pas d'un bruit d'arrondi : les coordonnées voyagent à six décimales, soit un
-    /// aller-retour exact à une dizaine de centimètres. Il absorbe la **variation humaine et
-    /// instrumentale** - une position relevée au GPS d'un côté, saisie à la main de l'autre, ou reprise
-    /// d'une trace. Quinze mètres restent un ordre de grandeur en dessous du seuil de protocole (200 m),
-    /// qui interdit précisément à deux points distincts d'être aussi proches : dans cette fourchette, il
-    /// n'y a pas de « deux points différents » possibles.
-    public static final double ECART_MEME_POINT_METRES = 15.0;
-
     /// Une localité porte déjà ce nom : est-ce **le nôtre**, ou un autre point qui s'appelle pareil ?
     ///
     /// Position distante illisible - géométrie absente ou malformée : on ne peut pas conclure, et l'on
@@ -155,7 +145,9 @@ public class PublicationPoint {
         }
         PointVigieChiro la = distante.get();
         double ecart = DistanceGeo.metresEntre(point.latitude(), point.longitude(), la.latitude(), la.longitude());
-        return ecart <= ECART_MEME_POINT_METRES
+        // Seuil **partagé avec l'audit en ligne** (#3750) : les deux répondent à « est-ce le même
+        // endroit ? », et deux valeurs différentes se contrediraient sous les yeux de l'utilisateur.
+        return ecart <= DistanceGeo.ECART_MEME_ENDROIT_METRES
                 ? new Resultat.DejaPresent(point.code())
                 : new Resultat.AilleursSurLaPlateforme(point.code(), ecart);
     }

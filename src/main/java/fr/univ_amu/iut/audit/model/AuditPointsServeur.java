@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.model.DistanceGeo;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -42,10 +43,6 @@ import java.util.stream.Collectors;
 /// localité **porte des nuits** qu'on n'a pas ici. Le point créé sans bruit dissimule alors du **travail
 /// qui existe ailleurs** - et ça, il faut le dire ([CategorieConstat#POINT_SERVEUR_IGNORE]).
 public final class AuditPointsServeur {
-
-    /// Tolérance de comparaison des coordonnées (~11 m à l'équateur) : en deçà, les positions sont
-    /// considérées identiques (arrondis de sérialisation).
-    private static final double TOLERANCE_DEGRES = 1e-4;
 
     /// Nombre de nuits citées nommément dans le constat : au-delà, le compte parle mieux que la liste.
     private static final int NUITS_CITEES = 3;
@@ -205,11 +202,18 @@ public final class AuditPointsServeur {
         }
     }
 
+    /// Les deux positions diffèrent-elles assez pour être **deux endroits** (#3750) ?
+    ///
+    /// ⚠️ La comparaison se faisait **axe par axe, en degrés** (`1e-4`). Un degré n'est pas une distance :
+    /// la tolérance en longitude valait ~11 m à l'équateur mais ~7,8 m à 45° N, et l'audit se resserrait
+    /// donc en montant vers le nord sans que personne ne l'ait voulu. Elle passe désormais par
+    /// [DistanceGeo#memeEndroit], en mètres, avec **le seuil que la publication d'un point utilise
+    /// aussi** : les deux répondaient à la même question et pouvaient se contredire sous les yeux de
+    /// l'utilisateur.
     private static boolean positionDiffere(PointDEcoute local, PointVigieChiro distant) {
         if (local.latitude() == null || local.longitude() == null) {
             return false; // pas de position locale à comparer
         }
-        return Math.abs(local.latitude() - distant.latitude()) > TOLERANCE_DEGRES
-                || Math.abs(local.longitude() - distant.longitude()) > TOLERANCE_DEGRES;
+        return !DistanceGeo.memeEndroit(local.latitude(), local.longitude(), distant.latitude(), distant.longitude());
     }
 }
