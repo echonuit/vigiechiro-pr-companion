@@ -6,8 +6,10 @@ import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.LocalitesDuSite;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.model.DistanceGeo;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import java.util.Objects;
+import java.util.Optional;
 
 /// Publie un point d'écoute **sur la plateforme** (#3458), sans effacer ceux des autres.
 ///
@@ -61,9 +63,21 @@ public class PublicationPoint {
         /// Le point est en ligne.
         record Publie() implements Resultat {}
 
-        /// Une localité portait déjà ce nom : rien n'a été envoyé. La plateforme impose leur unicité,
-        /// et écraser la sienne reviendrait à déplacer le point de quelqu'un.
+        /// Une localité portait déjà ce nom **au même endroit** : rien n'a été envoyé, et il n'y avait
+        /// rien à envoyer. La plateforme impose l'unicité des noms.
         record DejaPresent(String nom) implements Resultat {}
+
+        /// Une localité porte ce nom, mais **ailleurs** : rien n'a été envoyé, et rien n'est retenu.
+        ///
+        /// C'est le cas qu'il ne faut surtout pas confondre avec le précédent. Une participation
+        /// **nomme** sa localité, donc écraser la position distante déplacerait d'un coup toutes les
+        /// nuits qui s'y rattachent, y compris celles d'autres observateurs. Et la marquer « publiée »
+        /// sans rien envoyer serait pire encore : l'écran annoncerait en ligne un point qui, à cet
+        /// endroit, ne l'est pas.
+        ///
+        /// `distanceMetres` vaut `NaN` quand la position distante est **illisible** : on sait qu'un
+        /// homonyme existe, pas où il est.
+        record AilleursSurLaPlateforme(String nom, double distanceMetres) implements Resultat {}
 
         /// Le site a changé entre la lecture et l'envoi : rien n'a été envoyé, pour ne pas écraser ce
         /// qu'on n'a pas lu.
@@ -79,6 +93,10 @@ public class PublicationPoint {
     /// ⚠️ `idPointLocal` sert à cette mémoire, et à rien d'autre : sans elle, l'écran reproposerait le
     /// geste indéfiniment. Le marquage suit la réussite - et **aussi** le cas « déjà présent », qui
     /// constate la même vérité : le point est en ligne.
+    ///
+    /// ⚠️ [Resultat.AilleursSurLaPlateforme] n'est **pas** marqué, et c'est tout l'objet de sa
+    /// distinction : un homonyme posé ailleurs n'est pas notre point en ligne. Le marquer figerait la
+    /// confusion, puisque le geste ne serait plus jamais reproposé.
     public Resultat publier(String idSite, PointVigieChiro point, long idPointLocal) {
         Resultat resultat = envoyer(idSite, point);
         if (resultat instanceof Resultat.Publie || resultat instanceof Resultat.DejaPresent) {
@@ -96,7 +114,7 @@ public class PublicationPoint {
             return refus(lecture, "lire les localités du site");
         }
         if (avant.contient(point.code())) {
-            return new Resultat.DejaPresent(point.code());
+            return verdictSurHomonyme(avant, point);
         }
 
         JsonArray union = avant.avecEnPlus(point);
@@ -113,6 +131,33 @@ public class PublicationPoint {
 
         ReponseApi<String> envoi = client.remplacerLocalites(idSite, union);
         return envoi instanceof ReponseApi.Succes<String> ? new Resultat.Publie() : refus(envoi, "publier le point");
+    }
+
+    /// Écart (m) en deçà duquel une localité homonyme est **le même point** (#3458).
+    ///
+    /// Le seuil ne protège pas d'un bruit d'arrondi : les coordonnées voyagent à six décimales, soit un
+    /// aller-retour exact à une dizaine de centimètres. Il absorbe la **variation humaine et
+    /// instrumentale** - une position relevée au GPS d'un côté, saisie à la main de l'autre, ou reprise
+    /// d'une trace. Quinze mètres restent un ordre de grandeur en dessous du seuil de protocole (200 m),
+    /// qui interdit précisément à deux points distincts d'être aussi proches : dans cette fourchette, il
+    /// n'y a pas de « deux points différents » possibles.
+    public static final double ECART_MEME_POINT_METRES = 15.0;
+
+    /// Une localité porte déjà ce nom : est-ce **le nôtre**, ou un autre point qui s'appelle pareil ?
+    ///
+    /// Position distante illisible - géométrie absente ou malformée : on ne peut pas conclure, et l'on
+    /// choisit alors le verdict **prudent**. Rendre `DejaPresent` marquerait le point publié sur la foi
+    /// de son seul nom, ce qui est exactement le raccourci que cette méthode existe pour retirer.
+    private static Resultat verdictSurHomonyme(LocalitesDuSite avant, PointVigieChiro point) {
+        Optional<PointVigieChiro> distante = avant.localite(point.code());
+        if (distante.isEmpty()) {
+            return new Resultat.AilleursSurLaPlateforme(point.code(), Double.NaN);
+        }
+        PointVigieChiro la = distante.get();
+        double ecart = DistanceGeo.metresEntre(point.latitude(), point.longitude(), la.latitude(), la.longitude());
+        return ecart <= ECART_MEME_POINT_METRES
+                ? new Resultat.DejaPresent(point.code())
+                : new Resultat.AilleursSurLaPlateforme(point.code(), ecart);
     }
 
     /// Traduit un échec d'API en refus qui **dit quoi faire**.

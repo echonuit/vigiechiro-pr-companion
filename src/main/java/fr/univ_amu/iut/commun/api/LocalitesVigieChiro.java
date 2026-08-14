@@ -44,14 +44,22 @@ final class LocalitesVigieChiro {
             if (!element.isJsonObject()) {
                 continue;
             }
-            JsonObject localite = element.getAsJsonObject();
-            String nom = ReponsesVigieChiro.texte(localite, "nom");
-            double[] coord = coordonnees(localite);
-            if (nom != null && coord != null) {
-                points.add(new PointVigieChiro(nom, coord[0], coord[1]));
+            PointVigieChiro point = lireUnPoint(element.getAsJsonObject());
+            if (point != null) {
+                points.add(point);
             }
         }
         return points;
+    }
+
+    /// Une localité en [PointVigieChiro], ou `null` si elle n'a ni nom lisible ni position lisible.
+    ///
+    /// Extrait de [#lirePoints] pour que la **publication** puisse relire la position d'une localité
+    /// homonyme (#3458) : le nom seul ne dit pas que c'est le même point.
+    static PointVigieChiro lireUnPoint(JsonObject localite) {
+        String nom = ReponsesVigieChiro.texte(localite, "nom");
+        double[] coord = coordonnees(localite);
+        return nom != null && coord != null ? new PointVigieChiro(nom, coord[0], coord[1]) : null;
     }
 
     /// Coordonnées `[latitude, longitude]` d'une localité (`geometries.geometries[0].coordinates`).
