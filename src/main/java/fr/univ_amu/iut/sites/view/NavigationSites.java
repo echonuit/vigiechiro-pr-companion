@@ -16,6 +16,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
+import java.util.function.LongConsumer;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Modality;
@@ -93,11 +94,13 @@ public class NavigationSites implements OuvrirSite {
     /// @param parent fenêtre propriétaire (pour la modalité)
     /// @param site site auquel rattacher le nouveau point
     /// @param apresSucces action exécutée après un ajout réussi (typiquement rafraîchir le détail)
-    public void ouvrirModaleCreationPoint(Window parent, Site site, Runnable apresSucces) {
+    /// @param publierLePoint appelé, **après** `apresSucces`, avec l'identifiant du point créé lorsque
+    ///     l'utilisateur a coché « publier sur Vigie-Chiro » (#3458)
+    public void ouvrirModaleCreationPoint(Window parent, Site site, Runnable apresSucces, LongConsumer publierLePoint) {
         FXMLLoader loader = charger("ModalePoint.fxml");
         Parent vue = lire(loader);
         ModalePointController controller = loader.getController();
-        controller.demarrerCreation(site, apresSucces);
+        controller.demarrerCreation(site, apresSucces, publierLePoint);
         afficherModale(parent, vue, "Point d'écoute");
     }
 

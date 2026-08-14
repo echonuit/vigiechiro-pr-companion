@@ -13,6 +13,7 @@ import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.viewmodel.CartePoint;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
@@ -74,7 +75,9 @@ final class CartesPointsSite {
     /// la liaison suit la liste vivante), reconstruction à chaque changement de la liste observable de
     /// `viewModel`, actions Modifier (modale d'édition via `navigation`) et Supprimer (confirmation puis
     /// appel au viewModel), lien GPS vers la carte multi-sites (`ouvrirMultisite`).
-    static void installer(
+    /// @return le câblage installé, pour que la fiche puisse déclencher le même geste depuis un autre
+    ///     chemin (la modale de création, #3458)
+    static CartesPointsSite installer(
             FlowPane cartesPoints,
             Label lblAucunPoint,
             SiteDetailViewModel viewModel,
@@ -90,6 +93,7 @@ final class CartesPointsSite {
                 cartesPoints, viewModel, navigation, ouvrirMultisite, confirmateur, notificateur, executeur);
         viewModel.points().addListener((ListChangeListener<CartePoint>) changement -> cartes.reconstruire());
         cartes.reconstruire();
+        return cartes;
     }
 
     private void reconstruire() {
@@ -268,6 +272,29 @@ final class CartesPointsSite {
     /// reconstruite, et la carte avec.
     private void publierPoint(CartePoint carte, Hyperlink lien) {
         lien.setDisable(true);
+        lancerPublication(carte, () -> lien.setDisable(false));
+    }
+
+    /// Publie le point qui vient d'être **créé depuis la modale** (#3458), désigné par son identifiant.
+    ///
+    /// Second point d'entrée du même geste : un seul compte rendu pour les deux chemins, plutôt que
+    /// deux qui finiraient par diverger.
+    ///
+    /// ⚠️ Le point introuvable **se dit**. Un `ifPresent` muet laisserait l'utilisateur avec une case
+    /// cochée, une modale fermée, et rien : le silence se lirait comme une réussite.
+    void publierPointCree(long idPoint) {
+        Optional<CartePoint> carte = viewModel.points().stream()
+                .filter(candidate -> Objects.equals(candidate.point().id(), idPoint))
+                .findFirst();
+        if (carte.isEmpty()) {
+            alerteErreur("Le point vient d'être enregistré, mais il n'est plus affiché :"
+                    + " sa publication n'a pas été tentée. Reprenez-la depuis sa carte.");
+            return;
+        }
+        lancerPublication(carte.get(), () -> {});
+    }
+
+    private void lancerPublication(CartePoint carte, Runnable siEchecTechnique) {
         executeur.executer(
                 () -> viewModel.publier(carte),
                 resultat -> {
@@ -275,7 +302,7 @@ final class CartesPointsSite {
                     viewModel.rafraichir();
                 },
                 erreur -> {
-                    lien.setDisable(false);
+                    siEchecTechnique.run();
                     alerteErreur("La publication du point « " + carte.point().code() + " » a échoué : "
                             + erreur.getMessage());
                 });

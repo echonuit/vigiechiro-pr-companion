@@ -2,22 +2,28 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.model.Commune;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.model.ServiceCommunes;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
+import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -42,6 +48,8 @@ class PointEditViewModelTest {
     private PointCommuneDao communeDao;
     private PointEditViewModel viewModel;
     private Site site;
+    private LienVigieChiroDao liens;
+    private PointPublieDao publies;
 
     @BeforeEach
     void preparer() {
@@ -54,10 +62,28 @@ class PointEditViewModelTest {
         communeDao = new PointCommuneDao(source);
         service = new ServiceSites(
                 siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.now()), communeDao, () -> {});
+        liens = new LienVigieChiroDao(source);
+        publies = new PointPublieDao(source);
         // Contrôle du carré STOC absent (#733) : le cas hors connexion, où la saisie doit rester entière.
         viewModel = new PointEditViewModel(
-                service, new ServiceCommunes(pointDao, communeDao, position -> Optional.empty()), Optional.empty());
+                service,
+                new ServiceCommunes(pointDao, communeDao, position -> Optional.empty()),
+                Optional.empty(),
+                sansPublication());
         site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+    }
+
+    /// Publication **non installée** : le cas par défaut de ces tests, qui parlent de saisie et non de
+    /// plateforme. La case « publier » n'est alors pas offerte.
+    private PublicationDepuisLaFiche sansPublication() {
+        return new PublicationDepuisLaFiche(publies, liens, Optional.empty());
+    }
+
+    /// Publication installée et **connectée** : le montage des tests de la case à cocher.
+    private PublicationDepuisLaFiche avecPublicationConnectee() {
+        FournisseurToken token = () -> Optional.of("jeton-de-test");
+        return new PublicationDepuisLaFiche(
+                publies, liens, Optional.of(new PublicationPoint(new ClientVigieChiro(token), publies, token)));
     }
 
     @Test
@@ -272,12 +298,136 @@ class PointEditViewModelTest {
         assertThat(communeDao.idsResolus()).isEmpty();
     }
 
+    @Test
+    @DisplayName("#3458 : la case « publier » n'est offerte qu'à la CRÉATION, pas à l'édition")
+    void la_case_publier_ne_s_offre_qu_a_la_creation() {
+        PointEditViewModel vm = avecPublication();
+        vm.preparerCreation(site);
+        assertThat(vm.publication().offerteProperty().get()).isTrue();
+
+        PointDEcoute existant = service.ajouterPoint(site.id(), "A1", 43.5, 5.4, null);
+        vm.preparerEdition(site, existant);
+
+        // La carte du point porte déjà l'action : deux chemins pour un même geste finissent par diverger.
+        assertThat(vm.publication().offerteProperty().get()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#3458 : effacer les coordonnées après avoir coché DÉCOCHE la case, et dit pourquoi")
+    void effacer_le_gps_decoche_la_case() {
+        relierLeSiteALaPlateforme();
+        PointEditViewModel vm = avecPublication();
+        vm.preparerCreation(site);
+        vm.codeProperty().set("A1");
+        vm.latitudeProperty().set("43.52");
+        vm.longitudeProperty().set("5.46");
+        assertThat(vm.publication().empechementProperty().get()).isEmpty();
+
+        vm.publication().demandeeProperty().set(true);
+        vm.longitudeProperty().set("");
+
+        // Laisser la case cochée sous un contrôle désactivé donnerait à lire une intention qui ne
+        // partira pas. La décocher est visible ; le silence ne le serait pas.
+        assertThat(vm.publication().demandeeProperty().get()).isFalse();
+        assertThat(vm.publication().empechementProperty().get()).contains("coordonnées");
+        assertThat(vm.pointAPublier()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3458 : un carré non relié empêche la publication, et le dit avant le clic")
+    void un_carre_non_relie_empeche_la_publication() {
+        PointEditViewModel vm = avecPublication();
+        vm.preparerCreation(site);
+        vm.latitudeProperty().set("43.52");
+        vm.longitudeProperty().set("5.46");
+
+        assertThat(vm.publication().empechementProperty().get()).contains("pas encore enregistré");
+    }
+
+    @Test
+    @DisplayName("#3458 : la case cochée désigne le point qui vient d'être enregistré")
+    void la_case_cochee_designe_le_point_enregistre() {
+        relierLeSiteALaPlateforme();
+        PointEditViewModel vm = avecPublication();
+        vm.preparerCreation(site);
+        vm.codeProperty().set("A1");
+        vm.latitudeProperty().set("43.52");
+        vm.longitudeProperty().set("5.46");
+        vm.publication().demandeeProperty().set(true);
+
+        assertThat(vm.enregistrer()).isTrue();
+
+        assertThat(vm.pointAPublier())
+                .as("sans identifiant, la fiche ne saurait pas quel point publier")
+                .isPresent()
+                .hasValue(pointDao.findAll().stream()
+                        .filter(point -> "A1".equals(point.code()))
+                        .findFirst()
+                        .orElseThrow()
+                        .id());
+    }
+
+    @Test
+    @DisplayName("#3458 : case NON cochée, rien à publier")
+    void case_non_cochee_rien_a_publier() {
+        relierLeSiteALaPlateforme();
+        PointEditViewModel vm = avecPublication();
+        vm.preparerCreation(site);
+        vm.codeProperty().set("A1");
+        vm.latitudeProperty().set("43.52");
+        vm.longitudeProperty().set("5.46");
+
+        assertThat(vm.enregistrer()).isTrue();
+
+        assertThat(vm.pointAPublier())
+                .as("publier est un geste qui sort de la machine : il se demande, il ne se suppose pas")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3458 : un empêchement apparu SANS toucher aux champs annule quand même l'envoi")
+    void un_empechement_survenu_apres_le_clic_annule_l_envoi() {
+        relierLeSiteALaPlateforme();
+        PointEditViewModel vm = avecPublication();
+        vm.preparerCreation(site);
+        vm.codeProperty().set("A1");
+        vm.latitudeProperty().set("43.52");
+        vm.longitudeProperty().set("5.46");
+        vm.publication().demandeeProperty().set(true);
+        assertThat(vm.enregistrer()).isTrue();
+
+        // Le carré cesse d'être relié APRÈS que la case a été cochée, et sans qu'aucun champ ne bouge :
+        // rien ne relance le calcul du motif affiché. Un garde qui relirait l'écran serait d'accord avec
+        // un état périmé, et l'envoi partirait vers un carré qui n'existe plus côté plateforme.
+        liens.supprimer(LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()));
+
+        assertThat(vm.pointAPublier())
+                .as("le garde REDEMANDE au lieu de relire, sinon il entérine l'écran plutôt que la vérité")
+                .isEmpty();
+    }
+
+    /// ViewModel muni d'une publication installée et connectée.
+    private PointEditViewModel avecPublication() {
+        return new PointEditViewModel(
+                service,
+                new ServiceCommunes(pointDao, communeDao, position -> Optional.empty()),
+                Optional.empty(),
+                avecPublicationConnectee());
+    }
+
+    /// Le carré existe côté plateforme : sans ce lien, il n'y a nulle part où publier.
+    private void relierLeSiteALaPlateforme() {
+        liens.upsert(new LienVigieChiro(
+                LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()), "6a4961f587bc8dba39481180", false));
+    }
+
     /// Un ViewModel dont le résolveur répond toujours Aix-en-Provence : isole le déclencheur du réseau.
     private PointEditViewModel vmResolvantAix() {
         return new PointEditViewModel(
                 service,
                 new ServiceCommunes(
                         pointDao, communeDao, position -> Optional.of(new Commune("Aix-en-Provence", "13001"))),
-                Optional.empty());
+                Optional.empty(),
+                sansPublication());
     }
 }

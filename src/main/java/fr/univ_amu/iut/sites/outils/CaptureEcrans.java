@@ -180,7 +180,9 @@ public final class CaptureEcrans {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
-        ((ModalePointController) loader.getController()).demarrerCreation(site, () -> {});
+        // L'injecteur de capture n'a pas la connexion : la case « publier » y est donc absente, et
+        // l'aperçu montre la modale telle qu'elle est hors ligne (#3458).
+        ((ModalePointController) loader.getController()).demarrerCreation(site, () -> {}, identifiant -> {});
         ApercuFx.capturerApresPreparation(new Scene(vue), AttenteTuiles::attendre, fichier);
     }
 

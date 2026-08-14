@@ -84,19 +84,31 @@ public class PointEditViewModel {
     /// Le point que le dernier [#enregistrer] réussi a écrit : la cible de [#resoudreCommune].
     private Long idDernierPointEnregistre;
 
+    /// L'intention de publier ce point dès son enregistrement (#3458) : la case, son gris, son verdict.
+    /// Extraite d'ici, où elle faisait franchir le seuil God-class.
+    private final IntentionPublication intentionPublication;
+
     /// Carré **déclaré par le site** courant : c'est lui que la grille STOC vient confirmer ou contredire.
     private String carreDuSite;
 
     public PointEditViewModel(
-            ServiceSites service, ServiceCommunes communes, Optional<ControleCarreStoc> controleCarre) {
+            ServiceSites service,
+            ServiceCommunes communes,
+            Optional<ControleCarreStoc> controleCarre,
+            PublicationDepuisLaFiche publication) {
         this.service = Objects.requireNonNull(service, "service");
         this.communes = Objects.requireNonNull(communes, "communes");
         this.controleCarre = Objects.requireNonNull(controleCarre, "controleCarre");
+        this.intentionPublication =
+                new IntentionPublication(Objects.requireNonNull(publication, "publication"), this::gpsRenseigne);
         codeValide = Bindings.createBooleanBinding(() -> ValidateurCodePoint.estValide(code.get()), code);
         latitudeValide = Bindings.createBooleanBinding(() -> coordonneeValide(latitude.get(), LATITUDE_MAX), latitude);
         longitudeValide =
                 Bindings.createBooleanBinding(() -> coordonneeValide(longitude.get(), LONGITUDE_MAX), longitude);
         peutEnregistrer = codeValide.and(latitudeValide).and(longitudeValide);
+        // Le motif du gris suit la saisie : on peut cocher la case, puis effacer les coordonnées.
+        latitude.addListener((observable, avant, apres) -> intentionPublication.recalculer());
+        longitude.addListener((observable, avant, apres) -> intentionPublication.recalculer());
     }
 
     /// Configure la modale en **mode création** d'un point pour le site donné.
@@ -108,6 +120,7 @@ public class PointEditViewModel {
         reinitialiserChamps();
         titre.set("Nouveau point d'écoute · Carré " + site.numeroCarre());
         libelleBouton.set("+ Ajouter");
+        intentionPublication.aLaCreation(site.id());
     }
 
     /// Configure la modale en **mode édition** : champs pré-remplis depuis le point existant.
@@ -117,6 +130,7 @@ public class PointEditViewModel {
         this.idSite = site.id();
         this.idPointEnEdition = point.id();
         this.carreDuSite = site.numeroCarre();
+        intentionPublication.aLEdition();
         code.set(point.code());
         description.set(point.description() == null ? "" : point.description());
         latitude.set(point.latitude() == null ? "" : Double.toString(point.latitude()));
@@ -161,6 +175,26 @@ public class PointEditViewModel {
         if (idDernierPointEnregistre != null) {
             communes.mettreAJour(idDernierPointEnregistre);
         }
+    }
+
+    /// La case « publier ensuite » a-t-elle lieu d'être sur cet écran (#3458) ? Voir
+    /// L'intention de publier le point à sa création (#3458), à laquelle la vue se lie directement : une
+    /// couche de délégation ne ferait que recopier trois accesseurs, et le seuil God-class de cette
+    /// classe n'a pas de place à leur donner.
+    public IntentionPublication publication() {
+        return intentionPublication;
+    }
+
+    /// Cf. [IntentionPublication#pointAPublier(Long)]. Reste ici : l'identifiant du point enregistré
+    /// appartient à ce ViewModel.
+    public Optional<Long> pointAPublier() {
+        return intentionPublication.pointAPublier(idDernierPointEnregistre);
+    }
+
+    /// Les deux coordonnées sont-elles lisibles ? Seul ce ViewModel sait lire ses champs de saisie ;
+    /// [IntentionPublication] le lui demande plutôt que d'en tenir une copie.
+    private boolean gpsRenseigne() {
+        return parserCoordonnee(latitude.get()) != null && parserCoordonnee(longitude.get()) != null;
     }
 
     public StringProperty codeProperty() {

@@ -285,8 +285,11 @@ public class SitesModule extends ModuleDeFeature {
 
     @Provides
     PointEditViewModel fournirPointEditViewModel(
-            ServiceSites service, ServiceCommunes communes, Optional<ControleCarreStoc> controleCarre) {
-        return new PointEditViewModel(service, communes, controleCarre);
+            ServiceSites service,
+            ServiceCommunes communes,
+            Optional<ControleCarreStoc> controleCarre,
+            PublicationDepuisLaFiche publication) {
+        return new PointEditViewModel(service, communes, controleCarre, publication);
     }
 
     /// ViewModel de la modale de site (#1431) : la déclaration a besoin de l'utilisateur courant (R5,

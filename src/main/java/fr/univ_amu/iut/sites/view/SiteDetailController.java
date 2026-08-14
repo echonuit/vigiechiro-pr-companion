@@ -83,6 +83,10 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
     /// Travail lourd hors du fil JavaFX (#1014) : la publication d'un point appelle le réseau.
     private final ExecuteurTache executeur;
 
+    /// Câblage des cartes de points, gardé pour déclencher la publication depuis la **modale de
+    /// création** (#3458) : le même geste et le même compte rendu que depuis la carte.
+    private CartesPointsSite cartesPointsSite;
+
     /// Contexte du site (nom en zone gauche, commune/protocole en zone centre) déporté en barre de statut
     /// (#693) au lieu d'un en-tête titre/sous-titre.
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
@@ -340,7 +344,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         // pour alléger ce controller (seuil de cohésion PMD, #1087). Les deux porteurs de dialogue sont
         // ceux de l'écran (#1405) : les cartes fabriquaient jusqu'ici leur propre confirmateur, que
         // personne n'exposait - donc que personne ne pouvait remplacer en test.
-        CartesPointsSite.installer(
+        cartesPointsSite = CartesPointsSite.installer(
                 cartesPoints,
                 lblAucunPoint,
                 viewModel,
@@ -383,7 +387,8 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
 
     @FXML
     private void ajouterPoint() {
-        navigation.ouvrirModaleCreationPoint(fenetre(), viewModel.siteCourant(), viewModel::rafraichir);
+        navigation.ouvrirModaleCreationPoint(
+                fenetre(), viewModel.siteCourant(), viewModel::rafraichir, cartesPointsSite::publierPointCree);
     }
 
     /// Ouvre l'assistant « Importer une nuit » avec ce site déjà pré-rattaché (raccourci contextuel).
