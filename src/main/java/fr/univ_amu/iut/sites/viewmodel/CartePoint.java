@@ -15,7 +15,9 @@ import java.util.Optional;
 /// @param nombrePassages nombre de passages rattachés à ce point
 /// @param distanceProcheMetres distance (m) au point géolocalisé le plus proche du même site, ou `null` si
 ///     ce point n'a pas de GPS ou qu'aucun autre point géolocalisé n'existe
-public record CartePoint(PointDEcoute point, int nombrePassages, Double distanceProcheMetres) {
+/// @param publie `true` si **nous** avons poussé ce point sur la plateforme (#3458). ⚠️ À ne pas confondre
+///     avec `PointDEcoute#synchronise`, qui dit l'inverse : *rapatrié de* la plateforme
+public record CartePoint(PointDEcoute point, int nombrePassages, Double distanceProcheMetres, boolean publie) {
 
     /// Seuil (m) en dessous duquel deux points sont signalés **« trop proches »** (#154, garde-fou de
     /// protocole). Valeur par défaut prudente, à ajuster selon le protocole : c'est l'unique endroit à
@@ -41,5 +43,14 @@ public record CartePoint(PointDEcoute point, int nombrePassages, Double distance
     /// (saisie GPS erronée ou points trop rapprochés pour le protocole).
     public boolean tropProche() {
         return distanceProcheMetres != null && distanceProcheMetres < SEUIL_PROXIMITE_METRES;
+    }
+
+    /// `true` si ce point **vient de** la plateforme : l'y renvoyer n'aurait pas de sens, et l'action
+    /// « Publier » ne lui est donc pas proposée (#3458).
+    ///
+    /// Lecture métier de `PointDEcoute#synchronise`, dont le sens se confond facilement avec celui de
+    /// [#publie()] : l'un dit *rapatrié de*, l'autre *poussé vers*.
+    public boolean venuDeLaPlateforme() {
+        return point.synchronise();
     }
 }

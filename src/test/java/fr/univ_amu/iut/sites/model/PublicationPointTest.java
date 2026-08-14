@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.api.LocalitesDuSite;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -31,7 +32,20 @@ class PublicationPointTest {
 
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
     private final PointPublieDao publies = mock(PointPublieDao.class);
-    private final PublicationPoint publication = new PublicationPoint(client, publies);
+
+    /// Jeton présent par défaut : les tests d'envoi ne parlent pas de connexion. Le cas « pas de jeton »
+    /// a son propre test, avec son propre fournisseur.
+    private final PublicationPoint publication =
+            new PublicationPoint(client, publies, () -> Optional.of("jeton-de-test"));
+
+    @Test
+    @DisplayName("#3458 : sans jeton, la publication ne se propose pas - c'est le SEUL refus prévisible")
+    void sans_jeton_la_publication_ne_se_propose_pas() {
+        PublicationPoint sansJeton = new PublicationPoint(client, publies, Optional::empty);
+
+        assertThat(sansJeton.connecte()).isFalse();
+        assertThat(publication.connecte()).isTrue();
+    }
 
     @Test
     @DisplayName("#3458 : l'envoi contient les localités existantes ET la nouvelle")
@@ -125,7 +139,7 @@ class PublicationPointTest {
     }
 
     @Test
-    @DisplayName("#3458 : un 403 dit ce qui manque, pas seulement que c'est refusé")
+    @DisplayName("#3458 : un 403 nomme SES DEUX causes, la plus probable d'abord")
     void le_refus_dit_quoi_faire() {
         when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.refuse(403, ""));
 
@@ -136,8 +150,13 @@ class PublicationPointTest {
                         org.assertj.core.api.InstanceOfAssertFactories.type(PublicationPoint.Resultat.Refuse.class))
                 .extracting(PublicationPoint.Resultat.Refuse::geste)
                 .asString()
-                .as("« accès refusé » n'apprend rien : la plateforme exige d'être validé sur le protocole"
-                        + " du site, et c'est ça qu'il faut dire")
+                // `set_localite` refuse dans DEUX cas que rien ne distingue dans la réponse : le
+                // propriétaire d'un carré VERROUILLÉ, et le non-propriétaire non validé sur le protocole.
+                // La première version ne nommait que le second : pour son propre carré verrouillé - le cas
+                // le plus courant - elle était fausse, et envoyait vérifier une inscription hors sujet.
+                .as("le cas le plus courant est son PROPRE carré, déjà verrouillé")
+                .contains("verrouillé")
+                .as("l'autre cause reste possible : un carré de tiers, sans validation sur le protocole")
                 .contains("validé sur son protocole");
     }
 
