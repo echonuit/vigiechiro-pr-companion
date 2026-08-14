@@ -654,7 +654,7 @@ PMD / ArchUnit ne se désactivent **jamais** pour « faire passer » un build (c
 - Pour une capture déterministe, voir
   [Ajouter une fonctionnalité §7](ajouter-une-fonctionnalite.md#7-ajouter-un-apercu-capture-decran).
 
-### Trois pièges récurrents
+### Quatre pièges récurrents
 
 !!! warning "`assertThat(path).endsWith(Path)` canonicalise"
     Cette forme appelle `toRealPath` et lève `NoSuchFileException` si le dossier n'existe pas (erreur
@@ -671,5 +671,16 @@ PMD / ArchUnit ne se désactivent **jamais** pour « faire passer » un build (c
     Un handler qui modifie l'IHM depuis un thread d'arrière-plan lève `Not on FX application thread`,
     souvent **avalée** (l'écran fige). Découper **préparation** (fil FX) / **exécution** (hors-thread)
     / retour sur le fil FX - c'est exactement le contrat du socle `ExecuteurTache` (#793, cf.
-    [Patterns](patterns.md)), **synchrone en test** : avec lui, `bouton.fire()` rend l'état terminal
-    observable au retour du clic, sans attente.
+    [Patterns](patterns.md)), **synchrone par défaut en test de vue/ViewModel** (liaison Guice
+    `@ImplementedBy(ExecuteurTacheSynchrone.class)`, cf. [Patterns](patterns.md)) : avec lui,
+    `bouton.fire()` rend l'état terminal observable au retour du clic, sans attente.
+
+!!! warning "Un E2E n'a pas le double synchrone : attendre le signal, pas le retour du clic"
+    Un test `*E2ETest` monte le **vrai** `RacineInjecteur`, pas le module de test qui rebranche
+    `ExecuteurTacheSynchrone` (#793). `occupation.occuper(...)` y tourne donc sur le **vrai**
+    `ExecuteurTacheAsynchrone` : thread virtuel + `Platform.runLater`. Après un `robot.interact(...)`
+    (ou un appel direct en `@Start`) qui déclenche ce chemin, `waitForFxEvents()` ne fait que vider la
+    file du fil FX - il n'attend pas le thread d'arrière-plan qui la remplira. L'assertion tombe alors
+    avant le callback de succès : un échec qui ne se reproduit que sur une machine lente, donc en CI
+    (#3668, #3717). Remède : `WaitForAsyncUtils.waitFor(timeout, TimeUnit, () -> <prédicat
+    observable>)` sur l'état attendu, jamais une assertion immédiate après l'`interact`.
