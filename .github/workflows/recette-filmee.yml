@@ -1,0 +1,106 @@
+# Éprouver qu'un runner PILOTE réellement un test filmé, et pas seulement qu'il l'exécute.
+#
+# ## Pourquoi ce workflow existe
+#
+# `lance-test-filme.sh` (#3696) réunit les cinq conditions d'un lancement filmé. Deux d'entre
+# elles ne sont pas des propriétés Maven et dépendent de la MACHINE : un gestionnaire de fenêtres
+# doit tourner sur le DISPLAY visé, et `WAYLAND_DISPLAY` doit être absent.
+#
+# ⚠️ Sans gestionnaire de fenêtres, le pointeur ne bouge pas - même pour `xdotool` - et pourtant
+# les tests s'EXÉCUTENT sans erreur. Ils passent ou échouent pour de mauvaises raisons. Pire,
+# certains passent avec un robot mort : `annuler_ne_transmet_rien` affirme qu'une valeur reste
+# « intact », ce qui est vrai si l'on ne clique nulle part. Se fier au verdict de Maven ne suffit
+# donc pas, et c'est tout l'objet de ce workflow.
+#
+# ## Ce qui fait foi ici
+#
+# Le pas de vérification du lanceur, qui teste le COMPORTEMENT du pointeur et non la présence
+# d'un gestionnaire. Un gestionnaire installé mais inopérant passerait un contrôle de présence.
+#
+# ## Déclenchement
+#
+# Manuel seulement, pour l'instant. Le branchement sur la publication viendra avec le harnais de
+# recette (EPIC #3667) : brancher un dispositif avant d'avoir ce qu'il doit garder n'apporterait
+# qu'un vert de plus.
+
+name: recette filmée
+
+on:
+  workflow_dispatch:
+    inputs:
+      classe:
+        description: Classe de test à filmer
+        type: string
+        default: EditeurCommentaireTest
+      sans_gestionnaire_de_fenetres:
+        description: "Témoin : ne PAS installer matchbox, le lancement doit alors être refusé"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  filmer:
+    name: Le runner pilote-t-il vraiment ?
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v4
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Installer de quoi afficher et filmer
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          # matchbox-window-manager est posé À PART, pour que le témoin puisse s'en passer.
+          sudo apt-get install -y xvfb xdotool ffmpeg x11-utils
+          if [ "${{ inputs.sans_gestionnaire_de_fenetres }}" = "true" ]; then
+            echo "::warning::TÉMOIN : matchbox n'est pas installé, le lancement DOIT être refusé."
+          else
+            sudo apt-get install -y matchbox-window-manager
+          fi
+
+      - name: Filmer le test
+        id: film
+        run: |
+          set -euo pipefail
+          chmod +x .github/scripts/lance-test-filme.sh
+          if .github/scripts/lance-test-filme.sh "${{ inputs.classe }}"; then
+            echo "verdict=vert" >> "$GITHUB_OUTPUT"
+          else
+            echo "verdict=rouge" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Le témoin inverse le verdict : dans ce mode, un succès est un ÉCHEC du dispositif.
+      - name: Juger, témoin compris
+        run: |
+          set -euo pipefail
+          verdict="${{ steps.film.outputs.verdict }}"
+          temoin="${{ inputs.sans_gestionnaire_de_fenetres }}"
+          if [ "$temoin" = "true" ]; then
+            if [ "$verdict" = "vert" ]; then
+              echo "::error::Le lancement a RÉUSSI sans gestionnaire de fenêtres : la vérification"
+              echo "::error::du pointeur ne garde donc rien, et ce workflow rendrait un vert creux."
+              exit 1
+            fi
+            echo "Témoin concluant : sans gestionnaire de fenêtres, le lancement est refusé."
+            exit 0
+          fi
+          [ "$verdict" = "vert" ] || { echo "::error::Le lancement filmé a échoué."; exit 1; }
+          echo "Le runner pilote : les cinq conditions sont réunies et le test a tourné filmé."
+
+      - name: Conserver la vidéo
+        if: always() && inputs.sans_gestionnaire_de_fenetres != true
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: recette-filmee-${{ inputs.classe }}
+          path: target/recette/*.mkv
+          # Rétention bornée, décidée en séance : la vidéo se revoit un temps, puis s'efface.
+          # Rien ne part dans git.
+          retention-days: 14
+          if-no-files-found: error
