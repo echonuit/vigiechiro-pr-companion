@@ -29,6 +29,11 @@
         <recette.glass.platform>Headless</recette.glass.platform>
         <recette.testfx.robot>glass</recette.testfx.robot>
         <recette.awt.headless>true</recette.awt.headless>
+        <!-- Repères d'une séance filmée : où consigner l'instant de chaque cas joué (#3774).
+             Vide, l'extension ne fait rien ; détection désactivée, elle n'est même pas chargée.
+             Les deux valeurs ci-dessous sont donc INERTES, et seul `recette-filmee` les bascule. -->
+        <recette.reperes/>
+        <recette.autodetection>false</recette.autodetection>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
 
@@ -173,6 +178,19 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
+            <version>${junit.jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Éprouver une extension JUnit en la faisant EXÉCUTER par le moteur, plutôt qu'en simulant
+             le contexte qu'il lui passe (#3774). Un contexte simulé prouve que le code appelé écrit
+             bien ; il ne prouve pas que le moteur appelle. C'est justement le câblage qui casse en
+             silence dans une séance filmée.
+             Version explicite : le BOM ci-dessus est déclaré en dépendance ordinaire et non en
+             import, il ne gère donc aucune version. Depuis JUnit 6, plateforme et Jupiter portent
+             le même numéro, d'où la propriété commune. -->
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-testkit</artifactId>
             <version>${junit.jupiter.version}</version>
             <scope>test</scope>
         </dependency>
@@ -691,6 +709,11 @@
                         <prism.order>sw</prism.order>
                         <java.awt.headless>${recette.awt.headless}</java.awt.headless>
                         <testfx.robot>${recette.testfx.robot}</testfx.robot>
+                        <!-- Repères de séance filmée (#3774). Les deux vont ensemble : la détection
+                             charge l'extension, la propriété lui dit où écrire. Inertes hors du
+                             profil `recette-filmee`. -->
+                        <junit.jupiter.extensions.autodetection.enabled>${recette.autodetection}</junit.jupiter.extensions.autodetection.enabled>
+                        <recette.reperes>${recette.reperes}</recette.reperes>
                         <!-- Coupe-circuits d'interblocage TestFX, calibrés en propriétés plus haut
                              (#2120). TestFX les lit via Long.getLong au premier FxToolkitContext :
                              ils doivent donc être posés sur la JVM FORKÉE, pas sur celle de Maven. -->
@@ -926,6 +949,11 @@
                 <recette.glass.platform>gtk</recette.glass.platform>
                 <recette.testfx.robot>awt</recette.testfx.robot>
                 <recette.awt.headless>false</recette.awt.headless>
+                <!-- Repères de séance (#3774) : la séance dit quand chaque cas s'est joué, pour que
+                     le montage sache où tailler. Sans eux le film reste un bloc, et un bloc de
+                     trente minutes ne sert à personne pour trancher un cas. -->
+                <recette.autodetection>true</recette.autodetection>
+                <recette.reperes>${project.build.directory}/recette-filmee/reperes.tsv</recette.reperes>
             </properties>
         </profile>
 

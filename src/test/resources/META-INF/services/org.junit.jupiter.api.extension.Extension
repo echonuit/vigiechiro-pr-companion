@@ -1,0 +1,6 @@
+# Extensions JUnit détectées automatiquement (#3774).
+#
+# ⚠️ Ce fichier ne suffit PAS à activer quoi que ce soit : la détection automatique doit être
+# demandée par ailleurs, et seul le profil `recette-filmee` la demande. Un `mvn test` ordinaire ne
+# charge donc rien d'ici. CablageDesReperesTest garde ce câblage.
+fr.univ_amu.iut.recette.ReperesDeSeance
