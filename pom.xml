@@ -1332,6 +1332,14 @@
                                 <!-- Sans elle, les SEVERE volontaires des chemins d'échec noient le
                                      journal du minion, déjà bavard. -->
                                 <jvmArg>-Djava.util.logging.config.file=${project.basedir}/src/test/resources/logging-tests.properties</jvmArg>
+                                <!-- Repères de séance (#3774). Inertes ici comme partout hors du profil
+                                     `recette-filmee` : le minion ne filme rien. Elles sont reprises
+                                     parce que ProprietesMinionPitTest exige que les deux JVM voient les
+                                     MÊMES propriétés - une propriété absente d'un seul côté, c'est une
+                                     mesure hebdomadaire qui s'exécute dans d'autres conditions que le
+                                     build, sans que rien ne le dise. -->
+                                <jvmArg>-Djunit.jupiter.extensions.autodetection.enabled=${recette.autodetection}</jvmArg>
+                                <jvmArg>-Drecette.reperes=${recette.reperes}</jvmArg>
                             </jvmArgs>
                         </configuration>
                         <dependencies>
