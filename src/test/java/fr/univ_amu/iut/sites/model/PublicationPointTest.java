@@ -128,9 +128,9 @@ class PublicationPointTest {
     }
 
     @Test
-    @DisplayName("#3458 : un point déjà présent n'est pas republié")
+    @DisplayName("#3458 : un point déjà présent au même endroit n'est pas republié")
     void un_point_deja_present_ne_se_republie_pas() {
-        when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localites("etag-1", "Z42")));
+        when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localiteA("etag-1", "Z42", 43.52, 5.46)));
 
         PublicationPoint.Resultat resultat = publication.publier(SITE, Z42, ID_LOCAL);
 
@@ -172,15 +172,52 @@ class PublicationPointTest {
     }
 
     @Test
-    @DisplayName("#3458 : un point déjà présent est retenu AUSSI : la vérité est la même, il est en ligne")
+    @DisplayName("#3458 : un point déjà présent AU MÊME ENDROIT est retenu : il est bien en ligne")
     void un_point_deja_present_est_retenu() {
-        when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localites("etag-1", "Z42")));
+        // Trois mètres : sous le seuil, donc le même point relevé deux fois.
+        when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localiteA("etag-1", "Z42", 43.52003, 5.46001)));
 
-        publication.publier(SITE, Z42, ID_LOCAL);
+        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42, ID_LOCAL);
 
+        assertThat(resultat).isInstanceOf(PublicationPoint.Resultat.DejaPresent.class);
         // Sans cela, un point publié depuis un autre poste - ou avant cette mémoire - se reproposerait
         // indéfiniment, et chaque clic rendrait « déjà présent » sans que l'écran n'apprenne rien.
         verify(publies).marquer(ID_LOCAL);
+    }
+
+    @Test
+    @DisplayName("#3458 : un HOMONYME posé ailleurs n'est ni publié, ni retenu, ni écrasé")
+    void un_homonyme_ailleurs_n_est_pas_le_notre() {
+        // ~1,2 km : très au dessus du seuil, et même au dessus du seuil de protocole.
+        when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localiteA("etag-1", "Z42", 43.531, 5.46)));
+
+        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42, ID_LOCAL);
+
+        assertThat(resultat)
+                .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.type(
+                        PublicationPoint.Resultat.AilleursSurLaPlateforme.class))
+                .extracting(PublicationPoint.Resultat.AilleursSurLaPlateforme::distanceMetres)
+                .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.DOUBLE)
+                .as("la distance est dite, pour que l'utilisateur juge lui-même")
+                .isGreaterThan(1000.0);
+        // Une participation NOMME sa localité : écraser la position distante déplacerait toutes les
+        // nuits qui s'y rattachent, y compris celles d'autres observateurs.
+        verify(client, never()).remplacerLocalites(anyString(), any());
+        // Et le marquer publié figerait la confusion : le geste ne serait plus jamais reproposé.
+        verify(publies, never()).marquer(anyLong());
+    }
+
+    @Test
+    @DisplayName("#3458 : position distante illisible, on ne conclut PAS que c'est le même point")
+    void une_position_illisible_ne_conclut_pas() {
+        when(client.localitesDuSite(SITE)).thenReturn(ReponseApi.succes(localites("etag-1", "Z42")));
+
+        PublicationPoint.Resultat resultat = publication.publier(SITE, Z42, ID_LOCAL);
+
+        // Le verdict prudent : rendre « déjà présent » marquerait le point publié sur la foi de son seul
+        // nom, c'est-à-dire exactement le raccourci que ce chantier retire.
+        assertThat(resultat).isInstanceOf(PublicationPoint.Resultat.AilleursSurLaPlateforme.class);
+        verify(publies, never()).marquer(anyLong());
     }
 
     @Test
@@ -195,6 +232,8 @@ class PublicationPointTest {
         verify(publies, never()).marquer(anyLong());
     }
 
+    /// Localités **sans position** : la forme qu'avaient tous ces tests avant #3458. Elle reste utile,
+    /// parce que c'est aussi ce que rend une géométrie absente ou malformée en vrai.
     private static LocalitesDuSite localites(String etag, String... noms) {
         JsonArray brutes = new JsonArray();
         for (String nom : noms) {
@@ -202,6 +241,32 @@ class PublicationPointTest {
             localite.addProperty("nom", nom);
             brutes.add(localite);
         }
+        return new LocalitesDuSite(etag, brutes);
+    }
+
+    /// Une localité **posée quelque part**, dans la forme exacte de la plateforme.
+    ///
+    /// ⚠️ Le JSON est écrit **à la main**, et non fabriqué par `LocalitesDuSite#avecEnPlus`. Le construire
+    /// avec le code de production ferait un aller-retour qui se refermerait sur lui-même : l'ordre
+    /// `[latitude, longitude]` - à rebours du GeoJSON - serait faux des deux côtés, et le test resterait
+    /// vert pendant que la plateforme comprendrait autre chose.
+    private static LocalitesDuSite localiteA(String etag, String nom, double latitude, double longitude) {
+        JsonArray coordonnees = new JsonArray();
+        coordonnees.add(latitude);
+        coordonnees.add(longitude);
+        JsonObject point = new JsonObject();
+        point.addProperty("type", "Point");
+        point.add("coordinates", coordonnees);
+        JsonArray geometries = new JsonArray();
+        geometries.add(point);
+        JsonObject collection = new JsonObject();
+        collection.addProperty("type", "GeometryCollection");
+        collection.add("geometries", geometries);
+        JsonObject localite = new JsonObject();
+        localite.addProperty("nom", nom);
+        localite.add("geometries", collection);
+        JsonArray brutes = new JsonArray();
+        brutes.add(localite);
         return new LocalitesDuSite(etag, brutes);
     }
 

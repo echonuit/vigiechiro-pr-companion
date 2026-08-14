@@ -160,6 +160,14 @@ Vigie-Chiro » sur l'écran Mes sites).
   sont déjà. Le lien reste **grisé**, avec son motif, tant que vous n'êtes pas connecté, que le carré
   n'est pas enregistré sur la plateforme, ou que le point n'a pas de coordonnées.
 
+    !!! warning "Si un point du même code existe déjà, ailleurs"
+        Vigie-Chiro n'accepte qu'un seul point par code sur un carré. Si un point porte déjà ce code
+        **à une autre position**, Companion ne publie rien et vous dit à quelle distance il se trouve.
+        Il ne propose pas de le déplacer, et c'est volontaire : sur Vigie-Chiro, une nuit désigne son
+        point **par son code**. Déplacer ce point déplacerait donc toutes les nuits qui s'y rattachent,
+        y compris celles d'autres observateurs. À vous de choisir : donner un autre code à votre point,
+        ou aligner sa position sur celle de la plateforme.
+
     !!! note "Si la plateforme refuse"
         Vigie-Chiro peut refuser l'ajout, et Companion ne peut pas le prévoir. Deux raisons : le carré
         est **le vôtre et déjà verrouillé** (un carré verrouillé est figé, seul un administrateur

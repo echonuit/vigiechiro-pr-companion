@@ -1,7 +1,10 @@
 package fr.univ_amu.iut.commun.api;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.util.Objects;
+import java.util.Optional;
 
 /// Les localités d'un site **telles que la plateforme les rend**, et l'`_etag` du site à cet instant.
 ///
@@ -39,14 +42,37 @@ public record LocalitesDuSite(String etag, JsonArray brutes) {
     }
 
     /// Vrai si une localité porte déjà ce nom : la plateforme impose leur unicité (`unique_field: nom`).
+    ///
+    /// ⚠️ Question **strictement nominale**, et qui doit le rester. La déduire de [#localite(String)]
+    /// serait un piège : une localité dont la géométrie est illisible rendrait `false` ici, on enverrait
+    /// un doublon de nom, et la plateforme le refuserait pour une raison sans rapport avec la cause.
     public boolean contient(String nom) {
-        for (var element : brutes) {
+        return trouver(nom).isPresent();
+    }
+
+    /// La localité de ce nom, **avec sa position**, si elle existe et qu'on sait la lire.
+    ///
+    /// ⚠️ Le nom ne suffit pas à conclure que c'est le même point. Une localité homonyme peut être posée
+    /// **ailleurs**, et la confondre avec la nôtre serait grave : une participation nomme sa localité
+    /// (`'point': {'type': 'string'}` au schéma des participations), donc toute nuit déposée sur ce point
+    /// se rattacherait à la position distante, pas à la sienne.
+    ///
+    /// `Optional.empty()` couvre deux cas volontairement confondus - aucune localité de ce nom, ou une
+    /// localité de ce nom dont la géométrie est illisible : dans les deux cas on ne sait pas où elle est,
+    /// et l'appelant ne doit rien en conclure.
+    public Optional<PointVigieChiro> localite(String nom) {
+        return trouver(nom).map(LocalitesVigieChiro::lireUnPoint);
+    }
+
+    /// L'objet JSON de la localité de ce nom, tel quel.
+    private Optional<JsonObject> trouver(String nom) {
+        for (JsonElement element : brutes) {
             if (element.isJsonObject()
                     && element.getAsJsonObject().has("nom")
                     && nom.equals(element.getAsJsonObject().get("nom").getAsString())) {
-                return true;
+                return Optional.of(element.getAsJsonObject());
             }
         }
-        return false;
+        return Optional.empty();
     }
 }

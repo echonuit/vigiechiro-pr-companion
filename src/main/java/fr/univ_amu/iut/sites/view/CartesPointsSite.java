@@ -155,6 +155,16 @@ final class CartesPointsSite {
         return base + " : trop rapprochés pour le protocole, vérifiez la position ou la saisie GPS.";
     }
 
+    /// L'écart à un homonyme distant, dit sans prétendre le mesurer quand on ne le peut pas (#3458).
+    ///
+    /// `NaN` signale une géométrie distante illisible : annoncer « à 0 m » y serait un mensonge
+    /// rassurant, et c'est précisément le sens où il ne faut pas se tromper.
+    private static String ecartLisible(double metres) {
+        return Double.isNaN(metres)
+                ? "à une position que Companion n'a pas su lire"
+                : "à " + distanceLisible(metres) + " de celui-ci";
+    }
+
     /// Distance lisible : mètres arrondis en deçà de 1 km, kilomètres à une décimale au-delà.
     private static String distanceLisible(double metres) {
         return metres >= 1000
@@ -287,6 +297,15 @@ final class CartesPointsSite {
                         "Déjà sur Vigie-Chiro",
                         "Une localité « " + nom + " » existe déjà sur ce carré : rien n'a été envoyé."
                                 + " Le point est désormais suivi comme publié.");
+            case PublicationPoint.Resultat.AilleursSurLaPlateforme(String nom, double distance) ->
+                notificateur.notifier(
+                        NiveauNotification.AVERTISSEMENT,
+                        "Un point « " + nom + " » existe déjà, ailleurs",
+                        "Vigie-Chiro connaît un point « " + nom + " » " + ecartLisible(distance)
+                                + ". Rien n'a été envoyé : déplacer le point de la plateforme"
+                                + " déplacerait toutes les nuits qui s'y rattachent, y compris celles"
+                                + " d'autres observateurs. Donnez un autre code à votre point, ou"
+                                + " alignez sa position sur celle de la plateforme.");
             case PublicationPoint.Resultat.ModifieEntreTemps ignore ->
                 notificateur.notifier(
                         NiveauNotification.AVERTISSEMENT,
