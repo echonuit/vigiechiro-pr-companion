@@ -1,6 +1,6 @@
 # CI/CD et release
 
-Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->14<!--/inv--> workflows et le processus de
+Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->15<!--/inv--> workflows et le processus de
 publication.
 
 ## Les workflows
@@ -23,6 +23,7 @@ publication.
 | [mutation-ihm.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-ihm.yml) | quotidien (5 h UTC) + manuel | Mesure de mutation PIT sur les vues d'**une feature par tour** (rotation sans état, cycle de 15 jours), **E2E exclus** | — |
 | [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | **manuel** (`workflow_dispatch`) | Paquet Flatpak (cf. plus bas) | — |
 | [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | **manuel** (`workflow_dispatch`) | Soumission d'une version choisie à winget-pkgs (cf. plus bas) | — |
+| [recette-filmee.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/recette-filmee.yml) | **manuel** (`workflow_dispatch`) | Éprouve qu'un runner **pilote** un test filmé, et pas seulement qu'il l'exécute. Porte son **témoin** : sans gestionnaire de fenêtres, le lancement doit être refusé (cf. plus bas) | — |
 
 !!! note "L'image devcontainer pré-buildée a été retirée"
     Un workflow `devcontainer-image.yml` publiait une image sur GHCR pour accélérer le démarrage des
@@ -926,6 +927,38 @@ créé et la Release déposée en brouillon **avant** l'étape qui a échoué. L
 `installers` et `publish` ont été **sautés** - donc ni binaires attachés, ni brouillon levé. Une
 version peut donc exister à moitié. C'est ce qu'il faut regarder d'abord quand un train échoue :
 `gh release list` avant `gh run view`.
+
+## Un runner qui exécute n'est pas un runner qui pilote (#3710)
+
+`recette-filmee.yml` répond à une seule question, et elle n'est pas celle que le verdict de Maven
+donne : **le runner pilote-t-il vraiment l'interface ?**
+
+Un lancement filmé tient à cinq conditions (cf. `lance-test-filme.sh`), dont deux dépendent de la
+**machine** : un gestionnaire de fenêtres doit tourner sur le `DISPLAY` visé, et `WAYLAND_DISPLAY`
+doit être absent.
+
+⚠️ Sans gestionnaire de fenêtres, le pointeur ne bouge pas - **même pour `xdotool`** - et pourtant
+les tests s'exécutent sans erreur. Ils passent ou échouent pour de mauvaises raisons. Pire,
+certains passent **avec un robot mort** : un test qui affirme qu'une valeur reste inchangée est
+vrai si l'on ne clique nulle part.
+
+### Le témoin, qui est ce que ce workflow apporte vraiment
+
+L'entrée `sans_gestionnaire_de_fenetres` **n'installe pas** matchbox, et **inverse le verdict** :
+dans ce mode, un lancement réussi devient un **échec** du workflow, puisqu'il prouverait que la
+vérification du pointeur ne garde rien.
+
+Ce qui fait foi n'est donc pas la présence de matchbox mais `verifier_pointeur`, qui teste le
+**comportement** : un gestionnaire installé mais inopérant passerait un contrôle de présence, pas
+celui-là.
+
+La vidéo est conservée en artefact **14 jours** : elle se revoit un temps, puis s'efface, et rien
+ne part dans git.
+
+```bash
+gh workflow run recette-filmee.yml                                  # le passage normal
+gh workflow run recette-filmee.yml -f sans_gestionnaire_de_fenetres=true   # le témoin
+```
 
 ## Dépendances
 
