@@ -60,6 +60,13 @@ public class PublicationDepuisLaFiche {
     /// n'est pas connecté serait du bruit avant l'obstacle réel.
     public Optional<String> empechement(long idSite, CartePoint carte) {
         Objects.requireNonNull(carte, "carte");
+        return empechement(idSite, carte.gpsPresent());
+    }
+
+    /// Variante sans carte : le point n'existe pas encore (#3458). C'est le cas de la **modale de
+    /// création**, où l'on décide de publier avant même que le point soit enregistré ; seule sa position
+    /// est connue, et elle change à mesure qu'on la saisit.
+    public Optional<String> empechement(long idSite, boolean gpsPresent) {
         if (publication.isEmpty()) {
             return Optional.of("La publication vers Vigie-Chiro n'est pas disponible.");
         }
@@ -70,7 +77,7 @@ public class PublicationDepuisLaFiche {
             return Optional.of("Ce carré n'est pas encore enregistré sur Vigie-Chiro."
                     + " Déclarez-le sur la plateforme avant d'y ajouter des points.");
         }
-        if (!carte.gpsPresent()) {
+        if (!gpsPresent) {
             return Optional.of("Ce point n'a pas de coordonnées, et une localité Vigie-Chiro en exige."
                     + " Placez-le sur la carte avant de le publier.");
         }
@@ -85,10 +92,18 @@ public class PublicationDepuisLaFiche {
     /// @throws IllegalStateException si le geste n'était pas possible ; la vue le gate par
     ///     [#empechement(long, CartePoint)], et l'appeler quand même est une faute de câblage
     public PublicationPoint.Resultat publier(long idSite, CartePoint carte) {
-        empechement(idSite, carte).ifPresent(motif -> {
-            throw new IllegalStateException("Publication impossible : " + motif);
-        });
-        PointDEcoute point = carte.point();
+        Objects.requireNonNull(carte, "carte");
+        return publier(idSite, carte.point());
+    }
+
+    /// Variante à partir du **point** : la modale de création n'a pas de carte à présenter, elle vient
+    /// tout juste de l'enregistrer.
+    public PublicationPoint.Resultat publier(long idSite, PointDEcoute point) {
+        Objects.requireNonNull(point, "point");
+        empechement(idSite, point.latitude() != null && point.longitude() != null)
+                .ifPresent(motif -> {
+                    throw new IllegalStateException("Publication impossible : " + motif);
+                });
         return publication
                 .orElseThrow()
                 .publier(

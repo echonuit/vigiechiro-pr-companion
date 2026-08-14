@@ -22,6 +22,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.StackPane;
@@ -90,6 +91,25 @@ class ModalePointViewTest {
                 .map(Label::getText)
                 .toList();
         assertThat(codes).contains("A1", "B2");
+    }
+
+    @Test
+    @DisplayName("#3458 : la case « publier » est là, GRISÉE, et dit d'aller se connecter")
+    void la_case_publier_est_grisee_sans_jeton(FxRobot robot) {
+        ouvrirModale(robot);
+
+        CheckBox publier = robot.lookup("#chkPublier").queryAs(CheckBox.class);
+
+        // L'injecteur applicatif charge `PublicationPointModule` : la publication est donc INSTALLÉE,
+        // et la case existe. Ce qui manque ici est le jeton - le seul refus prévisible.
+        assertThat(publier.getParent().isVisible())
+                .as("la case s'affiche à la création, pour que le geste se décide au bon moment")
+                .isTrue();
+        assertThat(publier.isDisable()).isTrue();
+        assertThat(publier.isSelected()).isFalse();
+        assertThat(InfobulleDeBlocage.texteDe(publier.getParent()))
+                .as("une case grisée sans motif ne dit pas ce qu'il faut corriger (#789)")
+                .contains("Connectez-vous");
     }
 
     @Test

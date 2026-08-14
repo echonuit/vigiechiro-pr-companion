@@ -20,9 +20,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.LongConsumer;
 import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -59,6 +61,13 @@ public class ModalePointController {
 
     private final CarteSites carte = new CarteSites();
     private Runnable apresSucces = () -> {};
+
+    /// Ce que la modale demande à la fiche après une **création** : publier ce point (#3458).
+    ///
+    /// La publication n'est pas faite ici. La modale se ferme aussitôt, or le compte rendu doit être lu :
+    /// il part donc au porteur de l'écran, celui-là même qui rend compte du geste depuis la carte du
+    /// point. Un seul compte rendu pour les deux chemins, plutôt que deux qui divergeront.
+    private LongConsumer publierLePoint = identifiant -> {};
 
     /// Numéro du carré du site courant (sert à centrer la carte et à placer le marqueur par défaut).
     private String numeroCarre;
@@ -98,6 +107,13 @@ public class ModalePointController {
     @FXML
     private StackPane enveloppeValider;
 
+    /// Enveloppe porteuse de l'infobulle de la case « publier » : une case désactivée n'en affiche pas.
+    @FXML
+    private StackPane enveloppePublier;
+
+    @FXML
+    private CheckBox chkPublier;
+
     @FXML
     private Button boutonValider;
 
@@ -133,6 +149,19 @@ public class ModalePointController {
                 Bindings.when(viewModel.peutEnregistrer())
                         .then("Enregistrer ce point d'écoute.")
                         .otherwise("Corrigez d'abord les champs signalés en rouge (code, latitude, longitude)."));
+        // Publier après l'enregistrement (#3458). La case n'existe qu'en création, et se grise avec son
+        // motif dès qu'un obstacle apparaît - typiquement les coordonnées effacées après l'avoir cochée.
+        chkPublier.selectedProperty().bindBidirectional(viewModel.publierEnsuiteProperty());
+        chkPublier
+                .disableProperty()
+                .bind(viewModel.empechementPublicationProperty().isNotEmpty());
+        enveloppePublier.visibleProperty().bind(viewModel.publicationOfferteProperty());
+        enveloppePublier.managedProperty().bind(enveloppePublier.visibleProperty());
+        IndicateurBlocage.expliquer(
+                enveloppePublier,
+                Bindings.when(viewModel.empechementPublicationProperty().isEmpty())
+                        .then("Ajouter ce point aux localités du carré sur Vigie-Chiro dès son enregistrement.")
+                        .otherwise(viewModel.empechementPublicationProperty()));
         // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « messageErreur » et ne pouvait
         // donc rien porter d'autre qu'un échec ; la sévérité vit maintenant dans la valeur.
         BandeauRetour.installer(
@@ -182,8 +211,9 @@ public class ModalePointController {
 
     /// Colore le message du carré : alerte (divergence, hors grille) ou simple confirmation.
     /// Prépare la modale en mode création et mémorise l'action de succès.
-    public void demarrerCreation(Site site, Runnable apresSucces) {
+    public void demarrerCreation(Site site, Runnable apresSucces, LongConsumer publierLePoint) {
         this.apresSucces = Objects.requireNonNull(apresSucces, "apresSucces");
+        this.publierLePoint = Objects.requireNonNull(publierLePoint, "publierLePoint");
         viewModel.preparerCreation(site);
         majStyleCode();
         preparerCarte(site);
@@ -273,7 +303,11 @@ public class ModalePointController {
                     },
                     resultat -> {},
                     echec -> {});
+            // L'ordre compte : la fiche se recharge D'ABORD, sinon elle publierait un point qu'elle ne
+            // connaît pas encore et ne saurait pas où poser son compte rendu.
+            Optional<Long> aPublier = viewModel.pointAPublier();
             apresSucces.run();
+            aPublier.ifPresent(publierLePoint::accept);
             fermer();
         }
     }

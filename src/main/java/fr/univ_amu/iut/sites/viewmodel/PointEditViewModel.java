@@ -13,10 +13,14 @@ import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -84,19 +88,42 @@ public class PointEditViewModel {
     /// Le point que le dernier [#enregistrer] réussi a écrit : la cible de [#resoudreCommune].
     private Long idDernierPointEnregistre;
 
+    /// Publication d'un point vers la plateforme (#3458) : ce qui l'empêche, et son déclenchement.
+    private final PublicationDepuisLaFiche publication;
+
+    /// Choix de l'utilisateur : publier ce point dès qu'il sera enregistré. **Faux par défaut** ; publier
+    /// est un geste qui sort de la machine, il se demande.
+    private final BooleanProperty publierEnsuite = new SimpleBooleanProperty(this, "publierEnsuite", false);
+
+    /// Motif du gris de la case, vide quand le geste est possible.
+    private final ReadOnlyStringWrapper empechementPublication =
+            new ReadOnlyStringWrapper(this, "empechementPublication", "");
+
+    /// La case a-t-elle lieu d'être ? Seulement à la **création**, et seulement si la publication est
+    /// installée. En édition, la carte du point porte déjà l'action, et la reproposer ici la dédoublerait.
+    private final ReadOnlyBooleanWrapper publicationOfferte =
+            new ReadOnlyBooleanWrapper(this, "publicationOfferte", false);
+
     /// Carré **déclaré par le site** courant : c'est lui que la grille STOC vient confirmer ou contredire.
     private String carreDuSite;
 
     public PointEditViewModel(
-            ServiceSites service, ServiceCommunes communes, Optional<ControleCarreStoc> controleCarre) {
+            ServiceSites service,
+            ServiceCommunes communes,
+            Optional<ControleCarreStoc> controleCarre,
+            PublicationDepuisLaFiche publication) {
         this.service = Objects.requireNonNull(service, "service");
         this.communes = Objects.requireNonNull(communes, "communes");
         this.controleCarre = Objects.requireNonNull(controleCarre, "controleCarre");
+        this.publication = Objects.requireNonNull(publication, "publication");
         codeValide = Bindings.createBooleanBinding(() -> ValidateurCodePoint.estValide(code.get()), code);
         latitudeValide = Bindings.createBooleanBinding(() -> coordonneeValide(latitude.get(), LATITUDE_MAX), latitude);
         longitudeValide =
                 Bindings.createBooleanBinding(() -> coordonneeValide(longitude.get(), LONGITUDE_MAX), longitude);
         peutEnregistrer = codeValide.and(latitudeValide).and(longitudeValide);
+        // Le motif du gris suit la saisie : on peut cocher la case, puis effacer les coordonnées.
+        latitude.addListener((observable, avant, apres) -> majEmpechementPublication());
+        longitude.addListener((observable, avant, apres) -> majEmpechementPublication());
     }
 
     /// Configure la modale en **mode création** d'un point pour le site donné.
@@ -108,6 +135,9 @@ public class PointEditViewModel {
         reinitialiserChamps();
         titre.set("Nouveau point d'écoute · Carré " + site.numeroCarre());
         libelleBouton.set("+ Ajouter");
+        publicationOfferte.set(publication.installee());
+        publierEnsuite.set(false);
+        majEmpechementPublication();
     }
 
     /// Configure la modale en **mode édition** : champs pré-remplis depuis le point existant.
@@ -117,6 +147,10 @@ public class PointEditViewModel {
         this.idSite = site.id();
         this.idPointEnEdition = point.id();
         this.carreDuSite = site.numeroCarre();
+        // En édition, la carte du point porte déjà l'action « Publier » : la reproposer ici la
+        // dédoublerait, et deux chemins pour un même geste finissent par diverger.
+        publicationOfferte.set(false);
+        publierEnsuite.set(false);
         code.set(point.code());
         description.set(point.description() == null ? "" : point.description());
         latitude.set(point.latitude() == null ? "" : Double.toString(point.latitude()));
@@ -160,6 +194,49 @@ public class PointEditViewModel {
     public void resoudreCommune() {
         if (idDernierPointEnregistre != null) {
             communes.mettreAJour(idDernierPointEnregistre);
+        }
+    }
+
+    /// La case « publier ensuite » a-t-elle lieu d'être sur cet écran (#3458) ? Voir
+    /// [#publicationOfferte].
+    public ReadOnlyBooleanProperty publicationOfferteProperty() {
+        return publicationOfferte.getReadOnlyProperty();
+    }
+
+    /// Choix de l'utilisateur : publier le point dès qu'il sera enregistré.
+    public BooleanProperty publierEnsuiteProperty() {
+        return publierEnsuite;
+    }
+
+    /// Motif du gris de la case, **vide** quand le geste est possible.
+    public ReadOnlyStringProperty empechementPublicationProperty() {
+        return empechementPublication.getReadOnlyProperty();
+    }
+
+    /// Le point qui vient d'être enregistré doit-il partir sur la plateforme ?
+    ///
+    /// Rend l'identifiant seulement si la case est cochée **et** que rien n'empêche le geste : entre le
+    /// clic sur la case et le clic sur « Ajouter », les coordonnées ont pu être effacées.
+    public Optional<Long> pointAPublier() {
+        return publierEnsuite.get() && empechementPublication.get().isEmpty() && idDernierPointEnregistre != null
+                ? Optional.of(idDernierPointEnregistre)
+                : Optional.empty();
+    }
+
+    /// Recalcule le motif du gris, et **décoche** la case s'il vient d'apparaître.
+    ///
+    /// Laisser la case cochée sous un contrôle désactivé donnerait à lire une intention qui ne partira
+    /// pas. La décocher est visible - la case est sous les yeux - là où le silence ne le serait pas.
+    private void majEmpechementPublication() {
+        if (!publicationOfferte.get() || idSite == null) {
+            empechementPublication.set("");
+            return;
+        }
+        boolean gpsPresent = parserCoordonnee(latitude.get()) != null && parserCoordonnee(longitude.get()) != null;
+        String motif = publication.empechement(idSite, gpsPresent).orElse("");
+        empechementPublication.set(motif);
+        if (!motif.isEmpty()) {
+            publierEnsuite.set(false);
         }
     }
 

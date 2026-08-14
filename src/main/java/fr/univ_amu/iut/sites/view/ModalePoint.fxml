@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
@@ -76,6 +77,13 @@
   <StackPane fx:id="zoneCarte" styleClass="zone-carte-modale" minHeight="220.0" prefHeight="240.0"/>
   <Label text="Astuce : glissez le marqueur sur la carte pour fixer la position (ou saisissez les coordonnées)."
          styleClass="field-hint" wrapText="true"/>
+
+  <!-- Publier le point sur Vigie-Chiro dès l'enregistrement (#3458). L'enveloppe porte l'infobulle : une
+       case à cocher désactivée n'en affiche pas (patron #789, cf. IndicateurBlocage). La case n'existe
+       qu'en CRÉATION : en édition, la carte du point porte déjà l'action. -->
+  <StackPane fx:id="enveloppePublier" StackPane.alignment="CENTER_LEFT">
+    <CheckBox fx:id="chkPublier" text="Publier ce point sur Vigie-Chiro après l'enregistrement"/>
+  </StackPane>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <Region HBox.hgrow="ALWAYS"/>
