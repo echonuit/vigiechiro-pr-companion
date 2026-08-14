@@ -89,6 +89,9 @@ public final class Cli {
         // commande, pas échouer « Unknown option ». Le drapeau court-circuite la validation des arguments.
         ligne.getSubcommands().values().forEach(sous -> sous.getCommandSpec().mixinStandardHelpOptions(true));
         ligne.setCaseInsensitiveEnumValuesAllowed(true); // --protocole standard == STANDARD (confort de saisie)
+        // Le mode couleur est POSÉ, pas déduit : l'heuristique de picocli colorise sous Windows et pas
+        // sous Linux, et la même commande ne rendait donc pas le même texte selon la machine (#3738).
+        ligne.setColorScheme(new CommandLine.Help.ColorScheme.Builder(CouleurCli.choisie()).build());
         ligne.setOut(new PrintWriter(sortie, true, StandardCharsets.UTF_8));
         ligne.setErr(new PrintWriter(erreur, true, StandardCharsets.UTF_8));
         ligne.setExecutionStrategy(this::migrerPuisExecuter);

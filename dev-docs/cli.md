@@ -119,6 +119,21 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `emplacements` | `[--definir-travail <dir>] [--definir-base <dir>] [--reinitialiser] [--json]` | #1038 | Parité CLI de l'onglet « Emplacements » ([ADR 1038](decisions/1038-la-configuration-d-amorcage-vit-hors-de-la-base.md)) : `ServiceEmplacements`. Sans option, **affiche** où vivent le dossier de travail, la base et les **journaux** (et leurs défauts). Les journaux y figurent parce que la CLI n'imprime plus la pile d'un incident : le détail n'existe qu'une fois, dans ce dossier, et l'IHM est seule à savoir l'ouvrir (#3624). `--definir-*` **sonde** chaque dossier (un fichier ou un dossier non inscriptible est refusé, code `2` : rien n'est écrit) puis **écrit** le choix ; `--reinitialiser` l'efface. Ne déplace **rien** : change le pointeur lu au prochain démarrage, pas les données - une base pointée vers un dossier vide démarre neuve. `--reinitialiser` et `--definir-*` sont exclusifs (code `2`) |
 | `--help` / `-h`, `--version` / `-V`, ou aucun argument | — | — | — |
 
+### La couleur est choisie, pas déduite (#3738)
+
+`Cli` pose explicitement le mode ANSI à la construction du `CommandLine`. Sans cela, picocli applique
+son heuristique `AUTO`, **qui ne décide pas la même chose partout** : la première exécution de la suite
+sous Windows a rendu une aide colorisée là où Linux la rend nue - `Usage: ESC[1mvigiechiro…`.
+
+La règle : de la couleur pour un humain devant un terminal (`System.console() != null`), **jamais**
+dans un tuyau, un fichier ou un journal de CI ; et [`NO_COLOR`](https://no-color.org) l'emporte
+toujours, dès qu'il est présent et non vide - quelle que soit sa valeur.
+
+⚠️ La décision vit dans `CouleurCli`, sur des **entrées fournies** plutôt que lues du système : la
+console et l'environnement d'une JVM en cours ne se manipulent pas de façon portable, et c'est
+précisément cette non-portabilité qui avait créé le défaut. `CliTest` garde par ailleurs l'invariant
+qui compte - une sortie redirigée ne porte **aucun** caractère d'échappement.
+
 ### Socle : registre de commandes picocli (#614)
 
 Le CLI repose sur **[picocli](https://picocli.info) 4.7.7** : chaque commande est une classe annotée
