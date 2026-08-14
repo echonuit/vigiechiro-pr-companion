@@ -5,12 +5,22 @@
 # l'exécution, brancher le train de publication - dépendent toutes du chiffre qu'il produit, et les
 # décider avant de l'avoir serait décider sans savoir.
 #
-# ⚠️ Manuel, et délibérément. Un `schedule` posé aujourd'hui rougirait dès sa première nuit sur du
-# bruit de fixture probable, et un dispositif qui commence par du bruit ne se relit plus jamais - il
-# devient un onglet qu'on ferme.
+# ⚠️ Il était manuel au départ, délibérément : un `schedule` posé avant le tri aurait rougi dès sa
+# première nuit sur du bruit de fixture, et un dispositif qui commence par du bruit devient un onglet
+# qu'on ferme. Les onze échecs relevés à l'étape 1 sont corrigés, donc il se programme (#3526).
 name: Suite complète sous Windows et macOS
 
 on:
+  # ⚠️ Le MARDI, la veille du train du mercredi 6 h. La preuve est ainsi fraîche de moins de 24 h **au
+  # moment précis où elle sert de condition** - et non « quotidienne » comme l'issue le proposait
+  # d'abord : chaque passage coûte ~1 h 40 de machine (48 min par plateforme), et une preuve d'hier ne
+  # vaut pas mieux qu'une preuve d'avant-hier si le train ne part que le lendemain.
+  #
+  # Le prix est qu'une régression peut vivre une semaine avant d'être vue. Elle ne sera jamais
+  # **publiée**, ce qui est le risque qu'on couvre ici.
+  schedule:
+    - cron: "0 6 * * 2"
+  # Conservé : un doute n'attend pas le mardi, et depuis #3754 une question ciblée coûte trois minutes.
   workflow_dispatch:
     inputs:
       classes:

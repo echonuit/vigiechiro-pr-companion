@@ -97,4 +97,19 @@ read -r cre ere rre <<< "$(compte reste)"
 cat "${compte_rendu}"
 [ -n "${GITHUB_STEP_SUMMARY:-}" ] && cat "${compte_rendu}" >> "${GITHUB_STEP_SUMMARY}"
 rm -f "${compte_rendu}"
+
+# ⚠️ Il CONCLUT désormais, il ne se contente plus de compter (#3526, étape 3).
+#
+# Tant qu'il rendait toujours 0, la couleur du job ne disait rien de ce qu'il avait trouvé - c'est le
+# motif que ce chantier corrige partout ailleurs. Et surtout, la veille de fraîcheur qui garde le train
+# de publication cherche « la dernière exécution RÉUSSIE » : sur un job qui réussit toujours, elle
+# aurait certifié la fraîcheur d'une preuve inexistante.
+#
+# `-Dmaven.test.failure.ignore=true` garde tout son sens : Maven va au bout et produit le compte
+# COMPLET, et c'est ce compte-là - pas le premier échec - qui décide ici.
+total=$((efx + rfx + ere + rre))
+if [ "${total}" -gt 0 ]; then
+    echo "::error title=La suite ne passe pas sur ${RUNNER_OS:-cette plateforme}::${total} échec(s) et erreur(s) - voir le tableau du résumé."
+    exit 1
+fi
 exit 0
