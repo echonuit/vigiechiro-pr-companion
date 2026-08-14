@@ -1851,6 +1851,63 @@ ses lecteurs).
 
 ---
 
+### Un état de contrôle se lie, il ne se photographie pas
+
+**Le problème.** Un booléen est lu au moment où l'écran se construit, puis **posé** sur un contrôle :
+`setDisable`, `setVisible` + `setManaged`, un `String` de libellé. Ce qui le rendait vrai peut
+changer ; le contrôle, lui, ne rebouge plus.
+
+C'est plus insidieux que l'écran qui ne voit pas arriver la donnée (ci-dessus), pour deux raisons :
+l'instantané est **juste à l'instant où il est pris**, donc rien ne se voit au premier lancement ; et
+les écrans restent **vivants** dans la pile du `Navigateur`, donc aucune reconstruction ne rattrape
+la photo.
+
+**La règle.** Ce qui se décide au montage, c'est le **câblage** ; ce qui varie, c'est la **donnée**.
+Une propriété porte l'état, le contrôle s'y lie (`disableProperty().bind(...)`,
+`VisibiliteGeree.lier(...)`), et ce qui l'alimente est réinterrogé au bon moment.
+
+⚠️ **Ne pas dériver l'état de ce qui est affiché.** Avant « Appliquer », les chemins sélectionnés ne
+sont pas encore la configuration persistée : un bouton lié à eux s'allumerait sur une **intention**.
+Ce qui décide, c'est ce qui a été **écrit** (#3543).
+
+⚠️ **Recalculer ne doit pas défaire un choix de l'utilisateur** ([ADR 3095](decisions/3095-un-domaine-se-calcule-sans-son-propre-critere.md)).
+Repeupler la liste d'un `ComboBox` par `clear()` puis `addAll()` remet sa valeur à `null`, et une
+liaison bidirectionnelle propage ce `null` jusqu'au ViewModel : le filtre disparaît à chaque retour
+sur l'écran. `setAll` remplace le contenu sans passer par la liste vide (#3544).
+
+#### Les quatre formes, dont trois qu'un `grep` ne voit pas
+
+Le chantier #3539 les a rencontrées une par une. C'est **la forme** qui les relie, pas le mot-clé :
+
+| Forme | Ce qui la trahit |
+|---|---|
+| un booléen posé sur un contrôle au montage | `setDisable` / `setVisible`, visible au mot-clé |
+| une **sortie prématurée** qui n'installe ni items ni liaison | rien : la méthode a l'air complète |
+| un **`String` figé** dans un record (le libellé d'une étape de navigation) | rien |
+| un **rappel qui court-circuite** le point d'entrée qui rafraîchit | rien |
+
+L'inventaire complet des sites relevés, avec le verdict de chacun, vit dans
+[#3545](https://github.com/echonuit/vigiechiro-pr-companion/issues/3545) : un inventaire se cite, il
+ne se recopie pas ([ADR 3535](decisions/3535-un-inventaire-ne-se-duplique-pas-il-se-cite.md)).
+
+#### Le critère de tri, quand on cherche un jumeau
+
+La question n'est pas « y a-t-il un `setVisible` ? » mais :
+
+> **le fait qui le rend vrai peut-il changer pendant la vie de l'application ?**
+
+Trois familles répondent **non**, et sont donc légitimes :
+
+- ce qui dérive d'un **drapeau de fonctionnalité** (`Optional<Service>.isPresent()`) : l'onglet des
+  réglages annonce que la bascule prend effet au **prochain démarrage** ;
+- ce qui dérive d'une **ressource embarquée** dans l'artefact ;
+- ce qui vit dans une **modale**, rebâtie à chaque ouverture.
+
+**Principes.** **Observer** (le contrôle suit une propriété) et **DIP** pour la source qu'on
+réinterroge.
+
+---
+
 !!! note "API fluente (le « builder » le plus proche)"
     Les liaisons s'écrivent souvent avec l'**API fluente** de JavaFX :
     `Bindings.when(cond).then(a).otherwise(b)`, `Bindings.createStringBinding(...)`. C'est un

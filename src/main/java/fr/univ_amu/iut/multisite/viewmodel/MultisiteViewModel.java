@@ -107,8 +107,12 @@ public class MultisiteViewModel {
         tri.addListener((obs, ancien, nouveau) -> publierLignes());
     }
 
-    /// `true` si le **relevé groupé des analyses** (#1338) a un sens ici : l'observateur est connecté à
-    /// VigieChiro. La vue n'offre l'action que dans ce cas (sinon, il n'y a rien à interroger).
+    /// `true` si le **relevé groupé des analyses** (#1338) a un sens ici, c'est-à-dire si le module qui
+    /// le fournit est **composé** dans cette application. La vue n'offre l'action que dans ce cas
+    /// (sinon, il n'y a rien à interroger).
+    ///
+    /// ⚠️ Ce n'est **pas** un état de session : la valeur est fixée à la construction de l'injecteur et
+    /// ne bouge plus. Le mot « connecté » figurait ici et se lisait comme le contraire (#3545).
     public boolean releveAnalysesDisponible() {
         return suivi.isPresent();
     }

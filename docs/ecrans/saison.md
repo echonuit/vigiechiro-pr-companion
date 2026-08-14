@@ -99,6 +99,14 @@ puisque c'est l'état complet du point qui dit ce qu'il reste à y faire.
 La correspondance est **partielle et insensible à la casse** : taper `ens` retient « Suivi ENS ». Un
 point dont aucune nuit n'est rattachée à une campagne n'est jamais retenu par un filtre de campagne.
 
+!!! note "Le sélecteur n'apparaît que si vous avez une campagne"
+    Tant qu'aucune campagne n'existe, il n'y a rien à proposer : le sélecteur est **retiré** de la
+    barre plutôt que de rester vide, et l'écran reste dense.
+
+    Il reparaît **dès que vous en créez une**, y compris depuis un autre écran - la fenêtre
+    « Modifier le passage » d'une nuit, où les campagnes se gèrent. Revenez sur Ma saison et il est
+    là ; vous n'avez pas à relancer l'application.
+
 Le sélecteur **Campagne**, à côté de celui de l'année, applique ce filtre. « Toutes les campagnes »
 revient au solde entier. Le tableau **et** le résumé d'en-tête se restreignent ensemble : ils sont
 calculés à partir du même solde, ils ne peuvent pas se contredire.

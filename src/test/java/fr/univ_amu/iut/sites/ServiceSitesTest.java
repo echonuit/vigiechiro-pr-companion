@@ -115,6 +115,28 @@ class ServiceSitesTest {
     }
 
     @Test
+    @DisplayName("#3672 : relire un site rend ce qui est EN BASE, pas ce qu'on détenait")
+    void relire_un_site_rend_l_etat_en_base() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        service.modifierSite(site.id(), "640999", "Étang", Protocole.STANDARD, null);
+
+        // `site` est un record : celui qu'on détient porte encore l'ancien numéro. C'est toute la
+        // raison d'être de cette lecture, et le défaut que #3672 a corrigé sur la fiche.
+        assertThat(site.numeroCarre()).isEqualTo("640380");
+        assertThat(service.site(site.id()).numeroCarre()).isEqualTo("640999");
+    }
+
+    @Test
+    @DisplayName("#3672 : relire un site qui n'existe pas est un REFUS, pas un nul")
+    void relire_un_site_absent_refuse() {
+        // Le chemin non nominal de la lecture : un identifiant qui ne désigne rien. Rendre `null`
+        // laisserait l'appelant déréférencer plus loin, là où la cause ne se lit plus.
+        assertThatThrownBy(() -> service.site(4242L))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Site introuvable");
+    }
+
+    @Test
     @DisplayName("#3584 : supprimer un point sans passage le retire et annonce la mutation")
     void supprimer_point_sans_passage() {
         Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
@@ -220,6 +242,20 @@ class ServiceSitesTest {
         assertThat(service.listerSites(ID_USER))
                 .singleElement()
                 .satisfies(enregistre -> assertThat(enregistre.numeroCarre()).isEqualTo("130010"));
+    }
+
+    @Test
+    @DisplayName("R5 : renommer un site SANS changer son carré ne déclenche pas de faux conflit")
+    void modifier_site_meme_carre_pas_de_conflit() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+
+        // Le contrôle d'unicité doit s'exclure lui-même : sans cela, renommer un site en gardant son
+        // carré se heurterait à sa propre ligne. Ce cas n'était couvert que par un test de ViewModel
+        // qui exerçait un chemin mort (#3539, passe 7) ; il vit désormais où la règle vit.
+        Site modifie = service.modifierSite(site.id(), "640380", "Nouveau nom", Protocole.STANDARD, null);
+
+        assertThat(modifie.numeroCarre()).isEqualTo("640380");
+        assertThat(modifie.nomConvivial()).isEqualTo("Nouveau nom");
     }
 
     @Test

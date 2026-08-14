@@ -120,6 +120,40 @@ mémorise le `controller` de l'écran et en dérive, par `instanceof`, des **con
     jumelle relibellée sans que l'écran ait bougé. La pose est donc idempotente, et le retrait ne se
     déclenche que si plus aucune étape ne porte cette vue.
 
+### Un libellé dérivé de la donnée se relibelle
+
+Le `libelle` d'une [`EtapeNavigation`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/EtapeNavigation.java)
+est un `String` **immuable**, figé à l'empilement. C'est sans conséquence pour les treize écrans dont
+le libellé est une constante (« Mes sites », « Importer une nuit »). Ce ne l'est pas pour les **deux**
+qui le dérivent de la donnée :
+
+| Écran | Libellé | Ce qui peut le rendre faux |
+|---|---|---|
+| M-Passage | `libelleFil()` → « Détails du passage N° X » | renommer la nuit (#3455) |
+| Fiche site | `libelleFil()` → « Carré N » | renommer le carré (#3672) |
+
+**La règle, en trois points**, et ils vont ensemble :
+
+1. l'écran **déclare** son libellé (`libelleFil()`), et sa classe `Navigation*` le lit à l'empilement
+   au lieu de le fabriquer - une seule définition, sinon les deux divergent ;
+2. après une écriture qui touche l'identité, le rappel repasse par un **point d'entrée du
+   contrôleur**, qui appelle `Navigation*#actualiserFil` → `Navigateur#actualiserLibelleCourant` ;
+3. si l'écriture change un **agrégat détenu** par le ViewModel (un `record` mémorisé), celui-ci le
+   **relit** : recharger ses listes ne suffit pas.
+
+!!! warning "Deux façons de se tromper, et la seconde ne se voit pas"
+    Sur M-Passage, le fil d'Ariane est **vivant** - l'écran déclare `EmplacementNavigation`, donc
+    `filActuel()` redemande son emplacement à chaque affichage. Un libellé d'étape figé y produit une
+    **contradiction visible** : le fil dit « N° 2 », le bouton Retour « N° 7 ». C'est ce qui a fait
+    remarquer #3455.
+
+    La fiche site ne déclare pas `EmplacementNavigation` : le fil retombe sur l'historique et lit le
+    **même** libellé figé. Les deux s'accordent alors **sur la mauvaise valeur**, et rien n'alerte.
+    C'est pourquoi #3672 n'a été trouvée que par un balayage, pas par l'usage.
+
+    ⚠️ Corollaire : déclarer `EmplacementNavigation` sur un écran dont le libellé d'étape est figé
+    **fabrique** la contradiction au lieu de la corriger. Les deux se posent ensemble.
+
 ### Convention de la barre de statut (`ResumeStatut`)
 
 La barre de statut du chrome se lit en **3 zones**, alimentées par le `ResumeStatut` de l'écran au
