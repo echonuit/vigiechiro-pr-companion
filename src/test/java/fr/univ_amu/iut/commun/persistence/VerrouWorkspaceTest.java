@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Workspace;
+import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.file.Files;
@@ -194,5 +195,39 @@ class VerrouWorkspaceTest {
 
     private Workspace workspace() {
         return new Workspace(racine.resolve("ws"));
+    }
+
+    @Test
+    @DisplayName("#3693 : un verrou d'une version antérieure, sans sentinelle, se lit tel quel")
+    void occupant_au_format_d_avant() throws IOException {
+        // Écrit à la main, sans l'octet-sentinelle : c'est ce qu'une version antérieure laisse, et
+        // c'est aussi ce qu'un outil tiers pourrait déposer. L'amputer du premier caractère
+        // afficherait « rocessus 4821 », ce qui est pire que de ne rien dire.
+        Path verrou = workspace().racine().resolve(VerrouWorkspace.NOM_FICHIER);
+        Files.createDirectories(verrou.getParent());
+        Files.writeString(verrou, "processus 4821, depuis 2026-08-03T21:14:07");
+
+        assertThat(VerrouWorkspace.occupant(workspace()))
+                .as("ne transformer que ce qu'on reconnaît rend la compatibilité gratuite")
+                .isEqualTo("processus 4821, depuis 2026-08-03T21:14:07");
+    }
+
+    @Test
+    @DisplayName("#3693 : un verrou posé sur TOUT le fichier exclut encore celui qui n'en veut qu'un octet")
+    void cohabitation_avec_une_version_qui_verrouille_tout() throws Exception {
+        // Le cas de la mise à jour : deux versions coexistent sur un poste. L'ancienne verrouille le
+        // fichier entier, la nouvelle ne demande que l'octet 0. Les zones se chevauchent, donc
+        // l'exclusion tient - et c'est la seule chose que ce verrou existe pour garantir.
+        Path fichier = workspace().racine().resolve(VerrouWorkspace.NOM_FICHIER);
+        Files.createDirectories(fichier.getParent());
+        try (FileChannel ancienne = FileChannel.open(
+                        fichier, StandardOpenOption.CREATE, StandardOpenOption.WRITE, StandardOpenOption.READ);
+                FileLock toutLeFichier = ancienne.lock()) {
+            assertThat(toutLeFichier).isNotNull();
+
+            assertThat(VerrouWorkspace.prendre(workspace()))
+                    .as("une base corrompue coûte plus cher qu'un refus de trop pendant une mise à jour")
+                    .isEmpty();
+        }
     }
 }
