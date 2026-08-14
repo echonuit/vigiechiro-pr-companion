@@ -22,11 +22,20 @@ import java.lang.annotation.Target;
 /// créé le, dernière nuit, passages »). Elle dit : « ce test participe à la couverture de ce
 /// cas ».
 ///
+/// ## Ce qu'elle dit du juge (#3764)
+///
+/// Elle dit aussi **ce que ce test prétend prouver**. Un test qui asserte porte le [Jugement] par
+/// défaut ; un scénario qui déroule le geste sans rien asserter porte `HUMAIN`, et le cas qu'il
+/// cite n'entre alors **pas** dans le compte des couverts. Sans cette distinction, jouer un cas
+/// perceptif suffirait à le déclarer prouvé.
+///
 /// ## Ce qui la garde
 ///
 /// [CorrespondanceRecetteTest] vérifie **dans les deux sens** : tout identifiant cité existe dans
 /// une session, et les cas que rien ne couvre sont **listés**. Le second devoir est celui qu'on
-/// oublie, et sans lui un garde silencieux est indiscernable d'un garde qui ne lit rien.
+/// oublie, et sans lui un garde silencieux est indiscernable d'un garde qui ne lit rien. S'y
+/// ajoute la confrontation du juge : le script marque `*perceptif*` les cas qu'aucune assertion ne
+/// tranchera, et le garde rougit quand les deux sources se contredisent.
 ///
 /// Exemple :
 /// ```java
@@ -41,4 +50,11 @@ public @interface CasDeRecette {
 
     /// Les identifiants couverts, tels qu'ils s'écrivent dans la session (`S1-04`).
     String[] value();
+
+    /// Ce que ce test prétend prouver du cas.
+    ///
+    /// `AUTOMATIQUE` par défaut, et ce défaut est un choix : un oubli doit se **voir**. Un test
+    /// muet sur son juge est réputé asserter, si bien qu'un scénario perceptif qui oublierait de se
+    /// déclarer ferait rougir le garde plutôt que de gonfler le compteur en silence.
+    Jugement jugement() default Jugement.AUTOMATIQUE;
 }
