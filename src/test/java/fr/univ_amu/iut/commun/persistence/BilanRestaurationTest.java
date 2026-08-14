@@ -36,13 +36,17 @@ class BilanRestaurationTest {
     void dossier_d_arrivee_nomme_une_fois() {
         String texte = deuxNuitsDeplacees().enClair();
 
-        assertThat(texte.split(java.util.regex.Pattern.quote(TRAVAIL), -1).length - 1)
+        // Le compte se fait sur le chemin TEL QU'IL EST RENDU : la production le compose avec `Path`,
+        // donc avec le séparateur de la plateforme. Compter les occurrences d'un littéral en `/` rendait
+        // zéro sous Windows, et le test accusait la production d'avoir oublié le dossier (#3526).
+        String telQuAffiche = java.nio.file.Path.of(TRAVAIL).toString();
+        assertThat(texte.split(java.util.regex.Pattern.quote(telQuAffiche), -1).length - 1)
                 .as("il est le même pour toutes : le répéter allongeait chaque ligne au point de la"
                         + " faire revenir à la ligne")
                 .isEqualTo(1);
         assertThat(texte)
                 .as("mais il doit rester lisible : sans lui, l'utilisateur ne sait pas où chercher")
-                .contains(TRAVAIL);
+                .contains(telQuAffiche);
     }
 
     @Test

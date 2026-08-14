@@ -329,7 +329,9 @@ class ActionsSauvegardeTest {
                         .contains("n'ont pas retrouvé leur emplacement d'origine")
                         .as("l'utilisateur doit pouvoir aller les chercher : le dossier d'arrivée est"
                                 + " nommé une fois, et chaque nuit par son nom de dossier (#3148)")
-                        .contains("/home/moi/vigiechiro")
+                        // L'attendu passe par `Path` : le compte rendu rend le chemin avec le
+                        // séparateur de la plateforme, donc `\home\moi` sous Windows (#3526).
+                        .contains(java.nio.file.Path.of("/home/moi/vigiechiro").toString())
                         .contains("Nuit-01"));
     }
 

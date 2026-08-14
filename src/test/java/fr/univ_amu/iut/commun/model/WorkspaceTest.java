@@ -72,7 +72,11 @@ class WorkspaceTest {
     void base_deplacee() {
         Workspace deplace = new Workspace(Path.of("relatif/ws"), Path.of("/coffre/vigiechiro.db"));
 
-        assertThat(deplace.cheminBaseDeDonnees()).isEqualTo(Path.of("/coffre/vigiechiro.db"));
+        // ⚠️ `.toAbsolutePath()` des deux côtés : sous Windows, `Path.of("/coffre")` n'a **pas de
+        // lettre de lecteur** alors que le chemin résolu par la production en a une (`D:\coffre`). Les
+        // deux formes ne sont donc pas comparables, et ce n'est pas une affaire de séparateur (#3526).
+        assertThat(deplace.cheminBaseDeDonnees())
+                .isEqualTo(Path.of("/coffre/vigiechiro.db").toAbsolutePath());
         assertThat(deplace.racine())
                 .as("déplacer la base ne déménage pas l'audio : c'est tout l'intérêt du recadrage")
                 .isEqualTo(Path.of("relatif/ws").toAbsolutePath());
@@ -99,8 +103,9 @@ class WorkspaceTest {
 
         Workspace resolu = sansSurcharge(configuration, Workspace::resolu);
 
-        assertThat(resolu.racine()).isEqualTo(Path.of("/donnees/nuits"));
-        assertThat(resolu.cheminBaseDeDonnees()).isEqualTo(Path.of("/coffre/vc.db"));
+        assertThat(resolu.racine()).isEqualTo(Path.of("/donnees/nuits").toAbsolutePath());
+        assertThat(resolu.cheminBaseDeDonnees())
+                .isEqualTo(Path.of("/coffre/vc.db").toAbsolutePath());
     }
 
     @Test
@@ -113,7 +118,7 @@ class WorkspaceTest {
 
         assertThat(resolu.cheminBaseDeDonnees())
                 .as("ne choisir que le dossier de travail garde la base dedans, comme avant")
-                .isEqualTo(Path.of("/donnees/nuits", "vigiechiro.db"));
+                .isEqualTo(Path.of("/donnees/nuits", "vigiechiro.db").toAbsolutePath());
     }
 
     @Test

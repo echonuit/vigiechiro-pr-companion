@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audit.model;
 
 import fr.univ_amu.iut.commun.persistence.ArborescenceFichiers;
+import fr.univ_amu.iut.commun.persistence.GestesFichiers;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -69,8 +70,14 @@ public class NettoyageDossiersOrphelins {
     /// ne se laisse pas arrêter par ce qu'elle n'a pas pu. Qui **décide** appelle `peser` (#3627) ; ici
     /// on ne fait qu'annoncer un gain, donc `octets` est le bon des deux.
     static long tailleDe(Path dossier) {
+        return tailleDe(dossier, GestesFichiers.reels());
+    }
+
+    /// [#tailleDe(Path)], avec les gestes de disque injectés : l'illisibilité d'un dossier ne se
+    /// fabrique pas de façon portable, `File.setReadable(false)` rendant `false` sous Windows (#3526).
+    static long tailleDe(Path dossier, GestesFichiers gestes) {
         try {
-            return ArborescenceFichiers.octets(dossier);
+            return ArborescenceFichiers.octets(dossier, gestes);
         } catch (IOException illisible) {
             return 0L;
         }

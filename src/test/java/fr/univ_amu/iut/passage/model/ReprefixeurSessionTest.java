@@ -72,7 +72,11 @@ class ReprefixeurSessionTest {
                         nouvelle,
                         ANCIEN.prefixeFichier(),
                         NOUVEAU.prefixeFichier()))
-                .isEqualTo("/ws/Car040962-2026-Pass2-A1/bruts/Car040962-2026-Pass2-A1-x.wav");
+                // ⚠️ L'attendu passe par `Path` : `cheminApres` compose avec les outils du système, donc
+                // rend `\` sous Windows. Comparer à un littéral en `/` éprouvait le séparateur de la
+                // machine, pas la relocalisation (#3526).
+                .isEqualTo(Path.of("/ws/Car040962-2026-Pass2-A1/bruts/Car040962-2026-Pass2-A1-x.wav")
+                        .toString());
 
         // fichier non préfixé (journal) : relocalisé, nom conservé
         assertThat(ReprefixeurSession.cheminApres(
@@ -113,7 +117,8 @@ class ReprefixeurSessionTest {
                         nouvelle,
                         ANCIEN.prefixeFichier(),
                         NOUVEAU.prefixeFichier()))
-                .isEqualTo("/tmp/Car040962-2026-Pass1-A1-arch/Car040962-2026-Pass2-A1/bruts/"
-                        + "Car040962-2026-Pass2-A1-x.wav");
+                .isEqualTo(Path.of("/tmp/Car040962-2026-Pass1-A1-arch/Car040962-2026-Pass2-A1/bruts/"
+                                + "Car040962-2026-Pass2-A1-x.wav")
+                        .toString());
     }
 }

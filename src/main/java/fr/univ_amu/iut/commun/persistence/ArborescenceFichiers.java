@@ -63,7 +63,12 @@ public final class ArborescenceFichiers {
     /// C'est juste pour un **inventaire**, et faux pour une **décision** - un garde qui additionne ces
     /// zéros conclut « il y a la place » depuis un silence (#3627). Qui décide appelle [#peser].
     public static long octets(Path dossier) throws IOException {
-        return peser(dossier, TailleFichier.reelle()).octets();
+        return octets(dossier, GestesFichiers.reels());
+    }
+
+    /// [#octets(Path)], avec les gestes de disque injectés (#3526).
+    public static long octets(Path dossier, GestesFichiers gestes) throws IOException {
+        return peser(dossier, TailleFichier.reelle(), gestes).octets();
     }
 
     /// Ce que pèse un dossier, **et ce qu'on n'a pas pu lire**.
