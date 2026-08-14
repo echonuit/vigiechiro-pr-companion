@@ -12,7 +12,7 @@ publication.
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `second-compilateur` | push `main` + PR | Recompile **tout** avec le compilateur **Eclipse** (`-Pecj`), sans les tests : ce que `javac` accepte, un autre compilateur conforme ne l'accepte pas forcément (cf. plus bas). **En parallèle** des deux autres | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `fuseau-alternatif` | push `main` + PR | Rejoue **toute** la suite sous `America/Cayenne` : *ce que le produit calcule pour une nuit ne dépend pas du fuseau de la machine* ([ADR 3450](decisions/3450-une-propriete-de-fuseau-se-tient-en-rejouant-pas-en-relisant.md)). `TZ` passe par l'**environnement**, hérité des forks surefire, et `FuseauDExecutionTest` vérifie depuis l'intérieur que la zone est bien appliquée | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `duree-du-portail` | push `main` + PR | Compare la **médiane** des 12 dernières exécutions réussies sur `main` à celle des 12 d'avant, et **avertit** au-delà de 20 % d'écart. Une CI riche se dégrade par accumulation, jamais d'un coup : chaque ajout coûte trente secondes que personne ne remarque. ⚠️ Deux **médianes**, et non une exécution contre un seuil : sur trente exécutions, deux durent le double des autres, et un butoir aurait rougi sans qu'aucune PR soit fautive (#3508) | Non - il avertit |
-| [suite-sous-windows-et-macos.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/suite-sous-windows-et-macos.yml) | **manuel** | Lance la suite **entière** sous Windows et macOS et **compte** ce qui échoue, TestFX à part. On ne sait pas ce que la suite y donne : elle n'y a jamais tourné, et 29 classes portent un chemin POSIX en dur. ⚠️ Manuel délibérément - un `schedule` rougirait dès sa première nuit sur du bruit de fixture probable, et un dispositif qui commence par du bruit devient un onglet qu'on ferme. Le programmer viendra quand le chiffre sera connu (#3526) | Non - il compte |
+| [suite-sous-windows-et-macos.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/suite-sous-windows-et-macos.yml) | **hebdomadaire (mardi 6 h UTC)** + manuel | Lance la suite **entière** sous Windows et macOS, et **conclut** : rouge dès le premier échec, TestFX compté à part. Manuel jusqu'à #3526, le temps de savoir ce que la suite y donnait - 11 échecs sous Windows au premier relevé, 0 sous macOS. Programmé la **veille** du train de publication, dont il est désormais la condition (cf. plus bas). ⚠️ En manuel il peut être **ciblé** sur quelques classes (#3754, 2 min contre 48) : un passage ciblé sert à instruire, jamais à prouver | **Oui** |
 | [lint.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml) | push `main` + PR | « Quality gate » (statique) : `spotless:check` + complétude des captures + `./mvnw -Pquality-gate compile pmd:check` (**PMD bloquant**) | **Oui** |
 | [docs.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml) | push/PR sur la doc | Construit les **deux** sites MkDocs (`--strict`) ; déploie Pages (dormant tant que `ENABLE_PAGES` ≠ true) | Build oui |
 | [titre-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | Non - **informatif**, et volontairement (cf. ci-dessous) |
@@ -482,6 +482,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie-renvois-workflows.sh` | chaque `workflow_run` vise le `name:` d'un workflow existant | `lint.yml` |
 | `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé, propre, et **utilisable** avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |
 | `verifie-demarrage-emballage.sh` | un emballage de distribution, une fois **ouvert**, démarre et ne lève aucune erreur de chargement | `maven.yml` et `release.yml` (autotest : `lint.yml`) |
+| `veille-plateformes.sh` | la suite a été éprouvée sous Windows et macOS il y a moins de 10 jours, par un passage **programmé** | `release.yml` (autotest : `lint.yml`) |
 | `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
 
 **Le modèle vient de #2947** (`verifie-titre-pr.sh`) et il est le bon : le script **se réinvoque
@@ -546,6 +547,37 @@ déclenchement manuel de winget et Flathub - sans en être la principale, le paq
 accepté sur Flathub (#2191).
 
 Détail et alternatives écartées : [ADR 2744](decisions/2744-la-publication-part-a-heure-fixe.md).
+
+### Le train ne part pas sans preuve des plateformes (#3526)
+
+Le produit est livré en installeurs **Windows**, macOS et Linux. Jusqu'à #3526, rien dans la chaîne
+n'avait jamais exécuté la suite ailleurs que sous Linux : le train publiait un `.msi` sur la foi d'un
+vert obtenu sur un runner Ubuntu. Le premier passage sous Windows a rendu **11 échecs**, dont un vrai
+défaut produit (la couleur ANSI de la CLI, #3738) et un verrou de fichier que POSIX ne pouvait pas
+révéler (#3693) - un dépôt qui aurait été publié tel quel.
+
+La suite tourne donc le **mardi**, veille du train, et le train en fait sa condition : le job
+`preuve-des-plateformes` interroge l'historique du workflow et refuse de publier si la dernière
+preuve remonte à plus de **10 jours** (un passage hebdomadaire manqué, plus la marge d'un `schedule`
+retardé).
+
+⚠️ **Seuls les passages programmés comptent.** Depuis #3754, un passage manuel peut être **ciblé** sur
+quelques classes, et l'API des runs ne dit pas lesquelles : le compter certifierait la suite entière
+sur la preuve de deux classes. Cette distinction n'est pas théorique - au moment d'écrire ces lignes,
+l'historique du dépôt contenait deux passages manuels `success`, dont l'un portait les onze échecs
+(le tri ne concluait pas encore) et l'autre ne couvrait que trois classes. Sans le filtre, la veille
+aurait certifié la fraîcheur sur l'un ou l'autre.
+
+Comme [`veille-contrat-api.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/veille-contrat-api.sh),
+[`veille-plateformes.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/veille-plateformes.sh)
+**ne persiste rien** : l'historique des exécutions *est* la date cherchée. Elle refuse explicitement
+dans trois cas où un dispositif naïf rendrait un « 0 jour » rassurant : historique **vide** (la
+question n'a pas été posée), aucune exécution programmée réussie (preuve **absente**, pas périmée),
+date **illisible**. Son autotest tourne à chaque PR dans `lint.yml`.
+
+⚠️ Une différence avec la veille du contrat d'API, et elle compte : là-bas un `failure` **prouve** que
+le contrat a été exercé ; ici le job de plateformes **conclut**, donc un `failure` est l'inverse d'une
+preuve. Le compter rendrait la veille verte au moment précis où la suite est cassée.
 
 ## Les artefacts publiés portent une attestation de provenance (#2742)
 
