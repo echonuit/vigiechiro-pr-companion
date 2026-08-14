@@ -10,6 +10,23 @@
 # qu'on ferme. Les onze échecs relevés à l'étape 1 sont corrigés, donc il se programme (#3526).
 name: Suite complète sous Windows et macOS
 
+# ⚠️ Le titre du run porte le **marqueur** que la veille du train lit (`veille-plateformes.sh`). Il
+# distingue un passage complet d'un passage ciblé, ce que l'API des runs ne permet pas autrement :
+# elle ne rend pas les entrées d'un `workflow_dispatch`.
+#
+# Filtrer sur le seul déclencheur aurait été plus simple, et laissait le train sans **issue de
+# secours** : si le mardi rougit sur une instabilité, plus rien ne peut produire de preuve avant le
+# mardi suivant, et la publication reste bloquée une semaine sur du bruit. Un passage manuel *complet*
+# est une preuve tout aussi bonne qu'un passage programmé - c'est le passage *ciblé* qui n'en est pas
+# une. Le marqueur dit lequel des deux.
+#
+# Renommer `[complet]` sans reporter le nom dans la veille casserait la détection ; elle refuse alors
+# de conclure et dit que c'est elle qui est en cause, plutôt que d'annoncer un rassurant « jamais joué ».
+run-name: >-
+  ${{ (github.event_name == 'schedule' || inputs.classes == '')
+      && '[complet] toute la suite'
+      || format('[ciblé] {0}', inputs.classes) }}
+
 on:
   # ⚠️ Le MARDI, la veille du train du mercredi 6 h. La preuve est ainsi fraîche de moins de 24 h **au
   # moment précis où elle sert de condition** - et non « quotidienne » comme l'issue le proposait

@@ -561,12 +561,23 @@ La suite tourne donc le **mardi**, veille du train, et le train en fait sa condi
 preuve remonte à plus de **10 jours** (un passage hebdomadaire manqué, plus la marge d'un `schedule`
 retardé).
 
-⚠️ **Seuls les passages programmés comptent.** Depuis #3754, un passage manuel peut être **ciblé** sur
-quelques classes, et l'API des runs ne dit pas lesquelles : le compter certifierait la suite entière
-sur la preuve de deux classes. Cette distinction n'est pas théorique - au moment d'écrire ces lignes,
-l'historique du dépôt contenait deux passages manuels `success`, dont l'un portait les onze échecs
-(le tri ne concluait pas encore) et l'autre ne couvrait que trois classes. Sans le filtre, la veille
-aurait certifié la fraîcheur sur l'un ou l'autre.
+⚠️ **Seuls les passages complets comptent.** Depuis #3754 un passage peut être **ciblé** sur quelques
+classes, et l'API des runs ne dit pas quelles entrées ont été passées à un `workflow_dispatch` : le
+compter certifierait la suite entière sur la preuve de deux classes. Cette distinction n'est pas
+théorique - au moment d'écrire ces lignes, l'historique du dépôt contenait deux passages `success`,
+dont l'un portait les onze échecs (le tri ne concluait pas encore) et l'autre ne couvrait que trois
+classes. Sans le filtre, la veille aurait certifié la fraîcheur sur l'un ou l'autre.
+
+Le workflow porte donc son périmètre dans le **titre du run** (`run-name:`), que la veille lit :
+`[complet]` ou `[ciblé]`. Filtrer sur le seul **déclencheur** aurait été plus simple, et laissait le
+train **sans issue de secours** : un mardi rouge sur une instabilité aurait bloqué la publication
+jusqu'au mardi suivant, aucun passage manuel ne pouvant produire de preuve. Un passage complet lancé à
+la main vaut donc preuve ; c'est le passage ciblé qui n'en est pas une.
+
+⚠️ Comme `ETAPE_CONTRAT` un cran plus haut, la détection repose sur un **nom**. Si aucun run examiné
+ne porte de marqueur, la veille refuse en disant que c'est **elle** qui est en cause - et distingue
+les deux causes : des exécutions toutes antérieures à la pose du marqueur (qui se résout seule), ou un
+`run-name:` renommé sans report.
 
 Comme [`veille-contrat-api.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/veille-contrat-api.sh),
 [`veille-plateformes.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/scripts/veille-plateformes.sh)

@@ -65,7 +65,7 @@ jobs:
         run: |
           set -euo pipefail
           gh api "repos/${{ github.repository }}/actions/workflows/suite-sous-windows-et-macos.yml/runs?per_page=30" \
-            --jq '.workflow_runs[] | select(.conclusion != null) | "\(.updated_at)\t\(.conclusion)\t\(.event)"' \
+            --jq '.workflow_runs[] | select(.conclusion != null) | "\(.updated_at)\t\(.conclusion)\t\(.display_title)"' \
             | ./.github/scripts/veille-plateformes.sh
 
   release:
