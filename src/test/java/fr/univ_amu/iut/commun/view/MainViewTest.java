@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -108,6 +109,7 @@ class MainViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-29")
     @DisplayName("#927 : le menu ☰ → « Réglages » ouvre l'écran de réglages dans la zone centrale")
     void menu_reglages_ouvre_l_ecran(FxRobot robot) {
         MenuButton menu = robot.lookup("#menuOutils").queryAs(MenuButton.class);
@@ -125,6 +127,7 @@ class MainViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-01")
     @DisplayName("L'accueil regroupe les cartes en deux sections de prismes (Collecte / Biodiversité)")
     void accueil_regroupe_en_deux_prismes(FxRobot robot) {
         FlowPane sections = robot.lookup("#cartesActivites").queryAs(FlowPane.class);
