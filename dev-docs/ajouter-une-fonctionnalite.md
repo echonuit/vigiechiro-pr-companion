@@ -217,6 +217,12 @@ Pour qu'un **autre** écran ouvre le vôtre **sans dépendre de votre `view`**, 
     Les deux contrats se déclarent **ensemble** : ils ne couvrent pas les mêmes écritures. Et si votre
     écran **écrit**, la règle vaut aussi dans l'autre sens : tu écris, tu signales.
 
+!!! note "Un `Bindings.create…Binding` ?"
+    Sa liste de dépendances doit énoncer **tout** ce que son calcul lit, **méthodes appelées comprises**.
+    Rien ne le vérifie : un binding incomplet affiche juste tant qu'une autre propriété change au bon
+    moment. Un cliquet compte les sites pour qu'un nouveau soit **vu**, cf.
+    [Patrons › Un binding déclare tout ce qu'il lit](patterns.md#un-binding-declare-tout-ce-quil-lit).
+
 !!! note "Un bouton grisé, un contrôle masqué, un libellé calculé ?"
     Ne les **posez** pas au montage. Un `setDisable(!x)` ou un `setVisible(x)` lu dans `initialize()`
     fige la valeur de cet instant, et l'écran restant vivant dans la pile du `Navigateur`, aucune

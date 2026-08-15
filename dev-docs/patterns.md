@@ -1990,6 +1990,35 @@ de vérité unique** pour l'avancement d'une nuit.
 SOLID n'est pas seul : l'architecture respecte aussi plusieurs principes transverses, eux aussi
 visibles dans le code.
 
+### Un binding déclare tout ce qu'il lit
+
+**Le problème.** `Bindings.createXBinding(calcul, dependances…)` ne recalcule `calcul` que si l'une des
+`dependances` s'invalide. **Rien ne vérifie** que `calcul` n'en lit pas d'autres : ni le compilateur, ni
+PMD, ni un test. Un binding incomplet reste **silencieux** tant qu'une propriété correctement déclarée
+change juste après celle qui manque.
+
+C'est le mode de panne le plus discret des trois : l'affichage est **juste**, mais pour la mauvaise
+raison. Il ne cesse de l'être que le jour où l'ordre des écritures change.
+
+**La règle.** La liste énonce **tout** ce que le calcul lit, y compris **dans les méthodes qu'il
+appelle**. C'est là que les trois défauts du chantier #3536 se cachaient : le calcul était une référence
+de méthode, et la lecture deux niveaux plus bas.
+
+⚠️ **Une lambda qui lit un champ n'a pas une dépendance manquante**, elle a une dépendance **absente du
+modèle**. Les deux se ressemblent à la lecture, et le remède diffère : rendre la valeur observable, puis
+la déclarer. Trois écrans y sont passés (#3548), un quatrième ensuite (#3752).
+
+⚠️ **Attention aux valeurs constantes reposées.** `comptage.set(ComptageAudio.VIDE)` sur une propriété
+qui vaut déjà cette **instance** n'émet rien : `ObjectPropertyBase.set` compare par référence. Un chemin
+d'erreur qui « réinitialise » peut donc n'invalider **aucune** de ses dépendances déclarées.
+
+**Ce qui garde la règle, et ce qui ne la garde pas.** Vérifier statiquement « lu ⊆ déclaré » est hors de
+portée ([ADR 3547](decisions/3547-un-binding-declare-ce-qu-il-lit.md)). Un **cliquet compte** les sites
+à la place (`DeclarationDesBindingsTest`) : il ne vérifie aucune déclaration, il garantit qu'un nouveau
+site ne peut pas entrer sans être vu. Quand il rougit, ouvrez le site ajouté, confrontez ce que son
+calcul lit à ce qu'il déclare, **puis** ajustez le nombre - l'inverse retire au cliquet sa seule utilité
+([ADR 3540](decisions/3540-un-cliquet-qui-compte-n-est-pas-la-preuve-de-la-regle.md)).
+
 ### Loi de Déméter (« ne parle qu'à tes amis proches »)
 
 Un objet ne devrait appeler que les méthodes de **lui-même**, de ses **paramètres**, de ce qu'il
