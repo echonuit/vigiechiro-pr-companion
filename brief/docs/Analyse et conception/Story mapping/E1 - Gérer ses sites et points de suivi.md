@@ -24,6 +24,7 @@
 - [x] Le champ **protocole** est un menu déroulant à deux valeurs : `PointFixeStandard` (par défaut, déclenche les alertes [R3](../Modèle%20conceptuel/Règles%20métier.md#r3) / [R4](../Modèle%20conceptuel/Règles%20métier.md#r4) en cas de passage hors fenêtre) et `PointFixeRecherche` (R3 / R4 muettes, pour les campagnes recherche à dates personnalisées). Les autres protocoles VigieChiro (Pédestre, Routier, etc.) ne sont pas supportés au MVP.
 - [ ] Au moins un point d'écoute est exigé pour valider le site.
 - [x] Le code de point doit faire 1 lettre majuscule + 1 chiffre ([R2](../Modèle%20conceptuel/Règles%20métier.md#r2)), validé à la saisie.
+- [x] Le formulaire permet de demander à Vigie-Chiro si un site porte déjà ce n° de carré, **avant** de valider, et distingue « le carré est libre », « il est déjà déclaré » (le site trouvé est nommé) et « la vérification n'a pas pu se faire » (#3458).
 - [x] Le site créé apparaît immédiatement dans la vue des sites après validation.
 - [x] Le site est persisté en base et survit au redémarrage de l'application.
 
