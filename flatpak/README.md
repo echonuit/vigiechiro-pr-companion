@@ -1,16 +1,11 @@
 # Paquet Flatpak
 
-Manifeste de l'application pour [Flathub](https://flathub.org), le canal de distribution Linux du
-produit (#2111).
-
-Flathub exige que le manifeste vive dans **son propre dépôt** (`flathub/fr.echonuit.VigieChiroCompanion`),
-créé à l'acceptation de la soumission. Cette copie est la **source** : elle évolue avec le produit, et
-c'est elle qu'on recopie vers le dépôt Flathub. Sans elle, le manifeste dériverait en silence à la
-première évolution du packaging.
+Manifeste de l'application (#2111), source du paquet publié sur le dépôt Flatpak auto-hébergé du
+projet ([`dev-docs/ci-cd-release.md`](../dev-docs/ci-cd-release.md#dépôt-flatpak-auto-hébergé-9760)).
 
 ## Ce que le manifeste fait, et pourquoi
 
-**Il extrait le `.deb` publié** au lieu de construire depuis les sources. Les builds Flathub n'ont
+**Il extrait le `.deb` publié** au lieu de construire depuis les sources. Les builds Flatpak n'ont
 **aucun réseau** : une résolution Maven y est impossible sans déclarer chaque dépendance transitive en
 source vérifiée - un fichier généré, énorme, à régénérer à chaque montée de version. C'est le choix de
 [Gluon Scene Builder](https://github.com/flathub/com.gluonhq.SceneBuilder), précédent JavaFX
@@ -19,9 +14,9 @@ directement comparable, pour la même raison.
 Chez nous c'est même plus simple : le fat-jar embarque déjà JavaFX et ses natifs Linux, là où Scene
 Builder doit télécharger le SDK JavaFX à côté.
 
-**La mise à jour est automatique.** `x-checker-data` fait détecter les nouvelles versions par le robot
-de Flathub, qui ouvre la PR de mise à jour tout seul. Publier une version ne demande donc aucun geste
-ici.
+**La mise à jour est automatique.** Le bloc `x-checker-data` est lu par `flatpak-external-data-checker`
+dans `flatpak.yml`, qui ouvre la PR de mise à jour une fois le nouveau paquet construit et démarré avec
+succès. Publier une version ne demande donc aucun geste ici.
 
 ## Les permissions, et pourquoi elles sont si étroites
 
@@ -37,7 +32,7 @@ ici.
 **absent**. JavaFX rend par GTK en X11 et ne parle pas Wayland : sur une session Wayland, c'est-à-dire
 GNOME et KDE par défaut, le repli retirait X11 précisément là où il est indispensable, et l'application
 mourait au démarrage sur `Unable to open DISPLAY`. Sur Wayland, l'hôte expose XWayland, et `x11` y donne
-un affichage. Déclarer `x11` **et** `wayland` n'est pas une option : le linter de Flathub refuse cette
+un affichage. Déclarer `x11` **et** `wayland` n'est pas une option : `flatpak-builder-lint` refuse cette
 combinaison. `verifie-affichage-flatpak.sh` garde cette règle.
 
 `Workspace.parDefaut()` code le chemin de l'espace de travail **en dur** : on peut donc n'accorder que
@@ -95,7 +90,7 @@ Error: Failure spawning rofiles-fuse, exit_status: 256
 Ce n'est pas une histoire de FUSE manquant : la panne survient sur un poste de bureau ordinaire qui en
 dispose. La cause est que **le constructeur est lui-même un flatpak**. `org.flatpak.Builder` tourne dans
 son propre bac à sable, d'où il ne peut pas parler au `fusermount` de l'hôte. Or c'est exactement le mode
-d'installation que la recette ci-dessus emploie, et celui que recommande la doc de Flathub.
+d'installation que la recette ci-dessus emploie.
 
 Inspecter ce que le bac à sable voit réellement, ce qui est le seul moyen de vérifier une permission :
 
@@ -103,10 +98,10 @@ Inspecter ce que le bac à sable voit réellement, ce qui est le seul moyen de v
 flatpak run --command=sh fr.echonuit.VigieChiroCompanion -c 'ls -A "$HOME"; ls /media/*/'
 ```
 
-## Jouer les contrôles de Flathub avant eux
+## Faire tourner le linter avant publication
 
-`org.flatpak.Builder` embarque `flatpak-builder-lint`, celui-là même que leur CI applique à toute
-soumission. Autant le voir rougir ici.
+`org.flatpak.Builder` embarque `flatpak-builder-lint`, le contrôle de référence pour un manifeste
+Flatpak. Autant le voir rougir ici, avant de publier.
 
 ```bash
 cd flatpak
@@ -136,40 +131,12 @@ flatpak run --filesystem="$PWD" --cwd="$PWD" \
 !!! Ce contrôle-là peut rendre `appstream-external-screenshot-url` et
 `appstream-remote-icon-not-mirrored` **même quand tout va bien** : l'`appstreamcli` embarqué écrit des
 chemins relatifs avec `media_baseurl` sur la racine, tandis que le linter attend le préfixe absolu dans
-chaque élément. C'est un décalage d'outillage, pas un défaut du manifeste ; l'infrastructure de Flathub,
-elle, passe. Vérifié le 2026-08-13 sur une construction d'essai réussie.
+chaque élément. C'est un décalage d'outillage, pas un défaut du manifeste. Vérifié le 2026-08-13 sur une
+construction d'essai réussie.
 
 ## Monter de version
 
-Ne rien faire : le robot de Flathub s'en charge. En cas de reprise manuelle, mettre à jour `url` et
-`sha256` de la source `vigiechiro.deb` - l'empreinte est **publiée avec la release** (fichier
-`.deb.sha256`), il n'y a donc rien à recalculer.
-
-## Soumettre à Flathub
-
-⚠️ **Lire d'abord les [exigences](https://docs.flathub.org/docs/for-app-authors/requirements) en
-entier, y compris la politique sur l'IA générative.** Elle interdit qu'une PR de soumission soit
-« generated, opened, or automated using AI tools or agents », interdit aussi les réponses rédigées par
-un LLM dans le fil, et vise plus largement les applications dont le code ou la documentation sont
-assistés par IA. Sanction annoncée : refus sans examen, et bannissement permanent en cas de récidive.
-La [9760](https://github.com/flathub/flathub/pull/9760) a été fermée par un mainteneur sur ce motif,
-après avoir coché la case « I have read and followed all the Submission requirements » sans que la page
-ait été lue. **Ce point décide de la recevabilité avant toute question technique.**
-
-Ensuite seulement, la mécanique :
-
-- PR sur [`flathub/flathub`](https://github.com/flathub/flathub), base **`new-pr`**, titre littéral
-  `Add fr.echonuit.VigieChiroCompanion` ;
-- le manifeste **et** le metainfo **à la racine** : si tous les fichiers sont en sous-dossier, le robot
-  ferme ;
-- corps repris **mot pour mot** du gabarit, cases cochées. Un corps rédigé sur mesure sans checklist a
-  fait fermer la [9432](https://github.com/flathub/flathub/pull/9432) en 33 minutes, sans qu'aucun
-  humain ne la lise ;
-- la **vidéo** est obligatoire : case cochée et URL sur la même ligne ou dans les deux suivantes. Y
-  écrire « N/A » déclenche la fermeture au même titre qu'une case vide.
-
-!!! Le robot revalide **à chaque passage**, toutes les deux heures, et le brouillon n'exempte de rien :
-son contrôle anti-spam s'exécute avant la vérification du statut. On n'ouvre donc qu'une fois tout prêt.
-
-La revue humaine, elle, regarde surtout les **permissions** et les **métadonnées AppStream**. Prévoir de
-justifier `--filesystem=/media` : c'est inhabituel, et c'est ce qui rend l'application utilisable.
+Ne rien faire : `flatpak.yml` s'en charge, à chaque `workflow_dispatch`, en lisant le bloc
+`x-checker-data` du manifeste. En cas de reprise manuelle, mettre à jour `url` et `sha256` de la source
+`vigiechiro.deb` - l'empreinte est **publiée avec la release** (fichier `.deb.sha256`), il n'y a donc
+rien à recalculer.

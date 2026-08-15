@@ -44,9 +44,7 @@ winget upgrade Echonuit.VigieChiroCompanion
 
 ### Sous Linux, en quelques commandes : Flatpak
 
-Le paquet est soumis à [Flathub](https://flathub.org) depuis [#2191](https://github.com/echonuit/vigiechiro-pr-companion/issues/2191),
-sans y être encore accepté. En attendant, le même paquet - construit et vérifié par la même chaîne -
-est publié sur un dépôt Flatpak que nous hébergeons nous-mêmes, **signé** :
+Le paquet est publié, **signé**, sur un dépôt Flatpak que nous hébergeons nous-mêmes :
 
 ```bash
 flatpak remote-add --user --if-not-exists vigiechiro-companion \
@@ -61,11 +59,9 @@ flatpak run fr.echonuit.VigieChiroCompanion
 flatpak update --user fr.echonuit.VigieChiroCompanion
 ```
 
-!!! note "Pourquoi un dépôt maison, et pas juste `flatpak install` depuis Flathub"
-    Flathub exige un point de contact humain avant la première fusion, ce que la rotation de
-    mainteneurs de ce projet ne peut pas garantir. Ce dépôt-là disparaîtra le jour où la soumission
-    Flathub sera acceptée ; en attendant, il reçoit exactement le même paquet, à chaque montée de
-    version qui **apporte quelque chose à l'utilisateur** - même politique de publication que winget.
+!!! note "Un dépôt maison plutôt qu'un magasin d'applications tiers"
+    Comme pour winget, seules les versions qui **apportent quelque chose à l'utilisateur** sont
+    poussées sur ce dépôt - pas nécessairement la toute dernière de la page des Releases.
 
 ### Installer, ou simplement décompresser
 

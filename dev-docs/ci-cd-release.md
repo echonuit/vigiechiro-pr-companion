@@ -344,10 +344,9 @@ le check y rapportera.
 ## Flatpak (#2111)
 
 Le manifeste vit dans [`flatpak/`](https://github.com/echonuit/vigiechiro-pr-companion/tree/main/flatpak),
-qui porte aussi le mode d'emploi de construction et de soumission. Trois points valent d'être connus
-d'ici :
+qui porte aussi le mode d'emploi de construction locale. Trois points valent d'être connus d'ici :
 
-**Il extrait le `.deb` publié**, il ne construit pas depuis les sources. Les builds Flathub n'ont
+**Il extrait le `.deb` publié**, il ne construit pas depuis les sources. Les builds Flatpak n'ont
 **aucun réseau**, donc une résolution Maven y est impossible sans vendorer chaque dépendance
 transitive. Même choix que Gluon Scene Builder, pour la même raison - et plus simple chez nous, le
 fat-jar embarquant déjà JavaFX.
@@ -355,8 +354,9 @@ fat-jar embarquant déjà JavaFX.
 **Il consomme donc directement le travail de #2107** : le `.deb` **et son empreinte SHA-256** publiée
 sont exactement ce que la source du manifeste demande.
 
-**La montée de version est automatique** : `x-checker-data` fait ouvrir la PR de mise à jour par le
-robot de Flathub. Publier une version ne demande aucun geste côté paquet.
+**La montée de version est automatique** : le bloc `x-checker-data` du manifeste est lu par
+`flatpak-external-data-checker` directement dans `flatpak.yml`, qui propose la mise à jour une fois le
+paquet reconstruit et démarré avec succès. Publier une version ne demande aucun geste côté paquet.
 
 !!! tip "Le `.desktop` de jpackage est invalide"
     jpackage écrit `Categories=Unknown`, valeur que `desktop-file-validate` refuse. Le manifeste la
@@ -366,10 +366,8 @@ robot de Flathub. Publier une version ne demande aucun geste côté paquet.
 
 ### Dépôt Flatpak auto-hébergé (#9760)
 
-Le paquet est soumis à Flathub depuis #2191, sans être encore accepté : leur revue exige un point de
-contact humain avant la première fusion, et une rotation de mainteneurs interne n'y change rien. En
-attendant, `flatpak.yml` publie le **même** paquet - construit et démarré par la même vérification -
-dans un dépôt Flatpak que ce projet héberge lui-même, indépendant de Flathub.
+`flatpak.yml` publie le paquet - construit et démarré par la même vérification - dans un dépôt Flatpak
+que ce projet héberge lui-même. C'est le seul canal Flatpak du projet.
 
 **En production depuis le 2026-08-15** : `https://flatpak.echonuit.fr/fr.echonuit.VigieChiroCompanion.flatpakrepo`
 sert un dépôt **signé** (clé `1BA6A82DA9213B177B160E56CD450A9383707B17`), reconstruit à chaque
@@ -591,8 +589,7 @@ gh api repos/<proprietaire>/<action>/git/tags/<sha> --jq .object.sha
 journée. Ces versions n'étaient pas vides (95 % de `feat` et `fix` sur les 120 dernières) mais
 **atomisées** : une version = un changement, donc aucune validable par la recette (#1363) ni
 descriptible. La cadence pesait par ailleurs sur une décision en aval : elle compte parmi les raisons du
-déclenchement manuel de winget et Flathub - sans en être la principale, le paquet n'étant pas encore
-accepté sur Flathub (#2191).
+déclenchement manuel de winget, sans en être la principale.
 
 Détail et alternatives écartées : [ADR 2744](decisions/2744-la-publication-part-a-heure-fixe.md).
 
