@@ -68,7 +68,7 @@ class ModaleSiteViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             SiteEditViewModel viewModel() {
-                return new SiteEditViewModel(service, liens, ID_USER, Optional.empty());
+                return new SiteEditViewModel(service, liens, ID_USER, Optional.empty(), Optional.empty());
             }
         });
         FXMLLoader loader = new FXMLLoader(ModaleSiteController.class.getResource("ModaleSite.fxml"));

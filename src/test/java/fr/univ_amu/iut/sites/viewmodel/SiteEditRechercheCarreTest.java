@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
@@ -35,18 +36,23 @@ class SiteEditRechercheCarreTest {
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
     private final ServiceSites service = mock(ServiceSites.class);
     private final LienVigieChiroDao liens = mock(LienVigieChiroDao.class);
+    private final RapatriementCarre rapatriement = mock(RapatriementCarre.class);
 
-    /// Modale montée **avec** la vérification : le cas de l'application complète.
+    /// Modale montée **avec** la vérification et la récupération : le cas de l'application complète.
+    ///
+    /// Le rapatriement est **mocké** : ce qu'il fait en base est éprouvé par `RapatriementCarreTest`, sur
+    /// une vraie base. Ici on n'éprouve que ce que le ViewModel en fait - quand il l'appelle, quand il
+    /// offre le geste, et ce qu'il laisse à l'écran.
     private SiteEditViewModel avecRecherche() {
-        SiteEditViewModel viewModel =
-                new SiteEditViewModel(service, liens, "u-1", Optional.of(new RechercheCarreExistant(client)));
+        SiteEditViewModel viewModel = new SiteEditViewModel(
+                service, liens, "u-1", Optional.of(new RechercheCarreExistant(client)), Optional.of(rapatriement));
         viewModel.preparerCreation();
         return viewModel;
     }
 
     /// Modale montée **sans** : injecteur partiel, feature éteinte, capture d'écran.
     private SiteEditViewModel sansRecherche() {
-        SiteEditViewModel viewModel = new SiteEditViewModel(service, liens, "u-1", Optional.empty());
+        SiteEditViewModel viewModel = new SiteEditViewModel(service, liens, "u-1", Optional.empty(), Optional.empty());
         viewModel.preparerCreation();
         return viewModel;
     }
@@ -184,5 +190,35 @@ class SiteEditRechercheCarreTest {
         viewModel.preparerCreation();
 
         assertThat(viewModel.retourCarreExistantProperty().get().texte()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3806 : le geste « récupérer » n'apparaît QUE quand le carré existe déjà")
+    void le_geste_recuperer_suit_le_verdict() {
+        SiteEditViewModel viewModel = avecRecherche();
+        viewModel.numeroCarreProperty().set(CARRE);
+
+        assertThat(viewModel.carreRecuperable().get())
+                .as("rien n'a été demandé : il n'y a rien à récupérer")
+                .isFalse();
+
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
+        verifier(viewModel);
+        assertThat(viewModel.carreRecuperable().get())
+                .as("carré libre : le récupérer n'aurait aucun sens")
+                .isFalse();
+
+        when(client.chercherCarre(CARRE))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
+        verifier(viewModel);
+        assertThat(viewModel.carreRecuperable().get())
+                .as("le carré est là-bas : c'est le moment de proposer de le rapatrier")
+                .isTrue();
+
+        viewModel.numeroCarreProperty().set("640381");
+        assertThat(viewModel.carreRecuperable().get())
+                .as("le verdict s'efface avec le numéro, le geste qu'il ouvrait aussi")
+                .isFalse();
     }
 }

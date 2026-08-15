@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
@@ -54,6 +55,7 @@ class ModaleSiteVerifierCarreViewTest {
     private static final String CARRE = "640380";
 
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
+    private final RapatriementCarre rapatriement = mock(RapatriementCarre.class);
 
     private ModaleSiteController controleur;
 
@@ -64,7 +66,12 @@ class ModaleSiteVerifierCarreViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             SiteEditViewModel viewModel() {
-                return new SiteEditViewModel(service, liens, "u-1", Optional.of(new RechercheCarreExistant(client)));
+                return new SiteEditViewModel(
+                        service,
+                        liens,
+                        "u-1",
+                        Optional.of(new RechercheCarreExistant(client)),
+                        Optional.of(rapatriement));
             }
         });
         FXMLLoader loader = new FXMLLoader(ModaleSiteController.class.getResource("ModaleSite.fxml"));

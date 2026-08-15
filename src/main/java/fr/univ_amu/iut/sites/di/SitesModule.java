@@ -318,8 +318,9 @@ public class SitesModule extends ModuleDeFeature {
             ServiceSites service,
             LienVigieChiroDao liens,
             @Named("idUtilisateurCourant") String idUtilisateur,
-            Optional<RechercheCarreExistant> recherche) {
-        return new SiteEditViewModel(service, liens, idUtilisateur, recherche);
+            Optional<RechercheCarreExistant> recherche,
+            Optional<RapatriementCarre> rapatriement) {
+        return new SiteEditViewModel(service, liens, idUtilisateur, recherche, rapatriement);
     }
 
     private static String creerUtilisateurLocal(UtilisateurDao utilisateurDao) {

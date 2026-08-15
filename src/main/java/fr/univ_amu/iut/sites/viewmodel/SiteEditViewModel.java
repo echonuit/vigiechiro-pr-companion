@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -12,6 +13,8 @@ import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -90,15 +93,26 @@ public class SiteEditViewModel {
     private final ReadOnlyObjectWrapper<RetourOperation> retourCarreExistant =
             new ReadOnlyObjectWrapper<>(this, "retourCarreExistant", RetourOperation.AUCUN);
 
+    /// Le carré cherché existe sur la plateforme : il y a donc quelque chose à **récupérer** (#3806).
+    /// Faux tant qu'on n'a pas demandé, faux si le carré est libre, et remis à faux dès que le numéro
+    /// change - le geste ne survit pas au verdict qui l'a ouvert.
+    private final ReadOnlyBooleanWrapper carreRecuperable = new ReadOnlyBooleanWrapper(this, "carreRecuperable", false);
+
+    /// « Récupérer ce carré » (#3806). **Optionnel** pour la même raison que la recherche : il interroge
+    /// la plateforme. Absent, le geste n'est pas offert et la déclaration reste entière.
+    private final Optional<RapatriementCarre> rapatriement;
+
     public SiteEditViewModel(
             ServiceSites service,
             LienVigieChiroDao liens,
             String idUtilisateur,
-            Optional<RechercheCarreExistant> recherche) {
+            Optional<RechercheCarreExistant> recherche,
+            Optional<RapatriementCarre> rapatriement) {
         this.liens = Objects.requireNonNull(liens, "liens");
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         this.recherche = Objects.requireNonNull(recherche, "recherche");
+        this.rapatriement = Objects.requireNonNull(rapatriement, "rapatriement");
         carreValide = Bindings.createBooleanBinding(() -> numeroCarre.get().matches("\\d{6}"), numeroCarre);
         carreInvalideEtSaisi = Bindings.createBooleanBinding(
                 () -> !numeroCarre.get().isEmpty() && !numeroCarre.get().matches("\\d{6}"), numeroCarre);
@@ -109,7 +123,10 @@ public class SiteEditViewModel {
         // ⚠️ Le jumeau `PointEditViewModel` n'a pas ce besoin : son contrôle du carré STOC est
         // **automatique** et se relance à chaque frappe. Ici le geste est manuel - une requête réseau par
         // clic -, donc c'est l'effacement qui tient le rôle.
-        numeroCarre.addListener((observable, avant, apres) -> retourCarreExistant.set(RetourOperation.AUCUN));
+        numeroCarre.addListener((observable, avant, apres) -> {
+            retourCarreExistant.set(RetourOperation.AUCUN);
+            carreRecuperable.set(false);
+        });
     }
 
     /// La vérification « ce carré existe-t-il déjà ? » est-elle **installée** (#3458) ? Faux hors de
@@ -160,6 +177,32 @@ public class SiteEditViewModel {
         }
         retourCarreExistant.set(new RetourOperation(
                 resultat.verdict().message(), resultat.verdict().severite()));
+        // Le geste suit le verdict : on ne propose de récupérer que ce qui est là-bas, et seulement si le
+        // rapatriement est installé (sinon le bouton serait mort).
+        carreRecuperable.set(
+                rapatriement.isPresent() && resultat.verdict() instanceof RechercheCarreExistant.Verdict.DejaDeclare);
+    }
+
+    /// Y a-t-il un carré à récupérer, c'est-à-dire un verdict « il existe déjà » encore valable (#3806) ?
+    public ReadOnlyBooleanProperty carreRecuperable() {
+        return carreRecuperable.getReadOnlyProperty();
+    }
+
+    /// Récupère le carré saisi depuis la plateforme, avec le protocole choisi dans la modale.
+    ///
+    /// **Bloquant** (réseau) : à appeler hors du fil JavaFX. Rend un [RapatriementCarre.Resultat] que la
+    /// vue rend, et dont elle tire le site à ouvrir quand il a été rapatrié.
+    public RapatriementCarre.Resultat rapatrierCarre() {
+        if (rapatriement.isEmpty() || !carreValide.get()) {
+            return new RapatriementCarre.Resultat.Indisponible();
+        }
+        return rapatriement.get().rapatrier(numeroCarre.get(), protocole.get());
+    }
+
+    /// Affiche le compte rendu du rapatriement, **sur le fil JavaFX**.
+    public void appliquerRapatriement(RapatriementCarre.Resultat resultat) {
+        retourCarreExistant.set(new RetourOperation(resultat.message(), resultat.severite()));
+        carreRecuperable.set(false);
     }
 
     /// Ce que la plateforme a dit du carré saisi, avec sa gravité.
