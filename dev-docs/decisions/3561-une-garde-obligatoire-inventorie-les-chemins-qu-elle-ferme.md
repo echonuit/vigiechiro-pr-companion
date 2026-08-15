@@ -4,8 +4,11 @@
 - **Chantier** : #3561, lot 3 du chantier #3518
 - **Amende** : [ADR 2744](2744-la-publication-part-a-heure-fixe.md)
 - **Applique** : [ADR 0041](0041-un-check-requis-gouverne-la-branche.md)
-- **Vérification** : certaine - `veille-plateformes.sh --auto-test`, dix cas dont l'issue de secours ;
-  ⚠️ le **câblage** du job, lui, ne s'exécutera qu'au jour où `ENABLE_RELEASE` passe à `true`
+- **Vérification** : certaine - `.github/scripts/veille-plateformes.sh`
+
+⚠️ L'auto-test de ce script couvre dix cas, dont l'issue de secours et le marqueur absent. Mais le
+**câblage** du job, lui, ne s'exécutera qu'au jour où `ENABLE_RELEASE` passe à `true` : le script est
+éprouvé, le graphe de jobs ne l'est pas.
 
 ## Contexte
 
