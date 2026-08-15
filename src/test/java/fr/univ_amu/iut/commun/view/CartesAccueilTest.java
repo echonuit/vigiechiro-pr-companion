@@ -72,12 +72,19 @@ class CartesAccueilTest {
     /// `installer()` garde un `static boolean installee` : l'enregistrement est **global au JVM et fait
     /// une seule fois**. Dans un fork surefire, ce test voyait donc « Noto Sans » **si un autre test
     /// l'avait installée avant lui**, et la police du système sinon - c'est l'ordre d'exécution qui
-    /// décidait. Sous Linux le repli est assez large pour que l'assertion tienne dans les deux cas ;
-    /// sous macOS il est étroit, et le verdict basculait avec l'ordre.
+    /// décidait.
     ///
-    /// La preuve est au dossier : le **même commit**, sur la **même image** `macos-26-arm64`
-    /// (`20260728.0273.1`), a rendu vert à 8 h 14 et rouge à 15 h 34. Un test dont le verdict dépend de
-    /// ses voisins, pas de ce qu'il mesure.
+    /// ⚠️ Et sous Linux, rien de tout cela ne se voit - non parce que le repli serait large, mais parce
+    /// que `Noto Sans` y est une police **système** (`/usr/share/fonts/truetype/noto/`, 219 entrées sur
+    /// la machine de développement). La suite locale et le runner Ubuntu la trouvent donc **installée ou
+    /// non**, et aucune mesure faite sous Linux ne peut juger ce défaut. Sous macOS elle n'est pas là :
+    /// seul `installer()` la fournit, et le verdict bascule avec l'ordre.
+    ///
+    /// La preuve est au dossier, et elle a été refaite exprès (#3773) : le **même commit**, sur la
+    /// **même image** `macos-26-arm64` (`20260728.0273.1`), a rendu vert à 8 h 14 et rouge à 15 h 34.
+    /// Puis, joué **seul** sous macOS - donc sans aucun voisin pour installer la police -, ce test
+    /// **échoue**, avec les mêmes 17,666 px. Un test dont le verdict dépend de ses voisins, pas de ce
+    /// qu'il mesure.
     ///
     /// Le titre court mesure 20,43 px avec la police embarquée, contre 17,666 px relevés sous macOS avec
     /// celle du système : c'est l'écart qui faisait tenir « Espèces & observations » sur une ligne.
