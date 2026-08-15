@@ -194,6 +194,28 @@ class ModaleSiteViewTest {
     }
 
     @Test
+    @DisplayName("#790 : le champ carré rougit seulement quand il est SAISI et incomplet")
+    void le_champ_carre_rougit_quand_il_est_saisi_et_incomplet(FxRobot robot) {
+        // Trou relevé par PIT à la clôture de #3458 : trois mutants du binding survivaient, faute d'un
+        // test qui regarde la classe CSS ici. Le mécanisme est éprouvé au socle
+        // (ValidationFormulaireTest) et sur la modale point ; c'est son câblage sur CE champ qui manquait.
+        enCreation(robot);
+        TextField carre = robot.lookup("#champCarre").queryAs(TextField.class);
+
+        assertThat(carre.getStyleClass())
+                .as("formulaire vierge : rien n'est encore fautif, donc rien ne rougit")
+                .doesNotContain("champ-invalide");
+
+        robot.interact(() -> carre.setText("6403"));
+        assertThat(carre.getStyleClass())
+                .as("saisi mais incomplet : c'est là qu'on le signale")
+                .contains("champ-invalide");
+
+        robot.interact(() -> carre.setText("640380"));
+        assertThat(carre.getStyleClass()).as("six chiffres : le rouge s'efface").doesNotContain("champ-invalide");
+    }
+
+    @Test
     @DisplayName("#3458 : sans la vérification installée, la modale n'affiche pas de bouton mort")
     void sans_recherche_installee_pas_de_bouton_mort(FxRobot robot) {
         // Cette classe monte le ViewModel avec un `Optional.empty()` : c'est l'injecteur partiel (capture

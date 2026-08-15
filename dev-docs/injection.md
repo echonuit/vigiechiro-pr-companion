@@ -77,15 +77,23 @@ forte à la plus faible :
     `DecouverteModulesTest` vérifie que désactiver toute feuille **exposée** laisse l'injecteur
     constructible.
 
-Sont `OPTIONNELLE` (désactivables) : `import-vigiechiro` (aucun `Ouvrir*`, `OptionalBinder` vide dès
-l'origine), les 6 feuilles autrefois couplées au runtime dont le contrat `Ouvrir*` a été
-**neutralisé** (`OptionalBinder` vide côté consommateur + `setBinding` côté feuille, le consommateur
-masquant son point d'entrée si absent) : `diagnostic`, `lot`, `qualification`, `importation`, `analyse`,
-`recherche` (#1087), **et** `activite-nuit`, née `EXPERIMENTALE` le temps du chantier #2348 puis passée
-`OPTIONNELLE` à la clôture du lot #2352 : la bascule d'une feature achevée est le cas nominal, pas une
-exception. Le reste demeure `COEUR` : `sites`, `passage`, `validation`, `audio`,
-`bibliotheque`, `multisite`, `connexion`, `synchronisation-participation`, `depot-vigiechiro`
-(dépendances EAGER ; cf. [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)).
+**L'inventaire ne se recopie pas ici**, il se lit : l'onglet **« Fonctionnalités »** de l'écran Réglages
+rend la liste **du registre**, catégorie comprise, et la capture `apercu-reglages-fonctionnalites.png`
+la fige à chaque build. Une énumération en prose, elle, dérive sans rougir : celle qui vivait ici
+nommait **8** features `OPTIONNELLE` quand le code en déclare **18** (pour 11 `COEUR`) - dix chantiers
+avaient ajouté la leur sans que rien ne le signale (relevé à la clôture de #3458).
+
+Ce qui vaut la peine d'être dit tient au **critère**, pas à la liste :
+
+- est `OPTIONNELLE` ce dont l'absence retire une capacité **sans casser l'injecteur ni un écran** : la
+  feuille déclare son contrat en `OptionalBinder` **vide** côté consommateur et fait `setBinding` de son
+  côté, le consommateur masquant son point d'entrée quand l'`Optional` est absent (#1087). C'est le
+  montage de `carre-existant` (#3458) comme de `controle-carre-stoc` avant lui ;
+- reste `COEUR` ce dont une dépendance est **EAGER** ou dont un contrat `Ouvrir*` est consommé sans
+  garde : `sites`, `passage`, `connexion`… (cf. [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)) ;
+- une feature née `EXPERIMENTALE` passe `OPTIONNELLE` **à la clôture de son chantier** - la bascule
+  d'une feature achevée est le cas nominal, pas une exception (`activite-nuit`, chantier #2348, lot
+  #2352).
 
 ### Livrer un écran inachevé : conditionner l'accès, jamais les composants
 

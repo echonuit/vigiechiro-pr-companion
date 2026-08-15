@@ -180,6 +180,11 @@ public class ModaleSiteController {
         // « Ce carré existe-t-il déjà ? » (#3458). Le geste n'apparaît que si la recherche est installée
         // (hors application complète, l'Optional est vide) ; il se grise tant que le carré n'a pas ses
         // six chiffres, puisqu'il n'y aurait rien à chercher.
+        //
+        // La visibilité est POSÉE et non liée, à dessein : l'ADR 3539 range ce cas dans ses deux familles
+        // légitimes - un drapeau de fonctionnalité (`Optional<Service>.isPresent()`, dont la bascule ne
+        // prend effet qu'au prochain démarrage) et un contrôle de modale (rebâtie à chaque ouverture).
+        // Le fait qui la rend vraie ne peut pas changer pendant la vie de cette fenêtre.
         enveloppeVerifierCarre.setVisible(viewModel.rechercheCarreDisponible());
         enveloppeVerifierCarre.setManaged(viewModel.rechercheCarreDisponible());
         btnVerifierCarre.disableProperty().bind(viewModel.carreValide().not().or(rechercheEnCours));

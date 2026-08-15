@@ -179,6 +179,32 @@ prévenir : celle-ci rougit.
 **Toutes** les lectures exigent le même rôle (`Observateur`) : le source ne distingue les rôles qu'en
 écriture. Un refus en lecture ne vient donc **pas** du rôle, mais d'une route qui n'existe pas.
 
+#### `GET /sites?q=` filtre vraiment, et c'est le seul paramètre dont on puisse le dire (#3458)
+
+Le dépôt s'est fait prendre une fois par un paramètre **accepté puis ignoré** (`where=`, cf. #1277 et
+`donnees?where={titre}` plus bas) : depuis, aucun filtre serveur n'est cru sans mesure. Celui-ci a été
+mesuré, en lecture seule, le **2026-08-14** - six `GET` sur `/sites` :
+
+| Requête | Total annoncé | Rendu |
+|---|---|---|
+| `/sites?max_results=3` | **20 767** | référence, sans filtre |
+| `/sites?max_results=3&q=130711` | **1** | `Vigiechiro - Point Fixe-130711` |
+| `/sites?max_results=3&q=999999` | **0** | - |
+| `/sites?max_results=3&q=13071` | **0** | préfixe à 5 chiffres de 130711 |
+| `/sites?max_results=3&q=Routier` | **219** | recherche plein texte réelle |
+
+`_sites_generic_list` (`vigiechiro/resources/sites.py`) pose `lookup['$text'] = {'$search': q}` quand
+`q` est présent, et **l'index texte existe** : le total annoncé bouge, ce que `where=` ne fait jamais.
+
+⚠️ **`$text` cherche des mots entiers, pas des préfixes.** `13071` ne ramène pas `130711`. C'est ce
+qu'il faut pour un numéro de carré - aucun faux positif par troncature - et cela **interdit** d'en tirer
+une recherche partielle. Le titre d'un site (`Vigiechiro - Point Fixe-130711`) indexe le numéro comme un
+mot à lui seul, le tiret servant de séparateur.
+
+Conséquence pratique : « ce carré existe-t-il ? » se répond en **une** requête, sous la seconde
+(`ClientVigieChiro#chercherCarre`), et non en paginant les 200+ pages du catalogue. La ligne de commande
+le fait encore et doit s'aligner (#3769).
+
 **Rejouer la carte** quand le miroir du source bouge (`SAE201/vigiechiro-api`) :
 
 ```bash

@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
+import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
@@ -122,6 +123,7 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-30")
     @DisplayName("#3458 : carré libre : le verdict s'affiche dans la modale, en succès")
     void carre_libre_le_verdict_s_affiche(FxRobot robot) {
         enCreation(robot);
@@ -136,6 +138,7 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-31")
     @DisplayName("#3458 : carré déjà déclaré : l'avertissement nomme le site et dit quoi faire")
     void carre_deja_declare_avertit_dans_la_modale(FxRobot robot) {
         enCreation(robot);
@@ -193,6 +196,7 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-32")
     @DisplayName("#3458 : corriger le carré après coup efface un verdict qui ne le concerne plus")
     void corriger_le_carre_efface_le_verdict(FxRobot robot) {
         enCreation(robot);
