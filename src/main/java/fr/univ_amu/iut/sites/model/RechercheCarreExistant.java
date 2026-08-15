@@ -61,13 +61,23 @@ public class RechercheCarreExistant {
         /// carré porte un site par protocole, et « il existe » sans dire lequel n'aide pas.
         record DejaDeclare(List<String> titres) implements Verdict {
 
-            /// Le message dit **quoi faire**, et non seulement ce qui est : redéclarer un carré déjà
-            /// présent est exactement ce qui a produit le dépôt manqué à l'origine de #3458.
+            /// Le message dit **quoi faire**, et non seulement ce qui est.
+            ///
+            /// ⚠️ Il a dit deux fois le contraire de ce qu'il fallait, et les deux erreurs se corrigent
+            /// ensemble (#3806) :
+            ///
+            /// - il renvoyait à « Mes sites », « Récupérer depuis Vigie-Chiro ». Cette synchronisation
+            ///   part des **participations** : elle n'atteint que les carrés où une nuit est **déjà**
+            ///   déposée. Sur un carré fraîchement activé - le cas même qui a ouvert #3458 - le geste ne
+            ///   fait rien ;
+            /// - il disait « ne le redéclarez pas », alors que préparer une nuit *opportuniste* commence
+            ///   précisément par déclarer le carré. Ce qui manquait au geste n'était pas de l'empêcher,
+            ///   c'était de le **rattacher**.
             @Override
             public String message() {
                 return "Ce carré existe déjà sur Vigie-Chiro (" + String.join(", ", titres)
-                        + "). Ne le redéclarez pas : récupérez-le depuis « Mes sites », "
-                        + "« Récupérer depuis Vigie-Chiro ».";
+                        + "). Récupérez-le ici : il sera rattaché au carré de la plateforme, avec ses"
+                        + " points d'écoute déjà positionnés.";
             }
 
             @Override

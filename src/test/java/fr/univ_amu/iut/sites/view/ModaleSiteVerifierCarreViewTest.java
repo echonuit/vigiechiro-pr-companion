@@ -153,7 +153,7 @@ class ModaleSiteVerifierCarreViewTest {
         // message ne se contente donc pas de constater, il nomme le geste qui remplace la déclaration.
         assertThat(message(robot).getText())
                 .contains("Vigiechiro - Point Fixe-640380")
-                .contains("Récupérer depuis Vigie-Chiro");
+                .contains("rattaché");
         assertThat(message(robot).getStyleClass()).contains("encart-avertissement");
     }
 

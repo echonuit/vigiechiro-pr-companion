@@ -112,7 +112,9 @@ class SiteEditRechercheCarreTest {
         // Le titre porte le protocole : « il existe » sans dire lequel n'aide pas à décider quoi faire.
         assertThat(viewModel.retourCarreExistantProperty().get().texte())
                 .contains("Vigiechiro - Point Fixe-640380")
-                .contains("Récupérer depuis Vigie-Chiro");
+                // Depuis #3806, le message propose de récupérer le carré ICI, avec son rattachement : le
+                // renvoi vers la synchronisation ne ramenait pas un carré sans nuit déposée.
+                .contains("rattaché");
         assertThat(viewModel.retourCarreExistantProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
     }
 
