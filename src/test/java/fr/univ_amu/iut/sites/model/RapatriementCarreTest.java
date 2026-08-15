@@ -3,11 +3,16 @@ package fr.univ_amu.iut.sites.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.TypeLiteral;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -401,5 +406,28 @@ class RapatriementCarreTest {
         // sur la foi d'une comparaison avec rien. Sans preuve, on ne présume pas (#2525).
         Site local = siteDao.findByUtilisateur(ID_USER).getFirst();
         assertThat(siteTiers.estTiers(local.id())).isFalse();
+    }
+
+    @Test
+    @DisplayName("#3806 : dans l'application complète, le rapatriement est bien LIÉ")
+    void le_rapatriement_est_lie_dans_l_application_complete(@TempDir Path espaceDeTravail) {
+        System.setProperty("vigiechiro.workspace", espaceDeTravail.toString());
+        try {
+            Injector injecteur = Guice.createInjector(RacineInjecteur.modules());
+            // L'injecteur applicatif lit la base dès qu'on lui demande un objet qui en dépend : elle doit
+            // exister avant, comme dans l'application.
+            new MigrationSchema(injecteur.getInstance(SourceDeDonnees.class)).migrer();
+
+            // Sans ce `setBinding`, l'`Optional` reste vide, le ViewModel n'offre pas le geste, et le
+            // bouton « Récupérer ce carré » n'apparaît JAMAIS - dans l'application seulement, là où
+            // aucun test de vue ne regarde. La mutation qui retire cette ligne ne faisait rougir personne.
+            assertThat(injecteur.getInstance(Key.get(new TypeLiteral<Optional<RapatriementCarre>>() {})))
+                    .as("la feature « carre-existant » lie la recherche ET sa suite")
+                    .isPresent();
+            assertThat(injecteur.getInstance(Key.get(new TypeLiteral<Optional<RechercheCarreExistant>>() {})))
+                    .isPresent();
+        } finally {
+            System.clearProperty("vigiechiro.workspace");
+        }
     }
 }
