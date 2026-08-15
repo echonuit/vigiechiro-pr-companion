@@ -209,6 +209,7 @@ nav:
     - 2744 · La publication part à heure fixe: decisions/2744-la-publication-part-a-heure-fixe.md
     - 2745 · Une vue riche se découpe en sous-vues: decisions/2745-une-vue-riche-se-decoupe-en-sous-vues.md
     - 3482 · L'audit ramasse ce qu'une suppression laisse: decisions/3482-l-audit-ramasse-ce-qu-une-suppression-laisse.md
+    - 3561 · Une garde obligatoire inventorie les chemins qu'elle ferme: decisions/3561-une-garde-obligatoire-inventorie-les-chemins-qu-elle-ferme.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
@@ -221,6 +222,7 @@ nav:
     - S7 · Réglages: recette/sessions/s7-reglages.md
     - S8 · Récupérer une nuit déposée: recette/sessions/s8-recuperer-une-nuit.md
     - S9 · Installer et mettre à jour: recette/sessions/s9-installer-mettre-a-jour.md
+    - S10 · Le poste Windows: recette/sessions/s10-le-poste-windows.md
     - Passe ciblée · constats en attente: recette/sessions/passe-ciblee-constats-en-attente.md
     - Passe de coutures · stabilisation: recette/sessions/passe-verification-stabilisation.md
   - Interface en ligne de commande (CLI): cli.md

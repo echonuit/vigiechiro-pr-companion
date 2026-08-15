@@ -170,15 +170,46 @@ public final class VerrouWorkspace implements AutoCloseable {
         try {
             return Files.readString(fichier, StandardCharsets.UTF_8);
         } catch (IOException verrouille) {
-            try (FileChannel canal = FileChannel.open(fichier, StandardOpenOption.READ)) {
-                long apresLOctetDuVerrou = canal.size() - 1;
-                if (apresLOctetDuVerrou <= 0) {
-                    return "";
-                }
-                ByteBuffer tampon = ByteBuffer.allocate((int) apresLOctetDuVerrou);
-                canal.read(tampon, OCTET_DU_VERROU + 1);
-                return StandardCharsets.UTF_8.decode(tampon.flip()).toString();
+            return apresLOctetDuVerrou(fichier);
+        }
+    }
+
+    /// Le repli : relire en **sautant** l'octet que le détenteur verrouille.
+    ///
+    /// ⚠️ Extrait du `catch` ci-dessus, et **visible du paquet**, pour une raison mesurée : ce chemin ne
+    /// s'exécute que **sous Windows**, seul système où le verrou est impératif. Sous POSIX,
+    /// `Files.readString` réussit toujours, donc le `catch` est inatteignable - et PIT, qui tourne sous
+    /// Linux, rendait ici **quatre mutants sans couverture**, dont la borne `<= 0` et la soustraction.
+    /// Le remède de #3714 était livré sans qu'aucune mesure locale puisse le juger (#3561, passe 6).
+    ///
+    /// Le passage hebdomadaire sous Windows exerce le **câblage** - que la lecture emprunte bien ce
+    /// repli quand le verrou est tenu. Cette couture-ci rend la **borne** éprouvable partout, et les
+    /// deux sont nécessaires : l'une sans l'autre laisse la moitié du remède non jugée.
+    ///
+    /// ## Deux survivants PIT, **assumés** et de la même famille
+    ///
+    /// L'arithmétique ci-dessous est **défensive**, pas sémantique : le contrat observable est « rendre
+    /// tout ce qui suit l'octet 0 ». Deux mutants y survivent donc, et aucun test ne peut les tuer.
+    ///
+    /// - `restant <= 0` en `< 0` : pour un fichier d'un seul octet, `restant` vaut 0, et
+    ///   `ByteBuffer.allocate(0)` suivi d'une lecture à l'offset 1 rend `""` - exactement ce que la
+    ///   garde rendait. La garde ne sert vraiment qu'au fichier **vide**, où `restant` vaut -1 et où
+    ///   `allocate(-1)` lèverait ;
+    /// - `size() - 1` en `size() + 1` : sur-allouer ne change rien, `read` s'arrête à EOF et `flip()`
+    ///   borne le tampon à ce qui a été lu.
+    ///
+    /// Comme pour `EcritureAtomique`, ce sont des **équivalents par construction**, pas une couverture
+    /// manquante. Les écrire ainsi reste juste : `allocate` refuse une taille négative, et un lecteur
+    /// comprend `<= 0` sans avoir à raisonner sur le cas 0.
+    static String apresLOctetDuVerrou(Path fichier) throws IOException {
+        try (FileChannel canal = FileChannel.open(fichier, StandardOpenOption.READ)) {
+            long restant = canal.size() - 1;
+            if (restant <= 0) {
+                return "";
             }
+            ByteBuffer tampon = ByteBuffer.allocate((int) restant);
+            canal.read(tampon, OCTET_DU_VERROU + 1);
+            return StandardCharsets.UTF_8.decode(tampon.flip()).toString();
         }
     }
 

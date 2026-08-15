@@ -32,6 +32,45 @@ setup() {
   [[ "${output}" == *"reactiver"* ]]
 }
 
+# ⚠️ Le seul endroit qui éprouve la couleur SUR LA SORTIE RÉELLE. `CouleurCliTest` vérifie la
+# décision - « terminal interactif et pas de NO_COLOR » - sur des entrées injectées ; il ne dit rien
+# de son CÂBLAGE, qui tient en une ligne (`Cli.executer`). Le défaut de #3738 vivait précisément là :
+# picocli colorisait l'aide sous Windows et pas sous Linux, sans que personne l'ait choisi, et aucun
+# test in-process ne pouvait le voir.
+#
+# ⚠️ Il faut un VRAI pseudo-terminal, et c'est ce que `script -qec` fournit. Sans lui, deux des trois
+# cas sont indiscernables : sous `run`, la sortie est redirigée, donc nue **de toute façon** - un test
+# « NO_COLOR éteint la couleur » y serait vert sans rien prouver, puisqu'il n'y avait pas de couleur à
+# éteindre. Vu en éprouvant ces tests : neutraliser la détection de terminal n'en faisait rougir qu'un.
+sous_un_terminal() { # <variables d'environnement…> -- rend la sortie de `vigiechiro --help`
+  script -qec "java --enable-native-access=ALL-UNNAMED \
+    -Dvigiechiro.workspace=${BATS_TEST_TMPDIR} -cp ${JAR} fr.univ_amu.iut.cli.Cli --help" /dev/null
+}
+
+echappement() { printf '\033'; }
+
+@test "aide : aucune séquence ANSI quand la sortie est redirigée (#3738)" {
+  run cli --help
+  [ "${status}" -eq 0 ]
+  # `printf '\033'` plutôt qu'un littéral : un ESC brut dans le fichier serait invisible à la relecture
+  # et mangé par les outils qui le traversent.
+  [[ "${output}" != *"$(echappement)"* ]]
+}
+
+# La moitié de la règle que rien n'éprouvait. Sans ce cas, une CLI devenue muette en couleur - la
+# décision câblée à `Ansi.OFF` par mégarde - resterait verte partout.
+@test "aide : la couleur s'allume bien devant un vrai terminal (#3738)" {
+  command -v script >/dev/null || skip "« script » absent : pas de pseudo-terminal ici"
+  run sous_un_terminal
+  [[ "${output}" == *"$(echappement)"* ]]
+}
+
+@test "aide : NO_COLOR éteint la couleur devant un vrai terminal (#3738)" {
+  command -v script >/dev/null || skip "« script » absent : pas de pseudo-terminal ici"
+  NO_COLOR=1 run sous_un_terminal
+  [[ "${output}" != *"$(echappement)"* ]]
+}
+
 @test "reactiver --help : décrit la commande et ses options, exit 0 (#1592)" {
   run cli reactiver --help
   [ "${status}" -eq 0 ]
