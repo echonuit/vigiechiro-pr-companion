@@ -33,7 +33,7 @@ on:
         type: string
         default: EditeurCommentaireTest
       sans_gestionnaire_de_fenetres:
-        description: "Témoin : ne PAS installer matchbox, le lancement doit alors être refusé"
+        description: "Témoin : ne PAS installer le gestionnaire de fenêtres, le lancement doit alors être refusé"
         type: boolean
         default: false
 
@@ -57,12 +57,19 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update
-          # matchbox-window-manager est posé À PART, pour que le témoin puisse s'en passer.
+          # Le gestionnaire de fenêtres est posé À PART, pour que le témoin puisse s'en passer.
+          #
+          # ⚠️ openbox, et non matchbox (#3788). matchbox MAXIMISE tout ce qu'il affiche - c'est son
+          # parti pris, il est fait pour de petits écrans - si bien que la modale de connexion
+          # occupait 1280 × 900 sur le film, contenu tassé en haut. Deux conséquences, et la seconde
+          # est la grave : les tests de croissance de fenêtre ne pouvaient pas passer (une fenêtre
+          # déjà maximisée ne grandit pas), et surtout les clips de #3774 ne montraient PAS la mise
+          # en page livrée - donc qui les jugeait jugeait autre chose.
           sudo apt-get install -y xvfb xdotool ffmpeg x11-utils
           if [ "${{ inputs.sans_gestionnaire_de_fenetres }}" = "true" ]; then
-            echo "::warning::TÉMOIN : matchbox n'est pas installé, le lancement DOIT être refusé."
+            echo "::warning::TÉMOIN : aucun gestionnaire de fenêtres, le lancement DOIT être refusé."
           else
-            sudo apt-get install -y matchbox-window-manager
+            sudo apt-get install -y openbox
           fi
 
       - name: Filmer le test

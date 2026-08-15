@@ -102,7 +102,7 @@ verifier_pointeur() {
 
 verifier_outils() {
     local manques=()
-    for o in Xvfb xdotool ffmpeg matchbox-window-manager; do
+    for o in Xvfb xdotool ffmpeg openbox; do
         command -v "$o" >/dev/null 2>&1 || manques+=("$o")
     done
     [ ${#manques[@]} -eq 0 ] && return 0
@@ -398,7 +398,7 @@ lancer() {
     Xvfb "$ECRAN" -screen 0 "$TAILLE" -nolisten tcp >/dev/null 2>&1 &
     local xvfb=$!
     sleep 2
-    matchbox-window-manager -display "$ECRAN" >/dev/null 2>&1 &
+    DISPLAY="$ECRAN" openbox --sm-disable >/dev/null 2>&1 &
     local wm=$!
     sleep 2
     # Guillemets DOUBLES : les numéros de processus sont gravés dans le trap à sa pose. En
@@ -523,7 +523,7 @@ auto_test() {
     Xvfb :92 -screen 0 "$TAILLE" -nolisten tcp >/dev/null 2>&1 &
     local avec=$!
     sleep 2
-    matchbox-window-manager -display :92 >/dev/null 2>&1 &
+    DISPLAY=:92 openbox --sm-disable >/dev/null 2>&1 &
     local wm=$!
     aux="$nu $avec $wm"
     sleep 2
