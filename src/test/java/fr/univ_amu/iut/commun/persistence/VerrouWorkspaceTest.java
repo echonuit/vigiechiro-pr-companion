@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -30,6 +31,45 @@ class VerrouWorkspaceTest {
 
     @TempDir
     Path racine;
+
+    @Nested
+    @DisplayName("Le repli de lecture, celui que seul Windows emprunte")
+    class ApresLOctetDuVerrou {
+
+        // ⚠️ Ces trois cas existent parce que PIT rendait QUATRE mutants sans couverture ici, dont la
+        // borne `<= 0` et la soustraction (#3561, passe 6). La raison n'était pas un oubli : le repli
+        // ne s'exécute que sous Windows, seul système où le verrou est impératif, donc aucune mesure
+        // faite sous Linux ne pouvait l'atteindre. Le passage hebdomadaire sous Windows éprouve le
+        // câblage ; ces cas éprouvent la BORNE, partout.
+
+        @Test
+        @DisplayName("un fichier vide ne rend rien plutôt qu'un octet fantôme")
+        void fichier_vide() throws IOException {
+            Path f = Files.writeString(racine.resolve("vide.lock"), "");
+
+            assertThat(VerrouWorkspace.apresLOctetDuVerrou(f)).isEmpty();
+        }
+
+        @Test
+        @DisplayName("un fichier réduit au seul octet du verrou ne rend rien non plus")
+        void un_seul_octet() throws IOException {
+            Path f = Files.writeString(racine.resolve("sentinelle-seule.lock"), "#");
+
+            assertThat(VerrouWorkspace.apresLOctetDuVerrou(f))
+                    .as("la borne est <= 0 : un octet moins l'octet du verrou, il ne reste rien à lire")
+                    .isEmpty();
+        }
+
+        @Test
+        @DisplayName("le contenu est rendu SANS l'octet du verrou, et en entier")
+        void saute_le_premier_octet() throws IOException {
+            Path f = Files.writeString(racine.resolve("occupe.lock"), "#alice@poste-42");
+
+            assertThat(VerrouWorkspace.apresLOctetDuVerrou(f))
+                    .as("un octet de trop ou de moins décale tout le nom lu")
+                    .isEqualTo("alice@poste-42");
+        }
+    }
 
     @Test
     @DisplayName("le premier preneur obtient le verrou")
