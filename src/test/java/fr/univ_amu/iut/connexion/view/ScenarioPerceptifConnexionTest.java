@@ -2,15 +2,21 @@ package fr.univ_amu.iut.connexion.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -24,8 +30,11 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -37,14 +46,25 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
-/// Le scénario qui **joue** `S1-26`, pour qu'un humain le tranche en regardant (#3791, EPIC #3667).
+/// Les scénarios qui **jouent** `S1-26` et `S1-27`, pour qu'un humain les tranche en regardant
+/// (#3791, EPIC #3667).
 ///
-/// ## Ce que ce test prouve, et ce qu'il ne prouve pas
+/// ## Ce que ces tests prouvent, et ce qu'ils ne prouvent pas
 ///
-/// Il prouve que la modale **s'ouvre** : le champ de saisie est là, à l'écran, à la fin du geste.
-/// Il ne prouve **pas** que l'ouverture s'est faite sans saut - aucune assertion ne voit un contenu
-/// qui se replace, elle voit un contenu correct une fois posé. C'est pourquoi il porte
+/// Ils prouvent que le geste **a eu lieu** : la modale est à l'écran, la récupération est allée à son
+/// terme. Ils ne prouvent **pas** que rien n'a sauté ni débordé - aucune assertion ne voit un contenu
+/// qui se replace, elle voit un contenu correct une fois posé. C'est pourquoi ils portent
 /// `jugement = HUMAIN` : le verdict revient à qui regarde le clip.
+///
+/// ## ⚠️ Pourquoi l'exécuteur asynchrone, alors que les tests emploient le synchrone
+///
+/// `S1-27` porte sur un **transitoire** : la zone de progression paraît seule, et le bandeau n'arrive
+/// qu'à la fin. Avec l'exécuteur synchrone que `@ImplementedBy` donne par défaut aux tests, la
+/// récupération se ferait sur le fil JavaFX : aucune image ne serait rendue pendant ce temps, et il
+/// n'y aurait **rien à filmer**. Ces scénarios câblent donc l'exécuteur de la production.
+///
+/// C'est l'exact contraire du besoin des captures, qui exigent le synchrone pour ne pas photographier
+/// un « Chargement… ». Ici, ce chargement **est** le sujet.
 ///
 /// ⚠️ L'assertion de jeu n'est pas décorative. Un scénario qui n'assert rien du tout **échouerait en
 /// silence** : robot mort, clip noir, et le contrôle de couverture du montage n'y verrait qu'une
@@ -70,6 +90,11 @@ class ScenarioPerceptifConnexionTest {
     /// Et après : de quoi voir si quelque chose se replace une fois la modale posée.
     private static final long APRES_MS = 1_200;
 
+    /// Ce que « prend du temps » veut dire pour la récupération de S1-27 : de quoi rendre une
+    /// douzaine d'images à la cadence du banc, donc de quoi voir la zone de progression paraître,
+    /// tenir, puis céder la place au bandeau.
+    private static final long RECUPERATION_MS = 1_500;
+
     private Injector injector;
 
     @Start
@@ -77,7 +102,28 @@ class ScenarioPerceptifConnexionTest {
         Path workspace = Files.createTempDirectory("vc-scenario-connexion");
         StockageConnexion stockage = new StockageConnexion(new Workspace(workspace), Horloge.systeme());
         ClientVigieChiro client = mock(ClientVigieChiro.class);
+        // La récupération PREND DU TEMPS, sans quoi il n'y aurait rien à voir : la zone de
+        // progression paraîtrait et disparaîtrait entre deux images. Hors séance filmée, aucune
+        // attente n'est payée.
+        when(client.moi()).thenAnswer(appel -> {
+            if (Seance.filmee()) {
+                Thread.sleep(RECUPERATION_MS);
+            }
+            return ReponseApi.succes(new ProfilVigieChiro("u-scenario", "chiro", "observateur"));
+        });
         injector = Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                // ⚠️ L'exécuteur ASYNCHRONE, celui de la production (`CommunModule`), et non le
+                // synchrone que `@ImplementedBy` donne par défaut aux tests. Le transitoire de
+                // S1-27 n'existe que hors du fil JavaFX : en synchrone, la récupération bloque le
+                // fil, aucune image n'est rendue pendant ce temps, et il n'y aurait rien à filmer.
+                //
+                // C'est l'exact contraire du besoin des captures (#3242), qui exigent le synchrone
+                // pour ne pas photographier un « Chargement… ». Ici, ce chargement EST le sujet.
+                bind(ExecuteurTache.class).to(ExecuteurTacheAsynchrone.class).in(Singleton.class);
+            }
+
             @Provides
             ConnexionViewModel viewModel() {
                 return new ConnexionViewModel(stockage, client, Set.of());
@@ -112,6 +158,32 @@ class ScenarioPerceptifConnexionTest {
                 .as("le geste a-t-il seulement eu lieu ? Sans cette question, un robot mort rendrait"
                         + " un clip noir que personne ne signalerait.")
                 .isPresent();
+    }
+
+    @Test
+    @CasDeRecette(value = "S1-27", jugement = Jugement.HUMAIN)
+    @DisplayName("S1-27 · pendant la récupération : à regarder, rien ne doit sortir du cadre avant le bandeau")
+    void la_recuperation_ne_pousse_rien_hors_du_cadre(FxRobot robot) throws TimeoutException {
+        robot.interact(this::ouvrirLaModaleCommeLApplication);
+        WaitForAsyncUtils.waitForFxEvents();
+        respirer(robot, AVANT_MS);
+
+        robot.clickOn("#champToken").write("jeton-de-scenario");
+        robot.clickOn("Se connecter");
+
+        // C'est ici que se joue le cas : la zone de progression paraît d'abord, seule, et le bandeau
+        // n'arrive qu'à la fin. Attendre le BANDEAU, et non la zone, garantit que le film contient
+        // les deux moments - donc le passage de l'un à l'autre, qui est ce qu'on juge.
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible());
+        respirer(robot, APRES_MS);
+
+        assertThat(robot.lookup("#bandeauStatut").queryAs(Label.class).getText())
+                .as("la récupération est-elle seulement allée à son terme ? Sans cette question, un"
+                        + " scénario qui n'aurait rien déclenché rendrait un clip immobile.")
+                .isNotBlank();
     }
 
     // ----------------------------------------------------------------------------------------
