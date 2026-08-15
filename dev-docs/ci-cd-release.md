@@ -17,7 +17,7 @@ publication.
 | [docs.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml) | push/PR sur la doc | Construit les **deux** sites MkDocs (`--strict`) ; déploie Pages (dormant tant que `ENABLE_PAGES` ≠ true) | Build oui |
 | [titre-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | Non - **informatif**, et volontairement (cf. ci-dessous) |
 | [capture-vues.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml) | push `main` | Régénère les aperçus PNG (cf. [Captures](captures.md)) | — |
-| [release.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | push `main` | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true) | — |
+| [release.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | **hebdomadaire (mercredi 6 h UTC)** + manuel | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true). Le **train de publication** depuis l'ADR 2744 - la ligne disait encore « push `main` » neuf jours après le changement. Ne part pas sans preuve fraîche des plateformes, sauf contournement écrit (cf. plus bas) | — |
 | [api-live.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/api-live.yml) | hebdomadaire (lundi) + manuel | Contrat de l'API Vigie-Chiro, **en lecture seule** ; sépare « jeton mort » (warning) de « contrat cassé » (rouge), et **rougit au bout de trois semaines sans vérification réelle** (cf. ci-dessous) | — |
 | [adr-rapport.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/adr-rapport.yml) | hebdomadaire + manuel | Rapport ADR (calibration des cliquets et des loupes) | — |
 | [mutation-model.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-model.yml) | quotidien (3 h UTC) + manuel | Mesure de mutation PIT sur **un paquet `model` par tour** (rotation sans état, cycle de 17 jours), **E2E et `commun.api` exclus** : bilan dans le résumé du job, rapport détaillé en artefact | — |
@@ -612,6 +612,35 @@ Le workflow porte donc son périmètre dans le **titre du run** (`run-name:`), q
 train **sans issue de secours** : un mardi rouge sur une instabilité aurait bloqué la publication
 jusqu'au mardi suivant, aucun passage manuel ne pouvant produire de preuve. Un passage complet lancé à
 la main vaut donc preuve ; c'est le passage ciblé qui n'en est pas une.
+
+### ⚠️ Et une voie de secours, motivée par écrit (#3561)
+
+Poser cette condition contredisait deux décisions, et la clôture du lot 3 l'a relevé :
+
+- l'**ADR 0041** pose la règle qu'on avait sautée - « avant de rendre un check obligatoire, inventorier
+  tous les chemins d'écriture vers `main` [...] un chemin sans réponse est un **blocage permanent** ».
+  L'inventaire tient en deux lignes : le train du mercredi, et le `workflow_dispatch`. La seconde était
+  vide ;
+- l'**ADR 2744** décide pourtant en toutes lettres : « **Pourquoi `workflow_dispatch` reste** : un
+  correctif urgent n'attend pas le train ».
+
+Ce qui a tranché n'est pas le retard - un passage complet lancé à la main coûte ~50 min - mais qu'un
+**test instable sans rapport** (#3773) aurait retenu un correctif de sécurité.
+
+Le `workflow_dispatch` de `release.yml` porte donc une entrée **`raison_du_contournement`**, vide par
+défaut. Renseignée, elle saute la garde, et la raison part **dans le titre du run** - donc dans
+l'historique des exécutions, pas seulement dans le log d'un job - puis dans son résumé. En dessous de
+**20 caractères**, elle est refusée : un contournement dont la trace est « x » n'en laisse pas.
+
+⚠️ Deux pièges, écrits sur place dans le workflow parce qu'ils se reproduisent :
+
+- tester `inputs.raison_du_contournement == ''` **seul** aurait désarmé la garde sur le `schedule` :
+  `inputs` y est **null**, et une expression GitHub coule deux types différents en nombre, donc
+  `null == ''` y est **vrai**. La garde se serait sautée toute seule le mercredi, c'est-à-dire
+  exactement les jours où elle sert. La condition teste d'abord le **déclencheur** ;
+- `needs` sur un job **sauté** saute le dépendant par défaut. Sans `!cancelled()` et un test explicite
+  sur `.result != 'failure'`, le contournement aurait **empêché** la publication au lieu de la
+  permettre.
 
 ⚠️ Comme `ETAPE_CONTRAT` un cran plus haut, la détection repose sur un **nom**. Si aucun run examiné
 ne porte de marqueur, la veille refuse en disant que c'est **elle** qui est en cause - et distingue

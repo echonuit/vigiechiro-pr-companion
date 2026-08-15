@@ -1,7 +1,8 @@
 # Release : version + CHANGELOG (semantic-release) puis installeurs natifs par OS (jpackage).
 #
-# - release : sur push sur `main`, semantic-release analyse les Conventional Commits, calcule la
-#   version, crée le tag vX.Y.Z + la Release GitHub + met à jour CHANGELOG.md (cf. .releaserc.json).
+# - release : au TRAIN du mercredi (ADR 2744) ou sur déclenchement manuel - plus au push sur `main` -,
+#   semantic-release analyse les Conventional Commits, calcule la version, crée le tag vX.Y.Z + la
+#   Release GitHub + met à jour CHANGELOG.md (cf. .releaserc.json).
 #   DORMANT tant que la variable de dépôt ENABLE_RELEASE != 'true' : à activer quand le dépôt est
 #   public et que `main` est la branche consolidée (après la migration #169). Tant que c'est dormant,
 #   rien ne tourne (et donc aucune release accidentelle sur le `main` étudiant régénéré).
