@@ -83,13 +83,20 @@ public class ImportSiteDistant {
     /// sans carré exploitable, ou dont la création échoue, est ignoré (best-effort par site).
     public Optional<ResultatImport> importerOuLier(
             SiteVigieChiro distant, Map<String, Site> localesParCarre, String idProfilConnecte) {
-        return importerOuLier(distant, localesParCarre, idProfilConnecte, Protocole.STANDARD);
+        return importerOuLier(
+                distant,
+                localesParCarre,
+                idProfilConnecte,
+                new SouhaitDeclaration(distant.numeroCarre(), Protocole.STANDARD, null, null));
     }
 
     /// Variante qui **respecte le protocole choisi** par l'utilisateur (#3806). La synchronisation
     /// périodique, elle, n'a personne à qui demander et garde `STANDARD` : c'est la surcharge ci-dessus.
     public Optional<ResultatImport> importerOuLier(
-            SiteVigieChiro distant, Map<String, Site> localesParCarre, String idProfilConnecte, Protocole protocole) {
+            SiteVigieChiro distant,
+            Map<String, Site> localesParCarre,
+            String idProfilConnecte,
+            SouhaitDeclaration souhait) {
         String carre = distant.numeroCarre();
         if (carre == null) {
             return Optional.empty();
@@ -98,7 +105,7 @@ public class ImportSiteDistant {
             Site local = localesParCarre.get(carre);
             int poses;
             if (local == null) {
-                local = creerDepuis(distant, protocole);
+                local = creerDepuis(distant, souhait);
                 poses = compterPoints(local);
                 localesParCarre.put(carre, local);
             } else {
@@ -178,8 +185,15 @@ public class ImportSiteDistant {
 
     /// Crée le site local (carré + titre en nom) et ses points d'écoute depuis les localités du site
     /// distant. Un point au code/GPS invalide est ignoré, sans faire échouer le site.
-    private Site creerDepuis(SiteVigieChiro distant, Protocole protocole) {
-        Site site = serviceSites.creerSite(distant.numeroCarre(), distant.titre(), protocole, null, idUtilisateur);
+    private Site creerDepuis(SiteVigieChiro distant, SouhaitDeclaration souhait) {
+        // La saisie de l'utilisateur l'emporte sur le titre de la plateforme : il venait de l'écrire, et
+        // « Vigiechiro - Point Fixe-130711 » est un libellé technique. À défaut, le titre sert de nom.
+        Site site = serviceSites.creerSite(
+                distant.numeroCarre(),
+                souhait.nomOuTitre(distant.titre()),
+                souhait.protocole(),
+                souhait.commentaireOuNull(),
+                idUtilisateur);
         for (PointVigieChiro point : distant.points()) {
             ajouterPointRapatrie(site, distant, point);
         }

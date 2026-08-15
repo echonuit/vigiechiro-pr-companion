@@ -4,7 +4,6 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
 import java.util.List;
 import java.util.Locale;
@@ -131,12 +130,11 @@ public class RapatriementCarre {
     /// Toute issue non-succès rend [Resultat.Indisponible] **sans rien écrire** : un rapatriement à
     /// moitié fait serait pire que pas de rapatriement du tout, puisqu'il laisserait un site local non
     /// rattaché - exactement l'état que ce service existe pour éviter.
-    public Resultat rapatrier(String numeroCarre, Protocole protocole) {
-        Objects.requireNonNull(numeroCarre, "numeroCarre");
-        Objects.requireNonNull(protocole, "protocole");
+    public Resultat rapatrier(SouhaitDeclaration souhait) {
+        Objects.requireNonNull(souhait, "souhait");
+        String numeroCarre = souhait.numeroCarre();
         return switch (client.chercherCarre(numeroCarre)) {
-            case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) ->
-                poser(numeroCarre, trouves, protocole);
+            case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) -> poser(souhait, trouves);
             case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte -> new Resultat.Indisponible();
             case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) -> {
                 LOG.log(Level.FINE, () -> "Rapatriement du carré ignoré (Vigie-Chiro injoignable : " + cause + ")");
@@ -152,9 +150,9 @@ public class RapatriementCarre {
     /// Pose le site **en Point Fixe** parmi ceux trouvés. Un carré peut en porter plusieurs, un par
     /// protocole : prendre le premier venu rattacherait au hasard, et la nuit partirait au mauvais
     /// endroit.
-    private Resultat poser(String numeroCarre, List<SiteVigieChiro> trouves, Protocole protocole) {
+    private Resultat poser(SouhaitDeclaration souhait, List<SiteVigieChiro> trouves) {
         if (trouves.isEmpty()) {
-            return new Resultat.Inexistant(numeroCarre);
+            return new Resultat.Inexistant(souhait.numeroCarre());
         }
         Optional<SiteVigieChiro> pointFixe =
                 trouves.stream().filter(RapatriementCarre::estPointFixe).findFirst();
@@ -167,7 +165,7 @@ public class RapatriementCarre {
         SiteVigieChiro distant = pointFixe.get();
         Map<String, Site> locauxParCarre = imports.sitesLocauxParCarre();
         Optional<ImportSiteDistant.ResultatImport> importe =
-                imports.importerOuLier(distant, locauxParCarre, idProfilConnecte(), protocole);
+                imports.importerOuLier(distant, locauxParCarre, idProfilConnecte(), souhait);
         if (importe.isEmpty()) {
             return new Resultat.Indisponible();
         }
@@ -175,7 +173,7 @@ public class RapatriementCarre {
         imports.rattraperCommunes();
         // Le compte vient de l'import, pas de la réponse : un point refusé en best-effort ne doit pas
         // être annoncé comme posé.
-        return imports.siteLocalDuCarre(numeroCarre)
+        return imports.siteLocalDuCarre(souhait.numeroCarre())
                 .<Resultat>map(site -> new Resultat.Rapatrie(site, importe.get().pointsPoses()))
                 .orElseGet(Resultat.Indisponible::new);
     }

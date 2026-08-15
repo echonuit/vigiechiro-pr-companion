@@ -105,7 +105,8 @@ class RapatriementCarreTest {
                 .thenReturn(ReponseApi.succes(
                         List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "un-tiers"))));
 
-        RapatriementCarre.Resultat resultat = rapatriement.rapatrier(CARRE, Protocole.STANDARD);
+        RapatriementCarre.Resultat resultat =
+                rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
 
         // C'est le fait qui porte tout le lot : sans ce lien, `SynchronisationParticipation#creerPour`
         // refuse la participation avec « Site non rattaché à Vigie-Chiro », et le téléversement s'arrête
@@ -127,7 +128,7 @@ class RapatriementCarreTest {
                                 new PointVigieChiro("Z41", 43.514558, 5.451322)),
                         "un-tiers"))));
 
-        rapatriement.rapatrier(CARRE, Protocole.STANDARD);
+        rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
 
         // Le retour d'origine tenait en une phrase : « j'ai dû recréer Z1 manuellement en le positionnant
         // (en le choisissant dans la liste, il n'était pas prépositionné) ».
@@ -151,7 +152,8 @@ class RapatriementCarreTest {
                                 new PointVigieChiro("pas-un-code", 43.51, 5.45)),
                         "un-tiers"))));
 
-        RapatriementCarre.Resultat resultat = rapatriement.rapatrier(CARRE, Protocole.STANDARD);
+        RapatriementCarre.Resultat resultat =
+                rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
 
         // Annoncer « 2 points positionnés » quand un seul est en base ferait chercher longtemps un point
         // qui n'existe pas. Le compte rendu dit ce qui EST, pas ce qui a été tenté.
@@ -179,7 +181,7 @@ class RapatriementCarreTest {
                                 "un-tiers",
                                 List.of(new PointVigieChiro("Z41", 43.51, 5.45))))));
 
-        rapatriement.rapatrier(CARRE, Protocole.STANDARD);
+        rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
 
         // Un numéro de carré ne désigne pas un site : le même carré peut exister en Point Fixe, en
         // Pédestre et en Routier. Se rattacher au premier venu enverrait la nuit au mauvais endroit -
@@ -196,7 +198,8 @@ class RapatriementCarreTest {
                 .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
                         "routier", "Vigie-chiro - Routier-" + CARRE, true, CARRE, "un-tiers", List.of()))));
 
-        RapatriementCarre.Resultat resultat = rapatriement.rapatrier(CARRE, Protocole.STANDARD);
+        RapatriementCarre.Resultat resultat =
+                rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
 
         // Se taire ou dire « inexistant » serait faux : le carré est bien là, c'est le protocole qui ne
         // suit pas. L'utilisateur doit pouvoir comprendre pourquoi son numéro « existe » sans être
@@ -215,7 +218,7 @@ class RapatriementCarreTest {
                 .thenReturn(ReponseApi.succes(
                         List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "un-tiers"))));
 
-        rapatriement.rapatrier(CARRE, Protocole.RECHERCHE);
+        rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.RECHERCHE, null, null));
 
         // « PointFixeRecherche » n'est pas un autre protocole côté plateforme : c'est une variante LOCALE
         // (R3/R4 muettes, dates libres). Le rapatriement doit donc respecter ce que l'utilisateur a choisi
@@ -228,7 +231,7 @@ class RapatriementCarreTest {
     void un_carre_introuvable_ne_cree_rien() {
         when(client.chercherCarre("999999")).thenReturn(ReponseApi.succes(List.of()));
 
-        assertThat(rapatriement.rapatrier("999999", Protocole.STANDARD))
+        assertThat(rapatriement.rapatrier(new SouhaitDeclaration("999999", Protocole.STANDARD, null, null)))
                 .isInstanceOf(RapatriementCarre.Resultat.Inexistant.class);
         assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
     }
@@ -238,8 +241,41 @@ class RapatriementCarreTest {
     void hors_connexion_rien_n_est_cree() {
         when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.nonConnecte());
 
-        assertThat(rapatriement.rapatrier(CARRE, Protocole.STANDARD))
+        assertThat(rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null)))
                 .isInstanceOf(RapatriementCarre.Resultat.Indisponible.class);
         assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3806 : ce que l'utilisateur a saisi survit au rapatriement")
+    void la_saisie_de_l_utilisateur_survit() {
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(
+                        List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "un-tiers"))));
+
+        rapatriement.rapatrier(
+                new SouhaitDeclaration(CARRE, Protocole.STANDARD, "Étang de la Tuilière", "Accès par le chemin"));
+
+        // L'utilisateur avait rempli le formulaire avant de découvrir que le carré existait déjà. Écraser
+        // son nom par le titre de la plateforme - « Vigiechiro - Point Fixe-130711 » - lui reprendrait ce
+        // qu'il vient d'écrire, et le remplacerait par un libellé technique.
+        Site local = siteDao.findByUtilisateur(ID_USER).getFirst();
+        assertThat(local.nomConvivial()).isEqualTo("Étang de la Tuilière");
+        assertThat(local.commentaire()).isEqualTo("Accès par le chemin");
+    }
+
+    @Test
+    @DisplayName("#3806 : sans saisie, le site prend le titre de la plateforme")
+    void sans_saisie_le_titre_plateforme_sert_de_nom() {
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(
+                        List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "un-tiers"))));
+
+        rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
+
+        // Un nom vaut mieux que pas de nom : à défaut de celui de l'utilisateur, celui de la plateforme
+        // dit au moins de quel carré et de quel protocole il s'agit.
+        assertThat(siteDao.findByUtilisateur(ID_USER).getFirst().nomConvivial())
+                .isEqualTo("Vigiechiro - Point Fixe-" + CARRE);
     }
 }

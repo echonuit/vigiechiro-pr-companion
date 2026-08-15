@@ -8,6 +8,7 @@ import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
@@ -196,7 +197,9 @@ public class SiteEditViewModel {
         if (rapatriement.isEmpty() || !carreValide.get()) {
             return new RapatriementCarre.Resultat.Indisponible();
         }
-        return rapatriement.get().rapatrier(numeroCarre.get(), protocole.get());
+        return rapatriement
+                .get()
+                .rapatrier(new SouhaitDeclaration(numeroCarre.get(), protocole.get(), nom.get(), commentaire.get()));
     }
 
     /// Affiche le compte rendu du rapatriement, **sur le fil JavaFX**.
