@@ -10,11 +10,13 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
+import fr.univ_amu.iut.sites.model.Site;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -220,5 +222,45 @@ class SiteEditRechercheCarreTest {
         assertThat(viewModel.carreRecuperable().get())
                 .as("le verdict s'efface avec le numéro, le geste qu'il ouvrait aussi")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#3806 : en déclaration, « Créer » se ferme quand le carré existe déjà là-bas")
+    void en_declaration_creer_se_ferme_si_le_carre_existe() {
+        SiteEditViewModel viewModel = avecRecherche();
+        viewModel.numeroCarreProperty().set(CARRE);
+        assertThat(viewModel.peutEnregistrer().get()).isTrue();
+
+        when(client.chercherCarre(CARRE))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
+        verifier(viewModel);
+
+        // Déclarer ici produirait un second site local pour le même carré, sans rattachement : la panne
+        // d'origine de #3458. Le geste juste est à côté, et le message le nomme.
+        assertThat(viewModel.peutEnregistrer().get())
+                .as("on empêche plutôt que de laisser refaire l'erreur")
+                .isFalse();
+
+        viewModel.numeroCarreProperty().set("640381");
+        assertThat(viewModel.peutEnregistrer().get())
+                .as("le verdict s'efface avec le numéro : plus rien ne s'oppose à la déclaration")
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("#3806 : en ÉDITION, le même verdict n'empêche rien : ce site existe, c'est normal")
+    void en_edition_le_verdict_n_empeche_rien() {
+        SiteEditViewModel viewModel = avecRecherche();
+        viewModel.preparerEdition(new Site(7L, CARRE, "Étang", Protocole.STANDARD, null, "2026-01-01", "u-1"));
+        when(client.chercherCarre(CARRE))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
+
+        verifier(viewModel);
+
+        // Un site édité est déjà déclaré : que la plateforme le connaisse aussi est le cas NOMINAL.
+        // Fermer « Enregistrer » ici interdirait de corriger un nom ou un commentaire.
+        assertThat(viewModel.peutEnregistrer().get()).isTrue();
     }
 }

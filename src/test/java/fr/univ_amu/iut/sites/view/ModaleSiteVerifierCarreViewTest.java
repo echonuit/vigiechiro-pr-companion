@@ -296,4 +296,21 @@ class ModaleSiteVerifierCarreViewTest {
                 .as("le geste reste à portée : la panne peut être passagère")
                 .isFalse();
     }
+
+    @Test
+    @DisplayName("#3806 : « Créer » se ferme, et son infobulle dit POURQUOI et quoi faire")
+    void creer_se_ferme_avec_son_motif(FxRobot robot) {
+        enCreation(robot);
+        verdictCarrePresent(robot);
+
+        Button creer = robot.lookup("#boutonValider").queryAs(Button.class);
+        assertThat(creer.isDisabled())
+                .as("déclarer ici referait le doublon local qui a produit le dépôt manqué")
+                .isTrue();
+        // Un gris sans motif est un défaut ; un gris au MAUVAIS motif en est un pire : le carré a bien
+        // ses six chiffres, dire le contraire enverrait l'utilisateur corriger ce qui est déjà juste.
+        assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeValider").queryAs(StackPane.class)))
+                .contains("existe déjà")
+                .doesNotContain("6 chiffres");
+    }
 }

@@ -5,11 +5,13 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -65,6 +67,8 @@ class RapatriementCarreTest {
     private SiteDao siteDao;
     private PointDao pointDao;
     private LienVigieChiroDao liens;
+    private SiteTiersDao siteTiers;
+    private ServiceSites service;
     private RapatriementCarre rapatriement;
 
     @BeforeEach
@@ -75,7 +79,7 @@ class RapatriementCarreTest {
         siteDao = new SiteDao(source);
         pointDao = new PointDao(source);
         PointCommuneDao communeDao = new PointCommuneDao(source);
-        ServiceSites service = new ServiceSites(
+        service = new ServiceSites(
                 siteDao,
                 pointDao,
                 new PassageDao(source),
@@ -83,13 +87,14 @@ class RapatriementCarreTest {
                 communeDao,
                 () -> {});
         liens = new LienVigieChiroDao(source);
+        siteTiers = new SiteTiersDao(source);
         rapatriement = new RapatriementCarre(
                 client,
                 new ImportSiteDistant(
                         siteDao,
                         service,
                         liens,
-                        new SiteTiersDao(source),
+                        siteTiers,
                         ID_USER,
                         new ServiceCommunes(pointDao, communeDao, position -> Optional.empty())));
     }
@@ -277,5 +282,124 @@ class RapatriementCarreTest {
         // dit au moins de quel carré et de quel protocole il s'agit.
         assertThat(siteDao.findByUtilisateur(ID_USER).getFirst().nomConvivial())
                 .isEqualTo("Vigiechiro - Point Fixe-" + CARRE);
+    }
+
+    @Test
+    @DisplayName("#3806 : les trois comptes rendus disent ce qui vient de se passer, et quoi faire ensuite")
+    void les_comptes_rendus_disent_quoi_faire() {
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(
+                        List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "un-tiers"))));
+        RapatriementCarre.Resultat rapatrie =
+                rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
+
+        // Ce que l'utilisateur lit est le produit : ces messages sont la seule chose qui lui dise que son
+        // carré est rattaché, donc que son dépôt passera.
+        assertThat(rapatrie.message()).contains(CARRE).contains("1 point").contains("déposer");
+        assertThat(rapatrie.severite()).isEqualTo(Severite.SUCCES);
+
+        when(client.chercherCarre("999999")).thenReturn(ReponseApi.succes(List.of()));
+        RapatriementCarre.Resultat inexistant =
+                rapatriement.rapatrier(new SouhaitDeclaration("999999", Protocole.STANDARD, null, null));
+        assertThat(inexistant.message()).contains("n'existe pas").contains("portail");
+        assertThat(inexistant.severite()).isEqualTo(Severite.INFO);
+
+        when(client.chercherCarre("640380"))
+                .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
+                        "routier", "Vigie-chiro - Routier-640380", true, "640380", "un-tiers", List.of()))));
+        RapatriementCarre.Resultat autre =
+                rapatriement.rapatrier(new SouhaitDeclaration("640380", Protocole.STANDARD, null, null));
+        assertThat(autre.message()).contains("pas en Point Fixe").contains("Routier");
+        assertThat(autre.severite()).isEqualTo(Severite.AVERTISSEMENT);
+    }
+
+    @Test
+    @DisplayName("#3806 : sur un carré DÉJÀ déclaré à la main, on complète sans écraser")
+    void sur_un_carre_deja_declare_on_complete() {
+        Site local = service.creerSite(CARRE, "Mon carré", Protocole.STANDARD, null, ID_USER);
+        service.ajouterPoint(local.id(), "Z41", 43.9, 5.9, "posé à la main");
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(List.of(siteDistant(
+                        List.of(
+                                new PointVigieChiro("Z41", 43.51, 5.45),
+                                new PointVigieChiro("Z1", 43.52, 5.46),
+                                new PointVigieChiro("Z2", 43.53, 5.47)),
+                        "un-tiers"))));
+
+        RapatriementCarre.Resultat resultat =
+                rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
+
+        // C'est le parcours réel : l'observateur avait créé son carré et son point à la main, faute de
+        // pouvoir les récupérer. Le rapatriement doit le rattacher et compléter ce qui manque, SANS
+        // déplacer le point qu'il a positionné lui-même.
+        assertThat(pointDao.findBySite(local.id()))
+                .extracting(PointDEcoute::code)
+                .containsExactlyInAnyOrder("Z41", "Z1", "Z2");
+        assertThat(pointDao.findBySite(local.id()).stream()
+                        .filter(point -> "Z41".equals(point.code()))
+                        .findFirst()
+                        .orElseThrow()
+                        .latitude())
+                .as("le point saisi à la main garde SA position")
+                .isEqualTo(43.9);
+        assertThat(resultat)
+                .asInstanceOf(
+                        org.assertj.core.api.InstanceOfAssertFactories.type(RapatriementCarre.Resultat.Rapatrie.class))
+                .extracting(RapatriementCarre.Resultat.Rapatrie::points)
+                .as("deux points ajoutés, pas trois : Z41 était déjà là")
+                .isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("#3806 : un carré qui appartient à un tiers est marqué comme tel")
+    void un_carre_de_tiers_est_marque() {
+        when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("moi", "Testeur", "Observateur")));
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(
+                        List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "quelqu-un-d-autre"))));
+
+        rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
+
+        // Le marquage décide de la suite : les nuits d'un carré de tiers sont des participations
+        // opportunistes (#2525). C'est le cas MAJORITAIRE - les possesseurs de carrés sont peu nombreux -
+        // donc le rapatriement le pose comme le fait la synchronisation périodique.
+        Site local = siteDao.findByUtilisateur(ID_USER).getFirst();
+        assertThat(siteTiers.estTiers(local.id())).isTrue();
+    }
+
+    @Test
+    @DisplayName("#3806 : avec plusieurs carrés locaux, le compte rendu parle du BON")
+    void avec_plusieurs_carres_locaux_le_bon_est_rendu() {
+        service.creerSite("640380", "Un autre carré", Protocole.STANDARD, null, ID_USER);
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(
+                        List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "un-tiers"))));
+
+        RapatriementCarre.Resultat resultat =
+                rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
+
+        // La fiche qui s'ouvre derrière est celle du site rendu ici : se tromper de site enverrait
+        // l'utilisateur sur un carré qu'il n'a pas demandé, avec un compte rendu qui parle d'un autre.
+        assertThat(resultat)
+                .asInstanceOf(
+                        org.assertj.core.api.InstanceOfAssertFactories.type(RapatriementCarre.Resultat.Rapatrie.class))
+                .extracting(rapatrie -> rapatrie.site().numeroCarre())
+                .isEqualTo(CARRE);
+    }
+
+    @Test
+    @DisplayName("#3806 : profil illisible : on ne présume PAS que le carré est celui d'un tiers")
+    void profil_illisible_pas_de_presomption_de_tiers() {
+        when(client.moi()).thenReturn(ReponseApi.nonConnecte());
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(
+                        List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "quelqu-un-d-autre"))));
+
+        rapatriement.rapatrier(new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null));
+
+        // Marquer « carré d'un tiers » sans savoir qui l'on est rendrait toutes les nuits opportunistes
+        // sur la foi d'une comparaison avec rien. Sans preuve, on ne présume pas (#2525).
+        Site local = siteDao.findByUtilisateur(ID_USER).getFirst();
+        assertThat(siteTiers.estTiers(local.id())).isFalse();
     }
 }

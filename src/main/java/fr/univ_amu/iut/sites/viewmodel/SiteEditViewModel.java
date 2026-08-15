@@ -103,6 +103,14 @@ public class SiteEditViewModel {
     /// la plateforme. Absent, le geste n'est pas offert et la déclaration reste entière.
     private final Optional<RapatriementCarre> rapatriement;
 
+    /// La modale sert à **déclarer** (et non à modifier) : la distinction décide de ce qu'un verdict
+    /// « ce carré existe déjà » entraîne. En déclaration il ferme l'enregistrement ; en édition il ne
+    /// veut rien dire, puisque le site édité est par construction déjà déclaré.
+    private final ReadOnlyBooleanWrapper enCreation = new ReadOnlyBooleanWrapper(this, "enCreation", true);
+
+    /// Le formulaire est enregistrable : carré valide, et pas de carré à récupérer à la place (#3806).
+    private final BooleanBinding peutEnregistrer;
+
     public SiteEditViewModel(
             ServiceSites service,
             LienVigieChiroDao liens,
@@ -124,6 +132,10 @@ public class SiteEditViewModel {
         // ⚠️ Le jumeau `PointEditViewModel` n'a pas ce besoin : son contrôle du carré STOC est
         // **automatique** et se relance à chaque frappe. Ici le geste est manuel - une requête réseau par
         // clic -, donc c'est l'effacement qui tient le rôle.
+        // Composition d'observables plutôt qu'un calcul : chaque dépendance est déclarée par
+        // construction, là où un `createBooleanBinding` obligerait à les énumérer sans que rien ne
+        // vérifie l'énumération (ADR 3547).
+        peutEnregistrer = carreValide.and(enCreation.and(carreRecuperable).not());
         numeroCarre.addListener((observable, avant, apres) -> {
             retourCarreExistant.set(RetourOperation.AUCUN);
             carreRecuperable.set(false);
@@ -216,6 +228,7 @@ public class SiteEditViewModel {
     /// Configure la modale en **mode déclaration** d'un nouveau site.
     public void preparerCreation() {
         siteEnEdition = null;
+        enCreation.set(true);
         // Le verdict du carré n'est pas effacé ici : vider le numéro juste en dessous s'en charge, par le
         // même chemin que toute autre correction de saisie. Un second effacement, écrit à la main, aurait
         // dit la même chose une seconde fois - et PIT l'a signalé en le supprimant sans faire rougir
@@ -233,6 +246,7 @@ public class SiteEditViewModel {
     /// Configure la modale en **mode édition** : champs pré-remplis depuis le site existant.
     public void preparerEdition(Site site) {
         siteEnEdition = Objects.requireNonNull(site, "site");
+        enCreation.set(false);
         numeroCarre.set(site.numeroCarre());
         nom.set(ouVide(site.nomConvivial()));
         protocole.set(site.protocole());
@@ -310,7 +324,24 @@ public class SiteEditViewModel {
     /// Le bouton d'enregistrement n'est ouvert que si le carré est valide (#790) : on **empêche** au lieu
     /// d'avertir après coup.
     public BooleanBinding peutEnregistrer() {
-        return carreValide;
+        return peutEnregistrer;
+    }
+
+    /// Le motif du grisage d'« Enregistrer », ou vide s'il n'est pas grisé (#1970, #3806). Deux causes
+    /// distinctes, deux phrases : un carré incomplet ne se corrige pas comme un carré déjà pris.
+    public String motifEnregistrementFerme() {
+        if (!carreValide.get()) {
+            return "Renseignez d'abord un numéro de carré à 6 chiffres.";
+        }
+        if (enCreation.get() && carreRecuperable.get()) {
+            return "Ce carré existe déjà sur Vigie-Chiro : récupérez-le plutôt que de le redéclarer.";
+        }
+        return "";
+    }
+
+    /// La modale est-elle en **déclaration** ? (#3806)
+    public ReadOnlyBooleanProperty enCreation() {
+        return enCreation.getReadOnlyProperty();
     }
 
     /// Le numéro de carré a ses **six chiffres** : il y a donc quelque chose à chercher sur la

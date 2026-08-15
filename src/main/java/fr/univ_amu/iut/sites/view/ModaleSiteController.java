@@ -209,11 +209,18 @@ public class ModaleSiteController {
         boutonValider.disableProperty().bind(viewModel.peutEnregistrer().not());
         // Le motif du grisage se dit ici et non dans un message d'erreur (#1970) : la garde du ViewModel
         // teste EXACTEMENT ce prédicat, donc son message n'aurait jamais pu être lu par personne.
+        // Le motif du gris a maintenant DEUX causes - carré incomplet, ou carré déjà pris là-bas - et
+        // elles ne se corrigent pas de la même façon. Le ViewModel les distingue ; l'infobulle se
+        // recalcule sur ce qui les fait changer (#1970, #3806).
         IndicateurBlocage.expliquer(
                 enveloppeValider,
-                Bindings.when(viewModel.peutEnregistrer())
-                        .then("Enregistrer ce site de suivi.")
-                        .otherwise("Renseignez d'abord un numéro de carré à 6 chiffres."));
+                Bindings.createStringBinding(
+                        () -> viewModel.peutEnregistrer().get()
+                                ? "Enregistrer ce site de suivi."
+                                : viewModel.motifEnregistrementFerme(),
+                        viewModel.peutEnregistrer(),
+                        viewModel.carreRecuperable(),
+                        viewModel.enCreation()));
         ValidationFormulaire.marquerInvalide(champCarre, viewModel.carreInvalideEtSaisi());
 
         // « Ce carré existe-t-il déjà ? » (#3458). Le geste n'apparaît que si la recherche est installée
