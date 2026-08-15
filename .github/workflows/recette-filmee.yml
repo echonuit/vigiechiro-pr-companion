@@ -105,6 +105,7 @@ jobs:
           # ou vide dit que le câblage a lâché, là où le film, lui, sortirait pareil.
           path: |
             target/recette/*.mkv
+            target/recette/clips/
             target/recette-filmee/reperes.tsv
           # Rétention bornée, décidée en séance : la vidéo se revoit un temps, puis s'efface.
           # Rien ne part dans git.

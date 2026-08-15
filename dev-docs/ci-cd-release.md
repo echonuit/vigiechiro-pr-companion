@@ -1024,6 +1024,34 @@ produit un journal vide, et un journal vide ressemble à une séance où aucun t
 C'est aussi pourquoi le journal part dans l'artefact avec le film : depuis la CI, c'est le seul
 moyen de constater que l'extension a bien été chargée. Le film, lui, sortirait pareil.
 
+### Le montage : un clip par test, un index par cas (#3774)
+
+L'artefact contient `clips/`, un extrait par test cité, et son `index.md`, qui se lit **par cas**.
+Un cas couvert par plusieurs tests a plusieurs lignes ; le clip, lui, est taillé sur le **test**,
+parce que c'est ce que la JVM sait borner.
+
+⚠️ **L'index ne donne aucune position dans le film livré**, et c'est volontaire : ce film est
+écourté par luminance, si bien qu'une position calculée sur le brut y serait fausse. Le clip est le
+point d'entrée, pas un horodatage.
+
+**`t0` se mesure, il ne se suppose pas.** Le journal consigne des instants d'horloge, la vidéo se
+compte depuis son début, et l'instant de l'image 0 n'est pas celui où l'on a lancé `ffmpeg` : il
+s'initialise, et cette latence varie. On la rend sans objet en prenant l'heure au moment où l'on
+demande l'arrêt, puis en retranchant la durée du fichier obtenu.
+
+**Le contrôle porte sur la couverture, pas sur la clarté des clips.** Exiger qu'un clip soit clair
+ferait rougir un test de ViewModel, qui cite des cas et n'ouvre légitimement aucune fenêtre. Ce qui
+est exigé : les images où quelque chose est à l'écran doivent tomber **dans** les plages calculées.
+Un `t0` faux les fait toutes tomber à côté.
+
+| Sur le film fabriqué de l'auto-test | Couverture |
+|---|---|
+| repères justes | 1,00 |
+| repères décalés de 3 s | 0,00 |
+
+Un montage refusé **ne laisse aucun clip** et fait échouer le lancement, même quand les tests sont
+verts - c'est justement le cas où personne n'irait vérifier.
+
 ```bash
 gh workflow run recette-filmee.yml                                  # le passage normal
 gh workflow run recette-filmee.yml -f sans_gestionnaire_de_fenetres=true   # le témoin
