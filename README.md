@@ -124,6 +124,24 @@ ensuite la version en place. Le badge `winget` en haut de page dit la version qu
 n'y poussons que les versions qui apportent quelque chose à l'utilisateur, elle peut donc être un peu
 en retrait de la dernière release.
 
+Sous **Linux**, un dépôt Flatpak que nous hébergeons nous-mêmes évite lui aussi le téléchargement manuel :
+
+```bash
+flatpak remote-add --user --if-not-exists vigiechiro-companion \
+    https://flatpak.echonuit.fr/fr.echonuit.VigieChiroCompanion.flatpakrepo
+flatpak install --user vigiechiro-companion fr.echonuit.VigieChiroCompanion
+```
+
+Pour lancer, puis plus tard mettre à jour :
+
+```bash
+flatpak run fr.echonuit.VigieChiroCompanion
+flatpak update --user fr.echonuit.VigieChiroCompanion
+```
+
+Même logique que pour winget : seules les versions qui apportent quelque chose à l'utilisateur sont
+poussées sur ce dépôt, pas nécessairement la toute dernière de la page des Releases.
+
 La prise en main pas à pas est dans la
 [documentation utilisateur](https://companion.echonuit.fr/prise-en-main/).
 

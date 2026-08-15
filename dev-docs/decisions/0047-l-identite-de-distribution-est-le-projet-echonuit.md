@@ -1,7 +1,7 @@
 # ADR 0047 - L'identité de distribution est le projet Echonuit, distincte de l'auteur et de la plateforme
 
 - **Statut** : Accepté - 2026-07-21
-- **Chantier** : #2240 (issu de #2213 winget, #2111 Flathub)
+- **Chantier** : #2240 (issu de #2213 winget, #2111 Flatpak)
 - **Vérification** : certaine - `DecisionsRespecteesTest#l_installeur_porte_l_identite_echonuit`
 - **Fait évoluer** : [ADR 0045](0045-l-upgradecode-windows-est-une-constante-d-identite.md), dont les exemples d'identifiant winget sont remplacés ; prolonge la logique de #2108.
 
@@ -19,7 +19,7 @@ naturalistes. Trois identités s'y superposaient, mal démêlées :
 
 Deux faits rendaient le moment décisif :
 
-1. **Rien n'était encore soumis** (ni à winget-pkgs, ni à Flathub). Or un `PackageIdentifier` winget et
+1. **Rien n'était encore publié** (ni sur winget-pkgs, ni sur un dépôt Flatpak). Or un `PackageIdentifier` winget et
    un app-id Flatpak sont **permanents** une fois publiés : les changer après coup casse les
    installations existantes. C'était la dernière fenêtre pour les fixer sans coût.
 2. Le produit ne s'appelait plus tout à fait ce qu'il faisait : « PR » (Passive Recorder) était devenu
@@ -38,10 +38,10 @@ passif.
 | winget | `Echonuit.VigieChiroCompanion` |
 | `--vendor` / développeur affiché | Echonuit |
 
-**L'app-id s'ancre sur le domaine `echonuit.fr`, pas sur GitHub.** `fr.echonuit.*` se vérifie sur
-Flathub par un jeton `https://echonuit.fr/.well-known/org.flathub.VerifiedApps.txt`, non par le compte
-de forge. Conséquence voulue : **l'identité de paquet ne dépend pas du nom de l'organisation GitHub**,
-qui peut donc être renommée ou déplacée plus tard sans retoucher ni resoumettre les identifiants.
+**L'app-id s'ancre sur le domaine `echonuit.fr`, pas sur GitHub.** `fr.echonuit.*` se vérifie par un
+jeton hébergé sur le domaine, non par le compte de forge. Conséquence voulue : **l'identité de paquet
+ne dépend pas du nom de l'organisation GitHub**, qui peut donc être renommée ou déplacée plus tard sans
+retoucher ni republier les identifiants.
 
 **L'auteur reste crédité.** Le copyright appartient à la personne physique (Sébastien Nedjar, pied du
 README) ; l'éditeur/développeur est le projet (Echonuit). Les deux ne se contredisent pas : l'un est le
@@ -56,7 +56,7 @@ motif passe de « PR Companion » à « Companion »).
 
 **Ce qu'on gagne.** Une identité cohérente et non personnelle, invisible dans l'IHM (l'utilisateur voit
 le nom du produit, pas l'app-id), et **découplée de l'org GitHub** : le renommage d'org devient un
-geste libre, sans effet sur winget ni Flathub.
+geste libre, sans effet sur winget ni sur le dépôt Flatpak.
 
 **Ce qui est reporté (PR B).** Le `--name` de jpackage reste « VigieChiro » : les **noms d'artefacts**
 (`VigieChiro-*.msi`…), les chemins d'installation, l'entrée « Ajout/Suppression de programmes » et
@@ -66,8 +66,8 @@ n'est pas faite, l'entrée ARP (« VigieChiro ») ne correspondra pas au `Packag
 (« VigieChiro Companion ») : à résorber **avant** la soumission winget.
 
 **Ce qui reste à faire hors dépôt.** Créer l'org GitHub `echonuit` et configurer `echonuit.fr` (avant
-la soumission Flathub). Les URLs de la fiche AppStream restent sur `IUTInfoAix-S201` jusqu'à ce que le
-dépôt bouge.
+la mise en place du dépôt Flatpak). Les URLs de la fiche AppStream restent sur `IUTInfoAix-S201`
+jusqu'à ce que le dépôt bouge.
 
 **Ce qu'on n'a pas fait, et qu'on pourrait.** Le composant `audio-view` garde son groupId Maven
 `fr.nedjar.vigiechiro` (le domaine personnel de l'auteur). Le migrer sous `fr.echonuit` pour une

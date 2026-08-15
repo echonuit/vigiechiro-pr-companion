@@ -24,6 +24,12 @@ Le geste dépend de la façon dont vous avez installé :
     winget upgrade Echonuit.VigieChiroCompanion
     ```
 
+=== "Installé par Flatpak (Linux)"
+
+    ```bash
+    flatpak update --user fr.echonuit.VigieChiroCompanion
+    ```
+
 === "Installeur téléchargé"
 
     Reprenez l'installeur de la nouvelle version sur la page
@@ -36,7 +42,7 @@ Le geste dépend de la façon dont vous avez installé :
 
 !!! note "Vos données ne sont jamais touchées"
     La base et les journaux vivent **ailleurs**, dans votre dossier personnel : une mise à jour
-    remplace le programme, pas votre travail. C'est vrai des trois gestes ci-dessus, et même d'une
+    remplace le programme, pas votre travail. C'est vrai des quatre gestes ci-dessus, et même d'une
     désinstallation.
 
 ## Sites et import

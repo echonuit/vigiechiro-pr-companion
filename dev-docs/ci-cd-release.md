@@ -344,10 +344,9 @@ le check y rapportera.
 ## Flatpak (#2111)
 
 Le manifeste vit dans [`flatpak/`](https://github.com/echonuit/vigiechiro-pr-companion/tree/main/flatpak),
-qui porte aussi le mode d'emploi de construction et de soumission. Trois points valent d'être connus
-d'ici :
+qui porte aussi le mode d'emploi de construction locale. Trois points valent d'être connus d'ici :
 
-**Il extrait le `.deb` publié**, il ne construit pas depuis les sources. Les builds Flathub n'ont
+**Il extrait le `.deb` publié**, il ne construit pas depuis les sources. Les builds Flatpak n'ont
 **aucun réseau**, donc une résolution Maven y est impossible sans vendorer chaque dépendance
 transitive. Même choix que Gluon Scene Builder, pour la même raison - et plus simple chez nous, le
 fat-jar embarquant déjà JavaFX.
@@ -355,8 +354,9 @@ fat-jar embarquant déjà JavaFX.
 **Il consomme donc directement le travail de #2107** : le `.deb` **et son empreinte SHA-256** publiée
 sont exactement ce que la source du manifeste demande.
 
-**La montée de version est automatique** : `x-checker-data` fait ouvrir la PR de mise à jour par le
-robot de Flathub. Publier une version ne demande aucun geste côté paquet.
+**La montée de version est automatique** : le bloc `x-checker-data` du manifeste est lu par
+`flatpak-external-data-checker` directement dans `flatpak.yml`, qui propose la mise à jour une fois le
+paquet reconstruit et démarré avec succès. Publier une version ne demande aucun geste côté paquet.
 
 !!! tip "Le `.desktop` de jpackage est invalide"
     jpackage écrit `Categories=Unknown`, valeur que `desktop-file-validate` refuse. Le manifeste la
@@ -364,44 +364,51 @@ robot de Flathub. Publier une version ne demande aucun geste côté paquet.
     fichier à chaque appel et échouerait avant d'y arriver. Le `.deb` installé normalement, lui, garde
     cette catégorie fautive.
 
-### Dépôt Flatpak auto-hébergé (#9760)
+### Dépôt Flatpak auto-hébergé (#2111)
 
-Le paquet est soumis à Flathub depuis #2191, sans être encore accepté : leur revue exige un point de
-contact humain avant la première fusion, et une rotation de mainteneurs interne n'y change rien. En
-attendant, `flatpak.yml` peut publier le **même** paquet - construit et démarré par la même vérification
-- dans un dépôt Flatpak que ce projet héberge lui-même, indépendant de Flathub.
+`flatpak.yml` publie le paquet - construit et démarré par la même vérification - dans un dépôt Flatpak
+que ce projet héberge lui-même. C'est le seul canal Flatpak du projet.
 
-**Mécanisme** : la construction de `flatpak-builder` exporte désormais vers `--repo`, en plus du
-`--install` local qui sert au démarrage réel. C'est ce dépôt-là, déjà éprouvé par le pas qui le précède,
-qu'un `.flatpakrepo` généré à la volée puis
+**En production depuis le 2026-08-15** : `https://flatpak.echonuit.fr/fr.echonuit.VigieChiroCompanion.flatpakrepo`
+sert un dépôt **signé** (clé `1BA6A82DA9213B177B160E56CD450A9383707B17`), reconstruit à chaque
+`workflow_dispatch` de `flatpak.yml`. Installation côté utilisateur documentée dans la
+[documentation utilisateur](https://companion.echonuit.fr/prise-en-main/).
+
+**Mécanisme** : la construction de `flatpak-builder` exporte vers `--repo`, en plus du `--install` local
+qui sert au démarrage réel. C'est ce dépôt-là, déjà éprouvé par le pas qui le précède, qu'un
+`.flatpakrepo` généré à la volée puis
 [`peaceiris/actions-gh-pages`](https://github.com/peaceiris/actions-gh-pages) publient vers
 `echonuit/flatpak` (branche `gh-pages`, domaine `flatpak.echonuit.fr`) - le même patron que
 `companion`/`companion-dev`/`brief` dans [docs.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml).
+`flatpak.yml` ne tourne que sur `workflow_dispatch` : fusionner un correctif ne republie rien, il faut un
+run manuel pour le prouver.
 
-**Dormant par construction**, comme la publication de la doc : tant que la variable
-`ENABLE_FLATPAK_REPO` n'est pas à `true` ou que le secret `FLATPAK_DEPLOY_TOKEN` n'est pas posé, ces
-deux pas s'effacent en `::notice::` plutôt que de rougir. Pour l'activer :
+Les deux pas de publication (repo ostree + `.flatpakrepo`) restent gardés par la variable
+`ENABLE_FLATPAK_REPO` et le secret `FLATPAK_DEPLOY_TOKEN` (PAT `contents: write` sur `echonuit/flatpak`
+seul) : absents, ils s'effacent en `::notice::` plutôt que de rougir - mais les deux sont posés et actifs
+en production.
 
-1. Créer le dépôt de publication `echonuit/flatpak` (vide, `gh-pages` sera créée par l'action) et pointer
-   `flatpak.echonuit.fr` dessus (CNAME + enregistrement DNS, comme les trois domaines de doc).
-2. Poser un PAT avec `contents: write` sur ce seul dépôt dans le secret `FLATPAK_DEPLOY_TOKEN`.
-3. Poser la variable de dépôt `ENABLE_FLATPAK_REPO=true`.
-
-**Signature GPG** : la clé (ed25519, générée hors CI le 2026-08-15) est déjà câblée -
+**Signature GPG** : la clé (ed25519, générée hors CI le 2026-08-15) est câblée en deux parties -
 `FLATPAK_GPG_KEY_ID` et la clé publique `FLATPAK_GPG_PUBLIC_KEY_B64` vivent en clair dans `flatpak.yml`
-(non sensibles : c'est la partie publique). La partie **privée**, elle, n'existe nulle part dans ce
-dépôt ni dans une conversation - uniquement dans le secret `FLATPAK_DEPLOY_TOKEN`-adjacent
-`FLATPAK_GPG_KEY` (armored, encodé en base64), à poser en plus des trois étapes ci-dessus pour activer
-la signature :
+(non sensibles : c'est la partie publique). La partie **privée** n'existe nulle part dans ce dépôt ni
+dans une conversation - uniquement dans le secret `FLATPAK_GPG_KEY` (armored, encodé en base64, sortie
+de `gpg --export-secret-key --armor <ID> | base64 -w0`), posé et actif. Tant que ce secret est absent,
+`garde-flatpak-signature` retombe en silence sur le comportement non signé (`NoGpgVerify=true`,
+`flatpak-builder` sans `--gpg-sign`) - même patron d'inertie que la publication elle-même. Une fois posé,
+la construction signe l'export (`--gpg-sign`/`--gpg-homedir`) et le `.flatpakrepo` généré embarque
+`GPGKey=` au lieu de `NoGpgVerify=true`.
 
-4. Poser le secret `FLATPAK_GPG_KEY` : sortie de
-   `gpg --export-secret-key --armor <ID> | base64 -w0` pour la clé `1BA6A82DA9213B177B160E56CD450A9383707B17`.
+**Deux pannes ont retardé le premier run réel, toutes deux corrigées avant la mise en production** :
 
-Tant que ce secret est absent, `garde-flatpak-signature` retombe en silence sur le comportement non
-signé (`NoGpgVerify=true`, `flatpak-builder` sans `--gpg-sign`) - même patron d'inertie que les trois
-étapes précédentes. Une fois posé, la construction signe l'export (`--gpg-sign`/`--gpg-homedir`) et le
-`.flatpakrepo` généré embarque `GPGKey=` au lieu de `NoGpgVerify=true`, sans qu'aucune autre étape n'ait
-à changer.
+- `base64 -d` plantait sous `set -euo pipefail` à cause d'un artefact non-base64 en fin de secret
+  `FLATPAK_GPG_KEY`, alors que l'import GPG lui-même avait déjà réussi sur les données reçues. Corrigé
+  avec `base64 -d -i` (`--ignore-garbage`).
+- `flatpak-builder --gpg-sign` ouvrait un pinentry interactif pour déverrouiller la clé importée, et
+  plantait avec `Pinentry: Inappropriate ioctl for device` faute de terminal de contrôle sur le runner.
+  La clé de signature CI doit rester **sans passphrase** : sa protection vient du contrôle d'accès au
+  secret GitHub, pas d'un second secret interactif qu'aucune étape ne pourrait fournir. `gpg-agent.conf`/
+  `gpg.conf` configurent quand même `pinentry-mode loopback` avant l'import, en garde-fou si une future
+  clé en portait une par erreur.
 
 ## winget (#2213)
 
@@ -582,8 +589,7 @@ gh api repos/<proprietaire>/<action>/git/tags/<sha> --jq .object.sha
 journée. Ces versions n'étaient pas vides (95 % de `feat` et `fix` sur les 120 dernières) mais
 **atomisées** : une version = un changement, donc aucune validable par la recette (#1363) ni
 descriptible. La cadence pesait par ailleurs sur une décision en aval : elle compte parmi les raisons du
-déclenchement manuel de winget et Flathub - sans en être la principale, le paquet n'étant pas encore
-accepté sur Flathub (#2191).
+déclenchement manuel de winget, sans en être la principale.
 
 Détail et alternatives écartées : [ADR 2744](decisions/2744-la-publication-part-a-heure-fixe.md).
 

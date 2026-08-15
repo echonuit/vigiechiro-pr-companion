@@ -78,7 +78,7 @@ Ce sont des **interrupteurs**, pas des secrets : `gh variable list` les montre.
 | Où | Ce qui en dépend | Comment on y accède |
 |---|---|---|
 | **Plateforme VigieChiro** | le contrat API, les sondes live, l'import et le dépôt réels | compte naturaliste sur le site, rôle Observateur suffisant en lecture |
-| **Flathub** | **rien pour l'instant** : le paquet n'y est pas (#2191) | la soumission a été fermée par leur robot, checklist incomplète |
+| **Dépôt Flatpak auto-hébergé** | la distribution Linux : `fr.echonuit.VigieChiroCompanion`, en ligne depuis le 2026-08-15 | `echonuit/flatpak` (`gh-pages`) + `FLATPAK_DEPLOY_TOKEN` et `FLATPAK_GPG_KEY` ; `flatpak.yml` publie et met à jour tout seul (#2111) |
 | **winget** | la distribution Windows : `Echonuit.VigieChiroCompanion`, en ligne depuis le 2026-08-10 | fork `echonuit/winget-pkgs` + `WINGET_TOKEN` ; on y pousse une version à la main (#2213) |
 | **Zenodo** | le jeu de données d'exemple « une nuit » | dépôt public, DOI figé |
 | **GitHub Pages** | les trois sites de documentation | `DOCS_DEPLOY_TOKEN` |
@@ -94,22 +94,16 @@ C'est la partie que personne ne devine en lisant la CI.
 | Regarder les aperçus régénérés | après une PR qui touche l'IHM | une capture fausse illustre la documentation sans que rien ne rougisse |
 | **Pousser une version sur winget** : refaire `WINGET_TOKEN` (8 jours max), **puis** `gh workflow run winget.yml -f tag=vX.Y.Z` | quand une version **apporte quelque chose à l'utilisateur** | winget continue de servir l'ancienne, indéfiniment. Rien ne rougit : le canal n'est pas cassé, il est simplement en retard |
 
-!!! warning "Un canal de distribution est outillé et n'a jamais rien distribué"
-    C'est le piège le plus coûteux de cette page, parce qu'il se lit à l'envers : `.github/workflows/`
-    porte `winget.yml` **et** `flatpak.yml`, `flatpak/` porte un manifeste versionné et validé. Tout
-    donne à croire que les **deux** paquets existent et se mettent à jour. Un seul existe.
+!!! warning "Deux canaux, deux rythmes de mise à jour"
+    `.github/workflows/` porte `winget.yml` **et** `flatpak.yml`, tous deux en ligne, mais pas avec la
+    même autonomie.
 
     - **winget** : ✅ en ligne depuis le 2026-08-10, `Echonuit.VigieChiroCompanion`. Le canal marche,
       mais **ne se remplit pas tout seul** : chaque version se pousse à la main (voir le tableau des
       gestes ci-dessus). Cf. #2213.
-    - **Flathub** : ❌ ni `fr.echonuit.VigieChiroCompanion` ni l'ancien identifiant n'ont de dépôt chez
-      Flathub. La PR de soumission a été fermée par le robot pour checklist incomplète, et deux points
-      manquants sont des **actes humains** - une vidéo de l'application lancée en Flatpak, et une
-      attestation personnelle. Cf. #2191.
-
-    ⚠️ L'identifiant Flatpak a **changé** entre-temps (ADR 0047) : la PR fermée soumettait
-    `io.github.iutinfoaix_s201.VigieChiro`, le manifeste porte aujourd'hui `fr.echonuit.…`. Reprendre
-    la soumission n'est donc pas qu'une formalité de checklist.
+    - **Flatpak** : ✅ en ligne depuis le 2026-08-15 sur le dépôt auto-hébergé
+      `flatpak.echonuit.fr`, signé (`fr.echonuit.VigieChiroCompanion`). `flatpak.yml` publie et détecte
+      lui-même les nouvelles versions via `x-checker-data`, aucun geste manuel n'est requis. Cf. #2111.
 
 !!! warning "Le train mérite un œil, même vert"
     Son premier départ réel a échoué **après** avoir créé le tag et déposé la Release en brouillon :
