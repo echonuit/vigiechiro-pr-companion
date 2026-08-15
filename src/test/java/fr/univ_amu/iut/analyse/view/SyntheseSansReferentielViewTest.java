@@ -14,6 +14,7 @@ import fr.univ_amu.iut.analyse.model.LigneSynthese;
 import fr.univ_amu.iut.analyse.model.ServiceSynthese;
 import fr.univ_amu.iut.analyse.viewmodel.SyntheseViewModel;
 import fr.univ_amu.iut.commun.model.ContexteActivite;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -22,7 +23,6 @@ import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
@@ -101,7 +101,7 @@ class SyntheseSansReferentielViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        stage.setScene(new Scene(vue, 1100, 640));
+        stage.setScene(Habillage.scene(vue, 1100, 640));
         stage.show();
     }
 

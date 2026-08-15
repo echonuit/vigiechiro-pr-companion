@@ -34,6 +34,7 @@ import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
@@ -67,7 +68,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
@@ -278,7 +278,7 @@ class SonsValidationViewTest {
         Parent vue = loader.load();
         controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.References("u-1"));
-        stage.setScene(new Scene(vue, 1000, 700));
+        stage.setScene(Habillage.scene(vue, 1000, 700));
         stage.show();
     }
 

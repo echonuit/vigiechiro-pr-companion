@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.event.Event;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
@@ -36,7 +35,7 @@ class ModalesTest {
     @Start
     void demarrer(Stage stage) {
         modale = stage;
-        modale.setScene(new Scene(new StackPane(new Button("OK")), 240, 140));
+        modale.setScene(Habillage.scene(new StackPane(new Button("OK")), 240, 140));
         Modales.fermerParEchap(modale);
         modale.show();
     }
@@ -100,7 +99,7 @@ class ModalesTest {
         // les scènes qu'on lui pose ensuite. Sans conséquence pour une modale que l'on jette après usage,
         // mais le Stage du harnais TestFX est partagé par toutes les classes d'un même fork : figé, il
         // faisait échouer les suivantes sur des noeuds « invisibles », très loin de la cause.
-        robot.interact(() -> fenetre.setScene(new Scene(new VBox(dixLignes()))));
+        robot.interact(() -> fenetre.setScene(Habillage.scene(new VBox(dixLignes()))));
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(fenetre.getHeight())
@@ -124,7 +123,7 @@ class ModalesTest {
         AtomicReference<Stage> fenetre = new AtomicReference<>();
         robot.interact(() -> {
             Stage propre = new Stage();
-            propre.setScene(new Scene(racine));
+            propre.setScene(Habillage.scene(racine));
             propre.show();
             fenetre.set(propre);
         });

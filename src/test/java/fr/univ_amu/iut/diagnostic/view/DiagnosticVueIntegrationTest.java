@@ -9,6 +9,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
@@ -34,7 +35,6 @@ import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.Label;
@@ -96,7 +96,7 @@ class DiagnosticVueIntegrationTest {
         Parent vue = loader.load();
         controleur = loader.getController();
         controleur.ouvrirSur(ctx(42L));
-        stage.setScene(new Scene(vue, 1000, 760));
+        stage.setScene(Habillage.scene(vue, 1000, 760));
         stage.show();
     }
 

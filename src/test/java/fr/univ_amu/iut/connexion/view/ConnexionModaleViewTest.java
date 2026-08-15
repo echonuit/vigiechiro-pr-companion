@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
@@ -23,7 +24,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -68,7 +68,7 @@ class ConnexionModaleViewTest {
         FXMLLoader loader = new FXMLLoader(ConnexionModaleController.class.getResource("ConnexionModale.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
-        stage.setScene(new Scene(vue));
+        stage.setScene(Habillage.scene(vue));
         stage.show();
     }
 
