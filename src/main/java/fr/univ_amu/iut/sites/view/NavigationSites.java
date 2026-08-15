@@ -9,8 +9,10 @@ import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
@@ -62,6 +64,21 @@ public class NavigationSites implements OuvrirSite {
         SiteDetailController controller = loader.getController();
         controller.afficher(site);
         navigateur.empiler(vue, "site-detail", controller.libelleFil(), controller);
+    }
+
+    /// Ouvre la fiche d'un carré **qui vient d'être rapatrié** (#3806), et y porte le compte rendu.
+    ///
+    /// La modale s'est fermée : sans ce message, l'utilisateur arriverait sur une fiche soudainement
+    /// peuplée de quarante et un points sans savoir d'où ils viennent, ni si son carré est bien rattaché.
+    /// Un geste qui écrit autant ne se conclut pas par un écran muet.
+    public void ouvrirDetailRapatrie(RapatriementCarre.Resultat.Rapatrie rapatrie) {
+        Objects.requireNonNull(rapatrie, "rapatrie");
+        FXMLLoader loader = charger("SiteDetail.fxml");
+        Parent vue = lire(loader);
+        SiteDetailController controller = loader.getController();
+        controller.afficher(rapatrie.site());
+        navigateur.empiler(vue, "site-detail", controller.libelleFil(), controller);
+        controller.notificateur().notifier(NiveauNotification.INFORMATION, "Carré récupéré", rapatrie.message());
     }
 
     /// Relibelle l'étape de la fiche après une modification du site (#3672), sur le modèle de
@@ -122,7 +139,7 @@ public class NavigationSites implements OuvrirSite {
         FXMLLoader loader = charger("ModaleSite.fxml");
         Parent vue = lire(loader);
         ModaleSiteController controller = loader.getController();
-        controller.demarrerCreation(apresSucces);
+        controller.demarrerCreation(apresSucces, this::ouvrirDetailRapatrie);
         afficherModale(parent, vue, "Site de suivi");
     }
 

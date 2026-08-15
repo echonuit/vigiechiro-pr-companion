@@ -8,9 +8,11 @@ import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import java.util.Objects;
+import java.util.function.Consumer;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -94,6 +96,18 @@ public class ModaleSiteController {
     @FXML
     private Label messageCarreExistant;
 
+    /// Ligne du geste « Récupérer ce carré » (#3806) : elle n'existe qu'après un verdict « il existe
+    /// déjà », et se retire de la mise en page le reste du temps.
+    @FXML
+    private HBox ligneRecupererCarre;
+
+    @FXML
+    private Button btnRecupererCarre;
+
+    /// Ce que l'appelant fait d'un carré rapatrié : ouvrir sa fiche, et y porter le compte rendu. La
+    /// modale ne le sait pas - elle se contente de fermer derrière elle.
+    private Consumer<RapatriementCarre.Resultat.Rapatrie> apresRapatriement = rapatrie -> {};
+
     /// Exécuteur du socle (#1014) : interroger la plateforme est un appel **réseau**, il ne doit pas
     /// tourner sur le fil JavaFX. Synchrone en test (déterministe), en arrière-plan en production.
     private final ExecuteurTache executeur;
@@ -131,6 +145,31 @@ public class ModaleSiteController {
                 echec -> {
                     rechercheEnCours.set(false);
                     viewModel.appliquerRechercheCarre(SiteEditViewModel.ResultatRechercheCarre.indisponible(demande));
+                });
+    }
+
+    /// Récupère le carré **hors du fil JavaFX**, puis conclut.
+    ///
+    /// Succès : la modale se **ferme** et l'appelant ouvre la fiche du carré - le formulaire n'a plus
+    /// lieu d'être, puisque le site existe désormais. Tout autre résultat laisse la modale ouverte avec
+    /// son compte rendu : il reste quelque chose à faire ici.
+    @FXML
+    private void recupererCarre() {
+        btnRecupererCarre.setDisable(true);
+        executeur.executer(
+                viewModel::rapatrierCarre,
+                resultat -> {
+                    btnRecupererCarre.setDisable(false);
+                    if (resultat instanceof RapatriementCarre.Resultat.Rapatrie rapatrie) {
+                        apresRapatriement.accept(rapatrie);
+                        fermer();
+                        return;
+                    }
+                    viewModel.appliquerRapatriement(resultat);
+                },
+                echec -> {
+                    btnRecupererCarre.setDisable(false);
+                    viewModel.appliquerRapatriement(new RapatriementCarre.Resultat.Indisponible());
                 });
     }
 
@@ -194,6 +233,11 @@ public class ModaleSiteController {
                         .then("Demander à Vigie-Chiro si ce carré y est déjà déclaré.")
                         .otherwise("Renseignez d'abord un numéro de carré à 6 chiffres."));
         LibelleRetour.installer(messageCarreExistant, viewModel.retourCarreExistantProperty());
+        // Le geste suit le verdict : visible seulement quand il y a un carré à récupérer, et retiré de la
+        // mise en page sinon - un bouton grisé en permanence sur un carré libre n'aurait rien à dire.
+        ligneRecupererCarre.visibleProperty().bind(viewModel.carreRecuperable());
+        ligneRecupererCarre.managedProperty().bind(viewModel.carreRecuperable());
+        Modales.suivreLaCroissance(racine, ligneRecupererCarre.managedProperty());
         Modales.suivreLaCroissance(racine, messageCarreExistant.managedProperty());
 
         // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « messageErreur » et ne pouvait
@@ -205,7 +249,15 @@ public class ModaleSiteController {
 
     /// Ouvre la modale en **déclaration** d'un nouveau site.
     public void demarrerCreation(Runnable apresSucces) {
+        demarrerCreation(apresSucces, rapatrie -> {});
+    }
+
+    /// Ouvre la modale en **déclaration**, en disant ce qu'il advient d'un carré **rapatrié** (#3806) :
+    /// l'appelant ouvre sa fiche et y porte le compte rendu, la modale se contente de fermer.
+    public void demarrerCreation(
+            Runnable apresSucces, Consumer<RapatriementCarre.Resultat.Rapatrie> apresRapatriement) {
         this.apresSucces = Objects.requireNonNull(apresSucces, "apresSucces");
+        this.apresRapatriement = Objects.requireNonNull(apresRapatriement, "apresRapatriement");
         viewModel.preparerCreation();
         majStyleCarre();
     }

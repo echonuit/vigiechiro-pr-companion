@@ -49,6 +49,13 @@
   <!-- Ce que la plateforme a répondu sur ce carré : distinct du bandeau de retour, qui porte l'issue de
        l'enregistrement. Les confondre effacerait l'un par l'autre. -->
   <Label fx:id="messageCarreExistant" wrapText="true" managed="false" visible="false"/>
+  <!-- « Récupérer ce carré » (#3806) : n'apparaît qu'après un verdict « il existe déjà », et disparaît
+       avec lui. Poser le bouton en permanence obligerait à le griser sur un carré libre, où le geste
+       n'a aucun sens. -->
+  <HBox fx:id="ligneRecupererCarre" managed="false" visible="false">
+    <Button fx:id="btnRecupererCarre" text="Récupérer ce carré" styleClass="bouton-secondaire"
+            onAction="#recupererCarre"/>
+  </HBox>
   <!-- Bandeau de retour partagé (ADR 0023) : remplace le libellé « messageErreur », dont le NOM portait
        la sévérité et interdisait donc d'y dire autre chose qu'un échec (#1917). -->
   <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
