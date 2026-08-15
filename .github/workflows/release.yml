@@ -25,10 +25,35 @@ name: release
 # samedi). Un défaut découvert le mercredi a deux jours ouvrés devant lui.
 #
 # `workflow_dispatch` reste : un correctif urgent n'attend pas le train.
+#
+# ⚠️ CONTOURNEMENT DE LA GARDE DES PLATEFORMES (#3561, passe 0). L'ADR 0041 pose la règle qu'on avait
+# sautée : « avant de rendre un check obligatoire, inventorier tous les chemins d'écriture vers `main`
+# [...] un chemin sans réponse est un blocage permanent ». L'inventaire tient en deux lignes - le train
+# du mercredi, et ce dispatch - et la seconde était vide : la garde de #3526 retenait aussi le
+# correctif urgent, alors que l'ADR 2744 décide l'inverse en toutes lettres.
+#
+# Le cas qui a tranché n'est pas le retard : c'est qu'un test **instable et sans rapport** (#3773 en
+# documente dix candidats) aurait retenu un correctif de sécurité. On ne rend donc pas l'échappatoire
+# impossible, et on ne la rend pas invisible non plus : elle exige une raison écrite, qui part dans le
+# titre du run et dans son résumé.
 on:
   schedule:
     - cron: "0 6 * * 3"
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      raison_du_contournement:
+        description: >-
+          Publier SANS preuve des plateformes. Laisser VIDE en temps normal ; une raison ici saute la
+          garde et reste inscrite au titre du run.
+        required: false
+        type: string
+        default: ""
+
+# Le contournement se lit dans l'historique des runs, pas seulement dans les logs d'un job.
+run-name: >-
+  ${{ (github.event_name == 'workflow_dispatch' && inputs.raison_du_contournement != '')
+      && format('⚠️ publication SANS preuve des plateformes - {0}', inputs.raison_du_contournement)
+      || 'publication' }}
 
 # Plancher du workflow : LECTURE seule. Chaque job déclare ce qu'il lui faut de plus (#2739).
 # Auparavant ce bloc accordait `contents/issues/pull-requests: write` aux TROIS jobs, dont la matrice
@@ -50,8 +75,16 @@ jobs:
   # ⚠️ La veille garde le cas le plus sournois, celui qu'un simple « le job est vert » manquerait : un
   # job qui **ne tourne plus du tout**. Un `schedule` peut être retardé, sauté sous charge, et il est
   # désactivé après soixante jours sans activité. Son silence passerait pour un feu vert.
+  #
+  # ⚠️ La condition est écrite « pas un dispatch, OU un dispatch sans raison », et surtout PAS
+  # « inputs.raison_du_contournement == '' » seul : sur un `schedule`, `inputs` est **null**, et une
+  # expression GitHub compare deux types différents en les coulant en nombre - `null == ''` y est donc
+  # **vrai**. Écrite naïvement, la garde se serait sautée toute seule le mercredi, c'est-à-dire
+  # exactement les jours où elle sert.
   preuve-des-plateformes:
-    if: vars.ENABLE_RELEASE == 'true'
+    if: >-
+      vars.ENABLE_RELEASE == 'true'
+      && (github.event_name != 'workflow_dispatch' || inputs.raison_du_contournement == '')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -68,10 +101,50 @@ jobs:
             --jq '.workflow_runs[] | select(.conclusion != null) | "\(.updated_at)\t\(.conclusion)\t\(.display_title)"' \
             | ./.github/scripts/veille-plateformes.sh
 
+  # Déclare le contournement, et ne tourne QUE dans ce cas : le job apparaît alors dans le graphe du
+  # run, à côté de la garde absente. Un contournement qui ne se voit que dans un log est un
+  # contournement qu'on oublie.
+  contournement-declare:
+    if: >-
+      vars.ENABLE_RELEASE == 'true'
+      && github.event_name == 'workflow_dispatch'
+      && inputs.raison_du_contournement != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Pourquoi cette publication se passe de la preuve des plateformes
+        env:
+          RAISON: ${{ inputs.raison_du_contournement }}
+        run: |
+          set -euo pipefail
+          # ⚠️ Une raison d'un caractère laisse une trace inutile, donc pas de trace du tout. Le refus
+          # est chiffré pour qu'il se corrige au lieu de se deviner.
+          if [ "${#RAISON}" -lt 20 ]; then
+            echo "::error title=Raison trop courte::${#RAISON} caractère(s), 20 au minimum."
+            echo "Le contournement laisse une trace pour qui la lira dans six mois. « x » n'en est pas une."
+            exit 1
+          fi
+          {
+            echo "### ⚠️ Publication sans preuve des plateformes"
+            echo
+            echo "> ${RAISON}"
+            echo
+            echo "La suite n'a **pas** été confirmée sous Windows et macOS pour cette version."
+            echo "Lancer « Suite complète sous Windows et macOS » dès que possible (#3526)."
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  # ⚠️ `needs` sur un job **sauté** saute le dépendant par défaut : sans ce `if`, le contournement
+  # empêcherait la publication au lieu de la permettre. On exige donc que la garde n'ait pas ÉCHOUÉ,
+  # ce qui laisse passer « réussie » et « sautée » - et rien d'autre.
   release:
-    needs: preuve-des-plateformes
+    needs: [preuve-des-plateformes, contournement-declare]
     # Dormant tant que ENABLE_RELEASE n'est pas 'true' (cf. en-tête).
-    if: vars.ENABLE_RELEASE == 'true'
+    if: >-
+      vars.ENABLE_RELEASE == 'true'
+      && !cancelled()
+      && needs.preuve-des-plateformes.result != 'failure'
+      && needs.contournement-declare.result != 'failure'
     runs-on: ubuntu-latest
     # Le seul job qui a besoin des trois : semantic-release crée le tag et la Release (`contents`),
     # puis @semantic-release/github commente les issues et les pull requests que la version referme.
