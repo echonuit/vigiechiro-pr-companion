@@ -2,7 +2,6 @@ package fr.univ_amu.iut.commun.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import fr.univ_amu.iut.commun.model.EcritureAtomique.Deplacement;
 import java.io.IOException;
@@ -20,6 +19,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIf;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Écriture d'un secret sur disque (#2735) : jamais dans un fichier plus permissif que lui, jamais à
@@ -55,14 +55,23 @@ class EcritureAtomiqueTest {
         EcritureAtomique.ecrireSecret(cible, "{\"token\":\"secret\"}");
 
         assertThat(cible).hasContent("{\"token\":\"secret\"}");
-        assertThat(permissions(cible)).containsExactlyInAnyOrderElementsOf(PROPRIETAIRE_SEUL);
+        // ⚠️ La PROPRIÉTÉ, pas le mécanisme. L'ancienne forme lisait les permissions POSIX, et son
+        // `assumeTrue` vivait dans le helper : sous Windows le test s'interrompait ICI, emportant
+        // l'assertion suivante - qui n'a pourtant rien de POSIX. Un test PARTIEL qui se présentait
+        // comme sauté (#3778).
+        assertThat(ProtectionFichier.restreinteAuProprietaire(cible))
+                .as("le jeton ne doit être lisible par aucun autre compte de la machine")
+                .isTrue();
         assertThat(temporairesResiduels()).isEmpty();
     }
 
     @Test
     @DisplayName("Réécriture par-dessus un fichier laissé permissif : le nouveau reste privé")
+    @EnabledIf("fr.univ_amu.iut.commun.model.EcritureAtomiqueTest#posixDisponible")
     void reecriture_ne_herite_pas_des_permissions_laxistes() throws IOException {
-        assumeTrue(posixDisponible(), "système de fichiers non POSIX : permissions non applicables");
+        // ⚠️ `@EnabledIf` plutôt qu'un `assumeTrue` en cours de route : la fixture elle-même exige
+        // POSIX (elle CRÉE un fichier `rw-rw-rw-`), donc le cas n'a pas de sens ailleurs. Déclaratif,
+        // il se voit dans le rapport et ne peut pas interrompre un test au milieu.
         Path cible = dossier.resolve("connexion.json");
         // Un fichier que quelqu'un aurait rendu lisible par tous : l'écriture ne doit pas s'y couler.
         Files.createFile(cible, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-rw-rw-")));
@@ -73,6 +82,21 @@ class EcritureAtomiqueTest {
         assertThat(cible).hasContent("nouveau");
         assertThat(permissions(cible)).containsExactlyInAnyOrderElementsOf(PROPRIETAIRE_SEUL);
         assertThat(temporairesResiduels()).isEmpty();
+    }
+
+    // ⚠️ Le contrôle NÉGATIF de la propriété, et il manquait : sans lui, `restreinteAuProprietaire`
+    // pouvait rendre `true` en toute circonstance sans qu'aucun test s'en aperçoive - deux mutants PIT
+    // y survivaient. Une propriété de sécurité qui ne sait pas dire « non » ne dit rien.
+    @Test
+    @DisplayName("Un fichier ouvert à tous n'est PAS déclaré restreint")
+    @EnabledIf("fr.univ_amu.iut.commun.model.EcritureAtomiqueTest#posixDisponible")
+    void un_fichier_permissif_n_est_pas_restreint() throws IOException {
+        Path ouvert = dossier.resolve("ouvert.txt");
+        Files.createFile(ouvert, PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rw-rw-rw-")));
+
+        assertThat(ProtectionFichier.restreinteAuProprietaire(ouvert))
+                .as("un fichier lisible par tous ne doit surtout pas se déclarer protégé")
+                .isFalse();
     }
 
     @Test
@@ -105,12 +129,14 @@ class EcritureAtomiqueTest {
                 .isEmpty();
     }
 
-    private static boolean posixDisponible() {
+    static boolean posixDisponible() {
         return FileSystems.getDefault().supportedFileAttributeViews().contains("posix");
     }
 
+    /// ⚠️ Plus d'`assumeTrue` ici : il interrompait le test APPELANT au milieu de ses assertions, et
+    /// emportait celles qui n'avaient rien de POSIX. Les cas qui appellent ce helper déclarent
+    /// désormais leur condition avec `@EnabledIf`, qui se voit et n'interrompt rien (#3778).
     private static Set<PosixFilePermission> permissions(Path chemin) throws IOException {
-        assumeTrue(posixDisponible(), "système de fichiers non POSIX : permissions non applicables");
         return Files.getPosixFilePermissions(chemin);
     }
 
