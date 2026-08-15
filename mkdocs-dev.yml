@@ -194,6 +194,7 @@ nav:
     - 3668 · Un E2E attend le signal du callback, pas le retour du geste: decisions/3668-un-e2e-attend-le-signal-du-callback-pas-le-retour-du-geste.md
     - 3547 · Un binding déclare ce qu'il lit: decisions/3547-un-binding-declare-ce-qu-il-lit.md
     - 3540 · Un cliquet qui compte n'est pas la preuve de la règle: decisions/3540-un-cliquet-qui-compte-n-est-pas-la-preuve-de-la-regle.md
+    - 3458 · Un verdict ne juge que ce qu'on lui a demandé: decisions/3458-un-verdict-ne-juge-que-le-numero-qui-l-a-demande.md
     - 3507 · L'amorçage s'écrit d'un seul coup: decisions/3507-l-amorcage-s-ecrit-d-un-seul-coup.md
     - 3514 · Restaurer n'efface pas ce que la sauvegarde ignore: decisions/3514-restaurer-n-efface-pas-ce-que-la-sauvegarde-ignore.md
     - 3498 · La déclaration porte sur les lectrices: decisions/3498-la-declaration-porte-sur-les-lectrices.md
