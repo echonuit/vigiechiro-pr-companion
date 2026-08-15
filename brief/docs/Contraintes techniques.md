@@ -89,6 +89,9 @@ d'architecture** qui structurent son code.
   s'installe **par utilisateur**, donc sans UAC, et `winget upgrade` remplace la version en place au
   lieu de la doubler. Toutes les versions publiées n'y sont pas poussées : on y met celles qui
   apportent quelque chose à l'utilisateur.
+- **Dépôt Flatpak sous Linux**, hébergé par le projet lui-même : une fois le dépôt ajouté,
+  `flatpak install --user fr.echonuit.VigieChiroCompanion` installe, `flatpak update --user` monte de
+  version. Même sélection des versions poussées que pour winget.
 - **Lancement depuis les sources** : `./mvnw javafx:run` suffit dans un environnement Java 25.
 - **Mode CLI** (sans IHM) pour les opérations scriptables (import d'une nuit, export d'un CSV),
   utilisable en automatisation et en CI.
