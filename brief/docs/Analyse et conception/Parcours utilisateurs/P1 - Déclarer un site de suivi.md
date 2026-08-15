@@ -26,7 +26,7 @@ Marie a créé son site sur le portail web Vigie-Chiro (<https://vigiechiro.hero
 
 C'est le cas le plus fréquent, et celui qui a coûté le plus cher : le portail **n'autorise pas** à activer un carré sans y créer un point. Qui vient d'activer son carré a donc déjà, en ligne, un site **et** un point positionné.
 
-Redéclarer ce carré dans l'application produit alors deux sites pour le même carré et un point local qui n'est pas celui du portail ; la nuit déposée ensuite échoue, loin de sa cause. La vérification de l'étape 3 renvoie donc au geste juste : « **Récupérer depuis Vigie-Chiro** », en haut de la vue des sites, qui rapatrie le site **et ses points déjà positionnés**, plutôt que de les ressaisir.
+Redéclarer ce carré dans l'application produit alors deux sites pour le même carré et un point local qui n'est pas celui du portail ; la nuit déposée ensuite échoue, loin de sa cause. Déclarer le carré ici reste alors le geste juste - c'est ainsi qu'on prépare une nuit opportuniste - mais il lui manque le **rattachement** au carré du portail, faute duquel le dépôt sera refusé. « **Récupérer depuis Vigie-Chiro** » ne comble pas ce manque : cette synchronisation part des participations, et n'atteint donc que les carrés où une nuit est **déjà** déposée. La cible est de **rapatrier le carré par son numéro** depuis la fenêtre de déclaration, avec ses localités positionnées, ce que la recherche rend possible en une requête (chantier #3806).
 
 ## Variante : créer un site directement depuis l'import
 
