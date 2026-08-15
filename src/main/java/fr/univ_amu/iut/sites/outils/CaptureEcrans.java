@@ -22,6 +22,8 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -50,6 +52,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -148,6 +151,7 @@ public final class CaptureEcrans {
         capturerModaleSiteCreation(creerInjecteur(), sortie.resolve("apercu-sites-modale-site-creation.png"));
         capturerModaleSiteCarreExistant(sortie.resolve("apercu-sites-modale-site-carre-existant.png"));
         capturerModaleSiteAutreProtocole(sortie.resolve("apercu-sites-modale-site-autre-protocole.png"));
+        capturerCompteRenduRapatriement(sortie.resolve("apercu-sites-carre-recupere.png"));
         capturerSynchroEnCours(sortie.resolve("apercu-sites-synchro-progression.png"));
 
         // État vide : base neuve (juste un utilisateur, aucun site) → accueil M-Sites en état initial.
@@ -307,6 +311,32 @@ public final class CaptureEcrans {
         // découvre que le protocole ne suit pas.
         ((Button) exiger(scene, "#btnRecupererCarre")).fire();
         ApercuFx.enregistrerPng(scene, fichier);
+    }
+
+    /// Le **compte rendu** que l'utilisateur lit après avoir récupéré un carré (#3806).
+    ///
+    /// Il arrive par un `Alert` modal, patron du socle pour les comptes rendus d'action : la fiche du
+    /// carré s'ouvre derrière, et ce dialogue dit ce qui vient d'être créé. Rendu par
+    /// [NotificationDialogue#dialogue] - le composant de production - et non reconstruit ici : c'est
+    /// ainsi qu'un dialogue documenté a fini par dériver du produit (#1468).
+    ///
+    /// ⚠️ `notifier` ferait `showAndWait`, qui fige un rendu hors écran. La méthode `dialogue` existe
+    /// précisément pour rendre le même `Alert` sans l'afficher.
+    private static void capturerCompteRenduRapatriement(Path fichier) {
+        RapatriementCarre.Resultat.Rapatrie rapatrie = new RapatriementCarre.Resultat.Rapatrie(
+                new Site(
+                        1L,
+                        CARRE_DEJA_DECLARE,
+                        "Vigiechiro - Point Fixe-" + CARRE_DEJA_DECLARE,
+                        Protocole.STANDARD,
+                        null,
+                        "2026-08-16",
+                        ID_UTILISATEUR),
+                41);
+        Alert alerte = new NotificationDialogue()
+                .dialogue(NiveauNotification.INFORMATION, "Carré récupéré", rapatrie.message());
+        alerte.getDialogPane().setPrefWidth(560);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
     }
 
     /// Le nœud `selecteur`, ou une **erreur** qui le nomme.

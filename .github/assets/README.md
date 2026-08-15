@@ -252,7 +252,7 @@ La liste des carrés suivis, peuplée et à l'état initial.
 
 ## Modale site
 
-<sub>`sites/view/ModaleSite.fxml` &middot; 3 capture(s)</sub>
+<sub>`sites/view/ModaleSite.fxml` &middot; 5 capture(s)</sub>
 
 <table>
 <tr>
@@ -265,10 +265,18 @@ La liste des carrés suivis, peuplée et à l'état initial.
 </tr>
 <tr>
 <th width="50%">Modale site : carré déjà déclaré</th>
+<th width="50%">Modale site : carré sous un autre protocole</th>
+</tr>
+<tr>
+<td><a href="apercu-sites-modale-site-carre-existant.png"><img src="apercu-sites-modale-site-carre-existant.png" width="430" alt="Modale site : le carré vérifié existe déjà sur Vigie-Chiro, et peut être récupéré"></a></td>
+<td><a href="apercu-sites-modale-site-autre-protocole.png"><img src="apercu-sites-modale-site-autre-protocole.png" width="430" alt="Modale site : le carré existe en Routier, protocole que Companion ne gère pas"></a></td>
+</tr>
+<tr>
+<th width="50%">Compte rendu : carré récupéré</th>
 <th width="50%"></th>
 </tr>
 <tr>
-<td><a href="apercu-sites-modale-site-carre-existant.png"><img src="apercu-sites-modale-site-carre-existant.png" width="430" alt="Modale site : le carré vérifié existe déjà sur Vigie-Chiro"></a></td>
+<td><a href="apercu-sites-carre-recupere.png"><img src="apercu-sites-carre-recupere.png" width="430" alt="Compte rendu affiché après la récupération : le carré et ses 41 points positionnés"></a></td>
 <td></td>
 </tr>
 </table>
