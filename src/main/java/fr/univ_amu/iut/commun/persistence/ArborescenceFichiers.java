@@ -184,7 +184,12 @@ public final class ArborescenceFichiers {
     }
 
     /// [#effacerAuMieux(Path)], avec les gestes de disque injectés (#3525).
-    static List<EchecEffacement> effacerAuMieux(Path cible, GestesFichiers gestes) {
+    /// ⚠️ **Publique**, comme [#octets(Path,GestesFichiers)] et pour la même raison : un dossier qui
+    /// **résiste** ne se fabrique pas de façon portable - `File.setWritable(false)` rend `false` sous
+    /// Windows. `NettoyageDossiersOrphelins`, hors de ce paquet, est le seul appelant dont l'utilisateur
+    /// attend la **raison** de l'échec (ADR 3574) : sans cette couture, ce chemin n'était éprouvable
+    /// nulle part (#3681).
+    public static List<EchecEffacement> effacerAuMieux(Path cible, GestesFichiers gestes) {
         List<EchecEffacement> restants = new ArrayList<>();
         if (!Files.exists(cible)) {
             return restants;

@@ -27,6 +27,17 @@ public class NettoyageDossiersOrphelins {
     /// Retire les `dossiers` et rend compte de ce qui est parti, de ce qui a résisté et de la place
     /// regagnée. Un dossier déjà absent n'est ni retiré ni résistant : il n'y avait rien à faire.
     public BilanNettoyage retirer(List<Path> dossiers) {
+        return retirer(dossiers, GestesFichiers.reels());
+    }
+
+    /// [#retirer(List)], avec les gestes de disque injectés.
+    ///
+    /// ⚠️ Même motif que [#tailleDe(Path,GestesFichiers)], et il vaut aussi pour la **suppression** : un
+    /// dossier qui résiste ne se fabrique pas de façon portable - `File.setWritable(false)` rend `false`
+    /// sous Windows, et un `chmod` rendrait le test **inerte** là où la suite le joue chaque mardi
+    /// (#3526). Sans cette couture, la **raison** portée par le contrat « au mieux » n'était éprouvée
+    /// nulle part, alors que l'ADR 3574 la tient pour la justification de tout ce contrat (#3681).
+    BilanNettoyage retirer(List<Path> dossiers, GestesFichiers gestes) {
         List<Path> retires = new ArrayList<>();
         List<BilanNettoyage.DossierResistant> resistants = new ArrayList<>();
         long octets = 0L;
@@ -36,8 +47,8 @@ public class NettoyageDossiersOrphelins {
                 continue;
             }
             // Mesurer AVANT de supprimer : après, il n'y a plus rien à peser.
-            long taille = tailleDe(dossier);
-            String echec = premierEchec(dossier);
+            long taille = tailleDe(dossier, gestes);
+            String echec = premierEchec(dossier, gestes);
             if (Files.exists(dossier)) {
                 resistants.add(new BilanNettoyage.DossierResistant(dossier, echec));
             } else {
@@ -88,8 +99,8 @@ public class NettoyageDossiersOrphelins {
     /// Se ramène au contrat « au mieux » d'[ArborescenceFichiers#effacerAuMieux] (#3574), qui porte la
     /// raison précisément pour cet appelant : c'est le seul dont l'utilisateur attend une explication,
     /// et la lui retirer aurait obligé à refaire le parcours pour la retrouver.
-    private static String premierEchec(Path dossier) {
-        return ArborescenceFichiers.effacerAuMieux(dossier).stream()
+    private static String premierEchec(Path dossier, GestesFichiers gestes) {
+        return ArborescenceFichiers.effacerAuMieux(dossier, gestes).stream()
                 .findFirst()
                 .map(echec -> raisonLisible(echec.cause()))
                 .orElse("");
