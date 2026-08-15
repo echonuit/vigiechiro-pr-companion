@@ -260,6 +260,7 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-34")
     @DisplayName("#3806 : récupérer ferme la modale et passe le carré à l'appelant")
     void recuperer_ferme_la_modale_et_passe_le_carre(FxRobot robot) {
         enCreation(robot);
@@ -305,6 +306,7 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-36")
     @DisplayName("#3806 : « Créer » se ferme, et son infobulle dit POURQUOI et quoi faire")
     void creer_se_ferme_avec_son_motif(FxRobot robot) {
         enCreation(robot);

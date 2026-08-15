@@ -59,6 +59,16 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 - **S1-33** · Vérification **hors connexion** : se déconnecter (S1-11), rouvrir la déclaration, saisir six
   chiffres, cliquer. L'encart dit « Vérification impossible … Ce carré n'a donc PAS été vérifié » - jamais « il
   n'existe pas ». Le bouton reste offert, non grisé.
+- **S1-34** · Récupération : après S1-31, cliquer « **Récupérer ce carré** ». La fenêtre se ferme, la fiche
+  du carré s'ouvre, et un dialogue annonce « Carré <n°> récupéré depuis Vigie-Chiro : N point(s) d'écoute
+  positionné(s) ». Les points de la fiche portent leurs coordonnées, sans ressaisie.
+- **S1-35** · Le carré récupéré est **rattaché** : sur sa fiche, le badge « Enregistré sur Vigie-Chiro » est
+  présent, et « Ouvrir sur Vigie-Chiro » n'est plus grisé.
+- **S1-36** · Pendant le verdict « il existe déjà », le bouton « **Créer** » est **fermé** ; son infobulle dit
+  « Ce carré existe déjà sur Vigie-Chiro : récupérez-le plutôt que de le redéclarer ». Corriger un chiffre du
+  numéro le rouvre.
+- **S1-37** · *perceptif* · L'enchaînement « je récupère → la fenêtre se ferme → la fiche s'ouvre » paraît
+  **naturel** : on comprend où l'on a atterri et pourquoi, sans relire le dialogue deux fois.
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.

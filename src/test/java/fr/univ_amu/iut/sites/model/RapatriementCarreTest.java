@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -109,6 +110,7 @@ class RapatriementCarreTest {
     }
 
     @Test
+    @CasDeRecette("S1-35")
     @DisplayName("#3806 : un carré rapatrié est RATTACHÉ, donc le dépôt ne le refusera plus")
     void un_carre_rapatrie_est_rattache() {
         when(client.chercherCarre(CARRE))
