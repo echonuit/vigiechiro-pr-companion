@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -41,6 +42,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -229,6 +231,45 @@ class MainViewTest {
 
         FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
         assertThat(bandeau.isVisible()).isTrue();
+        assertThat(robot.lookup(".indicateur-libelle").queryAllAs(Label.class))
+                .extracting(Label::getText)
+                .contains("Sites");
+    }
+
+    @Test
+    @CasDeRecette("S1-10")
+    @DisplayName("#1405 : les compteurs suivent une RESTAURATION, sans qu'on ait quitté l'accueil")
+    void bandeau_suit_une_restauration_sans_navigation(FxRobot robot, @TempDir Path sauvegardes) {
+        // ⚠️ Ce cas n'est PAS celui de S1-09, et la nuance décide de son existence. Là-bas, la
+        // mutation est un `creerSite`, qui annonce lui-même sa révision. Ici, la base ENTIÈRE est
+        // remplacée par le contenu d'un fichier : c'est un tout autre chemin, et rien ne garantit a
+        // priori qu'il emprunte le même canal d'annonce. S'il ne l'empruntait pas, les compteurs
+        // resteraient sur l'ancienne base tant qu'on n'a pas quitté l'accueil - ce que le test de
+        // S1-09 ne peut pas voir.
+        FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
+        ServiceSites sites = injector.getInstance(ServiceSites.class);
+        ServiceSauvegarde sauvegarde = injector.getInstance(ServiceSauvegarde.class);
+
+        // Une sauvegarde qui CONTIENT un site, puis une base qu'on vide : l'écran retombe à zéro.
+        robot.interact(() -> {
+            new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
+            sites.creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, "u-1");
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        Path fichier = sauvegarde.sauvegarder(sauvegardes);
+        robot.interact(() -> sites.listerSites("u-1").forEach(site -> sites.supprimerSite(site.id())));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(bandeau.isVisible())
+                .as("point de départ du cas : la base est vide, le bandeau est masqué")
+                .isFalse();
+
+        // Le geste de S1-10, et rien d'autre : on restaure, on ne navigue pas.
+        robot.interact(() -> sauvegarde.restaurer(fichier));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(bandeau.isVisible())
+                .as("les compteurs reflètent la base restaurée sans qu'on ait quitté l'accueil")
+                .isTrue();
         assertThat(robot.lookup(".indicateur-libelle").queryAllAs(Label.class))
                 .extracting(Label::getText)
                 .contains("Sites");
