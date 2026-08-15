@@ -1027,11 +1027,26 @@ vrai si l'on ne clique nulle part.
 
 ### Le témoin, qui est ce que ce workflow apporte vraiment
 
-L'entrée `sans_gestionnaire_de_fenetres` **n'installe pas** matchbox, et **inverse le verdict** :
+L'entrée `sans_gestionnaire_de_fenetres` **n'installe pas** le gestionnaire, et **inverse le
+verdict** :
 dans ce mode, un lancement réussi devient un **échec** du workflow, puisqu'il prouverait que la
 vérification du pointeur ne garde rien.
 
-Ce qui fait foi n'est donc pas la présence de matchbox mais `verifier_pointeur`, qui teste le
+### ⚠️ Le gestionnaire choisi n'est pas neutre : openbox, et non matchbox (#3788)
+
+`matchbox-window-manager` **maximise tout** ce qu'il affiche - c'est son parti pris, il est fait pour
+de petits écrans. Le banc en a menti deux fois avant qu'on le voie :
+
+- les tests de croissance de fenêtre (`Modales.suivreLaCroissance`, #1534) **ne pouvaient pas**
+  passer en fenêtré : une fenêtre déjà maximisée ne grandit pas. On a d'abord soupçonné le code ;
+- surtout, les clips de #3774 montraient la modale de connexion sur 1280 × 900, contenu tassé en
+  haut. Or ces clips servent à faire **juger** des cas perceptifs par un humain : sur une mise en
+  page qui n'est pas celle qu'on livre, qui juge, juge autre chose.
+
+`openbox` honore les dimensions demandées par la fenêtre. Le banc montre alors l'application telle
+qu'elle est livrée, ce qui est la condition pour qu'un regard porté sur un clip vaille quelque chose.
+
+Ce qui fait foi n'est donc pas la présence du gestionnaire mais `verifier_pointeur`, qui teste le
 **comportement** : un gestionnaire installé mais inopérant passerait un contrôle de présence, pas
 celui-là.
 
