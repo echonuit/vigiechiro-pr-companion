@@ -100,7 +100,9 @@ public class RapprochementSites implements RapprochementVigieChiro {
         Map<String, Site> localesParCarre = imports.sitesLocauxParCarre();
         List<LienVigieChiro> correspondances = new ArrayList<>();
         for (SiteVigieChiro distant : distants) {
-            imports.importerOuLier(distant, localesParCarre, idProfilConnecte).ifPresent(correspondances::add);
+            imports.importerOuLier(distant, localesParCarre, idProfilConnecte)
+                    .map(ImportSiteDistant.ResultatImport::lien)
+                    .ifPresent(correspondances::add);
         }
         if (correspondances.isEmpty()) {
             return Optional.empty();

@@ -4,7 +4,6 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
-import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Severite;
 import java.util.List;
 import java.util.Map;
@@ -132,15 +131,17 @@ public class RapatriementCarre {
         }
         SiteVigieChiro distant = trouves.getFirst();
         Map<String, Site> locauxParCarre = imports.sitesLocauxParCarre();
-        Optional<LienVigieChiro> lien = imports.importerOuLier(distant, locauxParCarre, idProfilConnecte());
-        if (lien.isEmpty()) {
+        Optional<ImportSiteDistant.ResultatImport> importe =
+                imports.importerOuLier(distant, locauxParCarre, idProfilConnecte());
+        if (importe.isEmpty()) {
             return new Resultat.Indisponible();
         }
-        imports.enregistrer(lien.get());
+        imports.enregistrer(importe.get().lien());
         imports.rattraperCommunes();
+        // Le compte vient de l'import, pas de la réponse : un point refusé en best-effort ne doit pas
+        // être annoncé comme posé.
         return imports.siteLocalDuCarre(numeroCarre)
-                .<Resultat>map(
-                        site -> new Resultat.Rapatrie(site, distant.points().size()))
+                .<Resultat>map(site -> new Resultat.Rapatrie(site, importe.get().pointsPoses()))
                 .orElseGet(Resultat.Indisponible::new);
     }
 

@@ -61,6 +61,14 @@ public class ImportSiteDistant {
         this.communes = Objects.requireNonNull(communes, "communes");
     }
 
+    /// Ce qu'un import a réellement produit : le lien à enregistrer, et **combien de points ont été
+    /// posés** - pas combien la plateforme en a envoyé. Un point au code ou au GPS invalide est ignoré en
+    /// best-effort ; l'annoncer quand même ferait chercher longtemps un point qui n'est pas là.
+    ///
+    /// @param lien la correspondance entre le site local et son homologue distant
+    /// @param pointsPoses le nombre de localités effectivement créées par cet import
+    public record ResultatImport(LienVigieChiro lien, int pointsPoses) {}
+
     /// Les sites locaux de l'utilisateur, indexés par numéro de carré : l'appelant qui en importe
     /// plusieurs le construit **une** fois.
     public Map<String, Site> sitesLocauxParCarre() {
@@ -73,7 +81,7 @@ public class ImportSiteDistant {
 
     /// Relie le site distant à son pendant local (créé si absent), et renvoie le lien. Un site distant
     /// sans carré exploitable, ou dont la création échoue, est ignoré (best-effort par site).
-    public Optional<LienVigieChiro> importerOuLier(
+    public Optional<ResultatImport> importerOuLier(
             SiteVigieChiro distant, Map<String, Site> localesParCarre, String idProfilConnecte) {
         String carre = distant.numeroCarre();
         if (carre == null) {
@@ -81,17 +89,21 @@ public class ImportSiteDistant {
         }
         try {
             Site local = localesParCarre.get(carre);
+            int poses;
             if (local == null) {
                 local = creerDepuis(distant);
+                poses = compterPoints(local);
                 localesParCarre.put(carre, local);
             } else {
-                completerLesPoints(local, distant);
+                poses = completerLesPoints(local, distant);
             }
             // Propriété du carré (#2525) : réévaluée à chaque import, dans les deux sens (un carré peut
             // changer de main côté plateforme). Sans profil lisible, `appartientAUnTiers` répond faux.
             siteTiers.definir(local.id(), distant.appartientAUnTiers(idProfilConnecte));
-            return Optional.of(new LienVigieChiro(
-                    LienVigieChiro.ENTITE_SITE, String.valueOf(local.id()), distant.id(), distant.verrouille()));
+            return Optional.of(new ResultatImport(
+                    new LienVigieChiro(
+                            LienVigieChiro.ENTITE_SITE, String.valueOf(local.id()), distant.id(), distant.verrouille()),
+                    poses));
         } catch (RuntimeException echecSite) {
             LOG.log(Level.FINE, echecSite, () -> "Import du site Vigie-Chiro (carré " + carre + ") ignoré");
             return Optional.empty();
@@ -135,16 +147,26 @@ public class ImportSiteDistant {
     /// best-effort avale. Il est là pour que la protection soit **explicite** plutôt qu'accidentelle, et
     /// pour ne pas produire quarante et une exceptions avalées à chaque import - un journal qui crie
     /// « Point Z1 ignoré » sur le cas nominal apprend à ne plus être lu.
-    private void completerLesPoints(Site local, SiteVigieChiro distant) {
+    private int completerLesPoints(Site local, SiteVigieChiro distant) {
         Set<String> codesLocaux = serviceSites.listerPoints(local.id()).stream()
                 .map(PointDEcoute::code)
                 .collect(Collectors.toSet());
+        int poses = 0;
         for (PointVigieChiro point : distant.points()) {
             if (!codesLocaux.add(point.code())) {
                 continue;
             }
-            ajouterPointRapatrie(local, distant, point);
+            if (ajouterPointRapatrie(local, distant, point)) {
+                poses++;
+            }
         }
+        return poses;
+    }
+
+    /// Combien de points porte le site local : le compte **après** création, seul chiffre qui dise ce qui
+    /// est réellement en base.
+    private int compterPoints(Site local) {
+        return serviceSites.listerPoints(local.id()).size();
     }
 
     /// Crée le site local (carré + titre en nom) et ses points d'écoute depuis les localités du site
@@ -163,14 +185,16 @@ public class ImportSiteDistant {
     ///
     /// Marqué synchronisé (#1738) : rapatrié en masse, il pourra être masqué de la fiche site tant
     /// qu'aucune nuit ne s'y rattache, contrairement à un point ajouté à la main.
-    private void ajouterPointRapatrie(Site site, SiteVigieChiro distant, PointVigieChiro point) {
+    private boolean ajouterPointRapatrie(Site site, SiteVigieChiro distant, PointVigieChiro point) {
         try {
             serviceSites.ajouterPointSynchronise(site.id(), point.code(), point.latitude(), point.longitude(), null);
+            return true;
         } catch (RuntimeException pointInvalide) {
             LOG.log(
                     Level.FINE,
                     pointInvalide,
                     () -> "Point " + point.code() + " ignoré (carré " + distant.numeroCarre() + ")");
+            return false;
         }
     }
 }

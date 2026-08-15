@@ -139,6 +139,31 @@ class RapatriementCarreTest {
     }
 
     @Test
+    @DisplayName("#3806 : le compte annonce les points POSÉS, pas ceux que la plateforme a envoyés")
+    void le_compte_annonce_les_points_reellement_poses() {
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(List.of(siteDistant(
+                        List.of(
+                                new PointVigieChiro("Z1", 43.522194, 5.465893),
+                                // Code hors R2 : `ajouterPointSynchronise` le refuse, et l'import l'ignore
+                                // en best-effort pour ne pas perdre les quarante autres.
+                                new PointVigieChiro("pas-un-code", 43.51, 5.45)),
+                        "un-tiers"))));
+
+        RapatriementCarre.Resultat resultat = rapatriement.rapatrier(CARRE);
+
+        // Annoncer « 2 points positionnés » quand un seul est en base ferait chercher longtemps un point
+        // qui n'existe pas. Le compte rendu dit ce qui EST, pas ce qui a été tenté.
+        Site local = siteDao.findByUtilisateur(ID_USER).getFirst();
+        assertThat(pointDao.findBySite(local.id())).hasSize(1);
+        assertThat(resultat)
+                .asInstanceOf(
+                        org.assertj.core.api.InstanceOfAssertFactories.type(RapatriementCarre.Resultat.Rapatrie.class))
+                .extracting(RapatriementCarre.Resultat.Rapatrie::points)
+                .isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("#3806 : un carré introuvable ne crée rien")
     void un_carre_introuvable_ne_cree_rien() {
         when(client.chercherCarre("999999")).thenReturn(ReponseApi.succes(List.of()));
