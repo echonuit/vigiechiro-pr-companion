@@ -90,6 +90,12 @@ jobs:
     env:
       APP_ID: fr.echonuit.VigieChiroCompanion
       MANIFESTE: flatpak/fr.echonuit.VigieChiroCompanion.yml
+      # Clé publique de signature du dépôt Flatpak auto-hébergé. Non sensible : la
+      # partie publique se distribue par construction (elle vit aussi dans tout
+      # trousseau qui a ajouté le dépôt). Générée hors CI le 2026-08-15. La partie
+      # PRIVÉE correspondante ne vit que dans le secret FLATPAK_GPG_KEY, jamais ici.
+      FLATPAK_GPG_KEY_ID: 1BA6A82DA9213B177B160E56CD450A9383707B17
+      FLATPAK_GPG_PUBLIC_KEY_B64: mDMEan/0/xYJKwYBBAHaRw8BAQdAIzCR3zsyTFIBAAb0jho1b+mwF6+LYJAVdTHNCnb6wTS0KlZpZ2llQ2hpcm8gQ29tcGFuaW9uIChmbGF0cGFrLmVjaG9udWl0LmZyKYiQBBMWCgA4FiEEG6aoLakhOxd7Fg5WzUUKk4NwexcFAmp/9P8CGwMFCwkIBwIGFQoJCAsCBBYCAwECHgECF4AACgkQzUUKk4Nwexd0sAEA92YvhZ23QuIbI0M5rqCOfFz+XEHJVPeN6iSNXXNbYfMA/0enBKQEjCWXvvtwO8z0+v1LKoRIekNeRcCSHi2S7qQB
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -125,9 +131,37 @@ jobs:
           sudo apt-get update
           # xvfb et xdotool : le démarrage se fait désormais sur un VRAI serveur X,
           # et l'on exige qu'une fenêtre soit mappée. Cf. le pas « Démarrage réel ».
-          sudo apt-get install -y flatpak flatpak-builder xvfb xdotool
+          sudo apt-get install -y flatpak flatpak-builder xvfb xdotool gnupg
           flatpak remote-add --if-not-exists --user \
             flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      # Dormant tant que FLATPAK_GPG_KEY n'est pas posé : la construction et la
+      # publication qui suivent restent alors non signées (NoGpgVerify=true côté
+      # .flatpakrepo). Même patron d'inertie que le secret FLATPAK_DEPLOY_TOKEN,
+      # plus bas. La clé privée, elle, ne transite jamais par un commit, un journal
+      # de build ou une conversation : uniquement par ce secret GitHub.
+      - name: Vérifier la présence du secret FLATPAK_GPG_KEY
+        id: garde-flatpak-signature
+        if: steps.diff.outputs.change == 'true' || inputs.forcer
+        env:
+          FLATPAK_GPG_KEY: ${{ secrets.FLATPAK_GPG_KEY }}
+        run: |
+          if [ -z "$FLATPAK_GPG_KEY" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::FLATPAK_GPG_KEY absent : le dépôt auto-hébergé sera publié non signé."
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Importer la clé de signature GPG
+        if: (steps.diff.outputs.change == 'true' || inputs.forcer) && steps.garde-flatpak-signature.outputs.present == 'true'
+        env:
+          FLATPAK_GPG_KEY: ${{ secrets.FLATPAK_GPG_KEY }}
+        run: |
+          set -euo pipefail
+          export GNUPGHOME="${RUNNER_TEMP}/gnupg"
+          mkdir -m 700 -p "$GNUPGHOME"
+          echo "$FLATPAK_GPG_KEY" | base64 -d | gpg --batch --import
 
       - name: Construire le Flatpak
         if: steps.diff.outputs.change == 'true' || inputs.forcer
@@ -138,12 +172,28 @@ jobs:
         # flatpak-builder écrit `builddir/` et `.flatpak-builder/` dans le dossier
         # courant, soit des centaines de Mo au milieu des sources versionnées. Le
         # premier essai a fini en push rejeté par GitHub (objet de 147 Mo).
+        #
+        # --repo : exporte la construction vers un dépôt ostree, EN PLUS de
+        # l'installer localement. flatpak-builder installe alors depuis ce même
+        # dépôt plutôt que depuis un état intermédiaire : le pas « Démarrage réel »
+        # qui suit éprouve donc exactement ce que « Publier le dépôt Flatpak
+        # auto-hébergé », plus bas, s'apprête à publier - jamais un artefact distinct
+        # qui aurait pu diverger.
+        #
+        # --gpg-sign / --gpg-homedir : ajoutés seulement si la clé a pu être
+        # importée juste au-dessus (garde-flatpak-signature). Sans ça, l'export
+        # reste NON signé - le pas « Générer le .flatpakrepo » plus bas s'accorde
+        # sur le même indicateur pour ne jamais annoncer une signature absente.
         run: |
           set -euo pipefail
-          flatpak-builder --disable-rofiles-fuse --install-deps-from=flathub \
-            --state-dir="${RUNNER_TEMP}/flatpak-etat" \
-            --user --install --force-clean \
-            "${RUNNER_TEMP}/flatpak-build" "${APP_ID}.yml"
+          args=(--disable-rofiles-fuse --install-deps-from=flathub
+                --state-dir="${RUNNER_TEMP}/flatpak-etat"
+                --repo="${RUNNER_TEMP}/flatpak-repo"
+                --user --install --force-clean)
+          if [ "${{ steps.garde-flatpak-signature.outputs.present }}" = "true" ]; then
+            args+=(--gpg-sign="${FLATPAK_GPG_KEY_ID}" --gpg-homedir="${RUNNER_TEMP}/gnupg")
+          fi
+          flatpak-builder "${args[@]}" "${RUNNER_TEMP}/flatpak-build" "${APP_ID}.yml"
 
       - name: Démarrage réel du Flatpak
         if: steps.diff.outputs.change == 'true' || inputs.forcer
@@ -209,6 +259,62 @@ jobs:
           titre=$(DISPLAY=:99 xdotool getwindowname "$fenetre" 2>/dev/null || echo '?')
           kill "$appli" 2>/dev/null || true
           echo "Le Flatpak démarre et ouvre une fenêtre « ${titre} », sans erreur."
+
+      # Dépôt Flatpak auto-hébergé, en attendant l'acceptation sur Flathub (#2191).
+      #
+      # Dormant tant que ENABLE_FLATPAK_REPO != 'true' OU que FLATPAK_DEPLOY_TOKEN
+      # n'est pas posé : même garde-fou d'inertie que docs.yml pour companion/
+      # companion-dev/brief, pour la même raison : ce changement peut être fusionné
+      # avant que le dépôt de publication, le domaine et le jeton existent, et la
+      # publication démarrera d'elle-même le jour où ils sont posés.
+      #
+      # SIGNÉ dès que FLATPAK_GPG_KEY est posé (cf. garde-flatpak-signature et
+      # « Importer la clé de signature GPG », plus haut) ; NON signé sinon
+      # (`NoGpgVerify=true`) : c'est le même indicateur qui décide dans les deux
+      # pas, pour ne jamais annoncer un .flatpakrepo signé sur un export qui ne
+      # l'était pas.
+      - name: Vérifier la présence du secret FLATPAK_DEPLOY_TOKEN
+        id: garde-flatpak-repo
+        env:
+          FLATPAK_DEPLOY_TOKEN: ${{ secrets.FLATPAK_DEPLOY_TOKEN }}
+        run: |
+          if [ -z "$FLATPAK_DEPLOY_TOKEN" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::FLATPAK_DEPLOY_TOKEN absent : publication du dépôt Flatpak auto-hébergé ignorée."
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Générer le .flatpakrepo
+        if: (steps.diff.outputs.change == 'true' || inputs.forcer) && vars.ENABLE_FLATPAK_REPO == 'true' && steps.garde-flatpak-repo.outputs.present == 'true'
+        run: |
+          set -euo pipefail
+          fichier="${RUNNER_TEMP}/flatpak-repo/${APP_ID}.flatpakrepo"
+          {
+            echo "[Flatpak Repo]"
+            echo "Title=VigieChiro Companion (dépôt auto-hébergé)"
+            echo "Url=https://flatpak.echonuit.fr/"
+            echo "Homepage=https://companion.echonuit.fr/"
+            echo "Comment=En attendant l'acceptation sur Flathub (#2191)"
+            if [ "${{ steps.garde-flatpak-signature.outputs.present }}" = "true" ]; then
+              echo "Description=Publié depuis ce dépôt à chaque montée de version. Signé (clé ${FLATPAK_GPG_KEY_ID})."
+              echo "GPGKey=${FLATPAK_GPG_PUBLIC_KEY_B64}"
+            else
+              echo "Description=Publié depuis ce dépôt à chaque montée de version. Non signé pour l'instant : ajouté avec --no-gpg-verify."
+              echo "NoGpgVerify=true"
+            fi
+          } > "$fichier"
+
+      - name: Publier le dépôt Flatpak auto-hébergé (flatpak.echonuit.fr)
+        if: (steps.diff.outputs.change == 'true' || inputs.forcer) && vars.ENABLE_FLATPAK_REPO == 'true' && steps.garde-flatpak-repo.outputs.present == 'true'
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
+        with:
+          personal_token: ${{ secrets.FLATPAK_DEPLOY_TOKEN }}
+          external_repository: echonuit/flatpak
+          publish_branch: gh-pages
+          publish_dir: ${{ runner.temp }}/flatpak-repo
+          cname: flatpak.echonuit.fr
+          full_commit_message: "build(flatpak): republier le dépôt depuis ${{ github.sha }}"
 
       # Volontairement SANS `|| inputs.forcer` : forcer sert à ÉPROUVER, pas à
       # proposer. Quand le manifeste n'a pas bougé, il n'y a rien à committer, et

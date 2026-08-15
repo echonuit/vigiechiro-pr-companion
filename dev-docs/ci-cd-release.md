@@ -364,6 +364,45 @@ robot de Flathub. Publier une version ne demande aucun geste côté paquet.
     fichier à chaque appel et échouerait avant d'y arriver. Le `.deb` installé normalement, lui, garde
     cette catégorie fautive.
 
+### Dépôt Flatpak auto-hébergé (#9760)
+
+Le paquet est soumis à Flathub depuis #2191, sans être encore accepté : leur revue exige un point de
+contact humain avant la première fusion, et une rotation de mainteneurs interne n'y change rien. En
+attendant, `flatpak.yml` peut publier le **même** paquet - construit et démarré par la même vérification
+- dans un dépôt Flatpak que ce projet héberge lui-même, indépendant de Flathub.
+
+**Mécanisme** : la construction de `flatpak-builder` exporte désormais vers `--repo`, en plus du
+`--install` local qui sert au démarrage réel. C'est ce dépôt-là, déjà éprouvé par le pas qui le précède,
+qu'un `.flatpakrepo` généré à la volée puis
+[`peaceiris/actions-gh-pages`](https://github.com/peaceiris/actions-gh-pages) publient vers
+`echonuit/flatpak` (branche `gh-pages`, domaine `flatpak.echonuit.fr`) - le même patron que
+`companion`/`companion-dev`/`brief` dans [docs.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml).
+
+**Dormant par construction**, comme la publication de la doc : tant que la variable
+`ENABLE_FLATPAK_REPO` n'est pas à `true` ou que le secret `FLATPAK_DEPLOY_TOKEN` n'est pas posé, ces
+deux pas s'effacent en `::notice::` plutôt que de rougir. Pour l'activer :
+
+1. Créer le dépôt de publication `echonuit/flatpak` (vide, `gh-pages` sera créée par l'action) et pointer
+   `flatpak.echonuit.fr` dessus (CNAME + enregistrement DNS, comme les trois domaines de doc).
+2. Poser un PAT avec `contents: write` sur ce seul dépôt dans le secret `FLATPAK_DEPLOY_TOKEN`.
+3. Poser la variable de dépôt `ENABLE_FLATPAK_REPO=true`.
+
+**Signature GPG** : la clé (ed25519, générée hors CI le 2026-08-15) est déjà câblée -
+`FLATPAK_GPG_KEY_ID` et la clé publique `FLATPAK_GPG_PUBLIC_KEY_B64` vivent en clair dans `flatpak.yml`
+(non sensibles : c'est la partie publique). La partie **privée**, elle, n'existe nulle part dans ce
+dépôt ni dans une conversation - uniquement dans le secret `FLATPAK_DEPLOY_TOKEN`-adjacent
+`FLATPAK_GPG_KEY` (armored, encodé en base64), à poser en plus des trois étapes ci-dessus pour activer
+la signature :
+
+4. Poser le secret `FLATPAK_GPG_KEY` : sortie de
+   `gpg --export-secret-key --armor <ID> | base64 -w0` pour la clé `1BA6A82DA9213B177B160E56CD450A9383707B17`.
+
+Tant que ce secret est absent, `garde-flatpak-signature` retombe en silence sur le comportement non
+signé (`NoGpgVerify=true`, `flatpak-builder` sans `--gpg-sign`) - même patron d'inertie que les trois
+étapes précédentes. Une fois posé, la construction signe l'export (`--gpg-sign`/`--gpg-homedir`) et le
+`.flatpakrepo` généré embarque `GPGKey=` au lieu de `NoGpgVerify=true`, sans qu'aucune autre étape n'ait
+à changer.
+
 ## winget (#2213)
 
 Le paquet **`Echonuit.VigieChiroCompanion`** est servi par winget depuis le **2026-08-10**
