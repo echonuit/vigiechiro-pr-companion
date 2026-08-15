@@ -66,7 +66,7 @@ class SiteEditRechercheCarreTest {
         assertThat(viewModel.rechercheCarreDisponible())
                 .as("la modale doit pouvoir masquer le bouton plutôt que d'en afficher un mort")
                 .isFalse();
-        assertThat(viewModel.chercherCarreExistant())
+        assertThat(viewModel.chercherCarreExistant().verdict())
                 .as("et le verdict reste « on ne sait pas » : surtout pas « il est libre »")
                 .isInstanceOf(RechercheCarreExistant.Verdict.Indisponible.class);
         verify(client, never()).chercherCarre(anyString());
@@ -78,7 +78,8 @@ class SiteEditRechercheCarreTest {
         SiteEditViewModel viewModel = avecRecherche();
         viewModel.numeroCarreProperty().set("6403");
 
-        assertThat(viewModel.chercherCarreExistant()).isInstanceOf(RechercheCarreExistant.Verdict.Indisponible.class);
+        assertThat(viewModel.chercherCarreExistant().verdict())
+                .isInstanceOf(RechercheCarreExistant.Verdict.Indisponible.class);
         // `$text` cherche des mots ENTIERS : « 6403 » ne ramènerait pas « 640380 » mais un zéro qui se
         // lirait « ce carré est libre ». Le garde est ici, pas seulement dans le grisage du bouton.
         verify(client, never()).chercherCarre(anyString());
@@ -143,6 +144,30 @@ class SiteEditRechercheCarreTest {
         // vérifié - le pire des deux mondes, puisque l'utilisateur a la preuve visuelle du contraire.
         assertThat(viewModel.retourCarreExistantProperty().get().texte())
                 .as("un verdict ne survit pas au numéro sur lequel il portait")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3458 : une réponse arrivée APRÈS une correction ne juge plus ce qui est à l'écran")
+    void un_verdict_arrive_en_retard_est_ecarte() {
+        SiteEditViewModel viewModel = avecRecherche();
+        viewModel.numeroCarreProperty().set(CARRE);
+        when(client.chercherCarre(CARRE))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
+
+        // La requête part (en production elle tourne hors du fil JavaFX, donc l'utilisateur garde la main)…
+        var resultat = viewModel.chercherCarreExistant();
+        // … il corrige sa saisie pendant ce temps…
+        viewModel.numeroCarreProperty().set("640381");
+        // … et la réponse arrive enfin.
+        viewModel.appliquerRechercheCarre(resultat);
+
+        // C'est le jumeau du verdict périmé, pris par l'autre bout : là c'était la saisie qui bougeait
+        // après la réponse, ici c'est la réponse qui arrive après la saisie. Même panne à l'écran - un
+        // avertissement affiché sous un carré qu'il ne juge pas.
+        assertThat(viewModel.retourCarreExistantProperty().get().texte())
+                .as("un verdict ne s'applique qu'au numéro qui l'a demandé")
                 .isEmpty();
     }
 

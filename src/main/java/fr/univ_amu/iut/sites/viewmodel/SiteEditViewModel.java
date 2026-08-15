@@ -118,20 +118,48 @@ public class SiteEditViewModel {
         return recherche.isPresent();
     }
 
-    /// Interroge la plateforme sur le carré saisi.
+    /// Ce qu'une interrogation rapporte : le verdict **et le numéro qui l'a demandé** (#3458).
     ///
-    /// **Bloquant** (réseau) : à appeler hors du fil JavaFX, puis passer le verdict à
-    /// [#appliquerRechercheCarre]. Même découpage que `PointEditViewModel#controlerCarre`.
-    public RechercheCarreExistant.Verdict chercherCarreExistant() {
-        if (recherche.isEmpty() || !carreValide.get()) {
-            return new RechercheCarreExistant.Verdict.Indisponible();
+    /// Le numéro voyage avec le verdict parce que la réponse revient **plus tard**, sur une modale que
+    /// l'utilisateur a pu modifier entre-temps. Sans lui, rien ne permettrait de savoir que ce verdict ne
+    /// juge plus ce qui est à l'écran.
+    ///
+    /// @param numeroInterroge le numéro de carré tel qu'il était au départ de la requête
+    /// @param verdict ce que la plateforme en a dit
+    public record ResultatRechercheCarre(String numeroInterroge, RechercheCarreExistant.Verdict verdict) {
+
+        /// Aucune réponse exploitable pour `numeroInterroge` : panne technique, plutôt que refus de la
+        /// plateforme (celui-là est déjà un [RechercheCarreExistant.Verdict.Indisponible] rendu par le
+        /// modèle).
+        public static ResultatRechercheCarre indisponible(String numeroInterroge) {
+            return new ResultatRechercheCarre(numeroInterroge, new RechercheCarreExistant.Verdict.Indisponible());
         }
-        return recherche.get().chercher(numeroCarre.get());
     }
 
-    /// Applique un verdict de [#chercherCarreExistant] aux propriétés observables, **sur le fil JavaFX**.
-    public void appliquerRechercheCarre(RechercheCarreExistant.Verdict verdict) {
-        retourCarreExistant.set(new RetourOperation(verdict.message(), verdict.severite()));
+    /// Interroge la plateforme sur le carré saisi.
+    ///
+    /// **Bloquant** (réseau) : à appeler hors du fil JavaFX, puis passer le résultat à
+    /// [#appliquerRechercheCarre]. Même découpage que `PointEditViewModel#controlerCarre`.
+    public ResultatRechercheCarre chercherCarreExistant() {
+        String demande = numeroCarre.get();
+        if (recherche.isEmpty() || !carreValide.get()) {
+            return ResultatRechercheCarre.indisponible(demande);
+        }
+        return new ResultatRechercheCarre(demande, recherche.get().chercher(demande));
+    }
+
+    /// Applique un résultat de [#chercherCarreExistant] aux propriétés observables, **sur le fil JavaFX**.
+    ///
+    /// Un résultat qui porte sur un **autre numéro** que celui affiché est **écarté** : l'appel a duré, et
+    /// la saisie a changé pendant ce temps. L'afficher quand même mettrait un avertissement sous un carré
+    /// qu'il ne juge pas - le jumeau, pris par l'autre bout, du verdict qu'on efface quand le numéro
+    /// change.
+    public void appliquerRechercheCarre(ResultatRechercheCarre resultat) {
+        if (!resultat.numeroInterroge().equals(numeroCarre.get())) {
+            return;
+        }
+        retourCarreExistant.set(new RetourOperation(
+                resultat.verdict().message(), resultat.verdict().severite()));
     }
 
     /// Ce que la plateforme a dit du carré saisi, avec sa gravité.
@@ -142,7 +170,10 @@ public class SiteEditViewModel {
     /// Configure la modale en **mode déclaration** d'un nouveau site.
     public void preparerCreation() {
         siteEnEdition = null;
-        retourCarreExistant.set(RetourOperation.AUCUN);
+        // Le verdict du carré n'est pas effacé ici : vider le numéro juste en dessous s'en charge, par le
+        // même chemin que toute autre correction de saisie. Un second effacement, écrit à la main, aurait
+        // dit la même chose une seconde fois - et PIT l'a signalé en le supprimant sans faire rougir
+        // personne.
         numeroCarre.set("");
         nom.set("");
         protocole.set(Protocole.STANDARD);

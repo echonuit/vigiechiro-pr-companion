@@ -8,7 +8,6 @@ import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
-import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import java.util.Objects;
@@ -120,15 +119,18 @@ public class ModaleSiteController {
     @FXML
     private void verifierCarre() {
         rechercheEnCours.set(true);
+        // Le numéro est saisi ICI, sur le fil JavaFX, pour que l'échec sache lui aussi de quel carré il
+        // parle : le ViewModel écarte un résultat qui ne porte plus sur ce qui est à l'écran.
+        String demande = viewModel.numeroCarreProperty().get();
         executeur.executer(
                 viewModel::chercherCarreExistant,
-                verdict -> {
-                    viewModel.appliquerRechercheCarre(verdict);
+                resultat -> {
+                    viewModel.appliquerRechercheCarre(resultat);
                     rechercheEnCours.set(false);
                 },
                 echec -> {
                     rechercheEnCours.set(false);
-                    viewModel.appliquerRechercheCarre(new RechercheCarreExistant.Verdict.Indisponible());
+                    viewModel.appliquerRechercheCarre(SiteEditViewModel.ResultatRechercheCarre.indisponible(demande));
                 });
     }
 
