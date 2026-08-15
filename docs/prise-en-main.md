@@ -42,6 +42,31 @@ winget upgrade Echonuit.VigieChiroCompanion
     numéros sur la page des Releases. `winget show Echonuit.VigieChiroCompanion` dit ce qui est servi
     aujourd'hui ; pour avoir la toute dernière, prenez l'installeur ou l'archive portable ci-dessous.
 
+### Sous Linux, en quelques commandes : Flatpak
+
+Le paquet est soumis à [Flathub](https://flathub.org) depuis [#2191](https://github.com/echonuit/vigiechiro-pr-companion/issues/2191),
+sans y être encore accepté. En attendant, le même paquet - construit et vérifié par la même chaîne -
+est publié sur un dépôt Flatpak que nous hébergeons nous-mêmes, **signé** :
+
+```bash
+flatpak remote-add --user --if-not-exists vigiechiro-companion \
+    https://flatpak.echonuit.fr/fr.echonuit.VigieChiroCompanion.flatpakrepo
+flatpak install --user vigiechiro-companion fr.echonuit.VigieChiroCompanion
+```
+
+Pour lancer, puis plus tard mettre à jour :
+
+```bash
+flatpak run fr.echonuit.VigieChiroCompanion
+flatpak update --user fr.echonuit.VigieChiroCompanion
+```
+
+!!! note "Pourquoi un dépôt maison, et pas juste `flatpak install` depuis Flathub"
+    Flathub exige un point de contact humain avant la première fusion, ce que la rotation de
+    mainteneurs de ce projet ne peut pas garantir. Ce dépôt-là disparaîtra le jour où la soumission
+    Flathub sera acceptée ; en attendant, il reçoit exactement le même paquet, à chaque montée de
+    version qui **apporte quelque chose à l'utilisateur** - même politique de publication que winget.
+
 ### Installer, ou simplement décompresser
 
 **L'installeur** place l'application dans votre système comme n'importe quel logiciel : elle apparaît
