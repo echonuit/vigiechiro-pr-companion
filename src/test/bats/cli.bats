@@ -65,6 +65,21 @@ echappement() { printf '\033'; }
   [[ "${output}" == *"$(echappement)"* ]]
 }
 
+# ⚠️ Le seul cas où la sortie est REDIRIGÉE et la couleur attendue quand même : c'est exactement la
+# situation que #3796 corrige - un pager, un journal de CI qui rend l'ANSI, un enrobage `script`. Sans
+# `FORCE_COLOR`, le produit refusait la couleur à quelqu'un qui la demandait explicitement.
+@test "aide : FORCE_COLOR allume la couleur même redirigée (#3796)" {
+  FORCE_COLOR=1 run cli --help
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"$(echappement)"* ]]
+}
+
+@test "aide : NO_COLOR l'emporte sur FORCE_COLOR (#3796)" {
+  NO_COLOR=1 FORCE_COLOR=1 run cli --help
+  [ "${status}" -eq 0 ]
+  [[ "${output}" != *"$(echappement)"* ]]
+}
+
 @test "aide : NO_COLOR éteint la couleur devant un vrai terminal (#3738)" {
   command -v script >/dev/null || skip "« script » absent : pas de pseudo-terminal ici"
   NO_COLOR=1 run sous_un_terminal
