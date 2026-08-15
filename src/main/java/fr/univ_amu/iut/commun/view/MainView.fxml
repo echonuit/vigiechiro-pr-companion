@@ -42,12 +42,12 @@
       <!-- Barre de navigation : titre app, bouton ← Retour (historique), fil d'Ariane (emplacement)
            peuplé par MainController, et le champ de recherche globale (#144) aligné à droite. -->
       <HBox styleClass="barre-navigation" alignment="CENTER_LEFT" spacing="14.0">
-        <Label fx:id="titreApplication" styleClass="titre-application"
+        <Label fx:id="titreApplication" styleClass="titre-application" minWidth="-Infinity"
                text="VigieChiro Companion"/>
         <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip ; on le pose sur ce StackPane (qui
              reçoit le survol) pour expliquer le grisage du retour pendant un import (#789). L'enveloppe
              suit la visibilité du bouton (présent hors accueil). -->
-        <StackPane fx:id="enveloppeRetour">
+        <StackPane fx:id="enveloppeRetour" minWidth="-Infinity">
           <Button fx:id="boutonRetour" styleClass="bouton-retour" text="Retour" onAction="#revenir">
             <graphic>
               <FontIcon iconLiteral="fas-arrow-left"/>
@@ -60,8 +60,13 @@
              <FontIcon> (#1933). Le 🔍 qui s'y trouvait ne s'affichait déjà plus sur les aperçus régénérés
              en CI, et le mot « Rechercher » le disait déjà. Les trois autres champs de recherche de
              l'application (analyse, multisite, sons & validation) n'en portent pas non plus. -->
-        <TextField fx:id="champRecherche" styleClass="champ-recherche" promptText="Rechercher (Ctrl+F)"
-                   prefWidth="240.0"/>
+        <!-- L'invite dit « Rechercher » seul depuis #3760 : « (Ctrl+F) » demandait 140 px la ou la
+             barre n'en a que 132 a la largeur d'ouverture, et une invite se coupe SANS ellipse - le
+             mode de troncature le plus trompeur (cf. LisibiliteCapture). Le raccourci reste actif et
+             porte par le texte accessible ; ce qu'on perd est un rappel, pas une capacite. -->
+        <TextField fx:id="champRecherche" styleClass="champ-recherche"
+                   accessibleText="Rechercher (Ctrl+F)" promptText="Rechercher"
+                   prefWidth="132.0" minWidth="120.0"/>
         <!-- Menu ☰ (outils) peuplé en CODE par MainController depuis les ActionMenu contribuées (#930) :
              sauvegarde/restauration, purge, préférences, réglages, connexion, plus toute entrée future
              ajoutée par une feature. Le socle n'énumère plus les items ici. -->

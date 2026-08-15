@@ -139,15 +139,12 @@ public final class CaptureDiagnostic {
     /// Chrome principal : seul lui porte la barre de statut, qu'aucune vue ne rend elle-même.
     private static final String CHROME = "/fr/univ_amu/iut/commun/view/MainView.fxml";
 
-    /// **1250 et non 1100** (la largeur d'ouverture de l'application) : en dessous, la barre du haut du
-    /// chrome se tronque sur cet écran, et le garde de lisibilité refuse la capture - à juste titre.
-    /// Mesuré en descendant : 7 libellés tronqués à 1100 et 1150, 2 à 1200, aucun à partir de 1250.
+    /// La largeur d'ouverture de l'application (`TailleOuverture.LARGEUR_VOULUE`).
     ///
-    /// Le seuil est **au-dessus** de la largeur d'ouverture : c'est un défaut du produit, pas de la
-    /// capture, et il est ouvert à part (#3760). Élargir ici documente la barre de statut sans faire semblant
-    /// que le problème n'existe pas ; la capture porte donc une largeur qu'aucun utilisateur n'a par
-    /// défaut, et c'est écrit.
-    private static final int LARGEUR_CHROME = 1250;
+    /// Elle a valu 1250 le temps d'un chantier : en dessous, la barre du haut se tronquait et le garde de
+    /// lisibilité refusait la capture. #3760 a rendu au chrome son budget horizontal, et cet aperçu montre
+    /// de nouveau ce qu'un utilisateur voit par défaut.
+    private static final int LARGEUR_CHROME = 1100;
 
     /// Identifiant volontairement absent de la base : le chargement échoue et l'écran rend son bandeau.
     private static final long PASSAGE_INEXISTANT = 999_999L;

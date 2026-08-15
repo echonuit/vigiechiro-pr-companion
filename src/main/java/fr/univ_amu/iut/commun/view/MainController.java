@@ -327,12 +327,12 @@ public class MainController {
             Lieu lieu = segments.get(i);
             if (lieu.estCliquable()) {
                 Hyperlink lien = new Hyperlink(lieu.libelle());
-                lien.getStyleClass().add("fil-ariane-segment");
+                lien.getStyleClass().addAll("fil-ariane-segment", "abregeable");
                 lien.setOnAction(evenement -> lieu.ouvrir().run());
                 filAriane.getChildren().add(lien);
             } else {
                 Label courant = new Label(lieu.libelle());
-                courant.getStyleClass().add("fil-ariane-courant");
+                courant.getStyleClass().addAll("fil-ariane-courant", "abregeable");
                 filAriane.getChildren().add(courant);
             }
         }

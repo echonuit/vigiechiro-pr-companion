@@ -25,6 +25,19 @@ public final class FormatsLot {
                 + " disponibles. Libérez de l'espace avant de générer.";
     }
 
+    /// Même état, dit pour la **barre de statut** (#3743). Deux différences, et chacune a sa raison.
+    ///
+    /// Elle ne porte **pas la consigne** : l'ADR 0039 veut qu'une barre de statut dise où l'on en est,
+    /// pas quoi faire - et « Libérez de l'espace » est déjà écrit dans l'encart posé sous le bouton
+    /// concerné, qui est l'endroit prévu pour l'alerte.
+    ///
+    /// Elle est **courte** parce que la zone droite d'un `BorderPane` prend sa largeur préférée : la
+    /// phrase complète y occupait 791 px sur 1100 et écrasait la zone centre jusqu'à 10 px de large.
+    static String espaceInsuffisantAbrege(long requisOctets, long disponibleOctets) {
+        return "Espace insuffisant : " + Formats.octetsLisibles(requisOctets) + " requis, "
+                + Formats.octetsLisibles(disponibleOctets) + " libres";
+    }
+
     /// Récapitulatif du lot : « N séquences · volume ».
     static String recapLisible(EtatLot etat) {
         String volume = etat.volumeSequencesOctets() == null

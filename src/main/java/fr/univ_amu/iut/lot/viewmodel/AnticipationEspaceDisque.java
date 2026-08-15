@@ -35,6 +35,9 @@ final class AnticipationEspaceDisque {
     private final ReadOnlyBooleanWrapper suffisant = new ReadOnlyBooleanWrapper(this, "suffisant", true);
     private final ReadOnlyStringWrapper raison = new ReadOnlyStringWrapper(this, "raison", "");
 
+    /// La même contrainte, dite court et sans consigne, pour la barre de statut (#3743).
+    private final ReadOnlyStringWrapper raisonAbregee = new ReadOnlyStringWrapper(this, "raisonAbregee", "");
+
     AnticipationEspaceDisque(ServiceLot service) {
         this.service = Objects.requireNonNull(service, "service");
     }
@@ -49,6 +52,11 @@ final class AnticipationEspaceDisque {
         return raison.getReadOnlyProperty();
     }
 
+    /// La même chose pour la **barre de statut** : courte et sans consigne (#3743).
+    ReadOnlyStringProperty raisonAbregeeProperty() {
+        return raisonAbregee.getReadOnlyProperty();
+    }
+
     /// Recalcule depuis l'état chargé. Indéterminé (génération non pertinente, volume ou chemin inconnu,
     /// disque illisible) → on ne bloque pas.
     void majDepuis(EtatLot etat) {
@@ -60,11 +68,13 @@ final class AnticipationEspaceDisque {
         boolean insuffisant = generationPertinente && volume != null && disponible > 0 && disponible < requis;
         suffisant.set(!insuffisant);
         raison.set(insuffisant ? FormatsLot.messageEspaceInsuffisant(requis, disponible) : "");
+        raisonAbregee.set(insuffisant ? FormatsLot.espaceInsuffisantAbrege(requis, disponible) : "");
     }
 
     /// Remet l'anticipation à son état neutre (changement de passage) : on ne bloque pas.
     void reinitialiser() {
         suffisant.set(true);
         raison.set("");
+        raisonAbregee.set("");
     }
 }
