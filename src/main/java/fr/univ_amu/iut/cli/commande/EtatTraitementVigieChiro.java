@@ -7,6 +7,11 @@ import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import java.io.PrintWriter;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -45,6 +50,15 @@ import picocli.CommandLine.Spec;
         description = "Où en est l'analyse Tadarida de la nuit déposée ? (0 = terminé, 3 = en cours,"
                 + " 1 = en échec, 4 = jamais lancée, 2 = indisponible)")
 public final class EtatTraitementVigieChiro implements Callable<Integer>, LectureSeule {
+
+    /// ⚠️ Motif **purement numérique**, donc insensible à la locale : c'est justement le « Fri » et le
+    /// « Jul » du serveur qu'on remplace. `'à'` plutôt qu'un espace, parce que la valeur atterrit au
+    /// milieu d'une phrase.
+    private static final DateTimeFormatter AFFICHAGE = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
+
+    /// Les deux formes que la plateforme rend, vues l'une et l'autre dans les fixtures du dépôt.
+    private static final List<DateTimeFormatter> FORMES_DU_SERVEUR =
+            List.of(DateTimeFormatter.RFC_1123_DATE_TIME, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
 
     /// Analyse terminée : les observations sont récupérables.
     private static final int TERMINE = 0;
@@ -145,9 +159,44 @@ public final class EtatTraitementVigieChiro implements Callable<Integer>, Lectur
                 };
     }
 
-    /// « depuis le … » quand le serveur date l'événement, rien sinon (il ne garde pas toutes les dates).
+    /// « le … » quand le serveur date l'événement, rien sinon (il ne garde pas toutes les dates).
     private static String depuis(String date) {
-        return date == null ? "" : " (le " + date + ")";
+        return depuis(date, ZoneId.systemDefault());
+    }
+
+    /// [#depuis(String)], dans un fuseau **fourni**.
+    ///
+    /// L'instant du serveur était recopié **tel quel** au milieu d'une phrase française :
+    /// `analyse EN COURS (le Fri, 3 Jul 2026 19:00:00 GMT). Patientez.` - jour et mois en anglais,
+    /// heure en UTC, format d'en-tête HTTP (#3678).
+    ///
+    /// ⚠️ L'UTC n'est pas un détail de présentation : « le 3 juillet à 19 h » n'est pas la même heure
+    /// pour l'observateur que pour le serveur, et c'est l'observateur qui décide s'il attend ou s'il
+    /// revient demain.
+    ///
+    /// ⚠️ La plateforme rend **deux** formes, vues l'une et l'autre dans les fixtures : RFC 1123 et ISO
+    /// avec décalage. Les deux sont acceptées ; une seule l'aurait été en se fiant à un exemple.
+    ///
+    /// ⚠️ **Ce qu'on ne sait pas lire reste affiché tel quel.** Perdre l'information vaudrait moins que
+    /// l'afficher mal : un lecteur peut interpréter une chaîne étrange, jamais une absence.
+    ///
+    /// ⚠️ Le fuseau est un **paramètre** plutôt que `systemDefault()` en dur : `fuseau-alternatif`
+    /// rejoue toute la suite sous `America/Cayenne` (ADR 3450), et un test qui figerait « 21:00 » y
+    /// rougirait sans qu'aucun défaut soit en cause.
+    static String depuis(String date, ZoneId fuseau) {
+        return date == null ? "" : " (le " + lisible(date, fuseau) + ")";
+    }
+
+    /// L'instant dans le fuseau demandé, ou la chaîne d'origine si elle ne se lit pas.
+    private static String lisible(String date, ZoneId fuseau) {
+        for (DateTimeFormatter forme : FORMES_DU_SERVEUR) {
+            try {
+                return AFFICHAGE.format(ZonedDateTime.parse(date, forme).withZoneSameInstant(fuseau));
+            } catch (DateTimeParseException autreForme) {
+                // La forme suivante, et à défaut la chaîne telle quelle.
+            }
+        }
+        return date;
     }
 
     private static String essais(Traitement traitement) {
