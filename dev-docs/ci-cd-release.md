@@ -371,8 +371,8 @@ que ce projet héberge lui-même. C'est le seul canal Flatpak du projet.
 
 **En production depuis le 2026-08-15** : `https://flatpak.echonuit.fr/fr.echonuit.VigieChiroCompanion.flatpakrepo`
 sert un dépôt **signé** (clé `1BA6A82DA9213B177B160E56CD450A9383707B17`), reconstruit à chaque
-`workflow_dispatch` de `flatpak.yml`. Installation côté utilisateur documentée dans
-[`docs/prise-en-main.md`](../docs/prise-en-main.md).
+`workflow_dispatch` de `flatpak.yml`. Installation côté utilisateur documentée dans la
+[documentation utilisateur](https://companion.echonuit.fr/prise-en-main/).
 
 **Mécanisme** : la construction de `flatpak-builder` exporte vers `--repo`, en plus du `--install` local
 qui sert au démarrage réel. C'est ce dépôt-là, déjà éprouvé par le pas qui le précède, qu'un
