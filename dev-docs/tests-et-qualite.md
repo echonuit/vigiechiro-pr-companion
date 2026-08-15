@@ -653,6 +653,28 @@ PMD / ArchUnit ne se désactivent **jamais** pour « faire passer » un build (c
   stable en headless).
 - Pour une capture déterministe, voir
   [Ajouter une fonctionnalité §7](ajouter-une-fonctionnalite.md#7-ajouter-un-apercu-capture-decran).
+- **Un test qui MESURE une géométrie monte sa scène avec `Habillage.scene(...)`**, jamais `new Scene`.
+  Sans lui, il mesure la police de la **machine hôte** au lieu de celle du produit, et son verdict
+  dépend de ce qui a tourné avant lui dans le même fork. `ScenesHabilleesTest` le garde (#3773).
+
+### ⚠️ La police d'un test n'est pas celle du produit, sauf si on la lui donne
+
+`Typographie.installer()` garde un `static boolean` : l'enregistrement de la police embarquée est
+**global au JVM et fait une seule fois**. Un test qui monte sa scène à la main voit donc la police du
+produit **si un voisin l'a installée avant lui**, et celle du système sinon - avec `reuseForks=true`,
+c'est l'**ordre d'exécution** qui décide.
+
+Mesuré (#3773) : `CartesAccueilTest` a rendu **vert à 8 h 14 et rouge à 15 h 34**, sur le **même
+commit** et la **même image** `macos-26-arm64`. Puis, joué **seul** sous macOS - donc sans voisin -, il
+échoue. L'écart tient à 20,43 px contre 17,666 px selon la police effectivement rendue.
+
+⚠️ **Ce défaut ne se voit pas depuis un poste Linux** : `Noto Sans` y est une police système, donc
+trouvée installée ou non. Une suite locale verte ne dit rien de cette propriété. Sur le runner Ubuntu,
+l'ADR 3361 note que `sans-serif` se résout en « une police plus large » - ce que la CI voit exactement
+n'a pas été mesuré.
+
+Le remède ne dépend d'aucune machine : passer par `Habillage.scene(...)`, qui installe la police **et**
+pose le trio du chrome.
 
 ### Quatre pièges récurrents
 
