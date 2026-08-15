@@ -87,7 +87,7 @@ Cet écran **unifie** la validation taxonomique (post-Tadarida) et la bibliothè
   <text x="230" y="38" class="crumb-link">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="628" y="38" class="crumb-active">Sons &amp; validation</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <!-- Barre de filtres (à la Notion) -->
   <rect x="40" y="66" width="1120" height="42" rx="4" class="toolbar"/>
@@ -304,7 +304,7 @@ Ouvert depuis la carte d'accueil **« Sons & validation »** (prisme *Espèces &
   <text x="230" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="302" y="38" class="crumb-active">Sons de référence</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <rect x="40" y="66" width="1120" height="42" rx="4" class="toolbar"/>
   <rect x="52" y="74" width="290" height="26" rx="3" class="field"/>

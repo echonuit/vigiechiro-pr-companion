@@ -56,7 +56,7 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
   <text x="260" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="332" y="38" class="crumb-active">Espèces &amp; observations</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <text x="40" y="86" class="pagetitle">Espèces &amp; observations</text>
   <text x="40" y="106" class="pagesub">12 espèces · 3 980 observations retenues · 2 carrés</text>
@@ -269,7 +269,7 @@ Le bouton **« 🗺️ Carte »** remplace la table d'inventaire par une **carte
   <text x="260" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="332" y="38" class="crumb-active">Espèces &amp; observations</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <text x="40" y="86" class="pagetitle">Espèces &amp; observations</text>
   <text x="40" y="106" class="pagesub">12 espèces · 3 980 observations retenues · 2 carrés</text>

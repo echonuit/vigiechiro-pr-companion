@@ -51,7 +51,7 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
   <text x="210" y="38" class="retour">← Retour</text>
   <text x="290" y="38" class="crumb-active">Accueil</text>
   <rect x="910" y="22" width="200" height="22" rx="11" class="search"/>
-  <text x="926" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="926" y="38" class="search-txt">Rechercher</text>
   <rect x="1120" y="22" width="40" height="22" rx="6" class="search"/>
   <text x="1140" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="#3f51b5">☰</text>
 

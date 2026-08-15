@@ -116,7 +116,7 @@ L'écran est divisé en **2 colonnes** surmontant un **bandeau de décision en p
   <text x="210" y="38" class="breadcrumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="642" y="38" class="breadcrumb-curr">Vérifier</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <text x="40" y="90" class="pagesub">Écoutez quelques séquences réparties sur la nuit pour vous assurer que l'enregistrement est exploitable.</text>
 

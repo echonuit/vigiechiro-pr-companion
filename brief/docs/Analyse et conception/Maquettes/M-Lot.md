@@ -62,7 +62,7 @@ La vue déroule le dépôt en **quatre étapes** (un stepper les rappelle en tê
   <text x="210" y="38" class="breadcrumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="642" y="38" class="breadcrumb-curr">Préparer le dépôt</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <text x="40" y="86" class="pagetitle">📦 Préparer le dépôt sur Vigie-Chiro</text>
   <text x="40" y="107" class="pagesub">Téléversement direct depuis l'application, reprenable sur coupure ; dépôt navigateur en repli hors connexion.</text>

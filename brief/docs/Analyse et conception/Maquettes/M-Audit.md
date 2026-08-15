@@ -44,7 +44,7 @@
   <text x="210" y="28" class="crumb">Accueil  ›  </text>
   <text x="278" y="28" class="crumb-curr">Audit de cohérence</text>
   <rect x="780" y="12" width="200" height="22" rx="11" class="search"/>
-  <text x="794" y="28" class="search-txt">Rechercher (Ctrl+F)</text>
+  <text x="794" y="28" class="search-txt">Rechercher</text>
 
   <!-- Resume chiffre + actions -->
   <text x="30" y="76" class="resume">2 écart(s) : </text>
