@@ -157,11 +157,18 @@ jobs:
         if: (steps.diff.outputs.change == 'true' || inputs.forcer) && steps.garde-flatpak-signature.outputs.present == 'true'
         env:
           FLATPAK_GPG_KEY: ${{ secrets.FLATPAK_GPG_KEY }}
+        # allow-loopback-pinentry / pinentry-mode loopback : sans ça, la signature
+        # ostree plus bas (flatpak-builder --gpg-sign) tente d'ouvrir un pinentry
+        # interactif et plante avec « Pinentry: Inappropriate ioctl for device »,
+        # ce runner n'ayant pas de terminal de contrôle.
         run: |
           set -euo pipefail
           export GNUPGHOME="${RUNNER_TEMP}/gnupg"
           mkdir -m 700 -p "$GNUPGHOME"
+          echo "allow-loopback-pinentry" > "$GNUPGHOME/gpg-agent.conf"
+          echo "pinentry-mode loopback" > "$GNUPGHOME/gpg.conf"
           echo "$FLATPAK_GPG_KEY" | base64 -d -i | gpg --batch --import
+          gpgconf --homedir "$GNUPGHOME" --kill gpg-agent
 
       - name: Construire le Flatpak
         if: steps.diff.outputs.change == 'true' || inputs.forcer
