@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.persistence;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.Workspace;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -11,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.Set;
@@ -66,9 +66,6 @@ public final class VerrouWorkspace implements AutoCloseable {
     /// L'horodatage tel que [#inscrireLOccupant] l'écrit, repéré pour être reformaté à l'affichage.
     private static final Pattern HORODATAGE_ISO =
             Pattern.compile("\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?(\\.\\d+)?");
-
-    /// La forme que le reste du produit donne à une date et une heure.
-    private static final DateTimeFormatter AFFICHAGE = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final FileChannel canal;
     private final FileLock verrou;
@@ -254,7 +251,7 @@ public final class VerrouWorkspace implements AutoCloseable {
         try {
             LocalDateTime instant = LocalDateTime.parse(trouve.group());
             return new StringBuilder(inscrit)
-                    .replace(trouve.start(), trouve.end(), instant.format(AFFICHAGE))
+                    .replace(trouve.start(), trouve.end(), Horodatage.dansUnTableau(instant))
                     .toString();
         } catch (DateTimeParseException pasUneDate) {
             return inscrit;

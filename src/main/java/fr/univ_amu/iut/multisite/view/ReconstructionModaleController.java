@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.multisite.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
@@ -11,7 +12,6 @@ import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import java.time.OffsetDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
@@ -49,9 +49,6 @@ public class ReconstructionModaleController {
     private static final String POINT_INCONNU = "Inconnu ici : créez le site et le point";
 
     private static final String POINT_CONNU = "Connu";
-
-    /// Début de nuit tel qu'on le lit : « 03/07/2026 à 22:00 ».
-    private static final DateTimeFormatter FORMAT_NUIT = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
 
     private final ReconstructionViewModel viewModel;
     private final ExecuteurTache executeur;
@@ -388,7 +385,7 @@ public class ReconstructionModaleController {
             return "";
         }
         try {
-            return OffsetDateTime.parse(horodatage).format(FORMAT_NUIT);
+            return Horodatage.dansUnTableau(OffsetDateTime.parse(horodatage));
         } catch (DateTimeParseException surprise) {
             return horodatage;
         }
