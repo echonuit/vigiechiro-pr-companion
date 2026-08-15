@@ -369,6 +369,12 @@ public class LotViewModel {
         return espaceDisque.raisonProperty();
     }
 
+    /// La même contrainte, dite court et sans consigne, pour la **barre de statut** (#3743) : la phrase
+    /// complète y écrasait la zone centre, et l'ADR 0039 réserve la consigne à l'encart.
+    public ReadOnlyStringProperty raisonEspaceInsuffisantAbregeeProperty() {
+        return espaceDisque.raisonAbregeeProperty();
+    }
+
     /// `true` dès qu'il existe des archives ZIP à supprimer (liaison vivante sur la liste des archives), pour
     /// libérer l'espace disque : les archives restant régénérables à l'identique.
     public BooleanExpression peutSupprimerArchivesProperty() {

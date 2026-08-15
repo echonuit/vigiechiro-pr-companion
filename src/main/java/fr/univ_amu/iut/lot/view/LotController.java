@@ -288,7 +288,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 viewModel.generationEnCoursProperty(),
                 viewModel.progression().messageProperty(),
                 viewModel.espaceDepotSuffisantProperty(),
-                viewModel.raisonEspaceInsuffisantProperty(),
+                viewModel.raisonEspaceInsuffisantAbregeeProperty(),
                 viewModel.suiviLignes().lignes(),
                 depotViewModel.lancementEnCoursProperty(),
                 depotViewModel.enCoursProperty(),

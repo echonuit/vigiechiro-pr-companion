@@ -563,12 +563,16 @@ class LotVueIntegrationTest {
 
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
 
-        // Le texte exact est celui de l'alerte sous le bouton « Générer ». Qu'il tienne dans la zone est
-        // une autre question, mesurée et ouverte en #3743 : ce garde porte sur ce que la zone DIT.
+        // Forme **courte et sans consigne** depuis #3743, et pour deux raisons qui se renforcent. La
+        // phrase complète prenait 791 px sur 1100 et écrasait la zone centre jusqu'à 10 px de large ;
+        // et l'ADR 0039 réserve la consigne (« Libérez de l'espace ») à l'encart posé sous le bouton,
+        // une barre de statut disant où l'on en est, pas quoi faire. L'encart, lui, garde la phrase
+        // entière : c'est `lblEspaceInsuffisant`, gardé plus haut dans ce fichier.
+        //
+        // ⚠️ Ce garde tient la **copie** ; que le texte tienne dans la zone est tenu ailleurs, par
+        // `BudgetHorizontalChromeTest`. Aucun des deux ne remplace l'autre.
         assertThat(controleur.zonesStatutProperty().get().droite())
-                .startsWith("Espace disque insuffisant :")
-                .contains("9,0 Go") // requis
-                .contains("5,0 Go"); // disponible
+                .isEqualTo("Espace insuffisant : 9,0 Go requis, 5,0 Go libres");
     }
 
     @Test

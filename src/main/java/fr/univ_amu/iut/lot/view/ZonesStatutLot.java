@@ -76,7 +76,7 @@ final class ZonesStatutLot {
             return viewModel.progression().messageProperty().get();
         }
         if (!viewModel.espaceDepotSuffisantProperty().get()) {
-            return viewModel.raisonEspaceInsuffisantProperty().get();
+            return viewModel.raisonEspaceInsuffisantAbregeeProperty().get();
         }
         return FormatsLot.bilanArchives(viewModel.suiviLignes().lignes());
     }
