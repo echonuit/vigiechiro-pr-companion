@@ -4,11 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.view.TailleOuverture;
 import java.nio.file.Files;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
-import javafx.stage.Screen;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,6 +38,15 @@ class AppTest {
         new App().start(stage);
     }
 
+    /// Les entrées de la mesure, portées par le message d'échec (#3622) : un « 846 attendu >= 1336 » nu
+    /// oblige à deviner ce qui a été mesuré, et c'est ce qui a fait chercher ailleurs pendant des jours.
+    private record Mesure(double largeur, double hauteur, double contenu, double champ) {
+
+        String detail() {
+            return "ouverture %.0fx%.0f, contenu %.0f px, champ %.0f px".formatted(largeur, hauteur, contenu, champ);
+        }
+    }
+
     /// Met la mise en page à la taille d'ouverture **sans toucher au Stage**, et rend le contenu et le
     /// champ visible du défilement central.
     ///
@@ -58,9 +65,26 @@ class AppTest {
     /// La mesure porte donc sur la **mise en page** : on redimensionne la racine, on force une passe,
     /// on lit. C'est ce que #3452 veut savoir - à cette taille, l'accueil coupe-t-il ses activités ? -
     /// et cela ne laisse aucune trace derrière.
-    private double[] mesurerADimensionDOuverture(FxRobot robot) {
-        Rectangle2D ecran = Screen.getPrimary().getVisualBounds();
-        TailleOuverture ouverture = TailleOuverture.bornee(ecran.getWidth(), ecran.getHeight());
+    ///
+    /// ## À la taille d'ouverture **voulue**, et non à celle que ce poste-ci ouvrirait (#3622)
+    ///
+    /// Le garde lisait `Screen.getPrimary().getVisualBounds()` puis bornait la taille dessus. Son
+    /// attente dépendait donc de l'écran du **runner**, qui n'est ni le poste de développement ni la
+    /// machine de l'utilisateur : deux exécutions du **même commit** ont rendu deux verdicts opposés,
+    /// avec un contenu mesuré à **846 px** ici et à **1336** là - l'écart d'une grille de cartes qui se
+    /// replie sur davantage de rangs faute de largeur.
+    ///
+    /// Ce que le garde veut dire est dans son titre : « à la taille d'ouverture ». C'est une valeur que
+    /// le produit **décide** (`TailleOuverture.LARGEUR_VOULUE`), pas une que la machine lui impose.
+    ///
+    /// ⚠️ Ce que la borne couvrait est **perdu**, et il faut le dire : sur un écran plus petit que la
+    /// taille voulue, l'application ouvre plus petit et l'accueil y est coupé. Mesuré, à 900x600 - le
+    /// minimum autorisé - il ne tient pas. Ce n'est pas un défaut de ce garde-ci, c'est une question de
+    /// produit, qui mérite d'être posée pour elle-même plutôt que tenue par un test dont personne ne
+    /// contrôle l'entrée.
+    private Mesure mesurerADimensionDOuverture(FxRobot robot) {
+        TailleOuverture ouverture =
+                TailleOuverture.bornee(TailleOuverture.LARGEUR_VOULUE, TailleOuverture.HAUTEUR_VOULUE);
         ScrollPane defilement = robot.lookup(".defilement-central").queryAs(ScrollPane.class);
         double[] mesures = new double[2];
         robot.interact(() -> {
@@ -71,7 +95,7 @@ class AppTest {
             mesures[0] = defilement.getContent().getBoundsInLocal().getHeight();
             mesures[1] = defilement.getViewportBounds().getHeight();
         });
-        return mesures;
+        return new Mesure(ouverture.largeur(), ouverture.hauteur(), mesures[0], mesures[1]);
     }
 
     @AfterEach
@@ -124,15 +148,13 @@ class AppTest {
     @Test
     @DisplayName("#3452 : à la taille d'ouverture, l'accueil tient dans la fenêtre")
     void l_accueil_tient_dans_la_fenetre_d_ouverture(FxRobot robot) {
-        double[] mesures = mesurerADimensionDOuverture(robot);
-        double contenu = mesures[0];
-        double champ = mesures[1];
+        Mesure mesure = mesurerADimensionDOuverture(robot);
 
         // Mesuré avant correctif : la fenêtre s'ouvrait à 960x640, l'accueil demandait 816 px de contenu
         // pour 586 disponibles. Les 230 px manquants étaient exactement les deux cartes du bas - « Ma
         // saison » et « Audit de cohérence » d'un côté, « Sons & validation » de l'autre.
-        assertThat(champ)
-                .as("l'accueil ne doit pas ouvrir sur des activités coupées : %.0f px de contenu", contenu)
-                .isGreaterThanOrEqualTo(contenu);
+        assertThat(mesure.champ())
+                .as("l'accueil ne doit pas ouvrir sur des activités coupées - %s", mesure.detail())
+                .isGreaterThanOrEqualTo(mesure.contenu());
     }
 }
