@@ -66,7 +66,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
   <text x="338" y="38" class="crumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  </text>
   <text x="650" y="38" class="crumb-curr">Passage N° 2</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <!-- Titre + actions de tête -->
   <text x="40" y="124" class="pagetitle">Carré 640380 / A1 / N° 2 (2026)</text>

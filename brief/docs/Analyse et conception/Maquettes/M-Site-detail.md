@@ -59,7 +59,7 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
   <text x="260" y="38" class="crumb-link">Accueil  ›  Mes sites  ›  </text>
   <text x="430" y="38" class="crumb-active">Carré 640380</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <!-- En-tete : titre + sous-titre -->
   <text x="40" y="92" class="pagetitle">Carré 640380 - Étang de la Tuilière</text>

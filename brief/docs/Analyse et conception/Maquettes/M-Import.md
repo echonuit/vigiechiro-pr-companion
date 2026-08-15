@@ -59,7 +59,7 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
   <text x="260" y="38" class="crumb-link">Accueil  ›  Mes sites  ›  Carré 640380  ›  </text>
   <text x="566" y="38" class="crumb-active">Import</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <text x="40" y="86" class="pagetitle">Importer une nuit d'enregistrement</text>
   <text x="40" y="108" class="pagesub">L'application copie les fichiers de la carte SD sans toucher aux originaux, les renomme et les transforme.</text>

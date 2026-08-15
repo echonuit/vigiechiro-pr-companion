@@ -4,7 +4,7 @@
 > **Persona principal** : tous.
 > **Parcours couverts** : [P8 - Rechercher globalement](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md).
 
-La recherche globale permet de **sauter directement** à un site, un point, un passage ou une **espèce** depuis n'importe quel écran. On la déclenche par le champ **« 🔍 Rechercher »** du bandeau (ou **Ctrl+F**) ; la liste de résultats s'ouvre au fil de la frappe, **groupée par type**.
+La recherche globale permet de **sauter directement** à un site, un point, un passage ou une **espèce** depuis n'importe quel écran. On la déclenche par le champ **« Rechercher »** du bandeau (ou **Ctrl+F**) ; la liste de résultats s'ouvre au fil de la frappe, **groupée par type**.
 
 ## Maquette - liste de résultats ouverte
 

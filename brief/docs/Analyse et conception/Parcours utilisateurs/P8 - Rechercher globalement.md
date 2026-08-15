@@ -6,7 +6,7 @@
 
 Dès qu'un utilisateur gère plus de quelques sites, retrouver un site, un point ou un passage précis en naviguant écran par écran devient fastidieux. Une **recherche globale** est posée en haut à droite du bandeau de l'application, présente sur **tous les écrans**, et permet de **sauter directement** à l'élément voulu.
 
-1. Depuis n'importe quel écran, l'utilisateur clique le champ **« 🔍 Rechercher »** (ou tape **Ctrl+F**) et saisit quelques lettres.
+1. Depuis n'importe quel écran, l'utilisateur clique le champ **« Rechercher »** (ou tape **Ctrl+F**) et saisit quelques lettres.
 2. La liste de résultats se remplit **au fil de la frappe**, **insensible à la casse et aux accents** (« etang » trouve « Étang »). Elle interroge :
     - les **sites** (par n° de carré ou nom),
     - les **points d'écoute** (par code ou description),

@@ -51,7 +51,7 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
   <text x="210" y="28" class="crumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="600" y="28" class="crumb-curr">Activité</text>
   <rect x="780" y="12" width="200" height="22" rx="11" class="search"/>
-  <text x="794" y="28" class="search-txt">Rechercher (Ctrl+F)</text>
+  <text x="794" y="28" class="search-txt">Rechercher</text>
 
   <text x="30" y="72" class="pagesub">Nuit du 2026-06-22 · coucher 21:51 · lever 06:27 · 939 contacts de chiroptères</text>
 

@@ -62,7 +62,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   <text x="260" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="332" y="38" class="crumb-active">Carte &amp; passages</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <!-- Onglets de vues memorisees (socle partage, cf. Maquettes/index.md) -->
   <rect x="40" y="64" width="152" height="28" rx="4" class="tab-active"/>

@@ -50,7 +50,7 @@ L'écran présente, pour le passage courant, un **bilan technique** de la nuit :
   <text x="210" y="28" class="crumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="600" y="28" class="crumb-curr">Diagnostic</text>
   <rect x="780" y="12" width="200" height="22" rx="11" class="search"/>
-  <text x="794" y="28" class="search-txt">Rechercher (Ctrl+F)</text>
+  <text x="794" y="28" class="search-txt">Rechercher</text>
 
   <!-- Pas de titre d'écran (#693) : redondant avec le fil d'Ariane ; l'enregistreur est déporté en barre de statut. -->
   <text x="30" y="80" class="pagesub">Température en début de nuit : 8,5 °C</text>

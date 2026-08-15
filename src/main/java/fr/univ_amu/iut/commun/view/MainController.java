@@ -316,6 +316,12 @@ public class MainController {
             boutonRetour.setText(destination != null ? destination : "Retour");
         }
 
+        // « abregeable » sur chaque segment (#3760) : le fil d'Ariane est le porteur **déclaré** du
+        // déficit de la barre du haut. Il ne rend rien à la largeur d'ouverture, où tout tient ; sous
+        // 1100 il s'abrège, et le titre comme le bouton ← Retour restent entiers.
+        //
+        // La classe se pose ici, là où les segments naissent, et non dans une liste tenue ailleurs :
+        // l'ADR 0042 veut que l'exception se lise à l'endroit où elle s'applique.
         filAriane.getChildren().clear();
         var segments = navigateur.filActuel();
         for (int i = 0; i < segments.size(); i++) {

@@ -52,7 +52,7 @@ L'écran répond à une question que l'inventaire ne traite pas : **718 contacts
   <text x="210" y="28" class="crumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="600" y="28" class="crumb-curr">Synthèse</text>
   <rect x="780" y="12" width="200" height="22" rx="11" class="search"/>
-  <text x="794" y="28" class="search-txt">Rechercher (Ctrl+F)</text>
+  <text x="794" y="28" class="search-txt">Rechercher</text>
 
   <!-- Barre de contexte et de contrôles -->
   <text x="30" y="72" class="pagesub">Nuit du 2026-06-22 · 4 448 contacts détectés · 19 espèces de chiroptères</text>

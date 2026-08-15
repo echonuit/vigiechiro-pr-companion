@@ -52,7 +52,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
   <text x="300" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="372" y="38" class="crumb-active">Mes sites</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <!-- En-tete de page -->
   <text x="40" y="100" class="pagetitle">Mes sites de suivi</text>
@@ -173,7 +173,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
   <text x="300" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="372" y="38" class="crumb-active">Mes sites</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <text x="956" y="38" class="search-txt">Rechercher</text>
 
   <text x="40" y="100" class="pagetitle">Mes sites de suivi</text>
 
