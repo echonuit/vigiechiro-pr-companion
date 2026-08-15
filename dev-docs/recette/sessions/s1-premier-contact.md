@@ -48,6 +48,17 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 
 - **S1-12** · État vide : icône 🌐, « + Ajouter mon premier site de suivi », hint-box.
 - **S1-13** · Création : carré 6 chiffres, « Créer » grisé tant qu'invalide, le champ rougit.
+- **S1-30** · Vérification, carré **libre** : saisir `999999`, cliquer « Vérifier sur Vigie-Chiro ». Un encart
+  **vert** apparaît sous le champ : « Ce carré n'existe pas encore sur Vigie-Chiro : vous pouvez le déclarer
+  ici. » Le bouton redevient cliquable aussitôt après.
+- **S1-31** · Vérification, carré **déjà déclaré** : saisir le carré du site plateforme synchronisé (prérequis),
+  cliquer. Un encart **ambre** nomme le site trouvé, protocole compris (« Vigiechiro - Point Fixe-<carré> »), et
+  renvoie à « Mes sites », « Récupérer depuis Vigie-Chiro ». Il ne propose **pas** de déclarer quand même.
+- **S1-32** · Le verdict ne survit pas à ce qu'il jugeait : après S1-31, changer un chiffre du carré. L'encart
+  **disparaît** (il portait sur l'ancien numéro). Recliquer le repose sur le nouveau.
+- **S1-33** · Vérification **hors connexion** : se déconnecter (S1-11), rouvrir la déclaration, saisir six
+  chiffres, cliquer. L'encart dit « Vérification impossible … Ce carré n'a donc PAS été vérifié » - jamais « il
+  n'existe pas ». Le bouton reste offert, non grisé.
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.
