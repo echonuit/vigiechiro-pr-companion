@@ -94,10 +94,15 @@ class ScenesHabilleesTest {
     /// fait une seule fois**, et un test qui ne l'appelle pas voit la police embarquée **si un voisin
     /// l'a installée avant lui**.
     ///
-    /// ⚠️ Et sous Linux, rien de tout cela ne se voit : `Noto Sans` y est une police **système**
-    /// (`/usr/share/fonts/truetype/noto/`). La suite locale et le runner Ubuntu la trouvent donc
-    /// toujours, installée ou non. C'est pourquoi ce défaut ne pouvait apparaître qu'ailleurs, et
-    /// pourquoi ce garde vaut mieux qu'une exécution : il ne dépend pas de la machine qui le joue.
+    /// ⚠️ Et **sur un poste de développement Linux**, rien de tout cela ne se voit : `Noto Sans` y est
+    /// une police **système** (219 entrées sous `/usr/share/fonts/truetype/noto/`), donc trouvée
+    /// installée ou non. Une mesure locale de ce défaut est aveugle par construction.
+    ///
+    /// ⚠️ **Sur le runner, c'est différent, et j'avais écrit trop large.** L'ADR 3361 l'a mesuré avant
+    /// moi : l'alias `sans-serif` se résout « **Noto Sans sur un poste, une police plus large sur le
+    /// runner** ». Ce que la CI Ubuntu voit exactement n'a pas été remesuré ici (#3826, passe 0).
+    ///
+    /// C'est bien pourquoi ce garde vaut mieux qu'une exécution : **il ne dépend d'aucune machine**.
     @Test
     @DisplayName("#3773 : un test qui MESURE une géométrie monte une scène habillée")
     void les_tests_qui_mesurent_montent_une_scene_habillee() throws IOException {

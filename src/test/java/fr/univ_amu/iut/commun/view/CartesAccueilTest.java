@@ -75,10 +75,14 @@ class CartesAccueilTest {
     /// décidait.
     ///
     /// ⚠️ Et sous Linux, rien de tout cela ne se voit - non parce que le repli serait large, mais parce
-    /// que `Noto Sans` y est une police **système** (`/usr/share/fonts/truetype/noto/`, 219 entrées sur
-    /// la machine de développement). La suite locale et le runner Ubuntu la trouvent donc **installée ou
-    /// non**, et aucune mesure faite sous Linux ne peut juger ce défaut. Sous macOS elle n'est pas là :
-    /// seul `installer()` la fournit, et le verdict bascule avec l'ordre.
+    /// que `Noto Sans` y est une police **système** (219 entrées sous `/usr/share/fonts/truetype/noto/`
+    /// sur la machine de développement) : la suite locale la trouve **installée ou non**, et aucune
+    /// mesure faite là ne peut juger ce défaut.
+    ///
+    /// ⚠️ **Le runner Ubuntu, lui, n'a pas été mesuré**, et une première version de ce commentaire
+    /// l'affirmait quand même. L'ADR 3361 dit seulement que `sans-serif` s'y résout en « une police
+    /// plus large » (#3826, passe 0). Sous macOS, en revanche, la mesure existe : `Noto Sans` n'y est
+    /// pas, seul `installer()` la fournit, et le verdict bascule avec l'ordre.
     ///
     /// La preuve est au dossier, et elle a été refaite exprès (#3773) : le **même commit**, sur la
     /// **même image** `macos-26-arm64` (`20260728.0273.1`), a rendu vert à 8 h 14 et rouge à 15 h 34.
