@@ -187,6 +187,12 @@ Un onglet par famille de préférences.
 <td><a href="apercu-reglages-depot.png"><img src="apercu-reglages-depot.png" width="430" alt="Dépôt"></a></td>
 <td><a href="apercu-reglages-emplacements.png"><img src="apercu-reglages-emplacements.png" width="430" alt="Emplacements"></a></td>
 </tr>
+<tr>
+<th colspan="2">Emplacements personnalisés : « Rétablir les emplacements par défaut » devient actif</th>
+</tr>
+<tr>
+<td colspan="2"><a href="apercu-reglages-emplacements-personnalises.png"><img src="apercu-reglages-emplacements-personnalises.png" width="760" alt="Onglet Emplacements avec une configuration personnalisée : le bouton Rétablir est actif"></a></td>
+</tr>
 </table>
 
 <table>
