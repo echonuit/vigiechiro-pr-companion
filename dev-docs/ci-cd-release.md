@@ -364,7 +364,7 @@ paquet reconstruit et démarré avec succès. Publier une version ne demande auc
     fichier à chaque appel et échouerait avant d'y arriver. Le `.deb` installé normalement, lui, garde
     cette catégorie fautive.
 
-### Dépôt Flatpak auto-hébergé (#9760)
+### Dépôt Flatpak auto-hébergé (#2111)
 
 `flatpak.yml` publie le paquet - construit et démarré par la même vérification - dans un dépôt Flatpak
 que ce projet héberge lui-même. C'est le seul canal Flatpak du projet.

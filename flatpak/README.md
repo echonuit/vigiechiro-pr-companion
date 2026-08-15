@@ -1,15 +1,14 @@
 # Paquet Flatpak
 
 Manifeste de l'application (#2111), source du paquet publié sur le dépôt Flatpak auto-hébergé du
-projet ([`dev-docs/ci-cd-release.md`](../dev-docs/ci-cd-release.md#dépôt-flatpak-auto-hébergé-9760)).
+projet ([`dev-docs/ci-cd-release.md`](../dev-docs/ci-cd-release.md#dépôt-flatpak-auto-hébergé-2111)).
 
 ## Ce que le manifeste fait, et pourquoi
 
 **Il extrait le `.deb` publié** au lieu de construire depuis les sources. Les builds Flatpak n'ont
 **aucun réseau** : une résolution Maven y est impossible sans déclarer chaque dépendance transitive en
 source vérifiée - un fichier généré, énorme, à régénérer à chaque montée de version. C'est le choix de
-[Gluon Scene Builder](https://github.com/flathub/com.gluonhq.SceneBuilder), précédent JavaFX
-directement comparable, pour la même raison.
+Gluon Scene Builder, précédent JavaFX directement comparable, pour la même raison.
 
 Chez nous c'est même plus simple : le fat-jar embarque déjà JavaFX et ses natifs Linux, là où Scene
 Builder doit télécharger le SDK JavaFX à côté.
@@ -114,25 +113,6 @@ flatpak run --filesystem="$PWD" --cwd="$PWD" \
 rougir : glisser un `--filesystem=home` dans une copie du manifeste doit lui faire rendre
 `finish-args-home-filesystem-access`. Sans ce contrôle, on ne distingue pas « rien à signaler » de
 « dispositif muet ».
-
-Pour le contrôle du dépôt construit, il faut le miroitage des captures, sans quoi deux erreurs
-apparaissent qui ne viennent pas du manifeste :
-
-```bash
-flatpak run --filesystem="$PWD" --cwd="$PWD" org.flatpak.Builder \
-    --user --force-clean --disable-rofiles-fuse \
-    --mirror-screenshots-url=https://dl.flathub.org/media \
-    --repo=repo build-dir fr.echonuit.VigieChiroCompanion.yml
-
-flatpak run --filesystem="$PWD" --cwd="$PWD" \
-    --command=flatpak-builder-lint org.flatpak.Builder repo repo
-```
-
-!!! Ce contrôle-là peut rendre `appstream-external-screenshot-url` et
-`appstream-remote-icon-not-mirrored` **même quand tout va bien** : l'`appstreamcli` embarqué écrit des
-chemins relatifs avec `media_baseurl` sur la racine, tandis que le linter attend le préfixe absolu dans
-chaque élément. C'est un décalage d'outillage, pas un défaut du manifeste. Vérifié le 2026-08-13 sur une
-construction d'essai réussie.
 
 ## Monter de version
 

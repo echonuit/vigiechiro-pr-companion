@@ -117,9 +117,10 @@ jobs:
       - name: Installer le MSI, puis le LANCER
         shell: pwsh
         # Le contrôle qui manquait. La validation automatique de Microsoft installe le
-        # paquet et vérifie le manifeste, mais ne lance pas l'application : leur propre
-        # documentation le dit pour Flathub, et notre v2.32.3 en a fait la démonstration
-        # (paquet installable, validé par leur pipeline, incapable de démarrer).
+        # paquet et vérifie le manifeste, mais ne lance pas l'application : d'autres canaux
+        # de distribution empaquetée documentent le même angle mort, et notre v2.32.3 en a
+        # fait la démonstration (paquet installable, validé par leur pipeline, incapable de
+        # démarrer).
         #
         # Deux limites assumées. Le lanceur jpackage est en sous-système graphique : il
         # n'écrit sur aucune console, on ne peut donc pas lire sa sortie. On s'appuie

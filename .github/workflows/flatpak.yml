@@ -8,16 +8,10 @@
 # une version retirée, et l'AppStream annonçait une version encore plus vieille.
 #
 # Le manifeste porte pourtant DÉJÀ la description de cette mise à jour, dans son
-# bloc `x-checker-data`. C'est le mécanisme officiel de Flathub : leur robot le
-# lit et ouvre la mise à jour tout seul. Mais il ne tourne que sur
-# l'infrastructure Flathub, contre le manifeste du dépôt Flathub. Tant que le
-# paquet n'y est pas accepté (#2191), PERSONNE n'exécute ce bloc.
-#
-# Ce workflow est donc l'exécutant manquant, et il rend un second service :
-# il consomme exactement la même configuration que le robot de Flathub. Si notre
-# `x-checker-data` est mal écrit, on l'apprend ici, tout de suite, au lieu de le
-# découvrir après acceptation en constatant que le robot officiel ne s'est jamais
-# déclenché.
+# bloc `x-checker-data`, lu par `flatpak-external-data-checker`. Rien ne
+# l'exécute automatiquement contre notre dépôt auto-hébergé : ce workflow est
+# donc l'exécutant, et il fait tourner cet outil ici, directement, avant de
+# rien proposer.
 #
 # QUATRE PARTIS PRIS
 #
@@ -53,7 +47,7 @@
 name: flatpak
 
 on:
-  # DÉCLENCHEMENT MANUEL, comme la soumission winget et pour les mêmes deux raisons.
+  # DÉCLENCHEMENT MANUEL, comme la publication winget et pour les mêmes deux raisons.
   #
   # Ce workflow portait `release: released`, qui ne s'est JAMAIS déclenché : la
   # release est dé-brouillonnée par release.yml avec le GITHUB_TOKEN, et GitHub ne
@@ -61,13 +55,12 @@ on:
   # `gh run list --event release` ne renvoie rien, sur tout l'historique du dépôt.
   #
   # Et le rebrancher aurait coûté cher : ce dépôt publie entre 3 et 37 fois par
-  # jour, soit autant de constructions complètes du SDK Flathub et autant de
-  # commits de mise à jour sur main, pour un manifeste que personne ne lit encore
-  # tant que le paquet n'est pas accepté sur Flathub (#2191).
+  # jour, soit autant de constructions complètes du SDK et autant de commits de
+  # mise à jour sur main, pour un manifeste qui ne change pas à chaque publication.
   #
-  # Après acceptation, ce sont de toute façon les robots de Flathub qui prendront
-  # le relais des montées de version, toutes les deux heures. Ce workflow restera
-  # utile pour ce que ces robots ne font pas : attester que le paquet DÉMARRE.
+  # Ce workflow reste donc le seul mécanisme de mise à jour du dépôt Flatpak : il
+  # construit, démarre et publie à la demande, et attend `forcer` ou une montée
+  # de version pour agir.
   workflow_dispatch:
     inputs:
       forcer:
@@ -133,7 +126,7 @@ jobs:
           # et l'on exige qu'une fenêtre soit mappée. Cf. le pas « Démarrage réel ».
           sudo apt-get install -y flatpak flatpak-builder xvfb xdotool gnupg
           flatpak remote-add --if-not-exists --user \
-            flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+            runtimes https://dl.flathub.org/repo/flathub.flatpakrepo
 
       # Dormant tant que FLATPAK_GPG_KEY n'est pas posé : la construction et la
       # publication qui suivent restent alors non signées (NoGpgVerify=true côté
@@ -193,7 +186,7 @@ jobs:
         # sur le même indicateur pour ne jamais annoncer une signature absente.
         run: |
           set -euo pipefail
-          args=(--disable-rofiles-fuse --install-deps-from=flathub
+          args=(--disable-rofiles-fuse --install-deps-from=runtimes
                 --state-dir="${RUNNER_TEMP}/flatpak-etat"
                 --repo="${RUNNER_TEMP}/flatpak-repo"
                 --user --install --force-clean)
@@ -267,7 +260,7 @@ jobs:
           kill "$appli" 2>/dev/null || true
           echo "Le Flatpak démarre et ouvre une fenêtre « ${titre} », sans erreur."
 
-      # Dépôt Flatpak auto-hébergé, en attendant l'acceptation sur Flathub (#2191).
+      # Dépôt Flatpak auto-hébergé : seul canal de distribution Flatpak du projet (#2111).
       #
       # Dormant tant que ENABLE_FLATPAK_REPO != 'true' OU que FLATPAK_DEPLOY_TOKEN
       # n'est pas posé : même garde-fou d'inertie que docs.yml pour companion/
@@ -302,7 +295,7 @@ jobs:
             echo "Title=VigieChiro Companion (dépôt auto-hébergé)"
             echo "Url=https://flatpak.echonuit.fr/"
             echo "Homepage=https://companion.echonuit.fr/"
-            echo "Comment=En attendant l'acceptation sur Flathub (#2191)"
+            echo "Comment=Dépôt Flatpak officiel du projet VigieChiro Companion"
             if [ "${{ steps.garde-flatpak-signature.outputs.present }}" = "true" ]; then
               echo "Description=Publié depuis ce dépôt à chaque montée de version. Signé (clé ${FLATPAK_GPG_KEY_ID})."
               echo "GPGKey=${FLATPAK_GPG_PUBLIC_KEY_B64}"
@@ -359,7 +352,7 @@ jobs:
           {
             echo "Mise à jour automatique du manifeste Flatpak vers la **v${version}**."
             echo
-            echo "Produite par \`flatpak-external-data-checker\` à partir du bloc \`x-checker-data\` du manifeste, c'est-à-dire par le mécanisme même qu'emploiera le robot de Flathub."
+            echo "Produite par \`flatpak-external-data-checker\`, exécuté directement dans ce workflow, à partir du bloc \`x-checker-data\` du manifeste."
             echo
             echo "Le paquet a été **construit et démarré** avant l'ouverture de cette PR : 45 s debout, sans erreur de chargement."
             echo

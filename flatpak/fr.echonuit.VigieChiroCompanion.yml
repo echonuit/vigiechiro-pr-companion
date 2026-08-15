@@ -26,11 +26,11 @@ finish-args:
   # `UnsupportedOperationException: Unable to open DISPLAY`.
   #
   # Le repli etait donc exactement a l'envers : il retirait X11 precisement dans le
-  # cas ou il est indispensable. Constate en installant le paquet construit par
-  # Flathub sur un poste GNOME/Wayland ordinaire.
+  # cas ou il est indispensable. Constate en installant le paquet construit sur un
+  # poste GNOME/Wayland ordinaire.
   #
   # `--socket=wayland` a ete RETIRE, et pas seulement par gout du moindre privilege :
-  # le linter de Flathub refuse `finish-args-contains-both-x11-and-wayland`. Les deux
+  # `flatpak-builder-lint` refuse `finish-args-contains-both-x11-and-wayland`. Les deux
   # seules formes admises sont `wayland + fallback-x11`, qui nous casse, et `x11`
   # seul. Le declarer serait de toute facon accorder un acces dont l'application ne
   # sait rien faire. A revoir le jour ou JavaFX rendra nativement en Wayland.
@@ -71,9 +71,9 @@ modules:
   - name: vigiechiro
     buildsystem: simple
     build-commands:
-      # On extrait le .deb PUBLIÉ plutôt que de construire depuis les sources : les builds Flathub
+      # On extrait le .deb PUBLIÉ plutôt que de construire depuis les sources : les builds Flatpak
       # sont hors ligne, et une résolution Maven y est impossible sans déclarer chaque dépendance
-      # transitive en source vérifiée. Même choix que Gluon Scene Builder, pour la même raison.
+      # transitive en source vérifiée. Même choix qu'un précédent JavaFX comparable, pour la même raison.
       - mkdir -p paquet
       - ar p vigiechiro.deb data.tar.zst | tar --use-compress-program=unzstd -xf -
         -C paquet
@@ -104,8 +104,8 @@ modules:
         dest-filename: vigiechiro.deb
         url: https://github.com/echonuit/vigiechiro-pr-companion/releases/download/v2.185.0/vigiechirocompanion_2.185.0_amd64-x64.deb
         sha256: 6fa16f3ca801bffbc7730ea5f8e2b6ad40bdfe9ade585588c5e76a0b38c31387
-        # Le robot de Flathub détecte les nouvelles versions et ouvre la mise à jour tout seul :
-        # c'est ce qui rend la maintenance quasi nulle une fois le paquet accepté.
+        # `flatpak-external-data-checker`, exécuté dans `flatpak.yml`, détecte les nouvelles
+        # versions et ouvre la mise à jour tout seul : c'est ce qui rend la maintenance quasi nulle.
         x-checker-data:
           type: json
           # `is-main-source` : désigne ce .deb comme LA source qui porte la version de

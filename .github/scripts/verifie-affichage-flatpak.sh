@@ -21,7 +21,7 @@
 #     d'affichage. Il attestait « le paquet se charge », pas « le paquet s'affiche » ;
 #   - les essais locaux passaient tous `--nosocket=wayland` (pour un écran virtuel), ce qui
 #     active `fallback-x11` et prend PAR ACCIDENT le seul chemin qui fonctionne ;
-#   - la construction d'essai de Flathub construit, elle ne lance pas avec un écran.
+#   - la construction d'essai du dépôt Flatpak construit, elle ne lance pas avec un écran.
 #
 # Trois verts, aucun ne portait sur la propriété qui a cassé.
 #
@@ -33,7 +33,7 @@
 #
 #   1. `--socket=x11` est déclaré ;
 #   2. `--socket=fallback-x11` ne l'est PAS ;
-#   3. `x11` et `wayland` ne sont pas déclarés ensemble - le linter de Flathub refuse cette
+#   3. `x11` et `wayland` ne sont pas déclarés ensemble - `flatpak-builder-lint` refuse cette
 #      combinaison (`finish-args-contains-both-x11-and-wayland`), donc une PR qui la porterait
 #      serait rejetée en amont plutôt qu'ici.
 #
@@ -74,7 +74,7 @@ controler() {
 
     if printf '%s\n' "$sockets" | grep -qx 'x11' \
        && printf '%s\n' "$sockets" | grep -qx 'wayland'; then
-        motifs+=("x11 et wayland sont déclarés ensemble : le linter de Flathub refuse finish-args-contains-both-x11-and-wayland")
+        motifs+=("x11 et wayland sont déclarés ensemble : flatpak-builder-lint refuse finish-args-contains-both-x11-and-wayland")
     fi
 
     printf '%s\n' "${motifs[@]+"${motifs[@]}"}"
