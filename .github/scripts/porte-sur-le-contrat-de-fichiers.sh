@@ -23,6 +23,16 @@ set -euo pipefail
 # Chemins surveillés, un par ligne. ⚠️ Le nom de CHAQUE entrée est une décision : ajouter une classe
 # ici, c'est déclarer que son comportement dépend du système. Le faire à la légère rallonge le gate de
 # trois plateformes ; l'oublier laisse un chemin de disque non vérifié.
+#
+# ⚠️ `GestesFichiers` et `TailleFichier` y figurent depuis #3794, et ils méritent un mot : ce ne sont
+# pas des classes qui *font* du disque, ce sont les **points d'injection** par lesquels tout le reste y
+# accède. Leurs implémentations par défaut - `Files.walk`, `Files.list`, `deleteIfExists`, la taille -
+# SONT le comportement réel du produit. Changer l'une d'elles change ce que font les huit classes
+# ci-dessus sur les trois plateformes, et jusqu'ici cela ne déclenchait **rien**.
+#
+# La garde `verifie-inventaires-ci.sh` ne pouvait pas le trouver : elle confronte des inventaires, et
+# qu'une classe MÉRITE d'être surveillée reste un jugement. C'est écrit dans son en-tête, et c'est
+# pourquoi cette entrée-ci est posée à la main.
 SURVEILLES=$(
     cat <<'FIN'
 src/main/java/fr/univ_amu/iut/commun/model/EcritureAtomique.java
@@ -33,6 +43,8 @@ src/main/java/fr/univ_amu/iut/commun/persistence/BasculeRacines.java
 src/main/java/fr/univ_amu/iut/commun/persistence/RestaurationComplete.java
 src/main/java/fr/univ_amu/iut/importation/model/ExtracteurZip.java
 src/main/java/fr/univ_amu/iut/importation/model/BornesExtraction.java
+src/main/java/fr/univ_amu/iut/commun/persistence/GestesFichiers.java
+src/main/java/fr/univ_amu/iut/commun/model/TailleFichier.java
 src/test/java/fr/univ_amu/iut/commun/model/EcritureAtomiqueTest.java
 src/test/java/fr/univ_amu/iut/commun/model/ConfigurationAmorcageTest.java
 src/test/java/fr/univ_amu/iut/commun/persistence/VerrouWorkspaceTest.java
