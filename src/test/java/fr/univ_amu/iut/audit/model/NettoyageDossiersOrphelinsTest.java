@@ -157,4 +157,119 @@ class NettoyageDossiersOrphelinsTest {
                         + " qu'on observe")
                 .isEqualTo(5L);
     }
+
+    @Nested
+    @DisplayName("La raison qui remonte jusqu'à l'utilisateur (#3681)")
+    class LaRaison {
+
+        // ⚠️ Ce maillon est celui que l'ADR 3574 tient pour la justification de TOUT le contrat « au
+        // mieux » : la raison est portée parce qu'un appelant en rend compte à l'utilisateur. Une
+        // mesure de mutation (#3664) y laissait pourtant survivre quatre mutants - `premierEchec` et
+        // `raisonLisible` pouvaient rendre `""` sans qu'un seul test s'en aperçoive. On avait livré la
+        // raison sans vérifier qu'elle arrive.
+
+        @Test
+        @DisplayName("Un dossier qui résiste arrive au bilan AVEC sa raison")
+        void la_raison_arrive_non_vide() throws IOException {
+            Path dossier = dossierAvecSequences(PASS2, 2);
+
+            BilanNettoyage bilan = nettoyage.retirer(List.of(dossier), suppressionQuiResiste(dossier));
+
+            assertThat(bilan.resistants()).hasSize(1);
+            assertThat(bilan.resistants().getFirst().raison())
+                    .as("une raison vide vaut le silence que le contrat existe pour éviter")
+                    .isNotBlank()
+                    // ⚠️ On n'attend PAS « Permission denied » : le message du système dépend de la
+                    // locale et du noyau. Ce qui se vérifie est que la raison TRAVERSE, pas son libellé.
+                    .contains("refusée");
+        }
+
+        @Test
+        @DisplayName("Une panne sans message donne le TYPE, jamais le vide")
+        void sans_message_le_type_fait_office_de_raison() throws IOException {
+            Path dossier = dossierAvecSequences(PASS3, 1);
+
+            BilanNettoyage bilan = nettoyage.retirer(List.of(dossier), suppressionMuette(dossier));
+
+            assertThat(bilan.resistants().getFirst().raison())
+                    .as("un système qui ne dit rien ne doit pas devenir un produit qui ne dit rien")
+                    .isEqualTo("IOException");
+        }
+
+        @Test
+        @DisplayName("Un dossier retiré pour de bon n'invente aucune raison")
+        void ce_qui_part_ne_resiste_pas() throws IOException {
+            Path dossier = dossierAvecSequences(PASS9, 1);
+
+            BilanNettoyage bilan = nettoyage.retirer(List.of(dossier), GestesFichiers.reels());
+
+            assertThat(bilan.resistants()).isEmpty();
+            assertThat(bilan.retires()).containsExactly(dossier);
+        }
+    }
+
+    @Nested
+    @DisplayName("Ce que l'annonce ignore (#3681)")
+    class LAnnonce {
+
+        // Le prédicat de `mesurer` filtre le nul et l'absent. Remplacé par `true`, il survivait : aucun
+        // test ne lui passait l'un ni l'autre. C'est pourtant le cas d'un orphelin retiré entre
+        // l'inventaire et le nettoyage - la course courte que cette classe existe pour traverser.
+
+        @Test
+        @DisplayName("Un chemin nul dans la liste ne fait ni lever ni compter")
+        void un_chemin_nul_est_ignore() throws IOException {
+            Path present = dossierAvecSequences(PASS2, 3);
+
+            long annonce = nettoyage.mesurer(java.util.Arrays.asList(null, present));
+
+            assertThat(annonce)
+                    .as("un nul doit être ignoré, pas faire tomber l'annonce avant qu'elle s'affiche")
+                    .isEqualTo(3 * 1024L);
+        }
+
+        @Test
+        @DisplayName("Un dossier disparu entre l'inventaire et l'annonce compte pour zéro")
+        void un_dossier_absent_compte_pour_zero() throws IOException {
+            Path present = dossierAvecSequences(PASS3, 2);
+            Path envole = workspace.resolve("jamais-cree");
+
+            long annonce = nettoyage.mesurer(List.of(present, envole));
+
+            assertThat(annonce)
+                    .as("on ne promet pas de libérer ce qui n'existe plus")
+                    .isEqualTo(2 * 1024L);
+        }
+    }
+
+    /// Des gestes réels, sauf la suppression sous `interdit`, qui refuse **avec un message**.
+    ///
+    /// ⚠️ Fabriqué plutôt que demandé au système : `File.setWritable(false)` n'empêche pas la
+    /// suppression sous Windows, et un `chmod` rendrait ce test inerte là où la suite le joue chaque
+    /// mardi (#3526). Même patron que `ArborescenceFichiersTest`.
+    private static GestesFichiers suppressionQuiResiste(Path interdit) {
+        return new GestesFichiers() {
+            @Override
+            public void supprimer(Path chemin) throws IOException {
+                if (chemin.startsWith(interdit)) {
+                    throw new IOException("Suppression refusée : " + chemin);
+                }
+                Files.deleteIfExists(chemin);
+            }
+        };
+    }
+
+    /// Comme [#suppressionQuiResiste], mais la panne **ne dit rien** : `getMessage()` rend `null`.
+    /// C'est le cas que le repli sur le nom du type existe pour couvrir.
+    private static GestesFichiers suppressionMuette(Path interdit) {
+        return new GestesFichiers() {
+            @Override
+            public void supprimer(Path chemin) throws IOException {
+                if (chemin.startsWith(interdit)) {
+                    throw new IOException();
+                }
+                Files.deleteIfExists(chemin);
+            }
+        };
+    }
 }
