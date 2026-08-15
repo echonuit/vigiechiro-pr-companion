@@ -264,13 +264,13 @@ jobs:
       #
       # Dormant tant que ENABLE_FLATPAK_REPO != 'true' OU que FLATPAK_DEPLOY_TOKEN
       # n'est pas posé : même garde-fou d'inertie que docs.yml pour companion/
-      # companion-dev/brief, pour la même raison — ce changement peut être fusionné
+      # companion-dev/brief, pour la même raison : ce changement peut être fusionné
       # avant que le dépôt de publication, le domaine et le jeton existent, et la
       # publication démarrera d'elle-même le jour où ils sont posés.
       #
       # SIGNÉ dès que FLATPAK_GPG_KEY est posé (cf. garde-flatpak-signature et
       # « Importer la clé de signature GPG », plus haut) ; NON signé sinon
-      # (`NoGpgVerify=true`) — c'est le même indicateur qui décide dans les deux
+      # (`NoGpgVerify=true`) : c'est le même indicateur qui décide dans les deux
       # pas, pour ne jamais annoncer un .flatpakrepo signé sur un export qui ne
       # l'était pas.
       - name: Vérifier la présence du secret FLATPAK_DEPLOY_TOKEN
