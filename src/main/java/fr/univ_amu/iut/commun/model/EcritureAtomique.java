@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.model;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,6 +60,15 @@ public final class EcritureAtomique {
     private static final Set<PosixFilePermission> PROPRIETAIRE_SEUL =
             Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
 
+    /// Cinq tentatives espacées de 150 ms : ~600 ms d'insistance au total. Assez pour traverser une
+    /// analyse antivirus, trop court pour qu'un utilisateur croie l'application figée.
+    private static final int TENTATIVES = 5;
+
+    private static final long MILLIS_ENTRE_TENTATIVES = 150L;
+
+    private static final Deplacement DEPLACEMENT_REEL =
+            (source, cible) -> Files.move(source, cible, StandardCopyOption.ATOMIC_MOVE);
+
     private EcritureAtomique() {}
 
     /// Écrit `contenu` dans `cible`, en UTF-8, en remplaçant ce qui s'y trouvait. La forme à employer
@@ -77,16 +87,98 @@ public final class EcritureAtomique {
     }
 
     private static void ecrire(Path cible, String contenu, boolean secret) throws IOException {
+        ecrire(cible, contenu, secret, DEPLACEMENT_REEL, Thread::sleep);
+    }
+
+    /// [#ecrire(Path,String,boolean)], avec le déplacement et l'attente **injectés**.
+    ///
+    /// ⚠️ Sans cette couture, la reprise n'est éprouvable **nulle part** : le cas qu'elle traverse ne se
+    /// produit que sous Windows, où un lecteur concurrent bloque le remplacement, et sous POSIX le
+    /// déplacement **réussit** quoi qu'on tienne ouvert. Mesuré par sonde (#3777). Même raison que
+    /// `GestesFichiers` (#3525), `TailleFichier` (#3627) et `CouleurCli` (#3738).
+    static void ecrire(Path cible, String contenu, boolean secret, Deplacement deplacement, Attente attente)
+            throws IOException {
         Path dossier = cible.getParent();
         Files.createDirectories(dossier);
         Path temporaire = Files.createTempFile(dossier, ".ecriture-", ".tmp", attributsDeCreation(secret));
         try {
             Files.writeString(temporaire, contenu);
-            Files.move(temporaire, cible, StandardCopyOption.ATOMIC_MOVE);
+            deplacerEnInsistant(temporaire, cible, deplacement, attente);
         } catch (IOException | RuntimeException echec) {
             Files.deleteIfExists(temporaire);
             throw echec;
         }
+    }
+
+    /// Déplace, et **réessaie** tant que la cible est tenue par quelqu'un d'autre.
+    ///
+    /// ## Pourquoi une reprise, et pourquoi elle est bornée
+    ///
+    /// Mesuré sous Windows Server 2025 (#3777) : **n'importe quel** lecteur concurrent fait échouer le
+    /// remplacement en `AccessDeniedException` - un `Files.newInputStream` suffit, il n'y a pas besoin
+    /// d'un verrou. Or c'est le chemin d'écriture du fichier d'**amorçage** (#3507), et les tenues
+    /// concurrentes y sont **ordinaires** : un antivirus qui analyse le fichier au moment où on le
+    /// remplace, un outil de sauvegarde, une seconde instance qui lit.
+    ///
+    /// Insister quelques centaines de millisecondes traverse la tenue **transitoire**, qui est le cas
+    /// mesuré. Insister sans fin masquerait le cas **durable** - une seconde instance ouverte - qui, lui,
+    /// demande une action de l'utilisateur : d'où le butoir, et un refus qui **nomme** la situation.
+    ///
+    /// ⚠️ La reprise ne regarde pas le système d'exploitation. Sous POSIX, une `AccessDeniedException`
+    /// est un vrai refus de droits : elle coûtera le butoir avant d'échouer, et c'est le prix assumé
+    /// pour ne pas déduire un comportement d'un nom de plateforme - ce que [fr.univ_amu.iut.cli.CouleurCli]
+    /// a appris à ne plus faire.
+    private static void deplacerEnInsistant(Path temporaire, Path cible, Deplacement deplacement, Attente attente)
+            throws IOException {
+        AccessDeniedException dernier = null;
+        for (int tentative = 1; tentative <= TENTATIVES; tentative++) {
+            try {
+                deplacement.deplacer(temporaire, cible);
+                return;
+            } catch (AccessDeniedException tenue) {
+                dernier = tenue;
+                if (tentative < TENTATIVES) {
+                    patienter(attente);
+                }
+            }
+        }
+        throw refusCible(cible, dernier);
+    }
+
+    private static void patienter(Attente attente) throws IOException {
+        try {
+            attente.attendre(MILLIS_ENTRE_TENTATIVES);
+        } catch (InterruptedException interrompu) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Écriture interrompue pendant l'attente du fichier", interrompu);
+        }
+    }
+
+    /// Le refus, quand la cible reste tenue : il **nomme** la cause et dit quoi faire.
+    ///
+    /// ⚠️ Sans cela l'utilisateur lirait « accès refusé » sur un fichier dont il est propriétaire, ce
+    /// qui l'enverrait chercher un problème de droits qui n'existe pas.
+    private static IOException refusCible(Path cible, AccessDeniedException cause) {
+        IOException refus =
+                new IOException("Le fichier « " + cible.getFileName() + " » est tenu ouvert par un autre programme, "
+                        + "après " + TENTATIVES + " tentatives. Fermer l'application si elle est déjà "
+                        + "lancée, ou l'outil qui garde ce fichier ouvert (antivirus, sauvegarde).");
+        if (cause != null) {
+            refus.initCause(cause);
+        }
+        return refus;
+    }
+
+    /// Ce que fait le déplacement final. Réel par défaut ; fabriqué dans les tests.
+    @FunctionalInterface
+    interface Deplacement {
+        void deplacer(Path source, Path cible) throws IOException;
+    }
+
+    /// L'attente entre deux tentatives. Réelle par défaut ; instantanée dans les tests.
+    @FunctionalInterface
+    interface Attente {
+        void attendre(long millis) throws InterruptedException;
     }
 
     /// Les permissions posées **à la création** du temporaire, ou aucun attribut hors POSIX.
