@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// Toute fenêtre de l'application passe-t-elle par [Habillage] ? (#3374)
 ///
@@ -34,6 +35,17 @@ class ScenesHabilleesTest {
 
     /// Le seul endroit qui fabrique une scène de fenêtre.
     private static final String FABRIQUE = "commun/view/Habillage.java";
+
+    /// Les façons de demander une dimension à un nœud. Une liste, parce que le défaut ne tient pas à un
+    /// nom : il tient au fait de **mesurer**.
+    private static final List<String> MESURES = List.of(
+            "getLayoutBounds(",
+            "getBoundsInParent(",
+            "getBoundsInLocal(",
+            ".getWidth()",
+            ".getHeight()",
+            "prefWidth(",
+            "prefHeight(");
 
     @Test
     @DisplayName("#3374 : aucune fenêtre de l'application ne se construit hors de Habillage")
@@ -63,6 +75,79 @@ class ScenesHabilleesTest {
                 .isEmpty();
     }
 
+    /// ⚠️ **Le pendant côté tests**, et il ne vise PAS les mêmes fichiers que ci-dessus.
+    ///
+    /// `new Scene(` apparaît dans une centaine de tests, et l'immense majorité a raison de l'écrire :
+    /// ils vérifient un **comportement** - un clic, un intitulé, une navigation - et se moquent de la
+    /// police. Interdire la construction directe partout serait une règle fausse, donc une règle qu'on
+    /// désactive.
+    ///
+    /// Ceux qui **mesurent** sont autre chose : leur verdict dépend de la police effectivement rendue.
+    /// Sans habillage, ils mesurent celle de la **machine hôte** - qui n'est pas celle du produit, et
+    /// qui n'est pas la même partout.
+    ///
+    /// ## Ce que la mesure a montré, et qui n'est pas ce que je croyais (#3773)
+    ///
+    /// `CartesAccueilTest` a rendu **vert à 8 h 14 et rouge à 15 h 34** sur le **même commit** et la
+    /// **même image** `macos-26-arm64`. Le diagnostic naturel - « macOS rend autrement » - est faux :
+    /// [Typographie#installer] garde un `static boolean`, donc l'enregistrement est **global au JVM et
+    /// fait une seule fois**, et un test qui ne l'appelle pas voit la police embarquée **si un voisin
+    /// l'a installée avant lui**.
+    ///
+    /// ⚠️ Et sous Linux, rien de tout cela ne se voit : `Noto Sans` y est une police **système**
+    /// (`/usr/share/fonts/truetype/noto/`). La suite locale et le runner Ubuntu la trouvent donc
+    /// toujours, installée ou non. C'est pourquoi ce défaut ne pouvait apparaître qu'ailleurs, et
+    /// pourquoi ce garde vaut mieux qu'une exécution : il ne dépend pas de la machine qui le joue.
+    @Test
+    @DisplayName("#3773 : un test qui MESURE une géométrie monte une scène habillée")
+    void les_tests_qui_mesurent_montent_une_scene_habillee() throws IOException {
+        List<String> coupables;
+        try (Stream<Path> sources = Files.walk(Path.of("src/test/java"))) {
+            coupables = sources.filter(chemin -> chemin.toString().endsWith(".java"))
+                    .filter(ScenesHabilleesTest::construitUneScene)
+                    .filter(ScenesHabilleesTest::mesureUneGeometrie)
+                    .filter(chemin -> !habille(chemin))
+                    .map(ScenesHabilleesTest::normaliser)
+                    .sorted()
+                    .toList();
+        }
+
+        assertThat(coupables)
+                .as("ces tests mesurent une géométrie sur une scène qu'ils montent eux-mêmes : ils "
+                        + "mesurent donc la police de la MACHINE, pas celle du produit. Passer par "
+                        + "Habillage.scene(...), qui installe la police et pose les feuilles (#3773)")
+                .isEmpty();
+    }
+
+    /// ⚠️ Contrôle de non-vacuité **fabriqué**, et il le faut : une fois les dix corrigés, plus aucun
+    /// fichier du dépôt ne correspond au motif. Le test ci-dessus certifierait alors une absence qu'il
+    /// ne saurait plus constater - exactement le défaut qu'il est censé empêcher, appliqué à lui-même.
+    @Test
+    @DisplayName("#3773 : le garde attrape bien un test fabriqué qui mesure sans habiller")
+    void le_garde_attrape_un_coupable_fabrique(@TempDir Path bac) throws IOException {
+        Path coupable = Files.writeString(
+                bac.resolve("FauxTest.java"),
+                "class FauxTest { void t() { var s = new Scene(new VBox()); "
+                        + "s.getRoot().getLayoutBounds().getHeight(); } }");
+        Path innocent = Files.writeString(
+                bac.resolve("FauxSansMesureTest.java"),
+                "class FauxSansMesureTest { void t() { var s = new Scene(new VBox()); s.getRoot(); } }");
+        Path habille = Files.writeString(
+                bac.resolve("FauxHabilleTest.java"),
+                "class FauxHabilleTest { void t() { var s = Habillage.scene(new VBox()); "
+                        + "s.getRoot().getLayoutBounds().getHeight(); } }");
+
+        assertThat(construitUneScene(coupable) && mesureUneGeometrie(coupable) && !habille(coupable))
+                .as("un test qui monte sa scène ET mesure doit être vu")
+                .isTrue();
+        assertThat(mesureUneGeometrie(innocent))
+                .as("un test qui monte sa scène sans mesurer n'est pas concerné")
+                .isFalse();
+        assertThat(habille(habille))
+                .as("un test qui passe par Habillage est en règle")
+                .isTrue();
+    }
+
     @Test
     @DisplayName("#3374 : le garde saurait voir un « new Scene » - il en trouve un dans Habillage lui-même")
     void le_garde_detecte_bien_ce_qu_il_cherche() {
@@ -78,6 +163,12 @@ class ScenesHabilleesTest {
         return lire(source).contains("new Scene(");
     }
 
+    /// Le fichier demande-t-il une dimension à un nœud ?
+    private static boolean mesureUneGeometrie(Path source) {
+        String code = lire(source);
+        return MESURES.stream().anyMatch(code::contains);
+    }
+
     /// L'outil habille-t-il sa scène - lui-même, ou en la confiant à `ApercuFx` qui le fait ?
     private static boolean habille(Path source) {
         String code = lire(source);
@@ -85,7 +176,10 @@ class ScenesHabilleesTest {
     }
 
     private static String normaliser(Path source) {
-        return source.toString().replace('\\', '/').replace("src/main/java/fr/univ_amu/iut/", "");
+        return source.toString()
+                .replace('\\', '/')
+                .replace("src/main/java/fr/univ_amu/iut/", "")
+                .replace("src/test/java/fr/univ_amu/iut/", "");
     }
 
     private static String lire(Path source) {

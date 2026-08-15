@@ -57,7 +57,7 @@ class PanneauCompteRenduTest {
     private static PanneauCompteRendu miseEnPage(CompteRenduChiffre rendu) {
         PanneauCompteRendu panneau = new PanneauCompteRendu();
         panneau.afficher(rendu);
-        Scene scene = new Scene(panneau, LARGEUR, 400);
+        Scene scene = Habillage.scene(panneau, LARGEUR, 400);
         scene.getRoot().applyCss();
         scene.getRoot().layout();
         return panneau;
@@ -206,7 +206,7 @@ class PanneauCompteRenduTest {
                 List.of(),
                 List.of(),
                 List.of()));
-        Scene scene = new Scene(panneau, 520, 400);
+        Scene scene = Habillage.scene(panneau, 520, 400);
         scene.getRoot().applyCss();
         scene.getRoot().layout();
 
@@ -353,7 +353,7 @@ class PanneauCompteRenduTest {
         // liste vaut zéro. On reproduit donc la contrainte : une scène trop courte pour tout loger.
         PanneauCompteRendu panneau = new PanneauCompteRendu();
         panneau.afficher(importAvecRejets());
-        Scene scene = new Scene(panneau, LARGEUR, 150);
+        Scene scene = Habillage.scene(panneau, LARGEUR, 150);
         scene.getRoot().applyCss();
         scene.getRoot().layout();
 

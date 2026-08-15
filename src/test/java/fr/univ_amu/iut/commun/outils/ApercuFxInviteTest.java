@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.outils;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.view.Habillage;
 import java.nio.file.Path;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -59,7 +60,7 @@ class ApercuFxInviteTest {
         champ.setMinWidth(Double.NEGATIVE_INFINITY);
         champ.setPrefWidth(largeurChamp);
         champ.setMaxWidth(largeurChamp);
-        return new Scene(new VBox(champ), largeurChamp + 40, 120);
+        return Habillage.scene(new VBox(champ), largeurChamp + 40, 120);
     }
 
     @Test

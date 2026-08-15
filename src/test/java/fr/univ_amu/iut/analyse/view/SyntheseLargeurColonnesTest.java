@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.model.ConfianceReferentiel;
 import fr.univ_amu.iut.commun.model.ContexteActivite;
 import fr.univ_amu.iut.commun.model.SaisonActivite;
 import fr.univ_amu.iut.commun.model.SeuilsActivite;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -27,7 +28,6 @@ import java.util.Optional;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TableColumn;
 import javafx.scene.text.Text;
@@ -148,7 +148,7 @@ class SyntheseLargeurColonnesTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        stage.setScene(new Scene(vue, LARGEUR_APERCU, 700));
+        stage.setScene(Habillage.scene(vue, LARGEUR_APERCU, 700));
         stage.show();
     }
 
