@@ -1012,8 +1012,13 @@ La séance dépose donc, à côté de la vidéo, un **journal de repères**
 ```
 
 Les instants sont des **millisecondes depuis l'époque**, la même grandeur que `date +%s%3N` : c'est
-ce qui permettra au montage de les ramener à des positions dans la vidéo. Seuls les tests qui citent
-un cas (`@CasDeRecette`) sont encadrés ; les autres ne montrent rien qu'on irait chercher.
+ce qui permet au montage de les ramener à des positions dans la vidéo.
+
+⚠️ **Tous** les tests sont encadrés, y compris ceux qui ne citent aucun cas - leur colonne de cas est
+alors vide. Ce n'était pas le cas d'abord, et la première séance filmée réelle a montré pourquoi il
+le faut : le contrôle du montage vérifie que ce qui apparaît à l'écran tombe dans une plage connue,
+et un test non annoté qui ouvre une fenêtre lui semblait hors sujet. C'est l'**index**, et non ce
+journal, qui ne retient que les cas.
 
 ⚠️ Deux propriétés vont ensemble, et seul le profil `recette-filmee` les pose :
 `recette.autodetection` charge l'extension, `recette.reperes` lui dit où écrire. Un `mvn test`
@@ -1044,10 +1049,17 @@ ferait rougir un test de ViewModel, qui cite des cas et n'ouvre légitimement au
 est exigé : les images où quelque chose est à l'écran doivent tomber **dans** les plages calculées.
 Un `t0` faux les fait toutes tomber à côté.
 
+⚠️ Les plages sont celles de **tous** les tests, pas seulement des tests cités. La première séance
+réelle a refusé un alignement correct pour cette raison : `ConnexionModaleViewTest` compte dix tests
+dont trois annotés, et les sept autres ouvrent aussi des fenêtres - le contrôle jugeait hors sujet
+les cinq sixièmes de ce qu'il voyait, et annonçait 16 %. C'était le même travers que celui qu'il
+évitait par ailleurs : un garde qui crie sur du bon travail.
+
 | Sur le film fabriqué de l'auto-test | Couverture |
 |---|---|
 | repères justes | 1,00 |
 | repères décalés de 3 s | 0,00 |
+| geste appartenant à un test non cité | 1,00 |
 
 Un montage refusé **ne laisse aucun clip** et fait échouer le lancement, même quand les tests sont
 verts - c'est justement le cas où personne n'irait vérifier.

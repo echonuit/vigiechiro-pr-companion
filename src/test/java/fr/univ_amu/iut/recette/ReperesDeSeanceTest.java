@@ -29,20 +29,22 @@ class ReperesDeSeanceTest {
     private static final String NOM = "reperes.tsv";
 
     @Test
-    @DisplayName("Les bornes encadrent le test annoté, et lui seul")
-    void les_bornes_encadrent_le_test_annote(@TempDir Path dossier) throws IOException {
+    @DisplayName("Chaque test est encadré, celui qui ne cite rien avec une colonne de cas vide")
+    void chaque_test_est_encadre(@TempDir Path dossier) throws IOException {
+        // ⚠️ Le test sans citation est là VOLONTAIREMENT. La première séance filmée réelle l'a
+        // imposé : le montage vérifie que ce qui apparaît à l'écran tombe dans une plage connue,
+        // et un test non annoté qui ouvre une fenêtre lui semblait alors hors sujet. Il refusait
+        // ainsi un alignement correct.
         Path journal = dossier.resolve(NOM);
 
         jouer(SeanceExemple.class, journal);
 
-        List<String> lignes = lignesUtiles(journal);
-        assertThat(lignes)
-                .as("un test sans citation n'a pas de place dans l'index : il ne montre aucun cas")
-                .hasSize(2);
-        assertThat(lignes.stream().map(ReperesDeSeanceTest::sansInstant))
-                .containsExactly(
+        assertThat(lignesUtiles(journal).stream().map(ReperesDeSeanceTest::sansInstant))
+                .containsExactlyInAnyOrder(
                         colonnes("debut", "SeanceExemple.avec_cas", "S1-02"),
-                        colonnes("fin", "SeanceExemple.avec_cas", "S1-02"));
+                        colonnes("fin", "SeanceExemple.avec_cas", "S1-02"),
+                        colonnes("debut", "SeanceExemple.sans_cas", ""),
+                        colonnes("fin", "SeanceExemple.sans_cas", ""));
     }
 
     @Test
@@ -56,9 +58,10 @@ class ReperesDeSeanceTest {
 
         jouer(SeanceExemple.class, journal);
 
-        List<String> lignes = lignesUtiles(journal);
-        long debut = instant(lignes.get(0));
-        long fin = instant(lignes.get(1));
+        // Filtré par borne plutôt que pris par rang : la séance encadre désormais plusieurs tests,
+        // et JUnit ne promet pas l'ordre dans lequel il les exécute.
+        long debut = instant(unique(lignesUtiles(journal), "\tdebut\tSeanceExemple.avec_cas\t"));
+        long fin = instant(unique(lignesUtiles(journal), "\tfin\tSeanceExemple.avec_cas\t"));
 
         assertThat(debut).isCloseTo(System.currentTimeMillis(), within(60_000L));
         assertThat(fin).isGreaterThanOrEqualTo(debut);
@@ -120,6 +123,12 @@ class ReperesDeSeanceTest {
 
     private static long instant(String ligne) {
         return Long.parseLong(ligne.split("\t")[0]);
+    }
+
+    private static String unique(List<String> lignes, String motif) {
+        List<String> trouvees = lignes.stream().filter(l -> l.contains(motif)).toList();
+        assertThat(trouvees).as("une seule ligne doit porter %s", motif).hasSize(1);
+        return trouvees.getFirst();
     }
 
     // ----------------------------------------------------------------------------------------

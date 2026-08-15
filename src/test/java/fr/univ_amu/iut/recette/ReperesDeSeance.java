@@ -11,9 +11,9 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 ///
 /// ## Ce qu'elle fait, et ce qu'elle ne fait pas
 ///
-/// Elle encadre d'un `debut` et d'une `fin` **les seuls tests qui citent un cas** ([CasDeRecette]).
-/// Un test sans citation n'a pas de place dans l'index : il ne montre aucun cas, personne n'ira
-/// chercher son extrait.
+/// Elle encadre d'un `debut` et d'une `fin` **chaque test de la séance**, en notant les cas qu'il
+/// cite ([CasDeRecette]) quand il en cite. Le journal décrit donc la séance **entière** : c'est
+/// l'index du montage, et non ce journal, qui ne retient que les cas.
 ///
 /// Elle ne filme pas, ne découpe pas, ne juge pas. Elle pose des instants, et c'est tout.
 ///
@@ -46,14 +46,24 @@ public class ReperesDeSeance implements BeforeTestExecutionCallback, AfterTestEx
     }
 
     private void noter(ExtensionContext contexte, JournalDesReperes.Borne borne) {
-        journal.ifPresent(ou ->
-                cas(contexte).ifPresent(cas -> ou.note(borne, nomDuTest(contexte), cas, System.currentTimeMillis())));
+        journal.ifPresent(ou -> ou.note(borne, nomDuTest(contexte), cas(contexte), System.currentTimeMillis()));
     }
 
-    private static Optional<List<String>> cas(ExtensionContext contexte) {
+    /// Les cas cités, ou aucun.
+    ///
+    /// ⚠️ Un test **sans** citation est consigné lui aussi, la colonne des cas restant vide. Ce
+    /// n'était pas le cas d'abord, et la première séance filmée réelle a montré pourquoi il le
+    /// faut : `ConnexionModaleViewTest` compte dix tests dont trois annotés, et les sept autres
+    /// ouvrent des fenêtres. Le montage, qui vérifie que ce qui apparaît à l'écran tombe dans une
+    /// plage connue, jugeait donc **hors sujet** les cinq sixièmes de ce qu'il voyait, et refusait
+    /// un alignement correct.
+    ///
+    /// Le journal décrit désormais la séance entière ; c'est l'index qui ne retient que les cas.
+    private static List<String> cas(ExtensionContext contexte) {
         return contexte.getTestMethod()
                 .map(methode -> methode.getAnnotation(CasDeRecette.class))
-                .map(annotation -> List.of(annotation.value()));
+                .map(annotation -> List.of(annotation.value()))
+                .orElseGet(List::of);
     }
 
     private static String nomDuTest(ExtensionContext contexte) {
