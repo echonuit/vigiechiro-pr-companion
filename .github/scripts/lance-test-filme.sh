@@ -226,6 +226,155 @@ couper_par_luminance() {
     return 0
 }
 
+# --------------------------------------------------------------------------------------------
+# Le montage par cas : un clip par test cité, et un index qui se lit par cas (#3774).
+#
+# ## Le problème dur, et pourquoi `t0` se MESURE
+#
+# Le journal consigne des instants d'horloge ; la vidéo se compte depuis son début. Passer de
+# l'un à l'autre demande de connaître l'instant où l'image 0 a été capturée, et cet instant
+# n'est PAS celui où l'on a lancé ffmpeg : il s'initialise, et cette latence varie.
+#
+# On la contourne en la rendant sans objet. On connaît l'instant où l'on a demandé l'arrêt, et
+# la durée du fichier obtenu : l'image 0 est donc à `arrêt - durée`, quelle qu'ait été la
+# latence de démarrage. Rien n'est supposé.
+#
+# ⚠️ Se tromper ici ne produit pas de panne. Les clips s'ouvrent, montrent une interface, et ne
+# montrent pas le bon geste. C'est le motif exact que cet EPIC combat, d'où le contrôle qui suit.
+#
+# ## Le contrôle : la COUVERTURE, et non la clarté de chaque clip
+#
+# Le réflexe serait d'exiger que chaque clip soit clair. Ce serait un garde qui crie sur du bon
+# travail : un test de ViewModel cite des cas et n'ouvre **aucune** fenêtre, son clip est noir à
+# juste titre.
+#
+# La grandeur qui sépare vraiment est ailleurs : les images où quelque chose est à l'écran
+# doivent tomber DANS les plages calculées. Si `t0` est faux, elles tombent toutes à côté, et la
+# couverture s'effondre - alors qu'une séance sans aucune fenêtre n'a rien à couvrir et ne
+# déclenche rien.
+#
+# Mesuré sur le film fabriqué de l'auto-test (6 s, geste visible de 2 s à 4 s, 21 images utiles) :
+#
+#     repères justes          -> couverture 1,00
+#     repères décalés de 3 s  -> couverture 0,00
+#
+# Les deux modes sont aux extrémités, et le seuil est loin des deux : il ne se règle pas au
+# millimètre. ⚠️ Le nombre d'images utiles est rendu avec la couverture, et non déduit : une
+# couverture parfaite sur ZÉRO image utile serait un vert creux, indiscernable d'un contrôle qui
+# ne s'est pas exécuté.
+CLIP_MARGE=0.5           # un peu avant et après : ne pas couper au ras du geste
+COUVERTURE_MIN=0.6       # sous ce seuil, les plages ne désignent pas ce que le film montre
+
+# Rend « couverture utiles » : la part des images utiles du brut qui tombent dans une plage, et
+# leur nombre. Une couverture de -1 signifie qu'il n'y avait aucune image utile à couvrir.
+couverture_des_plages() {
+    profil_luminance "$1" | awk -v s="$LUMINANCE_SEUIL" -v p="$2" '
+        BEGIN {
+            n = split(p, lignes, "\n")
+            for (i = 1; i <= n; i++) {
+                if (lignes[i] == "") continue
+                split(lignes[i], ch, "\t"); deb[i] = ch[2]; fin[i] = ch[3]
+            }
+        }
+        $2 > s {
+            utiles++
+            for (i = 1; i <= n; i++) {
+                if (deb[i] != "" && $1 >= deb[i] && $1 <= fin[i]) { couvertes++; break }
+            }
+        }
+        END { printf "%s %d\n", (utiles ? couvertes / utiles : -1), utiles }'
+}
+
+# Les plages « test début fin cas », en secondes depuis le début du brut.
+plages_du_journal() {
+    LC_NUMERIC=C awk -F'\t' -v t0="$1" -v m="$CLIP_MARGE" '
+        /^#/ { next }
+        $2 == "debut" { d[$3] = $1; c[$3] = $4; next }
+        $2 == "fin" && ($3 in d) {
+            deb = d[$3] / 1000 - t0 - m; if (deb < 0) deb = 0
+            printf "%s\t%.2f\t%.2f\t%s\n", $3, deb, $1 / 1000 - t0 + m, c[$3]
+            delete d[$3]
+        }' "$2"
+}
+
+montage_par_cas() {
+    local brut="$1" journal="$2" dossier="$3" arret_ms="$4"
+    [ -s "$brut" ] || { echo "   index : rien n'a été filmé"; return 0; }
+    [ -s "$journal" ] || { echo "   index : aucun repère, aucun test filmé ne cite de cas"; return 0; }
+
+    local duree t0 plages mesure couverture utiles
+    duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$brut" 2>/dev/null)
+    [ -n "$duree" ] || { echo "⚠️ durée du brut illisible : pas de montage"; return 1; }
+    t0=$(LC_NUMERIC=C awk -v a="$arret_ms" -v d="$duree" 'BEGIN{printf "%.3f", a / 1000 - d}')
+
+    plages=$(plages_du_journal "$t0" "$journal")
+    [ -n "$plages" ] || { echo "   index : le journal ne contient aucun passage complet"; return 0; }
+
+    mesure=$(couverture_des_plages "$brut" "$plages")
+    couverture=${mesure% *}; utiles=${mesure##* }
+    if [ "$utiles" -eq 0 ]; then
+        echo "   index : aucune image utile de toute la séance, il n'y a rien à couvrir"
+    elif awk -v c="$couverture" -v m="$COUVERTURE_MIN" 'BEGIN{exit !(c < m)}'; then
+        LC_NUMERIC=C printf '⚠️ le montage vise à côté : %.0f %% seulement des images utiles tombent\n' \
+            "$(awk -v c="$couverture" 'BEGIN{print c * 100}')"
+        echo "   dans une plage. Les repères ne décrivent pas CE film : aucun clip produit."
+        return 1
+    fi
+
+    mkdir -p "$dossier"
+    local index="$dossier/index.md" lignes="$dossier/.lignes"
+    : > "$lignes"
+
+    local test deb fin cas clip part
+    while IFS=$'\t' read -r test deb fin cas; do
+        clip="$dossier/$test.mkv"
+        ffmpeg -nostdin -loglevel error -i "$brut" -ss "$deb" -to "$fin" -an \
+            -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$clip" >/dev/null 2>&1
+        part=$(part_utile "$clip")
+        # La part d'images utiles est REPORTÉE, pas exigée : un clip noir est le résultat juste
+        # pour un test qui n'ouvre pas de fenêtre. Ce qui est exigé vaut pour la séance entière,
+        # et c'est le contrôle de couverture ci-dessus.
+        printf '%s\t%s\t%s\t%s\n' "$cas" "$test" "$(basename "$clip")" \
+            "$(awk -v p="$part" 'BEGIN{printf "%.0f", p * 100}')" >> "$lignes"
+    done <<< "$plages"
+
+    {
+        cat <<'ENTETE'
+# Cas filmés
+
+Un clip par **test**, parce que c'est ce que la JVM sait borner ; cet index se lit par **cas**,
+parce que c'est ce qu'on cherche. Un cas couvert par plusieurs tests a donc plusieurs lignes.
+
+⚠️ Aucune position dans le film livré n'est donnée, et c'est volontaire : ce film est écourté par
+luminance, si bien qu'une position calculée sur le brut y serait fausse. Le clip est le point
+d'entrée.
+
+« Images utiles » dit la part du clip où quelque chose est à l'écran. **0 % est un résultat juste**
+pour un test qui n'ouvre aucune fenêtre - un ViewModel, par exemple : il cite des cas et ne montre
+rien.
+
+| Cas | Clip | Ce qu'il joue | Images utiles |
+|---|---|---|---|
+ENTETE
+        sort "$lignes" | awk -F'\t' '{
+            n = split($1, cas, ",")
+            for (i = 1; i <= n; i++) printf "| %s | `%s` | %s | %s %% |\n", cas[i], $3, $2, $4
+        }' | sort
+    } > "$index"
+
+    # Compté AVANT de retirer le fichier de travail : `grep '^|'` sur l'index compterait aussi
+    # l'en-tête et son trait de séparation, et annoncerait deux lignes de trop.
+    local nb_cas
+    nb_cas=$(awk -F'\t' '{n = split($1, c, ","); total += n} END {print total + 0}' "$lignes")
+    rm -f "$lignes"
+
+    printf '   index : %d clip(s), %d ligne(s) de cas -> %s\n' \
+        "$(printf '%s\n' "$plages" | wc -l)" "$nb_cas" "$index"
+    return 0
+}
+
+# --------------------------------------------------------------------------------------------
+
 lancer() {
     local classe="$1"
     # Deux `local` séparés, et non `local a=… b=…$a…` : bash développe TOUS les mots avant
@@ -283,9 +432,19 @@ lancer() {
     local code=$?
 
     printf q >&3
+    # Relevé ICI, et non après `wait` : ffmpeg cesse de capturer quand il lit `q`, puis prend une
+    # seconde à finaliser. Prendre l'heure après l'attente placerait l'image 0 une seconde trop
+    # tôt, et décalerait TOUS les clips d'autant - sans rien casser d'apparent.
+    local arret_ms
+    arret_ms=$(date +%s%3N)
     exec 3>&-
     wait "$film" 2>/dev/null
     rm -f "$tube"
+
+    # AVANT la coupe : elle supprime le brut, dans lequel les clips se taillent.
+    local montage=0
+    montage_par_cas "$brut" "$RACINE/target/recette-filmee/reperes.tsv" \
+        "$(dirname "$sortie")/clips" "$arret_ms" || montage=1
 
     couper_par_luminance "$brut" "$sortie"
 
@@ -294,6 +453,13 @@ lancer() {
     # LC_NUMERIC=C : ffprobe rend « 7.900000 », que la locale française refuse (elle attend
     # une virgule). Sans cela, printf échoue et affiche un nombre FAUX, ici 7,0 pour 7,9.
     LC_NUMERIC=C printf 'Verdict du test : %s · vidéo : %s (%.1f s)\n' "$code" "$sortie" "${duree:-0}"
+
+    # Un montage qui vise à côté est un DÉFAUT, pas une remarque : il livrerait des extraits
+    # plausibles pris au mauvais endroit. Il fait donc échouer le lancement même quand les tests
+    # sont verts - c'est justement le cas où personne ne regarderait.
+    if [ "$montage" -ne 0 ] && [ "$code" -eq 0 ]; then
+        return 1
+    fi
     return "$code"
 }
 
@@ -365,6 +531,36 @@ auto_test() {
         bash -c 'p=$(part_utile "$1"); awk -v p="$p" "BEGIN{exit !(p > 0.5)}"' _ "$tmp/blanc.mkv"
     essai "couper une vidéo noire est REFUSÉ"            rouge \
         bash -c 'cp "$1" "$2"; couper_par_luminance "$2" "$3"' _ "$tmp/noir.mkv" "$tmp/n2.mkv" "$tmp/n3.mkv"
+
+    # --- le montage par cas, sur un film dont on SAIT où est le geste ---
+    #
+    # Un sandwich de 6 s : noir, puis blanc de 2 s à 4 s, puis noir. Le journal est écrit pour
+    # que la plage tombe sur le blanc. C'est la seule façon d'éprouver l'arithmétique de `t0`
+    # sans dépendre d'une vraie séance - et sans elle, un décalage d'une seconde passerait,
+    # puisqu'il ne casse rien : il déplace.
+    ffmpeg -nostdin -loglevel error -f lavfi -i color=black:s=320x240:r=10:d=6 \
+        -f lavfi -i color=white:s=320x240:r=10:d=6 \
+        -filter_complex "[0:v][1:v]overlay=enable='between(t,2,4)'" \
+        -c:v libx264 -preset ultrafast -pix_fmt yuv420p -y "$tmp/sandwich.mkv" >/dev/null 2>&1
+
+    # Arrêt à 1 000 000 000 000 ms, brut de 6 s : l'image 0 est donc à 999 999 994 s.
+    printf '# entête\n999999996000\tdebut\tExemple.geste\tS1-01\n999999998000\tfin\tExemple.geste\tS1-01\n' \
+        > "$tmp/reperes-justes.tsv"
+    # Les mêmes repères, décalés de 3 s : la plage tombe alors sur le noir de fin.
+    printf '# entête\n999999999000\tdebut\tExemple.geste\tS1-01\n1000000001000\tfin\tExemple.geste\tS1-01\n' \
+        > "$tmp/reperes-decales.tsv"
+    printf '# entête seule\n' > "$tmp/reperes-vides.tsv"
+
+    essai "un montage aligné sur le geste est accepté" vert \
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-justes.tsv" "$tmp/clips-ok" 1000000000000
+    essai "des repères décalés de 3 s sont REFUSÉS" rouge \
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-decales.tsv" "$tmp/clips-ko" 1000000000000
+    essai "un journal sans passage ne casse rien" vert \
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-vides.tsv" "$tmp/clips-vide" 1000000000000
+    essai "l'index nomme le cas, pas seulement le test" vert \
+        bash -c 'grep -q "| S1-01 |" "$1/index.md"' _ "$tmp/clips-ok"
+    essai "un montage refusé ne laisse AUCUN clip" vert \
+        bash -c '[ ! -d "$1" ]' _ "$tmp/clips-ko"
 
     kill "$nu" "$avec" "$wm" 2>/dev/null
 
