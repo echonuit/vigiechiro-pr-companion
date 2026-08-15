@@ -172,6 +172,27 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
+    @DisplayName("#3458 : on peut vérifier, corriger, et vérifier de nouveau")
+    void verifier_deux_fois_de_suite(FxRobot robot) {
+        enCreation(robot);
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
+        when(client.chercherCarre("640381"))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640381", true))));
+        saisirCarre(robot, CARRE);
+        robot.interact(() -> verifier(robot).fire());
+
+        saisirCarre(robot, "640381");
+        robot.interact(() -> verifier(robot).fire());
+
+        // Le bouton se grise le temps de l'appel pour qu'un double clic ne parte pas deux fois ; s'il ne
+        // se rouvrait pas ensuite, la première vérification serait la seule possible - et corriger une
+        // faute de frappe coûterait de rouvrir la modale.
+        assertThat(message(robot).getText()).contains("Vigiechiro - Point Fixe-640381");
+        assertThat(verifier(robot).isDisabled()).isFalse();
+    }
+
+    @Test
     @DisplayName("#3458 : corriger le carré après coup efface un verdict qui ne le concerne plus")
     void corriger_le_carre_efface_le_verdict(FxRobot robot) {
         enCreation(robot);
