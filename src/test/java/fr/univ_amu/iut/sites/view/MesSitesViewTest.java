@@ -28,11 +28,14 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -178,6 +181,63 @@ class MesSitesViewTest {
         // site par le bandeau d'identité (numéro de carré) plutôt que par un titre d'en-tête.
         Label numeroCarre = robot.lookup("#valNumeroCarre").queryAs(Label.class);
         assertThat(numeroCarre.getText()).isEqualTo("640380");
+    }
+
+    @Test
+    @CasDeRecette("S1-15")
+    @DisplayName("#799 : une carte est atteignable au Tab, et annoncée comme un bouton")
+    void une_carte_est_atteignable_au_clavier(FxRobot robot) {
+        // Le Tab lui-même n'est pas simulé : ce qui le rend possible est cette propriété, et c'est
+        // elle que le défaut ferait disparaître. Une HBox n'est PAS focalisable par défaut.
+        HBox carte = trouverCarte(robot, "Carré 640380");
+
+        assertThat(carte.isFocusTraversable())
+                .as("sans cela, aucun Tab n'atteint la carte et les deux tests suivants n'ont plus de sujet")
+                .isTrue();
+        assertThat(carte.getAccessibleRole()).isEqualTo(AccessibleRole.BUTTON);
+    }
+
+    @Test
+    @CasDeRecette("S1-15")
+    @DisplayName("#799 : Entrée sur une carte ouvre le détail, comme un clic")
+    void entree_ouvre_le_detail(FxRobot robot) {
+        HBox carte = trouverCarte(robot, "Carré 640380");
+
+        robot.interact(() -> carte.getOnKeyPressed().handle(touche(KeyCode.ENTER)));
+
+        // Le détail absent est la façon dont ce test rougit quand la touche cesse d'être
+        // traitée : sans cette question posée d'abord, il ne rendrait qu'un « nœud
+        // introuvable » là où la cause est « Entrée n'a rien déclenché ».
+        assertThat(robot.lookup("#valNumeroCarre").tryQuery())
+                .as("Entrée sur la carte n'a pas ouvert le détail")
+                .isPresent();
+        assertThat(robot.lookup("#valNumeroCarre").queryAs(Label.class).getText())
+                .isEqualTo("640380");
+    }
+
+    @Test
+    @CasDeRecette("S1-15")
+    @DisplayName("#799 : Espace sur une carte ouvre le détail, comme un clic")
+    void espace_ouvre_le_detail(FxRobot robot) {
+        // Les deux touches sont éprouvées séparément : le contrôleur les traite dans une seule
+        // condition, et retirer une des deux branches ne ferait rougir aucun test qui n'essaie que
+        // l'autre.
+        HBox carte = trouverCarte(robot, "Carré 752204");
+
+        robot.interact(() -> carte.getOnKeyPressed().handle(touche(KeyCode.SPACE)));
+
+        // Le détail absent est la façon dont ce test rougit quand la touche cesse d'être
+        // traitée : sans cette question posée d'abord, il ne rendrait qu'un « nœud
+        // introuvable » là où la cause est « Espace n'a rien déclenché ».
+        assertThat(robot.lookup("#valNumeroCarre").tryQuery())
+                .as("Espace sur la carte n'a pas ouvert le détail")
+                .isPresent();
+        assertThat(robot.lookup("#valNumeroCarre").queryAs(Label.class).getText())
+                .isEqualTo("752204");
+    }
+
+    private static KeyEvent touche(KeyCode code) {
+        return new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false);
     }
 
     private static HBox trouverCarte(FxRobot robot, String titre) {
