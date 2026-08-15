@@ -83,6 +83,13 @@ public class ImportSiteDistant {
     /// sans carré exploitable, ou dont la création échoue, est ignoré (best-effort par site).
     public Optional<ResultatImport> importerOuLier(
             SiteVigieChiro distant, Map<String, Site> localesParCarre, String idProfilConnecte) {
+        return importerOuLier(distant, localesParCarre, idProfilConnecte, Protocole.STANDARD);
+    }
+
+    /// Variante qui **respecte le protocole choisi** par l'utilisateur (#3806). La synchronisation
+    /// périodique, elle, n'a personne à qui demander et garde `STANDARD` : c'est la surcharge ci-dessus.
+    public Optional<ResultatImport> importerOuLier(
+            SiteVigieChiro distant, Map<String, Site> localesParCarre, String idProfilConnecte, Protocole protocole) {
         String carre = distant.numeroCarre();
         if (carre == null) {
             return Optional.empty();
@@ -91,7 +98,7 @@ public class ImportSiteDistant {
             Site local = localesParCarre.get(carre);
             int poses;
             if (local == null) {
-                local = creerDepuis(distant);
+                local = creerDepuis(distant, protocole);
                 poses = compterPoints(local);
                 localesParCarre.put(carre, local);
             } else {
@@ -171,9 +178,8 @@ public class ImportSiteDistant {
 
     /// Crée le site local (carré + titre en nom) et ses points d'écoute depuis les localités du site
     /// distant. Un point au code/GPS invalide est ignoré, sans faire échouer le site.
-    private Site creerDepuis(SiteVigieChiro distant) {
-        Site site =
-                serviceSites.creerSite(distant.numeroCarre(), distant.titre(), Protocole.STANDARD, null, idUtilisateur);
+    private Site creerDepuis(SiteVigieChiro distant, Protocole protocole) {
+        Site site = serviceSites.creerSite(distant.numeroCarre(), distant.titre(), protocole, null, idUtilisateur);
         for (PointVigieChiro point : distant.points()) {
             ajouterPointRapatrie(site, distant, point);
         }

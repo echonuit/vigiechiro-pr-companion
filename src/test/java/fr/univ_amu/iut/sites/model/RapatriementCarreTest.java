@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -104,7 +105,7 @@ class RapatriementCarreTest {
                 .thenReturn(ReponseApi.succes(
                         List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "un-tiers"))));
 
-        RapatriementCarre.Resultat resultat = rapatriement.rapatrier(CARRE);
+        RapatriementCarre.Resultat resultat = rapatriement.rapatrier(CARRE, Protocole.STANDARD);
 
         // C'est le fait qui porte tout le lot : sans ce lien, `SynchronisationParticipation#creerPour`
         // refuse la participation avec « Site non rattaché à Vigie-Chiro », et le téléversement s'arrête
@@ -126,7 +127,7 @@ class RapatriementCarreTest {
                                 new PointVigieChiro("Z41", 43.514558, 5.451322)),
                         "un-tiers"))));
 
-        rapatriement.rapatrier(CARRE);
+        rapatriement.rapatrier(CARRE, Protocole.STANDARD);
 
         // Le retour d'origine tenait en une phrase : « j'ai dû recréer Z1 manuellement en le positionnant
         // (en le choisissant dans la liste, il n'était pas prépositionné) ».
@@ -150,7 +151,7 @@ class RapatriementCarreTest {
                                 new PointVigieChiro("pas-un-code", 43.51, 5.45)),
                         "un-tiers"))));
 
-        RapatriementCarre.Resultat resultat = rapatriement.rapatrier(CARRE);
+        RapatriementCarre.Resultat resultat = rapatriement.rapatrier(CARRE, Protocole.STANDARD);
 
         // Annoncer « 2 points positionnés » quand un seul est en base ferait chercher longtemps un point
         // qui n'existe pas. Le compte rendu dit ce qui EST, pas ce qui a été tenté.
@@ -164,11 +165,71 @@ class RapatriementCarreTest {
     }
 
     @Test
+    @DisplayName("#3806 : entre plusieurs protocoles, on récupère le POINT FIXE, pas le premier venu")
+    void entre_plusieurs_protocoles_on_prend_le_point_fixe() {
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(List.of(
+                        new SiteVigieChiro(
+                                "routier", "Vigie-chiro - Routier-" + CARRE, true, CARRE, "un-tiers", List.of()),
+                        new SiteVigieChiro(
+                                "pointfixe",
+                                "Vigiechiro - Point Fixe-" + CARRE,
+                                true,
+                                CARRE,
+                                "un-tiers",
+                                List.of(new PointVigieChiro("Z41", 43.51, 5.45))))));
+
+        rapatriement.rapatrier(CARRE, Protocole.STANDARD);
+
+        // Un numéro de carré ne désigne pas un site : le même carré peut exister en Point Fixe, en
+        // Pédestre et en Routier. Se rattacher au premier venu enverrait la nuit au mauvais endroit -
+        // le défaut que ce chantier corrige, reproduit par sa propre correction.
+        Site local = siteDao.findByUtilisateur(ID_USER).getFirst();
+        assertThat(liens.objectidPour(LienVigieChiro.ENTITE_SITE, String.valueOf(local.id())))
+                .contains("pointfixe");
+    }
+
+    @Test
+    @DisplayName("#3806 : carré présent sous un protocole que l'application ne gère pas : on le DIT")
+    void carre_sous_un_protocole_non_gere() {
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
+                        "routier", "Vigie-chiro - Routier-" + CARRE, true, CARRE, "un-tiers", List.of()))));
+
+        RapatriementCarre.Resultat resultat = rapatriement.rapatrier(CARRE, Protocole.STANDARD);
+
+        // Se taire ou dire « inexistant » serait faux : le carré est bien là, c'est le protocole qui ne
+        // suit pas. L'utilisateur doit pouvoir comprendre pourquoi son numéro « existe » sans être
+        // récupérable.
+        assertThat(resultat)
+                .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.type(
+                        RapatriementCarre.Resultat.AutreProtocole.class))
+                .satisfies(autre -> assertThat(autre.titres()).containsExactly("Vigie-chiro - Routier-" + CARRE));
+        assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3806 : le site créé porte le protocole choisi dans la modale, pas un protocole par défaut")
+    void le_site_cree_porte_le_protocole_choisi() {
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(
+                        List.of(siteDistant(List.of(new PointVigieChiro("Z41", 43.51, 5.45)), "un-tiers"))));
+
+        rapatriement.rapatrier(CARRE, Protocole.RECHERCHE);
+
+        // « PointFixeRecherche » n'est pas un autre protocole côté plateforme : c'est une variante LOCALE
+        // (R3/R4 muettes, dates libres). Le rapatriement doit donc respecter ce que l'utilisateur a choisi
+        // plutôt que d'imposer STANDARD comme le fait la synchronisation périodique.
+        assertThat(siteDao.findByUtilisateur(ID_USER).getFirst().protocole()).isEqualTo(Protocole.RECHERCHE);
+    }
+
+    @Test
     @DisplayName("#3806 : un carré introuvable ne crée rien")
     void un_carre_introuvable_ne_cree_rien() {
         when(client.chercherCarre("999999")).thenReturn(ReponseApi.succes(List.of()));
 
-        assertThat(rapatriement.rapatrier("999999")).isInstanceOf(RapatriementCarre.Resultat.Inexistant.class);
+        assertThat(rapatriement.rapatrier("999999", Protocole.STANDARD))
+                .isInstanceOf(RapatriementCarre.Resultat.Inexistant.class);
         assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
     }
 
@@ -177,7 +238,8 @@ class RapatriementCarreTest {
     void hors_connexion_rien_n_est_cree() {
         when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.nonConnecte());
 
-        assertThat(rapatriement.rapatrier(CARRE)).isInstanceOf(RapatriementCarre.Resultat.Indisponible.class);
+        assertThat(rapatriement.rapatrier(CARRE, Protocole.STANDARD))
+                .isInstanceOf(RapatriementCarre.Resultat.Indisponible.class);
         assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
     }
 }

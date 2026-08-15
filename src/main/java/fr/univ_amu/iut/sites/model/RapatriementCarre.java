@@ -4,8 +4,10 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -85,6 +87,28 @@ public class RapatriementCarre {
             }
         }
 
+        /// Le carré existe, mais **sous un protocole que l'application ne gère pas**.
+        ///
+        /// Un numéro de carré ne désigne pas un site : le même carré peut exister en Point Fixe, en
+        /// Pédestre et en Routier. Companion ne traite que le **Point Fixe** (les autres n'ont pas de
+        /// nuits complètes à importer), et rattacher un carré Routier enverrait la nuit au mauvais
+        /// endroit. Dire « inexistant » serait faux, et se taire laisserait l'utilisateur devant un
+        /// numéro qui « existe » sans être récupérable.
+        ///
+        /// @param titres les sites trouvés, dont le titre nomme leur protocole
+        record AutreProtocole(List<String> titres) implements Resultat {
+            @Override
+            public String message() {
+                return "Ce carré existe sur Vigie-Chiro, mais pas en Point Fixe (" + String.join(", ", titres)
+                        + "). Companion ne gère que le Point Fixe : rien n'a été récupéré.";
+            }
+
+            @Override
+            public Severite severite() {
+                return Severite.AVERTISSEMENT;
+            }
+        }
+
         /// On n'a pas pu demander : hors connexion, plateforme injoignable, ou refus.
         ///
         /// ⚠️ **Rien n'a été créé**, et surtout rien ne laisse croire que le carré a été récupéré.
@@ -107,10 +131,12 @@ public class RapatriementCarre {
     /// Toute issue non-succès rend [Resultat.Indisponible] **sans rien écrire** : un rapatriement à
     /// moitié fait serait pire que pas de rapatriement du tout, puisqu'il laisserait un site local non
     /// rattaché - exactement l'état que ce service existe pour éviter.
-    public Resultat rapatrier(String numeroCarre) {
+    public Resultat rapatrier(String numeroCarre, Protocole protocole) {
         Objects.requireNonNull(numeroCarre, "numeroCarre");
+        Objects.requireNonNull(protocole, "protocole");
         return switch (client.chercherCarre(numeroCarre)) {
-            case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) -> poser(numeroCarre, trouves);
+            case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) ->
+                poser(numeroCarre, trouves, protocole);
             case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte -> new Resultat.Indisponible();
             case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) -> {
                 LOG.log(Level.FINE, () -> "Rapatriement du carré ignoré (Vigie-Chiro injoignable : " + cause + ")");
@@ -123,16 +149,25 @@ public class RapatriementCarre {
         };
     }
 
-    /// Pose le premier site trouvé. Un carré peut en porter plusieurs (un par protocole) ; le premier
-    /// suffit à rattacher, et le titre dit lequel c'est.
-    private Resultat poser(String numeroCarre, List<SiteVigieChiro> trouves) {
+    /// Pose le site **en Point Fixe** parmi ceux trouvés. Un carré peut en porter plusieurs, un par
+    /// protocole : prendre le premier venu rattacherait au hasard, et la nuit partirait au mauvais
+    /// endroit.
+    private Resultat poser(String numeroCarre, List<SiteVigieChiro> trouves, Protocole protocole) {
         if (trouves.isEmpty()) {
             return new Resultat.Inexistant(numeroCarre);
         }
-        SiteVigieChiro distant = trouves.getFirst();
+        Optional<SiteVigieChiro> pointFixe =
+                trouves.stream().filter(RapatriementCarre::estPointFixe).findFirst();
+        if (pointFixe.isEmpty()) {
+            return new Resultat.AutreProtocole(trouves.stream()
+                    .map(SiteVigieChiro::titre)
+                    .filter(Objects::nonNull)
+                    .toList());
+        }
+        SiteVigieChiro distant = pointFixe.get();
         Map<String, Site> locauxParCarre = imports.sitesLocauxParCarre();
         Optional<ImportSiteDistant.ResultatImport> importe =
-                imports.importerOuLier(distant, locauxParCarre, idProfilConnecte());
+                imports.importerOuLier(distant, locauxParCarre, idProfilConnecte(), protocole);
         if (importe.isEmpty()) {
             return new Resultat.Indisponible();
         }
@@ -143,6 +178,17 @@ public class RapatriementCarre {
         return imports.siteLocalDuCarre(numeroCarre)
                 .<Resultat>map(site -> new Resultat.Rapatrie(site, importe.get().pointsPoses()))
                 .orElseGet(Resultat.Indisponible::new);
+    }
+
+    /// Le titre d'un site nomme son protocole plateforme (`Vigiechiro - Point Fixe-130711`,
+    /// `Vigie-chiro - Routier-…`). C'est la seule marque disponible : la recherche ne rend pas le
+    /// protocole en clair, et le résoudre coûterait une requête de plus par site.
+    ///
+    /// ⚠️ **`PointFixeStandard` et `PointFixeRecherche` sont tous deux du Point Fixe** : ce sont des
+    /// variantes **locales** (R3/R4 muettes ou non), pas deux protocoles de la plateforme. Le filtre
+    /// porte donc sur la famille, jamais sur la variante choisie par l'utilisateur.
+    private static boolean estPointFixe(SiteVigieChiro site) {
+        return site.titre() != null && site.titre().toLowerCase(Locale.FRENCH).contains("point fixe");
     }
 
     /// L'identifiant du profil connecté, pour savoir si le carré appartient à un tiers (#2525). Sans lui,
