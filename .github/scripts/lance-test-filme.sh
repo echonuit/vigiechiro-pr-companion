@@ -146,15 +146,34 @@ verifier_tout() {
 #     908 images à 16,01   (le noir)
 #      22 images à 216-226 (l'application)
 #
-# Aucune valeur entre les deux. Le seuil est donc loin des deux modes, et insensible au
-# réglage. ⚠️ Une image noire vaut 16 et NON zéro : « différent de zéro » ne marcherait pas.
+# Aucune valeur entre les deux. ⚠️ Une image noire vaut 16 et NON zéro : « différent de zéro »
+# ne marcherait pas.
+#
+# ## ⚠️ Le seuil a dû BAISSER quand le banc a cessé de maximiser (#3788)
+#
+# Les 216-226 ci-dessus sont ceux d'une fenêtre PLEIN ÉCRAN : c'est ce que faisait matchbox de
+# tout ce qu'il affichait. Avec openbox, une fenêtre occupe sa taille réelle, et la moyenne de
+# l'image chute d'autant. Mesuré sur la même modale :
+#
+#     16,01  le fond seul
+#     27,7   la fenêtre est là, encore vide
+#     69,1   la fenêtre avec son contenu
+#
+# 69 passait encore un seuil à 50, mais de justesse, et le calcul dit que ça ne tient pas : une
+# boîte de dialogue de 400 × 250 sur un écran de 1280 × 900 couvre 8,7 % de la surface, donc
+# rend 0,087 × 243 + 0,913 × 16 ≈ 36. Elle aurait été déclarée « rien à l'écran », la coupe
+# aurait refusé, et la couverture se serait effondrée - sur un banc pourtant juste.
+#
+# Le seuil se pose donc juste au-dessus du fond, à 20 : il sépare « aucune fenêtre » de
+# « une fenêtre, si petite soit-elle », qui est la question réellement posée. Il reste valable
+# pour l'ancien banc, où l'application donnait 223.
 #
 # ## Et le contrôle mesure CE QUE LA COUPE A DÉCIDÉ
 #
 # C'est la leçon de #3696 : un contrôle qui mesure autre chose que la coupe reproduit son
 # angle mort. Ici la coupe retient les images au-dessus du seuil, et le contrôle recompte,
 # sur le MONTAGE, la proportion d'images au-dessus du même seuil.
-LUMINANCE_SEUIL=50
+LUMINANCE_SEUIL=20
 LUMINANCE_MARGE=0.2      # un peu avant et après : ne pas couper au ras du geste
 LUMINANCE_ECART=1.5      # deux segments plus proches que ça n'en font qu'un
 
