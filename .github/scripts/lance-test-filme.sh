@@ -253,6 +253,14 @@ couper_par_luminance() {
 # couverture s'effondre - alors qu'une séance sans aucune fenêtre n'a rien à couvrir et ne
 # déclenche rien.
 #
+# ⚠️ LES PLAGES SONT CELLES DE TOUS LES TESTS, pas seulement des tests cités. La première séance
+# filmée réelle a refusé un alignement correct pour cette raison : `ConnexionModaleViewTest`
+# compte dix tests dont trois annotés, et les sept autres ouvrent aussi des fenêtres. Le contrôle
+# jugeait donc hors sujet les cinq sixièmes de ce qu'il voyait, et annonçait 16 %.
+#
+# C'était le même travers que celui qu'il évitait par ailleurs : un garde qui crie sur du bon
+# travail. Le journal décrit désormais la séance entière ; seul l'index ne retient que les cas.
+#
 # Mesuré sur le film fabriqué de l'auto-test (6 s, geste visible de 2 s à 4 s, 21 images utiles) :
 #
 #     repères justes          -> couverture 1,00
@@ -325,8 +333,13 @@ montage_par_cas() {
     local index="$dossier/index.md" lignes="$dossier/.lignes"
     : > "$lignes"
 
-    local test deb fin cas clip part
+    local test deb fin cas clip part clips=0
     while IFS=$'\t' read -r test deb fin cas; do
+        # Le journal décrit la séance ENTIÈRE, parce que le contrôle de couverture a besoin de
+        # toutes les fenêtres. L'index, lui, ne retient que les cas : un test qui n'en cite aucun
+        # n'a pas d'extrait, personne n'irait le chercher.
+        [ -n "$cas" ] || continue
+        clips=$((clips + 1))
         clip="$dossier/$test.mkv"
         ffmpeg -nostdin -loglevel error -i "$brut" -ss "$deb" -to "$fin" -an \
             -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$clip" >/dev/null 2>&1
@@ -368,8 +381,8 @@ ENTETE
     nb_cas=$(awk -F'\t' '{n = split($1, c, ","); total += n} END {print total + 0}' "$lignes")
     rm -f "$lignes"
 
-    printf '   index : %d clip(s), %d ligne(s) de cas -> %s\n' \
-        "$(printf '%s\n' "$plages" | wc -l)" "$nb_cas" "$index"
+    printf '   index : %d clip(s) sur %d test(s), %d ligne(s) de cas -> %s\n' \
+        "$clips" "$(printf '%s\n' "$plages" | wc -l)" "$nb_cas" "$index"
     return 0
 }
 
@@ -561,6 +574,17 @@ auto_test() {
         bash -c 'grep -q "| S1-01 |" "$1/index.md"' _ "$tmp/clips-ok"
     essai "un montage refusé ne laisse AUCUN clip" vert \
         bash -c '[ ! -d "$1" ]' _ "$tmp/clips-ko"
+
+    # Le cas que la première séance réelle a fait échouer : le geste appartient à un test qui ne
+    # cite AUCUN cas. Il doit couvrir - sinon le contrôle refuse un alignement juste - et ne
+    # produire aucun extrait, puisque personne n'irait le chercher.
+    printf '# entête\n999999996000\tdebut\tExemple.sans_cas\t\n999999998000\tfin\tExemple.sans_cas\t\n' \
+        > "$tmp/reperes-sans-cas.tsv"
+
+    essai "un test NON cité couvre quand même le geste" vert \
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-sans-cas.tsv" "$tmp/clips-sc" 1000000000000
+    essai "et il ne produit aucun extrait" vert \
+        bash -c '! ls "$1"/*.mkv >/dev/null 2>&1' _ "$tmp/clips-sc"
 
     kill "$nu" "$avec" "$wm" 2>/dev/null
 
