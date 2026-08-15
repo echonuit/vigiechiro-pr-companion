@@ -292,9 +292,16 @@ class ModaleSiteVerifierCarreViewTest {
         // Fermer sur un échec laisserait l'utilisateur devant une liste inchangée, sans savoir pourquoi.
         assertThat(rapatrieRecu).isNull();
         assertThat(message(robot).getText()).contains("Rien n'a été créé");
-        assertThat(recuperer(robot).isDisabled())
-                .as("le geste reste à portée : la panne peut être passagère")
-                .isFalse();
+        assertThat(robot.lookup("#ligneRecupererCarre")
+                        .queryAs(javafx.scene.layout.HBox.class)
+                        .isVisible())
+                .as("la panne peut être passagère : le geste doit rester OFFERT, pas seulement actif")
+                .isTrue();
+        // Et surtout : on sait toujours que le carré existe là-bas. Rouvrir « Créer » ici inviterait à
+        // fabriquer le doublon que tout ce chantier existe pour éviter.
+        assertThat(robot.lookup("#boutonValider").queryAs(Button.class).isDisabled())
+                .as("une panne de récupération ne rend pas la déclaration légitime")
+                .isTrue();
     }
 
     @Test

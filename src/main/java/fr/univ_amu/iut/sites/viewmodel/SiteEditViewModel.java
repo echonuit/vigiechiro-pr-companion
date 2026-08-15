@@ -217,7 +217,18 @@ public class SiteEditViewModel {
     /// Affiche le compte rendu du rapatriement, **sur le fil JavaFX**.
     public void appliquerRapatriement(RapatriementCarre.Resultat resultat) {
         retourCarreExistant.set(new RetourOperation(resultat.message(), resultat.severite()));
-        carreRecuperable.set(false);
+        // ⚠️ Une panne **ne referme pas** le geste, et ne rouvre pas la déclaration.
+        //
+        // Le geste ne se referme que lorsqu'il n'y a effectivement plus rien à récupérer : le carré
+        // existe sous un autre protocole. Sur une plateforme injoignable, on sait toujours que le carré
+        // est là-bas - le verdict vient de le dire - et la panne peut être passagère. Rouvrir « Créer »
+        // dans cet état inviterait à fabriquer le doublon que ce chantier existe pour éviter.
+        //
+        // Trouvé en regardant une capture, pas par un test : l'écran montrait « Créer » redevenu bleu
+        // après un échec réseau.
+        if (!(resultat instanceof RapatriementCarre.Resultat.Indisponible)) {
+            carreRecuperable.set(false);
+        }
     }
 
     /// Ce que la plateforme a dit du carré saisi, avec sa gravité.
