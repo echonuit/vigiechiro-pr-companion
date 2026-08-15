@@ -155,6 +155,20 @@ jobs:
           ./.github/scripts/verifie-renvois-workflows.sh --auto-test
           ./.github/scripts/verifie-renvois-workflows.sh
 
+      - name: Les inventaires que la CI tient sur elle-même concordent
+        # ⚠️ Ce dépôt exige de son PRODUIT que ses inventaires soient prouvés - commandes CLI contre
+        # `dev-docs/cli.md`, vues contre captures, ADR contre index et nav. De sa propre description, il
+        # n'exigeait rien, et les trois inventaires avaient dérivé : deux workflows absents du tableau -
+        # les deux de SÉCURITÉ -, six gardes autotestées absentes de l'autre (#3771, #3794).
+        #
+        # L'autotest tourne d'abord, et son premier cas est un contrôle NÉGATIF : un dépôt cohérent doit
+        # rester vert, `maven.yml` cité cinq fois compris. Une règle qui compterait des lignes au lieu
+        # de comparer des fichiers rougirait sur un tableau juste, et se ferait retirer.
+        run: |
+          chmod +x .github/scripts/verifie-inventaires-ci.sh
+          ./.github/scripts/verifie-inventaires-ci.sh --auto-test
+          ./.github/scripts/verifie-inventaires-ci.sh
+
       - name: Aucun jeton VigieChiro en clair
         # Le scan de secrets de GitHub ne reconnaît que les motifs de FOURNISSEURS ; un jeton
         # VigieChiro est une chaîne opaque qu'aucun catalogue ne connaît, et les motifs
