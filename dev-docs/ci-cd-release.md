@@ -385,11 +385,21 @@ deux pas s'effacent en `::notice::` plutôt que de rougir. Pour l'activer :
 2. Poser un PAT avec `contents: write` sur ce seul dépôt dans le secret `FLATPAK_DEPLOY_TOKEN`.
 3. Poser la variable de dépôt `ENABLE_FLATPAK_REPO=true`.
 
-**Non signé pour l'instant** (`NoGpgVerify=true` dans le `.flatpakrepo` généré, installation par
-`flatpak remote-add --no-gpg-verify`). Signer suppose une clé GPG dont la partie privée doit être
-engendrée **hors** de cette CI et déposée directement en secret d'organisation - jamais dans un commit,
-un journal de build ou ailleurs où elle transiterait en clair -, ce qui en fait une décision distincte de
-la publication elle-même plutôt qu'un préalable.
+**Signature GPG** : la clé (ed25519, générée hors CI le 2026-08-15) est déjà câblée -
+`FLATPAK_GPG_KEY_ID` et la clé publique `FLATPAK_GPG_PUBLIC_KEY_B64` vivent en clair dans `flatpak.yml`
+(non sensibles : c'est la partie publique). La partie **privée**, elle, n'existe nulle part dans ce
+dépôt ni dans une conversation - uniquement dans le secret `FLATPAK_DEPLOY_TOKEN`-adjacent
+`FLATPAK_GPG_KEY` (armored, encodé en base64), à poser en plus des trois étapes ci-dessus pour activer
+la signature :
+
+4. Poser le secret `FLATPAK_GPG_KEY` : sortie de
+   `gpg --export-secret-key --armor <ID> | base64 -w0` pour la clé `1BA6A82DA9213B177B160E56CD450A9383707B17`.
+
+Tant que ce secret est absent, `garde-flatpak-signature` retombe en silence sur le comportement non
+signé (`NoGpgVerify=true`, `flatpak-builder` sans `--gpg-sign`) - même patron d'inertie que les trois
+étapes précédentes. Une fois posé, la construction signe l'export (`--gpg-sign`/`--gpg-homedir`) et le
+`.flatpakrepo` généré embarque `GPGKey=` au lieu de `NoGpgVerify=true`, sans qu'aucune autre étape n'ait
+à changer.
 
 ## winget (#2213)
 
