@@ -57,6 +57,7 @@ class DecouverteModulesTest {
             "SaisonModule",
             "ControleCarreStocModule",
             "PublicationPointModule",
+            "RechercheCarreExistantModule",
             "SitesModule",
             "SynchronisationSitesModule",
             "ValidationModule");

@@ -33,8 +33,33 @@ carré à la volée sur le terrain et les compléter plus tard, depuis la fiche 
 
 ![La fenêtre de déclaration d'un site : numéro de carré (obligatoire), nom, protocole et commentaire.](../assets/captures/apercu-sites-modale-site-creation.png)
 
-Si le carré est **déjà déclaré**, le motif s'affiche **dans la fenêtre**, sous le champ, et **votre saisie
-est conservée** : corrigez le numéro sans tout recommencer.
+Si le carré est **déjà déclaré** dans Companion, le motif s'affiche **dans la fenêtre**, sous le champ,
+et **votre saisie est conservée** : corrigez le numéro sans tout recommencer.
+
+### Savoir si le carré existe déjà sur Vigie-Chiro
+
+Le bouton **Vérifier sur Vigie-Chiro**, à droite du numéro, pose la question **au portail** avant que
+vous ne déclariez quoi que ce soit. Il reste fermé tant que le numéro n'a pas ses six chiffres, et
+répond en une seconde. Trois réponses possibles :
+
+- **le carré n'y est pas encore** : vous pouvez le déclarer ici ;
+- **le carré y est déjà** : le message **nomme le site trouvé**, protocole compris - un même carré porte
+  un site par protocole. Ne le redéclarez pas : récupérez-le avec **Récupérer depuis Vigie-Chiro**, ce
+  qui rapatrie aussi ses **points déjà positionnés** ;
+- **la vérification n'a pas pu se faire** (hors connexion, portail injoignable) : c'est dit tel quel.
+  Ce n'est **pas** « le carré est libre ».
+
+![La fenêtre de déclaration après vérification : le carré cherché existe déjà sur Vigie-Chiro, et le message dit sous quel protocole et quoi faire à la place.](../assets/captures/apercu-sites-modale-site-carre-existant.png)
+
+Si vous corrigez le numéro après avoir vérifié, la réponse **disparaît** : elle portait sur l'ancien
+numéro, et la laisser affichée vous ferait croire que le nouveau a été vérifié. Recliquez pour poser la
+question sur le carré corrigé.
+
+!!! tip "Pourquoi ce détour évite un dépôt manqué"
+    Le portail n'autorise pas à activer un carré sans y créer un point. Un carré activé là-bas puis
+    **redéclaré ici** donne deux sites pour le même carré, et un point local qui n'est pas celui du
+    portail : la nuit déposée ensuite échoue, loin de sa cause. Vérifier d'abord, puis **récupérer**
+    plutôt que redéclarer, évite toute cette chaîne.
 
 Chaque carte porte aussi, quand l'application est [connectée à Vigie-Chiro](../connexion-vigiechiro.md),
 un **badge d'état plateforme** : **« Enregistré sur Vigie-Chiro »** (bleu) quand le carré est relié au

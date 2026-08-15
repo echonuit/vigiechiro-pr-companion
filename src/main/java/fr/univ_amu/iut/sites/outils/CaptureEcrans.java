@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Modules;
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.EchelleProgression;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -26,6 +27,7 @@ import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.ModalePointController;
@@ -35,12 +37,17 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 
 /// Outil de capture/mesure, utilisable tel quel.
@@ -83,6 +90,10 @@ public final class CaptureEcrans {
     /// dans CaptureDialogues, parce que le dialogue n'avait pas de .fxml, elle pouvait donc dériver du
     /// vrai écran sans que rien ne le signale.
     private static final String MODALE_SITE = "/fr/univ_amu/iut/sites/view/ModaleSite.fxml";
+
+    /// Carré de l'aperçu « ce carré existe déjà » (#3458) : une maille réelle, comme les autres
+    /// données d'exemple, pour que l'image ne montre pas un numéro impossible.
+    private static final String CARRE_DEJA_DECLARE = "130711";
 
     private CaptureEcrans() {}
 
@@ -131,6 +142,7 @@ public final class CaptureEcrans {
         capturerModaleCreation(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-point-creation.png"));
         capturerModaleSiteEdition(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-site.png"));
         capturerModaleSiteCreation(creerInjecteur(), sortie.resolve("apercu-sites-modale-site-creation.png"));
+        capturerModaleSiteCarreExistant(sortie.resolve("apercu-sites-modale-site-carre-existant.png"));
         capturerSynchroEnCours(sortie.resolve("apercu-sites-synchro-progression.png"));
 
         // État vide : base neuve (juste un utilisateur, aucun site) → accueil M-Sites en état initial.
@@ -203,6 +215,55 @@ public final class CaptureEcrans {
         Parent vue = loader.load();
         ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
+    }
+
+    /// Modale de déclaration **après** un « Vérifier sur Vigie-Chiro » qui trouve le carré (#3458).
+    ///
+    /// C'est l'état qui **évite la panne** : redéclarer un carré déjà présent est ce qui a produit le
+    /// dépôt manqué à l'origine de l'issue. Les deux autres aperçus de cette modale montrent le geste
+    /// disponible, aucun ne montrait sa réponse.
+    ///
+    /// Le geste est joué **par l'IHM** - on saisit le carré et on tire le bouton -, si bien que le
+    /// message rendu est celui que le produit compose. Seule la **réponse de la plateforme** est
+    /// bouchonnée : la capture ne doit pas dépendre du réseau ni d'un jeton, et un fac-similé du message
+    /// écrit ici n'engagerait personne (c'est ainsi qu'un dialogue documenté a dérivé du produit, #1468).
+    private static void capturerModaleSiteCarreExistant(Path fichier) throws IOException {
+        Injector injecteur = Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), liaison -> {
+                    liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
+                    OptionalBinder.newOptionalBinder(liaison, OuvrirImportation.class)
+                            .setBinding()
+                            .toInstance(idSite -> {});
+                    OptionalBinder.newOptionalBinder(liaison, RechercheCarreExistant.class)
+                            .setBinding()
+                            .toInstance(new RechercheCarreExistant(new ClientVigieChiro(Optional::empty)) {
+                                @Override
+                                public Verdict chercher(String numeroCarre) {
+                                    return new Verdict.DejaDeclare(List.of("Vigiechiro - Point Fixe-" + numeroCarre));
+                                }
+                            });
+                }));
+        FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
+        Scene scene = new Scene(vue);
+        ((TextField) exiger(scene, "#champCarre")).setText(CARRE_DEJA_DECLARE);
+        ((Button) exiger(scene, "#btnVerifierCarre")).fire();
+        ApercuFx.enregistrerPng(scene, fichier);
+    }
+
+    /// Le nœud `selecteur`, ou une **erreur** qui le nomme.
+    ///
+    /// Un `lookup` muet rendrait `null`, et la capture s'écrirait quand même - montrant une modale sans
+    /// verdict sous une légende qui en annonce un. C'est la panne que `ApercuFx.exigerParLibelle` ferme
+    /// pour les libellés ; ici c'est un `fx:id` qu'on exige.
+    private static Node exiger(Scene scene, String selecteur) {
+        Node noeud = scene.lookup(selecteur);
+        if (noeud == null) {
+            throw new IllegalStateException("Aucun noeud " + selecteur + " dans la modale de site");
+        }
+        return noeud;
     }
 
     private static Parent chargerFxml(Injector injecteur, String chemin) throws IOException {

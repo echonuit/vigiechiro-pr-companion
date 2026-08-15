@@ -1,0 +1,214 @@
+package fr.univ_amu.iut.sites.view;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
+import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
+import fr.univ_amu.iut.sites.model.ServiceSites;
+import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
+import java.util.List;
+import java.util.Optional;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.testfx.api.FxRobot;
+import org.testfx.framework.junit5.ApplicationExtension;
+import org.testfx.framework.junit5.Start;
+
+/// Le geste **« Vérifier sur Vigie-Chiro »** dans la modale de déclaration (#3458).
+///
+/// C'est la question posée mot pour mot par un utilisateur : *« Je n'ai pas trouvé de solution pour
+/// vérifier s'il existait déjà »*. Il est allé la poser au portail, a redéclaré le carré ici, et son
+/// dépôt a échoué - loin de la cause.
+///
+/// La modale est montée **avec** la vérification installée, ce qui est le cas de l'application complète.
+/// Le montage sans - injecteurs partiels, feature éteinte - est éprouvé par [ModaleSiteViewTest], où le
+/// bouton doit être **absent** plutôt que mort.
+///
+/// L'exécuteur est celui du socle : synchrone en test (`@ImplementedBy`), donc le verdict est lisible
+/// dès le retour du clic, sans attente ni `sleep`.
+@ExtendWith(ApplicationExtension.class)
+class ModaleSiteVerifierCarreViewTest {
+
+    private static final String CARRE = "640380";
+
+    private final ClientVigieChiro client = mock(ClientVigieChiro.class);
+
+    private ModaleSiteController controleur;
+
+    @Start
+    void start(Stage stage) throws Exception {
+        ServiceSites service = mock(ServiceSites.class);
+        LienVigieChiroDao liens = mock(LienVigieChiroDao.class);
+        Injector injector = Guice.createInjector(new AbstractModule() {
+            @Provides
+            SiteEditViewModel viewModel() {
+                return new SiteEditViewModel(service, liens, "u-1", Optional.of(new RechercheCarreExistant(client)));
+            }
+        });
+        FXMLLoader loader = new FXMLLoader(ModaleSiteController.class.getResource("ModaleSite.fxml"));
+        loader.setControllerFactory(injector::getInstance);
+        Parent vue = loader.load();
+        controleur = loader.getController();
+        stage.setScene(new Scene(vue));
+        stage.show();
+    }
+
+    private void enCreation(FxRobot robot) {
+        robot.interact(() -> controleur.demarrerCreation(() -> {}));
+    }
+
+    private void saisirCarre(FxRobot robot, String carre) {
+        robot.interact(
+                () -> robot.lookup("#champCarre").queryAs(TextField.class).setText(carre));
+    }
+
+    private Button verifier(FxRobot robot) {
+        return robot.lookup("#btnVerifierCarre").queryAs(Button.class);
+    }
+
+    private Label message(FxRobot robot) {
+        return robot.lookup("#messageCarreExistant").queryAs(Label.class);
+    }
+
+    @Test
+    @DisplayName("#3458 : le geste est offert, et grisé tant que le carré n'a pas ses six chiffres")
+    void geste_offert_et_grise_tant_que_le_carre_est_incomplet(FxRobot robot) {
+        enCreation(robot);
+        StackPane enveloppe = robot.lookup("#enveloppeVerifierCarre").queryAs(StackPane.class);
+
+        assertThat(enveloppe.isVisible())
+                .as("la vérification est installée : le geste doit être là")
+                .isTrue();
+        assertThat(verifier(robot).isDisabled())
+                .as("formulaire vierge : il n'y a rien à chercher")
+                .isTrue();
+        assertThat(InfobulleDeBlocage.texteDe(enveloppe))
+                .as("un bouton gris sans motif est lui-même un défaut (#789)")
+                .contains("6 chiffres");
+
+        saisirCarre(robot, "6403");
+        assertThat(verifier(robot).isDisabled())
+                .as("quatre chiffres : `$text` cherche des mots entiers, un carré tronqué ne trouverait rien")
+                .isTrue();
+
+        saisirCarre(robot, CARRE);
+        assertThat(verifier(robot).isDisabled())
+                .as("six chiffres : le geste s'ouvre")
+                .isFalse();
+        assertThat(InfobulleDeBlocage.texteDe(enveloppe))
+                .as("le motif cède la place à ce que fait l'action")
+                .doesNotContain("6 chiffres");
+    }
+
+    @Test
+    @DisplayName("#3458 : carré libre : le verdict s'affiche dans la modale, en succès")
+    void carre_libre_le_verdict_s_affiche(FxRobot robot) {
+        enCreation(robot);
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
+        saisirCarre(robot, CARRE);
+
+        robot.interact(() -> verifier(robot).fire());
+
+        assertThat(message(robot).isVisible()).isTrue();
+        assertThat(message(robot).getText()).contains("n'existe pas encore");
+        assertThat(message(robot).getStyleClass()).contains("encart-succes");
+    }
+
+    @Test
+    @DisplayName("#3458 : carré déjà déclaré : l'avertissement nomme le site et dit quoi faire")
+    void carre_deja_declare_avertit_dans_la_modale(FxRobot robot) {
+        enCreation(robot);
+        when(client.chercherCarre(CARRE))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
+        saisirCarre(robot, CARRE);
+
+        robot.interact(() -> verifier(robot).fire());
+
+        // Redéclarer un carré déjà présent est exactement ce qui a produit le dépôt manqué de #3458 : le
+        // message ne se contente donc pas de constater, il nomme le geste qui remplace la déclaration.
+        assertThat(message(robot).getText())
+                .contains("Vigiechiro - Point Fixe-640380")
+                .contains("Récupérer depuis Vigie-Chiro");
+        assertThat(message(robot).getStyleClass()).contains("encart-avertissement");
+    }
+
+    @Test
+    @DisplayName("#3458 : une panne technique remet le geste à portée, et ne dit JAMAIS « il est libre »")
+    void une_panne_technique_remet_le_geste_a_portee(FxRobot robot) {
+        enCreation(robot);
+        when(client.chercherCarre(CARRE)).thenThrow(new IllegalStateException("panne"));
+        saisirCarre(robot, CARRE);
+
+        robot.interact(() -> verifier(robot).fire());
+
+        assertThat(message(robot).getText())
+                .as("une absence de réponse n'est pas une réponse")
+                .contains("PAS été vérifié");
+        assertThat(verifier(robot).isDisabled())
+                .as("le bouton se rouvre : sans cela, la panne coûterait la modale entière")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#3458 : on peut vérifier, corriger, et vérifier de nouveau")
+    void verifier_deux_fois_de_suite(FxRobot robot) {
+        enCreation(robot);
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
+        when(client.chercherCarre("640381"))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640381", true))));
+        saisirCarre(robot, CARRE);
+        robot.interact(() -> verifier(robot).fire());
+
+        saisirCarre(robot, "640381");
+        robot.interact(() -> verifier(robot).fire());
+
+        // Le bouton se grise le temps de l'appel pour qu'un double clic ne parte pas deux fois ; s'il ne
+        // se rouvrait pas ensuite, la première vérification serait la seule possible - et corriger une
+        // faute de frappe coûterait de rouvrir la modale.
+        assertThat(message(robot).getText()).contains("Vigiechiro - Point Fixe-640381");
+        assertThat(verifier(robot).isDisabled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#3458 : corriger le carré après coup efface un verdict qui ne le concerne plus")
+    void corriger_le_carre_efface_le_verdict(FxRobot robot) {
+        enCreation(robot);
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
+        saisirCarre(robot, CARRE);
+        robot.interact(() -> verifier(robot).fire());
+        assertThat(message(robot).isVisible()).isTrue();
+
+        saisirCarre(robot, "640381");
+
+        assertThat(message(robot).isVisible())
+                .as("un « ce carré est libre » sous un autre numéro serait pire que pas de vérification")
+                .isFalse();
+        assertThat(message(robot).isManaged())
+                .as("et il se retire de la mise en page, sans laisser d'encadré vide")
+                .isFalse();
+        verify(client, never()).chercherCarre("640381");
+    }
+}

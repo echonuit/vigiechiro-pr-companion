@@ -4,7 +4,9 @@ import com.google.gson.JsonArray;
 import fr.univ_amu.iut.commun.model.Certitude;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.net.http.HttpRequest;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -41,6 +43,13 @@ public final class ClientVigieChiro {
     /// [PaginationEve#TAILLE_PAGE] éléments par page, 500 pages couvrent 50 000 éléments (une nuit en
     /// compte ~5 000).
     private static final int PAGES_MAX = 500;
+
+    /// Combien de sites au plus une recherche de carré rapporte (#3458).
+    ///
+    /// Un même carré porte un site **par protocole** : quelques-uns au grand maximum, jamais une page.
+    /// ⚠️ Ce backend refuse `max_results` au delà de 100 (422), et rend alors des listes vides **en
+    /// silence** : la borne est basse à dessein, et ne doit pas être élargie sans mesure.
+    private static final int RESULTATS_RECHERCHE_CARRE = 20;
 
     /// Rayon de recherche d'un carré STOC (#733), en **mètres**. Un carré fait 2 km de côté : 10 km laissent
     /// de la marge pour répondre « le carré voisin » plutôt que « aucun » quand la position est en limite.
@@ -126,12 +135,37 @@ public final class ClientVigieChiro {
     /// rendu dit **combien** il a lu et **si c'est tout** - sans quoi un échantillon serait indiscernable
     /// de la collection, ce qui est le défaut que #1277 a coûté cher à corriger.
     ///
-    /// Aucun filtre serveur n'est demandé : ce backend **accepte puis ignore** `where=` (le total
-    /// annoncé ne bouge même pas), si bien qu'un filtre encodé ici ne filtrerait rien tout en le
+    /// Aucun filtre serveur n'est demandé **ici** : ce backend **accepte puis ignore** `where=` (le total
+    /// annoncé ne bouge même pas), si bien qu'un filtre encodé ainsi ne filtrerait rien tout en le
     /// laissant croire. Le tri se fait chez l'appelant, sur ce qu'il a réellement lu.
+    ///
+    /// ⚠️ **Cela ne vaut que pour `where=`.** Le paramètre `q`, lui, filtre réellement - voir
+    /// [#chercherCarre] : qui cherche **un** carré n'a pas à payer deux cents pages.
     public ReponseApi<LotPagine<SiteVigieChiro>> sitesPlateforme(int pages, SuiviPagination suivi) {
         int bornees = Math.clamp(pages, 1, PAGES_MAX);
         return PaginationEve.parcourirBorne(bornees, this::pageSites, SitesVigieChiro::sites, suivi);
+    }
+
+    /// Les sites de la plateforme portant ce **numéro de carré** (#3458), en **une** requête.
+    ///
+    /// ## Ce que la mesure a établi (2026-08-14, six `GET` en lecture seule)
+    ///
+    /// `_sites_generic_list` construit `lookup['$text'] = {'$search': q}` quand `q` est présent, et
+    /// l'index texte **existe** : le total annoncé passe de 20 767 à 1 pour `q=130711`, et à 0 pour un
+    /// numéro qui n'existe pas. Ce n'est donc **pas** un paramètre accepté puis ignoré comme `where=`.
+    ///
+    /// ⚠️ **`$text` cherche des mots entiers, jamais des préfixes** : `13071` ne ramène pas `130711`.
+    /// C'est exactement ce qu'il faut pour un numéro de carré - aucun faux positif par troncature - mais
+    /// cela **interdit** de bâtir une recherche partielle là-dessus. Le titre d'un site
+    /// (`Vigiechiro - Point Fixe-130711`) indexe le numéro comme un mot à lui seul, le tiret servant de
+    /// séparateur.
+    ///
+    /// Liste **vide** = ce carré n'existe pas sur la plateforme. Plusieurs entrées sont possibles : un
+    /// même carré peut porter un site par protocole, et le titre le dit.
+    public ReponseApi<List<SiteVigieChiro>> chercherCarre(String numeroCarre) {
+        String requete = "/sites?max_results=" + RESULTATS_RECHERCHE_CARRE + "&q="
+                + URLEncoder.encode(numeroCarre, StandardCharsets.UTF_8);
+        return transport.lire(requete).transformer(SitesVigieChiro::sites);
     }
 
     /// Les localités d'un site **telles quelles**, avec l'`_etag` du site (#3458).

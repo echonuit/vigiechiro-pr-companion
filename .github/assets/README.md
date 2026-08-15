@@ -246,7 +246,7 @@ La liste des carrés suivis, peuplée et à l'état initial.
 
 ## Modale site
 
-<sub>`sites/view/ModaleSite.fxml` &middot; 2 capture(s)</sub>
+<sub>`sites/view/ModaleSite.fxml` &middot; 3 capture(s)</sub>
 
 <table>
 <tr>
@@ -256,6 +256,14 @@ La liste des carrés suivis, peuplée et à l'état initial.
 <tr>
 <td><a href="apercu-sites-modale-site.png"><img src="apercu-sites-modale-site.png" width="430" alt="Modale site"></a></td>
 <td><a href="apercu-sites-modale-site-creation.png"><img src="apercu-sites-modale-site-creation.png" width="430" alt="Modale site création"></a></td>
+</tr>
+<tr>
+<th width="50%">Modale site : carré déjà déclaré</th>
+<th width="50%"></th>
+</tr>
+<tr>
+<td><a href="apercu-sites-modale-site-carre-existant.png"><img src="apercu-sites-modale-site-carre-existant.png" width="430" alt="Modale site : le carré vérifié existe déjà sur Vigie-Chiro"></a></td>
+<td></td>
 </tr>
 </table>
 

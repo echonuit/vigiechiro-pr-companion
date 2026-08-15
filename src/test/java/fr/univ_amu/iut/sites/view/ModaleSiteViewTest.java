@@ -21,6 +21,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
+import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -67,7 +68,7 @@ class ModaleSiteViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             SiteEditViewModel viewModel() {
-                return new SiteEditViewModel(service, liens, ID_USER);
+                return new SiteEditViewModel(service, liens, ID_USER, Optional.empty());
             }
         });
         FXMLLoader loader = new FXMLLoader(ModaleSiteController.class.getResource("ModaleSite.fxml"));
@@ -190,6 +191,22 @@ class ModaleSiteViewTest {
 
         verify(service, never()).creerSite(anyString(), any(), any(), any(), anyString());
         assertThat(rafraichissements).isZero();
+    }
+
+    @Test
+    @DisplayName("#3458 : sans la vérification installée, la modale n'affiche pas de bouton mort")
+    void sans_recherche_installee_pas_de_bouton_mort(FxRobot robot) {
+        // Cette classe monte le ViewModel avec un `Optional.empty()` : c'est l'injecteur partiel (capture
+        // d'écran, feature de connexion éteinte), où la plateforme n'est pas joignable par construction.
+        enCreation(robot);
+        StackPane enveloppe = robot.lookup("#enveloppeVerifierCarre").queryAs(StackPane.class);
+
+        assertThat(enveloppe.isVisible())
+                .as("un bouton qui ne peut rien faire vaut moins que pas de bouton du tout")
+                .isFalse();
+        assertThat(enveloppe.isManaged())
+                .as("et il ne doit pas réserver sa place dans la ligne du carré")
+                .isFalse();
     }
 
     @Test

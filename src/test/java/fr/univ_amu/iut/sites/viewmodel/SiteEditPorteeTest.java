@@ -19,6 +19,7 @@ import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ class SiteEditPorteeTest {
                 new HorlogeFigee(LocalDate.of(2026, 4, 22)),
                 new PointCommuneDao(source),
                 () -> {});
-        viewModel = new SiteEditViewModel(service, liens, "u-1");
+        viewModel = new SiteEditViewModel(service, liens, "u-1", Optional.empty());
     }
 
     private Site siteDeclare() {
