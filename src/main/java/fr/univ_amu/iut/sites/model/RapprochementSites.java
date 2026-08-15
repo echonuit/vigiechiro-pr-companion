@@ -8,8 +8,6 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
-import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,15 +44,9 @@ public class RapprochementSites implements RapprochementVigieChiro {
     /// La mécanique d'import d'un site distant, partagée avec le rapatriement à la demande (#3806).
     private final ImportSiteDistant imports;
 
-    public RapprochementSites(
-            SiteDao siteDao,
-            ServiceSites serviceSites,
-            LienVigieChiroDao liens,
-            SiteTiersDao siteTiers,
-            String idUtilisateur,
-            ServiceCommunes communes) {
+    public RapprochementSites(LienVigieChiroDao liens, ImportSiteDistant imports) {
         this.liens = Objects.requireNonNull(liens, "liens");
-        this.imports = new ImportSiteDistant(siteDao, serviceSites, liens, siteTiers, idUtilisateur, communes);
+        this.imports = Objects.requireNonNull(imports, "imports");
     }
 
     @Override

@@ -28,8 +28,10 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.sites.model.ControleCarreStoc;
+import fr.univ_amu.iut.sites.model.ImportSiteDistant;
 import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
 import fr.univ_amu.iut.sites.model.PublicationPoint;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RapprochementNuitsOpportunistes;
 import fr.univ_amu.iut.sites.model.RapprochementSites;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
@@ -134,6 +136,10 @@ public class SitesModule extends ModuleDeFeature {
         // plateforme. `RechercheCarreExistantModule` fait `setBinding` dans l'app complète ; sinon
         // l'Optional reste vide et la modale de déclaration n'offre pas le geste.
         OptionalBinder.newOptionalBinder(binder(), RechercheCarreExistant.class);
+        // « Récupérer ce carré » (#3806) : même montage, même raison - il interroge la plateforme.
+        // `RechercheCarreExistantModule` fait `setBinding` dans l'app complète ; sinon l'Optional reste
+        // vide et la modale ne propose pas le geste.
+        OptionalBinder.newOptionalBinder(binder(), RapatriementCarre.class);
         // Rapprochement des sites locaux avec VigieChiro (#728), invoqué à la connexion.
         Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
                 .addBinding()
@@ -163,14 +169,22 @@ public class SitesModule extends ModuleDeFeature {
     /// [SiteDao] de la feature et du [LienVigieChiroDao] du socle : aucune dépendance vers `connexion`.
     @Provides
     @Singleton
-    RapprochementSites fournirRapprochementSites(
+    RapprochementSites fournirRapprochementSites(LienVigieChiroDao liens, ImportSiteDistant imports) {
+        return new RapprochementSites(liens, imports);
+    }
+
+    /// Mécanique d'import d'un site distant (#3806), partagée par la synchronisation périodique et le
+    /// rapatriement à la demande : ne dépend que des DAO de la feature et du socle, jamais de `connexion`.
+    @Provides
+    @Singleton
+    ImportSiteDistant fournirImportSiteDistant(
             SiteDao siteDao,
             ServiceSites serviceSites,
             LienVigieChiroDao liens,
             SiteTiersDao siteTiers,
             @Named("idUtilisateurCourant") String idUtilisateur,
             ServiceCommunes communes) {
-        return new RapprochementSites(siteDao, serviceSites, liens, siteTiers, idUtilisateur, communes);
+        return new ImportSiteDistant(siteDao, serviceSites, liens, siteTiers, idUtilisateur, communes);
     }
 
     /// Marquage « carré d'un tiers » (#2525), dérivé de `site.observateur` à chaque synchronisation.
