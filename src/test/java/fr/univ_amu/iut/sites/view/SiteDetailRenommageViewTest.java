@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.EtapeNavigation;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -100,6 +101,7 @@ class SiteDetailRenommageViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-22")
     @DisplayName("#3672 : renommer le carré met à jour l'en-tête de la fiche, pas seulement la base")
     void renommer_met_a_jour_l_entete(FxRobot robot) {
         assertThat(numeroAffiche(robot)).isEqualTo(CARRE_AVANT);
