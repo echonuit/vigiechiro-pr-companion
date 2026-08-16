@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import java.nio.file.Files;
+import java.text.Collator;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -55,12 +56,30 @@ public final class Fonctionnalites {
 
     private Fonctionnalites() {}
 
+    /// Ordre de lecture des fonctionnalités : leur **libellé**, celui que l'utilisateur voit.
+    ///
+    /// Le tri portait sur l'**identifiant technique** (#3833). Il était déterministe et illisible : les
+    /// identifiants se suivaient (`campagne`, `carre-existant`, `controle-carre-stoc`) sans que leurs
+    /// libellés le fassent, si bien que « Vérifier et récupérer un carré » se rangeait entre
+    /// « Campagnes de suivi » et « Contrôle du carré STOC ».
+    ///
+    /// ⚠️ Un `String::compareTo` ne suffit pas : il compare des points de code, où `'É'` (U+00C9) est
+    /// au-delà de `'Z'` (U+005A) - « Étang » se rangerait **après** « Zone ». Le [Collator] français
+    /// range les accents à leur lettre.
+    ///
+    /// ⚠️ Un `Collator` **n'est pas sûr en concurrence**, et le tri est déterministe précisément parce
+    /// que l'aperçu des Réglages doit sortir identique au bit près. Chaque appel rend donc son propre
+    /// comparateur plutôt qu'une constante partagée.
+    static Comparator<Fonctionnalite> parLibelle() {
+        return Comparator.comparing(Fonctionnalite::libelle, Collator.getInstance(Locale.FRENCH));
+    }
+
     /// Toutes les [Fonctionnalite] déclarées par les modules de feature découverts (`ServiceLoader`),
-    /// triées par id (ordre déterministe). Exposé pour l'UI de gestion des fonctionnalités.
+    /// triées par **libellé** (ordre déterministe, et lisible). Exposé pour l'UI de gestion.
     public static List<Fonctionnalite> toutes() {
         return ServiceLoader.load(ModuleDeFeature.class).stream()
                 .map(provider -> provider.get().fonctionnalite())
-                .sorted(Comparator.comparing(Fonctionnalite::id))
+                .sorted(parLibelle())
                 .toList();
     }
 
