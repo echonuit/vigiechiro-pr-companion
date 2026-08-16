@@ -59,12 +59,18 @@ le **lance 45 s** sur un runner Windows, journal relu. Ce que la machine réelle
 - **S9-04** · La fenêtre s'ouvre et l'écran d'accueil s'affiche, sans message d'erreur.
 - **S9-05** · L'application est installée **dans le dossier personnel** (`%LOCALAPPDATA%`), pas dans
   `Program Files` : le scope `user` est bien celui qui a été servi.
+- **S9-14** · Le bandeau d'annonce en haut de la fenêtre nomme les deux versions **et** dit de
+  **fermer l'application avant d'installer** (#3457). Sans cette phrase, l'installation lancée
+  fenêtre ouverte ne se termine pas, et rien n'en donne la raison.
+
+    ⚠️ Le numéro sort de la suite volontairement : les cases 06 à 13 sont citées ailleurs (#3621
+    tranche sur **S9-07**), et les renuméroter rendrait ces renvois faux en silence.
 
 **Étape 3 · La mise à jour REMPLACE, elle ne double pas**
 
 C'est la case pour laquelle cette session existe.
 
-1. Fermer l'application.
+1. Fermer l'application - ce que **S9-14** vérifie que le produit sait désormais demander.
 2. `winget upgrade Echonuit.VigieChiroCompanion`
 
 - **S9-06** · La commande propose la montée et l'exécute, toujours **sans invite UAC**.
