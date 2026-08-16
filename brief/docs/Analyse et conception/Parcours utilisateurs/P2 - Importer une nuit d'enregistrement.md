@@ -34,10 +34,10 @@ Marie vient de récupérer la carte SD de son enregistreur après une nuit d'enr
 - Si l'utilisateur lance un import alors qu'un autre est en cours, l'application le met en file d'attente plutôt que de refuser ou de paralléliser (préservation des perfs).
 - Les **identifiants observateur et participation** présents dans les noms de fichiers ou les CSV sont conservés en local mais ne sont jamais transmis à un service distant (R8 implicite, [SC2](../../Objectifs%20qualités/Scénario/SC2.md)).
 
-## Enrichissements prévus
+## Ce que la fin d'import est devenue
 
-> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+L'enrichissement annoncé ici est **livré** (#2358, EPIC #2350).
 
-- **La fin d'import rend des comptes en chiffres** *(livré, #2358)*. Le [compte rendu chiffré](../Maquettes/M-CompteRendu.md) a remplacé les trois surfaces qui se succédaient : la phrase de succès, le compte rendu textuel et la liste des rejets. Il restitue la ventilation des fichiers de la source, compare le volume **lu sur la carte** au volume **écrit sur le disque**, rappelle les réserves d'inspection **encore vraies** (#1488) et se termine par « Ouvrir le passage » plutôt que par un acquittement.
+- **La fin d'import rend des comptes en chiffres**. Le [compte rendu chiffré](../Maquettes/M-CompteRendu.md) a remplacé les trois surfaces qui se succédaient : la phrase de succès, le compte rendu textuel et la liste des rejets. Il restitue la ventilation des fichiers de la source, compare le volume **lu sur la carte** au volume **écrit sur le disque**, rappelle les réserves d'inspection **encore vraies** (#1488) et se termine par « Ouvrir le passage » plutôt que par un acquittement.
 
     Le remplacement n'a été **complet** qu'à #2654 : jusque-là le ViewModel alimentait encore les deux canaux d'autrefois - le compte rendu textuel et la liste des rejets - que plus aucune surface ne lisait. Ils mentaient sur l'état du code, et leur retrait a demandé de vérifier, cas par cas, que la substance de leurs sept tests avait bien déménagé.

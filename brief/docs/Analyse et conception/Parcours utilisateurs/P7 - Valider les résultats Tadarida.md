@@ -32,9 +32,9 @@
 
   L'utilisateur choisit le mode au démarrage du parcours (configurable par passage).
 
-## Enrichissements prévus
+## Ce que la revue a gagné
 
-> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+Les deux enrichissements annoncés ici sont **livrés** (EPIC #2348).
 
 - **Les espèces à enjeu se distinguent dans la table.** Un repère de ligne, un critère de filtre et un compteur dédié permettent d'aller droit aux observations qui comptent, au lieu de les retrouver une par une dans plusieurs milliers de contacts (#2353).
-- **Le mode activité devient mesurable.** Le parcours distingue déjà un mode *inventaire* et un mode *activité* ; ce second mode n'a aujourd'hui aucune restitution. La [synthèse de la nuit](../Maquettes/M-Synthese.md) lui en donne une, et sa bascule « identifications validées seulement » fait apparaître ce que la validation a changé (#2351).
+- **Le mode activité est devenu mesurable.** Le parcours distinguait déjà un mode *inventaire* et un mode *activité*, sans que le second ait de restitution. La [synthèse de la nuit](../Maquettes/M-Synthese.md) lui en donne une, et sa bascule « identifications validées seulement » fait apparaître ce que la validation a changé (#2351).

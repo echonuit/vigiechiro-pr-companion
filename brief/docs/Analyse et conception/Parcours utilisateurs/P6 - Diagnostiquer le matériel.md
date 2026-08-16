@@ -36,8 +36,8 @@ Le journal du capteur est **circulaire** sur l'enregistreur : en cas de saturati
 
 Si la sonde climatique est absente ou défaillante, le relevé climatique est manquant et l'onglet Diagnostic le signale clairement plutôt que de masquer la section (R20).
 
-## Enrichissements prévus
+## L'activité horaire comme signal de dispositif
 
-> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+L'enrichissement annoncé ici est **livré** (#2352, EPIC #2348).
 
-- **L'activité horaire comme signal de dispositif.** La [courbe d'activité](../Maquettes/M-Activite.md) matérialise la fenêtre réelle entre coucher et lever du soleil, calculée au point d'écoute par la même éphéméride que la cohérence horaire de ce parcours. Des contacts qui débordent en période diurne se voient alors immédiatement : c'est un signal de matériel ou de pose autant qu'écologique (#2352).
+La [courbe d'activité](../Maquettes/M-Activite.md) matérialise la fenêtre réelle entre coucher et lever du soleil, calculée au point d'écoute par la même éphéméride que la cohérence horaire de ce parcours. Des contacts qui débordent en période diurne se voient alors immédiatement : c'est un signal de matériel ou de pose autant qu'écologique (#2352).

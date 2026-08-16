@@ -9,15 +9,15 @@ Cette section présente les **parcours d'usage** de l'application, organisés en
 
 Tous les parcours reposent sur le vocabulaire posé dans le [Modèle conceptuel](../Modèle%20conceptuel/index.md).
 
-!!! info "Enrichissements décidés, pas encore livrés"
-    Neuf parcours portent en fin de fiche une section **« Enrichissements prévus »**, qui les
-    prolonge sans modifier leurs étapes actuelles. Ils viennent des chantiers #2348 (lire ce que la
-    nuit contient), #2349 (du passage à la saison) et #2350 (les opérations longues), et sont
-    maquettés dans [M-Synthese](../Maquettes/M-Synthese.md),
+!!! success "Ce que les chantiers de l'été ont ajouté aux parcours"
+    Neuf parcours portent en fin de fiche une section qui les prolonge sans modifier leurs étapes.
+    Elle vient des chantiers #2348 (lire ce que la nuit contient), #2349 (du passage à la saison) et
+    #2350 (les opérations longues), **clos le 29 juillet 2026**. Les quatre écrans correspondants
+    existent : [M-Synthese](../Maquettes/M-Synthese.md),
     [M-Activite](../Maquettes/M-Activite.md), [M-Saison](../Maquettes/M-Saison.md) et
     [M-CompteRendu](../Maquettes/M-CompteRendu.md).
 
-    | Parcours enrichi | Ce qui s'y ajoute |
+    | Parcours enrichi | Ce qui s'y est ajouté |
     |---|---|
     | [P0](P0%20-%20Première%20nuit%20de%20Marie.md) | une conclusion au fil rouge : ce que la nuit contient |
     | [P2](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) | un compte rendu d'import chiffré |
