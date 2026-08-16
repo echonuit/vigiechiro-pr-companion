@@ -505,10 +505,35 @@ L'instrument est mécanique : **partir des fichiers que le chantier a touchés, 
 cite**, plutôt que de partir de sa mémoire.
 
 ```bash
-git diff --name-only origin/main... | while read -r f; do
-  grep -rl "$(basename "$f")" docs dev-docs brief 2>/dev/null
+git diff --name-only origin/main... | while read -r fichier; do
+  nom=$(basename "$fichier")
+  # Un fichier SOURCE se cite par son identifiant, sans extension : les pages écrivent « FilAriane »,
+  # jamais « FilAriane.java ». Tout autre fichier se cite par son nom entier - retirer l'extension de
+  # « base.css » chercherait « base », qui apparaît partout.
+  case "$nom" in
+    [A-Z]*.java | [A-Z]*.fxml) motif="${nom%.*}" ;;
+    *) motif="$nom" ;;
+  esac
+  grep -rl -- "$motif" docs dev-docs brief 2>/dev/null | while read -r page; do
+    printf '%s\t%s\n' "$motif" "$page"
+  done
 done | sort -u
 ```
+
+**Lire la sortie par motif, du plus rare au plus fréquent.** Un motif qui rend plus d'une douzaine de
+pages est trop générique pour dire quoi que ce soit : ce sont les motifs à **faible rendement** qui
+désignent les pages à ouvrir.
+
+!!! warning "La recette a longtemps cherché `X.java` là où les pages citent `X` (#3648)"
+    Elle prenait le `basename` **avec** son extension. Mesuré sur le chantier #3798 : `FilAriane.java`
+    rendait **zéro** page, `FilAriane` en rend **deux** - dont `dev-docs/navigation.md`, précisément la
+    page que ce chantier avait rendue fausse et qu'il a fallu corriger. L'instrument de la passe 3
+    manquait donc exactement ce que la passe 3 existe pour trouver.
+
+    ⚠️ **Et le remède évident était pire que le mal.** Retirer l'extension partout fait chercher
+    « base » pour `base.css` : **122** pages au lieu de 7, et « navigation » pour `navigation.md` : 39
+    au lieu de 5. Le correctif ne vaut que pour les fichiers dont le nom **est un identifiant**, d'où
+    le `case` ci-dessus. Un instrument qui noie sa sortie ne ment pas moins qu'un qui rend zéro.
 
 Le nom d'une classe, d'un script ou d'un fichier suffit à trouver ses mentions ; pour un **concept**
 qui n'a pas de nom stable, la même question se pose au
