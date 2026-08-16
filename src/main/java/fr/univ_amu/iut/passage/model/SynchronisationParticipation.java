@@ -3,7 +3,9 @@ package fr.univ_amu.iut.passage.model;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
+import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -75,6 +77,62 @@ public final class SynchronisationParticipation {
         this.fuseaux = Objects.requireNonNull(fuseaux, "fuseaux");
     }
 
+    /// Le refus « site non rattaché », qui nomme le geste **qui marche** pour ce carré-là (#3854).
+    ///
+    /// ## Pourquoi ce message a changé
+    ///
+    /// Il conseillait « connectez-vous et **synchronisez vos sites** ». Or la synchronisation dérive les
+    /// sites de `GET /moi/participations` : elle n'atteint que les carrés où une nuit est **déjà**
+    /// déposée. Le conseil était donc inapplicable à qui essaie d'en déposer une première - c'est-à-dire
+    /// à tous ceux qui lisent ce message. Mesuré par la sonde #3669 : `/moi/sites` rend **0** pour un
+    /// compte qui dépose depuis des mois, son carré appartenant à un tiers.
+    ///
+    /// C'est le jumeau du défaut que #3806 a corrigé côté fenêtre de déclaration : un message qui renvoie
+    /// vers un geste inopérant.
+    ///
+    /// ## Ce que coûte le conseil, et où
+    ///
+    /// Une requête, **sur le chemin d'échec uniquement** : un dépôt qui aboutit ne cherche aucun carré.
+    /// Sans elle, il faudrait choisir entre deux conseils dont l'un serait faux, puisque « récupérez-le »
+    /// n'a de sens que si le carré existe là-bas en Point Fixe.
+    ///
+    /// ⚠️ **Injoignable ne tranche pas.** Ni « récupérez-le », ni « il n'existe pas » : le refus dit qu'il
+    /// n'a pas pu vérifier, comme le verdict de la modale l'a appris (ADR 3458). Affirmer depuis une
+    /// ignorance est le défaut que ce dépôt traque partout.
+    private String conseilSiteNonRattache(String numeroCarre) {
+        String entete = "Site non rattaché à Vigie-Chiro : ";
+        if (numeroCarre == null) {
+            // Le port ne connaît pas le carré (implémentation no-op, feature `sites` absente) : on garde
+            // le geste juste, sans prétendre savoir si le carré existe là-bas.
+            return entete + "récupérez ce carré depuis « Mes sites » › « Nouveau site » avant de déposer.";
+        }
+        return switch (client.chercherCarre(numeroCarre)) {
+            case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) ->
+                entete + conseilSelonCeQuiExiste(numeroCarre, trouves);
+            case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte ->
+                entete + "la vérification n'a pas pu se faire (vous n'êtes pas connecté)." + " Reconnectez-vous,"
+                        + " puis réessayez.";
+            case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) ->
+                entete + "la vérification n'a pas pu se faire (Vigie-Chiro injoignable : " + cause + ")."
+                        + " Réessayez plus tard.";
+            case ReponseApi.Refuse<List<SiteVigieChiro>>(int statut, String corps) ->
+                entete + "la vérification n'a pas pu se faire (Vigie-Chiro a répondu HTTP " + statut + ")."
+                        + " Réessayez plus tard.";
+        };
+    }
+
+    /// Deux conseils, et un seul est applicable selon ce que la plateforme porte.
+    private static String conseilSelonCeQuiExiste(String numeroCarre, List<SiteVigieChiro> trouves) {
+        boolean enPointFixe = trouves.stream().anyMatch(SiteVigieChiro::estPointFixe);
+        if (enPointFixe) {
+            return "le carré " + numeroCarre + " existe sur Vigie-Chiro. Ouvrez « Mes sites » › « Nouveau"
+                    + " site », saisissez ce numéro et cliquez « Récupérer ce carré » : il sera rattaché,"
+                    + " avec ses points d'écoute positionnés.";
+        }
+        return "le carré " + numeroCarre + " n'existe pas en Point Fixe sur Vigie-Chiro. Activez-le sur le"
+                + " portail (il faut y créer un point), puis récupérez-le depuis « Mes sites ».";
+    }
+
     /// L'`_id` de la participation liée à `idPassage`, ou vide s'il n'a pas encore été déposé/rattaché.
     public Optional<String> participationDe(Long idPassage) {
         return liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage));
@@ -86,8 +144,7 @@ public final class SynchronisationParticipation {
         Passage passage = chargerPassage(idPassage);
         InfosPoint point = infosPoint(passage);
         String objectidSite = liens.objectidPour(LienVigieChiro.ENTITE_SITE, String.valueOf(point.idSite()))
-                .orElseThrow(() -> new RegleMetierException("Site non rattaché à Vigie-Chiro : connectez-vous et"
-                        + " synchronisez vos sites avant de créer la participation."));
+                .orElseThrow(() -> new RegleMetierException(conseilSiteNonRattache(point.numeroCarre())));
 
         ParticipationADeposer participation = CorrespondanceParticipation.versParticipation(
                 point.code(), passage, materielDao.pour(idPassage), fuseaux.pour(passage.idPoint()));

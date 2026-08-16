@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.api;
 
 import java.util.List;
+import java.util.Locale;
 
 /// Site VigieChiro rattaché à l'observateur, **dérivé de ses participations** (`GET /moi/participations`
 /// → `site` embarqué, #728/#718). Un observateur *participe* à des sites régionaux dont il n'est pas le
@@ -38,5 +39,22 @@ public record SiteVigieChiro(
     /// l'un des deux identifiants est inconnu : sans preuve du contraire, on ne présume pas un tiers.
     public boolean appartientAUnTiers(String idProfilConnecte) {
         return observateur != null && idProfilConnecte != null && !observateur.equals(idProfilConnecte);
+    }
+
+    /// Ce site est-il du **Point Fixe**, le seul protocole que Companion traite ?
+    ///
+    /// Le titre nomme le protocole plateforme (`Vigiechiro - Point Fixe-130711`,
+    /// `Vigie-chiro - Routier-…`). C'est la seule marque disponible : la recherche ne rend pas le
+    /// protocole en clair, et le résoudre coûterait une requête de plus par site.
+    ///
+    /// ⚠️ **`PointFixeStandard` et `PointFixeRecherche` sont tous deux du Point Fixe** : ce sont des
+    /// variantes **locales** (R3/R4 muettes ou non), pas deux protocoles de la plateforme. Le filtre
+    /// porte donc sur la famille, jamais sur la variante choisie par l'utilisateur.
+    ///
+    /// Vit ici plutôt que chez son premier appelant depuis #3854 : `sites` s'en sert pour décider ce
+    /// qu'il rapatrie, `passage` pour décider ce qu'il conseille à qui n'a pas de site rattaché. Deux
+    /// copies auraient divergé, et le cycle `passage → sites` est interdit.
+    public boolean estPointFixe() {
+        return titre != null && titre.toLowerCase(Locale.FRENCH).contains("point fixe");
     }
 }

@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
+import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.FuseauDuPoint;
 import fr.univ_amu.iut.commun.model.InfosPoint;
@@ -25,6 +26,7 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,6 +44,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class SynchronisationParticipationTest {
 
     private static final String OBJECTID_SITE = "5eb12120cbe7410011f0a97f";
+    private static final String CARRE = "130711";
 
     @Mock
     ClientVigieChiro client;
@@ -99,11 +102,75 @@ class SynchronisationParticipationTest {
     void creer_pour_site_non_rattache() {
         armerPassageEtPoint();
         when(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "7")).thenReturn(Optional.empty());
+        // Depuis #3854, le refus interroge la plateforme pour choisir son conseil. Le cas éprouvé ici est
+        // le refus lui-même : quelle que soit la réponse, rien n'est créé.
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.injoignable("hors ligne"));
 
         assertThatThrownBy(() -> sync.creerPour(42L))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("non rattaché");
         verify(client, never()).creerParticipation(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("#3854 : le carré existe en Point Fixe → le refus renvoie vers la RÉCUPÉRATION")
+    void refus_conseille_de_recuperer_le_carre() {
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "7")).thenReturn(Optional.empty());
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(
+                        List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-" + CARRE, true))));
+
+        assertThatThrownBy(() -> sync.creerPour(42L))
+                .isInstanceOf(RegleMetierException.class)
+                // Le conseil d'avant - « synchronisez vos sites » - ne ramène PAS un carré sans
+                // participation : c'est la mesure de #3669, et c'est le parcours qui a produit #3458.
+                .hasMessageNotContainingAny("synchronisez")
+                .hasMessageContaining("Récupérer ce carré");
+        verify(client, never()).creerParticipation(anyString(), any());
+    }
+
+    @Test
+    @DisplayName("#3854 : le carré n'est pas en Point Fixe → le refus renvoie vers le PORTAIL")
+    void refus_renvoie_au_portail_quand_le_carre_n_y_est_pas() {
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "7")).thenReturn(Optional.empty());
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
+
+        assertThatThrownBy(() -> sync.creerPour(42L))
+                .isInstanceOf(RegleMetierException.class)
+                // Récupérer serait un conseil impossible à suivre : il n'y a rien à récupérer.
+                .hasMessageNotContainingAny("Récupérer ce carré")
+                .hasMessageContaining("portail");
+    }
+
+    @Test
+    @DisplayName("#3854 : plateforme injoignable → le refus le DIT, sans affirmer que le carré manque")
+    void refus_ne_tranche_pas_quand_la_plateforme_est_injoignable() {
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "7")).thenReturn(Optional.empty());
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.injoignable("timeout"));
+
+        assertThatThrownBy(() -> sync.creerPour(42L))
+                .isInstanceOf(RegleMetierException.class)
+                // Ni « récupérez-le » ni « il n'existe pas » : on ne sait pas (ADR 3458).
+                .hasMessageNotContainingAny("Récupérer ce carré", "portail")
+                .hasMessageContaining("n'a pas pu");
+    }
+
+    @Test
+    @DisplayName("#3854 : un dépôt qui aboutit n'interroge JAMAIS la recherche de carré")
+    void le_chemin_nominal_ne_cherche_aucun_carre() {
+        armerPassageEtPoint();
+        when(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "7")).thenReturn(Optional.of(OBJECTID_SITE));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(ResultatEcriture.reussie("part-1"));
+
+        sync.creerPour(42L);
+
+        // Le conseil se paie sur le chemin d'ÉCHEC seulement : sinon chaque dépôt réussi porterait une
+        // requête de plus, pour un message que personne ne lira.
+        verify(client, never()).chercherCarre(anyString());
     }
 
     @Test
@@ -332,7 +399,7 @@ class SynchronisationParticipationTest {
 
     private void armerPassageEtPoint() {
         when(passageDao.findById(42L)).thenReturn(Optional.of(passage(null)));
-        when(referentielPoint.pour(7L)).thenReturn(Optional.of(new InfosPoint("Z41", 7L)));
+        when(referentielPoint.pour(7L)).thenReturn(Optional.of(new InfosPoint("Z41", 7L, CARRE)));
     }
 
     private static ParticipationDetail detail(String etag) {

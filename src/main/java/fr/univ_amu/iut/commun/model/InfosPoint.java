@@ -6,6 +6,17 @@ package fr.univ_amu.iut.commun.model;
 /// l'objectid VigieChiro du site via `LienVigieChiro.ENTITE_SITE`). Transporté par le port [ReferentielPoint]
 /// (pendant de [PositionGeo] pour [CoordonneesPoint]).
 ///
+/// Depuis #3854, l'identité porte aussi le **numéro de carré**. Il ne sert pas à déposer - le dépôt passe
+/// par l'objectid du lien - mais à **conseiller** quand ce lien manque : sans le numéro, le refus ne peut
+/// pas demander à la plateforme si ce carré y existe, et retombe sur un conseil générique.
+///
 /// @param code code de la localité (`PointDEcoute.code`)
 /// @param idSite id du site local auquel le point appartient
-public record InfosPoint(String code, Long idSite) {}
+/// @param numeroCarre numéro du carré de ce site, ou `null` si l'implémentation ne le connaît pas
+public record InfosPoint(String code, Long idSite, String numeroCarre) {
+
+    /// Identité sans le carré : pour les appelants qui n'ont besoin que de déposer.
+    public InfosPoint(String code, Long idSite) {
+        this(code, idSite, null);
+    }
+}

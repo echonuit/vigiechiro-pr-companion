@@ -70,6 +70,9 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 
 15. « ☁ Téléverser sur Vigie-Chiro » est présent (l'application est connectée).
 16. Le clic échoue proprement avec « Site non rattaché à Vigie-Chiro… » (640380) : **rien** n'a été écrit.
+    Le message **nomme le geste à faire** pour ce carré-là (#3854) : « Récupérer ce carré » si le carré
+    existe en Point Fixe sur la plateforme, sinon l'activer sur le portail. Il ne dit **jamais**
+    « synchronisez vos sites », qui ne ramène pas un carré sans nuit déposée.
 17. Rien, avant ce clic, n'annonçait le dépôt impossible sur ce site (S4-C01 : le garde-fou arrive après
     la génération).
 18. « 📂 Ouvrir le dossier (dépôt manuel) » ouvre le dossier `depot/`.

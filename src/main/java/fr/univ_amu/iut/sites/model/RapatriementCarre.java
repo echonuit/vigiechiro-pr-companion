@@ -6,7 +6,6 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.Severite;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -155,7 +154,7 @@ public class RapatriementCarre {
             return new Resultat.Inexistant(souhait.numeroCarre());
         }
         Optional<SiteVigieChiro> pointFixe =
-                trouves.stream().filter(RapatriementCarre::estPointFixe).findFirst();
+                trouves.stream().filter(SiteVigieChiro::estPointFixe).findFirst();
         if (pointFixe.isEmpty()) {
             return new Resultat.AutreProtocole(trouves.stream()
                     .map(SiteVigieChiro::titre)
@@ -176,17 +175,6 @@ public class RapatriementCarre {
         return imports.siteLocalDuCarre(souhait.numeroCarre())
                 .<Resultat>map(site -> new Resultat.Rapatrie(site, importe.get().pointsPoses()))
                 .orElseGet(Resultat.Indisponible::new);
-    }
-
-    /// Le titre d'un site nomme son protocole plateforme (`Vigiechiro - Point Fixe-130711`,
-    /// `Vigie-chiro - Routier-…`). C'est la seule marque disponible : la recherche ne rend pas le
-    /// protocole en clair, et le résoudre coûterait une requête de plus par site.
-    ///
-    /// ⚠️ **`PointFixeStandard` et `PointFixeRecherche` sont tous deux du Point Fixe** : ce sont des
-    /// variantes **locales** (R3/R4 muettes ou non), pas deux protocoles de la plateforme. Le filtre
-    /// porte donc sur la famille, jamais sur la variante choisie par l'utilisateur.
-    private static boolean estPointFixe(SiteVigieChiro site) {
-        return site.titre() != null && site.titre().toLowerCase(Locale.FRENCH).contains("point fixe");
     }
 
     /// L'identifiant du profil connecté, pour savoir si le carré appartient à un tiers (#2525). Sans lui,
