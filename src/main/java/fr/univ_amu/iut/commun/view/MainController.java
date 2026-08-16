@@ -78,7 +78,7 @@ public class MainController {
     private StackPane enveloppeRetour;
 
     @FXML
-    private HBox filAriane;
+    private FilAriane filAriane;
 
     @FXML
     private BorderPane barreStatut;
@@ -316,32 +316,10 @@ public class MainController {
             boutonRetour.setText(destination != null ? destination : "Retour");
         }
 
-        // « abregeable » sur chaque segment (#3760) : le fil d'Ariane est le porteur **déclaré** du
-        // déficit de la barre du haut. Il ne rend rien à la largeur d'ouverture, où tout tient ; sous
-        // 1100 il s'abrège, et le titre comme le bouton ← Retour restent entiers.
-        //
-        // La classe se pose ici, là où les segments naissent, et non dans une liste tenue ailleurs :
-        // l'ADR 0042 veut que l'exception se lise à l'endroit où elle s'applique.
-        filAriane.getChildren().clear();
-        var segments = navigateur.filActuel();
-        for (int i = 0; i < segments.size(); i++) {
-            if (i > 0) {
-                Label separateur = new Label("›");
-                separateur.getStyleClass().add("fil-ariane-separateur");
-                filAriane.getChildren().add(separateur);
-            }
-            Lieu lieu = segments.get(i);
-            if (lieu.estCliquable()) {
-                Hyperlink lien = new Hyperlink(lieu.libelle());
-                lien.getStyleClass().addAll("fil-ariane-segment", "abregeable");
-                lien.setOnAction(evenement -> lieu.ouvrir().run());
-                filAriane.getChildren().add(lien);
-            } else {
-                Label courant = new Label(lieu.libelle());
-                courant.getStyleClass().addAll("fil-ariane-courant", "abregeable");
-                filAriane.getChildren().add(courant);
-            }
-        }
+        // Le chrome dit QUELS segments ; [FilAriane] décide lesquels tiennent (#3798). Les segments ne
+        // portent plus « abregeable » : ils ne se coupent plus, donc `LisibiliteCapture` retrouve le
+        // droit de rougir dessus, et le silence déclaré par #3760 n'a plus lieu d'être.
+        filAriane.poser(navigateur.filActuel());
     }
 
     /// Bâtit l'accueil en **deux sections de prismes** (« Collecte & passages » / « Espèces &

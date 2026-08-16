@@ -220,6 +220,7 @@ nav:
     - 3806 · Un carré se rapatrie par son numéro, pas par ses participations: decisions/3806-un-carre-se-rapatrie-par-son-numero-pas-par-ses-participations.md
     - 3854 · Un refus ne conseille que ce qu'il a vérifié applicable: decisions/3854-un-refus-ne-conseille-que-ce-qu-il-a-verifie.md
     - 3645 · Un détecteur textuel s'exclut de son propre corpus: decisions/3645-un-detecteur-textuel-s-exclut-de-son-corpus.md
+    - 3798 · Un fil élide des segments, il ne rogne pas des libellés: decisions/3798-un-fil-elide-des-segments-il-ne-rogne-pas-des-libelles.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

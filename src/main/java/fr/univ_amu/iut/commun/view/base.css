@@ -66,6 +66,42 @@
     -fx-font-weight: bold;
 }
 
+/* Menu « … » des segments élidés (#3798) : il remplace un morceau de fil, il doit donc se lire comme
+   du fil et non comme un bouton. Ni fond, ni bordure, ni flèche de menu : le « … » suffit à dire
+   qu'il s'ouvre, et une flèche coûterait la place qu'on cherche justement à rendre. */
+.fil-ariane-elision {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-text-fill: -couleur-texte-clair;
+    -fx-font-size: 13px;
+    -fx-padding: 0 2 0 2;
+}
+
+.fil-ariane-elision:hover {
+    -fx-underline: true;
+}
+
+/* La flèche de menu est effacée pour de bon, pas seulement rendue transparente : à 900, ses ~18 px
+   décident si « Détails du passage N° 1 » tient dans le fil ou part dans le menu. */
+.fil-ariane-elision > .label {
+    -fx-padding: 0;
+}
+
+.fil-ariane-elision > .arrow-button {
+    -fx-padding: 0;
+    -fx-background-color: transparent;
+    -fx-min-width: 0;
+    -fx-max-width: 0;
+}
+
+.fil-ariane-elision > .arrow-button > .arrow {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-min-width: 0;
+    -fx-max-width: 0;
+    -fx-min-height: 0;
+}
+
 /* Séparateur « › » entre segments. */
 .fil-ariane-separateur {
     -fx-text-fill: rgba(255, 255, 255, 0.55);
