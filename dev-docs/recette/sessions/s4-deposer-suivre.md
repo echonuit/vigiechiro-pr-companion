@@ -77,6 +77,17 @@ participation », puis le suivi du traitement. S4 est la première session qui *
     la génération).
 18. « 📂 Ouvrir le dossier (dépôt manuel) » ouvre le dossier `depot/`.
 19. Ce bouton est grisé sans archives, avec une infobulle explicative.
+59. Le chemin du dossier de dépôt porte, **à côté de lui**, un bouton « Copier » ; le cliquer place ce
+    chemin dans le presse-papier, et ce qui s'y trouve est **exactement** ce que l'écran affiche (le
+    coller dans un éditeur pour le lire).
+60. Sur une nuit introuvable (chemin vide), ce bouton est **grisé** comme ses voisins, avec son
+    infobulle : il n'écrase pas le presse-papier avec du vide.
+
+> ⚠️ **Ces deux numéros sortent de la suite, et c'est le moindre mal.** Insérer « 20 » et « 21 » ici
+> décale tout ce qui suit, or la numérotation de S4 est **déjà** cassée : le fichier porte deux « 43 »,
+> deux « 52 » et deux « 54 », ses blocs d'annexe repartant à zéro. Un décalage y ajoute des doublons au
+> lieu d'en retirer (mesuré en l'essayant). On prend donc deux numéros **libres**, au-delà du plus haut
+> existant, jusqu'à la refonte des identifiants en `Sxx-NN` que la campagne 2 prévoit (#3424).
 
 *A4 · Marquer déposé, réinitialiser, régression*
 

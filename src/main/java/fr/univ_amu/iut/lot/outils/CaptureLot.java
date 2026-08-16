@@ -360,7 +360,11 @@ public final class CaptureLot {
     private static void rendrePilote(
             Injector injecteur, long idPassage, Path fichier, BiConsumer<LotViewModel, DepotViewModel> pilote)
             throws IOException {
-        rendrePilote(injecteur, idPassage, fichier, 1180, pilote);
+        // 1200 depuis #3464 : le bouton « Copier » posé contre le chemin de dépôt rend cette carte plus
+        // haute que son libellé seul, et le garde-fou anti-troncature l'a chiffré - « manque 6 px » sur
+        // deux libellés enroulables. La marge est prise au-delà du strict nécessaire : un aperçu qui
+        // tient à six pixels près rougira au premier mot ajouté ailleurs.
+        rendrePilote(injecteur, idPassage, fichier, 1200, pilote);
     }
 
     /// Variante à **hauteur de scène** explicite : un état plus chargé (table de dépôt peuplée, #2354)
