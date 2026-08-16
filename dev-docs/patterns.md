@@ -1356,6 +1356,24 @@ Trois règles, apprises sur le premier cas :
   point corse une divergence. `RegionsFrancaises.memeDepartement` n'affirme que les écarts qu'elle sait
   **démontrer**.
 
+### Le patron vaut aussi hors des données du produit (#3667)
+
+`CorrespondanceRecetteTest` confronte deux sources qui parlent du même sujet sans se connaître : le
+**script de recette**, qui dit ce qu'un cas demande (`*perceptif*` ou non), et le **code**, qui dit ce
+qu'un test prétend prouver (`jugement`). Elles peuvent se contredire, et la contradiction était
+jusque-là invisible.
+
+Deux règles s'y retrouvent à l'identique, ce qui est le signe qu'il s'agit bien du même patron :
+
+- **montrer n'est pas trier** : un cas marqué perceptif ne rejoint **jamais** les assertés, quoi
+  qu'en dise le code. La contradiction se signale, elle ne se résout pas en silence dans le sens qui
+  arrange le compteur ;
+- **s'abstenir plutôt qu'affirmer** : le garde ne réclame pas la couverture, il refuse qu'elle soit
+  **tacite**. « Aucun test » reste une réponse recevable.
+
+Une différence, en revanche : ici la confrontation ne rend pas un constat à l'utilisateur, elle
+**rougit la CI**. Un désaccord entre un document et le code n'a pas de destinataire dans le produit.
+
 **Où le constat vit.** Sur la **portée de ce qu'il décrit**, pas sur celle de ce qui l'a déclenché. Un
 écart de topologie (un point, un carré) sort de l'audit **global** ; l'audit ciblé d'une nuit
 (`auditerPassage`) le répéterait à chaque passage du même point sans rien apprendre.

@@ -96,6 +96,31 @@ le script disait « perceptifs » en toutes lettres, et aucune machine ne le lis
   de la stabilisation tiennent-ils **ensemble** ? Un parcours qui traverse quatre écrans, là où chaque
   session n'en déroule qu'un. Condition d'entrée de la campagne 2 *(à jouer)*.
 
+### Le clip : ce qu'un cas perceptif donne à regarder (#3667)
+
+Un cas perceptif n'était jusqu'ici jugeable qu'en **refaisant les manipulations à la main**. Il l'est
+maintenant en regardant un extrait.
+
+Une séance filmée produit, à côté du film, un **clip par test** et un `index.md` qui se lit **par
+cas** : on saute à l'extrait plutôt que de regarder trente minutes.
+
+```bash
+.github/scripts/lance-test-filme.sh ConnexionModaleViewTest   # une classe
+.github/scripts/lance-test-filme.sh --planche                 # tout ce qui cite un cas
+```
+
+⚠️ **L'index dit par quel moyen chaque cas s'audite**, et c'est ce qui l'empêche d'inviter à cocher
+n'importe quoi : « en regardant » quand quelque chose a paru à l'écran, « en lisant le test » quand
+rien n'a paru. Un test de ViewModel cite des cas et n'ouvre aucune fenêtre - son clip est noir, et
+c'est le résultat **juste**.
+
+Le mode d'emploi et les pièges du banc vivent dans
+[CI/CD](../ci-cd-release.md#un-runner-qui-execute-nest-pas-un-runner-qui-pilote-3710).
+
+⚠️ **Le clip ne rend pas le verdict, il le rend possible.** Filmer une application cassée produit une
+vidéo parfaitement valide : ce qui fait foi reste l'assertion pour un cas asserté, et le **regard
+d'un humain** pour un cas perceptif.
+
 ## La fiche d'évaluation : six axes
 
 Chaque écran est noté sur **six axes**, verdict trivalué (**OK / remarque / bloquant**). Les axes **P**
@@ -148,7 +173,7 @@ Selon l'axe, la couche de cristallisation diffère :
 | **R** | test TestFX qui rejoue raccourcis et focus |
 | **P** | test de commande CLI en golden : voir [CLI](../cli.md) |
 | **D** | [harnais de captures](../captures.md) (`ApercuFx` / `Capture*`) + approbation |
-| **F** | **irréductiblement humain** pour la part *perçue* ; les invariants objectivables (annulable, désactivation expliquée) rejoignent C / E |
+| **F** | **irréductiblement humain** pour la part *perçue* - irréductible à une **assertion**, non à un **dispositif** : le geste se filme et se regarde (#3667). Les invariants objectivables (annulable, désactivation expliquée) rejoignent C / E |
 
 Le mécanisme s'appuie sur des patrons déjà en place : le **cliquet** (`CliquetFixturePassageTest`), qui
 empêche une dette de fixtures de repousser, et *[« la doc est tenue par un test »](../tests-et-qualite.md)*,
