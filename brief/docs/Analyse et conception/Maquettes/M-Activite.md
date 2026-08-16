@@ -21,7 +21,6 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
     .search { fill: #ffffff; stroke: #c5cae9; stroke-width: 1; }
     .search-txt { fill: #9aa0b3; font: 13px sans-serif; }
     .pagesub { font: 13px sans-serif; fill: #4a6785; }
-    .panel { fill: #ffffff; stroke: #c4ccd4; stroke-width: 1; }
     .section-title { font: 600 13px sans-serif; fill: #2c3e50; }
     .filt { font: 12px sans-serif; fill: #2c3e50; }
     .filt-off { font: 12px sans-serif; fill: #9aa0b3; }
@@ -41,6 +40,13 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
     .s3 { fill: none; stroke: #4a3aa7; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
     .lbl { font: 600 11px sans-serif; fill: #2c3e50; }
     .legend-txt { font: 12px sans-serif; fill: #2c3e50; }
+    /* Socle de la barre de filtres, repris a l'identique de M-Analyse : c'est le meme composant. */
+    .field-input { fill: #ffffff; stroke: #6a737d; stroke-width: 1; }
+    .field-ph { font: 13px sans-serif; fill: #bdc3c7; }
+    .btn-secondary { fill: #ffffff; stroke: #2c3e50; stroke-width: 1; }
+    .btn-txt-dark { fill: #2c3e50; font: 600 12px sans-serif; }
+    .puce { fill: #e8eefc; stroke: #4a90d9; stroke-width: 1; }
+    .puce-txt { font: 12px sans-serif; fill: #2563a3; }
     .statusbar { fill: #eceff5; stroke: #d0d7de; stroke-width: 1; }
     .status-txt { font: 12px sans-serif; fill: #4a6785; }
   </style>
@@ -55,77 +61,89 @@ L'écran trace le **nombre de contacts par tranche horaire et par espèce**, sur
 
   <text x="30" y="72" class="pagesub">Nuit du 2026-06-22 · coucher 21:51 · lever 06:27 · 939 contacts de chiroptères</text>
 
-  <!-- Panneau de filtres -->
-  <rect x="30" y="90" width="210" height="470" rx="4" class="panel"/>
-  <text x="44" y="112" class="section-title">Filtres</text>
+  <!-- Barre de filtres (socle partage par les cinq ecrans exploratoires, cf. Activite.fxml) -->
+  <rect x="30" y="90" width="210" height="26" rx="3" class="field-input"/>
+  <text x="44" y="107" class="field-ph">Rechercher (espèce, carré…)</text>
+  <rect x="250" y="90" width="90" height="26" rx="4" class="btn-secondary"/>
+  <text x="295" y="107" class="btn-txt-dark" text-anchor="middle">＋ Filtre</text>
+  <rect x="350" y="90" width="150" height="26" rx="13" class="puce"/>
+  <text x="364" y="107" class="puce-txt">Nuit : 2026-06-22  ✕</text>
+  <rect x="852" y="90" width="118" height="26" rx="3" class="btn-secondary"/>
+  <text x="911" y="107" class="btn-txt-dark" text-anchor="middle">Tout effacer</text>
 
-  <text x="44" y="140" class="filt">▾ Carrés</text><text x="226" y="140" class="filt-num">1 / 1</text>
-  <text x="44" y="164" class="filt">▸ Points</text><text x="226" y="164" class="filt-num">1 / 1</text>
-  <text x="44" y="188" class="filt">▸ Passages</text><text x="226" y="188" class="filt-num">1 / 1</text>
-  <text x="44" y="212" class="filt">▸ Nuits</text><text x="226" y="212" class="filt-num">1 / 1</text>
-
-  <line x1="44" y1="228" x2="226" y2="228" stroke="#e1e6ec" stroke-width="1"/>
-  <text x="44" y="252" class="section-title">▾ Espèces</text><text x="226" y="252" class="filt-num">3 / 19</text>
-  <rect x="46" y="266" width="11" height="11" rx="2" fill="#2a78d6"/><text x="66" y="276" class="filt">Pippip</text><text x="226" y="276" class="filt-num">302</text>
-  <rect x="46" y="290" width="11" height="11" rx="2" fill="#1baf7a"/><text x="66" y="300" class="filt">Nyclei</text><text x="226" y="300" class="filt-num">168</text>
-  <rect x="46" y="314" width="11" height="11" rx="2" fill="#4a3aa7"/><text x="66" y="324" class="filt">Pipkuh</text><text x="226" y="324" class="filt-num">141</text>
-  <rect x="46" y="338" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/><text x="66" y="348" class="filt-off">Eptser</text><text x="226" y="348" class="filt-num">29</text>
-  <rect x="46" y="362" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/><text x="66" y="372" class="filt-off">Plesp</text><text x="226" y="372" class="filt-num">13</text>
-  <rect x="46" y="386" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/><text x="66" y="396" class="filt-off">Barbar</text><text x="226" y="396" class="filt-num">9</text>
-
-  <rect x="44" y="450" width="128" height="22" rx="3" class="ctrl"/><text x="108" y="465" class="ctrl-txt">Tout effacer</text>
+  <!-- Selecteur d'especes (FlowPane du produit) : les trois tracees, puis celles qu'on peut ajouter -->
+  <text x="30" y="150" class="section-title">Espèces</text>
+  <text x="130" y="150" class="filt-num">3 / 19</text>
+  <rect x="160" y="140" width="11" height="11" rx="2" fill="#2a78d6"/>
+  <text x="180" y="150" class="filt">Pippip</text>
+  <text x="275" y="150" class="filt-num">302</text>
+  <rect x="295" y="140" width="11" height="11" rx="2" fill="#1baf7a"/>
+  <text x="315" y="150" class="filt">Nyclei</text>
+  <text x="410" y="150" class="filt-num">168</text>
+  <rect x="430" y="140" width="11" height="11" rx="2" fill="#4a3aa7"/>
+  <text x="450" y="150" class="filt">Pipkuh</text>
+  <text x="545" y="150" class="filt-num">141</text>
+  <rect x="565" y="140" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/>
+  <text x="585" y="150" class="filt-off">Eptser</text>
+  <text x="680" y="150" class="filt-num">29</text>
+  <rect x="700" y="140" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/>
+  <text x="720" y="150" class="filt-off">Plesp</text>
+  <text x="815" y="150" class="filt-num">13</text>
+  <rect x="835" y="140" width="11" height="11" rx="2" fill="#ffffff" stroke="#c4ccd4"/>
+  <text x="855" y="150" class="filt-off">Barbar</text>
+  <text x="950" y="150" class="filt-num">9</text>
 
   <!-- En-tete du graphe -->
-  <text x="264" y="112" class="section-title">Activité par tranche horaire</text>
-  <rect x="640" y="96" width="52" height="22" rx="3" class="ctrl"/><text x="666" y="111" class="ctrl-txt">15 min</text>
-  <rect x="698" y="96" width="52" height="22" rx="3" class="ctrl-on"/><text x="724" y="111" class="ctrl-on-txt">30 min</text>
-  <rect x="756" y="96" width="52" height="22" rx="3" class="ctrl"/><text x="782" y="111" class="ctrl-txt">60 min</text>
-  <rect x="820" y="96" width="150" height="22" rx="3" class="ctrl"/><text x="895" y="111" class="ctrl-txt">Exporter l'image…</text>
+  <text x="30.0" y="182.0" class="section-title">Activité par tranche horaire</text>
+  <rect x="530.6" y="166.0" width="69.2" height="22" rx="3" class="ctrl"/><text x="565.2" y="181.0" class="ctrl-txt">15 min</text>
+  <rect x="607.8" y="166.0" width="69.2" height="22" rx="3" class="ctrl-on"/><text x="642.5" y="181.0" class="ctrl-on-txt">30 min</text>
+  <rect x="685.1" y="166.0" width="69.2" height="22" rx="3" class="ctrl"/><text x="719.7" y="181.0" class="ctrl-txt">60 min</text>
+  <rect x="770.3" y="166.0" width="199.7" height="22" rx="3" class="ctrl"/><text x="870.1" y="181.0" class="ctrl-txt">Exporter l'image…</text>
 
   <!-- Zone de graphe -->
-  <rect x="264" y="130" width="706" height="330" class="chart-bg"/>
+  <rect x="30.0" y="200.0" width="940.0" height="330" class="chart-bg"/>
   <!-- bande nocturne : coucher 21:51 -> lever 06:27 -->
-  <rect x="450" y="146" width="410" height="270" class="nightband"/>
-  <text x="456" y="162" class="axis-txt">nuit (coucher → lever)</text>
+  <rect x="277.6" y="216.0" width="545.9" height="270" class="nightband"/>
+  <text x="285.6" y="232.0" class="axis-txt">nuit (coucher → lever)</text>
   <!-- grille + axe Y -->
-  <line x1="310" y1="146" x2="950" y2="146" class="grid"/><text x="302" y="150" class="axis-txt" text-anchor="end">40</text>
-  <line x1="310" y1="213.5" x2="950" y2="213.5" class="grid"/><text x="302" y="217" class="axis-txt" text-anchor="end">30</text>
-  <line x1="310" y1="281" x2="950" y2="281" class="grid"/><text x="302" y="285" class="axis-txt" text-anchor="end">20</text>
-  <line x1="310" y1="348.5" x2="950" y2="348.5" class="grid"/><text x="302" y="352" class="axis-txt" text-anchor="end">10</text>
-  <line x1="310" y1="416" x2="950" y2="416" class="axis"/><text x="302" y="420" class="axis-txt" text-anchor="end">0</text>
-  <text x="286" y="281" class="axis-title" transform="rotate(-90 286 281)" text-anchor="middle">Contacts / 30 min</text>
+  <line x1="91.2" y1="216.0" x2="943.4" y2="216.0" class="grid"/><text x="80.6" y="220.0" class="axis-txt" text-anchor="end">40</text>
+  <line x1="91.2" y1="283.5" x2="943.4" y2="283.5" class="grid"/><text x="80.6" y="287.0" class="axis-txt" text-anchor="end">30</text>
+  <line x1="91.2" y1="351.0" x2="943.4" y2="351.0" class="grid"/><text x="80.6" y="355.0" class="axis-txt" text-anchor="end">20</text>
+  <line x1="91.2" y1="418.5" x2="943.4" y2="418.5" class="grid"/><text x="80.6" y="422.0" class="axis-txt" text-anchor="end">10</text>
+  <line x1="91.2" y1="486.0" x2="943.4" y2="486.0" class="axis"/><text x="80.6" y="490.0" class="axis-txt" text-anchor="end">0</text>
+  <text x="59.3" y="351.0" class="axis-title" transform="rotate(-90 59.3 351.0)" text-anchor="middle">Contacts / 30 min</text>
 
   <!-- axe X : 18h -> 07h -->
-  <text x="310" y="434" class="axis-txt" text-anchor="middle">18h</text>
-  <text x="359" y="434" class="axis-txt" text-anchor="middle">19h</text>
-  <text x="408" y="434" class="axis-txt" text-anchor="middle">20h</text>
-  <text x="457" y="434" class="axis-txt" text-anchor="middle">21h</text>
-  <text x="507" y="434" class="axis-txt" text-anchor="middle">22h</text>
-  <text x="556" y="434" class="axis-txt" text-anchor="middle">23h</text>
-  <text x="605" y="434" class="axis-txt" text-anchor="middle">00h</text>
-  <text x="655" y="434" class="axis-txt" text-anchor="middle">01h</text>
-  <text x="704" y="434" class="axis-txt" text-anchor="middle">02h</text>
-  <text x="753" y="434" class="axis-txt" text-anchor="middle">03h</text>
-  <text x="803" y="434" class="axis-txt" text-anchor="middle">04h</text>
-  <text x="852" y="434" class="axis-txt" text-anchor="middle">05h</text>
-  <text x="901" y="434" class="axis-txt" text-anchor="middle">06h</text>
-  <text x="950" y="434" class="axis-txt" text-anchor="middle">07h</text>
-  <text x="630" y="452" class="axis-title" text-anchor="middle">Heure</text>
+  <text x="91.2" y="504.0" class="axis-txt" text-anchor="middle">18h</text>
+  <text x="156.5" y="504.0" class="axis-txt" text-anchor="middle">19h</text>
+  <text x="221.7" y="504.0" class="axis-txt" text-anchor="middle">20h</text>
+  <text x="287.0" y="504.0" class="axis-txt" text-anchor="middle">21h</text>
+  <text x="353.5" y="504.0" class="axis-txt" text-anchor="middle">22h</text>
+  <text x="418.8" y="504.0" class="axis-txt" text-anchor="middle">23h</text>
+  <text x="484.0" y="504.0" class="axis-txt" text-anchor="middle">00h</text>
+  <text x="550.6" y="504.0" class="axis-txt" text-anchor="middle">01h</text>
+  <text x="615.8" y="504.0" class="axis-txt" text-anchor="middle">02h</text>
+  <text x="681.1" y="504.0" class="axis-txt" text-anchor="middle">03h</text>
+  <text x="747.6" y="504.0" class="axis-txt" text-anchor="middle">04h</text>
+  <text x="812.9" y="504.0" class="axis-txt" text-anchor="middle">05h</text>
+  <text x="878.1" y="504.0" class="axis-txt" text-anchor="middle">06h</text>
+  <text x="943.4" y="504.0" class="axis-txt" text-anchor="middle">07h</text>
+  <text x="517.3" y="522.0" class="axis-title" text-anchor="middle">Heure</text>
 
   <!-- Series -->
-  <polyline class="s1" points="310,409 334,402 359,383 383,357 408,325 432,293 457,261 482,235 506,213 531,220 556,232 580,245 605,264 630,283 654,296 679,309 704,322 728,334 753,347 777,354 802,360 827,367 851,373 876,380 900,386 925,386 950,393"/>
-  <polyline class="s2" points="310,416 334,416 359,409 383,402 408,389 432,370 457,344 482,312 506,286 531,293 556,312 580,331 605,350 630,370 654,383 679,389 704,396 728,402 753,402 777,409 802,409 827,409 851,416 876,416 900,416 925,416 950,416"/>
-  <polyline class="s3" points="310,416 334,409 359,396 383,377 408,357 432,338 457,325 482,325 506,331 531,338 556,344 580,357 605,363 630,370 654,377 679,377 704,383 728,389 753,389 777,396 802,396 827,402 851,402 876,402 900,409 925,409 950,409"/>
+  <polyline class="s1" points="91.2,479.0 123.2,472.0 156.5,453.0 188.4,427.0 221.7,395.0 253.7,363.0 287.0,331.0 320.3,305.0 352.2,283.0 385.5,290.0 418.8,302.0 450.7,315.0 484.0,334.0 517.3,353.0 549.3,366.0 582.5,379.0 615.8,392.0 647.8,404.0 681.1,417.0 713.0,424.0 746.3,430.0 779.6,437.0 811.6,443.0 844.8,450.0 876.8,456.0 910.1,456.0 943.4,463.0"/>
+  <polyline class="s2" points="91.2,486.0 123.2,486.0 156.5,479.0 188.4,472.0 221.7,459.0 253.7,440.0 287.0,414.0 320.3,382.0 352.2,356.0 385.5,363.0 418.8,382.0 450.7,401.0 484.0,420.0 517.3,440.0 549.3,453.0 582.5,459.0 615.8,466.0 647.8,472.0 681.1,472.0 713.0,479.0 746.3,479.0 779.6,479.0 811.6,486.0 844.8,486.0 876.8,486.0 910.1,486.0 943.4,486.0"/>
+  <polyline class="s3" points="91.2,486.0 123.2,479.0 156.5,466.0 188.4,447.0 221.7,427.0 253.7,408.0 287.0,395.0 320.3,395.0 352.2,401.0 385.5,408.0 418.8,414.0 450.7,427.0 484.0,433.0 517.3,440.0 549.3,447.0 582.5,447.0 615.8,453.0 647.8,459.0 681.1,459.0 713.0,466.0 746.3,466.0 779.6,472.0 811.6,472.0 844.8,472.0 876.8,479.0 910.1,479.0 943.4,479.0"/>
 
   <!-- pics : marques seules, l'identification passe par la legende et le survol -->
-  <circle cx="506" cy="213" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2"/>
-  <circle cx="506" cy="286" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2"/>
-  <circle cx="457" cy="325" r="4" fill="#4a3aa7" stroke="#ffffff" stroke-width="2"/>
+  <circle cx="352.2" cy="283.0" r="4" fill="#2a78d6" stroke="#ffffff" stroke-width="2.7"/>
+  <circle cx="352.2" cy="356.0" r="4" fill="#1baf7a" stroke="#ffffff" stroke-width="2.7"/>
+  <circle cx="287.0" cy="395.0" r="4" fill="#4a3aa7" stroke="#ffffff" stroke-width="2.7"/>
 
   <!-- Legende -->
-  <rect x="46" y="490" width="11" height="11" rx="2" fill="#2a78d6"/><text x="66" y="500" class="legend-txt">Pipistrelle commune (Pippip)</text>
-  <rect x="300" y="490" width="11" height="11" rx="2" fill="#1baf7a"/><text x="320" y="500" class="legend-txt">Noctule de Leisler (Nyclei)</text>
-  <rect x="540" y="490" width="11" height="11" rx="2" fill="#4a3aa7"/><text x="560" y="500" class="legend-txt">Pipistrelle de Kuhl (Pipkuh)</text>
+  <rect x="46" y="560.0" width="11" height="11" rx="2" fill="#2a78d6"/><text x="66" y="570.0" class="legend-txt">Pipistrelle commune (Pippip)</text>
+  <rect x="300" y="560.0" width="11" height="11" rx="2" fill="#1baf7a"/><text x="320" y="570.0" class="legend-txt">Noctule de Leisler (Nyclei)</text>
+  <rect x="540" y="560.0" width="11" height="11" rx="2" fill="#4a3aa7"/><text x="560" y="570.0" class="legend-txt">Pipistrelle de Kuhl (Pipkuh)</text>
 
   <!-- Barre de statut -->
   <rect x="0" y="600" width="1000" height="20" class="statusbar"/>
