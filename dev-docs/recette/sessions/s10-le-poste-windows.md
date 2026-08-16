@@ -83,9 +83,18 @@ seule des trois.
 
 ## Ce que la session ne couvre pas, et pourquoi
 
-- **`ATOMIC_MOVE` sur une cible ouverte** (#3777) : le motif fondateur du lot, non éprouvé. Il demande
-  un **dispositif**, pas une observation - on ne sait pas encore reproduire la condition à la main de
-  façon fiable. À traiter par un test, pas par une case.
-- **La protection du jeton par les ACL du profil** (#3778) : affirmée par la doc, vérifiée par
-  personne. Une case de recette dirait « le fichier existe », pas « aucun autre compte ne peut le
-  lire ». Cela demande un second compte, et cela relève d'un port testable plutôt que d'un regard.
+⚠️ **Les deux points ci-dessous ont trouvé leur dispositif depuis** (#3777 et #3778, livrés). Ce
+paragraphe disait « on ne sait pas encore reproduire » et « cela relève d'un port testable » : c'est
+désormais **fait**, et la session n'a plus à s'en préoccuper.
+
+- **`ATOMIC_MOVE` sur une cible ouverte** : éprouvé par `EcritureAtomiqueTest`, sur un déplacement
+  **injecté** - la condition ne se fabrique pas sous POSIX, où le déplacement réussit quoi qu'on tienne
+  ouvert. Une sonde a mesuré sous Windows que **les quatre** façons de tenir la cible provoquent le
+  refus, y compris un simple `Files.newInputStream`.
+- **La protection du jeton par les ACL du profil** : lue par `ProtectionFichier.restreinteAuProprietaire`,
+  qui exprime la **propriété** - « aucun autre compte ne peut lire ce fichier » - sur les deux systèmes.
+  Mesuré : exactement trois entrées `ALLOW`, l'équivalent de `600`.
+
+**Ce qu'aucun des deux n'atteint, et qui reste à cette session** : qu'un **humain** lise le refus et
+comprenne quoi faire. Un test vérifie qu'une chaîne contient les bons mots ; il ne vérifie pas qu'on
+les comprend devant l'écran.
