@@ -90,7 +90,7 @@ fausse** : les étapes de packaging ne s'exécutaient qu'après le succès des t
 **masquait** l'état du packaging, qu'on n'apprenait qu'au tour suivant.
 
 Or ces étapes ne dépendent que de l'**assemblage** : `package -DskipTests` suffit (~20 s en local, et
-les <!--inv:tests-bats-->108<!--/inv--> tests bats passent sur ce seul artefact). D'où la séparation :
+les <!--inv:tests-bats-->110<!--/inv--> tests bats passent sur ce seul artefact). D'où la séparation :
 
 | Job | Ce dont il dépend | Ce qu'il prouve |
 |---|---|---|
