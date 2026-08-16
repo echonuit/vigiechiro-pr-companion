@@ -312,6 +312,50 @@ Le cadrage, sans lequel la mesure ne vaut rien :
 
 Le mode d'emploi complet est dans [Tests et qualité](tests-et-qualite.md).
 
+### Un garde ne dit ce qu'il vérifie qu'après l'avoir vu rougir sur SA mutation
+
+PIT répond à « une ligne est-elle couverte ». Il ne répond pas à « **ce garde attrape-t-il le défaut
+qu'il nomme** ». C'est une autre question, et elle se pose pour tout dispositif qu'on écrit pour
+empêcher un défaut précis de revenir : garde d'architecture, cliquet, test de parcours, inventaire.
+
+**La règle : avant de faire confiance à un garde, on casse à la main exactement ce qu'il prétend
+attraper, et on le regarde rougir.** Pas une mutation voisine - celle-là.
+
+Trois dispositifs de la seule journée du 16/08/2026 ont échoué à ce contrôle, et aucun n'aurait été
+démasqué par une relecture :
+
+- le cliquet d'annonces de [#3645](decisions/3645-un-detecteur-textuel-s-exclut-de-son-corpus.md)
+  parcourait tous les fichiers de test **y compris le sien**, dont la documentation nommait ses cinq
+  débiteurs : il les certifiait gardés. Mesuré, il n'en nommait **aucun** ;
+- le test de fraîcheur de [#3840](decisions/3840-le-signal-et-le-retour-se-partagent-la-fraicheur.md)
+  restait vert en retirant le mécanisme qu'il prétendait vérifier : une écriture voisine annonçait, et
+  son rechargement asynchrone relisait la base **après** le geste silencieux ;
+- le garde d'élision de [#3798](decisions/3798-un-fil-elide-des-segments-il-ne-rogne-pas-des-libelles.md)
+  a dû être **re-vérifié rouge après réécriture** du composant : la façon de lire avait changé en même
+  temps que la chose lue.
+
+Trois formes d'un même défaut : un vert qui existerait à l'identique sur un dépôt cassé
+([ADR 3624](decisions/3624-un-fait-que-rien-ne-peut-faire-rougir-s-ancre-autrement.md)), un fait tenu
+par **un autre dispositif que celui qu'on croit**, et un garde dont on a changé les deux côtés à la
+fois.
+
+Ce qui rend la mutation valable :
+
+- **elle doit laisser le test s'exécuter.** Renommer une méthode casse la compilation : le test ne
+  tourne plus, et un test qui ne tourne pas ne prouve rien. Simuler un cas de plus, neutraliser un
+  corps de méthode, retirer une classe CSS : oui ;
+- **elle porte sur le sujet, pas sur le détecteur.** Casser le détecteur vérifie sa **non-vacuité**,
+  ce qui est un second contrôle utile - mais distinct, et à faire aussi ;
+- **le message d'échec se lit.** Il doit nommer le coupable du jour, pas renvoyer un `expected: true`.
+  C'est lui qu'on lira dans six mois, pas le test ;
+- **après toute réécriture du garde ou du sujet, on refait la mutation.** Un dispositif vert n'est pas
+  un dispositif vérifié.
+
+Quand la mutation est impossible à monter - le défaut n'est pas atteignable en test - c'est une
+information, pas un échec : elle dit que le garde promet plus qu'il ne tient, et il faut l'écrire dans
+son en-tête plutôt que d'emprunter la solidité du voisin
+([ADR 3540](decisions/3540-un-cliquet-qui-compte-n-est-pas-la-preuve-de-la-regle.md)).
+
 ## À la clôture d'une issue : ce qu'on laisse derrière soi
 
 Une issue se ferme sur deux textes qu'on relira dans six mois **sans le fil** : son **corps**, et celui
