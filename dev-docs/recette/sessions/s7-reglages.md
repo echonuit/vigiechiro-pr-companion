@@ -125,6 +125,9 @@ exigent un redémarrage et le disent.
 
 - [ ] **S7-18** · Onglet **Fonctionnalités** : chaque fonctionnalité **désactivable** porte un
       interrupteur.
+- [ ] **S7-18b** · La liste se lit dans l'**ordre alphabétique des libellés affichés** (#3833) : rien ne
+      paraît rangé au hasard. Un libellé accentué est à sa lettre - « Étang » entre « Analyse » et
+      « Zone », jamais après le Z.
 - [ ] **S7-19** · Une fonctionnalité **du cœur** n'en porte **pas** : elle est présentée comme toujours
       active, sans commutateur à actionner.
 - [ ] **S7-20** · Désactiver une fonctionnalité optionnelle : un message annonce que l'effet arrive **au
