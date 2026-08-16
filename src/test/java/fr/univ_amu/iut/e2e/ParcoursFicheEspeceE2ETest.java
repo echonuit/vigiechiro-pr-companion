@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.MenuButton;
@@ -94,6 +95,15 @@ class ParcoursFicheEspeceE2ETest {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
+        // ⚠️ Attendre que la carte soit VISIBLE, pas seulement présente. Les cartes d'accueil sont
+        // peuplées section par section : celles de la seconde section sont posées en dernier, et un
+        // clic immédiat les rate sous charge - « returned 1 nodes, but no nodes were visible ». Sept
+        // occurrences en deux jours, toujours sur une carte tardive, jamais sur la première (#3823).
+        // C'est le motif « interact puis assertion immédiate » que #3717 avait audité.
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup("Sons & validation").queryAll().stream().anyMatch(Node::isVisible));
         robot.clickOn("Sons & validation");
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
 

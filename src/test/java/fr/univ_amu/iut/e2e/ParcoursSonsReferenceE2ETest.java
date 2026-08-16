@@ -10,7 +10,10 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TableView;
@@ -22,6 +25,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E (smoke) de l'entrée « Sons & validation »** (#audio) : depuis le **tableau de bord**, un
 /// clic réel sur la carte **« Sons & validation »** ouvre la **vue audio unifiée** (sur la source `References`)
@@ -56,10 +60,19 @@ class ParcoursSonsReferenceE2ETest {
 
     @Test
     @DisplayName("Tableau de bord : la carte « Sons & validation » ouvre la vue audio unifiée")
-    void accueil_ouvre_vue_audio(FxRobot robot) {
+    void accueil_ouvre_vue_audio(FxRobot robot) throws TimeoutException {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
+        // ⚠️ Attendre que la carte soit VISIBLE, pas seulement présente. Les cartes d'accueil sont
+        // peuplées section par section : celles de la seconde section sont posées en dernier, et un
+        // clic immédiat les rate sous charge - « returned 1 nodes, but no nodes were visible ». Sept
+        // occurrences en deux jours, toujours sur une carte tardive, jamais sur la première (#3823).
+        // C'est le motif « interact puis assertion immédiate » que #3717 avait audité.
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup("Sons & validation").queryAll().stream().anyMatch(Node::isVisible));
         robot.clickOn("Sons & validation");
 
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
