@@ -18,6 +18,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -159,14 +160,30 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
         Label chemin = new Label();
         chemin.getStyleClass().add("emplacements-chemin");
         chemin.textProperty().bind(choix.map(Path::toString));
-        HBox.setHgrow(chemin, Priority.ALWAYS);
-        chemin.setMaxWidth(Double.MAX_VALUE);
+
+        // #3882 : la suite du geste se passe AILLEURS - explorateur de fichiers, terminal, message où
+        // l'on demande de l'aide - et un Label n'est pas seulement en lecture seule, il n'est pas
+        // sélectionnable du tout. Ce qui part dans le presse-papier est ce que l'écran AFFICHE, et non
+        // la valeur du modèle : une copie qui diverge de ce qu'on lit serait pire que pas de copie,
+        // puisqu'on la collerait sans la relire.
+        Button copier = new Button("Copier");
+        copier.getStyleClass().add("emplacements-copier");
+        copier.setOnAction(evenement -> PressePapier.copier(chemin.getText()));
+        copier.setTooltip(new Tooltip("Copier ce chemin dans le presse-papier."));
 
         Button choisir = new Button("Choisir…");
         choisir.getStyleClass().add("emplacements-choisir");
         choisir.setOnAction(evenement -> choisir(titre, choix));
 
-        HBox rangee = new HBox(chemin, choisir);
+        // ⚠️ C'est ce Region qui absorbe la place restante, et non le libellé. Donné au libellé - comme
+        // il l'était avant #3882 - le `hgrow` lui faisait occuper toute la rangée et rejetait les
+        // boutons contre le bord droit. « Choisir… » peut se le permettre, il ne désigne rien ;
+        // « Copier » non, il doit se lire contre le chemin qu'il copie. C'est le défaut trouvé en
+        // regardant l'aperçu de #3464, et il se serait reproduit ici à l'identique.
+        Region ressort = new Region();
+        HBox.setHgrow(ressort, Priority.ALWAYS);
+
+        HBox rangee = new HBox(chemin, copier, ressort, choisir);
         rangee.getStyleClass().add("emplacements-rangee");
 
         Label rappel = new Label("Par défaut : " + parDefaut);

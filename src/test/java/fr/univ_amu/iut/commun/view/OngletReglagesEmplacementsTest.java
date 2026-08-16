@@ -81,6 +81,36 @@ class OngletReglagesEmplacementsTest {
     }
 
     @Test
+    @DisplayName("#3882 : chaque chemin affiché part dans le presse-papier, il ne se recopie pas à l'œil")
+    void chaque_chemin_se_copie() {
+        // Jumeau du défaut de #3464, sur l'écran qu'ouvre justement quelqu'un dont le disque est
+        // saturé : ces deux chemins sont portés par des Label, donc ni sélectionnables ni copiables,
+        // alors que la suite du geste se passe ailleurs (explorateur, terminal, demande d'aide).
+        OngletReglagesEmplacements onglet = onglet(
+                selecteurQuiRepond(choix.resolve("nuits"), choix.resolve("coffre")),
+                notificateurQuiCapture(),
+                () -> {});
+        Region racine = construire(onglet);
+
+        List<Button> copies = boutons(racine, "emplacements-copier");
+        assertThat(copies)
+                .as("les deux rangées - dossier de travail et base - offrent la copie")
+                .hasSize(2);
+
+        List<String> chemins = surFx(() -> textes(racine, "emplacements-chemin"));
+        String copie = surFx(() -> {
+            copies.get(0).fire();
+            // Le presse-papier ne se lit que sur le fil FX.
+            return javafx.scene.input.Clipboard.getSystemClipboard().getString();
+        });
+
+        // Ce que le bouton copie est ce que l'écran montre, et non une valeur recomposée à côté : une
+        // copie qui diverge de l'affichage serait pire que pas de copie, puisqu'on la collerait sans
+        // la relire. Même raisonnement qu'en #3464.
+        assertThat(copie).isEqualTo(chemins.get(0));
+    }
+
+    @Test
     @DisplayName("#3543 : après un Appliquer réussi, « Rétablir les défauts » s'allume, sans redémarrage")
     void appliquer_allume_retablir() {
         OngletReglagesEmplacements onglet = onglet(

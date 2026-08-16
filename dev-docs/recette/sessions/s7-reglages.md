@@ -147,6 +147,13 @@ exigent un redémarrage et le disent.
 
 - [ ] **S7-23** · Onglet **Emplacements** : le **dossier de travail** et la **base de données** sont
       affichés, chacun avec son emplacement courant et son défaut.
+- [ ] **S7-38** · Chaque chemin porte, **à côté de lui**, un bouton « Copier » ; le cliquer place ce
+      chemin dans le presse-papier, et ce qui s'y trouve est **exactement** ce que l'écran affiche
+      (le coller dans un éditeur pour le lire). Les deux rangées l'offrent (#3882).
+
+    ⚠️ Le numéro sort de la suite : les cases de S7 vont jusqu'à **S7-37**, et les renuméroter
+    rendrait faux les renvois que ce script porte déjà entre ses propres cases (S7-24 est cité par
+    S7-27, par exemple).
 - [ ] **S7-24** · L'écran annonce que choisir un emplacement change **où l'application ira lire au
       prochain démarrage**, et **ne déplace pas** les données existantes.
 - [ ] **S7-25** · Choisir un nouveau dossier de travail : un **avis de redémarrage** apparaît, et il est

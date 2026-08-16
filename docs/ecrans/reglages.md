@@ -72,7 +72,9 @@ L'onglet **Emplacements** décide **où vivent** deux choses :
 - le **dossier de travail**, qui contient les sessions et leur audio ;
 - la **base de données** (`vigiechiro.db`) : vos observations, vos validations, les liens avec Vigie-Chiro. C'est le **seul fichier irremplaçable** ; le reste se réimporte ou se recalcule.
 
-Pour chacun, le chemin courant est affiché, un bouton **« Choisir… »** ouvre un sélecteur de dossier, et l'emplacement **par défaut** est rappelé. Un dossier que l'application ne peut pas utiliser (un fichier, un dossier non inscriptible) est **refusé au moment du choix**, avec la raison : vous ne le découvrez pas au prochain démarrage.
+Pour chacun, le chemin courant est affiché, un bouton **« Copier »** le place dans le presse-papier, un bouton **« Choisir… »** ouvre un sélecteur de dossier, et l'emplacement **par défaut** est rappelé. Un dossier que l'application ne peut pas utiliser (un fichier, un dossier non inscriptible) est **refusé au moment du choix**, avec la raison : vous ne le découvrez pas au prochain démarrage.
+
+Le bouton **« Copier »** sert précisément quand la suite se passe **ailleurs** : coller le chemin dans votre explorateur de fichiers pour aller y regarder, dans un terminal, ou dans un message où vous demandez de l'aide. Vous n'avez pas à le recopier à l'œil.
 
 !!! warning "Changer un emplacement ne déplace pas vos données"
     Un emplacement est un **pointeur** : le changer dit à l'application **où aller lire au prochain démarrage**, il ne déplace rien. Si vous pointez la base vers un dossier **vide**, l'application y démarrera sur une base **neuve**, l'ancienne restant **intacte** à son ancien emplacement. Pour l'emporter, **copiez le fichier vous-même** avant de redémarrer. C'est le même principe que pour votre audio : l'application ne touche pas à vos fichiers à votre place.
