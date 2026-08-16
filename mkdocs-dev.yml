@@ -223,6 +223,10 @@ nav:
     - 3645 · Un détecteur textuel s'exclut de son propre corpus: decisions/3645-un-detecteur-textuel-s-exclut-de-son-corpus.md
     - 3798 · Un fil élide des segments, il ne rogne pas des libellés: decisions/3798-un-fil-elide-des-segments-il-ne-rogne-pas-des-libelles.md
     - 3840 · Le signal et le retour se partagent la fraîcheur: decisions/3840-le-signal-et-le-retour-se-partagent-la-fraicheur.md
+    - 3667 · Ce que la clôture a décidé de ne pas faire, et pourquoi: decisions/3667-ce-que-la-cloture-a-decide-de-ne-pas-faire.md
+    - 3764 · Un cas joué n'est pas un cas prouvé : la recette a trois états, pas deux: decisions/3764-un-cas-joue-n-est-pas-un-cas-prouve.md
+    - 3774 · Le clip se taille sur le test, et son contrôle porte sur la couverture: decisions/3774-le-clip-se-taille-sur-le-test.md
+    - 3788 · Un banc qui maximise tout ne montre pas ce qu'on livre: decisions/3788-un-banc-qui-maximise-tout-ne-montre-pas-ce-qu-on-livre.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
