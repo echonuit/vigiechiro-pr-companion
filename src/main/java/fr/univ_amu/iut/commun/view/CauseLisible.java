@@ -44,8 +44,14 @@ public final class CauseLisible {
     ///
     /// ⚠️ Le geste est **cité** depuis [ActionOuvrirJournaux], pas recopié : un message qui renvoie
     /// vers une entrée de menu doit la nommer telle qu'elle s'écrit, et le rester si elle est renommée
-    /// (ADR 3854). La première rédaction disait « ☰ → Journaux », qui n'existe pas.
-    private static final String OU_REGARDER = "☰ → « " + ActionOuvrirJournaux.LIBELLE + " »";
+    /// (ADR 3854). La première rédaction disait « Journaux », entrée qui n'existe pas.
+    ///
+    /// ⚠️ **Et « menu principal », pas le pictogramme ☰.** La deuxième rédaction l'employait ; le garde
+    /// `PoliceCouvreLIhmTest` l'a refusée, à juste titre : ce caractère n'est pas dans la Noto Sans
+    /// embarquée, il partirait donc en repli vers une police du système et deux utilisateurs ne
+    /// verraient pas le même glyphe (ADR 0035). La forme retenue est celle que le reste de
+    /// l'application emploie déjà - « menu principal > Entrée ».
+    private static final String OU_REGARDER = "menu principal > " + ActionOuvrirJournaux.LIBELLE;
 
     /// Ce que l'alerte dit quand la chaîne entière est muette : le type, et où regarder.
     ///
