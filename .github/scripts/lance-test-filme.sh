@@ -367,8 +367,13 @@ montage_par_cas() {
         # La part d'images utiles est REPORTÉE, pas exigée : un clip noir est le résultat juste
         # pour un test qui n'ouvre pas de fenêtre. Ce qui est exigé vaut pour la séance entière,
         # et c'est le contrôle de couverture ci-dessus.
-        printf '%s\t%s\t%s\t%s\n' "$cas" "$test" "$(basename "$clip")" \
-            "$(awk -v p="$part" 'BEGIN{printf "%.0f", p * 100}')" >> "$lignes"
+        #
+        # ⚠️ Elle décide en revanche de la MANIÈRE d'auditer (#3835). La frontière est « aucune
+        # image utile », et non un seuil réglé : soit quelque chose a paru à l'écran, soit rien.
+        # Un nombre choisi à la main aurait rangé un cas du mauvais côté sans qu'on le sache.
+        printf '%s\t%s\t%s\t%s\t%s\n' "$cas" "$test" "$(basename "$clip")" \
+            "$(awk -v p="$part" 'BEGIN{printf "%.0f", p * 100}')" \
+            "$(awk -v p="$part" 'BEGIN{print (p > 0 ? "en regardant" : "en lisant le test")}')" >> "$lignes"
     done <<< "$plages"
 
     {
@@ -382,16 +387,30 @@ parce que c'est ce qu'on cherche. Un cas couvert par plusieurs tests a donc plus
 luminance, si bien qu'une position calculée sur le brut y serait fausse. Le clip est le point
 d'entrée.
 
-« Images utiles » dit la part du clip où quelque chose est à l'écran. **0 % est un résultat juste**
-pour un test qui n'ouvre aucune fenêtre - un ViewModel, par exemple : il cite des cas et ne montre
-rien.
+## ⚠️ Comment auditer : en regardant, ou en lisant
 
-| Cas | Clip | Ce qu'il joue | Images utiles |
-|---|---|---|---|
+Cet index sert à relire ce que les annotations affirment - le garde vérifie qu'un identifiant cité
+**existe**, jamais que le test **fait ce que le cas décrit**.
+
+Mais tous les tests qui citent un cas n'ouvrent pas de fenêtre. Un ViewModel en cite et ne montre
+rien : son clip est noir, et c'est le résultat **juste**. Cocher « vu » dessus serait un mensonge, et
+un mensonge que cette page aurait encouragé si elle avait proposé la même case à tout le monde.
+
+La dernière colonne dit donc, pour chaque ligne, **par quel moyen** ce cas s'audite :
+
+- **en regardant** - quelque chose a paru à l'écran pendant ce test, le clip le montre ;
+- **en lisant le test** - rien n'a paru, il n'y a rien à regarder. L'audit est une lecture de code,
+  et le clip n'y ajoute rien.
+
+« Images utiles » donne la part du clip où quelque chose est à l'écran, pour que la ligne se juge
+plutôt que de se croire.
+
+| Cas | Clip | Ce qu'il joue | Images utiles | Comment l'auditer |
+|---|---|---|---|---|
 ENTETE
         sort "$lignes" | awk -F'\t' '{
             n = split($1, cas, ",")
-            for (i = 1; i <= n; i++) printf "| %s | `%s` | %s | %s %% |\n", cas[i], $3, $2, $4
+            for (i = 1; i <= n; i++) printf "| %s | `%s` | %s | %s %% | %s |\n", cas[i], $3, $2, $4, $5
         }' | sort
     } > "$index"
 
@@ -399,10 +418,12 @@ ENTETE
     # l'en-tête et son trait de séparation, et annoncerait deux lignes de trop.
     local nb_cas
     nb_cas=$(awk -F'\t' '{n = split($1, c, ","); total += n} END {print total + 0}' "$lignes")
-    rm -f "$lignes"
 
-    printf '   index : %d clip(s) sur %d test(s), %d ligne(s) de cas -> %s\n' \
-        "$clips" "$(printf '%s\n' "$plages" | wc -l)" "$nb_cas" "$index"
+    local a_regarder
+    a_regarder=$(awk -F'\t' '$5 == "en regardant" {n = split($1, c, ","); total += n} END {print total + 0}' "$lignes")
+    printf '   index : %d clip(s) sur %d test(s), %d ligne(s) de cas dont %d à regarder -> %s\n' \
+        "$clips" "$(printf '%s\n' "$plages" | wc -l)" "$nb_cas" "$a_regarder" "$index"
+    rm -f "$lignes"
     return 0
 }
 
@@ -646,6 +667,26 @@ auto_test() {
     # produire aucun extrait, puisque personne n'irait le chercher.
     printf '# entête\n999999996000\tdebut\tExemple.sans_cas\t\n999999998000\tfin\tExemple.sans_cas\t\n' \
         > "$tmp/reperes-sans-cas.tsv"
+
+    # --- la manière d'auditer : en regardant, ou en lisant (#3835) ---
+    #
+    # Deux tests cités dans la MÊME séance : l'un tombe sur le geste, l'autre sur le noir. Un test
+    # qui n'ouvre aucune fenêtre est le cas normal - un ViewModel en cite et ne montre rien - et
+    # l'index doit le dire, plutôt que de proposer la même case à cocher aux deux.
+    printf '# entête\n' > "$tmp/reperes-mixtes.tsv"
+    printf '999999996500\tdebut\tExemple.visible\tS1-01\n' >> "$tmp/reperes-mixtes.tsv"
+    printf '999999997500\tfin\tExemple.visible\tS1-01\n' >> "$tmp/reperes-mixtes.tsv"
+    printf '999999999000\tdebut\tExemple.invisible\tS1-02\n' >> "$tmp/reperes-mixtes.tsv"
+    printf '999999999500\tfin\tExemple.invisible\tS1-02\n' >> "$tmp/reperes-mixtes.tsv"
+
+    essai "un montage mêlant visible et invisible est accepté" vert \
+        montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-mixtes.tsv" "$tmp/clips-mixtes" 1000000000000
+    essai "le cas qui a paru à l'écran s'audite EN REGARDANT" vert \
+        bash -c 'grep -q "| S1-01 |.*| en regardant |" "$1/index.md"' _ "$tmp/clips-mixtes"
+    essai "le cas qui n'a rien montré s'audite EN LISANT" vert \
+        bash -c 'grep -q "| S1-02 |.*| en lisant le test |" "$1/index.md"' _ "$tmp/clips-mixtes"
+    essai "et il ne se voit PAS proposer le même verdict" vert \
+        bash -c '! grep -q "| S1-02 |.*| en regardant |" "$1/index.md"' _ "$tmp/clips-mixtes"
 
     # --- la liste de la planche : refuser le vide plutôt que filmer un décor ---
     printf 'MainViewTest\nMesSitesViewTest\n' > "$tmp/liste-pleine.txt"
