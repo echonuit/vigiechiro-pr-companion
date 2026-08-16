@@ -40,6 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours (P5)** : la **vue agrégée M-Multisite** et son **drill-down** vers
@@ -190,10 +191,17 @@ class ParcoursMultisiteVersPassageE2ETest {
     private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
         for (int essai = 1; essai <= 3; essai++) {
             try {
+                // ⚠️ Attendre ce que le clic EXIGE, et non la simple présence du nœud (#3906, jumeau de
+                // #3836). `doubleClickOn` filtre par `NodeQueryUtils.isVisible()`, qui demande en plus
+                // que le nœud **intersecte le rectangle de la scène** - une cellule déjà dans le graphe
+                // mais encore hors cadre passait donc cette attente, et le clic échouait.
                 WaitForAsyncUtils.waitFor(
                         3,
                         TimeUnit.SECONDS,
-                        () -> robot.lookup(DATE_NUIT).tryQuery().isPresent());
+                        () -> robot.lookup(DATE_NUIT)
+                                .match(NodeQueryUtils.isVisible())
+                                .tryQuery()
+                                .isPresent());
                 robot.doubleClickOn(DATE_NUIT);
                 WaitForAsyncUtils.waitFor(3, TimeUnit.SECONDS, () -> "passage".equals(navigation.getVueCourante()));
                 return;
