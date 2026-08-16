@@ -16,6 +16,12 @@ L'application vous prévient elle-même quand une version plus récente existe, 
 numéros** : celui que vous utilisez et celui qui est disponible. Vous savez ainsi si vous avez deux
 jours ou deux ans de retard, ce qui change ce qu'il y a à en faire.
 
+!!! warning "Sous Windows, fermez l'application avant d'installer"
+    L'installeur ne peut pas remplacer un programme qui **tourne encore** : Windows tient ses fichiers
+    ouverts. Une installation lancée pendant que Companion est ouvert **ne se termine pas**, et rien
+    ne vous dira pourquoi. Fermez la fenêtre d'abord, puis installez. C'est vrai des deux gestes
+    Windows ci-dessous, `winget upgrade` compris.
+
 Le geste dépend de la façon dont vous avez installé :
 
 === "Installé par winget (Windows)"
@@ -33,8 +39,8 @@ Le geste dépend de la façon dont vous avez installé :
 === "Installeur téléchargé"
 
     Reprenez l'installeur de la nouvelle version sur la page
-    [Releases](https://github.com/echonuit/vigiechiro-pr-companion/releases) et lancez-le : il
-    remplace la version en place.
+    [Releases](https://github.com/echonuit/vigiechiro-pr-companion/releases) et lancez-le,
+    **application fermée** : il remplace alors la version en place.
 
 === "Archive portable"
 
