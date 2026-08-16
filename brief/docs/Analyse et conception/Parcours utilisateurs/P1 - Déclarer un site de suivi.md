@@ -13,8 +13,9 @@ Marie a créé son site sur le portail web Vigie-Chiro (<https://vigiechiro.hero
     - **Protocole** : menu déroulant à deux valeurs - `PointFixeStandard` (par défaut : protocole VigieChiro à la lettre, déclenche les alertes [R3](../Modèle%20conceptuel/Règles%20métier.md#r3) / [R4](../Modèle%20conceptuel/Règles%20métier.md#r4) en cas de passage hors fenêtre) ou `PointFixeRecherche` (cas Samuel : dates et fréquences libres, R3 / R4 muettes)
     - **Liste des points** : Marie ajoute autant de codes que nécessaire (ex. `A1`, `B2`). Pour chaque point, elle peut ajouter des coordonnées GPS et un descriptif (tous optionnels).
 3. À côté du n° de carré, un bouton « **Vérifier sur Vigie-Chiro** » lui dit, avant qu'elle ne valide, si un site porte déjà ce carré sur le portail. Trois réponses, et la troisième ne se confond pas avec la première : le carré est libre, le carré est déjà déclaré (le message nomme le site trouvé et son protocole), ou la vérification n'a pas pu se faire (hors connexion, portail injoignable) et le carré n'est donc **pas** vérifié.
-4. Marie valide. Le site est enregistré localement. L'écran d'accueil bascule vers la **vue des sites** avec son site fraîchement créé.
-5. Elle peut désormais cliquer sur « Importer une nuit » et le formulaire suivant lui propose de choisir le site et le point concernés (parcours [P2 - Importer une nuit d'enregistrement](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)).
+4. **Si le carré est déjà déclaré là-bas**, un bouton « **Récupérer ce carré** » paraît sous le verdict, et « Créer » se ferme le temps que le verdict tienne : le créer une seconde fois produirait le doublon qui fait échouer le dépôt. Marie récupère : le site arrive **rattaché** à son homologue Vigie-Chiro, avec ses points d'écoute **déjà positionnés**, la fenêtre se ferme et la fiche du carré s'ouvre avec le compte rendu. Ce qu'elle avait saisi (nom convivial, commentaire) est conservé ; la plateforme ne stocke aucun nom libre.
+5. **Sinon**, Marie valide. Le site est enregistré localement. L'écran d'accueil bascule vers la **vue des sites** avec son site fraîchement créé.
+6. Elle peut désormais cliquer sur « Importer une nuit » et le formulaire suivant lui propose de choisir le site et le point concernés (parcours [P2 - Importer une nuit d'enregistrement](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)).
 
 ## Règles métier visibles
 
@@ -26,7 +27,11 @@ Marie a créé son site sur le portail web Vigie-Chiro (<https://vigiechiro.hero
 
 C'est le cas le plus fréquent, et celui qui a coûté le plus cher : le portail **n'autorise pas** à activer un carré sans y créer un point. Qui vient d'activer son carré a donc déjà, en ligne, un site **et** un point positionné.
 
-Redéclarer ce carré dans l'application produit alors deux sites pour le même carré et un point local qui n'est pas celui du portail ; la nuit déposée ensuite échoue, loin de sa cause. Déclarer le carré ici reste alors le geste juste - c'est ainsi qu'on prépare une nuit opportuniste - mais il lui manque le **rattachement** au carré du portail, faute duquel le dépôt sera refusé. « **Récupérer depuis Vigie-Chiro** » ne comble pas ce manque : cette synchronisation part des participations, et n'atteint donc que les carrés où une nuit est **déjà** déposée. La cible est de **rapatrier le carré par son numéro** depuis la fenêtre de déclaration, avec ses localités positionnées, ce que la recherche rend possible en une requête (chantier #3806).
+Redéclarer ce carré dans l'application produit alors deux sites pour le même carré et un point local qui n'est pas celui du portail ; la nuit déposée ensuite échoue, loin de sa cause. Le geste juste n'est donc pas de redéclarer, mais de **rapatrier le carré par son numéro** depuis la fenêtre de déclaration : le site arrive rattaché, avec ses localités positionnées (étape 4 ci-dessus, livré par #3806).
+
+⚠️ « **Récupérer depuis Vigie-Chiro** », sur l'écran des sites, ne comble **pas** ce manque et ne le comblera pas : cette synchronisation part des participations, et n'atteint donc que les carrés où une nuit est **déjà** déposée. Mesuré le 2026-08-15 sur un compte réel : `/moi/sites` rend **0**, et le seul site des participations appartient à un tiers - les possesseurs de carrés sont rares, la plupart des observateurs déposent sur le carré de quelqu'un d'autre. C'est pourquoi le rapatriement passe par la **recherche par numéro**, qui rend le carré à qui le demande.
+
+Et si le dépôt est tenté avant ce rattachement, le refus **nomme le geste** : récupérer le carré s'il existe en Point Fixe, l'activer sur le portail sinon (#3854).
 
 ## Variante : créer un site directement depuis l'import
 
