@@ -1,6 +1,6 @@
 # ADR 3537 - Un signal se pose à l'écriture ; la rafale se règle chez le lecteur
 
-- **Statut** : Accepté - 2026-08-10
+- **Statut** : Accepté - 2026-08-10, **amendé** par [ADR 3840](3840-le-signal-et-le-retour-se-partagent-la-fraicheur.md)
 - **Chantier** : #3537 (lot 1 du chantier #3536), décision prise entre #3541 et #3542
 - **Vérification** : certaine - `RevisionDonneesTest#les_mutations_en_rafale_sont_amorties`
 
