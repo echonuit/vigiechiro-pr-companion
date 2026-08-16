@@ -198,6 +198,12 @@ Pour **revalider** aux jalons suivants sans tout re-piloter à la main, on rejou
 - `dev-docs/recette/index.md` : **cette page**, la méthode.
 - `dev-docs/recette/sessions/` : les **scripts de session** figés. S1 et S2 ont été jouées ; S3 est à
   rejouer au delta ; S4, S7 et S8 sont écrites mais **à jouer** ; S5 et S6 restent **partielles**.
+
+    ⚠️ **« Jouée » se dit de la session telle qu'elle était.** S1 porte **huit cases écrites après sa
+    dernière exécution** - S1-30 à S1-33 (#3787) et S1-34 à S1-37 (#3806), dont une perceptive : elles
+    n'ont **jamais** été exercées à la main. Une session ne se re-marque pas « à jouer » pour autant,
+    mais la campagne suivante doit savoir par où reprendre, faute de quoi une capacité passe pour
+    vérifiée par un script qui ne l'a pas couverte.
   Depuis #3517, **les huit sessions existent** : aucune n'est plus à écrire. S'y ajoutent les **passes
   ciblées** listées plus haut.
 

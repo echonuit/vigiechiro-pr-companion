@@ -202,8 +202,14 @@ une recherche partielle. Le titre d'un site (`Vigiechiro - Point Fixe-130711`) i
 mot à lui seul, le tiret servant de séparateur.
 
 Conséquence pratique : « ce carré existe-t-il ? » se répond en **une** requête, sous la seconde
-(`ClientVigieChiro#chercherCarre`), et non en paginant les 200+ pages du catalogue. La ligne de commande
-le fait encore et doit s'aligner (#3769).
+(`ClientVigieChiro#chercherCarre`), et non en paginant les 200+ pages du catalogue. **Les deux surfaces
+posent la question de cette façon** : la fenêtre de déclaration depuis #3787, la ligne de commande
+depuis #3769 (`lister-sites-vigiechiro --carre`, qui refuse désormais `--pages` et `--tout` : il n'y a
+plus d'étendue à borner).
+
+⚠️ Un **troisième** appelant s'en sert pour autre chose que chercher : le refus « site non rattaché »
+(`SynchronisationParticipation`, #3854) interroge `q` pour choisir son conseil - récupérer le carré, ou
+l'activer sur le portail. La requête ne part que sur ce chemin d'échec.
 
 **Rejouer la carte** quand le miroir du source bouge (`SAE201/vigiechiro-api`) :
 
@@ -642,9 +648,22 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
     Le schéma d'une localité : `nom` (**requis**, unique dans la liste), `coordonnee`, `geometries`
     (`GeometryCollection`, coordonnées en **`[lat, lon]`**), `representatif`, `habitats`.
 
-    Le pull (`RapprochementSites`) est exécuté à la connexion, et rejouable **à la demande** depuis
-    M-Sites (« Récupérer depuis VigieChiro », #1045, passerelle `SynchronisationSites` activée par
-    `OptionalBinder`). Le **push** l'est depuis #3458 : `PublicationPoint`, offert sur la carte du point
+    Le pull a **trois** déclencheurs, et ils ne lisent pas la même route :
+
+    - à la **connexion**, et **à la demande** depuis M-Sites (« Récupérer depuis VigieChiro », #1045,
+      passerelle `SynchronisationSites` activée par `OptionalBinder`) : `RapprochementSites`, qui dérive
+      les sites de `/moi/participations` - donc **uniquement** les carrés où une nuit est déjà déposée ;
+    - **par numéro de carré**, depuis la fenêtre de déclaration (« Récupérer ce carré », #3806) :
+      `RapatriementCarre`, qui passe par `GET /sites?q=` et atteint donc un carré **sans participation**.
+      C'est le seul chemin qui rattache un carré avant tout dépôt.
+
+    Les deux posent **le même état local** : la mécanique d'import est partagée
+    (`ImportSiteDistant`, extrait de `RapprochementSites` en #3806), mêmes points rapatriés, même
+    marquage de propriété. Une différence est assumée : la synchronisation connaît **tous** les sites et
+    peut purger les correspondances qu'elle ne cite plus ; le rapatriement n'en connaît **qu'un** et se
+    contente d'un `upsert`.
+
+    Le **push** l'est depuis #3458 : `PublicationPoint`, offert sur la carte du point
     de la fiche site (passerelle `PublicationPoint` activée par `PublicationPointModule`).
 
     ⚠️ **Le 403 de cette route n'est pas prédictible depuis Companion**, et c'est ce qui décide de la
