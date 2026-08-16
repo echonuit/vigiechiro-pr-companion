@@ -109,3 +109,37 @@ demarrer_stub() {
   # partagé par presque tous les carrés »), rejouée ici de bout en bout.
   echo "$output" | grep -E '^Z1 +100'
 }
+
+@test "sites plateforme : --carre est filtré par le SERVEUR, en une requête (#3769)" {
+  demarrer_stub 250
+
+  export VIGIECHIRO_URL="http://127.0.0.1:${STUB_PORT}/api/v1"
+  export VIGIECHIRO_TOKEN="jeton-bidon"
+  run cli lister-sites-vigiechiro --portee plateforme --carre 130001
+  unset VIGIECHIRO_URL VIGIECHIRO_TOKEN
+
+  [ "$status" -eq 0 ]
+  # Le carré demandé est là, et le bilan annonce une RECHERCHE : « collection complète » laisserait
+  # croire qu'on a parcouru les 250 sites, « échantillon » qu'on n'en a vu qu'une part. Ni l'un ni l'autre.
+  [[ "${output}" == *"130001"* ]]
+  [[ "${output}" == *"Recherche du carré 130001"* ]]
+  [[ "${output}" != *"collection complète"* ]]
+  # Une seule requête, portant q : la preuve que le catalogue n'a pas été parcouru.
+  [ "$(grep -c 'q=130001' "${STUB_JOURNAL}")" -eq 1 ]
+  [ "$(grep -c 'page=' "${STUB_JOURNAL}")" -eq 0 ]
+}
+
+@test "sites plateforme : --carre inexistant rend une liste vide SANS prétendre à un échantillon (#3769)" {
+  demarrer_stub 250
+
+  export VIGIECHIRO_URL="http://127.0.0.1:${STUB_PORT}/api/v1"
+  export VIGIECHIRO_TOKEN="jeton-bidon"
+  run cli lister-sites-vigiechiro --portee plateforme --carre 999999
+  unset VIGIECHIRO_URL VIGIECHIRO_TOKEN
+
+  [ "$status" -eq 0 ]
+  # C'est ici que le défaut d'origine se voyait : la commande rendait un tableau vide sur un carré qui
+  # existe, faute d'avoir lu la bonne page. Le zéro doit désormais être un vrai zéro, dit comme tel.
+  [[ "${output}" == *"Recherche du carré 999999"* ]]
+  [[ "${output}" == *"0 site(s) trouvé(s)"* ]]
+}

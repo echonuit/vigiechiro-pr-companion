@@ -281,4 +281,59 @@ class ListerSitesVigieChiroTest {
 
         assertThat(System.getProperty("vigiechiro.token")).isEqualTo("ABC123");
     }
+
+    @Test
+    @DisplayName("#3769 : « --carre » demande au SERVEUR, et ne lit plus deux cents pages")
+    void carre_interroge_le_serveur() {
+        when(client.chercherCarre("130711")).thenReturn(ReponseApi.succes(List.of(site("s1", "130711", "Z41"))));
+
+        int code = executer("--portee", "PLATEFORME", "--carre", "130711");
+
+        assertThat(code).isZero();
+        assertThat(sortie.toString()).contains("130711");
+        // Le catalogue n'est plus parcouru : c'était une à deux minutes pour une question que le serveur
+        // tranche en une requête (mesuré le 2026-08-14, six GET consignés sur #3458).
+        verify(client, never()).sitesPlateforme(anyInt(), any());
+    }
+
+    @Test
+    @DisplayName("#3769 : le faux « aucun » disparaît : un carré existant n'est plus manqué")
+    void un_carre_existant_n_est_plus_manque() {
+        // Avant : sans « --tout », la commande lisait UNE page sur 208 puis filtrait chez elle. Le carré
+        // 130711, qui existe, n'était pas dans cette page : le tableau sortait vide. La ligne de bilan
+        // l'avouait, mais qui lit le tableau y lit « ce carré n'existe pas ».
+        when(client.chercherCarre("130711")).thenReturn(ReponseApi.succes(List.of(site("s1", "130711", "Z41"))));
+
+        executer("--portee", "PLATEFORME", "--carre", "130711");
+
+        assertThat(sortie.toString())
+                .as("le carré cherché est là, sans qu'on ait eu à demander --tout")
+                .contains("130711");
+    }
+
+    @Test
+    @DisplayName("#3769 : « --tout » avec « --carre » est REFUSÉ, plutôt qu'accepté puis ignoré")
+    void tout_avec_carre_est_refuse() {
+        int code = executer("--portee", "PLATEFORME", "--carre", "130711", "--tout");
+
+        // Un paramètre honoré en apparence et ignoré en fait est exactement ce que ce dépôt reproche à
+        // `where=`. La recherche par carré est complète par construction : le dire vaut mieux que de
+        // laisser croire qu'on a demandé quelque chose.
+        assertThat(code).isNotZero();
+        assertThat(erreur.toString()).contains("--carre").contains("--tout");
+        verify(client, never()).sitesPlateforme(anyInt(), any());
+    }
+
+    @Test
+    @DisplayName("#3769 : le bilan dit que la réponse vient d'une RECHERCHE, pas d'un catalogue lu")
+    void le_bilan_dit_qu_il_s_agit_d_une_recherche() {
+        when(client.chercherCarre("130711")).thenReturn(ReponseApi.succes(List.of(site("s1", "130711", "Z41"))));
+
+        executer("--portee", "PLATEFORME", "--carre", "130711");
+
+        // « 1 site lu : collection complète » serait exact et pourtant trompeur : on n'a pas lu la
+        // collection, on a posé une question au serveur. Le dénominateur d'une recherche est celui de la
+        // recherche - c'est la garde que #1277 a laissée derrière elle, et qu'on ne perd pas en route.
+        assertThat(sortie.toString()).containsIgnoringCase("recherche").doesNotContain("collection complète");
+    }
 }

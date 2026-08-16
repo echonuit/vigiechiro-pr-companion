@@ -103,6 +103,7 @@ public final class ListerSitesVigieChiro implements Callable<Integer>, LectureSe
 
     @Override
     public Integer call() {
+        refuserEtendueAvecCarre();
         if (token != null && !token.isBlank()) {
             System.setProperty("vigiechiro.token", token);
         }
@@ -124,6 +125,18 @@ public final class ListerSitesVigieChiro implements Callable<Integer>, LectureSe
         return 0;
     }
 
+    /// Refuse `--pages` / `--tout` quand `--carre` est présent (#3769).
+    ///
+    /// La recherche par carré interroge **toute** la collection en une requête : borner son étendue n'a
+    /// plus de sens. Accepter l'option en l'ignorant serait précisément ce que ce backend fait de
+    /// `where=` - un paramètre honoré en apparence, sans effet en fait - et ce que le dépôt lui reproche.
+    private void refuserEtendueAvecCarre() {
+        if (carre != null && etendue != null) {
+            throw new RegleMetierException("« --carre » cherche sur toute la collection, en une requête :"
+                    + " « --pages » et « --tout » n'ont donc rien à borner. Relancez sans eux.");
+        }
+    }
+
     /// Lit la portée demandée. Les sites de l'utilisateur arrivent toujours complets (le client parcourt
     /// toutes les pages) ; le catalogue, lui, s'arrête où on le lui a dit.
     private LotPagine<SiteVigieChiro> lire() {
@@ -131,8 +144,22 @@ public final class ListerSitesVigieChiro implements Callable<Integer>, LectureSe
             List<SiteVigieChiro> miens = exiger(client.mesSites(), "la liste de vos sites");
             return new LotPagine<>(miens, miens.size(), 1, true);
         }
+        if (carre != null) {
+            return chercherLeCarre();
+        }
         int pages = etendue == null ? 1 : (etendue.tout ? Integer.MAX_VALUE : Math.max(1, etendue.pages));
         return exiger(client.sitesPlateforme(pages, this::annoncerPage), "le catalogue des sites");
+    }
+
+    /// Un carré se demande **au serveur** (#3769), en une requête : `q` filtre réellement, mesuré le
+    /// 2026-08-14 (20 767 → 1). Paginer deux cents pages pour filtrer ensuite chez nous coûtait une à
+    /// deux minutes, et surtout **manquait le carré** dès qu'il ne tombait pas dans la page lue.
+    ///
+    /// Le lot rendu est **complet par construction** : la recherche porte sur la collection entière,
+    /// donc le dénominateur du bilan est celui de la recherche, pas celui du catalogue.
+    private LotPagine<SiteVigieChiro> chercherLeCarre() {
+        List<SiteVigieChiro> trouves = exiger(client.chercherCarre(carre), "la recherche du carré " + carre);
+        return new LotPagine<>(trouves, trouves.size(), 1, true);
     }
 
     /// La progression va sur la **sortie d'erreur** : la sortie standard reste le compte rendu, qu'un
@@ -184,6 +211,9 @@ public final class ListerSitesVigieChiro implements Callable<Integer>, LectureSe
     /// deux cent six passeraient pour la plateforme entière. Elle dit aussi combien de sites n'ont
     /// **aucun point** exploitable, faute de quoi un recensement les passerait sous silence.
     private String bilan(LotPagine<SiteVigieChiro> lot, List<SiteVigieChiro> retenus) {
+        if (carre != null && portee == Portee.PLATEFORME) {
+            return bilanRecherche(retenus);
+        }
         String filtres = retenus.size() == lot.elements().size() ? "" : retenus.size() + " site(s) retenu(s) sur ";
         String etendue = lot.complet()
                 ? lot.elements().size() + " site(s) lu(s) : collection complète."
@@ -191,6 +221,17 @@ public final class ListerSitesVigieChiro implements Callable<Integer>, LectureSe
                         + lot.pagesLues() + " page(s) sur " + lot.pagesAnnoncees()
                         + "). Échantillon : ces chiffres ne valent que pour lui.";
         return filtres + etendue + sansPoint(retenus);
+    }
+
+    /// Le bilan d'une **recherche** (#3769), qui n'est pas celui d'une lecture partielle.
+    ///
+    /// « 1 site lu : collection complète » serait exact et pourtant trompeur : on n'a pas parcouru la
+    /// collection, on a posé une question au serveur, qui a répondu sur **toute** la collection. Dire
+    /// laquelle, et sur quoi la réponse porte, est ce que la garde de #1277 demande - un échantillon ne
+    /// doit jamais passer pour un recensement, ni l'inverse.
+    private String bilanRecherche(List<SiteVigieChiro> retenus) {
+        return "Recherche du carré " + carre + " sur toute la collection : " + retenus.size() + " site(s) trouvé(s)."
+                + sansPoint(retenus);
     }
 
     /// Les sites **sans point d'écoute** exploitable, quand il y en a : sur le protocole routier, les
