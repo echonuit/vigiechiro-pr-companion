@@ -61,8 +61,29 @@ public final class FilAriane extends HBox {
 
     private List<Lieu> segments = List.of();
 
-    /// Garde-fou de réentrance : reconstruire touche les enfants, ce qui peut relancer une mise en page.
-    private boolean enReconstruction;
+    /// Les nœuds du fil, **construits une seule fois** par pose de segments : un libellé par segment, un
+    /// séparateur devant chacun, et le menu d'élision avec le sien.
+    ///
+    /// ⚠️ Ils restent tous enfants, et l'ajustement à la largeur ne fait que basculer leur `managed` et
+    /// leur `visible`. La première version reconstruisait la liste des enfants et appelait `applyCss()`
+    /// **depuis l'écouteur de largeur** - lequel se déclenche à l'intérieur de `Region.resize`, donc au
+    /// milieu de la mise en page en cours. Muter la scène et forcer un passage CSS à ce moment-là laisse
+    /// des nœuds voisins non disposés : trois exécutions de la CI ont rendu, dans des classes de test
+    /// sans rapport avec le fil, des « nœud present mais non visible » qui n'apparaissaient ni en local
+    /// ni sur les autres branches.
+    private List<Labeled> noeuds = List.of();
+
+    private List<Label> separateurs = List.of();
+
+    private MenuButton elision;
+
+    /// Largeurs voulues, mesurées **hors** mise en page, à la pose. Elles ne dépendent que des libellés
+    /// et des styles : les recalculer à chaque changement de largeur ne les changerait pas.
+    private List<Double> largeurs = List.of();
+
+    private double largeurSeparateur;
+
+    private double largeurElision;
 
     public FilAriane() {
         getStyleClass().add("fil-ariane");
@@ -73,55 +94,81 @@ public final class FilAriane extends HBox {
         // menu « … » lui faisait alors gagner ou perdre une douzaine de pixels, qui relançaient un
         // recalcul, qui changeait le contenu. À min = 0, la largeur reçue ne dépend plus que des voisins.
         setMinWidth(0);
-        widthProperty().addListener((observable, avant, apres) -> reconstruire());
+        // L'ajustement ne touche que `managed` / `visible` : aucun enfant n'est ajouté ni retiré ici, et
+        // aucun passage CSS n'est forcé. Cf. le champ `noeuds` pour ce que la première version coûtait.
+        widthProperty().addListener((observable, avant, apres) -> ajusterALaLargeur());
     }
 
     /// Pose les segments du fil. Le dernier est l'écran courant.
+    ///
+    /// Appelé sur changement de navigation, **hors** de toute mise en page : c'est le seul moment où les
+    /// enfants changent et où l'on peut résoudre les styles pour mesurer.
     public void poser(List<Lieu> nouveaux) {
         segments = List.copyOf(nouveaux);
-        reconstruire();
+        construireLesNoeuds();
+        ajusterALaLargeur();
     }
 
-    private void reconstruire() {
-        if (enReconstruction) {
-            return;
-        }
-        enReconstruction = true;
-        try {
-            poserLesEnfants();
-        } finally {
-            enReconstruction = false;
-        }
-    }
-
-    private void poserLesEnfants() {
+    private void construireLesNoeuds() {
         if (segments.isEmpty()) {
+            noeuds = List.of();
+            separateurs = List.of();
+            largeurs = List.of();
             getChildren().clear();
             return;
         }
 
-        List<Labeled> noeuds = segments.stream().map(FilAriane::noeudDe).toList();
-        MenuButton elision = menuDElision();
-        Label separateur = separateur();
+        noeuds = segments.stream().map(FilAriane::noeudDe).toList();
+        // Un séparateur par segment, plus celui qui précède le menu : ils vivent tous dans la liste et
+        // s'affichent selon le choix, plutôt que de naître et mourir à chaque redimensionnement.
+        separateurs = noeuds.stream().map(noeud -> separateur()).toList();
+        elision = menuDElision();
 
-        // Mesure : les largeurs voulues ne sont connues qu'une fois les styles résolus, donc une fois les
-        // nœuds dans la scène. On les y met tous, on mesure, puis on retient ce qui tient.
-        getChildren().setAll(new ArrayList<Node>(noeuds));
-        getChildren().addAll(elision, separateur);
+        List<Node> enfants = new ArrayList<>();
+        enfants.add(noeuds.get(0));
+        enfants.add(separateurs.get(0));
+        enfants.add(elision);
+        for (int i = 1; i < noeuds.size(); i++) {
+            enfants.add(separateurs.get(i));
+            enfants.add(noeuds.get(i));
+        }
+        getChildren().setAll(enfants);
+
+        // Les largeurs voulues ne sont connues qu'une fois les styles résolus. Ici c'est légitime : on
+        // n'est pas dans une mise en page.
         applyCss();
+        largeurs = noeuds.stream().map(noeud -> Math.ceil(noeud.prefWidth(-1))).toList();
+        largeurSeparateur = Math.ceil(separateurs.get(0).prefWidth(-1));
+        largeurElision = Math.ceil(elision.prefWidth(-1));
+    }
 
+    private void ajusterALaLargeur() {
+        if (noeuds.isEmpty()) {
+            return;
+        }
         // Le rembourrage de la barre n'est pas disponible pour les segments, et une largeur voulue se
         // demande à l'entier supérieur : un calcul optimiste de 3 px suffit à faire couper un libellé,
         // c'est-à-dire à produire exactement le défaut que ce composant existe pour supprimer.
         double dispo = getWidth() - getInsets().getLeft() - getInsets().getRight();
-        List<Double> largeurs =
-                noeuds.stream().map(noeud -> Math.ceil(noeud.prefWidth(-1))).toList();
-        Choix choix = choisir(largeurs, Math.ceil(separateur.prefWidth(-1)), Math.ceil(elision.prefWidth(-1)), dispo);
+        Choix choix = choisir(largeurs, largeurSeparateur, largeurElision, dispo);
+        boolean elide = choix.elide(noeuds.size());
 
-        // Vider avant de reposer : la liste finale reprend des nœuds qui sont déjà enfants (ceux de la
-        // mesure), et un `setAll` direct les compte deux fois.
-        getChildren().clear();
-        getChildren().setAll(assembler(noeuds, elision, choix));
+        montrer(noeuds.get(0), choix.ancre());
+        montrer(separateurs.get(0), elide && choix.ancre());
+        montrer(elision, elide);
+        if (elide) {
+            elision.getItems().setAll(elides(choix));
+        }
+        for (int i = 1; i < noeuds.size(); i++) {
+            boolean rendu = i >= choix.premier();
+            montrer(noeuds.get(i), rendu);
+            montrer(separateurs.get(i), rendu && (choix.ancre() || elide || i > choix.premier()));
+        }
+    }
+
+    private static void montrer(Node noeud, boolean visible) {
+        noeud.setVisible(visible);
+        noeud.setManaged(visible);
     }
 
     /// Ce que le fil rend : les segments à partir de `premier`, et l'ancre si elle tient encore.
@@ -175,29 +222,6 @@ public final class FilAriane extends HBox {
         int separateurs = elements - 1;
         int intervalles = elements + separateurs - 1;
         return total + separateurs * separateur + intervalles * getSpacing();
-    }
-
-    private List<Node> assembler(List<Labeled> noeuds, MenuButton elision, Choix choix) {
-        List<Node> enfants = new ArrayList<>();
-        if (choix.ancre()) {
-            enfants.add(noeuds.get(0));
-        }
-        if (choix.elide(noeuds.size())) {
-            elision.getItems().setAll(elides(choix));
-            ajouterSepare(enfants, elision);
-        }
-        for (int i = choix.premier(); i < noeuds.size(); i++) {
-            ajouterSepare(enfants, noeuds.get(i));
-        }
-        return enfants;
-    }
-
-    /// Ajoute `noeud`, précédé d'un « › » s'il n'ouvre pas le fil.
-    private void ajouterSepare(List<Node> enfants, Node noeud) {
-        if (!enfants.isEmpty()) {
-            enfants.add(separateur());
-        }
-        enfants.add(noeud);
     }
 
     /// Les segments retirés : ceux d'après l'ancre et d'avant `premier`, plus l'ancre elle-même quand la

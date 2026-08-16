@@ -148,9 +148,13 @@ class FilArianeElisionTest {
         robot.interact(() -> scene.getRoot().layout());
     }
 
-    /// Les libellés du fil, séparateurs « › » exclus : eux ne portent aucune information.
+    /// Les libellés **rendus** du fil, séparateurs « › » exclus : eux ne portent aucune information.
+    ///
+    /// ⚠️ Le filtre sur `isManaged` n'est pas décoratif : les segments élidés restent enfants du fil et
+    /// ne sont que démanagés. Les compter reviendrait à déclarer lisible ce qui ne s'affiche pas.
     private List<Labeled> segmentsRendus() {
         return enfantsDuFil().stream()
+                .filter(Node::isManaged)
                 .filter(Labeled.class::isInstance)
                 .map(Labeled.class::cast)
                 .filter(noeud -> !noeud.getStyleClass().contains("fil-ariane-separateur"))
@@ -159,6 +163,7 @@ class FilArianeElisionTest {
 
     private MenuButton menuDElision() {
         return enfantsDuFil().stream()
+                .filter(Node::isManaged)
                 .filter(MenuButton.class::isInstance)
                 .map(MenuButton.class::cast)
                 .findFirst()

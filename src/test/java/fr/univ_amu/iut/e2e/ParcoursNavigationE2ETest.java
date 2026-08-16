@@ -83,6 +83,10 @@ class ParcoursNavigationE2ETest {
         HBox fil = robot.lookup("#filAriane").queryAs(HBox.class);
         java.util.List<String> libelles = new java.util.ArrayList<>();
         for (javafx.scene.Node noeud : fil.getChildren()) {
+            if (!noeud.isManaged()) {
+                // Segment élidé : il reste enfant du fil, démanagé, et c'est le menu qui le porte.
+                continue;
+            }
             if (noeud instanceof javafx.scene.control.MenuButton menu) {
                 menu.getItems().forEach(entree -> libelles.add(entree.getText()));
             } else if (noeud.getStyleClass().contains("fil-ariane-segment")
