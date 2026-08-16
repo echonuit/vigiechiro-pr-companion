@@ -32,3 +32,13 @@ En **ligne de commande**, `vigiechiro exporter-sons --espece Rhifer --sortie rhi
 L'envoi lui-même (messagerie, dépôt de fichiers, lien de partage) reste **hors de l'application** :
 l'archive est le produit fini. Un envoi intégré supposerait un service tiers et des identifiants de
 plus, pour un geste que chacun a déjà ailleurs.
+
+## Ce que l'archive rend comme comptes
+
+L'enrichissement annoncé au sommaire des parcours est **livré** (#2358, EPIC #2350).
+
+Un son absent du disque n'interrompt pas l'export : l'observation reste dans le CSV et le son manquant
+est **compté**. Le [compte rendu chiffré](../Maquettes/M-CompteRendu.md) distingue donc ce qui est parti
+de ce qui n'a pas pu partir, en proportions plutôt qu'en liste. C'est la différence qui compte pour
+l'expert destinataire : une archive de 40 sons sur 40 et une archive de 40 sons sur 120 se ressemblent
+sur le disque, et ne disent pas la même chose de ce qu'il pourra conclure.

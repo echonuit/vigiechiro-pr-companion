@@ -101,8 +101,9 @@ Marie clique sur « Vérifier et préparer le dépôt ». L'application vérifie
 
 24-48 h après le dépôt, Marie recevra un fichier de résultats Tadarida sur le portail Vigie-Chiro. La validation de ces résultats est documentée comme **cible étirable** - voir [P7 - Valider les résultats Tadarida](P7%20-%20Valider%20les%20résultats%20Tadarida.md).
 
-## Enrichissements prévus
+## La conclusion du fil rouge
 
-> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+Le fil rouge s'arrêtait au dépôt, puis renvoyait à la validation. Il lui manquait la réponse à la question que Marie se pose une fois ses résultats revenus : *et alors, qu'est-ce que ma nuit contient ?* Deux écrans **livrés** (EPIC #2348) ferment cette boucle, atteignables depuis la fiche du passage une fois les observations importées.
 
-- **La nuit de Marie gagne une conclusion.** Le fil rouge s'arrête aujourd'hui au dépôt, puis renvoie à la validation. Il lui manque la réponse à la question que Marie se pose vraiment une fois ses résultats revenus : *et alors, qu'est-ce que ma nuit contient ?* La [synthèse de la nuit](../Maquettes/M-Synthese.md) et la [courbe d'activité](../Maquettes/M-Activite.md) ferment cette boucle (#2351, #2352).
+- La **[synthèse de la nuit](../Maquettes/M-Synthese.md)** situe chaque comptage d'espèce dans un référentiel de saison, de région et de milieu, et affiche les seuils sur lesquels elle fonde sa classe d'activité (#2351).
+- La **[courbe d'activité](../Maquettes/M-Activite.md)** donne à la nuit sa forme : les contacts par tranche horaire et par espèce, sur l'axe réel entre coucher et lever du soleil (#2352).

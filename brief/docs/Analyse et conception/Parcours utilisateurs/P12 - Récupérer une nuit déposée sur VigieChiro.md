@@ -153,8 +153,8 @@ La synchro rapatrie **tous** les points du carré Vigie-Chiro (la grille STOC pe
 - La **reconstruction** (couture 2) est un import **allégé** - observations seules - complémentaire de [P2 - Importer une nuit](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), qui part, lui, des fichiers bruts.
 - La **réactivation** (couture 3) est la variante **audio** de l'import : elle rebranche les fichiers retrouvés sur un passage archivé - et les **régénère** depuis les bruts quand ce sont les seuls que l'utilisateur a gardés, à l'identique de l'import. Elle se prête au traitement de volume de [P5 - Naviguer multi-sites](P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md).
 
-## Enrichissements prévus
+## Ce que la réactivation rend
 
-> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+L'enrichissement annoncé ici est **livré** (#2358, EPIC #2350).
 
-- **La réactivation rend des comptes en chiffres** *(livré, #2358)*. Ce qui a été rebranché, ce qui était déjà là et ce qui manque encore se lisent en proportions, les motifs d'absence s'ouvrant à la demande, les plus coûteux d'abord. Le compte rendu **textuel** subsiste pour la commande `reactiver` (un terminal ne dessine pas de barres) et pour un passage **reconstruit**, où la réactivation n'a pas eu lieu : une barre « 0 sur 30 » y ferait croire à une tentative échouée. Voir [M-CompteRendu](../Maquettes/M-CompteRendu.md).
+- **La réactivation rend des comptes en chiffres**. Ce qui a été rebranché, ce qui était déjà là et ce qui manque encore se lisent en proportions, les motifs d'absence s'ouvrant à la demande, les plus coûteux d'abord. Le compte rendu **textuel** subsiste pour la commande `reactiver` (un terminal ne dessine pas de barres) et pour un passage **reconstruit**, où la réactivation n'a pas eu lieu : une barre « 0 sur 30 » y ferait croire à une tentative échouée. Voir [M-CompteRendu](../Maquettes/M-CompteRendu.md).
