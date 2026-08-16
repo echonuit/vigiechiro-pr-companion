@@ -52,6 +52,17 @@ class SiteEditRechercheCarreTest {
         return viewModel;
     }
 
+    /// Modale d'**édition**, avec la vérification installée.
+    ///
+    /// Un assembleur à part, et non `avecRecherche()` suivi d'un `preparerEdition` : le ViewModel est
+    /// **mono-usage** depuis #3801, et le repréparer lève.
+    private SiteEditViewModel enEditionDe(Site site) {
+        SiteEditViewModel viewModel = new SiteEditViewModel(
+                service, liens, "u-1", Optional.of(new RechercheCarreExistant(client)), Optional.of(rapatriement));
+        viewModel.preparerEdition(site);
+        return viewModel;
+    }
+
     /// Modale montée **sans** : injecteur partiel, feature éteinte, capture d'écran.
     private SiteEditViewModel sansRecherche() {
         SiteEditViewModel viewModel = new SiteEditViewModel(service, liens, "u-1", Optional.empty(), Optional.empty());
@@ -62,7 +73,11 @@ class SiteEditRechercheCarreTest {
     /// Demande le verdict et l'applique, comme le fait le controller : appel bloquant, puis application
     /// sur le fil JavaFX.
     private static void verifier(SiteEditViewModel viewModel) {
-        viewModel.appliquerRechercheCarre(viewModel.chercherCarreExistant());
+        viewModel
+                .carre()
+                .appliquer(
+                        viewModel.chercherCarreExistant(),
+                        viewModel.numeroCarreProperty().get());
     }
 
     @Test
@@ -71,7 +86,7 @@ class SiteEditRechercheCarreTest {
         SiteEditViewModel viewModel = sansRecherche();
         viewModel.numeroCarreProperty().set(CARRE);
 
-        assertThat(viewModel.rechercheCarreDisponible())
+        assertThat(viewModel.carre().disponible())
                 .as("la modale doit pouvoir masquer le bouton plutôt que d'en afficher un mort")
                 .isFalse();
         assertThat(viewModel.chercherCarreExistant().verdict())
@@ -102,8 +117,8 @@ class SiteEditRechercheCarreTest {
 
         verifier(viewModel);
 
-        assertThat(viewModel.retourCarreExistantProperty().get().texte()).contains("n'existe pas encore");
-        assertThat(viewModel.retourCarreExistantProperty().get().severite()).isEqualTo(Severite.SUCCES);
+        assertThat(viewModel.carre().retourProperty().get().texte()).contains("n'existe pas encore");
+        assertThat(viewModel.carre().retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
     }
 
     @Test
@@ -118,12 +133,12 @@ class SiteEditRechercheCarreTest {
         verifier(viewModel);
 
         // Le titre porte le protocole : « il existe » sans dire lequel n'aide pas à décider quoi faire.
-        assertThat(viewModel.retourCarreExistantProperty().get().texte())
+        assertThat(viewModel.carre().retourProperty().get().texte())
                 .contains("Vigiechiro - Point Fixe-640380")
                 // Depuis #3806, le message propose de récupérer le carré ICI, avec son rattachement : le
                 // renvoi vers la synchronisation ne ramenait pas un carré sans nuit déposée.
                 .contains("rattaché");
-        assertThat(viewModel.retourCarreExistantProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
+        assertThat(viewModel.carre().retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
     }
 
     @Test
@@ -136,7 +151,7 @@ class SiteEditRechercheCarreTest {
         verifier(viewModel);
 
         // L'utilisateur a CLIQUÉ : se taire lui ferait croire au silence de l'absence.
-        assertThat(viewModel.retourCarreExistantProperty().get().texte()).contains("PAS été vérifié");
+        assertThat(viewModel.carre().retourProperty().get().texte()).contains("PAS été vérifié");
     }
 
     @Test
@@ -146,13 +161,13 @@ class SiteEditRechercheCarreTest {
         viewModel.numeroCarreProperty().set(CARRE);
         when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
         verifier(viewModel);
-        assertThat(viewModel.retourCarreExistantProperty().get().texte()).isNotEmpty();
+        assertThat(viewModel.carre().retourProperty().get().texte()).isNotEmpty();
 
         viewModel.numeroCarreProperty().set("640381");
 
         // Sans cela, « ce carré n'existe pas encore » resterait affiché sous un numéro que personne n'a
         // vérifié - le pire des deux mondes, puisque l'utilisateur a la preuve visuelle du contraire.
-        assertThat(viewModel.retourCarreExistantProperty().get().texte())
+        assertThat(viewModel.carre().retourProperty().get().texte())
                 .as("un verdict ne survit pas au numéro sur lequel il portait")
                 .isEmpty();
     }
@@ -171,27 +186,14 @@ class SiteEditRechercheCarreTest {
         // … il corrige sa saisie pendant ce temps…
         viewModel.numeroCarreProperty().set("640381");
         // … et la réponse arrive enfin.
-        viewModel.appliquerRechercheCarre(resultat);
+        viewModel.carre().appliquer(resultat, viewModel.numeroCarreProperty().get());
 
         // C'est le jumeau du verdict périmé, pris par l'autre bout : là c'était la saisie qui bougeait
         // après la réponse, ici c'est la réponse qui arrive après la saisie. Même panne à l'écran - un
         // avertissement affiché sous un carré qu'il ne juge pas.
-        assertThat(viewModel.retourCarreExistantProperty().get().texte())
+        assertThat(viewModel.carre().retourProperty().get().texte())
                 .as("un verdict ne s'applique qu'au numéro qui l'a demandé")
                 .isEmpty();
-    }
-
-    @Test
-    @DisplayName("#3458 : rouvrir la modale en déclaration repart sans verdict")
-    void preparer_creation_efface_le_verdict() {
-        SiteEditViewModel viewModel = avecRecherche();
-        viewModel.numeroCarreProperty().set(CARRE);
-        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
-        verifier(viewModel);
-
-        viewModel.preparerCreation();
-
-        assertThat(viewModel.retourCarreExistantProperty().get().texte()).isEmpty();
     }
 
     @Test
@@ -200,13 +202,13 @@ class SiteEditRechercheCarreTest {
         SiteEditViewModel viewModel = avecRecherche();
         viewModel.numeroCarreProperty().set(CARRE);
 
-        assertThat(viewModel.carreRecuperable().get())
+        assertThat(viewModel.carre().recuperable().get())
                 .as("rien n'a été demandé : il n'y a rien à récupérer")
                 .isFalse();
 
         when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
         verifier(viewModel);
-        assertThat(viewModel.carreRecuperable().get())
+        assertThat(viewModel.carre().recuperable().get())
                 .as("carré libre : le récupérer n'aurait aucun sens")
                 .isFalse();
 
@@ -214,12 +216,12 @@ class SiteEditRechercheCarreTest {
                 .thenReturn(
                         ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
         verifier(viewModel);
-        assertThat(viewModel.carreRecuperable().get())
+        assertThat(viewModel.carre().recuperable().get())
                 .as("le carré est là-bas : c'est le moment de proposer de le rapatrier")
                 .isTrue();
 
         viewModel.numeroCarreProperty().set("640381");
-        assertThat(viewModel.carreRecuperable().get())
+        assertThat(viewModel.carre().recuperable().get())
                 .as("le verdict s'efface avec le numéro, le geste qu'il ouvrait aussi")
                 .isFalse();
     }
@@ -251,8 +253,8 @@ class SiteEditRechercheCarreTest {
     @Test
     @DisplayName("#3806 : en ÉDITION, le même verdict n'empêche rien : ce site existe, c'est normal")
     void en_edition_le_verdict_n_empeche_rien() {
-        SiteEditViewModel viewModel = avecRecherche();
-        viewModel.preparerEdition(new Site(7L, CARRE, "Étang", Protocole.STANDARD, null, "2026-01-01", "u-1"));
+        SiteEditViewModel viewModel =
+                enEditionDe(new Site(7L, CARRE, "Étang", Protocole.STANDARD, null, "2026-01-01", "u-1"));
         when(client.chercherCarre(CARRE))
                 .thenReturn(
                         ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));

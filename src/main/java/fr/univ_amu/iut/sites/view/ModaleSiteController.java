@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.viewmodel.CarreExistantViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -139,12 +140,18 @@ public class ModaleSiteController {
         executeur.executer(
                 viewModel::chercherCarreExistant,
                 resultat -> {
-                    viewModel.appliquerRechercheCarre(resultat);
+                    viewModel
+                            .carre()
+                            .appliquer(resultat, viewModel.numeroCarreProperty().get());
                     rechercheEnCours.set(false);
                 },
                 echec -> {
                     rechercheEnCours.set(false);
-                    viewModel.appliquerRechercheCarre(SiteEditViewModel.ResultatRechercheCarre.indisponible(demande));
+                    viewModel
+                            .carre()
+                            .appliquer(
+                                    CarreExistantViewModel.ResultatRechercheCarre.indisponible(demande),
+                                    viewModel.numeroCarreProperty().get());
                 });
     }
 
@@ -165,11 +172,11 @@ public class ModaleSiteController {
                         fermer();
                         return;
                     }
-                    viewModel.appliquerRapatriement(resultat);
+                    viewModel.carre().appliquerRapatriement(resultat);
                 },
                 echec -> {
                     btnRecupererCarre.setDisable(false);
-                    viewModel.appliquerRapatriement(new RapatriementCarre.Resultat.Indisponible());
+                    viewModel.carre().appliquerRapatriement(new RapatriementCarre.Resultat.Indisponible());
                 });
     }
 
@@ -219,7 +226,7 @@ public class ModaleSiteController {
                                 ? "Enregistrer ce site de suivi."
                                 : viewModel.motifEnregistrementFerme(),
                         viewModel.peutEnregistrer(),
-                        viewModel.carreRecuperable(),
+                        viewModel.carre().recuperable(),
                         viewModel.enCreation()));
         ValidationFormulaire.marquerInvalide(champCarre, viewModel.carreInvalideEtSaisi());
 
@@ -231,19 +238,19 @@ public class ModaleSiteController {
         // légitimes - un drapeau de fonctionnalité (`Optional<Service>.isPresent()`, dont la bascule ne
         // prend effet qu'au prochain démarrage) et un contrôle de modale (rebâtie à chaque ouverture).
         // Le fait qui la rend vraie ne peut pas changer pendant la vie de cette fenêtre.
-        enveloppeVerifierCarre.setVisible(viewModel.rechercheCarreDisponible());
-        enveloppeVerifierCarre.setManaged(viewModel.rechercheCarreDisponible());
+        enveloppeVerifierCarre.setVisible(viewModel.carre().disponible());
+        enveloppeVerifierCarre.setManaged(viewModel.carre().disponible());
         btnVerifierCarre.disableProperty().bind(viewModel.carreValide().not().or(rechercheEnCours));
         IndicateurBlocage.expliquer(
                 enveloppeVerifierCarre,
                 Bindings.when(viewModel.carreValide())
                         .then("Demander à Vigie-Chiro si ce carré y est déjà déclaré.")
                         .otherwise("Renseignez d'abord un numéro de carré à 6 chiffres."));
-        LibelleRetour.installer(messageCarreExistant, viewModel.retourCarreExistantProperty());
+        LibelleRetour.installer(messageCarreExistant, viewModel.carre().retourProperty());
         // Le geste suit le verdict : visible seulement quand il y a un carré à récupérer, et retiré de la
         // mise en page sinon - un bouton grisé en permanence sur un carré libre n'aurait rien à dire.
-        ligneRecupererCarre.visibleProperty().bind(viewModel.carreRecuperable());
-        ligneRecupererCarre.managedProperty().bind(viewModel.carreRecuperable());
+        ligneRecupererCarre.visibleProperty().bind(viewModel.carre().recuperable());
+        ligneRecupererCarre.managedProperty().bind(viewModel.carre().recuperable());
         Modales.suivreLaCroissance(racine, ligneRecupererCarre.managedProperty());
         Modales.suivreLaCroissance(racine, messageCarreExistant.managedProperty());
 

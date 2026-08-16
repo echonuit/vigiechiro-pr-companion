@@ -102,14 +102,13 @@ class SiteEditPorteeTest {
     @Test
     @DisplayName("#1380 : une déclaration ne parle pas de portée")
     void creation_ne_dit_rien() {
-        Site site = siteDeclare();
-        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()), "abc123", true));
-        viewModel.preparerEdition(site);
-
+        // ⚠️ Ce cas prouvait la portée effacée en **rejouant** `preparerCreation` sur une instance déjà
+        // passée par l'édition. Ce chemin est refusé depuis #3801 : la modale est mono-usage, et son
+        // refus est éprouvé par `SiteEditCycleDeVieTest`. Ce qui reste à garantir ici est le fait
+        // lui-même - une déclaration ne parle pas de portée -, et il se lit sur un ViewModel neuf,
+        // c'est-à-dire dans l'état où la production le met toujours.
         viewModel.preparerCreation();
 
-        // Le message doit disparaître quand la même modale sert à déclarer : un site qui n'existe pas
-        // encore n'est relié à rien.
         assertThat(viewModel.porteeEditionProperty().get().present()).isFalse();
     }
 }
