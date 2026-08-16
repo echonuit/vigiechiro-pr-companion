@@ -183,6 +183,20 @@ echappement() { printf '\033'; }
   [ "${status}" -eq 0 ]
 }
 
+# La vérification en ligne de #3856 ne doit pas rendre la commande inutilisable sur le terrain : sans
+# connexion, elle crée quand même, et le DIT sur la sortie d'erreur. Ce cas tient les deux moitiés.
+@test "creer-site hors connexion : cree quand meme, et annonce que rien n a ete verifie (#3856)" {
+  run cli creer-site --carre 640380 --protocole STANDARD
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"non vérifié"* ]]
+}
+
+@test "creer-site --sans-verification : exit 0, et aucun avertissement (#3856)" {
+  run cli creer-site --carre 752204 --protocole STANDARD --sans-verification
+  [ "${status}" -eq 0 ]
+  [[ "${output}" != *"non vérifié"* ]]
+}
+
 @test "creer-site sans --carre : erreur d'usage picocli, exit 2" {
   run cli creer-site --protocole STANDARD
   [ "${status}" -eq 2 ]
