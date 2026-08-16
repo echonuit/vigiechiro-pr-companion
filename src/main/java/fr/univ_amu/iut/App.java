@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.ConfigurationJournalisation;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.view.AlerteDemarrage;
+import fr.univ_amu.iut.commun.view.CauseLisible;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;
@@ -52,7 +53,10 @@ public class App extends Application {
             Alert alerte = new Alert(Alert.AlertType.ERROR);
             Habillage.poser(alerte.getDialogPane());
             alerte.setHeaderText("Une erreur inattendue est survenue");
-            alerte.setContentText(String.valueOf(erreur.getMessage()));
+            // #3470 : et surtout PAS `erreur.getMessage()`. Derrière une enveloppe, la JDK fabrique un
+            // message qui est le `toString()` de sa cause : l'utilisateur lisait
+            // « java.lang.reflect.InvocationTargetException » là où la panne disait « Accès refusé ».
+            alerte.setContentText(CauseLisible.messageDe(erreur));
             alerte.showAndWait();
         }));
 

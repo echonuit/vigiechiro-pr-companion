@@ -21,6 +21,14 @@ public final class ActionOuvrirJournaux implements ActionMenu {
 
     private static final Logger LOG = Logger.getLogger(ActionOuvrirJournaux.class.getName());
 
+    /// Le libellé de l'entrée, exposé parce qu'un **autre texte y renvoie** : l'alerte d'incident dit
+    /// où regarder, et elle doit nommer le geste tel qu'il s'écrit dans le menu (#3470).
+    ///
+    /// Le citer plutôt que le recopier applique l'**ADR 3854** (« un refus ne conseille que ce qu'il a
+    /// vérifié applicable ») par construction : une copie aurait dérivé le jour où l'entrée est
+    /// renommée, en laissant un message qui envoie chercher une ligne de menu qui n'existe plus.
+    static final String LIBELLE = "Ouvrir le dossier des journaux";
+
     private final Workspace workspace;
     private final OuvreurDeLien ouvreurDeLien;
 
@@ -42,7 +50,7 @@ public final class ActionOuvrirJournaux implements ActionMenu {
 
     @Override
     public String libelle() {
-        return "Ouvrir le dossier des journaux";
+        return LIBELLE;
     }
 
     @Override
