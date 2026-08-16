@@ -34,8 +34,24 @@ données d'exemple ou de test.
   Le fichier est **restreint au propriétaire** (POSIX `600`) sur les systèmes qui le supportent, pour
   qu'un autre compte de la machine ne puisse pas lire le token. Sous Windows, il reste protégé par les
   **ACL du profil utilisateur** : le dossier de travail vit sous le profil, dont les autres comptes non
-  administrateurs n'ont pas la clé. Protection réelle, mais **de nature différente**, et c'est pourquoi
-  elle est écrite plutôt que sous-entendue.
+  administrateurs n'ont pas la clé. Protection réelle, mais **de nature différente**.
+
+    ⚠️ **Cette phrase a été affirmée pendant des mois sans que personne la vérifie**, et l'audit de
+    dette du 2026-07-28 le relevait : le code « se repose sur les ACL du profil **sans les contrôler
+    explicitement** ». Mesuré depuis (#3778), par sonde sous Windows Server 2025 : le fichier porte
+    exactement **trois** entrées `ALLOW` - son propriétaire, `NT AUTHORITY\SYSTEM` et
+    `BUILTIN\Administrators`. C'est l'équivalent exact de `600` sous POSIX, où **root** lit aussi ce
+    qu'il veut. **La doc disait vrai** - et c'est précisément ce qu'on ignorait.
+
+    La propriété est désormais **lue**, et non plus affirmée :
+    `commun.model.ProtectionFichier.restreinteAuProprietaire` l'exprime sur les deux systèmes -
+    permissions POSIX ici, ACL là-bas -, et `EcritureAtomiqueTest` l'éprouve. ⚠️ Ni POSIX ni ACL fait
+    **lever** plutôt que rendre `true` : annoncer une protection depuis une ignorance serait le faux
+    vert que tout ce dispositif existe pour éviter.
+
+    ⚠️ La protection reste **héritée** du dossier de profil, pas posée par le produit. Elle est réelle
+    et elle peut changer sans que rien ne le dise - d'où la lecture, et le test qui s'en sert chaque
+    mardi (#3526).
 
     L'écriture passe par `commun.model.EcritureAtomique` (#2735), et non plus par un `writeString`
     suivi d'un `chmod`. La différence n'est pas cosmétique : restreindre **après** avoir écrit laisse
@@ -44,6 +60,19 @@ données d'exemple ou de test.
     supprime. Le secret n'atterrit désormais que dans un fichier **créé déjà restreint**, déplacé sur sa
     cible par un `ATOMIC_MOVE` - ce qui corrige au passage un `connexion.json` tronqué par une
     interruption, que le lecteur traduisait en « non connecté » sans rien dire.
+
+    ⚠️ **Sous Windows, ce déplacement échoue dès qu'un lecteur tient la cible** - mesuré par sonde sur
+    Windows Server 2025 (#3777) : `Files.newInputStream`, `FileChannel`, `RandomAccessFile` et
+    `FileChannel.lock()` provoquent **tous** une `AccessDeniedException`. Un simple lecteur suffit, il
+    n'y a pas besoin d'un verrou. Or c'est le chemin du fichier d'amorçage, et les tenues concurrentes
+    y sont **ordinaires** : un antivirus qui analyse au moment du remplacement, un outil de sauvegarde,
+    une seconde instance qui lit.
+
+    L'écriture **insiste** donc : cinq tentatives espacées de 150 ms, ~600 ms au total - assez pour
+    traverser une analyse antivirus, trop court pour qu'un utilisateur croie l'application figée.
+    Au-delà, le refus **nomme** la cause (« tenu ouvert par un autre programme ») plutôt que de parler
+    de droits, ce qui enverrait chercher un problème qui n'existe pas sur un fichier dont on est
+    propriétaire.
 
     Ce garde est **structurel** (`SecretsEcritsProtegesTest`), parce que la fenêtre est un état
     intermédiaire : après coup, les deux façons d'écrire laissent le même fichier à `600`, et aucun test
