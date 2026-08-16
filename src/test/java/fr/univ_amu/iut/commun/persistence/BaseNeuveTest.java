@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -24,8 +25,12 @@ class BaseNeuveTest {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         int[] annonces = {0};
+        // Journal **typé** et non lambda anonyme : cette garde existait depuis le lot 1, mais le cliquet
+        // de #3645 cherche le nom du port dans le fichier de test, et ne la voyait pas. Il accusait donc
+        // `BaseNeuve` d'une dette qu'elle n'avait pas.
+        JournalMutations journal = () -> annonces[0]++;
 
-        new BaseNeuve(source, () -> annonces[0]++).repartirDeZero();
+        new BaseNeuve(source, journal).repartirDeZero();
 
         // Les quatre compteurs de l'accueil retombent à zéro d'un coup. C'est la mutation la plus
         // structurelle du produit, et elle ne passait par aucun émetteur avant la clôture du lot 1.

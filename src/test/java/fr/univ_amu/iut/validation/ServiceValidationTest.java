@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -70,6 +71,12 @@ class ServiceValidationTest {
     private ObservationDao observationDao;
     private ResultatsIdentificationDao resultatsDao;
     private ServiceValidation service;
+
+    /// Journal **typé** plutôt que lambda anonyme : c'est le nom du port dans le fichier qui rend la
+    /// garde visible au cliquet de #3645.
+    private final int[] annonces = {0};
+
+    private final JournalMutations journal = () -> annonces[0]++;
     private final ParserCsvTadarida parser = new ParserCsvTadarida();
 
     private long idPassage;
@@ -129,7 +136,7 @@ class ServiceValidationTest {
                         sequenceDao,
                         new UniteDeTravail(source),
                         new HorlogeFigee(LocalDate.of(2026, 5, 31)),
-                        () -> {}));
+                        journal));
     }
 
     private void insererSequence(EnregistrementOriginalDao originalDao, SequenceDao sequenceDao, String base) {
@@ -282,6 +289,34 @@ class ServiceValidationTest {
         assertThat(observations)
                 .filteredOn(o -> "Nyclei".equals(o.taxonAutreTadarida()))
                 .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#3537 : un import qui aboutit annonce une fois, quel que soit le nombre d'observations")
+    void un_import_annonce_une_fois() {
+        service.importer(idPassage, ecrireBrut());
+
+        // Quatre observations écrites, une seule annonce : l'ADR 3537 pose le signal sur l'opération
+        // métier, pas sur la ligne. Le lecteur relit tout à son réveil, une fois suffit.
+        assertThat(annonces[0]).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3537 : un import refusé n'annonce rien")
+    void un_import_refuse_n_annonce_rien() {
+        String contenu = guillemets("nom du fichier", "tadarida_taxon") + guillemets("sequence_inconnue_000", "Pippip");
+        Path fichier = dossier.resolve("annonce-refusee.csv");
+        try {
+            Files.writeString(fichier, contenu, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        assertThatThrownBy(() -> service.importer(idPassage, fichier)).isInstanceOf(RegleMetierException.class);
+
+        // Le noyau annonce APRÈS le commit de l'unité de travail, jamais dedans : un signal posé sur une
+        // transaction qui échoue ensuite ferait relire la base pour y trouver un état qui n'existe pas.
+        assertThat(annonces[0]).as("rien n'a été écrit, donc rien à signaler").isZero();
     }
 
     @Test

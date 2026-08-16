@@ -213,6 +213,7 @@ nav:
     - 3561 · Une garde obligatoire inventorie les chemins qu'elle ferme: decisions/3561-une-garde-obligatoire-inventorie-les-chemins-qu-elle-ferme.md
     - 3826 · Un test qui mesure monte une scène habillée: decisions/3826-un-test-qui-mesure-monte-une-scene-habillee.md
     - 3827 · Une affirmation de sécurité se lit, ou elle n'existe pas: decisions/3827-une-affirmation-de-securite-se-lit-ou-elle-n-existe-pas.md
+    - 3645 · Un détecteur textuel s'exclut de son propre corpus: decisions/3645-un-detecteur-textuel-s-exclut-de-son-corpus.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

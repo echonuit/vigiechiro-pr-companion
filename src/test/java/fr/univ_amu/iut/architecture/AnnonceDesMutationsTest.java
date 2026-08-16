@@ -14,7 +14,8 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Les deux cliquets de l'invariant « tu écris, tu signales » (#3645).
+/// Les deux dispositifs de l'invariant « tu écris, tu signales » (#3645) : une **invariante** sur les
+/// annonces, un **cliquet** sur les sites d'écriture.
 ///
 /// L'[ADR 3537](../../../../../../../dev-docs/decisions/3537-un-signal-se-pose-a-l-ecriture.md) veut que
 /// toute écriture **structurelle** validée - celle qui change l'un des quatre comptes de l'accueil :
@@ -31,8 +32,16 @@ import org.junit.jupiter.api.Test;
 /// la population** : vingt et une écritures passent par du **SQL brut**, hors DAO. Un vert dessus
 /// affirmerait sans preuve, ce que l'ADR 2213 interdit.
 ///
-/// Ces deux cliquets tiennent donc une promesse **plus faible et vérifiable** : rien de nouveau n'entre
-/// sans être vu, ni du côté des annonces, ni du côté des écritures.
+/// Ces deux dispositifs tiennent donc une promesse **plus faible et vérifiable** : rien de nouveau
+/// n'entre sans être vu, ni du côté des annonces, ni du côté des écritures.
+///
+/// ## Le premier a commencé sa vie vacant
+///
+/// Livré le 15/08/2026 comme cliquet de dette à cinq, il parcourait tous les fichiers de test **y
+/// compris le sien**, dont la documentation nommait précisément les cinq débiteurs. Il les certifiait
+/// donc gardés : mesuré, il n'en nommait aucun, et rien n'aurait pu le faire rougir. Il s'exclut
+/// désormais de son corpus (ADR 3645), les cinq gardes ont été écrites, et le plafond de dette a laissé
+/// place à une invariante : la liste doit être **vide**.
 class AnnonceDesMutationsTest {
 
     private static final Path SOURCES = Path.of("src", "main", "java");
@@ -51,14 +60,11 @@ class AnnonceDesMutationsTest {
     private static final Pattern ECRITURE_SQL = Pattern.compile(
             "(?i)(INSERT INTO|DELETE FROM)\\s+(monitoring_site|listening_point|survey_visit|observation)");
 
-    /// Relevé du 15/08/2026. **Cinq** classes annoncent sans qu'un test compte leur annonce :
-    /// `BaseNeuve`, `CreationPassageArchive`, `NoyauImportObservations`, `ServiceImportReference`,
-    /// `ValidationManuelle`. Les nommer ici est une trace de départ ; ce que le cliquet tient est le
-    /// **nombre**, et c'est le message d'échec qui redonne les noms du jour.
-    ///
-    /// C'est un **cliquet de dette** (ADR 2843) : le nombre doit descendre, jamais monter. Un compteur
-    /// et non une liste, l'ADR 3575 ayant montré qu'une liste de noms ne protège qu'elle-même.
-    private static final int ANNONCES_SANS_GARDE = 5;
+    /// Le détecteur lit du **texte**, et ce fichier-ci en est. Sans cette exclusion, nommer une classe
+    /// dans la documentation ci-dessus suffisait à la déclarer gardée, puisque le fichier contient par
+    /// construction le nom du port. Le cliquet de dette livré le 15/08/2026 était vacant pour cette
+    /// seule raison : mesuré, il ne nommait **aucun** débiteur sur cinq. Cf. ADR 3645.
+    private static final String SOI_MEME = "AnnonceDesMutationsTest.java";
 
     /// Relevé du 15/08/2026 : 38 écritures par DAO et 21 en SQL brut.
     ///
@@ -83,10 +89,12 @@ class AnnonceDesMutationsTest {
 
         assertThat(sansGarde)
                 .as(
-                        "le cliquet de #3645 descend, il ne monte pas. Une classe qui annonce doit avoir un"
-                                + " test injectant un `JournalMutations` compteur et vérifiant l'appel. En dette : %s",
+                        "une classe qui annonce doit avoir un test qui **nomme** `JournalMutations`, lui en"
+                                + " injecte un qui compte, et affirme l'appel. Un lambda anonyme `() -> {}` avale"
+                                + " l'annonce ; un `() -> compteur[0]++` non typé la compte sans que ce détecteur"
+                                + " puisse le voir. Sans garde : %s",
                         sansGarde)
-                .hasSizeLessThanOrEqualTo(ANNONCES_SANS_GARDE);
+                .isEmpty();
     }
 
     @Test
@@ -118,15 +126,27 @@ class AnnonceDesMutationsTest {
                 .toList();
     }
 
-    /// Vrai si un test cite la classe **et** manipule le journal. Approximation assumée : elle peut
-    /// surestimer la couverture (un test de vue qui cite la classe pour une autre raison). Elle ne peut
-    /// pas la sous-estimer, ce qui est le bon sens pour un cliquet qui doit descendre.
+    /// Vrai si un test cite la classe **et** nomme le journal. Approximation assumée, et elle se trompe
+    /// **dans les deux sens** :
+    ///
+    /// - elle **surestime** la couverture quand un test cite la classe pour une autre raison ;
+    /// - elle la **sous-estime** quand la garde existe mais passe un lambda anonyme. `BaseNeuveTest`
+    ///   comptait l'annonce depuis le lot 1 sans jamais prononcer le nom du port : le détecteur
+    ///   l'accusait d'une dette qu'elle n'avait pas.
+    ///
+    /// La première version de ce doc-comment affirmait que seule la surestimation était possible. C'était
+    /// faux, et de la moitié dangereuse : une dette surévaluée donne du mou à un cliquet.
+    ///
+    /// D'où la convention, écrite dans le message d'échec : **un garde nomme le port**.
     private static boolean unTestCompteLAnnonce(String classe) {
         try {
-            return fichiers(TESTS).stream().anyMatch(chemin -> {
-                String texte = lire(chemin);
-                return texte.contains(classe) && (texte.contains(ANNONCE) || texte.contains("JournalMutations"));
-            });
+            return fichiers(TESTS).stream()
+                    .filter(chemin -> !chemin.getFileName().toString().equals(SOI_MEME))
+                    .anyMatch(chemin -> {
+                        String texte = lire(chemin);
+                        return texte.contains(classe)
+                                && (texte.contains(ANNONCE) || texte.contains("JournalMutations"));
+                    });
         } catch (IOException echec) {
             throw new UncheckedIOException(echec);
         }

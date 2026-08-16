@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,6 +41,12 @@ class CreationPassageArchiveTest {
     private CreationPassageArchive creation;
     private Long idPoint;
 
+    /// Journal **typé**, pas un lambda anonyme : le cliquet de #3645 cherche le nom du port dans le
+    /// fichier de test, et une garde qu'il ne voit pas ne compte pas.
+    private final int[] annonces = {0};
+
+    private final JournalMutations journal = () -> annonces[0]++;
+
     @BeforeEach
     void preparer() {
         source = new SourceDeDonnees(new Workspace(dossier));
@@ -52,7 +60,7 @@ class CreationPassageArchiveTest {
                 .semerSiteEtPoint()
                 .idPoint();
         creation = new CreationPassageArchive(
-                source, new Workspace(dossier), new HorlogeFigee(LocalDate.of(2026, 7, 17)), () -> {});
+                source, new Workspace(dossier), new HorlogeFigee(LocalDate.of(2026, 7, 17)), journal);
     }
 
     private static ParticipationDetail detailComplet() {
@@ -98,6 +106,28 @@ class CreationPassageArchiveTest {
                 .extracting(Progression::libelle)
                 .anyMatch(l -> l.contains("Création du passage"))
                 .anyMatch(l -> l.contains("Création des séquences"));
+    }
+
+    @Test
+    @DisplayName("#3537 : chacune des portes de création annonce exactement une mutation")
+    void chaque_porte_de_creation_annonce_une_fois() {
+        LocalDateTime debut = LocalDateTime.of(2026, 7, 3, 21, 0);
+        LocalDateTime fin = LocalDateTime.of(2026, 7, 4, 5, 0);
+        Prefixe prefixe = new Prefixe("130711", 2026, 1, "Z41");
+
+        creation.creer(idPoint, 1, debut, fin, prefixe, detailComplet(), List.of("seqA_000"), progression -> {});
+        assertThat(annonces[0]).as("un passage de plus à l'inventaire").isEqualTo(1);
+
+        creation.creerNuitRapatriee(idPoint, 2, debut, fin, prefixe, Optional.of(detailComplet()));
+        assertThat(annonces[0])
+                .as("une nuit rapatriée par la synchro compte comme un passage créé à la main : c'est"
+                        + " cette écriture-là qui avait manqué à l'inventaire de #3542")
+                .isEqualTo(2);
+
+        creation.creerNuitRapatriee(idPoint, 3, debut, fin, prefixe, Optional.empty());
+        assertThat(annonces[0])
+                .as("un squelette nu, sans détail lisible, reste un passage de plus")
+                .isEqualTo(3);
     }
 
     @Test
