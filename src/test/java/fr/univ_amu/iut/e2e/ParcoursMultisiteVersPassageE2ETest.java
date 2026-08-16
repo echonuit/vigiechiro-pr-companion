@@ -179,6 +179,14 @@ class ParcoursMultisiteVersPassageE2ETest {
     /// correspondante, il reste une passe de layout JavaFX à consommer : sans l'attendre, `doubleClickOn`
     /// peut lever `FxRobotException` (« returned no nodes ») avant même le premier essai. On attend donc
     /// que la cellule soit effectivement interrogeable avant de cliquer, à chaque essai.
+    ///
+    /// ⚠️ **Épuiser les essais lève, au lieu de rendre la main.** Le helper abandonnait en **silence**
+    /// après trois tentatives : l'appelant asserta alors `vueCourante`, et l'échec se présentait comme
+    /// « attendu passage, obtenu multisite » - un bug de navigation apparent, là où le robot n'avait
+    /// simplement pas abouti. Deux échecs de cette classe ont été lus ainsi (#3823).
+    ///
+    /// C'est le motif de l'ADR 2213 : un dispositif qui ne peut pas conclure **rapporte ce qu'il a
+    /// vu**, il ne rend pas un verdict qui ressemble à autre chose.
     private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
         for (int essai = 1; essai <= 3; essai++) {
             try {
@@ -193,6 +201,10 @@ class ParcoursMultisiteVersPassageE2ETest {
                 // Cellule pas encore rendue ou navigation pas encore aboutie : on retente.
             }
         }
+        throw new AssertionError("Le double-clic vers le passage n'a pas abouti après 3 essais de 3 s : "
+                + "la cellule « " + DATE_NUIT + " » n'a jamais été interrogeable, ou la navigation n'a "
+                + "jamais atteint « passage » (vue courante : " + navigation.getVueCourante() + "). "
+                + "Ce n'est pas un défaut de navigation - c'est le robot qui n'a pas abouti sous charge.");
     }
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {
