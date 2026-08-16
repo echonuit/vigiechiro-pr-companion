@@ -205,9 +205,42 @@ Les tests vivent sous `src/test/java/fr/univ_amu/iut/`, en **miroir** des paquet
 | **CLI shell (bats)** | `src/test/bats/*.bats` (fixtures partagées `helper.bash`) | La CLI **empaquetée** (fat-jar shadé), au niveau **processus** : arguments picocli, texte d'aide, **codes de sortie**, refus métier, ce que les tests Java in-process ne voient pas. `cli.bats` éprouve les commandes du chantier #1565 ; `cli-surface.bats` couvre le contrat **hors-ligne de chaque** sous-commande (aide, refus des options requises manquantes, exécution locale, refus sans jeton) ; `cli-reseau.bats` pointe le client sur un **serveur stub** (processus Python `stub_vigiechiro.py`) via la surcharge `VIGIECHIRO_URL` (`ConnexionModule#urlDeBase`) et prouve le chemin réseau **sans jeton réel ni Internet**. Reste à étoffer : contrats métier réseau sur fixtures Eve réalistes (#1592). Lancés en CI après le smoke-test du fat-jar (#1572, amorce). |
 | Architecture (ArchUnit) | `architecture/ArchitectureTest` | Les **6 règles** de frontière MVVM (cf. [Architecture](architecture.md)). |
 | **Documentation** | `documentation/DocumentationAJourTest` | Toute commande CLI a sa ligne, tout écran a sa fiche (#1458). |
+| **Recette (traçabilité)** | `recette/` | Le lien entre les scripts de session et le code qui les couvre : `CorrespondanceRecetteTest` confronte les deux, `RepartitionDesCas` trie les cas en trois bacs, `CasDeRecette` porte la citation (#3667). |
+| **Scénario perceptif** | `<feature>/view/Scenario*Test` | Joue un geste **sans l'asserter** : le verdict revient à qui regarde le clip (`jugement = HUMAIN`). Il asserte seulement qu'il a **joué**. |
 
 Outils : **JUnit 5 + AssertJ + Mockito** ; **ApprovalTests** pour les sorties verbatim (CSV Tadarida
 `_Vu` : le premier run produit un `*.received`, à approuver en `*.approved`).
+
+### Ce qu'une assertion ne voit pas : le harnais de recette filmée (#3667)
+
+Certains cas de recette ne se tranchent pas par une assertion : « la modale s'ouvre **sans saut** »,
+« rien ne se redimensionne pendant la récupération ». Une assertion voit un contenu **correct une
+fois posé**, jamais le chemin pour y arriver.
+
+Le harnais leur donne un dispositif, dont la règle centrale est de ne **jamais** compter un cas joué
+comme un cas prouvé.
+
+| Pièce | Rôle |
+|---|---|
+| `CasDeRecette` | un test déclare le ou les cas qu'il couvre, et **ce qu'il prétend prouver** (`Jugement.AUTOMATIQUE` par défaut, `HUMAIN` pour un scénario qui ne fait que jouer) |
+| `FixtureDeRecette` | marque les classes d'**exemple** qui citent un cas sans rien couvrir - sans elle, elles gonfleraient l'index |
+| `RepartitionDesCas` | trie en **asserté / perceptif / non couvert**, et signale les désaccords entre le script et le code |
+| `ReperesDeSeance` + `JournalDesReperes` | pendant une séance filmée, consignent l'instant de chaque test (`currentTimeMillis`, jamais `nanoTime`) |
+| `Seance` | dit à un scénario s'il est filmé, pour qu'il ne prenne ses respirations que là |
+
+Le montage et l'index par cas vivent côté script :
+[CI/CD](ci-cd-release.md#le-montage-un-clip-par-test-un-index-par-cas-3774).
+
+⚠️ **Trois états, pas deux.** Un cas « perceptif » n'est ni couvert ni à couvrir : le script le
+marque `*perceptif*`, et le mot « couvert » reste réservé à ce que la CI prouve. Compter un scénario
+joué parmi les couverts fabriquerait exactement le vert creux que ce harnais combat.
+
+⚠️ **Un calcul alimenté par le classpath ne se voit pas rougir.** `CorrespondanceRecetteTest` balaie
+les annotations compilées : on ne peut lui présenter aucun jeu fabriqué, donc rien ne prouve qu'il
+range un cas du bon côté. Le tri vit pour cette raison dans `RepartitionDesCas`, qui reçoit des
+ensembles ordinaires - et ses tests lui montrent les situations que le dépôt ne contient pas, et ne
+contiendra jamais volontairement. **La règle se généralise** : quand un garde tire sa matière d'un
+balayage (classpath, disque, dépôt), en sortir la décision, sans quoi son verdict est indémontrable.
 
 ### Tester un geste, pas un bouton
 
@@ -711,9 +744,16 @@ pose le trio du chrome.
     `@ImplementedBy(ExecuteurTacheSynchrone.class)`, cf. [Patterns](patterns.md)) : avec lui,
     `bouton.fire()` rend l'état terminal observable au retour du clic, sans attente.
 
-!!! warning "Un E2E n'a pas le double synchrone : attendre le signal, pas le retour du clic"
+!!! warning "Dès que l'exécuteur est asynchrone : attendre le signal, pas le retour du clic"
     Un test `*E2ETest` monte le **vrai** `RacineInjecteur`, pas le module de test qui rebranche
-    `ExecuteurTacheSynchrone` (#793). `occupation.occuper(...)` y tourne donc sur le **vrai**
+    `ExecuteurTacheSynchrone` (#793).
+
+    ⚠️ **Ce n'est plus une propriété des seuls E2E** (#3667). Un test de vue peut brancher
+    `ExecuteurTacheAsynchrone` **délibérément** : `ScenarioPerceptifConnexionTest` le fait, parce que
+    le transitoire qu'il donne à voir - la zone de progression seule, avant le bandeau - n'existe pas
+    autrement. En synchrone, la récupération occupe le fil JavaFX : aucune image n'est rendue pendant
+    ce temps, et il n'y a rien à filmer. La règle ci-dessous porte donc sur **l'exécuteur employé**,
+    pas sur la famille du test. `occupation.occuper(...)` y tourne donc sur le **vrai**
     `ExecuteurTacheAsynchrone` : thread virtuel + `Platform.runLater`. Après un `robot.interact(...)`
     (ou un appel direct en `@Start`) qui déclenche ce chemin, `waitForFxEvents()` ne fait que vider la
     file du fil FX - il n'attend pas le thread d'arrière-plan qui la remplira. L'assertion tombe alors
