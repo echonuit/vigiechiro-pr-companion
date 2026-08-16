@@ -53,6 +53,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | Commande | Options | Parcours | Service |
 |---|---|---|---|
 | `creer-site` | `--carre <n> [--nom ..] [--protocole ..] [--commentaire ..] [--sans-verification]` | A10 | `ServiceSites.creerSite` |
+| `recuperer-carre` | `--carre <n> [--nom ..] [--protocole ..] [--commentaire ..]` | A10 | `RapatriementCarre.rapatrier` |
 | `modifier-site` | `--site <id> --carre <n> [--nom ..] [--protocole ..] [--commentaire ..]` | A10 | `ServiceSites.modifierSite` |
 | `supprimer-site` | `--site <id> [--confirmer]` | A10 | `ServiceSites.supprimerSite` |
 | `ajouter-point` | `--site <id> --code <c> [--lat ..] [--lon ..] [--description ..]` | A10 | `ServiceSites.ajouterPoint` |
