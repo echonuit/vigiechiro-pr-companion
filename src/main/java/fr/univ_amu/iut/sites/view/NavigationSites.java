@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
@@ -43,10 +44,23 @@ public class NavigationSites implements OuvrirSite {
     private final Injector injector;
     private final Navigateur navigateur;
 
+    /// Porteur du compte rendu des gestes que **cette classe** conclut, et non l'écran qu'elle ouvre.
+    ///
+    /// Il est **injecté** plutôt que construit ici, pour la raison de l'[ADR 0010] : un dialogue
+    /// bloquant se remplace en test. Le compte rendu du rapatriement passait par le notificateur de la
+    /// fiche fraîchement créée, qu'aucun test ne pouvait atteindre - la fiche n'existe pas avant
+    /// l'appel, et le dialogue réel fait `showAndWait`, qui fige TestFX headless. La couture était donc
+    /// **intestable**, ce que la mesure a confirmé : le compte rendu retiré, 286 tests restaient verts.
+    ///
+    /// En production, rien ne change : le délégué par défaut est le même `NotificationDialogue` sans
+    /// propriétaire que le contrôleur se donnait.
+    private final NotificateurModifiable notificateur;
+
     @Inject
-    public NavigationSites(Injector injector, Navigateur navigateur) {
+    public NavigationSites(Injector injector, Navigateur navigateur, NotificateurModifiable notificateur) {
         this.injector = Objects.requireNonNull(injector, "injector");
         this.navigateur = Objects.requireNonNull(navigateur, "navigateur");
+        this.notificateur = Objects.requireNonNull(notificateur, "notificateur");
     }
 
     /// Affiche l'écran d'accueil **M-Sites** dans la zone centrale du chrome.
@@ -78,7 +92,7 @@ public class NavigationSites implements OuvrirSite {
         SiteDetailController controller = loader.getController();
         controller.afficher(rapatrie.site());
         navigateur.empiler(vue, "site-detail", controller.libelleFil(), controller);
-        controller.notificateur().notifier(NiveauNotification.INFORMATION, "Carré récupéré", rapatrie.message());
+        notificateur.notifier(NiveauNotification.INFORMATION, "Carré récupéré", rapatrie.message());
     }
 
     /// Relibelle l'étape de la fiche après une modification du site (#3672), sur le modèle de
