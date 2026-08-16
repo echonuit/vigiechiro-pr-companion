@@ -36,11 +36,14 @@ Cette section regroupe les **maquettes basse fidélité** de l'application *Vigi
 | [M-Saison](M-Saison.md) | Solde de la saison (reste à faire, point par point) | Vue plein écran (depuis l'accueil) | [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), [P9](../Parcours%20utilisateurs/P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md) | prisme collecte & passages |
 | [M-CompteRendu](M-CompteRendu.md) | Compte rendu chiffré d'une opération lourde | Composant transverse | [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md), [P12](../Parcours%20utilisateurs/P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md) | transverse |
 
-!!! info "Quatre maquettes décidées, pas encore livrées"
+!!! success "Ce tableau décrit des écrans qui existent"
     [M-Synthese](M-Synthese.md), [M-Activite](M-Activite.md), [M-Saison](M-Saison.md) et
-    [M-CompteRendu](M-CompteRendu.md) décrivent des écrans **à construire**, rattachés aux chantiers
-    #2348, #2349 et #2350. Les autres maquettes de ce tableau décrivent l'application **livrée**.
-    Chaque fiche porte l'issue qui la met en oeuvre.
+    [M-CompteRendu](M-CompteRendu.md) ont été les dernières à décrire des écrans à construire. Leurs
+    chantiers #2348, #2349 et #2350 sont **clos depuis le 29 juillet 2026** : tout ce tableau décrit
+    désormais l'application livrée. Chaque fiche porte l'issue qui l'a mise en oeuvre.
+
+    Une maquette peut en revanche **devancer le produit sur un détail** : c'est un écart, pas une
+    intention, et il se traite comme un défaut de documentation.
 
 ## Comment lire une maquette
 
@@ -101,16 +104,17 @@ flowchart TB
     classDef avenir fill:#ffffff,stroke:#6a737d,color:#2c3e50,stroke-width:2px,stroke-dasharray:5 4
     class Accueil accueil
     class Sites,Import,Qualif,Lot main
-    class Detail,Passage,MultiSite detail
-    class Analyse,SonsVal biodiv
-    class Saison,Synthese,Activite avenir
+    class Detail,Passage,MultiSite,Saison detail
+    class Analyse,SonsVal,Synthese,Activite biodiv
 ```
 
 - 🟦 **Indigo** : écran d'accueil (lanceur à deux prismes).
 - 🟩 **Vert** : maquettes de la chaîne fil rouge (MUST).
 - 🟦 **Bleu** : maquettes de soutien (détails, navigation multi-sites).
 - 🟪 **Violet** : prisme espèces & biodiversité (inventaire, sons & validation).
-- ⬜ **Contour pointillé** : écrans **décidés et maquettés, pas encore livrés** (chantiers #2348 et #2349).
+- ⬜ **Contour pointillé** : écran **décidé et maquetté, pas encore livré**. Le statut se lit sur le
+  nœud, pas dans une phrase du corps de texte : c'est ce qui l'empêche de se périmer sans qu'on le
+  voie.
 
 Le composant [M-CompteRendu](M-CompteRendu.md) ne figure pas sur ce graphe : il n'est pas un écran mais une **restitution de fin d'opération**, appelée depuis M-Import, M-Lot et la réactivation d'un passage.
 

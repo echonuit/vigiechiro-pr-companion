@@ -176,11 +176,9 @@ Le bouton **✏ Modifier le passage** ouvre une **modale** d'édition de l'**ide
 - **Icônes** : `FontIcon` (Ikonli FontAwesome5) pour un rendu net, y compris en capture headless.
 - **Action « Modifier le passage »** : re-renomme tous les fichiers du passage (R6/R7). Confirmation forte obligatoire.
 
-## Enrichissements prévus
+## Les deux cartes ajoutées par le chantier #2348
 
-> Décidé et maquetté, pas encore livré.
-
-- Deux cartes d'action s'ajoutent à celles du passage, disponibles une fois les résultats
+- Deux cartes d'action se sont ajoutées à celles du passage, disponibles une fois les résultats
   d'identification importés : **Synthèse de la nuit** ([M-Synthese](M-Synthese.md), #2351),
   qui replace les comptages par espèce dans un référentiel de saison, de région et de
   milieu, et **Activité** ([M-Activite](M-Activite.md), #2352), qui trace les contacts par
@@ -188,3 +186,8 @@ Le bouton **✏ Modifier le passage** ouvre une **modale** d'édition de l'**ide
 - Les deux suivent la règle d'activation déjà en place : verrouillées tant que le passage
   n'a pas d'observations, comme « Sons & validation » l'est tant que la nuit n'est pas
   déposée.
+
+Le hub porte donc **six cartes**. C'est le point de vigilance de cet écran : chaque facette d'un
+passage y est un écran spécialisé ouvert par une carte, et le pivot devient un second lanceur à
+mesure qu'on en ajoute. Une prochaine carte demandera de grouper les cartes par nature plutôt que de
+prolonger la liste.
