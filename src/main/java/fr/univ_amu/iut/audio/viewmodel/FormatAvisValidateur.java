@@ -1,11 +1,10 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 /// Formatages du **troisième avis** : ce que le validateur du MNHN a tranché, et la discussion qui
 /// l'entoure (#1417).
@@ -16,9 +15,6 @@ import java.util.Locale;
 /// `FormatLigneAudio` en God Class au sens de PMD, ce qui n'était pas un caprice de l'outil : les
 /// responsabilités avaient bien divergé.
 public final class FormatAvisValidateur {
-
-    /// Format de date d'un message du fil (« 11/07/2026 21:04 »), en heure locale : le serveur date en UTC.
-    private static final DateTimeFormatter QUAND = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.FRENCH);
 
     private FormatAvisValidateur() {}
 
@@ -72,6 +68,8 @@ public final class FormatAvisValidateur {
     /// **Date** d'un message, en heure locale. Le serveur ne date pas toujours : un fil daté à moitié reste
     /// un fil lisible, on n'invente pas une date pour combler le trou.
     public static String quand(MessageObservation message) {
-        return message.date() == null ? "" : QUAND.format(message.date().atZone(ZoneId.systemDefault()));
+        return message.date() == null
+                ? ""
+                : Horodatage.dansUnTableau(message.date().atZone(ZoneId.systemDefault()));
     }
 }

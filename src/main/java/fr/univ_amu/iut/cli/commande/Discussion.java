@@ -3,14 +3,13 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import fr.univ_amu.iut.validation.model.PublicationMessage;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import java.io.PrintWriter;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -40,8 +39,6 @@ public final class Discussion implements Callable<Integer> {
 
     /// Code de sortie d'un envoi refusé : distinct du succès (0) et de l'échec d'exécution (1).
     private static final int CODE_REFUS = 2;
-
-    private static final DateTimeFormatter QUAND = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.FRENCH);
 
     @Option(
             names = "--observation",
@@ -129,6 +126,6 @@ public final class Discussion implements Callable<Integer> {
         String auteur = ligne.auteur() == null ? "auteur inconnu" : ligne.auteur();
         return ligne.date() == null
                 ? auteur
-                : auteur + " · " + QUAND.format(ligne.date().atZone(ZoneId.systemDefault()));
+                : auteur + " · " + Horodatage.dansUnTableau(ligne.date().atZone(ZoneId.systemDefault()));
     }
 }

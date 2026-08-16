@@ -1,9 +1,9 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.persistence.InventaireSauvegardes;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -34,8 +34,6 @@ public final class ContenuChoixSauvegarde {
     public static final String ID_TOTAL = "libelleTotal";
     public static final String ID_RESTAURER = "boutonRestaurer";
     public static final String ID_PARCOURIR = "boutonParcourir";
-
-    private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
     private final VBox racine;
     private final TableView<InventaireSauvegardes.Entree> table;
@@ -100,8 +98,8 @@ public final class ContenuChoixSauvegarde {
         table.setPlaceholder(new Label("Aucune sauvegarde ici. « Parcourir… » pour en chercher ailleurs."));
 
         TableColumn<InventaireSauvegardes.Entree, String> date = new TableColumn<>("Date");
-        date.setCellValueFactory(ligne ->
-                new ReadOnlyStringWrapper(DATE.format(ligne.getValue().date().atZone(ZoneId.systemDefault()))));
+        date.setCellValueFactory(ligne -> new ReadOnlyStringWrapper(
+                Horodatage.dansUnTableau(ligne.getValue().date().atZone(ZoneId.systemDefault()))));
         date.setPrefWidth(130);
 
         TableColumn<InventaireSauvegardes.Entree, String> taille = new TableColumn<>("Taille");

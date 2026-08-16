@@ -2,12 +2,12 @@ package fr.univ_amu.iut.lot.viewmodel;
 
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
 /// Mise en mots de l'état du traitement serveur (#1263) : ce que l'utilisateur lit dans la zone
@@ -23,9 +23,6 @@ final class FormatsTraitement {
     /// Au-delà de ce délai, un calcul planifié ou en cours **semble bloqué**. Le site officiel applique la
     /// même heuristique, côté navigateur : le serveur, lui, ne dit jamais qu'il a renoncé.
     private static final Duration TROP_LONG = Duration.ofHours(24);
-
-    /// Dates du serveur : ISO 8601 avec décalage (`2026-07-13T10:05:00+00:00`).
-    private static final DateTimeFormatter LISIBLE = DateTimeFormatter.ofPattern("dd/MM/yyyy à HH'h'mm");
 
     private FormatsTraitement() {}
 
@@ -104,10 +101,10 @@ final class FormatsTraitement {
     /// Date lisible par un humain, ou la date brute si elle ne se laisse pas lire (on n'invente rien).
     private static String lisible(String date) {
         try {
-            return OffsetDateTime.parse(date).format(LISIBLE);
+            return Horodatage.dansUnePhrase(OffsetDateTime.parse(date));
         } catch (DateTimeParseException maisPeutEtreLocale) {
             try {
-                return LocalDateTime.parse(date).format(LISIBLE);
+                return Horodatage.dansUnePhrase(LocalDateTime.parse(date));
             } catch (DateTimeParseException illisible) {
                 return date;
             }
