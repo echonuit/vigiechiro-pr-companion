@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.MenuButton;
@@ -41,6 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E** du parcours « Fiche de l'espèce » (#844) : depuis le tableau de bord, ouvrir
@@ -95,15 +95,22 @@ class ParcoursFicheEspeceE2ETest {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
-        // ⚠️ Attendre que la carte soit VISIBLE, pas seulement présente. Les cartes d'accueil sont
-        // peuplées section par section : celles de la seconde section sont posées en dernier, et un
-        // clic immédiat les rate sous charge - « returned 1 nodes, but no nodes were visible ». Sept
-        // occurrences en deux jours, toujours sur une carte tardive, jamais sur la première (#3823).
-        // C'est le motif « interact puis assertion immédiate » que #3717 avait audité.
+        // ⚠️ Attendre EXACTEMENT ce que le clic exige (#3836). L'attente posée par #3823 vérifiait
+        // `Node::isVisible`, le drapeau **local** du nœud. Or `clickOn` filtre avec
+        // `NodeQueryUtils.isVisible()`, qui exige **en plus** que le nœud **intersecte le rectangle de
+        // la scène** - mesuré en lisant le bytecode de `FxRobot`, puis vérifié par une sonde : un nœud
+        // posé hors cadre porte un drapeau local à `true` et n'est **pas** cliquable.
+        //
+        // Une carte d'accueil tardive passe donc l'ancienne attente alors qu'elle est encore sous la
+        // ligne de flottaison, et le clic échoue - « returned 1 nodes, but no nodes were visible ».
+        // C'est pour cela que #3823 n'avait pas suffi : la règle était bonne, le prédicat non.
         WaitForAsyncUtils.waitFor(
                 10,
                 TimeUnit.SECONDS,
-                () -> robot.lookup("Sons & validation").queryAll().stream().anyMatch(Node::isVisible));
+                () -> robot.lookup("Sons & validation")
+                        .match(NodeQueryUtils.isVisible())
+                        .tryQuery()
+                        .isPresent());
         robot.clickOn("Sons & validation");
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
 
