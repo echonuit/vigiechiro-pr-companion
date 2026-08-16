@@ -76,8 +76,8 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
   <text x="233" y="163" class="btn-txt-dark" text-anchor="middle">＋ Filtre</text>
   <rect x="286" y="146" width="150" height="26" rx="13" class="puce"/>
   <text x="300" y="163" class="puce-txt">Statut : déposé  ✕</text>
-  <rect x="446" y="146" width="170" height="26" rx="3" class="field-input"/>
-  <text x="460" y="163" class="field-ph">espèce, carré…</text>
+  <rect x="446" y="146" width="210" height="26" rx="3" class="field-input"/>
+  <text x="460" y="163" class="field-ph">Rechercher (espèce, carré…)</text>
   <rect x="800" y="146" width="110" height="26" rx="3" class="btn-secondary"/>
   <text x="855" y="163" class="btn-txt-dark" text-anchor="middle">🗺️ Carte</text>
   <rect x="918" y="146" width="130" height="26" rx="3" class="btn-secondary"/>
@@ -289,8 +289,8 @@ Le bouton **« 🗺️ Carte »** remplace la table d'inventaire par une **carte
   <text x="233" y="163" class="btn-txt-dark" text-anchor="middle">＋ Filtre</text>
   <rect x="286" y="146" width="150" height="26" rx="13" class="puce"/>
   <text x="300" y="163" class="puce-txt">Statut : déposé  ✕</text>
-  <rect x="446" y="146" width="170" height="26" rx="3" class="field-input"/>
-  <text x="460" y="163" class="field-ph">espèce, carré…</text>
+  <rect x="446" y="146" width="210" height="26" rx="3" class="field-input"/>
+  <text x="460" y="163" class="field-ph">Rechercher (espèce, carré…)</text>
   <rect x="800" y="146" width="110" height="26" rx="3" class="btn-active"/>
   <text x="855" y="163" class="btn-txt" text-anchor="middle">🗺️ Carte</text>
   <rect x="918" y="146" width="130" height="26" rx="3" class="btn-secondary"/>
