@@ -79,6 +79,26 @@ ré-affiche l'instance précédente, **état préservé**.
     hiérarchique** que l'écran déclare (cf. `EmplacementNavigation` ci-dessous), sinon il retombe sur
     l'historique.
 
+### Quand la place manque, le fil élide des segments
+
+`FilAriane` ne laisse **aucun** de ses libellés se faire couper : quand la barre rétrécit, il retire des
+segments **entiers** et les remplace par un menu « … » où chacun garde son libellé complet et son
+action.
+
+L'ordre de service est **la proximité d'abord** : le dernier segment (où l'on est) est gardé quoi qu'il
+arrive, puis on remonte vers ses ancêtres tant qu'ils tiennent, et « Accueil » ne vient qu'en dernier -
+le titre de l'application et le bouton ← Retour y mènent déjà.
+
+| Largeur | Fil rendu sur l'écran le plus profond |
+|---|---|
+| 1100 | `Accueil › Mes sites › Carré 640380 › Détails du passage N° 1 › Diagnostic matériel` |
+| 1000 | `… › Carré 640380 › Détails du passage N° 1 › Diagnostic matériel` |
+| 900 | `… › Détails du passage N° 1 › Diagnostic matériel` |
+
+Conséquence pour qui touche au chrome : les segments ne portent **plus** la classe `abregeable`.
+`LisibiliteCapture` les juge comme le reste, et un fil qui se couperait à nouveau ferait rougir la CI.
+Cf. [ADR 3798](decisions/3798-un-fil-elide-des-segments-il-ne-rogne-pas-des-libelles.md).
+
 ## Les contrats optionnels d'un écran
 
 [`EtapeNavigation`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/EtapeNavigation.java)
