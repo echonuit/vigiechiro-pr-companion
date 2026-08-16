@@ -28,6 +28,7 @@ MAINS=(
   "fr.univ_amu.iut.commun.outils.CaptureAccueil"
   "fr.univ_amu.iut.commun.outils.CaptureMenuOutils"
   "fr.univ_amu.iut.commun.outils.CaptureBandeauAnnonce"
+  "fr.univ_amu.iut.maj.outils.CaptureAnnonceMiseAJour"
   "fr.univ_amu.iut.commun.outils.CaptureBandeauRetour"
   "fr.univ_amu.iut.commun.outils.CaptureEcranReglages"
   "fr.univ_amu.iut.recherche.outils.CaptureRecherche"

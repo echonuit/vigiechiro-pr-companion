@@ -54,6 +54,35 @@ public final class VersionApplication {
         return Optional.ofNullable(versionLue).filter(v -> !v.isBlank());
     }
 
+    /// Un service qui rend `version` telle quelle, **sans lire aucun manifeste** (#3876).
+    ///
+    /// ## Pourquoi une fabrique, et pourquoi pas un constructeur
+    ///
+    /// Un troisième constructeur public rendrait le choix de Guice encore plus ambigu qu'il ne l'est
+    /// déjà - la classe en expose deux, et c'est pour cela que le sien porte `@Inject`. Une fabrique
+    /// statique ne participe pas à l'injection : elle ne peut donc pas créer ce piège.
+    ///
+    /// ## À quoi elle sert, et à quoi elle ne doit pas servir
+    ///
+    /// Aux **outils de capture**, et à eux seuls. Hors d'un jar - `javafx:run`, tests, capture -
+    /// [#versionEmpaquetee()] rend un `Optional` vide, si bien que rien qui **compare** des versions ne
+    /// peut s'exercer. L'aperçu de l'annonce de mise à jour en dépendait : sans version locale, le
+    /// vérificateur ne propose rien et le bandeau ne s'affiche pas. Mesuré en rendant un aperçu vide.
+    ///
+    /// ⚠️ **Ce n'est pas un moyen de forcer la version affichée en production.** Ce que l'application
+    /// dit d'elle-même doit venir de son empaquetage, sans quoi un « À propos » pourrait mentir.
+    ///
+    /// @param version la version à rendre, telle qu'un manifeste l'écrirait (ex. `2.21.3`)
+    public static VersionApplication figeeA(String version) {
+        return new VersionApplication(version);
+    }
+
+    /// Constructeur de la fabrique ci-dessus, **privé** : c'est ce qui le tient hors de portée de
+    /// Guice, et donc hors du piège d'ambiguïté que documente le constructeur annoté.
+    private VersionApplication(String version) {
+        this.versionLue = version;
+    }
+
     /// La version à **afficher**, jamais nulle ni vide.
     ///
     /// À préférer pour tout ce qui est montré ou journalisé : « À propos », `--version`, en-tête de
