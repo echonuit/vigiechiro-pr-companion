@@ -126,13 +126,35 @@ son heuristique `AUTO`, **qui ne décide pas la même chose partout** : la premi
 sous Windows a rendu une aide colorisée là où Linux la rend nue - `Usage: ESC[1mvigiechiro…`.
 
 La règle : de la couleur pour un humain devant un terminal (`System.console() != null`), **jamais**
-dans un tuyau, un fichier ou un journal de CI ; et [`NO_COLOR`](https://no-color.org) l'emporte
-toujours, dès qu'il est présent et non vide - quelle que soit sa valeur.
+dans un tuyau, un fichier ou un journal de CI ; et l'utilisateur a le dernier mot **dans les deux
+sens** :
+
+| Variable | Effet | Convention |
+|---|---|---|
+| [`NO_COLOR`](https://no-color.org) | éteint, toujours | spécifiée |
+| `FORCE_COLOR` | **allume**, même sans console | usage répandu, non spécifié |
+
+Les deux comptent dès qu'elles sont **présentes et non vides**, quelle que soit leur valeur - une seule
+lecture à retenir pour deux variables voisines. ⚠️ **`NO_COLOR` l'emporte** quand les deux sont posées :
+un refus explicite prime sur une demande explicite. Se tromper dans ce sens affiche du texte nu ; se
+tromper dans l'autre crache des séquences d'échappement chez quelqu'un qui a demandé qu'on ne le fasse
+pas.
+
+⚠️ `FORCE_COLOR` a été ajoutée parce que la règle précédente ne donnait le dernier mot que dans **un**
+sens (#3796). Trois situations ordinaires en souffraient, et elles ont un point commun : la sortie est
+**redirigée alors qu'un humain la lit** - `… | less -R`, un journal de CI qui **interprète** l'ANSI (les
+Actions GitHub le font), un enrobage `script`/`unbuffer`. Dans les trois, l'utilisateur veut la couleur,
+la console sait l'afficher, et le produit refusait.
 
 ⚠️ La décision vit dans `CouleurCli`, sur des **entrées fournies** plutôt que lues du système : la
 console et l'environnement d'une JVM en cours ne se manipulent pas de façon portable, et c'est
-précisément cette non-portabilité qui avait créé le défaut. `CliTest` garde par ailleurs l'invariant
-qui compte - une sortie redirigée ne porte **aucun** caractère d'échappement.
+précisément cette non-portabilité qui avait créé le défaut. `cli.bats` garde par ailleurs les
+**quatre** cas sur la sortie réelle du binaire, dont deux qui n'existent que là : la couleur **s'allume**
+devant un vrai terminal, et `FORCE_COLOR` l'allume même redirigée.
+
+⚠️ Il faut un **vrai pseudo-terminal** (`script -qec`) pour les éprouver. Sans lui, deux cas sur quatre
+sont indiscernables : sous une sortie redirigée, l'aide est nue **de toute façon**, donc « `NO_COLOR`
+éteint » y serait vert sans rien prouver.
 
 ### Socle : registre de commandes picocli (#614)
 
