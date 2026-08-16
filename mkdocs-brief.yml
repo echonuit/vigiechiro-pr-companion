@@ -190,6 +190,10 @@ nav:
           - M-Activite: Analyse et conception/Maquettes/M-Activite.md
           - M-Saison: Analyse et conception/Maquettes/M-Saison.md
           - M-CompteRendu: Analyse et conception/Maquettes/M-CompteRendu.md
+          - M-Releve - Relevé sur la plateforme: Analyse et conception/Maquettes/M-Releve.md
+          - M-Journal - Histoire d'une nuit: Analyse et conception/Maquettes/M-Journal.md
+          - M-Materiel - Parc de matériels: Analyse et conception/Maquettes/M-Materiel.md
+          - M-Paquet - Paquet de reprise: Analyse et conception/Maquettes/M-Paquet.md
 
 # Validation des liens (#2887). MkDocs vérifie par défaut que le FICHIER cité existe, mais pas que
 # l'ANCRE y existe : un `#titre-renomme` passait donc en silence, y compris en `--strict`. Mesuré, le
