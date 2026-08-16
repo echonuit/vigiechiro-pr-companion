@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
+import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -43,6 +44,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -144,6 +146,45 @@ class LotVueIntegrationTest {
                 .containsExactly("Mes sites", "Carré 640380", "Détails du passage N° 2", "Préparer le dépôt");
         assertThat(controleur.emplacement().get(0).estCliquable()).isTrue();
         assertThat(controleur.emplacement().get(3).estCliquable()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#3464 : le chemin de dépôt part dans le presse-papier, il ne se recopie pas à l'œil")
+    void le_chemin_de_depot_se_copie(FxRobot robot) {
+        // C'est au moment où le téléversement échoue qu'on dépose à la main, donc qu'on a besoin de ce
+        // chemin. Il était porté par un Label : pas seulement en lecture seule, pas sélectionnable du
+        // tout. L'utilisateur le recopiait à l'œil sur une arborescence profonde.
+        Label chemin = robot.lookup("#lblCheminDepot").queryAs(Label.class);
+        Button copier = robot.lookup("#btnCopierChemin").queryAs(Button.class);
+
+        java.util.concurrent.atomic.AtomicReference<String> copie = new java.util.concurrent.atomic.AtomicReference<>();
+        robot.interact(() -> {
+            copier.fire();
+            // Le presse-papier ne se lit que sur le fil FX.
+            copie.set(javafx.scene.input.Clipboard.getSystemClipboard().getString());
+        });
+
+        // Ce que le bouton copie est ce que l'écran montre, et non une valeur recomposée à côté : une
+        // copie qui diverge de l'affichage serait pire que pas de copie du tout.
+        assertThat(copie.get()).isEqualTo(chemin.getText()).isEqualTo("/ws/session-42/depot");
+    }
+
+    @Test
+    @DisplayName("#3464 : sans chemin, « Copier » est désactivé et le dit, plutôt que de copier du vide")
+    void copier_sans_chemin_est_desactive_et_l_explique(FxRobot robot) {
+        // Trouvé en REGARDANT l'aperçu « passage introuvable » : le chemin y est vide, et « Copier »
+        // était le SEUL bouton actif d'un écran entièrement grisé. Il aurait copié une chaîne vide,
+        // c'est-à-dire écrasé le presse-papier de l'utilisateur sans rien lui donner.
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.VERIFIE, "", 0, null, List.of(), null));
+
+        Button copier = robot.lookup("#btnCopierChemin").queryAs(Button.class);
+        assertThat(copier.isDisabled()).isTrue();
+        // Le grisage s'explique au survol de l'enveloppe (#789) : un Button désactivé n'affiche pas de
+        // Tooltip, comme « Ouvrir le dossier » le fait déjà deux lignes plus bas. On lit ce que le
+        // motif DIT, pas seulement qu'il existe (#1970).
+        assertThat(InfobulleDeBlocage.texteDe(
+                        robot.lookup("#enveloppeCopierChemin").queryAs(StackPane.class)))
+                .contains("Aucun chemin");
     }
 
     @Test

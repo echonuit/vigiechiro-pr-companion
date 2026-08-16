@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot.view;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.MenuCopier;
+import fr.univ_amu.iut.commun.view.PressePapier;
 import fr.univ_amu.iut.lot.viewmodel.LigneDepot;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -34,6 +35,16 @@ public class EtapeTeleversementController {
     /// Chemin du sous-dossier `depot/`, cible du téléversement manuel.
     @FXML
     private Label lblCheminDepot;
+
+    /// Copie du chemin ci-dessus (#3464) : c'est au moment où le téléversement échoue qu'on dépose à
+    /// la main, donc qu'on a besoin de ce chemin ailleurs.
+    @FXML
+    private Button btnCopierChemin;
+
+    /// Enveloppe du bouton de copie : porte l'infobulle du grisage (#789), qu'un Button désactivé
+    /// n'afficherait pas.
+    @FXML
+    private StackPane enveloppeCopierChemin;
 
     /// Enveloppe du bouton de téléversement : porte l'infobulle du grisage (#789), qu'un Button
     /// désactivé n'afficherait pas, et disparaît avec lui hors application connectée.
@@ -75,6 +86,7 @@ public class EtapeTeleversementController {
         lblCheminDepot.textProperty().bind(appuis.viewModel().cheminDepotProperty());
 
         cablerTeleversement();
+        cablerCopieDuChemin();
         cablerOuvertureManuelle();
         cablerTableDepot();
     }
@@ -107,6 +119,22 @@ public class EtapeTeleversementController {
                                         + " lui-même ce dont il a besoin.")
                                 .otherwise("Téléverser la nuit sur Vigie-Chiro (marque ensuite le passage"
                                         + " déposé).")));
+    }
+
+    /// « Copier » (#3464) : actif seulement quand il y a un chemin à copier.
+    ///
+    /// Le grisage se lie au **libellé** et non au ViewModel, pour la même raison que la copie lit son
+    /// texte : ce qui décide de l'offre et ce qui part dans le presse-papier doivent être la seule et
+    /// même chose que ce qu'on lit à l'écran.
+    private void cablerCopieDuChemin() {
+        btnCopierChemin.disableProperty().bind(lblCheminDepot.textProperty().isEmpty());
+        IndicateurBlocage.expliquer(
+                enveloppeCopierChemin,
+                Bindings.when(btnCopierChemin.disableProperty())
+                        .then("Aucun chemin de dépôt à copier tant que la nuit n'est pas ouverte sur un"
+                                + " dossier de session.")
+                        .otherwise("Copier ce chemin dans le presse-papier, pour le coller dans"
+                                + " l'explorateur de fichiers ou sur Vigie-Chiro."));
     }
 
     /// « Ouvrir le dossier » : actif seulement quand les archives sont réellement prêtes (#259). Les ZIP
@@ -196,6 +224,16 @@ public class EtapeTeleversementController {
         if (chemin != null && !chemin.isBlank()) {
             appuis.ouvreurDeLien().ouvrir(Path.of(chemin).toUri().toString());
         }
+    }
+
+    /// Copie le chemin du sous-dossier `depot/` dans le presse-papier (#3464).
+    ///
+    /// ⚠️ Ce qui part dans le presse-papier est **ce que le libellé affiche**, pas une valeur
+    /// recomposée à côté : une copie qui diverge de ce qu'on lit à l'écran serait pire que pas de
+    /// copie, puisqu'on la collerait sans la relire.
+    @FXML
+    private void copierCheminDepot() {
+        PressePapier.copier(lblCheminDepot.getText());
     }
 
     /// Réinitialise le dépôt (#984) : efface le suivi local pour permettre un nouveau téléversement (ex.

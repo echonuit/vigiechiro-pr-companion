@@ -5,6 +5,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
@@ -23,7 +24,34 @@
   <Label text="3. Téléverser sur Vigie-Chiro" styleClass="section-titre"/>
   <Label text="Téléversez la nuit directement sur Vigie-Chiro (les séquences transformées, au format attendu par la plateforme). En cas de besoin, un dépôt manuel des archives ZIP reste possible depuis le dossier :"
          styleClass="section-sous" wrapText="true"/>
-  <Label fx:id="lblCheminDepot" styleClass="chemin" wrapText="true"/>
+  <!-- Le chemin et son bouton de copie sur la même ligne (#3464). Le bouton est ICI et non dans la
+       rangée d'actions ci-dessous : celle-ci porte déjà trois boutons dont « Ouvrir le dossier (dépôt
+       manuel) », et un quatrième libellé y ferait pression sur la largeur - ce dépôt a déjà publié
+       « Copier le m… ». Un bouton posé contre ce qu'il copie n'a en plus rien à expliquer.
+       Le Label garde son wrapText : un TextField sélectionnable aurait rendu le chemin copiable au
+       prix de le rendre coupé, un chemin Windows profond ne tenant pas sur une ligne. -->
+  <HBox spacing="8.0" alignment="TOP_LEFT">
+    <Label fx:id="lblCheminDepot" styleClass="chemin" wrapText="true"/>
+    <!-- Enveloppe StackPane (#789) comme pour « Téléverser » et « Ouvrir le dossier » : un Button
+         désactivé n'affiche pas de Tooltip, on l'expose donc sur son enveloppe pour expliquer le
+         grisage au survol. Sans chemin, ce bouton doit être grisé : il l'était resté actif sur l'état
+         « passage introuvable », seul bouton vivant d'un écran entièrement gris, prêt à écraser le
+         presse-papier de l'utilisateur avec une chaîne vide. -->
+    <StackPane fx:id="enveloppeCopierChemin" alignment="CENTER_LEFT">
+      <Button fx:id="btnCopierChemin" text="Copier" styleClass="bouton-secondaire"
+              onAction="#copierCheminDepot">
+        <graphic>
+          <FontIcon iconLiteral="fas-copy"/>
+        </graphic>
+      </Button>
+    </StackPane>
+    <!-- C'est CE Region qui absorbe la place restante, et non le libellé. Donné au libellé, le
+         `hgrow` le faisait occuper toute la largeur de la carte et rejetait le bouton contre le bord
+         droit, à cinq cents pixels du chemin qu'il copie : le test passait, l'écran démentait
+         l'intention. Ici le bouton se pose contre son texte, et le chemin garde son enroulement quand
+         il déborde. -->
+    <Region HBox.hgrow="ALWAYS"/>
+  </HBox>
   <!-- Téléversement automatisé (#142) et repli manuel côte à côte : quand le téléversement direct est
        indisponible (application non connectée), l'enveloppe de btnTeleverser est démanagée et « Ouvrir le
        dossier » reste seul à gauche. Le message d'avancement/bilan du téléversement suit en dessous.
