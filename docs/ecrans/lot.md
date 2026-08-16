@@ -73,6 +73,11 @@ Deux chemins s'offrent à vous :
   `depot/` dans le gestionnaire de fichiers, et vous déposez les archives sur Vigie-Chiro depuis votre
   navigateur.
 
+    Le chemin de ce dossier est affiché juste au-dessus, avec un bouton **« Copier »** qui le place
+    dans le presse-papier : vous le collez tel quel dans l'explorateur de fichiers ou dans le
+    formulaire de la plateforme, sans le recopier à l'œil. Il est grisé tant qu'il n'y a pas de chemin
+    à copier.
+
 ### Un dépôt interrompu se reprend
 
 Le dépôt automatique est **reprenable** : une coupure réseau, une fermeture de l'application ou un
