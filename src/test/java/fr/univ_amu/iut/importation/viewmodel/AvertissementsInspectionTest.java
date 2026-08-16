@@ -36,7 +36,8 @@ class AvertissementsInspectionTest {
     }
 
     private static JournalParse journal(String serie) {
-        return new JournalParse(serie, null, NUIT, null, null, null, null, null, true, null, List.of(), List.of());
+        return new JournalParse(
+                serie, null, NUIT, null, null, null, null, null, true, null, List.of(), List.of(), List.of());
     }
 
     private static Constat constatUnique(CompteRendu rendu) {

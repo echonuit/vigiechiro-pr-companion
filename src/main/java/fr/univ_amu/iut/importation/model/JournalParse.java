@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /// Contenu exploité du journal du capteur `LogPR<n>.txt` (C9, R19), tel que produit par
 /// [AnalyseurLogPR]. C'est la **seule source d'identité de l'enregistreur** (n° de série) et des
@@ -31,6 +32,10 @@ import java.util.Map;
 /// @param evenements évènements remarquables relevés (changements de mode, réveils…), horodatés
 /// @param anomalies anomalies détectées (réveils non programmés, batterie faible, erreurs SD,
 /// sonde absente…), horodatées
+/// @param configurations **toutes** les configurations d'acquisition du journal, horodatées et dans
+/// l'ordre du fichier (#3460) : une carte laissée plusieurs nuits au même point en porte autant que
+/// de sessions. Les six champs plats ci-dessus décrivent la **première**, conservés pour l'inspection
+/// et l'affichage ; c'est [#configurationPourNuit] qui apparie une nuit à la sienne
 public record JournalParse(
         String numeroSerie,
         String versionModele,
@@ -43,11 +48,37 @@ public record JournalParse(
         boolean sondePresente,
         String parametresBruts,
         List<LigneJournal> evenements,
-        List<LigneJournal> anomalies) {
+        List<LigneJournal> anomalies,
+        List<ConfigurationAcquisition> configurations) {
 
     public JournalParse {
         evenements = List.copyOf(evenements);
         anomalies = List.copyOf(anomalies);
+        configurations = List.copyOf(configurations);
+    }
+
+    /// La configuration d'acquisition **en vigueur pour `nuit`** (#3460) : la dernière posée au plus
+    /// tard cette nuit-là.
+    ///
+    /// C'est la formulation de l'utilisateur qui a trouvé le défaut - *« la dernière config
+    /// correspondant à la nuit qu'on charge »* - et non « la dernière du fichier », qui serait fausse
+    /// pour toutes les nuits sauf une.
+    ///
+    /// ⚠️ **Repli sur la plus ancienne connue** quand aucune ne précède `nuit`. Le journal est
+    /// **circulaire** (R19) : ses premières entrées peuvent avoir disparu, et une nuit se retrouve alors
+    /// sans configuration antérieure. La plus ancienne disponible vaut mieux qu'un vide silencieux ;
+    /// c'est un repli assumé, pas une certitude, et c'est exactement le comportement d'avant #3460
+    /// - à ceci près qu'il ne s'applique plus qu'au cas où il est justifié.
+    ///
+    /// @return vide seulement si le journal ne déclare **aucune** configuration
+    public Optional<ConfigurationAcquisition> configurationPourNuit(LocalDate nuit) {
+        if (configurations.isEmpty()) {
+            return Optional.empty();
+        }
+        return configurations.stream()
+                .filter(configuration -> !configuration.nuit().isAfter(nuit))
+                .reduce((precedente, suivante) -> suivante)
+                .or(() -> Optional.of(configurations.get(0)));
     }
 
     /// `true` si au moins une anomalie a été détectée dans le journal.

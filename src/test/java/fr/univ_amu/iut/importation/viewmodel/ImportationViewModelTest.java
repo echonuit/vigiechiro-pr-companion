@@ -698,6 +698,7 @@ class ImportationViewModelTest {
                 true,
                 null,
                 List.of(),
+                List.of(),
                 List.of());
         when(serviceImport.inspecter(sd))
                 .thenReturn(new RapportInspection(
