@@ -64,7 +64,11 @@ final class JournalDeRepli {
                 false,
                 null,
                 List.of(),
-                List.of(new LigneJournal(null, ANOMALIE_ABSENCE)));
+                List.of(new LigneJournal(null, ANOMALIE_ABSENCE)),
+                // Aucune configuration horodatée (#3460) : ce journal est reconstruit depuis les NOMS
+                // des WAV, il n'a pas de lignes de log à dater. L'import retombe alors sur les champs
+                // plats ci-dessus, qui sont eux-mêmes vides - c'est le propre d'un repli.
+                List.of());
     }
 
     /// Écrit la **trace synthétique** de journal dégradé dans `dossierSession` et renvoie son chemin :

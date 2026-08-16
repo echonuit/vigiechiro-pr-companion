@@ -197,6 +197,12 @@ Une **table des nuits** apparaît alors, une ligne par nuit :
 
 ![Plusieurs nuits détectées : la table liste chaque nuit (inclure, date, nombre de fichiers, état, n° de passage proposé) ; chacune deviendra un passage distinct.](../assets/captures/apercu-import-multi-nuits.png)
 
+!!! note "Chaque nuit garde les réglages du capteur qui étaient les siens"
+    Si vous reprenez l'enregistreur entre deux séries de nuits et que vous **changez ses réglages**
+    (fréquence d'échantillonnage, bande passante, horaires d'acquisition), le journal en garde la trace
+    à chaque redémarrage. Chaque nuit importée reçoit alors les réglages **en vigueur cette nuit-là**,
+    et non ceux de la première session enregistrée sur la carte.
+
 - **Importer** : case à cocher (cochée par défaut). Décochez une nuit pour ne pas l'importer ; les
   numéros de passage proposés se **renumérotent** automatiquement pour rester consécutifs.
 - **Nuit du** : date du soir de la nuit (date du futur passage).

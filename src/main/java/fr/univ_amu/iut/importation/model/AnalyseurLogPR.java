@@ -83,6 +83,7 @@ public final class AnalyseurLogPR {
         String parametresBruts = null;
         List<LigneJournal> evenements = new ArrayList<>();
         List<LigneJournal> anomalies = new ArrayList<>();
+        List<ConfigurationAcquisition> configurations = new ArrayList<>();
 
         for (String brute : lignes) {
             Matcher m = LIGNE.matcher(brute.strip());
@@ -110,14 +111,24 @@ public final class AnalyseurLogPR {
             if (message.contains("Sonde")) {
                 sondePresente = message.toLowerCase(Locale.ROOT).contains("présente");
             }
-            if (message.startsWith("Param") && parametresBruts == null) {
-                parametresBruts = apres(message, ":");
-                heureDebut = normaliserHeure(extraireGroupe(FENETRE, message, 1));
-                heureFin = normaliserHeure(extraireGroupe(FENETRE, message, 2));
-                String hz = extraire(FREQUENCE, message);
-                frequenceHz = hz == null ? null : Integer.parseInt(hz) * 1000;
-                bandePassante = nettoyer(extraire(BANDE, message));
-                sensibilite = nettoyer(extraire(SENSIBILITE, message));
+            if (message.startsWith("Param")) {
+                // #3460 : TOUTES les configurations sont collectées, horodatées. Un capteur laissé
+                // plusieurs nuits au même point en pose une par session, et la garde d'origine
+                // (`&& parametresBruts == null`) ne retenait que la première : une nuit repartait avec
+                // la fréquence d'échantillonnage d'une autre, en silence.
+                ConfigurationAcquisition configuration = configurationDepuis(horodatage, message);
+                configurations.add(configuration);
+                if (parametresBruts == null) {
+                    // Les champs plats décrivent la PREMIÈRE configuration, comme avant : l'inspection
+                    // et l'affichage les lisent sans connaître de nuit. L'appariement par nuit se fait
+                    // dans JournalParse#configurationPourNuit, à l'import.
+                    parametresBruts = configuration.brut();
+                    heureDebut = configuration.heureDebut();
+                    heureFin = configuration.heureFin();
+                    frequenceHz = configuration.frequenceEchantillonnageHz();
+                    bandePassante = configuration.bandePassante();
+                    sensibilite = configuration.sensibilite();
+                }
             }
 
             collecterEvenement(horodatage, message, evenements);
@@ -148,7 +159,21 @@ public final class AnalyseurLogPR {
                 sondePresente != null && sondePresente,
                 parametresBruts,
                 evenements,
-                anomalies);
+                anomalies,
+                configurations);
+    }
+
+    /// Une configuration d'acquisition lue sur sa ligne « Paramètres : … », datée de cette ligne.
+    private static ConfigurationAcquisition configurationDepuis(LocalDateTime horodatage, String message) {
+        String hz = extraire(FREQUENCE, message);
+        return new ConfigurationAcquisition(
+                horodatage,
+                normaliserHeure(extraireGroupe(FENETRE, message, 1)),
+                normaliserHeure(extraireGroupe(FENETRE, message, 2)),
+                hz == null ? null : Integer.parseInt(hz) * 1000,
+                nettoyer(extraire(BANDE, message)),
+                nettoyer(extraire(SENSIBILITE, message)),
+                apres(message, ":"));
     }
 
     /// Évènements remarquables conservés (changements de mode, réveils, mises en veille).

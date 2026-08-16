@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
+import fr.univ_amu.iut.importation.model.ConfigurationAcquisition;
 import fr.univ_amu.iut.importation.model.JournalParse;
 import java.time.LocalDate;
 import java.util.List;
@@ -50,6 +51,84 @@ class AnalyseurLogPRTest {
         assertThat(journal.bandePassante()).isEqualTo("8-120kHz");
         assertThat(journal.sensibilite()).isEqualTo("16dB 1dt. GN0");
         assertThat(journal.sondePresente()).isTrue();
+    }
+
+    /// Une carte laissée **plusieurs nuits** au même point, ce que le protocole Point Fixe rend
+    /// courant : le capteur redémarre, et repose ses paramètres. Ici la fréquence change entre les
+    /// deux sessions, ce qui conditionne la transformation des séquences.
+    private static List<String> journalDeuxSessions() {
+        return List.of(
+                "22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01,"
+                        + " CPU 600000000, T4.1",
+                "22/04/26 - 16:02:21 PR1925492 Paramètres : Acquisi. 20:25-07:47, Fe384kHz FL N FPH 00, S."
+                        + " R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%",
+                "22/04/26 - 20:26:13 PR1925492 Wakeup by ALARM... Cpt 1",
+                "23/04/26 - 07:48:00 PR1925492 ### Passage en mode Veille",
+                // Seconde session : le capteur a été repris, reconfiguré, puis reposé.
+                "25/04/26 - 17:10:00 PR1925492 Paramètres : Acquisi. 21:00-06:30, Fe256kHz FL N FPH 00, S."
+                        + " R. 12dB 1dt. GN0, Bd. Freq. 10-96kHz, Wav 2-30s SD 80%",
+                "25/04/26 - 21:01:00 PR1925492 Wakeup by ALARM... Cpt 1",
+                "26/04/26 - 06:31:00 PR1925492 ### Passage en mode Veille");
+    }
+
+    @Test
+    @DisplayName("#3460 : chaque nuit reçoit la config de SA session, pas celle de la première")
+    void chaque_nuit_recoit_la_config_de_sa_session() {
+        // Le défaut : « la lecture du log par companion se fait sur les premières lignes pour trouver
+        // la config du PR ». Une nuit importée repartait donc avec la fréquence d'échantillonnage et la
+        // bande passante d'une AUTRE session - des données fausses, en silence, jusqu'à la plateforme.
+        JournalParse journal = analyseur.analyser(journalDeuxSessions());
+
+        assertThat(journal.configurationPourNuit(LocalDate.of(2026, 4, 22)))
+                .get()
+                .extracting(
+                        ConfigurationAcquisition::frequenceEchantillonnageHz, ConfigurationAcquisition::bandePassante)
+                .containsExactly(384000, "8-120kHz");
+
+        assertThat(journal.configurationPourNuit(LocalDate.of(2026, 4, 25)))
+                .get()
+                .extracting(
+                        ConfigurationAcquisition::frequenceEchantillonnageHz,
+                        ConfigurationAcquisition::bandePassante,
+                        ConfigurationAcquisition::heureDebut)
+                .containsExactly(256000, "10-96kHz", "21:00:00");
+    }
+
+    @Test
+    @DisplayName("#3460 : une nuit SANS config posée avant elle prend la plus ancienne connue")
+    void une_nuit_sans_config_anterieure_prend_la_plus_ancienne() {
+        // Le journal est CIRCULAIRE (R19) : ses premières entrées peuvent avoir disparu, si bien qu'une
+        // nuit peut n'avoir aucune configuration antérieure. La plus ancienne connue vaut mieux qu'un
+        // vide silencieux - c'est un repli assumé, pas une certitude.
+        JournalParse journal = analyseur.analyser(journalDeuxSessions());
+
+        assertThat(journal.configurationPourNuit(LocalDate.of(2026, 4, 10)))
+                .get()
+                .extracting(ConfigurationAcquisition::frequenceEchantillonnageHz)
+                .isEqualTo(384000);
+    }
+
+    @Test
+    @DisplayName("#3460 : sans aucune ligne « Paramètres », il n'y a pas de config à rendre")
+    void sans_ligne_parametres_aucune_config() {
+        JournalParse journal = analyseur.analyser(
+                List.of("22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01,"
+                        + " CPU 600000000, T4.1"));
+
+        assertThat(journal.configurationPourNuit(LocalDate.of(2026, 4, 22))).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3460 : le cas courant - une seule session - ne change pas de comportement")
+    void une_seule_session_ne_change_rien() {
+        // Le garde qui compte autant que les autres : la très grande majorité des cartes ne portent
+        // qu'une session, et cette correction ne doit rien y déplacer.
+        JournalParse journal = analyseur.analyser(journalNominal());
+
+        assertThat(journal.configurationPourNuit(LocalDate.of(2026, 4, 22)))
+                .get()
+                .extracting(ConfigurationAcquisition::frequenceEchantillonnageHz, ConfigurationAcquisition::heureFin)
+                .containsExactly(384000, "07:47:00");
     }
 
     @Test

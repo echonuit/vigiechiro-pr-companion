@@ -122,6 +122,7 @@ class AnalyseCoherenceTest {
     }
 
     private static JournalParse journal(String serie, LocalDate date) {
-        return new JournalParse(serie, null, date, null, null, null, null, null, true, null, List.of(), List.of());
+        return new JournalParse(
+                serie, null, date, null, null, null, null, null, true, null, List.of(), List.of(), List.of());
     }
 }
