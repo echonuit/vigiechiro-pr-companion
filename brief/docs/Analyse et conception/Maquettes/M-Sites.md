@@ -122,7 +122,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
 
 ### Annotations
 
-- **Bandeau (chrome)** : le titre, le **fil d'Ariane** (`Accueil › Mes sites`) et la **recherche globale** (champ « 🔍 Rechercher », raccourci Ctrl+F, cf. [P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md)) sont communs à tous les écrans.
+- **Bandeau (chrome)** : le titre, le **fil d'Ariane** (`Accueil › Mes sites`) et la **recherche globale** (champ « Rechercher », raccourci Ctrl+F, cf. [P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md)) sont communs à tous les écrans.
 - **Carte 1 (Carré 640380, Ahetze)** : le site en cours d'utilisation, en surbrillance (survol). Le badge vert « il y a 2 j » et « 1 à vérifier ⚠ » incitent à enchaîner sur la vérification.
 - **Carte 2 (Carré 131165, Marseille)** : site secondaire, dernier passage il y a quelques jours (badge orange).
 - **Carte 3 (Carré 131275, Calanques)** : site déclaré mais jamais utilisé (badge gris). Montre qu'on prépare un site avant la première nuit. Le carré et les coordonnées de chaque site sont **cohérents** (le préfixe du carré correspond au département des points, cf. [R26](../Modèle%20conceptuel/Règles%20métier.md#r26)).
@@ -134,7 +134,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
 | Clic sur une carte | Ouvre [M-Site-detail](M-Site-detail.md) avec le site sélectionné |
 | Bouton **+ Nouveau site** | Ouvre le formulaire de création d'un site (n° de carré, points) |
 | Bouton **☁️ Récupérer depuis Vigie-Chiro** | Synchronise les sites et points depuis la plateforme (rapatrie ceux qui existent côté web) |
-| Champ **🔍 Rechercher** (ou Ctrl+F) | Recherche globale : saute à un site, un point ou un passage ([P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md)) |
+| Champ **Rechercher** (ou Ctrl+F) | Recherche globale : saute à un site, un point ou un passage ([P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md)) |
 | Fil d'Ariane **Accueil** | Revient à l'accueil (cartes d'activités) |
 
 ---

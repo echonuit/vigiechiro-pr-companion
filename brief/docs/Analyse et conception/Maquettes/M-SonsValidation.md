@@ -92,7 +92,7 @@ Cet écran **unifie** la validation taxonomique (post-Tadarida) et la bibliothè
   <!-- Barre de filtres (à la Notion) -->
   <rect x="40" y="66" width="1120" height="42" rx="4" class="toolbar"/>
   <rect x="52" y="74" width="290" height="26" rx="3" class="field"/>
-  <text x="66" y="91" class="field-ph">🔍  Rechercher (fichier, espèce, commentaire)</text>
+  <text x="66" y="91" class="field-ph">Rechercher (espèce, fichier, commentaire…)</text>
   <rect x="352" y="74" width="86" height="26" rx="3" class="btn-sec"/>
   <text x="395" y="91" class="btn-txt-dark" text-anchor="middle">+ Filtre</text>
   <rect x="450" y="74" width="146" height="26" rx="13" class="chip"/>
@@ -233,7 +233,7 @@ Cet écran **unifie** la validation taxonomique (post-Tadarida) et la bibliothè
 
 ### Annotations
 
-- **Barre de filtres (« à la Notion »)** : un champ de **recherche libre** (fichier, espèce, commentaire) et un bouton **« + Filtre »** qui ajoute une **puce** parmi six critères combinés en ET : *Statut* (À revoir / Validée / Corrigée), *Taxon parent*, *Espèce*, *Références*, *Probabilité* (curseur), *Heure* (plage horaire de la nuit). Le tri et les filtres sont **mémorisés** d'une réouverture à l'autre.
+- **Barre de filtres (« à la Notion »)** : un champ de **recherche libre** (espèce, fichier, commentaire…) et un bouton **« + Filtre »** qui ajoute une **puce** parmi six critères combinés en ET : *Statut* (À revoir / Validée / Corrigée), *Taxon parent*, *Espèce*, *Références*, *Probabilité* (curseur), *Heure* (plage horaire de la nuit). Le tri et les filtres sont **mémorisés** d'une réouverture à l'autre.
 - **Menu ☰** (coin haut-droit) : il regroupe **toutes** les actions secondaires, variables selon la **source**. Ce n'est pas un menu court : il compte une douzaine d'entrées, réparties en groupes.
     - *Navigation* : `🗺️ Voir sur la carte`, `Fiche de l'espèce`.
     - *Plateforme Vigie-Chiro* : `📥 Importer depuis Vigie-Chiro…`, `📤 Publier les corrections vers Vigie-Chiro…`, `Ouvrir les données sur Vigie-Chiro`.
@@ -308,7 +308,7 @@ Ouvert depuis la carte d'accueil **« Sons & validation »** (prisme *Espèces &
 
   <rect x="40" y="66" width="1120" height="42" rx="4" class="toolbar"/>
   <rect x="52" y="74" width="290" height="26" rx="3" class="field"/>
-  <text x="66" y="91" class="field-ph">🔍  Rechercher (fichier, espèce, commentaire)</text>
+  <text x="66" y="91" class="field-ph">Rechercher (espèce, fichier, commentaire…)</text>
   <rect x="352" y="74" width="86" height="26" rx="3" class="btn-sec"/>
   <text x="395" y="91" class="btn-txt-dark" text-anchor="middle">+ Filtre</text>
   <rect x="1114" y="74" width="34" height="26" rx="3" class="menu"/>
