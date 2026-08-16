@@ -134,6 +134,18 @@ COMMANDES_LOCALES_SANS_ARG=(
   [[ "${output}" != *"Exception"* ]]
 }
 
+@test "lister-sites-vigiechiro : --carre avec --tout est refusé, sans réseau ni jeton (#3769)" {
+  # La recherche par carré porte sur toute la collection, en une requête : borner son étendue n'a rien à
+  # borner. Le refus tombe AVANT toute lecture de jeton, donc sans réseau - c'est ce que ce test vérifie
+  # que les tests in-process ne voient pas : le vrai jar, la vraie analyse picocli, le vrai code de sortie.
+  run cli lister-sites-vigiechiro --portee plateforme --carre 130711 --tout
+  [ "${status}" -eq 2 ]
+  [[ "${output}" == *"--carre"* ]]
+  [[ "${output}" == *"--tout"* ]]
+  [[ "${output}" != *"jeton"* ]]
+  [[ "${output}" != *"Exception"* ]]
+}
+
 @test "recuperer-vigiechiro hors connexion : refus métier explicite (jeton absent), exit 2 (#1592, #2294)" {
   # La validation des arguments passe (aucune option requise) : la commande s'exécute puis refuse faute
   # de jeton, sans jamais joindre le réseau - refus lisible, pas un plantage muet.

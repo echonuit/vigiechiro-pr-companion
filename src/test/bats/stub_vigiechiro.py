@@ -50,9 +50,27 @@ def site(rang):
     }
 
 
+def recherche_par_q(motif):
+    """Répond à `q=<motif>` comme le vrai backend (#3769), mesuré le 2026-08-14.
+
+    Le filtre est appliqué **côté serveur** et le total annoncé est celui de la recherche, pas celui du
+    catalogue : c'est ce qui distingue `q` de `where=`, que ce backend accepte puis ignore. Le mot est
+    entier, jamais un préfixe - `13071` ne ramène pas `130711`.
+    """
+    trouves = [
+        site(rang) for rang in range(TOTAL_SITES) if motif in site(rang)["titre"].split("-")[-1:]
+    ]
+    return json.dumps(
+        {"_items": trouves, "_meta": {"max_results": TAILLE_PAGE, "total": len(trouves), "page": 1}}
+    ).encode()
+
+
 def page_de_sites(requete):
     """Découpe le catalogue en pages de 100, comme le backend. Hors bornes : page vide (fin de collection)."""
-    page = int(parse_qs(urlparse(requete).query).get("page", ["1"])[0])
+    parametres = parse_qs(urlparse(requete).query)
+    if "q" in parametres:
+        return recherche_par_q(parametres["q"][0])
+    page = int(parametres.get("page", ["1"])[0])
     debut = (page - 1) * TAILLE_PAGE
     items = [site(rang) for rang in range(debut, min(debut + TAILLE_PAGE, TOTAL_SITES))]
     return json.dumps(
