@@ -69,6 +69,10 @@ C'est ce rattachement qui compte : sans lui, le téléversement d'une nuit se so
 où **une nuit est déjà déposée** - ce que vous ne pouvez pas faire, justement, tant que le site n'est pas
 rattaché.
 
+Ce refus ne se contente plus de constater. Il demande à Vigie-Chiro si votre carré y existe, et vous
+oriente en conséquence : **le récupérer ici** s'il y est en Point Fixe, ou **l'activer d'abord sur le
+portail** s'il n'y est pas encore. Si la plateforme ne répond pas, il vous le dit plutôt que de trancher.
+
 Ce que vous aviez saisi est conservé : si vous aviez écrit un nom convivial ou un commentaire, le site
 récupéré les porte. Sinon il prend le titre de la plateforme.
 
