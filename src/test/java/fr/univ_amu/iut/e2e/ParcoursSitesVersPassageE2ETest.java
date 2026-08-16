@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -98,6 +99,15 @@ class ParcoursSitesVersPassageE2ETest {
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
         // 1) Carte « Mes sites » du tableau de bord → écran M-Sites.
+        // ⚠️ Attendre que la carte soit VISIBLE, pas seulement présente. Les cartes d'accueil sont
+        // peuplées section par section : celles de la seconde section sont posées en dernier, et un
+        // clic immédiat les rate sous charge - « returned 1 nodes, but no nodes were visible ». Sept
+        // occurrences en deux jours, toujours sur une carte tardive, jamais sur la première (#3823).
+        // C'est le motif « interact puis assertion immédiate » que #3717 avait audité.
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup("Mes sites").queryAll().stream().anyMatch(Node::isVisible));
         robot.clickOn("Mes sites");
         assertThat(navigation.getVueCourante()).isEqualTo("sites");
 
