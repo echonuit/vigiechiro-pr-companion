@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -55,6 +56,17 @@ class CorrespondanceRecetteTest {
 
     private static final Path SESSIONS = Path.of("dev-docs", "recette", "sessions");
 
+    /// Les classes à filmer pour une **planche de contact** (#3835), déposées là où le script de
+    /// séance ira les chercher.
+    ///
+    /// ⚠️ Cette liste se DÉRIVE, elle ne se tient pas à la main. Un `grep` sur `@CasDeRecette`
+    /// ramène deux faux positifs sur dix-huit - l'annotation elle-même, qui contient un exemple
+    /// dans sa documentation, et les fixtures de [ReperesDeSeanceTest]. Le balayage du classpath,
+    /// lui, voit les annotations compilées et honore [FixtureDeRecette].
+    ///
+    /// Une liste tenue à la main dériverait exactement comme la prose dérivait avant #3728.
+    private static final Path CLASSES_A_FILMER = Path.of("target", "recette", "classes-citantes.txt");
+
     /// Un cas se déclare `- **S1-04** · texte`, et `- **S1-26** · *perceptif* · texte` s'il ne se
     /// tranche qu'à l'oeil. Le second groupe capture cette marque.
     private static final Pattern CAS =
@@ -86,6 +98,13 @@ class CorrespondanceRecetteTest {
         lireLeCode();
 
         tri = RepartitionDesCas.repartir(declares.keySet(), perceptifs, jugements);
+
+        // ⚠️ Retirée AVANT d'être réécrite, en deux gestes distincts. Le fichier survit d'un
+        // lancement à l'autre : sans ce retrait, une dérivation qui cesserait de tourner
+        // laisserait la liste d'hier en place, et son garde resterait vert dessus. Retirer
+        // l'appel qui suit fait maintenant rougir, ce qu'on a vérifié.
+        retirerLesClassesAFilmer();
+        deposerLesClassesAFilmer();
     }
 
     @Test
@@ -141,7 +160,59 @@ class CorrespondanceRecetteTest {
                 .isEmpty();
     }
 
+    @Test
+    @DisplayName("La liste des classes à filmer est déposée, et elle exclut les exemples")
+    void la_liste_des_classes_a_filmer_est_deposee() throws IOException {
+        // La planche de contact (#3835) filme ces classes-là et pas d'autres. Une liste vide ou
+        // absente ferait tourner une séance qui ne montre rien, sans rien dire.
+        assertThat(CLASSES_A_FILMER)
+                .as("la liste n a pas ete deposee par CETTE seance : la planche de contact"
+                        + " filmerait le vide, ou pire, la liste d une seance precedente")
+                .exists();
+
+        List<String> classes = Files.readAllLines(CLASSES_A_FILMER);
+        assertThat(classes)
+                .as("aucune classe citante : le balayage du classpath ne trouve plus rien")
+                .isNotEmpty();
+        assertThat(classes)
+                .as(
+                        "les exemples de %s imitent un test sans rien couvrir : les filmer donnerait des"
+                                + " extraits d'un décor, pas du produit",
+                        FixtureDeRecette.class.getSimpleName())
+                .doesNotContain("ReperesDeSeanceTest");
+        assertThat(classes).doesNotHaveDuplicates().isSorted();
+        assertThat(classes)
+                .as("la liste déposée doit être celle de CETTE séance, pas celle d'une précédente")
+                .containsExactlyElementsOf(classesCitantes());
+    }
+
     // ----------------------------------------------------------------------------------------
+
+    /// Les classes qui citent au moins un cas, triées.
+    private static Set<String> classesCitantes() {
+        Set<String> classes = new TreeSet<>();
+        cites.values().forEach(tests -> tests.forEach(test -> classes.add(test.substring(0, test.indexOf('.')))));
+        return classes;
+    }
+
+    /// Retire la liste de la séance précédente, pour que la suivante ne puisse pas la relire.
+    private static void retirerLesClassesAFilmer() {
+        try {
+            Files.deleteIfExists(CLASSES_A_FILMER);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Liste des classes à filmer impossible à retirer", e);
+        }
+    }
+
+    /// Dépose les classes qui citent au moins un cas, une par ligne, triées.
+    private static void deposerLesClassesAFilmer() {
+        try {
+            Files.createDirectories(CLASSES_A_FILMER.getParent());
+            Files.write(CLASSES_A_FILMER, classesCitantes());
+        } catch (IOException e) {
+            throw new UncheckedIOException("Liste des classes à filmer impossible à écrire", e);
+        }
+    }
 
     private static String explication(String cas, Jugement ceQueDitLeCode) {
         String tests = joindre(cites.getOrDefault(cas, Set.of()));

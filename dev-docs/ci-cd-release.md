@@ -1162,6 +1162,34 @@ les cinq sixièmes de ce qu'il voyait, et annonçait 16 %. C'était le même tra
 Un montage refusé **ne laisse aucun clip** et fait échouer le lancement, même quand les tests sont
 verts - c'est justement le cas où personne n'irait vérifier.
 
+### La planche de contact : tout ce qui cite un cas, en une séance (#3835)
+
+```bash
+.github/scripts/lance-test-filme.sh --planche
+```
+
+Le montage taille déjà un clip par **test** et indexe par **cas**. Passer les seize classes citantes
+à un même `-Dtest=A,B,C` rend donc, d'un coup, un index qui les couvre toutes : il n'y a rien à
+fusionner, là où seize séances auraient donné seize artefacts et une comptabilité à tenir de tête.
+
+⚠️ **La liste se dérive, elle ne se tient pas à la main.** Un `grep` sur `@CasDeRecette` ramène deux
+faux positifs sur dix-huit : l'annotation elle-même, dont la documentation contient un exemple, et
+les fixtures qui imitent un test sans rien couvrir. C'est `CorrespondanceRecetteTest` qui dépose la
+liste sous `target/recette/classes-citantes.txt`, parce qu'il balaie les annotations **compilées** et
+honore `@FixtureDeRecette`. Une liste tenue à la main dériverait comme la prose dérivait avant #3728.
+
+Deux refus, pour que le vide ne passe pas pour un résultat :
+
+- la liste **retirée avant d'être réécrite**, en deux gestes distincts : le fichier survit d'un
+  lancement à l'autre, si bien qu'une dérivation qui cesserait de tourner laisserait la liste d'hier
+  en place et son garde resterait vert dessus ;
+- une liste absente ou vide fait **refuser** la séance, plutôt que de filmer un écran noir et de
+  rendre un index sans ligne - ce qui ressemble trait pour trait à une recette qui ne couvre rien.
+
+À quoi elle sert : le garde de #3728 vérifie qu'un identifiant cité **existe**, jamais que le test
+**fait ce que le cas décrit**. La planche rend cette relecture possible en regardant, plutôt qu'en
+relisant seize classes.
+
 ```bash
 gh workflow run recette-filmee.yml                                  # le passage normal
 gh workflow run recette-filmee.yml -f sans_gestionnaire_de_fenetres=true   # le témoin

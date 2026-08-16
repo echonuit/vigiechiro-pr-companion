@@ -30,6 +30,7 @@
 #
 # Usage :
 #   lance-test-filme.sh <ClasseDeTest> [sortie.mkv]
+#   lance-test-filme.sh --planche             # TOUTES les classes qui citent un cas (#3835)
 #   lance-test-filme.sh --verifier            # les préconditions, sans rien lancer
 #   lance-test-filme.sh --auto-test           # éprouve les vérifications elles-mêmes
 
@@ -447,7 +448,7 @@ lancer() {
     rm -f "$tube"; mkfifo "$tube"
 
     ffmpeg -loglevel error -f x11grab -framerate 10 -video_size "${TAILLE%x*}" \
-        -i "$ECRAN" -t 900 -c:v libx264 -preset ultrafast -crf 26 -g 20 -flush_packets 1 \
+        -i "$ECRAN" -t 1800 -c:v libx264 -preset ultrafast -crf 26 -g 20 -flush_packets 1 \
         -pix_fmt yuv420p -y "$brut" < "$tube" >/dev/null 2>&1 &
     local film=$!
     exec 3> "$tube"
@@ -496,6 +497,52 @@ lancer() {
 }
 
 # --------------------------------------------------------------------------------------------
+# La planche de contact : filmer TOUT ce qui cite un cas, en une séance (#3835).
+#
+# ## Pourquoi une seule séance, et non seize
+#
+# Le montage taille déjà un clip par TEST et indexe par CAS. Passer les seize classes à un même
+# `-Dtest=A,B,C` rend donc, d'un coup, un index qui les couvre toutes : il n'y a rien à fusionner.
+# Seize séances auraient donné seize artefacts et une comptabilité à tenir de tête.
+#
+# ## ⚠️ La liste se DÉRIVE, elle ne se tient pas à la main
+#
+# Un `grep` sur `@CasDeRecette` ramène deux faux positifs sur dix-huit : l'annotation elle-même,
+# dont la documentation contient un exemple, et les fixtures qui imitent un test sans rien couvrir.
+# C'est `CorrespondanceRecetteTest` qui dépose la liste, parce qu'il balaie les annotations
+# COMPILÉES et honore `@FixtureDeRecette`.
+#
+# Une liste tenue à la main dériverait exactement comme la prose dérivait avant #3728.
+LISTE_CLASSES_DEFAUT="target/recette/classes-citantes.txt"
+
+# Rend les classes à filmer, séparées par des virgules. REFUSE plutôt que de filmer le vide : une
+# séance sans classe produirait un film noir et un index sans ligne, ce qui ressemble trait pour
+# trait à une recette qui ne couvre rien.
+classes_de_la_planche() {
+    local fichier="$1"
+    if [ ! -s "$fichier" ]; then
+        echo "⚠️ liste des classes à filmer absente ou vide : $fichier" >&2
+        echo "   Elle est DÉRIVÉE par CorrespondanceRecetteTest, qui doit tourner d'abord." >&2
+        return 1
+    fi
+    paste -sd, "$fichier"
+}
+
+planche() {
+    local liste="$RACINE/$LISTE_CLASSES_DEFAUT"
+    echo "Dérivation de la liste des classes qui citent un cas..."
+    if ! ( cd "$RACINE" && ./mvnw -B -q test -Dtest=CorrespondanceRecetteTest -DfailIfNoTests=false ); then
+        echo "⚠️ la liste n'a pas pu être dérivée : CorrespondanceRecetteTest a échoué." >&2
+        return 1
+    fi
+
+    local classes
+    classes=$(classes_de_la_planche "$liste") || return 1
+    printf 'Planche de contact : %d classe(s) à filmer.\n' "$(wc -l < "$liste")"
+    lancer "$classes" "$RACINE/target/recette/planche.mkv"
+}
+
+# --------------------------------------------------------------------------------------------
 # Auto-test : chaque condition retirée POUR DE VRAI, une à la fois.
 # --------------------------------------------------------------------------------------------
 
@@ -517,7 +564,7 @@ auto_test() {
         fi
     }
 
-    export -f part_utile profil_luminance couper_par_luminance
+    export -f part_utile profil_luminance couper_par_luminance classes_de_la_planche
     export LUMINANCE_SEUIL LUMINANCE_MARGE LUMINANCE_ECART
     echo "AUTO-TEST"
 
@@ -600,6 +647,17 @@ auto_test() {
     printf '# entête\n999999996000\tdebut\tExemple.sans_cas\t\n999999998000\tfin\tExemple.sans_cas\t\n' \
         > "$tmp/reperes-sans-cas.tsv"
 
+    # --- la liste de la planche : refuser le vide plutôt que filmer un décor ---
+    printf 'MainViewTest\nMesSitesViewTest\n' > "$tmp/liste-pleine.txt"
+    : > "$tmp/liste-vide.txt"
+
+    essai "une liste de classes absente est REFUSÉE" rouge \
+        classes_de_la_planche "$tmp/liste-inexistante.txt"
+    essai "une liste de classes vide est REFUSÉE" rouge \
+        classes_de_la_planche "$tmp/liste-vide.txt"
+    essai "une liste pleine rend les classes séparées par des virgules" vert \
+        bash -c '[ "$(classes_de_la_planche "$1")" = "MainViewTest,MesSitesViewTest" ]' _ "$tmp/liste-pleine.txt"
+
     essai "un test NON cité couvre quand même le geste" vert \
         montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-sans-cas.tsv" "$tmp/clips-sc" 1000000000000
     essai "et il ne produit aucun extrait" vert \
@@ -618,6 +676,7 @@ auto_test() {
 
 case "${1:---aide}" in
     --auto-test) auto_test ;;
+    --planche)   planche ;;
     --verifier)  verifier_tout ;;
     --aide|-h)   sed -n '/^# Usage/,/^$/p' "${BASH_SOURCE[0]}" | sed 's/^# \?//' ;;
     *)           lancer "$@" ;;
