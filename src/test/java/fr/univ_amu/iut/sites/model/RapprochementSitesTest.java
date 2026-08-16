@@ -73,12 +73,14 @@ class RapprochementSitesTest {
         liens = new LienVigieChiroDao(source);
         siteTiers = new SiteTiersDao(source);
         rapprochement = new RapprochementSites(
-                siteDao,
-                service,
                 liens,
-                siteTiers,
-                ID_USER,
-                new ServiceCommunes(pointDao, communeDao, position -> Optional.empty()));
+                new ImportSiteDistant(
+                        siteDao,
+                        service,
+                        liens,
+                        siteTiers,
+                        ID_USER,
+                        new ServiceCommunes(pointDao, communeDao, position -> Optional.empty())));
     }
 
     /// Site distant **sans propriétaire déclaré** (`observateur` absent) : cas des tests antérieurs à
@@ -274,13 +276,17 @@ class RapprochementSitesTest {
     @DisplayName("La synchro rattrape les communes des points qu'elle vient de créer (#2791)")
     void rattrape_les_communes_des_points_rapatries() {
         RapprochementSites avecResolveur = new RapprochementSites(
-                siteDao,
-                service,
                 liens,
-                siteTiers,
-                ID_USER,
-                new ServiceCommunes(
-                        pointDao, communeDao, position -> Optional.of(new Commune("Aix-en-Provence", "13001"))));
+                new ImportSiteDistant(
+                        siteDao,
+                        service,
+                        liens,
+                        siteTiers,
+                        ID_USER,
+                        new ServiceCommunes(
+                                pointDao,
+                                communeDao,
+                                position -> Optional.of(new Commune("Aix-en-Provence", "13001")))));
         when(client.mesSites())
                 .thenReturn(ReponseApi.succes(List.of(siteDistant(
                         "s1",
@@ -301,9 +307,16 @@ class RapprochementSitesTest {
                 .thenReturn(ReponseApi.succes(
                         List.of(siteDistant("s1", "640380", List.of(new PointVigieChiro("Z1", 43.52, 5.46))))));
         RapprochementSites rattrapageCasse = new RapprochementSites(
-                siteDao, service, liens, siteTiers, ID_USER, new ServiceCommunes(pointDao, communeDao, position -> {
-                    throw new IllegalStateException("panne du rattrapage");
-                }));
+                liens,
+                new ImportSiteDistant(
+                        siteDao,
+                        service,
+                        liens,
+                        siteTiers,
+                        ID_USER,
+                        new ServiceCommunes(pointDao, communeDao, position -> {
+                            throw new IllegalStateException("panne du rattrapage");
+                        })));
 
         Optional<RapportSynchro> rapport = rattrapageCasse.synchroniser(client);
 

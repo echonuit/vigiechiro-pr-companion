@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.outils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
@@ -21,15 +22,20 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.ImportSiteDistant;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
 import fr.univ_amu.iut.sites.view.ModalePointController;
 import fr.univ_amu.iut.sites.view.ModaleSiteController;
 import fr.univ_amu.iut.sites.view.NavigationSites;
@@ -46,6 +52,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -143,6 +150,8 @@ public final class CaptureEcrans {
         capturerModaleSiteEdition(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-site.png"));
         capturerModaleSiteCreation(creerInjecteur(), sortie.resolve("apercu-sites-modale-site-creation.png"));
         capturerModaleSiteCarreExistant(sortie.resolve("apercu-sites-modale-site-carre-existant.png"));
+        capturerModaleSiteAutreProtocole(sortie.resolve("apercu-sites-modale-site-autre-protocole.png"));
+        capturerCompteRenduRapatriement(sortie.resolve("apercu-sites-carre-recupere.png"));
         capturerSynchroEnCours(sortie.resolve("apercu-sites-synchro-progression.png"));
 
         // État vide : base neuve (juste un utilisateur, aucun site) → accueil M-Sites en état initial.
@@ -217,6 +226,48 @@ public final class CaptureEcrans {
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
     }
 
+    /// Injecteur de capture dont la recherche rend un **verdict figé** : la capture ne dépend ni du
+    /// réseau ni d'un jeton, et l'écran reste rendu par sa vraie vue.
+    private static Injector injecteurAvecVerdict(RechercheCarreExistant.Verdict verdict) {
+        return injecteurAvecVerdict(verdict, null);
+    }
+
+    /// Variante qui fige **aussi** l'issue du rapatriement, pour les états qui n'apparaissent qu'après
+    /// avoir cliqué « Récupérer ce carré ».
+    private static Injector injecteurAvecVerdict(
+            RechercheCarreExistant.Verdict verdict, RapatriementCarre.Resultat issueRapatriement) {
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), liaison -> {
+                    liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
+                    OptionalBinder.newOptionalBinder(liaison, OuvrirImportation.class)
+                            .setBinding()
+                            .toInstance(idSite -> {});
+                    OptionalBinder.newOptionalBinder(liaison, RechercheCarreExistant.class)
+                            .setBinding()
+                            .toInstance(new RechercheCarreExistant(new ClientVigieChiro(Optional::empty)) {
+                                @Override
+                                public Verdict chercher(String numeroCarre) {
+                                    return verdict;
+                                }
+                            });
+                    if (issueRapatriement != null) {
+                        // Le rapatriement réel est conservé pour ses dépendances : seule son ISSUE est
+                        // figée. Le fabriquer de toutes pièces demanderait des DAO factices, que les
+                        // gardes de construction refusent - à raison.
+                        Provider<ImportSiteDistant> imports = liaison.getProvider(ImportSiteDistant.class);
+                        OptionalBinder.newOptionalBinder(liaison, RapatriementCarre.class)
+                                .setBinding()
+                                .toProvider(() ->
+                                        new RapatriementCarre(new ClientVigieChiro(Optional::empty), imports.get()) {
+                                            @Override
+                                            public Resultat rapatrier(SouhaitDeclaration souhait) {
+                                                return issueRapatriement;
+                                            }
+                                        });
+                    }
+                }));
+    }
+
     /// Modale de déclaration **après** un « Vérifier sur Vigie-Chiro » qui trouve le carré (#3458).
     ///
     /// C'est l'état qui **évite la panne** : redéclarer un carré déjà présent est ce qui a produit le
@@ -228,21 +279,8 @@ public final class CaptureEcrans {
     /// bouchonnée : la capture ne doit pas dépendre du réseau ni d'un jeton, et un fac-similé du message
     /// écrit ici n'engagerait personne (c'est ainsi qu'un dialogue documenté a dérivé du produit, #1468).
     private static void capturerModaleSiteCarreExistant(Path fichier) throws IOException {
-        Injector injecteur = Guice.createInjector(Modules.override(RacineInjecteur.modules())
-                .with(ModuleCaptureCommun.executeursSynchrones(), liaison -> {
-                    liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
-                    OptionalBinder.newOptionalBinder(liaison, OuvrirImportation.class)
-                            .setBinding()
-                            .toInstance(idSite -> {});
-                    OptionalBinder.newOptionalBinder(liaison, RechercheCarreExistant.class)
-                            .setBinding()
-                            .toInstance(new RechercheCarreExistant(new ClientVigieChiro(Optional::empty)) {
-                                @Override
-                                public Verdict chercher(String numeroCarre) {
-                                    return new Verdict.DejaDeclare(List.of("Vigiechiro - Point Fixe-" + numeroCarre));
-                                }
-                            });
-                }));
+        Injector injecteur = injecteurAvecVerdict(new RechercheCarreExistant.Verdict.DejaDeclare(
+                List.of("Vigiechiro - Point Fixe-" + CARRE_DEJA_DECLARE)));
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
@@ -251,6 +289,54 @@ public final class CaptureEcrans {
         ((TextField) exiger(scene, "#champCarre")).setText(CARRE_DEJA_DECLARE);
         ((Button) exiger(scene, "#btnVerifierCarre")).fire();
         ApercuFx.enregistrerPng(scene, fichier);
+    }
+
+    /// Modale de déclaration quand le carré existe **sous un autre protocole** (#3806).
+    ///
+    /// L'état est trompeur sans image : le numéro « existe » et n'est pourtant pas récupérable, parce
+    /// que Companion ne traite que le Point Fixe. Ni « inexistant », ni silence : un refus qui dit
+    /// pourquoi.
+    private static void capturerModaleSiteAutreProtocole(Path fichier) throws IOException {
+        Injector injecteur = injecteurAvecVerdict(
+                new RechercheCarreExistant.Verdict.DejaDeclare(List.of("Vigie-chiro - Routier-" + CARRE_DEJA_DECLARE)),
+                new RapatriementCarre.Resultat.AutreProtocole(List.of("Vigie-chiro - Routier-" + CARRE_DEJA_DECLARE)));
+        FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
+        Scene scene = new Scene(vue);
+        ((TextField) exiger(scene, "#champCarre")).setText(CARRE_DEJA_DECLARE);
+        ((Button) exiger(scene, "#btnVerifierCarre")).fire();
+        // L'état ne se voit qu'APRÈS le geste : le verdict dit « il existe », c'est la récupération qui
+        // découvre que le protocole ne suit pas.
+        ((Button) exiger(scene, "#btnRecupererCarre")).fire();
+        ApercuFx.enregistrerPng(scene, fichier);
+    }
+
+    /// Le **compte rendu** que l'utilisateur lit après avoir récupéré un carré (#3806).
+    ///
+    /// Il arrive par un `Alert` modal, patron du socle pour les comptes rendus d'action : la fiche du
+    /// carré s'ouvre derrière, et ce dialogue dit ce qui vient d'être créé. Rendu par
+    /// [NotificationDialogue#dialogue] - le composant de production - et non reconstruit ici : c'est
+    /// ainsi qu'un dialogue documenté a fini par dériver du produit (#1468).
+    ///
+    /// ⚠️ `notifier` ferait `showAndWait`, qui fige un rendu hors écran. La méthode `dialogue` existe
+    /// précisément pour rendre le même `Alert` sans l'afficher.
+    private static void capturerCompteRenduRapatriement(Path fichier) {
+        RapatriementCarre.Resultat.Rapatrie rapatrie = new RapatriementCarre.Resultat.Rapatrie(
+                new Site(
+                        1L,
+                        CARRE_DEJA_DECLARE,
+                        "Vigiechiro - Point Fixe-" + CARRE_DEJA_DECLARE,
+                        Protocole.STANDARD,
+                        null,
+                        "2026-08-16",
+                        ID_UTILISATEUR),
+                41);
+        Alert alerte = new NotificationDialogue()
+                .dialogue(NiveauNotification.INFORMATION, "Carré récupéré", rapatrie.message());
+        alerte.getDialogPane().setPrefWidth(560);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
     }
 
     /// Le nœud `selecteur`, ou une **erreur** qui le nomme.

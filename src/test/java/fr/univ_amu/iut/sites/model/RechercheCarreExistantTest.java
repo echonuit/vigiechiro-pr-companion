@@ -43,6 +43,27 @@ class RechercheCarreExistantTest {
     }
 
     @Test
+    @DisplayName("#3806 : le verdict ne renvoie plus à une synchronisation qui ne ramènera pas ce carré")
+    void le_verdict_ne_renvoie_plus_a_la_synchronisation() {
+        when(client.chercherCarre("130711"))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-130711", true))));
+
+        String message = recherche.chercher("130711").message();
+
+        // « Récupérer depuis Vigie-Chiro » part des participations : elle n'atteint que les carrés où une
+        // nuit est déjà déposée. Sur un carré fraîchement activé - le cas même de #3458 - le geste ne fait
+        // rien, et l'utilisateur en conclut que l'application est cassée, ou redéclare le carré.
+        assertThat(message).as("ne plus envoyer vers un geste inopérant").doesNotContain("Mes sites");
+        // Et déclarer n'est pas l'erreur : préparer une nuit opportuniste commence par là. Ce qui manquait
+        // au geste, c'est le rattachement.
+        assertThat(message)
+                .as("ne plus interdire ce que le parcours opportuniste exige")
+                .doesNotContain("Ne le redéclarez pas");
+        assertThat(message).containsIgnoringCase("récupér");
+    }
+
+    @Test
     @DisplayName("#3458 : hors connexion, on ne SAIT PAS - et surtout on ne dit pas « il est libre »")
     void hors_connexion_on_ne_sait_pas() {
         when(client.chercherCarre("130711")).thenReturn(ReponseApi.nonConnecte());

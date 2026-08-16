@@ -42,7 +42,14 @@ class DeclarationDesBindingsTest {
     private static final Path SOURCES = Path.of("src", "main", "java");
 
     /// Relevé du 14/08/2026, revue #3547 : 63 sites, 32 fichiers, tous ouverts et jugés.
-    private static final int SITES_RELEVES = 63;
+    ///
+    /// **+1 le 16/08/2026 (#3806)** : `ModaleSiteController` compose le motif du grisage d'« Enregistrer »,
+    /// qui a désormais deux causes distinctes. Son calcul lit `peutEnregistrer()` et
+    /// `motifEnregistrementFerme()`, lequel lit à son tour `carreValide`, `enCreation` et
+    /// `carreRecuperable`. Les trois derniers sont déclarés ; `carreValide` ne l'est pas **directement**,
+    /// mais `peutEnregistrer` en dépend par construction (`carreValide.and(…)`), donc toute invalidation
+    /// du carré invalide le binding. Déclaration jugée **complète**.
+    private static final int SITES_RELEVES = 64;
 
     private static final Pattern APPEL = Pattern.compile("Bindings\\.create[A-Za-z]*Binding\\s*\\(");
 

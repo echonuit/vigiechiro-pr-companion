@@ -52,7 +52,7 @@ class SiteEditPorteeTest {
                 new HorlogeFigee(LocalDate.of(2026, 4, 22)),
                 new PointCommuneDao(source),
                 () -> {});
-        viewModel = new SiteEditViewModel(service, liens, "u-1", Optional.empty());
+        viewModel = new SiteEditViewModel(service, liens, "u-1", Optional.empty(), Optional.empty());
     }
 
     private Site siteDeclare() {

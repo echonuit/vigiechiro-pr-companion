@@ -10,10 +10,13 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
+import fr.univ_amu.iut.sites.model.Site;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -35,18 +38,23 @@ class SiteEditRechercheCarreTest {
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
     private final ServiceSites service = mock(ServiceSites.class);
     private final LienVigieChiroDao liens = mock(LienVigieChiroDao.class);
+    private final RapatriementCarre rapatriement = mock(RapatriementCarre.class);
 
-    /// Modale montée **avec** la vérification : le cas de l'application complète.
+    /// Modale montée **avec** la vérification et la récupération : le cas de l'application complète.
+    ///
+    /// Le rapatriement est **mocké** : ce qu'il fait en base est éprouvé par `RapatriementCarreTest`, sur
+    /// une vraie base. Ici on n'éprouve que ce que le ViewModel en fait - quand il l'appelle, quand il
+    /// offre le geste, et ce qu'il laisse à l'écran.
     private SiteEditViewModel avecRecherche() {
-        SiteEditViewModel viewModel =
-                new SiteEditViewModel(service, liens, "u-1", Optional.of(new RechercheCarreExistant(client)));
+        SiteEditViewModel viewModel = new SiteEditViewModel(
+                service, liens, "u-1", Optional.of(new RechercheCarreExistant(client)), Optional.of(rapatriement));
         viewModel.preparerCreation();
         return viewModel;
     }
 
     /// Modale montée **sans** : injecteur partiel, feature éteinte, capture d'écran.
     private SiteEditViewModel sansRecherche() {
-        SiteEditViewModel viewModel = new SiteEditViewModel(service, liens, "u-1", Optional.empty());
+        SiteEditViewModel viewModel = new SiteEditViewModel(service, liens, "u-1", Optional.empty(), Optional.empty());
         viewModel.preparerCreation();
         return viewModel;
     }
@@ -112,7 +120,9 @@ class SiteEditRechercheCarreTest {
         // Le titre porte le protocole : « il existe » sans dire lequel n'aide pas à décider quoi faire.
         assertThat(viewModel.retourCarreExistantProperty().get().texte())
                 .contains("Vigiechiro - Point Fixe-640380")
-                .contains("Récupérer depuis Vigie-Chiro");
+                // Depuis #3806, le message propose de récupérer le carré ICI, avec son rattachement : le
+                // renvoi vers la synchronisation ne ramenait pas un carré sans nuit déposée.
+                .contains("rattaché");
         assertThat(viewModel.retourCarreExistantProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
     }
 
@@ -182,5 +192,75 @@ class SiteEditRechercheCarreTest {
         viewModel.preparerCreation();
 
         assertThat(viewModel.retourCarreExistantProperty().get().texte()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3806 : le geste « récupérer » n'apparaît QUE quand le carré existe déjà")
+    void le_geste_recuperer_suit_le_verdict() {
+        SiteEditViewModel viewModel = avecRecherche();
+        viewModel.numeroCarreProperty().set(CARRE);
+
+        assertThat(viewModel.carreRecuperable().get())
+                .as("rien n'a été demandé : il n'y a rien à récupérer")
+                .isFalse();
+
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
+        verifier(viewModel);
+        assertThat(viewModel.carreRecuperable().get())
+                .as("carré libre : le récupérer n'aurait aucun sens")
+                .isFalse();
+
+        when(client.chercherCarre(CARRE))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
+        verifier(viewModel);
+        assertThat(viewModel.carreRecuperable().get())
+                .as("le carré est là-bas : c'est le moment de proposer de le rapatrier")
+                .isTrue();
+
+        viewModel.numeroCarreProperty().set("640381");
+        assertThat(viewModel.carreRecuperable().get())
+                .as("le verdict s'efface avec le numéro, le geste qu'il ouvrait aussi")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#3806 : en déclaration, « Créer » se ferme quand le carré existe déjà là-bas")
+    void en_declaration_creer_se_ferme_si_le_carre_existe() {
+        SiteEditViewModel viewModel = avecRecherche();
+        viewModel.numeroCarreProperty().set(CARRE);
+        assertThat(viewModel.peutEnregistrer().get()).isTrue();
+
+        when(client.chercherCarre(CARRE))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
+        verifier(viewModel);
+
+        // Déclarer ici produirait un second site local pour le même carré, sans rattachement : la panne
+        // d'origine de #3458. Le geste juste est à côté, et le message le nomme.
+        assertThat(viewModel.peutEnregistrer().get())
+                .as("on empêche plutôt que de laisser refaire l'erreur")
+                .isFalse();
+
+        viewModel.numeroCarreProperty().set("640381");
+        assertThat(viewModel.peutEnregistrer().get())
+                .as("le verdict s'efface avec le numéro : plus rien ne s'oppose à la déclaration")
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("#3806 : en ÉDITION, le même verdict n'empêche rien : ce site existe, c'est normal")
+    void en_edition_le_verdict_n_empeche_rien() {
+        SiteEditViewModel viewModel = avecRecherche();
+        viewModel.preparerEdition(new Site(7L, CARRE, "Étang", Protocole.STANDARD, null, "2026-01-01", "u-1"));
+        when(client.chercherCarre(CARRE))
+                .thenReturn(
+                        ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
+
+        verifier(viewModel);
+
+        // Un site édité est déjà déclaré : que la plateforme le connaisse aussi est le cas NOMINAL.
+        // Fermer « Enregistrer » ici interdirait de corriger un nom ou un commentaire.
+        assertThat(viewModel.peutEnregistrer().get()).isTrue();
     }
 }

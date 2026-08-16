@@ -13,11 +13,14 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
+import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import java.util.List;
 import java.util.Optional;
@@ -54,6 +57,7 @@ class ModaleSiteVerifierCarreViewTest {
     private static final String CARRE = "640380";
 
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
+    private final RapatriementCarre rapatriement = mock(RapatriementCarre.class);
 
     private ModaleSiteController controleur;
 
@@ -64,7 +68,12 @@ class ModaleSiteVerifierCarreViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             SiteEditViewModel viewModel() {
-                return new SiteEditViewModel(service, liens, "u-1", Optional.of(new RechercheCarreExistant(client)));
+                return new SiteEditViewModel(
+                        service,
+                        liens,
+                        "u-1",
+                        Optional.of(new RechercheCarreExistant(client)),
+                        Optional.of(rapatriement));
             }
         });
         FXMLLoader loader = new FXMLLoader(ModaleSiteController.class.getResource("ModaleSite.fxml"));
@@ -75,8 +84,23 @@ class ModaleSiteVerifierCarreViewTest {
         stage.show();
     }
 
+    /// Ce que l'appelant a reçu d'un carré rapatrié : ici on l'enregistre au lieu d'ouvrir une fiche.
+    private RapatriementCarre.Resultat.Rapatrie rapatrieRecu;
+
     private void enCreation(FxRobot robot) {
-        robot.interact(() -> controleur.demarrerCreation(() -> {}));
+        robot.interact(() -> controleur.demarrerCreation(() -> {}, rapatrie -> rapatrieRecu = rapatrie));
+    }
+
+    private Button recuperer(FxRobot robot) {
+        return robot.lookup("#btnRecupererCarre").queryAs(Button.class);
+    }
+
+    private void verdictCarrePresent(FxRobot robot) {
+        when(client.chercherCarre(CARRE))
+                .thenReturn(ReponseApi.succes(
+                        List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-" + CARRE, true))));
+        saisirCarre(robot, CARRE);
+        robot.interact(() -> verifier(robot).fire());
     }
 
     private void saisirCarre(FxRobot robot, String carre) {
@@ -153,7 +177,7 @@ class ModaleSiteVerifierCarreViewTest {
         // message ne se contente donc pas de constater, il nomme le geste qui remplace la déclaration.
         assertThat(message(robot).getText())
                 .contains("Vigiechiro - Point Fixe-640380")
-                .contains("Récupérer depuis Vigie-Chiro");
+                .contains("rattaché");
         assertThat(message(robot).getStyleClass()).contains("encart-avertissement");
     }
 
@@ -214,5 +238,88 @@ class ModaleSiteVerifierCarreViewTest {
                 .as("et il se retire de la mise en page, sans laisser d'encadré vide")
                 .isFalse();
         verify(client, never()).chercherCarre("640381");
+    }
+
+    @Test
+    @DisplayName("#3806 : « Récupérer ce carré » n'apparaît qu'après un verdict « il existe déjà »")
+    void le_geste_recuperer_apparait_avec_le_verdict(FxRobot robot) {
+        enCreation(robot);
+        assertThat(robot.lookup("#ligneRecupererCarre")
+                        .queryAs(javafx.scene.layout.HBox.class)
+                        .isVisible())
+                .as("rien n'a été cherché : il n'y a rien à récupérer")
+                .isFalse();
+
+        verdictCarrePresent(robot);
+
+        assertThat(robot.lookup("#ligneRecupererCarre")
+                        .queryAs(javafx.scene.layout.HBox.class)
+                        .isVisible())
+                .as("le carré est là-bas : le geste s'offre")
+                .isTrue();
+    }
+
+    @Test
+    @CasDeRecette("S1-34")
+    @DisplayName("#3806 : récupérer ferme la modale et passe le carré à l'appelant")
+    void recuperer_ferme_la_modale_et_passe_le_carre(FxRobot robot) {
+        enCreation(robot);
+        verdictCarrePresent(robot);
+        Site site = new Site(7L, CARRE, "Étang", Protocole.STANDARD, null, "2026-08-15", "u-1");
+        when(rapatriement.rapatrier(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new RapatriementCarre.Resultat.Rapatrie(site, 41));
+
+        robot.interact(() -> recuperer(robot).fire());
+
+        // Le formulaire n'a plus lieu d'être : le site existe désormais, et c'est sa fiche qu'il faut
+        // regarder. L'appelant reçoit de quoi l'ouvrir ET de quoi rendre compte des 41 points.
+        assertThat(rapatrieRecu).isNotNull();
+        assertThat(rapatrieRecu.points()).isEqualTo(41);
+        assertThat(robot.lookup("#champCarre").tryQuery())
+                .as("la modale s'est fermée")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3806 : un rapatriement impossible laisse la modale ouverte, avec son motif")
+    void un_rapatriement_impossible_laisse_la_modale_ouverte(FxRobot robot) {
+        enCreation(robot);
+        verdictCarrePresent(robot);
+        when(rapatriement.rapatrier(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(new RapatriementCarre.Resultat.Indisponible());
+
+        robot.interact(() -> recuperer(robot).fire());
+
+        // Fermer sur un échec laisserait l'utilisateur devant une liste inchangée, sans savoir pourquoi.
+        assertThat(rapatrieRecu).isNull();
+        assertThat(message(robot).getText()).contains("Rien n'a été créé");
+        assertThat(robot.lookup("#ligneRecupererCarre")
+                        .queryAs(javafx.scene.layout.HBox.class)
+                        .isVisible())
+                .as("la panne peut être passagère : le geste doit rester OFFERT, pas seulement actif")
+                .isTrue();
+        // Et surtout : on sait toujours que le carré existe là-bas. Rouvrir « Créer » ici inviterait à
+        // fabriquer le doublon que tout ce chantier existe pour éviter.
+        assertThat(robot.lookup("#boutonValider").queryAs(Button.class).isDisabled())
+                .as("une panne de récupération ne rend pas la déclaration légitime")
+                .isTrue();
+    }
+
+    @Test
+    @CasDeRecette("S1-36")
+    @DisplayName("#3806 : « Créer » se ferme, et son infobulle dit POURQUOI et quoi faire")
+    void creer_se_ferme_avec_son_motif(FxRobot robot) {
+        enCreation(robot);
+        verdictCarrePresent(robot);
+
+        Button creer = robot.lookup("#boutonValider").queryAs(Button.class);
+        assertThat(creer.isDisabled())
+                .as("déclarer ici referait le doublon local qui a produit le dépôt manqué")
+                .isTrue();
+        // Un gris sans motif est un défaut ; un gris au MAUVAIS motif en est un pire : le carré a bien
+        // ses six chiffres, dire le contraire enverrait l'utilisateur corriger ce qui est déjà juste.
+        assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeValider").queryAs(StackPane.class)))
+                .contains("existe déjà")
+                .doesNotContain("6 chiffres");
     }
 }

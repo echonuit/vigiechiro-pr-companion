@@ -1,27 +1,20 @@
 package fr.univ_amu.iut.sites.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
-import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
-import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 /// **Importe et relie** les sites de l'observateur VigieChiro à la connexion (#728/#718).
 ///
@@ -45,33 +38,15 @@ public class RapprochementSites implements RapprochementVigieChiro {
     /// Libellé du compte-rendu (pluriel, cf. RapportSynchro#libelle).
     private static final String LIBELLE_SITES = "sites";
 
-    private final SiteDao siteDao;
-    private final ServiceSites serviceSites;
+    /// Libellé du compte-rendu (pluriel, cf. RapportSynchro#libelle).
     private final LienVigieChiroDao liens;
 
-    /// Marquage « carré d'un tiers » (#2525), dérivé de `site.observateur` : entretenu **à chaque**
-    /// synchronisation, la propriété d'un carré pouvant changer côté plateforme.
-    private final SiteTiersDao siteTiers;
+    /// La mécanique d'import d'un site distant, partagée avec le rapatriement à la demande (#3806).
+    private final ImportSiteDistant imports;
 
-    private final String idUtilisateur;
-
-    /// Communes des points (#2791) : rattrapées en fin d'import, la synchro tournant déjà hors du fil
-    /// JavaFX avec le réseau à portée - le moment idéal pour combler les points en attente.
-    private final ServiceCommunes communes;
-
-    public RapprochementSites(
-            SiteDao siteDao,
-            ServiceSites serviceSites,
-            LienVigieChiroDao liens,
-            SiteTiersDao siteTiers,
-            String idUtilisateur,
-            ServiceCommunes communes) {
-        this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
-        this.serviceSites = Objects.requireNonNull(serviceSites, "serviceSites");
+    public RapprochementSites(LienVigieChiroDao liens, ImportSiteDistant imports) {
         this.liens = Objects.requireNonNull(liens, "liens");
-        this.siteTiers = Objects.requireNonNull(siteTiers, "siteTiers");
-        this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
-        this.communes = Objects.requireNonNull(communes, "communes");
+        this.imports = Objects.requireNonNull(imports, "imports");
     }
 
     @Override
@@ -106,123 +81,29 @@ public class RapprochementSites implements RapprochementVigieChiro {
 
     /// Import/liaison de sites effectivement reçus. Une liste vide (observateur sans participation)
     /// reste un no-op prudent.
+    ///
+    /// La mécanique d'import - créer, compléter, poser les points rapatriés, marquer la propriété - vit
+    /// dans [ImportSiteDistant] depuis #3806 : le rapatriement **à la demande** d'un carré doit poser
+    /// exactement le même état que cette synchronisation périodique.
     private Optional<RapportSynchro> importer(List<SiteVigieChiro> distants, String idProfilConnecte) {
         if (distants.isEmpty()) {
             return Optional.empty();
         }
-        {
-            Map<String, Site> localesParCarre = new HashMap<>();
-            for (Site local : siteDao.findByUtilisateur(idUtilisateur)) {
-                localesParCarre.put(local.numeroCarre(), local);
-            }
-            List<LienVigieChiro> correspondances = new ArrayList<>();
-            for (SiteVigieChiro distant : distants) {
-                importerOuLier(distant, localesParCarre, idProfilConnecte).ifPresent(correspondances::add);
-            }
-            if (correspondances.isEmpty()) {
-                return Optional.empty();
-            }
-            liens.remplacer(LienVigieChiro.ENTITE_SITE, correspondances);
-            rattraperCommunes();
-            return Optional.of(new RapportSynchro(LIBELLE_SITES, correspondances.size()));
+        Map<String, Site> localesParCarre = imports.sitesLocauxParCarre();
+        List<LienVigieChiro> correspondances = new ArrayList<>();
+        for (SiteVigieChiro distant : distants) {
+            imports.importerOuLier(distant, localesParCarre, idProfilConnecte)
+                    .map(ImportSiteDistant.ResultatImport::lien)
+                    .ifPresent(correspondances::add);
         }
-    }
-
-    /// Comble les communes des points en attente (#2791), dont ceux que cette synchro vient de créer.
-    /// Best-effort intégral : la commune est un confort dérivé, un raté ici ne doit ni faire échouer la
-    /// synchro ni altérer son rapport.
-    private void rattraperCommunes() {
-        try {
-            communes.rattraper();
-        } catch (RuntimeException echec) {
-            LOG.log(Level.FINE, echec, () -> "Rattrapage des communes ignoré (best-effort)");
-        }
-    }
-
-    /// Relie le site distant à son pendant local (créé si absent), et renvoie le lien. Un site distant
-    /// sans carré exploitable, ou dont la création échoue, est ignoré (best-effort par site).
-    private Optional<LienVigieChiro> importerOuLier(
-            SiteVigieChiro distant, Map<String, Site> localesParCarre, String idProfilConnecte) {
-        String carre = distant.numeroCarre();
-        if (carre == null) {
+        if (correspondances.isEmpty()) {
             return Optional.empty();
         }
-        try {
-            Site local = localesParCarre.get(carre);
-            if (local == null) {
-                local = creerDepuis(distant);
-                localesParCarre.put(carre, local);
-            } else {
-                completerLesPoints(local, distant);
-            }
-            // Propriété du carré (#2525) : réévaluée à chaque synchro, dans les deux sens (un carré peut
-            // changer de main côté plateforme). Sans profil lisible, `appartientAUnTiers` répond faux.
-            siteTiers.definir(local.id(), distant.appartientAUnTiers(idProfilConnecte));
-            return Optional.of(new LienVigieChiro(
-                    LienVigieChiro.ENTITE_SITE, String.valueOf(local.id()), distant.id(), distant.verrouille()));
-        } catch (RuntimeException echecSite) {
-            LOG.log(Level.FINE, echecSite, () -> "Import du site Vigie-Chiro (carré " + carre + ") ignoré");
-            return Optional.empty();
-        }
-    }
-
-    /// Complète un site **déjà relié** avec les points distants qui lui manquent (#3458).
-    ///
-    /// ## Le trou que cela ferme
-    ///
-    /// Les points ne venaient que par la branche « créer » : un site déclaré **avant** de se connecter -
-    /// le parcours nominal de qui découvre l'application - était relié mais **jamais peuplé**. Vécu sur
-    /// le carré 130711 : 41 localités sur la plateforme, **une** dans Companion, celle saisie à la main.
-    /// L'utilisateur ressaisit alors ses points, et un point ressaisi ne correspond à rien côté
-    /// plateforme : le dépôt le refuse plus tard, loin de la cause.
-    ///
-    /// ⚠️ **On n'écrit que ce qui manque.** Un point de même code déjà local est laissé **intact** :
-    /// c'est de la donnée saisie par l'utilisateur, et une synchro qui tourne toute seule à la connexion
-    /// n'a pas à déplacer son point ni à le requalifier en « rapatrié ». Le rapprochement entre un point
-    /// local et son homologue distant de mêmes coordonnées sous un autre nom est une **fusion**, qui
-    /// demande un choix explicite et vient à part.
-    ///
-    /// ⚠️ **Le filtre par code n'est pas ce qui protège cette saisie**, et la mutation l'a montré : le
-    /// retirer laisse le test passer, parce que `ajouterPoint` lève déjà sur l'unicité et que le
-    /// best-effort avale. Il est là pour que la protection soit **explicite** plutôt qu'accidentelle, et
-    /// pour ne pas produire quarante et une exceptions avalées à chaque synchronisation - un journal qui
-    /// crie « Point Z1 ignoré » sur le cas nominal apprend à ne plus être lu.
-    private void completerLesPoints(Site local, SiteVigieChiro distant) {
-        Set<String> codesLocaux = serviceSites.listerPoints(local.id()).stream()
-                .map(PointDEcoute::code)
-                .collect(Collectors.toSet());
-        for (PointVigieChiro point : distant.points()) {
-            if (!codesLocaux.add(point.code())) {
-                continue;
-            }
-            ajouterPointRapatrie(local, distant, point);
-        }
-    }
-
-    /// Crée le site local (carré + titre en nom) et ses points d'écoute depuis les localités du site
-    /// distant. Un point au code/GPS invalide est ignoré, sans faire échouer le site.
-    private Site creerDepuis(SiteVigieChiro distant) {
-        Site site =
-                serviceSites.creerSite(distant.numeroCarre(), distant.titre(), Protocole.STANDARD, null, idUtilisateur);
-        for (PointVigieChiro point : distant.points()) {
-            ajouterPointRapatrie(site, distant, point);
-        }
-        return site;
-    }
-
-    /// Pose un point rapatrié, **best-effort** : un point au code ou au GPS invalide est ignoré, sans
-    /// emporter les quarante autres ni le site lui-même.
-    ///
-    /// Marqué synchronisé (#1738) : rapatrié en masse, il pourra être masqué de la fiche site tant
-    /// qu'aucune nuit ne s'y rattache, contrairement à un point ajouté à la main.
-    private void ajouterPointRapatrie(Site site, SiteVigieChiro distant, PointVigieChiro point) {
-        try {
-            serviceSites.ajouterPointSynchronise(site.id(), point.code(), point.latitude(), point.longitude(), null);
-        } catch (RuntimeException pointInvalide) {
-            LOG.log(
-                    Level.FINE,
-                    pointInvalide,
-                    () -> "Point " + point.code() + " ignoré (carré " + distant.numeroCarre() + ")");
-        }
+        // `remplacer` et non `upsert` : cette synchronisation connaît TOUS les sites de l'observateur,
+        // elle a donc autorité pour purger les correspondances qu'elle ne cite plus. Le rapatriement à la
+        // demande, lui, n'en connaît qu'un et se contente d'un `upsert` (#3806).
+        liens.remplacer(LienVigieChiro.ENTITE_SITE, correspondances);
+        imports.rattraperCommunes();
+        return Optional.of(new RapportSynchro(LIBELLE_SITES, correspondances.size()));
     }
 }

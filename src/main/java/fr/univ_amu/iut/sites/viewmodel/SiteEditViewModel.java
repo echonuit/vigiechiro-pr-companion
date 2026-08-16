@@ -4,14 +4,18 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -90,15 +94,34 @@ public class SiteEditViewModel {
     private final ReadOnlyObjectWrapper<RetourOperation> retourCarreExistant =
             new ReadOnlyObjectWrapper<>(this, "retourCarreExistant", RetourOperation.AUCUN);
 
+    /// Le carré cherché existe sur la plateforme : il y a donc quelque chose à **récupérer** (#3806).
+    /// Faux tant qu'on n'a pas demandé, faux si le carré est libre, et remis à faux dès que le numéro
+    /// change - le geste ne survit pas au verdict qui l'a ouvert.
+    private final ReadOnlyBooleanWrapper carreRecuperable = new ReadOnlyBooleanWrapper(this, "carreRecuperable", false);
+
+    /// « Récupérer ce carré » (#3806). **Optionnel** pour la même raison que la recherche : il interroge
+    /// la plateforme. Absent, le geste n'est pas offert et la déclaration reste entière.
+    private final Optional<RapatriementCarre> rapatriement;
+
+    /// La modale sert à **déclarer** (et non à modifier) : la distinction décide de ce qu'un verdict
+    /// « ce carré existe déjà » entraîne. En déclaration il ferme l'enregistrement ; en édition il ne
+    /// veut rien dire, puisque le site édité est par construction déjà déclaré.
+    private final ReadOnlyBooleanWrapper enCreation = new ReadOnlyBooleanWrapper(this, "enCreation", true);
+
+    /// Le formulaire est enregistrable : carré valide, et pas de carré à récupérer à la place (#3806).
+    private final BooleanBinding peutEnregistrer;
+
     public SiteEditViewModel(
             ServiceSites service,
             LienVigieChiroDao liens,
             String idUtilisateur,
-            Optional<RechercheCarreExistant> recherche) {
+            Optional<RechercheCarreExistant> recherche,
+            Optional<RapatriementCarre> rapatriement) {
         this.liens = Objects.requireNonNull(liens, "liens");
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         this.recherche = Objects.requireNonNull(recherche, "recherche");
+        this.rapatriement = Objects.requireNonNull(rapatriement, "rapatriement");
         carreValide = Bindings.createBooleanBinding(() -> numeroCarre.get().matches("\\d{6}"), numeroCarre);
         carreInvalideEtSaisi = Bindings.createBooleanBinding(
                 () -> !numeroCarre.get().isEmpty() && !numeroCarre.get().matches("\\d{6}"), numeroCarre);
@@ -109,7 +132,14 @@ public class SiteEditViewModel {
         // ⚠️ Le jumeau `PointEditViewModel` n'a pas ce besoin : son contrôle du carré STOC est
         // **automatique** et se relance à chaque frappe. Ici le geste est manuel - une requête réseau par
         // clic -, donc c'est l'effacement qui tient le rôle.
-        numeroCarre.addListener((observable, avant, apres) -> retourCarreExistant.set(RetourOperation.AUCUN));
+        // Composition d'observables plutôt qu'un calcul : chaque dépendance est déclarée par
+        // construction, là où un `createBooleanBinding` obligerait à les énumérer sans que rien ne
+        // vérifie l'énumération (ADR 3547).
+        peutEnregistrer = carreValide.and(enCreation.and(carreRecuperable).not());
+        numeroCarre.addListener((observable, avant, apres) -> {
+            retourCarreExistant.set(RetourOperation.AUCUN);
+            carreRecuperable.set(false);
+        });
     }
 
     /// La vérification « ce carré existe-t-il déjà ? » est-elle **installée** (#3458) ? Faux hors de
@@ -160,6 +190,45 @@ public class SiteEditViewModel {
         }
         retourCarreExistant.set(new RetourOperation(
                 resultat.verdict().message(), resultat.verdict().severite()));
+        // Le geste suit le verdict : on ne propose de récupérer que ce qui est là-bas, et seulement si le
+        // rapatriement est installé (sinon le bouton serait mort).
+        carreRecuperable.set(
+                rapatriement.isPresent() && resultat.verdict() instanceof RechercheCarreExistant.Verdict.DejaDeclare);
+    }
+
+    /// Y a-t-il un carré à récupérer, c'est-à-dire un verdict « il existe déjà » encore valable (#3806) ?
+    public ReadOnlyBooleanProperty carreRecuperable() {
+        return carreRecuperable.getReadOnlyProperty();
+    }
+
+    /// Récupère le carré saisi depuis la plateforme, avec le protocole choisi dans la modale.
+    ///
+    /// **Bloquant** (réseau) : à appeler hors du fil JavaFX. Rend un [RapatriementCarre.Resultat] que la
+    /// vue rend, et dont elle tire le site à ouvrir quand il a été rapatrié.
+    public RapatriementCarre.Resultat rapatrierCarre() {
+        if (rapatriement.isEmpty() || !carreValide.get()) {
+            return new RapatriementCarre.Resultat.Indisponible();
+        }
+        return rapatriement
+                .get()
+                .rapatrier(new SouhaitDeclaration(numeroCarre.get(), protocole.get(), nom.get(), commentaire.get()));
+    }
+
+    /// Affiche le compte rendu du rapatriement, **sur le fil JavaFX**.
+    public void appliquerRapatriement(RapatriementCarre.Resultat resultat) {
+        retourCarreExistant.set(new RetourOperation(resultat.message(), resultat.severite()));
+        // ⚠️ Une panne **ne referme pas** le geste, et ne rouvre pas la déclaration.
+        //
+        // Le geste ne se referme que lorsqu'il n'y a effectivement plus rien à récupérer : le carré
+        // existe sous un autre protocole. Sur une plateforme injoignable, on sait toujours que le carré
+        // est là-bas - le verdict vient de le dire - et la panne peut être passagère. Rouvrir « Créer »
+        // dans cet état inviterait à fabriquer le doublon que ce chantier existe pour éviter.
+        //
+        // Trouvé en regardant une capture, pas par un test : l'écran montrait « Créer » redevenu bleu
+        // après un échec réseau.
+        if (!(resultat instanceof RapatriementCarre.Resultat.Indisponible)) {
+            carreRecuperable.set(false);
+        }
     }
 
     /// Ce que la plateforme a dit du carré saisi, avec sa gravité.
@@ -170,6 +239,7 @@ public class SiteEditViewModel {
     /// Configure la modale en **mode déclaration** d'un nouveau site.
     public void preparerCreation() {
         siteEnEdition = null;
+        enCreation.set(true);
         // Le verdict du carré n'est pas effacé ici : vider le numéro juste en dessous s'en charge, par le
         // même chemin que toute autre correction de saisie. Un second effacement, écrit à la main, aurait
         // dit la même chose une seconde fois - et PIT l'a signalé en le supprimant sans faire rougir
@@ -187,6 +257,7 @@ public class SiteEditViewModel {
     /// Configure la modale en **mode édition** : champs pré-remplis depuis le site existant.
     public void preparerEdition(Site site) {
         siteEnEdition = Objects.requireNonNull(site, "site");
+        enCreation.set(false);
         numeroCarre.set(site.numeroCarre());
         nom.set(ouVide(site.nomConvivial()));
         protocole.set(site.protocole());
@@ -264,7 +335,24 @@ public class SiteEditViewModel {
     /// Le bouton d'enregistrement n'est ouvert que si le carré est valide (#790) : on **empêche** au lieu
     /// d'avertir après coup.
     public BooleanBinding peutEnregistrer() {
-        return carreValide;
+        return peutEnregistrer;
+    }
+
+    /// Le motif du grisage d'« Enregistrer », ou vide s'il n'est pas grisé (#1970, #3806). Deux causes
+    /// distinctes, deux phrases : un carré incomplet ne se corrige pas comme un carré déjà pris.
+    public String motifEnregistrementFerme() {
+        if (!carreValide.get()) {
+            return "Renseignez d'abord un numéro de carré à 6 chiffres.";
+        }
+        if (enCreation.get() && carreRecuperable.get()) {
+            return "Ce carré existe déjà sur Vigie-Chiro : récupérez-le plutôt que de le redéclarer.";
+        }
+        return "";
+    }
+
+    /// La modale est-elle en **déclaration** ? (#3806)
+    public ReadOnlyBooleanProperty enCreation() {
+        return enCreation.getReadOnlyProperty();
     }
 
     /// Le numéro de carré a ses **six chiffres** : il y a donc quelque chose à chercher sur la

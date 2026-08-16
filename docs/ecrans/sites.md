@@ -44,8 +44,9 @@ répond en une seconde. Trois réponses possibles :
 
 - **le carré n'y est pas encore** : vous pouvez le déclarer ici ;
 - **le carré y est déjà** : le message **nomme le site trouvé**, protocole compris - un même carré porte
-  un site par protocole. Ne le redéclarez pas : récupérez-le avec **Récupérer depuis Vigie-Chiro**, ce
-  qui rapatrie aussi ses **points déjà positionnés** ;
+  un site par protocole - et un bouton **Récupérer ce carré** apparaît. Le bouton **Créer** se ferme le
+  temps que dure ce verdict : déclarer un carré qui existe déjà là-bas produirait un doublon local sans
+  rattachement, et votre dépôt serait refusé plus tard ;
 - **la vérification n'a pas pu se faire** (hors connexion, portail injoignable) : c'est dit tel quel.
   Ce n'est **pas** « le carré est libre ».
 
@@ -55,11 +56,35 @@ Si vous corrigez le numéro après avoir vérifié, la réponse **disparaît** :
 numéro, et la laisser affichée vous ferait croire que le nouveau a été vérifié. Recliquez pour poser la
 question sur le carré corrigé.
 
+### Récupérer un carré qui existe déjà
+
+**Récupérer ce carré** crée le site **chez vous**, rattaché à son homologue Vigie-Chiro, avec **ses points
+d'écoute déjà positionnés**. La fenêtre se ferme et la fiche du carré s'ouvre, avec le compte rendu de ce
+qui vient d'être créé.
+
+![Le compte rendu affiché après la récupération : le carré, et le nombre de points d'écoute positionnés.](../assets/captures/apercu-sites-carre-recupere.png)
+
+C'est ce rattachement qui compte : sans lui, le téléversement d'une nuit se solde par « site non rattaché
+à Vigie-Chiro ». Et il ne s'obtenait jusqu'ici que par la synchronisation, qui ne ramène que les carrés
+où **une nuit est déjà déposée** - ce que vous ne pouvez pas faire, justement, tant que le site n'est pas
+rattaché.
+
+Ce que vous aviez saisi est conservé : si vous aviez écrit un nom convivial ou un commentaire, le site
+récupéré les porte. Sinon il prend le titre de la plateforme.
+
+!!! warning "Un carré peut exister sous un autre protocole"
+    Le même numéro peut désigner un site **Point Fixe**, **Pédestre** ou **Routier**. Companion ne traite
+    que le Point Fixe : si le carré n'existe que sous un autre protocole, il vous le dit et ne récupère
+    rien, plutôt que de vous rattacher au mauvais site.
+
+    ![La fenêtre après une récupération refusée : le carré existe en Routier, protocole que l'application ne gère pas.](../assets/captures/apercu-sites-modale-site-autre-protocole.png)
+
 !!! tip "Pourquoi ce détour évite un dépôt manqué"
     Le portail n'autorise pas à activer un carré sans y créer un point. Un carré activé là-bas puis
     **redéclaré ici** donne deux sites pour le même carré, et un point local qui n'est pas celui du
     portail : la nuit déposée ensuite échoue, loin de sa cause. Vérifier d'abord, puis **récupérer**
-    plutôt que redéclarer, évite toute cette chaîne.
+    plutôt que redéclarer, évite toute cette chaîne - et c'est aussi le chemin le plus court pour
+    préparer une nuit **opportuniste** sur le carré de quelqu'un d'autre.
 
 Chaque carte porte aussi, quand l'application est [connectée à Vigie-Chiro](../connexion-vigiechiro.md),
 un **badge d'état plateforme** : **« Enregistré sur Vigie-Chiro »** (bleu) quand le carré est relié au
