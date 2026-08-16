@@ -108,7 +108,7 @@ La recherche globale permet de **sauter directement** à un site, un point, un p
 
 | Élément | Action |
 |---|---|
-| Champ **🔍 Rechercher** (ou **Ctrl+F**) | Ouvre / focalise la recherche depuis n'importe quel écran |
+| Champ **Rechercher** (ou **Ctrl+F**) | Ouvre / focalise la recherche depuis n'importe quel écran |
 | Saisie | Met à jour la liste (anti-rebond : les frappes rapides sont regroupées) |
 | **↓** / **↑** | Parcourt les résultats ; **Entrée** ouvre l'élément (fiche du site ou écran du passage) |
 | **Échap** | Ferme la liste (puis vide la recherche) |
