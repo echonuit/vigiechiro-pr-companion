@@ -83,25 +83,12 @@ public class SiteEditViewModel {
     /// Site en cours d'édition ; `null` en création.
     private Site siteEnEdition;
 
-    /// « Ce carré existe-t-il déjà ? » (#3458). **Optionnel**, car il a besoin de la plateforme : absent
-    /// (injecteurs partiels, feature de connexion éteinte), la vérification n'est simplement pas offerte
-    /// et la déclaration reste entière. Même montage que `ControleCarreStoc`.
-    private final Optional<RechercheCarreExistant> recherche;
+    /// Le mode a-t-il déjà été choisi ? Une modale ne se prépare qu'**une fois** (#3801).
+    private boolean prepare;
 
-    /// Ce que la plateforme a répondu sur le carré saisi, avec sa gravité. Vide tant qu'on n'a rien
-    /// demandé - et une **absence de réponse n'est pas une réponse** : voir
-    /// [RechercheCarreExistant.Verdict.Indisponible].
-    private final ReadOnlyObjectWrapper<RetourOperation> retourCarreExistant =
-            new ReadOnlyObjectWrapper<>(this, "retourCarreExistant", RetourOperation.AUCUN);
-
-    /// Le carré cherché existe sur la plateforme : il y a donc quelque chose à **récupérer** (#3806).
-    /// Faux tant qu'on n'a pas demandé, faux si le carré est libre, et remis à faux dès que le numéro
-    /// change - le geste ne survit pas au verdict qui l'a ouvert.
-    private final ReadOnlyBooleanWrapper carreRecuperable = new ReadOnlyBooleanWrapper(this, "carreRecuperable", false);
-
-    /// « Récupérer ce carré » (#3806). **Optionnel** pour la même raison que la recherche : il interroge
-    /// la plateforme. Absent, le geste n'est pas offert et la déclaration reste entière.
-    private final Optional<RapatriementCarre> rapatriement;
+    /// Le versant « ce carré existe-t-il là-bas ? » (#3458, #3806), **extrait** en #3801 : il ne
+    /// partage aucun état avec la saisie, et le portail qualité a fini par le dire.
+    private final CarreExistantViewModel carre;
 
     /// La modale sert à **déclarer** (et non à modifier) : la distinction décide de ce qu'un verdict
     /// « ce carré existe déjà » entraîne. En déclaration il ferme l'enregistrement ; en édition il ne
@@ -120,8 +107,7 @@ public class SiteEditViewModel {
         this.liens = Objects.requireNonNull(liens, "liens");
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
-        this.recherche = Objects.requireNonNull(recherche, "recherche");
-        this.rapatriement = Objects.requireNonNull(rapatriement, "rapatriement");
+        this.carre = new CarreExistantViewModel(recherche, rapatriement);
         carreValide = Bindings.createBooleanBinding(() -> numeroCarre.get().matches("\\d{6}"), numeroCarre);
         carreInvalideEtSaisi = Bindings.createBooleanBinding(
                 () -> !numeroCarre.get().isEmpty() && !numeroCarre.get().matches("\\d{6}"), numeroCarre);
@@ -135,137 +121,92 @@ public class SiteEditViewModel {
         // Composition d'observables plutôt qu'un calcul : chaque dépendance est déclarée par
         // construction, là où un `createBooleanBinding` obligerait à les énumérer sans que rien ne
         // vérifie l'énumération (ADR 3547).
-        peutEnregistrer = carreValide.and(enCreation.and(carreRecuperable).not());
-        numeroCarre.addListener((observable, avant, apres) -> {
-            retourCarreExistant.set(RetourOperation.AUCUN);
-            carreRecuperable.set(false);
-        });
+        peutEnregistrer = carreValide.and(enCreation.and(carre.recuperable()).not());
+        numeroCarre.addListener((observable, avant, apres) -> carre.oublier());
     }
 
-    /// La vérification « ce carré existe-t-il déjà ? » est-elle **installée** (#3458) ? Faux hors de
-    /// l'application complète : la modale n'affiche alors pas le geste, plutôt qu'un bouton mort.
-    public boolean rechercheCarreDisponible() {
-        return recherche.isPresent();
-    }
-
-    /// Ce qu'une interrogation rapporte : le verdict **et le numéro qui l'a demandé** (#3458).
+    /// Le versant « ce carré existe-t-il là-bas ? » de cette modale (#3801).
     ///
-    /// Le numéro voyage avec le verdict parce que la réponse revient **plus tard**, sur une modale que
-    /// l'utilisateur a pu modifier entre-temps. Sans lui, rien ne permettrait de savoir que ce verdict ne
-    /// juge plus ce qui est à l'écran.
-    ///
-    /// @param numeroInterroge le numéro de carré tel qu'il était au départ de la requête
-    /// @param verdict ce que la plateforme en a dit
-    public record ResultatRechercheCarre(String numeroInterroge, RechercheCarreExistant.Verdict verdict) {
-
-        /// Aucune réponse exploitable pour `numeroInterroge` : panne technique, plutôt que refus de la
-        /// plateforme (celui-là est déjà un [RechercheCarreExistant.Verdict.Indisponible] rendu par le
-        /// modèle).
-        public static ResultatRechercheCarre indisponible(String numeroInterroge) {
-            return new ResultatRechercheCarre(numeroInterroge, new RechercheCarreExistant.Verdict.Indisponible());
-        }
+    /// Exposé plutôt que délégué : re-publier ici six gestes qui n'appartiennent pas à la saisie
+    /// recréerait la classe que l'extraction vient de défaire.
+    public CarreExistantViewModel carre() {
+        return carre;
     }
 
-    /// Interroge la plateforme sur le carré saisi.
+    /// Demande à la plateforme si le carré **saisi** existe déjà.
     ///
     /// **Bloquant** (réseau) : à appeler hors du fil JavaFX, puis passer le résultat à
-    /// [#appliquerRechercheCarre]. Même découpage que `PointEditViewModel#controlerCarre`.
-    public ResultatRechercheCarre chercherCarreExistant() {
-        String demande = numeroCarre.get();
-        if (recherche.isEmpty() || !carreValide.get()) {
-            return ResultatRechercheCarre.indisponible(demande);
-        }
-        return new ResultatRechercheCarre(demande, recherche.get().chercher(demande));
-    }
-
-    /// Applique un résultat de [#chercherCarreExistant] aux propriétés observables, **sur le fil JavaFX**.
+    /// `carre().appliquer(...)`.
     ///
-    /// Un résultat qui porte sur un **autre numéro** que celui affiché est **écarté** : l'appel a duré, et
-    /// la saisie a changé pendant ce temps. L'afficher quand même mettrait un avertissement sous un carré
-    /// qu'il ne juge pas - le jumeau, pris par l'autre bout, du verdict qu'on efface quand le numéro
-    /// change.
-    public void appliquerRechercheCarre(ResultatRechercheCarre resultat) {
-        if (!resultat.numeroInterroge().equals(numeroCarre.get())) {
-            return;
+    /// Ce point d'entrée reste ici, et n'est pas parti avec le reste du concern : c'est la **saisie**
+    /// qui décide s'il y a lieu de demander. Un carré incomplet ne fait partir aucune requête - le
+    /// bouton est grisé, mais le ViewModel s'appelle aussi directement.
+    public CarreExistantViewModel.ResultatRechercheCarre chercherCarreExistant() {
+        String demande = numeroCarre.get();
+        if (!carreValide.get()) {
+            return CarreExistantViewModel.ResultatRechercheCarre.indisponible(demande);
         }
-        retourCarreExistant.set(new RetourOperation(
-                resultat.verdict().message(), resultat.verdict().severite()));
-        // Le geste suit le verdict : on ne propose de récupérer que ce qui est là-bas, et seulement si le
-        // rapatriement est installé (sinon le bouton serait mort).
-        carreRecuperable.set(
-                rapatriement.isPresent() && resultat.verdict() instanceof RechercheCarreExistant.Verdict.DejaDeclare);
-    }
-
-    /// Y a-t-il un carré à récupérer, c'est-à-dire un verdict « il existe déjà » encore valable (#3806) ?
-    public ReadOnlyBooleanProperty carreRecuperable() {
-        return carreRecuperable.getReadOnlyProperty();
+        return carre.chercher(demande);
     }
 
     /// Récupère le carré saisi depuis la plateforme, avec le protocole choisi dans la modale.
     ///
-    /// **Bloquant** (réseau) : à appeler hors du fil JavaFX. Rend un [RapatriementCarre.Resultat] que la
-    /// vue rend, et dont elle tire le site à ouvrir quand il a été rapatrié.
+    /// **Bloquant** (réseau) : à appeler hors du fil JavaFX. Même raison qu'au-dessus pour la garde de
+    /// validité, et c'est ici que vit le souhait de déclaration qu'on emporte.
     public RapatriementCarre.Resultat rapatrierCarre() {
-        if (rapatriement.isEmpty() || !carreValide.get()) {
+        if (!carreValide.get()) {
             return new RapatriementCarre.Resultat.Indisponible();
         }
-        return rapatriement
-                .get()
-                .rapatrier(new SouhaitDeclaration(numeroCarre.get(), protocole.get(), nom.get(), commentaire.get()));
-    }
-
-    /// Affiche le compte rendu du rapatriement, **sur le fil JavaFX**.
-    public void appliquerRapatriement(RapatriementCarre.Resultat resultat) {
-        retourCarreExistant.set(new RetourOperation(resultat.message(), resultat.severite()));
-        // ⚠️ Une panne **ne referme pas** le geste, et ne rouvre pas la déclaration.
-        //
-        // Le geste ne se referme que lorsqu'il n'y a effectivement plus rien à récupérer : le carré
-        // existe sous un autre protocole. Sur une plateforme injoignable, on sait toujours que le carré
-        // est là-bas - le verdict vient de le dire - et la panne peut être passagère. Rouvrir « Créer »
-        // dans cet état inviterait à fabriquer le doublon que ce chantier existe pour éviter.
-        //
-        // Trouvé en regardant une capture, pas par un test : l'écran montrait « Créer » redevenu bleu
-        // après un échec réseau.
-        if (!(resultat instanceof RapatriementCarre.Resultat.Indisponible)) {
-            carreRecuperable.set(false);
-        }
-    }
-
-    /// Ce que la plateforme a dit du carré saisi, avec sa gravité.
-    public ReadOnlyObjectProperty<RetourOperation> retourCarreExistantProperty() {
-        return retourCarreExistant.getReadOnlyProperty();
+        return carre.rapatrier(
+                new SouhaitDeclaration(numeroCarre.get(), protocole.get(), nom.get(), commentaire.get()));
     }
 
     /// Configure la modale en **mode déclaration** d'un nouveau site.
+    ///
+    /// ## Pourquoi il n'y a presque rien à faire ici
+    ///
+    /// **L'état construit EST l'état de déclaration** : le numéro, le nom et le commentaire naissent
+    /// vides, le protocole à `STANDARD`, le bouton libellé « Créer », `enCreation` à vrai, les deux
+    /// comptes rendus à `AUCUN`. Seul le titre en diffère.
+    ///
+    /// Ces affectations existaient, et **neuf mutants y survivaient** (#3801) : les supprimer une à une
+    /// ne faisait rougir personne, parce qu'elles réécrivaient des valeurs déjà en place. Elles
+    /// n'avaient de sens que si la même instance servait deux fois - ce que la production ne fait pas.
+    ///
+    /// Ce que ces lignes garantissaient est désormais tenu ailleurs :
+    /// `un_view_model_neuf_est_deja_en_declaration` lit les valeurs de départ, si bien qu'un défaut ne
+    /// peut plus se cacher derrière une réinitialisation redondante.
     public void preparerCreation() {
-        siteEnEdition = null;
-        enCreation.set(true);
-        // Le verdict du carré n'est pas effacé ici : vider le numéro juste en dessous s'en charge, par le
-        // même chemin que toute autre correction de saisie. Un second effacement, écrit à la main, aurait
-        // dit la même chose une seconde fois - et PIT l'a signalé en le supprimant sans faire rougir
-        // personne.
-        numeroCarre.set("");
-        nom.set("");
-        protocole.set(Protocole.STANDARD);
-        commentaire.set("");
-        retour.set(RetourOperation.AUCUN);
+        exigerPremierePreparation();
         titre.set("Nouveau site de suivi");
-        libelleBouton.set("Créer");
-        porteeEdition.set(RetourOperation.AUCUN);
     }
 
     /// Configure la modale en **mode édition** : champs pré-remplis depuis le site existant.
     public void preparerEdition(Site site) {
+        exigerPremierePreparation();
         siteEnEdition = Objects.requireNonNull(site, "site");
         enCreation.set(false);
         numeroCarre.set(site.numeroCarre());
         nom.set(ouVide(site.nomConvivial()));
         protocole.set(site.protocole());
         commentaire.set(ouVide(site.commentaire()));
-        retour.set(RetourOperation.AUCUN);
         titre.set("Modifier le site · Carré " + site.numeroCarre());
         libelleBouton.set("Enregistrer");
         porteeEdition.set(porteeDe(site));
+    }
+
+    /// Un ViewModel de modale ne sert **qu'une fois** (#3801).
+    ///
+    /// `NavigationSites` recharge le FXML à chaque ouverture : le ViewModel est neuf, et le mode se
+    /// choisit une seule fois dans sa vie. Le refus est **explicite** plutôt que silencieux - sans lui,
+    /// une seconde préparation laisserait les champs de la précédente en place, et l'écran mentirait
+    /// sans que rien ne le signale.
+    private void exigerPremierePreparation() {
+        if (prepare) {
+            throw new IllegalStateException("Ce ViewModel de site a déjà été préparé : il ne sert qu'une"
+                    + " fois. Rechargez la modale plutôt que de rejouer sa préparation.");
+        }
+        prepare = true;
     }
 
     /// Tente d'enregistrer le site (déclaration ou édition).
@@ -344,7 +285,7 @@ public class SiteEditViewModel {
         if (!carreValide.get()) {
             return "Renseignez d'abord un numéro de carré à 6 chiffres.";
         }
-        if (enCreation.get() && carreRecuperable.get()) {
+        if (enCreation.get() && carre.recuperable().get()) {
             return "Ce carré existe déjà sur Vigie-Chiro : récupérez-le plutôt que de le redéclarer.";
         }
         return "";
