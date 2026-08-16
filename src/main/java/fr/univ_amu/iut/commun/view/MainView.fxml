@@ -93,7 +93,12 @@
             alignment="CENTER_LEFT" spacing="10.0" visible="false" managed="false">
         <FontIcon iconLiteral="fas-arrow-alt-circle-up"/>
         <Label fx:id="texteAnnonce" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-        <Hyperlink fx:id="lienAnnonce"/>
+        <!-- minWidth="-Infinity" depuis #3876 : le libellé porte `hgrow` et prend donc toute la place
+             disponible, ce qui laisse le lien se faire écraser jusqu'à l'ellipse. Invisible tant que
+             l'annonce tenait en une phrase ; le message Windows de #3457 est trois fois plus long, et
+             le garde anti-troncature a chiffré le manque à 111 px. Un lien d'action abrégé en
+             « Voir cette… » est le défaut que la passe 8 cherche en premier. -->
+        <Hyperlink fx:id="lienAnnonce" minWidth="-Infinity"/>
         <Button fx:id="fermerAnnonce" styleClass="fermer-retour" accessibleText="Fermer l'annonce">
           <graphic>
             <FontIcon iconLiteral="fas-times"/>
