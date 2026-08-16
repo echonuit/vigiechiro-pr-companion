@@ -3,6 +3,7 @@ package fr.univ_amu.iut.validation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -38,6 +39,12 @@ class ValidationManuelleTest {
     private ValidationManuelle validationManuelle;
     private long idSequence;
 
+    /// Le journal est **typé** et non passé en lambda anonyme : c'est ce qui rend la garde visible au
+    /// cliquet de #3645, qui cherche le nom du port dans le fichier de test.
+    private final int[] annonces = {0};
+
+    private final JournalMutations journal = () -> annonces[0]++;
+
     @BeforeEach
     void preparer() throws SQLException {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
@@ -72,7 +79,7 @@ class ValidationManuelleTest {
                     idSession);
         }
         observationDao = new ObservationDao(source);
-        validationManuelle = new ValidationManuelle(observationDao, new TaxonDao(source), () -> {});
+        validationManuelle = new ValidationManuelle(observationDao, new TaxonDao(source), journal);
     }
 
     @Test
@@ -106,6 +113,27 @@ class ValidationManuelleTest {
     void valider_taxon_inconnu_refuse() {
         assertThatThrownBy(() -> validationManuelle.valider(idSequence, "ZZZZZZ"))
                 .isInstanceOf(RegleMetierException.class);
+    }
+
+    @Test
+    @DisplayName("#3537 : créer une observation manuelle annonce la mutation")
+    void valider_annonce_la_mutation() {
+        validationManuelle.valider(idSequence, "Pippip");
+
+        assertThat(annonces[0])
+                .as("une observation de plus : l'un des quatre comptes de l'accueil bouge")
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3537 : un taxon refusé n'annonce rien")
+    void un_refus_n_annonce_rien() {
+        assertThatThrownBy(() -> validationManuelle.valider(idSequence, "ZZZZZZ"))
+                .isInstanceOf(RegleMetierException.class);
+
+        // Le pendant du test précédent, et la moitié qui compte : une annonce posée avant le geste
+        // ferait relire la base pour rien, et surtout mentirait sur ce qui s'y trouve.
+        assertThat(annonces[0]).as("aucune écriture n'a eu lieu").isZero();
     }
 
     private static long insererCle(Connection cx, String sql, Object... params) throws SQLException {

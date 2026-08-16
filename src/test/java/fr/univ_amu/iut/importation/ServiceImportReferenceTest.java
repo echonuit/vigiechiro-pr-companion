@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -76,6 +77,12 @@ class ServiceImportReferenceTest {
     private Workspace workspace;
     private Long idPoint;
 
+    /// Journal **typé**, lié par surcharge Guice : le cliquet de #3645 cherche le nom du port dans le
+    /// fichier de test, et une garde invisible ne compte pas.
+    private final int[] annonces = {0};
+
+    private final JournalMutations journal = () -> annonces[0]++;
+
     private SessionDao sessionDao;
     private EnregistrementOriginalDao originalDao;
     private SequenceDao sequenceDao;
@@ -93,6 +100,9 @@ class ServiceImportReferenceTest {
                     @Override
                     protected void configure() {
                         bind(Horloge.class).toInstance(new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+                        // Le journal compteur remplace `RevisionDonnees` : sans cette liaison, l'annonce
+                        // partirait dans la vraie révision et personne ne pourrait dire si elle a eu lieu.
+                        bind(JournalMutations.class).toInstance(journal);
                     }
                 }));
 
@@ -147,6 +157,36 @@ class ServiceImportReferenceTest {
         assertThat(wavSousLaRacine(workspace.racine()))
                 .as("mode référence : rien d'audio n'est écrit dans l'espace de travail")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#3537 : un import de référence qui aboutit annonce une fois")
+    void un_import_de_reference_annonce_une_fois() throws IOException {
+        Path externe = preparerDossierTransforme(racine.resolve("externe"));
+
+        service.importer(externe, idPoint, 2026, 1, true, p -> {}, JetonAnnulation.neutre());
+
+        // Un passage, une session, deux originaux et trois séquences écrits : une seule annonce. Le
+        // signal porte l'opération métier, pas la ligne (ADR 3537).
+        assertThat(annonces[0])
+                .as("un passage de référence est un passage de plus à l'inventaire")
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#3537 : un import annulé en cours de route n'annonce rien")
+    void un_import_annule_n_annonce_rien() throws IOException {
+        Path externe = preparerDossierTransforme(racine.resolve("externe"));
+        JetonAnnulation jeton = new JetonAnnulation();
+        Consumer<Progression> annulerAuPremier = p -> jeton.annuler();
+
+        assertThatThrownBy(() -> service.importer(externe, idPoint, 2026, 1, true, annulerAuPremier, jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        // Le cas dur, et la raison d'être de la règle « après le commit, jamais dedans » : la session
+        // partielle avait déjà été écrite quand l'annulation est tombée, puis nettoyée. Une annonce posée
+        // à l'écriture aurait fait relire la base pour y chercher un passage qui n'a jamais existé.
+        assertThat(annonces[0]).as("rien ne subsiste, donc rien à signaler").isZero();
     }
 
     @Test
