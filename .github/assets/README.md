@@ -113,6 +113,15 @@ Le bandeau, les cartes d'activités, la recherche transverse et les menus qui le
 
 <table>
 <tr>
+<th width="100%">Annonce de mise à jour, variante Windows</th>
+</tr>
+<tr>
+<td><a href="apercu-annonce-maj-windows.png"><img src="apercu-annonce-maj-windows.png" width="870" alt="Annonce de mise à jour sous Windows : le message porte en plus « fermez l'application avant d'installer » et le geste winget, et s'enroule donc sur deux lignes"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
 <th width="50%">Dossier de travail déjà ouvert</th>
 <th width="50%">Restauration : nuits déplacées</th>
 </tr>
