@@ -5,6 +5,20 @@ import java.util.Optional;
 
 /// Le geste à conseiller, en plus du téléchargement, pour passer à la version disponible (#3616).
 ///
+/// ## Fermer d'abord, parce que l'installateur ne le fera pas (#3457)
+///
+/// Un utilisateur a lancé l'installation depuis le bandeau et s'est retrouvé devant une installation
+/// qui **ne se termine pas** : l'installateur ne peut pas remplacer des fichiers qu'un processus tient
+/// ouverts, et rien ne lui disait ni pourquoi ni quoi faire.
+///
+/// ⚠️ **Fermer l'application nous-mêmes n'est pas à notre portée**, et c'est une mesure et non une
+/// préférence : Companion ne lance aucun installateur. Le bandeau produit une annonce dont l'action
+/// **ouvre une page web** ; entre ce clic et le MSI il y a le navigateur, un téléchargement et un
+/// double-clic. Se fermer sur ce clic-là fermerait l'application pour aller lire une page.
+///
+/// Le conseil le **dit** donc, et il le dit en premier : c'est ce qui bloque, le canal d'installation
+/// ne vient qu'ensuite.
+///
 /// ## Pourquoi ce conseil existe
 ///
 /// L'annonce livrée au lot 4 (#2109) renvoyait **tout le monde** vers la page des Releases. Depuis
@@ -47,7 +61,8 @@ public final class ConseilDeMiseAJour {
         if (!nomDuSysteme.toLowerCase(Locale.ROOT).startsWith("windows")) {
             return Optional.empty();
         }
-        return Optional.of("Si vous avez installé par winget : winget upgrade " + PAQUET_WINGET);
+        return Optional.of("Fermez l'application avant d'installer la nouvelle version."
+                + " Si vous avez installé par winget : winget upgrade " + PAQUET_WINGET);
     }
 
     /// Le conseil pour le système sur lequel on tourne.

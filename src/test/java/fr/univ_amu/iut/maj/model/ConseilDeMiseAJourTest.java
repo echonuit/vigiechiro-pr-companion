@@ -71,6 +71,19 @@ class ConseilDeMiseAJourTest {
         }
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"Windows 11", "Windows 10", "windows server 2022", "WINDOWS"})
+    @DisplayName("sous Windows, le conseil dit de fermer l'application avant d'installer")
+    void sousWindowsLeConseilDitDeFermerLApplication(String systeme) {
+        // #3457 : l'installateur ne peut pas remplacer des fichiers qu'un processus tient ouverts.
+        // L'utilisateur se retrouvait devant une installation qui ne se termine pas, sans que rien ne
+        // lui dise pourquoi. Companion ne lance aucun installateur - l'annonce ouvre une page web -
+        // donc fermer l'application soi-même n'est pas à notre portée : reste à le DIRE.
+        String conseil = ConseilDeMiseAJour.pour(systeme).orElseThrow();
+
+        assertThat(conseil).containsIgnoringCase("fermez").containsIgnoringCase("application");
+    }
+
     @Test
     @DisplayName("le conseil PROPOSE le geste winget, il ne l'impose pas")
     void leConseilProposeSansImposer() {
