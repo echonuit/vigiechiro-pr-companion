@@ -1190,6 +1190,19 @@ Deux refus, pour que le vide ne passe pas pour un résultat :
 **fait ce que le cas décrit**. La planche rend cette relecture possible en regardant, plutôt qu'en
 relisant seize classes.
 
+⚠️ **Mais tous les cas ne s'auditent pas en regardant**, et l'index le dit ligne par ligne. Un
+ViewModel cite des cas et n'ouvre aucune fenêtre : son clip est noir, et c'est le résultat **juste**.
+Cocher « vu » dessus serait un mensonge - un mensonge que la planche aurait encouragé si elle avait
+proposé la même case à tout le monde.
+
+| Colonne « Comment l'auditer » | Ce que ça veut dire |
+|---|---|
+| **en regardant** | quelque chose a paru à l'écran pendant ce test, le clip le montre |
+| **en lisant le test** | rien n'a paru : l'audit est une lecture de code, le clip n'y ajoute rien |
+
+La frontière est « **aucune** image utile », et non un seuil réglé à la main : soit quelque chose a
+paru, soit rien. Un nombre choisi aurait rangé un cas du mauvais côté sans qu'on le sache.
+
 ```bash
 gh workflow run recette-filmee.yml                                  # le passage normal
 gh workflow run recette-filmee.yml -f sans_gestionnaire_de_fenetres=true   # le témoin
