@@ -62,42 +62,46 @@ raccourcis clavier.
 
 18. Sélectionner une séquence affiche son détail sous « Séquence sélectionnée ».
 19. « Vue audio (sonogramme + spectrogramme) » affiche la séquence.
-20. Dès le début de lecture, la séquence passe à « ✓ écoutée » (pas de latence au premier clic, #1509).
-21. La section « Votre verdict sur ce fichier » propose **Bon / Mauvais / Inexploitable**.
-22. Juger la séquence courante inscrit son verdict dans la colonne **Verdict** de la liste.
-23. La **barre de répartition** tricolore reflète les verdicts par fichier (segments Bon / Mauvais /
+20. Les commandes de la vue audio (« Lecture », « Temps ± », « Fréq. ± ») se **voient** comme des
+    boutons : chacune porte un contour net qui la détache du fond de la barre. C'est ce qui manquait
+    quand un utilisateur n'a lancé aucune écoute de toute une séance (#3462), le libellé étant
+    pourtant lisible.
+21. Dès le début de lecture, la séquence passe à « ✓ écoutée » (pas de latence au premier clic, #1509).
+22. La section « Votre verdict sur ce fichier » propose **Bon / Mauvais / Inexploitable**.
+23. Juger la séquence courante inscrit son verdict dans la colonne **Verdict** de la liste.
+24. La **barre de répartition** tricolore reflète les verdicts par fichier (segments Bon / Mauvais /
     Inexploitable + queue grise « non jugé » qui recule), avec un **résumé chiffré** (pas la couleur
     seule).
-24. L'axe des fréquences du spectrogramme **s'ajuste au contenu** (#1508).
-25. Sur un passage sans séquences : « Aucune séquence à écouter pour l'instant. ».
+25. L'axe des fréquences du spectrogramme **s'ajuste au contenu** (#1508).
+26. Sur un passage sans séquences : « Aucune séquence à écouter pour l'instant. ».
 
 **Bloc 4 · Verdict global du passage (proposé, dérivé, surchargeable)**
 
-26. La section « Verdict global du passage » porte le sous-titre « Décision d'ensemble pour toute la nuit,
+27. La section « Verdict global du passage » porte le sous-titre « Décision d'ensemble pour toute la nuit,
     pas pour un seul fichier ».
-27. Tant qu'aucune séquence n'est jugée, la puce « Verdict proposé » est **masquée**.
-28. Dès qu'une séquence est jugée, la puce affiche « Proposé : X » (OK / Utilisable / Inexploitable),
+28. Tant qu'aucune séquence n'est jugée, la puce « Verdict proposé » est **masquée**.
+29. Dès qu'une séquence est jugée, la puce affiche « Proposé : X » (OK / Utilisable / Inexploitable),
     colorée, dérivée des verdicts par fichier.
-29. Le verdict proposé **pré-remplit** le verdict global.
-30. Surcharger le verdict (choisir autre chose que le proposé) affiche la mention « (surchargé) ».
-31. Les 3 boutons du verdict global sont **OK / Utilisable / Inexploitable** (plus « À jeter »).
-32. « Enregistrer le verdict » est grisé tant qu'aucun verdict global n'est posé, avec infobulle.
-33. Enregistrer met à jour VERDICT ACTUEL et STATUT (→ Vérifié) ; badge « Verdict enregistré » + regrisage.
-34. Choisir « Inexploitable » dit son **effet réel** (le passage ne pourra pas être déposé sans
+30. Le verdict proposé **pré-remplit** le verdict global.
+31. Surcharger le verdict (choisir autre chose que le proposé) affiche la mention « (surchargé) ».
+32. Les 3 boutons du verdict global sont **OK / Utilisable / Inexploitable** (plus « À jeter »).
+33. « Enregistrer le verdict » est grisé tant qu'aucun verdict global n'est posé, avec infobulle.
+34. Enregistrer met à jour VERDICT ACTUEL et STATUT (→ Vérifié) ; badge « Verdict enregistré » + regrisage.
+35. Choisir « Inexploitable » dit son **effet réel** (le passage ne pourra pas être déposé sans
     requalification), sans le mot « lot » (#1510).
-35. Un passage au verdict **Inexploitable** est **bloqué au dépôt** (garde + affordance).
-36. Quitter avec un verdict non enregistré déclenche la garde de sortie.
-37. Rouvrir un passage Vérifié : le bandeau montre le verdict persisté, la répartition par fichier est
+36. Un passage au verdict **Inexploitable** est **bloqué au dépôt** (garde + affordance).
+37. Quitter avec un verdict non enregistré déclenche la garde de sortie.
+38. Rouvrir un passage Vérifié : le bandeau montre le verdict persisté, la répartition par fichier est
     rechargée.
 
 **Bloc 5 · Clavier**
 
-38. `↑`/`↓` dans la liste changent de séquence.
-39. `Espace` lance/pause la lecture (#1504 : Espace opérant, ne déclenche pas un bouton focalisé).
-40. `O`/`D`/`J` posent le verdict **global** (OK / Utilisable / Inexploitable).
-41. `Entrée` enregistre (si verdict global choisi).
-42. Curseur dans le commentaire : O/D/J tapent la lettre (raccourcis de verdict suspendus).
-43. La légende clavier est visible (footer) et cohérente avec les libellés à l'écran (#1513).
+39. `↑`/`↓` dans la liste changent de séquence.
+40. `Espace` lance/pause la lecture (#1504 : Espace opérant, ne déclenche pas un bouton focalisé).
+41. `O`/`D`/`J` posent le verdict **global** (OK / Utilisable / Inexploitable).
+42. `Entrée` enregistre (si verdict global choisi).
+43. Curseur dans le commentaire : O/D/J tapent la lettre (raccourcis de verdict suspendus).
+44. La légende clavier est visible (footer) et cohérente avec les libellés à l'écran (#1513).
 
 ## Corrections à confirmer (constats du 14/07, tous mergés)
 

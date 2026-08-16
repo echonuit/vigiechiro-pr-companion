@@ -1317,3 +1317,40 @@
 .dialog-pane .button:default:hover {
     -fx-background-color: -couleur-primaire-sombre;
 }
+
+/* ============================================================================
+ * Commandes de la vue audio : un contour, pour qu un bouton se VOIE (#3462)
+ *
+ * Un utilisateur n a lancé aucune écoute de toute une séance de vérification :
+ * « je n avais pas vu le bouton lecture du fait de la sobriété de l écran
+ * (bouton noir sur fond noir) ». La mesure a déplacé le défaut : son TEXTE est
+ * à 10,68:1, très au-dessus des 4,5:1 exigés. C est la SURFACE du bouton qui
+ * était à 1,17:1 du fond de la barre, là où WCAG 2.2 §1.4.11 demande 3:1 pour
+ * un composant d interface. Le libellé se lisait ; le bouton ne se voyait pas.
+ *
+ * POURQUOI UN CONTOUR ET NON UNE SURFACE PLUS CLAIRE. Calculé : même éclaircie
+ * ×3,8, la surface plafonne à 2,35:1 sans virer au gris-bleu clair, ce qui
+ * dénaturerait une vue sombre à dessein - un spectrogramme se lit sur du noir.
+ * WCAG 1.4.11 accepte les deux leviers ; celui-ci ne coûte pas le caractère de
+ * l écran.
+ *
+ * POURQUOI TROIS CLASSES. Ces boutons appartiennent à audio-view, dont la
+ * feuille est déclarée SUR SA PROPRE RACINE (AudioView.fxml), donc plus profond
+ * que les feuilles de l écran. À spécificité égale c est elle qui gagne :
+ * recopier son sélecteur à deux classes donnerait une règle juste dans le
+ * fichier et sans effet à l écran.
+ *
+ * POURQUOI CE GRIS-LÀ, ET UN SEUL. #6b737b rend 3,77:1 sur la barre sombre et
+ * 3,76:1 sur la barre claire du thème :light. Une seule déclaration sert donc
+ * les deux thèmes - et elle y survit, la bibliothèque ne posant de bordure dans
+ * aucun des deux : sa règle :light, plus spécifique, ne réécrit que le fond et
+ * le texte.
+ *
+ * Mesuré sur rendu par ContrasteVueAudioTest, pas sur le texte de cette feuille.
+ * ========================================================================= */
+
+.audio-view .audio-view-toolbar .button {
+    -fx-border-color: #6b737b;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+}
