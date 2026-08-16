@@ -657,6 +657,20 @@ PMD / ArchUnit ne se désactivent **jamais** pour « faire passer » un build (c
   Sans lui, il mesure la police de la **machine hôte** au lieu de celle du produit, et son verdict
   dépend de ce qui a tourné avant lui dans le même fork. `ScenesHabilleesTest` le garde (#3773).
 
+### ⚠️ Certains défauts ne se voient pas depuis ce poste - il faut les sonder
+
+Quatre fois sur la campagne #3802, une mesure locale a rendu **vert** sans rien dire : `Noto Sans` est
+une police **système** sous Linux, `ATOMIC_MOVE` y réussit quoi qu'on tienne ouvert, la vue **ACL** n'y
+existe pas, et PIT y tourne - donc laisse sans couverture toute branche que seul Windows emprunte.
+
+La méthode qui marche, et qui coûte trois minutes depuis #3754 : une **sonde jetable** qui **rapporte**
+au lieu de juger, dispatchée sur la plateforme concernée, lue, **puis** traduite en assertion.
+
+⚠️ Les deux sondes de cette campagne ont **contredit** l'hypothèse qui les demandait. Une sonde qui
+aurait asserté l'hypothèse serait passée au rouge sans qu'on sache pourquoi.
+
+Détail : [ADR 3802](decisions/3802-un-defaut-de-plateforme-se-sonde-il-ne-se-deduit-pas.md).
+
 ### ⚠️ La police d'un test n'est pas celle du produit, sauf si on la lui donne
 
 `Typographie.installer()` garde un `static boolean` : l'enregistrement de la police embarquée est
