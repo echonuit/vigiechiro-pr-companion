@@ -73,13 +73,24 @@ class ParcoursNavigationE2ETest {
         System.clearProperty("vigiechiro.workspace");
     }
 
+    /// Le fil **au sens de la navigation**, et non ce qui tient à l'écran : depuis #3798, un segment que
+    /// la place ne permet pas d'afficher part dans le menu « … » sans quitter le fil.
+    ///
+    /// ⚠️ Ne lire que les segments rendus rendrait ces parcours dépendants de la largeur de la fenêtre :
+    /// ils ont d'abord rougi ainsi, et sur **un seul** des trois jobs de la CI. Le menu occupe la place
+    /// exacte des segments qu'il porte, donc les déplier là où il se trouve redonne l'ordre du fil.
     private java.util.List<String> libellesDuFil(FxRobot robot) {
         HBox fil = robot.lookup("#filAriane").queryAs(HBox.class);
-        return fil.getChildren().stream()
-                .filter(n -> n.getStyleClass().contains("fil-ariane-segment")
-                        || n.getStyleClass().contains("fil-ariane-courant"))
-                .map(n -> ((Labeled) n).getText())
-                .toList();
+        java.util.List<String> libelles = new java.util.ArrayList<>();
+        for (javafx.scene.Node noeud : fil.getChildren()) {
+            if (noeud instanceof javafx.scene.control.MenuButton menu) {
+                menu.getItems().forEach(entree -> libelles.add(entree.getText()));
+            } else if (noeud.getStyleClass().contains("fil-ariane-segment")
+                    || noeud.getStyleClass().contains("fil-ariane-courant")) {
+                libelles.add(((Labeled) noeud).getText());
+            }
+        }
+        return libelles;
     }
 
     @Test

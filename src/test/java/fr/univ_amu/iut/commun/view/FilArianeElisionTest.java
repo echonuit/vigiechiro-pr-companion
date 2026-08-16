@@ -68,7 +68,10 @@ class FilArianeElisionTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        scene = new Scene(racine, LARGEUR, 720);
+        // `Habillage` et non `new Scene` : ce fichier **mesure** des largeurs, donc son verdict dépend de
+        // la police effectivement rendue (#3773). Recopier le banc voisin m'a fait hériter de sa dette :
+        // lui ne mesure pas lui-même, il délègue à `LisibiliteCapture`, et le garde ne le vise pas.
+        scene = Habillage.scene(racine, LARGEUR, 720);
         stage.setScene(scene);
         stage.show();
     }
