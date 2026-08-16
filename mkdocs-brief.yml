@@ -154,6 +154,10 @@ nav:
           - P11 - Inventaire des espèces: Analyse et conception/Parcours utilisateurs/P11 - Inventaire des espèces détectées.md
           - P12 - Récupérer une nuit déposée: Analyse et conception/Parcours utilisateurs/P12 - Récupérer une nuit déposée sur VigieChiro.md
           - P13 - Envoyer un sous-ensemble à un expert: Analyse et conception/Parcours utilisateurs/P13 - Envoyer un sous-ensemble à un expert.md
+          - P14 - Relever l'état sur la plateforme: Analyse et conception/Parcours utilisateurs/P14 - Vérifier ce que la plateforme détient d'une nuit.md
+          - P15 - Relire l'histoire d'une nuit: Analyse et conception/Parcours utilisateurs/P15 - Relire l'histoire d'une nuit.md
+          - P16 - Déclarer et retrouver son matériel: Analyse et conception/Parcours utilisateurs/P16 - Déclarer et retrouver son matériel.md
+          - P17 - Reprendre une nuit sur un autre poste: Analyse et conception/Parcours utilisateurs/P17 - Reprendre une nuit sur un autre poste.md
           - Topologie plein écran: Analyse et conception/Parcours utilisateurs/Topologie - plein écran.md
       - Story mapping:
           - Vue d'ensemble: Analyse et conception/Story mapping/index.md
@@ -186,6 +190,10 @@ nav:
           - M-Activite: Analyse et conception/Maquettes/M-Activite.md
           - M-Saison: Analyse et conception/Maquettes/M-Saison.md
           - M-CompteRendu: Analyse et conception/Maquettes/M-CompteRendu.md
+          - M-Releve - Relevé sur la plateforme: Analyse et conception/Maquettes/M-Releve.md
+          - M-Journal - Histoire d'une nuit: Analyse et conception/Maquettes/M-Journal.md
+          - M-Materiel - Parc de matériels: Analyse et conception/Maquettes/M-Materiel.md
+          - M-Paquet - Paquet de reprise: Analyse et conception/Maquettes/M-Paquet.md
 
 # Validation des liens (#2887). MkDocs vérifie par défaut que le FICHIER cité existe, mais pas que
 # l'ANCRE y existe : un `#titre-renomme` passait donc en silence, y compris en `--strict`. Mesuré, le

@@ -350,6 +350,29 @@ Ouvert depuis la carte d'accueil **« Sons & validation »** (prisme *Espèces &
 </svg>
 </div>
 
+## Variante attendue - valider au genre
+
+!!! warning "Cible non livrée"
+    Décrit un chantier ouvert. Son état se lit sur l'issue **#3844**, qui se ferme quand il est livré.
+
+Un contrôle s'ajoute à la barre d'actions, à côté du sélecteur de taxon. Il porte le **code de genre**
+correspondant au taxon retenu, et il a **deux états seulement** :
+
+| État | Quand | Ce que le contrôle affiche |
+|---|---|---|
+| **actif** | le genre existe au référentiel serveur | « Monter au genre (Plesp) » |
+| **grisé, avec son motif** | genre monospécifique en métropole, ou taxon déjà au niveau du genre | « Barbastelle : genre monospécifique en France » |
+
+Le contrôle ne propose donc **jamais** un code qu'il aurait déduit sans vérifier. Une heuristique de
+construction (trois lettres du genre, plus `sp`) qui ne serait pas confrontée au référentiel
+produirait des codes plausibles et refusés au dépôt, c'est-à-dire des erreurs découvertes très loin
+du geste qui les a créées.
+
+Le geste suit les règles déjà en vigueur dans cet écran : il agit sur la **multi-sélection**, il porte
+un raccourci clavier, et la correction part vers la plateforme comme les autres. Deux points restent à
+trancher au chantier : la **certitude** posée avec un genre, et si l'on peut ensuite redescendre à
+l'espèce.
+
 ## Sources - un écran, quatre manières de l'ouvrir
 
 | Source | Ouvert depuis | Fil d'Ariane | Colonnes contexte | Actions ☰ propres |

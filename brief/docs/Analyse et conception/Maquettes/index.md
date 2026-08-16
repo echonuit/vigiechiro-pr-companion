@@ -35,15 +35,29 @@ Cette section regroupe les **maquettes basse fidélité** de l'application *Vigi
 | [M-Activite](M-Activite.md) | Activité de la nuit (courbes horaires par espèce) | Depuis M-Passage (une nuit) et depuis l'accueil (toutes les nuits) | [P11](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20espèces%20détectées.md), [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) | prisme biodiversité |
 | [M-Saison](M-Saison.md) | Solde de la saison (reste à faire, point par point) | Vue plein écran (depuis l'accueil) | [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), [P9](../Parcours%20utilisateurs/P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md) | prisme collecte & passages |
 | [M-CompteRendu](M-CompteRendu.md) | Compte rendu chiffré d'une opération lourde | Composant transverse | [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md), [P12](../Parcours%20utilisateurs/P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md) | transverse |
+| [M-Releve](M-Releve.md) ⬜ | Relevé d'une nuit sur la plateforme | Vue secondaire (depuis M-Passage) | [P14](../Parcours%20utilisateurs/P14%20-%20Vérifier%20ce%20que%20la%20plateforme%20détient%20d%27une%20nuit.md) | chaîne de production |
+| [M-Journal](M-Journal.md) ⬜ | L'histoire d'une nuit (frise des évènements) | Vue secondaire (depuis M-Passage) | [P15](../Parcours%20utilisateurs/P15%20-%20Relire%20l%27histoire%20d%27une%20nuit.md) | chaîne de production |
+| [M-Materiel](M-Materiel.md) ⬜ | Parc d'enregistreurs et de micros | Onglet des Réglages | [P16](../Parcours%20utilisateurs/P16%20-%20Déclarer%20et%20retrouver%20son%20matériel.md) | chaîne de production |
+| [M-Paquet](M-Paquet.md) ⬜ | Paquet de reprise entre deux postes | Assistant (depuis M-MultiSite) | [P17](../Parcours%20utilisateurs/P17%20-%20Reprendre%20une%20nuit%20sur%20un%20autre%20poste.md) | prisme collecte & passages |
 
-!!! success "Ce tableau décrit des écrans qui existent"
+!!! success "Les écrans sans repère existent"
     [M-Synthese](M-Synthese.md), [M-Activite](M-Activite.md), [M-Saison](M-Saison.md) et
     [M-CompteRendu](M-CompteRendu.md) ont été les dernières à décrire des écrans à construire. Leurs
-    chantiers #2348, #2349 et #2350 sont **clos depuis le 29 juillet 2026** : tout ce tableau décrit
-    désormais l'application livrée. Chaque fiche porte l'issue qui l'a mise en oeuvre.
+    chantiers #2348, #2349 et #2350 sont **clos depuis le 29 juillet 2026**. Chaque fiche porte
+    l'issue qui l'a mise en oeuvre.
 
-    Une maquette peut en revanche **devancer le produit sur un détail** : c'est un écart, pas une
+    Le repère ⬜ marque une **cible non livrée**, dans la même convention que les nœuds pointillés du
+    diagramme ci-dessous. Les quatre dernières lignes du tableau sont des chantiers ouverts en août ;
+    chaque fiche porte l'issue qui la suit, et c'est là que se lit son état.
+
+    Une maquette peut par ailleurs **devancer le produit sur un détail** : c'est un écart, pas une
     intention, et il se traite comme un défaut de documentation.
+
+!!! note "M-Materiel comble un trou de ce jeu de maquettes"
+    L'écran des **Réglages** n'avait aucune fiche, alors qu'il est livré depuis longtemps et qu'il
+    porte déjà deux onglets. [M-Materiel](M-Materiel.md) est la première à le décrire, par le biais de
+    l'onglet que le chantier #3847 y ajoute. Les onglets *Emplacements* et *Fonctionnalités* restent à
+    documenter.
 
 ## Comment lire une maquette
 
@@ -74,6 +88,10 @@ flowchart TB
     Saison[🗓 M-Saison]
     Synthese[📊 M-Synthese]
     Activite[📈 M-Activite]
+    Releve[🛰 M-Releve]
+    Journal[🕰 M-Journal]
+    Materiel[🎛 M-Materiel]
+    Paquet[🧳 M-Paquet]
 
     Accueil --> Sites
     Accueil --> MultiSite
@@ -104,8 +122,15 @@ flowchart TB
     classDef avenir fill:#ffffff,stroke:#6a737d,color:#2c3e50,stroke-width:2px,stroke-dasharray:5 4
     class Accueil accueil
     class Sites,Import,Qualif,Lot main
+    Passage --> Releve
+    Passage --> Journal
+    Accueil -.Réglages.-> Materiel
+    MultiSite --> Paquet
+    Paquet -.reprise.-> Import
+
     class Detail,Passage,MultiSite,Saison detail
     class Analyse,SonsVal,Synthese,Activite biodiv
+    class Releve,Journal,Materiel,Paquet avenir
 ```
 
 - 🟦 **Indigo** : écran d'accueil (lanceur à deux prismes).
@@ -114,7 +139,10 @@ flowchart TB
 - 🟪 **Violet** : prisme espèces & biodiversité (inventaire, sons & validation).
 - ⬜ **Contour pointillé** : écran **décidé et maquetté, pas encore livré**. Le statut se lit sur le
   nœud, pas dans une phrase du corps de texte : c'est ce qui l'empêche de se périmer sans qu'on le
-  voie.
+  voie. Quatre écrans y sont aujourd'hui, tous ouverts en août 2026.
+
+Le graphe montre au passage ce que les chantiers d'août feraient au **pivot** : `M-Passage` porterait
+huit écrans spécialisés, contre quatre à l'origine. C'est le point d'attention noté sur sa fiche.
 
 Le composant [M-CompteRendu](M-CompteRendu.md) ne figure pas sur ce graphe : il n'est pas un écran mais une **restitution de fin d'opération**, appelée depuis M-Import, M-Lot et la réactivation d'un passage.
 

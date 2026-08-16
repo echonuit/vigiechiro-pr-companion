@@ -38,3 +38,29 @@ Les deux enrichissements annoncés ici sont **livrés** (EPIC #2348).
 
 - **Les espèces à enjeu se distinguent dans la table.** Un repère de ligne, un critère de filtre et un compteur dédié permettent d'aller droit aux observations qui comptent, au lieu de les retrouver une par une dans plusieurs milliers de contacts (#2353).
 - **Le mode activité est devenu mesurable.** Le parcours distinguait déjà un mode *inventaire* et un mode *activité*, sans que le second ait de restitution. La [synthèse de la nuit](../Maquettes/M-Synthese.md) lui en donne une, et sa bascule « identifications validées seulement » fait apparaître ce que la validation a changé (#2351).
+
+## Le geste qui manque : valider au genre
+
+!!! warning "Cible non livrée"
+    Décrit un chantier ouvert. Son état se lit sur l'issue **#3844**, qui se ferme quand il est livré.
+
+Une partie des cris ne permet pas de conclure à l'espèce. Le cas courant est le couple *Plecotus
+auritus* / *austriacus*, et il se présente aussi chez les murins et les pipistrelles. Le parcours
+laisse aujourd'hui trois gestes, dont aucun ne dit ce que l'observateur sait réellement :
+
+| Ce qu'il peut faire | Ce que la donnée devient |
+|---|---|
+| choisir une des deux espèces | une identification qui a une chance sur deux d'être fausse |
+| poser l'espèce en certitude « Possible » | l'espèce reste affirmée ; la certitude nuance le propos, elle ne le change pas |
+| ne rien poser | un contact qui ne remonte pas, alors qu'il est identifiable au genre |
+
+Le protocole accepte pourtant les identifications au niveau du genre, et le référentiel embarqué porte
+les codes correspondants (`Plesp`, `Myosp`, `Pipsp`) au même titre que les codes d'espèce. Un
+observateur peut donc déjà en poser un : il lui faut connaître le code par cœur et le retrouver dans
+une liste de plusieurs centaines d'entrées qui ne distingue pas visuellement un genre d'une espèce.
+
+Le geste attendu est un contrôle à côté du sélecteur de taxon, qui propose le code de genre et ne
+propose **rien** quand il n'y a rien à proposer : un genre monospécifique en métropole, ou un code qui
+est déjà un genre. La table
+[C15 - Groupe taxonomique](../Modèle%20conceptuel/C15%20-%20Groupe%20taxonomique.md) porte déjà le niveau
+« Genre » et sert de filtre groupé ; l'ossature existe, elle n'est pas reliée à la correction.
