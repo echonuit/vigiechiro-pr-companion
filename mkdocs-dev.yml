@@ -227,6 +227,9 @@ nav:
     - 3764 · Un cas joué n'est pas un cas prouvé: decisions/3764-un-cas-joue-n-est-pas-un-cas-prouve.md
     - 3774 · Le clip se taille sur le test, et son contrôle porte sur la couverture: decisions/3774-le-clip-se-taille-sur-le-test.md
     - 3788 · Un banc qui maximise tout ne montre pas ce qu'on livre: decisions/3788-un-banc-qui-maximise-tout-ne-montre-pas-ce-qu-on-livre.md
+    - 3462 · Surcharger une feuille tierce se déclare: decisions/3462-surcharger-une-feuille-tierce-se-declare-et-monte-en-specificite.md
+    - 3464 · Le ressort va au vide, pas au libellé désigné: decisions/3464-le-ressort-va-au-vide-pas-au-libelle-qu-un-bouton-designe.md
+    - 3470 · Un message d'erreur ne montre pas son enveloppe: decisions/3470-un-message-d-erreur-ne-montre-jamais-le-nom-de-son-enveloppe.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
