@@ -601,8 +601,21 @@ auto_test() {
     essai "profil entièrement absent" rouge env POM_A_VERIFIER="$tmp/sans-profil.xml" bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
 
     # --- WAYLAND_DISPLAY ---
+    #
+    # ⚠️ `RECETTE_RELANCE=1` n'est pas décoratif, et son absence rendait ce cas VERT SUR UN RUNNER
+    # (#3883). Sourcer ce script exécute aussi sa relance automatique : trouvant WAYLAND_DISPLAY posé
+    # et le drapeau vide, elle `exec` une nouvelle instance SANS la variable, laquelle repart en
+    # `--aide` et sort 0. `verifier_wayland` n'était donc jamais appelé, et le cas rendait vert.
+    #
+    # Il passait pourtant sur un poste de développement, et c'est ce qui l'a caché : là où la session
+    # tourne sous Wayland, le script s'est DÉJÀ relancé au lancement de l'auto-test, si bien que
+    # `RECETTE_RELANCE=1` était hérité et empêchait la seconde relance. Le cas était donc vert pour
+    # une raison qui n'existe que chez qui l'écrit - exactement ce que « ce vert existerait-il si
+    # c'était cassé ? » cherche, et ce que faire tourner ce garde en CI a révélé du premier coup.
+    #
+    # Le drapeau posé, le cas éprouve la VÉRIFICATION et non la relance, sur n'importe quel poste.
     essai "WAYLAND_DISPLAY retiré" vert  env -u WAYLAND_DISPLAY bash -c 'source "$0"; verifier_wayland' "${BASH_SOURCE[0]}"
-    essai "WAYLAND_DISPLAY posé"   rouge env WAYLAND_DISPLAY=wayland-0 bash -c 'source "$0"; verifier_wayland' "${BASH_SOURCE[0]}"
+    essai "WAYLAND_DISPLAY posé"   rouge env WAYLAND_DISPLAY=wayland-0 RECETTE_RELANCE=1 bash -c 'source "$0"; verifier_wayland' "${BASH_SOURCE[0]}"
 
     # --- le pointeur, sur de VRAIS serveurs X ---
     Xvfb :91 -screen 0 "$TAILLE" -nolisten tcp >/dev/null 2>&1 &
