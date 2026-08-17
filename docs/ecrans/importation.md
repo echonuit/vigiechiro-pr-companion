@@ -274,6 +274,11 @@ la barre « écrit » se réduit d'autant : c'est là que se voit ce que ce rég
 - la **participation créée sur Vigie-Chiro**, quand vous êtes connecté et que le site est relié. L'import
   écrit alors sur la plateforme, et il vous le dit plutôt que de vous le laisser découvrir au dépôt.
 
+    La mention vous rappelle aussi de **compléter la fiche sur le portail** : Companion y déclare la
+    nuit, mais il ne connaît ni la météo que vous avez observée, ni le matériel exact, ni ce que vous
+    voudriez signaler en commentaire. Une participation créée n'est donc pas une participation
+    terminée.
+
 Chaque mention porte une **icône** accordée à son registre : une coche pour une bonne nouvelle, un « i »
 pour un fait de contexte, un triangle pour ce sur quoi il faudra revenir : en plus de sa couleur, pour
 rester lisible si vous distinguez mal les couleurs.

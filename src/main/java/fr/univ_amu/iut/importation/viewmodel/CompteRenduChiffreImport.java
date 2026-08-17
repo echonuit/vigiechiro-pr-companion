@@ -238,14 +238,23 @@ public final class CompteRenduChiffreImport {
         // L'écriture distante se dit (#1488) : elle porte les données de l'utilisateur sur un serveur, et
         // ne s'annonçait nulle part. Elle est dite au registre du SUCCÈS, pas de l'alerte : c'est un fait
         // accompli et voulu, non un problème - la sévérité par mention (#2358) permet enfin de le dire.
+        // #3473 : et ce qu'il RESTE à y faire. Annoncer une création, c'est annoncer un fait accompli,
+        // ce qui se lit « c'est fait » - or la fiche web attend encore des informations que Companion
+        // ne connaît pas (météo saisie, matériel, commentaires). L'utilisateur qui a produit ce retour
+        // demandait exactement cette phrase-là : « pensez à remplir les informations complémentaires ».
+        //
+        // ⚠️ Cette suite n'a pu être ajoutée qu'APRÈS #3448. Ce message s'affichait auparavant alors
+        // qu'aucune participation n'avait été créée : l'enrichir l'aurait rendu plus convaincant, pas
+        // plus vrai.
         if (contexte.participations() == 1) {
             avertissements.add(Avertissement.succes(
-                    "Participation créée sur Vigie-Chiro : la nuit y est déclarée, le dépôt la réutilisera."));
+                    "Participation créée sur Vigie-Chiro : la nuit y est déclarée, le dépôt la réutilisera."
+                            + " Pensez à la compléter sur le portail (météo, matériel, commentaires)."));
         } else if (contexte.participations() > 1) {
-            avertissements.add(
-                    Avertissement.succes(
-                            contexte.participations()
-                                    + " participations créées sur Vigie-Chiro : les nuits y sont déclarées, le dépôt les réutilisera."));
+            avertissements.add(Avertissement.succes(contexte.participations()
+                    + " participations créées sur Vigie-Chiro : les nuits y sont déclarées, le dépôt"
+                    + " les réutilisera. Pensez à les compléter sur le portail (météo, matériel,"
+                    + " commentaires)."));
         }
         return avertissements;
     }
