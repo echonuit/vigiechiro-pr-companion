@@ -70,7 +70,16 @@ class RechercheCarreExistantTest {
 
         // Confondre « je ne sais pas » et « il n'existe pas » ferait déclarer un carré déjà pris à
         // quelqu'un qui croit avoir vérifié : exactement la panne que cette classe évite.
-        assertThat(recherche.chercher("130711")).isInstanceOf(RechercheCarreExistant.Verdict.Indisponible.class);
+        RechercheCarreExistant.Verdict verdict = recherche.chercher("130711");
+        assertThat(verdict).isInstanceOf(RechercheCarreExistant.Verdict.Indisponible.class);
+
+        // ⚠️ Le titre de ce test promettait « on ne dit pas il est libre » ; seul le TYPE du verdict
+        // était contrôlé. Un message qui aurait ajouté « il n'existe pas encore » serait passé (#3914).
+        assertThat(verdict.message())
+                .as("le texte doit dire l'ignorance, jamais l'absence")
+                .contains("PAS été vérifié")
+                .doesNotContain("n'existe pas")
+                .doesNotContain("vous pouvez le déclarer");
     }
 
     @Test
