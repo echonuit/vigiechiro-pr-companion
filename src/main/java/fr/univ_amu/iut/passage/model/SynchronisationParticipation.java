@@ -100,37 +100,22 @@ public final class SynchronisationParticipation {
     /// n'a pas pu vérifier, comme le verdict de la modale l'a appris (ADR 3458). Affirmer depuis une
     /// ignorance est le défaut que ce dépôt traque partout.
     private String conseilSiteNonRattache(String numeroCarre) {
-        String entete = "Site non rattaché à Vigie-Chiro : ";
         if (numeroCarre == null) {
-            // Le port ne connaît pas le carré (implémentation no-op, feature `sites` absente) : on garde
-            // le geste juste, sans prétendre savoir si le carré existe là-bas.
-            return entete + "récupérez ce carré depuis « Mes sites » › « Nouveau site » avant de déposer.";
+            return ConseilSiteNonRattache.sansNumeroDeCarre();
         }
         return switch (client.chercherCarre(numeroCarre)) {
             case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) ->
-                entete + conseilSelonCeQuiExiste(numeroCarre, trouves);
+                ConseilSiteNonRattache.selonCeQuiExiste(numeroCarre, trouves);
             case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte ->
-                entete + "la vérification n'a pas pu se faire (vous n'êtes pas connecté)." + " Reconnectez-vous,"
+                ConseilSiteNonRattache.sansAvoirPuVerifier("vous n'êtes pas connecté") + " Reconnectez-vous,"
                         + " puis réessayez.";
             case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) ->
-                entete + "la vérification n'a pas pu se faire (Vigie-Chiro injoignable : " + cause + ")."
+                ConseilSiteNonRattache.sansAvoirPuVerifier("Vigie-Chiro injoignable : " + cause)
                         + " Réessayez plus tard.";
             case ReponseApi.Refuse<List<SiteVigieChiro>>(int statut, String corps) ->
-                entete + "la vérification n'a pas pu se faire (Vigie-Chiro a répondu HTTP " + statut + ")."
+                ConseilSiteNonRattache.sansAvoirPuVerifier("Vigie-Chiro a répondu HTTP " + statut)
                         + " Réessayez plus tard.";
         };
-    }
-
-    /// Deux conseils, et un seul est applicable selon ce que la plateforme porte.
-    private static String conseilSelonCeQuiExiste(String numeroCarre, List<SiteVigieChiro> trouves) {
-        boolean enPointFixe = trouves.stream().anyMatch(SiteVigieChiro::estPointFixe);
-        if (enPointFixe) {
-            return "le carré " + numeroCarre + " existe sur Vigie-Chiro. Ouvrez « Mes sites » › « Nouveau"
-                    + " site », saisissez ce numéro et cliquez « Récupérer ce carré » : il sera rattaché,"
-                    + " avec ses points d'écoute positionnés.";
-        }
-        return "le carré " + numeroCarre + " n'existe pas en Point Fixe sur Vigie-Chiro. Activez-le sur le"
-                + " portail (il faut y créer un point), puis récupérez-le depuis « Mes sites ».";
     }
 
     /// L'`_id` de la participation liée à `idPassage`, ou vide s'il n'a pas encore été déposé/rattaché.
