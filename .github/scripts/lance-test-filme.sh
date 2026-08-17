@@ -602,7 +602,16 @@ auto_test() {
 
     # --- WAYLAND_DISPLAY ---
     essai "WAYLAND_DISPLAY retiré" vert  env -u WAYLAND_DISPLAY bash -c 'source "$0"; verifier_wayland' "${BASH_SOURCE[0]}"
-    essai "WAYLAND_DISPLAY posé"   rouge env WAYLAND_DISPLAY=wayland-0 bash -c 'source "$0"; verifier_wayland' "${BASH_SOURCE[0]}"
+    # ⚠️ `RECETTE_RELANCE=1` est INDISPENSABLE, et son absence a rendu ce cas vert pendant tout ce
+    # temps sans qu'il éprouve quoi que ce soit. `source` rejoue le script depuis le début, donc la
+    # relance de la ligne 44 : avec WAYLAND_DISPLAY posé et le drapeau absent, la copie sourcée
+    # s'exec elle-même SANS WAYLAND_DISPLAY, si bien que `verifier_wayland` ne voyait plus rien à
+    # signaler et rendait 0 - vert, là où l'on attend rouge.
+    #
+    # Le cas ne passait donc que sur une machine dont la session est en Wayland : le lancement
+    # extérieur y ayant déjà posé le drapeau, la copie sourcée en héritait. Sur le runner, qui n'a
+    # pas de session Wayland, il a rougi au premier passage en CI (#3883).
+    essai "WAYLAND_DISPLAY posé"   rouge env WAYLAND_DISPLAY=wayland-0 RECETTE_RELANCE=1 bash -c 'source "$0"; verifier_wayland' "${BASH_SOURCE[0]}"
 
     # --- le pointeur, sur de VRAIS serveurs X ---
     Xvfb :91 -screen 0 "$TAILLE" -nolisten tcp >/dev/null 2>&1 &
