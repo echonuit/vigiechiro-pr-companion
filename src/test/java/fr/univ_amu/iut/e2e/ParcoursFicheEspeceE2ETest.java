@@ -40,7 +40,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E** du parcours « Fiche de l'espèce » (#844) : depuis le tableau de bord, ouvrir
@@ -95,22 +94,9 @@ class ParcoursFicheEspeceE2ETest {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
-        // ⚠️ Attendre EXACTEMENT ce que le clic exige (#3836). L'attente posée par #3823 vérifiait
-        // `Node::isVisible`, le drapeau **local** du nœud. Or `clickOn` filtre avec
-        // `NodeQueryUtils.isVisible()`, qui exige **en plus** que le nœud **intersecte le rectangle de
-        // la scène** - mesuré en lisant le bytecode de `FxRobot`, puis vérifié par une sonde : un nœud
-        // posé hors cadre porte un drapeau local à `true` et n'est **pas** cliquable.
-        //
-        // Une carte d'accueil tardive passe donc l'ancienne attente alors qu'elle est encore sous la
-        // ligne de flottaison, et le clic échoue - « returned 1 nodes, but no nodes were visible ».
-        // C'est pour cela que #3823 n'avait pas suffi : la règle était bonne, le prédicat non.
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("Sons & validation")
-                        .match(NodeQueryUtils.isVisible())
-                        .tryQuery()
-                        .isPresent());
+        // Même attente que le parcours voisin : le prédicat exact du clic (#3836), rendu bavard à
+        // l'expiration par [AttenteAvantClic] (#3911).
+        AttenteAvantClic.attendreCliquable(robot, "Sons & validation", 10);
         robot.clickOn("Sons & validation");
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
 
