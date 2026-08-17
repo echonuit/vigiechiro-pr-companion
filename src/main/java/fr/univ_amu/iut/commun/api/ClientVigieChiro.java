@@ -429,29 +429,33 @@ public final class ClientVigieChiro {
 
     /// **PUT** des octets vers l'**URL S3 pré-signée** (étape 2/3) : hors API VigieChiro (aucun en-tête
     /// d'auth, l'URL est déjà signée). Le `Content-Type` doit être le **mime attendu par la signature**
-    /// (sinon S3 répond `SignatureDoesNotMatch`). `true` si 2xx, `false` sinon (dégradation propre).
-    public boolean televerserVersS3(String urlSignee, byte[] octets, String mime) {
+    /// (sinon S3 répond `SignatureDoesNotMatch`).
+    ///
+    /// Rend l'**issue triée** et non un booléen (#3688) : le transport la construit de toute façon, et
+    /// c'est elle qui dit si le refus se **retente**. Le booléen la jetait au dernier moment, si bien
+    /// qu'un refus définitif redevenait rejouable une ligne plus loin.
+    public ReponseApi<String> televerserVersS3(String urlSignee, byte[] octets, String mime) {
         return transport.deposerVersS3(urlSignee, () -> HttpRequest.BodyPublishers.ofByteArray(octets), mime);
     }
 
     /// Variante **en flux** de [#televerserVersS3(String, byte[], String)] (#982) : le corps du `PUT` est
     /// **streamé depuis le disque** (`BodyPublishers.ofFile`) au lieu d'être chargé en mémoire : une
-    /// archive ZIP de dépôt peut peser ~700 Mo. Mêmes garanties : `true` si 2xx, `false` sinon (fichier
-    /// illisible compris).
-    public boolean televerserVersS3(String urlSignee, Path fichier, String mime) {
+    /// archive ZIP de dépôt peut peser ~700 Mo. Même issue triée, fichier illisible compris.
+    public ReponseApi<String> televerserVersS3(String urlSignee, Path fichier, String mime) {
         return televerserVersS3(urlSignee, fichier, mime, fraction -> {});
     }
 
     /// Comme [#televerserVersS3(String, Path, String)], en **remontant l'avancement** octet par octet
     /// (#984) à `progression` (fraction 0 à 1) pour alimenter une barre de progression par archive.
-    public boolean televerserVersS3(String urlSignee, Path fichier, String mime, DoubleConsumer progression) {
+    public ReponseApi<String> televerserVersS3(
+            String urlSignee, Path fichier, String mime, DoubleConsumer progression) {
         return televerserVersS3(urlSignee, fichier, mime, progression, SuiviReprise.SILENCIEUX);
     }
 
     /// Comme ci-dessus, en **remontant les reprises** (#2354) à `reprise` : une coupure momentanée sur ce
     /// gros `PUT` est réessayée (le `PUT` S3 est idempotent), et chaque nouvelle tentative est signalée
     /// pour une mention discrète côté IHM.
-    public boolean televerserVersS3(
+    public ReponseApi<String> televerserVersS3(
             String urlSignee, Path fichier, String mime, DoubleConsumer progression, SuiviReprise reprise) {
         return transport.deposerVersS3(
                 urlSignee, () -> CorpsFichierAvecProgression.depuis(fichier, progression), mime, reprise);

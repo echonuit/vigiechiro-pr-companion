@@ -288,18 +288,24 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport = new TransportVigieChiro(
                 "http://localhost:1/api/v1", TOKEN_ABC, HttpClient.newHttpClient(), sansAttente());
 
-        assertThat(transport.deposerVersS3(
-                        "http://localhost:1/s3/signe",
-                        () -> HttpRequest.BodyPublishers.ofByteArray(new byte[] {1}),
-                        "audio/x-wav"))
-                .isFalse();
-        assertThat(transport.deposerVersS3(
-                        "http://localhost:1/s3/signe",
-                        () -> {
-                            throw new IOException("fichier illisible");
-                        },
-                        "application/zip"))
-                .isFalse();
+        assertThat(transport
+                        .deposerVersS3(
+                                "http://localhost:1/s3/signe",
+                                () -> HttpRequest.BodyPublishers.ofByteArray(new byte[] {1}),
+                                "audio/x-wav")
+                        .echec())
+                .as("hote injoignable : l issue porte la panne, elle ne la reduit plus a un booleen")
+                .isPresent();
+        assertThat(transport
+                        .deposerVersS3(
+                                "http://localhost:1/s3/signe",
+                                () -> {
+                                    throw new IOException("fichier illisible");
+                                },
+                                "application/zip")
+                        .echec())
+                .as("fichier illisible : meme traitement, la cause remonte")
+                .isPresent();
     }
 
     @Test
@@ -312,7 +318,10 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        boolean depose = transport.deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip");
+        boolean depose = transport
+                .deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip")
+                .echec()
+                .isEmpty();
 
         assertThat(depose).as("la seconde tentative aboutit").isTrue();
         assertThat(attentes).as("une seule attente : une coupure, une reprise").hasSize(1);
@@ -422,7 +431,10 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        boolean depose = transport.deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip");
+        boolean depose = transport
+                .deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip")
+                .echec()
+                .isEmpty();
 
         assertThat(depose).isFalse();
         assertThat(attentes).as("aucune attente : un 4xx ne se rejoue pas").isEmpty();
@@ -439,7 +451,10 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        boolean depose = transport.deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip");
+        boolean depose = transport
+                .deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip")
+                .echec()
+                .isEmpty();
 
         assertThat(depose).isTrue();
         assertThat(attentes).as("le délai du serveur fait autorité").containsExactly(Duration.ofSeconds(2));
@@ -454,7 +469,10 @@ class TransportVigieChiroTest {
         TransportVigieChiro transport =
                 new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
 
-        boolean depose = transport.deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip");
+        boolean depose = transport
+                .deposerVersS3(URL_S3_SIGNEE, octetUnique(), "application/zip")
+                .echec()
+                .isEmpty();
 
         assertThat(depose).isFalse();
         assertThat(attentes).as("premier plan : 4 tentatives, donc 3 attentes").hasSize(3);
