@@ -93,8 +93,13 @@ if [ "${1:-}" = "--auto-test" ]; then
   # ⚠️ On exige le MESSAGE de la garde, pas seulement son code de sortie. Un `exit 1` peut venir d'un
   # PyYAML absent, d'une erreur de syntaxe Python ou d'un bac mal monté : ces rouges-là ne prouvent
   # rien de la règle. Vécu le même jour sur #3335, où une compilation cassée a servi de fausse preuve.
+  # Le compte des cas et de ceux qui DOIVENT rougir (#3886).
+  cas=0
+  rouges=0
   verifie() { # <attendu> <libellé> [motif attendu dans la sortie]
     code=0
+    cas=$((cas + 1))
+    if [ "$1" != 0 ]; then rouges=$((rouges + 1)); fi
     sortie="$(RENVOIS_RACINE="$bac" "$0" 2>&1)" || code=$?
     if [ "${code}" != "$1" ]; then
       echo "  ✘ $2 : attendu $1, obtenu ${code}"
@@ -198,6 +203,8 @@ jobs:
     runs-on: ubuntu-latest'
   verifie 0 "un workflow sans renvoi ne déclenche pas"
 
+  if [ "${rouges}" -eq 1 ]; then verbe=DOIT; else verbe=DOIVENT; fi
+  echo "${cas} cas, dont ${rouges} qui ${verbe} rougir."
   if [ "$echecs" = 0 ]; then
     echo "Auto-test de la garde des renvois : OK"
   else

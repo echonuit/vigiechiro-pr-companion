@@ -186,8 +186,13 @@ SUR
 DOC
     }
 
+    # Le compte des cas et de ceux qui DOIVENT rougir (#3886).
+    cas=0
+    rouges=0
     verifie() { # <attendu> <libellé> [motif attendu dans la sortie]
         local code=0 sortie
+        cas=$((cas + 1))
+        if [ "$1" != 0 ]; then rouges=$((rouges + 1)); fi
         sortie=$(INVENTAIRES_RACINE="${bac}/depot" juger "${bac}/depot" 2>&1) || code=$?
         if [ "${code}" != "$1" ]; then
             echo "  ✘ $2 : attendu $1, obtenu ${code}"
@@ -238,6 +243,9 @@ DOC
     monter && rm "${bac}/depot/dev-docs/ci-cd-release.md"
     verifie 1 "la page absente accuse la garde" "C'est la GARDE qui est en cause"
 
+    echo
+    if [ "${rouges}" -eq 1 ]; then verbe=DOIT; else verbe=DOIVENT; fi
+    echo "${cas} cas, dont ${rouges} qui ${verbe} rougir."
     exit "${echecs}"
 fi
 

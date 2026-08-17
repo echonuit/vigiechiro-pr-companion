@@ -49,8 +49,20 @@ if [ "${1-}" = "--auto-test" ]; then
     serie=$(mktemp)
     trap 'rm -f "${serie}"' EXIT
 
+    # Le compte des cas et de ceux qui doivent PARLER (#3886).
+    #
+    # ⚠️ « Rougir » n'a pas de sens ici : cette mesure n'est pas un garde qui refuse, elle avertit ou
+    # se tait. Et elle porte TROIS états, pas deux - `court` n'est ni un silence ni une alerte, c'est
+    # le refus de conclure faute d'historique. Les fondre en « rouges » ferait disparaître de la
+    # ligne l'état le plus facile à casser sans le voir.
+    cas=0
+    avertit=0
+    court=0
     joue() { # <attendu: muet|avertit|court> <libellé> <durées…>
         local attendu="$1" libelle="$2"
+        cas=$((cas + 1))
+        if [ "$attendu" = avertit ]; then avertit=$((avertit + 1)); fi
+        if [ "$attendu" = court ]; then court=$((court + 1)); fi
         shift 2
         printf '[%s]' "$(printf '%s,' "$@" | sed 's/,$//')" > "${serie}"
         sortie=$(SERIE_DUREES_FICHIER="${serie}" "$0" depot/quelconque maven.yml 2>&1)
@@ -79,6 +91,10 @@ if [ "${1-}" = "--auto-test" ]; then
         11.0 10.9 11.2 10.8 11.1 10.7 11.3 10.9 11.0 11.2 10.8 11.1
     joue court "sans assez d'historique, il le dit au lieu de conclure" 11.0 10.9 11.2 10.8 11.1
 
+    echo
+    if [ "${avertit}" -eq 1 ]; then v1=DOIT; else v1=DOIVENT; fi
+    if [ "${court}" -eq 1 ]; then v2=DOIT; else v2=DOIVENT; fi
+    echo "${cas} cas, dont ${avertit} qui ${v1} avertir et ${court} qui ${v2} refuser de conclure."
     exit "${echecs}"
 fi
 
