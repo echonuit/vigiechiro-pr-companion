@@ -7,6 +7,7 @@ import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.DefilementChrome;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -67,7 +68,8 @@ class ParcoursSonsReferenceE2ETest {
         //
         // Elle passe par [AttenteAvantClic] parce qu'elle a expiré deux fois en CI sans rien laisser
         // d'exploitable (#3911) : même prédicat, même butoir, mais elle dit ce qu'elle a vu.
-        AttenteAvantClic.attendreCliquable(robot, "Sons & validation", 10);
+        AttenteAvantClic.attendreCliquable(
+                robot, "Sons & validation", 10, injector.getInstance(DefilementChrome.class));
         robot.clickOn("Sons & validation");
 
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
