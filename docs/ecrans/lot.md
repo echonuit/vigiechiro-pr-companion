@@ -78,6 +78,19 @@ Deux chemins s'offrent à vous :
     formulaire de la plateforme, sans le recopier à l'œil. Il est grisé tant qu'il n'y a pas de chemin
     à copier.
 
+### Si le site n'est pas rattaché, le refus dit quoi faire
+
+Déposer exige que votre site porte un **lien** vers son homologue Vigie-Chiro. Sans lui, le
+téléversement s'arrête net - et le message ne se contente pas de le constater : il demande à la
+plateforme si votre carré y existe, puis vous oriente en conséquence.
+
+![Le bandeau de refus au-dessus des archives : le site n'est pas rattaché, le carré existe sur Vigie-Chiro, et le message indique par quel geste le récupérer.](../assets/captures/apercu-lot-refus-rattachement.png)
+
+- le carré **existe** là-bas en Point Fixe : récupérez-le depuis « Mes sites » › « Nouveau site »
+  (voir [Mes sites](sites.md#recuperer-un-carre-qui-existe-deja)), et le rattachement vient avec ;
+- il n'y **est pas** : activez-le d'abord sur le portail Vigie-Chiro, où il faut créer un point ;
+- la plateforme **ne répond pas** : le message vous le dit, plutôt que de trancher à votre place.
+
 ### Un dépôt interrompu se reprend
 
 Le dépôt automatique est **reprenable** : une coupure réseau, une fermeture de l'application ou un

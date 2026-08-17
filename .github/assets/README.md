@@ -689,6 +689,7 @@ Le second gros pourvoyeur d'états : préparation, téléversement, reprise, int
 </tr>
 <tr>
 <td><a href="apercu-lot-depot-interrompu.png"><img src="apercu-lot-depot-interrompu.png" width="430" alt="Dépôt interrompu"></a></td>
+<td><a href="apercu-lot-refus-rattachement.png"><img src="apercu-lot-refus-rattachement.png" width="430" alt="Refus de dépôt : site non rattaché, le message dit par quel geste récupérer le carré"></a></td>
 </tr>
 </table>
 
