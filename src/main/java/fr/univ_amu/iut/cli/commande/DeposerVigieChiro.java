@@ -178,7 +178,7 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         }
 
         @Override
-        public void uniteEchouee(String identifiant, String raison) {
+        public void uniteEchouee(String identifiant, String raison, boolean definitif) {
             sortie.println("  ! " + identifiant + " : " + raison);
         }
 

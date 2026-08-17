@@ -75,7 +75,7 @@ class DeposerVigieChiroTest {
                 .thenReturn(SourceDepot.desFichiers(List.of(Path.of("/ws/a.wav"), Path.of("/ws/b.wav"))));
         when(depot.deposer(eq(42L), any(), any(), any())).thenAnswer(invocation -> {
             SuiviDepot suivi = invocation.getArgument(3);
-            suivi.uniteEchouee("b.wav", "coupure réseau");
+            suivi.uniteEchouee("b.wav", "coupure réseau", false);
             return new BilanDepot("part-1", 1, List.of("b.wav"));
         });
         StringWriter sortie = new StringWriter();

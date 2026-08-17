@@ -43,6 +43,47 @@ class SuiviLignesDepotTest {
     }
 
     @Test
+    @DisplayName("#3687 : un refus DÉFINITIF ne laisse rien à reprendre, et se compte à part")
+    void un_refus_definitif_ne_se_reprend_pas() {
+        SuiviLignesDepot suivi = new SuiviLignesDepot();
+        suivi.planifier(List.of(
+                unite(1L, "a.zip", StatutDepotUnite.A_DEPOSER, null),
+                unite(2L, "b.zip", StatutDepotUnite.A_DEPOSER, null)));
+
+        suivi.deposee("a.zip");
+        // 403 sur une URL signée expirée : le serveur ne changera pas d'avis.
+        suivi.echouee("b.zip", "HTTP 403 : SignatureDoesNotMatch", true);
+
+        assertThat(suivi.echecsProperty().get())
+                .as("il reste un échec : le refus ne disparaît pas du décompte")
+                .isEqualTo(1);
+        assertThat(suivi.refusDefinitifsProperty().get())
+                .as("mais il est compté à part, pour que le compte rendu puisse le nommer")
+                .isEqualTo(1);
+        assertThat(suivi.resteAReprendreProperty().get())
+                .as("et l'écran ne doit plus proposer « Retenter les échecs » : le retenter ne changerait"
+                        + " rien, et c'est le défaut que #3469 avait laissé ouvert")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#3687 : un refus définitif parmi des échecs rejouables laisse la reprise ouverte")
+    void un_refus_definitif_parmi_des_rejouables_laisse_la_reprise() {
+        SuiviLignesDepot suivi = new SuiviLignesDepot();
+        suivi.planifier(List.of(
+                unite(1L, "a.zip", StatutDepotUnite.A_DEPOSER, null),
+                unite(2L, "b.zip", StatutDepotUnite.A_DEPOSER, null)));
+
+        suivi.echouee("a.zip", "HTTP 403 : jeton mort", true);
+        suivi.echouee("b.zip", "coupure réseau", false);
+
+        assertThat(suivi.resteAReprendreProperty().get())
+                .as("une coupure réseau se retente : la reprise reste offerte tant qu'UNE unité peut"
+                        + " encore aboutir")
+                .isTrue();
+    }
+
+    @Test
     @DisplayName("les événements du moteur ciblent la ligne par identifiant : démarrée → déposée / échouée")
     void evenements_cibles_par_identifiant() {
         SuiviLignesDepot suivi = new SuiviLignesDepot();
@@ -54,7 +95,7 @@ class SuiviLignesDepotTest {
         assertThat(suivi.lignes().get(0).etatProperty().get()).isEqualTo(EtatUnite.EN_COURS);
 
         suivi.deposee("a.zip");
-        suivi.echouee("b.zip", "coupure réseau");
+        suivi.echouee("b.zip", "coupure réseau", false);
 
         assertThat(suivi.lignes().get(0).etatProperty().get()).isEqualTo(EtatUnite.TERMINEE);
         assertThat(suivi.lignes().get(1).etatProperty().get()).isEqualTo(EtatUnite.ECHEC);
@@ -82,7 +123,7 @@ class SuiviLignesDepotTest {
                 .isEqualTo(2);
 
         suivi.deposee("a.zip");
-        suivi.echouee("b.zip", "HTTP 503");
+        suivi.echouee("b.zip", "HTTP 503", false);
         assertThat(suivi.deposeesProperty().get()).isEqualTo(1);
         assertThat(suivi.echecsProperty().get()).isEqualTo(1);
         assertThat(suivi.enCoursProperty().get()).as("plus rien en vol").isZero();

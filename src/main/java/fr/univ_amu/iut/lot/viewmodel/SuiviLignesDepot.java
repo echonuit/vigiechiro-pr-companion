@@ -39,6 +39,10 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
     /// masquer un dépôt qui n'avance pas : la barre ne comptait auparavant que les succès.
     private final ReadOnlyIntegerWrapper echecs = new ReadOnlyIntegerWrapper(this, "echecs", 0);
 
+    /// Combien d'unités ont été **refusées définitivement** (#3687) : elles comptent parmi les échecs,
+    /// mais pas parmi ce qui reste à reprendre.
+    private final ReadOnlyIntegerWrapper refusDefinitifs = new ReadOnlyIntegerWrapper(this, "refusDefinitifs", 0);
+
     /// Pose (ou re-pose) la table depuis l'état **persisté** des unités : chaque statut de `depot_unite`
     /// est traduit en état de ligne (à déposer → en attente ; en cours interrompu → en attente, il sera
     /// re-tenté ; déposé → terminée ; échec → échec avec sa raison en infobulle).
@@ -76,8 +80,14 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
     }
 
     /// Le téléversement de l'unité `identifiant` a échoué (ligne « échec », raison en infobulle).
-    public void echouee(String identifiant, String raison) {
-        parIdentifiant(identifiant).ifPresent(ligne -> ligne.echouer(raison));
+    public void echouee(String identifiant, String raison, boolean definitif) {
+        parIdentifiant(identifiant).ifPresent(ligne -> {
+            if (definitif) {
+                ligne.echouerDefinitivement(raison);
+            } else {
+                ligne.echouer(raison);
+            }
+        });
         recalculerReste();
     }
 
@@ -118,6 +128,12 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
         return deposees.getReadOnlyProperty();
     }
 
+    /// Unités **refusées définitivement** du plan courant (#3687) : ce que le compte rendu doit nommer
+    /// au lieu de le fondre dans les échecs, puisqu'aucune reprise ne les rattrapera.
+    public ReadOnlyIntegerProperty refusDefinitifsProperty() {
+        return refusDefinitifs.getReadOnlyProperty();
+    }
+
     /// Taille du plan courant (barre de statut #823) ; `0` sans dépôt entamé.
     public ReadOnlyIntegerProperty totalProperty() {
         return total.getReadOnlyProperty();
@@ -147,10 +163,20 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
                 }
             }
         }
+        int definitifsN = 0;
+        for (LigneDepot ligne : lignes()) {
+            if (ligne.echecDefinitif()) {
+                definitifsN++;
+            }
+        }
         deposees.set(terminees);
         enCours.set(enCoursN);
         echecs.set(echecsN);
+        refusDefinitifs.set(definitifsN);
         total.set(lignes().size());
-        resteAReprendre.set(!lignes().isEmpty() && terminees < lignes().size());
+        // Une unité refusée DÉFINITIVEMENT n'est pas « à reprendre » : la retenter ne changera rien
+        // (#3687). Sans cette soustraction, l'écran proposait « Retenter les échecs » sur des unités que
+        // l'application savait irrécupérables - le défaut que #3469 avait laissé ouvert.
+        resteAReprendre.set(!lignes().isEmpty() && terminees + definitifsN < lignes().size());
     }
 }

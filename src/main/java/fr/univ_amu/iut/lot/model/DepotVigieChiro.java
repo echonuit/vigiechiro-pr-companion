@@ -317,7 +317,7 @@ public final class DepotVigieChiro {
             return resultat;
         }
         depotUnites.marquerEchec(unite.id(), resultat.raison(), resultat.definitif(), maintenant());
-        suivi.uniteEchouee(unite.identifiantUnite(), resultat.raison());
+        suivi.uniteEchouee(unite.identifiantUnite(), resultat.raison(), resultat.definitif());
         return resultat;
     }
 

@@ -38,8 +38,8 @@ final class RelaisSuiviDepot implements SuiviDepot {
     }
 
     @Override
-    public void uniteEchouee(String identifiant, String raison) {
-        filJavaFx.execute(() -> cible.echouee(identifiant, raison));
+    public void uniteEchouee(String identifiant, String raison, boolean definitif) {
+        filJavaFx.execute(() -> cible.echouee(identifiant, raison, definitif));
     }
 
     @Override
