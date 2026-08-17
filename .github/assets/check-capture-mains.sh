@@ -18,8 +18,14 @@ set -euo pipefail
 # arborescence jetable, donc le cas de test et le chemin réel sont le même code.
 if [ "${1:-}" = "--auto-test" ]; then
     echecs=0
+    # Le compte des cas et de ceux qui DOIVENT rougir (#3886) : un auto-test sans cas rouge ne
+    # prouve rien, et on ne s'en aperçoit qu'en le comptant.
+    cas=0
+    rouges=0
     verifie() { # <attendu> <libellé>
         code=0
+        cas=$((cas + 1))
+        if [ "$1" != 0 ]; then rouges=$((rouges + 1)); fi
         MAINS_ASSETS="$bac/assets" MAINS_SOURCES="$bac/src" "$0" >/dev/null 2>&1 || code=$?
         if [ "${code}" = "$1" ]; then
             echo "  ✔ $2"
@@ -81,6 +87,8 @@ if [ "${1:-}" = "--auto-test" ]; then
         && mv "$bac/tmp" "$bac/assets/capture-screenshots.sh"
     verifie 1 "un script qui n'épingle plus la langue est refusé"
 
+    echo
+    echo "${cas} cas, dont ${rouges} qui DOIVENT rougir."
     if [ "${echecs}" = 0 ]; then
         echo "Auto-test de la garde MAINS captures : OK"
     else

@@ -77,7 +77,17 @@ if [ "${1:-}" = "--auto-test" ]; then
           cd "${bac}/depot" && git diff --quiet -- .github/assets/apercu-test-carte.png )
     }
 
+    # Le compte des cas et de ceux qui DOIVENT être gardés (#3886).
+    #
+    # ⚠️ « Rougir » ne veut rien dire ici : ce script n'est pas un garde qui refuse, c'est un FILTRE
+    # qui distingue le bruit d'un vrai changement. Son équivalent du rouge est `gardee` - le
+    # changement compte et ne doit pas être avalé. Plaquer le vocabulaire des autres auto-tests
+    # rendrait la ligne fausse en la rendant uniforme.
+    cas=0
+    gardes=0
     verifie() { # <attendu:rendue|gardee> <libelle>
+        cas=$((cas + 1))
+        if [ "$1" = gardee ]; then gardes=$((gardes + 1)); fi
         if lancer; then obtenu=rendue; else obtenu=gardee; fi
         if [ "${obtenu}" = "$1" ]; then echo "  ✔ $2"; else
             echo "  ✘ $2 : attendue ${1}, obtenue ${obtenu}"; echecs=1
@@ -102,7 +112,11 @@ if [ "${1:-}" = "--auto-test" ]; then
         "${bac}/depot/.github/assets/apercu-test-carte.png"
     verifie gardee "du bruit de carte NE MASQUE PAS un changement hors carte"
 
-    [ "${echecs}" = 0 ] && echo "Auto-test : les trois cas passent." || echo "Auto-test : ECHEC." >&2
+    # ⚠️ Le compte se DÉRIVE. Cette ligne disait « les trois cas passent » en toutes lettres : elle
+    # aurait continué à le dire sur un quatrième cas.
+    echo
+    echo "${cas} cas, dont ${gardes} où le changement DOIT être gardé."
+    [ "${echecs}" = 0 ] && echo "Auto-test : tous les cas passent." || echo "Auto-test : ECHEC." >&2
     exit "${echecs}"
 fi
 
