@@ -91,7 +91,7 @@ final class AttenteAvantClic {
                     .append(noeud.isVisible());
             Scene scene = noeud.getScene();
             if (scene == null) {
-                texte.append(" — DANS AUCUNE SCÈNE (le nœud a été détaché)");
+                texte.append(" : DANS AUCUNE SCÈNE (le nœud a été détaché)");
                 continue;
             }
             Bounds dansLaScene = noeud.localToScene(noeud.getBoundsInLocal());
@@ -104,7 +104,7 @@ final class AttenteAvantClic {
                     scene.getWidth(),
                     scene.getHeight()));
             if (dansLaScene.getMaxY() > scene.getHeight() || dansLaScene.getMaxX() > scene.getWidth()) {
-                texte.append(" — HORS CADRE : il déborde de la scène, donc il n'est pas cliquable");
+                texte.append(" : HORS CADRE, il déborde de la scène, donc il n'est pas cliquable");
             }
             Window fenetre = scene.getWindow();
             texte.append(" | fenêtre ").append(fenetre == null ? "absente" : "affichée=" + fenetre.isShowing());
