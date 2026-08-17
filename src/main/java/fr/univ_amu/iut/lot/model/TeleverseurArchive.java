@@ -45,8 +45,10 @@ final class TeleverseurArchive {
         if (!(declaration instanceof ReponseApi.Succes<FichierSigne>(FichierSigne signe))) {
             return Resultat.echec("déclaration du fichier : " + causeDe(declaration), declaration);
         }
-        if (!client.televerserVersS3(signe.urlSignee(), fichier, mime(titre), progression, reprise)) {
-            return Resultat.echec("téléversement S3 refusé (réseau ou fichier illisible)");
+        ReponseApi<String> depose =
+                client.televerserVersS3(signe.urlSignee(), fichier, mime(titre), progression, reprise);
+        if (depose.echec().isPresent()) {
+            return Resultat.echec("téléversement S3 : " + causeDe(depose), depose);
         }
         ReponseApi<String> finalisation = client.finaliserFichier(signe.id());
         if (finalisation.echec().isPresent()) {
@@ -118,10 +120,9 @@ final class TeleverseurArchive {
 
         /// Échec dont on ne sait pas s'il se retente : **conservateur**, donc rejouable.
         ///
-        /// ⚠️ C'est le cas du `PUT` S3 **d'un seul bloc**, qui rend un `boolean` et a donc déjà perdu
-        /// le statut quand on arrive ici. Le supposer définitif retirerait une reprise légitime après
-        /// une simple coupure ; le supposer rejouable rend le comportement d'avant #3469. On préfère
-        /// donc reproposer une reprise inutile plutôt que d'en refuser une qui aurait marché.
+        /// Il ne reste qu'un cas : le **fichier introuvable** sur le disque, où aucune réponse serveur
+        /// n'existe. Le `PUT` S3 d'un seul bloc l'empruntait aussi, faute de rendre son statut ; depuis
+        /// #3688 il rend son issue et passe par la variante ci-dessous.
         static Resultat echec(String raison) {
             return new Resultat(null, raison, false, 0);
         }

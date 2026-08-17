@@ -233,7 +233,7 @@ final class TransportVigieChiro {
     ///
     /// Sans suivi de reprise : le réessai reste silencieux (le câblage de la mention discrète vers le
     /// suivi de dépôt vient au lot suivant).
-    boolean deposerVersS3(String urlSignee, CorpsAEnvoyer corps, String mime) {
+    ReponseApi<String> deposerVersS3(String urlSignee, CorpsAEnvoyer corps, String mime) {
         return deposerVersS3(urlSignee, corps, mime, SuiviReprise.SILENCIEUX);
     }
 
@@ -242,10 +242,8 @@ final class TransportVigieChiro {
     /// **idempotent** (même URL signée, même clé, même objet), donc sûr à rejouer ; profil INSISTANT,
     /// car le dépôt est attendu. `Retry-After` du serveur fait autorité (cf. [PolitiqueReessai]). `suivi`
     /// est prévenu avant chaque nouvelle tentative (mention discrète).
-    boolean deposerVersS3(String urlSignee, CorpsAEnvoyer corps, String mime, SuiviReprise suivi) {
-        ReponseApi<String> issue = politique.executer(
-                PolitiqueReessai.Profil.INSISTANT, suivi, suivi::renonce, () -> uneDepose(urlSignee, corps, mime));
-        return issue instanceof ReponseApi.Succes<String>;
+    ReponseApi<String> deposerVersS3(String urlSignee, CorpsAEnvoyer corps, String mime, SuiviReprise suivi) {
+        return deposerPartie(urlSignee, corps, mime, suivi);
     }
 
     /// **PUT** d'une **partie** multipart (#2354) vers son URL S3 signée, réessayé comme un dépôt entier
