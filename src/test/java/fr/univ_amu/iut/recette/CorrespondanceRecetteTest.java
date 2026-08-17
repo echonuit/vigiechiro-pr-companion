@@ -56,6 +56,36 @@ class CorrespondanceRecetteTest {
 
     private static final Path SESSIONS = Path.of("dev-docs", "recette", "sessions");
 
+    /// La raison commune à huit sessions sur dix : elles listent leurs cas en numérotation ordinale.
+    private static final String ORDINALE = "cas numérotés 1., 2., 3.";
+
+    /// Les sessions dont ce garde ne lit aucun cas, et dont le silence est assumé (#3884).
+    ///
+    /// ⚠️ Cette liste est une **dette chiffrée**, pas une dispense. Chaque ligne dit pourquoi la
+    /// session échappe à la regex, et disparaîtra le jour où elle adoptera le format `- **Sxx-NN** ·`.
+    /// Le garde refuse qu'on l'oublie dans les deux sens : une session muette absente d'ici rougit,
+    /// une ligne d'ici dont la session s'est mise à parler rougit aussi.
+    ///
+    /// Le travail de conversion est le point 2 de #3884, et il se fait session par session.
+    ///
+    /// ⚠️ `Map.ofEntries` et non `Map.of` : ce dernier plafonne à **dix** paires, et la liste en
+    /// compte exactement dix. La onzième session muette - celle que ce garde existe pour attraper -
+    /// aurait cassé la **compilation** au lieu de rougir avec son message. Un garde qui échoue par
+    /// erreur de build ne dit pas ce qu'il a trouvé, et c'est ce qui est arrivé en écrivant ceci.
+    private static final Map<String, String> MUETTES_ADMISES = Map.ofEntries(
+            Map.entry("s2-importer.md", ORDINALE),
+            Map.entry("s3-verifier.md", ORDINALE),
+            Map.entry("s4-deposer-suivre.md", ORDINALE),
+            Map.entry("s5-valider.md", ORDINALE),
+            Map.entry("s6-exploiter-piloter.md", ORDINALE + " - et cinq faits perceptifs en prose"),
+            Map.entry("s7-reglages.md", ORDINALE),
+            Map.entry("s8-recuperer-une-nuit.md", ORDINALE),
+            Map.entry("s10-le-poste-windows.md", ORDINALE),
+            Map.entry("passe-ciblee-constats-en-attente.md", "cas préfixés PC- et cochés, hors numérotation"),
+            Map.entry(
+                    "passe-verification-stabilisation.md",
+                    "ce n'est pas une session : un tableau des capacités et de leur session propriétaire"));
+
     /// Les classes à filmer pour une **planche de contact** (#3835), déposées là où le script de
     /// séance ira les chercher.
     ///
@@ -87,11 +117,19 @@ class CorrespondanceRecetteTest {
     /// Le tri qui en découle, calculé une fois.
     private static RepartitionDesCas tri;
 
+    /// Pour chaque session balayée, le nombre de cas que [#CAS] y a lus - zéro compris.
+    private static Map<String, Integer> casParFichier;
+
+    /// Sur quoi le décompte porte, et sur quoi il ne porte pas.
+    private static PerimetreDesSessions perimetre;
+
     @BeforeAll
     static void lire() {
         declares = new LinkedHashMap<>();
         perceptifs = new LinkedHashSet<>();
+        casParFichier = new LinkedHashMap<>();
         lireLesScripts();
+        perimetre = PerimetreDesSessions.analyser(casParFichier, MUETTES_ADMISES.keySet());
 
         cites = new LinkedHashMap<>();
         jugements = new LinkedHashMap<>();
@@ -131,11 +169,21 @@ class CorrespondanceRecetteTest {
                 .isNotEmpty();
 
         System.out.printf(
-                "%nCorrespondance recette : %d cas déclarés, %d assertés, %d perceptifs, %d non couverts.%n",
+                "%nCorrespondance recette (%s) : %d cas déclarés, %d assertés, %d perceptifs, %d non couverts.%n",
+                perimetre.assiette(),
                 declares.size(),
                 tri.assertes().size(),
                 tri.perceptifs().size(),
                 tri.nonCouverts().size());
+
+        // ⚠️ Les muettes s'affichent AVANT les cas. Le lecteur qui s'arrête à la première ligne doit
+        // déjà savoir ce que le décompte ne couvre pas ; les mettre en pied de sortie reviendrait à
+        // les réserver à qui lit tout, c'est-à-dire à personne.
+        perimetre
+                .muettes()
+                .forEach(session -> System.out.printf(
+                        "  hors périmètre · %s · %s%n",
+                        session, MUETTES_ADMISES.getOrDefault(session, "aucun cas au format lu, et rien ne l'admet")));
 
         tri.perceptifs()
                 .forEach(cas -> System.out.printf(
@@ -144,6 +192,29 @@ class CorrespondanceRecetteTest {
                         declares.get(cas),
                         cites.containsKey(cas) ? "joué par " + joindre(cites.get(cas)) : "à jouer"));
         tri.nonCouverts().forEach(cas -> System.out.printf("  non couvert · %s · %s%n", cas, declares.get(cas)));
+    }
+
+    @Test
+    @DisplayName("Le garde nomme les sessions qu'il ne lit pas")
+    void le_perimetre_ne_se_tait_sur_aucune_session() {
+        SoftAssertions verifs = new SoftAssertions();
+
+        verifs.assertThat(perimetre.silencesNonDeclares())
+                .as(
+                        "Ces sessions existent sous %s et ce garde n'en lit aucun cas, sans que rien"
+                                + " ne le dise. Un décompte qui tait son assiette se lit plus large"
+                                + " qu'il ne porte. Ajoutez-les à MUETTES_ADMISES avec leur raison,"
+                                + " ou donnez-leur le format `- **Sxx-NN** ·`.",
+                        SESSIONS)
+                .isEmpty();
+
+        verifs.assertThat(perimetre.admissionsPerimees())
+                .as("Ces sessions sont admises muettes et ne le sont plus - elles rendent des cas,"
+                        + " ou elles ont disparu. Retirez-les de MUETTES_ADMISES : une liste"
+                        + " d'exceptions qu'on n'élague pas redevient la prose qui dérive.")
+                .isEmpty();
+
+        verifs.assertAll();
     }
 
     @Test
@@ -243,9 +314,15 @@ class CorrespondanceRecetteTest {
             fichiers.filter(f -> f.getFileName().toString().endsWith(".md"))
                     .sorted()
                     .forEach(f -> {
+                        String nom = f.getFileName().toString();
+                        // ⚠️ Posé à zéro AVANT de lire, pour que les sessions dont la regex ne tire
+                        // rien figurent quand même au périmètre. Ne compter que ce qui parle rendrait
+                        // le silence indiscernable de l'absence : le défaut même de #3884.
+                        casParFichier.put(nom, 0);
                         Matcher m = CAS.matcher(lire(f));
                         while (m.find()) {
-                            declares.putIfAbsent(m.group(1), f.getFileName().toString());
+                            declares.putIfAbsent(m.group(1), nom);
+                            casParFichier.merge(nom, 1, Integer::sum);
                             if (m.group(2) != null) {
                                 perceptifs.add(m.group(1));
                             }
