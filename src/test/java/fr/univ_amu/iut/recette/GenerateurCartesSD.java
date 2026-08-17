@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -155,8 +156,20 @@ public final class GenerateurCartesSD {
     /// Délègue à [fr.univ_amu.iut.fixture.JournalDeCapteur] : le tracé d'une nuit est le même ici et
     /// dans les tests qui ont juste besoin d'un journal valide (#2868). Une seule source, deux usages.
     private static List<String> lignesJournal(SpecCarteSd spec) {
-        return JournalDeCapteur.lignes(
-                spec.journal().serie(), spec.journal().nuit(), spec.journal().sondePresente());
+        SpecCarteSd.Journal journal = spec.journal();
+        List<String> lignes =
+                new ArrayList<>(JournalDeCapteur.lignes(journal.serie(), journal.nuit(), journal.sondePresente()));
+        // #3898 : chaque redémarrage déclaré ajoute son propre tracé à la SUITE, ce qu'un vrai
+        // enregistreur fait - il n'ouvre pas un nouveau fichier, il continue le sien. Une ligne
+        // « Paramètres » de plus par session, donc, avec sa fréquence à elle.
+        //
+        // ⚠️ Sans `sessions:`, la boucle ne tourne pas et le journal produit est identique à l'octet
+        // près à celui d'avant. C'est ce qui permet aux huit specs existantes de ne pas bouger.
+        for (SpecCarteSd.Session session : journal.sessions()) {
+            lignes.addAll(JournalDeCapteur.lignes(
+                    journal.serie(), session.nuit(), journal.sondePresente(), session.frequenceKhz()));
+        }
+        return lignes;
     }
 
     private static String ligne(String date, String heure, String serie, String message) {

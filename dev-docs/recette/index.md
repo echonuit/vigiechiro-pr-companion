@@ -209,7 +209,7 @@ Pour **revalider** aux jalons suivants sans tout re-piloter à la main, on rejou
 - **Les parcours E2E** (`Parcours*E2ETest`) sont les **scripts de départ** des sessions : ils pilotent
   les vrais ViewModels et services sur base jetable.
 - **Les fixtures** (cartes SD de recette, workspace) sont **générées** depuis une spec de quelques
-  kilo-octets plutôt que stockées en binaire : versionnables, rejouables à l'identique. Les 9 cartes de
+  kilo-octets plutôt que stockées en binaire : versionnables, rejouables à l'identique. Les 10 cartes de
   recette (+ `sd-nominale.zip`) se reconstruisent à l'identique via le générateur déterministe : voir
   [Fixtures (générateur de cartes SD)](fixtures.md).
 

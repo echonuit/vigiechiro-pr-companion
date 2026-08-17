@@ -28,6 +28,9 @@ journal:                        # journal du capteur LogPR<serie>.txt
   nuit: "2026-04-22"            # date de la 1re ligne (fixe dateDebut pour l'analyseur)
   sondePresente: true           # ajoute la ligne « Sonde ... présente »
   corrompu: false               # true -> journal illisible (aucune série extractible)
+  sessions:                     # REDÉMARRAGES supplémentaires du capteur (#3898), facultatif
+    - nuit: "2026-04-25"        #   chacun repose ses paramètres après `nuit` ci-dessus
+      frequenceKhz: 256         #   et peut annoncer une autre fréquence d'acquisition
 
 thlog:                          # relevé climatique PaRecPR<serie>_THLog.csv
   present: true
@@ -82,7 +85,7 @@ Deux variantes utiles :
           intervalleSecondes: 300
     ```
 
-## Les 9 cartes de recette
+## Les 10 cartes de recette
 
 Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 de
 [S2 · Importer une nuit](sessions/s2-importer.md)).
@@ -93,6 +96,7 @@ Chaque carte exerce **une** pathologie de l'assistant d'import (voir l'étape 5 
 | `sd-melange` | deux enregistreurs dans le même dossier -> bandeau « mélange » | 6 |
 | `sd-incoherente` | journal et wav en désaccord (série + date) -> bandeau « incohérence » | 3 |
 | `sd-multi-nuits` | trois nuits sous un journal unique -> table des nuits | 6 |
+| `sd-multi-configs` | deux nuits, capteur **reconfiguré entre les deux** (384 puis 256 kHz) -> chaque nuit doit recevoir les paramètres de **sa** session (#3460) | 4 |
 | `sd-sans-journal` | aucun `LogPR` -> mode dégradé (import possible sans journal) | 3 |
 | `sd-journal-corrompu` | `LogPR` illisible -> l'inspection échoue avec un message clair | 3 |
 | `sd-prefixee` | bruts déjà préfixés `Car...` -> état de nommage `PREFIXE` | 3 |
