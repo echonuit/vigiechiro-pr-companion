@@ -73,9 +73,29 @@ on:
 permissions:
   contents: read
 
+# Deux files, parce que ce workflow fait deux choses (#3718).
+#
+# Publier exige une file unique : on ne déploie pas deux fois en même temps. Vérifier qu'une PR compile
+# la doc n'exige rien du tout, et partager la file de publication lui coûtait cher : avec
+# `cancel-in-progress: false`, une exécution EN ATTENTE est annulée dès qu'une plus récente entre dans
+# le groupe. Quand l'annulée était une vérification de PR, personne ne la relançait, et un check annulé
+# s'affiche en GRIS - il ne rougit pas, donc il se lit comme « rien à signaler ».
+#
+# Vécu une fois, sur la PR #3713 : `docs = completed/cancelled (pull_request)`, les cinq autres checks
+# verts. C'est rare (84 vérifications de PR du 13 au 16/08, aucune annulée) mais silencieux et sans
+# rattrapage, et la règle de fusion des PR documentaires s'appuie sur ce check.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  # ⚠️ Les trois lignes sont au MÊME retrait : `>-` ne replie en espaces que des lignes de même
+  # indentation. Plus indentées, elles forment un bloc et leurs retours à la ligne sont CONSERVÉS
+  # dans la chaîne - le groupe contiendrait alors des sauts de ligne.
+  group: >-
+    ${{ github.event_name == 'pull_request'
+    && format('docs-pr-{0}', github.event.pull_request.number)
+    || 'pages' }}
+  # Annuler le superflu uniquement sur une PR : deux pushes successifs sur la même PR n'ont pas besoin
+  # de deux vérifications, et la plus récente remplace la précédente. Côté publication, on garde
+  # `false` : une publication en cours va au bout.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
