@@ -63,16 +63,25 @@ final class AttenteAvantClic {
         return robot.lookup(libelle).match(NodeQueryUtils.isVisible());
     }
 
-    /// L'état au moment de l'expiration, lu **sur le fil JavaFX** : des bornes lues depuis le fil de
+    /// L'état d'un libellé **maintenant**, lu **sur le fil JavaFX** : des bornes lues depuis le fil de
     /// test peuvent être en cours de recalcul, et un rapport qui ment est pire que pas de rapport.
-    private static String rapport(FxRobot robot, String libelle, int secondes) {
+    ///
+    /// Exposé pour les attentes qui ne peuvent pas déléguer à [#attendreCliquable] - typiquement une
+    /// boucle de reprise, qui rattrape ses expirations et ne rend un verdict qu'à la fin. Elle peut
+    /// alors joindre à son message ce que le nœud faisait au dernier essai.
+    static String etatObserve(FxRobot robot, String libelle) {
         AtomicReference<String> vu = new AtomicReference<>("(état illisible)");
         try {
             robot.interact(() -> vu.set(decrire(robot, libelle)));
         } catch (RuntimeException echec) {
             vu.set("(état illisible : " + echec + ")");
         }
-        return "« " + libelle + " » n'est pas devenu cliquable en " + secondes + " s.\n" + vu.get()
+        return vu.get();
+    }
+
+    private static String rapport(FxRobot robot, String libelle, int secondes) {
+        return "« " + libelle + " » n'est pas devenu cliquable en " + secondes + " s.\n"
+                + etatObserve(robot, libelle)
                 + "\nRappel : le prédicat exige le drapeau `visible` ET l'intersection avec le rectangle"
                 + " de la scène. Ne PAS augmenter le butoir (ADR 3668) : chercher pourquoi la condition"
                 + " manquante manquait.";
