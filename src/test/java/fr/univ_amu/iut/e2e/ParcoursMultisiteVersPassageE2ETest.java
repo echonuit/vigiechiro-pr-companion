@@ -209,10 +209,20 @@ class ParcoursMultisiteVersPassageE2ETest {
                 // Cellule pas encore rendue ou navigation pas encore aboutie : on retente.
             }
         }
-        throw new AssertionError("Le double-clic vers le passage n'a pas abouti après 3 essais de 3 s : "
-                + "la cellule « " + DATE_NUIT + " » n'a jamais été interrogeable, ou la navigation n'a "
-                + "jamais atteint « passage » (vue courante : " + navigation.getVueCourante() + "). "
-                + "Ce n'est pas un défaut de navigation - c'est le robot qui n'a pas abouti sous charge.");
+        // Ce message rapportait un DÉLAI et concluait « c'est le robot qui n'a pas abouti sous charge ».
+        // Une occurrence de plus, consignée dans #3911, a démenti cette conclusion : depuis que
+        // l'attente exige le bon prédicat, elle expire au lieu de laisser partir un clic - donc la
+        // cellule n'entre **jamais** dans le cadre en neuf secondes, et ce n'est pas une question de
+        // patience. Il manquait la seule information qui départage : **où** est la cellule.
+        //
+        // Un dispositif qui ne peut pas conclure rapporte ce qu'il a vu (ADR 2213), et ne conclut donc
+        // pas à sa place. Celui-ci concluait.
+        throw new AssertionError("Le double-clic vers le passage n'a pas abouti après 3 essais de 3 s.\n"
+                + "Vue courante : " + navigation.getVueCourante() + "\n"
+                + AttenteAvantClic.etatObserve(robot, DATE_NUIT) + "\n"
+                + "Deux causes possibles, que ce message ne tranche pas : la cellule n'est jamais entrée"
+                + " dans le cadre de la scène (lire ses bornes ci-dessus), ou la navigation n'a pas"
+                + " abouti après un double-clic pourtant parti.");
     }
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {
