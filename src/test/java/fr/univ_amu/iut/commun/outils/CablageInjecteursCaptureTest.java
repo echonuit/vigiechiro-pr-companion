@@ -66,6 +66,7 @@ class CablageInjecteursCaptureTest {
             Map.entry("CaptureFicheEspece", "rend un composant isolé, sans injecteur"),
             Map.entry("CaptureDialogues", "rend des dialogues construits à la main, sans injecteur"),
             Map.entry("CaptureBandeauRetour", "rend le bandeau de retour seul, sans injecteur"),
+            Map.entry("CaptureRefusRattachement", "rend le bandeau de retour seul, avec le message du produit"),
             Map.entry("CaptureCompteRendu", "rend un composant de compte rendu, sans injecteur"),
             Map.entry("CaptureCompteRenduDepot", "rend un composant de compte rendu, sans injecteur"),
             Map.entry("CaptureCompteRenduReleve", "rend un composant de compte rendu, sans injecteur"),
