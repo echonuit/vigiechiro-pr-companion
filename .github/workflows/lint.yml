@@ -286,3 +286,45 @@ jobs:
         # squash, et que le CHANGELOG est le seul fichier que la typographie ne peut pas rattraper
         # après coup. Un garde qui cesserait de détecter laisserait la source se rouvrir en silence.
         run: bash .github/scripts/verifie-titre-pr.sh --auto-test
+
+  # ⚠️ Job SÉPARÉ, et non une étape de `lint` (#3883). Les 26 cas de l'auto-test du banc filmé ont
+  # besoin de `xvfb`, `xdotool`, `ffmpeg` et `openbox`, dont l'installation coûte 34 s mesurées.
+  # Ajoutée à `lint`, elle le ferait passer de 67 s à ~101 s, soit +50 % sur chaque PR et chaque
+  # push - or `lint` n'est intéressant que s'il répond vite.
+  #
+  # `lint.yml` ne porte aucun `needs:` : ce job s'exécute donc EN PARALLÈLE de `lint`, et ne coûte
+  # pas une seconde d'attente à qui pousse. Il coûte des minutes de runner, ce qui est le bon prix.
+  #
+  # ⚠️ L'auto-test reste ENTIER. Scinder les 9 cas sans outil des 17 autres a été écarté : un
+  # auto-test coupé en deux dont une moitié ne tourne pas AURAIT L'AIR de tourner, ce qui est pire
+  # que l'état d'avant, où l'on savait qu'il ne tournait pas.
+  #
+  # Ni `setup-java` ni cache Maven : les deux `./mvnw` du script vivent dans `lancer` et `planche`,
+  # jamais dans `auto_test`. C'est ce qui garde ce job court.
+  banc-filme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Outils du banc filmé
+        # Le jeu complet, pour que les 3 cas de pointeur tournent aussi : ce sont eux qui prouvent
+        # qu'un gestionnaire de fenêtres est nécessaire, et le témoin de `recette-filmee.yml` existe
+        # précisément pour cela. openbox et non matchbox (#3788) : matchbox MAXIMISE tout.
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y xvfb xdotool ffmpeg x11-utils openbox
+
+      - name: Auto-test du banc filmé (bloquant, #3883)
+        # 26 cas, dont 11 qui DOIVENT rougir. Ils n'avaient jamais tourné en CI : l'ADR 3661 exige
+        # qu'un garde porte ses cas et que `lint.yml` les lance, et c'était le seul des quinze à y
+        # manquer. `recette-filmee.yml` est à déclenchement manuel, donc rien n'exerçait ce garde
+        # entre deux séances.
+        #
+        # Ce que ces cas défendent : le profil Maven du banc, l'absence de WAYLAND_DISPLAY, le
+        # pointeur sur de vrais serveurs X, la coupe par luminance, le montage aligné sur le geste,
+        # et le refus d'une liste de classes vide. Un banc qui cesserait de mesurer rendrait des
+        # films où l'on ne verrait rien, sans que rien ne le dise.
+        run: |
+          chmod +x .github/scripts/lance-test-filme.sh
+          bash .github/scripts/lance-test-filme.sh --auto-test
