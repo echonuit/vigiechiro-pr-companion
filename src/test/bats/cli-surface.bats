@@ -34,6 +34,7 @@ COMMANDES_OPTIONS_REQUISES=(
   vigiechiro
   creer-campagne rattacher-campagne modifier-campagne supprimer-campagne
   modifier-site supprimer-site modifier-point
+  recuperer-carre
 )
 
 @test "surface : chaque commande à options requises refuse l'absence d'arguments (exit 2) (#1592)" {

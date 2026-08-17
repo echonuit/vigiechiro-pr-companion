@@ -36,7 +36,7 @@ class ClassementLectureEcritureTest {
     ///
     /// Un cliquet, pas un inventaire : il ne dit rien de plus que le code, il oblige seulement à
     /// trancher quand la surface bouge. Le chiffre se met à jour **en même temps** que la décision.
-    private static final int ECRIVAINES_ATTENDUES = 44;
+    private static final int ECRIVAINES_ATTENDUES = 45;
 
     @Test
     @DisplayName("le nombre de commandes qui prennent le verrou est celui qu'on a décidé")

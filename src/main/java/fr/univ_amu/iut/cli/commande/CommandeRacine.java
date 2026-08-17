@@ -32,6 +32,7 @@ import picocli.CommandLine.Spec;
         },
         subcommands = {
             CreerSite.class,
+            RecupererCarre.class,
             ModifierSite.class,
             SupprimerSite.class,
             AjouterPoint.class,
