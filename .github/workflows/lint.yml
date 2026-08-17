@@ -19,6 +19,48 @@ permissions:
   contents: read
 
 jobs:
+  banc-filme:
+    # Les 26 cas de `lance-test-filme.sh --auto-test`, dont les 11 qui DOIVENT rougir (#3883).
+    #
+    # ⚠️ Ils n'avaient JAMAIS tourné en CI. Quatorze scripts lancent leur `--auto-test` dans le job
+    # `lint` ci-dessous ; celui-ci n'y était pas, faute d'outillage - et `recette-filmee.yml`, qui
+    # l'installe, est à déclenchement MANUEL. Entre deux séances, rien n'exerçait le garde du banc.
+    #
+    # ## Pourquoi un job à part, et non une étape de `lint`
+    #
+    # Trois mesures ont tranché, plutôt qu'une préférence :
+    #
+    #   | `lint` aujourd'hui                          |  67 s |
+    #   | l'`apt-get install` de l'outillage          |  34 s |
+    #   | l'auto-test lui-même, 26 cas                |   6 s |
+    #
+    # Le coût n'est pas l'auto-test, c'est son outillage. Le poser dans `lint` porterait ce job à
+    # ~107 s, soit +60 % sur celui dont tout l'intérêt est d'être court. Ici, les deux tournent en
+    # PARALLÈLE derrière `Java CI` qui prend une dizaine de minutes : le coût horloge est nul.
+    #
+    # L'intention de l'ADR 3661 - les cas d'un garde de CI sont lancés par `lint.yml` - est donc
+    # tenue sans en payer le prix sur le job rapide.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Installer de quoi afficher et filmer
+        # Le même outillage que `recette-filmee.yml`, et pour la même raison. openbox, et NON
+        # matchbox (#3788) : matchbox maximise tout ce qu'il affiche, si bien qu'une modale de
+        # 560 px s'étalait sur 1280 et que le banc montrait une mise en page que personne ne voit.
+        #
+        # ⚠️ C'est l'un des 26 cas - « écran AVEC gestionnaire de fenêtres » - et c'est le SEUL qui
+        # échoue sur une machine de développement ordinaire, où openbox n'est pas installé. Le cas
+        # qui garde la découverte de #3788 est précisément celui que personne n'avait pu exercer.
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb xdotool ffmpeg x11-utils openbox
+
+      - name: Les 26 cas du banc filmé, dont 11 qui doivent rougir
+        run: |
+          chmod +x .github/scripts/lance-test-filme.sh
+          ./.github/scripts/lance-test-filme.sh --auto-test
+
   outillage-release:
     # release.yml ne se déclenche qu'au push sur `main` : aucune CI de PR ne traverse la chaîne de
     # publication, donc une erreur d'installation ou de configuration ne se verrait qu'à la prochaine
