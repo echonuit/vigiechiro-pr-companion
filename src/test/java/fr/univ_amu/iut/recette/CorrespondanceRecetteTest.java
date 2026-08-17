@@ -77,7 +77,6 @@ class CorrespondanceRecetteTest {
             Map.entry("s3-verifier.md", ORDINALE),
             Map.entry("s4-deposer-suivre.md", ORDINALE),
             Map.entry("s5-valider.md", ORDINALE),
-            Map.entry("s6-exploiter-piloter.md", ORDINALE + " - et cinq faits perceptifs en prose"),
             Map.entry("s7-reglages.md", ORDINALE),
             Map.entry("s8-recuperer-une-nuit.md", ORDINALE),
             Map.entry("s10-le-poste-windows.md", ORDINALE),
