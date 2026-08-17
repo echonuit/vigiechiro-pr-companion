@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.recette;
 
+import fr.univ_amu.iut.fixture.JournalDeCapteur;
 import fr.univ_amu.iut.recette.SpecCarteSd.Attendu;
 import fr.univ_amu.iut.recette.SpecCarteSd.Enregistreur;
 import fr.univ_amu.iut.recette.SpecCarteSd.Journal;
 import fr.univ_amu.iut.recette.SpecCarteSd.Prefixe;
+import fr.univ_amu.iut.recette.SpecCarteSd.Session;
 import fr.univ_amu.iut.recette.SpecCarteSd.Thlog;
 import fr.univ_amu.iut.recette.SpecCarteSd.Wav;
 import java.io.IOException;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.SafeConstructor;
@@ -71,7 +74,26 @@ final class LecteurSpec {
                 str(map, "serie"),
                 nuit == null ? null : LocalDate.parse(nuit),
                 bool(map, "sondePresente", true),
-                bool(map, "corrompu", false));
+                bool(map, "corrompu", false),
+                lireSessions(map.get("sessions")));
+    }
+
+    /// Les redémarrages supplémentaires déclarés par `sessions:` (#3898), ou aucun.
+    ///
+    /// ⚠️ **L'absence de la clé rend une liste vide, jamais une erreur** : huit specs ne la portent pas,
+    /// et elles doivent continuer à produire exactement le même journal.
+    private static List<Session> lireSessions(Object brut) {
+        if (!(brut instanceof List<?> entrees)) {
+            return List.of();
+        }
+        List<Session> sessions = new ArrayList<>();
+        for (Object entree : entrees) {
+            Map<?, ?> session = asMap(entree);
+            sessions.add(new Session(
+                    LocalDate.parse(Objects.requireNonNull(str(session, "nuit"), "sessions[].nuit")),
+                    intOf(session, "frequenceKhz", JournalDeCapteur.FREQUENCE_KHZ_PAR_DEFAUT)));
+        }
+        return sessions;
     }
 
     private static Thlog lireThlog(Map<?, ?> map) {

@@ -1,0 +1,46 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-multi-configs
+but: >
+  Deux sessions du capteur sous un journal unique, avec des fréquences d'acquisition DIFFÉRENTES ->
+  chaque nuit importée doit recevoir les paramètres de SA session (#3460), et non ceux de la première.
+
+# Le capteur a été posé le 03/07, repris, reconfiguré, puis reposé le 05/07. Un vrai enregistreur
+# n'ouvre pas un nouveau fichier à chaque redémarrage : il continue le sien, en y reposant ses
+# paramètres. Le journal porte donc DEUX lignes « Paramètres », avec deux fréquences.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-07-03"
+  sessions:
+    - nuit: "2026-07-05"
+      frequenceKhz: 256
+
+thlog:
+  present: true
+  mesures: 6
+
+# Les WAV sont générés à la fréquence de la PREMIÈRE session : c'est le cas réel, un enregistreur
+# n'écrit pas deux formats sur la même carte, et ce n'est pas ce que la case vérifie. Ce qui se
+# vérifie, c'est ce que Companion inscrit dans `passage.acquisition_params` pour chaque nuit.
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# Deux enregistrements par nuit, sur deux nuits séparées par un jour sans enregistrement (le 04) :
+# la carte a été récupérée puis reposée. C'est ce trou qui rend les deux sessions lisibles à l'œil
+# sur le journal.
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260703_210000"
+      - "20260703_233000"
+      - "20260705_213000"
+      - "20260705_235000"
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 2

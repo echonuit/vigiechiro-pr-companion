@@ -42,7 +42,36 @@ record SpecCarteSd(
     /// @param nuit date de la première ligne du journal (fixe `dateDebut` pour l'analyseur)
     /// @param sondePresente ajoute (ou non) la ligne « Sonde température/hygrométrie présente »
     /// @param corrompu si vrai, le journal est écrit illisible (aucune série extractible : l'inspection échoue)
-    record Journal(boolean present, String serie, LocalDate nuit, boolean sondePresente, boolean corrompu) {}
+    /// @param sessions redémarrages **supplémentaires** du capteur, chacun reposant ses paramètres après
+    ///     `nuit` (#3898). Vide dans le cas courant, et le journal produit est alors **identique** à
+    ///     l'octet près à ce qu'il était avant : les huit specs existantes ne bougent pas
+    record Journal(
+            boolean present,
+            String serie,
+            LocalDate nuit,
+            boolean sondePresente,
+            boolean corrompu,
+            List<Session> sessions) {
+
+        Journal {
+            sessions = List.copyOf(sessions);
+        }
+    }
+
+    /// Un **redémarrage du capteur**, qui repose ses paramètres d'acquisition (#3898).
+    ///
+    /// ## Pourquoi une carte en porte plusieurs
+    ///
+    /// Laisser l'enregistreur plusieurs nuits au même point est le cas **courant** d'un protocole Point
+    /// Fixe. Entre deux séries, on le reprend, on le reconfigure, on le repose : le journal accumule
+    /// alors une ligne « Paramètres » par session, et #3460 a corrigé le fait qu'une nuit repartait
+    /// avec les réglages d'une **autre**.
+    ///
+    /// Aucune fixture ne portait ce cas, si bien que la correction n'était vérifiable que par la CI.
+    ///
+    /// @param nuit la nuit que cette session ouvre
+    /// @param frequenceKhz la fréquence d'acquisition qu'elle annonce, en kHz
+    record Session(LocalDate nuit, int frequenceKhz) {}
 
     /// Relevé climatique. Quand `present` est faux, aucun `THLog.csv` n'est écrit (R20).
     ///

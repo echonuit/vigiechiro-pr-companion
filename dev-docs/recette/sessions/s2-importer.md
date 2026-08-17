@@ -91,20 +91,23 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
 40. `sd-melange` : bandeau « mélange » (2 enregistreurs), non bloquant.
 41. `sd-incoherente` : bandeau « incohérence » journal↔wav (série et date), plus ferme.
 42. `sd-multi-nuits` : la table des nuits apparaît (3 lignes, n° automatiques, cases Inclure).
-43. `sd-sans-journal` : l'absence de journal est signalée, l'import reste possible (mode dégradé).
-44. `sd-journal-corrompu` : l'inspection échoue avec un message compréhensible.
-45. `sd-prefixee` : bandeau « discordance de préfixe » si le rattachement ne correspond pas.
-46. `sd-rejets` : l'import aboutit malgré le faux wav, la zone des rejets liste « nom - raison ».
-47. `sd-nominale.zip` : la décompression affiche sa barre et son bouton Annuler avant l'inspection.
-48. Ré-inspection de `sd-nominale` : bandeau « nuit déjà importée », informatif.
-49. Rattachement au même point + année + n° : bandeau « n° déjà pris » avec « Utiliser ce n° » et
+43. `sd-multi-configs` : deux nuits, et le capteur a été **reconfiguré entre les deux** (384 kHz puis
+    256 kHz). Importer les deux, puis ouvrir chaque nuit : chacune annonce la fréquence
+    d'acquisition de **sa** session, et non celle de la première (#3460).
+44. `sd-sans-journal` : l'absence de journal est signalée, l'import reste possible (mode dégradé).
+45. `sd-journal-corrompu` : l'inspection échoue avec un message compréhensible.
+46. `sd-prefixee` : bandeau « discordance de préfixe » si le rattachement ne correspond pas.
+47. `sd-rejets` : l'import aboutit malgré le faux wav, la zone des rejets liste « nom - raison ».
+48. `sd-nominale.zip` : la décompression affiche sa barre et son bouton Annuler avant l'inspection.
+49. Ré-inspection de `sd-nominale` : bandeau « nuit déjà importée », informatif.
+50. Rattachement au même point + année + n° : bandeau « n° déjà pris » avec « Utiliser ce n° » et
 
 **Bloc · Gestes de ligne (EPIC #1792)** : non automatisable (rendu du popup).
 
-50. Pendant un import, clic droit sur une ligne du **suivi des fichiers** : le menu s'ouvre,
+51. Pendant un import, clic droit sur une ligne du **suivi des fichiers** : le menu s'ouvre,
     entièrement lisible.
-51. « Copier ▸ Nom du fichier » place le nom de l'enregistrement dans le presse-papier.
-52. « Colonnes… » y figure **en dernier** ; la disposition choisie n'est **pas** mémorisée
+52. « Copier ▸ Nom du fichier » place le nom de l'enregistrement dans le presse-papier.
+53. « Colonnes… » y figure **en dernier** ; la disposition choisie n'est **pas** mémorisée
     d'un import à l'autre (écran transitoire, assumé).
     « 🗑 Écraser et réimporter » ; « Écraser » enchaîne deux confirmations (principe, puis liste de ce
     qui sera supprimé).
@@ -114,18 +117,18 @@ Nécessite une archive dont **une seule entrée** dépasse le gigaoctet - une nu
 `.zip` fabriqué pour l'occasion. Les tests couvrent le mécanisme sur quelques mégaoctets ; ce qui se
 vérifie ici est ce qu'un humain **ressent**.
 
-53. Pendant la décompression d'un fichier de plusieurs Go, le **volume écrit défile** à côté du nom du
+54. Pendant la décompression d'un fichier de plusieurs Go, le **volume écrit défile** à côté du nom du
     fichier, alors que le compteur « X / N fichiers » reste immobile.
-54. « Annuler » pendant ce fichier arrête la décompression **sans attendre la fin du fichier** : le
+55. « Annuler » pendant ce fichier arrête la décompression **sans attendre la fin du fichier** : le
     retour à l'état neutre est perçu comme immédiat, pas au bout de plusieurs minutes.
-55. Après cette annulation, aucun dossier `import-zip-*` ne subsiste dans le dossier de travail.
+56. Après cette annulation, aucun dossier `import-zip-*` ne subsiste dans le dossier de travail.
 
 **Bloc · Archive refusée (#2732)** : automatisé au niveau unitaire, à confirmer **à l'écran** - c'est
 la lisibilité du bandeau qui se juge ici, pas la règle.
 
-56. Une archive dont le contenu décompressé dépasse la place disponible est refusée **avant** que quoi
+57. Une archive dont le contenu décompressé dépasse la place disponible est refusée **avant** que quoi
     que ce soit ne soit écrit ; le bandeau donne les deux volumes (nécessaire, disponible).
-57. Le bandeau du refus est lisible **en entier** : la phrase qui dit quoi faire n'est pas tronquée.
+58. Le bandeau du refus est lisible **en entier** : la phrase qui dit quoi faire n'est pas tronquée.
 
 **Étape 6 · Ce que l'import, le rattachement et la suppression **annoncent** (stabilisation #3424)**
 
@@ -133,16 +136,16 @@ la lisibilité du bandeau qui se juge ici, pas la règle.
 > juste et le message mentait. Ils se jugent donc sur ce que l'écran **dit**, confronté à ce qui s'est
 > réellement produit - et deux d'entre eux exigent de regarder **ailleurs que dans l'application**.
 
-58. 🔌 Connecté, importer une nuit : le compte rendu annonce une participation créée, **et** elle existe
+59. 🔌 Connecté, importer une nuit : le compte rendu annonce une participation créée, **et** elle existe
     réellement sur la plateforme (« Voir la participation » l'ouvre). #3448
-59. 🔒 Déconnecté, importer : le compte rendu **ne prétend pas** avoir créé de participation.
-60. Rattacher une nuit dont des séquences doivent être renommées : le compte rendu **chiffre** les
+60. 🔒 Déconnecté, importer : le compte rendu **ne prétend pas** avoir créé de participation.
+61. Rattacher une nuit dont des séquences doivent être renommées : le compte rendu **chiffre** les
     séquences renommées. #3449
-61. 🔒 Faire échouer l'envoi (se déconnecter avant de valider) : le compte rendu dit **à la fois** le
+62. 🔒 Faire échouer l'envoi (se déconnecter avant de valider) : le compte rendu dit **à la fois** le
     renommage réussi **et** l'échec de l'envoi, et non l'échec seul.
-62. « 🗑 Supprimer » : la confirmation dit que les **fichiers audio restent sur le disque**, et affiche
+63. « 🗑 Supprimer » : la confirmation dit que les **fichiers audio restent sur le disque**, et affiche
     **où**. #3482
-63. Après confirmation, regarder le disque : le dossier de la nuit est **toujours là**, conformément à
+64. Après confirmation, regarder le disque : le dossier de la nuit est **toujours là**, conformément à
     ce qu'annonçait la confirmation.
 
 > Le point 58 ne se coche pas sur le message : c'est exactement ce que #3448 a corrigé, l'écran
