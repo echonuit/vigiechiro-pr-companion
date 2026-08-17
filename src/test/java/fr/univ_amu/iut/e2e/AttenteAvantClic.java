@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.e2e;
 
+import fr.univ_amu.iut.commun.view.DefilementChrome;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -49,14 +50,48 @@ final class AttenteAvantClic {
     ///
     /// @throws AssertionError à l'expiration, avec l'état observé
     static void attendreCliquable(FxRobot robot, String libelle, int secondes) {
+        attendreCliquable(robot, libelle, secondes, null);
+    }
+
+    /// Même attente, mais en **faisant défiler** vers la cible tant qu'elle est hors du champ, par le
+    /// port de révélation du chrome (#1486).
+    ///
+    /// ## Pourquoi il faut défiler avant de conclure
+    ///
+    /// Mesuré sur l'échec de #3911 : sur un runner, l'écran headless est plus petit que la scène
+    /// demandée, la fenêtre est ramenée à `TailleOuverture.LARGEUR_MINIMALE` (900), et à cette largeur
+    /// le `FlowPane` des cartes d'accueil enroule sur une rangée de plus. La carte visée se retrouve à
+    /// `y=951` dans une scène haute de 860 : **hors cadre au repos**, donc jamais cliquable.
+    ///
+    /// Le contenu **défile** pourtant : la barre verticale du `ScrollPane` central est visible, et
+    /// après défilement les sept cartes sont dans le cadre. Un utilisateur les atteint. C'est donc le
+    /// test qui manquait un geste, pas le produit qui manquait une capacité.
+    ///
+    /// ⚠️ J'ai d'abord conclu l'inverse, et ouvert une issue de défaut produit sur cette conclusion
+    /// (#3925, fermée). Je l'avais tirée de la lecture de `MainView.fxml`, où la zone des cartes est un
+    /// `FlowPane` dans un `VBox` : le `ScrollPane` central, lui, est installé **en code** par
+    /// `MainController`. Lire le FXML ne disait pas ce que le chrome fait de sa zone centrale.
+    static void attendreCliquable(FxRobot robot, String libelle, int secondes, DefilementChrome revelateur) {
         try {
-            WaitForAsyncUtils.waitFor(
-                    secondes,
-                    TimeUnit.SECONDS,
-                    () -> cliquable(robot, libelle).tryQuery().isPresent());
+            WaitForAsyncUtils.waitFor(secondes, TimeUnit.SECONDS, () -> {
+                if (cliquable(robot, libelle).tryQuery().isPresent()) {
+                    return true;
+                }
+                reveler(robot, libelle, revelateur);
+                return cliquable(robot, libelle).tryQuery().isPresent();
+            });
         } catch (TimeoutException expiration) {
             throw new AssertionError(rapport(robot, libelle, secondes), expiration);
         }
+    }
+
+    /// Demande au chrome d'amener la cible dans le champ. Sans révélateur, ou sans cible, on ne fait
+    /// rien : l'attente reprend son cours et rapportera si elle expire.
+    private static void reveler(FxRobot robot, String libelle, DefilementChrome revelateur) {
+        if (revelateur == null) {
+            return;
+        }
+        robot.lookup(libelle).tryQuery().ifPresent(revelateur::revele);
     }
 
     private static NodeQuery cliquable(FxRobot robot, String libelle) {

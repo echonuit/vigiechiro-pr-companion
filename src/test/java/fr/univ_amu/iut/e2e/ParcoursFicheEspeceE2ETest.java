@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.DefilementChrome;
 import fr.univ_amu.iut.commun.view.ExecuteurFiche;
 import fr.univ_amu.iut.commun.view.ExecuteurFicheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -96,7 +97,8 @@ class ParcoursFicheEspeceE2ETest {
 
         // Même attente que le parcours voisin : le prédicat exact du clic (#3836), rendu bavard à
         // l'expiration par [AttenteAvantClic] (#3911).
-        AttenteAvantClic.attendreCliquable(robot, "Sons & validation", 10);
+        AttenteAvantClic.attendreCliquable(
+                robot, "Sons & validation", 10, injector.getInstance(DefilementChrome.class));
         robot.clickOn("Sons & validation");
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
 
