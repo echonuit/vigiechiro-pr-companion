@@ -54,7 +54,7 @@ public final class CompteRenduChiffreDepot {
     /// @param actions ce que l'écran propose ensuite ; c'est lui qui sait où mènent ses boutons
     public static CompteRenduChiffre de(BilanDepot bilan, Plan plan, List<Action> actions) {
         return new CompteRenduChiffre(
-                titre(plan),
+                titre(bilan, plan),
                 resultat(bilan, plan),
                 severite(bilan, plan),
                 List.of(),
@@ -64,8 +64,20 @@ public final class CompteRenduChiffreDepot {
                 actions);
     }
 
-    private static String titre(Plan plan) {
-        return plan.interrompu() ? "Dépôt interrompu" : "Nuit déposée sur Vigie-Chiro";
+    /// Le titre dit **l'état réel**, pas l'intention.
+    ///
+    /// ⚠️ Il valait « Nuit déposée sur Vigie-Chiro » dès que le plan n'était pas *interrompu* : une nuit
+    /// à 11 archives sur 14, dont trois refusées, s'annonçait donc **déposée**, en gras et en tête du
+    /// compte rendu. Trouvé en passe 8 de la clôture #3900, **en ouvrant l'aperçu** - aucun test ne
+    /// regardait ce titre, et la ventilation juste en dessous disait pourtant le contraire.
+    ///
+    /// « Dépôt incomplet » est le mot que la CLI emploie déjà pour le même état : deux surfaces, une
+    /// désignation.
+    private static String titre(BilanDepot bilan, Plan plan) {
+        if (plan.interrompu()) {
+            return "Dépôt interrompu";
+        }
+        return bilan.estComplet() ? "Nuit déposée sur Vigie-Chiro" : "Dépôt incomplet";
     }
 
     /// « 14 déposées », ou « 9 / 14 déposées » dès qu'il en manque. Compte ce qui est **en ligne**, pas ce
@@ -143,9 +155,20 @@ public final class CompteRenduChiffreDepot {
     private static String phraseDesRefus(List<EchecUnite> refuses) {
         String debut = refuses.size() + " archive(s) ont été refusées par Vigie-Chiro : les renvoyer telles"
                 + " quelles serait refusé de même.";
-        return refuses.stream().allMatch(EchecUnite::seRearmeParUneReconnexion)
-                ? debut + " Reconnectez-vous : elles redeviendront reprenables."
-                : debut + " Le détail par archive est dans la table.";
+        long parDroits =
+                refuses.stream().filter(EchecUnite::seRearmeParUneReconnexion).count();
+        if (parDroits == 0) {
+            return debut + " Le détail par archive est dans la table.";
+        }
+        if (parDroits == refuses.size()) {
+            return debut + " Reconnectez-vous : elles redeviendront reprenables.";
+        }
+        // ⚠️ Le cas mêlé, trouvé en ouvrant l'aperçu : deux refus de droits et un contenu refusé. La
+        // première rédaction se taisait dès qu'une seule archive n'était pas réparable, et perdait un
+        // geste **vérifié** pour les autres. L'ADR 3854 demande de ne nommer que ce qui s'applique, pas
+        // de se taire quand cela s'applique à une partie.
+        return debut + " " + parDroits + " d'entre elles tenaient à vos droits : reconnectez-vous et"
+                + " elles redeviendront reprenables. Le détail par archive est dans la table.";
     }
 
     /// Ce que la ventilation ne porte pas : **quoi faire** de ce qui manque, et ce que la reprise promet.

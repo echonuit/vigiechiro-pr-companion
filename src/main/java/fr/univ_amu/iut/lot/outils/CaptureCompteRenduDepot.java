@@ -5,6 +5,8 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.lot.model.BilanDepot;
+import fr.univ_amu.iut.lot.model.CauseRefus;
+import fr.univ_amu.iut.lot.model.EchecUnite;
 import fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot;
 import java.nio.file.Path;
 import java.util.List;
@@ -59,18 +61,41 @@ public final class CaptureCompteRenduDepot {
         System.exit(0);
     }
 
+    /// L'identifiant de participation que les trois aperçus partagent : c'est le même dépôt, montré à
+    /// trois moments.
+    private static final String PARTICIPATION = "part-1";
+
+    /// La raison des deux refus de droits de l'aperçu : deux archives, une seule cause.
+    private static final String DROITS_INSUFFISANTS = "HTTP 403 : droits insuffisants";
+
     private static void capturer() {
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
         rendre(
-                new BilanDepot("part-1", 14, List.of(), 4_500_000_000L),
+                new BilanDepot(PARTICIPATION, 14, List.of(), 4_500_000_000L),
                 new CompteRenduChiffreDepot.Plan(14, 14, false),
                 List.of(new CompteRenduChiffre.Action("Lancer la participation", true, () -> {})),
                 sortie.resolve("apercu-lot-depot-compte-rendu.png"));
         rendre(
-                new BilanDepot("part-1", 9, List.of(), 2_900_000_000L),
+                new BilanDepot(PARTICIPATION, 9, List.of(), 2_900_000_000L),
                 new CompteRenduChiffreDepot.Plan(14, 9, true),
                 List.of(),
                 sortie.resolve("apercu-lot-depot-interrompu.png"));
+        // L'état que la passe 4 de la clôture #3900 a trouvé SANS APERÇU, alors que c'est celui où
+        // l'utilisateur a le plus besoin d'être renseigné : des archives refusées définitivement, dont
+        // deux réparables par une reconnexion et une qui ne le sera jamais. C'est aussi le seul état où
+        // le bouton cesse de s'appeler « Reprendre le dépôt ».
+        rendre(
+                new BilanDepot(
+                        PARTICIPATION,
+                        11,
+                        List.of(
+                                new EchecUnite("Car-12.zip", DROITS_INSUFFISANTS, true, CauseRefus.AUTHENTIFICATION),
+                                new EchecUnite("Car-13.zip", DROITS_INSUFFISANTS, true, CauseRefus.AUTHENTIFICATION),
+                                new EchecUnite("Car-14.zip", "HTTP 422 : archive refusée", true, CauseRefus.CONTENU)),
+                        3_400_000_000L),
+                new CompteRenduChiffreDepot.Plan(14, 11, false),
+                List.of(),
+                sortie.resolve("apercu-lot-depot-refus-definitif.png"));
     }
 
     private static void rendre(

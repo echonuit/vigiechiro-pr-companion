@@ -112,6 +112,8 @@ plus rien à reprendre.
 
 La table garde le détail : la cause de chaque échec y est lisible, archive par archive.
 
+![Le compte rendu d'un dépôt incomplet : 11 archives sur 14 en ligne, trois refusées par Vigie-Chiro, dont deux qui redeviendront reprenables après une reconnexion.](../assets/captures/apercu-lot-depot-refus-definitif.png)
+
 #### Ce qui peut lever un refus, et ce qui ne le peut pas
 
 | Ce que dit le refus | Ce qui le lève |
