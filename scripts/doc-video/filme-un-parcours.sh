@@ -46,7 +46,7 @@ HAUTEUR=860
 
 verifier_outils() {
     local manquants=()
-    for outil in Xvfb xdotool ffmpeg xdpyinfo openbox tesseract; do
+    for outil in Xvfb xdotool ffmpeg xdpyinfo openbox tesseract udisksctl mkfs.vfat mcopy; do
         command -v "$outil" >/dev/null 2>&1 || manquants+=("$outil")
     done
     if [ ${#manquants[@]} -gt 0 ]; then
@@ -442,6 +442,97 @@ preparer_la_carte() { # <dossier de destination>
 }
 
 # ---------------------------------------------------------------------------------------------
+# La carte montée là où une vraie carte se monte
+# ---------------------------------------------------------------------------------------------
+
+# L'étiquette de NOTRE image. Elle sert deux fois : à ce que le film montre un nom de volume
+# plausible, et à ce que le démontage ne s'en prenne qu'à elle.
+ETIQUETTE_CARTE="VIGIECHIRO"
+
+# ⚠️ Pourquoi monter, plutôt que de désigner un dossier.
+#
+# Un banc de recette se moque de l'endroit : il vérifie un comportement. Un film de documentation,
+# lui, EST le livrable, et son réalisme en fait partie. Un naturaliste branche sa carte et la voit
+# apparaître sous `/media/<lui>/<étiquette>` ; il ne voit jamais `/tmp/quelquechose`.
+#
+# J'avais écarté ce montage en jugeant sur le déterminisme du banc - le bon critère pour la recette,
+# le mauvais ici. Les deux se cumulent sans rien perdre : `GenerateurCartesSD` produit les octets,
+# on les verse dans une image FAT étiquetée, et `udisksctl` la monte là où une vraie carte se monte.
+image_de_la_carte() { # <dossier de la carte> <image à écrire>
+    local carte="$1" image="$2" bruts
+    # ⚠️ Vérifier la SOURCE avant de fabriquer. Sans ce contrôle, une carte absente - `/tmp` nettoyé
+    # entre deux tournages, cela s'est produit - donne une image FAT parfaitement valide et VIDE.
+    # Le film montrerait alors « 0 enregistrement détecté », et le fichier serait irréprochable.
+    if [ ! -d "$carte" ]; then
+        echo "   - carte source introuvable : $carte" >&2
+        return 1
+    fi
+    bruts=$(find "$carte" -name '*.wav' 2>/dev/null | wc -l)
+    if [ "$bruts" -eq 0 ]; then
+        echo "   - carte source sans aucun brut : $carte" >&2
+        return 1
+    fi
+    rm -f "$image"
+    truncate -s 64M "$image" || return 1
+    mkfs.vfat -n "$ETIQUETTE_CARTE" "$image" >/dev/null 2>&1 || return 1
+    ( cd "$carte" && mcopy -i "$image" -s ./* :: ) >/dev/null 2>&1 || {
+        # `cd` puis `./*` : `mcopy -s "$carte"/*` recopierait le chemin absolu dans l'image.
+        mcopy -i "$image" -s "$carte"/* :: >/dev/null 2>&1 || return 1
+    }
+    return 0
+}
+
+# ⚠️ Le garde qui protège les cartes de l'utilisateur.
+#
+# Cette machine porte de VRAIES cartes montées - au moment d'écrire ceci, `/run/media/<user>/72CA-9E54`.
+# Un banc qui démonterait « le dernier volume apparu » pourrait s'en prendre à elles. On n'agit donc
+# que sur un point de montage dont le nom est NOTRE étiquette, et sur rien d'autre.
+notre_montage() { # <point de montage>
+    case "$(basename "${1:-}")" in
+        "$ETIQUETTE_CARTE") return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+# Monte l'image et rend le point de montage. `udisks2` monte de lui-même après `loop-setup` : on
+# n'appelle donc pas `udisksctl mount`, qui répondrait « already mounted ».
+monter_la_carte() { # <image>
+    local image="$1" sortie dev point i
+    sortie=$(udisksctl loop-setup -f "$image" 2>&1) || { echo "   - loop-setup refusé : $sortie" >&2; return 1; }
+    dev=$(printf '%s' "$sortie" | grep -oE '/dev/loop[0-9]+')
+    [ -n "$dev" ] || { echo "   - aucun périphérique boucle obtenu" >&2; return 1; }
+    for i in 1 2 3 4 5 6 7 8; do
+        point=$(lsblk -no MOUNTPOINT "$dev" 2>/dev/null | grep -v '^$' | head -1)
+        [ -n "$point" ] && break
+        sleep 1
+    done
+    if [ -z "$point" ]; then
+        echo "   - $dev n'a été monté nulle part après 8 s" >&2
+        return 1
+    fi
+    if ! notre_montage "$point"; then
+        echo "   - $point ne porte pas l'étiquette $ETIQUETTE_CARTE : on n'y touche pas" >&2
+        return 1
+    fi
+    printf '%s\t%s' "$point" "$dev"
+    return 0
+}
+
+# ⚠️ On démonte, on ne DÉTACHE pas. `udisksctl loop-delete` réclame une élévation par polkit : sur
+# un poste graphique, il fait surgir une boîte d'authentification chez qui travaille - vécu. Et il
+# est inutile : `loop-setup` pose l'autoclear, le périphérique s'en va de lui-même au démontage.
+demonter_la_carte() { # <point de montage> <périphérique>
+    local point="$1" dev="$2"
+    notre_montage "$point" || { echo "   - refus de démonter $point : ce n'est pas notre carte" >&2; return 1; }
+    udisksctl unmount -b "$dev" >/dev/null 2>&1
+    sleep 1
+    if losetup -l 2>/dev/null | grep -q "^$dev "; then
+        echo "   ⚠️ $dev subsiste : le détacher demanderait une élévation, on s'en abstient." >&2
+    fi
+    return 0
+}
+
+# ---------------------------------------------------------------------------------------------
 # Le montage
 # ---------------------------------------------------------------------------------------------
 
@@ -619,7 +710,7 @@ auto_test() {
     essai "un jar désigné mais ABSENT est refusé"        rouge verifier_le_jar "$bac/nexiste-pas.jar"
     essai "aucun jar du tout est refusé"                 rouge verifier_le_jar ""
     essai "VIGIECHIRO_JAR l'emporte sur la cible Maven"  vert \
-        bash -c 'source "$0"; VIGIECHIRO_JAR=/tmp/x.jar; [ "$(resoudre_le_jar)" = /tmp/x.jar ]' "${BASH_SOURCE[0]}"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; VIGIECHIRO_JAR=/tmp/x.jar; [ "$(resoudre_le_jar)" = /tmp/x.jar ]' "${BASH_SOURCE[0]}"
 
     # --- le bac jetable ---
     essai "un bac hors de l'espace utilisateur est accepté" vert  verifier_bac_jetable "$bac"
@@ -639,31 +730,31 @@ auto_test() {
         -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Mes sites':fontcolor=black:fontsize=22:x=20:y=18" \
         -frames:v 1 "$bac/libelle.png" </dev/null 2>/dev/null
     essai "un libellé rendu à l'écran se lit"           vert \
-        bash -c 'source "$0"; [ "$(lire_zone "$1" 0 0 400 60)" = "Mes sites" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(lire_zone "$1" 0 0 400 60)" = "Mes sites" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
     essai "une zone vide ne rend aucun libellé"         vert \
-        bash -c 'source "$0"; [ -z "$(lire_zone "$1" 300 0 90 60)" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ -z "$(lire_zone "$1" 300 0 90 60)" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
     # ⚠️ Le cas qui porte le contrôle : lire le MAUVAIS libellé doit échouer, sinon `viser` laisserait
     # partir n'importe quel clic.
     essai "un libellé ABSENT ne se lit pas quand même"  rouge \
-        bash -c 'source "$0"; [ "$(lire_zone "$1" 0 0 400 60)" = "Importer une nuit" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(lire_zone "$1" 0 0 400 60)" = "Importer une nuit" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
 
     # --- l'appariement des libellés ---
     essai "un libellé identique correspond"              vert \
-        bash -c 'source "$0"; libelle_correspond "Mes sites" "Mes sites"' "${BASH_SOURCE[0]}"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "Mes sites" "Mes sites"' "${BASH_SOURCE[0]}"
     # ⚠️ Le cas mesuré sur le produit : l'OCR rend « Messites » sans son espace.
     essai "un espace perdu par l'OCR correspond quand même" vert \
-        bash -c 'source "$0"; libelle_correspond "Accueil » Messites" "Mes sites"' "${BASH_SOURCE[0]}"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "Accueil » Messites" "Mes sites"' "${BASH_SOURCE[0]}"
     essai "un libellé DIFFÉRENT ne correspond pas"        rouge \
-        bash -c 'source "$0"; libelle_correspond "Mes sites" "Importer une nuit"' "${BASH_SOURCE[0]}"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "Mes sites" "Importer une nuit"' "${BASH_SOURCE[0]}"
     # ⚠️ Sans ce cas, un attendu vide correspondrait à tout, et « viser » laisserait partir n'importe
     # quel clic sur un scénario mal écrit.
     essai "un attendu VIDE ne correspond à rien"          rouge \
-        bash -c 'source "$0"; libelle_correspond "Mes sites" ""' "${BASH_SOURCE[0]}"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "Mes sites" ""' "${BASH_SOURCE[0]}"
 
     # ⚠️ Le cas qui a coûté un aller-retour : un libellé plus large que la zone est tronqué, et le
     # refus doit le DIRE au lieu d'accuser le scénario.
     essai "un libellé tronqué par la zone ne correspond pas" rouge \
-        bash -c 'source "$0"; libelle_correspond "uter mon premier site de:" "Ajouter mon premier site de suivi"' "${BASH_SOURCE[0]}"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "uter mon premier site de:" "Ajouter mon premier site de suivi"' "${BASH_SOURCE[0]}"
 
     # --- le trajet de souris ---
     essai "un trajet rend des arguments xdotool"        vert \
@@ -676,20 +767,20 @@ auto_test() {
     # dont tout le montage dépend, et la seule que #2191 postulait.
     printf '1000.0\tdebut\n1002.0\tfin\n1010.0\tarret\n' > "$bac/m.tsv"
     essai "t0 se mesure : arret moins duree"             vert \
-        bash -c 'source "$0"; [ "$(origine_du_film "$1" 10)" = "1000.000" ]' "${BASH_SOURCE[0]}" "$bac/m.tsv"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(origine_du_film "$1" 10)" = "1000.000" ]' "${BASH_SOURCE[0]}" "$bac/m.tsv"
     essai "un repere se convertit en position de film"   vert \
-        bash -c 'source "$0"; [ "$(instant_du_repere "$1" 1000 fin)" = "2.000" ]' "${BASH_SOURCE[0]}" "$bac/m.tsv"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(instant_du_repere "$1" 1000 fin)" = "2.000" ]' "${BASH_SOURCE[0]}" "$bac/m.tsv"
     # ⚠️ Sans repere « arret », t0 est indéterminable : le montage doit refuser, pas deviner.
     printf '1000.0\tdebut\n1002.0\tfin\n' > "$bac/sans-arret.tsv"
     essai "sans repere « arret », t0 est refuse"         rouge \
-        bash -c 'source "$0"; [ -n "$(origine_du_film "$1" 10)" ]' "${BASH_SOURCE[0]}" "$bac/sans-arret.tsv"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ -n "$(origine_du_film "$1" 10)" ]' "${BASH_SOURCE[0]}" "$bac/sans-arret.tsv"
     # Un film clair rend une part utile de 1 ; un film noir, de 0. Les deux bornes, pas un reglage.
     ffmpeg -v error -y -f lavfi -i "color=c=white:s=160x120:d=2:r=10" "$bac/clair.mkv" </dev/null 2>/dev/null
     ffmpeg -v error -y -f lavfi -i "color=c=black:s=160x120:d=2:r=10" "$bac/noir.mkv" </dev/null 2>/dev/null
     essai "un film clair rend une part utile de 1"       vert \
-        bash -c 'source "$0"; [ "$(part_utile "$1")" = "1.00" ]' "${BASH_SOURCE[0]}" "$bac/clair.mkv"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(part_utile "$1")" = "1.00" ]' "${BASH_SOURCE[0]}" "$bac/clair.mkv"
     essai "un film noir rend une part utile de 0"        vert \
-        bash -c 'source "$0"; [ "$(part_utile "$1")" = "0.00" ]' "${BASH_SOURCE[0]}" "$bac/noir.mkv"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(part_utile "$1")" = "0.00" ]' "${BASH_SOURCE[0]}" "$bac/noir.mkv"
 
     # --- l'index ---
     # ⚠️ Le cas qui garde l'honnêteté de la page. « Ce que ce film ne prouve pas » est la première
@@ -700,10 +791,10 @@ auto_test() {
     ffmpeg -v error -y -f lavfi -i "color=c=white:s=160x120:d=2:r=10" "$bac/f.mkv" </dev/null 2>/dev/null
     cp "$bac/f.mkv" "$bac/f-monte.mkv"
     essai "l index dit ce que le film ne prouve PAS"     vert \
-        bash -c 'source "$0"; ecrire_index "$1" "$2" "$3" >/dev/null; grep -q "ne prouve pas" "$3"' \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; ecrire_index "$1" "$2" "$3" >/dev/null; grep -q "ne prouve pas" "$3"' \
         "${BASH_SOURCE[0]}" "$bac/f-monte.mkv" "$bac/mi.tsv" "$bac/i.md"
     essai "l index nomme la fiche d ecran illustree"     vert \
-        bash -c 'source "$0"; grep -q "docs/ecrans" "$3"' \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; grep -q "docs/ecrans" "$3"' \
         "${BASH_SOURCE[0]}" "$bac/f-monte.mkv" "$bac/mi.tsv" "$bac/i.md"
 
     # --- la carte SD ---
@@ -719,6 +810,16 @@ auto_test() {
     # Et le cas VERT, sans quoi les trois refus ci-dessus passeraient sur une fonction qui refuse tout.
     mkdir -p "$bac/carte-bonne/sd-nominale/bruts" && : > "$bac/carte-bonne/sd-nominale/bruts/a.wav"
     essai "une carte avec ses bruts est acceptée"        vert  carte_utilisable "$bac/carte-bonne"
+
+    # --- la carte montée ---
+    # ⚠️ Le garde qui compte : cette machine porte de vraies cartes montées. Un banc qui démonterait
+    # au jugé pourrait s'en prendre à elles.
+    essai "notre étiquette est reconnue"                 vert  notre_montage "/run/media/moi/VIGIECHIRO"
+    essai "la carte d un tiers est refusée"              rouge notre_montage "/run/media/moi/72CA-9E54"
+    essai "un point de montage vide est refusé"          rouge notre_montage ""
+    essai "on refuse de démonter ce qui n est pas à nous" rouge demonter_la_carte "/run/media/moi/72CA-9E54" /dev/loop9
+    essai "une carte source absente est refusée"         rouge image_de_la_carte "$bac/nexiste-pas" "$bac/x.img"
+    essai "une carte source sans brut est refusée"       rouge image_de_la_carte "$bac/carte-bruts-vides/sd-nominale" "$bac/x.img"
 
     # --- les outils ---
     essai "les outils du poste sont là"                  vert  verifier_outils
@@ -742,7 +843,13 @@ auto_test() {
 # « WAYLAND_DISPLAY posé » se sourçait et relançait le script, si bien qu'il n'éprouvait plus rien
 # hors d'une session Wayland (#3883). Un fichier qui se source doit dire ce qu'il fait à ce
 # moment-là : ici, rien.
-if [ "${BASH_SOURCE[0]}" = "$0" ]; then
+# ⚠️ Le drapeau, et non « $0 vaut BASH_SOURCE ». Cette comparaison ne dit PAS ce qu'on croit :
+# sous `bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"' /chemin/du/banc`, `$0` EST le chemin du banc, donc les deux sont
+# égaux et le garde conclut « lancé directement ». L'auto-test déclenchait alors un tournage à
+# chaque cas qui se source - il s'est mis à figer dès que les prérequis ont grandi.
+#
+# Un drapeau explicite ne peut pas se tromper : qui source le dit.
+if [ -z "${BANC_SOURCE_SEULEMENT:-}" ] && [ "${BASH_SOURCE[0]}" = "$0" ]; then
     if [ "${1:-}" = "--auto-test" ]; then
         auto_test
         exit $?
