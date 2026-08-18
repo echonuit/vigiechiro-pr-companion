@@ -234,6 +234,8 @@ nav:
     - 3464 · Le ressort va au vide, pas au libellé désigné: decisions/3464-le-ressort-va-au-vide-pas-au-libelle-qu-un-bouton-designe.md
     - 3470 · Un message d'erreur ne montre pas son enveloppe: decisions/3470-un-message-d-erreur-ne-montre-jamais-le-nom-de-son-enveloppe.md
     - 3947 · Un message se compose en un seul endroit: decisions/3947-un-message-montre-a-l-utilisateur-se-compose-en-un-seul-endroit.md
+    - 3978 · Un point de passage garantit l'ensemble: decisions/3978-un-point-de-passage-garantit-l-ensemble-pas-un-de-ses-membres.md
+    - 3990 · Le texte se lit, le JSON se parse: decisions/3990-le-texte-se-lit-le-json-se-parse.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
