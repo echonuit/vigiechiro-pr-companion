@@ -360,7 +360,11 @@ tourner() {
         # montage aurait coupé les mauvaises plages, et le film serait resté parfaitement valide.
         marque "$marques" arret
 
-        monter "$sortie" "$marques" "${sortie%.mkv}-monte.mkv" || code=1
+        if monter "$sortie" "$marques" "${sortie%.mkv}-monte.mkv"; then
+            ecrire_index "${sortie%.mkv}-monte.mkv" "$marques" "$(dirname "$sortie")/index.md"
+        else
+            code=1
+        fi
     else
         echo "❌ Le produit n'a pas ouvert de fenêtre : rien à filmer."
         echo "   Journal : $bac/produit.log"
@@ -455,6 +459,71 @@ monter() { # <brut> <marques> <sortie>
         "$duree" "$(LC_NUMERIC=C awk -v a="$debut" -v b="$fin" 'BEGIN{print b - a}')" \
         "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
     return 0
+}
+
+# ---------------------------------------------------------------------------------------------
+# L'index
+# ---------------------------------------------------------------------------------------------
+
+# La fiche d'écran que ce parcours illustre. Écrite ici, à côté du parcours, et non dans l'index :
+# l'index se DÉRIVE, il ne se tient pas à la main - c'est la leçon de #3885, où une page portait
+# trois inventaires du même fait et où deux avaient dérivé.
+FICHE_DU_PARCOURS="docs/ecrans/sites.md"
+
+# Écrit l'index d'un film à partir de ses repères. Rien n'y est saisi : la durée vient du fichier,
+# les étapes des marqueurs, la part d'images utiles de la mesure.
+#
+# ⚠️ Ce que l'index dit de lui-même compte autant que ce qu'il liste. Un lecteur doit savoir que ce
+# film prouve un ENCHAÎNEMENT et rien d'autre : qu'il soit clair, lisible, bien rythmé, aucune
+# machine ne le dit. C'est le troisième état de l'ADR 3764, transposé à la documentation.
+ecrire_index() { # <film monté> <marques> <index>
+    local film="$1" marques="$2" index="$3" duree t0 brut_duree part
+    duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$film" 2>/dev/null)
+    brut_duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "${film%-monte.mkv}.mkv" 2>/dev/null)
+    t0=$(origine_du_film "$marques" "$brut_duree")
+    part=$(part_utile "$film")
+
+    {
+        echo "# Parcours filmés de la documentation"
+        echo
+        echo "Cette page est **dérivée** : elle se réécrit à chaque tournage, depuis les repères posés"
+        echo "par le scénario et la mesure du fichier. Rien n'y est saisi à la main."
+        echo
+        echo "## Déclarer un carré"
+        echo
+        printf '| | |\n|---|---|\n'
+        printf '| film | `%s` |\n' "$(basename "$film")"
+        LC_NUMERIC=C printf '| durée | %.1f s (brut : %.1f s) |\n' "$duree" "$brut_duree"
+        LC_NUMERIC=C printf '| images utiles | %.0f %% |\n' "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
+        printf '| illustre | [%s](../../%s) |\n' "$FICHE_DU_PARCOURS" "$FICHE_DU_PARCOURS"
+        echo
+        echo "### Où en est le parcours"
+        echo
+        printf '| étape | dans le film |\n|---|---|\n'
+        # ⚠️ Les positions se comptent dans le film MONTÉ, pas dans le brut. Le montage a coupé au
+        # repère « debut » : il faut donc retrancher cette origine, sans quoi l'index annonce un
+        # « debut » à -0,2 s dans un film qui commence à zéro - une petite fausseté, sur la page
+        # dont tout l'intérêt est de dire où regarder.
+        local coupe nom brute relative
+        coupe=$(instant_du_repere "$marques" "$t0" debut)
+        LC_NUMERIC=C awk -v c="$coupe" 'BEGIN{exit !(c < 0)}' && coupe=0
+        while IFS=$'\t' read -r _ nom; do
+            [ "$nom" = arret ] && continue
+            brute=$(instant_du_repere "$marques" "$t0" "$nom")
+            relative=$(LC_NUMERIC=C awk -v b="$brute" -v c="$coupe" 'BEGIN{v = b - c; if (v < 0) v = 0; printf "%.1f", v}')
+            printf '| %s | %s s |\n' "$nom" "$relative"
+        done < "$marques"
+        echo
+        echo "### ⚠️ Ce que ce film ne prouve pas"
+        echo
+        echo "Qu'il soit **clair**. Le banc sait dire que l'enchaînement a eu lieu - chaque geste a"
+        echo "vérifié son libellé avant de partir - et que le montage tombe sur du contenu. Il ne sait"
+        echo "pas si un lecteur comprend ce qu'il voit, ni si le rythme lui convient."
+        echo
+        echo "C'est le troisième état de l'[ADR 3764](../../dev-docs/decisions/3764-un-cas-joue-n-est-pas-un-cas-prouve.md) :"
+        echo "joué n'est pas prouvé. Ce verdict-là revient à qui regarde."
+    } > "$index"
+    echo "   ✔ index : $(basename "$index")"
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -561,6 +630,21 @@ auto_test() {
         bash -c 'source "$0"; [ "$(part_utile "$1")" = "1.00" ]' "${BASH_SOURCE[0]}" "$bac/clair.mkv"
     essai "un film noir rend une part utile de 0"        vert \
         bash -c 'source "$0"; [ "$(part_utile "$1")" = "0.00" ]' "${BASH_SOURCE[0]}" "$bac/noir.mkv"
+
+    # --- l'index ---
+    # ⚠️ Le cas qui garde l'honnêteté de la page. « Ce que ce film ne prouve pas » est la première
+    # section qu'on retire quand on veut faire propre, et c'est la seule qui empêche de lire l'index
+    # comme un certificat. Un index sans elle annoncerait « 100 % d'images utiles » à un lecteur qui
+    # comprendrait « ce film est bon ».
+    printf '1000.0\tdebut\n1002.0\tfin\n1010.0\tarret\n' > "$bac/mi.tsv"
+    ffmpeg -v error -y -f lavfi -i "color=c=white:s=160x120:d=2:r=10" "$bac/f.mkv" </dev/null 2>/dev/null
+    cp "$bac/f.mkv" "$bac/f-monte.mkv"
+    essai "l index dit ce que le film ne prouve PAS"     vert \
+        bash -c 'source "$0"; ecrire_index "$1" "$2" "$3" >/dev/null; grep -q "ne prouve pas" "$3"' \
+        "${BASH_SOURCE[0]}" "$bac/f-monte.mkv" "$bac/mi.tsv" "$bac/i.md"
+    essai "l index nomme la fiche d ecran illustree"     vert \
+        bash -c 'source "$0"; grep -q "docs/ecrans" "$3"' \
+        "${BASH_SOURCE[0]}" "$bac/f-monte.mkv" "$bac/mi.tsv" "$bac/i.md"
 
     # --- les outils ---
     essai "les outils du poste sont là"                  vert  verifier_outils
