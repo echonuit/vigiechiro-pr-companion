@@ -188,18 +188,26 @@ libelle_correspond() { # <lu> <attendu>
 # Ce que ce contrôle attrape : le geste qui viserait un endroit où le libellé attendu n'est plus.
 # Ce qu'il n'attrape PAS : retrouver où le bouton a bougé. Il dit que le scénario est périmé, il ne
 # le répare pas - et c'est le bon partage pour un banc dont le péché serait de filmer du faux.
-viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet]
-    local ecran="$1" x="$2" y="$3" attendu="$4" duree="${5:-0.55}" tmp lu
+viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet] [largeur de la zone lue]
+    local ecran="$1" x="$2" y="$3" attendu="$4" duree="${5:-0.55}" largeur="${6:-$ZONE_L}" tmp lu
     tmp=$(mktemp -d)
     ffmpeg -v error -y -f x11grab -video_size "${LARGEUR}x${HAUTEUR}" -i "$ecran" \
         -frames:v 1 "$tmp/ecran.png" </dev/null 2>/dev/null
 
-    lu=$(lire_zone "$tmp/ecran.png" "$((x - ZONE_L / 2))" "$((y - ZONE_H / 2))")
+    lu=$(lire_zone "$tmp/ecran.png" "$((x - largeur / 2))" "$((y - ZONE_H / 2))" "$largeur")
     rm -rf "$tmp"
 
     if ! libelle_correspond "$lu" "$attendu"; then
         echo "   - le geste visait « $attendu » en ($x, $y) ; l'écran y porte « $lu »"
-        echo "     Le scénario est périmé : la mise en page a changé, ou l'écran n'est pas celui attendu."
+        # ⚠️ Distinguer les deux causes, parce qu'elles ne se corrigent pas pareil. Un libellé plus
+        # long que la zone lue est TRONQUÉ, et le refus accuserait alors le scénario d'être périmé
+        # alors qu'il est juste - mesuré sur « + Ajouter mon premier site de suivi », rendu
+        # « uter mon premier site de: » dans une zone de 200 px.
+        if [ -n "$lu" ]; then
+            echo "     La zone lue fait ${largeur} px : si le libellé est plus large, il en sort."
+            echo "     Élargissez-la (6ᵉ argument), ou visez un fragment plus court."
+        fi
+        echo "     Sinon le scénario est périmé : la mise en page a changé, ou l'écran n'est pas celui attendu."
         return 1
     fi
 
@@ -209,6 +217,75 @@ viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet]
     sleep 0.18
     DISPLAY="$ecran" xdotool click 1
     return 0
+}
+
+# Saisit du texte au rythme d'une main. `--delay` en millisecondes par touche : à 0, xdotool colle
+# la chaîne d'un bloc et le spectateur ne voit rien se remplir.
+taper() { # <écran> <texte>
+    DISPLAY="$1" xdotool type --delay 70 "$2"
+}
+
+# Un marqueur : l'instant où l'on passe, et son nom. Le montage s'en sert pour savoir ce qu'il peut
+# accélérer, et l'index pour dire où commence quoi.
+#
+# ⚠️ L'instant est celui de l'HORLOGE, pas une position dans le film. La conversion se fait après
+# coup, `t0` étant mesuré comme « instant d'arrêt moins durée du fichier » - jamais postulé, comme
+# le fait `lance-test-filme.sh`. `monter.py` de #2191 supposait un décalage de 1,5 s ; le banc de
+# recette a montré que cette latence varie.
+marque() { # <fichier de marques> <nom>
+    printf '%s\t%s\n' "$(date +%s.%N)" "$2" >> "$1"
+}
+
+# Le parcours « déclarer un carré », premier de la documentation (#3887).
+#
+# ## Pourquoi celui-ci d'abord
+#
+# `docs/ecrans/sites.md` le pose en porte d'entrée : « vous ne pouvez pas importer une nuit tant
+# qu'un site n'est pas déclaré ». Et il n'exige **aucune fixture** - un espace de travail vide
+# suffit. L'importation, qui apprend davantage, demande une carte SD : elle viendra ensuite.
+#
+# ## Ce que chaque geste vérifie
+#
+# Chaque `viser` porte le libellé qu'il attend à l'écran. Un bouton déplacé ne produit donc pas un
+# clic muet au mauvais endroit mais un refus, et le tournage s'arrête là.
+parcours_declarer_un_carre() {
+    local ecran="$1" marques="$2"
+
+    marque "$marques" debut
+    respirer_doc 2.0                                   # l'accueil, le temps de le lire
+
+    viser "$ecran" 238 454 "Mes sites" || return 1
+    marque "$marques" mes_sites
+    respirer_doc 2.2                                   # l'état vide, et son invitation
+
+    viser "$ecran" 640 501 "Ajouter mon premier site de suivi" 0.6 420 || return 1
+    marque "$marques" modale
+    respirer_doc 1.6                                   # la modale s'installe
+
+    DISPLAY="$ecran" xdotool mousemove 557 253 click 1
+    taper "$ecran" "640380"
+    respirer_doc 1.2
+
+    DISPLAY="$ecran" xdotool mousemove 640 348 click 1
+    # ⚠️ « Mare » et non « Étang », qui est pourtant l'exemple du produit : `xdotool type` a rendu
+    # « étang » minuscule sur le premier tournage - il perd la MAJUSCULE ACCENTUÉE. Un film de
+    # documentation ne doit pas montrer une saisie que l'utilisateur n'obtiendrait pas.
+    taper "$ecran" "Mare de la Tuiliere"
+    respirer_doc 1.4
+    marque "$marques" saisi
+
+    viser "$ecran" 842 545 "Créer" || return 1
+    marque "$marques" cree
+    respirer_doc 2.5                                   # la fiche du carré paraît
+
+    marque "$marques" fin
+    return 0
+}
+
+# Les respirations du film. Elles ne servent qu'au spectateur : un écran qui change trop vite ne se
+# lit pas. Hors tournage, elles ne coûtent rien.
+respirer_doc() {
+    sleep "$1"
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -234,7 +311,7 @@ parcours_ouverture() {
 }
 
 tourner() {
-    local sortie="${1:-$RACINE/target/doc-video/ouverture.mkv}"
+    local sortie="${1:-$RACINE/target/doc-video/declarer-un-carre.mkv}"
     local bac ecran=":87" jar code=0
     jar=$(resoudre_le_jar)
     bac=$(mktemp -d)
@@ -264,10 +341,20 @@ tourner() {
 
     if attendre_la_fenetre "$ecran"; then
         verifier_dimensions_honorees "$ecran" || code=1
-        filmer "$ecran" "$sortie" 6 &
+        local marques="${sortie%.mkv}.marques.tsv"
+        : > "$marques"
+        # ⚠️ Durée fixée d'avance, et généreuse : un ffmpeg tué sans ménagement ne finalise pas son
+        # index. Le parcours dure une trentaine de secondes ; on filme 45, et le montage coupera.
+        filmer "$ecran" "$sortie" 45 &
         local camera=$!
-        parcours_ouverture "$ecran"
+        parcours_declarer_un_carre "$ecran" "$marques" || code=1
         wait "$camera"
+        # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
+        # fichier » : il faut donc l'instant où la CAMÉRA s'est arrêtée, pas celui où le parcours
+        # s'est terminé. Marqué avant le `wait`, les repères se convertissaient en 21,3 s à 45,0 s -
+        # un parcours qui n'aurait commencé qu'à la moitié d'un film qu'il occupe en entier. Le
+        # montage aurait coupé les mauvaises plages, et le film serait resté parfaitement valide.
+        marque "$marques" arret
     else
         echo "❌ Le produit n'a pas ouvert de fenêtre : rien à filmer."
         echo "   Journal : $bac/produit.log"
@@ -278,6 +365,7 @@ tourner() {
     wait 2>/dev/null
     if [ "$code" -eq 0 ]; then
         echo "✅ $sortie ($(du -h "$sortie" | cut -f1))"
+        echo "   marques : $(wc -l < "${sortie%.mkv}.marques.tsv") repères"
     fi
     rm -rf "$bac"
     return "$code"
@@ -356,6 +444,11 @@ auto_test() {
     # quel clic sur un scénario mal écrit.
     essai "un attendu VIDE ne correspond à rien"          rouge \
         bash -c 'source "$0"; libelle_correspond "Mes sites" ""' "${BASH_SOURCE[0]}"
+
+    # ⚠️ Le cas qui a coûté un aller-retour : un libellé plus large que la zone est tronqué, et le
+    # refus doit le DIRE au lieu d'accuser le scénario.
+    essai "un libellé tronqué par la zone ne correspond pas" rouge \
+        bash -c 'source "$0"; libelle_correspond "uter mon premier site de:" "Ajouter mon premier site de suivi"' "${BASH_SOURCE[0]}"
 
     # --- le trajet de souris ---
     essai "un trajet rend des arguments xdotool"        vert \
