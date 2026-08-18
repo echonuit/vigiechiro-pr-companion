@@ -782,6 +782,68 @@ instant_du_repere() { # <fichier de marques> <t0> <nom>
 # ⚠️ Écrire l'accélération maintenant produirait un dispositif qu'aucun cas ne peut faire rougir,
 # ce que #3886 vient de reprocher à seize auto-tests. Elle viendra avec le parcours d'importation,
 # qui a de vraies attentes : la scrutation de la carte et l'import.
+# Les plages où l'on regarde la machine travailler, accélérées au montage.
+#
+# ⚠️ Pourquoi celles-là et pas le reste. Un film de documentation se juge au temps qu'il réclame.
+# Les gestes doivent garder leur rythme - le spectateur les refera -, mais l'inspection de la carte
+# et l'import lui-même n'apprennent rien en temps réel : ce sont des barres qui avancent.
+#
+# ⚠️ Elles s'accélèrent, elles ne se COUPENT PAS. Un import qui disparaîtrait au montage laisserait
+# croire qu'il est instantané ; le lecteur qui attend huit secondes devant son écran croirait alors
+# que quelque chose ne va pas chez lui.
+FACTEUR_ACCELERATION=4
+
+# Les plages, en positions du film COUPÉ (donc après retrait de l'origine), une par ligne.
+#
+# Une plage se déclare par deux repères jumeaux, `<nom>_debut` et `<nom>_fin`. Un `_debut` sans son
+# `_fin` est ignoré : mieux vaut un film au rythme réel qu'un montage qui accélère jusqu'à la fin
+# sur un repère manquant.
+plages_a_accelerer() { # <marques> <t0> <coupe>
+    local marques="$1" t0="$2" coupe="$3" nom base d f
+    while IFS=$'\t' read -r _ nom; do
+        case "$nom" in
+            *_debut) base="${nom%_debut}" ;;
+            *) continue ;;
+        esac
+        grep -q "	${base}_fin$" "$marques" || continue
+        d=$(instant_du_repere "$marques" "$t0" "${base}_debut")
+        f=$(instant_du_repere "$marques" "$t0" "${base}_fin")
+        [ -n "$d" ] && [ -n "$f" ] || continue
+        LC_NUMERIC=C awk -v d="$d" -v f="$f" -v c="$coupe" \
+            'BEGIN{a = d - c; b = f - c; if (a < 0) a = 0; if (b > a) printf "%.3f\t%.3f\n", a, b}'
+    done < "$marques"
+}
+
+# Le filtre qui coupe le film et accélère ses plages de machine. Vide s'il n'y a rien à accélérer :
+# le montage reprend alors sa coupe simple, plus rapide et plus sûre.
+#
+# ⚠️ Il découpe en segments ALTERNÉS - normal, accéléré, normal… - et les recolle. Une seule passe,
+# donc pas de fichiers intermédiaires : le brut n'est lu qu'une fois, et c'est ce que `concat`
+# attend.
+filtre_de_montage() { # <début> <fin> <plages>
+    local debut="$1" fin="$2" plages="$3"
+    [ -n "$plages" ] || return 0
+    LC_NUMERIC=C awk -v d="$debut" -v f="$fin" -v k="$FACTEUR_ACCELERATION" '
+        { a[NR] = $1; b[NR] = $2 }
+        END {
+            n = 0; curseur = 0; filtre = ""; enchainement = ""
+            for (i = 1; i <= NR; i++) {
+                if (a[i] > curseur) {
+                    filtre = filtre sprintf("[0:v]trim=start=%.3f:end=%.3f,setpts=PTS-STARTPTS[s%d];", d + curseur, d + a[i], n)
+                    enchainement = enchainement sprintf("[s%d]", n); n++
+                }
+                filtre = filtre sprintf("[0:v]trim=start=%.3f:end=%.3f,setpts=(PTS-STARTPTS)/%d[s%d];", d + a[i], d + b[i], k, n)
+                enchainement = enchainement sprintf("[s%d]", n); n++
+                curseur = b[i]
+            }
+            if (d + curseur < f) {
+                filtre = filtre sprintf("[0:v]trim=start=%.3f:end=%.3f,setpts=PTS-STARTPTS[s%d];", d + curseur, f, n)
+                enchainement = enchainement sprintf("[s%d]", n); n++
+            }
+            printf "%s%sconcat=n=%d:v=1:a=0[sortie]", filtre, enchainement, n
+        }' <<< "$plages"
+}
+
 monter() { # <brut> <marques> <sortie>
     local brut="$1" marques="$2" sortie="$3" duree t0 debut fin part
     duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$brut" 2>/dev/null)
@@ -799,8 +861,17 @@ monter() { # <brut> <marques> <sortie>
     # Le repère de début tombe une fraction AVANT la première image ; on borne à zéro.
     LC_NUMERIC=C awk -v d="$debut" 'BEGIN{exit !(d < 0)}' && debut=0
 
-    ffmpeg -nostdin -v error -i "$brut" -ss "$debut" -to "$fin" -an \
-        -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" 2>/dev/null
+    local plages filtre
+    plages=$(plages_a_accelerer "$marques" "$t0" "$debut")
+    filtre=$(filtre_de_montage "$debut" "$fin" "$plages")
+
+    if [ -n "$filtre" ]; then
+        ffmpeg -nostdin -v error -i "$brut" -filter_complex "$filtre" -map "[sortie]" -an \
+            -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" 2>/dev/null
+    else
+        ffmpeg -nostdin -v error -i "$brut" -ss "$debut" -to "$fin" -an \
+            -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" 2>/dev/null
+    fi
 
     # ⚠️ Le contrôle, et il porte sur le RÉSULTAT, pas sur les repères. Un montage qui viserait à
     # côté rendrait un film noir - valide, lisible, et vide. C'est la seule chose qu'on ne peut pas
@@ -811,9 +882,18 @@ monter() { # <brut> <marques> <sortie>
             "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
         return 1
     fi
-    LC_NUMERIC=C printf '   ✔ montage : %.1f s -> %.1f s, %.0f %% d\u2019images utiles\n' \
-        "$duree" "$(LC_NUMERIC=C awk -v a="$debut" -v b="$fin" 'BEGIN{print b - a}')" \
-        "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
+    # ⚠️ La durée annoncée se MESURE sur le fichier produit. Calculée comme « fin moins début »,
+    # elle ignorait l'accélération des plages de machine et annonçait un film plus long que celui
+    # qu'on venait d'écrire - un chiffre faux sur la ligne même qui dit que le montage a réussi.
+    local montee accelerees
+    montee=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$sortie" 2>/dev/null)
+    accelerees=$(printf '%s' "$plages" | grep -c . || true)
+    LC_NUMERIC=C printf '   ✔ montage : %.1f s -> %.1f s, %.0f %% d\u2019images utiles' \
+        "$duree" "$montee" "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
+    if [ "${accelerees:-0}" -gt 0 ]; then
+        printf ' (%s plage(s) de machine accélérée(s) x%s)' "$accelerees" "$FACTEUR_ACCELERATION"
+    fi
+    echo
     return 0
 }
 
@@ -828,6 +908,26 @@ monter() { # <brut> <marques> <sortie>
 # ⚠️ Ce que l'index dit de lui-même compte autant que ce qu'il liste. Un lecteur doit savoir que ce
 # film prouve un ENCHAÎNEMENT et rien d'autre : qu'il soit clair, lisible, bien rythmé, aucune
 # machine ne le dit. C'est le troisième état de l'ADR 3764, transposé à la documentation.
+# La position d'un repère dans le film MONTÉ, une fois les plages de machine accélérées.
+#
+# ⚠️ Sans cette conversion, l'index pointe APRÈS la fin du film. Mesuré : il annonçait « fin à
+# 39,8 s » sur un fichier de 31,2 s. C'est une page dont tout l'objet est de dire où regarder, et
+# elle envoyait le lecteur dans le vide - en ayant l'air, comme toujours, parfaitement calculée.
+position_dans_le_montage() { # <position dans la coupe> <plages> <facteur>
+    LC_NUMERIC=C awk -v t="$1" -v k="$3" '
+        { a[NR] = $1; b[NR] = $2 }
+        END {
+            v = t
+            for (i = 1; i <= NR; i++) {
+                if (t >= b[i]) { v -= (b[i] - a[i]) * (1 - 1 / k) }
+                else if (t > a[i]) { v -= (t - a[i]) * (1 - 1 / k); break }
+                else break
+            }
+            if (v < 0) v = 0
+            printf "%.1f", v
+        }' <<< "$2"
+}
+
 # Le titre et la page de documentation qu'un parcours illustre.
 #
 # ⚠️ Cette table existe parce que l'index a menti. Écrit pour un seul parcours, il titrait
@@ -871,13 +971,15 @@ section_du_parcours() { # <dossier> <nom>
     # repère « debut » : il faut donc retrancher cette origine, sans quoi l'index annonce un
     # « debut » à -0,2 s dans un film qui commence à zéro - une petite fausseté, sur la page
     # dont tout l'intérêt est de dire où regarder.
-    local coupe etape brute relative
+    local coupe etape brute relative plages
     coupe=$(instant_du_repere "$marques" "$t0" debut)
     LC_NUMERIC=C awk -v c="$coupe" 'BEGIN{exit !(c < 0)}' && coupe=0
+    plages=$(plages_a_accelerer "$marques" "$t0" "$coupe")
     while IFS=$'\t' read -r _ etape; do
         [ "$etape" = arret ] && continue
         brute=$(instant_du_repere "$marques" "$t0" "$etape")
-        relative=$(LC_NUMERIC=C awk -v b="$brute" -v c="$coupe" 'BEGIN{v = b - c; if (v < 0) v = 0; printf "%.1f", v}')
+        relative=$(LC_NUMERIC=C awk -v b="$brute" -v c="$coupe" 'BEGIN{v = b - c; if (v < 0) v = 0; printf "%.3f", v}')
+        relative=$(position_dans_le_montage "$relative" "$plages" "$FACTEUR_ACCELERATION")
         printf '| %s | %s s |\n' "$etape" "$relative"
     done < "$marques"
     echo
@@ -1053,6 +1155,56 @@ auto_test() {
     # section qu'on retire quand on veut faire propre, et c'est la seule qui empêche de lire l'index
     # comme un certificat. Un index sans elle annoncerait « 100 % d'images utiles » à un lecteur qui
     # comprendrait « ce film est bon ».
+
+    # --- l'accélération des plages de machine ---
+    printf '1000.0\tdebut\n1004.0\tinspection_debut\n1008.0\tinspection_fin\n1020.0\tfin\n1030.0\tarret\n' > "$bac/acc.tsv"
+    essai "une plage jumelée est trouvée"                  vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_a_accelerer "$1" 1000 0 | wc -l)" = 1 ]' "${BASH_SOURCE[0]}" "$bac/acc.tsv"
+    # ⚠️ Un `_debut` orphelin doit être IGNORÉ, pas accéléré jusqu'à la fin : un film au rythme réel
+    # vaut mieux qu'un montage qui emballe tout sur un repère manquant.
+    printf '1000.0\tdebut\n1004.0\timport_debut\n1020.0\tfin\n1030.0\tarret\n' > "$bac/orphelin.tsv"
+    essai "un repere de debut ORPHELIN est ignoré"         vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ -z "$(plages_a_accelerer "$1" 1000 0)" ]' "${BASH_SOURCE[0]}" "$bac/orphelin.tsv"
+    essai "sans plage, le filtre reste vide"               vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ -z "$(filtre_de_montage 0 20 "")" ]' "${BASH_SOURCE[0]}"
+    essai "le filtre alterne normal et accéléré"           vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(filtre_de_montage 0 20 "$(printf "4.000\t8.000\n")" | grep -o "concat=n=3")" = "concat=n=3" ]' "${BASH_SOURCE[0]}"
+
+    # ⚠️ LE cas qui porte l'accélération, et il se mesure sur un VRAI fichier : le même parcours,
+    # monté avec et sans sa plage de machine, doit rendre un film plus court. Un filtre qui ne
+    # s'appliquerait pas laisserait les deux durées égales - et la ligne « montage » resterait
+    # verte, puisqu'elle ne compare rien.
+    ffmpeg -v error -y -f lavfi -i "testsrc=s=160x120:d=30:r=10" "$bac/long.mkv" </dev/null 2>/dev/null
+    essai "une plage de machine RACCOURCIT le film"        vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0";
+            monter "$1" "$2" "$3" >/dev/null 2>&1 || exit 1
+            monter "$1" "$4" "$5" >/dev/null 2>&1 || exit 1
+            avec=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$3")
+            sans=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$5")
+            LC_NUMERIC=C awk -v a="$avec" -v b="$sans" "BEGIN{exit !(a < b - 1)}"' \
+        "${BASH_SOURCE[0]}" "$bac/long.mkv" "$bac/acc.tsv" "$bac/avec.mkv" "$bac/orphelin.tsv" "$bac/sans.mkv"
+
+    # --- les positions de l'index, une fois les plages accélérées ---
+    essai "une position AVANT toute plage ne bouge pas"    vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(position_dans_le_montage 3.0 "$(printf "10.0\t14.0\n")" 4)" = "3.0" ]' "${BASH_SOURCE[0]}"
+    essai "une position APRÈS une plage recule"            vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(position_dans_le_montage 20.0 "$(printf "10.0\t14.0\n")" 4)" = "17.0" ]' "${BASH_SOURCE[0]}"
+    # ⚠️ LE cas, et c'est celui que le dépôt a vécu : l'index annonçait « fin à 39,8 s » sur un
+    # fichier de 31,2 s. Une page dont tout l'objet est de dire où regarder envoyait dans le vide,
+    # en ayant l'air parfaitement calculée. Le garde compare la dernière étape à la durée MESURÉE.
+    mkdir -p "$bac/verif"
+    ffmpeg -v error -y -f lavfi -i "testsrc=s=160x120:d=40:r=10" "$bac/verif/importer-une-nuit.mkv" </dev/null 2>/dev/null
+    printf '1000.0\tdebut\n1006.0\timport_debut\n1020.0\timport_fin\n1030.0\tfin\n1040.0\tarret\n' \
+        > "$bac/verif/importer-une-nuit.marques.tsv"
+    essai "l index ne pointe pas APRÈS la fin du film"     vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            monter "$1/importer-une-nuit.mkv" "$1/importer-une-nuit.marques.tsv" "$1/importer-une-nuit-monte.mkv" >/dev/null 2>&1 || exit 1
+            ecrire_index "$1" "$1/i.md" >/dev/null || exit 1
+            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$1/importer-une-nuit-monte.mkv")
+            max=$(grep -oE "\| [0-9]+\.[0-9]+ s \|" "$1/i.md" | grep -oE "[0-9]+\.[0-9]+" | sort -g | tail -1)
+            [ -n "$max" ] && [ -n "$d" ] || exit 1
+            LC_NUMERIC=C awk -v m="$max" -v d="$d" "BEGIN{exit !(m <= d + 0.5)}"' \
+        "${BASH_SOURCE[0]}" "$bac/verif"
     mkdir -p "$bac/films"
     printf '1000.0\tdebut\n1002.0\tfin\n1010.0\tarret\n' > "$bac/films/importer-une-nuit.marques.tsv"
     ffmpeg -v error -y -f lavfi -i "color=c=white:s=160x120:d=2:r=10" "$bac/films/importer-une-nuit.mkv" </dev/null 2>/dev/null
