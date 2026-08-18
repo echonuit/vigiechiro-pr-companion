@@ -69,6 +69,8 @@
  * dans base.css, côté chrome.)
  */
 .bouton-primaire {
+    -fx-min-height: -hauteur-controle-barre;
+    -fx-pref-height: -hauteur-controle-barre;
     -fx-background-color: -couleur-primaire;
     -fx-text-fill: -couleur-texte-clair;
     -fx-font-weight: bold;
@@ -101,6 +103,8 @@
 }
 
 .bouton-secondaire {
+    -fx-min-height: -hauteur-controle-barre;
+    -fx-pref-height: -hauteur-controle-barre;
     -fx-background-color: -couleur-texte-clair;
     -fx-text-fill: -couleur-texte;
     -fx-font-weight: bold;
@@ -112,6 +116,8 @@
 }
 
 .bouton-danger {
+    -fx-min-height: -hauteur-controle-barre;
+    -fx-pref-height: -hauteur-controle-barre;
     -fx-background-color: -couleur-texte-clair;
     -fx-text-fill: -couleur-danger;
     -fx-font-weight: bold;
@@ -145,6 +151,9 @@
 
 /* Bouton « + Filtre » : discret (contour indigo clair), s'anime au survol. */
 .menu-ajout-filtre {
+    /* Même hauteur que le reste de la barre (#4002) : il rendait 28 px contre 34 aux boutons. */
+    -fx-min-height: -hauteur-controle-barre;
+    -fx-pref-height: -hauteur-controle-barre;
     -fx-background-color: transparent;
     -fx-border-color: -couleur-primaire-fond;
     -fx-border-radius: 6;
@@ -1064,8 +1073,13 @@
     -fx-border-color: -couleur-texte;
     -fx-border-radius: 4;
     -fx-background-radius: 4;
-    -fx-padding: 5 8 5 8;
+    -fx-padding: 0 8 0 8;
     -fx-cursor: hand;
+    /* ⚠️ Hauteur ALIGNÉE sur les boutons de la barre, mesurée et non estimée : sans elle, la police de
+       14 px ci-dessus faisait rendre ce ☰ à 42 px quand ses voisins tenaient en 34. Il dépassait donc
+       de huit pixels, et c'est ce qui sautait aux yeux une fois qu'il avait un contour. */
+    -fx-min-height: -hauteur-controle-barre;
+    -fx-pref-height: -hauteur-controle-barre;
 }
 
 
