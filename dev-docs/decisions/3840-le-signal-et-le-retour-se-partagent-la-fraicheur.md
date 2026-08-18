@@ -71,3 +71,37 @@ son critère décrit ce que le **signal** couvre, pas ce que le **produit** gara
 survenant **pendant** qu'un écran suiveur est affiché. Tous les chemins d'`update` partent de la CLI -
 un autre processus - ou du modèle de vue audio, qui est l'écran affiché quand il s'exécute. Si un
 traitement de fond venait à en remplacer un, la décision se rouvrirait.
+
+## Amendement (#3964, clôture du lot #3900) : le contrat s'ajoute sur mesure, jamais par symétrie
+
+Le relevé exhaustif des trente contrôleurs a rendu **trois** écrans sans aucun mécanisme de fraîcheur,
+et l'ADR ci-dessus donnait le critère pour trancher chacun.
+
+| Écran | Verdict, après mesure |
+|---|---|
+| `Synthese` | il agrège des observations **et ouvre lui-même** la fiche du passage, d'où la validation est atteignable : `RafraichirAuRetour` |
+| `Activite` | même donnée, même chemin : `RafraichirAuRetour` |
+| `Audit` | il audite la base, que tout écran qui écrit périme : `RafraichirAuRetour` |
+| `Importation` | **laissé tel quel** : il porte `AuDepartEcran`, donc il se recharge déjà |
+
+⚠️ **`Importation` est le point de cet amendement.** Ajouté « par symétrie », le contrat l'aurait fait
+relire deux fois à chaque entrée, sans qu'aucun test ne s'en plaigne. C'est en ouvrant le fichier
+qu'on voit qu'un autre mécanisme le couvre.
+
+### Un écran à deux portes retient laquelle a servi
+
+`Activite` s'ouvre sur **un** passage, ou sur **tous** ceux d'un utilisateur, et ne retenait que le
+premier cas. Relire par la mauvaise porte afficherait le mauvais périmètre - **pire que ne pas
+relire**, parce que l'écran aurait alors l'air frais.
+
+### Le prix payé ailleurs
+
+Ajouter le contrat portait `ActiviteController` à WMC=49, au-dessus du plafond God-class du portail
+qualité. `//NOPMD` étant exclu par convention, le dessin d'une nuit - repère nocturne, séries,
+infobulles - est parti dans `CourbesActivite`. Il n'avait déjà plus sa place dans l'écran :
+`versSeries` était appelée par `ExportImageActivite`, `texteInfobulle` par son test. **Un morceau
+qu'on appelle du dehors n'appartient pas à l'écran qui le contenait.**
+
+⚠️ En le déplaçant, j'ai d'abord réécrit `minutesDepuis18h` de mémoire au lieu de le reprendre tel
+quel - exactement la divergence contre laquelle le doc-comment de la nouvelle classe met en garde.
+Un déplacement se fait par copie littérale, puis vérification.
