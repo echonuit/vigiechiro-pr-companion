@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.MemoireFiltres;
 import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import java.nio.file.Path;
@@ -39,7 +40,7 @@ import javafx.scene.layout.StackPane;
 /// Écran **Audit de cohérence** (feature `audit`) : affiche le résultat de l'audit disque / base global
 /// (fichiers manquants ou orphelins, préfixes non conformes, unités déposées divergentes) sous forme de
 /// table de constats, avec un résumé et un bouton de relance. Pur câblage vers l'[AuditViewModel].
-public class AuditController {
+public class AuditController implements RafraichirAuRetour {
 
     @FXML
     private StackPane hoteOccupation;
@@ -244,6 +245,16 @@ public class AuditController {
 
     @FXML
     private void rafraichir() {
+        viewModel.rafraichir();
+    }
+
+    /// Relit l'audit au retour (#3964).
+    ///
+    /// Cet écran **audite la base** : tout écran qui écrit le périme. Il portait déjà le geste, sous un
+    /// bouton ; il ne le rejouait simplement pas quand on revenait sur lui, et affichait alors un
+    /// inventaire d'avant les écritures qu'on venait de faire.
+    @Override
+    public void rafraichirAuRetour() {
         viewModel.rafraichir();
     }
 

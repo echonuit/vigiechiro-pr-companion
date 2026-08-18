@@ -17,7 +17,7 @@ import javafx.scene.chart.NumberAxis;
 ///
 /// Les séries sont **reconstruites** depuis les courbes du ViewModel, jamais empruntées à l'écran : une
 /// `XYChart.Series` n'appartient qu'à un graphe à la fois, et la réutiliser la **retirerait** de la vue
-/// affichée. Le même [ActiviteController#versSeries] les produit, donc l'image montre exactement ce que
+/// affichée. Le même [CourbesActivite#versSeries] les produit, donc l'image montre exactement ce que
 /// l'écran montre (étiquette au pic comprise).
 ///
 /// L'image **porte son contexte** ([LegendeExportActivite]) : carré, point, passage, tranche, filtres
@@ -49,7 +49,7 @@ public final class ExportImageActivite {
             List<String> lignesLegende,
             Path fichier) {
         ExportGraphe.ecrire(
-                () -> ActiviteController.versSeries(courbes),
+                () -> CourbesActivite.versSeries(courbes),
                 configurerAxe,
                 "Contacts",
                 fenetreNuit,

@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -43,7 +44,7 @@ import javafx.scene.layout.VBox;
 /// **Le milieu par défaut est « national »**, et c'est une position, pas un manque : aucune donnée de
 /// l'application ne dit si un point d'écoute est en forêt ou en ville. Une déclinaison devinée de
 /// travers changerait la classe d'activité en silence.
-public class SyntheseController implements EmplacementNavigation {
+public class SyntheseController implements EmplacementNavigation, RafraichirAuRetour {
 
     /// Entrée du sélecteur qui **ne décline rien** : la comparaison reste nationale.
     private static final String SANS_MILIEU = "National (aucun milieu)";
@@ -298,6 +299,25 @@ public class SyntheseController implements EmplacementNavigation {
     public void ouvrirSur(ContextePassage passage) {
         this.contexte = passage;
         viewModel.charger(passage.idPassage(), passage.site().numeroCarre());
+    }
+
+    /// Relit la synthèse au retour sur cet écran (#3964).
+    ///
+    /// ## Pourquoi ce contrat manquait
+    ///
+    /// La synthèse agrège des **observations**, et cet écran ouvre lui-même la fiche du site et celle du
+    /// passage - d'où la validation est atteignable. Le chemin
+    /// `Synthèse → Passage → Validation → retour → retour` corrige des observations et revient sur des
+    /// chiffres calculés **avant** la correction, sans que rien ne le dise.
+    ///
+    /// ⚠️ Et `SuitLaRevision` ne conviendrait pas : la validation écrit des `update`, que l'ADR 3840
+    /// exclut délibérément du signal - « l'élargir aux `update` ferait relire cinq écrans pour un
+    /// changement qu'aucun compte ne reflète ». C'est bien le **retour** qui porte ce cas-là.
+    @Override
+    public void rafraichirAuRetour() {
+        if (contexte != null) {
+            viewModel.charger(contexte.idPassage(), contexte.site().numeroCarre());
+        }
     }
 
     /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Passage N° X › Synthèse`.
