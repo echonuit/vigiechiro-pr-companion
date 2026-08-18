@@ -175,6 +175,45 @@ class CompteRenduChiffreDepotTest {
         assertThat(textes).anyMatch(texte -> texte.contains("1 archive(s) ont été refusées"));
     }
 
+    @Test
+    @DisplayName("#3962 : un dépôt auquel il manque des archives ne s'intitule pas « Nuit déposée »")
+    void le_titre_dit_l_etat_reel() {
+        // Trouvé en ouvrant l'aperçu, pas en lisant le code : le titre valait « Nuit déposée sur
+        // Vigie-Chiro » dès que le plan n'était pas interrompu, en gras, au-dessus d'une ventilation qui
+        // disait 11/14. La CLI dit « INCOMPLET » pour le même état.
+        BilanDepot incomplet = new BilanDepot(
+                "p-1", 11, List.of(new EchecUnite("Car-14.zip", "HTTP 422", true, CauseRefus.CONTENU)), 3_400_000_000L);
+        BilanDepot complet = new BilanDepot("p-1", 14, List.of(), 4_500_000_000L);
+
+        assertThat(traduire(incomplet, plan(14, 11, false)).titre()).isEqualTo("Dépôt incomplet");
+        assertThat(traduire(complet, plan(14, 14, false)).titre()).isEqualTo("Nuit déposée sur Vigie-Chiro");
+    }
+
+    @Test
+    @DisplayName("#3962 : sur un lot mêlé, la reconnexion est nommée pour la part qu'elle répare")
+    void le_geste_se_nomme_pour_la_part_qu_il_repare() {
+        BitmapMele mele = new BitmapMele();
+        List<String> textes = textes(traduire(mele.bilan(), plan(14, 11, false)));
+
+        assertThat(textes)
+                .as("deux des trois refus tenaient aux droits : se taire perd un geste vérifié")
+                .anyMatch(texte -> texte.contains("2 d'entre elles tenaient à vos droits"));
+    }
+
+    /// Le lot que l'aperçu montre : deux refus de droits, un contenu refusé.
+    private record BitmapMele() {
+        BilanDepot bilan() {
+            return new BilanDepot(
+                    "p-1",
+                    11,
+                    List.of(
+                            new EchecUnite("Car-12.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                            new EchecUnite("Car-13.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION),
+                            new EchecUnite("Car-14.zip", "HTTP 422", true, CauseRefus.CONTENU)),
+                    3_400_000_000L);
+        }
+    }
+
     private static Plan plan(int unitesDuPlan, int enLigne, boolean interrompu) {
         return new Plan(unitesDuPlan, enLigne, interrompu);
     }
