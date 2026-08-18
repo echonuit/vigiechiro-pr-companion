@@ -279,6 +279,14 @@ la barre « écrit » se réduit d'autant : c'est là que se voit ce que ce rég
     voudriez signaler en commentaire. Une participation créée n'est donc pas une participation
     terminée.
 
+![Le compte rendu de fin d'import : la mention verte annonce la participation créée sur Vigie-Chiro et rappelle de compléter la fiche sur le portail (météo, matériel, commentaires).](../assets/captures/apercu-import-participation.png)
+
+Si la carte portait **plusieurs nuits**, chacune reçoit sa participation, et la mention se met au
+pluriel. C'est le cas d'une carte laissée plusieurs jours sur le terrain, et c'est celui où l'on
+oublie le plus facilement d'aller finir les fiches.
+
+![Le même compte rendu après un import de trois nuits : « 3 participations créées sur Vigie-Chiro », suivi du même rappel au pluriel.](../assets/captures/apercu-import-participations-multi-nuits.png)
+
 Chaque mention porte une **icône** accordée à son registre : une coche pour une bonne nouvelle, un « i »
 pour un fait de contexte, un triangle pour ce sur quoi il faudra revenir : en plus de sa couleur, pour
 rester lisible si vous distinguez mal les couleurs.

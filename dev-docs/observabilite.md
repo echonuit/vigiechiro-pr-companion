@@ -98,6 +98,51 @@ Le menu principal (☰) → **« Ouvrir le dossier des journaux »** (une `Actio
 [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)) ouvre `<workspace>/logs/` dans le
 gestionnaire de fichiers : l'utilisateur retrouve la trace d'un incident et la joint à un signalement.
 
+## Ce que l'utilisateur lit d'une exception (#3470, #3947)
+
+Le journal reçoit la trace complète ; l'alerte, elle, ne montre **qu'une phrase**, et cette phrase se
+compose par [`CauseLisible.messageDe`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/model/CauseLisible.java)
+([ADR 3470](decisions/3470-un-message-d-erreur-ne-montre-jamais-le-nom-de-son-enveloppe.md)),
+**des deux côtés** : le filet de l'IHM comme celui de la ligne de commande
+([ADR 3947](decisions/3947-un-message-montre-a-l-utilisateur-se-compose-en-un-seul-endroit.md)).
+
+**Le défaut qu'elle ferme.** Un utilisateur a vu, pour tout diagnostic :
+
+> `java.lang.reflect.InvocationTargetException`
+
+La chaîne n'était pas absente, elle était **exacte et sans valeur**. Rien ne rougissait, parce qu'un
+texte non vide a l'air d'un message.
+
+⚠️ **Et ce n'est pas propre à la réflexion.** `RuntimeException(Throwable)` - comme **tous** les
+constructeurs `(Throwable)` de la bibliothèque standard - pose comme message le `toString()` de sa
+cause. La même chaîne inutile sort de n'importe quelle enveloppe.
+
+**La règle** : on descend la chaîne des causes et l'on retient le **dernier message informatif**, en
+écartant celui qu'une enveloppe a fabriqué. Ce n'est **pas** « prendre la cause racine » : la plus
+profonde peut être un `NullPointerException` muet, et dérouler jusqu'au bout **appauvrirait** l'alerte
+en ayant l'air de la corriger. Quand toute la chaîne est muette, le repli nomme le **type court** et
+renvoie au journal, jamais `null` ni un nom pleinement qualifié.
+
+⚠️ **Deux formes à ne pas réécrire à la main**, parce qu'elles produisent exactement ce que la règle
+interdit :
+
+```java
+echec.getMessage() != null ? echec.getMessage() : echec.toString();      // « java.lang.XxxException »
+echec.getMessage() == null ? echec.getClass().getSimpleName() : ...      // idem, en plus court
+echec.getCause() != null ? echec.getCause().getMessage() : ...           // ne déroule que d'un cran
+```
+
+Elles sont **comptées** : `scripts/adr/3947-message-enveloppe.py` porte un cliquet, et il ne descend
+jamais tout seul.
+
+⚠️ **Chaque surface passe son « où regarder ».** Le repli qui nomme le journal renvoie vers
+`menu principal > Ouvrir le dossier des journaux` à l'écran, et vers le dossier `logs/` en ligne de
+commande. Un terminal n'a pas de menu principal : lui en désigner un produirait un message non vide,
+donc d'apparence correcte, et inapplicable. C'est le défaut de l'ADR 3470 déplacé d'un cran par sa
+propre correction, et c'est pourquoi `OU_REGARDER_IHM` et `OU_REGARDER_CLI` sont deux constantes.
+
+Tout filet qui montre une exception à l'utilisateur passe par `CauseLisible`.
+
 ## Dette soldée
 
 L'audit de suite (#1543, **clos**) a résorbé les points restants : les opérations de fond lourdes

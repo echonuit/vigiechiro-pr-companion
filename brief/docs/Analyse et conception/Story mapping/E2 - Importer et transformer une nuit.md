@@ -215,6 +215,7 @@
 - [x] Une nuit dont le cycle s'est **mal terminé** (SD pleine, interruption) est signalée **tronquée** avec son motif ; une nuit **sans cycle** correspondant est supposée **complète** (pas de fausse alerte).
 - [x] Le groupage fonctionne **même sans journal du capteur**, à partir des noms horodatés `PaRecPR..._AAAAMMJJ_HHMMSS.wav` ; les fichiers non horodatés sont ignorés.
 - [x] Chaque nuit est **rattachée** à son site / point / n° de passage avant le traitement effectif.
+- [x] Chaque nuit reçoit les **paramètres d'acquisition de sa propre session**. Le capteur repose ses réglages à chaque redémarrage, donc un journal en porte autant que de sessions, et la fréquence d'échantillonnage peut changer d'une nuit à l'autre. La règle est « la dernière configuration posée **au plus tard** cette nuit-là », avec repli sur la plus ancienne connue quand aucune ne la précède, le journal étant circulaire. Ce ne sont pas des métadonnées d'agrément : la fréquence et la bande passante **conditionnent la transformation** des séquences.
 
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), variante multi-nuits<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (tableau des nuits détectées)<br>

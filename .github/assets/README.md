@@ -1070,6 +1070,17 @@ Le véhicule par défaut de tout compte rendu d'opération (ADR 0023). Ce qu'il 
 </tr>
 </table>
 
+<table>
+<tr>
+<th width="50%">Participation créée, et ce qu'il reste à y faire</th>
+<th width="50%">Plusieurs nuits, plusieurs participations</th>
+</tr>
+<tr>
+<td><a href="apercu-import-participation.png"><img src="apercu-import-participation.png" width="430" alt="Une participation créée sur Vigie-Chiro, avec le rappel de compléter la fiche sur le portail"></a></td>
+<td><a href="apercu-import-participations-multi-nuits.png"><img src="apercu-import-participations-multi-nuits.png" width="430" alt="Trois participations créées, la forme plurielle du même rappel"></a></td>
+</tr>
+</table>
+
 ## Relevé multi-sites
 
 <table>
