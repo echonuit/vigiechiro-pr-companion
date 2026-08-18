@@ -1378,6 +1378,29 @@ Une différence, en revanche : ici la confrontation ne rend pas un constat à l'
 écart de topologie (un point, un carré) sort de l'audit **global** ; l'audit ciblé d'une nuit
 (`auditerPassage`) le répéterait à chaque passage du même point sans rien apprendre.
 
+## Surcharger la feuille de style d'une bibliothèque tierce
+
+**Le problème.** Un composant embarqué apporte **sa** feuille de style, et elle peut être en dessous de
+nos seuils. Mesuré sur la barre d'outils d'`audio-view` (#3462) : le texte des boutons était à
+**10,68:1**, très au-dessus du seuil, mais leur **surface** à **1,17:1** contre le fond - un bouton qui
+ne se voit pas comme un bouton. Éclaircir le texte, remède qu'on prend sans mesurer, n'aurait rien
+réparé.
+
+**La règle** ([ADR 3462](decisions/3462-surcharger-une-feuille-tierce-se-declare-et-monte-en-specificite.md)) :
+
+- la surcharge vit dans `design.css`, jamais dans une feuille par feature ;
+- elle **monte en spécificité** (`.audio-view .audio-view-toolbar .button` et non `.button`), parce que
+  la feuille tierce est chargée après la nôtre et gagnerait à égalité ;
+- elle porte un **test de contraste qui mesure sur le rendu**, pas sur les valeurs déclarées
+  (`ContrasteVueAudioTest`). WCAG §1.4.11 accepte que le contraste vienne de la surface **ou** du
+  contour : le test retient `max(surface, contour)`, sans quoi il refuserait une correction valide.
+
+⚠️ **C'est un dépassement assumé de l'[ADR 0046](decisions/0046-une-classe-css-a-une-seule-feuille.md)**
+(« une classe CSS se définit dans une seule feuille »), et **son garde ne peut pas le voir** :
+`DoublonsFeuillesDeStyleTest` balaie `src/main/java/fr/univ_amu/iut`, or la feuille tierce vit dans un
+jar. Sans l'ADR, ce dépassement ne laisserait **aucune trace**. Le remède de 0046 - désambiguïser les
+noms - n'existe pas quand le nom appartient à une bibliothèque.
+
 ## Icônes d'IHM : un pictogramme se pose, il ne s'écrit pas
 
 **Le problème.** Les libellés portaient leurs pictogrammes **en toutes lettres** dans le `text` des

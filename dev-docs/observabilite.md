@@ -98,6 +98,39 @@ Le menu principal (☰) → **« Ouvrir le dossier des journaux »** (une `Actio
 [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)) ouvre `<workspace>/logs/` dans le
 gestionnaire de fichiers : l'utilisateur retrouve la trace d'un incident et la joint à un signalement.
 
+## Ce que l'utilisateur lit d'une exception (#3470)
+
+Le journal reçoit la trace complète ; l'alerte, elle, ne montre **qu'une phrase**, et cette phrase se
+compose par [`CauseLisible.messageDe`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/CauseLisible.java)
+([ADR 3470](decisions/3470-un-message-d-erreur-ne-montre-jamais-le-nom-de-son-enveloppe.md)).
+
+**Le défaut qu'elle ferme.** Un utilisateur a vu, pour tout diagnostic :
+
+> `java.lang.reflect.InvocationTargetException`
+
+La chaîne n'était pas absente, elle était **exacte et sans valeur**. Rien ne rougissait, parce qu'un
+texte non vide a l'air d'un message.
+
+⚠️ **Et ce n'est pas propre à la réflexion.** `RuntimeException(Throwable)` - comme **tous** les
+constructeurs `(Throwable)` de la bibliothèque standard - pose comme message le `toString()` de sa
+cause. La même chaîne inutile sort de n'importe quelle enveloppe.
+
+**La règle** : on descend la chaîne des causes et l'on retient le **dernier message informatif**, en
+écartant celui qu'une enveloppe a fabriqué. Ce n'est **pas** « prendre la cause racine » : la plus
+profonde peut être un `NullPointerException` muet, et dérouler jusqu'au bout **appauvrirait** l'alerte
+en ayant l'air de la corriger. Quand toute la chaîne est muette, le repli nomme le **type court** et
+renvoie au journal, jamais `null` ni un nom pleinement qualifié.
+
+⚠️ **Deux formes à ne pas réécrire à la main**, parce qu'elles produisent exactement ce que la règle
+interdit :
+
+```java
+echec.getMessage() != null ? echec.getMessage() : echec.toString();   // montre « java.lang.XxxException »
+echec.getCause() != null ? echec.getCause().getMessage() : ...        // ne déroule que d'un cran
+```
+
+Tout filet qui montre une exception à l'utilisateur passe par `CauseLisible`.
+
 ## Dette soldée
 
 L'audit de suite (#1543, **clos**) a résorbé les points restants : les opérations de fond lourdes
