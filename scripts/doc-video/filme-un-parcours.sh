@@ -100,6 +100,31 @@ verifier_le_jar() {
 # (`~/Documents/VigieChiro-Companion`). Filmer un parcours d'importation y toucherait de vraies
 # nuits. `Workspace.resolu()` donne la priorité à la propriété système, ce qui permet de l'écarter
 # sans toucher au produit.
+# L'environnement dans lequel le produit est lancé pour un tournage.
+#
+# ⚠️ Pourquoi HOME doit être jetable, et pas seulement l'espace de travail. Le sélecteur de dossier
+# est un sélecteur GTK ordinaire : il ouvre sur le dossier courant, liste le dossier personnel, et
+# sa barre latérale porte les emplacements de l'utilisateur. La première sonde de cet écran a filmé
+# en clair « nedjar », « sandbox », « R202 », « CLAUDE.md », « maj-notes-scodoc.py », « plop.md » et
+# les dossiers de cours. Un film publié dans `docs/` aurait montré l'arborescence privée de qui l'a
+# tourné - et rien dans le banc ne l'aurait dit, le fichier étant par ailleurs parfait.
+#
+# ⚠️ Ce qu'un HOME jetable ne cache PAS, et il faut le savoir avant de tourner : les VOLUMES MONTÉS
+# restent dans la barre latérale. Celui du banc, mais aussi ceux de l'utilisateur, sous leur
+# étiquette de volume - « Volume de 31 GB » sur le poste où ceci est écrit. C'est un nom générique,
+# sans rien du contenu, et démonter les cartes de l'utilisateur pour tourner serait pire que le mal.
+# Le banc le signale plutôt que de le corriger.
+poser_environnement_jetable() { # <bac>
+    local bac="${1:-}"
+    [ -n "$bac" ] || return 1
+    mkdir -p "$bac/home/.config" "$bac/home/.cache" "$bac/home/.local/share" || return 1
+    export HOME="$bac/home"
+    export XDG_CONFIG_HOME="$bac/home/.config"
+    export XDG_CACHE_HOME="$bac/home/.cache"
+    export XDG_DATA_HOME="$bac/home/.local/share"
+    cd "$bac/home" || return 1
+}
+
 verifier_bac_jetable() {
     local bac="$1"
     if [ -z "$bac" ]; then
@@ -339,8 +364,13 @@ tourner() {
     local wm=$!
     sleep 1
 
-    DISPLAY="$ecran" java --enable-native-access=ALL-UNNAMED \
-        -Dvigiechiro.workspace="$bac" -jar "$jar" >"$bac/produit.log" 2>&1 &
+    # ⚠️ Dans un SOUS-SHELL : `poser_environnement_jetable` exporte HOME et change de dossier, et
+    # le banc lui-même a besoin des siens - ne serait-ce que pour écrire le film à sa destination.
+    (
+        poser_environnement_jetable "$bac" || exit 1
+        DISPLAY="$ecran" java --enable-native-access=ALL-UNNAMED \
+            -Dvigiechiro.workspace="$bac" -jar "$jar"
+    ) >"$bac/produit.log" 2>&1 &
     local produit=$!
 
     if attendre_la_fenetre "$ecran"; then
@@ -398,8 +428,9 @@ SPEC_CARTE="recette/fixtures/spec/sd-nominale.yaml"
 # choix pour convaincre un relecteur Flathub : la scène montrait le geste réel d'un naturaliste.
 #
 # ⚠️ Pour un banc versionné, c'est l'inverse qu'il faut : une carte qu'on refabrique à l'identique.
-# `GenerateurCartesSD` rend les mêmes octets d'une exécution à l'autre, et le sélecteur du produit
-# est un sélecteur GTK ordinaire - aucun montage en boucle, aucun droit d'administration.
+# `GenerateurCartesSD` rend les mêmes octets d'une exécution à l'autre. Depuis #3996 ces octets
+# sont versés dans une image FAT montée en boucle, pour que le film montre le chemin qu'un
+# naturaliste voit vraiment : les deux se cumulent, la fixture reste déterministe.
 #
 # ⚠️ J'avais chiffré ce travail à « trois mécanismes neufs » avant de regarder. Le pom porte le goal
 # `generer-sd` depuis longtemps, documenté dans `dev-docs/recette/fixtures.md`. Un coût supposé, et
@@ -717,6 +748,18 @@ auto_test() {
     essai "un bac DANS l'espace utilisateur est refusé"     rouge \
         verifier_bac_jetable "$HOME/Documents/VigieChiro-Companion/essai"
     essai "un bac vide est refusé"                          rouge verifier_bac_jetable ""
+
+    # --- l'environnement jetable du produit ---
+    essai "l'environnement jetable pose HOME dans le bac"   vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; poser_environnement_jetable "$1"; [ "$HOME" = "$1/home" ]' "${BASH_SOURCE[0]}" "$bac"
+    # ⚠️ LE cas qui porte ce dispositif : si l'export disparaît, HOME reste celui de l'utilisateur et
+    # le sélecteur filme son arborescence. Le vert ne le dirait pas ; ce rouge-là, si.
+    essai "le HOME réel ne survit pas à l'environnement jetable" rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; reel="$HOME"; source "$0"; poser_environnement_jetable "$1"; [ "$HOME" = "$reel" ]' "${BASH_SOURCE[0]}" "$bac"
+    essai "les dossiers XDG que GTK lira sont créés"        vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; poser_environnement_jetable "$1"; [ -d "$XDG_CONFIG_HOME" ] && [ -d "$XDG_DATA_HOME" ]' "${BASH_SOURCE[0]}" "$bac"
+    essai "sans bac, l'environnement jetable refuse"        rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; poser_environnement_jetable ""' "${BASH_SOURCE[0]}"
 
     # --- la fenêtre ---
     # ⚠️ Le cas qui porte le banc : sans écran, aucune fenêtre ne peut paraître, et l'attente doit
