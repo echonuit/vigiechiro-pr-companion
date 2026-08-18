@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.CauseLisible;
 import fr.univ_amu.iut.commun.model.Workspace;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,7 +28,7 @@ public final class ActionOuvrirJournaux implements ActionMenu {
     /// Le citer plutôt que le recopier applique l'**ADR 3854** (« un refus ne conseille que ce qu'il a
     /// vérifié applicable ») par construction : une copie aurait dérivé le jour où l'entrée est
     /// renommée, en laissant un message qui envoie chercher une ligne de menu qui n'existe plus.
-    static final String LIBELLE = "Ouvrir le dossier des journaux";
+    static final String LIBELLE = CauseLisible.LIBELLE_ENTREE_JOURNAUX;
 
     private final Workspace workspace;
     private final OuvreurDeLien ouvreurDeLien;
