@@ -562,7 +562,12 @@ tourner() { # [nom du parcours] [sortie]
             # montage aurait coupé les mauvaises plages, et le film serait resté parfaitement valide.
             marque "$marques" arret
 
-            if monter "$sortie" "$marques" "${sortie%.mkv}-monte.mkv"; then
+            # ⚠️ Le montage sort en MP4, le brut reste en MKV, et ce n'est pas une inconséquence.
+            # Le MKV protège le TOURNAGE : un `ffmpeg` tué sans ménagement laisse un MP4 sans index,
+            # donc irrécupérable - le piège de #2191. Le montage, lui, est un ré-encodage propre qui
+            # va jusqu'à son terme, et il doit se lire dans un navigateur : aucun n'affiche le
+            # Matroska.
+            if monter "$sortie" "$marques" "${sortie%.mkv}-monte.mp4"; then
                 ecrire_index "$(dirname "$sortie")" "$(dirname "$sortie")/index.md"
             else
                 code=1
@@ -944,7 +949,7 @@ fiche_du_parcours() { # <nom>
 # La section d'un parcours dans l'index. Rien si son film n'est pas là.
 section_du_parcours() { # <dossier> <nom>
     local dossier="$1" nom="$2"
-    local film="$dossier/$nom-monte.mkv" brut="$dossier/$nom.mkv" marques="$dossier/$nom.marques.tsv"
+    local film="$dossier/$nom-monte.mp4" brut="$dossier/$nom.mkv" marques="$dossier/$nom.marques.tsv"
     [ -f "$film" ] && [ -f "$marques" ] || return 0
 
     local fiche titre page duree brut_duree t0 part
@@ -1198,9 +1203,9 @@ auto_test() {
         > "$bac/verif/importer-une-nuit.marques.tsv"
     essai "l index ne pointe pas APRÈS la fin du film"     vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
-            monter "$1/importer-une-nuit.mkv" "$1/importer-une-nuit.marques.tsv" "$1/importer-une-nuit-monte.mkv" >/dev/null 2>&1 || exit 1
+            monter "$1/importer-une-nuit.mkv" "$1/importer-une-nuit.marques.tsv" "$1/importer-une-nuit-monte.mp4" >/dev/null 2>&1 || exit 1
             ecrire_index "$1" "$1/i.md" >/dev/null || exit 1
-            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$1/importer-une-nuit-monte.mkv")
+            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$1/importer-une-nuit-monte.mp4")
             max=$(grep -oE "\| [0-9]+\.[0-9]+ s \|" "$1/i.md" | grep -oE "[0-9]+\.[0-9]+" | sort -g | tail -1)
             [ -n "$max" ] && [ -n "$d" ] || exit 1
             LC_NUMERIC=C awk -v m="$max" -v d="$d" "BEGIN{exit !(m <= d + 0.5)}"' \
@@ -1208,7 +1213,7 @@ auto_test() {
     mkdir -p "$bac/films"
     printf '1000.0\tdebut\n1002.0\tfin\n1010.0\tarret\n' > "$bac/films/importer-une-nuit.marques.tsv"
     ffmpeg -v error -y -f lavfi -i "color=c=white:s=160x120:d=2:r=10" "$bac/films/importer-une-nuit.mkv" </dev/null 2>/dev/null
-    cp "$bac/films/importer-une-nuit.mkv" "$bac/films/importer-une-nuit-monte.mkv"
+    cp "$bac/films/importer-une-nuit.mkv" "$bac/films/importer-une-nuit-monte.mp4"
     essai "l index dit ce que le film ne prouve PAS"     vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; ecrire_index "$1" "$2" >/dev/null; grep -q "ADR 3764" "$2"' \
         "${BASH_SOURCE[0]}" "$bac/films" "$bac/i.md"
@@ -1226,7 +1231,7 @@ auto_test() {
     # ⚠️ Et le cas inverse : les DEUX films présents doivent tenir sur la même page. Écrit pour le
     # seul dernier tournage, l'index effaçait le parcours précédent à chaque passage.
     cp "$bac/films/importer-une-nuit.mkv" "$bac/films/declarer-un-carre.mkv"
-    cp "$bac/films/importer-une-nuit.mkv" "$bac/films/declarer-un-carre-monte.mkv"
+    cp "$bac/films/importer-une-nuit.mkv" "$bac/films/declarer-un-carre-monte.mp4"
     cp "$bac/films/importer-une-nuit.marques.tsv" "$bac/films/declarer-un-carre.marques.tsv"
     essai "deux films tiennent sur la meme page"         vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; ecrire_index "$1" "$2" >/dev/null; grep -q "^## Déclarer un carré" "$2" && grep -q "^## Importer une nuit" "$2"' \
