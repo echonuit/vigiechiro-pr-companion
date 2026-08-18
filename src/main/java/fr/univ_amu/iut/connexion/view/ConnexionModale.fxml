@@ -42,7 +42,7 @@
       <Label text="Connectez-vous sur Vigie-Chiro (GitHub ou Google)."
              wrapText="true" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
       <!-- minWidth=USE_PREF_SIZE : la consigne (hgrow=ALWAYS) rognait le bouton (« Copier le m… »). -->
-      <Button text="Ouvrir Vigie-Chiro" styleClass="action-secondaire" onAction="#ouvrirSite"
+      <Button text="Ouvrir Vigie-Chiro" styleClass="bouton-secondaire" onAction="#ouvrirSite"
               minWidth="-Infinity"/>
     </HBox>
   </VBox>
@@ -53,7 +53,7 @@
     <HBox spacing="10.0" alignment="CENTER_LEFT">
       <Label text="Copiez le marque-page, créez un favori et collez-le comme adresse."
              wrapText="true" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-      <Button text="Copier le marque-page" styleClass="action-secondaire" onAction="#copierMarquePage"
+      <Button text="Copier le marque-page" styleClass="bouton-secondaire" onAction="#copierMarquePage"
               minWidth="-Infinity"/>
     </HBox>
   </VBox>
@@ -67,7 +67,7 @@
       <TextField fx:id="champToken" promptText="collez votre token ici" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
       <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
       <StackPane fx:id="enveloppeConnecter">
-        <Button fx:id="boutonConnecter" text="Se connecter" styleClass="action-primaire" onAction="#connecter"/>
+        <Button fx:id="boutonConnecter" text="Se connecter" styleClass="bouton-primaire" onAction="#connecter"/>
       </StackPane>
     </HBox>
   </VBox>
@@ -85,11 +85,11 @@
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <StackPane fx:id="enveloppeDeconnecter">
       <Button fx:id="boutonDeconnecter" text="Se déconnecter"
-              styleClass="action-secondaire" onAction="#deconnecter"/>
+              styleClass="bouton-secondaire" onAction="#deconnecter"/>
     </StackPane>
     <Region HBox.hgrow="ALWAYS"/>
     <!-- Grisé pendant une opération (#2642) : « Annuler » est juste au-dessus et renonce proprement ;
          fermer la modale, lui, laisserait le travail orphelin sans le dire. -->
-    <Button fx:id="boutonFermer" text="Fermer" styleClass="action-secondaire" onAction="#fermer"/>
+    <Button fx:id="boutonFermer" text="Fermer" styleClass="bouton-secondaire" onAction="#fermer"/>
   </HBox>
 </VBox>

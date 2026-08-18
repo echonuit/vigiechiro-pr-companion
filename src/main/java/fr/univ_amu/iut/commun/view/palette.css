@@ -20,6 +20,11 @@
  * divergence sur l'« accent » est assumée pour préserver la sémantique des couleurs.
  */
 .root {
+    /* Hauteur commune des contrôles cliquables d'une barre d'actions (#4002). Mesurée sur ce que
+       les boutons du socle rendaient déjà - 34 px - pour que l'alignement parte de l'existant
+       et non d'une valeur inventée. Un jeton, parce que cinq classes doivent s'accorder. */
+    -hauteur-controle-barre: 34;
+
     /* Indigo Material, aligné sur le thème du brief (primary: indigo). */
     -couleur-primaire: #3f51b5;
     -couleur-primaire-sombre: #303f9f;

@@ -53,7 +53,7 @@
   <!-- Export de la courbe climatique (#2618) : redessinée hors écran et estampillée de son contexte,
        comme la courbe d'activité. C'est ce qu'on joint à un signalement d'anomalie. -->
   <HBox alignment="CENTER_RIGHT">
-    <Button fx:id="boutonExporterGraphe" minWidth="-Infinity" text="Exporter le graphe…" onAction="#exporterGraphe">
+    <Button fx:id="boutonExporterGraphe" minWidth="-Infinity" text="Exporter le graphe…" styleClass="bouton-secondaire" onAction="#exporterGraphe">
       <graphic>
         <FontIcon iconLiteral="fas-file-image"/>
       </graphic>

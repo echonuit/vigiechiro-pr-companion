@@ -52,11 +52,16 @@
     -fx-background-color: transparent;
 }
 
-/* Formulaire : une colonne aérée, largeur bornée pour la lisibilité. */
+/* Formulaire : une colonne aérée, largeur bornée pour la lisibilité.
+   ⚠️ 640 et non 620 depuis #4002 : la rangée des emplacements porte un CHEMIN COMPLET suivi de deux
+   boutons, et c'est la seule ligne du formulaire dans ce cas. Une fois ses boutons stylés comme le
+   reste du produit, elle manquait quelques pixels, et l'on avait commencé à rogner l'espacement à
+   chaque fois - traiter le symptôme. Vingt pixels de plus tiennent la ligne sans desserrer la borne
+   de lisibilité, qui reste ce qu'elle est : une colonne de formulaire, pas une pleine largeur. */
 .formulaire-reglages {
     -fx-padding: 22 28 22 28;
     -fx-spacing: 18;
-    -fx-max-width: 620;
+    -fx-max-width: 640;
 }
 
 /* Une ligne = libellé au-dessus de son contrôle (les cases portent déjà leur libellé), puis l'aide
@@ -139,13 +144,15 @@
     -fx-text-fill: -couleur-texte-discret;
 }
 
-/* Espacement resserré à 6 (#3952) : une fois `bouton-secondaire` posé sur « Copier », les deux
-   boutons stylés de la rangée prennent leurs marges intérieures, et le chemin manquait 2 px - le
-   garde anti-troncature l'a refusé. Les trois intervalles rendent 6 px, ce qui suffit largement.
+/* ⚠️ L'espacement était descendu à 6 en #3952, puis on a voulu le descendre à 4 : à chaque bouton
+   stylé ajouté, la rangée manquait quelques pixels et on rognait l'espacement. C'était traiter le
+   symptôme. La cause était la LARGEUR DE LA CAPTURE - 760 px, seule de tout le dépôt à ce format,
+   quand les autres écrans se rendent de 980 à 1180. La rangée tient sans peine à la largeur réelle,
+   et l'espacement retrouve donc sa valeur (#4002).
    Le ressort reste sur le Region qui sépare « Copier » de « Choisir… », jamais sur le libellé
    (ADR 3464). */
 .emplacements-rangee {
-    -fx-spacing: 6;
+    -fx-spacing: 8;
     -fx-alignment: center-left;
 }
 

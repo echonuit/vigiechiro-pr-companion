@@ -45,6 +45,11 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// aussi ([#definirSortie]) : `Platform.exit()` en dur tuerait le runtime TestFX.
 public final class OngletReglagesEmplacements implements OngletReglagesPersonnalise {
 
+    /// La classe du socle que portent les trois boutons de cet onglet : « Copier », « Choisir… »
+    /// et « Rétablir les emplacements par défaut ». Extraite parce que PMD refuse le littéral
+    /// répété, et le dépôt refuse qu'on le taise (#4002).
+    private static final String BOUTON_SECONDAIRE = "bouton-secondaire";
+
     private final ServiceEmplacements service;
     private final SelecteurFichierModifiable selecteur;
     private final NotificateurModifiable notificateur;
@@ -175,7 +180,7 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
         // ⚠️ Elle n'aurait rien fait avant #3966 : cet écran était le seul des 24 à ne pas charger
         // `design.css`, où elle est définie. La poser plus tôt aurait donné une classe inerte, qu'un
         // test aurait certifiée.
-        copier.getStyleClass().addAll("emplacements-copier", "bouton-secondaire");
+        copier.getStyleClass().addAll("emplacements-copier", BOUTON_SECONDAIRE);
         // Le pictogramme de la copie, comme dans EtapeTeleversement.fxml. Posé en `graphic` et non
         // écrit dans le libellé : un caractère dépend des polices installées (ADR 0035).
         copier.setGraphic(new FontIcon("fas-copy"));
@@ -183,7 +188,9 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
         copier.setTooltip(new Tooltip("Copier ce chemin dans le presse-papier."));
 
         Button choisir = new Button("Choisir…");
-        choisir.getStyleClass().add("emplacements-choisir");
+        // Même geste que `Parcourir…` et `Choisir un .zip…` de l'écran d'import, qui portent
+        // déjà cette classe : ouvrir un sélecteur est une action secondaire (#4002).
+        choisir.getStyleClass().addAll("emplacements-choisir", BOUTON_SECONDAIRE);
         choisir.setOnAction(evenement -> choisir(titre, choix));
 
         // ⚠️ C'est ce Region qui absorbe la place restante, et non le libellé. Donné au libellé - comme
@@ -230,7 +237,9 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
         appliquer.setOnAction(evenement -> appliquer());
 
         Button reinitialiser = new Button("Rétablir les emplacements par défaut");
-        reinitialiser.getStyleClass().add("emplacements-reinitialiser");
+        // Secondaire à côté du primaire « Appliquer ». Sans cette classe, la rangée montrait un
+        // bouton du produit et un bouton de la plateforme, côte à côte (#4002).
+        reinitialiser.getStyleClass().addAll("emplacements-reinitialiser", BOUTON_SECONDAIRE);
         // Lié, et non posé : rien à rétablir tant qu'aucune configuration n'a été écrite, et le
         // bouton suit désormais l'écriture au lieu de l'instant du montage.
         reinitialiser.disableProperty().bind(configurationPersonnalisee.not());

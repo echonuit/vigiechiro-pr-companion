@@ -138,8 +138,8 @@
     <HBox fx:id="zonePassageExistant" spacing="10.0" alignment="CENTER_LEFT"
           visible="false" managed="false">
       <Label fx:id="labelPassageExistant" styleClass="encart" wrapText="true" HBox.hgrow="ALWAYS"/>
-      <Button fx:id="boutonNumeroLibre" text="Utiliser ce n°" onAction="#utiliserNumeroLibre"/>
-      <Button fx:id="boutonOuvrirNuit" text="Ouvrir cette nuit" onAction="#ouvrirNuitRecuperee"
+      <Button fx:id="boutonNumeroLibre" text="Utiliser ce n°" styleClass="bouton-secondaire" onAction="#utiliserNumeroLibre"/>
+      <Button fx:id="boutonOuvrirNuit" text="Ouvrir cette nuit" styleClass="bouton-secondaire" onAction="#ouvrirNuitRecuperee"
               visible="false" managed="false">
         <graphic>
           <FontIcon iconLiteral="fas-arrow-right"/>
