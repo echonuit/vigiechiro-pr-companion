@@ -8,8 +8,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.lot.model.BilanDepot;
+import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.EchecUnite;
 import fr.univ_amu.iut.lot.model.ModeDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.SourceDepot;
@@ -76,7 +78,7 @@ class DeposerVigieChiroTest {
         when(depot.deposer(eq(42L), any(), any(), any())).thenAnswer(invocation -> {
             SuiviDepot suivi = invocation.getArgument(3);
             suivi.uniteEchouee("b.wav", "coupure réseau", false);
-            return new BilanDepot("part-1", 1, List.of("b.wav"));
+            return new BilanDepot("part-1", 1, List.of(EchecUnite.rejouable("b.wav", "HTTP 503")));
         });
         StringWriter sortie = new StringWriter();
 
@@ -175,10 +177,49 @@ class DeposerVigieChiroTest {
     @DisplayName("clôture #2802 : le bilan dit le VOLUME en ligne, que l'écran affiche depuis #2653")
     void rendre_bilan_dit_le_volume() {
         String complet = DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 14, List.of(), 4_500_000_000L));
-        String partiel = DeposerVigieChiro.rendreBilan(new BilanDepot("p-1", 9, List.of("Car-10.zip"), 2_900_000_000L));
+        String partiel = DeposerVigieChiro.rendreBilan(
+                new BilanDepot("p-1", 9, List.of(EchecUnite.rejouable("Car-10.zip", "HTTP 503")), 2_900_000_000L));
 
         assertThat(complet).contains("14 fichier(s) téléversé(s) (4,5 Go)");
         assertThat(partiel).contains("9 fichier(s) téléversé(s) (2,9 Go)").contains("1 en échec");
+    }
+
+    @Test
+    @DisplayName("#3962 : la CLI ne dit plus « relancez » d'une archive que la relance ne reprendra pas")
+    void rendre_bilan_distingue_les_refus_definitifs() {
+        String refuse = DeposerVigieChiro.rendreBilan(new BilanDepot(
+                "p-1", 9, List.of(new EchecUnite("Car-10.zip", "HTTP 422", true, CauseRefus.CONTENU)), 0));
+
+        assertThat(refuse)
+                .as("la relance était promise pour une archive que Vigie-Chiro a refusée")
+                .doesNotContain("Relancez la commande");
+        assertThat(refuse).contains("Car-10.zip").contains("que la relance ne reprendra pas");
+    }
+
+    @Test
+    @DisplayName("#3962 : la CLI ne conseille la reconnexion que si elle peut lever la cause")
+    void rendre_bilan_ne_conseille_que_le_geste_applicable() {
+        String droits = DeposerVigieChiro.rendreBilan(new BilanDepot(
+                "p-1", 9, List.of(new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION)), 0));
+        String contenu = DeposerVigieChiro.rendreBilan(new BilanDepot(
+                "p-1", 9, List.of(new EchecUnite("Car-11.zip", "HTTP 422", true, CauseRefus.CONTENU)), 0));
+
+        assertThat(droits).contains("Reconnectez-vous");
+        assertThat(contenu).doesNotContain("Reconnectez-vous");
+    }
+
+    @Test
+    @DisplayName("#3962 : reprenables et refusés se disent tous les deux, chacun avec son compte")
+    void rendre_bilan_dit_les_deux_familles() {
+        String melange = DeposerVigieChiro.rendreBilan(new BilanDepot(
+                "p-1",
+                8,
+                List.of(
+                        EchecUnite.rejouable("Car-10.zip", "HTTP 503"),
+                        new EchecUnite("Car-11.zip", "HTTP 422", true, CauseRefus.CONTENU)),
+                0));
+
+        assertThat(melange).contains("reprendre les 1 manquante(s)").contains("1 refusée(s) par Vigie-Chiro");
     }
 
     @Test

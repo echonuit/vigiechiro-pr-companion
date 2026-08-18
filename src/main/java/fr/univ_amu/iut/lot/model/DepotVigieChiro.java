@@ -259,10 +259,18 @@ public final class DepotVigieChiro {
                 // les octets sont en ligne. Les compter a l'envoi les compterait aussi sur un echec.
                 cumul.octets().addAndGet(resultat.octets());
             } else {
-                cumul.echecs().add(unite.identifiantUnite());
+                // `definitif` et `cause` sont disponibles ICI, et le bilan les jetait : c'est ce qui
+                // faisait promettre une reprise impossible au compte rendu comme a la CLI (#3962).
+                cumul.echecs()
+                        .add(new EchecUnite(
+                                unite.identifiantUnite(), resultat.raison(), resultat.definitif(), resultat.cause()));
             }
         } catch (RuntimeException erreur) {
-            cumul.echecs().add(unite.identifiantUnite());
+            // Un incident inattendu n est pas un refus : la reprise le reprendra.
+            // Le message de l enveloppe n a pas sa place ici : `commun.view.CauseLisible` tient la
+            // regle de l ADR 3470, et `lot.model` ne peut pas l atteindre sans inverser les couches.
+            // Une raison fixe et honnete plutot qu un `toString` de mecanique de transport.
+            cumul.echecs().add(EchecUnite.rejouable(unite.identifiantUnite(), "incident inattendu pendant l'envoi"));
         }
     }
 
@@ -272,7 +280,7 @@ public final class DepotVigieChiro {
     /// Un objet plutot que trois parametres de plus : la methode qui traite une unite en portait deja
     /// sept, et trois accumulateurs voyageant ensemble sont un concept, pas une liste d'arguments.
     /// Tous **thread-safe** : plusieurs envois y ecrivent en meme temps.
-    private record Cumul(AtomicInteger deposees, List<String> echecs, AtomicLong octets) {
+    private record Cumul(AtomicInteger deposees, List<EchecUnite> echecs, AtomicLong octets) {
         static Cumul neuf() {
             return new Cumul(new AtomicInteger(), Collections.synchronizedList(new ArrayList<>()), new AtomicLong());
         }

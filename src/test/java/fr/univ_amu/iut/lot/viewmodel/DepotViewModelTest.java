@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.EchecUnite;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
@@ -333,10 +334,12 @@ class DepotViewModelTest {
                 .as("un dépôt réussi ne laisse plus de bandeau : la bande le dit mieux")
                 .isEmpty();
 
-        vm.appliquerBilan(new BilanDepot("p", 3, List.of("x.wav")));
+        vm.appliquerBilan(new BilanDepot("p", 3, List.of(EchecUnite.rejouable("x.wav", "HTTP 503"))));
         // #1890 conservé, déplacé : un dépôt partiel ne ment ni dans un sens ni dans l'autre. Ce n'est
         // plus la sévérité d'un bandeau qui le porte mais celle du compte rendu, décidée à la traduction.
-        assertThat(vm.finDepotProperty().get().bilan().echecs()).containsExactly("x.wav");
+        assertThat(vm.finDepotProperty().get().bilan().echecs())
+                .extracting(EchecUnite::identifiantUnite)
+                .containsExactly("x.wav");
 
         vm.echec("Token expiré");
         assertThat(vm.enCoursProperty().get()).isFalse();

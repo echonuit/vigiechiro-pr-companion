@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.EchecUnite;
 import fr.univ_amu.iut.lot.model.ModeDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.SourceDepot;
@@ -136,8 +137,39 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         }
         return "Dépôt INCOMPLET : " + bilan.deposees() + " fichier(s) téléversé(s)" + volume + ", "
                 + bilan.echecs().size()
-                + " en échec (participation " + bilan.participationId() + "). Relancez la commande pour ne"
-                + " reprendre que les manquants.";
+                + " en échec (participation " + bilan.participationId() + ")." + quoiFaireDesEchecs(bilan);
+    }
+
+    /// Ce qu'on conseille des échecs, **et seulement ce que la commande peut tenir**.
+    ///
+    /// « Relancez la commande pour ne reprendre que les manquants » était dit de tous les échecs. Or une
+    /// archive **refusée** ne repart pas : la relance la refuserait de la même façon. La CLI promettait
+    /// donc, en une phrase, ce que l'écran avait cessé de promettre en #3687 (#3962).
+    private static String quoiFaireDesEchecs(BilanDepot bilan) {
+        int reprenables = bilan.reprenables().size();
+        List<EchecUnite> refuses = bilan.refusesDefinitivement();
+        StringBuilder conseil = new StringBuilder();
+        if (reprenables > 0) {
+            conseil.append(" Relancez la commande pour reprendre les ")
+                    .append(reprenables)
+                    .append(" manquante(s).");
+        }
+        if (!refuses.isEmpty()) {
+            conseil.append(" ")
+                    .append(refuses.size())
+                    .append(" refusée(s) par Vigie-Chiro, que la relance ne")
+                    .append(" reprendra pas :");
+            refuses.forEach(refus -> conseil.append(" ")
+                    .append(refus.identifiantUnite())
+                    .append(" (")
+                    .append(refus.raison())
+                    .append(")"));
+            conseil.append(".");
+            if (refuses.stream().allMatch(EchecUnite::seRearmeParUneReconnexion)) {
+                conseil.append(" Reconnectez-vous, puis relancez : elles redeviendront reprenables.");
+            }
+        }
+        return conseil.toString();
     }
 
     /// Le volume en ligne, **s'il a été mesuré**. Rien à zéro : un « 0 Ko téléversé » annoncerait une

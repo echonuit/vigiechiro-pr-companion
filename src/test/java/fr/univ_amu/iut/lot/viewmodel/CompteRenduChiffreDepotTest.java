@@ -7,6 +7,8 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Avertissement;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Segment;
 import fr.univ_amu.iut.lot.model.BilanDepot;
+import fr.univ_amu.iut.lot.model.CauseRefus;
+import fr.univ_amu.iut.lot.model.EchecUnite;
 import fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot.Plan;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -55,7 +57,8 @@ class CompteRenduChiffreDepotTest {
     @Test
     @DisplayName("volume nul : rien n'est dit, plutôt qu'un « 0 Ko téléversés »")
     void volume_nul_n_est_pas_annonce() {
-        CompteRenduChiffre rendu = traduire(new BilanDepot("p-1", 0, List.of("Car-1.zip"), 0), plan(1, 0, false));
+        CompteRenduChiffre rendu = traduire(
+                new BilanDepot("p-1", 0, List.of(EchecUnite.rejouable("Car-1.zip", "HTTP 503")), 0), plan(1, 0, false));
 
         assertThat(rendu.volumes()).isEmpty();
         assertThat(textes(rendu)).noneMatch(texte -> texte.contains("téléversés"));
@@ -64,7 +67,11 @@ class CompteRenduChiffreDepotTest {
     @Test
     @DisplayName("dépôt partiel : les échecs sont une erreur, et le remède est nommé")
     void depot_partiel() {
-        BilanDepot bilan = new BilanDepot("p-1", 9, List.of("Car-10.zip", "Car-11.zip"), 3_000_000_000L);
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                9,
+                List.of(EchecUnite.rejouable("Car-10.zip", "HTTP 503"), EchecUnite.rejouable("Car-11.zip", "HTTP 503")),
+                3_000_000_000L);
 
         CompteRenduChiffre rendu = traduire(bilan, plan(11, 9, false));
 
@@ -101,7 +108,11 @@ class CompteRenduChiffreDepotTest {
     @Test
     @DisplayName("les archives en échec sont listées, avec renvoi à la table pour leur cause")
     void les_echecs_renvoient_a_la_table() {
-        BilanDepot bilan = new BilanDepot("p-1", 9, List.of("Car-10.zip", "Car-11.zip"), 1L);
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                9,
+                List.of(EchecUnite.rejouable("Car-10.zip", "HTTP 503"), EchecUnite.rejouable("Car-11.zip", "HTTP 503")),
+                1L);
 
         CompteRenduChiffre rendu = traduire(bilan, plan(11, 9, false));
 
@@ -110,6 +121,58 @@ class CompteRenduChiffreDepotTest {
         assertThat(rendu.motifs().get(0).libelle())
                 .as("le bilan ne porte pas les causes : elles vivent dans la table, et on y renvoie")
                 .contains("table");
+    }
+
+    @Test
+    @DisplayName("#3962 : un refus définitif ne se voit plus promettre « Reprendre le dépôt »")
+    void un_refus_definitif_n_est_plus_promis() {
+        // Dans cet état, le bouton de l'écran s'intitule « Téléverser sur Vigie-Chiro » (#3687) : citer
+        // « Reprendre le dépôt » nommait un bouton absent de la vue.
+        BilanDepot bilan = new BilanDepot(
+                "p-1", 9, List.of(new EchecUnite("Car-10.zip", "HTTP 422", true, CauseRefus.CONTENU)), 3_000_000_000L);
+
+        List<String> textes = textes(traduire(bilan, plan(10, 9, false)));
+
+        assertThat(textes)
+                .as("le compte rendu promet encore une reprise que le produit n'offre pas")
+                .noneMatch(texte -> texte.contains("Reprendre le dépôt"));
+        assertThat(textes).anyMatch(texte -> texte.contains("refusées par Vigie-Chiro"));
+    }
+
+    @Test
+    @DisplayName("#3962 : la reconnexion n'est conseillée que si elle peut lever la cause")
+    void le_geste_conseille_est_verifie() {
+        BilanDepot droits = new BilanDepot(
+                "p-1",
+                9,
+                List.of(new EchecUnite("Car-10.zip", "HTTP 403", true, CauseRefus.AUTHENTIFICATION)),
+                3_000_000_000L);
+        BilanDepot contenu = new BilanDepot(
+                "p-1", 9, List.of(new EchecUnite("Car-11.zip", "HTTP 422", true, CauseRefus.CONTENU)), 3_000_000_000L);
+
+        assertThat(textes(traduire(droits, plan(10, 9, false))))
+                .as("des droits refusés : une reconnexion les répare, on le dit")
+                .anyMatch(texte -> texte.contains("Reconnectez-vous"));
+        assertThat(textes(traduire(contenu, plan(10, 9, false))))
+                .as("un contenu refusé : se reconnecter n'y changerait rien, on ne le conseille pas")
+                .noneMatch(texte -> texte.contains("Reconnectez-vous"));
+    }
+
+    @Test
+    @DisplayName("#3962 : reprenables et refusés se comptent séparément, et se disent tous deux")
+    void les_deux_familles_se_disent() {
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                8,
+                List.of(
+                        EchecUnite.rejouable("Car-10.zip", "HTTP 503"),
+                        new EchecUnite("Car-11.zip", "HTTP 422", true, CauseRefus.CONTENU)),
+                3_000_000_000L);
+
+        List<String> textes = textes(traduire(bilan, plan(10, 8, false)));
+
+        assertThat(textes).anyMatch(texte -> texte.contains("1 archive(s) ne sont pas en ligne"));
+        assertThat(textes).anyMatch(texte -> texte.contains("1 archive(s) ont été refusées"));
     }
 
     private static Plan plan(int unitesDuPlan, int enLigne, boolean interrompu) {
@@ -127,7 +190,11 @@ class CompteRenduChiffreDepotTest {
     @Test
     @DisplayName("plan inconnu : le total se reconstitue de ce que la tentative a vu passer")
     void plan_inconnu_le_total_se_reconstitue_de_la_tentative() {
-        BilanDepot bilan = new BilanDepot("p-1", 9, List.of("Car-10.zip", "Car-11.zip"), 1L);
+        BilanDepot bilan = new BilanDepot(
+                "p-1",
+                9,
+                List.of(EchecUnite.rejouable("Car-10.zip", "HTTP 503"), EchecUnite.rejouable("Car-11.zip", "HTTP 503")),
+                1L);
 
         // `unitesDuPlan = 0` : le plan n'a pas été relu. Le total reste vrai parce qu'il additionne
         // ce qui est en ligne ET ce qui a échoué - une soustraction rendrait « 7 sur 5 ».
@@ -151,7 +218,7 @@ class CompteRenduChiffreDepotTest {
     @Test
     @DisplayName("un dépôt qui a échoué quelque part ne se dit pas complet")
     void un_depot_avec_echec_ne_se_dit_pas_complet() {
-        assertThat(new BilanDepot("p-1", 9, List.of("Car-10.zip"), 1L).estComplet())
+        assertThat(new BilanDepot("p-1", 9, List.of(EchecUnite.rejouable("Car-10.zip", "HTTP 503")), 1L).estComplet())
                 .isFalse();
         assertThat(new BilanDepot("p-1", 9, List.of(), 1L).estComplet()).isTrue();
     }
