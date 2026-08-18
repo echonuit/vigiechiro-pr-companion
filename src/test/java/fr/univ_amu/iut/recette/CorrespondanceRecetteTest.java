@@ -56,9 +56,6 @@ class CorrespondanceRecetteTest {
 
     private static final Path SESSIONS = Path.of("dev-docs", "recette", "sessions");
 
-    /// La raison commune à huit sessions sur dix : elles listent leurs cas en numérotation ordinale.
-    private static final String ORDINALE = "cas numérotés 1., 2., 3.";
-
     /// Les sessions dont ce garde ne lit aucun cas, et dont le silence est assumé (#3884).
     ///
     /// ⚠️ Cette liste est une **dette chiffrée**, pas une dispense. Chaque ligne dit pourquoi la
@@ -73,13 +70,6 @@ class CorrespondanceRecetteTest {
     /// aurait cassé la **compilation** au lieu de rougir avec son message. Un garde qui échoue par
     /// erreur de build ne dit pas ce qu'il a trouvé, et c'est ce qui est arrivé en écrivant ceci.
     private static final Map<String, String> MUETTES_ADMISES = Map.ofEntries(
-            Map.entry("s2-importer.md", ORDINALE),
-            Map.entry("s3-verifier.md", ORDINALE),
-            Map.entry("s4-deposer-suivre.md", ORDINALE),
-            Map.entry("s5-valider.md", ORDINALE),
-            Map.entry("s7-reglages.md", ORDINALE),
-            Map.entry("s8-recuperer-une-nuit.md", ORDINALE),
-            Map.entry("s10-le-poste-windows.md", ORDINALE),
             Map.entry("passe-ciblee-constats-en-attente.md", "cas préfixés PC- et cochés, hors numérotation"),
             Map.entry(
                     "passe-verification-stabilisation.md",
@@ -98,8 +88,15 @@ class CorrespondanceRecetteTest {
 
     /// Un cas se déclare `- **S1-04** · texte`, et `- **S1-26** · *perceptif* · texte` s'il ne se
     /// tranche qu'à l'oeil. Le second groupe capture cette marque.
+    ///
+    /// ⚠️ **La case à cocher est optionnelle, et le groupe qui l'accepte est NON CAPTURANT.** Une
+    /// session de recette se **joue** : cocher est le geste de qui la joue, et S7 comme S10 l'écrivent
+    /// ainsi. Le motif exigeait `- **S7-01** ·` : les **38 cas déjà numérotés** de S7 restaient hors
+    /// de l'assiette pour six caractères, et le décompte annonçait « non lue » une session écrite
+    /// (#3884). Capturer ce groupe décalerait `group(1)` et `group(2)`, et le silence deviendrait un
+    /// perceptif.
     private static final Pattern CAS =
-            Pattern.compile("^- \\*\\*(S\\d+-\\d+)\\*\\* ·( \\*perceptif\\* ·)?", Pattern.MULTILINE);
+            Pattern.compile("^- (?:\\[[ xX]\\] )?\\*\\*(S\\d+-\\d+)\\*\\* ·( \\*perceptif\\* ·)?", Pattern.MULTILINE);
 
     /// Les cas déclarés par les sessions, par identifiant, associés au fichier qui les porte.
     private static Map<String, String> declares;

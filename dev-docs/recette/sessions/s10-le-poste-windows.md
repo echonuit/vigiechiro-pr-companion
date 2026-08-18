@@ -41,22 +41,22 @@ Ce que la machine réelle ajoute : **un humain devant l'écran**, et une console
 
 ### A. Le dossier de travail déjà tenu (#3693, #3714)
 
-- [ ] **A1.** Lancer l'application, la laisser ouverte. Lancer une **seconde** instance sur le
+- [ ] **S10-01** · Lancer l'application, la laisser ouverte. Lancer une **seconde** instance sur le
   **même** dossier de travail.
   **Attendu** : la seconde refuse de démarrer, et son message **nomme l'occupant** - un identifiant
   et un poste, pas des parenthèses vides.
   ⚠️ C'est le motif exact de #3693 : sous Windows le verrou est impératif, et la fonctionnalité qui
   nomme l'occupant y était **inerte** - le message affichait « déjà utilisé () ».
 
-- [ ] **A2.** Noter **le texte exact** du message, capture à l'appui.
+- [ ] **S10-02** · Noter **le texte exact** du message, capture à l'appui.
   **Attendu** : il dit qui, depuis quand, et **quoi faire**. Un refus qui n'indique pas l'action
   suivante renvoie l'utilisateur à lui-même.
 
-- [ ] **A3.** Fermer la première instance. Relancer la seconde.
+- [ ] **S10-03** · Fermer la première instance. Relancer la seconde.
   **Attendu** : elle démarre. Le verrou relâché ne laisse pas de trace qui bloquerait le prochain
   lancement.
 
-- [ ] **A4.** Tuer la première instance **brutalement** (gestionnaire des tâches), puis relancer.
+- [ ] **S10-04** · Tuer la première instance **brutalement** (gestionnaire des tâches), puis relancer.
   **Attendu** : le démarrage réussit. ⚠️ Un verrou de fichier est relâché par le système à la mort du
   processus ; si ce n'était pas le cas, l'utilisateur serait **enfermé dehors** par un plantage, et
   c'est le pire des refus - celui qu'on ne sait pas défaire.
@@ -67,18 +67,18 @@ Ce que la machine réelle ajoute : **un humain devant l'écran**, et une console
 Le défaut d'origine venait précisément d'une heuristique qui décidait seule ; ne pas se contenter d'une
 seule des trois.
 
-- [ ] **B1.** Dans **Windows Terminal**, lancer `vigiechiro --help`.
+- [ ] **S10-05** · Dans **Windows Terminal**, lancer `vigiechiro --help`.
   **Attendu** : l'aide est **lisible**. Colorisée ou non selon ce que rend la console, mais **jamais**
   de suites de caractères parasites du genre `←[1m`.
 
-- [ ] **B2.** Même chose dans **PowerShell**, puis dans **`cmd.exe`**.
+- [ ] **S10-06** · Même chose dans **PowerShell**, puis dans **`cmd.exe`**.
   **Attendu** : idem. ⚠️ `cmd.exe` est le plus susceptible d'afficher les échappements bruts : c'est
   la console la moins capable, et celle qu'un observateur institutionnel a le plus de chances d'ouvrir.
 
-- [ ] **B3.** Rediriger : `vigiechiro --help > aide.txt`, puis ouvrir `aide.txt` dans le Bloc-notes.
+- [ ] **S10-07** · Rediriger : `vigiechiro --help > aide.txt`, puis ouvrir `aide.txt` dans le Bloc-notes.
   **Attendu** : **aucun** caractère parasite. Le fichier est du texte nu.
 
-- [ ] **B4.** Poser `NO_COLOR=1` puis relancer B1.
+- [ ] **S10-08** · Poser `NO_COLOR=1` puis relancer S10-05.
   **Attendu** : aucune couleur, et l'aide reste lisible.
 
 ## Ce que la session ne couvre pas, et pourquoi
