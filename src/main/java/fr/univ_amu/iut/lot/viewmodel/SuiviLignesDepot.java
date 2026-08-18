@@ -16,7 +16,7 @@ import javafx.beans.property.ReadOnlyIntegerWrapper;
 /// **identifiant** (nom du fichier, la clé de reprise), traduit ici en numéro de ligne.
 ///
 /// Expose [#resteAReprendreProperty()] : `true` quand un dépôt a été entamé et qu'il reste des unités
-/// non déposées : l'IHM bascule alors le bouton en « Retenter les échecs » (le moteur ne re-téléverse
+/// non déposées : l'IHM bascule alors le bouton en « Reprendre le dépôt » (le moteur ne re-téléverse
 /// que le manquant).
 ///
 /// **Fil JavaFX** : ces méthodes mutent des collections/propriétés observables ; l'appelant (le
@@ -112,7 +112,7 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
     }
 
     /// `true` quand un dépôt a été entamé (table non vide) et qu'il reste des unités non déposées :
-    /// l'action de téléversement devient une **reprise** (« Retenter les échecs »).
+    /// l'action de téléversement devient une **reprise** (« Reprendre le dépôt »).
     public ReadOnlyBooleanProperty resteAReprendreProperty() {
         return resteAReprendre.getReadOnlyProperty();
     }
@@ -175,7 +175,7 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
         refusDefinitifs.set(definitifsN);
         total.set(lignes().size());
         // Une unité refusée DÉFINITIVEMENT n'est pas « à reprendre » : la retenter ne changera rien
-        // (#3687). Sans cette soustraction, l'écran proposait « Retenter les échecs » sur des unités que
+        // (#3687). Sans cette soustraction, l'écran proposait « Reprendre le dépôt » sur des unités que
         // l'application savait irrécupérables - le défaut que #3469 avait laissé ouvert.
         resteAReprendre.set(!lignes().isEmpty() && terminees + definitifsN < lignes().size());
     }

@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro.Phase;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.RearmementDepot;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -48,13 +49,46 @@ class ConnexionViewModelTest {
     @Mock
     private RapprochementVigieChiro rapprocheur;
 
+    /// Le port de réarmement, **réellement injecté**. Les tests le passaient en `Optional.empty()`, donc
+    /// le ViewModel retombait toujours sur `RearmementDepot.inerte()` et l'appel de `connecter` n'était
+    /// jamais exercé : commenter cet appel laissait 61 tests verts (#3961).
+    @Mock
+    private RearmementDepot rearmement;
+
     private StockageConnexion stockage;
     private ConnexionViewModel viewModel;
 
     @BeforeEach
     void preparer() {
         stockage = new StockageConnexion(new Workspace(workspace), Horloge.figeeAu(LocalDate.of(2026, 1, 1)));
-        viewModel = new ConnexionViewModel(stockage, client, Set.of(rapprocheur), java.util.Optional.empty());
+        viewModel = new ConnexionViewModel(stockage, client, Set.of(rapprocheur), Optional.of(rearmement));
+    }
+
+    @Test
+    @DisplayName("#3961 : une connexion qui aboutit réarme les dépôts refusés pour authentification")
+    void connexion_reussie_rearme() {
+        when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
+
+        viewModel.connecter("TOK123");
+
+        verify(rearmement).reconnexionReussie();
+    }
+
+    @Test
+    @DisplayName("#3961 : aucune autre issue de connexion ne réarme quoi que ce soit")
+    void seul_le_succes_rearme() {
+        // Les trois autres branches de `connecter`. Un réarmement sur l'une d'elles rendrait
+        // « reprenable » ce que rien n'a réparé, et ramènerait le bouton que #3687 a fait taire.
+        when(client.moi())
+                .thenReturn(ReponseApi.injoignable("réseau coupé"))
+                .thenReturn(ReponseApi.refuse(401, "jeton mort"))
+                .thenReturn(ReponseApi.nonConnecte());
+
+        viewModel.connecter("TOK123");
+        viewModel.connecter("TOK123");
+        viewModel.connecter("TOK123");
+
+        verifyNoInteractions(rearmement);
     }
 
     @Test
@@ -88,7 +122,7 @@ class ConnexionViewModelTest {
                 .thenReturn(Optional.of(new RapportSynchro("passage(s) rapatrié(s)", 2)));
         // Le passage est donné AVANT le site dans le Set : l'ordre ne doit venir que des phases, pas de l'entrée.
         ConnexionViewModel avecDeux =
-                new ConnexionViewModel(stockage, client, Set.of(passages, sites), java.util.Optional.empty());
+                new ConnexionViewModel(stockage, client, Set.of(passages, sites), Optional.of(rearmement));
 
         avecDeux.connecter("TOK123");
 
