@@ -98,11 +98,13 @@ Le menu principal (☰) → **« Ouvrir le dossier des journaux »** (une `Actio
 [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)) ouvre `<workspace>/logs/` dans le
 gestionnaire de fichiers : l'utilisateur retrouve la trace d'un incident et la joint à un signalement.
 
-## Ce que l'utilisateur lit d'une exception (#3470)
+## Ce que l'utilisateur lit d'une exception (#3470, #3947)
 
 Le journal reçoit la trace complète ; l'alerte, elle, ne montre **qu'une phrase**, et cette phrase se
-compose par [`CauseLisible.messageDe`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/CauseLisible.java)
-([ADR 3470](decisions/3470-un-message-d-erreur-ne-montre-jamais-le-nom-de-son-enveloppe.md)).
+compose par [`CauseLisible.messageDe`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/model/CauseLisible.java)
+([ADR 3470](decisions/3470-un-message-d-erreur-ne-montre-jamais-le-nom-de-son-enveloppe.md)),
+**des deux côtés** : le filet de l'IHM comme celui de la ligne de commande
+([ADR 3947](decisions/3947-un-message-montre-a-l-utilisateur-se-compose-en-un-seul-endroit.md)).
 
 **Le défaut qu'elle ferme.** Un utilisateur a vu, pour tout diagnostic :
 
@@ -125,9 +127,19 @@ renvoie au journal, jamais `null` ni un nom pleinement qualifié.
 interdit :
 
 ```java
-echec.getMessage() != null ? echec.getMessage() : echec.toString();   // montre « java.lang.XxxException »
-echec.getCause() != null ? echec.getCause().getMessage() : ...        // ne déroule que d'un cran
+echec.getMessage() != null ? echec.getMessage() : echec.toString();      // « java.lang.XxxException »
+echec.getMessage() == null ? echec.getClass().getSimpleName() : ...      // idem, en plus court
+echec.getCause() != null ? echec.getCause().getMessage() : ...           // ne déroule que d'un cran
 ```
+
+Elles sont **comptées** : `scripts/adr/3947-message-enveloppe.py` porte un cliquet, et il ne descend
+jamais tout seul.
+
+⚠️ **Chaque surface passe son « où regarder ».** Le repli qui nomme le journal renvoie vers
+`menu principal > Ouvrir le dossier des journaux` à l'écran, et vers le dossier `logs/` en ligne de
+commande. Un terminal n'a pas de menu principal : lui en désigner un produirait un message non vide,
+donc d'apparence correcte, et inapplicable. C'est le défaut de l'ADR 3470 déplacé d'un cran par sa
+propre correction, et c'est pourquoi `OU_REGARDER_IHM` et `OU_REGARDER_CLI` sont deux constantes.
 
 Tout filet qui montre une exception à l'utilisateur passe par `CauseLisible`.
 
