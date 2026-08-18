@@ -21,6 +21,11 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 public enum CauseRefus {
     /// 401 / 403 : jeton mort, droits S3 manquants, URL signée expirée. **Une reconnexion réussie peut
     /// lever cette cause** : ces unités se réarment.
+    ///
+    /// ⚠️ C'est ici, et **seulement** ici, que la règle est écrite. Une méthode `leveeParUneReconnexion()`
+    /// la disait aussi, et personne ne l'appelait : `RearmementDepotUnites` passe la constante en dur au
+    /// DAO. Deux expressions d'une même règle, dont l'inerte **se lisait** comme l'autorité - un lecteur
+    /// qui l'aurait modifiée aurait cru changer le comportement (#3961).
     AUTHENTIFICATION,
 
     /// 400 / 422 et les autres 4xx : le contenu lui-même est refusé. **Aucun événement extérieur ne le
@@ -36,10 +41,5 @@ public enum CauseRefus {
             return null;
         }
         return refus.statut() == 401 || refus.statut() == 403 ? AUTHENTIFICATION : CONTENU;
-    }
-
-    /// Vrai si une **reconnexion réussie** peut avoir levé cette cause.
-    public boolean leveeParUneReconnexion() {
-        return this == AUTHENTIFICATION;
     }
 }

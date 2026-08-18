@@ -181,6 +181,38 @@ class SuiviLignesDepotTest {
         assertThat(ligne.messageRepriseProperty().get()).isEmpty();
     }
 
+    @Test
+    @DisplayName("#3961 : les lignes sont numérotées 1, 2, 3 dans l'ordre du plan")
+    void les_lignes_portent_leur_rang() {
+        // Survivant du PIT de clôture : « Changed increment from 1 to -1 » sur le numéro de ligne. Rien
+        // ne le regardait, alors que c'est ce que l'utilisateur lit dans la première colonne.
+        SuiviLignesDepot suivi = new SuiviLignesDepot();
+
+        suivi.planifier(List.of(
+                unite(1L, "a.zip", StatutDepotUnite.A_DEPOSER, null),
+                unite(2L, "b.zip", StatutDepotUnite.A_DEPOSER, null),
+                unite(3L, "c.zip", StatutDepotUnite.A_DEPOSER, null)));
+
+        assertThat(suivi.lignes()).extracting(LigneDepot::numero).containsExactly(1, 2, 3);
+    }
+
+    @Test
+    @DisplayName("#3961 : réinitialiser efface la table ET le drapeau de reprise")
+    void reinitialiser_efface_aussi_le_drapeau() {
+        // Survivant du PIT de clôture : retirer l'appel à recalculerReste() ne cassait rien, alors que
+        // c'est lui qui ramène le bouton de « Reprendre le dépôt » à « Téléverser sur Vigie-Chiro ».
+        SuiviLignesDepot suivi = new SuiviLignesDepot();
+        suivi.planifier(List.of(unite(1L, "a.zip", StatutDepotUnite.ECHEC, "HTTP 503")));
+        assertThat(suivi.resteAReprendreProperty().get())
+                .as("le dispositif est cassé : rien à reprendre alors qu'une unité est en échec")
+                .isTrue();
+
+        suivi.reinitialiser();
+
+        assertThat(suivi.lignes()).isEmpty();
+        assertThat(suivi.resteAReprendreProperty().get()).isFalse();
+    }
+
     private static DepotUnite unite(Long id, String identifiant, StatutDepotUnite statut, String erreur) {
         return new DepotUnite(id, 42L, identifiant, TypeDepotUnite.ZIP, statut, null, erreur, MAINTENANT);
     }
