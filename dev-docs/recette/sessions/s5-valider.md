@@ -36,36 +36,36 @@ Consignées lors de la clôture du lot E (#2796), CLI sur machine de développem
 
 **Étape 1 · Isoler le sous-ensemble (vue audio)**
 
-1. Depuis « Espèces & observations », un clic sur l'espèce ouvre la vue audio sur elle (toutes nuits).
-2. La puce « Lieu » liste communes, carrés et points réellement présents, dans cet ordre ; un carré
-   nommé paraît sous ses deux étiquettes, « 640380 · Vallon », et un carré sans nom sous son numéro
-   seul.
-3. Cocher une commune restreint la table ; la barre de statut suit le sous-ensemble affiché.
+- **S5-01** · Depuis « Espèces & observations », un clic sur l'espèce ouvre la vue audio sur elle (toutes nuits).
+- **S5-02** · La puce « Lieu » liste communes, carrés et points réellement présents, dans cet ordre ; un carré
+  nommé paraît sous ses deux étiquettes, « 640380 · Vallon », et un carré sans nom sous son numéro
+  seul.
+- **S5-03** · Cocher une commune restreint la table ; la barre de statut suit le sous-ensemble affiché.
 
 **Étape 2 · Exporter (menu principal (☰))**
 
-4. L'item « Exporter les observations et les sons (ZIP)… » est actif dès qu'une observation est
-   affichée, et grisé avec explication quand la table est vide.
-5. La première ligne de la fenêtre de progression annonce le contenu (« N observation(s) ·
-   M son(s) · ~X Mo ») **avant** toute copie.
-6. La barre avance fichier par fichier, le nom du son en cours se lit.
-7. Pendant l'export (plusieurs minutes sur une saison), la fenêtre reste vivante et « Annuler »
-   reste cliquable.
-8. Annuler en cours de copie : aucun fichier partiel ne subsiste à la destination.
-9. Relancer et laisser finir : le compte rendu chiffre observations, sons copiés, sons introuvables
-   et taille de l'archive.
+- **S5-04** · L'item « Exporter les observations et les sons (ZIP)… » est actif dès qu'une observation est
+  affichée, et grisé avec explication quand la table est vide.
+- **S5-05** · La première ligne de la fenêtre de progression annonce le contenu (« N observation(s) ·
+  M son(s) · ~X Mo ») **avant** toute copie.
+- **S5-06** · La barre avance fichier par fichier, le nom du son en cours se lit.
+- **S5-07** · Pendant l'export (plusieurs minutes sur une saison), la fenêtre reste vivante et « Annuler »
+  reste cliquable.
+- **S5-08** · Annuler en cours de copie : aucun fichier partiel ne subsiste à la destination.
+- **S5-09** · Relancer et laisser finir : le compte rendu chiffre observations, sons copiés, sons introuvables
+  et taille de l'archive.
 
 **Étape 3 · Ouvrir l'archive hors application**
 
-10. L'archive s'ouvre avec l'outil d'archive du système (double-clic), sans avertissement.
-11. `observations.csv` s'ouvre dans un tableur, accents corrects, colonne « Commune » remplie là où
-    le lot 0 a résolu.
-12. Les sons sont rangés par dossier de nuit ; un WAV pris au hasard s'écoute avec le lecteur du
-    système et correspond à sa ligne CSV (nom de fichier).
-13. Les sons introuvables annoncés sont bien **absents** de `sons/` mais **présents** dans le CSV.
+- **S5-10** · L'archive s'ouvre avec l'outil d'archive du système (double-clic), sans avertissement.
+- **S5-11** · `observations.csv` s'ouvre dans un tableur, accents corrects, colonne « Commune » remplie là où
+  le lot 0 a résolu.
+- **S5-12** · Les sons sont rangés par dossier de nuit ; un WAV pris au hasard s'écoute avec le lecteur du
+  système et correspond à sa ligne CSV (nom de fichier).
+- **S5-13** · Les sons introuvables annoncés sont bien **absents** de `sons/` mais **présents** dans le CSV.
 
 **Étape 4 · Parité CLI**
 
-14. `vigiechiro exporter-sons --espece <code> --sortie <zip>` produit une archive de même structure
-    (mêmes dossiers, même CSV) que le geste IHM sur le même sous-ensemble.
-15. `--passage` + `--espece` simultanés : refus expliqué, code 2, rien d'écrit.
+- **S5-14** · `vigiechiro exporter-sons --espece <code> --sortie <zip>` produit une archive de même structure
+  (mêmes dossiers, même CSV) que le geste IHM sur le même sous-ensemble.
+- **S5-15** · `--passage` + `--espece` simultanés : refus expliqué, code 2, rien d'écrit.
