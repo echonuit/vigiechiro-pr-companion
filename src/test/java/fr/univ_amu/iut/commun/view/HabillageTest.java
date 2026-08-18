@@ -138,6 +138,26 @@ class HabillageTest {
     }
 
     @Test
+    @DisplayName("#3985 : une racine portant design.css seule ne la reçoit pas une seconde fois")
+    void poser_ne_double_pas_une_feuille_deja_posee() {
+        // La forme de `CapturePublicationCorrections`, qui pose `design.css` seule avant de rendre.
+        // La troisième branche de `poser` - ni base, ni palette - ajoutait le trio SANS regarder ce
+        // qui était déjà là, quand les deux autres vérifient depuis #3978.
+        //
+        // ⚠️ `idempotent()` ne l'attrape pas : il rejoue `poser` sur une scène DÉJÀ habillée. Ici le
+        // doublon naît au PREMIER appel.
+        StackPane racine = new StackPane();
+        racine.getStylesheets().add(url(DESIGN));
+
+        Habillage.poser(new Scene(racine));
+
+        assertThat(racine.getStylesheets())
+                .as("le trio, chaque feuille une seule fois, et `design.css` reste après `base.css` - "
+                        + "c'est l'ordre qui décide laquelle reprend l'autre")
+                .containsExactly(url(PALETTE), url(BASE), url(DESIGN));
+    }
+
+    @Test
     @DisplayName("#3374 : poser deux fois n'ajoute rien - les points d'entrée s'appellent en cascade")
     void idempotent() {
         // `ExportGraphe` construit sa scène par `Habillage.scene(...)` puis la confie à `RenduPng`, qui
