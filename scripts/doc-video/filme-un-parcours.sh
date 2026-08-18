@@ -382,6 +382,66 @@ tourner() {
 }
 
 # ---------------------------------------------------------------------------------------------
+# La carte SD du parcours d'importation
+# ---------------------------------------------------------------------------------------------
+
+# La spec de carte que les films d'importation emploient. `sd-nominale` est la carte saine ; les
+# huit autres décrivent des cas dégradés - journal corrompu, carte incohérente, sans journal - qui
+# feront de bons films une fois le parcours nominal en boîte.
+SPEC_CARTE="recette/fixtures/spec/sd-nominale.yaml"
+
+# Matérialise la carte SD, en octets DÉTERMINISTES, par le goal que le dépôt porte déjà.
+#
+# ## Ce que cela remplace
+#
+# La vidéo de #2191 filmait une **vraie** carte, montée par `udisksctl` sous `/media`. C'était le bon
+# choix pour convaincre un relecteur Flathub : la scène montrait le geste réel d'un naturaliste.
+#
+# ⚠️ Pour un banc versionné, c'est l'inverse qu'il faut : une carte qu'on refabrique à l'identique.
+# `GenerateurCartesSD` rend les mêmes octets d'une exécution à l'autre, et le sélecteur du produit
+# est un sélecteur GTK ordinaire - aucun montage en boucle, aucun droit d'administration.
+#
+# ⚠️ J'avais chiffré ce travail à « trois mécanismes neufs » avant de regarder. Le pom porte le goal
+# `generer-sd` depuis longtemps, documenté dans `dev-docs/recette/fixtures.md`. Un coût supposé, et
+# faux d'un ordre de grandeur.
+# Le contrôle, SÉPARÉ de la fabrication pour pouvoir être éprouvé sans lancer Maven.
+#
+# ⚠️ Il porte sur ce qui EXISTE, pas sur le code de retour de Maven : `exec:java` rend zéro sur bien
+# des façons de ne rien produire. Une carte utilisable a un dossier, des bruts, et au moins un WAV -
+# sans quoi le film montrerait une importation qui ne trouve rien, et le fichier serait valide.
+carte_utilisable() { # <dossier de destination>
+    local dest="$1" carte bruts
+    carte=$(find "$dest" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head -1)
+    if [ -z "$carte" ]; then
+        echo "   - aucune carte matérialisée sous $dest" >&2
+        return 1
+    fi
+    if [ ! -d "$carte/bruts" ]; then
+        echo "   - la carte $carte n'a pas de dossier « bruts »" >&2
+        return 1
+    fi
+    bruts=$(find "$carte/bruts" -name '*.wav' 2>/dev/null | wc -l)
+    if [ "$bruts" -eq 0 ]; then
+        echo "   - la carte $carte ne contient aucun brut" >&2
+        return 1
+    fi
+    printf '%s' "$carte"
+    return 0
+}
+
+# Matérialise la carte, puis la soumet au contrôle ci-dessus.
+preparer_la_carte() { # <dossier de destination>
+    local dest="$1" spec="$RACINE/$SPEC_CARTE"
+    if [ ! -f "$spec" ]; then
+        echo "   - spec de carte introuvable : $spec" >&2
+        return 1
+    fi
+    ( cd "$RACINE" && ./mvnw -q test-compile exec:java@generer-sd \
+        -Dexec.args="$SPEC_CARTE $dest" ) >/dev/null 2>&1
+    carte_utilisable "$dest"
+}
+
+# ---------------------------------------------------------------------------------------------
 # Le montage
 # ---------------------------------------------------------------------------------------------
 
@@ -645,6 +705,20 @@ auto_test() {
     essai "l index nomme la fiche d ecran illustree"     vert \
         bash -c 'source "$0"; grep -q "docs/ecrans" "$3"' \
         "${BASH_SOURCE[0]}" "$bac/f-monte.mkv" "$bac/mi.tsv" "$bac/i.md"
+
+    # --- la carte SD ---
+    # ⚠️ On n'appelle pas Maven ici : l'auto-test doit rester en secondes. Ce qu'on éprouve, c'est le
+    # CONTRÔLE - qu'une carte absente, vide ou sans bruts soit refusée, puisque c'est le seul rempart
+    # entre un tournage et un film où l'importation ne trouve rien.
+    mkdir -p "$bac/carte-vide"
+    essai "un dossier sans carte est refusé"             rouge carte_utilisable "$bac/carte-vide"
+    mkdir -p "$bac/carte-sans-bruts/sd-nominale"
+    essai "une carte sans dossier bruts est refusée"     rouge carte_utilisable "$bac/carte-sans-bruts"
+    mkdir -p "$bac/carte-bruts-vides/sd-nominale/bruts"
+    essai "une carte sans aucun brut est refusée"        rouge carte_utilisable "$bac/carte-bruts-vides"
+    # Et le cas VERT, sans quoi les trois refus ci-dessus passeraient sur une fonction qui refuse tout.
+    mkdir -p "$bac/carte-bonne/sd-nominale/bruts" && : > "$bac/carte-bonne/sd-nominale/bruts/a.wav"
+    essai "une carte avec ses bruts est acceptée"        vert  carte_utilisable "$bac/carte-bonne"
 
     # --- les outils ---
     essai "les outils du poste sont là"                  vert  verifier_outils
