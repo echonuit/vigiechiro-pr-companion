@@ -61,12 +61,8 @@ public final class CaptureCompteRenduDepot {
         System.exit(0);
     }
 
-    /// L'identifiant de participation que les trois aperçus partagent : c'est le même dépôt,
-    /// montré à trois moments.
-    private static final String PARTICIPATION = PARTICIPATION;
-
-    /// L'identifiant de participation des trois aperçus : c'est la même nuit qu'on montre
-    /// dans trois états.
+    /// L'identifiant de participation que les trois aperçus partagent : c'est le même dépôt, montré à
+    /// trois moments.
     private static final String PARTICIPATION = "part-1";
 
     /// La raison des deux refus de droits de l'aperçu : deux archives, une seule cause.
