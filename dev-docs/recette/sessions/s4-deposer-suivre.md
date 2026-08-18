@@ -102,6 +102,29 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 26. « ↩ Annuler le dépôt » (M-Passage) : visible sur un passage déposé, avec confirmation.
 27. Passage archivé : les archives survivent-elles à la purge ?
 
+*A5 · Refus définitif et réarmement (#3687, #3688, #3689, #3962)*
+
+> **Fixture.** Lancer le stub avec `VIGIECHIRO_STUB_REFUS=403`, puis l'application avec
+> `VIGIECHIRO_URL` pointée dessus (recette : `dev-docs/recette/fixtures.md`, § « Provoquer un refus de
+> dépôt »). Le stub ne refuse que `/fichiers` et `/multipart` : on peut donc se connecter et atteindre
+> le dépôt normalement, et **c'est le point** - le cas à jouer est ce qui se passe *après* le refus.
+>
+> Numéros pris **au-delà du plus haut existant**, pour la raison dite plus haut.
+
+70. Téléverser avec le stub en 403 : **chaque** archive part en échec, et la table donne la cause de
+    chacune au survol (« HTTP 403 »).
+71. Le bouton de téléversement **cesse de s'appeler « Reprendre le dépôt »** et redevient « Téléverser
+    sur Vigie-Chiro » : il n'y a plus rien à reprendre, et il ne le promet plus.
+72. Le compte rendu s'intitule « **Dépôt incomplet** », et non « Nuit déposée sur Vigie-Chiro ».
+73. Il dit le nombre d'archives refusées, **et** conseille la reconnexion - parce que ce refus-là
+    tient aux droits. *perceptif* : c'est la lisibilité de la phrase qu'on juge, pas sa présence.
+74. Arrêter le refus (`VIGIECHIRO_STUB_REFUS=0`, stub relancé), puis **se reconnecter** dans
+    l'application : les unités refusées redeviennent reprenables, et le bouton se réintitule
+    « Reprendre le dépôt » **sans autre geste**.
+75. Reprendre le dépôt : seules les archives refusées repartent, jamais celles déjà en ligne.
+76. Rejouer 70 à 73 avec `VIGIECHIRO_STUB_REFUS=422` : le compte rendu **ne conseille pas** la
+    reconnexion, parce qu'un contenu refusé ne se répare pas ainsi. Une reconnexion ne réarme rien.
+
 **Bloc B · Dépôt réel (130711, nuit du 05/07, ZIP, calcul lancé)**
 
 28. Réactivation : réimport de la nuit depuis la carte SD → empreinte vérifiée → passage réactivé.
