@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.model.RearmementDepot;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,6 +30,9 @@ public class ConnexionViewModel {
     private final ClientVigieChiro client;
     private final Set<RapprochementVigieChiro> rapprocheurs;
 
+    /// Ce qui rearme un depot refuse quand la connexion revient (#3689) ; inerte sans la feature.
+    private final RearmementDepot rearmement;
+
     /// Résumé humain de la dernière synchronisation (ex. « 385 taxons, 3 sites »), vide si aucune.
     /// Écrit hors du fil JavaFX par [#amorcerRapprochements], lu ensuite par le controller ; `volatile`
     /// pour la visibilité inter-threads.
@@ -39,10 +43,17 @@ public class ConnexionViewModel {
     private final ReadOnlyBooleanWrapper jetonEnregistre = new ReadOnlyBooleanWrapper(this, "jetonEnregistre", false);
 
     public ConnexionViewModel(
-            StockageConnexion stockage, ClientVigieChiro client, Set<RapprochementVigieChiro> rapprocheurs) {
+            StockageConnexion stockage,
+            ClientVigieChiro client,
+            Set<RapprochementVigieChiro> rapprocheurs,
+            Optional<RearmementDepot> rearmementDepot) {
         this.stockage = Objects.requireNonNull(stockage, "stockage");
         this.client = Objects.requireNonNull(client, "client");
         this.rapprocheurs = Set.copyOf(Objects.requireNonNull(rapprocheurs, "rapprocheurs"));
+        // Optional : les injecteurs qui assemblent l application sans la feature `lot` (captures, tests
+        // cibles) n ont rien a rearmer, et ne rien faire y est le comportement juste.
+        this.rearmement =
+                Objects.requireNonNull(rearmementDepot, "rearmementDepot").orElseGet(RearmementDepot::inerte);
     }
 
     /// Recalcule l'état affiché depuis le stockage local (sans réseau). À appeler sur le fil JavaFX.
@@ -92,6 +103,10 @@ public class ConnexionViewModel {
         switch (profil) {
             case ReponseApi.Succes<ProfilVigieChiro>(ProfilVigieChiro identiteVerifiee) -> {
                 stockage.enregistrer(propre, identiteVerifiee);
+                // Un depot refuse pour AUTHENTIFICATION (jeton mort, droits S3) redevient tentable :
+                // la connexion qui vient d aboutir est precisement l evenement qui pouvait lever cette
+                // cause-la (#3689). Un contenu refuse, lui, ne bouge pas.
+                rearmement.reconnexionReussie();
                 amorcerRapprochements(suivi, jeton);
             }
             case ReponseApi.Injoignable<ProfilVigieChiro> injoignable -> {

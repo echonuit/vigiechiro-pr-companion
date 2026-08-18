@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.RearmementDepot;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -129,7 +130,10 @@ public class ConnexionModule extends ModuleDeFeature {
     // Reçoit l'ensemble des rapprocheurs (#728) qu'il déclenche après une connexion réussie.
     @Provides
     ConnexionViewModel fournirViewModel(
-            StockageConnexion stockage, ClientVigieChiro client, Set<RapprochementVigieChiro> rapprocheurs) {
-        return new ConnexionViewModel(stockage, client, rapprocheurs);
+            StockageConnexion stockage,
+            ClientVigieChiro client,
+            Set<RapprochementVigieChiro> rapprocheurs,
+            Optional<RearmementDepot> rearmement) {
+        return new ConnexionViewModel(stockage, client, rapprocheurs, rearmement);
     }
 }

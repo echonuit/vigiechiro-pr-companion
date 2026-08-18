@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.ActionGroupee;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.RearmementDepot;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
@@ -19,6 +20,7 @@ import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.LancementCalculGroupe;
 import fr.univ_amu.iut.lot.model.ModeDepot;
 import fr.univ_amu.iut.lot.model.PreparationGroupee;
+import fr.univ_amu.iut.lot.model.RearmementDepotUnites;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.TeleversementGroupe;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
@@ -76,6 +78,11 @@ public class LotModule extends ModuleDeFeature {
                 .setBinding()
                 .to(Key.get(ActionGroupee.class, Names.named("action.declencherCalcul.impl")));
         OptionalBinder.newOptionalBinder(binder(), OuvrirLot.class).setBinding().to(NavigationLot.class);
+        // Rearmement d un depot refuse (#3689) : la feature qui tient la table pose l implementation du
+        // port declare a vide par CommunModule. Sans elle, la connexion ne rearme rien.
+        OptionalBinder.newOptionalBinder(binder(), RearmementDepot.class)
+                .setBinding()
+                .to(RearmementDepotUnites.class);
         // Dépôt VigieChiro (#142) en liaison **optionnelle** : déclaré ici (défaut absent) pour que les
         // injecteurs partiels de la feature `lot` (notamment `CaptureLot`, sans `ConnexionModule` donc sans
         // client HTTP) résolvent `Optional<DepotVigieChiro>` à vide. La liaison réelle est posée par

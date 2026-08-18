@@ -140,6 +140,7 @@ class FiletAvantMigrationTest {
         executer("DROP TABLE IF EXISTS point_commune"); // V38
         executer("ALTER TABLE depot_unite DROP COLUMN echec_definitif"); // V39
         executer("DROP TABLE IF EXISTS point_publie"); // V40
+        executer("ALTER TABLE depot_unite DROP COLUMN cause_refus"); // V41
     }
 
     /// Noms des fichiers du dossier de sauvegardes, **liste vide** s'il n'existe pas : un dossier
