@@ -22,10 +22,6 @@ import org.testfx.framework.junit5.Start;
 @ExtendWith(ApplicationExtension.class)
 class AttenteAvantClicTest {
 
-    /// La scene montee par ce test, retenue pour que l'assertion LISE sa taille au lieu de la
-    /// recopier - voir [#un_libelle_hors_cadre_est_nomme].
-    private Scene scene;
-
     @Start
     void start(Stage stage) {
         Pane racine = new Pane();
@@ -34,8 +30,7 @@ class AttenteAvantClicTest {
         // le refuse. C'est exactement la forme du défaut observé en CI.
         horsCadre.setLayoutY(2000);
         racine.getChildren().add(horsCadre);
-        scene = new Scene(racine, 400, 300);
-        stage.setScene(scene);
+        stage.setScene(new Scene(racine, 400, 300));
         stage.show();
     }
 
@@ -56,13 +51,21 @@ class AttenteAvantClicTest {
                 .as("le rapport doit distinguer « absent » de « présent mais hors cadre »")
                 .hasMessageContaining("HORS CADRE")
                 .hasMessageContaining("visible=true")
-                // ATTENTION : la taille attendue se LIT sur la scene, elle ne se recopie pas depuis le
-                // `new Scene(racine, 400, 300)` ci-dessus. Les 400 demandes ne sont pas ceux qu'on
-                // obtient partout : sur un runner, la fenetre est rabattue a
-                // `TailleOuverture.LARGEUR_MINIMALE` (900), et ce test rougissait alors sur
-                // « scene 900x300 » la ou il attendait « scene 400x300 » - vert en local, rouge en CI.
+                // ⚠️ Un MOTIF, ni un littéral ni une lecture de la scène.
                 //
-                // Ce qu'il garde n'est pas la largeur de la scene, c'est que le rapport la NOMME.
-                .hasMessageContaining(String.format("scène %.0fx%.0f", scene.getWidth(), scene.getHeight()));
+                // La ligne disait `scène 400x300`, recopié du `new Scene(racine, 400, 300)` ci-dessus.
+                // Les 400 demandés ne sont pas ceux qu'on obtient partout : sur un runner la fenêtre
+                // est rabattue à `TailleOuverture.LARGEUR_MINIMALE` (900), et le test rougissait sur
+                // « scène 900x300 » là où il attendait « scène 400x300 » - vert en local, rouge en CI.
+                //
+                // ⚠️ Interroger la scène sur sa largeur au moment d'asserter aurait déplacé le défaut
+                // sans le
+                // supprimer : cette lecture se fait depuis le fil de TEST, alors qu'AttenteAvantClic
+                // prend soin de lire ses bornes sur le fil JavaFX, « des bornes lues depuis le fil de
+                // test peuvent être en cours de recalcul ».
+                //
+                // Ce que ce test garde n'est ni la largeur de la scène ni sa lecture : c'est que le
+                // rapport la NOMME. Un motif le dit exactement, et ne dépend d'aucun des deux.
+                .hasMessageFindingMatch("scène \\d+x\\d+");
     }
 }
