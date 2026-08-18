@@ -48,7 +48,11 @@ COMMANDES_OPTIONS_REQUISES=(
     n=$((n + 1))
   done
   echo "commandes à options requises vérifiées : ${n}"
-  [ "${n}" -ge 20 ]
+  # Verrouillé, comme COMMANDES_LOCALES_SANS_ARG juste en dessous. Un plancher à « -ge 20 » sur une
+  # liste de 41 tolérait d'en voir disparaître vingt sans rougir : ce n'était pas un inventaire, c'était
+  # un minimum. Ajouter une commande à la liste, c'est ajuster ce chiffre - le geste est le prix de
+  # l'inventaire (#3960).
+  [ "${n}" -eq 41 ]
 }
 
 # Commandes LOCALES sans option requise : s'exécutent telles quelles sur la base fraîche (migrée au

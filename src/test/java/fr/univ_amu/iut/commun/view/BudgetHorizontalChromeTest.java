@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.commun.view;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.within;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
@@ -15,6 +17,7 @@ import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.diagnostic.view.NavigationDiagnostic;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.DoubleConsumer;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -46,8 +49,12 @@ import org.testfx.framework.junit5.Start;
 @ExtendWith(ApplicationExtension.class)
 class BudgetHorizontalChromeTest {
 
-    /// Largeur d'ouverture (`TailleOuverture.LARGEUR_VOULUE`), puis largeur minimale imposée.
-    private static final double LARGEUR = Double.parseDouble(System.getProperty("chrome.largeur", "1100"));
+    /// Les **deux** largeurs livrées : celle d'ouverture, et la minimale imposée par `TailleOuverture`.
+    ///
+    /// ⚠️ Le nom de ce test annonçait « à 1100 comme à 900 » depuis #3760, et c'était **faux** : la
+    /// largeur venait d'un `System.getProperty("chrome.largeur", "1100")` que **rien** ne posait. Le
+    /// garde ne s'est jamais exécuté à 900, c'est-à-dire jamais au cas qu'il nomme (#3960).
+    private static final double[] LARGEURS_LIVREES = {TailleOuverture.LARGEUR_VOULUE, TailleOuverture.LARGEUR_MINIMALE};
 
     /// L'état vivant le plus long que la barre de statut sache produire : l'espace disque insuffisant,
     /// dans sa forme courte (#3743).
@@ -60,6 +67,7 @@ class BudgetHorizontalChromeTest {
     private static final String DROITE_LA_PLUS_LONGUE = "Espace insuffisant : 9,0 Go requis, 5,0 Go libres";
 
     private Scene scene;
+    private Stage fenetre;
     private Injector injector;
     private NavigationViewModel navigation;
 
@@ -73,7 +81,8 @@ class BudgetHorizontalChromeTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        scene = new Scene(racine, LARGEUR, 720);
+        scene = new Scene(racine, LARGEURS_LIVREES[0], 720);
+        fenetre = stage;
         stage.setScene(scene);
         stage.show();
     }
@@ -90,12 +99,11 @@ class BudgetHorizontalChromeTest {
         // Le passage n'existe pas : l'écran rend son bandeau d'erreur, et le fil est celui qu'on veut.
         robot.interact(() -> injector.getInstance(NavigationDiagnostic.class)
                 .ouvrir(new ContextePassage(999_999L, 1, new ContexteSite("640380", "A1", null))));
-        robot.interact(() -> scene.getRoot().applyCss());
-        robot.interact(() -> scene.getRoot().layout());
-
-        assertThatCode(() -> LisibiliteCapture.refuserToutTexteIllisible(scene))
-                .as("largeur %s : un libellé de la barre du haut est élidé sans l'avoir déclaré", LARGEUR)
-                .doesNotThrowAnyException();
+        aChaqueLargeurLivree(
+                robot,
+                largeur -> assertThatCode(() -> LisibiliteCapture.refuserToutTexteIllisible(scene))
+                        .as("largeur %s : un libellé de la barre du haut est élidé sans l'avoir déclaré", largeur)
+                        .doesNotThrowAnyException());
     }
 
     @Test
@@ -106,11 +114,28 @@ class BudgetHorizontalChromeTest {
         // libre pour y placer le pire cas que le produit sache produire.
         robot.interact(() -> navigation.setZonesStatut(new ZonesStatut(
                 "Carré 640380 · A1 · N° 2", "Prêt à déposer · 2 séquences · 8 Ko", DROITE_LA_PLUS_LONGUE)));
-        robot.interact(() -> scene.getRoot().applyCss());
-        robot.interact(() -> scene.getRoot().layout());
+        aChaqueLargeurLivree(
+                robot,
+                largeur -> assertThatCode(() -> LisibiliteCapture.refuserToutTexteIllisible(scene))
+                        .as("largeur %s : une zone du pied est élidée sans l'avoir déclaré", largeur)
+                        .doesNotThrowAnyException());
+    }
 
-        assertThatCode(() -> LisibiliteCapture.refuserToutTexteIllisible(scene))
-                .as("largeur %s : une zone du pied est élidée sans l'avoir déclaré", LARGEUR)
-                .doesNotThrowAnyException();
+    /// Rejoue `verification` **à chaque largeur livrée**, en vérifiant d'abord que la scène l'a
+    /// atteinte : une fenêtre rabattue rendrait la boucle muette sur le cas qu'elle vise.
+    private void aChaqueLargeurLivree(FxRobot robot, DoubleConsumer verification) {
+        for (double largeur : LARGEURS_LIVREES) {
+            robot.interact(() -> fenetre.setWidth(largeur));
+            robot.interact(() -> {
+                scene.getRoot().applyCss();
+                scene.getRoot().layout();
+            });
+
+            assertThat(scene.getWidth())
+                    .as("la scène n'a pas atteint %s : la boucle serait muette sur cette largeur", largeur)
+                    .isEqualTo(largeur, within(1.0));
+
+            verification.accept(largeur);
+        }
     }
 }

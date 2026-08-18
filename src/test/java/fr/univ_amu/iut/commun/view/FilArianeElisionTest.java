@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
@@ -14,6 +15,7 @@ import fr.univ_amu.iut.diagnostic.view.NavigationDiagnostic;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.DoubleConsumer;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -48,15 +50,23 @@ import org.testfx.framework.junit5.Start;
 @ExtendWith(ApplicationExtension.class)
 class FilArianeElisionTest {
 
-    /// Largeur d'ouverture par défaut ; la CI rejoue le même fichier à 900, la largeur minimale imposée
-    /// par `TailleOuverture`, comme pour `BudgetHorizontalChromeTest`.
-    private static final double LARGEUR = Double.parseDouble(System.getProperty("chrome.largeur", "1100"));
+    /// Les **deux** largeurs que le produit livre, éprouvées par chaque test de ce fichier.
+    ///
+    /// ⚠️ Elles y étaient déjà annoncées - « la CI rejoue le même fichier à 900 » - et c'était **faux** :
+    /// la largeur venait d'un `System.getProperty("chrome.largeur", "1100")` que **rien** ne posait, ni
+    /// le `pom.xml`, ni un atelier, ni un script. Les deux gardes de largeur ne tournaient donc jamais
+    /// qu'à 1100, c'est-à-dire jamais à la largeur où l'élision sert (#3960).
+    ///
+    /// Une boucle plutôt qu'une seconde exécution en intégration : un garde qui ne rougit qu'en CI ne
+    /// protège pas celui qui écrit le code.
+    private static final double[] LARGEURS_LIVREES = {TailleOuverture.LARGEUR_VOULUE, TailleOuverture.LARGEUR_MINIMALE};
 
     /// L'écran le plus profond du produit : `Accueil › Mes sites › Carré 640380 › Détails du passage
     /// N° 1 › Diagnostic matériel`.
     private static final int SEGMENTS = 5;
 
     private Scene scene;
+    private Stage fenetre;
     private Injector injector;
 
     @Start
@@ -71,7 +81,8 @@ class FilArianeElisionTest {
         // `Habillage` et non `new Scene` : ce fichier **mesure** des largeurs, donc son verdict dépend de
         // la police effectivement rendue (#3773). Recopier le banc voisin m'a fait hériter de sa dette :
         // lui ne mesure pas lui-même, il délègue à `LisibiliteCapture`, et le garde ne le vise pas.
-        scene = Habillage.scene(racine, LARGEUR, 720);
+        scene = Habillage.scene(racine, LARGEURS_LIVREES[0], 720);
+        fenetre = stage;
         stage.setScene(scene);
         stage.show();
     }
@@ -86,19 +97,22 @@ class FilArianeElisionTest {
     void aucun_segment_rendu_n_est_coupe(FxRobot robot) {
         ouvrirLEcranLePlusProfond(robot);
 
-        List<Labeled> rendus = segmentsRendus();
+        aChaqueLargeurLivree(robot, largeur -> {
+            List<Labeled> rendus = segmentsRendus();
 
-        // Non-vacuité : un fil vide passerait au vert sans rien prouver.
-        assertThat(rendus)
-                .as("le fil ne rend AUCUN segment : c'est le dispositif qui est cassé, pas le produit")
-                .isNotEmpty();
+            // Non-vacuité : un fil vide passerait au vert sans rien prouver.
+            assertThat(rendus)
+                    .as("largeur %s : le fil ne rend AUCUN segment, c'est le dispositif qui est cassé", largeur)
+                    .isNotEmpty();
 
-        assertThat(rendus)
-                .allSatisfy(segment -> assertThat(segment.getWidth())
-                        .as(
-                                "« %s » est coupé : le fil doit élider des segments, pas rogner des libellés",
-                                segment.getText())
-                        .isGreaterThanOrEqualTo(Math.floor(segment.prefWidth(-1))));
+            assertThat(rendus)
+                    .allSatisfy(segment -> assertThat(segment.getWidth())
+                            .as(
+                                    "largeur %s : « %s » est coupé, le fil doit élider des segments et non"
+                                            + " rogner des libellés",
+                                    largeur, segment.getText())
+                            .isGreaterThanOrEqualTo(Math.floor(segment.prefWidth(-1))));
+        });
     }
 
     @Test
@@ -106,13 +120,15 @@ class FilArianeElisionTest {
     void le_fil_ne_s_exempte_plus(FxRobot robot) {
         ouvrirLEcranLePlusProfond(robot);
 
-        assertThat(segmentsRendus())
-                .allSatisfy(segment -> assertThat(segment.getStyleClass())
-                        .as(
-                                "« %s » porte encore `abregeable` : le fil s'exempte du juge qui refuse"
-                                        + " d'écrire un aperçu tronqué, alors qu'il n'en a plus besoin (#3798)",
-                                segment.getText())
-                        .doesNotContain(LisibiliteCapture.ABREGEABLE));
+        aChaqueLargeurLivree(
+                robot,
+                largeur -> assertThat(segmentsRendus())
+                        .allSatisfy(segment -> assertThat(segment.getStyleClass())
+                                .as(
+                                        "largeur %s : « %s » porte encore `abregeable`, le fil s'exempte du juge qui"
+                                                + " refuse d'écrire un aperçu tronqué alors qu'il n'en a plus besoin",
+                                        largeur, segment.getText())
+                                .doesNotContain(LisibiliteCapture.ABREGEABLE)));
     }
 
     @Test
@@ -120,24 +136,49 @@ class FilArianeElisionTest {
     void aucun_segment_elide_n_est_perdu(FxRobot robot) {
         ouvrirLEcranLePlusProfond(robot);
 
-        List<Labeled> rendus = segmentsRendus();
-        MenuButton elision = menuDElision();
-        int visibles = elision == null ? rendus.size() : rendus.size() - 1;
-        int caches = elision == null ? 0 : elision.getItems().size();
+        aChaqueLargeurLivree(robot, largeur -> {
+            List<Labeled> rendus = segmentsRendus();
+            MenuButton elision = menuDElision();
+            int visibles = elision == null ? rendus.size() : rendus.size() - 1;
+            int caches = elision == null ? 0 : elision.getItems().size();
 
-        assertThat(visibles + caches)
-                .as(
-                        "largeur %s : %d segments rendus et %d dans le menu, il en manque au fil",
-                        LARGEUR, visibles, caches)
-                .isEqualTo(SEGMENTS);
+            assertThat(visibles + caches)
+                    .as(
+                            "largeur %s : %d segments rendus et %d dans le menu, il en manque au fil",
+                            largeur, visibles, caches)
+                    .isEqualTo(SEGMENTS);
 
-        if (elision != null) {
-            assertThat(elision.getItems())
-                    .allSatisfy(entree -> assertThat(entree.getOnAction())
-                            .as(
-                                    "« %s » est dans le menu sans action : l'ancêtre a disparu sans recours",
-                                    entree.getText())
-                            .isNotNull());
+            if (elision != null) {
+                assertThat(elision.getItems())
+                        .allSatisfy(entree -> assertThat(entree.getOnAction())
+                                .as(
+                                        "largeur %s : « %s » est dans le menu sans action, l'ancêtre a disparu"
+                                                + " sans recours",
+                                        largeur, entree.getText())
+                                .isNotNull());
+            }
+        });
+    }
+
+    /// Rejoue `verification` **à chaque largeur livrée**, et vérifie d'abord que la scène l'a
+    /// réellement atteinte.
+    ///
+    /// ⚠️ Ce contrôle-là n'est pas décoratif. Une fenêtre rabattue par la plateforme rendrait la boucle
+    /// muette sur le cas même qu'elle vise, et le garde annoncerait deux largeurs en n'en éprouvant
+    /// qu'une - exactement le défaut que #3960 vient de corriger.
+    private void aChaqueLargeurLivree(FxRobot robot, DoubleConsumer verification) {
+        for (double largeur : LARGEURS_LIVREES) {
+            robot.interact(() -> fenetre.setWidth(largeur));
+            robot.interact(() -> {
+                scene.getRoot().applyCss();
+                scene.getRoot().layout();
+            });
+
+            assertThat(scene.getWidth())
+                    .as("la scène n'a pas atteint %s : la boucle serait muette sur cette largeur", largeur)
+                    .isEqualTo(largeur, within(1.0));
+
+            verification.accept(largeur);
         }
     }
 
