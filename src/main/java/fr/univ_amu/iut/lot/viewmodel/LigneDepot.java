@@ -15,6 +15,10 @@ public final class LigneDepot extends LigneSuivi {
     private final String identifiant;
     private final TypeDepotUnite type;
 
+    /// Vrai quand l'échec de cette unité ne se retente pas (#3687). Simple champ et non propriété
+    /// observable : rien ne le lit en direct, il est agrégé au recalcul comme les autres états.
+    private boolean definitif;
+
     LigneDepot(int numero, String identifiant, TypeDepotUnite type) {
         super(numero);
         this.identifiant = identifiant;
@@ -26,6 +30,21 @@ public final class LigneDepot extends LigneSuivi {
     /// l'envoi reprend ou que l'unité se conclut (cf. [LigneSuivi]).
     public void reprise(Duration delai) {
         signalerReprise("Nouvelle tentative dans " + delai.toSeconds() + " s…");
+    }
+
+    /// Marque l'échec comme **définitif** (#3687) : le serveur a refusé pour une raison qu'un nouvel
+    /// essai ne changera pas (URL signée expirée, jeton mort, corps refusé).
+    ///
+    /// La distinction ne se devine pas du texte de la raison - la même panne s'y écrit de trop de
+    /// façons - mais vient de `ReponseApi.estReessayable()`, décidé à l'émission et transporté jusqu'ici.
+    public void echouerDefinitivement(String raison) {
+        echouer(raison);
+        definitif = true;
+    }
+
+    /// `true` si un nouvel essai est **inutile** : cette unité ne doit pas être reproposée à la reprise.
+    public boolean echecDefinitif() {
+        return definitif;
     }
 
     /// Nom du fichier téléversé (unique par passage, clé de ciblage des événements de dépôt).
