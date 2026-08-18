@@ -156,6 +156,11 @@ class CompteRenduChiffreDepotTest {
         assertThat(textes(traduire(contenu, plan(10, 9, false))))
                 .as("un contenu refusé : se reconnecter n'y changerait rien, on ne le conseille pas")
                 .noneMatch(texte -> texte.contains("Reconnectez-vous"));
+        // ⚠️ Mais on ne se tait pas pour autant. La mesure de #3946 établit que régénérer puis relancer
+        // fait bien repartir l'unité : le geste est vérifié, donc il se nomme (ADR 3854). Dire ce qui
+        // ne marche pas sans dire ce qui marche laisse l'utilisateur devant un mur.
+        assertThat(textes(traduire(contenu, plan(10, 9, false))))
+                .anyMatch(texte -> texte.contains("Régénérez les archives de la nuit"));
     }
 
     @Test

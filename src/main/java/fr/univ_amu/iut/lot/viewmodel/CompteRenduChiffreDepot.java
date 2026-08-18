@@ -158,7 +158,12 @@ public final class CompteRenduChiffreDepot {
         long parDroits =
                 refuses.stream().filter(EchecUnite::seRearmeParUneReconnexion).count();
         if (parDroits == 0) {
-            return debut + " Le détail par archive est dans la table.";
+            // ⚠️ Le geste est nommé parce qu'il est VÉRIFIÉ (#3946) : régénérer produit des archives de
+            // mêmes identifiants, la synchronisation du plan conserve les lignes, et le téléversement
+            // suivant les retente - `restantes()` rend « tout sauf déposé », et le moteur n'écarte
+            // jamais une unité sur son drapeau `definitif`. Ce que #3687 a retiré, c'est la PROMESSE
+            // d'une reprise, pas la POSSIBILITÉ d'un nouvel essai.
+            return debut + " Régénérez les archives de la nuit, puis relancez le téléversement.";
         }
         if (parDroits == refuses.size()) {
             return debut + " Reconnectez-vous : elles redeviendront reprenables.";

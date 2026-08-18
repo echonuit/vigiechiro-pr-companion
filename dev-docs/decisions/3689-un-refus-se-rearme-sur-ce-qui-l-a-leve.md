@@ -37,7 +37,8 @@ Ce qui suppose de connaître la cause, et ces refus ne sont pas de même nature 
 
 - **401 / 403** - authentification, droits S3, URL signée expirée. Une **reconnexion réussie** peut les
   lever ;
-- **400 / 422** et autres 4xx - le contenu lui-même est refusé. Aucun événement extérieur ne le répare.
+- **400 / 422** et autres 4xx - le contenu lui-même est refusé. **Aucun événement extérieur** ne le
+  répare : il faut que le contenu change (voir l'amendement #3946 en fin de page).
 
 Le bouton ne réapparaît donc que quand **quelque chose a réellement changé**.
 
@@ -71,3 +72,29 @@ encore vrai. La prochaine tentative l'écrasera.
 geste qui le lèverait est la **régénération de l'archive**, et il n'est pas câblé ici - une issue de
 suite le fera si le besoin se présente. Réarmer sur autre chose ramènerait le bouton que #3687 vient
 de faire taire.
+
+## Amendement (#3946) : « pas de réarmement » ne veut pas dire « coincé »
+
+L'issue de suite annoncée ci-dessus a été ouverte, puis **fermée sans code** : sa prémisse était
+fausse, et cette page y avait contribué.
+
+« Aucun événement extérieur ne le répare » vaut pour le **drapeau** `echec_definitif`, qu'aucun
+mécanisme ne remet à zéro. Il ne vaut **pas** pour l'unité, qui repart au dépôt suivant :
+
+- `restantes()` rend `WHERE statut != DEPOSE` : les refus définitifs en font partie ;
+- `DepotVigieChiro.deposer` les soumet **tous**, sans jamais consulter `definitif` - il ne fait que
+  l'enregistrer ;
+- `synchroniserPlan` **conserve** une ligne dont l'identifiant subsiste, et régénérer produit les
+  mêmes identifiants depuis la même liste source, donc la même empreinte : `exigerLotInchange` ne
+  refuse pas.
+
+Mesuré par `DepotVigieChiroTest#un_refus_definitif_repart_au_depot_suivant` : un 422, puis une archive
+régénérée que la plateforme accepte, et l'unité passe DÉPOSÉ au second dépôt.
+
+⚠️ **Ce que #3687 a retiré, c'est la PROMESSE d'une reprise, pas la POSSIBILITÉ d'un nouvel essai.**
+Confondre les deux a produit une issue, un avertissement faux dans la documentation utilisateur, et
+une assertion de test qui verrouillait la confusion - tous trois corrigés par #3946.
+
+**Conséquence sur ce que le produit dit** : le geste étant vérifié, il se nomme (ADR 3854). Le compte
+rendu et la CLI conseillent désormais « régénérez les archives, puis relancez le téléversement » au
+lieu de se taire.
