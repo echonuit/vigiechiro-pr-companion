@@ -1,4 +1,4 @@
-package fr.univ_amu.iut.commun.view;
+package fr.univ_amu.iut.commun.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -67,7 +67,7 @@ class CauseLisibleTest {
         // première rédaction disait « ☰ → Journaux » ; l'entrée s'appelle « Ouvrir le dossier des
         // journaux ». Un message qui envoie chercher une ligne inexistante est le défaut que
         // l'ADR 3854 ferme, et ce test l'empêche de revenir par recopie.
-        assertThat(message).contains(ActionOuvrirJournaux.LIBELLE);
+        assertThat(message).contains(CauseLisible.LIBELLE_ENTREE_JOURNAUX);
     }
 
     @Test

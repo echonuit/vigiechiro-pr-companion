@@ -17,6 +17,35 @@ import org.junit.jupiter.api.Test;
 class VerdictCliTest {
 
     @Test
+    @DisplayName("#3947 : un incident emballé montre la panne, pas le nom de son enveloppe")
+    void un_incident_emballe_montre_la_panne() {
+        // `RuntimeException(Throwable)` pose comme message le `toString()` de sa cause : la chaîne
+        // n'est pas vide, elle est exacte et sans valeur. C'est le défaut de l'ADR 3470, resté entier
+        // sur le filet global de la ligne de commande.
+        RuntimeException enveloppe =
+                new RuntimeException(new IllegalStateException("Le dossier de travail est verrouillé"));
+
+        VerdictCli verdict = VerdictCli.de(enveloppe);
+
+        assertThat(verdict.phrase())
+                .as("l'utilisateur doit lire la panne, jamais le nom du mécanisme qui l'a transportée")
+                .contains("Le dossier de travail est verrouillé")
+                .doesNotContain("java.lang.IllegalStateException");
+    }
+
+    @Test
+    @DisplayName("#3947 : un incident entièrement muet nomme son type court et renvoie au journal")
+    void un_incident_muet_renvoie_au_journal() {
+        VerdictCli verdict = VerdictCli.de(new IllegalStateException());
+
+        assertThat(verdict.phrase())
+                .as("« null » ne se cherche même pas ; un type court, si")
+                .contains("IllegalStateException")
+                .doesNotContain("java.lang.")
+                .doesNotContain("null");
+    }
+
+    @Test
     @DisplayName("un refus avant écriture vaut 2, même s'il hérite de l'échec d'accès aux données")
     void refus_avant_ecriture_vaut_deux() {
         VerdictCli verdict = VerdictCli.de(new RefusAvantEcriture("Ce dossier de travail est déjà utilisé", null));
