@@ -33,7 +33,11 @@ import java.util.Locale;
 /// - **noms de fichiers** (`yyyyMMdd_HHmmss`, `yyyyMMdd-HHmmss`) : ils doivent rester **stables** et
 ///   trier lexicalement. Leur donner une locale française casserait le tri ;
 /// - **lecture de fichiers tiers** (ThLog en `Locale.ROOT`) : ils doivent rester fidèles au
-///   **producteur**, pas à nous. Les changer casserait l'import.
+///   **producteur**, pas à nous. Les changer casserait l'import ;
+/// - **sorties `--json` de la ligne de commande** (#3990) : ce sont des **contrats de script**, et
+///   l'ISO y est la forme attendue. La même commande écrit donc sa date **deux fois différemment** -
+///   en français dans son texte, en ISO dans son JSON - parce que les deux sorties n'ont pas le même
+///   lecteur. Ce n'est pas une incohérence, c'est la distinction qu'il faut tenir.
 ///
 /// Les rapatrier ici serait un défaut, pas un remède.
 public final class Horodatage {
