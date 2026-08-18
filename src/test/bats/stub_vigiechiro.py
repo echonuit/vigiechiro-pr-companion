@@ -20,6 +20,7 @@ Usage : stub_vigiechiro.py <portfile> <journal> [total-sites]
 """
 
 import json
+import os
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
@@ -78,10 +79,40 @@ def page_de_sites(requete):
     ).encode()
 
 
+# Statut de refus a servir sur les routes de DEPOT, ou 0 pour ne rien refuser.
+#
+# Le depot est le seul endroit du produit ou un refus est DEFINITIF - l archive ne repartira pas telle
+# quelle - et c est ce comportement que la recette doit pouvoir jouer a la main (#3983). Sans ce
+# levier, une case « le bouton cesse de proposer la reprise » ne serait pas rejouable, donc pas
+# terminee au sens de #3510.
+#
+# 403 : droits refuses, reparable par une reconnexion. 422 : contenu refuse, que rien ne repare.
+REFUS_DEPOT = int(os.environ.get("VIGIECHIRO_STUB_REFUS", "0"))
+
+# Les routes par lesquelles une archive part. Refuser ailleurs empecherait d ARRIVER au depot.
+ROUTES_DE_DEPOT = ("/fichiers", "/multipart")
+
+
+def refus_attendu(chemin):
+    """Le statut a servir sur ce chemin, ou 0 pour servir normalement."""
+    if REFUS_DEPOT == 0:
+        return 0
+    return REFUS_DEPOT if any(chemin.endswith(route) for route in ROUTES_DE_DEPOT) else 0
+
+
 class Stub(BaseHTTPRequestHandler):
     def _servir(self):
         with open(JOURNAL, "a", encoding="utf-8") as f:
             f.write(f"{self.command} {self.path}\n")
+        statut = refus_attendu(urlparse(self.path).path)
+        if statut:
+            corps = json.dumps({"_status": "ERR", "_error": {"code": statut}}).encode()
+            self.send_response(statut)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(corps)))
+            self.end_headers()
+            self.wfile.write(corps)
+            return
         corps = page_de_sites(self.path) if urlparse(self.path).path.endswith("/sites") else VIDE
         self.send_response(200)
         self.send_header("Content-Type", "application/json")

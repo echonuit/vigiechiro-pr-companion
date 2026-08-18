@@ -134,6 +134,37 @@ Ces tests deviennent rouges si le générateur cesse de produire la bonne carte 
 d'import change de comportement (`AnalyseMelange`, `AnalyseCoherence`, `PartitionNuits`,
 `AnalyseurLogPR`, `ServiceImport`, `ExtracteurZip`).
 
+## Provoquer un refus de dépôt
+
+Les cartes SD ci-dessus fournissent des **données** ; elles ne permettent pas de faire **refuser** un
+dépôt par la plateforme. Or c'est le seul endroit du produit où un refus est **définitif** : l'archive
+ne repartira pas telle quelle, la reprise cesse d'être offerte, et une reconnexion réarme les refus de
+droits mais jamais un contenu refusé (#3687, #3689). Sans levier, ces cases ne seraient pas rejouables.
+
+Le stub réseau des E2E CLI sert aussi l'application : `ConnexionModule#urlDeBase` est le **seul**
+endroit qui décide l'URL du client, et ce client est le singleton partagé par toutes les features.
+Pointer `VIGIECHIRO_URL` sur le stub suffit donc à détourner l'IHM.
+
+```bash
+# 1. Le stub, avec le statut qu'on veut voir servir sur les routes de dépôt.
+VIGIECHIRO_STUB_REFUS=403 python3 src/test/bats/stub_vigiechiro.py /tmp/port /tmp/journal 5 &
+
+# 2. L'application, pointée dessus.
+VIGIECHIRO_URL="http://127.0.0.1:$(cat /tmp/port)" ./mvnw javafx:run
+```
+
+| Statut | Ce qu'il fait jouer |
+|---|---|
+| `403` (ou `401`) | un refus de **droits** : réparable par une reconnexion, les unités se réarment |
+| `422` (ou `400`) | un **contenu** refusé : rien ne le répare, et le message ne conseille pas la reconnexion |
+| `0` ou absent | aucun refus, comportement nominal |
+
+⚠️ **Le refus ne porte que sur `/fichiers` et `/multipart`**, et c'est délibéré : refuser partout
+empêcherait de se connecter, donc d'**atteindre** le dépôt. Le cas à jouer est ce qui se passe *après*
+le refus, pas le refus lui-même.
+
+Les cas correspondants sont le bloc **A5** de la [session S4](sessions/s4-deposer-suivre.md).
+
 ## Où ça vit
 
 - `recette/fixtures/spec/*.yaml` : les specs (source de vérité, versionnées).
