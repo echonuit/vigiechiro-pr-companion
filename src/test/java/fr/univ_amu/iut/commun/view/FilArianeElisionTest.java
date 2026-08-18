@@ -180,6 +180,16 @@ class FilArianeElisionTest {
 
             verification.accept(largeur);
         }
+
+        // ⚠️ On REND la fenêtre telle qu'on l'a trouvée. TestFX réutilise la **fenêtre primaire** dans un
+        // fork unique : une largeur laissée à 900 rétrécit toutes les classes qui suivent, et le défaut
+        // ne se voit que dans l'ordre où elles passent après celle-ci. C'est ce que le job
+        // `ordre-alternatif` a attrapé - fork unique, ordre inverse - et il avait raison (#3960).
+        robot.interact(() -> fenetre.setWidth(LARGEURS_LIVREES[0]));
+        robot.interact(() -> {
+            scene.getRoot().applyCss();
+            scene.getRoot().layout();
+        });
     }
 
     private void ouvrirLEcranLePlusProfond(FxRobot robot) {
