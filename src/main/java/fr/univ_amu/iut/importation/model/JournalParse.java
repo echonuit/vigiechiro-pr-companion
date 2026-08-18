@@ -86,11 +86,6 @@ public record JournalParse(
         return !anomalies.isEmpty();
     }
 
-    /// Messages des évènements, sans horodatage (affichage, résultat d'import).
-    public List<String> messagesEvenements() {
-        return messages(evenements);
-    }
-
     /// Messages des anomalies, sans horodatage.
     public List<String> messagesAnomalies() {
         return messages(anomalies);
@@ -105,16 +100,6 @@ public record JournalParse(
         champs.put("sensibilite", sensibilite);
         champs.put("brut", parametresBruts);
         return JsonSimple.objet(champs);
-    }
-
-    /// Évènements sérialisés en tableau JSON (colonne `sensor_log.parsed_events`), toutes nuits.
-    public String evenementsJson() {
-        return JsonSimple.tableau(messagesEvenements());
-    }
-
-    /// Anomalies sérialisées en tableau JSON (colonne `sensor_log.detected_anomalies`), toutes nuits.
-    public String anomaliesJson() {
-        return JsonSimple.tableau(messagesAnomalies());
     }
 
     /// Évènements de la **seule nuit** `nuit` (#1696), en tableau JSON : une entrée horodatée est rangée
