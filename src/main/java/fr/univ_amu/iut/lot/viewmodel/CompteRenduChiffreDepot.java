@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Teinte;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Ventilation;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.BilanDepot;
+import fr.univ_amu.iut.lot.model.EchecUnite;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -115,16 +116,36 @@ public final class CompteRenduChiffreDepot {
         }
     }
 
-    /// Les échecs, **groupés par cause** quand le moteur en donne une.
+    /// Les échecs, **séparés selon qu'ils repartiront ou non**.
     ///
-    /// `BilanDepot.echecs` ne porte que des **identifiants d'unité** (« Car-3.zip »), pas leur raison :
-    /// celle-ci vit dans la table de suivi, ligne par ligne. Un seul motif les rassemble donc, et il
-    /// renvoie là où la cause se lit - le partage assumé entre la bande et la table.
+    /// Depuis #3962, `BilanDepot.echecs` porte `definitif` : les deux familles ne se lisent plus de la
+    /// même façon, et les mélanger sous un seul motif reviendrait à taire la seule chose qui change ce
+    /// que l'utilisateur peut faire. La **raison** de chaque unité reste dans la table, ligne par ligne.
     private static List<Motif> motifs(BilanDepot bilan) {
-        if (bilan.echecs().isEmpty()) {
-            return List.of();
+        List<Motif> motifs = new ArrayList<>();
+        ajouterMotif(motifs, "archive(s) en échec, cause détaillée dans la table", bilan.reprenables());
+        ajouterMotif(motifs, "archive(s) refusée(s) par Vigie-Chiro", bilan.refusesDefinitivement());
+        return List.copyOf(motifs);
+    }
+
+    private static void ajouterMotif(List<Motif> motifs, String libelle, List<EchecUnite> unites) {
+        if (!unites.isEmpty()) {
+            motifs.add(new Motif(
+                    libelle, unites.stream().map(EchecUnite::identifiantUnite).toList()));
         }
-        return List.of(new Motif("archive(s) en échec, cause détaillée dans la table", bilan.echecs()));
+    }
+
+    /// Ce qu'on dit d'un refus définitif, **et le geste qu'on nomme seulement s'il s'applique**.
+    ///
+    /// Une reconnexion répare des droits (401 / 403) ; elle ne répare pas un contenu refusé (400 / 422).
+    /// Nommer « reconnectez-vous » devant un contenu refusé serait conseiller à côté de la cause -
+    /// exactement le défaut que l'ADR 3854 a fermé ailleurs, et que #3689 a écarté côté réarmement.
+    private static String phraseDesRefus(List<EchecUnite> refuses) {
+        String debut = refuses.size() + " archive(s) ont été refusées par Vigie-Chiro : les renvoyer telles"
+                + " quelles serait refusé de même.";
+        return refuses.stream().allMatch(EchecUnite::seRearmeParUneReconnexion)
+                ? debut + " Reconnectez-vous : elles redeviendront reprenables."
+                : debut + " Le détail par archive est dans la table.";
     }
 
     /// Ce que la ventilation ne porte pas : **quoi faire** de ce qui manque, et ce que la reprise promet.
@@ -147,8 +168,19 @@ public final class CompteRenduChiffreDepot {
             avertissements.add(Avertissement.de("Vous avez arrêté le dépôt. « Reprendre le dépôt » ne renverra"
                     + " que les " + Math.max(0, total - plan.enLigne()) + " archive(s) manquante(s)."));
         } else if (!bilan.echecs().isEmpty()) {
-            avertissements.add(Avertissement.de(bilan.echecs().size()
-                    + " archive(s) ne sont pas en ligne : « Reprendre le dépôt » ne renverra que celles-là."));
+            // ⚠️ Deux phrases et non une. Annoncer « « Reprendre le dépôt » ne renverra que celles-là »
+            // sur un refus définitif nommait un geste que le produit ne propose plus : dans cet état, le
+            // bouton s'intitule « Téléverser sur Vigie-Chiro » (#3687). Le compte rendu citait donc un
+            // bouton absent de l'écran, ce que l'ADR 3854 proscrit (#3962).
+            List<EchecUnite> reprenables = bilan.reprenables();
+            if (!reprenables.isEmpty()) {
+                avertissements.add(Avertissement.de(reprenables.size()
+                        + " archive(s) ne sont pas en ligne : « Reprendre le dépôt » ne renverra que celles-là."));
+            }
+            List<EchecUnite> refuses = bilan.refusesDefinitivement();
+            if (!refuses.isEmpty()) {
+                avertissements.add(Avertissement.de(phraseDesRefus(refuses)));
+            }
         }
         if (plan.enLigne() == total && total > 0) {
             avertissements.add(Avertissement.succes(

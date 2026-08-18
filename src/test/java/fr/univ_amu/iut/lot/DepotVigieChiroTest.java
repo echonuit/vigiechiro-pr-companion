@@ -31,8 +31,10 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.lot.model.BilanDepot;
+import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.EchecUnite;
 import fr.univ_amu.iut.lot.model.EmpreinteLot;
 import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
@@ -185,7 +187,7 @@ class DepotVigieChiroTest {
 
         BilanDepot bilan = depot.deposer(idPassage, List.of(a, fichier(dossier, "b.wav")));
 
-        assertThat(bilan.echecs()).containsExactlyInAnyOrder("a.wav", "b.wav");
+        assertThat(bilan.echecs()).extracting(EchecUnite::identifiantUnite).containsExactlyInAnyOrder("a.wav", "b.wav");
         assertThat(depotUnites.parPassage(idPassage)).hasSize(2);
     }
 
@@ -474,7 +476,13 @@ class DepotVigieChiroTest {
         BilanDepot bilan = depot.deposer(idPassage, List.of(ok, ko));
 
         assertThat(bilan.deposees()).isEqualTo(1);
-        assertThat(bilan.echecs()).containsExactly("ko.wav");
+        assertThat(bilan.echecs()).extracting(EchecUnite::identifiantUnite).containsExactly("ko.wav");
+        // #3962 : le bilan ne jette plus ce que le téléverseur savait. Un 422 est un refus DÉFINITIF de
+        // contenu ; sans ces deux composantes, le compte rendu et la CLI promettaient une reprise que la
+        // relance n'aurait jamais tenue.
+        assertThat(bilan.echecs())
+                .extracting(EchecUnite::definitif, EchecUnite::cause)
+                .containsExactly(org.assertj.core.api.Assertions.tuple(true, CauseRefus.CONTENU));
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOT_EN_COURS);
         DepotUnite enEchec = depotUnites.restantes(idPassage).getFirst();
         assertThat(enEchec.statut()).isEqualTo(StatutDepotUnite.ECHEC);
