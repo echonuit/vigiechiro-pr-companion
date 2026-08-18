@@ -1054,6 +1054,18 @@
    menu ouvert, et decale la hauteur du bouton d'environ 1px - imperceptible, verifie a la capture. */
 .menu-actions {
     -fx-font-size: 14px;
+    /* ⚠️ L'apparence, ajoutée en #4002. Cette classe ne portait qu'une TAILLE : le ☰ de réglage des
+       tables rendait donc le MenuButton par défaut de la plateforme, sans fond ni contour. Tant que
+       ses voisins étaient nus eux aussi, rien ne se voyait ; en les rendant au produit, on l'a laissé
+       seul. Il reprend donc le traitement de `bouton-secondaire`, qui est ce qu'il côtoie dans la
+       barre - fond clair, contour, coins arrondis - avec une marge resserrée, puisqu'il ne porte
+       qu'une icône et sa flèche là où un bouton porte un libellé. */
+    -fx-background-color: -couleur-texte-clair;
+    -fx-border-color: -couleur-texte;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 5 8 5 8;
+    -fx-cursor: hand;
 }
 
 
