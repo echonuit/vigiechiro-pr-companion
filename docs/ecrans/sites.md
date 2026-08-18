@@ -4,6 +4,17 @@ Les écrans **Sites** servent à gérer vos **sites de suivi** : un site corresp
 Vigie-Chiro** (six chiffres) et à ses **points d'écoute** (par exemple `A1`, `B2`). C'est le point
 de départ de tout le reste : vous ne pouvez pas importer une nuit tant qu'un site n'est pas déclaré.
 
+!!! tip "Le parcours en vidéo (16 s)"
+
+    <video controls muted playsinline preload="metadata" width="100%">
+      <source src="../../assets/parcours/parcours-declarer-un-carre.mp4" type="video/mp4">
+      Votre navigateur n'affiche pas les vidéos. Le film est là :
+      <a href="../../assets/parcours/parcours-declarer-un-carre.mp4">parcours-declarer-un-carre.mp4</a>.
+    </video>
+
+    Déclarer son premier carré, de l'accueil à la fiche du site : où cliquer, ce que
+    demande la fenêtre, et ce qu'on obtient.
+
 ## Mes sites
 
 L'écran **Mes sites** liste vos sites sous forme de cartes. Chaque carte indique le numéro de carré,

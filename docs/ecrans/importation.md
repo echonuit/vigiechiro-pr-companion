@@ -4,6 +4,18 @@ L'écran **Importation** importe une nuit depuis la carte SD, la renomme et la t
 écoutables, **sans jamais modifier vos fichiers d'origine**. Il prend la forme d'un **assistant en
 trois temps**.
 
+!!! tip "Le parcours en vidéo (31 s)"
+
+    <video controls muted playsinline preload="metadata" width="100%">
+      <source src="../../assets/parcours/parcours-importer-une-nuit.mp4" type="video/mp4">
+      Votre navigateur n'affiche pas les vidéos. Le film est là :
+      <a href="../../assets/parcours/parcours-importer-une-nuit.mp4">parcours-importer-une-nuit.mp4</a>.
+    </video>
+
+    Importer une nuit depuis la carte SD : la carte se prend sous son étiquette dans le
+    sélecteur, l'application annonce ce qu'elle y trouve, et le passage est créé. Les deux
+    attentes de machine y sont accélérées quatre fois.
+
 ## L'assistant d'import
 
 ![L'assistant d'import : dossier source, inspection, rattachement.](../assets/captures/apercu-import-assistant.png)

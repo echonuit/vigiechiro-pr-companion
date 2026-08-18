@@ -193,6 +193,7 @@ absente (lancés en CI) :
 |---|---|
 | [`check-captures.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/check-captures.sh) | Chaque vue FXML `src/main/**/view/*.fxml` est **déclarée** au `captures.manifest`, chaque capture déclarée existe, et chaque capture **écrite par un outil** est présentée dans la galerie. *(Aucune vue livrée sans capture, aucune capture que personne ne regarde.)* |
 | [`check-doc-images.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/check-doc-images.sh) | Chaque capture **référencée par une page de doc** existe et est au manifeste. *(Aucune page ne pointe une image absente.)* |
+| [`check-doc-videos.sh`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/assets/check-doc-videos.sh) | Chaque parcours filmé **référencé par une page** existe, chaque film présent a encore son scénario au banc, et chaque chemin **résout dans le site construit**. *(La première version ne vérifiait que l'existence du fichier : elle est restée verte pendant que le site rendait un lecteur vide, MkDocs ne réécrivant pas les chemins du HTML brut.)* |
 
 ### Pourquoi la dernière règle lit le **code** et non le disque
 
