@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 
@@ -45,8 +46,11 @@ public final class CompteRenduImport {
     /// Récapitulatif multi-nuits : nombre de passages créés, plage de dates couverte, total de séquences.
     private static String statutNuits(ResultatImportMultiNuits resultat) {
         var passages = resultat.parNuit();
-        String premiere = passages.getFirst().passage().dateEnregistrement();
-        String derniere = passages.getLast().passage().dateEnregistrement();
+        // Le compte rendu TEXTUEL et le chiffré partagent leur titre (ADR 2358) : ils doivent donc
+        // écrire la date de la même façon. Sans cela, la même nuit se lirait « 22/04/2026 » à l'écran
+        // et « 2026-04-22 » dans le compte rendu que la ligne de commande rend (#3950).
+        String premiere = Horodatage.dateSeule(passages.getFirst().passage().dateEnregistrement());
+        String derniere = Horodatage.dateSeule(passages.getLast().passage().dateEnregistrement());
         String plage = premiere.equals(derniere) ? "nuit du " + premiere : "nuits du " + premiere + " au " + derniere;
         return String.format(
                 "Import terminé : %d passage(s) créé(s) (%s), %d séquence(s) produite(s).",

@@ -48,7 +48,32 @@ public final class Horodatage {
     private static final DateTimeFormatter DANS_UN_TABLEAU =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm", Locale.FRANCE);
 
+    /// La **date seule**, pour un titre ou une phrase qui parle d'une nuit et non d'un instant
+    /// (#3950). « nuit du 22/04/2026 ».
+    ///
+    /// ⚠️ Elle ne remplace pas [#dansUnTableau] dans une **colonne** de date. Ces colonnes rendent une
+    /// chaîne ISO venue de la base, et une colonne de chaînes trie **lexicalement** : l'ISO est le seul
+    /// format où ce tri reste chronologique. Les convertir demande un comparateur, et un filtre qui
+    /// cherche dans le texte affiché suivrait. C'est un autre travail, délibérément hors de #3950.
+    private static final DateTimeFormatter DATE_SEULE = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
+
     private Horodatage() {}
+
+    /// « 22/04/2026 » - la date d'une nuit, dans un titre ou une phrase.
+    ///
+    /// @param dateIso la date au format ISO telle que la base la porte (`Passage.dateEnregistrement`),
+    ///     éventuellement `null` ou illisible - le titre d'un compte rendu ne doit pas casser sur une
+    ///     donnée abîmée, il rend alors la chaîne telle quelle
+    public static String dateSeule(String dateIso) {
+        if (dateIso == null || dateIso.isBlank()) {
+            return "";
+        }
+        try {
+            return DATE_SEULE.format(java.time.LocalDate.parse(dateIso));
+        } catch (java.time.format.DateTimeParseException illisible) {
+            return dateIso;
+        }
+    }
 
     /// « 03/07/2026 à 21:00 » - pour un instant **inséré dans une phrase**.
     public static String dansUnePhrase(TemporalAccessor instant) {
