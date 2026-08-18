@@ -73,7 +73,11 @@ class StatutPassageTest {
                 .contains("année 2026, passage n°2")
                 .contains("Déposé")
                 .contains("OK")
-                .contains("déposé le 2026-06-20")
+                .contains("déposé le 20/06/2026")
+                // #3990 : la nuit se lit comme partout ailleurs dans le produit. L'ISO reste
+                // dans le --json, qui est un contrat de script, jamais dans ce que l'on lit.
+                .contains("15/06/2026")
+                .doesNotContain("2026-06-15")
                 .contains("bruts 4,5 Go, séquences 537 Mo")
                 .contains("128 (durée enregistrée 10 min 40 s)")
                 .contains("début 18,5 °C")
@@ -117,7 +121,13 @@ class StatutPassageTest {
                 .containsEntry("nombreSequences", 128)
                 .containsEntry("resultatsTadarida", true)
                 .containsEntry("heuresProuvees", true)
-                .containsEntry("cheminResultatsTadarida", "transformes/passage2_Vu.csv");
+                .containsEntry("cheminResultatsTadarida", "transformes/passage2_Vu.csv")
+                // ⚠️ #3990 : le JSON garde l'ISO, et rien ne l'assertait. Le texte, lui, se lit
+                // en français depuis cette issue - les deux sorties ont des lecteurs
+                // différents. Franciser ces deux clés casserait tout script en aval, et sans
+                // ces deux lignes, personne ne s'en apercevrait avant l'utilisateur.
+                .containsEntry("date", "2026-06-15")
+                .containsEntry("deposeLe", "2026-06-20");
     }
 
     @Test

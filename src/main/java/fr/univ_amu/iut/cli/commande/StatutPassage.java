@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.cli.LectureSeule;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -97,7 +98,8 @@ public final class StatutPassage implements Callable<Integer>, LectureSeule {
         ligne(
                 texte,
                 "Nuit",
-                detail.dateEnregistrement() + "  (" + detail.heureDebut() + " → " + detail.heureFin() + ")"
+                Horodatage.dateSeule(detail.dateEnregistrement()) + "  (" + detail.heureDebut() + " → "
+                        + detail.heureFin() + ")"
                         + (heuresProuvees ? "  [attestées par les enregistrements]" : "  [déclarées, modifiables]"));
         ligne(texte, "Enregistreur", detail.idEnregistreur());
         ligne(texte, "Statut", detail.statut().libelle());
@@ -105,7 +107,12 @@ public final class StatutPassage implements Callable<Integer>, LectureSeule {
                 texte,
                 "Verdict",
                 detail.verdict() == null ? "en attente" : detail.verdict().libelle());
-        ligne(texte, "Dépôt", detail.deposeLe() == null ? "non déposé" : "déposé le " + detail.deposeLe());
+        // #3990 : la date se lit comme partout ailleurs. Le `--json` juste en dessous garde l'ISO :
+        // c'est un contrat de script, et le franciser casserait tout consommateur en aval.
+        ligne(
+                texte,
+                "Dépôt",
+                detail.deposeLe() == null ? "non déposé" : "déposé le " + Horodatage.dateSeule(detail.deposeLe()));
         ligne(
                 texte,
                 "Volumes",
