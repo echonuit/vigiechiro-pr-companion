@@ -119,11 +119,13 @@ La table garde le détail : la cause de chaque échec y est lisible, archive par
 | Ce que dit le refus | Ce qui le lève |
 |---|---|
 | **droits ou jeton** (session expirée, autorisation manquante) | **vous reconnecter**. Les archives refusées pour cette raison redeviennent reprenables aussitôt, sans autre geste |
-| **contenu refusé** (l'archive elle-même ne convient pas) | rien d'extérieur. Il faut **régénérer les archives** de la nuit |
+| **contenu refusé** (l'archive elle-même ne convient pas) | se reconnecter n'y change rien : il faut **régénérer les archives** de la nuit, puis relancer le téléversement |
 
-!!! warning "Après une régénération, la reprise ne revient pas toute seule"
-    Régénérer les archives d'une nuit ne réarme pas encore les unités refusées pour leur contenu.
-    C'est une limite connue, suivie en [#3946](https://github.com/echonuit/vigiechiro-pr-companion/issues/3946).
+!!! tip "Après une régénération, relancez simplement le téléversement"
+    Le bouton s'appelle alors « Téléverser sur Vigie-Chiro » et non « Reprendre le dépôt » : c'est
+    normal, il n'y a plus rien à *reprendre*. Le cliquer renvoie tout de même les archives refusées,
+    et celles qui viennent d'être régénérées passeront cette fois. Les archives déjà en ligne, elles,
+    ne repartent pas.
 
 ### Ce que le dépôt vous rend à la fin
 

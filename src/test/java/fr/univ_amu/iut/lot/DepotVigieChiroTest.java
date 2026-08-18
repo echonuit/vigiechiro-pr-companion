@@ -271,6 +271,44 @@ class DepotVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#3946 : une unité refusée DÉFINITIVEMENT repart au dépôt suivant, elle n'est pas coincée")
+    void un_refus_definitif_repart_au_depot_suivant(@TempDir Path dossier) throws IOException {
+        // L'issue #3946 supposait qu'un contenu refusé restait coincé faute de réarmement. La mesure dit
+        // l'inverse, et ce test la fixe : `restantes()` rend « tout sauf déposé », le moteur n'écarte
+        // jamais une unité sur son drapeau `definitif`, et la synchronisation du plan conserve la ligne
+        // quand l'identifiant subsiste. Régénérer l'archive puis relancer le téléversement suffit donc.
+        //
+        // ⚠️ Ce que #3687 a retiré, c'est la PROMESSE d'une reprise, pas la POSSIBILITÉ d'un nouvel
+        // essai. Confondre les deux est précisément l'erreur que portait #3946.
+        Path archive = fichier(dossier, "nuit.wav");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier(anyString(), anyString()))
+                .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3.exemple/signe")));
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenReturn(ReponseApi.refuse(422, "contenu refusé"));
+
+        depot.deposer(idPassage, List.of(archive));
+
+        assertThat(depotUnites.parPassage(idPassage))
+                .as("le dispositif est cassé si l'unité n'est pas refusée définitivement d'abord")
+                .allSatisfy(unite -> assertThat(unite.echecDefinitif()).isTrue());
+
+        // L'archive est régénérée : même identifiant, même empreinte de liste source, et la plateforme
+        // l'accepte cette fois.
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenReturn(ReponseApi.succes(""));
+        when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
+
+        BilanDepot second = depot.deposer(idPassage, List.of(archive));
+
+        assertThat(second.deposees())
+                .as("l'unité refusée n'a pas été retentée : elle serait bel et bien coincée")
+                .isEqualTo(1);
+        assertThat(depotUnites.parPassage(idPassage))
+                .allSatisfy(unite -> assertThat(unite.statut()).isEqualTo(StatutDepotUnite.DEPOSE));
+    }
+
+    @Test
     @DisplayName("#2653 : le bilan porte le volume RÉELLEMENT en ligne, somme des unités abouties")
     void bilan_porte_le_volume_depose(@TempDir Path dossier) throws IOException {
         Path a = fichierDe(dossier, "Car-1.zip", 1500);

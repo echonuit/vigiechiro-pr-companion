@@ -157,8 +157,8 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         if (!refuses.isEmpty()) {
             conseil.append(" ")
                     .append(refuses.size())
-                    .append(" refusée(s) par Vigie-Chiro, que la relance ne")
-                    .append(" reprendra pas :");
+                    .append(" refusée(s) par Vigie-Chiro, que relancer telles quelles")
+                    .append(" ferait refuser de même :");
             refuses.forEach(refus -> conseil.append(" ")
                     .append(refus.identifiantUnite())
                     .append(" (")
@@ -167,6 +167,11 @@ public final class DeposerVigieChiro implements Callable<Integer> {
             conseil.append(".");
             if (refuses.stream().allMatch(EchecUnite::seRearmeParUneReconnexion)) {
                 conseil.append(" Reconnectez-vous, puis relancez : elles redeviendront reprenables.");
+            } else if (refuses.stream().noneMatch(EchecUnite::seRearmeParUneReconnexion)) {
+                // Geste VÉRIFIÉ (#3946) : la relance retente bien ces unités - `restantes()` rend « tout
+                // sauf déposé » et rien ne les écarte sur leur drapeau. Ce qu'il faut changer, c'est le
+                // CONTENU de l'archive, pas la façon de la renvoyer.
+                conseil.append(" Régénérez les archives, puis relancez : les nouvelles repartiront.");
             }
         }
         return conseil.toString();

@@ -193,7 +193,13 @@ class DeposerVigieChiroTest {
         assertThat(refuse)
                 .as("la relance était promise pour une archive que Vigie-Chiro a refusée")
                 .doesNotContain("Relancez la commande");
-        assertThat(refuse).contains("Car-10.zip").contains("que la relance ne reprendra pas");
+        // ⚠️ Cette assertion disait « que la relance ne reprendra pas », et c'était FAUX : la mesure de
+        // #3946 montre que la relance les retente bel et bien. Ce qui ne repart pas, c'est l'archive
+        // INCHANGÉE - le contenu doit changer, pas la façon de le renvoyer.
+        assertThat(refuse).contains("Car-10.zip").contains("relancer telles quelles ferait refuser de même");
+        assertThat(refuse)
+                .as("le geste qui marche est vérifié, donc il se nomme (ADR 3854)")
+                .contains("Régénérez les archives");
     }
 
     @Test
