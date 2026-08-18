@@ -24,6 +24,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Onglet « Emplacements » des réglages (#1038, [ADR 1038]) : où vivent le **dossier de travail** et la
 /// **base**. Premier onglet **personnalisé** contribué par le socle, parce que choisir un dossier
@@ -167,7 +168,17 @@ public final class OngletReglagesEmplacements implements OngletReglagesPersonnal
         // la valeur du modèle : une copie qui diverge de ce qu'on lit serait pire que pas de copie,
         // puisqu'on la collerait sans la relire.
         Button copier = new Button("Copier");
-        copier.getStyleClass().add("emplacements-copier");
+        // Deux classes, deux rôles (#3952). `emplacements-copier` est le SÉLECTEUR dont les tests se
+        // servent pour retrouver ces boutons ; elle ne porte aucun style, et ne doit pas en porter.
+        // `bouton-secondaire` est la classe du socle, celle que le jumeau du Lot emploie déjà.
+        //
+        // ⚠️ Elle n'aurait rien fait avant #3966 : cet écran était le seul des 24 à ne pas charger
+        // `design.css`, où elle est définie. La poser plus tôt aurait donné une classe inerte, qu'un
+        // test aurait certifiée.
+        copier.getStyleClass().addAll("emplacements-copier", "bouton-secondaire");
+        // Le pictogramme de la copie, comme dans EtapeTeleversement.fxml. Posé en `graphic` et non
+        // écrit dans le libellé : un caractère dépend des polices installées (ADR 0035).
+        copier.setGraphic(new FontIcon("fas-copy"));
         copier.setOnAction(evenement -> PressePapier.copier(chemin.getText()));
         copier.setTooltip(new Tooltip("Copier ce chemin dans le presse-papier."));
 

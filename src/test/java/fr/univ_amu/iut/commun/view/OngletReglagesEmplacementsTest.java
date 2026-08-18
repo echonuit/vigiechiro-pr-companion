@@ -81,6 +81,31 @@ class OngletReglagesEmplacementsTest {
     }
 
     @Test
+    @DisplayName("#3952 : le bouton « Copier » se reconnaît, comme celui du Lot")
+    void le_bouton_copier_porte_la_forme_du_socle() {
+        OngletReglagesEmplacements onglet = onglet(
+                selecteurQuiRepond(choix.resolve("nuits"), choix.resolve("coffre")),
+                notificateurQuiCapture(),
+                () -> {});
+        Region racine = construire(onglet);
+
+        List<Button> copies = boutons(racine, "emplacements-copier");
+
+        // Le même geste doit se reconnaître d'un écran à l'autre : #3464 l'a posé dans le Lot avec le
+        // pictogramme de la copie, celui-ci n'en avait aucun. Seul l'aperçu le montrait.
+        //
+        // ⚠️ La classe du socle n'est exigeable que depuis #3966 : avant, cet écran était le seul
+        // des 24 à ne pas charger `design.css`, et l'assertion aurait certifié une classe inerte.
+        assertThat(copies)
+                .as("la classe de style vient du socle, à côté du sélecteur des tests")
+                .allSatisfy(bouton ->
+                        assertThat(bouton.getStyleClass()).contains("bouton-secondaire", "emplacements-copier"));
+        assertThat(copies)
+                .as("le pictogramme de la copie, comme dans EtapeTeleversement.fxml")
+                .allSatisfy(bouton -> assertThat(bouton.getGraphic()).isNotNull());
+    }
+
+    @Test
     @DisplayName("#3882 : chaque chemin affiché part dans le presse-papier, il ne se recopie pas à l'œil")
     void chaque_chemin_se_copie() {
         // Jumeau du défaut de #3464, sur l'écran qu'ouvre justement quelqu'un dont le disque est
