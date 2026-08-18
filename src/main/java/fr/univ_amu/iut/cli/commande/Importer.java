@@ -218,8 +218,16 @@ public final class Importer implements Callable<Integer> {
         }
         // #1488 : l'import crée une participation sur un serveur distant. L'écran le dit depuis la clôture
         // du lot 2 ; la taire ici laisserait l'écriture se découvrir ailleurs, ce que l'issue interdit.
+        // #3942 : et ce qu'il RESTE à y faire, comme l'écran le dit depuis #3473. Annoncer une création
+        // se lit « c'est fait », alors que la fiche web attend encore ce que Companion ne connaît pas :
+        // la météo observée, le matériel exact, les commentaires. Celui qui importe en ligne de commande
+        // a le même travail à finir que celui qui importe à l'écran.
         if (resultat.participationCreee()) {
-            ligne(texte, "Vigie-Chiro ", "participation créée (le dépôt la réutilisera)");
+            ligne(
+                    texte,
+                    "Vigie-Chiro ",
+                    "participation créée (le dépôt la réutilisera) ; pensez à la"
+                            + " compléter sur le portail (météo, matériel, commentaires)");
         }
         RapportImport rapport = resultat.rapport();
         ligne(texte, "Rapport     ", rapport.resume());
