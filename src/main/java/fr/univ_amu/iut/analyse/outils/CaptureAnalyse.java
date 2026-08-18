@@ -175,10 +175,8 @@ public final class CaptureAnalyse {
         Parent vue = loader.load();
         StackPane pile = new StackPane(vue);
         Scene scene = new Scene(pile, 1080, 640);
-        scene.getStylesheets()
-                .addAll(
-                        GestionnaireColonnes.class.getResource("palette.css").toExternalForm(),
-                        GestionnaireColonnes.class.getResource("design.css").toExternalForm());
+        // Les feuilles du socle arrivent par `Habillage`, que `ApercuFx` appelle (#3992). Les poser
+        // ici serait une copie de plus du même geste - l'ADR 3374 en a déjà retiré trois.
         ApercuFx.capturerApresPreparation(
                 scene,
                 () -> {

@@ -151,11 +151,9 @@ public final class CapturePublicationCorrections {
         cadre.setStyle("-fx-padding: 16; -fx-background-color: #f5f6f8;");
         Scene scene = new Scene(cadre, LARGEUR_COMPTE_RENDU, -1);
         // Habillage commun (#3374) : la paire palette+base, posée au niveau où la palette vit.
+        // `poser` garantit le trio depuis #3978 : l'ajout de `design.css` qui suivait ici est ce qui
+        // la posait DEUX fois (#3985).
         Habillage.poser(scene);
-        var design = PanneauCompteRendu.class.getResource("design.css");
-        if (design != null) {
-            scene.getStylesheets().add(design.toExternalForm());
-        }
         ApercuFx.enregistrerPng(scene, fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }

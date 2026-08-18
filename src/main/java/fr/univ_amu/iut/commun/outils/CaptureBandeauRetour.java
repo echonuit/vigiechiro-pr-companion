@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.commun.outils;
 
 import fr.univ_amu.iut.commun.view.BandeauRetour;
-import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.viewmodel.ResteDeRestauration;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import java.io.IOException;
@@ -165,12 +164,8 @@ public final class CaptureBandeauRetour {
         cadre.setStyle("-fx-padding: 16; -fx-background-color: #f5f6f8;");
 
         Scene scene = new Scene(cadre, LARGEUR, -1);
-        for (String feuille : List.of("palette.css", "base.css", "design.css")) {
-            var url = ConfirmationNavigation.class.getResource(feuille);
-            if (url != null) {
-                scene.getStylesheets().add(url.toExternalForm());
-            }
-        }
+        // Les feuilles du socle arrivent par `Habillage`, que `ApercuFx` appelle (#3992). Les poser
+        // ici serait une copie de plus du même geste - l'ADR 3374 en a déjà retiré trois.
         ApercuFx.enregistrerPng(scene, fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
