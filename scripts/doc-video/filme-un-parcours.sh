@@ -149,6 +149,31 @@ lire_zone() { # <image> <x> <y> [largeur] [hauteur]
     rm -rf "$tmp"
 }
 
+# Compare un libellé lu à celui qu'on attendait, en ignorant les espaces.
+#
+# ⚠️ Ce n'est pas une facilité : à la taille d'une interface, l'OCR PERD les espaces. Mesuré sur le
+# fil d'Ariane du produit, qui affiche « Accueil › Mes sites » et se lit :
+#
+#     [VigieChiro Companion Accueil Accueil » Messites]
+#
+# « Messites » n'est pas une erreur de lecture, c'est la même chaîne sans son espace. Exiger
+# l'égalité stricte ferait échouer des gestes justes, et pousserait à écrire les libellés attendus
+# tels que l'OCR les déforme - c'est-à-dire à documenter le défaut au lieu de l'absorber.
+#
+# Ce qui reste discriminant : les lettres et leur ordre. Deux libellés de l'application qui ne
+# différeraient que par leurs espaces n'existent pas, et en existerait-il que ce contrôle ne serait
+# pas le bon endroit pour les distinguer.
+sans_espaces() {
+    printf '%s' "$1" | tr -d '[:space:]'
+}
+
+libelle_correspond() { # <lu> <attendu>
+    local lu attendu
+    lu=$(sans_espaces "$1")
+    attendu=$(sans_espaces "$2")
+    [ -n "$attendu" ] && [[ "$lu" == *"$attendu"* ]]
+}
+
 # ⚠️ Pourquoi ce contrôle existe, et ce qu'il ne fait PAS.
 #
 # Les scénarios de #2191 cliquaient à des coordonnées nues : `g 203 811`. Au premier changement de
@@ -172,7 +197,7 @@ viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet]
     lu=$(lire_zone "$tmp/ecran.png" "$((x - ZONE_L / 2))" "$((y - ZONE_H / 2))")
     rm -rf "$tmp"
 
-    if [[ "$lu" != *"$attendu"* ]]; then
+    if ! libelle_correspond "$lu" "$attendu"; then
         echo "   - le geste visait « $attendu » en ($x, $y) ; l'écran y porte « $lu »"
         echo "     Le scénario est périmé : la mise en page a changé, ou l'écran n'est pas celui attendu."
         return 1
@@ -318,6 +343,19 @@ auto_test() {
     # partir n'importe quel clic.
     essai "un libellé ABSENT ne se lit pas quand même"  rouge \
         bash -c 'source "$0"; [ "$(lire_zone "$1" 0 0 400 60)" = "Importer une nuit" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
+
+    # --- l'appariement des libellés ---
+    essai "un libellé identique correspond"              vert \
+        bash -c 'source "$0"; libelle_correspond "Mes sites" "Mes sites"' "${BASH_SOURCE[0]}"
+    # ⚠️ Le cas mesuré sur le produit : l'OCR rend « Messites » sans son espace.
+    essai "un espace perdu par l'OCR correspond quand même" vert \
+        bash -c 'source "$0"; libelle_correspond "Accueil » Messites" "Mes sites"' "${BASH_SOURCE[0]}"
+    essai "un libellé DIFFÉRENT ne correspond pas"        rouge \
+        bash -c 'source "$0"; libelle_correspond "Mes sites" "Importer une nuit"' "${BASH_SOURCE[0]}"
+    # ⚠️ Sans ce cas, un attendu vide correspondrait à tout, et « viser » laisserait partir n'importe
+    # quel clic sur un scénario mal écrit.
+    essai "un attendu VIDE ne correspond à rien"          rouge \
+        bash -c 'source "$0"; libelle_correspond "Mes sites" ""' "${BASH_SOURCE[0]}"
 
     # --- le trajet de souris ---
     essai "un trajet rend des arguments xdotool"        vert \
