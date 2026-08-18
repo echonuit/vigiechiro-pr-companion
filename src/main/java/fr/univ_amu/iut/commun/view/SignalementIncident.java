@@ -40,6 +40,9 @@ public final class SignalementIncident implements Thread.UncaughtExceptionHandle
     private final Consumer<Throwable> montrer;
     private final AtomicBoolean enCours = new AtomicBoolean();
 
+    /// Au-delà, on tronque : voir `descriptionDeSecours`.
+    private static final int PROFONDEUR_MAXIMALE = 12;
+
     /// @param journal où la trace est écrite, **toujours**, y compris quand l'affichage renonce
     /// @param differe ce qui porte l'affichage sur le fil de l'interface (`Platform::runLater`)
     /// @param montrer l'affichage lui-même, injecté pour que cette classe s'éprouve sans JavaFX
@@ -51,7 +54,7 @@ public final class SignalementIncident implements Thread.UncaughtExceptionHandle
 
     @Override
     public void uncaughtException(Thread fil, Throwable erreur) {
-        journal.log(Level.SEVERE, erreur, () -> "Exception non capturée sur le fil « " + fil.getName() + " »");
+        journaliser(fil, erreur);
         if (!enCours.compareAndSet(false, true)) {
             return;
         }
@@ -71,5 +74,71 @@ public final class SignalementIncident implements Thread.UncaughtExceptionHandle
                 enCours.set(false);
             }
         });
+    }
+
+    /// Écrit l'incident, **sans faire confiance à celui qui le raconte**.
+    ///
+    /// ⚠️ Le message d'une exception peut lever à la lecture, et c'est le cas courant ici : sous
+    /// Java 25, `ProvisionException.getMessage()` cherche les numéros de ligne, lit du bytecode
+    /// major 69 avec l'ASM de Guice 7.0.0, et rend `IllegalArgumentException` (#3956). Le formateur
+    /// du journal appelle ce message ; la panne remonte donc **dans le filet**, qui est la dernière
+    /// ligne : s'il lève à son tour, plus rien ne rapporte rien.
+    ///
+    /// Le chemin riche est gardé - il porte la pile entière et sert dans tous les autres cas. Quand
+    /// il échoue, on retombe sur une description construite à la main, qui lit chaque cause
+    /// défensivement. On perd la pile complète ; on garde **le défaut**, qui était sinon à trois
+    /// « Caused by » d'un message parlant d'ASM.
+    private void journaliser(Thread fil, Throwable erreur) {
+        try {
+            journal.log(Level.SEVERE, erreur, () -> "Exception non capturée sur le fil « " + fil.getName() + " »");
+        } catch (RuntimeException | LinkageError formatageImpossible) {
+            journal.log(Level.SEVERE, () -> descriptionDeSecours(fil, erreur, formatageImpossible));
+        }
+    }
+
+    /// La chaîne des causes, lue sans le formateur qui vient d'échouer.
+    ///
+    /// Le parcours est **borné** : une chaîne de causes n'est pas garantie acyclique une fois que
+    /// des `initCause` s'en mêlent, et un filet qui bouclerait ici referait #3700 par un autre
+    /// chemin.
+    static String descriptionDeSecours(Thread fil, Throwable erreur, Throwable panneDuFormatage) {
+        StringBuilder texte = new StringBuilder(512);
+        texte.append("Exception non capturée sur le fil « ")
+                .append(fil.getName())
+                .append(" ». Son rapport n'a pas pu être formaté (")
+                .append(nomEtMessage(panneDuFormatage))
+                .append("). La chaîne des causes, lue sans le formateur :");
+
+        Throwable courant = erreur;
+        for (int rang = 0; courant != null && rang < PROFONDEUR_MAXIMALE; rang++) {
+            texte.append(System.lineSeparator())
+                    .append("    ")
+                    .append(rang == 0 ? "→ " : "causé par ")
+                    .append(nomEtMessage(courant));
+            StackTraceElement[] pile = courant.getStackTrace();
+            if (pile.length > 0) {
+                texte.append(System.lineSeparator()).append("        à ").append(pile[0]);
+            }
+            courant = courant.getCause();
+        }
+        if (courant != null) {
+            texte.append(System.lineSeparator())
+                    .append("    (chaîne tronquée à ")
+                    .append(PROFONDEUR_MAXIMALE)
+                    .append(" causes)");
+        }
+        return texte.toString();
+    }
+
+    /// Le nom et le message d'une exception, le message étant lu **défensivement** : c'est
+    /// précisément lui qui peut lever.
+    private static String nomEtMessage(Throwable erreur) {
+        String message;
+        try {
+            message = erreur.getMessage();
+        } catch (RuntimeException | LinkageError illisible) {
+            message = "message illisible (" + illisible.getClass().getName() + ")";
+        }
+        return message == null ? erreur.getClass().getName() : erreur.getClass().getName() + " : " + message;
     }
 }
