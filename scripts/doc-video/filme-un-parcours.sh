@@ -31,6 +31,10 @@ RACINE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 # image par image comme un clip de recette.
 CADENCE=12
 
+# Au-dessus de quoi une image « montre quelque chose ». Le noir vaut 16 ; 20 est le seuil retenu
+# par le banc de recette depuis le passage à openbox (#3788).
+LUMINANCE_SEUIL=20
+
 # La fenêtre du produit, telle que l'utilisateur l'ouvre.
 LARGEUR=1280
 HAUTEUR=860
@@ -355,6 +359,8 @@ tourner() {
         # un parcours qui n'aurait commencé qu'à la moitié d'un film qu'il occupe en entier. Le
         # montage aurait coupé les mauvaises plages, et le film serait resté parfaitement valide.
         marque "$marques" arret
+
+        monter "$sortie" "$marques" "${sortie%.mkv}-monte.mkv" || code=1
     else
         echo "❌ Le produit n'a pas ouvert de fenêtre : rien à filmer."
         echo "   Journal : $bac/produit.log"
@@ -369,6 +375,86 @@ tourner() {
     fi
     rm -rf "$bac"
     return "$code"
+}
+
+# ---------------------------------------------------------------------------------------------
+# Le montage
+# ---------------------------------------------------------------------------------------------
+
+# La part d'images d'un film où quelque chose est à l'écran. Le noir vaut 16 en luminance ; on
+# compte au-dessus d'un seuil bas, comme le fait le banc de recette (#3707, seuil ramené à 20
+# depuis openbox).
+part_utile() { # <film>
+    local mesures total claires
+    # ⚠️ PAS de `-v error` ici, et c'est un piège coûteux : `metadata=print` écrit au niveau INFO,
+    # si bien qu'abaisser la verbosité fait disparaître la mesure elle-même. On lit alors zéro image
+    # partout - un film blanc et un film noir rendent le même verdict.
+    mesures=$(ffmpeg -nostdin -i "$1" -vf "signalstats,metadata=print" -f null - 2>&1 \
+        | grep -oE "signalstats.YAVG=[0-9.]+")
+    total=$(printf '%s\n' "$mesures" | grep -c "YAVG" || true)
+    claires=$(printf '%s\n' "$mesures" | awk -F= -v s="$LUMINANCE_SEUIL" '$2 > s' | wc -l)
+    [ "$total" -gt 0 ] || { printf '0'; return; }
+    LC_NUMERIC=C awk -v c="$claires" -v t="$total" 'BEGIN{printf "%.2f", c / t}'
+}
+
+# `t0` : l'instant, sur l'horloge, de la première image du film.
+#
+# ⚠️ Il se MESURE - « instant d'arrêt moins durée du fichier » - et ne se postule pas. `monter.py`
+# de #2191 écrivait `DECALAGE = 1.5` ; mesurée ici, la latence d'initialisation d'ffmpeg vaut 0,3 s.
+# Un facteur cinq sur une constante en dur, et personne ne l'aurait vu : un montage décalé rend un
+# film parfaitement valide, qui montre autre chose que ce que son index annonce.
+origine_du_film() { # <fichier de marques> <durée du film>
+    LC_NUMERIC=C awk -F'\t' -v d="$2" '$2 == "arret" {printf "%.3f", $1 - d}' "$1"
+}
+
+instant_du_repere() { # <fichier de marques> <t0> <nom>
+    LC_NUMERIC=C awk -F'\t' -v t0="$2" -v n="$3" '$2 == n {printf "%.3f", $1 - t0}' "$1"
+}
+
+# Coupe le brut sur ce que le parcours occupe vraiment.
+#
+# ## Ce que ce montage fait, et ce qu'il ne fait pas
+#
+# Il **coupe**, il n'accélère rien. Le parcours « déclarer un carré » ne comporte aucune attente
+# machine : la création est instantanée, et les seuls temps morts sont les respirations posées POUR
+# le spectateur - les comprimer irait contre leur raison d'être.
+#
+# ⚠️ Écrire l'accélération maintenant produirait un dispositif qu'aucun cas ne peut faire rougir,
+# ce que #3886 vient de reprocher à seize auto-tests. Elle viendra avec le parcours d'importation,
+# qui a de vraies attentes : la scrutation de la carte et l'import.
+monter() { # <brut> <marques> <sortie>
+    local brut="$1" marques="$2" sortie="$3" duree t0 debut fin part
+    duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$brut" 2>/dev/null)
+    [ -n "$duree" ] || { echo "   - durée du brut illisible : pas de montage"; return 1; }
+
+    t0=$(origine_du_film "$marques" "$duree")
+    [ -n "$t0" ] || { echo "   - aucun repère « arret » : t0 ne peut pas se mesurer"; return 1; }
+
+    debut=$(instant_du_repere "$marques" "$t0" debut)
+    fin=$(instant_du_repere "$marques" "$t0" fin)
+    if [ -z "$debut" ] || [ -z "$fin" ]; then
+        echo "   - repères « debut » ou « fin » manquants : pas de montage"
+        return 1
+    fi
+    # Le repère de début tombe une fraction AVANT la première image ; on borne à zéro.
+    LC_NUMERIC=C awk -v d="$debut" 'BEGIN{exit !(d < 0)}' && debut=0
+
+    ffmpeg -nostdin -v error -i "$brut" -ss "$debut" -to "$fin" -an \
+        -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" 2>/dev/null
+
+    # ⚠️ Le contrôle, et il porte sur le RÉSULTAT, pas sur les repères. Un montage qui viserait à
+    # côté rendrait un film noir - valide, lisible, et vide. C'est la seule chose qu'on ne peut pas
+    # laisser passer en silence.
+    part=$(part_utile "$sortie")
+    if LC_NUMERIC=C awk -v p="$part" 'BEGIN{exit !(p < 0.5)}'; then
+        LC_NUMERIC=C printf '   - le montage vise à côté : %.0f %% seulement du film coupé montre quelque chose\n' \
+            "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
+        return 1
+    fi
+    LC_NUMERIC=C printf '   ✔ montage : %.1f s -> %.1f s, %.0f %% d\u2019images utiles\n' \
+        "$duree" "$(LC_NUMERIC=C awk -v a="$debut" -v b="$fin" 'BEGIN{print b - a}')" \
+        "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
+    return 0
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -455,6 +541,26 @@ auto_test() {
         bash -c 'python3 "$(dirname "$0")/trajet.py" 10 10 200 200 0.3 | grep -q "^mousemove "' "${BASH_SOURCE[0]}"
     essai "un trajet nul ne bouge pas pour rien"        vert \
         bash -c '[ "$(python3 "$(dirname "$0")/trajet.py" 40 40 41 40 0.3)" = "mousemove 41 40" ]' "${BASH_SOURCE[0]}"
+
+    # --- le montage ---
+    # ⚠️ Les repères se fabriquent, avec un « arret » qui sait où est la fin : c'est la grandeur
+    # dont tout le montage dépend, et la seule que #2191 postulait.
+    printf '1000.0\tdebut\n1002.0\tfin\n1010.0\tarret\n' > "$bac/m.tsv"
+    essai "t0 se mesure : arret moins duree"             vert \
+        bash -c 'source "$0"; [ "$(origine_du_film "$1" 10)" = "1000.000" ]' "${BASH_SOURCE[0]}" "$bac/m.tsv"
+    essai "un repere se convertit en position de film"   vert \
+        bash -c 'source "$0"; [ "$(instant_du_repere "$1" 1000 fin)" = "2.000" ]' "${BASH_SOURCE[0]}" "$bac/m.tsv"
+    # ⚠️ Sans repere « arret », t0 est indéterminable : le montage doit refuser, pas deviner.
+    printf '1000.0\tdebut\n1002.0\tfin\n' > "$bac/sans-arret.tsv"
+    essai "sans repere « arret », t0 est refuse"         rouge \
+        bash -c 'source "$0"; [ -n "$(origine_du_film "$1" 10)" ]' "${BASH_SOURCE[0]}" "$bac/sans-arret.tsv"
+    # Un film clair rend une part utile de 1 ; un film noir, de 0. Les deux bornes, pas un reglage.
+    ffmpeg -v error -y -f lavfi -i "color=c=white:s=160x120:d=2:r=10" "$bac/clair.mkv" </dev/null 2>/dev/null
+    ffmpeg -v error -y -f lavfi -i "color=c=black:s=160x120:d=2:r=10" "$bac/noir.mkv" </dev/null 2>/dev/null
+    essai "un film clair rend une part utile de 1"       vert \
+        bash -c 'source "$0"; [ "$(part_utile "$1")" = "1.00" ]' "${BASH_SOURCE[0]}" "$bac/clair.mkv"
+    essai "un film noir rend une part utile de 0"        vert \
+        bash -c 'source "$0"; [ "$(part_utile "$1")" = "0.00" ]' "${BASH_SOURCE[0]}" "$bac/noir.mkv"
 
     # --- les outils ---
     essai "les outils du poste sont là"                  vert  verifier_outils
