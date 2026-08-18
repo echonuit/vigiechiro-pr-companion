@@ -1282,7 +1282,16 @@ analyse, fiche site, qualification) sur un socle `commun/view`.
   dont la couleur est **dérivée de la donnée de la ligne** (jamais stockée). Les surcharges
   `classe(StatutWorkflow)` / `classe(Verdict)` couvrent les types de `commun.model` ;
 - `commun.view.design.css` : jetons sémantiques (`-badge-succes/avertissement/danger/info/neutre-*`) et
-  classes `.badge-*`, **chargée par tous les FXML** (plus de CSS de statut recopié par feature).
+  classes `.badge-*`, posée sur **toute scène** par
+  [`Habillage`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/Habillage.java)
+  (plus de CSS de statut recopié par feature).
+
+    ⚠️ **Le mécanisme est `Habillage`, pas la déclaration du FXML.** Cette page a longtemps écrit
+    « chargée par tous les FXML » : c'était vrai à 23 exemplaires sur 24, et surtout ça désignait le
+    mauvais endroit. L'[ADR 3374](decisions/3374-une-fenetre-porte-son-habillage-ou-elle-n-est-pas-le-produit.md)
+    écarte explicitement la déclaration par FXML, qui « se serait défaite au onzième ». La plupart des
+    vues la déclarent quand même, par héritage de leur écriture d'origine ; ce n'est pas ce qui la fait
+    arriver.
 
 **Le piège d'architecture (mapping feature → classe CSS).** `ColonneBadge` vit dans `commun`, qui **ne
 doit dépendre d'aucune feature** (règle `ArchitectureTest.features_sans_cycle`). Le socle ne connaît donc
