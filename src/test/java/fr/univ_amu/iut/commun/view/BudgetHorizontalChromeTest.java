@@ -81,7 +81,10 @@ class BudgetHorizontalChromeTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        scene = new Scene(racine, LARGEURS_LIVREES[0], 720);
+        // `Habillage` et non `new Scene` : depuis #3960 ce fichier MESURE la largeur atteinte avant
+        // chaque verification, donc son verdict depend de la police reellement rendue (ADR 3773).
+        // `ScenesHabilleesTest` l'a refuse des le premier passage en integration, a juste titre.
+        scene = Habillage.scene(racine, LARGEURS_LIVREES[0], 720);
         fenetre = stage;
         stage.setScene(scene);
         stage.show();
