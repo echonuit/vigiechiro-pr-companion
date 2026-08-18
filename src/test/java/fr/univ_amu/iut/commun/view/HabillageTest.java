@@ -116,6 +116,28 @@ class HabillageTest {
     }
 
     @Test
+    @DisplayName("#3978 : une racine qui déclare palette + base reçoit quand même design.css")
+    void poser_garantit_le_trio_meme_si_base_est_deja_la() {
+        // ⚠️ `poser` se désistait dès qu'il voyait `base.css`, en prenant sa présence pour preuve que
+        // le TRIO était là. C'était vrai de `MainView.fxml`, qui déclare les trois ; c'était faux
+        // d'`EcranReglages.fxml`, seul FXML du dépôt à déclarer `palette + base` sans `design`.
+        //
+        // Le symptôme n'est apparu que dans la GALERIE : en production, l'écran des Réglages est
+        // empilé dans la zone centrale de `MainView` et hérite de ses feuilles. C'est la capture, qui
+        // monte l'écran seul, qui rendait des contrôles nus - le cas même que l'ADR 3374 ferme.
+        StackPane racine = new StackPane();
+        racine.getStylesheets().addAll(url(PALETTE), url(BASE));
+
+        Habillage.poser(new Scene(racine));
+
+        assertThat(racine.getStylesheets())
+                .as("`design.css` porte les composants partagés - boutons du socle, pastilles, densité "
+                        + "des tables. Sans elle la scène rend les contrôles de la plateforme, et rien "
+                        + "ne le signale : la fenêtre s'ouvre, simplement pas habillée")
+                .containsExactly(url(PALETTE), url(BASE), url(DESIGN));
+    }
+
+    @Test
     @DisplayName("#3374 : poser deux fois n'ajoute rien - les points d'entrée s'appellent en cascade")
     void idempotent() {
         // `ExportGraphe` construit sa scène par `Habillage.scene(...)` puis la confie à `RenduPng`, qui
