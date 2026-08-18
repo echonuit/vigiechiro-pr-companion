@@ -41,6 +41,14 @@ jobs:
     # L'intention de l'ADR 3661 - les cas d'un garde de CI sont lancés par `lint.yml` - est donc
     # tenue sans en payer le prix sur le job rapide.
     runs-on: ubuntu-latest
+    # ⚠️ Un butoir, parce que l'absence de butoir a bloqué une PR pendant **quarante minutes** sans
+    # rien apprendre à personne. Le miroir Ubuntu d'Azure a rendu `fonts-urw-base35` (11 Mo) à une
+    # poignée de kilo-octets par seconde ; l'installation, mesurée à 34 s la veille, n'était toujours
+    # pas finie. Sans butoir, GitHub laisse courir six heures.
+    #
+    # Un garde qui peut bloquer indéfiniment est pire qu'un garde qui échoue : il ne dit rien, et il
+    # retient tout le monde. Douze minutes, c'est vingt fois la mesure nominale.
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -49,12 +57,18 @@ jobs:
         # matchbox (#3788) : matchbox maximise tout ce qu'il affiche, si bien qu'une modale de
         # 560 px s'étalait sur 1280 et que le banc montrait une mise en page que personne ne voit.
         #
-        # ⚠️ C'est l'un des 26 cas - « écran AVEC gestionnaire de fenêtres » - et c'est le SEUL qui
-        # échoue sur une machine de développement ordinaire, où openbox n'est pas installé. Le cas
-        # qui garde la découverte de #3788 est précisément celui que personne n'avait pu exercer.
+        # ⚠️ `--no-install-recommends` : les recommandations d'ffmpeg tirent SDL2, OpenAL, jack et
+        # `fonts-urw-base35` - de quoi jouer et sonoriser une vidéo, là où ce banc ne fait que
+        # capturer, mesurer une luminance et concaténer. C'est précisément ce que le miroir mettait
+        # quarante minutes à livrer.
+        #
+        # Ce qu'on ne vérifie pas par un raisonnement : que la version allégée suffise. C'est
+        # l'auto-test qui le dit, à l'étape suivante - quatorze de ses cas passent par `ffmpeg` ou
+        # `ffprobe`, trois par le serveur X et son gestionnaire de fenêtres. S'il manquait quelque
+        # chose, il rougirait ici même.
         run: |
           sudo apt-get update
-          sudo apt-get install -y xvfb xdotool ffmpeg x11-utils openbox
+          sudo apt-get install -y --no-install-recommends xvfb xdotool ffmpeg x11-utils openbox
 
       - name: Les 26 cas du banc filmé, dont 11 qui doivent rougir
         run: |
