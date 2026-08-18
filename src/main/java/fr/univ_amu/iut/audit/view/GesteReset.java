@@ -5,6 +5,7 @@ import fr.univ_amu.iut.audit.model.RecuperabiliteNuit;
 import fr.univ_amu.iut.audit.model.ResultatReset;
 import fr.univ_amu.iut.audit.model.ServiceRecuperabilite;
 import fr.univ_amu.iut.audit.model.ServiceReset;
+import fr.univ_amu.iut.commun.model.CauseLisible;
 import fr.univ_amu.iut.commun.model.SondeAccessibilite;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
@@ -170,7 +171,7 @@ final class GesteReset {
     }
 
     private static String message(Throwable echec) {
-        return echec.getMessage() != null ? echec.getMessage() : echec.toString();
+        return CauseLisible.messageDe(echec);
     }
 
     /// Porteur de désignation exposé aux tests (#1405).

@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.diagnostic.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.CauseLisible;
 import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.commun.view.AxeHoraire;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
@@ -179,8 +180,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
                     fichier);
             viewModel.signalerExport(String.valueOf(fichier.getFileName()));
         } catch (RuntimeException echec) {
-            viewModel.signalerEchecExport(
-                    echec.getMessage() == null ? echec.getClass().getSimpleName() : echec.getMessage());
+            viewModel.signalerEchecExport(CauseLisible.messageDe(echec));
         }
     }
 

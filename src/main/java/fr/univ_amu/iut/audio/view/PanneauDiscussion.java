@@ -4,6 +4,7 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.FormatAvisValidateur;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.model.CauseLisible;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -132,7 +133,7 @@ final class PanneauDiscussion {
     }
 
     private static String message(Throwable echec) {
-        return echec.getMessage() != null ? echec.getMessage() : echec.toString();
+        return CauseLisible.messageDe(echec);
     }
 
     /// Zone de rédaction, exposée aux tests : c'est elle qui se désactive quand l'envoi est impossible.

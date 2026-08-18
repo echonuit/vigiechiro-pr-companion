@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.model.CauseLisible;
 import fr.univ_amu.iut.commun.model.SondeAccessibilite;
 import fr.univ_amu.iut.commun.persistence.BilanRestauration;
 import fr.univ_amu.iut.commun.persistence.BilanSauvegarde;
@@ -247,6 +248,6 @@ final class ActionsSauvegarde {
     }
 
     private static String message(Throwable echec) {
-        return echec.getMessage() != null ? echec.getMessage() : echec.toString();
+        return CauseLisible.messageDe(echec);
     }
 }

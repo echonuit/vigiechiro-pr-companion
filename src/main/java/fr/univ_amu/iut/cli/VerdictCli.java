@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli;
 
 import fr.univ_amu.iut.cli.model.ErreurUsage;
+import fr.univ_amu.iut.commun.model.CauseLisible;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.persistence.RefusAvantEcriture;
 
@@ -51,7 +52,8 @@ record VerdictCli(Nature nature, String phrase) {
             // Le message du modèle dit ce qui MANQUE ; c'est ici qu'on ajoute quoi taper (#2635).
             return new VerdictCli(Nature.REFUS, "Refus : " + GesteAttenduCli.message(echec));
         }
-        return new VerdictCli(Nature.INCIDENT, "Échec : " + echec.getMessage());
+        return new VerdictCli(
+                Nature.INCIDENT, "Échec : " + CauseLisible.messageDe(echec, CauseLisible.OU_REGARDER_CLI));
     }
 
     int code() {
