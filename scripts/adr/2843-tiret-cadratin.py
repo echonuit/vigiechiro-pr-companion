@@ -160,7 +160,14 @@ def prose(
     if not racine.exists():
         return trouves
     balayage = racine.rglob(motif) if recursif else racine.glob(motif)
-    pages = [p for p in sorted(balayage) if not any(part in exclus for part in p.parts)]
+    # `is_file()` n'est pas une precaution de style : la zone « tests de paquet » balaie `*`, donc un
+    # sous-dossier y entre dans la liste et `read_text` leve `IsADirectoryError`. Le garde plantait
+    # alors au lieu de rendre un verdict - et il plantait CHEZ LE DEVELOPPEUR seulement, puisqu'un
+    # arbre fraichement clone n'en porte pas. C'est exactement ce que le commentaire de
+    # [#ZONES_NETTOYEES] promet d'eviter : « un garde qui ment selon la machine ne vaut rien ».
+    pages = [
+        p for p in sorted(balayage) if p.is_file() and not any(part in exclus for part in p.parts)
+    ]
     if not pages:
         raise AssertionError(f"zone « {racine} » : aucun fichier « {motif} », le garde ne balaie rien")
     for page in pages:
