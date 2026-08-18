@@ -68,6 +68,9 @@ class CablageInjecteursCaptureTest {
             Map.entry("CaptureBandeauRetour", "rend le bandeau de retour seul, sans injecteur"),
             Map.entry("CaptureRefusRattachement", "rend le bandeau de retour seul, avec le message du produit"),
             Map.entry("CaptureCompteRendu", "rend un composant de compte rendu, sans injecteur"),
+            Map.entry(
+                    "CaptureCompteRenduParticipation",
+                    "rend un composant de compte rendu, sans injecteur, sur un résultat d'import composé à la main"),
             Map.entry("CaptureCompteRenduDepot", "rend un composant de compte rendu, sans injecteur"),
             Map.entry("CaptureCompteRenduReleve", "rend un composant de compte rendu, sans injecteur"),
             Map.entry("CaptureEcranReglages", "rend l'écran des réglages depuis l'injecteur racine"),
