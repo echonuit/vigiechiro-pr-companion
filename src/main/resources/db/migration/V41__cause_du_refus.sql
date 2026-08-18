@@ -1,0 +1,23 @@
+-- V41 - Un refus definitif dit POURQUOI il est definitif (#3689, suite de #3469 et #3687).
+--
+-- Depuis V39, une unite refusee porte echec_definitif. Depuis #3687, l ecran cesse de proposer une
+-- reprise sur ces unites-la : le bouton ne ment plus. Mais rien ne les REARME quand la cause exterieure
+-- est levee, si bien qu une nuit dont toutes les archives ont ete refusees reste coincee sans recours.
+--
+-- Decider quand un refus cesse d etre definitif demandait de savoir DE QUOI il retourne, et ces refus
+-- ne sont pas de meme nature :
+--
+--   401 / 403 - authentification, droits S3. Une reconnexion reussie les repare.
+--   400 / 422 - le contenu lui-meme est refuse. Aucun evenement exterieur ne le repare.
+--
+-- Le statut existait deja, mais SEULEMENT dans le texte de message_erreur (« HTTP 403 : ... »), et le
+-- depot s interdit de le relire : « jamais d une lecture du texte de la raison, la meme panne s y ecrit
+-- de trop de facons pour qu on la redevine ». D ou cette colonne, decidee a l emission.
+--
+-- Une COLONNE et non un statut, pour la raison que V39 developpe : restantes() rend « tout sauf
+-- depose », et toutesDeposees() vaut « restantes() est vide ». Un statut ferait basculer le passage en
+-- DEPOSE alors qu il manque des sons.
+--
+-- Defaut NULL : les lignes anterieures ne disent rien de leur cause, et ne se rearment donc pas
+-- automatiquement - le comportement d avant cette migration.
+ALTER TABLE depot_unite ADD COLUMN cause_refus TEXT;

@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.persistence.DaoGenerique;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
@@ -176,15 +177,34 @@ public class DepotUniteDao extends DaoGenerique<DepotUnite, Long> {
     ///
     /// @param definitif ce que `ReponseApi.estReessayable()` a dit de la réponse, **pas** une lecture
     ///     du texte de la raison : la même panne s'écrit de trop de façons pour qu'on la redevine
-    public void marquerEchec(long id, String raison, boolean definitif, String majLe) {
+    public void marquerEchec(long id, String raison, boolean definitif, CauseRefus cause, String majLe) {
         executerMaj(
                 "UPDATE depot_unite SET statut = ?, fichier_id_distant = NULL, message_erreur = ?,"
-                        + " echec_definitif = ?, maj_le = ? WHERE id = ?",
+                        + " echec_definitif = ?, cause_refus = ?, maj_le = ? WHERE id = ?",
                 StatutDepotUnite.ECHEC.valeur(),
                 raison,
                 definitif ? 1 : 0,
+                cause == null ? null : cause.name(),
                 majLe,
                 id);
+    }
+
+    /// Rearme les unites refusees pour la cause donnee : elles redeviennent **a deposer** (#3689).
+    ///
+    /// Le drapeau et la cause sont effaces ensemble - une unite rearmee n est plus un refus definitif,
+    /// et laisser sa cause derriere elle ferait mentir la colonne au prochain relevé.
+    ///
+    /// Le message d erreur, lui, est conserve : il dit ce qui s est passe la fois d avant, et c est
+    /// encore vrai. Il sera ecrase par la prochaine tentative, qu elle aboutisse ou non.
+    ///
+    /// @return combien d unites ont ete rearmees
+    public int rearmer(CauseRefus cause, String majLe) {
+        return executerMaj(
+                "UPDATE depot_unite SET statut = ?, echec_definitif = 0, cause_refus = NULL, maj_le = ?"
+                        + " WHERE echec_definitif = 1 AND cause_refus = ?",
+                StatutDepotUnite.A_DEPOSER.valeur(),
+                majLe,
+                cause.name());
     }
 
     private static void supprimerHorsPlan(Connection cx, Long passageId, Set<String> identifiantsPlan)

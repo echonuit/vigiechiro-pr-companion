@@ -73,7 +73,8 @@ public class MigrationSchema {
         "V37__statut_recupere.sql",
         "V38__commune_du_point.sql",
         "V39__echec_definitif.sql",
-        "V40__point_publie.sql"
+        "V40__point_publie.sql",
+        "V41__cause_du_refus.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";

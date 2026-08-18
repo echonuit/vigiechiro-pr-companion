@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JournalMutations;
 import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
+import fr.univ_amu.iut.commun.model.RearmementDepot;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.SourceUniverselle;
 import fr.univ_amu.iut.commun.model.SourceUniversellePreferee;
@@ -127,6 +128,9 @@ public class CommunModule extends AbstractModule {
         // M-Passage le consomme en Optional : sans connexion (ou feature désactivée), le bouton d'import
         // n'apparaît tout simplement pas.
         OptionalBinder.newOptionalBinder(binder(), ImportObservations.class);
+        // Rearmement d un depot refuse (#3689) : port declare A VIDE, implemente par la feature
+        // `lot`. La connexion le consomme en Optional - sans `lot`, il n y a rien a rearmer.
+        OptionalBinder.newOptionalBinder(binder(), RearmementDepot.class);
     }
 
     /// Descripteurs de l'onglet « Fonctionnalités » : un booléen `feature.<id>.active` par feature

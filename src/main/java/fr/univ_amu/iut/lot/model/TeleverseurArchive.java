@@ -113,9 +113,9 @@ final class TeleverseurArchive {
     /// avant #2586, où le garde-fou d'espace disque parcourait les originaux puis oubliait le volume.
     ///
     /// @param octets taille du fichier parti, `0` sur un échec (rien n'est en ligne) ou un fichier illisible
-    record Resultat(String fichierId, String raison, boolean definitif, long octets) {
+    record Resultat(String fichierId, String raison, boolean definitif, CauseRefus cause, long octets) {
         static Resultat reussi(String fichierId, long octets) {
-            return new Resultat(fichierId, null, false, Math.max(0, octets));
+            return new Resultat(fichierId, null, false, null, Math.max(0, octets));
         }
 
         /// Échec dont on ne sait pas s'il se retente : **conservateur**, donc rejouable.
@@ -124,15 +124,18 @@ final class TeleverseurArchive {
         /// n'existe. Le `PUT` S3 d'un seul bloc l'empruntait aussi, faute de rendre son statut ; depuis
         /// #3688 il rend son issue et passe par la variante ci-dessous.
         static Resultat echec(String raison) {
-            return new Resultat(null, raison, false, 0);
+            return new Resultat(null, raison, false, null, 0);
         }
 
         /// Échec dont la **réponse** dit s'il se retente (#3469).
         ///
         /// Le caractère définitif vient de `ReponseApi.estReessayable()`, et jamais d'une lecture du
         /// texte de la raison : la même panne s'y écrit de trop de façons pour qu'on la redevine.
+        /// La cause vient du **statut**, decidee ici (#3689) : elle dira plus tard ce qui peut la
+        /// lever - une reconnexion reussie pour un refus d authentification, rien pour un contenu
+        /// refuse. Nulle sur un echec rejouable, qui n a pas a en porter.
         static Resultat echec(String raison, ReponseApi<?> reponse) {
-            return new Resultat(null, raison, !reponse.estReessayable(), 0);
+            return new Resultat(null, raison, !reponse.estReessayable(), CauseRefus.de(reponse), 0);
         }
 
         boolean reussi() {
