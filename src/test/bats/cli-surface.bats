@@ -133,6 +133,28 @@ COMMANDES_LOCALES_SANS_ARG=(
   [ "${status}" -eq 2 ]
   [[ "${output}" == *"jeton"* ]]
   [[ "${output}" != *"Exception"* ]]
+  # ⚠️ Le mot « jeton » ne suffit pas, et c'est ce qui a laissé passer #3963 : le refus conseillait
+  # « vigiechiro connexion --token <jeton> », commande qui n'a jamais existé. La phrase contenait le
+  # mot, donc le garde était vert. On vérifie donc le GESTE : le refus nomme les voies réelles.
+  [[ "${output}" == *"--token"* ]]
+  [[ "${output}" == *"VIGIECHIRO_TOKEN"* ]]
+  [[ "${output}" != *"vigiechiro connexion"* ]]
+}
+
+@test "surface : toute commande citee dans un refus est connue du binaire (#3963)" {
+  # Le pendant, sur le VRAI processus, de GesteAttenduCliTest : ce que le refus conseille se tape.
+  run cli lister-sites-vigiechiro --portee plateforme
+  [ "${status}" -eq 2 ]
+
+  local citees
+  citees=$(printf '%s' "${output}" | grep -oE 'vigiechiro [a-z][a-z0-9-]+' | awk '{print $2}' | sort -u)
+  for commande in ${citees}; do
+    run cli "${commande}" --help
+    [ "${status}" -eq 0 ] || {
+      echo "le refus conseille « vigiechiro ${commande} », que le binaire refuse (exit ${status})"
+      return 1
+    }
+  done
 }
 
 @test "lister-sites-vigiechiro : --carre avec --tout est refusé, sans réseau ni jeton (#3769)" {

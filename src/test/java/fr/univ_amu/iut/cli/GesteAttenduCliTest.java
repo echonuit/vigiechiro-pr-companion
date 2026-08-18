@@ -2,67 +2,102 @@ package fr.univ_amu.iut.cli;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.cli.commande.CommandeRacine;
 import fr.univ_amu.iut.commun.model.Besoin;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.commun.viewmodel.GesteAttendu;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import picocli.CommandLine.Command;
 
-/// #2635 : un refus dit **ce qui manque**, chaque surface dit **quoi faire**.
+/// Ce qu'un refus de la ligne de commande a le droit de conseiller (#3963).
 ///
-/// Le test vit dans le paquet `cli` parce que c'est le seul endroit d'où l'on voit les deux formateurs -
-/// celui de la ligne de commande y est confiné. Exposer le second uniquement pour qu'un test les compare
-/// aurait élargi la production au service du test.
+/// ## Le défaut que ce fichier ferme
 ///
-/// Ce qui est vérifié n'est pas la formulation, qui changera, mais le fait que le modèle n'en porte
-/// aucune : le même refus donne **deux gestes** et **un seul** énoncé.
+/// `GesteAttenduCli` conseillait « Connectez-vous avec « vigiechiro connexion --token <jeton> » ».
+/// Cette commande **n'a jamais existé** : la frapper répond « Commande inconnue ». Le conseil menait
+/// donc droit dans une erreur, sur trois commandes réseau qui lèvent ce besoin.
+///
+/// ⚠️ **Pourquoi aucun garde ne l'a vu.** Le test `bats` qui exerce ce chemin affirmait
+/// `[[ "${output}" == *"jeton"* ]]` : il vérifiait un **mot**, pas un geste. La phrase fausse contenait
+/// le mot, donc le garde était vert.
+///
+/// C'est l'ADR 3854 - un refus ne conseille que ce qu'il a vérifié applicable - côté ligne de commande.
 class GesteAttenduCliTest {
 
+    /// Toute mention de la forme « vigiechiro xxx » dans un message.
+    private static final Pattern COMMANDE_CITEE = Pattern.compile("vigiechiro ([a-z][a-z0-9-]+)");
+
     @Test
-    @DisplayName("Le même refus donne un chemin de menu dans l'application, une commande au terminal")
-    void deux_surfaces_deux_gestes() {
-        RegleMetierException refus = new RegleMetierException(
-                "Les observations n'ont pas pu être lues : l'application n'est pas connectée à Vigie-Chiro.",
-                new Besoin.Connexion());
+    @DisplayName("#3963 : aucun message ne cite une commande que le binaire ne connaît pas")
+    void aucune_commande_inventee() {
+        Set<String> connues = sousCommandes();
+        assertThat(connues)
+                .as("le dispositif est cassé : aucune sous-commande lue, la vérification serait vide")
+                .isNotEmpty();
 
-        String pourLApplication = GesteAttendu.message(refus);
-        String pourLeTerminal = GesteAttenduCli.message(refus);
-
-        assertThat(pourLApplication).contains("menu principal").doesNotContain("vigiechiro connexion");
-        assertThat(pourLeTerminal).contains("vigiechiro connexion").doesNotContain("menu principal > Se connecter");
-        // L'énoncé, lui, est le même des deux côtés : c'est le fait, il n'appartient à aucune surface.
-        assertThat(pourLApplication).contains("n'est pas connectée à Vigie-Chiro");
-        assertThat(pourLeTerminal).contains("n'est pas connectée à Vigie-Chiro");
+        for (String message : tousLesMessages()) {
+            Matcher citation = COMMANDE_CITEE.matcher(message);
+            while (citation.find()) {
+                assertThat(connues)
+                        .as(
+                                "« %s » est conseillée par « %s », et le binaire ne la connaît pas",
+                                citation.group(1), message)
+                        .contains(citation.group(1));
+            }
+        }
     }
 
     @Test
-    @DisplayName("Une fonctionnalité éteinte se règle dans l'application, et le terminal le dit franchement")
-    void fonctionnalite_se_regle_dans_l_application() {
-        RegleMetierException refus = new RegleMetierException(
-                "Régénérer les séquences est impossible : la fonctionnalité « Importation » est désactivée.",
-                new Besoin.Fonctionnalite("Importation"));
+    @DisplayName("#3963 : le besoin de connexion nomme les trois voies réelles d'apport du jeton")
+    void le_geste_de_connexion_est_celui_qui_existe() {
+        String message = GesteAttenduCli.message(new RegleMetierException("Non connecté.", new Besoin.Connexion()));
 
-        assertThat(GesteAttenduCli.message(refus))
-                .as("mieux vaut renvoyer à l'endroit qui existe que d'inventer une commande")
-                .contains("dans l'application")
-                .contains("ne se règlent pas en ligne de commande");
+        assertThat(message).contains("--token").contains("VIGIECHIRO_TOKEN").contains("dans l'application");
+        assertThat(message)
+                .as("la commande « connexion » n'existe pas : la conseiller mène à « Commande inconnue »")
+                .doesNotContain("vigiechiro connexion");
     }
 
     @Test
-    @DisplayName("Un refus sans besoin est rendu tel quel : on n'invente pas un geste")
-    void sans_besoin_rien_n_est_ajoute() {
-        RegleMetierException refus = new RegleMetierException("Ce passage est déjà déposé.");
-
-        assertThat(GesteAttendu.message(refus)).isEqualTo("Ce passage est déjà déposé.");
-        assertThat(GesteAttenduCli.message(refus)).isEqualTo("Ce passage est déjà déposé.");
+    @DisplayName("#3963 : l'application se désigne « menu principal », jamais par un pictogramme")
+    void l_application_se_designe_comme_partout_ailleurs() {
+        // Même raison que l'ADR 3470 côté message d'incident : deux désignations pour une seule entrée
+        // obligent le lecteur à deviner qu'il s'agit du même endroit.
+        assertThat(tousLesMessages()).allSatisfy(message -> assertThat(message).doesNotContain("☰"));
     }
 
-    @Test
-    @DisplayName("Une exception quelconque traverse sans dommage")
-    void exception_ordinaire_traverse() {
-        assertThat(GesteAttendu.message(new IllegalStateException("état incohérent")))
-                .isEqualTo("état incohérent");
-        assertThat(GesteAttenduCli.message(new IllegalStateException("état incohérent")))
-                .isEqualTo("état incohérent");
+    /// Les messages que cette classe sait produire, un par famille de besoin.
+    private static List<String> tousLesMessages() {
+        return Stream.of(new Besoin.Connexion(), new Besoin.Fonctionnalite("Recherche globale"))
+                .map(besoin -> GesteAttenduCli.message(new RegleMetierException("Geste impossible.", besoin)))
+                .toList();
+    }
+
+    /// Les noms de sous-commandes **déclarés** sur la racine, lus à l'annotation.
+    ///
+    /// Par réflexion et non par `new CommandLine(...)` : construire la ligne réelle demanderait
+    /// l'injecteur complet, quand la seule chose qui nous intéresse ici est la liste des noms.
+    private static Set<String> sousCommandes() {
+        Set<String> noms = new LinkedHashSet<>();
+        collecter(CommandeRacine.class, noms);
+        return noms;
+    }
+
+    private static void collecter(Class<?> commande, Set<String> noms) {
+        Command declaration = commande.getAnnotation(Command.class);
+        if (declaration == null) {
+            return;
+        }
+        if (!declaration.name().isBlank()) {
+            noms.add(declaration.name());
+        }
+        Arrays.stream(declaration.subcommands()).forEach(fille -> collecter(fille, noms));
     }
 }
