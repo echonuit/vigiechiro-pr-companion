@@ -348,9 +348,13 @@ tourner() {
         filmer "$ecran" "$sortie" 45 &
         local camera=$!
         parcours_declarer_un_carre "$ecran" "$marques" || code=1
-        # L'instant d'arrêt, pour que `t0` se mesure au lieu de se postuler.
-        marque "$marques" arret
         wait "$camera"
+        # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
+        # fichier » : il faut donc l'instant où la CAMÉRA s'est arrêtée, pas celui où le parcours
+        # s'est terminé. Marqué avant le `wait`, les repères se convertissaient en 21,3 s à 45,0 s -
+        # un parcours qui n'aurait commencé qu'à la moitié d'un film qu'il occupe en entier. Le
+        # montage aurait coupé les mauvaises plages, et le film serait resté parfaitement valide.
+        marque "$marques" arret
     else
         echo "❌ Le produit n'a pas ouvert de fenêtre : rien à filmer."
         echo "   Journal : $bac/produit.log"
