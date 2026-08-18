@@ -194,12 +194,19 @@ final class GraineSonsValidation {
         Parent vue = charger(loader);
         SonsValidationController controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.References(ID_UTILISATEUR));
-        // 860 px et non 720 : a 720, l'`AudioView` etait comprime au point que sa barre de transport
+        // 872 px et non 720 : a 720, l'`AudioView` etait comprime au point que sa barre de transport
         // (Pause, Temps +/-, Freq. +/-, l'horloge) disparaissait entierement de l'apercu, et que ses
         // graduations, peintes a la taille naturelle du composant, se retrouvaient DERRIERE la barre
         // d'actions - la legende des raccourcis clavier finissant coupee par le bord (#2129). Un
         // composant qui peint hors de la boite qu'on lui laisse ne se comprime pas, il deborde.
-        Scene scene = new Scene(vue, largeur, 860);
+        //
+        // ⚠️ 860 tenait a 0 px pres, et le chantier #4002 l'a fait ceder : la barre du haut a grandi de
+        // 2 px (le bouton ☰ passe sur le jeton `-hauteur-controle-barre`), le panneau audio a commence
+        // 2 px plus bas, et la barre de transport s'est retrouvee rognee par le haut - « Freq. » y
+        // perdait ses accents sur SIX apercus. Mesure a la regeneration : 860 rogne, 862 rogne encore,
+        // 872 degage la barre entiere. La marge est deliberee : une valeur au ras du besoin se reperd
+        // au premier controle qui grandit d'un pixel.
+        Scene scene = new Scene(vue, largeur, 872);
 
         ApercuFx.capturerApresPreparation(
                 scene,

@@ -106,7 +106,8 @@ class GestionnaireColonnesTest {
                     List.of(
                             new GestionnaireColonnes.Colonne(table.getColumns().get(0), "A", true),
                             new GestionnaireColonnes.Colonne(table.getColumns().get(1), "B", false),
-                            new GestionnaireColonnes.Colonne(table.getColumns().get(2), "C", false)));
+                            new GestionnaireColonnes.Colonne(table.getColumns().get(2), "C", false)),
+                    () -> {});
             racine.getChildren().setAll(panneau);
         });
 

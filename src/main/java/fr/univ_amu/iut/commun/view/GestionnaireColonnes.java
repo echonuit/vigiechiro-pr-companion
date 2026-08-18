@@ -127,11 +127,7 @@ public final class GestionnaireColonnes {
     public static void ouvrir(TableView<?> table, List<Colonne> colonnes, Node ancre) {
         Popup popup = new Popup();
         popup.setAutoHide(true);
-        VBox panneau = construirePanneau(table, colonnes);
-        Button fermer = new Button("Fermer");
-        fermer.setMaxWidth(Double.MAX_VALUE);
-        fermer.setOnAction(e -> popup.hide());
-        panneau.getChildren().add(fermer);
+        VBox panneau = construirePanneau(table, colonnes, popup::hide);
         popup.getContent().add(panneau);
         // Le Popup a sa propre scène et n'hérite pas des feuilles de l'écran : on y joint palette + design
         // pour que les classes d'affordance du panneau (poignee-colonne, ligne-colonne) prennent effet (#801).
@@ -246,11 +242,17 @@ public final class GestionnaireColonnes {
         };
     }
 
-    /// Construit le contenu du panneau (titre + liste réordonnable), sur l'**ordre courant** des colonnes
-    /// dans la table. Public (et non plus seulement `ouvert` par [#ouvrir]) pour être **rendu sans fenêtre
-    /// flottante** : par les tests et par les outils de capture d'écran (le `Popup` n'est pas capturé par le
-    /// `snapshot` de scène ; on rend donc directement ce `VBox`).
-    public static VBox construirePanneau(TableView<?> table, List<Colonne> colonnes) {
+    /// Construit le panneau **complet** (titre, liste réordonnable, bouton « Fermer »), sur l'**ordre
+    /// courant** des colonnes dans la table. Public (et non plus seulement `ouvert` par [#ouvrir]) pour être
+    /// **rendu sans fenêtre flottante** : par les tests et par les outils de capture d'écran (le `Popup`
+    /// n'est pas capturé par le `snapshot` de scène ; on rend donc directement ce `VBox`).
+    ///
+    /// ⚠️ Le bouton « Fermer » est assemblé **ici**, et non chez l'appelant : il l'était dans [#ouvrir], si
+    /// bien que la capture de documentation - qui appelle cette méthode - montrait un panneau **sans** le
+    /// bouton que le produit affiche. Une capture reconstruite au lieu d'être rendue finit toujours par
+    /// mentir (#1468) ; l'assemblage partagé est ce qui l'en empêche. `fermeture` est le geste de
+    /// fermeture : `Popup::hide` en production, un geste vide pour une capture, qui n'a rien à refermer.
+    public static VBox construirePanneau(TableView<?> table, List<Colonne> colonnes, Runnable fermeture) {
         List<Colonne> ordonnees = new ArrayList<>(colonnes);
         ordonnees.sort(Comparator.comparingInt(c -> table.getColumns().indexOf(c.colonne())));
 
@@ -261,7 +263,13 @@ public final class GestionnaireColonnes {
 
         Label titre = new Label("Colonnes  ·  glisser pour réordonner");
         titre.getStyleClass().add("titre-panneau-colonnes");
-        VBox panneau = new VBox(6, titre, liste);
+
+        Button fermer = new Button("Fermer");
+        fermer.getStyleClass().add("bouton-secondaire");
+        fermer.setMaxWidth(Double.MAX_VALUE);
+        fermer.setOnAction(evenement -> fermeture.run());
+
+        VBox panneau = new VBox(6, titre, liste, fermer);
         panneau.getStyleClass().add("panneau-colonnes");
         panneau.setPadding(new Insets(8));
         panneau.setStyle("-fx-background-color: -fx-background; -fx-border-color: -fx-box-border;"

@@ -182,8 +182,11 @@ public final class CaptureAnalyse {
                 () -> {
                     if (vue.lookup(ID_TABLE_ESPECES) instanceof TableView<?> table) {
                         table.getSelectionModel().select(0);
+                        // Geste de fermeture vide : un apercu n'a pas de fenetre a refermer. Le bouton
+                        // « Fermer » est neanmoins RENDU, puisque le produit l'affiche (cf. passe 8 du
+                        // chantier #4002 : la capture le montrait absent).
                         VBox panneau = GestionnaireColonnes.construirePanneau(
-                                table, GestionnaireColonnes.colonnesParDefaut(table));
+                                table, GestionnaireColonnes.colonnesParDefaut(table), () -> {});
                         panneau.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
                         StackPane.setAlignment(panneau, Pos.TOP_RIGHT);
                         StackPane.setMargin(panneau, new Insets(70, 24, 0, 0));

@@ -78,6 +78,7 @@ public abstract class SuiviProgression implements SuiviOperation {
         lblMessage.setWrapText(true);
         lblMessage.textProperty().bind(progression.messageProperty());
         Button annuler = new Button("Annuler");
+        annuler.getStyleClass().add("bouton-secondaire");
         annuler.setOnAction(evenement -> jeton.annuler());
         HBox actions = new HBox(annuler);
         actions.setAlignment(Pos.CENTER_RIGHT);
