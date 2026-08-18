@@ -133,8 +133,13 @@ if [ "${AUTO_TEST:-non}" = "oui" ]; then
     # que le code de retour - et deux refus pour des raisons opposées se ressemblent alors trait pour
     # trait. Vu en éprouvant cet autotest : en retirant la garde du marqueur absent, AUCUN cas n'a
     # rougi, parce que le refus tombait quand même, en accusant la suite au lieu de la veille.
+    # Le compte des cas et de ceux qui DOIVENT rougir (#3886).
+    cas=0
+    rouges=0
     verifie() { # <attendu> <libellé> <historique> [motif attendu dans la sortie]
         local code=0 sortie
+        cas=$((cas + 1))
+        if [ "$1" != 0 ]; then rouges=$((rouges + 1)); fi
         sortie=$(juger "$3" 10 "${MAINTENANT}" 2>&1) || code=$?
         if [ "${code}" != "$1" ]; then
             echo "  ✘ $2 : attendu $1, obtenu ${code}"
@@ -177,6 +182,10 @@ if [ "${AUTO_TEST:-non}" = "oui" ]; then
     # Contrôle NÉGATIF : un ciblé récent ne doit pas masquer un complet plus ancien mais encore frais.
     verifie 0 "un ciblé récent ne masque pas un complet encore frais" \
         "$(printf '2026-08-14T06:00:00Z\tsuccess\t%s\n2026-08-12T06:00:00Z\tsuccess\t%s' "$K" "$C")"
+
+    echo
+    if [ "${rouges}" -eq 1 ]; then verbe=DOIT; else verbe=DOIVENT; fi
+    echo "${cas} cas, dont ${rouges} qui ${verbe} rougir."
     exit "${echecs}"
 fi
 

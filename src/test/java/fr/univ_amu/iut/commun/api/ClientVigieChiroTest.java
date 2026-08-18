@@ -113,8 +113,10 @@ class ClientVigieChiroTest {
         // et non pour la panne réseau qu'il prétend éprouver.
         System.setProperty(UrlSigneeAdmise.PROPRIETE_HOTES, "localhost");
         try {
-            assertThat(client.televerserVersS3("https://localhost:1/s3/signe", new byte[] {1, 2, 3}, "audio/x-wav"))
-                    .isFalse();
+            assertThat(client.televerserVersS3("https://localhost:1/s3/signe", new byte[] {1, 2, 3}, "audio/x-wav")
+                            .echec())
+                    .as("panne reseau : l issue porte la cause, la ou un booleen la perdait")
+                    .isPresent();
         } finally {
             System.clearProperty(UrlSigneeAdmise.PROPRIETE_HOTES);
         }
@@ -125,9 +127,10 @@ class ClientVigieChiroTest {
     void upload_s3_en_clair_refuse() {
         ClientVigieChiro client = clientHorsLigne("https://api.exemple/api/v1", TOKEN_ABC);
 
-        assertThat(client.televerserVersS3("http://ailleurs.example/s3/signe", new byte[] {1, 2, 3}, "audio/x-wav"))
+        assertThat(client.televerserVersS3("http://ailleurs.example/s3/signe", new byte[] {1, 2, 3}, "audio/x-wav")
+                        .echec())
                 .as("les octets d'une nuit ne partent pas vers un hôte inattendu")
-                .isFalse();
+                .isPresent();
     }
 
     private static ParticipationADeposer participationMinimale() {

@@ -11,7 +11,7 @@ Marie vient de récupérer la carte SD de son enregistreur après une nuit d'enr
     - journal du capteur détecté ✅, **n° de série de l'enregistreur** extrait
     - relevé climatique détecté ✅ (ou non, signalé)
     - N enregistrements originaux détectés, taille totale, plage horaire couverte
-    - paramètres d'acquisition (Fe, gain, bande de fréquence) extraits du journal du capteur
+    - paramètres d'acquisition (Fe, gain, bande de fréquence) extraits du journal du capteur. Si la carte porte plusieurs nuits, le journal porte plusieurs configurations, et chaque nuit reçoit celle de **sa** session (cf. [E2.S9](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s9))
     - **état du nommage** des fichiers : sans préfixe (cas neuf), tous déjà préfixés `CarXXXXXX-AAAA-PassN-YY-` (cas d'un dossier déjà passé chez LupasRename ou d'un re-import), ou mélangé (cas d'un import précédent partiellement corrompu).
 3. La modale d'import demande à Marie de **rattacher la nuit à un site, un point, une année et un n° de passage**. Le pré-remplissage de ces 4 champs dépend de l'état du nommage :
     - **Cas « sans préfixe » (le plus courant)** :

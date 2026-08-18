@@ -5,7 +5,9 @@ import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.view.SuitLaRevision;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CarteSite;
@@ -41,7 +43,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// Implémente [ResumeStatut] (#693) : le résumé de l'écran (« N sites déclarés · N passages ») est
 /// affiché dans la **barre de statut** plutôt qu'en sous-titre, le titre étant redondant avec le fil
 /// d'Ariane.
-public class MesSitesController implements ResumeStatut {
+public class MesSitesController implements ResumeStatut, RafraichirAuRetour, SuitLaRevision {
 
     private static final String STYLE_STAT_NOMBRE = "carte-site-nombre";
     private static final String STYLE_STAT_LIBELLE = "carte-site-libelle";
@@ -129,6 +131,27 @@ public class MesSitesController implements ResumeStatut {
         // le filet de l'écran (#795), application des cartes sur le fil JavaFX.
         occupation.occuper(
                 "Chargement de vos sites…", viewModel::charger, viewModel::appliquer, viewModel::signalerErreur);
+    }
+
+    /// Relu quand on **revient** sur l'écran (← Retour ou fil d'Ariane), parce que
+    /// `Navigateur.revenirAIndex` restaure le **nœud mémorisé** : sans cela, la liste montre l'état
+    /// d'avant. `CarteSite` porte trois compteurs et le site lui-même - nom, carré, protocole - donc
+    /// tout y est périssable (#3644).
+    ///
+    /// ⚠️ Ce contrat-ci est **nécessaire même quand [#rafraichirDepuisLaDonnee()] existe** : renommer un
+    /// site est un `update`, aucun des quatre comptes de l'accueil ne bouge, et rien n'annonce - c'est
+    /// l'ADR 3840. Les deux ne sont pas redondants ; retirer celui-ci casserait la fraîcheur en silence.
+    @Override
+    public void rafraichirAuRetour() {
+        occupation.occuper(
+                "Chargement de vos sites…", viewModel::charger, viewModel::appliquer, viewModel::signalerErreur);
+    }
+
+    /// L'autre moitié : ce qui change **pendant** qu'on regarde l'écran - une synchronisation, un import
+    /// lancé ailleurs, une remise à zéro. Même relecture.
+    @Override
+    public void rafraichirDepuisLaDonnee() {
+        rafraichirAuRetour();
     }
 
     /// Action « Récupérer depuis VigieChiro » (#1045, déportée #1212) : pull best-effort puis

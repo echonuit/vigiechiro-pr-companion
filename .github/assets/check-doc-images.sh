@@ -14,8 +14,15 @@ set -uo pipefail
 # arborescence jetable, donc le cas de test et le chemin réel sont le même code.
 if [ "${1:-}" = "--auto-test" ]; then
     echecs=0
+    # Le compte des cas et de ceux qui DOIVENT rougir (#3886) : un auto-test dont on ignore combien
+    # de cas éprouvent le refus ne s'audite pas d'un coup d'oeil, et celui qui n'en aurait aucun ne
+    # prouverait rien du tout.
+    cas=0
+    rouges=0
     verifie() { # <attendu> <libellé>
         code=0
+        cas=$((cas + 1))
+        if [ "$1" != 0 ]; then rouges=$((rouges + 1)); fi
         DOC_IMAGES_RACINE="$bac" "$0" >/dev/null 2>&1 || code=$?
         if [ "${code}" = "$1" ]; then
             echo "  ✔ $2"
@@ -57,6 +64,8 @@ if [ "${1:-}" = "--auto-test" ]; then
     rm "$bac/docs/page.md"
     verifie 0 "une doc sans aucune capture n'a rien à vérifier"
 
+    echo
+    echo "${cas} cas, dont ${rouges} qui DOIVENT rougir."
     if [ "${echecs}" = 0 ]; then
         echo "Auto-test de la garde images de doc : OK"
     else

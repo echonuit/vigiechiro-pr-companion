@@ -473,6 +473,37 @@ class CompteRenduChiffreImportTest {
         }
 
         @Test
+        @DisplayName("#3473 : l'annonce dit aussi ce qu'il reste à compléter sur le portail")
+        void participation_creee_dit_ce_qui_reste() {
+            // Le retour de terrain : « je trouverais utile d'avoir un petit message nous disant
+            // "passage créé sur vigichiro ; pensez à remplir les informations complémentaires !" ».
+            // Le message annonçait la création, donc un fait accompli, ce qui se lit comme « c'est
+            // fait » alors que la fiche web reste à compléter (météo, matériel, commentaires).
+            ResultatImport avecParticipation =
+                    resultat(rapportType(), VolumesImport.AUCUN, List.of()).avecParticipationCreee();
+
+            CompteRenduChiffre rendu = CompteRenduChiffreImport.de(avecParticipation, List.of());
+
+            assertThat(rendu.textesDesAvertissements())
+                    .anySatisfy(texte -> assertThat(texte).contains("compléter"));
+        }
+
+        @Test
+        @DisplayName("#3473 : la forme plurielle le dit aussi, c'est celle d'un import multi-nuits")
+        void participations_creees_disent_ce_qui_reste() {
+            // La forme qu'on oublie : elle ne sort que d'un import découpé en plusieurs nuits, et
+            // c'est justement le cas d'une carte laissée plusieurs jours sur le terrain.
+            var nuits = new ResultatImportMultiNuits(List.of(
+                    MultiNuits.nuit("2026-04-22", 2, 0).avecParticipationCreee(),
+                    MultiNuits.nuit("2026-04-23", 1, 0).avecParticipationCreee()));
+
+            CompteRenduChiffre rendu = CompteRenduChiffreImport.de(nuits, List.of());
+
+            assertThat(rendu.textesDesAvertissements())
+                    .anySatisfy(texte -> assertThat(texte).contains("compléter"));
+        }
+
+        @Test
         @DisplayName("Sans participation, rien n'est annoncé : il n'y a rien à dire")
         void sans_participation_rien_a_dire() {
             CompteRenduChiffre rendu =

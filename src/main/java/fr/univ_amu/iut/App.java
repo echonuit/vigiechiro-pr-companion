@@ -2,11 +2,11 @@ package fr.univ_amu.iut;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.di.Amorcage;
+import fr.univ_amu.iut.commun.model.CauseLisible;
 import fr.univ_amu.iut.commun.model.ConfigurationJournalisation;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.view.AlerteDemarrage;
-import fr.univ_amu.iut.commun.view.CauseLisible;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;

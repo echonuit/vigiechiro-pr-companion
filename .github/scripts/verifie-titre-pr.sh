@@ -29,8 +29,13 @@ MOTIF='^(feat|fix|perf|refactor|docs|test|chore|ci|build|style|revert)(\([a-z0-9
 # nomme un titre CONNU et le code attendu. Lancé par `lint.yml`, à côté de l'auto-test des ADR.
 if [ "${TITRE}" = "--auto-test" ]; then
     echecs=0
+    # Le compte des cas et de ceux qui DOIVENT rougir (#3886).
+    cas=0
+    rouges=0
     verifie() { # <attendu> <titre> <libellé>
         code=0
+        cas=$((cas + 1))
+        if [ "$1" != 0 ]; then rouges=$((rouges + 1)); fi
         "$0" "$2" >/dev/null 2>&1 || code=$?
         if [ "${code}" = "$1" ]; then
             echo "  ✔ $3"
@@ -55,6 +60,10 @@ if [ "${TITRE}" = "--auto-test" ]; then
     verifie 0 "fix(passage): le point C3 et le carre A1 sont distincts" "un code de point ne déclenche pas"
     verifie 0 "feat(cli): le n° 4 est traite" "un numéro ne déclenche pas"
     verifie 0 "test(fixture): deux semeurs prennent l'entree legere" "une élision correcte ne déclenche pas"
+
+    echo
+    if [ "${rouges}" -eq 1 ]; then verbe=DOIT; else verbe=DOIVENT; fi
+    echo "${cas} cas, dont ${rouges} qui ${verbe} rougir."
     exit "${echecs}"
 fi
 

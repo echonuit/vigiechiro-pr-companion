@@ -35,6 +35,17 @@ class ImporterRenduBilanTest {
     }
 
     @Test
+    @DisplayName("#3942 : la ligne dit aussi ce qu'il RESTE à faire, comme l'écran depuis #3473")
+    void la_participation_creee_dit_ce_qu_il_reste_a_faire() {
+        String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, true), QUADRUPLET);
+
+        assertThat(texte)
+                .as("annoncer une création se lit « c'est fait », or la fiche web attend encore ce que"
+                        + " Companion ne connaît pas")
+                .contains("compléter sur le portail (météo, matériel, commentaires)");
+    }
+
+    @Test
     @DisplayName("#1488 : sans participation créée, la ligne n'existe pas - pas une ligne vide")
     void sans_participation_rien_n_est_dit() {
         String texte = Importer.rendreBilan(resultat(VolumesImport.AUCUN, false), QUADRUPLET);

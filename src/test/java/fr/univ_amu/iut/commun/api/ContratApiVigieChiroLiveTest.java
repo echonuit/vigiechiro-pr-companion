@@ -503,7 +503,9 @@ class ContratApiVigieChiroLiveTest {
                         + " refus ici casserait le dépôt en archives, mode par défaut depuis #984)")
                 .isPresent();
 
-        boolean televerse = client.televerserVersS3(signe.get().urlSignee(), zipDEssai(), "application/zip");
+        boolean televerse = client.televerserVersS3(signe.get().urlSignee(), zipDEssai(), "application/zip")
+                .echec()
+                .isEmpty();
         assertThat(televerse).as("PUT S3 du zip (mime signé application/zip)").isTrue();
 
         boolean finalise = client.finaliserFichier(signe.get().id()).echec().isEmpty();

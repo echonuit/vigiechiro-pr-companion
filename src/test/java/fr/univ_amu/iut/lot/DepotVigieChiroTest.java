@@ -162,7 +162,7 @@ class DepotVigieChiroTest {
                 .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier(eq("ko.wav"), anyString())).thenReturn(ReponseApi.refuse(422, "titre invalide"));
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
-                .thenReturn(true);
+                .thenReturn(ReponseApi.succes(""));
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
         depot.deposer(idPassage, List.of(ok, ko));
 
@@ -238,6 +238,34 @@ class DepotVigieChiroTest {
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOSE);
         assertThat(passage().deposeLe()).isNotNull();
         verify(participations, never()).creerPour(anyLong());
+    }
+
+    @Test
+    @DisplayName("#3688 : un PUT S3 refusé DÉFINITIVEMENT marque l'unité comme non rejouable")
+    void un_refus_definitif_du_put_marque_l_unite(@TempDir Path dossier) throws IOException {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier(anyString(), anyString()))
+                .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3.exemple/signe")));
+        // 403 : une URL signée expirée ou un jeton mort. `ReponseApi.Refuse` ne le juge pas réessayable
+        // (seuls 429 et 5xx le sont), donc l'unité ne doit PAS être reproposée à la reprise.
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenReturn(ReponseApi.refuse(403, "SignatureDoesNotMatch"));
+
+        depot.deposer(idPassage, List.of(fichier(dossier, "nuit.wav")));
+
+        assertThat(depotUnites.parPassage(idPassage)).allSatisfy(unite -> {
+            assertThat(unite.statut()).isEqualTo(StatutDepotUnite.ECHEC);
+            // Le cœur de #3688. Avant, le PUT d'un seul bloc rendait un `boolean` : la réponse mourait
+            // dans le transport, l'échec était supposé rejouable par prudence, et l'utilisateur se
+            // voyait proposer « Retenter les échecs » sur une unité irrécupérable.
+            assertThat(unite.echecDefinitif())
+                    .as("un 403 ne deviendra jamais valide en réessayant : la reprise ne doit pas le" + " reproposer")
+                    .isTrue();
+            assertThat(unite.messageErreur())
+                    .as("et la cause est celle du serveur, pas la devinette « réseau ou fichier"
+                            + " illisible » que rendait l'ancien message")
+                    .contains("403");
+        });
     }
 
     @Test
@@ -440,7 +468,7 @@ class DepotVigieChiroTest {
         when(client.creerFichier(eq("ko.wav"), anyString()))
                 .thenReturn(ReponseApi.refuse(422, "titre invalide")); // déclaration refusée
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
-                .thenReturn(true);
+                .thenReturn(ReponseApi.succes(""));
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
 
         BilanDepot bilan = depot.deposer(idPassage, List.of(ok, ko));
@@ -489,7 +517,7 @@ class DepotVigieChiroTest {
                 .thenReturn(ReponseApi.refuse(403, ""))
                 .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
-                .thenReturn(true);
+                .thenReturn(ReponseApi.succes(""));
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
 
         depot.deposer(idPassage, List.of(fichier));
@@ -515,7 +543,7 @@ class DepotVigieChiroTest {
                 .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier(eq("ko.wav"), anyString())).thenReturn(ReponseApi.refuse(422, "titre invalide"));
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
-                .thenReturn(true);
+                .thenReturn(ReponseApi.succes(""));
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
         depot.deposer(idPassage, List.of(ok, ko)); // 1re tentative : ko.wav en échec
 
@@ -685,7 +713,7 @@ class DepotVigieChiroTest {
         when(client.creerFichier(anyString(), anyString()))
                 .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
-                .thenReturn(true);
+                .thenReturn(ReponseApi.succes(""));
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
     }
 

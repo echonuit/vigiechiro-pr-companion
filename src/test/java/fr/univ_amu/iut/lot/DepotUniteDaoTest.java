@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.lot.model.CauseRefus;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
@@ -53,6 +54,82 @@ class DepotUniteDaoTest {
         passageDao = new PassageDao(source);
         idPassage = insererPassage(2).id();
         dao = new DepotUniteDao(source);
+    }
+
+    @Test
+    @DisplayName("#3689 : une reconnexion réarme les refus d'AUTHENTIFICATION, et eux seuls")
+    void le_rearmement_ne_touche_que_les_refus_d_authentification() {
+        dao.synchroniserPlan(
+                idPassage,
+                List.of(
+                        new DepotUnite(
+                                null,
+                                idPassage,
+                                "jeton.zip",
+                                TypeDepotUnite.ZIP,
+                                StatutDepotUnite.A_DEPOSER,
+                                null,
+                                null,
+                                false,
+                                MAINTENANT),
+                        new DepotUnite(
+                                null,
+                                idPassage,
+                                "contenu.zip",
+                                TypeDepotUnite.ZIP,
+                                StatutDepotUnite.A_DEPOSER,
+                                null,
+                                null,
+                                false,
+                                MAINTENANT)));
+        List<DepotUnite> posees = dao.parPassage(idPassage);
+        // 403 : jeton mort ou droits S3. Une reconnexion peut lever cette cause.
+        dao.marquerEchec(posees.get(0).id(), "HTTP 403 : refus", true, CauseRefus.AUTHENTIFICATION, MAINTENANT);
+        // 422 : le contenu est refusé. Rien dans une reconnexion ne le change.
+        dao.marquerEchec(posees.get(1).id(), "HTTP 422 : refus", true, CauseRefus.CONTENU, MAINTENANT);
+
+        int rearmees = dao.rearmer(CauseRefus.AUTHENTIFICATION, "2026-07-11T13:00:00");
+
+        assertThat(rearmees).as("une seule unité était concernée").isEqualTo(1);
+        DepotUnite jeton = dao.parPassage(idPassage).get(0);
+        assertThat(jeton.statut())
+                .as("le refus d'authentification redevient tentable : la connexion a pu lever sa cause")
+                .isEqualTo(StatutDepotUnite.A_DEPOSER);
+        assertThat(jeton.echecDefinitif())
+                .as("et il n'est plus définitif : laisser le drapeau ferait mentir la table")
+                .isFalse();
+
+        DepotUnite contenu = dao.parPassage(idPassage).get(1);
+        // Le garde-fou : réarmer trop large ramènerait le bouton que #3687 vient de faire taire.
+        assertThat(contenu.statut())
+                .as("un contenu refusé n'est pas réparé par une reconnexion : il ne bouge pas")
+                .isEqualTo(StatutDepotUnite.ECHEC);
+        assertThat(contenu.echecDefinitif()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#3689 : le message d'erreur survit au réarmement, il dit ce qui s'est passé avant")
+    void le_message_survit_au_rearmement() {
+        dao.synchroniserPlan(
+                idPassage,
+                List.of(new DepotUnite(
+                        null,
+                        idPassage,
+                        "jeton.zip",
+                        TypeDepotUnite.ZIP,
+                        StatutDepotUnite.A_DEPOSER,
+                        null,
+                        null,
+                        false,
+                        MAINTENANT)));
+        Long id = dao.parPassage(idPassage).get(0).id();
+        dao.marquerEchec(id, "HTTP 403 : SignatureDoesNotMatch", true, CauseRefus.AUTHENTIFICATION, MAINTENANT);
+
+        dao.rearmer(CauseRefus.AUTHENTIFICATION, "2026-07-11T13:00:00");
+
+        assertThat(dao.parPassage(idPassage).get(0).messageErreur())
+                .as("la tentative précédente a bien échoué ainsi ; la prochaine écrasera ce message")
+                .contains("403");
     }
 
     private Passage insererPassage(int numero) {

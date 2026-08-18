@@ -19,8 +19,14 @@ set -euo pipefail
 # de test et le chemin réel sont donc le même code, par construction.
 if [ "${1:-}" = "--auto-test" ]; then
     echecs=0
+    # Le compte des cas et de ceux qui DOIVENT rougir (#3886) : un auto-test sans cas rouge ne
+    # prouve rien, et on ne s'en aperçoit qu'en le comptant.
+    cas=0
+    rouges=0
     verifie() { # <attendu> <libellé> ; l'arborescence est déjà montée dans $bac
         code=0
+        cas=$((cas + 1))
+        if [ "$1" != 0 ]; then rouges=$((rouges + 1)); fi
         CAPTURES_ASSETS="$bac/assets" CAPTURES_SOURCES="$bac/src" "$0" >/dev/null 2>&1 || code=$?
         if [ "${code}" = "$1" ]; then
             echo "  ✔ $2"
@@ -98,6 +104,7 @@ if [ "${1:-}" = "--auto-test" ]; then
       > "$bac/src/fr/exemple/vue/outils/CaptureX.java"
     verifie 0 "une capture citée en commentaire seulement ne déclenche pas (#3129)"
 
+    echo "${cas} cas, dont ${rouges} qui DOIVENT rougir."
     if [ "${echecs}" = 0 ]; then
         echo "Auto-test de la garde captures : OK"
     else

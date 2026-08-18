@@ -212,6 +212,7 @@ nav:
     - 3482 · L'audit ramasse ce qu'une suppression laisse: decisions/3482-l-audit-ramasse-ce-qu-une-suppression-laisse.md
     - 3561 · Une garde obligatoire inventorie les chemins qu'elle ferme: decisions/3561-une-garde-obligatoire-inventorie-les-chemins-qu-elle-ferme.md
     - 3826 · Un test qui mesure monte une scène habillée: decisions/3826-un-test-qui-mesure-monte-une-scene-habillee.md
+    - 3689 · Un refus se réarme sur ce qui a levé sa cause: decisions/3689-un-refus-se-rearme-sur-ce-qui-l-a-leve.md
     - 3827 · Une affirmation de sécurité se lit, ou elle n'existe pas: decisions/3827-une-affirmation-de-securite-se-lit-ou-elle-n-existe-pas.md
     - 3828 · Une décision d'affichage se prend, elle ne se déduit pas: decisions/3828-une-decision-d-affichage-se-prend-elle-ne-se-deduit-pas.md
     - 3794 · La CI garde ses inventaires comme ceux du produit: decisions/3794-la-ci-garde-ses-inventaires-comme-ceux-du-produit.md
@@ -227,6 +228,10 @@ nav:
     - 3764 · Un cas joué n'est pas un cas prouvé: decisions/3764-un-cas-joue-n-est-pas-un-cas-prouve.md
     - 3774 · Le clip se taille sur le test, et son contrôle porte sur la couverture: decisions/3774-le-clip-se-taille-sur-le-test.md
     - 3788 · Un banc qui maximise tout ne montre pas ce qu'on livre: decisions/3788-un-banc-qui-maximise-tout-ne-montre-pas-ce-qu-on-livre.md
+    - 3462 · Surcharger une feuille tierce se déclare: decisions/3462-surcharger-une-feuille-tierce-se-declare-et-monte-en-specificite.md
+    - 3464 · Le ressort va au vide, pas au libellé désigné: decisions/3464-le-ressort-va-au-vide-pas-au-libelle-qu-un-bouton-designe.md
+    - 3470 · Un message d'erreur ne montre pas son enveloppe: decisions/3470-un-message-d-erreur-ne-montre-jamais-le-nom-de-son-enveloppe.md
+    - 3947 · Un message se compose en un seul endroit: decisions/3947-un-message-montre-a-l-utilisateur-se-compose-en-un-seul-endroit.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

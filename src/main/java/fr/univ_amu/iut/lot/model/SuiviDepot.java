@@ -23,7 +23,11 @@ public interface SuiviDepot {
     void uniteDeposee(DepotUnite unite);
 
     /// Le téléversement de l'unité `identifiant` a échoué (raison persistée et affichable).
-    void uniteEchouee(String identifiant, String raison);
+    ///
+    /// `definitif` dit qu'un nouvel essai est **inutile** (#3687) : URL signée expirée, jeton mort,
+    /// corps refusé. Il vient de `ReponseApi.estReessayable()`, décidé à l'émission - jamais d'une
+    /// lecture du texte de `raison`, où la même panne s'écrit de trop de façons.
+    void uniteEchouee(String identifiant, String raison, boolean definitif);
 
     /// Avancement (fraction 0 à 1, #984) du téléversement de l'unité `identifiant`, remontée octet par
     /// octet pour une barre de progression par archive. No-op par défaut : seuls les suivis IHM
@@ -49,7 +53,7 @@ public interface SuiviDepot {
             public void uniteDeposee(DepotUnite unite) {}
 
             @Override
-            public void uniteEchouee(String identifiant, String raison) {}
+            public void uniteEchouee(String identifiant, String raison, boolean definitif) {}
         };
     }
 }

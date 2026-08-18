@@ -7,10 +7,10 @@ import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.DefilementChrome;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -24,8 +24,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.NodeQueryUtils;
-import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E (smoke) de l'entrée « Sons & validation »** (#audio) : depuis le **tableau de bord**, un
 /// clic réel sur la carte **« Sons & validation »** ouvre la **vue audio unifiée** (sur la source `References`)
@@ -64,22 +62,14 @@ class ParcoursSonsReferenceE2ETest {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
-        // ⚠️ Attendre EXACTEMENT ce que le clic exige (#3836). L'attente posée par #3823 vérifiait
-        // `Node::isVisible`, le drapeau **local** du nœud. Or `clickOn` filtre avec
-        // `NodeQueryUtils.isVisible()`, qui exige **en plus** que le nœud **intersecte le rectangle de
-        // la scène** - mesuré en lisant le bytecode de `FxRobot`, puis vérifié par une sonde : un nœud
-        // posé hors cadre porte un drapeau local à `true` et n'est **pas** cliquable.
+        // L'attente exige EXACTEMENT ce que le clic exige (#3836) : pas seulement le drapeau local du
+        // nœud, mais l'intersection avec le rectangle de la scène. Une carte encore sous la ligne de
+        // flottaison porte un drapeau à `true` et n'est pourtant pas cliquable.
         //
-        // Une carte d'accueil tardive passe donc l'ancienne attente alors qu'elle est encore sous la
-        // ligne de flottaison, et le clic échoue - « returned 1 nodes, but no nodes were visible ».
-        // C'est pour cela que #3823 n'avait pas suffi : la règle était bonne, le prédicat non.
-        WaitForAsyncUtils.waitFor(
-                10,
-                TimeUnit.SECONDS,
-                () -> robot.lookup("Sons & validation")
-                        .match(NodeQueryUtils.isVisible())
-                        .tryQuery()
-                        .isPresent());
+        // Elle passe par [AttenteAvantClic] parce qu'elle a expiré deux fois en CI sans rien laisser
+        // d'exploitable (#3911) : même prédicat, même butoir, mais elle dit ce qu'elle a vu.
+        AttenteAvantClic.attendreCliquable(
+                robot, "Sons & validation", 10, injector.getInstance(DefilementChrome.class));
         robot.clickOn("Sons & validation");
 
         assertThat(navigation.getVueCourante()).isEqualTo("audio");

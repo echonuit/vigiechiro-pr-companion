@@ -40,7 +40,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
-import org.testfx.util.NodeQueryUtils;
 import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours (P5)** : la **vue agrégée M-Multisite** et son **drill-down** vers
@@ -75,7 +74,14 @@ class ParcoursMultisiteVersPassageE2ETest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1280, 860));
+        // ⚠️ 900, et non 1280 : c'est `TailleOuverture.LARGEUR_MINIMALE`, le plancher que l'application
+        // s'autorise et la largeur à laquelle les runners tournent réellement - l'écran headless étant
+        // plus petit que la scène demandée, la fenêtre y est rabattue. Déclarer 1280 ne le donnait pas :
+        // cela rendait seulement le défaut INTERMITTENT, selon que le rabattement s'appliquait ou non.
+        //
+        // À 900, la table déborde de façon reproductible et le test exerce ce que la CI exerce. C'est le
+        // parti pris de `CarteHorsCadreAccueilTest` (#3929), transposé ici (#3932).
+        stage.setScene(new Scene(racine, 900, 860));
         stage.show();
     }
 
@@ -189,30 +195,85 @@ class ParcoursMultisiteVersPassageE2ETest {
     /// C'est le motif de l'ADR 2213 : un dispositif qui ne peut pas conclure **rapporte ce qu'il a
     /// vu**, il ne rend pas un verdict qui ressemble à autre chose.
     private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
+        TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
         for (int essai = 1; essai <= 3; essai++) {
             try {
                 // ⚠️ Attendre ce que le clic EXIGE, et non la simple présence du nœud (#3906, jumeau de
                 // #3836). `doubleClickOn` filtre par `NodeQueryUtils.isVisible()`, qui demande en plus
                 // que le nœud **intersecte le rectangle de la scène** - une cellule déjà dans le graphe
                 // mais encore hors cadre passait donc cette attente, et le clic échouait.
-                WaitForAsyncUtils.waitFor(
-                        3,
-                        TimeUnit.SECONDS,
-                        () -> robot.lookup(DATE_NUIT)
-                                .match(NodeQueryUtils.isVisible())
-                                .tryQuery()
-                                .isPresent());
+                //
+                // ⚠️ Attendre le bon prédicat ne suffisait pas : l'attente expirait sans que la cellule
+                // entre jamais dans le cadre (#3932). Il faut donc l'y AMENER, et c'est le point de
+                // détail qui a coûté un essai : le défilement n'est pas celui du chrome.
+                amenerLaColonneDate(robot, table);
+                AttenteAvantClic.attendreCliquable(robot, DATE_NUIT, 3, null);
                 robot.doubleClickOn(DATE_NUIT);
                 WaitForAsyncUtils.waitFor(3, TimeUnit.SECONDS, () -> "passage".equals(navigation.getVueCourante()));
                 return;
-            } catch (TimeoutException reessai) {
+            } catch (AssertionError | TimeoutException reessai) {
                 // Cellule pas encore rendue ou navigation pas encore aboutie : on retente.
+                //
+                // ⚠️ `AssertionError` est rattrapée parce qu'`attendreCliquable` lève cela, et non une
+                // `TimeoutException` : elle joint son rapport d'état à l'expiration. Ne rattraper que
+                // la seconde ferait sortir la première du premier coup, et cette boucle de reprise
+                // n'aurait plus que l'apparence d'une reprise. Aucune autre assertion ne vit dans ce
+                // `try` : le seul verdict qui puisse en sortir est celui de l'attente.
             }
         }
-        throw new AssertionError("Le double-clic vers le passage n'a pas abouti après 3 essais de 3 s : "
-                + "la cellule « " + DATE_NUIT + " » n'a jamais été interrogeable, ou la navigation n'a "
-                + "jamais atteint « passage » (vue courante : " + navigation.getVueCourante() + "). "
-                + "Ce n'est pas un défaut de navigation - c'est le robot qui n'a pas abouti sous charge.");
+        // Ce message rapportait un DÉLAI et concluait « c'est le robot qui n'a pas abouti sous charge ».
+        // Une occurrence de plus, consignée dans #3911, a démenti cette conclusion : depuis que
+        // l'attente exige le bon prédicat, elle expire au lieu de laisser partir un clic - donc la
+        // cellule n'entre **jamais** dans le cadre en neuf secondes, et ce n'est pas une question de
+        // patience. Il manquait la seule information qui départage : **où** est la cellule.
+        //
+        // Un dispositif qui ne peut pas conclure rapporte ce qu'il a vu (ADR 2213), et ne conclut donc
+        // pas à sa place. Celui-ci concluait.
+        throw new AssertionError("Le double-clic vers le passage n'a pas abouti après 3 essais de 3 s.\n"
+                + "Vue courante : " + navigation.getVueCourante() + "\n"
+                + AttenteAvantClic.etatObserve(robot, DATE_NUIT) + "\n"
+                + "Deux causes possibles, que ce message ne tranche pas : la cellule n'est jamais entrée"
+                + " dans le cadre de la scène (lire ses bornes ci-dessus), ou la navigation n'a pas"
+                + " abouti après un double-clic pourtant parti.");
+    }
+
+    /// Amène la colonne « Date » dans le viewport de la table, sans quoi sa cellule reste hors cadre
+    /// et le double-clic ne peut pas partir (#3932).
+    ///
+    /// ## Ce que la mesure a montré, et ce qu'elle a écarté
+    ///
+    /// Scène ramenée à 900 - la largeur d'un runner headless, qui rabat la fenêtre sur
+    /// `TailleOuverture.LARGEUR_MINIMALE` - la table rend :
+    ///
+    /// | Ce qu'on lit | Valeur |
+    /// |---|---|
+    /// | largeur du viewport | **497** |
+    /// | somme des onze colonnes | **1235** |
+    /// | barre horizontale | **visible**, `max=590`, `valeur=0` |
+    /// | « Date » | 7ᵉ colonne, elle commence vers 485 dans un viewport de 497 |
+    ///
+    /// Le contenu **défile** : ce n'est donc pas un défaut du produit, c'est au test d'amener sa cible -
+    /// même conclusion que #3925, qui avait d'abord été prise pour un défaut produit avant d'être
+    /// fermée.
+    ///
+    /// ⚠️ Mais **pas le même défilement**. Le premier correctif essayé ici passait le port
+    /// `DefilementChrome` (#1486) à [AttenteAvantClic#attendreCliquable], comme #3929 l'a fait pour
+    /// l'accueil : **il n'a rien changé**, et l'échec s'est reproduit à l'identique. Le chrome fait
+    /// défiler *sa* zone centrale ; une colonne hors cadre vit dans le viewport **interne** de la
+    /// `TableView`, que le `ScrollPane` du chrome ne commande pas. Le geste juste est
+    /// `scrollToColumn`.
+    private static void amenerLaColonneDate(FxRobot robot, TableView<?> table) {
+        // `scrollToColumnIndex` et non `scrollToColumn` : le second réclame un
+        // `TableColumn<S, ?>` accordé au paramètre de la table, que `TableView<?>` ne peut pas
+        // fournir sans capture. L'index dit la même chose sans le détour.
+        robot.interact(() -> {
+            for (int i = 0; i < table.getColumns().size(); i++) {
+                if ("Date".equals(table.getColumns().get(i).getText())) {
+                    table.scrollToColumnIndex(i);
+                    return;
+                }
+            }
+        });
     }
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {

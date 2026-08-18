@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
+import fr.univ_amu.iut.commun.model.CauseLisible;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.SondeAccessibilite;
@@ -103,7 +104,7 @@ public final class FluxExportsAudio {
 
     /// L'écriture a échoué : l'archive partielle a été supprimée, le motif est restitué.
     public void echec(Throwable echec) {
-        String motif = echec.getCause() != null ? echec.getCause().getMessage() : echec.getMessage();
+        String motif = CauseLisible.messageDe(echec);
         messages.export(false, "Export impossible : " + motif);
     }
 }

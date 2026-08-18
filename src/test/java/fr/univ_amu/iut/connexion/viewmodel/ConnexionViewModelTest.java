@@ -54,7 +54,7 @@ class ConnexionViewModelTest {
     @BeforeEach
     void preparer() {
         stockage = new StockageConnexion(new Workspace(workspace), Horloge.figeeAu(LocalDate.of(2026, 1, 1)));
-        viewModel = new ConnexionViewModel(stockage, client, Set.of(rapprocheur));
+        viewModel = new ConnexionViewModel(stockage, client, Set.of(rapprocheur), java.util.Optional.empty());
     }
 
     @Test
@@ -87,7 +87,8 @@ class ConnexionViewModelTest {
         when(passages.synchroniser(eq(client), any(), any()))
                 .thenReturn(Optional.of(new RapportSynchro("passage(s) rapatrié(s)", 2)));
         // Le passage est donné AVANT le site dans le Set : l'ordre ne doit venir que des phases, pas de l'entrée.
-        ConnexionViewModel avecDeux = new ConnexionViewModel(stockage, client, Set.of(passages, sites));
+        ConnexionViewModel avecDeux =
+                new ConnexionViewModel(stockage, client, Set.of(passages, sites), java.util.Optional.empty());
 
         avecDeux.connecter("TOK123");
 

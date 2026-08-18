@@ -689,6 +689,7 @@ Le second gros pourvoyeur d'états : préparation, téléversement, reprise, int
 </tr>
 <tr>
 <td><a href="apercu-lot-depot-interrompu.png"><img src="apercu-lot-depot-interrompu.png" width="430" alt="Dépôt interrompu"></a></td>
+<td><a href="apercu-lot-refus-rattachement.png"><img src="apercu-lot-refus-rattachement.png" width="430" alt="Refus de dépôt : site non rattaché, le message dit par quel geste récupérer le carré"></a></td>
 </tr>
 </table>
 
@@ -1066,6 +1067,17 @@ Le véhicule par défaut de tout compte rendu d'opération (ADR 0023). Ce qu'il 
 <tr>
 <td><a href="apercu-compte-rendu-motifs.png"><img src="apercu-compte-rendu-motifs.png" width="430" alt="Motifs"></a></td>
 <td><a href="apercu-compte-rendu-echec.png"><img src="apercu-compte-rendu-echec.png" width="430" alt="Échec"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
+<th width="50%">Participation créée, et ce qu'il reste à y faire</th>
+<th width="50%">Plusieurs nuits, plusieurs participations</th>
+</tr>
+<tr>
+<td><a href="apercu-import-participation.png"><img src="apercu-import-participation.png" width="430" alt="Une participation créée sur Vigie-Chiro, avec le rappel de compléter la fiche sur le portail"></a></td>
+<td><a href="apercu-import-participations-multi-nuits.png"><img src="apercu-import-participations-multi-nuits.png" width="430" alt="Trois participations créées, la forme plurielle du même rappel"></a></td>
 </tr>
 </table>
 

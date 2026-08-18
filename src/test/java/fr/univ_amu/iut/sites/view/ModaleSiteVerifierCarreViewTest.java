@@ -199,6 +199,38 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
+    @CasDeRecette("S1-33")
+    @DisplayName("S1-33 : hors connexion, l'encart dit qu'on n'a PAS vérifié - jamais que le carré est libre")
+    void hors_connexion_l_encart_ne_nie_pas_le_carre(FxRobot robot) {
+        enCreation(robot);
+        // ⚠️ `nonConnecte()`, et non `thenThrow` : une déconnexion n'emprunte pas le chemin d'une
+        // panne technique. Le test voisin éprouve l'exception ; ce chemin-ci n'était couvert nulle
+        // part, alors que c'est celui que S1-33 décrit - se déconnecter, puis cliquer.
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.nonConnecte());
+        saisirCarre(robot, CARRE);
+
+        robot.interact(() -> verifier(robot).fire());
+
+        String encart = message(robot).getText();
+        assertThat(encart)
+                .as("l'encart doit nommer son impuissance, pas se taire")
+                .contains("Vérification impossible")
+                .contains("PAS été vérifié");
+
+        // ⚠️ L'assertion que deux tests promettaient sans la faire. « Ce carré n'existe pas encore
+        // sur Vigie-Chiro : vous pouvez le déclarer ici. » est le message de Verdict.Inexistant :
+        // l'afficher ici ferait déclarer un carré déjà pris à quelqu'un qui croit avoir vérifié.
+        assertThat(encart)
+                .as("« je ne sais pas » ne doit jamais se lire « il est libre »")
+                .doesNotContain("n'existe pas")
+                .doesNotContain("vous pouvez le déclarer");
+
+        assertThat(verifier(robot).isDisabled())
+                .as("le bouton reste offert : se reconnecter et recliquer doit suffire")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("#3458 : on peut vérifier, corriger, et vérifier de nouveau")
     void verifier_deux_fois_de_suite(FxRobot robot) {
         enCreation(robot);
