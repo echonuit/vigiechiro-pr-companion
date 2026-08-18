@@ -22,6 +22,10 @@ import org.testfx.framework.junit5.Start;
 @ExtendWith(ApplicationExtension.class)
 class AttenteAvantClicTest {
 
+    /// La scene montee par ce test, retenue pour que l'assertion LISE sa taille au lieu de la
+    /// recopier - voir [#un_libelle_hors_cadre_est_nomme].
+    private Scene scene;
+
     @Start
     void start(Stage stage) {
         Pane racine = new Pane();
@@ -30,7 +34,8 @@ class AttenteAvantClicTest {
         // le refuse. C'est exactement la forme du défaut observé en CI.
         horsCadre.setLayoutY(2000);
         racine.getChildren().add(horsCadre);
-        stage.setScene(new Scene(racine, 400, 300));
+        scene = new Scene(racine, 400, 300);
+        stage.setScene(scene);
         stage.show();
     }
 
@@ -51,6 +56,13 @@ class AttenteAvantClicTest {
                 .as("le rapport doit distinguer « absent » de « présent mais hors cadre »")
                 .hasMessageContaining("HORS CADRE")
                 .hasMessageContaining("visible=true")
-                .hasMessageContaining("scène 400x300");
+                // ATTENTION : la taille attendue se LIT sur la scene, elle ne se recopie pas depuis le
+                // `new Scene(racine, 400, 300)` ci-dessus. Les 400 demandes ne sont pas ceux qu'on
+                // obtient partout : sur un runner, la fenetre est rabattue a
+                // `TailleOuverture.LARGEUR_MINIMALE` (900), et ce test rougissait alors sur
+                // « scene 900x300 » la ou il attendait « scene 400x300 » - vert en local, rouge en CI.
+                //
+                // Ce qu'il garde n'est pas la largeur de la scene, c'est que le rapport la NOMME.
+                .hasMessageContaining(String.format("scène %.0fx%.0f", scene.getWidth(), scene.getHeight()));
     }
 }
