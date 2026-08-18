@@ -38,7 +38,7 @@
     <TextField fx:id="champRecherche" promptText="Rechercher (espèce, carré…)" minWidth="-Infinity" prefWidth="300.0"/>
     <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"/>
     <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS"/>
-    <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer"
+    <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer" styleClass="bouton-secondaire"
             accessibleText="Effacer tous les filtres"/>
   </HBox>
 
@@ -48,12 +48,12 @@
     <Label text="Tranche horaire" styleClass="section-sous"/>
     <ChoiceBox fx:id="choixTranche"/>
     <Region HBox.hgrow="ALWAYS"/>
-    <Button fx:id="boutonExporterDonnees" minWidth="-Infinity" text="Exporter les données…" onAction="#exporterDonnees">
+    <Button fx:id="boutonExporterDonnees" minWidth="-Infinity" text="Exporter les données…" styleClass="bouton-secondaire" onAction="#exporterDonnees">
       <graphic>
         <FontIcon iconLiteral="fas-file-csv"/>
       </graphic>
     </Button>
-    <Button fx:id="boutonExporterImage" minWidth="-Infinity" text="Exporter l'image…" onAction="#exporterImage">
+    <Button fx:id="boutonExporterImage" minWidth="-Infinity" text="Exporter l'image…" styleClass="bouton-secondaire" onAction="#exporterImage">
       <graphic>
         <FontIcon iconLiteral="fas-file-image"/>
       </graphic>

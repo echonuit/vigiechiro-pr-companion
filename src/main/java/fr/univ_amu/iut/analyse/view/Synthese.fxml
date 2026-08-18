@@ -44,7 +44,7 @@
     <ChoiceBox fx:id="cbMilieu" prefWidth="200.0"/>
     <!-- Le CSV emporte le contexte, l'avertissement et la citation en tête de fichier : c'est le
          pendant à l'écran de la commande `synthetiser-passage`, sur le même formateur pur. -->
-    <Button fx:id="boutonExporter" minWidth="-Infinity" text="Exporter…" onAction="#exporter">
+    <Button fx:id="boutonExporter" minWidth="-Infinity" text="Exporter…" styleClass="bouton-secondaire" onAction="#exporter">
       <graphic>
         <FontIcon iconLiteral="fas-file-csv"/>
       </graphic>

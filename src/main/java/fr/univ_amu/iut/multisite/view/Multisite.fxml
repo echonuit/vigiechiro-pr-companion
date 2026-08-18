@@ -58,7 +58,7 @@
         <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
                   HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
         <ComboBox fx:id="choixTri" minWidth="-Infinity" accessibleText="Trier les passages"/>
-        <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer"
+        <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer" styleClass="bouton-secondaire"
                 onAction="#toutEffacer" accessibleText="Effacer tous les filtres et le tri"/>
       </HBox>
     </center>

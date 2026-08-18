@@ -30,14 +30,14 @@
     <Region HBox.hgrow="ALWAYS"/>
     <!-- Enveloppes : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
     <StackPane fx:id="enveloppeEcouter">
-      <Button fx:id="boutonEcouter" text="Écouter / valider" onAction="#ecouterValider">
+      <Button fx:id="boutonEcouter" text="Écouter / valider" styleClass="bouton-secondaire" onAction="#ecouterValider">
         <graphic>
           <FontIcon iconLiteral="fas-headphones"/>
         </graphic>
       </Button>
     </StackPane>
     <StackPane fx:id="enveloppeOuvrirPassage">
-      <Button fx:id="boutonOuvrirPassage" text="Ouvrir le passage" onAction="#ouvrirPassage">
+      <Button fx:id="boutonOuvrirPassage" text="Ouvrir le passage" styleClass="bouton-secondaire" onAction="#ouvrirPassage">
         <graphic>
           <FontIcon iconLiteral="fas-arrow-right"/>
         </graphic>

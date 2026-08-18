@@ -64,8 +64,8 @@
   </VBox>
 
   <HBox alignment="CENTER_LEFT" spacing="8.0">
-    <Button fx:id="btnCreer" text="Créer" onAction="#creer"/>
-    <Button fx:id="btnEnregistrer" text="Enregistrer" onAction="#enregistrer"/>
+    <Button fx:id="btnCreer" text="Créer" styleClass="bouton-secondaire" onAction="#creer"/>
+    <Button fx:id="btnEnregistrer" text="Enregistrer" styleClass="bouton-secondaire" onAction="#enregistrer"/>
     <Button fx:id="btnSupprimer" text="Supprimer…" onAction="#supprimer" styleClass="bouton-danger"/>
   </HBox>
 
@@ -81,6 +81,6 @@
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <Region HBox.hgrow="ALWAYS"/>
-    <Button fx:id="btnFermer" text="Fermer" onAction="#fermer" defaultButton="true"/>
+    <Button fx:id="btnFermer" text="Fermer" styleClass="bouton-secondaire" onAction="#fermer" defaultButton="true"/>
   </HBox>
 </VBox>

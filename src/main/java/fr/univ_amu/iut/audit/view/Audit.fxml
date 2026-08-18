@@ -27,13 +27,13 @@
 
     <HBox spacing="10.0" alignment="CENTER_LEFT">
       <Label fx:id="lblResume" styleClass="titre-section" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-      <Button fx:id="boutonRafraichir" text="Relancer l'audit" onAction="#rafraichir"/>
-      <Button fx:id="boutonVerifierEnLigne" text="Vérifier en ligne" onAction="#verifierEnLigne"/>
+      <Button fx:id="boutonRafraichir" text="Relancer l'audit" styleClass="bouton-secondaire" onAction="#rafraichir"/>
+      <Button fx:id="boutonVerifierEnLigne" text="Vérifier en ligne" styleClass="bouton-secondaire" onAction="#verifierEnLigne"/>
       <!-- Audit ciblé (#1347) : après avoir réparé une nuit, on veut vérifier CELLE-LÀ, pas tout le
            workspace. Désactivé tant qu'aucun constat citant un passage n'est sélectionné (l'enveloppe
            porte l'explication : un bouton désactivé n'affiche pas d'infobulle). -->
       <StackPane fx:id="enveloppeAuditerPassage">
-        <Button fx:id="boutonAuditerPassage" text="Auditer ce passage"
+        <Button fx:id="boutonAuditerPassage" text="Auditer ce passage" styleClass="bouton-secondaire"
                 onAction="#auditerLePassageSelectionne"/>
       </StackPane>
       <!-- Retrait des dossiers de session orphelins (#3482, ADR-3482) : la seule action de l'audit qui
@@ -59,7 +59,7 @@
       <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"/>
       <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
                 HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-      <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer"
+      <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer" styleClass="bouton-secondaire"
               accessibleText="Effacer tous les filtres et le tri"/>
     </HBox>
 

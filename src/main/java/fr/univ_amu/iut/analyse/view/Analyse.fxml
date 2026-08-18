@@ -51,14 +51,14 @@
          FlowPane se limite à sa largeur préférée et les empile). Carte/Exporter s'ancrent à droite. -->
     <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
               HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-    <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer" onAction="#toutEffacer"
+    <Button fx:id="boutonToutEffacer" minWidth="-Infinity" text="Tout effacer" styleClass="bouton-secondaire" onAction="#toutEffacer"
             accessibleText="Effacer tous les filtres et le tri"/>
-    <Button fx:id="boutonCarte" minWidth="-Infinity" text="Carte" onAction="#basculerCarte">
+    <Button fx:id="boutonCarte" minWidth="-Infinity" text="Carte" styleClass="bouton-secondaire" onAction="#basculerCarte">
       <graphic>
         <FontIcon fx:id="iconeCarte" iconLiteral="fas-map"/>
       </graphic>
     </Button>
-    <Button fx:id="boutonExporter" minWidth="-Infinity" text="Exporter…" onAction="#exporter">
+    <Button fx:id="boutonExporter" minWidth="-Infinity" text="Exporter…" styleClass="bouton-secondaire" onAction="#exporter">
       <graphic>
         <FontIcon iconLiteral="fas-file-export"/>
       </graphic>

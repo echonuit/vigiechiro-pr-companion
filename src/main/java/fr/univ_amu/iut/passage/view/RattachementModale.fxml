@@ -105,7 +105,7 @@
                rendrait la sélection ambiguë. -->
           <HBox spacing="8.0" alignment="CENTER_LEFT">
             <ComboBox fx:id="champCampagne" prefWidth="260.0" maxWidth="Infinity"/>
-            <Button fx:id="btnGererCampagnes" text="Gérer…" onAction="#gererCampagnes"/>
+            <Button fx:id="btnGererCampagnes" text="Gérer…" styleClass="bouton-secondaire" onAction="#gererCampagnes"/>
           </HBox>
         </VBox>
       </HBox>
