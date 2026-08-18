@@ -1073,7 +1073,7 @@
     -fx-border-color: -couleur-texte;
     -fx-border-radius: 4;
     -fx-background-radius: 4;
-    -fx-padding: 0 8 0 8;
+    -fx-padding: 0 3 0 3;
     -fx-cursor: hand;
     /* ⚠️ Hauteur ALIGNÉE sur les boutons de la barre, mesurée et non estimée : sans elle, la police de
        14 px ci-dessus faisait rendre ce ☰ à 42 px quand ses voisins tenaient en 34. Il dépassait donc
