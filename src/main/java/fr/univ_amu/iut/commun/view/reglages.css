@@ -139,8 +139,13 @@
     -fx-text-fill: -couleur-texte-discret;
 }
 
+/* Espacement resserré à 6 (#3952) : une fois `bouton-secondaire` posé sur « Copier », les deux
+   boutons stylés de la rangée prennent leurs marges intérieures, et le chemin manquait 2 px - le
+   garde anti-troncature l'a refusé. Les trois intervalles rendent 6 px, ce qui suffit largement.
+   Le ressort reste sur le Region qui sépare « Copier » de « Choisir… », jamais sur le libellé
+   (ADR 3464). */
 .emplacements-rangee {
-    -fx-spacing: 8;
+    -fx-spacing: 6;
     -fx-alignment: center-left;
 }
 
