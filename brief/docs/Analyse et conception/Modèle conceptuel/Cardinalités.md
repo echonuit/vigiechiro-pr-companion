@@ -25,7 +25,7 @@ Tableau récapitulatif des cardinalités d'association du modèle conceptuel. Le
 | [Observation](C13%20-%20Observation.md) | classée comme | [Taxon](C14%20-%20Taxon.md) | 0..1 | `taxon Tadarida` **nullable** (observation manuelle) ; jusqu'à **3** taxons portés (Tadarida, observateur, validateur) |
 | [Taxon](C14%20-%20Taxon.md) | appartient | [Groupe taxonomique](C15%20-%20Groupe%20taxonomique.md) | 1..1 | exemple : Pippip → Pipistrellus → Vespertilionidae |
 | [Observation](C13%20-%20Observation.md) | discutée par | Message (`observation_message`) | 0..* | fil d'échange avec le validateur MNHN, ordonné (#1417) |
-| [Passage](C5%20-%20Passage.md) | déposé par | Unité de dépôt (`depot_unite`) | 0..* | dépôt reprenable, une unité par archive ZIP ou séquence WAV |
+| [Passage](C5%20-%20Passage.md) | déposé par | Unité de dépôt (`depot_unite`) | 0..* | dépôt reprenable, une unité par archive ZIP ou séquence WAV ; une unité refusée définitivement (`echec_definitif`) en sort |
 | [Passage](C5%20-%20Passage.md) | planifié par | Plan de dépôt (`depot_plan`) | 0..1 | empreinte de la liste source ordonnée |
 | [Passage](C5%20-%20Passage.md) | traité par | Traitement de participation (`participation_traitement`) | 0..1 | état relevé du calcul Tadarida serveur (cache) |
 | Site / Taxon / Passage | ancré par | Lien VigieChiro (`vigiechiro_link`) | 0..1 | correspondance entre l'objet local et son `_id` plateforme (+ verrou du site) |

@@ -36,7 +36,7 @@ L'unité métier centrale : une nuit complète d'enregistrement sur un point d'u
 - **À vérifier par** 0..1 [Sélection d'écoute](C11%20-%20Sélection%20d%27écoute.md).
 - **Annoté par** 0..1 [Résultats d'identification](C12%20-%20Résultats%20d%27identification.md).
 - **Déployé avec** 0..1 **Matériel micro** (table `passage_equipment`, 1:1) : position (sol / canopée), hauteur, type de micro **de cette nuit-là**. L'information micro a migré de l'enregistreur vers le déploiement d'un passage (EPIC #543).
-- **Déposé par** 0..N **Unité de dépôt** (table `depot_unite`) et 0..1 **Plan de dépôt** (`depot_plan`) : le dépôt reprenable, unité par unité (archive ZIP ou séquence WAV), avec l'empreinte de la liste source. Support de l'état `Dépôt en cours`.
+- **Déposé par** 0..N **Unité de dépôt** (table `depot_unite`) et 0..1 **Plan de dépôt** (`depot_plan`) : le dépôt reprenable, unité par unité (archive ZIP ou séquence WAV), avec l'empreinte de la liste source. Une unité **refusée définitivement** cesse d'être reprenable : elle porte `echec_definitif` et, depuis #3689, la `cause_refus` qui dit ce qui pourrait la relever. Support de l'état `Dépôt en cours`.
 - **Traité par** 0..1 **Traitement de participation** (table `participation_traitement`) : l'**état relevé** du calcul Tadarida côté serveur (planifié / en cours / fini / erreur), avec la date de notre dernière lecture. C'est un **cache d'observation**, jamais faisant autorité.
 - **Ancré par** 0..1 [Lien VigieChiro](index.md) (`vigiechiro_link`, entité `passage`) : l'`_id` de la **participation** créée au dépôt, prérequis de l'import des résultats.
 

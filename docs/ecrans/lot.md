@@ -96,8 +96,32 @@ plateforme si votre carré y existe, puis vous oriente en conséquence.
 Le dépôt automatique est **reprenable** : une coupure réseau, une fermeture de l'application ou un
 échec partiel ne font **rien perdre**. Le passage prend le statut « **Dépôt en cours** » et, à la
 réouverture de l'écran, la table de dépôt réaffiche l'état exact de chaque fichier. Le bouton devient
-alors « **Retenter les échecs** » : seuls les fichiers manquants sont re-téléversés, jamais ceux déjà
+alors « **Reprendre le dépôt** » : seuls les fichiers manquants sont re-téléversés, jamais ceux déjà
 en ligne. Le passage ne devient « Déposé » que lorsque **tous** les fichiers sont en ligne.
+
+### Certains refus ne se reprennent pas
+
+Toutes les archives en échec ne sont pas dans le même cas. Une coupure réseau, une lenteur du serveur
+ou une interruption de votre part laissent l'archive **reprenable** : la relancer a toutes les chances
+d'aboutir.
+
+Mais quand Vigie-Chiro **refuse** une archive, la renvoyer telle quelle serait refusée de la même
+façon. L'application ne vous propose donc plus de la reprendre, et cela se voit : le bouton cesse de
+s'appeler « Reprendre le dépôt » et redevient « **Téléverser sur Vigie-Chiro** », parce qu'il ne reste
+plus rien à reprendre.
+
+La table garde le détail : la cause de chaque échec y est lisible, archive par archive.
+
+#### Ce qui peut lever un refus, et ce qui ne le peut pas
+
+| Ce que dit le refus | Ce qui le lève |
+|---|---|
+| **droits ou jeton** (session expirée, autorisation manquante) | **vous reconnecter**. Les archives refusées pour cette raison redeviennent reprenables aussitôt, sans autre geste |
+| **contenu refusé** (l'archive elle-même ne convient pas) | rien d'extérieur. Il faut **régénérer les archives** de la nuit |
+
+!!! warning "Après une régénération, la reprise ne revient pas toute seule"
+    Régénérer les archives d'une nuit ne réarme pas encore les unités refusées pour leur contenu.
+    C'est une limite connue, suivie en [#3946](https://github.com/echonuit/vigiechiro-pr-companion/issues/3946).
 
 ### Ce que le dépôt vous rend à la fin
 
