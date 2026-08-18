@@ -42,12 +42,12 @@ HAUTEUR=860
 
 verifier_outils() {
     local manquants=()
-    for outil in Xvfb xdotool ffmpeg xdpyinfo openbox; do
+    for outil in Xvfb xdotool ffmpeg xdpyinfo openbox tesseract; do
         command -v "$outil" >/dev/null 2>&1 || manquants+=("$outil")
     done
     if [ ${#manquants[@]} -gt 0 ]; then
         echo "   - outils absents : ${manquants[*]}"
-        echo "     sudo apt-get install -y xvfb xdotool ffmpeg x11-utils openbox"
+        echo "     sudo apt-get install -y xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra"
         return 1
     fi
     return 0
@@ -123,6 +123,67 @@ attendre_la_fenetre() {
     done
     echo "   - aucune fenêtre « VigieChiro » après ${secondes} s"
     return 1
+}
+
+# ---------------------------------------------------------------------------------------------
+# Viser un libellé, et refuser si ce n'est pas lui
+# ---------------------------------------------------------------------------------------------
+
+# La marge lue autour du point visé. Assez large pour contenir un libellé de carte, assez étroite
+# pour ne pas ramasser celui d'à côté.
+ZONE_L=200
+ZONE_H=26
+
+# ⚠️ `--psm 6` (bloc de texte uniforme), et non le mode par défaut. `--psm 3` est taillé pour des
+# documents : sur une capture d'interface il lisait 66 mots au lieu de 117, et manquait les titres
+# de cartes. Mesuré, pas supposé (#3887).
+#
+# L'agrandissement x5 n'est pas cosmétique non plus : un libellé d'interface fait 11 à 13 px de
+# haut, très en dessous de ce que tesseract lit correctement.
+lire_zone() { # <image> <x> <y> [largeur] [hauteur]
+    local image="$1" x="$2" y="$3" l="${4:-$ZONE_L}" h="${5:-$ZONE_H}" tmp
+    tmp=$(mktemp -d)
+    ffmpeg -v error -y -i "$image" \
+        -vf "crop=${l}:${h}:${x}:${y},scale=iw*5:ih*5:flags=lanczos" "$tmp/zone.png" 2>/dev/null
+    tesseract "$tmp/zone.png" - -l fra --psm 6 2>/dev/null | tr -d '\n' | sed 's/  */ /g; s/^ //; s/ $//'
+    rm -rf "$tmp"
+}
+
+# ⚠️ Pourquoi ce contrôle existe, et ce qu'il ne fait PAS.
+#
+# Les scénarios de #2191 cliquaient à des coordonnées nues : `g 203 811`. Au premier changement de
+# mise en page, le clic tombe à côté **sans rien dire**, et le film montre un parcours qui n'a pas
+# eu lieu - un fichier parfaitement valide, et faux.
+#
+# Viser par le graphe de scène serait mieux, et c'est impossible : JavaFX n'implémente
+# l'accessibilité ni sous GTK ni via `javax.accessibility` (aucun fichier d'accessibilité dans
+# `native-glass/gtk`, zéro usage de `javax/accessibility` dans les jars ; côté OpenJFX, aucune issue
+# Linux depuis 2014). Le libellé se lit donc à l'écran.
+#
+# Ce que ce contrôle attrape : le geste qui viserait un endroit où le libellé attendu n'est plus.
+# Ce qu'il n'attrape PAS : retrouver où le bouton a bougé. Il dit que le scénario est périmé, il ne
+# le répare pas - et c'est le bon partage pour un banc dont le péché serait de filmer du faux.
+viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet]
+    local ecran="$1" x="$2" y="$3" attendu="$4" duree="${5:-0.55}" tmp lu
+    tmp=$(mktemp -d)
+    ffmpeg -v error -y -f x11grab -video_size "${LARGEUR}x${HAUTEUR}" -i "$ecran" \
+        -frames:v 1 "$tmp/ecran.png" </dev/null 2>/dev/null
+
+    lu=$(lire_zone "$tmp/ecran.png" "$((x - ZONE_L / 2))" "$((y - ZONE_H / 2))")
+    rm -rf "$tmp"
+
+    if [[ "$lu" != *"$attendu"* ]]; then
+        echo "   - le geste visait « $attendu » en ($x, $y) ; l'écran y porte « $lu »"
+        echo "     Le scénario est périmé : la mise en page a changé, ou l'écran n'est pas celui attendu."
+        return 1
+    fi
+
+    local X Y
+    eval "$(DISPLAY="$ecran" xdotool getmouselocation --shell | head -2)"
+    DISPLAY="$ecran" xdotool $(python3 "$(dirname "${BASH_SOURCE[0]}")/trajet.py" "$X" "$Y" "$x" "$y" "$duree")
+    sleep 0.18
+    DISPLAY="$ecran" xdotool click 1
+    return 0
 }
 
 # ---------------------------------------------------------------------------------------------
@@ -242,6 +303,27 @@ auto_test() {
     # ⚠️ Le cas qui porte le banc : sans écran, aucune fenêtre ne peut paraître, et l'attente doit
     # le DIRE plutôt que laisser filmer six secondes de néant.
     essai "sans écran, l'attente de fenêtre refuse"      rouge attendre_la_fenetre ":89" 2
+
+    # --- lire un libellé à l'écran ---
+    # ⚠️ La fixture se FABRIQUE : un banc dont l'auto-test dépendrait d'une capture committée
+    # rougirait au premier changement de style, pour une raison étrangère à ce qu'il éprouve.
+    ffmpeg -v error -y -f lavfi -i "color=c=white:s=400x60" \
+        -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Mes sites':fontcolor=black:fontsize=22:x=20:y=18" \
+        -frames:v 1 "$bac/libelle.png" </dev/null 2>/dev/null
+    essai "un libellé rendu à l'écran se lit"           vert \
+        bash -c 'source "$0"; [ "$(lire_zone "$1" 0 0 400 60)" = "Mes sites" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
+    essai "une zone vide ne rend aucun libellé"         vert \
+        bash -c 'source "$0"; [ -z "$(lire_zone "$1" 300 0 90 60)" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
+    # ⚠️ Le cas qui porte le contrôle : lire le MAUVAIS libellé doit échouer, sinon `viser` laisserait
+    # partir n'importe quel clic.
+    essai "un libellé ABSENT ne se lit pas quand même"  rouge \
+        bash -c 'source "$0"; [ "$(lire_zone "$1" 0 0 400 60)" = "Importer une nuit" ]' "${BASH_SOURCE[0]}" "$bac/libelle.png"
+
+    # --- le trajet de souris ---
+    essai "un trajet rend des arguments xdotool"        vert \
+        bash -c 'python3 "$(dirname "$0")/trajet.py" 10 10 200 200 0.3 | grep -q "^mousemove "' "${BASH_SOURCE[0]}"
+    essai "un trajet nul ne bouge pas pour rien"        vert \
+        bash -c '[ "$(python3 "$(dirname "$0")/trajet.py" 40 40 41 40 0.3)" = "mousemove 41 40" ]' "${BASH_SOURCE[0]}"
 
     # --- les outils ---
     essai "les outils du poste sont là"                  vert  verifier_outils
