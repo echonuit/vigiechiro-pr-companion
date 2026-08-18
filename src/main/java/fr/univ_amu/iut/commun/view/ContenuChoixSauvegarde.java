@@ -35,6 +35,8 @@ public final class ContenuChoixSauvegarde {
     public static final String ID_RESTAURER = "boutonRestaurer";
     public static final String ID_PARCOURIR = "boutonParcourir";
 
+    private static final String BOUTON_SECONDAIRE = "bouton-secondaire";
+
     private final VBox racine;
     private final TableView<InventaireSauvegardes.Entree> table;
 
@@ -58,6 +60,7 @@ public final class ContenuChoixSauvegarde {
         total.setMaxWidth(Double.MAX_VALUE);
 
         Button restaurer = new Button("Restaurer");
+        restaurer.getStyleClass().add("bouton-primaire");
         restaurer.setId(ID_RESTAURER);
         restaurer.setOnAction(
                 evenement -> surRestaurer.accept(table.getSelectionModel().getSelectedItem()));
@@ -67,10 +70,12 @@ public final class ContenuChoixSauvegarde {
                 .bind(table.getSelectionModel().selectedItemProperty().isNull());
 
         Button parcourir = new Button("Parcourir…");
+        parcourir.getStyleClass().add(BOUTON_SECONDAIRE);
         parcourir.setId(ID_PARCOURIR);
         parcourir.setOnAction(evenement -> surParcourir.run());
 
         Button annuler = new Button("Annuler");
+        annuler.getStyleClass().add(BOUTON_SECONDAIRE);
         annuler.setCancelButton(true);
         annuler.setOnAction(evenement -> surAnnuler.run());
 

@@ -325,7 +325,15 @@ public final class CaptureValidationTadarida {
         // Import réel du CSV (tolérant) : peuple la table et arme le bandeau de retour de succès.
         injecteur.getInstance(AudioViewModel.class).importer(csv, false);
 
-        Scene scene = new Scene(vue, 1100, 720);
+        // 872 x AudioView 340 : la meme place que [GraineSonsValidation], et pour la meme raison. A 720
+        // x 300, la barre d'actions recouvrait la legende des raccourcis clavier de l'`AudioView`
+        // (« Entree valider · R reference · D douteux… »), illisible sur l'apercu publie - le mode de
+        // panne decrit en #2129, jamais corrige ICI parce que cette capture a sa propre scene.
+        //
+        // ⚠️ Ce que la hauteur ne corrige PAS : les graduations de l'axe des temps restent peintes sous
+        // la barre d'actions, a 720 comme a 920 (mesure). L'`AudioView` peint hors de sa boite ; lui
+        // donner plus de place deplace le debordement, elle ne le supprime pas.
+        Scene scene = new Scene(vue, 1100, 872);
         ApercuFx.capturerApresPreparation(
                 scene,
                 () -> {
@@ -334,8 +342,8 @@ public final class CaptureValidationTadarida {
                         table.getSelectionModel().select(0); // déclenche le chargement audio
                     }
                     if (vue.lookup("#audioView") instanceof AudioView audio) {
-                        audio.setMinHeight(300);
-                        audio.setPrefHeight(300);
+                        audio.setMinHeight(340);
+                        audio.setPrefHeight(340);
                         AttenteAudio.attendreChargement(audio);
                     }
                 },

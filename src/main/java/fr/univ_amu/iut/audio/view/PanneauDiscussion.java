@@ -86,6 +86,7 @@ final class PanneauDiscussion {
         saisie.setPrefRowCount(3);
         saisie.setWrapText(true);
         saisie.setId("saisieMessage");
+        envoyer.getStyleClass().add("bouton-secondaire");
         envoyer.setId("boutonEnvoyerMessage");
         enveloppeEnvoyer.setId("enveloppeEnvoyerMessage");
         IndicateurBlocage.expliquer(enveloppeEnvoyer, explication);

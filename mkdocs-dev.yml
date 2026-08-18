@@ -236,6 +236,7 @@ nav:
     - 3947 · Un message se compose en un seul endroit: decisions/3947-un-message-montre-a-l-utilisateur-se-compose-en-un-seul-endroit.md
     - 3978 · Un point de passage garantit l'ensemble: decisions/3978-un-point-de-passage-garantit-l-ensemble-pas-un-de-ses-membres.md
     - 3990 · Le texte se lit, le JSON se parse: decisions/3990-le-texte-se-lit-le-json-se-parse.md
+    - 4002 · Un contrôle se juge avec ses voisins: decisions/4002-un-controle-se-juge-avec-ses-voisins-pas-seul.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
