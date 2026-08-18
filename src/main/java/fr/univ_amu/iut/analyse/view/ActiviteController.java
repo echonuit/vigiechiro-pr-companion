@@ -6,13 +6,11 @@ import fr.univ_amu.iut.analyse.model.CourbeEspece;
 import fr.univ_amu.iut.analyse.model.ExportActiviteCsv;
 import fr.univ_amu.iut.analyse.model.LargeurTranche;
 import fr.univ_amu.iut.analyse.model.LigneActivite;
-import fr.univ_amu.iut.analyse.model.PointActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VersionApplication;
-import fr.univ_amu.iut.commun.view.AxeHoraire;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
@@ -25,6 +23,7 @@ import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.MemoireFiltres;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.RepereEspeceAEnjeu;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
@@ -45,14 +44,12 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
@@ -64,7 +61,7 @@ import javafx.util.StringConverter;
 /// 0 h → 24 h, qui couperait la nuit en deux) : l'abscisse est le nombre de minutes depuis 18 h, l'heure
 /// du jour est reconstruite en étiquette. Aucun accès base ni logique métier ici (règle ArchUnit
 /// `view_sans_jdbc`).
-public class ActiviteController implements EmplacementNavigation {
+public class ActiviteController implements EmplacementNavigation, RafraichirAuRetour {
 
     /// Largeur de la fenêtre nocturne affichée, en minutes : de 18 h à 8 h le lendemain, soit 14 heures.
     private static final int MINUTES_FENETRE = 14 * 60;
@@ -77,7 +74,6 @@ public class ActiviteController implements EmplacementNavigation {
 
     /// Format de l'heure d'un point au survol : heure et minute (`22:30`), plus précis que l'étiquette
     /// d'axe (`HH`), puisqu'on donne la valeur exacte d'une tranche.
-    private static final DateTimeFormatter HEURE_MINUTE = DateTimeFormatter.ofPattern("HH:mm");
 
     /// Mémoire de session (#3098) : les filtres et le tri survivent à une sortie de l'écran.
     private final MemoireFiltres memoire;
@@ -95,6 +91,10 @@ public class ActiviteController implements EmplacementNavigation {
 
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
+
+    /// L'utilisateur dont on montre TOUS les passages, quand c'est par là qu'on est entré.
+    /// Il faut le retenir pour savoir quoi relire au retour : cet écran a deux portes.
+    private String utilisateurDeLEntreeTransverse;
 
     @FXML
     private GrapheNocturne grapheActivite;
@@ -310,7 +310,7 @@ public class ActiviteController implements EmplacementNavigation {
         try {
             ExportImageActivite.ecrire(
                     List.copyOf(viewModel.courbesAffichees()),
-                    ActiviteController::configurerAxeNocturne,
+                    CourbesActivite::configurerAxeNocturne,
                     fenetreNuitSurAxe(),
                     lignesLegende(dateExport),
                     fichier);
@@ -353,6 +353,7 @@ public class ActiviteController implements EmplacementNavigation {
     /// le chargement du FXML ; mémorise le contexte pour le fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
         this.contexte = passage;
+        this.utilisateurDeLEntreeTransverse = null;
         viewModel.chargerPassage(passage.idPassage());
         ouvrirSurLesChiropteres();
     }
@@ -361,8 +362,23 @@ public class ActiviteController implements EmplacementNavigation {
     /// contexte de passage : le fil d'Ariane se réduit au segment courant.
     public void ouvrirTout(String idUtilisateur) {
         this.contexte = null;
+        this.utilisateurDeLEntreeTransverse = idUtilisateur;
         viewModel.chargerUtilisateur(idUtilisateur);
         ouvrirSurLesChiropteres();
+    }
+
+    /// Relit les contacts au retour (#3964), **par la porte qui a servi** à ouvrir l'écran.
+    ///
+    /// Comme la synthèse, l'activité agrège des observations que la validation corrige ailleurs. Et
+    /// comme elle, c'est le retour qui porte ce cas : la validation écrit des `update`, que l'ADR 3840
+    /// exclut du signal.
+    @Override
+    public void rafraichirAuRetour() {
+        if (contexte != null) {
+            viewModel.chargerPassage(contexte.idPassage());
+        } else if (utilisateurDeLEntreeTransverse != null) {
+            viewModel.chargerUtilisateur(utilisateurDeLEntreeTransverse);
+        }
     }
 
     /// Pose la vue d'ouverture « Chiroptères » (#2616), **après** le chargement des contacts.
@@ -393,63 +409,13 @@ public class ActiviteController implements EmplacementNavigation {
     /// étiquetée `HH` en reconstruisant l'heure du jour depuis 18 h. Fixe et non calé sur les données pour
     /// que deux nuits se comparent d'un coup d'œil.
     private void configurerAxeNocturne() {
-        configurerAxeNocturne((NumberAxis) grapheActivite.getXAxis());
-    }
-
-    /// La configuration de l'axe nocturne, isolée pour être appliquée **aussi** à l'axe neuf de l'image
-    /// exportée : l'export redessine le graphe, il doit donc reposer sur le même repère que l'écran.
-    static void configurerAxeNocturne(NumberAxis axeTemps) {
-        // Cadre FIXE (et non calé sur les données) : deux nuits se comparent alors à la même échelle,
-        // une nuit courte occupant le milieu du cadre au lieu d'être étirée (ADR 2352).
-        AxeHoraire.graduerEnHeures(axeTemps, DEBUT_FENETRE, MINUTES_FENETRE, 60);
+        CourbesActivite.configurerAxeNocturne((NumberAxis) grapheActivite.getXAxis());
     }
 
     /// Reconstruit une série par espèce affichée : chaque tranche devient un point placé à sa minute
     /// depuis 18 h. Le nom de série (légende) est le nom vernaculaire, ou le code à défaut.
     private void majGraphe() {
-        grapheActivite.getData().setAll(versSeries(viewModel.courbesAffichees()));
-    }
-
-    /// Traduit des courbes en séries de graphe. Partagée avec [ExportImageActivite], qui redessine les
-    /// mêmes courbes hors écran : l'image montre ainsi exactement ce que l'écran montre.
-    static List<XYChart.Series<Number, Number>> versSeries(List<CourbeEspece> courbes) {
-        return courbes.stream().map(ActiviteController::versSerie).toList();
-    }
-
-    /// Traduit une courbe en série de graphe. Visible du paquet : [ExportImageActivite] la réutilise pour
-    /// **redessiner** les mêmes courbes hors écran, plutôt que d'emprunter les séries de l'écran (une série
-    /// n'appartient qu'à un graphe à la fois).
-    private static XYChart.Series<Number, Number> versSerie(CourbeEspece courbe) {
-        XYChart.Series<Number, Number> serie = new XYChart.Series<>();
-        serie.setName(nomAffiche(courbe));
-        for (PointActivite point : courbe.points()) {
-            XYChart.Data<Number, Number> donnee =
-                    new XYChart.Data<>(minutesDepuis18h(point.debutTranche()), point.nombre());
-            installerInfobulle(donnee, texteInfobulle(nomAffiche(courbe), point));
-            serie.getData().add(donnee);
-        }
-        return serie;
-    }
-
-    /// Texte de l'infobulle d'un point : espèce, heure de la tranche (`HH:mm`) et nombre de contacts, avec
-    /// l'accord singulier/pluriel. La valeur exacte que l'axe ne donne qu'approximativement.
-    static String texteInfobulle(String espece, PointActivite point) {
-        String heure = point.debutTranche().toLocalTime().format(HEURE_MINUTE);
-        String contacts = point.nombre() > 1 ? " contacts" : " contact";
-        return espece + " · " + heure + " · " + point.nombre() + contacts;
-    }
-
-    /// Pose l'infobulle sur le symbole du point. Le nœud n'existe qu'une fois le graphe mis en page : on
-    /// l'attend via `nodeProperty` (et on le prend s'il est déjà là).
-    private static void installerInfobulle(XYChart.Data<Number, Number> donnee, String texte) {
-        if (donnee.getNode() != null) {
-            Tooltip.install(donnee.getNode(), new Tooltip(texte));
-        }
-        donnee.nodeProperty().addListener((observable, ancien, noeud) -> {
-            if (noeud != null) {
-                Tooltip.install(noeud, new Tooltip(texte));
-            }
-        });
+        grapheActivite.getData().setAll(CourbesActivite.versSeries(viewModel.courbesAffichees()));
     }
 
     /// (Re)construit le sélecteur d'espèces : une case par espèce de la nuit, cochée si sélectionnée. La

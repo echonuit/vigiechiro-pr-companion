@@ -7,13 +7,13 @@ import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 
 /// Vérifie les helpers purs du controller de la courbe d'activité : le **texte de survol** d'un point
-/// ([ActiviteController#texteInfobulle]) et la conversion d'une **heure de la fenêtre nocturne** en
+/// ([CourbesActivite#texteInfobulle]) et la conversion d'une **heure de la fenêtre nocturne** en
 /// position sur l'axe ([ActiviteController#minutesSurAxe], base de l'aplat coucher/lever).
 class ActiviteControllerTest {
 
     @Test
     void l_infobulle_donne_espece_heure_et_nombre_pluriel() {
-        String texte = ActiviteController.texteInfobulle(
+        String texte = CourbesActivite.texteInfobulle(
                 "Pipistrelle de Kuhl", new PointActivite(LocalDateTime.of(2026, 6, 21, 22, 30), 14));
 
         assertThat(texte).isEqualTo("Pipistrelle de Kuhl · 22:30 · 14 contacts");
@@ -21,7 +21,7 @@ class ActiviteControllerTest {
 
     @Test
     void l_infobulle_accorde_le_singulier() {
-        String texte = ActiviteController.texteInfobulle(
+        String texte = CourbesActivite.texteInfobulle(
                 "Barbastelle d'Europe", new PointActivite(LocalDateTime.of(2026, 6, 21, 23, 0), 1));
 
         assertThat(texte).isEqualTo("Barbastelle d'Europe · 23:00 · 1 contact");

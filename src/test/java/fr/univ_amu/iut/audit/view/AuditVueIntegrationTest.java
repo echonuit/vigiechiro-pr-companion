@@ -38,6 +38,7 @@ import org.testfx.framework.junit5.Start;
 class AuditVueIntegrationTest {
 
     private ServiceAuditCoherence service;
+    private AuditController controleur;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -80,8 +81,31 @@ class AuditVueIntegrationTest {
         FXMLLoader loader = new FXMLLoader(AuditController.class.getResource("Audit.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
+        controleur = loader.getController();
         stage.setScene(new Scene(vue, 1000, 640));
         stage.show();
+    }
+
+    @Test
+    @DisplayName("#3964 : au retour, l'audit est REJOUÉ, pas conservé")
+    void l_audit_est_rejoue_au_retour(FxRobot robot) {
+        // Cet écran AUDITE LA BASE : tout écran qui écrit le périme. Il portait déjà le geste sous un
+        // bouton, et ne le rejouait pas quand on revenait sur lui - il montrait alors un inventaire
+        // d'avant les écritures qu'on venait de faire.
+        assertThat(robot.lookup("#tableConstats").queryAs(TableView.class).getItems())
+                .as("l'état de départ")
+                .hasSize(2);
+
+        // Le geste qui a lieu ailleurs : un écart corrigé, un constat de moins.
+        when(service.auditerTout())
+                .thenReturn(new RapportAudit(List.of(new ConstatAudit(
+                        Severite.ERREUR, CategorieConstat.DEPOT_DIVERGENT, 12L, "Passage 12", "reste un écart"))));
+
+        robot.interact(() -> controleur.rafraichirAuRetour());
+
+        assertThat(robot.lookup("#tableConstats").queryAs(TableView.class).getItems())
+                .as("l'écran a gardé l'inventaire d'avant : il ne rejoue pas son audit")
+                .hasSize(1);
     }
 
     @Test

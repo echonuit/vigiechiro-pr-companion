@@ -165,6 +165,31 @@ class ActiviteViewTest {
     }
 
     @Test
+    @org.junit.jupiter.api.DisplayName("#3964 : au retour, l'activité est RELUE par la porte qui a servi")
+    void l_activite_est_relue_au_retour_par_la_bonne_porte(FxRobot robot) {
+        // Cet écran a DEUX portes : un passage, ou tous les passages d'un utilisateur. Relire par la
+        // mauvaise afficherait la nuit d'un autre périmètre, ce qui est pire que ne pas relire.
+        when(service.contactsDeLUtilisateur("u-1")).thenReturn(nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
+        robot.interact(() -> controleur.ouvrirTout("u-1"));
+        assertThat(robot.lookup("#grapheActivite").queryAs(LineChart.class).getData())
+                .as("l'état de départ")
+                .hasSize(1);
+
+        // Le geste qui a lieu ailleurs : une observation corrigée, un taxon de plus sur la courbe.
+        when(service.contactsDeLUtilisateur("u-1"))
+                .thenReturn(java.util.stream.Stream.concat(
+                                nContacts("PIPKUH", "Pipistrelle de Kuhl", 5).stream(),
+                                nContacts("BARBAR", "Barbastelle", 2).stream())
+                        .toList());
+
+        robot.interact(() -> controleur.rafraichirAuRetour());
+
+        assertThat(robot.lookup("#grapheActivite").queryAs(LineChart.class).getData())
+                .as("l'écran a gardé la courbe d'avant la correction : il ne relit pas sa source")
+                .hasSize(2);
+    }
+
+    @Test
     void ouvrir_tout_charge_les_passages_de_l_utilisateur_en_racine(FxRobot robot) {
         when(service.contactsDeLUtilisateur("u-1")).thenReturn(nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
 

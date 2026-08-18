@@ -191,6 +191,43 @@ class SyntheseViewTest {
                 .isPresent();
     }
 
+    @Test
+    @DisplayName("#3964 : au retour sur l'écran, la synthèse est RELUE, pas conservée")
+    void la_synthese_est_relue_au_retour(FxRobot robot) {
+        // Cet écran ouvre lui-même la fiche du site et celle du passage, d'où la validation est
+        // atteignable : le chemin Synthèse → Passage → Validation → retour → retour corrige des
+        // observations et revient sur des chiffres calculés AVANT la correction.
+        when(service.pour(
+                        anyLong(),
+                        org.mockito.ArgumentMatchers.anyBoolean(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.of(ligne(PIPKUH, "Chiroptères", 150, ClasseActivite.FORTE)));
+        robot.interact(() -> controleur.ouvrirSur(new fr.univ_amu.iut.commun.viewmodel.ContextePassage(
+                1L, 3, new fr.univ_amu.iut.commun.viewmodel.ContexteSite(CARRE, "A1", POINT))));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(robot.lookup("#tableSynthese").queryAs(TableView.class).getItems())
+                .as("l'état de départ")
+                .hasSize(1);
+
+        // Le geste qui a lieu AILLEURS : une observation corrigée, une espèce de plus dans la synthèse.
+        when(service.pour(
+                        anyLong(),
+                        org.mockito.ArgumentMatchers.anyBoolean(),
+                        org.mockito.ArgumentMatchers.any(),
+                        org.mockito.ArgumentMatchers.any()))
+                .thenReturn(List.of(
+                        ligne(PIPKUH, "Chiroptères", 150, ClasseActivite.FORTE),
+                        ligne("Barbar", "Chiroptères", 4, null)));
+
+        robot.interact(() -> controleur.rafraichirAuRetour());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(robot.lookup("#tableSynthese").queryAs(TableView.class).getItems())
+                .as("l'écran a gardé les chiffres d'avant la correction : il ne relit pas sa source")
+                .hasSize(2);
+    }
+
     /// Charge une nuit à deux espèces et rend la main quand l'écran est peuplé.
     private void chargerDeuxEspeces(FxRobot robot) {
         when(service.pour(
