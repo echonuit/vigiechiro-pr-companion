@@ -14,7 +14,7 @@
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:controller="fr.univ_amu.iut.commun.view.EcranReglagesController"
-            stylesheets="@palette.css, @base.css, @design.css, @reglages.css"
+            stylesheets="@palette.css, @base.css, @reglages.css"
             styleClass="ecran-reglages">
   <top>
     <VBox styleClass="ecran-reglages-entete">

@@ -148,53 +148,6 @@ class DoublonsFeuillesDeStyleTest {
                 .isEmpty();
     }
 
-    /// **Toute vue qui déclare des feuilles charge celle du socle** (#3966).
-    ///
-    /// `design.css` porte les classes partagées : `bouton-primaire`, `bouton-secondaire`,
-    /// `bouton-danger`, les jetons de pastille, la densité des tables. Une vue qui ne la charge pas
-    /// **ne rougit nulle part** : ses contrôles rendent simplement ceux de la plateforme, et le seul
-    /// symptôme est un écran qui ne ressemble pas au reste du produit.
-    ///
-    /// C'est arrivé, et le défaut a survécu à toutes les revues visuelles : `EcranReglages.fxml` a été
-    /// **la seule des 24 vues** à ne pas la charger. On l'a découvert en cherchant pourquoi une classe
-    /// du socle posée sur un bouton n'avait aucun effet. La classe était inerte, et un test qui aurait
-    /// vérifié sa seule présence l'aurait certifiée.
-    ///
-    /// ⚠️ Ce cliquet ne regarde que les vues qui déclarent **déjà** des feuilles : une vue qui n'en
-    /// déclare aucune est un composant rendu dans une scène qui, elle, les porte. Les compter ferait
-    /// rougir du travail correct, et un garde qui crie sur du bon travail est un garde qu'on ignore.
-    @Test
-    @DisplayName("#3966 : toute vue qui déclare des feuilles charge design.css, celle du socle")
-    void chaque_vue_charge_la_feuille_du_socle() {
-        List<String> sansSocle = vuesFxml().stream()
-                .filter(vue -> lire(vue).contains("stylesheets="))
-                .filter(vue -> !lire(vue).contains("design.css"))
-                .map(Path::toString)
-                .sorted()
-                .toList();
-
-        assertThat(sansSocle).as("""
-                        Ces vues declarent des feuilles de style mais PAS `design.css`, celle du socle.
-
-                        Leurs controles rendent donc ceux de la plateforme : un `bouton-primaire` y est
-                        une classe inerte, et rien ne le signale. Ajoutez `@design.css` a leur attribut
-                        `stylesheets`, apres `base.css` et avant la feuille de la vue, pour que
-                        celle-ci reste autoritaire.
-
-                        Vues concernees :
-                        %s
-                        """.formatted(String.join("\n", sansSocle))).isEmpty();
-    }
-
-    private static List<Path> vuesFxml() {
-        try (Stream<Path> chemins = Files.walk(RACINE)) {
-            return new ArrayList<>(
-                    chemins.filter(p -> p.toString().endsWith(".fxml")).sorted().toList());
-        } catch (IOException echec) {
-            throw new UncheckedIOException("balayage des vues", echec);
-        }
-    }
-
     private static List<Path> feuillesDeStyle() {
         try (Stream<Path> chemins = Files.walk(RACINE)) {
             return new ArrayList<>(

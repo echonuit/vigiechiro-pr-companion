@@ -78,24 +78,56 @@ public final class Habillage {
         String base = url(FEUILLE_DE_BASE);
         List<String> surLaRacine = scene.getRoot().getStylesheets();
         List<String> surLaScene = scene.getStylesheets();
-        if (surLaRacine.contains(base) || surLaScene.contains(base)) {
-            return;
-        }
-        // `palette.css` vit tantôt sur le nœud racine (déclarée par le FXML), tantôt sur la scène
-        // (ajoutée à la main, comme pour la scène hôte d'un menu ouvert). On suit son niveau : insérée
-        // ailleurs, `base.css` passerait DEVANT la feuille de la fonctionnalité au lieu de derrière.
-        if (insererApres(surLaRacine, base) || insererApres(surLaScene, base)) {
-            return;
-        }
-        // Aucune des deux, nulle part : un contenu de dialogue monté seul. On pose alors le **trio du
-        // chrome**, dans son ordre - `MainView.fxml` déclare `palette, base, design`.
+
+        // ⚠️ La présence de `base.css` ne prouve PAS celle du trio (#3978). Ce retour se contentait de
+        // la constater et s'arrêtait là : vrai de `MainView.fxml`, qui déclare les trois feuilles, faux
+        // d'`EcranReglages.fxml`, seul FXML du dépôt à déclarer `palette + base` sans `design`. Une
+        // scène montée sur cette racine n'obtenait jamais les composants partagés, et le symptôme ne
+        // se voyait que dans la galerie - en production l'écran est empilé dans le chrome, dont il
+        // hérite les feuilles.
         //
-        // ⚠️ Poser `base.css` sans `palette.css` la laisserait sans ses couleurs ; la poser sans
-        // `design.css` prive la scène des composants partagés (badges, cartes-sections) que son
-        // contenu utilise pourtant. Une scène nue n'est pas moins l'application qu'une autre.
-        surLaRacine.add(0, url(FEUILLE_PALETTE));
-        surLaRacine.add(1, base);
-        surLaRacine.add(2, url(FEUILLE_DESIGN));
+        // C'est la forme du défaut décrit dans l'amendement de l'ADR 3374, un cran plus loin : là on
+        // avait vérifié un ORDRE sans vérifier une LISTE ; ici une PRÉSENCE prise pour un ENSEMBLE.
+        List<String> porteuse = null;
+        if (surLaRacine.contains(base)) {
+            porteuse = surLaRacine;
+        } else if (surLaScene.contains(base)) {
+            porteuse = surLaScene;
+        } else if (insererApres(surLaRacine, base)) {
+            // `palette.css` vit tantôt sur le nœud racine (déclarée par le FXML), tantôt sur la scène
+            // (ajoutée à la main, comme pour la scène hôte d'un menu ouvert). On suit son niveau :
+            // insérée ailleurs, `base.css` passerait DEVANT la feuille de la fonctionnalité.
+            porteuse = surLaRacine;
+        } else if (insererApres(surLaScene, base)) {
+            porteuse = surLaScene;
+        }
+
+        if (porteuse == null) {
+            // Aucune des deux, nulle part : un contenu de dialogue monté seul. On pose alors le **trio
+            // du chrome**, dans son ordre - `MainView.fxml` déclare `palette, base, design`.
+            //
+            // ⚠️ Poser `base.css` sans `palette.css` la laisserait sans ses couleurs ; la poser sans
+            // `design.css` prive la scène des composants partagés (badges, cartes-sections) que son
+            // contenu utilise pourtant. Une scène nue n'est pas moins l'application qu'une autre.
+            surLaRacine.add(0, url(FEUILLE_PALETTE));
+            surLaRacine.add(1, base);
+            surLaRacine.add(2, url(FEUILLE_DESIGN));
+            return;
+        }
+        garantirDesign(porteuse, base);
+    }
+
+    /// Pose `design.css` **juste après** `base.css` si elle manque, dans la liste qui porte déjà le
+    /// socle.
+    ///
+    /// Juste après, et non en fin de liste : la feuille de la **fonctionnalité** est déclarée ensuite
+    /// et doit rester prioritaire sur les composants partagés qu'elle surcharge.
+    private static void garantirDesign(List<String> feuilles, String base) {
+        String design = url(FEUILLE_DESIGN);
+        if (feuilles.contains(design)) {
+            return;
+        }
+        feuilles.add(feuilles.indexOf(base) + 1, design);
     }
 
     /// Pose les feuilles de socle sur le panneau d'un **dialogue** (#1499).
