@@ -461,7 +461,7 @@ Le dépôt persiste son avancement **fichier par fichier** (table `depot_unite` 
 `a_deposer|en_cours|depose|echec`, id distant, raison d'échec). Statuts **honnêtes** du passage :
 « Dépôt en cours » dès le premier téléversement entamé, « Déposé » **seulement** quand toutes les
 unités sont en ligne. Une interruption laisse « Dépôt en cours » ; la tentative suivante ne
-re-téléverse que les unités non confirmées (« Retenter les échecs » dans M-Lot). Détail : moteur
+re-téléverse que les unités non confirmées (« Reprendre le dépôt » dans M-Lot), **sauf celles refusées définitivement** (`echec_definitif`, #3469). Détail : moteur
 `lot/model/DepotVigieChiro`, suivi IHM `SuiviDepot` → table de dépôt (socle « suivi par unité »,
 cf. [Patterns](patterns.md)).
 

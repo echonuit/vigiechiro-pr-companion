@@ -57,7 +57,7 @@ Le diagramme ci-dessus est **conceptuel** : il ne porte que les entités métier
 |---|---|---|
 | `vigiechiro_link` | correspondance objet local ↔ `_id` plateforme (`site` / `taxon` / `passage`) + verrou du site | voisins de [C2](C2%20-%20Site%20de%20suivi.md), [C5](C5%20-%20Passage.md) |
 | `passage_equipment` | matériel micro **du déploiement d'une nuit** (1:1 passage) | voisin de [C5](C5%20-%20Passage.md) |
-| `depot_unite`, `depot_plan` | dépôt **reprenable**, unité par unité, + empreinte de la liste source | voisins de [C5](C5%20-%20Passage.md) |
+| `depot_unite`, `depot_plan` | dépôt **reprenable**, unité par unité, + empreinte de la liste source ; `echec_definitif` et `cause_refus` disent ce qui ne repart plus, et à quelle condition | voisins de [C5](C5%20-%20Passage.md) |
 | `participation_traitement` | **état relevé** du calcul Tadarida serveur (cache d'observation) | voisin de [C5](C5%20-%20Passage.md) |
 | `observation_message` | **fil de discussion** avec le validateur MNHN | voisin de [C13](C13%20-%20Observation.md) |
 | `passage_opportuniste` | **participation opportuniste** d'une nuit ([R34](Règles%20métier.md#r34)) : la présence de la ligne porte le fait | attribut de [C5](C5%20-%20Passage.md) |
