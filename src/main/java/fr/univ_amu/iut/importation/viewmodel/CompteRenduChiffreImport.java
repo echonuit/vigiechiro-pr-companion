@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre.Action;
@@ -300,7 +301,8 @@ public final class CompteRenduChiffreImport {
         if (resultat.passage() == null) {
             return TITRE_NU;
         }
-        String date = TITRE_NU + " - nuit du " + resultat.passage().dateEnregistrement();
+        String date = TITRE_NU + " - nuit du "
+                + Horodatage.dateSeule(resultat.passage().dateEnregistrement());
         if (resultat.session() == null) {
             return date;
         }
@@ -320,8 +322,8 @@ public final class CompteRenduChiffreImport {
         if (nuits.size() == 1) {
             return titreMonoNuit(nuits.getFirst());
         }
-        String premiere = nuits.getFirst().passage().dateEnregistrement();
-        String derniere = nuits.getLast().passage().dateEnregistrement();
+        String premiere = Horodatage.dateSeule(nuits.getFirst().passage().dateEnregistrement());
+        String derniere = Horodatage.dateSeule(nuits.getLast().passage().dateEnregistrement());
         return TITRE_NU + " - " + nuits.size() + " nuits, du " + premiere + " au " + derniere;
     }
 }

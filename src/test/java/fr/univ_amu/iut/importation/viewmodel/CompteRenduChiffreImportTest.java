@@ -132,7 +132,7 @@ class CompteRenduChiffreImportTest {
         @Test
         @DisplayName("Le titre nomme la nuit, le carré et le point, relus du dossier de session")
         void titre_nomme_la_nuit_et_le_point() {
-            assertThat(rendu().titre()).isEqualTo("Import terminé - nuit du 2026-04-22, carré 640380 · A1");
+            assertThat(rendu().titre()).isEqualTo("Import terminé - nuit du 22/04/2026, carré 640380 · A1");
         }
 
         @Test
@@ -422,7 +422,7 @@ class CompteRenduChiffreImportTest {
         @DisplayName("Le titre dit la plage couverte, pas seulement le nombre de passages")
         void titre_dit_la_plage() {
             assertThat(CompteRenduChiffreImport.de(troisNuits(), List.of()).titre())
-                    .isEqualTo("Import terminé - 3 nuits, du 2026-04-22 au 2026-04-24");
+                    .isEqualTo("Import terminé - 3 nuits, du 22/04/2026 au 24/04/2026");
         }
 
         @Test
@@ -431,7 +431,7 @@ class CompteRenduChiffreImportTest {
             var uneNuit = new ResultatImportMultiNuits(List.of(nuit("2026-04-22", 2, 0)));
 
             assertThat(CompteRenduChiffreImport.de(uneNuit, List.of()).titre())
-                    .isEqualTo("Import terminé - nuit du 2026-04-22, carré 640380 · A1");
+                    .isEqualTo("Import terminé - nuit du 22/04/2026, carré 640380 · A1");
         }
     }
 
