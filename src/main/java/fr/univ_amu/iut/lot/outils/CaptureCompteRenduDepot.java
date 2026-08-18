@@ -61,15 +61,26 @@ public final class CaptureCompteRenduDepot {
         System.exit(0);
     }
 
+    /// L'identifiant de participation que les trois aperçus partagent : c'est le même dépôt,
+    /// montré à trois moments.
+    private static final String PARTICIPATION = PARTICIPATION;
+
+    /// L'identifiant de participation des trois aperçus : c'est la même nuit qu'on montre
+    /// dans trois états.
+    private static final String PARTICIPATION = "part-1";
+
+    /// La raison des deux refus de droits de l'aperçu : deux archives, une seule cause.
+    private static final String DROITS_INSUFFISANTS = "HTTP 403 : droits insuffisants";
+
     private static void capturer() {
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
         rendre(
-                new BilanDepot("part-1", 14, List.of(), 4_500_000_000L),
+                new BilanDepot(PARTICIPATION, 14, List.of(), 4_500_000_000L),
                 new CompteRenduChiffreDepot.Plan(14, 14, false),
                 List.of(new CompteRenduChiffre.Action("Lancer la participation", true, () -> {})),
                 sortie.resolve("apercu-lot-depot-compte-rendu.png"));
         rendre(
-                new BilanDepot("part-1", 9, List.of(), 2_900_000_000L),
+                new BilanDepot(PARTICIPATION, 9, List.of(), 2_900_000_000L),
                 new CompteRenduChiffreDepot.Plan(14, 9, true),
                 List.of(),
                 sortie.resolve("apercu-lot-depot-interrompu.png"));
@@ -79,19 +90,11 @@ public final class CaptureCompteRenduDepot {
         // le bouton cesse de s'appeler « Reprendre le dépôt ».
         rendre(
                 new BilanDepot(
-                        "part-1",
+                        PARTICIPATION,
                         11,
                         List.of(
-                                new EchecUnite(
-                                        "Car-12.zip",
-                                        "HTTP 403 : droits insuffisants",
-                                        true,
-                                        CauseRefus.AUTHENTIFICATION),
-                                new EchecUnite(
-                                        "Car-13.zip",
-                                        "HTTP 403 : droits insuffisants",
-                                        true,
-                                        CauseRefus.AUTHENTIFICATION),
+                                new EchecUnite("Car-12.zip", DROITS_INSUFFISANTS, true, CauseRefus.AUTHENTIFICATION),
+                                new EchecUnite("Car-13.zip", DROITS_INSUFFISANTS, true, CauseRefus.AUTHENTIFICATION),
                                 new EchecUnite("Car-14.zip", "HTTP 422 : archive refusée", true, CauseRefus.CONTENU)),
                         3_400_000_000L),
                 new CompteRenduChiffreDepot.Plan(14, 11, false),
