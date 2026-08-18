@@ -111,7 +111,10 @@ public final class Habillage {
             // contenu utilise pourtant. Une scène nue n'est pas moins l'application qu'une autre.
             surLaRacine.add(0, url(FEUILLE_PALETTE));
             surLaRacine.add(1, base);
-            surLaRacine.add(2, url(FEUILLE_DESIGN));
+            // ⚠️ Par `garantirDesign` et non par un `add(2, ...)` aveugle (#3985) : une racine peut
+            // porter `design.css` sans porter ni `palette.css` ni `base.css` - c'est la forme de
+            // `CapturePublicationCorrections` - et l'ajouter sans regarder la posait DEUX fois.
+            garantirDesign(surLaRacine, base);
             return;
         }
         garantirDesign(porteuse, base);
