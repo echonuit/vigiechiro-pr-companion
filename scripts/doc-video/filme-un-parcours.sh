@@ -100,6 +100,31 @@ verifier_le_jar() {
 # (`~/Documents/VigieChiro-Companion`). Filmer un parcours d'importation y toucherait de vraies
 # nuits. `Workspace.resolu()` donne la priorité à la propriété système, ce qui permet de l'écarter
 # sans toucher au produit.
+# L'environnement dans lequel le produit est lancé pour un tournage.
+#
+# ⚠️ Pourquoi HOME doit être jetable, et pas seulement l'espace de travail. Le sélecteur de dossier
+# est un sélecteur GTK ordinaire : il ouvre sur le dossier courant, liste le dossier personnel, et
+# sa barre latérale porte les emplacements de l'utilisateur. La première sonde de cet écran a filmé
+# en clair « nedjar », « sandbox », « R202 », « CLAUDE.md », « maj-notes-scodoc.py », « plop.md » et
+# les dossiers de cours. Un film publié dans `docs/` aurait montré l'arborescence privée de qui l'a
+# tourné - et rien dans le banc ne l'aurait dit, le fichier étant par ailleurs parfait.
+#
+# ⚠️ Ce qu'un HOME jetable ne cache PAS, et il faut le savoir avant de tourner : les VOLUMES MONTÉS
+# restent dans la barre latérale. Celui du banc, mais aussi ceux de l'utilisateur, sous leur
+# étiquette de volume - « Volume de 31 GB » sur le poste où ceci est écrit. C'est un nom générique,
+# sans rien du contenu, et démonter les cartes de l'utilisateur pour tourner serait pire que le mal.
+# Le banc le signale plutôt que de le corriger.
+poser_environnement_jetable() { # <bac>
+    local bac="${1:-}"
+    [ -n "$bac" ] || return 1
+    mkdir -p "$bac/home/.config" "$bac/home/.cache" "$bac/home/.local/share" || return 1
+    export HOME="$bac/home"
+    export XDG_CONFIG_HOME="$bac/home/.config"
+    export XDG_CACHE_HOME="$bac/home/.cache"
+    export XDG_DATA_HOME="$bac/home/.local/share"
+    cd "$bac/home" || return 1
+}
+
 verifier_bac_jetable() {
     local bac="$1"
     if [ -z "$bac" ]; then
@@ -223,6 +248,37 @@ viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet] [largeur de l
     return 0
 }
 
+# Relit, SUR L'ÉCRAN DU PRODUIT, le dossier que le sélecteur a retenu.
+#
+# ⚠️ Pourquoi ce contrôle existe. Un premier essai désignait la carte en tapant son chemin dans la
+# barre d'emplacement du sélecteur (`Ctrl+L`) : le dialogue ENTRAIT dans le dossier et repartait
+# avec son premier enfant, `…/sd-nominale/bruts`, un cran trop bas. Le film montrait alors une
+# importation parfaitement valide, sur le mauvais dossier, et rien ne le disait. Choisir la carte
+# par la barre latérale évite ce piège ; ce contrôle le prouve à chaque tournage plutôt que de
+# faire confiance au geste.
+#
+# Ce qu'il compare : le DERNIER SEGMENT du chemin, pas le chemin entier. C'est ce segment que le
+# défaut change, et c'est celui que l'OCR rend le plus sûrement - une longue ligne de chemin se lit
+# avec des séparateurs incertains. Il ne dirait donc rien d'un dossier homonyme ailleurs, et ce
+# n'est pas ce qu'on lui demande.
+verifier_dossier_retenu() { # <écran> <x> <y> <chemin attendu> [largeur]
+    local ecran="$1" x="$2" y="$3" attendu="$4" largeur="${5:-360}" tmp lu segment
+    segment=$(basename "$attendu")
+    tmp=$(mktemp -d)
+    ffmpeg -v error -y -f x11grab -video_size "${LARGEUR}x${HAUTEUR}" -i "$ecran" \
+        -frames:v 1 "$tmp/ecran.png" </dev/null 2>/dev/null
+    lu=$(lire_zone "$tmp/ecran.png" "$((x - largeur / 2))" "$((y - ZONE_H / 2))" "$largeur")
+    rm -rf "$tmp"
+
+    if ! libelle_correspond "$lu" "$segment"; then
+        echo "   - le sélecteur devait retenir « $attendu » ; l'écran porte « $lu »"
+        echo "     Un chemin plus PROFOND que celui visé est le défaut connu : le dialogue est"
+        echo "     entré dans le dossier au lieu de le retenir."
+        return 1
+    fi
+    return 0
+}
+
 # Saisit du texte au rythme d'une main. `--delay` en millisecondes par touche : à 0, xdotool colle
 # la chaîne d'un bloc et le spectateur ne voit rien se remplir.
 taper() { # <écran> <texte>
@@ -286,6 +342,99 @@ parcours_declarer_un_carre() {
     return 0
 }
 
+# La préparation du parcours d'importation. Elle N'EST PAS FILMÉE.
+#
+# ⚠️ Pourquoi une préparation séparée, et non un film qui montre tout. L'importation a besoin d'un
+# carré ET d'un point d'écoute - l'assistant refuse de rattacher une nuit sans point. Filmer les
+# deux déclarations avant d'arriver au sujet donnerait un film qui met une minute à commencer, et
+# qui redit ce que `declarer-un-carre.mkv` montre déjà. Les gestes sont donc joués caméra éteinte.
+#
+# Ils restent VÉRIFIÉS : un `viser` qui refuse ici arrête le tournage avant qu'une pellicule soit
+# entamée, ce qui est le bon moment pour s'arrêter.
+preparation_importer_une_nuit() { # <écran>
+    local ecran="$1"
+
+    parcours_declarer_un_carre "$ecran" /dev/null || return 1
+
+    # la fiche du carré, par le chevron de sa carte
+    viser "$ecran" 195 180 "Carré 640380" || return 1
+    sleep 1.5
+
+    viser "$ecran" 324 237 "Ajouter un point" || return 1
+    sleep 1.5
+    DISPLAY="$ecran" xdotool mousemove 549 145 click 1
+    # ⚠️ « A1 » sans accent ni minuscule accentuée : `xdotool type` perd les MAJUSCULES ACCENTUÉES,
+    # mesuré sur « Étang » rendu « étang » au premier tournage.
+    taper "$ecran" "A1"
+    sleep 0.8
+    viser "$ecran" 849 755 "Ajouter" || return 1
+    sleep 2
+    return 0
+}
+
+# Le parcours « importer une nuit », deuxième de la documentation (#3887).
+#
+# ## Ce qu'il montre, et que rien d'autre ne montre
+#
+# Le geste que la documentation décrit en mots : la carte SD apparaît sous son étiquette dans la
+# barre latérale du sélecteur, comme sur le poste d'un naturaliste, et l'application lit ce qu'elle
+# y trouve - journal du capteur, relevé climatique, nombre d'enregistrements - avant de rien
+# modifier.
+#
+# ## Les deux attentes de machine
+#
+# L'inspection du dossier et l'importation elle-même sont les deux moments où le spectateur regarde
+# la machine travailler. Ils sont ENCADRÉS de repères, pour que le montage puisse les accélérer :
+# c'est le seul endroit du film où le temps réel n'apprend rien.
+parcours_importer_une_nuit() { # <écran> <marques> <point de montage de la carte>
+    local ecran="$1" marques="$2" carte="$3"
+
+    marque "$marques" debut
+    respirer_doc 2.0                                   # la fiche du carré, telle qu'on l'a laissée
+
+    viser "$ecran" 493 108 "Importer une nuit" || return 1
+    marque "$marques" assistant
+    respirer_doc 2.5                                   # l'assistant, et son étape 1 seule
+
+    viser "$ecran" 693 210 "Parcourir" || return 1
+    marque "$marques" selecteur
+    respirer_doc 2.0                                   # le sélecteur s'ouvre sur un dossier vide
+
+    # ⚠️ La carte se prend dans la BARRE LATÉRALE, sous son étiquette, et non en tapant son chemin :
+    # c'est le geste réel, et c'est celui qui retient le bon niveau (cf. `verifier_dossier_retenu`).
+    viser "$ecran" 168 178 "$ETIQUETTE_CARTE" 0.6 150 || return 1
+    respirer_doc 1.6
+    viser "$ecran" 1136 831 "Ouvrir" || return 1
+    marque "$marques" inspection_debut
+
+    respirer_doc 3.5                                   # l'application lit la carte
+    marque "$marques" inspection_fin
+
+    verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
+    respirer_doc 2.5                                   # l'étape 2 paraît, et dit ce qu'elle a trouvé
+
+    # ⚠️ Zone élargie à 230 px : « Choisissez un point » déborde des 200 px par défaut et se lit
+    # « hoisissez un point ». Mesuré au premier tournage, pas supposé.
+    viser "$ecran" 801 562 "Choisissez un point" 0.55 230 || return 1
+    respirer_doc 1.2
+    DISPLAY="$ecran" xdotool mousemove 801 592 click 1
+    marque "$marques" point_choisi
+    respirer_doc 1.8
+
+    DISPLAY="$ecran" xdotool mousemove 640 700
+    DISPLAY="$ecran" xdotool click --repeat 10 5
+    respirer_doc 2.0                                   # le préfixe qui sera appliqué, en clair
+
+    viser "$ecran" 201 769 "Importer cette nuit" || return 1
+    marque "$marques" import_debut
+    respirer_doc 8.0                                   # la machine travaille
+    marque "$marques" import_fin
+    respirer_doc 3.0                                   # ce qu'on obtient
+
+    marque "$marques" fin
+    return 0
+}
+
 # Les respirations du film. Elles ne servent qu'au spectateur : un écran qui change trop vite ne se
 # lit pas. Hors tournage, elles ne coûtent rien.
 respirer_doc() {
@@ -314,9 +463,33 @@ parcours_ouverture() {
     sleep 3
 }
 
-tourner() {
-    local sortie="${1:-$RACINE/target/doc-video/declarer-un-carre.mkv}"
+# Ce que le banc sait tourner. Un parcours porte son nom de fichier, la durée de pellicule qu'on
+# lui accorde, et s'il lui faut une carte SD montée.
+#
+# ⚠️ La pellicule est FIXÉE d'avance et généreuse : un `ffmpeg` tué sans ménagement ne finalise pas
+# son index, et le film est alors irrécupérable. Le montage coupera ce qui dépasse.
+parcours_connu() { # <nom>
+    case "$1" in
+        declarer-un-carre) printf '45\tnon\n' ;;
+        importer-une-nuit) printf '120\toui\n' ;;
+        *) return 1 ;;
+    esac
+}
+
+tourner() { # [nom du parcours] [sortie]
+    local nom="${1:-declarer-un-carre}"
+    local fiche pellicule besoin_carte
+    if ! fiche=$(parcours_connu "$nom"); then
+        echo "❌ Parcours inconnu : « $nom »."
+        echo "   Connus : declarer-un-carre, importer-une-nuit."
+        return 1
+    fi
+    pellicule=$(printf '%s' "$fiche" | cut -f1)
+    besoin_carte=$(printf '%s' "$fiche" | cut -f2)
+
+    local sortie="${2:-$RACINE/target/doc-video/$nom.mkv}"
     local bac ecran=":87" jar code=0
+    local atelier="" carte="" point="" peripherique=""
     jar=$(resoudre_le_jar)
     bac=$(mktemp -d)
 
@@ -331,6 +504,20 @@ tourner() {
     fi
     echo "   ✔ outils, jar et bac jetable"
 
+    if [ "$besoin_carte" = oui ]; then
+        atelier=$(mktemp -d)
+        if ! carte=$(preparer_la_carte "$atelier") \
+            || ! image_de_la_carte "$carte" "$atelier/carte.img" \
+            || ! fiche=$(monter_la_carte "$atelier/carte.img"); then
+            echo "❌ La carte du parcours n'a pas pu être montée."
+            rm -rf "$bac" "$atelier"
+            return 1
+        fi
+        point=$(printf '%s' "$fiche" | cut -f1)
+        peripherique=$(printf '%s' "$fiche" | cut -f2)
+        echo "   ✔ carte montée : $point"
+    fi
+
     mkdir -p "$(dirname "$sortie")"
     Xvfb "$ecran" -screen 0 "${LARGEUR}x${HAUTEUR}x24" >/dev/null 2>&1 &
     local xvfb=$!
@@ -339,31 +526,47 @@ tourner() {
     local wm=$!
     sleep 1
 
-    DISPLAY="$ecran" java --enable-native-access=ALL-UNNAMED \
-        -Dvigiechiro.workspace="$bac" -jar "$jar" >"$bac/produit.log" 2>&1 &
+    # ⚠️ Dans un SOUS-SHELL : `poser_environnement_jetable` exporte HOME et change de dossier, et
+    # le banc lui-même a besoin des siens - ne serait-ce que pour écrire le film à sa destination.
+    (
+        poser_environnement_jetable "$bac" || exit 1
+        DISPLAY="$ecran" java --enable-native-access=ALL-UNNAMED \
+            -Dvigiechiro.workspace="$bac" -jar "$jar"
+    ) >"$bac/produit.log" 2>&1 &
     local produit=$!
 
     if attendre_la_fenetre "$ecran"; then
         verifier_dimensions_honorees "$ecran" || code=1
         local marques="${sortie%.mkv}.marques.tsv"
         : > "$marques"
-        # ⚠️ Durée fixée d'avance, et généreuse : un ffmpeg tué sans ménagement ne finalise pas son
-        # index. Le parcours dure une trentaine de secondes ; on filme 45, et le montage coupera.
-        filmer "$ecran" "$sortie" 45 &
-        local camera=$!
-        parcours_declarer_un_carre "$ecran" "$marques" || code=1
-        wait "$camera"
-        # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
-        # fichier » : il faut donc l'instant où la CAMÉRA s'est arrêtée, pas celui où le parcours
-        # s'est terminé. Marqué avant le `wait`, les repères se convertissaient en 21,3 s à 45,0 s -
-        # un parcours qui n'aurait commencé qu'à la moitié d'un film qu'il occupe en entier. Le
-        # montage aurait coupé les mauvaises plages, et le film serait resté parfaitement valide.
-        marque "$marques" arret
 
-        if monter "$sortie" "$marques" "${sortie%.mkv}-monte.mkv"; then
-            ecrire_index "${sortie%.mkv}-monte.mkv" "$marques" "$(dirname "$sortie")/index.md"
-        else
-            code=1
+        # ⚠️ La préparation tourne CAMÉRA ÉTEINTE, et son refus arrête le tournage avant qu'une
+        # pellicule soit entamée - le bon moment pour s'arrêter.
+        if [ "$code" -eq 0 ] && [ "$nom" = importer-une-nuit ]; then
+            echo "   … préparation (non filmée) : un carré et son point d'écoute"
+            preparation_importer_une_nuit "$ecran" || code=1
+        fi
+
+        if [ "$code" -eq 0 ]; then
+            filmer "$ecran" "$sortie" "$pellicule" &
+            local camera=$!
+            case "$nom" in
+                declarer-un-carre) parcours_declarer_un_carre "$ecran" "$marques" || code=1 ;;
+                importer-une-nuit) parcours_importer_une_nuit "$ecran" "$marques" "$point" || code=1 ;;
+            esac
+            wait "$camera"
+            # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
+            # fichier » : il faut donc l'instant où la CAMÉRA s'est arrêtée, pas celui où le parcours
+            # s'est terminé. Marqué avant le `wait`, les repères se convertissaient en 21,3 s à 45,0 s -
+            # un parcours qui n'aurait commencé qu'à la moitié d'un film qu'il occupe en entier. Le
+            # montage aurait coupé les mauvaises plages, et le film serait resté parfaitement valide.
+            marque "$marques" arret
+
+            if monter "$sortie" "$marques" "${sortie%.mkv}-monte.mkv"; then
+                ecrire_index "$(dirname "$sortie")" "$(dirname "$sortie")/index.md"
+            else
+                code=1
+            fi
         fi
     else
         echo "❌ Le produit n'a pas ouvert de fenêtre : rien à filmer."
@@ -373,11 +576,12 @@ tourner() {
 
     kill "$produit" "$wm" "$xvfb" 2>/dev/null
     wait 2>/dev/null
+    [ -n "$point" ] && demonter_la_carte "$point" "$peripherique"
     if [ "$code" -eq 0 ]; then
         echo "✅ $sortie ($(du -h "$sortie" | cut -f1))"
         echo "   marques : $(wc -l < "${sortie%.mkv}.marques.tsv") repères"
     fi
-    rm -rf "$bac"
+    rm -rf "$bac" ${atelier:+"$atelier"}
     return "$code"
 }
 
@@ -398,8 +602,9 @@ SPEC_CARTE="recette/fixtures/spec/sd-nominale.yaml"
 # choix pour convaincre un relecteur Flathub : la scène montrait le geste réel d'un naturaliste.
 #
 # ⚠️ Pour un banc versionné, c'est l'inverse qu'il faut : une carte qu'on refabrique à l'identique.
-# `GenerateurCartesSD` rend les mêmes octets d'une exécution à l'autre, et le sélecteur du produit
-# est un sélecteur GTK ordinaire - aucun montage en boucle, aucun droit d'administration.
+# `GenerateurCartesSD` rend les mêmes octets d'une exécution à l'autre. Depuis #3996 ces octets
+# sont versés dans une image FAT montée en boucle, pour que le film montre le chemin qu'un
+# naturaliste voit vraiment : les deux se cumulent, la fixture reste déterministe.
 #
 # ⚠️ J'avais chiffré ce travail à « trois mécanismes neufs » avant de regarder. Le pom porte le goal
 # `generer-sd` depuis longtemps, documenté dans `dev-docs/recette/fixtures.md`. Un coût supposé, et
@@ -577,6 +782,68 @@ instant_du_repere() { # <fichier de marques> <t0> <nom>
 # ⚠️ Écrire l'accélération maintenant produirait un dispositif qu'aucun cas ne peut faire rougir,
 # ce que #3886 vient de reprocher à seize auto-tests. Elle viendra avec le parcours d'importation,
 # qui a de vraies attentes : la scrutation de la carte et l'import.
+# Les plages où l'on regarde la machine travailler, accélérées au montage.
+#
+# ⚠️ Pourquoi celles-là et pas le reste. Un film de documentation se juge au temps qu'il réclame.
+# Les gestes doivent garder leur rythme - le spectateur les refera -, mais l'inspection de la carte
+# et l'import lui-même n'apprennent rien en temps réel : ce sont des barres qui avancent.
+#
+# ⚠️ Elles s'accélèrent, elles ne se COUPENT PAS. Un import qui disparaîtrait au montage laisserait
+# croire qu'il est instantané ; le lecteur qui attend huit secondes devant son écran croirait alors
+# que quelque chose ne va pas chez lui.
+FACTEUR_ACCELERATION=4
+
+# Les plages, en positions du film COUPÉ (donc après retrait de l'origine), une par ligne.
+#
+# Une plage se déclare par deux repères jumeaux, `<nom>_debut` et `<nom>_fin`. Un `_debut` sans son
+# `_fin` est ignoré : mieux vaut un film au rythme réel qu'un montage qui accélère jusqu'à la fin
+# sur un repère manquant.
+plages_a_accelerer() { # <marques> <t0> <coupe>
+    local marques="$1" t0="$2" coupe="$3" nom base d f
+    while IFS=$'\t' read -r _ nom; do
+        case "$nom" in
+            *_debut) base="${nom%_debut}" ;;
+            *) continue ;;
+        esac
+        grep -q "	${base}_fin$" "$marques" || continue
+        d=$(instant_du_repere "$marques" "$t0" "${base}_debut")
+        f=$(instant_du_repere "$marques" "$t0" "${base}_fin")
+        [ -n "$d" ] && [ -n "$f" ] || continue
+        LC_NUMERIC=C awk -v d="$d" -v f="$f" -v c="$coupe" \
+            'BEGIN{a = d - c; b = f - c; if (a < 0) a = 0; if (b > a) printf "%.3f\t%.3f\n", a, b}'
+    done < "$marques"
+}
+
+# Le filtre qui coupe le film et accélère ses plages de machine. Vide s'il n'y a rien à accélérer :
+# le montage reprend alors sa coupe simple, plus rapide et plus sûre.
+#
+# ⚠️ Il découpe en segments ALTERNÉS - normal, accéléré, normal… - et les recolle. Une seule passe,
+# donc pas de fichiers intermédiaires : le brut n'est lu qu'une fois, et c'est ce que `concat`
+# attend.
+filtre_de_montage() { # <début> <fin> <plages>
+    local debut="$1" fin="$2" plages="$3"
+    [ -n "$plages" ] || return 0
+    LC_NUMERIC=C awk -v d="$debut" -v f="$fin" -v k="$FACTEUR_ACCELERATION" '
+        { a[NR] = $1; b[NR] = $2 }
+        END {
+            n = 0; curseur = 0; filtre = ""; enchainement = ""
+            for (i = 1; i <= NR; i++) {
+                if (a[i] > curseur) {
+                    filtre = filtre sprintf("[0:v]trim=start=%.3f:end=%.3f,setpts=PTS-STARTPTS[s%d];", d + curseur, d + a[i], n)
+                    enchainement = enchainement sprintf("[s%d]", n); n++
+                }
+                filtre = filtre sprintf("[0:v]trim=start=%.3f:end=%.3f,setpts=(PTS-STARTPTS)/%d[s%d];", d + a[i], d + b[i], k, n)
+                enchainement = enchainement sprintf("[s%d]", n); n++
+                curseur = b[i]
+            }
+            if (d + curseur < f) {
+                filtre = filtre sprintf("[0:v]trim=start=%.3f:end=%.3f,setpts=PTS-STARTPTS[s%d];", d + curseur, f, n)
+                enchainement = enchainement sprintf("[s%d]", n); n++
+            }
+            printf "%s%sconcat=n=%d:v=1:a=0[sortie]", filtre, enchainement, n
+        }' <<< "$plages"
+}
+
 monter() { # <brut> <marques> <sortie>
     local brut="$1" marques="$2" sortie="$3" duree t0 debut fin part
     duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$brut" 2>/dev/null)
@@ -594,8 +861,17 @@ monter() { # <brut> <marques> <sortie>
     # Le repère de début tombe une fraction AVANT la première image ; on borne à zéro.
     LC_NUMERIC=C awk -v d="$debut" 'BEGIN{exit !(d < 0)}' && debut=0
 
-    ffmpeg -nostdin -v error -i "$brut" -ss "$debut" -to "$fin" -an \
-        -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" 2>/dev/null
+    local plages filtre
+    plages=$(plages_a_accelerer "$marques" "$t0" "$debut")
+    filtre=$(filtre_de_montage "$debut" "$fin" "$plages")
+
+    if [ -n "$filtre" ]; then
+        ffmpeg -nostdin -v error -i "$brut" -filter_complex "$filtre" -map "[sortie]" -an \
+            -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" 2>/dev/null
+    else
+        ffmpeg -nostdin -v error -i "$brut" -ss "$debut" -to "$fin" -an \
+            -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" 2>/dev/null
+    fi
 
     # ⚠️ Le contrôle, et il porte sur le RÉSULTAT, pas sur les repères. Un montage qui viserait à
     # côté rendrait un film noir - valide, lisible, et vide. C'est la seule chose qu'on ne peut pas
@@ -606,9 +882,18 @@ monter() { # <brut> <marques> <sortie>
             "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
         return 1
     fi
-    LC_NUMERIC=C printf '   ✔ montage : %.1f s -> %.1f s, %.0f %% d\u2019images utiles\n' \
-        "$duree" "$(LC_NUMERIC=C awk -v a="$debut" -v b="$fin" 'BEGIN{print b - a}')" \
-        "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
+    # ⚠️ La durée annoncée se MESURE sur le fichier produit. Calculée comme « fin moins début »,
+    # elle ignorait l'accélération des plages de machine et annonçait un film plus long que celui
+    # qu'on venait d'écrire - un chiffre faux sur la ligne même qui dit que le montage a réussi.
+    local montee accelerees
+    montee=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$sortie" 2>/dev/null)
+    accelerees=$(printf '%s' "$plages" | grep -c . || true)
+    LC_NUMERIC=C printf '   ✔ montage : %.1f s -> %.1f s, %.0f %% d\u2019images utiles' \
+        "$duree" "$montee" "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
+    if [ "${accelerees:-0}" -gt 0 ]; then
+        printf ' (%s plage(s) de machine accélérée(s) x%s)' "$accelerees" "$FACTEUR_ACCELERATION"
+    fi
+    echo
     return 0
 }
 
@@ -616,58 +901,107 @@ monter() { # <brut> <marques> <sortie>
 # L'index
 # ---------------------------------------------------------------------------------------------
 
-# La fiche d'écran que ce parcours illustre. Écrite ici, à côté du parcours, et non dans l'index :
-# l'index se DÉRIVE, il ne se tient pas à la main - c'est la leçon de #3885, où une page portait
+# L'index se DÉRIVE, il ne se tient pas à la main : la durée vient du fichier, les étapes des
+# marqueurs, la part d'images utiles de la mesure. C'est la leçon de #3885, où une page portait
 # trois inventaires du même fait et où deux avaient dérivé.
-FICHE_DU_PARCOURS="docs/ecrans/sites.md"
-
-# Écrit l'index d'un film à partir de ses repères. Rien n'y est saisi : la durée vient du fichier,
-# les étapes des marqueurs, la part d'images utiles de la mesure.
 #
 # ⚠️ Ce que l'index dit de lui-même compte autant que ce qu'il liste. Un lecteur doit savoir que ce
 # film prouve un ENCHAÎNEMENT et rien d'autre : qu'il soit clair, lisible, bien rythmé, aucune
 # machine ne le dit. C'est le troisième état de l'ADR 3764, transposé à la documentation.
-ecrire_index() { # <film monté> <marques> <index>
-    local film="$1" marques="$2" index="$3" duree t0 brut_duree part
+# La position d'un repère dans le film MONTÉ, une fois les plages de machine accélérées.
+#
+# ⚠️ Sans cette conversion, l'index pointe APRÈS la fin du film. Mesuré : il annonçait « fin à
+# 39,8 s » sur un fichier de 31,2 s. C'est une page dont tout l'objet est de dire où regarder, et
+# elle envoyait le lecteur dans le vide - en ayant l'air, comme toujours, parfaitement calculée.
+position_dans_le_montage() { # <position dans la coupe> <plages> <facteur>
+    LC_NUMERIC=C awk -v t="$1" -v k="$3" '
+        { a[NR] = $1; b[NR] = $2 }
+        END {
+            v = t
+            for (i = 1; i <= NR; i++) {
+                if (t >= b[i]) { v -= (b[i] - a[i]) * (1 - 1 / k) }
+                else if (t > a[i]) { v -= (t - a[i]) * (1 - 1 / k); break }
+                else break
+            }
+            if (v < 0) v = 0
+            printf "%.1f", v
+        }' <<< "$2"
+}
+
+# Le titre et la page de documentation qu'un parcours illustre.
+#
+# ⚠️ Cette table existe parce que l'index a menti. Écrit pour un seul parcours, il titrait
+# « Déclarer un carré » au-dessus du film d'IMPORTATION, et le renvoyait vers `sites.md`. Une page
+# dérivée qui se trompe de sujet est pire qu'une page absente : elle a l'air d'avoir été vérifiée.
+fiche_du_parcours() { # <nom>
+    case "$1" in
+        declarer-un-carre) printf 'Déclarer un carré\tdocs/ecrans/sites.md\n' ;;
+        importer-une-nuit) printf 'Importer une nuit\tdocs/ecrans/importation.md\n' ;;
+        *) return 1 ;;
+    esac
+}
+
+# La section d'un parcours dans l'index. Rien si son film n'est pas là.
+section_du_parcours() { # <dossier> <nom>
+    local dossier="$1" nom="$2"
+    local film="$dossier/$nom-monte.mkv" brut="$dossier/$nom.mkv" marques="$dossier/$nom.marques.tsv"
+    [ -f "$film" ] && [ -f "$marques" ] || return 0
+
+    local fiche titre page duree brut_duree t0 part
+    fiche=$(fiche_du_parcours "$nom") || fiche="$nom	"
+    titre=$(printf '%s' "$fiche" | cut -f1)
+    page=$(printf '%s' "$fiche" | cut -f2)
     duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$film" 2>/dev/null)
-    brut_duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "${film%-monte.mkv}.mkv" 2>/dev/null)
+    brut_duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$brut" 2>/dev/null)
     t0=$(origine_du_film "$marques" "$brut_duree")
     part=$(part_utile "$film")
 
+    echo "## $titre"
+    echo
+    printf '| | |\n|---|---|\n'
+    printf '| film | `%s` |\n' "$(basename "$film")"
+    LC_NUMERIC=C printf '| durée | %.1f s (brut : %.1f s) |\n' "$duree" "$brut_duree"
+    LC_NUMERIC=C printf '| images utiles | %.0f %% |\n' "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
+    [ -n "$page" ] && printf '| illustre | [%s](../../%s) |\n' "$page" "$page"
+    echo
+    echo "### Où en est le parcours"
+    echo
+    printf '| étape | dans le film |\n|---|---|\n'
+    # ⚠️ Les positions se comptent dans le film MONTÉ, pas dans le brut. Le montage a coupé au
+    # repère « debut » : il faut donc retrancher cette origine, sans quoi l'index annonce un
+    # « debut » à -0,2 s dans un film qui commence à zéro - une petite fausseté, sur la page
+    # dont tout l'intérêt est de dire où regarder.
+    local coupe etape brute relative plages
+    coupe=$(instant_du_repere "$marques" "$t0" debut)
+    LC_NUMERIC=C awk -v c="$coupe" 'BEGIN{exit !(c < 0)}' && coupe=0
+    plages=$(plages_a_accelerer "$marques" "$t0" "$coupe")
+    while IFS=$'\t' read -r _ etape; do
+        [ "$etape" = arret ] && continue
+        brute=$(instant_du_repere "$marques" "$t0" "$etape")
+        relative=$(LC_NUMERIC=C awk -v b="$brute" -v c="$coupe" 'BEGIN{v = b - c; if (v < 0) v = 0; printf "%.3f", v}')
+        relative=$(position_dans_le_montage "$relative" "$plages" "$FACTEUR_ACCELERATION")
+        printf '| %s | %s s |\n' "$etape" "$relative"
+    done < "$marques"
+    echo
+}
+
+# ⚠️ L'index décrit TOUS les films présents, pas seulement celui qu'on vient de tourner. Écrit pour
+# le seul dernier tournage, il effaçait le parcours précédent à chaque passage : la page annonçait
+# un dépôt qui n'aurait filmé qu'un parcours, alors que les deux films étaient là, côte à côte.
+ecrire_index() { # <dossier> <index>
+    local dossier="$1" index="$2" nom
     {
         echo "# Parcours filmés de la documentation"
         echo
         echo "Cette page est **dérivée** : elle se réécrit à chaque tournage, depuis les repères posés"
-        echo "par le scénario et la mesure du fichier. Rien n'y est saisi à la main."
+        echo "par le scénario et la mesure des fichiers. Rien n'y est saisi à la main."
         echo
-        echo "## Déclarer un carré"
+        for nom in declarer-un-carre importer-une-nuit; do
+            section_du_parcours "$dossier" "$nom"
+        done
+        echo "## ⚠️ Ce que ces films ne prouvent pas"
         echo
-        printf '| | |\n|---|---|\n'
-        printf '| film | `%s` |\n' "$(basename "$film")"
-        LC_NUMERIC=C printf '| durée | %.1f s (brut : %.1f s) |\n' "$duree" "$brut_duree"
-        LC_NUMERIC=C printf '| images utiles | %.0f %% |\n' "$(LC_NUMERIC=C awk -v p="$part" 'BEGIN{print p * 100}')"
-        printf '| illustre | [%s](../../%s) |\n' "$FICHE_DU_PARCOURS" "$FICHE_DU_PARCOURS"
-        echo
-        echo "### Où en est le parcours"
-        echo
-        printf '| étape | dans le film |\n|---|---|\n'
-        # ⚠️ Les positions se comptent dans le film MONTÉ, pas dans le brut. Le montage a coupé au
-        # repère « debut » : il faut donc retrancher cette origine, sans quoi l'index annonce un
-        # « debut » à -0,2 s dans un film qui commence à zéro - une petite fausseté, sur la page
-        # dont tout l'intérêt est de dire où regarder.
-        local coupe nom brute relative
-        coupe=$(instant_du_repere "$marques" "$t0" debut)
-        LC_NUMERIC=C awk -v c="$coupe" 'BEGIN{exit !(c < 0)}' && coupe=0
-        while IFS=$'\t' read -r _ nom; do
-            [ "$nom" = arret ] && continue
-            brute=$(instant_du_repere "$marques" "$t0" "$nom")
-            relative=$(LC_NUMERIC=C awk -v b="$brute" -v c="$coupe" 'BEGIN{v = b - c; if (v < 0) v = 0; printf "%.1f", v}')
-            printf '| %s | %s s |\n' "$nom" "$relative"
-        done < "$marques"
-        echo
-        echo "### ⚠️ Ce que ce film ne prouve pas"
-        echo
-        echo "Qu'il soit **clair**. Le banc sait dire que l'enchaînement a eu lieu - chaque geste a"
+        echo "Qu'ils soient **clairs**. Le banc sait dire que l'enchaînement a eu lieu - chaque geste a"
         echo "vérifié son libellé avant de partir - et que le montage tombe sur du contenu. Il ne sait"
         echo "pas si un lecteur comprend ce qu'il voit, ni si le rythme lui convient."
         echo
@@ -717,6 +1051,40 @@ auto_test() {
     essai "un bac DANS l'espace utilisateur est refusé"     rouge \
         verifier_bac_jetable "$HOME/Documents/VigieChiro-Companion/essai"
     essai "un bac vide est refusé"                          rouge verifier_bac_jetable ""
+
+    # --- l'environnement jetable du produit ---
+    essai "l'environnement jetable pose HOME dans le bac"   vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; poser_environnement_jetable "$1"; [ "$HOME" = "$1/home" ]' "${BASH_SOURCE[0]}" "$bac"
+    # ⚠️ LE cas qui porte ce dispositif : si l'export disparaît, HOME reste celui de l'utilisateur et
+    # le sélecteur filme son arborescence. Le vert ne le dirait pas ; ce rouge-là, si.
+    essai "le HOME réel ne survit pas à l'environnement jetable" rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; reel="$HOME"; source "$0"; poser_environnement_jetable "$1"; [ "$HOME" = "$reel" ]' "${BASH_SOURCE[0]}" "$bac"
+    essai "les dossiers XDG que GTK lira sont créés"        vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; poser_environnement_jetable "$1"; [ -d "$XDG_CONFIG_HOME" ] && [ -d "$XDG_DATA_HOME" ]' "${BASH_SOURCE[0]}" "$bac"
+    essai "sans bac, l'environnement jetable refuse"        rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; poser_environnement_jetable ""' "${BASH_SOURCE[0]}"
+
+    # --- les parcours que le banc sait tourner ---
+    essai "le parcours de déclaration est connu"           vert  parcours_connu declarer-un-carre
+    essai "le parcours d'importation est connu"            vert  parcours_connu importer-une-nuit
+    # ⚠️ Sans ce cas, une faute de frappe tournerait le parcours par défaut sous le nom demandé : un
+    # film juste, portant le nom d'un autre.
+    essai "un parcours inconnu est refusé"                 rouge parcours_connu importer-une-nuits
+    essai "le parcours d'importation réclame une carte"    vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(parcours_connu importer-une-nuit | cut -f2)" = oui ]' "${BASH_SOURCE[0]}"
+    essai "celui de déclaration n'en réclame pas"          vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(parcours_connu declarer-un-carre | cut -f2)" = non ]' "${BASH_SOURCE[0]}"
+
+    # --- la relecture du dossier retenu par le sélecteur ---
+    # ⚠️ La fixture rend le chemin tel que l'écran le porte, et les cas éprouvent le DÉFAUT CONNU :
+    # un cran trop bas doit être refusé, sans quoi le film montrerait l'import du mauvais dossier.
+    ffmpeg -v error -y -f lavfi -i "color=c=white:s=420x40" \
+        -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='/run/media/x/VIGIECHIRO':fontcolor=black:fontsize=18:x=10:y=10" \
+        -frames:v 1 "$bac/chemin.png" </dev/null 2>/dev/null
+    essai "le dossier retenu se relit"                     vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "$(lire_zone "$1" 0 0 420 40)" "VIGIECHIRO"' "${BASH_SOURCE[0]}" "$bac/chemin.png"
+    essai "un cran TROP BAS ne passe pas pour le bon"      rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "$(lire_zone "$1" 0 0 420 40)" "bruts"' "${BASH_SOURCE[0]}" "$bac/chemin.png"
 
     # --- la fenêtre ---
     # ⚠️ Le cas qui porte le banc : sans écran, aucune fenêtre ne peut paraître, et l'attente doit
@@ -787,15 +1155,82 @@ auto_test() {
     # section qu'on retire quand on veut faire propre, et c'est la seule qui empêche de lire l'index
     # comme un certificat. Un index sans elle annoncerait « 100 % d'images utiles » à un lecteur qui
     # comprendrait « ce film est bon ».
-    printf '1000.0\tdebut\n1002.0\tfin\n1010.0\tarret\n' > "$bac/mi.tsv"
-    ffmpeg -v error -y -f lavfi -i "color=c=white:s=160x120:d=2:r=10" "$bac/f.mkv" </dev/null 2>/dev/null
-    cp "$bac/f.mkv" "$bac/f-monte.mkv"
+
+    # --- l'accélération des plages de machine ---
+    printf '1000.0\tdebut\n1004.0\tinspection_debut\n1008.0\tinspection_fin\n1020.0\tfin\n1030.0\tarret\n' > "$bac/acc.tsv"
+    essai "une plage jumelée est trouvée"                  vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_a_accelerer "$1" 1000 0 | wc -l)" = 1 ]' "${BASH_SOURCE[0]}" "$bac/acc.tsv"
+    # ⚠️ Un `_debut` orphelin doit être IGNORÉ, pas accéléré jusqu'à la fin : un film au rythme réel
+    # vaut mieux qu'un montage qui emballe tout sur un repère manquant.
+    printf '1000.0\tdebut\n1004.0\timport_debut\n1020.0\tfin\n1030.0\tarret\n' > "$bac/orphelin.tsv"
+    essai "un repere de debut ORPHELIN est ignoré"         vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ -z "$(plages_a_accelerer "$1" 1000 0)" ]' "${BASH_SOURCE[0]}" "$bac/orphelin.tsv"
+    essai "sans plage, le filtre reste vide"               vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ -z "$(filtre_de_montage 0 20 "")" ]' "${BASH_SOURCE[0]}"
+    essai "le filtre alterne normal et accéléré"           vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(filtre_de_montage 0 20 "$(printf "4.000\t8.000\n")" | grep -o "concat=n=3")" = "concat=n=3" ]' "${BASH_SOURCE[0]}"
+
+    # ⚠️ LE cas qui porte l'accélération, et il se mesure sur un VRAI fichier : le même parcours,
+    # monté avec et sans sa plage de machine, doit rendre un film plus court. Un filtre qui ne
+    # s'appliquerait pas laisserait les deux durées égales - et la ligne « montage » resterait
+    # verte, puisqu'elle ne compare rien.
+    ffmpeg -v error -y -f lavfi -i "testsrc=s=160x120:d=30:r=10" "$bac/long.mkv" </dev/null 2>/dev/null
+    essai "une plage de machine RACCOURCIT le film"        vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0";
+            monter "$1" "$2" "$3" >/dev/null 2>&1 || exit 1
+            monter "$1" "$4" "$5" >/dev/null 2>&1 || exit 1
+            avec=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$3")
+            sans=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$5")
+            LC_NUMERIC=C awk -v a="$avec" -v b="$sans" "BEGIN{exit !(a < b - 1)}"' \
+        "${BASH_SOURCE[0]}" "$bac/long.mkv" "$bac/acc.tsv" "$bac/avec.mkv" "$bac/orphelin.tsv" "$bac/sans.mkv"
+
+    # --- les positions de l'index, une fois les plages accélérées ---
+    essai "une position AVANT toute plage ne bouge pas"    vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(position_dans_le_montage 3.0 "$(printf "10.0\t14.0\n")" 4)" = "3.0" ]' "${BASH_SOURCE[0]}"
+    essai "une position APRÈS une plage recule"            vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(position_dans_le_montage 20.0 "$(printf "10.0\t14.0\n")" 4)" = "17.0" ]' "${BASH_SOURCE[0]}"
+    # ⚠️ LE cas, et c'est celui que le dépôt a vécu : l'index annonçait « fin à 39,8 s » sur un
+    # fichier de 31,2 s. Une page dont tout l'objet est de dire où regarder envoyait dans le vide,
+    # en ayant l'air parfaitement calculée. Le garde compare la dernière étape à la durée MESURÉE.
+    mkdir -p "$bac/verif"
+    ffmpeg -v error -y -f lavfi -i "testsrc=s=160x120:d=40:r=10" "$bac/verif/importer-une-nuit.mkv" </dev/null 2>/dev/null
+    printf '1000.0\tdebut\n1006.0\timport_debut\n1020.0\timport_fin\n1030.0\tfin\n1040.0\tarret\n' \
+        > "$bac/verif/importer-une-nuit.marques.tsv"
+    essai "l index ne pointe pas APRÈS la fin du film"     vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            monter "$1/importer-une-nuit.mkv" "$1/importer-une-nuit.marques.tsv" "$1/importer-une-nuit-monte.mkv" >/dev/null 2>&1 || exit 1
+            ecrire_index "$1" "$1/i.md" >/dev/null || exit 1
+            d=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$1/importer-une-nuit-monte.mkv")
+            max=$(grep -oE "\| [0-9]+\.[0-9]+ s \|" "$1/i.md" | grep -oE "[0-9]+\.[0-9]+" | sort -g | tail -1)
+            [ -n "$max" ] && [ -n "$d" ] || exit 1
+            LC_NUMERIC=C awk -v m="$max" -v d="$d" "BEGIN{exit !(m <= d + 0.5)}"' \
+        "${BASH_SOURCE[0]}" "$bac/verif"
+    mkdir -p "$bac/films"
+    printf '1000.0\tdebut\n1002.0\tfin\n1010.0\tarret\n' > "$bac/films/importer-une-nuit.marques.tsv"
+    ffmpeg -v error -y -f lavfi -i "color=c=white:s=160x120:d=2:r=10" "$bac/films/importer-une-nuit.mkv" </dev/null 2>/dev/null
+    cp "$bac/films/importer-une-nuit.mkv" "$bac/films/importer-une-nuit-monte.mkv"
     essai "l index dit ce que le film ne prouve PAS"     vert \
-        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; ecrire_index "$1" "$2" "$3" >/dev/null; grep -q "ne prouve pas" "$3"' \
-        "${BASH_SOURCE[0]}" "$bac/f-monte.mkv" "$bac/mi.tsv" "$bac/i.md"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; ecrire_index "$1" "$2" >/dev/null; grep -q "ADR 3764" "$2"' \
+        "${BASH_SOURCE[0]}" "$bac/films" "$bac/i.md"
     essai "l index nomme la fiche d ecran illustree"     vert \
-        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; grep -q "docs/ecrans" "$3"' \
-        "${BASH_SOURCE[0]}" "$bac/f-monte.mkv" "$bac/mi.tsv" "$bac/i.md"
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; grep -q "docs/ecrans/importation.md" "$2"' \
+        "${BASH_SOURCE[0]}" "$bac/films" "$bac/i.md"
+    # ⚠️ LE cas qui a manqué : l'index titrait « Déclarer un carré » au-dessus du film
+    # d'importation. Une page dérivée qui se trompe de sujet a l'air d'avoir été vérifiée.
+    essai "l index titre le parcours qu il décrit"       vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; grep -q "^## Importer une nuit" "$2"' \
+        "${BASH_SOURCE[0]}" "$bac/films" "$bac/i.md"
+    essai "il ne titre PAS un parcours absent"           rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; grep -q "^## Déclarer un carré" "$2"' \
+        "${BASH_SOURCE[0]}" "$bac/films" "$bac/i.md"
+    # ⚠️ Et le cas inverse : les DEUX films présents doivent tenir sur la même page. Écrit pour le
+    # seul dernier tournage, l'index effaçait le parcours précédent à chaque passage.
+    cp "$bac/films/importer-une-nuit.mkv" "$bac/films/declarer-un-carre.mkv"
+    cp "$bac/films/importer-une-nuit.mkv" "$bac/films/declarer-un-carre-monte.mkv"
+    cp "$bac/films/importer-une-nuit.marques.tsv" "$bac/films/declarer-un-carre.marques.tsv"
+    essai "deux films tiennent sur la meme page"         vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; ecrire_index "$1" "$2" >/dev/null; grep -q "^## Déclarer un carré" "$2" && grep -q "^## Importer une nuit" "$2"' \
+        "${BASH_SOURCE[0]}" "$bac/films" "$bac/i.md"
 
     # --- la carte SD ---
     # ⚠️ On n'appelle pas Maven ici : l'auto-test doit rester en secondes. Ce qu'on éprouve, c'est le
@@ -854,5 +1289,5 @@ if [ -z "${BANC_SOURCE_SEULEMENT:-}" ] && [ "${BASH_SOURCE[0]}" = "$0" ]; then
         auto_test
         exit $?
     fi
-    tourner "${1:-}"
+    tourner "${1:-}" "${2:-}"
 fi
