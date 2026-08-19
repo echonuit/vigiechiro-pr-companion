@@ -3,6 +3,8 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.commun.model.FuseauDuSite;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
@@ -129,7 +131,8 @@ public final class ReconstruirePassage implements Callable<Integer> {
     /// saut (ignorée). La CLI **pattern-matche** l'issue du service pour son rendu ; le service, lui, ne
     /// connaît ni la CLI ni l'IHM.
     private static String ligneIssue(IssueNuit issue, int rang, int total) {
-        String position = "[" + rang + "/" + total + "] nuit du " + issue.nuit().dateDebut();
+        String position = "[" + rang + "/" + total + "] nuit du "
+                + Horodatage.heureMuraleLisible(issue.nuit().dateDebut(), FuseauDuSite.ZONE);
         return switch (issue) {
             case IssueNuit.Reconstruite reconstruite ->
                 position + " -> passage " + reconstruite.rapport().idPassage() + " ("
@@ -154,7 +157,8 @@ public final class ReconstruirePassage implements Callable<Integer> {
         sortie.println(orphelines.size() + " participation(s) sans équivalent local :");
         for (ParticipationOrpheline orpheline : orphelines) {
             sortie.println("  - " + orpheline.idParticipation() + "  carré " + orpheline.numeroCarre() + ", localité "
-                    + orpheline.codePoint() + ", nuit du " + orpheline.dateDebut()
+                    + orpheline.codePoint() + ", nuit du "
+                    + Horodatage.heureMuraleLisible(orpheline.dateDebut(), FuseauDuSite.ZONE)
                     + (orpheline.pointLocalConnu() ? "" : "  [point inconnu localement : créez-le d'abord]"));
         }
         sortie.println("Reconstruisez-en une avec --participation <objectid>.");
