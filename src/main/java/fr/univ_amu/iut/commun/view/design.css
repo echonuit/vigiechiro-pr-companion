@@ -155,6 +155,13 @@
  * portent le meme poids de specificite (une classe), et a poids egal c'est la DERNIERE declaration qui
  * gagne. Les remonter au-dessus les ferait perdre leur apparence propre.
  *
+ * ⚠️ `.text-field` est dans la liste, et ce n'est pas un elargissement du perimetre : c'est ce qui
+ * empeche le remede de deplacer le defaut. Mesure a la deuxieme passe, sur « Modifier le passage » :
+ * la liste « Vent » rendait 34 px a cote du champ « Temperature debut » reste a 26, et les deux
+ * n'etaient plus alignes. On avait accorde la barre en desaccordant le formulaire. Une hauteur de
+ * controle est une propriete du PARC, pas d'une famille : la tenir sur quatre familles sur cinq, c'est
+ * ne pas la tenir.
+ *
  * ⚠️ `.choice-box` est nommee SEPAREMENT de `.combo-box-base` : une `ChoiceBox` ne derive pas de
  * `ComboBoxBase` et ne porte donc PAS cette classe. Mesure a la premiere passe : la liste de tri du
  * multisite (une `ComboBox`) etait habillee, « 30 min » et « National (aucun milieu) » (des
@@ -165,7 +172,8 @@
  */
 .combo-box-base,
 .choice-box,
-.spinner {
+.spinner,
+.text-field {
     -fx-min-height: -hauteur-controle-barre;
     -fx-pref-height: -hauteur-controle-barre;
     -fx-background-color: -couleur-texte-clair;

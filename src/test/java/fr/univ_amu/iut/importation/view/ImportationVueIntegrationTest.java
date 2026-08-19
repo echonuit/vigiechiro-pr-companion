@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
@@ -22,11 +23,12 @@ import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
@@ -80,7 +82,11 @@ class ImportationVueIntegrationTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1100, 760));
+        // `Habillage.scene` et non `new Scene` : depuis que ce test MESURE une geometrie (le
+        // defilement qui amene un bouton dans le cadre), il mesurerait la police de la MACHINE et non
+        // celle du produit. C'est ce que `ScenesHabilleesTest` exige, et il l'a exige des la premiere
+        // execution - le garde connaissait la regle avant moi.
+        stage.setScene(Habillage.scene(racine, 1100, 760));
         injector.getInstance(NavigationImportation.class).ouvrir();
         stage.show();
     }
@@ -234,7 +240,15 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#boutonOuvrirNuit").queryAs(Button.class).isVisible())
                 .isFalse();
 
-        // « Utiliser ce n° » adopte le prochain libre (2, le 1 étant pris) et masque l'avertissement.
+        // ⚠️ Amener le bouton DANS LE CADRE avant de cliquer. Le chrome monte le contenu dans un
+        // `ScrollPane` permanent, et l'assistant d'import est plus haut que la scène de ce test : le
+        // bouton existe, il est `visible`, et il est simplement sous le bord. TestFX refuse alors de
+        // cliquer - « returned 1 nodes, but no nodes were visible » - ce qui se lit comme une absence
+        // alors que c'est un hors-cadre. Le geste de l'utilisateur, lui, commence par un défilement.
+        //
+        // Trouvé quand #4011 a donné aux contrôles la hauteur du socle : l'assistant a grandi de
+        // quelques pixels par ligne de formulaire, et ce bouton est passé sous le bord.
+        amenerDansLeCadre(robot, "#boutonNumeroLibre");
         robot.clickOn("#boutonNumeroLibre");
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -376,5 +390,24 @@ class ImportationVueIntegrationTest {
         assertThat(labelApercu.getText())
                 .as("modifier l'année doit recalculer l'aperçu du préfixe (R6)")
                 .contains("Car640380-2099-Pass1-A1-");
+    }
+    /// Fait défiler le `ScrollPane` du chrome jusqu'à ce que `selecteur` soit dans le cadre.
+    ///
+    /// `Node::isVisible` répond `true` pour un nœud sous le bord : c'est une propriété du nœud, pas de
+    /// ce qu'on voit. Seul TestFX distingue les deux, et il le dit par un refus de clic.
+    private static void amenerDansLeCadre(FxRobot robot, String selecteur) {
+        Node cible = robot.lookup(selecteur).query();
+        ScrollPane defilement = robot.lookup(".scroll-pane").queryAs(ScrollPane.class);
+        robot.interact(() -> {
+            double hauteurContenu = defilement.getContent().getBoundsInLocal().getHeight();
+            double hauteurVue = defilement.getViewportBounds().getHeight();
+            double y = cible.localToScene(cible.getBoundsInLocal()).getMinY();
+            double yContenu = defilement
+                    .getContent()
+                    .localToScene(defilement.getContent().getBoundsInLocal())
+                    .getMinY();
+            defilement.setVvalue((y - yContenu) / Math.max(1, hauteurContenu - hauteurVue));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
     }
 }
