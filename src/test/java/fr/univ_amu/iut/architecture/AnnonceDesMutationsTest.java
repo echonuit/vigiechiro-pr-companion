@@ -116,9 +116,48 @@ class AnnonceDesMutationsTest {
                 .isPositive();
     }
 
+    @Test
+    @DisplayName("#3645 : l'exclusion du paquet outils ne dépend pas du séparateur du système")
+    void l_exclusion_ne_depend_pas_du_separateur() {
+        // Ce test existe parce que la suite Windows a rougi sur `CaptureAccueil` là où Linux et macOS
+        // étaient verts : l'exclusion comparait à « /outils/ », séparateur codé en dur.
+        assertThat(dansOutils("src/main/java/fr/univ_amu/iut/sites/outils/CaptureEcrans.java"))
+                .as("chemin POSIX")
+                .isTrue();
+        assertThat(dansOutils("src\\main\\java\\fr\\univ_amu\\iut\\sites\\outils\\CaptureEcrans.java"))
+                .as("le même chemin sous Windows : c'est ce cas qui rougissait en intégration")
+                .isTrue();
+        assertThat(dansOutils("src/main/java/fr/univ_amu/iut/sites/model/ServiceSites.java"))
+                .as("hors du paquet outils, dans les deux écritures")
+                .isFalse();
+        assertThat(dansOutils("src\\main\\java\\fr\\univ_amu\\iut\\sites\\model\\ServiceSites.java"))
+                .isFalse();
+    }
+
+    /// Vrai si ce chemin traverse le paquet `outils`, **quel que soit le séparateur du système**.
+    ///
+    /// ## Pourquoi une méthode nommée, et pas un `contains` en ligne
+    ///
+    /// Elle en était un : `chemin.toString().contains("/outils/")`. Sous Windows, `Path.toString()`
+    /// rend `...\outils\CaptureAccueil.java` : l'exclusion ne s'appliquait pas, `CaptureAccueil`
+    /// entrait dans la population des classes qui annoncent, aucun test ne la nommant, et le cliquet
+    /// rougissait. **Vert sous Linux et macOS, rouge sous Windows** - un garde qui ment selon la
+    /// machine, ce que l'ADR 2843 nomme et que ce fichier-ci n'avait pas suivi.
+    ///
+    /// Le dépôt portait déjà l'idiome (`ScenesHabilleesTest`, `PoliceCouvreLIhmTest`,
+    /// `DialoguesHabillesTest`, `InventaireDossiers`) : j'ai écrit une comparaison neuve au lieu de
+    /// reprendre celle qui existait.
+    ///
+    /// Prend une `String` et non un `Path` pour rester **éprouvable partout** : un `Path.of` construit
+    /// sous Linux ne portera jamais d'antislash, donc le défaut n'y serait pas reproductible. C'est la
+    /// couture que l'ADR 3802 exige à côté de la sonde.
+    static boolean dansOutils(String chemin) {
+        return chemin.replace('\\', '/').contains("/outils/");
+    }
+
     private static List<String> classesQuiAnnoncent() throws IOException {
         return fichiers(SOURCES).stream()
-                .filter(chemin -> !chemin.toString().contains("/outils/"))
+                .filter(chemin -> !dansOutils(chemin.toString()))
                 .filter(chemin -> lire(chemin).contains(ANNONCE))
                 .map(AnnonceDesMutationsTest::nomDeClasse)
                 .filter(classe -> !HORS_POPULATION.contains(classe))
