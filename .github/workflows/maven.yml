@@ -279,7 +279,7 @@ jobs:
         # pas. Amorce du harnais (#1572, chantier #1565) ; couverture complète cadrée en suite.
         run: |
           set -euo pipefail
-          sudo apt-get update && sudo apt-get install -y bats
+          bash .github/scripts/installer-paquets.sh --avec-recommandations bats
           export VIGIECHIRO_JAR=$(ls target/vigiechiro-*-shaded.jar | head -1)
           bats src/test/bats
 

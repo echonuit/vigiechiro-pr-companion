@@ -530,6 +530,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `filme-un-parcours.sh` | le banc de documentation : lancement, geste visé par libellé, carte, montage, index | `lint.yml` (job `banc-filme`) |
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `verifie-butoirs.sh` | tout job porte un `timeout-minutes` : sans butoir, GitHub laisse courir six heures | `lint.yml` |
+| `verifie-apt.sh` | aucun workflow n'appelle `apt-get` en direct : la porte `installer-paquets.sh` borne les délais et reprend | `lint.yml` |
 | `verifie-renvois-workflows.sh` | chaque `workflow_run` vise le `name:` d'un workflow existant | `lint.yml` |
 | `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé, propre, et **utilisable** avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |
 | `verifie-demarrage-emballage.sh` | un emballage de distribution, une fois **ouvert**, démarre et ne lève aucune erreur de chargement | `maven.yml` et `release.yml` (autotest : `lint.yml`) |
