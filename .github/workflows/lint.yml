@@ -78,9 +78,7 @@ jobs:
         # `ffprobe`, trois par le serveur X et son gestionnaire de fenêtres. S'il manquait quelque
         # chose, il rougirait ici même.
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xvfb xdotool ffmpeg x11-utils openbox \
-            tesseract-ocr tesseract-ocr-fra
+          bash .github/scripts/installer-paquets.sh xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra
 
       - name: Le banc de recette, ses cas et ses rouges attendus
         run: |
@@ -223,6 +221,14 @@ jobs:
           chmod +x .github/scripts/verifie-permissions.sh
           ./.github/scripts/verifie-permissions.sh --auto-test
           ./.github/scripts/verifie-permissions.sh
+
+      - name: Aucun workflow n appelle apt-get directement
+        # ⚠️ Trois étapes de trois workflows ont pendu le même jour sur `apt-get update`, jusqu'au
+        # butoir de leur job et jusque sur `main`. Le remède avait été appliqué à UNE des trois.
+        run: |
+          chmod +x .github/scripts/verifie-apt.sh
+          ./.github/scripts/verifie-apt.sh --auto-test
+          ./.github/scripts/verifie-apt.sh
 
       - name: Tout job porte un butoir
         # ⚠️ Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR

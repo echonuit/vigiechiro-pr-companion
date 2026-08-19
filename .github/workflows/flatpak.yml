@@ -122,10 +122,9 @@ jobs:
         if: steps.diff.outputs.change == 'true' || inputs.forcer
         run: |
           set -euo pipefail
-          sudo apt-get update
           # xvfb et xdotool : le démarrage se fait désormais sur un VRAI serveur X,
           # et l'on exige qu'une fenêtre soit mappée. Cf. le pas « Démarrage réel ».
-          sudo apt-get install -y flatpak flatpak-builder xvfb xdotool gnupg
+          bash .github/scripts/installer-paquets.sh --avec-recommandations flatpak flatpak-builder xvfb xdotool gnupg
           flatpak remote-add --if-not-exists --user \
             runtimes https://dl.flathub.org/repo/flathub.flatpakrepo
 

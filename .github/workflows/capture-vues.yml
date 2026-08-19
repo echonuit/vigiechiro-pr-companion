@@ -80,9 +80,7 @@ jobs:
           # runner ne répondait plus, apt basculait sur l'archive amont, et `-qq` ne laissait AUCUNE
           # trace pour le dire. Un `Acquire::Retries` reprend les téléchargements coupés ; les délais
           # font échouer vite plutôt que traîner jusqu'au butoir du job.
-          sudo apt-get update -o Acquire::Retries=3 -o Acquire::http::Timeout=20 \
-            -o Acquire::https::Timeout=20
-          sudo apt-get install -y --no-install-recommends -o Acquire::Retries=3 fonts-noto-core
+          bash .github/scripts/installer-paquets.sh fonts-noto-core
           mkdir -p ~/.config/fontconfig
           cat > ~/.config/fontconfig/fonts.conf <<'FIN'
           <?xml version="1.0"?>
@@ -107,7 +105,7 @@ jobs:
       # `filtrer-bruit-cartes.sh` compare les aperçus de carte à leur version committée. L'image
       # `ubuntu-latest` ne fournit AUCUN ImageMagick : sans cette étape, la suivante échoue.
       - name: Installer ImageMagick (comparaison des aperçus de carte)
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq imagemagick
+        run: bash .github/scripts/installer-paquets.sh --avec-recommandations imagemagick
 
       # Sur une PR comme sur `main`, et c'est le correctif de fond : ce filtre vivait DANS l'étape de
       # publication, donc sous `if: push`. Aucune PR ne l'exerçait. #3359 a ainsi pu être fusionnée
