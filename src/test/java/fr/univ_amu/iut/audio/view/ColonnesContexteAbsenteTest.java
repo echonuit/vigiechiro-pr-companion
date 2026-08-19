@@ -8,7 +8,10 @@ import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.time.LocalDateTime;
 import java.util.List;
+import javafx.collections.FXCollections;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -79,7 +82,7 @@ class ColonnesContexteAbsenteTest {
                 colonne(),
                 colonne(),
                 colonne(),
-                colonne(),
+                new TableColumn<LigneObservationAudio, java.time.LocalDate>(),
                 new TableColumn<LigneObservationAudio, LocalDateTime>(),
                 colonne(),
                 colonne(),
@@ -92,6 +95,22 @@ class ColonnesContexteAbsenteTest {
 
     private static TableColumn<LigneObservationAudio, String> colonne() {
         return new TableColumn<>();
+    }
+
+    /// Ce que la CELLULE d'une colonne typée rend pour un item absent. La valeur ne porte plus le
+    /// libellé : il faut donc construire la cellule et lui donner l'item, comme la table le fait.
+    private static String libelleAffiche(TableColumn<LigneObservationAudio, java.time.LocalDate> colonne) {
+        // `updateItem` est protégée : on branche la cellule sur une vraie table d'une ligne et on lui
+        // demande son index, ce qui est exactement le chemin qu'emprunte JavaFX. Une cellule qu'on
+        // pousserait à la main testerait autre chose que ce que l'utilisateur voit.
+        TableView<LigneObservationAudio> table = new TableView<>(FXCollections.observableArrayList(sansContexte()));
+        table.getColumns().add(colonne);
+        TableCell<LigneObservationAudio, java.time.LocalDate> cellule =
+                colonne.getCellFactory().call(colonne);
+        cellule.updateTableColumn(colonne);
+        cellule.updateTableView(table);
+        cellule.updateIndex(0);
+        return cellule.getText();
     }
 
     private static String valeurAffichee(TableColumn<LigneObservationAudio, String> colonne) {
@@ -110,10 +129,16 @@ class ColonnesContexteAbsenteTest {
                         valeurAffichee(col.carre()),
                         valeurAffichee(col.point()),
                         valeurAffichee(col.commune()),
-                        valeurAffichee(col.date()),
                         valeurAffichee(col.fichier())))
-                .as("carré, point, commune, date et fichier : cinq colonnes, une seule règle")
+                .as("carré, point, commune et fichier : une seule règle")
                 .containsOnly(Formats.VALEUR_ABSENTE);
+        // ⚠️ La colonne « date » suit la MEME règle, par un autre mécanisme depuis #4019 : sa valeur est
+        // une `LocalDate` (pour que le tri reste chronologique), et le cadratin est rendu par la
+        // CELLULE. On l'interroge donc là où il vit. La règle n'a pas changé, sa mise en oeuvre si -
+        // et un test qui aurait continué de lire la valeur aurait rougi sur un comportement correct.
+        assertThat(libelleAffiche(col.date()))
+                .as("la date absente marque le cadratin comme ses quatre voisines")
+                .isEqualTo(Formats.VALEUR_ABSENTE);
     }
 
     @Test

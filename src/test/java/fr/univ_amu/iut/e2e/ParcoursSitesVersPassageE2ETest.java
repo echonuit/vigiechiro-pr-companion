@@ -60,7 +60,9 @@ class ParcoursSitesVersPassageE2ETest {
     private static final int FREQUENCE_WAV = 384_000;
     private static final int TRAMES = 576_000;
     private static final String CARRE = "640380";
-    private static final String DATE_NUIT = "2026-04-22"; // cellule date du tableau (unique à l'écran)
+    /// La nuit **telle que la colonne la rend** depuis #4019 : la date se lit en français, et
+    /// c'est ce texte-là que vise le double-clic. La forme ISO ne désigne plus aucun nœud.
+    private static final String DATE_NUIT = "22/04/2026"; // cellule date du tableau (unique à l'écran)
     private Injector injector;
 
     @Start

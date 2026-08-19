@@ -33,6 +33,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ColonneDate;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
@@ -58,6 +59,7 @@ import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.io.File;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -604,7 +606,11 @@ class SonsValidationViewTest {
     @Test
     @DisplayName("Colonnes Date, Fréquence, Début et Durée (position et durée réelles du cri)")
     void affiche_date_frequence_debut_duree(FxRobot robot) {
-        assertThat(colonne(robot, "Date").getCellData(0)).isEqualTo("2026-06-20");
+        // La valeur est une `LocalDate` depuis #4019, pour que le tri reste chronologique ; le
+        // libellé français est rendu par la cellule. On tient les DEUX : la valeur, qui porte l'ordre,
+        // et le texte, qui est ce que la personne lit.
+        assertThat(colonne(robot, "Date").getCellData(0)).isEqualTo(LocalDate.of(2026, 6, 20));
+        assertThat(ColonneDate.libelle("2026-06-20")).isEqualTo("20/06/2026");
         assertThat(colonne(robot, "Fréquence").getCellData(0)).isEqualTo("45 kHz");
         // FME / fréquence terminale (#500) : « — » tant que le cri n'a pas été sélectionné (calcul
         // paresseux par l'audio-view ; aucun audio ne se charge en headless).

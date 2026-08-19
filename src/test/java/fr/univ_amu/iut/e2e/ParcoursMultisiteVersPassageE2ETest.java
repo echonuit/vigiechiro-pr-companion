@@ -53,7 +53,9 @@ class ParcoursMultisiteVersPassageE2ETest {
     private static final String SERIE = "1925492";
     private static final int FREQUENCE_WAV = 384_000;
     private static final int TRAMES = 576_000;
-    private static final String DATE_NUIT = "2026-04-22"; // date du journal → cellule unique du tableau
+    /// La nuit **telle que la colonne la rend** depuis #4019 : la date se lit en français, et
+    /// c'est ce texte-là que vise le double-clic. La forme ISO ne désigne plus aucun nœud.
+    private static final String DATE_NUIT = "22/04/2026"; // date du journal → cellule unique du tableau
     private Injector injector;
 
     @Start

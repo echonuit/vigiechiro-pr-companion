@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.ColonneDate;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -23,6 +24,7 @@ import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SuitLaRevision;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.LignePassage;
@@ -172,7 +174,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
     private MenuButton menuOutils;
 
     @FXML
-    private TableColumn<LignePassage, String> colDate;
+    private TableColumn<LignePassage, java.time.LocalDate> colDate;
 
     @FXML
     private TableColumn<LignePassage, String> colPoint;
@@ -190,7 +192,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
     private TableColumn<LignePassage, String> colEnregistreur;
 
     @FXML
-    private TableColumn<LignePassage, String> colDepose;
+    private TableColumn<LignePassage, java.time.LocalDate> colDepose;
 
     @Inject
     public SiteDetailController(
@@ -455,13 +457,17 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
     }
 
     private void configurerColonnes() {
-        colDate.setCellValueFactory(cd -> valeur(cd.getValue().date()));
+        ColonneDate.configurer(colDate, LignePassage::date);
         colPoint.setCellValueFactory(cd -> valeur(cd.getValue().codePoint()));
         colNumero.setCellValueFactory(cd -> valeur(cd.getValue().numeroPassage()));
         colStatut.setCellValueFactory(cd -> valeur(cd.getValue().statutLibelle()));
         colVerdict.setCellValueFactory(cd -> valeur(cd.getValue().verdictLibelle()));
         colEnregistreur.setCellValueFactory(cd -> valeur(cd.getValue().enregistreur()));
-        colDepose.setCellValueFactory(cd -> valeur(cd.getValue().deposeLe()));
+        // ⚠️ Le cadratin est passé explicitement pour « Déposé le » : le ViewModel y met déjà
+        // `Formats.VALEUR_ABSENTE` quand la nuit n'est pas déposée (`LignePassage` : « ou `—` si non
+        // déposé »). Sans lui, la cellule se serait VIDÉE là où la colonne disait « rien à cette date »,
+        // et c'est l'aperçu régénéré qui l'a montré, pas la lecture du code.
+        ColonneDate.configurer(colDepose, LignePassage::deposeLe, Formats.VALEUR_ABSENTE);
         colStatut.setCellFactory(colonne -> ColonneBadge.cellule(LignePassage::statutClasseCss));
         colVerdict.setCellFactory(colonne -> ColonneBadge.cellule(LignePassage::verdictClasseCss));
     }

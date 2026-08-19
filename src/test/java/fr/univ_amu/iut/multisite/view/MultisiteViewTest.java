@@ -417,7 +417,9 @@ class MultisiteViewTest {
     @Test
     @DisplayName("Double-cliquer une ligne ouvre M-Passage via le contrat socle OuvrirPassage")
     void double_clic_ouvre_le_passage(FxRobot robot) {
-        robot.doubleClickOn("2026-06-21"); // date unique de la ligne idPassage = 42
+        // Le libellé, et non l'ISO : depuis #4019 la colonne rend « 21/06/2026 », et c'est sur ce
+        // texte-là que se pose le curseur de la personne qui double-clique.
+        robot.doubleClickOn("21/06/2026"); // date unique de la ligne idPassage = 42
 
         verify(ouvrirPassage).ouvrir(eq(42L), any(ContexteSite.class));
     }

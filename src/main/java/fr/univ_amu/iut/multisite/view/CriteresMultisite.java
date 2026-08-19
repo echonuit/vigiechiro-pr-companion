@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.ClesCriteres;
+import fr.univ_amu.iut.commun.view.ColonneDate;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.CritereLieu;
 import fr.univ_amu.iut.commun.view.CritereListe;
@@ -338,6 +339,9 @@ final class CriteresMultisite {
         return NormalisationTexte.contient(ligne.numeroCarre(), aiguille)
                 || NormalisationTexte.contient(ligne.codePoint(), aiguille)
                 || NormalisationTexte.contient(ligne.dateEnregistrement(), aiguille)
+                // ⚠️ Et la forme AFFICHEE (#4019) : depuis que la colonne rend « 22/06/2026 »,
+                // ne chercher que dans l'ISO ferait taper « 2026-06-22 » a qui lit l'autre.
+                || NormalisationTexte.contient(ColonneDate.libelle(ligne.dateEnregistrement()), aiguille)
                 || NormalisationTexte.contient(ligne.commune(), aiguille)
                 || NormalisationTexte.contient(ligne.nomSite(), aiguille);
     }

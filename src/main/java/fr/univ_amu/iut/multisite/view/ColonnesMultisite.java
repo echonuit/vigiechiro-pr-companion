@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.multisite.view;
 
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.ColonneDate;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -39,7 +40,7 @@ final class ColonnesMultisite {
             TableColumn<LignePassage, String> point,
             TableColumn<LignePassage, String> annee,
             TableColumn<LignePassage, String> numero,
-            TableColumn<LignePassage, String> date,
+            TableColumn<LignePassage, java.time.LocalDate> date,
             TableColumn<LignePassage, String> statut,
             TableColumn<LignePassage, String> verdict,
             TableColumn<LignePassage, String> analyse,
@@ -51,7 +52,7 @@ final class ColonnesMultisite {
         TableColumn<LignePassage, String> point = col.point();
         TableColumn<LignePassage, String> annee = col.annee();
         TableColumn<LignePassage, String> numero = col.numero();
-        TableColumn<LignePassage, String> date = col.date();
+        TableColumn<LignePassage, java.time.LocalDate> date = col.date();
         TableColumn<LignePassage, String> statut = col.statut();
         TableColumn<LignePassage, String> verdict = col.verdict();
         TableColumn<LignePassage, String> analyse = col.analyse();
@@ -78,7 +79,7 @@ final class ColonnesMultisite {
         // #145 : tri NUMÉRIQUE (et non alphabétique) au clic d'en-tête sur Année et N° de passage.
         annee.setComparator(Comparator.comparingInt(Integer::parseInt));
         numero.setComparator(Comparator.comparingInt(Integer::parseInt));
-        date.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().dateEnregistrement()));
+        ColonneDate.configurer(date, LignePassage::dateEnregistrement);
         statut.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper(c.getValue().statut().libelle()));
         verdict.setCellValueFactory(c -> new ReadOnlyStringWrapper(
