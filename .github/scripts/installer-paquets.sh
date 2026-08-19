@@ -36,6 +36,24 @@ fi
 # Bornes : au-delà, on préfère un échec net à une attente muette.
 BORNES=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
 
+# ⚠️ Le CACHE, et c'est lui qui règle le fond. Borner et reprendre évite de pendre ; cela ne fait pas
+# descendre 91 Mo plus vite. Les runners ralentissent avant de bloquer - la panne est en amont, chez
+# l'hébergeur - et le seul levier qui nous reste est de NE PAS RETÉLÉCHARGER.
+#
+# `APT_CACHE` désigne un dossier que le workflow fait survivre d'un run à l'autre (actions/cache).
+# APT y dépose ses `.deb` et les y retrouve : le second run n'a plus que les index à chercher.
+# Absent, tout fonctionne comme avant - un poste de développement n'a pas besoin de ce détour.
+if [ -n "${APT_CACHE:-}" ]; then
+    mkdir -p "$APT_CACHE/partial"
+    # ⚠️ APT tourne sous sudo : sans ces droits, il ne sait pas écrire dans un dossier du runner, et
+    # il retéléchargerait en silence - un cache qui a l'air d'un cache et n'en est pas. Le dossier
+    # nous appartient (on vient de le créer), donc `chmod` nu suffit : réclamer sudo ici ferait
+    # échouer le script sur un poste de développement sans terminal.
+    chmod -R 777 "$APT_CACHE" 2>/dev/null || true
+    BORNES+=(-o "Dir::Cache::archives=$APT_CACHE")
+    echo "→ cache APT : $APT_CACHE ($(find "$APT_CACHE" -maxdepth 1 -name '*.deb' 2>/dev/null | wc -l) paquet(s) déjà là)"
+fi
+
 # ⚠️ On n'installe pas ce qui est déjà là. Le runner GitHub porte déjà `xvfb` : le demander le
 # faisait résoudre, comparer, et parfois retélécharger des dépendances pour rien. Mesuré dans un log
 # de `banc-filme` : « xvfb is already the newest version ».
@@ -65,6 +83,10 @@ while [ "$essai" -le 2 ]; do
         echo "→ apt-get install : $* (${volume:-?} Mo à télécharger)"
         # shellcheck disable=SC2086
         if sudo apt-get install -y $RECOMMANDATIONS "${BORNES[@]}" "$@"; then
+            # ⚠️ Les droits se remettent à plat APRÈS l'installation : `actions/cache` archive le
+            # dossier en tant qu'utilisateur ordinaire, et des `.deb` déposés par root sous des
+            # droits stricts ne seraient pas lisibles - le cache se remplirait sans jamais servir.
+            [ -n "${APT_CACHE:-}" ] && sudo chmod -R a+rX "$APT_CACHE"
             exit 0
         fi
     fi

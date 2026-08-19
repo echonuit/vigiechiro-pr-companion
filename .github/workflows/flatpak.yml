@@ -118,8 +118,19 @@ jobs:
             git diff --stat -- flatpak/
           fi
 
+      - name: Cache des paquets APT (flatpak, flatpak-builder, xvfb…)
+        # ⚠️ Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
+        # runners traînent AVANT de bloquer, donc la panne est en amont ; borner et reprendre
+        # évite de pendre, cela ne fait pas descendre 91 Mo plus vite.
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/apt-vigiechiro
+          key: apt-${{ runner.os }}-flatpak-flatpak-builder-gnupg-xdotool-xvfb
+      
       - name: Installer flatpak et son constructeur
         if: steps.diff.outputs.change == 'true' || inputs.forcer
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
           set -euo pipefail
           # xvfb et xdotool : le démarrage se fait désormais sur un VRAI serveur X,

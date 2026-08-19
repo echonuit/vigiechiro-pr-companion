@@ -41,8 +41,17 @@ if [ "${1:-}" = "--auto-test" ]; then
     mkdir -p "$bac/.github/workflows"
 
     echo "AUTO-TEST"
-    printf 'jobs:\n  a:\n    steps:\n      - run: bash .github/scripts/installer-paquets.sh bats\n' \
-        > "$bac/.github/workflows/bon.yml"
+    # ⚠️ La fixture de référence porte AUSSI son cache : depuis que la garde vérifie le câblage, une
+    # installation sans cache est une faute, et un exemple « bon » qui n'en aurait pas serait faux.
+    cat > "$bac/.github/workflows/bon.yml" <<'YML'
+jobs:
+  a:
+    steps:
+      - uses: actions/cache@abc
+      - env:
+          APT_CACHE: /tmp/c
+        run: bash .github/scripts/installer-paquets.sh bats
+YML
     verifie 0 "passer par la porte est accepté"
 
     printf 'jobs:\n  a:\n    steps:\n      - run: sudo apt-get install -y bats\n' \
@@ -56,6 +65,40 @@ if [ "${1:-}" = "--auto-test" ]; then
     printf 'jobs:\n  a:\n    # un apt-get nu pendait ici avant #4031\n    steps:\n      - run: echo ok\n' \
         > "$bac/.github/workflows/commente.yml"
     verifie 0 "un apt-get en COMMENTAIRE reste permis"
+
+    # --- le cache, et ce qui le rend inutile sans le dire ---
+    cat > "$bac/.github/workflows/cache.yml" <<'YML'
+jobs:
+  a:
+    steps:
+      - uses: actions/cache@abc
+      - env:
+          APT_CACHE: /tmp/c
+        run: bash .github/scripts/installer-paquets.sh bats
+YML
+    verifie 0 "un cache branché est accepté"
+
+    cat > "$bac/.github/workflows/cache.yml" <<'YML'
+jobs:
+  a:
+    steps:
+      - uses: actions/cache@abc
+      - run: bash .github/scripts/installer-paquets.sh bats
+YML
+    verifie 1 "une installation SANS APT_CACHE est refusée"
+
+    cat > "$bac/.github/workflows/cache.yml" <<'YML'
+jobs:
+  a:
+    steps:
+      - uses: actions/cache@abc
+      - uses: actions/cache@abc
+      - env:
+          APT_CACHE: /tmp/c
+        run: bash .github/scripts/installer-paquets.sh bats
+YML
+    verifie 1 "DEUX caches dans un job sont refusés"
+    rm "$bac/.github/workflows/cache.yml"
 
     rm -f "$bac/.github/workflows/"*.yml
     verifie 1 "sans aucun workflow, la garde REFUSE au lieu de passer"
@@ -102,4 +145,46 @@ if [ -n "$fautes" ]; then
     exit 1
 fi
 
-echo "✓ Aucun appel direct à apt-get : les $(printf '%s\n' "$fichiers" | wc -l) workflows passent par la porte."
+# ⚠️ Le cache ne sert que s'il est BRANCHÉ. Vérifié à la main une fois, il s'est révélé faux à deux
+# endroits sur six : un job portait deux caches sur le même chemin - ils se seraient écrasés - et une
+# étape d'installation n'avait pas la variable, donc téléchargeait tout en ayant l'air cachée.
+python3 - "$WORKFLOWS" <<'PY'
+import glob, os, sys
+
+try:
+    import yaml
+except ImportError:
+    print("✗ PyYAML absent : la garde ne peut pas lire les workflows.")
+    sys.exit(1)
+
+ecarts = []
+for chemin in sorted(glob.glob(os.path.join(sys.argv[1], "*.yml"))):
+    with open(chemin, encoding="utf-8") as f:
+        contenu = yaml.safe_load(f)
+    for nomjob, job in ((contenu or {}).get("jobs") or {}).items():
+        if not isinstance(job, dict):
+            continue
+        etapes = job.get("steps") or []
+        installs = [e for e in etapes if isinstance(e, dict) and "installer-paquets.sh" in str(e.get("run", ""))]
+        if not installs:
+            continue
+        caches = [e for e in etapes if isinstance(e, dict) and "actions/cache@" in str(e.get("uses", ""))]
+        nom = f"{os.path.basename(chemin)} / {nomjob}"
+        if len(caches) != 1:
+            ecarts.append(f"{nom} : {len(caches)} cache(s) pour {len(installs)} installation(s) - il en faut UN, partagé")
+        sans = [e for e in installs if not (e.get("env") or {}).get("APT_CACHE")]
+        if sans:
+            ecarts.append(f"{nom} : {len(sans)} installation(s) sans APT_CACHE - elles retéléchargent tout")
+
+if ecarts:
+    print("✗ le cache APT est mal branché :")
+    for e in ecarts:
+        print(f"   · {e}")
+    print("")
+    print("  Un cache qui a l'air d'un cache et n'en est pas coûte le temps qu'il prétend gagner.")
+    sys.exit(1)
+PY
+etat_cache=$?
+[ "$etat_cache" -ne 0 ] && exit 1
+
+echo "✓ Aucun appel direct à apt-get, et le cache est branché : les $(printf '%s\n' "$fichiers" | wc -l) workflows passent par la porte."

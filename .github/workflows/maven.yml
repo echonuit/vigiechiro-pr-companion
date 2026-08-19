@@ -273,10 +273,21 @@ jobs:
           java --enable-native-access=ALL-UNNAMED -cp "$jar" fr.univ_amu.iut.cli.Cli --help | tee sortie-smoke.txt
           grep -q "Usage: vigiechiro" sortie-smoke.txt
 
+      - name: Cache des paquets APT (bats)
+        # ⚠️ Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
+        # runners traînent AVANT de bloquer, donc la panne est en amont ; borner et reprendre
+        # évite de pendre, cela ne fait pas descendre 91 Mo plus vite.
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/apt-vigiechiro
+          key: apt-${{ runner.os }}-bats
+      
       - name: E2E CLI (bats) sur le fat-jar
         # Tests bout-en-bout au niveau SHELL sur le jar shadé : arguments picocli, codes de sortie et
         # refus métier d'un VRAI processus - ce que les tests Java in-process (CliTest & co.) ne voient
         # pas. Amorce du harnais (#1572, chantier #1565) ; couverture complète cadrée en suite.
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
           set -euo pipefail
           bash .github/scripts/installer-paquets.sh --avec-recommandations bats
