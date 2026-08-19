@@ -58,8 +58,15 @@ jobs:
     # pas finie. Sans butoir, GitHub laisse courir six heures.
     #
     # Un garde qui peut bloquer indéfiniment est pire qu'un garde qui échoue : il ne dit rien, et il
-    # retient tout le monde. Douze minutes, c'est vingt fois la mesure nominale.
-    timeout-minutes: 12
+    # retient tout le monde.
+    #
+    # ⚠️ Douze minutes n'étaient plus vingt fois la mesure nominale, elles étaient devenues trop
+    # justes. L'outillage pèse **91,2 Mo** : à 2,7 Mo/s - le miroir en forme - c'est 34 s ; à
+    # 0,2 Mo/s - le miroir de ce soir - c'est huit minutes rien que pour le téléchargement, et le
+    # job mourait au butoir sans avoir lancé un seul cas. Vingt-cinq minutes couvrent le miroir
+    # dégradé sans rien couvrir d'infini. Le chiffre à relire pour le régler de nouveau est celui
+    # que la porte annonce désormais : « N Mo à télécharger ».
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 

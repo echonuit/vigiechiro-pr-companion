@@ -36,11 +36,33 @@ fi
 # Bornes : au-delà, on préfère un échec net à une attente muette.
 BORNES=(-o Acquire::Retries=3 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20)
 
+# ⚠️ On n'installe pas ce qui est déjà là. Le runner GitHub porte déjà `xvfb` : le demander le
+# faisait résoudre, comparer, et parfois retélécharger des dépendances pour rien. Mesuré dans un log
+# de `banc-filme` : « xvfb is already the newest version ».
+manquants=()
+for paquet in "$@"; do
+    if dpkg -s "$paquet" >/dev/null 2>&1; then
+        echo "→ $paquet : déjà installé sur ce runner"
+    else
+        manquants+=("$paquet")
+    fi
+done
+if [ ${#manquants[@]} -eq 0 ]; then
+    echo "→ rien à installer : tout est déjà là."
+    exit 0
+fi
+set -- "${manquants[@]}"
+
 essai=1
 while [ "$essai" -le 2 ]; do
     echo "→ apt-get update (essai $essai/2)"
     if sudo apt-get update "${BORNES[@]}"; then
-        echo "→ apt-get install : $*"
+        # ⚠️ Le VOLUME se dit. Sans ce chiffre, une étape qui traîne se lit comme une panne : elle
+        # peut n'être qu'un miroir lent devant 91 Mo. C'est la mesure qui a fait relever le butoir
+        # de `banc-filme`, et c'est elle qu'il faudra relire pour le régler de nouveau.
+        volume=$(apt-get install -y --no-install-recommends --print-uris "$@" 2>/dev/null \
+            | grep -oE "^'[^']+' [^ ]+ [0-9]+" | awk '{ total += $NF } END { printf "%.0f", total / 1048576 }')
+        echo "→ apt-get install : $* (${volume:-?} Mo à télécharger)"
         # shellcheck disable=SC2086
         if sudo apt-get install -y $RECOMMANDATIONS "${BORNES[@]}" "$@"; then
             exit 0
