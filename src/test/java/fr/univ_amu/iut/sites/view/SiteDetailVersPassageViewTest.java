@@ -42,6 +42,9 @@ class SiteDetailVersPassageViewTest {
     private static final String ID_USER = "u-1";
     private static final String DATE = "2026-06-22";
 
+    /// Le même jour tel que la colonne le REND depuis #4019 : c'est ce texte que vise le double-clic.
+    private static final String DATE_AFFICHEE = "22/06/2026";
+
     @Start
     void start(Stage stage) throws Exception {
         Path workspace = Files.createTempDirectory("vc-nav-passage");
@@ -79,7 +82,7 @@ class SiteDetailVersPassageViewTest {
     @Test
     @DisplayName("Double-cliquer une ligne de passage ouvre l'écran pivot M-Passage")
     void double_clic_ouvre_m_passage(FxRobot robot) {
-        robot.doubleClickOn(DATE);
+        robot.doubleClickOn(DATE_AFFICHEE);
 
         HBox stepper = robot.lookup("#stepper").queryAs(HBox.class);
         assertThat(stepper.getChildren()).isNotEmpty();

@@ -83,7 +83,7 @@ public class TableObservationsController {
     private TableColumn<LigneObservationAudio, String> colCommune;
 
     @FXML
-    private TableColumn<LigneObservationAudio, String> colDate;
+    private TableColumn<LigneObservationAudio, java.time.LocalDate> colDate;
 
     @FXML
     private TableColumn<LigneObservationAudio, String> colStatut;

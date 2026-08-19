@@ -50,7 +50,7 @@ public class PanneauPassagesController {
     private TableColumn<LignePassage, String> colNumero;
 
     @FXML
-    private TableColumn<LignePassage, String> colDate;
+    private TableColumn<LignePassage, java.time.LocalDate> colDate;
 
     @FXML
     private TableColumn<LignePassage, String> colStatut;

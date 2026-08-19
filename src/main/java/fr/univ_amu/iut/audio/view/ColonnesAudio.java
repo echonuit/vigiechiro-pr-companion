@@ -4,7 +4,9 @@ import fr.univ_amu.iut.audio.viewmodel.ComparateursAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatAvisValidateur;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.ColonneDate;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,7 +41,7 @@ final class ColonnesAudio {
             TableColumn<LigneObservationAudio, String> nomSite,
             TableColumn<LigneObservationAudio, String> point,
             TableColumn<LigneObservationAudio, String> commune,
-            TableColumn<LigneObservationAudio, String> date,
+            TableColumn<LigneObservationAudio, java.time.LocalDate> date,
             TableColumn<LigneObservationAudio, LocalDateTime> heure,
             TableColumn<LigneObservationAudio, String> statut,
             TableColumn<LigneObservationAudio, String> reference,
@@ -124,9 +126,13 @@ final class ColonnesAudio {
         col.commune()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.ouTiret(c.getValue().commune())));
-        col.date()
-                .setCellValueFactory(c -> new ReadOnlyStringWrapper(
-                        FormatLigneAudio.ouTiret(c.getValue().dateEnregistrement())));
+        // « Date » : même idiome que « Heure » juste en dessous, et pour la même raison (#4019). La
+        // valeur est la DATE (tri chronologique par construction), l'affichage est français.
+        //
+        // ⚠️ Le cadratin est passé explicitement : cette table a sa règle, « carré, point, commune, date
+        // et fichier : cinq colonnes, une seule règle » (#3236). Une cellule vide ici aurait rompu une
+        // convention déjà décidée, et c'est son test qui l'a rappelé.
+        ColonneDate.configurer(col.date(), LigneObservationAudio::dateEnregistrement, Formats.VALEUR_ABSENTE);
         // « Heure » : valeur = l'INSTANT complet (tri chronologique naturel de LocalDateTime, correct à
         // cheval sur minuit) ; affichage « HH:mm » via une cellule dédiée. Pas de comparateur de chaîne.
         CellulesAudio.configurerColonneHeure(col.heure());
