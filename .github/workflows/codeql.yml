@@ -30,6 +30,7 @@ permissions:
 jobs:
   analyser:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       # Déposer les résultats dans l'onglet « Security » du dépôt : c'est la seule écriture du job.

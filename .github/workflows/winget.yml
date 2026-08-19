@@ -60,6 +60,7 @@ jobs:
     # Runner Windows : c'est le seul endroit où l'on peut INSTALLER puis LANCER le
     # MSI que les utilisateurs recevront.
     runs-on: windows-latest
+    timeout-minutes: 20
     steps:
       # Le checkout ne sert qu'à la garde ci-dessous : tout le reste de ce workflow travaille sur
       # des artefacts de Release, pas sur les sources.

@@ -105,6 +105,7 @@ jobs:
     #     les greffons mais AVANT d'analyser l'historique. Le vert dit « ça s'installe et ça se charge » ;
     #   - sur `main`, il va jusqu'à l'analyse et au calcul de version. C'est là que le contrôle est réel.
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # `contents: write` alors que ce job n'écrit rien : `semantic-release` vérifie qu'il POURRAIT pousser
     # un tag dès `verifyConditions`, y compris en `--dry-run`. Sous le plancher `contents: read` du
     # workflow, il échouait donc sur `main` par `EGITNOPERMISSION` - sauf quand un checkout obsolète le
@@ -170,6 +171,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -221,6 +223,16 @@ jobs:
           chmod +x .github/scripts/verifie-permissions.sh
           ./.github/scripts/verifie-permissions.sh --auto-test
           ./.github/scripts/verifie-permissions.sh
+
+      - name: Tout job porte un butoir
+        # ⚠️ Un job sans `timeout-minutes` que GitHub laisse courir SIX HEURES a bloqué une PR
+        # 4 h 15 sur un `apt-get install` de police, en `-qq` donc sans une ligne de log. Le butoir
+        # de #3883 avait été apprécié pour le seul `banc-filme` ; vingt-six autres jobs n'en avaient
+        # aucun, dont ceux qui publient.
+        run: |
+          chmod +x .github/scripts/verifie-butoirs.sh
+          ./.github/scripts/verifie-butoirs.sh --auto-test
+          ./.github/scripts/verifie-butoirs.sh
 
       - name: Les renvois entre workflows visent un libellé existant
         # Un `workflow_run` désigne le workflow attendu par son `name:`, apparié par égalité stricte.

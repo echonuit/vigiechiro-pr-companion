@@ -80,6 +80,7 @@ jobs:
   mettre-a-jour:
     name: Aligner le manifeste, après l'avoir éprouvé
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       APP_ID: fr.echonuit.VigieChiroCompanion
       MANIFESTE: flatpak/fr.echonuit.VigieChiroCompanion.yml

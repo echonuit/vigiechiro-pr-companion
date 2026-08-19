@@ -69,6 +69,7 @@ jobs:
   # la plateforme a été éprouvée ou seulement visitée.
   choisir:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       matrice: ${{ steps.calcul.outputs.matrice }}
     steps:
