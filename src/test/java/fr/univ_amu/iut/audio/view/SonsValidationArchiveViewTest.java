@@ -274,6 +274,18 @@ class SonsValidationArchiveViewTest {
     /// par son **index réel** et on lui envoie l'événement directement, ce qui exerce le même gestionnaire
     /// de production (`DoubleClicLigne`) sans dépendre du placement.
     private static void doubleCliquerLigne(FxRobot robot, String idTable, int index) {
+        // ⚠️ Amener la ligne dans le viewport AVANT de la chercher. Les `TableRow` sont **virtualisés** :
+        // seules les lignes visibles existent comme noeuds, et une ligne hors cadre n'est donc pas
+        // « introuvable », elle n'est pas encore construite. Le message qui remonte - « aucune ligne
+        // d'index N » - se lit pourtant comme une absence de donnee.
+        //
+        // Trouve en #4016 : le panneau d'ecoute a repris la place que son contenu demande, la table a
+        // rendu quelques lignes de moins, et l'index 2 est sorti du viewport.
+        robot.interact(() -> {
+            TableView<?> table = robot.lookup(idTable).queryAs(TableView.class);
+            table.scrollTo(index);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
         Node ligne = robot.lookup(idTable).lookup(".table-row-cell").queryAll().stream()
                 .map(noeud -> (TableRow<?>) noeud)
                 .filter(rangee -> !rangee.isEmpty() && rangee.getIndex() == index)

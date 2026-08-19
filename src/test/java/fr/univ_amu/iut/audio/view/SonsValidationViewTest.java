@@ -77,6 +77,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -1175,5 +1176,33 @@ class SonsValidationViewTest {
                 false,
                 null)));
         WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    @Test
+    @DisplayName("#4016 : le panneau d'écoute tient son contenu même quand le diviseur le serre")
+    void panneau_ecoute_ne_se_laisse_pas_comprimer(FxRobot robot) {
+        SplitPane separateur = robot.lookup("#separateur").queryAs(SplitPane.class);
+        Region panneau = robot.lookup("#panneauEcoute").queryAs(Region.class);
+
+        // Le diviseur poussé à fond vers le bas : la table réclame tout, le panneau d'écoute est serré.
+        // C'est le geste d'un utilisateur qui veut voir plus de lignes, et c'est là que le défaut se
+        // produisait - le panneau descendait sous ce que son contenu demande, et sa barre d'actions se
+        // retrouvait PAR-DESSUS l'axe des temps de l'AudioView.
+        robot.interact(() -> {
+            separateur.setDividerPosition(0, 0.95);
+            separateur.applyCss();
+            separateur.layout();
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // ⚠️ La propriété se mesure sur le panneau, pas sur l'AudioView : celle-ci obtenait bien sa
+        // hauteur (mesuré : 340 pour un minimum de 340). C'est son PARENT qui manquait de place - 350
+        // rendus pour 426 demandés - et qui empilait ses enfants les uns sur les autres.
+        assertThat(panneau.getHeight())
+                .as(
+                        "le panneau d'écoute rend %.0f px pour %.0f px de contenu : sa barre d'actions"
+                                + " recouvre l'axe des temps",
+                        panneau.getHeight(), panneau.prefHeight(-1))
+                .isGreaterThanOrEqualTo(panneau.prefHeight(-1) - 1);
     }
 }
