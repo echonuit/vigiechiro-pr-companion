@@ -133,6 +133,159 @@
 }
 
 /*
+ * Listes deroulantes, menus et compteurs (#4011).
+ *
+ * Le socle habillait les BOUTONS et rien d'autre : `.combo-box`, `.choice-box`, `.menu-button` et
+ * `.spinner` n'avaient de regle nulle part, et se rendaient donc avec l'apparence de la plateforme -
+ * gris, degrade, coins droits - DANS LA MEME RANGEE que des boutons habilles, sur sept ecrans. Sur la
+ * barre d'actions de « Sons & validation », l'ecran le plus utilise du produit, quatre controles sur
+ * cinq etaient des controles de plateforme.
+ *
+ * Deux traitements, parce qu'il y a deux natures :
+ *
+ * - une liste ou un compteur ATTEND une valeur : contour discret (`-couleur-bordure-controle`), comme
+ *   un champ de saisie, dont ils sont le voisin naturel dans un formulaire ;
+ * - un `MenuButton` PROPOSE une action : contour du texte, comme `.bouton-secondaire`, dont il est le
+ *   voisin naturel dans une barre.
+ *
+ * Ce que les deux partagent, et qui est le sujet : la meme HAUTEUR (`-hauteur-controle-barre`) et le
+ * meme rayon. C'est ce qui fait qu'une rangee s'aligne, cf. l'ADR 4002.
+ *
+ * ⚠️ Cette famille est declaree ICI, AVANT `.menu-ajout-filtre` et `.menu-actions` : ces deux classes
+ * portent le meme poids de specificite (une classe), et a poids egal c'est la DERNIERE declaration qui
+ * gagne. Les remonter au-dessus les ferait perdre leur apparence propre.
+ *
+ * ⚠️ `.text-field` est dans la liste, et ce n'est pas un elargissement du perimetre : c'est ce qui
+ * empeche le remede de deplacer le defaut. Mesure a la deuxieme passe, sur « Modifier le passage » :
+ * la liste « Vent » rendait 34 px a cote du champ « Temperature debut » reste a 26, et les deux
+ * n'etaient plus alignes. On avait accorde la barre en desaccordant le formulaire. Une hauteur de
+ * controle est une propriete du PARC, pas d'une famille : la tenir sur quatre familles sur cinq, c'est
+ * ne pas la tenir.
+ *
+ * ⚠️ `.choice-box` est nommee SEPAREMENT de `.combo-box-base` : une `ChoiceBox` ne derive pas de
+ * `ComboBoxBase` et ne porte donc PAS cette classe. Mesure a la premiere passe : la liste de tri du
+ * multisite (une `ComboBox`) etait habillee, « 30 min » et « National (aucun milieu) » (des
+ * `ChoiceBox`) restaient des controles de plateforme sur le meme rendu.
+ *
+ * ⚠️ Aucun `-fx-padding` n'est pose sur `.menu-button` : « + Filtre » vit dans un `FlowPane` dont la
+ * largeur decide du repli des puces, et 20 px de plus l'ont deja fait renvoyer a la ligne (#4003).
+ */
+.combo-box-base,
+.choice-box,
+.spinner,
+.text-field {
+    -fx-min-height: -hauteur-controle-barre;
+    -fx-pref-height: -hauteur-controle-barre;
+    -fx-background-color: -couleur-texte-clair;
+    -fx-background-insets: 0;
+    -fx-background-radius: 4;
+    -fx-border-color: -couleur-bordure-controle;
+    -fx-border-radius: 4;
+    -fx-border-width: 1;
+}
+
+.menu-button {
+    -fx-min-height: -hauteur-controle-barre;
+    -fx-pref-height: -hauteur-controle-barre;
+    -fx-background-color: -couleur-texte-clair;
+    -fx-background-insets: 0;
+    -fx-background-radius: 4;
+    -fx-border-color: -couleur-texte;
+    -fx-border-radius: 4;
+    -fx-border-width: 1;
+    -fx-cursor: hand;
+}
+
+/* La fleche : peinte a la couleur du texte plutot qu'au gris de la plateforme, sinon elle reste le
+   seul morceau de modena visible sur un controle par ailleurs habille. */
+.combo-box-base > .arrow-button > .arrow,
+.choice-box > .open-button > .arrow,
+.menu-button > .arrow-button > .arrow {
+    -fx-background-color: -couleur-texte;
+}
+
+.combo-box-base > .arrow-button,
+.choice-box > .open-button,
+.menu-button > .arrow-button {
+    -fx-background-color: transparent;
+}
+
+/* Le libelle affiche : la `ChoiceBox` le rend dans un `.label`, la `ComboBox` dans une `.list-cell`
+   posee comme cellule-bouton. Les deux heritent du fond de la plateforme si on ne le dit pas. */
+.combo-box > .list-cell,
+.choice-box > .label {
+    -fx-background-color: transparent;
+    -fx-text-fill: -couleur-texte;
+    -fx-padding: 0 6 0 6;
+}
+
+.combo-box-base:hover,
+.choice-box:hover,
+.menu-button:hover {
+    -fx-border-color: -couleur-primaire;
+}
+
+.combo-box-base:focused,
+.choice-box:focused,
+.menu-button:focused,
+.spinner:focused {
+    -fx-border-color: -couleur-primaire;
+}
+
+/* ⚠️ La liste DEROULEE compte autant que la facade : s'arreter au controle ferme, c'est habiller la
+   devanture et laisser la plateforme derriere des qu'on clique. */
+.combo-box-popup > .list-view {
+    -fx-background-color: -couleur-texte-clair;
+    -fx-background-insets: 0;
+    -fx-border-color: -couleur-bordure-controle;
+    -fx-border-radius: 0 0 4 4;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 10, 0, 0, 3);
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    -fx-background-color: -couleur-texte-clair;
+    -fx-text-fill: -couleur-texte;
+    -fx-padding: 5 10 5 10;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:hover {
+    -fx-background-color: -couleur-primaire-voile;
+}
+
+.combo-box-popup > .list-view > .virtual-flow > .clipped-container > .sheet > .list-cell:filled:selected {
+    -fx-background-color: -couleur-primaire-fond;
+    -fx-text-fill: -couleur-texte;
+}
+
+/* Le menu deroule d'une `ChoiceBox` est un `ContextMenu`, pas la `ListView` d'une `ComboBox` : c'est
+   un autre arbre de noeuds, et le traiter au meme endroit evite d'habiller une moitie du parc. */
+.choice-box-popup-menu .menu-item:focused,
+.choice-box-popup-menu .menu-item:hover {
+    -fx-background-color: -couleur-primaire-voile;
+}
+
+.choice-box-popup-menu .menu-item:focused > .label,
+.choice-box-popup-menu .menu-item:hover > .label {
+    -fx-text-fill: -couleur-texte;
+}
+
+/* Les fleches du compteur : le meme gris de plateforme y survivait, en plein milieu d'un formulaire. */
+.spinner > .increment-arrow-button,
+.spinner > .decrement-arrow-button {
+    -fx-background-color: transparent;
+}
+
+.spinner > .increment-arrow-button > .increment-arrow,
+.spinner > .decrement-arrow-button > .decrement-arrow {
+    -fx-background-color: -couleur-texte;
+}
+
+.spinner > .text-field {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+/*
  * Barre « à la Notion » (#692) : onglets de vues mémorisées + barre de filtres (bouton « + Filtre » et
  * puces des filtres actifs). Le comportement est porté par les composants partagés commun/view
  * (GestionnaireVues, GestionnaireFiltres, GestionnaireColonnes) qui posent ces styleClass ; les règles,
