@@ -87,6 +87,10 @@ public class RattachementImportViewModel {
     /// (#111) sur l'ensemble du dossier. Liste vide tant qu'aucune inspection n'a réussi.
     private List<String> nomsOriginaux = List.of();
 
+    /// Ceux des originaux que l'import RETIENDRA. Distincts des précédents dès qu'un dossier mélange
+    /// deux enregistreurs : l'import ne garde que la série du journal (#1492).
+    private List<String> nomsRetenus = List.of();
+
     public RattachementImportViewModel(
             ServiceSites serviceSites, Horloge horloge, String idUtilisateur, Optional<PropositionCampagne> campagnes) {
         this.serviceSites = Objects.requireNonNull(serviceSites, "serviceSites");
@@ -201,7 +205,24 @@ public class RattachementImportViewModel {
     /// Fournit (orchestrateur) les noms de **tous** les originaux inspectés, dérivés de l'inspection :
     /// ou une liste vide pour réinitialiser ; recalcule l'aperçu et l'avertissement de discordance.
     public void definirOriginaux(List<String> noms) {
+        definirOriginaux(noms, noms);
+    }
+
+    /// Les mêmes, en distinguant ceux que l'import **retiendra** (#4021).
+    ///
+    /// ⚠️ Pourquoi deux listes. L'aperçu montre ce que deviendront les fichiers ; l'avertissement de
+    /// discordance (#111) porte sur l'ensemble du dossier. Sur une carte qui mélange deux
+    /// enregistreurs, l'aperçu prenait `nomsOriginaux.get(0)` - le premier dans l'ordre des noms - et
+    /// désignait donc, une fois sur deux, un fichier que l'import allait **écarter**. Mesuré sur
+    /// `sd-melange` : journal de série 1925492, aperçu annonçant `…PaRecPR1648011_…`, et trois
+    /// fichiers de cette série ignorés au compte rendu.
+    ///
+    /// Sur le seul écran où l'utilisateur a besoin de savoir ce qui sera pris et ce qui sera laissé,
+    /// l'aperçu désignait précisément ce qui serait laissé - en ayant l'air juste, puisque le carré,
+    /// le passage et le point y étaient corrects.
+    public void definirOriginaux(List<String> noms, List<String> retenus) {
         this.nomsOriginaux = List.copyOf(noms);
+        this.nomsRetenus = List.copyOf(retenus);
         rafraichir();
     }
 
@@ -267,7 +288,10 @@ public class RattachementImportViewModel {
     }
 
     private void majApercu() {
-        String exemple = nomsOriginaux.isEmpty() ? null : nomsOriginaux.get(0);
+        // ⚠️ Un RETENU, jamais un écarté. Et si rien n'est retenu, aucun exemple : promettre le nom
+        // d'un fichier qu'on n'écrira pas est précisément le défaut de #4021, et le faire quand on
+        // n'écrira rien du tout serait le pire des deux.
+        String exemple = nomsRetenus.isEmpty() ? null : nomsRetenus.get(0);
         apercuPrefixe.set(ApercuPrefixe.calculer(
                 siteSelectionne.get(), pointSelectionne.get(), annee.get(), numeroPassage.get(), exemple));
     }

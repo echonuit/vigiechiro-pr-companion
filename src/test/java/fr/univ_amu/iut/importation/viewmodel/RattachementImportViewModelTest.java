@@ -292,4 +292,41 @@ class RattachementImportViewModelTest {
         assertThat(vm.campagnesProposees()).isEmpty();
         assertThat(vm.idCampagneRetenue()).isNull();
     }
+
+    @Test
+    @DisplayName("#4021 : sur un dossier mélangé, l'aperçu montre un fichier RETENU, pas un écarté")
+    void l_apercu_ne_montre_pas_un_fichier_ecarte() {
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1));
+        vm.siteSelectionneProperty().set(ETANG);
+        vm.pointSelectionneProperty().set(A1);
+
+        // La carte `sd-melange` : le journal porte la série 1925492, et « 1648011 » la précède dans
+        // l'ordre des noms - c'est donc lui que l'ancien aperçu prenait comme gabarit.
+        List<String> tous = List.of("PaRecPR1648011_20260422_204010.wav", "PaRecPR1925492_20260422_203922.wav");
+        List<String> retenus = List.of("PaRecPR1925492_20260422_203922.wav");
+
+        vm.definirOriginaux(tous, retenus);
+
+        assertThat(vm.apercuPrefixeProperty().get())
+                .as("l'aperçu annonce ce que deviendront les fichiers : montrer le futur nom d'un"
+                        + " fichier que l'import écartera trompe sur le seul écran où l'utilisateur a"
+                        + " besoin de savoir ce qui sera pris")
+                .contains("1925492")
+                .doesNotContain("1648011");
+    }
+
+    @Test
+    @DisplayName("#4021 : si RIEN n'est retenu, l'aperçu ne promet aucun nom de fichier")
+    void aucun_retenu_ne_promet_aucun_nom() {
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1));
+        vm.siteSelectionneProperty().set(ETANG);
+        vm.pointSelectionneProperty().set(A1);
+
+        vm.definirOriginaux(List.of("PaRecPR1648011_20260422_204010.wav"), List.of());
+
+        assertThat(vm.apercuPrefixeProperty().get())
+                .as("promettre le nom d'un fichier qu'on n'écrira pas est le défaut de #4021 ; le"
+                        + " faire quand on n'écrira rien du tout serait le pire des deux")
+                .doesNotContain("1648011");
+    }
 }
