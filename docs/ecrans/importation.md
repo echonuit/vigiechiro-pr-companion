@@ -184,6 +184,18 @@ des fichiers.
 
 ![Cas « mélange » : un avertissement signale que le dossier contient plusieurs enregistreurs (séries différentes).](../assets/captures/apercu-import-melange.png)
 
+!!! tip "Le cas « mélange » en vidéo (35 s)"
+
+    <video controls muted playsinline preload="metadata" width="100%">
+      <source src="../../assets/parcours/parcours-melange-de-capteurs.mp4" type="video/mp4">
+      Votre navigateur n'affiche pas les vidéos. Le film est là :
+      <a href="../../assets/parcours/parcours-melange-de-capteurs.mp4">parcours-melange-de-capteurs.mp4</a>.
+    </video>
+
+    Un dossier contenant deux enregistreurs, de bout en bout : l'avertissement paraît pendant
+    l'inspection et **nomme les deux séries**, le bouton d'import reste ouvert, et le compte rendu
+    final annonce « 3 / 6 importés » avec les trois autres marqués **ignorés**.
+
 Une **incohérence** entre le journal du capteur et les enregistrements (série ou date qui ne
 correspondent pas) est signalée plus fermement :
 

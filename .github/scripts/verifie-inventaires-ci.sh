@@ -95,9 +95,19 @@ if bloc is None:
     print("   C'est la GARDE qui est en cause : la section a-t-elle été renommée ?")
     sys.exit(1)
 
+# ⚠️ Le périmètre inclut `scripts/**`, et pas seulement `.github/`. Il s'est arrêté à `.github/`
+# pendant tout le temps où les gardes y vivaient - puis un banc de soixante-cinq cas est arrivé sous
+# `scripts/doc-video/`, il n'était lancé par aucun workflow, et cette garde ne pouvait pas le dire :
+# elle ne regardait pas là. Un inventaire aveugle à un dossier annonce la complétude qu'il n'a pas
+# (#4013).
 autotestes = set()
-for dossier in ("scripts", "assets"):
-    for chemin in glob.glob(os.path.join(racine, ".github", dossier, "*.sh")):
+motifs = [
+    os.path.join(racine, ".github", "scripts", "*.sh"),
+    os.path.join(racine, ".github", "assets", "*.sh"),
+    os.path.join(racine, "scripts", "**", "*.sh"),
+]
+for motif in motifs:
+    for chemin in glob.glob(motif, recursive=True):
         if "--auto-test" in open(chemin, encoding="utf-8", errors="ignore").read():
             autotestes.add(os.path.basename(chemin))
 
