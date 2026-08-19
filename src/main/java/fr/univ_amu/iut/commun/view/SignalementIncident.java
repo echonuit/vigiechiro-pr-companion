@@ -113,7 +113,10 @@ public final class SignalementIncident implements Thread.UncaughtExceptionHandle
         for (int rang = 0; courant != null && rang < PROFONDEUR_MAXIMALE; rang++) {
             texte.append(System.lineSeparator())
                     .append("    ")
-                    .append(rang == 0 ? "→ " : "causé par ")
+                    // ⚠️ Pas de flèche « → » ici : elle n'est pas couverte par la Noto Sans
+                    // embarquée, et `PoliceCouvreLIhmTest` refuse tout caractère qui partirait en
+                    // repli vers une police du système (ADR 0035, #3389).
+                    .append(rang == 0 ? "incident : " : "causé par ")
                     .append(nomEtMessage(courant));
             StackTraceElement[] pile = courant.getStackTrace();
             if (pile.length > 0) {
