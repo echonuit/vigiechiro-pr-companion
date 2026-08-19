@@ -464,7 +464,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         colVerdict.setCellValueFactory(cd -> valeur(cd.getValue().verdictLibelle()));
         colEnregistreur.setCellValueFactory(cd -> valeur(cd.getValue().enregistreur()));
         // ⚠️ Le cadratin est passé explicitement pour « Déposé le » : le ViewModel y met déjà
-        // `Formats.VALEUR_ABSENTE` quand la nuit n'est pas déposée (`LignePassage` : « ou — si non
+        // `Formats.VALEUR_ABSENTE` quand la nuit n'est pas déposée (`LignePassage` : « ou `—` si non
         // déposé »). Sans lui, la cellule se serait VIDÉE là où la colonne disait « rien à cette date »,
         // et c'est l'aperçu régénéré qui l'a montré, pas la lecture du code.
         ColonneDate.configurer(colDepose, LignePassage::deposeLe, Formats.VALEUR_ABSENTE);
