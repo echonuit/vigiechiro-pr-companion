@@ -527,6 +527,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `check-capture-mains.sh` | chaque outil de capture est enregistré dans `MAINS` | `lint.yml` |
 | `check-doc-images.sh` | chaque capture citée par la doc existe et est déclarée | `docs.yml` |
 | `check-doc-videos.sh` | chaque parcours filmé cité par la doc existe, a son scénario au banc, et son chemin **résout dans le site construit** | `docs.yml` |
+| `filme-un-parcours.sh` | le banc de documentation : lancement, geste visé par libellé, carte, montage, index | `lint.yml` (job `banc-filme`) |
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `verifie-renvois-workflows.sh` | chaque `workflow_run` vise le `name:` d'un workflow existant | `lint.yml` |
 | `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé, propre, et **utilisable** avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |

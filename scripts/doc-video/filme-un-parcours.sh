@@ -44,17 +44,36 @@ HAUTEUR=860
 # un banc qui ne pilote rien rend un fichier vidéo parfaitement valide et vide (#3707).
 # ---------------------------------------------------------------------------------------------
 
-verifier_outils() {
-    local manquants=()
-    for outil in Xvfb xdotool ffmpeg xdpyinfo openbox tesseract udisksctl mkfs.vfat mcopy; do
+# Ce que le banc réclame, en DEUX listes.
+#
+# ⚠️ Une seule liste coûtait cher au mauvais endroit. `udisksctl` vient du paquet `udisks2`, qui
+# n'a rien à faire sur un runner : l'auto-test ne monte aucune carte, il éprouve les REFUS du
+# montage - étiquette étrangère, point vide, source sans brut - qui sont du raisonnement pur. Exiger
+# l'outil pour lancer les cas revenait à installer un service de disques pour vérifier des chaînes
+# de caractères.
+#
+# La distinction est celle du parcours : un film qui monte une carte a besoin des trois derniers,
+# les autres non. `tourner` réclame donc la seconde liste **seulement** pour un parcours qui déclare
+# une spec.
+OUTILS_DU_BANC="Xvfb xdotool ffmpeg xdpyinfo openbox tesseract"
+OUTILS_DE_LA_CARTE="udisksctl mkfs.vfat mcopy"
+
+# ⚠️ Le remède doit couvrir CE qui manque. Le message ne nommait que les paquets de la première
+# liste, en vérifiant les neuf outils : à qui manquait `mcopy`, il conseillait d'installer
+# tesseract. Un message qui nomme le problème sans nommer son remède fait chercher ailleurs.
+verifier_outils() { # [--avec-carte]
+    local manquants=() attendus="$OUTILS_DU_BANC"
+    [ "${1:-}" = --avec-carte ] && attendus="$attendus $OUTILS_DE_LA_CARTE"
+    for outil in $attendus; do
         command -v "$outil" >/dev/null 2>&1 || manquants+=("$outil")
     done
-    if [ ${#manquants[@]} -gt 0 ]; then
-        echo "   - outils absents : ${manquants[*]}"
-        echo "     sudo apt-get install -y xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra"
-        return 1
+    if [ ${#manquants[@]} -eq 0 ]; then
+        return 0
     fi
-    return 0
+    echo "   - outils absents : ${manquants[*]}"
+    echo "     sudo apt-get install -y xvfb xdotool ffmpeg x11-utils openbox \\"
+    echo "         tesseract-ocr tesseract-ocr-fra dosfstools mtools udisks2"
+    return 1
 }
 
 # ⚠️ openbox, et NON matchbox : matchbox MAXIMISE tout ce qu'il affiche (#3788). Une vidéo de
@@ -562,7 +581,7 @@ tourner() { # [nom du parcours] [sortie]
     bac=$(mktemp -d)
 
     echo "Conditions du tournage"
-    verifier_outils || code=1
+    if [ "$spec_carte" = non ]; then verifier_outils || code=1; else verifier_outils --avec-carte || code=1; fi
     verifier_le_jar "$jar" || code=1
     verifier_bac_jetable "$bac" || code=1
     if [ "$code" -ne 0 ]; then
@@ -1352,7 +1371,25 @@ auto_test() {
     essai "une carte source sans brut est refusée"       rouge image_de_la_carte "$bac/carte-bruts-vides/sd-nominale" "$bac/x.img"
 
     # --- les outils ---
-    essai "les outils du poste sont là"                  vert  verifier_outils
+    essai "les outils du banc sont là"                   vert  verifier_outils
+    # ⚠️ Le cas qui porte la séparation des deux listes : un outil de la CARTE manquant ne doit pas
+    # refuser un parcours qui n'en monte pas. C'est ce qui permet à la CI de lancer ces 60 cas sans
+    # installer un service de disques.
+    essai "un outil de carte absent ne bloque pas le banc"  vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; OUTILS_DE_LA_CARTE="outil-qui-nexiste-pas"; verifier_outils' "${BASH_SOURCE[0]}"
+    essai "mais il bloque un tournage AVEC carte"        rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; OUTILS_DE_LA_CARTE="outil-qui-nexiste-pas"; verifier_outils --avec-carte' "${BASH_SOURCE[0]}"
+    # ⚠️ Et le remède doit nommer ce qui manque : le message ne citait que tesseract quand `mcopy`
+    # manquait.
+    #
+    # ⚠️ La sortie se CAPTURE, elle ne se traverse pas par un tube. Ce banc pose `pipefail` : dans
+    # `verifier_outils … | grep -q`, le code du pipeline est celui de `verifier_outils` - un échec,
+    # puisqu'un outil manque - et non celui du `grep`. Le cas rougissait pour une raison étrangère à
+    # ce qu'il éprouve, et il aurait aussi bien pu verdir pour une autre.
+    essai "le remède nomme les paquets de la carte"      vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; OUTILS_DE_LA_CARTE="outil-qui-nexiste-pas"
+            sortie=$(verifier_outils --avec-carte 2>&1)
+            case "$sortie" in *dosfstools*) exit 0 ;; *) exit 1 ;; esac' "${BASH_SOURCE[0]}"
 
     echo
     if [ "$rouges" -eq 1 ]; then verbe=DOIT; else verbe=DOIVENT; fi

@@ -20,7 +20,18 @@ permissions:
 
 jobs:
   banc-filme:
-    # Les 26 cas de `lance-test-filme.sh --auto-test`, dont les 11 qui DOIVENT rougir (#3883).
+    # Les auto-tests des DEUX bancs filmés : celui de la recette
+    # (`.github/scripts/lance-test-filme.sh`, #3883) et celui de la documentation
+    # (`scripts/doc-video/filme-un-parcours.sh`, #3887). Ils partagent leur outillage d'affichage,
+    # donc ils partagent ce job.
+    #
+    # ⚠️ Le second n'était lancé NULLE PART. Il figurait dans les chemins déclencheurs de `docs.yml`
+    # - le modifier réveillait le workflow - mais aucune étape n'exécutait ses cas. C'est exactement
+    # le défaut que #3883 avait fermé pour le premier banc, refait dans l'outil bâti pour le
+    # combattre : un garde de soixante-cinq cas dont personne ne vérifiait qu'il passe.
+    #
+    # ⚠️ Et `verifie-inventaires-ci.sh` ne pouvait pas le dire : il ne regarde que
+    # `.github/scripts` et `.github/assets`. Un banc rangé sous `scripts/` lui est invisible.
     #
     # ⚠️ Ils n'avaient JAMAIS tourné en CI. Quatorze scripts lancent leur `--auto-test` dans le job
     # `lint` ci-dessous ; celui-ci n'y était pas, faute d'outillage - et `recette-filmee.yml`, qui
@@ -68,12 +79,21 @@ jobs:
         # chose, il rougirait ici même.
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends xvfb xdotool ffmpeg x11-utils openbox
+          sudo apt-get install -y --no-install-recommends xvfb xdotool ffmpeg x11-utils openbox \
+            tesseract-ocr tesseract-ocr-fra
 
-      - name: Les 26 cas du banc filmé, dont 11 qui doivent rougir
+      - name: Le banc de recette, ses cas et ses rouges attendus
         run: |
           chmod +x .github/scripts/lance-test-filme.sh
           ./.github/scripts/lance-test-filme.sh --auto-test
+
+      - name: Le banc de documentation, ses cas et ses rouges attendus
+        # ⚠️ Sans `udisks2`, `dosfstools` ni `mtools`, et c'est voulu : l'auto-test ne monte aucune
+        # carte, il éprouve les REFUS du montage - étiquette étrangère, point vide, source sans
+        # brut - qui sont du raisonnement pur. Le banc distingue depuis #4013 les outils qu'il lui
+        # faut toujours de ceux qu'un parcours à carte réclame, ce qui évite d'installer un service
+        # de disques sur un runner pour vérifier des chaînes de caractères.
+        run: bash scripts/doc-video/filme-un-parcours.sh --auto-test
 
   outillage-release:
     # release.yml ne se déclenche qu'au push sur `main` : aucune CI de PR ne traverse la chaîne de
