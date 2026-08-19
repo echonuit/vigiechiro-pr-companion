@@ -435,6 +435,73 @@ parcours_importer_une_nuit() { # <écran> <marques> <point de montage de la cart
     return 0
 }
 
+# Le parcours « deux enregistreurs dans le même dossier » (#4013).
+#
+# ## Ce qu'il montre, et que la prose rend mal
+#
+# `docs/ecrans/importation.md` explique en trois paragraphes qu'un dossier mélangé déclenche un
+# avertissement **sans bloquer l'import**, et que seuls les enregistrements portant la série du
+# journal sont retenus. C'est une nuance : ni un refus, ni un import ordinaire. Le film la montre
+# d'un coup - le bandeau **paraît** pendant l'inspection, il **nomme les deux séries**, et le bouton
+# d'import reste ouvert.
+#
+# ## Les coordonnées ne sont PAS celles du parcours nominal
+#
+# ⚠️ Le bandeau ajoute de la hauteur : la liste des points d'écoute descend de 562 à 636. Un
+# scénario recopié tel quel viserait le vide - ou pire, le bon libellé au mauvais endroit. C'est la
+# raison pour laquelle chaque `viser` porte son libellé attendu.
+parcours_melange_de_capteurs() { # <écran> <marques> <point de montage de la carte>
+    local ecran="$1" marques="$2" carte="$3"
+
+    marque "$marques" debut
+    respirer_doc 2.0
+
+    viser "$ecran" 493 108 "Importer une nuit" || return 1
+    marque "$marques" assistant
+    respirer_doc 2.2
+
+    viser "$ecran" 693 210 "Parcourir" || return 1
+    marque "$marques" selecteur
+    respirer_doc 2.0
+
+    viser "$ecran" 168 178 "$ETIQUETTE_CARTE" 0.6 150 || return 1
+    respirer_doc 1.6
+    viser "$ecran" 1136 831 "Ouvrir" || return 1
+    marque "$marques" inspection_debut
+
+    respirer_doc 3.5                                   # l'application lit la carte
+    marque "$marques" inspection_fin
+
+    verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
+
+    # ⚠️ Le cœur du film. Le bandeau doit être LU, pas entrevu : c'est la seule chose que ce
+    # parcours apporte, et un spectateur qui le manque a regardé un import ordinaire.
+    viser "$ecran" 393 437 "mélange plusieurs enregistreurs" 0.7 420 || return 1
+    marque "$marques" melange_annonce
+    respirer_doc 4.0                                   # le temps de lire les deux séries
+
+    viser "$ecran" 801 636 "Choisissez un point" 0.55 230 || return 1
+    respirer_doc 1.2
+    DISPLAY="$ecran" xdotool mousemove 801 666 click 1
+    marque "$marques" point_choisi
+    respirer_doc 1.8
+
+    DISPLAY="$ecran" xdotool mousemove 640 700
+    DISPLAY="$ecran" xdotool click --repeat 10 5
+    respirer_doc 2.0
+
+    # ⚠️ Et l'import se fait. C'est le fait que la documentation peine à rendre : l'avertissement
+    # n'interdit rien, il informe. Un film qui s'arrêterait au bandeau dirait le contraire.
+    viser "$ecran" 201 769 "Importer cette nuit" || return 1
+    marque "$marques" import_debut
+    respirer_doc 8.0
+    marque "$marques" import_fin
+    respirer_doc 4.0                                   # le compte rendu, et ce qu'il a écarté
+
+    marque "$marques" fin
+    return 0
+}
+
 # Les respirations du film. Elles ne servent qu'au spectateur : un écran qui change trop vite ne se
 # lit pas. Hors tournage, elles ne coûtent rien.
 respirer_doc() {
@@ -471,21 +538,22 @@ parcours_ouverture() {
 parcours_connu() { # <nom>
     case "$1" in
         declarer-un-carre) printf '45\tnon\n' ;;
-        importer-une-nuit) printf '120\toui\n' ;;
+        importer-une-nuit) printf '120\trecette/fixtures/spec/sd-nominale.yaml\n' ;;
+        melange-de-capteurs) printf '120\trecette/fixtures/spec/sd-melange.yaml\n' ;;
         *) return 1 ;;
     esac
 }
 
 tourner() { # [nom du parcours] [sortie]
     local nom="${1:-declarer-un-carre}"
-    local fiche pellicule besoin_carte
+    local fiche pellicule spec_carte
     if ! fiche=$(parcours_connu "$nom"); then
         echo "❌ Parcours inconnu : « $nom »."
-        echo "   Connus : declarer-un-carre, importer-une-nuit."
+        echo "   Connus : declarer-un-carre, importer-une-nuit, melange-de-capteurs."
         return 1
     fi
     pellicule=$(printf '%s' "$fiche" | cut -f1)
-    besoin_carte=$(printf '%s' "$fiche" | cut -f2)
+    spec_carte=$(printf '%s' "$fiche" | cut -f2)
 
     local sortie="${2:-$RACINE/target/doc-video/$nom.mkv}"
     local bac ecran=":87" jar code=0
@@ -504,9 +572,9 @@ tourner() { # [nom du parcours] [sortie]
     fi
     echo "   ✔ outils, jar et bac jetable"
 
-    if [ "$besoin_carte" = oui ]; then
+    if [ "$spec_carte" != non ]; then
         atelier=$(mktemp -d)
-        if ! carte=$(preparer_la_carte "$atelier") \
+        if ! carte=$(preparer_la_carte "$atelier" "$spec_carte") \
             || ! image_de_la_carte "$carte" "$atelier/carte.img" \
             || ! fiche=$(monter_la_carte "$atelier/carte.img"); then
             echo "❌ La carte du parcours n'a pas pu être montée."
@@ -542,7 +610,7 @@ tourner() { # [nom du parcours] [sortie]
 
         # ⚠️ La préparation tourne CAMÉRA ÉTEINTE, et son refus arrête le tournage avant qu'une
         # pellicule soit entamée - le bon moment pour s'arrêter.
-        if [ "$code" -eq 0 ] && [ "$nom" = importer-une-nuit ]; then
+        if [ "$code" -eq 0 ] && [ "$spec_carte" != non ]; then
             echo "   … préparation (non filmée) : un carré et son point d'écoute"
             preparation_importer_une_nuit "$ecran" || code=1
         fi
@@ -553,6 +621,7 @@ tourner() { # [nom du parcours] [sortie]
             case "$nom" in
                 declarer-un-carre) parcours_declarer_un_carre "$ecran" "$marques" || code=1 ;;
                 importer-une-nuit) parcours_importer_une_nuit "$ecran" "$marques" "$point" || code=1 ;;
+                melange-de-capteurs) parcours_melange_de_capteurs "$ecran" "$marques" "$point" || code=1 ;;
             esac
             wait "$camera"
             # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
@@ -594,10 +663,12 @@ tourner() { # [nom du parcours] [sortie]
 # La carte SD du parcours d'importation
 # ---------------------------------------------------------------------------------------------
 
-# La spec de carte que les films d'importation emploient. `sd-nominale` est la carte saine ; les
-# huit autres décrivent des cas dégradés - journal corrompu, carte incohérente, sans journal - qui
-# feront de bons films une fois le parcours nominal en boîte.
-SPEC_CARTE="recette/fixtures/spec/sd-nominale.yaml"
+# ⚠️ La spec de carte est une propriété du PARCOURS, pas du banc. Elle a d'abord été un global
+# (`SPEC_CARTE`), ce qui convenait tant qu'un seul film montait une carte ; le deuxième l'aurait
+# fait mentir en silence - le film du mélange aurait été tourné sur la carte nominale, et rien
+# n'aurait signalé qu'il ne montre pas ce que son nom annonce. Elle se lit maintenant dans
+# `parcours_connu`. Les neuf cartes dégradées de `recette/fixtures/spec/` attendent leur scénario
+# (#4013).
 
 # Matérialise la carte SD, en octets DÉTERMINISTES, par le goal que le dépôt porte déjà.
 #
@@ -640,14 +711,19 @@ carte_utilisable() { # <dossier de destination>
 }
 
 # Matérialise la carte, puis la soumet au contrôle ci-dessus.
-preparer_la_carte() { # <dossier de destination>
-    local dest="$1" spec="$RACINE/$SPEC_CARTE"
+preparer_la_carte() { # <dossier de destination> <spec, relative à la racine>
+    local dest="$1" relative="${2:-}" spec
+    if [ -z "$relative" ]; then
+        echo "   - aucune spec de carte demandée" >&2
+        return 1
+    fi
+    spec="$RACINE/$relative"
     if [ ! -f "$spec" ]; then
         echo "   - spec de carte introuvable : $spec" >&2
         return 1
     fi
     ( cd "$RACINE" && ./mvnw -q test-compile exec:java@generer-sd \
-        -Dexec.args="$SPEC_CARTE $dest" ) >/dev/null 2>&1
+        -Dexec.args="$relative $dest" ) >/dev/null 2>&1
     carte_utilisable "$dest"
 }
 
@@ -942,6 +1018,7 @@ fiche_du_parcours() { # <nom>
     case "$1" in
         declarer-un-carre) printf 'Déclarer un carré\tdocs/ecrans/sites.md\n' ;;
         importer-une-nuit) printf 'Importer une nuit\tdocs/ecrans/importation.md\n' ;;
+        melange-de-capteurs) printf 'Deux enregistreurs dans le même dossier\tdocs/ecrans/importation.md\n' ;;
         *) return 1 ;;
     esac
 }
@@ -1001,7 +1078,7 @@ ecrire_index() { # <dossier> <index>
         echo "Cette page est **dérivée** : elle se réécrit à chaque tournage, depuis les repères posés"
         echo "par le scénario et la mesure des fichiers. Rien n'y est saisi à la main."
         echo
-        for nom in declarer-un-carre importer-une-nuit; do
+        for nom in declarer-un-carre importer-une-nuit melange-de-capteurs; do
             section_du_parcours "$dossier" "$nom"
         done
         echo "## ⚠️ Ce que ces films ne prouvent pas"
@@ -1075,10 +1152,23 @@ auto_test() {
     # ⚠️ Sans ce cas, une faute de frappe tournerait le parcours par défaut sous le nom demandé : un
     # film juste, portant le nom d'un autre.
     essai "un parcours inconnu est refusé"                 rouge parcours_connu importer-une-nuits
-    essai "le parcours d'importation réclame une carte"    vert \
-        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(parcours_connu importer-une-nuit | cut -f2)" = oui ]' "${BASH_SOURCE[0]}"
+    essai "le parcours du mélange est connu"               vert  parcours_connu melange-de-capteurs
+    essai "le parcours d'importation nomme SA carte"       vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(parcours_connu importer-une-nuit | cut -f2)" = "recette/fixtures/spec/sd-nominale.yaml" ]' "${BASH_SOURCE[0]}"
     essai "celui de déclaration n'en réclame pas"          vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(parcours_connu declarer-un-carre | cut -f2)" = non ]' "${BASH_SOURCE[0]}"
+    # ⚠️ LE cas qui porte le passage d'un global à une propriété : deux parcours qui monteraient la
+    # MÊME carte donneraient un film juste sous un nom faux, et rien ne le dirait.
+    essai "deux parcours ne partagent pas leur carte"      vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            [ "$(parcours_connu importer-une-nuit | cut -f2)" != "$(parcours_connu melange-de-capteurs | cut -f2)" ]' "${BASH_SOURCE[0]}"
+    essai "chaque spec citée existe vraiment"              vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            for nom in importer-une-nuit melange-de-capteurs; do
+                [ -f "$RACINE/$(parcours_connu "$nom" | cut -f2)" ] || exit 1
+            done' "${BASH_SOURCE[0]}"
+    essai "sans spec, la carte ne se prépare pas"          rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; preparer_la_carte "$1" ""' "${BASH_SOURCE[0]}" "$bac"
 
     # --- la relecture du dossier retenu par le sélecteur ---
     # ⚠️ La fixture rend le chemin tel que l'écran le porte, et les cas éprouvent le DÉFAUT CONNU :
