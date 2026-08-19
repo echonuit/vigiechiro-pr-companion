@@ -25,6 +25,12 @@
        et non d'une valeur inventée. Un jeton, parce que cinq classes doivent s'accorder. */
     -hauteur-controle-barre: 34;
 
+    /* Contour des controles de SAISIE - listes deroulantes, compteurs (#4011). Volontairement plus
+       discret que `-couleur-texte`, qui contourne les BOUTONS : une action se propose, un champ
+       attend. Les deux partagent en revanche la meme hauteur et le meme rayon, qui est ce qui fait
+       qu'une rangee s'aligne. */
+    -couleur-bordure-controle: #ccd2da;
+
     /* Indigo Material, aligné sur le thème du brief (primary: indigo). */
     -couleur-primaire: #3f51b5;
     -couleur-primaire-sombre: #303f9f;
