@@ -190,6 +190,13 @@ ZONE_H=26
 # haut, très en dessous de ce que tesseract lit correctement.
 lire_zone() { # <image> <x> <y> [largeur] [hauteur]
     local image="$1" x="$2" y="$3" l="${4:-$ZONE_L}" h="${5:-$ZONE_H}" tmp
+    # ⚠️ Une image absente rendait une chaîne VIDE, indiscernable de « rien d'écrit à cet endroit ».
+    # J'ai calibré six mesures sur un fichier qui n'existait pas et conclu que le texte n'y était
+    # pas. Une mesure vide n'est pas un zéro : elle doit se signaler.
+    if [ ! -f "$image" ]; then
+        echo "lire_zone : image introuvable : $image" >&2
+        return 1
+    fi
     tmp=$(mktemp -d)
     ffmpeg -v error -y -i "$image" \
         -vf "crop=${l}:${h}:${x}:${y},scale=iw*5:ih*5:flags=lanczos" "$tmp/zone.png" 2>/dev/null
@@ -236,16 +243,46 @@ libelle_correspond() { # <lu> <attendu>
 # Ce que ce contrôle attrape : le geste qui viserait un endroit où le libellé attendu n'est plus.
 # Ce qu'il n'attrape PAS : retrouver où le bouton a bougé. Il dit que le scénario est périmé, il ne
 # le répare pas - et c'est le bon partage pour un banc dont le péché serait de filmer du faux.
+# Les décalages verticaux essayés quand la lecture au point visé ne correspond pas.
+#
+# ⚠️ Pourquoi un balayage, et pourquoi il se DIT. Une feuille de style du socle (#4023) a rehaussé
+# l'en-tête de huit pixels : « Mes sites », visé en y=454, s'est retrouvé en y=462, et la zone lue
+# ramassait le bas de l'icône - « | Mecs citec » au lieu de « Mes sites ». Le scénario était juste,
+# le libellé était là, et le tournage s'arrêtait.
+#
+# Un banc qui refuse à chaque reflux de deux lignes de CSS ne sert personne. Mais un banc qui
+# absorberait le glissement en SILENCE laisserait ses scénarios pourrir sans que personne ne le
+# sache : au bout de quelques décalages, les coordonnées ne veulent plus rien dire. Il balaie donc,
+# et il ANNONCE l'écart qu'il a dû prendre.
+# ⚠️ Le pas est de QUATRE pixels, pas de huit. Mesuré : le bouton « + Ajouter » du modal était à
+# dix pixels du point visé ; à l'écart +8 la fenêtre de lecture le rognait et rendait « uler | | »,
+# à +10 elle rendait « + Ajouter ». Deux pixels séparaient le refus de la lecture juste, parce que
+# la fenêtre ne fait que 26 px de haut pour un libellé de 13. Un pas trop grand ne balaie rien.
+DECALAGES_ESSAYES="0 -4 4 -8 8 -12 12 -16 16 -20 20 -24 24"
+
 viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet] [largeur de la zone lue]
-    local ecran="$1" x="$2" y="$3" attendu="$4" duree="${5:-0.55}" largeur="${6:-$ZONE_L}" tmp lu
+    local ecran="$1" x="$2" y="$3" attendu="$4" duree="${5:-0.55}" largeur="${6:-$ZONE_L}"
+    local tmp lu ecart trouve=""
     tmp=$(mktemp -d)
     ffmpeg -v error -y -f x11grab -video_size "${LARGEUR}x${HAUTEUR}" -i "$ecran" \
         -frames:v 1 "$tmp/ecran.png" </dev/null 2>/dev/null
 
-    lu=$(lire_zone "$tmp/ecran.png" "$((x - largeur / 2))" "$((y - ZONE_H / 2))" "$largeur")
+    for ecart in $DECALAGES_ESSAYES; do
+        lu=$(lire_zone "$tmp/ecran.png" "$((x - largeur / 2))" "$((y + ecart - ZONE_H / 2))" "$largeur")
+        if libelle_correspond "$lu" "$attendu"; then
+            trouve="$ecart"
+            break
+        fi
+    done
     rm -rf "$tmp"
 
-    if ! libelle_correspond "$lu" "$attendu"; then
+    if [ -n "$trouve" ] && [ "$trouve" != 0 ]; then
+        echo "   ~ « $attendu » trouvé à $trouve px du point visé : la mise en page a glissé,"
+        echo "     le scénario reste juste. À recaler si l'écart grandit."
+        y=$((y + trouve))
+    fi
+
+    if [ -z "$trouve" ]; then
         echo "   - le geste visait « $attendu » en ($x, $y) ; l'écran y porte « $lu »"
         # ⚠️ Distinguer les deux causes, parce qu'elles ne se corrigent pas pareil. Un libellé plus
         # long que la zone lue est TRONQUÉ, et le refus accuserait alors le scénario d'être périmé
@@ -265,6 +302,46 @@ viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet] [largeur de l
     sleep 0.18
     DISPLAY="$ecran" xdotool click 1
     return 0
+}
+
+# Exige qu'un libellé SOIT à l'écran, sans rien cliquer.
+#
+# ⚠️ Pourquoi cette fonction existe, et ce qu'elle répare. Le banc ne vérifiait que ses GESTES : un
+# `viser` réussi prouve que le bouton était là et qu'on a cliqué dessus, jamais que le clic a **fait
+# quelque chose**. Le premier tournage « sans journal » a rendu ✅ sur un film où rien n'arrive : la
+# liste des points s'ouvrait, le clic sur son item tombait à côté - le seul geste du parcours qui ne
+# passait pas par `viser` - et le film montrait trente-quatre secondes d'un formulaire jamais rempli,
+# bouton d'import grisé jusqu'au bout. Fichier valide, montage propre, index juste.
+#
+# Un banc qui éprouve les gestes et pas les RÉSULTATS produit exactement le genre de faux qu'il
+# existe pour empêcher. Chaque parcours doit donc exiger ce qu'il a promis de montrer.
+#
+# ⚠️ UNE exigence par parcours, à la fin, et non une par geste. J'ai d'abord voulu contrôler aussi
+# le choix du point d'écoute en cours de route ; il a fallu trois réglages de coordonnées, parce que
+# la cible se déplace avec le défilement et que la valeur d'une liste - « A1 » - fait deux
+# caractères dont l'OCR ne tire rien. Or l'exigence finale la SUBSUME : sans point rattaché, l'import
+# ne part pas, et « Import terminé » n'apparaît jamais. Un contrôle qui en implique un autre rend
+# l'autre inutile - et deux contrôles fragiles valent moins qu'un seul qui tienne.
+#
+# La barre d'état est le bon endroit : elle ne défile pas. Exiger un texte dans le corps de la page
+# dépendrait de la position du défilement, donc du contenu - un contrôle qui varierait avec ce qu'il
+# contrôle.
+exiger_a_l_ecran() { # <écran> <x> <y> <libellé attendu> [largeur]
+    local ecran="$1" x="$2" y="$3" attendu="$4" largeur="${5:-$ZONE_L}" tmp lu ecart
+    tmp=$(mktemp -d)
+    ffmpeg -v error -y -f x11grab -video_size "${LARGEUR}x${HAUTEUR}" -i "$ecran" \
+        -frames:v 1 "$tmp/ecran.png" </dev/null 2>/dev/null
+    for ecart in $DECALAGES_ESSAYES; do
+        lu=$(lire_zone "$tmp/ecran.png" "$((x - largeur / 2))" "$((y + ecart - ZONE_H / 2))" "$largeur")
+        if libelle_correspond "$lu" "$attendu"; then
+            rm -rf "$tmp"
+            return 0
+        fi
+    done
+    rm -rf "$tmp"
+    echo "   - le parcours attendait « $attendu » en ($x, $y) ; l'écran y porte « $lu »"
+    echo "     Le geste précédent n'a pas produit son effet : le film montrerait un écran inerte."
+    return 1
 }
 
 # Relit, SUR L'ÉCRAN DU PRODUIT, le dossier que le sélecteur a retenu.
@@ -381,12 +458,16 @@ preparation_importer_une_nuit() { # <écran>
 
     viser "$ecran" 324 237 "Ajouter un point" || return 1
     sleep 1.5
-    DISPLAY="$ecran" xdotool mousemove 549 145 click 1
+    DISPLAY="$ecran" xdotool mousemove 549 143 click 1
     # ⚠️ « A1 » sans accent ni minuscule accentuée : `xdotool type` perd les MAJUSCULES ACCENTUÉES,
     # mesuré sur « Étang » rendu « étang » au premier tournage.
     taper "$ecran" "A1"
     sleep 0.8
-    viser "$ecran" 849 755 "Ajouter" || return 1
+    # ⚠️ Zone de 110 px, et non les 200 par défaut. À 200 elle englobe « Annuler » juste à côté :
+    # l'OCR en mode bloc reçoit alors deux fonds - texte sombre sur blanc ET texte blanc sur indigo -
+    # et rend une bouillie qui ne contient ni l'un ni l'autre. Une zone qui chevauche deux contrôles
+    # n'en lit aucun.
+    viser "$ecran" 849 765 "Ajouter" 0.55 110 || return 1
     sleep 2
     return 0
 }
@@ -436,7 +517,17 @@ parcours_importer_une_nuit() { # <écran> <marques> <point de montage de la cart
     # « hoisissez un point ». Mesuré au premier tournage, pas supposé.
     viser "$ecran" 801 562 "Choisissez un point" 0.55 230 || return 1
     respirer_doc 1.2
-    DISPLAY="$ecran" xdotool mousemove 801 592 click 1
+    # ⚠️ Au CLAVIER, et non au pixel. Le clic sur l'item d'une liste déroulante était le seul geste
+    # du parcours à ne pas passer par un libellé vérifié : sa position dépend de celle de la liste,
+    # qui dépend de la hauteur de tout ce qui la précède. Une feuille de style du socle (#4023) a
+    # déplacé la liste de quelques pixels, le clic est tombé à côté, et le film a montré
+    # trente-quatre secondes d'un formulaire jamais rempli - sans que rien ne rougisse.
+    #
+    # `Down` puis `Return` prend le premier item quelle que soit sa position. C'est aussi un geste
+    # qu'un utilisateur au clavier ferait, donc rien d'artificiel à l'écran.
+    DISPLAY="$ecran" xdotool key Down
+    sleep 0.4
+    DISPLAY="$ecran" xdotool key Return
     marque "$marques" point_choisi
     respirer_doc 1.8
 
@@ -448,6 +539,10 @@ parcours_importer_une_nuit() { # <écran> <marques> <point de montage de la cart
     marque "$marques" import_debut
     respirer_doc 8.0                                   # la machine travaille
     marque "$marques" import_fin
+    # ⚠️ La BARRE D'ÉTAT, en pied de fenêtre : elle ne défile pas. Exiger le compte rendu dans le
+    # corps de la page dépendrait de la position du défilement, donc du contenu - un contrôle qui
+    # varierait avec ce qu'il contrôle.
+    exiger_a_l_ecran "$ecran" 640 829 "Import termin" 460 || return 1
     respirer_doc 3.0                                   # ce qu'on obtient
 
     marque "$marques" fin
@@ -501,7 +596,17 @@ parcours_melange_de_capteurs() { # <écran> <marques> <point de montage de la ca
 
     viser "$ecran" 801 636 "Choisissez un point" 0.55 230 || return 1
     respirer_doc 1.2
-    DISPLAY="$ecran" xdotool mousemove 801 666 click 1
+    # ⚠️ Au CLAVIER, et non au pixel. Le clic sur l'item d'une liste déroulante était le seul geste
+    # du parcours à ne pas passer par un libellé vérifié : sa position dépend de celle de la liste,
+    # qui dépend de la hauteur de tout ce qui la précède. Une feuille de style du socle (#4023) a
+    # déplacé la liste de quelques pixels, le clic est tombé à côté, et le film a montré
+    # trente-quatre secondes d'un formulaire jamais rempli - sans que rien ne rougisse.
+    #
+    # `Down` puis `Return` prend le premier item quelle que soit sa position. C'est aussi un geste
+    # qu'un utilisateur au clavier ferait, donc rien d'artificiel à l'écran.
+    DISPLAY="$ecran" xdotool key Down
+    sleep 0.4
+    DISPLAY="$ecran" xdotool key Return
     marque "$marques" point_choisi
     respirer_doc 1.8
 
@@ -515,7 +620,91 @@ parcours_melange_de_capteurs() { # <écran> <marques> <point de montage de la ca
     marque "$marques" import_debut
     respirer_doc 8.0
     marque "$marques" import_fin
+    # ⚠️ La BARRE D'ÉTAT, en pied de fenêtre : elle ne défile pas. Exiger le compte rendu dans le
+    # corps de la page dépendrait de la position du défilement, donc du contenu - un contrôle qui
+    # varierait avec ce qu'il contrôle.
+    exiger_a_l_ecran "$ecran" 640 829 "Import termin" 460 || return 1
     respirer_doc 4.0                                   # le compte rendu, et ce qu'il a écarté
+
+    marque "$marques" fin
+    return 0
+}
+
+# Le parcours « aucun journal du capteur » (#4013).
+#
+# ## Pourquoi celui-ci avant les autres cartes dégradées
+#
+# C'est l'une des trois situations que `docs/ecrans/importation.md` décrit en mots **sans aucune
+# capture** - mesuré en confrontant les neuf specs aux images que la page référence vraiment. La
+# prose y est donc seule à porter une nuance difficile : l'absence de journal est signalée, et
+# l'import reste **possible**, en mode dégradé. Ni un refus, ni un import ordinaire.
+parcours_sans_journal() { # <écran> <marques> <point de montage de la carte>
+    local ecran="$1" marques="$2" carte="$3"
+
+    marque "$marques" debut
+    respirer_doc 2.0
+
+    viser "$ecran" 493 108 "Importer une nuit" || return 1
+    marque "$marques" assistant
+    respirer_doc 2.2
+
+    viser "$ecran" 693 210 "Parcourir" || return 1
+    marque "$marques" selecteur
+    respirer_doc 2.0
+
+    viser "$ecran" 168 178 "$ETIQUETTE_CARTE" 0.6 150 || return 1
+    respirer_doc 1.6
+    viser "$ecran" 1136 831 "Ouvrir" || return 1
+    marque "$marques" inspection_debut
+
+    respirer_doc 3.5
+    marque "$marques" inspection_fin
+
+    verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
+
+    # ⚠️ Le cœur du film, et il tient en une ligne d'écran : l'avertissement dit « mode dégradé »
+    # pendant que les deux autres contrôles restent au vert. Un spectateur qui ne le lit pas a
+    # regardé un import ordinaire - or c'est précisément la différence qu'il est venu voir.
+    # ⚠️ On vise un FRAGMENT, pas la phrase entière. « Aucun journal LogPR : import en mode dégradé
+    # (enregistreur déduit des fichiers, paramètres limités) » fait 657 px : une fenêtre de 420
+    # centrée sur elle en rate le début et lit « PR : import en mode dégradé… ». Élargir la fenêtre
+    # jusqu'à 700 px la ferait déborder sur les contrôles voisins - le défaut d'à côté. Un fragment
+    # court et distinctif est plus robuste que la phrase.
+    viser "$ecran" 477 341 "import en mode" 0.7 420 || return 1
+    marque "$marques" degrade_annonce
+    respirer_doc 4.0
+
+    viser "$ecran" 801 562 "Choisissez un point" 0.55 230 || return 1
+    respirer_doc 1.2
+    # ⚠️ Au CLAVIER, et non au pixel. Le clic sur l'item d'une liste déroulante était le seul geste
+    # du parcours à ne pas passer par un libellé vérifié : sa position dépend de celle de la liste,
+    # qui dépend de la hauteur de tout ce qui la précède. Une feuille de style du socle (#4023) a
+    # déplacé la liste de quelques pixels, le clic est tombé à côté, et le film a montré
+    # trente-quatre secondes d'un formulaire jamais rempli - sans que rien ne rougisse.
+    #
+    # `Down` puis `Return` prend le premier item quelle que soit sa position. C'est aussi un geste
+    # qu'un utilisateur au clavier ferait, donc rien d'artificiel à l'écran.
+    DISPLAY="$ecran" xdotool key Down
+    sleep 0.4
+    DISPLAY="$ecran" xdotool key Return
+    respirer_doc 1.2
+    marque "$marques" point_choisi
+    respirer_doc 1.2
+
+    DISPLAY="$ecran" xdotool mousemove 640 700
+    DISPLAY="$ecran" xdotool click --repeat 10 5
+    respirer_doc 2.0
+
+    # ⚠️ Et l'import se fait. C'est tout ce que ce film a à dire : l'avertissement n'interdit rien.
+    viser "$ecran" 201 769 "Importer cette nuit" || return 1
+    marque "$marques" import_debut
+    respirer_doc 8.0
+    marque "$marques" import_fin
+    # ⚠️ La BARRE D'ÉTAT, en pied de fenêtre : elle ne défile pas. Exiger le compte rendu dans le
+    # corps de la page dépendrait de la position du défilement, donc du contenu - un contrôle qui
+    # varierait avec ce qu'il contrôle.
+    exiger_a_l_ecran "$ecran" 640 829 "Import termin" 460 || return 1
+    respirer_doc 4.0
 
     marque "$marques" fin
     return 0
@@ -559,6 +748,7 @@ parcours_connu() { # <nom>
         declarer-un-carre) printf '45\tnon\n' ;;
         importer-une-nuit) printf '120\trecette/fixtures/spec/sd-nominale.yaml\n' ;;
         melange-de-capteurs) printf '120\trecette/fixtures/spec/sd-melange.yaml\n' ;;
+        sans-journal) printf '120\trecette/fixtures/spec/sd-sans-journal.yaml\n' ;;
         *) return 1 ;;
     esac
 }
@@ -568,7 +758,7 @@ tourner() { # [nom du parcours] [sortie]
     local fiche pellicule spec_carte
     if ! fiche=$(parcours_connu "$nom"); then
         echo "❌ Parcours inconnu : « $nom »."
-        echo "   Connus : declarer-un-carre, importer-une-nuit, melange-de-capteurs."
+        echo "   Connus : declarer-un-carre, importer-une-nuit, melange-de-capteurs, sans-journal."
         return 1
     fi
     pellicule=$(printf '%s' "$fiche" | cut -f1)
@@ -641,6 +831,7 @@ tourner() { # [nom du parcours] [sortie]
                 declarer-un-carre) parcours_declarer_un_carre "$ecran" "$marques" || code=1 ;;
                 importer-une-nuit) parcours_importer_une_nuit "$ecran" "$marques" "$point" || code=1 ;;
                 melange-de-capteurs) parcours_melange_de_capteurs "$ecran" "$marques" "$point" || code=1 ;;
+                sans-journal) parcours_sans_journal "$ecran" "$marques" "$point" || code=1 ;;
             esac
             wait "$camera"
             # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
@@ -967,10 +1158,12 @@ monter() { # <brut> <marques> <sortie>
 
     if [ -n "$filtre" ]; then
         ffmpeg -nostdin -v error -i "$brut" -filter_complex "$filtre" -map "[sortie]" -an \
-            -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" 2>/dev/null
+            -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -movflags +faststart \
+            -y "$sortie" 2>/dev/null
     else
         ffmpeg -nostdin -v error -i "$brut" -ss "$debut" -to "$fin" -an \
-            -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$sortie" 2>/dev/null
+            -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -movflags +faststart \
+            -y "$sortie" 2>/dev/null
     fi
 
     # ⚠️ Le contrôle, et il porte sur le RÉSULTAT, pas sur les repères. Un montage qui viserait à
@@ -1038,6 +1231,7 @@ fiche_du_parcours() { # <nom>
         declarer-un-carre) printf 'Déclarer un carré\tdocs/ecrans/sites.md\n' ;;
         importer-une-nuit) printf 'Importer une nuit\tdocs/ecrans/importation.md\n' ;;
         melange-de-capteurs) printf 'Deux enregistreurs dans le même dossier\tdocs/ecrans/importation.md\n' ;;
+        sans-journal) printf 'Une carte sans journal du capteur\tdocs/ecrans/importation.md\n' ;;
         *) return 1 ;;
     esac
 }
@@ -1097,7 +1291,7 @@ ecrire_index() { # <dossier> <index>
         echo "Cette page est **dérivée** : elle se réécrit à chaque tournage, depuis les repères posés"
         echo "par le scénario et la mesure des fichiers. Rien n'y est saisi à la main."
         echo
-        for nom in declarer-un-carre importer-une-nuit melange-de-capteurs; do
+        for nom in declarer-un-carre importer-une-nuit melange-de-capteurs sans-journal; do
             section_du_parcours "$dossier" "$nom"
         done
         echo "## ⚠️ Ce que ces films ne prouvent pas"
@@ -1172,6 +1366,21 @@ auto_test() {
     # film juste, portant le nom d'un autre.
     essai "un parcours inconnu est refusé"                 rouge parcours_connu importer-une-nuits
     essai "le parcours du mélange est connu"               vert  parcours_connu melange-de-capteurs
+    essai "le parcours sans journal est connu"             vert  parcours_connu sans-journal
+    # ⚠️ Le montage doit sortir un MP4 qui commence à jouer AVANT d'être entièrement chargé. Sans
+    # `+faststart`, l'atome `moov` reste en fin de fichier et le navigateur doit aller le chercher
+    # là-bas : la page rend un lecteur qui ne démarre pas tout de suite, sans une erreur.
+    essai "le montage pose l index en TÊTE du fichier"     vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            printf "1000.0\tdebut\n1004.0\tfin\n1010.0\tarret\n" > "$1/fs.tsv"
+            ffmpeg -v error -y -f lavfi -i "testsrc=s=160x120:d=10:r=10" "$1/fs.mkv" </dev/null 2>/dev/null
+            monter "$1/fs.mkv" "$1/fs.tsv" "$1/fs.mp4" >/dev/null 2>&1 || exit 1
+            python3 -c "
+import sys
+d = open(sys.argv[1], \"rb\").read(8192)
+i, j = d.find(b\"moov\"), d.find(b\"mdat\")
+sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
+" "$1/fs.mp4"' "${BASH_SOURCE[0]}" "$bac"
     essai "le parcours d'importation nomme SA carte"       vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(parcours_connu importer-une-nuit | cut -f2)" = "recette/fixtures/spec/sd-nominale.yaml" ]' "${BASH_SOURCE[0]}"
     essai "celui de déclaration n'en réclame pas"          vert \
@@ -1235,6 +1444,40 @@ auto_test() {
 
     # ⚠️ Le cas qui a coûté un aller-retour : un libellé plus large que la zone est tronqué, et le
     # refus doit le DIRE au lieu d'accuser le scénario.
+    # --- le balayage vertical, et ce qu'il ne doit PAS absorber ---
+    # ⚠️ La fixture rend le libellé DÉCALÉ de 8 px, comme la feuille de style du socle l'a fait
+    # (#4023). Le geste doit le retrouver ; sans balayage, le tournage s'arrêtait sur un scénario
+    # pourtant juste.
+    ffmpeg -v error -y -f lavfi -i "color=c=white:s=400x80" \
+        -vf "drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf:text='Mes sites':fontcolor=black:fontsize=22:x=20:y=46" \
+        -frames:v 1 "$bac/decale.png" </dev/null 2>/dev/null
+    # ⚠️ Ce que ce cas garde : le banc ne doit pas rendre ✅ sur un film où rien n'arrive. Le premier
+    # tournage « sans journal » l'a fait - tous les `viser` passaient, le seul clic aveugle tombait à
+    # côté, et le film montrait trente-quatre secondes d'un formulaire jamais rempli.
+    essai "une exigence non satisfaite refuse"           rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; exiger_a_l_ecran ":91" 100 100 "Import termin"' "${BASH_SOURCE[0]}"
+    # ⚠️ Le motif est ancré sur l'INDENTATION d'un corps de fonction (quatre espaces). Sans cet
+    # ancrage, le cas se comptait lui-même : la ligne qui cherche le motif contient le motif, et le
+    # compte donnait quatre au lieu de trois. Un compteur qui s'inclut dans son propre compte.
+    essai "les trois parcours d import exigent leur résultat" vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1
+            [ "$(grep -c "^    exiger_a_l_ecran .* 640 829" "$0")" = 3 ]' "${BASH_SOURCE[0]}"
+
+    essai "un libellé décalé de 8 px se retrouve"        vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            for ecart in $DECALAGES_ESSAYES; do
+                libelle_correspond "$(lire_zone "$1" 0 $((40 + ecart - ZONE_H / 2)) 400)" "Mes sites" && exit 0
+            done
+            exit 1' "${BASH_SOURCE[0]}" "$bac/decale.png"
+    # ⚠️ Et le cas qui empêche le balayage de tout accepter : un libellé ABSENT reste absent, si
+    # loin qu'on le cherche. Sans lui, `viser` finirait par trouver n'importe quoi ailleurs.
+    essai "un libellé ABSENT ne se trouve à aucun écart"  rouge \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            for ecart in $DECALAGES_ESSAYES; do
+                libelle_correspond "$(lire_zone "$1" 0 $((40 + ecart - ZONE_H / 2)) 400)" "Importer une nuit" && exit 0
+            done
+            exit 1' "${BASH_SOURCE[0]}" "$bac/decale.png"
+
     essai "un libellé tronqué par la zone ne correspond pas" rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; libelle_correspond "uter mon premier site de:" "Ajouter mon premier site de suivi"' "${BASH_SOURCE[0]}"
 

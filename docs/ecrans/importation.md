@@ -196,6 +196,18 @@ des fichiers.
     l'inspection et **nomme les deux séries**, le bouton d'import reste ouvert, et le compte rendu
     final annonce « 3 / 6 importés » avec les trois autres marqués **ignorés**.
 
+!!! tip "Une carte sans journal, en vidéo (37 s)"
+
+    <video controls muted playsinline preload="metadata" width="100%">
+      <source src="../../assets/parcours/parcours-sans-journal.mp4" type="video/mp4">
+      Votre navigateur n'affiche pas les vidéos. Le film est là :
+      <a href="../../assets/parcours/parcours-sans-journal.mp4">parcours-sans-journal.mp4</a>.
+    </video>
+
+    L'inspection signale l'absence du journal, et **l'import reste possible** : l'application
+    déduit l'enregistreur et la date des noms de fichiers. Le compte rendu final le redit, pour
+    que la nuit importée porte la mention de ce qui a été deviné.
+
 Une **incohérence** entre le journal du capteur et les enregistrements (série ou date qui ne
 correspondent pas) est signalée plus fermement :
 
