@@ -283,7 +283,8 @@ public class ImportationViewModel {
         // suffit plus de l'écouter réagir au rattachement, il faut le relancer quand la nuit change.
         controleNumeroPassage.verifier();
         if (inspection.estInspecte()) {
-            rattachement.definirOriginaux(inspection.nomsOriginaux());
+            rattachement.definirOriginaux(
+                    inspection.nomsOriginaux(), inspection.rapport().nomsRetenus());
         } else {
             reinitialiserExecution();
             rattachement.definirOriginaux(List.of());
