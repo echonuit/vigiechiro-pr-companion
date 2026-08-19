@@ -42,6 +42,66 @@
     -fx-background-color: transparent;
 }
 
+/*
+ * L'onglet lui-meme (#4020). Il rendait celui de la plateforme - degrade gris, coins droits, relief -
+ * sur une bande grise, entre un en-tete indigo et un fond clair. C'est le seul `TabPane` du produit,
+ * ce qui explique qu'il soit passe entre les mailles : rien ne le comparait a un voisin, puisqu'il
+ * n'en a pas.
+ *
+ * L'idiome vise n'est pas invente : c'est celui des ONGLETS DE VUES memorisees
+ * (`.onglet-vue` / `.onglet-vue-actif` dans `design.css`), que le produit affiche deja sur tous ses
+ * ecrans a tables. Fond clair, coins arrondis en haut, et l'onglet actif distingue par le voile
+ * indigo plus un trait de 2 px - pas par un relief.
+ *
+ * ⚠️ Ces onglets-la sont des `ToggleButton`, pas un `TabPane` : on transpose une apparence, on ne
+ * partage pas une classe. Les faire dependre l'un de l'autre lierait deux composants qui n'ont en
+ * commun que de ressembler.
+ */
+.onglets-reglages .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+.onglets-reglages .tab {
+    -fx-background-color: #f0f2f5;
+    /* ⚠️ 3 px a droite, et non `0` : sans ce retrait, les fonds des six onglets se TOUCHENT et la
+       rangee se lit comme une seule bande grise - on ne voit plus ou un onglet finit. Mesure a la
+       premiere passe : la bande courait sans interruption sur 610 px. */
+    -fx-background-insets: 0 3 0 0;
+    -fx-background-radius: 6 6 0 0;
+    -fx-padding: 6 14 6 14;
+    -fx-cursor: hand;
+}
+
+.onglets-reglages .tab .tab-label {
+    -fx-text-fill: -couleur-primaire-sombre;
+    -fx-font-size: 0.95em;
+}
+
+.onglets-reglages .tab:hover {
+    -fx-background-color: -couleur-primaire-voile;
+}
+
+.onglets-reglages .tab:selected {
+    -fx-background-color: -couleur-primaire-voile;
+    -fx-border-color: -couleur-primaire-fond;
+    -fx-border-width: 0 0 2 0;
+}
+
+.onglets-reglages .tab:selected .tab-label {
+    -fx-font-weight: bold;
+}
+
+/* Le lisere que modena peint au-dessus de l'onglet selectionne : il redonne le relief qu'on retire. */
+.onglets-reglages .tab:selected .focus-indicator {
+    -fx-border-color: transparent;
+}
+
+/* L'icone de chaque onglet (Ikonli) : a la couleur du libelle qu'elle accompagne, sinon elle reste
+   au gris de la plateforme au milieu d'un onglet indigo. */
+.onglets-reglages .tab .ikonli-font-icon {
+    -fx-icon-color: -couleur-primaire-sombre;
+}
+
 .onglet-reglages-defilement {
     -fx-background-color: transparent;
     -fx-background: transparent;

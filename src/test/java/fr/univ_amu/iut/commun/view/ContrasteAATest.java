@@ -103,6 +103,11 @@ class ContrasteAATest {
         COUPLES.put("badge danger", "-badge-danger-texte|-badge-danger-fond");
         COUPLES.put("badge neutre", "-badge-neutre-texte|-badge-neutre-fond");
         COUPLES.put("badge info", "-badge-info-texte|-badge-info-fond");
+        // reglages.css : le libelle d'un onglet des Reglages, sur son fond propre (#4020). Le balayage
+        // ne le derive pas - la regle qui pose le fond et celle qui pose le texte sont SEPAREES, parce
+        // qu'un `TabPane` peint son fond sur `.tab` et son libelle sur `.tab-label`.
+        COUPLES.put("onglet reglages inactif", "-couleur-primaire-sombre|#f0f2f5");
+        COUPLES.put("onglet reglages actif", "-couleur-primaire-sombre|-couleur-primaire-voile");
     }
 
     /// Couples **icône / fond**, vérifiés à [#SEUIL_AA_ELEMENT]. Un jeton n'entre ici que s'il
