@@ -7,6 +7,8 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Besoin;
+import fr.univ_amu.iut.commun.model.FuseauDuSite;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -74,7 +76,7 @@ public final class ListerParticipationsVigieChiro implements Callable<Integer>, 
             sortie.printf(
                     "%-26s %-12s %-8s %s%n",
                     participation.id(),
-                    ouTiret(participation.dateDebut()),
+                    date(participation.dateDebut()),
                     ouTiret(participation.point()),
                     ouTiret(participation.siteTitre()));
         }
@@ -83,14 +85,26 @@ public final class ListerParticipationsVigieChiro implements Callable<Integer>, 
         return 0;
     }
 
-    /// La date arrive en ISO 8601 complet ; seule la partie calendaire distingue deux nuits, et c'est
-    /// ce qu'on lit dans un tableau.
-    private static String ouTiret(String valeur) {
+    /// La date arrive en ISO 8601 complet, **datée d'un décalage** ; on rend le **jour** de la nuit, lu
+    /// dans le fuseau du site (#4017).
+    ///
+    /// Le jour seul, et non l'instant complet : c'est ce qui distingue deux nuits dans une liste, et
+    /// c'est l'intention que portait déjà cette colonne. Ce qui change, c'est qu'on **convertit avant de
+    /// couper**.
+    ///
+    /// ⚠️ Cette méthode coupait la chaîne au `T`. C'est plus qu'un défaut de format : la troncature
+    /// change le **jour** dès que le décalage traverse minuit. `2026-07-03T23:30:00Z` est une nuit du
+    /// **4** à Paris ; on annonçait le **3**.
+    private static String date(String valeur) {
         if (valeur == null || valeur.isBlank()) {
             return "-";
         }
-        int separateur = valeur.indexOf('T');
-        return separateur > 0 ? valeur.substring(0, separateur) : valeur;
+        return Horodatage.dateMuraleLisible(valeur, FuseauDuSite.ZONE);
+    }
+
+    /// Une valeur textuelle, ou le tiret des colonnes vides.
+    private static String ouTiret(String valeur) {
+        return valeur == null || valeur.isBlank() ? "-" : valeur;
     }
 
     private static Map<String, Object> enveloppe(List<ParticipationVigieChiro> participations) {

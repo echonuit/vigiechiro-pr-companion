@@ -1,8 +1,13 @@
 package fr.univ_amu.iut.commun.model;
 
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.Locale;
+import java.util.Optional;
 
 /// Comment le produit écrit une **date et une heure** à l'utilisateur (#3821).
 ///
@@ -77,6 +82,68 @@ public final class Horodatage {
         } catch (java.time.format.DateTimeParseException illisible) {
             return dateIso;
         }
+    }
+
+    /// L'instant que la plateforme renvoie (`2026-07-03T19:00:00+00:00`), ramené à **l'heure murale du
+    /// site** ; vide s'il est absent ou illisible.
+    ///
+    /// ## Pourquoi une conversion, et pas une troncature
+    ///
+    /// ⚠️ Couper la chaîne au `T` paraît suffire et **change la date** dès que le décalage traverse
+    /// minuit : une nuit commencée à 21:00 dans un fuseau à `-03:00` arrive en `2026-07-04T00:00:00Z`,
+    /// et la troncature annonce le **4** pour une nuit du **3**. C'est ce que faisait
+    /// `lister-participations-vigiechiro` (#4017).
+    ///
+    /// ## Pourquoi ici
+    ///
+    /// L'écriture convertit déjà dans ce sens ([ADR 3406], [ADR 3442]) : les deux moitiés de la boucle
+    /// doivent parler le même fuseau, sans quoi chaque cycle « reconstruire puis envoyer » déplace la
+    /// nuit - le cliquet de #1860. La conversion vivait dans `passage.model`, hors de portée de la CLI ;
+    /// une seconde copie aurait dérivé de la première.
+    ///
+    /// @param borne l'instant tel que l'API le donne, ou `null`
+    /// @param fuseau le fuseau du site - `FuseauDuPoint.pour(idPoint)` quand le point est connu,
+    ///     [FuseauDuSite#ZONE] sinon
+    public static Optional<LocalDateTime> heureMurale(String borne, ZoneId fuseau) {
+        if (borne == null || borne.isBlank()) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(
+                    OffsetDateTime.parse(borne).atZoneSameInstant(fuseau).toLocalDateTime());
+        } catch (DateTimeParseException premiere) {
+            try {
+                // Sans décalage, rien à convertir : la borne est déjà une heure murale.
+                return Optional.of(LocalDateTime.parse(borne));
+            } catch (DateTimeParseException seconde) {
+                return Optional.empty();
+            }
+        }
+    }
+
+    /// « 03/07/2026 21:00 » - l'instant de la plateforme, lisible, dans le fuseau du site.
+    ///
+    /// ⚠️ Rend la chaîne **telle quelle** quand elle est illisible, plutôt qu'un vide : une donnée
+    /// abîmée doit se voir, et un affichage qui l'escamote se présenterait en succès.
+    public static String heureMuraleLisible(String borne, ZoneId fuseau) {
+        if (borne == null || borne.isBlank()) {
+            return "";
+        }
+        return heureMurale(borne, fuseau).map(Horodatage::dansUnTableau).orElse(borne);
+    }
+
+    /// « 03/07/2026 » - la **date** de l'instant que la plateforme renvoie, lue dans le fuseau du site.
+    ///
+    /// ⚠️ Convertir **puis** couper, et non l'inverse. Couper d'abord donne un jour faux dès que le
+    /// décalage traverse minuit, et c'est le défaut de #4017 : `2026-07-03T23:30:00Z` est une nuit du
+    /// **4** à Paris, la troncature annonçait le 3.
+    public static String dateMuraleLisible(String borne, ZoneId fuseau) {
+        if (borne == null || borne.isBlank()) {
+            return "";
+        }
+        return heureMurale(borne, fuseau)
+                .map(instant -> DATE_SEULE.format(instant))
+                .orElse(borne);
     }
 
     /// « 03/07/2026 à 21:00 » - pour un instant **inséré dans une phrase**.

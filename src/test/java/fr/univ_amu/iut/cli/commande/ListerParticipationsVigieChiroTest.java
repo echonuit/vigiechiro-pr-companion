@@ -67,8 +67,41 @@ class ListerParticipationsVigieChiroTest {
                 .contains("1 participation(s)");
         assertThat(sortie.toString())
                 .as("la date se lit en jour : l'horodatage complet n'aide pas à choisir une nuit")
-                .contains("2026-07-03")
+                .contains("03/07/2026")
                 .doesNotContain("20:25:00");
+    }
+
+    @Test
+    @DisplayName("#4017 : le jour est celui du SITE, pas celui de l'instant UTC")
+    void le_jour_est_celui_du_site() {
+        // 23:30 UTC le 3 juillet, c'est 01:30 le 4 à Paris : la nuit est celle du 4. La version
+        // précédente coupait la chaîne au « T » et annonçait le 3.
+        //
+        // ⚠️ Ce test tient le FUSEAU, pas le format : chercher un « / » dans la sortie passerait sous
+        // trois fuseaux différents, et c'est justement ce que le job `fuseau-alternatif` rejoue.
+        when(client.mesParticipations())
+                .thenReturn(ReponseApi.succes(List.of(new ParticipationVigieChiro(
+                        "6a4961f5842983a29ba25363", "Z41", "2026-07-03T23:30:00+00:00", "Vigiechiro - 130711"))));
+
+        executer();
+
+        assertThat(sortie.toString())
+                .as("23:30 UTC le 3 juillet est une nuit du 4 à Paris")
+                .contains("04/07/2026")
+                .doesNotContain("03/07/2026");
+    }
+
+    @Test
+    @DisplayName("#4017 : une date illisible se rend telle quelle, plutôt que de disparaître")
+    void date_illisible_se_rend_telle_quelle() {
+        // Un correctif qui escamoterait la donnée abîmée se présenterait en succès sans rien corriger.
+        when(client.mesParticipations())
+                .thenReturn(ReponseApi.succes(
+                        List.of(new ParticipationVigieChiro("6a49", "Z41", "pas-une-date", "Vigiechiro - 130711"))));
+
+        executer();
+
+        assertThat(sortie.toString()).contains("pas-une-date");
     }
 
     @Test

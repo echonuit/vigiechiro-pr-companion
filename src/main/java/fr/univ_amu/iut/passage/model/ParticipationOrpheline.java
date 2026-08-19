@@ -2,10 +2,9 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.model.FuseauDuSite;
+import fr.univ_amu.iut.commun.model.Horodatage;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -78,19 +77,8 @@ public record ParticipationOrpheline(
     /// sert pour cette nuit. Les deux moitiés de la boucle doivent parler le même fuseau, sans quoi
     /// chaque cycle « reconstruire puis envoyer » déplace la nuit - le cliquet de #1860.
     static Optional<LocalDateTime> horodatage(String borne, ZoneId fuseau) {
-        if (borne == null || borne.isBlank()) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.of(
-                    OffsetDateTime.parse(borne).atZoneSameInstant(fuseau).toLocalDateTime());
-        } catch (DateTimeParseException premiere) {
-            try {
-                // Sans décalage, rien à convertir : la borne est déjà une heure murale.
-                return Optional.of(LocalDateTime.parse(borne));
-            } catch (DateTimeParseException seconde) {
-                return Optional.empty();
-            }
-        }
+        // Délègue depuis #4017 : la CLI avait besoin de la même conversion, et une seconde copie aurait
+        // dérivé de celle-ci. Le raisonnement ci-dessus reste ici, où il se lit avec son usage.
+        return Horodatage.heureMurale(borne, fuseau);
     }
 }
