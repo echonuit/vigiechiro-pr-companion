@@ -100,6 +100,8 @@ jobs:
 YML
     verifie 1 "une police par l action de cache est refusée"
 
+    # ⚠️ ffmpeg est justement l'exemple qui a coûté cinq cas rouges : il TRAÎNE dix paquets de
+    # polices. Ce cas garde la leçon.
     cat > "$bac/.github/workflows/cache.yml" <<'YML'
 jobs:
   a:
@@ -108,7 +110,17 @@ jobs:
         with:
           packages: ffmpeg xdotool
 YML
-    verifie 0 "des paquets de fichiers par l action de cache : accepté"
+    verifie 1 "ffmpeg par l action de cache est refusé"
+
+    cat > "$bac/.github/workflows/cache.yml" <<'YML'
+jobs:
+  a:
+    steps:
+      - uses: awalsh128/cache-apt-pkgs-action@abc
+        with:
+          packages: bats xdotool
+YML
+    verifie 0 "des paquets sans post-install : accepté"
 
     cat > "$bac/.github/workflows/cache.yml" <<'YML'
 jobs:
@@ -187,9 +199,16 @@ except ImportError:
 #   fonts-*   `fc-cache` n'est pas rejoué -> les aperçus rendent dans une police de REPLI, et rien
 #             ne rougit. C'est précisément la famille de faux que ce dépôt traque.
 #   flatpak*  services et alternatives.
+#   ffmpeg    ⚠️ AJOUTÉ APRÈS COUP, et c'est une leçon payée. Je l'avais rangé parmi les « paquets de
+#             fichiers » en regardant son nom ; sa FERMETURE DE DÉPENDANCES tire dix paquets de
+#             polices (fonts-droid-fallback, fonts-noto-mono…). Le premier run qui a trouvé le cache
+#             a fait tomber cinq cas du banc de recette - tous ceux qui écrivent du texte dans une
+#             vidéo, `drawtext` cherchant sa police par fontconfig. Le run précédent, cache froid,
+#             passait : la panne n'apparaît qu'au SECOND passage.
 #
-# Ils passent par `installer-paquets.sh`, qui installe pour de vrai.
-POST_INSTALL_COMPTE = ("fonts-", "flatpak")
+# La règle qu'il faut en retenir : ce qui compte n'est pas le paquet demandé, c'est ce qu'il TRAÎNE.
+# Dans le doute, la porte - on perd le dépaquetage, on garde un système réellement configuré.
+POST_INSTALL_COMPTE = ("fonts-", "flatpak", "ffmpeg")
 
 ecarts = []
 for chemin in sorted(glob.glob(os.path.join(sys.argv[1], "*.yml"))):

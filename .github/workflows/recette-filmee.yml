@@ -54,14 +54,23 @@ jobs:
           java-version: '25'
           cache: maven
 
+      - name: Cache des .deb (le dépaquetage, lui, se refait)
+        # ⚠️ Ce cache-ci porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque
+        # run, et avec lui les scripts post-installation - `fc-cache` compris. On perd le temps du
+        # dépaquetage ; on garde des polices réellement enregistrées.
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/apt-vigiechiro
+          key: apt-${{ runner.os }}-recette-filmee
+
       - name: Installer de quoi afficher et filmer
         # ⚠️ Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
         # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
         # `installer-paquets.sh`, dont le post-install fait foi.
-        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
-        with:
-          packages: xvfb xdotool ffmpeg x11-utils
-          version: vigiechiro-1
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
+        run: |
+          bash .github/scripts/installer-paquets.sh --avec-recommandations xvfb xdotool ffmpeg x11-utils
 
       - name: Installer le gestionnaire de fenêtres
         # Le gestionnaire de fenêtres est posé À PART, pour que le témoin puisse s'en passer : c'est
@@ -75,10 +84,10 @@ jobs:
         # déjà maximisée ne grandit pas), et surtout les clips de #3774 ne montraient PAS la mise
         # en page livrée - donc qui les jugeait jugeait autre chose.
         if: inputs.sans_gestionnaire_de_fenetres != 'true'
-        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
-        with:
-          packages: openbox
-          version: vigiechiro-1
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
+        run: |
+          bash .github/scripts/installer-paquets.sh --avec-recommandations openbox
 
       - name: Annoncer le témoin sans gestionnaire de fenêtres
         if: inputs.sans_gestionnaire_de_fenetres == 'true'
