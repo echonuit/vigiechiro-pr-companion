@@ -106,6 +106,24 @@ jobs:
       - if: ${{ !inputs.drapeau }}
         run: echo'
 
+    # ⚠️ Le cas qui a manqué au premier jet : la comparaison peut vivre AILLEURS que dans un `if:`.
+    # Celle-ci nommait un artefact, le nom était donc toujours celui du mode « une classe », et le
+    # job de publication cherchait un artefact qui n'existait pas.
+    essai "une comparaison dans un « name: » est refusée"  rouge \
+'on:
+  workflow_dispatch:
+    inputs:
+      drapeau:
+        type: boolean
+        default: false
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/upload-artifact@0000000000000000000000000000000000000000
+        with:
+          name: film-${{ inputs.drapeau == '"'"'true'"'"' && '"'"'tout'"'"' || '"'"'un'"'"' }}'
+
     # ⚠️ Le cas qui empêche la garde de tout refuser : une entrée de type CHAÎNE se compare
     # légitimement à une chaîne. Sans lui, la garde interdirait une forme juste et se ferait
     # contourner plutôt que corriger.
@@ -139,7 +157,7 @@ jobs:
       - run: if [ "${{ inputs.drapeau }}" = "true" ]; then echo; fi'
 
     echo
-    echo "$total cas, dont 2 qui DOIVENT rougir."
+    echo "$total cas, dont 3 qui DOIVENT rougir."
     if [ "$echecs" -ne 0 ]; then
         echo "AUTO-TEST EN ÉCHEC ($echecs) : ne pas se fier au verdict de ce garde."
         return 1
@@ -185,15 +203,25 @@ for fichier in sorted(os.listdir(flux)):
     with open(chemin, encoding="utf-8") as f:
         for numero, ligne in enumerate(f, start=1):
             nue = ligne.strip()
-            # ⚠️ `- if:` autant que `if:`. Une étape peut porter sa condition sur la ligne du tiret,
-            # et ne reconnaître que la seconde forme laissait passer la première - c'est l'auto-test
-            # qui l'a dit, sur une fixture écrite dans le style le plus courant.
-            if nue.startswith("- "):
-                nue = nue[2:].strip()
-            # L'interpolation dans un `run:` est la forme JUSTE : on ne regarde que les `if:`.
-            if not nue.startswith("if:"):
-                continue
-            total += 1
+            # ⚠️ TOUTE ligne, et pas seulement les `if:`. La première version ne regardait que
+            # celles-là, et la comparaison fautive suivante est passée dessous sans être vue :
+            #
+            #     name: recette-filmee-${{ inputs.publier_les_clips == 'true' && 'planche' || … }}
+            #
+            # L'artefact s'est donc appelé `recette-filmee-EditeurCommentaireTest`, le job de
+            # publication ne l'a pas trouvé, et le tournage complet a échoué une seconde fois - sur
+            # le défaut même que ce garde venait d'être écrit pour empêcher.
+            #
+            # Une expression GitHub peut vivre dans n'importe quelle valeur : `name:`, `env:`, un
+            # argument d'action. Restreindre aux `if:` était une supposition sur l'endroit du défaut.
+            #
+            # ⚠️ L'interpolation shell reste permise, et le motif la laisse passer de lui-même : dans
+            # `[ "${{ inputs.x }}" = "true" ]`, `inputs.x` est suivi de `}}`, jamais de `==`. Le cas
+            # de non-régression le garde.
+            # Ne compter que ce qui parle d'une entrée : « 700 lignes examinées » ne renseigne
+            # personne, et gonfle un chiffre qu'on lira comme une couverture.
+            if "inputs." in nue:
+                total += 1
             for nom, valeur in COMPARAISON.findall(nue):
                 if nom in booleennes:
                     fautives.append(f"{fichier}:{numero} · inputs.{nom} comparé à « {valeur} »")
@@ -208,7 +236,7 @@ if fautives:
     print("  Écrire `if: ${{ inputs.drapeau }}` ou `if: ${{ !inputs.drapeau }}`.")
     sys.exit(1)
 
-print(f"✓ Les {total} condition(s) sur entrée booléenne emploient le booléen, pas une chaîne.")
+print(f"✓ Les {total} usage(s) d'une entrée emploient le booléen, pas une comparaison à une chaîne.")
 PY
 }
 
