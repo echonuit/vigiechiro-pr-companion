@@ -127,5 +127,12 @@ modules:
         commands:
           # `--enable-native-access` et `--sun-misc-unsafe-memory-access` : mêmes options que
           # l'installeur jpackage (JNI SQLite, natifs JavaFX, Unsafe de Guice/Guava).
+          #
+          # `"${@:-ihm}"` : le mot qui DÉCLARE la fenêtre (#4071). C'est ici l'équivalent exact de
+          # `--arguments ihm` côté jpackage, qui écrit le même défaut dans le `[ArgOptions]` du `.cfg` :
+          # le paquet déclare ce qu'il veut voir quand personne n'a rien demandé - l'entrée de menu et
+          # `flatpak run <app-id>` sans argument - et s'efface dès qu'une commande est tapée.
+          # `flatpak run <app-id> lister-sites` part donc en ligne de commande.
+          # Forme POSIX, éprouvée sous dash : le runtime freedesktop n'a pas bash.
           - exec /app/jre/bin/java --enable-native-access=ALL-UNNAMED --sun-misc-unsafe-memory-access=allow
-            -cp /app/lib/vigiechiro.jar fr.univ_amu.iut.Launcher "$@"
+            -cp /app/lib/vigiechiro.jar fr.univ_amu.iut.Launcher "${@:-ihm}"

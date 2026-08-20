@@ -1123,6 +1123,16 @@
                                         <argument>${project.build.finalName}-shaded.jar</argument>
                                         <argument>--main-class</argument>
                                         <argument>fr.univ_amu.iut.Launcher</argument>
+                                        <!-- Le mot qui DÉCLARE la fenêtre (#4071). jpackage l'écrit en
+                                             `[ArgOptions]` dans le `.cfg` du lanceur, et le lanceur ne le
+                                             passe à `main` que si personne n'a donné d'argument : c'est
+                                             donc le double-clic et l'entrée de menu qui l'utilisent. Dès
+                                             que l'utilisateur tape une commande, elle remplace ce défaut
+                                             et `Launcher` part en ligne de commande.
+                                             La décision d'affichage est ainsi ÉCRITE dans le paquet, au
+                                             lieu d'être déduite de l'absence d'arguments (ADR 3828). -->
+                                        <argument>--arguments</argument>
+                                        <argument>ihm</argument>
                                         <argument>--icon</argument>
                                         <argument>${jpackage.icon}</argument>
                                         <!-- Accès natif (JavaFX + JNI SQLite) et Unsafe (Guice/Guava)
