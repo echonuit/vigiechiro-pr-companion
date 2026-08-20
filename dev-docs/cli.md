@@ -390,7 +390,39 @@ non-douteuses ».
 
 ## Lancer la CLI
 
-Il n'y a pas encore de lanceur empaqueté : on l'exécute via `exec-maven-plugin` (même mécanique que le
+### Depuis un produit installé
+
+Le lanceur des emballages est un **point d'entrée unique** : le mot `ihm` ouvre la fenêtre, **tout le
+reste** part à la ligne de commande (#4071). Personne n'a à taper `ihm` pour ouvrir l'interface :
+chaque emballage l'écrit pour son double-clic - `jpackage --arguments ihm` le dépose dans le `.cfg` du
+lanceur, le script Flatpak porte le même défaut.
+
+```bash
+# archive portable Linux (et app-image)
+bin/VigieChiroCompanion lister-passages
+
+# Flatpak
+flatpak run fr.echonuit.VigieChiroCompanion lister-passages
+
+# AppImage
+./VigieChiroCompanion-2.185.0-linux-x86_64.AppImage lister-passages
+```
+
+!!! warning "Sous Flatpak, `--workspace` exige que l'appelant accorde le chemin"
+    Le bac à sable n'ouvre que l'espace de travail par défaut (`~/Documents/VigieChiro-Companion`).
+    Viser ailleurs demande donc les deux, l'accès **et** l'option :
+
+    ```bash
+    flatpak run --filesystem=/chemin/ws fr.echonuit.VigieChiroCompanion \
+      lister-passages --workspace /chemin/ws
+    ```
+
+    Sans `--filesystem`, la commande échoue sur un dossier qu'elle ne voit pas, et non sur un refus
+    explicite.
+
+### Depuis les sources
+
+On l'exécute via `exec-maven-plugin` (même mécanique que le
 [banc de performance](performance.md)), avec le **JDK 25 standard** (comme la CI) :
 
 ```bash
@@ -401,7 +433,13 @@ export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
   -Dexec.args="-cp %classpath fr.univ_amu.iut.cli.Cli --workspace /tmp/vigiechiro-cli lister-passages"
 ```
 
-`Cli.main(String[])` existe et reste le point d'entrée naturel pour un futur lanceur natif (jpackage).
+`Cli.main(String[])` reste le point d'entrée direct, et c'est aussi celui vers lequel `Launcher`
+aiguille dans les emballages : le harnais `bats` peut donc viser l'un ou l'autre.
+
+⚠️ Une invocation **sans aucun argument** rend l'usage de la ligne de commande, elle n'ouvre pas la
+fenêtre - y compris pour `java -jar vigiechiro-*-shaded.jar`, qui demande désormais `ihm`. Déduire une
+demande d'interface de l'absence d'arguments serait la figure que refuse l'ADR 3828 : une condition
+ambiante tenant lieu de déclaration.
 
 ## Tests
 
