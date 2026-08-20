@@ -1228,6 +1228,18 @@
                                         <argument>Science;Biology;</argument>
                                         <argument>--linux-app-category</argument>
                                         <argument>science</argument>
+                                        <!-- Les scripts d'installation du `.deb`, fournis par le dépôt
+                                             (#4071). jpackage n'a aucune option pour poser un lien dans
+                                             le PATH : son paquet n'installe que `/opt`, et la commande
+                                             `vigiechiro` n'existait donc qu'en chemin complet. Ce
+                                             dossier remplace le postinst (entrée de menu, puis le lien)
+                                             et le postrm (retrait du lien), les autres ressources
+                                             restant celles de jpackage.
+                                             ⚠️ Ce dossier ne sert QUE sous Linux : il est ici, et pas
+                                             dans le profil `installer`, parce que ses scripts sont ceux
+                                             d'un paquet Debian. -->
+                                        <argument>--resource-dir</argument>
+                                        <argument>${project.basedir}/jpackage/deb</argument>
                                     </arguments>
                                 </configuration>
                             </execution>
