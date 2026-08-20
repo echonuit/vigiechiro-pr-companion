@@ -26,8 +26,9 @@ trois temps**.
    qui reste affiché.
 2. **Inspection** (lecture seule) : l'application détecte le journal du capteur, le relevé climatique
    et les enregistrements WAV, et annonce ce qu'elle va en faire. L'**état du nommage** nomme les
-   opérations dans l'ordre : vos enregistrements seront **copiés**, puis renommés et transformés. C'est
-   sur les **copies** que tout se passe. **Vos fichiers d'origine ne sont jamais modifiés**, ni pendant
+   opérations dans l'ordre : vos enregistrements seront **copiés**, puis renommés et transformés - sauf
+   s'ils portent **déjà** un préfixe Vigie-Chiro, auquel cas ils gardent leur nom (voir
+   [plus bas](#linspection-vous-alerte)). C'est sur les **copies** que tout se passe. **Vos fichiers d'origine ne sont jamais modifiés**, ni pendant
    l'inspection ni après.
 3. **Rattachement** : indiquez le site, le point d'écoute, l'année et le numéro de passage. Le
    **numéro reste grisé tant qu'aucun point n'est choisi**, parce qu'il vous est **proposé d'après le
