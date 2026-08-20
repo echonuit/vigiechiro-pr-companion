@@ -70,20 +70,31 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Installer de quoi afficher et filmer
-        # ⚠️ Le cache porte sur l'état INSTALLÉ, pas sur les `.deb` : il saute donc aussi le
-        # dépaquetage. Mon premier cache maison ne supprimait que le téléchargement, et les 91 Mo se
-        # dépaquetaient encore à chaque run - la moitié du remède.
-        #
-        # ⚠️ Ce que cette action ne garantit PAS : l'exécution des scripts post-installation Debian.
-        # Elle convient ICI parce que ces paquets ne sont que des fichiers. Les polices (`fc-cache`)
-        # et flatpak (services, alternatives) gardent `installer-paquets.sh`, dont le post-install
-        # fait foi : une police non enregistrée ferait rendre les aperçus dans un repli, sans que
-        # rien ne rougisse.
-        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+      - name: Cache des .deb (le dépaquetage, lui, se refait)
+        # ⚠️ Ce cache-ci porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque
+        # run, et avec lui les scripts post-installation - `fc-cache` compris. On perd le temps du
+        # dépaquetage ; on garde des polices réellement enregistrées.
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
-          packages: xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra
-          version: vigiechiro-1
+          path: ${{ runner.temp }}/apt-vigiechiro
+          key: apt-${{ runner.os }}-banc-filme
+
+      - name: Installer de quoi afficher et filmer
+        # ⚠️ PAS le cache de fichiers, et c'est une leçon payée. `awalsh128/cache-apt-pkgs-action`
+        # restaure des fichiers sans rejouer les scripts post-installation ; j'avais jugé ffmpeg
+        # « paquet de fichiers », et c'est faux : sa fermeture de dépendances tire DIX paquets de
+        # polices - fonts-droid-fallback, fonts-noto-mono… - et `fc-cache` ne tourne pas.
+        #
+        # Conséquence mesurée : le premier run qui a TROUVÉ le cache a fait tomber cinq cas du banc
+        # de recette, tous ceux qui écrivent du texte dans une vidéo de test (`drawtext` cherche une
+        # police par fontconfig). Le run précédent, cache froid, passait - donc la panne n'apparaît
+        # qu'au second passage, ce qui la rend d'autant plus traître.
+        #
+        # Ce job REND des images : il installe pour de vrai.
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
+        run: |
+          bash .github/scripts/installer-paquets.sh xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra
 
       - name: Le banc de recette, ses cas et ses rouges attendus
         run: |
