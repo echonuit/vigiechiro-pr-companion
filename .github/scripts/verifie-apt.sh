@@ -90,6 +90,16 @@ YML
     # ⚠️ La décision elle-même se garde. Sans ce cas, quelqu'un basculerait les polices sur l'action
     # rapide pour gagner vingt secondes, et les aperçus rendraient dans un repli sans que rien ne
     # rougisse.
+    # ⚠️ L'auto-test de la porte n'installe rien : lui réclamer un cache ferait rougir la CI sur une
+    # étape qui ne télécharge pas un octet.
+    cat > "$bac/.github/workflows/cache.yml" <<'YML'
+jobs:
+  a:
+    steps:
+      - run: bash .github/scripts/installer-paquets.sh --auto-test
+YML
+    verifie 0 "l auto-test de la porte n exige aucun cache"
+
     cat > "$bac/.github/workflows/cache.yml" <<'YML'
 jobs:
   a:
@@ -234,7 +244,15 @@ for chemin in sorted(glob.glob(os.path.join(sys.argv[1], "*.yml"))):
                     f"{nom} : {', '.join(risques)} passe(nt) par l'action de cache, qui n'exécute pas "
                     f"les scripts post-installation - à installer par installer-paquets.sh")
 
-        installs = [e for e in etapes if isinstance(e, dict) and "installer-paquets.sh" in str(e.get("run", ""))]
+        # ⚠️ `--auto-test` n'installe RIEN : il éprouve la porte. L'exiger d'un cache ferait rougir la
+        # CI sur une étape qui ne télécharge pas un octet - un garde qui accuse là où il n'y a rien.
+        installs = [
+            e
+            for e in etapes
+            if isinstance(e, dict)
+            and "installer-paquets.sh" in str(e.get("run", ""))
+            and "--auto-test" not in str(e.get("run", ""))
+        ]
         if not installs:
             continue
         caches = [e for e in etapes if isinstance(e, dict) and "actions/cache@" in str(e.get("uses", ""))]

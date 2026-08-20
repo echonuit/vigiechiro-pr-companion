@@ -238,6 +238,11 @@ jobs:
           ./.github/scripts/verifie-permissions.sh --auto-test
           ./.github/scripts/verifie-permissions.sh
 
+      - name: La porte d installation porte ses cas
+        # ⚠️ Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
+        # défaut y serait indiscernable d'une panne de miroir.
+        run: bash .github/scripts/installer-paquets.sh --auto-test
+
       - name: Aucun workflow n appelle apt-get directement
         # ⚠️ Trois étapes de trois workflows ont pendu le même jour sur `apt-get update`, jusqu'au
         # butoir de leur job et jusque sur `main`. Le remède avait été appliqué à UNE des trois.

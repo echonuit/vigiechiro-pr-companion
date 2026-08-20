@@ -530,6 +530,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `filme-un-parcours.sh` | le banc de documentation : lancement, geste visé par libellé **avec balayage annoncé**, carte, montage et plages accélérées, index converti, et l'**exigence de résultat** de chaque parcours ([ADR 4013](decisions/4013-un-banc-qui-filme-eprouve-son-resultat.md)) | `lint.yml` (job `banc-filme`) |
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `verifie-butoirs.sh` | tout job porte un `timeout-minutes` : sans butoir, GitHub laisse courir six heures ([ADR 4028](decisions/4028-tout-job-de-ci-porte-un-butoir.md)) | `lint.yml` |
+| `installer-paquets.sh` | la porte d'installation : elle écarte ce qui est déjà présent, borne et reprend, et câble le cache des `.deb` ([ADR 4034](decisions/4034-les-paquets-passent-par-une-porte.md)) | `lint.yml` (ses cas) et les cinq workflows qui installent |
 | `verifie-apt.sh` | aucun workflow n'appelle `apt-get` en direct, **le cache est branché** (un par job, la variable sur chaque installation), et les paquets à **post-installation** - `fonts-*`, `flatpak*`, `ffmpeg` - ne passent PAS par le cache de fichiers ([ADR 4034](decisions/4034-les-paquets-passent-par-une-porte.md)) | `lint.yml` |
 | `verifie-renvois-workflows.sh` | chaque `workflow_run` vise le `name:` d'un workflow existant | `lint.yml` |
 | `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé, propre, et **utilisable** avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |
