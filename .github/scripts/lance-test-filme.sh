@@ -79,6 +79,15 @@ verifier_profil() {
         || manques+=("recette.testfx.robot devrait valoir awt")
     printf '%s' "$bloc" | grep -q '<recette.awt.headless>false<' \
         || manques+=("recette.awt.headless devrait valoir false")
+    # ⚠️ UN SEUL fork, et c'est la condition même du filmage. Le réglage ordinaire du dépôt est `1C`,
+    # un fork par cœur : plusieurs classes tournent alors en parallèle, ce qui est bon pour la durée
+    # du build et fatal ici. Un tournage n'a qu'UN écran et qu'UN pointeur ; deux forks les pilotent
+    # en même temps, et les clics d'une classe tombent dans les fenêtres d'une autre.
+    #
+    # Mesuré : `ConnexionModaleViewTest` passe seul et rougit dès qu'une seconde classe est filmée
+    # avec lui. Le premier tournage complet en CI a donné 14 rouges sur 128 pour cette seule raison.
+    printf '%s' "$bloc" | grep -q '<surefire.forkCount>1<' \
+        || manques+=("surefire.forkCount devrait valoir 1 : un écran, un pointeur, un fork")
 
     [ ${#manques[@]} -eq 0 ] && return 0
     printf '   - %s\n' "${manques[@]}"
@@ -846,6 +855,15 @@ auto_test() {
     essai "et un libellé court reste intact"             vert \
         env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
             [ "$(printf "court" | abreger_sur_un_mot 40)" = "court" ]' "${BASH_SOURCE[0]}"
+
+    # --- le fork unique (#4056) ---
+    # ⚠️ Le cas qui manquait au profil, et qui a coûté quatorze rouges. Un pom qui laisse `1C` fait
+    # tourner les classes en parallèle sur un écran unique : les clips existent, les tests rougissent,
+    # et le banc n'a aucune raison de soupçonner le pom.
+    sed 's|<surefire.forkCount>1<|<surefire.forkCount>1C<|' "$POM" > "$tmp/forks-multiples.xml"
+    essai "un profil à plusieurs forks est REFUSÉ" rouge \
+        env RECETTE_RELANCE=1 POM_A_VERIFIER="$tmp/forks-multiples.xml" \
+        bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
 
     # --- l'horloge du banc (#4056) ---
     # ⚠️ LE cas qui manquait, et qui a coûté un tournage. `date +%s%3N` n'est pas portable : certaines

@@ -964,6 +964,21 @@
                      trente minutes ne sert à personne pour trancher un cas. -->
                 <recette.autodetection>true</recette.autodetection>
                 <recette.reperes>${project.build.directory}/recette-filmee/reperes.tsv</recette.reperes>
+                <!-- UN SEUL fork, et c'est la condition même du filmage. Le réglage ordinaire est
+                     `1C`, un fork par cœur : plusieurs classes tournent alors en parallèle, ce qui
+                     est bon pour la durée du build et fatal ici. Un tournage n'a qu'UN écran et
+                     qu'UN pointeur ; deux forks les pilotent en même temps, et les clics d'une
+                     classe tombent dans les fenêtres d'une autre.
+
+                     Mesuré : `ConnexionModaleViewTest` passe seul (10 tests verts) et rougit dès
+                     qu'une seconde classe est filmée avec lui - deux « Running » paraissent avant
+                     le moindre résultat. Le premier tournage complet en CI a donné 14 rouges sur
+                     128 pour cette seule raison, et personne ne l'avait vu parce que la planche
+                     n'avait jamais tourné en CI.
+
+                     Ce que cela coûte : un tournage complet est plus long qu'un build ordinaire.
+                     C'est le prix d'un écran unique, pas un réglage à optimiser. -->
+                <surefire.forkCount>1</surefire.forkCount>
             </properties>
         </profile>
 
