@@ -143,6 +143,51 @@ propre correction, et c'est pourquoi `OU_REGARDER_IHM` et `OU_REGARDER_CLI` sont
 
 Tout filet qui montre une exception à l'utilisateur passe par `CauseLisible`.
 
+## Quand c'est le MESSAGE qui explose (#3956)
+
+Le cas précédent suppose qu'on puisse **lire** le message. Sous Java 25, une panne d'injection Guice
+n'en offre pas : `ProvisionException.getMessage()` cherche les numéros de ligne pour composer son
+rapport, lit du bytecode **major 69** avec l'ASM embarqué de Guice 7.0.0, et lève
+`IllegalArgumentException: Unsupported class file major version 69`.
+
+⚠️ **La pile se lit à l'envers de ce qu'on croit.** Guice a d'abord échoué à fournir quelque chose ;
+c'est en **racontant** cet échec qu'il a explosé. Le message n'annonce pas le défaut, il annonce la
+panne du dispositif qui devait l'annoncer - et le vrai défaut est à trois `Caused by` de là. Guice le
+dit une ligne plus haut, et personne ne la lit :
+
+```
+AVERTISSEMENT: Failed loading line numbers. ASM is probably out of date.
+```
+
+**Ce que le dépôt fait.** `SignalementIncident` garde le chemin riche - il porte la pile entière et
+sert dans tous les autres cas - et **retombe** sur une description construite à la main quand le
+formatage lève. Chaque cause y est lue défensivement :
+
+```
+Exception non capturée sur le fil « JavaFX Application Thread ». Son rapport n'a pas pu être formaté
+(java.lang.IllegalArgumentException : Unsupported class file major version 69). La chaîne des causes,
+lue sans le formateur :
+    → com.google.inject.ProvisionException : message illisible (java.lang.IllegalArgumentException)
+        à fr.univ_amu.iut.App.start(App.java:102)
+    causé par java.lang.Error : Unresolved compilation problem:
+        à fr.univ_amu.iut.audit.view.ActionResetGuide.<init>(ActionResetGuide.java:1)
+```
+
+On perd la pile complète ; on garde le **défaut**. Le parcours des causes est borné à douze : une
+chaîne n'est pas garantie acyclique une fois que des `initCause` s'en mêlent, et un filet qui
+bouclerait ici referait #3700 par un autre chemin.
+
+**À la main, pour aller plus vite.** Le drapeau désarme le formateur de Guice et fait paraître la
+cause immédiatement :
+
+```bash
+./mvnw javafx:run -Dguice_include_stack_traces=OFF
+```
+
+⚠️ **Le défaut est en amont.** L'ASM de Guice 7.0.0 ne lit pas major 69 ; une version qui le lit
+règle tout, et rien de ce qui précède n'est perdu - le repli ne se déclenche que si le formatage
+échoue.
+
 ## Dette soldée
 
 L'audit de suite (#1543, **clos**) a résorbé les points restants : les opérations de fond lourdes

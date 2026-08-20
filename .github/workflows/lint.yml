@@ -58,25 +58,41 @@ jobs:
     # pas finie. Sans butoir, GitHub laisse courir six heures.
     #
     # Un garde qui peut bloquer indéfiniment est pire qu'un garde qui échoue : il ne dit rien, et il
-    # retient tout le monde. Douze minutes, c'est vingt fois la mesure nominale.
-    timeout-minutes: 12
+    # retient tout le monde.
+    #
+    # ⚠️ Douze minutes n'étaient plus vingt fois la mesure nominale, elles étaient devenues trop
+    # justes. L'outillage pèse **91,2 Mo** : à 2,7 Mo/s - le miroir en forme - c'est 34 s ; à
+    # 0,2 Mo/s - le miroir de ce soir - c'est huit minutes rien que pour le téléchargement, et le
+    # job mourait au butoir sans avoir lancé un seul cas. Vingt-cinq minutes couvrent le miroir
+    # dégradé sans rien couvrir d'infini. Le chiffre à relire pour le régler de nouveau est celui
+    # que la porte annonce désormais : « N Mo à télécharger ».
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
+      - name: Cache des .deb (le dépaquetage, lui, se refait)
+        # ⚠️ Ce cache-ci porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque
+        # run, et avec lui les scripts post-installation - `fc-cache` compris. On perd le temps du
+        # dépaquetage ; on garde des polices réellement enregistrées.
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ runner.temp }}/apt-vigiechiro
+          key: apt-${{ runner.os }}-banc-filme
+
       - name: Installer de quoi afficher et filmer
-        # Le même outillage que `recette-filmee.yml`, et pour la même raison. openbox, et NON
-        # matchbox (#3788) : matchbox maximise tout ce qu'il affiche, si bien qu'une modale de
-        # 560 px s'étalait sur 1280 et que le banc montrait une mise en page que personne ne voit.
+        # ⚠️ PAS le cache de fichiers, et c'est une leçon payée. `awalsh128/cache-apt-pkgs-action`
+        # restaure des fichiers sans rejouer les scripts post-installation ; j'avais jugé ffmpeg
+        # « paquet de fichiers », et c'est faux : sa fermeture de dépendances tire DIX paquets de
+        # polices - fonts-droid-fallback, fonts-noto-mono… - et `fc-cache` ne tourne pas.
         #
-        # ⚠️ `--no-install-recommends` : les recommandations d'ffmpeg tirent SDL2, OpenAL, jack et
-        # `fonts-urw-base35` - de quoi jouer et sonoriser une vidéo, là où ce banc ne fait que
-        # capturer, mesurer une luminance et concaténer. C'est précisément ce que le miroir mettait
-        # quarante minutes à livrer.
+        # Conséquence mesurée : le premier run qui a TROUVÉ le cache a fait tomber cinq cas du banc
+        # de recette, tous ceux qui écrivent du texte dans une vidéo de test (`drawtext` cherche une
+        # police par fontconfig). Le run précédent, cache froid, passait - donc la panne n'apparaît
+        # qu'au second passage, ce qui la rend d'autant plus traître.
         #
-        # Ce qu'on ne vérifie pas par un raisonnement : que la version allégée suffise. C'est
-        # l'auto-test qui le dit, à l'étape suivante - quatorze de ses cas passent par `ffmpeg` ou
-        # `ffprobe`, trois par le serveur X et son gestionnaire de fenêtres. S'il manquait quelque
-        # chose, il rougirait ici même.
+        # Ce job REND des images : il installe pour de vrai.
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
           bash .github/scripts/installer-paquets.sh xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra
 
