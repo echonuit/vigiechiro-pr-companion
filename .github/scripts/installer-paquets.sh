@@ -75,12 +75,16 @@ essai=1
 while [ "$essai" -le 2 ]; do
     echo "→ apt-get update (essai $essai/2)"
     if sudo apt-get update "${BORNES[@]}"; then
-        # ⚠️ Le VOLUME se dit. Sans ce chiffre, une étape qui traîne se lit comme une panne : elle
-        # peut n'être qu'un miroir lent devant 91 Mo. C'est la mesure qui a fait relever le butoir
-        # de `banc-filme`, et c'est elle qu'il faudra relire pour le régler de nouveau.
-        volume=$(apt-get install -y --no-install-recommends --print-uris "$@" 2>/dev/null \
-            | grep -oE "^'[^']+' [^ ]+ [0-9]+" | awk '{ total += $NF } END { printf "%.0f", total / 1048576 }')
-        echo "→ apt-get install : $* (${volume:-?} Mo à télécharger)"
+        # ⚠️ Le volume ne se recalcule PAS ici. Cette porte l'a annoncé un temps - « 87 Mo à
+        # télécharger » - en sommant la taille des paquets par `--print-uris`. Le chiffre était juste
+        # comme POIDS et faux comme ANNONCE : le cache servant, APT n'en téléchargeait aucun, et la
+        # ligne d'à côté disait « Need to get 0 B/91.2 MB ». Deux mesures voisines qui se
+        # contredisent, dont une seule fait foi.
+        #
+        # APT dit lui-même ce qui reste à chercher, et il le dit mieux : « 0 B/91.2 MB » donne le
+        # reste ET le total. Dupliquer cette mesure, c'était s'exposer à la voir vieillir - ce qui
+        # est arrivé en une journée.
+        echo "→ apt-get install : $*"
         # shellcheck disable=SC2086
         if sudo apt-get install -y $RECOMMANDATIONS "${BORNES[@]}" "$@"; then
             # ⚠️ Les droits se remettent à plat APRÈS l'installation : `actions/cache` archive le
