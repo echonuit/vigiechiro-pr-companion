@@ -5,54 +5,63 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-/// Un dossier de fixture doit montrer **un** état, jamais la somme de ceux qu'il a hérités (#4044).
+/// Un dossier de fixture doit montrer **un** état, et ne doit être ni devinable ni inscriptible par un
+/// autre utilisateur local (#4044, #4049).
 class DossierDeFixtureTest {
 
     private static final String LOG = "recorder.serial_number: 1925492\n";
 
     @Test
-    @DisplayName("#4044 : une seconde préparation ne laisse RIEN de la première")
-    void une_seconde_preparation_ne_laisse_rien_de_la_premiere(@TempDir Path temporaire) throws IOException {
-        String ancienTmp = System.getProperty("java.io.tmpdir");
-        System.setProperty("java.io.tmpdir", temporaire.toString());
-        try {
-            DossierDeFixture.preparer("sd-essai", LOG, List.of("PaRecPR1925492_20260422_203922.wav"));
-            Path sd = DossierDeFixture.preparer("sd-essai", LOG, List.of("PaRecPR1648011_20260422_204010.wav"));
+    @DisplayName("#4049 : deux préparations ne partagent pas leur dossier")
+    void deux_preparations_ne_partagent_pas_leur_dossier() throws IOException {
+        Path premier = DossierDeFixture.preparer("sd-essai", LOG, List.of("a.wav"));
+        Path second = DossierDeFixture.preparer("sd-essai", LOG, List.of("b.wav"));
 
-            assertThat(wavs(sd))
-                    .as("le chemin d'une fixture est déterministe : sans vidage, les fichiers de la"
-                            + " préparation précédente restent, et la capture montre leur SOMME - vécu"
-                            + " en ajustant une fixture, « 4 enregistrement(s) WAV détecté(s) » pour"
-                            + " une fixture qui en déclare deux")
-                    .containsExactly("PaRecPR1648011_20260422_204010.wav");
-        } finally {
-            System.setProperty("java.io.tmpdir", ancienTmp);
-        }
+        assertThat(second)
+                .as("un chemin déterministe obligeait à vider avant d'écrire, faute de quoi la capture"
+                        + " montrait la SOMME de deux préparations. Un dossier neuf règle cela par"
+                        + " construction : il n'y a rien à vider")
+                .isNotEqualTo(premier);
+        assertThat(wavs(second)).containsExactly("b.wav");
+        assertThat(wavs(premier)).containsExactly("a.wav");
+    }
+
+    @Test
+    @DisplayName("#4049 : le dossier n'est lisible que par son propriétaire")
+    void le_dossier_n_est_lisible_que_par_son_proprietaire() throws IOException {
+        Path sd = DossierDeFixture.preparer("sd-droits", LOG, List.of("a.wav"));
+
+        Set<PosixFilePermission> droits = Files.getPosixFilePermissions(sd);
+
+        assertThat(droits)
+                .as("cet outil fabrique des images PUBLIÉES : un dossier que les autres peuvent écrire"
+                        + " laisse un tiers y déposer ce qu'il veut avant le rendu, et la documentation"
+                        + " montrerait son contenu (CodeQL"
+                        + " java/local-temp-file-or-directory-information-disclosure)")
+                .doesNotContain(
+                        PosixFilePermission.OTHERS_READ,
+                        PosixFilePermission.OTHERS_WRITE,
+                        PosixFilePermission.GROUP_WRITE);
     }
 
     @Test
     @DisplayName("#4044 : le journal et le relevé sont écrits à côté des WAV")
-    void le_journal_et_le_releve_accompagnent_les_wav(@TempDir Path temporaire) throws IOException {
-        String ancienTmp = System.getProperty("java.io.tmpdir");
-        System.setProperty("java.io.tmpdir", temporaire.toString());
-        try {
-            Path sd = DossierDeFixture.preparer("sd-complet", LOG, List.of("a.wav", "b.wav"));
+    void le_journal_et_le_releve_accompagnent_les_wav() throws IOException {
+        Path sd = DossierDeFixture.preparer("sd-complet", LOG, List.of("a.wav", "b.wav"));
 
-            assertThat(sd.resolve("LogPR1925492.txt")).exists();
-            assertThat(sd.resolve("PaRecPR1925492_THLog.csv")).exists();
-            assertThat(Files.readString(sd.resolve("LogPR1925492.txt")))
-                    .as("le journal porte ce qu'on lui a donné : c'est lui qui fixe la série et la nuit"
-                            + " que l'inspection lira")
-                    .isEqualTo(LOG);
-        } finally {
-            System.setProperty("java.io.tmpdir", ancienTmp);
-        }
+        assertThat(sd.resolve("LogPR1925492.txt")).exists();
+        assertThat(sd.resolve("PaRecPR1925492_THLog.csv")).exists();
+        assertThat(Files.readString(sd.resolve("LogPR1925492.txt")))
+                .as("le journal porte ce qu'on lui a donné : c'est lui qui fixe la série et la nuit que"
+                        + " l'inspection lira")
+                .isEqualTo(LOG);
     }
 
     private static List<String> wavs(Path dossier) throws IOException {
