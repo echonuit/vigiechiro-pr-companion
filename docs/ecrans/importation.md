@@ -304,6 +304,20 @@ voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 ![Import en cours : barre de progression, formulaire gelé.](../assets/captures/apercu-import-en-cours.png)
 
+!!! tip "Soixante enregistrements, en vidéo (46 s)"
+
+    <video controls muted playsinline preload="metadata" width="100%">
+      <source src="../../assets/parcours/parcours-grosse-carte.mp4" type="video/mp4">
+      Votre navigateur n'affiche pas les vidéos. Le film est là :
+      <a href="../../assets/parcours/parcours-grosse-carte.mp4">parcours-grosse-carte.mp4</a>.
+    </video>
+
+    Une carte de **soixante** enregistrements, de bout en bout. L'inspection annonce le volume, et
+    l'import est **instantané** : sur des fichiers courts, la barre de progression et la table de
+    suivi passent en moins d'une demi-seconde. N'attendez donc pas de voir défiler quoi que ce soit
+    - le compte rendu est là avant que vous ayez relâché la souris, avec son décompte et les volumes
+    lus sur la carte comme écrits sur le disque.
+
 ## Compte rendu de fin d'import
 
 L'import est **résilient** : un fichier illisible ou de format invalide n'interrompt pas toute la nuit.
