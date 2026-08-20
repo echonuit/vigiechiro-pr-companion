@@ -52,6 +52,12 @@ class DecisionsRespecteesTest {
     /// Surefire s'exécute depuis la racine du projet : les chemins sont relatifs à elle.
     private static final Path POM = Path.of("pom.xml");
 
+    /// Les propriétés du lanceur de ligne de commande, et celles qui y ajoutent la console sous
+    /// Windows (ADR 4071). Deux fichiers, parce que `win-console` ne s'applique qu'à l'un des deux.
+    private static final Path LANCEUR_CLI = Path.of("jpackage", "lanceur-cli.properties");
+
+    private static final Path LANCEUR_CLI_WINDOWS = Path.of("jpackage", "lanceur-cli-windows.properties");
+
     /// La racine des features : un sous-paquet par feature, plus `commun`.
     private static final Path SOURCES = Path.of("src", "main", "java", "fr", "univ_amu", "iut");
 
@@ -125,6 +131,56 @@ class DecisionsRespecteesTest {
                 .contains("<argument>VigieChiroCompanion</argument>")
                 .contains("<argument>Echonuit</argument>")
                 .contains("fr.echonuit.VigieChiroCompanion");
+    }
+
+    @Test
+    @DisplayName("ADR 4071 : le lanceur de ligne de commande est déclaré, et la console reste à Windows")
+    void le_lanceur_de_ligne_de_commande_est_declare() {
+        // Trois faits tiennent l'accessibilité de la CLI depuis un produit installé, et deux d'entre eux
+        // se défont sans que rien ne plante : le mot qui déclare la fenêtre, l'enveloppe qui porte le
+        // nom qu'on tape, et la clé `arguments` qui EMPÊCHE cette enveloppe d'hériter du mot. Ce dernier
+        // point est le piège du chantier : mesuré sur une app-image, un second lanceur sans clé
+        // `arguments` reçoit l'`ihm` du principal, donc `vigiechiro` tapé seul ouvre la fenêtre au lieu
+        // de rendre l'aide. Aucune lecture de documentation ne l'annonçait.
+        String pom = lire(POM);
+
+        assertThat(pom)
+                .as("Le mot qui déclare la fenêtre doit être écrit DANS le paquet : sans lui, le "
+                        + "double-clic n'ouvre plus rien, puisque `Launcher` ne devine pas.")
+                .contains("<argument>--arguments</argument>")
+                .contains("<argument>ihm</argument>");
+
+        assertThat(pom)
+                .as("Sans ce second lanceur, la ligne de commande n'a plus de nom à taper : le seul "
+                        + "exécutable serait `bin/VigieChiroCompanion`, que personne ne tape sous Unix.")
+                .contains("<argument>--add-launcher</argument>")
+                .contains("<argument>vigiechiro=${jpackage.lanceurCli}</argument>");
+
+        String commun = lire(LANCEUR_CLI);
+        String windows = lire(LANCEUR_CLI_WINDOWS);
+
+        assertThat(commun)
+                .as("Le fichier de propriétés du lanceur de ligne de commande doit poser `arguments`, "
+                        + "sans quoi il HÉRITE du `ihm` du lanceur graphique et ouvre une fenêtre.")
+                .contains("arguments=--help");
+        assertThat(windows)
+                .as("Même exigence sous Windows, et elle y compte davantage : c'est là que le lanceur "
+                        + "est appelé depuis une console.")
+                .contains("arguments=--help");
+
+        assertThat(windows)
+                .as("La console est la raison d'être de l'enveloppe sous Windows : sans elle, la "
+                        + "commande n'écrit nulle part et rend 0, panne indiscernable d'un succès.")
+                .contains("win-console=true");
+        assertThat(commun)
+                .as("Et elle ne se déclare QUE sous Windows : le fichier commun sert aussi macOS et "
+                        + "Linux, où la propriété n'a pas de sens.")
+                .doesNotContain("win-console");
+
+        assertThat(pom)
+                .as("La console ne doit jamais être demandée pour TOUS les lanceurs : le lanceur "
+                        + "graphique en ouvrirait une à chaque lancement depuis le menu Démarrer.")
+                .doesNotContain("<argument>--win-console</argument>");
     }
 
     @Test
