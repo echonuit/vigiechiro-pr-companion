@@ -404,6 +404,9 @@ une seule est technique - sous Windows, elle porte la console que le lanceur gra
 avoir (ADR 4071) ; ailleurs, elle donne simplement à la commande le nom qu'on tape.
 
 ```bash
+# paquet Debian installé : la commande est dans le PATH
+vigiechiro lister-passages
+
 # archive portable Linux (et app-image)
 bin/vigiechiro lister-passages
 
