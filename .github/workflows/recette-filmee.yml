@@ -227,7 +227,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          fichiers=(repris/clips/*.mp4 repris/clips/index.md)
-          [ -e "${fichiers[0]}" ] || { echo "::error::Aucun clip mp4 dans l'artefact repris."; exit 1; }
-          gh release upload clips-recette "${fichiers[@]}" --clobber
-          echo "$(ls repris/clips/*.mp4 | wc -l) clip(s) versé(s) sur « clips-recette »."
+          # ⚠️ `recette/clips/`, et non `clips/`. L'action d'envoi range les fichiers sous leur plus
+          # petit ancêtre commun : les trois chemins téléversés vivent sous `target/`, donc l'archive
+          # contient `recette/…` et `recette-filmee/…`. Vérifié sur un artefact rapatrié, pas déduit.
+          clips=(repris/recette/clips/*.mp4)
+          [ -e "${clips[0]}" ] || {
+            echo "::error::Aucun clip mp4 dans l'artefact repris. Arborescence trouvée :"
+            find repris -type f | head -20
+            exit 1
+          }
+          gh release upload clips-recette "${clips[@]}" repris/recette/clips/index.md --clobber
+          echo "${#clips[@]} clip(s) versé(s) sur « clips-recette »."
