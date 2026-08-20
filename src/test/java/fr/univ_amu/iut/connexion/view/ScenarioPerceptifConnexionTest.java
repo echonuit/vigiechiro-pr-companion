@@ -103,6 +103,10 @@ class ScenarioPerceptifConnexionTest {
 
     private static final int HAUTEUR = 720;
 
+    /// L'entrée du menu ☰ qui ouvre la modale, telle que le produit la nomme quand aucun profil
+    /// n'est enregistré.
+    private static final String LIBELLE_ENTREE_MENU = "Se connecter à Vigie-Chiro…";
+
     private static final long LATENCE_RECUPERATION_MS = 1_500;
 
     private Injector injector;
@@ -184,8 +188,7 @@ class ScenarioPerceptifConnexionTest {
     void la_modale_de_connexion_s_ouvre(FxRobot robot) {
         Respiration.avantLeGeste(robot);
 
-        robot.interact(this::ouvrirLaModaleCommeLApplication);
-        WaitForAsyncUtils.waitForFxEvents();
+        ouvrirLaModaleParLeMenu(robot);
 
         // Le moment que ce cas existe pour montrer : la modale est posée, et c'est là qu'on juge
         // si quelque chose s'est replacé après coup.
@@ -201,8 +204,7 @@ class ScenarioPerceptifConnexionTest {
     @CasDeRecette(value = "S1-27", jugement = Jugement.HUMAIN)
     @DisplayName("S1-27 · pendant la récupération : à regarder, rien ne doit sortir du cadre avant le bandeau")
     void la_recuperation_ne_pousse_rien_hors_du_cadre(FxRobot robot) throws TimeoutException {
-        robot.interact(this::ouvrirLaModaleCommeLApplication);
-        WaitForAsyncUtils.waitForFxEvents();
+        ouvrirLaModaleParLeMenu(robot);
         Respiration.avantLeGeste(robot);
 
         robot.clickOn("#champToken").write("jeton-de-scenario");
@@ -227,14 +229,25 @@ class ScenarioPerceptifConnexionTest {
 
     // ----------------------------------------------------------------------------------------
 
-    /// Ouvre la modale par le CHEMIN RÉEL du produit : l'entrée de menu, avec la fenêtre de
-    /// l'application pour propriétaire.
+    /// Ouvre la modale comme un utilisateur : le menu ☰, puis l'entrée qui la nomme.
     ///
-    /// ⚠️ La version précédente recopiait le corps de `NavigationConnexion.ouvrir()` dans ce fichier.
-    /// Une copie ne suit pas l'original : quand `ouvrir()` a reçu son propriétaire (#4073), la copie
-    /// ne l'a pas reçu, et le clip a continué de montrer une modale posée n'importe où. Un scénario
-    /// qui rejoue le geste au lieu de l'appeler ne joue pas ce geste-là.
-    private void ouvrirLaModaleCommeLApplication() {
-        injector.getInstance(ActionConnexion.class).executer(fenetre);
+    /// ⚠️ La version précédente appelait `ActionConnexion.executer(fenetre)` directement. C'était le
+    /// bon chemin de code, et un mauvais film : la modale paraissait sans qu'aucun geste ne
+    /// l'explique. Retour de la revue : « on ne comprend pas comment on arrive sur la modale ».
+    ///
+    /// Un cas perceptif se joue comme on le jouerait à la main. Le clic sur `#menuOutils` ouvre le
+    /// menu et le laisse voir ; le clic sur l'entrée l'ouvre. Ce sont deux gestes, et le film les
+    /// montre tous les deux.
+    ///
+    /// ⚠️ On clique l'entrée par son LIBELLÉ, tel que `NavigationConnexion.libelleMenu()` le rend
+    /// pour un profil absent. Le viser par sa position dans le menu se casserait au premier ajout
+    /// d'entrée, sans que le film le dise - il montrerait un autre écran s'ouvrir.
+    private void ouvrirLaModaleParLeMenu(FxRobot robot) {
+        robot.clickOn("#menuOutils");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+
+        robot.clickOn(LIBELLE_ENTREE_MENU);
+        WaitForAsyncUtils.waitForFxEvents();
     }
 }
