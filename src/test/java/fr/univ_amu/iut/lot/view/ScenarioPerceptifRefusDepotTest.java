@@ -11,7 +11,7 @@ import fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot;
 import fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot.Plan;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
-import fr.univ_amu.iut.recette.Seance;
+import fr.univ_amu.iut.recette.Respiration;
 import java.util.List;
 import javafx.geometry.Insets;
 import javafx.scene.control.Labeled;
@@ -49,12 +49,6 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class ScenarioPerceptifRefusDepotTest {
 
-    /// Le temps d'arrêt avant l'affichage : l'écran vide sert de référence à qui compare.
-    private static final long AVANT_MS = 700;
-
-    /// Et après : de quoi lire la phrase entière, qui est ce qu'on vient juger.
-    private static final long APRES_MS = 3_000;
-
     /// Trois archives refusées, toutes pour la même cause : les droits. C'est l'état de la fixture
     /// `VIGIECHIRO_STUB_REFUS=403` que la session décrit, et le seul où le conseil de reconnexion
     /// s'applique à toutes.
@@ -78,11 +72,13 @@ class ScenarioPerceptifRefusDepotTest {
     @CasDeRecette(value = "S4-33", jugement = Jugement.HUMAIN)
     @DisplayName("S4-33 · le compte rendu dit le nombre de refus et conseille la reconnexion : à lire")
     void le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion(FxRobot robot) {
-        respirer(robot, AVANT_MS);
+        Respiration.avantLeGeste(robot);
 
         robot.interact(() -> panneau.afficher(CompteRenduChiffreDepot.de(bilanRefuse(), plan(), List.of())));
         WaitForAsyncUtils.waitForFxEvents();
-        respirer(robot, APRES_MS);
+        // Le moment que ce cas existe pour montrer : la phrase du compte rendu, dont c'est la
+        // LISIBILITÉ qu'on juge. Elle demande d'être lue, pas aperçue.
+        Respiration.surLeMomentCle(robot);
 
         String affiche = texteAffiche(robot);
         assertThat(affiche)
@@ -123,13 +119,5 @@ class ScenarioPerceptifRefusDepotTest {
                 .map(node -> ((Labeled) node).getText())
                 .filter(texte -> texte != null && !texte.isBlank())
                 .reduce("", (tout, texte) -> tout + " " + texte);
-    }
-
-    /// Ne s'arrête que si l'on filme : hors séance filmée, ces respirations n'allongeraient le build
-    /// que pour personne.
-    private static void respirer(FxRobot robot, long millis) {
-        if (Seance.filmee()) {
-            robot.sleep(millis);
-        }
     }
 }

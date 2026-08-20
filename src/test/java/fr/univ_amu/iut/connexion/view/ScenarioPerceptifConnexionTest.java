@@ -24,6 +24,7 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.Seance;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -84,16 +85,11 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class ScenarioPerceptifConnexionTest {
 
-    /// Le temps d'arrêt avant le geste : l'écran au repos sert de référence à qui compare.
-    private static final long AVANT_MS = 600;
-
-    /// Et après : de quoi voir si quelque chose se replace une fois la modale posée.
-    private static final long APRES_MS = 1_200;
-
-    /// Ce que « prend du temps » veut dire pour la récupération de S1-27 : de quoi rendre une
-    /// douzaine d'images à la cadence du banc, donc de quoi voir la zone de progression paraître,
-    /// tenir, puis céder la place au bandeau.
-    private static final long RECUPERATION_MS = 1_500;
+    /// ⚠️ Une LATENCE simulée, et non un temps d'arrêt. La récupération doit prendre du temps, sans
+    /// quoi la zone de progression paraîtrait et disparaîtrait entre deux images : il n'y aurait
+    /// rien à voir. Elle vit ici, et non dans [Respiration], parce qu'elle décrit ce que
+    /// l'application FAIT et non ce que le film montre.
+    private static final long LATENCE_RECUPERATION_MS = 1_500;
 
     private Injector injector;
 
@@ -107,7 +103,7 @@ class ScenarioPerceptifConnexionTest {
         // attente n'est payée.
         when(client.moi()).thenAnswer(appel -> {
             if (Seance.filmee()) {
-                Thread.sleep(RECUPERATION_MS);
+                Thread.sleep(LATENCE_RECUPERATION_MS);
             }
             return ReponseApi.succes(new ProfilVigieChiro("u-scenario", "chiro", "observateur"));
         });
@@ -147,12 +143,14 @@ class ScenarioPerceptifConnexionTest {
     @CasDeRecette(value = "S1-26", jugement = Jugement.HUMAIN)
     @DisplayName("S1-26 · la modale de connexion s'ouvre : à regarder, rien ne doit se replacer après coup")
     void la_modale_de_connexion_s_ouvre(FxRobot robot) {
-        respirer(robot, AVANT_MS);
+        Respiration.avantLeGeste(robot);
 
         robot.interact(this::ouvrirLaModaleCommeLApplication);
         WaitForAsyncUtils.waitForFxEvents();
 
-        respirer(robot, APRES_MS);
+        // Le moment que ce cas existe pour montrer : la modale est posée, et c'est là qu'on juge
+        // si quelque chose s'est replacé après coup.
+        Respiration.surLeMomentCle(robot);
 
         assertThat(robot.lookup("#champToken").tryQuery())
                 .as("le geste a-t-il seulement eu lieu ? Sans cette question, un robot mort rendrait"
@@ -166,7 +164,7 @@ class ScenarioPerceptifConnexionTest {
     void la_recuperation_ne_pousse_rien_hors_du_cadre(FxRobot robot) throws TimeoutException {
         robot.interact(this::ouvrirLaModaleCommeLApplication);
         WaitForAsyncUtils.waitForFxEvents();
-        respirer(robot, AVANT_MS);
+        Respiration.avantLeGeste(robot);
 
         robot.clickOn("#champToken").write("jeton-de-scenario");
         robot.clickOn("Se connecter");
@@ -178,7 +176,9 @@ class ScenarioPerceptifConnexionTest {
                 10,
                 TimeUnit.SECONDS,
                 () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible());
-        respirer(robot, APRES_MS);
+        // Le moment que ce cas existe pour montrer : le bandeau vient de remplacer la zone de
+        // progression, et c'est ce passage qu'on juge.
+        Respiration.surLeMomentCle(robot);
 
         assertThat(robot.lookup("#bandeauStatut").queryAs(Label.class).getText())
                 .as("la récupération est-elle seulement allée à son terme ? Sans cette question, un"
@@ -203,14 +203,6 @@ class ScenarioPerceptifConnexionTest {
             modale.show();
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
-        }
-    }
-
-    /// Ne s'arrête que si l'on filme : hors séance filmée, ces respirations n'allongeraient le build
-    /// que pour personne.
-    private static void respirer(FxRobot robot, long millis) {
-        if (Seance.filmee()) {
-            robot.sleep(millis);
         }
     }
 }

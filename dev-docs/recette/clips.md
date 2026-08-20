@@ -102,11 +102,14 @@ Le bandeau paraît, et la phrase nomme la valeur manquante sans jargon ni clé t
 
 La table revient entière et le tri d'origine est remis, en un seul clic.
 
-## Les autres clips
+## Les clips des cas assertés
 
-Le tournage produit **un clip par test**, pas seulement pour les cas perceptifs. La liste complète,
-avec la part d'images utiles de chacun, est publiée à côté d'eux :
-[`index.md`](https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/index.md).
+Le tournage produit **un clip par test**, pas seulement pour les cas perceptifs. Les quarante-six
+autres sont sur leur propre page, groupés par classe :
+[Les clips des cas assertés](clips-assertes.md).
+
+Ils ne demandent pas qu'on les regarde - un test asserté tranche tout seul - mais ils servent quand
+on cherche pourquoi l'un d'eux rougit.
 
 L'adresse d'un clip se déduit de son nom :
 
@@ -118,5 +121,5 @@ https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-rece
 
     Si un clip ne se lance pas, c'est que le tournage complet n'a pas eu lieu depuis que ce cas
     existe. Relancer le flux avec `publier_les_clips` avant de conclure quoi que ce soit sur le
-    produit. `PageDesClipsTest` garde la correspondance entre cette page et les cas joués, pas la
+    produit. `PageDesClipsTest` garde la correspondance entre ces pages et les cas joués, pas la
     présence des fichiers.
