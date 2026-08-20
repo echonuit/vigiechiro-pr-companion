@@ -867,6 +867,14 @@ parcours_grosse_carte() { # <écran> <marques> <point de montage de la carte>
     respirer_doc 6.0
     marque "$marques" import_acheve
 
+    # ⚠️ On redescend sur le compte rendu. Sans ce défilement, le film se terminait sur le haut de la
+    # page et la seule ligne de la barre d'état : le lecteur voyait « Import terminé » sans voir le
+    # décompte ni les volumes, c'est-à-dire sans voir ce que ce cas-ci a d'intéressant. La barre
+    # d'état ne défile pas, donc les exigences ci-dessous restent justes.
+    DISPLAY="$ecran" xdotool mousemove 640 700
+    DISPLAY="$ecran" xdotool click --repeat 12 5
+    respirer_doc 5.0
+
     exiger_a_l_ecran "$ecran" 520 829 "Import termin" 460 || return 1
     exiger_a_l_ecran "$ecran" 520 829 "60 s" 460 || return 1
     respirer_doc 4.0
