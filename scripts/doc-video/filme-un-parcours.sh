@@ -39,6 +39,9 @@ LUMINANCE_SEUIL=20
 LARGEUR=1280
 HAUTEUR=860
 
+# L'écran virtuel du tournage. Constante, et hissée ici pour que le calage puisse s'y brancher.
+ECRAN_DU_TOURNAGE=":87"
+
 # ---------------------------------------------------------------------------------------------
 # Les conditions du lancement. Chacune se vérifie, et chacune sait DIRE ce qui manque : sans cela,
 # un banc qui ne pilote rien rend un fichier vidéo parfaitement valide et vide (#3707).
@@ -420,6 +423,36 @@ taper() { # <écran> <texte>
 # recette a montré que cette latence varie.
 marque() { # <fichier de marques> <nom>
     printf '%s\t%s\n' "$(date +%s.%N)" "$2" >> "$1"
+    calage "$2"
+}
+
+# Le mode de calage : une image de l'écran à chaque repère, dans le dossier que CALAGE_BANC désigne.
+#
+# ⚠️ Il existe parce qu'écrire un scénario demande de connaître des COORDONNÉES, et qu'on ne les
+# connaît qu'en regardant l'écran du tournage. Les deux premiers parcours ont été calés en insérant
+# un `ffmpeg` à la main dans le corps de la fonction, puis en le déplaçant, puis en le retirant avant
+# de committer - trois tournages pour deux mesures, et une fois l'insertion posée dans le mauvais
+# parcours parce que l'ancre existait en plusieurs exemplaires.
+#
+# Chaque repère donne son image. Écrire un scénario devient : poser les repères, tourner une fois,
+# ouvrir les images, écrire les coordonnées.
+#
+# ⚠️ Sans la variable, cette fonction ne fait RIEN et ne coûte rien : pas de saisie d'écran, pas de
+# fichier. Un tournage ordinaire ne doit pas payer un outil de mise au point.
+calage() { # <nom du repère>
+    [ -n "${CALAGE_BANC:-}" ] || return 0
+    mkdir -p "$CALAGE_BANC"
+    saisir_ecran "$CALAGE_BANC/$1.png"
+}
+
+# ⚠️ La saisie est une fonction à part, et pas une ligne dans `calage`, pour que le cas puisse la
+# REMPLACER. Sa première version éprouvait « sans la variable, aucun fichier n apparaît » : c était
+# un faux vert, parce que sans écran `ffmpeg` échoue de toute façon et qu aucun fichier n apparaît
+# non plus quand le garde a disparu. L absence d effet ne prouve pas l absence de décision. Le cas
+# observe donc l APPEL, en substituant cette fonction-ci.
+saisir_ecran() { # <fichier de sortie>
+    ffmpeg -v error -y -f x11grab -video_size "${LARGEUR}x${HAUTEUR}" -i "$ECRAN_DU_TOURNAGE" \
+        -frames:v 1 "$1" </dev/null 2>/dev/null || true
 }
 
 # Le parcours « déclarer un carré », premier de la documentation (#3887).
@@ -764,6 +797,84 @@ parcours_sans_exigence() { # <fichier du banc>
     done
 }
 
+# Le parcours « grosse carte » (#4055).
+#
+# ## Ce qu'il montre, et ce qu'il devait montrer
+#
+# ⚠️ #4013 attendait de ce cas « la progression et le parallélisme, invisibles sur une capture ».
+# Cette attente est FAUSSE, et c'est le tournage qui l'a montrée : entre le clic sur « Importer » et
+# une demi-seconde plus tard, le compte rendu affiche déjà 60/60 (100 %) et les deux barres pleines.
+# Mesuré en échantillonnant le film brut toutes les demi-secondes, pas déduit.
+#
+# Soixante WAV de 0,1 s pèsent quatre méga-octets : il n'y a pas de charge, donc pas de progression à
+# filmer. Le premier montage donnait trente-cinq secondes d'un écran figé sur un import déjà fini,
+# sous un titre qui promettait du mouvement.
+#
+# Ce que le film montre donc, et qui vaut d'être vu : le volume est ANNONCÉ - « 60 enregistrement(s)
+# WAV détecté(s) » -, et l'import est **instantané**, avec son décompte complet et le volume lu sur
+# la carte comme écrit sur le disque. Un lecteur qui s'attend à patienter apprend qu'il n'a pas à le
+# faire.
+#
+# ⚠️ Ses repères d'import s'appellent tout de même `import_commence` et `import_acheve`, et non
+# `import_debut` / `import_fin` : le montage accélère les plages déclarées par une paire
+# `<nom>_debut` / `<nom>_fin`, et accélérer un import déjà instantané le rendrait invisible.
+# L'inspection, elle, garde sa paire - scruter soixante fichiers est une attente qui n'apprend rien.
+parcours_grosse_carte() { # <écran> <marques> <point de montage de la carte>
+    local ecran="$1" marques="$2" carte="$3"
+
+    marque "$marques" debut
+    respirer_doc 2.0
+
+    viser "$ecran" 493 108 "Importer une nuit" || return 1
+    marque "$marques" assistant
+    respirer_doc 2.2
+
+    viser "$ecran" 693 210 "Parcourir" || return 1
+    marque "$marques" selecteur
+    respirer_doc 2.0
+
+    viser "$ecran" 168 178 "$ETIQUETTE_CARTE" 0.6 150 || return 1
+    respirer_doc 1.6
+    viser "$ecran" 1136 831 "Ouvrir" || return 1
+    marque "$marques" inspection_debut
+
+    respirer_doc 5.0
+    marque "$marques" inspection_fin
+
+    verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
+
+    # ⚠️ Le volume, annoncé par l'inspection. Le fragment se vise à SON abscisse, pas au centre de sa
+    # ligne : c'est le piège qui a fait rougir deux exigences du parcours « multi-nuits » alors que
+    # l'écran portait bien ce qu'elles attendaient.
+    exiger_a_l_ecran "$ecran" 224 393 "60 enregistrement" 220 || return 1
+    marque "$marques" volume_annonce
+    respirer_doc 3.0
+
+    viser "$ecran" 801 562 "Choisissez un point" 0.55 230 || return 1
+    respirer_doc 1.2
+    DISPLAY="$ecran" xdotool key Down
+    sleep 0.4
+    DISPLAY="$ecran" xdotool key Return
+    marque "$marques" point_choisi
+    respirer_doc 1.5
+
+    DISPLAY="$ecran" xdotool mousemove 640 700
+    DISPLAY="$ecran" xdotool click --repeat 10 5
+    respirer_doc 2.0
+
+    viser "$ecran" 201 769 "Importer" || return 1
+    marque "$marques" import_commence
+    respirer_doc 6.0
+    marque "$marques" import_acheve
+
+    exiger_a_l_ecran "$ecran" 520 829 "Import termin" 460 || return 1
+    exiger_a_l_ecran "$ecran" 520 829 "60 s" 460 || return 1
+    respirer_doc 4.0
+
+    marque "$marques" fin
+    return 0
+}
+
 # Le parcours « plusieurs nuits » (#4055).
 #
 # ## Ce qu'il montre, et qu'aucune image fixe ne montre
@@ -968,6 +1079,7 @@ parcours_connu() { # <nom>
         sans-journal) printf '120\trecette/fixtures/spec/sd-sans-journal.yaml\n' ;;
         journal-illisible) printf '90\trecette/fixtures/spec/sd-journal-corrompu.yaml\n' ;;
         multi-nuits) printf '160\trecette/fixtures/spec/sd-multi-nuits.yaml\n' ;;
+        grosse-carte) printf '150\trecette/fixtures/spec/sd-grosse.yaml\n' ;;
         *) return 1 ;;
     esac
 }
@@ -978,14 +1090,14 @@ tourner() { # [nom du parcours] [sortie]
     if ! fiche=$(parcours_connu "$nom"); then
         echo "❌ Parcours inconnu : « $nom »."
         echo "   Connus : declarer-un-carre, importer-une-nuit, melange-de-capteurs, sans-journal,"
-        echo "            journal-illisible, multi-nuits."
+        echo "            journal-illisible, multi-nuits, grosse-carte."
         return 1
     fi
     pellicule=$(printf '%s' "$fiche" | cut -f1)
     spec_carte=$(printf '%s' "$fiche" | cut -f2)
 
     local sortie="${2:-$RACINE/target/doc-video/$nom.mkv}"
-    local bac ecran=":87" jar code=0
+    local bac ecran="$ECRAN_DU_TOURNAGE" jar code=0
     local atelier="" carte="" point="" peripherique=""
     jar=$(resoudre_le_jar)
     bac=$(mktemp -d)
@@ -1054,6 +1166,7 @@ tourner() { # [nom du parcours] [sortie]
                 sans-journal) parcours_sans_journal "$ecran" "$marques" "$point" || code=1 ;;
                 journal-illisible) parcours_journal_illisible "$ecran" "$marques" "$point" || code=1 ;;
                 multi-nuits) parcours_multi_nuits "$ecran" "$marques" "$point" || code=1 ;;
+                grosse-carte) parcours_grosse_carte "$ecran" "$marques" "$point" || code=1 ;;
             esac
             wait "$camera"
             # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
@@ -1456,6 +1569,7 @@ fiche_du_parcours() { # <nom>
         sans-journal) printf 'Une carte sans journal du capteur\tdocs/ecrans/importation.md\n' ;;
         journal-illisible) printf 'Un journal illisible : l assistant refuse\tdocs/ecrans/importation.md\n' ;;
         multi-nuits) printf 'Trois nuits sur une carte : decouper en passages\tdocs/ecrans/importation.md\n' ;;
+        grosse-carte) printf 'Soixante enregistrements, et c est instantane\tdocs/ecrans/importation.md\n' ;;
         *) return 1 ;;
     esac
 }
@@ -1687,6 +1801,34 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     # côté, et le film montrait trente-quatre secondes d'un formulaire jamais rempli.
     essai "une exigence non satisfaite refuse"           rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; exiger_a_l_ecran ":91" 100 100 "Import termin"' "${BASH_SOURCE[0]}"
+    # --- le mode de calage (#4055) ---
+    # ⚠️ Le cas qui compte n'est pas « il sait saisir un écran » - il n'y a pas d'écran ici - mais
+    # « il ne fait RIEN sans sa variable ». Un outil de mise au point qui saisirait l'écran à chaque
+    # repère d'un tournage ordinaire coûterait douze saisies par film, pour personne.
+    essai "sans CALAGE_BANC, aucune saisie n est TENTÉE"  vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            d=$(mktemp -d); trap "rm -rf $d" EXIT
+            saisir_ecran() { printf appel >> "$d/temoin"; }
+            unset CALAGE_BANC
+            calage un_repere
+            [ ! -s "$d/temoin" ]' "${BASH_SOURCE[0]}"
+    # ⚠️ Et son jumeau positif : AVEC la variable, la saisie doit être tentée. Sans ce cas-ci, un
+    # calage qui ne ferait jamais rien passerait le cas précédent sans faillir.
+    essai "avec CALAGE_BANC, la saisie est tentée"        vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            d=$(mktemp -d); trap "rm -rf $d" EXIT
+            saisir_ecran() { printf appel >> "$d/temoin"; }
+            CALAGE_BANC="$d/images" calage un_repere
+            [ -s "$d/temoin" ] && [ -d "$d/images" ]' "${BASH_SOURCE[0]}"
+    # ⚠️ Et le repère lui-même s écrit dans les deux cas : le calage est un supplément, pas un
+    # détour. S il remplaçait la ligne du repère, le montage perdrait ses plages.
+    essai "le repère s écrit, calage ou non"              vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            d=$(mktemp -d); trap "rm -rf $d" EXIT
+            marque "$d/m.tsv" premier
+            CALAGE_BANC="$d/images" marque "$d/m.tsv" second
+            [ "$(cut -f2 "$d/m.tsv" | tr "\n" " ")" = "premier second " ]' "${BASH_SOURCE[0]}"
+
     essai "tout parcours d import exige son résultat"     vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
             [ -z "$(parcours_sans_exigence "$0")" ]' "${BASH_SOURCE[0]}"
