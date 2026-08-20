@@ -5,7 +5,7 @@ regarde. Leur clip existe quand même, et il sert à autre chose - voir *ce que 
 cherche pourquoi il rougit, ou vérifier qu'il joue bien ce que son nom annonce.
 
 Pour les cas **perceptifs**, ceux dont le verdict revient à qui regarde, c'est l'autre page :
-[Regarder les clips de recette](clips.md).
+[Les clips des cas perceptifs](clips-perceptifs.md).
 
 !!! note "Un clip noir n'est pas un clip cassé"
 
