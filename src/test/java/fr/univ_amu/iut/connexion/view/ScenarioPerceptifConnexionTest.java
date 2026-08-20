@@ -90,10 +90,18 @@ class ScenarioPerceptifConnexionTest {
     /// quoi la zone de progression paraîtrait et disparaîtrait entre deux images : il n'y aurait
     /// rien à voir. Elle vit ici, et non dans [Respiration], parce qu'elle décrit ce que
     /// l'application FAIT et non ce que le film montre.
-    /// La fenêtre du produit, telle que le banc la filme.
-    private static final int LARGEUR = 1280;
+    /// La fenêtre de l'application, plus PETITE que l'écran du banc (1280x900).
+    ///
+    /// ⚠️ Elle valait d'abord 1280x860, soit la largeur exacte de l'écran. Avec ses décorations, la
+    /// fenêtre débordait alors, et la modale ouverte par-dessus atterrissait en (0,0), barre de
+    /// titre hors champ - sur le clip PUBLIÉ, alors qu'elle se centrait en local.
+    ///
+    /// Ce qui a tranché : dans la MÊME publication, la modale de `S1-37` était parfaitement centrée.
+    /// Même machine, même gestionnaire de fenêtres, deux résultats - donc la cause n'était ni l'un
+    /// ni l'autre. Son scénario donne 1100x720 à son hôte, et laisse de la marge autour.
+    private static final int LARGEUR = 1100;
 
-    private static final int HAUTEUR = 860;
+    private static final int HAUTEUR = 720;
 
     private static final long LATENCE_RECUPERATION_MS = 1_500;
 
