@@ -208,6 +208,18 @@ des fichiers.
     déduit l'enregistreur et la date des noms de fichiers. Le compte rendu final le redit, pour
     que la nuit importée porte la mention de ce qui a été deviné.
 
+!!! tip "Un journal illisible, en vidéo (22 s)"
+
+    <video controls muted playsinline preload="metadata" width="100%">
+      <source src="../../assets/parcours/parcours-journal-illisible.mp4" type="video/mp4">
+      Votre navigateur n'affiche pas les vidéos. Le film est là :
+      <a href="../../assets/parcours/parcours-journal-illisible.mp4">parcours-journal-illisible.mp4</a>.
+    </video>
+
+    Le seul cas où l'assistant **refuse** : l'étape « 2. Inspection » ne paraît pas du tout, le
+    bouton d'import reste fermé, et le motif est nommé - « Journal LogPR inexploitable : aucun
+    numéro de série d'enregistreur trouvé ».
+
 Une **incohérence** entre le journal du capteur et les enregistrements (série ou date qui ne
 correspondent pas) est signalée plus fermement :
 

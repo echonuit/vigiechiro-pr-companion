@@ -710,6 +710,56 @@ parcours_sans_journal() { # <écran> <marques> <point de montage de la carte>
     return 0
 }
 
+# Le parcours « journal illisible » (#4013).
+#
+# ## Le seul de la famille qui ne se termine PAS par un import
+#
+# Les autres films d'importation montrent une nuance : l'application prévient et laisse passer. Ici
+# elle **refuse**, et c'est ce refus qu'il faut montrer - l'étape « 2. Inspection » ne paraît même
+# pas, l'assistant reste à « 1 » puis « 3 », et le bouton d'import demeure fermé.
+#
+# ⚠️ Son exigence de fin n'est donc pas « Import terminé » mais le message de refus lui-même. Un
+# parcours qui exigerait l'import ici échouerait toujours ; un parcours qui n'exigerait rien
+# publierait un film montrant un écran quelconque.
+#
+# ⚠️ Une observation à ne pas perdre : le motif du refus s'affiche à côté du BOUTON, tout en bas,
+# à quelque sept cents pixels sous la zone d'inspection où l'utilisateur vient de regarder. Qui
+# désigne sa carte et lit le haut de la page voit « 1. » puis « 3. » sans explication. Ce n'est pas
+# l'objet de ce film ; c'est noté ici pour qui passera après.
+parcours_journal_illisible() { # <écran> <marques> <point de montage de la carte>
+    local ecran="$1" marques="$2" carte="$3"
+
+    marque "$marques" debut
+    respirer_doc 2.0
+
+    viser "$ecran" 493 108 "Importer une nuit" || return 1
+    marque "$marques" assistant
+    respirer_doc 2.2
+
+    viser "$ecran" 693 210 "Parcourir" || return 1
+    marque "$marques" selecteur
+    respirer_doc 2.0
+
+    viser "$ecran" 168 178 "$ETIQUETTE_CARTE" 0.6 150 || return 1
+    respirer_doc 1.6
+    viser "$ecran" 1136 831 "Ouvrir" || return 1
+    marque "$marques" inspection_debut
+
+    respirer_doc 3.5
+    marque "$marques" inspection_fin
+
+    verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
+    respirer_doc 2.0                                   # l'étape 2 ne paraît pas : elle a échoué
+
+    # ⚠️ Le cœur du film, et l'exigence de ce parcours : le motif du refus, nommé.
+    exiger_a_l_ecran "$ecran" 515 828 "inexploitable" 460 || return 1
+    marque "$marques" refus_annonce
+    respirer_doc 5.0                                   # le temps de lire ce qui cloche
+
+    marque "$marques" fin
+    return 0
+}
+
 # Les respirations du film. Elles ne servent qu'au spectateur : un écran qui change trop vite ne se
 # lit pas. Hors tournage, elles ne coûtent rien.
 respirer_doc() {
@@ -749,6 +799,7 @@ parcours_connu() { # <nom>
         importer-une-nuit) printf '120\trecette/fixtures/spec/sd-nominale.yaml\n' ;;
         melange-de-capteurs) printf '120\trecette/fixtures/spec/sd-melange.yaml\n' ;;
         sans-journal) printf '120\trecette/fixtures/spec/sd-sans-journal.yaml\n' ;;
+        journal-illisible) printf '90\trecette/fixtures/spec/sd-journal-corrompu.yaml\n' ;;
         *) return 1 ;;
     esac
 }
@@ -758,7 +809,7 @@ tourner() { # [nom du parcours] [sortie]
     local fiche pellicule spec_carte
     if ! fiche=$(parcours_connu "$nom"); then
         echo "❌ Parcours inconnu : « $nom »."
-        echo "   Connus : declarer-un-carre, importer-une-nuit, melange-de-capteurs, sans-journal."
+        echo "   Connus : declarer-un-carre, importer-une-nuit, melange-de-capteurs, sans-journal, journal-illisible."
         return 1
     fi
     pellicule=$(printf '%s' "$fiche" | cut -f1)
@@ -832,6 +883,7 @@ tourner() { # [nom du parcours] [sortie]
                 importer-une-nuit) parcours_importer_une_nuit "$ecran" "$marques" "$point" || code=1 ;;
                 melange-de-capteurs) parcours_melange_de_capteurs "$ecran" "$marques" "$point" || code=1 ;;
                 sans-journal) parcours_sans_journal "$ecran" "$marques" "$point" || code=1 ;;
+                journal-illisible) parcours_journal_illisible "$ecran" "$marques" "$point" || code=1 ;;
             esac
             wait "$camera"
             # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
@@ -1232,6 +1284,7 @@ fiche_du_parcours() { # <nom>
         importer-une-nuit) printf 'Importer une nuit\tdocs/ecrans/importation.md\n' ;;
         melange-de-capteurs) printf 'Deux enregistreurs dans le même dossier\tdocs/ecrans/importation.md\n' ;;
         sans-journal) printf 'Une carte sans journal du capteur\tdocs/ecrans/importation.md\n' ;;
+        journal-illisible) printf 'Un journal illisible : l assistant refuse\tdocs/ecrans/importation.md\n' ;;
         *) return 1 ;;
     esac
 }
@@ -1291,7 +1344,7 @@ ecrire_index() { # <dossier> <index>
         echo "Cette page est **dérivée** : elle se réécrit à chaque tournage, depuis les repères posés"
         echo "par le scénario et la mesure des fichiers. Rien n'y est saisi à la main."
         echo
-        for nom in declarer-un-carre importer-une-nuit melange-de-capteurs sans-journal; do
+        for nom in declarer-un-carre importer-une-nuit melange-de-capteurs sans-journal journal-illisible; do
             section_du_parcours "$dossier" "$nom"
         done
         echo "## ⚠️ Ce que ces films ne prouvent pas"
@@ -1366,6 +1419,13 @@ auto_test() {
     # film juste, portant le nom d'un autre.
     essai "un parcours inconnu est refusé"                 rouge parcours_connu importer-une-nuits
     essai "le parcours du mélange est connu"               vert  parcours_connu melange-de-capteurs
+    essai "le parcours du journal illisible est connu"     vert  parcours_connu journal-illisible
+    # ⚠️ Ce parcours ne se termine PAS par un import : son exigence de fin est le motif du refus.
+    # L'y attendre « Import terminé » le ferait échouer à tous les coups ; ne rien exiger publierait
+    # un film montrant un écran quelconque.
+    essai "le refus a sa propre exigence de fin"           vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1
+            [ "$(grep -c "^    exiger_a_l_ecran .* \"inexploitable\"" "$0")" = 1 ]' "${BASH_SOURCE[0]}"
     essai "le parcours sans journal est connu"             vert  parcours_connu sans-journal
     # ⚠️ Le montage doit sortir un MP4 qui commence à jouer AVANT d'être entièrement chargé. Sans
     # `+faststart`, l'atome `moov` reste en fin de fichier et le navigateur doit aller le chercher
