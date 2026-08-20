@@ -38,7 +38,9 @@ import org.junit.jupiter.api.Test;
 /// produit est cassé », et la page le dit à son lecteur.
 class PageDesClipsTest {
 
-    private static final Path PAGE = Path.of("dev-docs", "recette", "clips.md");
+    /// La page des cas perceptifs. Ce n'est PAS `clips.md`, qui est l'entrée de la section et ne
+    /// porte aucun lecteur : les deux familles ont chacune la sienne, et la navigation le dit.
+    private static final Path PAGE = Path.of("dev-docs", "recette", "clips-perceptifs.md");
 
     private static final Path PAGE_ASSERTES = Path.of("dev-docs", "recette", "clips-assertes.md");
 
