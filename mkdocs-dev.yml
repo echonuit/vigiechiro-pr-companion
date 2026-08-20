@@ -245,6 +245,7 @@ nav:
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
+    - Regarder les clips: recette/clips.md
     - S1 · Premier contact: recette/sessions/s1-premier-contact.md
     - S2 · Importer une nuit: recette/sessions/s2-importer.md
     - S3 · Vérifier: recette/sessions/s3-verifier.md
