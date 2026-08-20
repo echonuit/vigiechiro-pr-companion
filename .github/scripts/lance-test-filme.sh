@@ -53,7 +53,13 @@ TAILLE="1280x900x24"
 # La police du carton. DejaVu est présente sur les runners GitHub comme sur les postes de
 # développement ; `carton_de_titre` échoue proprement si elle manque, et le clip se produit sans
 # carton plutôt que pas du tout.
+# ⚠️ La police du carton se RÉSOUT. Le chemin DejaVu ci-dessous est celui des postes de dev et des
+# images GitHub, mais aucun paquet du banc ne le garantit : `fc-match` sert de recours plutôt que de
+# rendre un carton vide sur une machine autrement équipée.
 POLICE_CARTON="${POLICE_CARTON:-/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf}"
+if [ ! -r "$POLICE_CARTON" ] && command -v fc-match >/dev/null 2>&1; then
+    POLICE_CARTON=$(fc-match -f '%{file}' sans 2>/dev/null)
+fi
 
 # --------------------------------------------------------------------------------------------
 # Les vérifications. Chacune rend 0 (bon) ou 1 (mauvais) et explique.
@@ -766,12 +772,17 @@ auto_test() {
             duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$d/m.mkv")
             awk -v x="$duree" "BEGIN{exit !(x > 5.5 && x < 6.5)}" || exit 1
             [ "$(dimensions_du_film "$d/m.mkv")" = "$(dimensions_du_film "$d/clip.mkv")" ] || exit 1
-            ffmpeg -nostdin -loglevel error -i "$d/m.mkv" -vframes 1 -y "$d/1.png" >/dev/null 2>&1
-            python3 -c "
-import sys
-from PIL import Image
-r, v, b = Image.open(sys.argv[1]).convert(\"RGB\").getpixel((8, 8))
-sys.exit(0 if (r, v, b) != (0, 128, 0) and r < 60 and b > r else 1)" "$d/1.png"' "${BASH_SOURCE[0]}"
+            # ⚠️ La première version lisait ce pixel avec Pillow. Le banc n installe PAS Pillow - il
+            # installe ffmpeg, xdotool et tesseract - et le cas rougissait en CI en passant ici.
+            # `ffmpeg` réduit la première image à UN pixel, dont `od` donne les trois octets : la
+            # teinte moyenne du carton (sombre, bleutée) ne peut pas être celle de l extrait (vert).
+            set -- $(ffmpeg -nostdin -loglevel error -i "$d/m.mkv" -vframes 1 -vf scale=1:1 \
+                -f rawvideo -pix_fmt rgb24 - 2>/dev/null | od -An -tu1)
+            # ⚠️ Les TROIS canaux, et mesurés. La première version exigeait « rouge faible et bleu
+            # au-dessus du rouge » : le carton donne (40, 38, 59), mais l extrait vert donne
+            # (1, 128, 2), où le bleu passe lui aussi au-dessus du rouge. Le cas restait vert avec le
+            # carton monté APRÈS l extrait, c est-à-dire en ne gardant rien de ce qu il annonce.
+            [ "$1" -lt 60 ] && [ "$2" -lt 60 ] && [ "$3" -gt "$2" ]' "${BASH_SOURCE[0]}"
 
     # --- la RELANCE elle-même (#4047) ---
     # ⚠️ Le cas ci-dessous éprouve le contrôle ; celui-ci éprouve la RELANCE, qui n'était gardée par
