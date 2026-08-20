@@ -163,6 +163,10 @@ Si l'une d'elles gênait une archive pourtant légitime, le message vous indique
 
 L'inspection signale les anomalies **avant** l'import, pour éviter d'importer une mauvaise nuit.
 
+Quand vos fichiers portent **déjà** un préfixe Vigie-Chiro - une nuit reprise, ou préparée ailleurs -
+l'inspection le dit, et l'import **ne les renomme pas** : il les copie et les transforme, en gardant
+les noms que vous avez.
+
 Un **mélange** dans le dossier (plusieurs enregistreurs aux séries différentes) déclenche un
 avertissement, sans bloquer l'import :
 !!! note "Seuls les enregistrements du journal sont importés"

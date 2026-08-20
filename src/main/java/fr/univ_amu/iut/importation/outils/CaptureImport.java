@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
@@ -393,6 +394,20 @@ public final class CaptureImport {
     /// libellés communs (PMD `AvoidDuplicateLiterals`).
     private static Path creerDossierAvecWav(String nom, String log, List<String> wavs) throws IOException {
         Path sd = Path.of(System.getProperty("java.io.tmpdir"), nom);
+        // ⚠️ On VIDE le dossier avant d'écrire. Son chemin est déterministe : sans ce nettoyage, les
+        // fichiers d'une exécution précédente y restent, et la capture montre leur SOMME. Vécu en
+        // ajustant une fixture : « 4 enregistrement(s) WAV détecté(s) » pour une fixture qui en
+        // déclare deux, et un aperçu de préfixe portant l'ancien nom.
+        //
+        // La CI ne le voit pas - un runner est neuf à chaque fois - et c'est bien là le problème :
+        // le piège ne mord qu'en local, c'est-à-dire précisément là où l'on met une capture au point.
+        if (Files.isDirectory(sd)) {
+            try (Stream<Path> restes = Files.list(sd)) {
+                for (Path reste : restes.toList()) {
+                    Files.deleteIfExists(reste);
+                }
+            }
+        }
         Files.createDirectories(sd);
         Files.writeString(sd.resolve(NOM_JOURNAL), log, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve(NOM_RELEVE), ENTETE_RELEVE, StandardCharsets.UTF_8);
