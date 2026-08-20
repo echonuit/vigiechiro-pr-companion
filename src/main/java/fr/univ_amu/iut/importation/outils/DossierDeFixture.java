@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Stream;
 
 /// Le dossier d'exemple d'une capture : un journal, un relevé, des WAV, sous un chemin **déterministe**.
 ///
@@ -15,18 +14,28 @@ import java.util.stream.Stream;
 /// l'être : il vivait dans une méthode `private static` d'un outil qui, pour tourner, monte une scène
 /// JavaFX entière (#4044). Extraire nomme le concept **et** le rend atteignable par un test.
 ///
-/// ## Le vidage, et ce qu'il évite
+/// ## Un dossier NEUF à chaque appel, et pourquoi ce n'est pas qu'une affaire de sécurité
 ///
-/// ⚠️ Le chemin est déterministe, sous `java.io.tmpdir`. Sans nettoyage, les fichiers d'une exécution
-/// précédente restent, et la capture montre leur **somme** : vécu en ajustant une fixture -
-/// « 4 enregistrement(s) WAV détecté(s) » pour une fixture qui en déclare deux, et un aperçu de préfixe
-/// portant l'ancien nom.
+/// Le chemin était d'abord **déterministe**, sous `java.io.tmpdir`. CodeQL l'a signalé
+/// (`java/local-temp-file-or-directory-information-disclosure`, #4049) : un chemin prévisible dans le
+/// répertoire temporaire est lisible **et inscriptible** par les autres utilisateurs locaux.
 ///
-/// ⚠️ La CI ne peut pas attraper cette régression : un runner est **neuf** à chaque fois, donc l'ancien
-/// comportement y produisait déjà le bon résultat. Le piège ne mord qu'en **local**, c'est-à-dire
-/// précisément là où l'on met une capture au point. C'est aussi pourquoi le contraire s'est cru vrai un
-/// moment : un écart mesuré entre un rendu local et un rendu de CI avait été lu comme une pollution des
-/// fichiers committés, alors qu'il venait des tuiles de carte absentes hors ligne.
+/// ⚠️ Le risque n'est pas théorique pour cet outil-ci : il fabrique des images **publiées**. Un tiers
+/// qui devine le chemin peut y déposer ce qu'il veut avant que la capture ne soit rendue, et la
+/// documentation montrerait son contenu.
+///
+/// `Files.createTempDirectory` rend un dossier au nom imprévisible et, sur POSIX, aux droits du seul
+/// propriétaire.
+///
+/// ⚠️ **Et cela règle par construction ce qu'un nettoyage gardait.** Le chemin déterministe obligeait à
+/// vider avant d'écrire, sans quoi les fichiers d'une exécution précédente restaient et la capture
+/// montrait leur **somme** - « 4 enregistrement(s) WAV détecté(s) » pour une fixture qui en déclare
+/// deux. Un dossier neuf n'a rien à vider. Le garde disparaît avec le défaut qu'il gardait, ce qui vaut
+/// mieux que de le conserver.
+///
+/// ⚠️ Ce que le nom aléatoire ne coûte PAS : l'identité au bit près des captures. Le champ « Dossier
+/// source » se lie à `source().libelleProperty()`, que cet outil ne pose pas ; le chemin ne paraît donc
+/// sur aucune image. Vérifié avant de changer, la galerie promettant des PNG identiques au bit près.
 final class DossierDeFixture {
 
     private static final String NOM_JOURNAL = "LogPR1925492.txt";
@@ -46,26 +55,14 @@ final class DossierDeFixture {
     /// @param wavs les noms de fichiers WAV à créer, dans l'ordre
     /// @return le chemin du dossier préparé
     static Path preparer(String nom, String log, List<String> wavs) throws IOException {
-        Path sd = Path.of(System.getProperty("java.io.tmpdir"), nom);
-        vider(sd);
-        Files.createDirectories(sd);
+        // Le nom reste en PRÉFIXE : le dossier garde de quoi se reconnaître quand on fouille /tmp
+        // après un rendu, sans que son chemin se devine à l'avance.
+        Path sd = Files.createTempDirectory(nom + "-");
         Files.writeString(sd.resolve(NOM_JOURNAL), log, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve(NOM_RELEVE), ENTETE_RELEVE, StandardCharsets.UTF_8);
         for (String wav : wavs) {
             Files.writeString(sd.resolve(wav), CONTENU_WAV);
         }
         return sd;
-    }
-
-    /// Retire ce que le dossier contient, s'il existe. Ne descend pas : une fixture est plate.
-    private static void vider(Path dossier) throws IOException {
-        if (!Files.isDirectory(dossier)) {
-            return;
-        }
-        try (Stream<Path> restes = Files.list(dossier)) {
-            for (Path reste : restes.toList()) {
-                Files.deleteIfExists(reste);
-            }
-        }
     }
 }
