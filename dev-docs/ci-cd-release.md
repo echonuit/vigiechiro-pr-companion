@@ -527,10 +527,10 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `check-capture-mains.sh` | chaque outil de capture est enregistré dans `MAINS` | `lint.yml` |
 | `check-doc-images.sh` | chaque capture citée par la doc existe et est déclarée | `docs.yml` |
 | `check-doc-videos.sh` | chaque parcours filmé cité par la doc existe, a son scénario au banc, et son chemin **résout dans le site construit** | `docs.yml` |
-| `filme-un-parcours.sh` | le banc de documentation : lancement, geste visé par libellé, carte, montage, index | `lint.yml` (job `banc-filme`) |
+| `filme-un-parcours.sh` | le banc de documentation : lancement, geste visé par libellé **avec balayage annoncé**, carte, montage et plages accélérées, index converti, et l'**exigence de résultat** de chaque parcours ([ADR 4013](decisions/4013-un-banc-qui-filme-eprouve-son-resultat.md)) | `lint.yml` (job `banc-filme`) |
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
-| `verifie-butoirs.sh` | tout job porte un `timeout-minutes` : sans butoir, GitHub laisse courir six heures | `lint.yml` |
-| `verifie-apt.sh` | aucun workflow n'appelle `apt-get` en direct : la porte `installer-paquets.sh` borne les délais et reprend | `lint.yml` |
+| `verifie-butoirs.sh` | tout job porte un `timeout-minutes` : sans butoir, GitHub laisse courir six heures ([ADR 4028](decisions/4028-tout-job-de-ci-porte-un-butoir.md)) | `lint.yml` |
+| `verifie-apt.sh` | aucun workflow n'appelle `apt-get` en direct, **le cache est branché** (un par job, la variable sur chaque installation), et les paquets à **post-installation** - `fonts-*`, `flatpak*`, `ffmpeg` - ne passent PAS par le cache de fichiers ([ADR 4034](decisions/4034-les-paquets-passent-par-une-porte.md)) | `lint.yml` |
 | `verifie-renvois-workflows.sh` | chaque `workflow_run` vise le `name:` d'un workflow existant | `lint.yml` |
 | `verifie-secret-winget.sh` | `WINGET_TOKEN` est posé, propre, et **utilisable** avant qu'une soumission ne parte | `winget.yml` (autotest : `lint.yml`) |
 | `verifie-demarrage-emballage.sh` | un emballage de distribution, une fois **ouvert**, démarre et ne lève aucune erreur de chargement | `maven.yml` et `release.yml` (autotest : `lint.yml`) |
