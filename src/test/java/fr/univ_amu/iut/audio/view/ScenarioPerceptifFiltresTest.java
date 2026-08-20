@@ -19,10 +19,12 @@ import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Reglages;
+import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ClesCriteres;
 import fr.univ_amu.iut.commun.view.CritereListe;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
@@ -56,6 +58,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
@@ -119,6 +122,11 @@ class ScenarioPerceptifFiltresTest {
 
     private static final String LIEU_A_REVOIR = "640381";
 
+    /// Un carré que la vue enregistrée réclame et que les données ne portent pas.
+    private static final String LIEU_DISPARU = "649999";
+
+    private static final String VUE_ENREGISTREE = "Mes carrés";
+
     @TempDir
     Path dossierReglages;
 
@@ -136,7 +144,17 @@ class ScenarioPerceptifFiltresTest {
                         ligne(3, 12, "Barbar", "Barbastelle d'Europe", LIEU_A_REVOIR, StatutObservation.NON_TOUCHEE),
                         ligne(4, 13, "Pippip", "Pipistrelle commune", LIEU_A_REVOIR, StatutObservation.NON_TOUCHEE)));
         DepotVues depotVues = mock(DepotVues.class);
-        when(depotVues.findByFeature("audio")).thenReturn(List.of());
+        // ⚠️ Une vue enregistrée qui référence un lieu ABSENT des données. C'est l'état de `S6-28` :
+        // rejouer une vue dont une valeur a disparu doit faire paraître le bandeau, et la phrase doit
+        // nommer la valeur manquante. Le carré est inventé pour cette raison précise, et c'est écrit
+        // ici pour qu'on ne le « corrige » pas en croyant à une coquille.
+        when(depotVues.findByFeature("audio"))
+                .thenReturn(List.of(new VueSauvegardee(
+                        1L,
+                        "audio",
+                        VUE_ENREGISTREE,
+                        "{\"texte\":\"\",\"criteres\":[{\"nom\":\"" + ClesCriteres.LIEU + "\",\"valeurs\":[\""
+                                + LIEU_DISPARU + "\"]}]}")));
 
         Injector injector = Guice.createInjector(
                 new AbstractModule() {
@@ -328,6 +346,38 @@ class ScenarioPerceptifFiltresTest {
                 .isEmpty();
     }
 
+    @Test
+    @CasDeRecette(value = "S6-28", jugement = Jugement.HUMAIN)
+    @DisplayName("S6-28 · rejouer une vue dont une valeur a disparu : à regarder, la phrase la nomme")
+    void rejouer_une_vue_dont_une_valeur_a_disparu_fait_paraitre_le_bandeau(FxRobot robot) {
+        Label phrase = robot.lookup("#lblRetour").queryAs(Label.class);
+        assertThat(robot.lookup("#bandeauRetour").queryAs(Node.class).isVisible())
+                .as("rien n'a encore été rejoué : le bandeau ne doit pas être là d'avance, sinon le"
+                        + " clip montrerait un message qui précède son geste")
+                .isFalse();
+        respirer(robot, AVANT_MS);
+
+        robot.clickOn(ongletDeLaVue(robot, VUE_ENREGISTREE));
+        WaitForAsyncUtils.waitForFxEvents();
+        respirer(robot, APRES_MS);
+
+        assertThat(robot.lookup("#bandeauRetour").queryAs(Node.class).isVisible())
+                .as("un filtre ne s'élargit jamais en silence : la vue a été rejouée sans l'une de ses"
+                        + " valeurs, il faut le dire")
+                .isTrue();
+        assertThat(phrase.getText())
+                .as("la phrase nomme la vue rejouée et la valeur qui manque")
+                .contains(VUE_ENREGISTREE)
+                .contains(LIEU_DISPARU);
+        // ⚠️ « sans jargon ni clé technique » : la clé de sérialisation du critère n'a rien à faire
+        // dans une phrase lue par un utilisateur. C'est la moitié du cas, et sans cette assertion il
+        // resterait vert sur « la vue Mes carrés a été rejouée sans lieu=649999 ».
+        assertThat(phrase.getText())
+                .as("la clé de sérialisation « %s » ne doit pas paraître", ClesCriteres.LIEU)
+                .doesNotContain(ClesCriteres.LIEU + "=")
+                .doesNotContain("\"" + ClesCriteres.LIEU + "\"");
+    }
+
     // --------------------------------------------------------------------------------------------
 
     private static LigneObservationAudio ligne(
@@ -385,6 +435,12 @@ class ScenarioPerceptifFiltresTest {
 
     private static MenuButton menuDeLaPuce(FxRobot robot, int rang) {
         return (MenuButton) editeurDeLaPuce(robot, rang);
+    }
+
+    /// L'onglet d'une vue enregistrée, dans la barre des onglets.
+    private static Node ongletDeLaVue(FxRobot robot, String nom) {
+        FlowPane barre = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
+        return robot.from(barre).lookup(nom).query();
     }
 
     private static void ajouterLaPuce(FxRobot robot, String libelle) {
