@@ -94,6 +94,26 @@ verifier_profil() {
     return 1
 }
 
+# La configuration du gestionnaire de fenêtres du banc est-elle là ?
+#
+# ⚠️ Sans elle, openbox lit `/etc/xdg/openbox/rc.xml` et ne dit rien : il se rabat sur les défauts de
+# la distribution, qui ne sont pas les mêmes partout. Le poste de développement centre les fenêtres,
+# l'image des runners ne les centrait pas - et la modale corrigée par #4074 paraissait centrée en
+# local et collée en haut à gauche sur le clip PUBLIÉ. Même code, même commit, deux placements.
+#
+# Un fichier manquant ne doit donc pas se rattraper en silence : un film qui dépend des défauts de la
+# machine qui l'enregistre ne montre pas le produit, il montre la machine.
+verifier_config_openbox() {
+    if [ ! -r "$CONFIG_OPENBOX" ]; then
+        echo "   - configuration du gestionnaire de fenêtres absente : $CONFIG_OPENBOX"
+        echo "     Sans elle, openbox reprend les défauts de la distribution, qui placent les"
+        echo "     fenêtres autrement d'une machine à l'autre. Les clips ne seraient plus"
+        echo "     comparables entre un poste et la CI."
+        return 1
+    fi
+    return 0
+}
+
 verifier_wayland() {
     if [ -n "${WAYLAND_DISPLAY:-}" ]; then
         echo "   - WAYLAND_DISPLAY est posé (${WAYLAND_DISPLAY}) : le java.awt.Robot du JDK"
@@ -138,9 +158,10 @@ verifier_tout() {
     verifier_outils  || defauts=$((defauts + 1))
     verifier_profil  || defauts=$((defauts + 1))
     verifier_wayland || defauts=$((defauts + 1))
+    verifier_config_openbox || defauts=$((defauts + 1))
     verifier_pointeur "$ecran" || defauts=$((defauts + 1))
     if [ "$defauts" -eq 0 ]; then
-        echo "✅ Les cinq conditions sont réunies."
+        echo "✅ Les six conditions sont réunies."
         return 0
     fi
     echo "❌ $defauts condition(s) manquante(s) : le lancement piloterait dans le vide."
@@ -193,6 +214,10 @@ verifier_tout() {
 # C'est la leçon de #3696 : un contrôle qui mesure autre chose que la coupe reproduit son
 # angle mort. Ici la coupe retient les images au-dessus du seuil, et le contrôle recompte,
 # sur le MONTAGE, la proportion d'images au-dessus du même seuil.
+# La configuration du gestionnaire de fenêtres, surchargeable pour que le cas d'auto-test puisse
+# éprouver son absence.
+CONFIG_OPENBOX="${CONFIG_OPENBOX:-$RACINE/.github/scripts/openbox-banc.xml}"
+
 LUMINANCE_SEUIL=20
 LUMINANCE_MARGE=0.2      # un peu avant et après : ne pas couper au ras du geste
 LUMINANCE_ECART=1.5      # deux segments plus proches que ça n'en font qu'un
@@ -504,7 +529,7 @@ lancer() {
     Xvfb "$ECRAN" -screen 0 "$TAILLE" -nolisten tcp >/dev/null 2>&1 &
     local xvfb=$!
     sleep 2
-    DISPLAY="$ECRAN" openbox --sm-disable >/dev/null 2>&1 &
+    DISPLAY="$ECRAN" openbox --sm-disable --config-file "$CONFIG_OPENBOX" >/dev/null 2>&1 &
     local wm=$!
     sleep 2
     # Guillemets DOUBLES : les numéros de processus sont gravés dans le trap à sa pose. En
@@ -861,6 +886,16 @@ auto_test() {
     # tourner les classes en parallèle sur un écran unique : les clips existent, les tests rougissent,
     # et le banc n'a aucune raison de soupçonner le pom.
     sed 's|<surefire.forkCount>1<|<surefire.forkCount>1C<|' "$POM" > "$tmp/forks-multiples.xml"
+    # --- la configuration du gestionnaire de fenêtres (#4075) ---
+    # ⚠️ Sans elle, openbox reprend les défauts de la distribution et place les fenêtres autrement
+    # d'une machine à l'autre : la modale de S1-26 paraissait centrée en local et collée en haut à
+    # gauche sur le clip publié, à partir du MÊME commit.
+    essai "la configuration du banc est présente"        vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1; verifier_config_openbox' "${BASH_SOURCE[0]}"
+    essai "une configuration absente est REFUSÉE"        rouge \
+        env RECETTE_RELANCE=1 CONFIG_OPENBOX=/inexistant.xml \
+        bash -c 'source "$0" >/dev/null 2>&1; verifier_config_openbox' "${BASH_SOURCE[0]}"
+
     essai "un profil à plusieurs forks est REFUSÉ" rouge \
         env RECETTE_RELANCE=1 POM_A_VERIFIER="$tmp/forks-multiples.xml" \
         bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
@@ -959,7 +994,7 @@ auto_test() {
     Xvfb :92 -screen 0 "$TAILLE" -nolisten tcp >/dev/null 2>&1 &
     local avec=$!
     sleep 2
-    DISPLAY=:92 openbox --sm-disable >/dev/null 2>&1 &
+    DISPLAY=:92 openbox --sm-disable --config-file "$CONFIG_OPENBOX" >/dev/null 2>&1 &
     local wm=$!
     aux="$nu $avec $wm"
     sleep 2

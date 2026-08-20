@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  La configuration du gestionnaire de fenêtres du banc filmé.
+
+  ⚠️ Elle existe parce que le banc en héritait, et que l'héritage n'est pas le même partout. Sans configuration explicite, openbox lit `/etc/xdg/openbox/rc.xml`, dont le contenu dépend de la distribution.
+  Le poste de développement a `<center>yes</center>` ; l'image des runners GitHub ne place pas de la
+  même façon.
+
+  Conséquence mesurée sur le clip de `S1-26` : la modale de connexion, corrigée pour se centrer sur
+  l'application (#4074), paraissait centrée en local et collée en haut à gauche, rognée, sur le clip
+  PUBLIÉ. Le même code, le même commit, deux placements. Un film qui dépend des défauts de la machine
+  qui l'enregistre ne montre pas le produit, il montre la machine.
+
+  Ce fichier ne règle QUE le placement. Tout le reste vient des défauts d'openbox, qui les complète
+  pour toute section absente.
+-->
+<openbox_config xmlns="http://openbox.org/3.4/rc">
+  <placement>
+    <!-- `Smart` cherche une zone libre ; `center` y pose la fenêtre au milieu plutôt qu'en haut à
+         gauche. C'est ce que font les bureaux courants pour une modale qui a un propriétaire, et
+         donc ce qu'un utilisateur voit. -->
+    <policy>Smart</policy>
+    <center>yes</center>
+    <monitor>Primary</monitor>
+  </placement>
+</openbox_config>
