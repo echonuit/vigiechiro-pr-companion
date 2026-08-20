@@ -273,13 +273,21 @@ jobs:
           java --enable-native-access=ALL-UNNAMED -cp "$jar" fr.univ_amu.iut.cli.Cli --help | tee sortie-smoke.txt
           grep -q "Usage: vigiechiro" sortie-smoke.txt
 
+      - name: Installer bats
+        # ⚠️ Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
+        # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
+        # `installer-paquets.sh`, dont le post-install fait foi.
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: bats
+          version: vigiechiro-1
+
       - name: E2E CLI (bats) sur le fat-jar
         # Tests bout-en-bout au niveau SHELL sur le jar shadé : arguments picocli, codes de sortie et
         # refus métier d'un VRAI processus - ce que les tests Java in-process (CliTest & co.) ne voient
         # pas. Amorce du harnais (#1572, chantier #1565) ; couverture complète cadrée en suite.
         run: |
           set -euo pipefail
-          bash .github/scripts/installer-paquets.sh --avec-recommandations bats
           export VIGIECHIRO_JAR=$(ls target/vigiechiro-*-shaded.jar | head -1)
           bats src/test/bats
 
