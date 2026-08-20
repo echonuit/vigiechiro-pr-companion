@@ -36,7 +36,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
-import fr.univ_amu.iut.recette.Seance;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -103,16 +103,6 @@ import org.testfx.util.WaitForAsyncUtils;
 /// montrer.
 @ExtendWith(ApplicationExtension.class)
 class ScenarioPerceptifFiltresTest {
-
-    /// Le temps d'arrêt avant le geste : l'écran au repos sert de référence à qui compare.
-    private static final long AVANT_MS = 700;
-
-    /// Et après : de quoi lire ce que le geste a changé.
-    private static final long APRES_MS = 1_400;
-
-    /// Le temps laissé sur un menu ouvert. Plus long que les autres respirations : c'est **la liste
-    /// elle-même** qu'on vient lire, valeur par valeur.
-    private static final long MENU_MS = 2_000;
 
     /// L'espèce que « Statut = à revoir » fait sortir du jeu : elle n'a que des lignes **validées**.
     private static final String ESPECE_HORS_JEU = "Noctule de Leisler";
@@ -232,10 +222,12 @@ class ScenarioPerceptifFiltresTest {
     void une_puce_fraichement_ajoutee_n_ecarte_rien(FxRobot robot) {
         TableView<?> table = table(robot);
         int avant = table.getItems().size();
-        respirer(robot, AVANT_MS);
+        Respiration.avantLeGeste(robot);
 
         ajouterLaPuce(robot, "Espèce");
-        respirer(robot, APRES_MS);
+        // Le moment que ce cas existe pour montrer : la puce est posée et la table n'a PAS bougé.
+        // Un état qui ne change pas demande d'être tenu plus longtemps qu'un état qui change.
+        Respiration.surLeMomentCle(robot);
 
         assertThat(table.getItems())
                 .as("une puce sans valeur choisie ne filtre rien ; si la table maigrit ici, elle filtre"
@@ -253,22 +245,22 @@ class ScenarioPerceptifFiltresTest {
     void rouvrir_une_liste_apres_un_autre_filtre_montre_moins_de_valeurs(FxRobot robot) {
         ajouterLaPuce(robot, "Espèce");
         ComboBox<?> especes = listeDeLaPuce(robot, 0);
-        respirer(robot, AVANT_MS);
+        Respiration.avantLeGeste(robot);
 
         derouler(robot, especes);
         List<String> premiereOuverture = valeurs(especes);
-        respirer(robot, MENU_MS);
+        Respiration.leTempsDeLire(robot);
         replier(robot, especes);
 
         // ⚠️ « Statut » filtre DÈS SON AJOUT, et c'est voulu : il s'ouvre présélectionné sur « à revoir »
         // (ADR 3099). C'est justement ce qui resserre le domaine de l'autre critère sans qu'on ait rien
         // d'autre à faire, donc ce qui rend ce cas-ci observable.
         ajouterLaPuce(robot, "Statut");
-        respirer(robot, APRES_MS);
+        Respiration.apresLeGeste(robot);
 
         derouler(robot, especes);
         List<String> secondeOuverture = valeurs(especes);
-        respirer(robot, MENU_MS);
+        Respiration.leTempsDeLire(robot);
 
         assertThat(secondeOuverture)
                 .as("la liste doit se resserrer : proposer une valeur qui ne ramènerait rien fait perdre"
@@ -293,13 +285,15 @@ class ScenarioPerceptifFiltresTest {
         MenuButton lieux = menuDeLaPuce(robot, 0);
         String lieuCoche = valeurCochable(lieux, LIEU_HORS_JEU);
         cocher(robot, lieux, lieuCoche);
-        respirer(robot, AVANT_MS);
+        Respiration.avantLeGeste(robot);
 
         ajouterLaPuce(robot, "Statut");
-        respirer(robot, APRES_MS);
+        Respiration.apresLeGeste(robot);
 
         ouvrirLeMenu(robot, lieux);
-        respirer(robot, MENU_MS);
+        // Le moment que ce cas existe pour montrer : la valeur devenue impossible est toujours
+        // cochée, rangée en fin de liste. C'est à l'oeil que se juge sa distinction.
+        Respiration.surLeMomentCle(robot);
 
         assertThat(cochees(lieux))
                 .as("le filtre posé ne doit pas se relâcher tout seul : l'écran montrerait alors plus"
@@ -329,11 +323,12 @@ class ScenarioPerceptifFiltresTest {
         ajouterLaPuce(robot, "Statut");
         WaitForAsyncUtils.waitForFxEvents();
         int filtree = table.getItems().size();
-        respirer(robot, AVANT_MS);
+        Respiration.avantLeGeste(robot);
 
         robot.clickOn("#boutonToutEffacer");
         WaitForAsyncUtils.waitForFxEvents();
-        respirer(robot, APRES_MS);
+        // Le moment que ce cas existe pour montrer : un seul clic, et la table revient entière.
+        Respiration.surLeMomentCle(robot);
 
         assertThat(filtree)
                 .as("le filtre a-t-il seulement mordu ? Sans cette question, « Tout effacer » rendrait"
@@ -355,11 +350,13 @@ class ScenarioPerceptifFiltresTest {
                 .as("rien n'a encore été rejoué : le bandeau ne doit pas être là d'avance, sinon le"
                         + " clip montrerait un message qui précède son geste")
                 .isFalse();
-        respirer(robot, AVANT_MS);
+        Respiration.avantLeGeste(robot);
 
         robot.clickOn(ongletDeLaVue(robot, VUE_ENREGISTREE));
         WaitForAsyncUtils.waitForFxEvents();
-        respirer(robot, APRES_MS);
+        // Le moment que ce cas existe pour montrer : le bandeau paraît, et c'est SA PHRASE qu'on
+        // vient lire.
+        Respiration.surLeMomentCle(robot);
 
         assertThat(robot.lookup("#bandeauRetour").queryAs(Node.class).isVisible())
                 .as("un filtre ne s'élargit jamais en silence : la vue a été rejouée sans l'une de ses"
@@ -520,13 +517,5 @@ class ScenarioPerceptifFiltresTest {
                 .filter(item -> libelle.equals(item.getText()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("aucune entrée « " + libelle + " » dans ce menu"));
-    }
-
-    /// Ne s'arrête que si l'on filme : hors séance filmée, ces respirations n'allongeraient le build
-    /// que pour personne.
-    private static void respirer(FxRobot robot, long millis) {
-        if (Seance.filmee()) {
-            robot.sleep(millis);
-        }
     }
 }

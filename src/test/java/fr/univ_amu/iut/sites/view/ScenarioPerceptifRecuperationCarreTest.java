@@ -30,6 +30,7 @@ import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.Seance;
 import fr.univ_amu.iut.sites.model.ImportSiteDistant;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
@@ -98,12 +99,6 @@ class ScenarioPerceptifRecuperationCarreTest {
     private static final String ID_USER = "u-scenario";
     private static final String CARRE = "640380";
     private static final int POINTS_POSES = 41;
-
-    /// L'écran au repos avant le geste : la référence de qui compare.
-    private static final long AVANT_MS = 700;
-
-    /// Le temps de lire l'écran d'arrivée, une fois tout posé.
-    private static final long APRES_MS = 1_500;
 
     /// Entre deux gestes : sans quoi le clic suivant tombe avant que l'oeil ait suivi le précédent.
     private static final long ENTRE_MS = 500;
@@ -186,12 +181,12 @@ class ScenarioPerceptifRecuperationCarreTest {
     @CasDeRecette(value = "S1-37", jugement = Jugement.HUMAIN)
     @DisplayName("S1-37 · récupérer un carré : à regarder, comprend-on où l'on vient d'atterrir ?")
     void la_recuperation_s_enchaine_jusqu_a_la_fiche(FxRobot robot) throws TimeoutException {
-        respirer(robot, AVANT_MS);
+        Respiration.avantLeGeste(robot);
 
         robot.interact(
                 () -> injector.getInstance(NavigationSites.class).ouvrirModaleCreationSite(robot.window(0), () -> {}));
         WaitForAsyncUtils.waitForFxEvents();
-        respirer(robot, ENTRE_MS);
+        Respiration.entreDeuxGestes(robot);
 
         robot.interact(() -> robot.lookup("#champCarre")
                 .queryAs(javafx.scene.control.TextField.class)
@@ -202,7 +197,7 @@ class ScenarioPerceptifRecuperationCarreTest {
                 10,
                 TimeUnit.SECONDS,
                 () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent());
-        respirer(robot, ENTRE_MS);
+        Respiration.entreDeuxGestes(robot);
 
         robot.clickOn("#btnRecupererCarre");
 
@@ -212,7 +207,9 @@ class ScenarioPerceptifRecuperationCarreTest {
                 10,
                 TimeUnit.SECONDS,
                 () -> robot.lookup("#boutonImporterNuit").tryQuery().isPresent());
-        respirer(robot, APRES_MS);
+        // Le moment que ce cas existe pour montrer : la fiche vient de paraître, et c'est là qu'on
+        // juge si l'on comprend où l'on a atterri.
+        Respiration.surLeMomentCle(robot);
 
         assertThat(robot.lookup("#boutonImporterNuit").tryQuery())
                 .as("l'enchaînement est-il seulement allé jusqu'au bout ? Sans cette question, un"
@@ -241,14 +238,6 @@ class ScenarioPerceptifRecuperationCarreTest {
         @Override
         public void notifier(NiveauNotification niveau, String entete, CompteRenduChiffre compteRendu) {
             notifier(niveau, entete, compteRendu.toString());
-        }
-    }
-
-    /// Ne s'arrête que si l'on filme : hors séance filmée, ces respirations n'allongeraient le build
-    /// que pour personne.
-    private static void respirer(FxRobot robot, long millis) {
-        if (Seance.filmee()) {
-            robot.sleep(millis);
         }
     }
 
