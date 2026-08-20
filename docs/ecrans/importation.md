@@ -250,6 +250,19 @@ Une **table des nuits** apparaît alors, une ligne par nuit :
 
 ![Plusieurs nuits détectées : la table liste chaque nuit (inclure, date, nombre de fichiers, état, n° de passage proposé) ; chacune deviendra un passage distinct.](../assets/captures/apercu-import-multi-nuits.png)
 
+!!! tip "Trois nuits, et une qu'on retire, en vidéo (48 s)"
+
+    <video controls muted playsinline preload="metadata" width="100%">
+      <source src="../../assets/parcours/parcours-multi-nuits.mp4" type="video/mp4">
+      Votre navigateur n'affiche pas les vidéos. Le film est là :
+      <a href="../../assets/parcours/parcours-multi-nuits.mp4">parcours-multi-nuits.mp4</a>.
+    </video>
+
+    Ce que l'image ci-dessus ne peut pas montrer : les numéros de passage n'apparaissent qu'une fois
+    le **point d'écoute** choisi, et **décocher une nuit renumérote les autres**. La nuit du 04
+    passe à « — », celle du 05 descend de 3 à 2, et le compte rendu final annonce **2 passages
+    créés** au lieu de trois.
+
 !!! note "Chaque nuit garde les réglages du capteur qui étaient les siens"
     Si vous reprenez l'enregistreur entre deux séries de nuits et que vous **changez ses réglages**
     (fréquence d'échantillonnage, bande passante, horaires d'acquisition), le journal en garde la trace
