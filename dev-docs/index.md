@@ -62,6 +62,11 @@ cd vigiechiro-pr-companion
     Paquet-par-fonctionnalité + MVVM, le socle `commun`, et les règles d'architecture vérifiées
     automatiquement (ArchUnit).
 
+-   :material-magnify: **[Chercher dans le dépôt](chercher-dans-le-depot.md)**
+
+    Le graphe, `semgrep` et `grep` : lequel répond à quelle question, et comment chacun se trompe
+    sans le dire.
+
 -   :material-plus-box: **[Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)**
 
     Le tutoriel pas à pas : du modèle à l'écran, en passant par la navigation inter-feature.
