@@ -14,6 +14,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 /// Façade d'ouverture de la **modale « Connexion VigieChiro »** (#727/#741). Utilisée par l'entrée de
 /// menu [ActionConnexion] de la feature (#931) : le menu ☰ du chrome ouvre la modale et affiche l'état
@@ -35,13 +36,30 @@ public final class NavigationConnexion {
     }
 
     /// Ouvre la modale de connexion (non bloquante).
-    public void ouvrir() {
+    /// Ouvre la modale de connexion **au-dessus de** `proprietaire`.
+    ///
+    /// ⚠️ Le propriétaire n'est pas décoratif, et son absence a coûté un clip illisible. Sans lui,
+    /// le gestionnaire de fenêtres pose la modale où il veut : elle ne se centre pas sur
+    /// l'application, peut passer derrière elle, et ne la suit pas quand on la déplace. Le film de
+    /// `S1-26` la montrait collée en haut à gauche, rognée, puis ailleurs à l'image suivante - soit
+    /// exactement le « saut » que ce cas affirme absent.
+    ///
+    /// ⚠️ Sept écrans du produit ouvrent une modale ; six posaient déjà leur propriétaire. Celui-ci
+    /// était le seul à ne pas le faire, alors que [ActionConnexion] le RECEVAIT et le jetait. La
+    /// plomberie existait, elle n'était pas branchée.
+    public void ouvrir(Window proprietaire) {
+        Objects.requireNonNull(proprietaire, "proprietaire");
         FXMLLoader loader = ChargeurFxml.chargeur(NavigationConnexion.class, "ConnexionModale.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
             Stage modale = new Stage();
-            modale.initModality(Modality.APPLICATION_MODAL);
+            modale.initOwner(proprietaire);
+            // ⚠️ `WINDOW_MODAL`, comme les huit autres modales du produit. Celle-ci était la seule en
+            // `APPLICATION_MODAL`, et la seule sans propriétaire : deux écarts au même endroit, tous
+            // deux invisibles tant que personne ne regardait la fenêtre. Avec un propriétaire, la
+            // modale se centre sur l'application au lieu d'aller se coller dans un coin.
+            modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Connexion Vigie-Chiro");
             modale.setScene(Habillage.scene(vue));
             Modales.fermerParEchap(modale);

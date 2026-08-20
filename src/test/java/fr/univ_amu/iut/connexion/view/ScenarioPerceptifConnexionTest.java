@@ -9,16 +9,19 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.util.Modules;
+import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Habillage;
-import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
@@ -27,17 +30,15 @@ import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.Seance;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -89,13 +90,21 @@ class ScenarioPerceptifConnexionTest {
     /// quoi la zone de progression paraîtrait et disparaîtrait entre deux images : il n'y aurait
     /// rien à voir. Elle vit ici, et non dans [Respiration], parce qu'elle décrit ce que
     /// l'application FAIT et non ce que le film montre.
+    /// La fenêtre du produit, telle que le banc la filme.
+    private static final int LARGEUR = 1280;
+
+    private static final int HAUTEUR = 860;
+
     private static final long LATENCE_RECUPERATION_MS = 1_500;
 
     private Injector injector;
 
+    private Stage fenetre;
+
     @Start
     void start(Stage stage) throws IOException {
         Path workspace = Files.createTempDirectory("vc-scenario-connexion");
+        System.setProperty("vigiechiro.workspace", workspace.toString());
         StockageConnexion stockage = new StockageConnexion(new Workspace(workspace), Horloge.systeme());
         ClientVigieChiro client = mock(ClientVigieChiro.class);
         // La récupération PREND DU TEMPS, sans quoi il n'y aurait rien à voir : la zone de
@@ -107,36 +116,58 @@ class ScenarioPerceptifConnexionTest {
             }
             return ReponseApi.succes(new ProfilVigieChiro("u-scenario", "chiro", "observateur"));
         });
-        injector = Guice.createInjector(new AbstractModule() {
-            @Override
-            protected void configure() {
-                // ⚠️ L'exécuteur ASYNCHRONE, celui de la production (`CommunModule`), et non le
-                // synchrone que `@ImplementedBy` donne par défaut aux tests. Le transitoire de
-                // S1-27 n'existe que hors du fil JavaFX : en synchrone, la récupération bloque le
-                // fil, aucune image n'est rendue pendant ce temps, et il n'y aurait rien à filmer.
-                //
-                // C'est l'exact contraire du besoin des captures (#3242), qui exigent le synchrone
-                // pour ne pas photographier un « Chargement… ». Ici, ce chargement EST le sujet.
-                bind(ExecuteurTache.class).to(ExecuteurTacheAsynchrone.class).in(Singleton.class);
-            }
 
-            @Provides
-            ConnexionViewModel viewModel() {
-                return new ConnexionViewModel(stockage, client, Set.of(), java.util.Optional.empty());
-            }
+        // ⚠️ L'application RÉELLE, et non une scène hôte vide. La version précédente montait un
+        // `StackPane` sans contenu ni dimensions, au motif que « ce qu'il faut voir est
+        // l'ouverture ». Le clip publié montrait donc un écran noir, un rectangle blanc de la
+        // taille d'une vignette, puis une modale posée dans un coin : rien qui permette de juger
+        // « la saisie est en place, rien ne se replace ». Un scénario perceptif se juge à l'oeil,
+        // et un oeil a besoin d'un contexte.
+        //
+        // `Modules.override` est le chemin que `RacineInjecteur` documente lui-même, et que les
+        // outils de capture empruntent déjà : on garde le câblage du produit, on ne remplace que ce
+        // que ce scénario doit tenir - le client, l'ouvreur de lien, et l'exécuteur.
+        injector =
+                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        // ⚠️ L'exécuteur ASYNCHRONE, celui de la production, et non le synchrone que
+                        // `@ImplementedBy` donne par défaut aux tests. Le transitoire de S1-27
+                        // n'existe que hors du fil JavaFX : en synchrone, la récupération bloque le
+                        // fil, aucune image n'est rendue pendant ce temps, et il n'y aurait rien à
+                        // filmer.
+                        //
+                        // C'est l'exact contraire du besoin des captures (#3242), qui exigent le
+                        // synchrone pour ne pas photographier un « Chargement… ». Ici, ce chargement
+                        // EST le sujet.
+                        bind(ExecuteurTache.class)
+                                .to(ExecuteurTacheAsynchrone.class)
+                                .in(Singleton.class);
+                    }
 
-            @Provides
-            OuvreurDeLien ouvreurDeLien() {
-                return lien -> {
-                    // Le scénario n'ouvre aucun navigateur : rien à voir sur le film, et rien à
-                    // lancer sur la machine qui filme.
-                };
-            }
-        });
-        // La scène hôte reste VIDE, et c'est le point : ce qu'il faut voir est l'ouverture, elle
-        // doit donc se produire pendant le test et non avant lui.
-        stage.setScene(Habillage.scene(new StackPane()));
+                    @Provides
+                    ConnexionViewModel viewModel() {
+                        return new ConnexionViewModel(stockage, client, Set.of(), Optional.empty());
+                    }
+
+                    @Provides
+                    OuvreurDeLien ouvreurDeLien() {
+                        return lien -> {
+                            // Le scénario n'ouvre aucun navigateur : rien à voir sur le film, et
+                            // rien à lancer sur la machine qui filme.
+                        };
+                    }
+                }));
+        new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
+
+        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
+        loader.setControllerFactory(injector::getInstance);
+        Parent racine = loader.load();
+        // ⚠️ La taille du produit, et `Habillage.scene` : c'est lui qui embarque la typographie, donc
+        // ce qui fait que le clip montre l'application telle qu'elle est livrée.
+        stage.setScene(Habillage.scene(racine, LARGEUR, HAUTEUR));
         stage.show();
+        fenetre = stage;
     }
 
     @Test
@@ -188,21 +219,14 @@ class ScenarioPerceptifConnexionTest {
 
     // ----------------------------------------------------------------------------------------
 
-    /// Le même chemin que `NavigationConnexion.ouvrir()`, joué depuis le test pour que l'ouverture
-    /// tombe dans la fenêtre filmée.
+    /// Ouvre la modale par le CHEMIN RÉEL du produit : l'entrée de menu, avec la fenêtre de
+    /// l'application pour propriétaire.
+    ///
+    /// ⚠️ La version précédente recopiait le corps de `NavigationConnexion.ouvrir()` dans ce fichier.
+    /// Une copie ne suit pas l'original : quand `ouvrir()` a reçu son propriétaire (#4073), la copie
+    /// ne l'a pas reçu, et le clip a continué de montrer une modale posée n'importe où. Un scénario
+    /// qui rejoue le geste au lieu de l'appeler ne joue pas ce geste-là.
     private void ouvrirLaModaleCommeLApplication() {
-        FXMLLoader loader = ChargeurFxml.chargeur(NavigationConnexion.class, "ConnexionModale.fxml");
-        loader.setControllerFactory(injector::getInstance);
-        try {
-            Parent vue = loader.load();
-            Stage modale = new Stage();
-            modale.initModality(Modality.APPLICATION_MODAL);
-            modale.setTitle("Connexion Vigie-Chiro");
-            modale.setScene(Habillage.scene(vue));
-            Modales.fermerParEchap(modale);
-            modale.show();
-        } catch (IOException echec) {
-            throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
-        }
+        injector.getInstance(ActionConnexion.class).executer(fenetre);
     }
 }

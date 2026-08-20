@@ -43,6 +43,6 @@ public final class ActionConnexion implements ActionMenu {
 
     @Override
     public void executer(Window proprietaire) {
-        navigation.ouvrir();
+        navigation.ouvrir(proprietaire);
     }
 }
