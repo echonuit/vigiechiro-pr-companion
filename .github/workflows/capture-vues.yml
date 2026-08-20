@@ -78,7 +78,7 @@ jobs:
         # ⚠️ Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
         # runners traînent AVANT de bloquer, donc la panne est en amont ; borner et reprendre
         # évite de pendre, cela ne fait pas descendre 91 Mo plus vite.
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ runner.temp }}/apt-vigiechiro
           key: apt-${{ runner.os }}-fonts-noto-core-imagemagick
