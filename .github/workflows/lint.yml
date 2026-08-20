@@ -65,7 +65,7 @@ jobs:
     # 0,2 Mo/s - le miroir de ce soir - c'est huit minutes rien que pour le téléchargement, et le
     # job mourait au butoir sans avoir lancé un seul cas. Vingt-cinq minutes couvrent le miroir
     # dégradé sans rien couvrir d'infini. Le chiffre à relire pour le régler de nouveau est celui
-    # que la porte annonce désormais : « N Mo à télécharger ».
+    # qu'APT annonce lui-même à l'installation : « Need to get 0 B/91.2 MB of archives ».
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
