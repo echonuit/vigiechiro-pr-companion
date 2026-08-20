@@ -86,17 +86,9 @@ class CorrespondanceRecetteTest {
     /// Une liste tenue à la main dériverait exactement comme la prose dérivait avant #3728.
     private static final Path CLASSES_A_FILMER = Path.of("target", "recette", "classes-citantes.txt");
 
-    /// Un cas se déclare `- **S1-04** · texte`, et `- **S1-26** · *perceptif* · texte` s'il ne se
-    /// tranche qu'à l'oeil. Le second groupe capture cette marque.
-    ///
-    /// ⚠️ **La case à cocher est optionnelle, et le groupe qui l'accepte est NON CAPTURANT.** Une
-    /// session de recette se **joue** : cocher est le geste de qui la joue, et S7 comme S10 l'écrivent
-    /// ainsi. Le motif exigeait `- **S7-01** ·` : les **38 cas déjà numérotés** de S7 restaient hors
-    /// de l'assiette pour six caractères, et le décompte annonçait « non lue » une session écrite
-    /// (#3884). Capturer ce groupe décalerait `group(1)` et `group(2)`, et le silence deviendrait un
-    /// perceptif.
-    private static final Pattern CAS =
-            Pattern.compile("^- (?:\\[[ xX]\\] )?\\*\\*(S\\d+-\\d+)\\*\\* ·( \\*perceptif\\* ·)?", Pattern.MULTILINE);
+    /// Le motif vit dans [MotifDeCas] : trois lecteurs de ces fichiers coexistent, et deux ont
+    /// découvert séparément que certaines sessions cochent leurs puces.
+    private static final Pattern CAS = MotifDeCas.CAS;
 
     /// Les cas déclarés par les sessions, par identifiant, associés au fichier qui les porte.
     private static Map<String, String> declares;

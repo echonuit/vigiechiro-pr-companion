@@ -36,6 +36,10 @@ on:
         description: "Témoin : ne PAS installer le gestionnaire de fenêtres, le lancement doit alors être refusé"
         type: boolean
         default: false
+      publier_les_clips:
+        description: "Filmer TOUTES les classes citantes et publier les clips sur la pré-version « clips-recette »"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -98,14 +102,40 @@ jobs:
 
       - name: Filmer le test
         id: film
+        # ⚠️ Deux modes, et un seul dispositif. `--planche` dérive la liste des classes qui citent un
+        # cas (`CorrespondanceRecetteTest`), les filme d'une traite et découpe un clip par test. Le
+        # mode à une classe reste ce qu'il était : c'est lui le témoin, et c'est lui que
+        # `sans_gestionnaire_de_fenetres` inverse.
         run: |
           set -euo pipefail
           chmod +x .github/scripts/lance-test-filme.sh
-          if .github/scripts/lance-test-filme.sh "${{ inputs.classe }}"; then
+          if [ "${{ inputs.publier_les_clips }}" = "true" ]; then
+            cible=(--planche)
+          else
+            cible=("${{ inputs.classe }}")
+          fi
+          if .github/scripts/lance-test-filme.sh "${cible[@]}"; then
             echo "verdict=vert" >> "$GITHUB_OUTPUT"
           else
             echo "verdict=rouge" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Remuxer les clips en mp4, pour qu'un navigateur les lise
+        # ⚠️ Le banc produit du `.mkv`, qu'aucun navigateur ne lit de façon fiable. Le flux est déjà
+        # du H.264 : `-c copy` change le conteneur sans ré-encoder, donc sans perte ni délai. Sans
+        # cette étape, la page de la doc dev afficherait un lecteur vide - le défaut que
+        # `check-doc-videos.sh --site` garde déjà pour les films de documentation.
+        if: inputs.publier_les_clips == 'true'
+        run: |
+          set -euo pipefail
+          compte=0
+          for clip in target/recette/clips/*.mkv; do
+            [ -e "$clip" ] || continue
+            ffmpeg -nostdin -loglevel error -i "$clip" -c copy -y "${clip%.mkv}.mp4"
+            compte=$((compte + 1))
+          done
+          [ "$compte" -gt 0 ] || { echo "::error::Aucun clip à remuxer : la planche n'a rien produit."; exit 1; }
+          echo "$compte clip(s) remuxé(s) en mp4."
 
       # Le témoin inverse le verdict : dans ce mode, un succès est un ÉCHEC du dispositif.
       - name: Juger, témoin compris
@@ -129,7 +159,10 @@ jobs:
         if: always() && inputs.sans_gestionnaire_de_fenetres != true
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: recette-filmee-${{ inputs.classe }}
+          # ⚠️ Le nom porte le MODE, pas seulement la classe : le job de publication reprend cet
+          # artefact par son nom, et « recette-filmee-EditeurCommentaireTest » ne lui dirait pas
+          # qu'il s'agit de la planche entière.
+          name: recette-filmee-${{ inputs.publier_les_clips == 'true' && 'planche' || inputs.classe }}
           # Le journal de repères part avec le film (#3774). Sans lui, la vidéo est un bloc dont
           # personne ne saura où regarder pour trancher un cas donné - et surtout, il est le seul
           # moyen de constater DEPUIS LA CI que l'extension a bien été chargée : un journal absent
@@ -142,3 +175,66 @@ jobs:
           # Rien ne part dans git.
           retention-days: 14
           if-no-files-found: error
+
+  # ------------------------------------------------------------------------------------------------
+  # La publication des clips, dans un job SÉPARÉ.
+  #
+  # ⚠️ Pourquoi séparé, et non deux étapes de plus dans le job précédent. Publier demande
+  # `contents: write` ; le job qui filme exécute les tests du produit, donc du code qui change à
+  # chaque PR. Lui donner le droit d'écrire dans le dépôt élargirait la surface pour une commodité.
+  # Ce job-ci ne fait qu'une chose : reprendre l'artefact et le verser sur la pré-version.
+  #
+  # ⚠️ Une pré-version ROULANTE, `clips-recette`, et non une version par tournage. Les URL doivent
+  # être stables : la page `dev-docs/recette/clips.md` les écrit en dur, et une adresse qui change à
+  # chaque tournage rendrait la page fausse le lendemain. `--clobber` remplace en place.
+  #
+  # Une pièce jointe de publication ne pèse RIEN dans l'historique git : les 459 Mio attachés à
+  # v2.185.0 n'y laissent aucun blob. C'est ce qui permet de ranger des vidéos sans faire grossir le
+  # dépôt, dont 79 % du poids sont déjà des PNG de captures.
+  publier:
+    name: Verser les clips sur la pré-version roulante
+    needs: filmer
+    if: inputs.publier_les_clips == 'true' && inputs.sans_gestionnaire_de_fenetres != true
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Reprendre les clips du tournage
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: recette-filmee-planche
+          path: repris
+
+      - name: Ouvrir la pré-version si elle n'existe pas encore
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if gh release view clips-recette >/dev/null 2>&1; then
+            echo "La pré-version « clips-recette » existe déjà : les pièces seront remplacées."
+          else
+            gh release create clips-recette \
+              --prerelease \
+              --title "Clips de recette (roulant)" \
+              --notes "Les clips du dernier tournage complet. Cette pré-version est ROULANTE : ses pièces jointes sont remplacées à chaque tournage, et leurs adresses ne changent pas. Elle ne marque aucune version du produit ; voir la page « Regarder les clips de recette » de la documentation développeur."
+          fi
+
+      - name: Verser les clips et leur index
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          # ⚠️ `recette/clips/`, et non `clips/`. L'action d'envoi range les fichiers sous leur plus
+          # petit ancêtre commun : les trois chemins téléversés vivent sous `target/`, donc l'archive
+          # contient `recette/…` et `recette-filmee/…`. Vérifié sur un artefact rapatrié, pas déduit.
+          clips=(repris/recette/clips/*.mp4)
+          [ -e "${clips[0]}" ] || {
+            echo "::error::Aucun clip mp4 dans l'artefact repris. Arborescence trouvée :"
+            find repris -type f | head -20
+            exit 1
+          }
+          gh release upload clips-recette "${clips[@]}" repris/recette/clips/index.md --clobber
+          echo "${#clips[@]} clip(s) versé(s) sur « clips-recette »."
