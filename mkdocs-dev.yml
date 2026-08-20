@@ -259,6 +259,7 @@ nav:
     - Passe de coutures · stabilisation: recette/sessions/passe-verification-stabilisation.md
   - Interface en ligne de commande (CLI): cli.md
   - Tests et qualité: tests-et-qualite.md
+  - Spike · filmer depuis le graphe de scène: spikes/film-depuis-le-graphe-de-scene.md
   - Audit des filtres tabulaires: audit-filtres-vues-tabulaires.md
   - Contrat de l'API VigieChiro: api-vigiechiro.md
   - Performance et benchmarks: performance.md
