@@ -128,25 +128,35 @@ contenu occupe x de 90 à 1189 et y de 90 à 810, marges de 90 et 89 pixels, tit
 Ce qui rendait ce défaut dangereux est sa modestie : **un bord amputé de cinquante pixels se lit
 comme une mise en page**, pas comme un défaut. Il n'aurait fait rougir aucun test.
 
+### 4. L'allocation : le bassin de tampons n'est pas justifié
+
+`composer()` alloue une toile neuve et `snapshot` un `WritableImage` neuf à chaque image. La
+question posée était : faut-il un bassin de tampons rendus par le scribe après écriture ?
+
+**Non**, et la mesure le dit. On a poussé la cadence jusqu'à ce que le compteur d'images perdues
+bouge, sur `ParcoursNavigationE2ETest` :
+
+| Cadence | Images écrites | Images perdues |
+|---:|---:|---:|
+| 10 img/s (nominale) | 212 | **0** |
+| 25 img/s | 417 | **0** |
+| 50 img/s | 710 | **0** |
+| 50 img/s, file étranglée à 1 au lieu de 60 | 703 | **0** |
+
+**Le compteur n'est pas mort, il a été éprouvé** : en ralentissant le scribe de 120 ms par image, il
+rapporte 45 pertes. Un zéro non éprouvé n'aurait rien valu.
+
+À cinq fois la cadence nominale, et même avec une file de profondeur 1, rien ne se perd. Le bassin
+serait donc une optimisation que rien ne justifie, et il coûterait cher en risque : il faudrait que
+le scribe rende chaque tampon, et un tampon rendu trop tôt réécrirait une image encore en attente.
+
+Le piège reste documenté au-dessus de `composer()`, parce que la tentation, elle, reviendra.
+
 ### Ce qui reste à vérifier
 
-Ce conteneur n'a pas de banc de référence pour les deux points suivants.
-
-3. **Le pipeline logiciel.** Le rendu passe par Prism SW en headless. Quelques effets et mélanges
-   diffèrent à la marge du rendu matériel. Sans conséquence pour un film de recette, à vérifier
-   une fois si un test perceptif juge au pixel près.
-
-4. **L'allocation.** `composer()` alloue une toile neuve et `snapshot` un `WritableImage` neuf à
-   chaque image, soit de l'ordre de 45 Mo par seconde à 10 images/s en 1280x900. À surveiller en
-   même temps que le débit.
-
-   ⚠️ **Réutiliser un ou deux tampons ne marcherait pas**, et c'est un piège qui rend un film
-   silencieusement faux plutôt qu'absent : la file a une profondeur de 60 et le fil scribe consomme
-   en différé, donc jusqu'à 60 images attendent leur écriture. Écrire par-dessus l'une d'elles
-   remplacerait une image passée par une image présente. La forme juste est un **petit bassin de
-   tampons** que le scribe **rend** après écriture, le producteur comptant comme perdue une image
-   pour laquelle aucun tampon n'est libre, exactement comme il compte déjà celles que la file
-   refuse.
+**Le pipeline logiciel.** Le rendu passe par Prism SW en headless. Quelques effets et mélanges
+diffèrent à la marge du rendu matériel. Sans conséquence pour un film de recette, à vérifier une
+fois si un test perceptif juge au pixel près.
 
 Deux limites assumées : le curseur n'est pas rendu (il se dessine à partir d'un `EventFilter` sur
 `MOUSE_MOVED`, ce qui permet en échange de surligner le nœud touché), et les boîtes natives

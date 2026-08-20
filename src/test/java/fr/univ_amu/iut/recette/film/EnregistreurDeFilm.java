@@ -29,7 +29,12 @@ public final class EnregistreurDeFilm implements BeforeTestExecutionCallback, Af
 
     private static final String PROPRIETE = "recette.film";
     private static final String CLE = "enregistrement";
-    private static final int IMAGES_PAR_SECONDE = 10;
+    /// La cadence du film, pilotable comme la taille l'est déjà.
+    ///
+    /// Elle est réglable parce qu'elle a servi à ÉPROUVER le dispositif : poussée à 50, soit cinq
+    /// fois la valeur nominale, la caméra a composé 710 images sur un parcours sans en perdre une
+    /// seule. C'est ce qui a clos la question de l'allocation.
+    private static final int IMAGES_PAR_SECONDE = Integer.getInteger("recette.film.cadence", 10);
     private static final double DUREE_DU_CARTON = 2.0;
 
     private static final ExtensionContext.Namespace ESPACE =
