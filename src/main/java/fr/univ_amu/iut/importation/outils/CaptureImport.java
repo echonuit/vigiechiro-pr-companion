@@ -35,7 +35,6 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -45,7 +44,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
-import java.util.stream.Stream;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
@@ -370,11 +368,6 @@ public final class CaptureImport {
                 "PaRecPR1648011_20260430_204326.wav");
     }
 
-    private static final String NOM_JOURNAL = "LogPR1925492.txt";
-    private static final String NOM_RELEVE = "PaRecPR1925492_THLog.csv";
-    private static final String ENTETE_RELEVE = "Date\tHour\n";
-    private static final String CONTENU_WAV = "wav";
-
     /// Journal daté de la **première nuit** (03/07) de l'échantillon multi-nuits : sa date tombe dans les
     /// nuits des fichiers (03/04/05-07), pour que l'inspection ne lève **pas** l'avertissement de
     /// non-correspondance journal/enregistrements (le cas normal d'une carte laissée tourner plusieurs
@@ -392,29 +385,11 @@ public final class CaptureImport {
     /// (et non un dossier temporaire aléatoire) car il est affiché dans le champ « Dossier source », donc
     /// une racine stable garde les PNG reproductibles. Réécrit à chaque appel (idempotent). Factorise les
     /// libellés communs (PMD `AvoidDuplicateLiterals`).
+    /// Délègue à [DossierDeFixture], qui **vide** le dossier avant d'écrire - son chemin est
+    /// déterministe, et les restes d'une exécution précédente feraient montrer à la capture la SOMME
+    /// des deux (#4044).
     private static Path creerDossierAvecWav(String nom, String log, List<String> wavs) throws IOException {
-        Path sd = Path.of(System.getProperty("java.io.tmpdir"), nom);
-        // ⚠️ On VIDE le dossier avant d'écrire. Son chemin est déterministe : sans ce nettoyage, les
-        // fichiers d'une exécution précédente y restent, et la capture montre leur SOMME. Vécu en
-        // ajustant une fixture : « 4 enregistrement(s) WAV détecté(s) » pour une fixture qui en
-        // déclare deux, et un aperçu de préfixe portant l'ancien nom.
-        //
-        // La CI ne le voit pas - un runner est neuf à chaque fois - et c'est bien là le problème :
-        // le piège ne mord qu'en local, c'est-à-dire précisément là où l'on met une capture au point.
-        if (Files.isDirectory(sd)) {
-            try (Stream<Path> restes = Files.list(sd)) {
-                for (Path reste : restes.toList()) {
-                    Files.deleteIfExists(reste);
-                }
-            }
-        }
-        Files.createDirectories(sd);
-        Files.writeString(sd.resolve(NOM_JOURNAL), log, StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve(NOM_RELEVE), ENTETE_RELEVE, StandardCharsets.UTF_8);
-        for (String wav : wavs) {
-            Files.writeString(sd.resolve(wav), CONTENU_WAV);
-        }
-        return sd;
+        return DossierDeFixture.preparer(nom, log, wavs);
     }
 
     /// Variante à **deux** WAV (une seule nuit), pour les échantillons standard / mélange / incohérence.
