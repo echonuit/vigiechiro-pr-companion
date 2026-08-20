@@ -14,7 +14,7 @@ jamais écrire**.
 
 ```
 Aperçu : Car640380-2026-Pass1-A1-PaRecPR1648011_20260422_204010.wav
-Après  : « 3 / 6 importés » — les trois ignorés sont ceux de la série 1648011
+Après  : « 3 / 6 importés » - les trois ignorés sont ceux de la série 1648011
 ```
 
 Les deux règles étaient justes séparément, et ne se parlaient pas :
