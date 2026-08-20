@@ -88,15 +88,36 @@ final class CameraDeScene extends AnimationTimer {
             }
             fenetreVue = true;
             WritableImage prise = scene.snapshot(null);
-            g.drawImage(versAwt(prise), coordonnee(fenetre.getX()), coordonnee(fenetre.getY()), null);
+            g.drawImage(
+                    versAwt(prise),
+                    decalage(largeur, (int) prise.getWidth()),
+                    decalage(hauteur, (int) prise.getHeight()),
+                    null);
         }
         g.dispose();
         return toile;
     }
 
-    /// Une fenêtre pas encore positionnée rend NaN : on la pose à l'origine plutôt que d'échouer.
-    private static int coordonnee(double valeur) {
-        return Double.isNaN(valeur) ? 0 : (int) Math.round(valeur);
+    /// Le décalage qui CENTRE une fenêtre sur la toile.
+    ///
+    /// On ne lit pas les coordonnées de la fenêtre, et c'est le résultat d'une mesure. Sous
+    /// Monocle, `Window.getX()` situe la fenêtre sur un écran virtuel dont les dimensions ne sont
+    /// pas celles de la toile : une scène de 1100×720 était dessinée à **x = -51**, perdant ses
+    /// 51 premiers pixels tandis que 231 pixels de toile restaient vides à droite. Le clip montrait
+    /// alors « ieChiro Companion » au lieu de « VigieChiro Companion », et « gende » au lieu de
+    /// « Légende ».
+    ///
+    /// Le décalage est modeste, et c'est ce qui le rendait dangereux : un bord amputé de cinquante
+    /// pixels se lit comme une mise en page, pas comme un défaut.
+    ///
+    /// Centrer reproduit fidèlement l'arrangement visuel : une modale se pose au milieu de sa
+    /// fenêtre parente, ce qui est exactement là où l'utilisateur la voit.
+    ///
+    /// Une fenêtre PLUS LARGE que la toile déborde alors des deux côtés à parts égales, plutôt que
+    /// de perdre un bord entier. C'est délibéré : un débordement symétrique se remarque, un bord
+    /// unique manquant se lit comme une mise en page.
+    static int decalage(int toile, int fenetre) {
+        return (toile - fenetre) / 2;
     }
 
     /// Copie les pixels sans passer par `javafx.swing` : le format entier ARGB de JavaFX est

@@ -46,11 +46,12 @@ bon endroit pour dériver la liste.
 | Fichier | Rôle |
 |---|---|
 | `EnregistreurDeFilm.java` | L'extension JUnit 5. Ne fait rien sans `-Drecette.film` |
-| `CameraDeScene.java` | `AnimationTimer` qui compose les fenêtres visibles à leur position |
+| `CameraDeScene.java` | `AnimationTimer` qui compose les fenêtres visibles, CENTRÉES sur la toile |
 | `Enregistrement.java` | Une séance par test : file bornée, fil d'écriture, bilan |
 | `Encodeur.java` | Interface, et l'implémentation qui nourrit le ffmpeg du banc en rawvideo |
 | `CartonDeTitre.java` | Le carton, dessiné au format du film |
 | `LibelleDesCas.java` | Le libellé d'un cas, lu dans les sessions |
+| `CameraDeSceneTest`, `EncodeurTest` | Les gardes du placement et de la résolution de l'encodeur |
 | `IndexDesCas.java` | L'index par cas, écrit en fin de session JUnit |
 | `CasDeRecette.java` | Rappel de la forme supposée. À supprimer à l'intégration |
 
@@ -90,16 +91,47 @@ Propriétés reconnues : `recette.film` (présence suffit), `recette.film.taille
 repli de `CartonDeTitre` en fait rougir 1, et retirer la case à cocher du motif de puce en fait
 rougir 1. `apercu-carton.png` est le rendu réel, à relire à l'œil.
 
-Le reste ne l'est pas : ce conteneur n'a ni JavaFX ni banc. Quatre points à vérifier chez toi en
-premier.
+### 1. Le débit : mesuré, et le compteur ne bouge pas
 
-1. **Le débit.** Un `snapshot` d'une scène 1280x900 coûte quelques dizaines de millisecondes sur le
-   fil FX. À 10 images par seconde, l'application ralentit pendant le test. Le bilan compte les
-   images perdues plutôt que de les taire : si le compteur monte, baisser à 5 images par seconde
-   ou réduire la taille.
-2. **La position des fenêtres sous Monocle.** `Window.getX()` y vaut souvent 0 ou NaN, et les
-   modales se superposeraient alors à l'origine au lieu d'être centrées. Si c'est le cas, centrer
-   soi-même les fenêtres secondaires sur la toile plutôt que de lire leurs coordonnées.
+Seize clips produits, dix sur `ConnexionModaleViewTest` et six sur `ParcoursNavigationE2ETest` :
+**zéro image perdue**. Le fil FX suit la cadence de 10 images par seconde.
+
+Le surcoût en temps, lui, **n'est pas mesurable sur un poste chargé**. Trois exécutions de chaque
+sur la même classe E2E :
+
+| | avec film | sans film |
+|---|---:|---:|
+| 1 | 37,49 s | 26,46 s |
+| 2 | 28,51 s | 25,13 s |
+| 3 | 26,57 s | **38,04 s** |
+| moyenne | 30,86 s | 29,88 s |
+
+Le troisième run **sans** film est le plus lent de tous. L'écart des moyennes vaut +0,98 s pour une
+étendue de 12,91 s : la marge est du même ordre que la variance de la machine. Un seul échantillon
+aurait donné « +42 % », et c'est ce qu'il a donné avant qu'on répète.
+
+La leçon vaut au-delà de ce spike : **comparer la marge à la variance, pas à zéro**.
+
+### 2. La position des fenêtres : c'était un défaut, il est corrigé
+
+Le clip d'un parcours montrait « ieChiro Companion » au lieu de « VigieChiro Companion », et
+« gende » au lieu de « Légende ».
+
+Mesuré au pixel : la scène fait **1100×720** et elle était dessinée à **x = -51**, perdant ses
+51 premiers pixels tandis que 231 pixels de toile restaient vides à droite. `Window.getX()` situe
+la fenêtre sur un écran virtuel Monocle étranger à la toile.
+
+`CameraDeScene.decalage` **centre** désormais, sans lire aucune coordonnée. Sur le clip refait, le
+contenu occupe x de 90 à 1189 et y de 90 à 810, marges de 90 et 89 pixels, titre entier.
+`CameraDeSceneTest` garde le placement en cinq cas.
+
+Ce qui rendait ce défaut dangereux est sa modestie : **un bord amputé de cinquante pixels se lit
+comme une mise en page**, pas comme un défaut. Il n'aurait fait rougir aucun test.
+
+### Ce qui reste à vérifier
+
+Ce conteneur n'a pas de banc de référence pour les deux points suivants.
+
 3. **Le pipeline logiciel.** Le rendu passe par Prism SW en headless. Quelques effets et mélanges
    diffèrent à la marge du rendu matériel. Sans conséquence pour un film de recette, à vérifier
    une fois si un test perceptif juge au pixel près.
