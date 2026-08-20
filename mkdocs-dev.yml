@@ -237,6 +237,10 @@ nav:
     - 3978 · Un point de passage garantit l'ensemble: decisions/3978-un-point-de-passage-garantit-l-ensemble-pas-un-de-ses-membres.md
     - 3990 · Le texte se lit, le JSON se parse: decisions/3990-le-texte-se-lit-le-json-se-parse.md
     - 4002 · Un contrôle se juge avec ses voisins: decisions/4002-un-controle-se-juge-avec-ses-voisins-pas-seul.md
+    - 4013 · Un banc qui filme éprouve son résultat: decisions/4013-un-banc-qui-filme-eprouve-son-resultat.md
+    - 4021 · Un aperçu montre ce que l'action produira: decisions/4021-un-apercu-montre-ce-que-l-action-produira.md
+    - 4028 · Tout job de CI porte un butoir: decisions/4028-tout-job-de-ci-porte-un-butoir.md
+    - 4034 · Les paquets passent par une porte: decisions/4034-les-paquets-passent-par-une-porte.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
