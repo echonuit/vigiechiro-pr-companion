@@ -87,6 +87,29 @@ jobs:
 YML
     verifie 1 "une installation SANS APT_CACHE est refusée"
 
+    # ⚠️ La décision elle-même se garde. Sans ce cas, quelqu'un basculerait les polices sur l'action
+    # rapide pour gagner vingt secondes, et les aperçus rendraient dans un repli sans que rien ne
+    # rougisse.
+    cat > "$bac/.github/workflows/cache.yml" <<'YML'
+jobs:
+  a:
+    steps:
+      - uses: awalsh128/cache-apt-pkgs-action@abc
+        with:
+          packages: fonts-noto-core
+YML
+    verifie 1 "une police par l action de cache est refusée"
+
+    cat > "$bac/.github/workflows/cache.yml" <<'YML'
+jobs:
+  a:
+    steps:
+      - uses: awalsh128/cache-apt-pkgs-action@abc
+        with:
+          packages: ffmpeg xdotool
+YML
+    verifie 0 "des paquets de fichiers par l action de cache : accepté"
+
     cat > "$bac/.github/workflows/cache.yml" <<'YML'
 jobs:
   a:
@@ -157,6 +180,17 @@ except ImportError:
     print("✗ PyYAML absent : la garde ne peut pas lire les workflows.")
     sys.exit(1)
 
+# ⚠️ Les paquets dont le POST-INSTALL fait le travail. `awalsh128/cache-apt-pkgs-action` restaure
+# des fichiers ; elle ne garantit pas l'exécution des scripts `postinst`. Pour ceux-là, le gain de
+# vitesse s'échangerait contre un défaut muet :
+#
+#   fonts-*   `fc-cache` n'est pas rejoué -> les aperçus rendent dans une police de REPLI, et rien
+#             ne rougit. C'est précisément la famille de faux que ce dépôt traque.
+#   flatpak*  services et alternatives.
+#
+# Ils passent par `installer-paquets.sh`, qui installe pour de vrai.
+POST_INSTALL_COMPTE = ("fonts-", "flatpak")
+
 ecarts = []
 for chemin in sorted(glob.glob(os.path.join(sys.argv[1], "*.yml"))):
     with open(chemin, encoding="utf-8") as f:
@@ -165,11 +199,26 @@ for chemin in sorted(glob.glob(os.path.join(sys.argv[1], "*.yml"))):
         if not isinstance(job, dict):
             continue
         etapes = job.get("steps") or []
+        nom = f"{os.path.basename(chemin)} / {nomjob}"
+
+        # ⚠️ AVANT le « continue » ci-dessous : un job peut n'employer que l'action de cache, sans
+        # aucune installation par la porte - et c'est justement là qu'une police mal placée
+        # passerait. La première version de cette règle vivait après, donc ne s'exécutait jamais
+        # pour ces jobs-là ; son cas restait vert.
+        for etape in etapes:
+            if not isinstance(etape, dict) or "awalsh128/cache-apt-pkgs-action" not in str(etape.get("uses", "")):
+                continue
+            demandes = str((etape.get("with") or {}).get("packages", "")).split()
+            risques = [q for q in demandes if q.startswith(POST_INSTALL_COMPTE)]
+            if risques:
+                ecarts.append(
+                    f"{nom} : {', '.join(risques)} passe(nt) par l'action de cache, qui n'exécute pas "
+                    f"les scripts post-installation - à installer par installer-paquets.sh")
+
         installs = [e for e in etapes if isinstance(e, dict) and "installer-paquets.sh" in str(e.get("run", ""))]
         if not installs:
             continue
         caches = [e for e in etapes if isinstance(e, dict) and "actions/cache@" in str(e.get("uses", ""))]
-        nom = f"{os.path.basename(chemin)} / {nomjob}"
         if len(caches) != 1:
             ecarts.append(f"{nom} : {len(caches)} cache(s) pour {len(installs)} installation(s) - il en faut UN, partagé")
         sans = [e for e in installs if not (e.get("env") or {}).get("APT_CACHE")]

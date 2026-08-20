@@ -54,34 +54,38 @@ jobs:
           java-version: '25'
           cache: maven
 
-      - name: Cache des paquets APT (xvfb, xdotool, ffmpeg, openbox)
-        # ⚠️ Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
-        # runners traînent AVANT de bloquer, donc la panne est en amont ; borner et reprendre
-        # évite de pendre, cela ne fait pas descendre 91 Mo plus vite.
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ${{ runner.temp }}/apt-vigiechiro
-          key: apt-${{ runner.os }}-ffmpeg-openbox-x11-utils-xdotool-xvfb
-      
       - name: Installer de quoi afficher et filmer
-        env:
-          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
+        # ⚠️ Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
+        # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
+        # `installer-paquets.sh`, dont le post-install fait foi.
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: xvfb xdotool ffmpeg x11-utils
+          version: vigiechiro-1
+
+      - name: Installer le gestionnaire de fenêtres
+        # Le gestionnaire de fenêtres est posé À PART, pour que le témoin puisse s'en passer : c'est
+        # tout l'objet de `sans_gestionnaire_de_fenetres`, qui vérifie que le lancement filmé REFUSE
+        # quand il manque.
+        #
+        # ⚠️ openbox, et non matchbox (#3788). matchbox MAXIMISE tout ce qu'il affiche - c'est son
+        # parti pris, il est fait pour de petits écrans - si bien que la modale de connexion
+        # occupait 1280 × 900 sur le film, contenu tassé en haut. Deux conséquences, et la seconde
+        # est la grave : les tests de croissance de fenêtre ne pouvaient pas passer (une fenêtre
+        # déjà maximisée ne grandit pas), et surtout les clips de #3774 ne montraient PAS la mise
+        # en page livrée - donc qui les jugeait jugeait autre chose.
+        if: inputs.sans_gestionnaire_de_fenetres != 'true'
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: openbox
+          version: vigiechiro-1
+
+      - name: Annoncer le témoin sans gestionnaire de fenêtres
+        if: inputs.sans_gestionnaire_de_fenetres == 'true'
+        # ⚠️ Bloc littéral : la chaîne contient « : », que YAML lirait comme une association si elle
+        # était nue.
         run: |
-          set -euo pipefail
-          # Le gestionnaire de fenêtres est posé À PART, pour que le témoin puisse s'en passer.
-          #
-          # ⚠️ openbox, et non matchbox (#3788). matchbox MAXIMISE tout ce qu'il affiche - c'est son
-          # parti pris, il est fait pour de petits écrans - si bien que la modale de connexion
-          # occupait 1280 × 900 sur le film, contenu tassé en haut. Deux conséquences, et la seconde
-          # est la grave : les tests de croissance de fenêtre ne pouvaient pas passer (une fenêtre
-          # déjà maximisée ne grandit pas), et surtout les clips de #3774 ne montraient PAS la mise
-          # en page livrée - donc qui les jugeait jugeait autre chose.
-          bash .github/scripts/installer-paquets.sh --avec-recommandations xvfb xdotool ffmpeg x11-utils
-          if [ "${{ inputs.sans_gestionnaire_de_fenetres }}" = "true" ]; then
-            echo "::warning::TÉMOIN : aucun gestionnaire de fenêtres, le lancement DOIT être refusé."
-          else
-            bash .github/scripts/installer-paquets.sh --avec-recommandations openbox
-          fi
+          echo "::warning::TÉMOIN : aucun gestionnaire de fenêtres, le lancement DOIT être refusé."
 
       - name: Filmer le test
         id: film

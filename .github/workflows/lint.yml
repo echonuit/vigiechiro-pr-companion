@@ -70,33 +70,20 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
-      - name: Cache des paquets APT (xvfb, xdotool, ffmpeg…)
-        # ⚠️ Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
-        # runners traînent AVANT de bloquer, donc la panne est en amont ; borner et reprendre
-        # évite de pendre, cela ne fait pas descendre 91 Mo plus vite.
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ${{ runner.temp }}/apt-vigiechiro
-          key: apt-${{ runner.os }}-ffmpeg-openbox-tesseract-ocr-tesseract-ocr-fra-x11-utils-xdo
-      
       - name: Installer de quoi afficher et filmer
-        # Le même outillage que `recette-filmee.yml`, et pour la même raison. openbox, et NON
-        # matchbox (#3788) : matchbox maximise tout ce qu'il affiche, si bien qu'une modale de
-        # 560 px s'étalait sur 1280 et que le banc montrait une mise en page que personne ne voit.
+        # ⚠️ Le cache porte sur l'état INSTALLÉ, pas sur les `.deb` : il saute donc aussi le
+        # dépaquetage. Mon premier cache maison ne supprimait que le téléchargement, et les 91 Mo se
+        # dépaquetaient encore à chaque run - la moitié du remède.
         #
-        # ⚠️ `--no-install-recommends` : les recommandations d'ffmpeg tirent SDL2, OpenAL, jack et
-        # `fonts-urw-base35` - de quoi jouer et sonoriser une vidéo, là où ce banc ne fait que
-        # capturer, mesurer une luminance et concaténer. C'est précisément ce que le miroir mettait
-        # quarante minutes à livrer.
-        #
-        # Ce qu'on ne vérifie pas par un raisonnement : que la version allégée suffise. C'est
-        # l'auto-test qui le dit, à l'étape suivante - quatorze de ses cas passent par `ffmpeg` ou
-        # `ffprobe`, trois par le serveur X et son gestionnaire de fenêtres. S'il manquait quelque
-        # chose, il rougirait ici même.
-        env:
-          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
-        run: |
-          bash .github/scripts/installer-paquets.sh xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra
+        # ⚠️ Ce que cette action ne garantit PAS : l'exécution des scripts post-installation Debian.
+        # Elle convient ICI parce que ces paquets ne sont que des fichiers. Les polices (`fc-cache`)
+        # et flatpak (services, alternatives) gardent `installer-paquets.sh`, dont le post-install
+        # fait foi : une police non enregistrée ferait rendre les aperçus dans un repli, sans que
+        # rien ne rougisse.
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: xvfb xdotool ffmpeg x11-utils openbox tesseract-ocr tesseract-ocr-fra
+          version: vigiechiro-1
 
       - name: Le banc de recette, ses cas et ses rouges attendus
         run: |

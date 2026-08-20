@@ -291,15 +291,22 @@ jobs:
             -DskipTests -Dpmd.skip=true -Djacoco.skip=true \
             "${ICONE[@]}" verify
 
-      - name: Cache des paquets APT (desktop-file-utils)
-        # ⚠️ Le seul levier qui reste quand l'hébergeur ralentit : ne pas retélécharger. Les
-        # runners traînent AVANT de bloquer, donc la panne est en amont ; borner et reprendre
-        # évite de pendre, cela ne fait pas descendre 91 Mo plus vite.
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ${{ runner.temp }}/apt-vigiechiro
-          key: apt-${{ runner.os }}-desktop-file-utils
       
+      - name: Installer desktop-file-utils (validation du .desktop)
+        # `desktop-file-validate`, dont appimagetool se sert pour valider le .desktop. Absent des
+        # runners GitHub, alors qu'il est présent sur la plupart des postes de développement (tiré
+        # par les environnements de bureau) : d'où une construction qui passait en local et échouait
+        # ici, sur la release v2.21.0.
+        #
+        # ⚠️ Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
+        # parce que ce paquet n'est que des fichiers ; les polices et flatpak gardent
+        # `installer-paquets.sh`, dont le post-install fait foi.
+        if: matrix.portable == 'linux'
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: desktop-file-utils
+          version: vigiechiro-1
+
       - name: Construire l'AppImage (Linux)
         # Un fichier unique et exécutable : l'utilisateur le rend exécutable et le lance, sans rien
         # décompresser. Complément de l'archive portable pour qui préfère un fichier à un dossier, et
@@ -309,14 +316,7 @@ jobs:
         # deux formats partent de la même app-image, il ne faut donc pas la retirer entre-temps.
         if: matrix.portable == 'linux'
         shell: bash
-        env:
-          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
-          # desktop-file-utils fournit `desktop-file-validate`, dont appimagetool se sert pour valider
-          # le .desktop. Absent des runners GitHub, alors qu'il est présent sur la plupart des postes
-          # de développement (tiré par les environnements de bureau) : d'où une construction qui
-          # passait en local et échouait ici, sur la release v2.21.0.
-          bash .github/scripts/installer-paquets.sh --avec-recommandations desktop-file-utils
           TAG="${{ needs.release.outputs.tag }}"
           chmod +x .github/scripts/construit-appimage.sh
           ./.github/scripts/construit-appimage.sh "${TAG#v}" x86_64
