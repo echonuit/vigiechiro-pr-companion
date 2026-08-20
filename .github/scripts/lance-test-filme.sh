@@ -600,6 +600,33 @@ auto_test() {
     essai "robot laissé en glass" rouge env POM_A_VERIFIER="$tmp/sans-awt.xml" bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
     essai "profil entièrement absent" rouge env POM_A_VERIFIER="$tmp/sans-profil.xml" bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
 
+    # --- la RELANCE elle-même (#4047) ---
+    # ⚠️ Le cas ci-dessous éprouve le contrôle ; celui-ci éprouve la RELANCE, qui n'était gardée par
+    # rien. C'est pourtant elle qui a rendu « WAYLAND_DISPLAY posé » faussement vert : la copie
+    # sourcée se relançait, et le contrôle ne voyait plus rien à signaler.
+    #
+    # Le levier est `--verifier`, qui sort sans rien lancer. Avec WAYLAND_DISPLAY posé et AUCUN
+    # drapeau, la ligne 44 doit s'exécuter et retirer la variable : la sortie ne porte alors aucune
+    # plainte Wayland. Si la relance cessait d'opérer, la plainte reviendrait - et c'est exactement
+    # ce que ce cas verrait.
+    #
+    # ⚠️ On lit la SORTIE, pas le code de retour : `--verifier` rougit aussi pour un serveur X
+    # absent, ce qui est le cas sur un poste de développement. Un cas qui lirait le code confondrait
+    # les deux causes.
+    # ⚠️ `env -u RECETTE_RELANCE` : l'environnement de l'auto-test PORTE déjà le drapeau, si bien
+    # qu'un cas qui ne le retire pas hérite de la condition qu'il prétend poser - et observe donc
+    # l'absence de relance en croyant observer sa présence. C'est le piège de #3883 exactement, une
+    # génération plus loin : un cas doit poser son point de départ, jamais en hériter.
+    essai "la relance retire WAYLAND_DISPLAY" vert \
+        bash -c 'sortie=$(env -u RECETTE_RELANCE WAYLAND_DISPLAY=wayland-cas bash "$0" --verifier 2>&1)
+            case "$sortie" in *"WAYLAND_DISPLAY est posé"*) exit 1 ;; *) exit 0 ;; esac' "${BASH_SOURCE[0]}"
+    # ⚠️ Et le témoin : avec le drapeau DÉJÀ posé, la relance ne doit pas avoir lieu, donc la plainte
+    # doit paraître. Sans ce second cas, le premier passerait aussi si la relance retirait la
+    # variable pour une raison étrangère - ou si plus rien ne la posait jamais.
+    essai "sans relance, la plainte Wayland paraît" rouge \
+        bash -c 'sortie=$(WAYLAND_DISPLAY=wayland-cas RECETTE_RELANCE=1 bash "$0" --verifier 2>&1)
+            case "$sortie" in *"WAYLAND_DISPLAY est posé"*) exit 1 ;; *) exit 0 ;; esac' "${BASH_SOURCE[0]}"
+
     # --- WAYLAND_DISPLAY ---
     essai "WAYLAND_DISPLAY retiré" vert  env -u WAYLAND_DISPLAY bash -c 'source "$0"; verifier_wayland' "${BASH_SOURCE[0]}"
     # ⚠️ `RECETTE_RELANCE=1` est INDISPENSABLE, et son absence a rendu ce cas vert pendant tout ce
