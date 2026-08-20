@@ -261,6 +261,18 @@ jobs:
           ./.github/scripts/verifie-butoirs.sh --auto-test
           ./.github/scripts/verifie-butoirs.sh
 
+      - name: Une entrée booléenne ne se compare pas à une chaîne
+        # ⚠️ `inputs.x == 'true'` vaut TOUJOURS faux, et `!= 'true'` TOUJOURS vrai : une entrée
+        # `type: boolean` arrive comme un vrai booléen, et comparer deux types différents les casse
+        # tous les deux en nombres. Mesuré sur le run 32395513266 : le remuxage des clips était sauté
+        # alors que le film existait, et le témoin « sans gestionnaire de fenêtres » installait quand
+        # même openbox - la garde qui prouve que la vérification du pointeur garde quelque chose ne
+        # gardait donc rien elle-même.
+        run: |
+          chmod +x .github/scripts/verifie-conditions-booleennes.sh
+          ./.github/scripts/verifie-conditions-booleennes.sh --auto-test
+          ./.github/scripts/verifie-conditions-booleennes.sh
+
       - name: Les renvois entre workflows visent un libellé existant
         # Un `workflow_run` désigne le workflow attendu par son `name:`, apparié par égalité stricte.
         # Un libellé mort n'arme rien et ne rougit pas : il n'y a AUCUN run à regarder. #3279 l'a payé

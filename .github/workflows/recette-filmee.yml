@@ -76,6 +76,19 @@ jobs:
         run: |
           bash .github/scripts/installer-paquets.sh --avec-recommandations xvfb xdotool ffmpeg x11-utils
 
+      # ⚠️ `${{ !inputs.x }}`, et JAMAIS `inputs.x != 'true'`. Une entrée `type: boolean` de
+      # `workflow_dispatch` arrive comme un VRAI booléen, et comparer un booléen à une chaîne casse
+      # les deux en nombres : `'true'` n'est pas un nombre, donc toute comparaison est fausse.
+      # `!= 'true'` vaut donc TOUJOURS vrai, et `== 'true'` TOUJOURS faux.
+      #
+      # Conséquence mesurée sur le run 32395513266 : le témoin « sans gestionnaire de fenêtres »
+      # installait quand même openbox, et son avertissement ne paraissait jamais. La garde qui prouve
+      # que la vérification du pointeur garde quelque chose ne gardait donc rien elle-même.
+      #
+      # L'interpolation shell, elle, marche : `"${{ inputs.x }}"` rend le texte `true`. C'est ce qui a
+      # rendu le défaut invisible - les étapes en `run:` se comportaient comme attendu.
+      #
+      # `verifie-conditions-booleennes.sh` refuse désormais cette forme.
       - name: Installer le gestionnaire de fenêtres
         # Le gestionnaire de fenêtres est posé À PART, pour que le témoin puisse s'en passer : c'est
         # tout l'objet de `sans_gestionnaire_de_fenetres`, qui vérifie que le lancement filmé REFUSE
@@ -87,14 +100,14 @@ jobs:
         # est la grave : les tests de croissance de fenêtre ne pouvaient pas passer (une fenêtre
         # déjà maximisée ne grandit pas), et surtout les clips de #3774 ne montraient PAS la mise
         # en page livrée - donc qui les jugeait jugeait autre chose.
-        if: inputs.sans_gestionnaire_de_fenetres != 'true'
+        if: ${{ !inputs.sans_gestionnaire_de_fenetres }}
         env:
           APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
         run: |
           bash .github/scripts/installer-paquets.sh --avec-recommandations openbox
 
       - name: Annoncer le témoin sans gestionnaire de fenêtres
-        if: inputs.sans_gestionnaire_de_fenetres == 'true'
+        if: ${{ inputs.sans_gestionnaire_de_fenetres }}
         # ⚠️ Bloc littéral : la chaîne contient « : », que YAML lirait comme une association si elle
         # était nue.
         run: |
@@ -125,7 +138,10 @@ jobs:
         # du H.264 : `-c copy` change le conteneur sans ré-encoder, donc sans perte ni délai. Sans
         # cette étape, la page de la doc dev afficherait un lecteur vide - le défaut que
         # `check-doc-videos.sh --site` garde déjà pour les films de documentation.
-        if: inputs.publier_les_clips == 'true'
+        # ⚠️ `always()` : cette étape est la CONDITION de la publication, pas sa conséquence. Sans
+        # elle, une étape précédente qui rougit la saute, et le tournage rend un artefact sans mp4 -
+        # une absence qui se lit comme « le banc n'a rien filmé » alors qu'il a tout filmé.
+        if: ${{ always() && inputs.publier_les_clips }}
         run: |
           set -euo pipefail
           compte=0
@@ -139,6 +155,20 @@ jobs:
 
       # Le témoin inverse le verdict : dans ce mode, un succès est un ÉCHEC du dispositif.
       - name: Juger, témoin compris
+        # ⚠️ Le jugement dépend du MODE, parce que les deux modes ne répondent pas à la même question.
+        #
+        # En témoin, la question est « le runner pilote-t-il ? », et sa réponse est un verdict : un
+        # test rouge fait échouer le job, c'est tout l'objet du workflow.
+        #
+        # En planche, la question est « a-t-on les clips ? », et un test rouge n'y répond pas. Un cas
+        # qui rougit produit son clip comme les autres, et c'est même celui-là qu'on veut regarder :
+        # subordonner la publication au vert de cent vingt-huit tests rendrait les clips otages d'une
+        # condition sans rapport. Le premier tournage complet l'a montré - quatorze rouges, aucun
+        # clip publié, alors que le film existait.
+        #
+        # Le rouge n'est pas tu pour autant : il est annoncé, compté, et écrit au résumé du job. Ce
+        # qui fait échouer la planche, c'est l'absence de clips, et c'est l'étape de remuxage qui le
+        # dit - la seule condition dont la publication dépende vraiment.
         run: |
           set -euo pipefail
           verdict="${{ steps.film.outputs.verdict }}"
@@ -152,11 +182,27 @@ jobs:
             echo "Témoin concluant : sans gestionnaire de fenêtres, le lancement est refusé."
             exit 0
           fi
+          if [ "${{ inputs.publier_les_clips }}" = "true" ]; then
+            if [ "$verdict" = "vert" ]; then
+              echo "Planche entière : tous les tests filmés sont verts."
+              echo "Planche entière : tous les tests filmés sont verts." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::warning::Des tests ont rougi SOUS FILMAGE. Les clips sont produits quand même,"
+              echo "::warning::et un cas qui rougit est précisément celui qu'il faut regarder."
+              {
+                echo "### Planche entière : des tests ont rougi sous filmage"
+                echo
+                echo "Les clips sont publiés : un cas rouge produit son clip, et c'est celui-là qu'on regarde."
+                echo "Le verdict des tests appartient à l'intégration ordinaire, pas à ce tournage."
+              } >> "$GITHUB_STEP_SUMMARY"
+            fi
+            exit 0
+          fi
           [ "$verdict" = "vert" ] || { echo "::error::Le lancement filmé a échoué."; exit 1; }
           echo "Le runner pilote : les cinq conditions sont réunies et le test a tourné filmé."
 
       - name: Conserver la vidéo et les repères
-        if: always() && inputs.sans_gestionnaire_de_fenetres != true
+        if: ${{ always() && !inputs.sans_gestionnaire_de_fenetres }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           # ⚠️ Le nom porte le MODE, pas seulement la classe : le job de publication reprend cet
@@ -194,7 +240,7 @@ jobs:
   publier:
     name: Verser les clips sur la pré-version roulante
     needs: filmer
-    if: inputs.publier_les_clips == 'true' && inputs.sans_gestionnaire_de_fenetres != true
+    if: ${{ inputs.publier_les_clips && !inputs.sans_gestionnaire_de_fenetres }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
