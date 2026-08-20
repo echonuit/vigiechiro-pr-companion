@@ -50,6 +50,10 @@ RACINE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 POM="${POM_A_VERIFIER:-$RACINE/pom.xml}"
 ECRAN="${ECRAN_RECETTE:-:97}"
 TAILLE="1280x900x24"
+# La police du carton. DejaVu est présente sur les runners GitHub comme sur les postes de
+# développement ; `carton_de_titre` échoue proprement si elle manque, et le clip se produit sans
+# carton plutôt que pas du tout.
+POLICE_CARTON="${POLICE_CARTON:-/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf}"
 
 # --------------------------------------------------------------------------------------------
 # Les vérifications. Chacune rend 0 (bon) ou 1 (mauvais) et explique.
@@ -363,6 +367,27 @@ montage_par_cas() {
         clip="$dossier/$test.mkv"
         ffmpeg -nostdin -loglevel error -i "$brut" -ss "$deb" -to "$fin" -an \
             -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$clip" >/dev/null 2>&1
+
+        # ⚠️ Le carton d'ouverture (#4053). Sans lui, un clip démarre sur l'application en mouvement
+        # et le lien avec le cas vit dans `index.md`, à côté : il faut lire d'un côté et regarder de
+        # l'autre. Retour de la première revue humaine des clips.
+        #
+        # ⚠️ Il se colle SANS ré-encoder le clip : le carton est produit aux mêmes réglages, et
+        # `concat` recolle les deux. Ré-encoder l'extrait à chaque montage lui coûterait une
+        # génération de qualité pour rien.
+        #
+        # Si le carton échoue - police absente sur ce poste - le clip reste tel quel. Un extrait sans
+        # titre vaut mieux qu'un extrait manquant.
+        local avec_carton="$dossier/.$test-titre.mkv" liste="$dossier/.$test-liste"
+        if carton_de_titre "$cas" "$(libelle_du_cas "$cas")" "$test" \
+            "$(dimensions_du_film "$clip")" "$avec_carton"; then
+            printf "file '%s'\nfile '%s'\n" "$avec_carton" "$clip" > "$liste"
+            if ffmpeg -nostdin -loglevel error -f concat -safe 0 -i "$liste" -c copy \
+                -y "$clip.titre" >/dev/null 2>&1; then
+                mv "$clip.titre" "$clip"
+            fi
+            rm -f "$avec_carton" "$liste" "$clip.titre"
+        fi
         part=$(part_utile "$clip")
         # La part d'images utiles est REPORTÉE, pas exigée : un clip noir est le résultat juste
         # pour un test qui n'ouvre pas de fenêtre. Ce qui est exigé vaut pour la séance entière,
@@ -563,6 +588,80 @@ planche() {
     lancer "$classes" "$RACINE/target/recette/planche.mkv"
 }
 
+# Les dimensions d'un film, pour que le carton soit taillé comme lui.
+#
+# ⚠️ `concat -c copy` exige des flux identiques : un carton d'une autre taille ferait échouer le
+# recollage, et le clip repartirait sans titre sans qu'on sache pourquoi.
+dimensions_du_film() { # <film>
+    ffprobe -v error -select_streams v:0 -show_entries stream=width,height \
+        -of csv=s=x:p=0 "$1" 2>/dev/null
+}
+
+# Le libellé d'un cas, tel que sa session le formule.
+#
+# ⚠️ Une puce de session se REPLIE sur plusieurs lignes physiques, avec deux espaces d'indentation
+# pour la suite. Un `grep` n'en ramène que le premier morceau : la première revue du carton affichait
+# « ... rien ne se », qui s'arrête juste avant le verbe et annonce le contraire du cas. On recolle
+# donc la puce entière avant de la lire.
+libelle_du_cas() { # <identifiant, ex. S1-26>
+    local cas="$1"
+    awk -v cas="$cas" '
+        $0 ~ "^- \\*\\*" cas "\\*\\* " { dans = 1; texte = $0; next }
+        dans && /^  [^ ]/ { sub(/^  /, " "); texte = texte $0; next }
+        dans { print texte; dans = 0; exit }
+        END  { if (dans) print texte }
+    ' "$RACINE"/dev-docs/recette/sessions/*.md 2>/dev/null \
+        | sed -e "s/^- \*\*${cas}\*\* · //" -e 's/^\*perceptif\* · //' \
+              -e 's/\*\*//g' -e 's/\[\([^]]*\)\]([^)]*)/\1/g' -e 's/ *#[0-9]\+ *$//' \
+        | cut -c1-170
+}
+
+# Le carton d'ouverture d'un clip : son identifiant, ce qu'il montre, et la classe qui le filme.
+carton_de_titre() { # <cas> <libellé> <classe> <largeur>x<hauteur> <sortie>
+    local cas="$1" libelle="$2" classe="$3" taille="$4" sortie="$5"
+    local hauteur="${taille#*x}" atelier filtre="" total=0 y i=0 corps couleur ligne
+    local -a lignes=() corps_de=() couleur_de=()
+
+    # ⚠️ UNE ligne par fichier, et un `drawtext` par ligne. Un seul `drawtext` nourri d'un texte à
+    # sauts de ligne paraissait plus simple - c'est ce que faisait la première version - mais il
+    # DESSINE le saut de ligne : la première revue montrait un tofu en bout de chaque ligne. Un
+    # filtre par ligne n'a aucun saut à dessiner, et centre chaque ligne pour elle-même au lieu de
+    # caler un bloc ferré à gauche sur la largeur de sa ligne la plus longue.
+    atelier=$(mktemp -d)
+
+    lignes+=("$cas");            corps_de+=(46); couleur_de+=("0xffffff")
+    # ⚠️ Le libellé se REPLIE, il ne se tronque pas. Coupé à la largeur, il s'arrêtait en plein mot :
+    # un titre tronqué annonce autre chose que ce que le clip montre.
+    # ⚠️ `|| [ -n "$ligne" ]` : `fold` ne termine pas sa DERNIÈRE ligne par un saut, et `read` rend
+    # alors 1 tout en ayant rempli la variable. Sans ce garde, le carton perdait la fin du libellé -
+    # il affichait « ... la saisie » et s'arrêtait là, sans rien signaler.
+    while IFS= read -r ligne || [ -n "$ligne" ]; do
+        [ -n "$ligne" ] || continue
+        lignes+=("$ligne");      corps_de+=(30); couleur_de+=("0xd6d6e6")
+    done < <(printf '%s' "$libelle" | fold -s -w 54)
+    lignes+=("$classe");         corps_de+=(22); couleur_de+=("0x9494ac")
+
+    for corps in "${corps_de[@]}"; do total=$(( total + corps * 3 / 2 )); done
+    y=$(( (hauteur - total) / 2 ))
+
+    for ligne in "${lignes[@]}"; do
+        corps="${corps_de[$i]}"; couleur="${couleur_de[$i]}"
+        printf '%s' "$ligne" > "$atelier/$i"
+        [ -n "$filtre" ] && filtre="$filtre,"
+        filtre="${filtre}drawtext=fontfile=${POLICE_CARTON}:textfile=$atelier/$i"
+        filtre="${filtre}:fontcolor=${couleur}:fontsize=${corps}:x=(w-text_w)/2:y=${y}"
+        y=$(( y + corps * 3 / 2 ))
+        i=$(( i + 1 ))
+    done
+
+    ffmpeg -nostdin -loglevel error -f lavfi -i "color=c=0x1a1a2e:s=${taille}:d=2:r=25" \
+        -vf "$filtre" -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p \
+        -y "$sortie" >/dev/null 2>&1
+    local code=$?
+    rm -rf "$atelier"
+    return "$code"
+}
+
 # --------------------------------------------------------------------------------------------
 # Auto-test : chaque condition retirée POUR DE VRAI, une à la fois.
 # --------------------------------------------------------------------------------------------
@@ -599,6 +698,80 @@ auto_test() {
     essai "glass.platform laissé en Headless" rouge env POM_A_VERIFIER="$tmp/sans-gtk.xml" bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
     essai "robot laissé en glass" rouge env POM_A_VERIFIER="$tmp/sans-awt.xml" bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
     essai "profil entièrement absent" rouge env POM_A_VERIFIER="$tmp/sans-profil.xml" bash -c 'source "$0"; verifier_profil' "${BASH_SOURCE[0]}"
+
+    # --- le carton d'ouverture d'un clip (#4053) ---
+    # ⚠️ Retour de la première revue humaine des clips : « ça montre bien ce qui est attendu, mais il
+    # faudrait une diapo de titre pour comprendre ce qu'on regarde ».
+    #
+    # ⚠️ DEUX pièges à la fois, et les cas voisins les évitaient sans que la raison soit écrite.
+    #
+    # `RECETTE_RELANCE=1` d'abord : sans lui, sur une session Wayland, la copie sourcée atteint la
+    # relance de la ligne 44 et s'EXEC elle-même. Le shell appelant est remplacé, et rien après
+    # `source` ne s'exécute - le cas ne rougit pas, il disparaît. C'est #3883 pris par l'autre bout.
+    #
+    # Un SEUL argument ensuite : ce script n'a pas de garde de sourçage, son aiguillage tourne à la
+    # fin, et `${1:---aide}` prend le second argument pour une classe de test. Sourcé avec deux, il
+    # tombe dans `*) lancer "$@"` et tente de FILMER une classe portant le nom du chemin qu'on lui a
+    # passé.
+    essai "le libellé d un cas se lit dans sa session" vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            case "$(libelle_du_cas S1-26)" in *"sans saut"*) exit 0 ;; *) exit 1 ;; esac' "${BASH_SOURCE[0]}"
+    # ⚠️ Un cas peut être annoté avant d'être rédigé : le libellé manque alors, et le montage doit
+    # continuer. Un carton sans phrase vaut mieux qu'un clip qui n'existe pas.
+    essai "un cas sans libellé ne fait pas échouer" vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1; libelle_du_cas S9-99 >/dev/null' "${BASH_SOURCE[0]}"
+    essai "et il ne renvoie RIEN, pas un faux libellé" vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1; [ -z "$(libelle_du_cas S9-99)" ]' "${BASH_SOURCE[0]}"
+    essai "le carton se fabrique et dure deux secondes" vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            d=$(mktemp -d); trap "rm -rf $d" EXIT
+            carton_de_titre "S1-26" "La modale s ouvre sans saut" "ScenarioPerceptifConnexionTest" 320x180 "$d/c.mkv" || exit 1
+            duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$d/c.mkv")
+            awk -v x="$duree" "BEGIN{exit !(x > 1.5 && x < 2.5)}"' "${BASH_SOURCE[0]}"
+    # ⚠️ LE cas qui porte le carton : il doit montrer QUELQUE CHOSE. Un carton noir - police absente,
+    # texte non rendu - passerait un contrôle d'existence et ne dirait rien à qui regarde.
+    essai "et il n est pas vide : du texte y paraît" vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            d=$(mktemp -d); trap "rm -rf $d" EXIT
+            carton_de_titre "S1-26" "La modale s ouvre sans saut" "Scenario" 320x180 "$d/c.mkv" || exit 1
+            awk -v p="$(part_utile "$d/c.mkv")" "BEGIN{exit !(p > 0)}"' "${BASH_SOURCE[0]}"
+
+    # ⚠️ Les deux cas ci-dessus ont laissé passer TROIS cartons faux : un avec un tofu en bout de
+    # chaque ligne, un dont le libellé s'arrêtait en plein mot, un qui perdait sa dernière ligne de
+    # repli. Tous les trois duraient deux secondes et portaient des pixels clairs. Compter des pixels
+    # dit qu'il y a de l'encre, pas ce qui est écrit : ce cas RELIT le carton.
+    #
+    # L'assertion porte sur la FIN du libellé - c'est elle que les trois défauts mangeaient.
+    essai "et on y relit le libellé JUSQU AU BOUT" vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            command -v tesseract >/dev/null || exit 0
+            d=$(mktemp -d); trap "rm -rf $d" EXIT
+            carton_de_titre "S1-26" "$(libelle_du_cas S1-26)" "Scenario" 1280x720 "$d/c.mkv" || exit 1
+            ffmpeg -nostdin -loglevel error -i "$d/c.mkv" -vframes 1 -y "$d/c.png" >/dev/null 2>&1
+            tesseract "$d/c.png" - --psm 6 -l fra 2>/dev/null | grep -q "apr.s coup"' "${BASH_SOURCE[0]}"
+
+    # ⚠️ Et celui-ci éprouve le MONTAGE, pas le carton. Sa première version affirmait que
+    # `concat -c copy` REFUSE deux flux discordants ; c'est faux, et mesuré : un carton 200x100 collé
+    # devant un clip 320x180 rend un code 0, une durée juste, et un film qui SE DÉCLARE 200x100 alors
+    # que son extrait n'en fait pas la taille. Aucun message. C'est pour ça que le cas ne se contente
+    # pas de « ça a monté » : il relit les dimensions du film monté et exige celles de l'extrait.
+    essai "un clip monté s ouvre SUR son carton" vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            d=$(mktemp -d); trap "rm -rf $d" EXIT
+            ffmpeg -nostdin -loglevel error -f lavfi -i "color=c=green:s=320x180:d=4:r=25" \
+                -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$d/clip.mkv" >/dev/null 2>&1
+            carton_de_titre "S1-26" "un libellé" "Scenario" "$(dimensions_du_film "$d/clip.mkv")" "$d/t.mkv" || exit 1
+            printf "file %s\nfile %s\n" "$d/t.mkv" "$d/clip.mkv" > "$d/l"
+            ffmpeg -nostdin -loglevel error -f concat -safe 0 -i "$d/l" -c copy -y "$d/m.mkv" >/dev/null 2>&1 || exit 1
+            duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$d/m.mkv")
+            awk -v x="$duree" "BEGIN{exit !(x > 5.5 && x < 6.5)}" || exit 1
+            [ "$(dimensions_du_film "$d/m.mkv")" = "$(dimensions_du_film "$d/clip.mkv")" ] || exit 1
+            ffmpeg -nostdin -loglevel error -i "$d/m.mkv" -vframes 1 -y "$d/1.png" >/dev/null 2>&1
+            python3 -c "
+import sys
+from PIL import Image
+r, v, b = Image.open(sys.argv[1]).convert(\"RGB\").getpixel((8, 8))
+sys.exit(0 if (r, v, b) != (0, 128, 0) and r < 60 and b > r else 1)" "$d/1.png"' "${BASH_SOURCE[0]}"
 
     # --- la RELANCE elle-même (#4047) ---
     # ⚠️ Le cas ci-dessous éprouve le contrôle ; celui-ci éprouve la RELANCE, qui n'était gardée par
