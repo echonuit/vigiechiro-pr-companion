@@ -260,8 +260,17 @@ libelle_correspond() { # <lu> <attendu>
 # la fenêtre ne fait que 26 px de haut pour un libellé de 13. Un pas trop grand ne balaie rien.
 DECALAGES_ESSAYES="0 -4 4 -8 8 -12 12 -16 16 -20 20 -24 24"
 
-viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet] [largeur de la zone lue]
-    local ecran="$1" x="$2" y="$3" attendu="$4" duree="${5:-0.55}" largeur="${6:-$ZONE_L}"
+# L'ordonnée RÉELLE d'un libellé, corrigée du glissement de la mise en page.
+#
+# ⚠️ Extraite de `viser` pour le parcours « multi-nuits », qui doit LIRE à un endroit et CLIQUER à un
+# autre : la case « Importer » d'une ligne de la table des nuits n'a aucun texte, donc rien à viser.
+# La recopier dans le parcours aurait donné deux balayages à maintenir, et celui du parcours aurait
+# vieilli en silence.
+#
+# Rend l'ordonnée corrigée sur la sortie standard ; tout le reste part sur l'erreur standard, pour
+# que l'appelant puisse capturer le nombre sans capturer les explications.
+ordonnee_du_libelle() { # <écran> <x> <y> <libellé attendu> [largeur de la zone lue]
+    local ecran="$1" x="$2" y="$3" attendu="$4" largeur="${5:-$ZONE_L}"
     local tmp lu ecart trouve=""
     tmp=$(mktemp -d)
     ffmpeg -v error -y -f x11grab -video_size "${LARGEUR}x${HAUTEUR}" -i "$ecran" \
@@ -276,31 +285,52 @@ viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet] [largeur de l
     done
     rm -rf "$tmp"
 
-    if [ -n "$trouve" ] && [ "$trouve" != 0 ]; then
-        echo "   ~ « $attendu » trouvé à $trouve px du point visé : la mise en page a glissé,"
-        echo "     le scénario reste juste. À recaler si l'écart grandit."
-        y=$((y + trouve))
-    fi
-
     if [ -z "$trouve" ]; then
-        echo "   - le geste visait « $attendu » en ($x, $y) ; l'écran y porte « $lu »"
+        echo "   - le geste visait « $attendu » en ($x, $y) ; l'écran y porte « $lu »" >&2
         # ⚠️ Distinguer les deux causes, parce qu'elles ne se corrigent pas pareil. Un libellé plus
         # long que la zone lue est TRONQUÉ, et le refus accuserait alors le scénario d'être périmé
         # alors qu'il est juste - mesuré sur « + Ajouter mon premier site de suivi », rendu
         # « uter mon premier site de: » dans une zone de 200 px.
         if [ -n "$lu" ]; then
-            echo "     La zone lue fait ${largeur} px : si le libellé est plus large, il en sort."
-            echo "     Élargissez-la (6ᵉ argument), ou visez un fragment plus court."
+            echo "     La zone lue fait ${largeur} px : si le libellé est plus large, il en sort." >&2
+            echo "     Élargissez-la, ou visez un fragment plus court." >&2
         fi
-        echo "     Sinon le scénario est périmé : la mise en page a changé, ou l'écran n'est pas celui attendu."
+        echo "     Sinon le scénario est périmé : la mise en page a changé, ou l'écran n'est pas celui attendu." >&2
         return 1
     fi
 
-    local X Y
+    if [ "$trouve" != 0 ]; then
+        echo "   ~ « $attendu » trouvé à $trouve px du point visé : la mise en page a glissé," >&2
+        echo "     le scénario reste juste. À recaler si l'écart grandit." >&2
+    fi
+    echo "$((y + trouve))"
+}
+
+# Amène le pointeur en (x, y) et clique.
+main_vers() { # <écran> <x> <y> [durée du trajet]
+    local ecran="$1" x="$2" y="$3" duree="${4:-0.55}" X Y
     eval "$(DISPLAY="$ecran" xdotool getmouselocation --shell | head -2)"
     DISPLAY="$ecran" xdotool $(python3 "$(dirname "${BASH_SOURCE[0]}")/trajet.py" "$X" "$Y" "$x" "$y" "$duree")
     sleep 0.18
     DISPLAY="$ecran" xdotool click 1
+}
+
+viser() { # <écran> <x> <y> <libellé attendu> [durée du trajet] [largeur de la zone lue]
+    local ecran="$1" x="$2" y="$3" attendu="$4" duree="${5:-0.55}" largeur="${6:-$ZONE_L}"
+    local reel
+    reel=$(ordonnee_du_libelle "$ecran" "$x" "$y" "$attendu" "$largeur") || return 1
+    main_vers "$ecran" "$x" "$reel" "$duree"
+    return 0
+}
+
+# Clique à un endroit REPÉRÉ PAR UN AUTRE : le libellé se lit en (x_lu, y), le clic tombe en
+# (x_clic, y corrigé). C'est la seule façon d'atteindre un contrôle sans texte - une case à cocher -
+# sans revenir au clic aveugle, celui qui a rendu un film de trente-quatre secondes où rien n'arrive.
+viser_a_cote_de() { # <écran> <x du libellé> <y> <libellé attendu> <x du clic> [durée] [largeur lue]
+    local ecran="$1" x_lu="$2" y="$3" attendu="$4" x_clic="$5" duree="${6:-0.55}" largeur="${7:-$ZONE_L}"
+    local reel
+    reel=$(ordonnee_du_libelle "$ecran" "$x_lu" "$y" "$attendu" "$largeur") || return 1
+    main_vers "$ecran" "$x_clic" "$reel" "$duree"
     return 0
 }
 
@@ -710,6 +740,143 @@ parcours_sans_journal() { # <écran> <marques> <point de montage de la carte>
     return 0
 }
 
+# Les parcours d'import qui n'exigent RIEN de leur résultat, nommés.
+#
+# ⚠️ Ce garde remplace un compteur verrouillé qui cherchait « exiger_a_l_ecran … 640 829 » et exigeait
+# d'en trouver exactement trois. Il disait donc « trois parcours ont une exigence à cette
+# coordonnée-là », ce qui n'est pas la règle qu'on voulait tenir, et il rougissait dès qu'un parcours
+# en portait DEUX - ce que fait « multi-nuits », qui exige l'import ET le compte de passages.
+#
+# La règle réelle : un parcours qui désigne une carte (`verifier_dossier_retenu`) va jusqu'à un
+# résultat, donc il doit l'exiger. Ce qui compte n'est ni le nombre de parcours ni l'endroit de
+# l'exigence, c'est qu'aucun n'en soit dépourvu.
+parcours_sans_exigence() { # <fichier du banc>
+    local fichier="$1" nom corps
+    for nom in $(grep -o '^parcours_[a-z_]*()' "$fichier" | tr -d '()'); do
+        corps=$(sed -n "/^$nom() {/,/^}/p" "$fichier")
+        case "$corps" in
+            *verifier_dossier_retenu*)
+                case "$corps" in
+                    *exiger_a_l_ecran*) ;;
+                    *) printf '%s\n' "$nom" ;;
+                esac ;;
+        esac
+    done
+}
+
+# Le parcours « plusieurs nuits » (#4055).
+#
+# ## Ce qu'il montre, et qu'aucune image fixe ne montre
+#
+# Une carte laissée tourner trois nuits donne trois passages distincts. La table des nuits paraît
+# pendant l'inspection, et les numéros de passage y sont proposés d'office : 2, 3, 4. Décocher une
+# nuit ne la retire pas seulement de la liste, elle **renumérote les autres** pour qu'ils restent
+# consécutifs. C'est ce mouvement-là que la capture `apercu-import-multi-nuits.png` ne peut pas
+# rendre : elle montre un état, pas une conséquence.
+#
+# ## Comment ce parcours atteint une case à cocher
+#
+# La case « Importer » d'une ligne n'a aucun texte. La viser au pixel serait le clic aveugle qui a
+# déjà rendu un film de trente-quatre secondes où rien n'arrive. `viser_a_cote_de` lit donc la DATE
+# de la ligne - « 2026-07-04 », que rien d'autre ne porte à l'écran - et clique à l'abscisse de la
+# case, à l'ordonnée corrigée du même balayage que `viser`. Si la table glisse, la ligne suit.
+#
+# ⚠️ Le balayage vaut 24 px de part et d'autre, pour un pas de ligne de 32 : il pourrait donc lire
+# une ligne voisine. Il ne s'y trompe pas parce que les trois dates DIFFÈRENT - c'est ce qui rend ce
+# repérage sûr ici, et ce qui ne le rendrait pas sûr sur une colonne aux valeurs répétées.
+#
+# ## Ce qu'il exige
+#
+# Le compte rendu final annonce « Import terminé : N passage(s) créé(s) ». Avec une nuit décochée sur
+# trois, N vaut 2. C'est une conséquence que SEUL un décochage effectif produit : un clic tombé à
+# côté rendrait 3, et le parcours rougirait au lieu de publier un film qui montre autre chose que ce
+# qu'il annonce.
+parcours_multi_nuits() { # <écran> <marques> <point de montage de la carte>
+    local ecran="$1" marques="$2" carte="$3"
+
+    marque "$marques" debut
+    respirer_doc 2.0
+
+    viser "$ecran" 493 108 "Importer une nuit" || return 1
+    marque "$marques" assistant
+    respirer_doc 2.2
+
+    viser "$ecran" 693 210 "Parcourir" || return 1
+    marque "$marques" selecteur
+    respirer_doc 2.0
+
+    viser "$ecran" 168 178 "$ETIQUETTE_CARTE" 0.6 150 || return 1
+    respirer_doc 1.6
+    viser "$ecran" 1136 831 "Ouvrir" || return 1
+    marque "$marques" inspection_debut
+
+    respirer_doc 3.5
+    marque "$marques" inspection_fin
+
+    verifier_dossier_retenu "$ecran" 376 210 "$carte" || return 1
+
+    # ⚠️ La phrase qui annonce le découpage, avant la table elle-même. Elle est longue - « Plusieurs
+    # nuits détectées sur cette carte : chacune deviendra un passage distinct… » - donc on en vise un
+    # fragment court et distinctif, comme pour le mode dégradé.
+    # ⚠️ Le fragment se vise à SON abscisse, pas au centre de sa ligne. La phrase « Plusieurs nuits
+    # détectées sur cette carte : chacune deviendra un passage distinct… » fait 969 px de large. Une
+    # fenêtre de 420 px centrée au milieu de la ligne lit « sur cette carte : chacune deviendra » et
+    # ne voit jamais le début : le premier tournage a refusé pour ça, en accusant le geste précédent
+    # de n'avoir rien produit alors que la table était bien là.
+    exiger_a_l_ecran "$ecran" 215 440 "nuits détectées" 220 || return 1
+    marque "$marques" table_parait
+    respirer_doc 4.0
+
+    # Les trois nuits sont là, chacune avec sa date.
+    exiger_a_l_ecran "$ecran" 248 494 "2026-07-03" 150 || return 1
+    exiger_a_l_ecran "$ecran" 248 558 "2026-07-05" 150 || return 1
+    respirer_doc 2.5
+
+    # ⚠️ Le point d'écoute AVANT le décochage, et l'ordre n'est pas indifférent. Tant qu'aucun point
+    # n'est choisi, la colonne « Passage n° » porte « — » sur les trois lignes : il n'y a pas encore
+    # de numéro à attribuer, donc rien à renuméroter. Décocher d'abord aurait filmé un tiret qui
+    # remplace un tiret. Mesuré sur une capture du tournage, pas déduit.
+    viser "$ecran" 801 735 "Choisissez un point" 0.55 230 || return 1
+    respirer_doc 1.2
+    DISPLAY="$ecran" xdotool key Down
+    sleep 0.4
+    DISPLAY="$ecran" xdotool key Return
+    marque "$marques" point_choisi
+    respirer_doc 3.0
+
+    # ⚠️ LE geste du film : décocher la nuit du milieu, repérée par SA date. La case n'a aucun texte,
+    # donc `viser_a_cote_de` lit « 2026-07-04 » et clique à l'abscisse de la case, à l'ordonnée que le
+    # balayage a corrigée.
+    viser_a_cote_de "$ecran" 248 526 "2026-07-04" 172 0.7 150 || return 1
+    marque "$marques" nuit_decochee
+    respirer_doc 5.0
+
+    DISPLAY="$ecran" xdotool mousemove 640 700
+    DISPLAY="$ecran" xdotool click --repeat 14 5
+    respirer_doc 2.0
+
+    viser "$ecran" 201 769 "Importer" || return 1
+    marque "$marques" import_debut
+    respirer_doc 10.0
+    marque "$marques" import_fin
+
+    # ⚠️ DEUX exigences, et la seconde porte tout. « Import terminé » prouve que l'import a eu lieu ;
+    # « 2 passage » prouve que le décochage a PORTÉ. Sans elle, un clic tombé à côté de la case
+    # publierait un film où trois nuits s'importent sous un titre qui promet qu'on en retire une.
+    # ⚠️ Et le MÊME piège qu'en haut, une seconde fois dans le même parcours : la fenêtre de lecture
+    # est centrée sur l'abscisse qu'on lui donne. Le compte rendu multi-nuits est long - « Import
+    # terminé : 2 passage(s) créé(s) (nuits du 03/07/2026 au 05/07/2026), 4 séquence(s) produite(s). »
+    # - et commence à 358 px. Une fenêtre de 460 px centrée au milieu de la barre lit à partir de
+    # 410 : elle voit le compte, jamais le « Import terminé ». Le parcours accusait donc l'import de
+    # n'avoir rien fait alors qu'il venait de réussir. On centre sur le DÉBUT de la phrase.
+    exiger_a_l_ecran "$ecran" 520 829 "Import termin" 460 || return 1
+    exiger_a_l_ecran "$ecran" 520 829 "2 passage" 460 || return 1
+    respirer_doc 4.0
+
+    marque "$marques" fin
+    return 0
+}
+
 # Le parcours « journal illisible » (#4013).
 #
 # ## Le seul de la famille qui ne se termine PAS par un import
@@ -800,6 +967,7 @@ parcours_connu() { # <nom>
         melange-de-capteurs) printf '120\trecette/fixtures/spec/sd-melange.yaml\n' ;;
         sans-journal) printf '120\trecette/fixtures/spec/sd-sans-journal.yaml\n' ;;
         journal-illisible) printf '90\trecette/fixtures/spec/sd-journal-corrompu.yaml\n' ;;
+        multi-nuits) printf '160\trecette/fixtures/spec/sd-multi-nuits.yaml\n' ;;
         *) return 1 ;;
     esac
 }
@@ -809,7 +977,8 @@ tourner() { # [nom du parcours] [sortie]
     local fiche pellicule spec_carte
     if ! fiche=$(parcours_connu "$nom"); then
         echo "❌ Parcours inconnu : « $nom »."
-        echo "   Connus : declarer-un-carre, importer-une-nuit, melange-de-capteurs, sans-journal, journal-illisible."
+        echo "   Connus : declarer-un-carre, importer-une-nuit, melange-de-capteurs, sans-journal,"
+        echo "            journal-illisible, multi-nuits."
         return 1
     fi
     pellicule=$(printf '%s' "$fiche" | cut -f1)
@@ -884,6 +1053,7 @@ tourner() { # [nom du parcours] [sortie]
                 melange-de-capteurs) parcours_melange_de_capteurs "$ecran" "$marques" "$point" || code=1 ;;
                 sans-journal) parcours_sans_journal "$ecran" "$marques" "$point" || code=1 ;;
                 journal-illisible) parcours_journal_illisible "$ecran" "$marques" "$point" || code=1 ;;
+                multi-nuits) parcours_multi_nuits "$ecran" "$marques" "$point" || code=1 ;;
             esac
             wait "$camera"
             # ⚠️ APRÈS `wait`, et l'ordre est tout. `t0` se calcule « instant d'arrêt moins durée du
@@ -1285,6 +1455,7 @@ fiche_du_parcours() { # <nom>
         melange-de-capteurs) printf 'Deux enregistreurs dans le même dossier\tdocs/ecrans/importation.md\n' ;;
         sans-journal) printf 'Une carte sans journal du capteur\tdocs/ecrans/importation.md\n' ;;
         journal-illisible) printf 'Un journal illisible : l assistant refuse\tdocs/ecrans/importation.md\n' ;;
+        multi-nuits) printf 'Trois nuits sur une carte : decouper en passages\tdocs/ecrans/importation.md\n' ;;
         *) return 1 ;;
     esac
 }
@@ -1516,12 +1687,16 @@ sys.exit(0 if i != -1 and (j == -1 or i < j) else 1)
     # côté, et le film montrait trente-quatre secondes d'un formulaire jamais rempli.
     essai "une exigence non satisfaite refuse"           rouge \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; exiger_a_l_ecran ":91" 100 100 "Import termin"' "${BASH_SOURCE[0]}"
-    # ⚠️ Le motif est ancré sur l'INDENTATION d'un corps de fonction (quatre espaces). Sans cet
-    # ancrage, le cas se comptait lui-même : la ligne qui cherche le motif contient le motif, et le
-    # compte donnait quatre au lieu de trois. Un compteur qui s'inclut dans son propre compte.
-    essai "les trois parcours d import exigent leur résultat" vert \
-        bash -c 'BANC_SOURCE_SEULEMENT=1
-            [ "$(grep -c "^    exiger_a_l_ecran .* 640 829" "$0")" = 3 ]' "${BASH_SOURCE[0]}"
+    essai "tout parcours d import exige son résultat"     vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            [ -z "$(parcours_sans_exigence "$0")" ]' "${BASH_SOURCE[0]}"
+    # ⚠️ Et le garde du garde, sur une fixture FAUTIVE : un parcours qui désigne une carte sans rien
+    # exiger doit être NOMMÉ. Sans ce cas, une fonction d'inventaire qui ne rend jamais rien passerait
+    # pour un banc sain - c'est exactement le vert que le compteur précédent rendait.
+    printf '%s\n' 'parcours_fautif() {' '    verifier_dossier_retenu "$e" 1 1 "$c"' '}' > "$bac/fautif.sh"
+    essai "un parcours d import sans exigence est nommé"  vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
+            [ "$(parcours_sans_exigence "$1")" = parcours_fautif ]' "${BASH_SOURCE[0]}" "$bac/fautif.sh"
 
     essai "un libellé décalé de 8 px se retrouve"        vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"
