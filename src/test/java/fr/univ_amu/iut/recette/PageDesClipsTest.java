@@ -40,6 +40,8 @@ class PageDesClipsTest {
 
     private static final Path PAGE = Path.of("dev-docs", "recette", "clips.md");
 
+    private static final Path PAGE_ASSERTES = Path.of("dev-docs", "recette", "clips-assertes.md");
+
     private static final Path SESSIONS = Path.of("dev-docs", "recette", "sessions");
 
     private static final Path SOURCES_DE_TEST = Path.of("src", "test", "java");
@@ -50,6 +52,13 @@ class PageDesClipsTest {
 
     /// Le titre d'une section de cas : `### S6-27 · ...`.
     private static final Pattern SECTION = Pattern.compile("^### (S\\d+-\\d+) ·", Pattern.MULTILINE);
+
+    /// Une annotation `@CasDeRecette(...)` suivie, quelques lignes plus bas, de sa méthode de test.
+    /// Les trois formes employées dans le dépôt sont couvertes : la valeur seule, `value = "…"`, et
+    /// la liste `{"…", "…"}`.
+    private static final Pattern CITATION = Pattern.compile(
+            "@CasDeRecette\\([^)]*\\)(?:\\s*@[A-Za-z]+\\([^)]*\\))*\\s*(?:void|[A-Za-z<>\\[\\]]+)\\s+([a-z_0-9]+)\\s*\\(",
+            Pattern.DOTALL);
 
     @Test
     @DisplayName("#4056 : la page montre exactement les cas perceptifs, ni plus ni moins")
@@ -86,7 +95,56 @@ class PageDesClipsTest {
                 .isEmpty();
     }
 
+    @Test
+    @DisplayName("#4056 : tout test qui cite un cas a son clip sur l'une des deux pages")
+    void tout_test_qui_cite_un_cas_est_sur_une_page() {
+        String pages = lire(PAGE) + lire(PAGE_ASSERTES);
+        Set<String> absents = new TreeSet<>();
+        for (String joue : testsQuiCitentUnCas()) {
+            if (!pages.contains(joue + ".mp4")) {
+                absents.add(joue);
+            }
+        }
+
+        assertThat(absents)
+                .as("le tournage produit un clip par test qui cite un cas ; un clip qu'aucune page ne"
+                        + " montre est un clip que personne ne verra, et rien d'autre ne le dirait")
+                .isEmpty();
+    }
+
     // --------------------------------------------------------------------------------------------
+
+    /// Les `Classe.methode` des tests qui citent un cas de recette, lus dans les sources.
+    ///
+    /// ⚠️ Lus dans les SOURCES et non par réflexion : c'est le tournage qui produit les clips, et il
+    /// se règle sur ces annotations-là. Une annotation présente mais un test renommé donnerait un
+    /// clip d'un autre nom, que les pages ne montreraient plus.
+    private static Set<String> testsQuiCitentUnCas() {
+        Set<String> joues = new TreeSet<>();
+        try (Stream<Path> fichiers = Files.walk(SOURCES_DE_TEST)) {
+            for (Path source : fichiers.filter(f -> f.toString().endsWith("Test.java"))
+                    // ⚠️ Les tests de l'outillage de recette lui-même sont écartés. Leurs annotations
+                    // sont des EXEMPLES : elles imitent un test qui cite un cas, sans rien couvrir.
+                    // `CorrespondanceRecetteTest` les écarte déjà, et note qu'un balayage des sources
+                    // « ramène deux faux positifs » - ce sont exactement ceux que ce cas a trouvés,
+                    // `ReperesDeSeanceTest.avec_cas` et `.deux_cas`.
+                    //
+                    // Une règle sur le paquet plutôt qu'une liste de noms : la liste vieillirait, et
+                    // le prochain exemple de l'outillage y manquerait sans que rien ne le dise.
+                    .filter(f -> !f.toString().contains("/iut/recette/"))
+                    .toList()) {
+                String classe = source.getFileName().toString().replace(".java", "");
+                String contenu = lire(source);
+                Matcher m = CITATION.matcher(contenu);
+                while (m.find()) {
+                    joues.add(classe + "." + m.group(1));
+                }
+            }
+        } catch (IOException echec) {
+            throw new UncheckedIOException("Sources de test illisibles : " + SOURCES_DE_TEST, echec);
+        }
+        return joues;
+    }
 
     /// Les cas que les sessions marquent `*perceptif*`. Le motif vient de [MotifDeCas] : trois
     /// lecteurs de ces fichiers coexistent, et deux se sont déjà trompés en le réécrivant.
