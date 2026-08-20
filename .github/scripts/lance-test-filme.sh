@@ -323,6 +323,26 @@ couverture_des_plages() {
         END { printf "%s %d\n", (utiles ? couvertes / utiles : -1), utiles }'
 }
 
+# L'instant courant en millisecondes depuis l'époque, sur treize chiffres.
+#
+# ⚠️ `date +%s%3N` n'est PAS portable, et son échec ne se voit pas. Le modificateur de largeur `3`
+# est ignoré par certaines versions de `date` : `%N` sort alors ses neuf chiffres entiers, et
+# l'instant vaut un MILLION de fois trop. Mesuré sur un poste de développement, où `date +%s%3N`
+# rend `1787247026506300185` au lieu de `1787247026506`.
+#
+# Ce que cela produisait : `t0` partait à 1,8e15, toutes les plages du journal devenaient massivement
+# négatives, aucune image ne tombait dedans, et le banc annonçait « le montage vise à côté : 0 % » -
+# un message qui accuse les repères alors que c'est l'horloge qui a menti. Les runners GitHub
+# honorent `%3N`, si bien que le défaut ne paraissait qu'en local, et qu'il y bloquait tout.
+#
+# Une seule invocation de `date` : deux appels séparés pourraient tomber de part et d'autre d'une
+# seconde et rendre un instant faux d'une seconde entière.
+instant_en_millisecondes() {
+    local secondes nanosecondes
+    read -r secondes nanosecondes < <(date +'%s %N')
+    printf '%s' "$(( secondes * 1000 + 10#$nanosecondes / 1000000 ))"
+}
+
 # Les plages « test début fin cas », en secondes depuis le début du brut.
 plages_du_journal() {
     LC_NUMERIC=C awk -F'\t' -v t0="$1" -v m="$CLIP_MARGE" '
@@ -343,6 +363,19 @@ montage_par_cas() {
     local duree t0 plages mesure couverture utiles
     duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$brut" 2>/dev/null)
     [ -n "$duree" ] || { echo "⚠️ durée du brut illisible : pas de montage"; return 1; }
+    # ⚠️ Un instant hors de portée se REFUSE ici, au lieu de traverser le calcul. Sans ce contrôle,
+    # une horloge d'un million de fois trop grande rendait des plages négatives, et le banc concluait
+    # « les repères ne décrivent pas CE film » : il accusait les repères d'un défaut de l'horloge.
+    # Treize chiffres, c'est l'époque en millisecondes de 2001 à 2286.
+    case "$arret_ms" in
+        [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]) ;;
+        *)
+            echo "⚠️ instant d'arrêt implausible : « $arret_ms » n'est pas un nombre de treize chiffres."
+            echo "   L'horloge du banc ne rend pas des millisecondes. Sans elle, aucune plage n'est"
+            echo "   calculable et les clips seraient taillés n'importe où : pas de montage."
+            return 1
+            ;;
+    esac
     t0=$(LC_NUMERIC=C awk -v a="$arret_ms" -v d="$duree" 'BEGIN{printf "%.3f", a / 1000 - d}')
 
     plages=$(plages_du_journal "$t0" "$journal")
@@ -375,26 +408,18 @@ montage_par_cas() {
             -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$clip" >/dev/null 2>&1
 
         # ⚠️ Le carton d'ouverture (#4053). Sans lui, un clip démarre sur l'application en mouvement
-        # et le lien avec le cas vit dans `index.md`, à côté : il faut lire d'un côté et regarder de
-        # l'autre. Retour de la première revue humaine des clips.
+        # et le lien avec le cas vit dans `index.md`, à côté. Retour de la première revue humaine.
         #
-        # ⚠️ Il se colle SANS ré-encoder le clip : le carton est produit aux mêmes réglages, et
-        # `concat` recolle les deux. Ré-encoder l'extrait à chaque montage lui coûterait une
-        # génération de qualité pour rien.
+        # Si le collage échoue - police absente sur ce poste - le clip reste tel quel : un extrait
+        # sans titre vaut mieux qu'un extrait manquant.
         #
-        # Si le carton échoue - police absente sur ce poste - le clip reste tel quel. Un extrait sans
-        # titre vaut mieux qu'un extrait manquant.
-        local avec_carton="$dossier/.$test-titre.mkv" liste="$dossier/.$test-liste"
-        if carton_de_titre "$cas" "$(libelle_du_cas "$cas")" "$test" \
-            "$(dimensions_du_film "$clip")" "$avec_carton"; then
-            printf "file '%s'\nfile '%s'\n" "$avec_carton" "$clip" > "$liste"
-            if ffmpeg -nostdin -loglevel error -f concat -safe 0 -i "$liste" -c copy \
-                -y "$clip.titre" >/dev/null 2>&1; then
-                mv "$clip.titre" "$clip"
-            fi
-            rm -f "$avec_carton" "$liste" "$clip.titre"
-        fi
+        # ⚠️ La part d'images utiles se mesure AVANT le collage, et l'ordre n'est pas indifférent.
+        # Le carton porte du texte clair sur fond sombre : ses images comptent pour utiles. Mesurée
+        # après, un test qui ne montre RIEN - un ViewModel, par exemple - passerait de 0 % à un tiers,
+        # et l'index le proposerait « en regardant » alors qu'il n'y a rien à regarder. La part décrit
+        # le TEST, pas son titre.
         part=$(part_utile "$clip")
+        coller_le_carton "$clip" "$cas" "$test" || true
         # La part d'images utiles est REPORTÉE, pas exigée : un clip noir est le résultat juste
         # pour un test qui n'ouvre pas de fenêtre. Ce qui est exigé vaut pour la séance entière,
         # et c'est le contrôle de couverture ci-dessus.
@@ -521,7 +546,7 @@ lancer() {
     # seconde à finaliser. Prendre l'heure après l'attente placerait l'image 0 une seconde trop
     # tôt, et décalerait TOUS les clips d'autant - sans rien casser d'apparent.
     local arret_ms
-    arret_ms=$(date +%s%3N)
+    arret_ms=$(instant_en_millisecondes)
     exec 3>&-
     wait "$film" 2>/dev/null
     rm -f "$tube"
@@ -619,10 +644,65 @@ libelle_du_cas() { # <identifiant, ex. S1-26>
     ' "$RACINE"/dev-docs/recette/sessions/*.md 2>/dev/null \
         | sed -e "s/^- \*\*${cas}\*\* · //" -e 's/^\*perceptif\* · //' \
               -e 's/\*\*//g' -e 's/\[\([^]]*\)\]([^)]*)/\1/g' -e 's/ *#[0-9]\+ *$//' \
-        | cut -c1-170
+        | abreger_sur_un_mot 170
+}
+
+# Abrège un texte sans couper un mot, et le DIT quand il abrège.
+#
+# ⚠️ Une coupe brutale s'est vue sur le premier clip réel : le carton de S6-27 finissait sur
+# « habituelle. L'aper ». Un titre tronqué en plein mot se lit comme un défaut de rendu, et le
+# lecteur ne sait pas s'il manque trois lettres ou trois phrases. Les points de suspension le disent.
+abreger_sur_un_mot() { # <longueur maximale>  (texte sur l'entrée standard)
+    awk -v n="$1" '{
+        if (length($0) <= n) { print; next }
+        court = substr($0, 1, n - 1)
+        # ⚠️ On ne recule d un mot QUE si la coupe en tranche un. Quand elle tombe pile sur une fin
+        # de mot - le caractère suivant est un espace - reculer perdrait un mot entier pour rien.
+        if (substr($0, n, 1) != " ") {
+            espace = match(court, /[ ][^ ]*$/)
+            if (espace > 1) court = substr(court, 1, espace - 1)
+        }
+        sub(/[ ,;:.]+$/, "", court)
+        print court "…"
+    }'
 }
 
 # Le carton d'ouverture d'un clip : son identifiant, ce qu'il montre, et la classe qui le filme.
+# Colle le carton d'ouverture devant un clip, EN PLACE.
+#
+# ⚠️ Cette fonction existe parce que le collage était écrit dans la boucle de montage, et que le cas
+# d'auto-test qui le gardait le réécrivait à côté - avec un nom de sortie différent. Le cas passait,
+# le code échouait, et l'écart tenait à une extension : la boucle écrivait dans « <clip>.titre »,
+# que ffmpeg refuse (« Unable to choose an output format ») faute d'extension connue. Le carton n'a
+# donc jamais été collé sur un vrai clip, et rien ne l'a dit - le collage est délibérément silencieux
+# en cas d'échec, pour qu'un poste sans police rende quand même ses extraits.
+#
+# Un garde qui rejoue le geste au lieu de l'appeler ne garde pas ce geste-là.
+coller_le_carton() { # <clip> <cas> <test>
+    local clip="$1" cas="$2" test="$3"
+    local carton="${clip%.mkv}.carton.mkv"
+    local liste="${clip%.mkv}.liste"
+    local monte="${clip%.mkv}.avec-titre.mkv"
+    local code=0
+
+    if carton_de_titre "$cas" "$(libelle_du_cas "$cas")" "$test" \
+        "$(dimensions_du_film "$clip")" "$carton"; then
+        printf "file '%s'\nfile '%s'\n" "$carton" "$clip" > "$liste"
+        # ⚠️ Le carton est produit aux réglages du clip : `concat -c copy` recolle sans ré-encoder,
+        # donc sans coûter une génération de qualité à l'extrait.
+        if ffmpeg -nostdin -loglevel error -f concat -safe 0 -i "$liste" -c copy \
+            -y "$monte" >/dev/null 2>&1; then
+            mv "$monte" "$clip"
+        else
+            code=1
+        fi
+    else
+        code=1
+    fi
+    rm -f "$carton" "$liste" "$monte"
+    return "$code"
+}
+
 carton_de_titre() { # <cas> <libellé> <classe> <largeur>x<hauteur> <sortie>
     local cas="$1" libelle="$2" classe="$3" taille="$4" sortie="$5"
     local hauteur="${taille#*x}" atelier filtre="" total=0 y i=0 corps couleur ligne
@@ -756,33 +836,64 @@ auto_test() {
             ffmpeg -nostdin -loglevel error -i "$d/c.mkv" -vframes 1 -y "$d/c.png" >/dev/null 2>&1
             tesseract "$d/c.png" - --psm 6 -l fra 2>/dev/null | grep -q "apr.s coup"' "${BASH_SOURCE[0]}"
 
-    # ⚠️ Et celui-ci éprouve le MONTAGE, pas le carton. Sa première version affirmait que
-    # `concat -c copy` REFUSE deux flux discordants ; c'est faux, et mesuré : un carton 200x100 collé
-    # devant un clip 320x180 rend un code 0, une durée juste, et un film qui SE DÉCLARE 200x100 alors
-    # que son extrait n'en fait pas la taille. Aucun message. C'est pour ça que le cas ne se contente
-    # pas de « ça a monté » : il relit les dimensions du film monté et exige celles de l'extrait.
-    essai "un clip monté s ouvre SUR son carton" vert \
+    # ⚠️ L abrègement ne coupe pas un mot, et il le DIT. Vu sur le premier clip réel : le carton de
+    # S6-27 finissait sur « habituelle. L aper ». Un titre tronqué en plein mot se lit comme un
+    # défaut de rendu, et rien ne dit s il manque trois lettres ou trois phrases.
+    essai "un libellé long s abrège sur un mot entier"    vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            court=$(printf "un deux trois quatre cinq six" | abreger_sur_un_mot 14)
+            [ "$court" = "un deux trois…" ]' "${BASH_SOURCE[0]}"
+    essai "et un libellé court reste intact"             vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            [ "$(printf "court" | abreger_sur_un_mot 40)" = "court" ]' "${BASH_SOURCE[0]}"
+
+    # --- l'horloge du banc (#4056) ---
+    # ⚠️ LE cas qui manquait, et qui a coûté un tournage. `date +%s%3N` n'est pas portable : certaines
+    # versions ignorent le modificateur de largeur et rendent les neuf chiffres de `%N`, soit un
+    # instant un MILLION de fois trop grand. Le banc n'échouait pas pour autant - il calculait des
+    # plages négatives et concluait « les repères ne décrivent pas CE film », accusant les repères
+    # d'un défaut de l'horloge.
+    essai "l instant du banc tient sur treize chiffres"   vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            i=$(instant_en_millisecondes)
+            [ "${#i}" = 13 ]' "${BASH_SOURCE[0]}"
+    # ⚠️ Et qu il soit plausible, pas seulement long : treize chiffres au hasard passeraient le cas
+    # ci-dessus. On le compare aux secondes de l horloge, la seule référence disponible.
+    essai "et il vaut bien les secondes fois mille"       vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            i=$(instant_en_millisecondes); s=$(date +%s)
+            awk -v i="$i" -v s="$s" "BEGIN{ d = i / 1000 - s; exit !(d >= -2 && d <= 2) }"' "${BASH_SOURCE[0]}"
+
+    # ⚠️ Et celui-ci éprouve le collage TEL QU'IL SE FAIT, en appelant `coller_le_carton` et non en
+    # rejouant ses gestes à côté. Sa première version les rejouait, avec un nom de sortie différent :
+    # elle passait au vert pendant que le code échouait, parce que la boucle écrivait dans
+    # « <clip>.titre », sans extension connue de ffmpeg. Le carton n'a jamais été collé sur un vrai
+    # clip, et le collage étant silencieux en cas d'échec, rien ne l'a dit.
+    #
+    # Le cas nomme donc son clip comme la production le nomme, et laisse la fonction faire le reste.
+    essai "le carton se colle DEVANT le clip, en place"   vert \
         env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
             d=$(mktemp -d); trap "rm -rf $d" EXIT
+            clip="$d/UneClasseTest.un_test.mkv"
             ffmpeg -nostdin -loglevel error -f lavfi -i "color=c=green:s=320x180:d=4:r=25" \
-                -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$d/clip.mkv" >/dev/null 2>&1
-            carton_de_titre "S1-26" "un libellé" "Scenario" "$(dimensions_du_film "$d/clip.mkv")" "$d/t.mkv" || exit 1
-            printf "file %s\nfile %s\n" "$d/t.mkv" "$d/clip.mkv" > "$d/l"
-            ffmpeg -nostdin -loglevel error -f concat -safe 0 -i "$d/l" -c copy -y "$d/m.mkv" >/dev/null 2>&1 || exit 1
-            duree=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$d/m.mkv")
-            awk -v x="$duree" "BEGIN{exit !(x > 5.5 && x < 6.5)}" || exit 1
-            [ "$(dimensions_du_film "$d/m.mkv")" = "$(dimensions_du_film "$d/clip.mkv")" ] || exit 1
-            # ⚠️ La première version lisait ce pixel avec Pillow. Le banc n installe PAS Pillow - il
-            # installe ffmpeg, xdotool et tesseract - et le cas rougissait en CI en passant ici.
-            # `ffmpeg` réduit la première image à UN pixel, dont `od` donne les trois octets : la
-            # teinte moyenne du carton (sombre, bleutée) ne peut pas être celle de l extrait (vert).
-            set -- $(ffmpeg -nostdin -loglevel error -i "$d/m.mkv" -vframes 1 -vf scale=1:1 \
+                -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$clip" >/dev/null 2>&1
+            avant=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$clip")
+            coller_le_carton "$clip" "S1-26" "UneClasseTest.un_test" || exit 1
+            apres=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$clip")
+            awk -v a="$avant" -v b="$apres" "BEGIN{exit !(b > a + 1.5 && b < a + 2.5)}" || exit 1
+            set -- $(ffmpeg -nostdin -loglevel error -i "$clip" -vframes 1 -vf scale=1:1 \
                 -f rawvideo -pix_fmt rgb24 - 2>/dev/null | od -An -tu1)
-            # ⚠️ Les TROIS canaux, et mesurés. La première version exigeait « rouge faible et bleu
-            # au-dessus du rouge » : le carton donne (40, 38, 59), mais l extrait vert donne
-            # (1, 128, 2), où le bleu passe lui aussi au-dessus du rouge. Le cas restait vert avec le
-            # carton monté APRÈS l extrait, c est-à-dire en ne gardant rien de ce qu il annonce.
             [ "$1" -lt 60 ] && [ "$2" -lt 60 ] && [ "$3" -gt "$2" ]' "${BASH_SOURCE[0]}"
+    # ⚠️ Et il ne laisse RIEN derrière lui : un carton ou une liste oubliés dans le dossier des clips
+    # partiraient dans l'artefact et dans la publication, sous un nom que personne n'attend.
+    essai "et il ne laisse aucun fichier de travail"      vert \
+        env RECETTE_RELANCE=1 bash -c 'source "$0" >/dev/null 2>&1
+            d=$(mktemp -d); trap "rm -rf $d" EXIT
+            clip="$d/UneClasseTest.un_test.mkv"
+            ffmpeg -nostdin -loglevel error -f lavfi -i "color=c=green:s=320x180:d=4:r=25" \
+                -c:v libx264 -preset veryfast -crf 22 -pix_fmt yuv420p -y "$clip" >/dev/null 2>&1
+            coller_le_carton "$clip" "S1-26" "UneClasseTest.un_test" || exit 1
+            [ "$(ls -A "$d" | wc -l)" = 1 ]' "${BASH_SOURCE[0]}"
 
     # --- la RELANCE elle-même (#4047) ---
     # ⚠️ Le cas ci-dessous éprouve le contrôle ; celui-ci éprouve la RELANCE, qui n'était gardée par
