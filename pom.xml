@@ -1052,6 +1052,10 @@
                      déclarés APRÈS celui-ci, la remplacent par le format attendu de leur système.
                      Sans l'option icon, jpackage retombe sur son icône Duke générique (#2144). -->
                 <jpackage.icon>${project.basedir}/icone/derive/vigiechiro.png</jpackage.icon>
+                <!-- Propriétés du lanceur `vigiechiro`, la porte de la ligne de commande (#4071). Même
+                     patron que l'icône : le profil jpackage-windows remplace ce fichier par celui qui
+                     ajoute `win-console=true`, la seule différence entre les deux systèmes. -->
+                <jpackage.lanceurCli>${project.basedir}/jpackage/lanceur-cli.properties</jpackage.lanceurCli>
             </properties>
             <build>
                 <plugins>
@@ -1133,6 +1137,21 @@
                                              lieu d'être déduite de l'absence d'arguments (ADR 3828). -->
                                         <argument>--arguments</argument>
                                         <argument>ihm</argument>
+                                        <!-- La porte de la ligne de commande (#4071). Le nom est en
+                                             minuscules parce que c'est ce que l'utilisateur TAPE : le
+                                             nom du produit donne un `bin/VigieChiroCompanion`, qui ne
+                                             ressemble à rien sous Unix, et le renommer toucherait
+                                             l'identité du produit (menu Démarrer, bundle macOS,
+                                             winget), figée par les ADR 0045 et 0047.
+                                             Ce n'est PAS un second point d'entrée : le jar principal
+                                             et la classe principale s'héritent du lanceur ci-dessus,
+                                             les deux exécutables mènent au même `Launcher`. Le fichier
+                                             de propriétés ne déclare que ce qui diffère : la console
+                                             sous Windows, et une valeur d'`arguments` qui EMPÊCHE
+                                             d'hériter du `ihm` ci-dessus. Vérifié : sans elle,
+                                             `vigiechiro` tapé seul ouvrirait la fenêtre. -->
+                                        <argument>--add-launcher</argument>
+                                        <argument>vigiechiro=${jpackage.lanceurCli}</argument>
                                         <argument>--icon</argument>
                                         <argument>${jpackage.icon}</argument>
                                         <!-- Accès natif (JavaFX + JNI SQLite) et Unsafe (Guice/Guava)
@@ -1233,6 +1252,11 @@
             </activation>
             <properties>
                 <jpackage.icon>${project.basedir}/icone/derive/vigiechiro.ico</jpackage.icon>
+                <!-- La console ne s'ajoute QUE sur le lanceur de ligne de commande, et seulement ici :
+                     le lanceur graphique qui la gagnerait ouvrirait une console noire à chaque
+                     lancement depuis le menu Démarrer, celui-là même que `win-menu` installe plus bas
+                     (#4071). C'est pourquoi il y a deux enveloppes plutôt qu'un lanceur qui devine. -->
+                <jpackage.lanceurCli>${project.basedir}/jpackage/lanceur-cli-windows.properties</jpackage.lanceurCli>
             </properties>
             <build>
                 <plugins>

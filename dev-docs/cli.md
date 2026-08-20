@@ -397,9 +397,18 @@ reste** part à la ligne de commande (#4071). Personne n'a à taper `ihm` pour o
 chaque emballage l'écrit pour son double-clic - `jpackage --arguments ihm` le dépose dans le `.cfg` du
 lanceur, le script Flatpak porte le même défaut.
 
+La commande s'appelle `vigiechiro`, comme l'annonce déjà l'aide de picocli. C'est une **seconde
+enveloppe** posée par `--add-launcher` sur la même classe principale, et non un second point d'entrée :
+`VigieChiroCompanion lister-passages` répond exactement pareil. Elle existe pour deux raisons, dont
+une seule est technique - sous Windows, elle porte la console que le lanceur graphique ne peut pas
+avoir (ADR 4071) ; ailleurs, elle donne simplement à la commande le nom qu'on tape.
+
 ```bash
 # archive portable Linux (et app-image)
-bin/VigieChiroCompanion lister-passages
+bin/vigiechiro lister-passages
+
+# .msi et archive portable Windows
+bin\vigiechiro.exe lister-passages
 
 # Flatpak
 flatpak run fr.echonuit.VigieChiroCompanion lister-passages
