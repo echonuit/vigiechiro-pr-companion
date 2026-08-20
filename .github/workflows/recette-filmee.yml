@@ -208,7 +208,7 @@ jobs:
           # ⚠️ Le nom porte le MODE, pas seulement la classe : le job de publication reprend cet
           # artefact par son nom, et « recette-filmee-EditeurCommentaireTest » ne lui dirait pas
           # qu'il s'agit de la planche entière.
-          name: recette-filmee-${{ inputs.publier_les_clips == 'true' && 'planche' || inputs.classe }}
+          name: recette-filmee-${{ inputs.publier_les_clips && 'planche' || inputs.classe }}
           # Le journal de repères part avec le film (#3774). Sans lui, la vidéo est un bloc dont
           # personne ne saura où regarder pour trancher un cas donné - et surtout, il est le seul
           # moyen de constater DEPUIS LA CI que l'extension a bien été chargée : un journal absent
