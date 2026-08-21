@@ -59,7 +59,11 @@ class LectureBorneeTest {
                 .hasMessageContaining("LogPR1925492.txt")
                 .hasMessageContaining("2,1 Mo")
                 .hasMessageContaining("1,0 Mo")
-                .hasMessageContaining("-Dvigiechiro.import.journal.max-octets=");
+                // ⚠️ Le contrat a changé (#4075) : le refus conseillait `-Dvigiechiro.…`, geste qu'un
+                // produit installé ne permet PAS - le lanceur passe ses arguments à `main`, pas à la
+                // JVM. Il nomme désormais la porte qui existe là où l'utilisateur se trouve.
+                .hasMessageContaining("--reglage import.journal.max-octets=")
+                .hasMessageNotContaining("-D");
     }
 
     @Test
@@ -87,7 +91,7 @@ class LectureBorneeTest {
     @DisplayName("Un flux au-delà du plafond est refusé SANS avoir été lu en entier")
     void texte_refuse_avant_d_avoir_tout_lu() {
         PlafondLecture plafond =
-                new PlafondLecture("vigiechiro.reseau.corps.max-octets", UN_MO, "Réponse du serveur refusée");
+                new PlafondLecture(CleDeReglage.RESEAU_CORPS_MAX_OCTETS, UN_MO, "Réponse du serveur refusée");
         FluxCompte source = new FluxCompte(8 * (int) UN_MO);
 
         assertThatThrownBy(() -> LectureBornee.texte(source, plafond, "/donnees"))

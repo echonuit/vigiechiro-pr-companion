@@ -5,6 +5,7 @@ import fr.univ_amu.iut.cli.commande.CommandeRacine;
 import fr.univ_amu.iut.cli.di.CliModule;
 import fr.univ_amu.iut.commun.di.Amorcage;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.CleDeReglage;
 import fr.univ_amu.iut.commun.model.ConfigurationJournalisation;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -217,11 +219,23 @@ public final class Cli {
     /// Point d'entrée processus : extrait l'option globale `--workspace`, positionne
     /// `vigiechiro.workspace` **avant** de bâtir l'injecteur, exécute puis sort avec le code retourné.
     public static void main(String[] args) {
-        List<String> restants = new ArrayList<>();
-        String workspace = extraireWorkspace(args, restants);
+        List<String> sansWorkspace = new ArrayList<>();
+        String workspace = extraireWorkspace(args, sansWorkspace);
         if (workspace != null) {
             System.setProperty("vigiechiro.workspace", workspace);
         }
+
+        // Les réglages se posent AVANT l'injecteur, comme le workspace : les bornes sont lues à la
+        // construction des services, et une propriété posée après ne servirait plus à rien (#4075).
+        List<String> restants = new ArrayList<>();
+        List<String> reglages = extraireReglages(sansWorkspace, restants);
+        Optional<String> refus = poserLesReglages(reglages);
+        if (refus.isPresent()) {
+            System.err.println(refus.get());
+            System.exit(CODE_ERREUR_ARGUMENTS);
+            return;
+        }
+
         // Journalisation après la résolution du workspace (pour écrire dans le bon dossier), avant tout
         // travail : la CLI aussi laisse une trace de ses incidents (#1523).
         System.exit(executerOuRendreCompte(restants));
@@ -254,6 +268,57 @@ public final class Cli {
             System.err.println(verdict.phrase());
             return verdict.code();
         }
+    }
+
+    /// Retire les options globales `--reglage <cle>=<valeur>` (répétables, où qu'elles soient) et rend
+    /// leurs paires, en accumulant les autres jetons dans `restants`.
+    ///
+    /// ⚠️ Elles sont retirées **avant** picocli, comme `--workspace` : elles ne visent aucune
+    /// sous-commande en particulier, et les laisser passer ferait rougir l'analyse d'arguments sur une
+    /// option que la commande ne déclare pas.
+    static List<String> extraireReglages(List<String> args, List<String> restants) {
+        List<String> reglages = new ArrayList<>();
+        for (int i = 0; i < args.size(); i++) {
+            if (args.get(i).equals("--reglage") && i + 1 < args.size()) {
+                reglages.add(args.get(i + 1));
+                i++; // saute la valeur
+            } else {
+                restants.add(args.get(i));
+            }
+        }
+        return reglages;
+    }
+
+    /// Pose les réglages demandés, ou rend le **message de refus** qui nomme ce qui existe.
+    ///
+    /// ⚠️ La clé est cherchée au registre, jamais posée telle quelle : `--reglage` écrit une propriété
+    /// système, et sans registre elle en écrirait **n'importe laquelle**, y compris celles de la
+    /// plateforme. Le registre est aussi ce qui permet au refus de nommer les clés admises plutôt que
+    /// de laisser chercher.
+    ///
+    /// Rend un message plutôt que de sortir : le refus se décide ici, mais c'est `main` qui sait
+    /// comment sortir - ce qui rend ce chemin éprouvable sans lancer de processus.
+    ///
+    /// @param reglages les valeurs brutes de `--reglage`, sous la forme `cle=valeur`
+    /// @return le message de refus, ou vide si tout a été posé
+    static Optional<String> poserLesReglages(List<String> reglages) {
+        for (String reglage : reglages) {
+            int egal = reglage.indexOf('=');
+            if (egal <= 0 || egal == reglage.length() - 1) {
+                return Optional.of("Réglage mal écrit : « " + reglage
+                        + " ». La forme attendue est --reglage <cle>=<valeur>, par exemple --reglage "
+                        + CleDeReglage.IMPORT_ZIP_MAX_ENTREES.nom() + "=5000.");
+            }
+            String nom = reglage.substring(0, egal);
+            String valeur = reglage.substring(egal + 1);
+            Optional<CleDeReglage> cle = CleDeReglage.parNom(nom);
+            if (cle.isEmpty()) {
+                return Optional.of("Réglage inconnu : « " + nom + " ». Les réglages admis sont : "
+                        + CleDeReglage.nomsAdmis() + ".");
+            }
+            System.setProperty(cle.get().propriete(), valeur);
+        }
+        return Optional.empty();
     }
 
     /// Retire l'option globale `--workspace <dir>` du tableau d'arguments (où qu'elle soit) et renvoie sa

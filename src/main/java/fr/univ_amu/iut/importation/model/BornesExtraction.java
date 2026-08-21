@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.CleDeReglage;
 import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
@@ -76,20 +77,18 @@ public record BornesExtraction(
     /// exactement plein.
     private static final long DEFAUT_MARGE_DISQUE = 100L * 1000 * 1000;
 
-    private static final String PREFIXE = "vigiechiro.import.zip.";
-
     /// Les bornes de production : les défauts, chacun surchargeable par propriété système.
     public static BornesExtraction parDefaut() {
         return new BornesExtraction(
-                (int) entier("max-entrees", DEFAUT_MAX_ENTREES),
-                entier("max-octets-par-entree", DEFAUT_MAX_PAR_ENTREE),
-                entier("max-octets-total", DEFAUT_MAX_TOTAL),
-                entier("marge-disque-octets", DEFAUT_MARGE_DISQUE),
+                (int) entier(CleDeReglage.IMPORT_ZIP_MAX_ENTREES, DEFAUT_MAX_ENTREES),
+                entier(CleDeReglage.IMPORT_ZIP_MAX_OCTETS_PAR_ENTREE, DEFAUT_MAX_PAR_ENTREE),
+                entier(CleDeReglage.IMPORT_ZIP_MAX_OCTETS_TOTAL, DEFAUT_MAX_TOTAL),
+                entier(CleDeReglage.IMPORT_ZIP_MARGE_DISQUE, DEFAUT_MARGE_DISQUE),
                 EspaceDisque.reel());
     }
 
-    private static long entier(String cle, long defaut) {
-        String surcharge = System.getProperty(PREFIXE + cle);
+    private static long entier(CleDeReglage cle, long defaut) {
+        String surcharge = System.getProperty(cle.propriete());
         return surcharge == null || surcharge.isBlank() ? defaut : Long.parseLong(surcharge.trim());
     }
 
@@ -104,8 +103,8 @@ public record BornesExtraction(
     public void verifierAvantExtraction(InventaireArchive inventaire, Path destination) throws IOException {
         if (inventaire.nbFichiers() > maxEntrees) {
             throw new RegleMetierException("Archive zip refusée : " + inventaire.nbFichiers()
-                    + " fichiers, au-delà des " + maxEntrees + " admis. Pour une archive légitime, relancez avec"
-                    + " -D" + PREFIXE + "max-entrees=<valeur>.");
+                    + " fichiers, au-delà des " + maxEntrees + " admis. "
+                    + CleDeReglage.IMPORT_ZIP_MAX_ENTREES.commentRelever());
         }
         if (inventaire.plusGrandeEntree() > maxOctetsParEntree) {
             throw new RegleMetierException("Archive zip refusée : « " + nomCourt(inventaire.nomPlusGrandeEntree())

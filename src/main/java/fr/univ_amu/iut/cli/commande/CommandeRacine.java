@@ -35,6 +35,11 @@ import picocli.CommandLine.Spec;
         // celui qui découvre la commande n'a aucun moyen d'apprendre comment ouvrir la fenêtre (#4071).
         footer = {
             "  --workspace <dir>   Dossier de travail (base vigiechiro.db). Défaut : <Documents>/VigieChiro-Companion.",
+            // ⚠️ Les clés ne sont PAS listées ici : elles vivent au registre `CleDeReglage`, et une
+            // annotation ne peut citer qu'une constante de compilation - la liste y serait donc une
+            // COPIE, qui se démoderait au premier réglage ajouté. Une clé inconnue nomme celles qui
+            // existent, ce qui met la liste là où on en a besoin (#4075).
+            "  --reglage <cle>=<valeur>   Relève une borne (répétable). Une clé inconnue liste les clés admises.",
             "",
             // ⚠️ Le « refus métier » était rangé sous le code 1 dans ce pied, alors que la convention
             // #2294 le rend en 2 - et c'est bien 2 que le produit renvoie, comme l'attestent les E2E

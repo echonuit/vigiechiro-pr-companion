@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.api;
 
+import fr.univ_amu.iut.commun.model.CleDeReglage;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Arrays;
@@ -42,7 +43,7 @@ import java.util.Optional;
 public final class UrlSigneeAdmise {
 
     /// Liste des hôtes admis, séparés par des virgules, en remplacement des hôtes par défaut.
-    public static final String PROPRIETE_HOTES = "vigiechiro.s3.hotes";
+    public static final String PROPRIETE_HOTES = CleDeReglage.S3_HOTES.propriete();
 
     /// Le domaine de stockage de la plateforme : l'hôte doit lui être **égal** ou en être un
     /// sous-domaine.
@@ -75,8 +76,8 @@ public final class UrlSigneeAdmise {
         }
         if (hotesAdmis().stream().noneMatch(admis -> correspond(hote, admis))) {
             return Optional.of("URL de stockage refusée : hôte inattendu « " + hote + " », alors que la"
-                    + " plateforme sert " + String.join(", ", hotesAdmis()) + ". Si l'hébergement a changé,"
-                    + " relancez avec -D" + PROPRIETE_HOTES + "=<hôte>.");
+                    + " plateforme sert " + String.join(", ", hotesAdmis()) + ". Si l'hébergement a changé, "
+                    + CleDeReglage.S3_HOTES.commentRelever());
         }
         return Optional.empty();
     }

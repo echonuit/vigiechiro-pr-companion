@@ -38,17 +38,17 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 /// **message de refus** qui doit nommer la limite atteinte et la surcharge, sans quoi la seule issue
 /// serait de renoncer au fichier.
 ///
-/// @param propriete propriété système qui surcharge le plafond
+/// @param cle la borne au registre des réglages, qui porte son nom court et la propriété système
 /// @param octets plafond effectif, en octets
 /// @param refus l'annonce du refus, **accordée** (« Fichier de la carte refusé », « Réponse du
 ///     serveur refusée ») : le message la reprend telle quelle
-public record PlafondLecture(String propriete, long octets, String refus) {
+public record PlafondLecture(CleDeReglage cle, long octets, String refus) {
 
     /// Propriété système du plafond des fichiers texte lus depuis la carte SD.
-    public static final String PROPRIETE_JOURNAL = "vigiechiro.import.journal.max-octets";
+    public static final String PROPRIETE_JOURNAL = CleDeReglage.IMPORT_JOURNAL_MAX_OCTETS.propriete();
 
     /// Propriété système du plafond des corps de réponse HTTP.
-    public static final String PROPRIETE_CORPS = "vigiechiro.reseau.corps.max-octets";
+    public static final String PROPRIETE_CORPS = CleDeReglage.RESEAU_CORPS_MAX_OCTETS.propriete();
 
     /// 32 Mio : 17 000 fois le journal d'une nuit réelle, 70 fois une saison de dix ans.
     public static final long DEFAUT_JOURNAL = 32L * 1024 * 1024;
@@ -60,13 +60,17 @@ public record PlafondLecture(String propriete, long octets, String refus) {
     /// climatique.
     public static PlafondLecture journalCapteur() {
         return new PlafondLecture(
-                PROPRIETE_JOURNAL, octetsDe(PROPRIETE_JOURNAL, DEFAUT_JOURNAL), "Fichier de la carte refusé");
+                CleDeReglage.IMPORT_JOURNAL_MAX_OCTETS,
+                octetsDe(PROPRIETE_JOURNAL, DEFAUT_JOURNAL),
+                "Fichier de la carte refusé");
     }
 
     /// Plafond du corps d'une réponse de la plateforme.
     public static PlafondLecture corpsReseau() {
         return new PlafondLecture(
-                PROPRIETE_CORPS, octetsDe(PROPRIETE_CORPS, DEFAUT_CORPS), "Réponse du serveur refusée");
+                CleDeReglage.RESEAU_CORPS_MAX_OCTETS,
+                octetsDe(PROPRIETE_CORPS, DEFAUT_CORPS),
+                "Réponse du serveur refusée");
     }
 
     private static long octetsDe(String propriete, long defaut) {
@@ -97,7 +101,7 @@ public record PlafondLecture(String propriete, long octets, String refus) {
     /// réponse refusée plutôt que dans une exception.
     public String motif(long octetsObserves, String origine) {
         return refus + " : « " + origine + " » fait " + Formats.octetsLisibles(octetsObserves)
-                + ", au-delà des " + Formats.octetsLisibles(octets) + " admis. Pour une lecture légitime,"
-                + " relancez avec -D" + propriete + "=<valeur en octets>.";
+                + ", au-delà des " + Formats.octetsLisibles(octets) + " admis. "
+                + cle().commentRelever();
     }
 }
