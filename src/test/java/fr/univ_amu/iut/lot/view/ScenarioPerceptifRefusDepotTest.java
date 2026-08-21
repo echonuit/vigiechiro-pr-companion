@@ -158,6 +158,10 @@ class ScenarioPerceptifRefusDepotTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         stage.setScene(Habillage.scene(loader.load(), 1180, 900));
+        // ⚠️ L'écran du lot est ouvert AVANT `show()`. Ouvert après, l'accueil paraissait une fraction
+        // de seconde puis l'écran du lot surgissait sans qu'aucun geste ne l'explique : le clip
+        // commençait sur un écran qui n'a rien à voir avec le cas.
+        injector.getInstance(NavigationLot.class).ouvrir(contexte);
         stage.show();
     }
 
@@ -170,8 +174,6 @@ class ScenarioPerceptifRefusDepotTest {
     @CasDeRecette(value = "S4-33", jugement = Jugement.HUMAIN)
     @DisplayName("S4-33 · le compte rendu dit le nombre de refus et conseille la reconnexion : à lire")
     void le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion(FxRobot robot) throws Exception {
-        robot.interact(() -> injector.getInstance(NavigationLot.class).ouvrir(contexte));
-        WaitForAsyncUtils.waitForFxEvents();
         // ⚠️ Le dépôt demande confirmation, et le dialogue réel fait `showAndWait`, qui fige TestFX
         // headless : le film s'arrêterait là. Même remède que `LotDepotConnecteViewTest`. Ce qui se voit
         // reste juste, à une chose près qui ne se voit pas : la confirmation n'a pas été demandée.
@@ -191,6 +193,10 @@ class ScenarioPerceptifRefusDepotTest {
                 20, TimeUnit.SECONDS, () -> texteAffiche(robot).contains(REFUSEES + " archive(s) ont été refusées"));
         // Le moment que ce cas existe pour montrer : la phrase du compte rendu, dont c'est la
         // LISIBILITÉ qu'on juge. Elle demande d'être lue, pas aperçue.
+        // ⚠️ Le compte rendu paraît SOUS la ligne de flottaison, et l'écran est revenu en haut quand
+        // sa zone est apparue. Sans ce défilement, le clip se termine sur les étapes 1 et 2 et ne
+        // montre jamais la phrase qu'il fait juger - c'est ce que la relecture du clip publié a dit.
+        amenerNoeudDansLeCadre(libellePortant(robot, "Reconnectez-vous"), robot);
         Respiration.surLeMomentCle(robot);
 
         String affiche = texteAffiche(robot);
@@ -204,6 +210,14 @@ class ScenarioPerceptifRefusDepotTest {
         assertThat(affiche)
                 .as("et le geste qui répare est nommé : ce refus-là tient aux droits, donc une reconnexion suffit")
                 .contains("Reconnectez-vous");
+
+        // ⚠️ Et la phrase doit être DANS LE CADRE, pas seulement dans la scène. `lookup` trouve un
+        // noeud quelle que soit sa position : le clip publié se terminait sur les étapes 1 et 2, la
+        // phrase vivant sous la ligne de flottaison, et toutes les assertions ci-dessus passaient.
+        // Un cas perceptif dont le clip ne montre pas son objet ne fait rien juger.
+        assertThat(dansLeCadre(libellePortant(robot, "Reconnectez-vous")))
+                .as("la phrase que ce cas fait juger est visible à l'image, et non sous le pli")
+                .isTrue();
     }
 
     // --------------------------------------------------------------------------------------------
@@ -285,10 +299,17 @@ class ScenarioPerceptifRefusDepotTest {
     /// Agrandir la fenêtre ne réglerait rien ici : le film fait 1280x900, donc ce qui dépasse ne serait
     /// pas tourné. Le défilement est aussi le geste que l'utilisateur ferait.
     private static void amenerDansLeCadre(FxRobot robot, String selecteur) {
-        Node cible = robot.lookup(selecteur).query();
+        amenerNoeudDansLeCadre(robot.lookup(selecteur).query(), robot);
+    }
+
+    /// Fait défiler jusqu'à ce que `cible` entre dans le cadre.
+    ///
+    /// ⚠️ Viser la ZONE ne suffit pas : amener son bord haut dans le cadre laisse son contenu sous le
+    /// pli. C'est le noeud qu'on veut voir qu'il faut viser, et l'assertion de fin le vérifie.
+    private static void amenerNoeudDansLeCadre(Node cible, FxRobot robot) {
         ScrollPane cadre = cadreDefilant(cible);
         if (cadre == null) {
-            throw new AssertionError("aucun ScrollPane au-dessus de « " + selecteur + " » : rien à faire défiler");
+            throw new AssertionError("aucun ScrollPane au-dessus de la cible : rien à faire défiler");
         }
         // ⚠️ La MOLETTE ne suffit pas : `robot.scroll` n'a pas déplacé ce contenu d'un pixel, le
         // pointeur n'étant pas au-dessus du bon panneau. On pilote donc le défilement, ce qui rend le
@@ -302,8 +323,8 @@ class ScenarioPerceptifRefusDepotTest {
             }
         }
         if (!dansLeCadre(cible)) {
-            throw new AssertionError("« " + selecteur + " » reste hors du cadre après défilement : "
-                    + cible.localToScene(cible.getBoundsInLocal()));
+            throw new AssertionError(
+                    "la cible reste hors du cadre après défilement : " + cible.localToScene(cible.getBoundsInLocal()));
         }
     }
 
@@ -321,6 +342,18 @@ class ScenarioPerceptifRefusDepotTest {
         Bounds dansLaScene = noeud.localToScene(noeud.getBoundsInLocal());
         return dansLaScene.getMinY() >= 0
                 && dansLaScene.getMaxY() <= noeud.getScene().getHeight();
+    }
+
+    /// Le libellé qui porte `extrait`, ou une erreur qui le nomme.
+    private static Node libellePortant(FxRobot robot, String extrait) {
+        return robot
+                .lookup(node -> node instanceof Labeled libelle
+                        && libelle.getText() != null
+                        && libelle.getText().contains(extrait))
+                .queryAll()
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("aucun libellé ne porte « " + extrait + " »"));
     }
 
     /// Tout ce qui porte du texte dans la fenêtre, recollé. Le compte rendu répartit sa phrase entre
