@@ -393,6 +393,15 @@ plages_du_journal() {
     # Là où le voisin est loin, la marge reste entière : c'est elle qui empêche de couper au ras du
     # geste, et la raboter partout coûterait la respiration qu'elle donne.
     #
+    # ⚠️ Et le repère ne suffit PAS. Borner sur le `debut` du cas suivant laisse encore passer sa
+    # fenêtre : elle paraît pendant son montage (`@Start`), donc AVANT que son repère soit écrit. La
+    # première version de ce bornage a raccourci le clip de S6-28 de 0,2 s et la modale de connexion y
+    # est restée - vérifié à l'image sur le tournage qui a suivi.
+    #
+    # La borne juste n'est pas un repère mais une IMAGE : la queue s'arrête à la première image noire
+    # qui suit la fin du cas, c'est-à-dire au moment où sa fenêtre disparaît. Le profil de luminance
+    # est passé en troisième argument ; sans lui, on s'en tient aux repères.
+    #
     # Deux passes, parce que la seconde a besoin de connaître le voisin, donc de les avoir tous. Le
     # tri intermédiaire ne suppose rien de l'ordre du journal.
     LC_NUMERIC=C awk -F'\t' -v t0="$1" '
@@ -403,8 +412,30 @@ plages_du_journal() {
             delete d[$3]
         }' "$2" \
         | LC_ALL=C sort -t"$ONGLET" -k1,1n \
-        | LC_NUMERIC=C awk -F'\t' -v m="$CLIP_MARGE" -v duree_min="$CLIP_DUREE_MIN" '
+        | LC_NUMERIC=C awk -F'\t' -v m="$CLIP_MARGE" -v duree_min="$CLIP_DUREE_MIN" \
+            -v profil="${3:-}" -v seuil="$LUMINANCE_SEUIL" '
+            BEGIN {
+                # Le profil, une fois : « instant<TAB>luminance » par image, tel que rend
+                # profil_luminance. Absent, le bornage reste celui des reperes.
+                if (profil != "") {
+                    while ((getline ligne < profil) > 0) {
+                        split(ligne, champ, "\t")
+                        n_prof++
+                        t_prof[n_prof] = champ[1] + 0
+                        y_prof[n_prof] = champ[2] + 0
+                    }
+                    close(profil)
+                }
+            }
             { deb[NR] = $1; fin[NR] = $2; nom[NR] = $3; cas[NR] = $4 }
+            # La premiere image NOIRE au-dela de « depuis », ou -1 : cest la ou la fenetre du cas a
+            # disparu, donc la derniere image qui lui appartienne encore.
+            function premiere_image_noire(depuis,    k) {
+                for (k = 1; k <= n_prof; k++) {
+                    if (t_prof[k] >= depuis && y_prof[k] <= seuil) return t_prof[k]
+                }
+                return -1
+            }
             END {
                 for (i = 1; i <= NR; i++) {
                     a = deb[i] - m
@@ -412,6 +443,8 @@ plages_du_journal() {
                     if (a < 0) a = 0
                     b = fin[i] + m
                     if (i < NR && b > deb[i + 1]) b = deb[i + 1]
+                    noir = premiere_image_noire(fin[i])
+                    if (noir >= 0 && noir < b) b = noir
                     # ATTENTION : une plage EFFONDREE ne se coupe pas. ffmpeg ecrit un fichier vide,
                     # et le remuxage suivant echoue dessus : « invalid as first byte of an EBML
                     # number ». Vecu : le premier tournage apres le bornage n a publie AUCUN clip.
@@ -450,7 +483,13 @@ montage_par_cas() {
     esac
     t0=$(LC_NUMERIC=C awk -v a="$arret_ms" -v d="$duree" 'BEGIN{printf "%.3f", a / 1000 - d}')
 
-    plages=$(plages_du_journal "$t0" "$journal")
+    # Le profil sert de borne d'image au montage : calcule une fois, il dit ou chaque fenetre
+    # disparait. Sans lui, on retomberait sur les seuls reperes - et sur le defaut de S6-28.
+    local profil
+    profil=$(mktemp)
+    profil_luminance "$brut" > "$profil"
+    plages=$(plages_du_journal "$t0" "$journal" "$profil")
+    rm -f "$profil"
     [ -n "$plages" ] || { echo "   index : le journal ne contient aucun passage complet"; return 0; }
 
     mesure=$(couverture_des_plages "$brut" "$plages")
@@ -1167,6 +1206,28 @@ auto_test() {
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; plages_du_journal 0 "$1" 2>/dev/null \
             | awk -F"\t" "{ if (\$3 - \$2 < 0.20) exit 1 }"' \
         "${BASH_SOURCE[0]}" "$tmp/journal-colle.tsv"
+
+    # --- la queue s'arrete a l'IMAGE, pas au repere (#4122) ---
+    #
+    # ⚠️ Le defaut que ce cas garde : la fenetre du cas SUIVANT parait pendant son montage, donc avant
+    # que son repere soit ecrit. Borner sur le repere laissait la modale de connexion a la fin de
+    # S6-28. Le profil dit ou l ecran devient noir, cest-a-dire ou la fenetre du cas a disparu.
+    #
+    # Il se joue sans video : le profil est un fichier « instant<TAB>luminance ».
+    : > "$tmp/profil.tsv"
+    for centieme in $(seq 0 5 30); do
+        printf '%s.%02d%s100\n' "$((centieme / 100))" "$((centieme % 100))" "$ONGLET" >> "$tmp/profil.tsv"
+    done
+    printf '2.20%s5\n2.40%s5\n' "$ONGLET" "$ONGLET" >> "$tmp/profil.tsv"
+    printf '%s\n' \
+        "1000${ONGLET}debut${ONGLET}TestA${ONGLET}S9-01" \
+        "2000${ONGLET}fin${ONGLET}TestA${ONGLET}S9-01" > "$tmp/journal-seul.tsv"
+    essai "sans profil, la marge entiere est gardee" vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" | cut -f3)" = 2.50 ]' \
+        "${BASH_SOURCE[0]}" "$tmp/journal-seul.tsv"
+    essai "la queue s arrete a la premiere image noire" vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" "$2" | cut -f3)" = 2.20 ]' \
+        "${BASH_SOURCE[0]}" "$tmp/journal-seul.tsv" "$tmp/profil.tsv"
 
     # ⚠️ Sans ce cas, un correctif qui raboterait TOUTES les queues passerait au vert, et la
     # respiration que la marge existe pour donner disparaitrait sans qu'aucun test ne le dise.
