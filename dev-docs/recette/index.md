@@ -38,6 +38,7 @@ de la neuvième et de la dixième (#3885). Un test le confronte au dossier dans 
 | S8 | [Récupérer une nuit déposée](sessions/s8-recuperer-une-nuit.md) (P12 de bout en bout, carte SD réelle) | écrite, **à jouer** | Connexion, Mes sites, Toutes mes nuits, passage |
 | S9 | [Installer et mettre à jour](sessions/s9-installer-mettre-a-jour.md) (winget, machine Windows réelle) | écrite, **à jouer** (#3621) | l'installation et la montée se jouent **hors** de l'application ; une fois installée, la session traverse quand même l'accueil (S9-04), le **bandeau d'annonce de mise à jour** (S9-14) et « À propos » (S9-11) |
 | S10 | [Le poste Windows](sessions/s10-le-poste-windows.md) (verrou du dossier de travail, couleur en console) | écrite, **à jouer** | aucun : comportements de **plateforme** |
+| S11 | [La commande sur un poste Linux](sessions/s11-la-commande-sur-un-poste-linux.md) (`.deb`, Flatpak, AppImage) | écrite, **à jouer** (#4071) | aucun : ce qui se joue est l'**exposition** de la commande et l'entrée de menu, hors de l'application |
 
 ⚠️ **« Jouée » se dit de la session telle qu'elle était.** S1 porte **huit cases écrites après sa
 dernière exécution** - S1-30 à S1-33 (#3458) et S1-34 à S1-37 (#3806), dont une perceptive : elles

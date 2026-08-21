@@ -64,6 +64,10 @@ class DecisionsRespecteesTest {
 
     private static final Path POSTRM_DEB = Path.of("jpackage", "deb", "postrm");
 
+    /// Le manifeste Flatpak : son script de lancement tient le rôle que le `.cfg` jpackage tient
+    /// ailleurs, c'est-à-dire déclarer le mot qui ouvre la fenêtre (ADR 4071).
+    private static final Path MANIFESTE_FLATPAK = Path.of("flatpak", "fr.echonuit.VigieChiroCompanion.yml");
+
     /// La racine des features : un sous-paquet par feature, plus `commun`.
     private static final Path SOURCES = Path.of("src", "main", "java", "fr", "univ_amu", "iut");
 
@@ -187,6 +191,27 @@ class DecisionsRespecteesTest {
                 .as("La console ne doit jamais être demandée pour TOUS les lanceurs : le lanceur "
                         + "graphique en ouvrirait une à chaque lancement depuis le menu Démarrer.")
                 .doesNotContain("<argument>--win-console</argument>");
+    }
+
+    @Test
+    @DisplayName("ADR 4071 : le Flatpak déclare lui aussi le mot qui ouvre la fenêtre")
+    void le_flatpak_declare_le_mot_qui_ouvre_la_fenetre() {
+        // Le Flatpak n'a pas de `.cfg` jpackage : son script de lancement en tient le rôle, et cette
+        // ligne décide seule de ce que fait `flatpak run <app-id>` sans argument - donc de ce que fait
+        // l'entrée de menu. Repassée à `"$@"`, elle rendrait l'aide de la CLI au double-clic.
+        //
+        // ⚠️ Rien d'autre ne le verrait. Le garde voisin, `verifie-affichage-flatpak.sh`, ne regarde que
+        // les sockets d'affichage, et le paquet lui-même n'est construit ni sur les PR ni sur `main` :
+        // il l'est chez Flathub, à partir du `.deb` publié. Le défaut ne se découvrirait donc que sur le
+        // poste d'un utilisateur.
+        String manifeste = lire(MANIFESTE_FLATPAK);
+
+        assertThat(manifeste)
+                .as("Le script de lancement du Flatpak doit poser `ihm` par défaut, faute de quoi le "
+                        + "double-clic et `flatpak run <app-id>` rendent l'aide au lieu d'ouvrir la "
+                        + "fenêtre. La forme POSIX est exigée telle quelle : le runtime freedesktop "
+                        + "n'a pas bash.")
+                .contains("fr.univ_amu.iut.Launcher \"${@:-ihm}\"");
     }
 
     @Test
