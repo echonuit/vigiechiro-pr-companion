@@ -1,0 +1,33 @@
+#!/bin/sh
+# postrm du paquet Debian, FOURNI par le dépôt et non par jpackage (#4071) : il retire le lien que le
+# postinst a posé dans le PATH, pour ne pas laisser un lien mort derrière la désinstallation.
+#
+# Le gabarit de jpackage ne fait RIEN ici - son postrm ne porte que la structure des cas, vérifiable
+# sur le `.deb` publié. Le remplacer ne coûte donc aucun geste, contrairement au prerm, qui porte une
+# fonction et qu'on laisse tranquille.
+#
+# ⚠️ Sur `upgrade`, on ne retire rien : le postinst de la version entrante repose le lien juste après,
+# et un lien qui survit une montée de version ne gêne personne, là où un lien manquant se remarque.
+set -e
+
+case "$1" in
+    purge|remove)
+        # Le lien n'est retiré que s'il est bien le nôtre : un fichier de ce nom posé par quelqu'un
+        # d'autre ne nous appartient pas, et une désinstallation n'a pas à emporter ce qu'elle n'a pas
+        # installé.
+        if [ -L /usr/bin/vigiechiro ] \
+            && [ "$(readlink /usr/bin/vigiechiro)" = "/opt/vigiechirocompanion/bin/vigiechiro" ]; then
+            rm -f /usr/bin/vigiechiro
+        fi
+        ;;
+
+    upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
+        ;;
+
+    *)
+        echo "postrm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0

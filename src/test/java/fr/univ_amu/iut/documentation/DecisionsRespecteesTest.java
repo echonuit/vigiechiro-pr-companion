@@ -58,6 +58,12 @@ class DecisionsRespecteesTest {
 
     private static final Path LANCEUR_CLI_WINDOWS = Path.of("jpackage", "lanceur-cli-windows.properties");
 
+    /// Les scripts d'installation du `.deb`, que le dépôt fournit à la place de ceux de jpackage
+    /// (ADR 4071) : c'est la seule prise pour poser la commande dans le PATH.
+    private static final Path POSTINST_DEB = Path.of("jpackage", "deb", "postinst");
+
+    private static final Path POSTRM_DEB = Path.of("jpackage", "deb", "postrm");
+
     /// La racine des features : un sous-paquet par feature, plus `commun`.
     private static final Path SOURCES = Path.of("src", "main", "java", "fr", "univ_amu", "iut");
 
@@ -181,6 +187,46 @@ class DecisionsRespecteesTest {
                 .as("La console ne doit jamais être demandée pour TOUS les lanceurs : le lanceur "
                         + "graphique en ouvrirait une à chaque lancement depuis le menu Démarrer.")
                 .doesNotContain("<argument>--win-console</argument>");
+    }
+
+    @Test
+    @DisplayName("ADR 4071 : le paquet Debian pose la commande dans le PATH, sans perdre l'entrée de menu")
+    void le_paquet_debian_pose_la_commande_dans_le_path() {
+        // Reprendre le postinst de jpackage, c'est reprendre sa charge : il installait l'entrée de menu,
+        // et rien à la construction ne dirait qu'on l'a perdue. Le paquet se construirait, s'installerait,
+        // et l'application aurait simplement disparu du menu des applications - défaut qu'on ne voit
+        // qu'en installant sur un poste de bureau.
+        String pom = lire(POM);
+
+        assertThat(pom)
+                .as("Sans `resource-dir`, jpackage reprend SES scripts et le lien n'est plus posé : la "
+                        + "commande retourne vivre sous /opt, atteignable en chemin complet seulement.")
+                .contains("<argument>--resource-dir</argument>")
+                .contains("<argument>${project.basedir}/jpackage/deb</argument>");
+
+        String postinst = lire(POSTINST_DEB);
+
+        assertThat(postinst)
+                .as("Le postinst du dépôt REMPLACE celui de jpackage : l'entrée de menu qu'il installait "
+                        + "doit continuer d'être installée ici.")
+                .contains("xdg-desktop-menu install");
+        assertThat(postinst)
+                .as("C'est la raison d'être de ce script : poser `vigiechiro` dans le PATH, faute de "
+                        + "quoi le `.deb` n'installe aucun exécutable hors de /opt.")
+                .contains("ln -sf /opt/vigiechirocompanion/bin/vigiechiro /usr/bin/vigiechiro");
+
+        // ⚠️ L'ordre est un fait mesuré, pas une préférence : sur un système sans dossier de menus
+        // inscriptible, `xdg-desktop-menu` rend 3 et le `set -e` arrête le script sur-le-champ. Le lien
+        // placé après n'était alors pas posé, et l'installation rendait une commande absente.
+        assertThat(postinst.indexOf("ln -sf /opt/vigiechirocompanion/bin/vigiechiro"))
+                .as("Le lien doit être posé AVANT l'entrée de menu : `xdg-desktop-menu` peut échouer, "
+                        + "et `set -e` emporterait alors tout ce qui le suit.")
+                .isLessThan(postinst.indexOf("xdg-desktop-menu install"));
+
+        assertThat(lire(POSTRM_DEB))
+                .as("Ce que l'installation pose, la désinstallation le retire : sans cela, un lien mort "
+                        + "reste dans le PATH après le départ du paquet.")
+                .contains("rm -f /usr/bin/vigiechiro");
     }
 
     @Test
