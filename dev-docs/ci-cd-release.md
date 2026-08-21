@@ -24,7 +24,7 @@ publication.
 | [adr-rapport.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/adr-rapport.yml) | hebdomadaire + manuel | Rapport ADR (calibration des cliquets et des loupes) | — |
 | [mutation-model.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-model.yml) | quotidien (3 h UTC) + manuel | Mesure de mutation PIT sur **un paquet `model` par tour** (rotation sans état, cycle de 17 jours), **E2E et `commun.api` exclus** : bilan dans le résumé du job, rapport détaillé en artefact | — |
 | [mutation-ihm.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/mutation-ihm.yml) | quotidien (5 h UTC) + manuel | Mesure de mutation PIT sur les vues d'**une feature par tour** (rotation sans état, cycle de 15 jours), **E2E exclus** | — |
-| [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | **manuel** (`workflow_dispatch`) | Paquet Flatpak (cf. plus bas) | — |
+| [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | **appelé par le train** (`workflow_call` depuis `release.yml`), ou manuel | Paquet Flatpak (cf. plus bas) | — |
 | [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | **manuel** (`workflow_dispatch`) | Soumission d'une version choisie à winget-pkgs (cf. plus bas) | — |
 | [recette-filmee.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/recette-filmee.yml) | **manuel** (`workflow_dispatch`) | Éprouve qu'un runner **pilote** un test filmé, et pas seulement qu'il l'exécute. Porte son **témoin** : sans gestionnaire de fenêtres, le lancement doit être refusé (cf. plus bas) | — |
 
@@ -365,7 +365,24 @@ sont exactement ce que la source du manifeste demande.
 
 **La montée de version est automatique** : le bloc `x-checker-data` du manifeste est lu par
 `flatpak-external-data-checker` directement dans `flatpak.yml`, qui propose la mise à jour une fois le
-paquet reconstruit et démarré avec succès. Publier une version ne demande aucun geste côté paquet.
+paquet reconstruit et démarré avec succès.
+
+**Et le workflow part avec le train** (#4103) : `release.yml` l'appelle en `workflow_call` après avoir
+retiré le brouillon de la Release. Publier une version ne demande donc aucun geste côté paquet, ce qui
+n'était vrai qu'en théorie tant que le déclenchement restait manuel.
+
+⚠️ **C'est un `workflow_call`, et pas un `release: released`.** Ce dernier ne partirait jamais : la
+Release est dé-brouillonnée avec le `GITHUB_TOKEN`, et GitHub ne déclenche aucun workflow sur un
+événement produit par ce jeton. Un workflow appelé n'est pas un événement - il s'exécute dans le run de
+l'appelant - donc l'obstacle ne s'y applique pas. C'est le premier `workflow_call` du dépôt.
+
+⚠️ **Le job dépend de `publish`, pas d'`installers`** : le checker interroge `releases/latest`, qui
+ignore les brouillons. Téléverser les assets ne suffit pas ; il faut que la Release en soit sortie.
+
+⚠️ **Ce que le retard coûtait**, avant : le paquet publié pouvait rester plusieurs versions en arrière
+sans que rien ne le dise. Mesuré le 2026-08-21 - manifeste sur le `.deb` 2.185.0 quand la 2.187.0 était
+publiée, donc la ligne de commande de #4071 absente du paquet pendant que la documentation
+l'annonçait.
 
 !!! tip "Le `.desktop` de jpackage est invalide"
     jpackage écrit `Categories=Unknown`, valeur que `desktop-file-validate` refuse. Le manifeste la
@@ -379,8 +396,8 @@ paquet reconstruit et démarré avec succès. Publier une version ne demande auc
 que ce projet héberge lui-même. C'est le seul canal Flatpak du projet.
 
 **En production depuis le 2026-08-15** : `https://flatpak.echonuit.fr/fr.echonuit.VigieChiroCompanion.flatpakrepo`
-sert un dépôt **signé** (clé `1BA6A82DA9213B177B160E56CD450A9383707B17`), reconstruit à chaque
-`workflow_dispatch` de `flatpak.yml`. Installation côté utilisateur documentée dans la
+sert un dépôt **signé** (clé `1BA6A82DA9213B177B160E56CD450A9383707B17`), reconstruit à chaque train de
+publication, et à la demande par le `workflow_dispatch` de `flatpak.yml`. Installation côté utilisateur documentée dans la
 [documentation utilisateur](https://companion.echonuit.fr/prise-en-main/).
 
 **Mécanisme** : la construction de `flatpak-builder` exporte vers `--repo`, en plus du `--install` local
