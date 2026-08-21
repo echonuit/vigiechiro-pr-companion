@@ -73,7 +73,7 @@ question sur le carré corrigé.
 d'écoute déjà positionnés**. La fenêtre se ferme et la fiche du carré s'ouvre, avec le compte rendu de ce
 qui vient d'être créé.
 
-![Le compte rendu affiché après la récupération : le carré, et le nombre de points d'écoute positionnés.](../assets/captures/apercu-sites-carre-recupere.png)
+![La fiche du carré récupéré : un bandeau vert, en tête d'écran, annonce le carré et le nombre de points d'écoute positionnés. Il se ferme d'une croix.](../assets/captures/apercu-sites-carre-recupere.png)
 
 C'est ce rattachement qui compte : sans lui, le téléversement d'une nuit se solde par « site non rattaché
 à Vigie-Chiro ». Et il ne s'obtenait jusqu'ici que par la synchronisation, qui ne ramène que les carrés
