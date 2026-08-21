@@ -561,3 +561,42 @@ jobs:
       checks: write
     uses: ./.github/workflows/flatpak.yml
     secrets: inherit
+
+  # Les clips de recette se tournent AVEC le train, sur la version qui vient d'être
+  # publiée (#4111).
+  #
+  # ## Pourquoi pas la veille, ni le matin, ni chaque commit
+  #
+  # Les clips servent à jouer la recette d'UNE version. Tournés à date fixe, ils
+  # montreraient `main` à cette heure-là - un état qui n'existe nulle part ailleurs -
+  # et « la veille » suppose que rien ne fusionnera d'ici 6 h : le 2026-08-21, douze
+  # commits ont fusionné dans la journée. À chaque commit, ce serait 5 min et 58
+  # fichiers réécrits par fusion, sur une pré-version ROULANTE : on effacerait sans
+  # cesse des clips que personne n'a eu le temps de regarder.
+  #
+  # Ici, ce que la recette regarde est ce que la version publiée montre, par
+  # construction. Même raisonnement que pour le Flatpak (ADR 4103) : une dépendance
+  # déclarée plutôt qu'une supposition de date.
+  #
+  # ## Ce que ça coûte
+  #
+  # Cinq minutes, mesurées sur le tournage complet du 2026-08-20 (58 clips). Le job
+  # ne dépend pas de `flatpak` : les deux partent ensemble après `publish`.
+  #
+  # ⚠️ La condition NOMME l'état attendu (ADR 4079), comme celle du Flatpak : sans
+  # `!cancelled()` ni `needs.publish.result`, le « sauté » de `contournement-declare`
+  # se propagerait et le train rendrait vert sans avoir rien tourné.
+  clips-de-recette:
+    needs: [release, publish]
+    if: >-
+      ${{ !cancelled()
+      && needs.publish.result == 'success' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/recette-filmee.yml
+    with:
+      publier_les_clips: true
+      # La version que ces clips montrent, écrite dans la pré-version : sans elle, celui qui joue une
+      # session ne sait pas si ce qu'il regarde est bien ce qu'il valide.
+      version: ${{ needs.release.outputs.tag }}
+    secrets: inherit

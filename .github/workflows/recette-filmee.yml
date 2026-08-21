@@ -41,6 +41,35 @@ on:
         type: boolean
         default: false
 
+  # APPELÉ PAR LE TRAIN, après que la Release a cessé d'être un brouillon (#4111).
+  #
+  # ⚠️ L'en-tête de ce fichier disait « manuel seulement, POUR L'INSTANT : le branchement sur la
+  # publication viendra avec le harnais de recette (EPIC #3667) ». Cette condition est levée -
+  # l'EPIC est clos, et `CorrespondanceRecetteTest` lit 11 sessions et 403 cas. Il y a désormais
+  # quelque chose à garder.
+  #
+  # ⚠️ Après `publish`, et non la veille ni le matin. Les clips servent à jouer la recette d'UNE
+  # version : tournés à date fixe, ils montreraient `main` à cette heure-là, c'est-à-dire un état
+  # qui n'existe nulle part ailleurs. Le 2026-08-21, douze commits ont fusionné dans la journée -
+  # « la veille » aurait filmé autre chose que ce qui est publié.
+  workflow_call:
+    inputs:
+      classe:
+        description: Classe de test à filmer
+        type: string
+        default: EditeurCommentaireTest
+      sans_gestionnaire_de_fenetres:
+        type: boolean
+        default: false
+      publier_les_clips:
+        description: "Filmer TOUTES les classes citantes et publier les clips"
+        type: boolean
+        default: true
+      version:
+        description: "Version que ce tournage montre, écrite dans la pré-version (vide en tournage manuel)"
+        type: string
+        default: ""
+
 permissions:
   contents: read
 
@@ -254,18 +283,38 @@ jobs:
           name: recette-filmee-planche
           path: repris
 
-      - name: Ouvrir la pré-version si elle n'existe pas encore
+      - name: Ouvrir la pré-version, et dire CE QU'ELLE MONTRE
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+        # ⚠️ Le corps se réécrit à CHAQUE tournage, et pas seulement à la création. La pré-version
+        # annonçait « elle ne marque aucune version du produit » : c'était exact tant que le tournage
+        # était manuel, et ça devient faux depuis que le train l'appelle sur la version qu'il vient de
+        # publier (#4111). Celui qui joue une session doit savoir si ce qu'il regarde est bien ce
+        # qu'il valide - sans quoi les clips ont l'air justes quelle que soit leur ancienneté.
         run: |
           set -euo pipefail
+          if [ -n "${VERSION}" ]; then
+            montre="Ces clips montrent la **${VERSION}**, tournée juste après sa publication."
+          else
+            montre="Tournage **manuel** du $(git rev-parse --short HEAD) : ces clips ne correspondent à aucune version publiée."
+          fi
+          corps="${montre}
+
+          Pré-version **roulante** : ses pièces jointes sont remplacées à chaque tournage, et leurs adresses ne changent pas.
+
+          Voir la page « Regarder les clips de recette » de la documentation développeur.
+
+          _Tourné le $(date -u +%F) à $(date -u +%H:%M) UTC._"
+
           if gh release view clips-recette >/dev/null 2>&1; then
-            echo "La pré-version « clips-recette » existe déjà : les pièces seront remplacées."
+            gh release edit clips-recette --notes "${corps}"
+            echo "La pré-version existe : corps réécrit, les pièces seront remplacées."
           else
             gh release create clips-recette \
               --prerelease \
               --title "Clips de recette (roulant)" \
-              --notes "Les clips du dernier tournage complet. Cette pré-version est ROULANTE : ses pièces jointes sont remplacées à chaque tournage, et leurs adresses ne changent pas. Elle ne marque aucune version du produit ; voir la page « Regarder les clips de recette » de la documentation développeur."
+              --notes "${corps}"
           fi
 
       - name: Verser les clips et leur index
