@@ -2,6 +2,24 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.188.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.187.0...v2.188.0) (2026-08-21)
+
+
+### Bug Fixes
+
+* **commun:** cinq comptes rendus s'ouvrent sans propriétaire, et le bureau les pose où il veut ([#4097](https://github.com/echonuit/vigiechiro-pr-companion/issues/4097)) ([7d5ffca](https://github.com/echonuit/vigiechiro-pr-companion/commit/7d5ffca5eb175c4fa7264eb6eac6b81efffb3066)), closes [#4084](https://github.com/echonuit/vigiechiro-pr-companion/issues/4084) [#4092](https://github.com/echonuit/vigiechiro-pr-companion/issues/4092)
+* **deb:** l'entrée de menu ne décide plus du sort de l'installation ([#4096](https://github.com/echonuit/vigiechiro-pr-companion/issues/4096)) ([3ed3bec](https://github.com/echonuit/vigiechiro-pr-companion/commit/3ed3bec856ea55be4c2563a54bb5623abbfc1e6c)), closes [#4071](https://github.com/echonuit/vigiechiro-pr-companion/issues/4071) [#4080](https://github.com/echonuit/vigiechiro-pr-companion/issues/4080) [#4081](https://github.com/echonuit/vigiechiro-pr-companion/issues/4081)
+* **flatpak:** le paquet éprouve sa ligne de commande, et la doc date sa promesse ([#4100](https://github.com/echonuit/vigiechiro-pr-companion/issues/4100)) ([45eb7b9](https://github.com/echonuit/vigiechiro-pr-companion/commit/45eb7b9ecff8ba1cf904414c802020318200d031)), closes [#4071](https://github.com/echonuit/vigiechiro-pr-companion/issues/4071) [#4087](https://github.com/echonuit/vigiechiro-pr-companion/issues/4087) [#4071](https://github.com/echonuit/vigiechiro-pr-companion/issues/4071)
+* **recette:** le versement des clips retire ceux dont le cas a disparu ([#4107](https://github.com/echonuit/vigiechiro-pr-companion/issues/4107)) ([d289980](https://github.com/echonuit/vigiechiro-pr-companion/commit/d28998080fbb78fdcbbf3e9cc44ee89da19ec4b7)), closes [#4099](https://github.com/echonuit/vigiechiro-pr-companion/issues/4099) [#4091](https://github.com/echonuit/vigiechiro-pr-companion/issues/4091) [#4106](https://github.com/echonuit/vigiechiro-pr-companion/issues/4106)
+* **sites:** la fiche rend compte à son bandeau, et non dans une fenêtre ([#4094](https://github.com/echonuit/vigiechiro-pr-companion/issues/4094)) ([c2d8892](https://github.com/echonuit/vigiechiro-pr-companion/commit/c2d889269ce330b4812a284a75583516e463ea82)), closes [#4091](https://github.com/echonuit/vigiechiro-pr-companion/issues/4091)
+* **sites:** récupérer un carré reste sur « Mes sites », d'où la modale est partie ([#4102](https://github.com/echonuit/vigiechiro-pr-companion/issues/4102)) ([814e9a8](https://github.com/echonuit/vigiechiro-pr-companion/commit/814e9a8072289e765f0e849f3be8287a684851e2)), closes [#4099](https://github.com/echonuit/vigiechiro-pr-companion/issues/4099) [#4091](https://github.com/echonuit/vigiechiro-pr-companion/issues/4091)
+
+
+### Features
+
+* **cli:** l'aide nomme le mot qui ouvre la fenêtre, et la clôture comble ses trous ([#4093](https://github.com/echonuit/vigiechiro-pr-companion/issues/4093)) ([4d922b6](https://github.com/echonuit/vigiechiro-pr-companion/commit/4d922b61c5adebf17f3d704bedd872561fddba57)), closes [#2294](https://github.com/echonuit/vigiechiro-pr-companion/issues/2294) [#4071](https://github.com/echonuit/vigiechiro-pr-companion/issues/4071) [#4088](https://github.com/echonuit/vigiechiro-pr-companion/issues/4088) [#4081](https://github.com/echonuit/vigiechiro-pr-companion/issues/4081)
+* **cli:** les bornes se relèvent en ligne de commande, plus par une propriété JVM ([#4098](https://github.com/echonuit/vigiechiro-pr-companion/issues/4098)) ([0495161](https://github.com/echonuit/vigiechiro-pr-companion/commit/049516176070bab117d0e0aef25ac1043f1dcc5d)), closes [#4075](https://github.com/echonuit/vigiechiro-pr-companion/issues/4075) [#4075](https://github.com/echonuit/vigiechiro-pr-companion/issues/4075) [#4075](https://github.com/echonuit/vigiechiro-pr-companion/issues/4075)
+
 # [2.187.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.186.0...v2.187.0) (2026-08-21)
 
 
