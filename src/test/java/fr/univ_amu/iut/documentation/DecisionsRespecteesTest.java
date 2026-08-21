@@ -235,6 +235,16 @@ class DecisionsRespecteesTest {
                 .as("Le postinst du dépôt REMPLACE celui de jpackage : l'entrée de menu qu'il installait "
                         + "doit continuer d'être installée ici.")
                 .contains("xdg-desktop-menu install");
+
+        // ⚠️ Et l'appel doit être TOLÉRÉ, pas nu (#4081). Sous `set -e`, son code 3 - rendu partout où
+        // aucun menu système n'est inscriptible - laissait le paquet en `half-configured` : installé,
+        // non configuré, bloquant les opérations `apt` suivantes. Un geste d'affichage n'a pas à
+        // décider du sort de l'installation entière.
+        assertThat(postinst)
+                .as("L'installation de l'entrée de menu doit être tolérée et ANNONCÉE, faute de quoi son "
+                        + "échec emporte tout le postinst - et le paquet reste `iF`.")
+                .contains("if ! xdg-desktop-menu install")
+                .contains("entrée de menu non posée");
         assertThat(postinst)
                 .as("C'est la raison d'être de ce script : poser `vigiechiro` dans le PATH, faute de "
                         + "quoi le `.deb` n'installe aucun exécutable hors de /opt.")
