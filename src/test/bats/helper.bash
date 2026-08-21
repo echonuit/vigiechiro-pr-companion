@@ -76,32 +76,11 @@ ligne_cli() {
   fi
 }
 
-# Variante qui insere UNE option JVM avant le -cp : c'est ainsi qu'un test abaisse une borne de
-# ressources (#2732) pour eprouver son refus sur un vrai processus, sans fabriquer d'archive monstrueuse.
-#
-# ⚠️ Elle n'a PAS d'équivalent sur le lanceur empaqueté, qui ne prend aucune option JVM : la seule voie
-# y serait `JAVA_TOOL_OPTIONS`, dont la ligne « Picked up… » sur la sortie d'erreur fausserait le test.
-# Le test qui l'emploie appelle donc `exige_le_fat_jar` AVANT son `run` (voir ci-dessous), et c'est ce
-# manque de porte côté produit qui a fait ouvrir #4075.
-cli_avec_option_jvm() {
-  local option="$1"
-  shift
-  java --enable-native-access=ALL-UNNAMED -Dvigiechiro.workspace="${BATS_TEST_TMPDIR}" \
-    "${option}" -cp "${JAR}" fr.univ_amu.iut.cli.Cli "$@"
-}
-
-# À appeler AVANT le `run` d'un cas qui ne peut s'éprouver que sur le fat-jar, avec la raison.
-#
-# ⚠️ Et AVANT, jamais dedans : un `skip` exécuté sous `run` ne saute RIEN. Il s'exécute dans le
-# sous-shell, y rend un statut, et le test poursuit sur une mesure qui n'a pas eu lieu - puis échoue en
-# accusant le produit. Constaté en branchant la suite sur le lanceur : le cas de la borne rougissait
-# sur `status -eq 2` alors qu'il croyait s'être esquivé. Un dispositif qui peut ne rien vérifier doit
-# le DIRE (ADR 2748), et un skip muet ne le dit pas.
-exige_le_fat_jar() {
-  if [ -n "${VIGIECHIRO_LANCEUR:-}" ]; then
-    skip "$1"
-  fi
-}
+# ⚠️ `cli_avec_option_jvm` et `exige_le_fat_jar` ont ete RETIREES (#4075). Elles n existaient que
+# parce qu une borne ne se relevait que par propriete JVM, que le lanceur empaquete n accepte pas :
+# le cas devait donc viser le fat-jar, et le DIRE en sautant. Depuis que `--reglage` existe, la borne
+# se releve par la ligne de commande - donc sur le chemin reel de l utilisateur - et la suite entiere
+# traverse le lanceur sans exception.
 
 # Carte SD minimale mais REELLE : le journal du capteur (format LogPR du firmware Teensy), un relevé
 # climatique, et un WAV de 1 s a 384 kHz. C'est le strict necessaire pour qu'un import aboutisse.
