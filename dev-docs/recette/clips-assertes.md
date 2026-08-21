@@ -19,6 +19,36 @@ Les adresses viennent de la pré-version roulante `clips-recette`, alimentée pa
 **recette filmée** avec `publier_les_clips`. Un lecteur vide dit que le tournage n'a pas eu lieu
 depuis que ce cas existe, pas que le produit est cassé.
 
+## ScenarioPerceptifIssuesConnexionTest
+
+### S1-05 · jeton vide
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifIssuesConnexionTest.jeton_vide_dit_quoi_faire.mp4"></video>
+
+Le message dit le geste qui manque, sans laisser croire que le jeton est en cause.
+
+### S1-06 · jeton refusé
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifIssuesConnexionTest.jeton_refuse_nomme_le_geste.mp4"></video>
+
+La cause est nommée, et le geste qui répare aussi : on sait quoi faire sans deviner.
+
+### S1-07 · plateforme injoignable
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifIssuesConnexionTest.injoignable_ne_fait_pas_accuser_le_jeton.mp4"></video>
+
+Une panne réseau ne doit pas se lire « jeton invalide » : on jetterait un jeton valide.
+
+### S1-08 · connexion réussie
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifIssuesConnexionTest.succes_dit_ce_qui_a_ete_rapatrie.mp4"></video>
+
+Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous quel compte on déposera.
+
 ## AccueilApparenceTest
 
 ### S1-01 · `prismes_exposent_libelle_et_icone`
@@ -86,28 +116,6 @@ depuis que ce cas existe, pas que le produit est cassé.
 
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ConnexionModaleViewTest.ouvrir_site.mp4"></video>
-
-## ConnexionViewModelTest
-
-### S1-05 · `connecter_vide`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ConnexionViewModelTest.connecter_vide.mp4"></video>
-
-### S1-06 · `connecter_invalide`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ConnexionViewModelTest.connecter_invalide.mp4"></video>
-
-### S1-07 · `injoignable_conserve_le_jeton`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ConnexionViewModelTest.injoignable_conserve_le_jeton.mp4"></video>
-
-### S1-08 · `connecter_valide`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ConnexionViewModelTest.connecter_valide.mp4"></video>
 
 ## ConnexionModaleConnecteeViewTest
 

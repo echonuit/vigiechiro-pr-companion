@@ -44,6 +44,7 @@ import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Respiration;
@@ -53,10 +54,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.Labeled;
-import javafx.scene.control.ScrollPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -162,6 +161,12 @@ class ScenarioPerceptifRefusDepotTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         stage.setScene(Habillage.scene(loader.load(), 1180, 900));
+        // ⚠️ La taille se pose EXPLICITEMENT. Le Stage du harnais TestFX est partagé par toutes
+        // les classes d'un même fork : une classe précédente qui l'a dimensionné à la main le
+        // fige, et il cesse de s'ajuster aux scènes suivantes. Sans cela, ce scénario passe seul
+        // et rougit dans la suite - vécu, sur l'assertion de visibilité.
+        stage.setWidth(1180);
+        stage.setHeight(900);
         // ⚠️ L'écran du lot est ouvert AVANT `show()`. Ouvert après, l'accueil paraissait une fraction
         // de seconde puis l'écran du lot surgissait sans qu'aucun geste ne l'explique : le clip
         // commençait sur un écran qui n'a rien à voir avec le cas.
@@ -184,7 +189,7 @@ class ScenarioPerceptifRefusDepotTest {
         ecranDuLot().confirmateur().definir(message -> true);
         Respiration.avantLeGeste(robot);
 
-        amenerDansLeCadre(robot, "#btnTeleverser");
+        CadreVisible.amener(robot.lookup("#btnTeleverser").query(), robot);
         Respiration.entreDeuxGestes(robot);
 
         robot.clickOn("#btnTeleverser");
@@ -200,7 +205,7 @@ class ScenarioPerceptifRefusDepotTest {
         // ⚠️ Le compte rendu paraît SOUS la ligne de flottaison, et l'écran est revenu en haut quand
         // sa zone est apparue. Sans ce défilement, le clip se termine sur les étapes 1 et 2 et ne
         // montre jamais la phrase qu'il fait juger - c'est ce que la relecture du clip publié a dit.
-        amenerNoeudDansLeCadre(libellePortant(robot, "Reconnectez-vous"), robot);
+        CadreVisible.amener(libellePortant(robot, "Reconnectez-vous"), robot);
         Respiration.surLeMomentCle(robot);
 
         String affiche = texteAffiche(robot);
@@ -219,7 +224,7 @@ class ScenarioPerceptifRefusDepotTest {
         // noeud quelle que soit sa position : le clip publié se terminait sur les étapes 1 et 2, la
         // phrase vivant sous la ligne de flottaison, et toutes les assertions ci-dessus passaient.
         // Un cas perceptif dont le clip ne montre pas son objet ne fait rien juger.
-        assertThat(dansLeCadre(libellePortant(robot, "Reconnectez-vous")))
+        assertThat(CadreVisible.contient(libellePortant(robot, "Reconnectez-vous")))
                 .as("la phrase que ce cas fait juger est visible à l'image, et non sous le pli")
                 .isTrue();
     }
@@ -292,74 +297,6 @@ class ScenarioPerceptifRefusDepotTest {
         Object controleur =
                 injector.getInstance(Navigateur.class).historique().getLast().controleur();
         return (LotController) controleur;
-    }
-
-    /// Fait défiler l'écran jusqu'à ce que `selecteur` entre **dans le cadre**.
-    ///
-    /// ⚠️ Un noeud peut être `visible`, `managed`, actif, et rester inatteignable : celui-ci se trouvait
-    /// à y = 933 dans une scène haute de 900. TestFX répond alors « the query returned 1 nodes, but no
-    /// nodes were visible », ce qui se lit comme une absence alors que c'est un hors-cadre.
-    ///
-    /// Agrandir la fenêtre ne réglerait rien ici : le film fait 1280x900, donc ce qui dépasse ne serait
-    /// pas tourné. Le défilement est aussi le geste que l'utilisateur ferait.
-    private static void amenerDansLeCadre(FxRobot robot, String selecteur) {
-        amenerNoeudDansLeCadre(robot.lookup(selecteur).query(), robot);
-    }
-
-    /// Fait défiler jusqu'à ce que `cible` entre dans le cadre.
-    ///
-    /// ⚠️ Viser la ZONE ne suffit pas : amener son bord haut dans le cadre laisse son contenu sous le
-    /// pli. C'est le noeud qu'on veut voir qu'il faut viser, et l'assertion de fin le vérifie.
-    private static void amenerNoeudDansLeCadre(Node cible, FxRobot robot) {
-        ScrollPane cadre = cadreDefilant(cible);
-        if (cadre == null) {
-            throw new AssertionError("aucun ScrollPane au-dessus de la cible : rien à faire défiler");
-        }
-        // ⚠️ La MOLETTE ne suffit pas : `robot.scroll` n'a pas déplacé ce contenu d'un pixel, le
-        // pointeur n'étant pas au-dessus du bon panneau. On pilote donc le défilement, ce qui rend le
-        // même mouvement à l'image.
-        for (int essai = 0; essai < 24 && !dansLeCadre(cible); essai++) {
-            double avant = cadre.getVvalue();
-            robot.interact(() -> cadre.setVvalue(Math.min(1.0, cadre.getVvalue() + 0.08)));
-            WaitForAsyncUtils.waitForFxEvents();
-            if (cadre.getVvalue() == avant) {
-                break;
-            }
-        }
-        if (!dansLeCadre(cible)) {
-            throw new AssertionError(
-                    "la cible reste hors du cadre après défilement : " + cible.localToScene(cible.getBoundsInLocal()));
-        }
-    }
-
-    /// Le premier [ScrollPane] au-dessus de `noeud`, ou `null`.
-    private static ScrollPane cadreDefilant(Node noeud) {
-        for (Node parent = noeud.getParent(); parent != null; parent = parent.getParent()) {
-            if (parent instanceof ScrollPane cadre) {
-                return cadre;
-            }
-        }
-        return null;
-    }
-
-    /// `noeud` est-il **réellement à l'image** ?
-    ///
-    /// ⚠️ Comparer aux bornes de la SCÈNE ne suffit pas, et c'est ce que faisait la première version.
-    /// La zone réellement visible est plus petite : la barre du chrome la mange en haut, la barre de
-    /// statut en bas. Un noeud à y = 870 satisfait « maxY <= 900 » **et reste caché derrière la barre
-    /// de statut**. Le clip publié le montrait : l'assertion passait, la phrase était sous le bord.
-    ///
-    /// La bonne référence est la zone d'affichage du [ScrollPane] qui porte le noeud.
-    private static boolean dansLeCadre(Node noeud) {
-        Bounds cible = noeud.localToScene(noeud.getBoundsInLocal());
-        ScrollPane cadre = cadreDefilant(noeud);
-        if (cadre == null) {
-            return cible.getMinY() >= 0 && cible.getMaxY() <= noeud.getScene().getHeight();
-        }
-        Bounds vue = cadre.localToScene(cadre.getBoundsInLocal());
-        // ⚠️ Un peu d'air, et non le bord exact. Ce cas fait juger la LISIBILITÉ d'une phrase : collée
-        // au pixel près contre la barre de statut, elle est « visible » et se lit mal.
-        return cible.getMinY() >= vue.getMinY() + AIR_DE_LECTURE && cible.getMaxY() <= vue.getMaxY() - AIR_DE_LECTURE;
     }
 
     /// Le libellé qui porte `extrait`, ou une erreur qui le nomme.
