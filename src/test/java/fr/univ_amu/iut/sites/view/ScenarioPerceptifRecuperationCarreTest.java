@@ -183,14 +183,19 @@ class ScenarioPerceptifRecuperationCarreTest {
     void la_recuperation_s_enchaine_jusqu_a_la_fiche(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
 
-        robot.interact(
-                () -> injector.getInstance(NavigationSites.class).ouvrirModaleCreationSite(robot.window(0), () -> {}));
+        // ⚠️ Le bouton, et non l'appel. La version précédente ouvrait la modale par
+        // `ouvrirModaleCreationSite(...)` : le bon chemin de code, et un mauvais film - la modale
+        // paraissait sans qu'aucun geste ne l'explique. Retour de la revue de `S1-26`, qui vaut ici
+        // aussi.
+        robot.clickOn("+ Nouveau site");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.entreDeuxGestes(robot);
 
-        robot.interact(() -> robot.lookup("#champCarre")
-                .queryAs(javafx.scene.control.TextField.class)
-                .setText(CARRE));
+        // ⚠️ Et le numéro se TAPE, au lieu d'apparaître d'un coup par `setText`. Ce que le cas fait
+        // juger, c'est un enchaînement vu de l'extérieur : un champ qui se remplit tout seul n'en
+        // fait pas partie.
+        robot.clickOn("#champCarre").write(CARRE);
+        Respiration.entreDeuxGestes(robot);
         robot.clickOn("#btnVerifierCarre");
         // L'exécuteur est asynchrone : le verdict n'est PAS là au retour du clic (ADR 3668).
         WaitForAsyncUtils.waitFor(
