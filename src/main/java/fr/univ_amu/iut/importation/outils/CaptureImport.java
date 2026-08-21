@@ -207,24 +207,7 @@ public final class CaptureImport {
                         Duration.ofMillis(2500));
         rendre(scene, sortie.resolve("apercu-import-en-cours.png"));
 
-        // État « mélange » (#33) : dossier mêlant deux enregistreurs → avertissement à l'inspection
-        // (non bloquant). Changer le dossier source réinitialise l'état, on ré-inspecte.
-        vm.inspection().dossierSourceProperty().set(creerDossierMelange());
-        vm.inspecter();
-        rendre(scene, sortie.resolve("apercu-import-melange.png"));
-
-        // État « incohérence » (#33) : le journal (série 1925492, nuit du 22/04) contredit les WAV
-        // (série 1648011, nuit du 30/04) → bandeau rouge non bloquant (série ET date).
-        vm.inspection().dossierSourceProperty().set(creerDossierIncoherence());
-        vm.inspecter();
-        rendre(scene, sortie.resolve("apercu-import-incoherence.png"));
-
-        // État « plusieurs nuits » (#…) : une carte laissée tourner plusieurs nuits (3 dates) → la table
-        // des nuits s'affiche, une ligne par nuit (inclure, date, fichiers, état, n° de passage proposé,
-        // auto-numéroté). Le rattachement (site/point) reste sélectionné, donc les n° 1/2/3 apparaissent.
-        vm.inspection().dossierSourceProperty().set(creerDossierMultiNuits());
-        vm.inspecter();
-        rendre(scene, sortie.resolve("apercu-import-multi-nuits.png"));
+        capturerCartesInhabituelles(vm, scene, sortie);
 
         capturerAvertissementsRattachement(vm, scene, sortie);
 
@@ -289,6 +272,50 @@ public final class CaptureImport {
     /// déjà préfixé pour un AUTRE point (B2) : d'où la discordance de préfixe (#111), sans perturber la
     /// détection de nuit. Le rattachement A1 sélectionné, on re-choisit le n°1 - déjà pris par le passage
     /// seedé - d'où le doublon de passage (#108). Les deux encarts co-existent dans un même rendu.
+    /// Les quatre cartes qui **sortent du cas nominal**, chacune inspectée puis rendue : deux
+    /// enregistreurs mêlés, un journal en désaccord, des bruts déjà préfixés, et plusieurs nuits.
+    ///
+    /// Extraite de [#capturer()] parce que le quatrième état l'a fait dépasser le plafond NCSS du
+    /// profil qualité (#4141). La coupure suit une frontière réelle : ces quatre-là partagent le même
+    /// geste - changer le dossier source, ré-inspecter, rendre - alors que ce qui les précède monte
+    /// l'assistant et ce qui les suit joue un import terminé.
+    private static void capturerCartesInhabituelles(ImportationViewModel vm, Scene scene, Path sortie)
+            throws IOException {
+        // État « mélange » (#33) : dossier mêlant deux enregistreurs → avertissement à l'inspection
+        // (non bloquant). Changer le dossier source réinitialise l'état, on ré-inspecte.
+        vm.inspection().dossierSourceProperty().set(creerDossierMelange());
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-melange.png"));
+
+        // État « incohérence » (#33) : le journal (série 1925492, nuit du 22/04) contredit les WAV
+        // (série 1648011, nuit du 30/04) → bandeau rouge non bloquant (série ET date).
+        vm.inspection().dossierSourceProperty().set(creerDossierIncoherence());
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-incoherence.png"));
+
+        // État « déjà préfixés » (#4141) : les bruts portent le préfixe `Car…` qu'un import précédent a
+        // posé → « État du nommage : fichiers déjà préfixés (seront copiés et transformés) ».
+        //
+        // ⚠️ Ce qui ne rejoue pas est le RENOMMAGE, et non la transformation. La phrase des bruts dit
+        // « copiés, renommés et transformés » ; celle-ci retire le seul mot « renommés ». #4055 écrivait
+        // « la transformation ne rejoue pas » : l'écran dit le contraire, et c'est lui qui fait foi.
+        //
+        // ⚠️ Le préfixe est celui d'un AUTRE carré que le rattachement choisi, comme dans la fixture de
+        // recette `sd-prefixee` (Car130711-…-Z1). C'est le cas réel : on récupère une carte déjà traitée
+        // ailleurs. L'import est alors BLOQUÉ, et l'aperçu montre les deux à la fois - l'état de nommage,
+        // et le refus qui nomme le préfixe attendu.
+        vm.inspection().dossierSourceProperty().set(creerDossierPrefixe());
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-prefixe.png"));
+
+        // État « plusieurs nuits » (#…) : une carte laissée tourner plusieurs nuits (3 dates) → la table
+        // des nuits s'affiche, une ligne par nuit (inclure, date, fichiers, état, n° de passage proposé,
+        // auto-numéroté). Le rattachement (site/point) reste sélectionné, donc les n° 1/2/3 apparaissent.
+        vm.inspection().dossierSourceProperty().set(creerDossierMultiNuits());
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-multi-nuits.png"));
+    }
+
     private static void capturerAvertissementsRattachement(ImportationViewModel vm, Scene scene, Path sortie)
             throws IOException {
         vm.inspection().dossierSourceProperty().set(creerDossierAvertissements());
@@ -411,6 +438,22 @@ public final class CaptureImport {
     /// Dossier d'exemple **multi-nuits** (chemin déterministe) : trois soirées distinctes (2 WAV chacune)
     /// du même enregistreur, avec un journal daté de la première nuit → l'inspection détecte 3 nuits et
     /// affiche la table des nuits, sans avertissement de non-correspondance.
+    /// Dossier d'exemple **déjà préfixé** (chemin déterministe) : les trois bruts portent le préfixe
+    /// `Car130711-2026-Pass1-Z1-…` qu'un import précédent a posé → l'inspection bascule l'état de nommage
+    /// sur `PREFIXE`, et l'écran l'écrit.
+    ///
+    /// Les noms reprennent ceux de la fixture de recette `sd-prefixee`, pour que l'aperçu et la carte
+    /// que la recette monte montrent **la même chose**.
+    private static Path creerDossierPrefixe() throws IOException {
+        return creerDossierAvecWav(
+                "vigiechiro-sd-prefixee",
+                LOG,
+                List.of(
+                        "Car130711-2026-Pass1-Z1-PaRecPR1925492_20260422_203922.wav",
+                        "Car130711-2026-Pass1-Z1-PaRecPR1925492_20260422_210515.wav",
+                        "Car130711-2026-Pass1-Z1-PaRecPR1925492_20260422_223045.wav"));
+    }
+
     private static Path creerDossierMultiNuits() throws IOException {
         List<String> wavs = new ArrayList<>();
         for (String jour : List.of("20260703", "20260704", "20260705")) {

@@ -230,6 +230,27 @@ correspondent pas) est signalée plus fermement :
 
 ![Cas « incohérence » : le journal ne correspond pas aux enregistrements (série et date).](../assets/captures/apercu-import-incoherence.png)
 
+### Des fichiers déjà préfixés
+
+Une carte peut avoir **déjà été traitée** - par vous, sur un autre poste, ou par quelqu'un d'autre. Ses
+enregistrements portent alors le préfixe que l'application pose : `Car130711-2026-Pass1-Z1-…`. L'étape
+« 2. Inspection » le dit, et change ce qu'elle annonce :
+
+> État du nommage : **fichiers déjà préfixés** (seront copiés et transformés)
+
+Comparez avec la phrase des enregistrements bruts - « seront copiés, **renommés** et transformés ». Le
+seul mot qui disparaît est « renommés » : les fichiers gardent le nom qu'ils portent déjà, et rien
+d'autre ne change.
+
+![Cas « déjà préfixés » : l'état du nommage bascule, et l'import est refusé parce que le préfixe désigne un autre carré que le rattachement choisi.](../assets/captures/apercu-import-prefixe.png)
+
+⚠️ **Si le préfixe désigne un autre rattachement que celui que vous avez choisi, l'import est refusé**,
+et le message nomme le préfixe qu'il attendait. C'est voulu : sans ce refus, vos enregistrements
+partiraient au dépôt sous le nom d'un **autre carré**. Deux issues :
+
+- corriger le rattachement pour qu'il corresponde aux fichiers ;
+- ou repartir des originaux, non préfixés.
+
 Chaque avertissement **détaille ce qui cloche** : les numéros de série trouvés pour un mélange, la
 série et la date en désaccord pour une incohérence, les passages déjà en base pour une nuit déjà
 importée. Vous n'avez pas à rouvrir le dossier pour savoir de quoi il s'agit.

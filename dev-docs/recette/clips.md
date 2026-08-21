@@ -11,7 +11,7 @@ Ils ne sont pas dans le dépôt, et c'est délibéré.
 
 Une pièce jointe de publication ne pèse **rien** dans l'historique git : les 459 Mio attachés à
 `v2.185.0` n'y laissent aucun blob. À l'inverse, `.git` pèse aujourd'hui 957 Mio, dont **79 % de
-PNG** - 154 captures présentes, mais 4 507 versions dans l'historique, parce qu'une capture qui
+PNG** - 155 captures présentes au 22/08/2026, mais 4 507 versions dans l'historique, parce qu'une capture qui
 change d'octets produit un commit et qu'une capture à carte change d'octets à chaque exécution.
 Ranger des vidéos de la même façon reviendrait à recommencer, en plus lourd.
 
