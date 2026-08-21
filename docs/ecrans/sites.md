@@ -70,10 +70,10 @@ question sur le carré corrigé.
 ### Récupérer un carré qui existe déjà
 
 **Récupérer ce carré** crée le site **chez vous**, rattaché à son homologue Vigie-Chiro, avec **ses points
-d'écoute déjà positionnés**. La fenêtre se ferme et la fiche du carré s'ouvre, avec le compte rendu de ce
-qui vient d'être créé.
+d'écoute déjà positionnés**. La fenêtre se ferme et vous restez sur **Mes sites** : le carré récupéré y
+paraît, et un bandeau dit ce qui vient d'être créé.
 
-![La fiche du carré récupéré : un bandeau vert, en tête d'écran, annonce le carré et le nombre de points d'écoute positionnés. Il se ferme d'une croix.](../assets/captures/apercu-sites-carre-recupere.png)
+![La liste « Mes sites » après une récupération : le carré récupéré est apparu dans la liste, et un bandeau vert en tête d'écran annonce le nombre de points d'écoute positionnés. Il se ferme d'une croix.](../assets/captures/apercu-sites-carre-recupere.png)
 
 C'est ce rattachement qui compte : sans lui, le téléversement d'une nuit se solde par « site non rattaché
 à Vigie-Chiro ». Et il ne s'obtenait jusqu'ici que par la synchronisation, qui ne ramène que les carrés

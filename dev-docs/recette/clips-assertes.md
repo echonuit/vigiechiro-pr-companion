@@ -271,10 +271,10 @@ depuis que ce cas existe, pas que le produit est cassé.
 
 ## NavigationSitesRapatriementTest
 
-### S1-34 · `le_rapatriement_ouvre_la_fiche_et_rend_compte`
+### S1-34 · `le_rapatriement_rafraichit_mes_sites_et_y_rend_compte`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/NavigationSitesRapatriementTest.le_rapatriement_ouvre_la_fiche_et_rend_compte.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/NavigationSitesRapatriementTest.le_rapatriement_rafraichit_mes_sites_et_y_rend_compte.mp4"></video>
 
 ## RapatriementCarreTest
 

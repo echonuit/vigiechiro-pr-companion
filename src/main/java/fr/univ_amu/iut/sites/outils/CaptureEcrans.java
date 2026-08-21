@@ -22,6 +22,7 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
+import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -34,6 +35,7 @@ import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
+import fr.univ_amu.iut.sites.view.MesSitesController;
 import fr.univ_amu.iut.sites.view.ModalePointController;
 import fr.univ_amu.iut.sites.view.ModaleSiteController;
 import fr.univ_amu.iut.sites.view.NavigationSites;
@@ -330,10 +332,16 @@ public final class CaptureEcrans {
                 .getInstance(ServiceSites.class)
                 .listerPoints(site.id())
                 .size();
-        NavigationSites navigation = injecteur.getInstance(NavigationSites.class);
-        navigation.ouvrirAccueil();
-        navigation.ouvrirDetailRapatrie(new RapatriementCarre.Resultat.Rapatrie(site, points));
+        injecteur.getInstance(NavigationSites.class).ouvrirAccueil();
+        ecranMesSites(injecteur).annoncerRapatriement(new RapatriementCarre.Resultat.Rapatrie(site, points));
         ApercuFx.enregistrerPng(new Scene(chrome, 1180, 920), fichier);
+    }
+
+    /// Le contrôleur de « Mes sites » **en place**, celui-là même dont la modale reçoit la méthode.
+    private static MesSitesController ecranMesSites(Injector injecteur) {
+        Object controleur =
+                injecteur.getInstance(Navigateur.class).historique().getLast().controleur();
+        return (MesSitesController) controleur;
     }
 
     /// Le nœud `selecteur`, ou une **erreur** qui le nomme.
