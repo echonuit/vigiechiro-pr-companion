@@ -166,9 +166,12 @@ if [ "${1:-}" = "--auto-test" ]; then
   sortie=$(cd "$depot" && "$MOI" "$bac/change" .github/assets/ecran.png 2>&1)
   verifie "un écran modifié est comparé" "1 écran(s) comparé(s), 0 problème(s)" "$sortie"
   verifie "sa part de pixels est chiffrée" "50.00 %" "$(cat "$bac/change/index.md")"
-  [ -f "$bac/change/ecran.avant-apres.png" ] \
-    && echo "  ✔ le montage avant/après existe" \
-    || { echo "  ✘ le montage avant/après manque"; echecs=1; }
+  if [ -f "$bac/change/ecran.avant-apres.png" ]; then
+    echo "  ✔ le montage avant/après existe"
+  else
+    echo "  ✘ le montage avant/après manque"
+    echecs=1
+  fi
 
   # 3. Un écran NOUVEAU : pas d'avant dans git, et ce n'est pas une panne.
   convert -size 80x40 xc:blue "$depot/.github/assets/neuf.png"
