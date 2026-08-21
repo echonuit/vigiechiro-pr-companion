@@ -176,7 +176,10 @@ if [ -z "$connus" ]; then
 fi
 
 referencees=$(grep -rhoE 'parcours-[a-z0-9-]+\.mp4' docs --include='*.md' 2>/dev/null | sort -u)
-presentes=$(ls "$ASSETS" 2>/dev/null | grep -E '^parcours-[a-z0-9-]+\.mp4$' | sort -u)
+# `find` plutôt que `ls` : un nom de fichier inattendu (espace, accent) ne doit pas décaler
+# l'inventaire en silence, puisque c'est justement une ABSENCE que cette garde constate.
+presentes=$(find "$ASSETS" -maxdepth 1 -type f -name 'parcours-*.mp4' -printf '%f\n' 2>/dev/null \
+    | grep -E '^parcours-[a-z0-9-]+\.mp4$' | sort -u)
 
 while IFS= read -r film; do
     [ -z "$film" ] && continue

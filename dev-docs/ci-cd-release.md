@@ -572,6 +572,44 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `verifie-inventaires-ci.sh` | les trois inventaires que la CI tient **sur elle-même** concordent avec la réalité | `lint.yml` |
 | `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
 
+### Et un analyseur les lit tous (#4108)
+
+Ces gardes sont elles-mêmes du shell, et le dépôt en compte **31 scripts** hors `node_modules`. Le
+job `lint` les passe tous à `shellcheck`.
+
+Les **réglages** vivent dans `.shellcheckrc`, à la racine, et non dans le YAML : un contributeur qui
+lance `shellcheck son-script.sh` doit voir ce que voit la CI. Un réglage caché dans un workflow
+ferait diverger les deux, et c'est le local qui mentirait, puisque c'est lui qu'on consulte avant de
+pousser.
+
+**Une règle est exclue, `SC2016`** (« les expressions ne s'expansent pas dans des guillemets
+simples ») : 104 occurrences sur environ 130, toutes portant sur un `$` volontairement littéral -
+programmes `awk`, filtres `drawtext` de ffmpeg, extraits de workflow dans les auto-tests. Une règle
+qui rougit cent fois sur du code juste apprend à ne plus lire la sortie ([ADR 3479](decisions/3479-toute-table-n-a-pas-vocation-a-etre-exploree.md)).
+
+**Le seuil est `-S info`, et non `warning`.** Au seuil warning, un `rm -f $fichiers` non quoté passe
+au vert : c'est un `SC2086`, classé « info », et c'est exactement la remarque qui a trouvé un vrai
+défaut dans `clips-orphelins.sh` (#4106). Un seuil qui laisse passer le défaut fondateur ne garde
+rien. Le seuil est un drapeau et non un réglage parce que `severity=` **n'est pas lu** depuis
+`.shellcheckrc` - vérifié.
+
+⚠️ **La parité porte sur les réglages, pas sur la version.** Mesuré en branchant ce pas : le runner
+a signalé un `SC2015` que shellcheck 0.11.0 ne signale plus en local. C'est donc la CI qui fait foi,
+et un poste plus récent peut être plus **permissif** - l'inverse du sens rassurant. Vérifier
+`shellcheck --version` avant de conclure d'un vert local.
+
+⚠️ **Ce qui reste dehors**, nommé plutôt que tu : **trois notes de style**, deux `SC2001` (un `sed`
+là où une expansion suffirait, mais où l'expansion serait moins lisible) et un `SC2129` (des
+redirections successives dans une fixture d'auto-test). Un lancement à la main les montre ; la CI ne
+les impose pas.
+
+⚠️ **Cinq neutralisations locales**, chacune avec sa raison écrite sur place, et aucune globale :
+deux `SC2064`/`SC2046` où l'expansion immédiate et le découpage sont le **remède** et non le défaut
+(le `trap` du banc de recette, le trajet du pointeur du banc de documentation), un `SC2020` où le
+doublon de `\n` est voulu, et deux `SC2094` où shellcheck croit voir une écriture qui vit dans une
+autre fonction. **Les quatre premières auraient cassé un mécanisme qui marche si on les avait
+« corrigées ».**
+
 **Le modèle vient de #2947** (`verifie-titre-pr.sh`) et il est le bon : le script **se réinvoque
 lui-même** sur un cas connu, donc le cas de test et le chemin réel sont le même code **par
 construction**. Les gardes qui balaient une arborescence l'appliquent en rendant leur racine

@@ -275,6 +275,33 @@ jobs:
           chmod +x .github/scripts/clips-orphelins.sh
           ./.github/scripts/clips-orphelins.sh --auto-test
 
+      - name: Les scripts shell passent shellcheck
+        # ⚠️ Les RÉGLAGES (exclusions) vivent dans `.shellcheckrc`, pas ici : un contributeur qui
+        # lance `shellcheck son-script.sh` doit voir la même chose que ce pas. Seul le SEUIL est un
+        # drapeau, parce que `severity=` n'est pas lu depuis le fichier de réglages - vérifié, et
+        # non supposé : les notes continuaient de sortir.
+        #
+        # `-S info` et non `warning` : au seuil warning, un `rm -f $fichiers` non quoté passait au
+        # vert. C'est un SC2086, donc une « info » - et c'est exactement la remarque qui a trouvé un
+        # vrai défaut dans `clips-orphelins.sh` (#4106). Un garde qui manquerait le défaut qui l'a
+        # fait naître ne garderait pas grand-chose.
+        #
+        # ⚠️ La PARITÉ porte sur les réglages, PAS sur la version. Mesuré sur ce pas même : le
+        # runner a signalé un `SC2015` que shellcheck 0.11.0 ne signale plus en local. C'est donc la
+        # CI qui fait foi, et un poste plus récent peut être plus PERMISSIF - l'inverse de ce que
+        # j'avais d'abord écrit ici. `shellcheck --version` avant de conclure d'un vert local.
+        run: |
+          set -euo pipefail
+          command -v shellcheck >/dev/null 2>&1 || {
+            echo "::error::shellcheck absent du runner : l'image a changé, il faut l'installer par la porte."
+            exit 1
+          }
+          mapfile -t scripts < <(
+            find . -path ./target -prune -o -path '*/node_modules/*' -prune -o -name '*.sh' -print | sort
+          )
+          echo "${#scripts[@]} script(s) analysé(s)."
+          shellcheck --shell=bash -S info "${scripts[@]}"
+
       - name: La condition d'un job appuyé sur un « needs » nomme l'état qu'elle attend
         # ⚠️ GitHub saute un job dès qu'un ANCÊTRE a été sauté, sauf si son `if:` porte une fonction
         # d'état : sans elle, la condition est enveloppée en `success() && (...)` sur tout le graphe

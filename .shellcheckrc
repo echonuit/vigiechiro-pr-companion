@@ -1,0 +1,32 @@
+# Réglages de shellcheck pour ce dépôt, lus par la CI comme par un lancement à la main.
+#
+# Les avoir ICI plutôt qu'en options de la CI est délibéré : un contributeur qui lance
+# `shellcheck son-script.sh` doit voir la même chose que le job `lint`. Un réglage qui ne vivrait
+# que dans le YAML ferait diverger les deux, et c'est le local qui mentirait, puisque c'est lui
+# qu'on consulte avant de pousser.
+
+# ⚠️ SC2016 : « les expressions ne s'expansent pas dans des guillemets simples ».
+#
+# Mesuré sur les 31 scripts du dépôt (hors `node_modules`) : 104 occurrences sur environ 130
+# remarques, et toutes portent sur un `$` volontairement littéral - programmes `awk` passés en
+# argument, filtres `drawtext` de ffmpeg, extraits de workflow YAML dans les auto-tests des gardes.
+# Les « corriger » reviendrait à casser ce qu'elles décrivent.
+#
+# Une règle qui rougit cent fois sur du code juste ne signale plus rien : elle apprend à ne plus
+# lire la sortie. C'est la loupe bruyante que l'ADR 3479 écarte.
+disable=SC2016
+
+# ⚠️ Le SEUIL ne se règle pas ici. `severity=` n'est pas lu depuis ce fichier - vérifié, et non
+# supposé : les notes continuaient de sortir. Seul le drapeau `-S` filtre, et le job `lint` passe
+# donc `-S info`.
+#
+# Pourquoi `info` et non `warning` : au seuil warning, un `rm -f $fichiers` non quoté passe au vert.
+# C'est un SC2086, classé « info », et c'est précisément la remarque qui a trouvé un vrai défaut
+# dans `clips-orphelins.sh` (#4106). Un seuil qui laisse passer le défaut fondateur ne garde rien.
+#
+# ⚠️ Ce fichier donne les mêmes RÉGLAGES à tout le monde, pas la même VERSION. Mesuré : le runner a
+# signalé un `SC2015` que shellcheck 0.11.0 ne signale plus. Un poste plus récent peut donc être plus
+# permissif que la CI, et c'est la CI qui fait foi. Vérifier `shellcheck --version` avant de conclure
+# d'un vert local.
+#
+# Trois notes de STYLE restent hors du seuil, nommées dans `dev-docs/ci-cd-release.md`.

@@ -78,13 +78,16 @@ fi
 # donc sans recopier une seule règle. Par défaut, le dépôt réel.
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 RACINE="${DOC_IMAGES_RACINE:-$(cd "$ICI/../.." && pwd)}"
-cd "$RACINE"
+# Un `cd` qui échoue laisserait la garde inventorier un AUTRE dossier, et le déclarer conforme.
+cd "$RACINE" || exit 1
 
 ASSETS=".github/assets"
 MANIFEST="$ASSETS/captures.manifest"
 ERREURS=0
 
 # Captures DÉCLARÉES au manifeste (jetons apercu-*.png après le « : »).
+# shellcheck disable=SC2020  # Le doublon de `\n` est VOULU : espace et tabulation deviennent tous
+# deux un saut de ligne, ce qui découpe la liste du manifeste sur n'importe quelle blancheur.
 declarees="$(grep -v '^[[:space:]]*#' "$MANIFEST" \
   | sed 's/^[^:]*://' \
   | tr ' \t' '\n\n' \

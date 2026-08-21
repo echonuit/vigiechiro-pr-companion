@@ -143,7 +143,8 @@ nb_vues=0
 while IFS= read -r ligne; do
   case "$ligne" in ''|\#*) continue ;; esac
   vue="$(sed 's/[[:space:]]*:.*//;s/[[:space:]]//g' <<< "$ligne")"
-  captures="$(sed 's/^[^:]*://' <<< "$ligne")"
+  # Tout ce qui suit le premier « : », par expansion : plus court, et sans lancer un `sed`.
+  captures="${ligne#*:}"
   nb_vues=$((nb_vues + 1))
   if [[ ! -f "$SOURCES/$vue" ]]; then
     echo "❌ Vue déclarée au manifeste mais absente du code : $vue"
