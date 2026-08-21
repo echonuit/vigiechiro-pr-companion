@@ -243,6 +243,7 @@ nav:
     - 4028 · Tout job de CI porte un butoir: decisions/4028-tout-job-de-ci-porte-un-butoir.md
     - 4034 · Les paquets passent par une porte: decisions/4034-les-paquets-passent-par-une-porte.md
     - 4071 · Un point d'entrée, un mot déclaré: decisions/4071-un-point-d-entree-un-mot-declare.md
+    - 4079 · Une condition de job nomme l'état qu'elle attend: decisions/4079-une-condition-de-job-nomme-l-etat-qu-elle-attend.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
