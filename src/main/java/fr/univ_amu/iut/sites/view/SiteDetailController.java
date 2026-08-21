@@ -14,8 +14,10 @@ import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.MenuLigne;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
+import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -103,7 +105,8 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
     /// Compte rendu de l'écran : porteur partagé injectable (#1405), double capturant en test. Sans lui,
     /// le refus se terminait par un `Alert.showAndWait()` qui **fige** TestFX headless : ni « Supprimer
     /// ce site », ni « Supprimer ce point » n'était cliquable dans un test.
-    private final NotificateurModifiable notificateur = new NotificateurModifiable();
+    private final NotificateurModifiable notificateur =
+            new NotificateurModifiable(new NotificationDialogue(this::fenetre));
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
     ConfirmateurModifiable confirmateur() {
@@ -515,7 +518,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
     /// optionnels ; protocole choisi dans la liste).
 
     private Window fenetre() {
-        return cartesPoints.getScene().getWindow();
+        return Modales.fenetreDe(cartesPoints);
     }
 
     /// L'action n'a pas eu lieu : l'écran ne bouge pas, et l'utilisateur sait pourquoi.

@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.Notificateur;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
+import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.view.SuiviOperation;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
@@ -62,6 +63,10 @@ public final class TraitementLot {
 
     private final NotificateurModifiable porteurCompteRendu;
 
+    /// Fenêtre porteuse du geste en cours, retenue par [#lancer]. C'est elle qui devient le propriétaire
+    /// du compte rendu : cet objet n'a pas de noeud à lui, il reçoit la fenêtre au moment d'agir.
+    private Window fenetreDuGeste;
+
     /// Forme **de production** : l'objet porte ses propres ports, et l'écran n'a qu'un champ.
     ///
     /// Les porteurs sont exposés ([#confirmateur], [#notificateur]) pour qu'un test d'écran y pose ses
@@ -69,7 +74,7 @@ public final class TraitementLot {
     /// jusqu'à son effet depuis la vue.
     public TraitementLot(ExecuteurTache executeur) {
         this.porteurConfirmation = new ConfirmateurModifiable();
-        this.porteurCompteRendu = new NotificateurModifiable();
+        this.porteurCompteRendu = new NotificateurModifiable(new NotificationDialogue(() -> fenetreDuGeste));
         this.confirmateur = porteurConfirmation;
         this.notificateur = porteurCompteRendu;
         this.suivi = new DialogueProgression(Objects.requireNonNull(executeur, "executeur"));
@@ -99,6 +104,7 @@ public final class TraitementLot {
     /// @param proprietaire fenêtre porteuse du suivi
     /// @param apresCoup rejoué à la fin (rafraîchir le tableau : les statuts ont bougé)
     public void lancer(Window proprietaire, ActionGroupee action, List<LignePassage> lignes, Runnable apresCoup) {
+        this.fenetreDuGeste = proprietaire;
         List<CiblePassage> cibles = lignes.stream().map(TraitementLot::cible).toList();
         List<CiblePassage> eligibles = cibles.stream()
                 .filter(c -> action.motifNonEligible(c).isEmpty())

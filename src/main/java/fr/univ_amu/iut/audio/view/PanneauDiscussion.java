@@ -9,8 +9,10 @@ import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
+import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import java.util.List;
@@ -64,7 +66,8 @@ final class PanneauDiscussion {
             new ConfirmateurModifiable(new ConfirmationNavigation("Envoyer ce message ?"));
 
     /// Compte rendu : porteur injectable (#1405), double capturant en test.
-    private final NotificateurModifiable notificateur = new NotificateurModifiable();
+    private final NotificateurModifiable notificateur =
+            new NotificateurModifiable(new NotificationDialogue(() -> Modales.fenetreDe(racine)));
 
     PanneauDiscussion() {
         racine.setId("panneauDiscussion");
