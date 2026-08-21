@@ -2,11 +2,13 @@ package fr.univ_amu.iut;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.TailleOuverture;
 import java.nio.file.Files;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Smoke test JavaFX du bootstrap : vérifie que le chrome principal (`MainView`) est chargé via
 /// le `FXMLLoader` + la `controllerFactory` Guice, et que la barre de navigation affiche bien le
@@ -114,22 +117,74 @@ class AppTest {
         });
     }
 
-    /// Vérifie que cette classe rend le Stage partagé **tel qu'elle l'a reçu** : ajustable.
-    ///
-    /// ⚠️ C'est le garde que #1967 réclamait, et qu'il avait raison de réclamer : « rien ne l'empêche de
-    /// revenir […] aucun test ne rougit si on la réécrit ». Il est revenu **par ici**, en corrigeant
-    /// #3452 : `setWidth`/`setHeight` sur ce Stage l'ont refigé, et la CI l'a signalé sur une classe
-    /// sans rapport - `LotDepotConnecteViewTest`, noeud « invisible » - au hasard de la répartition des
-    /// forks. Le garde posé par #1967 vit dans `ModalesTest` et surveille le **socle** ; il ne pouvait
-    /// pas voir une classe de test qui fige le Stage elle-même.
-    ///
-    /// La propriété est nommée plutôt que l'accident reproduit : ce Stage suit encore les scènes qu'on
-    /// lui pose. Un Stage passé en dimensionnement explicite ne le fait plus, définitivement.
     @Test
+    @DisplayName("Le chrome principal est affiché, et il porte le nom du produit")
     void le_chrome_principal_est_affiche(FxRobot robot) {
         Label titre = robot.lookup("#titreApplication").queryAs(Label.class);
         assertThat(titre).isNotNull();
         assertThat(titre.getText()).isEqualTo("VigieChiro Companion");
+    }
+
+    /// Vérifie que cette classe rend le Stage partagé **tel qu'elle l'a reçu** : ajustable.
+    ///
+    /// ## Ce que ce garde remplace, et pourquoi il fallait le remplacer
+    ///
+    /// Ce texte-ci vivait au-dessus de `le_chrome_principal_est_affiche`, qui lit un libellé. Il
+    /// annonçait donc une propriété qu'aucune assertion ne touchait : `queryAs` trouve un noeud quelle
+    /// que soit sa position, et un Stage figé affiche son titre aussi bien qu'un Stage ajustable
+    /// (#4145).
+    ///
+    /// C'est ce doc-comment qui a fait croire que le trou de #1967 était bouché. Il ne l'était pas : le
+    /// défaut est revenu une **quatrième** fois par #4130, et c'est `ordre-alternatif` qui l'a signalé.
+    ///
+    /// ## Pourquoi une mesure, quand #4134 a déjà posé un garde
+    ///
+    /// #4134 lit les **sources** : aucune classe de test ne fige un Stage qu'elle a reçu. Il attrape la
+    /// forme connue du défaut, `alias.setWidth(`. Il ne peut pas attraper une fenêtre figée par un autre
+    /// chemin. La propriété se **mesure** : on pose une scène nettement plus haute, et la fenêtre doit
+    /// suivre.
+    ///
+    /// ## Les deux tailles ne sont pas prises au hasard
+    ///
+    /// `App.start` pose un **plancher** de 600 px de haut (#3452). Mesuré : une scène de huit lignes
+    /// laisse la fenêtre à 600 - le plancher, pas la scène - et une scène de quarante la porte à 720.
+    /// Le premier jet visait 8 puis 24 lignes : les deux tenaient **sous** le plancher, la fenêtre
+    /// restait à 600 dans les deux cas, et le garde rougissait sur du code sain.
+    ///
+    /// La seconde scène franchit donc le plancher. C'est ce qui rend la mesure lisible **sans** toucher
+    /// à la configuration réelle de l'application : relâcher le plancher pour mesurer aurait éprouvé un
+    /// Stage que le produit ne pose jamais.
+    ///
+    /// ⚠️ Les deux scènes restent **sous les 1000 px** de l'écran du banc headless : au-delà, le `blit`
+    /// déborde et l'échec parle d'autre chose que du Stage.
+    @Test
+    @DisplayName("#4145 : le Stage partagé suit encore les scènes qu'on lui pose")
+    void le_stage_partage_reste_ajustable(FxRobot robot) {
+        // ⚠️ `setScene` SUFFIT, et il ne faut surtout pas appeler `sizeToScene` ici. Poser une scène sur
+        // une fenêtre affichée la redimensionne - à moins qu'elle ne soit en dimensionnement explicite,
+        // et c'est précisément ce qu'on mesure. `sizeToScene`, lui, DÉFIGE : le premier jet l'appelait,
+        // et son mutant a survécu - le garde défaisait le défaut avant de le chercher.
+        robot.interact(() -> stage.setScene(Habillage.scene(lignes(8))));
+        WaitForAsyncUtils.waitForFxEvents();
+        double aLOuverture = stage.getHeight();
+
+        robot.interact(() -> stage.setScene(Habillage.scene(lignes(40))));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(stage.getHeight())
+                .as("une scène trois fois plus haute est posée : un Stage ajustable la suit, un Stage"
+                        + " passé en dimensionnement explicite reste où il est - et fait alors échouer"
+                        + " toutes les classes qui passent après celle-ci dans le fork")
+                .isGreaterThan(aLOuverture);
+    }
+
+    /// Une racine de `combien` lignes, assez basse pour tenir sous l'écran du banc.
+    private static VBox lignes(int combien) {
+        VBox racine = new VBox();
+        for (int i = 0; i < combien; i++) {
+            racine.getChildren().add(new Label("ligne " + i));
+        }
+        return racine;
     }
 
     @Test

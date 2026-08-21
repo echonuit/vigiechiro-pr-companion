@@ -12,6 +12,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,12 +33,28 @@ class ModalesTest {
 
     private Stage modale;
 
+    /// Ouvre une modale **à part**, propriétaire de celle du harnais.
+    ///
+    /// ⚠️ Ce banc prenait le Stage du harnais lui-même, et l'un de ses tests le **ferme** - c'est ce que
+    /// « Échap ferme la modale » veut dire. Or ce Stage est partagé par toutes les classes d'un même
+    /// fork : fermé puis rouvert par la classe suivante, il cessait de suivre les scènes qu'on lui
+    /// posait. Mesuré (#4145) : après cette classe, une scène de quarante lignes laissait la fenêtre au
+    /// plancher de 600 px, là où elle la portait à 720 quand la classe tournait seule.
+    ///
+    /// Aucune classe ne devrait fermer la fenêtre qu'elle a reçue. Celle-ci ouvre la sienne, et la
+    /// referme avec elle.
     @Start
     void demarrer(Stage stage) {
-        modale = stage;
+        modale = new Stage();
+        modale.initOwner(stage);
         modale.setScene(Habillage.scene(new StackPane(new Button("OK")), 240, 140));
         Modales.fermerParEchap(modale);
         modale.show();
+    }
+
+    @AfterEach
+    void refermerLaModale(FxRobot robot) {
+        robot.interact(modale::close);
     }
 
     private void frapper(KeyCode code) {
