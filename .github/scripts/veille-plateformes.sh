@@ -117,7 +117,11 @@ juger() {
 
     if [ "${age}" -gt "${jours_max}" ]; then
         echo "❌ Dernière preuve réelle il y a ${age} jours (${derniere}), au-delà des ${jours_max} tolérés."
-        echo "   Le `schedule` du mardi a peut-être été sauté, retardé, ou désactivé après soixante"
+        # ⚠️ Guillemets SIMPLES : entre guillemets doubles, les accents graves ouvraient une
+        # substitution de commande. Le message s'affichait « Le  du mardi », le mot `schedule`
+        # avalé, avec un « commande introuvable » sur la sortie d'erreur - et cela se lisait
+        # justement au moment où la veille est en retard. Trouvé par shellcheck (SC2006).
+        echo '   Le `schedule` du mardi a peut-être été sauté, retardé, ou désactivé après soixante'
         echo "   jours sans activité sur le dépôt. Relancer « Suite complète sous Windows et macOS »."
         return 1
     fi
