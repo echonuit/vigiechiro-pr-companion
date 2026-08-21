@@ -105,7 +105,9 @@ resoudre_le_jar() {
         printf '%s' "$VIGIECHIRO_JAR"
         return 0
     fi
-    ls "$RACINE"/target/vigiechiro-*-shaded.jar 2>/dev/null | head -1
+    local jars=("$RACINE"/target/vigiechiro-*-shaded.jar)
+    # Le glob non résolu reste littéral : le tester dit « aucun jar » sans passer par `ls`.
+    [ -e "${jars[0]}" ] && printf '%s' "${jars[0]}"
 }
 
 verifier_le_jar() {
@@ -313,6 +315,9 @@ ordonnee_du_libelle() { # <écran> <x> <y> <libellé attendu> [largeur de la zon
 main_vers() { # <écran> <x> <y> [durée du trajet]
     local ecran="$1" x="$2" y="$3" duree="${4:-0.55}" X Y
     eval "$(DISPLAY="$ecran" xdotool getmouselocation --shell | head -2)"
+    # shellcheck disable=SC2046  # Découpage VOULU : `trajet.py` émet une suite d'arguments
+    # `mousemove`, un par point du trajet. Les quoter n'en ferait qu'un seul, et le pointeur ne
+    # bougerait plus - le film montrerait alors une fenêtre immobile, sans erreur.
     DISPLAY="$ecran" xdotool $(python3 "$(dirname "${BASH_SOURCE[0]}")/trajet.py" "$X" "$Y" "$x" "$y" "$duree")
     sleep 0.18
     DISPLAY="$ecran" xdotool click 1
@@ -1432,6 +1437,8 @@ FACTEUR_ACCELERATION=4
 # Une plage se déclare par deux repères jumeaux, `<nom>_debut` et `<nom>_fin`. Un `_debut` sans son
 # `_fin` est ignoré : mieux vaut un film au rythme réel qu'un montage qui accélère jusqu'à la fin
 # sur un repère manquant.
+# shellcheck disable=SC2094  # Faux positif : la boucle et ses appels LISENT tous `$marques` ; la
+# seule écriture du script (`: > "$marques"`) vit dans une autre fonction, bien avant.
 plages_a_accelerer() { # <marques> <t0> <coupe>
     local marques="$1" t0="$2" coupe="$3" nom base d f
     while IFS=$'\t' read -r _ nom; do
@@ -1583,6 +1590,8 @@ fiche_du_parcours() { # <nom>
 }
 
 # La section d'un parcours dans l'index. Rien si son film n'est pas là.
+# shellcheck disable=SC2094  # Même faux positif que pour `plages_a_accelerer` : cette section ne
+# fait que LIRE `$marques`, depuis sa boucle comme depuis ses appels.
 section_du_parcours() { # <dossier> <nom>
     local dossier="$1" nom="$2"
     local film="$dossier/$nom-monte.mp4" brut="$dossier/$nom.mkv" marques="$dossier/$nom.marques.tsv"

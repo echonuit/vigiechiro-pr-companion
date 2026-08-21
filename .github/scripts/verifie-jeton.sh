@@ -83,7 +83,8 @@ if [ "${1:-}" = "--auto-test" ]; then
   exit $?
 fi
 
-cd "$RACINE"
+# Un `cd` qui échoue laisserait la suite lire un AUTRE dépôt, et rendre son verdict dessus.
+cd "$RACINE" || exit 1
 
 # `git grep` : le contenu VERSIONNÉ, celui que la CI reçoit et qui part chez tout le monde.
 trouvailles=$(git grep -nIE "$MOTIF" -- ':!.github/scripts/verifie-jeton.sh' 2>/dev/null \

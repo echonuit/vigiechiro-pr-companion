@@ -536,6 +536,7 @@ lancer() {
     # simples, il lirait `$wm` et `$xvfb` au déclenchement, or ce sont des `local` : à la sortie
     # du script ils n'existent plus, `set -u` avorte le trap, et Xvfb comme le gestionnaire de
     # fenêtres survivent en orphelins. Constaté.
+    # shellcheck disable=SC2064  # L'expansion IMMÉDIATE est le remède, pas le défaut : cf. ci-dessus.
     trap "kill $wm $xvfb 2>/dev/null" EXIT
 
     verifier_tout "$ECRAN" || return 1
