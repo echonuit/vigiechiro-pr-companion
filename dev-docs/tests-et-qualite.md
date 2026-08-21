@@ -723,7 +723,25 @@ n'a pas été mesuré.
 Le remède ne dépend d'aucune machine : passer par `Habillage.scene(...)`, qui installe la police **et**
 pose le trio du chrome.
 
-### Quatre pièges récurrents
+### Cinq pièges récurrents
+
+!!! warning "La fenêtre du harnais est PARTAGÉE : on ne l'emprunte pas"
+    TestFX réutilise **la même fenêtre primaire** pour toutes les classes d'un même fork. Une classe
+    qui la dimensionne, la déplace ou la **ferme** laisse cet état à toutes celles qui passent après
+    elle - et seulement à celles-là, dans l'ordre où la répartition des forks les a mises. Le symptôme
+    tombe alors sur une classe sans rapport, sous la forme d'un noeud « invisible ».
+
+    Le défaut est revenu **cinq fois** : #1940, #1967, #3452, #4130, #4145.
+
+    ⚠️ **Rendre la valeur ne rend pas la propriété.** `setWidth` fait passer un Stage en
+    dimensionnement **explicite**, et reposer la largeur d'entrée ne l'en fait pas sortir : il cesse
+    définitivement de suivre les scènes qu'on lui pose. Deux bancs appliquaient consciencieusement
+    cette restauration-là, en citant #3960 en commentaire, et figeaient quand même.
+
+    Un banc qui doit dimensionner, déplacer ou fermer une fenêtre **ouvre la sienne** :
+    `new Stage()`, `initOwner(celle du harnais)`, et on la referme en `@AfterEach`. Un scénario filmé
+    passe par `recette.FenetreDuBanc`, qui demande la taille à la mise en page puis `sizeToScene()`.
+    Voir l'[ADR 4134](decisions/4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md).
 
 !!! warning "`assertThat(path).endsWith(Path)` canonicalise"
     Cette forme appelle `toRealPath` et lève `NoSuchFileException` si le dossier n'existe pas (erreur
