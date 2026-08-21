@@ -27,6 +27,7 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.Seance;
 import java.io.IOException;
@@ -183,7 +184,7 @@ class ScenarioPerceptifConnexionTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-26", jugement = Jugement.HUMAIN)
+    @CasDeRecette(value = "S1-26", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S1-26 · la modale de connexion s'ouvre : à regarder, rien ne doit se replacer après coup")
     void la_modale_de_connexion_s_ouvre(FxRobot robot) {
         Respiration.avantLeGeste(robot);
@@ -201,7 +202,7 @@ class ScenarioPerceptifConnexionTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-27", jugement = Jugement.HUMAIN)
+    @CasDeRecette(value = "S1-27", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S1-27 · pendant la récupération : à regarder, rien ne doit sortir du cadre avant le bandeau")
     void la_recuperation_ne_pousse_rien_hors_du_cadre(FxRobot robot) throws TimeoutException {
         ouvrirLaModaleParLeMenu(robot);

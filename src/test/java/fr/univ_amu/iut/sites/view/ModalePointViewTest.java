@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
@@ -77,7 +78,7 @@ class ModalePointViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-24")
+    @CasDeRecette(value = "S1-24", portee = Portee.A_L_ECRAN)
     @DisplayName("Un code valide active le bouton et ajoute la carte du point")
     void ajouter_un_point_valide(FxRobot robot) {
         ouvrirModale(robot);

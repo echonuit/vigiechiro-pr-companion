@@ -36,6 +36,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
@@ -217,7 +218,7 @@ class ScenarioPerceptifFiltresTest {
     }
 
     @Test
-    @CasDeRecette(value = "S6-25", jugement = Jugement.HUMAIN)
+    @CasDeRecette(value = "S6-25", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S6-25 · une puce fraîchement ajoutée n'écarte rien : à regarder, la table ne bouge pas")
     void une_puce_fraichement_ajoutee_n_ecarte_rien(FxRobot robot) {
         TableView<?> table = table(robot);
@@ -240,7 +241,7 @@ class ScenarioPerceptifFiltresTest {
     }
 
     @Test
-    @CasDeRecette(value = "S6-26", jugement = Jugement.HUMAIN)
+    @CasDeRecette(value = "S6-26", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S6-26 · rouvrir une liste après un autre filtre : à regarder, elle offre moins de valeurs")
     void rouvrir_une_liste_apres_un_autre_filtre_montre_moins_de_valeurs(FxRobot robot) {
         ajouterLaPuce(robot, "Espèce");
@@ -275,7 +276,7 @@ class ScenarioPerceptifFiltresTest {
     }
 
     @Test
-    @CasDeRecette(value = "S6-27", jugement = Jugement.HUMAIN)
+    @CasDeRecette(value = "S6-27", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S6-27 · une valeur cochée devenue impossible reste cochée : à regarder, elle se distingue")
     void une_valeur_cochee_devenue_impossible_se_distingue(FxRobot robot) {
         // ⚠️ « Lieu » est le SEUL critère à cocher de cet écran ; les autres sont des listes déroulantes,
@@ -314,7 +315,7 @@ class ScenarioPerceptifFiltresTest {
     }
 
     @Test
-    @CasDeRecette(value = "S6-29", jugement = Jugement.HUMAIN)
+    @CasDeRecette(value = "S6-29", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S6-29 · « Tout effacer » rend la table entière : à regarder, en un seul clic")
     void tout_effacer_rend_la_table_entiere(FxRobot robot) {
         TableView<?> table = table(robot);
@@ -342,7 +343,7 @@ class ScenarioPerceptifFiltresTest {
     }
 
     @Test
-    @CasDeRecette(value = "S6-28", jugement = Jugement.HUMAIN)
+    @CasDeRecette(value = "S6-28", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S6-28 · rejouer une vue dont une valeur a disparu : à regarder, la phrase la nomme")
     void rejouer_une_vue_dont_une_valeur_a_disparu_fait_paraitre_le_bandeau(FxRobot robot) {
         Label phrase = robot.lookup("#lblRetour").queryAs(Label.class);

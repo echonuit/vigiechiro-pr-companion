@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -102,7 +103,7 @@ class ScenarioAccueilTest {
     }
 
     @Test
-    @CasDeRecette("S1-01")
+    @CasDeRecette(value = "S1-01", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-01 · chaque carte de l'accueil ouvre l'écran qu'elle annonce, et le fil d'Ariane le nomme")
     void chaque_carte_ouvre_ce_qu_elle_annonce(FxRobot robot) {
         WaitForAsyncUtils.waitForFxEvents();
@@ -147,7 +148,7 @@ class ScenarioAccueilTest {
     }
 
     @Test
-    @CasDeRecette("S1-28")
+    @CasDeRecette(value = "S1-28", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-28 · le menu ☰ ne porte plus « fiche espèce », et porte toujours le reste")
     void le_menu_ne_porte_plus_la_fiche_espece(FxRobot robot) {
         MenuButton menu = robot.lookup("#menuOutils").queryAs(MenuButton.class);

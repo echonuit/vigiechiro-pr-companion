@@ -47,6 +47,7 @@ import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Jugement;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -174,7 +175,7 @@ class ScenarioPerceptifRefusDepotTest {
     }
 
     @Test
-    @CasDeRecette(value = "S4-33", jugement = Jugement.HUMAIN)
+    @CasDeRecette(value = "S4-33", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S4-33 · le compte rendu dit le nombre de refus et conseille la reconnexion : à lire")
     void le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion(FxRobot robot) throws Exception {
         // ⚠️ Le dépôt demande confirmation, et le dialogue réel fait `showAndWait`, qui fige TestFX

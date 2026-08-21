@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
@@ -114,7 +115,7 @@ class ModaleSiteViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-13")
+    @CasDeRecette(value = "S1-13", portee = Portee.A_L_ECRAN)
     @DisplayName("#790 : « Créer » reste fermé tant que le carré n'a pas ses six chiffres")
     void bouton_ferme_tant_que_le_carre_est_incomplet(FxRobot robot) {
         enCreation(robot);
@@ -160,7 +161,7 @@ class ModaleSiteViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-23")
+    @CasDeRecette(value = "S1-23", portee = Portee.A_L_ECRAN)
     @DisplayName("#1431 : modifier un site : les champs sont pré-remplis, et l'enregistrement porte l'id")
     void edition_pre_remplit_et_enregistre(FxRobot robot) {
         enEdition(robot, site());
@@ -179,7 +180,7 @@ class ModaleSiteViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-25")
+    @CasDeRecette(value = "S1-25", portee = Portee.A_L_ECRAN)
     @DisplayName("#1431 : « Annuler » ne crée rien")
     void annuler_ne_cree_rien(FxRobot robot) {
         enCreation(robot);

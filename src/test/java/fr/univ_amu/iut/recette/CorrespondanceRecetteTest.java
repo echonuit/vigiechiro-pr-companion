@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -55,6 +56,11 @@ import org.junit.jupiter.api.Test;
 class CorrespondanceRecetteTest {
 
     private static final Path SESSIONS = Path.of("dev-docs", "recette", "sessions");
+
+    /// Les deux pages qui portent les lecteurs, et donc les seules où une réserve peut être lue.
+    private static final Path PAGE_PERCEPTIFS = Path.of("dev-docs", "recette", "clips-perceptifs.md");
+
+    private static final Path PAGE_ASSERTES = Path.of("dev-docs", "recette", "clips-assertes.md");
 
     /// Les sessions dont ce garde ne lit aucun cas, et dont le silence est assumé (#3884).
     ///
@@ -111,6 +117,12 @@ class CorrespondanceRecetteTest {
     /// Sur quoi le décompte porte, et sur quoi il ne porte pas.
     private static PerimetreDesSessions perimetre;
 
+    /// Ce que chaque test déclare de son cas : où se lit le verdict, et ce que le clip laisse dehors.
+    private static List<Citation> citations;
+
+    /// Une citation de cas par un test, avec ce que ce test dit de sa portée (#4142).
+    private record Citation(String test, String cas, Portee portee, String reserve) {}
+
     @BeforeAll
     static void lire() {
         declares = new LinkedHashMap<>();
@@ -121,6 +133,7 @@ class CorrespondanceRecetteTest {
 
         cites = new LinkedHashMap<>();
         jugements = new LinkedHashMap<>();
+        citations = new ArrayList<>();
         lireLeCode();
 
         tri = RepartitionDesCas.repartir(declares.keySet(), perceptifs, jugements);
@@ -180,6 +193,89 @@ class CorrespondanceRecetteTest {
                         declares.get(cas),
                         cites.containsKey(cas) ? "joué par " + joindre(cites.get(cas)) : "à jouer"));
         tri.nonCouverts().forEach(cas -> System.out.printf("  non couvert · %s · %s%n", cas, declares.get(cas)));
+    }
+
+    @Test
+    @DisplayName("#4142 : un cas hors application dit ce que son clip ne prouve pas, les autres se taisent")
+    void la_reserve_accompagne_la_portee() {
+        assertThat(citations)
+                .as("Aucune citation n'a été lue : le garde ne garde plus rien.")
+                .isNotEmpty();
+
+        SoftAssertions verifs = new SoftAssertions();
+        for (Citation citation : citations) {
+            if (citation.portee() == Portee.HORS_APPLICATION) {
+                verifs.assertThat(citation.reserve())
+                        .as(
+                                "%s cite %s comme un cas dont le verdict est HORS de l'application, sans"
+                                        + " dire ce que son clip ne prouve pas. Un clip bouchonné y montre"
+                                        + " un écran convaincant et creux : la phrase qui le borne n'est"
+                                        + " pas un ornement, c'est ce qui empêche de le croire sur parole.",
+                                citation.test(), citation.cas())
+                        .isNotBlank();
+            } else {
+                verifs.assertThat(citation.reserve())
+                        .as(
+                                "%s porte une réserve sur %s, dont le verdict se lit à l'écran. Une page"
+                                        + " qui met une réserve partout n'en fait lire aucune : ou bien la"
+                                        + " portée est fausse, ou bien la phrase est du bruit.",
+                                citation.test(), citation.cas())
+                        .isBlank();
+            }
+        }
+        verifs.assertAll();
+
+        long horsApplication = citations.stream()
+                .filter(citation -> citation.portee() == Portee.HORS_APPLICATION)
+                .count();
+        System.out.printf(
+                "%nPortée des cas cités : %d à l'écran, %d hors application.%n",
+                citations.size() - horsApplication, horsApplication);
+    }
+
+    @Test
+    @DisplayName("#4142 : la réserve est sur la page, et non seulement dans le code")
+    void la_reserve_atteint_celui_qui_regarde() {
+        SoftAssertions verifs = new SoftAssertions();
+        for (Citation citation : citations) {
+            if (citation.portee() != Portee.HORS_APPLICATION) {
+                continue;
+            }
+            verifs.assertThat(sectionDesPages(citation.cas()))
+                    .as(
+                            "%s est un cas dont le verdict est hors de l'application, et sa réserve"
+                                    + " n'apparaît nulle part sur les pages de clips. Elle vit alors dans"
+                                    + " le code, que personne ne lit en regardant un clip : la page reste"
+                                    + " un écran convaincant, sans la phrase qui le borne.",
+                            citation.cas())
+                    .contains(citation.reserve());
+        }
+        verifs.assertAll();
+    }
+
+    /// Ce que les deux pages de clips écrivent **sous** la section de `cas`, jusqu'à la section suivante.
+    ///
+    /// ⚠️ On lit la section, pas la page entière : une réserve écrite ailleurs sur la page ne borne pas
+    /// le clip qu'on regarde, et le garde la compterait pourtant.
+    private static String sectionDesPages(String cas) {
+        StringBuilder trouve = new StringBuilder();
+        for (Path page : List.of(PAGE_PERCEPTIFS, PAGE_ASSERTES)) {
+            if (!Files.isRegularFile(page)) {
+                continue;
+            }
+            String texte = lire(page);
+            int debut = texte.indexOf("### " + cas + " ·");
+            if (debut < 0) {
+                continue;
+            }
+            int fin = texte.indexOf("\n### ", debut + 1);
+            int finSection = texte.indexOf("\n## ", debut + 1);
+            if (finSection >= 0 && (fin < 0 || finSection < fin)) {
+                fin = finSection;
+            }
+            trouve.append(fin < 0 ? texte.substring(debut) : texte, debut, fin < 0 ? texte.length() : fin);
+        }
+        return trouve.toString();
     }
 
     @Test
@@ -340,6 +436,7 @@ class CorrespondanceRecetteTest {
                                     jugements
                                             .computeIfAbsent(id, k -> EnumSet.noneOf(Jugement.class))
                                             .add(annotation.jugement());
+                                    citations.add(new Citation(nom, id, annotation.portee(), annotation.reserve()));
                                 }
                             }));
         });

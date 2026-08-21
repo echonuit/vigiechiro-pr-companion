@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.Portee;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
@@ -79,7 +80,7 @@ class MesSitesEtatVideViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-12")
+    @CasDeRecette(value = "S1-12", portee = Portee.A_L_ECRAN)
     @DisplayName("Base vierge : l'état vide paraît, et la liste des cartes n'est pas là")
     void l_etat_vide_parait_sur_une_base_vierge(FxRobot robot) {
         assertThat(robot.lookup("#etatVide").queryAs(VBox.class).isVisible())
@@ -91,7 +92,7 @@ class MesSitesEtatVideViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-12")
+    @CasDeRecette(value = "S1-12", portee = Portee.A_L_ECRAN)
     @DisplayName("L'état vide porte sa porte de sortie : « + Ajouter mon premier site de suivi »")
     void l_etat_vide_porte_sa_porte_de_sortie(FxRobot robot) {
         // Le point qui compte pour l'utilisateur : un écran vide sans action est une impasse.
@@ -101,7 +102,7 @@ class MesSitesEtatVideViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-12")
+    @CasDeRecette(value = "S1-12", portee = Portee.A_L_ECRAN)
     @DisplayName("L'état vide explique ce qui doit exister sur le portail AVANT d'exister ici")
     void l_etat_vide_explique_le_prerequis(FxRobot robot) {
         // La hint-box, qui évite la méprise coûteuse : croire que déclarer un site ici le crée sur

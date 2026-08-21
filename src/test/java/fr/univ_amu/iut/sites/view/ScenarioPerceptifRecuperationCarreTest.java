@@ -30,6 +30,7 @@ import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.Seance;
 import fr.univ_amu.iut.sites.model.ImportSiteDistant;
@@ -175,7 +176,7 @@ class ScenarioPerceptifRecuperationCarreTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-37", jugement = Jugement.HUMAIN)
+    @CasDeRecette(value = "S1-37", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S1-37 · récupérer un carré : à regarder, comprend-on où l'on vient d'atterrir ?")
     void la_recuperation_ramene_sur_mes_sites(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);

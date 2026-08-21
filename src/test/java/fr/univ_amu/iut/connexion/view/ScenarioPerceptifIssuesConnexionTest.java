@@ -31,6 +31,7 @@ import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -152,7 +153,7 @@ class ScenarioPerceptifIssuesConnexionTest {
     }
 
     @Test
-    @CasDeRecette("S1-05")
+    @CasDeRecette(value = "S1-05", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-05 · jeton vide : le message dit quoi faire, sans accuser le jeton")
     void jeton_vide_dit_quoi_faire(FxRobot robot) throws TimeoutException {
         // Aucun appel réseau n'est attendu : le produit refuse avant de partir.
@@ -165,7 +166,7 @@ class ScenarioPerceptifIssuesConnexionTest {
     }
 
     @Test
-    @CasDeRecette("S1-06")
+    @CasDeRecette(value = "S1-06", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-06 · jeton refusé : le message nomme la cause et le geste qui répare")
     void jeton_refuse_nomme_le_geste(FxRobot robot) throws TimeoutException {
         when(client.moi()).thenReturn(ReponseApi.refuse(401, "token invalide"));
@@ -180,7 +181,7 @@ class ScenarioPerceptifIssuesConnexionTest {
     }
 
     @Test
-    @CasDeRecette("S1-07")
+    @CasDeRecette(value = "S1-07", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-07 · plateforme injoignable : le message ne fait pas accuser le jeton")
     void injoignable_ne_fait_pas_accuser_le_jeton(FxRobot robot) throws TimeoutException {
         when(client.moi()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
@@ -200,7 +201,7 @@ class ScenarioPerceptifIssuesConnexionTest {
     }
 
     @Test
-    @CasDeRecette("S1-08")
+    @CasDeRecette(value = "S1-08", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-08 · succès : le bandeau dit ce qui a été rapatrié, et l'identité paraît")
     void succes_dit_ce_qui_a_ete_rapatrie(FxRobot robot) throws TimeoutException {
         when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));

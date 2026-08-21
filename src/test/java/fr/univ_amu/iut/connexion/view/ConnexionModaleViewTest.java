@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.Portee;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -88,7 +89,7 @@ class ConnexionModaleViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-04")
+    @CasDeRecette(value = "S1-04", portee = Portee.A_L_ECRAN)
     @DisplayName("Étape 1 : « Ouvrir Vigie-Chiro » ouvre la plateforme dans le navigateur")
     void ouvrir_site(FxRobot robot) {
         robot.clickOn("Ouvrir Vigie-Chiro");
@@ -97,7 +98,7 @@ class ConnexionModaleViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-04")
+    @CasDeRecette(value = "S1-04", portee = Portee.A_L_ECRAN)
     @DisplayName("Étape 2 : « Copier le marque-page » copie et affiche l'instruction dans le bandeau")
     void copier_marque_page(FxRobot robot) {
         robot.clickOn("Copier le marque-page");
@@ -153,7 +154,7 @@ class ConnexionModaleViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-04")
+    @CasDeRecette(value = "S1-04", portee = Portee.A_L_ECRAN)
     @DisplayName("Étape 3 : se connecter sans token affiche une invite dans le bandeau, sans réseau")
     void connecter_sans_token(FxRobot robot) {
         robot.clickOn("Se connecter");
