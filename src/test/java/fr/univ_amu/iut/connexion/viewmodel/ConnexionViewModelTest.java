@@ -19,7 +19,6 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.RearmementDepot;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
-import fr.univ_amu.iut.recette.CasDeRecette;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -92,7 +91,6 @@ class ConnexionViewModelTest {
     }
 
     @Test
-    @CasDeRecette("S1-08")
     @DisplayName("connecter avec un token valide : identité persistée, état « connecté », résumé de synchro")
     void connecter_valide() {
         when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
@@ -134,7 +132,6 @@ class ConnexionViewModelTest {
     }
 
     @Test
-    @CasDeRecette("S1-06")
     @DisplayName("connecter avec un token invalide : connexion effacée, état « non connecté »")
     void connecter_invalide() {
         when(client.moi()).thenReturn(ReponseApi.refuse(401, "token invalide"));
@@ -149,7 +146,6 @@ class ConnexionViewModelTest {
     }
 
     @Test
-    @CasDeRecette("S1-07")
     @DisplayName("#1369 : plateforme injoignable → le jeton est CONSERVÉ, non vérifié, revérifiable")
     void injoignable_conserve_le_jeton() {
         when(client.moi()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
@@ -186,7 +182,6 @@ class ConnexionViewModelTest {
     }
 
     @Test
-    @CasDeRecette("S1-05")
     @DisplayName("connecter avec un token vide : vide, sans toucher au réseau ni au stockage")
     void connecter_vide() {
         assertThat(viewModel.connecter("   ")).isInstanceOf(ReponseApi.NonConnecte.class);
