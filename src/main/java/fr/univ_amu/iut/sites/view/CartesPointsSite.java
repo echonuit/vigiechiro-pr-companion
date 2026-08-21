@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.PublicationPoint;
 import fr.univ_amu.iut.sites.viewmodel.CartePoint;
@@ -303,45 +304,48 @@ final class CartesPointsSite {
                 },
                 erreur -> {
                     siEchecTechnique.run();
-                    alerteErreur("La publication du point « " + carte.point().code() + " » a échoué : "
-                            + erreur.getMessage());
+                    viewModel
+                            .compteRendu()
+                            .rendre(RetourOperation.erreur("La publication du point « "
+                                    + carte.point().code() + " » a échoué : " + erreur.getMessage()));
                 });
     }
 
-    /// Rend compte des **quatre** issues possibles. Un refus porte son `geste` et pas seulement sa
-    /// cause (ADR 2635) : « accès refusé » n'apprend rien à qui doit agir.
+    /// Rend compte des **cinq** issues possibles, au **bandeau de la fiche** (#4099).
+    ///
+    /// Publier un point ne détruit rien et ne perd rien : l'ADR 0023 réserve le modal à l'irréversible,
+    /// et range donc ce compte rendu au bandeau de l'écran concerné. Cinq fenêtres bloquantes
+    /// s'ouvraient ici pour annoncer le résultat d'un envoi.
+    ///
+    /// Un refus porte son `geste` et pas seulement sa cause (ADR 2635) : « accès refusé » n'apprend rien
+    /// à qui doit agir. Le bandeau n'ayant qu'un texte là où le dialogue avait un en-tête et un corps,
+    /// les deux se rejoignent en une phrase - et pour les quatre autres, le corps se suffisait déjà,
+    /// l'en-tête n'en étant que le titre.
     private void rendreCompte(CartePoint carte, PublicationPoint.Resultat resultat) {
         String code = carte.point().code();
-        switch (resultat) {
-            case PublicationPoint.Resultat.Publie ignore ->
-                notificateur.notifier(
-                        NiveauNotification.INFORMATION,
-                        "Point publié",
-                        "Le point « " + code + " » a été ajouté aux localités du carré sur Vigie-Chiro.");
-            case PublicationPoint.Resultat.DejaPresent(String nom) ->
-                notificateur.notifier(
-                        NiveauNotification.INFORMATION,
-                        "Déjà sur Vigie-Chiro",
-                        "Une localité « " + nom + " » existe déjà sur ce carré : rien n'a été envoyé."
-                                + " Le point est désormais suivi comme publié.");
-            case PublicationPoint.Resultat.AilleursSurLaPlateforme(String nom, double distance) ->
-                notificateur.notifier(
-                        NiveauNotification.AVERTISSEMENT,
-                        "Un point « " + nom + " » existe déjà, ailleurs",
-                        "Vigie-Chiro connaît un point « " + nom + " » " + ecartLisible(distance)
-                                + ". Rien n'a été envoyé : déplacer le point de la plateforme"
-                                + " déplacerait toutes les nuits qui s'y rattachent, y compris celles"
-                                + " d'autres observateurs. Donnez un autre code à votre point, ou"
-                                + " alignez sa position sur celle de la plateforme.");
-            case PublicationPoint.Resultat.ModifieEntreTemps ignore ->
-                notificateur.notifier(
-                        NiveauNotification.AVERTISSEMENT,
-                        "Le carré a changé entre-temps",
-                        "Quelqu'un a modifié les points de ce carré pendant l'envoi. Rien n'a été"
-                                + " modifié sur Vigie-Chiro : synchronisez, puis réessayez.");
-            case PublicationPoint.Resultat.Refuse(String cause, String geste) ->
-                notificateur.notifier(NiveauNotification.AVERTISSEMENT, cause, geste);
-        }
+        viewModel
+                .compteRendu()
+                .rendre(
+                        switch (resultat) {
+                            case PublicationPoint.Resultat.Publie ignore ->
+                                RetourOperation.succes("Le point « " + code
+                                        + " » a été ajouté aux localités du carré sur Vigie-Chiro.");
+                            case PublicationPoint.Resultat.DejaPresent(String nom) ->
+                                RetourOperation.info("Une localité « " + nom + " » existe déjà sur ce carré : rien"
+                                        + " n'a été envoyé. Le point est désormais suivi comme publié.");
+                            case PublicationPoint.Resultat.AilleursSurLaPlateforme(String nom, double distance) ->
+                                RetourOperation.avertissement("Vigie-Chiro connaît un point « " + nom + " » "
+                                        + ecartLisible(distance) + ". Rien n'a été envoyé : déplacer le point de la"
+                                        + " plateforme déplacerait toutes les nuits qui s'y rattachent, y compris"
+                                        + " celles d'autres observateurs. Donnez un autre code à votre point, ou"
+                                        + " alignez sa position sur celle de la plateforme.");
+                            case PublicationPoint.Resultat.ModifieEntreTemps ignore ->
+                                RetourOperation.avertissement("Quelqu'un a modifié les points de ce carré pendant"
+                                        + " l'envoi. Rien n'a été modifié sur Vigie-Chiro : synchronisez, puis"
+                                        + " réessayez.");
+                            case PublicationPoint.Resultat.Refuse(String cause, String geste) ->
+                                RetourOperation.avertissement(cause + " " + geste);
+                        });
     }
 
     private void supprimerPoint(CartePoint carte) {
