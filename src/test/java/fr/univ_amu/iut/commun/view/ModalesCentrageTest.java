@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 
 import java.util.concurrent.atomic.AtomicReference;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -33,6 +32,13 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Une règle vérifiée par une capture est une règle vérifiée **une fois**. Celle-ci se remesure à
 /// chaque exécution, et sur les deux formes de fenêtre, puisque c'est la seconde qui manquait.
 ///
+/// ## Les scènes passent par Habillage
+///
+/// `ScenesHabilleesTest` l'exige de tout test qui mesure une géométrie, et il a raison de l'exiger de
+/// celui-ci : une scène montée à la main porte la police de la **machine**, pas celle du produit. La
+/// largeur d'un dialogue dépend de son texte, donc de sa police ; mesurer un centrage sur une police
+/// qui n'est pas celle livrée reviendrait à mesurer autre chose que le produit.
+///
 /// ## Ce que « centré » veut dire ici
 ///
 /// Le centre du propriétaire, à un pixel près : la tolérance absorbe l'arrondi de la division par
@@ -52,7 +58,7 @@ class ModalesCentrageTest {
     @Start
     void start(Stage stage) {
         hote = stage;
-        stage.setScene(new Scene(new StackPane(), HOTE_LARGEUR, HOTE_HAUTEUR));
+        stage.setScene(Habillage.scene(new StackPane(), HOTE_LARGEUR, HOTE_HAUTEUR));
         stage.show();
     }
 
@@ -80,7 +86,7 @@ class ModalesCentrageTest {
             Stage nouvelle = new Stage();
             nouvelle.initOwner(hote);
             nouvelle.initModality(Modality.WINDOW_MODAL);
-            nouvelle.setScene(new Scene(new StackPane(), 400, 300));
+            nouvelle.setScene(Habillage.scene(new StackPane(), 400, 300));
             Modales.centrerSur(nouvelle, hote);
             nouvelle.show();
             porteur.set(nouvelle);
