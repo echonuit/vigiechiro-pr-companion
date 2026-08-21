@@ -335,6 +335,7 @@ couper_par_luminance() {
 # couverture parfaite sur ZÉRO image utile serait un vert creux, indiscernable d'un contrôle qui
 # ne s'est pas exécuté.
 CLIP_MARGE=0.5           # un peu avant et après : ne pas couper au ras du geste
+ONGLET=$'\t'             # la tabulation du journal, nommée : illisible en littéral dans un printf
 COUVERTURE_MIN=0.6       # sous ce seuil, les plages ne désignent pas ce que le film montre
 
 # Rend « couverture utiles » : la part des images utiles du brut qui tombent dans une plage, et
@@ -379,14 +380,37 @@ instant_en_millisecondes() {
 
 # Les plages « test début fin cas », en secondes depuis le début du brut.
 plages_du_journal() {
-    LC_NUMERIC=C awk -F'\t' -v t0="$1" -v m="$CLIP_MARGE" '
+    # ⚠️ La marge ne s'ajoute PAS à l'aveugle : elle est bornée par le cas voisin (#4113).
+    #
+    # Ajoutée sans regarder, elle fait finir un clip sur l'écran du cas SUIVANT. Constaté à l'image :
+    # S6-28 se terminait sur la modale de connexion d'une autre classe, et un clip perceptif existe
+    # justement pour qu'un humain juge ce qu'il voit. Sa dernière image est celle qui reste.
+    #
+    # Là où le voisin est loin, la marge reste entière : c'est elle qui empêche de couper au ras du
+    # geste, et la raboter partout coûterait la respiration qu'elle donne.
+    #
+    # Deux passes, parce que la seconde a besoin de connaître le voisin, donc de les avoir tous. Le
+    # tri intermédiaire ne suppose rien de l'ordre du journal.
+    LC_NUMERIC=C awk -F'\t' -v t0="$1" '
         /^#/ { next }
         $2 == "debut" { d[$3] = $1; c[$3] = $4; next }
         $2 == "fin" && ($3 in d) {
-            deb = d[$3] / 1000 - t0 - m; if (deb < 0) deb = 0
-            printf "%s\t%.2f\t%.2f\t%s\n", $3, deb, $1 / 1000 - t0 + m, c[$3]
+            printf "%.3f\t%.3f\t%s\t%s\n", d[$3] / 1000 - t0, $1 / 1000 - t0, $3, c[$3]
             delete d[$3]
-        }' "$2"
+        }' "$2" \
+        | LC_ALL=C sort -t"$ONGLET" -k1,1n \
+        | LC_NUMERIC=C awk -F'\t' -v m="$CLIP_MARGE" '
+            { deb[NR] = $1; fin[NR] = $2; nom[NR] = $3; cas[NR] = $4 }
+            END {
+                for (i = 1; i <= NR; i++) {
+                    a = deb[i] - m
+                    if (i > 1 && a < fin[i - 1]) a = fin[i - 1]
+                    if (a < 0) a = 0
+                    b = fin[i] + m
+                    if (i < NR && b > deb[i + 1]) b = deb[i + 1]
+                    printf "%s\t%.2f\t%.2f\t%s\n", nom[i], a, b, cas[i]
+                }
+            }'
 }
 
 montage_par_cas() {
@@ -1088,6 +1112,35 @@ auto_test() {
         montage_par_cas "$tmp/sandwich.mkv" "$tmp/reperes-sans-cas.tsv" "$tmp/clips-sc" 1000000000000
     essai "et il ne produit aucun extrait" vert \
         bash -c '! ls "$1"/*.mkv >/dev/null 2>&1' _ "$tmp/clips-sc"
+
+    # --- les bornes d'un extrait, contre son voisin (#4113) ---
+    #
+    # ⚠️ La marge existe pour ne pas couper au ras du geste. Ajoutée à l'aveugle, elle fait finir un
+    # clip sur l'écran du cas SUIVANT : constaté à l'image sur S6-28, qui se terminait sur la modale
+    # de connexion d'une autre classe. Les trois cas ci-dessous tiennent les deux moitiés de la
+    # règle - borner quand le voisin est proche, et garder la marge entière quand il est loin.
+    printf '%s\n' \
+        "1000${ONGLET}debut${ONGLET}TestA${ONGLET}S9-01" \
+        "2000${ONGLET}fin${ONGLET}TestA${ONGLET}S9-01" \
+        "2200${ONGLET}debut${ONGLET}TestB${ONGLET}S9-02" \
+        "3000${ONGLET}fin${ONGLET}TestB${ONGLET}S9-02" > "$tmp/journal-serre.tsv"
+    printf '%s\n' \
+        "1000${ONGLET}debut${ONGLET}TestA${ONGLET}S9-01" \
+        "2000${ONGLET}fin${ONGLET}TestA${ONGLET}S9-01" \
+        "9000${ONGLET}debut${ONGLET}TestB${ONGLET}S9-02" \
+        "9500${ONGLET}fin${ONGLET}TestB${ONGLET}S9-02" > "$tmp/journal-espace.tsv"
+
+    essai "un extrait ne déborde pas sur le début du cas suivant" vert \
+        bash -c 'source "$0"; [ "$(plages_du_journal 0 "$1" | head -1 | cut -f3)" = 2.20 ]' \
+        "${BASH_SOURCE[0]}" "$tmp/journal-serre.tsv"
+    essai "ni en arriere sur la fin du cas precedent" vert \
+        bash -c 'source "$0"; [ "$(plages_du_journal 0 "$1" | tail -1 | cut -f2)" = 2.00 ]' \
+        "${BASH_SOURCE[0]}" "$tmp/journal-serre.tsv"
+    # ⚠️ Sans ce cas, un correctif qui raboterait TOUTES les queues passerait au vert, et la
+    # respiration que la marge existe pour donner disparaitrait sans qu'aucun test ne le dise.
+    essai "un voisin eloigne laisse la marge entiere" vert \
+        bash -c 'source "$0"; [ "$(plages_du_journal 0 "$1" | head -1 | cut -f3)" = 2.50 ]' \
+        "${BASH_SOURCE[0]}" "$tmp/journal-espace.tsv"
 
     kill "$nu" "$avec" "$wm" 2>/dev/null
 
