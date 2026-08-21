@@ -6,7 +6,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.recette.CasDeRecette;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
@@ -63,7 +62,6 @@ class ContratCartesAccueilTest {
 
     @Test
     @DisplayName("#3521 : chaque carte annonce un prisme, un titre et une description non vides")
-    @CasDeRecette("S1-01")
     void chaque_carte_est_presentable(@TempDir Path espaceDeTravail) {
         System.setProperty("vigiechiro.workspace", espaceDeTravail.toString());
 

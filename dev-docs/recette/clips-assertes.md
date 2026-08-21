@@ -49,19 +49,17 @@ Une panne réseau ne doit pas se lire « jeton invalide » : on jetterait un jet
 
 Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous quel compte on déposera.
 
-## AccueilApparenceTest
+## ScenarioAccueilTest
 
-### S1-01 · `prismes_exposent_libelle_et_icone`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/AccueilApparenceTest.prismes_exposent_libelle_et_icone.mp4"></video>
-
-## ContratCartesAccueilTest
-
-### S1-01 · `chaque_carte_est_presentable`
+### S1-01 · `chaque_carte_ouvre_ce_qu_elle_annonce`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ContratCartesAccueilTest.chaque_carte_est_presentable.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce.mp4"></video>
+
+### S1-28 · `le_menu_ne_porte_plus_la_fiche_espece`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioAccueilTest.le_menu_ne_porte_plus_la_fiche_espece.mp4"></video>
 
 ## MainViewTest
 
@@ -237,13 +235,6 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModalePointViewTest.ajouter_un_point_valide.mp4"></video>
-
-## ActionMenuWiringTest
-
-### S1-28 · `agrege_et_ordonne`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ActionMenuWiringTest.agrege_et_ordonne.mp4"></video>
 
 ## ModaleSiteVerifierCarreViewTest
 
