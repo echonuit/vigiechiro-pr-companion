@@ -183,8 +183,12 @@ class ScenarioPerceptifRefusDepotTest {
 
         robot.clickOn("#btnTeleverser");
         // L'exécuteur est asynchrone : le compte rendu n'est PAS là au retour du clic.
+        // ⚠️ On attend LA PHRASE QU'ON AFFIRME, et non un texte voisin. Attendre « Dépôt incomplet »
+        // rendait la main dès le titre du compte rendu, alors que les avertissements paraissent à la
+        // passe suivante : le test passait sur mon poste et rougissait sur le runner, sur la seule
+        // différence de rythme. Une attente qui ne porte pas sur l'assertion ne garde rien.
         WaitForAsyncUtils.waitFor(
-                20, TimeUnit.SECONDS, () -> texteAffiche(robot).contains("Dépôt incomplet"));
+                20, TimeUnit.SECONDS, () -> texteAffiche(robot).contains(REFUSEES + " archive(s) ont été refusées"));
         // Le moment que ce cas existe pour montrer : la phrase du compte rendu, dont c'est la
         // LISIBILITÉ qu'on juge. Elle demande d'être lue, pas aperçue.
         Respiration.surLeMomentCle(robot);
