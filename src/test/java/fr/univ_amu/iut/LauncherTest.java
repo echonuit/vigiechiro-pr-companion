@@ -2,10 +2,12 @@ package fr.univ_amu.iut;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.cli.commande.CommandeRacine;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import picocli.CommandLine.Command;
 
 /// L'aiguillage du point d'entrée empaqueté (#4071) : un seul lanceur ouvre la fenêtre **ou** répond
 /// en texte, selon le mot reçu.
@@ -81,6 +83,26 @@ class LauncherTest {
         assertThat(texte.appelee()).isTrue();
         assertThat(fenetre.appelee()).isFalse();
         assertThat(texte.arguments()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("L'aide de la CLI nomme le mot qui ouvre la fenêtre, et c'est bien celui-ci")
+    void l_aide_nomme_le_mot_qui_ouvre_la_fenetre() {
+        // Sur un produit installé, `vigiechiro` est souvent le SEUL nom dans le PATH : le `.deb` ne pose
+        // aucun lien pour le lanceur graphique. Qui découvre la commande n'apprend donc à ouvrir la
+        // fenêtre que si son aide le dit.
+        //
+        // ⚠️ Ce test tient un lien que le compilateur ne peut pas tenir. Le mot est écrit en dur dans
+        // l'annotation `@Command`, parce qu'une constante de compilation y serait INLINÉE : renommer
+        // `MOT_FENETRE` laisserait le texte de l'aide inchangé, et l'aide mentirait sans que rien ne
+        // rougisse (la figure de l'ADR 3947). L'annotation est donc lue par réflexion et confrontée à
+        // la constante.
+        String[] pied = CommandeRacine.class.getAnnotation(Command.class).footer();
+
+        assertThat(pied)
+                .as("L'aide doit nommer le mot qui ouvre la fenêtre : sans lui, la capacité existe et "
+                        + "reste introuvable.")
+                .anySatisfy(ligne -> assertThat(ligne).contains(Launcher.MOT_FENETRE));
     }
 
     @Test
