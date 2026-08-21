@@ -202,27 +202,27 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.overlay_occupation_masque_apres_chargement.mp4"></video>
 
-## SiteDetailViewModelTest
+## ScenarioFicheSiteTest
 
-### S1-18 · `fiche_identite`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/SiteDetailViewModelTest.fiche_identite.mp4"></video>
-
-### S1-19 · `suppression_site_refusee_avec_passage`
+### S1-18 · `le_bandeau_dit_l_identite_du_carre`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/SiteDetailViewModelTest.suppression_site_refusee_avec_passage.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre.mp4"></video>
 
-### S1-20 · `cartes_points_gps_et_compteur`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/SiteDetailViewModelTest.cartes_points_gps_et_compteur.mp4"></video>
-
-### S1-21 · `passages_tries_par_date_decroissante`
+### S1-19 · `les_boutons_disent_ce_qui_les_empeche`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/SiteDetailViewModelTest.passages_tries_par_date_decroissante.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche.mp4"></video>
+
+### S1-20 · `les_cartes_de_points_portent_gps_et_distance`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.les_cartes_de_points_portent_gps_et_distance.mp4"></video>
+
+### S1-21 · `le_tableau_des_passages_porte_ses_sept_colonnes`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.le_tableau_des_passages_porte_ses_sept_colonnes.mp4"></video>
 
 ## SiteDetailRenommageViewTest
 
