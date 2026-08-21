@@ -131,6 +131,35 @@ jobs:
           chmod +x .github/assets/filtrer-bruit-cartes.sh
           .github/assets/filtrer-bruit-cartes.sh
 
+      - name: Montrer les écrans que cette PR change (#4119)
+        # Uniquement sur une PR : sur `main`, c'est le commit d'aperçus qui montre le changement.
+        #
+        # ⚠️ Ce pas ne juge RIEN et ne bloque rien. Un écran qui change est le résultat normal d'une PR
+        # qui touche l'interface ; ce qui manquait était de le MONTRER. Jusqu'ici, la liste des écrans
+        # modifiés était calculée par le filtrage ci-dessus, puis jetée : le seul endroit où l'on voyait
+        # un changement visuel était le commit `chore(captures)`, c'est-à-dire APRÈS la fusion.
+        #
+        # ⚠️ Le filtrage du bruit doit avoir eu lieu AVANT : sans lui, les aperçus de carte
+        # apparaîtraient à chaque fois, et une vraie régression deviendrait indiscernable du bruit de
+        # tuiles - jusqu'à 23,8 % d'une image (cf. `filtrer-bruit-cartes.sh`).
+        if: github.event_name == 'pull_request'
+        run: |
+          set -uo pipefail
+          chmod +x .github/assets/compare-apercus.sh
+          # `git status --porcelain` rend aussi bien les modifiés (` M`) que les nouveaux (`??`) : un
+          # écran ajouté par la PR mérite d'être montré, même s'il n'a pas d'avant.
+          mapfile -t modifies < <(git status --porcelain -- '*.png' | awk '{print $2}')
+          .github/assets/compare-apercus.sh target/apercus-pr "${modifies[@]}" || true
+          cat target/apercus-pr/index.md >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Conserver les avant/après
+        if: ${{ github.event_name == 'pull_request' && hashFiles('target/apercus-pr/*.avant-apres.png') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: apercus-avant-apres
+          path: target/apercus-pr
+          retention-days: 14
+
       - name: Publier les aperçus via une PR auto-mergée
         # Uniquement sur `main` : une PR vérifie que les écrans se rendent, elle ne publie rien.
         if: github.event_name == 'push'
