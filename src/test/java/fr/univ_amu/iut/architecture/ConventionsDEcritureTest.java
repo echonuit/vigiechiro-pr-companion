@@ -7,7 +7,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -85,6 +89,80 @@ class ConventionsDEcritureTest {
 
                         Le dernier cas connu était le composant de record `ResultatLancement.détail`, \
                         renommé en `detail` avec ses cinq appels (#2946).""").isEmpty();
+    }
+
+    /// Un Stage **reçu en paramètre** : celui de `start(Stage …)` que TestFX fournit, ou celui qu'un
+    /// utilitaire de test se voit confier.
+    private static final Pattern STAGE_RECU = Pattern.compile("Stage\\s+(\\w+)\\s*[,)]");
+
+    /// Une affectation d'un Stage reçu à un champ : `fenetre = stage;`, `this.fenetre = stage;`.
+    private static final String AFFECTATION = "(?:this\\.)?(\\w+)\\s*=\\s*%s\\s*;";
+
+    @Test
+    @DisplayName("#4134 : aucune classe de test ne fige un Stage qu'elle a reçu")
+    void aucun_stage_recu_n_est_fige() throws IOException {
+        List<String> fautifs = new ArrayList<>();
+        for (Path source : sources()) {
+            if (!source.startsWith(Path.of("src/test/java"))) {
+                continue;
+            }
+            String code = codeSeul(Files.readString(source, StandardCharsets.UTF_8));
+            for (String nom : nomsDesStagesRecus(code)) {
+                Matcher fige = Pattern.compile("\\b" + Pattern.quote(nom) + "\\.(setWidth|setHeight)\\s*\\(")
+                        .matcher(code);
+                while (fige.find()) {
+                    fautifs.add("%s:%d : %s.%s(…)".formatted(source, ligne(code, fige.start()), nom, fige.group(1)));
+                }
+            }
+        }
+        assertThat(fautifs).as("""
+                        Ces appels figent un Stage que la classe n'a pas créé.
+
+                        `setWidth` / `setHeight` font passer un Stage en dimensionnement EXPLICITE : il \
+                        cesse DEFINITIVEMENT de s'ajuster aux scènes qu'on lui pose ensuite. Sans \
+                        conséquence sur une fenêtre qu'on jette, mais le Stage du harnais TestFX est \
+                        partagé par toutes les classes d'un même fork : figé par l'une, il fait échouer \
+                        les suivantes sur des noeuds « invisibles », très loin de la cause et seulement \
+                        selon l'ordre d'exécution. C'est ce que le job `ordre-alternatif` attrape.
+
+                        Reposer la valeur en sortie ne suffit pas, et c'est le piège de ce défaut : la \
+                        largeur revient, le dimensionnement explicite reste. Mesuré - une fenêtre figée \
+                        à 900 ignore la scène suivante ; après `sizeToScene()` elle vaut 33, puis 369 \
+                        avec la scène d'après.
+
+                        Remède : demander la taille à la MISE EN PAGE (taille préférée sur la racine) \
+                        puis `sizeToScene()`, comme `recette.FenetreDuBanc`. Pour une fenêtre à soi, \
+                        `new Stage()` - et alors elle n'est plus reçue, et ce garde ne la regarde plus.
+
+                        Ce défaut en est à sa quatrième venue : #1940, #1967, #3452, #4130.""").isEmpty();
+    }
+
+    /// Les noms sous lesquels un fichier de test désigne un Stage qu'il a **reçu** : les paramètres de
+    /// type `Stage`, et les champs auxquels ils sont affectés.
+    ///
+    /// ⚠️ Les champs comptent, et c'est par eux que le défaut est passé deux fois : `fenetre = stage`
+    /// dans `start`, puis `fenetre.setWidth(...)` cinquante lignes plus bas. Ne regarder que le
+    /// paramètre laisserait les deux classes fautives vertes.
+    private static Set<String> nomsDesStagesRecus(String code) {
+        Set<String> noms = new LinkedHashSet<>();
+        Matcher recus = STAGE_RECU.matcher(code);
+        while (recus.find()) {
+            noms.add(recus.group(1));
+        }
+        for (String recu : Set.copyOf(noms)) {
+            Matcher affecte =
+                    Pattern.compile(AFFECTATION.formatted(Pattern.quote(recu))).matcher(code);
+            while (affecte.find()) {
+                noms.add(affecte.group(1));
+            }
+        }
+        return noms;
+    }
+
+    /// Le numéro de ligne d'une position dans le code dépouillé. Le dépouillement remplace chaque
+    /// caractère retiré par une espace : les positions, donc les lignes, restent celles du fichier.
+    private static int ligne(String code, int position) {
+        return (int) code.substring(0, position).chars().filter(c -> c == '\n').count() + 1;
     }
 
     /// Les sources Java des deux arbres.
