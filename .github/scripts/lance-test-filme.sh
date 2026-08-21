@@ -443,8 +443,14 @@ plages_du_journal() {
                     if (a < 0) a = 0
                     b = fin[i] + m
                     if (i < NR && b > deb[i + 1]) b = deb[i + 1]
+                    # ⚠️ Le bornage a l image AFFINE, il ne doit jamais APPAUVRIR. Un test tres rapide
+                    # nouvre aucune fenetre : son ecran est noir des le depart, la premiere image noire
+                    # tombe avant sa propre fin, et la plage seffondre. Onze clips ont ainsi disparu de
+                    # la pre-version, laissant onze lecteurs vides sur les pages de la doc.
+                    #
+                    # La coupe a limage ne sapplique donc que si elle laisse un extrait regardable.
                     noir = premiere_image_noire(fin[i])
-                    if (noir >= 0 && noir < b) b = noir
+                    if (noir >= 0 && noir < b && noir - a >= duree_min) b = noir
                     # ATTENTION : une plage EFFONDREE ne se coupe pas. ffmpeg ecrit un fichier vide,
                     # et le remuxage suivant echoue dessus : « invalid as first byte of an EBML
                     # number ». Vecu : le premier tournage apres le bornage n a publie AUCUN clip.
@@ -1225,6 +1231,25 @@ auto_test() {
     essai "sans profil, la marge entiere est gardee" vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" | cut -f3)" = 2.50 ]' \
         "${BASH_SOURCE[0]}" "$tmp/journal-seul.tsv"
+    # ⚠️ Le cas qui MANQUAIT, et dont l absence a coute onze clips. Un test tres rapide nouvre aucune
+    # fenetre : son ecran est noir des le depart. Si la coupe a limage sappliquait, sa plage tomberait
+    # a 0,01 s, il serait ecarte, et son lecteur pointerait dans le vide sur la page de la doc.
+    #
+    # Leffondrement demande DEUX choses : un cas precedent qui remonte la borne de tete, et un ecran
+    # deja noir. Cest exactement ce que le tournage a montre - les onze ecartes avaient des plages de
+    # 0,01 a 0,19 s. Un cas isole ne seffondre jamais, la marge le protegeant : mon premier jeu
+    # dessai restait donc vert sous le mutant, donc il ne gardait rien.
+    printf '%s%s5\n%s%s5\n' "2.02" "$ONGLET" "2.60" "$ONGLET" > "$tmp/profil-noir.tsv"
+    printf '%s\n' \
+        "1000${ONGLET}debut${ONGLET}TestA${ONGLET}S9-01" \
+        "2000${ONGLET}fin${ONGLET}TestA${ONGLET}S9-01" \
+        "2005${ONGLET}debut${ONGLET}TestB${ONGLET}S9-02" \
+        "2010${ONGLET}fin${ONGLET}TestB${ONGLET}S9-02" > "$tmp/journal-eclair.tsv"
+    essai "un cas eclair sans fenetre garde son extrait" vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; plages_du_journal 0 "$1" "$2" 2>/dev/null \
+            | grep -q TestB' \
+        "${BASH_SOURCE[0]}" "$tmp/journal-eclair.tsv" "$tmp/profil-noir.tsv"
+
     essai "la queue s arrete a la premiere image noire" vert \
         bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" "$2" | cut -f3)" = 2.20 ]' \
         "${BASH_SOURCE[0]}" "$tmp/journal-seul.tsv" "$tmp/profil.tsv"
