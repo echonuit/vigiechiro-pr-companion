@@ -41,7 +41,10 @@ set -uo pipefail
 # porte sur l'environnement réellement remis à Maven, et non sur une intention.
 # Le drapeau évite une boucle si l'environnement le repose (ce qu'aucun cas connu ne fait, mais
 # une relance infinie serait un défaut bien plus coûteux que cette ligne).
-if [ -n "${WAYLAND_DISPLAY:-}" ] && [ -z "${RECETTE_RELANCE:-}" ]; then
+# ⚠️ `BANC_SOURCE_SEULEMENT` court-circuite aussi CE point : qui source ne veut rien lancer, et la
+# relance est un lancement. Sans cela, `source ce-script` sur une session Wayland `exec`ute une
+# copie qui repart au début - le garde du bas n'est alors jamais atteint.
+if [ -z "${BANC_SOURCE_SEULEMENT:-}" ] && [ -n "${WAYLAND_DISPLAY:-}" ] && [ -z "${RECETTE_RELANCE:-}" ]; then
     exec env -u WAYLAND_DISPLAY -u XDG_SESSION_TYPE RECETTE_RELANCE=1 \
         bash "${BASH_SOURCE[0]}" "$@"
 fi
@@ -336,6 +339,7 @@ couper_par_luminance() {
 # ne s'est pas exécuté.
 CLIP_MARGE=0.5           # un peu avant et après : ne pas couper au ras du geste
 ONGLET=$'\t'             # la tabulation du journal, nommée : illisible en littéral dans un printf
+CLIP_DUREE_MIN=0.20      # sous cette durée, un extrait ne montre rien et ffmpeg n'écrit rien de lisible
 COUVERTURE_MIN=0.6       # sous ce seuil, les plages ne désignent pas ce que le film montre
 
 # Rend « couverture utiles » : la part des images utiles du brut qui tombent dans une plage, et
@@ -399,7 +403,7 @@ plages_du_journal() {
             delete d[$3]
         }' "$2" \
         | LC_ALL=C sort -t"$ONGLET" -k1,1n \
-        | LC_NUMERIC=C awk -F'\t' -v m="$CLIP_MARGE" '
+        | LC_NUMERIC=C awk -F'\t' -v m="$CLIP_MARGE" -v duree_min="$CLIP_DUREE_MIN" '
             { deb[NR] = $1; fin[NR] = $2; nom[NR] = $3; cas[NR] = $4 }
             END {
                 for (i = 1; i <= NR; i++) {
@@ -408,6 +412,16 @@ plages_du_journal() {
                     if (a < 0) a = 0
                     b = fin[i] + m
                     if (i < NR && b > deb[i + 1]) b = deb[i + 1]
+                    # ATTENTION : une plage EFFONDREE ne se coupe pas. ffmpeg ecrit un fichier vide,
+                    # et le remuxage suivant echoue dessus : « invalid as first byte of an EBML
+                    # number ». Vecu : le premier tournage apres le bornage n a publie AUCUN clip.
+                    # (Sans apostrophe : ce commentaire vit DANS un programme awk entre guillemets
+                    # simples, ou une apostrophe termine la chaine - shellcheck l a vu.)
+                    if (b - a < duree_min) {
+                        printf "   index : %s ecarte, plage de %.2f s apres bornage (< %.2f)\n", \
+                            nom[i], b - a, duree_min > "/dev/stderr"
+                        continue
+                    }
                     printf "%s\t%.2f\t%.2f\t%s\n", nom[i], a, b, cas[i]
                 }
             }'
@@ -1131,15 +1145,33 @@ auto_test() {
         "9500${ONGLET}fin${ONGLET}TestB${ONGLET}S9-02" > "$tmp/journal-espace.tsv"
 
     essai "un extrait ne déborde pas sur le début du cas suivant" vert \
-        bash -c 'source "$0"; [ "$(plages_du_journal 0 "$1" | head -1 | cut -f3)" = 2.20 ]' \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" | head -1 | cut -f3)" = 2.20 ]' \
         "${BASH_SOURCE[0]}" "$tmp/journal-serre.tsv"
     essai "ni en arriere sur la fin du cas precedent" vert \
-        bash -c 'source "$0"; [ "$(plages_du_journal 0 "$1" | tail -1 | cut -f2)" = 2.00 ]' \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" | tail -1 | cut -f2)" = 2.00 ]' \
         "${BASH_SOURCE[0]}" "$tmp/journal-serre.tsv"
+    # ⚠️ Le cas qui MANQUAIT, et dont l'absence a coûté un tournage entier. Deux cas collés - la fin
+    # de l'un est le début de l'autre - donnaient une plage de durée nulle ; ffmpeg écrivait un fichier
+    # vide, et le remuxage s'arrêtait dessus. Le banc n'a publié aucun clip.
+    # ⚠️ Un cas COURT coince entre deux autres : c'est LUI qui s'effondre. Mon premier jeu d'essai
+    # posait deux cas simplement adjacents, et il ne s'effondrait pas - le cas restait vert sans la
+    # garde, donc il ne gardait rien. Mesure avant conclusion, ici comme ailleurs.
+    printf '%s\n' \
+        "1000${ONGLET}debut${ONGLET}TestA${ONGLET}S9-01" \
+        "2000${ONGLET}fin${ONGLET}TestA${ONGLET}S9-01" \
+        "1900${ONGLET}debut${ONGLET}TestB${ONGLET}S9-02" \
+        "1950${ONGLET}fin${ONGLET}TestB${ONGLET}S9-02" \
+        "2000${ONGLET}debut${ONGLET}TestC${ONGLET}S9-03" \
+        "2600${ONGLET}fin${ONGLET}TestC${ONGLET}S9-03" > "$tmp/journal-colle.tsv"
+    essai "un cas court coince ne rend pas de plage effondree" vert \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; plages_du_journal 0 "$1" 2>/dev/null \
+            | awk -F"\t" "{ if (\$3 - \$2 < 0.20) exit 1 }"' \
+        "${BASH_SOURCE[0]}" "$tmp/journal-colle.tsv"
+
     # ⚠️ Sans ce cas, un correctif qui raboterait TOUTES les queues passerait au vert, et la
     # respiration que la marge existe pour donner disparaitrait sans qu'aucun test ne le dise.
     essai "un voisin eloigne laisse la marge entiere" vert \
-        bash -c 'source "$0"; [ "$(plages_du_journal 0 "$1" | head -1 | cut -f3)" = 2.50 ]' \
+        bash -c 'BANC_SOURCE_SEULEMENT=1; source "$0"; [ "$(plages_du_journal 0 "$1" | head -1 | cut -f3)" = 2.50 ]' \
         "${BASH_SOURCE[0]}" "$tmp/journal-espace.tsv"
 
     kill "$nu" "$avec" "$wm" 2>/dev/null
@@ -1153,10 +1185,19 @@ auto_test() {
 
 # --------------------------------------------------------------------------------------------
 
-case "${1:---aide}" in
-    --auto-test) auto_test ;;
-    --planche)   planche ;;
-    --verifier)  verifier_tout ;;
-    --aide|-h)   sed -n '/^# Usage/,/^$/p' "${BASH_SOURCE[0]}" | sed 's/^# \?//' ;;
-    *)           lancer "$@" ;;
-esac
+# ⚠️ Un fichier qui se source doit dire ce qu'il fait à ce moment-là : ici, RIEN. Sans ce garde,
+# `source ce-script` lançait un tournage complet - vécu, y compris depuis la copie principale du
+# dépôt, et les cas d'auto-test qui se sourcent en déclenchaient un chacun.
+#
+# Le drapeau, et non « $0 vaut BASH_SOURCE » : sous `bash -c 'source "$0"' /chemin/du/banc`, les deux
+# sont égaux et la comparaison conclut « lancé directement ». Le banc de documentation porte la même
+# leçon depuis plus longtemps.
+if [ -z "${BANC_SOURCE_SEULEMENT:-}" ]; then
+    case "${1:---aide}" in
+        --auto-test) auto_test ;;
+        --planche)   planche ;;
+        --verifier)  verifier_tout ;;
+        --aide|-h)   sed -n '/^# Usage/,/^$/p' "${BASH_SOURCE[0]}" | sed 's/^# \?//' ;;
+        *)           lancer "$@" ;;
+    esac
+fi
