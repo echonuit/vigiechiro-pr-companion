@@ -222,6 +222,11 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.le_tableau_des_passages_porte_ses_sept_colonnes.mp4"></video>
 
+### S1-35 · `le_carre_rattache_porte_son_badge`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge.mp4"></video>
+
 ## SiteDetailRenommageViewTest
 
 ### S1-22 · `renommer_met_a_jour_l_entete`
@@ -274,10 +279,3 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/NavigationSitesRapatriementTest.le_rapatriement_rafraichit_mes_sites_et_y_rend_compte.mp4"></video>
-
-## RapatriementCarreTest
-
-### S1-35 · `un_carre_rapatrie_est_rattache`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/RapatriementCarreTest.un_carre_rapatrie_est_rattache.mp4"></video>
