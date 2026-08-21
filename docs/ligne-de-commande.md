@@ -87,6 +87,33 @@ else
 fi
 ```
 
+## Quand un fichier est refusé parce qu'il est trop gros
+
+Le compagnon refuse de lire une entrée démesurée : un journal de carte, une réponse du serveur, une
+archive. Les limites sont larges - la plus basse vaut dix-sept mille fois le journal d'une nuit réelle -
+mais un cas légitime peut les dépasser.
+
+Le refus vous dit alors quoi taper :
+
+```
+Fichier de la carte refusé : « LogPR1925492.txt » fait 41,0 Mo, au-delà des 32,0 Mo admis.
+Cette limite se relève en ligne de commande : vigiechiro --reglage import.journal.max-octets=<valeur>.
+```
+
+```bash
+vigiechiro --reglage import.journal.max-octets=67108864 importer --point 12 --source /media/moi/CARTE
+```
+
+L'option se répète si plusieurs limites sont en cause, et une clé mal écrite vous liste celles qui
+existent. Elle ne vaut que pour la commande qu'elle accompagne : rien n'est retenu d'une fois sur
+l'autre.
+
+!!! note "Ces limites ne sont pas dans les Réglages, et c'est voulu"
+    Elles protègent la lecture de fichiers venus du dehors, et personne n'a à choisir une taille de
+    réponse serveur pour travailler. Elles se relèvent au cas par cas, quand un fichier légitime le
+    demande - y compris si vous avez rencontré le refus **dans la fenêtre** : c'est la même limite, et
+    la ligne de commande est l'endroit où elle se relève.
+
 ## Le dossier de travail
 
 Toutes les commandes travaillent sur le même dossier que l'application, `Documents/VigieChiro-Companion`.
