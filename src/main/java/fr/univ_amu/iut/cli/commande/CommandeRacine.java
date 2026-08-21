@@ -44,8 +44,10 @@ import picocli.CommandLine.Spec;
             "Codes de sortie : 0 succès · 1 échec d'exécution, état incertain (E/S, incident)",
             "                 · 2 refus métier, rien n'a été fait, ou mauvaise invocation.",
             "",
-            "Interface graphique : depuis un produit installé, « vigiechiro ihm » ouvre la fenêtre,",
-            "comme le fait le double-clic."
+            // ⚠️ Une seule ligne, et courte : picocli replie à la largeur du terminal. Une première
+            // version tenait en deux lignes de source et se rendait en TROIS, dont une orpheline
+            // (« fenêtre, » seul). Ce qui se juge ici est le rendu, pas le source.
+            "Ouvrir la fenêtre : « vigiechiro ihm », comme le double-clic."
         },
         subcommands = {
             CreerSite.class,
