@@ -56,8 +56,11 @@ class PageDesClipsTest {
     private static final Pattern SECTION = Pattern.compile("^### (S\\d+-\\d+) ·", Pattern.MULTILINE);
 
     /// Une annotation `@CasDeRecette(...)` suivie, quelques lignes plus bas, de sa méthode de test.
-    /// Les trois formes employées dans le dépôt sont couvertes : la valeur seule, `value = "…"`, et
-    /// la liste `{"…", "…"}`.
+    ///
+    /// Les deux formes employées dans le dépôt sont couvertes : `value = "…"` et la liste
+    /// `value = {"…", "…"}`. La forme abrégée - la valeur seule, sans `value =` - n'existe plus depuis
+    /// que [Portee] est obligatoire : une annotation qui porte un second attribut doit nommer le
+    /// premier.
     private static final Pattern CITATION = Pattern.compile(
             "@CasDeRecette\\([^)]*\\)(?:\\s*@[A-Za-z]+\\([^)]*\\))*\\s*(?:void|[A-Za-z<>\\[\\]]+)\\s+([a-z_0-9]+)\\s*\\(",
             Pattern.DOTALL);

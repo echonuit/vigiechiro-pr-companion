@@ -81,14 +81,42 @@ Une case est dans l'une de **trois** situations. Les réduire à deux fabrique u
 
 | État | Qui tranche | Comment il se déclare |
 |---|---|---|
-| **Asserté** | la CI, et elle rougit quand le logiciel a tort | un test porte `@CasDeRecette("S1-02")` |
+| **Asserté** | la CI, et elle rougit quand le logiciel a tort | un test porte `@CasDeRecette(value = "S1-02", portee = A_L_ECRAN)` |
 | **Perceptif** | un humain, en regardant | la case porte la marque `*perceptif*`, posée en passe 6 |
 | **Non couvert** | personne | ni l'une, ni l'autre |
 
 ⚠️ Le deuxième état n'est **pas** une couverture, et c'est tout l'enjeu. Un scénario qui *joue* un cas
 perceptif le cite comme n'importe quel test - c'est le seul lien vers le script - si bien que sans
 distinction il gonflerait le compte des couverts d'un cas que **personne n'a regardé**. Un tel
-scénario se déclare donc `@CasDeRecette("S1-26", jugement = HUMAIN)`.
+scénario se déclare donc `@CasDeRecette(value = "S1-26", jugement = HUMAIN, portee = A_L_ECRAN)`.
+
+### Où se lit le verdict (#4142)
+
+Tout cas cité déclare aussi **sa portée**, et l'attribut n'a **pas de valeur par défaut** : c'est le
+compilateur qui pose la question, à l'écriture du test, quand celui qui écrit sait encore ce que son
+scénario truque.
+
+| Portée | Ce que le clip prouve | Ce qu'elle exige |
+|---|---|---|
+| `A_L_ECRAN` | ce que le cas demande de constater est ce que la caméra enregistre | rien de plus |
+| `HORS_APPLICATION` | le geste côté produit, et lui seul | une **réserve**, disant ce que le clip ne prouve pas |
+
+Le second cas est celui des sessions dont l'objet est ailleurs : le dépôt reçu par Vigie-Chiro, la carte
+SD réelle, la nuit rapatriée du serveur, l'installeur sur un vrai poste, la commande dans un vrai
+terminal. Un clip bouchonné y montre un écran **convaincant et creux** - il ne devient pas faux, il
+devient muet sur son propre objet, ce qui est pire parce qu'on le regarde en croyant savoir.
+
+`CorrespondanceRecetteTest` garde les deux sens : la réserve est exigée si et seulement si la portée est
+`HORS_APPLICATION`, et elle doit **figurer sur la page du clip**. Une réserve qui ne vit que dans le code
+ne borne rien : personne ne lit une annotation en regardant une vidéo.
+
+⚠️ Aujourd'hui, **tous les cas cités sont à l'écran**, sans exception. Ce n'est pas un hasard, et cela
+dit où est la difficulté : ce qui a été couvert jusqu'ici est précisément ce qui se filme sans réserve.
+Les quelque 220 cas dont le verdict est hors de l'application restent devant nous.
+
+Le compte n'est pas recopié ici : `CorrespondanceRecetteTest` l'imprime à chaque lancement, sous la forme
+« Portée des cas cités : N à l'écran, M hors application ». Un nombre écrit à la main dans une page dérive
+sans que rien ne le signale, et c'est exactement ce qui a produit #3885.
 
 **Les deux sources se tiennent l'une l'autre.** Le script dit ce qu'un cas *demande*, le code dit ce
 qu'un test *prouve*, et `CorrespondanceRecetteTest` les confronte : il rougit sur un cas marqué

@@ -40,7 +40,7 @@ import java.lang.annotation.Target;
 /// Exemple :
 /// ```java
 /// @Test
-/// @CasDeRecette("S1-02")
+/// @CasDeRecette(value = "S1-02", portee = Portee.A_L_ECRAN)
 /// @DisplayName("Le bandeau de compteurs est masqué sans donnée")
 /// void bandeau_masque_sans_donnee(FxRobot robot) { ... }
 /// ```
@@ -57,4 +57,19 @@ public @interface CasDeRecette {
     /// muet sur son juge est réputé asserter, si bien qu'un scénario perceptif qui oublierait de se
     /// déclarer ferait rougir le garde plutôt que de gonfler le compteur en silence.
     Jugement jugement() default Jugement.AUTOMATIQUE;
+
+    /// **Où se lit le verdict** du cas, et donc ce qu'un clip peut en prouver.
+    ///
+    /// ⚠️ **Sans valeur par défaut, et c'est délibéré.** Le [Jugement] en porte une parce qu'une
+    /// seconde source - la marque `*perceptif*` du script - vient la contredire quand elle est
+    /// fausse. La portée n'a pas cette seconde source : un défaut la rendrait invisible, et la
+    /// question ne se poserait plus jamais. C'est donc le **compilateur** qui la pose, à l'écriture
+    /// du test, quand celui qui écrit sait encore ce que son scénario truque.
+    Portee portee();
+
+    /// Ce que le clip **ne prouve pas**, en une phrase, pour qui le regarde.
+    ///
+    /// Exigée si et seulement si la portée est [Portee#HORS_APPLICATION] : ailleurs elle serait du
+    /// bruit, et une page qui met une réserve partout n'en fait lire aucune.
+    String reserve() default "";
 }

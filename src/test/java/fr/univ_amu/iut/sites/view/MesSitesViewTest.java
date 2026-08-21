@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
@@ -137,7 +138,7 @@ class MesSitesViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-16")
+    @CasDeRecette(value = "S1-16", portee = Portee.A_L_ECRAN)
     @DisplayName("#1045 : le bouton « Récupérer depuis Vigie-Chiro » est visible dans l'app complète")
     void bouton_synchro_visible(FxRobot robot) {
         Button bouton = robot.lookup("#btnSyncVigieChiro").queryAs(Button.class);
@@ -148,7 +149,7 @@ class MesSitesViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-17")
+    @CasDeRecette(value = "S1-17", portee = Portee.A_L_ECRAN)
     @DisplayName("#1212 : l'overlay d'occupation est en place, masqué une fois le chargement terminé")
     void overlay_occupation_masque_apres_chargement(FxRobot robot) {
         Node voile = robot.lookup(".occupation-voile").query();
@@ -160,7 +161,7 @@ class MesSitesViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-14")
+    @CasDeRecette(value = "S1-14", portee = Portee.A_L_ECRAN)
     @DisplayName("Les cartes des sites seedés sont affichées")
     void affiche_les_cartes(FxRobot robot) {
         List<String> titres = robot.lookup(".carte-titre").queryAllAs(Label.class).stream()
@@ -184,7 +185,7 @@ class MesSitesViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-15")
+    @CasDeRecette(value = "S1-15", portee = Portee.A_L_ECRAN)
     @DisplayName("#799 : une carte est atteignable au Tab, et annoncée comme un bouton")
     void une_carte_est_atteignable_au_clavier(FxRobot robot) {
         // Le Tab lui-même n'est pas simulé : ce qui le rend possible est cette propriété, et c'est
@@ -198,7 +199,7 @@ class MesSitesViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-15")
+    @CasDeRecette(value = "S1-15", portee = Portee.A_L_ECRAN)
     @DisplayName("#799 : Entrée sur une carte ouvre le détail, comme un clic")
     void entree_ouvre_le_detail(FxRobot robot) {
         HBox carte = trouverCarte(robot, "Carré 640380");
@@ -216,7 +217,7 @@ class MesSitesViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-15")
+    @CasDeRecette(value = "S1-15", portee = Portee.A_L_ECRAN)
     @DisplayName("#799 : Espace sur une carte ouvre le détail, comme un clic")
     void espace_ouvre_le_detail(FxRobot robot) {
         // Les deux touches sont éprouvées séparément : le contrôleur les traite dans une seule

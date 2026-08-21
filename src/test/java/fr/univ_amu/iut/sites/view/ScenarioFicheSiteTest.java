@@ -20,6 +20,7 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -137,7 +138,7 @@ class ScenarioFicheSiteTest {
     }
 
     @Test
-    @CasDeRecette("S1-18")
+    @CasDeRecette(value = "S1-18", portee = Portee.A_L_ECRAN)
     @DisplayName(
             "S1-18 · le bandeau de la fiche dit carré, département, protocole, création, dernière nuit et passages")
     void le_bandeau_dit_l_identite_du_carre(FxRobot robot) throws TimeoutException {
@@ -171,7 +172,7 @@ class ScenarioFicheSiteTest {
     }
 
     @Test
-    @CasDeRecette("S1-19")
+    @CasDeRecette(value = "S1-19", portee = Portee.A_L_ECRAN)
     @DisplayName(
             "S1-19 · les gardes des boutons : non relié grise « Ouvrir sur Vigie-Chiro », un passage grise « Supprimer »")
     void les_boutons_disent_ce_qui_les_empeche(FxRobot robot) throws TimeoutException {
@@ -194,7 +195,7 @@ class ScenarioFicheSiteTest {
     }
 
     @Test
-    @CasDeRecette("S1-20")
+    @CasDeRecette(value = "S1-20", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-20 · les cartes de points portent le badge GPS et la distance au plus proche")
     void les_cartes_de_points_portent_gps_et_distance(FxRobot robot) throws TimeoutException {
         ouvrirLaFiche(robot, TITRE_CARRE);
@@ -225,7 +226,7 @@ class ScenarioFicheSiteTest {
     }
 
     @Test
-    @CasDeRecette("S1-21")
+    @CasDeRecette(value = "S1-21", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-21 · le tableau des passages porte ses sept colonnes, du plus récent au plus ancien")
     void le_tableau_des_passages_porte_ses_sept_colonnes(FxRobot robot) throws TimeoutException {
         ouvrirLaFiche(robot, TITRE_CARRE);
@@ -260,7 +261,7 @@ class ScenarioFicheSiteTest {
     }
 
     @Test
-    @CasDeRecette("S1-35")
+    @CasDeRecette(value = "S1-35", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-35 · le carré rattaché porte son badge, et « Ouvrir sur Vigie-Chiro » n'est plus grisé")
     void le_carre_rattache_porte_son_badge(FxRobot robot) throws TimeoutException {
         ouvrirLaFiche(robot, TITRE_RATTACHE);

@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -111,7 +112,7 @@ class MainViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-29")
+    @CasDeRecette(value = "S1-29", portee = Portee.A_L_ECRAN)
     @DisplayName("#927 : le menu ☰ → « Réglages » ouvre l'écran de réglages dans la zone centrale")
     void menu_reglages_ouvre_l_ecran(FxRobot robot) {
         MenuButton menu = robot.lookup("#menuOutils").queryAs(MenuButton.class);
@@ -129,7 +130,7 @@ class MainViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-01")
+    @CasDeRecette(value = "S1-01", portee = Portee.A_L_ECRAN)
     @DisplayName("L'accueil regroupe les cartes en deux sections de prismes (Collecte / Biodiversité)")
     void accueil_regroupe_en_deux_prismes(FxRobot robot) {
         FlowPane sections = robot.lookup("#cartesActivites").queryAs(FlowPane.class);
@@ -140,7 +141,7 @@ class MainViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-03")
+    @CasDeRecette(value = "S1-03", portee = Portee.A_L_ECRAN)
     @DisplayName("Le fil d'Ariane reflète le parcours ; cliquer un ancêtre y ramène")
     void fil_ariane_reflete_le_parcours(FxRobot robot) {
         robot.interact(() -> {
@@ -209,7 +210,7 @@ class MainViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-02")
+    @CasDeRecette(value = "S1-02", portee = Portee.A_L_ECRAN)
     @DisplayName("Tableau de bord : le bandeau de compteurs est masqué quand la base est vide (#141)")
     void bandeau_masque_si_base_vide(FxRobot robot) {
         FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
@@ -237,7 +238,7 @@ class MainViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-10")
+    @CasDeRecette(value = "S1-10", portee = Portee.A_L_ECRAN)
     @DisplayName("#1405 : les compteurs suivent une RESTAURATION, sans qu'on ait quitté l'accueil")
     void bandeau_suit_une_restauration_sans_navigation(FxRobot robot, @TempDir Path sauvegardes) {
         // ⚠️ Ce cas n'est PAS celui de S1-09, et la nuance décide de son existence. Là-bas, la
@@ -276,7 +277,7 @@ class MainViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-09")
+    @CasDeRecette(value = "S1-09", portee = Portee.A_L_ECRAN)
     @DisplayName("#1376 : les compteurs suivent une mutation survenue SANS changement de vue")
     void bandeau_suit_une_mutation_sans_navigation(FxRobot robot) {
         FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
@@ -318,7 +319,7 @@ class MainViewTest {
     }
 
     @Test
-    @CasDeRecette("S1-03")
+    @CasDeRecette(value = "S1-03", portee = Portee.A_L_ECRAN)
     @DisplayName("#144 : Ctrl+F est actif sur le chrome et donne le focus au champ de recherche")
     void ctrl_f_active_la_recherche(FxRobot robot) {
         var ctrlF = new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN);

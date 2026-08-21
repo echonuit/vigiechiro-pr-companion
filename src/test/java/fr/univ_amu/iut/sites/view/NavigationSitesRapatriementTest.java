@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -118,7 +119,7 @@ class NavigationSitesRapatriementTest {
     }
 
     @Test
-    @CasDeRecette("S1-34")
+    @CasDeRecette(value = "S1-34", portee = Portee.A_L_ECRAN)
     @DisplayName("#4099 : récupérer un carré rafraîchit « Mes sites » et y rend compte, sans quitter l'écran")
     void le_rapatriement_rafraichit_mes_sites_et_y_rend_compte(FxRobot robot) {
         assertThat(titresDesCartes(robot))

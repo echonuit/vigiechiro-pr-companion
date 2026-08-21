@@ -147,7 +147,7 @@ class ReperesDeSeanceTest {
     static class SeanceExemple {
 
         @Test
-        @CasDeRecette("S1-02")
+        @CasDeRecette(value = "S1-02", portee = Portee.A_L_ECRAN)
         void avec_cas() {
             // Rien à faire : ce qui est éprouvé, c'est ce que l'extension écrit autour.
         }
@@ -163,7 +163,9 @@ class ReperesDeSeanceTest {
     static class SeanceMulticas {
 
         @Test
-        @CasDeRecette({"S1-04", "S1-26"})
+        @CasDeRecette(
+                value = {"S1-04", "S1-26"},
+                portee = Portee.A_L_ECRAN)
         void deux_cas() {
             // Rien à faire.
         }
