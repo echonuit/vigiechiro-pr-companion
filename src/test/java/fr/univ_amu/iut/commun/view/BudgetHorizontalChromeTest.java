@@ -85,14 +85,24 @@ class BudgetHorizontalChromeTest {
         // chaque verification, donc son verdict depend de la police reellement rendue (ADR 3773).
         // `ScenesHabilleesTest` l'a refuse des le premier passage en integration, a juste titre.
         scene = Habillage.scene(racine, LARGEURS_LIVREES[0], 720);
-        fenetre = stage;
-        stage.setScene(scene);
-        stage.show();
+        // ⚠️ Une fenêtre À SOI, et non celle du harnais. Ce banc dimensionne sa fenêtre à la main, et
+        // `setWidth` fait passer un Stage en dimensionnement EXPLICITE : il cesse définitivement de
+        // s'ajuster aux scènes qu'on lui pose ensuite. Le Stage du harnais TestFX est partagé par toutes
+        // les classes d'un même fork - figé ici, il faisait échouer les suivantes sur des noeuds
+        // « invisibles » (#4134). Reposer la largeur en sortie ne suffisait pas : la valeur revenait, le
+        // dimensionnement explicite restait.
+        fenetre = new Stage();
+        fenetre.initOwner(stage);
+        fenetre.setScene(scene);
+        fenetre.show();
     }
 
     @AfterEach
-    void nettoyerWorkspace() {
+    void nettoyerWorkspace(FxRobot robot) {
         System.clearProperty("vigiechiro.workspace");
+        // La fenêtre appartient à ce banc : elle se referme avec lui. Laissée ouverte, elle resterait
+        // dans les fenêtres que `lookup` parcourt, et les classes suivantes y trouveraient des noeuds.
+        robot.interact(fenetre::close);
     }
 
     @Test
@@ -140,15 +150,5 @@ class BudgetHorizontalChromeTest {
 
             verification.accept(largeur);
         }
-
-        // ⚠️ On REND la fenêtre telle qu'on l'a trouvée. TestFX réutilise la **fenêtre primaire** dans un
-        // fork unique : une largeur laissée à 900 rétrécit toutes les classes qui suivent, et le défaut
-        // ne se voit que dans l'ordre où elles passent après celle-ci. C'est ce que le job
-        // `ordre-alternatif` a attrapé - fork unique, ordre inverse - et il avait raison (#3960).
-        robot.interact(() -> fenetre.setWidth(LARGEURS_LIVREES[0]));
-        robot.interact(() -> {
-            scene.getRoot().applyCss();
-            scene.getRoot().layout();
-        });
     }
 }
