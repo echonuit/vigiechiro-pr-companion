@@ -47,13 +47,18 @@ class UrlSigneeAdmiseTest {
     }
 
     @Test
-    @DisplayName("Hôte inattendu : refusé, et le refus nomme l'hôte ET la propriété à poser")
+    @DisplayName("Hôte inattendu : refusé, et le refus nomme l'hôte ET le réglage à poser")
     void hote_inattendu_refuse() {
         Optional<String> motif = UrlSigneeAdmise.motifDeRefus("https://ailleurs.example/5f2b?sig=abc");
 
         assertThat(motif).isPresent();
         // Sans ces deux informations, un changement d'hébergement côté plateforme devient un mur.
-        assertThat(motif.orElseThrow()).contains("ailleurs.example").contains(PROPRIETE);
+        // ⚠️ Et le geste nommé doit être ATTEIGNABLE : le refus citait la propriété JVM, qu'un produit
+        // installé ne permet pas de poser (#4075). Il nomme désormais l'option de la ligne de commande.
+        assertThat(motif.orElseThrow())
+                .contains("ailleurs.example")
+                .contains("--reglage s3.hotes=")
+                .doesNotContain("-D");
     }
 
     @Test
