@@ -20,10 +20,23 @@ Cela dépend de la façon dont vous avez installé l'application.
 |---|---|
 | Paquet Debian ou Ubuntu (`.deb`) | `vigiechiro lister-passages` |
 | Windows (installeur `.msi` ou `winget`) | `vigiechiro lister-passages` |
-| Flatpak | `flatpak run fr.echonuit.VigieChiroCompanion lister-passages` |
+| Flatpak | `flatpak run fr.echonuit.VigieChiroCompanion lister-passages` (paquet 2.187.0 ou plus récent) |
 | AppImage | `./VigieChiroCompanion-<version>-linux-x86_64.AppImage lister-passages` |
 | Archive portable (Linux, Windows) | `bin/vigiechiro lister-passages` depuis le dossier décompressé |
 | macOS | `/Applications/VigieChiroCompanion.app/Contents/MacOS/vigiechiro lister-passages` |
+
+!!! warning "Sous Flatpak, il faut un paquet 2.187.0 ou plus récent"
+    Le paquet Flatpak est construit à partir d'une version publiée, et il ne monte pas de version à
+    chaque publication. Si `flatpak run fr.echonuit.VigieChiroCompanion lister-passages` **ouvre la
+    fenêtre** au lieu de répondre dans le terminal, c'est que votre paquet est antérieur : les
+    commandes lui sont alors inconnues et il les ignore.
+
+    ```bash
+    flatpak update --user fr.echonuit.VigieChiroCompanion
+    flatpak run fr.echonuit.VigieChiroCompanion --version
+    ```
+
+    La seconde ligne dit la version installée : à partir de 2.187.0, elle répond dans le terminal.
 
 !!! note "macOS demande le chemin complet"
     Sur macOS, l'application vit dans un « paquet » `.app` que le terminal ne connaît pas par son nom.

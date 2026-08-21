@@ -271,6 +271,37 @@ jobs:
           kill "$appli" 2>/dev/null || true
           echo "Le Flatpak démarre et ouvre une fenêtre « ${titre} », sans erreur."
 
+      - name: La ligne de commande du Flatpak répond-elle ? (#4071)
+        if: steps.diff.outputs.change == 'true' || inputs.forcer
+        # Le pas précédent atteste que le paquet OUVRE UNE FENÊTRE. Il ne dit rien de
+        # la ligne de commande, et c'est exactement le trou par lequel le défaut de
+        # #4071 est passé : un emballage peut très bien s'afficher et n'exposer AUCUNE
+        # des 66 commandes. Les autres emballages sont désormais interrogés par
+        # `verifie-demarrage-emballage.sh --cli` ; le Flatpak, lui, ne l'était pas.
+        #
+        # ⚠️ On interroge par le chemin de l'UTILISATEUR - `flatpak run <app-id>
+        # --version` - et non par `--command=`, qui court-circuite le script de
+        # lancement. C'est précisément ce script qui déclare le mot `ihm` et fait
+        # partir tout le reste vers la CLI : le contourner reviendrait à vérifier
+        # autre chose que ce qu'on livre.
+        #
+        # ⚠️ Et « rend 0 » ne suffit pas : un lanceur qui ouvrirait la fenêtre au lieu
+        # de répondre finirait aussi par rendre 0. On exige donc d'avoir LU la version.
+        run: |
+          set -euo pipefail
+          sortie=$(timeout 120 flatpak run "$APP_ID" --version 2>&1) || {
+            echo "::error::La ligne de commande du Flatpak ne répond pas à --version."
+            printf '%s\n' "$sortie" | sed -n '1,40p'
+            exit 1
+          }
+          printf '%s\n' "$sortie"
+          if ! printf '%s' "$sortie" | grep -q 'CLI'; then
+            echo "::error::Le Flatpak a rendu 0 sans écrire sa version : la ligne de commande n'est pas exposée."
+            echo "   Le manifeste extrait peut-être un .deb ANTÉRIEUR à #4071, dont le lanceur ignore ses arguments."
+            exit 1
+          fi
+          echo "La ligne de commande du Flatpak répond."
+
       # Dépôt Flatpak auto-hébergé : seul canal de distribution Flatpak du projet (#2111).
       #
       # Dormant tant que ENABLE_FLATPAK_REPO != 'true' OU que FLATPAK_DEPLOY_TOKEN

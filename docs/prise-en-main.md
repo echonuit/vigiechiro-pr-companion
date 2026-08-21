@@ -59,6 +59,11 @@ flatpak run fr.echonuit.VigieChiroCompanion
 flatpak update --user fr.echonuit.VigieChiroCompanion
 ```
 
+!!! tip "La même application répond aussi dans le terminal"
+    `flatpak run fr.echonuit.VigieChiroCompanion` ouvre la fenêtre ; suivi d'une commande, il
+    travaille sans elle. Voir [Ligne de commande](ligne-de-commande.md), qui donne l'invocation pour
+    chaque façon d'installer.
+
 !!! note "Un dépôt maison plutôt qu'un magasin d'applications tiers"
     Comme pour winget, seules les versions qui **apportent quelque chose à l'utilisateur** sont
     poussées sur ce dépôt - pas nécessairement la toute dernière de la page des Releases.
