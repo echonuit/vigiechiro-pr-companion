@@ -56,9 +56,24 @@ qui décide du moment, pas la durée.
 
 ## Ce que la décision NE couvre pas
 
-**`capture-vues.yml`**, qui produit les PNG d'aperçu et pose exactement la même question. Son coût et
-son usage n'ont pas été mesurés ici, et l'aligner par symétrie serait la supposition que ce chantier
-reproche à l'existant. À rouvrir avec une mesure.
+**`capture-vues.yml`**, qui produit les PNG d'aperçu.
+
+⚠️ **La première rédaction disait qu'il « pose exactement la même question ». C'est faux, et la mesure
+l'a dit le jour même** : il n'est pas manuel. Il tourne sur `push: main` **et** sur chaque
+`pull_request`, en cinq minutes, et publie ses aperçus par une PR auto-mergée. Le défaut que cette ADR
+corrige - un dispositif qui dépend d'un geste que rien ne réclame - ne l'atteint donc pas.
+
+Et son moment est **l'inverse** de celui retenu ici, à juste titre. Les deux ne se rangent pas de la
+même façon :
+
+| | Aperçus PNG | Clips |
+|---|---|---|
+| Où ils vivent | **committés dans le dépôt** | pièces jointes d'une pré-version **roulante**, hors git |
+| Ce qui les date | l'historique git, par construction | rien, sauf à le leur faire dire |
+| D'où le moment | à chaque commit, pour rester alignés sur le code | à la publication, pour montrer une **version** |
+
+Ce n'est donc pas une incohérence entre deux dispositifs voisins : un artefact versionné avec le code
+suit le code, un artefact publié à côté suit les versions.
 
 ## Conséquences
 
