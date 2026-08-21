@@ -94,7 +94,11 @@ d'architecture** qui structurent son code.
   version. Même sélection des versions poussées que pour winget.
 - **Lancement depuis les sources** : `./mvnw javafx:run` suffit dans un environnement Java 25.
 - **Mode CLI** (sans IHM) pour les opérations scriptables (import d'une nuit, export d'un CSV),
-  utilisable en automatisation et en CI.
+  utilisable en automatisation et en CI. Depuis un produit **installé**, la commande s'appelle
+  `vigiechiro` : c'est le même point d'entrée que la fenêtre, qui ouvre l'interface quand on lui donne
+  le mot `ihm` et répond en texte pour tout le reste. Ce qui la rendait inatteignable ailleurs que dans
+  un dépôt cloné a été levé par #4071 ; le détail des invocations, par emballage, vit dans la
+  documentation utilisateur.
 - **Un seul processus écrit à la fois** dans un dossier de travail. Lancer l'application une seconde
   fois sur le même dossier est **refusé**, avec le nom du processus qui occupe la place : deux
   fenêtres qui écrivent la même base la corrompent, et le défaut ne se verrait que bien plus tard. Le

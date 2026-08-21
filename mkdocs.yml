@@ -72,6 +72,7 @@ nav:
       - Diagnostic: ecrans/diagnostic.md
       - Audit de cohérence: ecrans/audit.md
       - Réglages: ecrans/reglages.md
+  - Ligne de commande: ligne-de-commande.md
   - Raccourcis clavier: raccourcis-clavier.md
   - Glossaire: glossaire.md
   - FAQ et dépannage: faq.md
