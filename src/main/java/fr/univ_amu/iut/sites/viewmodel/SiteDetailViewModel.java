@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.RegionDuCarre;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.viewmodel.CompteRenduEcran;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -81,6 +82,13 @@ public class SiteDetailViewModel {
     private final ReadOnlyObjectWrapper<StatutPlateforme> statutPlateforme =
             new ReadOnlyObjectWrapper<>(this, "statutPlateforme", StatutPlateforme.ABSENT);
 
+    /// Compte rendu de la dernière opération portée par la fiche, rendu par le **bandeau de retour**
+    /// de l'écran et non par une fenêtre (ADR 0023). Le rapatriement d'un carré y annonce ses points.
+    ///
+    /// À ne pas confondre avec le *bandeau d'infos* de la fiche ([#mettreAJourBandeau]), qui porte
+    /// l'identité du site et non le résultat d'une opération.
+    private final CompteRenduEcran compteRendu = new CompteRenduEcran();
+
     private final ObservableList<CartePoint> points = FXCollections.observableArrayList();
     private final ObservableList<LignePassage> passages = FXCollections.observableArrayList();
 
@@ -117,6 +125,11 @@ public class SiteDetailViewModel {
     /// que dans ce dernier cas).
     public ReadOnlyObjectProperty<StatutPlateforme> statutPlateformeProperty() {
         return statutPlateforme.getReadOnlyProperty();
+    }
+
+    /// Compte rendu de la fiche : ce que son bandeau affiche, et la commande qui l'efface.
+    public CompteRenduEcran compteRendu() {
+        return compteRendu;
     }
 
     /// URL de la page du site sur le portail Vigie-Chiro (#1124), vide tant que le site n’est pas

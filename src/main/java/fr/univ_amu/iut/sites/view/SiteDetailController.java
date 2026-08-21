@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.ColonneDate;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
@@ -25,6 +26,7 @@ import fr.univ_amu.iut.commun.view.SuitLaRevision;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.LignePassage;
@@ -46,6 +48,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
@@ -166,6 +169,17 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
     @FXML
     private Hyperlink lienPointsNonUtilises;
 
+    /// Bandeau de retour d'opération (ADR 0023) : le compte rendu d'un carré récupéré s'y affiche, au
+    /// lieu d'ouvrir une fenêtre. Câblé dans initialize sur la propriété du ViewModel.
+    @FXML
+    private HBox bandeauRetour;
+
+    @FXML
+    private Label lblRetour;
+
+    @FXML
+    private Button btnFermerRetour;
+
     @FXML
     private TableView<LignePassage> tablePassages;
 
@@ -221,6 +235,13 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
         viewModel.chargerSite(site);
     }
 
+    /// Porte un compte rendu au **bandeau** de la fiche (ADR 0023), appelée par [NavigationSites] quand
+    /// l'écran s'ouvre sur le résultat d'une opération : un carré rapatrié annonce ainsi ses points sans
+    /// qu'une fenêtre s'ouvre par-dessus la fiche (#4091).
+    void rendreCompte(RetourOperation compteRendu) {
+        viewModel.compteRendu().rendre(compteRendu);
+    }
+
     /// Le libellé de cet écran dans la pile de navigation, **dérivé du site courant** (#3672). Lu par
     /// [NavigationSites] à l'empilement, et re-lu après une modification : le numéro de carré est
     /// modifiable, et un libellé figé annoncerait un carré qui n'existe plus sous ce nom.
@@ -271,6 +292,14 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
 
     @FXML
     private void initialize() {
+
+        // Compte rendu d'opération au bandeau de l'écran (ADR 0023), et non dans une fenêtre qui bloque.
+        BandeauRetour.installer(
+                bandeauRetour,
+                lblRetour,
+                btnFermerRetour,
+                viewModel.compteRendu().retourProperty(),
+                viewModel.compteRendu()::effacer);
 
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
         TableDonnees.uniformiserNavigable(tablePassages);
