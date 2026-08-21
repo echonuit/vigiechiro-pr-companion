@@ -569,6 +569,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `mesure-duree-portail.sh` | l'**allongement** du portail qualité, médiane contre médiane | `maven.yml` - ⚠️ il **avertit**, il ne bloque pas (autotest : `lint.yml`) |
 | `lance-test-filme.sh` | un runner **pilote** un test filmé, et refuse de le lancer sans gestionnaire de fenêtres | `recette-filmee.yml` - ⚠️ workflow **manuel** |
 | `filtrer-bruit-cartes.sh` | rend leur version committée aux aperçus de carte dont **seul le fond** a changé | `capture-vues.yml` |
+| `compare-apercus.sh` | montre, sur une PR, les écrans qu'elle change : avant/après accolés, part de pixels, et le **dit** quand aucun ne change | `capture-vues.yml` |
 | `verifie-inventaires-ci.sh` | les trois inventaires que la CI tient **sur elle-même** concordent avec la réalité | `lint.yml` |
 | `scripts/adr/verifie_scripts.py` | les scripts cités par les ADR | `lint.yml` |
 
