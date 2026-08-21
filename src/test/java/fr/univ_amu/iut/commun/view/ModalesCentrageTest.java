@@ -10,6 +10,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -55,11 +56,24 @@ class ModalesCentrageTest {
 
     private Stage hote;
 
+    /// Ouvre l'hôte **à part**, propriétaire de la fenêtre du harnais.
+    ///
+    /// ⚠️ Ce banc prenait le Stage du harnais et le **déplaçait** en (120, 60) sans jamais l'y remettre.
+    /// Sans conséquence mesurée aujourd'hui - vérifié en rejouant `AppTest` derrière lui - mais l'écran
+    /// du banc headless fait 1000 x 1000 : une classe suivante qui pose une scène de 1180 px sur une
+    /// fenêtre décalée de 120 la verrait déborder, et chercherait la cause ailleurs. C'est la forme que
+    /// prennent tous les défauts de cette famille (#4145).
     @Start
     void start(Stage stage) {
-        hote = stage;
-        stage.setScene(Habillage.scene(new StackPane(), HOTE_LARGEUR, HOTE_HAUTEUR));
-        stage.show();
+        hote = new Stage();
+        hote.initOwner(stage);
+        hote.setScene(Habillage.scene(new StackPane(), HOTE_LARGEUR, HOTE_HAUTEUR));
+        hote.show();
+    }
+
+    @AfterEach
+    void refermerLHote(FxRobot robot) {
+        robot.interact(hote::close);
     }
 
     /// Pose l'hôte **et attend que ce soit fait**, avant d'ouvrir quoi que ce soit par-dessus.
