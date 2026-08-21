@@ -272,6 +272,31 @@ jobs:
           chmod +x .github/scripts/verifie-conditions-booleennes.sh
           ./.github/scripts/verifie-conditions-booleennes.sh --auto-test
           ./.github/scripts/verifie-conditions-booleennes.sh
+
+      - name: Les scripts shell passent shellcheck
+        # ⚠️ Les RÉGLAGES (exclusions) vivent dans `.shellcheckrc`, pas ici : un contributeur qui
+        # lance `shellcheck son-script.sh` doit voir la même chose que ce pas. Seul le SEUIL est un
+        # drapeau, parce que `severity=` n'est pas lu depuis le fichier de réglages - vérifié, et
+        # non supposé : les notes continuaient de sortir.
+        #
+        # `-S info` et non `warning` : au seuil warning, un `rm -f $fichiers` non quoté passait au
+        # vert. C'est un SC2086, donc une « info » - et c'est exactement la remarque qui a trouvé un
+        # vrai défaut dans `clips-orphelins.sh` (#4106). Un garde qui manquerait le défaut qui l'a
+        # fait naître ne garderait pas grand-chose.
+        #
+        # La divergence qui reste va dans le bon sens : à la main on voit PLUS (les trois notes de
+        # style), jamais moins. Personne ne peut se croire propre pendant que la CI rougirait.
+        run: |
+          set -euo pipefail
+          command -v shellcheck >/dev/null 2>&1 || {
+            echo "::error::shellcheck absent du runner : l'image a changé, il faut l'installer par la porte."
+            exit 1
+          }
+          mapfile -t scripts < <(
+            find . -path ./target -prune -o -path '*/node_modules/*' -prune -o -name '*.sh' -print | sort
+          )
+          echo "${#scripts[@]} script(s) analysé(s)."
+          shellcheck --shell=bash -S info "${scripts[@]}"
           chmod +x .github/scripts/clips-orphelins.sh
           ./.github/scripts/clips-orphelins.sh --auto-test
 
