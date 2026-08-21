@@ -56,12 +56,19 @@ auto_test() {
     echo "AUTO-TEST"
 
     essai() { # <nom> <clips tournés, séparés par des espaces> <liste en ligne> <sortie attendue>
-        local nom="$1" tournes="$2" enligne="$3" attendu="$4" obtenu code
+        local nom="$1" attendu="$4" obtenu code
+        local -a tournes enligne
+        # Découpage EXPLICITE : les deux listes arrivent en une chaîne, et s'appuyer sur le découpage
+        # implicite du shell rendrait le cas « liste vide » ambigu, celui-là même qui compte ici.
+        read -ra tournes <<< "$2"
+        read -ra enligne <<< "$3"
         rm -rf "$bac/clips"
         mkdir -p "$bac/clips"
         local clip
-        for clip in $tournes; do : > "$bac/clips/$clip"; done
-        obtenu=$(printf '%s\n' $enligne | orphelins "$bac/clips" 2>/dev/null)
+        for clip in "${tournes[@]}"; do
+            [ -n "$clip" ] && : > "$bac/clips/$clip"
+        done
+        obtenu=$(printf '%s\n' "${enligne[@]}" | orphelins "$bac/clips" 2>/dev/null)
         code=$?
         [ "$code" -eq 2 ] && obtenu="REFUS"
         total=$((total + 1))
