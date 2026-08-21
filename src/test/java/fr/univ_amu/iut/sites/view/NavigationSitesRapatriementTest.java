@@ -16,6 +16,8 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.commun.view.Habillage;
+import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -23,8 +25,8 @@ import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
 import javafx.scene.layout.HBox;
@@ -36,51 +38,54 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
-/// La **couture** entre la fenêtre de déclaration et la fiche du carré, quand un carré vient d'être
-/// récupéré (#3806), et le **véhicule** par lequel la fiche en rend compte (#4091).
+/// La **couture** entre la modale de déclaration et l'écran qui l'a ouverte, quand un carré vient
+/// d'être récupéré (#3806), et l'écran sur lequel ce geste **se conclut** (#4099).
 ///
 /// ## Ce que ce test existe pour empêcher
 ///
 /// [ModaleSiteVerifierCarreViewTest] s'arrête une étape plus tôt : il vérifie que l'appelant **reçoit**
-/// le carré rapatrié. Ce que l'appelant en fait - ouvrir la fiche, et y porter le compte rendu -
-/// n'était exercé nulle part. Mesuré à la clôture des suites de #3458 : le compte rendu retiré, **286
-/// tests restaient verts**. On pouvait donc supprimer la seule phrase qui explique à l'utilisateur d'où
-/// sortent les quarante et un points apparus sur sa fiche.
+/// le carré rapatrié. Ce que l'appelant en fait n'était exercé nulle part. Mesuré à la clôture des
+/// suites de #3458 : le compte rendu retiré, **286 tests restaient verts**. On pouvait donc supprimer
+/// la seule phrase qui explique à l'utilisateur d'où sortent les points apparus sur son écran.
 ///
-/// L'aperçu ne rattrapait pas ce trou non plus : `apercu-sites-carre-recupere.png` rend bien le
-/// composant de production, mais il construit son `Alert` lui-même, et resterait donc identique.
+/// ## Trois brins, et pourquoi il en faut trois
 ///
-/// ## Ce qu'il garde, et ce qu'il ne garde pas
+/// La modale s'ouvre depuis « Mes sites ». Le geste s'y conclut donc, liste rafraîchie et compte rendu
+/// au bandeau de cet écran (ADR 0023) - alors qu'il ouvrait la fiche du carré jusqu'à #4099.
 ///
-/// Le compte rendu s'affichait dans une **fenêtre séparée**, alors que l'[ADR 0023] réserve le modal à
-/// l'irréversible. Récupérer un carré ne détruit rien : le compte rendu va au bandeau de l'écran.
+/// Chacun des trois brins doit pouvoir rougir **seul**, parce que chacun garde une moitié différente
+/// du besoin :
 ///
-/// Le test l'exige **positivement** : le bandeau est là, et il porte le message. C'est ce qui le fait
-/// rougir des deux côtés du défaut - bandeau absent, et bandeau vide.
+/// 1. rester sur l'écran. Sans lui, on retomberait dans la navigation d'avant ;
+/// 2. voir le carré dans la liste. ⚠️ Ce brin ne garde **pas** un appel à `rafraichir()` : l'écran
+///    déclare [fr.univ_amu.iut.commun.view.SuitLaRevision], donc le socle le recharge de lui-même sur
+///    l'`insert`. Il garde que cet écran suit bien la révision - retirer le contrat le ferait rougir.
+///    C'est une mesure qui a corrigé une intention : la première version appelait `rafraichir()`, et le
+///    test est resté vert quand on l'a retiré ;
+/// 3. lire le compte rendu. Une liste rafraîchie **en silence** ferait paraître des points sans dire
+///    d'où ils viennent : c'est exactement le défaut que #3806 avait corrigé, et qu'un test des deux
+///    seuls premiers brins laisserait revenir au vert.
 ///
-/// Il ne vérifie **pas** qu'aucune fenêtre ne s'ouvre, et cette limite est délibérée. Le seul port par
-/// lequel cette classe pouvait ouvrir une fenêtre était son [fr.univ_amu.iut.commun.view.Notificateur]
-/// injecté, retiré avec le défaut : un double posé là ne serait plus atteint par rien, et l'assertion
-/// « il n'a pas été appelé » serait vraie sans rien vérifier. Une assertion qu'aucun changement ne peut
-/// faire rougir est pire qu'absente, puisqu'elle se lit comme une garde. Ce qui garde vraiment le
-/// remède est l'assertion du bandeau : y revenir par une fenêtre laisserait le bandeau vide, et le
-/// test rougirait là.
+/// ## Le nombre de points est compté, pas posé
+///
+/// Le carré reçoit de vrais points, et le résultat annonce **ce que la base contient**. Un scénario qui
+/// promet quarante et un points sur un site qui n'en a aucun rend un écran impossible - le clip de
+/// recette S1-37 le montrait, bandeau et liste se contredisant à l'image.
 ///
 /// ## Pourquoi la composition complète
 ///
-/// Les deux brins de la couture vivent dans [NavigationSites] : empiler la fiche, puis rendre compte. Le
-/// premier a besoin du vrai chrome (le fil d'Ariane est peuplé par le [Navigateur] du socle), et le
-/// second du vrai câblage d'injection. Un montage partiel prouverait le test, pas le produit.
+/// L'écran est monté pour de vrai, et le test appelle la **méthode que la modale reçoit**, prise sur le
+/// contrôleur en place. Rejouer ses gestes à côté ferait dériver le test de la production sans que rien
+/// ne rougisse.
 @ExtendWith(ApplicationExtension.class)
 class NavigationSitesRapatriementTest {
 
     private static final String ID_USER = "u-test";
     private static final String CARRE = "640380";
-    private static final int POINTS_POSES = 41;
 
     private Injector injector;
-    private Site carre;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -99,12 +104,10 @@ class NavigationSitesRapatriementTest {
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
-        carre = injector.getInstance(ServiceSites.class)
-                .creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
-        stage.setScene(new Scene(loader.load(), 1100, 720));
+        stage.setScene(Habillage.scene(loader.load(), 1100, 720));
         injector.getInstance(NavigationSites.class).ouvrirAccueil();
         stage.show();
     }
@@ -116,32 +119,69 @@ class NavigationSitesRapatriementTest {
 
     @Test
     @CasDeRecette("S1-34")
-    @DisplayName("#4091 : récupérer un carré ouvre SA fiche, et y rend compte au bandeau")
-    void le_rapatriement_ouvre_la_fiche_et_rend_compte(FxRobot robot) {
-        RapatriementCarre.Resultat.Rapatrie rapatrie = new RapatriementCarre.Resultat.Rapatrie(carre, POINTS_POSES);
+    @DisplayName("#4099 : récupérer un carré rafraîchit « Mes sites » et y rend compte, sans quitter l'écran")
+    void le_rapatriement_rafraichit_mes_sites_et_y_rend_compte(FxRobot robot) {
+        assertThat(titresDesCartes(robot))
+                .as("aucun carré déclaré au départ : c'est ce qui rend le rafraîchissement observable")
+                .isEmpty();
 
-        robot.interact(() -> injector.getInstance(NavigationSites.class).ouvrirDetailRapatrie(rapatrie));
+        AtomicReference<RapatriementCarre.Resultat.Rapatrie> resultat = new AtomicReference<>();
+        robot.interact(() -> {
+            resultat.set(rapatrierLeCarre());
+            ecranCourant().annoncerRapatriement(resultat.get());
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+        RapatriementCarre.Resultat.Rapatrie rapatrie = resultat.get();
 
-        // Premier brin : la fiche du carré est à l'écran, et le fil dit où l'on vient d'arriver.
+        // Premier brin : on ne quitte pas l'écran d'où la modale a été ouverte.
         assertThat(robot.lookup("#boutonImporterNuit").tryQuery())
-                .as("la fiche du carré récupéré s'est ouverte")
-                .isPresent();
+                .as("la fiche du carré ne s'ouvre pas")
+                .isEmpty();
         assertThat(segmentsDuFil(robot))
-                .as("le fil d'Ariane porte l'étape empilée")
-                .endsWith("Carré " + CARRE);
+                .as("le fil d'Ariane reste sur « Mes sites »")
+                .endsWith("Mes sites");
 
-        // Second brin : sans ce compte rendu, quarante et un points paraissent sans explication.
+        // Deuxième brin : la liste montre ce qui vient d'être récupéré.
+        assertThat(titresDesCartes(robot))
+                .as("l'écran suit la révision : le carré récupéré paraît dans la liste")
+                .anyMatch(titre -> titre.contains(CARRE));
+
+        // Troisième brin : sans compte rendu, ces points paraîtraient sans explication.
         HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
         assertThat(bandeau.isVisible())
-                .as("la fiche montre son bandeau de retour")
+                .as("l'écran montre son bandeau de retour")
                 .isTrue();
         assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText())
                 .as("le compte rendu nomme le carré et compte ses points")
                 .contains(CARRE)
-                .contains(String.valueOf(POINTS_POSES));
+                .contains(String.valueOf(rapatrie.points()));
         assertThat(bandeau.getStyleClass())
                 .as("un carré récupéré est une bonne nouvelle, pas un avertissement")
                 .contains("retour-succes");
+    }
+
+    /// Crée le carré et ses points, puis rend le résultat que la modale aurait produit - avec le nombre
+    /// de points **compté sur la base**, et non posé en dur.
+    private RapatriementCarre.Resultat.Rapatrie rapatrierLeCarre() {
+        ServiceSites service = injector.getInstance(ServiceSites.class);
+        Site carre = service.creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
+        service.ajouterPoint(carre.id(), "A1", 43.42, 5.11, "Près du grand chêne");
+        service.ajouterPoint(carre.id(), "B2", 43.43, 5.12, "Lisière de roselière");
+        return new RapatriementCarre.Resultat.Rapatrie(
+                carre, service.listerPoints(carre.id()).size());
+    }
+
+    /// Le contrôleur de l'écran **en place**, celui-là même dont la modale reçoit la méthode.
+    private MesSitesController ecranCourant() {
+        Object controleur =
+                injector.getInstance(Navigateur.class).historique().getLast().controleur();
+        return (MesSitesController) controleur;
+    }
+
+    private static List<String> titresDesCartes(FxRobot robot) {
+        return robot.lookup(".carte-titre").queryAllAs(Label.class).stream()
+                .map(Label::getText)
+                .toList();
     }
 
     /// Les libellés du fil, dans l'ordre, sur le modèle de `MainViewTest#fil_ariane_reflete_le_parcours`.

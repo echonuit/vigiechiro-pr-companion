@@ -285,7 +285,7 @@ La liste des carrés suivis, peuplée et à l'état initial.
 <th width="50%"></th>
 </tr>
 <tr>
-<td><a href="apercu-sites-carre-recupere.png"><img src="apercu-sites-carre-recupere.png" width="430" alt="Fiche du carré récupéré : son bandeau annonce le carré et le nombre de points positionnés"></a></td>
+<td><a href="apercu-sites-carre-recupere.png"><img src="apercu-sites-carre-recupere.png" width="430" alt="Mes sites après une récupération : le carré paraît dans la liste et le bandeau annonce ses points"></a></td>
 <td></td>
 </tr>
 </table>

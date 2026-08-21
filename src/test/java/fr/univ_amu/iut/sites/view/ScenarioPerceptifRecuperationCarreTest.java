@@ -23,9 +23,9 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.Notificateur;
-import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.recette.CasDeRecette;
@@ -43,8 +43,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -110,7 +110,6 @@ class ScenarioPerceptifRecuperationCarreTest {
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
 
     private Injector injector;
-    private Site siteExistant;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -129,8 +128,6 @@ class ScenarioPerceptifRecuperationCarreTest {
                                 .to(ExecuteurTacheAsynchrone.class)
                                 .in(Singleton.class);
                         bind(ClientVigieChiro.class).toInstance(client);
-                        bind(NotificateurModifiable.class)
-                                .toInstance(new NotificateurModifiable(new CompteRenduVisible()));
                     }
 
                     // ⚠️ QUALIFIÉ, et le qualifiant est recopié en toutes lettres.
@@ -153,7 +150,7 @@ class ScenarioPerceptifRecuperationCarreTest {
                                 if (Seance.filmee()) {
                                     dormir(RAPATRIEMENT_MS);
                                 }
-                                return new Resultat.Rapatrie(siteExistant, POINTS_POSES);
+                                return poserLeCarreEtSesPoints();
                             }
                         };
                     }
@@ -162,12 +159,12 @@ class ScenarioPerceptifRecuperationCarreTest {
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Observateur"));
-        siteExistant = injector.getInstance(ServiceSites.class)
-                .creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
-        stage.setScene(new Scene(loader.load(), 1100, 720));
+        // Habillage, et non `new Scene` : un clip monté sans lui porte la police de la MACHINE, alors
+        // que ce cas existe pour être REGARDÉ. Le scénario de connexion le faisait déjà.
+        stage.setScene(Habillage.scene(loader.load(), 1100, 720));
         injector.getInstance(NavigationSites.class).ouvrirAccueil();
         stage.show();
     }
@@ -180,7 +177,7 @@ class ScenarioPerceptifRecuperationCarreTest {
     @Test
     @CasDeRecette(value = "S1-37", jugement = Jugement.HUMAIN)
     @DisplayName("S1-37 · récupérer un carré : à regarder, comprend-on où l'on vient d'atterrir ?")
-    void la_recuperation_s_enchaine_jusqu_a_la_fiche(FxRobot robot) throws TimeoutException {
+    void la_recuperation_ramene_sur_mes_sites(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
 
         // ⚠️ Le bouton, et non l'appel. La version précédente ouvrait la modale par
@@ -206,21 +203,41 @@ class ScenarioPerceptifRecuperationCarreTest {
 
         robot.clickOn("#btnRecupererCarre");
 
-        // C'est ici que se joue le cas : la modale s'efface et la fiche paraît. Attendre la FICHE, et
-        // non la fermeture, garantit que le film porte les deux moments - donc leur passage.
+        // C'est ici que se joue le cas : la modale s'efface, l'écran d'où elle venait reste, et son
+        // bandeau dit ce qui vient d'être créé. Attendre le TEXTE du bandeau, et non sa présence :
+        // le noeud existe dès le chargement de l'écran, invisible et vide.
         WaitForAsyncUtils.waitFor(
                 10,
                 TimeUnit.SECONDS,
-                () -> robot.lookup("#boutonImporterNuit").tryQuery().isPresent());
-        // Le moment que ce cas existe pour montrer : la fiche vient de paraître, et c'est là qu'on
-        // juge si l'on comprend où l'on a atterri.
+                () -> robot.lookup("#lblRetour")
+                        .tryQueryAs(Label.class)
+                        .filter(libelle -> libelle.getText().contains(CARRE))
+                        .isPresent());
+        // Le moment que ce cas existe pour montrer : la liste vient de s'ouvrir sur le carré récupéré,
+        // et c'est là qu'on juge si l'on comprend ce qui s'est passé.
         Respiration.surLeMomentCle(robot);
 
-        assertThat(robot.lookup("#boutonImporterNuit").tryQuery())
+        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText())
                 .as("l'enchaînement est-il seulement allé jusqu'au bout ? Sans cette question, un"
                         + " scénario qui n'aurait rien déclenché rendrait un clip immobile que"
                         + " personne ne signalerait.")
-                .isPresent();
+                .contains(CARRE);
+    }
+
+    /// Écrit ce que la vraie récupération écrirait : le carré, puis ses points d'écoute.
+    ///
+    /// ⚠️ Le résultat annonce **ce que la base contient**, et non un nombre posé en dur. La version
+    /// précédente promettait quarante et un points sur un carré qui n'en avait aucun : le clip publié
+    /// montrait un bandeau et un écran qui se contredisaient, ce qu'aucun utilisateur ne pourrait voir.
+    private RapatriementCarre.Resultat.Rapatrie poserLeCarreEtSesPoints() {
+        ServiceSites service = injector.getInstance(ServiceSites.class);
+        Site carre = service.creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
+        service.ajouterPoint(carre.id(), "A1", 43.42, 5.11, "Près du grand chêne, à 30 m du chemin");
+        service.ajouterPoint(carre.id(), "B2", 43.43, 5.12, "Lisière de roselière");
+        service.ajouterPoint(carre.id(), "C3", 43.44, 5.13, "Bord de l'étang");
+        service.ajouterPoint(carre.id(), "D4", 43.45, 5.14, "Haie en limite de parcelle");
+        return new RapatriementCarre.Resultat.Rapatrie(
+                carre, service.listerPoints(carre.id()).size());
     }
 
     // ----------------------------------------------------------------------------------------

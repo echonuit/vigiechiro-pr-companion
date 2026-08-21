@@ -25,7 +25,7 @@ Rien ne sort du cadre avant que le bandeau d'état ait pris sa place.
 ### S1-37 · récupérer un carré
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifRecuperationCarreTest.la_recuperation_s_enchaine_jusqu_a_la_fiche.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifRecuperationCarreTest.la_recuperation_ramene_sur_mes_sites.mp4"></video>
 
 L'enchaînement « je récupère, la fenêtre se ferme, la fiche s'ouvre » paraît naturel.
 
