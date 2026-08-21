@@ -516,3 +516,48 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: gh release edit "${{ needs.release.outputs.tag }}" --draft=false
+
+  # Le Flatpak part AVEC le train, une fois la Release sortie du brouillon (#4103).
+  #
+  # ## Pourquoi il ne partait pas
+  #
+  # `flatpak.yml` était en déclenchement manuel, donc personne ne le lançait à la
+  # publication et le paquet retardait sur les releases - sans que rien ne le dise. Le
+  # 2026-08-21, le manifeste extrayait encore le `.deb` 2.185.0 alors que la 2.187.0
+  # était publiée : la ligne de commande livrée par #4071 n'existait pas dans le paquet
+  # installé, pendant que la documentation utilisateur l'annonçait.
+  #
+  # ⚠️ Le retard n'était pas le défaut, il en était le symptôme : un canal de
+  # distribution dépendait d'un geste que rien ne réclamait, et une publication réussie
+  # qui laisse le Flatpak où il était est un état parfaitement vert.
+  #
+  # ## Pourquoi `uses:` et non un `release: released` dans flatpak.yml
+  #
+  # Parce que ce dernier ne partirait JAMAIS : la Release est dé-brouillonnée juste
+  # au-dessus avec le `GITHUB_TOKEN`, et GitHub ne déclenche aucun workflow sur un
+  # événement produit par ce jeton. Un workflow APPELÉ n'est pas un événement - il
+  # s'exécute dans ce run-ci - donc l'obstacle ne s'applique pas. C'est le premier
+  # `workflow_call` du dépôt.
+  #
+  # ⚠️ `needs: publish`, et pas `installers` : le `flatpak-external-data-checker`
+  # interroge `releases/latest`, qui IGNORE les brouillons. Dépendre de l'étape qui
+  # téléverse les assets ne suffit donc pas ; il faut celle qui retire le brouillon.
+  #
+  # ⚠️ La condition NOMME l'état attendu (ADR 4079). Sans `!cancelled()` ni
+  # `needs.publish.result`, le « sauté » de `contournement-declare` se propagerait
+  # jusqu'ici, et le train rendrait vert en n'ayant rien publié - le défaut même que
+  # cette ADR a nommé.
+  #
+  # Un échec ici ne compromet pas la Release, déjà publiée : il rend visible, dans le
+  # run de publication, ce qui restait invisible tant que le geste était manuel.
+  flatpak:
+    needs: [release, publish]
+    if: >-
+      ${{ !cancelled()
+      && needs.publish.result == 'success' }}
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+    uses: ./.github/workflows/flatpak.yml
+    secrets: inherit

@@ -68,6 +68,28 @@ on:
         type: boolean
         default: false
 
+  # APPELÉ PAR LE TRAIN, après que la Release a cessé d'être un brouillon (#4103).
+  #
+  # ⚠️ `workflow_call` et non `release: released` : ce dernier ne partirait jamais, la
+  # Release étant dé-brouillonnée avec le `GITHUB_TOKEN`, et GitHub ne déclenche aucun
+  # workflow sur un événement produit par ce jeton. Un workflow APPELÉ, lui, n'est pas
+  # un événement : il s'exécute dans le run de l'appelant, donc rien n'a à être
+  # déclenché.
+  #
+  # ⚠️ Ce qui a changé depuis l'ADR 2744, qui avait tranché « rien à rebrancher » : le
+  # dépôt publiait alors 3 à 37 fois par jour, et le déclenchement automatique était
+  # réputé impossible. Le train hebdomadaire a réglé le premier point, `workflow_call`
+  # le second - et le coût de l'attente a été MESURÉ depuis : le manifeste extrayait
+  # encore le .deb 2.185.0 quand la 2.187.0 était publiée, si bien que la ligne de
+  # commande livrée par #4071 n'existait pas dans le paquet, pendant que la
+  # documentation l'annonçait.
+  workflow_call:
+    inputs:
+      forcer:
+        description: Construire et démarrer même sans montée de version
+        type: boolean
+        default: false
+
 permissions:
   contents: write
   pull-requests: write
