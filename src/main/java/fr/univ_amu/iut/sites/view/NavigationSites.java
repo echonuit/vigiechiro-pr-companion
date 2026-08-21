@@ -169,6 +169,7 @@ public class NavigationSites implements OuvrirSite {
     private void afficherModale(Window parent, Parent vue, String titreFenetre) {
         Stage modale = new Stage();
         modale.initOwner(parent);
+        Modales.centrerSur(modale, parent);
         modale.initModality(Modality.WINDOW_MODAL);
         modale.setTitle(titreFenetre);
         modale.setScene(Habillage.scene(vue));

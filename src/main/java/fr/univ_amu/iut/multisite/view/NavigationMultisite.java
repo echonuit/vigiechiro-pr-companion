@@ -72,6 +72,7 @@ public class NavigationMultisite implements OuvrirMultisite {
             controleur.demarrer(apresSucces);
             Stage modale = new Stage();
             modale.initOwner(parent);
+            Modales.centrerSur(modale, parent);
             modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Compléter une nuit récupérée");
             modale.setScene(Habillage.scene(vue));
