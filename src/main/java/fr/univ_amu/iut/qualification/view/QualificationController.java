@@ -15,7 +15,9 @@ import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
+import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
@@ -93,7 +95,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// Compte rendu d'action (#1404) : rend compte de la régénération de la sélection (« Sélection
     /// régénérée : 18 séquences… », #1509). Porteur injectable, jumeau du confirmateur ; un double
     /// capturant en test (un `Alert` figerait le headless).
-    private final NotificateurModifiable notificateur = new NotificateurModifiable();
+    private final NotificateurModifiable notificateur =
+            new NotificateurModifiable(new NotificationDialogue(() -> Modales.fenetreDe(this.racine)));
 
     @FXML
     private StackPane hoteOccupation;

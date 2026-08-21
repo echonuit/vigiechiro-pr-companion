@@ -12,7 +12,9 @@ import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
+import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
@@ -108,7 +110,8 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// Porteur de compte rendu de l'écran : le pendant du confirmateur pour ce qui est **dit** après
     /// l'action. Exposé aux tests (`notificateur().definir(double)`), sans quoi le `showAndWait` du
     /// dialogue figerait TestFX headless - et le clic sur « Réactiver » resterait à jamais non testé.
-    private final NotificateurModifiable notificateur = new NotificateurModifiable();
+    private final NotificateurModifiable notificateur =
+            new NotificateurModifiable(new NotificationDialogue(() -> Modales.fenetreDe(this.racine)));
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
     ConfirmateurModifiable confirmateur() {

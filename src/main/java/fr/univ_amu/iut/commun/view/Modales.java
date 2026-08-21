@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import java.util.Objects;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
+import javafx.scene.Node;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
@@ -24,14 +25,23 @@ public final class Modales {
 
     private Modales() {}
 
-    /// Installe la fermeture par la touche **Échap** sur une fenêtre modale.
+    /// La fenêtre qui porte `noeud`, ou `null` tant qu'il n'est attaché à aucune scène.
     ///
-    /// Le gestionnaire est posé sur le Stage (phase de **bulle**) : il ne se déclenche que si aucun
-    /// nœud focalisé n'a consommé la touche avant (une liste déroulante ouverte, par exemple, ferme
-    /// d'abord sa popup avec Échap sans fermer la modale). Sans consommation, Échap ferme la fenêtre,
-    /// exactement comme le bouton « Annuler ».
+    /// C'est le propriétaire à donner à une modale, et le calcul était recopié dans chaque écran qui en
+    /// ouvre une. Il est ici nommé une fois, avec sa **garde** : appeler `getScene().getWindow()` sur un
+    /// noeud pas encore attaché lève une `NullPointerException`, ce qui a poussé plusieurs écrans à
+    /// renoncer purement et simplement au propriétaire.
     ///
-    /// @param modale la fenêtre modale à équiper (doit déjà porter une scène)
+    /// ⚠️ Rendre `null` est un résultat **normal**, pas un échec : l'écran peut ne pas encore être
+    /// affiché quand on construit son notificateur. C'est pourquoi le propriétaire se demande **au
+    /// moment d'ouvrir**, par un `Supplier`, et non une fois pour toutes à la construction.
+    public static Window fenetreDe(Node noeud) {
+        if (noeud == null || noeud.getScene() == null) {
+            return null;
+        }
+        return noeud.getScene().getWindow();
+    }
+
     /// Pose `modale` au centre de son propriétaire, une fois qu'elle connaît sa taille.
     ///
     /// ## Pourquoi le produit place lui-même ses modales
@@ -51,6 +61,15 @@ public final class Modales {
     /// ⚠️ Au `setOnShown`, et non avant `show()`. Avant l'affichage, `getWidth()` rend `NaN` : la
     /// scène n'a pas été mesurée, et centrer sur une largeur inconnue pose la fenêtre n'importe où
     /// sans rien signaler.
+    ///
+    /// ## Ce que cette méthode ne couvre pas
+    ///
+    /// Elle ne vaut que pour un [Stage]. Un [javafx.scene.control.Dialog] n'en est pas un, et n'en a
+    /// pas besoin : `ModalesCentrageTest` mesure que JavaFX le centre lui-même sur son propriétaire.
+    /// Ce qui manque parfois à un dialogue, c'est le **propriétaire** (#4092).
+    ///
+    /// ⚠️ `setOnShown` n'admet **qu'un seul** gestionnaire : cet appel remplace celui qui aurait été
+    /// posé avant lui.
     public static void centrerSur(Stage modale, Window proprietaire) {
         Objects.requireNonNull(modale, "modale");
         if (proprietaire == null) {
@@ -67,6 +86,14 @@ public final class Modales {
         });
     }
 
+    /// Installe la fermeture par la touche **Échap** sur une fenêtre modale.
+    ///
+    /// Le gestionnaire est posé sur le Stage (phase de **bulle**) : il ne se déclenche que si aucun
+    /// nœud focalisé n'a consommé la touche avant (une liste déroulante ouverte, par exemple, ferme
+    /// d'abord sa popup avec Échap sans fermer la modale). Sans consommation, Échap ferme la fenêtre,
+    /// exactement comme le bouton « Annuler ».
+    ///
+    /// @param modale la fenêtre modale à équiper (doit déjà porter une scène)
     public static void fermerParEchap(Stage modale) {
         Objects.requireNonNull(modale, "modale");
         modale.addEventHandler(KeyEvent.KEY_PRESSED, evenement -> {

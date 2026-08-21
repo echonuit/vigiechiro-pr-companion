@@ -57,7 +57,7 @@ class NotificationDialogueTest {
 
     private static Alert fabriquer(FxRobot robot, NiveauNotification niveau, String entete, String message) {
         AtomicReference<Alert> rendu = new AtomicReference<>();
-        robot.interact(() -> rendu.set(new NotificationDialogue().dialogue(niveau, entete, message)));
+        robot.interact(() -> rendu.set(NotificationDialogue.sansProprietaire().dialogue(niveau, entete, message)));
         return rendu.get();
     }
 }

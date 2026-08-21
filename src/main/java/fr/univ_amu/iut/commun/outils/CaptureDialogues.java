@@ -158,7 +158,7 @@ public final class CaptureDialogues {
     /// Rend le dialogue **de production** du port de compte rendu ([NotificationDialogue#dialogue]),
     /// sans l'ouvrir.
     private static void enregistrerCompteRendu(NiveauNotification niveau, String entete, String message, Path fichier) {
-        Alert alerte = new NotificationDialogue().dialogue(niveau, entete, ApercuFx.enrouler(message));
+        Alert alerte = NotificationDialogue.sansProprietaire().dialogue(niveau, entete, ApercuFx.enrouler(message));
         alerte.getDialogPane().setPrefWidth(620);
         ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), fichier);
         System.out.println(TRACE + fichier.toAbsolutePath());

@@ -18,9 +18,18 @@ public final class NotificationDialogue implements Notificateur {
     /// s'affiche alors sans propriétaire, ce que JavaFX accepte.
     private final Supplier<Window> fenetre;
 
-    /// Dialogue sans propriétaire déclaré.
-    public NotificationDialogue() {
-        this(() -> null);
+    /// Dialogue **sans propriétaire**, réservé à ce qui *rend* un panneau sans jamais l'afficher :
+    /// [#dialogue] et les outils d'aperçu.
+    ///
+    /// ⚠️ Ne pas s'en servir pour [#notifier] : une fenêtre sans propriétaire est posée par le bureau
+    /// où il l'entend. Sur l'intégration continue, cela l'a mise dans le coin haut-gauche, barre de
+    /// titre hors champ (#4092) ; sur un poste, c'est au petit bonheur du gestionnaire de fenêtres.
+    /// Un dialogue **qui s'affiche** nomme son propriétaire, par le constructeur à `Supplier`.
+    ///
+    /// La fabrique remplace un constructeur sans argument, dont le nom ne disait pas ce qu'il
+    /// abandonnait : cinq écrans l'avaient pris pour le cas ordinaire.
+    public static NotificationDialogue sansProprietaire() {
+        return new NotificationDialogue(() -> null);
     }
 
     public NotificationDialogue(Supplier<Window> fenetre) {
