@@ -548,7 +548,10 @@ class TransportVigieChiroTest {
         assertThat(reponse).isInstanceOf(ReponseApi.Refuse.class);
         assertThat(((ReponseApi.Refuse<String>) reponse).corps())
                 .contains("/donnees")
-                .contains("-Dvigiechiro.reseau.corps.max-octets=");
+                // ⚠️ Même bascule que pour les archives (#4075) : un refus ne conseille que ce que
+                // l'utilisateur peut faire là où il est, et `-D` n'existe pas dans un produit installé.
+                .contains("--reglage reseau.corps.max-octets=")
+                .doesNotContain("-D");
         assertThat(attentes)
                 .as("une réponse trop grosse le restera : il n'y a rien à rejouer")
                 .isEmpty();

@@ -203,6 +203,36 @@ globale `--workspace <dir>` est consommée par `main()` **avant** de bâtir l'in
 la propriété système `vigiechiro.workspace`, lue par `CommunModule`). Sans elle, le workspace par
 défaut est `<Documents>/VigieChiro-Companion`.
 
+### Relever une borne : `--reglage <cle>=<valeur>` (#4075)
+
+Sept bornes protègent la lecture d'une entrée externe : taille d'un fichier de la carte, corps d'une
+réponse, contenu d'une archive, hôtes admis pour un lien signé. Elles se surchargeaient **par propriété
+JVM**, et trois refus le conseillaient : « relancez avec `-Dvigiechiro.…` ».
+
+⚠️ **Ce conseil était inapplicable pour qui installe le produit.** Le lanceur jpackage passe ses
+arguments à `main`, jamais à la machine virtuelle : `-D` n'y existe pas. La seule issue chez
+l'utilisateur était de renoncer au fichier, ce que le doc-comment de `PlafondLecture` voulait
+précisément éviter.
+
+L'option est répétable, consommée par `main()` **avant** l'injecteur - même trajet que `--workspace`,
+et pour la même raison : les bornes sont lues à la construction des services.
+
+```bash
+vigiechiro --reglage import.zip.max-entrees=5000 importer --point 12 --source /media/moi/CARTE
+```
+
+Les clés vivent dans le registre `CleDeReglage`, et **rien d'autre ne les liste** : une clé inconnue
+nomme celles qui existent, ce qui met la liste là où on en a besoin. Le registre est aussi ce qui rend
+l'option sûre - elle écrit une propriété système, donc sans lui elle en écrirait n'importe laquelle, y
+compris celles de la plateforme.
+
+!!! note "Ce que cette option ne fait pas"
+    Elle ne rend pas ces bornes **réglables** : il n'y a toujours pas d'entrée dans l'écran Réglages,
+    et cette décision tient - un naturaliste n'a pas à choisir une taille de corps de réponse. Ce qui
+    change est qu'une limite atteinte **nomme une porte de sortie qui existe** là où l'utilisateur se
+    trouve. Le message est le même à l'écran et au terminal : la ligne de commande est le seul endroit
+    où ces bornes se relèvent, et inventer une consigne propre à l'écran promettrait un geste absent.
+
 ### Le dossier de travail est réservé pendant l'écriture (#3498)
 
 L'application graphique **réserve** le dossier de travail pour toute sa durée (`VerrouWorkspace`,

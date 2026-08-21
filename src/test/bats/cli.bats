@@ -336,10 +336,9 @@ echappement() { printf '\033'; }
   # derriere l IHM. On abaisse la borne d entrees plutot que de fabriquer une bombe - ce qu on eprouve
   # est le CHEMIN du refus jusqu au code de sortie du processus.
   #
-  # La borne s abaisse par propriete JVM, et le lanceur empaquete n en accepte aucune : ce cas est donc
-  # le seul de la suite qui ne peut s eprouver que sur le fat-jar (#4075). Il le DIT, plutot que de
-  # rendre un vert qui n aurait rien traverse.
-  exige_le_fat_jar "borne JVM : le lanceur empaquete n accepte pas d option JVM, ce cas s eprouve sur le fat-jar (#4075)"
+  # La borne s abaisse par `--reglage`, l option globale que #4075 a posee : ce cas etait le SEUL de la
+  # suite a ne pas pouvoir s eprouver sur le lanceur, faute de porte pour relever une borne ailleurs
+  # que dans un depot clone. Il la traverse maintenant comme les 110 autres.
   command -v python3 >/dev/null 2>&1 || skip "python3 requis pour fabriquer le WAV et l archive"
 
   local sd="${BATS_TEST_TMPDIR}/sd"
@@ -351,7 +350,7 @@ echappement() { printf '\033'; }
   site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
   point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
 
-  run cli_avec_option_jvm -Dvigiechiro.import.zip.max-entrees=1 \
+  run cli --reglage import.zip.max-entrees=1 \
     importer --point "${point}" --source "${BATS_TEST_TMPDIR}/carte.zip"
   [ "${status}" -eq 2 ]
   [[ "${output}" == *"Archive zip refus"* ]]
