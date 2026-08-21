@@ -8,7 +8,7 @@ publication.
 | Workflow | Déclencheur | Rôle | Bloque la PR ? |
 |---|---|---|---|
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `build` | push `main` + PR | « Java CI » : `./mvnw -B verify -Djacoco.haltOnFailure=true` (compilation + tous les tests dont ArchUnit + **seuils de couverture JaCoCo bloquants** + **hygiène des dépendances**, `dependency:analyze-only` avec `failOnWarning`) | **Oui** |
-| [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `paquet` | push `main` + PR | Assemblage du fat-jar (`package -DskipTests`) puis smoke-test, **E2E CLI bats** et idempotence du packaging. **En parallèle** de `build` | **Oui** |
+| [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `paquet` | push `main` + PR | Assemblage du fat-jar (`package -DskipTests`), smoke-test, idempotence, app-image, puis **E2E CLI bats sur le lanceur empaqueté**. **En parallèle** de `build` | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `second-compilateur` | push `main` + PR | Recompile **tout** avec le compilateur **Eclipse** (`-Pecj`), sans les tests : ce que `javac` accepte, un autre compilateur conforme ne l'accepte pas forcément (cf. plus bas). **En parallèle** des deux autres | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `fuseau-alternatif` | push `main` + PR | Rejoue **toute** la suite sous `America/Cayenne` : *ce que le produit calcule pour une nuit ne dépend pas du fuseau de la machine* ([ADR 3450](decisions/3450-une-propriete-de-fuseau-se-tient-en-rejouant-pas-en-relisant.md)). `TZ` passe par l'**environnement**, hérité des forks surefire, et `FuseauDExecutionTest` vérifie depuis l'intérieur que la zone est bien appliquée | **Oui** |
 | [maven.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `duree-du-portail` | push `main` + PR | Compare la **médiane** des 12 dernières exécutions réussies sur `main` à celle des 12 d'avant, et **avertit** au-delà de 20 % d'écart. Une CI riche se dégrade par accumulation, jamais d'un coup : chaque ajout coûte trente secondes que personne ne remarque. ⚠️ Deux **médianes**, et non une exécution contre un seuil : sur trente exécutions, deux durent le double des autres, et un butoir aurait rougi sans qu'aucune PR soit fautive (#3508) | Non - il avertit |
@@ -89,20 +89,27 @@ série**, soit ~10 min avant le moindre verdict. Le second, plus gênant, était
 fausse** : les étapes de packaging ne s'exécutaient qu'après le succès des tests, donc une suite rouge
 **masquait** l'état du packaging, qu'on n'apprenait qu'au tour suivant.
 
-Or ces étapes ne dépendent que de l'**assemblage** : `package -DskipTests` suffit (~20 s en local, et
-les <!--inv:tests-bats-->111<!--/inv--> tests bats passent sur ce seul artefact). D'où la séparation :
+Or ces étapes ne dépendent pas de la suite de tests, mais de ce qu'on **emballe** : un
+`package -DskipTests` (~20 s en local) puis l'app-image que le job construit déjà. D'où la séparation :
 
 | Job | Ce dont il dépend | Ce qu'il prouve |
 |---|---|---|
 | `build` | la suite de tests | le comportement, et la couverture au seuil |
-| `paquet` | l'assemblage du fat-jar | que le jar **démarre**, que la CLI répond, que le shade est idempotent |
+| `paquet` | l'assemblage, puis l'app-image | que le jar **démarre**, que la CLI répond **depuis le lanceur livré**, que le shade est idempotent |
+
+⚠️ Les <!--inv:tests-bats-->111<!--/inv--> tests bats visaient le fat-jar par `java -cp` jusqu'à #4071,
+c'est-à-dire un chemin qu'**aucun utilisateur n'emprunte**. Ils visent désormais `bin/vigiechiro` de
+l'app-image construite au-dessus, donc le runtime jlink réellement livré. Ils viennent pour cette
+raison **après** le garde-fou app-image, et non plus juste après le `package` - sans que rien ne change
+de job ni de coût, l'app-image étant déjà bâtie là. Le fat-jar, lui, reste éprouvé par le smoke-test
+qui le lance et lit son usage.
 
 Les deux tournent **en parallèle** et rendent leur verdict indépendamment : le chemin critique se
 ramène au plus long des deux, et un packaging cassé rougit même quand les tests échouent.
 
 !!! warning "Ce qui ne gagne rien à être optimisé"
     L'installation d'`apt`/`bats` coûte **9 s**, pas davantage : c'est vérifié. Le reste du harnais,
-    ce sont **les tests eux-mêmes**, qui lancent chacun un JVM sur le fat-jar. Chercher un cache apt
+    ce sont **les tests eux-mêmes**, qui lancent chacun un processus complet. Chercher un cache apt
     ici ne rapporte rien - l'hypothèse a été faite, mesurée, et démentie.
 
 ## La release (semantic-release + jpackage)

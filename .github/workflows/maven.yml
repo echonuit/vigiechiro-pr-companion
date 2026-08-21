@@ -5,9 +5,13 @@
 # - `build`  : compilation, suite de tests, seuil de couverture JaCoCo bloquant. C'est la seule
 #              exécution des tests en CI ; lint.yml ne fait que l'analyse statique (Spotless,
 #              captures, PMD).
-# - `paquet` : tout ce qui ne dépend que de l'ASSEMBLAGE du fat-jar - smoke-test, E2E CLI bats,
-#              idempotence du packaging. Ces étapes n'ont pas besoin de la suite de tests ni de la
-#              couverture, seulement d'un `package`.
+# - `paquet` : tout ce qui dépend de ce qu'on EMBALLE et non de ce qu'on teste - smoke-test du
+#              fat-jar, idempotence du packaging, app-image, puis les E2E CLI `bats`. Ces étapes n'ont
+#              besoin ni de la suite de tests ni de la couverture.
+#              ⚠️ Les E2E viennent APRÈS l'app-image depuis #4071, parce qu'ils visent désormais son
+#              lanceur `bin/vigiechiro` et non plus `java -cp <fat-jar>` : ils n'attendent donc plus un
+#              simple `package`. Rien n'a changé de job pour autant - l'app-image était déjà construite
+#              ici, et le coût est le même.
 #
 # Pourquoi les séparer. Elles étaient auparavant quatre étapes à la file dans un seul job, ce qui
 # avait deux coûts. Le premier, mesuré sur le run 29728409116 : 449 s de tests + 148 s de bats + 9 s
@@ -273,24 +277,6 @@ jobs:
           java --enable-native-access=ALL-UNNAMED -cp "$jar" fr.univ_amu.iut.cli.Cli --help | tee sortie-smoke.txt
           grep -q "Usage: vigiechiro" sortie-smoke.txt
 
-      - name: Installer bats
-        # ⚠️ Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
-        # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
-        # `installer-paquets.sh`, dont le post-install fait foi.
-        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
-        with:
-          packages: bats
-          version: vigiechiro-1
-
-      - name: E2E CLI (bats) sur le fat-jar
-        # Tests bout-en-bout au niveau SHELL sur le jar shadé : arguments picocli, codes de sortie et
-        # refus métier d'un VRAI processus - ce que les tests Java in-process (CliTest & co.) ne voient
-        # pas. Amorce du harnais (#1572, chantier #1565) ; couverture complète cadrée en suite.
-        run: |
-          set -euo pipefail
-          export VIGIECHIRO_JAR=$(ls target/vigiechiro-*-shaded.jar | head -1)
-          bats src/test/bats
-
       - name: Idempotence du packaging (2e build sans clean)
         # Le packaging doit être reproductible : un 2e `package` SANS `clean` ne doit pas re-shader le
         # fat-jar. Garde-fou contre une régression de la séparation thin/fat (#1188/#1189) : sans elle,
@@ -323,7 +309,37 @@ jobs:
             -Djpackage.appVersion=0.0.0 -Dapp.version=0.0.0 \
             -DskipTests -Dpmd.skip=true -Djacoco.skip=true verify
           test -x target/dist/VigieChiroCompanion/bin/VigieChiroCompanion
+          test -x target/dist/VigieChiroCompanion/bin/vigiechiro
           echo "app-image construite : $(ls -d target/dist/VigieChiroCompanion)"
+
+      - name: Installer bats
+        # ⚠️ Cache de l'état INSTALLÉ, pas des `.deb` : il saute aussi le dépaquetage. Convient ici
+        # parce que ces paquets ne sont que des fichiers ; les polices et flatpak gardent
+        # `installer-paquets.sh`, dont le post-install fait foi.
+        uses: awalsh128/cache-apt-pkgs-action@553a35bb8ebd9fcabcb1c9451aa4c98e1b4ca8a9 # v1.6.3
+        with:
+          packages: bats
+          version: vigiechiro-1
+
+      - name: E2E CLI (bats) sur le LANCEUR empaqueté (#4071)
+        # Tests bout-en-bout au niveau SHELL : arguments picocli, codes de sortie et refus métier d'un
+        # VRAI processus - ce que les tests Java in-process (CliTest & co.) ne voient pas. Amorce du
+        # harnais (#1572, chantier #1565).
+        #
+        # ⚠️ Ils visaient `java -cp <fat-jar> …cli.Cli`, c'est-à-dire un chemin qu'AUCUN utilisateur
+        # n'emprunte : les 66 commandes étaient éprouvées à côté de la porte par laquelle on entre. Ils
+        # visent maintenant le lanceur de l'app-image construite juste au-dessus, donc le runtime jlink
+        # réellement livré - celui où #2299 avait laissé partir un paquet incapable de démarrer.
+        #
+        # C'est pour cela que cette étape a été déplacée APRÈS le garde-fou app-image : elle a besoin de
+        # ce qu'il produit. Rien n'a changé de job ni de coût - l'app-image était déjà construite ici.
+        #
+        # Le fat-jar reste éprouvé par le smoke-test plus haut, qui le lance et vérifie son usage.
+        run: |
+          set -euo pipefail
+          export VIGIECHIRO_LANCEUR="${PWD}/target/dist/VigieChiroCompanion/bin/vigiechiro"
+          test -x "${VIGIECHIRO_LANCEUR}"
+          bats src/test/bats
 
       - name: Démarrage réel du paquet (runtime jlink, #2299)
         # Le pas précédent vérifiait que le lanceur EXISTE. Il ne l'exécutait pas, et c'est très
@@ -346,7 +362,8 @@ jobs:
           chmod +x .github/scripts/verifie-demarrage-emballage.sh
           ./.github/scripts/verifie-demarrage-emballage.sh \
             target/dist/VigieChiroCompanion/bin/VigieChiroCompanion \
-            --secondes 45 --libelle "app-image (runtime jlink)"
+            --secondes 45 --libelle "app-image (runtime jlink)" \
+            --cli target/dist/VigieChiroCompanion/bin/vigiechiro
 
       - name: L'archive portable survit-elle à son emballage ? (#3617)
         # L'app-image ci-dessus démarre : c'est la CHARGE UTILE. L'archive portable en est
@@ -362,7 +379,8 @@ jobs:
           tar -xzf "$bac/portable.tar.gz" -C "$bac"
           ./.github/scripts/verifie-demarrage-emballage.sh \
             "$bac/VigieChiroCompanion/bin/VigieChiroCompanion" \
-            --secondes 30 --libelle "archive portable (tar.gz ré-extraite)"
+            --secondes 30 --libelle "archive portable (tar.gz ré-extraite)" \
+            --cli "$bac/VigieChiroCompanion/bin/vigiechiro"
           rm -rf "$bac"
 
   # Surveille l'ALLONGEMENT du portail, que rien ne mesurait (#3508). Il AVERTIT, il ne bloque pas :

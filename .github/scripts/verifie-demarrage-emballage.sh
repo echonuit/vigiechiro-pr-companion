@@ -95,6 +95,50 @@ verifier_le_demarrage() {
   return 0
 }
 
+### Le lanceur de ligne de commande de l'emballage répond-il ? Rend 0 s'il rend sa version en code 0.
+###
+### ⚠️ Un emballage peut ouvrir sa fenêtre et n'exposer AUCUNE commande : c'est l'état dans lequel le
+### produit a vécu jusqu'à #4071, et rien ici ne pouvait le dire - le contrôle du dessus n'ouvre que le
+### lanceur graphique. On demande donc sa version au lanceur CLI, seule invocation qui ne touche ni la
+### base, ni le réseau, ni le dossier de travail.
+verifier_la_ligne_de_commande() {
+  local cli="$1" libelle="$2"
+
+  if [ ! -e "$cli" ]; then
+    echo "::error::${libelle} : l'emballage n'expose aucun lanceur de ligne de commande ($cli)."
+    echo "   La fenêtre s'ouvre, mais aucune des commandes n'est atteignable : c'est exactement ce que"
+    echo "   #4071 a corrigé, et ce contrôle est là pour que ça ne revienne pas en silence."
+    return 1
+  fi
+
+  if [ ! -x "$cli" ]; then
+    echo "::error::${libelle} : le lanceur de ligne de commande a perdu son bit exécutable."
+    echo "   $(ls -l "$cli")"
+    return 1
+  fi
+
+  local sortie code=0
+  sortie=$("$cli" --version 2>&1) || code=$?
+
+  if [ "$code" != 0 ]; then
+    echo "::error::${libelle} : le lanceur de ligne de commande rend ${code} au lieu de sa version."
+    printf '%s\n' "$sortie" | sed -n '1,20p'
+    return 1
+  fi
+
+  # ⚠️ Le cas qui justifie ce contrôle plutôt qu'un simple `$?`. Un lanceur bâti en sous-système
+  # graphique n'écrit NULLE PART et rend 0 : sa panne est indiscernable d'un succès pour qui ne
+  # regarde que le code de sortie. On exige donc d'avoir lu quelque chose.
+  if [ -z "$(printf '%s' "$sortie" | tr -d '[:space:]')" ]; then
+    echo "::error::${libelle} : le lanceur de ligne de commande rend 0 mais n'écrit RIEN."
+    echo "   Un lanceur sans console se comporte exactement ainsi ; le vert serait creux."
+    return 1
+  fi
+
+  echo "${libelle} : la ligne de commande répond (${sortie%%$'\n'*})."
+  return 0
+}
+
 # ---------------------------------------------------------------------------------------------
 # Auto-test, hors ligne : des faux lanceurs, pour éprouver les quatre issues sans construire
 # d'app-image. Les cas rouges se vérifient sur leur MESSAGE, un `exit 1` pouvant venir du script.
@@ -146,8 +190,47 @@ if [ "${1:-}" = "--auto-test" ]; then
     echecs=1
   fi
 
+  # La ligne de commande de l'emballage (#4071) : quatre cas, dont le seul qui compte vraiment - un
+  # lanceur qui rend 0 SANS RIEN ÉCRIRE, c'est-à-dire une panne déguisée en succès.
+  faux cli_repond 'echo "VigieChiro - compagnon PR (CLI) 9.9.9"'
+  faux cli_muet   'exit 0'
+  faux cli_casse  'echo "boum" >&2; exit 1'
+
+  verifie_cli() { # <attendu> <fragment attendu> <libellé> <faux lanceur CLI>
+    local sortie code=0
+    sortie=$( "$MOI" "$bac/tient" --secondes 2 --libelle "essai" --cli "$bac/$4" 2>&1 ) || code=$?
+    if [ "$code" != "$1" ]; then
+      echo "  ✘ $3 : attendu $1, obtenu $code"
+      printf '%s\n' "$sortie" | sed 's/^/      /'
+      echecs=1
+      return
+    fi
+    if ! printf '%s' "$sortie" | grep -qF "$2"; then
+      echo "  ✘ $3 : code correct, mais le message ne dit pas « $2 »"
+      printf '%s\n' "$sortie" | sed 's/^/      /'
+      echecs=1
+      return
+    fi
+    echo "  ✔ $3"
+  }
+
+  verifie_cli 0 "la ligne de commande répond"  "une CLI qui rend sa version passe"          cli_repond
+  verifie_cli 1 "n'écrit RIEN"                 "une CLI muette en code 0 est refusée"       cli_muet
+  verifie_cli 1 "au lieu de sa version"        "une CLI qui échoue est refusée"             cli_casse
+  verifie_cli 1 "n'expose aucun lanceur"       "une CLI absente de l emballage est refusée" cli_jamais_cree
+
+  # Sans `--cli`, le script le DIT au lieu de laisser croire qu'il a tout vérifié.
+  sortie=$( "$MOI" "$bac/tient" --secondes 2 --libelle "essai" 2>&1 ) || code=$?
+  if printf '%s' "$sortie" | grep -qF "NON vérifiée"; then
+    echo "  ✔ sans --cli, l absence de vérification est annoncée"
+  else
+    echo "  ✘ sans --cli, l absence de vérification devrait être annoncée"
+    printf '%s\n' "$sortie" | sed 's/^/      /'
+    echecs=1
+  fi
+
   if [ "$echecs" = 0 ]; then
-    echo "Auto-test du démarrage des emballages : OK (5 cas, dont 4 rouges vérifiés sur leur message)."
+    echo "Auto-test du démarrage des emballages : OK (10 cas, dont 7 rouges vérifiés sur leur message)."
   else
     echo "Auto-test du démarrage des emballages : ÉCHEC - la règle ne fait plus ce qu'elle promet."
   fi
@@ -159,20 +242,32 @@ fi
 LANCEUR="${1:-}"
 SECONDES=20
 LIBELLE=""
+CLI=""
 shift || true
 while [ $# -gt 0 ]; do
   case "$1" in
     --secondes) SECONDES="$2"; shift ;;
     --libelle)  LIBELLE="$2"; shift ;;
+    --cli)      CLI="$2"; shift ;;
     *) echo "option inconnue : $1" >&2; exit 2 ;;
   esac
   shift
 done
 
 if [ -z "$LANCEUR" ]; then
-  echo "usage : $(basename "$MOI") <lanceur> [--secondes N] [--libelle TEXTE]" >&2
+  echo "usage : $(basename "$MOI") <lanceur> [--secondes N] [--libelle TEXTE] [--cli <lanceur CLI>]" >&2
   exit 2
 fi
 [ -n "$LIBELLE" ] || LIBELLE="$(basename "$LANCEUR")"
 
-verifier_le_demarrage "$LANCEUR" "$SECONDES" "$LIBELLE"
+verifier_le_demarrage "$LANCEUR" "$SECONDES" "$LIBELLE" || exit 1
+
+# ⚠️ `--cli` est FACULTATIF, et son absence se dit : sans elle, ce script ne prouve rien de la ligne de
+# commande de l'emballage. Un appelant qui l'oublie doit le voir passer, sans quoi son vert répondrait
+# à une question qu'il n'a pas posée (ADR 2748).
+if [ -z "$CLI" ]; then
+  echo "${LIBELLE} : ligne de commande NON vérifiée (aucun --cli donné)."
+  exit 0
+fi
+
+verifier_la_ligne_de_commande "$CLI" "$LIBELLE"

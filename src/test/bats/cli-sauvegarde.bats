@@ -36,14 +36,9 @@ setup() {
   mkdir -p "${MACHINE_A}" "${MACHINE_B}" "${SAUVEGARDES}"
 }
 
-# Un processus CLI sur le workspace choisi : c'est ce qui permet de simuler DEUX machines, là où le
-# `cli` partagé travaille toujours sur le tmpdir du test.
-cli_sur() {
-  local workspace="$1"
-  shift
-  java --enable-native-access=ALL-UNNAMED -Dvigiechiro.workspace="${workspace}" \
-    -cp "${JAR}" fr.univ_amu.iut.cli.Cli "$@"
-}
+# `cli_sur <workspace> …` vit dans `helper.bash` : c'est ce qui permet de simuler DEUX machines, là où
+# le `cli` partagé travaille toujours sur le tmpdir du test. Il est partagé parce qu'il sait ce qu'on
+# lance - fat-jar ou lanceur empaqueté - et que cette connaissance doit tenir en un seul endroit.
 
 # Sème une nuit complète sur la machine A : site, point, puis import réel de la carte SD.
 importer_une_nuit_sur_a() {

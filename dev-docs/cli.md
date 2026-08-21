@@ -446,7 +446,15 @@ export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
 ```
 
 `Cli.main(String[])` reste le point d'entrée direct, et c'est aussi celui vers lequel `Launcher`
-aiguille dans les emballages : le harnais `bats` peut donc viser l'un ou l'autre.
+aiguille dans les emballages : le harnais `bats` peut donc viser l'un ou l'autre. En CI il vise le
+**lanceur**, par `VIGIECHIRO_LANCEUR` (#4071) ; sans cette variable, il retombe sur le fat-jar, ce qui
+reste la façon la plus rapide de le lancer en local :
+
+```bash
+./mvnw -q -DskipTests package && bats src/test/bats                       # sur le fat-jar
+VIGIECHIRO_LANCEUR=target/dist/VigieChiroCompanion/bin/vigiechiro \
+  bats src/test/bats                                                       # sur le lanceur livré
+```
 
 ⚠️ Une invocation **sans aucun argument** rend l'usage de la ligne de commande, elle n'ouvre pas la
 fenêtre - y compris pour `java -jar vigiechiro-*-shaded.jar`, qui demande désormais `ihm`. Déduire une
