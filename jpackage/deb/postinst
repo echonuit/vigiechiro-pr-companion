@@ -22,7 +22,22 @@ case "$1" in
         # script AUSSITÔT : mise en second, la ligne ci-dessous ne s'exécutait pas, et la commande
         # n'était pas installée. Le geste qui ne peut pas échouer passe donc devant.
         ln -sf /opt/vigiechirocompanion/bin/vigiechiro /usr/bin/vigiechiro
-        xdg-desktop-menu install /opt/vigiechirocompanion/lib/vigiechirocompanion-VigieChiroCompanion.desktop
+
+        # ⚠️ L'entrée de menu ne décide PAS du sort de l'installation. `xdg-desktop-menu` rend 3 là où
+        # aucun menu système n'est inscriptible - un conteneur, un serveur - et sous `set -e` ce 3
+        # laissait le paquet en `half-configured` : installé, non configuré, et bloquant les opérations
+        # `apt` suivantes (#4081). Le paquet publié 2.185.0 se comportait déjà ainsi ; ce n'est pas une
+        # régression, c'est le gabarit de jpackage.
+        #
+        # Un menu absent est une conséquence visible et bornée : l'application reste lançable, la
+        # commande reste dans le PATH. Une installation qui échoue, elle, ne laisse rien d'utilisable.
+        # On préfère donc la dire à la faire échouer - et la DIRE compte : un `|| true` muet
+        # transformerait un défaut d'affichage en silence, ce que l'ADR 2748 refuse.
+        if ! xdg-desktop-menu install /opt/vigiechirocompanion/lib/vigiechirocompanion-VigieChiroCompanion.desktop; then
+            echo "vigiechirocompanion : entrée de menu non posée (aucun menu système inscriptible)." >&2
+            echo "  L'application reste lançable : /opt/vigiechirocompanion/bin/VigieChiroCompanion," >&2
+            echo "  et « vigiechiro » répond en ligne de commande." >&2
+        fi
         ;;
 
     abort-upgrade|abort-remove|abort-deconfigure)
