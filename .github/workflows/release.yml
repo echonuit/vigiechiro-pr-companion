@@ -202,7 +202,18 @@ jobs:
       id-token: write
       attestations: write
     # Seulement si semantic-release a réellement publié une version (tag non vide).
-    if: needs.release.outputs.tag != ''
+    #
+    # ⚠️ `!cancelled()` n'est pas décoratif (#4079). GitHub saute un job dès qu'un ANCÊTRE a été
+    # sauté, et `release` descend de `contournement-declare`, qui ne tourne que sur un dispatch avec
+    # raison : sur le train du mercredi, il est toujours sauté. Sans fonction d'état, la condition
+    # ci-dessous est enveloppée en `success() && (...)` sur tout le graphe amont et n'est JAMAIS
+    # évaluée. C'est ce qui a laissé la 2.186.0 en brouillon sans un seul installeur, sur un run vert.
+    # `needs.release.result == 'success'` referme ce que `!cancelled()` seul laisserait passer : un
+    # `release` en échec.
+    if: >-
+      ${{ !cancelled()
+      && needs.release.result == 'success'
+      && needs.release.outputs.tag != '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -483,7 +494,12 @@ jobs:
     # Retire l'état brouillon de la Release : une seule commande `gh`, aucun code tiers.
     permissions:
       contents: write
-    if: needs.release.outputs.tag != ''
+    # ⚠️ Même garde qu'`installers`, et pour la même raison (#4079) : sans fonction d'état, le saut
+    # de `contournement-declare` se propage jusqu'ici et la Release reste en brouillon.
+    if: >-
+      ${{ !cancelled()
+      && needs.release.result == 'success'
+      && needs.release.outputs.tag != '' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
