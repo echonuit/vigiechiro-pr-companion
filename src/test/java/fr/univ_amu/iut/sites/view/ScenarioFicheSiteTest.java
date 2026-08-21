@@ -5,10 +5,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -24,12 +26,14 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -57,15 +61,18 @@ import org.testfx.util.WaitForAsyncUtils;
 /// et c'est la moitié qu'on saute quand on appelle la navigation directement : le clip s'ouvrirait sur
 /// une fiche sans que rien n'explique d'où elle vient - reproche fait à `S1-26` puis à `S4-33`.
 ///
-/// ## Deux sites, parce qu'une liste d'un seul n'est pas une liste
+/// ## Trois carrés, et chacun sert
 ///
-/// La fixture pose un second carré. Il n'est jamais ouvert : il existe pour que le clip commence sur
-/// une liste, qui est ce que l'utilisateur a sous les yeux, plutôt que sur une carte unique qui
-/// donnerait de l'écran une idée fausse.
+/// | carré | ce qu'il porte | ce qu'il montre |
+/// |---|---|---|
+/// | `640380` | des points, des passages, aucun lien plateforme | `S1-18`, `S1-19`, `S1-20`, `S1-21` |
+/// | `752204` | un lien plateforme, aucun passage | `S1-35` |
+/// | `013570` | rien | que « Mes sites » est une **liste** |
 ///
-/// ⚠️ Ce que ces clips ne montrent pas, et qu'il faut dire : `S1-19` fait juger des boutons **grisés**,
-/// donc l'état empêché seulement. Que les mêmes boutons soient actifs sur un carré relié et sans
-/// passage est vérifié par `SitesVueIntegrationTest`, hors caméra.
+/// `S1-19` et `S1-35` font juger les **deux mêmes commandes** dans leurs deux états : empêchées sur un
+/// carré non relié qui porte des passages, offertes sur un carré rattaché qui n'en porte pas. Les deux
+/// clips se regardent ensemble, et c'est leur écart qui dit la règle - un seul des deux ne montrerait
+/// qu'un écran, pas une garde.
 ///
 /// ## ⚠️ Ce que `lookup` ne dit pas, et où en est ce contrôle-ci
 ///
@@ -88,6 +95,15 @@ class ScenarioFicheSiteTest {
     private static final String CARRE = "640380";
 
     private static final String TITRE_CARRE = "Carré " + CARRE;
+
+    /// Le carré **rattaché** : il porte un lien vers la plateforme, et aucun passage.
+    private static final String CARRE_RATTACHE = "752204";
+
+    private static final String TITRE_RATTACHE = "Carré " + CARRE_RATTACHE;
+
+    /// L'identifiant que la plateforme donne au site, et par lequel « Ouvrir sur Vigie-Chiro » construit
+    /// son adresse.
+    private static final String OBJECTID = "5eb12120cbe7410011f0a97f";
 
     /// La date de la nuit la plus récente, **telle qu'elle est rendue** dans le tableau. C'est par elle
     /// que le double-clic vise sa ligne : viser « la première ligne » rendrait un clip juste sous une
@@ -243,6 +259,37 @@ class ScenarioFicheSiteTest {
                 .isPresent();
     }
 
+    @Test
+    @CasDeRecette("S1-35")
+    @DisplayName("S1-35 · le carré rattaché porte son badge, et « Ouvrir sur Vigie-Chiro » n'est plus grisé")
+    void le_carre_rattache_porte_son_badge(FxRobot robot) throws TimeoutException {
+        ouvrirLaFiche(robot, TITRE_RATTACHE);
+
+        Button portail = bouton(robot, "#boutonOuvrirPortail");
+        Node cellule = robot.lookup("#celluleStatutPlateforme").query();
+        CadreVisible.amener(cellule, robot);
+        Respiration.leTempsDeLire(robot);
+
+        assertThat(libellesDe(cellule))
+                .as("le rattachement se lit sur la fiche, sans avoir à ouvrir quoi que ce soit")
+                .contains("Enregistré sur Vigie-Chiro");
+        assertThat(portail.isDisabled())
+                .as("le carré est connu de la plateforme : le bouton mène quelque part")
+                .isFalse();
+        assertThat(CadreVisible.contient(cellule) && CadreVisible.contient(portail))
+                .as("le badge et le bouton offert sont ce que ce cas fait juger")
+                .isTrue();
+    }
+
+    /// Ce qu'une zone du bandeau **écrit**, libellé de cellule compris.
+    private static List<String> libellesDe(Node zone) {
+        return zone.lookupAll("*").stream()
+                .filter(Labeled.class::isInstance)
+                .map(noeud -> ((Labeled) noeud).getText())
+                .filter(texte -> texte != null && !texte.isBlank())
+                .toList();
+    }
+
     /// Le geste que fait un observateur : depuis « Mes sites », cliquer la carte du carré.
     ///
     /// ⚠️ La carte se cherche **par son titre**, et son absence est une erreur qui la nomme. Chercher
@@ -296,6 +343,13 @@ class ScenarioFicheSiteTest {
         service.ajouterPoint(carre.id(), "C3", null, null, "Coordonnées à relever sur place");
         semerPassage(source, a1, 1, "2026-04-22", Verdict.OK);
         semerPassage(source, a1, 2, "2026-06-22", null);
+
+        Site rattache = service.creerSite(CARRE_RATTACHE, "Ruisseau des Aiguiers", Protocole.STANDARD, null, ID_USER);
+        service.ajouterPoint(rattache.id(), "A1", 43.62, 5.28, "Sous le pont");
+        // Enregistré, non verrouillé : c'est l'état qu'un rapatriement laisse (#3806), et celui dont
+        // `S1-35` parle. Verrouillé serait un autre badge, et un autre cas.
+        injector.getInstance(LienVigieChiroDao.class)
+                .upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(rattache.id()), OBJECTID, false));
 
         service.creerSite("013570", "Mare du Vallon", Protocole.STANDARD, null, ID_USER);
     }
