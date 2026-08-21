@@ -364,6 +364,15 @@ L'assistant et **tous ses chemins non nominaux** : c'est la vue la plus riche en
 
 <table>
 <tr>
+<th width="100%">Nommage : fichiers déjà préfixés</th>
+</tr>
+<tr>
+<td><a href="apercu-import-prefixe.png"><img src="apercu-import-prefixe.png" width="870" alt="Inspection d'une carte dont les bruts portent déjà le préfixe Car130711-2026-Pass1-Z1 : « État du nommage : fichiers déjà préfixés (seront copiés et transformés) », l'aperçu du préfixe trouvé, et le refus qui bloque l'import parce que ce préfixe désigne un autre carré que le rattachement choisi"></a></td>
+</tr>
+</table>
+
+<table>
+<tr>
 <th width="50%">Décompression</th>
 <th width="50%">Rejets</th>
 </tr>
