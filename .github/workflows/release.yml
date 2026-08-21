@@ -370,21 +370,29 @@ jobs:
               tar -xzf ./*-portable.tar.gz -C "$bac"
               "${GITHUB_WORKSPACE}/.github/scripts/verifie-demarrage-emballage.sh" \
                 "$bac/VigieChiroCompanion/bin/VigieChiroCompanion" \
-                --secondes 30 --libelle "archive portable Linux"
+                --secondes 30 --libelle "archive portable Linux" \
+                --cli "$bac/VigieChiroCompanion/bin/vigiechiro"
 
               appimage=$(ls ./*.AppImage)
               chmod +x "$appimage"
               # --appimage-extract-and-run : les runners n'ont pas toujours FUSE, ce dont une AppImage
               # a besoin pour se monter. Sans cette option, l'échec est obscur et sans rapport.
+              #
+              # ⚠️ Le `--cli` de l'AppImage est l'AppImage ELLE-MÊME : `AppRun` passe ses arguments au
+              # lanceur, qui aiguille sur le mot reçu (#4071). Le `bin/vigiechiro` de l'app-image vit
+              # bien dedans, mais personne ne l'atteint sans monter l'image : ce qu'on vérifie ici,
+              # c'est ce que l'utilisateur tape.
               APPIMAGE_EXTRACT_AND_RUN=1 \
                 "${GITHUB_WORKSPACE}/.github/scripts/verifie-demarrage-emballage.sh" \
-                "$(pwd)/$appimage" --secondes 30 --libelle "AppImage"
+                "$(pwd)/$appimage" --secondes 30 --libelle "AppImage" \
+                --cli "$(pwd)/$appimage"
               ;;
             macOS)
               ditto -x -k ./*-portable.zip "$bac"
               "${GITHUB_WORKSPACE}/.github/scripts/verifie-demarrage-emballage.sh" \
                 "$bac/VigieChiroCompanion.app/Contents/MacOS/VigieChiroCompanion" \
-                --secondes 30 --libelle "archive portable macOS (bundle .app par ditto)"
+                --secondes 30 --libelle "archive portable macOS (bundle .app par ditto)" \
+                --cli "$bac/VigieChiroCompanion.app/Contents/MacOS/vigiechiro"
               ;;
           esac
           rm -rf "$bac"
