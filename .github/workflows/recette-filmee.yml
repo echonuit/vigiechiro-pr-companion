@@ -284,3 +284,27 @@ jobs:
           }
           gh release upload clips-recette "${clips[@]}" repris/recette/clips/index.md --clobber
           echo "${#clips[@]} clip(s) versé(s) sur « clips-recette »."
+
+      # `--clobber` remplace et ajoute ; il ne retire rien. Un cas renommé ou supprimé laissait donc
+      # son clip en ligne, montrant un comportement que le produit n'a plus - constaté après #4099.
+      #
+      # ⚠️ Le calcul vit dans un script à part parce que sa sortie SUPPRIME : une orientation inversée
+      # ne rend pas une erreur, elle rend la liste de ce qu'il fallait garder. `clips-orphelins.sh`
+      # refuse par ailleurs un dossier de tournage vide, et son auto-test garde les deux cas.
+      - name: Retirer les clips dont le cas a disparu
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          chmod +x .github/scripts/clips-orphelins.sh
+          orphelins=$(gh release view clips-recette --json assets --jq '.assets[].name' \
+            | ./.github/scripts/clips-orphelins.sh repris/recette/clips)
+          if [ -z "$orphelins" ]; then
+            echo "Aucun clip orphelin : la pré-version ne porte que des cas qui existent."
+            exit 0
+          fi
+          while IFS= read -r nom; do
+            [ -n "$nom" ] || continue
+            echo "Retrait de « $nom » : aucun cas de recette ne porte plus ce nom."
+            gh release delete-asset clips-recette "$nom" --yes
+          done <<< "$orphelins"

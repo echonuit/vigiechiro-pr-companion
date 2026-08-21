@@ -272,6 +272,8 @@ jobs:
           chmod +x .github/scripts/verifie-conditions-booleennes.sh
           ./.github/scripts/verifie-conditions-booleennes.sh --auto-test
           ./.github/scripts/verifie-conditions-booleennes.sh
+          chmod +x .github/scripts/clips-orphelins.sh
+          ./.github/scripts/clips-orphelins.sh --auto-test
 
       - name: La condition d'un job appuyé sur un « needs » nomme l'état qu'elle attend
         # ⚠️ GitHub saute un job dès qu'un ANCÊTRE a été sauté, sauf si son `if:` porte une fonction
