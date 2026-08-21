@@ -55,6 +55,7 @@ public final class NavigationConnexion {
             Parent vue = loader.load();
             Stage modale = new Stage();
             modale.initOwner(proprietaire);
+            Modales.centrerSur(modale, proprietaire);
             // ⚠️ `WINDOW_MODAL`, comme les huit autres modales du produit. Celle-ci était la seule en
             // `APPLICATION_MODAL`, et la seule sans propriétaire : deux écarts au même endroit, tous
             // deux invisibles tant que personne ne regardait la fenêtre. Avec un propriétaire, la

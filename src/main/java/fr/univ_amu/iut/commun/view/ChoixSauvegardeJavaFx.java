@@ -31,6 +31,7 @@ public final class ChoixSauvegardeJavaFx implements ChoixSauvegarde {
             String titre, Path dossier, List<InventaireSauvegardes.Entree> entrees, Supplier<Optional<Path>> repli) {
         Stage modale = new Stage();
         modale.initOwner(fenetre.get());
+        Modales.centrerSur(modale, fenetre.get());
         modale.initModality(Modality.WINDOW_MODAL);
         modale.setTitle(titre);
 

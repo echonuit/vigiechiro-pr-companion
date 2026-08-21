@@ -82,6 +82,7 @@ public class NavigationPassage implements OuvrirPassage {
             controleur.demarrer(idPassage, carre, codePoint, apresSucces);
             Stage modale = new Stage();
             modale.initOwner(parent);
+            Modales.centrerSur(modale, parent);
             modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Modifier le passage");
             modale.setScene(Habillage.scene(vue));
@@ -105,6 +106,7 @@ public class NavigationPassage implements OuvrirPassage {
             Parent vue = loader.load();
             Stage modale = new Stage();
             modale.initOwner(parent);
+            Modales.centrerSur(modale, parent);
             modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Gérer les campagnes");
             modale.setScene(Habillage.scene(vue));
@@ -130,6 +132,7 @@ public class NavigationPassage implements OuvrirPassage {
             controleur.demarrer(travail, apresSucces);
             Stage modale = new Stage();
             modale.initOwner(parent);
+            Modales.centrerSur(modale, parent);
             modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Réactiver ce passage");
             modale.setScene(Habillage.scene(vue));

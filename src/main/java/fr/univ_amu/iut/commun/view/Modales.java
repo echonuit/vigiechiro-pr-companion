@@ -7,6 +7,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 /// Comportements communs des **fenêtres modales** de l'application.
 ///
@@ -31,6 +32,41 @@ public final class Modales {
     /// exactement comme le bouton « Annuler ».
     ///
     /// @param modale la fenêtre modale à équiper (doit déjà porter une scène)
+    /// Pose `modale` au centre de son propriétaire, une fois qu'elle connaît sa taille.
+    ///
+    /// ## Pourquoi le produit place lui-même ses modales
+    ///
+    /// ⚠️ Sans cela, le placement est celui du gestionnaire de fenêtres, et il n'est le même nulle
+    /// part. Trois tournages successifs ont montré la même modale centrée sur un poste et posée en
+    /// (0, 0), barre de titre hors champ, sur l'intégration continue - **à partir du même commit**.
+    /// Trois hypothèses ont été faites sur l'environnement, et les trois étaient fausses : ce n'était
+    /// ni la configuration d'openbox, ni la taille de la fenêtre hôte, ni le propriétaire manquant
+    /// (qui était pourtant un vrai défaut, corrigé par #4074).
+    ///
+    /// Un utilisateur n'a pas plus de garantie qu'un runner : son bureau place les fenêtres comme il
+    /// l'entend. Une modale qui compte sur lui s'ouvre où elle peut.
+    ///
+    /// ## Le moment du placement
+    ///
+    /// ⚠️ Au `setOnShown`, et non avant `show()`. Avant l'affichage, `getWidth()` rend `NaN` : la
+    /// scène n'a pas été mesurée, et centrer sur une largeur inconnue pose la fenêtre n'importe où
+    /// sans rien signaler.
+    public static void centrerSur(Stage modale, Window proprietaire) {
+        Objects.requireNonNull(modale, "modale");
+        if (proprietaire == null) {
+            return;
+        }
+        modale.setOnShown(evenement -> {
+            double largeur = modale.getWidth();
+            double hauteur = modale.getHeight();
+            if (Double.isNaN(largeur) || Double.isNaN(hauteur)) {
+                return;
+            }
+            modale.setX(proprietaire.getX() + (proprietaire.getWidth() - largeur) / 2);
+            modale.setY(proprietaire.getY() + (proprietaire.getHeight() - hauteur) / 2);
+        });
+    }
+
     public static void fermerParEchap(Stage modale) {
         Objects.requireNonNull(modale, "modale");
         modale.addEventHandler(KeyEvent.KEY_PRESSED, evenement -> {

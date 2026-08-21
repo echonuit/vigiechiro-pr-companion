@@ -27,6 +27,7 @@ public final class DialogueProgression extends SuiviProgression {
     protected Runnable presenter(Window proprietaire, String titre, VBox contenu, JetonAnnulation jeton) {
         Stage modale = new Stage();
         modale.initOwner(proprietaire);
+        Modales.centrerSur(modale, proprietaire);
         modale.initModality(Modality.WINDOW_MODAL);
         modale.setTitle(titre);
         modale.setScene(Habillage.scene(contenu));

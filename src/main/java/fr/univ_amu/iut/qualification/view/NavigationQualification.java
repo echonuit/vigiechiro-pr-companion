@@ -70,6 +70,7 @@ public class NavigationQualification implements OuvrirVerification {
             ((ModaleSelectionController) loader.getController()).demarrer();
             Stage modale = new Stage();
             modale.initOwner(parent);
+            Modales.centrerSur(modale, parent);
             modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Sélection d'écoute");
             modale.setScene(Habillage.scene(vue));
