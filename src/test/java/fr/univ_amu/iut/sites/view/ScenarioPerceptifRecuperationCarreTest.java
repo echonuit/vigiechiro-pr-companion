@@ -232,7 +232,7 @@ class ScenarioPerceptifRecuperationCarreTest {
     /// `show()`. Ce qui se voit est juste ; ce qui ne se voit pas, c'est qu'il ne bloque pas.
     private static final class CompteRenduVisible implements Notificateur {
 
-        private final NotificationDialogue reel = new NotificationDialogue();
+        private final NotificationDialogue reel = NotificationDialogue.sansProprietaire();
 
         @Override
         public void notifier(NiveauNotification niveau, String entete, String message) {
