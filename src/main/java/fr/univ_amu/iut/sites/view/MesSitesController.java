@@ -8,7 +8,9 @@ import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SuitLaRevision;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
+import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CarteSite;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
@@ -113,7 +115,11 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         // Erreur de chargement (#795) : rendue visible seulement quand un message est présent.
         // Bandeau de retour partagé (ADR 0023) : libellé, visibilité, sévérité et croix de fermeture.
         BandeauRetour.installer(
-                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour,
+                lblRetour,
+                btnFermerRetour,
+                viewModel.compteRendu().retourProperty(),
+                viewModel.compteRendu()::effacer);
         // Synchronisation à la demande (#1045) : bouton masqué quand la passerelle est absente (#937),
         // message de résultat rendu visible seulement quand il est présent.
         boolean peutRecuperer = viewModel.peutRecuperer();
@@ -180,7 +186,28 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         // La modale porte la saisie, la validation en direct et le refus métier (#1431). Le Dialog bâti
         // ici se terminait par un showAndWait : déclarer un site - l'entrée du produit - n'était jouable
         // dans aucun test.
-        navigation.ouvrirModaleCreationSite(listeCartes.getScene().getWindow(), viewModel::rafraichir);
+        navigation.ouvrirModaleCreationSite(
+                listeCartes.getScene().getWindow(), viewModel::rafraichir, this::annoncerRapatriement);
+    }
+
+    /// Conclut un **rapatriement** sur cet écran : la liste montre le carré récupéré, et le bandeau dit
+    /// ce qui vient d'être créé.
+    ///
+    /// La modale de déclaration s'ouvre d'ici. C'est donc ici que le geste se termine, comme le fait
+    /// déjà une déclaration ordinaire. Jusqu'à #4099, une récupération ouvrait la fiche du carré : la
+    /// même modale avait deux issues, et rien ne justifiait la divergence.
+    ///
+    /// Le compte rendu va au bandeau et non dans une fenêtre : récupérer un carré ne détruit rien, et
+    /// l'ADR 0023 réserve le modal à l'irréversible. Le résultat porte déjà le message **et** la
+    /// sévérité : rien n'est décidé ici de ce qui doit être dit, ni de quelle couleur.
+    ///
+    /// ⚠️ **Aucun rafraîchissement ici**, et ce n'est pas un oubli. Cet écran déclare [SuitLaRevision] :
+    /// le `Navigateur` le recharge dès qu'un `insert` est validé, et un rapatriement en fait deux, le
+    /// carré et ses points. Une première version rappelait `rafraichir()` par prudence ; le test est
+    /// resté vert quand on l'a retirée, ce qui a montré que le mécanisme du socle suffisait. Doubler un
+    /// rechargement ne le rend pas plus sûr, il crée un second chemin qu'il faudra maintenir.
+    public void annoncerRapatriement(RapatriementCarre.Resultat.Rapatrie rapatrie) {
+        viewModel.compteRendu().rendre(new RetourOperation(rapatrie.message(), rapatrie.severite()));
     }
 
     private void reconstruire() {

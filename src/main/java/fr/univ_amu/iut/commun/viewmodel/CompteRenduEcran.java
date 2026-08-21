@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -37,5 +38,21 @@ public final class CompteRenduEcran {
     /// Efface le compte rendu : l'utilisateur a lu le bandeau et en ferme la croix.
     public void effacer() {
         retour.set(RetourOperation.AUCUN);
+    }
+
+    /// Efface le compte rendu **s'il porte une erreur**, et lui seul.
+    ///
+    /// Un rechargement réussi dément l'échec qui annonçait la lecture impossible : le garder afficherait
+    /// le contraire de ce que l'écran montre. Mais il n'a rien à annuler de ce qu'une **autre** opération
+    /// a dit, et c'est la nuance qui manquait (#4099) : le corollaire de l'ADR 0023 vise ce qui **démarre**
+    /// une opération, pas ce qui relit la donnée.
+    ///
+    /// ⚠️ Mesuré sur le scénario de recette S1-37 : récupérer un carré écrit le carré **et** ses points,
+    /// donc autant d'`insert` que de rechargements déclenchés par la révision - cinq. Le compte rendu du
+    /// geste était posé puis effacé cinq fois, avant d'avoir pu être lu, et rien ne le signalait.
+    public void oublierUnEchec() {
+        if (retour.get().severite() == Severite.ERREUR) {
+            retour.set(RetourOperation.AUCUN);
+        }
     }
 }

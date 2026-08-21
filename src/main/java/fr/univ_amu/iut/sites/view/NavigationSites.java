@@ -10,7 +10,6 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -18,6 +17,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.LongConsumer;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -63,28 +63,6 @@ public class NavigationSites implements OuvrirSite {
         Parent vue = lire(loader);
         SiteDetailController controller = loader.getController();
         controller.afficher(site);
-        navigateur.empiler(vue, "site-detail", controller.libelleFil(), controller);
-    }
-
-    /// Ouvre la fiche d'un carré **qui vient d'être rapatrié** (#3806), et y porte le compte rendu.
-    ///
-    /// La modale s'est fermée : sans ce message, l'utilisateur arriverait sur une fiche soudainement
-    /// peuplée de quarante et un points sans savoir d'où ils viennent, ni si son carré est bien rattaché.
-    /// Un geste qui écrit autant ne se conclut pas par un écran muet.
-    ///
-    /// Le compte rendu va au **bandeau de la fiche**, jamais dans une fenêtre : récupérer un carré ne
-    /// détruit rien, et l'[ADR 0023] réserve le modal à l'irréversible. Le clip de recette S1-37 montrait
-    /// l'ancienne forme, où une modale se fermait pour en ouvrir une autre, posée dans un coin (#4091).
-    ///
-    /// Le résultat porte déjà les deux moitiés d'un [RetourOperation] : son message et sa sévérité. Rien
-    /// n'est donc décidé ici de ce qui doit être dit, ni de quelle couleur.
-    public void ouvrirDetailRapatrie(RapatriementCarre.Resultat.Rapatrie rapatrie) {
-        Objects.requireNonNull(rapatrie, "rapatrie");
-        FXMLLoader loader = charger("SiteDetail.fxml");
-        Parent vue = lire(loader);
-        SiteDetailController controller = loader.getController();
-        controller.afficher(rapatrie.site());
-        controller.rendreCompte(new RetourOperation(rapatrie.message(), rapatrie.severite()));
         navigateur.empiler(vue, "site-detail", controller.libelleFil(), controller);
     }
 
@@ -142,11 +120,15 @@ public class NavigationSites implements OuvrirSite {
     ///
     /// @param parent fenêtre propriétaire (pour la modalité)
     /// @param apresSucces action exécutée après une déclaration réussie (rafraîchir la liste)
-    public void ouvrirModaleCreationSite(Window parent, Runnable apresSucces) {
+    /// @param apresRapatriement action exécutée quand le carré déclaré **existait déjà** sur la
+    ///     plateforme et vient d'être récupéré (#4099) : l'écran appelant conclut le geste lui-même,
+    ///     puisque c'est de lui que la modale est partie
+    public void ouvrirModaleCreationSite(
+            Window parent, Runnable apresSucces, Consumer<RapatriementCarre.Resultat.Rapatrie> apresRapatriement) {
         FXMLLoader loader = charger("ModaleSite.fxml");
         Parent vue = lire(loader);
         ModaleSiteController controller = loader.getController();
-        controller.demarrerCreation(apresSucces, this::ouvrirDetailRapatrie);
+        controller.demarrerCreation(apresSucces, apresRapatriement::accept);
         afficherModale(parent, vue, "Site de suivi");
     }
 

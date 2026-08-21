@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -191,9 +192,34 @@ class SitesViewModelTest {
 
         vm.rafraichir();
 
-        assertThat(vm.retourProperty().get().texte())
+        assertThat(vm.compteRendu().retourProperty().get().texte())
                 .as("l'échec est surfacé au lieu de remonter non capturé")
                 .contains("base indisponible");
+    }
+
+    @Test
+    @DisplayName("#4099 : un rechargement réussi efface l'échec de chargement qu'il vient de démentir")
+    void un_rechargement_reussi_efface_l_echec() {
+        viewModel.signalerErreur(new RuntimeException("base indisponible"));
+
+        viewModel.rafraichir();
+
+        assertThat(viewModel.compteRendu().retourProperty().get().texte())
+                .as("la base répond de nouveau : garder le message dirait le contraire de ce qu'on voit")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#4099 : un rechargement n'efface PAS le compte rendu d'un geste")
+    void un_rechargement_n_efface_pas_le_compte_rendu_d_un_geste() {
+        viewModel.compteRendu().rendre(RetourOperation.succes("Carré 640380 récupéré : 4 point(s)."));
+
+        viewModel.rafraichir();
+
+        assertThat(viewModel.compteRendu().retourProperty().get().texte())
+                .as("récupérer un carré écrit le carré ET ses points, donc autant de rechargements par la"
+                        + " révision : effacer à chaque fois retirait le message avant qu'il soit lu")
+                .contains("640380");
     }
 
     @Test
