@@ -1,22 +1,64 @@
 package fr.univ_amu.iut.lot.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.Key;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.OptionalBinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
+import com.google.inject.util.Modules;
+import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.Prefixe;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Habillage;
-import fr.univ_amu.iut.commun.view.PanneauCompteRendu;
+import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.CauseRefus;
+import fr.univ_amu.iut.lot.model.DepotUnite;
+import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.EchecUnite;
-import fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot;
-import fr.univ_amu.iut.lot.viewmodel.CompteRenduChiffreDepot.Plan;
+import fr.univ_amu.iut.lot.model.TypeDepotUnite;
+import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
+import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
+import fr.univ_amu.iut.passage.model.JournalDuCapteur;
+import fr.univ_amu.iut.passage.model.SequenceDEcoute;
+import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
+import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
+import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
+import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Respiration;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
-import javafx.geometry.Insets;
+import java.util.concurrent.TimeUnit;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.Labeled;
-import javafx.scene.layout.VBox;
+import javafx.scene.control.ScrollPane;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,57 +67,124 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
-/// Le scénario qui **joue** `S4-33`, pour qu'un humain le tranche en regardant (#4055).
+/// Le scénario qui **joue** `S4-33`, pour qu'un humain le tranche en regardant (#4055, #4115).
 ///
 /// ## Ce que le cas demande, et ce qu'il refuse
 ///
 /// La session est explicite : « c'est la **lisibilité** de la phrase qu'on juge, pas sa présence : une
-/// assertion la trancherait mal ». Le clip doit donc montrer la phrase **telle que l'écran la rend**,
-/// dans la typographie du produit, à la largeur où elle se replie.
+/// assertion la trancherait mal ». Le clip doit donc montrer la phrase **telle que l'écran la rend**.
 ///
-/// Les assertions ci-dessous ne tranchent que le nécessaire : que le compte y soit, et que le geste
-/// conseillé y soit. Qu'elle se lise d'un trait, qu'elle ne noie pas le conseil dans le constat, c'est
-/// le regard qui le dit.
+/// ## Pourquoi le vrai écran, et non le panneau seul
 ///
-/// ## Pourquoi le panneau seul, et non un dépôt joué de bout en bout
+/// La première version montait le seul `PanneauCompteRendu` dans un `VBox` nu. Le raccourci était
+/// assumé - « quatre minutes de film pour une phrase » - mais il coûtait ce qui manquait le plus : le
+/// **contexte**. On voyait une phrase flotter sur fond clair, sans chrome, sans écran autour, et on ne
+/// savait pas ce qu'on regardait. Un cas perceptif se juge à l'oeil ; un panneau sans écran ne se juge
+/// pas.
 ///
-/// Atteindre cet état par le vrai chemin demanderait un stub qui refuse en 403, une connexion, un plan,
-/// un téléversement : quatre minutes de film pour une phrase. Le panneau de compte rendu est le
-/// composant que l'écran emploie, nourri du même `CompteRenduChiffreDepot` : ce qui paraît à l'image est
-/// donc ce que l'utilisateur voit, sans le chemin qui y mène.
+/// Ce scénario suit donc la forme des cas `S1` : le **vrai chrome**, le **vrai écran du lot**, le
+/// **vrai clic**, et une seule frontière truquée - le port `DepotVigieChiro`, remplacé par un dépôt
+/// qui refuse trois unités en 403. Le compte rendu paraît alors dans sa zone de l'écran, là où
+/// l'utilisateur le verra.
 ///
-/// ⚠️ Ce raccourci a une limite, et il faut la connaître : il ne prouve pas que l'écran **atteint** cet
-/// état. `S4-30` à `S4-32` s'en chargent, et ils demandent le stub.
+/// ## Ce que la fixture doit réunir
+///
+/// Le bouton « Déposer » n'est vivant que si le lot est **cohérent** et **prêt**, et si des lignes de
+/// suivi existent. La checklist de `VerificationCoherence` exige donc : un verdict qui n'est pas
+/// « Inexploitable », des séquences dérivées de chaque original, des noms **préfixés**, et un
+/// **journal du capteur** - ce dernier bloquant. Le relevé climatique, lui, ne fait qu'avertir.
+///
+/// Les fichiers posés sur le disque sont minuscules : la source ne lit que leur **taille**.
 @ExtendWith(ApplicationExtension.class)
 class ScenarioPerceptifRefusDepotTest {
+
+    private static final String ID_USER = "u-scenario";
+    private static final String CARRE = "640380";
+    private static final String SERIE = "1925492";
+    private static final int NUMERO_PASSAGE = 2;
+    private static final int ANNEE = 2026;
+    private static final Prefixe PREFIXE = new Prefixe(CARRE, ANNEE, NUMERO_PASSAGE, "A1");
+    private static final String NOM_ORIGINAL = PREFIXE.nommerOriginal("PaRecPR" + SERIE + "_20260705_213000.wav");
 
     /// Trois archives refusées, toutes pour la même cause : les droits. C'est l'état de la fixture
     /// `VIGIECHIRO_STUB_REFUS=403` que la session décrit, et le seul où le conseil de reconnexion
     /// s'applique à toutes.
     private static final int REFUSEES = 3;
 
-    private PanneauCompteRendu panneau;
+    private static final String QUALIFIANT = "depotQuiRefuse";
+
+    private Injector injector;
+    private ContextePassage contexte;
 
     @Start
-    void start(Stage stage) {
-        panneau = new PanneauCompteRendu();
-        VBox racine = new VBox(panneau);
-        racine.setPadding(new Insets(24));
-        // ⚠️ `Habillage.scene`, et non `new Scene` : c'est lui qui embarque la typographie du produit.
-        // Juger la lisibilité d'une phrase dans une police que l'application n'a jamais n'aurait
-        // aucun sens.
-        stage.setScene(Habillage.scene(racine, 900, 500));
+    void start(Stage stage) throws Exception {
+        Path workspace = Files.createTempDirectory("vc-scenario-refus");
+        System.setProperty("vigiechiro.workspace", workspace.toString());
+
+        injector =
+                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        // Asynchrone, comme les autres scénarios perceptifs : en synchrone le dépôt se ferait
+                        // sur le fil JavaFX, aucune image ne serait rendue, et le passage à juger n'existerait
+                        // sur aucune trame.
+                        bind(ExecuteurTache.class)
+                                .to(ExecuteurTacheAsynchrone.class)
+                                .in(Singleton.class);
+                        // ⚠️ Qualifiant intermédiaire, comme `DepotVigieChiroModule` : sans lui, la cible de
+                        // l'`OptionalBinder` se référencerait elle-même.
+                        OptionalBinder.newOptionalBinder(binder(), DepotVigieChiro.class)
+                                .setBinding()
+                                .to(Key.get(DepotVigieChiro.class, Names.named(QUALIFIANT)));
+                    }
+
+                    @Provides
+                    @Singleton
+                    @Named(QUALIFIANT)
+                    DepotVigieChiro depotQuiRefuse() {
+                        // ⚠️ `DepotVigieChiro` est final : pas de sous-classe possible. Le dépôt le mocke déjà
+                        // ailleurs (`LotDepotConnecteViewTest`), et c'est la seule frontière truquée ici - tout
+                        // le reste du chemin, écran compris, est celui de la production.
+                        DepotVigieChiro faux = mock(DepotVigieChiro.class);
+                        when(faux.deposer(any(), any(), any(), any())).thenReturn(bilanRefuse());
+                        return faux;
+                    }
+                }));
+
+        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
+        new MigrationSchema(source).migrer();
+        contexte = semerUneNuitPreteADeposer(source, workspace);
+
+        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
+        loader.setControllerFactory(injector::getInstance);
+        stage.setScene(Habillage.scene(loader.load(), 1180, 900));
         stage.show();
+    }
+
+    @AfterEach
+    void nettoyerWorkspace() {
+        System.clearProperty("vigiechiro.workspace");
     }
 
     @Test
     @CasDeRecette(value = "S4-33", jugement = Jugement.HUMAIN)
     @DisplayName("S4-33 · le compte rendu dit le nombre de refus et conseille la reconnexion : à lire")
-    void le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion(FxRobot robot) {
+    void le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion(FxRobot robot) throws Exception {
+        robot.interact(() -> injector.getInstance(NavigationLot.class).ouvrir(contexte));
+        WaitForAsyncUtils.waitForFxEvents();
+        // ⚠️ Le dépôt demande confirmation, et le dialogue réel fait `showAndWait`, qui fige TestFX
+        // headless : le film s'arrêterait là. Même remède que `LotDepotConnecteViewTest`. Ce qui se voit
+        // reste juste, à une chose près qui ne se voit pas : la confirmation n'a pas été demandée.
+        ecranDuLot().confirmateur().definir(message -> true);
         Respiration.avantLeGeste(robot);
 
-        robot.interact(() -> panneau.afficher(CompteRenduChiffreDepot.de(bilanRefuse(), plan(), List.of())));
-        WaitForAsyncUtils.waitForFxEvents();
+        amenerDansLeCadre(robot, "#btnTeleverser");
+        Respiration.entreDeuxGestes(robot);
+
+        robot.clickOn("#btnTeleverser");
+        // L'exécuteur est asynchrone : le compte rendu n'est PAS là au retour du clic.
+        WaitForAsyncUtils.waitFor(
+                20, TimeUnit.SECONDS, () -> texteAffiche(robot).contains("Dépôt incomplet"));
         // Le moment que ce cas existe pour montrer : la phrase du compte rendu, dont c'est la
         // LISIBILITÉ qu'on juge. Elle demande d'être lue, pas aperçue.
         Respiration.surLeMomentCle(robot);
@@ -89,7 +198,7 @@ class ScenarioPerceptifRefusDepotTest {
                         + " table pour savoir l'ampleur")
                 .contains(REFUSEES + " archive(s) ont été refusées");
         assertThat(affiche)
-                .as("et le geste qui répare est nommé : ce refus-là tient aux droits, donc une" + " reconnexion suffit")
+                .as("et le geste qui répare est nommé : ce refus-là tient aux droits, donc une reconnexion suffit")
                 .contains("Reconnectez-vous");
     }
 
@@ -108,8 +217,106 @@ class ScenarioPerceptifRefusDepotTest {
                 3_400_000_000L);
     }
 
-    private static Plan plan() {
-        return new Plan(14, 11, false);
+    /// Sème la nuit jusqu'à ce que « Déposer » soit vivant, et rend son contexte de navigation.
+    private ContextePassage semerUneNuitPreteADeposer(SourceDeDonnees source, Path workspace) throws IOException {
+        JeuDeDonneesPassage jeu = JeuDeDonneesPassage.dans(source)
+                .utilisateur(ID_USER)
+                .carre(CARRE)
+                .nomSite("Étang de la Tuilière")
+                .point("A1")
+                .enregistreur(SERIE)
+                .nuit(NUMERO_PASSAGE, ANNEE, "2026-07-05")
+                .statut(StatutWorkflow.PRET_A_DEPOSER)
+                .verdict(Verdict.OK)
+                .semerPassage();
+        Long idPassage = jeu.idPassage();
+
+        Path racine = workspace.resolve(PREFIXE.nomDossierSession());
+        Files.createDirectories(racine.resolve("transformes"));
+        Long idSession = new SessionDao(source)
+                .insert(new SessionDEnregistrement(null, racine.toString(), null, 4096L, idPassage))
+                .id();
+        Long idOriginal = new EnregistrementOriginalDao(source)
+                .insert(new EnregistrementOriginal(
+                        null, NOM_ORIGINAL, "bruts/" + NOM_ORIGINAL, 12.0, 384000, null, idSession))
+                .id();
+        SequenceDao sequences = new SequenceDao(source);
+        for (int index = 0; index < REFUSEES; index++) {
+            String nom = PREFIXE.nommerSequence(NOM_ORIGINAL, index);
+            // ⚠️ Le fichier existe pour de vrai : la source de dépôt lit sa TAILLE (#1994). Son contenu,
+            // lui, n'est jamais lu - quelques octets suffisent, et le clip n'attend pas.
+            Files.writeString(racine.resolve("transformes").resolve(nom), "sequence");
+            sequences.insert(new SequenceDEcoute(
+                    null, nom, idOriginal, index, index * 5.0, 5.0, "transformes/" + nom, true, idSession));
+        }
+        // Bloquant s'il manque : « Journal du capteur (LogPR<n>.txt) absent ».
+        new JournalDuCapteurDao(source)
+                .insert(new JournalDuCapteur(null, "LogPR" + SERIE + ".txt", null, null, idSession));
+
+        // ⚠️ Sans lignes de suivi, `archivesGenerees` est faux et le bouton « Déposer » n'est pas le
+        // geste primaire de l'écran (`LotController:440`). Le premier essai s'est arrêté là : l'écran
+        // était juste, complet, et le dépôt ne partait pas.
+        DepotUniteDao unites = new DepotUniteDao(source);
+        for (int index = 0; index < REFUSEES; index++) {
+            unites.insert(DepotUnite.aDeposer(
+                    idPassage, PREFIXE.nomDossierSession() + "-" + index + ".zip", TypeDepotUnite.ZIP, "2026-07-06"));
+        }
+
+        return new ContextePassage(idPassage, NUMERO_PASSAGE, new ContexteSite(CARRE, "A1", "Étang de la Tuilière"));
+    }
+
+    /// Le contrôleur de l'écran **en place**, pris sur la pile de navigation.
+    private LotController ecranDuLot() {
+        Object controleur =
+                injector.getInstance(Navigateur.class).historique().getLast().controleur();
+        return (LotController) controleur;
+    }
+
+    /// Fait défiler l'écran jusqu'à ce que `selecteur` entre **dans le cadre**.
+    ///
+    /// ⚠️ Un noeud peut être `visible`, `managed`, actif, et rester inatteignable : celui-ci se trouvait
+    /// à y = 933 dans une scène haute de 900. TestFX répond alors « the query returned 1 nodes, but no
+    /// nodes were visible », ce qui se lit comme une absence alors que c'est un hors-cadre.
+    ///
+    /// Agrandir la fenêtre ne réglerait rien ici : le film fait 1280x900, donc ce qui dépasse ne serait
+    /// pas tourné. Le défilement est aussi le geste que l'utilisateur ferait.
+    private static void amenerDansLeCadre(FxRobot robot, String selecteur) {
+        Node cible = robot.lookup(selecteur).query();
+        ScrollPane cadre = cadreDefilant(cible);
+        if (cadre == null) {
+            throw new AssertionError("aucun ScrollPane au-dessus de « " + selecteur + " » : rien à faire défiler");
+        }
+        // ⚠️ La MOLETTE ne suffit pas : `robot.scroll` n'a pas déplacé ce contenu d'un pixel, le
+        // pointeur n'étant pas au-dessus du bon panneau. On pilote donc le défilement, ce qui rend le
+        // même mouvement à l'image.
+        for (int essai = 0; essai < 24 && !dansLeCadre(cible); essai++) {
+            double avant = cadre.getVvalue();
+            robot.interact(() -> cadre.setVvalue(Math.min(1.0, cadre.getVvalue() + 0.08)));
+            WaitForAsyncUtils.waitForFxEvents();
+            if (cadre.getVvalue() == avant) {
+                break;
+            }
+        }
+        if (!dansLeCadre(cible)) {
+            throw new AssertionError("« " + selecteur + " » reste hors du cadre après défilement : "
+                    + cible.localToScene(cible.getBoundsInLocal()));
+        }
+    }
+
+    /// Le premier [ScrollPane] au-dessus de `noeud`, ou `null`.
+    private static ScrollPane cadreDefilant(Node noeud) {
+        for (Node parent = noeud.getParent(); parent != null; parent = parent.getParent()) {
+            if (parent instanceof ScrollPane cadre) {
+                return cadre;
+            }
+        }
+        return null;
+    }
+
+    private static boolean dansLeCadre(Node noeud) {
+        Bounds dansLaScene = noeud.localToScene(noeud.getBoundsInLocal());
+        return dansLaScene.getMinY() >= 0
+                && dansLaScene.getMaxY() <= noeud.getScene().getHeight();
     }
 
     /// Tout ce qui porte du texte dans la fenêtre, recollé. Le compte rendu répartit sa phrase entre
