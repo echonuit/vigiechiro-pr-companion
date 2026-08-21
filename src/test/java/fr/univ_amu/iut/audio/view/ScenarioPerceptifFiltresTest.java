@@ -440,35 +440,49 @@ class ScenarioPerceptifFiltresTest {
         return robot.from(barre).lookup(nom).query();
     }
 
+    /// Ajoute une puce comme un utilisateur : le bouton « + Filtre », puis l'entrée qui la nomme.
+    ///
+    /// ⚠️ La première version faisait `itemParLibelle(...).fire()`, et je l'avais choisi exprès pour
+    /// ne pas dépendre de l'endroit où le système pose la fenêtre du menu. Ce raisonnement servait la
+    /// robustesse du test et DÉTRUISAIT le film : les puces apparaissaient seules, sans qu'aucun
+    /// geste ne les explique. Retour de la revue de `S1-26`, qui vaut pour ces cinq cas aussi.
+    ///
+    /// Le risque que je fuyais a été éprouvé avant d'écrire ceci : les cinq cas passent sous filmage
+    /// avec de vrais clics. La prudence n'était pas fondée.
     private static void ajouterLaPuce(FxRobot robot, String libelle) {
-        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
-        robot.interact(() -> itemParLibelle(menuAjout, libelle).fire());
+        robot.clickOn("#menuAjoutFiltre");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+        robot.clickOn(libelle);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
     /// ⚠️ On déroule par `show()` et non par un clic. Une liste déroulante s'affiche dans une **fenêtre
     /// à part** ; TestFX sait cliquer sur le contrôle, mais la position des entrées dépend alors de
     /// l'endroit où le système a posé cette fenêtre. `show()` déroule la même liste sans en dépendre.
+    /// Déroule une liste par un CLIC, pour que le film montre le geste.
     private static void derouler(FxRobot robot, ComboBox<?> liste) {
-        robot.interact(liste::show);
+        robot.clickOn(liste);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /// Replie par la touche d'échappement : c'est le geste, et il évite de cliquer au hasard hors de
+    /// la liste, ce qui pourrait atteindre un autre contrôle.
     private static void replier(FxRobot robot, ComboBox<?> liste) {
-        robot.interact(liste::hide);
+        robot.type(javafx.scene.input.KeyCode.ESCAPE);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
     private static void ouvrirLeMenu(FxRobot robot, MenuButton menu) {
-        robot.interact(menu::show);
+        robot.clickOn(menu);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
+    /// Coche une valeur par un clic sur son entrée, menu ouvert.
     private static void cocher(FxRobot robot, MenuButton menu, String valeur) {
         ouvrirLeMenu(robot, menu);
-        robot.interact(() -> ((CheckMenuItem) itemParLibelle(menu, valeur)).setSelected(true));
-        WaitForAsyncUtils.waitForFxEvents();
-        robot.interact(menu::hide);
+        Respiration.entreDeuxGestes(robot);
+        robot.clickOn(valeur);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
