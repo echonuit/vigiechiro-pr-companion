@@ -24,7 +24,6 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -46,6 +45,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Respiration;
 import java.io.IOException;
@@ -160,18 +160,12 @@ class ScenarioPerceptifRefusDepotTest {
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
-        stage.setScene(Habillage.scene(loader.load(), 1180, 900));
-        // ⚠️ La taille se pose EXPLICITEMENT. Le Stage du harnais TestFX est partagé par toutes
-        // les classes d'un même fork : une classe précédente qui l'a dimensionné à la main le
-        // fige, et il cesse de s'ajuster aux scènes suivantes. Sans cela, ce scénario passe seul
-        // et rougit dans la suite - vécu, sur l'assertion de visibilité.
-        stage.setWidth(1180);
-        stage.setHeight(900);
+        FenetreDuBanc.poser(stage, loader.load(), 1180, 900);
         // ⚠️ L'écran du lot est ouvert AVANT `show()`. Ouvert après, l'accueil paraissait une fraction
         // de seconde puis l'écran du lot surgissait sans qu'aucun geste ne l'explique : le clip
         // commençait sur un écran qui n'a rien à voir avec le cas.
         injector.getInstance(NavigationLot.class).ouvrir(contexte);
-        stage.show();
+        FenetreDuBanc.afficher(stage);
     }
 
     @AfterEach

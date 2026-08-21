@@ -25,12 +25,12 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Respiration;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -142,14 +142,8 @@ class ScenarioPerceptifIssuesConnexionTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(Habillage.scene(racine, LARGEUR, HAUTEUR));
-        // ⚠️ La taille se pose EXPLICITEMENT. Le Stage du harnais TestFX est partagé par toutes
-        // les classes d'un même fork : une classe précédente qui l'a dimensionné à la main le
-        // fige, et il cesse de s'ajuster aux scènes suivantes. Sans cela, ce scénario passe seul
-        // et rougit dans la suite - vécu, sur l'assertion de visibilité.
-        stage.setWidth(LARGEUR);
-        stage.setHeight(HAUTEUR);
-        stage.show();
+        FenetreDuBanc.poser(stage, racine, LARGEUR, HAUTEUR);
+        FenetreDuBanc.afficher(stage);
     }
 
     @AfterEach
