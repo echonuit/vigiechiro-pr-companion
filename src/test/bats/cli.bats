@@ -43,8 +43,7 @@ setup() {
 # « NO_COLOR éteint la couleur » y serait vert sans rien prouver, puisqu'il n'y avait pas de couleur à
 # éteindre. Vu en éprouvant ces tests : neutraliser la détection de terminal n'en faisait rougir qu'un.
 sous_un_terminal() { # <variables d'environnement…> -- rend la sortie de `vigiechiro --help`
-  script -qec "java --enable-native-access=ALL-UNNAMED \
-    -Dvigiechiro.workspace=${BATS_TEST_TMPDIR} -cp ${JAR} fr.univ_amu.iut.cli.Cli --help" /dev/null
+  script -qec "$(ligne_cli --help)" /dev/null
 }
 
 echappement() { printf '\033'; }
@@ -336,6 +335,11 @@ echappement() { printf '\033'; }
   # LE parcours que #2732 n avait aucun moyen d exercer bout en bout : ses bornes ne vivaient que
   # derriere l IHM. On abaisse la borne d entrees plutot que de fabriquer une bombe - ce qu on eprouve
   # est le CHEMIN du refus jusqu au code de sortie du processus.
+  #
+  # La borne s abaisse par propriete JVM, et le lanceur empaquete n en accepte aucune : ce cas est donc
+  # le seul de la suite qui ne peut s eprouver que sur le fat-jar (#4075). Il le DIT, plutot que de
+  # rendre un vert qui n aurait rien traverse.
+  exige_le_fat_jar "borne JVM : le lanceur empaquete n accepte pas d option JVM, ce cas s eprouve sur le fat-jar (#4075)"
   command -v python3 >/dev/null 2>&1 || skip "python3 requis pour fabriquer le WAV et l archive"
 
   local sd="${BATS_TEST_TMPDIR}/sd"
