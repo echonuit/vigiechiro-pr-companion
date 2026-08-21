@@ -17,7 +17,6 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.EtapeNavigation;
 import fr.univ_amu.iut.commun.view.Navigateur;
-import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -65,9 +64,8 @@ class SiteDetailRenommageViewTest {
                     /// sans ouvrir de fenêtre, qui figerait TestFX en headless.
                     @Provides
                     @Singleton
-                    NavigationSites navigation(
-                            Injector interne, Navigateur navigateur, NotificateurModifiable notificateur) {
-                        return new NavigationSites(interne, navigateur, notificateur) {
+                    NavigationSites navigation(Injector interne, Navigateur navigateur) {
+                        return new NavigationSites(interne, navigateur) {
                             @Override
                             public void ouvrirModaleEditionSite(Window parent, Site aModifier, Runnable apresSucces) {
                                 interne.getInstance(ServiceSites.class)

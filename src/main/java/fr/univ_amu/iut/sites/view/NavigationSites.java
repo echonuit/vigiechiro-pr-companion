@@ -9,9 +9,8 @@ import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
-import fr.univ_amu.iut.commun.view.NiveauNotification;
-import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -44,23 +43,10 @@ public class NavigationSites implements OuvrirSite {
     private final Injector injector;
     private final Navigateur navigateur;
 
-    /// Porteur du compte rendu des gestes que **cette classe** conclut, et non l'écran qu'elle ouvre.
-    ///
-    /// Il est **injecté** plutôt que construit ici, pour la raison de l'[ADR 0010] : un dialogue
-    /// bloquant se remplace en test. Le compte rendu du rapatriement passait par le notificateur de la
-    /// fiche fraîchement créée, qu'aucun test ne pouvait atteindre - la fiche n'existe pas avant
-    /// l'appel, et le dialogue réel fait `showAndWait`, qui fige TestFX headless. La couture était donc
-    /// **intestable**, ce que la mesure a confirmé : le compte rendu retiré, 286 tests restaient verts.
-    ///
-    /// En production, rien ne change : le délégué par défaut est le même `NotificationDialogue` sans
-    /// propriétaire que le contrôleur se donnait.
-    private final NotificateurModifiable notificateur;
-
     @Inject
-    public NavigationSites(Injector injector, Navigateur navigateur, NotificateurModifiable notificateur) {
+    public NavigationSites(Injector injector, Navigateur navigateur) {
         this.injector = Objects.requireNonNull(injector, "injector");
         this.navigateur = Objects.requireNonNull(navigateur, "navigateur");
-        this.notificateur = Objects.requireNonNull(notificateur, "notificateur");
     }
 
     /// Affiche l'écran d'accueil **M-Sites** dans la zone centrale du chrome.
@@ -85,14 +71,21 @@ public class NavigationSites implements OuvrirSite {
     /// La modale s'est fermée : sans ce message, l'utilisateur arriverait sur une fiche soudainement
     /// peuplée de quarante et un points sans savoir d'où ils viennent, ni si son carré est bien rattaché.
     /// Un geste qui écrit autant ne se conclut pas par un écran muet.
+    ///
+    /// Le compte rendu va au **bandeau de la fiche**, jamais dans une fenêtre : récupérer un carré ne
+    /// détruit rien, et l'[ADR 0023] réserve le modal à l'irréversible. Le clip de recette S1-37 montrait
+    /// l'ancienne forme, où une modale se fermait pour en ouvrir une autre, posée dans un coin (#4091).
+    ///
+    /// Le résultat porte déjà les deux moitiés d'un [RetourOperation] : son message et sa sévérité. Rien
+    /// n'est donc décidé ici de ce qui doit être dit, ni de quelle couleur.
     public void ouvrirDetailRapatrie(RapatriementCarre.Resultat.Rapatrie rapatrie) {
         Objects.requireNonNull(rapatrie, "rapatrie");
         FXMLLoader loader = charger("SiteDetail.fxml");
         Parent vue = lire(loader);
         SiteDetailController controller = loader.getController();
         controller.afficher(rapatrie.site());
+        controller.rendreCompte(new RetourOperation(rapatrie.message(), rapatrie.severite()));
         navigateur.empiler(vue, "site-detail", controller.libelleFil(), controller);
-        notificateur.notifier(NiveauNotification.INFORMATION, "Carré récupéré", rapatrie.message());
     }
 
     /// Relibelle l'étape de la fiche après une modification du site (#3672), sur le modèle de
