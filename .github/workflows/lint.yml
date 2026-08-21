@@ -273,6 +273,18 @@ jobs:
           ./.github/scripts/verifie-conditions-booleennes.sh --auto-test
           ./.github/scripts/verifie-conditions-booleennes.sh
 
+      - name: La condition d'un job appuyé sur un « needs » nomme l'état qu'elle attend
+        # ⚠️ GitHub saute un job dès qu'un ANCÊTRE a été sauté, sauf si son `if:` porte une fonction
+        # d'état : sans elle, la condition est enveloppée en `success() && (...)` sur tout le graphe
+        # amont, et la porte qu'on croit tenir n'est jamais évaluée. Mesuré sur le run 32224321373 :
+        # la 2.186.0 a eu son tag, son CHANGELOG et sa Release, puis aucun installeur - `installers`
+        # et `publish` descendaient d'une garde que le train programmé saute toujours. Le run était
+        # VERT, et personne ne l'a vu pendant huit jours (#4079).
+        run: |
+          chmod +x .github/scripts/verifie-conditions-de-job.sh
+          ./.github/scripts/verifie-conditions-de-job.sh --auto-test
+          ./.github/scripts/verifie-conditions-de-job.sh
+
       - name: Les renvois entre workflows visent un libellé existant
         # Un `workflow_run` désigne le workflow attendu par son `name:`, apparié par égalité stricte.
         # Un libellé mort n'arme rien et ne rougit pas : il n'y a AUCUN run à regarder. #3279 l'a payé
