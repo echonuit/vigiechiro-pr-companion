@@ -272,6 +272,8 @@ jobs:
           chmod +x .github/scripts/verifie-conditions-booleennes.sh
           ./.github/scripts/verifie-conditions-booleennes.sh --auto-test
           ./.github/scripts/verifie-conditions-booleennes.sh
+          chmod +x .github/scripts/clips-orphelins.sh
+          ./.github/scripts/clips-orphelins.sh --auto-test
 
       - name: Les scripts shell passent shellcheck
         # ⚠️ Les RÉGLAGES (exclusions) vivent dans `.shellcheckrc`, pas ici : un contributeur qui
@@ -284,8 +286,10 @@ jobs:
         # vrai défaut dans `clips-orphelins.sh` (#4106). Un garde qui manquerait le défaut qui l'a
         # fait naître ne garderait pas grand-chose.
         #
-        # La divergence qui reste va dans le bon sens : à la main on voit PLUS (les trois notes de
-        # style), jamais moins. Personne ne peut se croire propre pendant que la CI rougirait.
+        # ⚠️ La PARITÉ porte sur les réglages, PAS sur la version. Mesuré sur ce pas même : le
+        # runner a signalé un `SC2015` que shellcheck 0.11.0 ne signale plus en local. C'est donc la
+        # CI qui fait foi, et un poste plus récent peut être plus PERMISSIF - l'inverse de ce que
+        # j'avais d'abord écrit ici. `shellcheck --version` avant de conclure d'un vert local.
         run: |
           set -euo pipefail
           command -v shellcheck >/dev/null 2>&1 || {
@@ -297,8 +301,6 @@ jobs:
           )
           echo "${#scripts[@]} script(s) analysé(s)."
           shellcheck --shell=bash -S info "${scripts[@]}"
-          chmod +x .github/scripts/clips-orphelins.sh
-          ./.github/scripts/clips-orphelins.sh --auto-test
 
       - name: La condition d'un job appuyé sur un « needs » nomme l'état qu'elle attend
         # ⚠️ GitHub saute un job dès qu'un ANCÊTRE a été sauté, sauf si son `if:` porte une fonction

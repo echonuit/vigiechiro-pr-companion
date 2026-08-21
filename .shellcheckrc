@@ -24,6 +24,9 @@ disable=SC2016
 # C'est un SC2086, classé « info », et c'est précisément la remarque qui a trouvé un vrai défaut
 # dans `clips-orphelins.sh` (#4106). Un seuil qui laisse passer le défaut fondateur ne garde rien.
 #
-# La divergence qui reste va dans le bon sens : un lancement à la main montre PLUS que la CI - les
-# trois notes de STYLE en plus - jamais moins. Personne ne peut se croire propre pendant que la CI
-# rougirait. Ces trois-là sont nommées dans `dev-docs/ci-cd-release.md`.
+# ⚠️ Ce fichier donne les mêmes RÉGLAGES à tout le monde, pas la même VERSION. Mesuré : le runner a
+# signalé un `SC2015` que shellcheck 0.11.0 ne signale plus. Un poste plus récent peut donc être plus
+# permissif que la CI, et c'est la CI qui fait foi. Vérifier `shellcheck --version` avant de conclure
+# d'un vert local.
+#
+# Trois notes de STYLE restent hors du seuil, nommées dans `dev-docs/ci-cd-release.md`.

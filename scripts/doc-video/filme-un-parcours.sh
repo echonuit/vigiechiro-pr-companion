@@ -1449,7 +1449,10 @@ plages_a_accelerer() { # <marques> <t0> <coupe>
         grep -q "	${base}_fin$" "$marques" || continue
         d=$(instant_du_repere "$marques" "$t0" "${base}_debut")
         f=$(instant_du_repere "$marques" "$t0" "${base}_fin")
-        [ -n "$d" ] && [ -n "$f" ] || continue
+        # Forme `if` et non `A && B || C` : la seconde exécute C aussi quand A est vrai et B faux,
+        # ce qui est ici le comportement voulu mais ne se lit pas. Signalé par le shellcheck de la
+        # CI (SC2015), que la version locale ne signale plus.
+        if [ -z "$d" ] || [ -z "$f" ]; then continue; fi
         LC_NUMERIC=C awk -v d="$d" -v f="$f" -v c="$coupe" \
             'BEGIN{a = d - c; b = f - c; if (a < 0) a = 0; if (b > a) printf "%.3f\t%.3f\n", a, b}'
     done < "$marques"

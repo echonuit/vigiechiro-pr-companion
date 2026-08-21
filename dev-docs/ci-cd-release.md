@@ -585,13 +585,18 @@ pousser.
 **Une règle est exclue, `SC2016`** (« les expressions ne s'expansent pas dans des guillemets
 simples ») : 104 occurrences sur environ 130, toutes portant sur un `$` volontairement littéral -
 programmes `awk`, filtres `drawtext` de ffmpeg, extraits de workflow dans les auto-tests. Une règle
-qui rougit cent fois sur du code juste apprend à ne plus lire la sortie ([ADR 3479](decisions/3479-une-loupe-bruyante-ne-sert-personne.md)).
+qui rougit cent fois sur du code juste apprend à ne plus lire la sortie ([ADR 3479](decisions/3479-toute-table-n-a-pas-vocation-a-etre-exploree.md)).
 
 **Le seuil est `-S info`, et non `warning`.** Au seuil warning, un `rm -f $fichiers` non quoté passe
 au vert : c'est un `SC2086`, classé « info », et c'est exactement la remarque qui a trouvé un vrai
 défaut dans `clips-orphelins.sh` (#4106). Un seuil qui laisse passer le défaut fondateur ne garde
 rien. Le seuil est un drapeau et non un réglage parce que `severity=` **n'est pas lu** depuis
 `.shellcheckrc` - vérifié.
+
+⚠️ **La parité porte sur les réglages, pas sur la version.** Mesuré en branchant ce pas : le runner
+a signalé un `SC2015` que shellcheck 0.11.0 ne signale plus en local. C'est donc la CI qui fait foi,
+et un poste plus récent peut être plus **permissif** - l'inverse du sens rassurant. Vérifier
+`shellcheck --version` avant de conclure d'un vert local.
 
 ⚠️ **Ce qui reste dehors**, nommé plutôt que tu : **trois notes de style**, deux `SC2001` (un `sed`
 là où une expansion suffirait, mais où l'expansion serait moins lisible) et un `SC2129` (des
