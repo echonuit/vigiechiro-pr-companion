@@ -7,7 +7,6 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.viewmodel.IndicateurAccueil;
-import fr.univ_amu.iut.recette.CasDeRecette;
 import java.nio.file.Path;
 import java.util.Set;
 import org.junit.jupiter.api.AfterEach;
@@ -49,7 +48,6 @@ class AccueilApparenceTest {
 
     @Test
     @DisplayName("Chaque prisme expose un intitulé et un code d'icône FontAwesome (en-tête de section)")
-    @CasDeRecette("S1-01")
     void prismes_exposent_libelle_et_icone() {
         for (Prisme prisme : Prisme.values()) {
             assertThat(prisme.libelle()).as("intitulé de %s", prisme).isNotBlank();

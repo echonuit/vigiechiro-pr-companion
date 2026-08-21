@@ -6,7 +6,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.recette.CasDeRecette;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
@@ -26,7 +25,6 @@ class ActionMenuWiringTest {
     }
 
     @Test
-    @CasDeRecette("S1-28")
     @DisplayName("Le menu ☰ agrège les entrées du socle dans l'ordre (groupe puis ordre)")
     void agrege_et_ordonne(@TempDir Path tmp) {
         System.setProperty("vigiechiro.workspace", tmp.toString());
