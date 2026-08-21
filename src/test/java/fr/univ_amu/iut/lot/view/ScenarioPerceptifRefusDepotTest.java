@@ -113,6 +113,10 @@ class ScenarioPerceptifRefusDepotTest {
 
     private static final String QUALIFIANT = "depotQuiRefuse";
 
+    /// Marge au-dessus et au-dessous de ce qu'on vient lire : une phrase collée au bord se lit mal,
+    /// et ce cas fait juger sa lisibilité.
+    private static final double AIR_DE_LECTURE = 24;
+
     private Injector injector;
     private ContextePassage contexte;
 
@@ -338,10 +342,24 @@ class ScenarioPerceptifRefusDepotTest {
         return null;
     }
 
+    /// `noeud` est-il **réellement à l'image** ?
+    ///
+    /// ⚠️ Comparer aux bornes de la SCÈNE ne suffit pas, et c'est ce que faisait la première version.
+    /// La zone réellement visible est plus petite : la barre du chrome la mange en haut, la barre de
+    /// statut en bas. Un noeud à y = 870 satisfait « maxY <= 900 » **et reste caché derrière la barre
+    /// de statut**. Le clip publié le montrait : l'assertion passait, la phrase était sous le bord.
+    ///
+    /// La bonne référence est la zone d'affichage du [ScrollPane] qui porte le noeud.
     private static boolean dansLeCadre(Node noeud) {
-        Bounds dansLaScene = noeud.localToScene(noeud.getBoundsInLocal());
-        return dansLaScene.getMinY() >= 0
-                && dansLaScene.getMaxY() <= noeud.getScene().getHeight();
+        Bounds cible = noeud.localToScene(noeud.getBoundsInLocal());
+        ScrollPane cadre = cadreDefilant(noeud);
+        if (cadre == null) {
+            return cible.getMinY() >= 0 && cible.getMaxY() <= noeud.getScene().getHeight();
+        }
+        Bounds vue = cadre.localToScene(cadre.getBoundsInLocal());
+        // ⚠️ Un peu d'air, et non le bord exact. Ce cas fait juger la LISIBILITÉ d'une phrase : collée
+        // au pixel près contre la barre de statut, elle est « visible » et se lit mal.
+        return cible.getMinY() >= vue.getMinY() + AIR_DE_LECTURE && cible.getMaxY() <= vue.getMaxY() - AIR_DE_LECTURE;
     }
 
     /// Le libellé qui porte `extrait`, ou une erreur qui le nomme.
