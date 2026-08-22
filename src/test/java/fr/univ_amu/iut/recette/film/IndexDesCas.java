@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -45,8 +46,10 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 /// défaut d'origine reviendrait, en plus rare et donc en pire.
 ///
 /// ⚠️ Limite assumée : un dossier de tournage RÉUTILISÉ garde les fragments du tournage précédent,
-/// et l'index les compterait. Le nombre de fragments fusionnés est donc annoncé à chaque écriture -
-/// un total surprenant se voit, au lieu de se deviner. La CI part toujours d'un `target/` neuf.
+/// et l'index les compterait. C'est le prix d'une identité qui ne se réemploie jamais, et c'est le
+/// bon prix : le défaut inverse EFFACE des lignes, celui-ci en montre de trop. Le nombre de
+/// fragments fusionnés est annoncé à chaque écriture, si bien qu'un total surprenant se voit au lieu
+/// de se deviner. La CI part toujours d'un `target/` neuf.
 public final class IndexDesCas implements ExtensionContext.Store.CloseableResource {
 
     public record Ligne(String cas, String test, String clip, boolean fenetreVue) {
@@ -98,15 +101,35 @@ public final class IndexDesCas implements ExtensionContext.Store.CloseableResour
     private final List<Ligne> lignes = Collections.synchronizedList(new ArrayList<>());
 
     public IndexDesCas(Path fichier) {
-        // Deux JVM vivantes ne partagent pas un identifiant de processus : deux fragments ne
-        // peuvent donc pas se recouvrir.
-        this(fichier, String.valueOf(ProcessHandle.current().pid()));
+        this(fichier, identiteParDefaut());
+    }
+
+    /// L'identité de CETTE JVM, unique même parmi celles qui ne vivent pas en même temps.
+    ///
+    /// ⚠️ Le numéro de processus ne suffit pas, et c'est macOS qui l'a dit. La première version
+    /// nommait le fragment d'après le seul `pid`. Sous Linux et Windows les forks vivaient
+    /// ensemble, donc leurs numéros différaient et rien ne paraissait. Sur un runner macOS, moins
+    /// de coeurs : les forks se sont ENCHAÎNÉS, le système a recyclé un numéro libéré, et la JVM de
+    /// `ScenarioPerceptifRefusDepotTest` a écrasé le fragment de `ScenarioPerceptifRecuperationCarreTest`.
+    /// Neuf clips produits, index à huit lignes, `S1-37` disparu.
+    ///
+    /// C'est le JUMEAU du défaut que les fragments corrigeaient : une écriture qui en efface une
+    /// autre sans un mot. Le remède avait déplacé la collision d'un cran, du fichier unique au
+    /// numéro de processus, sans la retirer. Un identifiant qui se réemploie n'identifie pas.
+    ///
+    /// Le `pid` est gardé en tête parce qu'il se lit, et se rattache à une ligne de journal.
+    static String identiteParDefaut() {
+        return ProcessHandle.current().pid() + "-" + UUID.randomUUID();
     }
 
     /// ⚠️ L'identité est un paramètre pour que le défaut d'origine soit REPRODUCTIBLE. Il ne se
     /// produit qu'entre deux JVM, et un test ne peut pas en démarrer une seconde : sans cette
     /// couture, la seule façon de voir l'index amputé serait de lancer un tournage entier, ce qui
     /// revient à ne jamais le voir.
+    ///
+    /// ⚠️ Elle sert à ORDONNER les fragments dans les cas de garde, jamais à leur donner un nom
+    /// stable : deux séances qui se disent la même identité s'effacent, et c'est précisément le
+    /// défaut que [#identiteParDefaut()] existe pour empêcher.
     IndexDesCas(Path fichier, String identite) {
         this.fichier = fichier;
         this.identite = identite;
