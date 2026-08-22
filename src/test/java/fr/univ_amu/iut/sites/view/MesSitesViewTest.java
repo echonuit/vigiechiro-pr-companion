@@ -167,7 +167,7 @@ class MesSitesViewTest {
         assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeSync").query()))
                 .as("et il dit ce qui manque, avec le geste qui répare")
                 .contains("pas connecté")
-                .contains("menu ☰");
+                .contains("Se connecter à Vigie-Chiro");
         Respiration.surLeMomentCle(robot);
 
         seConnecter(robot);

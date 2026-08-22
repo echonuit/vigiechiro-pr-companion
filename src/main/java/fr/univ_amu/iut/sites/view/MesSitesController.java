@@ -151,7 +151,8 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
                 Bindings.when(viewModel.connecteProperty())
                         .then("Récupérer les sites déclarés sur Vigie-Chiro.")
                         .otherwise("Vous n'êtes pas connecté à Vigie-Chiro : rien ne peut être récupéré."
-                                + " Connectez-vous depuis le menu ☰."));
+                                + " Connectez-vous depuis le menu principal, entrée « Se connecter à"
+                                + " Vigie-Chiro… »."));
         // Chargement initial hors du fil JavaFX (#1212) : lectures base sous voile, erreur routée vers
         // le filet de l'écran (#795), application des cartes sur le fil JavaFX.
         occupation.occuper(
