@@ -20,6 +20,8 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
@@ -120,6 +122,8 @@ class MesSitesViewTest {
     @Test
     @DisplayName("#2606 : la synchronisation s'annonce sous une fenêtre de suivi, avec « Annuler »")
     void synchro_montre_son_avancement_et_laisse_renoncer(FxRobot robot) {
+        // Depuis #4194 le geste est FERMÉ sans jeton : il faut donc en poser un pour l'exercer.
+        seConnecter(robot);
         when(client.mesParticipations()).thenAnswer(appel -> {
             // Instantané pris pendant le travail : après coup, la fenêtre est déjà refermée.
             Window suivi = Window.getWindows().stream()
@@ -152,8 +156,24 @@ class MesSitesViewTest {
                 .as("app complète : la passerelle est liée, le bouton est offert")
                 .isTrue();
 
-        // Le bouton est ce que ce cas fait juger : il doit être À L'IMAGE, et tenu le temps d'être vu.
+        // ⚠️ D'ABORD l'état EMPÊCHÉ, et son motif. La revue demandait de « voir la connexion avant de
+        // voir que le bouton existe » (#4171), et cette demande a mis au jour un défaut du produit : le
+        // geste était offert sans jeton, ouvrait son dialogue, ne rapatriait rien et ne disait pas
+        // pourquoi (#4194). Il se ferme désormais, et dit ce qui manque.
         CadreVisible.amener(bouton, robot);
+        assertThat(bouton.isDisabled())
+                .as("sans jeton, rien ne peut être récupéré : le geste est fermé")
+                .isTrue();
+        assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeSync").query()))
+                .as("et il dit ce qui manque, avec le geste qui répare")
+                .contains("pas connecté")
+                .contains("menu ☰");
+        Respiration.surLeMomentCle(robot);
+
+        seConnecter(robot);
+        assertThat(bouton.isDisabled())
+                .as("le jeton posé, le geste se rouvre sans qu'on ait quitté l'écran")
+                .isFalse();
         assertThat(CadreVisible.contient(bouton))
                 .as("un bouton hors du cadre est un bouton que le clip n'offre pas")
                 .isTrue();
@@ -328,6 +348,17 @@ class MesSitesViewTest {
                 .isPresent();
         assertThat(robot.lookup("#valNumeroCarre").queryAs(Label.class).getText())
                 .isEqualTo("752204");
+    }
+
+    /// Pose un jeton et provoque la relecture, comme le ferait une connexion depuis le menu ☰.
+    ///
+    /// ⚠️ La connexion elle-même n'est pas jouée ici - elle a sa propre modale et ses propres cas
+    /// (`S1-04` à `S1-08`). Ce qui est montré est son EFFET sur cet écran : le geste qui se rouvre.
+    private void seConnecter(FxRobot robot) {
+        when(client.estConnecte()).thenReturn(true);
+        robot.interact(() -> injector.getInstance(RevisionDonnees.class).mutationStructurelleValidee());
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
     }
 
     private static KeyEvent touche(KeyCode code) {

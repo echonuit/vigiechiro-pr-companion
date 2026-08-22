@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
@@ -89,6 +90,9 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
     private Button btnSyncVigieChiro;
 
     @FXML
+    private StackPane enveloppeSync;
+
+    @FXML
     private Label lblSynchro;
 
     @Inject
@@ -132,7 +136,22 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
         // Bouton relâché par binding sur l'occupation (#1254) : plus de setDisable posé à la main de
         // part et d'autre du travail, plus de bouton figé si le travail échoue.
-        btnSyncVigieChiro.disableProperty().bind(occupation.enCoursProperty());
+        // ⚠️ Fermé aussi TANT QU'AUCUN JETON n'est disponible (#4194). Sans cela le geste était offert,
+        // ouvrait son dialogue de progression, ne rapatriait rien - `RapprochementSites` rend
+        // `Optional.empty()` sur `NonConnecte` - et l'écran ne disait pas pourquoi. C'est exactement ce
+        // que l'affordance #789 refuse : on EMPÊCHE, au lieu d'avertir après coup. La commande voisine
+        // « Ouvrir sur Vigie-Chiro », sur la fiche du site, l'appliquait déjà.
+        btnSyncVigieChiro
+                .disableProperty()
+                .bind(occupation
+                        .enCoursProperty()
+                        .or(viewModel.connecteProperty().not()));
+        IndicateurBlocage.expliquer(
+                enveloppeSync,
+                Bindings.when(viewModel.connecteProperty())
+                        .then("Récupérer les sites déclarés sur Vigie-Chiro.")
+                        .otherwise("Vous n'êtes pas connecté à Vigie-Chiro : rien ne peut être récupéré."
+                                + " Connectez-vous depuis le menu ☰."));
         // Chargement initial hors du fil JavaFX (#1212) : lectures base sous voile, erreur routée vers
         // le filet de l'écran (#795), application des cartes sur le fil JavaFX.
         occupation.occuper(
