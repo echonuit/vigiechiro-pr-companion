@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferInt;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import javafx.animation.AnimationTimer;
@@ -28,11 +30,24 @@ final class CameraDeScene extends AnimationTimer {
 
     private static final Color FOND = new Color(0x10, 0x10, 0x14);
 
+    /// La marque qui dit qu'une scène est déjà suivie, posée dans ses propriétés.
+    private static final String SUIVI_POSE = "recette.film.suivi";
+
+    /// ⚠️ Trois images à dix par seconde : assez pour qu'un appui se voie, trop court pour
+    /// qu'un clip entier paraisse cliqué.
+    private static final long HALO_MS = 300;
+
+    /// Assez pour lire un raccourci sans le chercher, et pour qu'il ne survive pas au geste
+    /// suivant.
+    private static final long BADGE_MS = 800;
+
     private final int largeur;
     private final int hauteur;
     private final long periodeNs;
     private final BlockingQueue<BufferedImage> file;
     private final AtomicInteger perdues = new AtomicInteger();
+
+    private final Gestes gestes = new Gestes();
 
     private long dernierDeclenchement;
     private volatile boolean fenetreVue;
@@ -78,6 +93,7 @@ final class CameraDeScene extends AnimationTimer {
     // image perdue, comme il compte déjà le refus de la file.
     private BufferedImage composer() {
         BufferedImage toile = new BufferedImage(largeur, hauteur, BufferedImage.TYPE_3BYTE_BGR);
+        Map<Window, int[]> decalages = new HashMap<>();
         Graphics2D g = toile.createGraphics();
         g.setColor(FOND);
         g.fillRect(0, 0, largeur, hauteur);
@@ -88,6 +104,10 @@ final class CameraDeScene extends AnimationTimer {
                 continue;
             }
             fenetreVue = true;
+            // Les filtres se posent une fois par scène, à la première image où on la voit.
+            if (scene.getProperties().putIfAbsent(SUIVI_POSE, Boolean.TRUE) == null) {
+                gestes.observer(scene);
+            }
             WritableImage prise = scene.snapshot(null);
             int x = decalage(largeur, (int) prise.getWidth());
             int y = decalage(hauteur, (int) prise.getHeight());
@@ -98,10 +118,36 @@ final class CameraDeScene extends AnimationTimer {
                 y = decalageRelatif(
                         hauteur, (int) proprietaire.getScene().getHeight(), fenetre.getY() - proprietaire.getY());
             }
+            decalages.put(fenetre, new int[] {x, y});
             g.drawImage(versAwt(prise), x, y, null);
         }
+        dessinerLesGestes(g, decalages);
         g.dispose();
         return toile;
+    }
+
+    /// Pose par-dessus le produit ce que le graphe de scène ne contient pas : le pointeur, son halo,
+    /// et le raccourci frappé.
+    ///
+    /// ⚠️ La position du pointeur est une coordonnée de SCÈNE, donc elle s'ajoute au décalage de la
+    /// fenêtre où le geste a eu lieu - celui-là même qui vient d'être calculé. C'est ce qui fait
+    /// suivre le pointeur jusque sur un menu, et c'est encore la même leçon : l'absolu ment, le
+    /// relatif non.
+    private void dessinerLesGestes(Graphics2D g, Map<Window, int[]> decalages) {
+        long maintenant = System.currentTimeMillis();
+        gestes.pointeur().ifPresent(vu -> {
+            int[] ou = decalages.get(vu.fenetre());
+            if (ou == null) {
+                // La fenêtre du dernier geste n'est plus à l'écran - un menu qui vient de se
+                // refermer, par exemple. Dessiner son pointeur le poserait n'importe où.
+                return;
+            }
+            int x = ou[0] + (int) Math.round(vu.x());
+            int y = ou[1] + (int) Math.round(vu.y());
+            CalqueDesGestes.halo(g, x, y, gestes.halo(maintenant, HALO_MS));
+            CalqueDesGestes.fleche(g, x, y);
+        });
+        gestes.badge(maintenant, BADGE_MS).ifPresent(libelle -> CalqueDesGestes.badge(g, largeur, hauteur, libelle));
     }
 
     /// La fenêtre dont celle-ci dépend, quand elle en dépend.
