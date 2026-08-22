@@ -379,5 +379,9 @@ class ModaleSiteVerifierCarreViewTest {
         assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeValider").queryAs(StackPane.class)))
                 .contains("existe déjà")
                 .doesNotContain("6 chiffres");
+
+        // Ce que ce cas fait juger tient à l'écran en même temps : le verdict « il existe déjà », le
+        // bouton « Créer » fermé, et le motif porté par son infobulle. On s'y arrête.
+        Respiration.surLeMomentCle(robot);
     }
 }
