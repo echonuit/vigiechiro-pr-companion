@@ -70,11 +70,11 @@ class CalqueDesGestesTest {
         // compris. Ce qui est éprouvé ici reste entier : la flèche est ANCRÉE par sa pointe et
         // s'étend vers le bas à droite. Une flèche centrée sur le point commencerait seize pixels
         // plus haut, et ce cas rougirait.
-        int liseré = 4;
+        int lisere = 4;
         int[] cadre = etendue(image);
         assertThat(cadre[2]).as("quelque chose a été peint").isNotEqualTo(-1);
-        assertThat(cadre[0]).as("rien à gauche de la pointe, au liseré près").isGreaterThanOrEqualTo(400 - liseré);
-        assertThat(cadre[1]).as("rien au-dessus de la pointe, au liseré près").isGreaterThanOrEqualTo(300 - liseré);
+        assertThat(cadre[0]).as("rien à gauche de la pointe, au liseré près").isGreaterThanOrEqualTo(400 - lisere);
+        assertThat(cadre[1]).as("rien au-dessus de la pointe, au liseré près").isGreaterThanOrEqualTo(300 - lisere);
         assertThat(cadre[3]).as("et elle descend, comme une flèche").isGreaterThan(300 + 20);
         assertThat(cadre[2] - cadre[0]).as("une flèche a une largeur lisible").isBetween(10, 40);
     }
