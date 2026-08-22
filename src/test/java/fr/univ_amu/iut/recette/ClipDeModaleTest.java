@@ -36,8 +36,13 @@ class ClipDeModaleTest {
 
     private static final Path SOURCES = Path.of("src", "test", "java");
 
-    /// Le chargement direct d'une modale : `charger("ModaleSite.fxml")`, `getResource("ModalePoint.fxml")`.
-    private static final Pattern MODALE_CHARGEE = Pattern.compile("\"Modale[A-Za-z]*\\.fxml\"");
+    /// Le chargement direct d'une modale, **où que le mot se trouve dans le nom** :
+    /// `ModaleSite.fxml`, `ModalePoint.fxml`, `ConnexionModale.fxml`.
+    ///
+    /// ⚠️ La première version ancrait `Modale` au DÉBUT du nom. Elle ratait `ConnexionModale.fxml`, donc
+    /// les deux cas de la modale de connexion - `S1-04` et `S1-11` - dont les clips montraient encore une
+    /// modale sur fond noir. Le garde se déclarait vert en regardant deux fichiers sur quatre.
+    private static final Pattern MODALE_CHARGEE = Pattern.compile("\"[A-Za-z]*Modale[A-Za-z]*\\.fxml\"");
 
     @Test
     @DisplayName("#4188 : aucun cas de recette n'est porté par une classe qui monte une modale seule")
@@ -46,6 +51,12 @@ class ClipDeModaleTest {
         for (Path source : sourcesDeTest()) {
             String code = lire(source);
             if (!code.contains("@CasDeRecette(") || code.contains("@FixtureDeRecette")) {
+                continue;
+            }
+            // ⚠️ Un détecteur textuel s'exclut de son corpus ([ADR 3645]). Sans cela ce fichier-ci se
+            // dénonce lui-même : son message d'échec cite les noms qu'il cherche, et son doc-comment
+            // aussi. La première version se comptait donc parmi les fautifs.
+            if (source.getFileName().toString().equals("ClipDeModaleTest.java")) {
                 continue;
             }
             if (MODALE_CHARGEE.matcher(code).find()) {
