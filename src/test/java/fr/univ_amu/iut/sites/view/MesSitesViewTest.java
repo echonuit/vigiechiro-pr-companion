@@ -20,8 +20,11 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
@@ -32,7 +35,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
@@ -49,6 +51,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX de l'écran **M-Sites** : chargement du chrome + de la vue d'accueil
 /// via Guice sur une base SQLite jetable, affichage des cartes seedées et navigation vers le
@@ -93,9 +96,11 @@ class MesSitesViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1100, 720));
+        // ⚠️ `Habillage` via `FenetreDuBanc`, et non `new Scene` : les six cas de cette classe sont
+        // FILMÉS, et une scène montée sans habillage porte la police de la MACHINE (#3773, #4149).
+        FenetreDuBanc.poser(stage, racine, 1180, 900);
         injector.getInstance(NavigationSites.class).ouvrirAccueil();
-        stage.show();
+        FenetreDuBanc.afficher(stage);
     }
 
     private void seeder(SourceDeDonnees source) {
@@ -146,6 +151,13 @@ class MesSitesViewTest {
         assertThat(bouton.isVisible())
                 .as("app complète : la passerelle est liée, le bouton est offert")
                 .isTrue();
+
+        // Le bouton est ce que ce cas fait juger : il doit être À L'IMAGE, et tenu le temps d'être vu.
+        CadreVisible.amener(bouton, robot);
+        assertThat(CadreVisible.contient(bouton))
+                .as("un bouton hors du cadre est un bouton que le clip n'offre pas")
+                .isTrue();
+        Respiration.leTempsDeLire(robot);
     }
 
     @Test
@@ -158,17 +170,38 @@ class MesSitesViewTest {
         assertThat(voile.isVisible())
                 .as("chargement terminé (exécuteur synchrone) : overlay masqué, cartes affichées")
                 .isFalse();
+
+        // Ce que le clip montre : l'écran chargé et RIEN qui le voile - les cartes sont là, lisibles,
+        // atteignables. C'est le défaut que ce cas garde : un voile resté en place bloquerait tout.
+        assertThat(robot.lookup(".carte-site").queryAll())
+                .as("sans carte, un écran non voilé ne prouverait rien : il serait vide, pas prêt")
+                .isNotEmpty();
+        Respiration.leTempsDeLire(robot);
+
+        // ⚠️ Ce clip ne montre PAS le voile pendant qu'il paraît, et il ne le peut pas : cette classe
+        // monte l'exécuteur SYNCHRONE, où le travail occupe le fil JavaFX. Aucune image n'est rendue
+        // pendant ce temps, il n'y a rien à filmer (cf. ScenarioPerceptifConnexionTest, qui branche
+        // l'asynchrone précisément pour cette raison). Le dire plutôt que de laisser croire l'inverse.
     }
 
     @Test
     @CasDeRecette(value = "S1-14", portee = Portee.A_L_ECRAN)
     @DisplayName("Les cartes des sites seedés sont affichées")
     void affiche_les_cartes(FxRobot robot) {
-        List<String> titres = robot.lookup(".carte-titre").queryAllAs(Label.class).stream()
-                .map(Label::getText)
-                .toList();
+        List<Label> cartes =
+                robot.lookup(".carte-titre").queryAllAs(Label.class).stream().toList();
 
-        assertThat(titres).contains("Carré 640380", "Carré 752204");
+        assertThat(cartes).extracting(Label::getText).contains("Carré 640380", "Carré 752204");
+
+        // Chaque carte est amenée à l'image et tenue : ce cas fait juger une LISTE, et une liste dont
+        // la moitié est sous le pli n'est pas montrée.
+        for (Label carte : cartes) {
+            CadreVisible.amener(carte, robot);
+            assertThat(CadreVisible.contient(carte))
+                    .as("« %s » reste hors du cadre", carte.getText())
+                    .isTrue();
+            Respiration.leTempsDeLire(robot);
+        }
     }
 
     @Test
@@ -196,6 +229,18 @@ class MesSitesViewTest {
                 .as("sans cela, aucun Tab n'atteint la carte et les deux tests suivants n'ont plus de sujet")
                 .isTrue();
         assertThat(carte.getAccessibleRole()).isEqualTo(AccessibleRole.BUTTON);
+
+        // Le clip montrait un écran immobile : une propriété ne se voit pas. Le focus, lui, se voit -
+        // c'est ce que cette propriété rend possible, et c'est ce qu'un utilisateur au clavier obtient.
+        CadreVisible.amener(carte, robot);
+        Respiration.avantLeGeste(robot);
+        robot.interact(carte::requestFocus);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(carte.isFocused())
+                .as("la carte prend réellement le focus : « focalisable » n'est pas « focalisée »")
+                .isTrue();
     }
 
     @Test
@@ -204,7 +249,18 @@ class MesSitesViewTest {
     void entree_ouvre_le_detail(FxRobot robot) {
         HBox carte = trouverCarte(robot, "Carré 640380");
 
-        robot.interact(() -> carte.getOnKeyPressed().handle(touche(KeyCode.ENTER)));
+        // ⚠️ Une VRAIE frappe, sur une carte qui a le focus. Appeler `getOnKeyPressed().handle(...)`
+        // prouve le gestionnaire et saute tout le reste : le clip montrait l'écran changer sans qu'aucun
+        // geste ne l'explique (#4149). Et l'assertion y gagne - un gestionnaire câblé sur un noeud que
+        // le clavier n'atteint jamais ne sert personne.
+        CadreVisible.amener(carte, robot);
+        robot.interact(carte::requestFocus);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.avantLeGeste(robot);
+
+        robot.push(KeyCode.ENTER);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         // Le détail absent est la façon dont ce test rougit quand la touche cesse d'être
         // traitée : sans cette question posée d'abord, il ne rendrait qu'un « nœud
@@ -225,7 +281,14 @@ class MesSitesViewTest {
         // l'autre.
         HBox carte = trouverCarte(robot, "Carré 752204");
 
-        robot.interact(() -> carte.getOnKeyPressed().handle(touche(KeyCode.SPACE)));
+        CadreVisible.amener(carte, robot);
+        robot.interact(carte::requestFocus);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.avantLeGeste(robot);
+
+        robot.push(KeyCode.SPACE);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         // Le détail absent est la façon dont ce test rougit quand la touche cesse d'être
         // traitée : sans cette question posée d'abord, il ne rendrait qu'un « nœud
