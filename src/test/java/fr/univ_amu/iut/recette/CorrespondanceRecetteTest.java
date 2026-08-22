@@ -241,7 +241,7 @@ class CorrespondanceRecetteTest {
             if (citation.portee() != Portee.HORS_APPLICATION) {
                 continue;
             }
-            verifs.assertThat(sectionDesPages(citation.cas()))
+            verifs.assertThat(sectionDesPages(citation))
                     .as(
                             "%s est un cas dont le verdict est hors de l'application, et sa réserve"
                                     + " n'apparaît nulle part sur les pages de clips. Elle vit alors dans"
@@ -253,18 +253,25 @@ class CorrespondanceRecetteTest {
         verifs.assertAll();
     }
 
-    /// Ce que les deux pages de clips écrivent **sous** la section de `cas`, jusqu'à la section suivante.
+    /// Ce que les deux pages de clips écrivent **sous la section de CE clip**, jusqu'à la suivante.
     ///
     /// ⚠️ On lit la section, pas la page entière : une réserve écrite ailleurs sur la page ne borne pas
     /// le clip qu'on regarde, et le garde la compterait pourtant.
-    private static String sectionDesPages(String cas) {
+    ///
+    /// ⚠️ Et on vise la section du **test**, pas celle du cas. Un cas couvert par plusieurs tests a
+    /// plusieurs sections - `S1-04` en a trois, une par geste de la modale - et chercher la première
+    /// venue faisait lire la réserve d'un autre clip. Le garde refusait alors une réserve pourtant
+    /// posée, ce qui aurait fait la recopier partout (#4158).
+    private static String sectionDesPages(Citation citation) {
+        String methode = citation.test().substring(citation.test().indexOf('.') + 1);
+        String titre = "### " + citation.cas() + " · `" + methode + "`";
         StringBuilder trouve = new StringBuilder();
         for (Path page : List.of(PAGE_PERCEPTIFS, PAGE_ASSERTES)) {
             if (!Files.isRegularFile(page)) {
                 continue;
             }
             String texte = lire(page);
-            int debut = texte.indexOf("### " + cas + " ·");
+            int debut = texte.indexOf(titre);
             if (debut < 0) {
                 continue;
             }

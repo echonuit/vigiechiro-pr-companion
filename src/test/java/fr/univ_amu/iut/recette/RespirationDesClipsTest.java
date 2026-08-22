@@ -133,8 +133,25 @@ class RespirationDesClipsTest {
             if (!lignes[i].strip().startsWith(ANNOTATION)) {
                 continue;
             }
+            // ⚠️ On saute l'annotation en suivant ses PARENTHÈSES, pas ses lignes. Une annotation
+            // repliée sur cinq lignes - `@CasDeRecette(value = …, portee = …, reserve = …)` - a des
+            // lignes de continuation qui ressemblent à tout sauf à une annotation, et un filtre
+            // ligne à ligne prenait la première pour une déclaration de méthode (#4158).
+            int j = i;
+            int ouvertes = 0;
+            do {
+                for (char c : lignes[j].toCharArray()) {
+                    if (c == '(') {
+                        ouvertes++;
+                    } else if (c == ')') {
+                        ouvertes--;
+                    }
+                }
+                j++;
+            } while (j < lignes.length && ouvertes > 0);
+
             String nom = null;
-            for (int j = i + 1; j < lignes.length && nom == null; j++) {
+            for (; j < lignes.length && nom == null; j++) {
                 String ligne = lignes[j].strip();
                 if (INTERCALAIRE.matcher(ligne).matches()) {
                     continue;

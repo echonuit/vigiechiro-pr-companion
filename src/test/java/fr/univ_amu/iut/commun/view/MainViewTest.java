@@ -2,9 +2,13 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
+import com.google.inject.Singleton;
+import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -23,6 +27,8 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
@@ -72,7 +78,13 @@ class MainViewTest {
     void start(Stage stage) throws Exception {
         Path workspace = Files.createTempDirectory("vc-main");
         System.setProperty("vigiechiro.workspace", workspace.toString());
-        injector = RacineInjecteur.creer();
+        // ⚠️ `ActionRestaurer` en singleton, POUR LE BANC SEULEMENT. Sans cela l'injecteur en rend une
+        // instance neuve à chaque demande - mesuré - et les dialogues bouchonnés par le test
+        // s'appliquent à un jetable pendant que le menu en garde un autre : le clic ouvrirait alors le
+        // sélecteur natif, qui fige le banc. La portée est le seul écart avec la production, et il ne
+        // change rien à ce que le cas éprouve.
+        injector = Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(liaison -> liaison.bind(ActionRestaurer.class).in(Singleton.class)));
         source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         navigateur = injector.getInstance(Navigateur.class);
@@ -142,9 +154,13 @@ class MainViewTest {
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.leTempsDeLire(robot);
 
-        robot.interact(reglages::fire);
+        // ⚠️ L'entrée se CLIQUE. `fire()` la déclenchait sans que le pointeur y aille : le menu se
+        // refermait et l'écran changeait, sans qu'on ait vu CHOISIR (#4158). Le libellé est celui de
+        // l'entrée réelle, lu sur elle, pour que le clic suive un renommage.
+        Respiration.entreDeuxGestes(robot);
+        robot.clickOn(reglages.getText());
         WaitForAsyncUtils.waitForFxEvents();
-        Respiration.apresLeGeste(robot);
+        Respiration.surLeMomentCle(robot);
 
         // La zone centrale affiche désormais l'écran Réglages (son TabPane d'onglets).
         assertThat(navigateur.getVueCentrale().lookup(".onglets-reglages"))
@@ -350,8 +366,23 @@ class MainViewTest {
         // L'état de repos, avant le geste : sans lui on ne peut pas dire que quelque chose a changé.
         Respiration.avantLeGeste(robot);
 
-        // Le geste de S1-10, et rien d'autre : on restaure, on ne navigue pas.
-        robot.interact(() -> sauvegarde.restaurer(fichier));
+        // ⚠️ Le geste RÉEL, par le menu. Le test appelait `sauvegarde.restaurer(fichier)` : le clip
+        // montrait un bandeau qui se vide puis se remplit sans aucune cause visible, ce qu'un
+        // spectateur attentif prend pour un défaut du produit (#4158).
+        //
+        // Une seule frontière est bouchonnée : la DÉSIGNATION du fichier. Le socle a été bâti pour
+        // cela - un sélecteur natif fige un test headless, d'où `ChoixSauvegarde` et `Confirmateur`
+        // injectables (#3197, #1405). Tout le reste est le chemin de production.
+        ActionRestaurer entree = actionDuMenu(ActionRestaurer.class);
+        ActionsSauvegarde dialogues = entree.porteur().actions();
+        dialogues.choix().definir((titre, dossier, entrees, repli) -> Optional.of(fichier));
+        dialogues.confirmateur().definir(message -> true);
+        dialogues.notificateur().definir((niveau, entete, message) -> {});
+
+        robot.clickOn("#menuOutils");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.leTempsDeLire(robot);
+        robot.clickOn(entree.libelle());
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
 
@@ -563,6 +594,18 @@ class MainViewTest {
 
         // Sites = 1, mais Points / Passages / Observations restent à 0 : ces pastilles sont atténuées.
         assertThat(robot.lookup(".indicateur-vide").queryAll()).isNotEmpty();
+    }
+
+    /// L'entrée du menu ☰ de ce type, telle que l'injecteur la fournit au chrome.
+    ///
+    /// ⚠️ C'est **la même instance** que celle que le menu porte : bouchonner ses dialogues sur une
+    /// autre ne changerait rien, et le clic ouvrirait un sélecteur natif qui fige le banc.
+    private <T extends ActionMenu> T actionDuMenu(Class<T> type) {
+        return injector.getInstance(Key.get(new TypeLiteral<Set<ActionMenu>>() {})).stream()
+                .filter(type::isInstance)
+                .map(type::cast)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("aucune entrée de menu de type " + type.getSimpleName()));
     }
 
     /// L'utilisateur **courant**, auto-créé au démarrage.

@@ -90,12 +90,21 @@ class ConnexionModaleViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-04", portee = Portee.A_L_ECRAN)
+    @CasDeRecette(
+            value = "S1-04",
+            portee = Portee.HORS_APPLICATION,
+            reserve = "Aucun navigateur ne s'ouvre sur le banc : ce clip montre le clic, pas la page qu'il"
+                    + " ouvre. Ce qui se vérifie est l'adresse transmise au système, et cela se lit dans"
+                    + " l'assertion, pas à l'image.")
     @DisplayName("Étape 1 : « Ouvrir Vigie-Chiro » ouvre la plateforme dans le navigateur")
     void ouvrir_site(FxRobot robot) {
         // ⚠️ Ce cas est le seul des trois dont le verdict n'est PAS à l'écran : ce qui compte est
         // l'adresse ouverte dans le navigateur, et aucun navigateur ne s'ouvre sur le banc. Le clip
         // montre donc le geste, et la modale au repos autour de lui - pas son effet.
+        //
+        // C'est pour cela qu'il porte `HORS_APPLICATION` et sa réserve : la revue a buté dessus - « on
+        // ne comprend pas qu'un navigateur s'est ouvert » - et la réponse n'est pas de montrer plus,
+        // c'est de DIRE ce que le clip ne montre pas, là où on le regarde (#4158, ADR 4142).
         Respiration.avantLeGeste(robot);
         robot.clickOn("Ouvrir Vigie-Chiro");
         Respiration.apresLeGeste(robot);
