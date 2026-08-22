@@ -1899,6 +1899,59 @@ Les cinq écrans qui rechargent au retour déclarent donc les deux.
 **Principes.** **DIP** (le service dépend d'un port, pas de JavaFX) et **Observer** (l'émetteur ignore
 ses lecteurs).
 
+### L'état qu'on peut demander mais pas suivre
+
+**Le problème.** Le signal de mutation couvre la **base**. Il ne couvre pas les états qui vivent
+ailleurs : le jeton Vigie-Chiro est un fichier du workspace, et `ClientVigieChiro#estConnecte()`
+comme `StockageConnexion#estConnecte()` se **demandent** - ils ne se **surveillent** pas.
+
+Un écran qui ferme un geste faute de jeton (affordance #789, « empêcher plutôt qu'avertir ») n'avait donc
+aucun moyen d'apprendre qu'un jeton venait d'arriver. Le bouton « Récupérer depuis Vigie-Chiro »
+conseillait « connectez-vous depuis le menu principal » ; on suivait ce conseil, on revenait, et il
+répétait le même conseil. **L'écran avait donné un conseil sans pouvoir voir qu'on l'avait suivi**
+(#4205).
+
+**La solution.** La même figure que ci-dessus, appliquée à un **état** plutôt qu'à un flux
+d'événements : un service qui n'est pas observable le devient par une **couche mince** au-dessus de lui.
+
+| Pièce | Où | Rôle |
+|---|---|---|
+| `EtatConnexion` | `commun.viewmodel` | le port, en lecture seule : `ReadOnlyBooleanProperty` |
+| `RefletDuJeton` | `connexion.viewmodel` | l'implémentation : un reflet de `FournisseurToken`, relu sur demande |
+
+**Trois différences avec le signal de mutation**, et chacune vient de ce qu'on observe un état et non
+des événements :
+
+- **Un booléen, pas un compteur.** Deux mutations successives doivent réveiller deux fois ; deux
+  lectures qui rendent « connecté » ne sont **pas** deux nouvelles. Reposer la même valeur ne réveille
+  personne, et c'est le comportement voulu.
+- **Un seul émetteur, nommé.** « Tu écris, tu signales » n'a pas de sens ici : il n'y a qu'un endroit
+  dans l'IHM où le jeton stocké change, la modale de connexion. Elle s'abonne à sa propre
+  `jetonEnregistreProperty`, ce qui couvre d'un seul branchement les cinq chemins qui rafraîchissent
+  (connexion, échec, refus, injoignable, déconnexion) - dont on en oublierait un à les recopier.
+- **La valeur se lit au berceau.** `RefletDuJeton` s'initialise depuis `FournisseurToken` à la
+  construction. Partir de `false` grisserait tous les gestes au démarrage d'une session déjà connectée,
+  jusqu'à la première ouverture de la modale.
+
+**Côté lecteur**, pas de contrat de navigation : l'écran s'abonne explicitement, parce que la
+dépendance mérite d'être lue dans son code.
+
+```java
+etatConnexion.ifPresent(etat ->
+        etat.connecteProperty().addListener((obs, avant, apres) -> rafraichirDepuisLaDonnee()));
+```
+
+⚠️ **`Optional` chez les consommateurs, et non chez l'émetteur.** La source de vérité
+(`FournisseurToken`) n'est liée que par `ConnexionModule` : un injecteur partiel (outils de capture) n'a
+aucun jeton, et « pas d'état de connexion » y est la réponse juste - un geste qui touche la plateforme
+s'y ferme, ce qui est prudent. La modale de connexion, elle, **exige** le reflet : elle ne s'ouvre que
+là où le module est chargé, et un `ifPresent` silencieux y rendrait l'application muette sur l'arrivée
+du jeton sans que rien ne rougisse.
+
+⚠️ **`OptionalBinder` veut un port, pas une classe concrète.** `newOptionalBinder(binder(), X.class)`
+suivi de `setBinding().to(X.class)` fait pointer la liaison sur elle-même, et Guice refuse de démarrer.
+C'est la raison de la paire port/implémentation ici, et non un goût pour les interfaces.
+
 ---
 
 ### Un état de contrôle se lie, il ne se photographie pas
