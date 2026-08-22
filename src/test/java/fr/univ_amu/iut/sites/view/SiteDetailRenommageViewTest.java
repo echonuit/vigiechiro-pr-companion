@@ -18,7 +18,9 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.EtapeNavigation;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -26,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// #3672 : après un **renommage de carré**, la fiche site continuait d'annoncer l'ancien numéro.
 ///
@@ -91,9 +93,10 @@ class SiteDetailRenommageViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injecteur::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1100, 760));
+        // ⚠️ `Habillage` via `FenetreDuBanc` : ce cas est FILMÉ (#3773, #4149).
+        FenetreDuBanc.poser(stage, racine, 1180, 900);
         injecteur.getInstance(NavigationSites.class).ouvrirDetail(site);
-        stage.show();
+        FenetreDuBanc.afficher(stage);
     }
 
     @AfterEach
@@ -106,8 +109,12 @@ class SiteDetailRenommageViewTest {
     @DisplayName("#3672 : renommer le carré met à jour l'en-tête de la fiche, pas seulement la base")
     void renommer_met_a_jour_l_entete(FxRobot robot) {
         assertThat(numeroAffiche(robot)).isEqualTo(CARRE_AVANT);
+        // L'en-tête AVANT : sans elle, on ne peut pas dire que le numéro a changé.
+        Respiration.leTempsDeLire(robot);
 
         robot.clickOn("#boutonModifier");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         // `rafraichir()` rechargeait points, passages et bandeau, mais ne relisait JAMAIS le `Site` :
         // le ViewModel gardait l'enregistrement d'avant, et avec lui l'ancien numéro.

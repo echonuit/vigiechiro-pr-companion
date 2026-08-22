@@ -16,16 +16,17 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -37,6 +38,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// La **modale de site** (#1431) : déclarer un site, le modifier, et la validation en direct.
 ///
@@ -76,7 +78,9 @@ class ModaleSiteViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        stage.setScene(new Scene(vue));
+        // ⚠️ `Habillage`, et non `new Scene` : les trois cas de cette classe sont FILMÉS, et une scène
+        // montée sans habillage porte la police de la MACHINE (#3773, #4149).
+        stage.setScene(Habillage.scene(vue));
         stage.show();
     }
 
@@ -124,15 +128,26 @@ class ModaleSiteViewTest {
         assertThat(valider(robot).isDisabled())
                 .as("formulaire vierge : rien à créer")
                 .isTrue();
+        Respiration.avantLeGeste(robot);
 
-        robot.interact(
-                () -> robot.lookup("#champCarre").queryAs(TextField.class).setText("6403"));
+        // ⚠️ Les chiffres se TAPENT, un par un. Avec `setText`, le champ passait de vide à « 6403 »
+        // puis à « 640380 » d'un coup : le clip montrait un bouton qui change d'état sans qu'on voie
+        // ce qui le fait changer, et c'est justement la validation EN DIRECT que ce cas fait juger.
+        TextField carre = robot.lookup("#champCarre").queryAs(TextField.class);
+        robot.clickOn(carre).write("6403");
+        WaitForAsyncUtils.waitForFxEvents();
         assertThat(valider(robot).isDisabled())
                 .as("quatre chiffres : toujours pas un carré")
                 .isTrue();
+        Respiration.leTempsDeLire(robot);
 
-        robot.interact(
-                () -> robot.lookup("#champCarre").queryAs(TextField.class).setText("640380"));
+        robot.write("80");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(carre.getText())
+                .as("les six chiffres sont bien dans le champ")
+                .isEqualTo("640380");
         assertThat(valider(robot).isDisabled())
                 .as("six chiffres : le geste s'ouvre")
                 .isFalse();
@@ -172,8 +187,17 @@ class ModaleSiteViewTest {
         assertThat(robot.lookup("#champNom").queryAs(TextField.class).getText()).isEqualTo("Étang de la Tuilière");
         assertThat(valider(robot).getText()).isEqualTo("Enregistrer");
 
-        robot.interact(() -> robot.lookup("#champNom").queryAs(TextField.class).setText("Nouveau nom"));
-        robot.interact(() -> valider(robot).fire());
+        Respiration.leTempsDeLire(robot);
+
+        TextField nom = robot.lookup("#champNom").queryAs(TextField.class);
+        robot.interact(nom::clear);
+        robot.clickOn(nom).write("Nouveau nom");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.avantLeGeste(robot);
+
+        robot.clickOn(valider(robot));
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         verify(service).modifierSite(7L, "640380", "Nouveau nom", Protocole.STANDARD, "Aix");
         assertThat(rafraichissements).isEqualTo(1);
@@ -185,10 +209,14 @@ class ModaleSiteViewTest {
     void annuler_ne_cree_rien(FxRobot robot) {
         enCreation(robot);
 
-        robot.interact(
-                () -> robot.lookup("#champCarre").queryAs(TextField.class).setText("640380"));
-        robot.interact(
-                () -> robot.lookup(".bouton-secondaire").queryAs(Button.class).fire());
+        // La saisie se voit, sinon « Annuler » n'annule rien de visible.
+        robot.clickOn(robot.lookup("#champCarre").queryAs(TextField.class)).write("640380");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.avantLeGeste(robot);
+
+        robot.clickOn(robot.lookup(".bouton-secondaire").queryAs(Button.class));
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         verify(service, never()).creerSite(anyString(), any(), any(), any(), anyString());
         assertThat(rafraichissements).isZero();

@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -126,12 +127,19 @@ class NavigationSitesRapatriementTest {
                 .as("aucun carré déclaré au départ : c'est ce qui rend le rafraîchissement observable")
                 .isEmpty();
 
+        // La liste VIDE, avant le rapatriement : c'est la référence de qui compare. Sans cet arrêt, le
+        // clip montre une liste peuplée et rien ne dit qu'elle ne l'était pas (#4149).
+        Respiration.avantLeGeste(robot);
+
         AtomicReference<RapatriementCarre.Resultat.Rapatrie> resultat = new AtomicReference<>();
         robot.interact(() -> {
             resultat.set(rapatrierLeCarre());
             ecranCourant().annoncerRapatriement(resultat.get());
         });
         WaitForAsyncUtils.waitForFxEvents();
+        // Les trois brins du cas sont à l'image en même temps : la liste qui s'est peuplée, le fil resté
+        // sur « Mes sites », et le bandeau qui explique d'où vient le carré.
+        Respiration.surLeMomentCle(robot);
         RapatriementCarre.Resultat.Rapatrie rapatrie = resultat.get();
 
         // Premier brin : on ne quitte pas l'écran d'où la modale a été ouverte.

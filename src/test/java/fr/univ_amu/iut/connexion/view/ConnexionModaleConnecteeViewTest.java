@@ -11,11 +11,13 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -23,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -70,7 +71,9 @@ class ConnexionModaleConnecteeViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        stage.setScene(new Scene(vue));
+        // ⚠️ `Habillage`, et non `new Scene` : ce cas est FILMÉ, et une scène montée sans habillage
+        // porte la police de la MACHINE (#3773, #4149).
+        stage.setScene(Habillage.scene(vue));
         stage.show();
     }
 
@@ -84,8 +87,11 @@ class ConnexionModaleConnecteeViewTest {
             return false; // l'utilisateur refuse
         });
 
+        // L'état connecté au repos : c'est de lui qu'on part, et c'est à lui qu'on revient après le refus.
+        Respiration.leTempsDeLire(robot);
         robot.clickOn("#boutonDeconnecter");
         WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         assertThat(demandes).as("la déconnexion demande confirmation").hasSize(1);
         assertThat(demandes.get(0)).contains("jeton");

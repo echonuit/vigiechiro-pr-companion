@@ -12,7 +12,9 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
@@ -22,7 +24,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -67,9 +68,10 @@ class ModalePointViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1100, 720));
+        // ⚠️ `Habillage` via `FenetreDuBanc` : ce cas est FILMÉ (#3773, #4149).
+        FenetreDuBanc.poser(stage, racine, 1180, 900);
         injector.getInstance(NavigationSites.class).ouvrirDetail(site);
-        stage.show();
+        FenetreDuBanc.afficher(stage);
     }
 
     @AfterEach
@@ -84,11 +86,19 @@ class ModalePointViewTest {
         ouvrirModale(robot);
 
         TextField champCode = robot.lookup("#champCode").queryAs(TextField.class);
-        robot.interact(() -> champCode.setText("B2"));
+        Respiration.avantLeGeste(robot);
+
+        // ⚠️ Le code se TAPE : ce cas fait juger un bouton qui s'active à la saisie, et `setText` posait
+        // le code d'un coup - le bouton changeait d'état sans qu'on voie ce qui le fait changer (#4149).
+        robot.clickOn(champCode).write("B2");
+        WaitForAsyncUtils.waitForFxEvents();
         Button valider = robot.lookup("#boutonValider").queryAs(Button.class);
         assertThat(valider.isDisabled()).isFalse();
+        Respiration.leTempsDeLire(robot);
 
-        robot.interact(valider::fire);
+        robot.clickOn(valider);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         List<String> codes = robot.lookup(".carte-point-code").queryAllAs(Label.class).stream()
                 .map(Label::getText)
