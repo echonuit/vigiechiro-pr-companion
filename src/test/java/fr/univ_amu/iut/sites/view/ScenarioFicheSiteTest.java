@@ -36,6 +36,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
@@ -289,6 +290,97 @@ class ScenarioFicheSiteTest {
                 .map(noeud -> ((Labeled) noeud).getText())
                 .filter(texte -> texte != null && !texte.isBlank())
                 .toList();
+    }
+
+    @Test
+    @CasDeRecette(
+            value = {"S1-22", "S1-23"},
+            portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-22, S1-23 · modifier depuis la fiche : la modale s'ouvre PRÉ-REMPLIE, et dit « Enregistrer »")
+    void renommer_le_carre_met_a_jour_l_entete(FxRobot robot) throws TimeoutException {
+        ouvrirLaFiche(robot, TITRE_CARRE);
+
+        Label numero = etiquette(robot, "#valNumeroCarre");
+        CadreVisible.amener(numero, robot);
+        assertThat(numero.getText()).isEqualTo(CARRE);
+        // L'en-tête AVANT : sans elle, on ne peut pas dire que le numéro a changé.
+        Respiration.leTempsDeLire(robot);
+
+        // ⚠️ La VRAIE modale d'édition, ouverte par le bouton. `SiteDetailRenommageViewTest` la
+        // remplaçait par un double qui écrivait le nouveau numéro : le clip montrait un clic sur
+        // « Modifier » puis un numéro qui change, sans qu'aucune modale ne paraisse (#4174).
+        robot.clickOn("#boutonModifier");
+        WaitForAsyncUtils.waitFor(
+                10, TimeUnit.SECONDS, () -> robot.lookup("#champNom").tryQuery().isPresent());
+        Respiration.leTempsDeLire(robot);
+
+        // S1-23 · « création vs édition » : les champs portent déjà le site, et le bouton ne dit plus
+        // « Créer ». C'est la moitié ÉDITION du cas ; la moitié création est dans `ScenarioModaleCarreTest`.
+        TextField nom = robot.lookup("#champNom").queryAs(TextField.class);
+        assertThat(robot.lookup("#champCarre").queryAs(TextField.class).getText())
+                .as("la modale d'édition s'ouvre pré-remplie, elle ne redemande pas ce qu'on sait déjà")
+                .isEqualTo(CARRE);
+        assertThat(nom.getText()).isEqualTo("Étang de la Tuilière");
+        assertThat(robot.lookup("#boutonValider").queryAs(Button.class).getText())
+                .as("le bouton dit ce qu'il fait : on enregistre un site, on n'en crée pas un second")
+                .isEqualTo("Enregistrer");
+
+        robot.interact(nom::clear);
+        robot.clickOn(nom).write("Étang de la Tuilière (rive nord)");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.avantLeGeste(robot);
+
+        robot.clickOn("#boutonValider");
+        WaitForAsyncUtils.waitFor(
+                10, TimeUnit.SECONDS, () -> robot.lookup("#champNom").tryQuery().isEmpty());
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(robot.lookup("#barreStatut").queryAll())
+                .as("la fiche est toujours là : le renommage ne fait pas quitter l'écran")
+                .isNotEmpty();
+        assertThat(etiquette(robot, "#valNumeroCarre").getText())
+                .as("la fiche affiche encore le carré qu'elle vient d'enregistrer")
+                .isEqualTo(CARRE);
+    }
+
+    @Test
+    @CasDeRecette(value = "S1-24", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-24 · ajouter un point depuis la fiche : sa carte paraît là où il n'y en avait pas")
+    void ajouter_un_point_le_fait_paraitre_sur_la_fiche(FxRobot robot) throws TimeoutException {
+        ouvrirLaFiche(robot, TITRE_CARRE);
+
+        // ⚠️ La fiche AVANT, avec ses trois points et pas un de plus. C'est ce que la revue réclamait :
+        // « montrer la fenêtre avant d'ouvrir la modale pour bien montrer que le point a été créé par
+        // l'action de la modale » (#4175). Sans cet état de départ, la carte qui paraît ne se rattache
+        // à rien.
+        long avant = robot.lookup(".carte-point").queryAll().size();
+        assertThat(avant).isEqualTo(3);
+        Respiration.leTempsDeLire(robot);
+
+        robot.clickOn("+ Ajouter un point");
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup("#champCode").tryQuery().isPresent());
+        Respiration.leTempsDeLire(robot);
+
+        robot.clickOn(robot.lookup("#champCode").queryAs(TextField.class)).write("D4");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.avantLeGeste(robot);
+
+        robot.clickOn("#boutonValider");
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup(".carte-point").queryAll().size() > avant);
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(robot.lookup(".carte-point-code").queryAll().stream()
+                        .filter(Label.class::isInstance)
+                        .map(noeud -> ((Label) noeud).getText())
+                        .toList())
+                .as("le point que la modale vient de créer est sur la fiche, avec les trois autres")
+                .contains("A1", "B2", "C3", "D4");
     }
 
     /// Le geste que fait un observateur : depuis « Mes sites », cliquer la carte du carré.

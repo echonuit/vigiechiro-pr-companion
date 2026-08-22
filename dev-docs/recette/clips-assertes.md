@@ -141,22 +141,22 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesEtatVideViewTest.l_etat_vide_porte_sa_porte_de_sortie.mp4"></video>
 
-## ModaleSiteViewTest
+## Modale de site · joués sur la fenêtre réelle
 
-### S1-13 · `bouton_ferme_tant_que_le_carre_est_incomplet`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteViewTest.bouton_ferme_tant_que_le_carre_est_incomplet.mp4"></video>
-
-### S1-23 · `edition_pre_remplit_et_enregistre`
+### S1-13 · `creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteViewTest.edition_pre_remplit_et_enregistre.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre.mp4"></video>
 
-### S1-25 · `annuler_ne_cree_rien`
+### S1-23 · `renommer_le_carre_met_a_jour_l_entete`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteViewTest.annuler_ne_cree_rien.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete.mp4"></video>
+
+### S1-25 · `annuler_ne_change_rien_a_la_liste`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.annuler_ne_change_rien_a_la_liste.mp4"></video>
 
 ## MesSitesViewTest
 
@@ -217,19 +217,19 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge.mp4"></video>
 
-## SiteDetailRenommageViewTest
+## ScenarioFicheSiteTest · S1-22
 
-### S1-22 · `renommer_met_a_jour_l_entete`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/SiteDetailRenommageViewTest.renommer_met_a_jour_l_entete.mp4"></video>
-
-## ModalePointViewTest
-
-### S1-24 · `ajouter_un_point_valide`
+### S1-22 · `renommer_le_carre_met_a_jour_l_entete`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModalePointViewTest.ajouter_un_point_valide.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete.mp4"></video>
+
+## ScenarioFicheSiteTest · S1-24
+
+### S1-24 · `ajouter_un_point_le_fait_paraitre_sur_la_fiche`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche.mp4"></video>
 
 ## ScenarioModaleCarreTest
 

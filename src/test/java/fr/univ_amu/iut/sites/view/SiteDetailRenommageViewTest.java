@@ -17,9 +17,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.EtapeNavigation;
 import fr.univ_amu.iut.commun.view.Navigateur;
-import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
-import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -47,6 +45,13 @@ import org.testfx.util.WaitForAsyncUtils;
 /// sans ouvrir de fenêtre. Un appel direct au service ne prouverait que le service.
 @ExtendWith(ApplicationExtension.class)
 class SiteDetailRenommageViewTest {
+
+    // ⚠️ Cette classe ne cite plus `S1-22`, et ce n'est pas un oubli.
+    // Elle remplaçait la modale d'édition par un double qui écrivait le nouveau numéro : le clip
+    // montrait un clic sur « Modifier » puis un numéro qui change, sans qu'aucune modale ne paraisse
+    // (#4174). Le cas est joué par `ScenarioFicheSiteTest`, où la vraie modale s'ouvre.
+    //
+    // Ses assertions restent : elles gardent le câblage, ce qui est un autre travail que de le montrer.
 
     private static final String ID_USER = "u-1";
     private static final String CARRE_AVANT = "640380";
@@ -105,7 +110,6 @@ class SiteDetailRenommageViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-22", portee = Portee.A_L_ECRAN)
     @DisplayName("#3672 : renommer le carré met à jour l'en-tête de la fiche, pas seulement la base")
     void renommer_met_a_jour_l_entete(FxRobot robot) {
         assertThat(numeroAffiche(robot)).isEqualTo(CARRE_AVANT);

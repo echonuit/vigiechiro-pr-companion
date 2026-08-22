@@ -247,6 +247,7 @@ nav:
     - 4111 · Un clip montre la version qu'on valide: decisions/4111-un-clip-montre-la-version-qu-on-valide.md
     - 4134 · Un banc n'emprunte pas l'état partagé, il ouvre le sien: decisions/4134-un-banc-n-emprunte-pas-l-etat-partage-il-ouvre-le-sien.md
     - 4142 · Un cas dit où se lit son verdict: decisions/4142-un-cas-dit-ou-se-lit-son-verdict.md
+    - 4188 · Une modale se filme avec son écran: decisions/4188-une-modale-se-filme-avec-son-ecran.md
     - 4079 · Une condition de job nomme l'état qu'elle attend: decisions/4079-une-condition-de-job-nomme-l-etat-qu-elle-attend.md
   - Recette (acceptation):
     - Méthode: recette/index.md
