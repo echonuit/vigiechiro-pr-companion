@@ -112,14 +112,14 @@ jobs:
         shell: bash
         run: ffmpeg -version | head -1
 
-      # ⚠️ `surefire.forkCount=1`, et ce n'est PAS pour la même raison que dans `recette-filmee`.
-      # Là-bas, un seul écran X impose une seule JVM. Ici, filmer le graphe de scène rend les forks
-      # parallèles parfaitement légitimes - et c'est `IndexDesCas` qui ne suit pas : chaque JVM tient
-      # son propre index et écrit le MÊME fichier en fin de session, si bien que la dernière qui
-      # finit efface les autres. Mesuré en local : quatre forks, index final à 5 lignes sur 9, et
-      # rien dans la page ne dit qu'il en manque quatre.
+      # ⚠️ AUCUN `forkCount` imposé, et c'est délibéré. `recette-filmee` doit en poser un parce qu'un
+      # seul écran X n'accueille qu'une JVM ; filmer le graphe de scène retire cette contrainte, et
+      # le défaut de `IndexDesCas` qui l'a un temps réimposée est corrigé (fragments par JVM,
+      # fusionnés sous verrou).
       #
-      # Une seule JVM contourne le défaut sans le masquer : il est nommé dans la page du spike.
+      # Ce tournage tourne donc au `1C` du dépôt, et le garde ci-dessous vérifie que l'index en
+      # ressort ENTIER. C'est la seule façon d'éprouver le correctif : à `forkCount=1` il n'y a
+      # qu'un fragment, et le dispositif de fusion ne fusionne rien.
       #
       # ⚠️ `failure.ignore` : on veut les CLIPS. Un cas qui rougit produit son clip comme les autres,
       # et c'est même celui-là qu'on veut regarder. Ce qui fait échouer ce job, c'est l'absence de
@@ -131,7 +131,6 @@ jobs:
           ./mvnw -B test --file pom.xml \
             -Dtest='ScenarioPerceptifConnexionTest,ScenarioPerceptifFiltresTest,ScenarioPerceptifRefusDepotTest,ScenarioPerceptifRecuperationCarreTest' \
             -DfailIfNoTests=false \
-            -Dsurefire.forkCount=1 \
             -Dmaven.test.failure.ignore=true \
             -Drecette.film \
             2>&1 | tee tournage.log
@@ -161,16 +160,27 @@ jobs:
           # exactement comme un tournage sans reproche.
           muets=$(grep -c 'aucune' tournage.log || true)
 
+          # ⚠️ L'index se compte, lui aussi. C'est le garde du défaut des forks parallèles : un index
+          # amputé garde toutes ses colonnes et n'a aucune ligne fausse, donc il ne se distingue d'un
+          # index complet que par un COMPTE. Sans cette ligne, le correctif n'aurait pas de témoin.
+          # ⚠️ `:-0` : un index ABSENT doit valoir zéro, pas une chaîne vide, que `-eq` refuserait en
+          # disant « nombre invalide » - une panne du garde qui ressemblerait à une panne du banc.
+          lignes=$(grep -c '^| S' target/recette/clips/index.md 2>/dev/null || true)
+          lignes=${lignes:-0}
+          echo "lignes d'index : ${lignes}"
+
           {
             echo "## Tournage sur ${{ matrix.os }}"
             echo
             echo "- ffmpeg : ${{ steps.ffmpeg.outputs.installe }}"
             echo "- clips produits : ${compte} / 9"
             echo "- clips sans aucune fenêtre : ${muets}"
+            echo "- lignes d'index : ${lignes} / 9"
           } >> "${GITHUB_STEP_SUMMARY}"
 
           [ "${compte}" -eq 9 ] || { echo "::error::${compte} clip(s) sur 9 : le banc n'a pas tout filmé."; exit 1; }
           [ "${muets}" -eq 0 ] || { echo "::error::${muets} clip(s) n'ont vu AUCUNE fenêtre : ils s'arrêtent à leur carton."; exit 1; }
+          [ "${lignes}" -eq 9 ] || { echo "::error::index à ${lignes} ligne(s) sur 9 : les forks s'effacent entre eux."; exit 1; }
 
       - name: Garder les clips en artefact
         if: ${{ always() }}
