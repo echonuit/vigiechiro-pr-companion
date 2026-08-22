@@ -239,10 +239,15 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.corriger_un_chiffre_efface_le_verdict.mp4"></video>
 
-### S1-33 · `hors_connexion_l_encart_ne_nie_pas_le_carre`
+### S1-33 · `hors_connexion_verifier_est_ferme_mais_declarer_reste_possible`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.hors_connexion_l_encart_ne_nie_pas_le_carre.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.hors_connexion_verifier_est_ferme_mais_declarer_reste_possible.mp4"></video>
+
+### S1-33 · `plateforme_injoignable_l_encart_ne_nie_pas_le_carre`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.plateforme_injoignable_l_encart_ne_nie_pas_le_carre.mp4"></video>
 
 ### S1-34 · `recuperer_ferme_la_modale_et_rend_compte`
 

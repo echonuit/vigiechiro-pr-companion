@@ -8,13 +8,16 @@ import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
+import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CarreExistantViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
@@ -121,10 +124,16 @@ public class ModaleSiteController {
     /// de faire entrer l'occupation **dans** le binding (#1254), pas de la poser par-dessus.
     private final BooleanProperty rechercheEnCours = new SimpleBooleanProperty(this, "rechercheEnCours", false);
 
+    private final Optional<EtatConnexion> etatConnexion;
+
     @Inject
-    public ModaleSiteController(SiteEditViewModel viewModel, ExecuteurTache executeur) {
+    public ModaleSiteController(
+            SiteEditViewModel viewModel, ExecuteurTache executeur, Optional<EtatConnexion> etatConnexion) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        // Vide dans un injecteur partiel sans la feature `connexion` : aucun jeton ne peut y exister,
+        // et « fermé » y est la réponse juste. Cf. `CommunModule`.
+        this.etatConnexion = Objects.requireNonNull(etatConnexion, "etatConnexion");
     }
 
     /// Interroge la plateforme **hors du fil JavaFX**, puis applique le verdict.
@@ -240,12 +249,35 @@ public class ModaleSiteController {
         // Le fait qui la rend vraie ne peut pas changer pendant la vie de cette fenêtre.
         enveloppeVerifierCarre.setVisible(viewModel.carre().disponible());
         enveloppeVerifierCarre.setManaged(viewModel.carre().disponible());
-        btnVerifierCarre.disableProperty().bind(viewModel.carreValide().not().or(rechercheEnCours));
+        // ⚠️ Fermé aussi TANT QU'AUCUN JETON n'est disponible (#4210). Sans cela le geste était offert :
+        // on tapait six chiffres, on cliquait, on payait un aller-retour réseau, et l'encart répondait
+        // « Vérification impossible » - alors que l'application savait avant le clic qu'elle n'avait pas
+        // de jeton. Empêcher plutôt qu'avertir (#789, heuristique 5 de Nielsen), comme pour
+        // « Récupérer depuis Vigie-Chiro » (#4194).
+        //
+        // ⚠️ Seule la VÉRIFICATION se ferme. Déclarer un carré hors connexion reste possible : c'est le
+        // travail hors ligne, et le fermer ferait de la plateforme une condition pour saisir chez soi.
+        //
+        // ⚠️ La planche promettait l'inverse (« le bouton reste offert, non grisé »), au nom d'un
+        // argument emprunté à `ControleCarreStoc` - le contrôle AUTOMATIQUE des coordonnées d'un point,
+        // qui est en effet un confort. Ce bouton-ci passe par `chercherCarre`. Restait « on s'est
+        // peut-être connecté entre-temps » : depuis #4205 le geste se rouvre tout seul dès qu'un jeton
+        // arrive, sans rouvrir la fenêtre.
+        BooleanExpression connecte = etatConnexion
+                .<BooleanExpression>map(EtatConnexion::connecteProperty)
+                .orElseGet(() -> new SimpleBooleanProperty(false));
+        btnVerifierCarre
+                .disableProperty()
+                .bind(viewModel.carreValide().not().or(rechercheEnCours).or(connecte.not()));
         IndicateurBlocage.expliquer(
                 enveloppeVerifierCarre,
-                Bindings.when(viewModel.carreValide())
-                        .then("Demander à Vigie-Chiro si ce carré y est déjà déclaré.")
-                        .otherwise("Renseignez d'abord un numéro de carré à 6 chiffres."));
+                Bindings.when(connecte)
+                        .then(Bindings.when(viewModel.carreValide())
+                                .then("Demander à Vigie-Chiro si ce carré y est déjà déclaré.")
+                                .otherwise("Renseignez d'abord un numéro de carré à 6 chiffres."))
+                        .otherwise("Vous n'êtes pas connecté à Vigie-Chiro : rien ne peut être vérifié."
+                                + " Vous pouvez déclarer ce carré sans vérifier, ou vous connecter depuis"
+                                + " le menu principal, entrée « Se connecter à Vigie-Chiro… »."));
         LibelleRetour.installer(messageCarreExistant, viewModel.carre().retourProperty());
         // Le geste suit le verdict : visible seulement quand il y a un carré à récupérer, et retiré de la
         // mise en page sinon - un bouton grisé en permanence sur un carré libre n'aurait rien à dire.

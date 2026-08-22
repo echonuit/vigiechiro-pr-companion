@@ -10,6 +10,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
@@ -17,6 +18,8 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
+import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
+import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
@@ -25,6 +28,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
@@ -79,11 +83,27 @@ class ModaleSiteVerifierCarreViewTest {
 
     private ModaleSiteController controleur;
 
+    /// Le jeton de ces cas, pilotable : « Vérifier » est fermé sans lui depuis #4210, et un cas d'ici
+    /// joue justement l'absence de connexion.
+    private final AtomicReference<Optional<String>> jeton = new AtomicReference<>(Optional.of("jeton-de-test"));
+
+    private RefletDuJeton reflet;
+
     @Start
     void start(Stage stage) throws Exception {
         ServiceSites service = mock(ServiceSites.class);
         LienVigieChiroDao liens = mock(LienVigieChiroDao.class);
+        // Le jeton de ces cas, pilotable : « Vérifier » est fermé sans lui depuis #4210, et deux cas
+        // d'ici jouent justement l'absence de connexion.
+        reflet = new RefletDuJeton(jeton::get, Runnable::run);
         Injector injector = Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                OptionalBinder.newOptionalBinder(binder(), EtatConnexion.class)
+                        .setBinding()
+                        .toInstance(reflet);
+            }
+
             @Provides
             SiteEditViewModel viewModel() {
                 return new SiteEditViewModel(
@@ -232,34 +252,39 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
-    @DisplayName("S1-33 : hors connexion, l'encart dit qu'on n'a PAS vérifié - jamais que le carré est libre")
-    void hors_connexion_l_encart_ne_nie_pas_le_carre(FxRobot robot) {
+    @DisplayName("#4210 : hors connexion, « Vérifier » est fermé et nomme le geste qui répare")
+    void hors_connexion_le_geste_est_ferme_et_dit_pourquoi(FxRobot robot) {
         enCreation(robot);
-        // ⚠️ `nonConnecte()`, et non `thenThrow` : une déconnexion n'emprunte pas le chemin d'une
-        // panne technique. Le test voisin éprouve l'exception ; ce chemin-ci n'était couvert nulle
-        // part, alors que c'est celui que S1-33 décrit - se déconnecter, puis cliquer.
-        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.nonConnecte());
         saisirCarre(robot, CARRE);
-
-        verifierLeCarre(robot);
-
-        String encart = message(robot).getText();
-        assertThat(encart)
-                .as("l'encart doit nommer son impuissance, pas se taire")
-                .contains("Vérification impossible")
-                .contains("PAS été vérifié");
-
-        // ⚠️ L'assertion que deux tests promettaient sans la faire. « Ce carré n'existe pas encore
-        // sur Vigie-Chiro : vous pouvez le déclarer ici. » est le message de Verdict.Inexistant :
-        // l'afficher ici ferait déclarer un carré déjà pris à quelqu'un qui croit avoir vérifié.
-        assertThat(encart)
-                .as("« je ne sais pas » ne doit jamais se lire « il est libre »")
-                .doesNotContain("n'existe pas")
-                .doesNotContain("vous pouvez le déclarer");
-
         assertThat(verifier(robot).isDisabled())
-                .as("le bouton reste offert : se reconnecter et recliquer doit suffire")
+                .as("connecté et six chiffres saisis : le geste est offert")
                 .isFalse();
+
+        seDeconnecter();
+
+        // ⚠️ Ce cas jouait autrefois un client qui répond `nonConnecte()` PENDANT que l'application
+        // avait un jeton : la fixture se contredisait, et le vert existait quoi qu'il arrive. Depuis
+        // #4210, l'absence de jeton se voit AVANT le clic - c'est ce qu'on éprouve ici.
+        assertThat(verifier(robot).isDisabled())
+                .as("le jeton retiré, le geste se ferme sans qu'on ait quitté la fenêtre (#4205)")
+                .isTrue();
+        assertThat(InfobulleDeBlocage.texteDe(
+                        robot.lookup("#enveloppeVerifierCarre").query()))
+                .as("et il nomme ce qui manque, avec le geste qui répare")
+                .contains("pas connecté")
+                .contains("Se connecter à Vigie-Chiro");
+
+        // ⚠️ Le pendant : seule la VÉRIFICATION se ferme. Déclarer un carré hors ligne reste possible.
+        assertThat(robot.lookup("#boutonValider").queryAs(Button.class).isDisabled())
+                .as("déclarer reste possible hors connexion")
+                .isFalse();
+    }
+
+    /// Retire le jeton et publie le reflet, comme la modale de connexion le fait (#4205).
+    private void seDeconnecter() {
+        jeton.set(Optional.empty());
+        reflet.relire();
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     @Test

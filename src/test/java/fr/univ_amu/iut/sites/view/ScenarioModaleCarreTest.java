@@ -13,6 +13,7 @@ import com.google.inject.name.Named;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
@@ -24,6 +25,8 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
+import fr.univ_amu.iut.connexion.model.StockageConnexion;
+import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
@@ -132,6 +135,11 @@ class ScenarioModaleCarreTest {
                     }
                 }));
 
+        // ⚠️ Une connexion RÉELLE : depuis #4210, « Vérifier sur Vigie-Chiro » est fermé sans jeton.
+        // Ces scénarios jouent un utilisateur connecté ; ils doivent l'être pour de bon, au lieu de
+        // s'appuyer sur un bouton qui ne demandait rien à personne.
+        seConnecter();
+
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Observateur"));
@@ -141,6 +149,24 @@ class ScenarioModaleCarreTest {
         FenetreDuBanc.poser(stage, loader.load(), 1180, 900);
         injector.getInstance(NavigationSites.class).ouvrirAccueil();
         FenetreDuBanc.afficher(stage);
+    }
+
+    /// Enregistre une connexion, comme la modale de connexion le ferait.
+    private void seConnecter() {
+        injector.getInstance(StockageConnexion.class)
+                .enregistrer("jeton-de-recette", new ProfilVigieChiro(ID_USER, "chiro", "observateur"));
+    }
+
+    /// Efface la connexion : le cas hors connexion se joue sur le produit, pas sur un drapeau.
+    ///
+    /// ⚠️ Et le reflet est PUBLIÉ, comme la modale de connexion le fait après chaque `rafraichir()`
+    /// (#4205). Écrire dans le stockage sans le dire ne réveille personne : `RefletDuJeton` garde un
+    /// reflet, il ne surveille pas le fichier. Sans cette ligne, ce cas verrait le geste encore ouvert
+    /// et croirait tenir un défaut du produit.
+    private void seDeconnecter() {
+        injector.getInstance(StockageConnexion.class).effacer();
+        injector.getInstance(RefletDuJeton.class).relire();
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     @AfterEach
@@ -198,11 +224,42 @@ class ScenarioModaleCarreTest {
 
     @Test
     @CasDeRecette(value = "S1-33", portee = Portee.A_L_ECRAN)
-    @DisplayName("S1-33 · hors connexion : l'encart dit qu'on n'a PAS vérifié, jamais que le carré est libre")
-    void hors_connexion_l_encart_ne_nie_pas_le_carre(FxRobot robot) throws TimeoutException {
+    @DisplayName("S1-33 · hors connexion : « Vérifier » est fermé et dit pourquoi, déclarer reste possible")
+    void hors_connexion_verifier_est_ferme_mais_declarer_reste_possible(FxRobot robot) throws TimeoutException {
+        seDeconnecter();
+        ouvrirLaDeclaration(robot);
+        saisir(robot, CARRE_LIBRE);
+
+        Button verifier = robot.lookup("#btnVerifierCarre").queryAs(Button.class);
+        CadreVisible.amener(verifier, robot);
+        assertThat(verifier.isDisabled())
+                .as("sans jeton, la vérification ne peut rien demander : le geste est fermé (#4210)")
+                .isTrue();
+        assertThat(InfobulleDeBlocage.texteDe(
+                        robot.lookup("#enveloppeVerifierCarre").query()))
+                .as("et il dit ce qui manque, avec le geste qui répare")
+                .contains("pas connecté")
+                .contains("Se connecter à Vigie-Chiro");
+        Respiration.surLeMomentCle(robot);
+
+        // ⚠️ Le pendant du cas, et le plus important : c'est la VÉRIFICATION qui se ferme, jamais la
+        // déclaration. Travailler hors ligne reste normal ; fermer les deux ferait de la plateforme une
+        // condition pour saisir chez soi.
+        assertThat(robot.lookup("#boutonValider").queryAs(Button.class).isDisabled())
+                .as("déclarer un carré hors connexion reste possible")
+                .isFalse();
+        Respiration.leTempsDeLire(robot);
+    }
+
+    @Test
+    @CasDeRecette(value = "S1-33", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-33 · connecté mais plateforme injoignable : l'encart dit qu'on n'a PAS vérifié")
+    void plateforme_injoignable_l_encart_ne_nie_pas_le_carre(FxRobot robot) throws TimeoutException {
+        // Connecté, donc le geste est offert : ce que ce cas juge est ce qu'on lit APRÈS le clic, quand
+        // la demande est partie et n'a pas abouti. Le jeton ne garantit pas que la plateforme réponde.
         when(client.chercherCarre(CARRE_LIBRE)).thenAnswer(appel -> {
             attendreCommeLeReseau();
-            return ReponseApi.nonConnecte();
+            return ReponseApi.injoignable("bouchon de recette");
         });
         ouvrirLaDeclaration(robot);
         saisir(robot, CARRE_LIBRE);
@@ -210,6 +267,12 @@ class ScenarioModaleCarreTest {
         verifier(robot);
 
         assertThat(encart(robot).getText()).contains("PAS été vérifié").doesNotContain("n'existe pas encore");
+        // Le geste reste offert : la plateforme peut répondre au prochain essai, et rien n'oblige à
+        // fermer puis rouvrir la fenêtre pour réessayer.
+        assertThat(robot.lookup("#btnVerifierCarre").queryAs(Button.class).isDisabled())
+                .as("connecté, on peut réessayer sans quitter l'écran")
+                .isFalse();
+        Respiration.leTempsDeLire(robot);
     }
 
     @Test
