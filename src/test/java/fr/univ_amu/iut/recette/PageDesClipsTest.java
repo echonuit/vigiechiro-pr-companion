@@ -81,10 +81,19 @@ class PageDesClipsTest {
     }
 
     @Test
-    @DisplayName("#4056 : chaque adresse écrite dans la page désigne une méthode de test qui existe")
+    @DisplayName("#4056 : chaque adresse écrite dans les DEUX pages désigne une méthode qui existe")
     void chaque_adresse_designe_une_methode_qui_existe() {
         Map<String, String> introuvables = new TreeMap<>();
-        Matcher m = CLIP.matcher(lire(PAGE));
+        // ⚠️ Les DEUX pages. Ce garde s'appelait « chaque adresse » et ne lisait que celle des cas
+        // perceptifs : la page des cas assertés a nommé pendant un temps `S1-16 · bouton_synchro_visible`,
+        // un test scindé en deux et qui n'existait plus, sans que rien ne rougisse. Le voisin
+        // `tout_test_qui_cite_un_cas_est_sur_une_page` lit bien les deux ; celui-ci en avait oublié une,
+        // et son nom promettait le contraire.
+        //
+        // Le sens de la vérification n'est pas symétrique : le voisin part des TESTS et vérifie qu'ils
+        // sont annoncés ; celui-ci part des ADRESSES et vérifie qu'elles mènent quelque part. Un test
+        // renommé casse le second, pas le premier.
+        Matcher m = CLIP.matcher(lire(PAGE) + "\n" + lire(PAGE_ASSERTES));
         while (m.find()) {
             String classe = m.group(1);
             String methode = m.group(2);
