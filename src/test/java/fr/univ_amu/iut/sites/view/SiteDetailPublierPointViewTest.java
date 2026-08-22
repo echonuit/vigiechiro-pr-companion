@@ -5,12 +5,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
+import fr.univ_amu.iut.connexion.model.StockageConnexion;
+import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointPublieDao;
@@ -33,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX de l'action **« Publier sur Vigie-Chiro »** de la fiche site (#3458).
 ///
@@ -56,11 +60,14 @@ class SiteDetailPublierPointViewTest {
     private static final String LIBELLE_ACTION = "Publier sur Vigie-Chiro";
     private static final String LIBELLE_ETAT = "Publié sur Vigie-Chiro";
 
+    private Injector injecteur;
+
     @Start
     void start(Stage stage) throws Exception {
         Path workspace = Files.createTempDirectory("vc-publier-point");
         System.setProperty("vigiechiro.workspace", workspace.toString());
-        Injector injector = Guice.createInjector(RacineInjecteur.modules());
+        injecteur = Guice.createInjector(RacineInjecteur.modules());
+        Injector injector = injecteur;
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
 
@@ -104,6 +111,30 @@ class SiteDetailPublierPointViewTest {
             semis.pointRapatrie();
         }
         return semis.semerSiteEtPoint();
+    }
+
+    @Test
+    @DisplayName("#4205 : le jeton posé, l'action se rouvre sans qu'on ait quitté la fiche")
+    void le_jeton_pose_l_action_se_rouvre(FxRobot robot) {
+        assertThat(lienPublier(robot, "A1").isDisable())
+                .as("écran de départ : pas de jeton, geste fermé")
+                .isTrue();
+
+        // Se connecter, comme la modale de connexion le fait : le jeton est écrit, et le changement
+        // est publié.
+        injecteur
+                .getInstance(StockageConnexion.class)
+                .enregistrer("jeton-de-test", new ProfilVigieChiro(ID_USER, "chiro", "observateur"));
+        injecteur.getInstance(RefletDuJeton.class).relire();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // ⚠️ `setDisable(...)` est posé UNE FOIS, à la construction de la carte : c'est un instantané,
+        // pas une liaison. La fiche ne se reconstruit que sur une mutation de la base, et se connecter
+        // n'en est pas une - le geste restait donc fermé, à conseiller un geste qu'on venait de faire.
+        // Le même angle mort que #4205 sur « Mes sites », dans un troisième écran.
+        assertThat(lienPublier(robot, "A1").isDisable())
+                .as("le jeton posé, le geste se rouvre : sinon le motif conseille ce qu'on vient de faire")
+                .isFalse();
     }
 
     @Test

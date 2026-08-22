@@ -27,6 +27,7 @@ import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SuitLaRevision;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -211,6 +212,8 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
     @FXML
     private TableColumn<LignePassage, java.time.LocalDate> colDepose;
 
+    private final Optional<EtatConnexion> etatConnexion;
+
     @Inject
     public SiteDetailController(
             SiteDetailViewModel viewModel,
@@ -221,8 +224,11 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
             DepotDispositionColonnes depotColonnes,
             OuvreurDeLien ouvreurDeLien,
             ActionVigieChiroPassage vigieChiro,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            Optional<EtatConnexion> etatConnexion) {
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        // Vide dans un injecteur partiel sans la feature `connexion` : aucun jeton ne peut y arriver.
+        this.etatConnexion = Objects.requireNonNull(etatConnexion, "etatConnexion");
         this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -295,6 +301,14 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut, S
 
     @FXML
     private void initialize() {
+
+        // ⚠️ La fiche SUIT le jeton (#4219). « Publier sur Vigie-Chiro » se grise faute de connexion et
+        // son motif dit « Connectez-vous à Vigie-Chiro pour publier ce point » ; mais `setDisable` est
+        // posé UNE FOIS, à la construction de la carte, et les cartes ne se reconstruisent que sur une
+        // mutation de la base. Se connecter n'en est pas une : le lien restait fermé, à conseiller un
+        // geste qu'on venait d'accomplir. Le même angle mort que #4205 sur « Mes sites ».
+        etatConnexion.ifPresent(
+                etat -> etat.connecteProperty().addListener((obs, avant, apres) -> rafraichirDepuisLaDonnee()));
 
         // Compte rendu d'opération au bandeau de l'écran (ADR 0023), et non dans une fenêtre qui bloque.
         BandeauRetour.installer(
