@@ -80,7 +80,8 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.
 - **S1-16** · « Récupérer depuis Vigie-Chiro » est présent, et **fermé hors connexion** : grisé, avec un
   motif qui nomme le geste manquant - « Connectez-vous depuis le menu principal, entrée "Se connecter à
-  Vigie-Chiro…" ». Se connecter le rouvre, sans quitter l'écran.
+  Vigie-Chiro…" ». Se connecter le rouvre **sans quitter l'écran**, et la récupération rend compte dans
+  le bandeau, qui nomme ce qui a été rapatrié.
 
     ⚠️ Cette case disait **« masqué »**, et le produit ne le faisait ni dans un sens ni dans l'autre : le
     bouton restait offert, ouvrait son dialogue, ne rapatriait rien et ne disait pas pourquoi (#4194).
@@ -88,6 +89,11 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
     dépôt l'a tranché : « désactivé, il documente ce qui manque (affordance #789) plutôt que de
     disparaître ». Un bouton qui disparaît n'apprend rien ; un bouton fermé qui dit pourquoi enseigne le
     geste. La case suit donc la doctrine, et non l'inverse.
+
+    ⚠️ « Se connecter le rouvre sans quitter l'écran » était écrit ici **avant** d'être vrai. Le produit
+    ne rouvrait rien : le motif conseillait de se connecter, on suivait ce conseil, on revenait, et le
+    bouton restait grisé à répéter le même conseil (#4205). Il fallait quitter l'écran et y revenir.
+    L'état de connexion n'était **observable** nulle part - on pouvait le demander, pas le suivre.
 - **S1-17** · Voile d'occupation au chargement.
 
 **Étape 4 · Détail de carré**

@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SuitLaRevision;
+import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
@@ -17,6 +18,7 @@ import fr.univ_amu.iut.sites.viewmodel.CarteSite;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
 import fr.univ_amu.iut.sites.viewmodel.StatutPlateforme;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -95,11 +97,20 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
     @FXML
     private Label lblSynchro;
 
+    /// Vide dans un injecteur partiel sans la feature `connexion` : aucun jeton ne peut y arriver,
+    /// donc rien à surveiller. Cf. `CommunModule`.
+    private final Optional<EtatConnexion> etatConnexion;
+
     @Inject
-    public MesSitesController(SitesViewModel viewModel, NavigationSites navigation, ExecuteurTache executeur) {
+    public MesSitesController(
+            SitesViewModel viewModel,
+            NavigationSites navigation,
+            ExecuteurTache executeur,
+            Optional<EtatConnexion> etatConnexion) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        this.etatConnexion = Objects.requireNonNull(etatConnexion, "etatConnexion");
     }
 
     @Override
@@ -132,6 +143,12 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         lblSynchro.textProperty().bind(viewModel.messageSynchroProperty());
         lblSynchro.visibleProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
         lblSynchro.managedProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
+        // ⚠️ Et l'écran SUIT le jeton (#4205). Le fermer faute de jeton (#4194) ne suffisait pas : le
+        // motif du bouton conseille « Connectez-vous depuis le menu principal », on suivait ce conseil,
+        // on revenait, et le bouton restait grisé à répéter le même conseil. Il fallait quitter l'écran
+        // et y revenir pour qu'il se relise. Un écran qui donne un conseil doit voir qu'on l'a suivi.
+        etatConnexion.ifPresent(
+                etat -> etat.connecteProperty().addListener((obs, avant, apres) -> rafraichirDepuisLaDonnee()));
         viewModel.cartes().addListener((ListChangeListener<CarteSite>) changement -> reconstruire());
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
         // Bouton relâché par binding sur l'occupation (#1254) : plus de setDisable posé à la main de

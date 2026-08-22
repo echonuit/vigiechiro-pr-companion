@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
+import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -69,6 +70,13 @@ class ConnexionProgressionIntegreeViewTest {
         });
 
         Injector injector = Guice.createInjector(new AbstractModule() {
+            /// Le reflet du jeton (#4205), exigé par le controller : ici sur un exécuteur direct, la
+            /// forme que `RevisionDonnees` documente pour les tests (`Runnable::run`).
+            @Provides
+            RefletDuJeton refletDuJeton() {
+                return new RefletDuJeton(stockage, Runnable::run);
+            }
+
             @Provides
             ConnexionViewModel viewModel() {
                 return new ConnexionViewModel(stockage, client, Set.of(), java.util.Optional.empty());

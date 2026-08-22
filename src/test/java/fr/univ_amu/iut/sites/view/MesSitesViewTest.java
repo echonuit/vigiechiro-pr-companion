@@ -11,7 +11,9 @@ import com.google.inject.Singleton;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -22,6 +24,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
+import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
@@ -33,6 +36,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
@@ -68,6 +73,10 @@ import org.testfx.util.WaitForAsyncUtils;
 class MesSitesViewTest {
 
     private static final String ID_USER = "u-test";
+
+    /// Le libelle que `NavigationConnexion.libelleMenu()` rend tant qu'aucun profil n'est enregistre.
+    /// Une fois connecte, cette meme entree porte le pseudo : le menu DIT l'etat de connexion.
+    private static final String LIBELLE_SE_CONNECTER = "Se connecter à Vigie-Chiro…";
     private Injector injector;
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
 
@@ -92,6 +101,18 @@ class MesSitesViewTest {
                         bind(ClientVigieChiro.class).toInstance(client);
                     }
                 }));
+        // ⚠️ Le mock répond comme le VRAI client : `estConnecte()` demande « un jeton est-il
+        // enregistré ? » et rien d'autre (`ClientVigieChiro:98`). Un clip peut donc MONTRER la
+        // connexion rouvrir le geste, au lieu de basculer un booléen que le produit n'aurait pas vu
+        // bouger. Le stockage est un fichier relu à chaque appel : la réponse suit le geste.
+        StockageConnexion stockage = injector.getInstance(StockageConnexion.class);
+        when(client.estConnecte()).thenAnswer(appel -> stockage.estConnecte());
+        when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro(ID_USER, "chiro", "observateur")));
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(
+                        new SiteVigieChiro("vc-1", "Étang de la Tuilière", false),
+                        new SiteVigieChiro("vc-2", "ZAC Nord", false))));
+        when(client.mesParticipations()).thenReturn(ReponseApi.succes(List.of()));
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         seeder(source);
@@ -148,55 +169,98 @@ class MesSitesViewTest {
 
     @Test
     @CasDeRecette(value = "S1-16", portee = Portee.A_L_ECRAN)
-    @DisplayName("#1045 : le bouton « Récupérer depuis Vigie-Chiro » est visible dans l'app complète")
-    void bouton_synchro_visible(FxRobot robot) {
+    @DisplayName("S1-16 · hors connexion, « Récupérer depuis Vigie-Chiro » est fermé et dit ce qui manque")
+    void hors_connexion_la_recuperation_est_fermee(FxRobot robot) {
+        // ⚠️ Le clip commence par ÉTABLIR la situation, au lieu de la supposer. Le menu principal
+        // porte « Se connecter à Vigie-Chiro… » tant qu'aucun profil n'est enregistré, et le pseudo
+        // ensuite (`NavigationConnexion.libelleMenu`) : c'est le produit qui dit qu'on n'est pas
+        // connecté, le clip n'a rien à affirmer par-dessus. Demande de la revue (#4171) : « il
+        // faudrait montrer que si on n'est pas connecté, en affichant le menu action par exemple ».
+        robot.clickOn("#menuOutils");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(robot.lookup(LIBELLE_SE_CONNECTER).tryQuery())
+                .as("le menu annonce qu'il reste à se connecter : c'est la situation que ce clip pose")
+                .isPresent();
+        Respiration.leTempsDeLire(robot);
+
+        robot.type(KeyCode.ESCAPE);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+
         Button bouton = robot.lookup("#btnSyncVigieChiro").queryAs(Button.class);
-
-        assertThat(bouton.isVisible())
-                .as("app complète : la passerelle est liée, le bouton est offert")
-                .isTrue();
-
-        // ⚠️ D'ABORD l'état EMPÊCHÉ, et son motif. La revue demandait de « voir la connexion avant de
-        // voir que le bouton existe » (#4171), et cette demande a mis au jour un défaut du produit : le
-        // geste était offert sans jeton, ouvrait son dialogue, ne rapatriait rien et ne disait pas
-        // pourquoi (#4194). Il se ferme désormais, et dit ce qui manque.
         CadreVisible.amener(bouton, robot);
+        assertThat(bouton.isVisible())
+                .as("app complète : la passerelle est liée, le bouton est offert (#1045)")
+                .isTrue();
         assertThat(bouton.isDisabled())
-                .as("sans jeton, rien ne peut être récupéré : le geste est fermé")
+                .as("sans jeton, rien ne peut être récupéré : le geste est fermé (#4194)")
                 .isTrue();
         assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeSync").query()))
                 .as("et il dit ce qui manque, avec le geste qui répare")
                 .contains("pas connecté")
                 .contains("Se connecter à Vigie-Chiro");
         Respiration.surLeMomentCle(robot);
+    }
 
-        seConnecter(robot);
+    @Test
+    @CasDeRecette(value = "S1-16", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-16 · une fois connecté, « Récupérer depuis Vigie-Chiro » s'ouvre et rend compte")
+    void une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte(FxRobot robot) throws TimeoutException {
+        Button bouton = robot.lookup("#btnSyncVigieChiro").queryAs(Button.class);
+        CadreVisible.amener(bouton, robot);
         assertThat(bouton.isDisabled())
-                .as("le jeton posé, le geste se rouvre sans qu'on ait quitté l'écran")
-                .isFalse();
-        assertThat(CadreVisible.contient(bouton))
-                .as("un bouton hors du cadre est un bouton que le clip n'offre pas")
+                .as("écran de départ : le geste est encore fermé, faute de jeton")
                 .isTrue();
         Respiration.avantLeGeste(robot);
 
-        // ⚠️ Et on le CLIQUE. « Le bouton est visible » se constatait sur un écran immobile, et la revue
-        // n'y voyait rien à comprendre (#4171). Un bouton se juge à ce qu'il FAIT : la synchronisation
-        // part, l'écran en rend compte, et c'est cela qu'on regarde.
-        //
-        // ⚠️ Ce que la revue supposait n'est pas ce que fait le produit. Elle demandait de « voir la
-        // connexion avant » ; or la visibilité de ce bouton ne dépend PAS de la connexion, mais de la
-        // présence de la passerelle - « app complète » (#1045). Un état non connecté ne changerait rien
-        // à son apparence, et le clip doit donc montrer autre chose : son effet.
+        // ⚠️ La connexion se JOUE, elle ne se pose pas dans le stockage à la main. La version
+        // précédente basculait un booléen du mock et sautait de « fermé » à « ouvert » sans rien
+        // montrer : la revue n'y voyait pas ce qui avait changé l'état (#4171). Ici le jeton arrive
+        // par le seul chemin qu'un utilisateur emprunte, et c'est LUI qui rouvre le bouton.
+        robot.clickOn("#menuOutils");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+        robot.clickOn(LIBELLE_SE_CONNECTER);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.avantLeGeste(robot);
+
+        robot.clickOn("#champToken").write("jeton-de-recette");
+        robot.clickOn("#boutonConnecter");
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup("#bandeauStatut").queryAs(Label.class).isVisible());
+        Respiration.leTempsDeLire(robot);
+
+        // ⚠️ ADR 4188 : une modale se filme avec son écran de départ ET son écran d'arrivée. On la
+        // referme donc, et « Mes sites » revient : c'est là que le changement se lit.
+        robot.clickOn("#boutonFermer");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.apresLeGeste(robot);
+
+        CadreVisible.amener(bouton, robot);
+        assertThat(bouton.isDisabled())
+                .as("le jeton posé, le geste se rouvre : c'est ce que la connexion vient de changer")
+                .isFalse();
+        Respiration.avantLeGeste(robot);
+
         robot.clickOn(bouton);
         WaitForAsyncUtils.waitForFxEvents();
-        Respiration.surLeMomentCle(robot);
 
         Label message = robot.lookup("#lblSynchro").queryAs(Label.class);
+        CadreVisible.amener(message, robot);
         assertThat(message.isVisible())
-                .as("la synchronisation rend compte : un bouton qui ne dit rien ne se distingue pas d'un"
-                        + " bouton qui n'a rien fait")
+                .as("la synchronisation rend compte : un bouton qui ne dit rien ne se distingue pas"
+                        + " d'un bouton qui n'a rien fait")
                 .isTrue();
-        assertThat(message.getText()).isNotBlank();
+        assertThat(message.getText())
+                .as("et le bandeau nomme ce qui a été récupéré, sinon il n'y a rien à lire")
+                .contains("site");
+
+        // ⚠️ La respiration FINALE, et elle est longue exprès. Le bandeau est le résultat du cas :
+        // un clip qui coupe à l'instant où il paraît ne le donne pas à lire (#4171).
+        Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
     }
 
     @Test
