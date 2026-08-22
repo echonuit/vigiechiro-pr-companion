@@ -20,6 +20,8 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
+import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
@@ -120,6 +122,8 @@ class MesSitesViewTest {
     @Test
     @DisplayName("#2606 : la synchronisation s'annonce sous une fenêtre de suivi, avec « Annuler »")
     void synchro_montre_son_avancement_et_laisse_renoncer(FxRobot robot) {
+        // Depuis #4194 le geste est FERMÉ sans jeton : il faut donc en poser un pour l'exercer.
+        seConnecter(robot);
         when(client.mesParticipations()).thenAnswer(appel -> {
             // Instantané pris pendant le travail : après coup, la fenêtre est déjà refermée.
             Window suivi = Window.getWindows().stream()
@@ -152,12 +156,47 @@ class MesSitesViewTest {
                 .as("app complète : la passerelle est liée, le bouton est offert")
                 .isTrue();
 
-        // Le bouton est ce que ce cas fait juger : il doit être À L'IMAGE, et tenu le temps d'être vu.
+        // ⚠️ D'ABORD l'état EMPÊCHÉ, et son motif. La revue demandait de « voir la connexion avant de
+        // voir que le bouton existe » (#4171), et cette demande a mis au jour un défaut du produit : le
+        // geste était offert sans jeton, ouvrait son dialogue, ne rapatriait rien et ne disait pas
+        // pourquoi (#4194). Il se ferme désormais, et dit ce qui manque.
         CadreVisible.amener(bouton, robot);
+        assertThat(bouton.isDisabled())
+                .as("sans jeton, rien ne peut être récupéré : le geste est fermé")
+                .isTrue();
+        assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeSync").query()))
+                .as("et il dit ce qui manque, avec le geste qui répare")
+                .contains("pas connecté")
+                .contains("Se connecter à Vigie-Chiro");
+        Respiration.surLeMomentCle(robot);
+
+        seConnecter(robot);
+        assertThat(bouton.isDisabled())
+                .as("le jeton posé, le geste se rouvre sans qu'on ait quitté l'écran")
+                .isFalse();
         assertThat(CadreVisible.contient(bouton))
                 .as("un bouton hors du cadre est un bouton que le clip n'offre pas")
                 .isTrue();
-        Respiration.leTempsDeLire(robot);
+        Respiration.avantLeGeste(robot);
+
+        // ⚠️ Et on le CLIQUE. « Le bouton est visible » se constatait sur un écran immobile, et la revue
+        // n'y voyait rien à comprendre (#4171). Un bouton se juge à ce qu'il FAIT : la synchronisation
+        // part, l'écran en rend compte, et c'est cela qu'on regarde.
+        //
+        // ⚠️ Ce que la revue supposait n'est pas ce que fait le produit. Elle demandait de « voir la
+        // connexion avant » ; or la visibilité de ce bouton ne dépend PAS de la connexion, mais de la
+        // présence de la passerelle - « app complète » (#1045). Un état non connecté ne changerait rien
+        // à son apparence, et le clip doit donc montrer autre chose : son effet.
+        robot.clickOn(bouton);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
+
+        Label message = robot.lookup("#lblSynchro").queryAs(Label.class);
+        assertThat(message.isVisible())
+                .as("la synchronisation rend compte : un bouton qui ne dit rien ne se distingue pas d'un"
+                        + " bouton qui n'a rien fait")
+                .isTrue();
+        assertThat(message.getText()).isNotBlank();
     }
 
     @Test
@@ -178,10 +217,21 @@ class MesSitesViewTest {
                 .isNotEmpty();
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ Ce clip ne montre PAS le voile pendant qu'il paraît, et il ne le peut pas : cette classe
-        // monte l'exécuteur SYNCHRONE, où le travail occupe le fil JavaFX. Aucune image n'est rendue
-        // pendant ce temps, il n'y a rien à filmer (cf. ScenarioPerceptifConnexionTest, qui branche
-        // l'asynchrone précisément pour cette raison). Le dire plutôt que de laisser croire l'inverse.
+        // ⚠️ Ce clip ne montre PAS le voile pendant qu'il paraît, et **aucun clip ne le peut**. La revue
+        // l'a demandé - « je ne comprends pas ce que je dois voir » (#4172) - et la mesure a répondu non.
+        //
+        // Deux raisons, cherchées dans cet ordre et toutes deux vérifiées :
+        //
+        // 1. l'exécuteur SYNCHRONE de cette classe occupe le fil JavaFX : aucune image n'est rendue
+        //    pendant le travail. Un scénario asynchrone a été écrit pour lever cet obstacle ;
+        // 2. il n'a rien montré non plus, et c'est la vraie raison. Le voile ne couvre qu'un
+        //    `viewModel::charger` - une lecture en base, instantanée. Et depuis #2558, la seule opération
+        //    LONGUE de cet écran, la synchronisation, n'emprunte plus le voile : elle ouvre un
+        //    `DialogueProgression`, qui se montre et se laisse interrompre.
+        //
+        // Filmer le voile demanderait donc de fabriquer une lenteur que le produit n'a pas. Ce que ce
+        // clip montre est ce que le cas garde vraiment : l'écran est chargé, ses cartes sont là, et RIEN
+        // ne le voile - le défaut serait un voile resté en place.
     }
 
     @Test
@@ -298,6 +348,17 @@ class MesSitesViewTest {
                 .isPresent();
         assertThat(robot.lookup("#valNumeroCarre").queryAs(Label.class).getText())
                 .isEqualTo("752204");
+    }
+
+    /// Pose un jeton et provoque la relecture, comme le ferait une connexion depuis le menu ☰.
+    ///
+    /// ⚠️ La connexion elle-même n'est pas jouée ici - elle a sa propre modale et ses propres cas
+    /// (`S1-04` à `S1-08`). Ce qui est montré est son EFFET sur cet écran : le geste qui se rouvre.
+    private void seConnecter(FxRobot robot) {
+        when(client.estConnecte()).thenReturn(true);
+        robot.interact(() -> injector.getInstance(RevisionDonnees.class).mutationStructurelleValidee());
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
     }
 
     private static KeyEvent touche(KeyCode code) {

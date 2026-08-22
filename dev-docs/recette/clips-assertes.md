@@ -262,10 +262,3 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre.mp4"></video>
-
-## NavigationSitesRapatriementTest
-
-### S1-34 · `le_rapatriement_rafraichit_mes_sites_et_y_rend_compte`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/NavigationSitesRapatriementTest.le_rapatriement_rafraichit_mes_sites_et_y_rend_compte.mp4"></video>

@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -77,13 +79,28 @@ class ConnexionModaleConnecteeViewTest {
         stage.show();
     }
 
+    private static TextField champToken(FxRobot robot) {
+        return robot.lookup("#champToken").queryAs(TextField.class);
+    }
+
     @Test
     @CasDeRecette(value = "S1-11", portee = Portee.A_L_ECRAN)
     @DisplayName("#798 : « Se déconnecter » confirme avant d'effacer le jeton local")
     void deconnexion_confirme_avant_effacement(FxRobot robot) {
+        // ⚠️ Le dialogue DE LA PRODUCTION, ouvert sans bloquer. Le test le remplaçait par une lambda
+        // muette : rien ne paraissait, et la revue l'a vu - « la confirmation ne s'affiche pas » (#4170).
+        //
+        // `ConfirmationNavigation.dialogue(...)` existe précisément pour cela : même type, même
+        // habillage, même texte. Ce qui se voit est donc juste, à une chose près qui ne se voit pas -
+        // la fenêtre ne BLOQUE pas, là où `showAndWait` figerait le banc.
         List<String> demandes = new ArrayList<>();
+        List<Alert> ouverts = new ArrayList<>();
         controleur.confirmateur().definir(message -> {
             demandes.add(message);
+            Alert dialogue = new ConfirmationNavigation().dialogue(message);
+            dialogue.initOwner(champToken(robot).getScene().getWindow());
+            dialogue.show();
+            ouverts.add(dialogue);
             return false; // l'utilisateur refuse
         });
 
@@ -91,7 +108,16 @@ class ConnexionModaleConnecteeViewTest {
         Respiration.leTempsDeLire(robot);
         robot.clickOn("#boutonDeconnecter");
         WaitForAsyncUtils.waitForFxEvents();
+        // La confirmation est à l'écran : c'est ce que ce cas fait juger, et c'est ce qui manquait.
         Respiration.surLeMomentCle(robot);
+
+        assertThat(ouverts)
+                .as("un dialogue de confirmation a bien paru, et non une lambda muette")
+                .hasSize(1);
+        assertThat(ouverts.get(0).isShowing()).isTrue();
+        robot.interact(() -> ouverts.get(0).close());
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.apresLeGeste(robot);
 
         assertThat(demandes).as("la déconnexion demande confirmation").hasSize(1);
         assertThat(demandes.get(0)).contains("jeton");

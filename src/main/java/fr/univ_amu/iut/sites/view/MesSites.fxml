@@ -30,8 +30,12 @@
   -->
   <FlowPane styleClass="entete-actions" alignment="CENTER_RIGHT">
     <!-- Synchronisation à la demande (#1045) : masqué quand la passerelle VigieChiro est absente. -->
-    <Button fx:id="btnSyncVigieChiro" text="Récupérer depuis Vigie-Chiro" styleClass="bouton-secondaire"
-            onAction="#recupererDepuisVigieChiro"/>
+    <!-- Enveloppe : un Button désactivé n'affiche pas d'infobulle, le motif du blocage se pose donc
+         au-dessus de lui (affordance #789, généralisée par IndicateurBlocage). -->
+    <StackPane fx:id="enveloppeSync">
+      <Button fx:id="btnSyncVigieChiro" text="Récupérer depuis Vigie-Chiro" styleClass="bouton-secondaire"
+              onAction="#recupererDepuisVigieChiro"/>
+    </StackPane>
     <Button text="+ Nouveau site" styleClass="bouton-primaire" onAction="#nouveauSite"/>
   </FlowPane>
 

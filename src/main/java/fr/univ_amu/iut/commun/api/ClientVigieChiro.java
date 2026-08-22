@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.DoubleConsumer;
 
@@ -63,6 +64,8 @@ public final class ClientVigieChiro {
     /// en trois exemplaires se transforme un jour en « PATCH » à deux endroits sur trois.
     private static final String PUT = "PUT";
 
+    private final FournisseurToken fournisseurToken;
+
     private final TransportVigieChiro transport;
 
     public ClientVigieChiro(FournisseurToken fournisseurToken) {
@@ -73,13 +76,27 @@ public final class ClientVigieChiro {
     /// (les réponses deviennent `empty`), et l'exécution peut viser un serveur de recette ou le **stub**
     /// des E2E CLI via la surcharge `vigiechiro.url` / `VIGIECHIRO_URL` (cf. `ConnexionModule#urlDeBase`).
     public ClientVigieChiro(String baseUrl, FournisseurToken fournisseurToken) {
+        this.fournisseurToken = Objects.requireNonNull(fournisseurToken, "fournisseurToken");
         this.transport = new TransportVigieChiro(baseUrl, fournisseurToken);
     }
 
     /// Constructeur d'**injection du transport** (#2354), réservé aux tests : un transport à `HttpClient`
     /// mocké simule le dialogue multipart (URL de partie, `PUT` S3, finalisation) sans réseau réel.
     ClientVigieChiro(TransportVigieChiro transport) {
-        this.transport = java.util.Objects.requireNonNull(transport, "transport");
+        this.transport = Objects.requireNonNull(transport, "transport");
+        // Ce client-ci n'a pas de source de jeton : le transport en porte une, mais elle ne remonte pas
+        // jusqu'ici. `estConnecte()` répond donc « non », ce qui est la réponse prudente pour une
+        // affordance - on ferme un geste plutôt que de l'offrir sans savoir.
+        this.fournisseurToken = Optional::empty;
+    }
+
+    /// Un jeton est-il disponible ? **Sans appel réseau** : la question se pose pour décider ce qu'un
+    /// écran offre, et une affordance ne se paie pas d'un aller-retour.
+    ///
+    /// ⚠️ Un jeton présent ne dit pas qu'il est **valide** - seul [#moi()] le sait. C'est suffisant pour
+    /// ce à quoi cela sert : empêcher un geste qui ne peut RIEN faire faute de jeton (#4194).
+    public boolean estConnecte() {
+        return fournisseurToken.token().isPresent();
     }
 
     /// Profil de l'utilisateur connecté (`GET /moi`), **trié** (#1284) : un jeton refusé (`401`)
