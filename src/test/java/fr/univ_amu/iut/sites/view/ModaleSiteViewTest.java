@@ -13,11 +13,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
+import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
+import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -75,6 +78,14 @@ class ModaleSiteViewTest {
         // les trois états de la portée se vérifient sans IHM (SiteEditPorteeTest).
         LienVigieChiroDao liens = mock(LienVigieChiroDao.class);
         Injector injector = Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                // Ces cas jouent un utilisateur connecté : « Vérifier » est fermé sans jeton (#4210).
+                OptionalBinder.newOptionalBinder(binder(), EtatConnexion.class)
+                        .setBinding()
+                        .toInstance(new RefletDuJeton(() -> Optional.of("jeton-de-test"), Runnable::run));
+            }
+
             @Provides
             SiteEditViewModel viewModel() {
                 return new SiteEditViewModel(service, liens, ID_USER, Optional.empty(), Optional.empty());

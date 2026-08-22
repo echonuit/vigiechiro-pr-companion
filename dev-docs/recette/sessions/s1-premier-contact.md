@@ -57,8 +57,25 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 - **S1-32** · Le verdict ne survit pas à ce qu'il jugeait : après S1-31, changer un chiffre du carré. L'encart
   **disparaît** (il portait sur l'ancien numéro). Recliquer le repose sur le nouveau.
 - **S1-33** · Vérification **hors connexion** : se déconnecter (S1-11), rouvrir la déclaration, saisir six
-  chiffres, cliquer. L'encart dit « Vérification impossible … Ce carré n'a donc PAS été vérifié » - jamais « il
-  n'existe pas ». Le bouton reste offert, non grisé.
+  chiffres. « Vérifier sur Vigie-Chiro » est **grisé**, avec un motif qui nomme le geste qui répare -
+  « Vous n'êtes pas connecté à Vigie-Chiro : rien ne peut être vérifié. Vous pouvez déclarer ce carré sans
+  vérifier, ou vous connecter depuis le menu principal… ». **« Créer » reste actif** : c'est la
+  vérification qui est fermée, jamais la déclaration.
+
+    Puis, **connecté mais plateforme injoignable** : cliquer. L'encart dit « Vérification impossible … Ce
+    carré n'a donc PAS été vérifié » - jamais « il n'existe pas » - et le bouton reste offert, pour
+    réessayer sans quitter la fenêtre.
+
+    ⚠️ Cette case promettait « le bouton reste offert, non grisé » **hors connexion**, et personne ne le
+    vérifiait. Le produit le faisait pourtant : on tapait six chiffres, on cliquait, on payait un
+    aller-retour réseau, et l'encart répondait « Vérification impossible » - alors que l'application
+    savait avant le clic qu'elle n'avait pas de jeton. C'est contraire à l'affordance #789 (« empêcher
+    plutôt qu'avertir ») et à l'heuristique 5 de Nielsen. La case a été renversée en #4210.
+
+    ⚠️ La défense de l'ancienne rédaction citait `ControleCarreStoc` (« un confort, jamais une
+    condition ») : c'est le contrôle **automatique** des coordonnées d'un point, pas ce bouton-ci, qui
+    passe par `chercherCarre`. Restait « on s'est peut-être connecté entre-temps » ; depuis #4205 le
+    geste se rouvre tout seul dès qu'un jeton arrive.
 - **S1-34** · Récupération : après S1-31, cliquer « **Récupérer ce carré** ». La fenêtre se ferme, on
   **reste sur « Mes sites »**, le carré récupéré paraît dans la liste, et le bandeau de l'écran annonce
   « Carré <n°> récupéré depuis Vigie-Chiro : N point(s) d'écoute positionné(s) ». Les points portent
