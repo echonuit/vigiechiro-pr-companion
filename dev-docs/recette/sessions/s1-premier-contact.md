@@ -78,7 +78,16 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.
-- **S1-16** · « Récupérer depuis Vigie-Chiro » est présent, et masqué hors connexion.
+- **S1-16** · « Récupérer depuis Vigie-Chiro » est présent, et **fermé hors connexion** : grisé, avec un
+  motif qui nomme le geste manquant - « Connectez-vous depuis le menu principal, entrée "Se connecter à
+  Vigie-Chiro…" ». Se connecter le rouvre, sans quitter l'écran.
+
+    ⚠️ Cette case disait **« masqué »**, et le produit ne le faisait ni dans un sens ni dans l'autre : le
+    bouton restait offert, ouvrait son dialogue, ne rapatriait rien et ne disait pas pourquoi (#4194).
+    En le corrigeant, il a fallu choisir entre les deux mots. C'est **grisé** qui l'emporte, parce que le
+    dépôt l'a tranché : « désactivé, il documente ce qui manque (affordance #789) plutôt que de
+    disparaître ». Un bouton qui disparaît n'apprend rien ; un bouton fermé qui dit pourquoi enseigne le
+    geste. La case suit donc la doctrine, et non l'inverse.
 - **S1-17** · Voile d'occupation au chargement.
 
 **Étape 4 · Détail de carré**
