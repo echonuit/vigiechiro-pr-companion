@@ -357,12 +357,25 @@ une vraie machine rend.
 
 | Cases | Ce qu'un banc peut en faire |
 |---|---|
-| `S10-01` à `S10-04` · le dossier de travail déjà tenu | **La moitié est atteignable.** Le refus est un écran, et sous Windows le verrou est impératif, ce qui est précisément la condition où la fonctionnalité était inerte (#3693). Il faut un scénario qui tienne le verrou et montre le refus : cela n'existe pas encore. |
+| `S10-01` à `S10-04` · le dossier de travail déjà tenu | **Filmable, et sans intérêt.** Voir ci-dessous. |
 | `S10-05` à `S10-08` · la couleur dans une vraie console | **Hors de portée**, de ce banc comme de tout autre. `cmd.exe`, PowerShell et Windows Terminal ne sont pas des graphes de scène. |
 
-Dire « S10 aura ses clips » serait donc faux. Ce qui est vrai : **S10-01 et S10-02 deviennent
-filmables, sur la plateforme même qui a porté le défaut**, et c'est ce qu'aucun dispositif ne sait
-faire aujourd'hui.
+Dire « S10 aura ses clips » serait donc faux. Cette page l'a d'abord écrit, puis corrigé en lisant la
+session ; il faut le corriger une seconde fois, en lisant le code.
+
+`S10-02` demande « le texte exact du message, capture à l'appui ». **La capture existe déjà**, et
+elle est meilleure qu'un clip : `CaptureDialogues` rend le dialogue **de production**, si bien qu'une
+reformulation du refus change l'image toute seule (ADR 0025). `S10-01` demande que le message nomme
+l'occupant, et `ReservationWorkspaceTest` l'affirme déjà, dans le passage complet du mardi sur
+`windows-latest`.
+
+Ce qu'un clip ajouterait est donc presque nul : le refus est une **modale statique**, elle s'ouvre et
+ne bouge plus. Le seul mouvement serait « l'application démarre, puis refuse », et c'est précisément
+le geste que la scène ne peut pas jouer honnêtement, puisqu'il demande deux vrais processus du
+système.
+
+**Ce que le banc Java apporte à S10 est donc la possibilité, et non le besoin.** La session garde ce
+qu'elle a toujours eu : des cases pour un humain devant une vraie machine.
 
 ## Ce qui reste à décider
 
@@ -376,7 +389,7 @@ L'ordre proposé, du plus sûr au plus engageant. Tout est rattaché à l'EPIC #
 | 1 | #4159, #4160, #4161 | les trois défauts du banc, **corrigés et gardés dans cette branche** |
 | 2 | #4162 | ne filmer que les tests qui citent un cas |
 | 3 | #4163 | un tournage **par session**, sur la plateforme de son choix, à côté du banc bash |
-| 4 | #4164 | `S10-01`/`S10-02`, le scénario du dossier déjà tenu |
+| 4 | #4164 | `S10-01`/`S10-02` : **à fermer**, la cartographie montre qu'un aperçu de production et une assertion jouée sous Windows les servent déjà mieux qu'un clip |
 | 5 | à ouvrir | les deux bancs comparés sur la **même planche**, puis décider de `lance-test-filme.sh`, de ses 1 289 lignes et de ses cinq préconditions. Cela vaudra un ADR |
 
 Le spike qui l'a précédé, et qui dit ce que le banc Java remplace :
