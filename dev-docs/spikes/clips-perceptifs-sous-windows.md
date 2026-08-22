@@ -10,6 +10,21 @@
     sur la plateforme de son choix. Cette page reste pour ce qu'elle a **mesuré** ; elle ne décrit
     plus un dispositif vivant.
 
+!!! warning "Ces clips ne se rafraîchissent plus tout seuls"
+
+    Les neuf pièces ont été retournées **à la main** le 22 août 2026, après que le banc a appris à
+    dessiner le pointeur : ce sont donc les premiers clips de cette page où l'on voit le **geste** et
+    non seulement son effet.
+
+    ⚠️ Aucun workflow n'alimente `clips-windows-spike` depuis le retrait de celui du spike, et
+    `tournage-recette.yml` ne publie **délibérément** nulle part, pour qu'un second dispositif ne
+    puisse pas contredire `recette-filmee.yml`. La date que portent ces clips est donc celle d'une
+    **main**, pas d'un dispositif : si le banc change encore, cette page gèle sans que rien ne le
+    signale.
+
+    Les retourner demande de dispatcher `tournage-recette.yml` sur `S1`, `S4` et `S6` en `windows`,
+    puis de verser les neuf `mp4` des artefacts sur la pré-version.
+
 ## La question
 
 La session [S10 · le poste Windows](../recette/sessions/s10-le-poste-windows.md) n'a jamais eu de
