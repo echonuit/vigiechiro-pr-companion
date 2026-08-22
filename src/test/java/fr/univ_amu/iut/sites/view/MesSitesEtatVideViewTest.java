@@ -13,13 +13,15 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
+import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
@@ -69,9 +71,11 @@ class MesSitesEtatVideViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1100, 720));
+        // ⚠️ `Habillage` via `FenetreDuBanc` : ces trois cas sont FILMÉS, et une scène montée sans
+        // habillage porte la police de la MACHINE (#3773, #4149).
+        FenetreDuBanc.poser(stage, racine, 1180, 900);
         injector.getInstance(NavigationSites.class).ouvrirAccueil();
-        stage.show();
+        FenetreDuBanc.afficher(stage);
     }
 
     @AfterEach
@@ -89,6 +93,14 @@ class MesSitesEtatVideViewTest {
         assertThat(robot.lookup(".carte-site").queryAll())
                 .as("et aucune carte ne subsiste")
                 .isEmpty();
+
+        // L'état vide EST ce que ce cas fait juger : il doit être à l'image, et tenu le temps d'être lu.
+        VBox etatVide = robot.lookup("#etatVide").queryAs(VBox.class);
+        CadreVisible.amener(etatVide, robot);
+        assertThat(CadreVisible.contient(etatVide))
+                .as("un état vide hors du cadre est un écran dont le clip ne montre rien")
+                .isTrue();
+        Respiration.surLeMomentCle(robot);
     }
 
     @Test
@@ -96,9 +108,15 @@ class MesSitesEtatVideViewTest {
     @DisplayName("L'état vide porte sa porte de sortie : « + Ajouter mon premier site de suivi »")
     void l_etat_vide_porte_sa_porte_de_sortie(FxRobot robot) {
         // Le point qui compte pour l'utilisateur : un écran vide sans action est une impasse.
-        assertThat(robot.lookup("#etatVide").lookup(".bouton-primaire-grand").queryAllAs(Button.class))
-                .extracting(Button::getText)
-                .containsExactly("+ Ajouter mon premier site de suivi");
+        Button porteDeSortie =
+                robot.lookup("#etatVide").lookup(".bouton-primaire-grand").queryAs(Button.class);
+        assertThat(porteDeSortie.getText()).isEqualTo("+ Ajouter mon premier site de suivi");
+
+        // C'est le bouton qu'on doit VOIR : un écran vide dont la sortie est sous le pli reste une
+        // impasse pour qui regarde le clip.
+        CadreVisible.amener(porteDeSortie, robot);
+        assertThat(CadreVisible.contient(porteDeSortie)).isTrue();
+        Respiration.surLeMomentCle(robot);
     }
 
     @Test
@@ -110,10 +128,12 @@ class MesSitesEtatVideViewTest {
         assertThat(robot.lookup("#etatVide").lookup(".hint-box").tryQuery())
                 .as("l'encart d'aide fait partie de l'état vide, il n'en est pas la décoration")
                 .isPresent();
-        assertThat(robot.lookup("#etatVide")
-                        .lookup(".hint-txt")
-                        .queryAs(Label.class)
-                        .getText())
-                .contains("vigiechiro.herokuapp.com");
+        Label aide = robot.lookup("#etatVide").lookup(".hint-txt").queryAs(Label.class);
+        assertThat(aide.getText()).contains("vigiechiro.herokuapp.com");
+
+        // L'encart d'aide se LIT : c'est une phrase, et une phrase demande qu'on s'arrête dessus.
+        CadreVisible.amener(aide, robot);
+        assertThat(CadreVisible.contient(aide)).isTrue();
+        Respiration.leTempsDeLire(robot);
     }
 }

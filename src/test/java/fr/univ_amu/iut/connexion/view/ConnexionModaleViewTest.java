@@ -19,6 +19,7 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
@@ -92,7 +93,12 @@ class ConnexionModaleViewTest {
     @CasDeRecette(value = "S1-04", portee = Portee.A_L_ECRAN)
     @DisplayName("Étape 1 : « Ouvrir Vigie-Chiro » ouvre la plateforme dans le navigateur")
     void ouvrir_site(FxRobot robot) {
+        // ⚠️ Ce cas est le seul des trois dont le verdict n'est PAS à l'écran : ce qui compte est
+        // l'adresse ouverte dans le navigateur, et aucun navigateur ne s'ouvre sur le banc. Le clip
+        // montre donc le geste, et la modale au repos autour de lui - pas son effet.
+        Respiration.avantLeGeste(robot);
         robot.clickOn("Ouvrir Vigie-Chiro");
+        Respiration.apresLeGeste(robot);
 
         assertThat(urlOuverte.get()).contains("vigiechiro");
     }
@@ -101,7 +107,10 @@ class ConnexionModaleViewTest {
     @CasDeRecette(value = "S1-04", portee = Portee.A_L_ECRAN)
     @DisplayName("Étape 2 : « Copier le marque-page » copie et affiche l'instruction dans le bandeau")
     void copier_marque_page(FxRobot robot) {
+        Respiration.avantLeGeste(robot);
         robot.clickOn("Copier le marque-page");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
         assertThat(bandeau.isVisible()).isTrue();
@@ -157,7 +166,11 @@ class ConnexionModaleViewTest {
     @CasDeRecette(value = "S1-04", portee = Portee.A_L_ECRAN)
     @DisplayName("Étape 3 : se connecter sans token affiche une invite dans le bandeau, sans réseau")
     void connecter_sans_token(FxRobot robot) {
+        // Le champ vide fait partie du cas : c'est de son vide que naît l'invite.
+        Respiration.avantLeGeste(robot);
         robot.clickOn("Se connecter");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
         assertThat(bandeau.isVisible()).isTrue();
