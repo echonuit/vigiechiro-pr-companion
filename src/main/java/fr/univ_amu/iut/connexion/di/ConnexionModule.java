@@ -20,9 +20,12 @@ import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.view.ActionConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
+import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import java.util.Optional;
 import java.util.Set;
 
@@ -56,6 +59,11 @@ public class ConnexionModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), SuiviTraitement.class)
                 .setBinding()
                 .to(Key.get(SuiviTraitement.class, Names.named(QUALIFIANT)));
+        // Jeton disponible, en observable (#4205) : pose la valeur de l'optional déclaré vide par
+        // CommunModule. C'est ici qu'elle peut l'être, parce que `FournisseurToken` est lié ici.
+        OptionalBinder.newOptionalBinder(binder(), EtatConnexion.class)
+                .setBinding()
+                .to(RefletDuJeton.class);
     }
 
     @Provides
@@ -73,6 +81,15 @@ public class ConnexionModule extends ModuleDeFeature {
     @Singleton
     FournisseurToken fournirFournisseurToken(StockageConnexion stockage) {
         return () -> jetonPonctuel().or(stockage::token);
+    }
+
+    /// Reflet observable du jeton (#4205), partagé : les écrans qui ferment un geste faute de jeton
+    /// (#4194) doivent tous voir le MÊME objet, sinon le signal part dans le vide sans que rien ne
+    /// rougisse. D'où le singleton, comme pour `RevisionDonnees`.
+    @Provides
+    @Singleton
+    RefletDuJeton fournirRefletDuJeton(FournisseurToken fournisseurToken, ExecuteurTache executeur) {
+        return new RefletDuJeton(fournisseurToken, executeur.surFilJavaFx());
     }
 
     /// Jeton fourni **hors connexion enregistrée**, consulté à chaque requête (surchargeable en cours

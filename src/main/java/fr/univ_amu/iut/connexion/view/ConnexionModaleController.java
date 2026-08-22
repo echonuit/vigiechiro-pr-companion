@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.PanneauProgression;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
+import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import java.util.Objects;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -104,12 +105,22 @@ public class ConnexionModaleController {
     @FXML
     private StackPane enveloppeDeconnecter;
 
+    private final RefletDuJeton etatConnexion;
+
     @Inject
     public ConnexionModaleController(
-            ConnexionViewModel viewModel, OuvreurDeLien ouvreurDeLien, ExecuteurTache executeur) {
+            ConnexionViewModel viewModel,
+            OuvreurDeLien ouvreurDeLien,
+            ExecuteurTache executeur,
+            RefletDuJeton etatConnexion) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        // ⚠️ Exigé, et non optionnel : cette modale ne s'ouvre que là où `ConnexionModule` est chargé,
+        // donc là où le reflet existe. Un `ifPresent` silencieux rendrait l'application muette sur
+        // l'arrivée du jeton (#4205) sans que rien ne rougisse - un signal partiel est pire que pas
+        // de signal.
+        this.etatConnexion = Objects.requireNonNull(etatConnexion, "etatConnexion");
     }
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
@@ -128,6 +139,16 @@ public class ConnexionModaleController {
         // l'arrivée du bandeau - ce que l'utilisateur voit comme un sursaut, et qu'aucune capture ne
         // montre : elle photographie un état stabilisé, jamais le chemin pour y arriver.
         Modales.suivreLaCroissance(racine, bandeauStatut.managedProperty(), zoneProgression.managedProperty());
+        // ⚠️ C'est d'ICI que le reste de l'application apprend qu'un jeton est arrivé, ou parti
+        // (#4205). Cette modale est le seul endroit de l'IHM où le jeton stocké change, et
+        // `jetonEnregistre` bouge à chaque `rafraichir()` : un branchement, un seul, plutôt qu'un
+        // rappel à recopier dans les cinq chemins qui rafraîchissent (connexion, échec, refus,
+        // injoignable, déconnexion) - dont on en oublierait un.
+        //
+        // Sans cela, un écran qui ferme un geste faute de jeton (#4194) ne rouvrait jamais : on se
+        // connectait depuis le menu en suivant le motif du bouton, on revenait, et le bouton restait
+        // grisé en conseillant de se connecter.
+        viewModel.jetonEnregistreProperty().addListener((obs, avant, apres) -> etatConnexion.relire());
         labelIdentite.textProperty().bind(viewModel.identiteProperty());
         // Le badge d'identité vire au vert quand on est connecté, au gris sinon (affordance d'état).
         viewModel.connecteProperty().addListener((obs, ancien, connecte) -> majBadgeIdentite(connecte));

@@ -43,6 +43,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
 import fr.univ_amu.iut.commun.view.ResolveurFiche;
 import fr.univ_amu.iut.commun.view.ResolveurFicheGbif;
+import fr.univ_amu.iut.commun.viewmodel.EtatConnexion;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.OngletReglagesGeneral;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
@@ -131,6 +132,11 @@ public class CommunModule extends AbstractModule {
         // Rearmement d un depot refuse (#3689) : port declare A VIDE, implemente par la feature
         // `lot`. La connexion le consomme en Optional - sans `lot`, il n y a rien a rearmer.
         OptionalBinder.newOptionalBinder(binder(), RearmementDepot.class);
+        // Jeton disponible, en observable (#4205) : OptionalBinder VIDE ici, car la source de vérité
+        // (`FournisseurToken`) n'est liée que par `ConnexionModule`. Un injecteur partiel (outils de
+        // capture) n'a donc pas de jeton du tout, et « pas d'état de connexion » y est la réponse
+        // juste - un geste qui touche la plateforme s'y ferme, ce qui est prudent.
+        OptionalBinder.newOptionalBinder(binder(), EtatConnexion.class);
     }
 
     /// Descripteurs de l'onglet « Fonctionnalités » : un booléen `feature.<id>.active` par feature

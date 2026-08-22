@@ -166,10 +166,15 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.une_carte_est_atteignable_au_clavier.mp4"></video>
 
-### S1-16 · `bouton_synchro_visible`
+### S1-16 · `hors_connexion_la_recuperation_est_fermee`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.bouton_synchro_visible.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.hors_connexion_la_recuperation_est_fermee.mp4"></video>
+
+### S1-16 · `une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte.mp4"></video>
 
 ### S1-17 · `overlay_occupation_masque_apres_chargement`
 
