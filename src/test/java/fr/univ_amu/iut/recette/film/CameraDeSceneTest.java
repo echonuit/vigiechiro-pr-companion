@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.recette.film;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.DisplayName;
@@ -88,6 +90,35 @@ class CameraDeSceneTest {
     void sansEcartLaFenetrePorteeSePoseSurSonProprietaire() {
         assertEquals(
                 CameraDeScene.decalage(TOILE_LARGEUR, 1100), CameraDeScene.decalageRelatif(TOILE_LARGEUR, 1100, 0));
+    }
+
+    /// Le geste dont la fenêtre a DISPARU entre-temps.
+    ///
+    /// ⚠️ C'est le cas d'un clic sur une entrée de menu, et il n'a rien d'exotique : cliquer une
+    /// entrée **referme le menu**. À l'image suivante, la fenêtre où le clic a eu lieu n'existe
+    /// plus, et son décalage est introuvable.
+    ///
+    /// La première version rendait la main dans ce cas, pour ne pas poser le pointeur n'importe où.
+    /// Le résultat, relevé sur le clip de `S1-27` : la modale paraissait **par magie**, sans que
+    /// rien ne montre le clic qui l'ouvrait. Le remède garde la dernière position RÉSOLUE, qui est
+    /// exactement là où le pointeur se trouvait.
+    @Test
+    @DisplayName("quand la fenêtre du geste a disparu, le pointeur reste où il était")
+    void quandLaFenetreDuGesteADisparuLePointeurResteOuIlEtait() {
+        int[] surLeMenu = CameraDeScene.pointSurLaToile(new int[] {600, 200}, 41, 36, null);
+
+        assertEquals(641, surLeMenu[0]);
+        assertEquals(236, surLeMenu[1]);
+        assertArrayEquals(
+                surLeMenu,
+                CameraDeScene.pointSurLaToile(null, 999, 999, surLeMenu),
+                "le menu refermé ne doit pas emporter le pointeur avec lui");
+    }
+
+    @Test
+    @DisplayName("sans fenêtre connue et sans position retenue, il n'y a rien à dessiner")
+    void sansFenetreConnueEtSansPositionRetenue() {
+        assertNull(CameraDeScene.pointSurLaToile(null, 10, 20, null));
     }
 
     @Test
