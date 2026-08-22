@@ -1,6 +1,6 @@
 # CI/CD et release
 
-Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->16<!--/inv--> workflows et le processus de
+Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->17<!--/inv--> workflows et le processus de
 publication.
 
 ## Les workflows
@@ -27,6 +27,7 @@ publication.
 | [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | **appelé par le train** (`workflow_call` depuis `release.yml`), ou manuel | Paquet Flatpak (cf. plus bas) | — |
 | [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | **manuel** (`workflow_dispatch`) | Soumission d'une version choisie à winget-pkgs (cf. plus bas) | — |
 | [recette-filmee.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/recette-filmee.yml) | **manuel** (`workflow_dispatch`) | Éprouve qu'un runner **pilote** un test filmé, et pas seulement qu'il l'exécute. Porte son **témoin** : sans gestionnaire de fenêtres, le lancement doit être refusé (cf. plus bas) | — |
+| [spike-clips-windows.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/spike-clips-windows.yml) | **poussée sur `spike/clips-windows-java`** + manuel | **SPIKE, jetable.** Filme les neuf cas perceptifs sur un runner **windows-latest** avec le banc en **Java pur** (`Scene.snapshot`), sans Xvfb ni gestionnaire de fenêtres, et verse les clips sur la pré-version **séparée** `clips-windows-spike`. Répond à « le poste Windows peut-il avoir ses clips ? », que `recette-filmee.yml` ne peut pas poser puisqu'il filme un bureau X. À supprimer avec sa page de spike si la réponse ne se transforme pas en chantier | — |
 
 !!! note "L'image devcontainer pré-buildée a été retirée"
     Un workflow `devcontainer-image.yml` publiait une image sur GHCR pour accélérer le démarrage des
