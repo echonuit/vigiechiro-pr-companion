@@ -18,8 +18,6 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.Navigateur;
-import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -84,6 +82,17 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class NavigationSitesRapatriementTest {
 
+    // ⚠️ Cette classe ne cite plus `S1-34`, et ce n'est pas un oubli. Elle APPELLE `rapatrierLeCarre()`
+    // puis annonce le résultat : aucun bouton n'était cliqué à l'image, et la revue l'a vu - « pas clair
+    // que l'on a cliqué sur le bouton de récupération » (#4181).
+    //
+    // Le cas est joué par `ScenarioModaleCarreTest`, qui part de « Mes sites », ouvre la déclaration par
+    // son bouton, vérifie le carré, clique « Récupérer ce carré », et montre l'écran d'arrivée
+    // ([ADR 4188]).
+    //
+    // Ses assertions restent : elles gardent les trois brins du rafraîchissement - on ne quitte pas
+    // l'écran, la liste suit, le bandeau explique - ce qui est un autre travail que de le montrer.
+
     private static final String ID_USER = "u-test";
     private static final String CARRE = "640380";
 
@@ -120,7 +129,6 @@ class NavigationSitesRapatriementTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-34", portee = Portee.A_L_ECRAN)
     @DisplayName("#4099 : récupérer un carré rafraîchit « Mes sites » et y rend compte, sans quitter l'écran")
     void le_rapatriement_rafraichit_mes_sites_et_y_rend_compte(FxRobot robot) {
         assertThat(titresDesCartes(robot))

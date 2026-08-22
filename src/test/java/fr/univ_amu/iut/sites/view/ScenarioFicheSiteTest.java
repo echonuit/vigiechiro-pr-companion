@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -177,12 +178,27 @@ class ScenarioFicheSiteTest {
     @DisplayName(
             "S1-19 · les gardes des boutons : non relié grise « Ouvrir sur Vigie-Chiro », un passage grise « Supprimer »")
     void les_boutons_disent_ce_qui_les_empeche(FxRobot robot) throws TimeoutException {
+        // ⚠️ D'ABORD le carré où les deux commandes sont OFFERTES. Un grisé ne se juge que contre son
+        // contraire : le clip précédent montrait deux boutons ternes parmi quatre, et la revue l'a dit -
+        // « ne montre pas ce qu'il doit » (#4173).
+        ouvrirLaFiche(robot, TITRE_RATTACHE);
+        Button portailOffert = bouton(robot, "#boutonOuvrirPortail");
+        CadreVisible.amener(portailOffert, robot);
+        assertThat(portailOffert.isDisabled())
+                .as("point de comparaison : sur un carré relié, la commande est ouverte")
+                .isFalse();
+        assertThat(bouton(robot, "#boutonSupprimer").isDisabled())
+                .as("et sans passage rattaché, la suppression aussi")
+                .isFalse();
+        Respiration.surLeMomentCle(robot);
+
+        revenirAMesSites(robot);
         ouvrirLaFiche(robot, TITRE_CARRE);
 
         Button portail = bouton(robot, "#boutonOuvrirPortail");
         Button supprimer = bouton(robot, "#boutonSupprimer");
         CadreVisible.amener(supprimer, robot);
-        Respiration.leTempsDeLire(robot);
+        Respiration.surLeMomentCle(robot);
 
         assertThat(portail.isDisabled())
                 .as("aucun lien plateforme sur ce carré : le bouton ne peut mener nulle part")
@@ -193,6 +209,31 @@ class ScenarioFicheSiteTest {
         assertThat(CadreVisible.contient(portail) && CadreVisible.contient(supprimer))
                 .as("les deux boutons grisés sont ce que ce cas fait juger : ils doivent être à l'image")
                 .isTrue();
+
+        // ⚠️ Et ce que ce cas fait juger, c'est ce qu'ils DISENT. Le test lisait `isDisabled()`, ce qui
+        // n'est pas la même chose : un gris sans motif est un défaut, et un gris au mauvais motif en est
+        // un pire. Le libellé est posé sur l'ENVELOPPE, un bouton désactivé n'affichant pas d'infobulle.
+        assertThat(InfobulleDeBlocage.texteDe(
+                        robot.lookup("#enveloppeOuvrirPortail").query()))
+                .as("le motif nomme ce qui manque, et le geste qui le répare")
+                .contains("pas encore relié")
+                .contains("synchronisez");
+        assertThat(InfobulleDeBlocage.texteDe(
+                        robot.lookup("#enveloppeSupprimer").query()))
+                .as("le motif nomme ce qui bloque, et ce qu'il faudrait retirer d'abord")
+                .contains("porte des passages")
+                .contains("Supprimez d'abord");
+    }
+
+    /// Revient à « Mes sites » par le fil d'Ariane, comme le ferait un observateur.
+    private void revenirAMesSites(FxRobot robot) throws TimeoutException {
+        Respiration.avantLeGeste(robot);
+        robot.clickOn("#boutonRetour");
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> !robot.lookup(".carte-site").queryAll().isEmpty());
+        Respiration.apresLeGeste(robot);
     }
 
     @Test

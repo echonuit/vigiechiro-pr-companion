@@ -157,7 +157,26 @@ class MesSitesViewTest {
         assertThat(CadreVisible.contient(bouton))
                 .as("un bouton hors du cadre est un bouton que le clip n'offre pas")
                 .isTrue();
-        Respiration.leTempsDeLire(robot);
+        Respiration.avantLeGeste(robot);
+
+        // ⚠️ Et on le CLIQUE. « Le bouton est visible » se constatait sur un écran immobile, et la revue
+        // n'y voyait rien à comprendre (#4171). Un bouton se juge à ce qu'il FAIT : la synchronisation
+        // part, l'écran en rend compte, et c'est cela qu'on regarde.
+        //
+        // ⚠️ Ce que la revue supposait n'est pas ce que fait le produit. Elle demandait de « voir la
+        // connexion avant » ; or la visibilité de ce bouton ne dépend PAS de la connexion, mais de la
+        // présence de la passerelle - « app complète » (#1045). Un état non connecté ne changerait rien
+        // à son apparence, et le clip doit donc montrer autre chose : son effet.
+        robot.clickOn(bouton);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
+
+        Label message = robot.lookup("#lblSynchro").queryAs(Label.class);
+        assertThat(message.isVisible())
+                .as("la synchronisation rend compte : un bouton qui ne dit rien ne se distingue pas d'un"
+                        + " bouton qui n'a rien fait")
+                .isTrue();
+        assertThat(message.getText()).isNotBlank();
     }
 
     @Test
@@ -178,10 +197,21 @@ class MesSitesViewTest {
                 .isNotEmpty();
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ Ce clip ne montre PAS le voile pendant qu'il paraît, et il ne le peut pas : cette classe
-        // monte l'exécuteur SYNCHRONE, où le travail occupe le fil JavaFX. Aucune image n'est rendue
-        // pendant ce temps, il n'y a rien à filmer (cf. ScenarioPerceptifConnexionTest, qui branche
-        // l'asynchrone précisément pour cette raison). Le dire plutôt que de laisser croire l'inverse.
+        // ⚠️ Ce clip ne montre PAS le voile pendant qu'il paraît, et **aucun clip ne le peut**. La revue
+        // l'a demandé - « je ne comprends pas ce que je dois voir » (#4172) - et la mesure a répondu non.
+        //
+        // Deux raisons, cherchées dans cet ordre et toutes deux vérifiées :
+        //
+        // 1. l'exécuteur SYNCHRONE de cette classe occupe le fil JavaFX : aucune image n'est rendue
+        //    pendant le travail. Un scénario asynchrone a été écrit pour lever cet obstacle ;
+        // 2. il n'a rien montré non plus, et c'est la vraie raison. Le voile ne couvre qu'un
+        //    `viewModel::charger` - une lecture en base, instantanée. Et depuis #2558, la seule opération
+        //    LONGUE de cet écran, la synchronisation, n'emprunte plus le voile : elle ouvre un
+        //    `DialogueProgression`, qui se montre et se laisse interrompre.
+        //
+        // Filmer le voile demanderait donc de fabriquer une lenteur que le produit n'a pas. Ce que ce
+        // clip montre est ce que le cas garde vraiment : l'écran est chargé, ses cartes sont là, et RIEN
+        // ne le voile - le défaut serait un voile resté en place.
     }
 
     @Test
