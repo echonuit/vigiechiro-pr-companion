@@ -49,6 +49,10 @@ final class CameraDeScene extends AnimationTimer {
 
     private final Gestes gestes = new Gestes();
 
+    /// La dernière position du pointeur RÉSOLUE sur la toile, gardée pour le cas où sa fenêtre
+    /// disparaît.
+    private int[] dernierPoint;
+
     private long dernierDeclenchement;
     private volatile boolean fenetreVue;
 
@@ -160,18 +164,38 @@ final class CameraDeScene extends AnimationTimer {
     private void dessinerLesGestes(Graphics2D g, Map<Window, int[]> decalages) {
         long maintenant = System.currentTimeMillis();
         gestes.pointeur().ifPresent(vu -> {
-            int[] ou = decalages.get(vu.fenetre());
-            if (ou == null) {
-                // La fenêtre du dernier geste n'est plus à l'écran - un menu qui vient de se
-                // refermer, par exemple. Dessiner son pointeur le poserait n'importe où.
+            dernierPoint = pointSurLaToile(decalages.get(vu.fenetre()), vu.x(), vu.y(), dernierPoint);
+            if (dernierPoint == null) {
                 return;
             }
-            int x = ou[0] + (int) Math.round(vu.x());
-            int y = ou[1] + (int) Math.round(vu.y());
-            CalqueDesGestes.halo(g, x, y, gestes.halo(maintenant, HALO_MS));
-            CalqueDesGestes.fleche(g, x, y);
+            CalqueDesGestes.halo(g, dernierPoint[0], dernierPoint[1], gestes.halo(maintenant, HALO_MS));
+            CalqueDesGestes.fleche(g, dernierPoint[0], dernierPoint[1]);
         });
         gestes.badge(maintenant, BADGE_MS).ifPresent(libelle -> CalqueDesGestes.badge(g, largeur, hauteur, libelle));
+    }
+
+    /// Où poser le pointeur sur la toile, et que faire quand sa fenêtre n'y est plus.
+    ///
+    /// ⚠️ Le cas de la fenêtre disparue n'a rien d'exotique : cliquer une entrée de menu **referme
+    /// le menu**. À l'image suivante, la fenêtre où le clic a eu lieu n'existe plus.
+    ///
+    /// La première version rendait la main dans ce cas, par prudence - poser le pointeur dans un
+    /// repère qu'on ne connaît plus reviendrait à le poser n'importe où. La prudence coûtait le
+    /// geste : relevé sur le clip de `S1-27`, la modale paraissait **par magie**, sans que rien ne
+    /// montre le clic qui l'ouvrait. Or le clic qui ferme une fenêtre est justement celui qu'il faut
+    /// voir, puisque c'est lui qui explique ce qui suit.
+    ///
+    /// On garde donc la dernière position **résolue**, qui n'est pas une approximation : c'est
+    /// l'endroit exact où le pointeur était à la dernière image où sa fenêtre existait, et il n'a
+    /// pas bougé depuis - sans quoi un nouvel événement l'aurait déplacé.
+    ///
+    /// @param decalage le décalage de la fenêtre du geste, ou `null` si elle n'est plus à l'écran
+    /// @param dernierConnu la dernière position résolue, ou `null` si aucun geste n'a encore eu lieu
+    static int[] pointSurLaToile(int[] decalage, double x, double y, int[] dernierConnu) {
+        if (decalage == null) {
+            return dernierConnu;
+        }
+        return new int[] {decalage[0] + (int) Math.round(x), decalage[1] + (int) Math.round(y)};
     }
 
     /// La fenêtre dont celle-ci dépend, quand elle en dépend.
