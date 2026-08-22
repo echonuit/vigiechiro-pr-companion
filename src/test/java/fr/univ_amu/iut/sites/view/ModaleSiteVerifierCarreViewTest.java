@@ -32,6 +32,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -58,6 +59,14 @@ import org.testfx.util.WaitForAsyncUtils;
 class ModaleSiteVerifierCarreViewTest {
 
     private static final String CARRE = "640380";
+
+    /// Le carré **libre**, celui que la planche de `S1-30` nomme.
+    ///
+    /// ⚠️ Il fallait un numéro à lui. `S1-30` saisissait le même `640380` que `S1-31`, si bien que deux
+    /// clips voisins rendaient des verdicts OPPOSÉS sur le même carré - « n'existe pas encore » ici,
+    /// « déjà déclaré » là - parce que la plateforme est bouchonnée par test. Vu de la page, c'est le
+    /// produit qui se contredit (#4166). Et la planche disait `999999` depuis le début.
+    private static final String CARRE_LIBRE = "999999";
 
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
     private final RapatriementCarre rapatriement = mock(RapatriementCarre.class);
@@ -171,8 +180,8 @@ class ModaleSiteVerifierCarreViewTest {
     @DisplayName("#3458 : carré libre : le verdict s'affiche dans la modale, en succès")
     void carre_libre_le_verdict_s_affiche(FxRobot robot) {
         enCreation(robot);
-        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
-        saisirCarre(robot, CARRE);
+        when(client.chercherCarre(CARRE_LIBRE)).thenReturn(ReponseApi.succes(List.of()));
+        saisirCarre(robot, CARRE_LIBRE);
 
         verifierLeCarre(robot);
 
@@ -280,9 +289,22 @@ class ModaleSiteVerifierCarreViewTest {
         saisirCarre(robot, CARRE);
         verifierLeCarre(robot);
         assertThat(message(robot).isVisible()).isTrue();
+        Respiration.leTempsDeLire(robot);
 
-        saisirCarre(robot, "640381");
+        // ⚠️ On corrige UN CHIFFRE, ce que la planche demande : « changer un chiffre du carré ».
+        // `saisirCarre` vide le champ et retape tout, si bien que le clip montrait le verdict
+        // disparaître au VIDAGE - un champ qui se vide seul, puis un numéro qui se réécrit, et
+        // l'encart parti entre les deux. On ne voyait pas la correction (#4166).
+        robot.clickOn(robot.lookup("#champCarre").queryAs(TextField.class));
+        robot.push(KeyCode.END);
+        robot.push(KeyCode.BACK_SPACE);
+        robot.write("1");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
+        assertThat(robot.lookup("#champCarre").queryAs(TextField.class).getText())
+                .as("le champ porte le numéro corrigé, un chiffre de différence")
+                .isEqualTo("640381");
         assertThat(message(robot).isVisible())
                 .as("un « ce carré est libre » sous un autre numéro serait pire que pas de vérification")
                 .isFalse();
