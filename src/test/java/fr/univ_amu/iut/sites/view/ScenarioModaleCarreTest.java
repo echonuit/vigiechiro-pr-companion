@@ -138,6 +138,13 @@ class ScenarioModaleCarreTest {
         // ⚠️ Une connexion RÉELLE : depuis #4210, « Vérifier sur Vigie-Chiro » est fermé sans jeton.
         // Ces scénarios jouent un utilisateur connecté ; ils doivent l'être pour de bon, au lieu de
         // s'appuyer sur un bouton qui ne demandait rien à personne.
+        // ⚠️ Le mock répond comme le VRAI client : `estConnecte()` demande « un jeton est-il
+        // enregistré ? » et rien d'autre. Sans cela, le menu lit le stockage et dit « connecté »
+        // pendant que « Récupérer depuis Vigie-Chiro » reste grisé en arrière-plan, parce que LUI
+        // interroge le client. Le clip se contredisait à l'image, et c'est le produit qu'on accusait.
+        StockageConnexion stockage = injector.getInstance(StockageConnexion.class);
+        when(client.estConnecte()).thenAnswer(appel -> stockage.estConnecte());
+
         seConnecter();
 
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
@@ -235,12 +242,15 @@ class ScenarioModaleCarreTest {
         assertThat(verifier.isDisabled())
                 .as("sans jeton, la vérification ne peut rien demander : le geste est fermé (#4210)")
                 .isTrue();
-        assertThat(InfobulleDeBlocage.texteDe(
-                        robot.lookup("#enveloppeVerifierCarre").query()))
+        // ⚠️ Le motif se FAIT PARAÎTRE : lu par programme, il ne serait pas à l'image, et « il dit ce
+        // qui manque » est justement ce que ce cas donne à juger.
+        assertThat(InfobulleDeBlocage.montrerEtLire(
+                        robot.lookup("#enveloppeVerifierCarre").query(), robot))
                 .as("et il dit ce qui manque, avec le geste qui répare")
                 .contains("pas connecté")
                 .contains("Se connecter à Vigie-Chiro");
         Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
 
         // ⚠️ Le pendant du cas, et le plus important : c'est la VÉRIFICATION qui se ferme, jamais la
         // déclaration. Travailler hors ligne reste normal ; fermer les deux ferait de la plateforme une
@@ -302,6 +312,15 @@ class ScenarioModaleCarreTest {
                         .tryQueryAs(Label.class)
                         .filter(libelle -> libelle.getText().contains(CARRE_PRIS))
                         .isPresent());
+        // ⚠️ Et on attend la CARTE, pas seulement le bandeau. Les deux arrivent par des chemins
+        // différents - le bandeau est posé par le compte rendu, la liste se reconstruit après le signal
+        // de mutation - et la liste arrive en dernier. Le test affirmait sur elle sans l'avoir attendue :
+        // vert cent fois en local, rouge dans la suite complète, là où la machine est chargée. Une
+        // assertion sur un état qu'on n'a pas attendu ne mesure que la vitesse du runner.
+        WaitForAsyncUtils.waitFor(
+                15,
+                TimeUnit.SECONDS,
+                () -> !robot.lookup(".carte-site").queryAll().isEmpty());
         Respiration.surLeMomentCle(robot);
 
         assertThat(robot.lookup("#champCarre").tryQuery())

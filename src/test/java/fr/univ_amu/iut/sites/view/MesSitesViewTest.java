@@ -108,10 +108,15 @@ class MesSitesViewTest {
         StockageConnexion stockage = injector.getInstance(StockageConnexion.class);
         when(client.estConnecte()).thenAnswer(appel -> stockage.estConnecte());
         when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro(ID_USER, "chiro", "observateur")));
+        // ⚠️ Avec leur NUMÉRO DE CARRÉ, et le constructeur complet. La version courte laissait
+        // `numeroCarre` à `null` : le rapprochement ne reconnaissait aucun site local, rendait un
+        // rapport vide, et l'écran repliait sur « Aucun site distant récupéré (non connecté, ou aucun
+        // site sur Vigie-Chiro) ». Le clip montrait alors une connexion réussie surmontée d'un bandeau
+        // disant « non connecté ». Un bouchon trop pauvre fabrique un produit qui a l'air cassé.
         when(client.mesSites())
                 .thenReturn(ReponseApi.succes(List.of(
-                        new SiteVigieChiro("vc-1", "Étang de la Tuilière", false),
-                        new SiteVigieChiro("vc-2", "ZAC Nord", false))));
+                        new SiteVigieChiro("vc-1", "Étang de la Tuilière", false, "640380", ID_USER, List.of()),
+                        new SiteVigieChiro("vc-2", "ZAC Nord", false, "752204", ID_USER, List.of()))));
         when(client.mesParticipations()).thenReturn(ReponseApi.succes(List.of()));
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
@@ -170,7 +175,7 @@ class MesSitesViewTest {
     @Test
     @CasDeRecette(value = "S1-16", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-16 · hors connexion, « Récupérer depuis Vigie-Chiro » est fermé et dit ce qui manque")
-    void hors_connexion_la_recuperation_est_fermee(FxRobot robot) {
+    void hors_connexion_la_recuperation_est_fermee(FxRobot robot) throws TimeoutException {
         // ⚠️ Le clip commence par ÉTABLIR la situation, au lieu de la supposer. Le menu principal
         // porte « Se connecter à Vigie-Chiro… » tant qu'aucun profil n'est enregistré, et le pseudo
         // ensuite (`NavigationConnexion.libelleMenu`) : c'est le produit qui dit qu'on n'est pas
@@ -195,11 +200,16 @@ class MesSitesViewTest {
         assertThat(bouton.isDisabled())
                 .as("sans jeton, rien ne peut être récupéré : le geste est fermé (#4194)")
                 .isTrue();
-        assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeSync").query()))
+        // ⚠️ Le motif se FAIT PARAÎTRE, il ne se lit pas par programme. Les images du tournage
+        // précédent montraient un bouton gris impeccable et aucune explication : la moitié du cas -
+        // « il dit ce qui manque » - restait hors de l'image.
+        assertThat(InfobulleDeBlocage.montrerEtLire(
+                        robot.lookup("#enveloppeSync").query(), robot))
                 .as("et il dit ce qui manque, avec le geste qui répare")
                 .contains("pas connecté")
                 .contains("Se connecter à Vigie-Chiro");
         Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
     }
 
     @Test
@@ -253,9 +263,16 @@ class MesSitesViewTest {
                 .as("la synchronisation rend compte : un bouton qui ne dit rien ne se distingue pas"
                         + " d'un bouton qui n'a rien fait")
                 .isTrue();
+        // ⚠️ L'assertion cherchait le mot « site », et « Aucun site distant récupéré (non connecté, ou
+        // aucun site sur Vigie-Chiro) » le contient. Le clip publié montrait donc une connexion réussie
+        // surmontée d'un bandeau disant « non connecté » : la scène et son compte rendu se
+        // contredisaient, et rien ne rougissait. Une assertion assez lâche pour accepter le contraire de
+        // ce qu'elle vérifie n'est pas une assertion.
         assertThat(message.getText())
-                .as("et le bandeau nomme ce qui a été récupéré, sinon il n'y a rien à lire")
-                .contains("site");
+                .as("le bandeau nomme ce qui a été récupéré, et ne dit surtout pas le contraire de la scène")
+                .contains("synchronisé")
+                .doesNotContain("Aucun")
+                .doesNotContain("non connecté");
 
         // ⚠️ La respiration FINALE, et elle est longue exprès. Le bandeau est le résultat du cas :
         // un clip qui coupe à l'instant où il paraît ne le donne pas à lire (#4171).
