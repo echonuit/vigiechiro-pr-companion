@@ -249,15 +249,91 @@ encoder en Java.
   matériel. Sans conséquence pour un film de recette ; à vérifier si un cas perceptif juge un jour
   au pixel près.
 
+## Combien cela coûte, comparé au banc bash
+
+C'est la question qui décide, et elle se pose mal si l'on compare un banc sous Windows à un banc
+sous Linux : le système d'exploitation et le banc changeraient en même temps. Le job `ubuntu-latest`
+existe pour cela. **Mêmes classes, mêmes neuf cas, mêmes respirations, même famille de runner.**
+
+| Classe | banc bash | banc Java |
+|---|---:|---:|
+| `ScenarioPerceptifRefusDepotTest` (1 cas) | 18,02 s | 16,11 s |
+| `ScenarioPerceptifConnexionTest` (2) | 19,20 s | 19,71 s |
+| `ScenarioPerceptifRecuperationCarreTest` (1) | 14,14 s | 14,61 s |
+| `ScenarioPerceptifFiltresTest` (5) | 54,61 s | 57,33 s |
+| **les quatre** | **105,97 s** | **107,76 s** |
+
+**+1,7 %.** Autant dire rien, et c'était attendu : sur ces 106 secondes, **89,8 sont des
+respirations**, que les deux bancs paient à l'identique. Le temps d'un tournage perceptif n'est pas
+du calcul, c'est de l'attente délibérée. Aucun choix d'implémentation ne la rendra.
+
+⚠️ Ne pas conclure « les deux bancs se valent » : ils ne coûtent pareil qu'**à périmètre égal**, et
+c'est le périmètre qui diffère.
+
+| | banc bash | banc Java |
+|---|---|---|
+| Ce qu'il faut lancer pour obtenir les 9 clips | `--planche`, soit **54 clips** | les 4 classes |
+| Durée du job | **9 min 15 s** | 3 min 01 s (Linux), 3 min 41 s (Windows) |
+| Plateformes | `ubuntu-latest` | les deux, mesurées |
+| À installer | Xvfb, openbox, xdotool, x11-utils, ffmpeg | ffmpeg |
+| Après le tournage | remuxer `mkv` en `mp4` | rien |
+
+Le gain n'est donc pas la vitesse **par clip**. Il est de pouvoir n'en tourner que ce dont on a
+besoin, et de le faire là où le banc bash ne va pas. C'est exactement la limite que l'EPIC #4133 se
+donnait à surveiller : « le tournage met une dizaine de minutes pour 45 clips ; à 400, ce serait des
+heures par passage ». Filmer **par session** ne demande ici qu'un `-Dtest=`.
+
+## Ce que le remplacement demanderait
+
+Mesuré, pas supposé.
+
+**Une ligne suffit pour couvrir toute la planche.** Ajouter `EnregistreurDeFilm` au fichier de
+services de JUnit le rend actif partout où la détection automatique est demandée, comme
+`ReperesDeSeance` l'est déjà. Sonde faite sur deux classes non annotées : `ScenarioAccueilTest` rend
+des clips pleins, `ServiceQualificationTest` des clips qui s'arrêtent à leur carton et que l'index
+range en « en lisant le test ». C'est le comportement que la classe documente. **Il n'y a pas trente
+classes à annoter.**
+
+**Un manque, en revanche, et il faut le traiter avant.** Ainsi branché, le banc filme **tous** les
+tests, y compris ceux qui ne citent aucun cas : la sonde a produit vingt clips de carton pour une
+seule classe de service. Il manque au banc de savoir ne filmer que les tests porteurs d'un
+`@CasDeRecette`.
+
+**Ce dont le banc bash est le support aujourd'hui**, et qu'un retrait casserait : `recette-filmee.yml`
+(appelé par le train de publication après `publish`, #4111), son auto-test dans `lint.yml`,
+`clips-orphelins.sh`, `verifie-inventaires-ci.sh`, quatre ADR qui le citent, et
+`dev-docs/recette/index.md`. Son frère `filme-un-parcours.sh`, qui tourne les films de la
+documentation utilisateur, est un dispositif **distinct** et ce spike ne dit rien de lui.
+
+## Ce que S10 peut recevoir, et ce qu'elle ne recevra pas
+
+Ce spike a d'abord annoncé qu'il « brancherait les clips de S10 ». **La session dit autre chose**, et
+c'est en la lisant que cela se voit. Elle n'a « aucun écran en propre » : elle porte sur ce que seule
+une vraie machine rend.
+
+| Cases | Ce qu'un banc peut en faire |
+|---|---|
+| `S10-01` à `S10-04` · le dossier de travail déjà tenu | **La moitié est atteignable.** Le refus est un écran, et sous Windows le verrou est impératif, ce qui est précisément la condition où la fonctionnalité était inerte (#3693). Il faut un scénario qui tienne le verrou et montre le refus : cela n'existe pas encore. |
+| `S10-05` à `S10-08` · la couleur dans une vraie console | **Hors de portée**, de ce banc comme de tout autre. `cmd.exe`, PowerShell et Windows Terminal ne sont pas des graphes de scène. |
+
+Dire « S10 aura ses clips » serait donc faux. Ce qui est vrai : **S10-01 et S10-02 deviennent
+filmables, sur la plateforme même qui a porté le défaut**, et c'est ce qu'aucun dispositif ne sait
+faire aujourd'hui.
+
 ## Ce qui reste à décider
 
-Ce spike ne décide de rien. Il rend une réponse et deux défauts nommés. Ce qu'il rend possible, si
-la réponse convient :
+Ce spike ne décide de rien, et surtout pas le retrait du banc bash : il est le support du train de
+publication, et le remplacer se fait par étapes, pas par suppression.
 
-- brancher les clips de la session **S10**, qui n'en a jamais eu ;
-- corriger `IndexDesCas` pour ouvrir les forks parallèles, et regagner le temps que le banc bash
-  paie pour un écran unique ;
-- décider ce que devient `lance-test-filme.sh`, ses 113 Kio et ses cinq préconditions.
+L'ordre proposé, du plus sûr au plus engageant :
+
+1. les trois défauts du banc Java, corrigés et gardés dans cette branche ;
+2. ne filmer que les tests qui citent un cas ;
+3. un tournage **par session**, sur la plateforme de son choix, à côté du banc bash et sans le
+   toucher ;
+4. `S10-01`/`S10-02`, le scénario du dossier déjà tenu ;
+5. alors seulement, et avec les deux bancs comparés sur la même planche : décider de
+   `lance-test-filme.sh`, de ses 1 289 lignes et de ses cinq préconditions.
 
 Le spike qui l'a précédé, et qui dit ce que le banc Java remplace :
 [Filmer la recette depuis le graphe de scène](film-depuis-le-graphe-de-scene.md).
