@@ -17,8 +17,6 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
-import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
@@ -57,6 +55,14 @@ import org.testfx.util.WaitForAsyncUtils;
 /// dès le retour du clic, sans attente ni `sleep`.
 @ExtendWith(ApplicationExtension.class)
 class ModaleSiteVerifierCarreViewTest {
+
+    // ⚠️ Cette classe ne cite plus de cas de recette, et ce n'est pas un oubli. Elle monte
+    // `ModaleSite.fxml` SEULE : ses clips montraient une modale flottant sur du noir, où « la fenêtre se
+    // ferme, la fiche s'ouvre » n'avait aucun écran d'arrivée à montrer (#4180). Les six cas sont joués
+    // par `ScenarioModaleCarreTest`, sur la fenêtre réelle et par des gestes.
+    //
+    // Ses assertions restent : elles gardent le câblage de la modale, ce qui est un autre travail que
+    // de le montrer.
 
     private static final String CARRE = "640380";
 
@@ -176,7 +182,6 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-30", portee = Portee.A_L_ECRAN)
     @DisplayName("#3458 : carré libre : le verdict s'affiche dans la modale, en succès")
     void carre_libre_le_verdict_s_affiche(FxRobot robot) {
         enCreation(robot);
@@ -191,7 +196,6 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-31", portee = Portee.A_L_ECRAN)
     @DisplayName("#3458 : carré déjà déclaré : l'avertissement nomme le site et dit quoi faire")
     void carre_deja_declare_avertit_dans_la_modale(FxRobot robot) {
         enCreation(robot);
@@ -228,7 +232,6 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-33", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-33 : hors connexion, l'encart dit qu'on n'a PAS vérifié - jamais que le carré est libre")
     void hors_connexion_l_encart_ne_nie_pas_le_carre(FxRobot robot) {
         enCreation(robot);
@@ -281,7 +284,6 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-32", portee = Portee.A_L_ECRAN)
     @DisplayName("#3458 : corriger le carré après coup efface un verdict qui ne le concerne plus")
     void corriger_le_carre_efface_le_verdict(FxRobot robot) {
         enCreation(robot);
@@ -334,7 +336,6 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-34", portee = Portee.A_L_ECRAN)
     @DisplayName("#3806 : récupérer ferme la modale et passe le carré à l'appelant")
     void recuperer_ferme_la_modale_et_passe_le_carre(FxRobot robot) {
         enCreation(robot);
@@ -386,7 +387,6 @@ class ModaleSiteVerifierCarreViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-36", portee = Portee.A_L_ECRAN)
     @DisplayName("#3806 : « Créer » se ferme, et son infobulle dit POURQUOI et quoi faire")
     void creer_se_ferme_avec_son_motif(FxRobot robot) {
         enCreation(robot);

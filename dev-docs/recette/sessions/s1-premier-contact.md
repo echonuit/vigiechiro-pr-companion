@@ -59,9 +59,15 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 - **S1-33** · Vérification **hors connexion** : se déconnecter (S1-11), rouvrir la déclaration, saisir six
   chiffres, cliquer. L'encart dit « Vérification impossible … Ce carré n'a donc PAS été vérifié » - jamais « il
   n'existe pas ». Le bouton reste offert, non grisé.
-- **S1-34** · Récupération : après S1-31, cliquer « **Récupérer ce carré** ». La fenêtre se ferme, la fiche
-  du carré s'ouvre, et un dialogue annonce « Carré <n°> récupéré depuis Vigie-Chiro : N point(s) d'écoute
-  positionné(s) ». Les points de la fiche portent leurs coordonnées, sans ressaisie.
+- **S1-34** · Récupération : après S1-31, cliquer « **Récupérer ce carré** ». La fenêtre se ferme, on
+  **reste sur « Mes sites »**, le carré récupéré paraît dans la liste, et le bandeau de l'écran annonce
+  « Carré <n°> récupéré depuis Vigie-Chiro : N point(s) d'écoute positionné(s) ». Les points portent
+  leurs coordonnées, sans ressaisie - on le vérifie en ouvrant la fiche, ce qui est S1-35.
+
+    ⚠️ Cette case décrivait « la fiche du carré s'ouvre » jusqu'à #4099 : la même modale avait deux
+    issues selon qu'on déclarait ou qu'on récupérait, et rien ne justifiait la divergence. Le geste se
+    termine désormais là où il a commencé. La planche a mis un chantier de retard sur le produit, et
+    c'est le clip qui l'a montré (#4180).
 - **S1-35** · Le carré récupéré est **rattaché** : sur sa fiche, le badge « Enregistré sur Vigie-Chiro » est
   présent, et « Ouvrir sur Vigie-Chiro » n'est plus grisé.
 - **S1-36** · Pendant le verdict « il existe déjà », le bouton « **Créer** » est **fermé** ; son infobulle dit
