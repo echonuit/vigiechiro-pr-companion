@@ -14,14 +14,20 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -38,6 +44,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -73,8 +80,15 @@ class MainViewTest {
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
-        stage.setScene(new Scene(racine, 1000, 700));
-        stage.show();
+        // ⚠️ `Habillage`, et non `new Scene` : les sept cas de cette classe sont FILMÉS, et une scène
+        // montée sans habillage porte la police de la MACHINE, pas celle embarquée dans le produit
+        // (#3773). Le défaut avait été corrigé pour les bancs qui MESURENT ; il restait entier pour
+        // ceux qu'on regarde, et un clip existe pour être regardé (#4149).
+        //
+        // La fenêtre passe par `FenetreDuBanc`, qui demande la taille à la mise en page : elle reste
+        // ajustable pour les classes suivantes du fork ([ADR 4134]).
+        FenetreDuBanc.poser(stage, racine, 1180, 900);
+        FenetreDuBanc.afficher(stage);
     }
 
     @AfterEach
@@ -121,7 +135,16 @@ class MainViewTest {
                 .findFirst()
                 .orElseThrow();
 
+        // ⚠️ Le menu s'OUVRE avant qu'on choisisse. `fire()` sur l'entrée saute cette moitié : l'écran
+        // changeait sans que rien ne l'explique, et le clip ne montrait pas d'où venait le geste (#4149).
+        Respiration.avantLeGeste(robot);
+        robot.clickOn(menu);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.leTempsDeLire(robot);
+
         robot.interact(reglages::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.apresLeGeste(robot);
 
         // La zone centrale affiche désormais l'écran Réglages (son TabPane d'onglets).
         assertThat(navigateur.getVueCentrale().lookup(".onglets-reglages"))
@@ -135,19 +158,52 @@ class MainViewTest {
     void accueil_regroupe_en_deux_prismes(FxRobot robot) {
         FlowPane sections = robot.lookup("#cartesActivites").queryAs(FlowPane.class);
         assertThat(sections.getChildren()).as("une section par prisme").hasSize(2);
-        assertThat(robot.lookup(".section-prisme-titre").queryAll())
-                .extracting(noeud -> ((Label) noeud).getText())
+
+        List<Label> titres = robot.lookup(".section-prisme-titre").queryAllAs(Label.class).stream()
+                .toList();
+        assertThat(titres)
+                .extracting(Label::getText)
                 .containsExactlyInAnyOrder("Collecte & passages", "Espèces & biodiversité");
+
+        // ⚠️ Ce cas fait juger un REGROUPEMENT : il ne se lit qu'en voyant les deux titres, chacun à
+        // l'image et assez longtemps pour être lu. Le clip précédent traversait cet écran en une
+        // fraction de seconde - « ne s'arrête pas assez longtemps pour qu'on voie ce qu'il montre »
+        // (#4149).
+        for (Label titre : titres) {
+            CadreVisible.amener(titre, robot);
+            assertThat(CadreVisible.contient(titre))
+                    .as(
+                            "« %s » reste hors du cadre : le clip annoncerait deux sections dont une invisible",
+                            titre.getText())
+                    .isTrue();
+            Respiration.leTempsDeLire(robot);
+        }
     }
 
     @Test
     @CasDeRecette(value = "S1-03", portee = Portee.A_L_ECRAN)
     @DisplayName("Le fil d'Ariane reflète le parcours ; cliquer un ancêtre y ramène")
-    void fil_ariane_reflete_le_parcours(FxRobot robot) {
-        robot.interact(() -> {
-            navigateur.afficher(new Group(), "sites", "Mes sites");
-            navigateur.afficher(new Group(), "site-detail", "Carré 640380");
-        });
+    void fil_ariane_reflete_le_parcours(FxRobot robot) throws TimeoutException {
+        // ⚠️ De VRAIS écrans, atteints par des CLICS. Ce test naviguait sur deux `Group` vides : il
+        // prouvait le câblage du fil d'Ariane - c'est légitime - mais son clip montrait un fil au-dessus
+        // d'un écran BLANC. Le produit qu'il filmait n'existait pas, d'où « incompréhensible » (#4149),
+        // et aucun temps d'arrêt n'y aurait rien changé.
+        semerUnSite();
+        Respiration.leTempsDeLire(robot);
+
+        robot.clickOn(carteDAccueil(robot, "Mes sites"));
+        // ⚠️ L'écran « Mes sites » se peuple par l'exécuteur ASYNCHRONE du vrai injecteur : au retour du
+        // clic il ne porte encore que son voile d'occupation. `waitForFxEvents` vide la file du fil FX,
+        // il n'attend pas le thread qui la remplira - on attend donc la carte elle-même.
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> !robot.lookup(".carte-site").queryAll().isEmpty());
+        Respiration.entreDeuxGestes(robot);
+
+        robot.clickOn((Node) robot.lookup(".carte-site").query());
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.leTempsDeLire(robot);
 
         // Fil = Accueil › Mes sites › Carré 640380 (segments dans l'ordre, dernier non cliquable).
         HBox fil = robot.lookup("#filAriane").queryAs(HBox.class);
@@ -163,7 +219,11 @@ class MainViewTest {
                 .map(Hyperlink.class::cast)
                 .findFirst()
                 .orElseThrow();
-        robot.interact(mesSites::fire);
+        // Le segment se CLIQUE : le clip montre le retour en arrière au lieu de le subir.
+        Respiration.avantLeGeste(robot);
+        robot.clickOn(mesSites);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.apresLeGeste(robot);
 
         assertThat(navigation.vueCouranteProperty().get()).isEqualTo("sites");
     }
@@ -214,7 +274,31 @@ class MainViewTest {
     @DisplayName("Tableau de bord : le bandeau de compteurs est masqué quand la base est vide (#141)")
     void bandeau_masque_si_base_vide(FxRobot robot) {
         FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
-        assertThat(bandeau.isVisible()).isFalse();
+        assertThat(bandeau.isVisible())
+                .as("au premier lancement, la base est vide : le bandeau ne paraît pas")
+                .isFalse();
+        Respiration.leTempsDeLire(robot);
+
+        // ⚠️ Une absence NE SE VOIT PAS. Un arrêt sur un accueil sans bandeau montre un accueil, et rien
+        // ne dit ce qu'on est censé ne pas y voir (#4149). Elle se lit par CONTRASTE : on donne à la
+        // base de quoi remplir le bandeau, puis on le lui retire.
+        //
+        // Le sens compte, et il distingue ce clip de celui de `S1-09` : là-bas le bandeau PARAÎT sans
+        // qu'on ait navigué, ici il SE RETIRE quand la donnée s'en va - qui est la phrase du cas.
+        semerUnSite();
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(bandeau.isVisible())
+                .as("avec une donnée, le bandeau est là : c'est le point de comparaison")
+                .isTrue();
+        Respiration.leTempsDeLire(robot);
+
+        viderLesSites();
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(bandeau.isVisible())
+                .as("la base redevient vide : le bandeau se retire, il ne reste pas à zéro")
+                .isFalse();
         assertThat(bandeau.getChildren()).isEmpty();
     }
 
@@ -263,10 +347,13 @@ class MainViewTest {
         assertThat(bandeau.isVisible())
                 .as("point de départ du cas : la base est vide, le bandeau est masqué")
                 .isFalse();
+        // L'état de repos, avant le geste : sans lui on ne peut pas dire que quelque chose a changé.
+        Respiration.avantLeGeste(robot);
 
         // Le geste de S1-10, et rien d'autre : on restaure, on ne navigue pas.
         robot.interact(() -> sauvegarde.restaurer(fichier));
         WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         assertThat(bandeau.isVisible())
                 .as("les compteurs reflètent la base restaurée sans qu'on ait quitté l'accueil")
@@ -284,6 +371,7 @@ class MainViewTest {
         assertThat(bandeau.isVisible())
                 .as("base vide au départ : le bandeau est masqué")
                 .isFalse();
+        Respiration.avantLeGeste(robot);
 
         // Le geste réel de #1376 : la connexion s'ouvre PAR-DESSUS l'accueil et sa synchronisation
         // importe des sites. On ne quitte pas l'accueil, et on n'y revient pas : c'est précisément
@@ -297,6 +385,8 @@ class MainViewTest {
                     .creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, "u-1");
         });
         WaitForAsyncUtils.waitForFxEvents();
+        // Ce que le cas existe pour montrer : le bandeau qui paraît alors qu'on n'a pas quitté l'accueil.
+        Respiration.surLeMomentCle(robot);
 
         assertThat(bandeau.isVisible())
                 .as("le bandeau paraît sans qu'on ait navigué")
@@ -326,10 +416,38 @@ class MainViewTest {
         Scene scene = robot.lookup("#champRecherche").queryAs(TextField.class).getScene();
         assertThat(scene.getAccelerators()).containsKey(ctrlF);
 
-        robot.interact(() -> scene.getAccelerators().get(ctrlF).run());
+        TextField champ = robot.lookup("#champRecherche").queryAs(TextField.class);
 
-        assertThat(robot.lookup("#champRecherche").queryAs(TextField.class).isFocused())
+        // ⚠️ Le focus est REMIS AILLEURS d'abord, et sans cela ce test ne prouvait rien : mesuré,
+        // `#champRecherche` porte déjà le focus au démarrage, si bien que l'assertion « Ctrl+F donne le
+        // focus » était vraie AVANT que le raccourci ne soit lancé. Son mutant survivait (#4149).
+        robot.interact(
+                () -> robot.lookup("#menuOutils").queryAs(MenuButton.class).requestFocus());
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(champ.isFocused())
+                .as("point de départ : le focus est ailleurs, sinon le raccourci n'a rien à faire")
+                .isFalse();
+        Respiration.avantLeGeste(robot);
+
+        robot.interact(() -> scene.getAccelerators().get(ctrlF).run());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(champ.isFocused())
+                .as("Ctrl+F ramène le focus sur le champ de recherche")
                 .isTrue();
+
+        // ⚠️ Un focus NE SE VOIT PAS : le clip montrait un écran immobile, et le cas restait
+        // incompréhensible (#4149). On tape derrière le raccourci - c'est ce que fait quelqu'un qui
+        // vient de le presser, et c'est la seule façon de montrer que le champ est vivant.
+        //
+        // L'assertion y gagne : un focus qui ne reçoit pas les frappes est un focus qui ment.
+        robot.write("640380");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(champ.getText())
+                .as("la frappe atteint le champ sans qu'on ait eu à le cliquer")
+                .isEqualTo("640380");
     }
 
     @Test
@@ -445,5 +563,37 @@ class MainViewTest {
 
         // Sites = 1, mais Points / Passages / Observations restent à 0 : ces pastilles sont atténuées.
         assertThat(robot.lookup(".indicateur-vide").queryAll()).isNotEmpty();
+    }
+
+    /// L'utilisateur **courant**, auto-créé au démarrage.
+    ///
+    /// ⚠️ Les écrans filtrent par lui. Semer sous un identifiant à soi remplit bien la base et les
+    /// compteurs, mais « Mes sites » reste vide : le site existe et l'écran ne le liste pas.
+    private String utilisateurCourant() {
+        return injector.getInstance(Key.get(String.class, Names.named("idUtilisateurCourant")));
+    }
+
+    /// Sème un carré sous l'utilisateur courant : de quoi remplir le bandeau et peupler « Mes sites ».
+    private void semerUnSite() {
+        injector.getInstance(ServiceSites.class)
+                .creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, utilisateurCourant());
+    }
+
+    /// Retire tous les sites : la base redevient vide, et le bandeau doit se retirer avec elle.
+    private void viderLesSites() {
+        ServiceSites sites = injector.getInstance(ServiceSites.class);
+        sites.listerSites(utilisateurCourant()).forEach(site -> sites.supprimerSite(site.id()));
+    }
+
+    /// La carte d'accueil portant `intitule`, ou une erreur qui la nomme.
+    ///
+    /// ⚠️ Le titre d'une carte est un `Text`, non un `Label` : `CartesAccueil` l'a changé en #2046 pour
+    /// que l'enroulement soit fiable.
+    private static Node carteDAccueil(FxRobot robot, String intitule) {
+        return robot.lookup(".carte-activite").queryAll().stream()
+                .filter(carte -> carte.lookupAll(".carte-activite-titre").stream()
+                        .anyMatch(noeud -> noeud instanceof Text texte && intitule.equals(texte.getText())))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("aucune carte d'accueil intitulée « " + intitule + " »"));
     }
 }
