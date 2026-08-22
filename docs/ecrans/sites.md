@@ -51,7 +51,11 @@ et **votre saisie est conservée** : corrigez le numéro sans tout recommencer.
 
 Le bouton **Vérifier sur Vigie-Chiro**, à droite du numéro, pose la question **au portail** avant que
 vous ne déclariez quoi que ce soit. Il reste fermé tant que le numéro n'a pas ses six chiffres, et
-répond en une seconde. Trois réponses possibles :
+répond en une seconde.
+
+Il reste fermé aussi **tant que vous n'êtes pas connecté** : sans connexion, la question ne peut être
+posée à personne. Le motif au survol le dit et rappelle où se connecter. **Déclarer le carré reste
+possible** : c'est la vérification qui attend, pas votre saisie - travailler hors ligne est normal. Trois réponses possibles :
 
 - **le carré n'y est pas encore** : vous pouvez le déclarer ici ;
 - **le carré y est déjà** : le message **nomme le site trouvé**, protocole compris - un même carré porte
@@ -125,7 +129,10 @@ Le bouton **Récupérer depuis Vigie-Chiro** (en haut à droite) récupère à l
 points déclarés sur le portail : les sites manquants sont créés localement, ceux déjà présents sont
 simplement reliés - vos données locales ne sont **jamais écrasées**. C'est la même synchronisation
 que celle exécutée automatiquement à la connexion ; un message sous le bandeau récapitule ce qui a
-été récupéré (ou signale qu'il n'y avait rien à récupérer, par exemple hors connexion).
+été récupéré (ou signale qu'il n'y avait rien à récupérer).
+
+Hors connexion, ce bouton est **grisé**, et son motif au survol nomme le geste qui manque. Il se
+rouvre **dès que vous vous connectez**, sans quitter l'écran ni le rouvrir.
 
 Ce message dit **chaque nature séparément** - sites, nuits, taxons - et **sur combien** : « 12 nuit(s)
 récupérée(s) sur 55, dont 40 en attente d'analyse Vigie-Chiro ». Un compteur seul serait exact et

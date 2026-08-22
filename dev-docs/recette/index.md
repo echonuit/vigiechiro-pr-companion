@@ -110,9 +110,15 @@ devient muet sur son propre objet, ce qui est pire parce qu'on le regarde en cro
 `HORS_APPLICATION`, et elle doit **figurer sur la page du clip**. Une réserve qui ne vit que dans le code
 ne borne rien : personne ne lit une annotation en regardant une vidéo.
 
-⚠️ Aujourd'hui, **tous les cas cités sont à l'écran**, sans exception. Ce n'est pas un hasard, et cela
-dit où est la difficulté : ce qui a été couvert jusqu'ici est précisément ce qui se filme sans réserve.
-Les quelque 220 cas dont le verdict est hors de l'application restent devant nous.
+⚠️ Un seul cas cité porte aujourd'hui `HORS_APPLICATION` : **S1-04**, « ouvrir le site sur la
+plateforme », dont le geste se termine dans un navigateur que le clip ne peut pas montrer. Sa réserve le
+dit, sur la page du clip. Le reste est à l'écran, et ce n'est pas un hasard : ce qui a été couvert
+jusqu'ici est précisément ce qui se filme sans réserve. Les quelque 220 cas dont le verdict est hors de
+l'application restent devant nous.
+
+Cette page a affirmé pendant un temps que **tous** les cas étaient à l'écran, alors que S1-04 ne l'était
+déjà plus. Une phrase de ce genre ne rougit nulle part : c'est pourquoi le **compte** vient de la
+machine, et pourquoi la phrase qui l'entoure doit se relire à chaque clôture.
 
 Le compte n'est pas recopié ici : `CorrespondanceRecetteTest` l'imprime à chaque lancement, sous la forme
 « Portée des cas cités : N à l'écran, M hors application ». Un nombre écrit à la main dans une page dérive
