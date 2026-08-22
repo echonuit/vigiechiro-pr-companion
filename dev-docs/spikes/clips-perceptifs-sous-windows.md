@@ -3,9 +3,12 @@
 !!! warning "Spike. Cette page est jetable."
 
     Elle répond à une question, elle ne garde rien. Ses clips viennent de la pré-version
-    **`clips-windows-spike`**, qui n'est ni `clips-recette` ni une version du produit. Si le spike
-    ne se transforme pas en chantier, cette page, `spike-clips-windows.yml` et cette pré-version
-    disparaissent ensemble.
+    **`clips-windows-spike`**, qui n'est ni `clips-recette` ni une version du produit.
+
+    Le spike **s'est** transformé en chantier : son workflow jetable a été retiré, et le dispositif
+    qui tourne aujourd'hui est [`tournage-recette.yml`](../ci-cd-release.md), qui filme une session
+    sur la plateforme de son choix. Cette page reste pour ce qu'elle a **mesuré** ; elle ne décrit
+    plus un dispositif vivant.
 
 ## La question
 

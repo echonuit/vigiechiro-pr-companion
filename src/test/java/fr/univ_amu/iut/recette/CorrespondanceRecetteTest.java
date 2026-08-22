@@ -15,6 +15,9 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -92,6 +95,13 @@ class CorrespondanceRecetteTest {
     /// Une liste tenue à la main dériverait exactement comme la prose dérivait avant #3728.
     private static final Path CLASSES_A_FILMER = Path.of("target", "recette", "classes-citantes.txt");
 
+    /// Les classes à filmer, rangées par SESSION (#4163).
+    ///
+    /// ⚠️ Un fichier à part, et non une colonne de plus dans le précédent : celui-ci est lu par
+    /// `lance-test-filme.sh --planche`, qui le passe tel quel à `paste -sd,`. Y ajouter une colonne
+    /// ferait filmer des classes dont le nom porterait un numéro de session.
+    private static final Path SESSIONS_A_FILMER = Path.of("target", "recette", "sessions-a-filmer.tsv");
+
     /// Le motif vit dans [MotifDeCas] : trois lecteurs de ces fichiers coexistent, et deux ont
     /// découvert séparément que certaines sessions cochent leurs puces.
     private static final Pattern CAS = MotifDeCas.CAS;
@@ -144,6 +154,7 @@ class CorrespondanceRecetteTest {
         // l'appel qui suit fait maintenant rougir, ce qu'on a vérifié.
         retirerLesClassesAFilmer();
         deposerLesClassesAFilmer();
+        deposerLesSessionsAFilmer();
     }
 
     @Test
@@ -348,6 +359,37 @@ class CorrespondanceRecetteTest {
                 .containsExactlyElementsOf(classesCitantes());
     }
 
+    /// Le garde du rangement PAR SESSION, dont dépend le tournage d'une seule session (#4163).
+    ///
+    /// ⚠️ Les deux assertions ne disent pas la même chose, et il faut les deux. La première dit
+    /// qu'aucune classe ne se perd en chemin : un tournage session par session doit couvrir
+    /// exactement ce qu'un tournage complet couvre, sans quoi des cas cesseraient d'être filmés
+    /// sans que personne ne l'ait décidé. La seconde dit que le compte des cas est juste, et c'est
+    /// lui que le tournage compare à ce qu'il a produit - un compte faux rendrait le garde du
+    /// tournage vert sur un tournage incomplet.
+    @Test
+    @DisplayName("Le rangement par session couvre les mêmes classes, et compte ses cas juste")
+    void le_rangement_par_session_couvre_les_memes_classes() throws IOException {
+        assertThat(SESSIONS_A_FILMER).exists();
+        List<String> lignes = Files.readAllLines(SESSIONS_A_FILMER);
+
+        Set<String> vues = new TreeSet<>();
+        int casComptes = 0;
+        for (String ligne : lignes) {
+            String[] colonnes = ligne.split("\t", -1);
+            assertThat(colonnes).as("session, nombre de cas, classes").hasSize(3);
+            casComptes += Integer.parseInt(colonnes[1]);
+            vues.addAll(List.of(colonnes[2].split(",")));
+        }
+
+        assertThat(vues)
+                .as("une session par session doit couvrir exactement ce qu'un tournage complet couvre")
+                .containsExactlyInAnyOrderElementsOf(classesCitantes());
+        assertThat(casComptes)
+                .as("chaque cas cité appartient à une session et une seule")
+                .isEqualTo(cites.size());
+    }
+
     // ----------------------------------------------------------------------------------------
 
     /// Les classes qui citent au moins un cas, triées.
@@ -357,12 +399,64 @@ class CorrespondanceRecetteTest {
         return classes;
     }
 
-    /// Retire la liste de la séance précédente, pour que la suivante ne puisse pas la relire.
+    /// Retire les listes de la séance précédente, pour que la suivante ne puisse pas les relire.
     private static void retirerLesClassesAFilmer() {
         try {
             Files.deleteIfExists(CLASSES_A_FILMER);
+            Files.deleteIfExists(SESSIONS_A_FILMER);
         } catch (IOException e) {
             throw new UncheckedIOException("Liste des classes à filmer impossible à retirer", e);
+        }
+    }
+
+    /// Les classes à filmer pour chaque session, avec le nombre de cas que la session fait jouer.
+    ///
+    /// La session se lit dans l'identifiant du cas : `S6-27` appartient à `S6`. Filmer une session,
+    /// c'est donc filmer les classes qui citent au moins un de ses cas - et une classe qui en cite
+    /// de deux sessions paraît dans les deux, ce qui est correct : elle sera tournée deux fois, et
+    /// chaque tournage ne gardera que ce qu'il est venu chercher.
+    private static SortedMap<String, SortedSet<String>> classesParSession() {
+        SortedMap<String, SortedSet<String>> parSession = new TreeMap<>();
+        cites.forEach((cas, tests) -> {
+            String session = sessionDe(cas);
+            tests.forEach(test -> parSession
+                    .computeIfAbsent(session, cle -> new TreeSet<>())
+                    .add(test.substring(0, test.indexOf('.'))));
+        });
+        return parSession;
+    }
+
+    /// Les cas CITÉS de chaque session. Les cas déclarés mais non couverts n'ont rien à filmer.
+    private static SortedMap<String, SortedSet<String>> casCitesParSession() {
+        SortedMap<String, SortedSet<String>> parSession = new TreeMap<>();
+        cites.keySet()
+                .forEach(cas -> parSession
+                        .computeIfAbsent(sessionDe(cas), cle -> new TreeSet<>())
+                        .add(cas));
+        return parSession;
+    }
+
+    private static String sessionDe(String cas) {
+        int tiret = cas.indexOf('-');
+        return tiret < 0 ? cas : cas.substring(0, tiret);
+    }
+
+    /// Dépose, par session : le nombre de cas cités, puis les classes qui les jouent.
+    ///
+    /// Le nombre de cas est déposé AVEC les classes parce que c'est lui qui permet au tournage de
+    /// dire s'il a rendu ce qu'il devait rendre. Sans lui, un tournage de session ne pourrait
+    /// vérifier que « des clips sont sortis », ce qui est le genre de garde qui ne garde rien.
+    private static void deposerLesSessionsAFilmer() {
+        SortedMap<String, SortedSet<String>> classes = classesParSession();
+        SortedMap<String, SortedSet<String>> cas = casCitesParSession();
+        List<String> lignes = new ArrayList<>();
+        classes.forEach((session, noms) -> lignes.add(
+                session + "\t" + cas.getOrDefault(session, new TreeSet<>()).size() + "\t" + String.join(",", noms)));
+        try {
+            Files.createDirectories(SESSIONS_A_FILMER.getParent());
+            Files.write(SESSIONS_A_FILMER, lignes);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Liste des sessions à filmer impossible à écrire", e);
         }
     }
 
