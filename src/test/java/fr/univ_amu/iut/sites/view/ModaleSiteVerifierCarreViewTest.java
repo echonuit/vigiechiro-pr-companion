@@ -15,9 +15,11 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Portee;
+import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.RechercheCarreExistant;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -27,7 +29,6 @@ import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Le geste **« Vérifier sur Vigie-Chiro »** dans la modale de déclaration (#3458).
 ///
@@ -81,7 +83,9 @@ class ModaleSiteVerifierCarreViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        stage.setScene(new Scene(vue));
+        // ⚠️ `Habillage`, et non `new Scene` : les six cas de cette classe sont FILMÉS, et une scène
+        // montée sans habillage porte la police de la MACHINE, pas celle du produit (#3773, #4149).
+        stage.setScene(Habillage.scene(vue));
         stage.show();
     }
 
@@ -101,12 +105,27 @@ class ModaleSiteVerifierCarreViewTest {
                 .thenReturn(ReponseApi.succes(
                         List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-" + CARRE, true))));
         saisirCarre(robot, CARRE);
-        robot.interact(() -> verifier(robot).fire());
+        verifierLeCarre(robot);
     }
 
+    /// Le numéro se **tape**, chiffre à chiffre, dans le champ qu'on vient de cliquer.
+    ///
+    /// ⚠️ `setText` posait les six chiffres d'un coup. Ce que ces cas font juger est un enchaînement vu
+    /// de l'extérieur - on saisit, on vérifie, l'encart répond - et un champ qui se remplit tout seul
+    /// n'en fait pas partie : le clip était incompréhensible (#4149). Même correction que sur `S1-37`.
     private void saisirCarre(FxRobot robot, String carre) {
-        robot.interact(
-                () -> robot.lookup("#champCarre").queryAs(TextField.class).setText(carre));
+        TextField champ = robot.lookup("#champCarre").queryAs(TextField.class);
+        robot.interact(champ::clear);
+        robot.clickOn(champ).write(carre);
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    /// Clique « Vérifier », en laissant voir l'écran avant le geste et le verdict après lui.
+    private void verifierLeCarre(FxRobot robot) {
+        Respiration.avantLeGeste(robot);
+        robot.clickOn(verifier(robot));
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
     }
 
     private Button verifier(FxRobot robot) {
@@ -155,7 +174,7 @@ class ModaleSiteVerifierCarreViewTest {
         when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
         saisirCarre(robot, CARRE);
 
-        robot.interact(() -> verifier(robot).fire());
+        verifierLeCarre(robot);
 
         assertThat(message(robot).isVisible()).isTrue();
         assertThat(message(robot).getText()).contains("n'existe pas encore");
@@ -172,7 +191,7 @@ class ModaleSiteVerifierCarreViewTest {
                         ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640380", true))));
         saisirCarre(robot, CARRE);
 
-        robot.interact(() -> verifier(robot).fire());
+        verifierLeCarre(robot);
 
         // Redéclarer un carré déjà présent est exactement ce qui a produit le dépôt manqué de #3458 : le
         // message ne se contente donc pas de constater, il nomme le geste qui remplace la déclaration.
@@ -189,7 +208,7 @@ class ModaleSiteVerifierCarreViewTest {
         when(client.chercherCarre(CARRE)).thenThrow(new IllegalStateException("panne"));
         saisirCarre(robot, CARRE);
 
-        robot.interact(() -> verifier(robot).fire());
+        verifierLeCarre(robot);
 
         assertThat(message(robot).getText())
                 .as("une absence de réponse n'est pas une réponse")
@@ -210,7 +229,7 @@ class ModaleSiteVerifierCarreViewTest {
         when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.nonConnecte());
         saisirCarre(robot, CARRE);
 
-        robot.interact(() -> verifier(robot).fire());
+        verifierLeCarre(robot);
 
         String encart = message(robot).getText();
         assertThat(encart)
@@ -240,10 +259,10 @@ class ModaleSiteVerifierCarreViewTest {
                 .thenReturn(
                         ReponseApi.succes(List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-640381", true))));
         saisirCarre(robot, CARRE);
-        robot.interact(() -> verifier(robot).fire());
+        verifierLeCarre(robot);
 
         saisirCarre(robot, "640381");
-        robot.interact(() -> verifier(robot).fire());
+        verifierLeCarre(robot);
 
         // Le bouton se grise le temps de l'appel pour qu'un double clic ne parte pas deux fois ; s'il ne
         // se rouvrait pas ensuite, la première vérification serait la seule possible - et corriger une
@@ -259,7 +278,7 @@ class ModaleSiteVerifierCarreViewTest {
         enCreation(robot);
         when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.succes(List.of()));
         saisirCarre(robot, CARRE);
-        robot.interact(() -> verifier(robot).fire());
+        verifierLeCarre(robot);
         assertThat(message(robot).isVisible()).isTrue();
 
         saisirCarre(robot, "640381");
@@ -302,7 +321,10 @@ class ModaleSiteVerifierCarreViewTest {
         when(rapatriement.rapatrier(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new RapatriementCarre.Resultat.Rapatrie(site, 41));
 
-        robot.interact(() -> recuperer(robot).fire());
+        Respiration.avantLeGeste(robot);
+        robot.clickOn(recuperer(robot));
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         // Le formulaire n'a plus lieu d'être : le site existe désormais, et c'est sa fiche qu'il faut
         // regarder. L'appelant reçoit de quoi l'ouvrir ET de quoi rendre compte des 41 points.
@@ -321,7 +343,10 @@ class ModaleSiteVerifierCarreViewTest {
         when(rapatriement.rapatrier(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(new RapatriementCarre.Resultat.Indisponible());
 
-        robot.interact(() -> recuperer(robot).fire());
+        Respiration.avantLeGeste(robot);
+        robot.clickOn(recuperer(robot));
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
 
         // Fermer sur un échec laisserait l'utilisateur devant une liste inchangée, sans savoir pourquoi.
         assertThat(rapatrieRecu).isNull();
