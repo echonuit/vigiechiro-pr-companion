@@ -59,6 +59,32 @@ final class CameraDeScene extends AnimationTimer {
         this.file = file;
     }
 
+    /// ⚠️ Les filtres se posent AVANT la première image, et non à la première image.
+    ///
+    /// La version précédente les posait dans `composer()`, donc à la première image composée. Entre
+    /// le démarrage de l'enregistrement et cette image-là, il s'écoule une pulsation de JavaFX - et
+    /// c'est assez pour perdre un geste, parce que les scénarios commencent souvent par un clic.
+    ///
+    /// Constaté sur le clip de `S1-27`, dont la première instruction ouvre la modale par le menu :
+    /// les deux clics partaient avant que le filtre existe, et le film montrait un menu qui
+    /// s'ouvrait **tout seul**, sans pointeur ni halo. Retour d'un relecteur, pas d'un test : c'est
+    /// exactement le genre de manque qu'aucune assertion ne voit.
+    @Override
+    public void start() {
+        Window.getWindows().stream()
+                .map(Window::getScene)
+                .filter(java.util.Objects::nonNull)
+                .forEach(this::observerUneFois);
+        super.start();
+    }
+
+    /// Pose les filtres sur une scène, une seule fois, quel que soit le nombre d'appels.
+    private void observerUneFois(Scene scene) {
+        if (scene.getProperties().putIfAbsent(SUIVI_POSE, Boolean.TRUE) == null) {
+            gestes.observer(scene);
+        }
+    }
+
     @Override
     public void handle(long maintenant) {
         if (maintenant - dernierDeclenchement < periodeNs) {
@@ -104,10 +130,8 @@ final class CameraDeScene extends AnimationTimer {
                 continue;
             }
             fenetreVue = true;
-            // Les filtres se posent une fois par scène, à la première image où on la voit.
-            if (scene.getProperties().putIfAbsent(SUIVI_POSE, Boolean.TRUE) == null) {
-                gestes.observer(scene);
-            }
+            // Pour les fenêtres qui PARAISSENT en cours de séance : un menu, une modale.
+            observerUneFois(scene);
             WritableImage prise = scene.snapshot(null);
             int x = decalage(largeur, (int) prise.getWidth());
             int y = decalage(hauteur, (int) prise.getHeight());
