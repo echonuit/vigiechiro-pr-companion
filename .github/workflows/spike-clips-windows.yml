@@ -48,8 +48,13 @@ jobs:
   # Mesurer le banc Java sur Windows seulement aurait donné un écart où le système d'exploitation et
   # le banc changent en même temps, c'est-à-dire aucun écart interprétable.
   #
-  # Le job `ubuntu-latest` existe pour cette raison, et pour elle seule : mêmes classes, mêmes
-  # respirations, même runner que le banc bash.
+  # Le job `ubuntu-latest` existe pour cette raison : mêmes classes, mêmes respirations, même runner
+  # que le banc bash.
+  #
+  # `macos-latest` répond à une autre question, et elle vaut d'être posée avant de décider quoi que
+  # ce soit : la troisième plateforme que le dépôt éprouve chaque mardi
+  # (`suite-sous-windows-et-macos.yml`) accueille-t-elle le banc ? Un « non » y coûterait plus cher
+  # à découvrir après avoir retiré le banc bash qu'avant.
   filmer:
     name: Neuf clips perceptifs (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
@@ -57,7 +62,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest, ubuntu-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -85,6 +90,13 @@ jobs:
             echo "absent de l'image ; il faut l'installer."
             echo "installe=manquant" >> "${GITHUB_OUTPUT}"
           fi
+
+      # ⚠️ `brew install` et non un `.pkg` : c'est ce que l'image macOS porte déjà, et la formule
+      # `ffmpeg` y est volumineuse. Ce pas est le plus lent des trois, et le comparatif le dit.
+      - name: Installer ffmpeg (macOS)
+        if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'macOS' }}
+        shell: bash
+        run: brew install ffmpeg
 
       - name: Installer ffmpeg (Windows)
         if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'Windows' }}
