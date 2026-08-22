@@ -112,6 +112,7 @@ montre.
 | Verdict des cas | **9 tests verts**, 0 échec |
 | Index par cas | **9 lignes sur 9**, fusionnées depuis **4 fragments** de 4 JVM |
 | Durée de Maven | **2 min 30 s** sous Windows, **1 min 54 s** sous Linux ; le job entier tient en 3 min 30 |
+| Plateformes | `windows-latest`, `ubuntu-latest` et `macos-latest` |
 | Xvfb, openbox, xdotool | **aucun**, et rien à leur place |
 | `ffmpeg` | **absent** de l'image `windows-latest` ; `choco install` le pose en 22 s |
 | Remuxage `mkv` vers `mp4` | sans objet : le banc écrit du `mp4` |
@@ -223,9 +224,33 @@ désormais tout index qui n'en porterait pas neuf. `IndexDesCasTest` reprend le 
 nom du fragment est un paramètre, faute de quoi il resterait irreproductible - il ne se produit
 qu'entre deux JVM, et un test ne peut pas en démarrer une seconde.
 
-Ce qui reste, et qui est nommé plutôt que masqué : un dossier de tournage **réutilisé** garde les
-fragments du tournage précédent. Le nombre de fragments fusionnés est donc annoncé à chaque
-écriture, pour qu'un total surprenant se voie au lieu de se deviner.
+#### Et il a fallu s'y reprendre à deux fois
+
+Le premier remède nommait chaque fragment d'après le `pid` de sa JVM, en supposant que deux JVM
+vivantes ne partagent pas un numéro. C'est vrai, et insuffisant.
+
+Sous Linux et Windows, les quatre forks vivaient **ensemble** : quatre numéros, quatre fragments,
+index à neuf lignes. Ajouter `macos-latest` a fait rougir le garde : **neuf clips, huit lignes**.
+Sur ce runner, moins de cœurs, les forks se sont **enchaînés**, le système a recyclé un numéro
+libéré, et la JVM de `ScenarioPerceptifRefusDepotTest` a écrit son fragment par-dessus celui de
+`ScenarioPerceptifRecuperationCarreTest`.
+
+Constaté sur les fichiers de l'artefact, pas déduit : `index.d/` portait trois fragments pour quatre
+JVM, et `S1-37` manquait à l'index alors que son clip était bien là.
+
+C'est le **jumeau** du défaut que les fragments corrigeaient. Le remède avait déplacé la collision du
+fichier unique vers le numéro de processus, sans la retirer : un identifiant qui se réemploie
+n'identifie pas. L'identité porte désormais le `pid`, qui se lit et se rattache à une ligne de
+journal, suivi d'un UUID.
+
+⚠️ Un cas de garde **verrouillait** le défaut. Il rejouait deux fois la même identité et affirmait
+qu'une seule ligne devait rester : il présentait donc l'écrasement comme le comportement voulu. Il
+porte maintenant sur la déduplication par cas et test, qui est la vraie promesse de l'index.
+
+Ce qui reste, et qui est nommé plutôt que masqué : un dossier de tournage **réutilisé** accumule les
+fragments des tournages précédents. C'est le bon prix, puisque le défaut inverse **efface** des
+lignes quand celui-ci en montre de trop, et que le nombre de fragments fusionnés est annoncé à
+chaque écriture.
 
 ### 4. La console Windows n'écrit pas les accents du banc
 
