@@ -156,18 +156,6 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteViewTest.annuler_ne_cree_rien.mp4"></video>
 
-## ValidationFormulaireTest
-
-### S1-13 · `gater_bouton_suit_la_validite`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ValidationFormulaireTest.gater_bouton_suit_la_validite.mp4"></video>
-
-### S1-13 · `marquer_invalide_bascule_la_classe`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ValidationFormulaireTest.marquer_invalide_bascule_la_classe.mp4"></video>
-
 ## MesSitesViewTest
 
 ### S1-14 · `affiche_les_cartes`

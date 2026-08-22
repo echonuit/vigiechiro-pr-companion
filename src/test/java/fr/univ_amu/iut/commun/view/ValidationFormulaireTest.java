@@ -2,8 +2,6 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.Portee;
 import java.lang.ref.WeakReference;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -19,12 +17,21 @@ import org.testfx.framework.junit5.ApplicationExtension;
 
 /// Tests du composant partagé [ValidationFormulaire] (#790). [ApplicationExtension] initialise le toolkit
 /// JavaFX (construction des nœuds) ; aucune scène affichée.
+///
+/// ## Pourquoi cette classe ne cite plus `S1-13`
+///
+/// ⚠️ **Aucune scène affichée** veut dire : rien à filmer. Le banc produisait pourtant deux clips pour
+/// ces deux tests, et c'étaient les plus vides du dépôt - 17 Ko chacun, contre 110 Ko à 1,3 Mo pour un
+/// clip qui montre quelque chose. La page de recette les annonçait avec un lecteur (#4149).
+///
+/// Le cas reste couvert là où un utilisateur le **voit** : `ModaleSiteViewTest`, où le bouton « Créer »
+/// s'ouvre à mesure qu'on tape les six chiffres. Ce qui se filme est le geste dans la modale, pas la
+/// liaison du socle - et c'est bien la liaison du socle que cette classe-ci éprouve.
 @ExtendWith(ApplicationExtension.class)
 class ValidationFormulaireTest {
 
     @Test
     @DisplayName("gaterBouton lie l'état désactivé du bouton à la validité (vrai → actif, faux → grisé)")
-    @CasDeRecette(value = "S1-13", portee = Portee.A_L_ECRAN)
     void gater_bouton_suit_la_validite() {
         DialogPane pane = new DialogPane();
         ButtonType valider = new ButtonType("Valider", ButtonType.OK.getButtonData());
@@ -42,7 +49,6 @@ class ValidationFormulaireTest {
 
     @Test
     @DisplayName("marquerInvalide ajoute/retire la classe champ-invalide selon l'état, réactivement")
-    @CasDeRecette(value = "S1-13", portee = Portee.A_L_ECRAN)
     void marquer_invalide_bascule_la_classe() {
         TextField champ = new TextField();
         SimpleBooleanProperty invalide = new SimpleBooleanProperty(true);
