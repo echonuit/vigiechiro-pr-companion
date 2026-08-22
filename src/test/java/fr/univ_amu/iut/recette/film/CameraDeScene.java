@@ -10,6 +10,7 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.Scene;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
+import javafx.stage.PopupWindow;
 import javafx.stage.Window;
 
 /// Photographie le GRAPHE DE SCÈNE, et non le bureau.
@@ -88,14 +89,41 @@ final class CameraDeScene extends AnimationTimer {
             }
             fenetreVue = true;
             WritableImage prise = scene.snapshot(null);
-            g.drawImage(
-                    versAwt(prise),
-                    decalage(largeur, (int) prise.getWidth()),
-                    decalage(hauteur, (int) prise.getHeight()),
-                    null);
+            int x = decalage(largeur, (int) prise.getWidth());
+            int y = decalage(hauteur, (int) prise.getHeight());
+            Window proprietaire = proprietaireDe(fenetre);
+            if (proprietaire != null && proprietaire.getScene() != null && positionnee(fenetre, proprietaire)) {
+                x = decalage(largeur, (int) proprietaire.getScene().getWidth())
+                        + (int) Math.round(fenetre.getX() - proprietaire.getX());
+                y = decalage(hauteur, (int) proprietaire.getScene().getHeight())
+                        + (int) Math.round(fenetre.getY() - proprietaire.getY());
+            }
+            g.drawImage(versAwt(prise), x, y, null);
         }
         g.dispose();
         return toile;
+    }
+
+    /// La fenêtre dont celle-ci dépend, quand elle en dépend.
+    ///
+    /// Un menu, une infobulle, la liste d'un `ComboBox` ne sont pas des nœuds de la scène : ce sont
+    /// des [PopupWindow] à part entière, que [Window#getWindows()] rend au même titre que la fenêtre
+    /// principale. Les CENTRER revient à les détacher du bouton qui les ouvre.
+    static Window proprietaireDe(Window fenetre) {
+        return fenetre instanceof PopupWindow popup ? popup.getOwnerWindow() : null;
+    }
+
+    /// Vrai si les deux fenêtres ont une position exploitable.
+    ///
+    /// ⚠️ On ne lit pas ces coordonnées pour ce qu'elles VALENT - sous Monocle elles situent la
+    /// fenêtre sur un écran virtuel étranger à la toile, et c'est ce qui a coûté le bord amputé de
+    /// cinquante pixels. On lit leur DIFFÉRENCE, qui est le même vecteur dans n'importe quel
+    /// repère. L'absolu ment, le relatif non.
+    private static boolean positionnee(Window fenetre, Window proprietaire) {
+        return !Double.isNaN(fenetre.getX())
+                && !Double.isNaN(fenetre.getY())
+                && !Double.isNaN(proprietaire.getX())
+                && !Double.isNaN(proprietaire.getY());
     }
 
     /// Le décalage qui CENTRE une fenêtre sur la toile.
