@@ -13,6 +13,7 @@ import com.google.inject.name.Named;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
@@ -28,6 +29,7 @@ import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.Notificateur;
 import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
+import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
@@ -47,6 +49,7 @@ import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -100,6 +103,13 @@ class ScenarioPerceptifRecuperationCarreTest {
 
     private static final String ID_USER = "u-scenario";
     private static final String CARRE = "640380";
+
+    /// L'identité connectée, telle que `NavigationConnexion.libelleMenu()` la rend.
+    private static final String PSEUDO = "chiro";
+
+    private static final String ROLE = "observateur";
+
+    private static final String IDENTITE_AU_MENU = "Vigie-Chiro : " + PSEUDO + " (" + ROLE + ")";
     private static final int POINTS_POSES = 41;
 
     /// Entre deux gestes : sans quoi le clic suivant tombe avant que l'oeil ait suivi le précédent.
@@ -162,6 +172,13 @@ class ScenarioPerceptifRecuperationCarreTest {
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Observateur"));
 
+        // ⚠️ Une connexion RÉELLE, enregistrée avant que le chrome ne se charge : c'est à la
+        // construction du menu que `NavigationConnexion.libelleMenu()` est lu, et c'est ce libellé qui
+        // dira à l'image qu'on est connecté. Posée après, l'entrée porterait encore « Se connecter… »
+        // et le clip dirait le contraire de ce que la scène joue.
+        injector.getInstance(StockageConnexion.class)
+                .enregistrer("jeton-de-recette", new ProfilVigieChiro(ID_USER, PSEUDO, ROLE));
+
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         // Habillage, et non `new Scene` : un clip monté sans lui porte la police de la MACHINE, alors
@@ -181,6 +198,21 @@ class ScenarioPerceptifRecuperationCarreTest {
     @DisplayName("S1-37 · récupérer un carré : à regarder, comprend-on où l'on vient d'atterrir ?")
     void la_recuperation_ramene_sur_mes_sites(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
+
+        // ⚠️ D'abord ÊTRE CONNECTÉ, et le montrer. Un rapatriement suppose un jeton : le clip qui
+        // commence au « + Nouveau site » demande de le croire sur parole. L'entrée de menu porte le
+        // pseudo une fois connecté et « Se connecter à Vigie-Chiro… » sinon : c'est le produit qui
+        // établit la situation, pas une phrase posée par-dessus.
+        robot.clickOn("#menuOutils");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(robot.lookup(IDENTITE_AU_MENU).tryQuery())
+                .as("le menu nomme l'identité connectée : c'est ce qui rend le rapatriement lisible")
+                .isPresent();
+        Respiration.leTempsDeLire(robot);
+
+        robot.type(KeyCode.ESCAPE);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
 
         // ⚠️ Le bouton, et non l'appel. La version précédente ouvrait la modale par
         // `ouvrirModaleCreationSite(...)` : le bon chemin de code, et un mauvais film - la modale
