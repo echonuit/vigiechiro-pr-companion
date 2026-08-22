@@ -21,13 +21,19 @@ import org.testfx.util.WaitForAsyncUtils;
 /// derrière la barre de statut : à y = 870 dans une scène de 900, « maxY <= hauteur » est vrai et le
 /// noeud est invisible. La référence est la zone d'affichage du [ScrollPane] qui le porte.
 ///
+/// ⚠️ **Et c'est cette référence qui fait tout le travail, pas une marge.** La première version ajoutait
+/// vingt-quatre pixels d'air de chaque côté, au nom de la lisibilité. Deux défauts en sont sortis, aux
+/// deux bouts : le **premier** élément d'une liste ne peut rien avoir au-dessus de lui quand le
+/// défilement est en butée haute, et le **dernier** rien en dessous quand il est en butée basse.
+/// `amener` tournait jusqu'à sa borne et échouait sur des noeuds parfaitement visibles (#4149).
+///
+/// La marge était de toute façon redondante : mesuré sur la fiche d'un site, la zone d'affichage fait
+/// **805 px sur une scène de 900** - elle exclut déjà le chrome et la barre de statut. Ce qui corrigeait
+/// #4128 était de comparer au **viewport** ; l'air en plus n'ajoutait qu'un faux négatif.
+///
 /// ⚠️ **La molette ne suffit pas.** `robot.scroll` n'a pas déplacé le contenu d'un pixel quand le
 /// pointeur n'était pas au-dessus du bon panneau. Le défilement se pilote.
 public final class CadreVisible {
-
-    /// Marge au-dessus et au-dessous de ce qu'on vient lire : une phrase collée au bord se lit mal, et
-    /// c'est la lisibilité que ces cas font juger.
-    private static final double AIR_DE_LECTURE = 24;
 
     /// Nombre de pas de défilement avant d'abandonner : borné pour qu'un noeud inatteignable rende une
     /// erreur qui le nomme, au lieu de tourner.
@@ -45,7 +51,7 @@ public final class CadreVisible {
             return cible.getMinY() >= 0 && cible.getMaxY() <= noeud.getScene().getHeight();
         }
         Bounds vue = cadre.localToScene(cadre.getBoundsInLocal());
-        return cible.getMinY() >= vue.getMinY() + AIR_DE_LECTURE && cible.getMaxY() <= vue.getMaxY() - AIR_DE_LECTURE;
+        return cible.getMinY() >= vue.getMinY() && cible.getMaxY() <= vue.getMaxY();
     }
 
     /// Fait défiler jusqu'à ce que `cible` entre dans le cadre, ou échoue en le nommant.
