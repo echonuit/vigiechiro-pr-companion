@@ -10,6 +10,7 @@ import javafx.animation.AnimationTimer;
 import javafx.scene.Scene;
 import javafx.scene.image.PixelFormat;
 import javafx.scene.image.WritableImage;
+import javafx.stage.PopupWindow;
 import javafx.stage.Window;
 
 /// Photographie le GRAPHE DE SCÈNE, et non le bureau.
@@ -88,14 +89,55 @@ final class CameraDeScene extends AnimationTimer {
             }
             fenetreVue = true;
             WritableImage prise = scene.snapshot(null);
-            g.drawImage(
-                    versAwt(prise),
-                    decalage(largeur, (int) prise.getWidth()),
-                    decalage(hauteur, (int) prise.getHeight()),
-                    null);
+            int x = decalage(largeur, (int) prise.getWidth());
+            int y = decalage(hauteur, (int) prise.getHeight());
+            Window proprietaire = proprietaireDe(fenetre);
+            if (proprietaire != null && proprietaire.getScene() != null && positionnee(fenetre, proprietaire)) {
+                x = decalageRelatif(
+                        largeur, (int) proprietaire.getScene().getWidth(), fenetre.getX() - proprietaire.getX());
+                y = decalageRelatif(
+                        hauteur, (int) proprietaire.getScene().getHeight(), fenetre.getY() - proprietaire.getY());
+            }
+            g.drawImage(versAwt(prise), x, y, null);
         }
         g.dispose();
         return toile;
+    }
+
+    /// La fenêtre dont celle-ci dépend, quand elle en dépend.
+    ///
+    /// Un menu, une infobulle, la liste d'un `ComboBox` ne sont pas des nœuds de la scène : ce sont
+    /// des [PopupWindow] à part entière, que [Window#getWindows()] rend au même titre que la fenêtre
+    /// principale. Les CENTRER revient à les détacher du bouton qui les ouvre.
+    static Window proprietaireDe(Window fenetre) {
+        return fenetre instanceof PopupWindow popup ? popup.getOwnerWindow() : null;
+    }
+
+    /// Le décalage d'une fenêtre PORTÉE par une autre : celui de son propriétaire, plus l'écart qui
+    /// les sépare.
+    ///
+    /// Mesuré sur le clip de `S6-27`, avec la scène propriétaire de 1100 de large et le bouton
+    /// « + Filtre » à 402 dans cette scène : le menu se pose à 492, bord gauche aligné sur celui de
+    /// son bouton. Centré, il se posait à 582, soit le centre exact de la toile, à 90 pixels de là.
+    ///
+    /// @param toile la largeur (ou la hauteur) du film
+    /// @param proprietaire la largeur (ou la hauteur) de la SCÈNE du propriétaire
+    /// @param ecart la distance qui sépare les deux fenêtres, dans le repère du système
+    static int decalageRelatif(int toile, int proprietaire, double ecart) {
+        return decalage(toile, proprietaire) + (int) Math.round(ecart);
+    }
+
+    /// Vrai si les deux fenêtres ont une position exploitable.
+    ///
+    /// ⚠️ On ne lit pas ces coordonnées pour ce qu'elles VALENT - sous Monocle elles situent la
+    /// fenêtre sur un écran virtuel étranger à la toile, et c'est ce qui a coûté le bord amputé de
+    /// cinquante pixels. On lit leur DIFFÉRENCE, qui est le même vecteur dans n'importe quel
+    /// repère. L'absolu ment, le relatif non.
+    private static boolean positionnee(Window fenetre, Window proprietaire) {
+        return !Double.isNaN(fenetre.getX())
+                && !Double.isNaN(fenetre.getY())
+                && !Double.isNaN(proprietaire.getX())
+                && !Double.isNaN(proprietaire.getY());
     }
 
     /// Le décalage qui CENTRE une fenêtre sur la toile.

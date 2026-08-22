@@ -33,6 +33,7 @@ import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.Seance;
+import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.sites.model.ImportSiteDistant;
 import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -94,7 +95,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Même raison qu'en [fr.univ_amu.iut.connexion.view.ScenarioPerceptifConnexionTest] : en synchrone,
 /// la récupération se ferait sur le fil JavaFX, aucune image ne serait rendue pendant ce temps, et le
 /// passage à juger n'existerait sur aucune trame.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class})
 class ScenarioPerceptifRecuperationCarreTest {
 
     private static final String ID_USER = "u-scenario";

@@ -13,6 +13,14 @@ import org.junit.jupiter.api.Test;
 /// ses 51 premiers pixels tandis que 231 pixels de toile restaient vides à droite. Le titre du
 /// produit y était amputé, ce qui ne fait rougir aucun test : cela se voit sur le film, et
 /// seulement si quelqu'un le regarde.
+///
+/// ⚠️ Le remède a produit le second défaut. Centrer est juste pour la fenêtre principale, et faux
+/// pour un menu : un [javafx.stage.PopupWindow] est une fenêtre à part entière, et la centrer la
+/// détache du bouton qui l'ouvre. Mesuré sur le clip de `S6-27`, le menu du bouton « + Filtre »
+/// tombait au centre exact de la toile, à 90 pixels de sa place.
+///
+/// Les deux moitiés tiennent ensemble : on ne lit jamais une coordonnée pour ce qu'elle VAUT, et on
+/// lit un ÉCART pour ce qu'il vaut. Sous Monocle l'absolu ment, le relatif non.
 class CameraDeSceneTest {
 
     private static final int TOILE_LARGEUR = 1280;
@@ -50,6 +58,36 @@ class CameraDeSceneTest {
         int x = CameraDeScene.decalage(TOILE_LARGEUR, 1600);
         assertEquals(-160, x);
         assertEquals(-160, TOILE_LARGEUR - (x + 1600), "les deux débordements doivent être égaux");
+    }
+
+    @Test
+    @DisplayName("un menu se pose SOUS son bouton, pas au centre de la toile")
+    void unMenuSePoseSousSonBouton() {
+        // Les trois nombres sont MESURÉS sur le clip de S6-27, pas choisis : scène propriétaire de
+        // 1100 de large, bouton « + Filtre » à 402 dans cette scène, menu de 115 de large.
+        int menu = CameraDeScene.decalageRelatif(TOILE_LARGEUR, 1100, 402);
+
+        assertEquals(492, menu, "le bord gauche du menu doit tomber sur celui de son bouton");
+        assertEquals(582, CameraDeScene.decalage(TOILE_LARGEUR, 115), "centré, il se posait là");
+        assertEquals(90, 582 - menu, "l'écart mesuré entre le défaut et le placement juste");
+    }
+
+    @Test
+    @DisplayName("un menu qui pend au bord droit y reste : le relatif ne recentre rien")
+    void unMenuAuBordDroitYReste() {
+        // Le menu du bouton hamburger, à 1010 dans une scène de 1100 : il doit rester à droite.
+        // Centrer l'aurait ramené au milieu, ce qui est précisément le défaut d'origine.
+        int menu = CameraDeScene.decalageRelatif(TOILE_LARGEUR, 1100, 1010);
+
+        assertEquals(1100, menu);
+        assertTrue(menu > TOILE_LARGEUR / 2, "un menu de droite ne doit jamais migrer vers le centre");
+    }
+
+    @Test
+    @DisplayName("sans écart, une fenêtre portée se pose exactement sur son propriétaire")
+    void sansEcartLaFenetrePorteeSePoseSurSonProprietaire() {
+        assertEquals(
+                CameraDeScene.decalage(TOILE_LARGEUR, 1100), CameraDeScene.decalageRelatif(TOILE_LARGEUR, 1100, 0));
     }
 
     @Test

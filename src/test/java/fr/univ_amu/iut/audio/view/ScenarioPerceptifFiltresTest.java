@@ -38,6 +38,7 @@ import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import fr.univ_amu.iut.validation.model.EspecesPrioritaires;
 import fr.univ_amu.iut.validation.model.ExportObservationsEtSons;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -102,7 +103,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// courant, ce qui est exactement l'état que `S6-26` et `S6-27` demandent de voir. Sans ce croisement,
 /// resserrer un critère ne changerait rien au domaine de l'autre et les deux cas n'auraient rien à
 /// montrer.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class})
 class ScenarioPerceptifFiltresTest {
 
     /// L'espèce que « Statut = à revoir » fait sortir du jeu : elle n'a que des lignes **validées**.
