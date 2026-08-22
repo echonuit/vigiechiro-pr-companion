@@ -170,7 +170,7 @@ class MesSitesViewTest {
     @Test
     @CasDeRecette(value = "S1-16", portee = Portee.A_L_ECRAN)
     @DisplayName("S1-16 · hors connexion, « Récupérer depuis Vigie-Chiro » est fermé et dit ce qui manque")
-    void hors_connexion_la_recuperation_est_fermee(FxRobot robot) {
+    void hors_connexion_la_recuperation_est_fermee(FxRobot robot) throws TimeoutException {
         // ⚠️ Le clip commence par ÉTABLIR la situation, au lieu de la supposer. Le menu principal
         // porte « Se connecter à Vigie-Chiro… » tant qu'aucun profil n'est enregistré, et le pseudo
         // ensuite (`NavigationConnexion.libelleMenu`) : c'est le produit qui dit qu'on n'est pas
@@ -195,11 +195,16 @@ class MesSitesViewTest {
         assertThat(bouton.isDisabled())
                 .as("sans jeton, rien ne peut être récupéré : le geste est fermé (#4194)")
                 .isTrue();
-        assertThat(InfobulleDeBlocage.texteDe(robot.lookup("#enveloppeSync").query()))
+        // ⚠️ Le motif se FAIT PARAÎTRE, il ne se lit pas par programme. Les images du tournage
+        // précédent montraient un bouton gris impeccable et aucune explication : la moitié du cas -
+        // « il dit ce qui manque » - restait hors de l'image.
+        assertThat(InfobulleDeBlocage.montrerEtLire(
+                        robot.lookup("#enveloppeSync").query(), robot))
                 .as("et il dit ce qui manque, avec le geste qui répare")
                 .contains("pas connecté")
                 .contains("Se connecter à Vigie-Chiro");
         Respiration.surLeMomentCle(robot);
+        Respiration.leTempsDeLire(robot);
     }
 
     @Test
