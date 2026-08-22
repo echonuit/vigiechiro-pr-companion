@@ -231,37 +231,37 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModalePointViewTest.ajouter_un_point_valide.mp4"></video>
 
-## ModaleSiteVerifierCarreViewTest
+## ScenarioModaleCarreTest
 
-### S1-30 · `carre_libre_le_verdict_s_affiche`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteVerifierCarreViewTest.carre_libre_le_verdict_s_affiche.mp4"></video>
-
-### S1-31 · `carre_deja_declare_avertit_dans_la_modale`
+### S1-30 · `le_carre_libre_s_annonce_libre`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteVerifierCarreViewTest.carre_deja_declare_avertit_dans_la_modale.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.le_carre_libre_s_annonce_libre.mp4"></video>
 
-### S1-32 · `corriger_le_carre_efface_le_verdict`
+### S1-31 · `le_carre_deja_declare_nomme_le_site`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteVerifierCarreViewTest.corriger_le_carre_efface_le_verdict.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.le_carre_deja_declare_nomme_le_site.mp4"></video>
+
+### S1-32 · `corriger_un_chiffre_efface_le_verdict`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.corriger_un_chiffre_efface_le_verdict.mp4"></video>
 
 ### S1-33 · `hors_connexion_l_encart_ne_nie_pas_le_carre`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteVerifierCarreViewTest.hors_connexion_l_encart_ne_nie_pas_le_carre.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.hors_connexion_l_encart_ne_nie_pas_le_carre.mp4"></video>
 
-### S1-34 · `recuperer_ferme_la_modale_et_passe_le_carre`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteVerifierCarreViewTest.recuperer_ferme_la_modale_et_passe_le_carre.mp4"></video>
-
-### S1-36 · `creer_se_ferme_avec_son_motif`
+### S1-34 · `recuperer_ferme_la_modale_et_rend_compte`
 
 <video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ModaleSiteVerifierCarreViewTest.creer_se_ferme_avec_son_motif.mp4"></video>
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.recuperer_ferme_la_modale_et_rend_compte.mp4"></video>
+
+### S1-36 · `creer_reste_ferme_puis_se_rouvre`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre.mp4"></video>
 
 ## NavigationSitesRapatriementTest
 
