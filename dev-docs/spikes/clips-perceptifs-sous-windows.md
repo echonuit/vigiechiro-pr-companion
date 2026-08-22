@@ -110,8 +110,8 @@ montre.
 |---|---|
 | Clips produits | **9 sur 9**, et une fenêtre a paru dans chacun |
 | Verdict des cas | **9 tests verts**, 0 échec |
-| Index par cas | **9 lignes sur 9** (`forkCount=1`) |
-| Durée de Maven | **2 min 41 s** (1 min 31 s sans les respirations) ; le job entier tient en 4 minutes |
+| Index par cas | **9 lignes sur 9**, fusionnées depuis **4 fragments** de 4 JVM |
+| Durée de Maven | **2 min 30 s** sous Windows, **1 min 54 s** sous Linux ; le job entier tient en 3 min 30 |
 | Xvfb, openbox, xdotool | **aucun**, et rien à leur place |
 | `ffmpeg` | **absent** de l'image `windows-latest` ; `choco install` le pose en 22 s |
 | Remuxage `mkv` vers `mp4` | sans objet : le banc écrit du `mp4` |
@@ -199,21 +199,33 @@ L'absolu ment, le relatif non : `fenetre.getX() - proprietaire.getX()` est le m�
 n'importe quel repère, y compris l'écran virtuel de Monocle. Après correctif, le menu se pose sous
 son bouton.
 
-### 3. L'index par cas perd des lignes dès qu'il y a plusieurs forks
+### 3. L'index par cas perdait des lignes dès qu'il y avait plusieurs forks
 
-Le banc bash imposait une seule JVM parce qu'il n'y a qu'un écran X. Le banc Java n'a pas cette
+Le banc bash impose une seule JVM parce qu'il n'y a qu'un écran X. Le banc Java n'a pas cette
 contrainte : filmer le graphe de scène rend les forks parallèles parfaitement légitimes, et c'est
 un gain, pas un détail.
 
-`IndexDesCas` ne suit pas. Chaque JVM tient son propre index et écrit le **même** fichier en fin de
-session : la dernière qui finit efface les autres. Mesuré en local avec `forkCount=1C`, quatre
-forks : l'index final portait **5 lignes sur 9**, et rien dans la page ne disait qu'il en manquait
-quatre.
+`IndexDesCas` ne suivait pas. Chaque JVM tenait son propre index et écrivait le **même** fichier en
+fin de session : la dernière qui finit effaçait les autres. Mesuré en local avec `forkCount=1C`,
+quatre forks : l'index final portait **5 lignes sur 9**, et rien dans la page ne disait qu'il en
+manquait quatre.
 
-Un index amputé se lit exactement comme un index complet. C'est le défaut qu'il faut corriger avant
-d'ouvrir les forks : un fragment par JVM, fusionné en fin de tournage.
+Un index amputé se lit exactement comme un index complet.
 
-Ce tournage-ci emploie donc `forkCount=1`, ce qui rend l'index entier sans masquer le défaut.
+**Corrigé depuis.** Chaque JVM dépose son fragment dans `index.d/`, puis reconstruit `index.md`
+depuis tous ceux qui sont présents, sous verrou : le verrou porte sur la suite lecture-puis-écriture,
+sans quoi une JVM ayant lu la liste avant qu'une autre ne dépose son fragment écrirait, après elle,
+un index plus pauvre - le défaut reviendrait en plus rare, donc en pire.
+
+Éprouvé en CI sur les deux plateformes, forks ouverts : les quatre JVM annoncent successivement
+**1, 2, 4 puis 9 lignes** pour **1, 2, 3 puis 4 fragments** fusionnés, et le garde du job refuse
+désormais tout index qui n'en porterait pas neuf. `IndexDesCasTest` reprend le défaut hors CI : le
+nom du fragment est un paramètre, faute de quoi il resterait irreproductible - il ne se produit
+qu'entre deux JVM, et un test ne peut pas en démarrer une seconde.
+
+Ce qui reste, et qui est nommé plutôt que masqué : un dossier de tournage **réutilisé** garde les
+fragments du tournage précédent. Le nombre de fragments fusionnés est donc annoncé à chaque
+écriture, pour qu'un total surprenant se voie au lieu de se deviner.
 
 ### 4. La console Windows n'écrit pas les accents du banc
 
@@ -267,13 +279,20 @@ existe pour cela. **Mêmes classes, mêmes neuf cas, mêmes respirations, même 
 respirations**, que les deux bancs paient à l'identique. Le temps d'un tournage perceptif n'est pas
 du calcul, c'est de l'attente délibérée. Aucun choix d'implémentation ne la rendra.
 
+⚠️ Ces deux colonnes sont mesurées **à une seule JVM des deux côtés**, pour que la comparaison ne
+porte que sur le banc. C'est une contrainte du banc bash, pas du banc Java : une fois `IndexDesCas`
+corrigé, celui-ci tourne au `forkCount=1C` du dépôt, et les quatre classes descendent alors à
+1 min 54 s sous Linux. Sur neuf cas dont l'essentiel du temps est du sommeil, le parallélisme ne
+rapporte presque rien ; sur la planche entière, c'est l'inverse.
+
 ⚠️ Ne pas conclure « les deux bancs se valent » : ils ne coûtent pareil qu'**à périmètre égal**, et
 c'est le périmètre qui diffère.
 
 | | banc bash | banc Java |
 |---|---|---|
 | Ce qu'il faut lancer pour obtenir les 9 clips | `--planche`, soit **54 clips** | les 4 classes |
-| Durée du job | **9 min 15 s** | 3 min 01 s (Linux), 3 min 41 s (Windows) |
+| Durée du job | **9 min 15 s** | 3 min 05 s (Linux), 3 min 30 s (Windows) |
+| JVM | **une seule**, imposée par l'écran unique | autant que de cœurs |
 | Plateformes | `ubuntu-latest` | les deux, mesurées |
 | À installer | Xvfb, openbox, xdotool, x11-utils, ffmpeg | ffmpeg |
 | Après le tournage | remuxer `mkv` en `mp4` | rien |
