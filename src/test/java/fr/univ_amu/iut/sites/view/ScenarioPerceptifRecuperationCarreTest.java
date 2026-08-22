@@ -179,6 +179,12 @@ class ScenarioPerceptifRecuperationCarreTest {
         injector.getInstance(StockageConnexion.class)
                 .enregistrer("jeton-de-recette", new ProfilVigieChiro(ID_USER, PSEUDO, ROLE));
 
+        // ⚠️ Et le client mocké répond comme le vrai : sans cela, le menu dit « connecté » pendant que
+        // « Récupérer depuis Vigie-Chiro » reste grisé derrière la modale, parce que LUI interroge le
+        // client. Le clip montrerait deux réponses opposées à la même question.
+        StockageConnexion stockage = injector.getInstance(StockageConnexion.class);
+        when(client.estConnecte()).thenAnswer(appel -> stockage.estConnecte());
+
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         // Habillage, et non `new Scene` : un clip monté sans lui porte la police de la MACHINE, alors

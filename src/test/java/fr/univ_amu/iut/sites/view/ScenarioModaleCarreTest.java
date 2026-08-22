@@ -138,6 +138,13 @@ class ScenarioModaleCarreTest {
         // ⚠️ Une connexion RÉELLE : depuis #4210, « Vérifier sur Vigie-Chiro » est fermé sans jeton.
         // Ces scénarios jouent un utilisateur connecté ; ils doivent l'être pour de bon, au lieu de
         // s'appuyer sur un bouton qui ne demandait rien à personne.
+        // ⚠️ Le mock répond comme le VRAI client : `estConnecte()` demande « un jeton est-il
+        // enregistré ? » et rien d'autre. Sans cela, le menu lit le stockage et dit « connecté »
+        // pendant que « Récupérer depuis Vigie-Chiro » reste grisé en arrière-plan, parce que LUI
+        // interroge le client. Le clip se contredisait à l'image, et c'est le produit qu'on accusait.
+        StockageConnexion stockage = injector.getInstance(StockageConnexion.class);
+        when(client.estConnecte()).thenAnswer(appel -> stockage.estConnecte());
+
         seConnecter();
 
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
