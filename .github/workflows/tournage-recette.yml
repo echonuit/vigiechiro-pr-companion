@@ -1,0 +1,253 @@
+# Tourner les clips d'UNE session, sur la plateforme de son choix (#4163).
+#
+# ## Pourquoi ce workflow existe
+#
+# L'EPIC #4133 s'était donné une limite à surveiller : « le tournage met une dizaine de minutes pour
+# 45 clips ; à 400, ce serait des heures par passage, et le dispositif changerait de nature. Il
+# faudra probablement filmer par session plutôt que tout à chaque fois. »
+#
+# Le banc filmé en Java pur le rend possible, et pour deux raisons qui n'ont rien à voir l'une avec
+# l'autre. Il photographie le graphe de scène, donc il tourne là où il n'y a ni serveur X ni
+# gestionnaire de fenêtres - Windows et macOS compris, ce que le banc bash ne peut pas. Et il écrit
+# un fichier par test, donc restreindre le tournage se réduit à un `-Dtest=`.
+#
+# ## Ce qu'il ne fait pas
+#
+# ⚠️ Il ne PUBLIE pas. Les clips restent en artefact. La pré-version `clips-recette` reste alimentée
+# par `recette-filmee.yml`, et le sort du banc bash se décide à part, les deux bancs comparés sur la
+# même planche. Deux dispositifs qui publieraient au même endroit se contrediraient tôt ou tard.
+#
+# ## Le garde, et pourquoi il porte sur les CAS
+#
+# ⚠️ Compter les clips ne prouverait rien : un tournage qui rend « des clips » peut en avoir perdu la
+# moitié. Ce qui se vérifie, c'est que chaque cas CITÉ de la session a bien sa ligne dans l'index.
+# Le nombre attendu ne se devine pas non plus : il est dérivé par `CorrespondanceRecetteTest`, qui
+# balaie le classpath, et déposé dans `sessions-a-filmer.tsv` à côté des classes.
+
+name: tournage de recette
+
+run-name: "tournage ${{ inputs.session }} sur ${{ inputs.plateforme }}"
+
+on:
+  workflow_dispatch:
+    inputs:
+      session:
+        description: "Session à filmer (« toutes » pour la planche entière)"
+        type: choice
+        default: "S6"
+        options:
+          - "toutes"
+          - "S1"
+          - "S2"
+          - "S3"
+          - "S4"
+          - "S5"
+          - "S6"
+          - "S7"
+          - "S8"
+          - "S9"
+          - "S10"
+          - "S11"
+      plateforme:
+        description: "Où filmer"
+        type: choice
+        default: "ubuntu"
+        options:
+          - "ubuntu"
+          - "windows"
+          - "macos"
+
+permissions:
+  contents: read
+
+jobs:
+  # ⚠️ Le runner se CALCULE, il ne se filtre pas. Une matrice filtrée par `if:` laisserait des jobs
+  # démarrer pour ne rien faire, et une pastille verte qui ne dit pas si la plateforme a été
+  # éprouvée ou seulement visitée. Même parti que `suite-sous-windows-et-macos.yml`.
+  choisir:
+    name: Où filmer ?
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      runner: ${{ steps.calcul.outputs.runner }}
+    steps:
+      - name: Traduire la plateforme en runner
+        id: calcul
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${{ inputs.plateforme }}" in
+            windows) runner="windows-latest" ;;
+            macos)   runner="macos-latest" ;;
+            *)       runner="ubuntu-latest" ;;
+          esac
+          echo "runner=${runner}" >> "${GITHUB_OUTPUT}"
+          echo "Tournage de ${{ inputs.session }} sur ${runner}." >> "${GITHUB_STEP_SUMMARY}"
+
+  filmer:
+    name: Filmer ${{ inputs.session }}
+    needs: choisir
+    # ⚠️ `needs.choisir.result == 'success'` est implicite ici : sans le runner calculé, ce job n'a
+    # pas de machine où tourner, donc il ne doit pas démarrer.
+    runs-on: ${{ needs.choisir.outputs.runner }}
+    timeout-minutes: 90
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      # ⚠️ On CONSTATE avant d'installer. Aucune des trois images GitHub ne porte `ffmpeg`, mais
+      # cela peut changer, et un pas d'installation qui devient inutile se voit ici plutôt que de
+      # coûter vingt secondes à chaque tournage sans que personne ne le sache.
+      - name: ffmpeg est-il déjà là ?
+        id: ffmpeg
+        shell: bash
+        run: |
+          set -uo pipefail
+          if chemin=$(command -v ffmpeg); then
+            echo "présent sur l'image : ${chemin}"
+            echo "installe=deja" >> "${GITHUB_OUTPUT}"
+          else
+            echo "absent de l'image ; il faut l'installer."
+            echo "installe=manquant" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Installer ffmpeg (macOS)
+        if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'macOS' }}
+        shell: bash
+        run: brew install ffmpeg
+
+      - name: Installer ffmpeg (Windows)
+        if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'Windows' }}
+        shell: pwsh
+        run: choco install ffmpeg --no-progress --yes
+
+      - name: Cache des .deb (le dépaquetage, lui, se refait)
+        if: ${{ runner.os == 'Linux' }}
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/apt-vigiechiro
+          key: apt-${{ runner.os }}-tournage-recette
+
+      # ⚠️ `installer-paquets.sh`, et non `apt-get` en direct : `verifie-apt.sh` refuse la seconde
+      # forme, et exige le cache ci-dessus avec son `APT_CACHE`.
+      - name: Installer ffmpeg (Linux)
+        if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'Linux' }}
+        shell: bash
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
+        run: bash .github/scripts/installer-paquets.sh ffmpeg
+
+      # La liste ne se maintient pas à la main : elle est DÉRIVÉE du classpath, cas par cas.
+      # ⚠️ Les entrées passent par `env:` et non par interpolation dans le shell. Elles viennent
+      # d'une liste fermée, donc rien ne peut s'y glisser aujourd'hui ; l'habitude, elle, se prend
+      # avant le jour où quelqu'un rendra l'entrée libre.
+      #
+      # ⚠️ Tout se lit en `awk` : `bc` n'existe pas sur le Git Bash des runners Windows, et une
+      # tabulation littérale dans un motif `grep` ne survit pas au YAML.
+      - name: Dériver les classes de la session
+        id: liste
+        shell: bash
+        env:
+          SESSION: ${{ inputs.session }}
+        run: |
+          set -euo pipefail
+          ./mvnw -B -q test --file pom.xml -Dtest=CorrespondanceRecetteTest -DfailIfNoTests=false
+          derive=target/recette/sessions-a-filmer.tsv
+          [ -s "${derive}" ] || { echo "::error::${derive} est absent ou vide : la dérivation n'a rien produit."; exit 1; }
+
+          if [ "${SESSION}" = "toutes" ]; then
+            classes=$(awk -F'\t' '{print $3}' "${derive}" | tr ',' '\n' | sort -u | paste -sd,)
+            attendus=$(awk -F'\t' '{s += $2} END {print s + 0}' "${derive}")
+          else
+            classes=$(awk -F'\t' -v s="${SESSION}" '$1 == s {print $3}' "${derive}")
+            attendus=$(awk -F'\t' -v s="${SESSION}" '$1 == s {print $2}' "${derive}")
+            # ⚠️ Une session SANS cas cité n'est pas une panne du dispositif : c'est l'état du
+            # dépôt, et la plupart des sessions y sont encore. On le dit et on s'arrête, plutôt que
+            # de lancer un tournage qui rendrait zéro clip et un garde qui ne saurait quoi conclure.
+            [ -n "${classes}" ] || { echo "::error::${SESSION} ne cite aucun cas : il n'y a rien à filmer."; exit 1; }
+          fi
+
+          echo "classes=${classes}" >> "${GITHUB_OUTPUT}"
+          echo "attendus=${attendus}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "## Tournage ${SESSION} sur ${{ needs.choisir.outputs.runner }}"
+            echo
+            echo "- cas attendus : ${attendus}"
+            echo "- classes : \`${classes}\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      # ⚠️ `failure.ignore` : on veut les CLIPS. Un cas qui rougit produit son clip comme les autres,
+      # et c'est même celui-là qu'on veut regarder. Subordonner le tournage au vert de la session
+      # rendrait les clips otages d'une condition sans rapport avec ce qu'ils servent à juger.
+      #
+      # Aucun `forkCount` imposé : filmer le graphe de scène n'exige pas un écran unique, et
+      # `IndexDesCas` fusionne les fragments de toutes les JVM.
+      - name: Filmer
+        shell: bash
+        run: |
+          set -uo pipefail
+          ./mvnw -B test --file pom.xml \
+            -Dtest='${{ steps.liste.outputs.classes }}' \
+            -DfailIfNoTests=false \
+            -Dmaven.test.failure.ignore=true \
+            -Drecette.film \
+            2>&1 | tee tournage.log
+          echo "Maven a rendu ${PIPESTATUS[0]} ; le verdict est pris à l'étape suivante."
+
+      # ⚠️ Le garde porte sur les CAS, pas sur le nombre de fichiers. Un tournage qui rend « des
+      # clips » peut en avoir perdu la moitié, et un compte de fichiers ne le dirait pas.
+      - name: Chaque cas de la session a sa ligne
+        shell: bash
+        env:
+          SESSION: ${{ inputs.session }}
+          ATTENDUS: ${{ steps.liste.outputs.attendus }}
+        run: |
+          set -uo pipefail
+          index=target/recette/clips/index.md
+          [ -s "${index}" ] || { echo "::error::index absent : le tournage n'a rien indexé."; exit 1; }
+
+          if [ "${SESSION}" = "toutes" ]; then
+            motif='^S[0-9]+-'
+          else
+            motif="^${SESSION}-"
+          fi
+          # La première colonne du tableau, dédoublonnée : un cas joué par deux tests a deux lignes.
+          # ⚠️ La sortie est CAPTURÉE avant d'être comptée : sous `pipefail`, un `grep` en bout de
+          # tube ne dit rien du code de ce qui est à sa gauche, et un index illisible se compterait
+          # comme un index vide.
+          colonne=$(grep -E '^\| S' "${index}" | cut -d'|' -f2 | tr -d ' ' || true)
+          obtenus=$(printf '%s\n' "${colonne}" | grep -E "${motif}" | sort -u | wc -l || true)
+          clips=0
+          for clip in target/recette/clips/*.mp4; do
+            [ -e "${clip}" ] || continue
+            clips=$((clips + 1))
+          done
+
+          {
+            echo "- cas obtenus : ${obtenus} / ${ATTENDUS}"
+            echo "- clips : ${clips}"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+          echo "cas obtenus : ${obtenus} / ${ATTENDUS}, clips : ${clips}"
+          [ "${obtenus}" -eq "${ATTENDUS}" ] || {
+            echo "::error::${obtenus} cas sur ${ATTENDUS} : le tournage est incomplet."
+            exit 1
+          }
+
+      - name: Garder les clips en artefact
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}
+          path: |
+            target/recette/clips/
+            tournage.log
+          retention-days: 14
