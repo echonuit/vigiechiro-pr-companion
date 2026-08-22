@@ -344,15 +344,15 @@ faire aujourd'hui.
 Ce spike ne décide de rien, et surtout pas le retrait du banc bash : il est le support du train de
 publication, et le remplacer se fait par étapes, pas par suppression.
 
-L'ordre proposé, du plus sûr au plus engageant :
+L'ordre proposé, du plus sûr au plus engageant. Tout est rattaché à l'EPIC #4133.
 
-1. les trois défauts du banc Java, corrigés et gardés dans cette branche ;
-2. ne filmer que les tests qui citent un cas ;
-3. un tournage **par session**, sur la plateforme de son choix, à côté du banc bash et sans le
-   toucher ;
-4. `S10-01`/`S10-02`, le scénario du dossier déjà tenu ;
-5. alors seulement, et avec les deux bancs comparés sur la même planche : décider de
-   `lance-test-filme.sh`, de ses 1 289 lignes et de ses cinq préconditions.
+| | | |
+|---|---|---|
+| 1 | #4159, #4160, #4161 | les trois défauts du banc, **corrigés et gardés dans cette branche** |
+| 2 | #4162 | ne filmer que les tests qui citent un cas |
+| 3 | #4163 | un tournage **par session**, sur la plateforme de son choix, à côté du banc bash |
+| 4 | #4164 | `S10-01`/`S10-02`, le scénario du dossier déjà tenu |
+| 5 | à ouvrir | les deux bancs comparés sur la **même planche**, puis décider de `lance-test-filme.sh`, de ses 1 289 lignes et de ses cinq préconditions. Cela vaudra un ADR |
 
 Le spike qui l'a précédé, et qui dit ce que le banc Java remplace :
 [Filmer la recette depuis le graphe de scène](film-depuis-le-graphe-de-scene.md).
