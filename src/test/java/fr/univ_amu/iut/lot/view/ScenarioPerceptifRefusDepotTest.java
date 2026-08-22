@@ -49,6 +49,7 @@ import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
+import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -95,7 +96,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// **journal du capteur** - ce dernier bloquant. Le relevé climatique, lui, ne fait qu'avertir.
 ///
 /// Les fichiers posés sur le disque sont minuscules : la source ne lit que leur **taille**.
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith({ApplicationExtension.class, EnregistreurDeFilm.class})
 class ScenarioPerceptifRefusDepotTest {
 
     private static final String ID_USER = "u-scenario";
