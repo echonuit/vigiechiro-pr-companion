@@ -11,9 +11,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
-import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
-import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -50,6 +48,12 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class ModalePointViewTest {
 
+    // ⚠️ Cette classe ne cite plus `S1-24`, et ce n'est pas un oubli.
+    // Elle monte `ModalePoint.fxml` seule : rien ne montrait que le point venait de la modale, faute
+    // de voir la fiche AVANT (#4175). Le cas est joué par `ScenarioFicheSiteTest`, depuis la fiche.
+    //
+    // Ses assertions restent : elles gardent le câblage, ce qui est un autre travail que de le montrer.
+
     private static final String ID_USER = "u-test";
     private static final String BOUTON_AJOUTER = "+ Ajouter un point";
     private Injector injector;
@@ -80,7 +84,6 @@ class ModalePointViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-24", portee = Portee.A_L_ECRAN)
     @DisplayName("Un code valide active le bouton et ajoute la carte du point")
     void ajouter_un_point_valide(FxRobot robot) {
         ouvrirModale(robot);

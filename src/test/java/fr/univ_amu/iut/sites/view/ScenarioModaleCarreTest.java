@@ -279,6 +279,72 @@ class ScenarioModaleCarreTest {
                 .isFalse();
     }
 
+    @Test
+    @CasDeRecette(value = "S1-13", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-13 · « Créer » s'ouvre au sixième chiffre, et le carré paraît dans « Mes sites »")
+    void creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre(FxRobot robot) throws TimeoutException {
+        laPlateformeNeConnaitPas(CARRE_LIBRE);
+        long avant = robot.lookup(".carte-site").queryAll().size();
+        ouvrirLaDeclaration(robot);
+
+        Button creer = robot.lookup("#boutonValider").queryAs(Button.class);
+        assertThat(creer.isDisabled()).as("formulaire vierge : rien à créer").isTrue();
+        Respiration.avantLeGeste(robot);
+
+        // Les chiffres se tapent un par un : c'est une validation EN DIRECT que ce cas fait juger, et
+        // un champ qui se remplit d'un coup ne la montre pas.
+        robot.clickOn(champCarre(robot)).write("9999");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(creer.isDisabled())
+                .as("quatre chiffres : toujours pas un carré")
+                .isTrue();
+        Respiration.leTempsDeLire(robot);
+
+        robot.write("99");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(creer.isDisabled()).as("six chiffres : le geste s'ouvre").isFalse();
+        Respiration.surLeMomentCle(robot);
+
+        // ⚠️ Et l'écran d'ARRIVÉE, sans quoi on ne voit pas ce que la modale a changé (ADR 4188).
+        robot.clickOn(creer);
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup(".carte-site").queryAll().size() > avant);
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(titresDesCartes(robot))
+                .as("la liste montre le carré que la modale vient de créer")
+                .anyMatch(titre -> titre.contains(CARRE_LIBRE));
+    }
+
+    @Test
+    @CasDeRecette(value = "S1-25", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-25 · « Annuler » ne crée rien : la liste est la même après qu'avant")
+    void annuler_ne_change_rien_a_la_liste(FxRobot robot) throws TimeoutException {
+        List<String> avant = titresDesCartes(robot);
+        // ⚠️ La liste AVANT. Ce cas fait juger une ABSENCE de changement : sans point de comparaison à
+        // l'image, il n'y a rien à comparer, et le clip précédent montrait une modale sur du noir
+        // (#4176, ADR 4188).
+        Respiration.leTempsDeLire(robot);
+
+        ouvrirLaDeclaration(robot);
+        robot.clickOn(champCarre(robot)).write(CARRE_LIBRE);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.avantLeGeste(robot);
+
+        robot.clickOn("Annuler");
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup("#champCarre").tryQuery().isEmpty());
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(titresDesCartes(robot))
+                .as("la liste est exactement celle d'avant : rien n'a été créé")
+                .isEqualTo(avant);
+    }
+
     // ----------------------------------------------------------------------------------------
 
     /// Ouvre la déclaration **par le bouton de l'écran**, et attend que la modale soit là.
@@ -318,6 +384,14 @@ class ScenarioModaleCarreTest {
         robot.write(chiffre);
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);
+    }
+
+    /// Les intitulés des cartes de « Mes sites », dans leur ordre d'affichage.
+    private static List<String> titresDesCartes(FxRobot robot) {
+        return robot.lookup(".carte-titre").queryAll().stream()
+                .filter(Label.class::isInstance)
+                .map(noeud -> ((Label) noeud).getText())
+                .toList();
     }
 
     private static TextField champCarre(FxRobot robot) {
