@@ -2,6 +2,7 @@ package fr.univ_amu.iut.recette;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.recette.film.EnregistreurDeFilm;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -9,8 +10,8 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Garde le câblage qui rend l'extension active en séance filmée, et inerte partout ailleurs
-/// (#3774).
+/// Garde le câblage qui rend les extensions actives en séance filmée, et inertes partout ailleurs
+/// (#3774, #4163).
 ///
 /// ## Pourquoi un garde pour trois lignes de configuration
 ///
@@ -30,16 +31,6 @@ class CablageDesReperesTest {
     private static final Path POM = Path.of("pom.xml");
 
     @Test
-    @DisplayName("Le fichier de services nomme l'extension, sous son nom d'aujourd'hui")
-    void le_fichier_de_services_nomme_l_extension() {
-        // Le nom vient de la classe elle-même : la renommer sans toucher au fichier rougit ici,
-        // plutôt que de rendre une séance muette.
-        assertThat(lire(SERVICES))
-                .as("sans cette ligne, la détection automatique ne trouve rien à détecter")
-                .contains(ReperesDeSeance.class.getName());
-    }
-
-    @Test
     @DisplayName("Le profil filmé pose les deux propriétés, qui vont ensemble")
     void le_profil_filme_pose_les_deux_proprietes() {
         String profil = profilRecetteFilmee();
@@ -50,6 +41,43 @@ class CablageDesReperesTest {
         assertThat(sansEspaces(profil))
                 .as("la propriété dit où écrire ; sans elle, l'extension chargée ne fait rien")
                 .contains("<recette.reperes>${project.build.directory}/recette-filmee/reperes.tsv</recette.reperes>");
+    }
+
+    /// ⚠️ DEUX extensions, et une seule ligne les sépare d'un tournage muet.
+    ///
+    /// Le nom vient des classes elles-mêmes : en renommer une sans toucher au fichier rougit ici,
+    /// plutôt que de rendre une séance muette.
+    ///
+    /// Le fichier de services est la seule chose qui rende une extension détectable. Renommer une
+    /// classe sans y toucher ne fait rougir aucun test : la séance tournerait, et le journal comme
+    /// les clips seraient vides - indiscernables d'une séance sans cas.
+    @Test
+    @DisplayName("Le fichier de services nomme les DEUX extensions, sous leur nom d'aujourd'hui")
+    void le_fichier_de_services_nomme_les_deux_extensions() {
+        assertThat(lire(SERVICES))
+                .as("le banc bash lit les repères de séance")
+                .contains(ReperesDeSeance.class.getName())
+                .as("le banc en Java pur filme depuis le graphe de scène")
+                .contains(EnregistreurDeFilm.class.getName());
+    }
+
+    /// Ce qui empêche les DEUX bancs de filmer le même tournage.
+    ///
+    /// ⚠️ L'ouverture de #4162 annonçait le contraire : « le profil demande déjà la détection
+    /// automatique, les deux bancs tourneraient ensemble ». Vérification faite, c'est faux, et
+    /// c'est cette propriété-ci qui le garantit. Le profil pose `recette.autodetection`, donc
+    /// l'extension du banc Java est bien CHARGÉE ; elle ne fait rien parce que `recette.film` reste
+    /// absente.
+    ///
+    /// Rien n'exprimait cela nulle part. Le jour où quelqu'un ajoutera une propriété à ce profil,
+    /// c'est ici que le désaccord se verra, et non sur un tournage où deux caméras se marchent
+    /// dessus.
+    @Test
+    @DisplayName("Le profil filmé ne pose PAS la propriété du banc Java")
+    void le_profil_filme_ne_pose_pas_la_propriete_du_banc_java() {
+        assertThat(sansEspaces(profilRecetteFilmee()))
+                .as("le banc bash et le banc Java ne doivent jamais filmer le même tournage")
+                .doesNotContain("<recette.film");
     }
 
     @Test
