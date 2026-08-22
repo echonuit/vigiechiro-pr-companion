@@ -43,10 +43,21 @@ permissions:
   contents: write
 
 jobs:
+  # ⚠️ La matrice ne sert pas à « couvrir des plateformes ». Elle sert à RÉPONDRE : combien coûte un
+  # tournage des cas perceptifs, comparé au banc bash ? Le banc bash ne tourne que sur `ubuntu-latest`.
+  # Mesurer le banc Java sur Windows seulement aurait donné un écart où le système d'exploitation et
+  # le banc changent en même temps, c'est-à-dire aucun écart interprétable.
+  #
+  # Le job `ubuntu-latest` existe pour cette raison, et pour elle seule : mêmes classes, mêmes
+  # respirations, même runner que le banc bash.
   filmer:
-    name: Neuf clips perceptifs, sous Windows
-    runs-on: windows-latest
+    name: Neuf clips perceptifs (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -71,14 +82,31 @@ jobs:
             echo "présent sur l'image : ${chemin}"
             echo "installe=deja" >> "${GITHUB_OUTPUT}"
           else
-            echo "absent de l'image ; installation par choco."
-            echo "installe=choco" >> "${GITHUB_OUTPUT}"
+            echo "absent de l'image ; il faut l'installer."
+            echo "installe=manquant" >> "${GITHUB_OUTPUT}"
           fi
 
-      - name: Installer ffmpeg
-        if: ${{ steps.ffmpeg.outputs.installe == 'choco' }}
+      - name: Installer ffmpeg (Windows)
+        if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'Windows' }}
         shell: pwsh
         run: choco install ffmpeg --no-progress --yes
+
+      - name: Cache des .deb (le dépaquetage, lui, se refait)
+        if: ${{ runner.os == 'Linux' }}
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/apt-vigiechiro
+          key: apt-${{ runner.os }}-spike-clips
+
+      # ⚠️ `installer-paquets.sh`, et non `apt-get` en direct : `verifie-apt.sh` refuse la seconde
+      # forme, et il a raison - le post-installation des polices en dépend ailleurs. Le même garde
+      # exige le cache ci-dessus et `APT_CACHE` : sans eux, l'étape retélécharge tout à chaque run.
+      - name: Installer ffmpeg (Linux)
+        if: ${{ steps.ffmpeg.outputs.installe == 'manquant' && runner.os == 'Linux' }}
+        shell: bash
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
+        run: bash .github/scripts/installer-paquets.sh ffmpeg
 
       - name: Ce que ffmpeg dit de lui-même
         shell: bash
@@ -134,7 +162,7 @@ jobs:
           muets=$(grep -c 'aucune' tournage.log || true)
 
           {
-            echo "## Tournage Windows"
+            echo "## Tournage sur ${{ matrix.os }}"
             echo
             echo "- ffmpeg : ${{ steps.ffmpeg.outputs.installe }}"
             echo "- clips produits : ${compte} / 9"
@@ -148,7 +176,7 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: clips-perceptifs-windows
+          name: clips-perceptifs-${{ matrix.os }}
           path: |
             target/recette/clips/
             tournage.log
@@ -157,7 +185,11 @@ jobs:
       # ⚠️ Pré-version SÉPARÉE de `clips-recette`. Un tournage de spike ne doit pas pouvoir remplacer
       # une pièce que `clips-perceptifs.md` écrit en dur : la page de recette montrerait alors des
       # clips venus d'ailleurs sans que rien ne le dise.
+      # ⚠️ Depuis Windows SEULEMENT. Les deux jobs produisent les mêmes neuf noms de fichiers : verser
+      # les deux écraserait les uns par les autres, et la page montrerait un mélange que rien ne
+      # signalerait. La page dit « tournés sous Windows », donc c'est Windows qui verse.
       - name: Verser sur la pré-version « clips-windows-spike »
+        if: ${{ runner.os == 'Windows' }}
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
