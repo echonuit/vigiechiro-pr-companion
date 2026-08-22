@@ -21,6 +21,18 @@ depuis que ce cas existe, pas que le produit est cassé.
 
 ## ScenarioPerceptifIssuesConnexionTest
 
+### S1-04 · `les_trois_etapes_de_la_modale`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifIssuesConnexionTest.les_trois_etapes_de_la_modale.mp4"></video>
+
+> ⚠️ Aucun navigateur ne s'ouvre sur le banc : ce clip montre le clic, pas la page qu'il ouvre. Ce qui se vérifie est l'adresse transmise au système, et cela se lit dans l'assertion, pas à l'image.
+
+### S1-11 · `la_deconnexion_demande_confirmation`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioPerceptifIssuesConnexionTest.la_deconnexion_demande_confirmation.mp4"></video>
+
 ### S1-05 · jeton vide
 
 <video controls muted playsinline preload="none" width="100%"
@@ -97,32 +109,6 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MainViewTest.menu_reglages_ouvre_l_ecran.mp4"></video>
-
-## ConnexionModaleViewTest
-
-### S1-04 · `connecter_sans_token`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ConnexionModaleViewTest.connecter_sans_token.mp4"></video>
-
-### S1-04 · `copier_marque_page`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ConnexionModaleViewTest.copier_marque_page.mp4"></video>
-
-### S1-04 · `ouvrir_site`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ConnexionModaleViewTest.ouvrir_site.mp4"></video>
-
-> ⚠️ Aucun navigateur ne s'ouvre sur le banc : ce clip montre le clic, pas la page qu'il ouvre. Ce qui se vérifie est l'adresse transmise au système, et cela se lit dans l'assertion, pas à l'image.
-
-## ConnexionModaleConnecteeViewTest
-
-### S1-11 · `deconnexion_confirme_avant_effacement`
-
-<video controls muted playsinline preload="none" width="100%"
-  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ConnexionModaleConnecteeViewTest.deconnexion_confirme_avant_effacement.mp4"></video>
 
 ## MesSitesEtatVideViewTest
 

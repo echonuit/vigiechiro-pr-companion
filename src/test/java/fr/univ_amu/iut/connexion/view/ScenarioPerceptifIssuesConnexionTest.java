@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -36,13 +37,18 @@ import fr.univ_amu.iut.recette.Respiration;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -110,6 +116,9 @@ class ScenarioPerceptifIssuesConnexionTest {
 
     private Injector injector;
 
+    /// L'adresse que « Ouvrir Vigie-Chiro » transmet au système : le seul verdict de `S1-04`.
+    private final AtomicReference<String> urlOuverte = new AtomicReference<>("");
+
     @Start
     void start(Stage stage) throws IOException {
         Path workspace = Files.createTempDirectory("vc-issues-connexion");
@@ -123,6 +132,11 @@ class ScenarioPerceptifIssuesConnexionTest {
                         bind(ExecuteurTache.class)
                                 .to(ExecuteurTacheAsynchrone.class)
                                 .in(Singleton.class);
+                        // ⚠️ Le contrôleur de la modale en SINGLETON, pour le banc seulement : sans cela
+                        // l'injecteur en rend une instance neuve à chaque demande, et le confirmateur
+                        // bouchonné s'appliquerait à un jetable pendant que la modale affichée en
+                        // garderait un autre. Mesuré sur `ActionRestaurer` (#4169).
+                        bind(ConnexionModaleController.class).in(Singleton.class);
                     }
 
                     @Provides
@@ -132,10 +146,10 @@ class ScenarioPerceptifIssuesConnexionTest {
 
                     @Provides
                     OuvreurDeLien ouvreurDeLien() {
-                        return lien -> {
-                            // Aucun navigateur ne s'ouvre : rien à voir sur le film, rien à lancer sur la
-                            // machine qui filme.
-                        };
+                        // Aucun navigateur ne s'ouvre : rien à lancer sur la machine qui filme. L'adresse
+                        // est RETENUE, parce que c'est le seul verdict de `S1-04` - et il n'est pas à
+                        // l'image, d'où la réserve que porte ce cas (ADR 4142).
+                        return urlOuverte::set;
                     }
                 }));
         new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
@@ -226,6 +240,81 @@ class ScenarioPerceptifIssuesConnexionTest {
     // --------------------------------------------------------------------------------------------
 
     /// Ouvre la modale **par le menu**, tape `jeton`, et attend que le bandeau ait quelque chose à dire.
+    @Test
+    @CasDeRecette(
+            value = "S1-04",
+            portee = Portee.HORS_APPLICATION,
+            reserve = "Aucun navigateur ne s'ouvre sur le banc : ce clip montre le clic, pas la page qu'il"
+                    + " ouvre. Ce qui se vérifie est l'adresse transmise au système, et cela se lit dans"
+                    + " l'assertion, pas à l'image.")
+    @DisplayName("S1-04 · les trois étapes de la modale : ouvrir la plateforme, copier le marque-page, se connecter")
+    void les_trois_etapes_de_la_modale(FxRobot robot) throws TimeoutException {
+        Respiration.avantLeGeste(robot);
+        ouvrirLaModaleParLeMenu(robot);
+        Respiration.leTempsDeLire(robot);
+
+        // Étape 1 : le clic part vers le navigateur. C'est le seul verdict hors de l'application.
+        robot.clickOn("Ouvrir Vigie-Chiro");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.apresLeGeste(robot);
+        assertThat(urlOuverte.get()).contains("vigiechiro");
+
+        // Étape 2 : le marque-page se copie, et le bandeau le dit.
+        robot.clickOn("Copier le marque-page");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
+        assertThat(statut(robot).getText()).contains("Marque-page copié");
+
+        // Étape 3 : se connecter sans jeton demande le geste manquant, sans partir sur le réseau.
+        robot.clickOn("#boutonConnecter");
+        WaitForAsyncUtils.waitFor(
+                20, TimeUnit.SECONDS, () -> statut(robot).getText().contains("Collez d'abord"));
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(statut(robot).getText()).contains("Collez d'abord");
+    }
+
+    @Test
+    @CasDeRecette(value = "S1-11", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-11 · se déconnecter demande confirmation avant d'effacer le jeton")
+    void la_deconnexion_demande_confirmation(FxRobot robot) throws TimeoutException {
+        when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
+        jouerLaConnexion(robot, JETON);
+        Respiration.leTempsDeLire(robot);
+
+        // ⚠️ Le dialogue DE LA PRODUCTION, ouvert sans bloquer : `showAndWait` figerait le banc, et
+        // `ConfirmationNavigation.dialogue(...)` existe pour cela - même type, même habillage, même
+        // texte. Ce qui se voit est juste, à une chose près qui ne se voit pas : il ne bloque pas.
+        List<Alert> ouverts = new ArrayList<>();
+        injector.getInstance(ConnexionModaleController.class).confirmateur().definir(message -> {
+            Alert dialogue = new ConfirmationNavigation().dialogue(message);
+            dialogue.initOwner(statut(robot).getScene().getWindow());
+            dialogue.show();
+            ouverts.add(dialogue);
+            return false; // l'utilisateur renonce
+        });
+
+        Respiration.avantLeGeste(robot);
+        robot.clickOn("#boutonDeconnecter");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
+
+        assertThat(ouverts)
+                .as("la confirmation paraît, et n'est pas une lambda muette")
+                .hasSize(1);
+        assertThat(ouverts.get(0).getContentText())
+                .as("elle dit ce qui va être effacé, et ce qu'il faudra refaire")
+                .contains("effacera le jeton")
+                .contains("recoller");
+        robot.interact(() -> ouverts.get(0).close());
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.apresLeGeste(robot);
+
+        assertThat(robot.lookup("#champToken").queryAs(TextField.class).isDisabled())
+                .as("on a renoncé : la connexion tient toujours, le champ reste verrouillé")
+                .isTrue();
+    }
+
     private void jouerLaConnexion(FxRobot robot, String jeton) throws TimeoutException {
         Respiration.avantLeGeste(robot);
         ouvrirLaModaleParLeMenu(robot);

@@ -17,8 +17,6 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
-import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,6 +43,17 @@ import org.testfx.util.WaitForAsyncUtils;
 /// Pas de réseau.
 @ExtendWith(ApplicationExtension.class)
 class ConnexionModaleViewTest {
+
+    // ⚠️ Cette classe ne cite plus `S1-04`, et ce n'est pas un oubli. Elle monte `ConnexionModale.fxml`
+    // SEULE : son clip montrait une modale sur fond noir, sans l'écran d'où part le geste ni celui où
+    // l'on retombe ([ADR 4188]). Le cas est joué par `ScenarioPerceptifIssuesConnexionTest`, qui ouvre
+    // la modale depuis le menu principal.
+    //
+    // ⚠️ Le garde `ClipDeModaleTest` ne l'avait pas vue : son motif ancrait « Modale » au DÉBUT du nom
+    // de fichier, et `ConnexionModale.fxml` lui échappait. Il regardait deux fichiers sur quatre et se
+    // déclarait vert.
+    //
+    // Ses assertions restent : elles gardent le câblage de la modale.
 
     private final AtomicReference<String> urlOuverte = new AtomicReference<>();
 
@@ -90,12 +99,6 @@ class ConnexionModaleViewTest {
     }
 
     @Test
-    @CasDeRecette(
-            value = "S1-04",
-            portee = Portee.HORS_APPLICATION,
-            reserve = "Aucun navigateur ne s'ouvre sur le banc : ce clip montre le clic, pas la page qu'il"
-                    + " ouvre. Ce qui se vérifie est l'adresse transmise au système, et cela se lit dans"
-                    + " l'assertion, pas à l'image.")
     @DisplayName("Étape 1 : « Ouvrir Vigie-Chiro » ouvre la plateforme dans le navigateur")
     void ouvrir_site(FxRobot robot) {
         // ⚠️ Ce cas est le seul des trois dont le verdict n'est PAS à l'écran : ce qui compte est
@@ -113,7 +116,6 @@ class ConnexionModaleViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-04", portee = Portee.A_L_ECRAN)
     @DisplayName("Étape 2 : « Copier le marque-page » copie et affiche l'instruction dans le bandeau")
     void copier_marque_page(FxRobot robot) {
         Respiration.avantLeGeste(robot);
@@ -172,7 +174,6 @@ class ConnexionModaleViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-04", portee = Portee.A_L_ECRAN)
     @DisplayName("Étape 3 : se connecter sans token affiche une invite dans le bandeau, sans réseau")
     void connecter_sans_token(FxRobot robot) {
         // Le champ vide fait partie du cas : c'est de son vide que naît l'invite.

@@ -16,8 +16,6 @@ import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
-import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -45,6 +43,17 @@ import org.testfx.util.WaitForAsyncUtils;
 /// badge d'identité est au vert (`badge-succes`). Déterministe, sans appel réseau ni asynchronisme.
 @ExtendWith(ApplicationExtension.class)
 class ConnexionModaleConnecteeViewTest {
+
+    // ⚠️ Cette classe ne cite plus `S1-11`, et ce n'est pas un oubli. Elle monte `ConnexionModale.fxml`
+    // SEULE : son clip montrait une modale sur fond noir, sans l'écran d'où part le geste ni celui où
+    // l'on retombe ([ADR 4188]). Le cas est joué par `ScenarioPerceptifIssuesConnexionTest`, qui ouvre
+    // la modale depuis le menu principal.
+    //
+    // ⚠️ Le garde `ClipDeModaleTest` ne l'avait pas vue : son motif ancrait « Modale » au DÉBUT du nom
+    // de fichier, et `ConnexionModale.fxml` lui échappait. Il regardait deux fichiers sur quatre et se
+    // déclarait vert.
+    //
+    // Ses assertions restent : elles gardent le câblage de la modale.
 
     private static final ProfilVigieChiro PROFIL = new ProfilVigieChiro("6a1b", "Sébastien", "Observateur");
 
@@ -84,7 +93,6 @@ class ConnexionModaleConnecteeViewTest {
     }
 
     @Test
-    @CasDeRecette(value = "S1-11", portee = Portee.A_L_ECRAN)
     @DisplayName("#798 : « Se déconnecter » confirme avant d'effacer le jeton local")
     void deconnexion_confirme_avant_effacement(FxRobot robot) {
         // ⚠️ Le dialogue DE LA PRODUCTION, ouvert sans bloquer. Le test le remplaçait par une lambda
