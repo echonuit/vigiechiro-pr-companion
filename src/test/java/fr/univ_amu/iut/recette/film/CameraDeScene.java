@@ -93,10 +93,10 @@ final class CameraDeScene extends AnimationTimer {
             int y = decalage(hauteur, (int) prise.getHeight());
             Window proprietaire = proprietaireDe(fenetre);
             if (proprietaire != null && proprietaire.getScene() != null && positionnee(fenetre, proprietaire)) {
-                x = decalage(largeur, (int) proprietaire.getScene().getWidth())
-                        + (int) Math.round(fenetre.getX() - proprietaire.getX());
-                y = decalage(hauteur, (int) proprietaire.getScene().getHeight())
-                        + (int) Math.round(fenetre.getY() - proprietaire.getY());
+                x = decalageRelatif(
+                        largeur, (int) proprietaire.getScene().getWidth(), fenetre.getX() - proprietaire.getX());
+                y = decalageRelatif(
+                        hauteur, (int) proprietaire.getScene().getHeight(), fenetre.getY() - proprietaire.getY());
             }
             g.drawImage(versAwt(prise), x, y, null);
         }
@@ -111,6 +111,20 @@ final class CameraDeScene extends AnimationTimer {
     /// principale. Les CENTRER revient à les détacher du bouton qui les ouvre.
     static Window proprietaireDe(Window fenetre) {
         return fenetre instanceof PopupWindow popup ? popup.getOwnerWindow() : null;
+    }
+
+    /// Le décalage d'une fenêtre PORTÉE par une autre : celui de son propriétaire, plus l'écart qui
+    /// les sépare.
+    ///
+    /// Mesuré sur le clip de `S6-27`, avec la scène propriétaire de 1100 de large et le bouton
+    /// « + Filtre » à 402 dans cette scène : le menu se pose à 492, bord gauche aligné sur celui de
+    /// son bouton. Centré, il se posait à 582, soit le centre exact de la toile, à 90 pixels de là.
+    ///
+    /// @param toile la largeur (ou la hauteur) du film
+    /// @param proprietaire la largeur (ou la hauteur) de la SCÈNE du propriétaire
+    /// @param ecart la distance qui sépare les deux fenêtres, dans le repère du système
+    static int decalageRelatif(int toile, int proprietaire, double ecart) {
+        return decalage(toile, proprietaire) + (int) Math.round(ecart);
     }
 
     /// Vrai si les deux fenêtres ont une position exploitable.
