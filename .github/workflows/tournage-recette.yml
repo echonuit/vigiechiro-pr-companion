@@ -190,6 +190,16 @@ jobs:
       #
       # Aucun `forkCount` imposé : filmer le graphe de scène n'exige pas un écran unique, et
       # `IndexDesCas` fusionne les fragments de toutes les JVM.
+      #
+      # ⚠️ La détection automatique n'est pas un détail de confort : sans elle, seules les classes
+      # qui portent encore `@ExtendWith(EnregistreurDeFilm.class)` sont filmées, c'est-à-dire les
+      # quatre scénarios perceptifs de #3791. Mesuré sur le premier tournage de `S1` : **3 cas sur
+      # 37**. Ni `S6` ni `S4` ne pouvaient le révéler - leurs seules classes sont justement celles
+      # qui portent l'annotation, et les deux étaient vertes.
+      #
+      # Ce qui la rend sûre est ailleurs : `EnregistreurDeFilm.aFilmer` écarte les tests qui ne
+      # citent aucun cas (#4162). Sans ce filtre, la même ligne rendrait des centaines de clips de
+      # carton.
       - name: Filmer
         shell: bash
         run: |
@@ -198,6 +208,7 @@ jobs:
             -Dtest='${{ steps.liste.outputs.classes }}' \
             -DfailIfNoTests=false \
             -Dmaven.test.failure.ignore=true \
+            -Djunit.jupiter.extensions.autodetection.enabled=true \
             -Drecette.film \
             2>&1 | tee tournage.log
           echo "Maven a rendu ${PIPESTATUS[0]} ; le verdict est pris à l'étape suivante."
