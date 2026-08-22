@@ -74,7 +74,10 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
   « Ce carré existe déjà sur Vigie-Chiro : récupérez-le plutôt que de le redéclarer ». Corriger un chiffre du
   numéro le rouvre.
 - **S1-37** · *perceptif* · L'enchaînement « je récupère → la fenêtre se ferme → la fiche s'ouvre » paraît
-  **naturel** : on comprend où l'on a atterri et pourquoi, sans relire le dialogue deux fois.
+  **naturel** : on comprend où l'on a atterri et pourquoi, sans relire le dialogue deux fois. Le film
+  **établit d'abord qu'on est connecté** : l'entrée de menu porte l'identité (« Vigie-Chiro : pseudo
+  (rôle) ») au lieu de « Se connecter à Vigie-Chiro… ». Un rapatriement suppose un jeton, et un clip
+  qui commence au « + Nouveau site » demande de le croire sur parole.
 - **S1-14** · Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
   sur Vigie-Chiro », chevron ›.
 - **S1-15** · Navigation clavier (Tab / Entrée / Espace) sur les cartes.
