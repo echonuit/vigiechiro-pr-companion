@@ -25,9 +25,16 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 ///
 /// Sans la propriété `-Drecette.film`, l'extension ne fait RIEN : une classe annotée
 /// garde donc exactement le comportement qu'elle a aujourd'hui hors séance filmée.
+///
+/// Avec elle, seuls les tests qui **citent un cas** sont filmés. La planche se lit par cas, et un
+/// clip qu'aucun cas ne nomme est un clip que l'index ne sait pas ranger. `-Drecette.film.tout`
+/// lève cette restriction, pour le débogage d'un test qui ne porte pas encore de cas.
 public final class EnregistreurDeFilm implements BeforeTestExecutionCallback, AfterTestExecutionCallback {
 
     private static final String PROPRIETE = "recette.film";
+
+    /// L'échappatoire : filmer AUSSI les tests qui ne citent aucun cas. Présence suffit.
+    private static final String PROPRIETE_TOUT = "recette.film.tout";
     private static final String CLE = "enregistrement";
     /// La cadence du film, pilotable comme la taille l'est déjà.
     ///
@@ -45,9 +52,15 @@ public final class EnregistreurDeFilm implements BeforeTestExecutionCallback, Af
         if (!filmeur()) {
             return;
         }
+        List<String> cas = casCites(contexte);
+        // ⚠️ Le refus se prend ICI, avant tout le reste. Plus bas, l'enregistrement crée son dossier
+        // puis lance l'encodeur : refuser après laisserait un dossier, et parfois un fichier vide,
+        // pour un test qu'on a précisément décidé de ne pas filmer.
+        if (!aFilmer(cas, tout())) {
+            return;
+        }
         Dimensions taille = Dimensions.demandees();
         String test = nomDuTest(contexte);
-        List<String> cas = casCites(contexte);
 
         BufferedImage carton = CartonDeTitre.dessiner(
                 taille.largeur(),
@@ -88,6 +101,22 @@ public final class EnregistreurDeFilm implements BeforeTestExecutionCallback, Af
 
     private static boolean filmeur() {
         return System.getProperty(PROPRIETE) != null;
+    }
+
+    /// Faut-il filmer ce test ?
+    ///
+    /// La planche est ce que ce banc sert à produire, et elle se lit par CAS : un clip qu'aucun cas
+    /// ne nomme est un clip que l'index ne sait pas ranger, et que personne n'ouvrira. Mesuré sur
+    /// une sonde : vingt clips de carton pour une seule classe de service.
+    ///
+    /// L'échappatoire existe pour le débogage d'un test qui ne porte pas encore de cas. Elle se
+    /// **demande**, elle ne s'obtient pas par défaut.
+    static boolean aFilmer(List<String> casCites, boolean tout) {
+        return tout || !casCites.isEmpty();
+    }
+
+    private static boolean tout() {
+        return System.getProperty(PROPRIETE_TOUT) != null;
     }
 
     private static Path dossier() {
