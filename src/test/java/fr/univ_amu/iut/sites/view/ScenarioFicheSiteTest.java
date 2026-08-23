@@ -21,6 +21,7 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -241,7 +242,7 @@ class ScenarioFicheSiteTest {
     /// Revient à « Mes sites » par le fil d'Ariane, comme le ferait un observateur.
     private void revenirAMesSites(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
-        robot.clickOn("#boutonRetour");
+        GesteVisible.cliquer(robot, "#boutonRetour");
         WaitForAsyncUtils.waitFor(
                 10,
                 TimeUnit.SECONDS,

@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -206,7 +207,7 @@ class ScenarioPerceptifRecuperationCarreTest {
         // fait pas partie.
         robot.clickOn("#champCarre").write(CARRE);
         Respiration.entreDeuxGestes(robot);
-        robot.clickOn("#btnVerifierCarre");
+        GesteVisible.cliquer(robot, "#btnVerifierCarre");
         // L'exécuteur est asynchrone : le verdict n'est PAS là au retour du clic (ADR 3668).
         WaitForAsyncUtils.waitFor(
                 10,
