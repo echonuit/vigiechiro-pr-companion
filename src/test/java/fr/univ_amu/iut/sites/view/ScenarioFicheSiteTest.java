@@ -35,6 +35,7 @@ import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.TableView;
@@ -396,6 +397,65 @@ class ScenarioFicheSiteTest {
         assertThat(etiquette(robot, "#valNumeroCarre").getText())
                 .as("la fiche affiche encore le carré qu'elle vient d'enregistrer")
                 .isEqualTo(CARRE);
+    }
+
+    @Test
+    @CasDeRecette(value = "S1-24", portee = Portee.A_L_ECRAN)
+    @DisplayName("S1-24 · des coordonnées en degrés/minutes/secondes valent une position")
+    void les_coordonnees_en_dms_valent_une_position(FxRobot robot) throws TimeoutException {
+        ouvrirLaFiche(robot, TITRE_CARRE);
+        int situesAvant = pointsSitues(robot);
+        Respiration.avantLeGeste(robot);
+
+        GesteVisible.cliquer(robot, "+ Ajouter un point");
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup("#champCode").tryQuery().isPresent());
+        Respiration.leTempsDeLire(robot);
+
+        robot.clickOn(robot.lookup("#champCode").queryAs(TextField.class)).write("E5");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // ⚠️ Le geste qu'un observateur de terrain fait vraiment : il relève sur son GPS de randonnée des
+        // degrés/minutes/secondes, et les colle dans une application qui parle en décimal. Le script
+        // promet que les deux formats se synchronisent ; c'est la moitié du cas que personne ne filmait,
+        // couverte en unitaire seulement (#4232).
+        robot.clickOn(robot.lookup("#champLatitude").queryAs(TextField.class)).write("43°31'47\"N");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+
+        robot.clickOn(robot.lookup("#champLongitude").queryAs(TextField.class)).write("5°26'51\"E");
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.surLeMomentCle(robot);
+
+        GesteVisible.cliquer(robot, "#boutonValider");
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> robot.lookup(".carte-point").queryAll().size() > 3);
+        Respiration.surLeMomentCle(robot);
+
+        // ⚠️ Le verdict se lit SUR L'ÉCRAN, et non dans le ViewModel : une carte de point porte
+        // « GPS : voir sur la carte » quand elle a une position, et « GPS manquant : placer sur la
+        // carte » sinon. Un point de PLUS qui se dit situé prouve que les degrés/minutes/secondes ont
+        // été compris - et c'est ce que le spectateur peut juger.
+        assertThat(pointsSitues(robot))
+                .as("les degrés/minutes/secondes doivent valoir une position, sans quoi le champ accepte"
+                        + " un texte qui ne mène nulle part")
+                .isEqualTo(situesAvant + 1);
+        Respiration.leTempsDeLire(robot);
+    }
+
+    /// Combien de points se disent situés.
+    ///
+    /// ⚠️ On compte les LIENS, pas les noeuds : `.gps-ok` est porté par l'hyperlien **et** par son
+    /// icône, qui en hérite. Le premier jet comptait donc deux fois chaque point, et l'écart qu'il
+    /// mesurait n'était pas celui qu'il croyait.
+    private static int pointsSitues(FxRobot robot) {
+        return (int) robot.lookup(".gps-ok").queryAll().stream()
+                .filter(Hyperlink.class::isInstance)
+                .count();
     }
 
     @Test

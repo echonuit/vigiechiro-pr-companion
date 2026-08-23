@@ -217,6 +217,11 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 
 ## ScenarioFicheSiteTest · S1-24
 
+### S1-24 · `les_coordonnees_en_dms_valent_une_position`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioFicheSiteTest.les_coordonnees_en_dms_valent_une_position.mp4"></video>
+
 ### S1-24 · `ajouter_un_point_le_fait_paraitre_sur_la_fiche`
 
 <video controls muted playsinline preload="none" width="100%"
