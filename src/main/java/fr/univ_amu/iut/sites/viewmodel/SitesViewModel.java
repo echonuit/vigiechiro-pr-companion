@@ -69,7 +69,6 @@ public class SitesViewModel {
     private final ReadOnlyStringWrapper messageSynchro = new ReadOnlyStringWrapper(this, "messageSynchro", "");
 
     /// Un jeton est-il disponible ? La récupération n'a rien à faire sans lui (#4194).
-    private final ReadOnlyBooleanWrapper connecte = new ReadOnlyBooleanWrapper(this, "connecte", false);
 
     public SitesViewModel(
             ServiceSites service,
@@ -89,10 +88,6 @@ public class SitesViewModel {
     /// `true` quand la synchronisation à la demande est disponible (app complète). `false` → la vue
     /// masque le bouton, patron de la modale passage (#937).
     /// `true` quand un jeton est disponible. La vue s'en sert pour **fermer** le geste plutôt que de
-    /// le laisser échouer en silence.
-    public ReadOnlyBooleanProperty connecteProperty() {
-        return connecte.getReadOnlyProperty();
-    }
 
     public boolean peutRecuperer() {
         return synchronisation.isPresent();
@@ -254,9 +249,6 @@ public class SitesViewModel {
 
     /// Applique un [ChargementCartes] aux propriétés observables, **sur le fil JavaFX**.
     public void appliquer(ChargementCartes chargement) {
-        // La connexion se relit à chaque chargement : se connecter depuis le menu ☰ rouvre le geste sans
-        // qu'on ait à quitter l'écran, parce que la révision des données ramène ici (#4194).
-        connecte.set(synchronisation.map(SynchronisationSites::estConnecte).orElse(false));
         cartes.setAll(chargement.cartes());
         vide.set(chargement.cartes().isEmpty());
         sousTitre.set(chargement.sousTitre());

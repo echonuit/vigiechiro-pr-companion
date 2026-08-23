@@ -25,6 +25,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.commun.viewmodel.RevisionDonnees;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
+import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
@@ -435,8 +436,16 @@ class MesSitesViewTest {
     ///
     /// ⚠️ La connexion elle-même n'est pas jouée ici - elle a sa propre modale et ses propres cas
     /// (`S1-04` à `S1-08`). Ce qui est montré est son EFFET sur cet écran : le geste qui se rouvre.
+    /// Se connecte **comme le produit le fait** : un jeton écrit dans le stockage, et le reflet publié.
+    ///
+    /// ⚠️ Cette aide basculait un booléen du mock (`when(client.estConnecte()).thenReturn(true)`).
+    /// Depuis que l'écran lit `EtatConnexion` - le même lecteur que la fiche et la modale de carré -
+    /// c'est le STOCKAGE qui fait foi, et un drapeau posé sur le client ne rouvrait plus rien. Un test
+    /// qui simule autrement que le produit finit par mesurer sa simulation.
     private void seConnecter(FxRobot robot) {
-        when(client.estConnecte()).thenReturn(true);
+        injector.getInstance(StockageConnexion.class)
+                .enregistrer("jeton-de-recette", new ProfilVigieChiro(ID_USER, "chiro", "observateur"));
+        injector.getInstance(RefletDuJeton.class).relire();
         robot.interact(() -> injector.getInstance(RevisionDonnees.class).mutationStructurelleValidee());
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.surLeMomentCle(robot);

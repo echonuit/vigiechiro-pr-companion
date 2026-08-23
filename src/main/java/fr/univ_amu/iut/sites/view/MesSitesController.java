@@ -20,8 +20,10 @@ import fr.univ_amu.iut.sites.viewmodel.StatutPlateforme;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.AccessibleRole;
@@ -143,12 +145,6 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         lblSynchro.textProperty().bind(viewModel.messageSynchroProperty());
         lblSynchro.visibleProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
         lblSynchro.managedProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
-        // ⚠️ Et l'écran SUIT le jeton (#4205). Le fermer faute de jeton (#4194) ne suffisait pas : le
-        // motif du bouton conseille « Connectez-vous depuis le menu principal », on suivait ce conseil,
-        // on revenait, et le bouton restait grisé à répéter le même conseil. Il fallait quitter l'écran
-        // et y revenir pour qu'il se relise. Un écran qui donne un conseil doit voir qu'on l'a suivi.
-        etatConnexion.ifPresent(
-                etat -> etat.connecteProperty().addListener((obs, avant, apres) -> rafraichirDepuisLaDonnee()));
         viewModel.cartes().addListener((ListChangeListener<CarteSite>) changement -> reconstruire());
         occupation = new IndicateurOccupation(hoteOccupation, executeur);
         // Bouton relâché par binding sur l'occupation (#1254) : plus de setDisable posé à la main de
@@ -158,14 +154,23 @@ public class MesSitesController implements ResumeStatut, RafraichirAuRetour, Sui
         // `Optional.empty()` sur `NonConnecte` - et l'écran ne disait pas pourquoi. C'est exactement ce
         // que l'affordance #789 refuse : on EMPÊCHE, au lieu d'avertir après coup. La commande voisine
         // « Ouvrir sur Vigie-Chiro », sur la fiche du site, l'appliquait déjà.
-        btnSyncVigieChiro
-                .disableProperty()
-                .bind(occupation
-                        .enCoursProperty()
-                        .or(viewModel.connecteProperty().not()));
+        //
+        // ⚠️ Et l'écran SUIT le jeton (#4205) : la question se LIE, elle ne se relit pas à chaque
+        // chargement. Le motif conseille « Connectez-vous depuis le menu principal » ; on suivait ce
+        // conseil, on revenait, et le bouton répétait le même conseil, faute d'un chargement pour le
+        // relire. Un écran qui donne un conseil doit voir qu'on l'a suivi.
+        //
+        // ⚠️ Et c'est le MÊME lecteur que les deux autres écrans qui ferment un geste de plateforme
+        // (la fiche, la modale de carré). La réponse passait ici par `SitesViewModel.connecte` →
+        // `SynchronisationSites.estConnecte()` → le client : trois maillons pour une question à
+        // laquelle `EtatConnexion` répond, et un instantané là où il faut une liaison.
+        BooleanExpression connecte = etatConnexion
+                .<BooleanExpression>map(EtatConnexion::connecteProperty)
+                .orElseGet(() -> new SimpleBooleanProperty(false));
+        btnSyncVigieChiro.disableProperty().bind(occupation.enCoursProperty().or(connecte.not()));
         IndicateurBlocage.expliquer(
                 enveloppeSync,
-                Bindings.when(viewModel.connecteProperty())
+                Bindings.when(connecte)
                         .then("Récupérer les sites déclarés sur Vigie-Chiro.")
                         .otherwise("Vous n'êtes pas connecté à Vigie-Chiro : rien ne peut être récupéré."
                                 + " Connectez-vous depuis le menu principal, entrée « Se connecter à"
