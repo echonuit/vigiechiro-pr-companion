@@ -3,20 +3,14 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
-import fr.univ_amu.iut.App;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
-import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.MenuButton;
@@ -84,17 +78,15 @@ class ScenarioAccueilTest {
     private Injector injector;
 
     @Start
-    void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-scenario-accueil");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
-
-        injector = RacineInjecteur.creer();
-        new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
-
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        FenetreDuBanc.poser(stage, loader.load(), 1180, 900);
-        FenetreDuBanc.afficher(stage);
+    void start(Stage stage) throws IOException {
+        injector = BancDeRecette.surLeChrome()
+                .taille(1180, 900)
+                // ⚠️ ASYNCHRONE, celui que cette classe avait déjà : `RacineInjecteur` lie l'exécuteur
+                // de PRODUCTION, et « pas de surcharge » ne veut donc pas dire « synchrone ». Le premier
+                // jet de la migration a posé SYNCHRONE par erreur, et trois cas ont rougi en « Not on FX
+                // application thread » - le banc exige ce choix précisément parce qu'il ne se devine pas.
+                .executeur(BancDeRecette.Executeur.ASYNCHRONE)
+                .montrer(stage);
     }
 
     @AfterEach

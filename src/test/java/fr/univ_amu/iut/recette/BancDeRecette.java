@@ -43,6 +43,12 @@ import javafx.stage.Stage;
 ///
 /// ## Ce qu'il ne fait pas
 ///
+/// ⚠️ **« Pas de surcharge » ne veut pas dire « synchrone ».** `RacineInjecteur` lie l'exécuteur de
+/// PRODUCTION, donc l'asynchrone : une classe qui ne surchargeait rien tournait en asynchrone. La
+/// migration de trois classes a posé SYNCHRONE par erreur en lisant « exécuteur par défaut » dans un
+/// inventaire, et trois cas ont rougi en « Not on FX application thread ». C'est une raison de plus
+/// d'exiger le choix : il ne se devine pas depuis l'absence de surcharge.
+///
 /// Il ne choisit **pas** l'exécuteur à votre place. Synchrone ou asynchrone est une décision de fond,
 /// documentée cas par cas : le synchrone rend les assertions déterministes, l'asynchrone est le seul
 /// qui laisse voir un transitoire - une barre de progression, un voile - parce qu'en synchrone le fil
@@ -82,9 +88,19 @@ public final class BancDeRecette {
     private double largeur = 1180;
     private double hauteur = 900;
     private Executeur executeur;
-    private Consumer<Injector> semis = injecteur -> {};
+    private Semis semis = injecteur -> {};
     private Consumer<Injector> ouverture = injecteur -> {};
     private ProfilVigieChiro profilConnecte;
+
+    /// Ce qu'un scénario écrit avant que l'écran ne s'ouvre.
+    ///
+    /// ⚠️ Il peut **lever** : un semis qui pose des fichiers de nuit fait des entrées/sorties, et un
+    /// `Consumer` l'aurait obligé à emballer son exception dans une non vérifiée - c'est-à-dire à cacher
+    /// ce que le banc doit laisser remonter. Constaté à la migration de `ScenarioPerceptifRefusDepotTest`.
+    @FunctionalInterface
+    public interface Semis {
+        void semer(Injector injecteur) throws IOException;
+    }
 
     private BancDeRecette() {}
 
@@ -114,7 +130,12 @@ public final class BancDeRecette {
     }
 
     /// Les données que ce scénario suppose, écrites après les migrations.
-    public BancDeRecette semer(Consumer<Injector> semis) {
+    ///
+    /// ⚠️ Le semis reçoit **l'injecteur en paramètre**, et doit s'en servir : le champ que
+    /// [#montrer(Stage)] rendra n'est pas encore affecté quand le semis tourne. Une méthode de semis
+    /// migrée telle quelle, qui lisait un champ `injector`, part en `NullPointerException` - c'est
+    /// arrivé à la première classe migrée.
+    public BancDeRecette semer(Semis semis) {
         this.semis = Objects.requireNonNull(semis, "semis");
         return this;
     }
@@ -162,7 +183,7 @@ public final class BancDeRecette {
                 Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(surcharges));
 
         new MigrationSchema(injecteur.getInstance(SourceDeDonnees.class)).migrer();
-        semis.accept(injecteur);
+        semis.semer(injecteur);
         if (profilConnecte != null) {
             injecteur.getInstance(StockageConnexion.class).enregistrer("jeton-de-recette", profilConnecte);
             injecteur.getInstance(RefletDuJeton.class).relire();

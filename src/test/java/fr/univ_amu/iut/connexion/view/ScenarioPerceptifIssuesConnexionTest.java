@@ -7,37 +7,25 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.util.Modules;
-import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
-import fr.univ_amu.iut.commun.model.Horloge;
-import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
-import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
-import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -45,8 +33,6 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -122,17 +108,12 @@ class ScenarioPerceptifIssuesConnexionTest {
 
     @Start
     void start(Stage stage) throws IOException {
-        Path workspace = Files.createTempDirectory("vc-issues-connexion");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
-        StockageConnexion stockage = new StockageConnexion(new Workspace(workspace), Horloge.systeme());
-
-        injector =
-                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
+        injector = BancDeRecette.surLeChrome()
+                .taille(LARGEUR, HAUTEUR)
+                .executeur(BancDeRecette.Executeur.ASYNCHRONE)
+                .remplacer(new AbstractModule() {
                     @Override
                     protected void configure() {
-                        bind(ExecuteurTache.class)
-                                .to(ExecuteurTacheAsynchrone.class)
-                                .in(Singleton.class);
                         // ⚠️ Le contrôleur de la modale en SINGLETON, pour le banc seulement : sans cela
                         // l'injecteur en rend une instance neuve à chaque demande, et le confirmateur
                         // bouchonné s'appliquerait à un jetable pendant que la modale affichée en
@@ -140,8 +121,12 @@ class ScenarioPerceptifIssuesConnexionTest {
                         bind(ConnexionModaleController.class).in(Singleton.class);
                     }
 
+                    // ⚠️ Le stockage vient de l'INJECTEUR, il ne se rebâtit pas à côté. La version
+                    // précédente en construisait un second sur le même dossier : deux objets pour un
+                    // fichier, ce qui marche tant que rien ne met d'état en mémoire, et cesse de
+                    // marcher le jour où quelque chose y en met.
                     @Provides
-                    ConnexionViewModel viewModel() {
+                    ConnexionViewModel viewModel(StockageConnexion stockage) {
                         return new ConnexionViewModel(stockage, client, Set.of(rapprocheur), Optional.empty());
                     }
 
@@ -152,14 +137,8 @@ class ScenarioPerceptifIssuesConnexionTest {
                         // l'image, d'où la réserve que porte ce cas (ADR 4142).
                         return urlOuverte::set;
                     }
-                }));
-        new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
-
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        Parent racine = loader.load();
-        FenetreDuBanc.poser(stage, racine, LARGEUR, HAUTEUR);
-        FenetreDuBanc.afficher(stage);
+                })
+                .montrer(stage);
     }
 
     @AfterEach

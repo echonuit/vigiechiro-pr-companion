@@ -2,40 +2,33 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
-import com.google.inject.util.Modules;
-import fr.univ_amu.iut.App;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
-import java.nio.file.Files;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -76,32 +69,20 @@ class MainViewTest {
     private NavigationViewModel navigation;
 
     @Start
-    void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-main");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
-        // ⚠️ `ActionRestaurer` en singleton, POUR LE BANC SEULEMENT. Sans cela l'injecteur en rend une
-        // instance neuve à chaque demande - mesuré - et les dialogues bouchonnés par le test
-        // s'appliquent à un jetable pendant que le menu en garde un autre : le clic ouvrirait alors le
-        // sélecteur natif, qui fige le banc. La portée est le seul écart avec la production, et il ne
-        // change rien à ce que le cas éprouve.
-        injector = Guice.createInjector(Modules.override(RacineInjecteur.modules())
-                .with(liaison -> liaison.bind(ActionRestaurer.class).in(Singleton.class)));
+    void start(Stage stage) throws IOException {
+        injector = BancDeRecette.surLeChrome()
+                .taille(1180, 900)
+                .executeur(BancDeRecette.Executeur.ASYNCHRONE)
+                // ⚠️ `ActionRestaurer` en singleton, POUR LE BANC SEULEMENT. Sans cela l'injecteur en
+                // rend une instance neuve à chaque demande - mesuré - et les dialogues bouchonnés par le
+                // test s'appliquent à un jetable pendant que le menu en garde un autre : le clic
+                // ouvrirait alors le sélecteur natif, qui fige le banc. La portée est le seul écart avec
+                // la production, et elle ne change rien à ce que le cas éprouve.
+                .remplacer(liaison -> liaison.bind(ActionRestaurer.class).in(Singleton.class))
+                .montrer(stage);
         source = injector.getInstance(SourceDeDonnees.class);
-        new MigrationSchema(source).migrer();
         navigateur = injector.getInstance(Navigateur.class);
         navigation = injector.getInstance(NavigationViewModel.class);
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        Parent racine = loader.load();
-        // ⚠️ `Habillage`, et non `new Scene` : les sept cas de cette classe sont FILMÉS, et une scène
-        // montée sans habillage porte la police de la MACHINE, pas celle embarquée dans le produit
-        // (#3773). Le défaut avait été corrigé pour les bancs qui MESURENT ; il restait entier pour
-        // ceux qu'on regarde, et un clip existe pour être regardé (#4149).
-        //
-        // La fenêtre passe par `FenetreDuBanc`, qui demande la taille à la mise en page : elle reste
-        // ajustable pour les classes suivantes du fork ([ADR 4134]).
-        FenetreDuBanc.poser(stage, racine, 1180, 900);
-        FenetreDuBanc.afficher(stage);
     }
 
     @AfterEach

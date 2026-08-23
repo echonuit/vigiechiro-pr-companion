@@ -77,17 +77,11 @@ class BancDesClipsTest {
     /// ⚠️ Nommée et finie, comme [#SANS_CHROME_EN_ATTENTE] : le garde rougit dès qu'elle s'allonge, et
     /// la migration se compte au lieu de se promettre. Une classe NEUVE ne peut donc pas repartir d'un
     /// copier-coller de préambule - c'est tout l'objet de #4133.
-    private static final Set<String> BANC_A_LA_MAIN_EN_ATTENTE = Set.of(
-            "MainViewTest.java",
-            "MesSitesEtatVideViewTest.java",
-            "MesSitesViewTest.java",
-            "ScenarioAccueilTest.java",
-            "ScenarioFicheSiteTest.java",
-            "ScenarioModaleCarreTest.java",
-            "ScenarioPerceptifConnexionTest.java",
-            "ScenarioPerceptifFiltresTest.java",
-            "ScenarioPerceptifIssuesConnexionTest.java",
-            "ScenarioPerceptifRefusDepotTest.java");
+    ///
+    /// Elle comptait dix entrées à la clôture ; il en reste **une**, et c'est la même que celle de
+    /// [#SANS_CHROME_EN_ATTENTE] : `ScenarioPerceptifFiltresTest` monte une vue seule, et la porter sur
+    /// le chrome est un chantier de la session 6, pas de celle-ci.
+    private static final Set<String> BANC_A_LA_MAIN_EN_ATTENTE = Set.of("ScenarioPerceptifFiltresTest.java");
 
     @Test
     @DisplayName("#4133 : une classe filmée neuve déclare son banc, elle ne le recopie pas")

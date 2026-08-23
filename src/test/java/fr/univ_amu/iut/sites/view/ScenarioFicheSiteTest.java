@@ -3,8 +3,6 @@ package fr.univ_amu.iut.sites.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
-import fr.univ_amu.iut.App;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -12,27 +10,24 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.InfobulleDeBlocage;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -118,22 +113,24 @@ class ScenarioFicheSiteTest {
     private Injector injector;
 
     @Start
-    void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-fiche-site");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
+    void start(Stage stage) throws IOException {
+        injector = BancDeRecette.surLeChrome()
+                .taille(1180, 900)
+                // ⚠️ ASYNCHRONE, celui que cette classe avait déjà : `RacineInjecteur` lie l'exécuteur
+                // de PRODUCTION, et « pas de surcharge » ne veut donc pas dire « synchrone ». Le premier
+                // jet de la migration a posé SYNCHRONE par erreur, et trois cas ont rougi en « Not on FX
+                // application thread » - le banc exige ce choix précisément parce qu'il ne se devine pas.
+                .executeur(BancDeRecette.Executeur.ASYNCHRONE)
+                .semer(this::semerLaFixture)
+                .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
+                .montrer(stage);
+    }
 
-        injector = RacineInjecteur.creer();
-        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
-        new MigrationSchema(source).migrer();
+    private void semerLaFixture(Injector inj) {
+        SourceDeDonnees source = inj.getInstance(SourceDeDonnees.class);
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Observateur"));
         new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
-        semerLesDeuxCarres(source);
-
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        FenetreDuBanc.poser(stage, loader.load(), 1180, 900);
-        injector.getInstance(NavigationSites.class).ouvrirAccueil();
-        FenetreDuBanc.afficher(stage);
+        semerLesDeuxCarres(inj, source);
     }
 
     @AfterEach
@@ -542,8 +539,8 @@ class ScenarioFicheSiteTest {
     /// ⚠️ A1 et B2 sont séparés d'environ cent mètres, ce qui est **sous le seuil de proximité** : c'est
     /// ce qui fait paraître l'alerte que `S1-20` fait juger. Un écart choisi au hasard rendrait un clip
     /// vert et muet sur la moitié du cas.
-    private void semerLesDeuxCarres(SourceDeDonnees source) {
-        ServiceSites service = injector.getInstance(ServiceSites.class);
+    private void semerLesDeuxCarres(Injector inj, SourceDeDonnees source) {
+        ServiceSites service = inj.getInstance(ServiceSites.class);
 
         Site carre = service.creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
         PointDEcoute a1 = service.ajouterPoint(carre.id(), "A1", 43.5000, 5.4000, "Près du grand chêne");
@@ -556,7 +553,7 @@ class ScenarioFicheSiteTest {
         service.ajouterPoint(rattache.id(), "A1", 43.62, 5.28, "Sous le pont");
         // Enregistré, non verrouillé : c'est l'état qu'un rapatriement laisse (#3806), et celui dont
         // `S1-35` parle. Verrouillé serait un autre badge, et un autre cas.
-        injector.getInstance(LienVigieChiroDao.class)
+        inj.getInstance(LienVigieChiroDao.class)
                 .upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(rattache.id()), OBJECTID, false));
 
         service.creerSite("013570", "Mare du Vallon", Protocole.STANDARD, null, ID_USER);
