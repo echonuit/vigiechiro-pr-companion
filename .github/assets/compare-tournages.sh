@@ -98,6 +98,19 @@ derniere_image() {
   ffmpeg -v error -y -i "$1" -vsync 0 -f image2 -update 1 "$2" 2>/dev/null
 }
 
+### La PREMIÈRE image d'un clip.
+###
+### Mesurée sur 51 cas, deux tournages du même commit : son plancher vaut **0,000 % partout**, quand
+### celui de la dernière image monte à 0,809 % sur son pire cas. L'application vient de se monter et
+### rien n'a encore bougé.
+###
+### ⚠️ Stable ne suffisait pas : une mesure toujours nulle peut aussi être AVEUGLE. Vérifié - les
+### premières images de deux cas différents diffèrent de 2,4 à 3 %, donc elles distinguent bien les cas
+### au lieu de montrer le même écran d'accueil à tout le monde (#4296).
+premiere_image() {
+  ffmpeg -v error -y -i "$1" -frames:v 1 "$2" 2>/dev/null
+}
+
 
 ### La durée d'un clip en secondes, ou "?" si elle ne se lit pas.
 duree() {
@@ -107,6 +120,16 @@ duree() {
   # ⚠️ `LC_ALL=C` : sur une machine en français, `printf` refuse « 6.5 » que `ffprobe` rend toujours
   # avec un point. Mesuré en écrivant ce script.
   LC_ALL=C awk -v d="$d" 'BEGIN { printf "%.1f", d }'
+}
+
+### Le rapport d'un écart au plancher de son cas, ou "?" si ce plancher n'est pas connu.
+###
+### Le plancher est borné par le bas : un plancher nul diviserait par zéro, et le borner à 0,001 revient
+### à dire « au moins un millième de pourcent », ce qui est déjà sous le plus petit écart mesurable.
+rapport_de() { # <écart> <plancher>
+  [ -n "$2" ] || { printf '?'; return; }
+  LC_ALL=C awk -v e="$1" -v p="$2" \
+    'BEGIN { d = (p + 0 > 0.001) ? p + 0 : 0.001; printf "%.1f", e / d }'
 }
 
 ### Les noms de cas d'un dossier de clips, triés.
@@ -123,7 +146,7 @@ comparer() {
   local planchers="${5:-}"
 
   # Les planchers par cas, s'ils sont fournis : un écart se lit contre le bruit de SON cas (#4287).
-  local -A sol nbp
+  local -A sol_deb sol_fin nbp
   if [ -n "$planchers" ]; then
     # ⚠️ Un fichier ANNONCÉ mais absent ne se lit pas comme « aucun plancher connu » : c'est une
     # erreur de chemin, et sans ce message les cinquante cas diraient tous « plancher inconnu » sans
@@ -132,11 +155,21 @@ comparer() {
       echo "::error::Fichier de planchers introuvable : « ${planchers} »."
       return 1
     fi
-    local pn pv pc
-    while IFS=$'\t' read -r pn pv pc; do
+    # Quatre colonnes depuis #4296 : cas, plancher du DÉBUT, plancher de la FIN, paires. Un fichier
+    # à trois colonnes est l'ancien format - le plancher qu'il porte est celui de la fin, et celui du
+    # début reste inconnu plutôt que d'être supposé nul.
+    local pn c1 c2 c3
+    while IFS=$'\t' read -r pn c1 c2 c3; do
       case "$pn" in ''|\#*) continue ;; esac
-      sol["$pn"]="$pv"
-      nbp["$pn"]="${pc:-1}"
+      if [ -n "${c3:-}" ]; then
+        sol_deb["$pn"]="$c1"
+        sol_fin["$pn"]="$c2"
+        nbp["$pn"]="$c3"
+      else
+        sol_deb["$pn"]=""
+        sol_fin["$pn"]="$c1"
+        nbp["$pn"]="${c2:-1}"
+      fi
     done < "$planchers"
   fi
   mkdir -p "$sortie"
@@ -178,57 +211,82 @@ comparer() {
     fi
 
     communs=$((communs + 1))
-    local ia="${sortie}/${nom}.avant.png" ib="${sortie}/${nom}.apres.png"
-    if ! derniere_image "$avant" "$ia" || ! derniere_image "$apres" "$ib"; then
-      printf '%s\t%s\t%s\t%s\n' "7000000" "$nom" "⚠️ image finale illisible" "clip corrompu ?" >> "$lignes"
+    local fa="${sortie}/${nom}.fin-a.png" fb="${sortie}/${nom}.fin-b.png"
+    local da_="${sortie}/${nom}.deb-a.png" db_="${sortie}/${nom}.deb-b.png"
+    if ! derniere_image "$avant" "$fa" || ! derniere_image "$apres" "$fb" \
+       || ! premiere_image "$avant" "$da_" || ! premiere_image "$apres" "$db_"; then
+      printf '%s\t%s\t%s\t%s\n' "7000000" "$nom" "⚠️ image illisible" "clip corrompu ?" >> "$lignes"
       illisibles=$((illisibles + 1))
-      rm -f "$ia" "$ib"
+      rm -f "$fa" "$fb" "$da_" "$db_"
       continue
     fi
 
-    local part da db geste
-    part=$(part_changee "$ia" "$ib" "$tolerance" 3)
+    local p_fin p_deb da db geste
+    p_fin=$(part_changee "$fa" "$fb" "$tolerance" 3)
+    p_deb=$(part_changee "$da_" "$db_" "$tolerance" 3)
     da=$(duree "$avant")
     db=$(duree "$apres")
 
-    convert "$ia" "$ib" +append "${sortie}/${nom}.avant-apres.png" 2>/dev/null
-    compare "$ia" "$ib" -highlight-color red -lowlight-color white "${sortie}/${nom}.ou.png" 2>/dev/null
-    rm -f "$ia" "$ib"
+    convert "$fa" "$fb" +append "${sortie}/${nom}.avant-apres.png" 2>/dev/null
+    compare "$fa" "$fb" -highlight-color red -lowlight-color white "${sortie}/${nom}.ou.png" 2>/dev/null
+    # ⚠️ Les fichiers ne répètent PAS le nom du cas : il est déjà en première colonne, et le
+    # répéter deux fois de plus faisait des lignes de trois cents caractères que personne ne lit
+    # (revue visuelle, passe 8). Les fichiers de l'artefact sont nommés « <cas>.<suffixe> ».
+    geste="montage + carte"
 
-    geste="\`${nom}.avant-apres.png\` · \`${nom}.ou.png\`"
+    # ⚠️ Les images du DÉBUT ne sont produites que s'il a bougé. Mesuré : son plancher vaut 0,000 %
+    # sur les 51 cas, donc en temps normal ce montage serait cinquante fichiers strictement
+    # identiques - du bruit qui noierait les deux ou trois qui comptent.
+    if [ "$p_deb" != "?" ] && awk -v p="$p_deb" 'BEGIN { exit !(p + 0 > 0) }' 2>/dev/null; then
+      convert "$da_" "$db_" +append "${sortie}/${nom}.debut.avant-apres.png" 2>/dev/null
+      compare "$da_" "$db_" -highlight-color red -lowlight-color white "${sortie}/${nom}.debut.ou.png" 2>/dev/null
+      geste="${geste} · **+ début**"
+    fi
+    rm -f "$fa" "$fb" "$da_" "$db_"
+
     # ⚠️ Une mesure qui ÉCHOUE ne se range pas parmi les cas qui ne bougent pas. Ce défaut a été
     # commis en écrivant ce script : les sept mesures rendaient « ? », et l'index annonçait
     # tranquillement « aucun cas ne bouge ». Un instrument cassé qui se présente en succès est pire
     # que pas d'instrument (ADR 2748).
-    if [ "$part" = "?" ]; then
+    if [ "$p_fin" = "?" ] || [ "$p_deb" = "?" ]; then
       printf '%s\t%s\t%s\t%s\n' "6000000" "$nom" "⚠️ mesure impossible" "${da} s → ${db} s · ${geste}" >> "$lignes"
       illisibles=$((illisibles + 1))
       continue
     fi
-    # ⚠️ Le tri se fait sur le RAPPORT au bruit propre du cas quand on le connaît, et non sur l'écart
-    # absolu. Mesuré : un cas à 1,799 % dont le plancher vaut 0,809 % bouge deux fois moins qu'un cas
-    # à 1,561 % dont le plancher vaut 0,101 %. L'écart absolu les classait dans le mauvais ordre.
-    local cellule cle sien
-    sien="${sol[$nom]:-}"
+
+    local cellule cle r_fin r_deb
     if [ -z "$planchers" ]; then
-      cellule="${part} %"
-      cle="$part"
-    elif [ -z "$sien" ]; then
-      # Un cas sans plancher connu se DIT : le prendre pour stable serait inventer une mesure.
-      cellule="${part} % · ⚠️ plancher inconnu"
-      cle="$part"
+      if awk -v d="$p_deb" 'BEGIN { exit !(d + 0 > 0) }' 2>/dev/null; then
+        cellule="début ${p_deb} % · fin ${p_fin} %"
+      else
+        cellule="fin ${p_fin} %"
+      fi
+      cle=$(LC_ALL=C awk -v a="$p_deb" -v b="$p_fin" 'BEGIN { print (a + 0 > b + 0) ? a : b }')
     else
-      local rapport
-      rapport=$(LC_ALL=C awk -v e="$part" -v p="$sien" \
-        'BEGIN { d = (p + 0 > 0.001) ? p + 0 : 0.001; printf "%.1f", e / d }')
-      cellule="${part} % · **×${rapport}** de son bruit (plancher ${sien} %, ${nbp[$nom]} paire(s))"
-      cle="$rapport"
-      awk -v r="$rapport" 'BEGIN { exit !(r + 0 > 1) }' 2>/dev/null && au_dessus=$((au_dessus + 1))
+      r_fin=$(rapport_de "$p_fin" "${sol_fin[$nom]:-}")
+      r_deb=$(rapport_de "$p_deb" "${sol_deb[$nom]:-}")
+      if [ "$r_fin" = "?" ] && [ "$r_deb" = "?" ]; then
+        # Un cas sans plancher connu se DIT : le prendre pour stable serait inventer une mesure.
+        cellule="fin ${p_fin} % · ⚠️ plancher inconnu"
+        cle=$(LC_ALL=C awk -v a="$p_deb" -v b="$p_fin" 'BEGIN { print (a + 0 > b + 0) ? a : b }')
+      else
+        cle=$(LC_ALL=C awk -v a="$r_deb" -v b="$r_fin" 'BEGIN {
+          x = (a == "?") ? 0 : a + 0
+          y = (b == "?") ? 0 : b + 0
+          printf "%.1f", (x > y) ? x : y
+        }')
+        if awk -v d="$p_deb" 'BEGIN { exit !(d + 0 > 0) }' 2>/dev/null; then
+          cellule="**×${cle}** · début ${p_deb} % (×${r_deb}) · fin ${p_fin} % (×${r_fin}) · ${nbp[$nom]} paire(s)"
+        else
+          cellule="**×${cle}** · fin ${p_fin} % · ${nbp[$nom]} paire(s)"
+        fi
+        awk -v r="$cle" 'BEGIN { exit !(r + 0 > 1) }' 2>/dev/null && au_dessus=$((au_dessus + 1))
+      fi
     fi
     printf '%s\t%s\t%s\t%s\n' "$cle" "$nom" "$cellule" "${da} s → ${db} s · ${geste}" >> "$lignes"
     # ⚠️ Le comptage se fait sur une comparaison NUMÉRIQUE, pas sur la chaîne : « 10.000 » est plus
     # grand que « 9.000 », et un tri de texte dirait l'inverse.
-    awk -v p="$part" 'BEGIN { exit !(p + 0 > 0) }' 2>/dev/null && bouges=$((bouges + 1))
+    awk -v a="$p_deb" -v b="$p_fin" 'BEGIN { exit !(a + 0 > 0 || b + 0 > 0) }' 2>/dev/null && bouges=$((bouges + 1))
   done
 
   {
@@ -236,6 +294,11 @@ comparer() {
     echo
     echo "Tolérance de couleur : **${tolerance} %**. Le chiffre **trie**, il ne prouve pas :"
     echo "sous un mot changé on est à deux fois le plancher de bruit. C'est la carte \`.ou.png\` qui dit **où**."
+    echo
+    echo "⚠️ La **première** image de chaque clip est comparée elle aussi, pour tous les cas. Elle"
+    echo "n'apparaît en ligne que si elle a bougé : son plancher vaut 0,000 % sur 102 mesures, donc"
+    echo "l'afficher partout n'écrirait que des zéros. Son silence veut dire « vérifiée et stable »,"
+    echo "pas « pas regardée »."
     if [ -n "$planchers" ]; then
       echo
       echo "Les cas sont classés par leur **rapport au bruit de leur propre cas**, et non par leur écart"
@@ -244,10 +307,10 @@ comparer() {
     fi
     echo
     if [ "$bouges" -eq 0 ] && [ "$apparus" -eq 0 ] && [ "$disparus" -eq 0 ] && [ "$illisibles" -eq 0 ]; then
-      echo "**Aucun cas ne bouge** : les ${communs} cas communs rendent une image finale identique,"
-      echo "à la tolérance près, et aucun cas n'est apparu ni disparu."
+      echo "**Aucun cas ne bouge** : les ${communs} cas communs rendent une première ET une dernière"
+      echo "image identiques, à la tolérance près, et aucun cas n'est apparu ni disparu."
     else
-      echo "| Cas | Pixels changés | Durée et images |"
+      echo "| Cas | Début et fin | Durée et images |"
       echo "|---|---|---|"
       LC_ALL=C sort -rn -k1,1 "$lignes" | while IFS=$'\t' read -r _ nom part reste; do
         echo "| \`${nom}\` | ${part} | ${reste} |"
@@ -286,33 +349,48 @@ plancher() {
   bac=$(mktemp -d)
   trap 'rm -rf "$bac"' RETURN
 
-  local -A sol nbp
+  local -A sol_deb sol_fin nbp
   if [ -n "$fichier" ] && [ -f "$fichier" ]; then
-    local n v c
-    while IFS=$'\t' read -r n v c; do
+    local n c1 c2 c3
+    while IFS=$'\t' read -r n c1 c2 c3; do
       case "$n" in ''|\#*) continue ;; esac
-      sol["$n"]="$v"
-      nbp["$n"]="${c:-1}"
+      if [ -n "${c3:-}" ]; then
+        sol_deb["$n"]="$c1"; sol_fin["$n"]="$c2"; nbp["$n"]="$c3"
+      else
+        # Ancien format à trois colonnes : le plancher qu'il porte est celui de la FIN.
+        sol_deb["$n"]=""; sol_fin["$n"]="$c1"; nbp["$n"]="${c2:-1}"
+      fi
     done < "$fichier"
   fi
 
   local nom
   for nom in $(cas_du_dossier "$a"); do
     [ -f "$b/$nom.mp4" ] || continue
-    derniere_image "$a/$nom.mp4" "$bac/a.png" || continue
-    derniere_image "$b/$nom.mp4" "$bac/b.png" || continue
-    local brut fuzz
-    brut=$(part_changee "$bac/a.png" "$bac/b.png" 0 3)
-    fuzz=$(part_changee "$bac/a.png" "$bac/b.png" "$TOLERANCE_PAR_DEFAUT" 3)
-    printf '%-56s brut %8s %%   tolérance %s %% : %8s %%\n' "$nom" "$brut" "$TOLERANCE_PAR_DEFAUT" "$fuzz"
-    pire=$(awk -v p="$pire" -v f="$fuzz" 'BEGIN { print (f + 0 > p + 0) ? f : p }')
+    derniere_image "$a/$nom.mp4" "$bac/fa.png" || continue
+    derniere_image "$b/$nom.mp4" "$bac/fb.png" || continue
+    premiere_image "$a/$nom.mp4" "$bac/da.png" || continue
+    premiere_image "$b/$nom.mp4" "$bac/db.png" || continue
+
+    local brut f_fin f_deb
+    brut=$(part_changee "$bac/fa.png" "$bac/fb.png" 0 3)
+    f_fin=$(part_changee "$bac/fa.png" "$bac/fb.png" "$TOLERANCE_PAR_DEFAUT" 3)
+    f_deb=$(part_changee "$bac/da.png" "$bac/db.png" "$TOLERANCE_PAR_DEFAUT" 3)
+    printf '%-56s fin brut %8s %%   fin %8s %%   début %8s %%\n' "$nom" "$brut" "$f_fin" "$f_deb"
+    pire=$(awk -v p="$pire" -v f="$f_fin" 'BEGIN { print (f + 0 > p + 0) ? f : p }')
 
     if [ -n "$fichier" ]; then
-      local vu="${sol[$nom]:-}" compte="${nbp[$nom]:-0}"
-      if [ -n "$vu" ]; then
-        sol["$nom"]=$(awk -v x="$vu" -v y="$fuzz" 'BEGIN { print (y + 0 > x + 0) ? y : x }')
+      local vu_f="${sol_fin[$nom]:-}" vu_d="${sol_deb[$nom]:-}" compte="${nbp[$nom]:-0}"
+      # ⚠️ Le PIRE observé, et non la dernière valeur vue : sous-estimer le bruit fabrique des faux
+      # positifs. Un plancher ne redescend jamais.
+      if [ -n "$vu_f" ]; then
+        sol_fin["$nom"]=$(awk -v x="$vu_f" -v y="$f_fin" 'BEGIN { print (y + 0 > x + 0) ? y : x }')
       else
-        sol["$nom"]="$fuzz"
+        sol_fin["$nom"]="$f_fin"
+      fi
+      if [ -n "$vu_d" ]; then
+        sol_deb["$nom"]=$(awk -v x="$vu_d" -v y="$f_deb" 'BEGIN { print (y + 0 > x + 0) ? y : x }')
+      else
+        sol_deb["$nom"]="$f_deb"
       fi
       nbp["$nom"]=$((compte + 1))
     fi
@@ -321,14 +399,14 @@ plancher() {
   if [ -n "$fichier" ]; then
     {
       echo "# Plancher de bruit PAR CAS, à ${TOLERANCE_PAR_DEFAUT} % de tolérance."
-      echo "# Colonnes : cas, plancher en %, nombre de paires de tournages qui l'ont produit."
+      echo "# Colonnes : cas, plancher de la PREMIÈRE image, plancher de la DERNIÈRE, nombre de paires."
       echo "# ⚠️ Le PIRE plancher observé est gardé : sous-estimer le bruit fabrique des faux positifs."
-      echo "# ⚠️ Un plancher tiré d'UNE seule paire ne prouve rien. Lire la troisième colonne."
-      for nom in "${!sol[@]}"; do
-        printf '%s\t%s\t%s\n' "$nom" "${sol[$nom]}" "${nbp[$nom]}"
+      echo "# ⚠️ Un plancher tiré d'UNE seule paire ne prouve rien. Lire la quatrième colonne."
+      for nom in "${!sol_fin[@]}"; do
+        printf '%s\t%s\t%s\t%s\n' "$nom" "${sol_deb[$nom]:-0.000}" "${sol_fin[$nom]}" "${nbp[$nom]}"
       done | LC_ALL=C sort
     } > "$fichier"
-    echo "Planchers écrits dans « ${fichier} » : ${#sol[@]} cas."
+    echo "Planchers écrits dans « ${fichier} » : ${#sol_fin[@]} cas."
   fi
 
   echo
@@ -451,11 +529,11 @@ if [ "${1:-}" = "--auto-test" ]; then
 
   "$MOI" --plancher "$bac/p1a" "$bac/p1b" "$bac/sols.tsv" >/dev/null 2>&1
   sortie=$(grep -v '^#' "$bac/sols.tsv")
-  verifie "le plancher d'une paire muette vaut zéro, sur une paire" "stable	0.000	1" "$sortie"
+  verifie "le plancher d'une paire muette vaut zéro aux deux bouts" "stable	0.000	0.000	1" "$sortie"
 
   "$MOI" --plancher "$bac/p2a" "$bac/p2b" "$bac/sols.tsv" >/dev/null 2>&1
   sortie=$(grep -v '^#' "$bac/sols.tsv")
-  verifie "une seconde paire bruyante ÉCRASE par le haut" "stable	100.000	2" "$sortie"
+  verifie "une seconde paire bruyante ÉCRASE par le haut" "stable	100.000	100.000	2" "$sortie"
 
   # 9. Un écart se lit contre le plancher de son cas, et le compte le dit.
   #
@@ -463,7 +541,8 @@ if [ "${1:-}" = "--auto-test" ]; then
   # distingue ce classement de l'ancien, où tout écart non nul « bougeait ».
   sortie=$("$MOI" "$bac/p2a" "$bac/p2b" "$bac/avec-sols" 5 "$bac/sols.tsv" 2>&1)
   verifie "un écart égal à son plancher ne le dépasse pas" "0 au-dessus de leur plancher" "$sortie"
-  verifie "et le rapport au bruit propre est affiché" "de son bruit" "$(cat "$bac/avec-sols/index.md")"
+  verifie "et le rapport au bruit propre est affiché" "**×" "$(cat "$bac/avec-sols/index.md")"
+  verifie "avec les deux bouts, début et fin" "début" "$(cat "$bac/avec-sols/index.md")"
 
   # 10. Un cas ABSENT du fichier de planchers se dit, au lieu d'être pris pour stable.
   mkdir -p "$bac/p3a" "$bac/p3b"
@@ -490,11 +569,18 @@ if [ "${1:-}" = "--auto-test" ]; then
     -c:v libx264 -pix_fmt yuv420p "$bac/d1/virage.mp4" 2>/dev/null
   cp "$bac/noir.mp4" "$bac/d2/virage.mp4"
 
-  sortie=$("$MOI" "$bac/d1" "$bac/d2" "$bac/derniere" 2>&1)
-  verifie "la dernière image est comparée, pas la première" "1 cas comparé(s), 0 qui bougent" "$sortie"
+  #
+  # ⚠️ Depuis #4296 ce cas prouve les DEUX bouts d'un seul coup, et c'est ce qui le rend décisif :
+  # « virage » commence blanc et finit noir, « noir » est noir de bout en bout. La fin doit donc valoir
+  # 0 % et le début 100 %. Un jour où quelqu'un inverserait les deux extractions, ou n'en comparerait
+  # qu'une, ce cas le dirait - ce qu'une simple assertion « 0 qui bougent » ne faisait pas.
+  "$MOI" "$bac/d1" "$bac/d2" "$bac/derniere" >/dev/null 2>&1
+  sortie=$(cat "$bac/derniere/index.md")
+  verifie "la dernière image est bien la fin : 0 %" "fin 0.000 %" "$sortie"
+  verifie "et la première est bien le début : 100 %" "début 100.000 %" "$sortie"
 
   if [ "$echecs" = 0 ]; then
-    echo "Auto-test de la comparaison de deux tournages : OK (21 cas, dont la dernière image et les planchers par cas)."
+    echo "Auto-test de la comparaison de deux tournages : OK (23 cas, dont les deux bouts et les planchers par cas)."
   else
     echo "Auto-test de la comparaison de deux tournages : ÉCHEC."
   fi

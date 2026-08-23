@@ -1,55 +1,55 @@
 # Plancher de bruit PAR CAS, à 5 % de tolérance.
-# Colonnes : cas, plancher en %, nombre de paires de tournages qui l'ont produit.
+# Colonnes : cas, plancher de la PREMIÈRE image, plancher de la DERNIÈRE, nombre de paires.
 # ⚠️ Le PIRE plancher observé est gardé : sous-estimer le bruit fabrique des faux positifs.
-# ⚠️ Un plancher tiré d'UNE seule paire ne prouve rien. Lire la troisième colonne.
-MainViewTest.accueil_regroupe_en_deux_prismes	0.000	1
-MainViewTest.bandeau_masque_si_base_vide	0.000	1
-MainViewTest.bandeau_suit_une_mutation_sans_navigation	0.000	1
-MainViewTest.bandeau_suit_une_restauration_sans_navigation	0.003	1
-MainViewTest.ctrl_f_active_la_recherche	0.000	1
-MainViewTest.fil_ariane_reflete_le_parcours	0.005	1
-MainViewTest.menu_reglages_ouvre_l_ecran	0.000	1
-MesSitesEtatVideViewTest.l_etat_vide_explique_le_prerequis	0.000	1
-MesSitesEtatVideViewTest.l_etat_vide_parait_sur_une_base_vierge	0.000	1
-MesSitesEtatVideViewTest.l_etat_vide_porte_sa_porte_de_sortie	0.000	1
-MesSitesViewTest.affiche_les_cartes	0.000	1
-MesSitesViewTest.entree_ouvre_le_detail	0.014	1
-MesSitesViewTest.espace_ouvre_le_detail	0.009	1
-MesSitesViewTest.hors_connexion_la_recuperation_est_fermee	0.001	1
-MesSitesViewTest.overlay_occupation_masque_apres_chargement	0.000	1
-MesSitesViewTest.une_carte_est_atteignable_au_clavier	0.000	1
-MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte	0.009	1
-ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.809	1
-ScenarioAccueilTest.le_menu_ne_porte_plus_la_fiche_espece	0.000	1
-ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche	0.036	1
-ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre	0.020	1
-ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge	0.020	1
-ScenarioFicheSiteTest.le_tableau_des_passages_porte_ses_sept_colonnes	0.025	1
-ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche	0.101	1
-ScenarioFicheSiteTest.les_cartes_de_points_portent_gps_et_distance	0.045	1
-ScenarioFicheSiteTest.les_coordonnees_en_dms_valent_une_position	0.037	1
-ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete	0.008	1
-ScenarioModaleCarreTest.annuler_ne_change_rien_a_la_liste	0.029	1
-ScenarioModaleCarreTest.corriger_un_chiffre_efface_le_verdict	0.016	1
-ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre	0.017	1
-ScenarioModaleCarreTest.creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre	0.000	1
-ScenarioModaleCarreTest.hors_connexion_verifier_est_ferme_mais_declarer_reste_possible	0.001	1
-ScenarioModaleCarreTest.le_carre_deja_declare_nomme_le_site	0.002	1
-ScenarioModaleCarreTest.le_carre_libre_s_annonce_libre	0.002	1
-ScenarioModaleCarreTest.plateforme_injoignable_l_encart_ne_nie_pas_le_carre	0.008	1
-ScenarioModaleCarreTest.recuperer_ferme_la_modale_et_rend_compte	0.000	1
-ScenarioPerceptifConnexionTest.la_modale_de_connexion_s_ouvre	0.014	1
-ScenarioPerceptifConnexionTest.la_recuperation_ne_pousse_rien_hors_du_cadre	0.007	1
-ScenarioPerceptifFiltresTest.rejouer_une_vue_dont_une_valeur_a_disparu_fait_paraitre_le_bandeau	0.001	1
-ScenarioPerceptifFiltresTest.rouvrir_une_liste_apres_un_autre_filtre_montre_moins_de_valeurs	0.004	1
-ScenarioPerceptifFiltresTest.tout_effacer_rend_la_table_entiere	0.004	1
-ScenarioPerceptifFiltresTest.une_puce_fraichement_ajoutee_n_ecarte_rien	0.004	1
-ScenarioPerceptifFiltresTest.une_valeur_cochee_devenue_impossible_se_distingue	0.010	1
-ScenarioPerceptifIssuesConnexionTest.injoignable_ne_fait_pas_accuser_le_jeton	0.025	1
-ScenarioPerceptifIssuesConnexionTest.jeton_refuse_nomme_le_geste	0.020	1
-ScenarioPerceptifIssuesConnexionTest.jeton_vide_dit_quoi_faire	0.047	1
-ScenarioPerceptifIssuesConnexionTest.la_deconnexion_demande_confirmation	0.022	1
-ScenarioPerceptifIssuesConnexionTest.les_trois_etapes_de_la_modale	0.027	1
-ScenarioPerceptifIssuesConnexionTest.succes_dit_ce_qui_a_ete_rapatrie	0.020	1
-ScenarioPerceptifRecuperationCarreTest.la_recuperation_ramene_sur_mes_sites	0.014	1
-ScenarioPerceptifRefusDepotTest.le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion	0.230	1
+# ⚠️ Un plancher tiré d'UNE seule paire ne prouve rien. Lire la quatrième colonne.
+MainViewTest.accueil_regroupe_en_deux_prismes	0.000	0.000	2
+MainViewTest.bandeau_masque_si_base_vide	0.000	0.000	2
+MainViewTest.bandeau_suit_une_mutation_sans_navigation	0.000	0.000	2
+MainViewTest.bandeau_suit_une_restauration_sans_navigation	0.000	0.003	2
+MainViewTest.ctrl_f_active_la_recherche	0.000	0.001	2
+MainViewTest.fil_ariane_reflete_le_parcours	0.000	0.005	2
+MainViewTest.menu_reglages_ouvre_l_ecran	0.000	0.001	2
+MesSitesEtatVideViewTest.l_etat_vide_explique_le_prerequis	0.000	0.000	2
+MesSitesEtatVideViewTest.l_etat_vide_parait_sur_une_base_vierge	0.000	0.000	2
+MesSitesEtatVideViewTest.l_etat_vide_porte_sa_porte_de_sortie	0.000	0.000	2
+MesSitesViewTest.affiche_les_cartes	0.000	0.004	2
+MesSitesViewTest.entree_ouvre_le_detail	0.000	0.014	2
+MesSitesViewTest.espace_ouvre_le_detail	0.000	0.015	2
+MesSitesViewTest.hors_connexion_la_recuperation_est_fermee	0.000	0.003	2
+MesSitesViewTest.overlay_occupation_masque_apres_chargement	0.000	0.003	2
+MesSitesViewTest.une_carte_est_atteignable_au_clavier	0.000	0.005	2
+MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte	0.000	0.009	2
+ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.000	0.809	2
+ScenarioAccueilTest.le_menu_ne_porte_plus_la_fiche_espece	0.000	0.000	2
+ScenarioFicheSiteTest.ajouter_un_point_le_fait_paraitre_sur_la_fiche	0.000	0.036	2
+ScenarioFicheSiteTest.le_bandeau_dit_l_identite_du_carre	0.000	0.020	2
+ScenarioFicheSiteTest.le_carre_rattache_porte_son_badge	0.000	0.020	2
+ScenarioFicheSiteTest.le_tableau_des_passages_porte_ses_sept_colonnes	0.000	0.025	2
+ScenarioFicheSiteTest.les_boutons_disent_ce_qui_les_empeche	0.000	0.101	2
+ScenarioFicheSiteTest.les_cartes_de_points_portent_gps_et_distance	0.000	0.062	2
+ScenarioFicheSiteTest.les_coordonnees_en_dms_valent_une_position	0.000	0.037	2
+ScenarioFicheSiteTest.renommer_le_carre_met_a_jour_l_entete	0.000	0.017	2
+ScenarioModaleCarreTest.annuler_ne_change_rien_a_la_liste	0.000	0.029	2
+ScenarioModaleCarreTest.corriger_un_chiffre_efface_le_verdict	0.000	0.016	2
+ScenarioModaleCarreTest.creer_reste_ferme_puis_se_rouvre	0.000	0.017	2
+ScenarioModaleCarreTest.creer_s_ouvre_au_sixieme_chiffre_et_ajoute_le_carre	0.000	0.000	2
+ScenarioModaleCarreTest.hors_connexion_verifier_est_ferme_mais_declarer_reste_possible	0.000	0.001	2
+ScenarioModaleCarreTest.le_carre_deja_declare_nomme_le_site	0.000	0.003	2
+ScenarioModaleCarreTest.le_carre_libre_s_annonce_libre	0.000	0.003	2
+ScenarioModaleCarreTest.plateforme_injoignable_l_encart_ne_nie_pas_le_carre	0.000	0.009	2
+ScenarioModaleCarreTest.recuperer_ferme_la_modale_et_rend_compte	0.000	0.015	2
+ScenarioPerceptifConnexionTest.la_modale_de_connexion_s_ouvre	0.000	0.065	2
+ScenarioPerceptifConnexionTest.la_recuperation_ne_pousse_rien_hors_du_cadre	0.000	0.007	2
+ScenarioPerceptifFiltresTest.rejouer_une_vue_dont_une_valeur_a_disparu_fait_paraitre_le_bandeau	0.000	0.001	2
+ScenarioPerceptifFiltresTest.rouvrir_une_liste_apres_un_autre_filtre_montre_moins_de_valeurs	0.000	0.008	2
+ScenarioPerceptifFiltresTest.tout_effacer_rend_la_table_entiere	0.000	0.007	2
+ScenarioPerceptifFiltresTest.une_puce_fraichement_ajoutee_n_ecarte_rien	0.000	0.004	2
+ScenarioPerceptifFiltresTest.une_valeur_cochee_devenue_impossible_se_distingue	0.000	0.010	2
+ScenarioPerceptifIssuesConnexionTest.injoignable_ne_fait_pas_accuser_le_jeton	0.000	0.047	2
+ScenarioPerceptifIssuesConnexionTest.jeton_refuse_nomme_le_geste	0.000	0.124	2
+ScenarioPerceptifIssuesConnexionTest.jeton_vide_dit_quoi_faire	0.000	0.047	2
+ScenarioPerceptifIssuesConnexionTest.la_deconnexion_demande_confirmation	0.000	0.022	2
+ScenarioPerceptifIssuesConnexionTest.les_trois_etapes_de_la_modale	0.000	0.027	2
+ScenarioPerceptifIssuesConnexionTest.succes_dit_ce_qui_a_ete_rapatrie	0.000	0.029	2
+ScenarioPerceptifRecuperationCarreTest.la_recuperation_ramene_sur_mes_sites	0.000	0.014	2
+ScenarioPerceptifRefusDepotTest.le_compte_rendu_dit_les_refus_et_conseille_la_reconnexion	0.000	0.230	2
