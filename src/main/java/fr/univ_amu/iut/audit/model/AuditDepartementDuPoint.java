@@ -58,7 +58,7 @@ public final class AuditDepartementDuPoint {
 
     /// Les constats de tous les points de tous les sites, dans l'ordre des sites puis des points.
     List<ConstatAudit> auditer() {
-        // ⚠️ Points et communes lus **par lot** (#4280) : la boucle en lançait une requête par site, puis
+        // ⚠️ Points et communes lus **par lot** (#4281) : la boucle en lançait une requête par site, puis
         // une par point pour sa commune. Même défaut que #4251, #4271 et #4278, de moindre ampleur -
         // mesuré à chaud, 130 ms à cent cinquante carrés, et qui croît avec l'inventaire.
         List<Site> sites = siteDao.findAll();

@@ -163,7 +163,7 @@ public final class AuditPointsServeur {
         }
         Map<String, SiteVigieChiro> parObjectid =
                 distants.stream().collect(Collectors.toMap(SiteVigieChiro::id, Function.identity(), (a, b) -> a));
-        // ⚠️ Points lus **par lot** (#4280) : la boucle en lançait une par site.
+        // ⚠️ Points lus **par lot** (#4281) : la boucle en lançait une par site.
         List<Site> locaux = siteDao.findByUtilisateur(idUtilisateur);
         Map<Long, List<PointDEcoute>> pointsParSite =
                 pointDao.findParSites(locaux.stream().map(Site::id).toList());

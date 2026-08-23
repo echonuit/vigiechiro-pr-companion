@@ -189,7 +189,7 @@ class AuditDepartementDuPointTest {
     }
 
     @Test
-    @DisplayName("#4280 : l'audit lit points et communes par LOT, pas site par site")
+    @DisplayName("#4281 : l'audit lit points et communes par LOT, pas site par site")
     void l_audit_lit_par_lot() {
         semer("010203", "A1", new Commune("Ain-ville", "01"));
         semer("040506", "B1", new Commune("Alpes-ville", "04"));
@@ -204,7 +204,7 @@ class AuditDepartementDuPointTest {
         surveille.auditer();
 
         // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
-        // variance de la machine. Le défaut mesuré (#4280) : une requête par site pour ses points, puis
+        // variance de la machine. Le défaut mesuré (#4281) : une requête par site pour ses points, puis
         // une par point pour sa commune - 130 ms à cent cinquante carrés, contre 3 ms lu par lot.
         Mockito.verify(points, Mockito.never()).findBySite(Mockito.any());
         Mockito.verify(communesSurveillees, Mockito.never()).pour(Mockito.anyLong());
