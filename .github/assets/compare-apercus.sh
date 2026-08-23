@@ -34,31 +34,11 @@ set -uo pipefail
 
 MOI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 
-### La part de pixels qui diffèrent entre deux images, en pourcentage, ou "?" si la mesure échoue.
-part_changee() {
-  local avant="$1" apres="$2" pixels
-  # `compare -metric AE` écrit son compte sur la SORTIE D'ERREUR et rend 1 dès qu'il y a une
-  # différence : sans `|| true`, `set -e` ferait passer une mesure réussie pour un échec.
-  pixels=$(compare -metric AE "$avant" "$apres" null: 2>&1 || true)
-  # ⚠️ Le PREMIER MOT, lu par `awk`. Au-delà du million, `compare` rend la NOTATION SCIENTIFIQUE -
-  # « 1.2034e+06 (1) » - et un découpage sur les chiffres s'arrête au point : il rendait « 1 », soit
-  # 0,00 % là où tout l'écran avait changé (#4274).
-  pixels=${pixels%% *}
-  [ -n "$pixels" ] || { printf '?'; return; }
+# La mesure des pixels est PARTAGÉE avec l'autre comparaison : elle portait le même défaut aux deux
+# endroits, corrigé deux fois (#4295).
+# shellcheck source=.github/assets/mesure-pixels.sh
+. "$(dirname "$MOI")/mesure-pixels.sh"
 
-  local total
-  # ⚠️ `%w %h` et non `%[fx:w*h]`, pour la même raison à l'autre bout du calcul : sur les 33 captures
-  # qui dépassent le million de pixels - `apercu-import-assistant.png` fait 1100 × 1094 - le produit
-  # s'écrit « 1.2034e+06 », que le test d'entier refusait. Ces écrans-là, les plus riches, rendaient
-  # « ? » au lieu d'un chiffre. L'auto-test ne pouvait pas le voir avec ses images de 80 × 40.
-  total=$(identify -format '%w %h' "$apres" 2>/dev/null) || { printf '?'; return; }
-  LC_ALL=C awk -v p="$pixels" -v wh="$total" 'BEGIN {
-    split(wh, d, " ")
-    t = d[1] * d[2]
-    if (t <= 0 || p "" !~ /^[0-9]/) { printf "?"; exit }
-    printf "%.2f", 100 * (p + 0) / t
-  }'
-}
 
 ### Compose l'avant et l'après côte à côte. Rend 1 si l'une des deux images manque.
 accoler() {
@@ -118,7 +98,7 @@ comparer() {
     fi
 
     local part
-    part=$(part_changee "$avant" "$chemin")
+    part=$(part_changee "$avant" "$chemin" 0 2)
     if accoler "$avant" "$chemin" "${sortie}/${nom}.avant-apres.png"; then
       echo "| \`${nom}\` | ${part} % | \`${nom}.avant-apres.png\` |" >> "$index"
     else

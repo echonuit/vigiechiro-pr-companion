@@ -63,6 +63,11 @@ set -uo pipefail
 
 MOI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 
+# La mesure des pixels est PARTAGÉE avec l'autre comparaison : elle portait le même défaut aux deux
+# endroits, corrigé deux fois (#4295).
+# shellcheck source=.github/assets/mesure-pixels.sh
+. "$(dirname "$MOI")/mesure-pixels.sh"
+
 ### Refuse de commencer sans ses outils, en NOMMANT ceux qui manquent.
 ###
 ### ⚠️ Sans cette garde, l'absence d'un outil ne se voyait pas : `compare` introuvable écrivait son
@@ -93,32 +98,6 @@ derniere_image() {
   ffmpeg -v error -y -i "$1" -vsync 0 -f image2 -update 1 "$2" 2>/dev/null
 }
 
-### La part de pixels qui diffèrent, en pourcentage, ou "?" si la mesure échoue.
-part_changee() {
-  local avant="$1" apres="$2" tolerance="$3" pixels total
-  # `compare -metric AE` écrit son compte sur la SORTIE D'ERREUR et rend 1 dès qu'il y a une
-  # différence : sans `|| true`, une mesure réussie passerait pour un échec.
-  pixels=$(compare -metric AE -fuzz "${tolerance}%" "$avant" "$apres" null: 2>&1 || true)
-  # ⚠️ Le PREMIER MOT, et c'est `awk` qui le lit - pas un découpage sur les chiffres. Au-delà d'un
-  # million de pixels différents, `compare` rend lui aussi la NOTATION SCIENTIFIQUE : « 1.152e+06 (1) ».
-  # Un `${pixels%%[^0-9]*}` s'arrête alors au point et rend « 1 », soit 0,000 % là où TOUT a changé.
-  # C'est le même piège que celui du dénominateur, à l'autre bout du calcul, et il ment dans le sens
-  # rassurant.
-  pixels=${pixels%% *}
-  [ -n "$pixels" ] || { printf '?'; return; }
-  # ⚠️ `%w %h` et non `%[fx:w*h]`. Sur une toile de 1280 × 900, ImageMagick rend le produit en
-  # NOTATION SCIENTIFIQUE - « 1.152e+06 » - que `[ … -gt 0 ]` refuse : la mesure rendait alors « ? »
-  # sur TOUTES les grandes images. `compare-apercus.sh` ne peut pas le voir, ses images d'auto-test
-  # faisant 80 × 40, soit 3200, qui s'écrit en entier.
-  total=$(identify -format '%w %h' "$apres" 2>/dev/null) || { printf '?'; return; }
-  LC_ALL=C awk -v p="$pixels" -v wh="$total" 'BEGIN {
-    split(wh, d, " ")
-    t = d[1] * d[2]
-    # Une valeur illisible se dit, elle ne se prend pas pour un zéro.
-    if (t <= 0 || p "" !~ /^[0-9]/) { printf "?"; exit }
-    printf "%.3f", 100 * (p + 0) / t
-  }'
-}
 
 ### La durée d'un clip en secondes, ou "?" si elle ne se lit pas.
 duree() {
@@ -208,7 +187,7 @@ comparer() {
     fi
 
     local part da db geste
-    part=$(part_changee "$ia" "$ib" "$tolerance")
+    part=$(part_changee "$ia" "$ib" "$tolerance" 3)
     da=$(duree "$avant")
     db=$(duree "$apres")
 
@@ -323,8 +302,8 @@ plancher() {
     derniere_image "$a/$nom.mp4" "$bac/a.png" || continue
     derniere_image "$b/$nom.mp4" "$bac/b.png" || continue
     local brut fuzz
-    brut=$(part_changee "$bac/a.png" "$bac/b.png" 0)
-    fuzz=$(part_changee "$bac/a.png" "$bac/b.png" "$TOLERANCE_PAR_DEFAUT")
+    brut=$(part_changee "$bac/a.png" "$bac/b.png" 0 3)
+    fuzz=$(part_changee "$bac/a.png" "$bac/b.png" "$TOLERANCE_PAR_DEFAUT" 3)
     printf '%-56s brut %8s %%   tolérance %s %% : %8s %%\n' "$nom" "$brut" "$TOLERANCE_PAR_DEFAUT" "$fuzz"
     pire=$(awk -v p="$pire" -v f="$fuzz" 'BEGIN { print (f + 0 > p + 0) ? f : p }')
 
@@ -497,8 +476,25 @@ if [ "${1:-}" = "--auto-test" ]; then
   sortie=$("$MOI" "$bac/p3a" "$bac/p3b" "$bac/sol-absent" 5 "$bac/pas-la.tsv" 2>&1) && echecs=1
   verifie "un fichier de planchers introuvable est une erreur" "Fichier de planchers introuvable" "$sortie"
 
+  # 12. C'est bien la DERNIÈRE image qui est comparée, et non la première.
+  #
+  # ⚠️ Rien ne l'affirmait jusqu'ici. Le clip « virage » commence BLANC et finit NOIR ; le clip
+  # « noir » est noir de bout en bout. Comparer les dernières images doit donc rendre 0 %, quand
+  # comparer les premières rendrait 100 %. Un jour où quelqu'un échantillonnera le milieu du clip pour
+  # « mieux voir la transition », ce cas dira ce qui se casse (ADR 4274).
+  mkdir -p "$bac/d1" "$bac/d2"
+  clip "$bac/blanc.mp4" white
+  clip "$bac/noir.mp4" black
+  ffmpeg -v error -y -i "$bac/blanc.mp4" -i "$bac/noir.mp4" \
+    -filter_complex "[0:v][1:v]concat=n=2:v=1[v]" -map "[v]" \
+    -c:v libx264 -pix_fmt yuv420p "$bac/d1/virage.mp4" 2>/dev/null
+  cp "$bac/noir.mp4" "$bac/d2/virage.mp4"
+
+  sortie=$("$MOI" "$bac/d1" "$bac/d2" "$bac/derniere" 2>&1)
+  verifie "la dernière image est comparée, pas la première" "1 cas comparé(s), 0 qui bougent" "$sortie"
+
   if [ "$echecs" = 0 ]; then
-    echo "Auto-test de la comparaison de deux tournages : OK (20 cas, dont les planchers par cas et l'outil absent)."
+    echo "Auto-test de la comparaison de deux tournages : OK (21 cas, dont la dernière image et les planchers par cas)."
   else
     echo "Auto-test de la comparaison de deux tournages : ÉCHEC."
   fi

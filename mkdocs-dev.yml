@@ -252,6 +252,8 @@ nav:
     - 4234 · Un motif de blocage se montre: decisions/4234-un-motif-de-blocage-se-montre-il-ne-se-lit-pas.md
     - 4235 · Le garde d'abord, l'abstraction ensuite: decisions/4235-le-garde-d-abord-l-abstraction-ensuite.md
     - 4248 · Un banc qui filme de l'intérieur dessine lui-même le geste: decisions/4248-un-banc-qui-filme-de-l-interieur-dessine-lui-meme-le-geste.md
+    - 4274 · On compare la dernière image d'un clip, pas son chemin: decisions/4274-on-compare-la-derniere-image-pas-le-chemin.md
+    - 4287 · Un écart se lit contre le plancher de son propre cas: decisions/4287-un-ecart-se-lit-contre-le-plancher-de-son-cas.md
     - 4249 · Un fichier écrit par plusieurs JVM se reconstruit: decisions/4249-un-fichier-ecrit-par-plusieurs-jvm-se-reconstruit.md
     - 4264 · Un helper partagé route vers le fil de l'application: decisions/4264-un-helper-partage-route-vers-le-fil-de-l-application.md
     - 4079 · Une condition de job nomme l'état qu'elle attend: decisions/4079-une-condition-de-job-nomme-l-etat-qu-elle-attend.md
