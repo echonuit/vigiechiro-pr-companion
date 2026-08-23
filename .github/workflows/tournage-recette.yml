@@ -98,10 +98,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # ⚠️ Le cas par défaut REFUSE, il ne se rabat pas. Tant que ce workflow n'était appelé qu'à
+          # la main, la liste de choix rendait une valeur inconnue impossible. Depuis qu'il est
+          # appelable (`workflow_call`), l'entrée est une chaîne libre : un `*) ubuntu` filmerait
+          # alors sur Linux une demande de tournage Windows, et le rapport dirait « windows » dans son
+          # titre. Un repli silencieux rend un résultat qui a l'air juste (ADR 0008).
           case "${{ inputs.plateforme }}" in
+            ubuntu)  runner="ubuntu-latest" ;;
             windows) runner="windows-latest" ;;
             macos)   runner="macos-latest" ;;
-            *)       runner="ubuntu-latest" ;;
+            *)
+              echo "::error::Plateforme inconnue : « ${{ inputs.plateforme }} ». Attendu : ubuntu, windows ou macos."
+              exit 1
+              ;;
           esac
           echo "runner=${runner}" >> "${GITHUB_OUTPUT}"
           echo "Tournage de ${{ inputs.session }} sur ${runner}." >> "${GITHUB_STEP_SUMMARY}"
