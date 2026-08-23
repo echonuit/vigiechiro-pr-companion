@@ -39,6 +39,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 
 /// Tests du [SiteDetailViewModel] sur base SQLite jetable, sans IHM : fiche d'identité, cartes de
 /// points, tableau des passages (tri, libellés) et garde-fous de suppression.
@@ -399,5 +400,32 @@ class SiteDetailViewModelTest {
                 .statut(StatutWorkflow.TRANSFORME)
                 .verdict(verdict)
                 .semerPassage();
+    }
+
+    @Test
+    @DisplayName("#4285 : la fiche lit les passages de ses points par LOT, pas point par point")
+    void la_fiche_lit_par_lot() {
+        Site site = service.creerSite("640200", "Grille STOC", Protocole.STANDARD, null, ID_USER);
+        for (int i = 0; i < 12; i++) {
+            service.ajouterPoint(site.id(), "P" + i, 43.5 + i * 0.001, 5.4, null);
+        }
+        PassageDao passagesSurveilles = Mockito.spy(passageDao);
+        SiteDetailViewModel vm = new SiteDetailViewModel(
+                service,
+                passagesSurveilles,
+                horloge,
+                new PortailVigieChiro(liens),
+                liens,
+                new PublicationDepuisLaFiche(publies, liens, publicationAvecJeton("jeton-de-test")));
+        Mockito.clearInvocations(passagesSurveilles);
+
+        vm.chargerSite(site);
+        assertThat(vm.points()).hasSize(12);
+
+        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
+        // variance de la machine. Le défaut mesuré (#4285) : une requête par point, 0,7 ms chacune, soit
+        // 40-55 ms sur un carré dont la grille STOC rapatriée compte des dizaines de points (ADR 0017).
+        Mockito.verify(passagesSurveilles, Mockito.never()).findByPoint(Mockito.any());
+        Mockito.verify(passagesSurveilles, Mockito.times(1)).findParPoints(Mockito.any());
     }
 }

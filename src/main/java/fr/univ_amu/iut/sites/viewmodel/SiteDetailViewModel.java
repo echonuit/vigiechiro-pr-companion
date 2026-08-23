@@ -166,8 +166,17 @@ public class SiteDetailViewModel {
     /// Recharge points et passages depuis la base et met à jour toutes les propriétés observables.
     public void rafraichir() {
         List<PointDEcoute> pointsDuSite = service.listerPoints(site.id());
-        List<Passage> passagesDuSite = passagesDeTousLesPoints(pointsDuSite);
-        mettreAJourCartesPoints(pointsDuSite);
+        // ⚠️ Les passages des points en UNE requête (#4285). La boucle en lançait une par point, et le
+        // commentaire de `mettreAJourCartesPoints` disait déjà pourquoi il ne fallait pas : « une requête
+        // par carte ferait N requêtes pour afficher un écran qui n'en demande qu'une ». Il valait pour la
+        // table des points publiés, pas pour les passages. Mesuré : 0,7 ms par point, soit 40-55 ms sur
+        // un carré dont la grille STOC rapatriée compte des dizaines de points (ADR 0017).
+        Map<Long, List<Passage>> passagesParPoint = passageDao.findParPoints(
+                pointsDuSite.stream().map(PointDEcoute::id).toList());
+        List<Passage> passagesDuSite = pointsDuSite.stream()
+                .flatMap(point -> passagesParPoint.getOrDefault(point.id(), List.<Passage>of()).stream())
+                .toList();
+        mettreAJourCartesPoints(pointsDuSite, passagesParPoint);
         mettreAJourTableauPassages(pointsDuSite, passagesDuSite);
         mettreAJourBandeau(passagesDuSite);
         suppressionPossible.set(passagesDuSite.isEmpty());
@@ -269,7 +278,7 @@ public class SiteDetailViewModel {
         return passages;
     }
 
-    private void mettreAJourCartesPoints(List<PointDEcoute> pointsDuSite) {
+    private void mettreAJourCartesPoints(List<PointDEcoute> pointsDuSite, Map<Long, List<Passage>> passagesParPoint) {
         // Une seule lecture pour tout le site (#3458) : une requête par carte ferait N requêtes pour
         // afficher un écran qui n'en demande qu'une.
         Set<Long> dejaPublies = publication.publiesDuSite(site.id());
@@ -278,7 +287,7 @@ public class SiteDetailViewModel {
             Double distanceProche = ProximitePoints.distanceAuPlusProche(point, pointsDuSite);
             cartes.add(new CartePoint(
                     point,
-                    passageDao.findByPoint(point.id()).size(),
+                    passagesParPoint.getOrDefault(point.id(), List.of()).size(),
                     distanceProche,
                     dejaPublies.contains(point.id())));
         }
@@ -331,14 +340,6 @@ public class SiteDetailViewModel {
         dateCreation.set(site.dateCreation());
         derniereNuit.set(libelleDerniereNuit(passagesDuSite));
         passagesDeLAnnee.set(libellePassagesAnnee(passagesDuSite, annee));
-    }
-
-    private List<Passage> passagesDeTousLesPoints(List<PointDEcoute> pointsDuSite) {
-        List<Passage> tous = new ArrayList<>();
-        for (PointDEcoute point : pointsDuSite) {
-            tous.addAll(passageDao.findByPoint(point.id()));
-        }
-        return tous;
     }
 
     private String composerTitre() {
