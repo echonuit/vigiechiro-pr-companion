@@ -64,9 +64,13 @@ public final class ListerSites implements Callable<Integer>, LectureSeule {
             return 0;
         }
         sortie.println(sites.size() + " site(s) :");
+        // ⚠️ Points lus **par lot** : la boucle en lançait une requête par site. L'IHM lit ainsi depuis
+        // #4251 ; laisser la CLI boucler aurait fait payer à `vigiechiro sites lister` ce que « Mes
+        // sites » ne paie plus - une asymétrie créée par le chantier lui-même (ADR 0014).
+        Map<Long, List<PointDEcoute>> pointsParSite = pointsDe(sites);
         for (Site site : sites) {
             sortie.println(enTeteSite(site));
-            List<PointDEcoute> points = service.listerPoints(site.id());
+            List<PointDEcoute> points = pointsParSite.getOrDefault(site.id(), List.of());
             if (points.isEmpty()) {
                 sortie.println("      (aucun point)");
             } else {
@@ -95,12 +99,18 @@ public final class ListerSites implements Callable<Integer>, LectureSeule {
         return String.format(Locale.ROOT, "(%.5f, %.5f)", point.latitude(), point.longitude());
     }
 
+    /// Les points de tous les `sites` en **une** requête (#4251, parité CLI de l'IHM).
+    private Map<Long, List<PointDEcoute>> pointsDe(List<Site> sites) {
+        return service.listerPointsParSites(sites.stream().map(Site::id).toList());
+    }
+
     /// Table plate site×point : une ligne par point ; un site sans point donne une ligne aux champs point
     /// à `null` (son identifiant reste ainsi récupérable).
     private List<Map<String, Object>> lignesJson(List<Site> sites) {
+        Map<Long, List<PointDEcoute>> pointsParSite = pointsDe(sites);
         List<Map<String, Object>> lignes = new ArrayList<>();
         for (Site site : sites) {
-            List<PointDEcoute> points = service.listerPoints(site.id());
+            List<PointDEcoute> points = pointsParSite.getOrDefault(site.id(), List.of());
             if (points.isEmpty()) {
                 lignes.add(ligneJson(site, null));
             } else {
