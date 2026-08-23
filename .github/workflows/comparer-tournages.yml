@@ -136,7 +136,11 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x .github/assets/compare-tournages.sh
-          ./.github/assets/compare-tournages.sh avant apres comparaison "${TOLERANCE}"
+          # Les planchers mesurés sur runner : un écart se lit contre le bruit de SON cas, pas
+          # contre zéro (#4287). Le fichier est versionné, et `--plancher` l'enrichit paire après
+          # paire.
+          ./.github/assets/compare-tournages.sh avant apres comparaison "${TOLERANCE}" \
+            .github/assets/planchers-tournages.tsv
           cat comparaison/index.md >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Garder les images de la comparaison

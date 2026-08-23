@@ -121,6 +121,50 @@ Rapportés à leur propre plancher, ils se séparent :
   changement localisé : c'est du bruit de rendu, et le chiffre brut le faisait passer pour un
   changement.
 
+## Le fichier de planchers
+
+Les planchers mesurés vivent dans `.github/assets/planchers-tournages.tsv`, une ligne par cas :
+
+```
+ScenarioAccueilTest.chaque_carte_ouvre_ce_qu_elle_annonce	0.809	1
+```
+
+Le cas, son plancher en pourcentage, et **le nombre de paires de tournages qui l'ont produit**.
+
+Le flux de comparaison le passe automatiquement, et chaque cas est alors classé par son **rapport à
+son propre bruit** plutôt que par son écart absolu. Le résumé compte les cas « au-dessus de leur
+propre plancher », qui est le nombre à regarder.
+
+### L'enrichir
+
+```
+compare-tournages.sh --plancher <tournage A> <tournage B> .github/assets/planchers-tournages.tsv
+```
+
+Relancer sur une **autre** paire garde le **pire** plancher observé et compte une paire de plus.
+
+!!! warning "Le pire, et non la moyenne"
+
+    Un plancher qui sous-estime le bruit fabrique des faux positifs, c'est-à-dire exactement ce qu'on
+    cherche à éviter. Mieux vaut rater un petit changement sur un cas instable que crier au changement
+    à chaque tournage.
+
+!!! danger "Le fichier livré ne porte qu'UNE paire"
+
+    Il le dit dans sa troisième colonne. Un cas dont le plancher est ressorti à 0,000 % n'est donc pas
+    prouvé stable, et les rapports calculés dessus - « quatre-vingts fois son bruit » pour un écart
+    absolu de 0,084 %, soit moins qu'un mot changé - ne valent pas mieux que leur échantillon.
+
+    Chaque paire supplémentaire rend le fichier plus juste. Le lire, c'est lire aussi cette colonne.
+
+### Deux silences que le fichier ne produit pas
+
+Un cas **absent** du fichier est annoncé « plancher inconnu ». Le prendre pour stable reviendrait à
+inventer une mesure qui n'a pas été faite.
+
+Un fichier **annoncé mais introuvable** fait échouer la comparaison. Sans ce refus, les cinquante cas
+diraient tous « plancher inconnu » et personne n'irait chercher le chemin fautif.
+
 ## Ce que la méthode ne voit pas
 
 ⚠️ **L'image finale compare la destination, pas le chemin.**
