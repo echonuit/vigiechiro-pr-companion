@@ -13,7 +13,110 @@ Lit .graphify_extract.json s'il existe (chainage apres pont-doc-code.py), sinon 
 """
 import json
 import re
+import sys
 from pathlib import Path
+
+
+def indexer_classes_java(noeuds):
+    """Index des classes Java : par nom pleinement qualifie, et par fichier source.
+
+    Rend `(par_fqn, par_fichier)`. Sert aux trois sous-passes : `fx:controller` (C1),
+    registre `META-INF/services` (C2) et resolution des commandes picocli (C3).
+    """
+    par_fqn, par_fichier = {}, {}
+    for n in noeuds:
+        sf = n.get('source_file') or ''
+        if not sf.endswith('.java') or n.get('_origin') != 'ast':
+            continue
+        stem = Path(sf).stem
+        # Un fichier `X.java` porte DEUX noeuds AST : la classe (`X`) et la page
+        # (`X.java`). Les deux passaient ce filtre, et l'ordre d'iteration decidait
+        # lequel gagnait - donc les liens de C1, C2 et C3 visaient tantot l'un tantot
+        # l'autre, sur 1 953 des 1 962 fichiers .java (#4231). C'est la classe que ces
+        # liens designent : `module-info.java`, qui n'en a pas, reste dehors.
+        if n.get('label') != stem:
+            continue
+        par_fichier[sf] = n['id']
+        m = re.match(r'src/(?:main|test)/java/(.+)\.java$', sf)
+        if m:
+            par_fqn[m.group(1).replace('/', '.')] = n['id']
+    return par_fqn, par_fichier
+
+
+def commandes_couvertes(aretes, commandes):
+    """Noms de commandes CLI qu'au moins un test bats invoque.
+
+    `aretes` est pre-alimente avec TOUT le graphe : compter ses cibles sans les
+    confronter a l'index de la passe courante ramasse l'historique, dont les aretes
+    posees vers la page `X.java` du temps ou l'index etait ambigu. Le compte rendait
+    `128/69` (#4231). On repart donc des NOMS indexes : le numerateur est un
+    sous-ensemble du denominateur, par construction.
+    """
+    cibles = {e['target'] for e in aretes if e.get('context') == 'cli_invocation'}
+    return {nom for nom, cid in commandes.items() if cid in cibles}
+
+
+def auto_test():
+    """Cinq cas ; les deux premiers de chaque defaut doivent rougir sur le code fautif."""
+    echecs = []
+
+    def verifier(nom, condition, detail=''):
+        if condition:
+            print(f'  ok   {nom}')
+        else:
+            print(f'  ECHEC {nom}{" : " + detail if detail else ""}')
+            echecs.append(nom)
+
+    fichier = 'src/main/java/fr/univ_amu/iut/cli/commande/Auditer.java'
+    classe = {'id': 'x_auditer_auditer', 'label': 'Auditer',
+              'source_file': fichier, '_origin': 'ast'}
+    page = {'id': 'x_auditer', 'label': 'Auditer.java',
+            'source_file': fichier, '_origin': 'ast', 'source_location': 'L1'}
+
+    # 1 et 2 : la classe l'emporte sur le noeud de fichier, quel que soit l'ordre de
+    # lecture. Sans cela, c'est l'ordre d'iteration qui decide, et les liens
+    # `fx:controller` / `ServiceLoader` / `cli_invocation` visent tantot l'un tantot
+    # l'autre - 1 953 fichiers .java sur 1 962 sont concernes (#4231).
+    for ordre, lot in (('classe puis fichier', [classe, page]),
+                       ('fichier puis classe', [page, classe])):
+        _, par_fichier = indexer_classes_java(lot)
+        verifier(f'l index retient la classe ({ordre})',
+                 par_fichier.get(fichier) == 'x_auditer_auditer',
+                 f'retenu : {par_fichier.get(fichier)!r}')
+
+    # 3 : un fichier sans classe homonyme (module-info.java) n'a pas a entrer.
+    mi = {'id': 'x_module_info', 'label': 'module-info.java',
+          'source_file': 'src/main/java/module-info.java', '_origin': 'ast'}
+    _, sans_classe = indexer_classes_java([mi])
+    verifier('un fichier sans classe homonyme reste hors de l index', sans_classe == {})
+
+    # 4 : une arete heritee vers une cible que la passe courante n'indexe plus ne
+    # doit pas compter. `edges` est pre-alimente avec tout le graphe.
+    commandes = {'auditer': 'x_auditer_auditer', 'importer': 'x_importer_importer'}
+    aretes = [
+        {'target': 'x_auditer_auditer', 'context': 'cli_invocation'},
+        {'target': 'x_auditer', 'context': 'cli_invocation'},        # heritee, noeud de fichier
+        {'target': 'x_inconnue', 'context': 'cli_invocation'},       # heritee, hors index
+        {'target': 'x_importer_importer', 'context': 'autre_chose'},
+    ]
+    couvertes = commandes_couvertes(aretes, commandes)
+    verifier('seule la commande reellement indexee compte',
+             couvertes == {'auditer'}, f'obtenu : {sorted(couvertes)}')
+
+    # 5 : le numerateur est borne par le denominateur, par construction.
+    verifier('le numerateur ne depasse jamais le denominateur',
+             len(couvertes) <= len(commandes),
+             f'{len(couvertes)}/{len(commandes)}')
+
+    if echecs:
+        print(f'\n{len(echecs)} cas en echec : {", ".join(echecs)}')
+        return 1
+    print('\nauto-test : tous les cas passent')
+    return 0
+
+
+if __name__ == '__main__' and '--auto-test' in sys.argv:
+    raise SystemExit(auto_test())
 
 SRC = Path('graphify-out/.graphify_extract.json')
 if not SRC.exists():
@@ -56,16 +159,7 @@ for e in edges:
     vues.add((e['source'], e['target'], e.get('relation')))
 
 # ------------------------------------------------- index des classes Java par nom pleinement qualifie
-par_fqn, par_fichier = {}, {}
-for n in list(nodes.values()):
-    sf = n.get('source_file') or ''
-    if sf.endswith('.java') and n.get('_origin') == 'ast':
-        stem = Path(sf).stem
-        if n['label'] in (stem, stem + '.java'):
-            par_fichier[sf] = n['id']
-            m = re.match(r'src/(?:main|test)/java/(.+)\.java$', sf)
-            if m:
-                par_fqn[m.group(1).replace('/', '.')] = n['id']
+par_fqn, par_fichier = indexer_classes_java(list(nodes.values()))
 print(f'index : {len(par_fqn)} classes Java par FQN')
 
 # ------------------------------------------------------------------------ C1 : vues FXML
@@ -171,7 +265,7 @@ for p in sorted(Path('src/test/bats').glob('*.bats')):
 print(f'C3 : {n_bats} fichiers bats, {n_test} tests, {n_inv} liens test -> commande CLI')
 print(f'     commandes invoquees non resolues : {len(non_resolues)} -> {sorted(non_resolues)[:12]}')
 
-couvertes = {e['target'] for e in edges if e.get('context') == 'cli_invocation'}
+couvertes = commandes_couvertes(edges, commandes)
 print(f'     commandes CLI couvertes par au moins un bats : {len(couvertes)}/{len(commandes)}')
 
 extraction = {'nodes': list(nodes.values()), 'edges': edges,
