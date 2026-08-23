@@ -176,6 +176,11 @@ Le bandeau dit ce qui a été rapatrié, et l'identité paraît : on sait sous q
 <video controls muted playsinline preload="none" width="100%"
   src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/MesSitesViewTest.une_fois_connecte_la_recuperation_s_ouvre_et_rend_compte.mp4"></video>
 
+### S1-17 · `le_voile_parait_puis_cede_la_place`
+
+<video controls muted playsinline preload="none" width="100%"
+  src="https://github.com/echonuit/vigiechiro-pr-companion/releases/download/clips-recette/ScenarioVoileChargementTest.le_voile_parait_puis_cede_la_place.mp4"></video>
+
 ### S1-17 · `overlay_occupation_masque_apres_chargement`
 
 <video controls muted playsinline preload="none" width="100%"

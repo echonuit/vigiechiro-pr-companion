@@ -114,7 +114,13 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
     ne rouvrait rien : le motif conseillait de se connecter, on suivait ce conseil, on revenait, et le
     bouton restait grisé à répéter le même conseil (#4205). Il fallait quitter l'écran et y revenir.
     L'état de connexion n'était **observable** nulle part - on pouvait le demander, pas le suivre.
-- **S1-17** · Voile d'occupation au chargement.
+- **S1-17** · Voile d'occupation au chargement : sur une base fournie, l'écran se voile le temps de
+  recomposer ses cartes, puis le voile cède la place. Un voile resté en place bloquerait tout.
+
+    ⚠️ Ce cas a longtemps été réputé **infilmable**, et la raison était fausse : mesurée sur une fixture
+    de deux sites, où le chargement est instantané. Sur cent cinquante carrés - ce que suit un
+    coordinateur départemental - il prend un demi-seconde. Le voile n'était pas invisible, il était
+    invisible sur une base de démonstration.
 
 **Étape 4 · Détail de carré**
 

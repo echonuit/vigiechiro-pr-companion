@@ -300,21 +300,17 @@ class MesSitesViewTest {
                 .isNotEmpty();
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ Ce clip ne montre PAS le voile pendant qu'il paraît, et **aucun clip ne le peut**. La revue
-        // l'a demandé - « je ne comprends pas ce que je dois voir » (#4172) - et la mesure a répondu non.
+        // ⚠️ Ce clip-ci ne montre pas le voile PENDANT qu'il paraît, et c'est voulu : il garde l'autre
+        // moitié du cas - l'écran chargé, ses cartes lisibles, et RIEN qui le voile. Un voile resté en
+        // place bloquerait tout.
         //
-        // Deux raisons, cherchées dans cet ordre et toutes deux vérifiées :
+        // ⚠️ J'ai écrit ici qu'AUCUN clip ne pouvait montrer le voile, et c'était faux. L'affirmation
+        // était mesurée sur cette fixture-ci, deux sites, où `charger()` est instantané. Sur cent
+        // cinquante carrés - ce que suit un coordinateur départemental - il prend un demi-seconde, de
+        // quoi rendre cinq images. `ScenarioVoileChargementTest` le filme (#4172).
         //
-        // 1. l'exécuteur SYNCHRONE de cette classe occupe le fil JavaFX : aucune image n'est rendue
-        //    pendant le travail. Un scénario asynchrone a été écrit pour lever cet obstacle ;
-        // 2. il n'a rien montré non plus, et c'est la vraie raison. Le voile ne couvre qu'un
-        //    `viewModel::charger` - une lecture en base, instantanée. Et depuis #2558, la seule opération
-        //    LONGUE de cet écran, la synchronisation, n'emprunte plus le voile : elle ouvre un
-        //    `DialogueProgression`, qui se montre et se laisse interrompre.
-        //
-        // Filmer le voile demanderait donc de fabriquer une lenteur que le produit n'a pas. Ce que ce
-        // clip montre est ce que le cas garde vraiment : l'écran est chargé, ses cartes sont là, et RIEN
-        // ne le voile - le défaut serait un voile resté en place.
+        // Le défaut de raisonnement mérite d'être noté : j'avais conclu du produit ce qui n'était vrai
+        // que de la base de démonstration.
     }
 
     @Test
