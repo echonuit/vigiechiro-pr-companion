@@ -5,32 +5,25 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.google.inject.util.Modules;
-import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
-import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.view.ExecuteurTache;
-import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.Notificateur;
 import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
+import fr.univ_amu.iut.recette.BancDeRecette;
 import fr.univ_amu.iut.recette.CasDeRecette;
-import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -41,12 +34,10 @@ import fr.univ_amu.iut.sites.model.RapatriementCarre;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.SouhaitDeclaration;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
@@ -124,74 +115,56 @@ class ScenarioPerceptifRecuperationCarreTest {
     private Injector injector;
 
     @Start
-    void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-scenario-recuperation");
-        System.setProperty("vigiechiro.workspace", workspace.toString());
-
+    void start(Stage stage) throws IOException {
         when(client.chercherCarre(CARRE))
                 .thenReturn(ReponseApi.succes(
                         List.of(new SiteVigieChiro("6a49", "Vigiechiro - Point Fixe-" + CARRE, true))));
 
-        injector =
-                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(ExecuteurTache.class)
-                                .to(ExecuteurTacheAsynchrone.class)
-                                .in(Singleton.class);
-                        bind(ClientVigieChiro.class).toInstance(client);
-                    }
+        injector = BancDeRecette.surLeChrome()
+                .taille(1100, 720)
+                .executeur(BancDeRecette.Executeur.ASYNCHRONE)
+                .remplacer(binder -> binder.bind(ClientVigieChiro.class).toInstance(client), rapatriementBouchonne())
+                .semer(inj -> new UtilisateurDao(inj.getInstance(SourceDeDonnees.class))
+                        .insert(new Utilisateur(ID_USER, "Observateur")))
+                .connecte(ID_USER, PSEUDO, ROLE)
+                .ouvrir(inj -> inj.getInstance(NavigationSites.class).ouvrirAccueil())
+                .montrer(stage);
 
-                    // ⚠️ QUALIFIÉ, et le qualifiant est recopié en toutes lettres.
-                    // RechercheCarreExistantModule relie Optional<RapatriementCarre> à
-                    // @Named("vigiechiro-carre-existant") : un @Provides RapatriementCarre NU est
-                    // donc ignoré. Le bouton paraît quand même, le clic part, et c'est le
-                    // rapatriement RÉEL qui répond - le premier jet de ce scénario expirait ainsi,
-                    // sans rien dire de plus qu'un TimeoutException.
-                    //
-                    // La constante est private dans son module ; la recopier est le prix à payer, et
-                    // le jour où elle changera ce scénario rougira, ce qui est le bon sens de l'échec.
-                    @Provides
-                    @Singleton
-                    @Named("vigiechiro-carre-existant")
-                    RapatriementCarre rapatriement(ImportSiteDistant importSiteDistant) {
-                        return new RapatriementCarre(client, importSiteDistant) {
-                            @Override
-                            public Resultat rapatrier(SouhaitDeclaration souhait) {
-                                // Hors séance filmée, aucune attente n'est payée : le test reste rapide.
-                                if (Seance.filmee()) {
-                                    dormir(RAPATRIEMENT_MS);
-                                }
-                                return poserLeCarreEtSesPoints();
-                            }
-                        };
-                    }
-                }));
-
-        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
-        new MigrationSchema(source).migrer();
-        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Observateur"));
-
-        // ⚠️ Une connexion RÉELLE, enregistrée avant que le chrome ne se charge : c'est à la
-        // construction du menu que `NavigationConnexion.libelleMenu()` est lu, et c'est ce libellé qui
-        // dira à l'image qu'on est connecté. Posée après, l'entrée porterait encore « Se connecter… »
-        // et le clip dirait le contraire de ce que la scène joue.
-        injector.getInstance(StockageConnexion.class)
-                .enregistrer("jeton-de-recette", new ProfilVigieChiro(ID_USER, PSEUDO, ROLE));
-
-        // ⚠️ Et le client mocké répond comme le vrai : sans cela, le menu dit « connecté » pendant que
-        // « Récupérer depuis Vigie-Chiro » reste grisé derrière la modale, parce que LUI interroge le
-        // client. Le clip montrerait deux réponses opposées à la même question.
+        // ⚠️ Le client mocké répond comme le vrai : sans cela, le menu lit le stockage et dit
+        // « connecté » pendant que « Récupérer depuis Vigie-Chiro » reste grisé derrière la modale,
+        // parce que LUI interroge le client. Le clip montrerait deux réponses opposées à la même
+        // question. Posé après le banc, qui fournit l'injecteur.
         StockageConnexion stockage = injector.getInstance(StockageConnexion.class);
         when(client.estConnecte()).thenAnswer(appel -> stockage.estConnecte());
+    }
 
-        FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        // Habillage, et non `new Scene` : un clip monté sans lui porte la police de la MACHINE, alors
-        // que ce cas existe pour être REGARDÉ. Le scénario de connexion le faisait déjà.
-        FenetreDuBanc.poser(stage, loader.load(), 1100, 720);
-        injector.getInstance(NavigationSites.class).ouvrirAccueil();
-        FenetreDuBanc.afficher(stage);
+    /// Le rapatriement, bouchonné et **qualifié**.
+    ///
+    /// ⚠️ `RechercheCarreExistantModule` relie `Optional<RapatriementCarre>` à
+    /// `@Named("vigiechiro-carre-existant")` : un `@Provides RapatriementCarre` NU est donc ignoré. Le
+    /// bouton paraît quand même, le clic part, et c'est le rapatriement RÉEL qui répond - le premier jet
+    /// de ce scénario expirait ainsi, sans rien dire de plus qu'un `TimeoutException`.
+    ///
+    /// La constante est `private` dans son module ; la recopier est le prix à payer, et le jour où elle
+    /// changera ce scénario rougira, ce qui est le bon sens de l'échec.
+    private Module rapatriementBouchonne() {
+        return new AbstractModule() {
+            @Provides
+            @Singleton
+            @Named("vigiechiro-carre-existant")
+            RapatriementCarre rapatriement(ImportSiteDistant importSiteDistant) {
+                return new RapatriementCarre(client, importSiteDistant) {
+                    @Override
+                    public Resultat rapatrier(SouhaitDeclaration souhait) {
+                        // Hors séance filmée, aucune attente n'est payée : le test reste rapide.
+                        if (Seance.filmee()) {
+                            dormir(RAPATRIEMENT_MS);
+                        }
+                        return poserLeCarreEtSesPoints();
+                    }
+                };
+            }
+        };
     }
 
     @AfterEach

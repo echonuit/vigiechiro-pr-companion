@@ -72,13 +72,61 @@ class BancDesClipsTest {
                         `FenetreDuBanc.afficher(stage)`, qui fait le `sizeToScene()` (ADR 4134).""").isEmpty();
     }
 
+    /// Les classes qui montent encore leur banc à la main, en attendant [BancDeRecette].
+    ///
+    /// ⚠️ Nommée et finie, comme [#SANS_CHROME_EN_ATTENTE] : le garde rougit dès qu'elle s'allonge, et
+    /// la migration se compte au lieu de se promettre. Une classe NEUVE ne peut donc pas repartir d'un
+    /// copier-coller de préambule - c'est tout l'objet de #4133.
+    private static final Set<String> BANC_A_LA_MAIN_EN_ATTENTE = Set.of(
+            "MainViewTest.java",
+            "MesSitesEtatVideViewTest.java",
+            "MesSitesViewTest.java",
+            "ScenarioAccueilTest.java",
+            "ScenarioFicheSiteTest.java",
+            "ScenarioModaleCarreTest.java",
+            "ScenarioPerceptifConnexionTest.java",
+            "ScenarioPerceptifFiltresTest.java",
+            "ScenarioPerceptifIssuesConnexionTest.java",
+            "ScenarioPerceptifRefusDepotTest.java");
+
+    @Test
+    @DisplayName("#4133 : une classe filmée neuve déclare son banc, elle ne le recopie pas")
+    void une_classe_filmee_neuve_declare_son_banc() {
+        List<String> aLaMain = new ArrayList<>();
+        for (Path source : classesFilmees()) {
+            String nom = source.getFileName().toString();
+            if (!lire(source).contains("BancDeRecette") && !BANC_A_LA_MAIN_EN_ATTENTE.contains(nom)) {
+                aLaMain.add(nom);
+            }
+        }
+
+        assertThat(aLaMain).as("""
+                        Ces classes filmées montent leur banc à la main : espace de travail, injecteur, \
+                        migrations, semis, chrome, fenêtre, ouverture.
+
+                        Ce préambule pesait 494 lignes pour cinquante cas à la clôture de #4133, et les \
+                        trois plus lourds 47 à 69 lignes POUR UN SEUL CAS. Écrire un cas neuf revenait \
+                        donc à recopier le préambule du voisin - et une copie hérite de la dette de son \
+                        modèle : trois classes sur onze traînaient encore un idiome de fenêtre périmé.
+
+                        Remède : `BancDeRecette.surLeChrome()`, qui porte les huit gestes toujours \
+                        identiques et n'exige que les quatre décisions qui varient vraiment.""").isEmpty();
+    }
+
     @Test
     @DisplayName("#4133 : un cas filmé monte le chrome, et la liste d'attente ne s'allonge pas")
     void un_cas_filme_monte_le_chrome() {
         List<String> sansChrome = new ArrayList<>();
         for (Path source : classesFilmees()) {
             String nom = source.getFileName().toString();
-            if (!lire(source).contains("MainView.fxml") && !SANS_CHROME_EN_ATTENTE.contains(nom)) {
+            // ⚠️ Deux façons de monter le chrome, et le garde doit connaître les deux : nommer le
+            // FXML, ou passer par `BancDeRecette.surLeChrome()` qui le nomme à sa place. Le premier jet
+            // ne cherchait que la chaîne « MainView.fxml » et a déclaré fautive la première classe
+            // migrée sur le banc - un garde qui mesure un PROXY plutôt que la propriété se trompe dès
+            // que le proxy change.
+            String code = lire(source);
+            boolean surLeChrome = code.contains("MainView.fxml") || code.contains("BancDeRecette.surLeChrome()");
+            if (!surLeChrome && !SANS_CHROME_EN_ATTENTE.contains(nom)) {
                 sansChrome.add(nom);
             }
         }
