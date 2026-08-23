@@ -165,12 +165,16 @@ public final class AuditPointsServeur {
                 distants.stream().collect(Collectors.toMap(SiteVigieChiro::id, Function.identity(), (a, b) -> a));
         // ⚠️ Points lus **par lot** (#4281) : la boucle en lançait une par site.
         List<Site> locaux = siteDao.findByUtilisateur(idUtilisateur);
+        // ⚠️ Les rapprochements en UNE lecture (#4283) : la boucle appelait `objectidPour` une fois par
+        // site. Mesuré, 45 ms à cent cinquante carrés - modeste au regard de l'attente réseau qui
+        // précède, mais `tous(...)` existait déjà et « Mes sites » s'en servait déjà.
+        Map<String, String> objectidParSite = liens.tous(LienVigieChiro.ENTITE_SITE);
         Map<Long, List<PointDEcoute>> pointsParSite =
                 pointDao.findParSites(locaux.stream().map(Site::id).toList());
 
         List<ConstatAudit> constats = new ArrayList<>();
         for (Site local : locaux) {
-            Optional<String> objectid = liens.objectidPour(LienVigieChiro.ENTITE_SITE, String.valueOf(local.id()));
+            Optional<String> objectid = Optional.ofNullable(objectidParSite.get(String.valueOf(local.id())));
             if (objectid.isEmpty()) {
                 continue; // site non lié au serveur : hors périmètre de l'audit en ligne
             }

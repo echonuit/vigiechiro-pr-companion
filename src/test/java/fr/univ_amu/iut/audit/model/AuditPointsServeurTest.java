@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 
 /// Audit en ligne des points (#1178) : DAO réels sur SQLite jetable, client **mocké**. On seede un site
 /// (carré 040962) + un point A1 (43.5, 5.4) lié au serveur, puis on fait varier ce que renvoie
@@ -250,5 +251,27 @@ class AuditPointsServeurTest {
         when(client.mesSites())
                 .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
                         OBJECTID_SITE, "Étang", true, "040962", null, List.of(new PointVigieChiro("A1", 43.5, 5.4))))));
+    }
+
+    @Test
+    @DisplayName("#4283 : les rapprochements se lisent en UNE fois, pas une par site")
+    void les_liens_se_lisent_en_une_fois() {
+        LienVigieChiroDao liensSurveilles = Mockito.spy(new LienVigieChiroDao(source));
+        AuditPointsServeur surveille = new AuditPointsServeur(
+                client, new SiteDao(source), new PointDao(source), liensSurveilles, ID_USER, Optional.empty());
+        // ⚠️ Le serveur doit rendre des sites : une liste VIDE fait sortir `confronterTous` avant sa
+        // boucle, et le garde passerait alors même avec le défaut en place. Vérifié en remettant le
+        // défaut : avec la liste vide il restait vert, avec ce site-ci il rougit.
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
+                        OBJECTID_SITE, "Étang", true, "040962", null, List.of(new PointVigieChiro("A1", 43.5, 5.4))))));
+        Mockito.clearInvocations(liensSurveilles);
+
+        assertThat(surveille.auditer()).isNotNull();
+
+        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes. Le défaut mesuré (#4283) : une lecture
+        // du rapprochement par site - 45 ms à cent cinquante carrés, modeste au regard de l'attente
+        // réseau qui précède, mais `tous(...)` existait déjà et rendait la boucle inutile.
+        Mockito.verify(liensSurveilles, Mockito.never()).objectidPour(Mockito.any(), Mockito.any());
     }
 }
