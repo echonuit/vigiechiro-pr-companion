@@ -1,0 +1,114 @@
+# Dit ce qui a changé entre DEUX tournages de recette.
+#
+# ## Pourquoi à la demande, et non committé
+#
+# La comparaison « dernière version contre tournante » change dès que l'un des deux bouge : une page
+# committée serait périmée au prochain tournage manuel. Le résultat vit donc dans le résumé du job et
+# dans un artefact, toujours frais, et `dev-docs/recette/comparer-deux-tournages.md` dit comment le
+# lire (#4274).
+#
+# ## Pourquoi il faut normaliser les noms
+#
+# Sur un tag de version, les pièces portent le préfixe de leur banc - `bash-` ou `java-` - parce que
+# les deux bancs nomment leurs clips à l'identique et s'écraseraient sinon (#4258). Sur la pré-version
+# roulante, elles n'en portent pas. Comparer les deux demande donc de retirer le préfixe après
+# téléchargement, sans quoi aucun cas ne se retrouverait des deux côtés et l'outil annoncerait
+# cinquante cas « apparus » et cinquante « disparus ».
+name: comparer deux tournages
+
+run-name: "comparaison ${{ inputs.avant }} → ${{ inputs.apres }} (banc ${{ inputs.banc }})"
+
+on:
+  workflow_dispatch:
+    inputs:
+      avant:
+        description: "Ce à quoi on compare : un tag de version, ou « clips-recette »"
+        type: string
+        required: true
+      apres:
+        description: "Ce qu'on regarde : un tag de version, ou « clips-recette »"
+        type: string
+        default: "clips-recette"
+      banc:
+        description: "Quel banc, sur les tags de version"
+        type: choice
+        default: "bash"
+        options:
+          - "bash"
+          - "java"
+      tolerance:
+        description: "Tolérance de couleur, en %. 5 absorbe l'anticrénelage sans rendre aveugle."
+        type: string
+        default: "5"
+
+permissions:
+  contents: read
+
+jobs:
+  comparer:
+    name: Comparer les deux tournages
+    runs-on: ubuntu-latest
+    # Un butoir, comme tout job : le téléchargement de cent clips peut pendre sur un miroir.
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Reprendre les clips des deux tournages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AVANT: ${{ inputs.avant }}
+          APRES: ${{ inputs.apres }}
+          BANC: ${{ inputs.banc }}
+        run: |
+          set -euo pipefail
+
+          reprendre() { # <source> <dossier>
+            local source="$1" dossier="$2" clip nu
+            mkdir -p "$dossier"
+            if ! gh release view "$source" >/dev/null 2>&1; then
+              echo "::error::« $source » n'est ni un tag de version ni une pré-version de ce dépôt."
+              exit 1
+            fi
+            # Les deux préfixes sont demandés : une pré-version roulante n'en porte aucun, un tag les
+            # porte tous les deux. `|| true` parce qu'une absence de correspondance n'est pas une
+            # panne ici - c'est le compte final qui tranche.
+            gh release download "$source" --dir "$dossier" --pattern "${BANC}-*.mp4" --clobber 2>/dev/null || true
+            gh release download "$source" --dir "$dossier" --pattern "*.mp4" --clobber 2>/dev/null || true
+
+            # ⚠️ La normalisation. Sans elle, `bash-Truc.mp4` et `Truc.mp4` sont deux cas différents,
+            # et la comparaison annoncerait tout le monde apparu et tout le monde disparu.
+            for clip in "$dossier"/*.mp4; do
+              [ -e "$clip" ] || continue
+              nu=$(basename "$clip"); nu=${nu#bash-}; nu=${nu#java-}
+              [ "$(basename "$clip")" = "$nu" ] || mv -f "$clip" "$dossier/$nu"
+            done
+
+            local compte
+            compte=$(find "$dossier" -name '*.mp4' | wc -l)
+            echo "« $source » : ${compte} clip(s)."
+            [ "$compte" -gt 0 ] || {
+              echo "::error::Aucun clip repris de « $source ». Un dossier vide n'est pas « rien n'a changé »."
+              exit 1
+            }
+          }
+
+          reprendre "$AVANT" avant
+          reprendre "$APRES" apres
+
+      - name: Comparer, et écrire ce qu'on doit regarder
+        env:
+          TOLERANCE: ${{ inputs.tolerance }}
+        run: |
+          set -euo pipefail
+          chmod +x .github/assets/compare-tournages.sh
+          ./.github/assets/compare-tournages.sh avant apres comparaison "${TOLERANCE}"
+          cat comparaison/index.md >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Garder les images de la comparaison
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: comparaison-${{ inputs.avant }}-${{ inputs.apres }}
+          path: comparaison/
+          retention-days: 14
+          if-no-files-found: error

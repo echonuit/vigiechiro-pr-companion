@@ -1,6 +1,6 @@
 # CI/CD et release
 
-Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->17<!--/inv--> workflows et le processus de
+Tout est automatisé par **GitHub Actions**. Cette page cartographie les <!--inv:workflows-ci-->18<!--/inv--> workflows et le processus de
 publication.
 
 ## Les workflows
@@ -28,6 +28,7 @@ publication.
 | [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | **manuel** (`workflow_dispatch`) | Soumission d'une version choisie à winget-pkgs (cf. plus bas) | — |
 | [recette-filmee.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/recette-filmee.yml) | **manuel** (`workflow_dispatch`) | Éprouve qu'un runner **pilote** un test filmé, et pas seulement qu'il l'exécute. Porte son **témoin** : sans gestionnaire de fenêtres, le lancement doit être refusé (cf. plus bas). Avec `publier_les_clips`, il verse le tournage complet sur `clips-recette` **et**, quand le train lui passe une version, une copie préfixée `bash-` sur le **tag** de cette version, qui lui ne bougera jamais (#4258) | — |
 | [tournage-recette.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/tournage-recette.yml) | **manuel** (`workflow_dispatch`) | Tourne les clips d'**une session**, sur la plateforme de son choix - `ubuntu`, `windows` ou `macos`, le banc en Java pur n'ayant besoin d'aucun écran. Répond à la limite que l'EPIC #4133 se donnait : « à 400 clips, ce serait des heures par passage ». La liste des classes est **dérivée** par `CorrespondanceRecetteTest`, jamais tenue à la main. Appelé **aussi par le train** (`workflow_call`), il verse alors ses clips préfixés `java-` sur le **tag** de la version, à côté de ceux du banc bash : c'est la transition qui se prépare, et le jour venu il n'y aura qu'un des deux appels à retirer (#4258). ⚠️ Il ne touche **jamais** à une pré-version roulante : `clips-java` est un instantané daté que la page de comparaison interroge | — |
+| [comparer-tournages.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/comparer-tournages.yml) | **manuel** (`workflow_dispatch`) | Dit ce qui a changé entre **deux tournages** : présence du cas, image finale accolée, carte des différences, durée. Prend deux sources - un tag de version ou `clips-recette` - et **normalise les préfixes de banc**, sans quoi `bash-Truc.mp4` et `Truc.mp4` passeraient pour deux cas différents. ⚠️ À la demande et non committé : la comparaison « dernière version contre tournante » change dès que l'un des deux bouge (#4274) | — |
 
 !!! note "L'image devcontainer pré-buildée a été retirée"
     Un workflow `devcontainer-image.yml` publiait une image sur GHCR pour accélérer le démarrage des
@@ -570,7 +571,8 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `mesure-duree-portail.sh` | l'**allongement** du portail qualité, médiane contre médiane | `maven.yml` - ⚠️ il **avertit**, il ne bloque pas (autotest : `lint.yml`) |
 | `lance-test-filme.sh` | un runner **pilote** un test filmé, et refuse de le lancer sans gestionnaire de fenêtres | `recette-filmee.yml` - ⚠️ workflow **manuel** |
 | `filtrer-bruit-cartes.sh` | rend leur version committée aux aperçus de carte dont **seul le fond** a changé | `capture-vues.yml` |
-| `compare-apercus.sh` | montre, sur une PR, les écrans qu'elle change : avant/après accolés, part de pixels, et le **dit** quand aucun ne change | `capture-vues.yml` |
+| `compare-apercus.sh` | montre, sur une PR, les écrans qu'elle change : avant/après accolés, part de pixels, et le **dit** quand aucun ne change | `capture-vues.yml` (autotest : `lint.yml`) |
+| `compare-tournages.sh` | montre ce qui a changé entre **deux tournages** : présence du cas, image finale accolée, carte des différences, durée. Le chiffre **trie**, la carte **localise** ; une mesure impossible se compte au lieu de passer pour « rien n'a changé » | `comparer-tournages.yml` (autotest : `lint.yml`) |
 | `verifie-inventaires-ci.sh` | les trois inventaires que la CI tient **sur elle-même** concordent avec la réalité | `lint.yml` |
 | `verifie-noms-d-etapes.sh` | aucun nom d'étape ou de job ne perd de texte à l'analyse YAML (un `#` non cité ouvre un commentaire) | `lint.yml` |
 | `scripts/adr/verifie_scripts.py` | chaque détecteur ADR voit sa violation témoin et ignore la même en commentaire, et **aucun détecteur n'est sans cas** | `lint.yml` |
