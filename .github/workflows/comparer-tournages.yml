@@ -69,11 +69,19 @@ jobs:
               echo "::error::« $source » n'est ni un tag de version ni une pré-version de ce dépôt."
               exit 1
             fi
-            # Les deux préfixes sont demandés : une pré-version roulante n'en porte aucun, un tag les
-            # porte tous les deux. `|| true` parce qu'une absence de correspondance n'est pas une
-            # panne ici - c'est le compte final qui tranche.
+            # Le banc demandé D'ABORD. Le motif général n'est qu'un REPLI, et il ne se déclenche que
+            # si le premier n'a rien ramené - le cas d'une pré-version roulante, dont les pièces ne
+            # portent aucun préfixe.
+            #
+            # ⚠️ Enchaîner les deux inconditionnellement ramènerait, sur un tag qui porte les DEUX
+            # bancs, les clips de l'autre banc par-dessus. La normalisation qui suit les renommerait
+            # tous pareil, et « bash-Truc.mp4 » puis « java-Truc.mp4 » deviendraient le même fichier :
+            # une comparaison qui mélange les deux bancs en ayant l'air juste.
             gh release download "$source" --dir "$dossier" --pattern "${BANC}-*.mp4" --clobber 2>/dev/null || true
-            gh release download "$source" --dir "$dossier" --pattern "*.mp4" --clobber 2>/dev/null || true
+            if [ "$(find "$dossier" -name "*.mp4" | wc -l)" -eq 0 ]; then
+              echo "« $source » ne porte aucune pièce « ${BANC}- » : repli sur les pièces sans préfixe."
+              gh release download "$source" --dir "$dossier" --pattern "*.mp4" --clobber 2>/dev/null || true
+            fi
 
             # ⚠️ La normalisation. Sans elle, `bash-Truc.mp4` et `Truc.mp4` sont deux cas différents,
             # et la comparaison annoncerait tout le monde apparu et tout le monde disparu.
