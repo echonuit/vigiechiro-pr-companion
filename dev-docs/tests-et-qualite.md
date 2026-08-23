@@ -228,8 +228,30 @@ comme un cas prouvé.
 | `ReperesDeSeance` + `JournalDesReperes` | pendant une séance filmée, consignent l'instant de chaque test (`currentTimeMillis`, jamais `nanoTime`) |
 | `Seance` | dit à un scénario s'il est filmé, pour qu'il ne prenne ses respirations que là |
 
-Le montage et l'index par cas vivent côté script :
-[CI/CD](ci-cd-release.md#le-montage-un-clip-par-test-un-index-par-cas-3774).
+**Deux bancs tournent ces clips, et ils ne se ressemblent pas.**
+
+Le banc historique filme l'**écran** : `ffmpeg -f x11grab` sur un Xvfb, avec `openbox` et `xdotool`.
+Son montage et son index par cas vivent donc côté script
+([CI/CD](ci-cd-release.md#le-montage-un-clip-par-test-un-index-par-cas-3774)), et il ne tourne que
+sous Linux.
+
+Le banc en Java pur filme la **scène** : `Scene.snapshot` poussé dans `ffmpeg`, depuis la JVM du test.
+Il tourne sous Linux, Windows et macOS, sans serveur X ni gestionnaire de fenêtres, et il porte donc
+son montage et son index en Java :
+
+| Pièce (`recette/film/`) | Rôle |
+|---|---|
+| `CameraDeScene` | prend la scène à intervalle régulier et compose les fenêtres sur une toile unique |
+| `EnregistreurDeFilm` | extension JUnit : ouvre l'encodeur autour d'un test, un fichier par test |
+| `Encodeur` | pousse les images brutes dans `ffmpeg`, et sait dire ce qui manque quand il est absent |
+| `IndexDesCas` | l'index par cas, écrit en **fragments par JVM** et reconstruit sous verrou (ADR 4249) |
+| `CartonDeTitre` | le carton d'ouverture : le cas, son libellé, le test qui le joue |
+| `Gestes` + `CalqueDesGestes` | observent les événements et dessinent le halo, la flèche et le badge (ADR 4248) |
+| `PoliceDuBanc` | la typographie du produit, chargée dans AWT depuis le jar |
+
+⚠️ **Lequel des deux tourne n'est pas encore tranché.** Le comparatif des deux bancs est dans
+[Comparer les deux bancs](recette/comparer-les-deux-bancs.md), et cette page-là est datée : elle
+mourra avec la décision.
 
 ⚠️ **Trois états, pas deux.** Un cas « perceptif » n'est ni couvert ni à couvrir : le script le
 marque `*perceptif*`, et le mot « couvert » reste réservé à ce que la CI prouve. Compter un scénario
