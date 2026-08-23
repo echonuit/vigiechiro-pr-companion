@@ -78,6 +78,12 @@ jobs:
     name: Le runner pilote-t-il vraiment ?
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    # Le verdict sort du job pour que le versement sur le TAG puisse l'écrire dans l'index : sur une
+    # pièce immuable, celui qui la relira dans six mois doit savoir si les tests étaient verts ce
+    # jour-là. La publication n'en dépend pas pour autant - un cas qui rougit produit son clip, et
+    # c'est celui-là qu'on veut regarder.
+    outputs:
+      verdict: ${{ steps.film.outputs.verdict }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -333,6 +339,59 @@ jobs:
           }
           gh release upload clips-recette "${clips[@]}" repris/recette/clips/index.md --clobber
           echo "${#clips[@]} clip(s) versé(s) sur « clips-recette »."
+
+      # La pré-version roulante garde son rôle : des adresses STABLES, que les pages écrivent en dur.
+      # Le tag de la version en reçoit une COPIE, pour une raison différente : un tag ne bouge JAMAIS,
+      # donc ces adresses-là sont immuables, et la suite des versions forme un historique du produit
+      # que rien ne reconstituera après coup (#4258).
+      #
+      # Ce n'est pas une hypothèse : en cherchant un « avant » pour l'artefact visuel de la clôture de
+      # #4133, aucun clip antérieur au calque des gestes n'a été retrouvé. Les pièces de la
+      # pré-version du spike avaient été reversées par-dessus, et sa date de publication ne dit rien
+      # de la date de son contenu.
+      #
+      # ⚠️ Le PRÉFIXE n'est pas décoratif. Les deux bancs nomment leurs pièces à l'identique - 50 noms
+      # communs sur 51, mesuré - et les verser tous deux sur un même tag les ferait s'écraser EN
+      # SILENCE. Le préfixe réserve la place du banc Java avant qu'il en ait besoin.
+      #
+      # ⚠️ Ce qu'on ne sait pas encore vérifier : qu'AUCUN cas ne manque. Un tag est immuable, donc un
+      # tournage amputé y resterait, et un clip manquant se lit comme « ce cas n'existait pas ». Le
+      # garde qui compte les CAS vit dans `tournage-recette.yml` ; ici, l'artefact n'emporte pas
+      # `classes-citantes.txt`, donc le compte attendu n'est pas connu de ce job. En attendant, le
+      # dépôt se DÉCRIT : l'index versé porte en tête la version, la date et le nombre de clips, si
+      # bien qu'un trou se constate au lieu de se deviner.
+      - name: Verser aussi les clips sur le tag de la version
+        if: ${{ inputs.version != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          VERDICT: ${{ needs.filmer.outputs.verdict }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "${VERSION}" >/dev/null 2>&1; then
+            echo "::error::La version ${VERSION} n'a pas de release : rien à quoi attacher les clips."
+            exit 1
+          fi
+
+          rm -rf versionnes && mkdir -p versionnes
+          compte=0
+          for clip in repris/recette/clips/*.mp4; do
+            cp "$clip" "versionnes/bash-$(basename "$clip")"
+            compte=$((compte + 1))
+          done
+
+          {
+            echo "> Clips du banc **bash** pour la **${VERSION}**, tournés le $(date -u +%F) à $(date -u +%H:%M) UTC."
+            echo ">"
+            echo "> **${compte} clips**, verdict des tests sous filmage : **${VERDICT:-inconnu}**."
+            echo ">"
+            echo "> Un cas absent de cette table n'a pas été filmé pour cette version."
+            echo
+          } > versionnes/bash-index.md
+          cat repris/recette/clips/index.md >> versionnes/bash-index.md
+
+          gh release upload "${VERSION}" versionnes/* --clobber
+          echo "${compte} clip(s) versé(s) sur « ${VERSION} », préfixés « bash- »."
 
       # `--clobber` remplace et ajoute ; il ne retire rien. Un cas renommé ou supprimé laissait donc
       # son clip en ligne, montrant un comportement que le produit n'a plus - constaté après #4099.
