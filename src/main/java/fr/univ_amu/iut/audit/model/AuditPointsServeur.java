@@ -163,8 +163,13 @@ public final class AuditPointsServeur {
         }
         Map<String, SiteVigieChiro> parObjectid =
                 distants.stream().collect(Collectors.toMap(SiteVigieChiro::id, Function.identity(), (a, b) -> a));
+        // ⚠️ Points lus **par lot** (#4280) : la boucle en lançait une par site.
+        List<Site> locaux = siteDao.findByUtilisateur(idUtilisateur);
+        Map<Long, List<PointDEcoute>> pointsParSite =
+                pointDao.findParSites(locaux.stream().map(Site::id).toList());
+
         List<ConstatAudit> constats = new ArrayList<>();
-        for (Site local : siteDao.findByUtilisateur(idUtilisateur)) {
+        for (Site local : locaux) {
             Optional<String> objectid = liens.objectidPour(LienVigieChiro.ENTITE_SITE, String.valueOf(local.id()));
             if (objectid.isEmpty()) {
                 continue; // site non lié au serveur : hors périmètre de l'audit en ligne
@@ -175,7 +180,7 @@ public final class AuditPointsServeur {
             }
             Map<String, PointVigieChiro> pointsServeur = distant.points().stream()
                     .collect(Collectors.toMap(PointVigieChiro::code, Function.identity(), (a, b) -> a));
-            for (PointDEcoute point : pointDao.findBySite(local.id())) {
+            for (PointDEcoute point : pointsParSite.getOrDefault(local.id(), List.of())) {
                 confronter(constats, local, point, pointsServeur.get(point.code()));
             }
         }
