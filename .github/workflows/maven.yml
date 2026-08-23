@@ -297,7 +297,7 @@ jobs:
           fi
           test "${tailleMince}" -lt 6000000                     # le jar principal doit rester mince (< 6 Mo)
 
-      - name: Garde-fou app-image (jpackage --type app-image, #2256)
+      - name: "Garde-fou app-image (jpackage --type app-image, #2256)"
         # release.yml construit l'app-image APRÈS l'installeur, mais ce build n'était exercé sur AUCUNE
         # PR : la régression #2215 (options d'installeur invalides pour --type app-image) a cassé 6
         # releases sans qu'un seul check ne rougisse. On l'exerce donc ici, avec la MÊME désactivation
@@ -341,7 +341,7 @@ jobs:
           test -x "${VIGIECHIRO_LANCEUR}"
           bats src/test/bats
 
-      - name: Démarrage réel du paquet (runtime jlink, #2299)
+      - name: "Démarrage réel du paquet (runtime jlink, #2299)"
         # Le pas précédent vérifiait que le lanceur EXISTE. Il ne l'exécutait pas, et c'est très
         # exactement ce qui a laissé partir v2.32.3 : l'application démarrait puis mourait sur
         # NoClassDefFoundError java/net/http/HttpClient, module absent du runtime composé par jlink.
