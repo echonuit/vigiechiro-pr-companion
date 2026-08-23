@@ -57,6 +57,28 @@ on:
           - "windows"
           - "macos"
 
+  # ⚠️ Un second bloc, et non le même : `workflow_call` ne connaît pas `type: choice`. Les valeurs
+  # possibles restent celles de la liste ci-dessus, et c'est l'appelant qui en répond.
+  #
+  # Le train appelle ce workflow pour PRÉPARER LA TRANSITION vers le banc Java : les deux bancs
+  # filment la même version, le bash verse ses clips préfixés `bash-` et celui-ci les siens préfixés
+  # `java-`, sur le même tag. Le jour où le sort du banc bash sera tranché, il n'y aura qu'un appel à
+  # retirer (#4258).
+  workflow_call:
+    inputs:
+      session:
+        description: "Session à filmer (« toutes » pour tous les cas cités)"
+        type: string
+        default: "toutes"
+      plateforme:
+        description: "Où filmer"
+        type: string
+        default: "ubuntu"
+      version:
+        description: "Le tag de la version que ces clips montrent. Vide : rien n'est versé."
+        type: string
+        default: ""
+
 permissions:
   contents: read
 
@@ -76,10 +98,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # ⚠️ Le cas par défaut REFUSE, il ne se rabat pas. Tant que ce workflow n'était appelé qu'à
+          # la main, la liste de choix rendait une valeur inconnue impossible. Depuis qu'il est
+          # appelable (`workflow_call`), l'entrée est une chaîne libre : un `*) ubuntu` filmerait
+          # alors sur Linux une demande de tournage Windows, et le rapport dirait « windows » dans son
+          # titre. Un repli silencieux rend un résultat qui a l'air juste (ADR 0008).
           case "${{ inputs.plateforme }}" in
+            ubuntu)  runner="ubuntu-latest" ;;
             windows) runner="windows-latest" ;;
             macos)   runner="macos-latest" ;;
-            *)       runner="ubuntu-latest" ;;
+            *)
+              echo "::error::Plateforme inconnue : « ${{ inputs.plateforme }} ». Attendu : ubuntu, windows ou macos."
+              exit 1
+              ;;
           esac
           echo "runner=${runner}" >> "${GITHUB_OUTPUT}"
           echo "Tournage de ${{ inputs.session }} sur ${runner}." >> "${GITHUB_STEP_SUMMARY}"
@@ -262,3 +293,76 @@ jobs:
             target/recette/clips/
             tournage.log
           retention-days: 14
+
+  # ------------------------------------------------------------------------------------------------
+  # Le versement, dans un job SÉPARÉ, pour la même raison que côté bash : le job qui filme exécute
+  # les tests du produit, donc du code qui change à chaque PR. Lui donner le droit d'écrire dans le
+  # dépôt élargirait la surface pour une commodité. Celui-ci ne fait que reprendre l'artefact.
+  #
+  # ⚠️ Il ne verse QUE sur le tag, jamais sur une pré-version roulante. `clips-java` est un
+  # INSTANTANÉ daté, celui que la page de comparaison des deux bancs interroge : la faire écraser par
+  # le train rendrait cette page fausse du jour au lendemain (#4258).
+  #
+  # ⚠️ Et il ne s'exécute que si `filmer` a réussi. C'est ce qui donne au banc Java la garantie que le
+  # banc bash ne sait pas donner : son étape « Chaque cas de la session a sa ligne » compare les cas
+  # OBTENUS aux cas ATTENDUS et échoue s'il en manque un. Un tournage amputé ne peut donc pas se
+  # graver sur un tag immuable.
+  publier:
+    name: Verser les clips Java sur le tag de la version
+    needs: filmer
+    if: ${{ inputs.version != '' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Reprendre les clips du tournage
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}
+          path: repris
+
+      - name: Verser les clips sur le tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          VERSION: ${{ inputs.version }}
+          PLATEFORME: ${{ inputs.plateforme }}
+        run: |
+          set -euo pipefail
+          if ! gh release view "${VERSION}" >/dev/null 2>&1; then
+            echo "::error::La version ${VERSION} n'a pas de release : rien à quoi attacher les clips."
+            exit 1
+          fi
+
+          # ⚠️ `target/recette/clips/`, et non `clips/`. L'action d'envoi range les fichiers sous leur
+          # plus petit ancêtre commun, et `tournage.log` vit à la racine du workspace : l'archive
+          # conserve donc le chemin entier. Vérifié sur un artefact rapatrié, pas déduit.
+          clips=(repris/target/recette/clips/*.mp4)
+          [ -e "${clips[0]}" ] || {
+            echo "::error::Aucun clip mp4 dans l'artefact repris. Arborescence trouvée :"
+            find repris -type f | head -20
+            exit 1
+          }
+
+          # ⚠️ Le PRÉFIXE. Les deux bancs nomment leurs pièces à l'identique - 50 noms communs sur 51,
+          # mesuré - et les verser tous deux sans préfixe les ferait s'écraser EN SILENCE.
+          rm -rf versionnes && mkdir -p versionnes
+          for clip in "${clips[@]}"; do
+            cp "${clip}" "versionnes/java-$(basename "${clip}")"
+          done
+
+          {
+            echo "> Clips du banc **Java** pour la **${VERSION}**, tournés sur \`${PLATEFORME}\`"
+            echo "> le $(date -u +%F) à $(date -u +%H:%M) UTC."
+            echo ">"
+            echo "> **${#clips[@]} clips**. Le tournage a été vérifié COMPLET : le job qui filme"
+            echo "> compare les cas obtenus aux cas attendus et échoue s'il en manque un."
+            echo
+          } > versionnes/java-index.md
+          if [ -f repris/target/recette/clips/index.md ]; then
+            cat repris/target/recette/clips/index.md >> versionnes/java-index.md
+          fi
+
+          gh release upload "${VERSION}" versionnes/* --clobber
+          echo "${#clips[@]} clip(s) versé(s) sur « ${VERSION} », préfixés « java- »."

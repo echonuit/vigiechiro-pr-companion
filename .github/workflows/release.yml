@@ -600,3 +600,37 @@ jobs:
       # session ne sait pas si ce qu'il regarde est bien ce qu'il valide.
       version: ${{ needs.release.outputs.tag }}
     secrets: inherit
+
+  # Le banc en Java pur filme la MÊME version, et verse ses clips sur le MÊME tag, préfixés `java-`
+  # là où le banc bash pose les siens en `bash-` (#4258).
+  #
+  # ## Pourquoi les deux, et pas encore l'un ou l'autre
+  #
+  # C'est la transition qui est préparée ici. Tant que le sort du banc bash n'est pas tranché, chaque
+  # version porte les deux tournages : on peut les comparer sur le produit du jour, au lieu de les
+  # comparer sur une page datée qui mourra avec la décision. Le jour venu, il n'y aura qu'un des deux
+  # appels à retirer.
+  #
+  # ## Ce que celui-ci apporte que l'autre n'a pas
+  #
+  # Son job qui filme compare les cas OBTENUS aux cas ATTENDUS et échoue s'il en manque un. Le
+  # versement dépend de ce job, donc un tournage amputé ne peut pas se graver sur un tag immuable.
+  # Le banc bash n'a pas cet oracle : son artefact n'emporte pas le compte attendu.
+  #
+  # ## Ce que ça coûte
+  #
+  # Cinq minutes quarante, mesurées sur le tournage complet des 43 cas. Les deux bancs partent
+  # ensemble après `publish` et ne s'attendent pas.
+  clips-de-recette-java:
+    needs: [release, publish]
+    if: >-
+      ${{ !cancelled()
+      && needs.publish.result == 'success' }}
+    permissions:
+      contents: write
+    uses: ./.github/workflows/tournage-recette.yml
+    with:
+      session: toutes
+      plateforme: ubuntu
+      version: ${{ needs.release.outputs.tag }}
+    secrets: inherit
