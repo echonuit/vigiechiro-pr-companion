@@ -26,6 +26,7 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.GesteDeMenu;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -187,7 +188,7 @@ class ScenarioPerceptifConnexionTest {
     @Test
     @CasDeRecette(value = "S1-26", jugement = Jugement.HUMAIN, portee = Portee.A_L_ECRAN)
     @DisplayName("S1-26 · la modale de connexion s'ouvre : à regarder, rien ne doit se replacer après coup")
-    void la_modale_de_connexion_s_ouvre(FxRobot robot) {
+    void la_modale_de_connexion_s_ouvre(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
 
         ouvrirLaModaleParLeMenu(robot);
@@ -244,25 +245,7 @@ class ScenarioPerceptifConnexionTest {
     /// ⚠️ On clique l'entrée par son LIBELLÉ, tel que `NavigationConnexion.libelleMenu()` le rend
     /// pour un profil absent. Le viser par sa position dans le menu se casserait au premier ajout
     /// d'entrée, sans que le film le dise - il montrerait un autre écran s'ouvrir.
-    private void ouvrirLaModaleParLeMenu(FxRobot robot) {
-        robot.clickOn("#menuOutils");
-        WaitForAsyncUtils.waitForFxEvents();
-        Respiration.entreDeuxGestes(robot);
-
-        // ⚠️ On SE POSE sur l'entrée avant de la cliquer, et les deux gestes sont séparés.
-        //
-        // `clickOn` déplace et clique d'un seul tenant : le pointeur arrivait sur l'entrée et
-        // l'appui suivait dans la même image. Retour de la revue des clips - « on a l'impression
-        // que la modale apparaît par magie » - et ce n'était qu'à moitié le pointeur manquant : même
-        // dessiné, il ne laissait pas le temps de LIRE ce qui allait être cliqué.
-        //
-        // Le temps d'arrêt se prend donc entre l'arrivée et l'appui, là où l'entrée est surlignée
-        // sous le pointeur. C'est le moment qui explique la modale qui suit.
-        robot.moveTo(LIBELLE_ENTREE_MENU);
-        WaitForAsyncUtils.waitForFxEvents();
-        Respiration.avantLeGeste(robot);
-
-        robot.clickOn(LIBELLE_ENTREE_MENU);
-        WaitForAsyncUtils.waitForFxEvents();
+    private void ouvrirLaModaleParLeMenu(FxRobot robot) throws TimeoutException {
+        GesteDeMenu.choisir(robot, "#menuOutils", LIBELLE_ENTREE_MENU);
     }
 }

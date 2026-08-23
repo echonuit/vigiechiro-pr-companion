@@ -32,6 +32,7 @@ import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.GesteDeMenu;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import java.io.IOException;
@@ -345,11 +346,7 @@ class ScenarioPerceptifIssuesConnexionTest {
         return robot.lookup("#bandeauStatut").queryAs(Label.class);
     }
 
-    private void ouvrirLaModaleParLeMenu(FxRobot robot) {
-        robot.clickOn("#menuOutils");
-        WaitForAsyncUtils.waitForFxEvents();
-        Respiration.entreDeuxGestes(robot);
-        robot.clickOn(LIBELLE_ENTREE_MENU);
-        WaitForAsyncUtils.waitForFxEvents();
+    private void ouvrirLaModaleParLeMenu(FxRobot robot) throws TimeoutException {
+        GesteDeMenu.choisir(robot, "#menuOutils", LIBELLE_ENTREE_MENU);
     }
 }
