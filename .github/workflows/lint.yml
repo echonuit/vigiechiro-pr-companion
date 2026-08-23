@@ -270,6 +270,19 @@ jobs:
           ./.github/scripts/verifie-permissions.sh --auto-test
           ./.github/scripts/verifie-permissions.sh
 
+      - name: Un secret de plateforme ne dépasse pas son pas
+        # ⚠️ Posé dans l'`env:` d'un JOB, un jeton Vigie-Chiro n'est pas offert au pas qui en a
+        # besoin : il l'est à tout ce que le job exécute. `ConnexionModule` lit `System.getenv`, les
+        # forks surefire héritent de l'environnement du job, et l'URL de base vaut la production : la
+        # suite de tests entière serait armée face à la plateforme réelle.
+        #
+        # ⚠️ Et rien côté serveur ne peut le rattraper : le rôle `Lecteur` est déclaré mais AUCUNE
+        # route ne l'accepte, `GET /moi` compris. La lecture seule ne tient que par cette portée.
+        run: |
+          chmod +x .github/scripts/verifie-portee-des-secrets.sh
+          ./.github/scripts/verifie-portee-des-secrets.sh --auto-test
+          ./.github/scripts/verifie-portee-des-secrets.sh
+
       - name: La porte d installation porte ses cas
         # ⚠️ Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
         # défaut y serait indiscernable d'une panne de miroir.
