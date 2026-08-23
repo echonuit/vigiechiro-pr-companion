@@ -34,7 +34,7 @@ class CartonDeTitreTest {
 
     @Test
     @DisplayName("le repli ne perd AUCUN mot, y compris le dernier")
-    void leRepliNePerdAucunMot() {
+    void le_repli_ne_perd_aucun_mot() {
         List<String> lignes = CartonDeTitre.replier(LIBELLE, metrique(), 400);
         assertTrue(lignes.size() > 1, "le libellé devrait se replier à cette largeur");
         assertEquals(LIBELLE, String.join(" ", lignes));
@@ -42,7 +42,7 @@ class CartonDeTitreTest {
 
     @Test
     @DisplayName("un mot plus large que la ligne occupe la sienne, il n'est pas tronqué")
-    void unMotTropLargeNestPasTronque() {
+    void un_mot_trop_large_nest_pas_tronque() {
         String mot = "anticonstitutionnellement".repeat(3);
         List<String> lignes = CartonDeTitre.replier(mot, metrique(), 100);
         assertEquals(List.of(mot), lignes);
@@ -50,14 +50,14 @@ class CartonDeTitreTest {
 
     @Test
     @DisplayName("un libellé absent ne fait pas échouer le carton")
-    void unLibelleAbsentNeCassePas() {
+    void un_libelle_absent_ne_casse_pas() {
         assertEquals(List.of(), CartonDeTitre.replier("", metrique(), 400));
         assertEquals(List.of(), CartonDeTitre.replier(null, metrique(), 400));
     }
 
     @Test
     @DisplayName("le carton est aux dimensions du film, en bgr24")
-    void leCartonEstAuFormatDuFilm() {
+    void le_carton_est_au_format_du_film() {
         BufferedImage carton = CartonDeTitre.dessiner(1280, 900, "S1-26", LIBELLE, "Exemple");
         assertEquals(1280, carton.getWidth());
         assertEquals(900, carton.getHeight());
@@ -67,7 +67,7 @@ class CartonDeTitreTest {
 
     @Test
     @DisplayName("du texte y paraît, et un carton vide se distingue d'un carton plein")
-    void leCartonPorteDeLEncre() {
+    void le_carton_porte_de_l_encre() {
         assertTrue(CartonDeTitre.porteDeLEncre(CartonDeTitre.dessiner(640, 360, "S1-26", LIBELLE, "Exemple")));
         // Le témoin : sans ce cas, « porte de l'encre » pourrait être vrai partout, et le cas
         // ci-dessus resterait vert sur un carton qui n'affiche rien.

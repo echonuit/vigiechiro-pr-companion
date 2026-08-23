@@ -58,7 +58,7 @@ class CalqueDesGestesTest {
 
     @Test
     @DisplayName("la flèche se voit, et sa pointe tombe sur la position rapportée")
-    void laFlecheSeVoitEtSaPointeTombeSurLaPosition() {
+    void la_fleche_se_voit_et_sa_pointe_tombe_sur_la_position() {
         BufferedImage image = toile();
         Graphics2D g = image.createGraphics();
 
@@ -83,7 +83,7 @@ class CalqueDesGestesTest {
     /// toutes les images qui suivent un clic, et un clip entier paraîtrait cliqué de bout en bout.
     @Test
     @DisplayName("un halo éteint ne peint rien du tout")
-    void unHaloEteintNePeintRien() {
+    void un_halo_eteint_ne_peint_rien() {
         BufferedImage image = toile();
         Graphics2D g = image.createGraphics();
 
@@ -95,7 +95,7 @@ class CalqueDesGestesTest {
 
     @Test
     @DisplayName("un halo vif se voit, et il grossit en s'effaçant")
-    void unHaloVifSeVoitEtGrossitEnSEffacant() {
+    void un_halo_vif_se_voit_et_grossit_en_s_effacant() {
         BufferedImage vif = toile();
         Graphics2D gv = vif.createGraphics();
         CalqueDesGestes.halo(gv, 400, 300, 1.0);
@@ -126,7 +126,7 @@ class CalqueDesGestesTest {
     /// d'être là où l'oeil le cherche.
     @Test
     @DisplayName("le badge tient dans la bande basse, toujours au même endroit")
-    void leBadgeTientDansLaBandeBasse() {
+    void le_badge_tient_dans_la_bande_basse() {
         BufferedImage image = toile();
         Graphics2D g = image.createGraphics();
 
@@ -143,7 +143,7 @@ class CalqueDesGestesTest {
 
     @Test
     @DisplayName("le badge est centré, quelle que soit la longueur du libellé")
-    void leBadgeEstCentre() {
+    void le_badge_est_centre() {
         for (String libelle : new String[] {"R", "Ctrl + Maj + Alt + S"}) {
             BufferedImage image = toile();
             Graphics2D g = image.createGraphics();

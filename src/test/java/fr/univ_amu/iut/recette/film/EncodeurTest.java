@@ -24,7 +24,7 @@ class EncodeurTest {
 
     @Test
     @DisplayName("un programme introuvable est refusé, et le refus le NOMME")
-    void unProgrammeIntrouvableEstRefuse() {
+    void un_programme_introuvable_est_refuse() {
         IOException refus = assertThrows(
                 IOException.class, () -> Encodeur.VersFfmpeg.resoudre("programme-qui-n-existe-nulle-part-42"));
         assertTrue(
@@ -37,7 +37,7 @@ class EncodeurTest {
 
     @Test
     @DisplayName("un chemin imposé par propriété est honoré")
-    void unCheminImposeEstHonore(@TempDir Path dossier) throws IOException {
+    void un_chemin_impose_est_honore(@TempDir Path dossier) throws IOException {
         Path faux = executable(dossier.resolve("faux-encodeur"));
         System.setProperty(PROPRIETE, faux.toString());
         try {
@@ -49,7 +49,7 @@ class EncodeurTest {
 
     @Test
     @DisplayName("un chemin imposé qui n'est pas exécutable est refusé, et non ignoré")
-    void unCheminImposeNonExecutableEstRefuse(@TempDir Path dossier) throws IOException {
+    void un_chemin_impose_non_executable_est_refuse(@TempDir Path dossier) throws IOException {
         // Ignorer silencieusement une propriété fausse ferait retomber sur le PATH, donc lancer
         // AUTRE CHOSE que ce qui a été demandé. Le refus vaut mieux que la substitution.
         Path inerte = Files.writeString(dossier.resolve("inerte"), "pas un programme");
