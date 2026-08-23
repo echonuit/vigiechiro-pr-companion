@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.GesteDeMenu;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -140,7 +141,7 @@ class MainViewTest {
     @Test
     @CasDeRecette(value = "S1-29", portee = Portee.A_L_ECRAN)
     @DisplayName("#927 : le menu ☰ → « Réglages » ouvre l'écran de réglages dans la zone centrale")
-    void menu_reglages_ouvre_l_ecran(FxRobot robot) {
+    void menu_reglages_ouvre_l_ecran(FxRobot robot) throws TimeoutException {
         MenuButton menu = robot.lookup("#menuOutils").queryAs(MenuButton.class);
         MenuItem reglages = menu.getItems().stream()
                 .filter(item -> item.getText() != null && item.getText().contains("Réglages"))
@@ -150,16 +151,12 @@ class MainViewTest {
         // ⚠️ Le menu s'OUVRE avant qu'on choisisse. `fire()` sur l'entrée saute cette moitié : l'écran
         // changeait sans que rien ne l'explique, et le clip ne montrait pas d'où venait le geste (#4149).
         Respiration.avantLeGeste(robot);
-        robot.clickOn(menu);
-        WaitForAsyncUtils.waitForFxEvents();
-        Respiration.leTempsDeLire(robot);
 
-        // ⚠️ L'entrée se CLIQUE. `fire()` la déclenchait sans que le pointeur y aille : le menu se
-        // refermait et l'écran changeait, sans qu'on ait vu CHOISIR (#4158). Le libellé est celui de
-        // l'entrée réelle, lu sur elle, pour que le clic suive un renommage.
-        Respiration.entreDeuxGestes(robot);
-        robot.clickOn(reglages.getText());
-        WaitForAsyncUtils.waitForFxEvents();
+        // ⚠️ Le pointeur VA sur l'entrée et s'y arrête avant de cliquer (#4177). Remplacer `fire()` par
+        // un vrai clic (#4158) était nécessaire et pas suffisant : `clickOn(libellé)` téléporte le
+        // pointeur et clique dans la foulée, le menu se referme, et l'instant du choix n'existe sur
+        // aucune trame. Mesuré en extrayant les images autour du clic.
+        GesteDeMenu.choisir(robot, "#menuOutils", reglages.getText());
         Respiration.surLeMomentCle(robot);
 
         // La zone centrale affiche désormais l'écran Réglages (son TabPane d'onglets).
@@ -340,7 +337,8 @@ class MainViewTest {
     @Test
     @CasDeRecette(value = "S1-10", portee = Portee.A_L_ECRAN)
     @DisplayName("#1405 : les compteurs suivent une RESTAURATION, sans qu'on ait quitté l'accueil")
-    void bandeau_suit_une_restauration_sans_navigation(FxRobot robot, @TempDir Path sauvegardes) {
+    void bandeau_suit_une_restauration_sans_navigation(FxRobot robot, @TempDir Path sauvegardes)
+            throws TimeoutException {
         // ⚠️ Ce cas n'est PAS celui de S1-09, et la nuance décide de son existence. Là-bas, la
         // mutation est un `creerSite`, qui annonce lui-même sa révision. Ici, la base ENTIÈRE est
         // remplacée par le contenu d'un fichier : c'est un tout autre chemin, et rien ne garantit a
@@ -379,11 +377,9 @@ class MainViewTest {
         dialogues.confirmateur().definir(message -> true);
         dialogues.notificateur().definir((niveau, entete, message) -> {});
 
-        robot.clickOn("#menuOutils");
-        WaitForAsyncUtils.waitForFxEvents();
-        Respiration.leTempsDeLire(robot);
-        robot.clickOn(entree.libelle());
-        WaitForAsyncUtils.waitForFxEvents();
+        // ⚠️ Le pointeur s'arrête SUR l'entrée avant de cliquer (#4177) : sans quoi le clip montre le
+        // menu, puis les compteurs qui changent, et jamais ce qui a été choisi entre les deux.
+        GesteDeMenu.choisir(robot, "#menuOutils", entree.libelle());
         Respiration.surLeMomentCle(robot);
 
         assertThat(bandeau.isVisible())
