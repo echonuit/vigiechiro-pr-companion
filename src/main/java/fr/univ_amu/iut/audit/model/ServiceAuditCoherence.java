@@ -93,10 +93,17 @@ public class ServiceAuditCoherence {
     public RapportAudit auditerTout() {
         List<ConstatAudit> constats = new ArrayList<>();
         Set<String> racinesConnues = new HashSet<>();
+        // ⚠️ Les quatre petites tables sont lues **en entier une fois** (#4286), pas une requête par
+        // passage. Elles portent une ligne par session ou par passage : trois cents lignes pour trois
+        // cents nuits. Les originaux et les séquences, eux, restent lus session par session - ce sont
+        // les tables de volume, et les charger toutes d'un bloc échangerait un défaut de lenteur contre
+        // un défaut de mémoire.
+        ContexteAudit contexte =
+                ContexteAudit.deTout(sessionDao, journalDao, releveDao, resultatsDao, pointDao, siteDao, depotDao);
         for (Passage passage : passageDao.findAll()) {
-            Optional<SessionDEnregistrement> session = sessionDao.trouverParPassage(passage.id());
+            Optional<SessionDEnregistrement> session = contexte.session(passage.id());
             session.ifPresent(s -> racinesConnues.add(normaliser(Path.of(s.cheminRacine()))));
-            constats.addAll(auditerUnPassage(passage, session));
+            constats.addAll(auditerUnPassage(passage, session, contexte));
         }
         constats.addAll(balayage.dossiersOrphelins(workspace.racine(), racinesConnues));
         constats.addAll(departements.auditer());
@@ -115,7 +122,10 @@ public class ServiceAuditCoherence {
         Passage passage = passageDao
                 .findById(idPassage)
                 .orElseThrow(() -> new IllegalArgumentException("Passage introuvable : " + idPassage));
-        return new RapportAudit(auditerUnPassage(passage, sessionDao.trouverParPassage(idPassage)));
+        return new RapportAudit(auditerUnPassage(
+                passage,
+                sessionDao.trouverParPassage(idPassage),
+                ContexteAudit.dUnSeulPassage(journalDao, releveDao, resultatsDao, pointDao, siteDao, depotDao)));
     }
 
     /// Audit **en ligne** (confrontation au serveur : dépôts #1132 + points #1178), délégué à [AuditEnLigne].
@@ -124,7 +134,8 @@ public class ServiceAuditCoherence {
         return new RapportAudit(auditEnLigne.auditer());
     }
 
-    private List<ConstatAudit> auditerUnPassage(Passage passage, Optional<SessionDEnregistrement> sessionOpt) {
+    private List<ConstatAudit> auditerUnPassage(
+            Passage passage, Optional<SessionDEnregistrement> sessionOpt, ContexteAudit contexte) {
         List<ConstatAudit> constats = new ArrayList<>();
         if (sessionOpt.isEmpty()) {
             constats.add(new ConstatAudit(
@@ -138,21 +149,21 @@ public class ServiceAuditCoherence {
         SessionDEnregistrement session = sessionOpt.get();
         List<EnregistrementOriginal> originaux = originalDao.findBySession(session.id());
         List<SequenceDEcoute> sequences = sequenceDao.findBySession(session.id());
-        Optional<JournalDuCapteur> journal = journalDao.trouverParSession(session.id());
-        Optional<ReleveClimatique> releve = releveDao.trouverParSession(session.id());
+        Optional<JournalDuCapteur> journal = contexte.journal(session.id());
+        Optional<ReleveClimatique> releve = contexte.releve(session.id());
         // Des observations rapatriées de la plateforme ne viennent d'AUCUN fichier : leur « chemin » est un
         // marqueur de provenance (#1050). Le chercher sur le disque faisait dire à l'audit qu'un fichier
         // externe était introuvable, et soupçonner une carte SD non montée là où il n'y en a jamais eu.
         Optional<ResultatsIdentification> resultats =
-                resultatsDao.findByPassage(passage.id()).filter(ResultatsIdentification::issuDunFichier);
+                contexte.resultats(passage.id()).filter(ResultatsIdentification::issuDunFichier);
 
         controleExistence(constats, passage, sequences, journal, releve, resultats);
-        controlePrefixe(constats, passage, originaux, sequences);
+        controlePrefixe(constats, passage, originaux, sequences, contexte);
         constats.addAll(balayage.orphelinsDeSession(
                 passage.id(),
                 Path.of(session.cheminRacine()),
                 cheminsConnus(originaux, sequences, journal, releve, resultats)));
-        controleDepot(constats, passage);
+        controleDepot(constats, passage, contexte);
         return constats;
     }
 
@@ -249,8 +260,9 @@ public class ServiceAuditCoherence {
             List<ConstatAudit> constats,
             Passage passage,
             List<EnregistrementOriginal> originaux,
-            List<SequenceDEcoute> sequences) {
-        Optional<Prefixe> prefixeOpt = prefixeAttendu(passage);
+            List<SequenceDEcoute> sequences,
+            ContexteAudit contexte) {
+        Optional<Prefixe> prefixeOpt = prefixeAttendu(passage, contexte);
         if (prefixeOpt.isEmpty()) {
             constats.add(new ConstatAudit(
                     Severite.ERREUR,
@@ -305,13 +317,13 @@ public class ServiceAuditCoherence {
 
     // --- C3 : unités déposées divergentes (renommage après dépôt), sans réseau ------------------
 
-    private void controleDepot(List<ConstatAudit> constats, Passage passage) {
-        Optional<Prefixe> prefixeOpt = prefixeAttendu(passage);
+    private void controleDepot(List<ConstatAudit> constats, Passage passage, ContexteAudit contexte) {
+        Optional<Prefixe> prefixeOpt = prefixeAttendu(passage, contexte);
         if (prefixeOpt.isEmpty()) {
             return;
         }
         String prefixe = prefixeOpt.get().prefixeFichier();
-        for (DepotUnite unite : depotDao.parPassage(passage.id())) {
+        for (DepotUnite unite : contexte.depots(passage.id())) {
             String nom = unite.identifiantUnite();
             if (nom != null && !nom.startsWith(prefixe)) {
                 constats.add(new ConstatAudit(
@@ -340,9 +352,9 @@ public class ServiceAuditCoherence {
                         .map(site -> new ContexteAuditPassage(site.numeroCarre(), point.code(), site.nomConvivial())));
     }
 
-    private Optional<Prefixe> prefixeAttendu(Passage passage) {
-        return pointDao.findById(passage.idPoint())
-                .flatMap(point -> siteDao.findById(point.idSite())
+    private Optional<Prefixe> prefixeAttendu(Passage passage, ContexteAudit contexte) {
+        return contexte.point(passage.idPoint())
+                .flatMap(point -> contexte.site(point.idSite())
                         .map(site -> new Prefixe(
                                 site.numeroCarre(), passage.annee(), passage.numeroPassage(), point.code())));
     }
