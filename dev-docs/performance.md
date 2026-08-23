@@ -33,20 +33,33 @@ complètes (avec les propriétés `-Dperf.*` de dimensionnement) sont dans le RE
 Les deux opérations critiques sont **largement sous les cibles** (facteur ~4 à ~10), grâce à l'index
 `idx_obs_results` posé en réponse au point #28 :
 
-| Opération | Cible | Froid (réf.) |
-|---|---|---|
-| Sélection ~4031 observations (`findByResults`) | < 100 ms | ~25 ms ✅ |
-| Tri/filtre ~1000 passages (multisite) | < 200 ms | ~18 ms ✅ |
+Relevé du 24/08/2026, sur la topologie par défaut : **40 carrés de 10 points**, 1000 passages,
+4031 observations.
 
-!!! warning "Ces deux chiffres ont été relevés sur **un seul carré**"
-    Le jeu du banc semait **un** site de dix points, quelle que soit la valeur de `perf.passages`. Les
-    écrans lançaient pourtant une requête **par site** puis une **par point** : sur cette topologie, onze
-    requêtes, noyées dans le bruit. Le relevé « ~18 ms ✅ » était donc exact **et** aveugle - un
-    coordinateur départemental, cent cinquante carrés, en payait plus de quatre cents.
+| Opération | Cible | Froid (1ᵉʳ appel) | Chaud (médiane de 20) |
+|---|---|---|---|
+| Sélection ~4031 observations (`findByResults`) | < 100 ms | 34,4 ms ✅ | 9,5 ms |
+| Tri/filtre ~1000 passages (multisite) | < 200 ms | 26,2 ms ✅ | 8,2 ms |
 
-    Le jeu sème désormais `perf.sites` carrés (défaut **40**), et un test
-    (`JeuDuBancTest`) refuse qu'il retombe à un. **Les deux chiffres ci-dessus sont donc à refaire** sur
-    la nouvelle topologie : ils ne sont pas faux, ils mesuraient autre chose que ce qu'on croyait.
+!!! note "Les deux colonnes, et laquelle regarder"
+    Le **froid** dit ce que coûte le premier geste du jour, démarrage de la JVM compris. Le **chaud** dit
+    ce que coûte l'opération elle-même. Pour juger une **cible de capacité**, c'est la seconde qui
+    compte : une première mesure de processus coûte ~300 ms quelle que soit la taille des données, et
+    noierait n'importe quel écart réel.
+
+!!! warning "Ces chiffres remplacent un relevé fait sur **un seul carré**"
+    Le jeu du banc semait **un** site de dix points, quelle que soit la valeur de `perf.passages`, et
+    annonçait « ~25 ms » et « ~18 ms ». Les écrans lançaient pourtant une requête **par site** puis une
+    **par point** : sur cette topologie, onze requêtes, noyées dans le bruit. Le relevé était donc exact
+    **et** aveugle - un coordinateur départemental, cent cinquante carrés, en payait plus de quatre
+    cents.
+
+    Le jeu sème désormais `perf.sites` carrés (défaut **40**), et `JeuDuBancTest` refuse qu'il retombe à
+    un. Les chiffres ci-dessus sont ceux de cette topologie-là.
+
+    ⚠️ Ils sont plus **hauts** que les anciens (34 contre 25, 26 contre 18) et c'est attendu : le jeu est
+    quarante fois plus large. Ils restent très en deçà des cibles, et surtout ils mesurent enfin la
+    dimension où le coût vivait.
 
 Sans l'index, la sélection faisait un `SCAN` (~75 ms froid) ; l'index la ramène à ~25 ms. Le gain est
 **verrouillé par un test CI** (non-régression du plan d'exécution).
