@@ -24,13 +24,13 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
-import fr.univ_amu.iut.commun.view.Habillage;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.Notificateur;
 import fr.univ_amu.iut.commun.view.NotificationDialogue;
 import fr.univ_amu.iut.commun.viewmodel.CompteRenduChiffre;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.recette.CasDeRecette;
+import fr.univ_amu.iut.recette.FenetreDuBanc;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -189,9 +189,9 @@ class ScenarioPerceptifRecuperationCarreTest {
         loader.setControllerFactory(injector::getInstance);
         // Habillage, et non `new Scene` : un clip monté sans lui porte la police de la MACHINE, alors
         // que ce cas existe pour être REGARDÉ. Le scénario de connexion le faisait déjà.
-        stage.setScene(Habillage.scene(loader.load(), 1100, 720));
+        FenetreDuBanc.poser(stage, loader.load(), 1100, 720);
         injector.getInstance(NavigationSites.class).ouvrirAccueil();
-        stage.show();
+        FenetreDuBanc.afficher(stage);
     }
 
     @AfterEach
