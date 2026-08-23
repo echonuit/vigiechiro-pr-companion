@@ -258,7 +258,7 @@ public class ModaleSiteController {
         // ⚠️ Seule la VÉRIFICATION se ferme. Déclarer un carré hors connexion reste possible : c'est le
         // travail hors ligne, et le fermer ferait de la plateforme une condition pour saisir chez soi.
         //
-        // ⚠️ La planche promettait l'inverse (« le bouton reste offert, non grisé »), au nom d'un
+        // ⚠️ Le script promettait l'inverse (« le bouton reste offert, non grisé »), au nom d'un
         // argument emprunté à `ControleCarreStoc` - le contrôle AUTOMATIQUE des coordonnées d'un point,
         // qui est en effet un confort. Ce bouton-ci passe par `chercherCarre`. Restait « on s'est
         // peut-être connecté entre-temps » : depuis #4205 le geste se rouvre tout seul dès qu'un jeton

@@ -92,7 +92,7 @@ class ScenarioModaleCarreTest {
     /// Le carré **déjà déclaré** sur la plateforme : celui de `S1-31`, `S1-34` et `S1-36`.
     private static final String CARRE_PRIS = "640380";
 
-    /// Le carré **libre**, celui que la planche de `S1-30` nomme.
+    /// Le carré **libre**, celui que le script de `S1-30` nomme.
     private static final String CARRE_LIBRE = "999999";
 
     /// Ce que « la vérification prend du temps » veut dire : de quoi rendre quelques images à la cadence
@@ -300,9 +300,9 @@ class ScenarioModaleCarreTest {
         Respiration.avantLeGeste(robot);
         robot.clickOn("#btnRecupererCarre");
 
-        // ⚠️ Ce que le cas existe pour montrer, et ce n'est PLUS ce que sa planche disait : depuis #4099
+        // ⚠️ Ce que le cas existe pour montrer, et ce n'est PLUS ce que son script disait : depuis #4099
         // le geste se termine là où il a commencé. La modale s'efface, « Mes sites » reste, le carré
-        // paraît dans la liste et le bandeau dit ce qui vient d'être créé. La planche promettait la
+        // paraît dans la liste et le bandeau dit ce qui vient d'être créé. Le script promettait la
         // fiche du carré ; c'est ce clip qui a montré qu'elle avait un chantier de retard (#4180).
         WaitForAsyncUtils.waitFor(
                 15,
@@ -355,7 +355,7 @@ class ScenarioModaleCarreTest {
         Respiration.surLeMomentCle(robot);
 
         // ⚠️ La seconde moitié du cas, que le clip ne jouait pas : « corriger un chiffre du numéro le
-        // rouvre ». Sans elle, ce cas ne fait pas tout ce que sa planche annonce (#4182).
+        // rouvre ». Sans elle, ce cas ne fait pas tout ce que son script annonce (#4182).
         corrigerLeDernierChiffre(robot, "1");
 
         assertThat(creer.isDisabled())
@@ -459,7 +459,7 @@ class ScenarioModaleCarreTest {
 
     /// Remplace le dernier chiffre : fin de ligne, retour arrière, un chiffre.
     ///
-    /// ⚠️ C'est le geste que la planche décrit - « changer un chiffre du carré ». Vider le champ et
+    /// ⚠️ C'est le geste que le script décrit - « changer un chiffre du carré ». Vider le champ et
     /// retaper montrerait le verdict disparaître au VIDAGE, ce qui n'est pas le cas jugé.
     private void corrigerLeDernierChiffre(FxRobot robot, String chiffre) {
         robot.clickOn(champCarre(robot));
