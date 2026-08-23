@@ -83,7 +83,7 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 
     ⚠️ Cette case décrivait « la fiche du carré s'ouvre » jusqu'à #4099 : la même modale avait deux
     issues selon qu'on déclarait ou qu'on récupérait, et rien ne justifiait la divergence. Le geste se
-    termine désormais là où il a commencé. La planche a mis un chantier de retard sur le produit, et
+    termine désormais là où il a commencé. Le script a mis un chantier de retard sur le produit, et
     c'est le clip qui l'a montré (#4180).
 - **S1-35** · Le carré récupéré est **rattaché** : sur sa fiche, le badge « Enregistré sur Vigie-Chiro » est
   présent, et « Ouvrir sur Vigie-Chiro » n'est plus grisé.

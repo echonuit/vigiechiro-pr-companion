@@ -84,7 +84,7 @@ class CorrespondanceRecetteTest {
                     "passe-verification-stabilisation.md",
                     "ce n'est pas une session : un tableau des capacités et de leur session propriétaire"));
 
-    /// Les classes à filmer pour une **planche de contact** (#3835), déposées là où le script de
+    /// Les classes à filmer pour une **tournage complet** (#3835), déposées là où le script de
     /// séance ira les chercher.
     ///
     /// ⚠️ Cette liste se DÉRIVE, elle ne se tient pas à la main. Un `grep` sur `@CasDeRecette`
@@ -336,10 +336,10 @@ class CorrespondanceRecetteTest {
     @Test
     @DisplayName("La liste des classes à filmer est déposée, et elle exclut les exemples")
     void la_liste_des_classes_a_filmer_est_deposee() throws IOException {
-        // La planche de contact (#3835) filme ces classes-là et pas d'autres. Une liste vide ou
+        // Le script de contact (#3835) filme ces classes-là et pas d'autres. Une liste vide ou
         // absente ferait tourner une séance qui ne montre rien, sans rien dire.
         assertThat(CLASSES_A_FILMER)
-                .as("la liste n a pas ete deposee par CETTE seance : la planche de contact"
+                .as("la liste n a pas ete deposee par CETTE seance : le script de contact"
                         + " filmerait le vide, ou pire, la liste d une seance precedente")
                 .exists();
 

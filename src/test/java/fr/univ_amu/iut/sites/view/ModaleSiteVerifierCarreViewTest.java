@@ -70,12 +70,12 @@ class ModaleSiteVerifierCarreViewTest {
 
     private static final String CARRE = "640380";
 
-    /// Le carré **libre**, celui que la planche de `S1-30` nomme.
+    /// Le carré **libre**, celui que le script de `S1-30` nomme.
     ///
     /// ⚠️ Il fallait un numéro à lui. `S1-30` saisissait le même `640380` que `S1-31`, si bien que deux
     /// clips voisins rendaient des verdicts OPPOSÉS sur le même carré - « n'existe pas encore » ici,
     /// « déjà déclaré » là - parce que la plateforme est bouchonnée par test. Vu de la page, c'est le
-    /// produit qui se contredit (#4166). Et la planche disait `999999` depuis le début.
+    /// produit qui se contredit (#4166). Et le script disait `999999` depuis le début.
     private static final String CARRE_LIBRE = "999999";
 
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
@@ -318,7 +318,7 @@ class ModaleSiteVerifierCarreViewTest {
         assertThat(message(robot).isVisible()).isTrue();
         Respiration.leTempsDeLire(robot);
 
-        // ⚠️ On corrige UN CHIFFRE, ce que la planche demande : « changer un chiffre du carré ».
+        // ⚠️ On corrige UN CHIFFRE, ce que le script demande : « changer un chiffre du carré ».
         // `saisirCarre` vide le champ et retape tout, si bien que le clip montrait le verdict
         // disparaître au VIDAGE - un champ qui se vide seul, puis un numéro qui se réécrit, et
         // l'encart parti entre les deux. On ne voyait pas la correction (#4166).

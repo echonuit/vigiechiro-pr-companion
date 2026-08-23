@@ -1236,7 +1236,7 @@ les cinq sixièmes de ce qu'il voyait, et annonçait 16 %. C'était le même tra
 Un montage refusé **ne laisse aucun clip** et fait échouer le lancement, même quand les tests sont
 verts - c'est justement le cas où personne n'irait vérifier.
 
-### La planche de contact : tout ce qui cite un cas, en une séance (#3835)
+### La tournage complet : tout ce qui cite un cas, en une séance (#3835)
 
 ```bash
 .github/scripts/lance-test-filme.sh --planche
@@ -1261,12 +1261,12 @@ Deux refus, pour que le vide ne passe pas pour un résultat :
   rendre un index sans ligne - ce qui ressemble trait pour trait à une recette qui ne couvre rien.
 
 À quoi elle sert : le garde de #3728 vérifie qu'un identifiant cité **existe**, jamais que le test
-**fait ce que le cas décrit**. La planche rend cette relecture possible en regardant, plutôt qu'en
+**fait ce que le cas décrit**. Le tournage complet rend cette relecture possible en regardant, plutôt qu'en
 relisant seize classes.
 
 ⚠️ **Mais tous les cas ne s'auditent pas en regardant**, et l'index le dit ligne par ligne. Un
 ViewModel cite des cas et n'ouvre aucune fenêtre : son clip est noir, et c'est le résultat **juste**.
-Cocher « vu » dessus serait un mensonge - un mensonge que la planche aurait encouragé si elle avait
+Cocher « vu » dessus serait un mensonge - un mensonge que le tournage complet aurait encouragé si elle avait
 proposé la même case à tout le monde.
 
 | Colonne « Comment l'auditer » | Ce que ça veut dire |
