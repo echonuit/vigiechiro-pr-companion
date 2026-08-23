@@ -107,14 +107,22 @@ public class RapatriementCarre {
             }
         }
 
-        /// On n'a pas pu demander : hors connexion, plateforme injoignable, ou refus.
+        /// On n'a pas pu demander, et `cause` dit **laquelle** des trois raisons : pas de jeton,
+        /// plateforme injoignable, ou refus.
         ///
         /// ⚠️ **Rien n'a été créé**, et surtout rien ne laisse croire que le carré a été récupéré.
-        record Indisponible() implements Resultat {
+        ///
+        /// ⚠️ Le message nommait les deux premières **à la fois** - « Vigie-Chiro est injoignable ou vous
+        /// n'êtes pas connecté » - alors que le `switch` ci-dessous les distingue depuis toujours. Il
+        /// faisait donc douter d'une connexion qui était bonne, et laissait l'utilisateur trancher ce que
+        /// le programme savait déjà (#4233). `AuditPointsServeur` faisait la distinction depuis #718 :
+        /// c'est sa forme qui est reprise ici.
+        ///
+        /// @param cause ce qui a empêché la demande, dit en clair et suivi du geste qui répare
+        record Indisponible(String cause) implements Resultat {
             @Override
             public String message() {
-                return "Récupération impossible : Vigie-Chiro est injoignable ou vous n'êtes pas connecté."
-                        + " Rien n'a été créé.";
+                return "Récupération impossible : " + cause + " Rien n'a été créé.";
             }
 
             @Override
@@ -134,14 +142,16 @@ public class RapatriementCarre {
         String numeroCarre = souhait.numeroCarre();
         return switch (client.chercherCarre(numeroCarre)) {
             case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> trouves) -> poser(souhait, trouves);
-            case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte -> new Resultat.Indisponible();
+            case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte ->
+                new Resultat.Indisponible("vous n'êtes pas connecté à Vigie-Chiro. Connectez-vous, puis réessayez.");
             case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) -> {
                 LOG.log(Level.FINE, () -> "Rapatriement du carré ignoré (Vigie-Chiro injoignable : " + cause + ")");
-                yield new Resultat.Indisponible();
+                yield new Resultat.Indisponible("Vigie-Chiro est injoignable (" + cause + "). Réessayez plus tard.");
             }
             case ReponseApi.Refuse<List<SiteVigieChiro>>(int statut, String corps) -> {
                 LOG.log(Level.FINE, () -> "Rapatriement du carré ignoré (refus HTTP " + statut + ")");
-                yield new Resultat.Indisponible();
+                yield new Resultat.Indisponible(
+                        "Vigie-Chiro a refusé la demande (HTTP " + statut + "). Vérifiez votre jeton.");
             }
         };
     }
@@ -166,7 +176,8 @@ public class RapatriementCarre {
         Optional<ImportSiteDistant.ResultatImport> importe =
                 imports.importerOuLier(distant, locauxParCarre, idProfilConnecte(), souhait);
         if (importe.isEmpty()) {
-            return new Resultat.Indisponible();
+            return new Resultat.Indisponible(
+                    "le carré n'a pas pu être posé localement. Réessayez, ou signalez l'incident.");
         }
         imports.enregistrer(importe.get().lien());
         imports.rattraperCommunes();
@@ -174,7 +185,8 @@ public class RapatriementCarre {
         // être annoncé comme posé.
         return imports.siteLocalDuCarre(souhait.numeroCarre())
                 .<Resultat>map(site -> new Resultat.Rapatrie(site, importe.get().pointsPoses()))
-                .orElseGet(Resultat.Indisponible::new);
+                .orElseGet(() -> new Resultat.Indisponible("le carré a été importé mais reste introuvable localement."
+                        + " Réessayez, ou signalez l'incident."));
     }
 
     /// L'identifiant du profil connecté, pour savoir si le carré appartient à un tiers (#2525). Sans lui,

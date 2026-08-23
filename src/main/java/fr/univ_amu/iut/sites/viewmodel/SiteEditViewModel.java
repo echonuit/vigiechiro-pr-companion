@@ -155,7 +155,7 @@ public class SiteEditViewModel {
     /// validité, et c'est ici que vit le souhait de déclaration qu'on emporte.
     public RapatriementCarre.Resultat rapatrierCarre() {
         if (!carreValide.get()) {
-            return new RapatriementCarre.Resultat.Indisponible();
+            return new RapatriementCarre.Resultat.Indisponible("le numéro de carré n'a pas ses six chiffres.");
         }
         return carre.rapatrier(
                 new SouhaitDeclaration(numeroCarre.get(), protocole.get(), nom.get(), commentaire.get()));

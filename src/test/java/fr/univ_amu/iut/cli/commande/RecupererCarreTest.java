@@ -87,7 +87,9 @@ class RecupererCarreTest {
     @Test
     @DisplayName("#3856 : plateforme injoignable → refus, et RIEN n'a été créé")
     void injoignable_ne_cree_rien() {
-        when(rapatriement.rapatrier(any())).thenReturn(new RapatriementCarre.Resultat.Indisponible());
+        when(rapatriement.rapatrier(any()))
+                .thenReturn(new RapatriementCarre.Resultat.Indisponible(
+                        "Vigie-Chiro est injoignable (bouchon). Réessayez plus tard."));
 
         assertThat(executer(Optional.of(rapatriement), "--carre", CARRE)).isEqualTo(2);
         assertThat(erreur.toString()).contains("Rien n'a été créé");
