@@ -556,6 +556,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 | `filme-un-parcours.sh` | le banc de documentation : lancement, geste visé par libellé **avec balayage annoncé**, carte, montage et plages accélérées, index converti, et l'**exigence de résultat** de chaque parcours ([ADR 4013](decisions/4013-un-banc-qui-filme-eprouve-son-resultat.md)) | `lint.yml` (job `banc-filme`) |
 | `verifie-permissions.sh` | aucun plancher en écriture dans un workflow multi-jobs | `lint.yml` |
 | `verifie-portee-des-secrets.sh` | aucun secret `VIGIECHIRO_*` dans l'`env:` d'un **job** ni d'un workflow : la forme juste est l'`env:` d'un **pas**. Posé plus haut, il est offert à toute la suite de tests, que `ConnexionModule` pointe alors sur la production. Aucun rôle de la plateforme ne peut le rattraper - `Lecteur` est déclaré et aucune route ne l'accepte (#4303) | `lint.yml` |
+| `revoque-jeton.sh` | le jeton d un tournage connecté est rendu inutilisable en fin de run (`POST /logout`), et la règle qui compte est que **`404` et `401` valent succès** : le but n est pas « le serveur a répondu 200 » mais « ce jeton ne sert plus à personne ». Il ne fait jamais rougir le run, l incertitude sort en avertissement (#4305) | `tournage-recette.yml` (autotest : `lint.yml`) |
 | `verifie-butoirs.sh` | tout job porte un `timeout-minutes` : sans butoir, GitHub laisse courir six heures ([ADR 4028](decisions/4028-tout-job-de-ci-porte-un-butoir.md)) | `lint.yml` |
 | `installer-paquets.sh` | la porte d'installation : elle écarte ce qui est déjà présent, borne et reprend, et câble le cache des `.deb` ([ADR 4034](decisions/4034-les-paquets-passent-par-une-porte.md)) | `lint.yml` (ses cas) et les cinq workflows qui installent |
 | `verifie-apt.sh` | aucun workflow n'appelle `apt-get` en direct, **le cache est branché** (un par job, la variable sur chaque installation), et les paquets à **post-installation** - `fonts-*`, `flatpak*`, `ffmpeg` - ne passent PAS par le cache de fichiers ([ADR 4034](decisions/4034-les-paquets-passent-par-une-porte.md)) | `lint.yml` |
@@ -582,7 +583,7 @@ succès - et c'est pourquoi chaque garde de ce dépôt répond à `--auto-test`.
 
 ### Et un analyseur les lit tous (#4108)
 
-Ces gardes sont elles-mêmes du shell, et le dépôt en compte **35 scripts** hors `node_modules`. Le
+Ces gardes sont elles-mêmes du shell, et le dépôt en compte **37 scripts** hors `node_modules`. Le
 job `lint` les passe tous à `shellcheck`.
 
 Les **réglages** vivent dans `.shellcheckrc`, à la racine, et non dans le YAML : un contributeur qui

@@ -359,6 +359,32 @@ jobs:
   # banc bash ne sait pas donner : son étape « Chaque cas de la session a sa ligne » compare les cas
   # OBTENUS aux cas ATTENDUS et échoue s'il en manque un. Un tournage amputé ne peut donc pas se
   # graver sur un tag immuable.
+  # ------------------------------------------------------------------------------------------------
+  # ⚠️ Un JOB, et non un pas du job qui filme. Un pas ne s'exécute pas quand le job qui le porte a été
+  # ANNULÉ ou a atteint son butoir de quatre-vingt-dix minutes - deux cas où le jeton a pourtant vécu,
+  # et où il resterait valide ses quatorze jours.
+  #
+  # ⚠️ `always()`, et non `success()` : le run qu'on ira regarder est justement celui qui a mal tourné,
+  # donc celui dont l'artefact sera ouvert. Et la condition NOMME cet état plutôt que de le laisser
+  # deviner : sans fonction d'état, GitHub enveloppe la condition en `success() && (...)` sur tout le
+  # graphe amont, et ce job serait sauté le jour où il sert le plus (ADR 4079, la 2.186.0).
+  revoquer:
+    name: Révoquer le jeton du tournage
+    needs: filmer
+    if: ${{ always() && inputs.connecte }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Rendre le jeton inutilisable
+        shell: bash
+        env:
+          JETON: ${{ secrets.VIGIECHIRO_TOKEN_TOURNAGE }}
+        run: |
+          chmod +x .github/scripts/revoque-jeton.sh
+          ./.github/scripts/revoque-jeton.sh
+
   publier:
     name: Verser les clips Java sur le tag de la version
     needs: filmer

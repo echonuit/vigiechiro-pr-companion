@@ -283,6 +283,18 @@ jobs:
           ./.github/scripts/verifie-portee-des-secrets.sh --auto-test
           ./.github/scripts/verifie-portee-des-secrets.sh
 
+      - name: La révocation du jeton sait ce qui vaut succès
+        # ⚠️ Sa règle est de celles qu'une relecture distraite retourne : `404` et `401` sont des
+        # SUCCÈS, parce que l'objectif n'est pas « le serveur a répondu 200 » mais « ce jeton ne sert
+        # plus à personne ». Les lire comme des échecs ferait avertir à chaque tournage dont le jeton
+        # avait déjà expiré, et on apprendrait à ignorer la ligne.
+        #
+        # Seul le verdict est éprouvé ici : l'appel réseau reste au bord, et il n'a rien à faire dans
+        # un job de lint.
+        run: |
+          chmod +x .github/scripts/revoque-jeton.sh
+          ./.github/scripts/revoque-jeton.sh --auto-test
+
       - name: La porte d installation porte ses cas
         # ⚠️ Elle est en travers du chemin de tous les workflows, y compris ceux qui publient : un
         # défaut y serait indiscernable d'une panne de miroir.
