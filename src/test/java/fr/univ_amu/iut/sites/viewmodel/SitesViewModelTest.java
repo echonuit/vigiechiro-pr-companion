@@ -406,8 +406,8 @@ class SitesViewModelTest {
         // variance de la machine, et rougirait un jour de charge sans qu'aucun code ait bougé.
         //
         // Le défaut mesuré (#4251) : une requête par site pour ses points, puis une par point pour ses
-        // passages - cent quatre-vingts requêtes et 487 ms sur soixante carrés, là où l'écran des
-        // observations charge quatre fois plus de lignes en huit millisecondes.
+        // passages. Mesuré avec préchauffage : 165-241 ms à cent cinquante carrés avant, 6-8 ms après -
+        // le coût d'avant croissait avec l'inventaire, celui d'après ne bouge pas.
         Mockito.verify(points, Mockito.never()).findBySite(Mockito.any());
         Mockito.verify(passages, Mockito.never()).findByPoint(Mockito.any());
         Mockito.verify(points, Mockito.times(1)).findParSites(Mockito.any());

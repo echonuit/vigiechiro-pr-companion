@@ -95,8 +95,8 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
     /// pour résoudre un chemin relatif : deux requêtes par cri exporté, et un export porte volontiers
     /// plusieurs milliers de cris.
     ///
-    /// Découpé en tranches ([LotsDeParametres]) : SQLite refuse au-delà de quelques centaines de
-    /// paramètres liés, et un export volumineux dépasserait la borne là où la boucle, elle, marchait.
+    /// Découpé en tranches ([LotsDeParametres]) : le découpage borne la **taille de la requête**, la
+    /// borne de SQLite étant bien plus haute que ce que ces commentaires ont d'abord annoncé.
     public Map<Long, SequenceDEcoute> findParIds(Collection<Long> ids) {
         Map<Long, SequenceDEcoute> parId = new HashMap<>();
         for (List<Long> tranche : LotsDeParametres.decouper(ids)) {

@@ -57,15 +57,18 @@ public class PointDao extends DaoGenerique<PointDEcoute, Long> {
     /// ## Pourquoi cette lecture existe
     ///
     /// Quatre endroits appelaient [#findBySite(Long)] **dans une boucle** sur les sites, et l'un d'eux
-    /// enchaînait une seconde boucle sur les passages de chaque point. Mesuré sur soixante carrés de deux
-    /// points : cent quatre-vingts requêtes, et **487 ms** pour ouvrir « Mes sites » - là où l'écran
-    /// « Espèces & observations » charge quatre fois plus de lignes en huit millisecondes, parce qu'il
-    /// lit par ensembles.
+    /// enchaînait une seconde boucle sur les passages de chaque point : cent quatre-vingts requêtes pour
+    /// soixante carrés de deux points.
     ///
-    /// ⚠️ **Le lot est découpé.** SQLite refuse au-delà de quelques centaines de paramètres liés
-    /// (`SQLITE_MAX_VARIABLE_NUMBER`), et un observateur qui suit trois cents carrés dépasserait la borne
-    /// en silence - l'appel échouerait là où la boucle, elle, marchait. Le découpage rend la lecture
-    /// sûre quel que soit l'inventaire, au prix d'une requête par tranche.
+    /// Mesuré avec préchauffage, trois essais : « Mes sites » passait de **165-241 ms à cent cinquante
+    /// carrés** à 6-8 ms. Le gain n'est pas un facteur, c'est une **pente qui disparaît** - le coût
+    /// d'avant doublait de soixante à cent cinquante carrés, celui d'après ne bouge pas.
+    ///
+    /// ⚠️ Ce commentaire a d'abord annoncé « 487 ms ». C'était la **première mesure de son processus**,
+    /// et le démarrage d'une JVM coûte ~300 ms quelle que soit la taille des données.
+    ///
+    /// Le lot est découpé ([LotsDeParametres]), ce qui borne la **taille de la requête** - et non, comme
+    /// ce commentaire l'a aussi prétendu, pour contourner un refus de SQLite qui n'existe pas ici.
     ///
     /// @param idsSites les sites voulus ; un identifiant sans point rend une liste vide, pas d'entrée
     /// @return une entrée par site **ayant au moins un point**

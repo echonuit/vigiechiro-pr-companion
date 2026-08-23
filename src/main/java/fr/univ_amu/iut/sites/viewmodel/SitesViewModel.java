@@ -236,9 +236,10 @@ public class SitesViewModel {
         Set<String> sitesVerrouilles = liens.verrouilles(LienVigieChiro.ENTITE_SITE);
         List<Site> sites = service.listerSites(idUtilisateur);
         // ⚠️ DEUX lectures pour tout le lot, là où la boucle en lançait une par site puis une par point
-        // (#4251). Mesuré sur soixante carrés de deux points : cent quatre-vingts requêtes et 487 ms,
-        // quand « Espèces & observations » charge quatre fois plus de lignes en huit millisecondes -
-        // même base, même machine. Ce n'était donc ni SQLite ni le volume, mais la façon de lire.
+        // (#4251). Mesuré avec préchauffage, trois essais : 165-241 ms à cent cinquante carrés
+        // avant, 6-8 ms après. Le coût d'avant CROISSAIT avec l'inventaire ; celui d'après ne bouge pas.
+        // (Le « 487 ms » d'abord annoncé était une première mesure de processus, donc le démarrage de la
+        // JVM autant que le chargement.)
         Map<Long, List<PointDEcoute>> pointsParSite =
                 service.listerPointsParSites(sites.stream().map(Site::id).toList());
         Map<Long, List<Passage>> passagesParPoint = passageDao.findParPoints(pointsParSite.values().stream()
