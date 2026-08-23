@@ -2,14 +2,12 @@ package fr.univ_amu.iut.commun.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,15 +36,21 @@ class LectureParLotSurVraiSqliteTest {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur("u", "S"));
-        SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
 
+        // ⚠️ Semé par la FIXTURE, pas à la main : `CliquetSemisTopologieTest` épingle une dette soldée -
+        // treize fichiers créaient jadis site et point par DAO. M'y ajouter aurait rouvert ce que
+        // quelqu'un a fini de payer, et `semerSiteEtPoint()` existe précisément pour ce besoin-là.
         List<Long> idsSites = new ArrayList<>();
         for (int i = 0; i < 1200; i++) {
-            Site site = siteDao.insert(new Site(
-                    null, String.format("%06d", 100000 + i), "C" + i, Protocole.STANDARD, null, "2026-01-01", "u"));
-            pointDao.insert(new PointDEcoute(null, "A1", 43.5, 5.4, null, site.id()));
-            idsSites.add(site.id());
+            idsSites.add(JeuDeDonneesPassage.dans(source)
+                    .utilisateur("u")
+                    .carre(String.format("%06d", 100000 + i))
+                    .nomSite("C" + i)
+                    .point("A1")
+                    .semerSiteEtPoint()
+                    .leSite()
+                    .id());
         }
 
         Map<Long, List<PointDEcoute>> parSite = pointDao.findParSites(idsSites);
