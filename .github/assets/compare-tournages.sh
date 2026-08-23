@@ -122,6 +122,16 @@ duree() {
   LC_ALL=C awk -v d="$d" 'BEGIN { printf "%.1f", d }'
 }
 
+### Le rapport d'un écart au plancher de son cas, ou "?" si ce plancher n'est pas connu.
+###
+### Le plancher est borné par le bas : un plancher nul diviserait par zéro, et le borner à 0,001 revient
+### à dire « au moins un millième de pourcent », ce qui est déjà sous le plus petit écart mesurable.
+rapport_de() { # <écart> <plancher>
+  [ -n "$2" ] || { printf '?'; return; }
+  LC_ALL=C awk -v e="$1" -v p="$2" \
+    'BEGIN { d = (p + 0 > 0.001) ? p + 0 : 0.001; printf "%.1f", e / d }'
+}
+
 ### Les noms de cas d'un dossier de clips, triés.
 cas_du_dossier() {
   local dossier="$1" clip
@@ -219,7 +229,10 @@ comparer() {
 
     convert "$fa" "$fb" +append "${sortie}/${nom}.avant-apres.png" 2>/dev/null
     compare "$fa" "$fb" -highlight-color red -lowlight-color white "${sortie}/${nom}.ou.png" 2>/dev/null
-    geste="\`${nom}.avant-apres.png\` · \`${nom}.ou.png\`"
+    # ⚠️ Les fichiers ne répètent PAS le nom du cas : il est déjà en première colonne, et le
+    # répéter deux fois de plus faisait des lignes de trois cents caractères que personne ne lit
+    # (revue visuelle, passe 8). Les fichiers de l'artefact sont nommés « <cas>.<suffixe> ».
+    geste="montage + carte"
 
     # ⚠️ Les images du DÉBUT ne sont produites que s'il a bougé. Mesuré : son plancher vaut 0,000 %
     # sur les 51 cas, donc en temps normal ce montage serait cinquante fichiers strictement
@@ -227,7 +240,7 @@ comparer() {
     if [ "$p_deb" != "?" ] && awk -v p="$p_deb" 'BEGIN { exit !(p + 0 > 0) }' 2>/dev/null; then
       convert "$da_" "$db_" +append "${sortie}/${nom}.debut.avant-apres.png" 2>/dev/null
       compare "$da_" "$db_" -highlight-color red -lowlight-color white "${sortie}/${nom}.debut.ou.png" 2>/dev/null
-      geste="${geste} · début : \`${nom}.debut.avant-apres.png\`"
+      geste="${geste} · **+ début**"
     fi
     rm -f "$fa" "$fb" "$da_" "$db_"
 
@@ -241,23 +254,20 @@ comparer() {
       continue
     fi
 
-    # Le rapport d'un écart à SON plancher, ou "?" si ce plancher n'est pas connu.
-    rapport_de() { # <écart> <plancher>
-      [ -n "$2" ] || { printf '?'; return; }
-      LC_ALL=C awk -v e="$1" -v p="$2" \
-        'BEGIN { d = (p + 0 > 0.001) ? p + 0 : 0.001; printf "%.1f", e / d }'
-    }
-
     local cellule cle r_fin r_deb
     if [ -z "$planchers" ]; then
-      cellule="début ${p_deb} % · fin ${p_fin} %"
+      if awk -v d="$p_deb" 'BEGIN { exit !(d + 0 > 0) }' 2>/dev/null; then
+        cellule="début ${p_deb} % · fin ${p_fin} %"
+      else
+        cellule="fin ${p_fin} %"
+      fi
       cle=$(LC_ALL=C awk -v a="$p_deb" -v b="$p_fin" 'BEGIN { print (a + 0 > b + 0) ? a : b }')
     else
       r_fin=$(rapport_de "$p_fin" "${sol_fin[$nom]:-}")
       r_deb=$(rapport_de "$p_deb" "${sol_deb[$nom]:-}")
       if [ "$r_fin" = "?" ] && [ "$r_deb" = "?" ]; then
         # Un cas sans plancher connu se DIT : le prendre pour stable serait inventer une mesure.
-        cellule="début ${p_deb} % · fin ${p_fin} % · ⚠️ plancher inconnu"
+        cellule="fin ${p_fin} % · ⚠️ plancher inconnu"
         cle=$(LC_ALL=C awk -v a="$p_deb" -v b="$p_fin" 'BEGIN { print (a + 0 > b + 0) ? a : b }')
       else
         cle=$(LC_ALL=C awk -v a="$r_deb" -v b="$r_fin" 'BEGIN {
@@ -265,7 +275,11 @@ comparer() {
           y = (b == "?") ? 0 : b + 0
           printf "%.1f", (x > y) ? x : y
         }')
-        cellule="**×${cle}** · début ${p_deb} % (×${r_deb}) · fin ${p_fin} % (×${r_fin}) · ${nbp[$nom]} paire(s)"
+        if awk -v d="$p_deb" 'BEGIN { exit !(d + 0 > 0) }' 2>/dev/null; then
+          cellule="**×${cle}** · début ${p_deb} % (×${r_deb}) · fin ${p_fin} % (×${r_fin}) · ${nbp[$nom]} paire(s)"
+        else
+          cellule="**×${cle}** · fin ${p_fin} % · ${nbp[$nom]} paire(s)"
+        fi
         awk -v r="$cle" 'BEGIN { exit !(r + 0 > 1) }' 2>/dev/null && au_dessus=$((au_dessus + 1))
       fi
     fi
@@ -280,6 +294,11 @@ comparer() {
     echo
     echo "Tolérance de couleur : **${tolerance} %**. Le chiffre **trie**, il ne prouve pas :"
     echo "sous un mot changé on est à deux fois le plancher de bruit. C'est la carte \`.ou.png\` qui dit **où**."
+    echo
+    echo "⚠️ La **première** image de chaque clip est comparée elle aussi, pour tous les cas. Elle"
+    echo "n'apparaît en ligne que si elle a bougé : son plancher vaut 0,000 % sur 102 mesures, donc"
+    echo "l'afficher partout n'écrirait que des zéros. Son silence veut dire « vérifiée et stable »,"
+    echo "pas « pas regardée »."
     if [ -n "$planchers" ]; then
       echo
       echo "Les cas sont classés par leur **rapport au bruit de leur propre cas**, et non par leur écart"
