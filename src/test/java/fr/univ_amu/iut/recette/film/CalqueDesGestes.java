@@ -2,7 +2,6 @@ package fr.univ_amu.iut.recette.film;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.Polygon;
@@ -100,8 +99,10 @@ final class CalqueDesGestes {
     static void badge(Graphics2D g, int largeurDeLaToile, int hauteurDeLaToile, String libelle) {
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-        // Police LOGIQUE, comme le carton : toujours résolue, sur tout poste et sans fontconfig.
-        g.setFont(new Font(Font.SANS_SERIF, Font.BOLD, CORPS_BADGE));
+        // La police EMBARQUÉE, comme le carton : toujours résolue puisqu'elle voyage dans le jar, et
+        // celle du produit. Une police logique l'aurait fait dépendre du poste, et le badge se rendait
+        // en serif sur le runner (#4241).
+        g.setFont(PoliceDuBanc.grasse(CORPS_BADGE));
         FontMetrics mesure = g.getFontMetrics();
 
         int largeur = mesure.stringWidth(libelle) + MARGE_BADGE * 2;
