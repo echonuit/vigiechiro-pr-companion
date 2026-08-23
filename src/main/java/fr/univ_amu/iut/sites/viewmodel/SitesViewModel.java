@@ -234,12 +234,26 @@ public class SitesViewModel {
         // correspondances = « enregistré » ; correspondance verrouillée = « verrouillé » (dépôt possible).
         Map<String, String> sitesEnregistres = liens.tous(LienVigieChiro.ENTITE_SITE);
         Set<String> sitesVerrouilles = liens.verrouilles(LienVigieChiro.ENTITE_SITE);
+        List<Site> sites = service.listerSites(idUtilisateur);
+        // ⚠️ DEUX lectures pour tout le lot, là où la boucle en lançait une par site puis une par point
+        // (#4251). Mesuré sur soixante carrés de deux points : cent quatre-vingts requêtes et 487 ms,
+        // quand « Espèces & observations » charge quatre fois plus de lignes en huit millisecondes -
+        // même base, même machine. Ce n'était donc ni SQLite ni le volume, mais la façon de lire.
+        Map<Long, List<PointDEcoute>> pointsParSite =
+                service.listerPointsParSites(sites.stream().map(Site::id).toList());
+        Map<Long, List<Passage>> passagesParPoint = passageDao.findParPoints(pointsParSite.values().stream()
+                .flatMap(List::stream)
+                .map(PointDEcoute::id)
+                .toList());
+
         List<CarteSite> recomposees = new ArrayList<>();
         int totalPassagesAnnee = 0;
-        for (Site site : service.listerSites(idUtilisateur)) {
+        for (Site site : sites) {
             StatutPlateforme statut =
                     StatutPlateforme.deduire(String.valueOf(site.id()), sitesEnregistres, sitesVerrouilles);
-            CarteSite carte = construireCarte(site, aujourdhui, annee, statut);
+            List<PointDEcoute> points = pointsParSite.getOrDefault(site.id(), List.of());
+            CarteSite carte =
+                    construireCarte(site, points, passagesDe(points, passagesParPoint), aujourdhui, annee, statut);
             totalPassagesAnnee += carte.passagesDeLAnnee();
             recomposees.add(carte);
         }
@@ -279,9 +293,13 @@ public class SitesViewModel {
         return cree;
     }
 
-    private CarteSite construireCarte(Site site, LocalDate aujourdhui, int annee, StatutPlateforme statut) {
-        List<PointDEcoute> points = service.listerPoints(site.id());
-        List<Passage> passages = passagesDuSite(points);
+    private CarteSite construireCarte(
+            Site site,
+            List<PointDEcoute> points,
+            List<Passage> passages,
+            LocalDate aujourdhui,
+            int annee,
+            StatutPlateforme statut) {
         Set<Long> pointsAvecPassage = passages.stream().map(Passage::idPoint).collect(Collectors.toSet());
         int passagesAnnee =
                 (int) passages.stream().filter(p -> p.annee() == annee).count();
@@ -303,12 +321,11 @@ public class SitesViewModel {
                 statut);
     }
 
-    private List<Passage> passagesDuSite(List<PointDEcoute> points) {
-        List<Passage> passages = new ArrayList<>();
-        for (PointDEcoute point : points) {
-            passages.addAll(passageDao.findByPoint(point.id()));
-        }
-        return passages;
+    /// Les passages des `points`, pris dans le lot **déjà lu** : aucune requête ici.
+    private static List<Passage> passagesDe(List<PointDEcoute> points, Map<Long, List<Passage>> parPoint) {
+        return points.stream()
+                .flatMap(point -> parPoint.getOrDefault(point.id(), List.<Passage>of()).stream())
+                .toList();
     }
 
     /// Un passage est « à vérifier » tant qu'aucun verdict n'a été posé.

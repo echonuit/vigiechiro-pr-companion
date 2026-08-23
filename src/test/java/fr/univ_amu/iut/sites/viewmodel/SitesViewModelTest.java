@@ -37,6 +37,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 
 /// Tests du [SitesViewModel] sur une base SQLite jetable (`@TempDir` + [MigrationSchema]),
 /// sans IHM : on vérifie la logique de présentation (cartes, compteurs, fraîcheur, sous-titre,
@@ -372,5 +373,44 @@ class SitesViewModelTest {
                 .statut(StatutWorkflow.TRANSFORME)
                 .verdict(verdict)
                 .semerPassage();
+    }
+
+    @Test
+    @DisplayName("#4251 : charger() lit par LOT - le nombre de requêtes ne suit pas le nombre de sites")
+    void charger_lit_par_lot(@TempDir Path autre) {
+        SourceDeDonnees base = new SourceDeDonnees(new Workspace(autre));
+        new MigrationSchema(base).migrer();
+        new UtilisateurDao(base).insert(new Utilisateur(ID_USER, "Testeur"));
+        PointDao points = Mockito.spy(new PointDao(base));
+        PassageDao passages = Mockito.spy(new PassageDao(base));
+        ServiceSites services = new ServiceSites(
+                new SiteDao(base), points, passages, new HorlogeFigee(JOUR_FIXE), new PointCommuneDao(base), () -> {});
+        for (int i = 0; i < 12; i++) {
+            Site site = services.creerSite(
+                    String.format("%06d", 640000 + i), "Carré " + i, Protocole.STANDARD, null, ID_USER);
+            services.ajouterPoint(site.id(), "A1", 43.5, 5.4, null);
+            services.ajouterPoint(site.id(), "B2", 43.6, 5.5, null);
+        }
+        Mockito.clearInvocations(points, passages);
+
+        SitesViewModel vm = new SitesViewModel(
+                services,
+                passages,
+                new HorlogeFigee(JOUR_FIXE),
+                new LienVigieChiroDao(base),
+                ID_USER,
+                Optional.empty());
+        assertThat(vm.charger().cartes()).hasSize(12);
+
+        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
+        // variance de la machine, et rougirait un jour de charge sans qu'aucun code ait bougé.
+        //
+        // Le défaut mesuré (#4251) : une requête par site pour ses points, puis une par point pour ses
+        // passages - cent quatre-vingts requêtes et 487 ms sur soixante carrés, là où l'écran des
+        // observations charge quatre fois plus de lignes en huit millisecondes.
+        Mockito.verify(points, Mockito.never()).findBySite(Mockito.any());
+        Mockito.verify(passages, Mockito.never()).findByPoint(Mockito.any());
+        Mockito.verify(points, Mockito.times(1)).findParSites(Mockito.any());
+        Mockito.verify(passages, Mockito.times(1)).findParPoints(Mockito.any());
     }
 }

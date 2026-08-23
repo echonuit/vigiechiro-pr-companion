@@ -12,7 +12,9 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.dao.PointCommuneDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /// Service métier de la feature `sites` : **service de référence** du projet (le patron à
@@ -229,6 +231,15 @@ public class ServiceSites {
     /// Points d'écoute d'un site, triés par code.
     public List<PointDEcoute> listerPoints(Long idSite) {
         return pointDao.findBySite(idSite);
+    }
+
+    /// Les points de **plusieurs sites à la fois**, groupés par site (#4251).
+    ///
+    /// Un écran qui liste des sites et leurs points appelait [#listerPoints(Long)] **dans une boucle** :
+    /// une requête par site, puis une par point pour les passages. Cette lecture-ci en fait une pour tout
+    /// le lot. Voir [fr.univ_amu.iut.sites.model.dao.PointDao#findParSites].
+    public Map<Long, List<PointDEcoute>> listerPointsParSites(Collection<Long> idsSites) {
+        return pointDao.findParSites(idsSites);
     }
 
     /// Nombre total de sites (compteur du tableau de bord d'accueil).
