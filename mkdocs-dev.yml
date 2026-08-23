@@ -281,6 +281,7 @@ nav:
   - Tests et qualité: tests-et-qualite.md
   - Spike · filmer depuis le graphe de scène: spikes/film-depuis-le-graphe-de-scene.md
   - Spike · clips perceptifs sous Windows: spikes/clips-perceptifs-sous-windows.md
+  - Spike · tourner contre la plateforme: spikes/tournage-contre-la-plateforme.md
   - Audit des filtres tabulaires: audit-filtres-vues-tabulaires.md
   - Contrat de l'API VigieChiro: api-vigiechiro.md
   - Performance et benchmarks: performance.md
