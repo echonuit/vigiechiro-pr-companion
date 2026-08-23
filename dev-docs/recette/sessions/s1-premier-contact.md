@@ -134,7 +134,14 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 **Étape 5 · Modale Point**
 
 - **S1-23** · Création vs édition : titre et bouton dynamiques.
-- **S1-24** · Garde de validité : code « 1 lettre + chiffres », GPS décimal/DMS synchronisés avec la carte-outil.
+- **S1-24** · Garde de validité : code « 1 lettre + chiffres », GPS décimal/DMS synchronisés avec la
+  carte-outil. Deux clips : le point qui paraît sur la fiche, et des coordonnées relevées en
+  degrés/minutes/secondes qui valent une position - la carte du point neuf porte « GPS : voir sur la
+  carte » et non « GPS manquant ».
+
+    ⚠️ La seconde moitié de cette case n'était filmée nulle part, couverte en unitaire seulement, alors
+    que c'est le geste d'un observateur de terrain : relever des DMS sur un GPS de randonnée et les
+    coller dans une application qui parle en décimal (#4232).
 - **S1-25** · « Annuler » ne touche rien.
 
 **Étape 6 · Ce que la stabilisation a changé au premier contact** (#3424)

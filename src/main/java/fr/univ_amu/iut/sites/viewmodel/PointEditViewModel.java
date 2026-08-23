@@ -193,8 +193,21 @@ public class PointEditViewModel {
 
     /// Les deux coordonnées sont-elles lisibles ? Seul ce ViewModel sait lire ses champs de saisie ;
     /// [IntentionPublication] le lui demande plutôt que d'en tenir une copie.
+    ///
+    /// ⚠️ Il **s'appuie sur les validités déjà calculées** au lieu de réanalyser. La version précédente
+    /// rappelait `parserCoordonnee`, qui **lève** sur une saisie inanalysable - et comme cette méthode
+    /// est appelée depuis un écouteur, à chaque frappe, une lettre parasite jetait un
+    /// `NumberFormatException` non attrapé sur le fil JavaFX. Taper « lat 43,5 » ou coller un texte
+    /// suffisait. `coordonneeValide` attrapait pourtant l'exception deux méthodes plus loin : la garde
+    /// existait, ce chemin-ci passait à côté.
+    ///
+    /// Trouvé par une mutation destinée à éprouver un autre test (#4232) : c'est le hasard d'un mutant
+    /// qui a nommé un défaut que personne ne cherchait.
     private boolean gpsRenseigne() {
-        return parserCoordonnee(latitude.get()) != null && parserCoordonnee(longitude.get()) != null;
+        return latitudeValide.get()
+                && longitudeValide.get()
+                && !latitude.get().isBlank()
+                && !longitude.get().isBlank();
     }
 
     public StringProperty codeProperty() {
