@@ -278,13 +278,19 @@ class MesSitesViewTest {
         // moitié du cas - l'écran chargé, ses cartes lisibles, et RIEN qui le voile. Un voile resté en
         // place bloquerait tout.
         //
-        // ⚠️ J'ai écrit ici qu'AUCUN clip ne pouvait montrer le voile, et c'était faux. L'affirmation
-        // était mesurée sur cette fixture-ci, deux sites, où `charger()` est instantané. Sur cent
-        // cinquante carrés - ce que suit un coordinateur départemental - il prend un demi-seconde, de
-        // quoi rendre cinq images. `ScenarioVoileChargementTest` le filme (#4172).
+        // ⚠️ Deux erreurs successives méritent d'être notées ici, parce qu'elles se contredisent.
         //
-        // Le défaut de raisonnement mérite d'être noté : j'avais conclu du produit ce qui n'était vrai
-        // que de la base de démonstration.
+        // 1. J'ai d'abord écrit qu'AUCUN clip ne pouvait montrer le voile. C'était mesuré sur cette
+        //    fixture-ci, deux sites, où `charger()` est instantané - j'avais conclu du PRODUIT ce qui
+        //    n'était vrai que de la base de démonstration. Sur cent cinquante carrés il durait un
+        //    demi-seconde, et un cas l'a filmé (#4172).
+        // 2. Puis #4251 a fait lire l'écran PAR LOT : huit millisecondes à cent cinquante carrés comme à
+        //    soixante. Le voile ne tient plus sur une image, et le cas qui le filmait n'a plus de sujet.
+        //
+        // La seconde erreur serait de croire que la première était sans objet : le voile a bien été
+        // filmable, et il a cessé de l'être parce que le produit s'est amélioré. Le mécanisme reste, et
+        // servira le jour où un écran mettra du temps - « Carte & passages » y met encore cent vingt
+        // millisecondes (#4271).
     }
 
     @Test
