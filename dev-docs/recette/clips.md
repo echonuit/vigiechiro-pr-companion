@@ -10,10 +10,23 @@ Les clips sont attachés à une **pré-version roulante**,
 Ils ne sont pas dans le dépôt, et c'est délibéré.
 
 Une pièce jointe de publication ne pèse **rien** dans l'historique git : les 459 Mio attachés à
-`v2.185.0` n'y laissent aucun blob. À l'inverse, `.git` pèse aujourd'hui 957 Mio, dont **79 % de
-PNG** - 155 captures présentes au 22/08/2026, mais 4 507 versions dans l'historique, parce qu'une capture qui
-change d'octets produit un commit et qu'une capture à carte change d'octets à chaque exécution.
-Ranger des vidéos de la même façon reviendrait à recommencer, en plus lourd.
+`v2.185.0` n'y laissent aucun blob. À l'inverse, les objets de `.git` pèsent **966 Mio**, dont
+**866 Mio de PNG** - 170 captures présentes au 23/08/2026, mais **4 537 versions dans l'historique**,
+parce qu'une capture qui change d'octets produit un commit et qu'une capture à carte change d'octets à
+chaque exécution. Ranger des vidéos de la même façon reviendrait à recommencer, en plus lourd.
+
+??? note "Comment ce chiffre se remesure"
+
+    Les objets, pack et vrac : `git count-objects -vH` (`size-pack` + `size`). Les blobs PNG et leur
+    poids compressé :
+
+    ```bash
+    git rev-list --objects --all | grep -E '\.png$' | cut -d' ' -f1 | sort -u > /tmp/b.txt
+    git cat-file --batch-check='%(objectsize:disk)' < /tmp/b.txt | awk '{s+=$1} END {print s/1048576, "Mio"}'
+    ```
+
+    Mesuré sur un clone de travail, toutes branches distantes rapatriées. Une mesure antérieure
+    annonçait 79 % : la méthode n'en était pas consignée, et c'est précisément pourquoi elle l'est ici.
 
 La pré-version est **roulante** : ses pièces sont remplacées à chaque tournage complet et leurs
 adresses ne changent pas. C'est ce qui permet à cette page de les écrire en dur.
@@ -22,6 +35,36 @@ adresses ne changent pas. C'est ce qui permet à cette page de les écrire en du
 
     `clips-recette` porte le dernier tournage, pas un état figé. Elle est marquée pré-version pour
     qu'elle ne devienne jamais la « dernière version » du dépôt.
+
+### Et une copie sur le tag de chaque version
+
+Depuis #4258, le tournage du train verse **aussi** ses clips sur le tag de la version qu'il vient de
+filmer, préfixés `bash-`. Les deux destinations ne servent pas à la même chose :
+
+| | `clips-recette` | le tag `vX.Y.Z` |
+|---|---|---|
+| ce qu'on y trouve | le **dernier** tournage | le tournage de **cette version-là** |
+| les adresses | stables, mais leur **contenu** change | immuables, contenu compris |
+| à quoi ça sert | regarder la recette d'aujourd'hui | comparer, et garder une trace |
+
+Un tag ne bouge jamais : une adresse écrite vers `v2.188.0` montrera toujours ce que `v2.188.0`
+montrait. La suite des versions forme ainsi un historique visuel du produit, que **rien ne
+reconstituera après coup**.
+
+!!! warning "L'historique commence à la version qui a suivi #4258"
+
+    Verser aujourd'hui des clips sur un tag ancien montrerait le produit d'aujourd'hui sous une
+    version qui ne l'affichait pas. Les versions antérieures resteront donc sans clips, et c'est
+    volontaire.
+
+    Le constat qui a motivé ce choix : en cherchant un « avant » pour l'artefact visuel de la clôture
+    de #4133, **aucun clip antérieur au calque des gestes n'a été retrouvé**. Les pièces de la
+    pré-version du spike avaient été reversées par-dessus, et la date de publication d'une pré-version
+    ne dit rien de la date de son contenu.
+
+⚠️ Le préfixe `bash-` réserve la place du banc Java, dont les clips portent **exactement les mêmes
+noms** : 50 sur 51 sont communs aux deux bancs. Les verser tous deux sans préfixe les ferait s'écraser
+en silence.
 
 ## Produire un tournage complet
 
