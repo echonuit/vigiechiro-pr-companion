@@ -8,13 +8,17 @@ import java.util.List;
 ///
 /// ## Pourquoi cette borne existe
 ///
-/// Une lecture « par lot » remplace N requêtes par une seule `... IN (?, ?, …)`. Mais SQLite refuse
-/// au-delà de quelques centaines de paramètres liés (`SQLITE_MAX_VARIABLE_NUMBER`, 999 par défaut) : un
-/// observateur qui suit trois cents carrés ferait échouer l'appel là où la boucle, elle, marchait.
+/// Une lecture « par lot » remplace N requêtes par une seule `... IN (?, ?, …)`.
 ///
-/// Le remède qui supprime un défaut de lenteur ne doit pas en introduire un de **justesse**. La lecture
-/// par lot est donc découpée, et reste sûre quel que soit l'inventaire - au prix d'une requête par
-/// tranche, c'est-à-dire une pour un inventaire ordinaire.
+/// ⚠️ **Ce commentaire a d'abord annoncé une raison fausse.** Il disait que SQLite refuse au-delà de
+/// « quelques centaines » de paramètres liés (`SQLITE_MAX_VARIABLE_NUMBER`, 999). C'est l'ancienne
+/// valeur par défaut : mesuré sur le pilote embarqué ici, une requête à **cinquante mille** paramètres
+/// passe sans broncher, et le découpage n'a donc **jamais** évité l'échec qu'on lui prêtait.
+///
+/// La raison mesurée est autre, et plus modeste : le découpage borne la **taille de la requête**.
+/// Cinquante mille marqueurs font une centaine de kilo-octets de SQL à construire et à analyser à
+/// chaque appel. Pour un inventaire ordinaire - quelques centaines d'identifiants - il rend **une**
+/// tranche et ne change rien.
 public final class LotsDeParametres {
 
     /// Assez large pour qu'un inventaire ordinaire tienne en **une** requête, assez bas pour rester loin

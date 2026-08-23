@@ -156,8 +156,12 @@ Mesuré sur six chemins (#4251, #4271, #4278, #4280, #4283, #4286, #4293), à ce
 **La règle.** Toute boucle qui compose des lignes à partir de la base lit **par lot** avant de boucler :
 `PointDao#findParSites`, `PassageDao#findParPoints`, `SequenceDao#findParIds`, ou un index construit
 depuis un `findAll()` quand la table porte une ligne par entité. Les lectures par identifiants passent
-par `LotsDeParametres.decouper` : SQLite refuse au-delà de quelques centaines de paramètres liés, et un
-remède contre la lenteur ne doit pas introduire un défaut de justesse.
+par `LotsDeParametres.decouper`, qui borne la **taille de la requête**.
+
+⚠️ Cette page a d'abord justifié ce découpage par un refus de SQLite au-delà de « quelques centaines »
+de paramètres liés. C'est faux pour le pilote embarqué ici : **cinquante mille passent**, mesuré. Le
+découpage reste - une requête de cent kilo-octets de marqueurs ne se justifie pas davantage - mais il
+n'évite aucun échec, et le dire autrement ferait croire à une protection qui n'existe pas.
 
 ⚠️ **Ce qui ne se lit pas par lot.** Les tables de **volume** - originaux, séquences d'écoute - restent
 lues par session. Une nuit en porte des milliers : les charger toutes d'un bloc échangerait un défaut de
