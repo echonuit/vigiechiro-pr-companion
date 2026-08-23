@@ -21,9 +21,17 @@ même prix aux deux bancs.
 
 ## Ce qui reste à trancher, et que cette page ne dit pas
 
-- **Trois ADR nomment `lance-test-filme.sh` comme leur vérification** : 3774, 3788 et 3794. Retirer le
-  banc bash fera rougir `DocumentationAJourTest`, qui vérifie que la référence existe. Il faut donc
-  décider ce que deviennent ces trois vérifications **avant** de retirer quoi que ce soit.
+- **Deux ADR nomment `lance-test-filme.sh` comme leur vérification** : [3774](../decisions/3774-le-clip-se-taille-sur-le-test.md)
+  et [3788](../decisions/3788-un-banc-qui-maximise-tout-ne-montre-pas-ce-qu-on-livre.md). Retirer le
+  banc bash fera rougir `DocumentationAJourTest.la_verification_declaree_par_une_adr_existe_vraiment`,
+  qui vérifie que la référence nommée existe. Il faut donc décider ce que deviennent ces deux
+  vérifications **avant** de retirer quoi que ce soit.
+
+    ⚠️ Cette page a d'abord annoncé **trois**, en comptant l'ADR 3794. C'était un comptage fait sur
+    les fichiers qui *contiennent* la chaîne, et non sur ceux dont la **puce de vérification** la
+    nomme : 3794 se vérifie par `verifie-inventaires-ci.sh`. L'ADR 4013 cite elle aussi un banc, mais
+    c'est `filme-un-parcours.sh`, celui des films de **documentation** - un dispositif distinct, que
+    le retrait du banc de recette ne touche pas.
 - L'auto-test du banc bash **se vérifie lui-même en permanence** : 14 de ses 50 cas nomment un rouge
   attendu. Les gardes du banc Java ont été éprouvés par mutation, mais **à la main**, une fois.
 
