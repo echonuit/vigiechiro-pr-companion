@@ -65,6 +65,20 @@ jobs:
           reprendre() { # <source> <dossier>
             local source="$1" dossier="$2" clip nu
             mkdir -p "$dossier"
+            # ⚠️ `clips-connectes` est REFUSÉE, et pas parce qu'elle serait introuvable : elle existe,
+            # et c'est précisément le piège. Ses clips sont tournés contre la vraie plateforme, donc
+            # leur écran dépend de données vivantes. Deux tournages du même commit y diffèrent parce
+            # qu'une nuit a été traitée entre les deux, et le plancher de bruit mesuré en #4287
+            # mesurerait alors la plateforme au lieu du rendu.
+            #
+            # Le refus vaut mieux que le chiffre : un outil qui accepte une source dont il ne sait
+            # rien conclure rend un résultat qui A L'AIR juste (#4306).
+            if [ "$source" = "clips-connectes" ]; then
+              echo "::error::« clips-connectes » ne se compare pas. Ses clips sont tournés contre la vraie"
+              echo "::error::plateforme : leur écran suit des données vivantes, et le plancher de bruit y"
+              echo "::error::mesurerait la plateforme plutôt que le produit. Les regarder, pas les comparer."
+              exit 1
+            fi
             if ! gh release view "$source" >/dev/null 2>&1; then
               echo "::error::« $source » n'est ni un tag de version ni une pré-version de ce dépôt."
               exit 1
