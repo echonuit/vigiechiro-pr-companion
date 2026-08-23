@@ -446,7 +446,15 @@ jobs:
         # sous le cliquet, et resterait vert pendant qu'une vraie violation passe - un faux vert.
         # Cet auto-test plante une violation témoin par script et exige qu'il la voie, et la même en
         # commentaire pour qu'il ne la compte pas. Il ferme le trou de la passe 6 de clôture.
-        run: python3 scripts/adr/verifie_scripts.py
+        #
+        # ⚠️ Et le harnais lui-même a désormais son auto-test, lancé d'abord (#4268). Il prouvait que
+        # chaque détecteur détecte, sans que rien ne prouve qu'il les exerce TOUS : `2635` et `3947`
+        # n'avaient aucun cas témoin, et n'étaient donc tenus que par leur cliquet - c'est-à-dire par
+        # un compte qui ne monte pas, le trou exact que ce mécanisme existe pour fermer.
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/verifie_scripts.py --auto-test
+          python3 scripts/adr/verifie_scripts.py
 
       - name: "Auto-test des passes du graphe de connaissance (bloquant, #4231)"
         # Ces deux scripts n'avaient aucun dispositif, et les deux annonçaient des chiffres
