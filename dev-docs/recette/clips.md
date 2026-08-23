@@ -32,6 +32,18 @@ et les verse sur la pré-version.
 Sans cette case, le flux garde son autre rôle : filmer **une** classe pour éprouver qu'un runner
 pilote réellement, ce qui est l'objet de `sans_gestionnaire_de_fenetres`.
 
+## Tourner une seule session, ou sur une autre plateforme
+
+Le flux **tournage de recette** (`tournage-recette.yml`, `workflow_dispatch`) prend deux entrées : la
+**session** (`toutes`, ou `S1` à `S11`) et la **plateforme** (`ubuntu`, `windows`, `macos`). Il tourne
+avec le banc en Java pur, qui n'a besoin ni de serveur X ni de gestionnaire de fenêtres.
+
+C'est le flux à prendre quand on travaille une session et qu'on veut revoir ses clips sans refaire les
+quatre cents autres, ou quand on veut savoir à quoi le produit ressemble sur un autre système.
+
+⚠️ Son garde compte les **cas**, pas les fichiers : un tournage qui rend « des clips » peut en avoir
+perdu la moitié, et un compte de fichiers ne le dirait pas.
+
 ## Deux familles, deux pages
 
 | | Ce qu'un clip y sert | Combien |
