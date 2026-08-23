@@ -49,13 +49,13 @@ public final class CartonDeTitre {
         g.setColor(FOND);
         g.fillRect(0, 0, largeur, hauteur);
 
-        Font policeLibelle = new Font(Font.SANS_SERIF, Font.PLAIN, CORPS_LIBELLE);
+        Font policeLibelle = PoliceDuBanc.normale(CORPS_LIBELLE);
         List<Ligne> lignes = new ArrayList<>();
-        lignes.add(new Ligne(cas, new Font(Font.SANS_SERIF, Font.BOLD, CORPS_CAS), COULEUR_CAS));
+        lignes.add(new Ligne(cas, PoliceDuBanc.grasse(CORPS_CAS), COULEUR_CAS));
         for (String morceau : replier(libelle, g.getFontMetrics(policeLibelle), (int) (largeur * PART_DE_LARGEUR))) {
             lignes.add(new Ligne(morceau, policeLibelle, COULEUR_LIBELLE));
         }
-        lignes.add(new Ligne(test, new Font(Font.SANS_SERIF, Font.PLAIN, CORPS_TEST), COULEUR_TEST));
+        lignes.add(new Ligne(test, PoliceDuBanc.normale(CORPS_TEST), COULEUR_TEST));
 
         int total = lignes.stream().mapToInt(Ligne::hauteur).sum();
         int y = Math.max(0, (hauteur - total) / 2);
