@@ -326,7 +326,7 @@ du calcul, c'est de l'attente délibérée. Aucun choix d'implémentation ne la 
 porte que sur le banc. C'est une contrainte du banc bash, pas du banc Java : une fois `IndexDesCas`
 corrigé, celui-ci tourne au `forkCount=1C` du dépôt, et les quatre classes descendent alors à
 1 min 54 s sous Linux. Sur neuf cas dont l'essentiel du temps est du sommeil, le parallélisme ne
-rapporte presque rien ; sur la planche entière, c'est l'inverse.
+rapporte presque rien ; sur un tournage complet, c'est l'inverse.
 
 ⚠️ Ne pas conclure « les deux bancs se valent » : ils ne coûtent pareil qu'**à périmètre égal**, et
 c'est le périmètre qui diffère.
@@ -349,7 +349,7 @@ heures par passage ». Filmer **par session** ne demande ici qu'un `-Dtest=`.
 
 Mesuré, pas supposé.
 
-**Une ligne suffit pour couvrir toute la planche.** Ajouter `EnregistreurDeFilm` au fichier de
+**Une ligne suffit pour couvrir tous les cas cités.** Ajouter `EnregistreurDeFilm` au fichier de
 services de JUnit le rend actif partout où la détection automatique est demandée, comme
 `ReperesDeSeance` l'est déjà. Sonde faite sur deux classes non annotées : `ScenarioAccueilTest` rend
 des clips pleins, `ServiceQualificationTest` des clips qui s'arrêtent à leur carton et que l'index
@@ -408,7 +408,7 @@ L'ordre proposé, du plus sûr au plus engageant. Tout est rattaché à l'EPIC #
 | 2 | #4162 | ne filmer que les tests qui citent un cas |
 | 3 | #4163 | un tournage **par session**, sur la plateforme de son choix, à côté du banc bash |
 | 4 | #4164 | `S10-01`/`S10-02` : **à fermer**, la cartographie montre qu'un aperçu de production et une assertion jouée sous Windows les servent déjà mieux qu'un clip |
-| 5 | à ouvrir | les deux bancs comparés sur la **même planche**, puis décider de `lance-test-filme.sh`, de ses 1 289 lignes et de ses cinq préconditions. Cela vaudra un ADR |
+| 5 | à ouvrir | les deux bancs comparés sur le **même tournage complet**, puis décider de `lance-test-filme.sh`, de ses 1 289 lignes et de ses cinq préconditions. Cela vaudra un ADR |
 
 Le spike qui l'a précédé, et qui dit ce que le banc Java remplace :
 [Filmer la recette depuis le graphe de scène](film-depuis-le-graphe-de-scene.md).

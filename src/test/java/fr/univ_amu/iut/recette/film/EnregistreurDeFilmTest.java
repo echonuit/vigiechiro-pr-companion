@@ -19,7 +19,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 /// ## Pourquoi cette question se pose
 ///
 /// Une seule ligne au fichier de services de JUnit rend l'extension active partout où la détection
-/// automatique est demandée : il n'y a pas trente classes à annoter pour couvrir la planche. Le
+/// automatique est demandée : il n'y a pas trente classes à annoter pour couvrir tous les cas. Le
 /// revers est qu'ainsi branchée, elle filme **tous** les tests, y compris ceux qui ne citent aucun
 /// cas. Une sonde l'a mesuré sur une seule classe de service : **vingt clips de carton**, deux
 /// secondes chacun, que personne n'ouvrira - et l'index, qui se lit par cas, ne sait même pas les
@@ -57,7 +57,7 @@ class EnregistreurDeFilmTest {
     }
 
     /// L'échappatoire existe pour le débogage d'un test qui ne porte pas encore de cas. Elle se
-    /// demande, elle ne s'obtient pas par défaut : la planche est ce que le banc sert à produire.
+    /// demande, elle ne s'obtient pas par défaut : un tournage complet est ce que le banc sert à produire.
     @Test
     @DisplayName("la propriété « tout » filme aussi ce qui ne cite rien")
     void laProprieteToutFilmeAussiCeQuiNeCiteRien() {
