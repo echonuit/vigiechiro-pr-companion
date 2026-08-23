@@ -38,6 +38,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.Mockito;
 
 /// Tests du service [ServiceSoldeSaison] sur une base SQLite jetable (`@TempDir` + [MigrationSchema]),
 /// topologie semée par [JeuDeDonneesPassage]. L'[HorlogeFigee] au **2026-07-20** (dans la fenêtre du
@@ -428,5 +429,42 @@ class ServiceSoldeSaisonTest {
                 .contains(tuple("A1", "Ahetze"))
                 .as("un point sans commune résolue la laisse absente : c'est un état normal")
                 .contains(tuple("A2", null));
+    }
+
+    @Test
+    @DisplayName("#4278 : le solde lit tout par LOT - le nombre de requêtes ne suit pas l'inventaire")
+    void le_solde_lit_par_lot() {
+        PointDao points = Mockito.spy(injecteur.getInstance(PointDao.class));
+        PassageDao passages = Mockito.spy(injecteur.getInstance(PassageDao.class));
+        PointCommuneDao communes = Mockito.spy(injecteur.getInstance(PointCommuneDao.class));
+        PassageOpportunisteDao opportunistesSurveilles =
+                Mockito.spy(injecteur.getInstance(PassageOpportunisteDao.class));
+        ServiceSoldeSaison surveille = new ServiceSoldeSaison(
+                siteDao,
+                points,
+                passages,
+                communes,
+                opportunistesSurveilles,
+                carresDeTiers,
+                Optional.empty(),
+                new HorlogeFigee(LocalDate.of(2026, 7, 20)));
+        Mockito.clearInvocations(points, passages, communes, opportunistesSurveilles);
+
+        assertThat(surveille.soldePour(ID_USER, 2026).lignes()).isNotEmpty();
+
+        // ⚠️ Le garde compte des REQUÊTES, pas des millisecondes : un butoir en temps se noierait dans la
+        // variance de la machine. Le défaut mesuré (#4278) : une requête par site pour ses points, puis
+        // jusqu'à CINQ par point - deux cases, la commune, et une par passage trouvé pour l'opportunisme.
+        // 400 ms à cent cinquante carrés, contre 8 ms une fois lu par lot.
+        Mockito.verify(points, Mockito.never()).findBySite(Mockito.any());
+        Mockito.verify(passages, Mockito.never())
+                .trouverParPointAnneePassage(Mockito.any(), Mockito.anyInt(), Mockito.anyInt());
+        Mockito.verify(communes, Mockito.never()).pour(Mockito.anyLong());
+        Mockito.verify(opportunistesSurveilles, Mockito.never()).estOpportuniste(Mockito.anyLong());
+
+        Mockito.verify(points, Mockito.times(1)).findParSites(Mockito.any());
+        Mockito.verify(passages, Mockito.times(1)).findParPoints(Mockito.any());
+        Mockito.verify(communes, Mockito.times(1)).findAll();
+        Mockito.verify(opportunistesSurveilles, Mockito.times(1)).tousLesIds();
     }
 }
