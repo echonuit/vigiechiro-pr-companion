@@ -161,10 +161,23 @@ public class ServiceMultisite {
         for (CommuneDuPoint resolue : communesDao.findAll()) {
             communes.put(resolue.idPoint(), resolue.commune().nom());
         }
+        // ⚠️ Les points et les passages se lisent **par lot**, comme les quatre sources ci-dessus
+        // (#4271). Le commentaire d'à côté disait déjà le principe - « lues une seule fois, pas une par
+        // ligne » - et il n'était pas appliqué ici : une requête par site, puis une par point. Mesuré à
+        // chaud sur soixante carrés : cent vingt millisecondes, là où « Mes sites », qui lit le même
+        // genre de données par lot, en met sept.
+        List<Site> sites = siteDao.findByUtilisateur(idUtilisateur);
+        Map<Long, List<PointDEcoute>> pointsParSite =
+                pointDao.findParSites(sites.stream().map(Site::id).toList());
+        Map<Long, List<Passage>> passagesParPoint = passageDao.findParPoints(pointsParSite.values().stream()
+                .flatMap(List::stream)
+                .map(PointDEcoute::id)
+                .toList());
+
         List<LignePassage> lignes = new ArrayList<>();
-        for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
-            for (PointDEcoute point : pointDao.findBySite(site.id())) {
-                for (Passage passage : passageDao.findByPoint(point.id())) {
+        for (Site site : sites) {
+            for (PointDEcoute point : pointsParSite.getOrDefault(site.id(), List.of())) {
+                for (Passage passage : passagesParPoint.getOrDefault(point.id(), List.of())) {
                     Optional<ReleveTraitement> releve = Optional.ofNullable(releves.get(passage.id()));
                     LignePassage ligne = new LignePassage(
                             passage.id(),
@@ -203,12 +216,22 @@ public class ServiceMultisite {
     /// couche `view` les traduit en marqueurs/emprises colorés.
     public List<CarreAgrege> agregerPourCarte(String idUtilisateur) {
         Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        // ⚠️ Même lecture par lot que [#listerPassages] (#4271) : la carte parcourt exactement la même
+        // topologie, et la parcourait avec les mêmes requêtes une par une.
+        List<Site> sitesDuCarre = siteDao.findByUtilisateur(idUtilisateur);
+        Map<Long, List<PointDEcoute>> pointsParSiteCarte =
+                pointDao.findParSites(sitesDuCarre.stream().map(Site::id).toList());
+        Map<Long, List<Passage>> passagesParPointCarte = passageDao.findParPoints(pointsParSiteCarte.values().stream()
+                .flatMap(List::stream)
+                .map(PointDEcoute::id)
+                .toList());
+
         List<CarreAgrege> carres = new ArrayList<>();
-        for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
+        for (Site site : sitesDuCarre) {
             List<PointAgrege> points = new ArrayList<>();
             int passagesDuCarre = 0;
-            for (PointDEcoute point : pointDao.findBySite(site.id())) {
-                List<Passage> passages = passageDao.findByPoint(point.id());
+            for (PointDEcoute point : pointsParSiteCarte.getOrDefault(site.id(), List.of())) {
+                List<Passage> passages = passagesParPointCarte.getOrDefault(point.id(), List.of());
                 passagesDuCarre += passages.size();
                 points.add(new PointAgrege(
                         point.code(),
