@@ -90,8 +90,17 @@ un oubli.
 ⚠️ Deux dossiers vides font **échouer** la comparaison au lieu de rendre « aucun cas ne bouge », et une
 mesure qui échoue se compte à part dans le résumé.
 
+⚠️ Et un **outil absent** est une panne d'installation, pas une mesure : le script refuse de commencer
+et nomme ce qui manque, au lieu de rendre cinquante « ? » qui se liraient comme cinquante cas stables.
+Les deux ne se réparent pas au même endroit, donc ils ne doivent pas se lire pareil.
+
 Ce n'est pas de la prudence de principe : le premier jet de cet outil rendait « ? » sur les sept cas
 d'un vrai tournage, et son index annonçait tranquillement « aucun cas ne bouge ». La cause était que
 `identify` écrit `1.152e+06` pour une toile de 1280 × 900, et le test d'entier qui suivait refusait la
 mesure. Un instrument cassé qui se présente en succès est pire que pas d'instrument
 ([ADR 2748](../decisions/2748-un-dispositif-qui-peut-ne-rien-verifier-le-dit.md)).
+
+Le premier lancement réel l'a montré deux fois. Le workflow n'installait pas ImageMagick : `compare`
+était introuvable, la part de pixels valait « ? », et les cinquante cas d'un vrai tournage se rangeaient
+en « mesure impossible » - **le job restant vert**. Le compteur de mesures impossibles a dit la panne ;
+sans lui, le résumé aurait annoncé « aucun cas ne bouge », et la chaîne aurait eu l'air éprouvée.

@@ -54,6 +54,28 @@ set -uo pipefail
 
 MOI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 
+### Refuse de commencer sans ses outils, en NOMMANT ceux qui manquent.
+###
+### ⚠️ Sans cette garde, l'absence d'un outil ne se voyait pas : `compare` introuvable écrivait son
+### « command not found » dans la sortie que la mesure capture, la part de pixels devenait « ? », et
+### les cinquante cas d'un vrai tournage se rangeaient en « mesure impossible » sans qu'une seule
+### ligne ne dise POURQUOI. Mesuré sur le run 32640637929, où le job restait vert.
+###
+### Un outil manquant est une PANNE D'INSTALLATION, pas un résultat de mesure. Les deux ne se
+### réparent pas au même endroit, donc ils ne doivent pas se lire pareil.
+exige_ses_outils() {
+  local manquants=() outil
+  for outil in ffmpeg ffprobe compare convert identify; do
+    command -v "$outil" >/dev/null 2>&1 || manquants+=("$outil")
+  done
+  [ "${#manquants[@]}" -eq 0 ] && return 0
+
+  echo "::error::Outils absents : ${manquants[*]}. Une mesure impossible faute d'outil n'est pas un" >&2
+  echo "::error::résultat : installer ffmpeg et imagemagick avant de comparer." >&2
+  return 1
+}
+
+
 TOLERANCE_PAR_DEFAUT=5
 
 ### La dernière image d'un clip. `-update 1` réécrit le même fichier à chaque image : ce qui reste est
@@ -312,8 +334,25 @@ if [ "${1:-}" = "--auto-test" ]; then
   verifie "une grande toile se mesure quand même" "0 mesure(s) impossible(s)" "$sortie"
   verifie "et son écart est chiffré, pas rendu « ? »" "100.000 %" "$(cat "$bac/grand/index.md")"
 
+  # 7. Un OUTIL ABSENT, et c'est le cas qui compte le plus.
+  #
+  # ⚠️ Sans lui, la garde d'outils ne serait elle-même gardée par rien. Le défaut qu'elle ferme s'est
+  # produit pour de vrai : `comparer-tournages.yml` n'installait pas ImageMagick, `compare` était
+  # introuvable, et les cinquante cas d'un vrai tournage se rangeaient en « mesure impossible » sans
+  # qu'une ligne ne dise pourquoi - le job restant vert (run 32640637929).
+  #
+  # Le chemin est reconstruit avec tout SAUF `compare` : c'est la seule façon d'éprouver l'absence
+  # sans désinstaller quoi que ce soit sur la machine qui lance l'auto-test.
+  mkdir -p "$bac/bin"
+  for outil in bash basename mktemp rm mkdir cp mv cat find wc sort sed grep awk ffmpeg ffprobe convert identify; do
+    chemin=$(command -v "$outil" 2>/dev/null) && ln -sf "$chemin" "$bac/bin/$outil"
+  done
+  sortie=$(PATH="$bac/bin" "$MOI" "$bac/a" "$bac/b" "$bac/sans-outil" 2>&1) && echecs=1
+  verifie "un outil absent est une panne, pas une mesure" "Outils absents" "$sortie"
+  verifie "et l'outil manquant est NOMMÉ" "compare" "$sortie"
+
   if [ "$echecs" = 0 ]; then
-    echo "Auto-test de la comparaison de deux tournages : OK (12 cas, dont la grande toile et la panne des dossiers vides)."
+    echo "Auto-test de la comparaison de deux tournages : OK (14 cas, dont l'outil absent et la grande toile)."
   else
     echo "Auto-test de la comparaison de deux tournages : ÉCHEC."
   fi
@@ -324,6 +363,7 @@ fi
 
 if [ "${1:-}" = "--plancher" ]; then
   [ "$#" -ge 3 ] || { echo "usage : $(basename "$MOI") --plancher <dossier A> <dossier B>" >&2; exit 2; }
+  exige_ses_outils || exit 3
   plancher "$2" "$3"
   exit 0
 fi
@@ -332,4 +372,5 @@ if [ "$#" -lt 3 ]; then
   echo "usage : $(basename "$MOI") <dossier avant> <dossier après> <dossier de sortie> [tolérance %]" >&2
   exit 2
 fi
+exige_ses_outils || exit 3
 comparer "$1" "$2" "$3" "${4:-$TOLERANCE_PAR_DEFAUT}"

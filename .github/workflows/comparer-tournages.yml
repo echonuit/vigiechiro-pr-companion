@@ -103,6 +103,33 @@ jobs:
           reprendre "$AVANT" avant
           reprendre "$APRES" apres
 
+      - name: Cache des paquets APT (ffmpeg, imagemagick)
+        # Ce cache porte sur les `.deb`, pas sur l'état installé : `dpkg` tourne donc à chaque run,
+        # et avec lui les scripts post-installation. On perd le dépaquetage, on garde le
+        # téléchargement.
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/apt-vigiechiro
+          # La clé NOMME ce qu'elle contient : ajouter un paquet sans la changer servirait un cache
+          # d'avant, et le manque n'apparaîtrait qu'au second passage.
+          key: apt-${{ runner.os }}-comparer-tournages-ffmpeg-imagemagick
+
+      - name: Installer de quoi lire les clips et comparer les images
+        # ⚠️ Cette étape manquait, et le workflow rendait quand même un job VERT. `compare` était
+        # introuvable, la part de pixels valait « ? », et les cinquante cas d'un vrai tournage se
+        # rangeaient en « mesure impossible » (run 32640637929). Le compteur de mesures impossibles
+        # l'a dit ; sans lui, le résumé aurait annoncé « aucun cas ne bouge ».
+        #
+        # « L'image `ubuntu-latest` ne fournit AUCUN ImageMagick », comme le dit déjà
+        # `capture-vues.yml`, et `--avec-recommandations` parce que le paquet ne tire ses binaires
+        # que par ses recommandations. ffmpeg s'installe sans, comme dans `lint.yml`.
+        env:
+          APT_CACHE: ${{ runner.temp }}/apt-vigiechiro
+        run: |
+          set -euo pipefail
+          bash .github/scripts/installer-paquets.sh ffmpeg
+          bash .github/scripts/installer-paquets.sh --avec-recommandations imagemagick
+
       - name: Comparer, et écrire ce qu'on doit regarder
         env:
           TOLERANCE: ${{ inputs.tolerance }}
