@@ -35,6 +35,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Jugement;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
@@ -455,7 +456,7 @@ class ScenarioPerceptifFiltresTest {
         robot.clickOn("#menuAjoutFiltre");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.entreDeuxGestes(robot);
-        robot.clickOn(libelle);
+        GesteVisible.cliquer(robot, libelle);
         WaitForAsyncUtils.waitForFxEvents();
     }
 
@@ -484,7 +485,7 @@ class ScenarioPerceptifFiltresTest {
     private static void cocher(FxRobot robot, MenuButton menu, String valeur) {
         ouvrirLeMenu(robot, menu);
         Respiration.entreDeuxGestes(robot);
-        robot.clickOn(valeur);
+        GesteVisible.cliquer(robot, valeur);
         WaitForAsyncUtils.waitForFxEvents();
     }
 

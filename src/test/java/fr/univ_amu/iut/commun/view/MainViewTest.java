@@ -21,7 +21,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
-import fr.univ_amu.iut.recette.GesteDeMenu;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -156,7 +156,7 @@ class MainViewTest {
         // un vrai clic (#4158) était nécessaire et pas suffisant : `clickOn(libellé)` téléporte le
         // pointeur et clique dans la foulée, le menu se referme, et l'instant du choix n'existe sur
         // aucune trame. Mesuré en extrayant les images autour du clic.
-        GesteDeMenu.choisir(robot, "#menuOutils", reglages.getText());
+        GesteVisible.choisir(robot, "#menuOutils", reglages.getText());
         Respiration.surLeMomentCle(robot);
 
         // La zone centrale affiche désormais l'écran Réglages (son TabPane d'onglets).
@@ -234,7 +234,7 @@ class MainViewTest {
                 .orElseThrow();
         // Le segment se CLIQUE : le clip montre le retour en arrière au lieu de le subir.
         Respiration.avantLeGeste(robot);
-        robot.clickOn(mesSites);
+        GesteVisible.cliquer(robot, mesSites);
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.apresLeGeste(robot);
 
@@ -379,7 +379,7 @@ class MainViewTest {
 
         // ⚠️ Le pointeur s'arrête SUR l'entrée avant de cliquer (#4177) : sans quoi le clip montre le
         // menu, puis les compteurs qui changent, et jamais ce qui a été choisi entre les deux.
-        GesteDeMenu.choisir(robot, "#menuOutils", entree.libelle());
+        GesteVisible.choisir(robot, "#menuOutils", entree.libelle());
         Respiration.surLeMomentCle(robot);
 
         assertThat(bandeau.isVisible())

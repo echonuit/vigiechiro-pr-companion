@@ -30,6 +30,7 @@ import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.recette.Seance;
@@ -297,8 +298,9 @@ class ScenarioModaleCarreTest {
                 10,
                 TimeUnit.SECONDS,
                 () -> robot.lookup("#btnRecupererCarre").tryQuery().isPresent());
-        Respiration.avantLeGeste(robot);
-        robot.clickOn("#btnRecupererCarre");
+        // ⚠️ Le pointeur s'arrête SUR le bouton avant de cliquer (#4181). `clickOn` seul téléporte : le
+        // geste décisif de ce cas - « on a cliqué sur Récupérer » - n'existait sur aucune image.
+        GesteVisible.cliquer(robot, "#btnRecupererCarre");
 
         // ⚠️ Ce que le cas existe pour montrer, et ce n'est PLUS ce que sa planche disait : depuis #4099
         // le geste se termine là où il a commencé. La modale s'efface, « Mes sites » reste, le carré
@@ -434,7 +436,7 @@ class ScenarioModaleCarreTest {
     /// Ouvre la déclaration **par le bouton de l'écran**, et attend que la modale soit là.
     private void ouvrirLaDeclaration(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
-        robot.clickOn("+ Nouveau site");
+        GesteVisible.cliquer(robot, "+ Nouveau site");
         WaitForAsyncUtils.waitFor(
                 10,
                 TimeUnit.SECONDS,
@@ -451,7 +453,7 @@ class ScenarioModaleCarreTest {
     /// Clique « Vérifier », et attend le verdict que l'exécuteur asynchrone rendra.
     private void verifier(FxRobot robot) throws TimeoutException {
         Respiration.avantLeGeste(robot);
-        robot.clickOn("#btnVerifierCarre");
+        GesteVisible.cliquer(robot, "#btnVerifierCarre");
         WaitForAsyncUtils.waitFor(10, TimeUnit.SECONDS, () -> encart(robot).isVisible());
         CadreVisible.amener(encart(robot), robot);
         Respiration.surLeMomentCle(robot);

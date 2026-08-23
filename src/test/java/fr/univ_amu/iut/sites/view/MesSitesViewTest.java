@@ -29,6 +29,7 @@ import fr.univ_amu.iut.connexion.viewmodel.RefletDuJeton;
 import fr.univ_amu.iut.recette.CadreVisible;
 import fr.univ_amu.iut.recette.CasDeRecette;
 import fr.univ_amu.iut.recette.FenetreDuBanc;
+import fr.univ_amu.iut.recette.GesteVisible;
 import fr.univ_amu.iut.recette.Portee;
 import fr.univ_amu.iut.recette.Respiration;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -231,7 +232,7 @@ class MesSitesViewTest {
         robot.clickOn("#menuOutils");
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.entreDeuxGestes(robot);
-        robot.clickOn(LIBELLE_SE_CONNECTER);
+        GesteVisible.cliquer(robot, LIBELLE_SE_CONNECTER);
         WaitForAsyncUtils.waitForFxEvents();
         Respiration.avantLeGeste(robot);
 

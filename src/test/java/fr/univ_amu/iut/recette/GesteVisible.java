@@ -2,10 +2,11 @@ package fr.univ_amu.iut.recette;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import javafx.scene.Node;
 import org.testfx.api.FxRobot;
 import org.testfx.util.WaitForAsyncUtils;
 
-/// Choisir une entrée dans un menu, **de façon qu'on voie choisir** (#4177).
+/// Faire un geste **de façon qu'on le voie faire** (#4177, #4181).
 ///
 /// ## Pourquoi ce geste est partagé
 ///
@@ -26,9 +27,34 @@ import org.testfx.util.WaitForAsyncUtils;
 ///
 /// D'où les trois temps : le menu s'ouvre, le pointeur **va** sur l'entrée et **s'y arrête**, puis il
 /// clique. Le temps d'arrêt ne coûte qu'à une séance filmée.
-public final class GesteDeMenu {
+public final class GesteVisible {
 
-    private GesteDeMenu() {}
+    private GesteVisible() {}
+
+    /// Amène le pointeur sur `cible`, l'y laisse voir, puis clique.
+    ///
+    /// ⚠️ `clickOn` seul **téléporte** le pointeur et clique dans la foulée : l'arrivée et l'appui
+    /// tombent sur la même trame, et le geste décisif d'un clip n'existe sur aucune image. Constaté sur
+    /// « Récupérer ce carré » (#4181) comme sur les entrées de menu (#4177) - c'est le même défaut, et
+    /// la doctrine n'est pas « le menu » mais « on doit voir le geste ».
+    public static void cliquer(FxRobot robot, String cible) {
+        robot.moveTo(cible);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+
+        robot.clickOn(cible);
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    /// Même chose sur un noeud déjà en main, quand le scénario le tient plutôt que son sélecteur.
+    public static void cliquer(FxRobot robot, Node cible) {
+        robot.moveTo(cible);
+        WaitForAsyncUtils.waitForFxEvents();
+        Respiration.entreDeuxGestes(robot);
+
+        robot.clickOn(cible);
+        WaitForAsyncUtils.waitForFxEvents();
+    }
 
     /// Ouvre `idDuMenu`, amène le pointeur sur l'entrée `libelle`, l'y laisse voir, puis clique.
     ///
@@ -44,11 +70,6 @@ public final class GesteDeMenu {
         // ⚠️ Le pointeur VA sur l'entrée, et s'y arrête, AVANT de cliquer. Sans cet arrêt, le clic et la
         // fermeture du menu tombent sur la même trame : on voit le menu, puis l'écran d'après, et jamais
         // le choix.
-        robot.moveTo(libelle);
-        WaitForAsyncUtils.waitForFxEvents();
-        Respiration.entreDeuxGestes(robot);
-
-        robot.clickOn(libelle);
-        WaitForAsyncUtils.waitForFxEvents();
+        cliquer(robot, libelle);
     }
 }
