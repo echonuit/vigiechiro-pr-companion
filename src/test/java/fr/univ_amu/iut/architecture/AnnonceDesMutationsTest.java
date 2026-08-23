@@ -71,7 +71,17 @@ class AnnonceDesMutationsTest {
     /// ⚠️ Mon premier relevé, fait au shell, en annonçait **36** : `grep -c` compte des **lignes**, pas
     /// des occurrences, et deux lignes en portaient deux. C'est ce test-ci qui l'a corrigé - le
     /// quatrième inventaire de cet invariant, et le troisième à démentir le précédent.
-    private static final int SITES_D_ECRITURE = 59;
+    /// Relevé du 23/08/2026 : **60**. Le site ajouté est `GenerateurJeuDeDonnees#creerPoints`, qui sème
+    /// désormais plusieurs carrés au lieu d'un seul (le banc était aveugle aux requêtes lancées par
+    /// site). Il **n'annonce pas**, et c'est délibéré : ce générateur peuple une base de **banc**,
+    /// jetable et réécrite à neuf, qu'aucun écran n'observe. Le port `JournalMutations` sert à réveiller
+    /// un binding JavaFX ; il n'y en a aucun ici.
+    ///
+    /// ⚠️ L'écriture existait déjà ; c'est de l'avoir sortie dans une variable `siteDao` qui l'a rendue
+    /// **visible** au détecteur, lequel cherche `siteDao.insert` et non `new SiteDao(...).insert`. La
+    /// tentation était de la réécrire en ligne pour retrouver 59 : cela aurait gardé l'écriture en la
+    /// cachant de son garde.
+    private static final int SITES_D_ECRITURE = 60;
 
     @Test
     @DisplayName("#3645 : toute classe qui annonce a un test qui compte son annonce")
