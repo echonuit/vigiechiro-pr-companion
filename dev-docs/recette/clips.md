@@ -107,6 +107,16 @@ perdu la moitié, et un compte de fichiers ne le dirait pas.
 | [Cas perceptifs](clips-perceptifs.md) | **le regarder** : c'est le seul verdict qui existe pour ces cas | 9 |
 | [Cas assertés](clips-assertes.md) | comprendre **pourquoi un test rougit**, ou vérifier qu'il joue ce que son nom annonce | 46 |
 
+### Et une troisième source, qui ne se compare pas
+
+Depuis #4306, un tournage peut parler à la **vraie** plateforme plutôt qu'à ses fixtures. Ses clips
+vivent sur leur propre pré-version, [`clips-connectes`](clips-connectes.md), pour une raison qui n'est
+pas de rangement : leur écran suit des **données vivantes**, donc le plancher de bruit y mesurerait la
+plateforme au lieu du rendu. `comparer-tournages.yml` refuse cette source, et le dit.
+
+Ce ne sont pas d'autres cas, ce sont les **mêmes** cas vus contre une autre frontière : les quelque 220
+dont le verdict se lit hors de l'application, et qu'un bouchon rend convaincants et creux.
+
 L'adresse d'un clip se déduit de son nom :
 
 ```

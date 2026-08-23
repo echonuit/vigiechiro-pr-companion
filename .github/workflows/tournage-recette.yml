@@ -385,6 +385,82 @@ jobs:
           chmod +x .github/scripts/revoque-jeton.sh
           ./.github/scripts/revoque-jeton.sh
 
+  # ------------------------------------------------------------------------------------------------
+  # ⚠️ Une pré-version À PART, et c'est tout l'objet de #4306. Des données vivantes font bouger l'écran
+  # sans qu'aucun commit ait changé : le plancher de bruit de `compare-tournages.sh` mesurerait alors la
+  # plateforme et non le rendu. Verser ces clips sur `clips-recette` ou à côté des `java-` d'un tag
+  # ferait se contredire deux dispositifs EN SILENCE, puisque tous deux produisent des clips valides.
+  #
+  # ⚠️ Et contrairement à la révocation, ce job ne part QUE si le tournage a réussi. Un jeton doit
+  # mourir dans tous les cas ; un tournage amputé, lui, n'a pas à se publier.
+  publier-connecte:
+    name: Verser les clips connectés sur leur pré-version
+    needs: filmer
+    if: ${{ success() && inputs.connecte }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    steps:
+      - name: Reprendre les clips du tournage
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: clips-${{ inputs.session }}-${{ inputs.plateforme }}
+          path: repris
+
+      - name: Ouvrir la pré-version, et dire ce qu elle montre
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          SESSION: ${{ inputs.session }}
+          PLATEFORME: ${{ inputs.plateforme }}
+        run: |
+          set -euo pipefail
+          corps=$(cat <<'FIN'
+          Clips tournés contre la **vraie** plateforme Vigie-Chiro, en lecture seule.
+
+          ⚠️ **Ils ne se comparent pas aux autres.** Leur écran dépend de données vivantes : deux
+          tournages du même commit peuvent différer parce qu'une nuit a été traitée entre les deux.
+          `comparer-tournages.yml` refuse donc cette source, et c'est délibéré.
+
+          Ce qu'ils apportent, et qu'un tournage sur fixtures ne peut pas donner : les cas dont le
+          verdict se lit **hors de l'application** cessent d'être filmés contre une frontière
+          bouchonnée. Un clip bouchonné y serait convaincant et creux.
+
+          Comment les lire : `dev-docs/recette/clips-connectes.md`.
+          FIN
+          )
+          corps="${corps}"$'\n\n'"Dernier versement : ${SESSION} sur ${PLATEFORME}, le $(date -u +%F) à $(date -u +%H:%M) UTC."
+          if gh release view clips-connectes >/dev/null 2>&1; then
+            gh release edit clips-connectes --notes "${corps}"
+          else
+            gh release create clips-connectes \
+              --prerelease \
+              --title "Clips tournés contre la plateforme (roulant)" \
+              --notes "${corps}"
+          fi
+
+      - name: Verser les clips et leur index
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          clips=(repris/target/recette/clips/*.mp4)
+          [ -e "${clips[0]}" ] || {
+            echo "::error::Aucun clip mp4 dans l'artefact repris. Arborescence trouvée :"
+            find repris -type f | head -20
+            exit 1
+          }
+          # ⚠️ Pas de préfixe, et ce n'est pas un oubli : la SÉPARATION est portée par la pré-version
+          # elle-même. Un préfixe servirait à distinguer deux populations rangées au même endroit ;
+          # ici il n'y en a qu'une, et le nom nu garde les adresses lisibles depuis la page.
+          gh release upload clips-connectes "${clips[@]}" --clobber
+          if [ -f repris/target/recette/clips/index.md ]; then
+            gh release upload clips-connectes repris/target/recette/clips/index.md --clobber
+          fi
+          echo "${#clips[@]} clip(s) versé(s) sur « clips-connectes »." >> "${GITHUB_STEP_SUMMARY}"
+
   publier:
     name: Verser les clips Java sur le tag de la version
     needs: filmer
