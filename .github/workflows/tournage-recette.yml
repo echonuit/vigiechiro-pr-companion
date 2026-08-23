@@ -301,7 +301,11 @@ jobs:
           # laisser dans la suite ordinaire la ferait rougir sur chaque PR (#4307).
           selection=(-Dtest="${{ steps.liste.outputs.classes }}")
           if [ "${{ inputs.connecte }}" = "true" ]; then
-            selection=(-Dsurefire.groups=recette-connectee)
+            # ⚠️ Les DEUX propriétés, et c'est le défaut que le premier tir a trouvé : poser
+            # `groups` seul ne lève pas l'exclusion, et surefire n'a rien sélectionné. Le tournage
+            # a rendu « Tests run: 0 », un build VERT, et n'a échoué qu'à l'étape suivante sur un
+            # index absent. C'est ce que fait le profil `-Papi-live` : il inverse les deux.
+            selection=(-Dsurefire.groups=recette-connectee -Dsurefire.excludedGroups=api-live)
           fi
           ./mvnw -B test --file pom.xml \
             "${selection[@]}" \
