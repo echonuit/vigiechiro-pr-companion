@@ -13,7 +13,7 @@ référence structurée ; le repo-root garde un mémo
 | `./mvnw test -Dtest=SitesViewModelTest#charger_lit_par_lot` | Une seule **méthode** |
 | `./mvnw verify` | Build complet : tests + couverture + contrôles (PMD/JaCoCo **non** bloquants) |
 | `./mvnw -Pquality-gate verify` | **Portail qualité** : PMD `failOnViolation` + seuils JaCoCo **bloquants** |
-| `./mvnw -Pmutation test` | Tests de **mutation** PIT (lent, à la demande) |
+| `env -u DISPLAY ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage -DtargetClasses=… -DtargetTests=…` | Tests de **mutation** PIT (lent, ciblé, à la demande). ⚠️ `-Pmutation test` **ne mute rien** : le profil n'a aucune liaison de phase, donc le goal n'est jamais invoqué - la commande lance toute la suite et rend zéro rapport, sans le dire. |
 | `./mvnw pmd:check` | Rapport PMD seul (rapide) |
 | `./mvnw spotless:check` / `spotless:apply` | Vérifie / applique le formatage |
 | `./mvnw javafx:run` | Lance l'application |
