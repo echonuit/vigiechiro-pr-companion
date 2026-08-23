@@ -39,6 +39,25 @@ Ce qu'il vaut la peine de comparer, dans cet ordre :
 3. **Le clip montre-t-il son objet ?** Un clip qui s'arrête avant ce que le cas fait juger ne sert à
    rien, quel que soit le banc qui l'a produit.
 
+!!! danger "Cette page est un instantané, et elle mourra avec la décision"
+
+    Elle existe pour **trancher une fois** : adopter le banc Java, ou non. Elle n'est pas un état
+    courant du dépôt, et elle ne le deviendra pas.
+
+    ⚠️ **Les deux colonnes ne vieillissent pas à la même vitesse.** `clips-recette` est alimentée par
+    le flux **recette filmée**, branché sur le train de publication ; `clips-java` est versée **à la
+    main**, depuis l'artefact d'un tournage. Un test écrit après le dernier versement manuel apparaît
+    donc à gauche et manque à droite - ce n'est pas une lacune du banc, c'est un décalage de dates.
+
+    Mesuré une fois : deux cas de `S1-33` manquaient à droite parce que leurs tests étaient nés
+    **quatorze minutes** après le début du tournage.
+
+    Faire publier le banc Java automatiquement aurait retiré ce décalage, et posé un second dispositif
+    qui publie **avant** que le sort du banc bash soit tranché. Le choix a été de ne pas le faire, et
+    de le dire ici.
+
+    **Une fois la décision prise, cette page se supprime** avec la pré-version `clips-java`.
+
 !!! warning "Deux tournages, deux dates"
 
     Le banc bash alimente `clips-recette` par le flux **recette filmée** ; le banc Java a versé sur
