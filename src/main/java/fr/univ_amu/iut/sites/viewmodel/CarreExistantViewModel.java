@@ -113,7 +113,8 @@ public final class CarreExistantViewModel {
     /// Récupère le carré depuis la plateforme. **Bloquant** (réseau) : à appeler hors du fil JavaFX.
     public RapatriementCarre.Resultat rapatrier(SouhaitDeclaration souhait) {
         if (rapatriement.isEmpty()) {
-            return new RapatriementCarre.Resultat.Indisponible();
+            return new RapatriementCarre.Resultat.Indisponible(
+                    "la récupération de carré n'est pas disponible dans cette configuration.");
         }
         return rapatriement.get().rapatrier(souhait);
     }

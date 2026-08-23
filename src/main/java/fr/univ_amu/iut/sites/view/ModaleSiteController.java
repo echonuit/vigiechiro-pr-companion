@@ -185,7 +185,10 @@ public class ModaleSiteController {
                 },
                 echec -> {
                     btnRecupererCarre.setDisable(false);
-                    viewModel.carre().appliquerRapatriement(new RapatriementCarre.Resultat.Indisponible());
+                    viewModel
+                            .carre()
+                            .appliquerRapatriement(new RapatriementCarre.Resultat.Indisponible(
+                                    "la récupération s'est interrompue : " + echec.getMessage()));
                 });
     }
 

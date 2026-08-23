@@ -389,7 +389,8 @@ class ModaleSiteVerifierCarreViewTest {
         enCreation(robot);
         verdictCarrePresent(robot);
         when(rapatriement.rapatrier(org.mockito.ArgumentMatchers.any()))
-                .thenReturn(new RapatriementCarre.Resultat.Indisponible());
+                .thenReturn(new RapatriementCarre.Resultat.Indisponible(
+                        "Vigie-Chiro est injoignable (bouchon). Réessayez plus tard."));
 
         Respiration.avantLeGeste(robot);
         robot.clickOn(recuperer(robot));

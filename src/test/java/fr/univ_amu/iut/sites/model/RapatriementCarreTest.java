@@ -257,6 +257,38 @@ class RapatriementCarreTest {
     }
 
     @Test
+    @DisplayName("#4233 : trois empêchements, trois messages - le programme ne fait pas deviner")
+    void chaque_empechement_dit_sa_propre_cause() {
+        SouhaitDeclaration souhait = new SouhaitDeclaration(CARRE, Protocole.STANDARD, null, null);
+
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.nonConnecte());
+        String sansJeton = rapatriement.rapatrier(souhait).message();
+
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.injoignable("délai dépassé"));
+        String injoignable = rapatriement.rapatrier(souhait).message();
+
+        when(client.chercherCarre(CARRE)).thenReturn(ReponseApi.refuse(401, "jeton expiré"));
+        String refuse = rapatriement.rapatrier(souhait).message();
+
+        // ⚠️ Le message nommait DEUX causes à la fois - « Vigie-Chiro est injoignable ou vous n'êtes pas
+        // connecté » - alors que le `switch` les distingue depuis toujours. Il faisait douter d'une
+        // connexion qui était bonne, et laissait l'utilisateur trancher ce que le programme savait déjà.
+        assertThat(sansJeton).contains("pas connecté").doesNotContain("injoignable");
+        assertThat(injoignable).contains("injoignable").doesNotContain("pas connecté");
+        assertThat(refuse).contains("refusé").contains("401");
+
+        // Et les trois disent le geste qui répare, chacun le sien.
+        assertThat(sansJeton).contains("Connectez-vous");
+        assertThat(injoignable).contains("Réessayez");
+        assertThat(refuse).contains("jeton");
+
+        assertThat(List.of(sansJeton, injoignable, refuse))
+                .as("trois causes distinctes ne peuvent pas rendre le même message")
+                .doesNotHaveDuplicates()
+                .allSatisfy(message -> assertThat(message).contains("Rien n'a été créé"));
+    }
+
+    @Test
     @DisplayName("#3806 : ce que l'utilisateur a saisi survit au rapatriement")
     void la_saisie_de_l_utilisateur_survit() {
         when(client.chercherCarre(CARRE))
